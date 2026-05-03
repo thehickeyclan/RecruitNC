@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react"
 import { HardLink } from "@/components/hard-link"
-import type { FundraisingHubActivityRow } from "@/lib/fundraising/hub-data"
+import type { FundraisingHubActivityRow, FundraisingHubTransparencyMeta } from "@/lib/fundraising/hub-data"
 import { fundraisingAthletePublicHrefFromCode } from "@/lib/fundraising/athlete-fundraising-slug"
 import { formatUsdWhole } from "./FundraisingHero"
 
@@ -36,7 +36,13 @@ function mapRealtimeRow(payload: Record<string, unknown>): FundraisingHubActivit
 
 const FEED_LIMIT = 20
 
-export function DonorActivityFeed({ initial }: { initial: FundraisingHubActivityRow[] }) {
+export function DonorActivityFeed({
+  initial,
+  hubTransparency,
+}: {
+  initial: FundraisingHubActivityRow[]
+  hubTransparency: FundraisingHubTransparencyMeta
+}) {
   const [rows, setRows] = useState(initial)
   const scrollRef = useRef<HTMLDivElement>(null)
   const pauseScrollRef = useRef(false)
@@ -150,7 +156,9 @@ export function DonorActivityFeed({ initial }: { initial: FundraisingHubActivity
           </span>
         </div>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/80">
-          Last {FEED_LIMIT} paid gifts from checkout, newest first — Supabase realtime + Stripe mirror.
+          Last {FEED_LIMIT} paid gifts for <strong className="text-white">{hubTransparency.campaignDisplayName}</strong> in the
+          last <strong className="tabular-nums text-white">{hubTransparency.lookbackDays}</strong> days, newest first — same
+          scope as the leaderboard (Supabase realtime + Stripe mirror).
         </p>
 
         <div

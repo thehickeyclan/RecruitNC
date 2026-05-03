@@ -50,6 +50,51 @@ export const FUNDRAISING_CAMPAIGNS = [
 export const DEFAULT_FUNDRAISING_CAMPAIGN: FundraisingCampaignDefinition = FUNDRAISING_CAMPAIGNS[0]
 
 /**
+ * True when Stripe Checkout metadata `spartan_campaign` should be rolled into `requestedRegistrySlug`
+ * (e.g. historic `fayetteville_spartan` checkouts vs current registry `fayetteville_2026`).
+ * Empty / missing metadata returns false — caller decides whether to list those sessions.
+ */
+export function stripeSpartanCampaignMetadataMatchesRequested(
+  metadataSpartanCampaign: string | null | undefined,
+  requestedRegistrySlug: string,
+): boolean {
+  const s = (metadataSpartanCampaign ?? "").trim()
+  if (!s) return false
+  if (s === requestedRegistrySlug) return true
+  if (requestedRegistrySlug === "fayetteville_2026" && s === "fayetteville_spartan") return true
+  return false
+}
+
+/**
+ * `spartan_donations` rows with no `spartan_campaign` are usually legacy webhook rows before the column was reliable.
+ * While there is a single Spartan drive in the registry, treat those as the default campaign so the hub does not
+ * under-count vs live Stripe lists.
+ */
+export function hubSpartanDonationRowMatchesCampaign(
+  rowSpartanCampaign: string | null | undefined,
+  campaign: FundraisingCampaignDefinition,
+): boolean {
+  const c = (rowSpartanCampaign ?? "").trim()
+  if (!c) {
+    return (
+      FUNDRAISING_CAMPAIGNS.length === 1 &&
+      campaign.stripeCampaignSlug === DEFAULT_FUNDRAISING_CAMPAIGN.stripeCampaignSlug
+    )
+  }
+  return stripeSpartanCampaignMetadataMatchesRequested(c, campaign.stripeCampaignSlug)
+}
+
+/** Maps DB / metadata slug to registry `stripeCampaignSlug` for hub rollups (cards, metrics). */
+export function normalizeRegistryStripeCampaignSlug(metadataSlug: string | null | undefined): string {
+  const s = (metadataSlug ?? "").trim()
+  if (!s) {
+    return FUNDRAISING_CAMPAIGNS.length === 1 ? DEFAULT_FUNDRAISING_CAMPAIGN.stripeCampaignSlug : "__unknown__"
+  }
+  if (s === "fayetteville_spartan") return "fayetteville_2026"
+  return s
+}
+
+/**
  * Campaign-agnostic checkout (hub branding). Same `/api/spartan/checkout` + metadata as `/spartan`.
  * Public athlete donor pages (`/fundraising/athletes/...`) use this path so gifts are not routed through the `/spartan` landing.
  */

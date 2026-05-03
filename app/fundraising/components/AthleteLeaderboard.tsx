@@ -2,7 +2,7 @@
 
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import type { FundraisingHubLeaderRow } from "@/lib/fundraising/hub-data"
+import type { FundraisingHubLeaderRow, FundraisingHubTransparencyMeta } from "@/lib/fundraising/hub-data"
 import { fundraisingAthletePublicHrefFromCode } from "@/lib/fundraising/athlete-fundraising-slug"
 import { HardLink } from "@/components/hard-link"
 import { formatUsdWhole } from "./FundraisingHero"
@@ -15,7 +15,13 @@ function isPaidSpartanRow(row: Record<string, unknown>): boolean {
   return row.status === "paid"
 }
 
-export function AthleteLeaderboard({ rows }: { rows: FundraisingHubLeaderRow[] }) {
+export function AthleteLeaderboard({
+  rows,
+  hubTransparency,
+}: {
+  rows: FundraisingHubLeaderRow[]
+  hubTransparency: FundraisingHubTransparencyMeta
+}) {
   const router = useRouter()
 
   useEffect(() => {
@@ -81,7 +87,12 @@ export function AthleteLeaderboard({ rows }: { rows: FundraisingHubLeaderRow[] }
               Athlete leaderboard
             </h2>
             <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/55">
-              Top ten by credited gifts across NC United drives — numbers refresh as checkout clears.
+              Top ten for <strong className="text-white/80">{hubTransparency.campaignDisplayName}</strong> — paid gifts in the
+              last <strong className="tabular-nums text-white/80">{hubTransparency.lookbackDays}</strong> days (
+              <span className="font-mono text-[11px] text-white/45">{hubTransparency.stripeCampaignSlug}</span>
+              ). <strong className="text-white/80">Gifts</strong> = checkout sessions;{" "}
+              <strong className="text-white/80">Donors</strong> = distinct payer emails. Matches the full leaderboard and
+              admin totals for that window (after credit corrections).
             </p>
           </div>
           <HardLink
@@ -135,7 +146,9 @@ export function AthleteLeaderboard({ rows }: { rows: FundraisingHubLeaderRow[] }
                     <p className={`${displayFont("text-lg font-extrabold tabular-nums text-white")}`}>
                       {formatUsdWhole(r.raisedCents)}
                     </p>
-                    <p className="text-xs text-white/50">{r.donorCount} donors</p>
+                    <p className="text-xs text-white/50">
+                      {r.giftCount} gift{r.giftCount === 1 ? "" : "s"} · {r.donorCount} donor{r.donorCount === 1 ? "" : "s"}
+                    </p>
                   </div>
                 </div>
                 <p className="mt-3 truncate text-sm text-white/50">{r.school || "—"}</p>
@@ -161,6 +174,7 @@ export function AthleteLeaderboard({ rows }: { rows: FundraisingHubLeaderRow[] }
                 <th className="px-4 py-4">Athlete</th>
                 <th className="px-4 py-4">School</th>
                 <th className="px-4 py-4 text-right">Raised</th>
+                <th className="px-4 py-4 text-right">Gifts</th>
                 <th className="px-4 py-4 text-right">Donors</th>
                 <th className="min-w-[160px] px-4 py-4">Momentum</th>
               </tr>
@@ -168,7 +182,7 @@ export function AthleteLeaderboard({ rows }: { rows: FundraisingHubLeaderRow[] }
             <tbody className="text-white/88">
               {rows.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-14 text-center text-white/45">
+                  <td colSpan={7} className="px-4 py-14 text-center text-white/45">
                     Paid gifts will populate this board as athletes earn support.
                   </td>
                 </tr>
@@ -208,6 +222,7 @@ export function AthleteLeaderboard({ rows }: { rows: FundraisingHubLeaderRow[] }
                     <td className={`${displayFont("px-4 py-4 text-right text-base font-extrabold tabular-nums text-white")}`}>
                       {formatUsdWhole(r.raisedCents)}
                     </td>
+                    <td className="px-4 py-4 text-right tabular-nums text-white/65">{r.giftCount}</td>
                     <td className="px-4 py-4 text-right tabular-nums text-white/65">{r.donorCount}</td>
                     <td className="px-4 py-4">
                       <div className="h-2.5 overflow-hidden rounded-full bg-black/45">

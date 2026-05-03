@@ -24,11 +24,11 @@ export default async function FundraisingPortalHomePage() {
 
   return (
     <div id="fundraising-hub-root" className="min-h-screen bg-[#0B2545]">
-      <FundraisingHero hero={snapshot.hero} />
+      <FundraisingHero hero={snapshot.hero} hubTransparency={snapshot.hubTransparency} />
       <CorporateSponsors />
       <CampaignCards campaigns={snapshot.campaigns} />
-      <AthleteLeaderboard rows={snapshot.leaderboard} />
-      <DonorActivityFeed initial={snapshot.activity} />
+      <AthleteLeaderboard rows={snapshot.leaderboard} hubTransparency={snapshot.hubTransparency} />
+      <DonorActivityFeed initial={snapshot.activity} hubTransparency={snapshot.hubTransparency} />
       <DonorHallOfFame
         individuals={hallOfFame?.individuals ?? []}
         organizations={hallOfFame?.organizations ?? []}

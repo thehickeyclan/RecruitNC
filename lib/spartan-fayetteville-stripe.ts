@@ -1,5 +1,5 @@
 import Stripe from "stripe"
-import { DEFAULT_FUNDRAISING_CAMPAIGN } from "@/lib/fundraising/campaign-registry"
+import { DEFAULT_FUNDRAISING_CAMPAIGN, stripeSpartanCampaignMetadataMatchesRequested } from "@/lib/fundraising/campaign-registry"
 import { normalizeSpartanPublicAthleteDisplay, scoreSpartanPublicDisplayRichness } from "@/lib/spartan-fundraising-code"
 
 /** @deprecated Prefer `DEFAULT_FUNDRAISING_CAMPAIGN.stripeCampaignSlug` or pass `campaignSlug` into list helpers. */
@@ -93,7 +93,7 @@ export async function listSpartanFayettevilleDonations(
     for (const s of res.data) {
       if (s.payment_status !== "paid") continue
       const m = s.metadata || {}
-      if (m.spartan_campaign !== campaignSlug) continue
+      if (!stripeSpartanCampaignMetadataMatchesRequested(m.spartan_campaign, campaignSlug)) continue
 
       const raceRequested = m.race_entry_requested === "true"
       const ft = m.fundraising_type === "race_donation" ? "race_donation" : "gift_only"

@@ -1,6 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { fundraisingCampaignByStripeSlug, fundraisingCampaignPortalPath } from "@/lib/fundraising/campaign-registry"
+import {
+  DEFAULT_FUNDRAISING_CAMPAIGN,
+  fundraisingCampaignByStripeSlug,
+  fundraisingCampaignPortalPath,
+  hubSpartanDonationRowMatchesCampaign,
+  normalizeRegistryStripeCampaignSlug,
+  type FundraisingCampaignDefinition,
+} from "@/lib/fundraising/campaign-registry"
 import { fundraisingCodeToFullNameMap, getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
 import {
   fetchSpartanCreditCorrectionsIndex,
@@ -47,8 +54,18 @@ export type FundraisingHubLeaderRow = {
   athleteName: string
   school: string
   raisedCents: number
+  /** Paid checkout sessions credited to this athlete (matches `/api/spartan/supporters` gifts). */
+  giftCount: number
+  /** Distinct donor emails in that set (a donor can give more than once). */
   donorCount: number
   progressPct: number
+}
+
+/** Scope for hero, top-10 board, and activity — mirrors public leaderboard + admin default window. */
+export type FundraisingHubTransparencyMeta = {
+  campaignDisplayName: string
+  stripeCampaignSlug: string
+  lookbackDays: number
 }
 
 export type FundraisingHubActivityRow = {
@@ -66,6 +83,7 @@ export type FundraisingHubSnapshot = {
   campaigns: FundraisingHubCampaignCard[]
   leaderboard: FundraisingHubLeaderRow[]
   activity: FundraisingHubActivityRow[]
+  hubTransparency: FundraisingHubTransparencyMeta
 }
 
 const PAGE = 900
@@ -122,21 +140,20 @@ function withEffectiveAthleteCodes(rows: HubDonationRow[], index: SpartanCreditC
   }))
 }
 
-async function fetchRecentActivity(admin: SupabaseClient, limit: number): Promise<HubDonationRow[]> {
-  const { data, error } = await admin
-    .from("spartan_donations")
-    .select(
-      "id, created_at, amount_cents, donor_email, donor_name, athlete_code, athlete_display_name, spartan_campaign, raw_metadata",
-    )
-    .eq("status", "paid")
-    .order("created_at", { ascending: false })
-    .limit(limit)
-
-  if (error) {
-    console.warn("[fundraising/hub-data] activity slice:", error.message)
-    return []
-  }
-  return (data ?? []) as HubDonationRow[]
+/**
+ * Same scope as `listSpartanFayettevilleDonations` + `/api/spartan/supporters`: registry campaign (including
+ * legacy Stripe metadata aliases) and `created_at` within the campaign default lookback.
+ */
+function filterHubRowsForTransparencyWindow(
+  rows: HubDonationRow[],
+  campaign: FundraisingCampaignDefinition,
+): HubDonationRow[] {
+  const cutoffMs = Date.now() - campaign.defaultLookbackDays * 24 * 60 * 60 * 1000
+  return rows.filter((r) => {
+    if (!hubSpartanDonationRowMatchesCampaign(r.spartan_campaign, campaign)) return false
+    const t = new Date(r.created_at).getTime()
+    return Number.isFinite(t) && t >= cutoffMs
+  })
 }
 
 type CampaignDbRow = Record<string, unknown>
@@ -169,8 +186,7 @@ async function fetchActiveCampaignsFromDb(admin: SupabaseClient): Promise<Campai
 function aggregateByCampaign(rows: HubDonationRow[]): Map<string, { raisedCents: number; athletes: Set<string> }> {
   const m = new Map<string, { raisedCents: number; athletes: Set<string> }>()
   for (const r of rows) {
-    const slug = (r.spartan_campaign ?? "").trim()
-    const key = slug || "__unknown__"
+    const key = normalizeRegistryStripeCampaignSlug(r.spartan_campaign)
     let b = m.get(key)
     if (!b) {
       b = { raisedCents: 0, athletes: new Set<string>() }
@@ -217,7 +233,7 @@ function computeLeaderboard(
   codeToFullName: Map<string, string>,
   schoolByCodeLower: Map<string, string>,
 ): FundraisingHubLeaderRow[] {
-  type Agg = { raisedCents: number; donors: Set<string>; displayName: string }
+  type Agg = { raisedCents: number; giftCount: number; donors: Set<string>; displayName: string }
   const byCode = new Map<string, Agg>()
   for (const r of rows) {
     const codeRaw = r.athlete_code?.trim()
@@ -225,10 +241,11 @@ function computeLeaderboard(
     const key = codeRaw.toLowerCase()
     let a = byCode.get(key)
     if (!a) {
-      a = { raisedCents: 0, donors: new Set<string>(), displayName: "" }
+      a = { raisedCents: 0, giftCount: 0, donors: new Set<string>(), displayName: "" }
       byCode.set(key, a)
     }
     a.raisedCents += r.amount_cents ?? 0
+    a.giftCount += 1
     const em = r.donor_email?.trim().toLowerCase()
     if (em) a.donors.add(em)
     const dn = (r.athlete_display_name ?? "").trim()
@@ -254,6 +271,7 @@ function computeLeaderboard(
       athleteName: display,
       school,
       raisedCents: agg.raisedCents,
+      giftCount: agg.giftCount,
       donorCount: agg.donors.size,
       progressPct: Math.min(100, pct),
     }
@@ -318,15 +336,15 @@ function dbRowsToCards(
 export async function buildFundraisingHubSnapshot(admin?: SupabaseClient): Promise<FundraisingHubSnapshot> {
   const client = admin ?? createAdminClient()
 
-  const [allRows, activitySlice, directory, dbCampaigns, correctionIndex] = await Promise.all([
+  const [allRows, directory, dbCampaigns, correctionIndex] = await Promise.all([
     fetchAllPaidHubDonations(client),
-    fetchRecentActivity(client, 20),
     getFundraisingAthleteEntries(client),
     fetchActiveCampaignsFromDb(client),
     fetchSpartanCreditCorrectionsIndex(client),
   ])
 
   const allRowsAdjusted = withEffectiveAthleteCodes(allRows, correctionIndex)
+  const transparencyRows = filterHubRowsForTransparencyWindow(allRowsAdjusted, DEFAULT_FUNDRAISING_CAMPAIGN)
 
   const codeToFullName = fundraisingCodeToFullNameMap(directory)
   const schoolByCodeLower = new Map<string, string>()
@@ -334,22 +352,25 @@ export async function buildFundraisingHubSnapshot(admin?: SupabaseClient): Promi
     schoolByCodeLower.set(e.code.trim().toLowerCase(), schoolFromFundraisingLabel(e.label))
   }
 
-  const hero = computeHero(allRowsAdjusted)
+  const hero = computeHero(transparencyRows)
   const metrics = aggregateByCampaign(allRowsAdjusted)
 
   /** Hub shows only `fundraising_campaigns` rows with status active; otherwise the UI shows year-round giving. */
   const campaigns: FundraisingHubCampaignCard[] =
     dbCampaigns && dbCampaigns.length > 0 ? dbRowsToCards(dbCampaigns, metrics) : []
 
-  const leaderboard = computeLeaderboard(allRowsAdjusted, codeToFullName, schoolByCodeLower)
+  const leaderboard = computeLeaderboard(transparencyRows, codeToFullName, schoolByCodeLower)
 
-  const activitySourceRows = activitySlice.length
-    ? withEffectiveAthleteCodes(activitySlice, correctionIndex)
-    : [...allRowsAdjusted].sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at)).slice(0, 20)
+  const activitySorted = [...transparencyRows].sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at))
+  const activity = rowsToActivity(activitySorted.slice(0, 20))
 
-  const activity = rowsToActivity(activitySourceRows)
+  const hubTransparency: FundraisingHubTransparencyMeta = {
+    campaignDisplayName: DEFAULT_FUNDRAISING_CAMPAIGN.campaignDisplayName,
+    stripeCampaignSlug: DEFAULT_FUNDRAISING_CAMPAIGN.stripeCampaignSlug,
+    lookbackDays: DEFAULT_FUNDRAISING_CAMPAIGN.defaultLookbackDays,
+  }
 
-  return { hero, campaigns, leaderboard, activity }
+  return { hero, campaigns, leaderboard, activity, hubTransparency }
 }
 
 export async function getFundraisingHubSnapshot(): Promise<FundraisingHubSnapshot> {

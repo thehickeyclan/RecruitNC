@@ -4,6 +4,7 @@ import {
   firstNameFromDonorName,
   sendNcuDonationAcknowledgmentEmail,
 } from "@/lib/email/ncu-donation-acknowledgment"
+import { stripeSpartanCampaignMetadataMatchesRequested } from "@/lib/fundraising/campaign-registry"
 import { SPARTAN_FAYETTEVILLE_CAMPAIGN } from "@/lib/spartan-fayetteville-stripe"
 
 function autoAckEnabled() {
@@ -23,7 +24,11 @@ export async function sendFayettevilleDonationAutoAckIfEligible(
 ): Promise<void> {
   if (!autoAckEnabled()) return
   const meta = session.metadata
-  if (meta?.channel !== "spartan" || meta.spartan_campaign !== SPARTAN_FAYETTEVILLE_CAMPAIGN) return
+  if (
+    meta?.channel !== "spartan" ||
+    !stripeSpartanCampaignMetadataMatchesRequested(meta.spartan_campaign, SPARTAN_FAYETTEVILLE_CAMPAIGN)
+  )
+    return
   if (session.payment_status !== "paid") return
   const amountCents = session.amount_total ?? 0
   if (amountCents < 1) return

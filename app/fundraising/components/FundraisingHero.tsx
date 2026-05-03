@@ -1,4 +1,5 @@
-import type { FundraisingHubHeroStats } from "@/lib/fundraising/hub-data"
+import type { FundraisingHubHeroStats, FundraisingHubTransparencyMeta } from "@/lib/fundraising/hub-data"
+import { HardLink } from "@/components/hard-link"
 
 const NAVY = "#0B2545"
 const RED = "#CC0000"
@@ -17,10 +18,16 @@ export function formatUsdWhole(cents: number) {
   }).format(cents / 100)
 }
 
-export function FundraisingHero({ hero }: { hero: FundraisingHubHeroStats }) {
+export function FundraisingHero({
+  hero,
+  hubTransparency,
+}: {
+  hero: FundraisingHubHeroStats
+  hubTransparency: FundraisingHubTransparencyMeta
+}) {
   return (
     <section
-      className="relative overflow-hidden border-b border-white/[0.08] px-4 pb-20 pt-12 sm:pb-28 sm:pt-16"
+      className="relative overflow-hidden border-b border-white/[0.08] px-4 pb-20 pt-12 text-white sm:pb-28 sm:pt-16"
       style={{ backgroundColor: NAVY }}
     >
       {/* Tactical grid + wash */}
@@ -89,6 +96,21 @@ export function FundraisingHero({ hero }: { hero: FundraisingHubHeroStats }) {
           ))}
         </dl>
 
+        <p className="mt-4 max-w-2xl text-xs font-medium leading-relaxed text-white/55 sm:text-sm">
+          Figures above are paid checkouts for{" "}
+          <strong className="text-white/85">{hubTransparency.campaignDisplayName}</strong> in the last{" "}
+          <strong className="tabular-nums text-white/85">{hubTransparency.lookbackDays}</strong> days (Stripe metadata{" "}
+          <span className="font-mono text-[11px] text-white/70">{hubTransparency.stripeCampaignSlug}</span>) — same scope
+          as the{" "}
+          <HardLink
+            href="/fundraising/leaderboard"
+            className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline"
+          >
+            full leaderboard
+          </HardLink>
+          .
+        </p>
+
         <div className="mt-12 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center">
           <a
             href="#fundraising-active-campaigns"
@@ -108,7 +130,7 @@ export function FundraisingHero({ hero }: { hero: FundraisingHubHeroStats }) {
 
         <nav
           aria-label="Jump to hub sections"
-          className="mt-10 flex flex-wrap gap-x-5 gap-y-2 border-t border-white/10 pt-8"
+          className="mt-10 flex flex-wrap gap-x-5 gap-y-2 border-t border-white/10 pt-8 text-white"
         >
           {(
             [
@@ -122,7 +144,7 @@ export function FundraisingHero({ hero }: { hero: FundraisingHubHeroStats }) {
             <a
               key={href}
               href={href}
-              className={`${displayFont("text-[11px] font-extrabold uppercase tracking-[0.18em] text-white/78 underline-offset-4 hover:text-[#C8A94A] hover:underline")}`}
+              className={`${displayFont("text-[11px] font-extrabold uppercase tracking-[0.18em] text-white underline-offset-4 hover:text-[#C8A94A] hover:underline")}`}
             >
               {label}
             </a>

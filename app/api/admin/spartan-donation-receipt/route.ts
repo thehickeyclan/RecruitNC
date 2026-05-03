@@ -17,6 +17,7 @@ import {
 } from "@/lib/email/ncu-donation-acknowledgment"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
+import { stripeSpartanCampaignMetadataMatchesRequested } from "@/lib/fundraising/campaign-registry"
 import { SPARTAN_FAYETTEVILLE_CAMPAIGN } from "@/lib/spartan-fayetteville-stripe"
 
 export const dynamic = "force-dynamic"
@@ -118,7 +119,7 @@ export async function POST(request: NextRequest) {
   if (session.payment_status !== "paid") {
     return NextResponse.json({ error: "Checkout session is not paid." }, { status: 400 })
   }
-  if (session.metadata?.spartan_campaign !== SPARTAN_FAYETTEVILLE_CAMPAIGN) {
+  if (!stripeSpartanCampaignMetadataMatchesRequested(session.metadata?.spartan_campaign, SPARTAN_FAYETTEVILLE_CAMPAIGN)) {
     return NextResponse.json({ error: "Not a Fayetteville Spartan campaign session." }, { status: 400 })
   }
   const expectedTotal = session.amount_total ?? 0
