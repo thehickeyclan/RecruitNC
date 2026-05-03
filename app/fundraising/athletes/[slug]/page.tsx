@@ -5,7 +5,7 @@ import { getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
 import { resolveFundraisingAthletePublic } from "@/lib/fundraising/athlete-fundraising-profiles"
 import { getAthleteFundraisingPublicStats, getAthleteRecentGifts } from "@/lib/fundraising/athlete-public-stats"
 import { HardLink } from "@/components/hard-link"
-import { DEFAULT_FUNDRAISING_CAMPAIGN } from "@/lib/fundraising/campaign-registry"
+import { DEFAULT_FUNDRAISING_CAMPAIGN, FUNDRAISING_GIVE_PAGE_PATH } from "@/lib/fundraising/campaign-registry"
 import { formatUsdWhole } from "@/app/fundraising/components/FundraisingHero"
 
 type Props = { params: Promise<{ slug: string }> }
@@ -54,9 +54,10 @@ export default async function FundraisingAthletePublicPage({ params }: Props) {
       : null
 
   const profile = resolved.profile
+  const checkoutAnchor = "spartan-checkout"
   const giveHref = code
-    ? `${DEFAULT_FUNDRAISING_CAMPAIGN.publicPagePath}?${DEFAULT_FUNDRAISING_CAMPAIGN.athleteQueryParam}=${encodeURIComponent(code)}`
-    : DEFAULT_FUNDRAISING_CAMPAIGN.publicPagePath
+    ? `${FUNDRAISING_GIVE_PAGE_PATH}?${DEFAULT_FUNDRAISING_CAMPAIGN.athleteQueryParam}=${encodeURIComponent(code)}#${checkoutAnchor}`
+    : `${FUNDRAISING_GIVE_PAGE_PATH}#${checkoutAnchor}`
 
   const goalCents = profile?.campaign_goal_cents ?? null
   const raisedForBar = stats?.raisedCents ?? 0
@@ -102,9 +103,18 @@ export default async function FundraisingAthletePublicPage({ params }: Props) {
         ) : null}
 
         <p className="mt-6 max-w-xl text-sm leading-relaxed text-white/75">
-          Support NC United Wrestling (501(c)(3), EIN 99-3757238). Your gift can be credited to this athlete at
-          checkout — search their name or open the button below
-          {code ? " with their code ready." : "."}
+          Support NC United Wrestling (501(c)(3), EIN 99-3757238).{" "}
+          {code ? (
+            <>
+              <strong className="text-white/90">Give now</strong> goes to a <strong className="text-white/90">campaign-neutral checkout</strong>{" "}
+              (not the Spartan landing page), with <strong className="text-white/90">{displayName}</strong> pre-selected ({code}).
+            </>
+          ) : (
+            <>
+              <strong className="text-white/90">Give now</strong> opens year-round checkout. Add an NCU credit code on this profile so gifts
+              route to the right athlete automatically.
+            </>
+          )}
         </p>
 
         <HardLink

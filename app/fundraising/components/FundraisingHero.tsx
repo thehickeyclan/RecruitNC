@@ -63,7 +63,7 @@ export function FundraisingHero({ hero }: { hero: FundraisingHubHeroStats }) {
           NC United <span className="text-[#C8A94A]">×</span> Fundraising
         </h1>
 
-        <p className="mt-6 max-w-2xl text-lg font-medium leading-relaxed text-white/88 sm:text-xl">
+        <p className="mt-6 max-w-2xl text-lg font-medium leading-relaxed text-white sm:text-xl">
           Every gift is tax-deductible and goes directly to NC wrestler development — pool or athlete credit at checkout.
         </p>
 
@@ -77,7 +77,7 @@ export function FundraisingHero({ hero }: { hero: FundraisingHubHeroStats }) {
               key={s.label}
               className="relative overflow-hidden rounded-lg border border-white/12 bg-black/30 pl-5 pr-4 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_20px_50px_-24px_rgba(0,0,0,0.9)] backdrop-blur-sm before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-[#CC0000]"
             >
-              <dt className={`${displayFont("text-[10px] font-bold uppercase tracking-[0.24em] text-white/45")}`}>
+              <dt className={`${displayFont("text-[10px] font-bold uppercase tracking-[0.24em] text-white/80")}`}>
                 {s.label}
               </dt>
               <dd

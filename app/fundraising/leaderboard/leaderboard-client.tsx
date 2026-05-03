@@ -7,6 +7,7 @@ import {
   DEFAULT_FUNDRAISING_CAMPAIGN,
   fundraisingCampaignByStripeSlug,
 } from "@/lib/fundraising/campaign-registry"
+import { fundraisingAthletePublicHrefFromCode } from "@/lib/fundraising/athlete-fundraising-slug"
 
 const NAVY = "#03154C"
 const GOLD = "#CBAF5D"
@@ -251,18 +252,41 @@ export function FundraisingLeaderboardContent({ campaigns }: { campaigns: Leader
                         <td className="px-4 py-3 text-right tabular-nums">{summary.ncUnitedCommunityRaceSignupCount ?? 0}</td>
                       </tr>
                     ) : null}
-                    {sortedAthletes.map((row, i) => (
+                    {sortedAthletes.map((row, i) => {
+                      const athleteHref = fundraisingAthletePublicHrefFromCode(row.athleteCode)
+                      return (
                       <tr key={row.athleteCode} className="border-b border-slate-100 last:border-0">
                         <td className="px-4 py-3 tabular-nums text-slate-500">{i + 1}</td>
                         <td className="px-4 py-3">
-                          <span className="font-medium text-slate-900">{row.athleteName}</span>
-                          <span className="mt-0.5 block font-mono text-[11px] text-slate-400">{row.athleteCode}</span>
+                          {athleteHref ? (
+                            <>
+                              <HardLink
+                                href={athleteHref}
+                                className="block font-medium text-slate-900 underline-offset-4 hover:underline"
+                                style={{ color: NAVY }}
+                              >
+                                {row.athleteName}
+                              </HardLink>
+                              <HardLink
+                                href={athleteHref}
+                                className="mt-0.5 block font-mono text-[11px] text-slate-500 hover:underline"
+                                style={{ color: NAVY }}
+                              >
+                                {row.athleteCode}
+                              </HardLink>
+                            </>
+                          ) : (
+                            <>
+                              <span className="font-medium text-slate-900">{row.athleteName}</span>
+                              <span className="mt-0.5 block font-mono text-[11px] text-slate-400">{row.athleteCode}</span>
+                            </>
+                          )}
                         </td>
                         <td className="px-4 py-3 text-right font-semibold tabular-nums">{formatUsd(row.totalCents)}</td>
                         <td className="px-4 py-3 text-right tabular-nums">{row.donationCount}</td>
                         <td className="px-4 py-3 text-right tabular-nums">{row.raceSignupCount}</td>
                       </tr>
-                    ))}
+                    )})}
                   </tbody>
                 </table>
               </div>

@@ -50,6 +50,8 @@ export type FundraisingHubActivityRow = {
   donorDisplay: string
   amountCents: number
   athleteCredit: string
+  /** NCU code when gift is credited to an athlete — used for link to /fundraising/athletes/[slug]. */
+  athleteCode: string | null
 }
 
 export type FundraisingHubSnapshot = {
@@ -237,16 +239,20 @@ function computeLeaderboard(
 }
 
 function rowsToActivity(rows: HubDonationRow[]): FundraisingHubActivityRow[] {
-  return rows.slice(0, 20).map((r) => ({
-    id: r.id,
-    createdIso: r.created_at,
-    donorDisplay: formatDonorPublic(r.donor_name),
-    amountCents: r.amount_cents ?? 0,
-    athleteCredit:
-      (r.athlete_display_name ?? "").trim() ||
-      (r.athlete_code ? r.athlete_code.trim() : "") ||
-      "NC United general fund",
-  }))
+  return rows.slice(0, 20).map((r) => {
+    const codeRaw = r.athlete_code?.trim() ?? ""
+    return {
+      id: r.id,
+      createdIso: r.created_at,
+      donorDisplay: formatDonorPublic(r.donor_name),
+      amountCents: r.amount_cents ?? 0,
+      athleteCredit:
+        (r.athlete_display_name ?? "").trim() ||
+        (codeRaw ? codeRaw : "") ||
+        "NC United general fund",
+      athleteCode: codeRaw ? codeRaw : null,
+    }
+  })
 }
 
 function dbRowsToCards(
@@ -260,15 +266,24 @@ function dbRowsToCards(
     const raised = m?.raisedCents ?? 0
     const participating = m?.athletes.size ?? 0
     const reg = stripeSlug ? fundraisingCampaignByStripeSlug(stripeSlug) : undefined
+    /** Prefer live checkout (`/spartan`); portal pages remain reachable via direct URLs. */
     const href =
       str(row.public_path) ??
+      reg?.publicPagePath ??
       (reg ? fundraisingCampaignPortalPath(reg) : stripeSlug ? `/fundraising/${stripeSlug}` : "/fundraising")
+    const dbGoal = num(row.goal_cents)
+    const goalCents =
+      dbGoal != null && dbGoal > 0
+        ? dbGoal
+        : reg?.hubDefaultGoalCents != null && reg.hubDefaultGoalCents > 0
+          ? reg.hubDefaultGoalCents
+          : null
     return {
       id: str(row.id) ?? str(row.slug) ?? `campaign-${i}`,
       name: str(row.name) ?? str(row.title) ?? "Campaign",
       partnerLogoUrl: str(row.partner_logo_url),
       heroImageUrl: str(row.hero_image_url) ?? "/images/spartan-race-banner.png",
-      goalCents: num(row.goal_cents),
+      goalCents,
       endsAt: str(row.ends_at),
       raisedCents: raised,
       participatingAthletes: participating,

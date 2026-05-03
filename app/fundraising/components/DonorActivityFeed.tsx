@@ -1,7 +1,9 @@
 "use client"
 
 import { useEffect, useRef, useState, useCallback } from "react"
+import { HardLink } from "@/components/hard-link"
 import type { FundraisingHubActivityRow } from "@/lib/fundraising/hub-data"
+import { fundraisingAthletePublicHrefFromCode } from "@/lib/fundraising/athlete-fundraising-slug"
 import { formatUsdWhole } from "./FundraisingHero"
 
 function displayFont(c: string) {
@@ -19,7 +21,8 @@ function mapRealtimeRow(payload: Record<string, unknown>): FundraisingHubActivit
   const athlete_display_name =
     typeof payload.athlete_display_name === "string" ? payload.athlete_display_name.trim() : ""
   const athlete_code = typeof payload.athlete_code === "string" ? payload.athlete_code.trim() : ""
-  const athleteCredit = athlete_display_name || athlete_code || "NC United general fund"
+  const athleteCredit =
+    athlete_display_name || athlete_code || "NC United general fund"
 
   return {
     id,
@@ -27,6 +30,7 @@ function mapRealtimeRow(payload: Record<string, unknown>): FundraisingHubActivit
     donorDisplay,
     amountCents: amount_cents,
     athleteCredit,
+    athleteCode: athlete_code || null,
   }
 }
 
@@ -142,7 +146,7 @@ export function DonorActivityFeed({ initial }: { initial: FundraisingHubActivity
             Live — updating in real time
           </span>
         </div>
-        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/55">
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/80">
           Last {FEED_LIMIT} paid gifts from checkout, newest first — Supabase realtime + Stripe mirror.
         </p>
 
@@ -164,14 +168,14 @@ export function DonorActivityFeed({ initial }: { initial: FundraisingHubActivity
         >
           <ul className="divide-y divide-white/[0.06]">
             {rows.length === 0 ? (
-              <li className="px-4 py-14 text-center text-sm text-white/45">No gifts logged yet.</li>
+              <li className="px-4 py-14 text-center text-sm text-white/80">No gifts logged yet.</li>
             ) : (
               rows.map((r) => (
                 <li
                   key={r.id}
                   className="flex flex-col gap-2 px-4 py-4 text-sm transition-colors hover:bg-white/[0.03] sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4 sm:gap-y-1"
                 >
-                  <span className="shrink-0 font-mono text-[11px] tabular-nums text-white/35 sm:w-[118px]">
+                  <span className="shrink-0 font-mono text-[11px] tabular-nums text-white sm:w-[118px]">
                     {new Date(r.createdIso).toLocaleString(undefined, {
                       month: "short",
                       day: "numeric",
@@ -179,12 +183,24 @@ export function DonorActivityFeed({ initial }: { initial: FundraisingHubActivity
                       minute: "2-digit",
                     })}
                   </span>
-                  <span className="min-w-0 flex-1 font-semibold text-white/92">{r.donorDisplay}</span>
+                  <span className="min-w-0 flex-1 font-semibold text-white">{r.donorDisplay}</span>
                   <span className={`${displayFont("shrink-0 font-extrabold tabular-nums text-[#C8A94A]")}`}>
                     {formatUsdWhole(r.amountCents)}
                   </span>
-                  <span className="max-w-full truncate text-white/55 sm:max-w-[280px]">
-                    <span className="text-white/35">→</span> {r.athleteCredit}
+                  <span className="max-w-full truncate text-white sm:max-w-[280px]">
+                    <span className="text-white/80">→</span>{" "}
+                    {(() => {
+                      const href = fundraisingAthletePublicHrefFromCode(r.athleteCode)
+                      if (!href) return r.athleteCredit
+                      return (
+                        <HardLink
+                          href={href}
+                          className="font-semibold text-white underline-offset-4 hover:text-[#C8A94A] hover:underline"
+                        >
+                          {r.athleteCredit}
+                        </HardLink>
+                      )
+                    })()}
                   </span>
                 </li>
               ))

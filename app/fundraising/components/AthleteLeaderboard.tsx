@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import type { FundraisingHubLeaderRow } from "@/lib/fundraising/hub-data"
+import { fundraisingAthletePublicHrefFromCode } from "@/lib/fundraising/athlete-fundraising-slug"
 import { HardLink } from "@/components/hard-link"
 import { formatUsdWhole } from "./FundraisingHero"
 
@@ -103,8 +104,29 @@ export function AthleteLeaderboard({ rows }: { rows: FundraisingHubLeaderRow[] }
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <span className={`${displayFont("text-2xl font-black tabular-nums text-[#CC0000]")}`}>{r.rank}</span>
-                    <h3 className="mt-1 font-bold text-white">{r.athleteName}</h3>
-                    <p className="font-mono text-[11px] text-white/35">{r.athleteCode}</p>
+                    {(() => {
+                      const href = fundraisingAthletePublicHrefFromCode(r.athleteCode)
+                      return href ? (
+                        <HardLink
+                          href={href}
+                          className="mt-1 block font-bold text-white underline-offset-4 hover:text-[#C8A94A] hover:underline"
+                        >
+                          {r.athleteName}
+                        </HardLink>
+                      ) : (
+                        <h3 className="mt-1 font-bold text-white">{r.athleteName}</h3>
+                      )
+                    })()}
+                    {(() => {
+                      const href = fundraisingAthletePublicHrefFromCode(r.athleteCode)
+                      return href ? (
+                        <HardLink href={href} className="font-mono text-[11px] text-white/60 hover:text-[#C8A94A] hover:underline">
+                          {r.athleteCode}
+                        </HardLink>
+                      ) : (
+                        <p className="font-mono text-[11px] text-white/35">{r.athleteCode}</p>
+                      )
+                    })()}
                   </div>
                   <div className="text-right">
                     <p className={`${displayFont("text-lg font-extrabold tabular-nums text-white")}`}>
@@ -154,8 +176,30 @@ export function AthleteLeaderboard({ rows }: { rows: FundraisingHubLeaderRow[] }
                       {r.rank}
                     </td>
                     <td className="px-4 py-4">
-                      <span className="font-bold text-white">{r.athleteName}</span>
-                      <span className="mt-0.5 block font-mono text-[11px] text-white/35">{r.athleteCode}</span>
+                      {(() => {
+                        const href = fundraisingAthletePublicHrefFromCode(r.athleteCode)
+                        return href ? (
+                          <>
+                            <HardLink
+                              href={href}
+                              className="block font-bold text-white underline-offset-4 hover:text-[#C8A94A] hover:underline"
+                            >
+                              {r.athleteName}
+                            </HardLink>
+                            <HardLink
+                              href={href}
+                              className="mt-0.5 block font-mono text-[11px] text-white/55 hover:text-[#C8A94A] hover:underline"
+                            >
+                              {r.athleteCode}
+                            </HardLink>
+                          </>
+                        ) : (
+                          <>
+                            <span className="font-bold text-white">{r.athleteName}</span>
+                            <span className="mt-0.5 block font-mono text-[11px] text-white/35">{r.athleteCode}</span>
+                          </>
+                        )
+                      })()}
                     </td>
                     <td className="max-w-[220px] truncate px-4 py-4 text-white/55">{r.school || "—"}</td>
                     <td className={`${displayFont("px-4 py-4 text-right text-base font-extrabold tabular-nums text-white")}`}>

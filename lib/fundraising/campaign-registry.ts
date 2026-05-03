@@ -22,6 +22,11 @@ export type FundraisingCampaignDefinition = {
   /** Deep-link query param for pre-selected athlete (Spartan pattern: `?athlete=NCU-…`). */
   athleteQueryParam: string
   defaultLookbackDays: number
+  /**
+   * When `fundraising_campaigns.goal_cents` is null/0, hub cards use this for progress (cents).
+   * Keeps the public hub honest vs a known campaign target (e.g. $10k Spartan drive).
+   */
+  hubDefaultGoalCents?: number
 }
 
 export const NC_UNITED_FUNDRAISING_BRAND = {
@@ -38,10 +43,17 @@ export const FUNDRAISING_CAMPAIGNS = [
     publicPagePath: "/spartan",
     athleteQueryParam: "athlete",
     defaultLookbackDays: 120,
+    hubDefaultGoalCents: 1_000_000,
   },
 ] as const satisfies readonly FundraisingCampaignDefinition[]
 
 export const DEFAULT_FUNDRAISING_CAMPAIGN: FundraisingCampaignDefinition = FUNDRAISING_CAMPAIGNS[0]
+
+/**
+ * Campaign-agnostic checkout (hub branding only). Same `/api/spartan/checkout` + metadata as `/spartan`.
+ * Use for athlete pages and anywhere you want giving without the Spartan landing experience.
+ */
+export const FUNDRAISING_GIVE_PAGE_PATH = "/fundraising/give"
 
 export function fundraisingCampaignByContextKey(key: string): FundraisingCampaignDefinition | undefined {
   return FUNDRAISING_CAMPAIGNS.find((c) => c.adminContextKey === key)

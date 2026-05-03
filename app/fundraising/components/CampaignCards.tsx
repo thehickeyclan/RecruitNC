@@ -62,7 +62,10 @@ export function CampaignCards({ campaigns }: { campaigns: FundraisingHubCampaign
           <ul className="mt-16 grid gap-10 md:grid-cols-2">
             {campaigns.map((c) => {
               const goal = c.goalCents && c.goalCents > 0 ? c.goalCents : null
-              const pct = goal ? Math.min(100, Math.round((c.raisedCents / goal) * 100)) : null
+              const pctOfGoal =
+                goal && goal > 0 ? Math.round((c.raisedCents / goal) * 100) : null
+              const barPct = pctOfGoal != null ? Math.min(100, pctOfGoal) : null
+              const overGoal = pctOfGoal != null && pctOfGoal > 100
               const days = daysRemaining(c.endsAt)
               return (
                 <li
@@ -108,7 +111,13 @@ export function CampaignCards({ campaigns }: { campaigns: FundraisingHubCampaign
                       <div className="flex flex-wrap justify-between gap-2 text-sm text-white/55">
                         <span className="font-semibold text-white/80">{formatUsdWhole(c.raisedCents)} raised</span>
                         {goal ? (
-                          <span className="tabular-nums">{formatUsdWhole(goal)} goal</span>
+                          overGoal ? (
+                            <span className="text-right font-semibold text-[#C8A94A]">
+                              Over goal · {pctOfGoal}% ({formatUsdWhole(goal)} target)
+                            </span>
+                          ) : (
+                            <span className="tabular-nums">{formatUsdWhole(goal)} goal</span>
+                          )
                         ) : (
                           <span className="italic text-white/40">Open goal</span>
                         )}
@@ -117,9 +126,11 @@ export function CampaignCards({ campaigns }: { campaigns: FundraisingHubCampaign
                         <div
                           className="h-full rounded-full transition-[width] duration-500"
                           style={{
-                            width: pct != null ? `${pct}%` : "100%",
-                            background: `linear-gradient(90deg, ${GOLD}, ${NAVY})`,
-                            opacity: pct != null ? 1 : 0.3,
+                            width: barPct != null ? `${barPct}%` : "100%",
+                            background: overGoal
+                              ? "linear-gradient(90deg, #22c55e, #C8A94A)"
+                              : `linear-gradient(90deg, ${GOLD}, ${NAVY})`,
+                            opacity: barPct != null ? 1 : 1,
                           }}
                         />
                       </div>
