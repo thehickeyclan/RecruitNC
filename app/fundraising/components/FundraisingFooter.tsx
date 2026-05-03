@@ -55,7 +55,7 @@ export function FundraisingFooter() {
               href="/fundraising#fundraising-donor-hall-of-fame"
               className={`${displayFont("text-[11px] font-extrabold uppercase tracking-[0.18em] text-white/70 hover:text-[#C8A94A]")}`}
             >
-              Donor hall of fame →
+              Supporter honor roll →
             </HardLink>
             <HardLink
               href="/fundraising/playbook"

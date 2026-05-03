@@ -123,7 +123,10 @@ export function DonorActivityFeed({ initial }: { initial: FundraisingHubActivity
   }, [rows.length])
 
   return (
-    <section className="border-b border-white/[0.06] bg-[#061224] px-4 py-20 sm:py-24">
+    <section
+      id="fundraising-activity"
+      className="scroll-mt-28 border-b border-white/[0.06] bg-[#061224] px-4 py-20 sm:py-24"
+    >
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-baseline sm:justify-between">
           <div>

@@ -251,12 +251,12 @@ export default async function FundraisingAthletePublicPage({ params }: Props) {
         {code && stats && (stats.giftCount > 0 || stats.raisedCents > 0) ? (
           <div className="mt-12 rounded-xl border border-white/10 bg-[#0B2545]/70 px-5 py-5">
             <h2 className="font-[family-name:var(--font-fundraising-display)] text-sm font-bold uppercase tracking-wide text-[#C8A94A]">
-              Credit to this athlete (Stripe mirror)
+              Credit to this athlete
             </h2>
             <p className="mt-3 text-2xl font-black tabular-nums text-white">{formatUsdWhole(stats.raisedCents)}</p>
             <p className="mt-1 text-sm text-white/55">{stats.giftCount} gifts recorded to this NCU code</p>
             <p className="mt-2 text-xs text-white/40">
-              Totals mirror paid checkouts. Admin credit corrections may adjust public leaderboards separately.
+              Paid gifts credited to this code after staff adjustments (for example, moving a gift to the NC United general fund) are excluded here, same as the fundraising hub leaderboard.
             </p>
           </div>
         ) : code ? (

@@ -105,6 +105,29 @@ export function FundraisingHero({ hero }: { hero: FundraisingHubHeroStats }) {
             </span>
           </div>
         </div>
+
+        <nav
+          aria-label="Jump to hub sections"
+          className="mt-10 flex flex-wrap gap-x-5 gap-y-2 border-t border-white/10 pt-8"
+        >
+          {(
+            [
+              ["#fundraising-corporate-sponsors", "Partners"],
+              ["#fundraising-active-campaigns", "Campaigns"],
+              ["#fundraising-leaderboard", "Leaderboard"],
+              ["#fundraising-activity", "Recent gifts"],
+              ["#fundraising-donor-hall-of-fame", "Honor roll"],
+            ] as const
+          ).map(([href, label]) => (
+            <a
+              key={href}
+              href={href}
+              className={`${displayFont("text-[11px] font-extrabold uppercase tracking-[0.18em] text-white/78 underline-offset-4 hover:text-[#C8A94A] hover:underline")}`}
+            >
+              {label}
+            </a>
+          ))}
+        </nav>
       </div>
     </section>
   )

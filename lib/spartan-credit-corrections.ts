@@ -63,29 +63,85 @@ export async function fetchSpartanCreditCorrectionsMap(admin: SupabaseClient): P
   return idx.athleteBySessionOrPi
 }
 
+export type SpartanDonationLedgerRow = {
+  /** Checkout session id (`cs_…`) — same as `spartan_donations.id`. */
+  id: string
+  athlete_code: string | null
+  /** Webhook persists `stripe_payment_intent_id` here for PI-keyed corrections. */
+  raw_metadata?: unknown
+}
+
+export function stripePaymentIntentIdFromDonationRawMetadata(raw: unknown): string | null {
+  if (!raw || typeof raw !== "object") return null
+  const v = (raw as Record<string, unknown>).stripe_payment_intent_id
+  return typeof v === "string" && v.trim() ? v.trim() : null
+}
+
+/** True when ops marked this checkout / PI as NC United general fund (not an individual credit). */
+export function matchesGeneralFundLedgerIds(
+  sessionId: string,
+  paymentIntentId: string | null,
+  generalFundSessionOrPi: Set<string>,
+): boolean {
+  const sid = sessionId?.trim()
+  if (sid && generalFundSessionOrPi.has(sid)) return true
+  const pi = paymentIntentId?.trim()
+  if (pi && generalFundSessionOrPi.has(pi)) return true
+  return false
+}
+
+/**
+ * Effective credited NCU code for a `spartan_donations` row — same outcome as applying
+ * `applySpartanCreditCorrectionsToDonations` on live Stripe rows (general fund + re-credit).
+ */
+export function effectiveAthleteCodeForDonationLedgerRow(
+  row: SpartanDonationLedgerRow,
+  index: SpartanCreditCorrectionsIndex,
+): string | null {
+  const sid = (row.id ?? "").trim()
+  const pi = stripePaymentIntentIdFromDonationRawMetadata(row.raw_metadata)
+  if (matchesGeneralFundLedgerIds(sid, pi, index.generalFundSessionOrPi)) return null
+  const corrected = correctionAthleteCodeFromIndex(sid, pi, index.athleteBySessionOrPi)
+  if (corrected) return corrected.toUpperCase()
+  const raw = row.athlete_code?.trim()
+  return raw ? raw.toUpperCase() : null
+}
+
+function correctionAthleteCodeFromIndex(
+  sessionId: string,
+  paymentIntentId: string | null,
+  sessionIdOrPiToAthleteCode: Map<string, string>,
+): string | undefined {
+  const bySession = sessionIdOrPiToAthleteCode.get(sessionId)
+  if (bySession?.trim()) return bySession.trim()
+  const pi = paymentIntentId?.trim()
+  if (pi) {
+    const byPi = sessionIdOrPiToAthleteCode.get(pi)
+    if (byPi?.trim()) return byPi.trim()
+  }
+  return undefined
+}
+
 function matchesGeneralFund(
   r: SpartanFayettevilleDonation,
   generalFundSessionOrPi: Set<string>,
 ): boolean {
-  const sid = r.sessionId?.trim()
-  if (sid && generalFundSessionOrPi.has(sid)) return true
-  const pi = r.paymentIntentId?.trim()
-  if (pi && generalFundSessionOrPi.has(pi)) return true
-  return false
+  return matchesGeneralFundLedgerIds(
+    (r.sessionId ?? "").trim(),
+    r.paymentIntentId?.trim() ?? null,
+    generalFundSessionOrPi,
+  )
 }
 
 function correctionCodeForRow(
   r: SpartanFayettevilleDonation,
   sessionIdOrPiToAthleteCode: Map<string, string>,
 ): string | undefined {
-  const bySession = sessionIdOrPiToAthleteCode.get(r.sessionId)
-  if (bySession?.trim()) return bySession.trim()
-  const pi = r.paymentIntentId?.trim()
-  if (pi) {
-    const byPi = sessionIdOrPiToAthleteCode.get(pi)
-    if (byPi?.trim()) return byPi.trim()
-  }
-  return undefined
+  return correctionAthleteCodeFromIndex(
+    (r.sessionId ?? "").trim(),
+    r.paymentIntentId?.trim() ?? null,
+    sessionIdOrPiToAthleteCode,
+  )
 }
 
 export function applySpartanCreditCorrectionsToDonations(

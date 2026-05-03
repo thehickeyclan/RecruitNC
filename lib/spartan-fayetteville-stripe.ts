@@ -18,6 +18,8 @@ export type SpartanFayettevilleDonation = {
   /** Stripe metadata `spartan_notification_email` — where Spartan sends race codes (may differ from payer; parent is common). */
   spartanNotificationEmail: string | null
   donorName: string | null
+  /** Opt-in public list (`donor_list_public` metadata). */
+  donorListPublic: boolean
   /** Stripe metadata — org payers listed in company hall of fame when they opt in to public name */
   payerType: "person" | "organization"
   raceParticipant: boolean

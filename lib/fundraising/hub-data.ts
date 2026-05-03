@@ -2,6 +2,11 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { fundraisingCampaignByStripeSlug, fundraisingCampaignPortalPath } from "@/lib/fundraising/campaign-registry"
 import { fundraisingCodeToFullNameMap, getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
+import {
+  fetchSpartanCreditCorrectionsIndex,
+  effectiveAthleteCodeForDonationLedgerRow,
+  type SpartanCreditCorrectionsIndex,
+} from "@/lib/spartan-credit-corrections"
 
 /** Paid Spartan rows mirrored from Stripe (`spartan_donations`). Not the generic `donations` table. */
 export type HubDonationRow = {
@@ -13,6 +18,8 @@ export type HubDonationRow = {
   athlete_code: string | null
   athlete_display_name: string | null
   spartan_campaign: string | null
+  /** Present when synced from Stripe webhook — used for PI-keyed credit corrections. */
+  raw_metadata?: unknown
 }
 
 export type FundraisingHubHeroStats = {
@@ -81,7 +88,9 @@ async function fetchAllPaidHubDonations(admin: SupabaseClient): Promise<HubDonat
   for (;;) {
     const { data, error } = await admin
       .from("spartan_donations")
-      .select("id, created_at, amount_cents, donor_email, donor_name, athlete_code, athlete_display_name, spartan_campaign")
+      .select(
+        "id, created_at, amount_cents, donor_email, donor_name, athlete_code, athlete_display_name, spartan_campaign, raw_metadata",
+      )
       .eq("status", "paid")
       .order("created_at", { ascending: true })
       .range(from, from + PAGE - 1)
@@ -102,10 +111,23 @@ async function fetchAllPaidHubDonations(admin: SupabaseClient): Promise<HubDonat
   return out
 }
 
+function withEffectiveAthleteCodes(rows: HubDonationRow[], index: SpartanCreditCorrectionsIndex): HubDonationRow[] {
+  if (index.athleteBySessionOrPi.size === 0 && index.generalFundSessionOrPi.size === 0) return rows
+  return rows.map((r) => ({
+    ...r,
+    athlete_code: effectiveAthleteCodeForDonationLedgerRow(
+      { id: r.id, athlete_code: r.athlete_code, raw_metadata: r.raw_metadata },
+      index,
+    ),
+  }))
+}
+
 async function fetchRecentActivity(admin: SupabaseClient, limit: number): Promise<HubDonationRow[]> {
   const { data, error } = await admin
     .from("spartan_donations")
-    .select("id, created_at, amount_cents, donor_email, donor_name, athlete_code, athlete_display_name, spartan_campaign")
+    .select(
+      "id, created_at, amount_cents, donor_email, donor_name, athlete_code, athlete_display_name, spartan_campaign, raw_metadata",
+    )
     .eq("status", "paid")
     .order("created_at", { ascending: false })
     .limit(limit)
@@ -241,15 +263,15 @@ function computeLeaderboard(
 function rowsToActivity(rows: HubDonationRow[]): FundraisingHubActivityRow[] {
   return rows.slice(0, 20).map((r) => {
     const codeRaw = r.athlete_code?.trim() ?? ""
+    const athleteCredit = !codeRaw
+      ? "NC United general fund"
+      : (r.athlete_display_name ?? "").trim() || codeRaw || "NC United general fund"
     return {
       id: r.id,
       createdIso: r.created_at,
       donorDisplay: formatDonorPublic(r.donor_name),
       amountCents: r.amount_cents ?? 0,
-      athleteCredit:
-        (r.athlete_display_name ?? "").trim() ||
-        (codeRaw ? codeRaw : "") ||
-        "NC United general fund",
+      athleteCredit,
       athleteCode: codeRaw ? codeRaw : null,
     }
   })
@@ -296,12 +318,15 @@ function dbRowsToCards(
 export async function buildFundraisingHubSnapshot(admin?: SupabaseClient): Promise<FundraisingHubSnapshot> {
   const client = admin ?? createAdminClient()
 
-  const [allRows, activitySlice, directory, dbCampaigns] = await Promise.all([
+  const [allRows, activitySlice, directory, dbCampaigns, correctionIndex] = await Promise.all([
     fetchAllPaidHubDonations(client),
     fetchRecentActivity(client, 20),
     getFundraisingAthleteEntries(client),
     fetchActiveCampaignsFromDb(client),
+    fetchSpartanCreditCorrectionsIndex(client),
   ])
+
+  const allRowsAdjusted = withEffectiveAthleteCodes(allRows, correctionIndex)
 
   const codeToFullName = fundraisingCodeToFullNameMap(directory)
   const schoolByCodeLower = new Map<string, string>()
@@ -309,18 +334,20 @@ export async function buildFundraisingHubSnapshot(admin?: SupabaseClient): Promi
     schoolByCodeLower.set(e.code.trim().toLowerCase(), schoolFromFundraisingLabel(e.label))
   }
 
-  const hero = computeHero(allRows)
-  const metrics = aggregateByCampaign(allRows)
+  const hero = computeHero(allRowsAdjusted)
+  const metrics = aggregateByCampaign(allRowsAdjusted)
 
   /** Hub shows only `fundraising_campaigns` rows with status active; otherwise the UI shows year-round giving. */
   const campaigns: FundraisingHubCampaignCard[] =
     dbCampaigns && dbCampaigns.length > 0 ? dbRowsToCards(dbCampaigns, metrics) : []
 
-  const leaderboard = computeLeaderboard(allRows, codeToFullName, schoolByCodeLower)
+  const leaderboard = computeLeaderboard(allRowsAdjusted, codeToFullName, schoolByCodeLower)
 
-  const activity = rowsToActivity(
-    activitySlice.length ? activitySlice : [...allRows].sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at)),
-  )
+  const activitySourceRows = activitySlice.length
+    ? withEffectiveAthleteCodes(activitySlice, correctionIndex)
+    : [...allRowsAdjusted].sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at)).slice(0, 20)
+
+  const activity = rowsToActivity(activitySourceRows)
 
   return { hero, campaigns, leaderboard, activity }
 }

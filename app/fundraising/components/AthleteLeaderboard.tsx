@@ -65,7 +65,10 @@ export function AthleteLeaderboard({ rows }: { rows: FundraisingHubLeaderRow[] }
   }, [router])
 
   return (
-    <section className="border-y border-white/[0.06] bg-[#040f22] px-4 py-20 sm:py-24">
+    <section
+      id="fundraising-leaderboard"
+      className="scroll-mt-28 border-y border-white/[0.06] bg-[#040f22] px-4 py-20 sm:py-24"
+    >
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
