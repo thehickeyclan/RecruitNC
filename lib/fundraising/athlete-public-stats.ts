@@ -3,6 +3,10 @@ import {
   fetchSpartanCreditCorrectionsIndex,
   effectiveAthleteCodeForDonationLedgerRow,
 } from "@/lib/spartan-credit-corrections"
+import { DEFAULT_FUNDRAISING_CAMPAIGN } from "@/lib/fundraising/campaign-registry"
+import { loadCorrectedStripeDonationsForCampaignWindow } from "@/lib/fundraising/stripe-transparency-pipeline"
+import { attachPublicSupporterFields } from "@/lib/spartan-public-supporter-feed"
+import { fundraisingCodeToFullNameMap, getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
 
 const CODE_RE = /^NCU-[A-Za-z0-9]+-\d{2}$/i
 
@@ -31,12 +35,27 @@ function mergeDonationRows(target: Map<string, DonationSelectRow>, batch: Donati
 }
 
 /**
- * Paid `spartan_donations` credited to this NCU code **after** `spartan_credit_corrections`
- * (e.g. gifts realigned to NC United general fund no longer count toward the athlete).
+ * Paid gifts credited to this NCU code for the default Spartan campaign lookback window — sourced from **live Stripe**
+ * with the same corrections as `/spartan` and the fundraising hub. If `STRIPE_SECRET_KEY` is missing or listing fails,
+ * falls back to `spartan_donations` (mirror may lag Stripe).
  */
 export async function getAthleteFundraisingPublicStats(code: string): Promise<AthleteFundraisingPublicStats | null> {
   const c = code.trim().toUpperCase()
   if (!CODE_RE.test(c)) return null
+
+  const corrected = await loadCorrectedStripeDonationsForCampaignWindow(DEFAULT_FUNDRAISING_CAMPAIGN)
+  if (corrected != null) {
+    let raisedCents = 0
+    let giftCount = 0
+    for (const r of corrected) {
+      if ((r.athleteCode ?? "").trim().toUpperCase() === c) {
+        raisedCents += r.amountCents
+        giftCount += 1
+      }
+    }
+    return { raisedCents, giftCount }
+  }
+
   const admin = createAdminClient()
   const idx = await fetchSpartanCreditCorrectionsIndex(admin)
 
@@ -110,6 +129,23 @@ export type AthleteRecentGiftRow = {
 export async function getAthleteRecentGifts(code: string, limit: number): Promise<AthleteRecentGiftRow[]> {
   const c = code.trim().toUpperCase()
   if (!CODE_RE.test(c)) return []
+
+  const corrected = await loadCorrectedStripeDonationsForCampaignWindow(DEFAULT_FUNDRAISING_CAMPAIGN)
+  if (corrected != null) {
+    const admin = createAdminClient()
+    const entries = await getFundraisingAthleteEntries(admin)
+    const codeToFullName = fundraisingCodeToFullNameMap(entries)
+    const enriched = attachPublicSupporterFields(corrected, codeToFullName)
+    const mine = enriched.filter((r) => (r.athleteCode ?? "").trim().toUpperCase() === c)
+    mine.sort((a, b) => b.createdUnix - a.createdUnix)
+    const lim = Math.min(50, Math.max(1, limit))
+    return mine.slice(0, lim).map((r) => ({
+      created_at: r.createdIso,
+      donorLabel: r.publicDisplayName?.trim() ? r.publicDisplayName.trim() : "Supporter",
+      amountCents: r.amountCents,
+    }))
+  }
+
   const admin = createAdminClient()
   const idx = await fetchSpartanCreditCorrectionsIndex(admin)
 

@@ -14,6 +14,12 @@ import {
   effectiveAthleteCodeForDonationLedgerRow,
   type SpartanCreditCorrectionsIndex,
 } from "@/lib/spartan-credit-corrections"
+import { loadCorrectedStripeDonationsForCampaignWindow } from "@/lib/fundraising/stripe-transparency-pipeline"
+import {
+  attachPublicSupporterFields,
+  type SpartanDonationWithPublicFields,
+} from "@/lib/spartan-public-supporter-feed"
+import type { SpartanFayettevilleDonation } from "@/lib/spartan-fayetteville-stripe"
 
 /** Paid Spartan rows mirrored from Stripe (`spartan_donations`). Not the generic `donations` table. */
 export type HubDonationRow = {
@@ -199,6 +205,53 @@ function aggregateByCampaign(rows: HubDonationRow[]): Map<string, { raisedCents:
   return m
 }
 
+function hubDonationRowsFromStripeDonations(rows: SpartanFayettevilleDonation[]): HubDonationRow[] {
+  return rows.map((r) => ({
+    id: r.sessionId,
+    created_at: r.createdIso,
+    amount_cents: r.amountCents,
+    donor_email: r.donorEmail,
+    donor_name: r.donorName,
+    athlete_code: r.athleteCode,
+    athlete_display_name: r.athleteDisplayName,
+    spartan_campaign: null,
+    raw_metadata: undefined,
+  }))
+}
+
+function computeHeroFromStripeRows(rows: SpartanFayettevilleDonation[]): FundraisingHubHeroStats {
+  let totalRaisedCents = 0
+  const donorEmails = new Set<string>()
+  const athleteCodes = new Set<string>()
+  for (const r of rows) {
+    totalRaisedCents += r.amountCents
+    const em = r.donorEmail?.trim().toLowerCase()
+    if (em) donorEmails.add(em)
+    const code = r.athleteCode?.trim()
+    if (code) athleteCodes.add(code.toLowerCase())
+  }
+  return {
+    totalRaisedCents,
+    totalDonors: donorEmails.size,
+    athletesFunded: athleteCodes.size,
+  }
+}
+
+function stripeEnrichedToActivity(rows: SpartanDonationWithPublicFields[]): FundraisingHubActivityRow[] {
+  return rows.map((r) => {
+    const codeRaw = r.athleteCode?.trim() ?? ""
+    const label = (r.creditLabel ?? "").trim()
+    return {
+      id: r.sessionId,
+      createdIso: r.createdIso,
+      donorDisplay: formatDonorPublic(r.publicDisplayName),
+      amountCents: r.amountCents,
+      athleteCredit: !codeRaw ? "NC United general fund" : label || codeRaw,
+      athleteCode: codeRaw ? r.athleteCode!.trim() : null,
+    }
+  })
+}
+
 function computeHero(rows: HubDonationRow[]): FundraisingHubHeroStats {
   let totalRaisedCents = 0
   const donorEmails = new Set<string>()
@@ -344,7 +397,6 @@ export async function buildFundraisingHubSnapshot(admin?: SupabaseClient): Promi
   ])
 
   const allRowsAdjusted = withEffectiveAthleteCodes(allRows, correctionIndex)
-  const transparencyRows = filterHubRowsForTransparencyWindow(allRowsAdjusted, DEFAULT_FUNDRAISING_CAMPAIGN)
 
   const codeToFullName = fundraisingCodeToFullNameMap(directory)
   const schoolByCodeLower = new Map<string, string>()
@@ -352,17 +404,38 @@ export async function buildFundraisingHubSnapshot(admin?: SupabaseClient): Promi
     schoolByCodeLower.set(e.code.trim().toLowerCase(), schoolFromFundraisingLabel(e.label))
   }
 
-  const hero = computeHero(transparencyRows)
+  const stripeTransparencyRows = await loadCorrectedStripeDonationsForCampaignWindow(
+    DEFAULT_FUNDRAISING_CAMPAIGN,
+    correctionIndex,
+  )
+
+  let hero: FundraisingHubHeroStats
+  let leaderboard: FundraisingHubLeaderRow[]
+  let activity: FundraisingHubActivityRow[]
+
+  if (stripeTransparencyRows != null) {
+    hero = computeHeroFromStripeRows(stripeTransparencyRows)
+    leaderboard = computeLeaderboard(
+      hubDonationRowsFromStripeDonations(stripeTransparencyRows),
+      codeToFullName,
+      schoolByCodeLower,
+    )
+    const enriched = attachPublicSupporterFields(stripeTransparencyRows, codeToFullName)
+    const actSorted = [...enriched].sort((a, b) => b.createdUnix - a.createdUnix)
+    activity = stripeEnrichedToActivity(actSorted.slice(0, 20))
+  } else {
+    const transparencyRows = filterHubRowsForTransparencyWindow(allRowsAdjusted, DEFAULT_FUNDRAISING_CAMPAIGN)
+    hero = computeHero(transparencyRows)
+    leaderboard = computeLeaderboard(transparencyRows, codeToFullName, schoolByCodeLower)
+    const activitySorted = [...transparencyRows].sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at))
+    activity = rowsToActivity(activitySorted.slice(0, 20))
+  }
+
   const metrics = aggregateByCampaign(allRowsAdjusted)
 
   /** Hub shows only `fundraising_campaigns` rows with status active; otherwise the UI shows year-round giving. */
   const campaigns: FundraisingHubCampaignCard[] =
     dbCampaigns && dbCampaigns.length > 0 ? dbRowsToCards(dbCampaigns, metrics) : []
-
-  const leaderboard = computeLeaderboard(transparencyRows, codeToFullName, schoolByCodeLower)
-
-  const activitySorted = [...transparencyRows].sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at))
-  const activity = rowsToActivity(activitySorted.slice(0, 20))
 
   const hubTransparency: FundraisingHubTransparencyMeta = {
     campaignDisplayName: DEFAULT_FUNDRAISING_CAMPAIGN.campaignDisplayName,

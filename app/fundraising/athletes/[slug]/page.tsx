@@ -254,9 +254,17 @@ export default async function FundraisingAthletePublicPage({ params }: Props) {
               Credit to this athlete
             </h2>
             <p className="mt-3 text-2xl font-black tabular-nums text-white">{formatUsdWhole(stats.raisedCents)}</p>
-            <p className="mt-1 text-sm text-white/55">{stats.giftCount} gifts recorded to this NCU code</p>
+            <p className="mt-1 text-sm text-white/55">
+              {stats.giftCount} paid gift{stats.giftCount === 1 ? "" : "s"} in the last{" "}
+              {DEFAULT_FUNDRAISING_CAMPAIGN.defaultLookbackDays}-day window ({DEFAULT_FUNDRAISING_CAMPAIGN.campaignDisplayName}
+              ). Totals come from live Stripe (same roll-up as the Spartan supporter board), not the database mirror.
+            </p>
             <p className="mt-2 text-xs text-white/40">
-              Paid gifts credited to this code after staff adjustments (for example, moving a gift to the NC United general fund) are excluded here, same as the fundraising hub leaderboard.
+              Staff credit adjustments (for example, moving a gift to the NC United general fund) apply the same way as on{" "}
+              <HardLink href="/spartan" className="text-[#C8A94A] underline-offset-4 hover:underline">
+                /spartan
+              </HardLink>
+              .
             </p>
           </div>
         ) : code ? (
