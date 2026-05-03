@@ -266,10 +266,10 @@ function dbRowsToCards(
     const raised = m?.raisedCents ?? 0
     const participating = m?.athletes.size ?? 0
     const reg = stripeSlug ? fundraisingCampaignByStripeSlug(stripeSlug) : undefined
-    /** Prefer live checkout (`/spartan`); portal pages remain reachable via direct URLs. */
+    /** Prefer registry public page (e.g. `/spartan`) over DB `public_path` so hub cards match live checkout. */
     const href =
-      str(row.public_path) ??
       reg?.publicPagePath ??
+      str(row.public_path) ??
       (reg ? fundraisingCampaignPortalPath(reg) : stripeSlug ? `/fundraising/${stripeSlug}` : "/fundraising")
     const dbGoal = num(row.goal_cents)
     const goalCents =

@@ -1,8 +1,6 @@
 import type { Metadata } from "next"
 import { HardLink } from "@/components/hard-link"
-import { getFundraisingHubSnapshot } from "@/lib/fundraising/hub-data"
 import { FundraisingGiveCheckout } from "./fundraising-give-checkout"
-import { GiveFeaturedCampaign } from "./give-featured-campaign"
 
 export const metadata: Metadata = {
   title: "Give | NC United Fundraising",
@@ -11,10 +9,6 @@ export const metadata: Metadata = {
 }
 
 export default async function FundraisingGivePage() {
-  const { campaigns } = await getFundraisingHubSnapshot()
-  const featuredCampaign = campaigns[0] ?? null
-  const additionalActiveCount = Math.max(0, campaigns.length - 1)
-
   return (
     <div
       className="min-h-screen bg-[#061224] text-white"
@@ -45,26 +39,15 @@ export default async function FundraisingGivePage() {
           Make a gift
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-white/75">
-          {featuredCampaign ? (
-            <>
-              <span className="font-semibold text-white/88">Active drive below.</span> You can open that campaign, or stay on this
-              page to <strong className="text-white/90">support an athlete</strong> (named credit) or{" "}
-              <strong className="text-white/90">donate to the NC United Training Fund</strong> — same tax-deductible checkout ($5
-              minimum). Share <span className="font-mono text-sm text-white/90">?athlete=NCU-…</span> to pre-select a wrestler.
-            </>
-          ) : (
-            <>
-              <strong className="text-white/88">Support an athlete</strong> with a named credit at checkout, or{" "}
-              <strong className="text-white/88">donate to the NC United Training Fund</strong>. All gifts are tax-deductible ($5
-              minimum). Share <span className="font-mono text-sm text-white/90">?athlete=NCU-…</span> to pre-select a wrestler.
-            </>
-          )}
+          <strong className="text-white/88">Support an athlete</strong> with a named credit at checkout, or{" "}
+          <strong className="text-white/88">donate to the NC United Training Fund</strong>. All gifts are tax-deductible ($5
+          minimum). Share <span className="font-mono text-sm text-white/90">?athlete=NCU-…</span> on{" "}
+          <HardLink href="/spartan" className="font-mono text-sm text-[#C8A94A] underline-offset-4 hover:underline">
+            /spartan
+          </HardLink>{" "}
+          to pre-select a wrestler.
         </p>
       </header>
-
-      {featuredCampaign ? (
-        <GiveFeaturedCampaign campaign={featuredCampaign} additionalActiveCount={additionalActiveCount} />
-      ) : null}
 
       <FundraisingGiveCheckout />
 

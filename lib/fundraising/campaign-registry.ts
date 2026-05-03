@@ -50,8 +50,8 @@ export const FUNDRAISING_CAMPAIGNS = [
 export const DEFAULT_FUNDRAISING_CAMPAIGN: FundraisingCampaignDefinition = FUNDRAISING_CAMPAIGNS[0]
 
 /**
- * Campaign-agnostic checkout (hub branding only). Same `/api/spartan/checkout` + metadata as `/spartan`.
- * Use for athlete pages and anywhere you want giving without the Spartan landing experience.
+ * Campaign-agnostic checkout (hub branding). Same `/api/spartan/checkout` + metadata as `/spartan`.
+ * Athlete donor pages (`/fundraising/athletes/...`) deep-link to `/spartan` with `?athlete=…`.
  */
 export const FUNDRAISING_GIVE_PAGE_PATH = "/fundraising/give"
 

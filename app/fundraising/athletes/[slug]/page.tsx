@@ -1,12 +1,25 @@
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
+import QRCode from "qrcode"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
 import { resolveFundraisingAthletePublic } from "@/lib/fundraising/athlete-fundraising-profiles"
 import { getAthleteFundraisingPublicStats, getAthleteRecentGifts } from "@/lib/fundraising/athlete-public-stats"
 import { HardLink } from "@/components/hard-link"
-import { DEFAULT_FUNDRAISING_CAMPAIGN, FUNDRAISING_GIVE_PAGE_PATH } from "@/lib/fundraising/campaign-registry"
+import { DEFAULT_FUNDRAISING_CAMPAIGN } from "@/lib/fundraising/campaign-registry"
 import { formatUsdWhole } from "@/app/fundraising/components/FundraisingHero"
+
+function publicGiftSiteOrigin(): string {
+  const u = (
+    process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.NEXT_PUBLIC_BASE_URL ||
+    ""
+  ).trim()
+  if (u) return u.replace(/\/$/, "")
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`
+  return "http://localhost:3000"
+}
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -55,9 +68,13 @@ export default async function FundraisingAthletePublicPage({ params }: Props) {
 
   const profile = resolved.profile
   const checkoutAnchor = "spartan-checkout"
+  const giveBase = DEFAULT_FUNDRAISING_CAMPAIGN.publicPagePath
+  const athleteQ = DEFAULT_FUNDRAISING_CAMPAIGN.athleteQueryParam
   const giveHref = code
-    ? `${FUNDRAISING_GIVE_PAGE_PATH}?${DEFAULT_FUNDRAISING_CAMPAIGN.athleteQueryParam}=${encodeURIComponent(code)}#${checkoutAnchor}`
-    : `${FUNDRAISING_GIVE_PAGE_PATH}#${checkoutAnchor}`
+    ? `${giveBase}?${athleteQ}=${encodeURIComponent(code)}#${checkoutAnchor}`
+    : `${giveBase}#${checkoutAnchor}`
+  const giveAbsoluteUrl = `${publicGiftSiteOrigin()}${giveHref}`
+  const giveQrDataUrl = await QRCode.toDataURL(giveAbsoluteUrl, { margin: 1, width: 220, errorCorrectionLevel: "M" })
 
   const goalCents = profile?.campaign_goal_cents ?? null
   const raisedForBar = stats?.raisedCents ?? 0
@@ -106,13 +123,13 @@ export default async function FundraisingAthletePublicPage({ params }: Props) {
           Support NC United Wrestling (501(c)(3), EIN 99-3757238).{" "}
           {code ? (
             <>
-              <strong className="text-white/90">Give now</strong> goes to a <strong className="text-white/90">campaign-neutral checkout</strong>{" "}
-              (not the Spartan landing page), with <strong className="text-white/90">{displayName}</strong> pre-selected ({code}).
+              <strong className="text-white/90">Give now</strong> opens secure checkout on{" "}
+              <strong className="text-white/90">/spartan</strong> with <strong className="text-white/90">{displayName}</strong> pre-selected ({code}).
             </>
           ) : (
             <>
-              <strong className="text-white/90">Give now</strong> opens year-round checkout. Add an NCU credit code on this profile so gifts
-              route to the right athlete automatically.
+              <strong className="text-white/90">Give now</strong> opens year-round checkout on <strong className="text-white/90">/spartan</strong>.
+              Add an NCU credit code on this profile so share links credit the right athlete automatically.
             </>
           )}
         </p>
@@ -123,6 +140,23 @@ export default async function FundraisingAthletePublicPage({ params }: Props) {
         >
           Give now
         </HardLink>
+
+        <div className="mt-8 rounded-xl border border-white/10 bg-white p-4 text-center shadow-[0_12px_40px_-12px_rgba(0,0,0,0.45)]">
+          <p className="font-[family-name:var(--font-fundraising-display)] text-[11px] font-bold uppercase tracking-[0.2em] text-[#061224]/70">
+            Scan to give
+          </p>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={giveQrDataUrl}
+            alt={`Open NC United checkout for ${displayName}`}
+            className="mx-auto mt-3 h-[220px] w-[220px]"
+            width={220}
+            height={220}
+          />
+          <p className="mx-auto mt-3 max-w-[240px] text-center font-mono text-[10px] leading-snug text-[#061224]/55 break-all">
+            {giveAbsoluteUrl}
+          </p>
+        </div>
 
         {goalCents != null && goalCents > 0 ? (
           <div className="mt-10 rounded-xl border border-white/10 bg-[#0B2545]/70 px-5 py-5">
