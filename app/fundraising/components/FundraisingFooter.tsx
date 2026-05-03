@@ -51,6 +51,18 @@ export function FundraisingFooter() {
             >
               Corporate partners →
             </HardLink>
+            <HardLink
+              href="/fundraising#fundraising-donor-hall-of-fame"
+              className={`${displayFont("text-[11px] font-extrabold uppercase tracking-[0.18em] text-white/70 hover:text-[#C8A94A]")}`}
+            >
+              Donor hall of fame →
+            </HardLink>
+            <HardLink
+              href="/fundraising/playbook"
+              className={`${displayFont("text-[11px] font-extrabold uppercase tracking-[0.18em] text-white/70 hover:text-[#C8A94A]")}`}
+            >
+              Staff — RecruitNC sign-in →
+            </HardLink>
           </p>
         </div>
       </div>

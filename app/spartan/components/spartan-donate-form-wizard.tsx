@@ -114,6 +114,8 @@ export function SpartanDonateFormWizard({ fundraisingHub = false }: { fundraisin
   const [donorName, setDonorName] = useState("")
   /** Optional: person at the org (thank-yous) when receipt is a business name */
   const [payerContactName, setPayerContactName] = useState("")
+  /** Stripe metadata payer_type — drives company vs individual hall of fame */
+  const [receiptIsOrganization, setReceiptIsOrganization] = useState(false)
   const [donorListPublic, setDonorListPublic] = useState(true)
   const [fundraisingCode, setFundraisingCode] = useState("")
 
@@ -713,6 +715,7 @@ export function SpartanDonateFormWizard({ fundraisingHub = false }: { fundraisin
             : {}),
           ...(flow === "race" && raceParticipant ? { raceParticipantName: raceParticipant } : {}),
           ...(flow === "race" && regForStripe ? { raceRegistrationEmail: regForStripe } : {}),
+          ...(receiptIsOrganization ? { payerType: "organization" } : {}),
         }),
       })
       const data = await res.json().catch(() => ({}))
@@ -1067,6 +1070,18 @@ export function SpartanDonateFormWizard({ fundraisingHub = false }: { fundraisin
               className={`mt-1.5 min-h-[48px] w-full border px-3 py-2.5 text-base text-white focus:outline-none ${dField} ${dFocus} ${ringInvalid("spartan-donor-name-d")}`}
             />
             <p className="mt-1.5 text-[11px] text-[#666]">Individual or org — as it should read on the receipt.</p>
+            <label className="mt-4 flex cursor-pointer items-start gap-3 text-sm text-[#ccc]">
+              <input
+                type="checkbox"
+                checked={receiptIsOrganization}
+                onChange={(e) => setReceiptIsOrganization(e.target.checked)}
+                className="mt-1 h-4 w-4 shrink-0 rounded border border-[#555] accent-[#C8A94A]"
+              />
+              <span>
+                Receipt is for a <strong className="text-[#e5e5e5]">company or organization</strong> (hall of fame lists
+                you under companies when your name is public).
+              </span>
+            </label>
           </div>
           <div>
             <label htmlFor="spartan-donor-email-d" className="text-sm font-medium text-[#ccc]">
@@ -1172,6 +1187,11 @@ export function SpartanDonateFormWizard({ fundraisingHub = false }: { fundraisin
             <li>
               <span className="text-[#666]">Receipt name:</span> {donorName || "—"}
             </li>
+            {receiptIsOrganization ? (
+              <li>
+                <span className="text-[#666]">Receipt type:</span> Organization
+              </li>
+            ) : null}
             <li>
               <span className="text-[#666]">Email:</span> {email}
             </li>
@@ -1216,6 +1236,17 @@ export function SpartanDonateFormWizard({ fundraisingHub = false }: { fundraisin
               className={`mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white focus:border-[#CC0000] focus:outline-none ${ringInvalid("spartan-race-donor-name")}`}
             />
             <p className="mt-1.5 text-[11px] text-[#666]">Individual or org — as it should read on the receipt.</p>
+            <label className="mt-4 flex cursor-pointer items-start gap-3 text-sm text-[#ccc]">
+              <input
+                type="checkbox"
+                checked={receiptIsOrganization}
+                onChange={(e) => setReceiptIsOrganization(e.target.checked)}
+                className="mt-1 h-4 w-4 shrink-0 rounded border border-[#555] accent-[#C8A94A]"
+              />
+              <span>
+                Receipt is for a <strong className="text-[#e5e5e5]">company or organization</strong>.
+              </span>
+            </label>
           </div>
           <div>
             <label htmlFor="spartan-race-donor-email" className="text-sm font-medium text-[#ccc]">
@@ -1534,6 +1565,9 @@ export function SpartanDonateFormWizard({ fundraisingHub = false }: { fundraisin
           <ul className="mt-2 space-y-1.5 text-sm text-[#ccc]">
             <li>
               <span className="text-[#666]">Payer:</span> {donorName} · {email}
+              {receiptIsOrganization ? (
+                <span className="block text-[11px] text-[#888] sm:inline sm:before:content-['·_']">Organization receipt</span>
+              ) : null}
             </li>
             {payerContactName.trim() && (
               <li>

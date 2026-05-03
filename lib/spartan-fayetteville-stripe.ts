@@ -18,8 +18,8 @@ export type SpartanFayettevilleDonation = {
   /** Stripe metadata `spartan_notification_email` — where Spartan sends race codes (may differ from payer; parent is common). */
   spartanNotificationEmail: string | null
   donorName: string | null
-  /** From metadata donor_list_public — false = show as Anonymous on public lists */
-  donorListPublic: boolean
+  /** Stripe metadata — org payers listed in company hall of fame when they opt in to public name */
+  payerType: "person" | "organization"
   raceParticipant: boolean
   fundraisingType: "race_donation" | "gift_only"
   athleteCode: string | null
@@ -142,6 +142,10 @@ export async function listSpartanFayettevilleDonations(
         attr = "general_nc_united"
       }
 
+      const payerTypeRaw = typeof m.payer_type === "string" ? m.payer_type.trim().toLowerCase() : ""
+      const payerType: SpartanFayettevilleDonation["payerType"] =
+        payerTypeRaw === "organization" || payerTypeRaw === "org" ? "organization" : "person"
+
       rows.push({
         sessionId: s.id,
         paymentIntentId: paymentIntentIdFromSession(s),
@@ -153,6 +157,7 @@ export async function listSpartanFayettevilleDonations(
         spartanNotificationEmail,
         donorName: typeof m.donor_name === "string" && m.donor_name.trim() ? m.donor_name.trim() : null,
         donorListPublic: parseDonorListPublic(m),
+        payerType,
         raceParticipant: raceRequested,
         fundraisingType: ft,
         athleteCode,

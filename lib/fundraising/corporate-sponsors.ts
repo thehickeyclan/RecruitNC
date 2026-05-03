@@ -16,7 +16,7 @@ export const CORPORATE_SPONSORS: readonly CorporateSponsor[] = [
   {
     id: "the-guild",
     name: "The Guild",
-    logoSrc: "/images/sponsors/the-guild-brand.jpg",
+    logoSrc: "/images/sponsors/the-guild-logo.jpg",
     logoAlt: "The Guild — train with Division I wrestlers",
     href: "https://theguildwrestling.com",
   },

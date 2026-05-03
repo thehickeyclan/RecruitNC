@@ -74,6 +74,8 @@ export function SpartanDonateFormClassic() {
   const [raceParticipantName, setRaceParticipantName] = useState("")
   /** Public supporter list shows name; false = anonymous on /api/spartan/supporters */
   const [donorListPublic, setDonorListPublic] = useState(true)
+  /** Stripe payer_type — company / org hall of fame when name is public */
+  const [receiptIsOrganization, setReceiptIsOrganization] = useState(false)
   const [fundraisingCode, setFundraisingCode] = useState("")
   /** Race vs donate first */
   const [flow, setFlow] = useState<"race" | "donate" | null>(null)
@@ -395,6 +397,7 @@ export function SpartanDonateFormClassic() {
           ...(flow === "race" && raceParticipantName.trim()
             ? { raceParticipantName: raceParticipantName.trim() }
             : {}),
+          ...(receiptIsOrganization ? { payerType: "organization" } : {}),
         }),
       })
       const data = await res.json().catch(() => ({}))
@@ -608,6 +611,18 @@ export function SpartanDonateFormClassic() {
                 aria-invalid={fieldHighlights.includes("spartan-donor-name")}
                 className={`mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white placeholder:text-[#555] focus:border-[#5a8ab0] focus:outline-none focus:ring-1 focus:ring-[#5a8ab0] ${ringInvalid("spartan-donor-name")}`}
               />
+              <label className="mt-3 flex cursor-pointer items-start gap-3 text-sm text-[#ccc]">
+                <input
+                  type="checkbox"
+                  checked={receiptIsOrganization}
+                  onChange={(e) => setReceiptIsOrganization(e.target.checked)}
+                  className="mt-1 h-4 w-4 shrink-0 rounded border border-[#555] accent-[#5a8ab0]"
+                />
+                <span>
+                  Receipt is for a <strong className="text-[#e5e5e5]">company or organization</strong> (hall of fame —
+                  companies — when your name is public).
+                </span>
+              </label>
             </div>
             <div>
               <label htmlFor="spartan-donor-email" className="text-sm font-medium text-[#ccc]">

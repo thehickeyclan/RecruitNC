@@ -7,6 +7,8 @@ import { DonorActivityFeed } from "./components/DonorActivityFeed"
 import { HowItWorks } from "./components/HowItWorks"
 import { FundraisingFooter } from "./components/FundraisingFooter"
 import { CorporateSponsors } from "./components/CorporateSponsors"
+import { DonorHallOfFame } from "./components/DonorHallOfFame"
+import { fetchDonorHallOfFameFromStripe } from "@/lib/fundraising/donor-hall-of-fame"
 
 export const metadata: Metadata = {
   title: "Fundraising | NC United Wrestling",
@@ -15,12 +17,19 @@ export const metadata: Metadata = {
 }
 
 export default async function FundraisingPortalHomePage() {
-  const snapshot = await getFundraisingHubSnapshot()
+  const [snapshot, hallOfFame] = await Promise.all([
+    getFundraisingHubSnapshot(),
+    fetchDonorHallOfFameFromStripe(),
+  ])
 
   return (
     <div id="fundraising-hub-root" className="min-h-screen bg-[#0B2545]">
       <FundraisingHero hero={snapshot.hero} />
       <CorporateSponsors />
+      <DonorHallOfFame
+        individuals={hallOfFame?.individuals ?? []}
+        organizations={hallOfFame?.organizations ?? []}
+      />
       <CampaignCards campaigns={snapshot.campaigns} />
       <AthleteLeaderboard rows={snapshot.leaderboard} />
       <DonorActivityFeed initial={snapshot.activity} />
