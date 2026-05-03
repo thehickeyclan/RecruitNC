@@ -43,6 +43,13 @@ export default async function FundraisingPlaybookGatePage() {
           Fundraising playbook
         </h1>
         <p className="mt-4 text-sm leading-relaxed text-white/75">
+          Looking for the <strong className="text-white">athlete and family playbook</strong> (how to ask, matching gifts, donor types)?{" "}
+          <HardLink href="/fundraising/playbook/guide" className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
+            Read the full guide here
+          </HardLink>{" "}
+          — no admin access required.
+        </p>
+        <p className="mt-4 text-sm leading-relaxed text-white/75">
           You&apos;re signed in as <span className="font-medium text-white/90">{user.email}</span>. The NC United
           fundraising playbook (donor CRM, exports, and ops tools) is available only to{" "}
           <strong className="text-white">RecruitNC administrators</strong>.

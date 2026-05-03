@@ -34,6 +34,12 @@ export function FundraisingFooter() {
           </p>
           <p className="flex flex-col gap-2 pt-2 border-t border-white/10 sm:flex-row sm:flex-wrap sm:gap-x-6">
             <HardLink
+              href="/fundraising/playbook/guide"
+              className={`${displayFont("text-[11px] font-extrabold uppercase tracking-[0.18em] text-white/70 hover:text-[#C8A94A]")}`}
+            >
+              Fundraising playbook (guide) →
+            </HardLink>
+            <HardLink
               href="/fundraising/athletes"
               className={`${displayFont("text-[11px] font-extrabold uppercase tracking-[0.18em] text-white/70 hover:text-[#C8A94A]")}`}
             >
@@ -43,7 +49,7 @@ export function FundraisingFooter() {
               href="/fundraising/playbook"
               className={`${displayFont("text-[11px] font-extrabold uppercase tracking-[0.18em] text-white/70 hover:text-[#C8A94A]")}`}
             >
-              NC United staff → Fundraising playbook (RecruitNC sign-in)
+              Staff — RecruitNC sign-in →
             </HardLink>
           </p>
         </div>
