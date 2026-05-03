@@ -51,7 +51,7 @@ export const DEFAULT_FUNDRAISING_CAMPAIGN: FundraisingCampaignDefinition = FUNDR
 
 /**
  * Campaign-agnostic checkout (hub branding). Same `/api/spartan/checkout` + metadata as `/spartan`.
- * Athlete donor pages (`/fundraising/athletes/...`) deep-link to `/spartan` with `?athlete=…`.
+ * Public athlete donor pages (`/fundraising/athletes/...`) use this path so gifts are not routed through the `/spartan` landing.
  */
 export const FUNDRAISING_GIVE_PAGE_PATH = "/fundraising/give"
 

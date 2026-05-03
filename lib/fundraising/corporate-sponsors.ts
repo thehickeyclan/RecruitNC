@@ -18,6 +18,13 @@ export const CORPORATE_SPONSORS: readonly CorporateSponsor[] = [
     name: "The Guild",
     logoSrc: "/images/sponsors/the-guild-logo.jpg",
     logoAlt: "The Guild — train with Division I wrestlers",
-    href: "https://theguildwrestling.com",
+    href: "https://www.wrestlingguild.com",
+  },
+  {
+    id: "submission-solutions",
+    name: "Submission Solutions",
+    logoSrc: "/images/sponsors/submission-solutions-logo.png",
+    logoAlt: "Submission Solutions — athlete hygiene and training care",
+    href: "https://submission-solutions.com",
   },
 ] as const

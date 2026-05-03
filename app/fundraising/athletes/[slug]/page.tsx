@@ -6,8 +6,38 @@ import { getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
 import { resolveFundraisingAthletePublic } from "@/lib/fundraising/athlete-fundraising-profiles"
 import { getAthleteFundraisingPublicStats, getAthleteRecentGifts } from "@/lib/fundraising/athlete-public-stats"
 import { HardLink } from "@/components/hard-link"
-import { DEFAULT_FUNDRAISING_CAMPAIGN } from "@/lib/fundraising/campaign-registry"
+import { DEFAULT_FUNDRAISING_CAMPAIGN, FUNDRAISING_GIVE_PAGE_PATH } from "@/lib/fundraising/campaign-registry"
 import { formatUsdWhole } from "@/app/fundraising/components/FundraisingHero"
+
+const PLACEHOLDER_ATHLETE_PHOTOS = new Set<string>(["/wrestler-silhouette.png"])
+
+function isUsablePublicAthletePhoto(raw: string | null | undefined): boolean {
+  const u = (raw ?? "").trim()
+  if (!u || PLACEHOLDER_ATHLETE_PHOTOS.has(u)) return false
+  return true
+}
+
+function recruitingPhotoFromAthleteRow(row: {
+  image_url?: string | null
+  photourl?: string | null
+  photo_url?: string | null
+}): string | null {
+  for (const k of ["image_url", "photourl", "photo_url"] as const) {
+    const v = row[k]
+    if (isUsablePublicAthletePhoto(v)) return v!.trim()
+  }
+  return null
+}
+
+async function fetchRecruitingProfilePhoto(admin: ReturnType<typeof createAdminClient>, athleteId: string): Promise<string | null> {
+  const { data, error } = await admin
+    .from("athletes")
+    .select("image_url, photourl, photo_url")
+    .eq("id", athleteId)
+    .maybeSingle()
+  if (error || !data) return null
+  return recruitingPhotoFromAthleteRow(data as { image_url?: string | null; photourl?: string | null; photo_url?: string | null })
+}
 
 function publicGiftSiteOrigin(): string {
   const u = (
@@ -55,10 +85,14 @@ export default async function FundraisingAthletePublicPage({ params }: Props) {
   if (!resolved) notFound()
 
   const code = resolved.code
-  const [stats, recent] =
-    code != null
-      ? await Promise.all([getAthleteFundraisingPublicStats(code), getAthleteRecentGifts(code, 12)])
-      : [null, []]
+  const athleteId = resolved.profile?.athlete_id ?? resolved.entry?.id ?? null
+  const profile = resolved.profile
+
+  const [stats, recent, recruitingPhotoUrl] = await Promise.all([
+    code != null ? getAthleteFundraisingPublicStats(code) : Promise.resolve(null),
+    code != null ? getAthleteRecentGifts(code, 12) : Promise.resolve([]),
+    athleteId ? fetchRecruitingProfilePhoto(admin, athleteId) : Promise.resolve(null),
+  ])
 
   const displayName = publicTitleName(resolved)
   const schoolLine =
@@ -66,15 +100,25 @@ export default async function FundraisingAthletePublicPage({ params }: Props) {
       ? resolved.entry.label.split("·").slice(1).join("·").trim()
       : null
 
-  const profile = resolved.profile
+  const viewProfileHref = athleteId ? `/view-profile?id=${encodeURIComponent(athleteId)}` : null
+  const rawFundraisingPhoto = profile?.photo_url?.trim() ?? null
+  const fundraisingPhoto =
+    rawFundraisingPhoto && isUsablePublicAthletePhoto(rawFundraisingPhoto) ? rawFundraisingPhoto : null
+  const heroPhotoSrc = recruitingPhotoUrl ?? fundraisingPhoto
+  /** Shared with `/fundraising/give` so the embedded wizard can scroll to checkout. */
   const checkoutAnchor = "spartan-checkout"
-  const giveBase = DEFAULT_FUNDRAISING_CAMPAIGN.publicPagePath
   const athleteQ = DEFAULT_FUNDRAISING_CAMPAIGN.athleteQueryParam
+  /** Campaign-agnostic gift flow only — not `/spartan` race landing. */
   const giveHref = code
-    ? `${giveBase}?${athleteQ}=${encodeURIComponent(code)}#${checkoutAnchor}`
-    : `${giveBase}#${checkoutAnchor}`
+    ? `${FUNDRAISING_GIVE_PAGE_PATH}?${athleteQ}=${encodeURIComponent(code)}#${checkoutAnchor}`
+    : `${FUNDRAISING_GIVE_PAGE_PATH}#${checkoutAnchor}`
   const giveAbsoluteUrl = `${publicGiftSiteOrigin()}${giveHref}`
-  const giveQrDataUrl = await QRCode.toDataURL(giveAbsoluteUrl, { margin: 1, width: 220, errorCorrectionLevel: "M" })
+  const qrPixelSize = 144
+  const giveQrDataUrl = await QRCode.toDataURL(giveAbsoluteUrl, {
+    margin: 1,
+    width: qrPixelSize,
+    errorCorrectionLevel: "M",
+  })
 
   const goalCents = profile?.campaign_goal_cents ?? null
   const raisedForBar = stats?.raisedCents ?? 0
@@ -98,19 +142,43 @@ export default async function FundraisingAthletePublicPage({ params }: Props) {
           NC United — donor page
         </p>
 
-        {profile?.photo_url ? (
-          <div className="mt-6 overflow-hidden rounded-xl border border-white/10 bg-[#0B2545]/50">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={profile.photo_url}
-              alt=""
-              className="h-auto max-h-[min(420px,55vh)] w-full object-cover object-top"
-            />
-          </div>
+        {heroPhotoSrc ? (
+          viewProfileHref ? (
+            <HardLink
+              href={viewProfileHref}
+              className="group mt-6 block overflow-hidden rounded-xl border border-white/10 bg-[#0B2545]/50 outline-none ring-offset-2 ring-offset-[#061224] focus-visible:ring-2 focus-visible:ring-[#C8A94A]"
+              aria-label={`View ${displayName} recruiting profile on RecruitNC`}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={heroPhotoSrc}
+                alt=""
+                className="h-auto max-h-[min(420px,55vh)] w-full object-cover object-top transition duration-300 group-hover:opacity-92"
+              />
+            </HardLink>
+          ) : (
+            <div className="mt-6 overflow-hidden rounded-xl border border-white/10 bg-[#0B2545]/50">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={heroPhotoSrc}
+                alt=""
+                className="h-auto max-h-[min(420px,55vh)] w-full object-cover object-top"
+              />
+            </div>
+          )
         ) : null}
 
         <h1 className="font-[family-name:var(--font-fundraising-display)] mt-6 text-3xl font-black uppercase leading-tight tracking-tight text-white sm:text-4xl">
-          {displayName}
+          {viewProfileHref ? (
+            <HardLink
+              href={viewProfileHref}
+              className="text-white decoration-[#C8A94A] decoration-2 underline-offset-4 hover:text-[#C8A94A] hover:underline"
+            >
+              {displayName}
+            </HardLink>
+          ) : (
+            displayName
+          )}
         </h1>
         {schoolLine ? <p className="mt-2 text-base text-white/65">{schoolLine}</p> : null}
         {code ? <p className="mt-2 font-mono text-xs text-white/40">{code}</p> : null}
@@ -123,12 +191,13 @@ export default async function FundraisingAthletePublicPage({ params }: Props) {
           Support NC United Wrestling (501(c)(3), EIN 99-3757238).{" "}
           {code ? (
             <>
-              <strong className="text-white/90">Give now</strong> opens secure checkout on{" "}
-              <strong className="text-white/90">/spartan</strong> with <strong className="text-white/90">{displayName}</strong> pre-selected ({code}).
+              <strong className="text-white/90">Give now</strong> opens our <strong className="text-white/90">campaign-neutral</strong>,{" "}
+              tax-deductible checkout with <strong className="text-white/90">{displayName}</strong> pre-selected ({code}) — the same flow as the
+              fundraising hub, not a race signup page.
             </>
           ) : (
             <>
-              <strong className="text-white/90">Give now</strong> opens year-round checkout on <strong className="text-white/90">/spartan</strong>.
+              <strong className="text-white/90">Give now</strong> opens the same year-round, campaign-neutral checkout as the hub.
               Add an NCU credit code on this profile so share links credit the right athlete automatically.
             </>
           )}
@@ -141,19 +210,22 @@ export default async function FundraisingAthletePublicPage({ params }: Props) {
           Give now
         </HardLink>
 
-        <div className="mt-8 rounded-xl border border-white/10 bg-white p-4 text-center shadow-[0_12px_40px_-12px_rgba(0,0,0,0.45)]">
-          <p className="font-[family-name:var(--font-fundraising-display)] text-[11px] font-bold uppercase tracking-[0.2em] text-[#061224]/70">
+        <div className="mx-auto mt-8 max-w-[220px] rounded-xl border border-white/10 bg-white px-3 py-3 text-center shadow-[0_12px_40px_-12px_rgba(0,0,0,0.45)]">
+          <p className="font-[family-name:var(--font-fundraising-display)] text-[10px] font-bold uppercase tracking-[0.18em] text-[#061224]/70">
             Scan to give
+          </p>
+          <p className="mx-auto mt-1 max-w-[200px] text-center text-[10px] leading-snug text-[#061224]/50">
+            Same link as Give now · campaign-neutral checkout
           </p>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={giveQrDataUrl}
-            alt={`Open NC United checkout for ${displayName}`}
-            className="mx-auto mt-3 h-[220px] w-[220px]"
-            width={220}
-            height={220}
+            alt={`Open NC United donation checkout for ${displayName}`}
+            className="mx-auto mt-2 h-36 w-36"
+            width={144}
+            height={144}
           />
-          <p className="mx-auto mt-3 max-w-[240px] text-center font-mono text-[10px] leading-snug text-[#061224]/55 break-all">
+          <p className="mx-auto mt-2 max-w-[200px] text-center font-mono text-[9px] leading-snug text-[#061224]/55 break-all">
             {giveAbsoluteUrl}
           </p>
         </div>
@@ -215,7 +287,17 @@ export default async function FundraisingAthletePublicPage({ params }: Props) {
         ) : null}
 
         <p className="mt-12 border-t border-white/10 pt-8 text-xs text-white/45">
-          College recruiting bios live elsewhere on RecruitNC. This page is only for NC United fundraising.
+          {viewProfileHref ? (
+            <>
+              <strong className="font-semibold text-white/55">Recruiting profile:</strong> use the name or photo link for commitments,
+              school info, and match history on RecruitNC. This page is NC United fundraising only.
+            </>
+          ) : (
+            <>
+              College recruiting bios live elsewhere on RecruitNC when we can match this page to an athlete id. This page is only
+              for NC United fundraising.
+            </>
+          )}
         </p>
       </div>
     </div>
