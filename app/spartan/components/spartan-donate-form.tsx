@@ -4,6 +4,11 @@ import { useSearchParams } from "next/navigation"
 import { SpartanDonateFormClassic } from "./spartan-donate-form-classic"
 import { SpartanDonateFormWizard } from "./spartan-donate-form-wizard"
 
+type SpartanDonateFormProps = {
+  /** When true (e.g. `/fundraising/give`): donate-only entry, hub palette — no Race vs Donate split. */
+  fundraisingHub?: boolean
+}
+
 /**
  * Default: step-by-step wizard. Fallback to single-page (last shipped pre-wizard UI), same `/api/spartan/checkout`:
  * - `?classic=1` or `?checkout=classic` or `?form=classic` (share link: `/spartan?classic=1#spartan-checkout`)
@@ -11,7 +16,7 @@ import { SpartanDonateFormWizard } from "./spartan-donate-form-wizard"
  *
  * `SpartanDonateForm` must stay inside `<Suspense>` (see donation-section) because of `useSearchParams`.
  */
-export function SpartanDonateForm() {
+export function SpartanDonateForm({ fundraisingHub = false }: SpartanDonateFormProps) {
   const searchParams = useSearchParams()
   const fromQuery =
     searchParams.get("classic") === "1" ||
@@ -37,5 +42,5 @@ export function SpartanDonateForm() {
       </>
     )
   }
-  return <SpartanDonateFormWizard />
+  return <SpartanDonateFormWizard fundraisingHub={fundraisingHub} />
 }

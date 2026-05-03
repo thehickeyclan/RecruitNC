@@ -106,8 +106,9 @@ function scrollToCheckout() {
   })
 }
 
-export function SpartanDonateFormWizard() {
+export function SpartanDonateFormWizard({ fundraisingHub = false }: { fundraisingHub?: boolean }) {
   const searchParams = useSearchParams()
+  const fh = Boolean(fundraisingHub)
 
   const [email, setEmail] = useState("")
   const [donorName, setDonorName] = useState("")
@@ -244,8 +245,16 @@ export function SpartanDonateFormWizard() {
       setDonateMode("athlete")
       setDonateStep(1)
       setAmountDollars("50")
+      return
     }
-  }, [searchParams])
+    if (fundraisingHub) {
+      setFlow("donate")
+      setTierPreference("")
+      setDonateMode("athlete")
+      setDonateStep(1)
+      setAmountDollars("50")
+    }
+  }, [searchParams, fundraisingHub])
 
   useEffect(() => {
     const q = athleteQuery.trim()
@@ -729,9 +738,14 @@ export function SpartanDonateFormWizard() {
       ? donateMode !== null && (donateMode === "general" || hasAthleteCredit) && donateStep === 6
       : flow === "race" && raceFor !== null && raceStep === RACE_STEPS
 
+  const ringOff = fh ? "ring-offset-[#061224]" : "ring-offset-[#0a0a0a]"
+  const dField = fh ? "border-white/20 bg-[#061224]" : "border-[#444] bg-[#0A0A0A]"
+  const dPh = fh ? "placeholder:text-white/40" : "placeholder:text-[#555]"
+  const dFocus = fh ? "focus:border-[#C8A94A]" : "focus:border-[#5a8ab0]"
+
   const ringInvalid = (id: string) =>
     fieldHighlights.includes(id)
-      ? "ring-2 ring-amber-500/90 ring-offset-2 ring-offset-[#0a0a0a] border-amber-500/50"
+      ? `ring-2 ring-amber-500/90 ring-offset-2 ${ringOff} border-amber-500/50`
       : ""
 
   const dismissHighlight = (id: string) => setFieldHighlights((f) => f.filter((x) => x !== id))
@@ -741,52 +755,58 @@ export function SpartanDonateFormWizard() {
       onSubmit={submit}
       className="mx-auto mt-6 max-w-lg px-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-left sm:mt-8 sm:px-0"
     >
-      <div className="rounded-lg border border-[#333] bg-[#141414] p-3 sm:p-4">
-        <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#888]">Start here</p>
-        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="flex flex-col gap-1.5">
-            <button
-              type="button"
-              onClick={goToRace}
-              className={`min-h-[48px] rounded border px-3 py-3 text-center text-sm font-bold leading-tight transition-colors ${
-                flow === "race"
-                  ? "border-[#CC0000] bg-[#2a1515] text-white"
-                  : "border-[#444] bg-[#0A0A0A] text-[#ccc] hover:border-[#666]"
-              }`}
-            >
-              Race
-            </button>
-            <p className="text-[10px] leading-snug text-[#777]">
-              Spartan distance + <strong className="text-[#999]">credit a wrestler</strong>. You get registration follow-up{" "}
-              <strong className="text-[#999]">after</strong> you pay.
-            </p>
+      {!fundraisingHub && (
+        <div className="rounded-lg border border-[#333] bg-[#141414] p-3 sm:p-4">
+          <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#888]">Start here</p>
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <button
+                type="button"
+                onClick={goToRace}
+                className={`min-h-[48px] rounded border px-3 py-3 text-center text-sm font-bold leading-tight transition-colors ${
+                  flow === "race"
+                    ? "border-[#CC0000] bg-[#2a1515] text-white"
+                    : "border-[#444] bg-[#0A0A0A] text-[#ccc] hover:border-[#666]"
+                }`}
+              >
+                Race
+              </button>
+              <p className="text-[10px] leading-snug text-[#777]">
+                Spartan distance + <strong className="text-[#999]">credit a wrestler</strong>. You get registration follow-up{" "}
+                <strong className="text-[#999]">after</strong> you pay.
+              </p>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <button
+                type="button"
+                onClick={goToDonate}
+                className={`min-h-[48px] rounded border px-3 py-3 text-center text-sm font-bold leading-tight transition-colors ${
+                  flow === "donate"
+                    ? "border-[#C8A94A] bg-[#1a170d] text-[#C8A94A]"
+                    : "border-[#444] bg-[#0A0A0A] text-[#ccc] hover:border-[#666]"
+                }`}
+              >
+                Donate
+              </button>
+              <p className="text-[10px] leading-snug text-[#777]">
+                <strong className="text-[#999]">Named wrestler</strong> or <strong className="text-[#8ab4d8]">NC United Training Fund</strong> —{" "}
+                <strong className="text-[#C8A94A]">$5 min</strong>
+              </p>
+            </div>
           </div>
-          <div className="flex flex-col gap-1.5">
-            <button
-              type="button"
-              onClick={goToDonate}
-              className={`min-h-[48px] rounded border px-3 py-3 text-center text-sm font-bold leading-tight transition-colors ${
-                flow === "donate"
-                  ? "border-[#C8A94A] bg-[#1a170d] text-[#C8A94A]"
-                  : "border-[#444] bg-[#0A0A0A] text-[#ccc] hover:border-[#666]"
-              }`}
-            >
-              Donate
-            </button>
-            <p className="text-[10px] leading-snug text-[#777]">
-              <strong className="text-[#999]">Named wrestler</strong> or <strong className="text-[#8ab4d8]">NC United Training Fund</strong> —{" "}
-              <strong className="text-[#C8A94A]">$5 min</strong>
-            </p>
-          </div>
+          <p className="mt-3 rounded border border-[#C8A94A]/35 bg-[#1a170d] px-3 py-2.5 text-[11px] leading-snug text-[#bbb] sm:text-xs">
+            <strong className="text-[#C8A94A]">Two kids?</strong> Finish once, then start again for the second credit.
+          </p>
         </div>
-        <p className="mt-3 rounded border border-[#C8A94A]/35 bg-[#1a170d] px-3 py-2.5 text-[11px] leading-snug text-[#bbb] sm:text-xs">
-          <strong className="text-[#C8A94A]">Two kids?</strong> Finish once, then start again for the second credit.
-        </p>
-      </div>
+      )}
 
       {showProgressRecap && progressMilestones.length > 0 && (
         <div
-          className="mt-4 overflow-hidden rounded-2xl border border-white/[0.06] bg-gradient-to-b from-[#161616] to-[#0a0a0a] px-3.5 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_8px_32px_rgba(0,0,0,0.35)] sm:rounded-xl sm:px-4 sm:py-3.5 sm:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+          className={
+            fh
+              ? "mt-4 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-[#0B2545]/55 to-[#061224]/90 px-3.5 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_8px_32px_rgba(0,0,0,0.35)] sm:rounded-xl sm:px-4 sm:py-3.5 sm:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+              : "mt-4 overflow-hidden rounded-2xl border border-white/[0.06] bg-gradient-to-b from-[#161616] to-[#0a0a0a] px-3.5 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_8px_32px_rgba(0,0,0,0.35)] sm:rounded-xl sm:px-4 sm:py-3.5 sm:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+          }
           role="status"
         >
           <div className="mb-3 border-b border-white/[0.06] pb-3 sm:mb-3 sm:pb-2.5 sm:border-[#252525]">
@@ -822,12 +842,20 @@ export function SpartanDonateFormWizard() {
 
       {/* Donate: step 1 — who benefits */}
       {flow === "donate" && donateStep === 1 && (
-        <div className="mt-5 space-y-3 rounded border border-[#4a3d1a] border-l-4 border-l-[#C8A94A] bg-[#141008] p-3 sm:p-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#C8A94A]">Who should this support?</p>
-          <p className="text-xs text-[#9ca3af]">Credit a wrestler, or the NC United Training Fund.</p>
+        <div
+          className={`mt-5 space-y-3 rounded border border-l-4 border-l-[#C8A94A] p-3 sm:p-4 ${fh ? "border-white/15 bg-[#0B2545]/45" : "border-[#4a3d1a] bg-[#141008]"}`}
+        >
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#C8A94A]">
+            {fh ? "Support an athlete or the training fund" : "Who should this support?"}
+          </p>
+          <p className="text-xs text-[#9ca3af]">
+            {fh
+              ? "Choose how your gift should count — both options use the same secure checkout ($5 minimum)."
+              : "Credit a wrestler, or the NC United Training Fund."}
+          </p>
           <div
             id="spartan-donate-step1"
-            className={`grid gap-2 rounded-md sm:grid-cols-2 ${fieldHighlights.includes("spartan-donate-step1") ? "p-0.5 ring-2 ring-amber-500/90 ring-offset-2 ring-offset-[#141008]" : ""}`}
+            className={`grid gap-2 rounded-md sm:grid-cols-2 ${fieldHighlights.includes("spartan-donate-step1") ? `p-0.5 ring-2 ring-amber-500/90 ring-offset-2 ${ringOff}` : ""}`}
           >
             <button
               type="button"
@@ -839,16 +867,16 @@ export function SpartanDonateFormWizard() {
               }}
               className="min-h-[48px] rounded border border-[#C8A94A] bg-[#1a170d] px-3 text-sm font-bold text-[#C8A94A] hover:bg-[#252014]"
             >
-              A specific wrestler
+              {fh ? "Support an athlete" : "A specific wrestler"}
             </button>
             <button
               type="button"
               onClick={() => {
                 goToDonateGeneralFund()
               }}
-              className="min-h-[48px] rounded border border-[#444] bg-[#0A0A0A] px-3 text-sm font-bold text-[#ccc] hover:border-[#666]"
+              className={`min-h-[48px] rounded border px-2 py-2.5 text-[13px] font-bold leading-snug text-[#ccc] hover:border-[#666] sm:px-3 sm:text-sm ${dField}`}
             >
-              NC United Training Fund
+              {fh ? "Donate to the NC United Training Fund" : "NC United Training Fund"}
             </button>
           </div>
         </div>
@@ -856,7 +884,9 @@ export function SpartanDonateFormWizard() {
 
       {/* Donate: step 2 — athlete search */}
       {flow === "donate" && donateStep === 2 && donateMode === "athlete" && (
-        <div className="relative mt-5 rounded-lg border border-[#4a3d1a] border-l-4 border-l-[#C8A94A] bg-[#141008] p-3 sm:p-4">
+        <div
+          className={`relative mt-5 rounded-lg border border-l-4 border-l-[#C8A94A] p-3 sm:p-4 ${fh ? "border-white/15 bg-[#0B2545]/45" : "border-[#4a3d1a] bg-[#141008]"}`}
+        >
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#C8A94A]">Wrestler to credit</p>
           <p className="mt-1 text-xs leading-snug text-[#b9a86e]">Search and select — or type a name if they are not in the list.</p>
           <label className="mt-3 block text-sm font-medium text-[#ddd]" htmlFor="spartan-athlete-search">
@@ -874,7 +904,7 @@ export function SpartanDonateFormWizard() {
             }}
             onFocus={() => athleteHits.length > 0 && setAthleteMenuOpen(true)}
             aria-invalid={fieldHighlights.includes("spartan-athlete-search")}
-            className={`mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white placeholder:text-[#555] focus:border-[#C8A94A] focus:outline-none focus:ring-1 focus:ring-[#C8A94A] ${ringInvalid("spartan-athlete-search")}`}
+            className={`mt-1.5 min-h-[48px] w-full border px-3 py-2.5 text-base text-white ${dPh} focus:border-[#C8A94A] focus:outline-none focus:ring-1 focus:ring-[#C8A94A] ${dField} ${ringInvalid("spartan-athlete-search")}`}
             autoComplete="off"
           />
           {athleteSearchLoading && <p className="mt-1 text-[11px] text-[#666]">…</p>}
@@ -888,7 +918,7 @@ export function SpartanDonateFormWizard() {
             </p>
           )}
           {athleteMenuOpen && athleteHits.length > 0 && (
-            <ul className="absolute z-20 mt-1 max-h-[min(50vh,16rem)] w-full overflow-auto rounded border border-[#444] bg-[#141414] py-1 shadow-lg">
+            <ul className={`absolute z-20 mt-1 max-h-[min(50vh,16rem)] w-full overflow-auto rounded border py-1 shadow-lg ${fh ? "border-white/15 bg-[#061224]/98" : "border-[#444] bg-[#141414]"}`}>
               {athleteHits.map((h) => (
                 <li key={h.code}>
                   <button
@@ -927,7 +957,7 @@ export function SpartanDonateFormWizard() {
                 dismissHighlight("spartan-manual-credit")
               }}
               aria-invalid={fieldHighlights.includes("spartan-manual-credit")}
-              className={`mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white placeholder:text-[#555] focus:border-[#C8A94A] focus:outline-none ${ringInvalid("spartan-manual-credit")}`}
+              className={`mt-1.5 min-h-[48px] w-full border px-3 py-2.5 text-base text-white ${dPh} focus:border-[#C8A94A] focus:outline-none ${dField} ${ringInvalid("spartan-manual-credit")}`}
             />
             <p className="mt-2 text-[11px] text-[#666]">
               Or the{" "}
@@ -947,7 +977,9 @@ export function SpartanDonateFormWizard() {
       {flow === "donate" && donateStep === 3 && (
         <div className="mt-6">
           {donateMode === "general" && (
-            <p className="mb-3 rounded border border-[#333] bg-[#0A0A0A] px-3 py-2 text-center text-sm font-semibold text-[#C8A94A]">
+            <p
+              className={`mb-3 rounded border px-3 py-2 text-center text-sm font-semibold text-[#C8A94A] ${fh ? "border-white/15 bg-[#061224]/90" : "border-[#333] bg-[#0A0A0A]"}`}
+            >
               NC United Training Fund
             </p>
           )}
@@ -957,7 +989,7 @@ export function SpartanDonateFormWizard() {
                 key={d}
                 type="button"
                 onClick={() => setAmountDollars(String(d))}
-                className="min-h-[44px] min-w-[3rem] rounded border border-[#444] bg-[#0A0A0A] px-2.5 text-sm font-semibold text-[#C8A94A] hover:border-[#C8A94A]"
+                className={`min-h-[44px] min-w-[3rem] rounded border px-2.5 text-sm font-semibold text-[#C8A94A] hover:border-[#C8A94A] ${dField}`}
               >
                 ${d}
               </button>
@@ -967,11 +999,15 @@ export function SpartanDonateFormWizard() {
             Amount <span className="text-[#666]">($5 minimum)</span>
           </label>
           <div
-            className={`mt-1 flex overflow-hidden rounded border border-[#444] bg-[#0A0A0A] focus-within:border-[#C8A94A] ${
-              fieldHighlights.includes("spartan-amount-usd-d") ? "ring-2 ring-amber-500/90 ring-offset-2 ring-offset-[#0a0a0a]" : ""
+            className={`mt-1 flex overflow-hidden rounded border focus-within:border-[#C8A94A] ${dField} ${
+              fieldHighlights.includes("spartan-amount-usd-d") ? `ring-2 ring-amber-500/90 ring-offset-2 ${ringOff}` : ""
             }`}
           >
-            <span className="flex items-center border-r border-[#444] bg-[#1a1a1a] px-2.5 text-[#888]">$</span>
+            <span
+              className={`flex items-center border-r px-2.5 text-[#888] ${fh ? "border-white/15 bg-[#061224]/80" : "border-[#444] bg-[#1a1a1a]"}`}
+            >
+              $
+            </span>
             <input
               id="spartan-amount-usd-d"
               type="number"
@@ -999,8 +1035,18 @@ export function SpartanDonateFormWizard() {
 
       {/* Donate: contact + public name */}
       {flow === "donate" && donateStep === 4 && (
-        <div className="mt-6 space-y-3 rounded-lg border border-[#2a3d4f] border-l-4 border-l-[#5a8ab0] bg-[#0c1014] p-3 sm:p-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8ab4d8]">Receipt & visibility</p>
+        <div
+          className={`mt-6 space-y-3 rounded-lg border border-l-4 p-3 sm:p-4 ${
+            fh
+              ? "border-white/12 border-l-[#C8A94A] bg-[#0B2545]/40"
+              : "border-[#2a3d4f] border-l-[#5a8ab0] bg-[#0c1014]"
+          }`}
+        >
+          <p
+            className={`text-[11px] font-semibold uppercase tracking-[0.14em] ${fh ? "text-[#C8A94A]" : "text-[#8ab4d8]"}`}
+          >
+            Receipt & visibility
+          </p>
           <p className="text-xs text-[#9ca3af]">Name on the tax receipt. This is the payer, not the wrestler (unless the same person).</p>
           <div>
             <label htmlFor="spartan-donor-name-d" className="text-sm font-medium text-[#ccc]">
@@ -1018,7 +1064,7 @@ export function SpartanDonateFormWizard() {
                 dismissHighlight("spartan-donor-name-d")
               }}
               aria-invalid={fieldHighlights.includes("spartan-donor-name-d")}
-              className={`mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white focus:border-[#5a8ab0] focus:outline-none ${ringInvalid("spartan-donor-name-d")}`}
+              className={`mt-1.5 min-h-[48px] w-full border px-3 py-2.5 text-base text-white focus:outline-none ${dField} ${dFocus} ${ringInvalid("spartan-donor-name-d")}`}
             />
             <p className="mt-1.5 text-[11px] text-[#666]">Individual or org — as it should read on the receipt.</p>
           </div>
@@ -1037,7 +1083,7 @@ export function SpartanDonateFormWizard() {
                 dismissHighlight("spartan-donor-email-d")
               }}
               aria-invalid={fieldHighlights.includes("spartan-donor-email-d")}
-              className={`mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white focus:border-[#5a8ab0] focus:outline-none ${ringInvalid("spartan-donor-email-d")}`}
+              className={`mt-1.5 min-h-[48px] w-full border px-3 py-2.5 text-base text-white focus:outline-none ${dField} ${dFocus} ${ringInvalid("spartan-donor-email-d")}`}
             />
           </div>
           <div>
@@ -1051,19 +1097,21 @@ export function SpartanDonateFormWizard() {
               autoComplete="name"
               value={payerContactName}
               onChange={(e) => setPayerContactName(e.target.value)}
-              className="mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white focus:border-[#5a8ab0] focus:outline-none"
+              className={`mt-1.5 min-h-[48px] w-full border px-3 py-2.5 text-base text-white focus:outline-none ${dField} ${dFocus}`}
             />
           </div>
           <div>
             <label htmlFor="spartan-supporter-list-d" className="text-sm font-medium text-[#ccc]">
               Public supporter list
             </label>
-            <p className="mt-0.5 text-[11px] text-[#666]">On /spartan activity, show your name or hide it</p>
+            <p className="mt-0.5 text-[11px] text-[#666]">
+              On {fh ? "the public fundraising hub" : "/spartan activity"}, show your name or hide it
+            </p>
             <select
               id="spartan-supporter-list-d"
               value={donorListPublic ? "show" : "anon"}
               onChange={(e) => setDonorListPublic(e.target.value === "show")}
-              className="mt-1.5 min-h-[44px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2 text-base text-white focus:border-[#5a8ab0] focus:outline-none"
+              className={`mt-1.5 min-h-[44px] w-full border px-3 py-2 text-base text-white focus:outline-none ${dField} ${dFocus}`}
             >
               <option value="show">Show my name</option>
               <option value="anon">Anonymous on the public list</option>
@@ -1074,7 +1122,9 @@ export function SpartanDonateFormWizard() {
 
       {/* Donate: tee */}
       {flow === "donate" && donateStep === 5 && teeEligible && (
-        <div className="mt-5 rounded border border-[#C8A94A]/35 bg-[#141414] px-3 py-3">
+        <div
+          className={`mt-5 rounded border border-[#C8A94A]/35 px-3 py-3 ${fh ? "bg-[#0B2545]/45" : "bg-[#141414]"}`}
+        >
           <p className="text-xs font-medium text-[#C8A94A]">Free tee — size & ship ($100+ gifts)</p>
           <TeeBlock
             shirtSize={shirtSize}
@@ -1093,13 +1143,19 @@ export function SpartanDonateFormWizard() {
             setShipCountry={setShipCountry}
             fieldHighlights={fieldHighlights}
             onClearHighlight={dismissHighlight}
+            ringOffsetClass={ringOff}
+            fieldSurfaceClass={dField}
+            fieldPhClass={dPh}
+            imageFrameClass={fh ? "border border-white/15 bg-[#061224]/35" : undefined}
           />
         </div>
       )}
 
       {/* Donate: review */}
       {flow === "donate" && donateStep === 6 && (
-        <div className="mt-6 rounded border border-[#333] bg-[#0c0c0c] p-3 sm:p-4">
+        <div
+          className={`mt-6 rounded border p-3 sm:p-4 ${fh ? "border-white/12 bg-[#061224]/85" : "border-[#333] bg-[#0c0c0c]"}`}
+        >
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#888]">Review</p>
           <ul className="mt-2 space-y-1.5 text-sm text-[#ccc]">
             <li>
@@ -1513,7 +1569,7 @@ export function SpartanDonateFormWizard() {
           <button
             type="button"
             onClick={donateBack}
-            className="min-h-[44px] flex-1 rounded border border-[#444] bg-[#1a1a1a] text-sm font-medium text-[#ccc] hover:bg-[#252525]"
+            className={`min-h-[44px] flex-1 rounded border px-3 text-sm font-medium text-[#ccc] transition-colors ${fh ? "border-white/15 bg-[#061224]/80 hover:bg-[#0B2545]/55" : "border-[#444] bg-[#1a1a1a] hover:bg-[#252525]"}`}
           >
             Back
           </button>
@@ -1570,7 +1626,8 @@ export function SpartanDonateFormWizard() {
         <p className="mt-2 text-center text-[11px] text-amber-200/90">Go back to the wrestler step and select or enter a name to credit.</p>
       )}
 
-      {!flow && <p className="mt-4 text-center text-[11px] text-[#666]">Choose Race or Donate to begin.</p>}
+      {!flow && !fundraisingHub && <p className="mt-4 text-center text-[11px] text-[#666]">Choose Race or Donate to begin.</p>}
+      {!flow && fundraisingHub && <p className="mt-4 text-center text-[11px] text-white/45">Loading checkout…</p>}
     </form>
   )
 }
@@ -1592,6 +1649,10 @@ function TeeBlock({
   setShipCountry,
   fieldHighlights,
   onClearHighlight,
+  ringOffsetClass = "ring-offset-[#0a0a0a]",
+  fieldSurfaceClass = "border-[#444] bg-[#0A0A0A]",
+  fieldPhClass = "placeholder:text-[#555]",
+  imageFrameClass = "border border-[#333] bg-black",
 }: {
   shirtSize: string
   setShirtSize: (s: string) => void
@@ -1609,16 +1670,20 @@ function TeeBlock({
   setShipCountry: (s: string) => void
   fieldHighlights: string[]
   onClearHighlight: (id: string) => void
+  ringOffsetClass?: string
+  fieldSurfaceClass?: string
+  fieldPhClass?: string
+  imageFrameClass?: string
 }) {
   const ringTee = (id: string) =>
     fieldHighlights.includes(id)
-      ? "ring-2 ring-amber-500/90 ring-offset-2 ring-offset-[#0a0a0a] border-amber-500/50"
+      ? `ring-2 ring-amber-500/90 ring-offset-2 ${ringOffsetClass} border-amber-500/50`
       : ""
 
   return (
     <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-start">
       <div className="mx-auto shrink-0 sm:mx-0">
-        <div className="relative aspect-square w-[min(100%,200px)] overflow-hidden rounded border border-[#333] bg-black sm:w-[180px]">
+        <div className={`relative aspect-square w-[min(100%,200px)] overflow-hidden rounded sm:w-[180px] ${imageFrameClass}`}>
           <Image
             src="/images/spartan-nc-united-tee.png"
             alt="NC United team tee"
@@ -1641,7 +1706,7 @@ function TeeBlock({
             onClearHighlight("spartan-tee-size")
           }}
           aria-invalid={fieldHighlights.includes("spartan-tee-size")}
-          className={`min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-2 py-2.5 text-base text-white focus:border-[#C8A94A] focus:outline-none ${ringTee("spartan-tee-size")}`}
+          className={`min-h-[48px] w-full border px-2 py-2.5 text-base text-white focus:border-[#C8A94A] focus:outline-none ${fieldSurfaceClass} ${ringTee("spartan-tee-size")}`}
         >
           <option value="">Size</option>
           {TEE_SIZES.map((s) => (
@@ -1660,7 +1725,7 @@ function TeeBlock({
             onClearHighlight("spartan-ship-line1")
           }}
           aria-invalid={fieldHighlights.includes("spartan-ship-line1")}
-          className={`min-h-[44px] w-full border border-[#444] bg-[#0A0A0A] px-2 py-2.5 text-base text-white placeholder:text-[#555] focus:border-[#C8A94A] focus:outline-none ${ringTee("spartan-ship-line1")}`}
+          className={`min-h-[44px] w-full border px-2 py-2.5 text-base text-white focus:border-[#C8A94A] focus:outline-none ${fieldPhClass} ${fieldSurfaceClass} ${ringTee("spartan-ship-line1")}`}
           autoComplete="address-line1"
         />
         <input
@@ -1668,7 +1733,7 @@ function TeeBlock({
           placeholder="Apt (opt)"
           value={shipLine2}
           onChange={(e) => setShipLine2(e.target.value)}
-          className="min-h-[44px] w-full border border-[#444] bg-[#0A0A0A] px-2 py-2.5 text-base text-white placeholder:text-[#555] focus:border-[#C8A94A] focus:outline-none"
+          className={`min-h-[44px] w-full border px-2 py-2.5 text-base text-white ${fieldPhClass} focus:border-[#C8A94A] focus:outline-none ${fieldSurfaceClass}`}
           autoComplete="address-line2"
         />
         <div className="grid grid-cols-2 gap-2">
@@ -1682,7 +1747,7 @@ function TeeBlock({
               onClearHighlight("spartan-ship-city")
             }}
             aria-invalid={fieldHighlights.includes("spartan-ship-city")}
-            className={`min-h-[44px] border border-[#444] bg-[#0A0A0A] px-2 py-2.5 text-base text-white ${ringTee("spartan-ship-city")}`}
+            className={`min-h-[44px] border px-2 py-2.5 text-base text-white ${fieldSurfaceClass} ${ringTee("spartan-ship-city")}`}
             autoComplete="address-level2"
           />
           <input
@@ -1695,7 +1760,7 @@ function TeeBlock({
               onClearHighlight("spartan-ship-state")
             }}
             aria-invalid={fieldHighlights.includes("spartan-ship-state")}
-            className={`min-h-[44px] border border-[#444] bg-[#0A0A0A] px-2 py-2.5 text-base text-white ${ringTee("spartan-ship-state")}`}
+            className={`min-h-[44px] border px-2 py-2.5 text-base text-white ${fieldSurfaceClass} ${ringTee("spartan-ship-state")}`}
             autoComplete="address-level1"
           />
         </div>
@@ -1710,13 +1775,13 @@ function TeeBlock({
               onClearHighlight("spartan-ship-postal")
             }}
             aria-invalid={fieldHighlights.includes("spartan-ship-postal")}
-            className={`min-h-[44px] border border-[#444] bg-[#0A0A0A] px-2 py-2.5 text-base text-white ${ringTee("spartan-ship-postal")}`}
+            className={`min-h-[44px] border px-2 py-2.5 text-base text-white ${fieldSurfaceClass} ${ringTee("spartan-ship-postal")}`}
             autoComplete="postal-code"
           />
           <select
             value={shipCountry}
             onChange={(e) => setShipCountry(e.target.value)}
-            className="min-h-[44px] border border-[#444] bg-[#0A0A0A] px-2 py-2.5 text-base text-white"
+            className={`min-h-[44px] border px-2 py-2.5 text-base text-white ${fieldSurfaceClass}`}
           >
             <option value="US">US</option>
             <option value="CA">CA</option>
