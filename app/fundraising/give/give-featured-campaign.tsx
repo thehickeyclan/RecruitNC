@@ -32,6 +32,8 @@ export function GiveFeaturedCampaign({
   const heroSrc = campaign.heroImageUrl ?? "/images/spartan-race-banner.png"
   const heroAlt = `${campaign.name} — campaign visual`
   const remote = /^https?:\/\//i.test(heroSrc)
+
+  return (
     <section className="mx-auto max-w-lg px-4 pb-2 pt-2" aria-labelledby="give-featured-heading">
       <p className={`${displayFont("text-center text-[10px] font-extrabold uppercase tracking-[0.26em] text-[#CC0000]")}`}>
         Active campaign
