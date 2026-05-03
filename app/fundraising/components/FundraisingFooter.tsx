@@ -46,10 +46,10 @@ export function FundraisingFooter() {
               Athlete pages →
             </HardLink>
             <HardLink
-              href="/fundraising/playbook"
+              href="/fundraising#fundraising-corporate-sponsors"
               className={`${displayFont("text-[11px] font-extrabold uppercase tracking-[0.18em] text-white/70 hover:text-[#C8A94A]")}`}
             >
-              Staff — RecruitNC sign-in →
+              Corporate partners →
             </HardLink>
           </p>
         </div>

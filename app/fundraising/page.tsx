@@ -6,6 +6,7 @@ import { AthleteLeaderboard } from "./components/AthleteLeaderboard"
 import { DonorActivityFeed } from "./components/DonorActivityFeed"
 import { HowItWorks } from "./components/HowItWorks"
 import { FundraisingFooter } from "./components/FundraisingFooter"
+import { CorporateSponsors } from "./components/CorporateSponsors"
 
 export const metadata: Metadata = {
   title: "Fundraising | NC United Wrestling",
@@ -19,6 +20,7 @@ export default async function FundraisingPortalHomePage() {
   return (
     <div id="fundraising-hub-root" className="min-h-screen bg-[#0B2545]">
       <FundraisingHero hero={snapshot.hero} />
+      <CorporateSponsors />
       <CampaignCards campaigns={snapshot.campaigns} />
       <AthleteLeaderboard rows={snapshot.leaderboard} />
       <DonorActivityFeed initial={snapshot.activity} />
