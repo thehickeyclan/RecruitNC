@@ -81,7 +81,8 @@ export async function fetchNchsaaResultsForAthleteProfile(
   const gy = options?.graduationYear
   if (gy != null && !Number.isNaN(Number(gy))) {
     const y = Number(gy)
-    q = q.gte("year", y - 5).lte("year", y + 2)
+    /** Keep in sync with `plausibleNchsaaYearsForGradYear` in nchsaa-results.ts (wide enough for young grads + SQ). */
+    q = q.gte("year", y - 14).lte("year", y + 2)
   }
 
   const { data, error } = await q.order("year", { ascending: false })

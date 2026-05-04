@@ -166,24 +166,24 @@ export function nchsaaJsonToProfileRows(raw: unknown, fallbackWrestlerName: stri
 }
 
 /**
- * Plausible NCHSAA tournament years for a graduation year (high school: gradYear-4 through gradYear).
- * Used to avoid merging a different person with the same name (e.g. two Jacob Perrys).
+ * Plausible NCHSAA tournament years for a graduation year.
+ * Upper bound keeps late entries; lower bound must include early high-school / middle-school state years
+ * (e.g. **2026 SQ with class of 2031+** was dropped when min was only `gradYear - 4`).
  */
 export function plausibleNchsaaYearsForGradYear(graduationYear: number): { min: number; max: number } {
   const y = Number(graduationYear)
   if (!y || isNaN(y)) return { min: 0, max: 9999 }
-  // Include gradYear+2 so late-season / data-entry timing and slight wrong grad year on file
-  // don't drop the current state year (e.g. 2026 for class of 2028 — see RECRUITNC-PROFILE-NAME-MATCHING-DETTORE.md).
-  const maxYear = Math.min(2032, y + 2)
-  return { min: Math.max(1990, y - 4), max: maxYear }
+  const maxYear = Math.min(2035, y + 2)
+  const minYear = Math.max(1990, y - 14)
+  return { min: minYear, max: maxYear }
 }
 
 /**
  * Fetch NCHSAA results for an athlete using the same logic as /api/wrestling-achievements
  * (name variations, ilike per variation, merge, placer-over-SQ). Use this so Blue list
  * and unified profiles show identical placement.
- * When graduationYear is provided, results are filtered to plausible high-school years only
- * (gradYear-4 through gradYear) so we don't merge a different person with the same name.
+ * When graduationYear is provided, results are filtered to plausible tournament years only
+ * (see `plausibleNchsaaYearsForGradYear`) so we don't merge a different person with the same name.
  */
 export async function getNCHSAAResultsForProfile(
   supabase: SupabaseClient,
@@ -393,15 +393,26 @@ export function mergeNchsaaResults(
   a: NchsaaRowForProfile[],
   b: NchsaaRowForProfile[]
 ): NchsaaRowForProfile[] {
-  const seen = new Set<string>()
-  const out: NchsaaRowForProfile[] = []
-  for (const row of [...a, ...b]) {
-    const key = `${row.year}-${row.classification}-${row.weight_class}`
-    if (seen.has(key)) continue
-    seen.add(key)
-    out.push(row)
+  const keyOf = (row: NchsaaRowForProfile) =>
+    `${row.year}-${row.classification}-${row.weight_class}`
+
+  /** Higher = better for display (state placer beats SQ; better place wins). */
+  const placeRank = (place: number | null): number => {
+    if (place != null && place >= 1 && place <= 16) return 200 - place
+    if (place === 0) return 50
+    return 0
   }
-  out.sort((x, y) => y.year - x.year)
+
+  const pickBetter = (x: NchsaaRowForProfile, y: NchsaaRowForProfile) =>
+    placeRank(y.place) > placeRank(x.place) ? y : x
+
+  const byKey = new Map<string, NchsaaRowForProfile>()
+  for (const row of [...a, ...b]) {
+    const k = keyOf(row)
+    const existing = byKey.get(k)
+    byKey.set(k, existing ? pickBetter(existing, row) : row)
+  }
+  const out = [...byKey.values()].sort((x, y) => y.year - x.year)
   return out
 }
 
