@@ -23,12 +23,33 @@ function normalizeApostrophes(s: string): string {
     .replace(/\u2018/g, "'")
 }
 
+/** Generational / trailing suffixes so "Elias Smith Jr." → last Smith, not "Jr." */
+const TRAILING_NAME_SUFFIXES = new Set(
+  ["jr", "sr", "ii", "iii", "iv", "v", "vi", "2nd", "3rd", "4th"].map((s) => s.toLowerCase())
+)
+
+function normalizedSuffixToken(token: string): string {
+  return token.replace(/\./g, "").toLowerCase()
+}
+
+/** Drop Jr., Sr., III, etc. from the end of a space-split name before taking first/last. */
+function stripTrailingGenerationalSuffixes(parts: string[]): string[] {
+  const out = [...parts]
+  while (out.length >= 2) {
+    const last = normalizedSuffixToken(out[out.length - 1] ?? "")
+    if (!TRAILING_NAME_SUFFIXES.has(last)) break
+    out.pop()
+  }
+  return out
+}
+
 /**
  * Parse "First Last" or "Last, First" into first + last tokens for AND ILIKE matching.
  * - "Ryan Thompson" → first=Ryan, last=Thompson
  * - "Ryan M. Thompson" → first=Ryan, last=Thompson (NOT "M. Thompson" — that broke DB rows like "Thompson, Ryan")
  * - "Thompson, Ryan" / "Thompson, Ryan M." → last=Thompson, first=Ryan (first token after comma only)
  * - "Mary Jane Smith" → first=Mary, last=Smith (first + last token when 3+ parts)
+ * - "Elias Smith Jr." / "Smith Jr., Elias" → first=Elias, last=Smith (suffix stripped; dual ILIKE matches NCHSAA rows)
  */
 export function parseFirstLastForNchsaa(athleteName: string): { first: string; last: string } | null {
   const raw = normalizeApostrophes((athleteName ?? "").trim())
@@ -37,14 +58,16 @@ export function parseFirstLastForNchsaa(athleteName: string): { first: string; l
   if (raw.includes(",")) {
     const [a, b] = raw.split(",").map((s) => s.trim())
     if (a && b) {
+      const lastSegment = stripTrailingGenerationalSuffixes(a.split(/\s+/).filter(Boolean)).join(" ").trim()
       const afterParts = b.split(/\s+/).filter(Boolean)
-      const firstAfter = afterParts[0] ?? b
-      return { last: a.trim(), first: firstAfter.trim() }
+      const firstAfter = (stripTrailingGenerationalSuffixes(afterParts)[0] ?? b).trim()
+      if (!lastSegment || !firstAfter) return null
+      return { last: lastSegment, first: firstAfter }
     }
     return null
   }
 
-  const parts = raw.split(/\s+/).filter(Boolean)
+  const parts = stripTrailingGenerationalSuffixes(raw.split(/\s+/).filter(Boolean))
   if (parts.length < 2) return null
   if (parts.length === 2) return { first: parts[0]!, last: parts[1]! }
   // 3+ tokens: first word + last word (handles middle names / initials)
