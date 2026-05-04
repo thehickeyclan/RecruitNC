@@ -54,6 +54,8 @@ const SAME_PERSON_NAME_ALIASES: string[][] = [
   ["Nevaeh Williamson", "Nevaeh Willamson"],
   ["Cam Stinson", "Cameron Stinson"],
   ["Jackson D'Ettore", "Jackson Dettore", "Jackson D\u2019Ettore"],
+  /** NCHSAA rows sometimes omit the second surname (e.g. "Marquez, Elias"); dual-token pairs also cover this. */
+  ["Elias Marquez Flores", "Elias Marquez"],
 ]
 
 function normalizeForAlias(name: string): string {

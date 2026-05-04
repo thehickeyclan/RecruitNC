@@ -43,6 +43,53 @@ function stripTrailingGenerationalSuffixes(parts: string[]): string[] {
   return out
 }
 
+/** True for tokens we should not treat as a second surname (e.g. "M." in "Ryan M. Thompson"). */
+function looksLikeMiddleInitial(token: string): boolean {
+  const t = token.replace(/\./g, "").trim()
+  if (t.length <= 1) return true
+  return /^[A-Z]$/i.test(t)
+}
+
+/**
+ * One or two (first, last) token pairs for dual ILIKE against `wrestler_name`.
+ * Hispanic / compound surnames on the profile ("Elias Marquez Flores") often appear in results as
+ * "Marquez, Elias" (no "Flores") — only `Elias`+`Flores` misses; add `Elias`+`Marquez`.
+ */
+export function dualTokenPairsForNchsaa(athleteName: string): { first: string; last: string }[] {
+  const raw = normalizeApostrophes((athleteName ?? "").trim())
+  if (!raw) return []
+
+  if (raw.includes(",")) {
+    const p = parseFirstLastForNchsaa(athleteName)
+    return p ? [p] : []
+  }
+
+  const parts = stripTrailingGenerationalSuffixes(raw.split(/\s+/).filter(Boolean))
+  if (parts.length < 2) return []
+
+  const first = parts[0]!
+  const lastTok = parts[parts.length - 1]!
+  const pairs: { first: string; last: string }[] = [{ first, last: lastTok }]
+
+  if (parts.length >= 3) {
+    const penultimate = parts[parts.length - 2]!
+    if (
+      !looksLikeMiddleInitial(penultimate) &&
+      penultimate.toLowerCase() !== lastTok.toLowerCase()
+    ) {
+      pairs.push({ first, last: penultimate })
+    }
+  }
+
+  const seen = new Set<string>()
+  return pairs.filter((p) => {
+    const k = `${p.first.toLowerCase()}|${p.last.toLowerCase()}`
+    if (seen.has(k)) return false
+    seen.add(k)
+    return true
+  })
+}
+
 /**
  * Parse "First Last" or "Last, First" into first + last tokens for AND ILIKE matching.
  * - "Ryan Thompson" → first=Ryan, last=Thompson
@@ -90,35 +137,44 @@ export async function fetchNchsaaResultsForAthleteProfile(
   athleteName: string,
   options?: { graduationYear?: number }
 ): Promise<NchsaaProfileFetchRow[]> {
-  const parsed = parseFirstLastForNchsaa(athleteName)
-  if (!parsed) return []
-
-  const pFirst = `%${escapeForIlike(parsed.first)}%`
-  const pLast = `%${escapeForIlike(parsed.last)}%`
-
-  let q = supabase
-    .from("wrestling_nchsaa_results")
-    .select("year, classification, weight_class, place, school, wrestler_name")
-    .ilike("wrestler_name", pFirst)
-    .ilike("wrestler_name", pLast)
+  const pairs = dualTokenPairsForNchsaa(athleteName)
+  if (!pairs.length) return []
 
   const gy = options?.graduationYear
-  if (gy != null && !Number.isNaN(Number(gy))) {
-    const y = Number(gy)
-    /** Keep in sync with `plausibleNchsaaYearsForGradYear` in nchsaa-results.ts (wide enough for young grads + SQ). */
-    q = q.gte("year", y - 14).lte("year", y + 4)
+  const merged = new Map<string, NchsaaProfileFetchRow>()
+
+  for (const parsed of pairs) {
+    const pFirst = `%${escapeForIlike(parsed.first)}%`
+    const pLast = `%${escapeForIlike(parsed.last)}%`
+
+    let q = supabase
+      .from("wrestling_nchsaa_results")
+      .select("year, classification, weight_class, place, school, wrestler_name")
+      .ilike("wrestler_name", pFirst)
+      .ilike("wrestler_name", pLast)
+
+    if (gy != null && !Number.isNaN(Number(gy))) {
+      const y = Number(gy)
+      /** Keep in sync with `plausibleNchsaaYearsForGradYear` in nchsaa-results.ts (wide enough for young grads + SQ). */
+      q = q.gte("year", y - 14).lte("year", y + 4)
+    }
+
+    const { data, error } = await q.order("year", { ascending: false })
+    if (error) throw error
+
+    for (const row of data ?? []) {
+      const mapped: NchsaaProfileFetchRow = {
+        year: Number(row.year),
+        classification: (row.classification ?? "").toString(),
+        weight_class: (row.weight_class ?? "").toString(),
+        place: row.place != null ? Number(row.place) : null,
+        school: (row.school ?? "").toString(),
+        wrestler_name: (row.wrestler_name ?? "").toString(),
+      }
+      const key = `${mapped.year}-${mapped.classification}-${mapped.weight_class}-${mapped.wrestler_name}`
+      merged.set(key, mapped)
+    }
   }
 
-  const { data, error } = await q.order("year", { ascending: false })
-
-  if (error) throw error
-
-  return (data ?? []).map((row: Record<string, unknown>) => ({
-    year: Number(row.year),
-    classification: (row.classification ?? "").toString(),
-    weight_class: (row.weight_class ?? "").toString(),
-    place: row.place != null ? Number(row.place) : null,
-    school: (row.school ?? "").toString(),
-    wrestler_name: (row.wrestler_name ?? "").toString(),
-  }))
+  return [...merged.values()].sort((a, b) => b.year - a.year)
 }

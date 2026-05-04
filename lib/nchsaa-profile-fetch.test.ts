@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest"
-import { parseFirstLastForNchsaa } from "@/lib/nchsaa-profile-fetch"
+import {
+  dualTokenPairsForNchsaa,
+  parseFirstLastForNchsaa,
+} from "@/lib/nchsaa-profile-fetch"
 
 describe("parseFirstLastForNchsaa", () => {
   it("parses First Last", () => {
@@ -27,5 +30,22 @@ describe("parseFirstLastForNchsaa", () => {
 
   it("returns null for single token", () => {
     expect(parseFirstLastForNchsaa("Elias")).toBeNull()
+  })
+})
+
+describe("dualTokenPairsForNchsaa", () => {
+  it("adds penultimate surname for three-part names (compound Hispanic surnames)", () => {
+    expect(dualTokenPairsForNchsaa("Elias Marquez Flores")).toEqual([
+      { first: "Elias", last: "Flores" },
+      { first: "Elias", last: "Marquez" },
+    ])
+  })
+
+  it("does not add penultimate when it looks like a middle initial", () => {
+    expect(dualTokenPairsForNchsaa("Ryan M. Thompson")).toEqual([{ first: "Ryan", last: "Thompson" }])
+  })
+
+  it("comma form stays a single pair from parseFirstLastForNchsaa", () => {
+    expect(dualTokenPairsForNchsaa("Thompson, Ryan")).toEqual([{ first: "Ryan", last: "Thompson" }])
   })
 })
