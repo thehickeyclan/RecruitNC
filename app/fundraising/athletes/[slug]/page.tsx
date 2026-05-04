@@ -8,6 +8,7 @@ import { getAthleteFundraisingPublicStats, getAthleteRecentGifts } from "@/lib/f
 import { HardLink } from "@/components/hard-link"
 import { DEFAULT_FUNDRAISING_CAMPAIGN, FUNDRAISING_GIVE_PAGE_PATH } from "@/lib/fundraising/campaign-registry"
 import { formatUsdWhole } from "@/app/fundraising/components/FundraisingHero"
+import { FundraisingAthleteQrCard } from "./fundraising-athlete-qr-card"
 
 const PLACEHOLDER_ATHLETE_PHOTOS = new Set<string>(["/wrestler-silhouette.png"])
 
@@ -127,10 +128,10 @@ export default async function FundraisingAthletePublicPage({ params }: Props) {
 
   return (
     <div
-      className="min-h-screen bg-[#061224] px-4 py-12 text-white"
+      className="min-h-screen bg-[#061224] px-4 py-8 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))] text-white sm:px-6 sm:py-12"
       style={{ fontFamily: "var(--font-fundraising-body), system-ui, sans-serif" }}
     >
-      <div className="mx-auto max-w-2xl">
+      <div className="mx-auto w-full max-w-lg sm:max-w-2xl">
         <HardLink
           href="/fundraising/athletes"
           className="text-sm font-semibold text-[#C8A94A] underline-offset-4 hover:underline"
@@ -168,7 +169,7 @@ export default async function FundraisingAthletePublicPage({ params }: Props) {
           )
         ) : null}
 
-        <h1 className="font-[family-name:var(--font-fundraising-display)] mt-6 text-3xl font-black uppercase leading-tight tracking-tight text-white sm:text-4xl">
+        <h1 className="font-[family-name:var(--font-fundraising-display)] mt-6 text-2xl font-black uppercase leading-tight tracking-tight text-white sm:text-4xl">
           {viewProfileHref ? (
             <HardLink
               href={viewProfileHref}
@@ -203,31 +204,21 @@ export default async function FundraisingAthletePublicPage({ params }: Props) {
           )}
         </p>
 
-        <HardLink
-          href={giveHref}
-          className="font-[family-name:var(--font-fundraising-display)] mt-8 inline-flex min-h-[52px] items-center justify-center rounded-sm bg-[#CC0000] px-10 text-sm font-extrabold uppercase tracking-[0.14em] text-white shadow-[0_14px_44px_-10px_rgba(204,0,0,0.55)] hover:bg-[#a80000]"
-        >
-          Give now
-        </HardLink>
+        <div className="mt-8 flex flex-col items-center gap-8 sm:items-stretch">
+          <HardLink
+            href={giveHref}
+            className="font-[family-name:var(--font-fundraising-display)] flex min-h-[52px] w-full touch-manipulation items-center justify-center rounded-sm bg-[#CC0000] px-8 text-sm font-extrabold uppercase tracking-[0.14em] text-white shadow-[0_14px_44px_-10px_rgba(204,0,0,0.55)] hover:bg-[#a80000] sm:inline-flex sm:w-auto sm:min-w-[240px] sm:self-center"
+          >
+            Give now
+          </HardLink>
 
-        <div className="mx-auto mt-8 max-w-[220px] rounded-xl border border-white/10 bg-white px-3 py-3 text-center shadow-[0_12px_40px_-12px_rgba(0,0,0,0.45)]">
-          <p className="font-[family-name:var(--font-fundraising-display)] text-[10px] font-bold uppercase tracking-[0.18em] text-[#061224]/70">
-            Scan to give
-          </p>
-          <p className="mx-auto mt-1 max-w-[200px] text-center text-[10px] leading-snug text-[#061224]/50">
-            Same link as Give now · campaign-neutral checkout
-          </p>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={giveQrDataUrl}
-            alt={`Open NC United donation checkout for ${displayName}`}
-            className="mx-auto mt-2 h-36 w-36"
-            width={144}
-            height={144}
-          />
-          <p className="mx-auto mt-2 max-w-[200px] text-center font-mono text-[9px] leading-snug text-[#061224]/55 break-all">
-            {giveAbsoluteUrl}
-          </p>
+          <div className="flex justify-center sm:justify-center">
+            <FundraisingAthleteQrCard
+              qrSrc={giveQrDataUrl}
+              donateUrl={giveAbsoluteUrl}
+              athleteDisplayName={displayName}
+            />
+          </div>
         </div>
 
         {goalCents != null && goalCents > 0 ? (
@@ -282,7 +273,7 @@ export default async function FundraisingAthletePublicPage({ params }: Props) {
             </h2>
             <ul className="mt-3 divide-y divide-white/10 rounded-lg border border-white/10 bg-black/20">
               {recent.map((r, i) => (
-                <li key={`${r.created_at}-${i}`} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-sm">
+                <li key={`${r.created_at}-${i}`} className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-3 py-3 text-sm sm:py-2">
                   <span className="text-xs tabular-nums text-white/40">
                     {new Date(r.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
                   </span>

@@ -30,7 +30,7 @@ export function FundraisingAthletesDirectory({ rows }: { rows: FundraisingAthlet
         placeholder="Search by name, school, or NCU code…"
         autoComplete="off"
         spellCheck={false}
-        className="w-full max-w-md rounded-lg border border-white/15 bg-[#0B2545]/90 px-4 py-3 text-base text-white shadow-inner placeholder:text-white/40 focus:border-[#C8A94A]/70 focus:outline-none focus:ring-2 focus:ring-[#C8A94A]/35"
+        className="w-full max-w-md min-h-12 rounded-lg border border-white/15 bg-[#0B2545]/90 px-4 py-3 text-base text-white shadow-inner placeholder:text-white/40 focus:border-[#C8A94A]/70 focus:outline-none focus:ring-2 focus:ring-[#C8A94A]/35"
       />
       <p className="mt-2 text-xs text-white/45 tabular-nums">
         {filtered.length === rows.length
@@ -48,7 +48,7 @@ export function FundraisingAthletesDirectory({ rows }: { rows: FundraisingAthlet
             <li key={r.athleteId}>
               <HardLink
                 href={`/fundraising/athletes/${r.hrefSlug}`}
-                className="flex flex-row gap-4 rounded-lg border border-white/10 bg-[#0B2545]/80 px-4 py-4 transition hover:border-[#C8A94A]/40"
+                className="flex min-h-[4.5rem] touch-manipulation flex-row gap-4 rounded-lg border border-white/10 bg-[#0B2545]/80 px-4 py-4 transition hover:border-[#C8A94A]/40"
               >
                 {r.photoUrl ? (
                   <div className="h-16 w-16 shrink-0 overflow-hidden rounded-md border border-white/10 bg-black/30">
