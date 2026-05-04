@@ -8,7 +8,13 @@ export const metadata: Metadata = {
     "Support an NC wrestler with a named credit or donate to the NC United Training Fund. Tax-deductible gifts ($5 min) via secure checkout.",
 }
 
-export default async function FundraisingGivePage() {
+export default async function FundraisingGivePage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ cancelled?: string }>
+}) {
+  const sp = (await searchParams) ?? {}
+  const cancelled = sp.cancelled === "1"
   return (
     <div
       className="min-h-screen bg-[#061224] text-white"
@@ -30,6 +36,14 @@ export default async function FundraisingGivePage() {
           </HardLink>
         </div>
       </div>
+
+      {cancelled ? (
+        <div className="mx-auto max-w-3xl px-4 pt-6">
+          <p className="rounded-lg border border-amber-400/35 bg-amber-500/10 px-4 py-3 text-sm text-amber-100/95">
+            Checkout was cancelled — nothing was charged. You can try again whenever you&apos;re ready.
+          </p>
+        </div>
+      ) : null}
 
       <header className="px-4 pb-2 pt-10 text-center sm:pt-14">
         <p className="font-[family-name:var(--font-fundraising-display)] text-[11px] font-bold uppercase tracking-[0.28em] text-[#CC0000]">

@@ -15,6 +15,8 @@ export type SpartanFayettevilleDonation = {
   amountCents: number
   currency: string
   donorEmail: string | null
+  /** Checkout `customer_details.phone` when Stripe collected it (often empty). */
+  donorPhone: string | null
   /** Stripe metadata `spartan_notification_email` — where Spartan sends race codes (may differ from payer; parent is common). */
   spartanNotificationEmail: string | null
   donorName: string | null
@@ -156,6 +158,10 @@ export async function listSpartanFayettevilleDonations(
         amountCents: s.amount_total ?? 0,
         currency: s.currency ?? "usd",
         donorEmail: s.customer_details?.email ?? s.customer_email ?? null,
+        donorPhone:
+          typeof s.customer_details?.phone === "string" && s.customer_details.phone.trim()
+            ? s.customer_details.phone.trim().slice(0, 32)
+            : null,
         spartanNotificationEmail,
         donorName: typeof m.donor_name === "string" && m.donor_name.trim() ? m.donor_name.trim() : null,
         donorListPublic: parseDonorListPublic(m),

@@ -4,11 +4,14 @@ import QRCode from "qrcode"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
 import { resolveFundraisingAthletePublic } from "@/lib/fundraising/athlete-fundraising-profiles"
-import { getAthleteFundraisingPublicStats, getAthleteRecentGifts } from "@/lib/fundraising/athlete-public-stats"
+import { getAthleteFundraisingPublicStats, getAthleteRecentGifts, getAthleteOwnerThankYouRows } from "@/lib/fundraising/athlete-public-stats"
 import { HardLink } from "@/components/hard-link"
+import { createClient } from "@/lib/supabase/server"
 import { DEFAULT_FUNDRAISING_CAMPAIGN, FUNDRAISING_GIVE_PAGE_PATH } from "@/lib/fundraising/campaign-registry"
 import { formatUsdWhole } from "@/app/fundraising/components/FundraisingHero"
+import { userCanManageFundraisingForAthlete } from "@/lib/fundraising/athlete-fundraising-access"
 import { FundraisingAthleteQrCard } from "./fundraising-athlete-qr-card"
+import { FundraisingOwnerPanel } from "./fundraising-owner-panel"
 
 const PLACEHOLDER_ATHLETE_PHOTOS = new Set<string>(["/wrestler-silhouette.png"])
 
@@ -74,7 +77,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const name = publicTitleName(resolved)
   return {
     title: `Support ${name} | NC United Fundraising`,
-    description: `Tax-deductible NC United 501(c)(3) support — ${name}. Give securely through our nonprofit checkout.`,
+    description: `Support ${name} and NC United Wrestling — tax-deductible 501(c)(3) gifts help North Carolina wrestlers and teams. Secure checkout.`,
   }
 }
 
@@ -89,10 +92,19 @@ export default async function FundraisingAthletePublicPage({ params }: Props) {
   const athleteId = resolved.profile?.athlete_id ?? resolved.entry?.id ?? null
   const profile = resolved.profile
 
-  const [stats, recent, recruitingPhotoUrl] = await Promise.all([
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const isFundraisingManager =
+    !!(user?.id && athleteId && (await userCanManageFundraisingForAthlete(admin, user.id, athleteId)))
+
+  const [stats, recent, recruitingPhotoUrl, ownerDonors] = await Promise.all([
     code != null ? getAthleteFundraisingPublicStats(code) : Promise.resolve(null),
     code != null ? getAthleteRecentGifts(code, 12) : Promise.resolve([]),
     athleteId ? fetchRecruitingProfilePhoto(admin, athleteId) : Promise.resolve(null),
+    isFundraisingManager && code ? getAthleteOwnerThankYouRows(code) : Promise.resolve([]),
   ])
 
   const displayName = publicTitleName(resolved)
@@ -114,11 +126,11 @@ export default async function FundraisingAthletePublicPage({ params }: Props) {
     ? `${FUNDRAISING_GIVE_PAGE_PATH}?${athleteQ}=${encodeURIComponent(code)}#${checkoutAnchor}`
     : `${FUNDRAISING_GIVE_PAGE_PATH}#${checkoutAnchor}`
   const giveAbsoluteUrl = `${publicGiftSiteOrigin()}${giveHref}`
-  const qrPixelSize = 144
   const giveQrDataUrl = await QRCode.toDataURL(giveAbsoluteUrl, {
-    margin: 1,
-    width: qrPixelSize,
-    errorCorrectionLevel: "M",
+    margin: 2,
+    width: 320,
+    errorCorrectionLevel: "H",
+    color: { dark: "#000000", light: "#FFFFFF" },
   })
 
   const goalCents = profile?.campaign_goal_cents ?? null
@@ -140,7 +152,7 @@ export default async function FundraisingAthletePublicPage({ params }: Props) {
         </HardLink>
 
         <p className="font-[family-name:var(--font-fundraising-display)] mt-8 text-[11px] font-bold uppercase tracking-[0.28em] text-[#CC0000]">
-          NC United — donor page
+          Official NC United gift page
         </p>
 
         {heroPhotoSrc ? (
@@ -148,7 +160,7 @@ export default async function FundraisingAthletePublicPage({ params }: Props) {
             <HardLink
               href={viewProfileHref}
               className="group mt-6 block overflow-hidden rounded-xl border border-white/10 bg-[#0B2545]/50 outline-none ring-offset-2 ring-offset-[#061224] focus-visible:ring-2 focus-visible:ring-[#C8A94A]"
-              aria-label={`View ${displayName} recruiting profile on RecruitNC`}
+              aria-label={`View ${displayName} recruiting profile`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -184,25 +196,69 @@ export default async function FundraisingAthletePublicPage({ params }: Props) {
         {schoolLine ? <p className="mt-2 text-base text-white/65">{schoolLine}</p> : null}
         {code ? <p className="mt-2 font-mono text-xs text-white/40">{code}</p> : null}
 
-        {profile?.bio?.trim() ? (
-          <p className="mt-6 max-w-xl text-base leading-relaxed text-white/80">{profile.bio.trim()}</p>
+        {profile?.bio?.trim() && !isFundraisingManager ? (
+          <div className="mt-6 max-w-xl">
+            <h2 className="font-[family-name:var(--font-fundraising-display)] text-xs font-bold uppercase tracking-[0.22em] text-[#C8A94A]">
+              What I&apos;m raising for
+            </h2>
+            <p className="mt-2 text-base leading-relaxed text-white/80">{profile.bio.trim()}</p>
+          </div>
         ) : null}
 
-        <p className="mt-6 max-w-xl text-sm leading-relaxed text-white/75">
-          Support NC United Wrestling (501(c)(3), EIN 99-3757238).{" "}
-          {code ? (
-            <>
-              <strong className="text-white/90">Give now</strong> opens our <strong className="text-white/90">campaign-neutral</strong>,{" "}
-              tax-deductible checkout with <strong className="text-white/90">{displayName}</strong> pre-selected ({code}) — the same flow as the
-              fundraising hub, not a race signup page.
-            </>
-          ) : (
-            <>
-              <strong className="text-white/90">Give now</strong> opens the same year-round, campaign-neutral checkout as the hub.
-              Add an NCU credit code on this profile so share links credit the right athlete automatically.
-            </>
-          )}
-        </p>
+        {isFundraisingManager && athleteId ? (
+          <FundraisingOwnerPanel
+            key={profile ? `${profile.updated_at}-owner` : `${slug}-owner`}
+            athleteId={athleteId}
+            fundraisingSlug={slug}
+            canEditStory={profile != null}
+            initialBio={profile?.bio ?? ""}
+            donorRows={ownerDonors}
+            lookbackDays={DEFAULT_FUNDRAISING_CAMPAIGN.defaultLookbackDays}
+          />
+        ) : null}
+
+        <div className="mt-6 rounded-xl border border-white/10 bg-[#0B2545]/55 px-4 py-4 sm:px-5 sm:py-5">
+          <p className="text-sm leading-relaxed text-white/80">
+            <span className="font-[family-name:var(--font-fundraising-display)] font-bold uppercase tracking-wide text-[#C8A94A]">
+              New to NC United?
+            </span>{" "}
+            We&apos;re a North Carolina-based nonprofit that helps young wrestlers and local teams—covering real costs like
+            travel, events, and training, and growing opportunities for kids in the sport statewide. This link is usually
+            shared by family or friends so you can root for{" "}
+            <strong className="text-white/95">{displayName}</strong> with a gift that also supports NC United&apos;s programs.
+            Use <strong className="text-white/95">Give now</strong> or scan the QR code for a secure checkout
+            {code ? (
+              <>
+                ; <strong className="text-white/95">{displayName}</strong> is already selected so your gift counts toward their
+                fundraiser.
+              </>
+            ) : (
+                <> to complete your gift.</>
+            )}
+          </p>
+          <div className="mt-4 space-y-3 border-t border-white/10 pt-4 text-sm leading-relaxed text-white/78">
+            <p>
+              <strong className="text-white/92">Email receipt.</strong> As soon as your payment succeeds, you&apos;ll get an
+              email receipt for your records—check spam or promotions folders if it doesn&apos;t land in your inbox.
+            </p>
+            {code ? (
+              <p>
+                <strong className="text-white/92">Every dollar you give on this page</strong> is credited to{" "}
+                <strong className="text-white/92">{displayName}</strong>&apos;s fundraiser on this campaign and supports
+                NC United&apos;s mission for wrestlers and teams.
+              </p>
+            ) : (
+              <p>
+                <strong className="text-white/92">Tax-deductible support.</strong> Your gift helps NC United Wrestling serve
+                athletes and teams; you&apos;ll receive the same emailed receipt as soon as checkout finishes.
+              </p>
+            )}
+          </div>
+          <p className="mt-3 text-xs leading-relaxed text-white/55">
+            NC United Wrestling is a 501(c)(3) public charity (EIN 99-3757238). Donations are tax-deductible to the extent
+            allowed by law.
+          </p>
+        </div>
 
         <div className="mt-8 flex flex-col items-center gap-8 sm:items-stretch">
           <HardLink
@@ -242,27 +298,29 @@ export default async function FundraisingAthletePublicPage({ params }: Props) {
         {code && stats && (stats.giftCount > 0 || stats.raisedCents > 0) ? (
           <div className="mt-12 rounded-xl border border-white/10 bg-[#0B2545]/70 px-5 py-5">
             <h2 className="font-[family-name:var(--font-fundraising-display)] text-sm font-bold uppercase tracking-wide text-[#C8A94A]">
-              Credit to this athlete
+              Support so far
             </h2>
             <p className="mt-3 text-2xl font-black tabular-nums text-white">{formatUsdWhole(stats.raisedCents)}</p>
             <p className="mt-1 text-sm text-white/55">
-              {stats.giftCount} paid gift{stats.giftCount === 1 ? "" : "s"} in the last{" "}
-              {DEFAULT_FUNDRAISING_CAMPAIGN.defaultLookbackDays}-day window ({DEFAULT_FUNDRAISING_CAMPAIGN.campaignDisplayName}
-              ). Totals come from live Stripe (same roll-up as the Spartan supporter board), not the database mirror.
+              {stats.giftCount} gift{stats.giftCount === 1 ? "" : "s"} recorded for {displayName} in the last{" "}
+              {DEFAULT_FUNDRAISING_CAMPAIGN.defaultLookbackDays} days ({DEFAULT_FUNDRAISING_CAMPAIGN.campaignDisplayName}).
             </p>
             <p className="mt-2 text-xs text-white/40">
-              Staff credit adjustments (for example, moving a gift to the NC United general fund) apply the same way as on{" "}
+              Totals reflect completed gifts credited to this athlete. If our team moved a gift to NC United&apos;s general fund, it
+              won&apos;t appear here — same rules as on our{" "}
               <HardLink href="/spartan" className="text-[#C8A94A] underline-offset-4 hover:underline">
-                /spartan
+                main team fundraiser page
               </HardLink>
               .
             </p>
           </div>
         ) : code ? (
-          <p className="mt-10 text-sm text-white/50">Be the first gift credited to this code in our live Stripe data.</p>
+          <p className="mt-10 text-sm text-white/50">
+            Be the first to support {displayName} here — after you give, your gift will show up in this list.
+          </p>
         ) : (
           <p className="mt-10 text-sm text-white/50">
-            Checkout is live — use Give now to complete a gift. (This page does not yet have an NCU credit code on file.)
+            Ready when you are — tap <strong className="text-white/65">Give now</strong> to complete a secure donation.
           </p>
         )}
 
@@ -288,13 +346,13 @@ export default async function FundraisingAthletePublicPage({ params }: Props) {
         <p className="mt-12 border-t border-white/10 pt-8 text-xs text-white/45">
           {viewProfileHref ? (
             <>
-              <strong className="font-semibold text-white/55">Recruiting profile:</strong> use the name or photo link for commitments,
-              school info, and match history on RecruitNC. This page is NC United fundraising only.
+              <strong className="font-semibold text-white/55">College recruiting:</strong> use the name or photo link above for
+              commitments, school, and match history on RecruitNC. This page is only for supporting NC United.
             </>
           ) : (
             <>
-              College recruiting bios live elsewhere on RecruitNC when we can match this page to an athlete id. This page is only
-              for NC United fundraising.
+              This page is for NC United fundraising only. A RecruitNC recruiting profile may appear here when we can link this
+              fundraiser to an athlete record.
             </>
           )}
         </p>

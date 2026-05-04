@@ -17,8 +17,9 @@ async function requireAdmin(): Promise<{ ok: true } | { ok: false; status: 401 |
 }
 
 /**
- * POST: Staff inserts parent_athlete_links so the parent can manage Fundraise / Family for this athlete.
- * Body: { athleteId: uuid, parentUserId: uuid } — resolve parent account via Admin → user search first.
+ * POST: Staff links a RecruitNC auth user to an athlete (`parent_athlete_links`). Use for parent **or** athlete accounts
+ * (fundraising page access does not use profile claim — only this link). Body: { athleteId, parentUserId } where
+ * `parentUserId` is the Supabase `user.id` to connect (name is historical).
  */
 export async function POST(request: NextRequest) {
   const auth = await requireAdmin()
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest) {
   if (existingLink) {
     return NextResponse.json({
       success: true,
-      message: `Already linked — ${athlete.name ?? athleteId} is tied to this parent account.`,
+      message: `Already linked — ${athlete.name ?? athleteId} is tied to this RecruitNC account.`,
       athleteId,
       parentUserId,
     })
@@ -90,7 +91,7 @@ export async function POST(request: NextRequest) {
     if (insertErr.code === "23505") {
       return NextResponse.json({
         success: true,
-        message: `Already linked — ${athlete.name ?? athleteId} is tied to this parent account.`,
+        message: `Already linked — ${athlete.name ?? athleteId} is tied to this RecruitNC account.`,
         athleteId,
         parentUserId,
       })
@@ -105,7 +106,7 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({
     success: true,
-    message: `Linked ${athlete.name ?? athleteId} to the selected parent — they’ll see this wrestler under Profile → Family & athletes.`,
+    message: `Linked ${athlete.name ?? athleteId} to the selected RecruitNC account — they’ll see this wrestler under Profile → Family & athletes and can manage their fundraising page when staff set one up.`,
     athleteId,
     parentUserId,
   })

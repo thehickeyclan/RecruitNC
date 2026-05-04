@@ -51,6 +51,8 @@ export async function POST(request: NextRequest) {
     shipState?: string
     shipPostal?: string
     shipCountry?: string
+    /** When true, Stripe return URLs point at /fundraising/give (hub checkout), not /spartan. */
+    fundraisingHub?: boolean
   } = {}
   try {
     body = await request.json()
@@ -87,6 +89,7 @@ export async function POST(request: NextRequest) {
   const payerTypeNormalized = payerTypeRaw === "organization" || payerTypeRaw === "org" ? "organization" : "person"
   const payerContactName =
     typeof body.payerContactName === "string" ? body.payerContactName.trim().slice(0, 120) : ""
+  const fundraisingHub = body.fundraisingHub === true
   /** Super 10K tier → donor expects Spartan entry code path; omit for donate-only. */
   const raceEntryRequested = Boolean(tierPreference && tierPreference.length > 0)
   const amountCents = Number(body.amountCents)
@@ -273,8 +276,12 @@ export async function POST(request: NextRequest) {
               }
             : { fundraising_attribution: "general_nc_united" }),
       },
-      success_url: `${baseUrl}/spartan/thanks?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/spartan?cancelled=1#spartan-checkout`,
+      success_url: fundraisingHub
+        ? `${baseUrl}/fundraising/give/thanks?session_id={CHECKOUT_SESSION_ID}`
+        : `${baseUrl}/spartan/thanks?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: fundraisingHub
+        ? `${baseUrl}/fundraising/give?cancelled=1#spartan-checkout`
+        : `${baseUrl}/spartan?cancelled=1#spartan-checkout`,
     })
 
     if (!session.url) {

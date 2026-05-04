@@ -1,0 +1,67 @@
+import type { Metadata } from "next"
+import { HardLink } from "@/components/hard-link"
+
+export const metadata: Metadata = {
+  title: "Thank you | NC United Fundraising",
+  description: "Your tax-deductible gift to NC United Wrestling is processing.",
+}
+
+export default function FundraisingGiveThanksPage() {
+  return (
+    <div
+      className="flex min-h-screen flex-col bg-[#061224] text-white"
+      style={{ fontFamily: "var(--font-fundraising-body), system-ui, sans-serif" }}
+    >
+      <div className="border-b border-white/10 bg-[#0B2545]/40 px-4 py-5">
+        <div className="mx-auto flex max-w-lg justify-between gap-3">
+          <HardLink
+            href="/fundraising"
+            className="text-sm font-semibold text-[#C8A94A] underline-offset-4 hover:underline"
+          >
+            ← Fundraising hub
+          </HardLink>
+          <HardLink
+            href="/fundraising/give"
+            className="text-xs font-semibold uppercase tracking-wide text-white/55 underline-offset-4 hover:text-[#C8A94A] hover:underline"
+          >
+            Give again
+          </HardLink>
+        </div>
+      </div>
+
+      <main className="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center px-4 py-14 text-center sm:py-20">
+        <p className="font-[family-name:var(--font-fundraising-display)] text-[11px] font-bold uppercase tracking-[0.28em] text-[#CC0000]">
+          NC United
+        </p>
+        <h1 className="font-[family-name:var(--font-fundraising-display)] mt-4 text-[clamp(1.75rem,5vw,2.35rem)] font-black uppercase leading-tight tracking-tight text-white">
+          Thank you
+        </h1>
+        <p className="mx-auto mt-6 max-w-md text-base leading-relaxed text-white/78">
+          Your tax-deductible gift is processing. You&apos;ll receive a receipt by email shortly (check spam or promotions).
+          Your support helps North Carolina wrestlers and teams through NC United Wrestling.
+        </p>
+        <p className="mx-auto mt-5 max-w-md text-sm leading-relaxed text-white/55">
+          EIN <span className="tabular-nums">99-3757238</span>
+          {" · "}
+          <a href="mailto:info@ncwrestlingunited.com" className="text-[#C8A94A] hover:underline">
+            info@ncwrestlingunited.com
+          </a>
+        </p>
+        <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:justify-center">
+          <HardLink
+            href="/fundraising/give"
+            className="font-[family-name:var(--font-fundraising-display)] inline-flex min-h-[48px] items-center justify-center border border-[#C8A94A]/50 bg-[#0B2545]/40 px-6 text-xs font-extrabold uppercase tracking-[0.12em] text-white hover:border-[#C8A94A] hover:bg-[#0B2545]/70"
+          >
+            Make another gift
+          </HardLink>
+          <HardLink
+            href="/fundraising/athletes"
+            className="font-[family-name:var(--font-fundraising-display)] inline-flex min-h-[48px] items-center justify-center border border-white/25 px-6 text-xs font-extrabold uppercase tracking-[0.12em] text-white/90 hover:border-white/50"
+          >
+            Athlete pages
+          </HardLink>
+        </div>
+      </main>
+    </div>
+  )
+}

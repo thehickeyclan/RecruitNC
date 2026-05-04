@@ -200,3 +200,94 @@ export async function getAthleteRecentGifts(code: string, limit: number): Promis
     amountCents: typeof row.amount_cents === "number" ? row.amount_cents : 0,
   }))
 }
+
+export type AthleteOwnerThankYouRow = {
+  createdIso: string
+  donorName: string | null
+  donorEmail: string | null
+  donorPhone: string | null
+  /** Race-path notification inbox when different from payer email — useful if parent paid. */
+  notificationEmail: string | null
+  amountCents: number
+}
+
+/**
+ * Donor contact rows for the signed-in athlete owner only — same credit rules as public totals.
+ * Phone is present only when Stripe Checkout collected it (often blank).
+ */
+export async function getAthleteOwnerThankYouRows(code: string): Promise<AthleteOwnerThankYouRow[]> {
+  const c = code.trim().toUpperCase()
+  if (!CODE_RE.test(c)) return []
+
+  const corrected = await loadCorrectedStripeDonationsForCampaignWindow(DEFAULT_FUNDRAISING_CAMPAIGN)
+  if (corrected != null) {
+    const mine = corrected.filter((r) => {
+      const ac = (r.athleteCode ?? "").trim().toUpperCase()
+      return ac === c && r.attribution !== "general_nc_united"
+    })
+    mine.sort((a, b) => b.createdUnix - a.createdUnix)
+    return mine.map((r) => ({
+      createdIso: r.createdIso,
+      donorName: r.donorName?.trim() ? r.donorName.trim() : null,
+      donorEmail: r.donorEmail?.trim() ? r.donorEmail.trim() : null,
+      donorPhone: r.donorPhone?.trim() ? r.donorPhone.trim() : null,
+      notificationEmail: r.spartanNotificationEmail?.trim() ? r.spartanNotificationEmail.trim() : null,
+      amountCents: r.amountCents,
+    }))
+  }
+
+  const admin = createAdminClient()
+  const idx = await fetchSpartanCreditCorrectionsIndex(admin)
+
+  const keysForC = new Set<string>()
+  for (const [k, ac] of idx.athleteBySessionOrPi) {
+    if ((ac ?? "").trim().toUpperCase() === c) keysForC.add(k)
+  }
+  const csIds = [...keysForC].filter((k) => k.startsWith("cs_"))
+  const piIds = [...keysForC].filter((k) => k.startsWith("pi_"))
+
+  type Row = DonationSelectRow & { donor_email?: string | null }
+  const byId = new Map<string, Row>()
+  const sel = `${DONATION_SELECT}, created_at, donor_name, donor_email`
+
+  const { data: byAthleteMeta } = await admin.from("spartan_donations").select(sel).eq("status", "paid").ilike("athlete_code", c)
+  mergeDonationRows(byId, byAthleteMeta as Row[])
+
+  const chunk = <T,>(arr: T[], size: number): T[][] => {
+    const out: T[][] = []
+    for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size))
+    return out
+  }
+
+  for (const part of chunk(csIds, 80)) {
+    if (part.length === 0) continue
+    const { data } = await admin.from("spartan_donations").select(sel).eq("status", "paid").in("id", part)
+    mergeDonationRows(byId, data as Row[])
+  }
+
+  if (piIds.length > 0) {
+    const orClause = piIds.map((pi) => `raw_metadata->stripe_payment_intent_id.eq.${pi}`).join(",")
+    const { data } = await admin.from("spartan_donations").select(sel).eq("status", "paid").or(orClause)
+    mergeDonationRows(byId, data as Row[])
+  }
+
+  const credited: Row[] = []
+  for (const row of byId.values()) {
+    const eff = effectiveAthleteCodeForDonationLedgerRow(
+      { id: row.id, athlete_code: row.athlete_code, raw_metadata: row.raw_metadata },
+      idx,
+    )
+    if (eff === c) credited.push(row)
+  }
+
+  credited.sort((a, b) => +new Date(b.created_at ?? 0) - +new Date(a.created_at ?? 0))
+
+  return credited.map((row) => ({
+    createdIso: row.created_at ? new Date(row.created_at).toISOString() : "",
+    donorName: typeof row.donor_name === "string" && row.donor_name.trim() ? row.donor_name.trim() : null,
+    donorEmail: typeof row.donor_email === "string" && row.donor_email.trim() ? row.donor_email.trim() : null,
+    donorPhone: null,
+    notificationEmail: null,
+    amountCents: typeof row.amount_cents === "number" ? row.amount_cents : 0,
+  }))
+}

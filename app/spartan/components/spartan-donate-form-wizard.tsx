@@ -716,6 +716,7 @@ export function SpartanDonateFormWizard({ fundraisingHub = false }: { fundraisin
           ...(flow === "race" && raceParticipant ? { raceParticipantName: raceParticipant } : {}),
           ...(flow === "race" && regForStripe ? { raceRegistrationEmail: regForStripe } : {}),
           ...(receiptIsOrganization ? { payerType: "organization" } : {}),
+          ...(fundraisingHub ? { fundraisingHub: true as const } : {}),
         }),
       })
       const data = await res.json().catch(() => ({}))
