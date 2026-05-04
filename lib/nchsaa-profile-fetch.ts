@@ -55,7 +55,8 @@ export function parseFirstLastForNchsaa(athleteName: string): { first: string; l
  * Fetch NCHSAA state results for profile using **two** ILIKEs (first + last token), so both
  * `Ryan Thompson` and `Thompson, Ryan` match — a single `%Ryan Thompson%` does **not** match `Thompson, Ryan`.
  *
- * When `graduationYear` is set, the query adds a **year window** (grad−5 … grad+2) so we stay under
+ * When `graduationYear` is set, the query adds a **year window** aligned with `plausibleNchsaaYearsForGradYear`
+ * so we stay under
  * PostgREST default row limits when many athletes share tokens like "Ryan" + "Thompson".
  *
  * @see docs/2026-STATE-QUALIFIERS-FOR-RECRUITNC.md — canonical table `wrestling_nchsaa_results`
@@ -82,7 +83,7 @@ export async function fetchNchsaaResultsForAthleteProfile(
   if (gy != null && !Number.isNaN(Number(gy))) {
     const y = Number(gy)
     /** Keep in sync with `plausibleNchsaaYearsForGradYear` in nchsaa-results.ts (wide enough for young grads + SQ). */
-    q = q.gte("year", y - 14).lte("year", y + 2)
+    q = q.gte("year", y - 14).lte("year", y + 4)
   }
 
   const { data, error } = await q.order("year", { ascending: false })

@@ -169,11 +169,13 @@ export function nchsaaJsonToProfileRows(raw: unknown, fallbackWrestlerName: stri
  * Plausible NCHSAA tournament years for a graduation year.
  * Upper bound keeps late entries; lower bound must include early high-school / middle-school state years
  * (e.g. **2026 SQ with class of 2031+** was dropped when min was only `gradYear - 4`).
+ * Upper bound uses **gradYear + 4** (not +2): profiles often mis-state class year by 1–2;
+ * `+ 2` capped **2026** out for `graduation_year` **2023** while **2025** rows still matched.
  */
 export function plausibleNchsaaYearsForGradYear(graduationYear: number): { min: number; max: number } {
   const y = Number(graduationYear)
   if (!y || isNaN(y)) return { min: 0, max: 9999 }
-  const maxYear = Math.min(2035, y + 2)
+  const maxYear = Math.min(2035, y + 4)
   const minYear = Math.max(1990, y - 14)
   return { min: minYear, max: maxYear }
 }
