@@ -21,6 +21,16 @@ export function MissionBar() {
     return () => cancelAnimationFrame(t)
   }, [raisedCents])
 
+  const avgCents = donations > 0 ? Math.round(raisedCents / donations) : 0
+  const avgUsd =
+    donations > 0
+      ? (avgCents / 100).toLocaleString("en-US", {
+          style: "currency",
+          currency: "USD",
+          maximumFractionDigits: 0,
+        })
+      : "—"
+
   const raisedUsd = (raisedCents / 100).toLocaleString("en-US", {
     style: "currency",
     currency: "USD",
@@ -43,7 +53,7 @@ export function MissionBar() {
         {error && (
           <p className="mb-4 text-center text-xs text-amber-600/90">Live totals unavailable — refresh the page in a moment.</p>
         )}
-        <div className="grid gap-10 md:grid-cols-3 md:gap-6">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
           <div className="text-center md:text-left">
             <p className="font-[family-name:var(--font-barlow-spartan)] text-sm font-semibold uppercase tracking-[0.12em] text-[#999]">
               Fundraising
@@ -78,7 +88,7 @@ export function MissionBar() {
             </p>
             <p className="mt-1 text-sm text-[#666]">Any Spartan distance · checkout here</p>
           </div>
-          <div className="text-center md:text-right">
+          <div className="text-center lg:text-right">
             <p className="font-[family-name:var(--font-barlow-spartan)] text-sm font-semibold uppercase tracking-[0.12em] text-[#999]">
               Donations
             </p>
@@ -88,6 +98,17 @@ export function MissionBar() {
               {loading ? "…" : donations}
             </p>
             <p className="mt-1 text-sm text-[#666]">Completed gifts via this page</p>
+          </div>
+          <div className="text-center lg:text-right">
+            <p className="font-[family-name:var(--font-barlow-spartan)] text-sm font-semibold uppercase tracking-[0.12em] text-[#999]">
+              Avg donation
+            </p>
+            <p
+              className={`mt-2 font-[family-name:var(--font-barlow-spartan)] text-3xl font-black tabular-nums text-white md:text-4xl ${loading ? "opacity-60" : ""}`}
+            >
+              {loading ? "…" : avgUsd}
+            </p>
+            <p className="mt-1 text-sm text-[#666]">Mean gift amount (same window)</p>
           </div>
         </div>
       </div>
