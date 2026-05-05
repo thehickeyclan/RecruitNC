@@ -56,26 +56,33 @@ function mergeUniqueRows<T extends Record<string, unknown>>(
   return out
 }
 
+/** Display weight like `107 lbs` (matches legacy Data Dawg / schools page style). */
+function formatWeightLbs(weightRaw: unknown): string {
+  const s = String(weightRaw ?? "")
+    .replace(/lbs?$/i, "")
+    .trim()
+  if (!s) return ""
+  return `${s} lbs`
+}
+
 function formatNchsaaLine(r: Record<string, unknown>): string {
   const name = String(r.wrestler_name ?? "").trim()
   const place = Number(r.place ?? 0)
   const year = r.year ?? "?"
   const cls = String(r.classification ?? "").trim()
-  const weight = String(r.weight_class ?? "")
-    .replace(/lbs?$/i, "")
-    .trim()
-  const w = weight ? `${weight}lbs` : ""
+  const w = formatWeightLbs(r.weight_class)
+  const clsW = [cls, w].filter(Boolean).join(", ")
   if (place === 1) {
-    return `- ${year}: **${name}** — State Champion (${cls}${w ? `, ${w}` : ""})`
+    return `- ${year}: ${name} — State Champion (${clsW})`
   }
   if (place >= 2 && place <= 6) {
     const ord = place === 2 ? "2nd" : place === 3 ? "3rd" : `${place}th`
-    return `- ${year}: **${name}** — ${ord} place (${cls}${w ? `, ${w}` : ""})`
+    return `- ${year}: ${name} — ${ord} place (${clsW})`
   }
   if (place === 0) {
-    return `- ${year}: **${name}** — State qualifier (${cls}${w ? `, ${w}` : ""})`
+    return `- ${year}: ${name} — State qualifier (${clsW})`
   }
-  return `- ${year}: **${name}** (${cls}${w ? `, ${w}` : ""})`
+  return `- ${year}: ${name} (${clsW})`
 }
 
 function placementNum(p: unknown): number {
@@ -91,19 +98,20 @@ function formatSuper32Line(r: Record<string, unknown>): string {
   const name = String(r.athlete_name ?? "").trim()
   const record =
     String(r.record ?? "").trim() ||
-    (r.wins != null && r.losses != null ? `(${r.wins}-${r.losses})` : "")
-  const weight = String(r.weight_class ?? r.weight ?? "").trim()
-  const isAA = placement >= 1 && placement <= 8
+    (r.wins != null && r.losses != null ? `${r.wins}-${r.losses}` : "")
+  const weightRaw = String(r.weight_class ?? r.weight ?? "")
+    .replace(/lbs?$/i, "")
+    .trim()
   let pt = ""
   if (placement === 1) pt = "Champion (All-American)"
   else if (placement >= 2 && placement <= 8) {
     pt = `${placement}${placement === 2 ? "nd" : placement === 3 ? "rd" : "th"} place (All-American)`
   } else if (placement > 0) pt = `${placement}th place`
-  const parts = [`${year}: **${name}**`]
-  if (pt) parts.push(pt)
-  if (record) parts.push(record)
-  if (weight) parts.push(`(${weight})`)
-  return `- ${parts.join(" — ")}`
+  const mid = pt ? `${name} — ${pt}` : name
+  let line = `- ${year}: ${mid}`
+  if (record) line += ` — ${record}`
+  if (weightRaw) line += ` — (${weightRaw})`
+  return line
 }
 
 async function resolveCanonicalSchool(
@@ -328,26 +336,30 @@ export async function buildSchoolWrestlingDossierMarkdown(rawQuery: string): Pro
   )
 
   const lines: string[] = []
-  lines.push(`## ${canonical}`)
+  lines.push(`## 🏫 ${canonical}`)
   lines.push("")
+
   if (clsMeta?.classification || clsMeta?.region) {
     const eff =
       clsMeta.effective_year != null && Number.isFinite(clsMeta.effective_year)
         ? ` (effective ${clsMeta.effective_year})`
         : ""
-    const bits = [
-      clsMeta.classification ? `${clsMeta.classification}` : null,
-      clsMeta.region ? `Region ${clsMeta.region}` : null,
-    ].filter(Boolean)
-    if (bits.length) {
-      lines.push(`**Classification:** ${bits.join(" · ")}${eff}`)
+    const clsPart = clsMeta.classification ? String(clsMeta.classification).trim() : ""
+    const regionPart =
+      clsMeta.region && String(clsMeta.region).trim()
+        ? ` · Region ${String(clsMeta.region).trim()}`
+        : ""
+    const summary = [clsPart + regionPart].filter(Boolean).join("")
+    if (summary) {
+      lines.push(`📊 Classification: ${summary}${eff}`)
       lines.push("")
     }
   }
 
-  lines.push("### NCHSAA individual tournament")
+  lines.push("### 🏆 NCHSAA Individual Tournament")
+  lines.push("")
   if (nchsaaRows.length === 0) {
-    lines.push("*No individual NCHSAA tournament rows matched this school (or only out-of-scope classifications).*")
+    lines.push("*No individual tournament results on file for this school in the matched data.*")
   } else {
     const sorted = [...nchsaaRows].sort((a, b) => {
       const ya = Number(a.year) || 0
@@ -357,24 +369,30 @@ export async function buildSchoolWrestlingDossierMarkdown(rawQuery: string): Pro
     })
     const champs = sorted.filter((r) => Number(r.place) === 1)
     const other = sorted.filter((r) => Number(r.place) !== 1)
-    lines.push(`**State champions (${champs.length}):**`)
-    if (champs.length === 0) lines.push("*None in the matched rows.*")
+    lines.push(`State Champions (${champs.length}):`)
+    lines.push("")
+    if (champs.length === 0) lines.push("*None in the database for this school.*")
     else {
       for (const r of champs) lines.push(formatNchsaaLine(r))
     }
     lines.push("")
-    lines.push(`**All other state placements in matched rows (${other.length}):**`)
-    if (other.length === 0) lines.push("*None — only champions, no placers 2–6 or qualifiers in these rows.*")
+    lines.push(`Other State Placements (${other.length}):`)
+    lines.push("")
+    if (other.length === 0) lines.push("*No other placers or qualifiers beyond state champions in these rows.*")
     else {
       for (const r of other.slice(0, 400)) lines.push(formatNchsaaLine(r))
-      if (other.length > 400) lines.push(`\n*…plus ${other.length - 400} more placements (truncated).*`)
+      if (other.length > 400) {
+        lines.push("")
+        lines.push(`_…and ${other.length - 400} more placements (truncated)._`)
+      }
     }
   }
 
   lines.push("")
-  lines.push("### Dual team — NCHSAA state champions")
+  lines.push("### 🤼 Dual Team — NCHSAA State Champions")
+  lines.push("")
   if (dualFiltered.length === 0) {
-    lines.push("*No dual team titles matched for this school name.*")
+    lines.push("*No dual-team state titles matched this school name.*")
   } else {
     const sortedDual = [...dualFiltered].sort(
       (a: Record<string, unknown>, b: Record<string, unknown>) =>
@@ -382,13 +400,14 @@ export async function buildSchoolWrestlingDossierMarkdown(rawQuery: string): Pro
     )
     for (const d of sortedDual) {
       lines.push(
-        `- ${d.year}: **${String(d.champion_school ?? "").trim()}** — ${String(d.division ?? "").trim()}`,
+        `- ${d.year}: ${String(d.champion_school ?? "").trim()} — ${String(d.division ?? "").trim()}`,
       )
     }
   }
 
   lines.push("")
-  lines.push("### NHSCA nationals (merged table + nhsca_placements)")
+  lines.push("### 🌟 NHSCA Nationals")
+  lines.push("")
   if (nhscaCombined.length === 0) {
     lines.push("*No NHSCA rows matched this high school.*")
   } else {
@@ -397,52 +416,54 @@ export async function buildSchoolWrestlingDossierMarkdown(rawQuery: string): Pro
       const p = placementNum(r.placement)
       const nm = String(r.athlete_name ?? "").trim()
       const div = String(r.division ?? "").trim()
-      const wt = String(r.weight ?? r.weight_class ?? "").trim()
+      const wt = formatWeightLbs(r.weight ?? r.weight_class)
       const rec = String((r as { record?: string }).record ?? "").trim()
       const aa = p >= 1 && p <= 8 ? " (All-American)" : ""
       const placeStr =
         p === 1 ? "Champion" : p > 0 ? `${p}${p === 2 ? "nd" : p === 3 ? "rd" : "th"}` : "Placer"
-      const extras = [div, wt ? `${wt}` : "", rec ? rec : ""].filter(Boolean).join(", ")
-      lines.push(
-        `- ${r.year}: **${nm}** — ${placeStr}${aa}${extras ? ` (${extras})` : ""}`,
-      )
+      const extras = [div, wt, rec].filter(Boolean).join(", ")
+      lines.push(`- ${r.year}: ${nm} — ${placeStr}${aa}${extras ? ` (${extras})` : ""}`)
     }
   }
 
   lines.push("")
-  lines.push("### Super32")
+  lines.push("### ⚡ Super32 (All-Americans)")
+  lines.push("")
   const aaOnly = super32Rows.filter((r) => {
     const p = placementNum(r.placement ?? r.place)
     return p >= 1 && p <= 8
   })
   if (aaOnly.length === 0) {
-    lines.push("*No Super32 All-American (top 8) rows matched this school.*")
+    lines.push("*No Super32 top-8 (All-American) rows matched this school.*")
   } else {
     const sortedS = [...aaOnly].sort((a, b) => (Number(b.year) || 0) - (Number(a.year) || 0))
     for (const r of sortedS.slice(0, MAX_SUPER32_LIST)) lines.push(formatSuper32Line(r))
     if (sortedS.length > MAX_SUPER32_LIST) {
-      lines.push(`\n*…plus ${sortedS.length - MAX_SUPER32_LIST} more Super32 rows (truncated).*`)
+      lines.push("")
+      lines.push(`_…and ${sortedS.length - MAX_SUPER32_LIST} more Super32 rows (truncated)._`)
     }
   }
 
   lines.push("")
-  lines.push("### Dave Schultz High School Excellence Award")
+  lines.push("### 🎖️ Dave Schultz High School Excellence Award")
+  lines.push("")
   if (daveFiltered.length === 0) {
-    lines.push("*No Dave Schultz award rows matched this school.*")
+    lines.push("*No Dave Schultz award winners matched this school.*")
   } else {
     const sortedD = [...daveFiltered].sort(
       (a: Record<string, unknown>, b: Record<string, unknown>) =>
         (Number(b.year) || 0) - (Number(a.year) || 0),
     )
     for (const d of sortedD) {
-      lines.push(`- ${d.year}: **${String(d.name ?? "").trim()}** (${String(d.high_school ?? "").trim()})`)
+      lines.push(`- ${d.year}: ${String(d.name ?? "").trim()} (${String(d.high_school ?? "").trim()})`)
     }
   }
 
   lines.push("")
-  lines.push("### NCHSAA state tournament — Most Outstanding Wrestler")
+  lines.push("### ⭐ NCHSAA State Tournament — Most Outstanding Wrestler")
+  lines.push("")
   if (mowFiltered.length === 0) {
-    lines.push("*No MOW rows matched this school.*")
+    lines.push("*No tournament MOW rows matched this school.*")
   } else {
     const sortedM = [...mowFiltered].sort(
       (a: Record<string, unknown>, b: Record<string, unknown>) =>
@@ -450,13 +471,14 @@ export async function buildSchoolWrestlingDossierMarkdown(rawQuery: string): Pro
     )
     for (const m of sortedM) {
       lines.push(
-        `- ${m.year}: **${String(m.name ?? "").trim()}** — ${String(m.division ?? "").trim()} (${String(m.school ?? "").trim()})`,
+        `- ${m.year}: ${String(m.name ?? "").trim()} — ${String(m.division ?? "").trim()} (${String(m.school ?? "").trim()})`,
       )
     }
   }
 
   lines.push("")
-  lines.push(`*Matched school name: **${canonical}** · Searched: "${phrase}"*`)
+  lines.push("---")
+  lines.push(`_🔍 Matched: **${canonical}** · Search: "${phrase}"_`)
 
   return { markdown: lines.join("\n"), searched_for: phrase, canonical_school: canonical }
 }

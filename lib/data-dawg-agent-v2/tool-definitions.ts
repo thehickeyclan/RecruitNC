@@ -92,6 +92,33 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
   {
     type: "function",
     function: {
+      name: "nchsaa_dual_team_champions",
+      description:
+        "NCHSAA **state** dual team championships (state duals / dual team state champions): winners by year and division from table dual_team_champions. Use for 'show dual team state champions', 'NCHSAA dual team', 'who won state duals', 'dual team winners in [year]', or 'which school has the most dual team titles' (set leaderboard: true). Optional filters: year, division (e.g. '4A', '1A/2A'), school (champion school name fragment). NOT the same as NHSCA national duals — if the user asks only for NHSCA duals, clarify; for NC state duals use this tool.",
+      parameters: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          year: { type: "integer", description: "Optional — filter to this season year." },
+          division: { type: "string", description: "Optional — e.g. '4A', '7A', '1A/2A'." },
+          school: { type: "string", description: "Optional — champion school name fragment." },
+          leaderboard: {
+            type: "boolean",
+            description:
+              "If true, return schools ranked by total state dual titles (with years). Use for 'most dual team championships', 'dual team leaderboard'.",
+          },
+          limit: {
+            type: "integer",
+            description: "Max rows (list mode, default ~400) or max schools (leaderboard, default 80).",
+          },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "nhsca_placements_search",
       description:
         "NHSCA national tournament placements (athlete or school). Use for All-Americans, national placers, NHSCA history.",

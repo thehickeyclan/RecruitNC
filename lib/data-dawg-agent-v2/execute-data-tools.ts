@@ -534,6 +534,109 @@ export async function toolNchsaaMultiTimeStateChampions(args: { times: number })
   }
 }
 
+const MAX_DUAL_LIST = 400
+const MAX_DUAL_LEADERBOARD = 80
+
+/**
+ * NCHSAA **state** dual team championships (dual_team_champions). Not NHSCA national duals.
+ */
+export async function toolNchsaaDualTeamChampions(args: {
+  year?: number | null
+  division?: string | null
+  school?: string | null
+  leaderboard?: boolean | null
+  limit?: number | null
+}) {
+  const admin = getSupabaseAdmin()
+  const wantLeaderboard = Boolean(args.leaderboard)
+
+  if (wantLeaderboard) {
+    const listCap = Math.min(Math.max(Number(args.limit) || MAX_DUAL_LEADERBOARD, 1), 200)
+    const { data, error } = await admin
+      .from("dual_team_champions")
+      .select("champion_school, year, division")
+      .eq("is_vacated", false)
+
+    if (error) {
+      return { error: error.message, leaderboard: true, schools: [] as unknown[] }
+    }
+
+    let rows = (data ?? []) as Array<{ champion_school?: string; year?: number; division?: string }>
+    if (args.year != null && Number.isFinite(args.year)) {
+      const y = Math.floor(Number(args.year))
+      rows = rows.filter((r) => r.year === y)
+    }
+    if (args.division?.trim()) {
+      const d = args.division.trim().toLowerCase()
+      rows = rows.filter((r) => String(r.division ?? "").toLowerCase().includes(d))
+    }
+    if (args.school?.trim()) {
+      const frag = args.school.trim().toLowerCase()
+      rows = rows.filter((r) => String(r.champion_school ?? "").toLowerCase().includes(frag))
+    }
+
+    const counts = new Map<string, { count: number; years: number[] }>()
+    for (const r of rows) {
+      const s = String(r.champion_school ?? "").trim()
+      if (!s) continue
+      if (!counts.has(s)) counts.set(s, { count: 0, years: [] })
+      const c = counts.get(s)!
+      c.count++
+      if (r.year != null && !c.years.includes(r.year)) c.years.push(r.year)
+    }
+
+    const schools = [...counts.entries()]
+      .map(([school, v]) => ({
+        school,
+        title_count: v.count,
+        years: v.years.sort((a, b) => b - a),
+      }))
+      .sort((a, b) => b.title_count - a.title_count || a.school.localeCompare(b.school))
+      .slice(0, listCap)
+
+    return {
+      leaderboard: true,
+      schools,
+      total_schools_in_scope: counts.size,
+      note: "NCHSAA state dual team titles (non-vacated). This is not the NHSCA national dual meet.",
+    }
+  }
+
+  const rowCap = Math.min(Math.max(Number(args.limit) || MAX_DUAL_LIST, 1), 500)
+
+  let q = admin
+    .from("dual_team_champions")
+    .select("year, division, champion_school")
+    .eq("is_vacated", false)
+    .order("year", { ascending: false })
+    .limit(rowCap)
+
+  if (args.year != null && Number.isFinite(args.year)) {
+    q = q.eq("year", Math.floor(Number(args.year)))
+  }
+  if (args.division?.trim()) {
+    q = q.ilike("division", `%${escapeForIlike(args.division.trim())}%`)
+  }
+  if (args.school?.trim()) {
+    q = q.ilike("champion_school", `%${escapeForIlike(args.school.trim())}%`)
+  }
+
+  const { data, error } = await q
+  if (error) {
+    return { error: error.message, leaderboard: false, rows: [] as unknown[] }
+  }
+
+  const rows = data ?? []
+  return {
+    leaderboard: false,
+    rows,
+    count: rows.length,
+    truncated: rows.length >= rowCap,
+    limit_used: rowCap,
+    note: "NCHSAA state dual team championships (non-vacated). NHSCA national duals are a different tournament.",
+  }
+}
+
 export async function toolGetAthleteFullDossier(args: { athlete_id: string }) {
   const id = String(args.athlete_id ?? "").trim()
   const result = await buildAthleteDossierMarkdown(id)
@@ -552,6 +655,7 @@ export type DataToolName =
   | "search_athletes"
   | "search_school_classifications"
   | "get_school_wrestling_dossier"
+  | "nchsaa_dual_team_champions"
   | "nhsca_placements_search"
   | "nchsaa_state_results_search"
   | "nchsaa_multi_time_state_champions"
@@ -580,6 +684,18 @@ export async function executeDataTool(name: string, rawArgs: unknown): Promise<s
       case "get_school_wrestling_dossier":
         return JSON.stringify(
           await toolGetSchoolWrestlingDossier(args as { query: string }),
+        )
+      case "nchsaa_dual_team_champions":
+        return JSON.stringify(
+          await toolNchsaaDualTeamChampions(
+            args as {
+              year?: number | null
+              division?: string | null
+              school?: string | null
+              leaderboard?: boolean | null
+              limit?: number | null
+            },
+          ),
         )
       case "nhsca_placements_search":
         return JSON.stringify(
