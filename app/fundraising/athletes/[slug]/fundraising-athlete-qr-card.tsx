@@ -24,21 +24,21 @@ export function FundraisingAthleteQrCard({ qrSrc, donateUrl, athleteDisplayName 
   }, [donateUrl])
 
   return (
-    <div className="w-full max-w-[min(100%,18rem)] rounded-2xl border-2 border-white/25 bg-white p-4 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.5)] sm:max-w-[19rem] sm:p-5">
-      <p className="font-[family-name:var(--font-fundraising-display)] text-center text-[10px] font-bold uppercase tracking-[0.2em] text-[#061224]/75">
+    <div className="w-full max-w-[min(100%,18rem)] rounded-2xl border-2 border-white/25 bg-white p-4 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.5)] sm:max-w-[19rem] sm:p-5 lg:max-w-[15rem] lg:p-3.5">
+      <p className="font-[family-name:var(--font-fundraising-display)] text-center text-[10px] font-bold uppercase tracking-[0.2em] text-[#061224]/75 lg:text-[9px]">
         Scan to give
       </p>
-      <p className="mx-auto mt-2 max-w-[16rem] text-center text-xs leading-snug text-[#061224]/55">
+      <p className="mx-auto mt-2 max-w-[16rem] text-center text-xs leading-snug text-[#061224]/55 lg:mt-1.5 lg:max-w-[13rem] lg:text-[10px]">
         Opens this athlete&apos;s gift page (bookmark or share). Same secure checkout — brightness up for scanning.
       </p>
-      <div className="mt-4 flex justify-center rounded-lg bg-white p-2">
+      <div className="mt-4 flex justify-center rounded-lg bg-white p-2 lg:mt-3 lg:p-1.5">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={qrSrc}
           alt={`QR code: donate to ${athleteDisplayName}`}
           width={224}
           height={224}
-          className="h-auto w-full max-w-[14rem] sm:max-w-[15.5rem]"
+          className="h-auto w-full max-w-[14rem] sm:max-w-[15.5rem] lg:max-w-[10.5rem]"
           decoding="async"
         />
       </div>

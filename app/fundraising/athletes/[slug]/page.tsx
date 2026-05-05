@@ -17,6 +17,9 @@ import { recruitingProfilePhotoFromRow } from "@/lib/recruiting-profile-photo"
 
 const HERO_FALLBACK_SILHOUETTE = "/wrestler-silhouette.png"
 
+const PRIMARY_DONATE_CTA_CLASS =
+  "font-[family-name:var(--font-fundraising-display)] flex min-h-[52px] w-full touch-manipulation items-center justify-center rounded-sm bg-[#CC0000] px-8 text-sm font-extrabold uppercase tracking-[0.14em] text-white shadow-[0_14px_44px_-10px_rgba(204,0,0,0.55)] hover:bg-[#a80000] sm:inline-flex sm:w-auto sm:min-w-[240px]"
+
 async function fetchRecruitingProfilePhoto(admin: ReturnType<typeof createAdminClient>, athleteId: string): Promise<string | null> {
   const { data, error } = await admin.from("athletes").select("*").eq("id", athleteId).maybeSingle()
   if (error || !data) return null
@@ -146,29 +149,31 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           Official NC United gift page
         </p>
 
-        {viewProfileHref && heroIsCustomPhoto ? (
-          <HardLink
-            href={viewProfileHref}
-            className="group mt-6 block overflow-hidden rounded-xl border border-white/10 bg-[#0B2545]/50 outline-none ring-offset-2 ring-offset-[#061224] focus-visible:ring-2 focus-visible:ring-[#C8A94A]"
-            aria-label={`View ${displayName} recruiting profile`}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={heroPhotoSrc}
-              alt={`${displayName} — recruiting photo`}
-              className="h-auto max-h-[min(480px,60vh)] w-full object-cover object-center transition duration-300 group-hover:opacity-92"
-            />
-          </HardLink>
-        ) : (
-          <div className="mt-6 overflow-hidden rounded-xl border border-white/10 bg-[#0B2545]/50">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={heroPhotoSrc}
-              alt={heroIsCustomPhoto ? `${displayName} — recruiting photo` : ""}
-              className={`h-auto max-h-[min(480px,60vh)] w-full object-cover object-center ${heroIsCustomPhoto ? "" : "opacity-80"}`}
-            />
-          </div>
-        )}
+        <div className="mt-6 mx-auto w-full max-w-full lg:max-w-[min(100%,20rem)]">
+          {viewProfileHref && heroIsCustomPhoto ? (
+            <HardLink
+              href={viewProfileHref}
+              className="group block overflow-hidden rounded-xl border border-white/10 bg-[#0B2545]/50 outline-none ring-offset-2 ring-offset-[#061224] focus-visible:ring-2 focus-visible:ring-[#C8A94A]"
+              aria-label={`View ${displayName} recruiting profile`}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={heroPhotoSrc}
+                alt={`${displayName} — recruiting photo`}
+                className="h-auto max-h-[min(480px,60vh)] w-full object-cover object-center transition duration-300 group-hover:opacity-92 lg:max-h-[min(340px,45vh)]"
+              />
+            </HardLink>
+          ) : (
+            <div className="overflow-hidden rounded-xl border border-white/10 bg-[#0B2545]/50">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={heroPhotoSrc}
+                alt={heroIsCustomPhoto ? `${displayName} — recruiting photo` : ""}
+                className={`h-auto max-h-[min(480px,60vh)] w-full object-cover object-center lg:max-h-[min(340px,45vh)] ${heroIsCustomPhoto ? "" : "opacity-80"}`}
+              />
+            </div>
+          )}
+        </div>
 
         <h1 className="font-[family-name:var(--font-fundraising-display)] mt-6 text-2xl font-black uppercase leading-tight tracking-tight text-white sm:text-4xl">
           {viewProfileHref ? (
@@ -184,6 +189,17 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
         </h1>
         {schoolLine ? <p className="mt-2 text-base text-white/65">{schoolLine}</p> : null}
         {code ? <p className="mt-2 font-mono text-xs text-white/40">{code}</p> : null}
+
+        {code ? (
+          <div className="mt-5 flex flex-col items-stretch gap-2 sm:items-center">
+            <HardLink href={giveOnThisPageHref} className={PRIMARY_DONATE_CTA_CLASS}>
+              Donate now
+            </HardLink>
+            <p className="text-center text-[11px] leading-snug text-white/45 sm:max-w-md">
+              Opens secure checkout on this page (below). Everything underneath is optional context.
+            </p>
+          </div>
+        ) : null}
 
         {athleteId ? (
           <FundraisingAthleteMessageSection
@@ -342,7 +358,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           </div>
         ) : null}
 
-        <div className="mt-10 flex justify-center">
+        <div className="mt-10 flex justify-center lg:mt-8">
           <FundraisingAthleteQrCard
             qrSrc={athleteQrDataUrl}
             donateUrl={athleteAbsoluteUrl}
@@ -351,11 +367,8 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
         </div>
 
         <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-          <HardLink
-            href={giveOnThisPageHref}
-            className="font-[family-name:var(--font-fundraising-display)] flex min-h-[52px] w-full touch-manipulation items-center justify-center rounded-sm bg-[#CC0000] px-8 text-sm font-extrabold uppercase tracking-[0.14em] text-white shadow-[0_14px_44px_-10px_rgba(204,0,0,0.55)] hover:bg-[#a80000] sm:inline-flex sm:w-auto sm:min-w-[240px]"
-          >
-            Give now
+          <HardLink href={giveOnThisPageHref} className={PRIMARY_DONATE_CTA_CLASS}>
+            Donate now
           </HardLink>
         </div>
 
