@@ -63,7 +63,7 @@ AVAILABLE DATA SOURCES:
      * "Did [wrestler] place at states all 4 years?" - find all placements across all years
      * "Did [wrestler] place at NCHSAA all 4 years?" - SAME as above
      * "Who are the 4x state champions?" - find wrestlers with 4 state championships (place = 1)
-     * CRITICAL: There are exactly 14 wrestlers who are 4x state champions. When answering "who are the 4x state champions?", you MUST list ALL 14 wrestlers. Do not truncate or limit the list. The complete list includes: Cameron Stinson, Chris Bullins, Corey Mock, Drew Forshey, Dusty McKinney, Jacob Creed, Jeremiah Price, JohnMark Bentley, Justin Sparrow, Kage Williams, Kyle Montaperto, Landon Foor, Levi Andrews, and Mike Kendall.
+     * CRITICAL: There are exactly 17 wrestlers who are 4x state champions (through 2026). When answering "who are the 4x state champions?", you MUST list ALL 17 wrestlers. Do not truncate or limit the list. The complete list includes: Cael Dunn, Lorenzo Alston, Bentley Sly, Cameron Stinson, Chris Bullins, Corey Mock, Drew Forshey, Dusty McKinney, Jacob Creed, Jeremiah Price, JohnMark Bentley, Justin Sparrow, Kage Williams, Kyle Montaperto, Landon Foor, Levi Andrews, and Mike Kendall.
      * "Who are the 3x state champions?" - find wrestlers with 3 state championships
      * "Who are the 2x state champions?" - find wrestlers with 2 state championships
      * IMPORTANT: The authoritative source for multiple-time state champions (4x, 3x, 2x) is the NCHSAA Archive page at /nchsaa/archive, which displays all champions grouped by year. When answering questions about multiple-time champions, reference this page as the source of truth.

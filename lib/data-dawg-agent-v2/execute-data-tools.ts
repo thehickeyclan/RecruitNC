@@ -19,6 +19,7 @@ import {
   scoreSchoolMatch,
 } from "./fuzzy-utils"
 import { buildAthleteDossierMarkdown } from "@/lib/data-dawg-athlete-dossier"
+import { buildSchoolWrestlingDossierMarkdown } from "@/lib/data-dawg-school-dossier"
 import { getNchsaaStateChampionsByExactTitleCount } from "@/lib/nchsaa-multi-time-state-champions"
 
 const MAX_ROWS = 40
@@ -528,7 +529,7 @@ export async function toolNchsaaMultiTimeStateChampions(args: { times: number })
     champions,
     note:
       t === 4
-        ? "Four-time individual state champions: curated list of 14 (official NC high school wrestling record book)."
+        ? "Four-time individual state champions: curated list of 17 through 2026 (Cael Dunn, Lorenzo Alston, and Bentley Sly joined the list in Feb 2026)."
         : null,
   }
 }
@@ -542,9 +543,15 @@ export async function toolGetAthleteFullDossier(args: { athlete_id: string }) {
   return { markdown: result.markdown }
 }
 
+export async function toolGetSchoolWrestlingDossier(args: { query: string }) {
+  const q = sanitizeFragment(String(args.query ?? ""))
+  return buildSchoolWrestlingDossierMarkdown(q)
+}
+
 export type DataToolName =
   | "search_athletes"
   | "search_school_classifications"
+  | "get_school_wrestling_dossier"
   | "nhsca_placements_search"
   | "nchsaa_state_results_search"
   | "nchsaa_multi_time_state_champions"
@@ -569,6 +576,10 @@ export async function executeDataTool(name: string, rawArgs: unknown): Promise<s
       case "search_school_classifications":
         return JSON.stringify(
           await toolSearchSchoolClassifications(args as { query: string; limit?: number }),
+        )
+      case "get_school_wrestling_dossier":
+        return JSON.stringify(
+          await toolGetSchoolWrestlingDossier(args as { query: string }),
         )
       case "nhsca_placements_search":
         return JSON.stringify(

@@ -345,7 +345,7 @@ export function formatResults(
                               (extractedParams?.queryType === "nhsca_all_american" && extractedParams?.year) // Year-specific queries should show all results
     const resultLimit = isUnlimitedQuery ? results.length : 20
     
-    // Special handling for 4x state champions - ensure all 14 are explicitly listed
+    // Special handling for 4x state champions - ensure full curated list is explicitly listed
     const is4xStateChamps = extractedParams?.queryType === "state_champion_records" && 
                             extractedParams?.championshipCount === 4
     
@@ -455,12 +455,15 @@ export function formatResults(
       })
       
       resultsText = summaryLines.join("\n") + yearSections.join("\n\n")
-    } else if (is4xStateChamps && results.length === 14) {
-      // Explicitly format all 14 4x state champions
-      resultsText = `There are exactly 14 wrestlers who are 4x State Champions in North Carolina. Here is the complete list:\n\n${results
+    } else if (is4xStateChamps && results.length > 0) {
+      const n = results.length
+      resultsText = `There are exactly ${n} wrestlers who are 4x State Champions in North Carolina. Here is the complete list:\n\n${results
         .map((r: any, idx: number) => {
           const champYears = r.championships
-            .map((c: any) => `${c.year} (${c.classification} ${c.weight_class}lbs)`)
+            .map((c: any) => {
+              const w = String(c.weight_class ?? "").replace(/lbs?$/i, "").trim()
+              return `${c.year} (${c.classification} ${w}lbs)`
+            })
             .join(", ")
           return `${idx + 1}. ${r.wrestler_name} - ${champYears}`
         })

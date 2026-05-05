@@ -14,8 +14,47 @@ export type NchsaaMultiTimeStateChampion = {
   weight_classes: string[]
 }
 
-/** All 14 four-time NCHSAA individual state champions (verified; matches legacy Data Dawg handler). */
+/** All 17 four-time NCHSAA individual state champions through 2026 (curated list; includes 2026 class). */
 export const NCHSAA_FOUR_TIME_STATE_CHAMPIONS: NchsaaMultiTimeStateChampion[] = [
+  {
+    wrestler_name: "Cael Dunn",
+    championship_count: 4,
+    championships: [
+      { year: 2026, classification: "1A/2A", weight_class: "215lbs", school: "Avery/South Davidson" },
+      { year: 2025, classification: "1A", weight_class: "190lbs", school: "Avery/South Davidson" },
+      { year: 2024, classification: "1A", weight_class: "170lbs", school: "Avery/South Davidson" },
+      { year: 2023, classification: "1A", weight_class: "170lbs", school: "Avery/South Davidson" },
+    ],
+    schools: ["Avery/South Davidson"],
+    classifications: ["1A", "1A/2A"],
+    weight_classes: ["170lbs", "190lbs", "215lbs"],
+  },
+  {
+    wrestler_name: "Lorenzo Alston",
+    championship_count: 4,
+    championships: [
+      { year: 2026, classification: "4A", weight_class: "175lbs", school: "Uwharrie Charter" },
+      { year: 2025, classification: "1A", weight_class: "157lbs", school: "Uwharrie Charter" },
+      { year: 2024, classification: "1A", weight_class: "145lbs", school: "Uwharrie Charter" },
+      { year: 2023, classification: "1A", weight_class: "144lbs", school: "Uwharrie Charter" },
+    ],
+    schools: ["Uwharrie Charter"],
+    classifications: ["1A", "4A"],
+    weight_classes: ["144lbs", "145lbs", "157lbs", "175lbs"],
+  },
+  {
+    wrestler_name: "Bentley Sly",
+    championship_count: 4,
+    championships: [
+      { year: 2026, classification: "4A", weight_class: "150lbs", school: "Stuart Cramer" },
+      { year: 2025, classification: "3A", weight_class: "144lbs", school: "Stuart Cramer" },
+      { year: 2024, classification: "3A", weight_class: "132lbs", school: "Stuart Cramer" },
+      { year: 2023, classification: "3A", weight_class: "120lbs", school: "Stuart Cramer" },
+    ],
+    schools: ["Stuart Cramer"],
+    classifications: ["3A", "4A"],
+    weight_classes: ["120lbs", "132lbs", "144lbs", "150lbs"],
+  },
   {
     wrestler_name: "Cameron Stinson",
     championship_count: 4,

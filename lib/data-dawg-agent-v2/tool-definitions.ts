@@ -55,7 +55,7 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
     function: {
       name: "search_school_classifications",
       description:
-        "Find NC high schools: official classifications (1A–4A, region) plus schools seen on athlete rosters. Use for 'tell me about [school]', classification, region, or whether a school exists. Pass the school name only.",
+        "Find NC high schools: official classifications (1A–4A, region) plus schools seen on athlete rosters. Use when the user only asks division/region or you need disambiguation between multiple schools. For a general school question ('Avery County', 'tell me about Cardinal Gibbons wrestling'), prefer get_school_wrestling_dossier.",
       parameters: {
         type: "object",
         additionalProperties: false,
@@ -65,6 +65,25 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
             description: "School name or distinctive fragment (e.g. 'Cardinal Gibbons', 'Page'). Typos are handled server-side.",
           },
           limit: { type: "integer" },
+        },
+        required: ["query"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_school_wrestling_dossier",
+      description:
+        "FULL school wrestling report: NCHSAA individual (champions + other placers), dual team state titles, NHSCA nationals (wrestling_nhsca_results + nhsca_placements), Super32 All-Americans (top 8), Dave Schultz award winners, NCHSAA tournament MOW — plus classification when available. Use when the message is mainly a school name or asks about that school's wrestling history, champs, duals, nationals, or All-Americans. Pass the school name only.",
+      parameters: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          query: {
+            type: "string",
+            description: "High school name (e.g. 'Avery County', 'Cardinal Gibbons High School').",
+          },
         },
         required: ["query"],
       },
