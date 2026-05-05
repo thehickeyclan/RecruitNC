@@ -16,7 +16,7 @@ type SpartanDonateFormProps = {
 
 /**
  * Default: step-by-step wizard. Fallback to single-page (last shipped pre-wizard UI), same `/api/spartan/checkout`:
- * - `?classic=1` or `?checkout=classic` or `?form=classic` (share link: `/spartan?classic=1#spartan-checkout`)
+ * - `?classic=1` … — **ignored on `/fundraising/*` checkout** (hub paths always use the wizard so Stripe returns to the hub/athlete thanks URL, not `/spartan`).
  * - `NEXT_PUBLIC_SPARTAN_CLASSIC_CHECKOUT=1` — all visitors get classic ( emergency rollback in Vercel)
  *
  * `SpartanDonateForm` must stay inside `<Suspense>` (see donation-section) because of `useSearchParams`.
@@ -35,7 +35,9 @@ export function SpartanDonateForm({
     searchParams.get("form") === "classic"
   const fromEnv =
     typeof process !== "undefined" && process.env.NEXT_PUBLIC_SPARTAN_CLASSIC_CHECKOUT === "1"
-  if (fromQuery || fromEnv) {
+  /** Classic form doesn’t send `fundraisingHub` — would wrongly send donors to `/spartan` thanks/cancel after Stripe. */
+  const useClassicCheckout = !fundraisingHub && (fromQuery || fromEnv)
+  if (useClassicCheckout) {
     return (
       <>
         <p className="mb-3 rounded border border-amber-800/50 bg-amber-950/40 px-3 py-2 text-[12px] leading-snug text-amber-100/90">

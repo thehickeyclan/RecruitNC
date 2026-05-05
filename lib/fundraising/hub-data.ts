@@ -7,7 +7,6 @@ import {
   fundraisingCampaignPortalPath,
   hubSpartanDonationRowMatchesCampaign,
   normalizeRegistryStripeCampaignSlug,
-  stripeSpartanCampaignMetadataMatchesRequested,
   type FundraisingCampaignDefinition,
 } from "@/lib/fundraising/campaign-registry"
 import { fundraisingCodeToFullNameMap, getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
@@ -16,10 +15,14 @@ import {
   effectiveAthleteCodeForDonationLedgerRow,
   type SpartanCreditCorrectionsIndex,
 } from "@/lib/spartan-credit-corrections"
-import { loadCorrectedStripeDonationsForAllHubCampaignsWindow } from "@/lib/fundraising/stripe-transparency-pipeline"
+import {
+  loadCorrectedStripeDonationsForAllHubCampaignsWindow,
+  loadCorrectedStripeDonationsForCampaignWindow,
+} from "@/lib/fundraising/stripe-transparency-pipeline"
 import { hubActivityCampaignFromStripeSlug } from "@/lib/fundraising/hub-activity-meta"
 import {
   attachPublicSupporterFields,
+  buildSpartanPublicSupporterSummary,
   type SpartanDonationWithPublicFields,
 } from "@/lib/spartan-public-supporter-feed"
 import type { SpartanFayettevilleDonation } from "@/lib/spartan-fayetteville-stripe"
@@ -38,10 +41,13 @@ export type HubDonationRow = {
   raw_metadata?: unknown
 }
 
+/** Hero totals match `GET /api/spartan/supporters` for the default campaign (MissionBar). */
 export type FundraisingHubHeroStats = {
   totalRaisedCents: number
-  totalDonors: number
-  athletesFunded: number
+  /** Paid checkouts in window — Spartan label “Donations”. */
+  giftCount: number
+  raceEntryCount: number
+  ncUnitedCommunityFundCents: number
 }
 
 export type FundraisingHubCampaignCard = {
@@ -236,20 +242,12 @@ function hubDonationRowsFromStripeDonations(rows: SpartanFayettevilleDonation[])
 }
 
 function computeHeroFromStripeRows(rows: SpartanFayettevilleDonation[]): FundraisingHubHeroStats {
-  let totalRaisedCents = 0
-  const donorEmails = new Set<string>()
-  const athleteCodes = new Set<string>()
-  for (const r of rows) {
-    totalRaisedCents += r.amountCents
-    const em = r.donorEmail?.trim().toLowerCase()
-    if (em) donorEmails.add(em)
-    const code = r.athleteCode?.trim()
-    if (code) athleteCodes.add(code.toLowerCase())
-  }
+  const s = buildSpartanPublicSupporterSummary(rows)
   return {
-    totalRaisedCents,
-    totalDonors: donorEmails.size,
-    athletesFunded: athleteCodes.size,
+    totalRaisedCents: s.totalRaisedCents,
+    giftCount: s.giftCount,
+    raceEntryCount: s.raceEntryCount,
+    ncUnitedCommunityFundCents: s.ncUnitedCommunityFundCents,
   }
 }
 
@@ -273,19 +271,14 @@ function stripeEnrichedToActivity(rows: SpartanDonationWithPublicFields[]): Fund
 
 function computeHero(rows: HubDonationRow[]): FundraisingHubHeroStats {
   let totalRaisedCents = 0
-  const donorEmails = new Set<string>()
-  const athleteCodes = new Set<string>()
   for (const r of rows) {
     totalRaisedCents += r.amount_cents ?? 0
-    const em = r.donor_email?.trim().toLowerCase()
-    if (em) donorEmails.add(em)
-    const code = r.athlete_code?.trim()
-    if (code) athleteCodes.add(code.toLowerCase())
   }
   return {
     totalRaisedCents,
-    totalDonors: donorEmails.size,
-    athletesFunded: athleteCodes.size,
+    giftCount: rows.length,
+    raceEntryCount: 0,
+    ncUnitedCommunityFundCents: 0,
   }
 }
 
@@ -427,12 +420,15 @@ export async function buildFundraisingHubSnapshot(admin?: SupabaseClient): Promi
   }
 
   const lookbackDays = DEFAULT_FUNDRAISING_CAMPAIGN.defaultLookbackDays
-  const allHubStripeRows = await loadCorrectedStripeDonationsForAllHubCampaignsWindow(lookbackDays, correctionIndex)
-  const defaultSlug = DEFAULT_FUNDRAISING_CAMPAIGN.stripeCampaignSlug
-  const primaryCampaignStripeRows =
-    allHubStripeRows != null
-      ? allHubStripeRows.filter((r) => stripeSpartanCampaignMetadataMatchesRequested(r.spartanCampaignSlug, defaultSlug))
-      : null
+  /** Same Stripe list + corrections as `GET /api/spartan/supporters` for the default campaign. */
+  const primaryCampaignStripeRows = await loadCorrectedStripeDonationsForCampaignWindow(
+    DEFAULT_FUNDRAISING_CAMPAIGN,
+    correctionIndex,
+  )
+  const allHubStripeRows =
+    FUNDRAISING_CAMPAIGNS.length > 1
+      ? await loadCorrectedStripeDonationsForAllHubCampaignsWindow(lookbackDays, correctionIndex)
+      : primaryCampaignStripeRows
 
   let hero: FundraisingHubHeroStats
   let leaderboard: FundraisingHubLeaderRow[]
@@ -440,20 +436,16 @@ export async function buildFundraisingHubSnapshot(admin?: SupabaseClient): Promi
 
   if (primaryCampaignStripeRows != null) {
     hero = computeHeroFromStripeRows(primaryCampaignStripeRows)
-    if (allHubStripeRows != null) {
-      leaderboard = computeLeaderboard(
-        hubDonationRowsFromStripeDonations(allHubStripeRows),
-        codeToFullName,
-        schoolByCodeLower,
-      )
-    } else {
-      leaderboard = computeLeaderboard(
-        filterHubRowsForAllRegisteredCampaignsLookback(allRowsAdjusted, lookbackDays),
-        codeToFullName,
-        schoolByCodeLower,
-      )
-    }
-    const enrichedAll = attachPublicSupporterFields(allHubStripeRows, codeToFullName)
+    const stripeRowsForCombinedBoard =
+      allHubStripeRows != null && allHubStripeRows !== primaryCampaignStripeRows
+        ? allHubStripeRows
+        : primaryCampaignStripeRows
+    leaderboard = computeLeaderboard(
+      hubDonationRowsFromStripeDonations(stripeRowsForCombinedBoard),
+      codeToFullName,
+      schoolByCodeLower,
+    )
+    const enrichedAll = attachPublicSupporterFields(stripeRowsForCombinedBoard, codeToFullName)
     const actSorted = [...enrichedAll].sort((a, b) => b.createdUnix - a.createdUnix)
     activity = stripeEnrichedToActivity(actSorted.slice(0, 20))
   } else {

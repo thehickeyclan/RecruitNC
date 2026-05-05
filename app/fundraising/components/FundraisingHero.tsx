@@ -84,29 +84,39 @@ export function FundraisingHero({
             |
           </span>
           <div className="flex min-w-0 flex-1 flex-col sm:flex-none">
-            <span className="text-[10px] font-extrabold uppercase tracking-[0.24em] text-[#C8A94A]">Donors</span>
+            <span className="text-[10px] font-extrabold uppercase tracking-[0.24em] text-[#C8A94A]">Donations</span>
             <span className="mt-1 text-2xl font-black tabular-nums text-white sm:text-3xl">
-              {hero.totalDonors.toLocaleString("en-US")}
+              {hero.giftCount.toLocaleString("en-US")}
             </span>
           </div>
           <span className="hidden text-[#C8A94A]/50 sm:block" aria-hidden>
             |
           </span>
           <div className="flex min-w-0 flex-1 flex-col sm:flex-none">
-            <span className="text-[10px] font-extrabold uppercase tracking-[0.24em] text-[#C8A94A]">Athletes funded</span>
+            <span className="text-[10px] font-extrabold uppercase tracking-[0.24em] text-[#C8A94A]">Race checkouts</span>
             <span className="mt-1 text-2xl font-black tabular-nums text-white sm:text-3xl">
-              {hero.athletesFunded.toLocaleString("en-US")}
+              {hero.raceEntryCount.toLocaleString("en-US")}
             </span>
           </div>
         </div>
 
+        {hero.ncUnitedCommunityFundCents > 0 ? (
+          <p className="mx-auto mt-4 max-w-2xl text-xs leading-relaxed text-white/85 sm:mx-0">
+            <span className="font-semibold text-white">NC United fund</span> (community programs, not tied to a single
+            athlete): {formatUsdWhole(hero.ncUnitedCommunityFundCents)}
+          </p>
+        ) : null}
+
         <p className="mx-auto mt-4 max-w-2xl text-xs leading-relaxed text-white/90 sm:mx-0">
-          <strong className="text-white">Raised</strong>, <strong className="text-white">Donors</strong>, and{" "}
-          <strong className="text-white">Athletes funded</strong> count paid checkouts for{" "}
+          <strong className="text-white">Raised</strong>, <strong className="text-white">Donations</strong>, and{" "}
+          <strong className="text-white">Race checkouts</strong> match the public Spartan campaign totals (
+          <HardLink href="/spartan" className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
+            /spartan
+          </HardLink>
+          ) for{" "}
           <strong className="text-white">{hubTransparency.campaignDisplayName}</strong> in the last{" "}
-          <span className="tabular-nums text-white">{hubTransparency.lookbackDays}</span> days — same scope as live
-          activity on this page. The athlete leaderboard ranks athlete-credited gifts across every NC United hub campaign in
-          that window (
+          <span className="tabular-nums text-white">{hubTransparency.lookbackDays}</span> days. The athlete leaderboard ranks
+          athlete-credited gifts across every NC United hub campaign in that window (
           <HardLink
             href={`/fundraising/leaderboard?campaign=all&days=${hubTransparency.lookbackDays}`}
             className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline"
@@ -122,7 +132,7 @@ export function FundraisingHero({
           Raised in 16 days. Zero preparation. One community.
         </p>
 
-        <div className="mx-auto mt-10 flex max-w-xl flex-col gap-3 sm:mx-0 sm:max-w-none sm:flex-row sm:flex-wrap">
+        <div className="mx-auto mt-10 flex max-w-xl flex-col gap-4 sm:mx-0 sm:max-w-none sm:flex-row sm:flex-wrap sm:items-start">
           <HardLink
             href="/fundraising/athletes"
             className={`${displayFont("inline-flex min-h-[52px] flex-1 items-center justify-center rounded-sm bg-[#CC0000] px-8 text-sm font-extrabold uppercase tracking-[0.14em] text-white shadow-[0_18px_52px_-12px_rgba(204,0,0,0.65)] transition hover:bg-[#a80000] sm:flex-none sm:min-w-[240px]")}`}
@@ -135,6 +145,24 @@ export function FundraisingHero({
           >
             Training fund →
           </HardLink>
+          <div className="flex w-full flex-col items-center sm:w-auto sm:min-w-[200px] sm:items-start">
+            <button
+              type="button"
+              disabled
+              aria-disabled="true"
+              aria-label="Scholarships — coming soon"
+              className={`${displayFont(
+                "inline-flex min-h-[52px] w-full cursor-not-allowed flex-col items-center justify-center rounded-sm border-2 border-white/15 bg-white/[0.04] px-8 py-2 text-sm font-extrabold uppercase tracking-[0.14em] text-white/45 sm:w-auto sm:min-w-[240px]",
+              )}`}
+            >
+              Scholarships
+            </button>
+            <span
+              className={`${displayFont("mt-2 text-center text-[10px] font-bold uppercase tracking-[0.18em] text-[#C8A94A]/75 sm:text-left")}`}
+            >
+              Coming soon
+            </span>
+          </div>
         </div>
 
         <p className="mx-auto mt-6 text-center text-xs text-white sm:mx-0 sm:text-left">

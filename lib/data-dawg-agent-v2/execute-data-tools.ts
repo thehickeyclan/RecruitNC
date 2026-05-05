@@ -82,6 +82,26 @@ function rowLast(row: Record<string, unknown>, cols: AthleteSearchCols): string 
   return String(row[cols.ln] ?? row.last_name ?? row.lastname ?? "").trim()
 }
 
+/** Prefer split columns; fall back to first / last token of `name` when columns are blank. */
+function directoryFirstLastLow(
+  row: Record<string, unknown>,
+  cols: AthleteSearchCols,
+): { firstLow: string; lastLow: string } {
+  let f = rowFirst(row, cols).toLowerCase()
+  let l = rowLast(row, cols).toLowerCase()
+  const nameField = String(row.name ?? "").trim()
+  if (nameField.includes(" ")) {
+    const bits = nameField.split(/\s+/).filter(Boolean)
+    if (!f && bits.length) f = bits[0].toLowerCase()
+    if (!l && bits.length >= 2) l = bits[bits.length - 1].toLowerCase()
+  }
+  return { firstLow: f, lastLow: l }
+}
+
+function maxTypoDistForToken(tok: string): number {
+  return tok.length <= 4 ? 1 : 2
+}
+
 /** Half the pool ordered by grad year ascending, half descending — mitigates bias to recent rows only. */
 async function mergeIlikeWithGradYearSpread(
   admin: SupabaseClient,
@@ -229,18 +249,45 @@ export async function toolSearchAthletes(args: { query: string; limit?: number }
       return { row, score, disp }
     })
     .filter((x) => {
-      if (x.score >= 0.28) return true
-      const last = rowLast(x.row as Record<string, unknown>, cols).toLowerCase()
-      const nameField = String(x.row.name ?? "").trim()
-      const lastFromFullName =
-        nameField && nameField.includes(" ") ? (nameField.split(/\s+/).pop() ?? "").toLowerCase() : ""
-      const lastCompare = last || lastFromFullName
       const parts = qLower.split(/\s+/).filter(Boolean)
       // For "First Last School …" queries, surname is the second token, not the last ("Gibbons").
       const wantLast =
         parts.length >= 3 ? parts[1] : parts.length > 1 ? parts[parts.length - 1] : qLower
       const wantFirst = parts[0] ?? ""
-      const firstLow = rowFirst(x.row as Record<string, unknown>, cols).toLowerCase()
+      const { firstLow, lastLow } = directoryFirstLastLow(x.row as Record<string, unknown>, cols)
+      const lastCompare = lastLow
+
+      // Exactly two meaningful tokens → treat as First + Last (not "First + School"). Wrong surnames
+      // must not pass on composite score / first-name overlap alone (Tyler Tracy vs Tyler Gardner).
+      if (
+        tokens.length === 2 &&
+        tokens[0].length >= 2 &&
+        tokens[1].length >= 2 &&
+        wantFirst.length >= 2 &&
+        wantLast.length >= 2
+      ) {
+        if (!firstLow || !lastCompare) return false
+        if (levenshteinDistance(tokens[0], firstLow) > maxTypoDistForToken(tokens[0])) return false
+        if (levenshteinDistance(tokens[1], lastCompare) > maxTypoDistForToken(tokens[1])) return false
+        return true
+      }
+
+      if (x.score >= 0.28) {
+        // "First Last School …" — school overlap can inflate score; do not admit rows whose first two
+        // tokens disagree with directory first/last (e.g. Tyler Gardner + Jacksonville vs Tyler Tracy).
+        const needsNameStem =
+          tokens.length >= 3 &&
+          tokens[0].length >= 2 &&
+          tokens[1].length >= 2 &&
+          Boolean(firstLow && lastCompare)
+        if (
+          !needsNameStem ||
+          (levenshteinDistance(tokens[0], firstLow) <= maxTypoDistForToken(tokens[0]) &&
+            levenshteinDistance(tokens[1], lastCompare) <= maxTypoDistForToken(tokens[1]))
+        ) {
+          return true
+        }
+      }
 
       if (tokens.length >= 2 && lastCompare && wantLast.length >= 2) {
         const maxLastDist = wantLast.length <= 4 ? 1 : 2

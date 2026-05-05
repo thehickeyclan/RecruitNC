@@ -1,16 +1,25 @@
 "use client"
 
+import { Trophy } from "lucide-react"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { HardLink } from "@/components/hard-link"
+import { FundraisingFooter } from "@/app/fundraising/components/FundraisingFooter"
 import {
   DEFAULT_FUNDRAISING_CAMPAIGN,
   fundraisingCampaignByStripeSlug,
 } from "@/lib/fundraising/campaign-registry"
 import { fundraisingAthletePublicHrefFromCode } from "@/lib/fundraising/athlete-fundraising-slug"
 
-const NAVY = "#03154C"
-const GOLD = "#CBAF5D"
+/** Matches fundraising hub / Spartan fundraising rails */
+const NAVY = "#0B2545"
+const NAVY_DEEP = "#061224"
+const GOLD = "#C8A94A"
+const CRIMSON = "#CC0000"
+
+function displayFont(c: string) {
+  return `font-[family-name:var(--font-fundraising-display)] ${c}`
+}
 
 export type LeaderboardCampaignOption = {
   stripeCampaignSlug: string
@@ -46,10 +55,37 @@ function formatUsd(cents: number) {
 
 export function LeaderboardSkeleton() {
   return (
-    <div className="min-h-[50vh] bg-slate-100 pb-16 pt-12">
-      <div className="mx-auto max-w-4xl px-4">
-        <div className="h-8 w-48 animate-pulse rounded bg-slate-200" />
-        <div className="mt-8 h-64 animate-pulse rounded-xl bg-slate-200/80" />
+    <div className="min-h-screen pb-16 text-white" style={{ backgroundColor: NAVY }}>
+      <section className="relative overflow-hidden border-b border-white/[0.08] px-4 pb-24 pt-12">
+        <div className="mx-auto max-w-6xl">
+          <div className="h-4 w-40 animate-pulse rounded bg-white/10" />
+          <div className="mt-6 h-10 max-w-md animate-pulse rounded bg-white/10" />
+          <div className="mt-4 h-20 max-w-2xl animate-pulse rounded bg-white/5" />
+        </div>
+      </section>
+      <div className="relative z-[1] mx-auto max-w-6xl px-4" style={{ marginTop: "-3rem" }}>
+        <div
+          className="rounded-2xl border border-white/10 p-6 sm:p-8"
+          style={{ backgroundColor: `${NAVY_DEEP}f2` }}
+        >
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="h-10 animate-pulse rounded-lg bg-white/10" />
+            <div className="flex gap-2">
+              {[1, 2, 3, 4].map((k) => (
+                <div key={k} className="h-9 flex-1 animate-pulse rounded-lg bg-white/10" />
+              ))}
+            </div>
+          </div>
+          <div className="mt-10 grid gap-3 sm:grid-cols-3">
+            {[1, 2, 3].map((k) => (
+              <div key={k} className="h-24 animate-pulse rounded-xl bg-white/5" />
+            ))}
+          </div>
+          <div className="mt-10 h-64 animate-pulse rounded-xl bg-white/5" />
+          <p className={`${displayFont("mt-10 text-center text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]/70")}`}>
+            Loading leaderboard…
+          </p>
+        </div>
       </div>
     </div>
   )
@@ -79,6 +115,7 @@ export function FundraisingLeaderboardContent({ campaigns }: { campaigns: Leader
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [retryNonce, setRetryNonce] = useState(0)
   const [summary, setSummary] = useState<SpartanMetricsSummary | null>(null)
   const [byAthlete, setByAthlete] = useState<SpartanByAthlete[]>([])
   const [meta, setMeta] = useState<{ campaignDisplayName: string } | null>(null)
@@ -103,7 +140,7 @@ export function FundraisingLeaderboardContent({ campaigns }: { campaigns: Leader
           campaign: resolvedCampaignSlug,
           days: String(resolvedDays),
         })
-        const res = await fetch(`/api/spartan/supporters?${q}`)
+        const res = await fetch(`/api/spartan/supporters?${q}`, { cache: "no-store" })
         const j = (await res.json()) as {
           error?: string
           summary?: SpartanMetricsSummary
@@ -113,7 +150,7 @@ export function FundraisingLeaderboardContent({ campaigns }: { campaigns: Leader
         if (!res.ok) throw new Error(j.error || "Could not load leaderboard")
         if (cancelled) return
         setSummary(j.summary ?? null)
-        setByAthlete(j.byAthlete ?? [])
+        setByAthlete(Array.isArray(j.byAthlete) ? j.byAthlete : [])
         setMeta(j.campaignDisplayName ? { campaignDisplayName: j.campaignDisplayName } : null)
       } catch (e) {
         if (!cancelled) {
@@ -129,7 +166,7 @@ export function FundraisingLeaderboardContent({ campaigns }: { campaigns: Leader
     return () => {
       cancelled = true
     }
-  }, [resolvedCampaignSlug, resolvedDays])
+  }, [resolvedCampaignSlug, resolvedDays, retryNonce])
 
   const sortedAthletes = useMemo(() => [...byAthlete].sort((a, b) => b.totalCents - a.totalCents), [byAthlete])
 
@@ -141,62 +178,114 @@ export function FundraisingLeaderboardContent({ campaigns }: { campaigns: Leader
 
   const dayPresets = [30, 90, 120, 365]
 
+  const avgGiftCents =
+    summary && summary.giftCount > 0 ? Math.round(summary.totalRaisedCents / summary.giftCount) : null
+
   return (
-    <div className="min-h-[70vh] bg-slate-100 pb-16">
-      <header className="relative overflow-hidden px-4 pb-16 pt-12 sm:pb-20 sm:pt-14" style={{ backgroundColor: NAVY }}>
+    <div id="fundraising-leaderboard-root" className="min-h-screen text-white" style={{ backgroundColor: NAVY }}>
+      <section className="relative overflow-hidden border-b border-white/[0.08] px-4 pb-28 pt-12 sm:pb-32 sm:pt-16">
         <div
-          className="pointer-events-none absolute inset-0 opacity-[0.07]"
+          className="pointer-events-none absolute inset-0 opacity-[0.14]"
           aria-hidden
           style={{
-            backgroundImage: `radial-gradient(circle at 20% 20%, ${GOLD} 0%, transparent 45%), radial-gradient(circle at 80% 80%, ${GOLD} 0%, transparent 40%)`,
+            backgroundImage: `
+              linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px),
+              linear-gradient(125deg, ${CRIMSON} 0%, transparent 38%),
+              radial-gradient(ellipse 80% 60% at 100% -10%, ${GOLD}22 0%, transparent 55%)
+            `,
+            backgroundSize: "48px 48px, 48px 48px, auto, auto",
           }}
         />
-        <div className="relative mx-auto max-w-4xl">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em]" style={{ color: GOLD }}>
-            NC United Wrestling · Transparency
-          </p>
-          <h1 className="mt-3 text-balance text-3xl font-bold tracking-tight text-white sm:text-[2rem] sm:leading-tight">
-            Fundraising leaderboard
-          </h1>
-          <p className="mt-4 max-w-2xl text-pretty text-base leading-relaxed text-white/88">
-            Totals credited to athletes from paid gifts in the selected window. Donor names on gift feeds respect listing
-            preferences (anonymous supporters appear without identification).
-          </p>
-        </div>
-      </header>
+        <div
+          className="pointer-events-none absolute inset-0"
+          aria-hidden
+          style={{
+            background: `linear-gradient(180deg, rgba(0,0,0,0.35) 0%, transparent 42%, rgba(0,0,0,0.22) 100%)`,
+          }}
+        />
 
-      <div className="relative z-[1] mx-auto max-w-4xl px-4 sm:px-6" style={{ marginTop: "-3rem" }}>
-        <div className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-[0_12px_40px_-12px_rgba(15,23,42,0.25)] sm:p-8">
-          <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
-            <div className="flex flex-col gap-2">
-              <label htmlFor="leaderboard-campaign" className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <div className="relative mx-auto max-w-6xl">
+          <nav aria-label="Breadcrumb" className={`${displayFont("flex flex-wrap items-center gap-2 text-[11px] font-extrabold uppercase tracking-[0.22em]")}`}>
+            <HardLink href="/fundraising" className="text-[#C8A94A]/90 underline-offset-4 hover:text-[#C8A94A] hover:underline">
+              Fundraising home
+            </HardLink>
+            <span className="text-white/25" aria-hidden>
+              /
+            </span>
+            <span className="text-white/60">Leaderboard</span>
+          </nav>
+
+          <div className="mt-8 flex flex-wrap items-start gap-4">
+            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-[#CC0000]/35 bg-[#CC0000]/15 text-[#ffb4b4]">
+              <Trophy className="h-7 w-7" aria-hidden />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className={`${displayFont("text-[10px] font-extrabold uppercase tracking-[0.28em] text-[#C8A94A] sm:text-[11px]")}`}>
+                NC United · Transparency
+              </p>
+              <h1
+                className={`${displayFont("mt-3 text-balance text-[clamp(1.85rem,5vw,3rem)] font-black uppercase leading-[0.95] tracking-tight text-white")}`}
+              >
+                Fundraising leaderboard
+              </h1>
+              <p className="mt-4 max-w-2xl text-pretty text-base leading-relaxed text-white/88">
+                Paid gifts credited to athletes in the window you pick — same Stripe totals as the{" "}
+                <HardLink href="/spartan" className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
+                  Spartan campaign page
+                </HardLink>
+                . Donor names elsewhere respect listing preferences.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="relative z-[1] mx-auto max-w-6xl px-4 pb-8 sm:px-6" style={{ marginTop: "-5rem" }}>
+        <div
+          className="rounded-2xl border border-white/10 px-5 py-8 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.55)] sm:px-10 sm:py-10"
+          style={{
+            background: `linear-gradient(165deg, ${NAVY_DEEP} 0%, rgba(11,37,69,0.97) 50%, ${NAVY_DEEP} 100%)`,
+          }}
+        >
+          <div className="flex flex-col gap-8 lg:flex-row lg:flex-wrap lg:items-end lg:justify-between">
+            <div className="flex min-w-[200px] flex-col gap-2">
+              <label
+                htmlFor="leaderboard-campaign"
+                className={`${displayFont("text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#C8A94A]/90")}`}
+              >
                 Campaign
               </label>
               <select
                 id="leaderboard-campaign"
-                className="max-w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#03154C]"
+                className={`${displayFont("max-w-full rounded-lg border border-white/15 bg-[#0B2545]/90 px-4 py-3 text-sm font-bold uppercase tracking-wide text-white shadow-inner focus:border-[#C8A94A]/50 focus:outline-none focus:ring-2 focus:ring-[#C8A94A]/35")}`}
+                style={{ colorScheme: "dark" }}
                 value={resolvedCampaignSlug}
                 onChange={(e) => commitFilters(e.target.value, resolvedDays)}
               >
-                <option value="all">All campaigns (combined)</option>
+                <option value="all" className="bg-[#0B2545] text-white">
+                  All campaigns (combined)
+                </option>
                 {campaigns.map((c) => (
-                  <option key={c.stripeCampaignSlug} value={c.stripeCampaignSlug}>
+                  <option key={c.stripeCampaignSlug} value={c.stripeCampaignSlug} className="bg-[#0B2545] text-white">
                     {c.tabLabel}
                   </option>
                 ))}
               </select>
             </div>
-            <div className="flex flex-col gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Lookback window</span>
+            <div className="flex flex-col gap-3">
+              <span className={`${displayFont("text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#C8A94A]/90")}`}>
+                Lookback window
+              </span>
               <div className="flex flex-wrap gap-2">
                 {dayPresets.map((d) => (
                   <button
                     key={d}
                     type="button"
-                    className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#03154C] focus-visible:ring-offset-2 ${
+                    className={`${displayFont("min-h-[44px] rounded-lg border px-4 py-2 text-xs font-extrabold uppercase tracking-[0.14em] transition focus:outline-none focus:ring-2 focus:ring-[#C8A94A]/45 focus:ring-offset-2 focus:ring-offset-[#061224]")} ${
                       resolvedDays === d
-                        ? "border-[#03154C] bg-[#03154C] text-white"
-                        : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
+                        ? "border-[#CC0000] bg-[#CC0000] text-white shadow-[0_12px_40px_-12px_rgba(204,0,0,0.55)]"
+                        : "border-white/15 bg-white/5 text-white/90 hover:border-[#C8A94A]/35 hover:bg-white/[0.08]"
                     }`}
                     onClick={() => commitFilters(resolvedCampaignSlug, d)}
                   >
@@ -207,120 +296,214 @@ export function FundraisingLeaderboardContent({ campaigns }: { campaigns: Leader
             </div>
           </div>
 
-          <p className="mt-6 text-sm font-semibold text-slate-900">{displayTitle}</p>
-          <p className="mt-1 text-xs text-slate-500 tabular-nums">
-            {resolvedCampaignSlug === "all"
-              ? "Athlete totals combine every registered NC United Stripe campaign in this window."
-              : `Stripe campaign · ${resolvedCampaignSlug}`}
-          </p>
+          <div className="mt-10 border-t border-white/10 pt-8">
+            <p className={`${displayFont("text-lg font-black uppercase tracking-tight text-white")}`}>{displayTitle}</p>
+            <p className="mt-2 text-sm tabular-nums text-white/55">
+              {resolvedCampaignSlug === "all"
+                ? "Athlete totals combine every registered NC United Stripe campaign in this window."
+                : `Stripe campaign · ${resolvedCampaignSlug}`}{" "}
+              · <span className="text-white/75">{resolvedDays}-day window</span>
+            </p>
+          </div>
 
           {loading ? (
-            <p className="mt-10 text-center text-sm text-slate-500">Loading totals…</p>
+            <div className="mt-14 flex flex-col items-center gap-4">
+              <div
+                className="h-10 w-10 animate-spin rounded-full border-2 border-[#C8A94A]/25 border-t-[#C8A94A]"
+                aria-hidden
+              />
+              <p className={`${displayFont("text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]/80")}`}>
+                Loading totals…
+              </p>
+            </div>
           ) : error ? (
-            <p className="mt-10 text-center text-sm text-red-600">{error}</p>
+            <div className="mt-12 rounded-xl border border-amber-500/30 bg-amber-500/10 px-5 py-6 text-center">
+              <p className="font-semibold text-amber-100">Could not load leaderboard</p>
+              <p className="mt-2 text-sm text-amber-100/85">{error}</p>
+              <p className="mt-4 text-xs text-amber-100/70">
+                Check your connection and try again — totals load directly from our supporter API.
+              </p>
+              <button
+                type="button"
+                className={`${displayFont("mt-6 inline-flex min-h-11 items-center justify-center rounded-lg border border-white/20 bg-white/10 px-6 text-xs font-extrabold uppercase tracking-[0.14em] text-white hover:bg-white/15")}`}
+                onClick={() => setRetryNonce((n) => n + 1)}
+              >
+                Retry
+              </button>
+            </div>
           ) : (
             <>
               {summary && (
-                <dl className="mt-8 grid gap-3 sm:grid-cols-3">
-                  <div className="rounded-xl border border-slate-100 bg-slate-50/80 px-4 py-3">
-                    <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Raised (window)</dt>
-                    <dd className="mt-1 text-xl font-bold tabular-nums text-slate-900">
-                      {formatUsd(summary.totalRaisedCents)}
+                <dl className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="rounded-xl border border-white/10 bg-[#0B2545]/65 px-5 py-4">
+                    <dt className={`${displayFont("text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#C8A94A]")}`}>
+                      Raised
+                    </dt>
+                    <dd className="mt-2 text-2xl font-black tabular-nums text-white">{formatUsd(summary.totalRaisedCents)}</dd>
+                  </div>
+                  <div className="rounded-xl border border-white/10 bg-[#0B2545]/65 px-5 py-4">
+                    <dt className={`${displayFont("text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#C8A94A]")}`}>
+                      Donations
+                    </dt>
+                    <dd className="mt-2 text-2xl font-black tabular-nums text-white">{summary.giftCount}</dd>
+                  </div>
+                  <div className="rounded-xl border border-white/10 bg-[#0B2545]/65 px-5 py-4">
+                    <dt className={`${displayFont("text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#C8A94A]")}`}>
+                      Race checkouts
+                    </dt>
+                    <dd className="mt-2 text-2xl font-black tabular-nums" style={{ color: CRIMSON }}>
+                      {summary.raceEntryCount}
                     </dd>
                   </div>
-                  <div className="rounded-xl border border-slate-100 bg-slate-50/80 px-4 py-3">
-                    <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Paid gifts</dt>
-                    <dd className="mt-1 text-xl font-bold tabular-nums text-slate-900">{summary.giftCount}</dd>
-                  </div>
-                  <div className="rounded-xl border border-slate-100 bg-slate-50/80 px-4 py-3">
-                    <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Race entries</dt>
-                    <dd className="mt-1 text-xl font-bold tabular-nums text-slate-900">{summary.raceEntryCount}</dd>
+                  <div className="rounded-xl border border-white/10 bg-[#0B2545]/65 px-5 py-4">
+                    <dt className={`${displayFont("text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#C8A94A]")}`}>
+                      Avg gift
+                    </dt>
+                    <dd className="mt-2 text-2xl font-black tabular-nums text-white">
+                      {avgGiftCents != null ? formatUsd(avgGiftCents) : "—"}
+                    </dd>
                   </div>
                 </dl>
               )}
 
-              <div className="mt-10 overflow-x-auto rounded-xl border border-slate-200">
-                <table className="w-full min-w-[520px] text-left text-sm">
+              {(summary?.ncUnitedCommunityFundCents ?? 0) > 0 && summary ? (
+                <p className="mt-6 rounded-xl border border-[#C8A94A]/20 bg-[#C8A94A]/10 px-4 py-3 text-sm leading-relaxed text-white/90">
+                  <span className={`${displayFont("font-extrabold text-[#C8A94A]")}`}>NC United fund</span> (community
+                  programs, not tied to one athlete):{" "}
+                  <span className="font-semibold tabular-nums text-white">{formatUsd(summary.ncUnitedCommunityFundCents ?? 0)}</span>
+                  <span className="text-white/60">
+                    {" "}
+                    · {summary.ncUnitedCommunityGiftCount ?? 0} gift{(summary.ncUnitedCommunityGiftCount ?? 0) === 1 ? "" : "s"}
+                  </span>
+                </p>
+              ) : null}
+
+              <div className="mt-10 overflow-hidden rounded-xl border border-white/10">
+                <table className="w-full min-w-[560px] text-left text-sm">
                   <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-                      <th className="px-4 py-3">Rank</th>
-                      <th className="px-4 py-3">Athlete</th>
-                      <th className="px-4 py-3 text-right">Raised</th>
-                      <th className="px-4 py-3 text-right">Gifts</th>
-                      <th className="px-4 py-3 text-right">Race</th>
+                    <tr
+                      className={`${displayFont("border-b border-white/10 bg-black/25 text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#C8A94A]/95")}`}
+                    >
+                      <th className="px-4 py-4">Rank</th>
+                      <th className="px-4 py-4">Athlete</th>
+                      <th className="px-4 py-4 text-right">Raised</th>
+                      <th className="px-4 py-4 text-right">Gifts</th>
+                      <th className="px-4 py-4 text-right">Race</th>
                     </tr>
                   </thead>
-                  <tbody className="text-slate-800">
+                  <tbody className="text-white/90">
                     {(summary?.ncUnitedCommunityFundCents ?? 0) > 0 && summary ? (
-                      <tr className="border-b border-slate-100 bg-slate-50/90">
-                        <td className="px-4 py-3 tabular-nums text-slate-500">—</td>
-                        <td className="px-4 py-3 font-medium text-slate-900">NC United community fund</td>
-                        <td className="px-4 py-3 text-right font-semibold tabular-nums">
+                      <tr className="border-b border-white/[0.06] bg-[#C8A94A]/10">
+                        <td className="px-4 py-3.5 tabular-nums text-white/45">—</td>
+                        <td className={`${displayFont("px-4 py-3.5 font-bold uppercase tracking-wide text-[#C8A94A]")}`}>
+                          NC United community fund
+                        </td>
+                        <td className="px-4 py-3.5 text-right text-base font-black tabular-nums text-white">
                           {formatUsd(summary.ncUnitedCommunityFundCents ?? 0)}
                         </td>
-                        <td className="px-4 py-3 text-right tabular-nums">{summary.ncUnitedCommunityGiftCount ?? 0}</td>
-                        <td className="px-4 py-3 text-right tabular-nums">{summary.ncUnitedCommunityRaceSignupCount ?? 0}</td>
+                        <td className="px-4 py-3.5 text-right tabular-nums text-white/80">
+                          {summary.ncUnitedCommunityGiftCount ?? 0}
+                        </td>
+                        <td className="px-4 py-3.5 text-right tabular-nums text-white/80">
+                          {summary.ncUnitedCommunityRaceSignupCount ?? 0}
+                        </td>
                       </tr>
                     ) : null}
                     {sortedAthletes.map((row, i) => {
                       const athleteHref = fundraisingAthletePublicHrefFromCode(row.athleteCode)
+                      const rank = i + 1
+                      const podium = rank <= 3
                       return (
-                      <tr key={row.athleteCode} className="border-b border-slate-100 last:border-0">
-                        <td className="px-4 py-3 tabular-nums text-slate-500">{i + 1}</td>
-                        <td className="px-4 py-3">
-                          {athleteHref ? (
-                            <>
-                              <HardLink
-                                href={athleteHref}
-                                className="block font-medium text-slate-900 underline-offset-4 hover:underline"
-                                style={{ color: NAVY }}
-                              >
-                                {row.athleteName}
-                              </HardLink>
-                              <HardLink
-                                href={athleteHref}
-                                className="mt-0.5 block font-mono text-[11px] text-slate-500 hover:underline"
-                                style={{ color: NAVY }}
-                              >
-                                {row.athleteCode}
-                              </HardLink>
-                            </>
-                          ) : (
-                            <>
-                              <span className="font-medium text-slate-900">{row.athleteName}</span>
-                              <span className="mt-0.5 block font-mono text-[11px] text-slate-400">{row.athleteCode}</span>
-                            </>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-right font-semibold tabular-nums">{formatUsd(row.totalCents)}</td>
-                        <td className="px-4 py-3 text-right tabular-nums">{row.donationCount}</td>
-                        <td className="px-4 py-3 text-right tabular-nums">{row.raceSignupCount}</td>
-                      </tr>
-                    )})}
+                        <tr
+                          key={row.athleteCode}
+                          className={`border-b border-white/[0.06] transition hover:bg-white/[0.04] ${
+                            podium ? "bg-white/[0.02]" : ""
+                          }`}
+                        >
+                          <td className="px-4 py-3.5 tabular-nums">
+                            <span
+                              className={`inline-flex min-w-[2rem] items-center justify-center rounded-md px-2 py-1 text-xs font-black ${
+                                rank === 1
+                                  ? "bg-[#C8A94A]/25 text-[#C8A94A]"
+                                  : rank === 2
+                                    ? "bg-white/10 text-white/85"
+                                    : rank === 3
+                                      ? "bg-[#CC0000]/15 text-[#ffb4b4]"
+                                      : "text-white/45"
+                              }`}
+                            >
+                              {rank}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3.5">
+                            {athleteHref ? (
+                              <>
+                                <HardLink
+                                  href={athleteHref}
+                                  className={`${displayFont("block text-base font-black uppercase tracking-tight text-white underline-offset-4 hover:text-[#C8A94A] hover:underline")}`}
+                                >
+                                  {row.athleteName}
+                                </HardLink>
+                                <HardLink
+                                  href={athleteHref}
+                                  className="mt-1 block font-mono text-[11px] text-[#C8A94A]/75 hover:text-[#C8A94A] hover:underline"
+                                >
+                                  {row.athleteCode}
+                                </HardLink>
+                              </>
+                            ) : (
+                              <>
+                                <span className={`${displayFont("block text-base font-black uppercase text-white")}`}>
+                                  {row.athleteName}
+                                </span>
+                                <span className="mt-1 block font-mono text-[11px] text-white/40">{row.athleteCode}</span>
+                              </>
+                            )}
+                          </td>
+                          <td className="px-4 py-3.5 text-right text-base font-black tabular-nums text-white">
+                            {formatUsd(row.totalCents)}
+                          </td>
+                          <td className="px-4 py-3.5 text-right tabular-nums text-white/75">{row.donationCount}</td>
+                          <td className={`${displayFont("px-4 py-3.5 text-right text-sm font-bold tabular-nums text-[#CC0000]/95")}`}>
+                            {row.raceSignupCount}
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>
 
               {sortedAthletes.length === 0 && !(summary?.ncUnitedCommunityFundCents ?? 0) ? (
-                <p className="mt-8 text-center text-sm text-slate-500">No paid gifts in this window yet.</p>
+                <p className="mt-12 text-center text-sm text-white/55">No paid gifts in this window yet.</p>
               ) : null}
             </>
           )}
 
-          <div className="mt-10 flex flex-wrap gap-x-6 gap-y-2 border-t border-slate-100 pt-6 text-sm">
-            <HardLink href="/fundraising" className="font-medium underline-offset-4 hover:underline" style={{ color: NAVY }}>
-              ← Fundraising home
+          <div className="mt-12 flex flex-wrap items-center gap-x-8 gap-y-4 border-t border-white/10 pt-8">
+            <HardLink
+              href="/fundraising"
+              className={`${displayFont("text-xs font-extrabold uppercase tracking-[0.16em] text-[#C8A94A] underline-offset-4 hover:underline")}`}
+            >
+              ← Fundraising hub
+            </HardLink>
+            <HardLink
+              href="/fundraising/activity?campaign=all"
+              className={`${displayFont("text-xs font-extrabold uppercase tracking-[0.16em] text-white/75 underline-offset-4 hover:text-[#C8A94A] hover:underline")}`}
+            >
+              Gift log
             </HardLink>
             <HardLink
               href={campaignDefinition.publicPagePath}
-              className="font-medium underline-offset-4 hover:underline"
-              style={{ color: NAVY }}
+              className={`${displayFont("inline-flex min-h-11 items-center justify-center rounded-sm bg-[#CC0000] px-6 text-xs font-extrabold uppercase tracking-[0.14em] text-white shadow-[0_14px_40px_-12px_rgba(204,0,0,0.55)] transition hover:bg-[#a80000]")}`}
             >
-              Donate ({campaignDefinition.publicPagePath})
+              Give now
             </HardLink>
           </div>
         </div>
       </div>
+
+      <FundraisingFooter />
     </div>
   )
 }

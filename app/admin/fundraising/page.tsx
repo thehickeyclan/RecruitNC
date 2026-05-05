@@ -19,6 +19,7 @@ import {
   adminFundraisingLeaderboardStorageKey,
   adminFundraisingNotesStorageKey,
   fundraisingCampaignByContextKey,
+  fundraisingCampaignByStripeSlug,
 } from "@/lib/fundraising/campaign-registry"
 import { cn } from "@/lib/utils"
 import { publicAthleteCreditLabel } from "@/lib/spartan-fayetteville-stripe"
@@ -29,6 +30,7 @@ import {
   Filter,
   Gift,
   Layers,
+  LayoutGrid,
   Link2,
   Mail,
   RefreshCw,
@@ -37,6 +39,8 @@ import {
   Users,
   Wrench,
 } from "lucide-react"
+import type { FundraisingAthleteMatrixPayload } from "@/lib/admin-fundraising-athlete-matrix"
+import { matrixRowDisplayName } from "@/lib/admin-fundraising-athlete-matrix"
 import { toast } from "@/hooks/use-toast"
 import {
   Dialog,
@@ -177,6 +181,36 @@ function scrollToFundraisingSection(elementId: string) {
   })
 }
 
+function WiringDot({ ok, title }: { ok: boolean; title: string }) {
+  return (
+    <span title={title} className="inline-flex items-center justify-center">
+      <span
+        className={cn("inline-block h-2.5 w-2.5 shrink-0 rounded-full", ok ? "bg-emerald-500" : "bg-red-500")}
+        aria-hidden
+      />
+    </span>
+  )
+}
+
+function ProfileCodeSyncDot({ ok }: { ok: boolean | null }) {
+  if (ok === null) {
+    return (
+      <span
+        title="Fundraising profile has no primary NCU code — optional sanity check"
+        className="text-muted-foreground inline-flex min-w-[1.25rem] justify-center text-xs font-medium"
+      >
+        —
+      </span>
+    )
+  }
+  return (
+    <WiringDot
+      ok={ok}
+      title={ok ? "Primary NCU on profile matches roster code" : "Primary NCU on profile does not match roster code"}
+    />
+  )
+}
+
 const ATHLETE_UUID_PIN_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
@@ -264,6 +298,11 @@ export default function AdminFundraisingPage() {
   const [fundraisingProfiles, setFundraisingProfiles] = useState<AdminAthleteFundraisingProfileRow[] | null>(null)
   const [fundraisingProfilesLoading, setFundraisingProfilesLoading] = useState(false)
   const [fundraisingProfilesError, setFundraisingProfilesError] = useState<string | null>(null)
+
+  const [athleteMatrix, setAthleteMatrix] = useState<FundraisingAthleteMatrixPayload | null>(null)
+  const [athleteMatrixLoading, setAthleteMatrixLoading] = useState(false)
+  const [athleteMatrixError, setAthleteMatrixError] = useState<string | null>(null)
+  const [athleteMatrixFilter, setAthleteMatrixFilter] = useState("")
   const [profileDialogOpen, setProfileDialogOpen] = useState(false)
   const [profileEditingId, setProfileEditingId] = useState<string | null>(null)
   const [profileAthleteId, setProfileAthleteId] = useState("")
@@ -440,6 +479,30 @@ export default function AdminFundraisingPage() {
       })
   }, [campaign.defaultLookbackDays, campaign.stripeCampaignSlug])
 
+  const loadAthleteMatrix = useCallback(async () => {
+    setAthleteMatrixLoading(true)
+    setAthleteMatrixError(null)
+    try {
+      const res = await fetch("/api/admin/fundraising-athlete-matrix", { credentials: "include" })
+      const j = (await res.json()) as FundraisingAthleteMatrixPayload & { error?: string }
+      if (!res.ok) throw new Error(typeof j.error === "string" ? j.error : "Failed to load wiring matrix")
+      setAthleteMatrix({
+        rows: Array.isArray(j.rows) ? j.rows : [],
+        campaigns: Array.isArray(j.campaigns) ? j.campaigns : [],
+        generatedAt: typeof j.generatedAt === "string" ? j.generatedAt : new Date().toISOString(),
+      })
+    } catch (e) {
+      setAthleteMatrixError(e instanceof Error ? e.message : "Failed")
+      setAthleteMatrix(null)
+    } finally {
+      setAthleteMatrixLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    void loadAthleteMatrix()
+  }, [loadAthleteMatrix])
+
   useEffect(() => {
     try {
       const lk = adminFundraisingLeaderboardStorageKey(campaign.adminContextKey)
@@ -535,6 +598,7 @@ export default function AdminFundraisingPage() {
       setNetAfterReimbursementsCents(typeof j.netAfterReimbursementsCents === "number" ? j.netAfterReimbursementsCents : 0)
       setParentCoverage(j.parentCoverage ?? null)
       void fetchTeeRollup()
+      void loadAthleteMatrix()
     } catch (e) {
       setDonationsError(e instanceof Error ? e.message : "Load failed")
       setDonations(null)
@@ -572,6 +636,7 @@ export default function AdminFundraisingPage() {
       if (!res.ok) throw new Error(j.error || "Pin failed")
       toast({ title: "Pinned", description: j.message ?? `${key} linked.` })
       await loadDonations()
+      await loadAthleteMatrix()
     } catch (e) {
       toast({
         title: "Pin failed",
@@ -989,6 +1054,49 @@ export default function AdminFundraisingPage() {
     void loadFundraisingProfiles()
   }, [loadFundraisingProfiles])
 
+  const athleteMatrixFilteredRows = useMemo(() => {
+    if (!athleteMatrix?.rows.length) return []
+    const q = athleteMatrixFilter.trim().toLowerCase()
+    if (!q) return athleteMatrix.rows
+
+    const campaignSlugHints = FUNDRAISING_CAMPAIGNS.filter(
+      (c) =>
+        c.tabLabel.toLowerCase().includes(q) ||
+        c.stripeCampaignSlug.toLowerCase().includes(q) ||
+        c.adminContextKey.toLowerCase().includes(q),
+    ).map((c) => c.stripeCampaignSlug)
+
+    return athleteMatrix.rows.filter((r) => {
+      const slugs = r.campaignActivitySlugs ?? []
+      if (
+        r.code.toLowerCase().includes(q) ||
+        matrixRowDisplayName(r).toLowerCase().includes(q) ||
+        (r.donorProfileSlug ?? "").toLowerCase().includes(q) ||
+        (r.pinnedAthleteId ?? "").toLowerCase().includes(q)
+      ) {
+        return true
+      }
+      if (campaignSlugHints.length > 0 && campaignSlugHints.some((slug) => slugs.includes(slug))) return true
+      return slugs.some((s) => s.toLowerCase().includes(q))
+    })
+  }, [athleteMatrix, athleteMatrixFilter])
+
+  const athleteMatrixSummary = useMemo(() => {
+    const rows = athleteMatrix?.rows ?? []
+    if (!rows.length) return null
+    let fullyWired = 0
+    let needPin = 0
+    let needDonorPage = 0
+    let needParent = 0
+    for (const r of rows) {
+      if (r.rosterPinOk && r.donorPageOk && r.parentOk) fullyWired++
+      if (!r.rosterPinOk) needPin++
+      if (r.rosterPinOk && !r.donorPageOk) needDonorPage++
+      if (r.rosterPinOk && !r.parentOk) needParent++
+    }
+    return { fullyWired, needPin, needDonorPage, needParent, total: rows.length }
+  }, [athleteMatrix])
+
   const openNewFundraisingProfileDialog = () => {
     setProfileEditingId(null)
     setProfileAthleteId("")
@@ -1098,6 +1206,7 @@ export default function AdminFundraisingPage() {
       toast({ title: profileEditingId ? "Profile updated" : "Profile created" })
       setProfileDialogOpen(false)
       await loadFundraisingProfiles()
+      await loadAthleteMatrix()
     } finally {
       setProfileSaveBusy(false)
     }
@@ -1173,6 +1282,239 @@ export default function AdminFundraisingPage() {
                 {donationsError ? (
                   <p className="text-destructive text-sm" role="alert">
                     {donationsError}
+                  </p>
+                ) : null}
+              </CardContent>
+            </Card>
+
+            <Card
+              id="fundraising-athlete-wiring-matrix"
+              className="overflow-hidden border-[#003366]/20 bg-white shadow-sm"
+            >
+              <div
+                className="h-1"
+                style={{ background: `linear-gradient(to right, ${brand.navy}, ${brand.crimson})` }}
+                aria-hidden
+              />
+              <CardHeader className="pb-2">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="space-y-1">
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <LayoutGrid className="h-5 w-5 shrink-0 opacity-90" aria-hidden />
+                      Athlete wiring matrix
+                    </CardTitle>
+                    <CardDescription className="max-w-2xl text-sm leading-snug">
+                      Every roster kid with an NCU code: directory pin (Profile → Fundraise), donor page, parent managers,
+                      profile NCU match, and paid gifts per registry campaign (ledger mirror). Green = connected / has
+                      activity; red = missing or mismatch.
+                    </CardDescription>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0 gap-2"
+                    onClick={() => void loadAthleteMatrix()}
+                    disabled={athleteMatrixLoading}
+                  >
+                    <RefreshCw className={`h-4 w-4 shrink-0 ${athleteMatrixLoading ? "animate-spin" : ""}`} />
+                    Refresh matrix
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4 pt-0">
+                <div className="text-muted-foreground flex flex-wrap gap-x-4 gap-y-2 text-[11px] leading-snug">
+                  <span>
+                    <span className="font-semibold text-foreground">Pin</span> — roster row linked to{" "}
+                    <code className="rounded bg-muted px-1">athletes.id</code>
+                  </span>
+                  <span>
+                    <span className="font-semibold text-foreground">Page</span> — active{" "}
+                    <code className="rounded bg-muted px-1">/fundraising/athletes/[slug]</code>
+                  </span>
+                  <span>
+                    <span className="font-semibold text-foreground">Parent</span> — parent profile or link row on pinned
+                    athlete
+                  </span>
+                  <span>
+                    <span className="font-semibold text-foreground">NCU</span> — primary fundraising code on profile vs
+                    roster (when set)
+                  </span>
+                  <span>
+                    <span className="font-semibold text-foreground">Campaign</span> — ≥1 paid Spartan gift credited to
+                    this code in that drive (<code className="rounded bg-muted px-1">spartan_campaign</code>)
+                  </span>
+                </div>
+
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <div className="relative max-w-md flex-1">
+                    <Filter className="text-muted-foreground pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+                    <Input
+                      id="athlete-matrix-filter"
+                      placeholder="Filter by code, name, slug, UUID, or campaign…"
+                      value={athleteMatrixFilter}
+                      onChange={(e) => setAthleteMatrixFilter(e.target.value)}
+                      className="pl-9"
+                      aria-label="Filter athlete wiring matrix"
+                    />
+                  </div>
+                  {athleteMatrixSummary ? (
+                    <p className="text-muted-foreground text-xs leading-snug sm:text-right">
+                      <span className="font-semibold tabular-nums text-emerald-700 dark:text-emerald-400">
+                        {athleteMatrixSummary.fullyWired}
+                      </span>
+                      /{athleteMatrixSummary.total} fully wired ·{" "}
+                      <span className="tabular-nums">{athleteMatrixSummary.needPin}</span> need pin ·{" "}
+                      <span className="tabular-nums">{athleteMatrixSummary.needDonorPage}</span> need donor page ·{" "}
+                      <span className="tabular-nums">{athleteMatrixSummary.needParent}</span> need parent
+                    </p>
+                  ) : null}
+                </div>
+
+                {athleteMatrixError ? (
+                  <p className="text-destructive text-sm" role="alert">
+                    {athleteMatrixError}
+                  </p>
+                ) : null}
+
+                <div className="-mx-1 overflow-x-auto px-1 pb-1">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="whitespace-nowrap font-semibold">NCU</TableHead>
+                        <TableHead className="min-w-[140px] font-semibold">Athlete</TableHead>
+                        <TableHead className="whitespace-nowrap font-semibold">Grad</TableHead>
+                        <TableHead className="text-center font-semibold">Pin</TableHead>
+                        <TableHead className="min-w-[160px] font-semibold">Donor page</TableHead>
+                        <TableHead className="text-center font-semibold">Parent</TableHead>
+                        <TableHead className="text-center font-semibold">NCU</TableHead>
+                        <TableHead className="min-w-[180px] font-semibold">Campaign gifts</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {athleteMatrixLoading && !athleteMatrix?.rows.length ? (
+                        <TableRow>
+                          <TableCell colSpan={8} className="text-muted-foreground py-8 text-center text-sm">
+                            Loading roster wiring…
+                          </TableCell>
+                        </TableRow>
+                      ) : null}
+                      {!athleteMatrixLoading && athleteMatrixFilteredRows.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={8} className="text-muted-foreground py-8 text-center text-sm">
+                            {athleteMatrix?.rows.length ? "No rows match your filter." : "No active roster codes."}
+                          </TableCell>
+                        </TableRow>
+                      ) : null}
+                      {athleteMatrixFilteredRows.map((r) => {
+                        const campaigns = athleteMatrix?.campaigns?.length
+                          ? athleteMatrix.campaigns
+                          : FUNDRAISING_CAMPAIGNS.map((c) => ({
+                              stripeCampaignSlug: c.stripeCampaignSlug,
+                              tabLabel: c.tabLabel,
+                            }))
+                        const slugSet = new Set(r.campaignActivitySlugs ?? [])
+                        return (
+                          <TableRow key={r.code} className="align-middle">
+                            <TableCell className="font-mono text-xs font-semibold">{r.code}</TableCell>
+                            <TableCell className="text-sm">{matrixRowDisplayName(r)}</TableCell>
+                            <TableCell className="text-muted-foreground whitespace-nowrap text-xs">
+                              {r.gradYear ?? "—"}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <WiringDot
+                                ok={r.rosterPinOk}
+                                title={
+                                  r.rosterPinOk
+                                    ? "Pinned to directory athlete"
+                                    : "Not pinned — paste athlete UUID in gap tools below"
+                                }
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex min-w-0 items-center gap-2">
+                                <WiringDot
+                                  ok={r.donorPageOk}
+                                  title={
+                                    r.donorPageOk
+                                      ? "Active donor-facing fundraising profile"
+                                      : r.donorProfileSlug
+                                        ? "Profile exists but inactive or incomplete"
+                                        : "No fundraising profile for pinned athlete"
+                                  }
+                                />
+                                {r.donorProfileSlug ? (
+                                  <HardLink
+                                    href={`/fundraising/athletes/${encodeURIComponent(r.donorProfileSlug)}`}
+                                    className="text-primary truncate text-xs underline underline-offset-2"
+                                  >
+                                    /{r.donorProfileSlug}
+                                  </HardLink>
+                                ) : (
+                                  <span className="text-muted-foreground text-xs">—</span>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <div className="flex flex-col items-center gap-0.5">
+                                <WiringDot
+                                  ok={r.parentOk}
+                                  title={
+                                    r.parentOk
+                                      ? `${r.parentLinkCount} parent manager(s)`
+                                      : r.rosterPinOk
+                                        ? "No parent linked to this athlete yet"
+                                        : "Pin athlete first"
+                                  }
+                                />
+                                <span className="text-muted-foreground text-[10px] tabular-nums">
+                                  {r.rosterPinOk ? r.parentLinkCount : "—"}
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <ProfileCodeSyncDot ok={r.codeSyncOk ?? null} />
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-wrap gap-x-3 gap-y-1">
+                                {campaigns.map((c) => {
+                                  const active = slugSet.has(c.stripeCampaignSlug)
+                                  const def = fundraisingCampaignByStripeSlug(c.stripeCampaignSlug)
+                                  const publicPath = def?.publicPagePath ?? "/spartan"
+                                  return (
+                                    <span
+                                      key={c.stripeCampaignSlug}
+                                      className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground"
+                                    >
+                                      <WiringDot
+                                        ok={active}
+                                        title={
+                                          active
+                                            ? `${c.tabLabel}: paid gift on ledger`
+                                            : `${c.tabLabel}: no paid gifts on ledger for this code yet`
+                                        }
+                                      />
+                                      <HardLink
+                                        href={`${publicPath}?${def?.athleteQueryParam ?? "athlete"}=${encodeURIComponent(r.code)}`}
+                                        className="max-w-[100px] truncate hover:text-foreground hover:underline"
+                                      >
+                                        {c.tabLabel}
+                                      </HardLink>
+                                    </span>
+                                  )
+                                })}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {athleteMatrix?.generatedAt ? (
+                  <p className="text-muted-foreground text-[11px]">
+                    Matrix generated {new Date(athleteMatrix.generatedAt).toLocaleString()}
                   </p>
                 ) : null}
               </CardContent>

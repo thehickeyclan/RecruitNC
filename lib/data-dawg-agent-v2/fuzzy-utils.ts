@@ -67,7 +67,19 @@ export function scoreAthleteNameMatch(
     firstS = simFromDistance(fd, q.length, f.length)
   }
 
-  return lastS * 0.52 + firstS * 0.28 + fullS * 0.2
+  let combined = lastS * 0.52 + firstS * 0.28 + fullS * 0.2
+
+  // Two-token queries ("Tyler Tracy"): strong first-name overlap must not outweigh a wrong surname
+  // ("Tyler Gardner" scored ~0.28+ and ranked above the real Tracy without this cap).
+  if (qParts.length >= 2 && l && searchLast) {
+    const ldLast = levenshteinDistance(searchLast, l)
+    const maxOkLast = searchLast.length <= 4 ? 1 : 2
+    if (ldLast > maxOkLast) {
+      combined = Math.min(combined, 0.17)
+    }
+  }
+
+  return combined
 }
 
 export function scoreSchoolMatch(queryNorm: string, schoolName: string): number {
@@ -108,6 +120,15 @@ export function combinedAthleteSearchScore(
       for (let j = i + 1; j <= Math.min(i + 3, nameTokens.length); j++) {
         schoolMatch = Math.max(schoolMatch, scoreSchoolMatch(nameTokens.slice(i, j).join(" "), hs))
       }
+    }
+  }
+
+  // School match must not promote rows whose first two tokens disagree with directory surname
+  // ("Tyler Tracy Jacksonville" vs a Tyler Gardner at that school).
+  if (schoolMatch > 0.35 && nameTokens.length >= 2) {
+    const stemOnly = scoreAthleteNameMatch(`${nameTokens[0]} ${nameTokens[1]}`, first, last, displayName)
+    if (stemOnly <= 0.2) {
+      return stemOnly
     }
   }
 
