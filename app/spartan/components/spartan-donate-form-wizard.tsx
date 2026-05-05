@@ -113,6 +113,7 @@ export function SpartanDonateFormWizard({
   fundraisingHubPrefillCode = null,
   fundraisingHubPrefillLabel = null,
   fundraisingHubReturnSlug = null,
+  fundraisingHubDefaultTrainingFund = false,
 }: {
   fundraisingHub?: boolean
   /** On athlete fundraising pages: skip wrestler search and start at amount step */
@@ -120,6 +121,8 @@ export function SpartanDonateFormWizard({
   fundraisingHubPrefillLabel?: string | null
   /** Slug for Stripe return URLs (thanks/cancel on this athlete page) */
   fundraisingHubReturnSlug?: string | null
+  /** Open donate flow on NC United Training Fund (same checkout as general on /fundraising/give). */
+  fundraisingHubDefaultTrainingFund?: boolean
 }) {
   const searchParams = useSearchParams()
   const fh = Boolean(fundraisingHub)
@@ -234,6 +237,18 @@ export function SpartanDonateFormWizard({
     if (tierFromSearchParams(searchParams)) return
     if (searchParams.get("athlete")?.trim()) return
 
+    if (fundraisingHubDefaultTrainingFund) {
+      setFlow("donate")
+      setTierPreference("")
+      setDonateMode("general")
+      setFundraisingCode("")
+      setAthleteQuery("")
+      setManualCreditName("")
+      setDonateStep(3)
+      setAmountDollars("50")
+      return
+    }
+
     const flowParam = searchParams.get("flow")?.toLowerCase() ?? ""
     if (flowParam === "race") {
       setFlow("race")
@@ -290,7 +305,7 @@ export function SpartanDonateFormWizard({
       setDonateStep(1)
       setAmountDollars("50")
     }
-  }, [searchParams, fundraisingHub, fundraisingHubPrefillCode, fundraisingHubPrefillLabel])
+  }, [searchParams, fundraisingHub, fundraisingHubPrefillCode, fundraisingHubPrefillLabel, fundraisingHubDefaultTrainingFund])
 
   useEffect(() => {
     const q = athleteQuery.trim()

@@ -733,10 +733,15 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
     }
   }
 
-  const fetchNCHSAAResults = async (athleteName: string, graduationYear: number) => {
+  const fetchNCHSAAResults = async (athleteName: string, graduationYear: number, prospectId?: string) => {
     try {
-      console.log("[v0] Fetching NCHSAA for:", athleteName, graduationYear)
-      const response = await fetch(`/api/nchsaa-results?athleteName=${encodeURIComponent(athleteName)}&graduationYear=${graduationYear}`)
+      console.log("[v0] Fetching NCHSAA for:", athleteName, graduationYear, prospectId ?? "")
+      const q = new URLSearchParams({
+        athleteName,
+        graduationYear: String(graduationYear),
+      })
+      if (prospectId) q.set("athleteId", prospectId)
+      const response = await fetch(`/api/nchsaa-results?${q}`)
       if (response.ok) {
         const data = await response.json()
         console.log("[v0] NCHSAA results received:", data.results?.length || 0, data.results)
@@ -750,16 +755,11 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
     }
   }
 
-  // Fetch NCHSAA results when athlete is selected
+  // Fetch NCHSAA when a prospect is selected (same pipeline as unified profile; do not require location === "NC")
   useEffect(() => {
-    if (selectedAthlete) {
-      console.log("[v0] Selected athlete changed:", selectedAthlete.name, "Location:", selectedAthlete.location)
-      if (selectedAthlete.location === "NC") {
-        fetchNCHSAAResults(selectedAthlete.name, selectedAthlete.graduationyear)
-      } else {
-        console.log("[v0] Not NC athlete, skipping NCHSAA fetch")
-        setNchsaaResults([])
-      }
+    if (selectedAthlete?.name && selectedAthlete.graduationyear) {
+      console.log("[v0] Selected athlete changed:", selectedAthlete.name, "id:", selectedAthlete.id)
+      fetchNCHSAAResults(selectedAthlete.name, selectedAthlete.graduationyear, selectedAthlete.id)
     }
   }, [selectedAthlete?.id])
 

@@ -197,12 +197,18 @@ export async function POST(request: NextRequest) {
   }
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin
-  const hubThanksPath = fundraisingHubReturnSlug
-    ? `/fundraising/athletes/${fundraisingHubReturnSlug}/thanks`
-    : "/fundraising/give/thanks"
-  const hubCancelPath = fundraisingHubReturnSlug
-    ? `/fundraising/athletes/${fundraisingHubReturnSlug}?cancelled=1`
-    : "/fundraising/give?cancelled=1"
+  const hubThanksPath =
+    fundraisingHubReturnSlug === "training-fund"
+      ? "/fundraising/training-fund/thanks"
+      : fundraisingHubReturnSlug
+        ? `/fundraising/athletes/${fundraisingHubReturnSlug}/thanks`
+        : "/fundraising/give/thanks"
+  const hubCancelPath =
+    fundraisingHubReturnSlug === "training-fund"
+      ? `/fundraising/training-fund?cancelled=1`
+      : fundraisingHubReturnSlug
+        ? `/fundraising/athletes/${fundraisingHubReturnSlug}?cancelled=1`
+        : "/fundraising/give?cancelled=1"
   const stripe = new Stripe(stripeSecret)
 
   const raceTier = raceEntryRequested && tierPreference ? getSpartanRaceTierOrDefault(tierPreference) : null

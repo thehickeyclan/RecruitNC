@@ -232,8 +232,9 @@ export default function AthleteRecruitingDetailPage() {
   }, [athleteId])
 
   useEffect(() => {
-    // Fetch NCHSAA results for NC athletes
-    if (athlete && athlete.location === "NC") {
+    // NCHSAA: same name-matching as `/view-profile` (dual-token + `wrestling_nchsaa_results`).
+    // Do not gate on `location === "NC"` — that field is often unset; the table is NC-only anyway.
+    if (athlete?.name && athlete.graduationyear) {
       fetchNCHSAAResults()
     }
   }, [athlete])
@@ -270,15 +271,20 @@ export default function AthleteRecruitingDetailPage() {
 
   const fetchNCHSAAResults = async () => {
     if (!athlete) return
-    
+
     try {
-      const response = await fetch(`/api/nchsaa-results?athleteName=${encodeURIComponent(athlete.name)}&graduationYear=${athlete.graduationyear}`)
+      const q = new URLSearchParams({
+        athleteName: athlete.name,
+        graduationYear: String(athlete.graduationyear),
+        athleteId: athlete.id,
+      })
+      const response = await fetch(`/api/nchsaa-results?${q}`)
       if (response.ok) {
         const data = await response.json()
         setNchsaaResults(data.results || [])
       }
     } catch (error) {
-      console.error("Error fetching NCHSAA results:", error)
+      console.error("[RecruitNC] Error fetching NCHSAA results:", error)
     }
   }
 

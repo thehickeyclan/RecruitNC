@@ -10,6 +10,8 @@ type SpartanDonateFormProps = {
   fundraisingHubPrefillCode?: string | null
   fundraisingHubPrefillLabel?: string | null
   fundraisingHubReturnSlug?: string | null
+  /** Start on NC United Training Fund path (wizard). */
+  fundraisingHubDefaultTrainingFund?: boolean
 }
 
 /**
@@ -24,6 +26,7 @@ export function SpartanDonateForm({
   fundraisingHubPrefillCode = null,
   fundraisingHubPrefillLabel = null,
   fundraisingHubReturnSlug = null,
+  fundraisingHubDefaultTrainingFund = false,
 }: SpartanDonateFormProps) {
   const searchParams = useSearchParams()
   const fromQuery =
@@ -56,6 +59,7 @@ export function SpartanDonateForm({
       fundraisingHubPrefillCode={fundraisingHubPrefillCode}
       fundraisingHubPrefillLabel={fundraisingHubPrefillLabel}
       fundraisingHubReturnSlug={fundraisingHubReturnSlug}
+      fundraisingHubDefaultTrainingFund={fundraisingHubDefaultTrainingFund}
     />
   )
 }
