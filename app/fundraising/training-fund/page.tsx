@@ -5,9 +5,10 @@ import { getTrainingFundPublicSnapshot } from "@/lib/fundraising/training-fund-p
 import { formatUsdWhole } from "@/app/fundraising/components/FundraisingHero"
 import { FundraisingTrainingFundCheckout } from "./fundraising-training-fund-checkout"
 
-        <div className="mt-12">
-          <FundraisingTrainingFundCheckout />
-        </div>
+/** Hash target for Donate CTA; must match `fundraising-training-fund-checkout.tsx`. */
+const CHECKOUT_ANCHOR = "spartan-checkout"
+
+export const metadata: Metadata = {
   title: "NC United Training Fund | Fundraising",
   description:
     "Tax-deductible gifts to the NC United Training Fund support wrestlers and programs statewide. Secure Stripe checkout and public gift history.",
