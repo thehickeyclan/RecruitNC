@@ -45,8 +45,10 @@ export function FundraisingPlaybookGuideContent() {
         taught them how to build a real fundraising system around their development.
       </Lead>
       <P>
-        <Strong>This is not theory. This is already working.</Strong> In under 14 days, the NC United × Spartan Race campaign generated over
-        $20,000 in funding with 37 race participants and 204 donations — from zero preparation and zero prior notice.
+        <Strong>This is not theory. This is already working.</Strong> The NC United × Spartan Race blew past a{" "}
+        <Strong>$10k</Strong> goal in under two weeks — <Strong>$20,000+</Strong> raised, <Strong>204</Strong> donations,{" "}
+        <Strong>37</Strong> runners, <Strong>29</Strong> athletes with designated gifts — with zero advance prep (
+        <span className="font-semibold text-white/90">see breakdown below</span>).
       </P>
 
       <DisplayHeading as="h2">The Mindset Shift First</DisplayHeading>
@@ -198,7 +200,7 @@ export function FundraisingPlaybookGuideContent() {
       </Ul>
       <P>
         Suggested tiers: <Strong>$25</Strong> practice fees · <Strong>$50</Strong> tournament entry · <Strong>$100</Strong> private lesson ·{" "}
-        <Strong>$155</Strong> Spartan-style gift level · <Strong>$500</Strong> travel weekend · <Strong>$1,000</Strong> elite summer camp.
+        <Strong>$155</Strong> race-entry–style gift tier · <Strong>$500</Strong> travel weekend · <Strong>$1,000</Strong> elite summer camp.
       </P>
 
       <DisplayHeading as="h2">The Outreach Sequence</DisplayHeading>
@@ -217,18 +219,22 @@ export function FundraisingPlaybookGuideContent() {
         corporate asks in parallel (often longer sales cycles).
       </P>
 
-      <DisplayHeading as="h2">The NC United × Spartan Race — The Model in Action</DisplayHeading>
+      <DisplayHeading as="h2">Case study: The NC United × Spartan Race — The Model in Action</DisplayHeading>
       <P>
         In under two weeks with zero advance prep: <Strong>$20,000+</Strong> raised against a $10k goal, <Strong>204 donations</Strong>,{" "}
         <Strong>37</Strong> race participants, <Strong>29</Strong> athletes with designated gifts — from individuals, businesses, and
         foundations — because the system made it easy to say yes.
       </P>
+      <P className="mt-3 text-sm text-white/60">
+        That campaign window has ended. Ongoing tax-deductible gifts still run through NC United&apos;s nonprofit checkout — athlete credit
+        pages and the Make a gift hub below.
+      </P>
       <div className="mt-4">
         <HardLink
-          href="/spartan"
+          href="/fundraising/give"
           className="inline-flex min-h-10 items-center rounded-sm bg-[#CC0000] px-5 text-sm font-extrabold uppercase tracking-wide text-white hover:bg-[#a80000]"
         >
-          Register, sponsor, or give — Spartan campaign
+          Make a gift — training fund or athlete
         </HardLink>
       </div>
 
@@ -243,6 +249,10 @@ export function FundraisingPlaybookGuideContent() {
         </Li>
         <Li>
           <Strong>Passive social-only asks</Strong> — likes don&apos;t pay fees; direct asks convert.
+        </Li>
+        <Li>
+          <Strong>Individual requests on social for Venmo, Cash App, etc.</Strong> — immediate loss of credibility with donors who expect a
+          nonprofit structure, a receipt, and accountability — not a personal handle.
         </Li>
         <Li>
           <Strong>Non-501(c)(3) routing</Strong> — caps corporate, foundation, and matching eligibility.
@@ -269,10 +279,10 @@ export function FundraisingPlaybookGuideContent() {
       </P>
       <P className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         <HardLink
-          href="/spartan"
+          href="/fundraising/give"
           className="inline-flex min-h-11 items-center justify-center rounded-sm bg-[#CC0000] px-6 text-sm font-bold uppercase tracking-wide text-white hover:bg-[#a80000]"
         >
-          Start fundraising — give / Spartan
+          Make a gift — NC United checkout
         </HardLink>
         <HardLink
           href="/fundraising"
