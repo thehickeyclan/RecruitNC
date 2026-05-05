@@ -619,14 +619,117 @@ function pickNhscaRowWhenUnscored(list: TournamentResultRow[], want: string): To
 const ALL_TIME_YEAR_MIN = 2000
 const ALL_TIME_YEAR_MAX = 2035
 
+/** Full year range — same name-matching chain as grad-window `getNhscaPlacementsFromTablesForAthlete`. */
+async function getNhscaPlacementsFromTablesAllYears(
+  supabase: SupabaseClient,
+  athleteName: string,
+  exactName: string,
+): Promise<TournamentResultRow[]> {
+  const { data: exactPlacements } = await supabase
+    .from("nhsca_placements")
+    .select("*")
+    .ilike("athlete_name", exactName)
+    .gte("year", ALL_TIME_YEAR_MIN)
+    .lte("year", ALL_TIME_YEAR_MAX)
+    .order("year", { ascending: false })
+  if (exactPlacements?.length) return exactPlacements.map(mapPlacementRow)
+
+  const lastFirst = getNameVariants(athleteName).find((n) => n.includes(","))
+  if (lastFirst) {
+    const { data: lfPlacements } = await supabase
+      .from("nhsca_placements")
+      .select("*")
+      .ilike("athlete_name", lastFirst)
+      .gte("year", ALL_TIME_YEAR_MIN)
+      .lte("year", ALL_TIME_YEAR_MAX)
+      .order("year", { ascending: false })
+    if (lfPlacements?.length) return lfPlacements.map(mapPlacementRow)
+  }
+
+  const namesToTry = getNameVariants(athleteName)
+  for (const searchName of namesToTry) {
+    for (const pattern of getIlikePatternsForVariation(searchName)) {
+      const { data: placements } = await supabase
+        .from("nhsca_placements")
+        .select("*")
+        .ilike("athlete_name", pattern)
+        .gte("year", ALL_TIME_YEAR_MIN)
+        .lte("year", ALL_TIME_YEAR_MAX)
+        .order("year", { ascending: false })
+      if (placements?.length) return placements.map(mapPlacementRow)
+    }
+  }
+  return []
+}
+
+async function getNhscaLegacyFromTablesAllYears(
+  supabase: SupabaseClient,
+  athleteName: string,
+  exactName: string,
+): Promise<TournamentResultRow[]> {
+  const { data: exactNhsca } = await supabase
+    .from("wrestling_nhsca_results")
+    .select("*")
+    .ilike("athlete_name", exactName)
+    .gte("year", ALL_TIME_YEAR_MIN)
+    .lte("year", ALL_TIME_YEAR_MAX)
+    .order("year", { ascending: false })
+  if (exactNhsca?.length) return exactNhsca.map(mapLegacyNhscaRow)
+
+  const lastFirst = getNameVariants(athleteName).find((n) => n.includes(","))
+  if (lastFirst) {
+    const { data: lfNhsca } = await supabase
+      .from("wrestling_nhsca_results")
+      .select("*")
+      .ilike("athlete_name", lastFirst)
+      .gte("year", ALL_TIME_YEAR_MIN)
+      .lte("year", ALL_TIME_YEAR_MAX)
+      .order("year", { ascending: false })
+    if (lfNhsca?.length) return lfNhsca.map(mapLegacyNhscaRow)
+  }
+
+  const namesToTry = getNameVariants(athleteName)
+  for (const searchName of namesToTry) {
+    for (const pattern of getIlikePatternsForVariation(searchName)) {
+      const { data: results } = await supabase
+        .from("wrestling_nhsca_results")
+        .select("*")
+        .ilike("athlete_name", pattern)
+        .gte("year", ALL_TIME_YEAR_MIN)
+        .lte("year", ALL_TIME_YEAR_MAX)
+        .order("year", { ascending: false })
+      if (results?.length) return results.map(mapLegacyNhscaRow)
+    }
+  }
+  return []
+}
+
+function isFiniteGradYearForNhsca(g: number | null | undefined): g is number {
+  return g != null && Number.isFinite(g) && !Number.isNaN(g) && g >= 1990 && g <= 2050
+}
+
 /**
- * Fetch NHSCA for all years (no grad-year window). Use for all-time stats (e.g. Blue page tiles).
+ * Fetch NHSCA for all years (no grad-year window on placements/legacy).
+ * When `graduationYearForRoster` is set, merges **nhsca_roster** (live 2026 rows before placements import) + placements + legacy — same policy as `getNHSCAFromTables`.
  */
 export async function getNHSCAFromTablesAllTime(
   supabase: SupabaseClient,
-  athleteName: string
+  athleteName: string,
+  graduationYearForRoster?: number | null,
 ): Promise<TournamentResultRow[]> {
   if (!athleteName?.trim()) return []
+
+  if (isFiniteGradYearForNhsca(graduationYearForRoster)) {
+    const grad = Math.floor(Number(graduationYearForRoster))
+    const exactName = normalizeApostrophes(athleteName.trim())
+    const [rosterRows, placementRows, legacyRows] = await Promise.all([
+      getNHSCAFromNhscaRosterTable(supabase, athleteName, grad),
+      getNhscaPlacementsFromTablesAllYears(supabase, athleteName, exactName),
+      getNhscaLegacyFromTablesAllYears(supabase, athleteName, exactName),
+    ])
+    return mergeNhscaByYearPreferRoster(rosterRows, placementRows, legacyRows)
+  }
+
   const namesToTry = getNameVariants(athleteName)
 
   for (const searchName of namesToTry) {

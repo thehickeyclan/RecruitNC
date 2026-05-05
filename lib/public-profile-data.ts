@@ -242,7 +242,7 @@ export async function getNHSCAForAthlete(
   const merged: Awaited<ReturnType<typeof getNHSCAFromTables>> = []
   for (const n of bases) {
     const rows = useAllTime
-      ? await getNHSCAFromTablesAllTime(supabase, n)
+      ? await getNHSCAFromTablesAllTime(supabase, n, gradYear)
       : await getNHSCAFromTables(supabase, n, gradYear)
     merged.push(...rows)
   }

@@ -63,7 +63,7 @@ export async function loadProfileTournamentData(
       ? getNCHSAAResultsForProfile(supabase, name, undefined)
       : getNCHSAAResultsForProfile(supabase, name, hasValid ? grad : undefined),
     allTime
-      ? getNHSCAFromTablesAllTime(supabase, name)
+      ? getNHSCAFromTablesAllTime(supabase, name, hasValid ? grad : undefined)
       : hasValid
         ? getNHSCAFromTables(supabase, name, grad)
         : Promise.resolve([]),
