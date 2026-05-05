@@ -27,6 +27,11 @@ export type ResolvedFundraisingAthletePublic = {
   entry: FundraisingAthleteEntry | null
   /** When the athlete is not on the computed fundraising roster but has a profile row. */
   fallbackDisplayName: string | null
+  /**
+   * Valid NCU codes to sum for public totals (URL slug + primary + roster). Stripe may credit any one of these
+   * when checkout metadata differs from profile primary.
+   */
+  ledgerCodes: string[]
 }
 
 export function normalizeFundraisingProfileSlug(raw: string): string {
@@ -70,21 +75,28 @@ export async function resolveFundraisingAthletePublic(
     const row = profile as AthleteFundraisingProfileRow
     const fromPrimary = coerceNcuCode(row.primary_fundraising_code)
     const entry = entries.find((e) => e.id === row.athlete_id) ?? null
-    /** Slug in DB (e.g. `ncu-aponte-30`) encodes the public NCU code; use it before roster `entry.code` when
-     *  `primary_fundraising_code` is unset — otherwise a mismatched roster code shows $0 while checkout uses the URL code. */
-    const code = fromPrimary ?? legacyCode ?? entry?.code?.toUpperCase() ?? null
+    /** `/fundraising/athletes/ncu-aponte-30` must ledger `NCU-APONTE-30` — URL slug wins when it is a valid NCU
+     *  so bad `primary_fundraising_code` / roster `entry.code` cannot zero out totals while checkout still shows the athlete. */
+    const code = legacyCode ?? fromPrimary ?? entry?.code?.toUpperCase() ?? null
+    const ledgerCodes = [
+      ...new Set(
+        [legacyCode, fromPrimary, entry?.code?.toUpperCase() ?? null, code]
+          .map((p) => coerceNcuCode(p))
+          .filter((p): p is string => p != null),
+      ),
+    ]
     let fallbackDisplayName: string | null = null
     if (!entry) {
       const { data: ath } = await admin.from("athletes").select("name").eq("id", row.athlete_id).maybeSingle()
       const nm = typeof ath?.name === "string" ? ath.name.trim() : ""
       fallbackDisplayName = nm || null
     }
-    return { profile: row, code, entry, fallbackDisplayName }
+    return { profile: row, code, entry, fallbackDisplayName, ledgerCodes }
   }
 
   if (!legacyCode) return null
   const entry = entries.find((e) => e.code.toUpperCase() === legacyCode) ?? null
-  return { profile: null, code: legacyCode, entry, fallbackDisplayName: null }
+  return { profile: null, code: legacyCode, entry, fallbackDisplayName: null, ledgerCodes: [legacyCode] }
 }
 
 /**

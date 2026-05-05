@@ -63,7 +63,10 @@ export async function loadCorrectedStripeDonationsForCampaignWindow(
     ],
     { revalidate: STRIPE_DONATION_LIST_CACHE_SECONDS },
   )
-  return cachedLoader()
+  const fromCache = await cachedLoader()
+  if (fromCache != null) return fromCache
+  /** `unstable_cache` may have stored `null` from a transient Stripe/env failure — bypass cache once. */
+  return loadCorrectedStripeDonationsForCampaignWindowUncached(campaign, null)
 }
 
 /**

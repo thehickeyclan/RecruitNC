@@ -82,6 +82,11 @@ const HANDLER_EXAMPLES: Record<string, string[]> = {
   ],
   "state_champion_records": [
     // NCHSAA Individual Tournament (State Tournament/States) - Athlete-specific queries
+    "who are the 4x state champions?",
+    "who are the 4x state champs?",
+    "four time state champions nc",
+    "list all three time state champions",
+    "how many 4x state champs are there?",
     "how many state titles does evan wick have?",
     "what year did faith bane win her first state championship?",
     "did trent allen place at states?",

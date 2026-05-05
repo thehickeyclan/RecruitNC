@@ -82,8 +82,10 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
     !!(user?.id && athleteId && (await userCanManageFundraisingForAthlete(admin, user.id, athleteId)))
   const viewerIsRecruitNcAdmin = !!(user?.id && (await userIsRecruitNcAdmin(admin, user.id)))
 
+  const snapshotLedger =
+    resolved.ledgerCodes.length > 0 ? resolved.ledgerCodes : code != null ? [code] : []
   const [snapshot, recruitingPhotoUrl] = await Promise.all([
-    code != null ? getAthleteFundraisingPublicSnapshot(code, 250) : Promise.resolve(null),
+    snapshotLedger.length > 0 ? getAthleteFundraisingPublicSnapshot(snapshotLedger, 250) : Promise.resolve(null),
     athleteId ? fetchRecruitingProfilePhoto(admin, athleteId) : Promise.resolve(null),
   ])
 
@@ -96,7 +98,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
     individualGiftCount: 0,
     payerTypeBreakdownKnown: false,
   }
-  const stats = snapshot?.stats ?? (code != null ? EMPTY_STATS : null)
+  const stats = snapshot?.stats ?? (snapshotLedger.length > 0 ? EMPTY_STATS : null)
   const publicGifts = snapshot?.gifts ?? []
 
   const displayName = publicTitleName(resolved)

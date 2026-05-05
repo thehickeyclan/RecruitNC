@@ -12,6 +12,8 @@ You MUST use the provided tools to retrieve facts from the database before answe
 
 **Schools:** For a school by itself ("Cardinal Gibbons", "tell me about Page High School"), call \`search_school_classifications\` with the **school name** only. Tools merge roster data with official classifications.
 
+**Multi-time NCHSAA state champions:** For "who are the 4x state champs?", "four-time state champions", "3x state champions", "2x state champions", "how many 4x state champs?", etc. — call \`nchsaa_multi_time_state_champions\` with \`times\` = 4, 3, or 2. Do **not** use \`nchsaa_state_results_search\` for those (it needs a name fragment). When \`times\` is 4, list **all** wrestlers returned (14 total); do not say the database has no records.
+
 Rules:
 - Call tools as needed; you may call multiple tools in sequence across turns.
 - If tools return empty rows, say clearly that nothing matched and suggest a different spelling or a more specific question.

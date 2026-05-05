@@ -93,7 +93,7 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
     function: {
       name: "nchsaa_state_results_search",
       description:
-        "NCHSAA individual state tournament results (placers/champions) by wrestler or school name fragment.",
+        "NCHSAA individual state tournament results (placers/champions) by wrestler or school name fragment. Do NOT use for 'who are the 2x/3x/4x state champs' — use nchsaa_multi_time_state_champions instead.",
       parameters: {
         type: "object",
         additionalProperties: false,
@@ -102,6 +102,26 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
           limit: { type: "integer" },
         },
         required: ["query"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "nchsaa_multi_time_state_champions",
+      description:
+        "List ALL North Carolina wrestlers who won exactly N individual NCHSAA state championships (place=1), for N = 2, 3, or 4. Use for questions like 'who are the four-time state champions?', '4x state champs', 'three-time state champs', 'how many 4x champs' (call with times=4 then cite total_wrestlers). Does not require a wrestler name.",
+      parameters: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          times: {
+            type: "integer",
+            description: "Exact title count: 2, 3, or 4 (e.g. 4 for four-time state champions).",
+            enum: [2, 3, 4],
+          },
+        },
+        required: ["times"],
       },
     },
   },

@@ -19,6 +19,7 @@ import {
   scoreSchoolMatch,
 } from "./fuzzy-utils"
 import { buildAthleteDossierMarkdown } from "@/lib/data-dawg-athlete-dossier"
+import { getNchsaaStateChampionsByExactTitleCount } from "@/lib/nchsaa-multi-time-state-champions"
 
 const MAX_ROWS = 40
 const MAX_Q_LEN = 120
@@ -477,7 +478,7 @@ export async function toolCollegeCommitsSearch(args: {
 
   if (frag.trim().length >= 2) {
     const pattern = `%${escapeForIlike(frag.trim())}%`
-    const base = () => admin.from("athletes").select(sel).not("college", "is", null)
+    const base = () => admin.from("athletes").select("*").not("college", "is", null)
     const [a, b, c, d] = await Promise.all([
       gy != null ? base().eq(cols.gy, gy).ilike(cols.fn, pattern).limit(limit) : base().ilike(cols.fn, pattern).limit(limit),
       gy != null ? base().eq(cols.gy, gy).ilike(cols.ln, pattern).limit(limit) : base().ilike(cols.ln, pattern).limit(limit),
@@ -512,6 +513,26 @@ export async function toolCollegeCommitsSearch(args: {
   return { rows: data ?? [] }
 }
 
+export async function toolNchsaaMultiTimeStateChampions(args: { times: number }) {
+  const t = Math.floor(Number(args.times))
+  if (t !== 2 && t !== 3 && t !== 4) {
+    return {
+      error: "times must be 2, 3, or 4 (individual NCHSAA state championships, place=1).",
+      champions: [] as unknown[],
+    }
+  }
+  const champions = await getNchsaaStateChampionsByExactTitleCount(t as 2 | 3 | 4)
+  return {
+    exact_title_count: t,
+    total_wrestlers: champions.length,
+    champions,
+    note:
+      t === 4
+        ? "Four-time individual state champions: curated list of 14 (official NC high school wrestling record book)."
+        : null,
+  }
+}
+
 export async function toolGetAthleteFullDossier(args: { athlete_id: string }) {
   const id = String(args.athlete_id ?? "").trim()
   const result = await buildAthleteDossierMarkdown(id)
@@ -526,6 +547,7 @@ export type DataToolName =
   | "search_school_classifications"
   | "nhsca_placements_search"
   | "nchsaa_state_results_search"
+  | "nchsaa_multi_time_state_champions"
   | "college_commits_search"
   | "get_athlete_full_dossier"
 
@@ -557,6 +579,10 @@ export async function executeDataTool(name: string, rawArgs: unknown): Promise<s
       case "nchsaa_state_results_search":
         return JSON.stringify(
           await toolNchsaaStateResultsSearch(args as { query: string; limit?: number }),
+        )
+      case "nchsaa_multi_time_state_champions":
+        return JSON.stringify(
+          await toolNchsaaMultiTimeStateChampions(args as { times: number }),
         )
       case "college_commits_search":
         return JSON.stringify(

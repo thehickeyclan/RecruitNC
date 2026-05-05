@@ -8,7 +8,7 @@ import {
   hubSpartanDonationRowMatchesCampaign,
   publicGiftCampaignLabel,
 } from "@/lib/fundraising/campaign-registry"
-import { loadCorrectedStripeDonationsForCampaignWindow } from "@/lib/fundraising/stripe-transparency-pipeline"
+import { loadCorrectedStripeDonationsForCampaignWindow, loadCorrectedStripeDonationsForSpartanPublicWindow } from "@/lib/fundraising/stripe-transparency-pipeline"
 import {
   aggregateSpartanByAthlete,
   publicSupporterDisplayName,
@@ -155,13 +155,35 @@ async function fetchAthleteMirrorCreditedRows(
   return credited
 }
 
+/** Same rules as single-code fetch; merges unique donation ids across codes (e.g. slug vs primary mismatch). */
+async function fetchAthleteMirrorCreditedRowsMerged(
+  admin: ReturnType<typeof createAdminClient>,
+  codesUpper: string[],
+): Promise<DonationSelectRow[] | null> {
+  const merged = new Map<string, DonationSelectRow>()
+  for (const c of codesUpper) {
+    const rows = await fetchAthleteMirrorCreditedRows(admin, c)
+    if (rows == null) return null
+    for (const r of rows) merged.set(r.id, r)
+  }
+  const out = [...merged.values()]
+  out.sort((a, b) => +new Date(b.created_at ?? 0) - +new Date(a.created_at ?? 0))
+  return out
+}
+
+async function loadCorrectedStripeForAthletePublicPage(): Promise<SpartanFayettevilleDonation[] | null> {
+  const cached = await loadCorrectedStripeDonationsForCampaignWindow(DEFAULT_FUNDRAISING_CAMPAIGN)
+  if (cached != null) return cached
+  if (!process.env.STRIPE_SECRET_KEY?.trim()) return null
+  return loadCorrectedStripeDonationsForSpartanPublicWindow(DEFAULT_FUNDRAISING_CAMPAIGN)
+}
+
 /**
- * Same roll-up as `/spartan` `byAthlete` (see `aggregateSpartanByAthlete`): corrected Stripe sessions in the
- * campaign window. Uses the **cached** full session list (same as the fundraising hub) so athlete pages stay fast;
- * numbers match Spartan within the cache window (default ~60–120s, see `RECRUITNC_FUNDRAISING_STRIPE_LIST_CACHE_SECONDS`).
+ * Same roll-up as `/spartan` `byAthlete` (see `aggregateSpartanByAthlete`). Uses cached Stripe list when possible;
+ * if cache returns null, retries uncached once (avoids stuck $0 after a cached Stripe error).
  */
 async function loadAthleteCreditedForPublic(
-  codeUpper: string,
+  codesUpper: string[],
 ): Promise<
   | {
       source: "stripe"
@@ -171,13 +193,15 @@ async function loadAthleteCreditedForPublic(
   | { source: "mirror"; rows: DonationSelectRow[] }
   | null
 > {
-  const corrected = await loadCorrectedStripeDonationsForCampaignWindow(DEFAULT_FUNDRAISING_CAMPAIGN)
+  const keys = new Set(codesUpper.map((c) => c.trim().toLowerCase()).filter(Boolean))
+  if (keys.size === 0) return null
+
+  const corrected = await loadCorrectedStripeForAthletePublicPage()
   if (corrected != null) {
-    const key = codeUpper.toLowerCase()
-    const mine = corrected.filter((r) => (r.athleteCode ?? "").trim().toLowerCase() === key)
+    const mine = corrected.filter((r) => keys.has((r.athleteCode ?? "").trim().toLowerCase()))
     return { source: "stripe", allCorrected: corrected, mine }
   }
-  const mirror = await fetchAthleteMirrorCreditedRows(createAdminClient(), codeUpper)
+  const mirror = await fetchAthleteMirrorCreditedRowsMerged(createAdminClient(), [...codesUpper])
   if (mirror == null) return null
   return { source: "mirror", rows: mirror }
 }
@@ -185,17 +209,22 @@ async function loadAthleteCreditedForPublic(
 /**
  * Identical cents + gift count as Spartan `byAthlete` for this NCU code (after credit corrections).
  */
-function statsFromStripeCreditedForCode(
+function statsFromStripeCreditedForCodes(
   allCorrected: SpartanFayettevilleDonation[],
-  codeUpper: string,
+  codesUpper: string[],
 ): AthleteFundraisingPublicStats {
-  const key = codeUpper.toLowerCase()
+  const keySet = new Set(codesUpper.map((c) => c.trim().toLowerCase()).filter(Boolean))
   const agg = aggregateSpartanByAthlete(allCorrected)
-  const row = agg.find((a) => a.athleteCode.trim().toLowerCase() === key)
-  const raisedCents = row?.totalCents ?? 0
-  const giftCount = row?.donationCount ?? 0
+  let raisedCents = 0
+  let giftCount = 0
+  for (const a of agg) {
+    if (keySet.has(a.athleteCode.trim().toLowerCase())) {
+      raisedCents += a.totalCents
+      giftCount += a.donationCount
+    }
+  }
 
-  const mine = allCorrected.filter((r) => (r.athleteCode ?? "").trim().toLowerCase() === key)
+  const mine = allCorrected.filter((r) => keySet.has((r.athleteCode ?? "").trim().toLowerCase()))
   let organizationGiftCount = 0
   let individualGiftCount = 0
   for (const r of mine) {
@@ -210,6 +239,13 @@ function statsFromStripeCreditedForCode(
     individualGiftCount,
     payerTypeBreakdownKnown: true,
   }
+}
+
+function statsFromStripeCreditedForCode(
+  allCorrected: SpartanFayettevilleDonation[],
+  codeUpper: string,
+): AthleteFundraisingPublicStats {
+  return statsFromStripeCreditedForCodes(allCorrected, [codeUpper])
 }
 
 function giftsFromStripeCredited(rows: SpartanFayettevilleDonation[], limit: number): AthleteRecentGiftRow[] {
@@ -256,7 +292,7 @@ function giftsFromMirrorCredited(credited: DonationSelectRow[], limit: number): 
 export async function getAthleteFundraisingPublicStats(code: string): Promise<AthleteFundraisingPublicStats | null> {
   const c = code.trim().toUpperCase()
   if (!CODE_RE.test(c)) return null
-  const loaded = await loadAthleteCreditedForPublic(c)
+  const loaded = await loadAthleteCreditedForPublic([c])
   if (loaded == null) return null
   return loaded.source === "stripe"
     ? statsFromStripeCreditedForCode(loaded.allCorrected, c)
@@ -274,7 +310,7 @@ export type AthleteRecentGiftRow = {
 export async function getAthleteRecentGifts(code: string, limit: number): Promise<AthleteRecentGiftRow[]> {
   const c = code.trim().toUpperCase()
   if (!CODE_RE.test(c)) return []
-  const loaded = await loadAthleteCreditedForPublic(c)
+  const loaded = await loadAthleteCreditedForPublic([c])
   if (loaded == null) return []
   return loaded.source === "stripe"
     ? giftsFromStripeCredited(loaded.mine, limit)
@@ -282,19 +318,21 @@ export async function getAthleteRecentGifts(code: string, limit: number): Promis
 }
 
 /**
- * Public totals + gift table: Stripe-first, **uncached** (Spartan-parity), mirror fallback only.
+ * Public totals + gift table: Stripe-first (cached campaign window + uncached retry), mirror merge fallback.
+ * Pass multiple ledger codes to sum credits when slug, `primary_fundraising_code`, and roster disagree.
  */
 export async function getAthleteFundraisingPublicSnapshot(
-  code: string,
+  ledgerCodesInput: string | string[],
   giftLimit: number,
 ): Promise<{ stats: AthleteFundraisingPublicStats; gifts: AthleteRecentGiftRow[] } | null> {
-  const c = code.trim().toUpperCase()
-  if (!CODE_RE.test(c)) return null
-  const loaded = await loadAthleteCreditedForPublic(c)
+  const raw = Array.isArray(ledgerCodesInput) ? ledgerCodesInput : [ledgerCodesInput]
+  const codes = [...new Set(raw.map((c) => c.trim().toUpperCase()).filter((c) => CODE_RE.test(c)))]
+  if (codes.length === 0) return null
+  const loaded = await loadAthleteCreditedForPublic(codes)
   if (loaded == null) return null
   if (loaded.source === "stripe") {
     return {
-      stats: statsFromStripeCreditedForCode(loaded.allCorrected, c),
+      stats: statsFromStripeCreditedForCodes(loaded.allCorrected, codes),
       gifts: giftsFromStripeCredited(loaded.mine, giftLimit),
     }
   }
@@ -322,7 +360,7 @@ export async function getAthleteOwnerThankYouRows(code: string): Promise<Athlete
   const c = code.trim().toUpperCase()
   if (!CODE_RE.test(c)) return []
 
-  const corrected = await loadCorrectedStripeDonationsForCampaignWindow(DEFAULT_FUNDRAISING_CAMPAIGN)
+  const corrected = await loadCorrectedStripeForAthletePublicPage()
   if (corrected != null) {
     const mine = corrected.filter((r) => {
       const ac = (r.athleteCode ?? "").trim().toUpperCase()
