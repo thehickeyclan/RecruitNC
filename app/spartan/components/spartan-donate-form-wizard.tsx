@@ -99,6 +99,8 @@ const TEE_THRESHOLD_CENTS = 10_000
 const DONATE_STEPS = 6
 const RACE_STEPS = 8
 
+const ATHLETE_CODE_RE = /^NCU-([A-Za-z0-9]+)-(\d{2})$/i
+
 function scrollToCheckout() {
   if (typeof document === "undefined") return
   requestAnimationFrame(() => {
@@ -106,7 +108,19 @@ function scrollToCheckout() {
   })
 }
 
-export function SpartanDonateFormWizard({ fundraisingHub = false }: { fundraisingHub?: boolean }) {
+export function SpartanDonateFormWizard({
+  fundraisingHub = false,
+  fundraisingHubPrefillCode = null,
+  fundraisingHubPrefillLabel = null,
+  fundraisingHubReturnSlug = null,
+}: {
+  fundraisingHub?: boolean
+  /** On athlete fundraising pages: skip wrestler search and start at amount step */
+  fundraisingHubPrefillCode?: string | null
+  fundraisingHubPrefillLabel?: string | null
+  /** Slug for Stripe return URLs (thanks/cancel on this athlete page) */
+  fundraisingHubReturnSlug?: string | null
+}) {
   const searchParams = useSearchParams()
   const fh = Boolean(fundraisingHub)
 
@@ -250,13 +264,26 @@ export function SpartanDonateFormWizard({ fundraisingHub = false }: { fundraisin
       return
     }
     if (fundraisingHub) {
+      const preCode = (fundraisingHubPrefillCode ?? "").trim()
+      const preLabel = (fundraisingHubPrefillLabel ?? "").trim()
+      if (preCode && ATHLETE_CODE_RE.test(preCode)) {
+        setFlow("donate")
+        setTierPreference("")
+        setDonateMode("athlete")
+        setFundraisingCode(preCode.toUpperCase())
+        setAthleteQuery(preLabel)
+        setManualCreditName("")
+        setDonateStep(3)
+        setAmountDollars("50")
+        return
+      }
       setFlow("donate")
       setTierPreference("")
       setDonateMode("athlete")
       setDonateStep(1)
       setAmountDollars("50")
     }
-  }, [searchParams, fundraisingHub])
+  }, [searchParams, fundraisingHub, fundraisingHubPrefillCode, fundraisingHubPrefillLabel])
 
   useEffect(() => {
     const q = athleteQuery.trim()
@@ -294,7 +321,7 @@ export function SpartanDonateFormWizard({ fundraisingHub = false }: { fundraisin
   useEffect(() => {
     const code = fundraisingCode.trim()
     if (!code || athleteQuery.trim()) return
-    const m = /^NCU-([A-Za-z]+)-(\d{2})$/i.exec(code)
+    const m = ATHLETE_CODE_RE.exec(code.trim())
     if (!m) return
     const last = m[1]
     let cancelled = false
@@ -717,6 +744,9 @@ export function SpartanDonateFormWizard({ fundraisingHub = false }: { fundraisin
           ...(flow === "race" && regForStripe ? { raceRegistrationEmail: regForStripe } : {}),
           ...(receiptIsOrganization ? { payerType: "organization" } : {}),
           ...(fundraisingHub ? { fundraisingHub: true as const } : {}),
+          ...(fundraisingHub && fundraisingHubReturnSlug?.trim()
+            ? { fundraisingHubReturnSlug: fundraisingHubReturnSlug.trim().toLowerCase() }
+            : {}),
         }),
       })
       const data = await res.json().catch(() => ({}))

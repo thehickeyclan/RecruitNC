@@ -14,6 +14,8 @@ export const SPARTAN_TEE_THRESHOLD_CENTS = 10_000
 
 const TEE_SIZES = new Set(["XS", "S", "M", "L", "XL", "2XL", "3XL"])
 
+const FUNDRAISING_ATHLETE_SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/
+
 /** One-time tax-deductible donation; email captured for Spartan code fulfillment per partner process. */
 export async function POST(request: NextRequest) {
   if (!stripeSecret?.trim()) {
@@ -53,6 +55,8 @@ export async function POST(request: NextRequest) {
     shipCountry?: string
     /** When true, Stripe return URLs point at /fundraising/give (hub checkout), not /spartan. */
     fundraisingHub?: boolean
+    /** With fundraisingHub: thanks/cancel on `/fundraising/athletes/{slug}` instead of /fundraising/give */
+    fundraisingHubReturnSlug?: string
   } = {}
   try {
     body = await request.json()
@@ -90,6 +94,18 @@ export async function POST(request: NextRequest) {
   const payerContactName =
     typeof body.payerContactName === "string" ? body.payerContactName.trim().slice(0, 120) : ""
   const fundraisingHub = body.fundraisingHub === true
+  const fundraisingHubReturnSlugRaw =
+    typeof body.fundraisingHubReturnSlug === "string" ? body.fundraisingHubReturnSlug.trim().toLowerCase() : ""
+  let fundraisingHubReturnSlug = ""
+  if (fundraisingHubReturnSlugRaw) {
+    if (!FUNDRAISING_ATHLETE_SLUG_RE.test(fundraisingHubReturnSlugRaw)) {
+      return NextResponse.json({ error: "Invalid return page." }, { status: 400 })
+    }
+    fundraisingHubReturnSlug = fundraisingHubReturnSlugRaw
+  }
+  if (fundraisingHubReturnSlug && !fundraisingHub) {
+    return NextResponse.json({ error: "fundraisingHubReturnSlug requires fundraisingHub." }, { status: 400 })
+  }
   /** Super 10K tier → donor expects Spartan entry code path; omit for donate-only. */
   const raceEntryRequested = Boolean(tierPreference && tierPreference.length > 0)
   const amountCents = Number(body.amountCents)
@@ -181,6 +197,12 @@ export async function POST(request: NextRequest) {
   }
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin
+  const hubThanksPath = fundraisingHubReturnSlug
+    ? `/fundraising/athletes/${fundraisingHubReturnSlug}/thanks`
+    : "/fundraising/give/thanks"
+  const hubCancelPath = fundraisingHubReturnSlug
+    ? `/fundraising/athletes/${fundraisingHubReturnSlug}?cancelled=1`
+    : "/fundraising/give?cancelled=1"
   const stripe = new Stripe(stripeSecret)
 
   const raceTier = raceEntryRequested && tierPreference ? getSpartanRaceTierOrDefault(tierPreference) : null
@@ -277,10 +299,10 @@ export async function POST(request: NextRequest) {
             : { fundraising_attribution: "general_nc_united" }),
       },
       success_url: fundraisingHub
-        ? `${baseUrl}/fundraising/give/thanks?session_id={CHECKOUT_SESSION_ID}`
+        ? `${baseUrl}${hubThanksPath}?session_id={CHECKOUT_SESSION_ID}`
         : `${baseUrl}/spartan/thanks?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: fundraisingHub
-        ? `${baseUrl}/fundraising/give?cancelled=1#spartan-checkout`
+        ? `${baseUrl}${hubCancelPath}#spartan-checkout`
         : `${baseUrl}/spartan?cancelled=1#spartan-checkout`,
     })
 

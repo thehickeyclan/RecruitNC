@@ -29,7 +29,7 @@ export function FundraisingAthleteQrCard({ qrSrc, donateUrl, athleteDisplayName 
         Scan to give
       </p>
       <p className="mx-auto mt-2 max-w-[16rem] text-center text-xs leading-snug text-[#061224]/55">
-        Opens the same secure checkout as <span className="font-semibold text-[#061224]/70">Give now</span>. Works best with screen brightness up.
+        Opens this athlete&apos;s gift page (bookmark or share). Same secure checkout — brightness up for scanning.
       </p>
       <div className="mt-4 flex justify-center rounded-lg bg-white p-2">
         {/* eslint-disable-next-line @next/next/no-img-element */}

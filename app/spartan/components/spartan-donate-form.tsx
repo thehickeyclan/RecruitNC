@@ -7,6 +7,9 @@ import { SpartanDonateFormWizard } from "./spartan-donate-form-wizard"
 type SpartanDonateFormProps = {
   /** When true (e.g. `/fundraising/give`): donate-only entry, hub palette — no Race vs Donate split. */
   fundraisingHub?: boolean
+  fundraisingHubPrefillCode?: string | null
+  fundraisingHubPrefillLabel?: string | null
+  fundraisingHubReturnSlug?: string | null
 }
 
 /**
@@ -16,7 +19,12 @@ type SpartanDonateFormProps = {
  *
  * `SpartanDonateForm` must stay inside `<Suspense>` (see donation-section) because of `useSearchParams`.
  */
-export function SpartanDonateForm({ fundraisingHub = false }: SpartanDonateFormProps) {
+export function SpartanDonateForm({
+  fundraisingHub = false,
+  fundraisingHubPrefillCode = null,
+  fundraisingHubPrefillLabel = null,
+  fundraisingHubReturnSlug = null,
+}: SpartanDonateFormProps) {
   const searchParams = useSearchParams()
   const fromQuery =
     searchParams.get("classic") === "1" ||
@@ -42,5 +50,12 @@ export function SpartanDonateForm({ fundraisingHub = false }: SpartanDonateFormP
       </>
     )
   }
-  return <SpartanDonateFormWizard fundraisingHub={fundraisingHub} />
+  return (
+    <SpartanDonateFormWizard
+      fundraisingHub={fundraisingHub}
+      fundraisingHubPrefillCode={fundraisingHubPrefillCode}
+      fundraisingHubPrefillLabel={fundraisingHubPrefillLabel}
+      fundraisingHubReturnSlug={fundraisingHubReturnSlug}
+    />
+  )
 }

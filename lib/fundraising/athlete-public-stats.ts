@@ -13,6 +13,13 @@ const CODE_RE = /^NCU-[A-Za-z0-9]+-\d{2}$/i
 export type AthleteFundraisingPublicStats = {
   raisedCents: number
   giftCount: number
+  /** Mean gift when giftCount > 0 */
+  avgGiftCents: number | null
+  /** Receipt type ≈ organization (tax receipt) when Stripe metadata is available */
+  organizationGiftCount: number
+  individualGiftCount: number
+  /** False when sourced from DB mirror without payer_type */
+  payerTypeBreakdownKnown: boolean
 }
 
 type DonationSelectRow = {
@@ -47,13 +54,24 @@ export async function getAthleteFundraisingPublicStats(code: string): Promise<At
   if (corrected != null) {
     let raisedCents = 0
     let giftCount = 0
+    let organizationGiftCount = 0
+    let individualGiftCount = 0
     for (const r of corrected) {
       if ((r.athleteCode ?? "").trim().toUpperCase() === c) {
         raisedCents += r.amountCents
         giftCount += 1
+        if (r.payerType === "organization") organizationGiftCount += 1
+        else individualGiftCount += 1
       }
     }
-    return { raisedCents, giftCount }
+    return {
+      raisedCents,
+      giftCount,
+      avgGiftCents: giftCount > 0 ? Math.round(raisedCents / giftCount) : null,
+      organizationGiftCount,
+      individualGiftCount,
+      payerTypeBreakdownKnown: true,
+    }
   }
 
   const admin = createAdminClient()
@@ -117,7 +135,14 @@ export async function getAthleteFundraisingPublicStats(code: string): Promise<At
       giftCount += 1
     }
   }
-  return { raisedCents, giftCount }
+  return {
+    raisedCents,
+    giftCount,
+    avgGiftCents: giftCount > 0 ? Math.round(raisedCents / giftCount) : null,
+    organizationGiftCount: 0,
+    individualGiftCount: 0,
+    payerTypeBreakdownKnown: false,
+  }
 }
 
 export type AthleteRecentGiftRow = {
@@ -138,7 +163,7 @@ export async function getAthleteRecentGifts(code: string, limit: number): Promis
     const enriched = attachPublicSupporterFields(corrected, codeToFullName)
     const mine = enriched.filter((r) => (r.athleteCode ?? "").trim().toUpperCase() === c)
     mine.sort((a, b) => b.createdUnix - a.createdUnix)
-    const lim = Math.min(50, Math.max(1, limit))
+    const lim = Math.min(250, Math.max(1, limit))
     return mine.slice(0, lim).map((r) => ({
       created_at: r.createdIso,
       donorLabel: r.publicDisplayName?.trim() ? r.publicDisplayName.trim() : "Supporter",
@@ -192,13 +217,66 @@ export async function getAthleteRecentGifts(code: string, limit: number): Promis
 
   credited.sort((a, b) => +new Date(b.created_at ?? 0) - +new Date(a.created_at ?? 0))
 
-  const lim = Math.min(50, Math.max(1, limit))
+  const lim = Math.min(250, Math.max(1, limit))
   return credited.slice(0, lim).map((row) => ({
     created_at: String(row.created_at ?? ""),
     donorLabel:
       typeof row.donor_name === "string" && row.donor_name.trim() ? row.donor_name.trim() : "Supporter",
     amountCents: typeof row.amount_cents === "number" ? row.amount_cents : 0,
   }))
+}
+
+/**
+ * One Stripe list pass for athlete pages: public stats + gift table (same credit rules as `/spartan`).
+ */
+export async function getAthleteFundraisingPublicSnapshot(
+  code: string,
+  giftLimit: number,
+): Promise<{ stats: AthleteFundraisingPublicStats; gifts: AthleteRecentGiftRow[] } | null> {
+  const c = code.trim().toUpperCase()
+  if (!CODE_RE.test(c)) return null
+
+  const corrected = await loadCorrectedStripeDonationsForCampaignWindow(DEFAULT_FUNDRAISING_CAMPAIGN)
+  if (corrected != null) {
+    const mine = corrected.filter((r) => (r.athleteCode ?? "").trim().toUpperCase() === c)
+    const admin = createAdminClient()
+    const entries = await getFundraisingAthleteEntries(admin)
+    const codeToFullName = fundraisingCodeToFullNameMap(entries)
+    let raisedCents = 0
+    let organizationGiftCount = 0
+    let individualGiftCount = 0
+    for (const r of mine) {
+      raisedCents += r.amountCents
+      if (r.payerType === "organization") organizationGiftCount += 1
+      else individualGiftCount += 1
+    }
+    const giftCount = mine.length
+    const stats: AthleteFundraisingPublicStats = {
+      raisedCents,
+      giftCount,
+      avgGiftCents: giftCount > 0 ? Math.round(raisedCents / giftCount) : null,
+      organizationGiftCount,
+      individualGiftCount,
+      payerTypeBreakdownKnown: true,
+    }
+    mine.sort((a, b) => b.createdUnix - a.createdUnix)
+    const lim = Math.min(250, Math.max(1, giftLimit))
+    const slice = mine.slice(0, lim)
+    const enriched = attachPublicSupporterFields(slice, codeToFullName)
+    const gifts = enriched.map((r) => ({
+      created_at: r.createdIso,
+      donorLabel: r.publicDisplayName?.trim() ? r.publicDisplayName.trim() : "Supporter",
+      amountCents: r.amountCents,
+    }))
+    return { stats, gifts }
+  }
+
+  const [stats, gifts] = await Promise.all([
+    getAthleteFundraisingPublicStats(code),
+    getAthleteRecentGifts(code, giftLimit),
+  ])
+  if (!stats) return null
+  return { stats, gifts }
 }
 
 export type AthleteOwnerThankYouRow = {
