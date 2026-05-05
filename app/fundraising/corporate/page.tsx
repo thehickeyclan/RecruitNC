@@ -1,6 +1,10 @@
 import type { Metadata } from "next"
 import { HardLink } from "@/components/hard-link"
 
+/** All partnership inquiries from this page go to NC United’s main inbox. */
+const NC_UNITED_INFO_EMAIL = "info@ncwrestlingunited.com"
+const corporatePartnershipsMailto = `mailto:${NC_UNITED_INFO_EMAIL}?subject=${encodeURIComponent("Corporate partnership — NC United")}`
+
 export const metadata: Metadata = {
   title: "Corporate partners | NC United Fundraising",
   description:
@@ -34,8 +38,9 @@ export default function FundraisingCorporatePage() {
         </p>
         <div className="mt-10 flex flex-col gap-3 sm:flex-row">
           <a
-            href="mailto:info@ncwrestlingunited.com?subject=Corporate%20partnership%20%E2%80%94%20NC%20United"
+            href={corporatePartnershipsMailto}
             className={`${displayFont("inline-flex min-h-12 flex-1 items-center justify-center rounded-sm bg-[#CC0000] px-6 text-sm font-extrabold uppercase tracking-wide text-white hover:bg-[#a80000]")}`}
+            aria-label={`Email ${NC_UNITED_INFO_EMAIL} about corporate partnerships`}
           >
             Email partnerships
           </a>
@@ -46,6 +51,13 @@ export default function FundraisingCorporatePage() {
             Back to hub
           </HardLink>
         </div>
+        <p className="mt-6 text-center text-sm text-white/85 sm:text-left">
+          Sends to{" "}
+          <a href={`mailto:${NC_UNITED_INFO_EMAIL}`} className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
+            {NC_UNITED_INFO_EMAIL}
+          </a>
+          .
+        </p>
       </div>
     </div>
   )

@@ -11,14 +11,14 @@ import {
   buildSpartanPublicByAthlete,
   buildSpartanPublicSupporterSummary,
 } from "@/lib/spartan-public-supporter-feed"
-import { listSpartanFayettevilleDonations } from "@/lib/spartan-fayetteville-stripe"
-import { resolveFundraisingCampaignQueryParam } from "@/lib/fundraising/campaign-registry"
+import { listSpartanFayettevilleDonations, listSpartanFayettevilleDonationsAllRegisteredCampaigns } from "@/lib/spartan-fayetteville-stripe"
+import { DEFAULT_FUNDRAISING_CAMPAIGN, resolveFundraisingCampaignQueryParam } from "@/lib/fundraising/campaign-registry"
 
 export const dynamic = "force-dynamic"
 
 /**
  * Public supporter activity: paid Spartan gifts with names redacted per donor_list_public.
- * Query: days (default per campaign registry), campaign= Stripe slug (default: registry default).
+ * Query: `days` (default per campaign), `campaign` = Stripe slug or `all` for every registered hub campaign combined.
  * No auth. Does not expose email addresses.
  */
 export async function GET(request: NextRequest) {
@@ -27,21 +27,29 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Not configured" }, { status: 503 })
   }
 
-  const campaignResult = resolveFundraisingCampaignQueryParam(request.nextUrl.searchParams.get("campaign"))
-  if (!campaignResult.ok) {
-    return NextResponse.json({ error: campaignResult.error }, { status: 400 })
-  }
-  const { campaign } = campaignResult
+  const rawCampaign = request.nextUrl.searchParams.get("campaign")?.trim()
+  const allHubCampaigns = rawCampaign?.toLowerCase() === "all"
 
-  let days = Number(request.nextUrl.searchParams.get("days") ?? String(campaign.defaultLookbackDays))
-  if (!Number.isFinite(days) || days < 1) days = campaign.defaultLookbackDays
+  let resolvedCampaign = DEFAULT_FUNDRAISING_CAMPAIGN
+  if (!allHubCampaigns) {
+    const campaignResult = resolveFundraisingCampaignQueryParam(rawCampaign ?? null)
+    if (!campaignResult.ok) {
+      return NextResponse.json({ error: campaignResult.error }, { status: 400 })
+    }
+    resolvedCampaign = campaignResult.campaign
+  }
+
+  let days = Number(request.nextUrl.searchParams.get("days") ?? String(resolvedCampaign.defaultLookbackDays))
+  if (!Number.isFinite(days) || days < 1) days = resolvedCampaign.defaultLookbackDays
   if (days > 400) days = 400
 
   const since = Math.floor((Date.now() - days * 24 * 60 * 60 * 1000) / 1000)
   const stripe = new Stripe(stripeSecret)
 
   try {
-    const rowsRaw = await listSpartanFayettevilleDonations(stripe, since, campaign.stripeCampaignSlug)
+    const rowsRaw = allHubCampaigns
+      ? await listSpartanFayettevilleDonationsAllRegisteredCampaigns(stripe, since)
+      : await listSpartanFayettevilleDonations(stripe, since, resolvedCampaign.stripeCampaignSlug)
     let rows = rowsRaw
     let codeToFullName = new Map<string, string>()
     try {
@@ -68,14 +76,17 @@ export async function GET(request: NextRequest) {
       creditLabel: r.creditLabel,
       attribution: r.attribution,
       raceParticipantName: r.publicRaceParticipantName,
+      spartanCampaignSlug: r.spartanCampaignSlug,
     }))
 
     const byAthlete = buildSpartanPublicByAthlete(rows, codeToFullName)
     const summary = buildSpartanPublicSupporterSummary(rows)
 
     const res = NextResponse.json({
-      campaign: campaign.stripeCampaignSlug,
-      campaignDisplayName: campaign.campaignDisplayName,
+      campaign: allHubCampaigns ? "all" : resolvedCampaign.stripeCampaignSlug,
+      campaignDisplayName: allHubCampaigns
+        ? "All NC United fundraising campaigns (combined)"
+        : resolvedCampaign.campaignDisplayName,
       days,
       count: entries.length,
       summary: {

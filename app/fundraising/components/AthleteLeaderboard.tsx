@@ -86,17 +86,14 @@ export function AthleteLeaderboard({
             >
               Athlete leaderboard
             </h2>
-            <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/55">
-              Top ten for <strong className="text-white/80">{hubTransparency.campaignDisplayName}</strong> — paid gifts in the
-              last <strong className="tabular-nums text-white/80">{hubTransparency.lookbackDays}</strong> days (
-              <span className="font-mono text-[11px] text-white/45">{hubTransparency.stripeCampaignSlug}</span>
-              ). <strong className="text-white/80">Gifts</strong> = checkout sessions;{" "}
-              <strong className="text-white/80">Donors</strong> = distinct payer emails. Matches the full leaderboard and
-              admin totals for that window (after credit corrections).
+            <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/80">
+              Top ten athletes by athlete-credited paid gifts in the last{" "}
+              <strong className="tabular-nums text-white">{hubTransparency.lookbackDays}</strong> days — all NC United hub
+              campaigns combined. Gifts = checkout sessions; donors = distinct payer emails.
             </p>
           </div>
           <HardLink
-            href="/fundraising/leaderboard"
+            href={`/fundraising/leaderboard?campaign=all&days=${hubTransparency.lookbackDays}`}
             className={`${displayFont("shrink-0 text-sm font-extrabold uppercase tracking-wide text-[#C8A94A] underline-offset-4 hover:underline")}`}
           >
             View all athletes →

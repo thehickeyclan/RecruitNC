@@ -62,13 +62,16 @@ export function FundraisingLeaderboardContent({ campaigns }: { campaigns: Leader
 
   const resolvedCampaignSlug = useMemo(() => {
     const raw = searchParams.get("campaign")?.trim()
-    if (!raw) return DEFAULT_FUNDRAISING_CAMPAIGN.stripeCampaignSlug
+    if (!raw || raw.toLowerCase() === "all") return "all"
     const found = fundraisingCampaignByStripeSlug(raw)
     return found?.stripeCampaignSlug ?? DEFAULT_FUNDRAISING_CAMPAIGN.stripeCampaignSlug
   }, [searchParams])
 
   const resolvedDays = useMemo(() => {
-    const c = fundraisingCampaignByStripeSlug(resolvedCampaignSlug) ?? DEFAULT_FUNDRAISING_CAMPAIGN
+    const c =
+      resolvedCampaignSlug === "all"
+        ? DEFAULT_FUNDRAISING_CAMPAIGN
+        : fundraisingCampaignByStripeSlug(resolvedCampaignSlug) ?? DEFAULT_FUNDRAISING_CAMPAIGN
     const n = Number(searchParams.get("days"))
     if (!Number.isFinite(n) || n < 1) return c.defaultLookbackDays
     return Math.min(400, Math.floor(n))
@@ -131,7 +134,9 @@ export function FundraisingLeaderboardContent({ campaigns }: { campaigns: Leader
   const sortedAthletes = useMemo(() => [...byAthlete].sort((a, b) => b.totalCents - a.totalCents), [byAthlete])
 
   const campaignDefinition =
-    fundraisingCampaignByStripeSlug(resolvedCampaignSlug) ?? DEFAULT_FUNDRAISING_CAMPAIGN
+    resolvedCampaignSlug === "all"
+      ? DEFAULT_FUNDRAISING_CAMPAIGN
+      : fundraisingCampaignByStripeSlug(resolvedCampaignSlug) ?? DEFAULT_FUNDRAISING_CAMPAIGN
   const displayTitle = meta?.campaignDisplayName ?? campaignDefinition.campaignDisplayName
 
   const dayPresets = [30, 90, 120, 365]
@@ -173,6 +178,7 @@ export function FundraisingLeaderboardContent({ campaigns }: { campaigns: Leader
                 value={resolvedCampaignSlug}
                 onChange={(e) => commitFilters(e.target.value, resolvedDays)}
               >
+                <option value="all">All campaigns (combined)</option>
                 {campaigns.map((c) => (
                   <option key={c.stripeCampaignSlug} value={c.stripeCampaignSlug}>
                     {c.tabLabel}
@@ -202,7 +208,11 @@ export function FundraisingLeaderboardContent({ campaigns }: { campaigns: Leader
           </div>
 
           <p className="mt-6 text-sm font-semibold text-slate-900">{displayTitle}</p>
-          <p className="mt-1 text-xs text-slate-500 tabular-nums">Stripe campaign · {resolvedCampaignSlug}</p>
+          <p className="mt-1 text-xs text-slate-500 tabular-nums">
+            {resolvedCampaignSlug === "all"
+              ? "Athlete totals combine every registered NC United Stripe campaign in this window."
+              : `Stripe campaign · ${resolvedCampaignSlug}`}
+          </p>
 
           {loading ? (
             <p className="mt-10 text-center text-sm text-slate-500">Loading totals…</p>

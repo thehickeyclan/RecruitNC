@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react"
 import { HardLink } from "@/components/hard-link"
 import type { FundraisingHubActivityRow, FundraisingHubTransparencyMeta } from "@/lib/fundraising/hub-data"
+import { hubActivityCampaignFromStripeSlug } from "@/lib/fundraising/hub-activity-meta"
 import { fundraisingAthletePublicHrefFromCode } from "@/lib/fundraising/athlete-fundraising-slug"
 import { formatUsdWhole } from "./FundraisingHero"
 
@@ -21,8 +22,14 @@ function mapRealtimeRow(payload: Record<string, unknown>): FundraisingHubActivit
   const athlete_display_name =
     typeof payload.athlete_display_name === "string" ? payload.athlete_display_name.trim() : ""
   const athlete_code = typeof payload.athlete_code === "string" ? payload.athlete_code.trim() : ""
-  const athleteCredit =
-    athlete_display_name || athlete_code || "NC United general fund"
+  const athleteCredit = !athlete_code && !athlete_display_name
+    ? "NC United general fund"
+    : athlete_display_name || athlete_code || "NC United general fund"
+  const spartanRaw =
+    typeof payload.spartan_campaign === "string" && payload.spartan_campaign.trim()
+      ? payload.spartan_campaign.trim()
+      : null
+  const { campaignStripeSlug, campaignShortLabel } = hubActivityCampaignFromStripeSlug(spartanRaw)
 
   return {
     id,
@@ -31,6 +38,8 @@ function mapRealtimeRow(payload: Record<string, unknown>): FundraisingHubActivit
     amountCents: amount_cents,
     athleteCredit,
     athleteCode: athlete_code || null,
+    campaignStripeSlug,
+    campaignShortLabel,
   }
 }
 
@@ -156,9 +165,13 @@ export function DonorActivityFeed({
           </span>
         </div>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/80">
-          Last {FEED_LIMIT} paid gifts for <strong className="text-white">{hubTransparency.campaignDisplayName}</strong> in the
-          last <strong className="tabular-nums text-white">{hubTransparency.lookbackDays}</strong> days, newest first — same
-          scope as the leaderboard (Supabase realtime + Stripe mirror).
+          Most recent {FEED_LIMIT} paid gifts across all NC United hub campaigns in the last{" "}
+          <strong className="tabular-nums text-white">{hubTransparency.lookbackDays}</strong> days. Hero stats use{" "}
+          <strong className="text-white">{hubTransparency.campaignDisplayName}</strong> only.{" "}
+          <HardLink href={`/fundraising/activity?campaign=all&days=${hubTransparency.lookbackDays}`} className="text-[#C8A94A] underline-offset-4 hover:underline">
+            Full gift log
+          </HardLink>
+          .
         </p>
 
         <div
@@ -193,6 +206,9 @@ export function DonorActivityFeed({
                       hour: "numeric",
                       minute: "2-digit",
                     })}
+                  </span>
+                  <span className="shrink-0 rounded border border-white/10 bg-black/20 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-[#C8A94A]">
+                    {r.campaignShortLabel ?? "—"}
                   </span>
                   <span className="min-w-0 flex-1 font-semibold text-white">{r.donorDisplay}</span>
                   <span className={`${displayFont("shrink-0 font-extrabold tabular-nums text-[#C8A94A]")}`}>

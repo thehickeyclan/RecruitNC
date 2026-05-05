@@ -32,6 +32,7 @@ export default async function FundraisingPortalHomePage() {
     <div id="fundraising-hub-root" className="min-h-screen bg-[#0B2545] text-white">
       <FundraisingHero hero={snapshot.hero} hubTransparency={snapshot.hubTransparency} />
       <NavigationPaths />
+      <HowItWorks />
       <ActiveCampaigns campaigns={snapshot.campaigns} />
       <LeaderboardPreview rows={leaderboardPreview} hubTransparency={snapshot.hubTransparency} />
       <LiveDonationStream initial={liveFeedInitial} hubTransparency={snapshot.hubTransparency} />
@@ -43,7 +44,6 @@ export default async function FundraisingPortalHomePage() {
         minAmountCents={hallOfFame?.minAmountCents ?? DONOR_RECOGNITION_MIN_AMOUNT_CENTS}
       />
       <CorporatePartners />
-      <HowItWorks />
       <FundraisingFooter />
     </div>
   )

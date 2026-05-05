@@ -71,6 +71,15 @@ export function stripeSpartanCampaignMetadataMatchesRequested(
   return false
 }
 
+/** Checkout metadata matches any registry `spartan_campaign` (including legacy aliases per campaign). */
+export function stripeSpartanCampaignMetadataMatchesAnyRegisteredCampaign(
+  metadataSpartanCampaign: string | null | undefined,
+): boolean {
+  return FUNDRAISING_CAMPAIGNS.some((c) =>
+    stripeSpartanCampaignMetadataMatchesRequested(metadataSpartanCampaign, c.stripeCampaignSlug),
+  )
+}
+
 /**
  * `spartan_donations` rows with no `spartan_campaign` are usually legacy webhook rows before the column was reliable.
  * While there is a single Spartan drive in the registry, treat those as the default campaign so the hub does not

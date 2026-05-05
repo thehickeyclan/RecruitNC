@@ -1,5 +1,9 @@
 import Stripe from "stripe"
-import { DEFAULT_FUNDRAISING_CAMPAIGN, stripeSpartanCampaignMetadataMatchesRequested } from "@/lib/fundraising/campaign-registry"
+import {
+  DEFAULT_FUNDRAISING_CAMPAIGN,
+  stripeSpartanCampaignMetadataMatchesAnyRegisteredCampaign,
+  stripeSpartanCampaignMetadataMatchesRequested,
+} from "@/lib/fundraising/campaign-registry"
 import { normalizeSpartanPublicAthleteDisplay, scoreSpartanPublicDisplayRichness } from "@/lib/spartan-fundraising-code"
 
 /** @deprecated Prefer `DEFAULT_FUNDRAISING_CAMPAIGN.stripeCampaignSlug` or pass `campaignSlug` into list helpers. */
@@ -98,6 +102,132 @@ export async function listSpartanFayettevilleDonations(
       if (s.payment_status !== "paid") continue
       const m = s.metadata || {}
       if (!stripeSpartanCampaignMetadataMatchesRequested(m.spartan_campaign, campaignSlug)) continue
+
+      const raceRequested = m.race_entry_requested === "true"
+      const ft = m.fundraising_type === "race_donation" ? "race_donation" : "gift_only"
+      const athleteCode =
+        typeof m.athlete_code === "string" && m.athlete_code.trim()
+          ? m.athlete_code.trim()
+          : typeof m.fundraising_code === "string" && m.fundraising_code.trim()
+            ? m.fundraising_code.trim()
+            : null
+      const manualCreditName =
+        typeof m.manual_credit_name === "string" && m.manual_credit_name.trim()
+          ? m.manual_credit_name.trim().slice(0, 120)
+          : null
+      const athleteDisplayName =
+        typeof m.athlete_display_name === "string" && m.athlete_display_name.trim()
+          ? m.athlete_display_name.trim().slice(0, 120)
+          : null
+      const raceParticipantName =
+        typeof m.race_participant_name === "string" && m.race_participant_name.trim()
+          ? m.race_participant_name.trim().slice(0, 120)
+          : null
+      const spartanNotificationEmail =
+        typeof m.spartan_notification_email === "string" && m.spartan_notification_email.trim()
+          ? m.spartan_notification_email.trim().slice(0, 320)
+          : null
+
+      const tee100Eligible = m.tee_100_eligible === "yes"
+      const teeShirtSize =
+        typeof m.tee_sz === "string" && m.tee_sz.trim() ? m.tee_sz.trim().toUpperCase().slice(0, 8) : null
+      const teeShipLine1 = typeof m.ship_1 === "string" && m.ship_1.trim() ? m.ship_1.trim().slice(0, 120) : null
+      const teeShipLine2 = typeof m.ship_2 === "string" && m.ship_2.trim() ? m.ship_2.trim().slice(0, 120) : null
+      const teeShipCity = typeof m.ship_city === "string" && m.ship_city.trim() ? m.ship_city.trim().slice(0, 80) : null
+      const teeShipState = typeof m.ship_st === "string" && m.ship_st.trim() ? m.ship_st.trim().slice(0, 32) : null
+      const teeShipPostal = typeof m.ship_zip === "string" && m.ship_zip.trim() ? m.ship_zip.trim().slice(0, 20) : null
+      const teeShipCountry =
+        typeof m.ship_ctry === "string" && m.ship_ctry.trim() ? m.ship_ctry.trim().slice(0, 2).toUpperCase() : null
+
+      let attr: SpartanFayettevilleDonation["attribution"]
+      if (m.fundraising_attribution === "manual_name") {
+        attr = "manual_name"
+      } else if (m.fundraising_attribution === "general_nc_united") {
+        attr = "general_nc_united"
+      } else if (athleteCode) {
+        attr = "athlete"
+      } else if (manualCreditName) {
+        attr = "manual_name"
+      } else {
+        attr = "general_nc_united"
+      }
+
+      const spartanCampaignSlug =
+        typeof m.spartan_campaign === "string" && m.spartan_campaign.trim() ? m.spartan_campaign.trim() : null
+
+      const payerTypeRaw = typeof m.payer_type === "string" ? m.payer_type.trim().toLowerCase() : ""
+      const payerType: SpartanFayettevilleDonation["payerType"] =
+        payerTypeRaw === "organization" || payerTypeRaw === "org" ? "organization" : "person"
+
+      rows.push({
+        sessionId: s.id,
+        paymentIntentId: paymentIntentIdFromSession(s),
+        createdIso: new Date((s.created ?? 0) * 1000).toISOString(),
+        createdUnix: s.created ?? 0,
+        amountCents: s.amount_total ?? 0,
+        currency: s.currency ?? "usd",
+        donorEmail: s.customer_details?.email ?? s.customer_email ?? null,
+        donorPhone:
+          typeof s.customer_details?.phone === "string" && s.customer_details.phone.trim()
+            ? s.customer_details.phone.trim().slice(0, 32)
+            : null,
+        spartanNotificationEmail,
+        donorName: typeof m.donor_name === "string" && m.donor_name.trim() ? m.donor_name.trim() : null,
+        donorListPublic: parseDonorListPublic(m),
+        payerType,
+        raceParticipant: raceRequested,
+        fundraisingType: ft,
+        athleteCode,
+        athleteDisplayName,
+        manualCreditName,
+        raceParticipantName,
+        attribution: attr,
+        spartanCampaignSlug,
+        tierPreference: typeof m.tier_preference === "string" ? m.tier_preference : "",
+        tee100Eligible,
+        teeShirtSize,
+        teeShipLine1,
+        teeShipLine2,
+        teeShipCity,
+        teeShipState,
+        teeShipPostal,
+        teeShipCountry,
+      })
+    }
+
+    pages++
+    if (!res.has_more || res.data.length === 0) break
+    startingAfter = res.data[res.data.length - 1]!.id
+  }
+
+  rows.sort((a, b) => b.createdUnix - a.createdUnix)
+  return rows
+}
+
+/**
+ * Paid sessions where `spartan_campaign` metadata matches any registered NC United hub campaign.
+ * Same Stripe list behavior as {@link listSpartanFayettevilleDonations}, wider metadata filter.
+ */
+export async function listSpartanFayettevilleDonationsAllRegisteredCampaigns(
+  stripe: Stripe,
+  createdGteUnix: number,
+): Promise<SpartanFayettevilleDonation[]> {
+  const rows: SpartanFayettevilleDonation[] = []
+  let startingAfter: string | undefined
+  let pages = 0
+
+  while (pages < SPARTAN_STRIPE_LIST_MAX_PAGES) {
+    const res = await stripe.checkout.sessions.list({
+      created: { gte: createdGteUnix },
+      limit: 100,
+      expand: ["data.payment_intent"],
+      ...(startingAfter ? { starting_after: startingAfter } : {}),
+    })
+
+    for (const s of res.data) {
+      if (s.payment_status !== "paid") continue
+      const m = s.metadata || {}
+      if (!stripeSpartanCampaignMetadataMatchesAnyRegisteredCampaign(m.spartan_campaign)) continue
 
       const raceRequested = m.race_entry_requested === "true"
       const ft = m.fundraising_type === "race_donation" ? "race_donation" : "gift_only"

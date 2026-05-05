@@ -58,7 +58,7 @@ export function FundraisingHero({
         <p
           className={`${displayFont("text-[10px] font-extrabold uppercase tracking-[0.32em] text-[#C8A94A] sm:text-[11px]")}`}
         >
-          Live ops · 501(c)(3) central command
+          Tax-deductible giving · 501(c)(3)
         </p>
 
         <h1
@@ -68,18 +68,9 @@ export function FundraisingHero({
         </h1>
 
         <p className="mx-auto mt-6 max-w-2xl text-base font-medium leading-relaxed text-white sm:mx-0 sm:text-lg">
-          NC wrestlers earn their development. Their community makes it possible. Every dollar is tax-deductible and goes
-          directly to the athlete you choose.
-        </p>
-        <p className="mx-auto mt-3 max-w-2xl text-xs leading-relaxed text-white/90 sm:mx-0">
-          Hero figures = paid checkouts for{" "}
-          <strong className="text-white">{hubTransparency.campaignDisplayName}</strong>, last{" "}
-          <span className="tabular-nums text-white">{hubTransparency.lookbackDays}</span> days (
-          <span className="font-mono text-[10px] text-white/80">{hubTransparency.stripeCampaignSlug}</span>) — aligns with the{" "}
-          <HardLink href="/fundraising/leaderboard" className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
-            leaderboard
-          </HardLink>
-          .
+          NC wrestlers earn their development. Their community makes it possible. Every gift is tax-deductible to NC United and is
+          credited to the athlete you choose at checkout—NC United absorbs card-processing fees so their campaign total reflects
+          what you pay.
         </p>
 
         <div
@@ -109,6 +100,22 @@ export function FundraisingHero({
           </div>
         </div>
 
+        <p className="mx-auto mt-4 max-w-2xl text-xs leading-relaxed text-white/90 sm:mx-0">
+          <strong className="text-white">Raised</strong>, <strong className="text-white">Donors</strong>, and{" "}
+          <strong className="text-white">Athletes funded</strong> count paid checkouts for{" "}
+          <strong className="text-white">{hubTransparency.campaignDisplayName}</strong> in the last{" "}
+          <span className="tabular-nums text-white">{hubTransparency.lookbackDays}</span> days — same scope as live
+          activity on this page. The athlete leaderboard ranks athlete-credited gifts across every NC United hub campaign in
+          that window (
+          <HardLink
+            href={`/fundraising/leaderboard?campaign=all&days=${hubTransparency.lookbackDays}`}
+            className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline"
+          >
+            combined leaderboard
+          </HardLink>
+          ).
+        </p>
+
         <p
           className={`${displayFont("mx-auto mt-4 max-w-2xl text-[11px] font-bold uppercase tracking-[0.2em] text-[#C8A94A] sm:mx-0")}`}
         >
@@ -123,10 +130,10 @@ export function FundraisingHero({
             Support an athlete →
           </HardLink>
           <HardLink
-            href="/fundraising/donate"
+            href="/fundraising/training-fund"
             className={`${displayFont("inline-flex min-h-[52px] flex-1 items-center justify-center rounded-sm border-2 border-white/25 bg-transparent px-8 text-sm font-extrabold uppercase tracking-[0.14em] text-white transition hover:border-[#C8A94A]/60 hover:text-[#C8A94A] sm:flex-none sm:min-w-[240px]")}`}
           >
-            Donate to NC United →
+            Training fund →
           </HardLink>
         </div>
 

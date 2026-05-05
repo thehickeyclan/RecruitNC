@@ -16,7 +16,7 @@ type Card = { title: string; body: string }
 
 const CARDS: Card[] = [
   {
-    title: "501(c)(3), not a personal tip jar",
+    title: "501(c)(3) nonprofit structure",
     body: "NC United Wrestling is a North Carolina public charity (EIN 99-3757238). Gifts can be tax-deductible for donors who itemize, and the nonprofit path unlocks matching gifts, corporate giving, and institutional support in ways typical P2P apps and most personal crowdfunding pages do not.",
   },
   {
@@ -25,7 +25,7 @@ const CARDS: Card[] = [
   },
   {
     title: "Nonprofit checkout — built for wrestling",
-    body: "You pay through our nonprofit-owned Stripe checkout—email receipt, supporter visibility choices, and metadata that ties every gift to the right athlete code. Many consumer platforms add a visible platform fee on top of what donors intended; here your gift is structured as a tax-documented nonprofit gift when eligible, without that extra consumer-fundraiser layer.",
+    body: "You pay through our nonprofit-owned Stripe checkout—email receipt, supporter visibility choices, and metadata that ties every gift to the right athlete code. Some consumer platforms add separate platform fees on top of donations; our flow is built so eligible gifts can be documented as nonprofit support without that extra layer.",
   },
   {
     title: "Major supporters — recognition & thanks",
@@ -45,7 +45,7 @@ export function FundraisingValueProps({ hero }: { hero: FundraisingHubHeroStats 
     >
       <div className="mx-auto max-w-6xl">
         <p className={`${displayFont("text-[11px] font-extrabold uppercase tracking-[0.28em] text-[#C8A94A]")}`}>
-          Nonprofit advantage
+          Through the nonprofit
         </p>
         <h2
           id="fundraising-why-nc-united-heading"
@@ -56,8 +56,9 @@ export function FundraisingValueProps({ hero }: { hero: FundraisingHubHeroStats 
         <p className="mt-4 max-w-3xl text-base leading-relaxed text-white sm:text-lg">
           You get <strong className="text-white">tax documentation</strong>,{" "}
           <strong className="text-white">athlete or program credit</strong>, and a{" "}
-          <strong className="text-white">single nonprofit ledger</strong> — instead of routing gifts through apps built
-          for casual transfers or generic crowdfunding.{" "}
+          <strong className="text-white">single nonprofit ledger</strong>—so donors and families see one clear story. That
+          differs from routing gifts only through apps built for casual transfers or generic crowdfunding, where receipts
+          and credits can be harder to line up.{" "}
           <strong className="text-white">Major supporters</strong> can also receive NC United{" "}
           <strong className="text-white">recognition and thank-you benefits</strong> (tiered)—when we run those programs
           for a campaign season, details are shared with qualifying donors.
@@ -82,10 +83,9 @@ export function FundraisingValueProps({ hero }: { hero: FundraisingHubHeroStats 
             Compared to typical consumer tools
           </h3>
           <p className="mt-3 text-sm leading-relaxed text-white">
-            <strong className="text-white">GoFundMe-style pages</strong> usually charge platform fees (often several
-            percent) on donations and are rarely structured as deductible gifts to your organization.{" "}
-            <strong className="text-white">Venmo, Cash App, Zelle</strong> are peer-to-peer transfers — convenient, but
-            they don&apos;t produce a 501(c)(3) receipt or tie cleanly to NCU athlete credits for staff and families.
+            Crowdfunding pages often include platform fees and may not be set up as deductible gifts to a 501(c)(3). P2P
+            apps like Venmo, Cash App, or Zelle are great for everyday transfers, but they don&apos;t automatically produce a
+            charity receipt or tie cleanly to NCU athlete credits in our systems.
           </p>
           {illustrativeFeesCents > 0 ? (
             <p className="mt-4 border-t border-white/10 pt-4 text-xs leading-relaxed text-white/85">

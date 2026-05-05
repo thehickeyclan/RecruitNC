@@ -3,16 +3,17 @@ import type { Metadata } from "next"
 import QRCode from "qrcode"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { resolveFundraisingAthletePublicBySlugForRequest } from "@/lib/fundraising/athlete-fundraising-profiles"
-import { getAthleteFundraisingPublicSnapshot, type AthleteFundraisingPublicStats } from "@/lib/fundraising/athlete-public-stats"
+import { getAthleteFundraisingPublicSnapshot, getAthleteOwnerThankYouRowsForLedgerCodes, type AthleteFundraisingPublicStats } from "@/lib/fundraising/athlete-public-stats"
 import { HardLink } from "@/components/hard-link"
 import { createClient } from "@/lib/supabase/server"
 import { DEFAULT_FUNDRAISING_CAMPAIGN, FUNDRAISING_GIVE_PAGE_PATH } from "@/lib/fundraising/campaign-registry"
 import { formatUsdWhole } from "@/app/fundraising/components/FundraisingHero"
-import { userCanManageFundraisingForAthlete, userIsRecruitNcAdmin } from "@/lib/fundraising/athlete-fundraising-access"
+import { getFundraisingPageManagerAccess, userIsRecruitNcAdmin } from "@/lib/fundraising/athlete-fundraising-access"
 import { FundraisingAthleteQrCard } from "./fundraising-athlete-qr-card"
 import { FundraisingAthleteEmbeddedCheckout } from "./fundraising-athlete-embedded-checkout"
 import { FundraisingAthleteMessageSection } from "./fundraising-athlete-message"
 import { FundraisingMilestoneTrophy } from "./fundraising-milestone-trophy"
+import { FundraisingOwnerPanel } from "./fundraising-owner-panel"
 import { recruitingProfilePhotoFromRow } from "@/lib/recruiting-profile-photo"
 
 const HERO_FALLBACK_SILHOUETTE = "/wrestler-silhouette.png"
@@ -21,7 +22,11 @@ const PRIMARY_DONATE_CTA_CLASS =
   "font-[family-name:var(--font-fundraising-display)] flex min-h-[52px] w-full touch-manipulation items-center justify-center rounded-sm bg-[#CC0000] px-8 text-sm font-extrabold uppercase tracking-[0.14em] text-white shadow-[0_14px_44px_-10px_rgba(204,0,0,0.55)] hover:bg-[#a80000] sm:inline-flex sm:w-auto sm:min-w-[240px]"
 
 async function fetchRecruitingProfilePhoto(admin: ReturnType<typeof createAdminClient>, athleteId: string): Promise<string | null> {
-  const { data, error } = await admin.from("athletes").select("*").eq("id", athleteId).maybeSingle()
+  const { data, error } = await admin
+    .from("athletes")
+    .select("photourl, photo_url, image_url, headshot_url, athlete_image")
+    .eq("id", athleteId)
+    .maybeSingle()
   if (error || !data) return null
   return recruitingProfilePhotoFromRow(data as Record<string, unknown>)
 }
@@ -84,9 +89,12 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
 
   const snapshotLedger =
     resolved.ledgerCodes.length > 0 ? resolved.ledgerCodes : code != null ? [code] : []
-  const [snapshot, recruitingPhotoUrl] = await Promise.all([
+  const [snapshot, recruitingPhotoUrl, ownerThankYouRows] = await Promise.all([
     snapshotLedger.length > 0 ? getAthleteFundraisingPublicSnapshot(snapshotLedger, 250) : Promise.resolve(null),
     athleteId ? fetchRecruitingProfilePhoto(admin, athleteId) : Promise.resolve(null),
+    isFundraisingManager && snapshotLedger.length > 0
+      ? getAthleteOwnerThankYouRowsForLedgerCodes(snapshotLedger)
+      : Promise.resolve([]),
   ])
 
   /** Totals use the same corrected Stripe aggregate as `/spartan` (via cached campaign session list — typically within 60–120s of live). If Stripe + mirror fail, show zeros — do not substitute `profile.total_raised_cents`. */
@@ -230,8 +238,11 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
               New to NC United?
             </span>{" "}
             We&apos;re a North Carolina-based nonprofit that helps young wrestlers and local teams—covering real costs like
-            travel, events, and training. This link is for rooting for{" "}
-            <strong className="text-white/95">{displayName}</strong> with a gift that also supports our programs.
+            travel, events, and training. Gifts on this page are made to NC United (your receipt reflects the nonprofit).{" "}
+            <strong className="text-white/95">The full amount you pay is credited to {displayName}</strong> for this drive—their
+            NCU code is what ties checkout to their campaign total.{" "}
+            <strong className="text-white/95">NC United pays card-processing fees</strong> so that credited amount isn&apos;t
+            reduced by Stripe.
           </p>
           <div className="mt-4 space-y-3 border-t border-white/10 pt-4 text-sm leading-relaxed text-white/78">
             <p>
@@ -240,8 +251,9 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
             </p>
             {code ? (
               <p>
-                <strong className="text-white/92">Every dollar on this page</strong> is credited to{" "}
-                <strong className="text-white/92">{displayName}</strong> for this campaign when checkout uses their NCU code.
+                <strong className="text-white/92">Campaign credit.</strong> Totals and gift activity here match our Spartan
+                fundraiser rules: paid checkout with <strong className="text-white/92">{displayName}</strong>&apos;s code is
+                credited to them for this campaign window.
               </p>
             ) : null}
           </div>
@@ -391,6 +403,18 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
               </ul>
             </div>
           </div>
+        ) : null}
+
+        {isFundraisingManager && athleteId && snapshotLedger.length > 0 ? (
+          <FundraisingOwnerPanel
+            athleteId={athleteId}
+            fundraisingSlug={slug}
+            showBioEditor={false}
+            canEditStory={false}
+            initialBio=""
+            donorRows={ownerThankYouRows}
+            lookbackDays={DEFAULT_FUNDRAISING_CAMPAIGN.defaultLookbackDays}
+          />
         ) : null}
 
         <div className="mt-10 flex justify-center lg:mt-8">

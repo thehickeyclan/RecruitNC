@@ -85,13 +85,13 @@ export function LeaderboardPreview({
               Top athletes
             </h2>
             <p className="mt-2 max-w-xl text-sm text-white">
-              Top five for{" "}
-              <strong className="text-white">{hubTransparency.campaignDisplayName}</strong> — paid gifts, last{" "}
-              <span className="tabular-nums text-white">{hubTransparency.lookbackDays}</span> days.
+              Top five athletes by athlete-credited paid gifts in the last{" "}
+              <span className="tabular-nums text-white">{hubTransparency.lookbackDays}</span> days — all NC United hub
+              campaigns in Stripe combined (not only {hubTransparency.campaignDisplayName}).
             </p>
           </div>
           <HardLink
-            href="/fundraising/leaderboard"
+            href={`/fundraising/leaderboard?campaign=all&days=${hubTransparency.lookbackDays}`}
             className={`${displayFont("text-right text-sm font-extrabold uppercase tracking-wide text-[#C8A94A] underline-offset-4 hover:underline sm:text-left")}`}
           >
             View full leaderboard →

@@ -53,6 +53,12 @@ export function FundraisingFooter() {
             <span className="text-white/25" aria-hidden>
               ·
             </span>
+            <HardLink href="/fundraising/activity?campaign=all" className="text-white/90 hover:text-[#C8A94A]">
+              Gift log
+            </HardLink>
+            <span className="text-white/25" aria-hidden>
+              ·
+            </span>
             <HardLink href="/fundraising#fundraising-live-donor-stream" className="text-white/90 hover:text-[#C8A94A]">
               Live feed
             </HardLink>
@@ -71,7 +77,7 @@ export function FundraisingFooter() {
               ·
             </span>
             <HardLink href="/fundraising/playbook/guide" className="text-white/90 hover:text-[#C8A94A]">
-              Fundraising playbook
+              Fundraising guide
             </HardLink>
             <span className="text-white/25" aria-hidden>
               ·

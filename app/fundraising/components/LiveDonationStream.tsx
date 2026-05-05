@@ -1,7 +1,9 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { HardLink } from "@/components/hard-link"
+import { FUNDRAISING_CAMPAIGNS } from "@/lib/fundraising/campaign-registry"
+import { hubActivityCampaignFromStripeSlug, hubActivityRowMatchesCampaignFilter } from "@/lib/fundraising/hub-activity-meta"
 import type { FundraisingHubActivityRow, FundraisingHubTransparencyMeta } from "@/lib/fundraising/hub-data"
 import { fundraisingAthletePublicHrefFromCode } from "@/lib/fundraising/athlete-fundraising-slug"
 import { formatUsdWhole } from "./FundraisingHero"
@@ -31,10 +33,14 @@ function mapRealtimeRow(payload: Record<string, unknown>): FundraisingHubActivit
   const athlete_display_name =
     typeof payload.athlete_display_name === "string" ? payload.athlete_display_name.trim() : ""
   const athlete_code = typeof payload.athlete_code === "string" ? payload.athlete_code.trim() : ""
-  const athleteCredit =
-    !athlete_code && !athlete_display_name
-      ? "NC United Training Fund"
-      : athlete_display_name || athlete_code || "NC United Training Fund"
+  const athleteCredit = !athlete_code && !athlete_display_name
+    ? "NC United general fund"
+    : athlete_display_name || athlete_code || "NC United general fund"
+  const spartanRaw =
+    typeof payload.spartan_campaign === "string" && payload.spartan_campaign.trim()
+      ? payload.spartan_campaign.trim()
+      : null
+  const { campaignStripeSlug, campaignShortLabel } = hubActivityCampaignFromStripeSlug(spartanRaw)
 
   return {
     id,
@@ -43,11 +49,13 @@ function mapRealtimeRow(payload: Record<string, unknown>): FundraisingHubActivit
     amountCents: amount_cents,
     athleteCredit,
     athleteCode: athlete_code || null,
+    campaignStripeSlug,
+    campaignShortLabel,
   }
 }
 
 function creditLabel(r: FundraisingHubActivityRow): string {
-  if (!r.athleteCode?.trim()) return "NC United Training Fund"
+  if (!r.athleteCode?.trim()) return "NC United general fund"
   return r.athleteCredit
 }
 
@@ -61,10 +69,16 @@ export function LiveDonationStream({
   hubTransparency: FundraisingHubTransparencyMeta
 }) {
   const [rows, setRows] = useState(initial)
+  const [feedCampaignFilter, setFeedCampaignFilter] = useState<string>("all")
 
   useEffect(() => {
     setRows(initial.slice(0, FEED_LIMIT))
   }, [initial])
+
+  const visibleRows = useMemo(
+    () => rows.filter((r) => hubActivityRowMatchesCampaignFilter(r, feedCampaignFilter)),
+    [rows, feedCampaignFilter],
+  )
 
   const mergeIncoming = useCallback((mapped: FundraisingHubActivityRow) => {
     setRows((prev) => {
@@ -117,6 +131,8 @@ export function LiveDonationStream({
     }
   }, [mergeIncoming])
 
+  const activityLogHref = `/fundraising/activity?campaign=${feedCampaignFilter === "all" ? "all" : encodeURIComponent(feedCampaignFilter)}&days=${hubTransparency.lookbackDays}`
+
   return (
     <section
       id="fundraising-live-donor-stream"
@@ -141,16 +157,55 @@ export function LiveDonationStream({
           </span>
         </div>
         <p className="mt-3 max-w-2xl text-sm text-white">
-          Last {FEED_LIMIT} paid gifts · {hubTransparency.campaignDisplayName}, last {hubTransparency.lookbackDays} days.
+          Last {FEED_LIMIT} paid gifts across <strong className="text-white">all NC United hub campaigns</strong> in Stripe,
+          last <span className="tabular-nums text-white">{hubTransparency.lookbackDays}</span> days (newest first). Hero
+          stats above still reflect <strong className="text-white">{hubTransparency.campaignDisplayName}</strong> only.
         </p>
 
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-2">
+            <label htmlFor="live-feed-campaign" className="text-xs font-semibold uppercase tracking-wide text-white/60">
+              Show
+            </label>
+            <select
+              id="live-feed-campaign"
+              value={feedCampaignFilter}
+              onChange={(e) => setFeedCampaignFilter(e.target.value)}
+              className="rounded-md border border-white/15 bg-[#0B2545] px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A94A]"
+            >
+              <option value="all">All campaigns</option>
+              {FUNDRAISING_CAMPAIGNS.map((c) => (
+                <option key={c.stripeCampaignSlug} value={c.stripeCampaignSlug}>
+                  {c.tabLabel}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className={`${displayFont("flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-bold uppercase tracking-wide text-white/70")}`}>
+            <span className="text-white/50">Give</span>
+            {FUNDRAISING_CAMPAIGNS.map((c, i) => (
+              <span key={c.stripeCampaignSlug} className="flex items-center gap-x-3">
+                {i > 0 ? <span className="text-white/25" aria-hidden>·</span> : null}
+                <HardLink href={c.publicPagePath} className="text-[#C8A94A] underline-offset-4 hover:underline">
+                  {c.tabLabel}
+                </HardLink>
+              </span>
+            ))}
+          </div>
+        </div>
+
         <ul className="mt-8 divide-y divide-white/[0.06] overflow-hidden rounded-xl border border-white/10 bg-[#0B2545]/45">
-          {rows.length === 0 ? (
-            <li className="px-4 py-12 text-center text-sm text-white/90">No gifts logged yet.</li>
+          {visibleRows.length === 0 ? (
+            <li className="px-4 py-12 text-center text-sm text-white/90">
+              {rows.length === 0
+                ? "No gifts logged yet."
+                : "No gifts in this campaign for the current feed window — try “All campaigns”."}
+            </li>
           ) : (
-            rows.map((r) => {
+            visibleRows.map((r) => {
               const label = creditLabel(r)
               const href = fundraisingAthletePublicHrefFromCode(r.athleteCode)
+              const campaignBadge = r.campaignShortLabel ?? "—"
               return (
                 <li
                   key={r.id}
@@ -158,6 +213,11 @@ export function LiveDonationStream({
                 >
                   <span className="w-28 shrink-0 font-mono text-[11px] tabular-nums text-white/75">
                     {formatRelativeOrAbsolute(r.createdIso)}
+                  </span>
+                  <span
+                    className={`${displayFont("shrink-0 rounded border border-white/10 bg-black/20 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-[#C8A94A]")}`}
+                  >
+                    {campaignBadge}
                   </span>
                   <span className="min-w-0 flex-1 font-semibold text-white">{r.donorDisplay}</span>
                   <span className={`${displayFont("font-extrabold tabular-nums text-[#C8A94A]")}`}>
@@ -179,9 +239,9 @@ export function LiveDonationStream({
           )}
         </ul>
 
-        <div className="mt-6 text-right">
+        <div className="mt-6 flex flex-col items-end gap-2 sm:flex-row sm:justify-end sm:gap-6">
           <HardLink
-            href="/spartan"
+            href={activityLogHref}
             className={`${displayFont("text-sm font-extrabold uppercase tracking-wide text-[#C8A94A] underline-offset-4 hover:underline")}`}
           >
             View all donor activity →

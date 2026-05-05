@@ -1,6 +1,5 @@
 import type { Metadata } from "next"
 import { HardLink } from "@/components/hard-link"
-import { DEFAULT_FUNDRAISING_CAMPAIGN } from "@/lib/fundraising/campaign-registry"
 import { getTrainingFundPublicSnapshot } from "@/lib/fundraising/training-fund-public-stats"
 import { formatUsdWhole } from "@/app/fundraising/components/FundraisingHero"
 import { FundraisingTrainingFundCheckout } from "./fundraising-training-fund-checkout"
@@ -11,7 +10,7 @@ const CHECKOUT_ANCHOR = "spartan-checkout"
 export const metadata: Metadata = {
   title: "NC United Training Fund | Fundraising",
   description:
-    "Tax-deductible gifts to the NC United Training Fund support wrestlers and programs statewide. Secure Stripe checkout and public gift history.",
+    "Support the NC United Training Fund — resources for wrestlers training and competing nationally, year-round. Tax-deductible 501(c)(3) gifts.",
 }
 
 export default async function FundraisingTrainingFundPage({
@@ -38,16 +37,17 @@ export default async function FundraisingTrainingFundPage({
         </HardLink>
 
         <p className="font-[family-name:var(--font-fundraising-display)] mt-8 text-[11px] font-bold uppercase tracking-[0.28em] text-[#CC0000]">
-          NC United · Training fund
+          NC United
         </p>
 
         <h1 className="font-[family-name:var(--font-fundraising-display)] mt-4 text-2xl font-black uppercase leading-tight tracking-tight text-white sm:text-4xl">
-          NC United Training Fund
+          Training Fund
         </h1>
         <p className="mt-3 text-base leading-relaxed text-white/70">
-          Support North Carolina wrestlers and teams through our nonprofit <strong className="text-white/90">501(c)(3)</strong>{" "}
-          training fund — travel, events, and program costs statewide. Same secure checkout and ledger as athlete-credited
-          gifts; this path credits the <strong className="text-white/90">general NC United fund</strong> at checkout.
+          The <strong className="text-white/90">NC United Training Fund</strong> is how we help wrestlers who need resources
+          and assistance to train and compete <strong className="text-white/90">nationally, year-round</strong>. Gifts are
+          tax-deductible through our North Carolina <strong className="text-white/90">501(c)(3)</strong> and flow to the
+          general training fund — not to one athlete.
         </p>
 
         {cancelled ? (
@@ -58,19 +58,8 @@ export default async function FundraisingTrainingFundPage({
 
         <div className="mt-8 flex flex-col items-stretch gap-2 sm:items-center">
           <HardLink href={giveHref} className="font-[family-name:var(--font-fundraising-display)] flex min-h-[52px] w-full touch-manipulation items-center justify-center rounded-sm bg-[#CC0000] px-8 text-sm font-extrabold uppercase tracking-[0.14em] text-white shadow-[0_14px_44px_-10px_rgba(204,0,0,0.55)] hover:bg-[#a80000] sm:inline-flex sm:w-auto sm:min-w-[240px]">
-            Donate to training fund
+            Give now →
           </HardLink>
-          <p className="text-center text-[11px] leading-snug text-white/45 sm:max-w-md">
-            Prefer to credit a specific wrestler?{" "}
-            <HardLink href="/fundraising/athletes" className="text-[#C8A94A] underline-offset-4 hover:underline">
-              Support an athlete
-            </HardLink>{" "}
-            or{" "}
-            <HardLink href="/fundraising/give" className="text-[#C8A94A] underline-offset-4 hover:underline">
-              Make a gift
-            </HardLink>{" "}
-            (search at checkout).
-          </p>
         </div>
 
         <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -91,10 +80,10 @@ export default async function FundraisingTrainingFundPage({
         </div>
 
         <p className="mt-6 text-center text-xs text-white/45">
-          Totals reflect paid checkouts for {DEFAULT_FUNDRAISING_CAMPAIGN.campaignDisplayName} credited to the training fund
-          (no individual NCU code), same rules as the{" "}
+          Totals reflect completed gifts to the training fund (paid checkouts not credited to an individual NCU athlete
+          code), counted the same way as NC United&apos;s broader{" "}
           <HardLink href="/spartan" className="text-[#C8A94A] underline-offset-4 hover:underline">
-            team fundraiser
+            fundraising ledger
           </HardLink>
           .
         </p>

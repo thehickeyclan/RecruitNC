@@ -47,8 +47,9 @@ export function FundraisingTrainingFundCheckout() {
             Secure checkout
           </h2>
           <p className="mx-auto mt-2 max-w-md text-center text-[13px] leading-snug text-white/70">
-            <strong className="font-semibold text-white/85">NC United Training Fund</strong> — tax-deductible gifts ($5 minimum).
-            You&apos;ll finish on Stripe; your 501(c)(3) receipt arrives by email.
+            <strong className="font-semibold text-white/85">NC United Training Fund</strong> — tax-deductible gifts ($5
+            minimum) that support training, travel, and national competition year-round. You&apos;ll finish on Stripe; your
+            501(c)(3) receipt arrives by email.
           </p>
           <div className="mt-6 w-full text-left">
             <Suspense fallback={<FormFallback />}>

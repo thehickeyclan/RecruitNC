@@ -8,6 +8,7 @@ import {
 } from "@/lib/spartan-credit-corrections"
 import {
   listSpartanFayettevilleDonations,
+  listSpartanFayettevilleDonationsAllRegisteredCampaigns,
   type SpartanFayettevilleDonation,
 } from "@/lib/spartan-fayetteville-stripe"
 import { DEFAULT_FUNDRAISING_CAMPAIGN, type FundraisingCampaignDefinition } from "@/lib/fundraising/campaign-registry"
@@ -78,4 +79,47 @@ export async function loadCorrectedStripeDonationsForSpartanPublicWindow(
   campaign: FundraisingCampaignDefinition = DEFAULT_FUNDRAISING_CAMPAIGN,
 ): Promise<SpartanFayettevilleDonation[] | null> {
   return loadCorrectedStripeDonationsForCampaignWindowUncached(campaign, null)
+}
+
+async function loadCorrectedStripeDonationsForAllHubCampaignsWindowUncached(
+  lookbackDays: number,
+  preloadedCorrectionIndex: SpartanCreditCorrectionsIndex | null,
+): Promise<SpartanFayettevilleDonation[] | null> {
+  const key = process.env.STRIPE_SECRET_KEY?.trim()
+  if (!key) return null
+  try {
+    const stripe = new Stripe(key)
+    const since = Math.floor((Date.now() - lookbackDays * 86400000) / 1000)
+    const [raw, idx] = await Promise.all([
+      listSpartanFayettevilleDonationsAllRegisteredCampaigns(stripe, since),
+      preloadedCorrectionIndex != null
+        ? Promise.resolve(preloadedCorrectionIndex)
+        : fetchSpartanCreditCorrectionsIndex(createAdminClient()),
+    ])
+    return applySpartanCreditCorrectionsToDonations(raw, idx)
+  } catch (e) {
+    console.error("[stripe-transparency-pipeline] all hub campaigns", e)
+    return null
+  }
+}
+
+/**
+ * Paid checkouts for every registry `spartan_campaign` in the lookback window (Stripe + credit corrections).
+ * One Checkout list pass; wider metadata filter than {@link loadCorrectedStripeDonationsForCampaignWindow}.
+ */
+export async function loadCorrectedStripeDonationsForAllHubCampaignsWindow(
+  lookbackDays: number,
+  preloadedCorrectionIndex: SpartanCreditCorrectionsIndex | null = null,
+): Promise<SpartanFayettevilleDonation[] | null> {
+  if (preloadedCorrectionIndex != null) {
+    return loadCorrectedStripeDonationsForAllHubCampaignsWindowUncached(lookbackDays, preloadedCorrectionIndex)
+  }
+  const cachedLoader = unstable_cache(
+    async () => loadCorrectedStripeDonationsForAllHubCampaignsWindowUncached(lookbackDays, null),
+    ["spartan-corrected-stripe-donations-all-hub-campaigns", String(lookbackDays)],
+    { revalidate: STRIPE_DONATION_LIST_CACHE_SECONDS },
+  )
+  const fromCache = await cachedLoader()
+  if (fromCache != null) return fromCache
+  return loadCorrectedStripeDonationsForAllHubCampaignsWindowUncached(lookbackDays, null)
 }

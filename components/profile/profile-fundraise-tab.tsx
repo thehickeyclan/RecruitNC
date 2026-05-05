@@ -2,7 +2,9 @@
 
 import { ExpenseRequestSection } from "@/components/profile/expense-request-section"
 import { GuildCreditAllocationSection } from "@/components/profile/guild-credit-allocation-section"
+import { ProfileFundraiseThankYousSection } from "@/components/profile/profile-fundraise-thank-yous-section"
 import { DEFAULT_FUNDRAISING_CAMPAIGN } from "@/lib/fundraising/campaign-registry"
+import type { ProfileSpartanSupportersAthletePayload } from "@/app/api/profile/spartan-fundraising-supporters/route"
 import { Loader2, Coins } from "lucide-react"
 
 /** Parent-facing reporting cutoff for displayed totals (ops-aligned). */
@@ -29,6 +31,9 @@ type LinkedAthlete = { id: string; name: string }
 type ProfileFundraiseTabProps = {
   spartanFundraising: { athletes: SpartanRow[] } | null
   spartanFundraisingLoading: boolean
+  supporterContactsLoading: boolean
+  supporterContacts: ProfileSpartanSupportersAthletePayload[] | null
+  supporterLookbackDays: number | null
   linkedLoading: boolean
   linkedCount: number
   linkedAthletes: LinkedAthlete[]
@@ -49,6 +54,9 @@ function usedBreakdownCaption(reimb: number, guild: number): string | null {
 export function ProfileFundraiseTab({
   spartanFundraising,
   spartanFundraisingLoading,
+  supporterContactsLoading,
+  supporterContacts,
+  supporterLookbackDays,
   linkedLoading,
   linkedCount,
   linkedAthletes,
@@ -165,6 +173,12 @@ export function ProfileFundraiseTab({
           )}
         </div>
       </section>
+
+      <ProfileFundraiseThankYousSection
+        loading={supporterContactsLoading}
+        lookbackDays={supporterLookbackDays}
+        athletes={supporterContacts}
+      />
 
       <GuildCreditAllocationSection
         onSpartanTotalsRefresh={onSpartanTotalsRefresh}

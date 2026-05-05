@@ -19,6 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { NcUnitedBlueSection, type ParentBlueMembership } from "@/components/profile/nc-united-blue-section"
 import { ProfileFamilyTab } from "@/components/profile/profile-family-tab"
 import { ProfileFundraiseTab } from "@/components/profile/profile-fundraise-tab"
+import type { ProfileSpartanSupportersAthletePayload } from "@/app/api/profile/spartan-fundraising-supporters/route"
 import { HardLink } from "@/components/hard-link"
 
 const ATHLETE_COMPLETENESS_LABELS: Record<string, string> = {
@@ -84,6 +85,9 @@ export function ProfileClient() {
     }[]
   } | null>(null)
   const [spartanFundraisingLoading, setSpartanFundraisingLoading] = useState(true)
+  const [supporterContacts, setSupporterContacts] = useState<ProfileSpartanSupportersAthletePayload[] | null>(null)
+  const [supporterLookbackDays, setSupporterLookbackDays] = useState<number | null>(null)
+  const [supporterContactsLoading, setSupporterContactsLoading] = useState(true)
 
   useEffect(() => {
     console.log("[v0] ProfileClient useEffect:", { authLoading, isAuthenticated, user: !!user })
@@ -94,12 +98,16 @@ export function ProfileClient() {
       fetchLinkedAthletes()
       fetchEventHubs()
       void fetchSpartanFundraisingTotals()
+      void fetchSpartanSupporterContacts()
     } else if (!authLoading && !isAuthenticated) {
       setIsLoading(false)
       setBlueLoading(false)
       setLinkedLoading(false)
       setEventHubsLoading(false)
       setSpartanFundraisingLoading(false)
+      setSupporterContacts(null)
+      setSupporterLookbackDays(null)
+      setSupporterContactsLoading(false)
     }
   }, [authLoading, isAuthenticated])
 
@@ -113,6 +121,32 @@ export function ProfileClient() {
       setEventHubs([])
     } finally {
       setEventHubsLoading(false)
+    }
+  }
+
+  const fetchSpartanSupporterContacts = async () => {
+    setSupporterContactsLoading(true)
+    try {
+      const res = await fetch("/api/profile/spartan-fundraising-supporters", {
+        credentials: "include",
+        cache: "no-store",
+      })
+      if (res.ok) {
+        const data = (await res.json().catch(() => ({}))) as {
+          athletes?: ProfileSpartanSupportersAthletePayload[]
+          lookbackDays?: number
+        }
+        setSupporterContacts(data.athletes ?? [])
+        setSupporterLookbackDays(typeof data.lookbackDays === "number" ? data.lookbackDays : null)
+      } else {
+        setSupporterContacts(null)
+        setSupporterLookbackDays(null)
+      }
+    } catch {
+      setSupporterContacts(null)
+      setSupporterLookbackDays(null)
+    } finally {
+      setSupporterContactsLoading(false)
     }
   }
 
@@ -192,6 +226,7 @@ export function ProfileClient() {
       setSuccess(data.message ?? "Athlete linked.")
       fetchLinkedAthletes()
       void fetchSpartanFundraisingTotals()
+      void fetchSpartanSupporterContacts()
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not link athlete")
     } finally {
@@ -796,10 +831,16 @@ export function ProfileClient() {
           <ProfileFundraiseTab
             spartanFundraising={spartanFundraising}
             spartanFundraisingLoading={spartanFundraisingLoading}
+            supporterContactsLoading={supporterContactsLoading}
+            supporterContacts={supporterContacts}
+            supporterLookbackDays={supporterLookbackDays}
             linkedLoading={linkedLoading}
             linkedCount={linkedAthletes.length}
             linkedAthletes={linkedAthletes}
-            onSpartanTotalsRefresh={fetchSpartanFundraisingTotals}
+            onSpartanTotalsRefresh={() => {
+              void fetchSpartanFundraisingTotals()
+              void fetchSpartanSupporterContacts()
+            }}
           />
         </TabsContent>
 

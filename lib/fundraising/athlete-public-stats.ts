@@ -1,3 +1,4 @@
+import { cache } from "react"
 import { createAdminClient } from "@/lib/supabase/admin"
 import {
   fetchSpartanCreditCorrectionsIndex,
@@ -171,13 +172,20 @@ async function fetchAthleteMirrorCreditedRowsMerged(
   return out
 }
 
-async function loadCorrectedStripeForAthletePublicPage(): Promise<SpartanFayettevilleDonation[] | null> {
-  /** Donors refresh the athlete page expecting to see their gift — avoid `unstable_cache` here (hub `/spartan` can stay cached). */
+/**
+ * Stripe-backed gift totals for public athlete pages — same corrections as `/spartan`.
+ *
+ * - **Prefer** {@link loadCorrectedStripeDonationsForCampaignWindow} (short `unstable_cache` TTL) so we do not list every
+ *   Checkout Session on every page view (that was taking tens of seconds at scale).
+ * - **Fallback** to an uncached list only when the cache path returns null (transient Stripe failure, cold cache, etc.).
+ * - Wrapped in React `cache()` so snapshot + owner thank-you rows in the same request share one load.
+ */
+const loadCorrectedStripeForAthletePublicPage = cache(async (): Promise<SpartanFayettevilleDonation[] | null> => {
   if (!process.env.STRIPE_SECRET_KEY?.trim()) return null
-  const fresh = await loadCorrectedStripeDonationsForSpartanPublicWindow(DEFAULT_FUNDRAISING_CAMPAIGN)
-  if (fresh != null) return fresh
-  return loadCorrectedStripeDonationsForCampaignWindow(DEFAULT_FUNDRAISING_CAMPAIGN)
-}
+  const fromSharedCache = await loadCorrectedStripeDonationsForCampaignWindow(DEFAULT_FUNDRAISING_CAMPAIGN)
+  if (fromSharedCache != null) return fromSharedCache
+  return loadCorrectedStripeDonationsForSpartanPublicWindow(DEFAULT_FUNDRAISING_CAMPAIGN)
+})
 
 /**
  * Same roll-up as `/spartan` `byAthlete` (see `aggregateSpartanByAthlete`). Uses cached Stripe list when possible;
@@ -432,4 +440,58 @@ export async function getAthleteOwnerThankYouRows(code: string): Promise<Athlete
     notificationEmail: null,
     amountCents: typeof row.amount_cents === "number" ? row.amount_cents : 0,
   }))
+}
+
+function thankYouRowDedupeKey(r: AthleteOwnerThankYouRow): string {
+  return [
+    r.createdIso,
+    r.amountCents,
+    (r.donorEmail ?? "").toLowerCase(),
+    (r.notificationEmail ?? "").toLowerCase(),
+    r.donorPhone ?? "",
+    (r.donorName ?? "").toLowerCase(),
+  ].join("\0")
+}
+
+/**
+ * Same contact rows as {@link getAthleteOwnerThankYouRows}, for every ledger code that credits this athlete
+ * (e.g. slug vs roster code). Stripe path loads once; mirror path merges per-code lists.
+ */
+export async function getAthleteOwnerThankYouRowsForLedgerCodes(ledgerCodesInput: string | string[]): Promise<AthleteOwnerThankYouRow[]> {
+  const raw = Array.isArray(ledgerCodesInput) ? ledgerCodesInput : [ledgerCodesInput]
+  const codes = [...new Set(raw.map((c) => c.trim().toUpperCase()).filter((c) => CODE_RE.test(c)))]
+  if (codes.length === 0) return []
+  if (codes.length === 1) return getAthleteOwnerThankYouRows(codes[0]!)
+
+  const corrected = await loadCorrectedStripeForAthletePublicPage()
+  if (corrected != null) {
+    const codeSet = new Set(codes)
+    const mine = corrected.filter((r) => {
+      const ac = (r.athleteCode ?? "").trim().toUpperCase()
+      return codeSet.has(ac) && r.attribution !== "general_nc_united"
+    })
+    mine.sort((a, b) => b.createdUnix - a.createdUnix)
+    return mine.map((r) => ({
+      createdIso: r.createdIso,
+      donorName: r.donorName?.trim() ? r.donorName.trim() : null,
+      donorEmail: r.donorEmail?.trim() ? r.donorEmail.trim() : null,
+      donorPhone: r.donorPhone?.trim() ? r.donorPhone.trim() : null,
+      notificationEmail: r.spartanNotificationEmail?.trim() ? r.spartanNotificationEmail.trim() : null,
+      amountCents: r.amountCents,
+    }))
+  }
+
+  const seen = new Set<string>()
+  const out: AthleteOwnerThankYouRow[] = []
+  for (const c of codes) {
+    const rows = await getAthleteOwnerThankYouRows(c)
+    for (const r of rows) {
+      const k = thankYouRowDedupeKey(r)
+      if (seen.has(k)) continue
+      seen.add(k)
+      out.push(r)
+    }
+  }
+  out.sort((a, b) => +new Date(b.createdIso) - +new Date(a.createdIso))
+  return out
 }

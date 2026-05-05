@@ -9,6 +9,8 @@ import type { AthleteOwnerThankYouRow } from "@/lib/fundraising/athlete-public-s
 type Props = {
   athleteId: string
   fundraisingSlug: string
+  /** When false, only the private supporter contact table is shown (e.g. bio is edited elsewhere on the page). */
+  showBioEditor?: boolean
   canEditStory: boolean
   initialBio: string
   donorRows: AthleteOwnerThankYouRow[]
@@ -18,6 +20,7 @@ type Props = {
 export function FundraisingOwnerPanel({
   athleteId,
   fundraisingSlug,
+  showBioEditor = true,
   canEditStory,
   initialBio,
   donorRows,
@@ -60,15 +63,15 @@ export function FundraisingOwnerPanel({
           Account linked in admin
         </p>
         <h2 className="font-[family-name:var(--font-fundraising-display)] mt-2 text-lg font-black uppercase tracking-tight text-white">
-          Manage this fundraising page
+          {showBioEditor ? "Manage this fundraising page" : "Supporters to thank (private)"}
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-white/65">
-          Only RecruitNC accounts staff connected to this athlete (same link as Family / Fundraise) see this block. Use supporter
-          contact info to say thank you personally — don&apos;t add people to lists or share their details outside that.
+          Only RecruitNC accounts linked to this athlete in admin (same as Family / Fundraise on your profile) see this. Use
+          supporter contact info for personal thank-yous only — don&apos;t add people to lists or share their details.
         </p>
       </div>
 
-      {canEditStory ? (
+      {showBioEditor && canEditStory ? (
         <div className="border-t border-white/10 pt-8">
           <label htmlFor="fundraising-story" className="block text-sm font-semibold text-white/90">
             What I&apos;m raising for
@@ -105,7 +108,7 @@ export function FundraisingOwnerPanel({
             {error ? <span className="text-sm text-red-400/90">{error}</span> : null}
           </div>
         </div>
-      ) : (
+      ) : showBioEditor ? (
         <div className="border-t border-white/10 pt-8">
           <p className="text-sm text-white/65">
             To edit the &quot;what I&apos;m raising for&quot; message on this URL, NC United needs an active fundraising profile
@@ -116,7 +119,7 @@ export function FundraisingOwnerPanel({
             if this page should be editable.
           </p>
         </div>
-      )}
+      ) : null}
 
       <div className="border-t border-white/10 pt-8">
         <h3 className="font-[family-name:var(--font-fundraising-display)] text-sm font-bold uppercase tracking-wide text-white">

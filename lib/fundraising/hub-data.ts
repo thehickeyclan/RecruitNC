@@ -2,10 +2,12 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { createAdminClient } from "@/lib/supabase/admin"
 import {
   DEFAULT_FUNDRAISING_CAMPAIGN,
+  FUNDRAISING_CAMPAIGNS,
   fundraisingCampaignByStripeSlug,
   fundraisingCampaignPortalPath,
   hubSpartanDonationRowMatchesCampaign,
   normalizeRegistryStripeCampaignSlug,
+  stripeSpartanCampaignMetadataMatchesRequested,
   type FundraisingCampaignDefinition,
 } from "@/lib/fundraising/campaign-registry"
 import { fundraisingCodeToFullNameMap, getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
@@ -14,7 +16,8 @@ import {
   effectiveAthleteCodeForDonationLedgerRow,
   type SpartanCreditCorrectionsIndex,
 } from "@/lib/spartan-credit-corrections"
-import { loadCorrectedStripeDonationsForCampaignWindow } from "@/lib/fundraising/stripe-transparency-pipeline"
+import { loadCorrectedStripeDonationsForAllHubCampaignsWindow } from "@/lib/fundraising/stripe-transparency-pipeline"
+import { hubActivityCampaignFromStripeSlug } from "@/lib/fundraising/hub-activity-meta"
 import {
   attachPublicSupporterFields,
   type SpartanDonationWithPublicFields,
@@ -67,7 +70,7 @@ export type FundraisingHubLeaderRow = {
   progressPct: number
 }
 
-/** Scope for hero, top-10 board, and activity — mirrors public leaderboard + admin default window. */
+/** Hero stats use primary campaign; leaderboard + live activity span all registered hub campaigns (see hub build). */
 export type FundraisingHubTransparencyMeta = {
   campaignDisplayName: string
   stripeCampaignSlug: string
@@ -82,6 +85,10 @@ export type FundraisingHubActivityRow = {
   athleteCredit: string
   /** NCU code when gift is credited to an athlete — used for link to /fundraising/athletes/[slug]. */
   athleteCode: string | null
+  /** Normalized registry Stripe slug when known. */
+  campaignStripeSlug?: string | null
+  /** Short tab label for filters / badges (e.g. Spartan Spring '26). */
+  campaignShortLabel?: string
 }
 
 export type FundraisingHubSnapshot = {
@@ -157,6 +164,15 @@ function filterHubRowsForTransparencyWindow(
   const cutoffMs = Date.now() - campaign.defaultLookbackDays * 24 * 60 * 60 * 1000
   return rows.filter((r) => {
     if (!hubSpartanDonationRowMatchesCampaign(r.spartan_campaign, campaign)) return false
+    const t = new Date(r.created_at).getTime()
+    return Number.isFinite(t) && t >= cutoffMs
+  })
+}
+
+function filterHubRowsForAllRegisteredCampaignsLookback(rows: HubDonationRow[], lookbackDays: number): HubDonationRow[] {
+  const cutoffMs = Date.now() - lookbackDays * 24 * 60 * 60 * 1000
+  return rows.filter((r) => {
+    if (!FUNDRAISING_CAMPAIGNS.some((c) => hubSpartanDonationRowMatchesCampaign(r.spartan_campaign, c))) return false
     const t = new Date(r.created_at).getTime()
     return Number.isFinite(t) && t >= cutoffMs
   })
@@ -241,6 +257,7 @@ function stripeEnrichedToActivity(rows: SpartanDonationWithPublicFields[]): Fund
   return rows.map((r) => {
     const codeRaw = r.athleteCode?.trim() ?? ""
     const label = (r.creditLabel ?? "").trim()
+    const { campaignStripeSlug, campaignShortLabel } = hubActivityCampaignFromStripeSlug(r.spartanCampaignSlug)
     return {
       id: r.sessionId,
       createdIso: r.createdIso,
@@ -248,6 +265,8 @@ function stripeEnrichedToActivity(rows: SpartanDonationWithPublicFields[]): Fund
       amountCents: r.amountCents,
       athleteCredit: !codeRaw ? "NC United general fund" : label || codeRaw,
       athleteCode: codeRaw ? r.athleteCode!.trim() : null,
+      campaignStripeSlug,
+      campaignShortLabel,
     }
   })
 }
@@ -337,6 +356,7 @@ function rowsToActivity(rows: HubDonationRow[]): FundraisingHubActivityRow[] {
     const athleteCredit = !codeRaw
       ? "NC United general fund"
       : (r.athlete_display_name ?? "").trim() || codeRaw || "NC United general fund"
+    const { campaignStripeSlug, campaignShortLabel } = hubActivityCampaignFromStripeSlug(r.spartan_campaign)
     return {
       id: r.id,
       createdIso: r.created_at,
@@ -344,6 +364,8 @@ function rowsToActivity(rows: HubDonationRow[]): FundraisingHubActivityRow[] {
       amountCents: r.amount_cents ?? 0,
       athleteCredit,
       athleteCode: codeRaw ? codeRaw : null,
+      campaignStripeSlug,
+      campaignShortLabel,
     }
   })
 }
@@ -404,30 +426,46 @@ export async function buildFundraisingHubSnapshot(admin?: SupabaseClient): Promi
     schoolByCodeLower.set(e.code.trim().toLowerCase(), schoolFromFundraisingLabel(e.label))
   }
 
-  const stripeTransparencyRows = await loadCorrectedStripeDonationsForCampaignWindow(
-    DEFAULT_FUNDRAISING_CAMPAIGN,
-    correctionIndex,
-  )
+  const lookbackDays = DEFAULT_FUNDRAISING_CAMPAIGN.defaultLookbackDays
+  const allHubStripeRows = await loadCorrectedStripeDonationsForAllHubCampaignsWindow(lookbackDays, correctionIndex)
+  const defaultSlug = DEFAULT_FUNDRAISING_CAMPAIGN.stripeCampaignSlug
+  const primaryCampaignStripeRows =
+    allHubStripeRows != null
+      ? allHubStripeRows.filter((r) => stripeSpartanCampaignMetadataMatchesRequested(r.spartanCampaignSlug, defaultSlug))
+      : null
 
   let hero: FundraisingHubHeroStats
   let leaderboard: FundraisingHubLeaderRow[]
   let activity: FundraisingHubActivityRow[]
 
-  if (stripeTransparencyRows != null) {
-    hero = computeHeroFromStripeRows(stripeTransparencyRows)
-    leaderboard = computeLeaderboard(
-      hubDonationRowsFromStripeDonations(stripeTransparencyRows),
-      codeToFullName,
-      schoolByCodeLower,
-    )
-    const enriched = attachPublicSupporterFields(stripeTransparencyRows, codeToFullName)
-    const actSorted = [...enriched].sort((a, b) => b.createdUnix - a.createdUnix)
+  if (primaryCampaignStripeRows != null) {
+    hero = computeHeroFromStripeRows(primaryCampaignStripeRows)
+    if (allHubStripeRows != null) {
+      leaderboard = computeLeaderboard(
+        hubDonationRowsFromStripeDonations(allHubStripeRows),
+        codeToFullName,
+        schoolByCodeLower,
+      )
+    } else {
+      leaderboard = computeLeaderboard(
+        filterHubRowsForAllRegisteredCampaignsLookback(allRowsAdjusted, lookbackDays),
+        codeToFullName,
+        schoolByCodeLower,
+      )
+    }
+    const enrichedAll = attachPublicSupporterFields(allHubStripeRows, codeToFullName)
+    const actSorted = [...enrichedAll].sort((a, b) => b.createdUnix - a.createdUnix)
     activity = stripeEnrichedToActivity(actSorted.slice(0, 20))
   } else {
     const transparencyRows = filterHubRowsForTransparencyWindow(allRowsAdjusted, DEFAULT_FUNDRAISING_CAMPAIGN)
     hero = computeHero(transparencyRows)
-    leaderboard = computeLeaderboard(transparencyRows, codeToFullName, schoolByCodeLower)
-    const activitySorted = [...transparencyRows].sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at))
+    leaderboard = computeLeaderboard(
+      filterHubRowsForAllRegisteredCampaignsLookback(allRowsAdjusted, lookbackDays),
+      codeToFullName,
+      schoolByCodeLower,
+    )
+    const allCampaignDbRows = filterHubRowsForAllRegisteredCampaignsLookback(allRowsAdjusted, lookbackDays)
+    const activitySorted = [...allCampaignDbRows].sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at))
     activity = rowsToActivity(activitySorted.slice(0, 20))
   }
 
@@ -440,7 +478,7 @@ export async function buildFundraisingHubSnapshot(admin?: SupabaseClient): Promi
   const hubTransparency: FundraisingHubTransparencyMeta = {
     campaignDisplayName: DEFAULT_FUNDRAISING_CAMPAIGN.campaignDisplayName,
     stripeCampaignSlug: DEFAULT_FUNDRAISING_CAMPAIGN.stripeCampaignSlug,
-    lookbackDays: DEFAULT_FUNDRAISING_CAMPAIGN.defaultLookbackDays,
+    lookbackDays,
   }
 
   return { hero, campaigns, leaderboard, activity, hubTransparency }

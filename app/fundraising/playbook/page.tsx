@@ -4,8 +4,8 @@ import { createClient } from "@/lib/supabase/server"
 import { HardLink } from "@/components/hard-link"
 
 export const metadata: Metadata = {
-  title: "Fundraising playbook | NC United Wrestling",
-  description: "NC United fundraising operations playbook — RecruitNC sign-in required.",
+  title: "Staff fundraising tools | NC United Wrestling",
+  description: "RecruitNC admin sign-in for donor CRM and exports. The public fundraising guide is a separate page.",
   robots: { index: false, follow: false },
 }
 
@@ -40,18 +40,18 @@ export default async function FundraisingPlaybookGatePage() {
     >
       <div className="mx-auto max-w-lg rounded-xl border border-white/15 bg-black/25 p-8 text-white shadow-xl">
         <h1 className="font-[family-name:var(--font-fundraising-display)] text-2xl font-black uppercase tracking-tight text-white">
-          Fundraising playbook
+          Staff fundraising tools
         </h1>
         <p className="mt-4 text-sm leading-relaxed text-white/75">
-          Looking for the <strong className="text-white">athlete and family playbook</strong> (how to ask, matching gifts, donor types)?{" "}
+          Looking for the <strong className="text-white">family fundraising guide</strong> (how to ask, matching gifts, donor types)?{" "}
           <HardLink href="/fundraising/playbook/guide" className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
-            Read the full guide here
+            Open the public guide
           </HardLink>{" "}
           — no admin access required.
         </p>
         <p className="mt-4 text-sm leading-relaxed text-white/75">
-          You&apos;re signed in as <span className="font-medium text-white/90">{user.email}</span>. The NC United
-          fundraising playbook (donor CRM, exports, and ops tools) is available only to{" "}
+          You&apos;re signed in as <span className="font-medium text-white/90">{user.email}</span>. Donor CRM, exports, and
+          ops dashboards are available only to{" "}
           <strong className="text-white">RecruitNC administrators</strong>.
         </p>
         <p className="mt-3 text-sm text-white/60">
