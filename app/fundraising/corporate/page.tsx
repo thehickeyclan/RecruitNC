@@ -24,11 +24,11 @@ export default function FundraisingCorporatePage() {
         <h1 className={`${displayFont("mt-4 text-3xl font-black uppercase tracking-tight text-white sm:text-4xl")}`}>
           Partner with NC United
         </h1>
-        <p className="mt-6 text-base leading-relaxed text-white/75">
+        <p className="mt-6 text-base leading-relaxed text-white">
           Businesses and foundations can support NC United Wrestling with tax-deductible gifts, employer matching, and public
           recognition — structured through our 501(c)(3) nonprofit (EIN 99-3757238), not consumer crowdfunding.
         </p>
-        <p className="mt-4 text-base leading-relaxed text-white/75">
+        <p className="mt-4 text-base leading-relaxed text-white">
           Tell us about your organization&apos;s goals — sponsorship, team challenges, matching gifts, or event presence —
           and we&apos;ll route you to the right NC United contact.
         </p>

@@ -38,7 +38,7 @@ const CARDS = [
 
 export function NavigationPaths() {
   return (
-    <section className="border-b border-white/[0.06] bg-[#0F2D5A] px-4 py-16 sm:py-20">
+    <section className="border-b border-white/[0.06] bg-[#0F2D5A] px-4 py-16 text-white sm:py-20">
       <div className="mx-auto max-w-6xl">
         <p className={`${displayFont("text-center text-[10px] font-extrabold uppercase tracking-[0.28em] text-[#C8A94A]")}`}>
           Where to go
@@ -64,7 +64,7 @@ export function NavigationPaths() {
                     <h3 className={`${displayFont("text-lg font-black uppercase leading-snug tracking-tight text-white")}`}>
                       {c.headline}
                     </h3>
-                    <p className="mt-3 text-sm leading-relaxed text-white/72">{c.body}</p>
+                    <p className="mt-3 text-sm leading-relaxed text-white">{c.body}</p>
                   </div>
                 </div>
                 <HardLink

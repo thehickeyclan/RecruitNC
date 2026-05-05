@@ -29,7 +29,7 @@ export default async function FundraisingPortalHomePage() {
   const liveFeedInitial = snapshot.activity.slice(0, 15)
 
   return (
-    <div id="fundraising-hub-root" className="min-h-screen bg-[#0B2545]">
+    <div id="fundraising-hub-root" className="min-h-screen bg-[#0B2545] text-white">
       <FundraisingHero hero={snapshot.hero} hubTransparency={snapshot.hubTransparency} />
       <NavigationPaths />
       <ActiveCampaigns campaigns={snapshot.campaigns} />

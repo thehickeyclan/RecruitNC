@@ -120,7 +120,7 @@ export function LiveDonationStream({
   return (
     <section
       id="fundraising-live-donor-stream"
-      className="scroll-mt-28 border-b border-white/[0.06] bg-[#061224] px-4 py-16 sm:py-20"
+      className="scroll-mt-28 border-b border-white/[0.06] bg-[#061224] px-4 py-16 text-white sm:py-20"
     >
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
@@ -140,13 +140,13 @@ export function LiveDonationStream({
             Live — updating in real time
           </span>
         </div>
-        <p className="mt-3 max-w-2xl text-sm text-white/65">
+        <p className="mt-3 max-w-2xl text-sm text-white">
           Last {FEED_LIMIT} paid gifts · {hubTransparency.campaignDisplayName}, last {hubTransparency.lookbackDays} days.
         </p>
 
         <ul className="mt-8 divide-y divide-white/[0.06] overflow-hidden rounded-xl border border-white/10 bg-[#0B2545]/45">
           {rows.length === 0 ? (
-            <li className="px-4 py-12 text-center text-sm text-white/55">No gifts logged yet.</li>
+            <li className="px-4 py-12 text-center text-sm text-white/90">No gifts logged yet.</li>
           ) : (
             rows.map((r) => {
               const label = creditLabel(r)
@@ -156,15 +156,15 @@ export function LiveDonationStream({
                   key={r.id}
                   className="flex flex-col gap-1 px-4 py-3.5 text-sm sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4"
                 >
-                  <span className="w-28 shrink-0 font-mono text-[11px] tabular-nums text-white/45">
+                  <span className="w-28 shrink-0 font-mono text-[11px] tabular-nums text-white/75">
                     {formatRelativeOrAbsolute(r.createdIso)}
                   </span>
                   <span className="min-w-0 flex-1 font-semibold text-white">{r.donorDisplay}</span>
                   <span className={`${displayFont("font-extrabold tabular-nums text-[#C8A94A]")}`}>
                     {formatUsdWhole(r.amountCents)}
                   </span>
-                  <span className="text-white/50">→</span>
-                  <span className="min-w-0 flex-1 truncate text-white/85 sm:max-w-md">
+                  <span className="text-white/80">→</span>
+                  <span className="min-w-0 flex-1 truncate text-white sm:max-w-md">
                     {href ? (
                       <HardLink href={href} className="font-semibold underline-offset-4 hover:text-[#C8A94A] hover:underline">
                         {label}

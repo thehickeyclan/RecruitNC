@@ -12,7 +12,7 @@ export function CorporatePartners() {
   return (
     <section
       id="fundraising-corporate-partners"
-      className="scroll-mt-28 border-b border-white/[0.06] bg-[#061224] px-4 py-16 sm:py-20"
+      className="scroll-mt-28 border-b border-white/[0.06] bg-[#061224] px-4 py-16 text-white sm:py-20"
     >
       <div className="mx-auto max-w-6xl text-center">
         <p className={`${displayFont("text-[10px] font-extrabold uppercase tracking-[0.28em] text-[#C8A94A]")}`}>
@@ -21,7 +21,7 @@ export function CorporatePartners() {
         <h2 className={`${displayFont("mt-3 text-2xl font-black uppercase tracking-tight text-white sm:text-3xl")}`}>
           Thank you to our sponsors
         </h2>
-        <p className="mx-auto mt-3 max-w-2xl text-sm text-white/60">
+        <p className="mx-auto mt-3 max-w-2xl text-sm text-white">
           Organizations backing NC United athletes and year-round training.
         </p>
 

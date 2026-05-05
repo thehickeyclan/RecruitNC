@@ -36,7 +36,7 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
     function: {
       name: "wrestling_cross_store_search",
       description:
-        "**Use together with `search_athletes` for any named wrestler.** One round trip across all major historical tables (1990s–present): NCHSAA individual state `wrestling_nchsaa_results`, NHSCA nationals `nhsca_placements` + legacy `wrestling_nhsca_results`, Super32 `super32_results`, and NC United national-team roster `nc_united_wrestlers` (NHSCA Duals / UCD roster context — not NCHSAA **state** dual team champions). Returns separate arrays per source so alumni appear even without an `athletes` directory row. For NCHSAA **state dual team** school winners by year use `nchsaa_dual_team_champions`. For a full merged markdown profile when you have a UUID, still call `get_athlete_full_dossier`.",
+        "**Use together with `search_athletes` for any named wrestler.** One round trip across all major historical tables (1990s–present): NCHSAA individual state `wrestling_nchsaa_results`, NHSCA nationals `nhsca_placements` + legacy `wrestling_nhsca_results`, Super32 `super32_results`, and NC United national-team roster `nc_united_wrestlers` (NHSCA Duals / UCD roster context — not NCHSAA **state** dual team champions). Returns separate arrays per source so alumni appear even without an `athletes` directory row. For NCHSAA **state dual team** school winners by year use `nchsaa_dual_team_champions`. **After `search_athletes` returns the row you are answering about, call this again with the same `query` and pass `directory_high_school` and `grad_year` from that row** so namesakes at other schools do not pollute the arrays. For a full merged markdown profile when you have a UUID, still call `get_athlete_full_dossier`.",
       parameters: {
         type: "object",
         additionalProperties: false,
@@ -46,6 +46,16 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
             description: "Wrestler name and/or school fragment (same style as search_athletes).",
           },
           limit: { type: "integer", description: "Max rows per underlying table (default ~32, max 50)." },
+          directory_high_school: {
+            type: "string",
+            description:
+              "From the chosen `search_athletes` row: high school name (substring match). Required when disambiguating duplicate names — drops tournament rows whose school fields contradict this when those fields are non-empty.",
+          },
+          grad_year: {
+            type: "integer",
+            description:
+              "From the chosen `search_athletes` row: graduation year. When set, drops tournament rows outside an approximate high-school window (grad−6 through grad+1).",
+          },
         },
         required: ["query"],
       },

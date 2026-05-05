@@ -104,31 +104,36 @@ export async function GET(
     if (name) nameBases.push(name)
     if (wrestlingName && wrestlingName.toLowerCase() !== name.toLowerCase()) nameBases.push(wrestlingName)
     const athleteRow = athlete as Record<string, unknown>
-    const [nhscaMerged, super32FromTable, nationalTeamFromTables, nchsaaMergedRows] = await Promise.all([
+    const [nhscaMerged, super32FromTable, nationalTeamFromTables, nchsaaMergedRows, nhsca2026] = await Promise.all([
       getNHSCAForAthlete(supabase, athleteRow),
       (async () => {
-        for (const n of nameBases) {
-          if (!n) continue
-          const rows = await getSuper32FromTable(supabase, n, gradYear, { highSchool: highSchool || undefined })
+        const bases = nameBases.filter(Boolean)
+        if (!bases.length) return []
+        const tries = await Promise.all(
+          bases.map((n) => getSuper32FromTable(supabase, n, gradYear, { highSchool: highSchool || undefined })),
+        )
+        for (const rows of tries) {
           if (rows.length) return rows
         }
         return []
       })(),
       (async () => {
-        for (const n of nameBases) {
-          if (!n) continue
-          const rows = await getUltimateClubDualsFromTables(supabase, n, highSchool || undefined)
+        const bases = nameBases.filter(Boolean)
+        if (!bases.length) return []
+        const tries = await Promise.all(bases.map((n) => getUltimateClubDualsFromTables(supabase, n, highSchool || undefined)))
+        for (const rows of tries) {
           if (rows.length) return rows
         }
         return []
       })(),
       (async () => {
         try {
-          let byName = await getNCHSAAResultsForProfile(supabase, name, gradYear)
-          let byWrestling: Awaited<ReturnType<typeof getNCHSAAResultsForProfile>> = []
-          if (wrestlingName && wrestlingName !== name) {
-            byWrestling = await getNCHSAAResultsForProfile(supabase, wrestlingName, gradYear)
-          }
+          const [byName, byWrestling] = await Promise.all([
+            getNCHSAAResultsForProfile(supabase, name, gradYear),
+            wrestlingName && wrestlingName !== name
+              ? getNCHSAAResultsForProfile(supabase, wrestlingName, gradYear)
+              : Promise.resolve([] as Awaited<ReturnType<typeof getNCHSAAResultsForProfile>>),
+          ])
           const fromAthleteRow = nchsaaJsonToProfileRows(athleteRow.nchsaa_results, name)
           return mergeNchsaaResults(mergeNchsaaResults(byName, byWrestling), fromAthleteRow)
         } catch (e) {
@@ -140,6 +145,11 @@ export async function GET(
           }
         }
       })(),
+      getNhscaDuals2026RosterStatus(supabase, id.trim(), {
+        name,
+        highSchool,
+        gradYear,
+      }),
     ])
     const nchsaa_profile = nchsaaMergedRows.map((r) => ({
       year: r.year,
@@ -150,12 +160,7 @@ export async function GET(
     const nationalTeamFromRow = getNationalTeamResults(athlete)
     let national_team_results = mergeNationalTeamResults(nationalTeamFromTables, nationalTeamFromRow)
 
-    // 2026 NHSCA Duals: if athlete is on the roster (national_team_event_registrations), show as Member with record (or 0-0 until set in admin)
-    const nhsca2026 = await getNhscaDuals2026RosterStatus(supabase, id.trim(), {
-      name,
-      highSchool,
-      gradYear,
-    })
+    // 2026 NHSCA Duals — loaded in parallel with tournament merges above
     if (nhsca2026.member) {
       const has2026 = national_team_results.some((r) => r.event === "NHSCA Duals" && r.year === 2026)
       if (!has2026) {
@@ -188,7 +193,15 @@ export async function GET(
       nhscaDuals2026Member: nhsca2026.member,
     })
 
-    return NextResponse.json({ ok: true, athlete: athleteWithTournaments })
+    return NextResponse.json(
+      { ok: true, athlete: athleteWithTournaments },
+      {
+        headers: {
+          /** Public athlete JSON is safe to cache briefly at the edge (per-athlete URL). */
+          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
+        },
+      },
+    )
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
     console.error("[RecruitNC] GET /api/athlete/[id] exception", { message, elapsed: Date.now() - start })

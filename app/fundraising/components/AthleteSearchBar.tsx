@@ -83,9 +83,9 @@ export function AthleteSearchBar() {
           aria-label="Athlete search results"
         >
           {loading && hits.length === 0 ? (
-            <p className="px-4 py-6 text-sm text-white/55">Searching…</p>
+            <p className="px-4 py-6 text-sm text-white/90">Searching…</p>
           ) : hits.length === 0 ? (
-            <p className="px-4 py-6 text-sm text-white/55">No athlete matches that search.</p>
+            <p className="px-4 py-6 text-sm text-white/90">No athlete matches that search.</p>
           ) : (
             <ul className="divide-y divide-white/[0.06] py-1">
               {hits.map((h) => (

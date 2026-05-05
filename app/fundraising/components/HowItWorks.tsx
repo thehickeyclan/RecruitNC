@@ -22,7 +22,7 @@ const STEPS = [
 
 export function HowItWorks() {
   return (
-    <section className="border-t border-white/[0.06] bg-[#0B2545] px-4 py-16 sm:py-20">
+    <section className="border-t border-white/[0.06] bg-[#0B2545] px-4 py-16 text-white sm:py-20">
       <div className="mx-auto max-w-6xl">
         <div className="text-center">
           <p className={`${displayFont("text-[10px] font-extrabold uppercase tracking-[0.28em] text-[#C8A94A]")}`}>
@@ -46,7 +46,7 @@ export function HowItWorks() {
               <h3 className={`${displayFont("text-base font-extrabold uppercase tracking-wide text-[#C8A94A] sm:text-lg")}`}>
                 {s.title}
               </h3>
-              <p className="mt-4 text-sm leading-relaxed text-white/75 sm:text-base">{s.body}</p>
+              <p className="mt-4 text-sm leading-relaxed text-white sm:text-base">{s.body}</p>
             </li>
           ))}
         </ul>

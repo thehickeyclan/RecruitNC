@@ -53,13 +53,13 @@ export function FundraisingValueProps({ hero }: { hero: FundraisingHubHeroStats 
         >
           Why give through NC United
         </h2>
-        <p className="mt-4 max-w-3xl text-base leading-relaxed text-white/75 sm:text-lg">
-          You get <strong className="text-white/90">tax documentation</strong>,{" "}
-          <strong className="text-white/90">athlete or program credit</strong>, and a{" "}
-          <strong className="text-white/90">single nonprofit ledger</strong> — instead of routing gifts through apps built
+        <p className="mt-4 max-w-3xl text-base leading-relaxed text-white sm:text-lg">
+          You get <strong className="text-white">tax documentation</strong>,{" "}
+          <strong className="text-white">athlete or program credit</strong>, and a{" "}
+          <strong className="text-white">single nonprofit ledger</strong> — instead of routing gifts through apps built
           for casual transfers or generic crowdfunding.{" "}
-          <strong className="text-white/90">Major supporters</strong> can also receive NC United{" "}
-          <strong className="text-white/90">recognition and thank-you benefits</strong> (tiered)—when we run those programs
+          <strong className="text-white">Major supporters</strong> can also receive NC United{" "}
+          <strong className="text-white">recognition and thank-you benefits</strong> (tiered)—when we run those programs
           for a campaign season, details are shared with qualifying donors.
         </p>
 
@@ -72,7 +72,7 @@ export function FundraisingValueProps({ hero }: { hero: FundraisingHubHeroStats 
               <h3 className={`${displayFont("text-sm font-extrabold uppercase tracking-wide text-[#C8A94A]")}`}>
                 {c.title}
               </h3>
-              <p className="mt-3 text-sm leading-relaxed text-white/78">{c.body}</p>
+              <p className="mt-3 text-sm leading-relaxed text-white">{c.body}</p>
             </li>
           ))}
         </ul>
@@ -81,25 +81,25 @@ export function FundraisingValueProps({ hero }: { hero: FundraisingHubHeroStats 
           <h3 className={`${displayFont("text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]")}`}>
             Compared to typical consumer tools
           </h3>
-          <p className="mt-3 text-sm leading-relaxed text-white/78">
-            <strong className="text-white/90">GoFundMe-style pages</strong> usually charge platform fees (often several
+          <p className="mt-3 text-sm leading-relaxed text-white">
+            <strong className="text-white">GoFundMe-style pages</strong> usually charge platform fees (often several
             percent) on donations and are rarely structured as deductible gifts to your organization.{" "}
-            <strong className="text-white/90">Venmo, Cash App, Zelle</strong> are peer-to-peer transfers — convenient, but
+            <strong className="text-white">Venmo, Cash App, Zelle</strong> are peer-to-peer transfers — convenient, but
             they don&apos;t produce a 501(c)(3) receipt or tie cleanly to NCU athlete credits for staff and families.
           </p>
           {illustrativeFeesCents > 0 ? (
-            <p className="mt-4 border-t border-white/10 pt-4 text-xs leading-relaxed text-white/55">
-              <strong className="text-white/70">Illustrative only:</strong> at roughly a{" "}
+            <p className="mt-4 border-t border-white/10 pt-4 text-xs leading-relaxed text-white/85">
+              <strong className="text-white">Illustrative only:</strong> at roughly a{" "}
               {Math.round(ILLUSTRATIVE_PLATFORM_FEE_RATE * 1000) / 10}% platform-style fee assumption (not NC United&apos;s
               actual pricing), the {formatUsdWhole(hero.totalRaisedCents)} raised on the hub window below could represent on
-              the order of <strong className="tabular-nums text-white/75">{formatUsdWhole(illustrativeFeesCents)}</strong> that
+              the order of <strong className="tabular-nums text-white">{formatUsdWhole(illustrativeFeesCents)}</strong> that
               might otherwise go to third-party platform fees in a consumer fundraising model — not a promise or accounting
               figure; ask your CPA about deductibility.
             </p>
           ) : null}
         </div>
 
-        <p className="mt-8 text-sm text-white/55">
+        <p className="mt-8 text-sm text-white/90">
           Deeper playbook (mindset, donors, matching):{" "}
           <HardLink href="/fundraising/playbook/guide" className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
             Fundraising guide

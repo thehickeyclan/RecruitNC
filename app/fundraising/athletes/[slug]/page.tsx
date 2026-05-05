@@ -206,7 +206,8 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
               Donate now
             </HardLink>
             <p className="text-center text-[11px] leading-snug text-white/45 sm:max-w-md">
-              Opens secure checkout on this page (below). Everything underneath is optional context.
+              Opens secure checkout on this page (below). Most people finish in about 10 minutes. Everything underneath is optional
+              context.
             </p>
           </div>
         ) : null}
@@ -408,8 +409,9 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
             Secure checkout
           </h2>
           <p className="mx-auto mt-2 max-w-md text-center text-[13px] leading-snug text-white/70">
-            <strong className="font-semibold text-white/85">Tax-deductible</strong> gift ($5 minimum). You finish on Stripe;
-            your receipt arrives by email.
+            <strong className="font-semibold text-white/85">Tax-deductible</strong> gift ($5 minimum). Plan about{" "}
+            <strong className="font-semibold text-white/85">10 minutes</strong> for the steps, then you finish on Stripe; your receipt
+            arrives by email.
           </p>
           <div className="mt-6 w-full text-left">
             <FundraisingAthleteEmbeddedCheckout

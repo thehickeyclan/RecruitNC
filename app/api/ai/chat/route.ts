@@ -1848,10 +1848,13 @@ export async function POST(request: NextRequest) {
     // ============================================
     // ADMIN-ONLY: College Commitment Update Handler
     // ============================================
-    // Require "Admin," prefix for all admin updates
+    // Require "Admin," / "Admin:" / "Admin " prefix for all admin updates
     // Support both present tense ("goes to", "attends") and past tense ("went to", "attended")
     const lowerMessage = message.toLowerCase()
-    const hasAdminPrefix = lowerMessage.startsWith("admin,") || lowerMessage.startsWith("admin ")
+    const hasAdminPrefix =
+      lowerMessage.startsWith("admin,") ||
+      lowerMessage.startsWith("admin ") ||
+      lowerMessage.startsWith("admin:")
     
     const isUpdateQuery = hasAdminPrefix && (
       (lowerMessage.includes("update") && lowerMessage.includes("college")) ||
@@ -1917,8 +1920,8 @@ export async function POST(request: NextRequest) {
           })
         }
         
-        // Remove "Admin," prefix from message before parsing
-        const messageWithoutPrefix = message.replace(/^admin[,:]\s*/i, "").trim()
+        // Remove "Admin," / "Admin:" / "Admin " prefix from message before parsing
+        const messageWithoutPrefix = message.replace(/^admin(?:,|:|\s)+/i, "").trim()
         
         // Extract name and college from the message
         // Patterns: "Admin, [Name] goes to [College]", "Admin, [Name] went to [College]", "Admin, [Name] wrestlers for [College]", etc.
@@ -1929,7 +1932,7 @@ export async function POST(request: NextRequest) {
         
         if (!nameMatch || !collegeMatch) {
           return NextResponse.json({
-            answer: "I couldn't parse the update request. Please use formats like:\n- \"Admin, [Name] goes to [College]\"\n- \"Admin, [Name] went to [College]\" (for historical athletes)\n- \"Admin, [Name] attends [College]\"\n- \"Admin, [Name] wrestlers for [College]\"\n- \"Admin, Update [Name]'s college to [College]\"",
+            answer: "I couldn't parse the update request. Please use formats like:\n- \"Admin, [Name] goes to [College]\" or \"Admin: [Name] goes to [College]\"\n- \"Admin, [Name] went to [College]\" (for historical athletes)\n- \"Admin, [Name] attends [College]\"\n- \"Admin, [Name] wrestlers for [College]\"\n- \"Admin, Update [Name]'s college to [College]\"",
             messageId: messageId || `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           })
         }

@@ -31,7 +31,7 @@ export function HonorRollPreview({
   return (
     <section
       id="fundraising-honor-roll-preview"
-      className="scroll-mt-28 border-b border-white/[0.06] bg-[#0B2545] px-4 py-16 sm:py-20"
+      className="scroll-mt-28 border-b border-white/[0.06] bg-[#0B2545] px-4 py-16 text-white sm:py-20"
     >
       <div className="mx-auto max-w-6xl">
         <div className="text-center">
@@ -41,14 +41,14 @@ export function HonorRollPreview({
           <h2 className={`${displayFont("mt-3 text-2xl font-black uppercase tracking-tight text-white sm:text-3xl")}`}>
             Supporter honor roll
           </h2>
-          <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-white/70">
+          <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-white">
             Supporters who chose &ldquo;show my name&rdquo; at checkout and gave {minLabel}+ on a single gift (paid Stripe
             checkouts).
           </p>
         </div>
 
         {names.length === 0 ? (
-          <p className="mx-auto mt-10 max-w-lg text-center text-sm text-white/55">
+          <p className="mx-auto mt-10 max-w-lg text-center text-sm text-white/90">
             Names appear here when supporters meet the threshold and opt in on the receipt step.
           </p>
         ) : (

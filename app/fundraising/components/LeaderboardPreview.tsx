@@ -84,10 +84,10 @@ export function LeaderboardPreview({
             <h2 className={`${displayFont("mt-2 text-2xl font-black uppercase tracking-tight text-white sm:text-3xl")}`}>
               Top athletes
             </h2>
-            <p className="mt-2 max-w-xl text-sm text-white/55">
+            <p className="mt-2 max-w-xl text-sm text-white">
               Top five for{" "}
-              <strong className="text-white/75">{hubTransparency.campaignDisplayName}</strong> — paid gifts, last{" "}
-              <span className="tabular-nums text-white/75">{hubTransparency.lookbackDays}</span> days.
+              <strong className="text-white">{hubTransparency.campaignDisplayName}</strong> — paid gifts, last{" "}
+              <span className="tabular-nums text-white">{hubTransparency.lookbackDays}</span> days.
             </p>
           </div>
           <HardLink
@@ -101,7 +101,7 @@ export function LeaderboardPreview({
         <div className="mt-10 overflow-x-auto rounded-xl border border-white/10 bg-[#0B2545]/55">
           <table className="w-full min-w-[520px] text-left text-sm">
             <thead>
-              <tr className={`${displayFont("border-b border-white/10 text-[10px] font-extrabold uppercase tracking-[0.18em] text-white/40")}`}>
+              <tr className={`${displayFont("border-b border-white/10 text-[10px] font-extrabold uppercase tracking-[0.18em] text-white/70")}`}>
                 <th className="px-4 py-3">Rank</th>
                 <th className="px-4 py-3">Athlete</th>
                 <th className="px-4 py-3">School</th>
@@ -109,10 +109,10 @@ export function LeaderboardPreview({
                 <th className="min-w-[120px] px-4 py-3">Momentum</th>
               </tr>
             </thead>
-            <tbody className="text-white/88">
+            <tbody className="text-white">
               {rows.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center text-white/45">
+                  <td colSpan={5} className="px-4 py-12 text-center text-white/85">
                     Paid gifts will populate this board as athletes earn support.
                   </td>
                 </tr>
@@ -134,7 +134,7 @@ export function LeaderboardPreview({
                         )
                       })()}
                     </td>
-                    <td className="max-w-[200px] truncate px-4 py-3 text-white/55">{r.school || "—"}</td>
+                    <td className="max-w-[200px] truncate px-4 py-3 text-white">{r.school || "—"}</td>
                     <td className={`${displayFont("px-4 py-3 text-right text-base font-extrabold tabular-nums text-white")}`}>
                       {formatUsdWhole(r.raisedCents)}
                     </td>

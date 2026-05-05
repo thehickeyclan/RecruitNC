@@ -33,7 +33,7 @@ export function CampaignCards({ campaigns }: { campaigns: FundraisingHubCampaign
           >
             Active campaigns
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-white/60">
+          <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-white">
             What&apos;s live right now — open a drive, track the bar, and get teammates on the board.
           </p>
         </div>
@@ -46,7 +46,7 @@ export function CampaignCards({ campaigns }: { campaigns: FundraisingHubCampaign
               </h3>
             </div>
             <div className="px-6 py-8">
-              <p className="leading-relaxed text-white/72">
+              <p className="leading-relaxed text-white">
                 No timed drives are live in the board right now — general NC United giving stays open. Tax-deductible
                 gifts with athlete credit at checkout.
               </p>
@@ -108,18 +108,18 @@ export function CampaignCards({ campaigns }: { campaigns: FundraisingHubCampaign
                       {c.name}
                     </h3>
                     <div className="mt-5 space-y-3">
-                      <div className="flex flex-wrap justify-between gap-2 text-sm text-white/55">
-                        <span className="font-semibold text-white/80">{formatUsdWhole(c.raisedCents)} raised</span>
+                      <div className="flex flex-wrap justify-between gap-2 text-sm text-white/90">
+                        <span className="font-semibold text-white">{formatUsdWhole(c.raisedCents)} raised</span>
                         {goal ? (
                           overGoal ? (
                             <span className="text-right font-semibold text-[#C8A94A]">
                               Over goal · {pctOfGoal}% ({formatUsdWhole(goal)} target)
                             </span>
                           ) : (
-                            <span className="tabular-nums">{formatUsdWhole(goal)} goal</span>
+                            <span className="tabular-nums text-white">{formatUsdWhole(goal)} goal</span>
                           )
                         ) : (
-                          <span className="italic text-white/40">Open goal</span>
+                          <span className="italic text-white/75">Open goal</span>
                         )}
                       </div>
                       <div className="h-2.5 overflow-hidden rounded-full bg-black/45 ring-1 ring-inset ring-white/10">
@@ -134,9 +134,9 @@ export function CampaignCards({ campaigns }: { campaigns: FundraisingHubCampaign
                           }}
                         />
                       </div>
-                      <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-[13px] text-white/50">
+                      <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-[13px] text-white/85">
                         <span>
-                          <strong className="text-white/80">{c.participatingAthletes}</strong> athletes in
+                          <strong className="text-white">{c.participatingAthletes}</strong> athletes in
                         </span>
                         {days != null ? (
                           <span className={`${displayFont("font-extrabold uppercase tracking-wide text-[#CC0000]")}`}>

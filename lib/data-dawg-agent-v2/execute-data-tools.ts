@@ -527,11 +527,50 @@ function dedupeByKey<T>(rows: T[], keyFn: (r: T) => string): T[] {
   return out
 }
 
+function filterCrossStoreByDirectoryContext(
+  rows: Record<string, unknown>[],
+  opts: { directoryHighSchool?: string; gradYear?: number | null },
+): Record<string, unknown>[] {
+  let out = rows
+  const hsFrag = opts.directoryHighSchool?.trim()
+  if (hsFrag && hsFrag.length >= 3) {
+    const h = hsFrag.toLowerCase()
+    out = out.filter((r) => {
+      const parts = [r.school, r.high_school, r.highSchool]
+        .map((x) => String(x ?? "").trim().toLowerCase())
+        .filter(Boolean)
+      if (parts.length === 0) return true
+      return parts.some((p) => p.includes(h))
+    })
+  }
+  const gy = opts.gradYear
+  if (gy != null && Number.isFinite(gy)) {
+    const g = Math.floor(Number(gy))
+    const lo = g - 6
+    const hi = g + 1
+    out = out.filter((r) => {
+      const yRaw = r.year
+      if (yRaw == null || String(yRaw).trim() === "") return true
+      const y = Number(yRaw)
+      if (!Number.isFinite(y)) return true
+      return y >= lo && y <= hi
+    })
+  }
+  return out
+}
+
 /**
  * Single tool: NCHSAA state + NHSCA (placements + legacy) + Super32 + NC United roster — all years in DB.
  * Complements `search_athletes` (directory row + dossier need an athlete id).
  */
-export async function toolWrestlingCrossStoreSearch(args: { query: string; limit?: number }) {
+export async function toolWrestlingCrossStoreSearch(args: {
+  query: string
+  limit?: number
+  /** After you pick a directory athlete, pass their `highschool` so tournament rows from other namesakes are dropped when school is present on the row. */
+  directory_high_school?: string
+  /** Grad year from directory row; keeps rows whose `year` is roughly in high-school range (grad−6 … grad+1). */
+  grad_year?: number | string | null
+}) {
   const raw = sanitizeFragment(String(args.query ?? ""))
   const phrase = extractSearchablePhrase(raw) || stripConversationalNoise(raw)
   const q = phrase.trim()
@@ -726,24 +765,49 @@ export async function toolWrestlingCrossStoreSearch(args: { query: string; limit
     })
   }
 
+  const dirHsRaw = args.directory_high_school
+  const directoryHs =
+    typeof dirHsRaw === "string" && dirHsRaw.trim().length >= 3 ? dirHsRaw.trim() : ""
+  const gyRaw = args.grad_year
+  const parsedGrad =
+    gyRaw != null && String(gyRaw).trim() !== "" && Number.isFinite(Number(gyRaw))
+      ? Math.floor(Number(gyRaw))
+      : null
+  const narrowOpts = { directoryHighSchool: directoryHs || undefined, gradYear: parsedGrad }
+
+  const nchsaa_state_narrowed = filterCrossStoreByDirectoryContext(nchsaa_state, narrowOpts)
+  const nhsca_placements_narrowed = filterCrossStoreByDirectoryContext(nhsca_placements, narrowOpts)
+  const nhsca_legacy_narrowed = filterCrossStoreByDirectoryContext(nhsca_legacy_table, narrowOpts)
+  const super32_narrowed = filterCrossStoreByDirectoryContext(super32, narrowOpts)
+  const nc_united_narrowed = filterCrossStoreByDirectoryContext(nc_united_roster, narrowOpts)
+
+  const narrowedNote =
+    directoryHs || parsedGrad != null
+      ? ` Rows were narrowed to the directory athlete when \`directory_high_school\` / \`grad_year\` were provided (school filter skips rows with blank school fields; year keeps grad−6…grad+1).`
+      : ""
+
   const totalHits =
-    nchsaa_state.length +
-    nhsca_placements.length +
-    nhsca_legacy_table.length +
-    super32.length +
-    nc_united_roster.length
+    nchsaa_state_narrowed.length +
+    nhsca_placements_narrowed.length +
+    nhsca_legacy_narrowed.length +
+    super32_narrowed.length +
+    nc_united_narrowed.length
 
   return {
     searched_for: q,
-    nchsaa_state,
-    nhsca_placements,
-    nhsca_legacy_table,
-    super32,
-    nc_united_roster,
+    nchsaa_state: nchsaa_state_narrowed,
+    nhsca_placements: nhsca_placements_narrowed,
+    nhsca_legacy_table: nhsca_legacy_narrowed,
+    super32: super32_narrowed,
+    nc_united_roster: nc_united_narrowed,
     total_hits: totalHits,
+    ...(directoryHs || parsedGrad != null
+      ? { narrow_filters: { directory_high_school: directoryHs || null, grad_year: parsedGrad } }
+      : {}),
     ...(errors.length ? { partial_errors: errors.slice(0, 3) } : {}),
     note:
-      "NCHSAA state = `wrestling_nchsaa_results`. NHSCA nationals = `nhsca_placements` + legacy `wrestling_nhsca_results`. Super32 = `super32_results`. NC United roster = national-team / dual-meet program context (not NCHSAA **state** dual champions — use `nchsaa_dual_team_champions` for those). For a full merged athlete report when an id exists, call `get_athlete_full_dossier`.",
+      "NCHSAA state = `wrestling_nchsaa_results`. NHSCA nationals = `nhsca_placements` + legacy `wrestling_nhsca_results`. Super32 = `super32_results`. NC United roster = national-team / dual-meet program context (not NCHSAA **state** dual champions — use `nchsaa_dual_team_champions` for those). For a full merged athlete report when an id exists, call `get_athlete_full_dossier`." +
+      narrowedNote,
   }
 }
 
@@ -986,7 +1050,14 @@ export async function executeDataTool(name: string, rawArgs: unknown): Promise<s
         return JSON.stringify(await toolSearchAthletes(args as { query: string; limit?: number }))
       case "wrestling_cross_store_search":
         return JSON.stringify(
-          await toolWrestlingCrossStoreSearch(args as { query: string; limit?: number }),
+          await toolWrestlingCrossStoreSearch(
+            args as {
+              query: string
+              limit?: number
+              directory_high_school?: string
+              grad_year?: number | string | null
+            },
+          ),
         )
       case "search_school_classifications":
         return JSON.stringify(

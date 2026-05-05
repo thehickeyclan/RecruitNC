@@ -22,11 +22,11 @@ export function WhyNCUnited({ hero }: { hero: FundraisingHubHeroStats }) {
           <h2 className={`${displayFont("mt-3 text-[clamp(1.65rem,4vw,2.35rem)] font-black uppercase leading-tight tracking-tight text-white")}`}>
             Why give through NC United
           </h2>
-          <p className="mt-5 text-base leading-relaxed text-white/78">
+          <p className="mt-5 text-base leading-relaxed text-white">
             When you give through NC United you get tax documentation, direct athlete credit, and a single nonprofit ledger
             — not a platform fee, not a P2P transfer, not a personal tip jar.
           </p>
-          <p className="mt-4 text-base leading-relaxed text-white/78">
+          <p className="mt-4 text-base leading-relaxed text-white">
             NC United is a registered 501(c)(3) public charity (EIN 99-3757238). That structure unlocks giving that generic
             platforms never can.
           </p>
@@ -97,7 +97,7 @@ export function WhyNCUnited({ hero }: { hero: FundraisingHubHeroStats }) {
       </div>
 
       {illustrativeFeesCents > 0 ? (
-        <div className="mx-auto mt-10 max-w-6xl rounded-xl border border-white/10 bg-black/20 px-5 py-4 text-xs leading-relaxed text-white/55 sm:px-6">
+        <div className="mx-auto mt-10 max-w-6xl rounded-xl border border-white/10 bg-black/20 px-5 py-4 text-xs leading-relaxed text-white/90 sm:px-6">
           At a 3% platform fee, the {formatUsdWhole(hero.totalRaisedCents)} raised through NC United on this hub window
           could have cost donors ~{formatUsdWhole(illustrativeFeesCents)} in fees through a consumer platform. Not a promise
           — ask your CPA about deductibility.

@@ -67,15 +67,15 @@ export function FundraisingHero({
           NC United <span className="text-[#C8A94A]">×</span> Fundraising
         </h1>
 
-        <p className="mx-auto mt-6 max-w-2xl text-base font-medium leading-relaxed text-white/75 sm:mx-0 sm:text-lg">
+        <p className="mx-auto mt-6 max-w-2xl text-base font-medium leading-relaxed text-white sm:mx-0 sm:text-lg">
           NC wrestlers earn their development. Their community makes it possible. Every dollar is tax-deductible and goes
           directly to the athlete you choose.
         </p>
-        <p className="mx-auto mt-3 max-w-2xl text-xs leading-relaxed text-white/50 sm:mx-0">
+        <p className="mx-auto mt-3 max-w-2xl text-xs leading-relaxed text-white/90 sm:mx-0">
           Hero figures = paid checkouts for{" "}
-          <strong className="text-white/70">{hubTransparency.campaignDisplayName}</strong>, last{" "}
-          <span className="tabular-nums text-white/65">{hubTransparency.lookbackDays}</span> days (
-          <span className="font-mono text-[10px] text-white/45">{hubTransparency.stripeCampaignSlug}</span>) — aligns with the{" "}
+          <strong className="text-white">{hubTransparency.campaignDisplayName}</strong>, last{" "}
+          <span className="tabular-nums text-white">{hubTransparency.lookbackDays}</span> days (
+          <span className="font-mono text-[10px] text-white/80">{hubTransparency.stripeCampaignSlug}</span>) — aligns with the{" "}
           <HardLink href="/fundraising/leaderboard" className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
             leaderboard
           </HardLink>
@@ -130,9 +130,9 @@ export function FundraisingHero({
           </HardLink>
         </div>
 
-        <p className="mx-auto mt-6 text-center text-xs text-white/55 sm:mx-0 sm:text-left">
-          <span className="font-semibold text-white/80">501(c)(3)</span> · EIN{" "}
-          <span className="tabular-nums text-white/90">99-3757238</span>
+        <p className="mx-auto mt-6 text-center text-xs text-white sm:mx-0 sm:text-left">
+          <span className="font-semibold text-white">501(c)(3)</span> · EIN{" "}
+          <span className="tabular-nums text-white">99-3757238</span>
         </p>
 
         <div className="mx-auto max-w-xl sm:mx-0">
