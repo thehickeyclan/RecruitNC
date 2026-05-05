@@ -4,7 +4,7 @@ import QRCode from "qrcode"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
 import { resolveFundraisingAthletePublic } from "@/lib/fundraising/athlete-fundraising-profiles"
-import { getAthleteFundraisingPublicSnapshot, getAthleteOwnerThankYouRows } from "@/lib/fundraising/athlete-public-stats"
+import { getAthleteFundraisingPublicSnapshot } from "@/lib/fundraising/athlete-public-stats"
 import { HardLink } from "@/components/hard-link"
 import { createClient } from "@/lib/supabase/server"
 import { DEFAULT_FUNDRAISING_CAMPAIGN, FUNDRAISING_GIVE_PAGE_PATH } from "@/lib/fundraising/campaign-registry"
@@ -12,36 +12,15 @@ import { formatUsdWhole } from "@/app/fundraising/components/FundraisingHero"
 import { userCanManageFundraisingForAthlete } from "@/lib/fundraising/athlete-fundraising-access"
 import { FundraisingAthleteQrCard } from "./fundraising-athlete-qr-card"
 import { FundraisingAthleteEmbeddedCheckout } from "./fundraising-athlete-embedded-checkout"
-import { FundraisingOwnerPanel } from "./fundraising-owner-panel"
+import { FundraisingAthleteMessageSection } from "./fundraising-athlete-message"
+import { recruitingProfilePhotoFromRow } from "@/lib/recruiting-profile-photo"
 
-const PLACEHOLDER_ATHLETE_PHOTOS = new Set<string>(["/wrestler-silhouette.png"])
-
-function isUsablePublicAthletePhoto(raw: string | null | undefined): boolean {
-  const u = (raw ?? "").trim()
-  if (!u || PLACEHOLDER_ATHLETE_PHOTOS.has(u)) return false
-  return true
-}
-
-function recruitingPhotoFromAthleteRow(row: {
-  image_url?: string | null
-  photourl?: string | null
-  photo_url?: string | null
-}): string | null {
-  for (const k of ["image_url", "photourl", "photo_url"] as const) {
-    const v = row[k]
-    if (isUsablePublicAthletePhoto(v)) return v!.trim()
-  }
-  return null
-}
+const HERO_FALLBACK_SILHOUETTE = "/wrestler-silhouette.png"
 
 async function fetchRecruitingProfilePhoto(admin: ReturnType<typeof createAdminClient>, athleteId: string): Promise<string | null> {
-  const { data, error } = await admin
-    .from("athletes")
-    .select("image_url, photourl, photo_url")
-    .eq("id", athleteId)
-    .maybeSingle()
+  const { data, error } = await admin.from("athletes").select("*").eq("id", athleteId).maybeSingle()
   if (error || !data) return null
-  return recruitingPhotoFromAthleteRow(data as { image_url?: string | null; photourl?: string | null; photo_url?: string | null })
+  return recruitingProfilePhotoFromRow(data as Record<string, unknown>)
 }
 
 function publicGiftSiteOrigin(): string {
@@ -99,14 +78,12 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
   const {
     data: { user },
   } = await supabase.auth.getUser()
-
   const isFundraisingManager =
     !!(user?.id && athleteId && (await userCanManageFundraisingForAthlete(admin, user.id, athleteId)))
 
-  const [snapshot, recruitingPhotoUrl, ownerDonors] = await Promise.all([
+  const [snapshot, recruitingPhotoUrl] = await Promise.all([
     code != null ? getAthleteFundraisingPublicSnapshot(code, 250) : Promise.resolve(null),
     athleteId ? fetchRecruitingProfilePhoto(admin, athleteId) : Promise.resolve(null),
-    isFundraisingManager && code ? getAthleteOwnerThankYouRows(code) : Promise.resolve([]),
   ])
   const stats = snapshot?.stats ?? null
   const publicGifts = snapshot?.gifts ?? []
@@ -118,10 +95,12 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
       : null
 
   const viewProfileHref = athleteId ? `/view-profile?id=${encodeURIComponent(athleteId)}` : null
-  const rawFundraisingPhoto = profile?.photo_url?.trim() ?? null
-  const fundraisingPhoto =
-    rawFundraisingPhoto && isUsablePublicAthletePhoto(rawFundraisingPhoto) ? rawFundraisingPhoto : null
-  const heroPhotoSrc = recruitingPhotoUrl ?? fundraisingPhoto
+  const fundraisingPhoto = profile?.photo_url
+    ? recruitingProfilePhotoFromRow({ photo_url: profile.photo_url })
+    : null
+  const heroFromAthleteOrProfile = recruitingPhotoUrl ?? fundraisingPhoto
+  const heroPhotoSrc = heroFromAthleteOrProfile ?? HERO_FALLBACK_SILHOUETTE
+  const heroIsCustomPhoto = heroFromAthleteOrProfile != null
   const checkoutAnchor = "spartan-checkout"
   const athletePagePath = `/fundraising/athletes/${encodeURIComponent(slug)}`
   const athleteAbsoluteUrl = `${publicGiftSiteOrigin()}${athletePagePath}`
@@ -151,7 +130,8 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
       <div className="mx-auto w-full max-w-lg sm:max-w-2xl">
         {cancelledCheckout ? (
           <div className="mt-6 rounded-lg border border-amber-400/35 bg-amber-500/10 px-4 py-3 text-sm text-amber-100/95">
-            Checkout was cancelled — nothing was charged. You can finish a gift below when you&apos;re ready.
+            Checkout was cancelled — nothing was charged. You can finish a gift in secure checkout at the bottom when you&apos;re
+            ready.
           </div>
         ) : null}
 
@@ -166,31 +146,29 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           Official NC United gift page
         </p>
 
-        {heroPhotoSrc ? (
-          viewProfileHref ? (
-            <HardLink
-              href={viewProfileHref}
-              className="group mt-6 block overflow-hidden rounded-xl border border-white/10 bg-[#0B2545]/50 outline-none ring-offset-2 ring-offset-[#061224] focus-visible:ring-2 focus-visible:ring-[#C8A94A]"
-              aria-label={`View ${displayName} recruiting profile`}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={heroPhotoSrc}
-                alt=""
-                className="h-auto max-h-[min(420px,55vh)] w-full object-cover object-top transition duration-300 group-hover:opacity-92"
-              />
-            </HardLink>
-          ) : (
-            <div className="mt-6 overflow-hidden rounded-xl border border-white/10 bg-[#0B2545]/50">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={heroPhotoSrc}
-                alt=""
-                className="h-auto max-h-[min(420px,55vh)] w-full object-cover object-top"
-              />
-            </div>
-          )
-        ) : null}
+        {viewProfileHref && heroIsCustomPhoto ? (
+          <HardLink
+            href={viewProfileHref}
+            className="group mt-6 block overflow-hidden rounded-xl border border-white/10 bg-[#0B2545]/50 outline-none ring-offset-2 ring-offset-[#061224] focus-visible:ring-2 focus-visible:ring-[#C8A94A]"
+            aria-label={`View ${displayName} recruiting profile`}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={heroPhotoSrc}
+              alt={`${displayName} — recruiting photo`}
+              className="h-auto max-h-[min(420px,55vh)] w-full object-cover object-top transition duration-300 group-hover:opacity-92"
+            />
+          </HardLink>
+        ) : (
+          <div className="mt-6 overflow-hidden rounded-xl border border-white/10 bg-[#0B2545]/50">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={heroPhotoSrc}
+              alt={heroIsCustomPhoto ? `${displayName} — recruiting photo` : ""}
+              className={`h-auto max-h-[min(420px,55vh)] w-full object-cover object-top ${heroIsCustomPhoto ? "" : "opacity-80"}`}
+            />
+          </div>
+        )}
 
         <h1 className="font-[family-name:var(--font-fundraising-display)] mt-6 text-2xl font-black uppercase leading-tight tracking-tight text-white sm:text-4xl">
           {viewProfileHref ? (
@@ -207,21 +185,54 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
         {schoolLine ? <p className="mt-2 text-base text-white/65">{schoolLine}</p> : null}
         {code ? <p className="mt-2 font-mono text-xs text-white/40">{code}</p> : null}
 
-        {profile?.bio?.trim() && !isFundraisingManager ? (
-          <div className="mt-6 max-w-xl">
-            <h2 className="font-[family-name:var(--font-fundraising-display)] text-xs font-bold uppercase tracking-[0.22em] text-[#C8A94A]">
-              What I&apos;m raising for
-            </h2>
-            <p className="mt-2 text-base leading-relaxed text-white/80">{profile.bio.trim()}</p>
-          </div>
+        {athleteId ? (
+          <FundraisingAthleteMessageSection
+            key={profile ? `${profile.updated_at}-msg` : `${slug}-msg`}
+            displayName={displayName}
+            athleteId={athleteId}
+            hasFundraisingProfile={profile != null}
+            canEdit={isFundraisingManager}
+            initialBio={profile?.bio?.trim() ?? ""}
+          />
         ) : null}
 
-        <p className="mt-6 text-sm leading-snug text-white/75">
+        <div className="mt-8 rounded-xl border border-white/10 bg-[#0B2545]/55 px-4 py-4 sm:px-5 sm:py-5">
+          <p className="text-sm leading-relaxed text-white/80">
+            <span className="font-[family-name:var(--font-fundraising-display)] font-bold uppercase tracking-wide text-[#C8A94A]">
+              New to NC United?
+            </span>{" "}
+            We&apos;re a North Carolina-based nonprofit that helps young wrestlers and local teams—covering real costs like
+            travel, events, and training. This link is for rooting for{" "}
+            <strong className="text-white/95">{displayName}</strong> with a gift that also supports our programs.
+          </p>
+          <div className="mt-4 space-y-3 border-t border-white/10 pt-4 text-sm leading-relaxed text-white/78">
+            <p>
+              <strong className="text-white/92">Email receipt.</strong> After payment you&apos;ll get an email receipt—check spam
+              or promotions if needed.
+            </p>
+            {code ? (
+              <p>
+                <strong className="text-white/92">Every dollar on this page</strong> is credited to{" "}
+                <strong className="text-white/92">{displayName}</strong> for this campaign when checkout uses their NCU code.
+              </p>
+            ) : null}
+          </div>
+          <p className="mt-3 text-xs leading-relaxed text-white/55">
+            501(c)(3) EIN <span className="tabular-nums">99-3757238</span>. Need the{" "}
+            <HardLink href={hubGiveHref} className="text-[#C8A94A] underline-offset-4 hover:underline">
+              full gift hub
+            </HardLink>{" "}
+            (training fund or directory)?
+          </p>
+        </div>
+
+        <p className="mt-6 text-sm leading-snug text-white/70">
           {code ? (
             <>
-              <strong className="text-[#C8A94A]">Give on this page.</strong> The form is below —{" "}
-              <strong className="text-white/90">{displayName}</strong> is already selected. You only go to{" "}
-              <strong className="text-white/90">Stripe</strong> for card payment, then return to our thank-you page.
+              <strong className="text-[#C8A94A]">How giving works.</strong>{" "}
+              <strong className="text-white/90">{displayName}</strong> is already selected for credit. When you&apos;re ready,
+              use <strong className="text-white/90">secure checkout at the bottom</strong> of this page — you&apos;ll finish
+              payment on <strong className="text-white/90">Stripe</strong>, then see our thank-you page.
             </>
           ) : (
             <>
@@ -234,42 +245,23 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           )}
         </p>
 
-        <div className="mt-6 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-          <HardLink
-            href={giveOnThisPageHref}
-            className="font-[family-name:var(--font-fundraising-display)] flex min-h-[52px] w-full touch-manipulation items-center justify-center rounded-sm bg-[#CC0000] px-8 text-sm font-extrabold uppercase tracking-[0.14em] text-white shadow-[0_14px_44px_-10px_rgba(204,0,0,0.55)] hover:bg-[#a80000] sm:inline-flex sm:w-auto sm:min-w-[240px]"
-          >
-            Give now
-          </HardLink>
-        </div>
-
-        <section
-          id={checkoutAnchor}
-          className="mt-6 scroll-mt-28 rounded-xl border border-[#C8A94A]/25 bg-[#0B2545]/35 p-4 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.45)] backdrop-blur-sm sm:p-6"
-        >
-          <h2 className="font-[family-name:var(--font-fundraising-display)] text-center text-lg font-bold uppercase tracking-wide text-white">
-            Secure checkout
-          </h2>
-          <p className="mx-auto mt-2 max-w-md text-center text-[13px] leading-snug text-white/70">
-            <strong className="font-semibold text-white/85">Tax-deductible</strong> gift ($5 minimum). You finish on Stripe;
-            your receipt arrives by email.
-          </p>
-          <div className="mt-6 w-full text-left">
-            <FundraisingAthleteEmbeddedCheckout
-              athleteCode={code}
-              athleteDirectoryLabel={directoryLabelForCheckout}
-              fundraisingSlug={slug}
-            />
+        {goalCents != null && goalCents > 0 ? (
+          <div className="mt-8 rounded-xl border border-white/10 bg-[#0B2545]/70 px-5 py-5">
+            <h2 className="font-[family-name:var(--font-fundraising-display)] text-sm font-bold uppercase tracking-wide text-[#C8A94A]">
+              Campaign goal
+            </h2>
+            <p className="mt-2 text-sm text-white/60">
+              {formatUsdWhole(raisedForBar)} raised of {formatUsdWhole(goalCents)}
+              {progressPct != null ? ` · ${progressPct}%` : ""}
+            </p>
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
+              <div
+                className="h-full rounded-full bg-[#C8A94A] transition-[width] duration-500"
+                style={{ width: `${progressPct ?? 0}%` }}
+              />
+            </div>
           </div>
-        </section>
-
-        <div className="mt-8 flex justify-center">
-          <FundraisingAthleteQrCard
-            qrSrc={athleteQrDataUrl}
-            donateUrl={athleteAbsoluteUrl}
-            athleteDisplayName={displayName}
-          />
-        </div>
+        ) : null}
 
         {code && stats ? (
           <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -297,27 +289,9 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
                     <span className="font-semibold text-white">{stats.organizationGiftCount}</span> org
                   </>
                 ) : (
-                  <span className="text-white/55">Detail when live Stripe data is available</span>
+                  <span className="text-white/55">Org vs individual — shown when available</span>
                 )}
               </p>
-            </div>
-          </div>
-        ) : null}
-
-        {goalCents != null && goalCents > 0 ? (
-          <div className="mt-10 rounded-xl border border-white/10 bg-[#0B2545]/70 px-5 py-5">
-            <h2 className="font-[family-name:var(--font-fundraising-display)] text-sm font-bold uppercase tracking-wide text-[#C8A94A]">
-              Campaign goal
-            </h2>
-            <p className="mt-2 text-sm text-white/60">
-              {formatUsdWhole(raisedForBar)} raised of {formatUsdWhole(goalCents)}
-              {progressPct != null ? ` · ${progressPct}%` : ""}
-            </p>
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
-              <div
-                className="h-full rounded-full bg-[#C8A94A] transition-[width] duration-500"
-                style={{ width: `${progressPct ?? 0}%` }}
-              />
             </div>
           </div>
         ) : null}
@@ -368,47 +342,42 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           </div>
         ) : null}
 
-        <div className="mt-12 rounded-xl border border-white/10 bg-[#0B2545]/55 px-4 py-4 sm:px-5 sm:py-5">
-          <p className="text-sm leading-relaxed text-white/80">
-            <span className="font-[family-name:var(--font-fundraising-display)] font-bold uppercase tracking-wide text-[#C8A94A]">
-              New to NC United?
-            </span>{" "}
-            We&apos;re a North Carolina-based nonprofit that helps young wrestlers and local teams—covering real costs like
-            travel, events, and training. This link is for rooting for{" "}
-            <strong className="text-white/95">{displayName}</strong> with a gift that also supports our programs.
-          </p>
-          <div className="mt-4 space-y-3 border-t border-white/10 pt-4 text-sm leading-relaxed text-white/78">
-            <p>
-              <strong className="text-white/92">Email receipt.</strong> After payment you&apos;ll get an email receipt—check spam
-              or promotions if needed.
-            </p>
-            {code ? (
-              <p>
-                <strong className="text-white/92">Every dollar on this page</strong> is credited to{" "}
-                <strong className="text-white/92">{displayName}</strong> for this campaign when checkout uses their NCU code.
-              </p>
-            ) : null}
-          </div>
-          <p className="mt-3 text-xs leading-relaxed text-white/55">
-            501(c)(3) EIN <span className="tabular-nums">99-3757238</span>. Need the{" "}
-            <HardLink href={hubGiveHref} className="text-[#C8A94A] underline-offset-4 hover:underline">
-              full gift hub
-            </HardLink>{" "}
-            (training fund or directory)?
-          </p>
+        <div className="mt-10 flex justify-center">
+          <FundraisingAthleteQrCard
+            qrSrc={athleteQrDataUrl}
+            donateUrl={athleteAbsoluteUrl}
+            athleteDisplayName={displayName}
+          />
         </div>
 
-        {isFundraisingManager && athleteId ? (
-          <FundraisingOwnerPanel
-            key={profile ? `${profile.updated_at}-owner` : `${slug}-owner`}
-            athleteId={athleteId}
-            fundraisingSlug={slug}
-            canEditStory={profile != null}
-            initialBio={profile?.bio ?? ""}
-            donorRows={ownerDonors}
-            lookbackDays={DEFAULT_FUNDRAISING_CAMPAIGN.defaultLookbackDays}
-          />
-        ) : null}
+        <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+          <HardLink
+            href={giveOnThisPageHref}
+            className="font-[family-name:var(--font-fundraising-display)] flex min-h-[52px] w-full touch-manipulation items-center justify-center rounded-sm bg-[#CC0000] px-8 text-sm font-extrabold uppercase tracking-[0.14em] text-white shadow-[0_14px_44px_-10px_rgba(204,0,0,0.55)] hover:bg-[#a80000] sm:inline-flex sm:w-auto sm:min-w-[240px]"
+          >
+            Give now
+          </HardLink>
+        </div>
+
+        <section
+          id={checkoutAnchor}
+          className="mt-6 scroll-mt-28 rounded-xl border border-[#C8A94A]/25 bg-[#0B2545]/35 p-4 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.45)] backdrop-blur-sm sm:p-6"
+        >
+          <h2 className="font-[family-name:var(--font-fundraising-display)] text-center text-lg font-bold uppercase tracking-wide text-white">
+            Secure checkout
+          </h2>
+          <p className="mx-auto mt-2 max-w-md text-center text-[13px] leading-snug text-white/70">
+            <strong className="font-semibold text-white/85">Tax-deductible</strong> gift ($5 minimum). You finish on Stripe;
+            your receipt arrives by email.
+          </p>
+          <div className="mt-6 w-full text-left">
+            <FundraisingAthleteEmbeddedCheckout
+              athleteCode={code}
+              athleteDirectoryLabel={directoryLabelForCheckout}
+              fundraisingSlug={slug}
+            />
+          </div>
+        </section>
 
         <p className="mt-12 border-t border-white/10 pt-8 text-xs text-white/45">
           {viewProfileHref ? (
