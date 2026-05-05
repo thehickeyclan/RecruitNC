@@ -7,6 +7,7 @@ import { getSupabaseAdmin } from "@/lib/server-supabase"
 import { getAthletesColumnNames } from "@/lib/athletes-schema"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { escapeForIlike } from "@/lib/nchsaa-results"
+import { dualTokenPairsForNchsaa } from "@/lib/nchsaa-profile-fetch"
 import {
   extractSearchablePhrase,
   stripConversationalNoise,
@@ -25,6 +26,11 @@ import { getNchsaaStateChampionsByExactTitleCount } from "@/lib/nchsaa-multi-tim
 const MAX_ROWS = 40
 const MAX_Q_LEN = 120
 const FUZZY_POOL = 260
+/**
+ * Per-strategy row cap. Unordered ILIKE + limit biases toward whatever physical/index order Postgres returns
+ * (often "recent" rows), so alumni never enter the merge pool — we spread by grad year (see below).
+ */
+const STRATEGY_CAP = 420
 
 type AthleteSearchCols = { fn: string; ln: string; gy: string; hs: string }
 
@@ -76,6 +82,26 @@ function rowLast(row: Record<string, unknown>, cols: AthleteSearchCols): string 
   return String(row[cols.ln] ?? row.last_name ?? row.lastname ?? "").trim()
 }
 
+/** Half the pool ordered by grad year ascending, half descending — mitigates bias to recent rows only. */
+async function mergeIlikeWithGradYearSpread(
+  admin: SupabaseClient,
+  cols: AthleteSearchCols,
+  column: string,
+  pat: string,
+  cap: number,
+  labelAsc: string,
+  labelDesc: string,
+  merge: (res: { data: unknown; error: { message: string } | null }, label?: string) => void,
+) {
+  const half = Math.max(1, Math.floor(cap / 2))
+  const [asc, desc] = await Promise.all([
+    athletesBase(admin).ilike(column, pat).order(cols.gy, { ascending: true, nullsFirst: false }).limit(half),
+    athletesBase(admin).ilike(column, pat).order(cols.gy, { ascending: false, nullsFirst: false }).limit(half),
+  ])
+  merge(asc, labelAsc)
+  merge(desc, labelDesc)
+}
+
 export async function toolSearchAthletes(args: { query: string; limit?: number }) {
   const raw = sanitizeFragment(args.query || "")
   const limit = Math.min(Math.max(Number(args.limit) || 20, 1), MAX_ROWS)
@@ -88,6 +114,16 @@ export async function toolSearchAthletes(args: { query: string; limit?: number }
   const admin = getSupabaseAdmin()
   const cols = await getAthleteSearchCols(admin)
   const pattern = `%${escapeForIlike(q)}%`
+  const tokens = tokenizeMeaningfulWords(raw)
+  const strategyCap = Math.min(600, Math.max(limit, STRATEGY_CAP))
+  const firstTokPat =
+    tokens.length > 0 ? `%${escapeForIlike(tokens[0])}%` : pattern
+  const lastTokPat =
+    tokens.length >= 2
+      ? `%${escapeForIlike(tokens[tokens.length - 1])}%`
+      : tokens.length === 1
+        ? firstTokPat
+        : pattern
 
   const byId = new Map<string, Record<string, unknown>>()
   const queryErrors: string[] = []
@@ -115,62 +151,72 @@ export async function toolSearchAthletes(args: { query: string; limit?: number }
     `${cols.ln}.ilike.${pattern}`,
     `${cols.hs}.ilike.${pattern}`,
   ].join(",")
-  const broad = await athletesBase(admin).or(orClause).limit(limit)
-  merge(broad, "or(name,first,last,school)")
-  if (byId.size === 0 && broad.error) {
+  const halfCap = Math.max(1, Math.floor(strategyCap / 2))
+  const [broadAsc, broadDesc] = await Promise.all([
+    athletesBase(admin).or(orClause).order(cols.gy, { ascending: true, nullsFirst: false }).limit(halfCap),
+    athletesBase(admin).or(orClause).order(cols.gy, { ascending: false, nullsFirst: false }).limit(halfCap),
+  ])
+  merge(broadAsc, "or(name,first,last,school)_gy_asc")
+  merge(broadDesc, "or(name,first,last,school)_gy_desc")
+  if (byId.size === 0 && broadAsc.error && broadDesc.error) {
     const narrowOr = [`name.ilike.${pattern}`, `${cols.fn}.ilike.${pattern}`, `${cols.ln}.ilike.${pattern}`].join(",")
-    const retry = await athletesBase(admin).or(narrowOr).limit(limit)
-    merge(retry, "or(name,first,last)")
+    const [nAsc, nDesc] = await Promise.all([
+      athletesBase(admin).or(narrowOr).order(cols.gy, { ascending: true, nullsFirst: false }).limit(halfCap),
+      athletesBase(admin).or(narrowOr).order(cols.gy, { ascending: false, nullsFirst: false }).limit(halfCap),
+    ])
+    merge(nAsc, "or(name,first,last)_gy_asc")
+    merge(nDesc, "or(name,first,last)_gy_desc")
   }
 
-  const [a, b, c, nFull] = await Promise.all([
-    athletesBase(admin).ilike(cols.fn, pattern).limit(limit),
-    athletesBase(admin).ilike(cols.ln, pattern).limit(limit),
-    athletesBase(admin).ilike(cols.hs, pattern).limit(limit),
-    athletesBase(admin).ilike("name", pattern).limit(limit),
-  ])
-  merge(a, "ilike_first")
-  merge(b, "ilike_last")
-  merge(c, "ilike_school")
-  merge(nFull, "ilike_name")
+  // Isolated first/last columns need token-sized ILIKEs — `%First Last%` never matches split name fields.
+  await mergeIlikeWithGradYearSpread(admin, cols, cols.fn, firstTokPat, strategyCap, "ilike_first_gy_asc", "ilike_first_gy_desc", merge)
+  await mergeIlikeWithGradYearSpread(admin, cols, cols.ln, lastTokPat, strategyCap, "ilike_last_gy_asc", "ilike_last_gy_desc", merge)
 
-  const tokens = tokenizeMeaningfulWords(raw)
+  const [c, nAsc, nDesc] = await Promise.all([
+    athletesBase(admin).ilike(cols.hs, pattern).limit(strategyCap),
+    athletesBase(admin).ilike("name", pattern).order(cols.gy, { ascending: true, nullsFirst: false }).limit(halfCap),
+    athletesBase(admin).ilike("name", pattern).order(cols.gy, { ascending: false, nullsFirst: false }).limit(halfCap),
+  ])
+  merge(c, "ilike_school")
+  merge(nAsc, "ilike_name_gy_asc")
+  merge(nDesc, "ilike_name_gy_desc")
+
   if (tokens.length >= 2) {
     const t0 = tokens[0]
     const t1 = tokens[tokens.length - 1]
     const p0 = `%${escapeForIlike(t0)}%`
     const p1 = `%${escapeForIlike(t1)}%`
-    const [d1, d2, dName] = await Promise.all([
-      athletesBase(admin).ilike(cols.fn, p0).ilike(cols.ln, p1).limit(limit),
-      athletesBase(admin).ilike(cols.fn, p1).ilike(cols.ln, p0).limit(limit),
-      athletesBase(admin).ilike("name", p0).ilike("name", p1).limit(limit),
+    const pairHalf = Math.max(1, Math.floor(strategyCap / 2))
+    const [d1a, d1b, d2a, d2b, dNa, dNb] = await Promise.all([
+      athletesBase(admin).ilike(cols.fn, p0).ilike(cols.ln, p1).order(cols.gy, { ascending: true, nullsFirst: false }).limit(pairHalf),
+      athletesBase(admin).ilike(cols.fn, p0).ilike(cols.ln, p1).order(cols.gy, { ascending: false, nullsFirst: false }).limit(pairHalf),
+      athletesBase(admin).ilike(cols.fn, p1).ilike(cols.ln, p0).order(cols.gy, { ascending: true, nullsFirst: false }).limit(pairHalf),
+      athletesBase(admin).ilike(cols.fn, p1).ilike(cols.ln, p0).order(cols.gy, { ascending: false, nullsFirst: false }).limit(pairHalf),
+      athletesBase(admin).ilike("name", p0).ilike("name", p1).order(cols.gy, { ascending: true, nullsFirst: false }).limit(pairHalf),
+      athletesBase(admin).ilike("name", p0).ilike("name", p1).order(cols.gy, { ascending: false, nullsFirst: false }).limit(pairHalf),
     ])
-    merge(d1, "first+last_tokens")
-    merge(d2, "first+last_swap")
-    merge(dName, "name_tokens")
+    merge(d1a, "first+last_tokens_gy_asc")
+    merge(d1b, "first+last_tokens_gy_desc")
+    merge(d2a, "first+last_swap_gy_asc")
+    merge(d2b, "first+last_swap_gy_desc")
+    merge(dNa, "name_tokens_gy_asc")
+    merge(dNb, "name_tokens_gy_desc")
   }
 
   const qLower = q.toLowerCase()
 
-  if (byId.size < Math.min(8, limit)) {
+  if (byId.size === 0) {
     const anchor = tokens.length ? tokens.reduce((a, t) => (t.length > a.length ? t : a), "") : q
     const prefix = anchor.slice(0, Math.min(4, Math.max(2, anchor.length)))
     const loose = `%${escapeForIlike(prefix)}%`
-    const [p1, p2, p3] = await Promise.all([
-      athletesBase(admin).ilike(cols.ln, loose).limit(FUZZY_POOL),
-      athletesBase(admin).ilike(cols.fn, loose).limit(FUZZY_POOL),
-      athletesBase(admin).ilike("name", loose).limit(FUZZY_POOL),
-    ])
-    merge(p1, "fuzzy_last")
-    merge(p2, "fuzzy_first")
-    merge(p3, "fuzzy_name")
+    await mergeIlikeWithGradYearSpread(admin, cols, cols.ln, loose, FUZZY_POOL, "fuzzy_last_gy_asc", "fuzzy_last_gy_desc", merge)
+    await mergeIlikeWithGradYearSpread(admin, cols, cols.fn, loose, FUZZY_POOL, "fuzzy_first_gy_asc", "fuzzy_first_gy_desc", merge)
+    await mergeIlikeWithGradYearSpread(admin, cols, "name", loose, FUZZY_POOL, "fuzzy_name_gy_asc", "fuzzy_name_gy_desc", merge)
   }
 
   if (byId.size === 0 && queryErrors.length > 0) {
     console.error("[RecruitNC Data Dawg] search_athletes DB errors (0 rows):", queryErrors[0], { searched_for: q })
   }
-
-  const nameTokens = tokenizeMeaningfulWords(raw)
 
   const scored = [...byId.values()]
     .map((row) => {
@@ -179,7 +225,7 @@ export async function toolSearchAthletes(args: { query: string; limit?: number }
       const l = rowLast(r, cols)
       const disp = athleteDisplayName(r, cols)
       const hs = String(r[cols.hs] ?? "").trim()
-      const score = combinedAthleteSearchScore(qLower, nameTokens, f, l, disp, hs)
+      const score = combinedAthleteSearchScore(qLower, tokens, f, l, disp, hs)
       return { row, score, disp }
     })
     .filter((x) => {
@@ -189,10 +235,22 @@ export async function toolSearchAthletes(args: { query: string; limit?: number }
       const lastFromFullName =
         nameField && nameField.includes(" ") ? (nameField.split(/\s+/).pop() ?? "").toLowerCase() : ""
       const lastCompare = last || lastFromFullName
-      const parts = qLower.split(/\s+/)
+      const parts = qLower.split(/\s+/).filter(Boolean)
       // For "First Last School …" queries, surname is the second token, not the last ("Gibbons").
       const wantLast =
         parts.length >= 3 ? parts[1] : parts.length > 1 ? parts[parts.length - 1] : qLower
+      const wantFirst = parts[0] ?? ""
+      const firstLow = rowFirst(x.row as Record<string, unknown>, cols).toLowerCase()
+
+      if (tokens.length >= 2 && lastCompare && wantLast.length >= 2) {
+        const maxLastDist = wantLast.length <= 4 ? 1 : 2
+        if (levenshteinDistance(wantLast, lastCompare) <= maxLastDist) {
+          if (!firstLow || wantFirst.length < 2 || levenshteinDistance(wantFirst, firstLow) <= 2) {
+            return true
+          }
+        }
+      }
+
       if (lastCompare && wantLast.length >= 3) {
         return levenshteinDistance(wantLast, lastCompare) <= 2
       }
@@ -208,13 +266,6 @@ export async function toolSearchAthletes(args: { query: string; limit?: number }
     seen.add(id)
     out.push(row)
     if (out.length >= limit) break
-  }
-
-  if (out.length === 0 && byId.size > 0) {
-    for (const row of byId.values()) {
-      out.push(row)
-      if (out.length >= limit) break
-    }
   }
 
   if (out.length === 0 && queryErrors.length > 0) {
@@ -462,6 +513,240 @@ export async function toolNchsaaStateResultsSearch(args: { query: string; limit?
   return { rows: merged }
 }
 
+const CROSS_STORE_CAP = 50
+
+function dedupeByKey<T>(rows: T[], keyFn: (r: T) => string): T[] {
+  const seen = new Set<string>()
+  const out: T[] = []
+  for (const r of rows) {
+    const k = keyFn(r)
+    if (seen.has(k)) continue
+    seen.add(k)
+    out.push(r)
+  }
+  return out
+}
+
+/**
+ * Single tool: NCHSAA state + NHSCA (placements + legacy) + Super32 + NC United roster — all years in DB.
+ * Complements `search_athletes` (directory row + dossier need an athlete id).
+ */
+export async function toolWrestlingCrossStoreSearch(args: { query: string; limit?: number }) {
+  const raw = sanitizeFragment(String(args.query ?? ""))
+  const phrase = extractSearchablePhrase(raw) || stripConversationalNoise(raw)
+  const q = phrase.trim()
+  const perTable = Math.min(CROSS_STORE_CAP, Math.max(8, Number(args.limit) || 32))
+  if (q.length < 2) {
+    return {
+      error: "Query must be at least 2 characters.",
+      nchsaa_state: [] as unknown[],
+      nhsca_placements: [] as unknown[],
+      nhsca_legacy_table: [] as unknown[],
+      super32: [] as unknown[],
+      nc_united_roster: [] as unknown[],
+    }
+  }
+  const pattern = `%${escapeForIlike(q)}%`
+  const tokens = tokenizeMeaningfulWords(raw)
+  const admin = getSupabaseAdmin()
+
+  const nchsaaSel = "wrestler_name,place,year,classification,weight_class,school"
+
+  const nhscaSelPlc = "athlete_name,placement,year,division,weight_class,high_school"
+  const nhscaSelLeg = "athlete_name,placement,year,division,weight,high_school"
+  const s32Sel = "athlete_name,placement,place,year,weight,weight_class,high_school,school,record,wins,losses"
+
+  const pairPromises = dualTokenPairsForNchsaa(q).slice(0, 4).map(({ first, last }) => {
+    const pf = `%${escapeForIlike(first)}%`
+    const pl = `%${escapeForIlike(last)}%`
+    return admin
+      .from("wrestling_nchsaa_results")
+      .select(nchsaaSel)
+      .ilike("wrestler_name", pf)
+      .ilike("wrestler_name", pl)
+      .order("year", { ascending: false })
+      .limit(perTable)
+  })
+
+  const [
+    nchsaaByWrestler,
+    nchsaaBySchool,
+    ...nchsaaPairRes
+  ] = await Promise.all([
+    admin
+      .from("wrestling_nchsaa_results")
+      .select(nchsaaSel)
+      .ilike("wrestler_name", pattern)
+      .order("year", { ascending: false })
+      .limit(perTable),
+    admin
+      .from("wrestling_nchsaa_results")
+      .select(nchsaaSel)
+      .ilike("school", pattern)
+      .order("year", { ascending: false })
+      .limit(perTable),
+    ...pairPromises,
+  ])
+
+  const [
+    plcByAthlete,
+    plcBySchool,
+    legByAthlete,
+    legBySchool,
+    s32ByAthlete,
+    s32ByHighSchool,
+    s32BySchoolCol,
+  ] = await Promise.all([
+    admin.from("nhsca_placements").select(nhscaSelPlc).ilike("athlete_name", pattern).order("year", { ascending: false }).limit(perTable),
+    admin.from("nhsca_placements").select(nhscaSelPlc).ilike("high_school", pattern).order("year", { ascending: false }).limit(perTable),
+    admin.from("wrestling_nhsca_results").select(nhscaSelLeg).ilike("athlete_name", pattern).order("year", { ascending: false }).limit(perTable),
+    admin.from("wrestling_nhsca_results").select(nhscaSelLeg).ilike("high_school", pattern).order("year", { ascending: false }).limit(perTable),
+    admin.from("super32_results").select(s32Sel).ilike("athlete_name", pattern).order("year", { ascending: false }).limit(perTable),
+    admin.from("super32_results").select(s32Sel).ilike("high_school", pattern).order("year", { ascending: false }).limit(perTable),
+    admin.from("super32_results").select(s32Sel).ilike("school", pattern).order("year", { ascending: false }).limit(perTable),
+  ])
+
+  const ncPromises: Promise<typeof nchsaaByWrestler>[] = []
+  if (tokens.length >= 2) {
+    const lastT = tokens[tokens.length - 1] ?? ""
+    const firstT = tokens[0] ?? ""
+    if (lastT.length >= 2) {
+      ncPromises.push(
+        admin
+          .from("nc_united_wrestlers")
+          .select("first_name,last_name,high_school")
+          .ilike("last_name", `%${escapeForIlike(lastT)}%`)
+          .limit(100),
+      )
+    }
+    if (firstT.length >= 2 && lastT.length >= 2) {
+      ncPromises.push(
+        admin
+          .from("nc_united_wrestlers")
+          .select("first_name,last_name,high_school")
+          .ilike("first_name", `%${escapeForIlike(firstT)}%`)
+          .ilike("last_name", `%${escapeForIlike(lastT)}%`)
+          .limit(40),
+      )
+    }
+  } else {
+    ncPromises.push(
+      admin.from("nc_united_wrestlers").select("first_name,last_name,high_school").ilike("last_name", pattern).limit(40),
+    )
+  }
+
+  const ncRes = ncPromises.length ? await Promise.all(ncPromises) : []
+
+  const errors: string[] = []
+  const noteErr = (res: { error?: { message?: string } | null }, label: string) => {
+    if (!res.error) return
+    const msg = res.error.message || ""
+    if (msg.includes("does not exist") || msg.includes("42P01") || msg.includes("42703")) return
+    errors.push(`${label}: ${msg}`)
+  }
+
+  const rowsOf = (res: { data?: unknown; error?: { message?: string } | null }): Record<string, unknown>[] =>
+    res.error ? [] : ((res.data as Record<string, unknown>[]) ?? [])
+
+  ;[
+    nchsaaByWrestler,
+    nchsaaBySchool,
+    plcByAthlete,
+    plcBySchool,
+    legByAthlete,
+    legBySchool,
+    s32ByAthlete,
+    s32ByHighSchool,
+    s32BySchoolCol,
+    ...nchsaaPairRes,
+    ...ncRes,
+  ].forEach((res, i) => {
+    if (i === 0) noteErr(res, "nchsaa_by_wrestler")
+    else if (i === 1) noteErr(res, "nchsaa_by_school")
+    else if (i === 2) noteErr(res, "nhsca_placements_name")
+    else if (i === 3) noteErr(res, "nhsca_placements_school")
+    else if (i === 4) noteErr(res, "nhsca_legacy_name")
+    else if (i === 5) noteErr(res, "nhsca_legacy_school")
+    else if (i === 6) noteErr(res, "super32_name")
+    else if (i === 7) noteErr(res, "super32_high_school")
+    else if (i === 8) noteErr(res, "super32_school_col")
+    else if (i < 9 + nchsaaPairRes.length) noteErr(res, `nchsaa_pair_${i - 9}`)
+    else noteErr(res, "nc_united")
+  })
+
+  const nchsaaBuckets: Record<string, unknown>[] = [
+    ...rowsOf(nchsaaByWrestler),
+    ...rowsOf(nchsaaBySchool),
+    ...nchsaaPairRes.flatMap(rowsOf),
+  ]
+  const plcBuckets: Record<string, unknown>[] = [...rowsOf(plcByAthlete), ...rowsOf(plcBySchool)]
+  const legBuckets: Record<string, unknown>[] = [...rowsOf(legByAthlete), ...rowsOf(legBySchool)]
+  const s32Buckets: Record<string, unknown>[] = [
+    ...rowsOf(s32ByAthlete),
+    ...rowsOf(s32ByHighSchool),
+    ...rowsOf(s32BySchoolCol),
+  ]
+  const ncBuckets: Record<string, unknown>[] = ncRes.flatMap(rowsOf)
+
+  const nchsaa_state = dedupeByKey(nchsaaBuckets, (r) => {
+    const x = r as Record<string, unknown>
+    return `${x.wrestler_name}|${x.year}|${x.place}|${x.school}|${x.weight_class}`
+  })
+
+  const nhsca_placements = dedupeByKey(plcBuckets, (r) => {
+    const x = r as Record<string, unknown>
+    return `${x.athlete_name}|${x.year}|${x.placement}|${x.high_school}|${x.weight_class}`
+  })
+
+  const nhsca_legacy_table = dedupeByKey(legBuckets, (r) => {
+    const x = r as Record<string, unknown>
+    return `${x.athlete_name}|${x.year}|${x.placement}|${x.high_school}|${x.weight}`
+  })
+
+  const super32 = dedupeByKey(s32Buckets, (r) => {
+    const x = r as Record<string, unknown>
+    return `${x.athlete_name}|${x.year}|${x.placement ?? x.place}|${x.high_school ?? x.school}`
+  })
+
+  let nc_united_roster = dedupeByKey(ncBuckets, (r) => {
+    const x = r as Record<string, unknown>
+    return `${x.first_name}|${x.last_name}|${x.high_school}`
+  })
+
+  if (tokens.length >= 2) {
+    const wf = (tokens[0] ?? "").toLowerCase()
+    const wl = (tokens[tokens.length - 1] ?? "").toLowerCase()
+    nc_united_roster = nc_united_roster.filter((r) => {
+      const x = r as Record<string, unknown>
+      const f = String(x.first_name ?? "").toLowerCase()
+      const l = String(x.last_name ?? "").toLowerCase()
+      const distF = wf.length >= 2 ? levenshteinDistance(wf, f) <= 2 : true
+      const distL = wl.length >= 2 ? levenshteinDistance(wl, l) <= 2 : true
+      return distF && distL
+    })
+  }
+
+  const totalHits =
+    nchsaa_state.length +
+    nhsca_placements.length +
+    nhsca_legacy_table.length +
+    super32.length +
+    nc_united_roster.length
+
+  return {
+    searched_for: q,
+    nchsaa_state,
+    nhsca_placements,
+    nhsca_legacy_table,
+    super32,
+    nc_united_roster,
+    total_hits: totalHits,
+    ...(errors.length ? { partial_errors: errors.slice(0, 3) } : {}),
+    note:
+      "NCHSAA state = `wrestling_nchsaa_results`. NHSCA nationals = `nhsca_placements` + legacy `wrestling_nhsca_results`. Super32 = `super32_results`. NC United roster = national-team / dual-meet program context (not NCHSAA **state** dual champions — use `nchsaa_dual_team_champions` for those). For a full merged athlete report when an id exists, call `get_athlete_full_dossier`.",
+  }
+}
+
 export async function toolCollegeCommitsSearch(args: {
   query?: string
   grad_year?: number | null
@@ -537,11 +822,34 @@ export async function toolNchsaaMultiTimeStateChampions(args: { times: number })
 const MAX_DUAL_LIST = 400
 const MAX_DUAL_LEADERBOARD = 80
 
+/** Models sometimes pass year as a string; PostgREST needs a numeric year filter. */
+function coerceDualYear(raw: unknown): number | null {
+  if (raw == null) return null
+  if (typeof raw === "number" && Number.isFinite(raw)) return Math.floor(raw)
+  if (typeof raw === "string") {
+    const t = raw.trim()
+    if (!t) return null
+    const n = Number(t)
+    if (Number.isFinite(n)) return Math.floor(n)
+  }
+  return null
+}
+
+function dualTeamChampionsBase(admin: ReturnType<typeof getSupabaseAdmin>) {
+  return admin
+    .from("dual_team_champions")
+    .eq("is_vacated", false)
+    .neq("champion_school", "No Dual Tournament")
+    .or("held.is.null,held.eq.true")
+    .not("champion_school", "is", null)
+    .not("champion_school", "eq", "")
+}
+
 /**
  * NCHSAA **state** dual team championships (dual_team_champions). Not NHSCA national duals.
  */
 export async function toolNchsaaDualTeamChampions(args: {
-  year?: number | null
+  year?: number | string | null
   division?: string | null
   school?: string | null
   leaderboard?: boolean | null
@@ -549,22 +857,19 @@ export async function toolNchsaaDualTeamChampions(args: {
 }) {
   const admin = getSupabaseAdmin()
   const wantLeaderboard = Boolean(args.leaderboard)
+  const yearFilter = coerceDualYear(args.year)
 
   if (wantLeaderboard) {
     const listCap = Math.min(Math.max(Number(args.limit) || MAX_DUAL_LEADERBOARD, 1), 200)
-    const { data, error } = await admin
-      .from("dual_team_champions")
-      .select("champion_school, year, division")
-      .eq("is_vacated", false)
+    const { data, error } = await dualTeamChampionsBase(admin).select("champion_school, year, division")
 
     if (error) {
       return { error: error.message, leaderboard: true, schools: [] as unknown[] }
     }
 
     let rows = (data ?? []) as Array<{ champion_school?: string; year?: number; division?: string }>
-    if (args.year != null && Number.isFinite(args.year)) {
-      const y = Math.floor(Number(args.year))
-      rows = rows.filter((r) => r.year === y)
+    if (yearFilter != null) {
+      rows = rows.filter((r) => r.year === yearFilter)
     }
     if (args.division?.trim()) {
       const d = args.division.trim().toLowerCase()
@@ -598,21 +903,16 @@ export async function toolNchsaaDualTeamChampions(args: {
       leaderboard: true,
       schools,
       total_schools_in_scope: counts.size,
-      note: "NCHSAA state dual team titles (non-vacated). This is not the NHSCA national dual meet.",
+      note: "NCHSAA state dual team titles (held tournaments only; non-vacated; no placeholder rows). This is not the NHSCA national dual meet.",
     }
   }
 
   const rowCap = Math.min(Math.max(Number(args.limit) || MAX_DUAL_LIST, 1), 500)
 
-  let q = admin
-    .from("dual_team_champions")
-    .select("year, division, champion_school")
-    .eq("is_vacated", false)
-    .order("year", { ascending: false })
-    .limit(rowCap)
+  let q = dualTeamChampionsBase(admin).select("year, division, champion_school")
 
-  if (args.year != null && Number.isFinite(args.year)) {
-    q = q.eq("year", Math.floor(Number(args.year)))
+  if (yearFilter != null) {
+    q = q.eq("year", yearFilter)
   }
   if (args.division?.trim()) {
     q = q.ilike("division", `%${escapeForIlike(args.division.trim())}%`)
@@ -620,6 +920,8 @@ export async function toolNchsaaDualTeamChampions(args: {
   if (args.school?.trim()) {
     q = q.ilike("champion_school", `%${escapeForIlike(args.school.trim())}%`)
   }
+
+  q = q.order("year", { ascending: false }).order("division", { ascending: true }).limit(rowCap)
 
   const { data, error } = await q
   if (error) {
@@ -633,7 +935,11 @@ export async function toolNchsaaDualTeamChampions(args: {
     count: rows.length,
     truncated: rows.length >= rowCap,
     limit_used: rowCap,
-    note: "NCHSAA state dual team championships (non-vacated). NHSCA national duals are a different tournament.",
+    year_filter_applied: yearFilter,
+    note:
+      rows.length === 0 && yearFilter != null
+        ? "No dual team champions matched this year in the database (held tournaments only). If unexpected, the season may be stored under a different year or results may not be loaded yet."
+        : "NCHSAA state dual team championships (held tournaments only; non-vacated). NHSCA national duals are a different tournament.",
   }
 }
 
@@ -653,6 +959,7 @@ export async function toolGetSchoolWrestlingDossier(args: { query: string }) {
 
 export type DataToolName =
   | "search_athletes"
+  | "wrestling_cross_store_search"
   | "search_school_classifications"
   | "get_school_wrestling_dossier"
   | "nchsaa_dual_team_champions"
@@ -677,6 +984,10 @@ export async function executeDataTool(name: string, rawArgs: unknown): Promise<s
     switch (name as DataToolName) {
       case "search_athletes":
         return JSON.stringify(await toolSearchAthletes(args as { query: string; limit?: number }))
+      case "wrestling_cross_store_search":
+        return JSON.stringify(
+          await toolWrestlingCrossStoreSearch(args as { query: string; limit?: number }),
+        )
       case "search_school_classifications":
         return JSON.stringify(
           await toolSearchSchoolClassifications(args as { query: string; limit?: number }),
@@ -689,7 +1000,7 @@ export async function executeDataTool(name: string, rawArgs: unknown): Promise<s
         return JSON.stringify(
           await toolNchsaaDualTeamChampions(
             args as {
-              year?: number | null
+              year?: number | string | null
               division?: string | null
               school?: string | null
               leaderboard?: boolean | null

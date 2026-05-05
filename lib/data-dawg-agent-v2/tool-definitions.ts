@@ -15,7 +15,7 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
     function: {
       name: "search_athletes",
       description:
-        "Find athletes in RecruitNC by name or high school. Handles natural phrasing ('tell me about…', 'who is…') and minor misspellings server-side. Pass the person's name (or best guess); do not repeat filler words.",
+        "Find athletes in RecruitNC by name or high school (includes alumni / any graduation year — not limited to recent classes). Handles natural phrasing ('tell me about…', 'who is…') and minor misspellings server-side. Pass the person's name (or best guess); do not repeat filler words. If no row matches, the person may not be in the directory (e.g. some coaches or pre-digital-era alumni); do not assume a grad-year cutoff.",
       parameters: {
         type: "object",
         additionalProperties: false,
@@ -34,9 +34,29 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
   {
     type: "function",
     function: {
+      name: "wrestling_cross_store_search",
+      description:
+        "**Use together with `search_athletes` for any named wrestler.** One round trip across all major historical tables (1990s–present): NCHSAA individual state `wrestling_nchsaa_results`, NHSCA nationals `nhsca_placements` + legacy `wrestling_nhsca_results`, Super32 `super32_results`, and NC United national-team roster `nc_united_wrestlers` (NHSCA Duals / UCD roster context — not NCHSAA **state** dual team champions). Returns separate arrays per source so alumni appear even without an `athletes` directory row. For NCHSAA **state dual team** school winners by year use `nchsaa_dual_team_champions`. For a full merged markdown profile when you have a UUID, still call `get_athlete_full_dossier`.",
+      parameters: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          query: {
+            type: "string",
+            description: "Wrestler name and/or school fragment (same style as search_athletes).",
+          },
+          limit: { type: "integer", description: "Max rows per underlying table (default ~32, max 50)." },
+        },
+        required: ["query"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "get_athlete_full_dossier",
       description:
-        "FULL athlete report (legacy Data Dawg format): NCHSAA, duals, Super32, NHSCA, NC United, Dave Schultz, career record — same data path as unified profile. Call AFTER search_athletes whenever answering about a specific athlete by name. Required for 'tell me about [name]'; do not substitute narrative bio text from other fields.",
+        "FULL athlete report (legacy Data Dawg format): NCHSAA, duals, Super32, NHSCA, NC United, Dave Schultz, career record — same data path as unified profile. Call AFTER search_athletes (and use wrestling_cross_store_search for extra historical rows) whenever answering about a specific athlete by name. Required for 'tell me about [name]' when you have their UUID; do not substitute narrative bio text from other fields.",
       parameters: {
         type: "object",
         additionalProperties: false,
@@ -94,7 +114,7 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
     function: {
       name: "nchsaa_dual_team_champions",
       description:
-        "NCHSAA **state** dual team championships (state duals / dual team state champions): winners by year and division from table dual_team_champions. Use for 'show dual team state champions', 'NCHSAA dual team', 'who won state duals', 'dual team winners in [year]', or 'which school has the most dual team titles' (set leaderboard: true). Optional filters: year, division (e.g. '4A', '1A/2A'), school (champion school name fragment). NOT the same as NHSCA national duals — if the user asks only for NHSCA duals, clarify; for NC state duals use this tool.",
+        "NCHSAA **state** dual team championships (state duals / dual team state champions): winners by year and division from table dual_team_champions. Use for 'show dual team state champions', 'NCHSAA dual team', 'who won state duals', **'who won dual team states in 2026'** (always pass year: 2026 as integer), 'dual team winners in [year]', or 'which school has the most dual team titles' (set leaderboard: true). Always call this tool for a specific year—never claim 'no records' without it. Optional filters: year (integer), division (e.g. '4A', '1A/2A'), school (champion school name fragment). Excludes vacated titles, placeholder rows, and tournaments marked not held. NOT the same as NHSCA national duals — if the user asks only for NHSCA duals, clarify; for NC state duals use this tool.",
       parameters: {
         type: "object",
         additionalProperties: false,
