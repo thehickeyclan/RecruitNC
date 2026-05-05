@@ -1,9 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 
 /**
- * Who may edit the fundraising story on `/fundraising/athletes/[slug]` (and PATCH fundraising-bio).
+ * Who may edit the fundraising story on `/fundraising/athletes/[slug]` (and PATCH fundraising-bio),
+ * and who sees private supporter contact rows (email/phone) on that page — never public visitors.
  * - `user_profiles.is_admin` (RecruitNC staff), or
- * - `parent_athlete_links` for that athlete (parent/athlete account linked in admin).
+ * - `parent_athlete_links` for that athlete (parent linked in admin), or
+ * - same user as `user_profiles.athlete_id` when it equals this athlete (athlete’s own login).
  */
 export type FundraisingPageManagerAccess = "none" | "linked"
 
@@ -35,6 +37,16 @@ export async function getFundraisingPageManagerAccess(
   return link ? "linked" : "none"
 }
 
+async function userProfileAthleteId(admin: SupabaseClient, userId: string): Promise<string | null> {
+  const { data, error } = await admin.from("user_profiles").select("athlete_id").eq("user_id", userId).maybeSingle()
+  if (error) {
+    console.warn("[athlete-fundraising-access] user_profiles athlete_id", error.message)
+    return null
+  }
+  const aid = (data as { athlete_id?: string | null } | null)?.athlete_id
+  return typeof aid === "string" && aid.trim() ? aid.trim() : null
+}
+
 export async function userCanManageFundraisingForAthlete(
   admin: SupabaseClient,
   userId: string,
@@ -42,5 +54,7 @@ export async function userCanManageFundraisingForAthlete(
 ): Promise<boolean> {
   if (await userIsRecruitNcAdmin(admin, userId)) return true
   const access = await getFundraisingPageManagerAccess(admin, userId, athleteId)
-  return access !== "none"
+  if (access !== "none") return true
+  const selfAid = await userProfileAthleteId(admin, userId)
+  return !!(selfAid && selfAid === athleteId)
 }

@@ -1,0 +1,18 @@
+-- Persist “thanked this supporter” checklist for fundraising managers (parent link, athlete self-login, admin).
+-- Ledger keys match Stripe checkout session ids (cs_…), PaymentIntent ids (pi_…), or rare legacy fallbacks from lib/fundraising/athlete-public-stats.ts.
+-- Run once in Supabase SQL Editor.
+
+CREATE TABLE IF NOT EXISTS public.fundraising_supporter_thank_you_ack (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  athlete_id uuid NOT NULL REFERENCES public.athletes(id) ON DELETE CASCADE,
+  ledger_key text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  created_by_user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  UNIQUE (athlete_id, ledger_key),
+  CONSTRAINT fundraising_supporter_thank_you_ack_ledger_key_len CHECK (char_length(ledger_key) <= 512)
+);
+
+CREATE INDEX IF NOT EXISTS fundraising_supporter_thank_you_ack_athlete_idx
+  ON public.fundraising_supporter_thank_you_ack (athlete_id);
+
+COMMENT ON TABLE public.fundraising_supporter_thank_you_ack IS 'Private thank-you tracking per Spartan gift row; API-only via service role after manager auth check.';

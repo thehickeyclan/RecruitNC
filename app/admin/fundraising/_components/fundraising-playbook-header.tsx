@@ -26,33 +26,44 @@ export function FundraisingPlaybookHeader({
             className="text-muted-foreground text-xs font-semibold uppercase tracking-[0.12em]"
             style={{ color: brand.navy }}
           >
-            NC United · Fundraising playbook
+            NC United · Fundraising (admin)
           </p>
           <div className="flex flex-wrap items-center gap-3">
             <BookOpen className="h-8 w-8 shrink-0 md:h-9 md:w-9" style={{ color: brand.crimson }} aria-hidden />
             <div>
               <h1 className="text-2xl font-bold tracking-tight md:text-3xl" style={{ color: brand.navy }}>
-                Operations
+                Match gifts to kids and families
               </h1>
-              <p className="text-muted-foreground mt-0.5 text-sm font-medium md:text-base">{campaign.campaignDisplayName}</p>
+              <p className="text-muted-foreground mt-1 text-sm font-medium md:text-[15px]">{campaign.campaignDisplayName}</p>
+              <p className="text-muted-foreground mt-1 max-w-2xl text-sm leading-relaxed">
+                Donors pay with a wrestler code (<span className="font-medium text-foreground">NCU-…</span>). Your job is to connect that code to the right athlete and parent account so{" "}
+                <strong className="font-medium text-foreground">Profile → Fundraise</strong> shows correct totals. Public donor pages are optional extras.
+              </p>
             </div>
           </div>
+
+          {campaign.playbookOperationalBanner ? (
+            <div
+              role="status"
+              className="max-w-3xl rounded-lg border border-amber-500/45 bg-amber-50 px-3 py-2.5 text-sm leading-snug text-amber-950 dark:border-amber-900/50 dark:bg-amber-950/35 dark:text-amber-50"
+            >
+              {campaign.playbookOperationalBanner}
+            </div>
+          ) : null}
+
           <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">
-            Same flow for every drive: profiles and NCU codes → parent sees Fundraise → each payment credits the right athlete.
-            Load data, use the tiles, fix each section, refresh.
+            Numbers below use Stripe campaign{" "}
+            <code className="rounded bg-muted px-1 font-mono text-[11px]">{campaign.stripeCampaignSlug}</code>
+            , last <strong className="font-medium text-foreground">{campaign.defaultLookbackDays} days</strong>, for reporting. Family-facing balances still follow how each code is pinned to an athlete.
           </p>
           <p className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
             <span>
-              Window: <strong className="text-foreground font-medium">{campaign.defaultLookbackDays} days</strong>
+              Reporting window:{" "}
+              <strong className="text-foreground font-medium">{campaign.defaultLookbackDays} days</strong>
             </span>
             <span className="text-muted-foreground/60">·</span>
             <span>
-              Stripe{" "}
-              <code className="rounded bg-muted px-1 font-mono text-[11px]">{campaign.stripeCampaignSlug}</code>
-            </span>
-            <span className="text-muted-foreground/60">·</span>
-            <span>
-              Public{" "}
+              Legacy public page{" "}
               <HardLink
                 href={campaign.publicPagePath}
                 className="text-primary font-mono text-[11px] underline-offset-4 hover:underline"
@@ -73,6 +84,10 @@ export function FundraisingPlaybookHeader({
               className="text-primary font-medium underline-offset-4 hover:underline"
             >
               Public leaderboard
+            </HardLink>
+            <span className="text-muted-foreground/60">·</span>
+            <HardLink href="/fundraising/give" className="text-primary font-medium underline-offset-4 hover:underline">
+              Fundraising hub / give
             </HardLink>
           </p>
         </div>

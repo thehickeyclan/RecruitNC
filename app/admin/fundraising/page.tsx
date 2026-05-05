@@ -25,6 +25,8 @@ import { cn } from "@/lib/utils"
 import { publicAthleteCreditLabel } from "@/lib/spartan-fayetteville-stripe"
 import { SpartanFundraisingVisuals } from "@/components/admin/spartan-fundraising-visuals"
 import {
+  AlertTriangle,
+  ChevronDown,
   ClipboardCopy,
   Download,
   Filter,
@@ -37,6 +39,7 @@ import {
   UserRoundX,
   UserCircle,
   Users,
+  Wallet,
   Wrench,
 } from "lucide-react"
 import type { FundraisingAthleteMatrixPayload } from "@/lib/admin-fundraising-athlete-matrix"
@@ -50,6 +53,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { firstNameFromDonorName } from "@/lib/email/ncu-donation-acknowledgment"
 
 type SpartanDonationRow = {
@@ -173,6 +177,28 @@ function sortParentCoverageRows(rows: SpartanParentCoverageRow[]): SpartanParent
     if (pa !== pb) return pa - pb
     return b.totalCents - a.totalCents
   })
+}
+
+/** Open reimbursement requests (pending / review / approved awaiting payout), keyed by `athletes.id`. */
+function rollupOpenExpenseRequestsByAthleteId(
+  requests: { athlete_id: string; status: string; amount_cents: number; amount_approved_cents: number | null }[],
+): Record<string, { pendingReviewCents: number; awaitingPayoutCents: number; openCount: number }> {
+  const out: Record<string, { pendingReviewCents: number; awaitingPayoutCents: number; openCount: number }> = {}
+  for (const r of requests) {
+    const st = r.status
+    if (st === "paid" || st === "rejected") continue
+    const id = typeof r.athlete_id === "string" ? r.athlete_id.trim() : ""
+    if (!id) continue
+    const cur = out[id] ?? { pendingReviewCents: 0, awaitingPayoutCents: 0, openCount: 0 }
+    cur.openCount += 1
+    if (st === "pending" || st === "under_review") {
+      cur.pendingReviewCents += typeof r.amount_cents === "number" ? r.amount_cents : 0
+    } else if (st === "approved") {
+      cur.awaitingPayoutCents += r.amount_approved_cents ?? r.amount_cents ?? 0
+    }
+    out[id] = cur
+  }
+  return out
 }
 
 function scrollToFundraisingSection(elementId: string) {
@@ -313,6 +339,14 @@ export default function AdminFundraisingPage() {
   const [profilePrimaryCode, setProfilePrimaryCode] = useState("")
   const [profileActive, setProfileActive] = useState(true)
   const [profileSaveBusy, setProfileSaveBusy] = useState(false)
+  const [walletGuideOpen, setWalletGuideOpen] = useState(false)
+
+  const [kidLedgerFilter, setKidLedgerFilter] = useState("")
+  const [expenseRollupByAthleteId, setExpenseRollupByAthleteId] = useState<
+    Record<string, { pendingReviewCents: number; awaitingPayoutCents: number; openCount: number }>
+  >({})
+  const [expenseRollupLoading, setExpenseRollupLoading] = useState(false)
+  const [expenseRollupError, setExpenseRollupError] = useState<string | null>(null)
 
   const parentCoverageDisplayRows = useMemo(() => {
     if (!parentCoverage) return []
@@ -503,6 +537,82 @@ export default function AdminFundraisingPage() {
     void loadAthleteMatrix()
   }, [loadAthleteMatrix])
 
+  const loadDonations = useCallback(async () => {
+    setDonationsLoading(true)
+    setDonationsError(null)
+    try {
+      const days = campaign.defaultLookbackDays
+      const slug = encodeURIComponent(campaign.stripeCampaignSlug)
+      const res = await fetch(
+        `/api/admin/spartan-donations?days=${days}&includeParentCoverage=1&campaign=${slug}`,
+        { cache: "no-store" },
+      )
+      const j = (await res.json()) as {
+        error?: string
+        donations?: SpartanDonationRow[]
+        byAthlete?: SpartanAthleteAggregate[]
+        generalTotalCents?: number
+        reimbursementsPaidTotalCents?: number
+        grossSessionTotalCents?: number
+        netAfterReimbursementsCents?: number
+        parentCoverage?: { rows: SpartanParentCoverageRow[]; summary: { withFunds: number; needsAttention: number; ok: number } }
+      }
+      if (!res.ok) throw new Error(j.error || "Could not load donations")
+      setDonations(j.donations ?? [])
+      setByAthlete(j.byAthlete ?? [])
+      setGeneralTotalCents(typeof j.generalTotalCents === "number" ? j.generalTotalCents : 0)
+      setReimbursementsPaidTotalCents(typeof j.reimbursementsPaidTotalCents === "number" ? j.reimbursementsPaidTotalCents : 0)
+      setGrossSessionTotalCents(typeof j.grossSessionTotalCents === "number" ? j.grossSessionTotalCents : 0)
+      setNetAfterReimbursementsCents(typeof j.netAfterReimbursementsCents === "number" ? j.netAfterReimbursementsCents : 0)
+      setParentCoverage(j.parentCoverage ?? null)
+      void fetchTeeRollup()
+      void loadAthleteMatrix()
+    } catch (e) {
+      setDonationsError(e instanceof Error ? e.message : "Load failed")
+      setDonations(null)
+      setByAthlete(null)
+      setParentCoverage(null)
+      setGeneralTotalCents(0)
+      setReimbursementsPaidTotalCents(0)
+      setGrossSessionTotalCents(0)
+      setNetAfterReimbursementsCents(0)
+    } finally {
+      setDonationsLoading(false)
+    }
+  }, [campaign.defaultLookbackDays, campaign.stripeCampaignSlug, fetchTeeRollup, loadAthleteMatrix])
+
+  useEffect(() => {
+    void loadDonations()
+  }, [loadDonations])
+
+  const loadExpenseRollup = useCallback(async () => {
+    setExpenseRollupLoading(true)
+    setExpenseRollupError(null)
+    try {
+      const res = await fetch("/api/admin/expense-requests", { credentials: "include" })
+      const j = (await res.json()) as {
+        error?: string
+        requests?: {
+          athlete_id: string
+          status: string
+          amount_cents: number
+          amount_approved_cents: number | null
+        }[]
+      }
+      if (!res.ok) throw new Error(typeof j.error === "string" ? j.error : "Could not load reimbursement queue")
+      setExpenseRollupByAthleteId(rollupOpenExpenseRequestsByAthleteId(j.requests ?? []))
+    } catch (e) {
+      setExpenseRollupError(e instanceof Error ? e.message : "Reimbursement queue failed")
+      setExpenseRollupByAthleteId({})
+    } finally {
+      setExpenseRollupLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    void loadExpenseRollup()
+  }, [loadExpenseRollup])
+
   useEffect(() => {
     try {
       const lk = adminFundraisingLeaderboardStorageKey(campaign.adminContextKey)
@@ -567,50 +677,6 @@ export default function AdminFundraisingPage() {
     window.requestAnimationFrame(() => {
       document.getElementById("admin-fundraising-stripe-donations")?.scrollIntoView({ behavior: "smooth", block: "start" })
     })
-  }
-
-  const loadDonations = async () => {
-    setDonationsLoading(true)
-    setDonationsError(null)
-    try {
-      const days = campaign.defaultLookbackDays
-      const slug = encodeURIComponent(campaign.stripeCampaignSlug)
-      const res = await fetch(
-        `/api/admin/spartan-donations?days=${days}&includeParentCoverage=1&campaign=${slug}`,
-        { cache: "no-store" },
-      )
-      const j = (await res.json()) as {
-        error?: string
-        donations?: SpartanDonationRow[]
-        byAthlete?: SpartanAthleteAggregate[]
-        generalTotalCents?: number
-        reimbursementsPaidTotalCents?: number
-        grossSessionTotalCents?: number
-        netAfterReimbursementsCents?: number
-        parentCoverage?: { rows: SpartanParentCoverageRow[]; summary: { withFunds: number; needsAttention: number; ok: number } }
-      }
-      if (!res.ok) throw new Error(j.error || "Could not load donations")
-      setDonations(j.donations ?? [])
-      setByAthlete(j.byAthlete ?? [])
-      setGeneralTotalCents(typeof j.generalTotalCents === "number" ? j.generalTotalCents : 0)
-      setReimbursementsPaidTotalCents(typeof j.reimbursementsPaidTotalCents === "number" ? j.reimbursementsPaidTotalCents : 0)
-      setGrossSessionTotalCents(typeof j.grossSessionTotalCents === "number" ? j.grossSessionTotalCents : 0)
-      setNetAfterReimbursementsCents(typeof j.netAfterReimbursementsCents === "number" ? j.netAfterReimbursementsCents : 0)
-      setParentCoverage(j.parentCoverage ?? null)
-      void fetchTeeRollup()
-      void loadAthleteMatrix()
-    } catch (e) {
-      setDonationsError(e instanceof Error ? e.message : "Load failed")
-      setDonations(null)
-      setByAthlete(null)
-      setParentCoverage(null)
-      setGeneralTotalCents(0)
-      setReimbursementsPaidTotalCents(0)
-      setGrossSessionTotalCents(0)
-      setNetAfterReimbursementsCents(0)
-    } finally {
-      setDonationsLoading(false)
-    }
   }
 
   const pinGapToAthleteProfile = async (ncuCode: string) => {
@@ -997,7 +1063,80 @@ export default function AdminFundraisingPage() {
     )
   }, [byAthlete, athleteFilter])
 
-  const remediationDashboardReady = donations !== null && parentCoverage !== null
+  const fundraiserCodeToAthleteId = useMemo(() => {
+    const m = new Map<string, string>()
+    for (const row of parentCoverage?.rows ?? []) {
+      const code = row.athleteCode?.trim().toUpperCase()
+      const aid = row.athleteId?.trim()
+      if (code && aid) m.set(code, aid)
+    }
+    for (const row of athleteMatrix?.rows ?? []) {
+      const code = row.code.trim().toUpperCase()
+      if (row.pinnedAthleteId) m.set(code, row.pinnedAthleteId)
+    }
+    return m
+  }, [parentCoverage, athleteMatrix])
+
+  const aggByAthleteCode = useMemo(() => {
+    const map = new Map<string, SpartanAthleteAggregate>()
+    for (const a of byAthlete ?? []) {
+      map.set(a.athleteCode.trim().toUpperCase(), a)
+    }
+    return map
+  }, [byAthlete])
+
+  const kidLedgerRows = useMemo(() => {
+    const matrixRows = athleteMatrix?.rows ?? []
+    const codes = new Set<string>()
+    for (const r of matrixRows) codes.add(r.code.trim().toUpperCase())
+    for (const k of aggByAthleteCode.keys()) codes.add(k)
+
+    const rows = [...codes].map((code) => {
+      const mat = matrixRows.find((x) => x.code.trim().toUpperCase() === code)
+      const agg = aggByAthleteCode.get(code)
+      const raised = agg?.totalCents ?? 0
+      const reimbPaid = agg?.reimbursementsPaidCents ?? 0
+      const net = agg?.netAfterReimbursementsCents ?? raised - reimbPaid
+      const guild = agg?.guildAllocationsCents ?? 0
+      const balance = net - guild
+      const displayName = mat ? matrixRowDisplayName(mat) : (agg?.athleteDisplayName ?? "").trim() || code
+      const athleteId = fundraiserCodeToAthleteId.get(code) ?? mat?.pinnedAthleteId ?? null
+      const exp = athleteId ? expenseRollupByAthleteId[athleteId] : undefined
+      const pendingReviewCents = exp?.pendingReviewCents ?? 0
+      const awaitingPayoutCents = exp?.awaitingPayoutCents ?? 0
+      const openReimbCents = pendingReviewCents + awaitingPayoutCents
+      return {
+        code,
+        displayName,
+        raised,
+        reimbPaid,
+        guild,
+        balance,
+        athleteId,
+        openReimbCents,
+        openReimbCount: exp?.openCount ?? 0,
+        pendingReviewCents,
+        awaitingPayoutCents,
+      }
+    })
+
+    rows.sort((a, b) => b.raised - a.raised || a.displayName.localeCompare(b.displayName))
+    return rows
+  }, [aggByAthleteCode, athleteMatrix, expenseRollupByAthleteId, fundraiserCodeToAthleteId])
+
+  const filteredKidLedgerRows = useMemo(() => {
+    const q = kidLedgerFilter.trim().toLowerCase()
+    if (!q) return kidLedgerRows
+    return kidLedgerRows.filter(
+      (r) => r.displayName.toLowerCase().includes(q) || r.code.toLowerCase().includes(q),
+    )
+  }, [kidLedgerRows, kidLedgerFilter])
+
+  const kidLedgerOpenReimbCount = useMemo(
+    () => kidLedgerRows.filter((r) => r.openReimbCount > 0).length,
+    [kidLedgerRows],
+  )
+
   const dash = fundraisingDashboardMetrics
 
   const goDirectoryGapTable = () => {
@@ -1219,11 +1358,57 @@ export default function AdminFundraisingPage() {
 
         <AdminHeader />
 
+        <Card id="admin-fundraising-start-here" className="mt-6 overflow-hidden border-[#003366]/25 bg-white shadow-sm">
+          <div
+            className="h-1"
+            style={{ background: `linear-gradient(to right, ${brand.navy}, ${brand.crimson})` }}
+            aria-hidden
+          />
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg text-[#003366] dark:text-blue-100">Start here (new teammate)</CardTitle>
+            <CardDescription className="text-base leading-relaxed text-foreground/85">
+              No prior context needed. When someone says money is not showing for their kid, walk down this list in order.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-0 text-sm leading-relaxed">
+            <ol className="text-muted-foreground list-decimal space-y-2.5 pl-5 marker:font-semibold marker:text-[#003366]">
+              <li>
+                <span className="font-medium text-foreground">Gifts use a wrestler code</span> (looks like{" "}
+                <span className="font-mono text-xs text-foreground">NCU-LASTNAME-28</span>). Stripe stores that on each payment.
+              </li>
+              <li>
+                <span className="font-medium text-foreground">Pin the code to the athlete</span> — search them in{" "}
+                <HardLink href="/admin/athletes" className="text-primary font-medium underline-offset-2 hover:underline">
+                  Athletes admin
+                </HardLink>
+                , copy their long ID, paste under Directory gaps (Pin). Without Pin, money never attaches to the kid&apos;s wallet.
+              </li>
+              <li>
+                <span className="font-medium text-foreground">Optional:</span> turn on a public donor page (see section Donor-facing athlete profiles). Families do not need this to see balances.
+              </li>
+              <li>
+                <span className="font-medium text-foreground">Link the parent account</span> if Mom/Dad should see Profile → Fundraise (section Parent coverage).
+              </li>
+              <li>
+                <span className="font-medium text-foreground">Use Kids ledger</span> as your cheat sheet: raised vs paid back vs what&apos;s left + flags for open reimbursement requests.
+              </li>
+            </ol>
+            <div className="flex flex-wrap gap-2 border-t border-border pt-3">
+              <Button type="button" variant="outline" size="sm" onClick={() => scrollToFundraisingSection("admin-fundraising-quick-ops")}>
+                Jump to 3-step setup
+              </Button>
+              <Button type="button" variant="outline" size="sm" onClick={() => scrollToFundraisingSection("admin-fundraising-kids-ledger")}>
+                Jump to Kids ledger
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         {FUNDRAISING_CAMPAIGNS.length > 1 ? (
           <div
             role="tablist"
             aria-label="Fundraising campaigns"
-            className="mt-4 flex flex-wrap gap-2 rounded-xl border border-[#003366]/12 bg-white p-2 shadow-sm"
+            className="mt-6 flex flex-wrap gap-2 rounded-xl border border-[#003366]/12 bg-white p-2 shadow-sm"
           >
             {FUNDRAISING_CAMPAIGNS.map((c) => (
               <button
@@ -1245,47 +1430,436 @@ export default function AdminFundraisingPage() {
           </div>
         ) : null}
 
-        <div className={FUNDRAISING_CAMPAIGNS.length > 1 ? "mt-6 space-y-6" : "mt-8 space-y-6"}>
-            <Card className="overflow-hidden border-[#003366]/20 bg-white shadow-sm">
+        <div className="mt-6 space-y-6">
+            <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+              <Card id="admin-fundraising-campaign-overview" className="overflow-hidden border-[#003366]/20 bg-white shadow-sm">
+                <div
+                  className="h-1"
+                  style={{ background: `linear-gradient(to right, ${brand.navy}, ${brand.crimson})` }}
+                  aria-hidden
+                />
+                <CardHeader className="pb-2">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <CardTitle className="text-lg">Numbers at a glance</CardTitle>
+                      <CardDescription className="mt-1 max-w-xl leading-snug">
+                        Pulled from Stripe for <strong className="font-medium text-foreground">{campaign.tabLabel}</strong>, last{" "}
+                        {campaign.defaultLookbackDays} days. Updates when you open the page; press Refresh if you fixed something in another tab.
+                      </CardDescription>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="shrink-0 gap-2"
+                      onClick={() => {
+                        void loadDonations()
+                        void loadExpenseRollup()
+                      }}
+                      disabled={donationsLoading}
+                    >
+                      <RefreshCw className={cn("h-4 w-4 shrink-0", donationsLoading && "animate-spin")} aria-hidden />
+                      Refresh
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4 pt-0">
+                  {donationsLoading && donations === null ? (
+                    <p className="text-muted-foreground text-sm">Syncing Stripe payments and parent coverage…</p>
+                  ) : null}
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    <div className="rounded-lg border bg-muted/30 px-3 py-2">
+                      <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">Checkouts</p>
+                      <p className="mt-1 text-xs text-muted-foreground">rows</p>
+                      <p className="mt-0.5 text-xl font-bold tabular-nums">{donations !== null ? ackStats.total : "—"}</p>
+                    </div>
+                    <div className="rounded-lg border bg-muted/30 px-3 py-2">
+                      <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">Total charged</p>
+                      <p className="mt-1 text-xs text-muted-foreground">all gifts</p>
+                      <p className="mt-0.5 text-xl font-bold tabular-nums leading-tight">
+                        {donations !== null ? formatMoney(grossSessionTotalCents, "usd") : "—"}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border bg-muted/30 px-3 py-2">
+                      <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">After paid-back</p>
+                      <p className="mt-1 text-xs text-muted-foreground">reimbursements</p>
+                      <p className="mt-0.5 text-xl font-bold tabular-nums leading-tight">
+                        {donations !== null ? formatMoney(netAfterReimbursementsCents, "usd") : "—"}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border bg-muted/30 px-3 py-2">
+                      <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">Codes w/ money</p>
+                      <p className="mt-1 text-xs text-muted-foreground">wrestlers</p>
+                      <p className="mt-0.5 text-xl font-bold tabular-nums">{parentCoverage ? parentCoverage.summary.withFunds : "—"}</p>
+                    </div>
+                    <div className="rounded-lg border bg-muted/30 px-3 py-2">
+                      <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">Still broken</p>
+                      <p className="mt-1 text-xs text-muted-foreground">need fixes</p>
+                      <p className="mt-0.5 text-xl font-bold tabular-nums">{parentCoverage ? parentCoverage.summary.needsAttention : "—"}</p>
+                    </div>
+                    <div className="rounded-lg border bg-muted/30 px-3 py-2">
+                      <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">Thank-you emails</p>
+                      <p className="mt-1 text-xs text-muted-foreground">not sent yet</p>
+                      <p className="mt-0.5 text-sm font-semibold tabular-nums leading-snug">
+                        {donations !== null ? `${ackStats.unsent} unsent` : "—"}
+                      </p>
+                    </div>
+                  </div>
+                  {dash ? (
+                    <p className="text-muted-foreground text-xs leading-snug">
+                      Tap the colored tiles further down to jump to each fix list —{" "}
+                      <span className="font-medium tabular-nums text-foreground">{dash.offDirectoryCodes}</span> payments on codes we
+                      haven&apos;t matched to a kid yet ·{" "}
+                      <span className="font-medium tabular-nums text-foreground">{dash.rosterOnlyKids}</span> roster placeholders (no real athlete row) ·{" "}
+                      <span className="font-medium tabular-nums text-foreground">{dash.needsParentKids}</span> kids still need a parent login linked ·{" "}
+                      <span className="font-medium tabular-nums text-foreground">{dash.orphanedCheckouts}</span> checkouts stuck on mystery codes.
+                    </p>
+                  ) : null}
+                  {donationsError ? (
+                    <p className="text-destructive text-sm" role="alert">
+                      {donationsError}
+                    </p>
+                  ) : null}
+                </CardContent>
+              </Card>
+
+              <Card id="admin-fundraising-quick-ops" className="overflow-hidden border-[#003366]/20 bg-white shadow-sm">
+                <div
+                  className="h-1"
+                  style={{ background: `linear-gradient(to right, ${brand.navy}, ${brand.crimson})` }}
+                  aria-hidden
+                />
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">3-step setup</CardTitle>
+                  <CardDescription className="leading-relaxed">
+                    Search the wrestler in{" "}
+                    <HardLink href="/admin/athletes" className="text-primary font-medium underline-offset-2 hover:underline">
+                      Athletes admin
+                    </HardLink>
+                    , copy their <strong className="font-medium text-foreground">ID</strong> (long text with dashes). Then do these in order on this page.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-2 pt-0">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="h-auto justify-start gap-3 py-3 text-left"
+                    onClick={() => scrollToFundraisingSection("admin-fundraising-directory-gaps")}
+                  >
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#003366]/12 text-sm font-bold text-[#003366]">
+                      1
+                    </span>
+                    <span>
+                      <span className="font-semibold text-foreground">Pin code to athlete</span>
+                      <span className="text-muted-foreground block text-xs font-normal leading-snug">
+                        Tell the system which wrestler owns this NCU checkout code (Directory gaps).
+                      </span>
+                    </span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="h-auto justify-start gap-3 py-3 text-left"
+                    onClick={() => scrollToFundraisingSection("admin-fundraising-athlete-profiles")}
+                  >
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#003366]/12 text-sm font-bold text-[#003366]">
+                      2
+                    </span>
+                    <span>
+                      <span className="font-semibold text-foreground">Turn on a public gift page (optional)</span>
+                      <span className="text-muted-foreground block text-xs font-normal leading-snug">
+                        Gives donors a nice link — not required for Profile → Fundraise totals.
+                      </span>
+                    </span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="h-auto justify-start gap-3 py-3 text-left"
+                    onClick={() => scrollToFundraisingSection("admin-fundraising-parent-coverage")}
+                  >
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#003366]/12 text-sm font-bold text-[#003366]">
+                      3
+                    </span>
+                    <span>
+                      <span className="font-semibold text-foreground">Link parent</span>
+                      <span className="text-muted-foreground block text-xs font-normal leading-snug">
+                        So a parent login can open Profile → Fundraise for this athlete (Parent coverage).
+                      </span>
+                    </span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-1 gap-2 self-start"
+                    onClick={() => scrollToFundraisingSection("admin-fundraising-kids-ledger")}
+                  >
+                    View money table (Kids ledger)
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 self-start"
+                    onClick={() => scrollToFundraisingSection("fundraising-athlete-wiring-matrix")}
+                  >
+                    <LayoutGrid className="h-4 w-4 shrink-0" aria-hidden />
+                    Wiring matrix (full roster codes)
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card id="admin-fundraising-kids-ledger" className="overflow-hidden border-[#003366]/20 bg-white shadow-sm">
               <div
                 className="h-1"
                 style={{ background: `linear-gradient(to right, ${brand.navy}, ${brand.crimson})` }}
                 aria-hidden
               />
-              <CardContent className="flex flex-col gap-4 py-5">
-                <div className="flex flex-wrap items-center gap-4">
-                  <Button
-                    type="button"
-                    size="lg"
-                    className="gap-2 bg-[#003366] text-white shadow-sm hover:bg-[#002952]"
-                    onClick={() => void loadDonations()}
-                    disabled={donationsLoading}
-                  >
-                    <RefreshCw className={`h-5 w-5 shrink-0 ${donationsLoading ? "animate-spin" : ""}`} />
-                    {donations === null ? "Load data" : "Refresh"}
-                  </Button>
-                  {remediationDashboardReady ? (
-                    <p className="text-muted-foreground max-w-xl text-sm leading-snug">
-                      <span className="font-semibold tabular-nums" style={{ color: brand.navy }}>
-                        {ackStats.total}
-                      </span>{" "}
-                      payments ·{" "}
-                      <span className="font-semibold tabular-nums" style={{ color: brand.navy }}>
-                        {parentCoverage!.summary.withFunds}
-                      </span>{" "}
-                      codes with money. Tiles = work queue — click to jump.
+              <CardHeader className="space-y-4 pb-3">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="min-w-0 space-y-2">
+                    <CardTitle className="text-lg">Kids ledger</CardTitle>
+                    <div className="flex flex-wrap items-center gap-2 text-xs">
+                      {kidLedgerOpenReimbCount > 0 ? (
+                        <Badge variant="outline" className="gap-1 border-amber-500/60 font-normal text-amber-950 dark:text-amber-50">
+                          <AlertTriangle className="h-3 w-3 shrink-0" aria-hidden />
+                          {kidLedgerOpenReimbCount} wrestler{kidLedgerOpenReimbCount === 1 ? "" : "s"} still have open reimbursement requests
+                        </Badge>
+                      ) : expenseRollupLoading ? (
+                        <span className="text-muted-foreground">Loading reimbursement queue…</span>
+                      ) : (
+                        <span className="text-muted-foreground">No open reimbursement requests right now.</span>
+                      )}
+                      {expenseRollupError ? (
+                        <span className="text-destructive font-medium" role="alert">
+                          {expenseRollupError}
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="text-muted-foreground max-w-3xl text-sm leading-relaxed">
+                      One row per wrestler code on our roster (plus any code that got a gift in this reporting window). Use it to answer: how much came in, how much went back to families, and what reimbursement paperwork is still open.
                     </p>
-                  ) : (
-                    <p className="text-muted-foreground max-w-md text-sm">Fetches Stripe + link status in one step.</p>
-                  )}
+                    <details className="rounded-lg border border-[#003366]/15 bg-slate-50/90 px-3 py-2 text-sm dark:bg-slate-950/40">
+                      <summary className="cursor-pointer font-medium text-[#003366] outline-none dark:text-blue-300">
+                        What each column means
+                      </summary>
+                      <ul className="text-muted-foreground mt-3 list-disc space-y-2 pl-5 leading-snug">
+                        <li>
+                          <strong className="font-medium text-foreground">Raised</strong> — gifts credited to this code in the same{" "}
+                          {campaign.defaultLookbackDays}-day window as the numbers above.
+                        </li>
+                        <li>
+                          <strong className="font-medium text-foreground">Paid back</strong> — reimbursements already marked{" "}
+                          <em>paid</em> in that window (cash sent to the family).
+                        </li>
+                        <li>
+                          <strong className="font-medium text-foreground">Training hold</strong> — NC United Guild / training credits booked against this wrestler (counts down what&apos;s still available on Profile → Fundraise).
+                        </li>
+                        <li>
+                          <strong className="font-medium text-foreground">Balance</strong> — approximate amount still available after paid backs and training holds (same idea families see on Profile → Fundraise).
+                        </li>
+                        <li>
+                          <strong className="font-medium text-foreground">Open requests</strong> — reimbursement paperwork still waiting on staff or payout; details in{" "}
+                          <HardLink href="/admin/expense-requests" className="text-primary font-medium underline-offset-2 hover:underline">
+                            Expense requests
+                          </HardLink>
+                          .
+                        </li>
+                      </ul>
+                    </details>
+                  </div>
+                  <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
+                    <Button type="button" variant="outline" size="sm" className="gap-2" onClick={() => void loadExpenseRollup()} disabled={expenseRollupLoading}>
+                      <RefreshCw className={cn("h-4 w-4", expenseRollupLoading && "animate-spin")} aria-hidden />
+                      Refresh requests
+                    </Button>
+                  </div>
                 </div>
-                {donationsError ? (
-                  <p className="text-destructive text-sm" role="alert">
-                    {donationsError}
-                  </p>
+                <div className="grid min-w-0 gap-1.5 max-w-md">
+                  <Label htmlFor="kid-ledger-filter">Search by kid name or code</Label>
+                  <Input
+                    id="kid-ledger-filter"
+                    placeholder="Name or NCU-…"
+                    value={kidLedgerFilter}
+                    onChange={(e) => setKidLedgerFilter(e.target.value)}
+                    autoComplete="off"
+                  />
+                  <p className="text-muted-foreground text-xs">Rows sort by most raised (gift dollars first).</p>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3 pt-0">
+                {donationsLoading && donations === null ? (
+                  <p className="text-muted-foreground text-sm">Loading gift totals for this campaign window…</p>
                 ) : null}
+                {filteredKidLedgerRows.length === 0 ? (
+                  <p className="text-muted-foreground text-sm">
+                    {kidLedgerRows.length === 0
+                      ? "No roster codes yet — wait for the wiring matrix to load, or refresh."
+                      : "No rows match your search."}
+                  </p>
+                ) : (
+                  <div className="overflow-x-auto rounded-lg border shadow-sm">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="min-w-[160px] whitespace-nowrap">Kid</TableHead>
+                          <TableHead className="whitespace-nowrap font-mono text-xs">NCU</TableHead>
+                          <TableHead className="text-right whitespace-nowrap">Raised</TableHead>
+                          <TableHead className="text-right whitespace-nowrap">Paid back</TableHead>
+                          <TableHead className="text-right whitespace-nowrap">Training hold</TableHead>
+                          <TableHead className="text-right whitespace-nowrap">Balance</TableHead>
+                          <TableHead className="min-w-[140px] whitespace-nowrap">Open requests</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredKidLedgerRows.map((r) => (
+                          <TableRow key={r.code}>
+                            <TableCell className="text-sm">
+                              <div className="font-medium text-foreground">{r.displayName}</div>
+                              {!r.athleteId ? (
+                                <div className="text-muted-foreground mt-0.5 text-[11px] leading-snug">
+                                  Pin this code first — open requests won&apos;t attach without an athlete ID.
+                                </div>
+                              ) : null}
+                            </TableCell>
+                            <TableCell className="font-mono text-xs">{r.code}</TableCell>
+                            <TableCell className="text-right font-medium tabular-nums">{formatMoney(r.raised, "usd")}</TableCell>
+                            <TableCell className="text-right tabular-nums text-muted-foreground">
+                              {r.reimbPaid > 0 ? formatMoney(r.reimbPaid, "usd") : "—"}
+                            </TableCell>
+                            <TableCell className="text-right tabular-nums text-muted-foreground">
+                              {r.guild > 0 ? formatMoney(r.guild, "usd") : "—"}
+                            </TableCell>
+                            <TableCell
+                              className={cn(
+                                "text-right font-semibold tabular-nums",
+                                r.balance < 0 ? "text-destructive" : "text-green-800 dark:text-green-400",
+                              )}
+                            >
+                              {formatMoney(r.balance, "usd")}
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              {r.openReimbCount > 0 ? (
+                                <span
+                                  className="inline-flex items-center gap-1.5"
+                                  title={`${r.openReimbCount} open request(s): ${formatMoney(r.pendingReviewCents, "usd")} in review · ${formatMoney(r.awaitingPayoutCents, "usd")} approved / awaiting payout`}
+                                >
+                                  <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
+                                  <span className="font-medium tabular-nums">{formatMoney(r.openReimbCents, "usd")}</span>
+                                  <span className="text-muted-foreground text-xs">({r.openReimbCount})</span>
+                                </span>
+                              ) : (
+                                <span className="text-muted-foreground">—</span>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
               </CardContent>
             </Card>
+
+            <Collapsible open={walletGuideOpen} onOpenChange={setWalletGuideOpen}>
+              <Card id="admin-fundraising-family-wallet" className="overflow-hidden border-[#003366]/25 bg-white shadow-sm">
+                <div
+                  className="h-1"
+                  style={{ background: `linear-gradient(to right, ${brand.navy}, ${brand.crimson})` }}
+                  aria-hidden
+                />
+                <CollapsibleTrigger asChild>
+                  <button
+                    type="button"
+                    className="flex w-full items-center gap-3 px-6 py-4 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <Wallet className="h-5 w-5 shrink-0 text-[#003366]" aria-hidden />
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-semibold text-foreground">Extra detail: who sees Fundraise balances?</span>
+                      <span className="text-muted-foreground mt-0.5 block text-xs leading-snug">
+                        Expand only if you are coaching someone — athlete login vs parent link vs donor page.
+                      </span>
+                    </span>
+                    <ChevronDown
+                      className={cn("h-5 w-5 shrink-0 text-muted-foreground transition-transform", walletGuideOpen && "rotate-180")}
+                      aria-hidden
+                    />
+                  </button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="space-y-4 border-t pt-4 text-sm leading-relaxed">
+                    <ul className="text-muted-foreground list-none space-y-3 p-0">
+                      <li className="flex gap-2">
+                        <span className="mt-0.5 font-bold text-foreground">1.</span>
+                        <span>
+                          <strong className="text-foreground">Athlete on their own RecruitNC login:</strong>{" "}
+                          <code className="rounded bg-muted px-1 text-[11px]">user_profiles.athlete_id</code> must equal their directory{" "}
+                          <code className="rounded bg-muted px-1 text-[11px]">athletes.id</code> (claim / confirm profile, or admin fixes the profile row).
+                          Then Fundraise lists that wrestler automatically — no parent row required.
+                        </span>
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="mt-0.5 font-bold text-foreground">2.</span>
+                        <span>
+                          <strong className="text-foreground">Parent account:</strong> add{" "}
+                          <code className="rounded bg-muted px-1 text-[11px]">parent_athlete_links</code> for each kid (Family &amp; athletes on{" "}
+                          <HardLink href="/profile" className="text-primary font-medium underline-offset-2 hover:underline">
+                            Profile
+                          </HardLink>
+                          , or admin tooling below). Totals use the same NCU → athlete pin as the athlete path.
+                        </span>
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="mt-0.5 font-bold text-foreground">3.</span>
+                        <span>
+                          <strong className="text-foreground">NCU → athlete pin:</strong> Stripe credits checkout codes; pin each NCU to the correct{" "}
+                          <code className="rounded bg-muted px-1 text-[11px]">athletes.id</code> in{" "}
+                          <button
+                            type="button"
+                            className="text-[#003366] font-semibold underline-offset-2 hover:underline dark:text-blue-400"
+                            onClick={() => scrollToFundraisingSection("admin-fundraising-directory-gaps")}
+                          >
+                            Directory gaps
+                          </button>
+                          . Without this, gifts never attach to the kid&apos;s wallet row.
+                        </span>
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="mt-0.5 font-bold text-foreground">4.</span>
+                        <span>
+                          <strong className="text-foreground">Public gift page</strong> (
+                          <code className="rounded bg-muted px-1 text-[11px]">athlete_fundraising_profiles</code>
+                          ) is for donors — optional for the ledger math that drives Profile → Fundraise.
+                        </span>
+                      </li>
+                    </ul>
+                    <div className="flex flex-wrap gap-2 border-t border-border pt-4">
+                      <Button type="button" variant="outline" size="sm" asChild>
+                        <HardLink href="/profile">Open Profile (test Fundraise tab)</HardLink>
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => scrollToFundraisingSection("admin-fundraising-parent-coverage")}
+                      >
+                        Jump to parent linking
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => scrollToFundraisingSection("fundraising-athlete-wiring-matrix")}
+                      >
+                        Wiring matrix
+                      </Button>
+                    </div>
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
 
             <Card
               id="fundraising-athlete-wiring-matrix"
@@ -1304,9 +1878,11 @@ export default function AdminFundraisingPage() {
                       Athlete wiring matrix
                     </CardTitle>
                     <CardDescription className="max-w-2xl text-sm leading-snug">
-                      Every roster kid with an NCU code: directory pin (Profile → Fundraise), donor page, parent managers,
-                      profile NCU match, and paid gifts per registry campaign (ledger mirror). Green = connected / has
-                      activity; red = missing or mismatch.
+                      Wiring for each <strong className="text-foreground">active NCU code</strong> in the playbook roster (
+                      <code className="rounded bg-muted px-1 text-[11px]">spartan_fundraising_athletes</code>). Directory athletes
+                      without an NCU row here don&apos;t appear — pin (below) creates or updates that row and links{" "}
+                      <code className="rounded bg-muted px-1 text-[11px]">athletes.id</code>. Then add a donor profile and link a
+                      parent. Green = OK / activity; red = missing (Page &amp; Parent stay neutral until Pin is green).
                     </CardDescription>
                   </div>
                   <Button
@@ -1323,18 +1899,68 @@ export default function AdminFundraisingPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4 pt-0">
+                <div className="rounded-lg border border-dashed border-[#003366]/25 bg-slate-50/80 px-3 py-3 text-sm dark:bg-slate-950/25">
+                  <p className="font-semibold text-foreground">Connect any kid (order matters)</p>
+                  <ol className="text-muted-foreground mt-2 list-decimal space-y-1.5 pl-5 leading-snug">
+                    <li>
+                      <button
+                        type="button"
+                        className="text-left font-medium text-[#003366] underline-offset-2 hover:underline dark:text-blue-400"
+                        onClick={() => scrollToFundraisingSection("admin-fundraising-directory-gaps")}
+                      >
+                        1. Directory gaps — Pin
+                      </button>{" "}
+                      Paste the RecruitNC{" "}
+                      <code className="rounded bg-muted px-1 text-[11px]">athletes.id</code> UUID and pin it to the NCU code (also
+                      sets roster name/grad from the athlete). Codes with money show here first; you can pin the same way for any
+                      valid NCU if the row exists in the roster.
+                    </li>
+                    <li>
+                      <button
+                        type="button"
+                        className="text-left font-medium text-[#003366] underline-offset-2 hover:underline dark:text-blue-400"
+                        onClick={() => scrollToFundraisingSection("admin-fundraising-athlete-profiles")}
+                      >
+                        2. Donor-facing athlete profiles
+                      </button>{" "}
+                      After Pin, use <strong className="text-foreground">New profile</strong> with that athlete&apos;s UUID, slug,
+                      and mark active so <code className="rounded bg-muted px-1 text-[11px]">/fundraising/athletes/…</code> works.
+                    </li>
+                    <li>
+                      <button
+                        type="button"
+                        className="text-left font-medium text-[#003366] underline-offset-2 hover:underline dark:text-blue-400"
+                        onClick={() => scrollToFundraisingSection("admin-fundraising-parent-coverage")}
+                      >
+                        3. Parent coverage
+                      </button>{" "}
+                      Link the parent&apos;s RecruitNC account to that pinned athlete so Profile → Fundraise and thank-you lists
+                      work for the family.
+                    </li>
+                  </ol>
+                  <p className="text-muted-foreground mt-2 text-xs leading-snug">
+                    Stripe and parent coverage sync automatically (or use Refresh). Need an NCU on the roster with no Stripe gifts
+                    yet? Use Pin from gaps when it appears, or upsert{" "}
+                    <code className="rounded bg-muted px-1 text-[11px]">spartan_fundraising_athletes</code> in Supabase (same columns as pin —
+                    see{" "}
+                    <code className="rounded bg-muted px-1 text-[11px]">POST /api/admin/spartan-fundraising-pin-code</code>
+                    ).
+                  </p>
+                </div>
+
                 <div className="text-muted-foreground flex flex-wrap gap-x-4 gap-y-2 text-[11px] leading-snug">
                   <span>
                     <span className="font-semibold text-foreground">Pin</span> — roster row linked to{" "}
                     <code className="rounded bg-muted px-1">athletes.id</code>
                   </span>
                   <span>
-                    <span className="font-semibold text-foreground">Page</span> — active{" "}
-                    <code className="rounded bg-muted px-1">/fundraising/athletes/[slug]</code>
+                    <span className="font-semibold text-foreground">Page</span> — active profile for the{" "}
+                    <strong className="font-medium text-foreground">pinned</strong> athlete (
+                    <code className="rounded bg-muted px-1">/fundraising/athletes/[slug]</code>)
                   </span>
                   <span>
-                    <span className="font-semibold text-foreground">Parent</span> — parent profile or link row on pinned
-                    athlete
+                    <span className="font-semibold text-foreground">Parent</span> — after Pin: parent profile or link on that
+                    athlete (before Pin: not evaluated)
                   </span>
                   <span>
                     <span className="font-semibold text-foreground">NCU</span> — primary fundraising code on profile vs
@@ -1366,7 +1992,7 @@ export default function AdminFundraisingPage() {
                       /{athleteMatrixSummary.total} fully wired ·{" "}
                       <span className="tabular-nums">{athleteMatrixSummary.needPin}</span> need pin ·{" "}
                       <span className="tabular-nums">{athleteMatrixSummary.needDonorPage}</span> need donor page ·{" "}
-                      <span className="tabular-nums">{athleteMatrixSummary.needParent}</span> need parent
+                      <span className="tabular-nums">{athleteMatrixSummary.needParent}</span> pinned need parent
                     </p>
                   ) : null}
                 </div>
@@ -1433,44 +2059,60 @@ export default function AdminFundraisingPage() {
                             </TableCell>
                             <TableCell>
                               <div className="flex min-w-0 items-center gap-2">
-                                <WiringDot
-                                  ok={r.donorPageOk}
-                                  title={
-                                    r.donorPageOk
-                                      ? "Active donor-facing fundraising profile"
-                                      : r.donorProfileSlug
-                                        ? "Profile exists but inactive or incomplete"
-                                        : "No fundraising profile for pinned athlete"
-                                  }
-                                />
-                                {r.donorProfileSlug ? (
-                                  <HardLink
-                                    href={`/fundraising/athletes/${encodeURIComponent(r.donorProfileSlug)}`}
-                                    className="text-primary truncate text-xs underline underline-offset-2"
+                                {!r.rosterPinOk ? (
+                                  <span
+                                    className="text-muted-foreground text-xs"
+                                    title="Pin this NCU to a directory athlete first — then create an active fundraising profile"
                                   >
-                                    /{r.donorProfileSlug}
-                                  </HardLink>
+                                    Pin first
+                                  </span>
                                 ) : (
-                                  <span className="text-muted-foreground text-xs">—</span>
+                                  <>
+                                    <WiringDot
+                                      ok={r.donorPageOk}
+                                      title={
+                                        r.donorPageOk
+                                          ? "Active donor-facing fundraising profile"
+                                          : r.donorProfileSlug
+                                            ? "Profile exists but inactive or incomplete"
+                                            : "No fundraising profile — use New profile below"
+                                      }
+                                    />
+                                    {r.donorProfileSlug ? (
+                                      <HardLink
+                                        href={`/fundraising/athletes/${encodeURIComponent(r.donorProfileSlug)}`}
+                                        className="text-primary truncate text-xs underline underline-offset-2"
+                                      >
+                                        /{r.donorProfileSlug}
+                                      </HardLink>
+                                    ) : (
+                                      <span className="text-muted-foreground text-xs">—</span>
+                                    )}
+                                  </>
                                 )}
                               </div>
                             </TableCell>
                             <TableCell className="text-center">
-                              <div className="flex flex-col items-center gap-0.5">
-                                <WiringDot
-                                  ok={r.parentOk}
-                                  title={
-                                    r.parentOk
-                                      ? `${r.parentLinkCount} parent manager(s)`
-                                      : r.rosterPinOk
-                                        ? "No parent linked to this athlete yet"
-                                        : "Pin athlete first"
-                                  }
-                                />
-                                <span className="text-muted-foreground text-[10px] tabular-nums">
-                                  {r.rosterPinOk ? r.parentLinkCount : "—"}
+                              {!r.rosterPinOk ? (
+                                <span
+                                  className="text-muted-foreground text-xs"
+                                  title="Pin this NCU first — parent links attach to the directory athlete"
+                                >
+                                  Pin first
                                 </span>
-                              </div>
+                              ) : (
+                                <div className="flex flex-col items-center gap-0.5">
+                                  <WiringDot
+                                    ok={r.parentOk}
+                                    title={
+                                      r.parentOk
+                                        ? `${r.parentLinkCount} parent manager(s)`
+                                        : "No parent linked — use Parent coverage section below"
+                                    }
+                                  />
+                                  <span className="text-muted-foreground text-[10px] tabular-nums">{r.parentLinkCount}</span>
+                                </div>
+                              )}
                             </TableCell>
                             <TableCell className="text-center">
                               <ProfileCodeSyncDot ok={r.codeSyncOk ?? null} />
@@ -1524,7 +2166,7 @@ export default function AdminFundraisingPage() {
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 <button
                   type="button"
-                  disabled={!remediationDashboardReady}
+                  disabled={donationsLoading}
                   onClick={goDirectoryGapTable}
                   className={cn(
                     "rounded-xl border bg-card p-4 text-left shadow-sm outline-none ring-offset-background transition hover:bg-muted/60 hover:border-orange-400/45 focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-45",
@@ -1541,7 +2183,7 @@ export default function AdminFundraisingPage() {
                 </button>
                 <button
                   type="button"
-                  disabled={!remediationDashboardReady}
+                  disabled={donationsLoading}
                   onClick={goRosterOnlyTable}
                   className={cn(
                     "rounded-xl border bg-card p-4 text-left shadow-sm outline-none ring-offset-background transition hover:bg-muted/60 hover:border-amber-500/35 focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-45",
@@ -1558,7 +2200,7 @@ export default function AdminFundraisingPage() {
                 </button>
                 <button
                   type="button"
-                  disabled={!remediationDashboardReady}
+                  disabled={donationsLoading}
                   onClick={goNeedsParentTable}
                   className={cn(
                     "rounded-xl border bg-card p-4 text-left shadow-sm outline-none ring-offset-background transition hover:bg-muted/60 hover:border-blue-500/35 focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-45",
@@ -1575,7 +2217,7 @@ export default function AdminFundraisingPage() {
                 </button>
                 <button
                   type="button"
-                  disabled={!remediationDashboardReady}
+                  disabled={donationsLoading}
                   onClick={goOrphanedCheckoutsTable}
                   className={cn(
                     "rounded-xl border bg-card p-4 text-left shadow-sm outline-none ring-offset-background transition hover:bg-muted/60 hover:border-rose-500/35 focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-45",
@@ -1633,7 +2275,13 @@ export default function AdminFundraisingPage() {
                       <HardLink href="/fundraising/athletes" className="text-primary underline-offset-4 hover:underline">
                         /fundraising/athletes
                       </HardLink>{" "}
-                      — bio, photo, goal, optional NCU override. Requires{" "}
+                      — bio, photo, goal, optional NCU override. There isn&apos;t a name search in this dialog: open{" "}
+                      <HardLink href="/admin/athletes" className="text-primary underline-offset-4 hover:underline">
+                        athletes admin
+                      </HardLink>
+                      , find &quot;Ayden Sumners&quot;, copy his <code className="rounded bg-muted px-1 text-[11px]">athletes.id</code> UUID,
+                      then <strong className="text-foreground">New profile</strong> and paste it with a slug. Copy the live URL from
+                      the slug column when done. Requires{" "}
                       <code className="rounded bg-muted px-1 text-[11px]">athlete_fundraising_profiles</code> in Supabase (
                       <code className="rounded bg-muted px-1 text-[11px]">database/create-athlete-fundraising-profiles.sql</code>
                       ).
@@ -1876,14 +2524,18 @@ export default function AdminFundraisingPage() {
               </Card>
             ) : null}
 
-            {parentCoverage && parentCoverage.summary.withFunds > 0 ? (
+            {parentCoverage !== null ? (
               <Card id="admin-fundraising-parent-coverage" className={parentCoverage.summary.needsAttention > 0 ? "border-amber-500/50" : "border-emerald-600/40"}>
                 <CardHeader className="space-y-4 pb-4">
                   <div className="space-y-2">
                     <CardTitle className="text-lg leading-snug">2. Parent coverage</CardTitle>
                     <p className="text-muted-foreground text-sm leading-snug">
-                      Anyone with dollars should have a manager who can open <strong className="text-foreground">Profile → Fundraise</strong>. Use{" "}
-                      <strong className="text-foreground">Link parent</strong> or have them add the athlete under Family. Directory issues → fix in{" "}
+                      Anyone with dollars should have a manager who can open <strong className="text-foreground">Profile → Fundraise</strong>. After data loads,
+                      find the kid by name in this table (or filter views).
+                      <strong className="text-foreground"> Link parent</strong> only appears when the row has a RecruitNC{" "}
+                      <code className="rounded bg-muted px-1 text-[11px]">athleteId</code> and status &quot;Needs parent link&quot; — search parent
+                      accounts by name/email in the dialog, then <strong className="text-foreground">Create link</strong>. Or ask the family to add the
+                      wrestler under Family on Profile. Directory issues → fix in{" "}
                       <HardLink href="/admin/athletes" className="text-primary underline-offset-4 hover:underline">
                         athletes admin
                       </HardLink>
@@ -2081,7 +2733,10 @@ export default function AdminFundraisingPage() {
                   size="sm"
                   className="shrink-0 gap-2"
                   disabled={donationsLoading || donations === null}
-                  onClick={() => void loadDonations()}
+                  onClick={() => {
+                    void loadDonations()
+                    void loadExpenseRollup()
+                  }}
                 >
                   <RefreshCw className={`h-4 w-4 ${donationsLoading ? "animate-spin" : ""}`} />
                   Refresh

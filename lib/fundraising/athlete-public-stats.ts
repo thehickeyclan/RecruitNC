@@ -352,6 +352,8 @@ export async function getAthleteFundraisingPublicSnapshot(
 }
 
 export type AthleteOwnerThankYouRow = {
+  /** Stable id for thank-you persistence (`cs_…`, `pi_…`, or rare legacy/mirror fallback). */
+  ledgerKey: string
   createdIso: string
   donorName: string | null
   donorEmail: string | null
@@ -359,6 +361,32 @@ export type AthleteOwnerThankYouRow = {
   /** Race-path notification inbox when different from payer email — useful if parent paid. */
   notificationEmail: string | null
   amountCents: number
+}
+
+export type AthleteOwnerThankYouRowWithAck = AthleteOwnerThankYouRow & { thanked: boolean }
+
+function ledgerKeyForStripeDonation(r: SpartanFayettevilleDonation): string {
+  const cs = r.sessionId?.trim()
+  if (cs?.startsWith("cs_")) return cs
+  const pi = r.paymentIntentId?.trim()
+  if (pi?.startsWith("pi_")) return pi
+  const fallback = [
+    r.createdIso,
+    String(r.amountCents),
+    (r.donorEmail ?? "").toLowerCase(),
+    (r.spartanNotificationEmail ?? "").toLowerCase(),
+    (r.donorPhone ?? "").trim(),
+    (r.donorName ?? "").toLowerCase(),
+  ].join("\0")
+  return `legacy:${fallback}`
+}
+
+function ledgerKeyForMirrorDonationRow(row: { id?: string }): string {
+  const id = typeof row.id === "string" ? row.id.trim() : ""
+  if (id.startsWith("cs_")) return id
+  if (id.startsWith("pi_")) return id
+  if (id) return `mirror:${id}`
+  return "mirror:missing"
 }
 
 /**
@@ -377,6 +405,7 @@ export async function getAthleteOwnerThankYouRows(code: string): Promise<Athlete
     })
     mine.sort((a, b) => b.createdUnix - a.createdUnix)
     return mine.map((r) => ({
+      ledgerKey: ledgerKeyForStripeDonation(r),
       createdIso: r.createdIso,
       donorName: r.donorName?.trim() ? r.donorName.trim() : null,
       donorEmail: r.donorEmail?.trim() ? r.donorEmail.trim() : null,
@@ -433,6 +462,7 @@ export async function getAthleteOwnerThankYouRows(code: string): Promise<Athlete
   credited.sort((a, b) => +new Date(b.created_at ?? 0) - +new Date(a.created_at ?? 0))
 
   return credited.map((row) => ({
+    ledgerKey: ledgerKeyForMirrorDonationRow(row),
     createdIso: row.created_at ? new Date(row.created_at).toISOString() : "",
     donorName: typeof row.donor_name === "string" && row.donor_name.trim() ? row.donor_name.trim() : null,
     donorEmail: typeof row.donor_email === "string" && row.donor_email.trim() ? row.donor_email.trim() : null,
@@ -440,17 +470,6 @@ export async function getAthleteOwnerThankYouRows(code: string): Promise<Athlete
     notificationEmail: null,
     amountCents: typeof row.amount_cents === "number" ? row.amount_cents : 0,
   }))
-}
-
-function thankYouRowDedupeKey(r: AthleteOwnerThankYouRow): string {
-  return [
-    r.createdIso,
-    r.amountCents,
-    (r.donorEmail ?? "").toLowerCase(),
-    (r.notificationEmail ?? "").toLowerCase(),
-    r.donorPhone ?? "",
-    (r.donorName ?? "").toLowerCase(),
-  ].join("\0")
 }
 
 /**
@@ -472,6 +491,7 @@ export async function getAthleteOwnerThankYouRowsForLedgerCodes(ledgerCodesInput
     })
     mine.sort((a, b) => b.createdUnix - a.createdUnix)
     return mine.map((r) => ({
+      ledgerKey: ledgerKeyForStripeDonation(r),
       createdIso: r.createdIso,
       donorName: r.donorName?.trim() ? r.donorName.trim() : null,
       donorEmail: r.donorEmail?.trim() ? r.donorEmail.trim() : null,
@@ -481,14 +501,13 @@ export async function getAthleteOwnerThankYouRowsForLedgerCodes(ledgerCodesInput
     }))
   }
 
-  const seen = new Set<string>()
+  const seenLedger = new Set<string>()
   const out: AthleteOwnerThankYouRow[] = []
   for (const c of codes) {
     const rows = await getAthleteOwnerThankYouRows(c)
     for (const r of rows) {
-      const k = thankYouRowDedupeKey(r)
-      if (seen.has(k)) continue
-      seen.add(k)
+      if (seenLedger.has(r.ledgerKey)) continue
+      seenLedger.add(r.ledgerKey)
       out.push(r)
     }
   }

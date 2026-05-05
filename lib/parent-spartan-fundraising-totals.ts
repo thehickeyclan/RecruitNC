@@ -61,8 +61,8 @@ export type ParentSpartanFundraisingAthleteRow = {
 }
 
 /**
- * Fayetteville Spartan totals per linked athlete for a parent user (same basis as
- * GET /api/profile/spartan-fundraising-totals).
+ * NC United ledger totals per linked athlete for a RecruitNC account (`parent_athlete_links` and/or `user_profiles.athlete_id`).
+ * Same basis as GET /api/profile/spartan-fundraising-totals.
  */
 export async function computeParentSpartanFundraisingTotalsForUser(
   admin: SupabaseClient,

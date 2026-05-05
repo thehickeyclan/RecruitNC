@@ -20,7 +20,7 @@ export type SpartanFundraisingTotalRow = {
 }
 
 /**
- * GET: For the signed-in parent, show Fayetteville Spartan donation totals per linked athlete.
+ * GET: NC United ledger totals per athlete the signed-in account manages (parent_athlete_links and/or user_profiles.athlete_id).
  */
 export async function GET() {
   const supabase = await createClient()

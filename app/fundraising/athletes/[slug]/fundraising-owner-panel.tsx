@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation"
 import { useCallback, useState } from "react"
 import { HardLink } from "@/components/hard-link"
 import { formatUsdWhole } from "@/app/fundraising/components/FundraisingHero"
-import type { AthleteOwnerThankYouRow } from "@/lib/fundraising/athlete-public-stats"
+import type { AthleteOwnerThankYouRow, AthleteOwnerThankYouRowWithAck } from "@/lib/fundraising/athlete-public-stats"
 
 type Props = {
   athleteId: string
@@ -13,7 +13,7 @@ type Props = {
   showBioEditor?: boolean
   canEditStory: boolean
   initialBio: string
-  donorRows: AthleteOwnerThankYouRow[]
+  donorRows: AthleteOwnerThankYouRowWithAck[]
   lookbackDays: number
 }
 
@@ -31,6 +31,8 @@ export function FundraisingOwnerPanel({
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [busyThankLedger, setBusyThankLedger] = useState<string | null>(null)
+  const [thankAckError, setThankAckError] = useState<string | null>(null)
 
   const saveBio = useCallback(async () => {
     setSaving(true)
@@ -56,18 +58,46 @@ export function FundraisingOwnerPanel({
     }
   }, [athleteId, bio, router])
 
+  const persistThankAck = useCallback(
+    async (ledgerKey: string, thanked: boolean) => {
+      setBusyThankLedger(ledgerKey)
+      setThankAckError(null)
+      try {
+        const res = await fetch(`/api/athletes/${encodeURIComponent(athleteId)}/fundraising-thank-you-acks`, {
+          method: "PATCH",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ledgerKey, thanked }),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) {
+          throw new Error(typeof data.error === "string" ? data.error : "Could not update thank-you flag.")
+        }
+        router.refresh()
+      } catch (e) {
+        setThankAckError(e instanceof Error ? e.message : "Could not update thank-you flag.")
+      } finally {
+        setBusyThankLedger(null)
+      }
+    },
+    [athleteId, router],
+  )
+
+  const thankedCount = donorRows.filter((r) => r.thanked).length
+
   return (
     <div className="mt-10 space-y-10 rounded-xl border border-[#C8A94A]/35 bg-[#0B2545]/50 p-5 sm:p-6">
       <div>
         <p className="font-[family-name:var(--font-fundraising-display)] text-[11px] font-bold uppercase tracking-[0.2em] text-[#C8A94A]">
-          Account linked in admin
+          Managers only — not public
         </p>
         <h2 className="font-[family-name:var(--font-fundraising-display)] mt-2 text-lg font-black uppercase tracking-tight text-white">
           {showBioEditor ? "Manage this fundraising page" : "Supporters to thank (private)"}
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-white/65">
-          Only RecruitNC accounts linked to this athlete in admin (same as Family / Fundraise on your profile) see this. Use
-          supporter contact info for personal thank-yous only — don&apos;t add people to lists or share their details.
+          Only linked parents (admin parent-athlete link), this athlete when their RecruitNC login matches their profile, or
+          RecruitNC staff see checkout emails and phones here. Visitors never do. Use contacts for personal thank-yous only —
+          don&apos;t add people to lists or share their details.
         </p>
       </div>
 
@@ -128,13 +158,20 @@ export function FundraisingOwnerPanel({
         <p className="mt-1 text-xs text-white/50">
           Email comes from checkout. Phone appears only if the donor entered it in Stripe — many rows will show “—”.
         </p>
+        {donorRows.length > 0 ? (
+          <p className="mt-2 text-xs text-white/55">
+            Thanked {thankedCount} / {donorRows.length}. Check the box after you reach out — only managers see this list.
+          </p>
+        ) : null}
+        {thankAckError ? <p className="mt-2 text-sm text-red-400/90">{thankAckError}</p> : null}
         {donorRows.length === 0 ? (
           <p className="mt-4 text-sm text-white/55">No credited gifts in this window yet.</p>
         ) : (
           <div className="mt-4 overflow-x-auto rounded-lg border border-white/10">
-            <table className="w-full min-w-[520px] text-left text-sm">
+            <table className="w-full min-w-[560px] text-left text-sm">
               <thead className="border-b border-white/10 bg-black/25 text-[11px] uppercase tracking-wide text-white/50">
                 <tr>
+                  <th className="px-2 py-2 font-semibold text-center">Thanked</th>
                   <th className="px-3 py-2 font-semibold">Date</th>
                   <th className="px-3 py-2 font-semibold">Name</th>
                   <th className="px-3 py-2 font-semibold">Email</th>
@@ -144,7 +181,21 @@ export function FundraisingOwnerPanel({
               </thead>
               <tbody className="divide-y divide-white/10">
                 {donorRows.map((r, i) => (
-                  <tr key={`${r.createdIso}-${i}`} className="text-white/85">
+                  <tr key={`${r.ledgerKey}-${i}`} className="text-white/85">
+                    <td className="px-2 py-2.5 text-center align-middle">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 cursor-pointer rounded border-white/35 bg-[#061224] text-[#C8A94A] accent-[#C8A94A] focus:ring-2 focus:ring-[#C8A94A]/40 disabled:cursor-not-allowed disabled:opacity-50"
+                        checked={r.thanked}
+                        disabled={busyThankLedger === r.ledgerKey}
+                        onChange={(e) => void persistThankAck(r.ledgerKey, e.target.checked)}
+                        aria-label={
+                          r.thanked
+                            ? `Marked thanked for ${r.donorName ?? "supporter"}`
+                            : `Mark thanked for ${r.donorName ?? "supporter"}`
+                        }
+                      />
+                    </td>
                     <td className="whitespace-nowrap px-3 py-2.5 text-xs tabular-nums text-white/45">
                       {r.createdIso
                         ? new Date(r.createdIso).toLocaleDateString(undefined, {

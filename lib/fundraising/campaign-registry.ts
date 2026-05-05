@@ -32,6 +32,8 @@ export type FundraisingCampaignDefinition = {
    * otherwise the UI falls back to calendar season + year.
    */
   athleteGiftHistoryLabel: string
+  /** Amber playbook banner — drive archived/trickle; wallet ops remain primary focus. */
+  playbookOperationalBanner?: string
 }
 
 export const NC_UNITED_FUNDRAISING_BRAND = {
@@ -50,6 +52,8 @@ export const FUNDRAISING_CAMPAIGNS = [
     defaultLookbackDays: 120,
     hubDefaultGoalCents: 1_000_000,
     athleteGiftHistoryLabel: "Spring Spartan 2026",
+    playbookOperationalBanner:
+      "Primary Spartan checkout drive has wound down; gifts may still trickle in. Use this admin hub year-round for NCU pins, donor pages, and parent/athlete wiring so Profile → Fundraise shows balances.",
   },
 ] as const satisfies readonly FundraisingCampaignDefinition[]
 

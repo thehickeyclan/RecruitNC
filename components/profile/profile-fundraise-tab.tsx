@@ -81,6 +81,12 @@ export function ProfileFundraiseTab({
                 through <span className="font-medium text-slate-800">{FUNDRAISE_TOTALS_THROUGH_LABEL}</span> — not a bank
                 balance.
               </p>
+              <p className="text-xs text-slate-600 leading-relaxed border-l-2 border-[#03154C]/25 pl-3">
+                <span className="font-medium text-slate-800">Athletes:</span> your account must match your recruiting profile (
+                <code className="rounded bg-slate-100 px-1 font-mono text-[10px]">user_profiles.athlete_id</code>
+                ). <span className="font-medium text-slate-800">Parents:</span> link each wrestler under Family &amp;
+                athletes — same ledger either way.
+              </p>
               <p className="text-xs text-slate-500 leading-relaxed pt-0.5">
                 <span className="font-medium text-slate-600">Available</span> is what&apos;s left after reimbursements and
                 any amounts moved to Guild. Update wrestler details under{" "}

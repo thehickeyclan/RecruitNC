@@ -8,13 +8,14 @@ import { HardLink } from "@/components/hard-link"
 import { createClient } from "@/lib/supabase/server"
 import { DEFAULT_FUNDRAISING_CAMPAIGN, FUNDRAISING_GIVE_PAGE_PATH } from "@/lib/fundraising/campaign-registry"
 import { formatUsdWhole } from "@/app/fundraising/components/FundraisingHero"
-import { getFundraisingPageManagerAccess, userIsRecruitNcAdmin } from "@/lib/fundraising/athlete-fundraising-access"
+import { userCanManageFundraisingForAthlete, userIsRecruitNcAdmin } from "@/lib/fundraising/athlete-fundraising-access"
 import { FundraisingAthleteQrCard } from "./fundraising-athlete-qr-card"
 import { FundraisingAthleteEmbeddedCheckout } from "./fundraising-athlete-embedded-checkout"
 import { FundraisingAthleteMessageSection } from "./fundraising-athlete-message"
 import { FundraisingMilestoneTrophy } from "./fundraising-milestone-trophy"
 import { FundraisingOwnerPanel } from "./fundraising-owner-panel"
 import { recruitingProfilePhotoFromRow } from "@/lib/recruiting-profile-photo"
+import { fetchThankYouAckLedgerKeys } from "@/lib/fundraising/supporter-thank-you-ack"
 
 const HERO_FALLBACK_SILHOUETTE = "/wrestler-silhouette.png"
 
@@ -89,13 +90,19 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
 
   const snapshotLedger =
     resolved.ledgerCodes.length > 0 ? resolved.ledgerCodes : code != null ? [code] : []
-  const [snapshot, recruitingPhotoUrl, ownerThankYouRows] = await Promise.all([
+  const [snapshot, recruitingPhotoUrl, ownerThankYouRows, thankAckLedgerKeys] = await Promise.all([
     snapshotLedger.length > 0 ? getAthleteFundraisingPublicSnapshot(snapshotLedger, 250) : Promise.resolve(null),
     athleteId ? fetchRecruitingProfilePhoto(admin, athleteId) : Promise.resolve(null),
     isFundraisingManager && snapshotLedger.length > 0
       ? getAthleteOwnerThankYouRowsForLedgerCodes(snapshotLedger)
       : Promise.resolve([]),
+    isFundraisingManager && athleteId ? fetchThankYouAckLedgerKeys(admin, athleteId) : Promise.resolve(new Set<string>()),
   ])
+
+  const ownerThankYouRowsWithAck = ownerThankYouRows.map((r) => ({
+    ...r,
+    thanked: thankAckLedgerKeys.has(r.ledgerKey),
+  }))
 
   /** Totals use the same corrected Stripe aggregate as `/spartan` (via cached campaign session list — typically within 60–120s of live). If Stripe + mirror fail, show zeros — do not substitute `profile.total_raised_cents`. */
   const EMPTY_STATS: AthleteFundraisingPublicStats = {
@@ -412,7 +419,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
             showBioEditor={false}
             canEditStory={false}
             initialBio=""
-            donorRows={ownerThankYouRows}
+            donorRows={ownerThankYouRowsWithAck}
             lookbackDays={DEFAULT_FUNDRAISING_CAMPAIGN.defaultLookbackDays}
           />
         ) : null}

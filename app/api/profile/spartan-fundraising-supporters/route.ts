@@ -5,6 +5,7 @@ import { computeParentSpartanFundraisingTotalsForUser } from "@/lib/parent-spart
 import { getAthleteOwnerThankYouRows } from "@/lib/fundraising/athlete-public-stats"
 import { FAYETTEVILLE_STRIPE_LOOKBACK_DAYS } from "@/lib/spartan-fayetteville-totals-by-code"
 import { fundraisingSlugFromCode } from "@/lib/fundraising/athlete-fundraising-slug"
+import { fetchThankYouAckLedgerKeysForAthletes } from "@/lib/fundraising/supporter-thank-you-ack"
 
 export const dynamic = "force-dynamic"
 
@@ -14,11 +15,15 @@ export type ProfileSpartanSupportersAthletePayload = {
   fundraisingCode: string | null
   codeUnavailable?: boolean
   giftPagePath: string | null
-  rows: Awaited<ReturnType<typeof getAthleteOwnerThankYouRows>>
+  /** Paid gifts in the campaign window — detail rows stay server-side on the athlete gift page for managers only. */
+  supporterCount: number
+  /** Rows marked thanked (persisted) among supporterCount — managers only persistence on gift page. */
+  thankedCount: number
 }
 
 /**
- * GET: Per linked athlete, donor contact rows for thank-yous (same window as profile totals / public Spartan).
+ * GET: Per linked athlete, supporter counts for thank-you prompts (no email/phone in JSON — contacts only on
+ * `/fundraising/athletes/[slug]` when the viewer is admin, parent link, or the athlete’s own profile login).
  */
 export async function GET() {
   const supabase = await createClient()
@@ -52,6 +57,8 @@ export async function GET() {
     }
 
     const payload: ProfileSpartanSupportersAthletePayload[] = []
+    const ackByAthlete = await fetchThankYouAckLedgerKeysForAthletes(admin, ids)
+
     for (const a of athletes) {
       const code = a.fundraisingCode
       const slug = slugByAthleteId.get(a.athleteId) ?? (code ? fundraisingSlugFromCode(code) : null)
@@ -64,18 +71,25 @@ export async function GET() {
           fundraisingCode: code,
           codeUnavailable: a.codeUnavailable,
           giftPagePath,
-          rows: [],
+          supporterCount: 0,
+          thankedCount: 0,
         })
         continue
       }
 
       const rows = await getAthleteOwnerThankYouRows(code)
+      const ackSet = ackByAthlete.get(a.athleteId) ?? new Set<string>()
+      let thankedCount = 0
+      for (const r of rows) {
+        if (ackSet.has(r.ledgerKey)) thankedCount++
+      }
       payload.push({
         athleteId: a.athleteId,
         name: a.name,
         fundraisingCode: code,
         giftPagePath,
-        rows,
+        supporterCount: rows.length,
+        thankedCount,
       })
     }
 
