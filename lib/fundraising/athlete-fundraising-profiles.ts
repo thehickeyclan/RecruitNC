@@ -2,7 +2,7 @@ import { cache } from "react"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { createAdminClient } from "@/lib/supabase/admin"
 import type { FundraisingAthleteEntry } from "@/lib/spartan-fundraising-code"
-import { getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
+import { getFundraisingAthleteEntries, scoreSpartanPublicDisplayRichness } from "@/lib/spartan-fundraising-code"
 import { fundraisingCodeFromSlug } from "@/lib/fundraising/athlete-fundraising-slug"
 
 const NCU_CODE_RE = /^NCU-[A-Za-z0-9]+-\d{2}$/i
@@ -45,6 +45,42 @@ function coerceNcuCode(raw: string | null | undefined): string | null {
 }
 
 /**
+ * Directory `buildFundraisingEntries` and `spartan_fundraising_athletes` (same `athlete_id`) can disagree on the
+ * collision suffix — e.g. `NCU-APONTE-31` vs `NCU-APONTEJ-31`. Stripe credits whatever was on checkout; public totals
+ * must sum **all** codes for this profile.
+ */
+function allCoercedLedgerCodesForAthleteId(entries: FundraisingAthleteEntry[], athleteId: string): string[] {
+  const out = new Set<string>()
+  for (const e of entries) {
+    if (e.id !== athleteId) continue
+    const c = coerceNcuCode(e.code)
+    if (c) out.add(c)
+  }
+  return [...out]
+}
+
+function pickPreferredFundraisingEntryForAthlete(
+  entries: FundraisingAthleteEntry[],
+  athleteId: string,
+): FundraisingAthleteEntry | null {
+  const list = entries.filter((e) => e.id === athleteId)
+  if (list.length === 0) return null
+  if (list.length === 1) return list[0]!
+  return [...list].reduce((a, b) =>
+    scoreSpartanPublicDisplayRichness(b.fullName) > scoreSpartanPublicDisplayRichness(a.fullName) ? b : a,
+  )
+}
+
+function uniqueCoercedCodes(parts: (string | null | undefined)[]): string[] {
+  const out = new Set<string>()
+  for (const p of parts) {
+    const c = coerceNcuCode(p)
+    if (c) out.add(c)
+  }
+  return [...out]
+}
+
+/**
  * Map URL slug → profile (if any) + NCU code for Stripe-linked stats / checkout.
  * Legacy URLs without a profile row still work when slug is the lowercase NCU code.
  */
@@ -74,17 +110,12 @@ export async function resolveFundraisingAthletePublic(
   if (profile) {
     const row = profile as AthleteFundraisingProfileRow
     const fromPrimary = coerceNcuCode(row.primary_fundraising_code)
-    const entry = entries.find((e) => e.id === row.athlete_id) ?? null
+    const entry = pickPreferredFundraisingEntryForAthlete(entries, row.athlete_id)
+    const rosterCodes = allCoercedLedgerCodesForAthleteId(entries, row.athlete_id)
     /** `/fundraising/athletes/ncu-aponte-30` must ledger `NCU-APONTE-30` — URL slug wins when it is a valid NCU
      *  so bad `primary_fundraising_code` / roster `entry.code` cannot zero out totals while checkout still shows the athlete. */
     const code = legacyCode ?? fromPrimary ?? entry?.code?.toUpperCase() ?? null
-    const ledgerCodes = [
-      ...new Set(
-        [legacyCode, fromPrimary, entry?.code?.toUpperCase() ?? null, code]
-          .map((p) => coerceNcuCode(p))
-          .filter((p): p is string => p != null),
-      ),
-    ]
+    const ledgerCodes = uniqueCoercedCodes([legacyCode, fromPrimary, ...rosterCodes, code])
     let fallbackDisplayName: string | null = null
     if (!entry) {
       const { data: ath } = await admin.from("athletes").select("name").eq("id", row.athlete_id).maybeSingle()
@@ -96,7 +127,12 @@ export async function resolveFundraisingAthletePublic(
 
   if (!legacyCode) return null
   const entry = entries.find((e) => e.code.toUpperCase() === legacyCode) ?? null
-  return { profile: null, code: legacyCode, entry, fallbackDisplayName: null, ledgerCodes: [legacyCode] }
+  const rosterCodes =
+    entry && !entry.id.startsWith("spartan-fundraising:")
+      ? allCoercedLedgerCodesForAthleteId(entries, entry.id)
+      : []
+  const ledgerCodes = uniqueCoercedCodes([legacyCode, ...rosterCodes])
+  return { profile: null, code: legacyCode, entry, fallbackDisplayName: null, ledgerCodes }
 }
 
 /**

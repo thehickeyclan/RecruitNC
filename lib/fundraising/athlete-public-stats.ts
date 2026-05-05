@@ -172,10 +172,11 @@ async function fetchAthleteMirrorCreditedRowsMerged(
 }
 
 async function loadCorrectedStripeForAthletePublicPage(): Promise<SpartanFayettevilleDonation[] | null> {
-  const cached = await loadCorrectedStripeDonationsForCampaignWindow(DEFAULT_FUNDRAISING_CAMPAIGN)
-  if (cached != null) return cached
+  /** Donors refresh the athlete page expecting to see their gift — avoid `unstable_cache` here (hub `/spartan` can stay cached). */
   if (!process.env.STRIPE_SECRET_KEY?.trim()) return null
-  return loadCorrectedStripeDonationsForSpartanPublicWindow(DEFAULT_FUNDRAISING_CAMPAIGN)
+  const fresh = await loadCorrectedStripeDonationsForSpartanPublicWindow(DEFAULT_FUNDRAISING_CAMPAIGN)
+  if (fresh != null) return fresh
+  return loadCorrectedStripeDonationsForCampaignWindow(DEFAULT_FUNDRAISING_CAMPAIGN)
 }
 
 /**
