@@ -70,7 +70,9 @@ export async function resolveFundraisingAthletePublic(
     const row = profile as AthleteFundraisingProfileRow
     const fromPrimary = coerceNcuCode(row.primary_fundraising_code)
     const entry = entries.find((e) => e.id === row.athlete_id) ?? null
-    const code = fromPrimary ?? entry?.code?.toUpperCase() ?? legacyCode ?? null
+    /** Slug in DB (e.g. `ncu-aponte-30`) encodes the public NCU code; use it before roster `entry.code` when
+     *  `primary_fundraising_code` is unset — otherwise a mismatched roster code shows $0 while checkout uses the URL code. */
+    const code = fromPrimary ?? legacyCode ?? entry?.code?.toUpperCase() ?? null
     let fallbackDisplayName: string | null = null
     if (!entry) {
       const { data: ath } = await admin.from("athletes").select("name").eq("id", row.athlete_id).maybeSingle()

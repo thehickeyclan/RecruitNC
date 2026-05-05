@@ -8,7 +8,7 @@ import {
   hubSpartanDonationRowMatchesCampaign,
   publicGiftCampaignLabel,
 } from "@/lib/fundraising/campaign-registry"
-import { loadCorrectedStripeDonationsForSpartanPublicWindow } from "@/lib/fundraising/stripe-transparency-pipeline"
+import { loadCorrectedStripeDonationsForCampaignWindow } from "@/lib/fundraising/stripe-transparency-pipeline"
 import {
   aggregateSpartanByAthlete,
   publicSupporterDisplayName,
@@ -157,8 +157,8 @@ async function fetchAthleteMirrorCreditedRows(
 
 /**
  * Same roll-up as `/spartan` `byAthlete` (see `aggregateSpartanByAthlete`): corrected Stripe sessions in the
- * Spartan public window, **uncached** — matches `GET /api/spartan/supporters?days=<defaultLookbackDays>`.
- * Falls back to `spartan_donations` only when Stripe is unavailable.
+ * campaign window. Uses the **cached** full session list (same as the fundraising hub) so athlete pages stay fast;
+ * numbers match Spartan within the cache window (default ~60–120s, see `RECRUITNC_FUNDRAISING_STRIPE_LIST_CACHE_SECONDS`).
  */
 async function loadAthleteCreditedForPublic(
   codeUpper: string,
@@ -171,7 +171,7 @@ async function loadAthleteCreditedForPublic(
   | { source: "mirror"; rows: DonationSelectRow[] }
   | null
 > {
-  const corrected = await loadCorrectedStripeDonationsForSpartanPublicWindow(DEFAULT_FUNDRAISING_CAMPAIGN)
+  const corrected = await loadCorrectedStripeDonationsForCampaignWindow(DEFAULT_FUNDRAISING_CAMPAIGN)
   if (corrected != null) {
     const key = codeUpper.toLowerCase()
     const mine = corrected.filter((r) => (r.athleteCode ?? "").trim().toLowerCase() === key)
@@ -322,7 +322,7 @@ export async function getAthleteOwnerThankYouRows(code: string): Promise<Athlete
   const c = code.trim().toUpperCase()
   if (!CODE_RE.test(c)) return []
 
-  const corrected = await loadCorrectedStripeDonationsForSpartanPublicWindow(DEFAULT_FUNDRAISING_CAMPAIGN)
+  const corrected = await loadCorrectedStripeDonationsForCampaignWindow(DEFAULT_FUNDRAISING_CAMPAIGN)
   if (corrected != null) {
     const mine = corrected.filter((r) => {
       const ac = (r.athleteCode ?? "").trim().toUpperCase()

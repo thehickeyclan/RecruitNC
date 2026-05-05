@@ -87,7 +87,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
     athleteId ? fetchRecruitingProfilePhoto(admin, athleteId) : Promise.resolve(null),
   ])
 
-  /** Spartan-parity totals come from uncached Stripe (see `getAthleteFundraisingPublicSnapshot`). If both Stripe and mirror fail, show zeros — do not substitute `profile.total_raised_cents` (often drifts from `/spartan`). */
+  /** Totals use the same corrected Stripe aggregate as `/spartan` (via cached campaign session list — typically within 60–120s of live). If Stripe + mirror fail, show zeros — do not substitute `profile.total_raised_cents`. */
   const EMPTY_STATS: AthleteFundraisingPublicStats = {
     raisedCents: 0,
     giftCount: 0,
