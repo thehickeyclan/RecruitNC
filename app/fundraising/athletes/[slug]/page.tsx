@@ -156,7 +156,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
             <img
               src={heroPhotoSrc}
               alt={`${displayName} — recruiting photo`}
-              className="h-auto max-h-[min(420px,55vh)] w-full object-cover object-top transition duration-300 group-hover:opacity-92"
+              className="h-auto max-h-[min(480px,60vh)] w-full object-cover object-center transition duration-300 group-hover:opacity-92"
             />
           </HardLink>
         ) : (
@@ -165,7 +165,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
             <img
               src={heroPhotoSrc}
               alt={heroIsCustomPhoto ? `${displayName} — recruiting photo` : ""}
-              className={`h-auto max-h-[min(420px,55vh)] w-full object-cover object-top ${heroIsCustomPhoto ? "" : "opacity-80"}`}
+              className={`h-auto max-h-[min(480px,60vh)] w-full object-cover object-center ${heroIsCustomPhoto ? "" : "opacity-80"}`}
             />
           </div>
         )}

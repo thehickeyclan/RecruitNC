@@ -1,11 +1,20 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 
 /**
- * Who may edit the fundraising story and see donor contact details on `/fundraising/athletes/[slug]`.
- * **Only** admin-linked accounts: rows in `parent_athlete_links` (POST `/api/admin/parent-athlete-link`).
- * Staff should pass the RecruitNC `user_id` to link — parent account, athlete account, or both — not `claimed_by_user_id`.
+ * Who may edit the fundraising story on `/fundraising/athletes/[slug]` (and PATCH fundraising-bio).
+ * - `user_profiles.is_admin` (RecruitNC staff), or
+ * - `parent_athlete_links` for that athlete (parent/athlete account linked in admin).
  */
 export type FundraisingPageManagerAccess = "none" | "linked"
+
+async function userIsRecruitNcAdmin(admin: SupabaseClient, userId: string): Promise<boolean> {
+  const { data, error } = await admin.from("user_profiles").select("is_admin").eq("user_id", userId).maybeSingle()
+  if (error) {
+    console.warn("[athlete-fundraising-access] user_profiles", error.message)
+    return false
+  }
+  return !!(data as { is_admin?: boolean } | null)?.is_admin
+}
 
 export async function getFundraisingPageManagerAccess(
   admin: SupabaseClient,
@@ -31,6 +40,7 @@ export async function userCanManageFundraisingForAthlete(
   userId: string,
   athleteId: string,
 ): Promise<boolean> {
+  if (await userIsRecruitNcAdmin(admin, userId)) return true
   const access = await getFundraisingPageManagerAccess(admin, userId, athleteId)
   return access !== "none"
 }
