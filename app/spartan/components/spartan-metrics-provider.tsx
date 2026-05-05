@@ -1,8 +1,9 @@
 "use client"
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react"
+import { DEFAULT_FUNDRAISING_CAMPAIGN } from "@/lib/fundraising/campaign-registry"
 
-export const SPARTAN_METRICS_DAYS = 120
+export const SPARTAN_METRICS_DAYS = DEFAULT_FUNDRAISING_CAMPAIGN.defaultLookbackDays
 
 export type SpartanPublicEntry = {
   id: string

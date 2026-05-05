@@ -8,8 +8,9 @@ import {
   hubSpartanDonationRowMatchesCampaign,
   publicGiftCampaignLabel,
 } from "@/lib/fundraising/campaign-registry"
-import { loadCorrectedStripeDonationsForCampaignWindow } from "@/lib/fundraising/stripe-transparency-pipeline"
+import { loadCorrectedStripeDonationsForSpartanPublicWindow } from "@/lib/fundraising/stripe-transparency-pipeline"
 import {
+  aggregateSpartanByAthlete,
   publicSupporterDisplayName,
   type SpartanFayettevilleDonation,
 } from "@/lib/spartan-fayetteville-stripe"
@@ -155,36 +156,52 @@ async function fetchAthleteMirrorCreditedRows(
 }
 
 /**
- * Same roll-up as `/spartan` athlete leaderboard: corrected Stripe sessions in the campaign window, filtered by
- * `athleteCode` (metadata + credit corrections). Falls back to `spartan_donations` only when Stripe is unavailable.
+ * Same roll-up as `/spartan` `byAthlete` (see `aggregateSpartanByAthlete`): corrected Stripe sessions in the
+ * Spartan public window, **uncached** — matches `GET /api/spartan/supporters?days=<defaultLookbackDays>`.
+ * Falls back to `spartan_donations` only when Stripe is unavailable.
  */
 async function loadAthleteCreditedForPublic(
   codeUpper: string,
 ): Promise<
-  | { source: "stripe"; rows: SpartanFayettevilleDonation[] }
+  | {
+      source: "stripe"
+      allCorrected: SpartanFayettevilleDonation[]
+      mine: SpartanFayettevilleDonation[]
+    }
   | { source: "mirror"; rows: DonationSelectRow[] }
   | null
 > {
-  const corrected = await loadCorrectedStripeDonationsForCampaignWindow(DEFAULT_FUNDRAISING_CAMPAIGN)
+  const corrected = await loadCorrectedStripeDonationsForSpartanPublicWindow(DEFAULT_FUNDRAISING_CAMPAIGN)
   if (corrected != null) {
-    const mine = corrected.filter((r) => (r.athleteCode ?? "").trim().toUpperCase() === codeUpper)
-    return { source: "stripe", rows: mine }
+    const key = codeUpper.toLowerCase()
+    const mine = corrected.filter((r) => (r.athleteCode ?? "").trim().toLowerCase() === key)
+    return { source: "stripe", allCorrected: corrected, mine }
   }
   const mirror = await fetchAthleteMirrorCreditedRows(createAdminClient(), codeUpper)
   if (mirror == null) return null
   return { source: "mirror", rows: mirror }
 }
 
-function statsFromStripeCredited(rows: SpartanFayettevilleDonation[]): AthleteFundraisingPublicStats {
-  let raisedCents = 0
+/**
+ * Identical cents + gift count as Spartan `byAthlete` for this NCU code (after credit corrections).
+ */
+function statsFromStripeCreditedForCode(
+  allCorrected: SpartanFayettevilleDonation[],
+  codeUpper: string,
+): AthleteFundraisingPublicStats {
+  const key = codeUpper.toLowerCase()
+  const agg = aggregateSpartanByAthlete(allCorrected)
+  const row = agg.find((a) => a.athleteCode.trim().toLowerCase() === key)
+  const raisedCents = row?.totalCents ?? 0
+  const giftCount = row?.donationCount ?? 0
+
+  const mine = allCorrected.filter((r) => (r.athleteCode ?? "").trim().toLowerCase() === key)
   let organizationGiftCount = 0
   let individualGiftCount = 0
-  for (const row of rows) {
-    raisedCents += row.amountCents
-    if (row.payerType === "organization") organizationGiftCount++
+  for (const r of mine) {
+    if (r.payerType === "organization") organizationGiftCount++
     else individualGiftCount++
   }
-  const giftCount = rows.length
   return {
     raisedCents,
     giftCount,
@@ -233,15 +250,17 @@ function giftsFromMirrorCredited(credited: DonationSelectRow[], limit: number): 
 }
 
 /**
- * Paid gifts credited to this NCU code — prefer **corrected Stripe** (same window + rules as `/spartan` leaderboard);
- * fall back to `spartan_donations` when Stripe is unavailable. May trail live Stripe briefly until cache revalidates.
+ * Paid gifts credited to this NCU code — same Stripe list + corrections and **same per-athlete rollup** as
+ * `/api/spartan/supporters` / Spartan `byAthlete` (uncached). Falls back to `spartan_donations` when Stripe is unavailable.
  */
 export async function getAthleteFundraisingPublicStats(code: string): Promise<AthleteFundraisingPublicStats | null> {
   const c = code.trim().toUpperCase()
   if (!CODE_RE.test(c)) return null
   const loaded = await loadAthleteCreditedForPublic(c)
   if (loaded == null) return null
-  return loaded.source === "stripe" ? statsFromStripeCredited(loaded.rows) : statsFromMirrorCredited(loaded.rows)
+  return loaded.source === "stripe"
+    ? statsFromStripeCreditedForCode(loaded.allCorrected, c)
+    : statsFromMirrorCredited(loaded.rows)
 }
 
 export type AthleteRecentGiftRow = {
@@ -258,12 +277,12 @@ export async function getAthleteRecentGifts(code: string, limit: number): Promis
   const loaded = await loadAthleteCreditedForPublic(c)
   if (loaded == null) return []
   return loaded.source === "stripe"
-    ? giftsFromStripeCredited(loaded.rows, limit)
+    ? giftsFromStripeCredited(loaded.mine, limit)
     : giftsFromMirrorCredited(loaded.rows, limit)
 }
 
 /**
- * Public totals + gift table: Stripe-first (cached full-session list + corrections), mirror fallback only.
+ * Public totals + gift table: Stripe-first, **uncached** (Spartan-parity), mirror fallback only.
  */
 export async function getAthleteFundraisingPublicSnapshot(
   code: string,
@@ -275,8 +294,8 @@ export async function getAthleteFundraisingPublicSnapshot(
   if (loaded == null) return null
   if (loaded.source === "stripe") {
     return {
-      stats: statsFromStripeCredited(loaded.rows),
-      gifts: giftsFromStripeCredited(loaded.rows, giftLimit),
+      stats: statsFromStripeCreditedForCode(loaded.allCorrected, c),
+      gifts: giftsFromStripeCredited(loaded.mine, giftLimit),
     }
   }
   return {
@@ -303,7 +322,7 @@ export async function getAthleteOwnerThankYouRows(code: string): Promise<Athlete
   const c = code.trim().toUpperCase()
   if (!CODE_RE.test(c)) return []
 
-  const corrected = await loadCorrectedStripeDonationsForCampaignWindow(DEFAULT_FUNDRAISING_CAMPAIGN)
+  const corrected = await loadCorrectedStripeDonationsForSpartanPublicWindow(DEFAULT_FUNDRAISING_CAMPAIGN)
   if (corrected != null) {
     const mine = corrected.filter((r) => {
       const ac = (r.athleteCode ?? "").trim().toUpperCase()

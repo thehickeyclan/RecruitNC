@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 import QRCode from "qrcode"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { resolveFundraisingAthletePublicBySlugForRequest } from "@/lib/fundraising/athlete-fundraising-profiles"
-import { getAthleteFundraisingPublicSnapshot } from "@/lib/fundraising/athlete-public-stats"
+import { getAthleteFundraisingPublicSnapshot, type AthleteFundraisingPublicStats } from "@/lib/fundraising/athlete-public-stats"
 import { HardLink } from "@/components/hard-link"
 import { createClient } from "@/lib/supabase/server"
 import { DEFAULT_FUNDRAISING_CAMPAIGN, FUNDRAISING_GIVE_PAGE_PATH } from "@/lib/fundraising/campaign-registry"
@@ -86,7 +86,17 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
     code != null ? getAthleteFundraisingPublicSnapshot(code, 250) : Promise.resolve(null),
     athleteId ? fetchRecruitingProfilePhoto(admin, athleteId) : Promise.resolve(null),
   ])
-  const stats = snapshot?.stats ?? null
+
+  /** Spartan-parity totals come from uncached Stripe (see `getAthleteFundraisingPublicSnapshot`). If both Stripe and mirror fail, show zeros — do not substitute `profile.total_raised_cents` (often drifts from `/spartan`). */
+  const EMPTY_STATS: AthleteFundraisingPublicStats = {
+    raisedCents: 0,
+    giftCount: 0,
+    avgGiftCents: null,
+    organizationGiftCount: 0,
+    individualGiftCount: 0,
+    payerTypeBreakdownKnown: false,
+  }
+  const stats = snapshot?.stats ?? (code != null ? EMPTY_STATS : null)
   const publicGifts = snapshot?.gifts ?? []
 
   const displayName = publicTitleName(resolved)

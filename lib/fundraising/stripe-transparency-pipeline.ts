@@ -65,3 +65,14 @@ export async function loadCorrectedStripeDonationsForCampaignWindow(
   )
   return cachedLoader()
 }
+
+/**
+ * **Uncached** paid Spartan checkouts for `campaign.defaultLookbackDays`, with the same corrections as
+ * `GET /api/spartan/supporters` when called with `days` equal to that value (e.g. 120 for Fayetteville 2026).
+ * Use for **public athlete gift pages** so raised totals match the Spartan supporter board exactly.
+ */
+export async function loadCorrectedStripeDonationsForSpartanPublicWindow(
+  campaign: FundraisingCampaignDefinition = DEFAULT_FUNDRAISING_CAMPAIGN,
+): Promise<SpartanFayettevilleDonation[] | null> {
+  return loadCorrectedStripeDonationsForCampaignWindowUncached(campaign, null)
+}
