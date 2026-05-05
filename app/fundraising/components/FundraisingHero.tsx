@@ -1,5 +1,6 @@
 import type { FundraisingHubHeroStats, FundraisingHubTransparencyMeta } from "@/lib/fundraising/hub-data"
 import { HardLink } from "@/components/hard-link"
+import { AthleteSearchBar } from "./AthleteSearchBar"
 
 const NAVY = "#0B2545"
 const RED = "#CC0000"
@@ -25,12 +26,13 @@ export function FundraisingHero({
   hero: FundraisingHubHeroStats
   hubTransparency: FundraisingHubTransparencyMeta
 }) {
+  const raised = formatUsdWhole(hero.totalRaisedCents).replace(/^\$/, "")
+
   return (
     <section
-      className="relative overflow-hidden border-b border-white/[0.08] px-4 pb-20 pt-12 text-white sm:pb-28 sm:pt-16"
+      className="relative overflow-hidden border-b border-white/[0.08] px-4 pb-16 pt-12 text-white sm:pb-24 sm:pt-16"
       style={{ backgroundColor: NAVY }}
     >
-      {/* Tactical grid + wash */}
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.14]"
         aria-hidden
@@ -52,106 +54,90 @@ export function FundraisingHero({
         }}
       />
 
-      <div className="relative mx-auto max-w-6xl">
-        <div className="flex flex-wrap items-center gap-3">
-          <span
-            className={`${displayFont("inline-flex items-center rounded border border-[#CC0000]/50 bg-[#CC0000]/15 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.22em] text-[#ffb3b3]")}`}
-          >
-            Live ops
-          </span>
-          <span className={`${displayFont("text-[11px] font-bold uppercase tracking-[0.32em]")}`} style={{ color: GOLD }}>
-            501(c)(3) central command
-          </span>
-        </div>
+      <div className="relative mx-auto max-w-6xl text-center sm:text-left">
+        <p
+          className={`${displayFont("text-[10px] font-extrabold uppercase tracking-[0.32em] text-[#C8A94A] sm:text-[11px]")}`}
+        >
+          Live ops · 501(c)(3) central command
+        </p>
 
         <h1
-          className={`${displayFont("mt-6 max-w-[20ch] text-[clamp(2.5rem,7vw,4.25rem)] font-black uppercase leading-[0.95] tracking-[-0.02em] text-white")}`}
+          className={`${displayFont("mx-auto mt-6 max-w-[22ch] text-[clamp(2.25rem,8vw,4.5rem)] font-black uppercase leading-[0.92] tracking-[-0.02em] text-white sm:mx-0")}`}
         >
           NC United <span className="text-[#C8A94A]">×</span> Fundraising
         </h1>
 
-        <p className="mt-6 max-w-2xl text-lg font-medium leading-relaxed text-white sm:text-xl">
-          Nonprofit <span className="text-white/90">501(c)(3)</span> giving: tax documentation when eligible, athlete or
-          training-fund credit at checkout, and a purpose-built ledger — not generic crowdfunding or P2P money requests.
+        <p className="mx-auto mt-6 max-w-2xl text-base font-medium leading-relaxed text-white/75 sm:mx-0 sm:text-lg">
+          NC wrestlers earn their development. Their community makes it possible. Every dollar is tax-deductible and goes
+          directly to the athlete you choose.
         </p>
-
-        <dl className="mt-14 grid gap-4 sm:grid-cols-3">
-          {[
-            { label: "Total raised", value: formatUsdWhole(hero.totalRaisedCents) },
-            { label: "Total donors", value: hero.totalDonors.toLocaleString("en-US") },
-            { label: "Athletes funded", value: hero.athletesFunded.toLocaleString("en-US") },
-          ].map((s) => (
-            <div
-              key={s.label}
-              className="relative overflow-hidden rounded-lg border border-white/12 bg-black/30 pl-5 pr-4 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_20px_50px_-24px_rgba(0,0,0,0.9)] backdrop-blur-sm before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-[#CC0000]"
-            >
-              <dt className={`${displayFont("text-[10px] font-bold uppercase tracking-[0.24em] text-white/80")}`}>
-                {s.label}
-              </dt>
-              <dd
-                className={`${displayFont("mt-3 text-[clamp(1.75rem,4vw,2.35rem)] font-black tabular-nums tracking-tight text-white")}`}
-              >
-                {s.value}
-              </dd>
-            </div>
-          ))}
-        </dl>
-
-        <p className="mt-4 max-w-2xl text-xs font-medium leading-relaxed text-white/55 sm:text-sm">
-          Figures above are paid checkouts for{" "}
-          <strong className="text-white/85">{hubTransparency.campaignDisplayName}</strong> in the last{" "}
-          <strong className="tabular-nums text-white/85">{hubTransparency.lookbackDays}</strong> days (Stripe metadata{" "}
-          <span className="font-mono text-[11px] text-white/70">{hubTransparency.stripeCampaignSlug}</span>) — same scope
-          as the{" "}
-          <HardLink
-            href="/fundraising/leaderboard"
-            className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline"
-          >
-            full leaderboard
+        <p className="mx-auto mt-3 max-w-2xl text-xs leading-relaxed text-white/50 sm:mx-0">
+          Hero figures = paid checkouts for{" "}
+          <strong className="text-white/70">{hubTransparency.campaignDisplayName}</strong>, last{" "}
+          <span className="tabular-nums text-white/65">{hubTransparency.lookbackDays}</span> days (
+          <span className="font-mono text-[10px] text-white/45">{hubTransparency.stripeCampaignSlug}</span>) — aligns with the{" "}
+          <HardLink href="/fundraising/leaderboard" className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
+            leaderboard
           </HardLink>
           .
         </p>
 
-        <div className="mt-12 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center">
-          <a
-            href="#fundraising-active-campaigns"
-            className={`${displayFont("inline-flex min-h-[54px] items-center justify-center rounded-sm bg-[#CC0000] px-12 text-[15px] font-extrabold uppercase tracking-[0.16em] text-white shadow-[0_18px_52px_-12px_rgba(204,0,0,0.65)] transition hover:bg-[#a80000] active:scale-[0.99]")}`}
-          >
-            Support an Athlete
-          </a>
-          <div
-            className={`${displayFont("flex items-center gap-2 rounded border border-white/20 bg-white/[0.06] px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-white/75")}`}
-          >
-            <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-[#C8A94A]" aria-hidden />
-            <span>
-              EIN <span className="tabular-nums text-white">99-3757238</span>
+        <div
+          className={`${displayFont("mx-auto mt-10 flex max-w-4xl flex-col gap-3 border-y border-white/10 py-6 text-white sm:mx-0 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-6 sm:py-7 md:justify-start")}`}
+        >
+          <div className="flex min-w-0 flex-1 flex-col sm:flex-none">
+            <span className="text-[10px] font-extrabold uppercase tracking-[0.24em] text-[#C8A94A]">Raised</span>
+            <span className="mt-1 text-2xl font-black tabular-nums text-white sm:text-3xl">${raised}</span>
+          </div>
+          <span className="hidden text-[#C8A94A]/50 sm:block" aria-hidden>
+            |
+          </span>
+          <div className="flex min-w-0 flex-1 flex-col sm:flex-none">
+            <span className="text-[10px] font-extrabold uppercase tracking-[0.24em] text-[#C8A94A]">Donors</span>
+            <span className="mt-1 text-2xl font-black tabular-nums text-white sm:text-3xl">
+              {hero.totalDonors.toLocaleString("en-US")}
+            </span>
+          </div>
+          <span className="hidden text-[#C8A94A]/50 sm:block" aria-hidden>
+            |
+          </span>
+          <div className="flex min-w-0 flex-1 flex-col sm:flex-none">
+            <span className="text-[10px] font-extrabold uppercase tracking-[0.24em] text-[#C8A94A]">Athletes funded</span>
+            <span className="mt-1 text-2xl font-black tabular-nums text-white sm:text-3xl">
+              {hero.athletesFunded.toLocaleString("en-US")}
             </span>
           </div>
         </div>
 
-        <nav
-          aria-label="Jump to hub sections"
-          className="mt-10 flex flex-wrap gap-x-5 gap-y-2 border-t border-white/10 pt-8 text-white"
+        <p
+          className={`${displayFont("mx-auto mt-4 max-w-2xl text-[11px] font-bold uppercase tracking-[0.2em] text-[#C8A94A] sm:mx-0")}`}
         >
-          {(
-            [
-              ["#fundraising-why-nc-united", "Why NC United"],
-              ["#fundraising-corporate-sponsors", "Partners"],
-              ["#fundraising-active-campaigns", "Campaigns"],
-              ["#fundraising-leaderboard", "Leaderboard"],
-              ["#fundraising-activity", "Recent gifts"],
-              ["#fundraising-donor-hall-of-fame", "Honor roll"],
-            ] as const
-          ).map(([href, label]) => (
-            <a
-              key={href}
-              href={href}
-              className={`${displayFont("text-[11px] font-extrabold uppercase tracking-[0.18em] text-white underline-offset-4 hover:text-[#C8A94A] hover:underline")}`}
-            >
-              {label}
-            </a>
-          ))}
-        </nav>
+          Raised in 16 days. Zero preparation. One community.
+        </p>
+
+        <div className="mx-auto mt-10 flex max-w-xl flex-col gap-3 sm:mx-0 sm:max-w-none sm:flex-row sm:flex-wrap">
+          <HardLink
+            href="/fundraising/athletes"
+            className={`${displayFont("inline-flex min-h-[52px] flex-1 items-center justify-center rounded-sm bg-[#CC0000] px-8 text-sm font-extrabold uppercase tracking-[0.14em] text-white shadow-[0_18px_52px_-12px_rgba(204,0,0,0.65)] transition hover:bg-[#a80000] sm:flex-none sm:min-w-[240px]")}`}
+          >
+            Support an athlete →
+          </HardLink>
+          <HardLink
+            href="/fundraising/donate"
+            className={`${displayFont("inline-flex min-h-[52px] flex-1 items-center justify-center rounded-sm border-2 border-white/25 bg-transparent px-8 text-sm font-extrabold uppercase tracking-[0.14em] text-white transition hover:border-[#C8A94A]/60 hover:text-[#C8A94A] sm:flex-none sm:min-w-[240px]")}`}
+          >
+            Donate to NC United →
+          </HardLink>
+        </div>
+
+        <p className="mx-auto mt-6 text-center text-xs text-white/55 sm:mx-0 sm:text-left">
+          <span className="font-semibold text-white/80">501(c)(3)</span> · EIN{" "}
+          <span className="tabular-nums text-white/90">99-3757238</span>
+        </p>
+
+        <div className="mx-auto max-w-xl sm:mx-0">
+          <AthleteSearchBar />
+        </div>
       </div>
     </section>
   )

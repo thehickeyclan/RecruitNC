@@ -21,12 +21,12 @@ export function CampaignCards({ campaigns }: { campaigns: FundraisingHubCampaign
   return (
     <section
       id="fundraising-active-campaigns"
-      className="scroll-mt-28 border-b border-white/[0.06] bg-[#061224] px-4 py-20 sm:py-24"
+      className="scroll-mt-28 border-b border-white/[0.06] bg-[#0B2545] px-4 py-20 sm:py-24"
     >
       <div className="mx-auto max-w-6xl">
         <div className="text-center">
-          <p className={`${displayFont("text-[11px] font-extrabold uppercase tracking-[0.28em] text-[#CC0000]")}`}>
-            Missions in market
+          <p className={`${displayFont("text-[10px] font-extrabold uppercase tracking-[0.28em] text-[#C8A94A] sm:text-[11px]")}`}>
+            Live campaigns
           </p>
           <h2
             className={`${displayFont("mt-3 text-[clamp(1.85rem,4.5vw,2.65rem)] font-black uppercase tracking-tight text-white")}`}
@@ -34,7 +34,7 @@ export function CampaignCards({ campaigns }: { campaigns: FundraisingHubCampaign
             Active campaigns
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-white/60">
-            Drive locked. Same secure Stripe checkout — open a campaign and put support behind NC United athletes.
+            What&apos;s live right now — open a drive, track the bar, and get teammates on the board.
           </p>
         </div>
 
@@ -51,10 +51,10 @@ export function CampaignCards({ campaigns }: { campaigns: FundraisingHubCampaign
                 gifts with athlete credit at checkout.
               </p>
               <HardLink
-                href="/spartan"
+                href="/fundraising/athletes"
                 className={`${displayFont("mt-8 inline-flex min-h-[50px] w-full items-center justify-center rounded-sm bg-[#CC0000] text-sm font-extrabold uppercase tracking-[0.14em] text-white transition hover:bg-[#a80000] sm:w-auto sm:px-10")}`}
               >
-                Give now →
+                Support an athlete year-round →
               </HardLink>
             </div>
           </div>

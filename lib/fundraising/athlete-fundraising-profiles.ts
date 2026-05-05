@@ -101,6 +101,8 @@ export type FundraisingAthleteIndexRow = {
   sublabel: string | null
   hrefSlug: string
   photoUrl: string | null
+  /** From `athlete_fundraising_profiles.total_raised_cents` when present. */
+  totalRaisedCents: number | null
 }
 
 /**
@@ -136,6 +138,7 @@ export async function getFundraisingAthletesIndexRows(
       sublabel: e.label.includes("·") ? e.label.split("·").slice(1).join("·").trim() : null,
       hrefSlug,
       photoUrl: p?.photo_url ?? null,
+      totalRaisedCents: typeof p?.total_raised_cents === "number" ? p.total_raised_cents : null,
     }
   })
 
@@ -162,6 +165,7 @@ export async function getFundraisingAthletesIndexRows(
       sublabel: null,
       hrefSlug: p.slug,
       photoUrl: p.photo_url,
+      totalRaisedCents: typeof p.total_raised_cents === "number" ? p.total_raised_cents : null,
     }
   })
 

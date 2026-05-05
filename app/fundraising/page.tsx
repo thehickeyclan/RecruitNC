@@ -1,20 +1,22 @@
 import type { Metadata } from "next"
 import { getFundraisingHubSnapshot } from "@/lib/fundraising/hub-data"
+import { fetchDonorHallOfFameFromStripe, DONOR_RECOGNITION_MIN_AMOUNT_CENTS } from "@/lib/fundraising/donor-hall-of-fame"
 import { FundraisingHero } from "./components/FundraisingHero"
-import { FundraisingValueProps } from "./components/FundraisingValueProps"
-import { CampaignCards } from "./components/CampaignCards"
-import { AthleteLeaderboard } from "./components/AthleteLeaderboard"
-import { DonorActivityFeed } from "./components/DonorActivityFeed"
+import { NavigationPaths } from "./components/NavigationPaths"
+import { ActiveCampaigns } from "./components/ActiveCampaigns"
+import { LeaderboardPreview } from "./components/LeaderboardPreview"
+import { LiveDonationStream } from "./components/LiveDonationStream"
+import { WhyNCUnited } from "./components/WhyNCUnited"
+import { PlaybookTeaser } from "./components/PlaybookTeaser"
+import { HonorRollPreview } from "./components/HonorRollPreview"
+import { CorporatePartners } from "./components/CorporatePartners"
 import { HowItWorks } from "./components/HowItWorks"
 import { FundraisingFooter } from "./components/FundraisingFooter"
-import { CorporateSponsors } from "./components/CorporateSponsors"
-import { DonorHallOfFame } from "./components/DonorHallOfFame"
-import { fetchDonorHallOfFameFromStripe, DONOR_RECOGNITION_MIN_AMOUNT_CENTS } from "@/lib/fundraising/donor-hall-of-fame"
 
 export const metadata: Metadata = {
   title: "Fundraising | NC United Wrestling",
   description:
-    "501(c)(3) nonprofit fundraising for NC United Wrestling — tax documentation, athlete credits, Stripe checkout vs consumer crowdfunding. Live totals, campaigns, and donor activity.",
+    "501(c)(3) nonprofit fundraising hub — tax-deductible gifts, athlete search, live donor activity, campaigns, and honor roll. EIN 99-3757238.",
 }
 
 export default async function FundraisingPortalHomePage() {
@@ -23,19 +25,24 @@ export default async function FundraisingPortalHomePage() {
     fetchDonorHallOfFameFromStripe(),
   ])
 
+  const leaderboardPreview = snapshot.leaderboard.slice(0, 5).map((r, i) => ({ ...r, rank: i + 1 }))
+  const liveFeedInitial = snapshot.activity.slice(0, 15)
+
   return (
     <div id="fundraising-hub-root" className="min-h-screen bg-[#0B2545]">
       <FundraisingHero hero={snapshot.hero} hubTransparency={snapshot.hubTransparency} />
-      <FundraisingValueProps hero={snapshot.hero} />
-      <CorporateSponsors />
-      <CampaignCards campaigns={snapshot.campaigns} />
-      <AthleteLeaderboard rows={snapshot.leaderboard} hubTransparency={snapshot.hubTransparency} />
-      <DonorActivityFeed initial={snapshot.activity} hubTransparency={snapshot.hubTransparency} />
-      <DonorHallOfFame
+      <NavigationPaths />
+      <ActiveCampaigns campaigns={snapshot.campaigns} />
+      <LeaderboardPreview rows={leaderboardPreview} hubTransparency={snapshot.hubTransparency} />
+      <LiveDonationStream initial={liveFeedInitial} hubTransparency={snapshot.hubTransparency} />
+      <WhyNCUnited hero={snapshot.hero} />
+      <PlaybookTeaser />
+      <HonorRollPreview
         individuals={hallOfFame?.individuals ?? []}
         organizations={hallOfFame?.organizations ?? []}
         minAmountCents={hallOfFame?.minAmountCents ?? DONOR_RECOGNITION_MIN_AMOUNT_CENTS}
       />
+      <CorporatePartners />
       <HowItWorks />
       <FundraisingFooter />
     </div>
