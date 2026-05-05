@@ -123,7 +123,14 @@ export function SpartanDonateFormWizard({
 }) {
   const searchParams = useSearchParams()
   const fh = Boolean(fundraisingHub)
+  /** `/fundraising/athletes/[slug]` embed: not the general Make a gift hub */
+  const athleteGiftPageEmbed = fh && Boolean((fundraisingHubReturnSlug ?? "").trim())
 
+  const publicSupporterListHelp = athleteGiftPageEmbed
+    ? "On this athlete's gift page and in team fundraiser activity, show your name or hide it."
+    : fh
+      ? "On the public fundraising hub, show your name or hide it."
+      : "On /spartan activity, show your name or hide it."
   const [email, setEmail] = useState("")
   const [donorName, setDonorName] = useState("")
   /** Optional: person at the org (thank-yous) when receipt is a business name */
@@ -1150,9 +1157,7 @@ export function SpartanDonateFormWizard({
             <label htmlFor="spartan-supporter-list-d" className="text-sm font-medium text-[#ccc]">
               Public supporter list
             </label>
-            <p className="mt-0.5 text-[11px] text-[#666]">
-              On {fh ? "the public fundraising hub" : "/spartan activity"}, show your name or hide it
-            </p>
+            <p className="mt-0.5 text-[11px] text-[#666]">{publicSupporterListHelp}</p>
             <select
               id="spartan-supporter-list-d"
               value={donorListPublic ? "show" : "anon"}

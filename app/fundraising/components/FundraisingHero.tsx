@@ -71,7 +71,8 @@ export function FundraisingHero({
         </h1>
 
         <p className="mt-6 max-w-2xl text-lg font-medium leading-relaxed text-white sm:text-xl">
-          Every gift is tax-deductible and goes directly to NC wrestler development — pool or athlete credit at checkout.
+          Nonprofit <span className="text-white/90">501(c)(3)</span> giving: tax documentation when eligible, athlete or
+          training-fund credit at checkout, and a purpose-built ledger — not generic crowdfunding or P2P money requests.
         </p>
 
         <dl className="mt-14 grid gap-4 sm:grid-cols-3">
@@ -134,6 +135,7 @@ export function FundraisingHero({
         >
           {(
             [
+              ["#fundraising-why-nc-united", "Why NC United"],
               ["#fundraising-corporate-sponsors", "Partners"],
               ["#fundraising-active-campaigns", "Campaigns"],
               ["#fundraising-leaderboard", "Leaderboard"],

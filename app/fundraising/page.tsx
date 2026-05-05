@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { getFundraisingHubSnapshot } from "@/lib/fundraising/hub-data"
 import { FundraisingHero } from "./components/FundraisingHero"
+import { FundraisingValueProps } from "./components/FundraisingValueProps"
 import { CampaignCards } from "./components/CampaignCards"
 import { AthleteLeaderboard } from "./components/AthleteLeaderboard"
 import { DonorActivityFeed } from "./components/DonorActivityFeed"
@@ -13,7 +14,7 @@ import { fetchDonorHallOfFameFromStripe, DONOR_RECOGNITION_MIN_AMOUNT_CENTS } fr
 export const metadata: Metadata = {
   title: "Fundraising | NC United Wrestling",
   description:
-    "Tax-deductible 501(c)(3) fundraising for NC United Wrestling athletes — live totals, campaigns, and donor activity.",
+    "501(c)(3) nonprofit fundraising for NC United Wrestling — tax documentation, athlete credits, Stripe checkout vs consumer crowdfunding. Live totals, campaigns, and donor activity.",
 }
 
 export default async function FundraisingPortalHomePage() {
@@ -25,6 +26,7 @@ export default async function FundraisingPortalHomePage() {
   return (
     <div id="fundraising-hub-root" className="min-h-screen bg-[#0B2545]">
       <FundraisingHero hero={snapshot.hero} hubTransparency={snapshot.hubTransparency} />
+      <FundraisingValueProps hero={snapshot.hero} />
       <CorporateSponsors />
       <CampaignCards campaigns={snapshot.campaigns} />
       <AthleteLeaderboard rows={snapshot.leaderboard} hubTransparency={snapshot.hubTransparency} />

@@ -366,15 +366,9 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           />
         </div>
 
-        <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-          <HardLink href={giveOnThisPageHref} className={PRIMARY_DONATE_CTA_CLASS}>
-            Donate now
-          </HardLink>
-        </div>
-
         <section
           id={checkoutAnchor}
-          className="mt-6 scroll-mt-28 rounded-xl border border-[#C8A94A]/25 bg-[#0B2545]/35 p-4 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.45)] backdrop-blur-sm sm:p-6"
+          className="mt-10 scroll-mt-28 rounded-xl border border-[#C8A94A]/25 bg-[#0B2545]/35 p-4 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.45)] backdrop-blur-sm sm:p-6"
         >
           <h2 className="font-[family-name:var(--font-fundraising-display)] text-center text-lg font-bold uppercase tracking-wide text-white">
             Secure checkout
