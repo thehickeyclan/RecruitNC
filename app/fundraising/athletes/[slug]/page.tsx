@@ -14,6 +14,7 @@ import { FundraisingAthleteEmbeddedCheckout } from "./fundraising-athlete-embedd
 import { FundraisingAthleteMessageSection } from "./fundraising-athlete-message"
 import { FundraisingMilestoneTrophy } from "./fundraising-milestone-trophy"
 import { FundraisingOwnerPanel } from "./fundraising-owner-panel"
+import { FundraisingAdminAssignmentPanel } from "./fundraising-admin-assignment-panel"
 import { recruitingProfilePhotoFromRow } from "@/lib/recruiting-profile-photo"
 import { fetchThankYouAckLedgerKeys } from "@/lib/fundraising/supporter-thank-you-ack"
 
@@ -169,6 +170,16 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
         >
           ← All athletes
         </HardLink>
+
+        {viewerIsRecruitNcAdmin ? (
+          <FundraisingAdminAssignmentPanel
+            fundraisingSlug={slug}
+            profileId={profile?.id ?? null}
+            athleteId={athleteId}
+            athleteDisplayLabel={displayName}
+            ncuHint={profile?.primary_fundraising_code ?? code}
+          />
+        ) : null}
 
         <p className="font-[family-name:var(--font-fundraising-display)] mt-8 text-[11px] font-bold uppercase tracking-[0.28em] text-[#CC0000]">
           Official NC United gift page

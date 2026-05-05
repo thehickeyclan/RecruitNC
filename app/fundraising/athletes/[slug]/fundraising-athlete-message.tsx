@@ -70,7 +70,8 @@ export function FundraisingAthleteMessageSection({
 
   const trimmed = bio.trim()
   const showPublicMessage = trimmed.length > 0
-  const showPencil = canEdit && (hasFundraisingProfile || isRecruitNcAdmin)
+  /** Managers (athlete login + athlete_id, linked parent, or staff) may edit; first save can create the profile from roster NCU. */
+  const showPencil = canEdit
 
   return (
     <section className="mt-8 rounded-xl border border-[#C8A94A]/30 bg-[#0B2545]/45 px-4 py-5 sm:px-6 sm:py-6">
@@ -97,19 +98,12 @@ export function FundraisingAthleteMessageSection({
 
       {canEdit && !hasFundraisingProfile && !isRecruitNcAdmin ? (
         <p className="mt-3 text-sm leading-relaxed text-white/65">
-          A fundraising profile is needed to save a note here. Contact{" "}
-          <a href="mailto:info@ncwrestlingunited.com" className="text-[#C8A94A] underline-offset-2 hover:underline">
-            info@ncwrestlingunited.com
-          </a>
-          .
+          Tap <strong className="text-white/90">Edit</strong> to write your note — saving creates your gift page record if you&apos;re on the roster with an NCU code. If save fails, staff can add your profile in Fundraising admin.
         </p>
       ) : showPencil && editing ? (
         <>
           <p className="mt-2 text-xs leading-relaxed text-white/50">
-            This message appears at the top of this gift page. Only the athlete&apos;s linked family account and NC United admins
-            can change it
-            {isRecruitNcAdmin && !hasFundraisingProfile ? " (saving will create a fundraising profile when the roster NCU code is available)" : ""}
-            .
+            This message appears at the top of this gift page. Saving may create your fundraising profile the first time if your NCU code is on file.
           </p>
           <textarea
             value={bio}

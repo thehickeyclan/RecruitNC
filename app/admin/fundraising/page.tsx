@@ -36,6 +36,7 @@ import {
   Link2,
   Mail,
   RefreshCw,
+  Search,
   UserRoundX,
   UserCircle,
   Users,
@@ -240,6 +241,8 @@ function ProfileCodeSyncDot({ ok }: { ok: boolean | null }) {
 const ATHLETE_UUID_PIN_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
+const NCU_CODE_PIN_RE = /^NCU-[A-Z0-9]+-\d{2}$/
+
 export default function AdminFundraisingPage() {
   const [activeCampaignKey, setActiveCampaignKey] = useState(DEFAULT_FUNDRAISING_CAMPAIGN.adminContextKey)
   const campaign = fundraisingCampaignByContextKey(activeCampaignKey) ?? DEFAULT_FUNDRAISING_CAMPAIGN
@@ -252,6 +255,15 @@ export default function AdminFundraisingPage() {
   /** Paste athlete UUID per gap row → POST pin API */
   const [gapPinAthleteId, setGapPinAthleteId] = useState<Record<string, string>>({})
   const [gapPinBusy, setGapPinBusy] = useState<string | null>(null)
+
+  /** Wrestler picker + manual Pin when Directory gaps table is empty */
+  const [quickPinAthletes, setQuickPinAthletes] = useState<{ id: string; name: string }[] | null>(null)
+  const [quickPinAthletesLoading, setQuickPinAthletesLoading] = useState(false)
+  const [quickPinSearch, setQuickPinSearch] = useState("")
+  const [quickPinAthleteIdField, setQuickPinAthleteIdField] = useState("")
+  const [quickPinAthleteNameHint, setQuickPinAthleteNameHint] = useState("")
+  const [quickPinNcu, setQuickPinNcu] = useState("")
+  const [quickPinSubmitBusy, setQuickPinSubmitBusy] = useState(false)
 
   const [donations, setDonations] = useState<SpartanDonationRow[] | null>(null)
   const [byAthlete, setByAthlete] = useState<SpartanAthleteAggregate[] | null>(null)
@@ -339,6 +351,14 @@ export default function AdminFundraisingPage() {
   const [profilePrimaryCode, setProfilePrimaryCode] = useState("")
   const [profileActive, setProfileActive] = useState(true)
   const [profileSaveBusy, setProfileSaveBusy] = useState(false)
+  /** Donor profile row → search wrestlers by name and PATCH `athlete_id`. */
+  const [attachAthleteProfile, setAttachAthleteProfile] = useState<AdminAthleteFundraisingProfileRow | null>(null)
+  const [attachAthleteSearch, setAttachAthleteSearch] = useState("")
+  const [attachAthletePickId, setAttachAthletePickId] = useState("")
+  const [attachAthletePickName, setAttachAthletePickName] = useState("")
+  const [attachAthleteBusy, setAttachAthleteBusy] = useState(false)
+  /** When linking a parent from the donor profiles table, show slug in the dialog. */
+  const [linkParentContextSlug, setLinkParentContextSlug] = useState<string | null>(null)
   const [walletGuideOpen, setWalletGuideOpen] = useState(false)
 
   const [kidLedgerFilter, setKidLedgerFilter] = useState("")
@@ -679,36 +699,94 @@ export default function AdminFundraisingPage() {
     })
   }
 
+  const submitSpartanFundraisingPin = useCallback(
+    async (athleteIdRaw: string, ncuCodeRaw: string): Promise<boolean> => {
+      const athleteId = athleteIdRaw.trim()
+      const code = ncuCodeRaw.trim().toUpperCase()
+      if (!ATHLETE_UUID_PIN_RE.test(athleteId)) {
+        toast({
+          title: "Need a valid athlete ID",
+          description: "Pick a wrestler below or paste UUID from Athletes admin / view-profile.",
+          variant: "destructive",
+        })
+        return false
+      }
+      if (!NCU_CODE_PIN_RE.test(code)) {
+        toast({
+          title: "NCU code format",
+          description: "Use NCU-NAME-YY (example: NCU-SMITH-28). Letters/numbers OK in the middle.",
+          variant: "destructive",
+        })
+        return false
+      }
+      try {
+        const res = await fetch("/api/admin/spartan-fundraising-pin-code", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ athleteId, ncuCode: code }),
+        })
+        const j = (await res.json()) as { error?: string; message?: string }
+        if (!res.ok) throw new Error(j.error || "Pin failed")
+        toast({ title: "Pinned", description: j.message ?? `${code} linked.` })
+        await loadDonations()
+        await loadAthleteMatrix()
+        return true
+      } catch (e) {
+        toast({
+          title: "Pin failed",
+          description: e instanceof Error ? e.message : "Unknown error",
+          variant: "destructive",
+        })
+        return false
+      }
+    },
+    [loadDonations, loadAthleteMatrix],
+  )
+
+  const loadQuickPinAthletes = async () => {
+    if (quickPinAthletes !== null || quickPinAthletesLoading) return
+    setQuickPinAthletesLoading(true)
+    try {
+      const res = await fetch("/api/admin/athletes", { credentials: "include" })
+      if (!res.ok) throw new Error(`Could not load athletes (${res.status})`)
+      const data = await res.json()
+      let arr: unknown[] = []
+      if (Array.isArray(data)) arr = data
+      else if (data && typeof data === "object") {
+        const d = data as { athletes?: unknown[]; data?: unknown[] }
+        if (Array.isArray(d.athletes)) arr = d.athletes
+        else if (Array.isArray(d.data)) arr = d.data
+      }
+      const mapped = arr
+        .map((raw) => {
+          const a = raw as { id?: string; name?: string }
+          return {
+            id: typeof a.id === "string" ? a.id : "",
+            name: typeof a.name === "string" ? a.name : "—",
+          }
+        })
+        .filter((a) => a.id)
+        .sort((a, b) => a.name.localeCompare(b.name))
+      setQuickPinAthletes(mapped)
+    } catch (e) {
+      toast({
+        title: "Could not load wrestler list",
+        description: e instanceof Error ? e.message : "Open Athletes admin to copy an ID.",
+        variant: "destructive",
+      })
+      setQuickPinAthletes(null)
+    } finally {
+      setQuickPinAthletesLoading(false)
+    }
+  }
+
   const pinGapToAthleteProfile = async (ncuCode: string) => {
     const key = ncuCode.trim().toUpperCase()
     const athleteId = (gapPinAthleteId[key] ?? "").trim()
-    if (!ATHLETE_UUID_PIN_RE.test(athleteId)) {
-      toast({
-        title: "Paste athlete UUID",
-        description: "Copy id from view-profile (?id=…) or athletes admin.",
-        variant: "destructive",
-      })
-      return
-    }
     setGapPinBusy(key)
     try {
-      const res = await fetch("/api/admin/spartan-fundraising-pin-code", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ athleteId, ncuCode: key }),
-      })
-      const j = (await res.json()) as { error?: string; message?: string }
-      if (!res.ok) throw new Error(j.error || "Pin failed")
-      toast({ title: "Pinned", description: j.message ?? `${key} linked.` })
-      await loadDonations()
-      await loadAthleteMatrix()
-    } catch (e) {
-      toast({
-        title: "Pin failed",
-        description: e instanceof Error ? e.message : "Unknown error",
-        variant: "destructive",
-      })
+      await submitSpartanFundraisingPin(athleteId, key)
     } finally {
       setGapPinBusy(null)
     }
@@ -816,11 +894,38 @@ export default function AdminFundraisingPage() {
   }
 
   const openLinkParentDialog = (r: SpartanParentCoverageRow) => {
+    setLinkParentContextSlug(null)
     setLinkParentRow(r)
     setParentSearchQuery("")
     setParentSearchResults([])
     setSelectedParent(null)
     setLinkParentOpen(true)
+  }
+
+  const openLinkParentDialogFromProfile = (p: AdminAthleteFundraisingProfileRow) => {
+    const codeRaw = (p.primary_fundraising_code ?? p.roster_ncu_code ?? "").trim()
+    setLinkParentRow({
+      athleteCode: codeRaw || "—",
+      displayName: p.athlete_name ?? p.slug,
+      athleteId: p.athlete_id,
+      totalCents: 0,
+      donationCount: 0,
+      managingUserCount: 0,
+      status: "no_managing_user",
+    })
+    setLinkParentContextSlug(p.slug)
+    setParentSearchQuery("")
+    setParentSearchResults([])
+    setSelectedParent(null)
+    setLinkParentOpen(true)
+  }
+
+  const openAttachAthleteDialog = (p: AdminAthleteFundraisingProfileRow) => {
+    setAttachAthleteProfile(p)
+    setAttachAthleteSearch("")
+    setAttachAthletePickId("")
+    setAttachAthletePickName("")
+    void loadQuickPinAthletes()
   }
 
   const submitParentLink = async () => {
@@ -866,6 +971,7 @@ export default function AdminFundraisingPage() {
       toast({ title: "Parent linked", description: j.message ?? "Saved." })
       setLinkParentOpen(false)
       setLinkParentRow(null)
+      setLinkParentContextSlug(null)
       setParentSearchQuery("")
       setParentSearchResults([])
       setSelectedParent(null)
@@ -1124,6 +1230,20 @@ export default function AdminFundraisingPage() {
     return rows
   }, [aggByAthleteCode, athleteMatrix, expenseRollupByAthleteId, fundraiserCodeToAthleteId])
 
+  const quickPinFiltered = useMemo(() => {
+    if (!quickPinAthletes?.length) return []
+    const q = quickPinSearch.trim().toLowerCase()
+    if (q.length < 2) return []
+    return quickPinAthletes.filter((a) => a.name.toLowerCase().includes(q)).slice(0, 20)
+  }, [quickPinAthletes, quickPinSearch])
+
+  const attachAthleteFiltered = useMemo(() => {
+    if (!attachAthleteProfile || !quickPinAthletes?.length) return []
+    const q = attachAthleteSearch.trim().toLowerCase()
+    if (q.length < 2) return []
+    return quickPinAthletes.filter((a) => a.name.toLowerCase().includes(q)).slice(0, 20)
+  }, [quickPinAthletes, attachAthleteSearch, attachAthleteProfile])
+
   const filteredKidLedgerRows = useMemo(() => {
     const q = kidLedgerFilter.trim().toLowerCase()
     if (!q) return kidLedgerRows
@@ -1348,6 +1468,57 @@ export default function AdminFundraisingPage() {
       await loadAthleteMatrix()
     } finally {
       setProfileSaveBusy(false)
+    }
+  }
+
+  const submitAttachAthleteToProfile = async () => {
+    if (!attachAthleteProfile) return
+    const aid = attachAthletePickId.trim()
+    if (!ATHLETE_UUID_PIN_RE.test(aid)) {
+      toast({
+        title: "Pick a wrestler",
+        description: "Choose someone from the list or paste a valid athletes.id UUID.",
+        variant: "destructive",
+      })
+      return
+    }
+    if (aid === attachAthleteProfile.athlete_id) {
+      toast({ title: "Already attached", description: "This donor page already points at that athlete record." })
+      return
+    }
+    setAttachAthleteBusy(true)
+    try {
+      const res = await fetch("/api/admin/athlete-fundraising-profiles", {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: attachAthleteProfile.id,
+          athlete_id: aid,
+        }),
+      })
+      const j = (await res.json()) as { error?: string }
+      if (!res.ok) {
+        toast({
+          title: "Could not attach athlete",
+          description: j.error ?? res.statusText,
+          variant: "destructive",
+        })
+        return
+      }
+      toast({
+        title: "Athlete attached",
+        description: `${attachAthletePickName || aid.slice(0, 8)}… is now linked to /fundraising/athletes/${attachAthleteProfile.slug}`,
+      })
+      setAttachAthleteProfile(null)
+      setAttachAthleteSearch("")
+      setAttachAthletePickId("")
+      setAttachAthletePickName("")
+      await loadFundraisingProfiles()
+      await loadAthleteMatrix()
+      await loadDonations()
+    } finally {
+      setAttachAthleteBusy(false)
     }
   }
 
@@ -2274,15 +2445,12 @@ export default function AdminFundraisingPage() {
                       Public pages at{" "}
                       <HardLink href="/fundraising/athletes" className="text-primary underline-offset-4 hover:underline">
                         /fundraising/athletes
-                      </HardLink>{" "}
-                      — bio, photo, goal, optional NCU override. There isn&apos;t a name search in this dialog: open{" "}
-                      <HardLink href="/admin/athletes" className="text-primary underline-offset-4 hover:underline">
-                        athletes admin
                       </HardLink>
-                      , find &quot;Ayden Sumners&quot;, copy his <code className="rounded bg-muted px-1 text-[11px]">athletes.id</code> UUID,
-                      then <strong className="text-foreground">New profile</strong> and paste it with a slug. Copy the live URL from
-                      the slug column when done. Requires{" "}
-                      <code className="rounded bg-muted px-1 text-[11px]">athlete_fundraising_profiles</code> in Supabase (
+                      . Each row has <strong className="text-foreground">Attach athlete</strong> (search by name — updates which{" "}
+                      <span className="font-mono text-[11px]">athletes.id</span> this slug uses) and{" "}
+                      <strong className="text-foreground">Attach parent</strong> (search login users for{" "}
+                      <span className="font-mono text-[11px]">parent_athlete_links</span>). Requires{" "}
+                      <code className="rounded bg-muted px-1 text-[11px]">athlete_fundraising_profiles</code> (
                       <code className="rounded bg-muted px-1 text-[11px]">database/create-athlete-fundraising-profiles.sql</code>
                       ).
                     </CardDescription>
@@ -2330,7 +2498,7 @@ export default function AdminFundraisingPage() {
                           <TableHead>NCU (roster / override)</TableHead>
                           <TableHead>Goal</TableHead>
                           <TableHead>Active</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
+                          <TableHead className="text-right min-w-[11rem]">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -2371,9 +2539,17 @@ export default function AdminFundraisingPage() {
                                 )}
                               </TableCell>
                               <TableCell className="text-right">
-                                <Button type="button" variant="outline" size="sm" onClick={() => openEditFundraisingProfileDialog(p)}>
-                                  Edit
-                                </Button>
+                                <div className="flex flex-col items-end gap-1 sm:flex-row sm:flex-wrap sm:justify-end">
+                                  <Button type="button" variant="outline" size="sm" onClick={() => openEditFundraisingProfileDialog(p)}>
+                                    Edit
+                                  </Button>
+                                  <Button type="button" variant="outline" size="sm" onClick={() => openAttachAthleteDialog(p)}>
+                                    Attach athlete
+                                  </Button>
+                                  <Button type="button" variant="outline" size="sm" onClick={() => openLinkParentDialogFromProfile(p)}>
+                                    Attach parent
+                                  </Button>
+                                </div>
                               </TableCell>
                             </TableRow>
                           )
@@ -2400,23 +2576,127 @@ export default function AdminFundraisingPage() {
                     <div className="min-w-0 flex-1 space-y-2">
                       <CardTitle className="text-lg leading-snug">1. Directory gaps</CardTitle>
                       <p className="text-muted-foreground text-sm leading-snug">
-                        Stripe credited these NCU codes but the playbook couldn&apos;t match them yet. Paste the{" "}
-                        <strong className="text-foreground">athlete UUID</strong> for the correct profile (from{" "}
-                        <HardLink href="/admin/athletes" className="text-primary underline-offset-4 hover:underline">
-                          athletes admin
-                        </HardLink>{" "}
-                        or <span className="font-mono text-[11px]">view-profile?id=…</span>) → <strong className="text-foreground">Pin</strong>.
-                        First-time setup: run the SQL in{" "}
-                        <span className="font-mono text-[11px]">docs/sql/spartan-fundraising-athlete-id-column.sql.txt</span> in Supabase if pinning errors mention{" "}
-                        <span className="font-mono text-[11px]">athlete_id</span>.
+                        The table below only appears when Stripe shows checkout dollars on a code we couldn&apos;t match yet — it is{" "}
+                        <strong className="text-foreground">not</strong> a wrestler search. Use{" "}
+                        <strong className="text-foreground">Pin any wrestler</strong> (box below) to search by name and attach any NCU code anytime.
+                        If rows appear here instead, paste the athlete UUID per row → Pin.
                       </p>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4 pt-0">
+                  <div className="rounded-xl border border-[#003366]/20 bg-white p-4 shadow-sm dark:bg-card">
+                    <div className="flex flex-wrap items-start gap-2">
+                      <Search className="mt-0.5 h-5 w-5 shrink-0 text-[#003366]" aria-hidden />
+                      <div className="min-w-0 flex-1 space-y-3">
+                        <div>
+                          <p className="font-semibold text-foreground">Pin any wrestler (search by name)</p>
+                          <p className="text-muted-foreground mt-1 text-sm leading-snug">
+                            Same action as Pin profile — links an NCU checkout code to the athlete record. Donor page slug is separate (Donor-facing profiles section).
+                          </p>
+                        </div>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div className="grid gap-1.5">
+                            <Label htmlFor="quick-pin-search">Find wrestler</Label>
+                            <Input
+                              id="quick-pin-search"
+                              placeholder="Type name (min 2 letters)"
+                              value={quickPinSearch}
+                              onChange={(e) => setQuickPinSearch(e.target.value)}
+                              onFocus={() => void loadQuickPinAthletes()}
+                              autoComplete="off"
+                              disabled={quickPinAthletesLoading}
+                            />
+                            {quickPinAthletesLoading ? (
+                              <p className="text-muted-foreground text-xs">Loading directory…</p>
+                            ) : quickPinAthletes && quickPinAthletes.length === 0 ? (
+                              <p className="text-muted-foreground text-xs">No athletes returned — try Athletes admin.</p>
+                            ) : quickPinSearch.trim().length >= 2 && quickPinFiltered.length === 0 ? (
+                              <p className="text-muted-foreground text-xs">No name matches — paste ID manually.</p>
+                            ) : null}
+                            {quickPinFiltered.length > 0 ? (
+                              <ul className="max-h-44 overflow-auto rounded-md border bg-muted/30 text-sm">
+                                {quickPinFiltered.map((a) => (
+                                  <li key={a.id}>
+                                    <button
+                                      type="button"
+                                      className="hover:bg-muted/80 w-full px-3 py-2 text-left"
+                                      onClick={() => {
+                                        setQuickPinAthleteIdField(a.id)
+                                        setQuickPinAthleteNameHint(a.name)
+                                        setQuickPinSearch("")
+                                      }}
+                                    >
+                                      <span className="font-medium text-foreground">{a.name}</span>
+                                      <span className="text-muted-foreground ml-2 font-mono text-[10px]">{a.id.slice(0, 8)}…</span>
+                                    </button>
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : null}
+                          </div>
+                          <div className="grid gap-1.5">
+                            <Label htmlFor="quick-pin-athlete-id">Athlete ID (fills when you pick above)</Label>
+                            <Input
+                              id="quick-pin-athlete-id"
+                              placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                              value={quickPinAthleteIdField}
+                              onChange={(e) => {
+                                setQuickPinAthleteIdField(e.target.value)
+                                setQuickPinAthleteNameHint("")
+                              }}
+                              className="font-mono text-xs"
+                              autoComplete="off"
+                            />
+                            {quickPinAthleteNameHint ? (
+                              <p className="text-muted-foreground text-xs">Selected: {quickPinAthleteNameHint}</p>
+                            ) : null}
+                          </div>
+                        </div>
+                        <div className="grid gap-1.5 sm:max-w-md">
+                          <Label htmlFor="quick-pin-ncu">NCU code to attach</Label>
+                          <Input
+                            id="quick-pin-ncu"
+                            placeholder="NCU-LASTNAME-28"
+                            value={quickPinNcu}
+                            onChange={(e) => setQuickPinNcu(e.target.value)}
+                            className="font-mono text-sm"
+                            autoComplete="off"
+                          />
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            type="button"
+                            className="bg-[#003366] text-white hover:bg-[#002952]"
+                            disabled={quickPinSubmitBusy}
+                            onClick={async () => {
+                              setQuickPinSubmitBusy(true)
+                              try {
+                                const ok = await submitSpartanFundraisingPin(quickPinAthleteIdField, quickPinNcu)
+                                if (ok) setQuickPinNcu("")
+                              } finally {
+                                setQuickPinSubmitBusy(false)
+                              }
+                            }}
+                          >
+                            {quickPinSubmitBusy ? "Pinning…" : "Pin NCU to this athlete"}
+                          </Button>
+                          <Button type="button" variant="outline" size="sm" asChild>
+                            <HardLink href="/admin/athletes">Open Athletes admin</HardLink>
+                          </Button>
+                        </div>
+                        <p className="text-muted-foreground text-[11px] leading-snug">
+                          Pin errors about missing <span className="font-mono">athlete_id</span>? Run{" "}
+                          <span className="font-mono">docs/sql/spartan-fundraising-athlete-id-column.sql.txt</span> in Supabase once.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
                   {directoryGapRows.length === 0 ? (
                     <p className="text-sm leading-relaxed text-emerald-800 dark:text-emerald-200">
-                      No orphaned codes — every NCU code with dollars in this window maps to the fundraising directory (or there are no coded gifts loaded yet).
+                      No orphaned checkout codes in this reporting window — nothing needs fixing in the table below. Use{" "}
+                      <strong className="font-semibold text-foreground">Pin any wrestler</strong> above anytime you still need to attach a code.
                     </p>
                   ) : (
                     <>
@@ -3243,11 +3523,117 @@ export default function AdminFundraisingPage() {
         </div>
 
         <Dialog
+          open={attachAthleteProfile !== null}
+          onOpenChange={(o) => {
+            if (!o) {
+              setAttachAthleteProfile(null)
+              setAttachAthleteSearch("")
+              setAttachAthletePickId("")
+              setAttachAthletePickName("")
+              setAttachAthleteBusy(false)
+            }
+          }}
+        >
+          <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="leading-snug">Attach athlete to donor profile</DialogTitle>
+              <DialogDescription className="leading-snug">
+                Search by wrestler name, pick one, then save. This updates{" "}
+                <code className="rounded bg-muted px-1 text-[11px]">athlete_fundraising_profiles.athlete_id</code> for slug{" "}
+                <span className="font-mono text-[11px]">{attachAthleteProfile?.slug ?? ""}</span> — the public URL stays the same. Another profile
+                cannot already use that athlete (unique constraint).
+              </DialogDescription>
+            </DialogHeader>
+            {attachAthleteProfile ? (
+              <div className="space-y-4 text-sm">
+                <div className="rounded-md border bg-muted/35 px-3 py-2 leading-relaxed">
+                  <p className="font-medium text-foreground">Currently linked</p>
+                  <p className="mt-1">{attachAthleteProfile.athlete_name ?? "—"}</p>
+                  <p className="text-muted-foreground font-mono text-[11px]">{attachAthleteProfile.athlete_id}</p>
+                </div>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="attach-fp-athlete-search">Find wrestler (min 2 letters)</Label>
+                  <Input
+                    id="attach-fp-athlete-search"
+                    placeholder="Type name…"
+                    value={attachAthleteSearch}
+                    onChange={(e) => {
+                      setAttachAthleteSearch(e.target.value)
+                      setAttachAthletePickId("")
+                      setAttachAthletePickName("")
+                    }}
+                    onFocus={() => void loadQuickPinAthletes()}
+                    autoComplete="off"
+                    disabled={quickPinAthletesLoading}
+                  />
+                  {quickPinAthletesLoading ? (
+                    <p className="text-muted-foreground text-xs">Loading directory…</p>
+                  ) : attachAthleteSearch.trim().length >= 2 && attachAthleteFiltered.length === 0 ? (
+                    <p className="text-muted-foreground text-xs">No name matches — open Athletes admin and paste UUID below.</p>
+                  ) : null}
+                  {attachAthleteFiltered.length > 0 ? (
+                    <ul className="max-h-44 overflow-auto rounded-md border bg-muted/30 text-sm">
+                      {attachAthleteFiltered.map((a) => (
+                        <li key={a.id}>
+                          <button
+                            type="button"
+                            className="hover:bg-muted/80 w-full px-3 py-2 text-left"
+                            onClick={() => {
+                              setAttachAthletePickId(a.id)
+                              setAttachAthletePickName(a.name)
+                              setAttachAthleteSearch("")
+                            }}
+                          >
+                            <span className="font-medium text-foreground">{a.name}</span>
+                            <span className="text-muted-foreground ml-2 font-mono text-[10px]">{a.id.slice(0, 8)}…</span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="attach-fp-athlete-id">Athletes.id UUID (fills when you pick above)</Label>
+                  <Input
+                    id="attach-fp-athlete-id"
+                    className="font-mono text-xs"
+                    placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                    value={attachAthletePickId}
+                    onChange={(e) => {
+                      setAttachAthletePickId(e.target.value)
+                      setAttachAthletePickName("")
+                    }}
+                    autoComplete="off"
+                  />
+                  {attachAthletePickName ? (
+                    <p className="text-muted-foreground text-xs">Selected: {attachAthletePickName}</p>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setAttachAthleteProfile(null)}
+                disabled={attachAthleteBusy}
+              >
+                Cancel
+              </Button>
+              <Button type="button" onClick={() => void submitAttachAthleteToProfile()} disabled={attachAthleteBusy}>
+                {attachAthleteBusy ? "Saving…" : "Save attachment"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog
           open={linkParentOpen}
           onOpenChange={(o) => {
             setLinkParentOpen(o)
             if (!o) {
               setLinkParentRow(null)
+              setLinkParentContextSlug(null)
               setParentSearchQuery("")
               setParentSearchResults([])
               setSelectedParent(null)
@@ -3260,6 +3646,18 @@ export default function AdminFundraisingPage() {
               <DialogDescription className="leading-snug">
                 Search by email or name, click a row to select, then <strong className="text-foreground">Create link</strong>. That adds{" "}
                 <code className="rounded bg-muted px-1 text-[11px]">parent_athlete_links</code> so Fundraise shows under Profile.
+                {linkParentContextSlug ? (
+                  <>
+                    {" "}
+                    Donor page:{" "}
+                    <HardLink
+                      href={`/fundraising/athletes/${linkParentContextSlug}`}
+                      className="text-primary underline-offset-4 hover:underline"
+                    >
+                      /fundraising/athletes/{linkParentContextSlug}
+                    </HardLink>
+                  </>
+                ) : null}
               </DialogDescription>
             </DialogHeader>
             {linkParentRow ? (
@@ -3350,9 +3748,14 @@ export default function AdminFundraisingPage() {
             <DialogHeader>
               <DialogTitle>{profileEditingId ? "Edit fundraising profile" : "New fundraising profile"}</DialogTitle>
               <DialogDescription className="leading-snug">
-                {profileEditingId
-                  ? "Update slug, story, photo URL, goal, or NCU override. Athlete id cannot move between profiles."
-                  : "Paste the RecruitNC athletes.id (UUID), choose a unique URL slug, then save."}
+                {profileEditingId ? (
+                  <>
+                    Update slug, story, photo URL, goal, or NCU override. To point this page at a different wrestler, close here and use{" "}
+                    <strong className="text-foreground">Attach athlete</strong> on that profile&apos;s row (name search).
+                  </>
+                ) : (
+                  "Paste the RecruitNC athletes.id (UUID), choose a unique URL slug, then save."
+                )}
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-3 text-sm">

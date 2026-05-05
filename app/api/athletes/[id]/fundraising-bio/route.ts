@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 
-import { userCanManageFundraisingForAthlete, userIsRecruitNcAdmin } from "@/lib/fundraising/athlete-fundraising-access"
+import { userCanManageFundraisingForAthlete } from "@/lib/fundraising/athlete-fundraising-access"
 import { getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
 import { normalizeFundraisingProfileSlug } from "@/lib/fundraising/athlete-fundraising-profiles"
 import { fundraisingSlugFromCode } from "@/lib/fundraising/athlete-fundraising-slug"
@@ -63,14 +63,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return NextResponse.json({ error: "Could not load fundraising page" }, { status: 500 })
     }
     if (!profile) {
-      const isAdmin = await userIsRecruitNcAdmin(admin, user.id)
-      if (!isAdmin) {
-        return NextResponse.json(
-          { error: "No fundraising page on file for this athlete — contact NC United to add one." },
-          { status: 404 },
-        )
-      }
-
+      /** Same auto-create path staff used to have only — now any athlete/parent who already passes userCanManageFundraisingForAthlete. */
       const entries = await getFundraisingAthleteEntries(admin)
       const entry = entries.find((e) => e.id === athleteId)
       const fromCode = entry?.code?.trim() ? normalizeFundraisingProfileSlug(fundraisingSlugFromCode(entry.code)) : ""

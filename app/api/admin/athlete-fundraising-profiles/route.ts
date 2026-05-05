@@ -166,6 +166,7 @@ export async function PATCH(request: NextRequest) {
 
   let body: {
     id?: string
+    athlete_id?: string
     slug?: string
     bio?: string | null
     photo_url?: string | null
@@ -182,7 +183,22 @@ export async function PATCH(request: NextRequest) {
   const id = typeof body.id === "string" ? body.id.trim() : ""
   if (!id) return NextResponse.json({ error: "id is required" }, { status: 400 })
 
+  const admin = createAdminClient()
   const patch: Record<string, unknown> = { updated_at: new Date().toISOString() }
+
+  if (body.athlete_id !== undefined) {
+    const athleteId = typeof body.athlete_id === "string" ? body.athlete_id.trim() : ""
+    if (!athleteId) {
+      return NextResponse.json({ error: "athlete_id cannot be empty" }, { status: 400 })
+    }
+    const { data: athleteOk, error: athleteErr } = await admin.from("athletes").select("id").eq("id", athleteId).maybeSingle()
+    if (athleteErr) {
+      console.error("[athlete-fundraising-profiles] PATCH athlete check", athleteErr)
+      return NextResponse.json({ error: athleteErr.message }, { status: 500 })
+    }
+    if (!athleteOk) return NextResponse.json({ error: "athlete_id not found in athletes" }, { status: 400 })
+    patch.athlete_id = athleteId
+  }
 
   if (body.slug !== undefined) {
     const slug = normalizeFundraisingProfileSlug(typeof body.slug === "string" ? body.slug : "")
@@ -220,7 +236,6 @@ export async function PATCH(request: NextRequest) {
     }
   }
 
-  const admin = createAdminClient()
   const { data: updated, error: upErr } = await admin
     .from("athlete_fundraising_profiles")
     .update(patch)
@@ -231,7 +246,15 @@ export async function PATCH(request: NextRequest) {
   if (upErr) {
     console.error("[athlete-fundraising-profiles] PATCH", upErr)
     if (upErr.code === "23505") {
-      return NextResponse.json({ error: "That slug is already taken." }, { status: 409 })
+      const slugTaken = patch.slug !== undefined
+      return NextResponse.json(
+        {
+          error: slugTaken
+            ? "That slug is already taken."
+            : "That athlete already has a donor fundraising profile — merge or delete the other row first.",
+        },
+        { status: 409 },
+      )
     }
     return NextResponse.json({ error: upErr.message }, { status: 500 })
   }
