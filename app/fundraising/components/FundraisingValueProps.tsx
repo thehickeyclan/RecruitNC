@@ -27,6 +27,10 @@ const CARDS: Card[] = [
     title: "Nonprofit checkout — built for wrestling",
     body: "You pay through our nonprofit-owned Stripe checkout—email receipt, supporter visibility choices, and metadata that ties every gift to the right athlete code. Many consumer platforms add a visible platform fee on top of what donors intended; here your gift is structured as a tax-documented nonprofit gift when eligible, without that extra consumer-fundraiser layer.",
   },
+  {
+    title: "Major supporters — recognition & thanks",
+    body: "Qualifying donors can appear on our public supporter honor roll (when they choose “show my name”) and may be eligible for tiered thank-you benefits—gear, seasonal recognition, or event-style thanks—depending on the campaign year and thresholds NC United sets. Benefits stay proportional; we communicate what applies so expectations stay clear.",
+  },
 ]
 
 export function FundraisingValueProps({ hero }: { hero: FundraisingHubHeroStats }) {
@@ -53,10 +57,13 @@ export function FundraisingValueProps({ hero }: { hero: FundraisingHubHeroStats 
           You get <strong className="text-white/90">tax documentation</strong>,{" "}
           <strong className="text-white/90">athlete or program credit</strong>, and a{" "}
           <strong className="text-white/90">single nonprofit ledger</strong> — instead of routing gifts through apps built
-          for casual transfers or generic crowdfunding.
+          for casual transfers or generic crowdfunding.{" "}
+          <strong className="text-white/90">Major supporters</strong> can also receive NC United{" "}
+          <strong className="text-white/90">recognition and thank-you benefits</strong> (tiered)—when we run those programs
+          for a campaign season, details are shared with qualifying donors.
         </p>
 
-        <ul className="mt-12 grid gap-6 md:grid-cols-3">
+        <ul className="mt-12 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
           {CARDS.map((c) => (
             <li
               key={c.title}

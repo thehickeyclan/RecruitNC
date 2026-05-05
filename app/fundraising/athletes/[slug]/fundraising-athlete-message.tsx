@@ -7,10 +7,12 @@ import { useCallback, useEffect, useState } from "react"
 type Props = {
   displayName: string
   athleteId: string
-  /** True when athlete_fundraising_profiles row exists (required to save bio). */
+  /** True when athlete_fundraising_profiles row exists (parent/linked users need this to save). */
   hasFundraisingProfile: boolean
   /** Linked parent/athlete or RecruitNC admin (`user_profiles.is_admin`). */
   canEdit: boolean
+  /** RecruitNC staff — may edit the note even before a profile row exists (saving creates the profile when possible). */
+  isRecruitNcAdmin: boolean
   initialBio: string
 }
 
@@ -19,6 +21,7 @@ export function FundraisingAthleteMessageSection({
   athleteId,
   hasFundraisingProfile,
   canEdit,
+  isRecruitNcAdmin,
   initialBio,
 }: Props) {
   const router = useRouter()
@@ -67,7 +70,7 @@ export function FundraisingAthleteMessageSection({
 
   const trimmed = bio.trim()
   const showPublicMessage = trimmed.length > 0
-  const showPencil = canEdit && hasFundraisingProfile
+  const showPencil = canEdit && (hasFundraisingProfile || isRecruitNcAdmin)
 
   return (
     <section className="mt-8 rounded-xl border border-[#C8A94A]/30 bg-[#0B2545]/45 px-4 py-5 sm:px-6 sm:py-6">
@@ -92,7 +95,7 @@ export function FundraisingAthleteMessageSection({
         ) : null}
       </div>
 
-      {canEdit && !hasFundraisingProfile ? (
+      {canEdit && !hasFundraisingProfile && !isRecruitNcAdmin ? (
         <p className="mt-3 text-sm leading-relaxed text-white/65">
           A fundraising profile is needed to save a note here. Contact{" "}
           <a href="mailto:info@ncwrestlingunited.com" className="text-[#C8A94A] underline-offset-2 hover:underline">
@@ -103,8 +106,10 @@ export function FundraisingAthleteMessageSection({
       ) : showPencil && editing ? (
         <>
           <p className="mt-2 text-xs leading-relaxed text-white/50">
-            This message appears at the top of your gift page. Only you, your linked family account, and NC United admins can
-            change it.
+            This message appears at the top of this gift page. Only the athlete&apos;s linked family account and NC United admins
+            can change it
+            {isRecruitNcAdmin && !hasFundraisingProfile ? " (saving will create a fundraising profile when the roster NCU code is available)" : ""}
+            .
           </p>
           <textarea
             value={bio}

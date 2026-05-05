@@ -214,7 +214,7 @@ function hubDonationRowsFromStripeDonations(rows: SpartanFayettevilleDonation[])
     donor_name: r.donorName,
     athlete_code: r.athleteCode,
     athlete_display_name: r.athleteDisplayName,
-    spartan_campaign: null,
+    spartan_campaign: r.spartanCampaignSlug,
     raw_metadata: undefined,
   }))
 }

@@ -2,9 +2,14 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 
-import { userCanManageFundraisingForAthlete } from "@/lib/fundraising/athlete-fundraising-access"
+import { userCanManageFundraisingForAthlete, userIsRecruitNcAdmin } from "@/lib/fundraising/athlete-fundraising-access"
+import { getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
+import { normalizeFundraisingProfileSlug } from "@/lib/fundraising/athlete-fundraising-profiles"
+import { fundraisingSlugFromCode } from "@/lib/fundraising/athlete-fundraising-slug"
 
 const MAX_BIO = 6000
+const SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/
+const NCU_RE = /^NCU-[A-Za-z0-9]+-\d{2}$/i
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -58,10 +63,62 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return NextResponse.json({ error: "Could not load fundraising page" }, { status: 500 })
     }
     if (!profile) {
-      return NextResponse.json(
-        { error: "No fundraising page on file for this athlete — contact NC United to add one." },
-        { status: 404 },
-      )
+      const isAdmin = await userIsRecruitNcAdmin(admin, user.id)
+      if (!isAdmin) {
+        return NextResponse.json(
+          { error: "No fundraising page on file for this athlete — contact NC United to add one." },
+          { status: 404 },
+        )
+      }
+
+      const entries = await getFundraisingAthleteEntries(admin)
+      const entry = entries.find((e) => e.id === athleteId)
+      const fromCode = entry?.code?.trim() ? normalizeFundraisingProfileSlug(fundraisingSlugFromCode(entry.code)) : ""
+      const slug = fromCode && SLUG_RE.test(fromCode) ? fromCode : ""
+
+      if (!slug) {
+        return NextResponse.json(
+          {
+            error:
+              "Cannot create a fundraising profile automatically: this athlete needs an NCU roster code. Create a profile in admin Fundraising or add the athlete to the fundraising roster first.",
+          },
+          { status: 400 },
+        )
+      }
+
+      const primary =
+        entry?.code?.trim() && NCU_RE.test(entry.code.trim().toUpperCase())
+          ? entry.code.trim().toUpperCase()
+          : null
+
+      const now = new Date().toISOString()
+      const { data: created, error: insErr } = await admin
+        .from("athlete_fundraising_profiles")
+        .insert({
+          athlete_id: athleteId,
+          slug,
+          bio,
+          photo_url: null,
+          is_active: true,
+          campaign_goal_cents: null,
+          primary_fundraising_code: primary,
+          updated_at: now,
+        })
+        .select("id, slug, bio, updated_at")
+        .single()
+
+      if (insErr) {
+        console.error("[fundraising-bio] admin create profile", insErr.message)
+        if (insErr.code === "23505") {
+          return NextResponse.json(
+            { error: "That slug is already taken — add this athlete’s profile in admin Fundraising with a unique slug." },
+            { status: 409 },
+          )
+        }
+        return NextResponse.json({ error: "Could not create fundraising profile" }, { status: 500 })
+      }
+
+      return NextResponse.json({ success: true, profile: created })
     }
 
     const { data: updated, error: uErr } = await admin

@@ -1,5 +1,8 @@
+import { cache } from "react"
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { createAdminClient } from "@/lib/supabase/admin"
 import type { FundraisingAthleteEntry } from "@/lib/spartan-fundraising-code"
+import { getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
 import { fundraisingCodeFromSlug } from "@/lib/fundraising/athlete-fundraising-slug"
 
 const NCU_CODE_RE = /^NCU-[A-Za-z0-9]+-\d{2}$/i
@@ -81,6 +84,15 @@ export async function resolveFundraisingAthletePublic(
   const entry = entries.find((e) => e.code.toUpperCase() === legacyCode) ?? null
   return { profile: null, code: legacyCode, entry, fallbackDisplayName: null }
 }
+
+/**
+ * Dedupes roster + slug resolution when both `generateMetadata` and the page load the same athlete (same request).
+ */
+export const resolveFundraisingAthletePublicBySlugForRequest = cache(async (slugInput: string) => {
+  const admin = createAdminClient()
+  const entries = await getFundraisingAthleteEntries(admin)
+  return resolveFundraisingAthletePublic(admin, slugInput, entries)
+})
 
 export type FundraisingAthleteIndexRow = {
   athleteId: string

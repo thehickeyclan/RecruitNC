@@ -34,6 +34,8 @@ export type SpartanFayettevilleDonation = {
   /** Optional: who is running the race if different from donor (metadata race_participant_name) */
   raceParticipantName: string | null
   attribution: "athlete" | "general_nc_united" | "manual_name"
+  /** Checkout metadata `spartan_campaign` when present — for public gift tables / campaign labels. */
+  spartanCampaignSlug: string | null
   tierPreference: string
   /**
    * NC United team tee (Stripe metadata `tee_sz` / `tee_100_eligible`) when checkout required size+ship
@@ -146,6 +148,9 @@ export async function listSpartanFayettevilleDonations(
         attr = "general_nc_united"
       }
 
+      const spartanCampaignSlug =
+        typeof m.spartan_campaign === "string" && m.spartan_campaign.trim() ? m.spartan_campaign.trim() : null
+
       const payerTypeRaw = typeof m.payer_type === "string" ? m.payer_type.trim().toLowerCase() : ""
       const payerType: SpartanFayettevilleDonation["payerType"] =
         payerTypeRaw === "organization" || payerTypeRaw === "org" ? "organization" : "person"
@@ -173,6 +178,7 @@ export async function listSpartanFayettevilleDonations(
         manualCreditName,
         raceParticipantName,
         attribution: attr,
+        spartanCampaignSlug,
         tierPreference: typeof m.tier_preference === "string" ? m.tier_preference : "",
         tee100Eligible,
         teeShirtSize,

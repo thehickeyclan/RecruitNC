@@ -27,6 +27,11 @@ export type FundraisingCampaignDefinition = {
    * Keeps the public hub honest vs a known campaign target (e.g. $10k Spartan drive).
    */
   hubDefaultGoalCents?: number
+  /**
+   * Athlete gift-activity table (e.g. "Spring Spartan 2026"). Use registry campaigns when metadata matches;
+   * otherwise the UI falls back to calendar season + year.
+   */
+  athleteGiftHistoryLabel: string
 }
 
 export const NC_UNITED_FUNDRAISING_BRAND = {
@@ -44,6 +49,7 @@ export const FUNDRAISING_CAMPAIGNS = [
     athleteQueryParam: "athlete",
     defaultLookbackDays: 120,
     hubDefaultGoalCents: 1_000_000,
+    athleteGiftHistoryLabel: "Spring Spartan 2026",
   },
 ] as const satisfies readonly FundraisingCampaignDefinition[]
 
@@ -92,6 +98,46 @@ export function normalizeRegistryStripeCampaignSlug(metadataSlug: string | null 
   }
   if (s === "fayetteville_spartan") return "fayetteville_2026"
   return s
+}
+
+/** Gift date in America/New_York → "Spring 2026" (no campaign). */
+export function seasonYearLabelForGiftDate(isoUtc: string): string {
+  const d = new Date(isoUtc)
+  if (Number.isNaN(d.getTime())) return "—"
+  const intl = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", month: "numeric", year: "numeric" })
+  const parts = intl.formatToParts(d)
+  const month = Number(parts.find((p) => p.type === "month")?.value ?? "1")
+  const year = Number(parts.find((p) => p.type === "year")?.value ?? d.getUTCFullYear())
+  let season: string
+  if (month >= 3 && month <= 5) season = "Spring"
+  else if (month >= 6 && month <= 8) season = "Summer"
+  else if (month >= 9 && month <= 11) season = "Fall"
+  else season = "Winter"
+  return `${season} ${year}`
+}
+
+function humanizeUnknownCampaignSlug(slug: string): string {
+  return slug
+    .replace(/_/g, " ")
+    .split(" ")
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ")
+}
+
+/**
+ * Label for athlete public gift lists: registry campaign name when `spartan_campaign` metadata matches;
+ * unknown non-empty slug → title-cased slug; empty / unknown with no registry match → season + year (ET).
+ */
+export function publicGiftCampaignLabel(metadataSlug: string | null | undefined, giftIsoUtc: string): string {
+  const raw = (metadataSlug ?? "").trim()
+  const norm = normalizeRegistryStripeCampaignSlug(raw)
+  if (norm !== "__unknown__") {
+    const c = fundraisingCampaignByStripeSlug(norm)
+    if (c) return c.athleteGiftHistoryLabel
+  }
+  if (raw) return humanizeUnknownCampaignSlug(raw)
+  return seasonYearLabelForGiftDate(giftIsoUtc)
 }
 
 /**

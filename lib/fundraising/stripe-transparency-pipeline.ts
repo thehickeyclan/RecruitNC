@@ -1,4 +1,5 @@
 import Stripe from "stripe"
+import { unstable_cache } from "next/cache"
 import { createAdminClient } from "@/lib/supabase/admin"
 import {
   fetchSpartanCreditCorrectionsIndex,
@@ -11,15 +12,14 @@ import {
 } from "@/lib/spartan-fayetteville-stripe"
 import { DEFAULT_FUNDRAISING_CAMPAIGN, type FundraisingCampaignDefinition } from "@/lib/fundraising/campaign-registry"
 
-/**
- * Paid Spartan checkouts for the campaign window, with the same credit corrections as `/api/spartan/supporters`.
- * Use for public totals that must match `/spartan` (source of truth is Stripe, not the `spartan_donations` mirror).
- *
- * Pass `preloadedCorrectionIndex` when the caller already loaded corrections (avoids a duplicate Supabase round trip).
- */
-export async function loadCorrectedStripeDonationsForCampaignWindow(
-  campaign: FundraisingCampaignDefinition = DEFAULT_FUNDRAISING_CAMPAIGN,
-  preloadedCorrectionIndex: SpartanCreditCorrectionsIndex | null = null,
+const STRIPE_DONATION_LIST_CACHE_SECONDS = Math.min(
+  600,
+  Math.max(60, Number(process.env.RECRUITNC_FUNDRAISING_STRIPE_LIST_CACHE_SECONDS) || 120),
+)
+
+async function loadCorrectedStripeDonationsForCampaignWindowUncached(
+  campaign: FundraisingCampaignDefinition,
+  preloadedCorrectionIndex: SpartanCreditCorrectionsIndex | null,
 ): Promise<SpartanFayettevilleDonation[] | null> {
   const key = process.env.STRIPE_SECRET_KEY?.trim()
   if (!key) return null
@@ -37,4 +37,31 @@ export async function loadCorrectedStripeDonationsForCampaignWindow(
     console.error("[stripe-transparency-pipeline]", e)
     return null
   }
+}
+
+/**
+ * Paid Spartan checkouts for the campaign window, with the same credit corrections as `/api/spartan/supporters`.
+ * Use for public totals that must match `/spartan` (source of truth is Stripe, not the `spartan_donations` mirror).
+ *
+ * Pass `preloadedCorrectionIndex` when the caller already loaded corrections (avoids a duplicate Supabase round trip).
+ * When `preloadedCorrectionIndex` is null, results are cached briefly (see `RECRUITNC_FUNDRAISING_STRIPE_LIST_CACHE_SECONDS`)
+ * so listing all Checkout Sessions is not repeated on every request.
+ */
+export async function loadCorrectedStripeDonationsForCampaignWindow(
+  campaign: FundraisingCampaignDefinition = DEFAULT_FUNDRAISING_CAMPAIGN,
+  preloadedCorrectionIndex: SpartanCreditCorrectionsIndex | null = null,
+): Promise<SpartanFayettevilleDonation[] | null> {
+  if (preloadedCorrectionIndex != null) {
+    return loadCorrectedStripeDonationsForCampaignWindowUncached(campaign, preloadedCorrectionIndex)
+  }
+  const cachedLoader = unstable_cache(
+    async () => loadCorrectedStripeDonationsForCampaignWindowUncached(campaign, null),
+    [
+      "spartan-corrected-stripe-donations",
+      campaign.stripeCampaignSlug,
+      String(campaign.defaultLookbackDays),
+    ],
+    { revalidate: STRIPE_DONATION_LIST_CACHE_SECONDS },
+  )
+  return cachedLoader()
 }

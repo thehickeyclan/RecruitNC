@@ -7,7 +7,7 @@ import type { SupabaseClient } from "@supabase/supabase-js"
  */
 export type FundraisingPageManagerAccess = "none" | "linked"
 
-async function userIsRecruitNcAdmin(admin: SupabaseClient, userId: string): Promise<boolean> {
+export async function userIsRecruitNcAdmin(admin: SupabaseClient, userId: string): Promise<boolean> {
   const { data, error } = await admin.from("user_profiles").select("is_admin").eq("user_id", userId).maybeSingle()
   if (error) {
     console.warn("[athlete-fundraising-access] user_profiles", error.message)

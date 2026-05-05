@@ -2,17 +2,17 @@ import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import QRCode from "qrcode"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
-import { resolveFundraisingAthletePublic } from "@/lib/fundraising/athlete-fundraising-profiles"
+import { resolveFundraisingAthletePublicBySlugForRequest } from "@/lib/fundraising/athlete-fundraising-profiles"
 import { getAthleteFundraisingPublicSnapshot } from "@/lib/fundraising/athlete-public-stats"
 import { HardLink } from "@/components/hard-link"
 import { createClient } from "@/lib/supabase/server"
 import { DEFAULT_FUNDRAISING_CAMPAIGN, FUNDRAISING_GIVE_PAGE_PATH } from "@/lib/fundraising/campaign-registry"
 import { formatUsdWhole } from "@/app/fundraising/components/FundraisingHero"
-import { userCanManageFundraisingForAthlete } from "@/lib/fundraising/athlete-fundraising-access"
+import { userCanManageFundraisingForAthlete, userIsRecruitNcAdmin } from "@/lib/fundraising/athlete-fundraising-access"
 import { FundraisingAthleteQrCard } from "./fundraising-athlete-qr-card"
 import { FundraisingAthleteEmbeddedCheckout } from "./fundraising-athlete-embedded-checkout"
 import { FundraisingAthleteMessageSection } from "./fundraising-athlete-message"
+import { FundraisingMilestoneTrophy } from "./fundraising-milestone-trophy"
 import { recruitingProfilePhotoFromRow } from "@/lib/recruiting-profile-photo"
 
 const HERO_FALLBACK_SILHOUETTE = "/wrestler-silhouette.png"
@@ -41,7 +41,7 @@ function publicGiftSiteOrigin(): string {
 type PageProps = { params: Promise<{ slug: string }>; searchParams?: Promise<{ cancelled?: string }> }
 
 function publicTitleName(
-  resolved: NonNullable<Awaited<ReturnType<typeof resolveFundraisingAthletePublic>>>,
+  resolved: NonNullable<Awaited<ReturnType<typeof resolveFundraisingAthletePublicBySlugForRequest>>>,
 ): string {
   if (resolved.entry?.fullName?.trim()) return resolved.entry.fullName.trim()
   if (resolved.entry?.label?.trim()) return resolved.entry.label.trim()
@@ -52,9 +52,7 @@ function publicTitleName(
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
-  const admin = createAdminClient()
-  const entries = await getFundraisingAthleteEntries(admin)
-  const resolved = await resolveFundraisingAthletePublic(admin, slug, entries)
+  const resolved = await resolveFundraisingAthletePublicBySlugForRequest(slug)
   if (!resolved) return { title: "Athlete | NC United Fundraising" }
 
   const name = publicTitleName(resolved)
@@ -69,8 +67,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
   const sp = (await searchParams) ?? {}
   const cancelledCheckout = sp.cancelled === "1"
   const admin = createAdminClient()
-  const entries = await getFundraisingAthleteEntries(admin)
-  const resolved = await resolveFundraisingAthletePublic(admin, slug, entries)
+  const resolved = await resolveFundraisingAthletePublicBySlugForRequest(slug)
   if (!resolved) notFound()
 
   const code = resolved.code
@@ -83,6 +80,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
   } = await supabase.auth.getUser()
   const isFundraisingManager =
     !!(user?.id && athleteId && (await userCanManageFundraisingForAthlete(admin, user.id, athleteId)))
+  const viewerIsRecruitNcAdmin = !!(user?.id && (await userIsRecruitNcAdmin(admin, user.id)))
 
   const [snapshot, recruitingPhotoUrl] = await Promise.all([
     code != null ? getAthleteFundraisingPublicSnapshot(code, 250) : Promise.resolve(null),
@@ -208,6 +206,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
             athleteId={athleteId}
             hasFundraisingProfile={profile != null}
             canEdit={isFundraisingManager}
+            isRecruitNcAdmin={viewerIsRecruitNcAdmin}
             initialBio={profile?.bio?.trim() ?? ""}
           />
         ) : null}
@@ -280,45 +279,53 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
         ) : null}
 
         {code && stats ? (
-          <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <div className="rounded-xl border border-white/10 bg-[#0B2545]/70 px-4 py-4">
-              <p className="text-[10px] font-bold uppercase tracking-wide text-[#C8A94A]">Total raised</p>
-              <p className="mt-2 text-lg font-black tabular-nums text-white sm:text-xl">{formatUsdWhole(stats.raisedCents)}</p>
+          <>
+            <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="rounded-xl border border-white/10 bg-[#0B2545]/70 px-4 py-4">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-[#C8A94A]">Total raised</p>
+                <p className="mt-2 text-lg font-black tabular-nums text-white sm:text-xl">{formatUsdWhole(stats.raisedCents)}</p>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-[#0B2545]/70 px-4 py-4">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-[#C8A94A]">Gifts</p>
+                <p className="mt-2 text-lg font-black tabular-nums text-white sm:text-xl">{stats.giftCount}</p>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-[#0B2545]/70 px-4 py-4">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-[#C8A94A]">Avg gift</p>
+                <p className="mt-2 text-lg font-black tabular-nums text-white sm:text-xl">
+                  {stats.avgGiftCents != null ? formatUsdWhole(stats.avgGiftCents) : "—"}
+                </p>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-[#0B2545]/70 px-4 py-4">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-[#C8A94A]">Receipt type</p>
+                <p className="mt-2 text-xs leading-snug text-white/80">
+                  {stats.payerTypeBreakdownKnown ? (
+                    <>
+                      <span className="font-semibold text-white">{stats.individualGiftCount}</span> individual
+                      <span className="text-white/40"> · </span>
+                      <span className="font-semibold text-white">{stats.organizationGiftCount}</span> org
+                    </>
+                  ) : (
+                    <span className="text-white/55">Org vs individual — shown when available</span>
+                  )}
+                </p>
+              </div>
             </div>
-            <div className="rounded-xl border border-white/10 bg-[#0B2545]/70 px-4 py-4">
-              <p className="text-[10px] font-bold uppercase tracking-wide text-[#C8A94A]">Gifts</p>
-              <p className="mt-2 text-lg font-black tabular-nums text-white sm:text-xl">{stats.giftCount}</p>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-[#0B2545]/70 px-4 py-4">
-              <p className="text-[10px] font-bold uppercase tracking-wide text-[#C8A94A]">Avg gift</p>
-              <p className="mt-2 text-lg font-black tabular-nums text-white sm:text-xl">
-                {stats.avgGiftCents != null ? formatUsdWhole(stats.avgGiftCents) : "—"}
-              </p>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-[#0B2545]/70 px-4 py-4">
-              <p className="text-[10px] font-bold uppercase tracking-wide text-[#C8A94A]">Receipt type</p>
-              <p className="mt-2 text-xs leading-snug text-white/80">
-                {stats.payerTypeBreakdownKnown ? (
-                  <>
-                    <span className="font-semibold text-white">{stats.individualGiftCount}</span> individual
-                    <span className="text-white/40"> · </span>
-                    <span className="font-semibold text-white">{stats.organizationGiftCount}</span> org
-                  </>
-                ) : (
-                  <span className="text-white/55">Org vs individual — shown when available</span>
-                )}
-              </p>
-            </div>
-          </div>
+            <FundraisingMilestoneTrophy
+              raisedCents={stats.raisedCents}
+              goalCents={goalCents}
+              athleteLabel={displayName}
+            />
+          </>
         ) : null}
 
         {code ? (
           <p className="mt-8 text-center text-xs text-white/45">
-            Totals and activity use the same credit rules as our{" "}
+            Totals and gift list use the same credit rules and campaign scope as our{" "}
             <HardLink href="/spartan" className="text-[#C8A94A] underline-offset-4 hover:underline">
               team fundraiser page
             </HardLink>{" "}
-            ({DEFAULT_FUNDRAISING_CAMPAIGN.campaignDisplayName}, last {DEFAULT_FUNDRAISING_CAMPAIGN.defaultLookbackDays} days).
+            ({DEFAULT_FUNDRAISING_CAMPAIGN.campaignDisplayName}). They load from our donation ledger and typically appear within
+            a short time after checkout; live Stripe totals may update slightly sooner.
           </p>
         ) : null}
 
@@ -340,21 +347,36 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
               Gift activity
             </h2>
             <p className="mt-1 text-xs text-white/45">Public names only — up to {publicGifts.length} recent gifts shown.</p>
-            <ul className="mt-3 divide-y divide-white/10 rounded-lg border border-white/10 bg-black/20">
-              {publicGifts.map((r, i) => (
-                <li key={`${r.created_at}-${i}`} className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-3 py-3 text-sm sm:py-2">
-                  <span className="text-xs tabular-nums text-white/40">
-                    {new Date(r.created_at).toLocaleDateString(undefined, {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                  </span>
-                  <span className="flex-1 text-white/85">{r.donorLabel}</span>
-                  <span className="font-semibold text-[#C8A94A] tabular-nums">{formatUsdWhole(r.amountCents)}</span>
-                </li>
-              ))}
-            </ul>
+            <div className="mt-3 overflow-hidden rounded-lg border border-white/10 bg-black/20">
+              <div className="hidden grid-cols-[5.25rem_minmax(0,10.5rem)_minmax(0,1fr)_auto] gap-x-3 border-b border-white/10 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-white/40 sm:grid">
+                <span>Date</span>
+                <span>Campaign</span>
+                <span>Supporter</span>
+                <span className="text-right">Amount</span>
+              </div>
+              <ul className="divide-y divide-white/10">
+                {publicGifts.map((r, i) => (
+                  <li
+                    key={`${r.created_at}-${i}`}
+                    className="grid grid-cols-1 gap-y-1 px-3 py-3 text-sm sm:grid-cols-[5.25rem_minmax(0,10.5rem)_minmax(0,1fr)_auto] sm:items-center sm:gap-x-3 sm:gap-y-0 sm:py-2.5"
+                  >
+                    <div className="flex flex-wrap items-baseline justify-between gap-x-3 sm:contents">
+                      <span className="text-xs tabular-nums text-white/40">
+                        {new Date(r.created_at).toLocaleDateString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                      </span>
+                      <span className="font-semibold text-[#C8A94A] tabular-nums sm:hidden">{formatUsdWhole(r.amountCents)}</span>
+                    </div>
+                    <span className="text-xs leading-snug text-white/55 sm:min-w-0">{r.campaignLabel}</span>
+                    <span className="min-w-0 text-white/85">{r.donorLabel}</span>
+                    <span className="hidden font-semibold text-[#C8A94A] tabular-nums sm:block sm:text-right">{formatUsdWhole(r.amountCents)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         ) : null}
 
@@ -386,18 +408,8 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           </div>
         </section>
 
-        <p className="mt-12 border-t border-white/10 pt-8 text-xs text-white/45">
-          {viewProfileHref ? (
-            <>
-              <strong className="font-semibold text-white/55">College recruiting:</strong> use the name or photo link above for
-              commitments, school, and match history on RecruitNC. This page is only for supporting NC United.
-            </>
-          ) : (
-            <>
-              This page is for NC United fundraising only. A RecruitNC recruiting profile may appear here when we can link this
-              fundraiser to an athlete record.
-            </>
-          )}
+        <p className="mt-12 border-t border-white/10 pt-8 text-center text-xs text-white/45">
+          Your gift supports NC United Wrestling, a North Carolina 501(c)(3) nonprofit.
         </p>
       </div>
     </div>
