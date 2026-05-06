@@ -51,6 +51,36 @@ export function FundraisingPlaybookGuideContent() {
         <span className="font-semibold text-white/90">see breakdown below</span>).
       </P>
 
+      <DisplayHeading as="h2">What Doesn&apos;t Work — Read This Before You Post a Venmo Link</DisplayHeading>
+      <Ul>
+        <Li>
+          <Strong>Standalone crowdfunding (e.g. GoFundMe)</Strong> — usually no donor deduction, weak institutional credibility, hard to
+          repeat.
+        </Li>
+        <Li>
+          <Strong>Car wash / bake sale as the only plan</Strong> — massive time for modest return vs. a structured 501(c)(3) campaign.
+        </Li>
+        <Li>
+          <Strong>Passive social-only asks</Strong> — likes don&apos;t pay fees; direct asks convert.
+        </Li>
+        <Li>
+          <Strong>Individual requests on social for Venmo, Cash App, etc.</Strong> — immediate loss of credibility with donors who expect a
+          nonprofit structure, a receipt, and accountability — not a personal handle.
+        </Li>
+        <Li>
+          <Strong>Non-501(c)(3) routing</Strong> — caps corporate, foundation, and matching eligibility.
+        </Li>
+        <Li>
+          <Strong>Personal Venmo/Cash App as the main vehicle</Strong> — no receipt, no transparency, corporate ineligible, serious donor friction.
+        </Li>
+        <Li>
+          <Strong>One-off campaigns with no system</Strong> — you restart from zero every season instead of compounding trust and donors.
+        </Li>
+        <Li>
+          <Strong>Waiting until you&apos;re underwater financially</Strong> — start early; relationships beat panic.
+        </Li>
+      </Ul>
+
       <DisplayHeading as="h2">The Mindset Shift First</DisplayHeading>
       <P>
         Fundraising for your development is not begging. It is building a community of investors who believe in what you are doing. The
@@ -237,36 +267,6 @@ export function FundraisingPlaybookGuideContent() {
           Make a gift — training fund or athlete
         </HardLink>
       </div>
-
-      <DisplayHeading as="h2">What Doesn&apos;t Work — Common Mistakes</DisplayHeading>
-      <Ul>
-        <Li>
-          <Strong>Standalone crowdfunding (e.g. GoFundMe)</Strong> — usually no donor deduction, weak institutional credibility, hard to
-          repeat.
-        </Li>
-        <Li>
-          <Strong>Car wash / bake sale as the only plan</Strong> — massive time for modest return vs. a structured 501(c)(3) campaign.
-        </Li>
-        <Li>
-          <Strong>Passive social-only asks</Strong> — likes don&apos;t pay fees; direct asks convert.
-        </Li>
-        <Li>
-          <Strong>Individual requests on social for Venmo, Cash App, etc.</Strong> — immediate loss of credibility with donors who expect a
-          nonprofit structure, a receipt, and accountability — not a personal handle.
-        </Li>
-        <Li>
-          <Strong>Non-501(c)(3) routing</Strong> — caps corporate, foundation, and matching eligibility.
-        </Li>
-        <Li>
-          <Strong>Personal Venmo/Cash App as the main vehicle</Strong> — no receipt, no transparency, corporate ineligible, serious donor friction.
-        </Li>
-        <Li>
-          <Strong>One-off campaigns with no system</Strong> — you restart from zero every season instead of compounding trust and donors.
-        </Li>
-        <Li>
-          <Strong>Waiting until you&apos;re underwater financially</Strong> — start early; relationships beat panic.
-        </Li>
-      </Ul>
 
       <DisplayHeading as="h2">Closing</DisplayHeading>
       <P>

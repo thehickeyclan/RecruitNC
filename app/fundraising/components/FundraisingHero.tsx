@@ -121,15 +121,6 @@ export function FundraisingHero({
           ranks athlete-credited gifts across every NC United hub campaign in that window.
         </p>
 
-        {hubTransparency.timedDriveArchived ? (
-          <p className="mx-auto mt-2 max-w-2xl text-[11px] leading-relaxed text-white/55 sm:mx-0">
-            The timed fundraiser{" "}
-            <span className="font-semibold text-white/70">{hubTransparency.campaignDisplayName}</span> has closed; totals here
-            can still include late-settling checkouts from that drive and other hub flows within this{" "}
-            <span className="tabular-nums">{hubTransparency.lookbackDays}</span>-day window.
-          </p>
-        ) : null}
-
         <div className="mx-auto mt-10 flex max-w-xl flex-col gap-4 sm:mx-0 sm:max-w-none sm:flex-row sm:flex-wrap sm:items-start">
           <HardLink
             href="/fundraising/athletes"

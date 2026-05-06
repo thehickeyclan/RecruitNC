@@ -376,7 +376,7 @@ function dbRowsToCards(
       id: str(row.id) ?? str(row.slug) ?? `campaign-${i}`,
       name: str(row.name) ?? str(row.title) ?? "Campaign",
       partnerLogoUrl: str(row.partner_logo_url),
-      heroImageUrl: str(row.hero_image_url) ?? "/images/real-cost-campaign-headline-nc-united.png",
+      heroImageUrl: str(row.hero_image_url) ?? "/images/spartan-race-banner.png",
       goalCents,
       endsAt: str(row.ends_at),
       raisedCents: raised,
