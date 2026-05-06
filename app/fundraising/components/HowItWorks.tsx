@@ -1,6 +1,5 @@
 import { Heart, Search } from "lucide-react"
 import { HardLink } from "@/components/hard-link"
-import { ScholarshipsInterestNotifyCard } from "./scholarships-interest-notify"
 
 function displayFont(c: string) {
   return `font-[family-name:var(--font-fundraising-display)] ${c}`
@@ -97,8 +96,8 @@ export function HowItWorks() {
             Two ways to give
           </h3>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-white/72 sm:mx-0">
-            Pick a wrestler or give to the NC United Training Fund — email receipt and NC United credit either way. Scholarships are separate
-            farther down; sponsors appear later on this page.
+            Pick a wrestler or give to the NC United Training Fund — email receipt and NC United credit either way. Training scholarships and
+            corporate sponsors follow in the next sections.
           </p>
 
           <ul className="mx-auto mt-10 grid max-w-4xl list-none gap-6 sm:grid-cols-2">
@@ -132,23 +131,6 @@ export function HowItWorks() {
               )
             })}
           </ul>
-        </div>
-
-        <div
-          id="fundraising-scholarships-soon"
-          className="mx-auto mt-16 max-w-xl scroll-mt-28 border-t border-white/10 pt-14 text-center"
-        >
-          <p className={`${displayFont("text-[10px] font-extrabold uppercase tracking-[0.26em] text-[#C8A94A]/95")}`}>Coming soon</p>
-          <h3 className={`${displayFont("mt-3 text-xl font-black uppercase tracking-tight text-white sm:text-2xl")}`}>
-            Training scholarships
-          </h3>
-          <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-white/68">
-            Not part of today&apos;s giving checkout — NC United will open need- and merit-based scholarships later. Leave your email to hear when
-            applications and funding details go live.
-          </p>
-          <div className="mx-auto mt-8 text-left">
-            <ScholarshipsInterestNotifyCard />
-          </div>
         </div>
       </div>
     </section>

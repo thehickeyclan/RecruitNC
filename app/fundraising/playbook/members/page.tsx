@@ -5,7 +5,6 @@ import { createClient } from "@/lib/supabase/server"
 import { logPlaybookMembersVisit } from "@/lib/fundraising/playbook-members-visit"
 import { HardLink } from "@/components/hard-link"
 import { FundraisingFooter } from "@/app/fundraising/components/FundraisingFooter"
-import { PlaybookMembersRedCallout } from "./components/red-callout"
 import { PlaybookMembersContent } from "./components/playbook-members-content"
 import { FundraisingPlaybookAckSection } from "../_components/fundraising-playbook-ack-section"
 
@@ -50,10 +49,6 @@ export default async function FundraisingPlaybookMembersPage() {
             </HardLink>
           </div>
         </div>
-      </div>
-
-      <div className="mx-auto max-w-3xl px-4 pb-2 pt-8">
-        <PlaybookMembersRedCallout />
       </div>
 
       <PlaybookMembersContent />

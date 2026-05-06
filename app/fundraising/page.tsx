@@ -9,6 +9,7 @@ import { WhyNCUnited } from "./components/WhyNCUnited"
 import { TopDonorsPreview } from "./components/top-donors-preview"
 import { CorporatePartners } from "./components/CorporatePartners"
 import { HowItWorks } from "./components/HowItWorks"
+import { ScholarshipsSoonSection } from "./components/scholarships-soon-section"
 import { FundraisingFooter } from "./components/FundraisingFooter"
 
 export const metadata: Metadata = {
@@ -30,6 +31,8 @@ export default async function FundraisingPortalHomePage() {
     <div id="fundraising-hub-root" className="min-h-screen bg-[#0B2545] text-white">
       <FundraisingHero hero={snapshot.hero} />
       <HowItWorks />
+      <ScholarshipsSoonSection />
+      <CorporatePartners />
       <WhyNCUnited hero={snapshot.hero} />
       <LeaderboardPreview rows={leaderboardPreview} hubTransparency={snapshot.hubTransparency} />
       <LiveDonationStream initial={liveFeedInitial} hubTransparency={snapshot.hubTransparency} />
@@ -39,7 +42,6 @@ export default async function FundraisingPortalHomePage() {
         organizations={hallOfFame?.organizations ?? []}
         minAmountCents={hallOfFame?.minAmountCents ?? DONOR_RECOGNITION_MIN_AMOUNT_CENTS}
       />
-      <CorporatePartners />
       <FundraisingFooter />
     </div>
   )

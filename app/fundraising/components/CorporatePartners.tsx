@@ -12,7 +12,7 @@ export function CorporatePartners() {
   return (
     <section
       id="fundraising-corporate-partners"
-      className="scroll-mt-28 border-b border-white/[0.06] bg-[#061224] px-4 py-16 text-white sm:py-20"
+      className="scroll-mt-28 border-b border-t border-white/[0.07] bg-[#07182e] px-4 py-16 text-white sm:py-20"
     >
       <div className="mx-auto max-w-6xl text-center">
         <p className={`${displayFont("text-[10px] font-extrabold uppercase tracking-[0.28em] text-[#C8A94A]")}`}>

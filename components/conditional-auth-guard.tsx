@@ -4,7 +4,9 @@ import { usePathname } from "next/navigation"
 import { AuthGuard } from "@/components/auth-guard"
 
 /**
- * Public routes (no sign-in): `/`, `/news` (index only), `/spartan` and `/spartan/*`, and `/auth/*`.
+ * Public routes (no sign-in): `/`, `/news` (index only), `/spartan` and `/spartan/*`, `/fundraising` and
+ * `/fundraising/*` (giving hub, athlete pages, leaderboard — playbook/members enforces sign-in in its page),
+ * and `/auth/*`.
  * Individual `/news/[slug]` articles require login; other app routes require login.
  */
 export function ConditionalAuthGuard({
@@ -20,9 +22,11 @@ export function ConditionalAuthGuard({
   const isNewsIndex = path === "/news" || path === "/news/"
   /** Spartan fundraising campaign — must stay public (links from article, email, social). */
   const isSpartan = path === "/spartan" || path.startsWith("/spartan/")
+  /** NC United giving hub and athlete flows — public for donors; gated playbook routes redirect server-side. */
+  const isFundraisingHub = path === "/fundraising" || path.startsWith("/fundraising/")
   const isAuthRoute = path.startsWith("/auth/")
 
-  const isPublic = isHomepage || isNewsIndex || isSpartan || isAuthRoute
+  const isPublic = isHomepage || isNewsIndex || isSpartan || isFundraisingHub || isAuthRoute
 
   if (isPublic) {
     return <>{children}</>

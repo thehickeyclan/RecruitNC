@@ -8,7 +8,7 @@ function displayFont(c: string) {
   return `font-[family-name:var(--font-fundraising-display)] ${c}`
 }
 
-/** Email capture only — parent section supplies headline and context (not a “give now” path). */
+/** Email capture — used under Training scholarships on the hub. */
 export function ScholarshipsInterestNotifyCard() {
   const [email, setEmail] = useState("")
   const [busy, setBusy] = useState(false)
@@ -39,46 +39,44 @@ export function ScholarshipsInterestNotifyCard() {
   }
 
   return (
-    <div className="relative rounded-xl border border-white/[0.06] bg-[#050d18]/85 px-5 pb-5 pt-7 opacity-[0.95] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-      <span
-        className={`${displayFont(
-          "absolute right-4 top-4 rounded border border-[#C8A94A]/45 bg-[#C8A94A]/12 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.14em] text-[#f0dc9a]",
-        )}`}
-      >
-        COMING SOON
-      </span>
-
+    <div className="rounded-xl border border-white/10 bg-[#0B2545]/70 px-4 py-5 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:px-6 sm:py-6">
       {done === "saved" ? (
-        <p className={`${displayFont("pr-16 text-xs font-bold uppercase tracking-[0.14em] text-emerald-300/95")}`}>
+        <p className={`${displayFont("text-center text-xs font-bold uppercase tracking-[0.14em] text-emerald-300/95 sm:text-left")}`}>
           Thanks — we&apos;ll email you when this opens.
         </p>
       ) : done === "duplicate" ? (
-        <p className={`${displayFont("pr-16 text-xs font-bold uppercase tracking-[0.14em] text-[#C8A94A]/90")}`}>
+        <p className={`${displayFont("text-center text-xs font-bold uppercase tracking-[0.14em] text-[#C8A94A]/90 sm:text-left")}`}>
           You&apos;re already on the list.
         </p>
       ) : (
         <form
-          className="flex flex-col gap-3 pr-2 pt-1 sm:flex-row sm:flex-wrap sm:items-stretch"
+          className="flex w-full flex-col gap-3 sm:flex-row sm:items-stretch"
           onSubmit={(e) => {
             e.preventDefault()
             void submit()
           }}
         >
-          <Input
-            type="email"
-            name="email"
-            autoComplete="email"
-            placeholder="Email for scholarship updates"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={busy}
-            className="min-h-[48px] border-white/15 bg-black/35 text-base text-white placeholder:text-white/35 focus-visible:ring-[#C8A94A]/40 sm:min-w-[16rem] sm:flex-1"
-          />
+          <div className="min-w-0 flex-1">
+            <label htmlFor="scholarship-notify-email" className="sr-only">
+              Email for scholarship updates
+            </label>
+            <Input
+              id="scholarship-notify-email"
+              type="email"
+              name="email"
+              autoComplete="email"
+              placeholder="Email for scholarship updates"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={busy}
+              className="min-h-[48px] w-full border-white/15 bg-black/35 text-base text-white placeholder:text-white/35 focus-visible:ring-[#C8A94A]/40"
+            />
+          </div>
           <Button
             type="submit"
             disabled={busy || !email.trim()}
             className={`${displayFont(
-              "min-h-[48px] shrink-0 touch-manipulation bg-[#C8A94A] px-4 text-xs font-extrabold uppercase tracking-[0.14em] text-[#061224] hover:bg-[#b89740] disabled:opacity-40",
+              "h-auto min-h-[48px] w-full shrink-0 touch-manipulation whitespace-nowrap bg-[#C8A94A] px-5 text-xs font-extrabold uppercase tracking-[0.14em] text-[#061224] hover:bg-[#b89740] disabled:opacity-40 sm:w-auto sm:self-stretch",
             )}`}
           >
             {busy ? "Sending…" : "Notify me"}

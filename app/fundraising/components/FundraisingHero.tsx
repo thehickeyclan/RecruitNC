@@ -13,13 +13,13 @@ function displayFont(className: string) {
 const HUB_JUMP_LINKS: ReadonlyArray<{ href: string; label: string; primary?: true }> = [
   { href: "#fundraising-two-ways-give", label: "Give now", primary: true },
   { href: "#fundraising-how-it-works", label: "How it works" },
+  { href: "#fundraising-scholarships-soon", label: "Scholarships" },
+  { href: "#fundraising-corporate-partners", label: "Sponsors" },
   { href: "#fundraising-why-nc-united", label: "Why NC United" },
   { href: "#fundraising-leaderboard-preview", label: "Leaderboard" },
   { href: "#fundraising-live-donor-stream", label: "Live feed" },
   { href: "#fundraising-active-campaigns", label: "Campaigns" },
   { href: "#fundraising-top-donors", label: "Top donors" },
-  { href: "#fundraising-corporate-partners", label: "Sponsors" },
-  { href: "#fundraising-scholarships-soon", label: "Scholarships" },
 ]
 
 export function formatUsdWhole(cents: number) {
