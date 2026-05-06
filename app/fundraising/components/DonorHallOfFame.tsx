@@ -26,13 +26,13 @@ export function DonorHallOfFame({
       <div className="mx-auto max-w-6xl">
         <div className="text-center">
           <p className={`${displayFont("text-[10px] font-extrabold uppercase tracking-[0.28em] text-[#C8A94A]")}`}>
-            Public recognition
+            Thank you
           </p>
           <h2
             id="donor-hof-heading"
             className={`${displayFont("mt-2 text-[clamp(1.5rem,4vw,2.25rem)] font-black uppercase tracking-tight text-white")}`}
           >
-            Supporter honor roll
+            Top donors
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-white/85">
             Supporters who chose <strong className="font-semibold text-white">“show my name”</strong> at checkout and

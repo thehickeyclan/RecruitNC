@@ -1,6 +1,5 @@
 "use client"
 
-import { GraduationCap } from "lucide-react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,6 +8,7 @@ function displayFont(c: string) {
   return `font-[family-name:var(--font-fundraising-display)] ${c}`
 }
 
+/** Email capture only — parent section supplies headline and context (not a “give now” path). */
 export function ScholarshipsInterestNotifyCard() {
   const [email, setEmail] = useState("")
   const [busy, setBusy] = useState(false)
@@ -39,9 +39,7 @@ export function ScholarshipsInterestNotifyCard() {
   }
 
   return (
-    <li
-      className="relative flex h-full flex-col rounded-xl border border-white/[0.06] bg-[#050d18]/85 p-6 opacity-[0.92] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
-    >
+    <div className="relative rounded-xl border border-white/[0.06] bg-[#050d18]/85 px-5 pb-5 pt-7 opacity-[0.95] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
       <span
         className={`${displayFont(
           "absolute right-4 top-4 rounded border border-[#C8A94A]/45 bg-[#C8A94A]/12 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.14em] text-[#f0dc9a]",
@@ -50,31 +48,17 @@ export function ScholarshipsInterestNotifyCard() {
         COMING SOON
       </span>
 
-      <div className="flex items-start gap-4 pr-[6.5rem]">
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-white/12 bg-white/[0.06] text-white/55">
-          <GraduationCap className="h-5 w-5" aria-hidden />
-        </span>
-        <div className="min-w-0 flex-1">
-          <h3 className={`${displayFont("text-lg font-black uppercase leading-snug tracking-tight text-white/88")}`}>
-            Training Scholarships
-          </h3>
-          <p className="mt-3 text-sm leading-relaxed text-white/62">
-            Need-based and merit scholarships for NC wrestlers — funded by the community, awarded by NC United.
-          </p>
-        </div>
-      </div>
-
       {done === "saved" ? (
-        <p className={`${displayFont("mt-6 text-xs font-bold uppercase tracking-[0.14em] text-emerald-300/95")}`}>
+        <p className={`${displayFont("pr-16 text-xs font-bold uppercase tracking-[0.14em] text-emerald-300/95")}`}>
           Thanks — we&apos;ll email you when this opens.
         </p>
       ) : done === "duplicate" ? (
-        <p className={`${displayFont("mt-6 text-xs font-bold uppercase tracking-[0.14em] text-[#C8A94A]/90")}`}>
+        <p className={`${displayFont("pr-16 text-xs font-bold uppercase tracking-[0.14em] text-[#C8A94A]/90")}`}>
           You&apos;re already on the list.
         </p>
       ) : (
         <form
-          className="mt-6 flex min-h-[44px] flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-stretch"
+          className="flex flex-col gap-3 pr-2 pt-1 sm:flex-row sm:flex-wrap sm:items-stretch"
           onSubmit={(e) => {
             e.preventDefault()
             void submit()
@@ -84,11 +68,11 @@ export function ScholarshipsInterestNotifyCard() {
             type="email"
             name="email"
             autoComplete="email"
-            placeholder="Email for updates"
+            placeholder="Email for scholarship updates"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             disabled={busy}
-            className="min-h-11 border-white/15 bg-black/35 text-white placeholder:text-white/35 focus-visible:ring-[#C8A94A]/40 sm:max-w-[14rem] sm:flex-1"
+            className="min-h-11 border-white/15 bg-black/35 text-white placeholder:text-white/35 focus-visible:ring-[#C8A94A]/40 sm:min-w-[16rem] sm:flex-1"
           />
           <Button
             type="submit"
@@ -102,10 +86,10 @@ export function ScholarshipsInterestNotifyCard() {
         </form>
       )}
       {err ? (
-        <p className="mt-2 text-xs leading-snug text-red-300/95" role="alert">
+        <p className="mt-3 text-xs leading-snug text-red-300/95" role="alert">
           {err}
         </p>
       ) : null}
-    </li>
+    </div>
   )
 }

@@ -64,8 +64,8 @@ export function FundraisingFooter() {
             </HardLink>
           </div>
           <div className={`${displayFont("flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs sm:text-sm")}`}>
-            <HardLink href="/fundraising/honor-roll" className="text-white/90 hover:text-[#C8A94A]">
-              Honor roll
+            <HardLink href="/fundraising#fundraising-top-donors" className="text-white/90 hover:text-[#C8A94A]">
+              Top donors
             </HardLink>
             <span className="text-white/25" aria-hidden>
               ·

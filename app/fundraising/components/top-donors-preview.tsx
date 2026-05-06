@@ -15,7 +15,7 @@ function previewNames(
   return merged.slice(0, max)
 }
 
-export function HonorRollPreview({
+export function TopDonorsPreview({
   individuals,
   organizations,
   minAmountCents,
@@ -29,20 +29,25 @@ export function HonorRollPreview({
 
   return (
     <section
-      id="fundraising-honor-roll-preview"
+      id="fundraising-top-donors"
       className="scroll-mt-28 border-b border-white/[0.06] bg-[#0B2545] px-4 py-16 text-white sm:py-20"
+      aria-labelledby="fundraising-top-donors-heading"
     >
       <div className="mx-auto max-w-6xl">
         <div className="text-center">
           <p className={`${displayFont("text-[10px] font-extrabold uppercase tracking-[0.28em] text-[#C8A94A]")}`}>
-            Public recognition
+            Thank you
           </p>
-          <h2 className={`${displayFont("mt-3 text-2xl font-black uppercase tracking-tight text-white sm:text-3xl")}`}>
-            Supporter honor roll
+          <h2
+            id="fundraising-top-donors-heading"
+            className={`${displayFont("mt-3 text-2xl font-black uppercase tracking-tight text-white sm:text-3xl")}`}
+          >
+            Top donors
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-white">
-            Supporters who chose &ldquo;show my name&rdquo; at checkout and gave {minLabel}+ on a single gift (paid Stripe
-            checkouts).
+            Recognized supporters who chose <strong className="font-semibold text-white">&ldquo;show my name&rdquo;</strong> at checkout and gave{" "}
+            <strong className="font-semibold text-white">{minLabel}+</strong> on a single paid gift — individuals and organizations that opted in
+            publicly (not a ranked leaderboard by dollar).
           </p>
         </div>
 
@@ -64,7 +69,7 @@ export function HonorRollPreview({
         )}
 
         <p className="mt-8 text-center text-[11px] leading-relaxed text-white/55">
-          Names reflect paid hub checkouts where donors opted in to show recognition publicly.
+          From paid hub checkouts where donors opted in to public recognition.
         </p>
 
         <div className="mt-6 text-center">
@@ -72,7 +77,7 @@ export function HonorRollPreview({
             href="/fundraising/honor-roll"
             className={`${displayFont("text-sm font-extrabold uppercase tracking-wide text-[#C8A94A] underline-offset-4 hover:underline")}`}
           >
-            View full honor roll →
+            View full list →
           </HardLink>
         </div>
       </div>

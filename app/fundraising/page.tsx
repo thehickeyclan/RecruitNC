@@ -2,12 +2,11 @@ import type { Metadata } from "next"
 import { getFundraisingHubSnapshot } from "@/lib/fundraising/hub-data"
 import { fetchDonorHallOfFameFromStripe, DONOR_RECOGNITION_MIN_AMOUNT_CENTS } from "@/lib/fundraising/donor-hall-of-fame"
 import { FundraisingHero } from "./components/FundraisingHero"
-import { NavigationPaths } from "./components/NavigationPaths"
 import { ActiveCampaigns } from "./components/ActiveCampaigns"
 import { LeaderboardPreview } from "./components/LeaderboardPreview"
 import { LiveDonationStream } from "./components/LiveDonationStream"
 import { WhyNCUnited } from "./components/WhyNCUnited"
-import { HonorRollPreview } from "./components/HonorRollPreview"
+import { TopDonorsPreview } from "./components/top-donors-preview"
 import { CorporatePartners } from "./components/CorporatePartners"
 import { HowItWorks } from "./components/HowItWorks"
 import { FundraisingFooter } from "./components/FundraisingFooter"
@@ -30,13 +29,12 @@ export default async function FundraisingPortalHomePage() {
   return (
     <div id="fundraising-hub-root" className="min-h-screen bg-[#0B2545] text-white">
       <FundraisingHero hero={snapshot.hero} />
-      <NavigationPaths />
       <HowItWorks />
-      <ActiveCampaigns campaigns={snapshot.campaigns} />
+      <WhyNCUnited hero={snapshot.hero} />
       <LeaderboardPreview rows={leaderboardPreview} hubTransparency={snapshot.hubTransparency} />
       <LiveDonationStream initial={liveFeedInitial} hubTransparency={snapshot.hubTransparency} />
-      <WhyNCUnited hero={snapshot.hero} />
-      <HonorRollPreview
+      <ActiveCampaigns campaigns={snapshot.campaigns} />
+      <TopDonorsPreview
         individuals={hallOfFame?.individuals ?? []}
         organizations={hallOfFame?.organizations ?? []}
         minAmountCents={hallOfFame?.minAmountCents ?? DONOR_RECOGNITION_MIN_AMOUNT_CENTS}

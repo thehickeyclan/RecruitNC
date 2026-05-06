@@ -16,13 +16,14 @@ export function CorporatePartners() {
     >
       <div className="mx-auto max-w-6xl text-center">
         <p className={`${displayFont("text-[10px] font-extrabold uppercase tracking-[0.28em] text-[#C8A94A]")}`}>
-          Corporate partners
+          Thank you
         </p>
         <h2 className={`${displayFont("mt-3 text-2xl font-black uppercase tracking-tight text-white sm:text-3xl")}`}>
-          Thank you to our sponsors
+          Corporate sponsors &amp; partners
         </h2>
-        <p className="mx-auto mt-3 max-w-2xl text-sm text-white">
-          Organizations backing NC United athletes and year-round training.
+        <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-white/85">
+          These organizations help NC United athletes and year-round training through sponsorships and partnerships — we&apos;re grateful for their
+          support. Interested in joining them? Reach out and we&apos;ll connect you with the right NC United contact.
         </p>
 
         <ul className="mt-12 flex flex-wrap items-center justify-center gap-8 sm:gap-12">
@@ -53,7 +54,7 @@ export function CorporatePartners() {
           href="/fundraising/corporate"
           className={`${displayFont("mt-10 inline-flex min-h-12 items-center justify-center rounded-sm border-2 border-[#C8A94A]/50 px-8 text-xs font-extrabold uppercase tracking-[0.14em] text-[#C8A94A] hover:bg-[#C8A94A]/10")}`}
         >
-          Become a corporate partner →
+          Become a sponsor or partner →
         </HardLink>
       </div>
     </section>

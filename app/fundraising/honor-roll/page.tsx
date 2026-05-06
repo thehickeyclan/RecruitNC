@@ -4,9 +4,9 @@ import { DonorHallOfFame } from "../components/DonorHallOfFame"
 import { HardLink } from "@/components/hard-link"
 
 export const metadata: Metadata = {
-  title: "Supporter honor roll | NC United Fundraising",
+  title: "Top donors | NC United Fundraising",
   description:
-    "Public recognition for qualifying NC United donors who chose to show their name — paid Stripe checkouts, 501(c)(3) nonprofit.",
+    "Recognized NC United donors who chose to show their name — qualifying paid Stripe checkouts, 501(c)(3) nonprofit.",
 }
 
 function displayFont(c: string) {

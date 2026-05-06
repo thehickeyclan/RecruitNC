@@ -48,8 +48,18 @@ export function FundraisingHero({ hero }: { hero: FundraisingHubHeroStats }) {
       />
 
       <div className="relative mx-auto max-w-6xl text-center sm:text-left">
+        <div className="flex justify-center border-b border-white/20 pb-4 sm:justify-start">
+          <a
+            href="#fundraising-top-donors"
+            className={`${displayFont(
+              "inline-flex items-center text-[11px] font-black uppercase tracking-[0.28em] text-white underline decoration-white/50 underline-offset-[6px] transition hover:decoration-white",
+            )}`}
+          >
+            Top donors
+          </a>
+        </div>
         <p
-          className={`${displayFont("text-[10px] font-extrabold uppercase tracking-[0.32em] text-[#C8A94A] sm:text-[11px]")}`}
+          className={`${displayFont("mt-5 text-[10px] font-extrabold uppercase tracking-[0.32em] text-[#C8A94A] sm:text-[11px]")}`}
         >
           Tax-deductible giving · 501(c)(3)
         </p>
@@ -94,8 +104,18 @@ export function FundraisingHero({ hero }: { hero: FundraisingHubHeroStats }) {
         </div>
 
         <p className="mx-auto mt-10 text-center text-xs leading-relaxed text-white/70 sm:mx-0 sm:text-left">
-          Ways to give — athletes, training fund, corporate partners, and scholarships (soon) — are in{" "}
-          <strong className="text-white/90">Four paths</strong> below.
+          <a href="#fundraising-how-it-works" className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
+            How giving works
+          </a>{" "}
+          covers the steps and your two checkout paths (wrestler or training fund).{" "}
+          <a href="#fundraising-corporate-partners" className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
+            Corporate partners
+          </a>{" "}
+          and{" "}
+          <a href="#fundraising-scholarships-soon" className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
+            scholarships
+          </a>{" "}
+          are farther down — not checkout lanes yet.
         </p>
 
         <p className="mx-auto mt-4 text-center text-xs text-white sm:mx-0 sm:text-left">
