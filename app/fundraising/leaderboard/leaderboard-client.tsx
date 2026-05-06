@@ -175,6 +175,7 @@ export function FundraisingLeaderboardContent({ campaigns }: { campaigns: Leader
       ? DEFAULT_FUNDRAISING_CAMPAIGN
       : fundraisingCampaignByStripeSlug(resolvedCampaignSlug) ?? DEFAULT_FUNDRAISING_CAMPAIGN
   const displayTitle = meta?.campaignDisplayName ?? campaignDefinition.campaignDisplayName
+  const giveHref = resolvedCampaignSlug === "all" ? "/fundraising" : campaignDefinition.publicPagePath
 
   const dayPresets = [30, 90, 120, 365]
 
@@ -230,11 +231,8 @@ export function FundraisingLeaderboardContent({ campaigns }: { campaigns: Leader
                 Fundraising leaderboard
               </h1>
               <p className="mt-4 max-w-2xl text-pretty text-base leading-relaxed text-white/88">
-                Paid gifts credited to athletes in the window you pick — same Stripe totals as the{" "}
-                <HardLink href="/spartan" className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
-                  Spartan campaign page
-                </HardLink>
-                . Donor names elsewhere respect listing preferences.
+                Paid gifts credited to athletes for the window you choose — same paid Stripe ledger NC United uses across hub
+                fundraising. Donor names elsewhere respect listing preferences.
               </p>
             </div>
           </div>
@@ -349,7 +347,7 @@ export function FundraisingLeaderboardContent({ campaigns }: { campaigns: Leader
                   </div>
                   <div className="rounded-xl border border-white/10 bg-[#0B2545]/65 px-5 py-4">
                     <dt className={`${displayFont("text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#C8A94A]")}`}>
-                      Race checkouts
+                      Event checkouts
                     </dt>
                     <dd className="mt-2 text-2xl font-black tabular-nums" style={{ color: CRIMSON }}>
                       {summary.raceEntryCount}
@@ -388,7 +386,7 @@ export function FundraisingLeaderboardContent({ campaigns }: { campaigns: Leader
                       <th className="px-4 py-4">Athlete</th>
                       <th className="px-4 py-4 text-right">Raised</th>
                       <th className="px-4 py-4 text-right">Gifts</th>
-                      <th className="px-4 py-4 text-right">Race</th>
+                      <th className="px-4 py-4 text-right">Event</th>
                     </tr>
                   </thead>
                   <tbody className="text-white/90">
@@ -494,7 +492,7 @@ export function FundraisingLeaderboardContent({ campaigns }: { campaigns: Leader
               Gift log
             </HardLink>
             <HardLink
-              href={campaignDefinition.publicPagePath}
+              href={giveHref}
               className={`${displayFont("inline-flex min-h-11 items-center justify-center rounded-sm bg-[#CC0000] px-6 text-xs font-extrabold uppercase tracking-[0.14em] text-white shadow-[0_14px_40px_-12px_rgba(204,0,0,0.55)] transition hover:bg-[#a80000]")}`}
             >
               Give now

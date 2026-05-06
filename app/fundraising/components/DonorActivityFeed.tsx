@@ -166,8 +166,8 @@ export function DonorActivityFeed({
         </div>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/80">
           Most recent {FEED_LIMIT} paid gifts across all NC United hub campaigns in the last{" "}
-          <strong className="tabular-nums text-white">{hubTransparency.lookbackDays}</strong> days. Hero stats use{" "}
-          <strong className="text-white">{hubTransparency.campaignDisplayName}</strong> only.{" "}
+          <strong className="tabular-nums text-white">{hubTransparency.lookbackDays}</strong> days — same combined scope as
+          the headline hub totals.{" "}
           <HardLink href={`/fundraising/activity?campaign=all&days=${hubTransparency.lookbackDays}`} className="text-[#C8A94A] underline-offset-4 hover:underline">
             Full gift log
           </HardLink>

@@ -22,11 +22,11 @@ export function PlaybookTeaser() {
           Fundraising guide
         </p>
         <h2 className={`${displayFont("mt-3 text-[clamp(1.65rem,4vw,2.5rem)] font-black uppercase leading-tight tracking-tight text-white")}`}>
-          How the NC wrestling community raised $21,000 in 16 days
+          How NC United runs community-backed fundraising
         </h2>
         <p className="mt-5 text-base leading-relaxed text-white">
-          And how your athlete can build on the same idea — 501(c)(3) infrastructure, thoughtful donor outreach, and a clear
-          plan families can follow.
+          The same playbook families used on sprint drives — built on 501(c)(3) infrastructure, thoughtful donor outreach, and
+          clear roles athletes can follow year-round.
         </p>
         <p className="mt-6 font-semibold text-white">What&apos;s inside:</p>
         <ul className="mt-3 space-y-2 text-left text-sm leading-relaxed text-white">

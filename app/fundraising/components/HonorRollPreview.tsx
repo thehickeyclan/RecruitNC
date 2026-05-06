@@ -1,5 +1,4 @@
 import type { DonorHallOfFameEntry } from "@/lib/fundraising/donor-hall-of-fame"
-import { DEFAULT_FUNDRAISING_CAMPAIGN } from "@/lib/fundraising/campaign-registry"
 import { HardLink } from "@/components/hard-link"
 import { formatUsdWhole } from "./FundraisingHero"
 
@@ -64,8 +63,8 @@ export function HonorRollPreview({
           </ul>
         )}
 
-        <p className="mt-8 text-center text-[11px] font-semibold uppercase tracking-[0.2em] text-[#C8A94A]/90">
-          {DEFAULT_FUNDRAISING_CAMPAIGN.campaignDisplayName}
+        <p className="mt-8 text-center text-[11px] leading-relaxed text-white/55">
+          Names reflect paid hub checkouts where donors opted in to show recognition publicly.
         </p>
 
         <div className="mt-6 text-center">

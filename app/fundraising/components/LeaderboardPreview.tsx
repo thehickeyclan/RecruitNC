@@ -86,8 +86,8 @@ export function LeaderboardPreview({
             </h2>
             <p className="mt-2 max-w-xl text-sm text-white">
               Top five athletes by athlete-credited paid gifts in the last{" "}
-              <span className="tabular-nums text-white">{hubTransparency.lookbackDays}</span> days — all NC United hub
-              campaigns in Stripe combined (not only {hubTransparency.campaignDisplayName}).
+              <span className="tabular-nums text-white">{hubTransparency.lookbackDays}</span> days — same combined NC United
+              hub scope as the headline totals above.
             </p>
           </div>
           <HardLink

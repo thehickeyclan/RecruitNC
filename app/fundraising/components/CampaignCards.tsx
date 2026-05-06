@@ -74,7 +74,7 @@ export function CampaignCards({ campaigns }: { campaigns: FundraisingHubCampaign
                 >
                   <div className="relative aspect-[16/9] w-full bg-black/50">
                     {(() => {
-                      const heroSrc = c.heroImageUrl ?? "/images/spartan-race-banner.png"
+                      const heroSrc = c.heroImageUrl ?? "/images/real-cost-campaign-headline-nc-united.png"
                       const remote = /^https?:\/\//i.test(heroSrc)
                       return remote ? (
                         // eslint-disable-next-line @next/next/no-img-element

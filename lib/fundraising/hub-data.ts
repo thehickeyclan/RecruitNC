@@ -15,10 +15,7 @@ import {
   effectiveAthleteCodeForDonationLedgerRow,
   type SpartanCreditCorrectionsIndex,
 } from "@/lib/spartan-credit-corrections"
-import {
-  loadCorrectedStripeDonationsForAllHubCampaignsWindow,
-  loadCorrectedStripeDonationsForCampaignWindow,
-} from "@/lib/fundraising/stripe-transparency-pipeline"
+import { loadCorrectedStripeDonationsForAllHubCampaignsWindow } from "@/lib/fundraising/stripe-transparency-pipeline"
 import { hubActivityCampaignFromStripeSlug } from "@/lib/fundraising/hub-activity-meta"
 import {
   attachPublicSupporterFields,
@@ -41,10 +38,10 @@ export type HubDonationRow = {
   raw_metadata?: unknown
 }
 
-/** Hero totals match `GET /api/spartan/supporters` for the default campaign (MissionBar). */
+/** Hero totals: combined paid hub checkouts in the transparency window (Stripe + corrections when available). */
 export type FundraisingHubHeroStats = {
   totalRaisedCents: number
-  /** Paid checkouts in window — Spartan label “Donations”. */
+  /** Paid checkout sessions in window (donations + bundled flows counted by ledger). */
   giftCount: number
   raceEntryCount: number
   ncUnitedCommunityFundCents: number
@@ -69,18 +66,23 @@ export type FundraisingHubLeaderRow = {
   athleteName: string
   school: string
   raisedCents: number
-  /** Paid checkout sessions credited to this athlete (matches `/api/spartan/supporters` gifts). */
+  /** Paid checkout sessions credited to this athlete in the combined window. */
   giftCount: number
   /** Distinct donor emails in that set (a donor can give more than once). */
   donorCount: number
   progressPct: number
 }
 
-/** Hero stats use primary campaign; leaderboard + live activity span all registered hub campaigns (see hub build). */
+/**
+ * Transparency window + registry metadata for filters.
+ * Hero, leaderboard preview, and live feed share the same combined hub scope when Stripe lists load.
+ */
 export type FundraisingHubTransparencyMeta = {
   campaignDisplayName: string
   stripeCampaignSlug: string
   lookbackDays: number
+  /** Most recent timed fundraiser in the registry has wound down — hub landing favors year-round framing. */
+  timedDriveArchived: boolean
 }
 
 export type FundraisingHubActivityRow = {
@@ -157,22 +159,6 @@ function withEffectiveAthleteCodes(rows: HubDonationRow[], index: SpartanCreditC
       index,
     ),
   }))
-}
-
-/**
- * Same scope as `listSpartanFayettevilleDonations` + `/api/spartan/supporters`: registry campaign (including
- * legacy Stripe metadata aliases) and `created_at` within the campaign default lookback.
- */
-function filterHubRowsForTransparencyWindow(
-  rows: HubDonationRow[],
-  campaign: FundraisingCampaignDefinition,
-): HubDonationRow[] {
-  const cutoffMs = Date.now() - campaign.defaultLookbackDays * 24 * 60 * 60 * 1000
-  return rows.filter((r) => {
-    if (!hubSpartanDonationRowMatchesCampaign(r.spartan_campaign, campaign)) return false
-    const t = new Date(r.created_at).getTime()
-    return Number.isFinite(t) && t >= cutoffMs
-  })
 }
 
 function filterHubRowsForAllRegisteredCampaignsLookback(rows: HubDonationRow[], lookbackDays: number): HubDonationRow[] {
@@ -390,7 +376,7 @@ function dbRowsToCards(
       id: str(row.id) ?? str(row.slug) ?? `campaign-${i}`,
       name: str(row.name) ?? str(row.title) ?? "Campaign",
       partnerLogoUrl: str(row.partner_logo_url),
-      heroImageUrl: str(row.hero_image_url) ?? "/images/spartan-race-banner.png",
+      heroImageUrl: str(row.hero_image_url) ?? "/images/real-cost-campaign-headline-nc-united.png",
       goalCents,
       endsAt: str(row.ends_at),
       raisedCents: raised,
@@ -420,43 +406,27 @@ export async function buildFundraisingHubSnapshot(admin?: SupabaseClient): Promi
   }
 
   const lookbackDays = DEFAULT_FUNDRAISING_CAMPAIGN.defaultLookbackDays
-  /** Same Stripe list + corrections as `GET /api/spartan/supporters` for the default campaign. */
-  const primaryCampaignStripeRows = await loadCorrectedStripeDonationsForCampaignWindow(
-    DEFAULT_FUNDRAISING_CAMPAIGN,
-    correctionIndex,
-  )
-  const allHubStripeRows =
-    FUNDRAISING_CAMPAIGNS.length > 1
-      ? await loadCorrectedStripeDonationsForAllHubCampaignsWindow(lookbackDays, correctionIndex)
-      : primaryCampaignStripeRows
+  /** Combined Stripe sessions for every registered hub campaign — hero, leaderboard, and activity match this scope. */
+  const allHubStripeRows = await loadCorrectedStripeDonationsForAllHubCampaignsWindow(lookbackDays, correctionIndex)
 
   let hero: FundraisingHubHeroStats
   let leaderboard: FundraisingHubLeaderRow[]
   let activity: FundraisingHubActivityRow[]
 
-  if (primaryCampaignStripeRows != null) {
-    hero = computeHeroFromStripeRows(primaryCampaignStripeRows)
-    const stripeRowsForCombinedBoard =
-      allHubStripeRows != null && allHubStripeRows !== primaryCampaignStripeRows
-        ? allHubStripeRows
-        : primaryCampaignStripeRows
+  if (allHubStripeRows != null) {
+    hero = computeHeroFromStripeRows(allHubStripeRows)
     leaderboard = computeLeaderboard(
-      hubDonationRowsFromStripeDonations(stripeRowsForCombinedBoard),
+      hubDonationRowsFromStripeDonations(allHubStripeRows),
       codeToFullName,
       schoolByCodeLower,
     )
-    const enrichedAll = attachPublicSupporterFields(stripeRowsForCombinedBoard, codeToFullName)
+    const enrichedAll = attachPublicSupporterFields(allHubStripeRows, codeToFullName)
     const actSorted = [...enrichedAll].sort((a, b) => b.createdUnix - a.createdUnix)
     activity = stripeEnrichedToActivity(actSorted.slice(0, 20))
   } else {
-    const transparencyRows = filterHubRowsForTransparencyWindow(allRowsAdjusted, DEFAULT_FUNDRAISING_CAMPAIGN)
-    hero = computeHero(transparencyRows)
-    leaderboard = computeLeaderboard(
-      filterHubRowsForAllRegisteredCampaignsLookback(allRowsAdjusted, lookbackDays),
-      codeToFullName,
-      schoolByCodeLower,
-    )
     const allCampaignDbRows = filterHubRowsForAllRegisteredCampaignsLookback(allRowsAdjusted, lookbackDays)
+    hero = computeHero(allCampaignDbRows)
+    leaderboard = computeLeaderboard(allCampaignDbRows, codeToFullName, schoolByCodeLower)
     const activitySorted = [...allCampaignDbRows].sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at))
     activity = rowsToActivity(activitySorted.slice(0, 20))
   }
@@ -471,6 +441,7 @@ export async function buildFundraisingHubSnapshot(admin?: SupabaseClient): Promi
     campaignDisplayName: DEFAULT_FUNDRAISING_CAMPAIGN.campaignDisplayName,
     stripeCampaignSlug: DEFAULT_FUNDRAISING_CAMPAIGN.stripeCampaignSlug,
     lookbackDays,
+    timedDriveArchived: Boolean(DEFAULT_FUNDRAISING_CAMPAIGN.playbookOperationalBanner),
   }
 
   return { hero, campaigns, leaderboard, activity, hubTransparency }

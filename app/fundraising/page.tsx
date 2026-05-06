@@ -14,9 +14,9 @@ import { HowItWorks } from "./components/HowItWorks"
 import { FundraisingFooter } from "./components/FundraisingFooter"
 
 export const metadata: Metadata = {
-  title: "Fundraising | NC United Wrestling",
+  title: "Fundraising Hub | NC United Wrestling",
   description:
-    "501(c)(3) nonprofit fundraising hub — tax-deductible gifts, athlete search, live donor activity, campaigns, and honor roll. EIN 99-3757238.",
+    "Central 501(c)(3) fundraising hub for NC United Wrestling — tax-deductible athlete support, training fund, campaigns, honor roll, and live activity. EIN 99-3757238.",
 }
 
 export default async function FundraisingPortalHomePage() {

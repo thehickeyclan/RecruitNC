@@ -93,7 +93,7 @@ export function FundraisingHero({
             |
           </span>
           <div className="flex min-w-0 flex-1 flex-col sm:flex-none">
-            <span className="text-[10px] font-extrabold uppercase tracking-[0.24em] text-[#C8A94A]">Race checkouts</span>
+            <span className="text-[10px] font-extrabold uppercase tracking-[0.24em] text-[#C8A94A]">Event checkouts</span>
             <span className="mt-1 text-2xl font-black tabular-nums text-white sm:text-3xl">
               {hero.raceEntryCount.toLocaleString("en-US")}
             </span>
@@ -109,7 +109,7 @@ export function FundraisingHero({
 
         <p className="mx-auto mt-4 max-w-2xl text-xs leading-relaxed text-white/90 sm:mx-0">
           <strong className="text-white">Raised</strong>, <strong className="text-white">Donations</strong>, and{" "}
-          <strong className="text-white">Race checkouts</strong> summarize NC United hub fundraising for the last{" "}
+          <strong className="text-white">Event checkouts</strong> summarize NC United hub fundraising for the last{" "}
           <span className="tabular-nums text-white">{hubTransparency.lookbackDays}</span> days — donations credited at
           checkout, plus paid event registrations run through hub campaigns. The{" "}
           <HardLink
@@ -121,20 +121,14 @@ export function FundraisingHero({
           ranks athlete-credited gifts across every NC United hub campaign in that window.
         </p>
 
-        <p className="mx-auto mt-2 max-w-2xl text-[11px] leading-relaxed text-white/55 sm:mx-0">
-          When checkout uses the current timed race fundraiser ({hubTransparency.campaignDisplayName}), these headline figures
-          reconcile with{" "}
-          <HardLink href="/spartan" className="font-semibold text-[#C8A94A]/90 underline-offset-4 hover:underline">
-            public Spartan totals
-          </HardLink>{" "}
-          on <span className="text-white/70">/spartan</span> for the same {hubTransparency.lookbackDays}-day window.
-        </p>
-
-        <p
-          className={`${displayFont("mx-auto mt-4 max-w-2xl text-[11px] font-bold uppercase tracking-[0.2em] text-[#C8A94A] sm:mx-0")}`}
-        >
-          Raised in 16 days. Zero preparation. One community.
-        </p>
+        {hubTransparency.timedDriveArchived ? (
+          <p className="mx-auto mt-2 max-w-2xl text-[11px] leading-relaxed text-white/55 sm:mx-0">
+            The timed fundraiser{" "}
+            <span className="font-semibold text-white/70">{hubTransparency.campaignDisplayName}</span> has closed; totals here
+            can still include late-settling checkouts from that drive and other hub flows within this{" "}
+            <span className="tabular-nums">{hubTransparency.lookbackDays}</span>-day window.
+          </p>
+        ) : null}
 
         <div className="mx-auto mt-10 flex max-w-xl flex-col gap-4 sm:mx-0 sm:max-w-none sm:flex-row sm:flex-wrap sm:items-start">
           <HardLink

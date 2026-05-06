@@ -158,8 +158,8 @@ export function LiveDonationStream({
         </div>
         <p className="mt-3 max-w-2xl text-sm text-white">
           Last {FEED_LIMIT} paid gifts across <strong className="text-white">all NC United hub campaigns</strong> in Stripe,
-          last <span className="tabular-nums text-white">{hubTransparency.lookbackDays}</span> days (newest first). Hero
-          stats above still reflect <strong className="text-white">{hubTransparency.campaignDisplayName}</strong> only.
+          last <span className="tabular-nums text-white">{hubTransparency.lookbackDays}</span> days (newest first) — same
+          combined scope as the headline totals. Filter by campaign below when you want a single drive.
         </p>
 
         <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
@@ -188,6 +188,9 @@ export function LiveDonationStream({
                 {i > 0 ? <span className="text-white/25" aria-hidden>·</span> : null}
                 <HardLink href={c.publicPagePath} className="text-[#C8A94A] underline-offset-4 hover:underline">
                   {c.tabLabel}
+                  {hubTransparency.timedDriveArchived ? (
+                    <span className="font-normal normal-case text-white/45"> · archived</span>
+                  ) : null}
                 </HardLink>
               </span>
             ))}

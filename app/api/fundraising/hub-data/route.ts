@@ -4,7 +4,7 @@ import { buildFundraisingHubSnapshot } from "@/lib/fundraising/hub-data"
 export const dynamic = "force-dynamic"
 
 /**
- * Public JSON snapshot for the fundraising hub (mirrored Spartan donations + optional campaigns table).
+ * Public JSON snapshot for the fundraising hub (combined Stripe hub sessions + optional active campaigns table).
  */
 export async function GET() {
   try {
