@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { requireAdmin } from "@/lib/admin-auth"
+import { resolveFundraisingAthletePublicBySlugForRequest } from "@/lib/fundraising/athlete-fundraising-profiles"
+import { ensureParentAthleteLinkAdmin } from "@/lib/fundraising/ensure-parent-athlete-link-admin"
 
 export type ActivationRequestRow = {
   id: string
@@ -94,6 +96,31 @@ export async function submitFundraisingActivationRequestAction(params: {
   return { ok: true }
 }
 
+async function resolveAthleteIdForActivationApprove(params: {
+  storedAthleteId: string | null
+  fundraisingSlug: string
+}): Promise<string | null> {
+  const stored =
+    typeof params.storedAthleteId === "string" && params.storedAthleteId.trim()
+      ? params.storedAthleteId.trim()
+      : null
+  if (stored) return stored
+
+  const slug = params.fundraisingSlug.trim().toLowerCase()
+  if (!slug) return null
+
+  const resolved = await resolveFundraisingAthletePublicBySlugForRequest(slug)
+  if (!resolved) return null
+
+  const fromProfile = typeof resolved.profile?.athlete_id === "string" ? resolved.profile.athlete_id.trim() : ""
+  if (fromProfile) return fromProfile
+
+  const eid = resolved.entry?.id
+  if (eid && !eid.startsWith("spartan-fundraising:")) return eid
+
+  return null
+}
+
 export async function reviewFundraisingActivationRequestAdminAction(
   requestId: string,
   nextStatus: "approved" | "rejected",
@@ -108,24 +135,73 @@ export async function reviewFundraisingActivationRequestAdminAction(
   if (!user) return { ok: false, error: "Unauthorized" }
 
   const admin = createAdminClient()
-  const now = new Date().toISOString()
-  const { error } = await admin
+  const { data: reqRow, error: fetchErr } = await admin
     .from("fundraising_activation_requests")
-    .update({
-      status: nextStatus,
-      reviewed_at: now,
-      reviewed_by: user.id,
-    })
+    .select("id, user_id, athlete_id, fundraising_slug, status")
     .eq("id", requestId)
+    .maybeSingle()
+
+  if (fetchErr || !reqRow) {
+    console.warn("[reviewFundraisingActivationRequest] fetch", fetchErr?.message)
+    return { ok: false, error: fetchErr?.message ?? "Request not found." }
+  }
+
+  let resolvedAthleteIdForApprove: string | null = null
+
+  if (nextStatus === "approved") {
+    const slug =
+      typeof reqRow.fundraising_slug === "string" ? reqRow.fundraising_slug.trim().toLowerCase() : ""
+    const parentUserId = typeof reqRow.user_id === "string" ? reqRow.user_id.trim() : ""
+    if (!slug || !parentUserId) {
+      return { ok: false, error: "Request is missing slug or user — cannot approve." }
+    }
+
+    resolvedAthleteIdForApprove = await resolveAthleteIdForActivationApprove({
+      storedAthleteId: typeof reqRow.athlete_id === "string" ? reqRow.athlete_id : null,
+      fundraisingSlug: slug,
+    })
+
+    if (!resolvedAthleteIdForApprove) {
+      return {
+        ok: false,
+        error:
+          "Cannot resolve a recruiting athlete UUID for this slug (roster-only / Spartan-only rows need a profile or manual link). Fix the fundraising profile or use Profile → attach parent, then approve again.",
+      }
+    }
+
+    const linked = await ensureParentAthleteLinkAdmin(admin, {
+      parentUserId,
+      athleteId: resolvedAthleteIdForApprove,
+    })
+    if (!linked.ok) return { ok: false, error: linked.error }
+  }
+
+  const now = new Date().toISOString()
+  const updatePayload: Record<string, unknown> = {
+    status: nextStatus,
+    reviewed_at: now,
+    reviewed_by: user.id,
+  }
+
+  if (nextStatus === "approved" && resolvedAthleteIdForApprove) {
+    const existing = typeof reqRow.athlete_id === "string" ? reqRow.athlete_id.trim() : ""
+    if (!existing || existing !== resolvedAthleteIdForApprove) {
+      updatePayload.athlete_id = resolvedAthleteIdForApprove
+    }
+  }
+
+  const { error } = await admin.from("fundraising_activation_requests").update(updatePayload).eq("id", requestId)
 
   if (error) {
     console.warn("[reviewFundraisingActivationRequest]", error.message)
     return { ok: false, error: error.message }
   }
 
-  const { data: row } = await admin.from("fundraising_activation_requests").select("fundraising_slug").eq("id", requestId).maybeSingle()
-  const slug = typeof row?.fundraising_slug === "string" ? row.fundraising_slug : null
-  if (slug) revalidatePath(`/fundraising/athletes/${slug}`)
+  const slugOut = typeof reqRow.fundraising_slug === "string" ? reqRow.fundraising_slug : null
+  if (slugOut) {
+    revalidatePath(`/fundraising/athletes/${slugOut.trim().toLowerCase()}`)
+    revalidatePath("/profile")
+  }
   revalidatePath("/admin/fundraising/activation-requests")
   return { ok: true }
 }

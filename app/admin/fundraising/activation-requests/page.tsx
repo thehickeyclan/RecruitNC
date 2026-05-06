@@ -21,8 +21,10 @@ export default async function AdminFundraisingActivationRequestsPage() {
         </HardLink>
         <h1 className="mt-2 text-2xl font-bold tracking-tight text-gray-900">Activation requests</h1>
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          Families submit these after acknowledging the playbook. Approve/reject here, then wire parent accounts (Profile → Fundraise)
-          as usual. Ensure tables exist:{" "}
+          Families submit these after acknowledging the playbook. Approving resolves the athlete from the slug (when possible), inserts{" "}
+          <code className="rounded bg-muted px-1">parent_athlete_links</code> for that parent user, then marks the request approved — same
+          wiring as the manual parent-athlete link API. If approval fails with a resolve/link error, fix the profile or link manually,
+          then approve again. Ensure tables exist:{" "}
           <code className="rounded bg-muted px-1">scripts/supabase-fundraising-activation.sql</code>.
         </p>
       </div>

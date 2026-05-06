@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClientFresh } from "@/lib/supabase/admin"
+import { ensureParentAthleteLinkAdmin } from "@/lib/fundraising/ensure-parent-athlete-link-admin"
 
 export const dynamic = "force-dynamic"
 
@@ -44,64 +45,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Athlete not found." }, { status: 404 })
   }
 
-  const { data: existingLink } = await admin
-    .from("parent_athlete_links")
-    .select("id")
-    .eq("user_id", parentUserId)
-    .eq("athlete_id", athleteId)
-    .maybeSingle()
-
-  if (existingLink) {
-    return NextResponse.json({
-      success: true,
-      message: `Already linked — ${athlete.name ?? athleteId} is tied to this RecruitNC account.`,
-      athleteId,
-      parentUserId,
-    })
-  }
-
-  let insertErr = (
-    await admin.from("parent_athlete_links").insert({
-      user_id: parentUserId,
-      athlete_id: athleteId,
-    })
-  ).error
-
-  if (
-    insertErr &&
-    /row-level security|42501/i.test(`${insertErr.message} ${insertErr.code ?? ""}`)
-  ) {
-    const rpc = await admin.rpc("insert_parent_athlete_link_admin", {
-      p_parent_user_id: parentUserId,
-      p_athlete_id: athleteId,
-    })
-    if (!rpc.error) {
-      insertErr = null
-    } else if (
-      rpc.error.code === "42883" ||
-      /does not exist|could not find.*function/i.test(rpc.error.message ?? "")
-    ) {
-      console.error("[admin/parent-athlete-link] RLS blocked insert; RPC not installed:", rpc.error.message)
-    } else {
-      insertErr = rpc.error
-    }
-  }
-
-  if (insertErr) {
-    if (insertErr.code === "23505") {
-      return NextResponse.json({
-        success: true,
-        message: `Already linked — ${athlete.name ?? athleteId} is tied to this RecruitNC account.`,
-        athleteId,
-        parentUserId,
-      })
-    }
-    console.error("[admin/parent-athlete-link]", insertErr)
-    const rlsHint =
-      /row-level security/i.test(insertErr.message)
-        ? " Confirm Vercel SUPABASE_SERVICE_ROLE_KEY is the service_role secret (not anon). Optional: run docs/sql/parent-athlete-link-admin-rpc.sql.txt in Supabase SQL Editor."
-        : ""
-    return NextResponse.json({ error: `${insertErr.message}${rlsHint}` }, { status: 500 })
+  const linked = await ensureParentAthleteLinkAdmin(admin, { parentUserId, athleteId })
+  if (!linked.ok) {
+    console.error("[admin/parent-athlete-link]", linked.error)
+    return NextResponse.json({ error: linked.error }, { status: 500 })
   }
 
   return NextResponse.json({

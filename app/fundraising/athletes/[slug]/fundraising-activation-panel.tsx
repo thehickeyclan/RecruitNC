@@ -72,7 +72,7 @@ export function FundraisingActivationPanel({
       return {
         tone: "emerald" as const,
         label: "Approved",
-        text: "Staff approved your activation request. When wiring is complete, open Profile → Fundraise to manage donor tools.",
+        text: "Staff approved your request and linked your login to this wrestler. Refresh if needed, then use Profile → Fundraise for donor tools.",
       }
     }
     if (!playbookDone) {

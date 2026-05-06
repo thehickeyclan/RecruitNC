@@ -29,8 +29,11 @@ export function ActivationRequestReviewButtons({
         return
       }
       toast({
-        title: next === "approved" ? "Approved" : "Rejected",
-        description: `${fundraisingSlug} · request updated.`,
+        title: next === "approved" ? "Approved & linked" : "Rejected",
+        description:
+          next === "approved"
+            ? `${fundraisingSlug} · parent account linked (Profile → Family & athletes).`
+            : `${fundraisingSlug} · request updated.`,
       })
       router.refresh()
     } finally {
