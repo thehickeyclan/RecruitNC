@@ -92,13 +92,61 @@ export function LeaderboardPreview({
           </div>
           <HardLink
             href={`/fundraising/leaderboard?campaign=all&days=${hubTransparency.lookbackDays}`}
-            className={`${displayFont("text-right text-sm font-extrabold uppercase tracking-wide text-[#C8A94A] underline-offset-4 hover:underline sm:text-left")}`}
+            className={`${displayFont(
+              "-mx-1 inline-flex min-h-[48px] touch-manipulation items-center justify-end rounded-lg px-3 py-2 text-right text-sm font-extrabold uppercase tracking-wide text-[#C8A94A] underline-offset-4 hover:bg-white/[0.06] hover:underline sm:justify-start sm:text-left",
+            )}`}
           >
             View full leaderboard →
           </HardLink>
         </div>
 
-        <div className="mt-10 overflow-x-auto rounded-xl border border-white/10 bg-[#0B2545]/55">
+        <ul className="mt-10 space-y-3 md:hidden" aria-label="Top athletes, mobile layout">
+          {rows.length === 0 ? (
+            <li className="rounded-xl border border-white/10 bg-[#0B2545]/55 px-4 py-10 text-center text-sm text-white/85">
+              Paid gifts will populate this board as athletes earn support.
+            </li>
+          ) : (
+            rows.map((r) => {
+              const href = fundraisingAthletePublicHrefFromCode(r.athleteCode)
+              return (
+                <li
+                  key={r.athleteCode}
+                  className="rounded-xl border border-white/10 bg-[#0B2545]/55 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <span className={`${displayFont("text-3xl font-black tabular-nums leading-none text-[#CC0000]")}`}>
+                      {r.rank}
+                    </span>
+                    <span className={`${displayFont("text-right text-lg font-extrabold tabular-nums text-white")}`}>
+                      {formatUsdWhole(r.raisedCents)}
+                    </span>
+                  </div>
+                  <div className="mt-3 min-w-0">
+                    {href ? (
+                      <HardLink
+                        href={href}
+                        className="touch-manipulation text-lg font-bold leading-snug text-white underline-offset-4 hover:text-[#C8A94A] hover:underline"
+                      >
+                        {r.athleteName}
+                      </HardLink>
+                    ) : (
+                      <span className="text-lg font-bold text-white">{r.athleteName}</span>
+                    )}
+                    <p className="mt-1 truncate text-sm text-white/70">{r.school || "—"}</p>
+                  </div>
+                  <div className="mt-4 h-2 overflow-hidden rounded-full bg-black/45">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-[#CC0000] to-[#C8A94A]"
+                      style={{ width: `${r.progressPct}%` }}
+                    />
+                  </div>
+                </li>
+              )
+            })
+          )}
+        </ul>
+
+        <div className="mt-10 hidden overflow-x-auto rounded-xl border border-white/10 bg-[#0B2545]/55 md:block">
           <table className="w-full min-w-[520px] text-left text-sm">
             <thead>
               <tr className={`${displayFont("border-b border-white/10 text-[10px] font-extrabold uppercase tracking-[0.18em] text-white/70")}`}>
@@ -126,7 +174,10 @@ export function LeaderboardPreview({
                       {(() => {
                         const href = fundraisingAthletePublicHrefFromCode(r.athleteCode)
                         return href ? (
-                          <HardLink href={href} className="font-bold text-white underline-offset-4 hover:text-[#C8A94A] hover:underline">
+                          <HardLink
+                            href={href}
+                            className="touch-manipulation font-bold text-white underline-offset-4 hover:text-[#C8A94A] hover:underline"
+                          >
                             {r.athleteName}
                           </HardLink>
                         ) : (
@@ -152,6 +203,7 @@ export function LeaderboardPreview({
             </tbody>
           </table>
         </div>
+        <p className="mt-3 hidden text-center text-[11px] text-white/45 md:block">Swipe sideways if columns are clipped on a narrow tablet.</p>
       </div>
     </section>
   )

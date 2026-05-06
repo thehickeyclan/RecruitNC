@@ -72,13 +72,13 @@ export function ScholarshipsInterestNotifyCard() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             disabled={busy}
-            className="min-h-11 border-white/15 bg-black/35 text-white placeholder:text-white/35 focus-visible:ring-[#C8A94A]/40 sm:min-w-[16rem] sm:flex-1"
+            className="min-h-[48px] border-white/15 bg-black/35 text-base text-white placeholder:text-white/35 focus-visible:ring-[#C8A94A]/40 sm:min-w-[16rem] sm:flex-1"
           />
           <Button
             type="submit"
             disabled={busy || !email.trim()}
             className={`${displayFont(
-              "min-h-11 shrink-0 bg-[#C8A94A] px-4 text-xs font-extrabold uppercase tracking-[0.14em] text-[#061224] hover:bg-[#b89740] disabled:opacity-40",
+              "min-h-[48px] shrink-0 touch-manipulation bg-[#C8A94A] px-4 text-xs font-extrabold uppercase tracking-[0.14em] text-[#061224] hover:bg-[#b89740] disabled:opacity-40",
             )}`}
           >
             {busy ? "Sending…" : "Notify me"}

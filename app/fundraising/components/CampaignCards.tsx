@@ -52,7 +52,9 @@ export function CampaignCards({ campaigns }: { campaigns: FundraisingHubCampaign
               </p>
               <HardLink
                 href="/fundraising/athletes"
-                className={`${displayFont("mt-8 inline-flex min-h-[50px] w-full items-center justify-center rounded-sm bg-[#CC0000] text-sm font-extrabold uppercase tracking-[0.14em] text-white transition hover:bg-[#a80000] sm:w-auto sm:px-10")}`}
+                className={`${displayFont(
+                  "mt-8 inline-flex min-h-[50px] w-full touch-manipulation items-center justify-center rounded-sm bg-[#CC0000] text-sm font-extrabold uppercase tracking-[0.14em] text-white transition hover:bg-[#a80000] sm:w-auto sm:px-10",
+                )}`}
               >
                 Support an athlete year-round →
               </HardLink>
@@ -150,7 +152,9 @@ export function CampaignCards({ campaigns }: { campaigns: FundraisingHubCampaign
                     <div className="mt-auto pt-7">
                       <HardLink
                         href={c.href}
-                        className={`${displayFont("inline-flex w-full min-h-[50px] items-center justify-center rounded-sm border-2 border-white/15 bg-black/25 text-sm font-extrabold uppercase tracking-[0.14em] text-white transition group-hover:border-[#CC0000]/55 group-hover:bg-[#CC0000]/12")}`}
+                        className={`${displayFont(
+                          "inline-flex w-full min-h-[50px] touch-manipulation items-center justify-center rounded-sm border-2 border-white/15 bg-black/25 text-sm font-extrabold uppercase tracking-[0.14em] text-white transition group-hover:border-[#CC0000]/55 group-hover:bg-[#CC0000]/12",
+                        )}`}
                       >
                         Open Campaign →
                       </HardLink>

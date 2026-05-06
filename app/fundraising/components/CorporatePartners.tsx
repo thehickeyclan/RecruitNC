@@ -7,7 +7,7 @@ function displayFont(c: string) {
 }
 
 export function CorporatePartners() {
-  if (CORPORATE_SPONSORS.length === 0) return null
+  const empty = CORPORATE_SPONSORS.length === 0
 
   return (
     <section
@@ -16,43 +16,54 @@ export function CorporatePartners() {
     >
       <div className="mx-auto max-w-6xl text-center">
         <p className={`${displayFont("text-[10px] font-extrabold uppercase tracking-[0.28em] text-[#C8A94A]")}`}>
-          Thank you
+          {empty ? "Partners" : "Thank you"}
         </p>
         <h2 className={`${displayFont("mt-3 text-2xl font-black uppercase tracking-tight text-white sm:text-3xl")}`}>
           Corporate sponsors &amp; partners
         </h2>
         <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-white/85">
-          These organizations help NC United athletes and year-round training through sponsorships and partnerships — we&apos;re grateful for their
-          support. Interested in joining them? Reach out and we&apos;ll connect you with the right NC United contact.
+          {empty ? (
+            <>
+              Sponsorships help NC United athletes and year-round training. We&apos;re lining up partners now — if your organization wants to get
+              involved, we&apos;d love to hear from you.
+            </>
+          ) : (
+            <>
+              These organizations help NC United athletes and year-round training through sponsorships and partnerships — we&apos;re grateful for their
+              support. Interested in joining them? Reach out and we&apos;ll connect you with the right NC United contact.
+            </>
+          )}
         </p>
 
-        <ul className="mt-12 flex flex-wrap items-center justify-center gap-8 sm:gap-12">
-          {CORPORATE_SPONSORS.map((s) => (
-            <li key={s.id}>
-              <a
-                href={s.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`${s.name} — visit website (opens in new tab)`}
-                className="group flex flex-col items-center"
-              >
-                <span className="relative block h-28 w-40 sm:h-32 sm:w-48">
-                  <Image
-                    src={s.logoSrc}
-                    alt={s.logoAlt}
-                    fill
-                    className="object-contain object-center transition group-hover:opacity-90"
-                    sizes="(max-width: 640px) 160px, 192px"
-                  />
-                </span>
-              </a>
-            </li>
-          ))}
-        </ul>
+        {!empty ? (
+          <ul className="mt-12 flex flex-wrap items-center justify-center gap-8 sm:gap-12">
+            {CORPORATE_SPONSORS.map((s) => (
+              <li key={s.id}>
+                <a
+                  href={s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`${s.name} — visit website (opens in new tab)`}
+                  className="group flex flex-col items-center"
+                >
+                  <span className="relative block h-28 w-40 sm:h-32 sm:w-48">
+                    <Image
+                      src={s.logoSrc}
+                      alt={s.logoAlt}
+                      fill
+                      className="object-contain object-center transition group-hover:opacity-90"
+                      sizes="(max-width: 640px) 160px, 192px"
+                    />
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        ) : null}
 
         <HardLink
           href="/fundraising/corporate"
-          className={`${displayFont("mt-10 inline-flex min-h-12 items-center justify-center rounded-sm border-2 border-[#C8A94A]/50 px-8 text-xs font-extrabold uppercase tracking-[0.14em] text-[#C8A94A] hover:bg-[#C8A94A]/10")}`}
+          className={`${displayFont(`${empty ? "mt-8 " : "mt-10 "}touch-manipulation inline-flex min-h-[48px] items-center justify-center rounded-sm border-2 border-[#C8A94A]/50 px-8 text-xs font-extrabold uppercase tracking-[0.14em] text-[#C8A94A] hover:bg-[#C8A94A]/10`)}`}
         >
           Become a sponsor or partner →
         </HardLink>

@@ -9,18 +9,18 @@ function displayFont(c: string) {
 const STEPS = [
   {
     n: "01",
-    title: "Give securely",
-    body: "Complete checkout on Stripe. When your gift qualifies, documentation arrives by email.",
+    title: "Choose the beneficiary",
+    body: "Pick a specific wrestler or the NC United Training Fund — gift credit follows your choice at checkout.",
   },
   {
     n: "02",
-    title: "Choose who to support",
-    body: "Pick a wrestler by name or give to the NC United Training Fund—your choice at checkout.",
+    title: "Secure checkout",
+    body: "Complete payment through NC United&apos;s nonprofit Stripe checkout — encrypted like any major retailer.",
   },
   {
     n: "03",
-    title: "Support shows up for athletes",
-    body: "Credited gifts count toward approved training and competition costs through NC United’s reimbursement process.",
+    title: "Receipt & tax documentation",
+    body: "When your gift qualifies as tax-deductible, documentation arrives by email — NC United is a 501(c)(3); ask your advisor about your return.",
   },
 ] as const
 
@@ -58,7 +58,7 @@ export function HowItWorks() {
             How giving works
           </h2>
           <p className="mx-auto max-w-2xl text-sm leading-relaxed text-white/70 sm:mx-0">
-            Three quick steps — then choose a wrestler or the pooled training fund with the same secure nonprofit checkout.
+            Choose athlete or NC United Training Fund → secure nonprofit checkout → email receipt and tax documentation when your gift qualifies.
           </p>
         </div>
 
@@ -122,7 +122,9 @@ export function HowItWorks() {
                   </div>
                   <HardLink
                     href={c.href}
-                    className={`${displayFont("mt-6 inline-flex min-h-11 items-center text-xs font-extrabold uppercase tracking-[0.18em] text-[#C8A94A] underline-offset-4 hover:underline")}`}
+                    className={`${displayFont(
+                      "mt-8 inline-flex min-h-[52px] w-full touch-manipulation items-center justify-center rounded-sm bg-[#CC0000] px-6 text-sm font-extrabold uppercase tracking-[0.14em] text-white shadow-[0_18px_52px_-12px_rgba(204,0,0,0.65)] transition hover:bg-[#a80000]",
+                    )}`}
                   >
                     {c.cta}
                   </HardLink>

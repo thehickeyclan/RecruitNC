@@ -6,7 +6,7 @@ import { HardLink } from "@/components/hard-link"
 export const metadata: Metadata = {
   title: "Top donors | NC United Fundraising",
   description:
-    "Recognized NC United donors who chose to show their name — qualifying paid Stripe checkouts, 501(c)(3) nonprofit.",
+    "NC United donors ranked by total paid hub giving ($250+ combined opt-in gifts), with campaigns listed — 501(c)(3) nonprofit.",
 }
 
 function displayFont(c: string) {

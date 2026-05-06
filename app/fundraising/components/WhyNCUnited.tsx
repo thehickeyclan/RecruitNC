@@ -34,6 +34,9 @@ export function WhyNCUnited({ hero }: { hero: FundraisingHubHeroStats }) {
         </div>
 
         <div className="overflow-x-auto rounded-xl border border-white/10 bg-[#0B2545]/50">
+          <p className="px-3 pb-2 pt-3 text-center text-[11px] text-white/55 md:hidden">
+            Swipe sideways to compare columns →
+          </p>
           <table className="w-full min-w-[420px] text-sm">
             <thead>
               <tr className={`${displayFont("border-b border-white/10 text-[10px] font-extrabold uppercase tracking-[0.15em] text-white/50")}`}>

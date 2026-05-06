@@ -5,9 +5,17 @@ function displayFont(c: string) {
   return `font-[family-name:var(--font-fundraising-display)] ${c}`
 }
 
+const FOOTER_LINK_CLASS = displayFont(
+  "flex min-h-[48px] touch-manipulation items-center justify-center rounded-lg px-4 py-2 text-center text-white/90 transition hover:bg-white/[0.06] hover:text-[#C8A94A] sm:min-h-0 sm:inline-flex sm:justify-start sm:px-2 sm:py-1",
+)
+
+const FOOTER_LINK_CLASS_SECONDARY = displayFont(
+  "flex min-h-[48px] touch-manipulation items-center justify-center rounded-lg px-4 py-2 text-center text-xs text-white/90 transition hover:bg-white/[0.06] hover:text-[#C8A94A] sm:min-h-0 sm:inline-flex sm:justify-start sm:px-2 sm:py-1 sm:text-sm",
+)
+
 export function FundraisingFooter() {
   return (
-    <footer className="border-t border-white/10 bg-[#020812] px-4 py-14 text-white">
+    <footer className="border-t border-white/10 bg-[#020812] px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-14 text-white">
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-10 text-center">
         <Image
           src="/images/nc-united-stacked-logo-white.png"
@@ -26,51 +34,51 @@ export function FundraisingFooter() {
           <p>
             <a
               href="mailto:info@ncwrestlingunited.com"
-              className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline"
+              className="inline-flex min-h-[48px] touch-manipulation items-center justify-center rounded-lg px-2 font-semibold text-[#C8A94A] underline-offset-4 hover:underline sm:min-h-0 sm:inline"
             >
               info@ncwrestlingunited.com
             </a>
           </p>
         </div>
 
-        <nav aria-label="Giving hub links" className="flex w-full max-w-2xl flex-col gap-6 text-sm">
-          <div className={`${displayFont("flex flex-wrap items-center justify-center gap-x-4 gap-y-2")}`}>
-            <HardLink href="/fundraising/athletes" className="text-white/90 hover:text-[#C8A94A]">
+        <nav aria-label="Giving hub links" className={`${displayFont("w-full max-w-2xl space-y-4 text-sm")}`}>
+          <div className="grid grid-cols-1 gap-1 sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-2 sm:gap-y-2">
+            <HardLink href="/fundraising/athletes" className={FOOTER_LINK_CLASS}>
               Athlete profiles
             </HardLink>
-            <span className="text-white/25" aria-hidden>
+            <span className="hidden text-white/25 sm:inline" aria-hidden>
               ·
             </span>
-            <HardLink href="/fundraising#fundraising-active-campaigns" className="text-white/90 hover:text-[#C8A94A]">
+            <HardLink href="/fundraising#fundraising-active-campaigns" className={FOOTER_LINK_CLASS}>
               Active campaigns
             </HardLink>
-            <span className="text-white/25" aria-hidden>
+            <span className="hidden text-white/25 sm:inline" aria-hidden>
               ·
             </span>
-            <HardLink href="/fundraising/leaderboard" className="text-white/90 hover:text-[#C8A94A]">
+            <HardLink href="/fundraising/leaderboard" className={FOOTER_LINK_CLASS}>
               Leaderboard
             </HardLink>
-            <span className="text-white/25" aria-hidden>
+            <span className="hidden text-white/25 sm:inline" aria-hidden>
               ·
             </span>
-            <HardLink href="/fundraising/activity?campaign=all" className="text-white/90 hover:text-[#C8A94A]">
+            <HardLink href="/fundraising/activity?campaign=all" className={FOOTER_LINK_CLASS}>
               Gift log
             </HardLink>
-            <span className="text-white/25" aria-hidden>
+            <span className="hidden text-white/25 sm:inline" aria-hidden>
               ·
             </span>
-            <HardLink href="/fundraising#fundraising-live-donor-stream" className="text-white/90 hover:text-[#C8A94A]">
+            <HardLink href="/fundraising#fundraising-live-donor-stream" className={FOOTER_LINK_CLASS}>
               Live feed
             </HardLink>
           </div>
-          <div className={`${displayFont("flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs sm:text-sm")}`}>
-            <HardLink href="/fundraising#fundraising-top-donors" className="text-white/90 hover:text-[#C8A94A]">
+          <div className="grid grid-cols-1 gap-1 sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-2 sm:gap-y-2">
+            <HardLink href="/fundraising#fundraising-top-donors" className={FOOTER_LINK_CLASS_SECONDARY}>
               Top donors
             </HardLink>
-            <span className="text-white/25" aria-hidden>
+            <span className="hidden text-white/25 sm:inline" aria-hidden>
               ·
             </span>
-            <HardLink href="/fundraising/corporate" className="text-white/90 hover:text-[#C8A94A]">
+            <HardLink href="/fundraising/corporate" className={FOOTER_LINK_CLASS_SECONDARY}>
               Corporate partners
             </HardLink>
           </div>

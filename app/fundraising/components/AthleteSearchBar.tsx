@@ -49,7 +49,7 @@ export function AthleteSearchBar() {
   const showPanel = open && (q.trim().length >= 2 || loading)
 
   return (
-    <div ref={wrapRef} className="relative mt-10 max-w-xl">
+    <div ref={wrapRef} className="relative max-w-xl">
       <label
         htmlFor="fundraising-hub-athlete-search"
         className={`${displayFont("mb-2 block text-[10px] font-extrabold uppercase tracking-[0.28em] text-[#C8A94A]")}`}
@@ -73,7 +73,7 @@ export function AthleteSearchBar() {
           }}
           onFocus={() => setOpen(true)}
           placeholder="Search for an athlete by name..."
-          className="min-h-14 w-full rounded-lg border border-white/15 bg-black/35 py-3.5 pl-11 pr-4 text-base text-white shadow-inner placeholder:text-white/40 focus:border-[#C8A94A]/55 focus:outline-none focus:ring-2 focus:ring-[#C8A94A]/30"
+          className="min-h-14 w-full touch-manipulation rounded-lg border border-white/15 bg-black/35 py-3.5 pl-11 pr-4 text-base text-white shadow-inner placeholder:text-white/40 focus:border-[#C8A94A]/55 focus:outline-none focus:ring-2 focus:ring-[#C8A94A]/30"
         />
       </div>
       {showPanel ? (
@@ -92,7 +92,7 @@ export function AthleteSearchBar() {
                 <li key={h.slug} role="option">
                   <HardLink
                     href={`/fundraising/athletes/${h.slug}`}
-                    className="flex items-center gap-3 px-3 py-3 transition hover:bg-white/[0.04]"
+                    className="flex min-h-[52px] touch-manipulation items-center gap-3 px-3 py-3 transition hover:bg-white/[0.04]"
                     onNavigate={() => setOpen(false)}
                   >
                     {h.photoUrl ? (
