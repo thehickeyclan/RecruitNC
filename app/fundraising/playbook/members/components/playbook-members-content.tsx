@@ -67,7 +67,7 @@ function OlFlawed() {
 
 export function PlaybookMembersContent() {
   return (
-    <article className="mx-auto max-w-3xl px-4 py-12 pb-24">
+    <article className="mx-auto max-w-3xl px-4 pb-24 pt-6">
       <p className="font-[family-name:var(--font-fundraising-display)] text-[11px] font-bold uppercase tracking-[0.28em] text-[#C8A94A]">
         The NC United fundraising playbook · Members
       </p>

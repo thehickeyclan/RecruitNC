@@ -31,7 +31,6 @@ export default async function FundraisingPlaybookMembersPage() {
 
   return (
     <div className="min-h-screen bg-[#061224] text-white">
-      <PlaybookMembersRedCallout />
       <div className="border-b border-white/10 bg-[#0B2545]/90">
         <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-4 px-4 py-5">
           <HardLink href="/fundraising" className="text-sm font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
@@ -47,6 +46,11 @@ export default async function FundraisingPlaybookMembersPage() {
           </div>
         </div>
       </div>
+
+      <div className="mx-auto max-w-3xl px-4 pb-2 pt-8">
+        <PlaybookMembersRedCallout />
+      </div>
+
       <PlaybookMembersContent />
       <FundraisingFooter />
     </div>
