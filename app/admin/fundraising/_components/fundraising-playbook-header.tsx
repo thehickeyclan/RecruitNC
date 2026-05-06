@@ -89,6 +89,10 @@ export function FundraisingPlaybookHeader({
             <HardLink href="/fundraising/give" className="text-primary font-medium underline-offset-4 hover:underline">
               Fundraising hub / give
             </HardLink>
+            <span className="text-muted-foreground/60">·</span>
+            <HardLink href="/admin/fundraising/playbook" className="text-primary font-medium underline-offset-4 hover:underline">
+              Playbook visits
+            </HardLink>
           </p>
         </div>
       </div>

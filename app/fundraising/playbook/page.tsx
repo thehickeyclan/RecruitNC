@@ -43,6 +43,13 @@ export default async function FundraisingPlaybookGatePage() {
           Staff fundraising tools
         </h1>
         <p className="mt-4 text-sm leading-relaxed text-white/75">
+          Looking for the <strong className="text-white">tracked members playbook</strong> (full walkthrough after sign-in)?{" "}
+          <HardLink href="/fundraising/playbook/members" className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
+            Open playbook · members
+          </HardLink>
+          .
+        </p>
+        <p className="mt-4 text-sm leading-relaxed text-white/75">
           Looking for the <strong className="text-white">family fundraising guide</strong> (how to ask, matching gifts, donor types)?{" "}
           <HardLink href="/fundraising/playbook/guide" className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
             Open the public guide

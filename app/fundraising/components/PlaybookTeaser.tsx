@@ -49,6 +49,17 @@ export function PlaybookTeaser() {
         >
           Open the full guide →
         </HardLink>
+        <div className="mt-4 text-center sm:text-left">
+          <HardLink
+            href="/fundraising/playbook/members"
+            className={`${displayFont("text-sm font-extrabold uppercase tracking-wide text-[#C8A94A] underline-offset-4 hover:underline")}`}
+          >
+            Members playbook (sign in) →
+          </HardLink>
+          <span className="mt-1 block text-xs text-white/55">
+            Same narrative with visit tracking after RecruitNC sign-in.
+          </span>
+        </div>
         <p className="mt-4 text-center text-xs text-white/85 sm:text-left">
           <strong className="text-white/95">Staff only:</strong> sign in for donor CRM, exports, and dashboards —{" "}
           <HardLink href="/fundraising/playbook" className="text-[#C8A94A] underline-offset-4 hover:underline">

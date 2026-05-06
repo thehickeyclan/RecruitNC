@@ -23,13 +23,21 @@ export default function FundraisingPlaybookGuidePage() {
           >
             ← Fundraising hub
           </HardLink>
-          <HardLink
-            href="/fundraising/playbook"
-            className="text-xs font-semibold uppercase tracking-wide text-white/55 underline-offset-4 hover:text-[#C8A94A] hover:underline"
-            title="Recipients only: sign in to RecruitNC for donor CRM, exports, and admin dashboards—not the public guide on this site."
-          >
-            Staff: CRM &amp; dashboards
-          </HardLink>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+            <HardLink
+              href="/fundraising/playbook/members"
+              className="text-xs font-semibold uppercase tracking-wide text-[#C8A94A] underline-offset-4 hover:underline"
+            >
+              Members playbook (sign in)
+            </HardLink>
+            <HardLink
+              href="/fundraising/playbook"
+              className="text-xs font-semibold uppercase tracking-wide text-white/55 underline-offset-4 hover:text-[#C8A94A] hover:underline"
+              title="Staff: donor CRM and admin dashboards — sign in required."
+            >
+              Staff: CRM &amp; dashboards
+            </HardLink>
+          </div>
         </div>
       </div>
       <article
