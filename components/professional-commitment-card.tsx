@@ -52,6 +52,45 @@ interface ProfessionalCommitmentCardProps {
 /** Honor pill order on card back (matches getCommitmentHonorBadgesForAthlete output). */
 const HONOR_BADGE_DISPLAY_ORDER = ["All-American", "State Champion", "State Placer", "State Qualifier"] as const
 
+function normalizeAwardDisplayName(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/\s+/g, " ")
+    .replace(/\bbenley\b/g, "bentley")
+    .trim()
+}
+
+/** True when display name is clearly the same person as canonical "First Last". */
+function awardRecipientMatches(normalizedDisplay: string, canonicalFullName: string): boolean {
+  const c = normalizeAwardDisplayName(canonicalFullName)
+  if (!normalizedDisplay || !c) return false
+  if (normalizedDisplay === c) return true
+  const parts = c.split(" ").filter(Boolean)
+  if (parts.length < 2) return normalizedDisplay.includes(c)
+  return parts.every((p) => normalizedDisplay.includes(p))
+}
+
+/** Prestigious NC high-school wrestling awards — solid gold chips on flip-card back. */
+function getNcLegacyAwardBadges(displayName: string | undefined): { key: string; label: string }[] {
+  const n = normalizeAwardDisplayName(displayName ?? "")
+  if (!n) return []
+
+  const daveSchultzCanonical = ["Bentley Sly", "Liam Hickey"]
+  const triciaSaundersCanonical = ["Faith Bane", "Leah Edwards"]
+
+  const out: { key: string; label: string }[] = []
+
+  if (daveSchultzCanonical.some((c) => awardRecipientMatches(n, c))) {
+    out.push({ key: "dave-schultz", label: "Dave Schultz Award" })
+  }
+  if (triciaSaundersCanonical.some((c) => awardRecipientMatches(n, c))) {
+    out.push({ key: "tricia-saunders", label: "Tricia Saunders Award" })
+  }
+
+  return out
+}
+
 interface SeasonRecord {
   year: string
   displayYear: string
@@ -441,6 +480,8 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
     return HONOR_BADGE_DISPLAY_ORDER.filter((b) => merged.has(b))
   }, [honorBadges, serverStateHonors])
 
+  const legacyAwardBadges = useMemo(() => getNcLegacyAwardBadges(athlete.name), [athlete.name])
+
   /** Bias above center so foreheads/headgear stay in frame; ~18% is a good default for full-body and mat shots. */
   const getImagePositionClass = () => {
     const athleteName = athlete.name?.toLowerCase() || ""
@@ -592,6 +633,24 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
                 <p className="text-xl font-black tabular-nums leading-tight mt-1" style={{ color: "#D3B574" }}>
                   #{backCardNcRank}
                 </p>
+              </div>
+            )}
+
+            {legacyAwardBadges.length > 0 && (
+              <div className="flex flex-wrap justify-center gap-1.5 mb-2.5 px-0.5">
+                {legacyAwardBadges.map((b) => (
+                  <span
+                    key={b.key}
+                    className="inline-flex items-center rounded-full px-2.5 py-1 text-[8px] font-extrabold uppercase tracking-wide leading-tight text-center shadow-md max-w-[11rem]"
+                    style={{
+                      backgroundColor: "#D3B574",
+                      color: "#0D1A4D",
+                      boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                    }}
+                  >
+                    {b.label}
+                  </span>
+                ))}
               </div>
             )}
 
