@@ -805,21 +805,17 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
   )
 }
 
-const COMMITMENT_HONOR_ORDER = ["All-American", "State champion", "State placer", "State qualifier"] as const
+/** Display labels — only these four categories (no win–loss / tournament records). */
+const COMMITMENT_HONOR_ORDER = ["All-American", "State Champion", "State Placer", "State Qualifier"] as const
 
+/** Placement strings only; *_record (e.g. 15–2) is intentionally excluded from honor chips. */
 const HONOR_PLACEMENT_SNIPPET_KEYS = [
   "nhsca_2025_placement",
-  "nhsca_2025_record",
   "nhsca_2024_placement",
-  "nhsca_2024_record",
   "nhsca_2023_placement",
-  "nhsca_2023_record",
   "super_32_2025_placement",
-  "super_32_2025_record",
   "super_32_2024_placement",
-  "super_32_2024_record",
   "super_32_2023_placement",
-  "super_32_2023_record",
 ] as const
 
 function pushAchievementLines(lines: string[], v: string[] | string | undefined) {
@@ -847,7 +843,7 @@ function collectHonorPlacementSnippets(athlete: Athlete): string[] {
   return out
 }
 
-/** Parse 1–16 placement from common wrestling strings; skip win–loss records like "15-2". */
+/** Parse 1–16 placement from placement strings; skip win–loss shaped tokens like "15-2". */
 function parseBracketPlacementRank(text: string): number | null {
   const t = text.toLowerCase().trim()
   if (!t || t === "-" || t === "—") return null
@@ -885,8 +881,8 @@ function applyNchsaaJsonStateHonors(found: Set<string>, raw: unknown) {
   const rows = nchsaaJsonToProfileRows(raw, "")
   for (const row of rows) {
     const p = row.place
-    if (p === 1) found.add("State champion")
-    else if (p != null && p >= 2 && p <= 24) found.add("State placer")
+    if (p === 1) found.add("State Champion")
+    else if (p != null && p >= 2 && p <= 24) found.add("State Placer")
   }
 }
 
@@ -906,7 +902,7 @@ function applyHonorPatternsFromHay(found: Set<string>, hay: string) {
       hay,
     )
   ) {
-    found.add("State champion")
+    found.add("State Champion")
   }
 
   if (
@@ -914,15 +910,15 @@ function applyHonorPatternsFromHay(found: Set<string>, hay: string) {
       hay,
     )
   ) {
-    found.add("State placer")
+    found.add("State Placer")
   }
 
   if (/\bstate\s+qualifier\b|\bstate\s+qual\b|\bqualified\s+for\s+state\b|\bstate\s+qualification\b/i.test(hay)) {
-    found.add("State qualifier")
+    found.add("State Qualifier")
   }
 }
 
-/** Honors row on flip-card back: achievements text + NHSCA/Super 32 placements + NCHSAA JSON on athlete row. */
+/** Honors row on flip-card back: achievements text + placement fields only + NCHSAA JSON places (no W–L records). */
 function getCommitmentHonorBadgesForAthlete(athlete: Athlete): string[] {
   const found = new Set<string>()
 
