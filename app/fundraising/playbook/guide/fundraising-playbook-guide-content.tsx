@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import { HardLink } from "@/components/hard-link"
+import { SpartanDonorMixGrounding } from "@/app/fundraising/playbook/_components/spartan-donor-mix-grounding"
 
 function DisplayHeading({ as: Tag = "h2", className = "", children }: { as?: "h1" | "h2" | "h3"; className?: string; children: ReactNode }) {
   const base =
@@ -117,16 +118,20 @@ export function FundraisingPlaybookGuideContent() {
 
       <DisplayHeading as="h2">Who Can Give — And How Much</DisplayHeading>
 
+      <SpartanDonorMixGrounding />
+
       <DisplayHeading as="h3">Individual Donors — Friends and Family</DisplayHeading>
       <P>
-        <Strong>Who:</Strong> Parents, grandparents, relatives, coaches, teachers, neighbors. <Strong>Typical gift:</Strong> $25–$500.{" "}
-        <Strong>Best approach:</Strong> direct personal ask — text, call, or in-person. Never mass email as your only strategy.
+        Spartan Fayetteville&apos;s transaction volume lived here first — lots of household-scale gifts stacking into campaign totals.{" "}
+        <Strong>Who:</Strong> Parents, grandparents, relatives, coaches, teachers, neighbors. <Strong>Typical gift:</Strong> $25–$500 (same band the
+        data clustered around). <Strong>Best approach:</Strong> direct personal ask — text, call, or in-person. Never mass email as your only
+        strategy.
       </P>
 
       <DisplayHeading as="h3">Community and Local Business Donors</DisplayHeading>
       <P>
-        <Strong>Who:</Strong> Restaurants, contractors, agents, gyms, retailers, professional services. <Strong>Typical gift:</Strong>{" "}
-        $100–$1,000.
+        Those named NC businesses gave through the identical nonprofit checkout as families — proof trades spend when the recipient is a 501(c)(3).{" "}
+        <Strong>Who:</Strong> Restaurants, contractors, agents, gyms, retailers, professional services. <Strong>Typical gift:</Strong> $100–$1,000.
       </P>
       <P>
         For business owners, charitable gifts to a 501(c)(3) carry real tax advantages (C-Corps, pass-through entities, sole props). Beyond
@@ -139,14 +144,16 @@ export function FundraisingPlaybookGuideContent() {
 
       <DisplayHeading as="h3">Corporate Donors</DisplayHeading>
       <P>
-        <Strong>Typical gift:</Strong> $1,000–$25,000+. Corporations usually cannot donate to individuals in a tax-beneficial way — they give
-        through 501(c)(3) organizations. That is why NC United&apos;s structure unlocks corporate giving.
+        Larger institutional paths showed up once the nonprofit rails were obvious — same lesson every season. <Strong>Typical gift:</Strong>{" "}
+        $1,000–$25,000+. Corporations usually cannot donate to individuals in a tax-beneficial way — they give through 501(c)(3) organizations.
+        That is why NC United&apos;s structure unlocks corporate giving.
       </P>
 
       <DisplayHeading as="h3">Foundations and Grants</DisplayHeading>
       <P>
-        Foundations give to 501(c)(3) organizations. <Strong>Best approach:</Strong> research local foundations, annual cycles, and align
-        programs with mission (youth development, access, education).
+        Fayetteville proved foundations write checks when the recipient is eligible — Adam Mills Foundation is the anchor example from that
+        window. <Strong>Best approach:</Strong> research local foundations, annual cycles, and align programs with mission (youth development,
+        access, education).
       </P>
 
       <DisplayHeading as="h3">Matching Gift Programs</DisplayHeading>

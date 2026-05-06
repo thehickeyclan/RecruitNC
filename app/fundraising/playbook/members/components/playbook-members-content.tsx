@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import { HardLink } from "@/components/hard-link"
+import { SpartanDonorMixGrounding } from "@/app/fundraising/playbook/_components/spartan-donor-mix-grounding"
 
 function DH({ as: Tag = "h2", children }: { as?: "h1" | "h2" | "h3"; children: ReactNode }) {
   const base =
@@ -161,46 +162,68 @@ export function PlaybookMembersContent() {
 
       <DH as="h2">Who can give — and how much</DH>
 
+      <SpartanDonorMixGrounding />
+
       <MobileDetails title="Individual donors ($25–$500)">
         <P>
-          Parents, relatives, coaches, neighbors. Best channel: personal text/call/in-person — not bulk email as your only lever.
+          Spartan Fayetteville&apos;s volume piled up here first — family-scale gifts stacking fast. Parents, relatives, coaches, neighbors:
+          personal text/call/in-person beats bulk email alone.
         </P>
       </MobileDetails>
       <DesktopBlock>
         <DH as="h3">Individual donors ($25–$500)</DH>
         <P>
-          Parents, relatives, coaches, neighbors. Best channel: personal text/call/in-person — not bulk email as your only lever.
+          Spartan Fayetteville&apos;s volume piled up here first — family-scale gifts stacking fast. Parents, relatives, coaches, neighbors:
+          personal text/call/in-person beats bulk email alone.
         </P>
       </DesktopBlock>
 
       <MobileDetails title="Local business ($100–$1,000)">
-        <P>Owners and operators you can reach with a concise proposal and NC United EIN.</P>
+        <P>
+          Named NC trades ran gifts through the same nonprofit Stripe rails as grandparents — Caffeine Fueled Lawn Service, Carolina Heating &amp;
+          Air, North State Sport &amp; Spine-class supporters.
+        </P>
         <P className="text-sm text-white/65">
-          Tax outcomes depend on entity type and circumstances — coordinate with a tax advisor for business gifts.
+          Tax outcomes depend on entity type — coordinate with a tax advisor for business gifts.
         </P>
       </MobileDetails>
       <DesktopBlock>
         <DH as="h3">Local business ($100–$1,000)</DH>
-        <P>Owners and operators you can reach with a concise proposal and NC United EIN.</P>
+        <P>
+          Named NC trades ran gifts through the same nonprofit Stripe rails as grandparents — Caffeine Fueled Lawn Service, Carolina Heating &amp;
+          Air, North State Sport &amp; Spine-class supporters.
+        </P>
         <P className="text-sm text-white/65">
-          Tax outcomes depend on entity type and circumstances — coordinate with a tax advisor for business gifts.
+          Tax outcomes depend on entity type — coordinate with a tax advisor for business gifts.
         </P>
       </DesktopBlock>
 
       <MobileDetails title="Corporate ($1,000–$25,000+)">
-        <P>Corporate giving typically flows through eligible nonprofits — NC United&apos;s structure exists for that lane.</P>
+        <P>
+          Institutional checks showed up once the 501(c)(3) path was obvious — Fayetteville reinforced why corporations rarely fund individuals
+          directly but fund nonprofits.
+        </P>
       </MobileDetails>
       <DesktopBlock>
         <DH as="h3">Corporate ($1,000–$25,000+)</DH>
-        <P>Corporate giving typically flows through eligible nonprofits — NC United&apos;s structure exists for that lane.</P>
+        <P>
+          Institutional checks showed up once the 501(c)(3) path was obvious — Fayetteville reinforced why corporations rarely fund individuals
+          directly but fund nonprofits.
+        </P>
       </DesktopBlock>
 
       <MobileDetails title="Foundations & grants ($500–$10,000+)">
-        <P>Foundations generally require 501(c)(3) recipients — align program narrative with youth access and education outcomes.</P>
+        <P>
+          Foundation dollars cleared because NC United was the recipient — Adam Mills Foundation is the headline example from that Spartan window.
+          Align future asks with youth access and education outcomes.
+        </P>
       </MobileDetails>
       <DesktopBlock>
         <DH as="h3">Foundations &amp; grants ($500–$10,000+)</DH>
-        <P>Foundations generally require 501(c)(3) recipients — align program narrative with youth access and education outcomes.</P>
+        <P>
+          Foundation dollars cleared because NC United was the recipient — Adam Mills Foundation is the headline example from that Spartan window.
+          Align future asks with youth access and education outcomes.
+        </P>
       </DesktopBlock>
 
       <DH as="h3">Matching gifts — ask every time</DH>
