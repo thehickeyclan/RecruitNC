@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import type { FundraisingAthleteEntry } from "@/lib/spartan-fundraising-code"
 import { getFundraisingAthleteEntries, scoreSpartanPublicDisplayRichness } from "@/lib/spartan-fundraising-code"
 import { fundraisingCodeFromSlug } from "@/lib/fundraising/athlete-fundraising-slug"
+import { recruitingProfilePhotoFromRow } from "@/lib/recruiting-profile-photo"
 
 const NCU_CODE_RE = /^NCU-[A-Za-z0-9]+-\d{2}$/i
 
@@ -178,6 +179,29 @@ export async function getFundraisingAthletesIndexRows(
     byAthlete.set(p.athlete_id, p)
   }
 
+  const rosterAthleteIds = [...new Set(entries.map((e) => e.id).filter(Boolean))]
+  const orphanIdsEarly = [...new Set((profiles ?? []).map((p) => (p as AthleteFundraisingProfileRow).athlete_id).filter(Boolean))]
+  const allPhotoIds = [...new Set([...rosterAthleteIds, ...orphanIdsEarly])]
+  const recruitingPhotoByAthleteId = new Map<string, string | null>()
+  if (allPhotoIds.length > 0) {
+    const { data: athPhotoRows, error: pe } = await admin.from("athletes").select("*").in("id", allPhotoIds)
+    if (pe) console.warn("[athlete-fundraising-profiles] athlete recruiting photos", pe.message)
+    for (const row of athPhotoRows ?? []) {
+      const id = typeof row.id === "string" ? row.id : ""
+      if (!id) continue
+      recruitingPhotoByAthleteId.set(id, recruitingProfilePhotoFromRow(row as Record<string, unknown>))
+    }
+  }
+
+  const pickDirectoryPhotoUrl = (athleteId: string, profilePhotoRaw: string | null | undefined): string | null => {
+    const fromProfile =
+      typeof profilePhotoRaw === "string" && profilePhotoRaw.trim()
+        ? recruitingProfilePhotoFromRow({ photo_url: profilePhotoRaw.trim() })
+        : null
+    const fromRecruiting = recruitingPhotoByAthleteId.get(athleteId) ?? null
+    return fromProfile ?? fromRecruiting ?? null
+  }
+
   const fromRoster: FundraisingAthleteIndexRow[] = entries.map((e) => {
     const p = byAthlete.get(e.id)
     const hrefSlug = p?.slug ?? e.code.trim().toLowerCase()
@@ -187,7 +211,7 @@ export async function getFundraisingAthletesIndexRows(
       displayName: e.fullName || e.label,
       sublabel: e.label.includes("·") ? e.label.split("·").slice(1).join("·").trim() : null,
       hrefSlug,
-      photoUrl: p?.photo_url ?? null,
+      photoUrl: pickDirectoryPhotoUrl(e.id, p?.photo_url ?? null),
       totalRaisedCents: typeof p?.total_raised_cents === "number" ? p.total_raised_cents : null,
     }
   })
@@ -214,7 +238,7 @@ export async function getFundraisingAthletesIndexRows(
       displayName: nameById.get(p.athlete_id) ?? "NC United athlete",
       sublabel: null,
       hrefSlug: p.slug,
-      photoUrl: p.photo_url,
+      photoUrl: pickDirectoryPhotoUrl(p.athlete_id, p.photo_url),
       totalRaisedCents: typeof p.total_raised_cents === "number" ? p.total_raised_cents : null,
     }
   })

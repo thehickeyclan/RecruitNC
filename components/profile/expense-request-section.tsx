@@ -150,17 +150,17 @@ export function ExpenseRequestSection({ linkedAthletes = [] }: { linkedAthletes?
   }
 
   return (
-    <Card className="rounded-2xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] overflow-hidden">
-      <div className="border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-[#fef2f2]/30 px-4 py-5 sm:px-6">
+    <Card className="overflow-hidden rounded-2xl border border-[#003366]/12 bg-white shadow-md shadow-[#003366]/5">
+      <div className="h-1 w-full bg-gradient-to-r from-[#03154C] via-[#B31B1B] to-[#CBAF5D]" aria-hidden />
+      <div className="border-b border-[#003366]/8 bg-white px-4 py-5 sm:px-6">
         <div className="flex items-start gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#03154C] text-[#e8d5a3] shadow-sm">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#03154C] text-[#CBAF5D] shadow-sm">
             <Receipt className="h-5 w-5" aria-hidden />
           </span>
           <div className="min-w-0 space-y-1">
-            <CardTitle className="text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">Reimbursements</CardTitle>
-            <CardDescription className="text-sm text-slate-600 leading-relaxed max-w-prose">
-              Staff reviews each request. Add Zelle or Venmo for payout if approved. We&apos;ll email you when the status
-              changes.
+            <CardTitle className="text-lg font-bold tracking-tight text-[#03154C] sm:text-xl">Reimbursements</CardTitle>
+            <CardDescription className="text-xs text-slate-600 sm:text-sm">
+              Submit a request — staff reviews and follows up by email.
             </CardDescription>
           </div>
         </div>

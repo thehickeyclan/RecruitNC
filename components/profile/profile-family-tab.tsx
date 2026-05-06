@@ -129,7 +129,7 @@ export function ProfileFamilyTab({
       <p className="text-xs text-slate-500 -mt-2">
         <strong className="text-[#003366] font-semibold">Fundraising</strong> totals and{" "}
         <strong className="text-[#003366] font-semibold">reimbursement requests</strong> are on the{" "}
-        <span className="font-medium text-[#03154C]">Fundraise</span> tab.
+        <span className="font-medium text-[#03154C]">Digital wallet</span> tab.
       </p>
 
       <Card className="border-[#003366]/10 shadow-md shadow-[#003366]/4">

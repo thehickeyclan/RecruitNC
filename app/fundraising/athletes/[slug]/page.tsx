@@ -17,6 +17,7 @@ import { FundraisingOwnerPanel } from "./fundraising-owner-panel"
 import { FundraisingAdminAssignmentPanel } from "./fundraising-admin-assignment-panel"
 import { recruitingProfilePhotoFromRow } from "@/lib/recruiting-profile-photo"
 import { fetchThankYouAckLedgerKeys } from "@/lib/fundraising/supporter-thank-you-ack"
+import { getFundraisingWiringAdminSnapshot } from "@/lib/fundraising/fundraising-wiring-status"
 
 const HERO_FALLBACK_SILHOUETTE = "/wrestler-silhouette.png"
 
@@ -24,11 +25,7 @@ const PRIMARY_DONATE_CTA_CLASS =
   "font-[family-name:var(--font-fundraising-display)] flex min-h-[52px] w-full touch-manipulation items-center justify-center rounded-sm bg-[#CC0000] px-8 text-sm font-extrabold uppercase tracking-[0.14em] text-white shadow-[0_14px_44px_-10px_rgba(204,0,0,0.55)] hover:bg-[#a80000] sm:inline-flex sm:w-auto sm:min-w-[240px]"
 
 async function fetchRecruitingProfilePhoto(admin: ReturnType<typeof createAdminClient>, athleteId: string): Promise<string | null> {
-  const { data, error } = await admin
-    .from("athletes")
-    .select("photourl, photo_url, image_url, headshot_url, athlete_image")
-    .eq("id", athleteId)
-    .maybeSingle()
+  const { data, error } = await admin.from("athletes").select("*").eq("id", athleteId).maybeSingle()
   if (error || !data) return null
   return recruitingProfilePhotoFromRow(data as Record<string, unknown>)
 }
@@ -91,13 +88,14 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
 
   const snapshotLedger =
     resolved.ledgerCodes.length > 0 ? resolved.ledgerCodes : code != null ? [code] : []
-  const [snapshot, recruitingPhotoUrl, ownerThankYouRows, thankAckLedgerKeys] = await Promise.all([
+  const [snapshot, recruitingPhotoUrl, ownerThankYouRows, thankAckLedgerKeys, wiringSnapshot] = await Promise.all([
     snapshotLedger.length > 0 ? getAthleteFundraisingPublicSnapshot(snapshotLedger, 250) : Promise.resolve(null),
     athleteId ? fetchRecruitingProfilePhoto(admin, athleteId) : Promise.resolve(null),
     isFundraisingManager && snapshotLedger.length > 0
       ? getAthleteOwnerThankYouRowsForLedgerCodes(snapshotLedger)
       : Promise.resolve([]),
     isFundraisingManager && athleteId ? fetchThankYouAckLedgerKeys(admin, athleteId) : Promise.resolve(new Set<string>()),
+    viewerIsRecruitNcAdmin && athleteId ? getFundraisingWiringAdminSnapshot(admin, athleteId) : Promise.resolve(null),
   ])
 
   const ownerThankYouRowsWithAck = ownerThankYouRows.map((r) => ({
@@ -178,6 +176,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
             athleteId={athleteId}
             athleteDisplayLabel={displayName}
             ncuHint={profile?.primary_fundraising_code ?? code}
+            wiringSnapshot={wiringSnapshot}
           />
         ) : null}
 

@@ -12,6 +12,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { HardLink } from "@/components/hard-link"
 import { FundraisingPlaybookHeader } from "@/app/admin/fundraising/_components/fundraising-playbook-header"
+import { AttachAthleteToProfileDialog } from "@/components/fundraising-wiring/attach-athlete-to-profile-dialog"
+import {
+  LinkParentToAthleteDialog,
+  type FundraisingParentLinkPayload,
+} from "@/components/fundraising-wiring/link-parent-to-athlete-dialog"
 import {
   FUNDRAISING_CAMPAIGNS,
   DEFAULT_FUNDRAISING_CAMPAIGN,
@@ -21,6 +26,7 @@ import {
   fundraisingCampaignByContextKey,
   fundraisingCampaignByStripeSlug,
 } from "@/lib/fundraising/campaign-registry"
+import { emptyFundraisingWiringSnapshot, type FundraisingWiringAdminSnapshot } from "@/lib/fundraising/fundraising-wiring-status"
 import { cn } from "@/lib/utils"
 import { publicAthleteCreditLabel } from "@/lib/spartan-fayetteville-stripe"
 import { SpartanFundraisingVisuals } from "@/components/admin/spartan-fundraising-visuals"
@@ -95,6 +101,7 @@ type AdminAthleteFundraisingProfileRow = {
   primary_fundraising_code: string | null
   athlete_name: string | null
   roster_ncu_code: string | null
+  wiring: FundraisingWiringAdminSnapshot
 }
 
 type SpartanAthleteAggregate = {
@@ -318,17 +325,7 @@ export default function AdminFundraisingPage() {
   /** Narrow “Needs attention” by issue type (ignored when viewing “All codes”). */
   const [attentionKind, setAttentionKind] = useState<"all" | "no_parent" | "directory" | "roster">("all")
 
-  const [linkParentOpen, setLinkParentOpen] = useState(false)
-  const [linkParentRow, setLinkParentRow] = useState<SpartanParentCoverageRow | null>(null)
-  const [parentSearchQuery, setParentSearchQuery] = useState("")
-  const [parentSearchResults, setParentSearchResults] = useState<
-    { id: string; email?: string | null; full_name: string }[]
-  >([])
-  const [parentSearchBusy, setParentSearchBusy] = useState(false)
-  const [selectedParent, setSelectedParent] = useState<{ id: string; email?: string | null; full_name: string } | null>(
-    null,
-  )
-  const [linkParentBusy, setLinkParentBusy] = useState(false)
+  const [linkParentPayload, setLinkParentPayload] = useState<FundraisingParentLinkPayload | null>(null)
 
   /** Narrow section 3 donation table to checkouts credited to NCU codes missing from fundraising directory. */
   const [donationTableMode, setDonationTableMode] = useState<"all" | "orphaned_codes">("all")
@@ -336,6 +333,7 @@ export default function AdminFundraisingPage() {
   const [fundraisingProfiles, setFundraisingProfiles] = useState<AdminAthleteFundraisingProfileRow[] | null>(null)
   const [fundraisingProfilesLoading, setFundraisingProfilesLoading] = useState(false)
   const [fundraisingProfilesError, setFundraisingProfilesError] = useState<string | null>(null)
+  const [syncDirectoryBusy, setSyncDirectoryBusy] = useState(false)
 
   const [athleteMatrix, setAthleteMatrix] = useState<FundraisingAthleteMatrixPayload | null>(null)
   const [athleteMatrixLoading, setAthleteMatrixLoading] = useState(false)
@@ -351,14 +349,8 @@ export default function AdminFundraisingPage() {
   const [profilePrimaryCode, setProfilePrimaryCode] = useState("")
   const [profileActive, setProfileActive] = useState(true)
   const [profileSaveBusy, setProfileSaveBusy] = useState(false)
-  /** Donor profile row → search wrestlers by name and PATCH `athlete_id`. */
+  /** Donor profile row → Attach athlete dialog */
   const [attachAthleteProfile, setAttachAthleteProfile] = useState<AdminAthleteFundraisingProfileRow | null>(null)
-  const [attachAthleteSearch, setAttachAthleteSearch] = useState("")
-  const [attachAthletePickId, setAttachAthletePickId] = useState("")
-  const [attachAthletePickName, setAttachAthletePickName] = useState("")
-  const [attachAthleteBusy, setAttachAthleteBusy] = useState(false)
-  /** When linking a parent from the donor profiles table, show slug in the dialog. */
-  const [linkParentContextSlug, setLinkParentContextSlug] = useState<string | null>(null)
   const [walletGuideOpen, setWalletGuideOpen] = useState(false)
 
   const [kidLedgerFilter, setKidLedgerFilter] = useState("")
@@ -404,36 +396,6 @@ export default function AdminFundraisingPage() {
   useEffect(() => {
     if (parentCoverageView === "all") setAttentionKind("all")
   }, [parentCoverageView])
-
-  useEffect(() => {
-    if (!linkParentOpen) return
-    const q = parentSearchQuery.trim()
-    if (q.length < 2) {
-      setParentSearchResults([])
-      setParentSearchBusy(false)
-      return
-    }
-    const ctrl = new AbortController()
-    const t = window.setTimeout(() => {
-      setParentSearchBusy(true)
-      void fetch(`/api/admin/users/search?q=${encodeURIComponent(q)}`, {
-        credentials: "include",
-        signal: ctrl.signal,
-      })
-        .then((res) => res.json() as Promise<{ users?: { id: string; email?: string | null; full_name: string }[] }>)
-        .then((j) => setParentSearchResults(Array.isArray(j.users) ? j.users.slice(0, 40) : []))
-        .catch(() => {
-          if (!ctrl.signal.aborted) setParentSearchResults([])
-        })
-        .finally(() => {
-          if (!ctrl.signal.aborted) setParentSearchBusy(false)
-        })
-    }, 320)
-    return () => {
-      ctrl.abort()
-      window.clearTimeout(t)
-    }
-  }, [parentSearchQuery, linkParentOpen])
 
   const attentionBreakdown = useMemo(() => {
     if (!parentCoverage) return { no_parent: 0, directory: 0, roster: 0 }
@@ -894,97 +856,34 @@ export default function AdminFundraisingPage() {
   }
 
   const openLinkParentDialog = (r: SpartanParentCoverageRow) => {
-    setLinkParentContextSlug(null)
-    setLinkParentRow(r)
-    setParentSearchQuery("")
-    setParentSearchResults([])
-    setSelectedParent(null)
-    setLinkParentOpen(true)
+    if (!r.athleteId) {
+      toast({
+        title: "No athlete id",
+        description: "Pin this NCU code to a directory athlete first.",
+        variant: "destructive",
+      })
+      return
+    }
+    setLinkParentPayload({
+      athleteId: r.athleteId,
+      displayName: r.displayName,
+      athleteCode: r.athleteCode,
+      fundraisingSlug: null,
+    })
   }
 
   const openLinkParentDialogFromProfile = (p: AdminAthleteFundraisingProfileRow) => {
     const codeRaw = (p.primary_fundraising_code ?? p.roster_ncu_code ?? "").trim()
-    setLinkParentRow({
-      athleteCode: codeRaw || "—",
-      displayName: p.athlete_name ?? p.slug,
+    setLinkParentPayload({
       athleteId: p.athlete_id,
-      totalCents: 0,
-      donationCount: 0,
-      managingUserCount: 0,
-      status: "no_managing_user",
+      displayName: p.athlete_name ?? p.slug,
+      athleteCode: codeRaw || "—",
+      fundraisingSlug: p.slug,
     })
-    setLinkParentContextSlug(p.slug)
-    setParentSearchQuery("")
-    setParentSearchResults([])
-    setSelectedParent(null)
-    setLinkParentOpen(true)
   }
 
   const openAttachAthleteDialog = (p: AdminAthleteFundraisingProfileRow) => {
     setAttachAthleteProfile(p)
-    setAttachAthleteSearch("")
-    setAttachAthletePickId("")
-    setAttachAthletePickName("")
-    void loadQuickPinAthletes()
-  }
-
-  const submitParentLink = async () => {
-    if (!linkParentRow?.athleteId || !selectedParent) return
-    setLinkParentBusy(true)
-    try {
-      const res = await fetch("/api/admin/parent-athlete-link", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          athleteId: linkParentRow.athleteId,
-          parentUserId: selectedParent.id,
-        }),
-      })
-      const j = (await res.json()) as { error?: string; message?: string }
-      if (!res.ok) throw new Error(j.error || "Could not create link")
-
-      const linkedAthleteId = linkParentRow.athleteId
-      const linkedCodeKey = linkParentRow.athleteCode.trim().toUpperCase()
-      setParentCoverage((prev) => {
-        if (!prev) return prev
-        const rows = prev.rows.map((r) => {
-          const sameRow =
-            r.athleteId === linkedAthleteId && r.athleteCode.trim().toUpperCase() === linkedCodeKey
-          if (sameRow && r.status === "no_managing_user") {
-            return {
-              ...r,
-              status: "ok" as const,
-              managingUserCount: Math.max(r.managingUserCount, 1),
-            }
-          }
-          return r
-        })
-        const ok = rows.filter((x) => x.status === "ok").length
-        const needsAttention = rows.filter((x) => x.status !== "ok").length
-        return {
-          rows,
-          summary: { ...prev.summary, ok, needsAttention },
-        }
-      })
-
-      toast({ title: "Parent linked", description: j.message ?? "Saved." })
-      setLinkParentOpen(false)
-      setLinkParentRow(null)
-      setLinkParentContextSlug(null)
-      setParentSearchQuery("")
-      setParentSearchResults([])
-      setSelectedParent(null)
-      await loadDonations()
-    } catch (e) {
-      toast({
-        title: "Link failed",
-        description: e instanceof Error ? e.message : "Unknown error",
-        variant: "destructive",
-      })
-    } finally {
-      setLinkParentBusy(false)
-    }
   }
 
   const openReceiptDialog = (d: SpartanDonationRow) => {
@@ -1237,13 +1136,6 @@ export default function AdminFundraisingPage() {
     return quickPinAthletes.filter((a) => a.name.toLowerCase().includes(q)).slice(0, 20)
   }, [quickPinAthletes, quickPinSearch])
 
-  const attachAthleteFiltered = useMemo(() => {
-    if (!attachAthleteProfile || !quickPinAthletes?.length) return []
-    const q = attachAthleteSearch.trim().toLowerCase()
-    if (q.length < 2) return []
-    return quickPinAthletes.filter((a) => a.name.toLowerCase().includes(q)).slice(0, 20)
-  }, [quickPinAthletes, attachAthleteSearch, attachAthleteProfile])
-
   const filteredKidLedgerRows = useMemo(() => {
     const q = kidLedgerFilter.trim().toLowerCase()
     if (!q) return kidLedgerRows
@@ -1300,7 +1192,12 @@ export default function AdminFundraisingPage() {
         setFundraisingProfiles([])
         return
       }
-      setFundraisingProfiles(Array.isArray(j.profiles) ? j.profiles : [])
+      setFundraisingProfiles(
+        (Array.isArray(j.profiles) ? j.profiles : []).map((p) => ({
+          ...p,
+          wiring: p.wiring ?? emptyFundraisingWiringSnapshot(),
+        })),
+      )
     } catch {
       setFundraisingProfilesError("Failed to load profiles")
       setFundraisingProfiles([])
@@ -1312,6 +1209,38 @@ export default function AdminFundraisingPage() {
   useEffect(() => {
     void loadFundraisingProfiles()
   }, [loadFundraisingProfiles])
+
+  const syncFundraisingProfilesFromDirectory = useCallback(async () => {
+    setSyncDirectoryBusy(true)
+    try {
+      const res = await fetch("/api/admin/athlete-fundraising-profiles/sync-directory", {
+        method: "POST",
+        credentials: "include",
+      })
+      const j = (await res.json()) as {
+        error?: string
+        created?: number
+        skippedHasProfile?: number
+        conflicts?: { code: string; reason: string }[]
+      }
+      if (!res.ok) throw new Error(typeof j.error === "string" ? j.error : "Sync failed")
+      await loadFundraisingProfiles()
+      await loadAthleteMatrix()
+      const nConf = j.conflicts?.length ?? 0
+      toast({
+        title: "Directory sync finished",
+        description: `Created ${j.created ?? 0}. Skipped ${j.skippedHasProfile ?? 0} already linked.${nConf ? ` ${nConf} conflicts (slug taken).` : ""}`,
+      })
+    } catch (e) {
+      toast({
+        title: "Sync failed",
+        description: e instanceof Error ? e.message : "Unknown error",
+        variant: "destructive",
+      })
+    } finally {
+      setSyncDirectoryBusy(false)
+    }
+  }, [loadFundraisingProfiles, loadAthleteMatrix])
 
   const athleteMatrixFilteredRows = useMemo(() => {
     if (!athleteMatrix?.rows.length) return []
@@ -1471,57 +1400,6 @@ export default function AdminFundraisingPage() {
     }
   }
 
-  const submitAttachAthleteToProfile = async () => {
-    if (!attachAthleteProfile) return
-    const aid = attachAthletePickId.trim()
-    if (!ATHLETE_UUID_PIN_RE.test(aid)) {
-      toast({
-        title: "Pick a wrestler",
-        description: "Choose someone from the list or paste a valid athletes.id UUID.",
-        variant: "destructive",
-      })
-      return
-    }
-    if (aid === attachAthleteProfile.athlete_id) {
-      toast({ title: "Already attached", description: "This donor page already points at that athlete record." })
-      return
-    }
-    setAttachAthleteBusy(true)
-    try {
-      const res = await fetch("/api/admin/athlete-fundraising-profiles", {
-        method: "PATCH",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: attachAthleteProfile.id,
-          athlete_id: aid,
-        }),
-      })
-      const j = (await res.json()) as { error?: string }
-      if (!res.ok) {
-        toast({
-          title: "Could not attach athlete",
-          description: j.error ?? res.statusText,
-          variant: "destructive",
-        })
-        return
-      }
-      toast({
-        title: "Athlete attached",
-        description: `${attachAthletePickName || aid.slice(0, 8)}… is now linked to /fundraising/athletes/${attachAthleteProfile.slug}`,
-      })
-      setAttachAthleteProfile(null)
-      setAttachAthleteSearch("")
-      setAttachAthletePickId("")
-      setAttachAthletePickName("")
-      await loadFundraisingProfiles()
-      await loadAthleteMatrix()
-      await loadDonations()
-    } finally {
-      setAttachAthleteBusy(false)
-    }
-  }
-
   return (
     <div className="min-h-screen bg-slate-100/80 p-4 md:p-8">
       <div className="mx-auto max-w-7xl">
@@ -1548,11 +1426,8 @@ export default function AdminFundraisingPage() {
                 <span className="font-mono text-xs text-foreground">NCU-LASTNAME-28</span>). Stripe stores that on each payment.
               </li>
               <li>
-                <span className="font-medium text-foreground">Pin the code to the athlete</span> — search them in{" "}
-                <HardLink href="/admin/athletes" className="text-primary font-medium underline-offset-2 hover:underline">
-                  Athletes admin
-                </HardLink>
-                , copy their long ID, paste under Directory gaps (Pin). Without Pin, money never attaches to the kid&apos;s wallet.
+                <span className="font-medium text-foreground">Pin NCU to the athlete</span> — use Directory gaps →{" "}
+                <strong className="text-foreground">Pin any wrestler</strong> (name search). Without Pin, gifts never credit that kid&apos;s wallet.
               </li>
               <li>
                 <span className="font-medium text-foreground">Optional:</span> turn on a public donor page (see section Donor-facing athlete profiles). Families do not need this to see balances.
@@ -2094,8 +1969,7 @@ export default function AdminFundraisingPage() {
                       >
                         2. Donor-facing athlete profiles
                       </button>{" "}
-                      After Pin, use <strong className="text-foreground">New profile</strong> with that athlete&apos;s UUID, slug,
-                      and mark active so <code className="rounded bg-muted px-1 text-[11px]">/fundraising/athletes/…</code> works.
+                      After Pin, add a donor profile (section Donor-facing athlete profiles) — slug + athlete UUID, mark active.
                     </li>
                     <li>
                       <button
@@ -2442,17 +2316,21 @@ export default function AdminFundraisingPage() {
                       Donor-facing athlete profiles
                     </CardTitle>
                     <CardDescription className="mt-1 max-w-2xl">
-                      Public pages at{" "}
+                      Public URLs:{" "}
                       <HardLink href="/fundraising/athletes" className="text-primary underline-offset-4 hover:underline">
                         /fundraising/athletes
                       </HardLink>
-                      . Each row has <strong className="text-foreground">Attach athlete</strong> (search by name — updates which{" "}
-                      <span className="font-mono text-[11px]">athletes.id</span> this slug uses) and{" "}
-                      <strong className="text-foreground">Attach parent</strong> (search login users for{" "}
-                      <span className="font-mono text-[11px]">parent_athlete_links</span>). Requires{" "}
-                      <code className="rounded bg-muted px-1 text-[11px]">athlete_fundraising_profiles</code> (
-                      <code className="rounded bg-muted px-1 text-[11px]">database/create-athlete-fundraising-profiles.sql</code>
-                      ).
+                      . Use row actions <strong className="text-foreground">Attach athlete</strong> /{" "}
+                      <strong className="text-foreground">Attach parent</strong> — same dialogs as on the live donor page when you&apos;re logged in as admin.
+                      Table{" "}
+                      <code className="rounded bg-muted px-1 text-[11px]">athlete_fundraising_profiles</code>.{" "}
+                      <strong className="text-foreground">Gift-page edits</strong> column: green/red dots —{" "}
+                      <strong className="text-foreground">Links</strong> ={" "}
+                      <code className="rounded bg-muted px-1 text-[10px]">parent_athlete_links</code> count;{" "}
+                      <strong className="text-foreground">Claim</strong> ={" "}
+                      <code className="rounded bg-muted px-1 text-[10px]">user_profiles.athlete_id</code> count. Either green usually means
+                      non-admin story edits are wired (roster email match can still apply without dots).{" "}
+                      <strong className="text-foreground">Sync from directory</strong> creates missing rows (slug = lowercase NCU) for every real roster athlete — run once after deploy or when pages say “no donor profile”.
                     </CardDescription>
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -2465,6 +2343,16 @@ export default function AdminFundraisingPage() {
                     >
                       <RefreshCw className={`mr-2 h-4 w-4 ${fundraisingProfilesLoading ? "animate-spin" : ""}`} />
                       Refresh
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void syncFundraisingProfilesFromDirectory()}
+                      disabled={syncDirectoryBusy || fundraisingProfilesLoading}
+                    >
+                      <RefreshCw className={`mr-2 h-4 w-4 ${syncDirectoryBusy ? "animate-spin" : ""}`} />
+                      Sync from directory
                     </Button>
                     <Button type="button" size="sm" className="bg-[#003366] text-white hover:bg-[#002952]" onClick={openNewFundraisingProfileDialog}>
                       New profile
@@ -2498,6 +2386,9 @@ export default function AdminFundraisingPage() {
                           <TableHead>NCU (roster / override)</TableHead>
                           <TableHead>Goal</TableHead>
                           <TableHead>Active</TableHead>
+                          <TableHead className="whitespace-nowrap min-w-[7.5rem] text-[11px] leading-tight">
+                            Gift-page edits
+                          </TableHead>
                           <TableHead className="text-right min-w-[11rem]">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -2537,6 +2428,37 @@ export default function AdminFundraisingPage() {
                                     No
                                   </Badge>
                                 )}
+                              </TableCell>
+                              <TableCell className="align-top">
+                                <div className="flex flex-col gap-1.5 text-[11px] leading-tight">
+                                  <div
+                                    className="flex items-center gap-1.5"
+                                    title="parent_athlete_links — parent or wrestler via Attach parent"
+                                  >
+                                    <span
+                                      className={cn(
+                                        "inline-block h-2 w-2 shrink-0 rounded-full",
+                                        p.wiring.parentAthleteLinkCount > 0 ? "bg-emerald-500" : "bg-red-600",
+                                      )}
+                                      aria-hidden
+                                    />
+                                    <span className="text-muted-foreground">Links</span>
+                                    <span className="font-medium tabular-nums text-foreground">{p.wiring.parentAthleteLinkCount}</span>
+                                  </div>
+                                  <div className="flex items-center gap-1.5" title="user_profiles.athlete_id — wrestler claimed roster row">
+                                    <span
+                                      className={cn(
+                                        "inline-block h-2 w-2 shrink-0 rounded-full",
+                                        p.wiring.userProfilesAthleteIdMatchCount > 0 ? "bg-emerald-500" : "bg-red-600",
+                                      )}
+                                      aria-hidden
+                                    />
+                                    <span className="text-muted-foreground">Claim</span>
+                                    <span className="font-medium tabular-nums text-foreground">
+                                      {p.wiring.userProfilesAthleteIdMatchCount}
+                                    </span>
+                                  </div>
+                                </div>
                               </TableCell>
                               <TableCell className="text-right">
                                 <div className="flex flex-col items-end gap-1 sm:flex-row sm:flex-wrap sm:justify-end">
@@ -3522,220 +3444,48 @@ export default function AdminFundraisingPage() {
             </div>
         </div>
 
-        <Dialog
-          open={attachAthleteProfile !== null}
-          onOpenChange={(o) => {
-            if (!o) {
-              setAttachAthleteProfile(null)
-              setAttachAthleteSearch("")
-              setAttachAthletePickId("")
-              setAttachAthletePickName("")
-              setAttachAthleteBusy(false)
-            }
+        <AttachAthleteToProfileDialog
+          profile={attachAthleteProfile}
+          variant="admin"
+          onClose={() => setAttachAthleteProfile(null)}
+          onApplied={async () => {
+            await loadFundraisingProfiles()
+            await loadAthleteMatrix()
+            await loadDonations()
           }}
-        >
-          <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="leading-snug">Attach athlete to donor profile</DialogTitle>
-              <DialogDescription className="leading-snug">
-                Search by wrestler name, pick one, then save. This updates{" "}
-                <code className="rounded bg-muted px-1 text-[11px]">athlete_fundraising_profiles.athlete_id</code> for slug{" "}
-                <span className="font-mono text-[11px]">{attachAthleteProfile?.slug ?? ""}</span> — the public URL stays the same. Another profile
-                cannot already use that athlete (unique constraint).
-              </DialogDescription>
-            </DialogHeader>
-            {attachAthleteProfile ? (
-              <div className="space-y-4 text-sm">
-                <div className="rounded-md border bg-muted/35 px-3 py-2 leading-relaxed">
-                  <p className="font-medium text-foreground">Currently linked</p>
-                  <p className="mt-1">{attachAthleteProfile.athlete_name ?? "—"}</p>
-                  <p className="text-muted-foreground font-mono text-[11px]">{attachAthleteProfile.athlete_id}</p>
-                </div>
-                <div className="grid gap-1.5">
-                  <Label htmlFor="attach-fp-athlete-search">Find wrestler (min 2 letters)</Label>
-                  <Input
-                    id="attach-fp-athlete-search"
-                    placeholder="Type name…"
-                    value={attachAthleteSearch}
-                    onChange={(e) => {
-                      setAttachAthleteSearch(e.target.value)
-                      setAttachAthletePickId("")
-                      setAttachAthletePickName("")
-                    }}
-                    onFocus={() => void loadQuickPinAthletes()}
-                    autoComplete="off"
-                    disabled={quickPinAthletesLoading}
-                  />
-                  {quickPinAthletesLoading ? (
-                    <p className="text-muted-foreground text-xs">Loading directory…</p>
-                  ) : attachAthleteSearch.trim().length >= 2 && attachAthleteFiltered.length === 0 ? (
-                    <p className="text-muted-foreground text-xs">No name matches — open Athletes admin and paste UUID below.</p>
-                  ) : null}
-                  {attachAthleteFiltered.length > 0 ? (
-                    <ul className="max-h-44 overflow-auto rounded-md border bg-muted/30 text-sm">
-                      {attachAthleteFiltered.map((a) => (
-                        <li key={a.id}>
-                          <button
-                            type="button"
-                            className="hover:bg-muted/80 w-full px-3 py-2 text-left"
-                            onClick={() => {
-                              setAttachAthletePickId(a.id)
-                              setAttachAthletePickName(a.name)
-                              setAttachAthleteSearch("")
-                            }}
-                          >
-                            <span className="font-medium text-foreground">{a.name}</span>
-                            <span className="text-muted-foreground ml-2 font-mono text-[10px]">{a.id.slice(0, 8)}…</span>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
-                </div>
-                <div className="grid gap-1.5">
-                  <Label htmlFor="attach-fp-athlete-id">Athletes.id UUID (fills when you pick above)</Label>
-                  <Input
-                    id="attach-fp-athlete-id"
-                    className="font-mono text-xs"
-                    placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-                    value={attachAthletePickId}
-                    onChange={(e) => {
-                      setAttachAthletePickId(e.target.value)
-                      setAttachAthletePickName("")
-                    }}
-                    autoComplete="off"
-                  />
-                  {attachAthletePickName ? (
-                    <p className="text-muted-foreground text-xs">Selected: {attachAthletePickName}</p>
-                  ) : null}
-                </div>
-              </div>
-            ) : null}
-            <DialogFooter className="gap-2 sm:gap-0">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => setAttachAthleteProfile(null)}
-                disabled={attachAthleteBusy}
-              >
-                Cancel
-              </Button>
-              <Button type="button" onClick={() => void submitAttachAthleteToProfile()} disabled={attachAthleteBusy}>
-                {attachAthleteBusy ? "Saving…" : "Save attachment"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        />
 
-        <Dialog
-          open={linkParentOpen}
-          onOpenChange={(o) => {
-            setLinkParentOpen(o)
-            if (!o) {
-              setLinkParentRow(null)
-              setLinkParentContextSlug(null)
-              setParentSearchQuery("")
-              setParentSearchResults([])
-              setSelectedParent(null)
-            }
+        <LinkParentToAthleteDialog
+          payload={linkParentPayload}
+          variant="admin"
+          onClose={() => setLinkParentPayload(null)}
+          afterLinked={(ctx) => {
+            const linkedAthleteId = ctx.athleteId
+            const linkedCodeKey = ctx.athleteCode.trim().toUpperCase()
+            setParentCoverage((prev) => {
+              if (!prev) return prev
+              const rows = prev.rows.map((r) => {
+                const sameRow =
+                  r.athleteId === linkedAthleteId && r.athleteCode.trim().toUpperCase() === linkedCodeKey
+                if (sameRow && r.status === "no_managing_user") {
+                  return {
+                    ...r,
+                    status: "ok" as const,
+                    managingUserCount: Math.max(r.managingUserCount, 1),
+                  }
+                }
+                return r
+              })
+              const ok = rows.filter((x) => x.status === "ok").length
+              const needsAttention = rows.filter((x) => x.status !== "ok").length
+              return {
+                rows,
+                summary: { ...prev.summary, ok, needsAttention },
+              }
+            })
           }}
-        >
-          <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="leading-snug">Link parent to wrestler</DialogTitle>
-              <DialogDescription className="leading-snug">
-                Search by email or name, click a row to select, then <strong className="text-foreground">Create link</strong>. That adds{" "}
-                <code className="rounded bg-muted px-1 text-[11px]">parent_athlete_links</code> so Fundraise shows under Profile.
-                {linkParentContextSlug ? (
-                  <>
-                    {" "}
-                    Donor page:{" "}
-                    <HardLink
-                      href={`/fundraising/athletes/${linkParentContextSlug}`}
-                      className="text-primary underline-offset-4 hover:underline"
-                    >
-                      /fundraising/athletes/{linkParentContextSlug}
-                    </HardLink>
-                  </>
-                ) : null}
-              </DialogDescription>
-            </DialogHeader>
-            {linkParentRow ? (
-              <div className="space-y-4 text-sm">
-                <div className="rounded-md border bg-muted/35 px-3 py-2 leading-relaxed">
-                  <p className="font-medium text-foreground">{linkParentRow.displayName}</p>
-                  <p className="text-muted-foreground mt-1 font-mono text-xs">{linkParentRow.athleteCode}</p>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="parent-search-fundraising">Search parent accounts</Label>
-                  <Input
-                    id="parent-search-fundraising"
-                    placeholder="e.g. smith, mom@gmail.com, Jane Smith…"
-                    value={parentSearchQuery}
-                    onChange={(e) => {
-                      setParentSearchQuery(e.target.value)
-                      setSelectedParent(null)
-                    }}
-                    autoComplete="off"
-                  />
-                  <p className="text-muted-foreground text-xs leading-snug">
-                    Matches login email, full name, and separate first/last on the profile. Click a result to select it — the
-                    highlighted row is who will be linked.
-                  </p>
-                </div>
-                {parentSearchBusy ? (
-                  <p className="text-muted-foreground text-xs">Searching…</p>
-                ) : parentSearchResults.length > 0 ? (
-                  <div className="max-h-[220px] overflow-y-auto rounded-md border">
-                    <ul className="divide-y">
-                      {parentSearchResults.map((u) => (
-                        <li key={u.id}>
-                          <button
-                            type="button"
-                            className={`hover:bg-muted/60 flex w-full flex-col items-start gap-0.5 px-3 py-2 text-left text-sm transition-colors ${
-                              selectedParent?.id === u.id ? "bg-muted" : ""
-                            }`}
-                            onClick={() => setSelectedParent(u)}
-                          >
-                            <span className="font-medium">{u.full_name}</span>
-                            <span className="text-muted-foreground break-all text-xs">{u.email ?? "—"}</span>
-                            <span className="text-muted-foreground font-mono text-[10px]">{u.id}</span>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : parentSearchQuery.trim().length >= 2 ? (
-                  <p className="text-muted-foreground text-xs">No matches — try another spelling or email fragment.</p>
-                ) : null}
-                {selectedParent ? (
-                  <div className="rounded-md border border-emerald-600/40 bg-emerald-50/50 px-3 py-2 text-sm dark:bg-emerald-950/30">
-                    <p className="font-medium text-emerald-950 dark:text-emerald-50">Selected</p>
-                    <p className="mt-1">{selectedParent.full_name}</p>
-                    <p className="text-muted-foreground break-all text-xs">{selectedParent.email ?? "—"}</p>
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
-            <DialogFooter className="gap-2 sm:gap-0">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => setLinkParentOpen(false)}
-                disabled={linkParentBusy}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                onClick={() => void submitParentLink()}
-                disabled={linkParentBusy || !linkParentRow?.athleteId || !selectedParent}
-              >
-                {linkParentBusy ? "Saving…" : "Create link"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          onRefresh={() => void loadDonations()}
+        />
 
         <Dialog
           open={profileDialogOpen}

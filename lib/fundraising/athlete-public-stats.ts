@@ -206,13 +206,33 @@ async function loadAthleteCreditedForPublic(
   if (keys.size === 0) return null
 
   const corrected = await loadCorrectedStripeForAthletePublicPage()
-  if (corrected != null) {
+
+  const mirrorMerged = async (): Promise<{ source: "mirror"; rows: DonationSelectRow[] } | null> => {
+    const mirror = await fetchAthleteMirrorCreditedRowsMerged(createAdminClient(), [...codesUpper])
+    if (mirror == null || mirror.length === 0) return null
+    return { source: "mirror", rows: mirror }
+  }
+
+  if (corrected == null) {
+    return mirrorMerged()
+  }
+
+  /**
+   * Spartan `/api/spartan/supporters` lists Stripe live every request; gift pages reuse a short-lived cache.
+   * Cached `[]` or Stripe sessions missing `spartan_campaign` metadata yield **global** Stripe rows while this athlete
+   * still has paid rows in `spartan_donations`. Prefer mirror when Stripe rollup for **these** ledger codes is empty.
+   */
+  const stripeSliceStats = statsFromStripeCreditedForCodes(corrected, codesUpper)
+  if (stripeSliceStats.raisedCents > 0 || stripeSliceStats.giftCount > 0) {
     const mine = corrected.filter((r) => keys.has((r.athleteCode ?? "").trim().toLowerCase()))
     return { source: "stripe", allCorrected: corrected, mine }
   }
-  const mirror = await fetchAthleteMirrorCreditedRowsMerged(createAdminClient(), [...codesUpper])
-  if (mirror == null) return null
-  return { source: "mirror", rows: mirror }
+
+  const fromMirror = await mirrorMerged()
+  if (fromMirror != null) return fromMirror
+
+  const mine = corrected.filter((r) => keys.has((r.athleteCode ?? "").trim().toLowerCase()))
+  return { source: "stripe", allCorrected: corrected, mine }
 }
 
 /**

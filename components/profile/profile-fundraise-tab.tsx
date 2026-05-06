@@ -5,13 +5,9 @@ import { GuildCreditAllocationSection } from "@/components/profile/guild-credit-
 import { ProfileFundraiseThankYousSection } from "@/components/profile/profile-fundraise-thank-yous-section"
 import { DEFAULT_FUNDRAISING_CAMPAIGN } from "@/lib/fundraising/campaign-registry"
 import type { ProfileSpartanSupportersAthletePayload } from "@/app/api/profile/spartan-fundraising-supporters/route"
-import { Loader2, Coins } from "lucide-react"
+import { Loader2, Wallet } from "lucide-react"
 
-/** Parent-facing reporting cutoff for displayed totals (ops-aligned). */
-const FUNDRAISE_TOTALS_THROUGH_LABEL = "September 1, 2026"
-
-const FUNDRAISE_LOOKBACK_DAYS = DEFAULT_FUNDRAISING_CAMPAIGN.defaultLookbackDays
-const FUNDRAISE_SECTION_TITLE = DEFAULT_FUNDRAISING_CAMPAIGN.campaignDisplayName
+const LOOKBACK_DAYS = DEFAULT_FUNDRAISING_CAMPAIGN.defaultLookbackDays
 
 type SpartanRow = {
   athleteId: string
@@ -44,11 +40,11 @@ function formatUsd(cents: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100)
 }
 
-function usedBreakdownCaption(reimb: number, guild: number): string | null {
-  if (reimb > 0 && guild > 0) return "Reimbursements and Guild credits"
-  if (reimb > 0) return "Reimbursements paid"
-  if (guild > 0) return "Moved to Guild credits"
-  return null
+function spentSubLabel(reimb: number, guild: number): string {
+  const parts: string[] = []
+  if (reimb > 0) parts.push("Reimbursements")
+  if (guild > 0) parts.push("Guild")
+  return parts.length > 0 ? parts.join(" · ") : "None yet"
 }
 
 export function ProfileFundraiseTab({
@@ -63,113 +59,82 @@ export function ProfileFundraiseTab({
   onSpartanTotalsRefresh,
 }: ProfileFundraiseTabProps) {
   return (
-    <div className="space-y-8">
-      <section className="rounded-2xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] overflow-hidden">
-        <div className="border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-[#f8fafc] px-4 py-5 sm:px-6 sm:py-6">
-          <div className="flex items-start gap-3 sm:gap-4">
-            <div
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#03154C] text-[#e8d5a3] shadow-sm"
-              aria-hidden
-            >
-              <Coins className="h-5 w-5" strokeWidth={2} />
-            </div>
-            <div className="min-w-0 flex-1 space-y-1">
-              <h2 className="text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">{FUNDRAISE_SECTION_TITLE}</h2>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Gifts from the last{" "}
-                <span className="font-medium text-slate-800">{FUNDRAISE_LOOKBACK_DAYS} days</span>. Totals are estimates
-                through <span className="font-medium text-slate-800">{FUNDRAISE_TOTALS_THROUGH_LABEL}</span> — not a bank
-                balance.
-              </p>
-              <p className="text-xs text-slate-600 leading-relaxed border-l-2 border-[#03154C]/25 pl-3">
-                <span className="font-medium text-slate-800">Athletes:</span> your account must match your recruiting profile (
-                <code className="rounded bg-slate-100 px-1 font-mono text-[10px]">user_profiles.athlete_id</code>
-                ). <span className="font-medium text-slate-800">Parents:</span> link each wrestler under Family &amp;
-                athletes — same ledger either way.
-              </p>
-              <p className="text-xs text-slate-500 leading-relaxed pt-0.5">
-                <span className="font-medium text-slate-600">Available</span> is what&apos;s left after reimbursements and
-                any amounts moved to Guild. Update wrestler details under{" "}
-                <span className="font-medium text-slate-700">Family &amp; athletes</span> if something looks off.
-              </p>
+    <div className="space-y-6">
+      <section className="overflow-hidden rounded-2xl border border-[#003366]/12 bg-white shadow-md shadow-[#003366]/8">
+        <div className="h-1 w-full bg-gradient-to-r from-[#03154C] via-[#B31B1B] to-[#CBAF5D]" aria-hidden />
+        <div className="px-4 py-5 sm:px-6 sm:py-6">
+          <div className="mb-5 flex items-center gap-3 sm:gap-4">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#03154C] text-[#CBAF5D] shadow-inner">
+              <Wallet className="h-6 w-6" strokeWidth={2} aria-hidden />
+            </span>
+            <div className="min-w-0">
+              <h2 className="text-xl font-bold tracking-tight text-[#03154C] sm:text-2xl">Digital Wallet</h2>
+              <p className="mt-0.5 text-xs text-slate-600">Campaign gifts · last {LOOKBACK_DAYS} days</p>
             </div>
           </div>
-        </div>
 
-        <div className="px-4 py-5 sm:px-6 sm:py-6">
           {spartanFundraisingLoading ? (
-            <p className="text-sm text-slate-500 flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin text-[#03154C]" aria-hidden />
-              Loading…
-            </p>
+            <div className="flex items-center gap-2 rounded-xl border border-[#003366]/10 bg-slate-50/80 px-4 py-6 text-sm text-slate-600">
+              <Loader2 className="h-5 w-5 shrink-0 animate-spin text-[#03154C]" aria-hidden />
+              Loading balances…
+            </div>
           ) : !spartanFundraising || spartanFundraising.athletes.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 px-4 py-8 text-center">
-              <p className="text-sm text-slate-600 leading-relaxed max-w-md mx-auto">
+            <div className="rounded-xl border border-dashed border-[#003366]/20 bg-slate-50/60 px-4 py-10 text-center">
+              <p className="mx-auto max-w-md text-sm leading-relaxed text-slate-600">
                 {!linkedLoading && linkedCount === 0
-                  ? "Link athletes under Family & athletes to see fundraising totals here."
-                  : "No totals yet. If someone is linked but shows zero, add their graduation year on Family & athletes so we can match their gifts."}
+                  ? "Link wrestlers under Family & athletes to see balances."
+                  : "Nothing to show yet. Add graduation year under Family & athletes if gifts should appear."}
               </p>
             </div>
           ) : (
-            <ul className="space-y-4 list-none p-0 m-0">
+            <ul className="m-0 list-none space-y-4 p-0">
               {spartanFundraising.athletes.map((row) => {
                 const net = row.netAfterReimbursementsCents ?? row.totalCents
                 const guildAlloc = row.guildAllocationsCents ?? 0
                 const remainingAfterGuild = net - guildAlloc
                 const reimb = row.reimbursementsPaidCents ?? 0
                 const usedTotal = reimb + guildAlloc
-                const breakdown = usedBreakdownCaption(reimb, guildAlloc)
                 const showSetupHint = !row.fundraisingCode || row.codeUnavailable
 
                 return (
                   <li
                     key={row.athleteId}
-                    className="rounded-2xl border border-slate-100 bg-slate-50/40 p-4 sm:p-5 ring-1 ring-slate-900/[0.03]"
+                    className="rounded-xl border border-[#003366]/10 bg-gradient-to-b from-white to-slate-50/40 p-4 shadow-sm sm:p-5"
                   >
-                    <div className="space-y-4">
-                      <div>
-                        <p className="text-base font-semibold text-slate-900 leading-snug sm:text-lg">
-                          {row.name?.trim() ? row.name : "—"}
+                    <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+                      <p className="text-lg font-semibold leading-snug text-[#03154C] sm:text-xl">
+                        {row.name?.trim() ? row.name : "—"}
+                      </p>
+                      {showSetupHint ? (
+                        <p className="text-xs font-medium text-[#B31B1B]">
+                          Add graduation year under Family & athletes to match gifts.
                         </p>
-                        {showSetupHint ? (
-                          <p className="mt-2 text-sm text-amber-800/90 leading-relaxed">
-                            Add their graduation year under <span className="font-medium">Family &amp; athletes</span> so
-                            we can match gifts to this wrestler.
-                          </p>
-                        ) : null}
+                      ) : null}
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      <div className="rounded-lg bg-white px-4 py-3 ring-1 ring-[#003366]/10 sm:py-4">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#B31B1B]">Available</p>
+                        <p
+                          className={`mt-1 text-2xl font-bold tabular-nums tracking-tight sm:text-3xl ${
+                            remainingAfterGuild < 0 ? "text-red-600" : "text-emerald-700"
+                          }`}
+                        >
+                          {formatUsd(remainingAfterGuild)}
+                        </p>
+                        <p className="mt-1 text-[11px] leading-snug text-slate-500">After reimbursements & Guild holds</p>
                       </div>
-
-                      <div className="rounded-xl bg-white px-4 py-4 shadow-[inset_0_0_0_1px_rgba(15,23,42,0.06)] sm:px-5 sm:py-5">
-                        <div className="flex flex-col gap-1">
-                          <span className="text-xs font-medium text-slate-500">Available</span>
-                          <span
-                            className={`text-2xl font-semibold tabular-nums tracking-tight sm:text-3xl ${
-                              remainingAfterGuild < 0 ? "text-red-600" : "text-emerald-700"
-                            }`}
-                          >
-                            {formatUsd(remainingAfterGuild)}
-                          </span>
-                        </div>
-
-                        <div className="mt-4 grid grid-cols-1 gap-3 border-t border-slate-100 pt-4 sm:grid-cols-2 sm:gap-4">
-                          <div>
-                            <span className="text-xs font-medium text-slate-500">
-                              Raised (last {FUNDRAISE_LOOKBACK_DAYS} days)
-                            </span>
-                            <p className="mt-0.5 text-base font-medium tabular-nums text-slate-900">
-                              {formatUsd(row.totalCents)}
-                            </p>
-                          </div>
-                          <div>
-                            <span className="text-xs font-medium text-slate-500">Used</span>
-                            <p className="mt-0.5 text-base font-medium tabular-nums text-slate-900">
-                              {usedTotal > 0 ? formatUsd(usedTotal) : "—"}
-                            </p>
-                            {breakdown && usedTotal > 0 ? (
-                              <p className="mt-1 text-xs text-slate-500 leading-snug">{breakdown}</p>
-                            ) : null}
-                          </div>
-                        </div>
+                      <div className="rounded-lg bg-white px-4 py-3 ring-1 ring-[#003366]/10 sm:py-4">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#03154C]/65">Raised</p>
+                        <p className="mt-1 text-xl font-bold tabular-nums text-[#03154C] sm:text-2xl">{formatUsd(row.totalCents)}</p>
+                        <p className="mt-1 text-[11px] leading-snug text-slate-500">Started with · credited gifts</p>
+                      </div>
+                      <div className="rounded-lg bg-white px-4 py-3 ring-1 ring-[#003366]/10 sm:py-4">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#03154C]/65">Spent</p>
+                        <p className="mt-1 text-xl font-bold tabular-nums text-[#03154C] sm:text-2xl">
+                          {usedTotal > 0 ? formatUsd(usedTotal) : "—"}
+                        </p>
+                        <p className="mt-1 text-[11px] leading-snug text-slate-500">{spentSubLabel(reimb, guildAlloc)}</p>
                       </div>
                     </div>
                   </li>
@@ -180,11 +145,7 @@ export function ProfileFundraiseTab({
         </div>
       </section>
 
-      <ProfileFundraiseThankYousSection
-        loading={supporterContactsLoading}
-        lookbackDays={supporterLookbackDays}
-        athletes={supporterContacts}
-      />
+      <ExpenseRequestSection linkedAthletes={linkedAthletes} />
 
       <GuildCreditAllocationSection
         onSpartanTotalsRefresh={onSpartanTotalsRefresh}
@@ -199,7 +160,11 @@ export function ProfileFundraiseTab({
         }
       />
 
-      <ExpenseRequestSection linkedAthletes={linkedAthletes} />
+      <ProfileFundraiseThankYousSection
+        loading={supporterContactsLoading}
+        lookbackDays={supporterLookbackDays}
+        athletes={supporterContacts}
+      />
     </div>
   )
 }

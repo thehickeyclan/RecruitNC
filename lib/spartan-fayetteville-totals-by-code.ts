@@ -30,8 +30,16 @@ type StripeWindowCache = {
   ncUnitedCommunityFund120dCents: number
 }
 let stripeWindowCache: StripeWindowCache | null = null
-/** Keep short: profile + admin must match public /spartan (which lists Stripe every request) for the same 120d window. */
-const STRIPE_LIST_CACHE_MS = 0
+
+/**
+ * Short TTL avoids hammering Stripe on every Profile → Wallet tab focus while staying aligned with admin/playbook data.
+ * Override seconds globally via RECRUITNC_FUNDRAISING_STRIPE_LIST_CACHE_SECONDS (same as hub Stripe caches).
+ */
+function fayettevilleStripeWindowCacheTtlMs(): number {
+  const raw = Number(process.env.RECRUITNC_FUNDRAISING_STRIPE_LIST_CACHE_SECONDS)
+  const sec = Number.isFinite(raw) && raw > 0 ? Math.min(600, Math.max(30, raw)) : 90
+  return sec * 1000
+}
 
 export type FayettevilleStripeWindowSnapshot = {
   statsByAthleteCodeLowercase: Map<string, FayettevilleCodeStats>
@@ -57,7 +65,7 @@ export async function getFayettevilleStripeWindowSnapshot(): Promise<Fayettevill
   if (!stripeSecret) {
     const empty = new Map<string, FayettevilleCodeStats>()
     stripeWindowCache = {
-      expiresAt: now + STRIPE_LIST_CACHE_MS,
+      expiresAt: now + fayettevilleStripeWindowCacheTtlMs(),
       statsByAthleteCodeLowercase: empty,
       grossSessionTotalCents: 0,
       ncUnitedCommunityFund120dCents: 0,
@@ -86,7 +94,7 @@ export async function getFayettevilleStripeWindowSnapshot(): Promise<Fayettevill
   }
 
   stripeWindowCache = {
-    expiresAt: now + STRIPE_LIST_CACHE_MS,
+    expiresAt: now + fayettevilleStripeWindowCacheTtlMs(),
     statsByAthleteCodeLowercase,
     grossSessionTotalCents,
     ncUnitedCommunityFund120dCents,

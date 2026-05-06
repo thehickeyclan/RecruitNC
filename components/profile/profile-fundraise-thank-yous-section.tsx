@@ -13,10 +13,10 @@ export function ProfileFundraiseThankYousSection(props: {
 
   if (loading) {
     return (
-      <section className="rounded-2xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] overflow-hidden">
-        <div className="px-4 py-5 sm:px-6 sm:py-6 flex items-center gap-2 text-sm text-slate-500">
-          <Loader2 className="h-4 w-4 animate-spin text-[#03154C]" aria-hidden />
-          Loading supporter summaries…
+      <section className="overflow-hidden rounded-2xl border border-[#003366]/12 bg-white shadow-md shadow-[#003366]/5">
+        <div className="flex items-center gap-2 px-4 py-5 text-sm text-slate-600 sm:px-6">
+          <Loader2 className="h-4 w-4 shrink-0 animate-spin text-[#03154C]" aria-hidden />
+          Loading…
         </div>
       </section>
     )
@@ -33,39 +33,31 @@ export function ProfileFundraiseThankYousSection(props: {
     return null
   }
 
-  const windowLabel =
-    lookbackDays != null ? `${lookbackDays}-day campaign window` : "campaign window"
+  const windowLabel = lookbackDays != null ? `${lookbackDays}-day window` : "campaign window"
 
   return (
-    <section className="rounded-2xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] overflow-hidden">
-      <div className="border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-[#f8fafc] px-4 py-5 sm:px-6 sm:py-6">
-        <div className="flex items-start gap-3 sm:gap-4">
-          <div
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#03154C] text-[#e8d5a3] shadow-sm"
-            aria-hidden
-          >
-            <Heart className="h-5 w-5" strokeWidth={2} />
-          </div>
-          <div className="min-w-0 flex-1 space-y-1">
-            <h2 className="text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">Thank your supporters</h2>
-            <p className="text-sm text-slate-600 leading-relaxed">
-              Email and phone from checkout stay off your profile for privacy. Open each athlete&apos;s gift page while logged in —
-              same accounts as <span className="font-medium text-slate-800">Family &amp; Fundraise</span> (linked parent, athlete on
-              their own login, or RecruitNC admin) — to copy contacts and send thanks.
+    <section className="overflow-hidden rounded-2xl border border-[#003366]/12 bg-white shadow-md shadow-[#003366]/5">
+      <div className="h-1 w-full bg-gradient-to-r from-[#03154C] via-[#B31B1B] to-[#CBAF5D]" aria-hidden />
+      <div className="border-b border-[#003366]/8 px-4 py-4 sm:px-6 sm:py-5">
+        <div className="flex items-center gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#03154C] text-[#CBAF5D] shadow-sm">
+            <Heart className="h-5 w-5" strokeWidth={2} aria-hidden />
+          </span>
+          <div>
+            <h2 className="text-base font-bold tracking-tight text-[#03154C] sm:text-lg">Thank your supporters</h2>
+            <p className="text-xs text-slate-600">
+              Open each gift page while signed in to thank donors privately.
             </p>
           </div>
         </div>
       </div>
 
-      <div className="px-4 py-5 sm:px-6 sm:py-6 space-y-4">
+      <div className="space-y-3 px-4 py-5 sm:px-6 sm:py-6">
         {!hasAnySupporters ? (
-          <p className="text-sm text-slate-600">
-            When gifts arrive in the last {windowLabel}, you&apos;ll see a count here with a shortcut to the private list on the
-            gift page.
-          </p>
+          <p className="text-sm text-slate-600">Supporter counts appear when gifts credit in the last {windowLabel}.</p>
         ) : null}
 
-        <ul className="space-y-3 list-none p-0 m-0">
+        <ul className="m-0 list-none space-y-3 p-0">
           {eligibleAthletes.map((a) => {
             const hasGifts = a.supporterCount > 0
             const thankedCount = typeof a.thankedCount === "number" ? a.thankedCount : 0
@@ -75,7 +67,7 @@ export function ProfileFundraiseThankYousSection(props: {
             return (
               <li
                 key={a.athleteId}
-                className="flex flex-col gap-3 rounded-xl border border-slate-100 bg-slate-50/50 p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+                className="flex flex-col gap-3 rounded-xl border border-[#003366]/10 bg-slate-50/50 p-4 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="flex min-w-0 flex-1 items-start gap-3">
                   <span className="mt-0.5 shrink-0" aria-hidden>
@@ -90,22 +82,12 @@ export function ProfileFundraiseThankYousSection(props: {
                     )}
                   </span>
                   <div className="min-w-0">
-                    <p className="font-semibold text-slate-900">{a.name?.trim() || "Athlete"}</p>
+                    <p className="font-semibold text-[#03154C]">{a.name?.trim() || "Athlete"}</p>
                     <p className="mt-1 text-xs leading-snug text-slate-600">
                       {hasGifts ? (
                         <>
-                          <span className="font-medium text-slate-800">{a.supporterCount}</span> supporter
-                          {a.supporterCount === 1 ? "" : "s"} in the last {windowLabel}.{" "}
-                          <span className="font-medium text-slate-800">{thankedCount}</span> marked thanked on the gift page
-                          {remainingThanks > 0 ? (
-                            <>
-                              {" "}
-                              · <span className="font-medium text-slate-800">{remainingThanks}</span> not marked yet
-                            </>
-                          ) : (
-                            " · all marked"
-                          )}
-                          . Checkout email &amp; phone stay on that page (managers only).
+                          {a.supporterCount} supporter{a.supporterCount === 1 ? "" : "s"} · {thankedCount} thanked
+                          {remainingThanks > 0 ? ` · ${remainingThanks} left` : allMarkedThanked ? " · all set" : ""}
                         </>
                       ) : (
                         <>No credited gifts in the last {windowLabel}.</>
@@ -118,7 +100,7 @@ export function ProfileFundraiseThankYousSection(props: {
                     href={a.giftPagePath}
                     className="shrink-0 text-sm font-semibold text-[#03154C] underline-offset-2 hover:underline sm:text-right"
                   >
-                    Private thank-you list →
+                    Gift page →
                   </HardLink>
                 ) : null}
               </li>

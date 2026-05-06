@@ -512,7 +512,7 @@ export function ProfileClient() {
               <p className="text-xs font-semibold uppercase tracking-wider text-[#B31B1B]">RecruitNC</p>
               <h1 className="mt-1 text-2xl sm:text-3xl font-bold tracking-tight text-[#03154C]">My profile</h1>
               <p className="text-slate-600 text-sm sm:text-base mt-1.5 max-w-2xl">
-                Account, family &amp; athletes, fundraising, and NC United Blue — all in one place.
+                Account, family &amp; athletes, digital wallet, and NC United Blue — all in one place.
               </p>
             </div>
             <div className="hidden h-12 w-1 shrink-0 rounded-full bg-gradient-to-b from-[#03154C] via-[#B31B1B] to-[#CBAF5D] sm:block" aria-hidden />
@@ -543,11 +543,13 @@ export function ProfileClient() {
             </TabsTrigger>
             <TabsTrigger
               value="fundraise"
+              title="Digital wallet"
               className="rounded-xl py-2.5 px-2 text-xs sm:text-sm font-semibold text-slate-600 transition-all data-[state=active]:bg-[#03154C] data-[state=active]:text-white data-[state=active]:shadow-md data-[state=inactive]:hover:bg-white/70"
             >
               <span className="inline-flex items-center justify-center gap-1.5 min-w-0">
                 <Coins className="h-4 w-4 shrink-0" />
-                <span>Fundraise</span>
+                <span className="hidden sm:inline">Digital wallet</span>
+                <span className="sm:hidden">Wallet</span>
               </span>
             </TabsTrigger>
             <TabsTrigger

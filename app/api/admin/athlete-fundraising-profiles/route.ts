@@ -3,6 +3,11 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
 import { normalizeFundraisingProfileSlug } from "@/lib/fundraising/athlete-fundraising-profiles"
+import {
+  emptyFundraisingWiringSnapshot,
+  getFundraisingWiringSnapshotsForAthleteIds,
+  type FundraisingWiringAdminSnapshot,
+} from "@/lib/fundraising/fundraising-wiring-status"
 
 export const dynamic = "force-dynamic"
 
@@ -35,6 +40,8 @@ type AdminAthleteFundraisingProfileRow = {
   primary_fundraising_code: string | null
   athlete_name: string | null
   roster_ncu_code: string | null
+  /** Non-admin gift-page edit wiring — same signals staff checks after Attach parent / profile claim. */
+  wiring: FundraisingWiringAdminSnapshot
 }
 
 export async function GET() {
@@ -62,6 +69,9 @@ export async function GET() {
     ids.length > 0 ? await admin.from("athletes").select("id, name").in("id", ids) : { data: [] as { id: string; name: string | null }[] }
   const nameById = new Map((athletes ?? []).map((a) => [a.id, typeof a.name === "string" ? a.name : null]))
 
+  const wiringByAthlete =
+    ids.length > 0 ? await getFundraisingWiringSnapshotsForAthleteIds(admin, ids) : new Map<string, FundraisingWiringAdminSnapshot>()
+
   const out: AdminAthleteFundraisingProfileRow[] = (profiles ?? []).map((p: Record<string, unknown>) => {
     const athleteId = String(p.athlete_id ?? "")
     return {
@@ -78,6 +88,7 @@ export async function GET() {
       primary_fundraising_code: (p.primary_fundraising_code as string | null) ?? null,
       athlete_name: nameById.get(athleteId) ?? null,
       roster_ncu_code: codeByAthlete.get(athleteId) ?? null,
+      wiring: wiringByAthlete.get(athleteId) ?? emptyFundraisingWiringSnapshot(),
     }
   })
 
