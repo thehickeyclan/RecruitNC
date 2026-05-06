@@ -49,6 +49,9 @@ interface ProfessionalCommitmentCardProps {
   athlete: Athlete
 }
 
+/** Honor pill order on card back (matches getCommitmentHonorBadgesForAthlete output). */
+const HONOR_BADGE_DISPLAY_ORDER = ["All-American", "State Champion", "State Placer", "State Qualifier"] as const
+
 interface SeasonRecord {
   year: string
   displayYear: string
@@ -72,6 +75,8 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
     totalLosses: number
     totalWinPercentage: number
   } | null>(null)
+  /** NCHSAA rows from /api/wrestling-achievements (table-backed state champ / placer / SQ). */
+  const [serverStateHonors, setServerStateHonors] = useState<string[]>([])
 
   useEffect(() => {
     setIsFlipped(false)
@@ -269,6 +274,49 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
     fetchCareerRecord()
   }, [athlete.id, athlete.graduationyear, athlete.graduationYear])
 
+  useEffect(() => {
+    setServerStateHonors([])
+    const id = athlete.id?.trim()
+    if (!id || id.includes("fallback") || id.startsWith("row-") || id.startsWith("recover-")) return
+
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch(`/api/wrestling-achievements?athlete_id=${encodeURIComponent(id)}`, {
+          cache: "no-store",
+        })
+        const data = await res.json()
+        if (cancelled || !data?.success || !data?.achievements) return
+
+        const found = new Set<string>()
+        const ach = data.achievements as {
+          state_championships?: unknown[]
+          all_results?: { nchsaa?: Array<{ place?: number | null }> }
+        }
+        if (Array.isArray(ach.state_championships) && ach.state_championships.length > 0) {
+          found.add("State Champion")
+        }
+        const nchsaa = Array.isArray(ach.all_results?.nchsaa) ? ach.all_results!.nchsaa! : []
+        for (const r of nchsaa) {
+          const p = r?.place
+          if (p === 1) found.add("State Champion")
+          else if (p != null && typeof p === "number" && p >= 2 && p <= 24) found.add("State Placer")
+          else if (p === 0) found.add("State Qualifier")
+        }
+
+        setServerStateHonors(
+          (["State Champion", "State Placer", "State Qualifier"] as const).filter((b) => found.has(b)),
+        )
+      } catch (e) {
+        console.error("[RecruitNC] commitment-card state honors fetch:", e)
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [athlete.id])
+
   const getAthletePhoto = () => {
     if (athlete.name?.toLowerCase().includes("liam hickey")) {
       return "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/athlete/liam-hickey-1746040496978.png"
@@ -387,6 +435,11 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
   const backCardNcRank = ncRankPositive != null && ncRankPositive <= 30 ? ncRankPositive : null
 
   const honorBadges = useMemo(() => getCommitmentHonorBadgesForAthlete(athlete), [athlete])
+
+  const honorBadgesMerged = useMemo(() => {
+    const merged = new Set<string>([...honorBadges, ...serverStateHonors])
+    return HONOR_BADGE_DISPLAY_ORDER.filter((b) => merged.has(b))
+  }, [honorBadges, serverStateHonors])
 
   /** Bias above center so foreheads/headgear stay in frame; ~18% is a good default for full-body and mat shots. */
   const getImagePositionClass = () => {
@@ -529,14 +582,22 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
             </div>
 
             {backCardNcRank != null && (
-              <p className="text-center text-sm mb-3" style={{ color: "#D3B574" }}>
-                #{backCardNcRank} in NC
-              </p>
+              <div className="text-center mb-3 px-1">
+                <p
+                  className="text-[10px] font-semibold uppercase tracking-[0.14em]"
+                  style={{ color: "#D3B574" }}
+                >
+                  RecruitNC Ranking
+                </p>
+                <p className="text-xl font-black tabular-nums leading-tight mt-1" style={{ color: "#D3B574" }}>
+                  #{backCardNcRank}
+                </p>
+              </div>
             )}
 
-            {honorBadges.length > 0 && (
+            {honorBadgesMerged.length > 0 && (
               <div className="flex flex-wrap justify-center gap-1 mb-3 px-0.5">
-                {honorBadges.map((label) => (
+                {honorBadgesMerged.map((label) => (
                   <span
                     key={label}
                     className="inline-flex items-center rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide leading-none"
@@ -807,7 +868,7 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
 }
 
 /** Display labels — only these four categories (no win–loss / tournament records). */
-const COMMITMENT_HONOR_ORDER = ["All-American", "State Champion", "State Placer", "State Qualifier"] as const
+const COMMITMENT_HONOR_ORDER = HONOR_BADGE_DISPLAY_ORDER
 
 /** Placement strings only; *_record (e.g. 15–2) is intentionally excluded from honor chips. */
 const HONOR_PLACEMENT_SNIPPET_KEYS = [
