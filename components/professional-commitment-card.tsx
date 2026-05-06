@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Card } from "@/components/ui/card"
@@ -34,6 +34,8 @@ interface Athlete {
   commitmentPhotoUrl?: string
   image_url?: string
   achievements?: string[] | string
+  /** Extra honors text from profile/API when present */
+  additional_achievements?: string[] | string
   location?: string
   ncUnitedTeam?: string
   rankings?: { nc_rank: string }
@@ -382,6 +384,11 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
   /** Shown below header on card back only when ranked (header already shows Class of). */
   const backCardNcRank = ncRankPositive != null && ncRankPositive <= 30 ? ncRankPositive : null
 
+  const honorBadges = useMemo(
+    () => getCommitmentHonorBadges(athlete.achievements, athlete.additional_achievements),
+    [athlete.achievements, athlete.additional_achievements],
+  )
+
   /** Bias above center so foreheads/headgear stay in frame; ~18% is a good default for full-body and mat shots. */
   const getImagePositionClass = () => {
     const athleteName = athlete.name?.toLowerCase() || ""
@@ -526,6 +533,24 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
               <p className="text-center text-sm mb-3" style={{ color: "#D3B574" }}>
                 #{backCardNcRank} in NC
               </p>
+            )}
+
+            {honorBadges.length > 0 && (
+              <div className="flex flex-wrap justify-center gap-1 mb-3 px-0.5">
+                {honorBadges.map((label) => (
+                  <span
+                    key={label}
+                    className="inline-flex items-center rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide leading-none"
+                    style={{
+                      borderColor: "#D3B574",
+                      color: "#D3B574",
+                      backgroundColor: "rgba(211, 181, 116, 0.12)",
+                    }}
+                  >
+                    {label}
+                  </span>
+                ))}
+              </div>
             )}
 
             <div className="bg-white rounded-lg p-3 mb-3 shadow-sm border relative overflow-hidden">
@@ -780,6 +805,63 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
       `}</style>
     </div>
   )
+}
+
+const COMMITMENT_HONOR_ORDER = ["All-American", "State champion", "State placer", "State qualifier"] as const
+
+/** Compact postseason honors for flip-card back; parses achievements free text + optional tokens like state_champion. */
+function getCommitmentHonorBadges(
+  achievements: string[] | string | undefined,
+  additionalAchievements?: string[] | string | undefined,
+): string[] {
+  const lines: string[] = []
+
+  const pushLines = (v: string[] | string | undefined) => {
+    if (v == null) return
+    if (Array.isArray(v)) {
+      for (const x of v) {
+        const t = String(x).trim()
+        if (t) lines.push(t)
+      }
+    } else if (typeof v === "string" && v.trim()) {
+      v.split(/[\n,]+/).forEach((part) => {
+        const t = part.trim()
+        if (t) lines.push(t)
+      })
+    }
+  }
+
+  pushLines(achievements)
+  pushLines(additionalAchievements)
+
+  const hay = lines.join("\n").toLowerCase().replace(/_/g, " ")
+  const found = new Set<string>()
+
+  if (
+    /\ball[\s-]?american\b|\bnational\s+all[\s-]?american\b|\bnhsca\b.*\ball[\s-]?american\b|\ball american\b/i.test(
+      hay,
+    )
+  ) {
+    found.add("All-American")
+  }
+
+  if (
+    /\bstate\s+champion\b|\bstate\s+champ\b|\b\d+\s*x\s*state\s+champ|\bmulti[\s-]?time\s+state\s+champ/i.test(
+      hay,
+    )
+  ) {
+    found.add("State champion")
+  }
+
+  if (/\bstate\s+placer\b|\bstate\s+finalist\b|\b\d+\s*x\s*state\s+final/i.test(hay)) {
+    found.add("State placer")
+  }
+
+  if (/\bstate\s+qualifier\b|\bstate\s+qual\b|\bqualified\s+for\s+state\b|\bstate\s+qualification\b/i.test(hay)) {
+    found.add("State qualifier")
+  }
+
+  return COMMITMENT_HONOR_ORDER.filter((b) => found.has(b))
 }
 
 const getNCUnitedTeamStatus = (athlete: Athlete) => {
