@@ -1,5 +1,4 @@
-import type { FundraisingHubHeroStats, FundraisingHubTransparencyMeta } from "@/lib/fundraising/hub-data"
-import { HardLink } from "@/components/hard-link"
+import type { FundraisingHubHeroStats } from "@/lib/fundraising/hub-data"
 import { AthleteSearchBar } from "./AthleteSearchBar"
 
 const NAVY = "#0B2545"
@@ -19,13 +18,7 @@ export function formatUsdWhole(cents: number) {
   }).format(cents / 100)
 }
 
-export function FundraisingHero({
-  hero,
-  hubTransparency,
-}: {
-  hero: FundraisingHubHeroStats
-  hubTransparency: FundraisingHubTransparencyMeta
-}) {
+export function FundraisingHero({ hero }: { hero: FundraisingHubHeroStats }) {
   const raised = formatUsdWhole(hero.totalRaisedCents).replace(/^\$/, "")
 
   return (
@@ -100,61 +93,12 @@ export function FundraisingHero({
           </div>
         </div>
 
-        {hero.ncUnitedCommunityFundCents > 0 ? (
-          <p className="mx-auto mt-4 max-w-2xl text-xs leading-relaxed text-white/85 sm:mx-0">
-            <span className="font-semibold text-white">NC United fund</span> — community programs, not tied to a single
-            athlete: <span className="tabular-nums font-semibold text-white">{formatUsdWhole(hero.ncUnitedCommunityFundCents)}</span>
-          </p>
-        ) : null}
-
-        <p className="mx-auto mt-4 max-w-2xl text-xs leading-relaxed text-white/90 sm:mx-0">
-          <strong className="text-white">Raised</strong>, <strong className="text-white">Donations</strong>, and{" "}
-          <strong className="text-white">Event checkouts</strong> summarize NC United hub fundraising for the last{" "}
-          <span className="tabular-nums text-white">{hubTransparency.lookbackDays}</span> days — donations credited at
-          checkout, plus paid event registrations run through hub campaigns. The{" "}
-          <HardLink
-            href={`/fundraising/leaderboard?campaign=all&days=${hubTransparency.lookbackDays}`}
-            className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline"
-          >
-            combined athlete leaderboard
-          </HardLink>{" "}
-          ranks athlete-credited gifts across every NC United hub campaign in that window.
+        <p className="mx-auto mt-10 text-center text-xs leading-relaxed text-white/70 sm:mx-0 sm:text-left">
+          Ways to give — athletes, training fund, corporate partners, and scholarships (soon) — are in{" "}
+          <strong className="text-white/90">Four paths</strong> below.
         </p>
 
-        <div className="mx-auto mt-10 flex max-w-xl flex-col gap-4 sm:mx-0 sm:max-w-none sm:flex-row sm:flex-wrap sm:items-start">
-          <HardLink
-            href="/fundraising/athletes"
-            className={`${displayFont("inline-flex min-h-[52px] flex-1 items-center justify-center rounded-sm bg-[#CC0000] px-8 text-sm font-extrabold uppercase tracking-[0.14em] text-white shadow-[0_18px_52px_-12px_rgba(204,0,0,0.65)] transition hover:bg-[#a80000] sm:flex-none sm:min-w-[240px]")}`}
-          >
-            Support an athlete →
-          </HardLink>
-          <HardLink
-            href="/fundraising/training-fund"
-            className={`${displayFont("inline-flex min-h-[52px] flex-1 items-center justify-center rounded-sm border-2 border-white/25 bg-transparent px-8 text-sm font-extrabold uppercase tracking-[0.14em] text-white transition hover:border-[#C8A94A]/60 hover:text-[#C8A94A] sm:flex-none sm:min-w-[240px]")}`}
-          >
-            Training fund →
-          </HardLink>
-          <div className="flex w-full flex-col items-center sm:w-auto sm:min-w-[200px] sm:items-start">
-            <button
-              type="button"
-              disabled
-              aria-disabled="true"
-              aria-label="Scholarships — coming soon"
-              className={`${displayFont(
-                "inline-flex min-h-[52px] w-full cursor-not-allowed flex-col items-center justify-center rounded-sm border-2 border-white/15 bg-white/[0.04] px-8 py-2 text-sm font-extrabold uppercase tracking-[0.14em] text-white/45 sm:w-auto sm:min-w-[240px]",
-              )}`}
-            >
-              Scholarships
-            </button>
-            <span
-              className={`${displayFont("mt-2 text-center text-[10px] font-bold uppercase tracking-[0.18em] text-[#C8A94A]/75 sm:text-left")}`}
-            >
-              Coming soon
-            </span>
-          </div>
-        </div>
-
-        <p className="mx-auto mt-6 text-center text-xs text-white sm:mx-0 sm:text-left">
+        <p className="mx-auto mt-4 text-center text-xs text-white sm:mx-0 sm:text-left">
           <span className="font-semibold text-white">501(c)(3)</span> · EIN{" "}
           <span className="tabular-nums text-white">99-3757238</span>
         </p>

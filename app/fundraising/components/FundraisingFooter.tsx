@@ -73,18 +73,6 @@ export function FundraisingFooter() {
             <HardLink href="/fundraising/corporate" className="text-white/90 hover:text-[#C8A94A]">
               Corporate partners
             </HardLink>
-            <span className="text-white/25" aria-hidden>
-              ·
-            </span>
-            <HardLink href="/fundraising/playbook/members" className="text-white/90 hover:text-[#C8A94A]">
-              Fundraising playbook
-            </HardLink>
-            <span className="text-white/25" aria-hidden>
-              ·
-            </span>
-            <HardLink href="/fundraising/playbook" className="text-white/90 hover:text-[#C8A94A]">
-              Staff CRM (sign in)
-            </HardLink>
           </div>
         </nav>
       </div>

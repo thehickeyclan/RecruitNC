@@ -26,7 +26,9 @@ export async function middleware(request: NextRequest) {
   })
 
   // Skip middleware entirely for public routes that don't need auth
+  // Giving hub and athlete/training-fund pages stay public; playbook routes enforce sign-in in their own layouts/pages.
   const publicRoutes = [
+    '/fundraising',
     '/view-profile',
     '/blue',
     '/go',

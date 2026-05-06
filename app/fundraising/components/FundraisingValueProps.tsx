@@ -1,5 +1,4 @@
 import type { FundraisingHubHeroStats } from "@/lib/fundraising/hub-data"
-import { HardLink } from "@/components/hard-link"
 import { formatUsdWhole } from "./FundraisingHero"
 
 function displayFont(c: string) {
@@ -98,14 +97,6 @@ export function FundraisingValueProps({ hero }: { hero: FundraisingHubHeroStats 
             </p>
           ) : null}
         </div>
-
-        <p className="mt-8 text-sm text-white/90">
-          Deeper playbook (mindset, donors, matching):{" "}
-          <HardLink href="/fundraising/playbook/members" className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
-            Fundraising playbook
-          </HardLink>
-          .
-        </p>
       </div>
     </section>
   )

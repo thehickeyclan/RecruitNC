@@ -1,5 +1,6 @@
 import { Building2, Heart, Search } from "lucide-react"
 import { HardLink } from "@/components/hard-link"
+import { ScholarshipsInterestNotifyCard } from "./scholarships-interest-notify"
 
 function displayFont(c: string) {
   return `font-[family-name:var(--font-fundraising-display)] ${c}`
@@ -16,7 +17,7 @@ const CARDS = [
   {
     icon: Heart,
     headline: "Support the Training Fund",
-    body: "Tax-deductible giving to the NC United Training Fund — resources for wrestlers who need help training and competing nationally, year-round.",
+    body: "Tax-deductible giving to the NC United Training Fund — supporting wrestlers who need help training and competing nationally, year-round.",
     cta: "Give now →",
     href: "/fundraising/training-fund",
   },
@@ -39,21 +40,21 @@ export function NavigationPaths() {
         <h2
           className={`${displayFont("mt-3 text-center text-[clamp(1.65rem,4vw,2.35rem)] font-black uppercase tracking-tight text-white")}`}
         >
-          Three ways to support
+          Four paths
         </h2>
         <p className="mx-auto mt-4 max-w-2xl text-center text-sm leading-relaxed text-white/75">
-          Choose how you&apos;d like to give — every path uses secure nonprofit checkout, email receipts, and clear credit to an athlete or the
-          training fund.
+          Three active ways to give — secure nonprofit checkout, email receipts, and clear credit to an athlete or the training fund. Training
+          scholarships are coming soon; join the notify list to hear first.
         </p>
-        <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
+        <ul className="mt-12 grid list-none gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
           {CARDS.map((c) => {
             const Icon = c.icon
             return (
               <li
                 key={c.href}
-                className="flex flex-col rounded-xl border border-white/10 bg-[#0B2545]/55 p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
+                className="flex h-full flex-col rounded-xl border border-white/10 bg-[#0B2545]/55 p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
               >
-                <div className="flex items-start gap-4">
+                <div className="flex flex-1 items-start gap-4">
                   <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-[#CC0000]/35 bg-[#CC0000]/12 text-[#ffb4b4]">
                     <Icon className="h-5 w-5" aria-hidden />
                   </span>
@@ -73,6 +74,7 @@ export function NavigationPaths() {
               </li>
             )
           })}
+          <ScholarshipsInterestNotifyCard />
         </ul>
       </div>
     </section>
