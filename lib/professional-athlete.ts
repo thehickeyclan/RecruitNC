@@ -20,6 +20,18 @@ export type ProfessionalAthlete = {
   instagram?: string
   nhsca_2025_record?: string
   nhsca_2025_placement?: string
+  nhsca_2024_record?: string
+  nhsca_2024_placement?: string
+  nhsca_2023_record?: string
+  nhsca_2023_placement?: string
+  super_32_2025_record?: string
+  super_32_2025_placement?: string
+  super_32_2024_record?: string
+  super_32_2024_placement?: string
+  super_32_2023_record?: string
+  super_32_2023_placement?: string
+  /** NCHSAA state tournament rows (JSON on athletes row) — used for honor chips on commitment cards. */
+  nchsaa_results?: unknown
   /** Our class ranking (1–30). Used on commitment card back. */
   prospect_ranking?: number | string | null
   rankings?: { nc_rank?: string }
@@ -106,6 +118,22 @@ export function normalizeAthlete(input: any): ProfessionalAthlete {
       ? String(input.nhsca_2025_placement).trim()
       : undefined
 
+  const nhscaStr = (v: unknown) => (v != null && String(v).trim() !== "" ? String(v).trim() : undefined)
+
+  const nhsca_2024_record = nhscaStr(input?.nhsca_2024_record)
+  const nhsca_2024_placement = nhscaStr(input?.nhsca_2024_placement)
+  const nhsca_2023_record = nhscaStr(input?.nhsca_2023_record)
+  const nhsca_2023_placement = nhscaStr(input?.nhsca_2023_placement)
+
+  const super_32_2025_record = nhscaStr(input?.super_32_2025_record)
+  const super_32_2025_placement = nhscaStr(input?.super_32_2025_placement)
+  const super_32_2024_record = nhscaStr(input?.super_32_2024_record)
+  const super_32_2024_placement = nhscaStr(input?.super_32_2024_placement)
+  const super_32_2023_record = nhscaStr(input?.super_32_2023_record)
+  const super_32_2023_placement = nhscaStr(input?.super_32_2023_placement)
+
+  const nchsaa_results = input?.nchsaa_results
+
   const prospect_ranking: number | string | null | undefined =
     input?.prospect_ranking != null ? input.prospect_ranking : undefined
   const rankings: { nc_rank?: string } | undefined =
@@ -132,6 +160,17 @@ export function normalizeAthlete(input: any): ProfessionalAthlete {
     instagram,
     nhsca_2025_record,
     nhsca_2025_placement,
+    nhsca_2024_record,
+    nhsca_2024_placement,
+    nhsca_2023_record,
+    nhsca_2023_placement,
+    super_32_2025_record,
+    super_32_2025_placement,
+    super_32_2024_record,
+    super_32_2024_placement,
+    super_32_2023_record,
+    super_32_2023_placement,
+    nchsaa_results,
     prospect_ranking,
     rankings,
   }

@@ -6,6 +6,7 @@ import Link from "next/link"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { RotateCw, ExternalLink, Instagram, Calendar } from "lucide-react"
+import { nchsaaJsonToProfileRows } from "@/lib/nchsaa-results-json"
 interface Athlete {
   id: string
   name: string
@@ -384,10 +385,7 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
   /** Shown below header on card back only when ranked (header already shows Class of). */
   const backCardNcRank = ncRankPositive != null && ncRankPositive <= 30 ? ncRankPositive : null
 
-  const honorBadges = useMemo(
-    () => getCommitmentHonorBadges(athlete.achievements, athlete.additional_achievements),
-    [athlete.achievements, athlete.additional_achievements],
-  )
+  const honorBadges = useMemo(() => getCommitmentHonorBadgesForAthlete(athlete), [athlete])
 
   /** Bias above center so foreheads/headgear stay in frame; ~18% is a good default for full-body and mat shots. */
   const getImagePositionClass = () => {
@@ -809,36 +807,94 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
 
 const COMMITMENT_HONOR_ORDER = ["All-American", "State champion", "State placer", "State qualifier"] as const
 
-/** Compact postseason honors for flip-card back; parses achievements free text + optional tokens like state_champion. */
-function getCommitmentHonorBadges(
-  achievements: string[] | string | undefined,
-  additionalAchievements?: string[] | string | undefined,
-): string[] {
-  const lines: string[] = []
+const HONOR_PLACEMENT_SNIPPET_KEYS = [
+  "nhsca_2025_placement",
+  "nhsca_2025_record",
+  "nhsca_2024_placement",
+  "nhsca_2024_record",
+  "nhsca_2023_placement",
+  "nhsca_2023_record",
+  "super_32_2025_placement",
+  "super_32_2025_record",
+  "super_32_2024_placement",
+  "super_32_2024_record",
+  "super_32_2023_placement",
+  "super_32_2023_record",
+] as const
 
-  const pushLines = (v: string[] | string | undefined) => {
-    if (v == null) return
-    if (Array.isArray(v)) {
-      for (const x of v) {
-        const t = String(x).trim()
-        if (t) lines.push(t)
-      }
-    } else if (typeof v === "string" && v.trim()) {
-      v.split(/[\n,]+/).forEach((part) => {
-        const t = part.trim()
-        if (t) lines.push(t)
-      })
+function pushAchievementLines(lines: string[], v: string[] | string | undefined) {
+  if (v == null) return
+  if (Array.isArray(v)) {
+    for (const x of v) {
+      const t = String(x).trim()
+      if (t) lines.push(t)
+    }
+  } else if (typeof v === "string" && v.trim()) {
+    v.split(/[\n,]+/).forEach((part) => {
+      const t = part.trim()
+      if (t) lines.push(t)
+    })
+  }
+}
+
+function collectHonorPlacementSnippets(athlete: Athlete): string[] {
+  const r = athlete as Record<string, unknown>
+  const out: string[] = []
+  for (const k of HONOR_PLACEMENT_SNIPPET_KEYS) {
+    const v = r[k]
+    if (v != null && String(v).trim() !== "") out.push(String(v))
+  }
+  return out
+}
+
+/** Parse 1–16 placement from common wrestling strings; skip win–loss records like "15-2". */
+function parseBracketPlacementRank(text: string): number | null {
+  const t = text.toLowerCase().trim()
+  if (!t || t === "-" || t === "—") return null
+  if (/^\d+\s*[-–]\s*\d+$/.test(t)) return null
+  if (/\bchamp|first\s+place|\b1\s*st\b|^1st\b|\b1\s*st\s+place\b/.test(t)) return 1
+  const top = t.match(/\btop\s*(\d{1,2})\b/)
+  if (top) {
+    const n = Number.parseInt(top[1], 10)
+    if (n >= 1 && n <= 8) return n
+  }
+  const m = t.match(/\b(\d{1,2})\s*(?:st|nd|rd|th)?(?:\s+place)?\b/)
+  if (m) {
+    const n = Number.parseInt(m[1], 10)
+    if (n >= 1 && n <= 16) return n
+  }
+  return null
+}
+
+function applyNationalBracketTop8FromSnippets(found: Set<string>, snippets: string[]) {
+  for (const s of snippets) {
+    const rank = parseBracketPlacementRank(s)
+    if (rank != null && rank >= 1 && rank <= 8) {
+      found.add("All-American")
+      return
+    }
+    const low = s.toLowerCase()
+    if (/\ball[\s-]?american\b|\bnational\s+finalist\b|\bfinalist\b|\bsemifinal\b/.test(low)) {
+      found.add("All-American")
+      return
     }
   }
+}
 
-  pushLines(achievements)
-  pushLines(additionalAchievements)
+function applyNchsaaJsonStateHonors(found: Set<string>, raw: unknown) {
+  const rows = nchsaaJsonToProfileRows(raw, "")
+  for (const row of rows) {
+    const p = row.place
+    if (p === 1) found.add("State champion")
+    else if (p != null && p >= 2 && p <= 24) found.add("State placer")
+  }
+}
 
-  const hay = lines.join("\n").toLowerCase().replace(/_/g, " ")
-  const found = new Set<string>()
+function applyHonorPatternsFromHay(found: Set<string>, hay: string) {
+  if (!hay.trim()) return
 
   if (
-    /\ball[\s-]?american\b|\bnational\s+all[\s-]?american\b|\bnhsca\b.*\ball[\s-]?american\b|\ball american\b/i.test(
+    /\ball[\s-]?american\b|\bnational\s+all[\s-]?american\b|\bnational\s+placer\b|\bnational\s+finalist\b|\bnhsca\b.*\ball[\s-]?american\b|\ball american\b/i.test(
       hay,
     )
   ) {
@@ -846,20 +902,42 @@ function getCommitmentHonorBadges(
   }
 
   if (
-    /\bstate\s+champion\b|\bstate\s+champ\b|\b\d+\s*x\s*state\s+champ|\bmulti[\s-]?time\s+state\s+champ/i.test(
+    /\bstate\s+champion\b|\bstate\s+champ\b|\bnchsaa\b.*\b(champ|champion)\b|\b\d+\s*x\s*state\s+champ|\bmulti[\s-]?time\s+state\s+champ/i.test(
       hay,
     )
   ) {
     found.add("State champion")
   }
 
-  if (/\bstate\s+placer\b|\bstate\s+finalist\b|\b\d+\s*x\s*state\s+final/i.test(hay)) {
+  if (
+    /\bstate\s+placer\b|\bstate\s+finalist\b|\b(state\s+)?runner[\s-]?up\b|\b\d+\s*x\s*state\s+final|\bnchsaa\b.*\b(finalist|semifinal|\d+\s*(?:st|nd|rd|th))\b/i.test(
+      hay,
+    )
+  ) {
     found.add("State placer")
   }
 
   if (/\bstate\s+qualifier\b|\bstate\s+qual\b|\bqualified\s+for\s+state\b|\bstate\s+qualification\b/i.test(hay)) {
     found.add("State qualifier")
   }
+}
+
+/** Honors row on flip-card back: achievements text + NHSCA/Super 32 placements + NCHSAA JSON on athlete row. */
+function getCommitmentHonorBadgesForAthlete(athlete: Athlete): string[] {
+  const found = new Set<string>()
+
+  const textLines: string[] = []
+  pushAchievementLines(textLines, athlete.achievements)
+  pushAchievementLines(textLines, athlete.additional_achievements)
+  const hayText = textLines.join("\n").toLowerCase().replace(/_/g, " ")
+  applyHonorPatternsFromHay(found, hayText)
+
+  const snippets = collectHonorPlacementSnippets(athlete)
+  const haySnippets = snippets.join("\n").toLowerCase().replace(/_/g, " ")
+  applyHonorPatternsFromHay(found, haySnippets)
+
+  applyNationalBracketTop8FromSnippets(found, snippets)
+  applyNchsaaJsonStateHonors(found, (athlete as Record<string, unknown>).nchsaa_results)
 
   return COMMITMENT_HONOR_ORDER.filter((b) => found.has(b))
 }

@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { fetchNchsaaResultsForAthleteProfile } from "@/lib/nchsaa-profile-fetch"
+import type { NchsaaRowForProfile } from "@/lib/nchsaa-results-json"
+export { nchsaaJsonToProfileRows, type NchsaaRowForProfile } from "@/lib/nchsaa-results-json"
 
 /**
  * Normalize name for matching: same person "Aaron Ellison" and "Ellison, Aaron" => same string.
@@ -112,59 +114,6 @@ export function getNameVariations(name: string): string[] {
 
   addVariantsFor(n)
   return [...variations]
-}
-
-export type NchsaaRowForProfile = {
-  year: number
-  classification: string
-  weight_class: string
-  place: number | null
-  school: string
-  wrestler_name: string
-}
-
-/**
- * Map `athletes.nchsaa_results` JSON/JSONB (array of state rows) into the same shape as table rows.
- * Used when `wrestling_nchsaa_results` is empty, missing in this Supabase project, or as a supplement.
- */
-export function nchsaaJsonToProfileRows(raw: unknown, fallbackWrestlerName: string): NchsaaRowForProfile[] {
-  if (raw == null) return []
-  let arr: unknown[] = []
-  if (Array.isArray(raw)) {
-    arr = raw
-  } else if (typeof raw === "string") {
-    try {
-      const p = JSON.parse(raw)
-      arr = Array.isArray(p) ? p : []
-    } catch {
-      return []
-    }
-  } else {
-    return []
-  }
-
-  const name = (fallbackWrestlerName ?? "").trim() || "Unknown"
-  const out: NchsaaRowForProfile[] = []
-  for (const item of arr) {
-    if (!item || typeof item !== "object") continue
-    const o = item as Record<string, unknown>
-    const year = Number(o.year)
-    if (!year || Number.isNaN(year)) continue
-    const placeRaw = o.place
-    const place =
-      placeRaw == null || placeRaw === ""
-        ? null
-        : Number(placeRaw)
-    out.push({
-      year,
-      classification: String(o.classification ?? (o as any).class ?? ""),
-      weight_class: String(o.weight_class ?? (o as any).weightClass ?? ""),
-      place: place != null && !Number.isNaN(place) ? place : null,
-      school: String(o.school ?? ""),
-      wrestler_name: String(o.wrestler_name ?? (o as any).wrestlerName ?? name),
-    })
-  }
-  return out.sort((a, b) => b.year - a.year)
 }
 
 /**

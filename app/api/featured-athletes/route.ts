@@ -49,6 +49,25 @@ async function attachDivision(
   return mappedAthletes
 }
 
+/** Pass through DB fields used by commitment-card honor chips (not only free-text achievements). */
+function honorSourceFieldsFromRow(athlete: Record<string, unknown>) {
+  return {
+    nhsca_2023_placement: athlete.nhsca_2023_placement ?? undefined,
+    nhsca_2023_record: athlete.nhsca_2023_record ?? undefined,
+    nhsca_2024_placement: athlete.nhsca_2024_placement ?? undefined,
+    nhsca_2024_record: athlete.nhsca_2024_record ?? undefined,
+    nhsca_2025_placement: athlete.nhsca_2025_placement ?? undefined,
+    nhsca_2025_record: athlete.nhsca_2025_record ?? undefined,
+    super_32_2023_placement: athlete.super_32_2023_placement ?? undefined,
+    super_32_2023_record: athlete.super_32_2023_record ?? undefined,
+    super_32_2024_placement: athlete.super_32_2024_placement ?? undefined,
+    super_32_2024_record: athlete.super_32_2024_record ?? undefined,
+    super_32_2025_placement: athlete.super_32_2025_placement ?? undefined,
+    super_32_2025_record: athlete.super_32_2025_record ?? undefined,
+    nchsaa_results: athlete.nchsaa_results ?? undefined,
+  }
+}
+
 export async function GET(request: Request) {
   try {
     const supabase = createAdminClient()
@@ -114,6 +133,7 @@ export async function GET(request: Request) {
           gender: athlete.gender || "Male",
           commitment_date: athlete.commitment_date || athlete.commitmentdate || null,
           prospect_ranking: athlete.prospect_ranking ?? undefined,
+          ...honorSourceFieldsFromRow(athlete),
         }))
         await attachDivision(supabase, athletes, mappedAthletes)
 
@@ -272,6 +292,7 @@ export async function GET(request: Request) {
         gender: athlete.gender || "Male",
         commitment_date: athlete.commitment_date || athlete.commitmentdate || athlete.updated_at || null,
         prospect_ranking: athlete.prospect_ranking ?? undefined,
+        ...honorSourceFieldsFromRow(athlete),
       }))
       await attachDivision(supabase, sortedCommitments, recentCommitmentAthletes)
 
@@ -358,6 +379,7 @@ export async function GET(request: Request) {
       gender: athlete.gender || "Male",
       commitment_date: athlete.commitment_date || athlete.commitmentdate || null,
       prospect_ranking: athlete.prospect_ranking ?? undefined,
+      ...honorSourceFieldsFromRow(athlete),
     }))
     await attachDivision(supabase, validAthletes, mappedAthletes)
 
