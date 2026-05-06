@@ -102,28 +102,32 @@ export function FundraisingHero({
 
         {hero.ncUnitedCommunityFundCents > 0 ? (
           <p className="mx-auto mt-4 max-w-2xl text-xs leading-relaxed text-white/85 sm:mx-0">
-            <span className="font-semibold text-white">NC United fund</span> (community programs, not tied to a single
-            athlete): {formatUsdWhole(hero.ncUnitedCommunityFundCents)}
+            <span className="font-semibold text-white">NC United fund</span> — community programs, not tied to a single
+            athlete: <span className="tabular-nums font-semibold text-white">{formatUsdWhole(hero.ncUnitedCommunityFundCents)}</span>
           </p>
         ) : null}
 
         <p className="mx-auto mt-4 max-w-2xl text-xs leading-relaxed text-white/90 sm:mx-0">
           <strong className="text-white">Raised</strong>, <strong className="text-white">Donations</strong>, and{" "}
-          <strong className="text-white">Race checkouts</strong> match the public Spartan campaign totals (
-          <HardLink href="/spartan" className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
-            /spartan
-          </HardLink>
-          ) for{" "}
-          <strong className="text-white">{hubTransparency.campaignDisplayName}</strong> in the last{" "}
-          <span className="tabular-nums text-white">{hubTransparency.lookbackDays}</span> days. The athlete leaderboard ranks
-          athlete-credited gifts across every NC United hub campaign in that window (
+          <strong className="text-white">Race checkouts</strong> summarize NC United hub fundraising for the last{" "}
+          <span className="tabular-nums text-white">{hubTransparency.lookbackDays}</span> days — donations credited at
+          checkout, plus paid event registrations run through hub campaigns. The{" "}
           <HardLink
             href={`/fundraising/leaderboard?campaign=all&days=${hubTransparency.lookbackDays}`}
             className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline"
           >
-            combined leaderboard
-          </HardLink>
-          ).
+            combined athlete leaderboard
+          </HardLink>{" "}
+          ranks athlete-credited gifts across every NC United hub campaign in that window.
+        </p>
+
+        <p className="mx-auto mt-2 max-w-2xl text-[11px] leading-relaxed text-white/55 sm:mx-0">
+          When checkout uses the current timed race fundraiser ({hubTransparency.campaignDisplayName}), these headline figures
+          reconcile with{" "}
+          <HardLink href="/spartan" className="font-semibold text-[#C8A94A]/90 underline-offset-4 hover:underline">
+            public Spartan totals
+          </HardLink>{" "}
+          on <span className="text-white/70">/spartan</span> for the same {hubTransparency.lookbackDays}-day window.
         </p>
 
         <p
