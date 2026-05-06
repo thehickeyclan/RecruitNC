@@ -160,7 +160,19 @@ export function GuildCreditAllocationSection({ spartanAthletes, spartanLoading, 
             "bg-gradient-to-r from-[#9a7b28] via-[#CBAF5D] to-[#e6d5a5]",
           )}
         >
-          <span className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#03154C] sm:text-sm">Transfer to Guild</span>
+          <span className="flex min-w-0 flex-1 items-center gap-2.5">
+            <span
+              role="status"
+              className={cn(
+                "h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-white/60 transition-colors",
+                loading ? "animate-pulse bg-[#03154C]/30" : guildParentUserId ? "bg-emerald-500" : "bg-[#03154C]/35",
+              )}
+              aria-label={
+                loading ? "Checking Guild connection" : guildParentUserId ? "Guild connected" : "Guild not linked yet"
+              }
+            />
+            <span className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#03154C] sm:text-sm">Transfer to Guild</span>
+          </span>
           <ChevronDown
             className={cn("h-5 w-5 shrink-0 text-[#03154C] transition-transform duration-200", open && "rotate-180")}
             aria-hidden
