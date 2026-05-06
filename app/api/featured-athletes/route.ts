@@ -50,7 +50,7 @@ async function attachDivision(
   return mappedAthletes
 }
 
-/** Pass through placement + NCHSAA state JSON only (honor chips — no tournament win–loss records). */
+/** Pass through NHSCA/Super32 placements only (honor chips — no win–loss records). */
 function honorSourceFieldsFromRow(athlete: Record<string, unknown>) {
   return {
     nhsca_2023_placement: athlete.nhsca_2023_placement ?? undefined,
@@ -59,7 +59,6 @@ function honorSourceFieldsFromRow(athlete: Record<string, unknown>) {
     super_32_2023_placement: athlete.super_32_2023_placement ?? undefined,
     super_32_2024_placement: athlete.super_32_2024_placement ?? undefined,
     super_32_2025_placement: athlete.super_32_2025_placement ?? undefined,
-    nchsaa_results: athlete.nchsaa_results ?? undefined,
   }
 }
 

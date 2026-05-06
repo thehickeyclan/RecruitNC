@@ -65,7 +65,6 @@ export async function GET(request: Request) {
             super_32_2023_record, super_32_2023_placement,
             super_32_2024_record, super_32_2024_placement,
             super_32_2025_record, super_32_2025_placement,
-            nchsaa_results,
             prospect_ranking
           `,
           { count: "exact" },
@@ -235,7 +234,6 @@ export async function GET(request: Request) {
         super_32_2024_placement: athlete.super_32_2024_placement ?? undefined,
         super_32_2025_record: athlete.super_32_2025_record ?? undefined,
         super_32_2025_placement: athlete.super_32_2025_placement ?? undefined,
-        nchsaa_results: athlete.nchsaa_results ?? undefined,
         prospect_ranking: athlete.prospect_ranking ?? undefined,
       }
     })

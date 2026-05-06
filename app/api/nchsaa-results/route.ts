@@ -13,8 +13,8 @@ import {
  * is "Last, First" (e.g. Hickey, Gavin) while the CRM has "Gavin Hickey".
  *
  * Now: same pipeline as unified profiles — `getNCHSAAResultsForProfile` (dual-token ILIKE + name
- * variations + plausible year window). Optional `athleteId` loads `wrestling_name` + `nchsaa_results`
- * JSON merge like `GET /api/athlete/[id]`.
+ * variations + plausible year window). Optional `athleteId` loads name + `wrestling_name` + graduation year.
+ * (Some DBs have no `athletes.nchsaa_results` JSON column — NCHSAA rows come from `wrestling_nchsaa_results` only.)
  */
 export async function GET(request: Request) {
   try {
@@ -41,7 +41,7 @@ export async function GET(request: Request) {
     if (athleteId) {
       const { data: row } = await supabase
         .from("athletes")
-        .select("name, wrestling_name, nchsaa_results, graduationyear")
+        .select("name, wrestling_name, graduationyear")
         .eq("id", athleteId)
         .maybeSingle()
 
@@ -49,7 +49,6 @@ export async function GET(request: Request) {
         const rowName = (row.name ?? "").toString().trim()
         if (rowName) name = rowName
         wrestlingName = (row.wrestling_name ?? "").toString().trim()
-        nchsaaJson = (row as { nchsaa_results?: unknown }).nchsaa_results
         const gy = Number((row as { graduationyear?: unknown }).graduationyear)
         if (Number.isFinite(gy) && gy >= 1990 && gy <= 2100) {
           gradYear = gy
