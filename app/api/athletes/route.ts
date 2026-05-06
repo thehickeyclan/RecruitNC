@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { normalizeCollegeToCanonical } from "@/lib/canonical-college"
 import { getCollegesByIds } from "@/lib/colleges"
 import { matchesDivisionFilter } from "@/lib/division-display"
+import { jsonSafeClone } from "@/lib/json-safe-clone"
 
 export const dynamic = "force-dynamic"
 
@@ -274,18 +275,20 @@ export async function GET(request: Request) {
     console.log(`✅ Athletes API: Successfully processed ${resultAthletes.length} athletes`)
 
     const totalPages = Math.ceil((count || 0) / limit)
-    const response = NextResponse.json({
-      success: true,
-      athletes: resultAthletes,
-      pagination: {
-        page,
-        limit,
-        total: count || 0,
-        totalPages,
-        hasNext: page < totalPages,
-        hasPrev: page > 1,
-      },
-    })
+    const response = NextResponse.json(
+      jsonSafeClone({
+        success: true,
+        athletes: resultAthletes,
+        pagination: {
+          page,
+          limit,
+          total: count || 0,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1,
+        },
+      }),
+    )
 
     response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate")
 

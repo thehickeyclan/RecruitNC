@@ -214,9 +214,10 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
           const gradeGroups: { [key: string]: { wins: number; losses: number } } = {}
 
           data.matches.forEach((season: any) => {
-            const raw = (season.grade || season.year || "Unknown").trim()
-            if (!raw || raw === "Unknown") return
-            const grade = toCanonicalGrade(raw)
+            const raw = season.grade ?? season.year ?? "Unknown"
+            const rawStr = typeof raw === "string" ? raw : String(raw)
+            if (!rawStr || rawStr === "Unknown") return
+            const grade = toCanonicalGrade(rawStr)
 
             if (!gradeGroups[grade]) {
               gradeGroups[grade] = { wins: 0, losses: 0 }
@@ -918,24 +919,29 @@ function applyHonorPatternsFromHay(found: Set<string>, hay: string) {
   }
 }
 
-/** Honors row on flip-card back: achievements text + placement fields only + NCHSAA JSON places (no W–L records). */
+/** Honors row on flip-card back — never throw render (bad regex/data must not blank the card). */
 function getCommitmentHonorBadgesForAthlete(athlete: Athlete): string[] {
-  const found = new Set<string>()
+  try {
+    const found = new Set<string>()
 
-  const textLines: string[] = []
-  pushAchievementLines(textLines, athlete.achievements)
-  pushAchievementLines(textLines, athlete.additional_achievements)
-  const hayText = textLines.join("\n").toLowerCase().replace(/_/g, " ")
-  applyHonorPatternsFromHay(found, hayText)
+    const textLines: string[] = []
+    pushAchievementLines(textLines, athlete.achievements)
+    pushAchievementLines(textLines, athlete.additional_achievements)
+    const hayText = textLines.join("\n").toLowerCase().replace(/_/g, " ")
+    applyHonorPatternsFromHay(found, hayText)
 
-  const snippets = collectHonorPlacementSnippets(athlete)
-  const haySnippets = snippets.join("\n").toLowerCase().replace(/_/g, " ")
-  applyHonorPatternsFromHay(found, haySnippets)
+    const snippets = collectHonorPlacementSnippets(athlete)
+    const haySnippets = snippets.join("\n").toLowerCase().replace(/_/g, " ")
+    applyHonorPatternsFromHay(found, haySnippets)
 
-  applyNationalBracketTop8FromSnippets(found, snippets)
-  applyNchsaaJsonStateHonors(found, (athlete as Record<string, unknown>).nchsaa_results)
+    applyNationalBracketTop8FromSnippets(found, snippets)
+    applyNchsaaJsonStateHonors(found, (athlete as Record<string, unknown>).nchsaa_results)
 
-  return COMMITMENT_HONOR_ORDER.filter((b) => found.has(b))
+    return COMMITMENT_HONOR_ORDER.filter((b) => found.has(b))
+  } catch (e) {
+    console.error("[RecruitNC] getCommitmentHonorBadgesForAthlete:", e)
+    return []
+  }
 }
 
 const getNCUnitedTeamStatus = (athlete: Athlete) => {

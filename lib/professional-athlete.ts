@@ -37,6 +37,48 @@ export type ProfessionalAthlete = {
   rankings?: { nc_rank?: string }
 }
 
+function cryptoRandomId(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    // @ts-ignore
+    return crypto.randomUUID()
+  }
+  return "athlete-" + Math.random().toString(36).slice(2, 10)
+}
+
+/** Slim plain rows for the client — avoids odd blobs from `athletes.nchsaa_results`. */
+function sanitizeNchsaaResults(raw: unknown): unknown[] | undefined {
+  if (raw == null) return undefined
+  let arr: unknown[] = []
+  if (Array.isArray(raw)) {
+    arr = raw
+  } else if (typeof raw === "string") {
+    try {
+      const p = JSON.parse(raw)
+      if (!Array.isArray(p)) return undefined
+      arr = p
+    } catch {
+      return undefined
+    }
+  } else {
+    return undefined
+  }
+
+  const slim: Record<string, unknown>[] = []
+  for (const item of arr.slice(0, 100)) {
+    if (!item || typeof item !== "object") continue
+    const o = item as Record<string, unknown>
+    slim.push({
+      year: o.year,
+      place: o.place,
+      classification: o.classification ?? o.class,
+      weight_class: o.weight_class ?? o.weightClass,
+      school: o.school,
+      wrestler_name: o.wrestler_name ?? o.wrestlerName,
+    })
+  }
+  return slim.length ? slim : undefined
+}
+
 /**
  * Best-effort normalization from any backend or legacy shape to ProfessionalAthlete.
  */
@@ -132,7 +174,7 @@ export function normalizeAthlete(input: any): ProfessionalAthlete {
   const super_32_2023_record = nhscaStr(input?.super_32_2023_record)
   const super_32_2023_placement = nhscaStr(input?.super_32_2023_placement)
 
-  const nchsaa_results = input?.nchsaa_results
+  const nchsaa_results = sanitizeNchsaaResults(input?.nchsaa_results)
 
   const prospect_ranking: number | string | null | undefined =
     input?.prospect_ranking != null ? input.prospect_ranking : undefined
@@ -178,13 +220,18 @@ export function normalizeAthlete(input: any): ProfessionalAthlete {
 
 export function normalizeAthleteList(list: any): ProfessionalAthlete[] {
   if (!Array.isArray(list)) return []
-  return list.map(normalizeAthlete)
-}
-
-function cryptoRandomId(): string {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    // @ts-ignore
-    return crypto.randomUUID()
+  const out: ProfessionalAthlete[] = []
+  for (let i = 0; i < list.length; i++) {
+    try {
+      out.push(normalizeAthlete(list[i]))
+    } catch (e) {
+      console.error("[RecruitNC] normalizeAthlete failed for commitment feed row:", i, e)
+      const raw = list[i] as Record<string, unknown>
+      out.push({
+        id: String(raw?.id ?? `row-${i}`),
+        name: String(raw?.name ?? "Unknown Athlete"),
+      })
+    }
   }
-  return "athlete-" + Math.random().toString(36).slice(2, 10)
+  return out
 }

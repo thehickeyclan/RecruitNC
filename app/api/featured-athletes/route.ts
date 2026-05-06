@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getCollegesByIds } from "@/lib/colleges"
+import { jsonSafeClone } from "@/lib/json-safe-clone"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 60 // Cache for 60 seconds
@@ -142,10 +143,10 @@ export async function GET(request: Request) {
 
         // Return the mapped athletes (up to 3)
         return NextResponse.json(
-          {
+          jsonSafeClone({
             success: true,
             athletes: mappedAthletes.slice(0, 3),
-          },
+          }),
           {
             headers: {
               "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
@@ -292,10 +293,10 @@ export async function GET(request: Request) {
 
       if (recentCommitmentAthletes.length > 0) {
         return NextResponse.json(
-          {
+          jsonSafeClone({
             success: true,
             athletes: recentCommitmentAthletes,
-          },
+          }),
           {
             headers: {
               "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
@@ -379,7 +380,14 @@ export async function GET(request: Request) {
 
     console.log(`✅ Featured Athletes API: Successfully mapped ${mappedAthletes.length} athletes`)
     console.log("[v0] ===== API RESPONSE DEBUG =====")
-    console.log("[v0] First athlete in response:", JSON.stringify(mappedAthletes[0], null, 2))
+    try {
+      console.log(
+        "[v0] First athlete in response:",
+        JSON.stringify(mappedAthletes[0], (_k, v) => (typeof v === "bigint" ? v.toString() : v), 2),
+      )
+    } catch {
+      console.log("[v0] First athlete in response: [omit — not JSON-safe]")
+    }
     console.log("[v0] ===== API RESPONSE DEBUG END =====")
 
     // Only use rankings as fallback if no recent commitments are available
@@ -389,10 +397,10 @@ export async function GET(request: Request) {
       : mappedAthletes
 
     return NextResponse.json(
-      {
+      jsonSafeClone({
         success: true,
         athletes: finalAthletes.slice(0, 3),
-      },
+      }),
       {
         headers: {
           "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
