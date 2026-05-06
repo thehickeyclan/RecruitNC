@@ -21,7 +21,8 @@ export function PlaybookMembersRedCallout() {
         paths usually need a 501(c)(3).
       </p>
       <p className="mt-2 text-sm leading-relaxed text-white/75">
-        NC United checkout gives receipts, athlete attribution, and a nonprofit ledger. Orientation takes minutes.
+        NC United checkout gives receipts, athlete attribution, and a nonprofit ledger — then credits and reimbursements flow through{" "}
+        <strong className="text-white">Profile → Digital wallet</strong>, not a personal Venmo balance. Orientation takes minutes.
       </p>
       <div className="mt-5">
         <HardLink

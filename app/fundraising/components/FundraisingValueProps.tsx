@@ -101,8 +101,8 @@ export function FundraisingValueProps({ hero }: { hero: FundraisingHubHeroStats 
 
         <p className="mt-8 text-sm text-white/90">
           Deeper playbook (mindset, donors, matching):{" "}
-          <HardLink href="/fundraising/playbook/guide" className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
-            Fundraising guide
+          <HardLink href="/fundraising/playbook/members" className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
+            Fundraising playbook
           </HardLink>
           .
         </p>

@@ -42,15 +42,8 @@ export function NavigationPaths() {
           Three ways to support
         </h2>
         <p className="mx-auto mt-4 max-w-2xl text-center text-sm leading-relaxed text-white/75">
-          Choose how you&apos;d like to support NC United below. Athletes and families planning outreach can jump to the
-          public{" "}
-          <HardLink
-            href="/fundraising/playbook/guide"
-            className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline"
-          >
-            fundraising guide
-          </HardLink>{" "}
-          — or keep scrolling for the longer playbook walkthrough. No account required.
+          Choose how you&apos;d like to give — every path uses secure nonprofit checkout, email receipts, and clear credit to an athlete or the
+          training fund.
         </p>
         <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
           {CARDS.map((c) => {

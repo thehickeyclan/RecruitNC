@@ -7,11 +7,12 @@ import { HardLink } from "@/components/hard-link"
 import { FundraisingFooter } from "@/app/fundraising/components/FundraisingFooter"
 import { PlaybookMembersRedCallout } from "./components/red-callout"
 import { PlaybookMembersContent } from "./components/playbook-members-content"
+import { FundraisingPlaybookAckSection } from "../_components/fundraising-playbook-ack-section"
 
 export const metadata: Metadata = {
-  title: "Fundraising playbook (members) | NC United Wrestling",
+  title: "Fundraising playbook | NC United Wrestling",
   description:
-    "Full NC United fundraising playbook for signed-in families — Venmo alternatives, 501(c)(3) model, outreach, and execution patterns.",
+    "NC United fundraising playbook for families — 501(c)(3) model, Digital Wallet, outreach, activation. Sign-in required.",
   robots: { index: false, follow: false },
 }
 
@@ -29,6 +30,13 @@ export default async function FundraisingPlaybookMembersPage() {
   const referer = h.get("referer")
   await logPlaybookMembersVisit(supabase, user, referer)
 
+  const { data: ackRow } = await supabase
+    .from("fundraising_playbook_acks")
+    .select("acknowledged_at")
+    .eq("user_id", user.id)
+    .maybeSingle()
+  const playbookAckAt = typeof ackRow?.acknowledged_at === "string" ? ackRow.acknowledged_at : null
+
   return (
     <div className="min-h-screen bg-[#061224] text-white">
       <div className="border-b border-white/10 bg-[#0B2545]/90">
@@ -37,9 +45,6 @@ export default async function FundraisingPlaybookMembersPage() {
             ← Fundraising hub
           </HardLink>
           <div className="flex flex-wrap items-center gap-4 text-xs font-semibold uppercase tracking-wide text-white/55">
-            <HardLink href="/fundraising/playbook/guide" className="hover:text-[#C8A94A] hover:underline">
-              Public guide
-            </HardLink>
             <HardLink href="/fundraising/playbook" className="hover:text-[#C8A94A] hover:underline">
               Staff tools
             </HardLink>
@@ -52,6 +57,11 @@ export default async function FundraisingPlaybookMembersPage() {
       </div>
 
       <PlaybookMembersContent />
+      <FundraisingPlaybookAckSection
+        id="playbook-activation-ack"
+        initialAcknowledgedAt={playbookAckAt}
+        userSignedIn
+      />
       <FundraisingFooter />
     </div>
   )

@@ -33,7 +33,7 @@ export function FundraisingFooter() {
           </p>
         </div>
 
-        <nav aria-label="Fundraising hub links" className="flex w-full max-w-2xl flex-col gap-6 text-sm">
+        <nav aria-label="Giving hub links" className="flex w-full max-w-2xl flex-col gap-6 text-sm">
           <div className={`${displayFont("flex flex-wrap items-center justify-center gap-x-4 gap-y-2")}`}>
             <HardLink href="/fundraising/athletes" className="text-white/90 hover:text-[#C8A94A]">
               Athlete profiles
@@ -63,7 +63,7 @@ export function FundraisingFooter() {
               Live feed
             </HardLink>
           </div>
-          <div className={`${displayFont("flex flex-wrap items-center justify-center gap-x-4 gap-y-2")}`}>
+          <div className={`${displayFont("flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs sm:text-sm")}`}>
             <HardLink href="/fundraising/honor-roll" className="text-white/90 hover:text-[#C8A94A]">
               Honor roll
             </HardLink>
@@ -76,14 +76,14 @@ export function FundraisingFooter() {
             <span className="text-white/25" aria-hidden>
               ·
             </span>
-            <HardLink href="/fundraising/playbook/guide" className="text-white/90 hover:text-[#C8A94A]">
-              Fundraising guide
+            <HardLink href="/fundraising/playbook/members" className="text-white/90 hover:text-[#C8A94A]">
+              Fundraising playbook
             </HardLink>
             <span className="text-white/25" aria-hidden>
               ·
             </span>
             <HardLink href="/fundraising/playbook" className="text-white/90 hover:text-[#C8A94A]">
-              Staff sign-in
+              Staff CRM (sign in)
             </HardLink>
           </div>
         </nav>

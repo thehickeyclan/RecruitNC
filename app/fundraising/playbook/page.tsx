@@ -5,7 +5,8 @@ import { HardLink } from "@/components/hard-link"
 
 export const metadata: Metadata = {
   title: "Staff fundraising tools | NC United Wrestling",
-  description: "RecruitNC admin sign-in for donor CRM and exports. The public fundraising guide is a separate page.",
+  description:
+    "RecruitNC sign-in for donor CRM and exports. Family playbook pages require a RecruitNC account; the giving hub stays public for donors.",
   robots: { index: false, follow: false },
 }
 
@@ -43,18 +44,11 @@ export default async function FundraisingPlaybookGatePage() {
           Staff fundraising tools
         </h1>
         <p className="mt-4 text-sm leading-relaxed text-white/75">
-          Looking for the <strong className="text-white">tracked members playbook</strong> (full walkthrough after sign-in)?{" "}
+          Family fundraising playbook (full walkthrough — RecruitNC sign-in, visit tracking):{" "}
           <HardLink href="/fundraising/playbook/members" className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
-            Open playbook · members
+            Open playbook
           </HardLink>
           .
-        </p>
-        <p className="mt-4 text-sm leading-relaxed text-white/75">
-          Looking for the <strong className="text-white">family fundraising guide</strong> (how to ask, matching gifts, donor types)?{" "}
-          <HardLink href="/fundraising/playbook/guide" className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
-            Open the public guide
-          </HardLink>{" "}
-          — no admin access required.
         </p>
         <p className="mt-4 text-sm leading-relaxed text-white/75">
           You&apos;re signed in as <span className="font-medium text-white/90">{user.email}</span>. Donor CRM, exports, and

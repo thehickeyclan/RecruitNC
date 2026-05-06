@@ -7,16 +7,15 @@ import { ActiveCampaigns } from "./components/ActiveCampaigns"
 import { LeaderboardPreview } from "./components/LeaderboardPreview"
 import { LiveDonationStream } from "./components/LiveDonationStream"
 import { WhyNCUnited } from "./components/WhyNCUnited"
-import { PlaybookTeaser } from "./components/PlaybookTeaser"
 import { HonorRollPreview } from "./components/HonorRollPreview"
 import { CorporatePartners } from "./components/CorporatePartners"
 import { HowItWorks } from "./components/HowItWorks"
 import { FundraisingFooter } from "./components/FundraisingFooter"
 
 export const metadata: Metadata = {
-  title: "Fundraising Hub | NC United Wrestling",
+  title: "Give | NC United Wrestling",
   description:
-    "Central 501(c)(3) fundraising hub for NC United Wrestling — tax-deductible athlete support, training fund, campaigns, honor roll, and live activity. EIN 99-3757238.",
+    "Tax-deductible 501(c)(3) gifts to NC United Wrestling — support a wrestler or the training fund, secure checkout, leaderboards, and public gift activity. EIN 99-3757238.",
 }
 
 export default async function FundraisingPortalHomePage() {
@@ -37,7 +36,6 @@ export default async function FundraisingPortalHomePage() {
       <LeaderboardPreview rows={leaderboardPreview} hubTransparency={snapshot.hubTransparency} />
       <LiveDonationStream initial={liveFeedInitial} hubTransparency={snapshot.hubTransparency} />
       <WhyNCUnited hero={snapshot.hero} />
-      <PlaybookTeaser />
       <HonorRollPreview
         individuals={hallOfFame?.individuals ?? []}
         organizations={hallOfFame?.organizations ?? []}

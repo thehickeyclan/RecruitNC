@@ -15,6 +15,7 @@ import { FundraisingAthleteMessageSection } from "./fundraising-athlete-message"
 import { FundraisingMilestoneTrophy } from "./fundraising-milestone-trophy"
 import { FundraisingOwnerPanel } from "./fundraising-owner-panel"
 import { FundraisingAdminAssignmentPanel } from "./fundraising-admin-assignment-panel"
+import { FundraisingActivationPanel } from "./fundraising-activation-panel"
 import { recruitingProfilePhotoFromRow } from "@/lib/recruiting-profile-photo"
 import { fetchThankYouAckLedgerKeys } from "@/lib/fundraising/supporter-thank-you-ack"
 import { getFundraisingWiringAdminSnapshot } from "@/lib/fundraising/fundraising-wiring-status"
@@ -85,6 +86,25 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
   const isFundraisingManager =
     !!(user?.id && athleteId && (await userCanManageFundraisingForAthlete(admin, user.id, athleteId)))
   const viewerIsRecruitNcAdmin = !!(user?.id && (await userIsRecruitNcAdmin(admin, user.id)))
+
+  let playbookAcknowledgedAt: string | null = null
+  let latestActivationStatus: "none" | "pending" | "approved" | "rejected" = "none"
+  if (user?.id) {
+    const slugNorm = slug.trim().toLowerCase()
+    const [{ data: ackRow }, { data: reqRows }] = await Promise.all([
+      supabase.from("fundraising_playbook_acks").select("acknowledged_at").eq("user_id", user.id).maybeSingle(),
+      supabase
+        .from("fundraising_activation_requests")
+        .select("status")
+        .eq("user_id", user.id)
+        .eq("fundraising_slug", slugNorm)
+        .order("created_at", { ascending: false })
+        .limit(1),
+    ])
+    playbookAcknowledgedAt = typeof ackRow?.acknowledged_at === "string" ? ackRow.acknowledged_at : null
+    const st = reqRows?.[0]?.status
+    if (st === "pending" || st === "approved" || st === "rejected") latestActivationStatus = st
+  }
 
   const snapshotLedger =
     resolved.ledgerCodes.length > 0 ? resolved.ledgerCodes : code != null ? [code] : []
@@ -179,6 +199,16 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
             wiringSnapshot={wiringSnapshot}
           />
         ) : null}
+
+        <FundraisingActivationPanel
+          fundraisingSlug={slug}
+          athleteId={athleteId}
+          userId={user?.id ?? null}
+          playbookAcknowledgedAt={playbookAcknowledgedAt}
+          latestActivationStatus={latestActivationStatus}
+          isFundraisingManager={isFundraisingManager}
+          viewerIsRecruitNcAdmin={viewerIsRecruitNcAdmin}
+        />
 
         <p className="font-[family-name:var(--font-fundraising-display)] mt-8 text-[11px] font-bold uppercase tracking-[0.28em] text-[#CC0000]">
           Official NC United gift page

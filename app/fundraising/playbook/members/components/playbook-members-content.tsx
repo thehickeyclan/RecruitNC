@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 import { HardLink } from "@/components/hard-link"
 import { SpartanDonorMixGrounding } from "@/app/fundraising/playbook/_components/spartan-donor-mix-grounding"
+import { DigitalWalletGovernancePlaybook } from "@/app/fundraising/playbook/_components/digital-wallet-governance-playbook"
 
 function DH({ as: Tag = "h2", children }: { as?: "h1" | "h2" | "h3"; children: ReactNode }) {
   const base =
@@ -49,13 +50,13 @@ function DesktopBlock({ className = "", children }: { className?: string; childr
 
 function OlFlawed() {
   const items = [
-    "Standalone crowdfunding — fees, weak receipts, repeated asks get harder.",
-    "Venmo / Cash App as primary — friction for matching, businesses, and serious donors.",
-    "Car wash / bake sale only — enormous volunteer hours for thin yield vs structured nonprofit checkout.",
-    "Passive posts alone — likes ≠ tuition; direct asks convert.",
-    "Routing outside 501(c)(3) — corporate and foundation lanes collapse.",
-    "One-off chaos each season — no list compounding, no CRM rhythm.",
-    "Waiting until crisis — relationships built early convert better than panic.",
+    "Crowdfunding alone — fees add up, receipts can be thin, and repeat asks get harder without a nonprofit spine.",
+    "Venmo / Cash App as the main lane — matching gifts, businesses, and careful donors often need documented 501(c)(3) gifts.",
+    "Bake sales / car washes only — huge volunteer hours for modest yield compared with structured nonprofit checkout.",
+    "Passive posts without direct asks — engagement feels good; personal invites actually close.",
+    "Giving routed outside 501(c)(3) — many corporate, foundation, and matching paths simply never open.",
+    "Starting from scratch every season — lists and trust compound when you steward donors intentionally.",
+    "Waiting until money is acute — relationships built early convert kinder than panic outreach.",
   ]
   return (
     <ol className="mt-4 list-decimal space-y-3 pl-5 text-white/80 marker:text-[#C8A94A]">
@@ -73,7 +74,27 @@ export function PlaybookMembersContent() {
         The NC United fundraising playbook · Members
       </p>
       <DH as="h1">How the NC wrestling community raised $21,000 in 16 days</DH>
-      <p className="mt-2 text-base text-white/65">And how your athlete can replicate the system — not the hustle-by-accident version.</p>
+      <p className="mt-2 text-base text-white/65">
+        And how your athlete can use the same playbook — with clearer rails and less reliance on guilt posts or informal apps alone.
+      </p>
+
+      <Lead>
+        Fundraising can feel awkward at first. Most families aren&apos;t avoiding generosity — they&apos;re running into patterns that quietly cap
+        results and drain energy. Before we go tactical, it helps to name what usually doesn&apos;t carry a whole season by itself.
+      </Lead>
+
+      <DH as="h2">What tends not to work well</DH>
+      <P className="text-white/75">
+        None of this is personal — these are common shortcuts across youth sports. They&apos;re just rarely enough once tuition, travel, and
+        training stack up.
+      </P>
+      <OlFlawed />
+
+      <DH as="h2">What&apos;s possible when the rails fit</DH>
+      <p className="mt-2 text-sm text-white/60">
+        Recent NC United windows — Spartan Fayetteville among them — showed what happens when donors get nonprofit checkout, receipts, and clear
+        attribution.
+      </p>
 
       <div className="mt-8 grid gap-4 rounded-xl border border-white/10 bg-[#0B2545]/50 px-4 py-6 sm:grid-cols-4">
         {[
@@ -89,15 +110,16 @@ export function PlaybookMembersContent() {
         ))}
       </div>
 
-      <DH as="h2">Read this first · Before you post that Venmo link</DH>
+      <DH as="h2">Informal rails vs nonprofit checkout</DH>
       <Lead>
-        These approaches cost NC athletes real money every season — not because people don&apos;t care, but because the plumbing is wrong.
+        Same nominal dollars — different doors for matching, businesses, and donors who need documentation. Illustration only; talk with a tax
+        advisor about what applies to you.
       </Lead>
 
       <div className="mt-8 grid gap-6 md:grid-cols-2">
         <div className="rounded-xl border border-white/10 bg-black/25 p-5">
           <p className="font-[family-name:var(--font-fundraising-display)] text-xs font-black uppercase tracking-wide text-white/55">
-            Wrong way
+            Informal rails
           </p>
           <p className="mt-2 font-semibold text-white">Venmo / Cash App / typical crowdfunding</p>
           <p className="mt-3 text-sm text-white/75">10 donors × $200 = $2,000 raised</p>
@@ -111,7 +133,7 @@ export function PlaybookMembersContent() {
         </div>
         <div className="rounded-xl border border-[#C8A94A]/35 bg-[#C8A94A]/10 p-5">
           <p className="font-[family-name:var(--font-fundraising-display)] text-xs font-black uppercase tracking-wide text-[#C8A94A]">
-            Right way
+            NC United checkout
           </p>
           <p className="mt-2 font-semibold text-white">NC United 501(c)(3) checkout</p>
           <p className="mt-3 text-sm text-white/85">10 donors × $200 = $2,000 raised</p>
@@ -128,14 +150,31 @@ export function PlaybookMembersContent() {
         </div>
       </div>
 
-      <DH as="h3">Seven flawed models</DH>
-      <OlFlawed />
-
       <DH as="h2">Fundraising is not begging · It is building investors</DH>
       <P>
         The athletes who raise the most are not always the ones with the biggest following. They make the clearest ask, tell the strongest
         story, and make it easy to say yes. Every NC wrestler has a story worth funding — the variable is whether they tell it with intention.
       </P>
+
+      <DH as="h2">Athlete-owned gratitude · Every gift</DH>
+      <P>
+        For <Strong>every donation</Strong>, the athlete should own the thank-you — not generic boilerplate from the organization alone. A timely
+        text is the <Strong>minimum standard</Strong>; a short note (handwritten or thoughtful DM/email) is <Strong>preferred</Strong> when you can.
+        People repeat gifts when they feel seen, not when the ledger silently ticks up.
+      </P>
+      <Ul>
+        <Li>
+          <Strong>Within about 48 hours:</Strong> the athlete sends a personal text or DM — name the donor, name what their gift supports (fees,
+          trip block, training block).
+        </Li>
+        <Li>
+          <Strong>Level up:</Strong> a note they can keep on the fridge — youth handwriting reads louder than a mass blast ever will.
+        </Li>
+        <Li>
+          <Strong>Parents:</Strong> help with logistics or reminders, but keep the athlete&apos;s voice in front — authenticity compounds trust and
+          repeat support.
+        </Li>
+      </Ul>
 
       <DH as="h2">The NC United model</DH>
       <P className="text-white/70">Five pillars no single family or for-profit page easily replaces.</P>
@@ -150,7 +189,7 @@ export function PlaybookMembersContent() {
             "Checkout, attribution to athletes, receipts, and accountability in one nonprofit ledger.",
           ],
           ["Community network", "Collective investment in NC wrestling development instead of every family improvising alone."],
-          ["Athlete accountability", "NC United provides rails; the outreach discipline is still yours."],
+          ["Athlete accountability", "NC United provides rails; outreach, follow-through, and athlete-led gratitude after every gift are still yours."],
           ["Radical transparency", "Public progress, live boards where campaigns run, and documentation donors expect."],
         ].map(([t, b]) => (
           <div key={String(t)} className="rounded-xl border border-white/10 bg-[#0B2545]/40 p-5">
@@ -159,6 +198,8 @@ export function PlaybookMembersContent() {
           </div>
         ))}
       </div>
+
+      <DigitalWalletGovernancePlaybook />
 
       <DH as="h2">Who can give — and how much</DH>
 
@@ -290,10 +331,14 @@ export function PlaybookMembersContent() {
           <Strong>A numeric ask</Strong> — &quot;20 people × $100&quot; beats &quot;anything helps&quot; alone.
         </Li>
         <Li>
-          <Strong>NC United checkout link</Strong> — mobile receipt + athlete credit + hub transparency.
+          <Strong>NC United checkout link</Strong> — mobile receipt + athlete credit + hub transparency; credited totals roll into{" "}
+          <Strong>Profile → Digital wallet</Strong> for Raised / Spent / Available (reimbursements + Guild — not informal paybacks).
         </Li>
         <Li>
           <Strong>A written outreach list</Strong> — most athletes find dozens of real contacts when they commit it to paper.
+        </Li>
+        <Li>
+          <Strong>Thank-you discipline</Strong> — athlete-led gratitude on every gift (text minimum; note preferred) so donors remember why they said yes.
         </Li>
       </Ul>
       <P>
@@ -314,7 +359,8 @@ export function PlaybookMembersContent() {
         <Strong>Week 2 — social proof.</Strong> Post with a mat photo, specific goal, dollar ask, link, deadline.
       </P>
       <P>
-        <Strong>Week 3 — follow up.</Strong> Polite reminders convert people who meant to donate.
+        <Strong>Week 3 — follow up.</Strong> Polite reminders convert people who meant to donate. Layer in thank-yous for gifts already received —
+        consistency signals you&apos;re building relationships, not blasting a feed.
       </P>
       <P>
         <Strong>Ongoing — business corridor.</Strong> Parallel track with intros and one-page proposals for local businesses.
@@ -429,10 +475,10 @@ export function PlaybookMembersContent() {
           Fundraising hub →
         </HardLink>
         <HardLink
-          href="/fundraising/playbook/guide"
+          href="/profile"
           className="inline-flex min-h-[52px] items-center justify-center rounded-sm border border-white/15 px-8 text-sm font-semibold text-white/80 underline-offset-4 hover:text-[#C8A94A] hover:underline"
         >
-          Public guide (shareable link)
+          Profile · Digital wallet →
         </HardLink>
       </div>
 

@@ -64,13 +64,13 @@ export function FundraisingHero({
         <h1
           className={`${displayFont("mx-auto mt-6 max-w-[22ch] text-[clamp(2.25rem,8vw,4.5rem)] font-black uppercase leading-[0.92] tracking-[-0.02em] text-white sm:mx-0")}`}
         >
-          NC United <span className="text-[#C8A94A]">×</span> Fundraising
+          NC United <span className="text-[#C8A94A]">×</span> Giving
         </h1>
 
         <p className="mx-auto mt-6 max-w-2xl text-base font-medium leading-relaxed text-white sm:mx-0 sm:text-lg">
-          NC wrestlers earn their development. Their community makes it possible. Every gift is tax-deductible to NC United and is
-          credited to the athlete you choose at checkout—NC United absorbs card-processing fees so their campaign total reflects
-          what you pay.
+          Support NC wrestlers with a tax-deductible gift to NC United (501(c)(3)). Choose an athlete or the training fund at checkout — your
+          receipt reflects the nonprofit, and credit follows the wrestler you select. NC United absorbs card-processing fees so their campaign
+          total reflects what you pay.
         </p>
 
         <div

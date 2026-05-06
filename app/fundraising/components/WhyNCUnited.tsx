@@ -1,5 +1,4 @@
 import type { FundraisingHubHeroStats } from "@/lib/fundraising/hub-data"
-import { HardLink } from "@/components/hard-link"
 import { formatUsdWhole } from "./FundraisingHero"
 
 function displayFont(c: string) {
@@ -105,15 +104,6 @@ export function WhyNCUnited({ hero }: { hero: FundraisingHubHeroStats }) {
           third-party fees in a consumer fundraising flow. Illustration only—talk with your CPA about what applies to you.
         </div>
       ) : null}
-
-      <div className="mx-auto mt-8 max-w-6xl text-center sm:text-left">
-        <HardLink
-          href="/fundraising/playbook/guide"
-          className={`${displayFont("text-sm font-extrabold uppercase tracking-wide text-[#C8A94A] underline-offset-4 hover:underline")}`}
-        >
-          Read the full fundraising guide →
-        </HardLink>
-      </div>
     </section>
   )
 }
