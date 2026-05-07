@@ -11,6 +11,7 @@ import { formatUsdWhole } from "@/app/fundraising/components/FundraisingHero"
 import { userCanManageFundraisingForAthlete, userIsRecruitNcAdmin } from "@/lib/fundraising/athlete-fundraising-access"
 import { FundraisingAthleteQrCard } from "./fundraising-athlete-qr-card"
 import { FundraisingAthleteEmbeddedCheckout } from "./fundraising-athlete-embedded-checkout"
+import { FundraisingAthleteGoalSection } from "./fundraising-athlete-goal"
 import { FundraisingAthleteMessageSection } from "./fundraising-athlete-message"
 import { FundraisingMilestoneTrophy } from "./fundraising-milestone-trophy"
 import { FundraisingOwnerPanel } from "./fundraising-owner-panel"
@@ -166,8 +167,6 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
 
   const goalCents = profile?.campaign_goal_cents ?? null
   const raisedForBar = stats?.raisedCents ?? 0
-  const progressPct =
-    goalCents != null && goalCents > 0 ? Math.min(100, Math.round((raisedForBar / goalCents) * 100)) : null
 
   return (
     <div
@@ -268,15 +267,31 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
         ) : null}
 
         {athleteId ? (
-          <FundraisingAthleteMessageSection
-            key={profile ? `${profile.updated_at}-msg` : `${slug}-msg`}
-            displayName={displayName}
-            athleteId={athleteId}
-            hasFundraisingProfile={profile != null}
-            canEdit={isFundraisingManager}
-            isRecruitNcAdmin={viewerIsRecruitNcAdmin}
-            initialBio={profile?.bio?.trim() ?? ""}
-          />
+          <>
+            <FundraisingAthleteGoalSection
+              key={
+                profile
+                  ? `${profile.updated_at}-${goalCents ?? "none"}-goal`
+                  : `${slug}-${goalCents ?? "none"}-goal`
+              }
+              displayName={displayName}
+              athleteId={athleteId}
+              hasFundraisingProfile={profile != null}
+              canEdit={isFundraisingManager}
+              isRecruitNcAdmin={viewerIsRecruitNcAdmin}
+              initialGoalCents={goalCents}
+              raisedCents={raisedForBar}
+            />
+            <FundraisingAthleteMessageSection
+              key={profile ? `${profile.updated_at}-msg` : `${slug}-msg`}
+              displayName={displayName}
+              athleteId={athleteId}
+              hasFundraisingProfile={profile != null}
+              canEdit={isFundraisingManager}
+              isRecruitNcAdmin={viewerIsRecruitNcAdmin}
+              initialBio={profile?.bio?.trim() ?? ""}
+            />
+          </>
         ) : null}
 
         <div className="mt-8 rounded-xl border border-white/10 bg-[#0B2545]/55 px-4 py-4 sm:px-5 sm:py-5">
@@ -331,24 +346,6 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
             </>
           )}
         </p>
-
-        {goalCents != null && goalCents > 0 ? (
-          <div className="mt-8 rounded-xl border border-white/10 bg-[#0B2545]/70 px-5 py-5">
-            <h2 className="font-[family-name:var(--font-fundraising-display)] text-sm font-bold uppercase tracking-wide text-[#C8A94A]">
-              Campaign goal
-            </h2>
-            <p className="mt-2 text-sm text-white/60">
-              {formatUsdWhole(raisedForBar)} raised of {formatUsdWhole(goalCents)}
-              {progressPct != null ? ` · ${progressPct}%` : ""}
-            </p>
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
-              <div
-                className="h-full rounded-full bg-[#C8A94A] transition-[width] duration-500"
-                style={{ width: `${progressPct ?? 0}%` }}
-              />
-            </div>
-          </div>
-        ) : null}
 
         {code && stats ? (
           <>

@@ -8,6 +8,9 @@ import { normalizeFundraisingProfileSlug } from "@/lib/fundraising/athlete-fundr
 import { fundraisingSlugFromCode } from "@/lib/fundraising/athlete-fundraising-slug"
 
 const MAX_BIO = 6000
+/** Minimum campaign goal when set (cents) — $50 */
+const MIN_CAMPAIGN_GOAL_CENTS = 50 * 100
+const MAX_CAMPAIGN_GOAL_CENTS = 500_000 * 100
 const SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/
 const NCU_RE = /^NCU-[A-Za-z0-9]+-\d{2}$/i
 
@@ -23,18 +26,54 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    let body: { bio?: unknown } = {}
+    let body: { bio?: unknown; campaign_goal_cents?: unknown } = {}
     try {
       body = await request.json()
     } catch {
       return NextResponse.json({ error: "Invalid JSON" }, { status: 400 })
     }
 
-    const rawBio = body.bio
-    if (typeof rawBio !== "string") {
-      return NextResponse.json({ error: "bio must be a string" }, { status: 400 })
+    const hasBioKey = Object.prototype.hasOwnProperty.call(body, "bio")
+    const hasGoalKey = Object.prototype.hasOwnProperty.call(body, "campaign_goal_cents")
+    if (!hasBioKey && !hasGoalKey) {
+      return NextResponse.json({ error: "Provide bio and/or campaign_goal_cents" }, { status: 400 })
     }
-    const bio = rawBio.trim().slice(0, MAX_BIO) || null
+
+    let nextBio: string | null | undefined = undefined
+    if (hasBioKey) {
+      const rawBio = body.bio
+      if (typeof rawBio !== "string") {
+        return NextResponse.json({ error: "bio must be a string" }, { status: 400 })
+      }
+      nextBio = rawBio.trim().slice(0, MAX_BIO) || null
+    }
+
+    let nextGoalCents: number | null | undefined = undefined
+    if (hasGoalKey) {
+      const g = body.campaign_goal_cents
+      if (g === null) {
+        nextGoalCents = null
+      } else if (typeof g === "number" && Number.isFinite(g)) {
+        const cents = Math.round(g)
+        if (!Number.isSafeInteger(cents) || cents < 0) {
+          return NextResponse.json({ error: "campaign_goal_cents must be a non-negative integer (or null)" }, { status: 400 })
+        }
+        if (cents === 0) {
+          nextGoalCents = null
+        } else if (cents < MIN_CAMPAIGN_GOAL_CENTS) {
+          return NextResponse.json(
+            { error: `Campaign goal must be at least $${MIN_CAMPAIGN_GOAL_CENTS / 100}` },
+            { status: 400 },
+          )
+        } else if (cents > MAX_CAMPAIGN_GOAL_CENTS) {
+          return NextResponse.json({ error: "Campaign goal is too large" }, { status: 400 })
+        } else {
+          nextGoalCents = cents
+        }
+      } else {
+        return NextResponse.json({ error: "campaign_goal_cents must be a number or null" }, { status: 400 })
+      }
+    }
 
     const admin = createAdminClient()
     const { data: athlete, error: aErr } = await admin
@@ -54,7 +93,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     const { data: profile, error: pErr } = await admin
       .from("athlete_fundraising_profiles")
-      .select("id, athlete_id, slug, bio")
+      .select("id, athlete_id, slug, bio, campaign_goal_cents")
       .eq("athlete_id", athleteId)
       .maybeSingle()
 
@@ -79,6 +118,17 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         )
       }
 
+      const bioForInsert = nextBio !== undefined ? nextBio : null
+      const goalForInsert = nextGoalCents !== undefined ? nextGoalCents : null
+      const hasPageContent =
+        (bioForInsert != null && bioForInsert.length > 0) || (goalForInsert != null && goalForInsert > 0)
+      if (!hasPageContent) {
+        return NextResponse.json(
+          { error: "Add a note or a fundraising goal to create your gift page the first time." },
+          { status: 400 },
+        )
+      }
+
       const primary =
         entry?.code?.trim() && NCU_RE.test(entry.code.trim().toUpperCase())
           ? entry.code.trim().toUpperCase()
@@ -90,14 +140,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         .insert({
           athlete_id: athleteId,
           slug,
-          bio,
+          bio: bioForInsert,
           photo_url: null,
           is_active: true,
-          campaign_goal_cents: null,
+          campaign_goal_cents: goalForInsert,
           primary_fundraising_code: primary,
           updated_at: now,
         })
-        .select("id, slug, bio, updated_at")
+        .select("id, slug, bio, campaign_goal_cents, updated_at")
         .single()
 
       if (insErr) {
@@ -114,11 +164,15 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return NextResponse.json({ success: true, profile: created })
     }
 
+    const patch: Record<string, unknown> = { updated_at: new Date().toISOString() }
+    if (nextBio !== undefined) patch.bio = nextBio
+    if (nextGoalCents !== undefined) patch.campaign_goal_cents = nextGoalCents
+
     const { data: updated, error: uErr } = await admin
       .from("athlete_fundraising_profiles")
-      .update({ bio, updated_at: new Date().toISOString() })
+      .update(patch)
       .eq("id", profile.id)
-      .select("id, slug, bio, updated_at")
+      .select("id, slug, bio, campaign_goal_cents, updated_at")
       .single()
 
     if (uErr) {

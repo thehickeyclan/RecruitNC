@@ -22,27 +22,31 @@ function milestoneListCents(): number[] {
 }
 
 /**
- * Scale used only for cup fill + inner tick marks.
- * Previously we divided by the full $50k ladder, so ~$500 showed as ~1% fill (invisible).
- * Now the liquid rises toward the next milestone / goal so early dollars read clearly.
+ * Scale for cup fill + inner ticks.
+ * When the athlete sets a campaign goal, the cup fills to **100% at that goal** (still clamps if raised exceeds goal).
+ * Without a goal, fill scales toward the next milestone so early dollars stay visible.
  */
 function cupScaleMaxCents(raised: number, goal: number | null | undefined): number {
   const lastMilestoneCents = FUNDRAISING_MILESTONE_DOLLARS[FUNDRAISING_MILESTONE_DOLLARS.length - 1]! * 100
-  const asc = FUNDRAISING_MILESTONE_DOLLARS.map((d) => d * 100)
-  const nextAbove = asc.find((c) => c > raised) ?? lastMilestoneCents
+  const MIN_SPAN = 25_000 // $250 — minimum cup scale when idle
 
-  let target = nextAbove
-  if (goal != null && goal > 0 && raised < goal) {
-    target = Math.max(target, goal)
+  if (goal != null && goal > 0) {
+    return Math.max(goal, MIN_SPAN)
   }
 
-  const MIN_SPAN = 25_000 // $250 — avoid divide-by-zero-ish sliver when idle
-  return Math.min(lastMilestoneCents, Math.max(target, MIN_SPAN))
+  const asc = FUNDRAISING_MILESTONE_DOLLARS.map((d) => d * 100)
+  const nextAbove = asc.find((c) => c > raised) ?? lastMilestoneCents
+  return Math.min(lastMilestoneCents, Math.max(nextAbove, MIN_SPAN))
 }
 
 export function FundraisingMilestoneTrophy({ raisedCents, goalCents, athleteLabel }: Props) {
   const cupMaxCents = cupScaleMaxCents(raisedCents, goalCents)
-  const fillRatio = cupMaxCents > 0 ? Math.min(1, raisedCents / cupMaxCents) : 0
+  const fillRatio =
+    goalCents != null && goalCents > 0
+      ? Math.min(1, raisedCents / goalCents)
+      : cupMaxCents > 0
+        ? Math.min(1, raisedCents / cupMaxCents)
+        : 0
   const innerH = VB.bottomY - VB.topY
   const fillH = innerH * fillRatio
   const milestones = milestoneListCents()
@@ -50,8 +54,12 @@ export function FundraisingMilestoneTrophy({ raisedCents, goalCents, athleteLabe
   const cupTicks = milestones.filter((c) => c <= cupMaxCents)
 
   const aria = athleteLabel?.trim()
-    ? `${athleteLabel}: ${formatUsdWhole(raisedCents)} raised; cup fill scales toward ${formatUsdWhole(cupMaxCents)}.`
-    : `${formatUsdWhole(raisedCents)} raised; cup fill scales toward ${formatUsdWhole(cupMaxCents)}.`
+    ? goalCents != null && goalCents > 0
+      ? `${athleteLabel}: ${formatUsdWhole(raisedCents)} raised toward goal ${formatUsdWhole(goalCents)}.`
+      : `${athleteLabel}: ${formatUsdWhole(raisedCents)} raised; cup fill scales toward ${formatUsdWhole(cupMaxCents)}.`
+    : goalCents != null && goalCents > 0
+      ? `${formatUsdWhole(raisedCents)} raised toward goal ${formatUsdWhole(goalCents)}.`
+      : `${formatUsdWhole(raisedCents)} raised; cup fill scales toward ${formatUsdWhole(cupMaxCents)}.`
 
   return (
     <div className="mt-8 rounded-xl border border-[#C8A94A]/25 bg-[#0B2545]/55 px-4 py-5 sm:px-6 sm:py-6">
@@ -229,9 +237,17 @@ export function FundraisingMilestoneTrophy({ raisedCents, goalCents, athleteLabe
       </div>
 
       <p className="mt-4 text-center text-[11px] leading-snug text-white/40">
-        Fill level tracks progress toward your next milestone on this ladder (same ledger as your totals). Milestones on the
-        right show the full trail
-        {goalCents != null && goalCents > 0 ? "; your campaign goal also stretches the fill toward that target" : ""}.
+        {goalCents != null && goalCents > 0 ? (
+          <>
+            Fill level tracks progress toward <Strong>your campaign goal</Strong> (same ledger as your totals). Milestones on the right are reference
+            checkpoints along the way.
+          </>
+        ) : (
+          <>
+            Fill level tracks progress toward your next milestone on this ladder (same ledger as your totals). Milestones on the right show the full
+            trail.
+          </>
+        )}
       </p>
     </div>
   )
