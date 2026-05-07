@@ -1,3 +1,5 @@
+import { HardLink } from "@/components/hard-link"
+
 import { ScholarshipsInterestNotifyCard } from "./scholarships-interest-notify"
 
 function displayFont(c: string) {
@@ -12,17 +14,26 @@ export function ScholarshipsSoonSection() {
       aria-labelledby="fundraising-scholarships-heading"
     >
       <div className="mx-auto max-w-xl text-center">
-        <p className={`${displayFont("text-[10px] font-extrabold uppercase tracking-[0.26em] text-[#C8A94A]/95")}`}>Coming soon</p>
+        <p className={`${displayFont("text-[10px] font-extrabold uppercase tracking-[0.26em] text-[#C8A94A]/95")}`}>Scholarships</p>
         <h3
           id="fundraising-scholarships-heading"
           className={`${displayFont("mt-3 text-xl font-black uppercase tracking-tight text-white sm:text-2xl")}`}
         >
-          Training scholarships
+          NC United scholarship funds
         </h3>
         <p className="mx-auto mt-4 max-w-lg text-sm leading-relaxed text-white/72">
-          Not part of today&apos;s giving checkout — NC United will open need- and merit-based scholarships later. Leave your email to hear when
-          applications and funding details go live.
+          Named funds and applications live on the scholarships hub. Leave your email if you want a ping when new funds or deadlines post.
         </p>
+        <div className="mx-auto mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-center">
+          <HardLink
+            href="/fundraising/scholarships"
+            className={`${displayFont(
+              "inline-flex min-h-[48px] items-center justify-center rounded-sm bg-[#CC0000] px-8 text-xs font-extrabold uppercase tracking-[0.14em] text-white hover:bg-[#a80000]",
+            )}`}
+          >
+            Scholarships hub →
+          </HardLink>
+        </div>
         <div className="mx-auto mt-8 w-full max-w-lg">
           <ScholarshipsInterestNotifyCard />
         </div>

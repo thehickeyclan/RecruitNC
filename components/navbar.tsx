@@ -22,6 +22,10 @@ import {
   Crown,
   Archive,
   Activity,
+  Gift,
+  BookOpen,
+  GraduationCap,
+  CircleDollarSign,
 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { useCartStore } from "@/lib/store/cart-store"
@@ -251,6 +255,55 @@ export function Navbar() {
     { href: "/tricia-saunders-award", label: "Tricia Saunders Award", description: "NC female wrestler award winners", icon: Trophy },
   ]
 
+  /** Giving hub + athlete directory + playbook + scholarships (desktop dropdown + mobile section). */
+  const fundraisingNavItems = [
+    { href: "/fundraising", label: "Overview", description: "Campaigns, live feed, leaderboards, corporate partners", icon: Gift },
+    {
+      href: "/fundraising/athletes",
+      label: "Athlete gift pages",
+      description: "Search the directory & team fundraisers",
+      icon: Users,
+    },
+    {
+      href: "/fundraising/scholarships",
+      label: "Scholarships",
+      description: "Named funds, applications, award history",
+      icon: GraduationCap,
+    },
+    {
+      href: "/fundraising/playbook",
+      label: "Fundraising playbook",
+      description: "NC United team fundraising guide",
+      icon: BookOpen,
+    },
+    {
+      href: "/fundraising/give",
+      label: "Make a gift",
+      description: "Hub checkout — choose amount & receipt name",
+      icon: CircleDollarSign,
+    },
+    {
+      href: "/fundraising/training-fund",
+      label: "Training fund",
+      description: "National training & competition support",
+      icon: Trophy,
+    },
+    {
+      href: "/fundraising/leaderboard",
+      label: "Leaderboard",
+      description: "Top fundraisers & teams",
+      icon: Medal,
+    },
+    {
+      href: "/fundraising/activity?campaign=all",
+      label: "Gift log",
+      description: "Public donation activity",
+      icon: Activity,
+    },
+  ]
+
+  const fundraisingNavActiveRefs = [{ href: "/fundraising" }]
+
   const highlightNavItems = showMyRecruits
     ? [
         {
@@ -418,9 +471,39 @@ export function Navbar() {
               </DropdownMenu>
               <HardLink href="/calendar" className={navLinkClass("")}>Calendar</HardLink>
               <a href="/blue" className={navLinkClass("/blue")}>Blue</a>
-              <HardLink href="/fundraising" className={navLinkClass("/fundraising")}>
-                Fundraising
-              </HardLink>
+              <DropdownMenu>
+                <DropdownMenuTrigger className={navTriggerClass(fundraisingNavActiveRefs)}>
+                  <Gift className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
+                  Giving hub
+                  <ChevronDown className="h-4 w-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-80 max-h-[min(85vh,560px)] overflow-y-auto">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex items-center gap-2 font-semibold">
+                      <Gift className="h-4 w-4" aria-hidden />
+                      Giving hub
+                    </div>
+                    <p className="text-xs text-muted-foreground font-normal mt-1">
+                      Tax-deductible 501(c)(3) giving · NC United Wrestling
+                    </p>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {fundraisingNavItems.map((sub) => {
+                    const Icon = sub.icon
+                    return (
+                      <DropdownMenuItem key={sub.href} asChild>
+                        <a href={sub.href} className="flex flex-1 cursor-pointer items-start gap-3 py-2">
+                          <Icon className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" aria-hidden />
+                          <div className="flex flex-col gap-0.5">
+                            <span className="font-medium">{sub.label}</span>
+                            <span className="text-xs text-muted-foreground">{sub.description}</span>
+                          </div>
+                        </a>
+                      </DropdownMenuItem>
+                    )
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
               <a href="/national-team" className={navLinkClass("/national-team")}>National Team</a>
               <a href="/recruiting/tournaments" className={navLinkClass("/recruiting/tournaments")}>Recruiting</a>
               <a href="/news" className={navLinkClass("/news")}>News</a>
@@ -842,9 +925,21 @@ export function Navbar() {
                   </div>
                   <HardLink href="/calendar" className={mobileLinkClass("")} onNavigate={() => setIsOpen(false)}>Calendar</HardLink>
                   <a href="/blue" className={mobileLinkClass("/blue")} onClick={() => setIsOpen(false)}>Blue</a>
-                  <HardLink href="/fundraising" className={mobileLinkClass("/fundraising")} onNavigate={() => setIsOpen(false)}>
-                    Fundraising
-                  </HardLink>
+                  <div className="px-3">
+                    <div className={mobileMenuParentClass(isDropdownActive(fundraisingNavActiveRefs))}>Giving hub</div>
+                    <div className="space-y-2">
+                      {fundraisingNavItems.map((sub) => (
+                        <HardLink
+                          key={sub.href}
+                          href={sub.href}
+                          className={mobileSubLinkClass(sub.href.split("?")[0])}
+                          onNavigate={() => setIsOpen(false)}
+                        >
+                          {sub.label}
+                        </HardLink>
+                      ))}
+                    </div>
+                  </div>
                   <a href="/national-team" className={mobileLinkClass("/national-team")} onClick={() => setIsOpen(false)}>National Team</a>
                   <a href="/recruiting/tournaments" className={mobileLinkClass("/recruiting/tournaments")} onClick={() => setIsOpen(false)}>Recruiting</a>
                   <a href="/news" className={mobileLinkClass("/news")} onClick={() => setIsOpen(false)}>News</a>

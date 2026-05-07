@@ -68,6 +68,12 @@ export function FundraisingAthleteMessageSection({
     setError(null)
   }, [initialBio])
 
+  const startEditing = useCallback(() => {
+    setEditing(true)
+    setMessage(null)
+    setError(null)
+  }, [])
+
   const trimmed = bio.trim()
   const showPublicMessage = trimmed.length > 0
   /** Managers (athlete login + athlete_id, linked parent, or staff) may edit; first save can create the profile from roster NCU. */
@@ -82,11 +88,7 @@ export function FundraisingAthleteMessageSection({
         {showPencil && !editing ? (
           <button
             type="button"
-            onClick={() => {
-              setEditing(true)
-              setMessage(null)
-              setError(null)
-            }}
+            onClick={startEditing}
             className="-mr-1 -mt-0.5 flex shrink-0 items-center gap-1.5 rounded-md border border-white/15 bg-white/5 px-2.5 py-1.5 text-xs font-semibold text-[#C8A94A] hover:border-[#C8A94A]/50 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A94A]/60"
             aria-label="Edit note from athlete"
           >
@@ -96,11 +98,7 @@ export function FundraisingAthleteMessageSection({
         ) : null}
       </div>
 
-      {canEdit && !hasFundraisingProfile && !isRecruitNcAdmin ? (
-        <p className="mt-3 text-sm leading-relaxed text-white/65">
-          Tap <strong className="text-white/90">Edit</strong> to write your note — saving creates your gift page record if you&apos;re on the roster with an NCU code. If save fails, staff can add your profile in Fundraising admin.
-        </p>
-      ) : showPencil && editing ? (
+      {showPencil && editing ? (
         <>
           <p className="mt-2 text-xs leading-relaxed text-white/50">
             This message appears at the top of this gift page. Saving may create your fundraising profile the first time if your NCU code is on file.
@@ -135,12 +133,45 @@ export function FundraisingAthleteMessageSection({
             {error ? <span className="text-sm text-red-400/90">{error}</span> : null}
           </div>
         </>
-      ) : showPublicMessage ? (
-        <p className="mt-4 text-base leading-relaxed text-white/85">{trimmed}</p>
       ) : (
-        <p className="mt-4 text-sm italic text-white/50">
-          We&apos;ll share a personal note from {firstName} here when it&apos;s added — scroll down to give anytime.
-        </p>
+        <>
+          {canEdit && !hasFundraisingProfile && !isRecruitNcAdmin ? (
+            <p className="mt-3 text-sm leading-relaxed text-white/65">
+              Use <strong className="text-white/90">Edit</strong> above or the button below — saving creates your gift page record if this wrestler is on
+              the roster with an NCU code. If save fails, staff can add the profile in Fundraising admin.
+            </p>
+          ) : null}
+
+          {showPublicMessage ? (
+            showPencil ? (
+              <button
+                type="button"
+                onClick={startEditing}
+                className="mt-4 w-full rounded-lg border border-transparent px-1 py-1 text-left transition hover:border-[#C8A94A]/35 hover:bg-white/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A94A]/55"
+              >
+                <p className="text-base leading-relaxed text-white/85">{trimmed}</p>
+                <p className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-[#C8A94A]/90">Tap to edit</p>
+              </button>
+            ) : (
+              <p className="mt-4 text-base leading-relaxed text-white/85">{trimmed}</p>
+            )
+          ) : showPencil ? (
+            <button
+              type="button"
+              onClick={startEditing}
+              className="mt-4 w-full rounded-lg border border-dashed border-[#C8A94A]/35 bg-black/15 px-4 py-4 text-left transition hover:border-[#C8A94A]/55 hover:bg-black/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A94A]/60"
+            >
+              <p className="text-sm font-semibold text-white/90">Write {firstName}&apos;s note for donors</p>
+              <p className="mt-2 text-sm leading-relaxed text-white/55">
+                Opens the editor — same as <span className="text-[#C8A94A]">Edit</span> in the corner. This note appears at the top of the gift page.
+              </p>
+            </button>
+          ) : (
+            <p className="mt-4 text-sm italic text-white/50">
+              We&apos;ll share a personal note from {firstName} here when it&apos;s added — scroll down to give anytime.
+            </p>
+          )}
+        </>
       )}
     </section>
   )

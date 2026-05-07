@@ -14,7 +14,9 @@ export const SPARTAN_TEE_THRESHOLD_CENTS = 10_000
 
 const TEE_SIZES = new Set(["XS", "S", "M", "L", "XL", "2XL", "3XL"])
 
-const FUNDRAISING_ATHLETE_SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/
+/** Athlete gift slug, training fund, or `scholarships/{slug}` for NC United scholarship funds. */
+const FUNDRAISING_HUB_RETURN_SLUG_RE =
+  /^(?:[a-z0-9]+(?:-[a-z0-9]+)*|training-fund|scholarships\/[a-z0-9]+(?:-[a-z0-9]+)*)$/
 
 /** One-time tax-deductible donation; email captured for Spartan code fulfillment per partner process. */
 export async function POST(request: NextRequest) {
@@ -197,18 +199,25 @@ export async function POST(request: NextRequest) {
   }
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin
+  const scholarshipSlugFromReturn =
+    fundraisingHubReturnSlug.startsWith("scholarships/") ? fundraisingHubReturnSlug.slice("scholarships/".length) : ""
+
   const hubThanksPath =
     fundraisingHubReturnSlug === "training-fund"
       ? "/fundraising/training-fund/thanks"
-      : fundraisingHubReturnSlug
-        ? `/fundraising/athletes/${fundraisingHubReturnSlug}/thanks`
-        : "/fundraising/give/thanks"
+      : scholarshipSlugFromReturn
+        ? `/fundraising/scholarships/${scholarshipSlugFromReturn}/thanks`
+        : fundraisingHubReturnSlug
+          ? `/fundraising/athletes/${fundraisingHubReturnSlug}/thanks`
+          : "/fundraising/give/thanks"
   const hubCancelPath =
     fundraisingHubReturnSlug === "training-fund"
       ? `/fundraising/training-fund?cancelled=1`
-      : fundraisingHubReturnSlug
-        ? `/fundraising/athletes/${fundraisingHubReturnSlug}?cancelled=1`
-        : "/fundraising/give?cancelled=1"
+      : scholarshipSlugFromReturn
+        ? `/fundraising/scholarships/${scholarshipSlugFromReturn}?cancelled=1`
+        : fundraisingHubReturnSlug
+          ? `/fundraising/athletes/${fundraisingHubReturnSlug}?cancelled=1`
+          : "/fundraising/give?cancelled=1"
   const stripe = new Stripe(stripeSecret)
 
   const raceTier = raceEntryRequested && tierPreference ? getSpartanRaceTierOrDefault(tierPreference) : null
@@ -220,7 +229,9 @@ export async function POST(request: NextRequest) {
   let productDescription =
     raceEntryRequested && raceTier
       ? `Tax-deductible gift to NC United (501(c)(3)). Race intent: ${raceTier.name} — ${raceTier.detail}. ${raceTier.dates}. Register and choose Open vs Age Group on Spartan.com. After your gift, NC United coordinates with Spartan—entry details follow their process.`
-      : "Tax-deductible gift to NC United (501(c)(3)). This is support only—no Spartan race entry. If you chose a wrestler at checkout, your gift counts toward their fundraising."
+      : scholarshipSlugFromReturn
+        ? `Tax-deductible gift to NC United (501(c)(3)) designated for the scholarship fund on file (${scholarshipSlugFromReturn}).`
+        : "Tax-deductible gift to NC United (501(c)(3)). This is support only—no Spartan race entry. If you chose a wrestler at checkout, your gift counts toward their fundraising."
   if (raceEntryRequested && raceTier?.id === "super") {
     productDescription += " Team NC’s crew race is the Super 10K (May 3)."
   }
@@ -290,19 +301,24 @@ export async function POST(request: NextRequest) {
               ship_ctry: shipCountry,
             }
           : {}),
-        ...(athleteCode
+        ...(scholarshipSlugFromReturn
           ? {
-              athlete_code: athleteCode,
-              fundraising_code: athleteCode,
-              fundraising_attribution: "athlete",
-              ...(athleteDisplayName ? { athlete_display_name: athleteDisplayName } : {}),
+              fundraising_attribution: "scholarship_fund",
+              scholarship_slug: scholarshipSlugFromReturn,
             }
-          : hasManualCredit
+          : athleteCode
             ? {
-                manual_credit_name: manualAthleteName,
-                fundraising_attribution: "manual_name",
+                athlete_code: athleteCode,
+                fundraising_code: athleteCode,
+                fundraising_attribution: "athlete",
+                ...(athleteDisplayName ? { athlete_display_name: athleteDisplayName } : {}),
               }
-            : { fundraising_attribution: "general_nc_united" }),
+            : hasManualCredit
+              ? {
+                  manual_credit_name: manualAthleteName,
+                  fundraising_attribution: "manual_name",
+                }
+              : { fundraising_attribution: "general_nc_united" }),
       },
       success_url: fundraisingHub
         ? `${baseUrl}${hubThanksPath}?session_id={CHECKOUT_SESSION_ID}`

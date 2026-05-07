@@ -43,6 +43,12 @@ export function FundraisingFooter() {
 
         <nav aria-label="Giving hub links" className={`${displayFont("w-full max-w-2xl space-y-4 text-sm")}`}>
           <div className="grid grid-cols-1 gap-1 sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-2 sm:gap-y-2">
+            <HardLink href="/fundraising/scholarships" className={FOOTER_LINK_CLASS}>
+              Scholarships
+            </HardLink>
+            <span className="hidden text-white/25 sm:inline" aria-hidden>
+              ·
+            </span>
             <HardLink href="/fundraising/athletes" className={FOOTER_LINK_CLASS}>
               Athlete profiles
             </HardLink>

@@ -96,7 +96,7 @@ export function HowItWorks() {
             Two ways to give
           </h3>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-white/72 sm:mx-0">
-            Pick a wrestler or give to the NC United Training Fund — email receipt and NC United credit either way. Training scholarships and
+            Pick a wrestler or give to the NC United Training Fund — email receipt and NC United credit either way. Scholarship funds and
             corporate sponsors follow in the next sections.
           </p>
 

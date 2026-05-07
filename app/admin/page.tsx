@@ -10,7 +10,7 @@ import {
   Users, Trophy, Target, UserCheck, Clock, Calendar,
   School, Pencil, BarChart3, Settings, FileText,
   TrendingUp, Zap, Plus, Eye, UserPlus, RefreshCw, ClipboardList, Database, BookOpen, CreditCard,
-  ShoppingBag, Smile, Coins, LayoutDashboard, CircleDollarSign, Link2, Receipt,
+  ShoppingBag, Smile, Coins, LayoutDashboard, CircleDollarSign, Link2, Receipt, GraduationCap,
 } from "lucide-react"
 
 interface AdminStats {
@@ -246,6 +246,12 @@ export default function AdminDashboard() {
               <span className="w-full h-20 bg-gradient-to-br from-[#7c2d12] to-[#991b1b] hover:from-[#991b1b] hover:to-[#7c2d12] text-white shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex font-bold">
                 <Coins className="h-6 w-6" />
                 <span className="text-sm font-semibold">Fundraising</span>
+              </span>
+            </HardLink>
+            <HardLink href="/admin/scholarships" className="block">
+              <span className="w-full h-20 bg-gradient-to-br from-[#13294b] to-[#0B2545] hover:from-[#0B2545] hover:to-[#13294b] text-[#C8A94A] shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex font-bold border border-[#C8A94A]/30">
+                <GraduationCap className="h-6 w-6" />
+                <span className="text-sm font-semibold">Scholarships</span>
               </span>
             </HardLink>
             <HardLink href="/admin/expense-requests" className="block">

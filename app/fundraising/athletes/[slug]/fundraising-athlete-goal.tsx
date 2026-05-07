@@ -117,6 +117,13 @@ export function FundraisingAthleteGoalSection({
     setError(null)
   }, [goalCents])
 
+  const startEditing = useCallback(() => {
+    setEditing(true)
+    setMessage(null)
+    setError(null)
+    setDollarInput(dollarsFromCents(goalCents))
+  }, [goalCents])
+
   const showPublicGoal = goalCents != null && goalCents > 0
 
   return (
@@ -128,12 +135,7 @@ export function FundraisingAthleteGoalSection({
         {canEdit && !editing ? (
           <button
             type="button"
-            onClick={() => {
-              setEditing(true)
-              setMessage(null)
-              setError(null)
-              setDollarInput(dollarsFromCents(goalCents))
-            }}
+            onClick={startEditing}
             className="-mr-1 -mt-0.5 flex shrink-0 items-center gap-1.5 rounded-md border border-white/15 bg-white/5 px-2.5 py-1.5 text-xs font-semibold text-[#C8A94A] hover:border-[#C8A94A]/50 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A94A]/60"
             aria-label="Edit fundraising goal"
           >
@@ -145,7 +147,7 @@ export function FundraisingAthleteGoalSection({
 
       {canEdit && !hasFundraisingProfile && !isRecruitNcAdmin ? (
         <p className="mt-3 text-sm leading-relaxed text-white/65">
-          Tap <strong className="text-white/90">Edit</strong> to set a goal — saving creates your gift page record if you&apos;re on the roster with an NCU code (same as your note above).
+          Use <strong className="text-white/90">Edit</strong> above or tap below — saving creates your gift page record if this wrestler is on the roster with an NCU code (same as the note section).
         </p>
       ) : null}
 
@@ -202,30 +204,68 @@ export function FundraisingAthleteGoalSection({
         </>
       ) : showPublicGoal ? (
         <>
-          <p className="mt-4 text-sm text-white/70">
-            <span className="tabular-nums font-semibold text-white/90">{formatUsdWhole(raisedCents)}</span> raised of{" "}
-            <span className="tabular-nums text-white/90">{formatUsdWhole(goalCents!)}</span>
-            {progressPct != null ? (
-              <>
-                {" "}
-                · <span className="tabular-nums text-[#C8A94A]">{progressPct}%</span>
-              </>
-            ) : null}
-          </p>
-          <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
-            <div
-              className="h-full rounded-full bg-[#C8A94A] transition-[width] duration-500"
-              style={{ width: `${progressPct ?? 0}%` }}
-            />
-          </div>
-          <p className="mt-3 text-xs leading-relaxed text-white/45">
-            The trophy below fills with the same running total and reaches full at this goal.
-          </p>
+          {canEdit ? (
+            <button
+              type="button"
+              onClick={startEditing}
+              className="mt-4 w-full rounded-lg border border-transparent text-left transition hover:border-[#C8A94A]/35 hover:bg-white/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A94A]/55"
+            >
+              <p className="text-sm text-white/70">
+                <span className="tabular-nums font-semibold text-white/90">{formatUsdWhole(raisedCents)}</span> raised of{" "}
+                <span className="tabular-nums text-white/90">{formatUsdWhole(goalCents!)}</span>
+                {progressPct != null ? (
+                  <>
+                    {" "}
+                    · <span className="tabular-nums text-[#C8A94A]">{progressPct}%</span>
+                  </>
+                ) : null}
+              </p>
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
+                <div
+                  className="h-full rounded-full bg-[#C8A94A] transition-[width] duration-500"
+                  style={{ width: `${progressPct ?? 0}%` }}
+                />
+              </div>
+              <p className="mt-3 text-[11px] font-semibold uppercase tracking-wide text-[#C8A94A]/90">Tap to edit goal</p>
+              <p className="mt-2 text-xs leading-relaxed text-white/45">
+                The trophy below fills with the same running total and reaches full at this goal.
+              </p>
+            </button>
+          ) : (
+            <>
+              <p className="mt-4 text-sm text-white/70">
+                <span className="tabular-nums font-semibold text-white/90">{formatUsdWhole(raisedCents)}</span> raised of{" "}
+                <span className="tabular-nums text-white/90">{formatUsdWhole(goalCents!)}</span>
+                {progressPct != null ? (
+                  <>
+                    {" "}
+                    · <span className="tabular-nums text-[#C8A94A]">{progressPct}%</span>
+                  </>
+                ) : null}
+              </p>
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
+                <div
+                  className="h-full rounded-full bg-[#C8A94A] transition-[width] duration-500"
+                  style={{ width: `${progressPct ?? 0}%` }}
+                />
+              </div>
+              <p className="mt-3 text-xs leading-relaxed text-white/45">
+                The trophy below fills with the same running total and reaches full at this goal.
+              </p>
+            </>
+          )}
         </>
       ) : canEdit ? (
-        <p className="mt-4 text-sm italic text-white/50">
-          Set a fundraising goal so supporters see your target — it also sets when the trophy reads full.
-        </p>
+        <button
+          type="button"
+          onClick={startEditing}
+          className="mt-4 w-full rounded-lg border border-dashed border-[#C8A94A]/35 bg-black/15 px-4 py-4 text-left transition hover:border-[#C8A94A]/55 hover:bg-black/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A94A]/60"
+        >
+          <p className="text-sm font-semibold text-white/90">Set {firstName}&apos;s fundraising goal</p>
+          <p className="mt-2 text-sm italic text-white/55">
+            Tap here or use <span className="text-[#C8A94A]">Edit</span> — supporters see progress toward this target.
+          </p>
+        </button>
       ) : (
         <p className="mt-4 text-sm leading-relaxed text-white/55">
           No personal goal is shown here yet. RecruitNC staff, this wrestler, or a <strong className="text-white/80">parent account linked to this athlete</strong>{" "}
