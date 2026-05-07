@@ -8,6 +8,34 @@ import { recruitingProfilePhotoFromRow } from "@/lib/recruiting-profile-photo"
 
 const NCU_CODE_RE = /^NCU-[A-Za-z0-9]+-\d{2}$/i
 
+/** PostgREST `.in("id", …)` with hundreds of UUIDs can overflow URL length — batch fetches. */
+const ATHLETE_PHOTO_FETCH_BATCH = 100
+
+const ATHLETE_UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+async function fetchRecruitingPhotosByAthleteId(
+  admin: SupabaseClient,
+  candidateIds: string[],
+): Promise<Map<string, string | null>> {
+  const uuidIds = [...new Set(candidateIds.filter((id) => ATHLETE_UUID_RE.test(id)))]
+  const recruitingPhotoByAthleteId = new Map<string, string | null>()
+  for (let i = 0; i < uuidIds.length; i += ATHLETE_PHOTO_FETCH_BATCH) {
+    const slice = uuidIds.slice(i, i + ATHLETE_PHOTO_FETCH_BATCH)
+    const { data: athPhotoRows, error: pe } = await admin.from("athletes").select("*").in("id", slice)
+    if (pe) {
+      console.warn("[athlete-fundraising-profiles] athlete recruiting photos batch", pe.message)
+      continue
+    }
+    for (const row of athPhotoRows ?? []) {
+      const id = typeof row.id === "string" ? row.id : ""
+      if (!id) continue
+      recruitingPhotoByAthleteId.set(id, recruitingProfilePhotoFromRow(row as Record<string, unknown>))
+    }
+  }
+  return recruitingPhotoByAthleteId
+}
+
 export type AthleteFundraisingProfileRow = {
   id: string
   created_at: string
@@ -182,16 +210,8 @@ export async function getFundraisingAthletesIndexRows(
   const rosterAthleteIds = [...new Set(entries.map((e) => e.id).filter(Boolean))]
   const orphanIdsEarly = [...new Set((profiles ?? []).map((p) => (p as AthleteFundraisingProfileRow).athlete_id).filter(Boolean))]
   const allPhotoIds = [...new Set([...rosterAthleteIds, ...orphanIdsEarly])]
-  const recruitingPhotoByAthleteId = new Map<string, string | null>()
-  if (allPhotoIds.length > 0) {
-    const { data: athPhotoRows, error: pe } = await admin.from("athletes").select("*").in("id", allPhotoIds)
-    if (pe) console.warn("[athlete-fundraising-profiles] athlete recruiting photos", pe.message)
-    for (const row of athPhotoRows ?? []) {
-      const id = typeof row.id === "string" ? row.id : ""
-      if (!id) continue
-      recruitingPhotoByAthleteId.set(id, recruitingProfilePhotoFromRow(row as Record<string, unknown>))
-    }
-  }
+  const recruitingPhotoByAthleteId =
+    allPhotoIds.length > 0 ? await fetchRecruitingPhotosByAthleteId(admin, allPhotoIds) : new Map<string, string | null>()
 
   const pickDirectoryPhotoUrl = (athleteId: string, profilePhotoRaw: string | null | undefined): string | null => {
     const fromProfile =

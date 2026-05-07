@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react"
 import type { FundraisingAthleteIndexRow } from "@/lib/fundraising/athlete-fundraising-profiles"
 import { HardLink } from "@/components/hard-link"
+import { FundraisingAthleteDirectoryAvatar } from "@/app/fundraising/components/fundraising-athlete-directory-avatar"
 
 export function FundraisingAthletesDirectory({ rows }: { rows: FundraisingAthleteIndexRow[] }) {
   const [query, setQuery] = useState("")
@@ -48,14 +49,9 @@ export function FundraisingAthletesDirectory({ rows }: { rows: FundraisingAthlet
             <li key={r.athleteId}>
               <HardLink
                 href={`/fundraising/athletes/${r.hrefSlug}`}
-                className="flex min-h-[4.5rem] touch-manipulation flex-row gap-4 rounded-lg border border-white/10 bg-[#0B2545]/80 px-4 py-4 transition hover:border-[#C8A94A]/40"
+                className="flex min-h-[4.5rem] touch-manipulation flex-row items-center gap-4 rounded-lg border border-white/10 bg-[#0B2545]/80 px-4 py-4 transition hover:border-[#C8A94A]/40"
               >
-                {r.photoUrl ? (
-                  <div className="h-16 w-16 shrink-0 overflow-hidden rounded-md border border-white/10 bg-black/30">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={r.photoUrl} alt="" className="h-full w-full object-cover object-top" />
-                  </div>
-                ) : null}
+                <FundraisingAthleteDirectoryAvatar photoUrl={r.photoUrl} />
                 <div className="min-w-0 flex-1">
                   <span className="font-[family-name:var(--font-fundraising-display)] text-lg font-bold text-white">
                     {r.displayName}
