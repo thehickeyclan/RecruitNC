@@ -43,6 +43,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Password must be at least 6 characters long" }, { status: 400 })
     }
 
+    const roleNeedsPhone = profileType === "athlete" || profileType === "parent"
+    if (roleNeedsPhone) {
+      const digits = (cellPhone ?? "").replace(/\D/g, "")
+      if (digits.length < 10) {
+        return NextResponse.json(
+          {
+            error:
+              "Cell phone is required for athlete and parent accounts (enter at least 10 digits, country code optional).",
+          },
+          { status: 400 },
+        )
+      }
+    }
+
     console.log("[v0] Creating Supabase client...")
     const supabase = await createClient()
     console.log("[v0] Supabase client created")
