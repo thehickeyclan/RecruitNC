@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/admin-auth"
+import { recordFundraisingLedgerReimbursementPaid } from "@/lib/fundraising/ledger"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { notifyReimbursementStatusChangeDegraded } from "@/lib/reimbursement-notify"
 import type { ExpenseRequestStatus } from "@/lib/athlete-expense-requests"
@@ -121,6 +122,19 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
       amountCents: r.amount_cents,
       amountApprovedCents: r.amount_approved_cents,
       adminNotes: r.admin_notes,
+    })
+  }
+
+  const paidAmount =
+    typeof r.amount_approved_cents === "number" && r.amount_approved_cents > 0
+      ? r.amount_approved_cents
+      : r.amount_cents
+  if (was !== "paid" && updatedStatus === "paid" && paidAmount > 0) {
+    await recordFundraisingLedgerReimbursementPaid(admin, {
+      expenseRequestId: id,
+      athleteId: r.athlete_id,
+      amountCents: paidAmount,
+      detail: r.admin_notes,
     })
   }
 

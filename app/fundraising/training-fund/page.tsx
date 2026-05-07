@@ -63,12 +63,29 @@ export default async function FundraisingTrainingFundPage({
         </div>
 
         <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <div className="rounded-xl border border-white/10 bg-[#0B2545]/70 px-4 py-4 sm:col-span-1">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-[#C8A94A]">Total raised (fund)</p>
-            <p className="mt-2 text-lg font-black tabular-nums text-white sm:text-xl">{formatUsdWhole(stats.raisedCents)}</p>
+          <div className="rounded-xl border border-white/10 bg-[#0B2545]/70 px-4 py-4">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-[#C8A94A]">Available in pool</p>
+            <p className="mt-2 text-lg font-black tabular-nums text-white sm:text-xl">
+              {formatUsdWhole(stats.unallocatedBalanceCents)}
+            </p>
+            <p className="mt-1 text-[10px] leading-snug text-white/45">
+              After gifts received minus amounts committed to scholarships.
+            </p>
           </div>
           <div className="rounded-xl border border-white/10 bg-[#0B2545]/70 px-4 py-4">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-[#C8A94A]">Gifts</p>
+            <p className="text-[10px] font-bold uppercase tracking-wide text-[#C8A94A]">Gifts received</p>
+            <p className="mt-2 text-lg font-black tabular-nums text-white sm:text-xl">
+              {formatUsdWhole(stats.donationsReceivedCents)}
+            </p>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-[#0B2545]/70 px-4 py-4">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-[#C8A94A]">Committed to scholarships</p>
+            <p className="mt-2 text-lg font-black tabular-nums text-white sm:text-xl">
+              {formatUsdWhole(stats.allocatedToScholarshipsCents)}
+            </p>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-[#0B2545]/70 px-4 py-4">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-[#C8A94A]">Gift count</p>
             <p className="mt-2 text-lg font-black tabular-nums text-white sm:text-xl">{stats.giftCount}</p>
           </div>
           <div className="rounded-xl border border-white/10 bg-[#0B2545]/70 px-4 py-4">
@@ -80,12 +97,12 @@ export default async function FundraisingTrainingFundPage({
         </div>
 
         <p className="mt-6 text-center text-xs text-white/45">
-          Totals reflect completed gifts to the training fund (paid checkouts not credited to an individual NCU athlete
-          code), counted the same way as NC United&apos;s broader{" "}
+          “Gifts received” counts completed training-fund checkouts (no individual NCU athlete code), same basis as NC
+          United&apos;s broader{" "}
           <HardLink href="/spartan" className="text-[#C8A94A] underline-offset-4 hover:underline">
             fundraising ledger
           </HardLink>
-          .
+          . “Committed to scholarships” is the total of board allocations from this pool into named scholarship funds.
         </p>
 
         {gifts.length > 0 ? (

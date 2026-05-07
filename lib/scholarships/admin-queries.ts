@@ -66,7 +66,7 @@ export async function listReviewsForApplication(applicationId: string): Promise<
 }
 
 const ADMIN_SCHOLARSHIP_COLUMNS =
-  "id, slug, name, tagline, status, award_amount_cents, applications_open_date, applications_close_date, created_at"
+  "id, slug, name, tagline, status, award_amount_cents, total_donated_cents, applications_open_date, applications_close_date, created_at"
 
 export type ScholarshipAdminListRow = {
   id: string
@@ -75,9 +75,36 @@ export type ScholarshipAdminListRow = {
   tagline: string | null
   status: string
   award_amount_cents: number | null
+  total_donated_cents: number
   applications_open_date: string | null
   applications_close_date: string | null
   created_at: string
+}
+
+export type ScholarshipDonationAdminRow = {
+  id: string
+  created_at: string
+  scholarship_id: string
+  amount_cents: number
+  donor_name: string | null
+  donor_email: string | null
+  source: string | null
+  admin_note: string | null
+}
+
+export async function listScholarshipDonationsAdmin(scholarshipId: string): Promise<ScholarshipDonationAdminRow[]> {
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from("scholarship_donations")
+    .select("id, created_at, scholarship_id, amount_cents, donor_name, donor_email, source, admin_note")
+    .eq("scholarship_id", scholarshipId)
+    .order("created_at", { ascending: false })
+
+  if (error) {
+    console.warn("[scholarships] listScholarshipDonationsAdmin:", error.message)
+    return []
+  }
+  return (data ?? []) as ScholarshipDonationAdminRow[]
 }
 
 export async function getScholarshipAdminById(scholarshipId: string): Promise<ScholarshipAdminListRow | null> {
