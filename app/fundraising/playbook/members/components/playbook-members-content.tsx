@@ -64,8 +64,8 @@ export function PlaybookMembersContent() {
         <Strong>what NC United provides</Strong>, <Strong>what&apos;s worked for other wrestlers</Strong>, and <Strong>practical next steps</Strong>.
       </Lead>
       <P className="text-white/78">
-        Skim in order or jump ahead; the acknowledgment at the bottom only needs you to have scrolled through once so staff know you&apos;ve seen how
-        tax-deductible checkout fits athlete credits.
+        Skim in order or jump ahead. After reading, sign in on your athlete&apos;s gift page and use{" "}
+        <Strong>Request activation</Strong> so staff can link your RecruitNC login — no separate acknowledgment checkbox required here.
       </P>
       <Ul>
         <Li>
