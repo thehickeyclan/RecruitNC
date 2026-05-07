@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import type { FundraisingAthleteIndexRow } from "@/lib/fundraising/athlete-fundraising-profiles"
 import { submitFundraisingActivationRequestAction } from "@/app/actions/fundraising/fundraising-activation-actions"
 import { HardLink } from "@/components/hard-link"
+import { FundraisingAthleteDirectoryAvatar } from "@/app/fundraising/components/fundraising-athlete-directory-avatar"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/hooks/use-toast"
 
@@ -132,15 +133,18 @@ export function PlaybookFundraisingRequestSection({ rows, activationStatusBySlug
                 key={`${row.athleteId}-${row.hrefSlug}`}
                 className="flex flex-col gap-3 rounded-lg border border-white/12 bg-black/20 px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
               >
-                <div className="min-w-0">
-                  <p className="font-[family-name:var(--font-fundraising-display)] text-sm font-bold uppercase tracking-wide text-white">{row.displayName}</p>
-                  <p className="mt-1 font-mono text-[11px] text-white/50">{row.code}</p>
-                  {row.sublabel ? <p className="mt-1 text-xs text-white/55">{row.sublabel}</p> : null}
-                  <p className="mt-2">
-                    <HardLink href={giftHref} className="text-xs font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
-                      Open gift page →
-                    </HardLink>
-                  </p>
+                <div className="flex min-w-0 flex-1 gap-3 sm:items-center">
+                  <FundraisingAthleteDirectoryAvatar photoUrl={row.photoUrl} boxClassName="h-14 w-14" />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-[family-name:var(--font-fundraising-display)] text-sm font-bold uppercase tracking-wide text-white">{row.displayName}</p>
+                    <p className="mt-1 font-mono text-[11px] text-white/50">{row.code}</p>
+                    {row.sublabel ? <p className="mt-1 text-xs text-white/55">{row.sublabel}</p> : null}
+                    <p className="mt-2">
+                      <HardLink href={giftHref} className="text-xs font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
+                        Open gift page →
+                      </HardLink>
+                    </p>
+                  </div>
                 </div>
                 <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-end">
                   {st === "approved" ? (
