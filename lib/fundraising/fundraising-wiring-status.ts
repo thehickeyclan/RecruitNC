@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 
 /**
  * Admin-visible wiring for gift-page edits (`userCanManageFundraisingForAthlete` — non-admin paths).
- * Does not detect roster-email bootstrap (see `lib/fundraising/athlete-fundraising-access.ts`).
+ * Matches explicit `parent_athlete_links` + `user_profiles.athlete_id` only (no roster email guessing).
  */
 export type FundraisingWiringAdminSnapshot = {
   parentAthleteLinkCount: number
