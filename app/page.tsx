@@ -13,7 +13,6 @@ import { ProfessionalCommitmentCard } from "@/components/professional-commitment
 import { normalizeAthleteList } from "@/lib/professional-athlete"
 import { StoreProductPromotion } from "@/components/store-product-promotion"
 import { HomeNewsHighlightsCarousel } from "@/components/home-news-highlights-carousel"
-import { NhscaLiveDashboardBanner } from "@/components/nhsca-live-dashboard-banner"
 import { FundraisingPlaybookHomeBanner } from "@/components/fundraising-playbook-home-banner"
 
 type YearFilter = "All" | "2025" | "2026"
@@ -259,7 +258,6 @@ export default function HomePage() {
 
   return (
     <main className="bg-white">
-      <NhscaLiveDashboardBanner />
       <FundraisingPlaybookHomeBanner />
       <div className="container mx-auto px-4 py-8">
 
