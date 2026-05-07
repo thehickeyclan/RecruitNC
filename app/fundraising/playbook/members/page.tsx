@@ -6,12 +6,11 @@ import { logPlaybookMembersVisit } from "@/lib/fundraising/playbook-members-visi
 import { HardLink } from "@/components/hard-link"
 import { FundraisingFooter } from "@/app/fundraising/components/FundraisingFooter"
 import { PlaybookMembersContent } from "./components/playbook-members-content"
-import { FundraisingPlaybookAckSection } from "../_components/fundraising-playbook-ack-section"
 
 export const metadata: Metadata = {
   title: "Fundraising playbook | NC United Wrestling",
   description:
-    "Family fundraising playbook for NC United Wrestling — nonprofit checkout, outreach ideas, activation steps. Sign-in required.",
+    "Family fundraising playbook for NC United Wrestling — nonprofit checkout, outreach ideas. Sign-in required for activation requests.",
   robots: { index: false, follow: false },
 }
 
@@ -29,13 +28,6 @@ export default async function FundraisingPlaybookMembersPage() {
   const referer = h.get("referer")
   await logPlaybookMembersVisit(supabase, user, referer)
 
-  const { data: ackRow } = await supabase
-    .from("fundraising_playbook_acks")
-    .select("acknowledged_at")
-    .eq("user_id", user.id)
-    .maybeSingle()
-  const playbookAckAt = typeof ackRow?.acknowledged_at === "string" ? ackRow.acknowledged_at : null
-
   return (
     <div className="min-h-screen bg-[#061224] text-white">
       <div className="border-b border-white/10 bg-[#0B2545]/90">
@@ -52,11 +44,6 @@ export default async function FundraisingPlaybookMembersPage() {
       </div>
 
       <PlaybookMembersContent />
-      <FundraisingPlaybookAckSection
-        id="playbook-activation-ack"
-        initialAcknowledgedAt={playbookAckAt}
-        userSignedIn
-      />
       <FundraisingFooter />
     </div>
   )

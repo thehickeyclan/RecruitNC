@@ -14,7 +14,6 @@ type Props = {
   athleteId: string | null
   /** Logged-in user id — signed-out users see a compact sign-in prompt */
   userId: string | null
-  playbookAcknowledgedAt: string | null
   latestActivationStatus: LatestActivationStatus
   isFundraisingManager: boolean
   viewerIsRecruitNcAdmin: boolean
@@ -34,7 +33,6 @@ export function FundraisingActivationPanel({
   fundraisingSlug,
   athleteId,
   userId,
-  playbookAcknowledgedAt,
   latestActivationStatus,
   isFundraisingManager,
   viewerIsRecruitNcAdmin,
@@ -51,7 +49,6 @@ export function FundraisingActivationPanel({
 
   const pending = !isFundraisingManager && (optimisticPending || latestActivationStatus === "pending")
   const requestApproved = latestActivationStatus === "approved"
-  const playbookDone = !!playbookAcknowledgedAt
 
   const headline = useMemo(() => {
     if (isFundraisingManager) {
@@ -75,18 +72,11 @@ export function FundraisingActivationPanel({
         text: "Staff approved your request and linked your login to this wrestler. Refresh if needed, then use Profile → Fundraise for donor tools.",
       }
     }
-    if (!playbookDone) {
-      return {
-        tone: "neutral" as const,
-        label: "Playbook required",
-        text: "Read and acknowledge the fundraising playbook before you can request activation.",
-      }
-    }
     if (latestActivationStatus === "rejected") {
       return {
         tone: "neutral" as const,
         label: "Previous request declined",
-        text: "You can submit a new activation request after reviewing the playbook again if needed.",
+        text: "You can submit a new activation request when you&apos;re ready.",
       }
     }
     return {
@@ -94,7 +84,7 @@ export function FundraisingActivationPanel({
       label: "Not activated",
       text: "Request NC United staff to link your login so you can use donor tools for this athlete.",
     }
-  }, [isFundraisingManager, latestActivationStatus, pending, playbookDone, requestApproved])
+  }, [isFundraisingManager, latestActivationStatus, pending, requestApproved])
 
   if (viewerIsRecruitNcAdmin) return null
 
@@ -106,7 +96,7 @@ export function FundraisingActivationPanel({
         : "border-white/12 bg-[#0B2545]/55"
 
   const submitRequest = async () => {
-    if (!userId || !playbookDone || pending || isFundraisingManager || requestApproved) return
+    if (!userId || pending || isFundraisingManager || requestApproved) return
     setBusy(true)
     setOptimisticPending(true)
     try {
@@ -133,7 +123,7 @@ export function FundraisingActivationPanel({
     }
   }
 
-  const playbookHref = "/fundraising/playbook/members#playbook-activation-ack"
+  const playbookHref = "/fundraising/playbook/members"
   const returnToPath = `/fundraising/athletes/${encodeURIComponent(fundraisingSlug)}`
 
   if (!userId) {
@@ -146,7 +136,11 @@ export function FundraisingActivationPanel({
           </h2>
         </div>
         <p className="mt-3 text-sm leading-relaxed text-white/82">
-          Sign in after reading the playbook to submit an activation request. Staff reviews requests before donor tools unlock.
+          Sign in with your RecruitNC account (athlete or parent) to request activation. Staff reviews requests before donor tools unlock. Review the{" "}
+          <HardLink href={playbookHref} className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
+            fundraising playbook
+          </HardLink>{" "}
+          anytime — no acknowledgment step required.
         </p>
         <Button asChild className="mt-4 min-h-11 bg-[#C8A94A] font-semibold text-[#061224] hover:bg-[#b89740]">
           <HardLink href={`/auth/signin?returnTo=${encodeURIComponent(returnToPath)}`}>Sign in</HardLink>
@@ -155,8 +149,7 @@ export function FundraisingActivationPanel({
     )
   }
 
-  const showRequestButton =
-    playbookDone && !pending && !isFundraisingManager && !requestApproved
+  const showRequestButton = !pending && !isFundraisingManager && !requestApproved
 
   return (
     <section className={`mt-6 rounded-xl border px-4 py-4 sm:px-5 sm:py-5 ${borderCls}`}>
@@ -171,16 +164,8 @@ export function FundraisingActivationPanel({
       </div>
       <p className="mt-3 text-sm leading-relaxed text-white/82">{headline.text}</p>
 
-      {!playbookDone ? (
-        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-          <Button asChild variant="outline" className="border-[#C8A94A]/50 text-[#C8A94A] hover:bg-[#C8A94A]/10">
-            <HardLink href={playbookHref}>Open playbook &amp; acknowledge</HardLink>
-          </Button>
-        </div>
-      ) : null}
-
       {showRequestButton ? (
-        <div className="mt-4">
+        <div className="mt-4 flex flex-col gap-2">
           <Button
             type="button"
             disabled={busy}
@@ -189,6 +174,13 @@ export function FundraisingActivationPanel({
           >
             {busy ? "Sending…" : "Request activation"}
           </Button>
+          <p className="text-xs leading-snug text-white/55">
+            Questions about nonprofit checkout and outreach? Read the{" "}
+            <HardLink href={playbookHref} className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
+              playbook
+            </HardLink>
+            .
+          </p>
         </div>
       ) : null}
 

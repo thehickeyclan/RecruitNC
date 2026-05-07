@@ -19,30 +19,6 @@ export type ActivationRequestRow = {
   admin_note: string | null
 }
 
-export async function acknowledgeFundraisingPlaybookAction(): Promise<{ ok: boolean; error?: string }> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return { ok: false, error: "Sign in required." }
-
-  const now = new Date().toISOString()
-  const { error } = await supabase.from("fundraising_playbook_acks").upsert(
-    { user_id: user.id, acknowledged_at: now, source: "members", updated_at: now },
-    { onConflict: "user_id" },
-  )
-  if (error) {
-    if (error.code === "42P01" || error.message?.includes("does not exist")) {
-      return { ok: false, error: "Database table missing — run scripts/supabase-fundraising-activation.sql in Supabase." }
-    }
-    console.warn("[acknowledgeFundraisingPlaybook]", error.message)
-    return { ok: false, error: error.message }
-  }
-  revalidatePath("/fundraising/playbook/members")
-  revalidatePath("/fundraising/athletes")
-  return { ok: true }
-}
-
 export async function submitFundraisingActivationRequestAction(params: {
   fundraisingSlug: string
   athleteId: string | null
@@ -55,14 +31,6 @@ export async function submitFundraisingActivationRequestAction(params: {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) return { ok: false, error: "Sign in required." }
-
-  const { data: ack } = await supabase.from("fundraising_playbook_acks").select("user_id").eq("user_id", user.id).maybeSingle()
-  if (!ack) {
-    return {
-      ok: false,
-      error: "Read and acknowledge the fundraising playbook first (bottom of /fundraising/playbook/members — sign in required).",
-    }
-  }
 
   const { data: existingPending } = await supabase
     .from("fundraising_activation_requests")

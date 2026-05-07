@@ -91,21 +91,17 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
     !!(user?.id && athleteId && (await userCanManageFundraisingForAthlete(admin, user.id, athleteId)))
   const viewerIsRecruitNcAdmin = !!(user?.id && (await userIsRecruitNcAdmin(admin, user.id)))
 
-  let playbookAcknowledgedAt: string | null = null
   let latestActivationStatus: "none" | "pending" | "approved" | "rejected" = "none"
   if (user?.id) {
     const slugNorm = slug.trim().toLowerCase()
-    const [{ data: ackRow }, { data: reqRows }] = await Promise.all([
-      supabase.from("fundraising_playbook_acks").select("acknowledged_at").eq("user_id", user.id).maybeSingle(),
-      supabase
-        .from("fundraising_activation_requests")
-        .select("status")
-        .eq("user_id", user.id)
-        .eq("fundraising_slug", slugNorm)
-        .order("created_at", { ascending: false })
-        .limit(1),
-    ])
-    playbookAcknowledgedAt = typeof ackRow?.acknowledged_at === "string" ? ackRow.acknowledged_at : null
+    const { data: reqRows } = await supabase
+      .from("fundraising_activation_requests")
+      .select("status")
+      .eq("user_id", user.id)
+      .eq("fundraising_slug", slugNorm)
+      .order("created_at", { ascending: false })
+      .limit(1)
+
     const st = reqRows?.[0]?.status
     if (st === "pending" || st === "approved" || st === "rejected") latestActivationStatus = st
   }
@@ -207,7 +203,6 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           fundraisingSlug={slug}
           athleteId={athleteId}
           userId={user?.id ?? null}
-          playbookAcknowledgedAt={playbookAcknowledgedAt}
           latestActivationStatus={latestActivationStatus}
           isFundraisingManager={isFundraisingManager}
           viewerIsRecruitNcAdmin={viewerIsRecruitNcAdmin}
