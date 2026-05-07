@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 
 import { formatUsdWhole } from "@/app/fundraising/components/FundraisingHero"
 import { HardLink } from "@/components/hard-link"
+import { ScholarshipSubmissionCountdown } from "@/components/scholarships/scholarship-submission-countdown"
 import {
   CADEN_ABOUT_COMING_SOON_LINE,
   CADEN_ABOUT_PLACEHOLDER_BODY,
@@ -23,6 +24,7 @@ import {
   scholarshipApplicationsAreOpen,
 } from "@/lib/scholarships/applications-open"
 import { getScholarshipBySlug, listPublicAwardsForScholarship } from "@/lib/scholarships/public-queries"
+import { scholarshipSubmissionDeadlineUtcMs } from "@/lib/scholarships/scholarship-submission-deadline"
 
 function df(c: string) {
   return `font-[family-name:var(--font-fundraising-display)] ${c}`
@@ -78,11 +80,21 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
 
   const awardParagraphs = CADEN_AWARD_DESCRIPTION_VERBATIM.split(/\n\n+/).map((p) => p.trim()).filter(Boolean)
 
+  const submissionDeadlineUtcMs = scholarshipSubmissionDeadlineUtcMs(closeDisplayRaw ?? null)
+
   return (
     <div
       className="min-h-screen bg-[#061224] text-white"
       style={{ fontFamily: "var(--font-fundraising-body), system-ui, sans-serif" }}
     >
+      {s.status !== "archived" && submissionDeadlineUtcMs != null ? (
+        <ScholarshipSubmissionCountdown
+          scholarshipName={s.name}
+          deadlineUtcMs={submissionDeadlineUtcMs}
+          deadlineLabel={closePretty ?? closeDisplayRaw ?? "listed date"}
+        />
+      ) : null}
+
       <section className="relative">
         <div className="relative aspect-[21/9] max-h-[420px] w-full bg-[#0B2545]">
           {s.hero_image_url ? (
