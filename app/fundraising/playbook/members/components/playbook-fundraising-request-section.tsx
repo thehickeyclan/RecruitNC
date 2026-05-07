@@ -25,14 +25,16 @@ export function PlaybookFundraisingRequestSection({ rows, activationStatusBySlug
   const [busySlug, setBusySlug] = useState<string | null>(null)
   const [optimisticPending, setOptimisticPending] = useState<Record<string, boolean>>({})
 
+  const trimmedQuery = query.trim().toLowerCase()
+
+  /** Full roster is never rendered — families search first (matches hub UX expectations). */
   const filtered = useMemo(() => {
-    const t = query.trim().toLowerCase()
-    if (!t) return rows
+    if (!trimmedQuery) return []
     return rows.filter((r) => {
       const hay = `${r.displayName} ${r.code} ${r.sublabel ?? ""} ${r.hrefSlug}`.toLowerCase()
-      return hay.includes(t)
+      return hay.includes(trimmedQuery)
     })
-  }, [rows, query])
+  }, [rows, trimmedQuery])
 
   const statusFor = (hrefSlug: string): string => {
     const k = digitsSlug(hrefSlug)
@@ -87,7 +89,7 @@ export function PlaybookFundraisingRequestSection({ rows, activationStatusBySlug
       </h2>
       <p className="mt-4 text-base leading-relaxed text-white/82">
         You need a <strong className="text-white/95">RecruitNC account</strong> (athlete or parent). After skimming this playbook, find your wrestler
-        below and tap <strong className="text-white/95">Request staff link</strong>. That notifies admins — same queue as the{" "}
+        using search below, then tap <strong className="text-white/95">Request staff link</strong>. That notifies admins — same queue as the{" "}
         <strong className="text-white/95">Request activation</strong> button on the public gift page. No separate checklist here.
       </p>
       <p className="mt-3 text-sm leading-relaxed text-white/65">
@@ -113,16 +115,22 @@ export function PlaybookFundraisingRequestSection({ rows, activationStatusBySlug
         className="mt-2 w-full max-w-lg min-h-12 rounded-lg border border-white/15 bg-[#061224]/90 px-4 py-3 text-base text-white shadow-inner placeholder:text-white/40 focus:border-[#C8A94A]/70 focus:outline-none focus:ring-2 focus:ring-[#C8A94A]/35"
       />
       <p className="mt-2 text-xs text-white/45 tabular-nums">
-        {filtered.length === rows.length
-          ? `${rows.length} athlete${rows.length === 1 ? "" : "s"} listed`
-          : `${filtered.length} of ${rows.length} shown`}
+        {!trimmedQuery
+          ? `${rows.length} wrestler${rows.length === 1 ? "" : "s"} on roster — search to show matches.`
+          : filtered.length === 0
+            ? `No matches for “${query.trim()}”. Try spelling or NCU code.`
+            : filtered.length > 80
+              ? `${filtered.length} matches — showing first 80`
+              : `${filtered.length} match${filtered.length === 1 ? "" : "es"}`}
       </p>
 
+      {!trimmedQuery ? (
+        <div className="mt-6 rounded-lg border border-dashed border-white/18 bg-black/15 px-4 py-8 text-center text-sm text-white/55">
+          Type part of a name, school, or NCU code — results appear here.
+        </div>
+      ) : filtered.length === 0 ? null : (
       <ul className="mt-6 space-y-3">
-        {filtered.length === 0 ? (
-          <li className="rounded-lg border border-white/10 bg-black/20 px-4 py-6 text-sm text-white/60">No matches — try another spelling or code.</li>
-        ) : (
-          filtered.slice(0, 80).map((row) => {
+          {filtered.slice(0, 80).map((row) => {
             const slugKey = digitsSlug(row.hrefSlug)
             const st = statusFor(row.hrefSlug)
             const busy = busySlug === slugKey
@@ -175,10 +183,10 @@ export function PlaybookFundraisingRequestSection({ rows, activationStatusBySlug
                 </div>
               </li>
             )
-          })
-        )}
+          })}
       </ul>
-      {filtered.length > 80 ? (
+      )}
+      {trimmedQuery && filtered.length > 80 ? (
         <p className="mt-4 text-xs text-white/50">Showing first 80 matches — narrow your search for faster browsing.</p>
       ) : null}
 
