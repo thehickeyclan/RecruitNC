@@ -1,16 +1,31 @@
 import type { Metadata } from "next"
+import Image from "next/image"
 import { notFound } from "next/navigation"
 
 import { formatUsdWhole } from "@/app/fundraising/components/FundraisingHero"
+import { HardLink } from "@/components/hard-link"
+import {
+  CADEN_ABOUT_PLACEHOLDER_BODY,
+  CADEN_AWARD_DESCRIPTION_VERBATIM,
+  CADEN_CLOSING_TAGLINE_FULLWIDTH,
+  CADEN_SELECTION_CRITERIA_CARDS,
+  CADEN_SELECTION_FOOTNOTE,
+} from "@/lib/scholarships/caden-perry-content"
 import {
   scholarshipApplicationBadge,
   scholarshipApplicationsAreOpen,
 } from "@/lib/scholarships/applications-open"
 import { getScholarshipBySlug, listPublicAwardsForScholarship } from "@/lib/scholarships/public-queries"
-import { HardLink } from "@/components/hard-link"
 
 function df(c: string) {
   return `font-[family-name:var(--font-fundraising-display)] ${c}`
+}
+
+function formatScholarshipPageDate(iso: string | null): string | null {
+  if (!iso) return null
+  const d = new Date(`${iso}T12:00:00`)
+  if (Number.isNaN(d.getTime())) return null
+  return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
 }
 
 export async function generateMetadata({
@@ -27,9 +42,6 @@ export async function generateMetadata({
   }
 }
 
-/** Cadence PRD: standalone closing line — editable later via CMS/copy deck if needed. */
-const CADEN_TAGLINE_FULLWIDTH = "The future is bright for those who refuse to quit."
-
 export default async function ScholarshipDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const s = await getScholarshipBySlug(slug)
@@ -42,6 +54,9 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
   const appsOpen = scholarshipApplicationsAreOpen(s)
   const isCaden = s.slug === "caden-perry"
 
+  const closePretty = formatScholarshipPageDate(s.applications_close_date ?? null)
+  const announcePretty = formatScholarshipPageDate(s.award_announcement_date ?? null)
+
   return (
     <div
       className="min-h-screen bg-[#061224] text-white"
@@ -53,16 +68,25 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
             // eslint-disable-next-line @next/next/no-img-element
             <img src={s.hero_image_url} alt="" className="h-full w-full object-cover object-[center_22%]" />
           ) : (
-            <div className="flex h-full min-h-[220px] items-center justify-center bg-gradient-to-br from-[#0B2545] via-[#061224] to-black">
-              <p className={df("max-w-md px-6 text-center text-xs font-bold uppercase tracking-[0.24em] text-white/35")}>
-                Hero photography pending family approval
+            <div className="relative flex h-full min-h-[220px] flex-col items-center justify-center bg-gradient-to-br from-[#0B2545] via-[#061224] to-black px-6 py-10">
+              <Image
+                src="/images/nc-united-stacked-logo-white.png"
+                alt="NC United Wrestling"
+                width={470}
+                height={394}
+                className="h-auto max-h-[min(38vw,220px)] w-auto opacity-[0.38]"
+                priority
+              />
+              <p className={df("mt-8 max-w-lg text-center text-[10px] font-bold uppercase tracking-[0.22em] text-white/30")}>
+                {isCaden ? "Photography pending Perry family — dignified placeholder" : "Scholarship hero image pending"}
               </p>
             </div>
           )}
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#061224] via-[#061224]/55 to-transparent" />
           <div className="absolute inset-x-0 bottom-0 px-4 pb-10 pt-24 sm:px-8">
             <div className="mx-auto max-w-4xl">
-              <p className={df("text-[10px] font-extrabold uppercase tracking-[0.26em] text-[#CC0000]")}>NC United Scholarships</p>
+              <p className={df("text-[9px] font-bold uppercase tracking-[0.28em] text-white/55")}>NC United Wrestling</p>
+              <p className={df("mt-2 text-[10px] font-extrabold uppercase tracking-[0.26em] text-[#CC0000]")}>Scholarships</p>
               <h1 className={df("mt-4 text-[clamp(1.65rem,4.6vw,2.85rem)] font-black uppercase leading-[1.08] tracking-tight text-white")}>
                 {s.name}
               </h1>
@@ -70,7 +94,11 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
                 <p className="mt-5 max-w-2xl text-lg italic leading-relaxed text-[#C8A94A]/95">&ldquo;{s.tagline}&rdquo;</p>
               ) : null}
               {s.established_year ? (
-                <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">
+                <p
+                  className={df(
+                    "mt-6 inline-flex rounded-full border border-[#C8A94A]/55 bg-[#C8A94A]/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#f5e6b8]",
+                  )}
+                >
                   Established {s.established_year}
                 </p>
               ) : null}
@@ -109,46 +137,77 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
           ) : null}
         </div>
 
-        {s.description ? (
-          <div className="prose prose-invert prose-sm mt-10 max-w-none">
-            <h2 className={df("text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]")}>Story</h2>
-            <div className="mt-4 whitespace-pre-wrap text-base leading-relaxed text-white/78">{s.description}</div>
-          </div>
-        ) : null}
-
         {isCaden ? (
-          <div className="mt-12 border-y border-[#C8A94A]/25 py-10">
-            <h2 className={df("text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]")}>The award</h2>
-            <blockquote className="mt-5 border-l-4 border-[#C8A94A]/55 pl-5 text-base italic leading-relaxed text-white/85">
-              This scholarship is awarded to a student-athlete who embodies the true spirit of scholastic wrestling — someone who has faced adversity head-on and refused to be defined by it…
-            </blockquote>
-            <p className="sr-only">Full citation finalized with the Perry family.</p>
-          </div>
-        ) : null}
+          <>
+            {/* Full story pending Perry family approval — Matt confirms before publishing substantive edits */}
+            <section className="mt-14">
+              <h2 className={df("text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]")}>About Caden</h2>
+              <div className="mt-5 whitespace-pre-wrap text-base leading-relaxed text-white/78">{CADEN_ABOUT_PLACEHOLDER_BODY}</div>
+            </section>
 
-        <div className="mt-12">
-          <h2 className={df("text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]")}>Criteria</h2>
-          <div className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-white/72">
-            {s.criteria ??
-              `Reviewers look for resilience in the face of adversity — on or off the mat; character that reflects what wrestling builds; perseverance through hardship; and a mindset that carries beyond the sport. Academic record and win-loss record are not selection criteria.`}
-          </div>
-        </div>
+            <section className="mt-16 border-t border-white/[0.06] pt-14">
+              <h2 className={df("text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]")}>The award</h2>
+              <div className="mt-6 whitespace-pre-wrap text-[15px] leading-[1.75] text-white/82">{CADEN_AWARD_DESCRIPTION_VERBATIM}</div>
+            </section>
 
-        {isCaden ? (
-          <p
-            className={`${df(
-              "mx-auto mt-14 max-w-3xl text-center text-[clamp(1.15rem,3.4vw,1.65rem)] font-black uppercase leading-snug tracking-[0.04em] text-[#C8A94A]",
-            )}`}
-          >
-            {CADEN_TAGLINE_FULLWIDTH}
-          </p>
-        ) : null}
+            <p
+              className={`${df(
+                "mx-auto mt-16 max-w-3xl text-center text-[clamp(1.2rem,3.8vw,1.85rem)] font-black uppercase leading-snug tracking-[0.06em] text-[#C8A94A]",
+              )}`}
+            >
+              {CADEN_CLOSING_TAGLINE_FULLWIDTH}
+            </p>
+
+            <section className="mt-16 border-t border-white/[0.06] pt-14">
+              <h2 className={df("text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]")}>What we look for</h2>
+              <div className="mt-8 grid gap-4 sm:grid-cols-2">
+                {CADEN_SELECTION_CRITERIA_CARDS.map((c) => (
+                  <article key={c.title} className="rounded-xl border border-white/[0.07] bg-[#0B2545]/35 px-4 py-5">
+                    <p className={df("text-[11px] font-black uppercase tracking-[0.14em] text-white")}>
+                      {c.title}{" "}
+                      <span className="text-[#C8A94A]">({c.weightLabel})</span>
+                    </p>
+                    <p className="mt-3 text-sm leading-relaxed text-white/72">{c.body}</p>
+                  </article>
+                ))}
+              </div>
+              <p className="mt-8 text-xs leading-relaxed text-white/42">{CADEN_SELECTION_FOOTNOTE}</p>
+            </section>
+          </>
+        ) : (
+          <>
+            {s.description ? (
+              <div className="prose prose-invert prose-sm mt-10 max-w-none">
+                <h2 className={df("text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]")}>Story</h2>
+                <div className="mt-4 whitespace-pre-wrap text-base leading-relaxed text-white/78">{s.description}</div>
+              </div>
+            ) : null}
+
+            <div className="mt-12">
+              <h2 className={df("text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]")}>Criteria</h2>
+              <div className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-white/72">
+                {s.criteria ??
+                  `Reviewers look for resilience in the face of adversity — on or off the mat; character that reflects what wrestling builds; perseverance through hardship; and a mindset that carries beyond the sport. Academic record and win-loss record are not selection criteria.`}
+              </div>
+            </div>
+
+            {s.tagline ? (
+              <p
+                className={`${df(
+                  "mx-auto mt-14 max-w-3xl text-center text-[clamp(1.05rem,3vw,1.45rem)] font-black uppercase leading-snug tracking-[0.04em] text-[#C8A94A]",
+                )}`}
+              >
+                {s.tagline}
+              </p>
+            ) : null}
+          </>
+        )}
 
         <section className="mt-14 rounded-xl border border-[#C8A94A]/25 bg-[#0B2545]/45 px-4 py-6 sm:px-6">
-          <h2 className={df("text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]")}>Fund status</h2>
-          <div className="mt-5 grid gap-4 sm:grid-cols-3">
+          <h2 className={df("text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]")}>{isCaden ? "Fund status" : "Program summary"}</h2>
+          <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wide text-white/45">Raised</p>
+              <p className="text-[10px] font-bold uppercase tracking-wide text-white/45">Total donated</p>
               <p className="mt-2 tabular-nums text-xl font-black text-white">{formatUsdWhole(s.total_donated_cents)}</p>
             </div>
             <div>
@@ -158,10 +217,12 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
               </p>
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wide text-white/45">Announcement</p>
-              <p className="mt-2 text-sm font-semibold text-white/85">
-                {s.award_announcement_date ?? "To be scheduled"}
-              </p>
+              <p className="text-[10px] font-bold uppercase tracking-wide text-white/45">Applications close</p>
+              <p className="mt-2 text-sm font-semibold text-white/85">{closePretty ?? s.applications_close_date ?? "—"}</p>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wide text-white/45">Award announcement</p>
+              <p className="mt-2 text-sm font-semibold text-white/85">{announcePretty ?? s.award_announcement_date ?? "—"}</p>
             </div>
           </div>
         </section>
@@ -199,7 +260,15 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
           <h2 className={df("text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]")}>Award history</h2>
           {awards.length === 0 ? (
             <p className="mt-5 text-sm leading-relaxed text-white/55">
-              Inaugural award to be announced{s.award_announcement_date ? ` (${s.award_announcement_date})` : ""}.
+              {isCaden ? (
+                <>
+                  Year 1: Inaugural award to be announced{announcePretty ? ` (${announcePretty})` : " June 2026"}.
+                </>
+              ) : (
+                <>
+                  Inaugural award to be announced{s.award_announcement_date ? ` (${s.award_announcement_date})` : ""}.
+                </>
+              )}
             </p>
           ) : (
             <div className="mt-6 overflow-x-auto">
@@ -232,16 +301,17 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
           <a href="mailto:info@ncwrestlingunited.com" className="text-[#C8A94A] hover:underline">
             info@ncwrestlingunited.com
           </a>
-          .           Staff review portal:{" "}
-          <HardLink href="/scholarships/review" className="text-[#C8A94A] hover:underline">
-            /scholarships/review
-          </HardLink>
           .
         </p>
       </div>
 
-      <footer className="border-t border-white/[0.06] px-4 py-10 text-center text-[11px] text-white/45">
-        NC United Wrestling · EIN 99-3757238
+      <footer className="border-t border-white/[0.06] px-4 py-10 text-center text-[11px] leading-relaxed text-white/45">
+        <p>NC United Wrestling · 501(c)(3) · EIN 99-3757238</p>
+        <p className="mt-2">
+          <a href="mailto:info@ncwrestlingunited.com" className="text-[#C8A94A] hover:underline">
+            info@ncwrestlingunited.com
+          </a>
+        </p>
       </footer>
     </div>
   )

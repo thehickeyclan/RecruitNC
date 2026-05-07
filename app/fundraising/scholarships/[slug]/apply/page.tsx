@@ -8,6 +8,13 @@ import {
 import { getScholarshipBySlug } from "@/lib/scholarships/public-queries"
 import { HardLink } from "@/components/hard-link"
 
+function formatUsDate(iso: string | null): string | null {
+  if (!iso) return null
+  const d = new Date(`${iso}T12:00:00`)
+  if (Number.isNaN(d.getTime())) return null
+  return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -58,14 +65,12 @@ export default async function ScholarshipApplyPage({ params }: { params: Promise
         <HardLink href={`/fundraising/scholarships/${s.slug}`} className="text-sm font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
           ← {s.name}
         </HardLink>
-        <h1 className="font-[family-name:var(--font-fundraising-display)] mt-10 text-[clamp(1.5rem,4vw,2.25rem)] font-black uppercase leading-tight text-white">
-          Application
-        </h1>
-        <p className="mt-4 text-sm leading-relaxed text-white/65">
-          Complete every required block. The written statement must stay within <strong className="text-white/85">300–500 words</strong>.
-        </p>
         <div className="mt-10">
-          <ScholarshipApplicationForm slug={s.slug} scholarshipName={s.name} />
+          <ScholarshipApplicationForm
+            slug={s.slug}
+            scholarshipName={s.name}
+            applicationsCloseLabel={formatUsDate(s.applications_close_date ?? null)}
+          />
         </div>
       </div>
     </div>

@@ -34,8 +34,8 @@ export default async function ScholarshipDonatePage({ params }: { params: Promis
           Donate
         </h1>
         <p className="mt-4 text-sm leading-relaxed text-white/65">
-          Tax-deductible gifts through NC United Wrestling (501(c)(3)). Stripe checkout tags this gift for{" "}
-          <strong className="text-white/85">{s.name}</strong> so staff can reconcile totals toward this fund.
+          Your gift goes to <strong className="text-white/85">{s.name}</strong>. NC United Wrestling is a North Carolina
+          501(c)(3); tax-deductible gifts are processed securely and your receipt is emailed after checkout.
         </p>
       </div>
       <ScholarshipFundCheckout scholarshipSlug={s.slug} scholarshipName={s.name} />
