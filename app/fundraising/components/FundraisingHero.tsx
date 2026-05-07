@@ -1,4 +1,5 @@
 import type { FundraisingHubHeroStats } from "@/lib/fundraising/hub-data"
+import { HardLink } from "@/components/hard-link"
 import { AthleteSearchBar } from "./AthleteSearchBar"
 
 const NAVY = "#0B2545"
@@ -13,7 +14,8 @@ function displayFont(className: string) {
 const HUB_JUMP_LINKS: ReadonlyArray<{ href: string; label: string; primary?: true }> = [
   { href: "#fundraising-two-ways-give", label: "Give now", primary: true },
   { href: "#fundraising-how-it-works", label: "How it works" },
-  { href: "#fundraising-scholarships-soon", label: "Scholarships" },
+  /** Full page — scholarships hub (named funds, applications); not only the in-page teaser block below. */
+  { href: "/fundraising/scholarships", label: "Scholarships" },
   { href: "#fundraising-corporate-partners", label: "Sponsors" },
   { href: "#fundraising-why-nc-united", label: "Why NC United" },
   { href: "#fundraising-leaderboard-preview", label: "Leaderboard" },
@@ -87,24 +89,29 @@ export function FundraisingHero({ hero }: { hero: FundraisingHubHeroStats }) {
           <ul
             className={`flex max-w-full snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:flex-wrap sm:justify-start sm:overflow-visible sm:pb-1 sm:snap-none [&::-webkit-scrollbar]:hidden`}
           >
-            {HUB_JUMP_LINKS.map((item) => (
-              <li key={item.href} className="shrink-0 snap-start">
-                <a
-                  href={item.href}
-                  className={
-                    item.primary
-                      ? `${displayFont(
-                          "touch-manipulation inline-flex min-h-[44px] items-center justify-center rounded-full border border-[#CC0000]/70 bg-[#CC0000]/25 px-5 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-white shadow-[0_12px_36px_-12px_rgba(204,0,0,0.75)] transition hover:bg-[#CC0000]/45 hover:shadow-[0_14px_40px_-10px_rgba(204,0,0,0.85)] active:scale-[0.98]",
-                        )}`
-                      : `${displayFont(
-                          "touch-manipulation inline-flex min-h-[44px] items-center justify-center rounded-full border border-white/20 bg-white/[0.07] px-4 py-2 text-[11px] font-black uppercase tracking-[0.12em] text-white/92 transition hover:border-white/40 hover:bg-white/14 active:scale-[0.98]",
-                        )}`
-                  }
-                >
+            {HUB_JUMP_LINKS.map((item) => {
+              const chipClass = item.primary
+                ? `${displayFont(
+                    "touch-manipulation inline-flex min-h-[44px] items-center justify-center rounded-full border border-[#CC0000]/70 bg-[#CC0000]/25 px-5 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-white shadow-[0_12px_36px_-12px_rgba(204,0,0,0.75)] transition hover:bg-[#CC0000]/45 hover:shadow-[0_14px_40px_-10px_rgba(204,0,0,0.85)] active:scale-[0.98]",
+                  )}`
+                : `${displayFont(
+                    "touch-manipulation inline-flex min-h-[44px] items-center justify-center rounded-full border border-white/20 bg-white/[0.07] px-4 py-2 text-[11px] font-black uppercase tracking-[0.12em] text-white/92 transition hover:border-white/40 hover:bg-white/14 active:scale-[0.98]",
+                  )}`
+              const inner = item.href.startsWith("#") ? (
+                <a href={item.href} className={chipClass}>
                   {item.label}
                 </a>
-              </li>
-            ))}
+              ) : (
+                <HardLink href={item.href} className={chipClass}>
+                  {item.label}
+                </HardLink>
+              )
+              return (
+                <li key={item.href} className="shrink-0 snap-start">
+                  {inner}
+                </li>
+              )
+            })}
           </ul>
         </nav>
 

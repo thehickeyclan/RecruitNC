@@ -8,7 +8,7 @@ function displayFont(c: string) {
   return `font-[family-name:var(--font-fundraising-display)] ${c}`
 }
 
-/** Email capture — used under Training scholarships on the hub. */
+/** Optional email alerts — new scholarship rounds / deadlines (hub links to live scholarships page). */
 export function ScholarshipsInterestNotifyCard() {
   const [email, setEmail] = useState("")
   const [busy, setBusy] = useState(false)
@@ -42,7 +42,7 @@ export function ScholarshipsInterestNotifyCard() {
     <div className="rounded-xl border border-white/10 bg-[#0B2545]/70 px-4 py-5 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:px-6 sm:py-6">
       {done === "saved" ? (
         <p className={`${displayFont("text-center text-xs font-bold uppercase tracking-[0.14em] text-emerald-300/95 sm:text-left")}`}>
-          Thanks — we&apos;ll email you when this opens.
+          Thanks — we&apos;ll email you when new scholarship rounds or deadlines post.
         </p>
       ) : done === "duplicate" ? (
         <p className={`${displayFont("text-center text-xs font-bold uppercase tracking-[0.14em] text-[#C8A94A]/90 sm:text-left")}`}>
@@ -58,14 +58,14 @@ export function ScholarshipsInterestNotifyCard() {
         >
           <div className="min-w-0 flex-1">
             <label htmlFor="scholarship-notify-email" className="sr-only">
-              Email for scholarship updates
+              Email for optional scholarship alerts
             </label>
             <Input
               id="scholarship-notify-email"
               type="email"
               name="email"
               autoComplete="email"
-              placeholder="Email for scholarship updates"
+              placeholder="Optional — email for new rounds & deadlines"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={busy}

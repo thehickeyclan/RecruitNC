@@ -249,6 +249,19 @@ export function SpartanDonateFormWizard({
       return
     }
 
+    const fhRet = (fundraisingHubReturnSlug ?? "").trim().toLowerCase()
+    if (fh && fhRet.startsWith("scholarships/")) {
+      setFlow("donate")
+      setTierPreference("")
+      setDonateMode("general")
+      setFundraisingCode("")
+      setAthleteQuery("")
+      setManualCreditName("")
+      setDonateStep(3)
+      setAmountDollars("50")
+      return
+    }
+
     const flowParam = searchParams.get("flow")?.toLowerCase() ?? ""
     if (flowParam === "race") {
       setFlow("race")
@@ -305,7 +318,7 @@ export function SpartanDonateFormWizard({
       setDonateStep(1)
       setAmountDollars("50")
     }
-  }, [searchParams, fundraisingHub, fundraisingHubPrefillCode, fundraisingHubPrefillLabel, fundraisingHubDefaultTrainingFund])
+  }, [searchParams, fundraisingHub, fundraisingHubPrefillCode, fundraisingHubPrefillLabel, fundraisingHubDefaultTrainingFund, fundraisingHubReturnSlug])
 
   useEffect(() => {
     const q = athleteQuery.trim()
