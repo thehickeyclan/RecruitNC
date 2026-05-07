@@ -98,12 +98,12 @@ export default async function ScholarshipsHubPage() {
                       <h3 className={df("mt-3 text-lg font-black uppercase leading-snug tracking-tight text-white")}>{s.name}</h3>
                       {s.tagline ? <p className="mt-2 text-sm italic leading-relaxed text-[#C8A94A]/95">&ldquo;{s.tagline}&rdquo;</p> : null}
                       <p className="mt-4 text-sm text-white/70">
-                        Fund balance (tracked):{" "}
+                        Scholarship fund:{" "}
                         <span className="tabular-nums font-semibold text-white">{formatUsdWhole(s.total_donated_cents)}</span>
                         {s.award_amount_cents ? (
                           <>
                             {" "}
-                            · Award target:{" "}
+                            · Award amount:{" "}
                             <span className="tabular-nums font-semibold text-white">{formatUsdWhole(s.award_amount_cents)}</span>
                           </>
                         ) : null}
@@ -164,7 +164,8 @@ export default async function ScholarshipsHubPage() {
         <section className="mt-16 rounded-2xl border border-[#CC0000]/35 bg-[#CC0000]/10 px-5 py-8 text-center sm:px-8">
           <p className={df("text-[11px] font-bold uppercase tracking-[0.22em] text-[#CC0000]")}>Give</p>
           <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-white/78">
-            Every scholarship keeps its own fund; checkout tags your gift in Stripe so ops can reconcile toward the right legacy.
+            Gifts to a named scholarship support that program directly and are tax-deductible through NC United Wrestling,
+            our North Carolina 501(c)(3).
           </p>
           <HardLink
             href="/fundraising/scholarships#scholarship-funds"

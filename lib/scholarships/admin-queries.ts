@@ -10,7 +10,7 @@ export async function listApplicationsForScholarships(
   const { data, error } = await admin
     .from("scholarship_applications")
     .select(
-      "id, scholarship_id, created_at, athlete_name, athlete_school, athlete_grad_year, athlete_weight_class, athlete_email, athlete_phone, nominator_name, nominator_relationship, nominator_email, nominator_phone, written_statement, wrestling_moment, reference_name, reference_relationship, reference_email, reference_phone, status",
+      "id, scholarship_id, created_at, anonymous_id, athlete_name, athlete_school, athlete_grad_year, athlete_weight_class, athlete_email, athlete_phone, nominator_name, nominator_relationship, nominator_email, nominator_phone, is_parent_nominating_own_child, nominator_known_duration, written_statement, wrestling_moment, reference_name, reference_relationship, reference_email, reference_phone, status",
     )
     .in("scholarship_id", scholarshipIds)
     .order("created_at", { ascending: false })
@@ -27,7 +27,7 @@ export async function getApplicationById(applicationId: string): Promise<Scholar
   const { data, error } = await admin
     .from("scholarship_applications")
     .select(
-      "id, scholarship_id, created_at, athlete_name, athlete_school, athlete_grad_year, athlete_weight_class, athlete_email, athlete_phone, nominator_name, nominator_relationship, nominator_email, nominator_phone, written_statement, wrestling_moment, reference_name, reference_relationship, reference_email, reference_phone, status",
+      "id, scholarship_id, created_at, anonymous_id, athlete_name, athlete_school, athlete_grad_year, athlete_weight_class, athlete_email, athlete_phone, nominator_name, nominator_relationship, nominator_email, nominator_phone, is_parent_nominating_own_child, nominator_known_duration, written_statement, wrestling_moment, reference_name, reference_relationship, reference_email, reference_phone, status",
     )
     .eq("id", applicationId)
     .maybeSingle()

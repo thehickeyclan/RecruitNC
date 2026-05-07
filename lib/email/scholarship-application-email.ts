@@ -5,6 +5,9 @@ export async function sendScholarshipApplicationEmails(params: {
   nominatorName: string
   scholarshipName: string
   athleteName: string
+  anonymousId: string | null
+  applicationsCloseDate: string | null
+  awardAnnouncementDate: string | null
   adminNotifyEmail?: string | null
 }): Promise<{ ok: boolean; error?: string }> {
   if (!process.env.RESEND_API_KEY) {
@@ -14,6 +17,18 @@ export async function sendScholarshipApplicationEmails(params: {
 
   const site = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://app.ncwrestlingunited.com"
   const hub = `${site.replace(/\/$/, "")}/fundraising/scholarships`
+  const adminScholarshipsUrl = `${site.replace(/\/$/, "")}/admin/scholarships`
+
+  const closeLine = params.applicationsCloseDate
+    ? `Applications close <strong>${escapeHtml(params.applicationsCloseDate)}</strong>.`
+    : "We will publish key dates on the scholarship page."
+  const announceLine = params.awardAnnouncementDate
+    ? `Award plans are communicated around <strong>${escapeHtml(params.awardAnnouncementDate)}</strong>; we'll email you if we need anything before then.`
+    : "You'll hear from us if we need anything else."
+
+  const blindLine = params.anonymousId
+    ? `<p>Your nomination is recorded under blind-review id <strong>${escapeHtml(params.anonymousId)}</strong>. The selection committee scores applications without seeing the athlete's name or school until finalists are chosen.</p>`
+    : `<p>Applications are reviewed with identity protected until finalists are chosen.</p>`
 
   try {
     const { Resend } = await import("resend")
@@ -24,15 +39,17 @@ export async function sendScholarshipApplicationEmails(params: {
 <html><head><meta charset="utf-8"/></head>
 <body style="font-family:system-ui,sans-serif;line-height:1.6;color:#1e293b;max-width:560px;margin:0 auto;padding:24px;">
   <p>Hi ${escapeHtml(params.nominatorName)},</p>
-  <p>Thank you — we received your nomination for <strong>${escapeHtml(params.athleteName)}</strong> for the <strong>${escapeHtml(params.scholarshipName)}</strong>.</p>
-  <p>The NC United team will review applications during the published window. If we need anything else, we&apos;ll reach out by email.</p>
+  <p>Thank you — we received your nomination for <strong>${escapeHtml(params.athleteName)}</strong> for <strong>${escapeHtml(params.scholarshipName)}</strong>.</p>
+  ${blindLine}
+  <p>${closeLine}</p>
+  <p>${announceLine}</p>
   <p style="margin-top:28px;color:#64748b;font-size:14px;">NC United Wrestling · Scholarships<br/><a href="${hub}">${hub}</a></p>
 </body></html>`
 
     const nomResult = await resend.emails.send({
       from: FROM,
       to: [params.nominatorEmail.trim()],
-      subject: `Received — ${params.scholarshipName}`,
+      subject: `Your nomination has been received — ${params.scholarshipName}`,
       html: nominatorHtml,
     })
     if (nomResult.error) {
@@ -45,6 +62,10 @@ export async function sendScholarshipApplicationEmails(params: {
       process.env.SCHOLARSHIP_ADMIN_NOTIFY_EMAIL ||
       "info@ncwrestlingunited.com"
 
+    const anonAdmin = params.anonymousId
+      ? `<li><strong>Blind-review id:</strong> ${escapeHtml(params.anonymousId)}</li>`
+      : ""
+
     const adminHtml = `
 <!DOCTYPE html>
 <html><head><meta charset="utf-8"/></head>
@@ -52,15 +73,16 @@ export async function sendScholarshipApplicationEmails(params: {
   <p>New scholarship application</p>
   <ul>
     <li><strong>Scholarship:</strong> ${escapeHtml(params.scholarshipName)}</li>
-    <li><strong>Athlete:</strong> ${escapeHtml(params.athleteName)}</li>
+    ${anonAdmin}
     <li><strong>Nominator:</strong> ${escapeHtml(params.nominatorName)} (${escapeHtml(params.nominatorEmail)})</li>
   </ul>
+  <p style="margin-top:16px;"><a href="${adminScholarshipsUrl}">Open scholarship admin</a></p>
 </body></html>`
 
     const admResult = await resend.emails.send({
       from: FROM,
       to: [adminTo.trim()],
-      subject: `[Scholarship] New application — ${params.scholarshipName}`,
+      subject: `New ${params.scholarshipName} application`,
       html: adminHtml,
     })
     if (admResult.error) {

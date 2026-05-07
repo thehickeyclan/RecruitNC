@@ -52,7 +52,7 @@ export function ScholarshipFundCheckout({
           </h2>
           <p className="mx-auto mt-2 max-w-md text-center text-[13px] leading-snug text-white/70">
             <strong className="font-semibold text-white/85">{scholarshipName}</strong> — tax-deductible gifts ($5 minimum).
-            Your receipt arrives by email; Stripe metadata tags this gift for this scholarship fund.
+            Your receipt arrives by email after you finish checkout.
           </p>
           <div className="mt-6 w-full text-left">
             <Suspense fallback={<FormFallback />}>

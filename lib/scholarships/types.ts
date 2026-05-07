@@ -42,6 +42,7 @@ export type ScholarshipApplicationRow = {
   id: string
   scholarship_id: string
   created_at: string
+  anonymous_id: string | null
   athlete_name: string
   athlete_school: string
   athlete_grad_year: number | null
@@ -52,6 +53,8 @@ export type ScholarshipApplicationRow = {
   nominator_relationship: string
   nominator_email: string
   nominator_phone: string | null
+  is_parent_nominating_own_child?: boolean
+  nominator_known_duration?: string | null
   written_statement: string
   wrestling_moment: string | null
   reference_name: string | null
