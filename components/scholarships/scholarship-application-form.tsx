@@ -9,6 +9,14 @@ function wordCountLabel(wc: number): string {
   return `${wc} word${wc === 1 ? "" : "s"}`
 }
 
+/** Essay limits are counted in words (split on whitespace), not characters. */
+function essayStatusHint(wc: number): string {
+  if (wc === 0) return "Write 400–600 words — count is words, not characters."
+  if (wc < 400) return `Need at least ${400 - wc} more word${400 - wc === 1 ? "" : "s"} (min 400, max 600).`
+  if (wc > 600) return `Trim by ${wc - 600} word${wc - 600 === 1 ? "" : "s"} (max 600).`
+  return "Length looks good for submission."
+}
+
 const REFERENCE_ROLES = ["Coach", "Teacher", "Counselor", "Community member", "Other"] as const
 
 function combineRelationship(selectVal: string, otherDetail: string): string {
@@ -255,8 +263,10 @@ export function ScholarshipApplicationForm({
               onChange={(e) => setWrittenStatement(e.target.value)}
               className={`${field} resize-y`}
             />
-            <p className={`mt-2 text-xs tabular-nums ${essayOk ? "text-emerald-400/90" : "text-white/45"}`}>
-              {wordCountLabel(wcMain)} · required 400–600 words to submit
+            <p className={`mt-2 text-xs tabular-nums leading-relaxed ${essayOk ? "text-emerald-400/90" : "text-white/45"}`}>
+              <span className="font-medium text-white/55">{wordCountLabel(wcMain)}</span>
+              <span className="text-white/35"> · </span>
+              {essayStatusHint(wcMain)}
             </p>
           </div>
         </fieldset>

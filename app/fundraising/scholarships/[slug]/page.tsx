@@ -5,9 +5,16 @@ import { notFound } from "next/navigation"
 import { formatUsdWhole } from "@/app/fundraising/components/FundraisingHero"
 import { HardLink } from "@/components/hard-link"
 import {
+  CADEN_ABOUT_COMING_SOON_LINE,
   CADEN_ABOUT_PLACEHOLDER_BODY,
+  CADEN_APPLICATION_ESSAY_SUMMARY,
   CADEN_AWARD_DESCRIPTION_VERBATIM,
   CADEN_CLOSING_TAGLINE_FULLWIDTH,
+  CADEN_ELIGIBILITY_BODY,
+  CADEN_FAMILY_ADVISORY_MEMBER,
+  CADEN_NOMINATORS_BODY,
+  CADEN_PUBLIC_PAGE_FALLBACKS,
+  CADEN_REVIEW_PROCESS_STAGES,
   CADEN_SELECTION_CRITERIA_CARDS,
   CADEN_SELECTION_FOOTNOTE,
 } from "@/lib/scholarships/caden-perry-content"
@@ -54,8 +61,22 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
   const appsOpen = scholarshipApplicationsAreOpen(s)
   const isCaden = s.slug === "caden-perry"
 
-  const closePretty = formatScholarshipPageDate(s.applications_close_date ?? null)
-  const announcePretty = formatScholarshipPageDate(s.award_announcement_date ?? null)
+  const openDisplayRaw =
+    isCaden && !s.applications_open_date ? CADEN_PUBLIC_PAGE_FALLBACKS.applications_open_date : s.applications_open_date
+  const closeDisplayRaw =
+    isCaden && !s.applications_close_date ? CADEN_PUBLIC_PAGE_FALLBACKS.applications_close_date : s.applications_close_date
+  const announceDisplayRaw =
+    isCaden && !s.award_announcement_date
+      ? CADEN_PUBLIC_PAGE_FALLBACKS.award_announcement_date
+      : s.award_announcement_date
+
+  const closePretty = formatScholarshipPageDate(closeDisplayRaw ?? null)
+  const announcePretty = formatScholarshipPageDate(announceDisplayRaw ?? null)
+
+  const awardAmountDisplayCents =
+    isCaden && s.award_amount_cents == null ? CADEN_PUBLIC_PAGE_FALLBACKS.award_amount_cents : s.award_amount_cents
+
+  const awardParagraphs = CADEN_AWARD_DESCRIPTION_VERBATIM.split(/\n\n+/).map((p) => p.trim()).filter(Boolean)
 
   return (
     <div
@@ -77,9 +98,6 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
                 className="h-auto max-h-[min(38vw,220px)] w-auto opacity-[0.38]"
                 priority
               />
-              <p className={df("mt-8 max-w-lg text-center text-[10px] font-bold uppercase tracking-[0.22em] text-white/30")}>
-                {isCaden ? "Photography pending Perry family — dignified placeholder" : "Scholarship hero image pending"}
-              </p>
             </div>
           )}
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#061224] via-[#061224]/55 to-transparent" />
@@ -124,13 +142,17 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
           >
             {badgeLabel}
           </span>
-          {s.applications_open_date ? (
+          {openDisplayRaw || closeDisplayRaw ? (
             <span className="text-[11px] text-white/45">
-              Opens <span className="tabular-nums text-white/65">{s.applications_open_date}</span>
-              {s.applications_close_date ? (
+              {openDisplayRaw ? (
                 <>
-                  {" "}
-                  · closes <span className="tabular-nums text-white/65">{s.applications_close_date}</span>
+                  Opens <span className="tabular-nums text-white/65">{openDisplayRaw}</span>
+                </>
+              ) : null}
+              {openDisplayRaw && closeDisplayRaw ? <> · </> : null}
+              {closeDisplayRaw ? (
+                <>
+                  closes <span className="tabular-nums text-white/65">{closeDisplayRaw}</span>
                 </>
               ) : null}
             </span>
@@ -143,11 +165,18 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
             <section className="mt-14">
               <h2 className={df("text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]")}>About Caden</h2>
               <div className="mt-5 whitespace-pre-wrap text-base leading-relaxed text-white/78">{CADEN_ABOUT_PLACEHOLDER_BODY}</div>
+              <p className="mt-6 text-sm italic leading-relaxed text-white/55">{CADEN_ABOUT_COMING_SOON_LINE}</p>
             </section>
 
             <section className="mt-16 border-t border-white/[0.06] pt-14">
               <h2 className={df("text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]")}>The award</h2>
-              <div className="mt-6 whitespace-pre-wrap text-[15px] leading-[1.75] text-white/82">{CADEN_AWARD_DESCRIPTION_VERBATIM}</div>
+              <div className="mt-6 space-y-5 text-[15px] leading-[1.75] text-white/82">
+                {awardParagraphs.map((para, i) => (
+                  <p key={i} className="text-pretty">
+                    {para}
+                  </p>
+                ))}
+              </div>
             </section>
 
             <p
@@ -172,6 +201,69 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
                 ))}
               </div>
               <p className="mt-8 text-xs leading-relaxed text-white/42">{CADEN_SELECTION_FOOTNOTE}</p>
+            </section>
+
+            <section className="mt-16 border-t border-white/[0.06] pt-14">
+              <h2 className={df("text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]")}>Eligibility & nominations</h2>
+              <div className="mt-6 space-y-8">
+                <div>
+                  <h3 className={df("text-[11px] font-bold uppercase tracking-[0.14em] text-white/80")}>Who can be nominated</h3>
+                  <div className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-white/72">{CADEN_ELIGIBILITY_BODY}</div>
+                </div>
+                <div>
+                  <h3 className={df("text-[11px] font-bold uppercase tracking-[0.14em] text-white/80")}>Who can nominate</h3>
+                  <div className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-white/72">{CADEN_NOMINATORS_BODY}</div>
+                </div>
+              </div>
+            </section>
+
+            <section className="mt-16 border-t border-white/[0.06] pt-14">
+              <h2 className={df("text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]")}>The application</h2>
+              <div className="mt-6 whitespace-pre-wrap text-sm leading-relaxed text-white/72">{CADEN_APPLICATION_ESSAY_SUMMARY}</div>
+            </section>
+
+            <section className="mt-16 border-t border-white/[0.06] pt-14">
+              <h2 className={df("text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]")}>How we review</h2>
+              <ol className="mt-6 space-y-5">
+                {CADEN_REVIEW_PROCESS_STAGES.map((stage, i) => (
+                  <li key={stage.title} className="flex gap-4">
+                    <span className={df("mt-0.5 shrink-0 tabular-nums text-xs font-black text-[#C8A94A]")}>{i + 1}</span>
+                    <div>
+                      <p className={df("text-sm font-bold uppercase tracking-wide text-white/88")}>{stage.title}</p>
+                      <p className="mt-2 text-sm leading-relaxed text-white/68">{stage.body}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </section>
+
+            <section className="mt-16 border-t border-white/[0.06] pt-14">
+              <h2 className={df("text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]")}>Family advisory — this scholarship</h2>
+              <p className="mt-4 text-sm leading-relaxed text-white/68">
+                The voting committee that scores nominations blind is the same across NC United scholarship funds — see the{" "}
+                <HardLink href="/fundraising/scholarships#selection-committee" className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
+                  Scholarships hub
+                </HardLink>
+                . This award separately names one non-voting family representative tied only to the Caden Perry Scholarship:
+              </p>
+              <div className="mt-8 overflow-x-auto rounded-xl border border-white/[0.08]">
+                <table className="w-full min-w-[420px] border-collapse text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-white/15 bg-black/20 text-[10px] font-bold uppercase tracking-wide text-[#C8A94A]/95">
+                      <th className="px-4 py-3 pr-3">Name</th>
+                      <th className="px-3 py-3">Seat</th>
+                      <th className="px-3 py-3">Role</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-white/78">
+                    <tr className="border-b border-white/[0.06]">
+                      <td className="px-4 py-3 font-medium text-white">{CADEN_FAMILY_ADVISORY_MEMBER.name}</td>
+                      <td className="px-3 py-3">{CADEN_FAMILY_ADVISORY_MEMBER.seatTitle}</td>
+                      <td className="px-3 py-3 text-white/65">{CADEN_FAMILY_ADVISORY_MEMBER.connection}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </section>
           </>
         ) : (
@@ -203,6 +295,17 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
           </>
         )}
 
+        {!isCaden ? (
+          <p className="mt-12 text-center text-sm text-white/50">
+            <HardLink
+              href="/fundraising/scholarships#selection-committee"
+              className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline"
+            >
+              Selection committee & how we review applications →
+            </HardLink>
+          </p>
+        ) : null}
+
         <section className="mt-14 rounded-xl border border-[#C8A94A]/25 bg-[#0B2545]/45 px-4 py-6 sm:px-6">
           <h2 className={df("text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]")}>{isCaden ? "Fund status" : "Program summary"}</h2>
           <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -213,7 +316,7 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wide text-white/45">Award amount</p>
               <p className="mt-2 tabular-nums text-xl font-black text-white">
-                {s.award_amount_cents != null ? formatUsdWhole(s.award_amount_cents) : "—"}
+                {awardAmountDisplayCents != null ? formatUsdWhole(awardAmountDisplayCents) : "—"}
               </p>
             </div>
             <div>
