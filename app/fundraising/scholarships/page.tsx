@@ -2,6 +2,14 @@ import type { Metadata } from "next"
 
 import { formatUsdWhole } from "@/app/fundraising/components/FundraisingHero"
 import { scholarshipApplicationBadge } from "@/lib/scholarships/applications-open"
+import {
+  SHARED_SCHOLARSHIP_VOTING_COMMITTEE,
+  SCHOLARSHIP_BLIND_REVIEW_SUMMARY,
+  SCHOLARSHIP_HUB_ADVISORY_EXPLAINER,
+  SCHOLARSHIP_HUB_COMMITTEE_INTRO,
+  SCHOLARSHIP_HUB_TRANSPARENCY_NOTE,
+  SCHOLARSHIP_INTEGRITY_NOTE,
+} from "@/lib/scholarships/scholarship-hub-governance"
 import { listPublicAwardsAll, listScholarshipsForHub } from "@/lib/scholarships/public-queries"
 import { HardLink } from "@/components/hard-link"
 
@@ -124,6 +132,49 @@ export default async function ScholarshipsHubPage() {
               })}
             </ul>
           )}
+        </section>
+
+        <section
+          id="selection-committee"
+          className="mt-16 border-t border-white/[0.06] pt-14"
+          aria-labelledby="selection-committee-heading"
+        >
+          <h2 id="selection-committee-heading" className={df("text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]")}>
+            Selection committee & governance
+          </h2>
+          <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/72">{SCHOLARSHIP_HUB_COMMITTEE_INTRO}</p>
+          <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/58">{SCHOLARSHIP_HUB_ADVISORY_EXPLAINER}</p>
+
+          <div className="mt-8 overflow-x-auto rounded-xl border border-white/[0.08]">
+            <table className="w-full min-w-[520px] border-collapse text-left text-sm">
+              <thead>
+                <tr className="border-b border-white/15 bg-black/20 text-[10px] font-bold uppercase tracking-wide text-[#C8A94A]/95">
+                  <th className="px-4 py-3 pr-3">Name</th>
+                  <th className="px-3 py-3">Seat</th>
+                  <th className="px-3 py-3">Connection</th>
+                  <th className="px-4 py-3 pl-3">Vote</th>
+                </tr>
+              </thead>
+              <tbody className="text-white/78">
+                {SHARED_SCHOLARSHIP_VOTING_COMMITTEE.map((row) => (
+                  <tr key={row.name} className="border-b border-white/[0.06]">
+                    <td className="px-4 py-3 font-medium text-white">{row.name}</td>
+                    <td className="px-3 py-3">{row.seatTitle}</td>
+                    <td className="px-3 py-3 text-white/65">{row.connection}</td>
+                    <td className="px-4 py-3 text-white/75">{row.voteType}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <p className="mt-6 max-w-3xl text-xs leading-relaxed text-white/45">{SCHOLARSHIP_HUB_TRANSPARENCY_NOTE}</p>
+
+          <div className="mt-10 rounded-xl border border-white/[0.07] bg-[#0B2545]/35 px-4 py-6 sm:px-6">
+            <h3 className={df("text-[11px] font-bold uppercase tracking-[0.18em] text-[#C8A94A]")}>Blind review & integrity</h3>
+            <p className="mt-4 text-sm leading-relaxed text-white/72">{SCHOLARSHIP_BLIND_REVIEW_SUMMARY}</p>
+            <p className="mt-4 text-sm leading-relaxed text-white/58">{SCHOLARSHIP_INTEGRITY_NOTE}</p>
+          </div>
         </section>
 
         <section className="mt-16 border-t border-white/[0.06] pt-14" aria-labelledby="past-awards-heading">
