@@ -52,6 +52,8 @@ export function FundraisingMilestoneTrophy({ raisedCents, goalCents, athleteLabe
   const milestones = milestoneListCents()
 
   const cupTicks = milestones.filter((c) => c <= cupMaxCents)
+  const fillPctRounded = Math.min(100, Math.round(fillRatio * 100))
+  const labelForHints = athleteLabel?.trim() || "this athlete"
 
   const aria = athleteLabel?.trim()
     ? goalCents != null && goalCents > 0
@@ -239,13 +241,17 @@ export function FundraisingMilestoneTrophy({ raisedCents, goalCents, athleteLabe
       <p className="mt-4 text-center text-[11px] leading-snug text-white/40">
         {goalCents != null && goalCents > 0 ? (
           <>
-            Fill level tracks progress toward <Strong>your campaign goal</Strong> (same ledger as your totals). Milestones on the right are reference
-            checkpoints along the way.
+            Fill level tracks progress toward <strong className="text-white/55">your campaign goal</strong> (same ledger as your totals). Milestones on
+            the right are reference checkpoints along the way.
           </>
         ) : (
           <>
-            Fill level tracks progress toward your next milestone on this ladder (same ledger as your totals). Milestones on the right show the full
-            trail.
+            With no personal goal yet, the cup fills toward the next scale stop at{" "}
+            <span className="tabular-nums text-white/55">{formatUsdWhole(cupMaxCents)}</span> (about{" "}
+            <span className="tabular-nums text-white/55">{fillPctRounded}%</span> full at{" "}
+            <span className="tabular-nums text-white/55">{formatUsdWhole(raisedCents)}</span> raised). Checkmarks are earned tiers, not “full cup.” Whoever
+            manages this page can set <strong className="text-white/55">{labelForHints}&apos;s goal</strong> in the gold section{" "}
+            <strong className="text-white/55">above their note</strong> so the trophy reads full when that target is reached.
           </>
         )}
       </p>
