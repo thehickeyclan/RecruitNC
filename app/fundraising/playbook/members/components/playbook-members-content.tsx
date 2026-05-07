@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import { HardLink } from "@/components/hard-link"
+import { DigitalWalletGovernancePlaybook } from "../../_components/digital-wallet-governance-playbook"
 import { PlaybookInformalGivingNote } from "./red-callout"
 
 function DH({ as: Tag = "h2", children }: { as?: "h1" | "h2" | "h3"; children: ReactNode }) {
@@ -60,8 +61,7 @@ export function PlaybookMembersContent() {
 
       <Lead>
         Thanks for opening this. Whether you&apos;re new to fundraising or you&apos;ve done it every season, we wrote this so your family can see{" "}
-        <Strong>what NC United provides</Strong>, <Strong>what&apos;s worked for other wrestlers</Strong>, and{" "}
-        <Strong>practical next steps</Strong> — without shame about how anyone gave before.
+        <Strong>what NC United provides</Strong>, <Strong>what&apos;s worked for other wrestlers</Strong>, and <Strong>practical next steps</Strong>.
       </Lead>
       <P className="text-white/78">
         Skim in order or jump ahead; the acknowledgment at the bottom only needs you to have scrolled through once so staff know you&apos;ve seen how
@@ -117,38 +117,55 @@ export function PlaybookMembersContent() {
       <Rule />
 
       <DH as="h2">The NC United model</DH>
+      <P>
+        Venmo, Cash App, and standalone crowdfunding links feel urgent — they&apos;re basically asking friends for cash through an app. Each household can
+        blast another solo post; what you don&apos;t get is <Strong>one credible nonprofit spine</Strong> schools, employers, sponsors, and auditors can
+        rely on.
+      </P>
+      <P className="text-white/82">
+        Raising with credibility beats one hundred individuals spinning separate Venmo handles and GoFundMe URLs across social — scattered receipts, no
+        matching lane, no institutional grade attribution. NC United concentrates that lift behind{" "}
+        <Strong>501(c)(3) rails, ledger-backed credits, and documented flows</Strong> donors already expect when they want their gift to count beyond a text
+        thread.
+      </P>
       <P className="text-white/78">
-        Five strengths built into NC United&apos;s nonprofit rails — usually beyond what one household or an informal payment app can match end-to-end.
+        Five strengths built into NC United&apos;s nonprofit stack — generally impossible for one household or a pile of informal payment apps to carry
+        end-to-end:
       </P>
       <ol className="mt-6 list-decimal space-y-5 pl-5 text-white/82 marker:font-black marker:text-[#C8A94A]">
         <li>
-          <Strong>501(c)(3) structure.</Strong> Tax-deductible giving for individuals, businesses, and foundations where applicable — opening paths
-          informal giving cannot.
+          <Strong>501(c)(3) structure.</Strong> Tax-deductible giving for individuals, businesses, and foundations where applicable — paths informal peer apps
+          simply don&apos;t open.
         </li>
         <li>
           <Strong>Central platform.</Strong> Donations tracked, dollars attributed to athletes, receipts emailed, ledger aligned with nonprofit
-          expectations.
+          expectations — not screenshots you chase across devices.
         </li>
         <li>
-          <Strong>Community network.</Strong> The broader NC wrestling community invests together — not every household carrying the whole lift solo.
+          <Strong>Community network.</Strong> The broader NC wrestling community invests together instead of every household pretending it must carry the whole
+          lift solo off-platform.
         </li>
         <li>
-          <Strong>Athlete ownership.</Strong> NC United supplies infrastructure; families still drive outreach, follow-through, and thank-yous.
+          <Strong>Athlete ownership.</Strong> NC United supplies infrastructure; families still drive outreach, follow-through, and thank-yous — but under a
+          banner outsiders recognize as nonprofit-backed.
         </li>
         <li>
-          <Strong>Transparency.</Strong> Public attribution where intended, live progress signals, receipts generated at checkout.
+          <Strong>Transparency.</Strong> Public attribution where intended, live progress signals, receipts generated at checkout — built for scrutiny, not
+          opacity.
         </li>
       </ol>
+
+      <DigitalWalletGovernancePlaybook />
 
       <PlaybookInformalGivingNote />
 
       <Rule />
 
       <DH as="h2">Where unofficial channels usually leave money on the table</DH>
-      <P className="text-white/78">
-        Youth sports families everywhere reach for quick tools — Venmo, standalone crowdfunding, one-off posts. That&apos;s understandable. For a full
-        season of credited athlete fundraising through NC United, these patterns tend to cap totals — not because families &quot;failed,&quot; but
-        because tax and employer rules reward structured giving.
+      <P className="text-white/82">
+        Informal channels max out fast because they weren&apos;t engineered for charitable receipts, employer matching, corporate gifts, or foundations —
+        no matter how loud the feed gets. When donors want paperwork that survives HR or the IRS, unstructured rails leak leverage even when everyone&apos;s
+        intentions are good.
       </P>
       <P className="mt-6 font-[family-name:var(--font-fundraising-display)] text-xs font-bold uppercase tracking-[0.18em] text-[#C8A94A]">
         Same ten donors — different upside
