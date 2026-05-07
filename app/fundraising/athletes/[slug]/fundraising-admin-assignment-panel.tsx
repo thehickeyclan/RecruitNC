@@ -9,14 +9,27 @@ import {
   type FundraisingParentLinkPayload,
 } from "@/components/fundraising-wiring/link-parent-to-athlete-dialog"
 import { fundraisingCodeFromSlug } from "@/lib/fundraising/athlete-fundraising-slug"
-import {
-  fundraisingWiringLooksReadyForNonAdminEdits,
-  type FundraisingWiringAdminSnapshot,
-} from "@/lib/fundraising/fundraising-wiring-status"
+import type { FundraisingWiringAdminSnapshot } from "@/lib/fundraising/fundraising-wiring-status"
 import { toast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 
 const NCU_PRIMARY_RE = /^NCU-[A-Za-z0-9]+-\d{2}$/i
+
+type ActivationWireStatus = "none" | "pending" | "approved" | "rejected"
+
+type WiringChipTone = "good" | "pending" | "bad"
+
+function wiringChipTone(connected: boolean, activationPending: boolean): WiringChipTone {
+  if (connected) return "good"
+  if (activationPending) return "pending"
+  return "bad"
+}
+
+const CHIP_TONE_CLASS: Record<WiringChipTone, string> = {
+  good: "border-emerald-500/55 bg-emerald-950/45 text-emerald-50",
+  pending: "border-amber-500/55 bg-amber-950/40 text-amber-50",
+  bad: "border-red-500/50 bg-red-950/35 text-red-50",
+}
 
 type Props = {
   fundraisingSlug: string
@@ -26,6 +39,8 @@ type Props = {
   ncuHint: string | null
   /** Server snapshot — parent links vs claimed athlete profile for non-admin gift-page edits. */
   wiringSnapshot: FundraisingWiringAdminSnapshot | null
+  /** Latest family activation request — drives yellow “pending” on status chips. */
+  latestActivationStatus: ActivationWireStatus
 }
 
 export function FundraisingAdminAssignmentPanel({
@@ -35,6 +50,7 @@ export function FundraisingAdminAssignmentPanel({
   athleteDisplayLabel,
   ncuHint,
   wiringSnapshot,
+  latestActivationStatus,
 }: Props) {
   const router = useRouter()
   const [attachProfile, setAttachProfile] = useState<{
@@ -54,6 +70,18 @@ export function FundraisingAdminAssignmentPanel({
   }, [ncuHint, fundraisingSlug])
 
   const ncuLine = ncuHint?.trim() || "—"
+
+  const activationPending = latestActivationStatus === "pending"
+  const parentLinked = !!(wiringSnapshot && wiringSnapshot.parentAthleteLinkCount > 0)
+  const wrestlerClaimed = !!(wiringSnapshot && wiringSnapshot.userProfilesAthleteIdMatchCount > 0)
+  const parentTone = wiringSnapshot ? wiringChipTone(parentLinked, activationPending) : "bad"
+  const claimTone = wiringSnapshot ? wiringChipTone(wrestlerClaimed, activationPending) : "bad"
+
+  function chipSubtitle(tone: WiringChipTone, connectedLabel: string) {
+    if (tone === "good") return connectedLabel
+    if (tone === "pending") return "Awaiting review"
+    return "Not connected"
+  }
 
   const createDonorProfileRow = async () => {
     if (!athleteId) return
@@ -122,59 +150,25 @@ export function FundraisingAdminAssignmentPanel({
           . NCU hint: <span className="font-mono text-[11px] text-white/55">{ncuLine}</span>
         </p>
         {athleteId && wiringSnapshot ? (
-          <div
-            className={cn(
-              "mt-3 rounded-lg border px-3 py-2.5 text-xs leading-snug",
-              fundraisingWiringLooksReadyForNonAdminEdits(wiringSnapshot)
-                ? "border-emerald-500/45 bg-emerald-950/40"
-                : "border-red-500/45 bg-red-950/35",
-            )}
-            role="status"
-          >
-            <p
+          <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Gift-page login wiring">
+            <div
               className={cn(
-                "font-semibold",
-                fundraisingWiringLooksReadyForNonAdminEdits(wiringSnapshot) ? "text-emerald-200" : "text-red-200",
+                "min-h-[52px] min-w-[min(100%,160px)] flex-1 rounded-lg border px-3 py-2 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]",
+                CHIP_TONE_CLASS[parentTone],
               )}
             >
-              {fundraisingWiringLooksReadyForNonAdminEdits(wiringSnapshot)
-                ? "Non-admin edit path: good — at least one login can edit this gift page."
-                : "Non-admin edit path: incomplete — use Attach parent or a claimed athlete profile."}
-            </p>
-            <ul className="mt-2 space-y-2 text-white/85">
-              <li className="flex gap-2">
-                <span
-                  className={cn(
-                    "mt-1.5 h-2 w-2 shrink-0 rounded-full",
-                    wiringSnapshot.parentAthleteLinkCount > 0 ? "bg-emerald-500" : "bg-red-600",
-                  )}
-                  aria-hidden
-                />
-                <span>
-                  <strong className="text-white">Links</strong> ({wiringSnapshot.parentAthleteLinkCount}) —{" "}
-                  <code className="font-mono text-[10px] text-white/55">parent_athlete_links</code>. Parent account or wrestler
-                  account linked via <strong className="text-white">Attach parent</strong>.
-                </span>
-              </li>
-              <li className="flex gap-2">
-                <span
-                  className={cn(
-                    "mt-1.5 h-2 w-2 shrink-0 rounded-full",
-                    wiringSnapshot.userProfilesAthleteIdMatchCount > 0 ? "bg-emerald-500" : "bg-red-600",
-                  )}
-                  aria-hidden
-                />
-                <span>
-                  <strong className="text-white">Claim</strong> ({wiringSnapshot.userProfilesAthleteIdMatchCount}) —{" "}
-                  <code className="font-mono text-[10px] text-white/55">user_profiles.athlete_id</code>. Wrestler&apos;s own login
-                  claims this roster athlete (self-edit).
-                </span>
-              </li>
-            </ul>
-            <p className="mt-2 text-[11px] text-white/45 leading-snug">
-              Either green dot is usually enough for edits. Login email matching roster contact can still unlock edits without these
-              rows.
-            </p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] opacity-90">Parent account</p>
+              <p className="mt-1 text-xs font-semibold">{chipSubtitle(parentTone, "Linked")}</p>
+            </div>
+            <div
+              className={cn(
+                "min-h-[52px] min-w-[min(100%,160px)] flex-1 rounded-lg border px-3 py-2 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]",
+                CHIP_TONE_CLASS[claimTone],
+              )}
+            >
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] opacity-90">Wrestler login</p>
+              <p className="mt-1 text-xs font-semibold">{chipSubtitle(claimTone, "Claimed")}</p>
+            </div>
           </div>
         ) : null}
         {!profileId && athleteId ? (

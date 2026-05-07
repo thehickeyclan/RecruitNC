@@ -199,6 +199,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
             athleteDisplayLabel={displayName}
             ncuHint={profile?.primary_fundraising_code ?? code}
             wiringSnapshot={wiringSnapshot}
+            latestActivationStatus={latestActivationStatus}
           />
         ) : null}
 

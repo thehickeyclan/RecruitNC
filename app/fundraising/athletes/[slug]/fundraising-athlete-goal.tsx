@@ -228,8 +228,8 @@ export function FundraisingAthleteGoalSection({
         </p>
       ) : (
         <p className="mt-4 text-sm leading-relaxed text-white/55">
-          No personal goal is shown here yet. When an athlete, linked parent, or RecruitNC staff signs in, they can publish a goal in this
-          section — same login that edits the note below.
+          No personal goal is shown here yet. RecruitNC staff, this wrestler, or a <strong className="text-white/80">parent account linked to this athlete</strong>{" "}
+          can add one when signed in — same as the note below.
         </p>
       )}
     </section>
