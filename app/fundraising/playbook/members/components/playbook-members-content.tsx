@@ -598,28 +598,6 @@ export function PlaybookMembersContent({
 
       {showFundraisingRequest ? <Rule /> : null}
 
-      <DH as="h2">Start now</DH>
-      <P>You are not just a wrestler. You are a story and a cause worth investing in.</P>
-      <P>
-        The athletes who raise the most make the clearest ask, tell their story with conviction, build real relationships with their donors, and follow up.
-      </P>
-      <P>The system is built. The community is ready. The only thing missing is you making the ask.</P>
-
-      <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-        <HardLink
-          href="/fundraising/athletes"
-          className="inline-flex min-h-[52px] items-center justify-center rounded-sm bg-[#C8A94A] px-8 font-[family-name:var(--font-fundraising-display)] text-sm font-extrabold uppercase tracking-[0.14em] text-[#061224] hover:bg-[#b89740]"
-        >
-          Set up your athlete fundraising profile →
-        </HardLink>
-        <HardLink
-          href="/fundraising"
-          className="inline-flex min-h-[52px] items-center justify-center rounded-sm border border-white/25 px-8 font-[family-name:var(--font-fundraising-display)] text-sm font-extrabold uppercase tracking-[0.14em] text-[#C8A94A] hover:bg-white/5"
-        >
-          Return to fundraising hub →
-        </HardLink>
-      </div>
-
       <div className="mt-16 space-y-2 border-t border-white/10 pt-10 text-xs leading-relaxed text-white/50">
         <p>NC United Wrestling is a registered 501(c)(3) nonprofit organization.</p>
         <p>
@@ -630,6 +608,11 @@ export function PlaybookMembersContent({
           <a href="mailto:info@ncwrestlingunited.com" className="text-[#C8A94A] underline-offset-4 hover:underline">
             info@ncwrestlingunited.com
           </a>
+        </p>
+        <p>
+          <HardLink href="/fundraising" className="text-[#C8A94A] underline-offset-4 hover:underline">
+            Fundraising hub →
+          </HardLink>
         </p>
         <p className="text-white/40">#NCUnited #StrengthInUnity #NCWrestling</p>
       </div>
