@@ -46,6 +46,9 @@ function publicGiftSiteOrigin(): string {
 
 type PageProps = { params: Promise<{ slug: string }>; searchParams?: Promise<{ cancelled?: string }> }
 
+/** Gift pages personalize edit controls from auth — avoid serving a cached anonymous shell. */
+export const dynamic = "force-dynamic"
+
 function publicTitleName(
   resolved: NonNullable<Awaited<ReturnType<typeof resolveFundraisingAthletePublicBySlugForRequest>>>,
 ): string {

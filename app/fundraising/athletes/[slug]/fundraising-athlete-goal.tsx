@@ -118,7 +118,6 @@ export function FundraisingAthleteGoalSection({
   }, [goalCents])
 
   const showPublicGoal = goalCents != null && goalCents > 0
-  if (!canEdit && !showPublicGoal) return null
 
   return (
     <section className="mt-8 rounded-xl border border-[#C8A94A]/30 bg-[#0B2545]/45 px-4 py-5 sm:px-6 sm:py-6">
@@ -223,9 +222,14 @@ export function FundraisingAthleteGoalSection({
             The trophy below fills with the same running total and reaches full at this goal.
           </p>
         </>
-      ) : (
+      ) : canEdit ? (
         <p className="mt-4 text-sm italic text-white/50">
           Set a fundraising goal so supporters see your target — it also sets when the trophy reads full.
+        </p>
+      ) : (
+        <p className="mt-4 text-sm leading-relaxed text-white/55">
+          No personal goal is shown here yet. When an athlete, linked parent, or RecruitNC staff signs in, they can publish a goal in this
+          section — same login that edits the note below.
         </p>
       )}
     </section>
