@@ -271,6 +271,11 @@ export function PlaybookMembersContent() {
       <Rule />
 
       <DH as="h2">Who can give — and how much</DH>
+      <P className="mt-4 border-l-2 border-[#C8A94A]/45 bg-white/[0.03] pl-4 py-3 text-sm leading-relaxed text-white/78">
+        The spans below come from <Strong>what we&apos;ve seen across NC United drives</Strong> — usual gift sizes and tiers families anchor asks on.
+        They are <Strong>not caps</Strong>: donors can give more or less than any bracket (checkout minimums aside). Nothing here limits how much a
+        relative, friend, or business can contribute when they&apos;re ready.
+      </P>
 
       <DH as="h3">Individual donors — $25 to $500</DH>
       <P>
