@@ -1,7 +1,14 @@
 import type { ReactNode } from "react"
+import type { FundraisingAthleteIndexRow } from "@/lib/fundraising/athlete-fundraising-profiles"
 import { HardLink } from "@/components/hard-link"
 import { DigitalWalletGovernancePlaybook } from "../../_components/digital-wallet-governance-playbook"
 import { PlaybookInformalGivingNote } from "./red-callout"
+import { PlaybookFundraisingRequestSection } from "./playbook-fundraising-request-section"
+
+export type PlaybookMembersContentProps = {
+  fundraisingDirectoryRows?: FundraisingAthleteIndexRow[]
+  activationStatusBySlug?: Record<string, string>
+}
 
 function DH({ as: Tag = "h2", children }: { as?: "h1" | "h2" | "h3"; children: ReactNode }) {
   const base =
@@ -45,7 +52,12 @@ function DataTable({ children }: { children: ReactNode }) {
   )
 }
 
-export function PlaybookMembersContent() {
+export function PlaybookMembersContent({
+  fundraisingDirectoryRows = [],
+  activationStatusBySlug = {},
+}: PlaybookMembersContentProps = {}) {
+  const showFundraisingRequest = fundraisingDirectoryRows.length > 0
+
   return (
     <article className="mx-auto max-w-3xl overflow-x-hidden px-4 pb-24 pt-8">
       <p className="font-[family-name:var(--font-fundraising-display)] text-[11px] font-bold uppercase tracking-[0.28em] text-[#C8A94A]">
@@ -59,13 +71,41 @@ export function PlaybookMembersContent() {
         NC United Wrestling · 501(c)(3) nonprofit · EIN: <span className="tabular-nums not-italic">99-3757238</span>
       </p>
 
+      {showFundraisingRequest ? (
+        <p className="mt-3">
+          <HardLink
+            href="#fundraising-page-request"
+            className="text-sm font-bold uppercase tracking-[0.14em] text-[#C8A94A] underline-offset-4 hover:underline"
+          >
+            Jump to: request gift-page access →
+          </HardLink>
+        </p>
+      ) : null}
+
       <Lead>
         Thanks for opening this. Whether you&apos;re new to fundraising or you&apos;ve done it every season, we wrote this so your family can see{" "}
         <Strong>what NC United provides</Strong>, <Strong>what&apos;s worked for other wrestlers</Strong>, and <Strong>practical next steps</Strong>.
       </Lead>
       <P className="text-white/78">
-        Skim in order or jump ahead. After reading, sign in on your athlete&apos;s gift page and use{" "}
-        <Strong>Request activation</Strong> so staff can link your RecruitNC login — no separate acknowledgment checkbox required here.
+        Skim in order or jump ahead. After reading,{" "}
+        {showFundraisingRequest ? (
+          <>
+            use{" "}
+            <HardLink href="#fundraising-page-request" className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
+              Request staff link
+            </HardLink>{" "}
+            below <span className="text-white/55">(or open the gift page and use </span>
+          </>
+        ) : (
+          <>open your athlete&apos;s gift page and </>
+        )}
+        <Strong>Request activation</Strong>
+        {showFundraisingRequest ? (
+          <span className="text-white/55"> from there)</span>
+        ) : (
+          <span className="text-white/55">)</span>
+        )}{" "}
+        so NC United can wire your RecruitNC login.
       </P>
       <Ul>
         <Li>
@@ -532,6 +572,12 @@ export function PlaybookMembersContent() {
       </div>
 
       <Rule />
+
+      {showFundraisingRequest ? (
+        <PlaybookFundraisingRequestSection rows={fundraisingDirectoryRows} activationStatusBySlug={activationStatusBySlug} />
+      ) : null}
+
+      {showFundraisingRequest ? <Rule /> : null}
 
       <DH as="h2">When you&apos;re ready to move</DH>
       <P>You&apos;re not &quot;just a wrestler&quot; — you&apos;re a story people can invest in with clarity.</P>

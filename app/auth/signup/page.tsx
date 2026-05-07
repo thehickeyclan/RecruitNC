@@ -34,10 +34,18 @@ export default function SignUpPage() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
 
+  const roleNeedsPhone = profileType === "athlete" || profileType === "parent"
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError("")
+
+    if (roleNeedsPhone && cellPhone.replace(/\D/g, "").length < 10) {
+      setError("Athlete and parent accounts require a cell phone (at least 10 digits).")
+      setLoading(false)
+      return
+    }
 
     try {
       const res = await fetch("/api/auth/signup", {
@@ -238,25 +246,8 @@ export default function SignUpPage() {
               />
             </div>
 
-            {/* Optional, additive fields */}
             <div className="space-y-2">
-              <Label htmlFor="cellPhone">Cell Phone <span className="text-gray-400 text-xs">(optional)</span></Label>
-              <Input
-                id="cellPhone"
-                name="cellPhone"
-                type="tel"
-                inputMode="tel"
-                autoComplete="tel"
-                placeholder="+1 555 555 5555"
-                value={cellPhone}
-                onChange={(e) => setCellPhone(e.target.value)}
-                onInput={(e) => setCellPhone((e.target as HTMLInputElement).value)}
-                disabled={loading}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Profile Type <span className="text-gray-400 text-xs">(optional)</span></Label>
+              <Label>Profile type <span className="text-gray-400 text-xs">(choose before phone if athlete/parent)</span></Label>
               <Select value={profileType} onValueChange={setProfileType} disabled={loading}>
                 <SelectTrigger aria-label="Profile type">
                   <SelectValue placeholder="Select a profile type (optional)" />
@@ -270,6 +261,33 @@ export default function SignUpPage() {
                   <SelectItem value="fan">Fan</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="cellPhone">
+                Cell phone{" "}
+                {roleNeedsPhone ? (
+                  <span className="text-red-600 dark:text-red-400">*</span>
+                ) : (
+                  <span className="text-gray-400 text-xs">(optional)</span>
+                )}
+              </Label>
+              <Input
+                id="cellPhone"
+                name="cellPhone"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder="+1 555 555 5555"
+                value={cellPhone}
+                onChange={(e) => setCellPhone(e.target.value)}
+                onInput={(e) => setCellPhone((e.target as HTMLInputElement).value)}
+                disabled={loading}
+                required={roleNeedsPhone}
+              />
+              {roleNeedsPhone ? (
+                <p className="text-xs text-muted-foreground">Required for athlete &amp; parent profiles (fundraising &amp; outreach).</p>
+              ) : null}
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>
