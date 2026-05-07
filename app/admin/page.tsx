@@ -248,6 +248,12 @@ export default function AdminDashboard() {
                 <span className="text-sm font-semibold">Fundraising</span>
               </span>
             </HardLink>
+            <HardLink href="/admin/fundraising-ledger" className="block">
+              <span className="w-full h-20 bg-gradient-to-br from-[#422006] to-[#713f12] hover:from-[#713f12] hover:to-[#422006] text-[#fde68a] shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex font-bold border border-amber-700/40">
+                <ClipboardList className="h-6 w-6" />
+                <span className="text-sm font-semibold">Fundraising ledger</span>
+              </span>
+            </HardLink>
             <HardLink href="/admin/scholarships" className="block">
               <span className="w-full h-20 bg-gradient-to-br from-[#13294b] to-[#0B2545] hover:from-[#0B2545] hover:to-[#13294b] text-[#C8A94A] shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex font-bold border border-[#C8A94A]/30">
                 <GraduationCap className="h-6 w-6" />

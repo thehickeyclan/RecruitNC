@@ -9,7 +9,16 @@ export default async function AdminScholarshipsPage() {
       <h1 className="text-2xl font-bold">Scholarships</h1>
       <p className="mt-2 text-sm text-gray-600">
         Registry + applications live in Supabase. Run{" "}
-        <code className="rounded bg-gray-100 px-1 py-0.5 text-xs">scripts/supabase-scholarships-portal.sql</code> once, then manage rows and reviewer assignments here (expand this hub as workflows firm up).
+        <code className="rounded bg-gray-100 px-1 py-0.5 text-xs">scripts/supabase-scholarships-portal.sql</code> once. To
+        record dollars moved from the NC United Training Fund into a named scholarship, open a scholarship →{" "}
+        <strong>Training fund → scholarship</strong>.         One-time SQL setup:{" "}
+        <code className="rounded bg-gray-100 px-1 py-0.5 text-xs">lib/scholarships/sql/training-fund-allocation.sql</code>.
+        Full fundraising audit log:{" "}
+        <HardLink href="/admin/fundraising-ledger" className="font-semibold text-blue-700 underline">
+          Fundraising ledger
+        </HardLink>{" "}
+        (<code className="rounded bg-gray-100 px-1 py-0.5 text-xs">lib/fundraising/sql/fundraising-ledger.sql</code>
+        ).
       </p>
 
       <div className="mt-6">
@@ -36,6 +45,10 @@ export default async function AdminScholarshipsPage() {
                 <p className="font-medium">{s.name}</p>
                 <p className="text-xs text-gray-500">
                   {s.slug} · {s.status}
+                  {" · "}
+                  <span className="tabular-nums">
+                    raised {(s.total_donated_cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })}
+                  </span>
                 </p>
               </div>
               <HardLink href={`/admin/scholarships/${encodeURIComponent(s.slug)}`} className="text-sm text-blue-700 underline">

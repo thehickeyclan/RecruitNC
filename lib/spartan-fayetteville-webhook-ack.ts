@@ -4,6 +4,7 @@ import {
   firstNameFromDonorName,
   sendNcuDonationAcknowledgmentEmail,
 } from "@/lib/email/ncu-donation-acknowledgment"
+import { recordFundraisingLedgerSpartanCheckout } from "@/lib/fundraising/ledger"
 import { stripeSpartanCampaignMetadataMatchesRequested } from "@/lib/fundraising/campaign-registry"
 import { SPARTAN_FAYETTEVILLE_CAMPAIGN } from "@/lib/spartan-fayetteville-stripe"
 
@@ -114,5 +115,8 @@ export async function upsertSpartanDonationFromCheckoutSession(
   )
   if (spartanErr) {
     console.error("[spartan-fayetteville-webhook-ack] spartan_donations upsert:", spartanErr.message)
+    return
   }
+
+  await recordFundraisingLedgerSpartanCheckout(admin, session)
 }

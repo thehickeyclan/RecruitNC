@@ -5,6 +5,7 @@ import {
   publicGiftCampaignLabel,
 } from "@/lib/fundraising/campaign-registry"
 import { loadCorrectedStripeDonationsForCampaignWindow } from "@/lib/fundraising/stripe-transparency-pipeline"
+import { sumTrainingFundScholarshipAllocationsCents } from "@/lib/scholarships/training-fund-allocations-sum"
 import type { SpartanFayettevilleDonation } from "@/lib/spartan-fayetteville-stripe"
 
 /** Same shape as athlete gift rows for shared table UI. */
@@ -16,7 +17,12 @@ export type TrainingFundGiftRow = {
 }
 
 export type TrainingFundPublicStats = {
-  raisedCents: number
+  /** Completed Stripe gifts to the training fund (gross, before internal moves). */
+  donationsReceivedCents: number
+  /** Dollars moved from this pool into named scholarships (same rows as admin allocations). */
+  allocatedToScholarshipsCents: number
+  /** max(0, donationsReceivedCents − allocatedToScholarshipsCents). */
+  unallocatedBalanceCents: number
   giftCount: number
   avgGiftCents: number | null
 }
@@ -41,11 +47,13 @@ function publicDonorFromStripeMeta(d: SpartanFayettevilleDonation): string {
 export async function getTrainingFundPublicSnapshot(
   giftLimit: number,
 ): Promise<{ stats: TrainingFundPublicStats; gifts: TrainingFundGiftRow[] }> {
+  const allocatedToScholarshipsCents = await sumTrainingFundScholarshipAllocationsCents()
+
   const corrected = await loadCorrectedStripeDonationsForCampaignWindow(DEFAULT_FUNDRAISING_CAMPAIGN)
   if (corrected != null) {
     const mine = corrected.filter(isTrainingFundDonation)
-    let raisedCents = 0
-    for (const r of mine) raisedCents += r.amountCents
+    let donationsReceivedCents = 0
+    for (const r of mine) donationsReceivedCents += r.amountCents
     const giftCount = mine.length
     mine.sort((a, b) => b.createdUnix - a.createdUnix)
     const lim = Math.min(250, Math.max(1, giftLimit))
@@ -56,11 +64,14 @@ export async function getTrainingFundPublicSnapshot(
       amountCents: r.amountCents,
       campaignLabel: publicGiftCampaignLabel(r.spartanCampaignSlug ?? null, r.createdIso),
     }))
+    const unallocatedBalanceCents = Math.max(0, donationsReceivedCents - allocatedToScholarshipsCents)
     return {
       stats: {
-        raisedCents,
+        donationsReceivedCents,
+        allocatedToScholarshipsCents,
+        unallocatedBalanceCents,
         giftCount,
-        avgGiftCents: giftCount > 0 ? Math.round(raisedCents / giftCount) : null,
+        avgGiftCents: giftCount > 0 ? Math.round(donationsReceivedCents / giftCount) : null,
       },
       gifts,
     }
@@ -84,7 +95,13 @@ export async function getTrainingFundPublicSnapshot(
   if (error) {
     console.warn("[training-fund-public-stats]", error.message)
     return {
-      stats: { raisedCents: 0, giftCount: 0, avgGiftCents: null },
+      stats: {
+        donationsReceivedCents: 0,
+        allocatedToScholarshipsCents,
+        unallocatedBalanceCents: Math.max(0, 0 - allocatedToScholarshipsCents),
+        giftCount: 0,
+        avgGiftCents: null,
+      },
       gifts: [],
     }
   }
@@ -106,9 +123,9 @@ export async function getTrainingFundPublicSnapshot(
 
   credited.sort((a, b) => +new Date(b.created_at ?? 0) - +new Date(a.created_at ?? 0))
 
-  let raisedCents = 0
+  let donationsReceivedCents = 0
   for (const row of credited) {
-    raisedCents += typeof row.amount_cents === "number" ? row.amount_cents : 0
+    donationsReceivedCents += typeof row.amount_cents === "number" ? row.amount_cents : 0
   }
   const giftCount = credited.length
   const lim = Math.min(250, Math.max(1, giftLimit))
@@ -146,11 +163,15 @@ export async function getTrainingFundPublicSnapshot(
     campaignLabel: publicGiftCampaignLabel(mirrorCampaignSlug(row), String(row.created_at ?? "")),
   }))
 
+  const unallocatedBalanceCents = Math.max(0, donationsReceivedCents - allocatedToScholarshipsCents)
+
   return {
     stats: {
-      raisedCents,
+      donationsReceivedCents,
+      allocatedToScholarshipsCents,
+      unallocatedBalanceCents,
       giftCount,
-      avgGiftCents: giftCount > 0 ? Math.round(raisedCents / giftCount) : null,
+      avgGiftCents: giftCount > 0 ? Math.round(donationsReceivedCents / giftCount) : null,
     },
     gifts,
   }

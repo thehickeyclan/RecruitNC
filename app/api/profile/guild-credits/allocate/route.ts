@@ -6,6 +6,7 @@ import {
   computeGuildAllocatableCents,
   sumReservedGuildAllocationCentsByAthlete,
 } from "@/lib/guild-credit-allocations"
+import { recordFundraisingLedgerGuildAllocation } from "@/lib/fundraising/ledger"
 import { isGuildGrantConfigured, postGuildCreditGrant } from "@/lib/guild-grant-client"
 
 export const dynamic = "force-dynamic"
@@ -183,7 +184,7 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  await admin
+  const { error: guildUpErr } = await admin
     .from("guild_credit_allocations")
     .update({
       status: "guild_applied",
@@ -194,6 +195,18 @@ export async function POST(request: NextRequest) {
       updated_at: new Date().toISOString(),
     })
     .eq("id", allocationId)
+
+  if (!guildUpErr) {
+    await recordFundraisingLedgerGuildAllocation(admin, {
+      guildCreditAllocationId: allocationId,
+      athleteId,
+      recruitNcUserId: user.id,
+      amountCents,
+      campaign: "fayetteville_spartan",
+    })
+  } else {
+    console.error("[profile/guild-credits/allocate] guild_applied update", guildUpErr)
+  }
 
   return NextResponse.json({
     success: true,

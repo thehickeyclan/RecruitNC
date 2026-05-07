@@ -5,7 +5,7 @@ import { FundraisingGiveCheckout } from "./fundraising-give-checkout"
 export const metadata: Metadata = {
   title: "Give | NC United Fundraising",
   description:
-    "Support an NC wrestler with a named credit or donate to the NC United Training Fund. Tax-deductible gifts ($5 min) via secure checkout.",
+    "Credit an NC wrestler at checkout or give to the NC United Training Fund. Tax-deductible gifts from $5 — secure checkout.",
 }
 
 export default async function FundraisingGivePage({
@@ -53,13 +53,9 @@ export default async function FundraisingGivePage({
           Make a gift
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-white/75">
-          <strong className="text-white/88">Support an athlete</strong> with a named credit at checkout, or{" "}
-          <strong className="text-white/88">donate to the NC United Training Fund</strong>. All gifts are tax-deductible ($5
-          minimum). Share <span className="font-mono text-sm text-white/90">?athlete=NCU-…</span> on{" "}
-          <HardLink href="/spartan" className="font-mono text-sm text-[#C8A94A] underline-offset-4 hover:underline">
-            /spartan
-          </HardLink>{" "}
-          to pre-select a wrestler.
+          <strong className="text-white/88">Credit an athlete</strong> in the form below, or{" "}
+          <strong className="text-white/88">give to the NC United Training Fund</strong>. Minimum gift{" "}
+          <span className="tabular-nums">$5</span>. All gifts are tax-deductible; you&apos;ll get your receipt by email after checkout.
         </p>
       </header>
 
@@ -71,8 +67,8 @@ export default async function FundraisingGivePage({
           info@ncwrestlingunited.com
         </a>
         {" · "}
-        <HardLink href="/spartan" className="text-[#C8A94A] underline-offset-4 hover:underline">
-          Race registration &amp; Spartan drive
+        <HardLink href="/fundraising" className="text-[#C8A94A] underline-offset-4 hover:underline">
+          Giving hub
         </HardLink>
       </footer>
     </div>
