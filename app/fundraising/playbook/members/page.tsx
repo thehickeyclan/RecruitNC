@@ -11,7 +11,7 @@ import { FundraisingPlaybookAckSection } from "../_components/fundraising-playbo
 export const metadata: Metadata = {
   title: "Fundraising playbook | NC United Wrestling",
   description:
-    "NC United fundraising playbook for families — 501(c)(3) model, Digital Wallet, outreach, activation. Sign-in required.",
+    "Family fundraising playbook for NC United Wrestling — nonprofit checkout, outreach ideas, activation steps. Sign-in required.",
   robots: { index: false, follow: false },
 }
 

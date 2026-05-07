@@ -16,33 +16,42 @@ type Props = {
 /** Cup interior: top and bottom Y in viewBox coords (fill grows upward from bottomY). */
 const VB = { w: 200, h: 260, innerLeft: 52, innerRight: 148, topY: 52, bottomY: 188 }
 
-function visualMaxCents(raised: number, goal: number | null | undefined): number {
-  const lastMilestoneCents = FUNDRAISING_MILESTONE_DOLLARS[FUNDRAISING_MILESTONE_DOLLARS.length - 1]! * 100
-  let need = Math.max(raised, goal ?? 0)
-  const idleFloorCents = 500_000
-  if (!(goal != null && goal > 0) && need < idleFloorCents) {
-    need = idleFloorCents
-  }
-  if (goal != null && goal > need) need = goal
-  const cap = Math.max(lastMilestoneCents, need)
-  const step = 250_000
-  return Math.ceil(cap / step) * step
+/** Full ladder for the milestone list (always show every tier). */
+function milestoneListCents(): number[] {
+  return FUNDRAISING_MILESTONE_DOLLARS.map((d) => d * 100)
 }
 
-function milestoneCentsUsable(maxCents: number): number[] {
-  return FUNDRAISING_MILESTONE_DOLLARS.map((d) => d * 100).filter((c) => c <= maxCents)
+/**
+ * Scale used only for cup fill + inner tick marks.
+ * Previously we divided by the full $50k ladder, so ~$500 showed as ~1% fill (invisible).
+ * Now the liquid rises toward the next milestone / goal so early dollars read clearly.
+ */
+function cupScaleMaxCents(raised: number, goal: number | null | undefined): number {
+  const lastMilestoneCents = FUNDRAISING_MILESTONE_DOLLARS[FUNDRAISING_MILESTONE_DOLLARS.length - 1]! * 100
+  const asc = FUNDRAISING_MILESTONE_DOLLARS.map((d) => d * 100)
+  const nextAbove = asc.find((c) => c > raised) ?? lastMilestoneCents
+
+  let target = nextAbove
+  if (goal != null && goal > 0 && raised < goal) {
+    target = Math.max(target, goal)
+  }
+
+  const MIN_SPAN = 25_000 // $250 — avoid divide-by-zero-ish sliver when idle
+  return Math.min(lastMilestoneCents, Math.max(target, MIN_SPAN))
 }
 
 export function FundraisingMilestoneTrophy({ raisedCents, goalCents, athleteLabel }: Props) {
-  const maxCents = visualMaxCents(raisedCents, goalCents)
-  const fillRatio = maxCents > 0 ? Math.min(1, raisedCents / maxCents) : 0
+  const cupMaxCents = cupScaleMaxCents(raisedCents, goalCents)
+  const fillRatio = cupMaxCents > 0 ? Math.min(1, raisedCents / cupMaxCents) : 0
   const innerH = VB.bottomY - VB.topY
   const fillH = innerH * fillRatio
-  const milestones = milestoneCentsUsable(maxCents)
+  const milestones = milestoneListCents()
+
+  const cupTicks = milestones.filter((c) => c <= cupMaxCents)
 
   const aria = athleteLabel?.trim()
-    ? `${athleteLabel}: ${formatUsdWhole(raisedCents)} raised toward milestones up to ${formatUsdWhole(maxCents)}.`
-    : `${formatUsdWhole(raisedCents)} raised on the milestone track (scale to ${formatUsdWhole(maxCents)}).`
+    ? `${athleteLabel}: ${formatUsdWhole(raisedCents)} raised; cup fill scales toward ${formatUsdWhole(cupMaxCents)}.`
+    : `${formatUsdWhole(raisedCents)} raised; cup fill scales toward ${formatUsdWhole(cupMaxCents)}.`
 
   return (
     <div className="mt-8 rounded-xl border border-[#C8A94A]/25 bg-[#0B2545]/55 px-4 py-5 sm:px-6 sm:py-6">
@@ -145,8 +154,8 @@ export function FundraisingMilestoneTrophy({ raisedCents, goalCents, athleteLabe
             />
 
             {/* Milestone ticks inside cup */}
-            {milestones.map((cent) => {
-              const ratio = cent / maxCents
+            {cupTicks.map((cent) => {
+              const ratio = cent / cupMaxCents
               const y = VB.bottomY - innerH * ratio
               const hit = raisedCents >= cent
               return (
@@ -220,8 +229,9 @@ export function FundraisingMilestoneTrophy({ raisedCents, goalCents, athleteLabe
       </div>
 
       <p className="mt-4 text-center text-[11px] leading-snug text-white/40">
-        Fill level matches dollars raised on this page (same ledger as your totals). Milestones celebrate progress toward
-        bigger goals{goalCents != null && goalCents > 0 ? " and your campaign target" : ""}.
+        Fill level tracks progress toward your next milestone on this ladder (same ledger as your totals). Milestones on the
+        right show the full trail
+        {goalCents != null && goalCents > 0 ? "; your campaign goal also stretches the fill toward that target" : ""}.
       </p>
     </div>
   )

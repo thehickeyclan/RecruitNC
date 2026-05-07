@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import { HardLink } from "@/components/hard-link"
-import { PlaybookMembersRedCallout } from "./red-callout"
+import { PlaybookInformalGivingNote } from "./red-callout"
 
 function DH({ as: Tag = "h2", children }: { as?: "h1" | "h2" | "h3"; children: ReactNode }) {
   const base =
@@ -51,26 +51,107 @@ export function PlaybookMembersContent() {
         Members playbook
       </p>
       <DH as="h1">The NC United fundraising playbook</DH>
-      <p className="mt-4 font-[family-name:var(--font-fundraising-display)] text-[clamp(1rem,2.8vw,1.2rem)] font-black uppercase leading-snug tracking-tight text-white/92">
-        How the NC wrestling community raised $21,000 in 16 days — and how your athlete can too
+      <p className="mt-4 font-[family-name:var(--font-fundraising-display)] text-[clamp(1rem,2.8vw,1.2rem)] font-semibold uppercase leading-snug tracking-wide text-white/88 sm:text-[clamp(1.05rem,2.8vw,1.25rem)]">
+        Built from how NC wrestling families raised $21,000+ in 16 days — yours can follow the same steps
       </p>
       <p className="mt-4 text-sm italic leading-relaxed text-white/55">
         NC United Wrestling · 501(c)(3) nonprofit · EIN: <span className="tabular-nums not-italic">99-3757238</span>
       </p>
 
-      <Rule />
-
-      <PlaybookMembersRedCallout />
-
-      <Rule />
-
-      <DH as="h2">What doesn&apos;t work — and why</DH>
-      <P className="text-white/75">
-        These are the patterns costing NC athletes money every season. None of this is personal — they&apos;re the same shortcuts families across
-        every youth sport reach for. They just don&apos;t carry a full season.
+      <Lead>
+        Thanks for opening this. Whether you&apos;re new to fundraising or you&apos;ve done it every season, we wrote this so your family can see{" "}
+        <Strong>what NC United provides</Strong>, <Strong>what&apos;s worked for other wrestlers</Strong>, and{" "}
+        <Strong>practical next steps</Strong> — without shame about how anyone gave before.
+      </Lead>
+      <P className="text-white/78">
+        Skim in order or jump ahead; the acknowledgment at the bottom only needs you to have scrolled through once so staff know you&apos;ve seen how
+        tax-deductible checkout fits athlete credits.
       </P>
-      <P className="mt-6 font-[family-name:var(--font-fundraising-display)] text-xs font-black uppercase tracking-[0.18em] text-[#C8A94A]">
-        The real cost of doing it wrong
+      <Ul>
+        <Li>
+          <Strong>Proof points</Strong> — real numbers from a recent NC United × Spartan campaign (below).
+        </Li>
+        <Li>
+          <Strong>The nonprofit model</Strong> — receipts, matching, businesses, and foundations.
+        </Li>
+        <Li>
+          <Strong>A toolkit + timeline</Strong> — story, ask, link, outreach in plain language.
+        </Li>
+      </Ul>
+
+      <Rule />
+
+      <DH as="h2">Proof it works here in NC</DH>
+      <Lead>This isn&apos;t theory — NC families already ran this playbook.</Lead>
+
+      <DataTable>
+        <thead>
+          <tr className="border-b border-white/15 bg-[#0B2545]/90">
+            {["$21,000+", "220+", "30", "16"].map((h) => (
+              <th
+                key={h}
+                className="px-3 py-3 text-center font-[family-name:var(--font-fundraising-display)] text-lg font-black tabular-nums text-[#C8A94A] sm:text-xl"
+              >
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          <tr className="bg-black/15">
+            {["Raised", "Donations", "Athletes funded", "Days"].map((l) => (
+              <td key={l} className="px-2 py-2 text-center text-[11px] font-bold uppercase tracking-wide text-white/65 sm:text-xs">
+                {l}
+              </td>
+            ))}
+          </tr>
+        </tbody>
+      </DataTable>
+
+      <P>
+        The NC United × Spartan Race campaign moved past a $10,000 goal in under two weeks — without weeks of advance rehearsal. Families, local
+        businesses, a foundation, athlete-to-athlete gifts, and anonymous supporters all used one trusted nonprofit checkout.
+      </P>
+      <P>The patterns later in this guide showed up in that data.</P>
+
+      <Rule />
+
+      <DH as="h2">The NC United model</DH>
+      <P className="text-white/78">
+        Five strengths built into NC United&apos;s nonprofit rails — usually beyond what one household or an informal payment app can match end-to-end.
+      </P>
+      <ol className="mt-6 list-decimal space-y-5 pl-5 text-white/82 marker:font-black marker:text-[#C8A94A]">
+        <li>
+          <Strong>501(c)(3) structure.</Strong> Tax-deductible giving for individuals, businesses, and foundations where applicable — opening paths
+          informal giving cannot.
+        </li>
+        <li>
+          <Strong>Central platform.</Strong> Donations tracked, dollars attributed to athletes, receipts emailed, ledger aligned with nonprofit
+          expectations.
+        </li>
+        <li>
+          <Strong>Community network.</Strong> The broader NC wrestling community invests together — not every household carrying the whole lift solo.
+        </li>
+        <li>
+          <Strong>Athlete ownership.</Strong> NC United supplies infrastructure; families still drive outreach, follow-through, and thank-yous.
+        </li>
+        <li>
+          <Strong>Transparency.</Strong> Public attribution where intended, live progress signals, receipts generated at checkout.
+        </li>
+      </ol>
+
+      <PlaybookInformalGivingNote />
+
+      <Rule />
+
+      <DH as="h2">Where unofficial channels usually leave money on the table</DH>
+      <P className="text-white/78">
+        Youth sports families everywhere reach for quick tools — Venmo, standalone crowdfunding, one-off posts. That&apos;s understandable. For a full
+        season of credited athlete fundraising through NC United, these patterns tend to cap totals — not because families &quot;failed,&quot; but
+        because tax and employer rules reward structured giving.
+      </P>
+      <P className="mt-6 font-[family-name:var(--font-fundraising-display)] text-xs font-bold uppercase tracking-[0.18em] text-[#C8A94A]">
+        Same ten donors — different upside
       </P>
 
       <DataTable>
@@ -118,7 +199,7 @@ export function PlaybookMembersContent() {
             <td className="px-3 py-2.5 align-top text-white/50">❌</td>
             <td className="px-3 py-2.5 align-top text-emerald-300/95">✅</td>
           </tr>
-          <tr className="border-t border-white/15 bg-[#CC0000]/15">
+          <tr className="border-t border-white/15 bg-[#C8A94A]/12">
             <td className="px-3 py-3 align-top font-semibold text-white">Total potential</td>
             <td className="px-3 py-3 align-top font-semibold text-white/90">~$2,000</td>
             <td className="px-3 py-3 align-top font-semibold text-[#C8A94A]">$2,600–$3,000+</td>
@@ -131,110 +212,44 @@ export function PlaybookMembersContent() {
         vary.
       </P>
 
-      <p className="mt-8 font-[family-name:var(--font-fundraising-display)] text-xs font-black uppercase tracking-[0.18em] text-[#C8A94A]">
-        Seven patterns that quietly cap results
+      <p className="mt-8 font-[family-name:var(--font-fundraising-display)] text-xs font-bold uppercase tracking-[0.18em] text-[#C8A94A]">
+        Seven habits we see soften totals — all fixable
       </p>
       <ol className="mt-4 list-decimal space-y-4 pl-5 text-white/82 marker:font-semibold marker:text-[#C8A94A]">
         <li>
-          <Strong>GoFundMe and standalone crowdfunding</Strong> — platform fees, no donor tax deduction, wrong cultural signal (associated with
-          hardship, not investment), no athlete attribution, potentially taxable income for the recipient.
+          <Strong>GoFundMe or standalone crowdfunding alone</Strong> — fees add up; donors may not receive a charitable deduction; attribution and team
+          bookkeeping can get fuzzy compared with NC United&apos;s ledger.
         </li>
         <li>
-          <Strong>Venmo / Cash App as the main vehicle</Strong> — no receipt, no corporate eligibility, no employer matching, legal gray area on
-          large amounts, serious donors hesitate.
+          <Strong>Venmo / Cash App as the only system</Strong> — usually no formal receipt, employer matching rarely applies, some larger donors pause
+          without documentation.
         </li>
         <li>
-          <Strong>Car wash or bake sale as the only plan</Strong> — enormous volunteer hours for modest return. The NC United × Spartan campaign
-          raised more in 24 hours than most car washes raise in a season.
+          <Strong>Relying only on car washes or bake sales</Strong> — huge volunteer hours per dollar; digital campaigns often raise faster when paired
+          with in-person connection — not instead of it.
         </li>
         <li>
-          <Strong>Passive social posts</Strong> — &quot;support my journey — link in bio&quot; gets likes, not donations. Direct personal asks convert
-          at dramatically higher rates.
+          <Strong>Only passive social posts</Strong> — &quot;support my journey — link in bio&quot; earns visibility; paired personal asks still carry most
+          conversions.
         </li>
         <li>
-          <Strong>Routing outside a 501(c)(3)</Strong> — caps corporate giving, foundation grants, and employer matching entirely.
+          <Strong>Gifts routed outside a 501(c)(3)</Strong> — many employers, foundations, and corporate programs need nonprofit eligibility.
         </li>
         <li>
-          <Strong>One-time campaigns with no system</Strong> — you restart from zero every season instead of compounding trust and donors year over
-          year.
+          <Strong>One-off bursts with no rhythm</Strong> — rebuilding trust from scratch each season is slower than nurturing repeat donors.
         </li>
         <li>
-          <Strong>Waiting until you&apos;re financially underwater</Strong> — relationships built early convert far better than panic asks.
+          <Strong>Waiting until budgets feel desperate</Strong> — relationships seeded earlier tend to respond better than last-minute-only appeals.
         </li>
       </ol>
 
       <Rule />
 
-      <DH as="h2">The proof — it works</DH>
-      <Lead>This is not theory.</Lead>
-
-      <DataTable>
-        <thead>
-          <tr className="border-b border-white/15 bg-[#0B2545]/90">
-            {["$21,000+", "220+", "30", "16"].map((h) => (
-              <th
-                key={h}
-                className="px-3 py-3 text-center font-[family-name:var(--font-fundraising-display)] text-lg font-black tabular-nums text-[#C8A94A] sm:text-xl"
-              >
-                {h}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          <tr className="bg-black/15">
-            {["Raised", "Donations", "Athletes funded", "Days"].map((l) => (
-              <td key={l} className="px-2 py-2 text-center text-[11px] font-bold uppercase tracking-wide text-white/65 sm:text-xs">
-                {l}
-              </td>
-            ))}
-          </tr>
-        </tbody>
-      </DataTable>
-
+      <DH as="h2">Fundraising is an invitation, not a plea</DH>
       <P>
-        The NC United × Spartan Race campaign blew past a $10,000 goal in under two weeks — with zero advance preparation. Individual families, local
-        businesses, a foundation, athletes supporting athletes, and anonymous major donors all showed up through one simple, trusted platform.
+        Wrestlers who reach strong totals are rarely just &quot;loudest online&quot; — they tend to make a clear ask, share an honest story, and remove friction so donors can say yes quickly.
       </P>
-      <P>Every principle in this playbook showed up in the data.</P>
-
-      <Rule />
-
-      <DH as="h2">Fundraising is not begging. It is building investors.</DH>
-      <P>
-        The athletes who raise the most are not the ones with the biggest following. They make the clearest ask, tell the most compelling story, and
-        make it easy for people to say yes.
-      </P>
-      <P>Every NC wrestler has a story worth funding. The variable is whether they tell it with intention.</P>
-
-      <Rule />
-
-      <DH as="h2">The NC United model</DH>
-      <P className="text-white/70">
-        Five things no individual family, club, or for-profit platform can replicate alone.
-      </P>
-      <ol className="mt-6 list-decimal space-y-5 pl-5 text-white/82 marker:font-black marker:text-[#C8A94A]">
-        <li>
-          <Strong>501(c)(3) structure.</Strong> Tax-deductible giving for individuals, businesses, corporations, and foundations. Without this structure,
-          entire categories of support are completely inaccessible.
-        </li>
-        <li>
-          <Strong>Central platform.</Strong> Every donation tracked, every dollar attributed to the right athlete, automatic tax receipts emailed
-          instantly, and a clean nonprofit ledger that satisfies IRS expectations.
-        </li>
-        <li>
-          <Strong>Community network.</Strong> The entire NC wrestling community investing collectively in athlete development — not every family
-          carrying the full weight alone.
-        </li>
-        <li>
-          <Strong>Athlete accountability.</Strong> NC United provides the rails. The outreach, the follow-through, and the personal thank-you after
-          every gift are still yours.
-        </li>
-        <li>
-          <Strong>Radical transparency.</Strong> Every donation is public. Every dollar tracked in real time. Live leaderboards show progress. Receipts
-          are generated and emailed automatically the moment a gift is made.
-        </li>
-      </ol>
+      <P>Every NC wrestler has a story worth backing; what changes outcomes is how clearly families invite people into it.</P>
 
       <Rule />
 
@@ -243,7 +258,7 @@ export function PlaybookMembersContent() {
       <DH as="h3">Individual donors — $25 to $500</DH>
       <P>
         Parents, grandparents, aunts and uncles, coaches, teachers, neighbors. The largest share of donations in every campaign.{" "}
-        <Strong>Best approach:</Strong> direct personal ask — text, call, or in-person. Never rely on a mass post as your only strategy.
+        <Strong>Best approach:</Strong> mix personal texts or calls with posts — mass posting alone usually underperforms.
       </P>
 
       <DH as="h3">Local business donors — $100 to $1,000</DH>
@@ -267,11 +282,11 @@ export function PlaybookMembersContent() {
 
       <DH as="h3">Foundations and grants — $500 to $10,000+</DH>
       <P>
-        Foundations only give to 501(c)(3) organizations. Full stop. Research local community foundations, align programs with their mission (youth
+        Foundations typically give to registered 501(c)(3) organizations. Research local community foundations, align programs with their mission (youth
         access, development, education), and apply through NC United.
       </P>
 
-      <DH as="h3">Matching gift programs — free money most families never claim</DH>
+      <DH as="h3">Matching gift programs — many employers still offer them</DH>
       <P>
         Many employers match charitable donations dollar-for-dollar — sometimes 2:1 or 3:1. Matching almost always requires a 501(c)(3) recipient.
       </P>
@@ -353,8 +368,8 @@ export function PlaybookMembersContent() {
       <Rule />
 
       <DH as="h2">The fundraising toolkit</DH>
-      <P className="font-[family-name:var(--font-fundraising-display)] text-xs font-black uppercase tracking-[0.14em] text-[#C8A94A]">
-        Four things every athlete needs before making a single ask
+      <P className="font-[family-name:var(--font-fundraising-display)] text-xs font-bold uppercase tracking-[0.14em] text-[#C8A94A]">
+        Four building blocks before the first ask
       </P>
 
       <ol className="mt-6 list-decimal space-y-5 pl-5 text-white/82 marker:font-black marker:text-[#C8A94A]">
@@ -448,7 +463,7 @@ export function PlaybookMembersContent() {
             simultaneously. NC United&apos;s live leaderboard shows donations arriving in real time — the energy of the room drives the hustle.
           </P>
           <p className="mt-3 text-sm italic text-white/55">
-            Predictable outcome: 15 athletes × 20 contacts × $75 average = $22,500 in a single session.
+            Illustrative math: 15 athletes × 20 contacts × $75 average ≈ $22,500 in one focused session.
           </p>
         </section>
         <section>
@@ -458,7 +473,7 @@ export function PlaybookMembersContent() {
             Clear ask. NC United checkout for clean receipts.
           </P>
           <p className="mt-3 text-sm italic text-white/55">
-            Predictable outcome: 20 businesses × $500 average = $10,000 in one coordinated week.
+            Illustrative math: 20 businesses × $500 average ≈ $10,000 in one coordinated week.
           </p>
         </section>
         <section>
@@ -480,7 +495,7 @@ export function PlaybookMembersContent() {
             personal ask. Focus specifically on employers with matching programs.
           </P>
           <p className="mt-3 text-sm italic text-white/55">
-            Predictable outcome: 20 families × 3 contacts × $200 average = $12,000 before matching. With 30% matching participation: $15,600+.
+            Illustrative math: 20 families × 3 contacts × $200 average ≈ $12,000 before matching; matching participation stretches from there.
           </p>
         </section>
         <section>
@@ -489,27 +504,25 @@ export function PlaybookMembersContent() {
           </p>
           <P>
             Frame the ask around a specific event: &quot;We&apos;re raising $5,000 to send our team to NHSCA Duals.&quot; Specific goals with specific
-            deadlines outperform general fundraising by 40–60%. The event is the urgency.
+            deadlines tend to outperform open-ended asks. The event supplies gentle urgency.
           </P>
         </section>
       </div>
 
       <Rule />
 
-      <DH as="h2">Start now</DH>
+      <DH as="h2">When you&apos;re ready to move</DH>
+      <P>You&apos;re not &quot;just a wrestler&quot; — you&apos;re a story people can invest in with clarity.</P>
       <P>
-        You are not just a wrestler. You are a story and a cause worth investing in.
+        Families who finish strong tend to share a clear ask, an honest narrative, real relationships with donors, and steady follow-up — habits NC
+        United&apos;s tools support rather than replace.
       </P>
-      <P>
-        The athletes who raise the most make the clearest ask, tell their story with conviction, build real relationships with their donors, and
-        follow up.
-      </P>
-      <P>The system is built. The community is ready. The only thing missing is you making the ask.</P>
+      <P>The rails exist; the community is active — your next step is the first intentional conversation or message.</P>
 
       <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         <HardLink
           href="/fundraising/athletes"
-          className="inline-flex min-h-[52px] items-center justify-center rounded-sm bg-[#CC0000] px-8 font-[family-name:var(--font-fundraising-display)] text-sm font-extrabold uppercase tracking-[0.14em] text-white hover:bg-[#a80000]"
+          className="inline-flex min-h-[52px] items-center justify-center rounded-sm bg-[#C8A94A] px-8 font-[family-name:var(--font-fundraising-display)] text-sm font-extrabold uppercase tracking-[0.14em] text-[#061224] hover:bg-[#b89740]"
         >
           Set up your athlete fundraising profile →
         </HardLink>

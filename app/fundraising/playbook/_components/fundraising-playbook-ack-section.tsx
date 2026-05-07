@@ -110,13 +110,13 @@ export function FundraisingPlaybookAckSection({ initialAcknowledgedAt, userSigne
       <div className="flex flex-wrap items-center gap-3">
         <span className="inline-flex h-3 w-3 shrink-0 rounded-full bg-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.55)]" />
         <p className="font-[family-name:var(--font-fundraising-display)] text-sm font-bold uppercase tracking-wide text-amber-100/95">
-          Finish to unlock activation
+          Acknowledgment for fundraising activation
         </p>
       </div>
       <p className="mt-3 text-sm leading-relaxed text-white/82">
-        Scroll through the playbook above, then confirm below. NC United uses this so families see the 501(c)(3) model and Venmo
-        alternatives before requesting staff to wire{" "}
-        <strong className="text-white/95">Profile → Fundraise</strong> access.
+        When you&apos;ve read through the guide above, check the box and save below. Staff use this so families have seen how NC United&apos;s
+        nonprofit checkout credits athletes before we enable{" "}
+        <strong className="text-white/95">Profile → Fundraise</strong>.
       </p>
       <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-lg border border-white/10 bg-black/20 px-3 py-3 text-sm leading-snug text-white/88">
         <Checkbox
@@ -125,9 +125,9 @@ export function FundraisingPlaybookAckSection({ initialAcknowledgedAt, userSigne
           className="mt-0.5 border-white/35 data-[state=checked]:border-[#C8A94A] data-[state=checked]:bg-[#C8A94A]"
         />
         <span>
-          I have read the playbook on this page and understand that{" "}
-          <strong className="text-white/95">tax-deductible NC United checkout</strong> is the supported path for gifts credited to
-          athletes—not informal apps as the primary system.
+          I have read this playbook and understand that gifts credited to athletes run through NC United&apos;s{" "}
+          <strong className="text-white/95">tax-deductible nonprofit checkout</strong> — so donors receive receipts and gifts route cleanly, rather than
+          using informal apps as the primary ledger.
         </span>
       </label>
       <Button
