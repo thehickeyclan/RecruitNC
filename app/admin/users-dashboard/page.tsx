@@ -9,6 +9,12 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
 import { 
@@ -75,6 +81,21 @@ function getRelativeTime(date: string | null): string {
   if (diffHours < 24) return `${diffHours}h ago`
   if (diffDays < 7) return `${diffDays}d ago`
   return new Date(date).toLocaleDateString()
+}
+
+/** Dedupe by lowercase; preserve first-seen casing (every Supabase auth account email). */
+function uniqueMarketingEmails(rows: { email: string }[]): string[] {
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const row of rows) {
+    const raw = (row.email || "").trim()
+    if (!raw) continue
+    const key = raw.toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+    out.push(raw)
+  }
+  return out
 }
 
 export default function UsersDashboardPage() {
@@ -309,6 +330,32 @@ export default function UsersDashboardPage() {
         title: "Error",
         description: e?.message || "Failed to export users",
         variant: "destructive"
+      })
+    }
+  }
+
+  const handleCopyMarketingEmails = async (format: "comma" | "newline") => {
+    const emails = uniqueMarketingEmails(profiles)
+    if (emails.length === 0) {
+      toast({
+        title: "Nothing to copy",
+        description: "No loaded users with email addresses.",
+        variant: "destructive",
+      })
+      return
+    }
+    const text = format === "comma" ? emails.join(", ") : emails.join("\n")
+    try {
+      await navigator.clipboard.writeText(text)
+      toast({
+        title: "Copied",
+        description: `${emails.length} unique emails (${format === "comma" ? "comma-separated" : "one per line"}).`,
+      })
+    } catch {
+      toast({
+        title: "Copy failed",
+        description: "Clipboard access was blocked. Try a secure (https) context or grant permission.",
+        variant: "destructive",
       })
     }
   }
@@ -620,15 +667,37 @@ export default function UsersDashboardPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
           <p className="text-gray-600 mt-1">Manage user profiles, approve coaches, and assign schools</p>
+          <p className="text-muted-foreground mt-2 max-w-xl text-xs">
+            Marketing: copy every account email in the system (deduped), same source as Export CSV — use only where you have consent or legitimate interest.
+          </p>
         </div>
-        <Button onClick={handleExportCSV} variant="outline" className="flex items-center gap-2">
-          <Download className="h-4 w-4" />
-          Export CSV
-        </Button>
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button type="button" variant="outline" className="flex items-center gap-2">
+                <ClipboardCopy className="h-4 w-4" />
+                Copy emails
+                <ChevronDown className="h-4 w-4 opacity-60" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onClick={() => void handleCopyMarketingEmails("comma")}>
+                Comma-separated (e.g. Mailchimp)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => void handleCopyMarketingEmails("newline")}>
+                One email per line
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button onClick={handleExportCSV} variant="outline" className="flex items-center gap-2">
+            <Download className="h-4 w-4" />
+            Export CSV
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}

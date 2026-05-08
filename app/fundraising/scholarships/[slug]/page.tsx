@@ -25,6 +25,12 @@ import {
 } from "@/lib/scholarships/applications-open"
 import { getScholarshipBySlug, listPublicAwardsForScholarship } from "@/lib/scholarships/public-queries"
 import { scholarshipSubmissionDeadlineUtcMs } from "@/lib/scholarships/scholarship-submission-deadline"
+import {
+  TRAINING_AWARD_NOT_COLLEGE_PARAGRAPH,
+  TRAINING_AWARD_OPENING_NO_AMOUNT,
+  TRAINING_AWARD_TYPICAL_USES,
+  trainingAwardOpeningSentenceUsd,
+} from "@/lib/scholarships/scholarship-training-award-copy"
 
 function df(c: string) {
   return `font-[family-name:var(--font-fundraising-display)] ${c}`
@@ -138,7 +144,29 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
       </section>
 
       <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
-        <HardLink href="/fundraising/scholarships" className="text-sm font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
+        <section className="rounded-xl border border-[#C8A94A]/35 bg-[#0B2545]/55 px-5 py-6 sm:px-6">
+          <h2 className={df("text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]")}>What this award is</h2>
+          <p className="mt-4 text-sm leading-relaxed text-white/82">
+            {awardAmountDisplayCents != null ? (
+              trainingAwardOpeningSentenceUsd(formatUsdWhole(awardAmountDisplayCents))
+            ) : (
+              TRAINING_AWARD_OPENING_NO_AMOUNT
+            )}
+          </p>
+          <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/45">Examples of appropriate uses</p>
+          <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-white/72">
+            {TRAINING_AWARD_TYPICAL_USES.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+          <p className="mt-6 border-t border-white/[0.08] pt-5 text-sm leading-relaxed text-white/58">{TRAINING_AWARD_NOT_COLLEGE_PARAGRAPH}</p>
+          <p className="mt-3 text-xs leading-relaxed text-white/42">
+            Final use details may be confirmed in writing with the recipient&apos;s family so the stipend matches NC United&apos;s nonprofit purpose and any
+            applicable policies.
+          </p>
+        </section>
+
+        <HardLink href="/fundraising/scholarships" className="mt-10 inline-block text-sm font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
           ← Scholarships hub
         </HardLink>
 
