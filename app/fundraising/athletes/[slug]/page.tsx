@@ -17,6 +17,7 @@ import { FundraisingMilestoneTrophy } from "./fundraising-milestone-trophy"
 import { FundraisingOwnerPanel } from "./fundraising-owner-panel"
 import { FundraisingAdminAssignmentPanel } from "./fundraising-admin-assignment-panel"
 import { FundraisingActivationPanel } from "./fundraising-activation-panel"
+import { FundraisingAthleteActivationIndicator } from "./fundraising-athlete-activation-indicator"
 import { recruitingProfilePhotoFromRow } from "@/lib/recruiting-profile-photo"
 import { fetchThankYouAckLedgerKeys } from "@/lib/fundraising/supporter-thank-you-ack"
 import { getFundraisingWiringAdminSnapshot } from "@/lib/fundraising/fundraising-wiring-status"
@@ -180,12 +181,21 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           </div>
         ) : null}
 
-        <HardLink
-          href="/fundraising/athletes"
-          className="text-sm font-semibold text-[#C8A94A] underline-offset-4 hover:underline"
-        >
-          ← All athletes
-        </HardLink>
+        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+          <HardLink
+            href="/fundraising/athletes"
+            className="text-sm font-semibold text-[#C8A94A] underline-offset-4 hover:underline"
+          >
+            ← All athletes
+          </HardLink>
+          <FundraisingAthleteActivationIndicator
+            hasActivatedProfile={profile != null}
+            signedIn={!!user?.id}
+            isFamilyConnected={isFundraisingManager}
+            signInReturnToPath={athletePagePath}
+            latestActivationStatus={latestActivationStatus}
+          />
+        </div>
 
         {viewerIsRecruitNcAdmin ? (
           <FundraisingAdminAssignmentPanel

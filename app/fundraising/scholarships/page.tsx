@@ -49,6 +49,10 @@ export default async function ScholarshipsHubPage() {
           <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-white/72">
             Honoring the character wrestling builds — on the mat and beyond.
           </p>
+          <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-white/52">
+            Named scholarship funds award <strong className="font-semibold text-white/70">training support stipends</strong> for wrestling-related costs —
+            not college tuition, academic awards, or NCAA athletic scholarships. Amount and story are listed on each fund.
+          </p>
           <HardLink
             href="/fundraising"
             className="mt-10 inline-flex text-sm font-semibold text-[#C8A94A] underline-offset-4 hover:underline"

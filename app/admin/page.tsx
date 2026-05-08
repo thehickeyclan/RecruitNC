@@ -303,9 +303,10 @@ export default function AdminDashboard() {
               </Button>
             </Link>
             <Link href="/admin/users-dashboard">
-              <Button className="w-full h-20 bg-gradient-to-br from-[#003366] to-[#004080] hover:from-[#004080] hover:to-[#003366] text-white shadow-lg flex flex-col items-center justify-center gap-2">
-                <UserCheck className="h-6 w-6" />
+              <Button className="w-full min-h-20 h-auto py-3 bg-gradient-to-br from-[#003366] to-[#004080] hover:from-[#004080] hover:to-[#003366] text-white shadow-lg flex flex-col items-center justify-center gap-1 px-2">
+                <UserCheck className="h-6 w-6 shrink-0" />
                 <span className="text-sm font-semibold">Users</span>
+                <span className="text-[10px] font-normal leading-tight opacity-90">Marketing email copy</span>
               </Button>
             </Link>
             <Link href="/admin/commitment-stats">
@@ -484,7 +485,7 @@ export default function AdminDashboard() {
                 <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
                   <UserCheck className="h-10 w-10 text-[#003366] mb-3" />
                   <h3 className="font-bold text-[#003366] mb-1">Users Dashboard</h3>
-                  <p className="text-xs text-gray-600">Manage users</p>
+                  <p className="text-xs text-gray-600">Manage users · copy all emails for marketing</p>
                 </CardContent>
               </Card>
             </Link>
