@@ -51,17 +51,20 @@ export async function getCachedAuth(sessionId?: string): Promise<{
     }
   }
 
-  // Cache miss or expired - fetch new result
+  // Cache miss or expired — validate with Auth server (not cookie-only session.user).
   try {
     const supabase = await createClient()
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser()
 
-    if (sessionError || !session) {
+    if (userError || !user) {
       return {
         user: null,
         profile: null,
-        error: sessionError?.message || "Not authenticated",
-        cached: false
+        error: userError?.message || "Not authenticated",
+        cached: false,
       }
     }
 
@@ -69,22 +72,22 @@ export async function getCachedAuth(sessionId?: string): Promise<{
     const { data: profile, error: profileError } = await supabase
       .from("user_profiles")
       .select("is_admin, full_name, email, role")
-      .eq("user_id", session.user.id)
+      .eq("user_id", user.id)
       .single()
 
     const result = {
-      user: session.user,
+      user,
       profile: profile || null,
       error: profileError?.message || null,
-      cached: false
+      cached: false,
     }
 
     // Cache the result
-    if (session.user.id) {
-      authCache.set(session.user.id, {
-        user: session.user,
+    if (user.id) {
+      authCache.set(user.id, {
+        user,
         profile: profile || null,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       })
       
       // Clean up old cache entries (keep cache size reasonable)
