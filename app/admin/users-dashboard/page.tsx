@@ -35,7 +35,9 @@ import {
   ArrowDown,
   TrendingUp,
   Activity,
-  Download
+  Download,
+  ClipboardCopy,
+  ChevronDown,
 } from "lucide-react"
 import { 
   LineChart, 

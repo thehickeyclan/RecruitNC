@@ -124,8 +124,21 @@ const clearSupabaseCookies = () => {
   }
 }
 
+type BrowserSupabaseClient = ReturnType<typeof createClient>
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [supabase] = useState(() => createClient())
+  const [supabase] = useState<BrowserSupabaseClient | null>(() => {
+    try {
+      return createClient()
+    } catch (e) {
+      console.error(
+        "[RecruitNC] Supabase browser client failed to initialize (site loads without sign-in). " +
+          "Usually NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY are unset on this host — e.g. Vercel Preview env not populated.",
+        e,
+      )
+      return null
+    }
+  })
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
@@ -239,6 +252,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setProfile(null)
           setIsLoading(false)
           const retryTimer = setTimeout(() => {
+            if (!supabase) return
             if (document.cookie.includes("sb-") || document.cookie.includes("supabase")) {
               supabase.auth.getSession().then(({ data: { session }, error }) => {
                 if (!error && session) {
@@ -324,6 +338,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
+      if (!supabase) {
+        return {
+          error: {
+            message:
+              "Authentication is unavailable on this deployment (missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY). Check Vercel → Settings → Environment Variables for Preview.",
+          },
+        }
+      }
+
       console.log("[v0] Explicit sign-in attempt:", email)
       
       // REMOVED: Cooldown check - let Supabase handle rate limiting
@@ -382,6 +405,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signUp = async (email: string, password: string, metadata?: any) => {
+    if (!supabase) {
+      return {
+        error: {
+          message:
+            "Sign-up unavailable: Supabase env vars are not configured for this deployment.",
+        },
+      }
+    }
+
     const redirectUrl =
       typeof window !== "undefined"
         ? `${window.location.origin}/auth/callback`
@@ -405,7 +437,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearSupabaseCookies()
     
     try {
-      await supabase.auth.signOut()
+      if (supabase) await supabase.auth.signOut()
     } catch (error) {
       // Ignore errors on signout - we're clearing everything anyway
       console.warn("[v0] Sign out error (ignoring):", error)
@@ -417,6 +449,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const resetPassword = async (email: string) => {
+    if (!supabase) {
+      return {
+        error: {
+          message:
+            "Password reset unavailable: Supabase env vars are not configured for this deployment.",
+        },
+      }
+    }
+
     // Send user straight to reset page so the link is /auth/reset-password?code=... (client exchanges there).
     const base =
       typeof window !== "undefined"
