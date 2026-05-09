@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { Users, Shield, ShieldCheck, AlertCircle, Database, Settings, Loader2, RefreshCw, Download } from "lucide-react"
+import { Users, Shield, ShieldCheck, AlertCircle, Database, Settings, Loader2, RefreshCw, Download, Mail } from "lucide-react"
 import Link from "next/link"
 import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/components/ui/use-toast"
@@ -197,6 +197,41 @@ export default function UsersPage() {
     }
   }
 
+  const handleExportEmailsTxt = async () => {
+    try {
+      const res = await fetch("/api/admin/users/export-csv?format=emails-txt", {
+        method: "GET",
+        credentials: "include"
+      })
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: "Failed to export" }))
+        throw new Error(errorData.error || "Failed to export emails")
+      }
+
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `recruitnc-account-emails-${new Date().toISOString().split("T")[0]}.txt`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
+      toast({
+        title: "Downloaded",
+        description: "Emails saved as .txt (one per line)."
+      })
+    } catch (e: any) {
+      toast({
+        title: "Error",
+        description: e?.message || "Failed to download emails",
+        variant: "destructive"
+      })
+    }
+  }
+
   const filteredUsers = users.filter(
     (user) =>
       user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -321,10 +356,16 @@ export default function UsersPage() {
                 Manage user accounts, roles, and permissions. Currently logged in as: {currentUser?.email}
               </CardDescription>
             </div>
-            <Button onClick={handleExportCSV} variant="outline" className="flex items-center gap-2">
-              <Download className="h-4 w-4" />
-              Export CSV
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button onClick={handleExportEmailsTxt} variant="outline" className="flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                Emails (.txt)
+              </Button>
+              <Button onClick={handleExportCSV} variant="outline" className="flex items-center gap-2">
+                <Download className="h-4 w-4" />
+                Export CSV
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>

@@ -271,7 +271,7 @@ export function Navbar() {
       icon: GraduationCap,
     },
     {
-      href: "/fundraising/playbook",
+      href: "/fundraising/playbook/members",
       label: "Fundraising playbook",
       description: "NC United team fundraising guide",
       icon: BookOpen,

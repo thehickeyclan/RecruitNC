@@ -27,6 +27,12 @@ export default async function FundraisingPlaybookMembersPage() {
     redirect(`/auth/signin?returnTo=${encodeURIComponent("/fundraising/playbook/members")}`)
   }
 
+  const { data: viewerProfile } = await supabase
+    .from("user_profiles")
+    .select("is_admin")
+    .eq("user_id", user.id)
+    .maybeSingle()
+
   const h = await headers()
   const referer = h.get("referer")
   await logPlaybookMembersVisit(supabase, user, referer)
@@ -60,11 +66,14 @@ export default async function FundraisingPlaybookMembersPage() {
           <HardLink href="/fundraising" className="text-sm font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
             ← Fundraising hub
           </HardLink>
-          <div className="flex flex-wrap items-center gap-4 text-xs font-semibold uppercase tracking-wide text-white/55">
-            <HardLink href="/fundraising/playbook" className="hover:text-[#C8A94A] hover:underline">
+          {viewerProfile?.is_admin ? (
+            <HardLink
+              href="/admin/fundraising"
+              className="text-xs font-semibold uppercase tracking-wide text-white/55 hover:text-[#C8A94A] hover:underline"
+            >
               Staff tools
             </HardLink>
-          </div>
+          ) : null}
         </div>
       </div>
 
