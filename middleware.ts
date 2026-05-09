@@ -1,11 +1,20 @@
 import { NextResponse, type NextRequest } from "next/server"
+import { FUNDRAISING_AUTH_RETURN_COOKIE } from "@/lib/fundraising/fundraising-auth-return-cookie"
+
+function isFundraisingHubPublicPath(p: string): boolean {
+  if (p === "/fundraising" || p === "/fundraising/") return true
+  if (p.startsWith("/fundraising/athletes")) return true
+  if (p.startsWith("/fundraising/scholarships")) return true
+  if (p.startsWith("/fundraising/") && p.includes("/thanks")) return true
+  return false
+}
 
 /**
  * ⚠️ LOCKED MIDDLEWARE CONFIGURATION - DO NOT MODIFY ⚠️
- * 
+ *
  * This middleware MUST NOT call getUser() or getSession().
  * Making auth calls here causes rate limits on every request.
- * 
+ *
  * See AUTH_CONFIG_LOCKED.md for full documentation.
  */
 export async function middleware(request: NextRequest) {
@@ -24,26 +33,20 @@ export async function middleware(request: NextRequest) {
     request,
   })
 
-  /** Hub landing, athletes (`/fundraising/athletes/**`), scholarships hub/detail/donate/thanks (`/fundraising/scholarships/**` — apply stays behind `(giving-auth)`), and other post-checkout `**/thanks/**` stay public. */
-  function isFundraisingHubPublicPath(p: string): boolean {
-    if (p === "/fundraising" || p === "/fundraising/") return true
-    if (p.startsWith("/fundraising/athletes")) return true
-    if (p.startsWith("/fundraising/scholarships")) return true
-    if (p.startsWith("/fundraising/") && p.includes("/thanks")) return true
-    return false
-  }
-
   if (pathname.startsWith("/fundraising")) {
     if (isFundraisingHubPublicPath(pathname)) {
       return supabaseResponse
     }
-    const reqHeaders = new Headers(request.headers)
-    reqHeaders.set("x-fundraising-return-path", pathname + request.nextUrl.search)
-    return NextResponse.next({
-      request: {
-        headers: reqHeaders,
-      },
+    const returnTarget = pathname + request.nextUrl.search
+    const res = NextResponse.next({ request })
+    res.cookies.set(FUNDRAISING_AUTH_RETURN_COOKIE, encodeURIComponent(returnTarget), {
+      path: "/",
+      maxAge: 600,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
     })
+    return res
   }
 
   // Skip middleware entirely for public routes that don't need auth (no Supabase calls — see header comment above).
