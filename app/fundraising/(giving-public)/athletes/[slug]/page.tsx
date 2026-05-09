@@ -16,8 +16,7 @@ import { FundraisingAthleteMessageSection } from "./fundraising-athlete-message"
 import { FundraisingMilestoneTrophy } from "./fundraising-milestone-trophy"
 import { FundraisingOwnerPanel } from "./fundraising-owner-panel"
 import { FundraisingAdminAssignmentPanel } from "./fundraising-admin-assignment-panel"
-import { FundraisingActivationPanel } from "./fundraising-activation-panel"
-import { FundraisingAthleteActivationIndicator } from "./fundraising-athlete-activation-indicator"
+import { FundraisingActivationIndicator } from "./fundraising-activation-indicator"
 import { recruitingProfilePhotoFromRow } from "@/lib/recruiting-profile-photo"
 import { fetchThankYouAckLedgerKeys } from "@/lib/fundraising/supporter-thank-you-ack"
 import { getFundraisingWiringAdminSnapshot } from "@/lib/fundraising/fundraising-wiring-status"
@@ -92,19 +91,17 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
     !!(user?.id && athleteId && (await userCanManageFundraisingForAthlete(admin, user.id, athleteId)))
   const viewerIsRecruitNcAdmin = !!(user?.id && (await userIsRecruitNcAdmin(admin, user.id)))
 
+  /** Pending family activation on this slug — wiring chips only (recruitnc admins). */
   let latestActivationStatus: "none" | "pending" | "approved" | "rejected" = "none"
-  if (user?.id) {
+  if (viewerIsRecruitNcAdmin) {
     const slugNorm = slug.trim().toLowerCase()
-    const { data: reqRows } = await supabase
+    const { data: pendRows } = await admin
       .from("fundraising_activation_requests")
       .select("status")
-      .eq("user_id", user.id)
       .eq("fundraising_slug", slugNorm)
-      .order("created_at", { ascending: false })
+      .eq("status", "pending")
       .limit(1)
-
-    const st = reqRows?.[0]?.status
-    if (st === "pending" || st === "approved" || st === "rejected") latestActivationStatus = st
+    if (pendRows?.length) latestActivationStatus = "pending"
   }
 
   const snapshotLedger =
@@ -116,7 +113,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
       ? getAthleteOwnerThankYouRowsForLedgerCodes(snapshotLedger)
       : Promise.resolve([]),
     isFundraisingManager && athleteId ? fetchThankYouAckLedgerKeys(admin, athleteId) : Promise.resolve(new Set<string>()),
-    viewerIsRecruitNcAdmin && athleteId ? getFundraisingWiringAdminSnapshot(admin, athleteId) : Promise.resolve(null),
+    athleteId && isFundraisingManager ? getFundraisingWiringAdminSnapshot(admin, athleteId) : Promise.resolve(null),
   ])
 
   const ownerThankYouRowsWithAck = ownerThankYouRows.map((r) => ({
@@ -181,21 +178,18 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           </div>
         ) : null}
 
-        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+        <div className="mt-6">
           <HardLink
             href="/fundraising/athletes"
             className="text-sm font-semibold text-[#C8A94A] underline-offset-4 hover:underline"
           >
             ← All athletes
           </HardLink>
-          <FundraisingAthleteActivationIndicator
-            hasActivatedProfile={profile != null}
-            signedIn={!!user?.id}
-            isFamilyConnected={isFundraisingManager}
-            signInReturnToPath={athletePagePath}
-            latestActivationStatus={latestActivationStatus}
-          />
         </div>
+
+        {athleteId && wiringSnapshot && isFundraisingManager ? (
+          <FundraisingActivationIndicator wiringSnapshot={wiringSnapshot} />
+        ) : null}
 
         {viewerIsRecruitNcAdmin ? (
           <FundraisingAdminAssignmentPanel
@@ -208,15 +202,6 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
             latestActivationStatus={latestActivationStatus}
           />
         ) : null}
-
-        <FundraisingActivationPanel
-          fundraisingSlug={slug}
-          athleteId={athleteId}
-          userId={user?.id ?? null}
-          latestActivationStatus={latestActivationStatus}
-          isFundraisingManager={isFundraisingManager}
-          viewerIsRecruitNcAdmin={viewerIsRecruitNcAdmin}
-        />
 
         <p className="font-[family-name:var(--font-fundraising-display)] mt-8 text-[11px] font-bold uppercase tracking-[0.28em] text-[#CC0000]">
           Official NC United gift page

@@ -23,7 +23,7 @@ export function DigitalWalletGovernancePlaybook() {
         <p className="mt-4 text-base leading-relaxed text-white/85">
           Donors give through <strong className="text-white">NC United nonprofit checkout</strong>; gifts are credited to athletes under campaign rules.
           Families track the result in RecruitNC under{" "}
-          <strong className="text-white">Profile → Digital wallet</strong> (Fundraise tab). Informal Venmo/Cash App puts money{" "}
+          <strong className="text-white">Profile → Digital wallet</strong> (coins / Wallet tab). Informal Venmo/Cash App puts money{" "}
           <strong className="text-white">outside</strong> that nonprofit custody chain — so you lose institutional lanes, unified receipts, and an
           organization-backed trail for how dollars move after checkout.
         </p>
@@ -66,7 +66,7 @@ export function DigitalWalletGovernancePlaybook() {
           in” and “what moved out under policy.”
         </li>
         <li>
-          <strong className="text-white/95">Thank-you reminders tied to real gifts.</strong> The same Fundraise tab surfaces supporter prompts so athlete
+          <strong className="text-white/95">Thank-you reminders tied to real gifts.</strong> The same Digital wallet tab surfaces supporter prompts so athlete
           gratitude stays attached to credited donors — not divorced from the ledger (still read the gratitude section above: texts minimum, notes
           preferred).
         </li>

@@ -1,4 +1,3 @@
-import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
 /**
@@ -25,10 +24,30 @@ export async function middleware(request: NextRequest) {
     request,
   })
 
-  // Skip middleware entirely for public routes that don't need auth
-  // Giving hub and athlete/training-fund pages stay public; playbook routes enforce sign-in in their own layouts/pages.
+  /** Hub landing, athletes (`/fundraising/athletes/**`), scholarships hub/detail/donate/thanks (`/fundraising/scholarships/**` — apply stays behind `(giving-auth)`), and other post-checkout `**/thanks/**` stay public. */
+  function isFundraisingHubPublicPath(p: string): boolean {
+    if (p === "/fundraising" || p === "/fundraising/") return true
+    if (p.startsWith("/fundraising/athletes")) return true
+    if (p.startsWith("/fundraising/scholarships")) return true
+    if (p.startsWith("/fundraising/") && p.includes("/thanks")) return true
+    return false
+  }
+
+  if (pathname.startsWith("/fundraising")) {
+    if (isFundraisingHubPublicPath(pathname)) {
+      return supabaseResponse
+    }
+    const reqHeaders = new Headers(request.headers)
+    reqHeaders.set("x-fundraising-return-path", pathname + request.nextUrl.search)
+    return NextResponse.next({
+      request: {
+        headers: reqHeaders,
+      },
+    })
+  }
+
+  // Skip middleware entirely for public routes that don't need auth (no Supabase calls — see header comment above).
   const publicRoutes = [
-    '/fundraising',
     '/view-profile',
     '/blue',
     '/go',

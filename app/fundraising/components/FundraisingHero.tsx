@@ -69,6 +69,17 @@ export function FundraisingHero({ hero }: { hero: FundraisingHubHeroStats }) {
           Tax-deductible giving · 501(c)(3)
         </p>
 
+        <p className="mt-5 flex justify-center sm:justify-start">
+          <HardLink
+            href="/fundraising/playbook/members"
+            className={`${displayFont(
+              "inline-flex min-h-11 items-center justify-center rounded-md border border-[#C8A94A]/55 bg-[#C8A94A]/12 px-5 py-2.5 text-[11px] font-black uppercase tracking-[0.18em] text-[#C8A94A] shadow-[0_10px_30px_-14px_rgba(200,169,74,0.75)] transition hover:bg-[#C8A94A]/22 hover:border-[#C8A94A]/80 active:scale-[0.99]",
+            )}`}
+          >
+            Access playbook →
+          </HardLink>
+        </p>
+
         <h1
           className={`${displayFont("mx-auto mt-5 max-w-[22ch] text-[clamp(2.25rem,8vw,4.5rem)] font-black uppercase leading-[0.92] tracking-[-0.02em] text-white sm:mx-0")}`}
         >

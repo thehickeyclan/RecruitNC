@@ -1,12 +1,6 @@
 import type { ReactNode } from "react"
-import type { FundraisingAthleteIndexRow } from "@/lib/fundraising/athlete-fundraising-profiles"
 import { HardLink } from "@/components/hard-link"
-import { PlaybookFundraisingRequestSection } from "./playbook-fundraising-request-section"
-
-export type PlaybookMembersContentProps = {
-  fundraisingDirectoryRows?: FundraisingAthleteIndexRow[]
-  activationStatusBySlug?: Record<string, string>
-}
+import { DigitalWalletGovernancePlaybook } from "../../_components/digital-wallet-governance-playbook"
 
 function DH({ as: Tag = "h2", children }: { as?: "h1" | "h2" | "h3"; children: ReactNode }) {
   const base =
@@ -58,12 +52,7 @@ function DataTable({ children }: { children: ReactNode }) {
   )
 }
 
-export function PlaybookMembersContent({
-  fundraisingDirectoryRows = [],
-  activationStatusBySlug = {},
-}: PlaybookMembersContentProps = {}) {
-  const showFundraisingRequest = fundraisingDirectoryRows.length > 0
-
+export function PlaybookMembersContent() {
   return (
     <article className="mx-auto max-w-3xl overflow-x-hidden px-4 pb-24 pt-8">
       <p className="font-[family-name:var(--font-fundraising-display)] text-[11px] font-bold uppercase tracking-[0.28em] text-[#C8A94A]">
@@ -74,17 +63,6 @@ export function PlaybookMembersContent({
       <p className="mt-4 text-sm italic leading-relaxed text-white/55">
         NC United Wrestling · 501(c)(3) nonprofit · EIN: <span className="tabular-nums not-italic">99-3757238</span>
       </p>
-
-      {showFundraisingRequest ? (
-        <p className="mt-3">
-          <HardLink
-            href="#fundraising-page-request"
-            className="text-sm font-bold uppercase tracking-[0.14em] text-[#C8A94A] underline-offset-4 hover:underline"
-          >
-            Jump to: request gift-page access →
-          </HardLink>
-        </p>
-      ) : null}
 
       <Rule />
 
@@ -307,6 +285,33 @@ export function PlaybookMembersContent({
         NC United reviews and approves. Payment follows. Every transaction is documented.
       </P>
       <p className="mt-6 font-[family-name:var(--font-fundraising-display)] text-xs font-black uppercase tracking-[0.14em] text-[#C8A94A]">
+        How parents access the digital wallet
+      </p>
+      <P>Use the same RecruitNC account you use as athlete or parent — the login tied to your wrestler on NC United.</P>
+      <ol className="mt-4 list-decimal space-y-3 pl-5 text-base leading-relaxed text-white/82 marker:font-black marker:text-[#C8A94A]">
+        <li>
+          <Strong>Sign in</Strong> to RecruitNC —{" "}
+          <HardLink href="/auth/signin" className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
+            open sign-in
+          </HardLink>{" "}
+          if you aren&apos;t already.
+        </li>
+        <li>
+          Open{" "}
+          <HardLink href="/profile" className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
+            Profile
+          </HardLink>
+          .
+        </li>
+        <li>
+          Select the <Strong>Digital wallet</Strong> tab (coins icon). On phones it may show as <Strong>Wallet</Strong>.
+        </li>
+      </ol>
+      <P className="text-sm text-white/65">
+        Balances and reimbursement requests live there. If you don&apos;t see your wrestler, link them first under Profile →{" "}
+        <Strong>Family &amp; athletes</Strong>, then open Digital wallet again.
+      </P>
+      <p className="mt-6 font-[family-name:var(--font-fundraising-display)] text-xs font-black uppercase tracking-[0.14em] text-[#C8A94A]">
         What makes it different from Venmo
       </p>
       <P>
@@ -328,13 +333,8 @@ export function PlaybookMembersContent({
         This is what separates a real fundraising system from a social post with a payment handle. The money is accountable. The athlete earns it. The family
         controls how it is spent — within a structure that protects everyone.
       </P>
-      <P className="text-sm text-white/65">
-        Track balances and submit reimbursement requests in RecruitNC under{" "}
-        <HardLink href="/profile" className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
-          Profile
-        </HardLink>{" "}
-        → <Strong>Fundraise</Strong> (digital wallet).
-      </P>
+
+      <DigitalWalletGovernancePlaybook />
 
       <Rule />
 
@@ -592,11 +592,21 @@ export function PlaybookMembersContent({
 
       <Rule />
 
-      {showFundraisingRequest ? (
-        <PlaybookFundraisingRequestSection rows={fundraisingDirectoryRows} activationStatusBySlug={activationStatusBySlug} />
-      ) : null}
-
-      {showFundraisingRequest ? <Rule /> : null}
+      <DH as="h2">Start here</DH>
+      <P className="mt-3">
+        <Strong>1.</Strong> 400+ athletes already have RecruitNC profiles — each has a fundraising page. Start today:{" "}
+        <HardLink href="/fundraising/athletes" className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
+          search for your athlete
+        </HardLink>
+        .
+      </P>
+      <P>
+        <Strong>2.</Strong> Don&apos;t have a profile yet?{" "}
+        <HardLink href="/create-profile" className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
+          Create one here
+        </HardLink>
+        , then search for them and share their fundraising page.
+      </P>
 
       <div className="mt-16 space-y-2 border-t border-white/10 pt-10 text-xs leading-relaxed text-white/50">
         <p>NC United Wrestling is a registered 501(c)(3) nonprofit organization.</p>
