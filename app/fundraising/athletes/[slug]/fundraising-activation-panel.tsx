@@ -1,10 +1,10 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
+import { Wallet } from "lucide-react"
 import { submitFundraisingActivationRequestAction } from "@/app/actions/fundraising/fundraising-activation-actions"
 import { HardLink } from "@/components/hard-link"
-import { Button } from "@/components/ui/button"
 import { toast } from "@/hooks/use-toast"
 
 type LatestActivationStatus = "none" | "pending" | "approved" | "rejected"
@@ -12,23 +12,13 @@ type LatestActivationStatus = "none" | "pending" | "approved" | "rejected"
 type Props = {
   fundraisingSlug: string
   athleteId: string | null
-  /** Logged-in user id — signed-out users see a compact sign-in prompt */
   userId: string | null
   latestActivationStatus: LatestActivationStatus
   isFundraisingManager: boolean
   viewerIsRecruitNcAdmin: boolean
 }
 
-function StatusDot({ tone }: { tone: "neutral" | "amber" | "emerald" }) {
-  const cls =
-    tone === "emerald"
-      ? "bg-emerald-400 shadow-[0_0_14px_rgba(52,211,153,0.65)]"
-      : tone === "amber"
-        ? "bg-amber-400 shadow-[0_0_14px_rgba(251,191,36,0.55)] animate-pulse"
-        : "bg-white/35"
-  return <span className={`inline-flex h-3 w-3 shrink-0 rounded-full ${cls}`} aria-hidden />
-}
-
+/** Traffic-light control — terminology matches the fundraising playbook (“digital wallet”). */
 export function FundraisingActivationPanel({
   fundraisingSlug,
   athleteId,
@@ -49,51 +39,13 @@ export function FundraisingActivationPanel({
 
   const pending = !isFundraisingManager && (optimisticPending || latestActivationStatus === "pending")
   const requestApproved = latestActivationStatus === "approved"
-
-  const headline = useMemo(() => {
-    if (isFundraisingManager) {
-      return {
-        tone: "emerald" as const,
-        label: "Connected",
-        text: "You can manage this page from Profile → Fundraise.",
-      }
-    }
-    if (pending) {
-      return {
-        tone: "amber" as const,
-        label: "Waiting on staff",
-        text: "Your request is in the queue — NC United will connect your account when reviewed.",
-      }
-    }
-    if (requestApproved) {
-      return {
-        tone: "emerald" as const,
-        label: "Approved",
-        text: "Staff approved your request and linked your login to this wrestler. Refresh if needed, then use Profile → Fundraise for donor tools.",
-      }
-    }
-    if (latestActivationStatus === "rejected") {
-      return {
-        tone: "neutral" as const,
-        label: "Previous request declined",
-        text: "You can submit a new activation request when you&apos;re ready.",
-      }
-    }
-    return {
-      tone: "neutral" as const,
-      label: "Not activated",
-      text: "Request NC United staff to link your login so you can use donor tools for this athlete.",
-    }
-  }, [isFundraisingManager, latestActivationStatus, pending, requestApproved])
+  /** Staff approved link but client profile row not refreshed yet — yellow until refresh unlocks tools. */
+  const approvedAwaitingRefresh = requestApproved && !isFundraisingManager && !pending
 
   if (viewerIsRecruitNcAdmin) return null
 
-  const borderCls =
-    headline.tone === "emerald"
-      ? "border-emerald-500/35 bg-emerald-950/30"
-      : pending
-        ? "border-amber-500/35 bg-amber-950/25"
-        : "border-white/12 bg-[#0B2545]/55"
+  const returnToPath = `/fundraising/athletes/${encodeURIComponent(fundraisingSlug)}`
+  const signInHref = `/auth/signin?returnTo=${encodeURIComponent(returnToPath)}`
 
   const submitRequest = async () => {
     if (!userId || pending || isFundraisingManager || requestApproved) return
@@ -115,7 +67,7 @@ export function FundraisingActivationPanel({
       }
       toast({
         title: "Request submitted",
-        description: "Status shows waiting until staff approves.",
+        description: "Staff will review and connect your account.",
       })
       router.refresh()
     } finally {
@@ -123,73 +75,95 @@ export function FundraisingActivationPanel({
     }
   }
 
-  const playbookHref = "/fundraising/playbook/members"
-  const returnToPath = `/fundraising/athletes/${encodeURIComponent(fundraisingSlug)}`
+  const btnBase =
+    "relative flex min-h-12 w-full max-w-md items-center justify-center gap-2.5 rounded-xl border px-4 py-3 font-[family-name:var(--font-fundraising-display)] text-sm font-bold uppercase tracking-[0.12em] shadow-lg transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
 
+  // —— Signed out: red → sign in ——
   if (!userId) {
     return (
-      <section className="mt-6 rounded-xl border border-white/12 bg-[#0B2545]/55 px-4 py-4 sm:px-5 sm:py-5">
-        <div className="flex flex-wrap items-center gap-3">
-          <StatusDot tone="neutral" />
-          <h2 className="font-[family-name:var(--font-fundraising-display)] text-xs font-bold uppercase tracking-[0.22em] text-[#C8A94A]">
-            Family fundraising access
-          </h2>
-        </div>
-        <p className="mt-3 text-sm leading-relaxed text-white/82">
-          Sign in with your RecruitNC account (athlete or parent) to request activation. Staff reviews requests before donor tools unlock. Review the{" "}
-          <HardLink href={playbookHref} className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
-            fundraising playbook
-          </HardLink>{" "}
-          anytime — no acknowledgment step required.
+      <section className="mt-6" aria-label="Family fundraising access">
+        <HardLink
+          href={signInHref}
+          className={`${btnBase} border-red-600/55 bg-[#7f1d1d] text-white hover:bg-[#991b1b] focus-visible:outline-red-300`}
+          aria-describedby="wallet-connect-hint-signed-out"
+        >
+          <span className="absolute left-3 flex h-2.5 w-2.5 shrink-0 rounded-full bg-red-400 shadow-[0_0_12px_rgba(248,113,113,0.9)]" aria-hidden />
+          <Wallet className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
+          <span>Connect digital wallet</span>
+        </HardLink>
+        <p id="wallet-connect-hint-signed-out" className="sr-only">
+          Sign in to your RecruitNC account to request access to family fundraising and donor tools for this athlete.
         </p>
-        <Button asChild className="mt-4 min-h-11 bg-[#C8A94A] font-semibold text-[#061224] hover:bg-[#b89740]">
-          <HardLink href={`/auth/signin?returnTo=${encodeURIComponent(returnToPath)}`}>Sign in</HardLink>
-        </Button>
       </section>
     )
   }
 
-  const showRequestButton = !pending && !isFundraisingManager && !requestApproved
+  // —— Green: donor tools connected ——
+  if (isFundraisingManager) {
+    return (
+      <section className="mt-6" aria-label="Digital wallet">
+        <HardLink
+          href="/profile"
+          className={`${btnBase} border-emerald-500/45 bg-[#064e3b] text-emerald-50 hover:bg-[#065f46] focus-visible:outline-emerald-300`}
+        >
+          <span className="absolute left-3 flex h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-400 shadow-[0_0_14px_rgba(52,211,153,0.85)]" aria-hidden />
+          <Wallet className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
+          <span>Connected</span>
+        </HardLink>
+      </section>
+    )
+  }
+
+  // —— Yellow: waiting on staff ——
+  if (pending) {
+    return (
+      <section className="mt-6" aria-label="Digital wallet">
+        <button
+          type="button"
+          disabled
+          className={`${btnBase} cursor-not-allowed border-amber-600/50 bg-[#78350f] text-amber-100 opacity-95`}
+          aria-label="Requested, awaiting staff"
+        >
+          <span className="absolute left-3 flex h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-amber-400 shadow-[0_0_14px_rgba(251,191,36,0.65)]" aria-hidden />
+          <Wallet className="h-5 w-5 shrink-0 opacity-90" aria-hidden />
+          <span>Requested</span>
+        </button>
+      </section>
+    )
+  }
+
+  // —— Yellow: approved, refresh to pick up parent link ——
+  if (approvedAwaitingRefresh) {
+    return (
+      <section className="mt-6" aria-label="Digital wallet">
+        <button
+          type="button"
+          className={`${btnBase} border-amber-500/45 bg-[#713f12] text-amber-50 hover:bg-[#854d0e]`}
+          onClick={() => router.refresh()}
+        >
+          <span className="absolute left-3 flex h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-amber-400 shadow-[0_0_14px_rgba(251,191,36,0.55)]" aria-hidden />
+          <Wallet className="h-5 w-5 shrink-0 opacity-90" aria-hidden />
+          <span>Refresh to activate</span>
+        </button>
+      </section>
+    )
+  }
+
+  // —— Red: can submit request (includes declined prior request) ——
+  const canSubmit = !pending && !requestApproved
 
   return (
-    <section className={`mt-6 rounded-xl border px-4 py-4 sm:px-5 sm:py-5 ${borderCls}`}>
-      <div className="flex flex-wrap items-center gap-3">
-        <StatusDot tone={headline.tone === "emerald" ? "emerald" : pending ? "amber" : "neutral"} />
-        <h2 className="font-[family-name:var(--font-fundraising-display)] text-xs font-bold uppercase tracking-[0.22em] text-[#C8A94A]">
-          Family fundraising access
-        </h2>
-        <span className="rounded-full border border-white/15 bg-black/25 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white/70">
-          {headline.label}
-        </span>
-      </div>
-      <p className="mt-3 text-sm leading-relaxed text-white/82">{headline.text}</p>
-
-      {showRequestButton ? (
-        <div className="mt-4 flex flex-col gap-2">
-          <Button
-            type="button"
-            disabled={busy}
-            onClick={() => void submitRequest()}
-            className="min-h-11 w-full bg-[#C8A94A] font-semibold text-[#061224] hover:bg-[#b89740] sm:w-auto"
-          >
-            {busy ? "Sending…" : "Request activation"}
-          </Button>
-          <p className="text-xs leading-snug text-white/55">
-            Questions about nonprofit checkout and outreach? Read the{" "}
-            <HardLink href={playbookHref} className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
-              playbook
-            </HardLink>
-            .
-          </p>
-        </div>
-      ) : null}
-
-      {pending ? (
-        <p className="mt-3 text-xs leading-snug text-amber-100/75">
-          Indicator stays <strong className="text-amber-200">amber</strong> until staff approves — then it turns{" "}
-          <strong className="text-emerald-200">green</strong>.
-        </p>
-      ) : null}
+    <section className="mt-6" aria-label="Digital wallet">
+      <button
+        type="button"
+        disabled={busy || !canSubmit}
+        className={`${btnBase} border-red-600/55 bg-[#7f1d1d] text-white hover:bg-[#991b1b] disabled:pointer-events-none disabled:opacity-50`}
+        onClick={() => void submitRequest()}
+      >
+        <span className="absolute left-3 flex h-2.5 w-2.5 shrink-0 rounded-full bg-red-400 shadow-[0_0_12px_rgba(248,113,113,0.9)]" aria-hidden />
+        <Wallet className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
+        <span>{busy ? "Sending…" : "Connect digital wallet"}</span>
+      </button>
     </section>
   )
 }

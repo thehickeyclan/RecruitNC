@@ -1,11 +1,10 @@
-import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { createClient as createServiceClient } from "@supabase/supabase-js"
 import { getCachedAdminCheck } from "@/lib/cached-auth-check"
 
 export const dynamic = "force-dynamic"
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     // Use cached auth check to reduce Supabase API calls
     const authCheck = await getCachedAdminCheck()
@@ -73,6 +72,32 @@ export async function GET() {
 
     console.log(`[Export CSV] Total auth users fetched: ${allAuthUsers.length}`)
 
+    const { searchParams } = new URL(request.url)
+    const format = searchParams.get("format") || "csv"
+
+    /** One email per line — plain text avoids browser CSV/plugin preview issues. */
+    if (format === "txt" || format === "emails-txt") {
+      const seen = new Set<string>()
+      const lines: string[] = []
+      for (const user of allAuthUsers) {
+        const e = (user.email || "").trim()
+        if (!e) continue
+        const key = e.toLowerCase()
+        if (seen.has(key)) continue
+        seen.add(key)
+        lines.push(e)
+      }
+      const body = `${lines.join("\n")}\n`
+      const date = new Date().toISOString().split("T")[0]
+      return new NextResponse(body, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/plain; charset=utf-8",
+          "Content-Disposition": `attachment; filename="recruitnc-account-emails-${date}.txt"`,
+        },
+      })
+    }
+
     const { data: userProfiles, error: profileError } = await supabaseAdmin
       .from("user_profiles")
       .select(`
@@ -108,13 +133,14 @@ export async function GET() {
       )
     ]
 
-    const csv = csvRows.join("\n")
+    // UTF-8 BOM helps Excel recognize encoding; charset avoids ambiguous plugin handlers.
+    const csv = "\uFEFF" + csvRows.join("\n")
 
     // Return CSV file
     return new NextResponse(csv, {
       status: 200,
       headers: {
-        "Content-Type": "text/csv",
+        "Content-Type": "text/csv; charset=utf-8",
         "Content-Disposition": `attachment; filename="users-export-${new Date().toISOString().split('T')[0]}.csv"`,
       },
     })

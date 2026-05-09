@@ -336,6 +336,42 @@ export default function UsersDashboardPage() {
     }
   }
 
+  /** Plain-text emails — avoids OS/browser “couldn’t load plugin” on CSV preview. */
+  const handleExportEmailsTxt = async () => {
+    try {
+      const res = await fetch("/api/admin/users/export-csv?format=emails-txt", {
+        method: "GET",
+        credentials: "include"
+      })
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: "Failed to export" }))
+        throw new Error(errorData.error || "Failed to export emails")
+      }
+
+      const blob = await res.blob()
+      const dlUrl = window.URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = dlUrl
+      a.download = `recruitnc-account-emails-${new Date().toISOString().split("T")[0]}.txt`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(dlUrl)
+      document.body.removeChild(a)
+
+      toast({
+        title: "Downloaded",
+        description: "Emails saved as .txt (one per line, deduped).",
+      })
+    } catch (e: any) {
+      toast({
+        title: "Error",
+        description: e?.message || "Failed to download emails",
+        variant: "destructive"
+      })
+    }
+  }
+
   const handleCopyMarketingEmails = async (format: "comma" | "newline") => {
     const emails = uniqueMarketingEmails(profiles)
     if (emails.length === 0) {
@@ -674,7 +710,7 @@ export default function UsersDashboardPage() {
           <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
           <p className="text-gray-600 mt-1">Manage user profiles, approve coaches, and assign schools</p>
           <p className="text-muted-foreground mt-2 max-w-xl text-xs">
-            Marketing: copy every account email in the system (deduped), same source as Export CSV — use only where you have consent or legitimate interest.
+            Marketing: copy or download emails (deduped). Use Emails (.txt) if CSV triggers a browser plugin error — same account list as CSV. Use only where you have consent or legitimate interest.
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
@@ -695,6 +731,10 @@ export default function UsersDashboardPage() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <Button onClick={handleExportEmailsTxt} variant="outline" className="flex items-center gap-2">
+            <Mail className="h-4 w-4" />
+            Emails (.txt)
+          </Button>
           <Button onClick={handleExportCSV} variant="outline" className="flex items-center gap-2">
             <Download className="h-4 w-4" />
             Export CSV
