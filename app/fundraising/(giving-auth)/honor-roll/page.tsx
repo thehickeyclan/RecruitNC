@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { fetchDonorHallOfFameFromStripe, DONOR_RECOGNITION_MIN_AMOUNT_CENTS } from "@/lib/fundraising/donor-hall-of-fame"
-import { DonorHallOfFame } from "../components/DonorHallOfFame"
+import { DonorHallOfFame } from "@/app/fundraising/components/DonorHallOfFame"
 import { HardLink } from "@/components/hard-link"
 
 export const metadata: Metadata = {
