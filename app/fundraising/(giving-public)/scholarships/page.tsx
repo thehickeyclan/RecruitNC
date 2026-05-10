@@ -1,6 +1,8 @@
 import type { Metadata } from "next"
+import Image from "next/image"
 
 import { formatUsdWhole } from "@/app/fundraising/components/FundraisingHero"
+import { CADEN_PERRY_HUB_CARD_IMAGE_SRC } from "@/lib/scholarships/caden-perry-gallery-images"
 import { scholarshipApplicationBadge } from "@/lib/scholarships/applications-open"
 import {
   SHARED_SCHOLARSHIP_VOTING_COMMITTEE,
@@ -94,9 +96,19 @@ export default async function ScholarshipsHubPage() {
                     className="flex flex-col overflow-hidden rounded-2xl border border-[#C8A94A]/25 bg-[#0B2545]/55 shadow-[0_24px_80px_-28px_rgba(0,0,0,0.65)]"
                   >
                     <div className="relative aspect-[16/9] w-full bg-[#061224]">
-                      {s.hero_image_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={s.hero_image_url} alt="" className="h-full w-full object-cover object-center" />
+                      {tileSrc ? (
+                        tileSrc.startsWith("/") ? (
+                          <Image
+                            src={tileSrc}
+                            alt=""
+                            fill
+                            className="object-cover object-[center_35%]"
+                            sizes="(max-width: 640px) 100vw, 50vw"
+                          />
+                        ) : (
+                          // eslint-disable-next-line @next/next/no-img-element -- remote CMS/storage URLs
+                          <img src={tileSrc} alt="" className="h-full w-full object-cover object-center" />
+                        )
                       ) : (
                         <div className="flex h-full w-full items-center justify-center text-[11px] font-semibold uppercase tracking-[0.16em] text-white/35">
                           Scholarship fund

@@ -1,4 +1,8 @@
 /** Static paths under `public/scholarships/caden-perry/` — family-provided photos for the Caden Perry Scholarship page. */
+
+/** Wide crop-friendly shot for the scholarships hub tile when DB `hero_image_url` is empty. */
+export const CADEN_PERRY_HUB_CARD_IMAGE_SRC = "/scholarships/caden-perry/04-tournament.png"
+
 export type CadenGallerySlide = {
   src: string
   alt: string
