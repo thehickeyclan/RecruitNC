@@ -104,7 +104,13 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
       ) : null}
 
       <section className="relative">
-        <div className="relative aspect-[21/9] max-h-[420px] w-full bg-[#0B2545]">
+        <div
+          className={`relative w-full bg-[#061224] ${
+            isCaden
+              ? "aspect-[5/4] min-h-[260px] max-h-[560px] sm:aspect-[16/10] sm:max-h-[500px]"
+              : "aspect-[21/9] max-h-[420px] bg-[#0B2545]"
+          }`}
+        >
           {isCaden ? (
             <CadenPerryHeroCarousel heroImageUrl={s.hero_image_url} />
           ) : s.hero_image_url ? (
@@ -122,8 +128,15 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
               />
             </div>
           )}
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#061224] via-[#061224]/55 to-transparent" />
-          <div className="absolute inset-x-0 bottom-0 px-4 pb-10 pt-24 sm:px-8">
+          {!isCaden ? (
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#061224] via-[#061224]/55 to-transparent" />
+          ) : (
+            <div
+              className="pointer-events-none absolute inset-x-0 bottom-0 top-1/2 z-[5] bg-gradient-to-t from-[#061224] to-transparent"
+              aria-hidden
+            />
+          )}
+          <div className="absolute inset-x-0 bottom-0 z-[6] px-4 pb-10 pt-24 sm:px-8">
             <div className="mx-auto max-w-4xl">
               <p className={df("text-[9px] font-bold uppercase tracking-[0.28em] text-white/55")}>NC United Wrestling</p>
               <p className={df("mt-2 text-[10px] font-extrabold uppercase tracking-[0.26em] text-[#CC0000]")}>Scholarships</p>
@@ -214,14 +227,33 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
 
             <section className="mt-12" aria-label="Caden Perry photo gallery">
               <p className={df("text-[10px] font-bold uppercase tracking-[0.22em] text-white/45")}>Photos</p>
-              <p className="mt-2 text-xs leading-relaxed text-white/55 sm:hidden">Swipe sideways for more — same images rotate in the banner above.</p>
-              <div className="mt-4 flex gap-3 overflow-x-auto overscroll-x-contain pb-2 [-ms-overflow-style:none] [scrollbar-width:none] snap-x snap-mandatory sm:flex-wrap sm:gap-3 sm:overflow-visible sm:snap-none [&::-webkit-scrollbar]:hidden">
+              <p className="mt-2 text-xs leading-relaxed text-white/55">
+                Full photos (not cropped). On phones, swipe sideways; on larger screens they wrap in a grid.
+              </p>
+              {/* Mobile: wide snap strip (priority). sm+: wrapped rows, centered so 7 tiles don’t leave a ragged edge. */}
+              <div
+                className={[
+                  "mt-4 flex gap-3 pb-2",
+                  "overflow-x-auto overscroll-x-contain snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+                  "sm:flex-wrap sm:justify-center sm:gap-4 sm:overflow-visible sm:pb-0 sm:snap-none",
+                ].join(" ")}
+              >
                 {CADEN_PERRY_GALLERY_ITEMS.map((item) => (
                   <div
                     key={item.src}
-                    className="relative h-36 w-[min(72vw,13.5rem)] shrink-0 snap-start overflow-hidden rounded-xl border border-white/10 bg-black/30 sm:h-40 sm:w-[calc(50%-0.375rem)] lg:w-[calc(25%-0.5625rem)]"
+                    className={[
+                      "relative aspect-[4/3] shrink-0 overflow-hidden rounded-xl border border-white/10 bg-[#0a1628]",
+                      "w-[min(88vw,19rem)] snap-start",
+                      "sm:w-[13rem] sm:snap-none md:w-[13.75rem] lg:w-[12.75rem] xl:w-[13.25rem]",
+                    ].join(" ")}
                   >
-                    <Image src={item.src} alt={item.alt} fill className="object-cover object-center" sizes="(max-width:640px) 72vw, (max-width:1024px) 45vw, 22vw" />
+                    <Image
+                      src={item.src}
+                      alt={item.alt}
+                      fill
+                      className="object-contain object-center"
+                      sizes="(max-width:639px) 88vw, (max-width:1024px) 220px, 200px"
+                    />
                   </div>
                 ))}
               </div>

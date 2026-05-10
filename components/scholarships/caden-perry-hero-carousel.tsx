@@ -1,29 +1,33 @@
 "use client"
 
-import Image from "next/image"
 import { useCallback, useEffect, useState } from "react"
 import { CADEN_PERRY_GALLERY_ITEMS, type CadenGallerySlide } from "@/lib/scholarships/caden-perry-gallery-images"
 import { cn } from "@/lib/utils"
 
 const AUTO_ADVANCE_MS = 5500
 
-type Slide = CadenGallerySlide & { remote?: boolean }
+type Slide = CadenGallerySlide
 
 function buildSlides(heroImageUrl: string | null | undefined): Slide[] {
   const trimmed = typeof heroImageUrl === "string" ? heroImageUrl.trim() : ""
   if (!trimmed) return [...CADEN_PERRY_GALLERY_ITEMS]
-  return [{ src: trimmed, alt: "Caden Perry Scholarship — hero image", remote: true }, ...CADEN_PERRY_GALLERY_ITEMS]
+  return [
+    { src: trimmed, alt: "Caden Perry Scholarship — hero image" },
+    ...CADEN_PERRY_GALLERY_ITEMS,
+  ]
 }
 
+/** Centered `object-contain` inside the slide box — avoids Next/Image `fill` + ultrawide crop clipping faces (portrait + landscape mix). */
 function SlidePicture({ slide, priority }: { slide: Slide; priority?: boolean }) {
-  if (slide.remote) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element -- CMS hero URLs may be off-domain
-      <img src={slide.src} alt={slide.alt} className="h-full w-full object-cover object-[center_25%]" loading={priority ? "eager" : "lazy"} />
-    )
-  }
   return (
-    <Image src={slide.src} alt={slide.alt} fill className="object-cover object-[center_28%]" sizes="100vw" priority={priority} />
+    // eslint-disable-next-line @next/next/no-img-element -- predictable sizing vs Image fill in carousel
+    <img
+      src={slide.src}
+      alt={slide.alt}
+      className="absolute left-1/2 top-1/2 max-h-full max-w-full -translate-x-1/2 -translate-y-1/2 object-contain"
+      loading={priority ? "eager" : "lazy"}
+      decoding="async"
+    />
   )
 }
 
@@ -49,7 +53,7 @@ export function CadenPerryHeroCarousel({ heroImageUrl }: { heroImageUrl?: string
 
   return (
     <div
-      className="relative h-full min-h-[220px] w-full overflow-hidden bg-black"
+      className="relative min-h-[240px] h-full w-full overflow-hidden bg-[#0a1628]"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
@@ -65,7 +69,7 @@ export function CadenPerryHeroCarousel({ heroImageUrl }: { heroImageUrl?: string
           <SlidePicture slide={slide} priority={i === 0} />
         </div>
       ))}
-      <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-[#061224] via-[#061224]/45 to-transparent" />
+      <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-[#061224]/90 via-transparent to-[#061224]/25" />
 
       {slides.length > 1 ? (
         <>
