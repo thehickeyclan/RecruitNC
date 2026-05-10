@@ -31,6 +31,8 @@ import {
   TRAINING_AWARD_TYPICAL_USES,
   trainingAwardOpeningSentenceUsd,
 } from "@/lib/scholarships/scholarship-training-award-copy"
+import { CadenPerryHeroCarousel } from "@/components/scholarships/caden-perry-hero-carousel"
+import { CADEN_PERRY_GALLERY_ITEMS } from "@/lib/scholarships/caden-perry-gallery-images"
 
 function df(c: string) {
   return `font-[family-name:var(--font-fundraising-display)] ${c}`
@@ -103,7 +105,9 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
 
       <section className="relative">
         <div className="relative aspect-[21/9] max-h-[420px] w-full bg-[#0B2545]">
-          {s.hero_image_url ? (
+          {isCaden ? (
+            <CadenPerryHeroCarousel heroImageUrl={s.hero_image_url} />
+          ) : s.hero_image_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={s.hero_image_url} alt="" className="h-full w-full object-cover object-[center_22%]" />
           ) : (
@@ -206,6 +210,21 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
               <h2 className={df("text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]")}>About Caden</h2>
               <div className="mt-5 whitespace-pre-wrap text-base leading-relaxed text-white/78">{CADEN_ABOUT_PLACEHOLDER_BODY}</div>
               <p className="mt-6 text-sm italic leading-relaxed text-white/55">{CADEN_ABOUT_COMING_SOON_LINE}</p>
+            </section>
+
+            <section className="mt-12" aria-label="Caden Perry photo gallery">
+              <p className={df("text-[10px] font-bold uppercase tracking-[0.22em] text-white/45")}>Photos</p>
+              <p className="mt-2 text-xs leading-relaxed text-white/55 sm:hidden">Swipe sideways for more — same images rotate in the banner above.</p>
+              <div className="mt-4 flex gap-3 overflow-x-auto overscroll-x-contain pb-2 [-ms-overflow-style:none] [scrollbar-width:none] snap-x snap-mandatory sm:flex-wrap sm:gap-3 sm:overflow-visible sm:snap-none [&::-webkit-scrollbar]:hidden">
+                {CADEN_PERRY_GALLERY_ITEMS.map((item) => (
+                  <div
+                    key={item.src}
+                    className="relative h-36 w-[min(72vw,13.5rem)] shrink-0 snap-start overflow-hidden rounded-xl border border-white/10 bg-black/30 sm:h-40 sm:w-[calc(50%-0.375rem)] lg:w-[calc(25%-0.5625rem)]"
+                  >
+                    <Image src={item.src} alt={item.alt} fill className="object-cover object-center" sizes="(max-width:640px) 72vw, (max-width:1024px) 45vw, 22vw" />
+                  </div>
+                ))}
+              </div>
             </section>
 
             <section className="mt-16 border-t border-white/[0.06] pt-14">
