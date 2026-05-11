@@ -18,7 +18,7 @@ import { HardLink } from "@/components/hard-link"
 export const metadata: Metadata = {
   title: "Scholarships | NC United Wrestling",
   description:
-    "NC United Wrestling scholarships — honoring legacy on the mat and beyond. Apply, give to a named fund, and see award history.",
+    "NC United scholarships honor character and legacies in wrestling. Named funds provide training support stipends—apply, give, and read each fund’s story.",
 }
 
 function df(c: string) {
@@ -45,15 +45,25 @@ export default async function ScholarshipsHubPage() {
         </div>
         <div className="relative mx-auto max-w-3xl text-center">
           <p className={df("text-[10px] font-extrabold uppercase tracking-[0.26em] text-[#CC0000]")}>NC United Wrestling</p>
-          <h1 className={df("mt-4 text-[clamp(2rem,6vw,3rem)] font-black uppercase tracking-tight leading-none text-white")}>
-            Scholarships
+          <h1
+            className={df(
+              "mt-4 max-w-3xl mx-auto text-[clamp(1.65rem,4.2vw,2.35rem)] font-black tracking-tight leading-[1.12] text-white",
+            )}
+          >
+            Scholarships rooted in character—on the mat and long after
           </h1>
-          <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-white/72">
-            Honoring the character wrestling builds — on the mat and beyond.
+          <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-white/72">
+            NC United scholarships recognize what wrestling asks of a person: discipline when it&apos;s hard, respect when no
+            one&apos;s watching, and courage when the match is on the line. Many funds{" "}
+            <strong className="font-semibold text-white/85">honor legacies</strong>—athletes, coaches, and families whose
+            example still defines what we want this sport to build.{" "}
+            <strong className="font-semibold text-white/85">Named funds</strong> turn donations into{" "}
+            <strong className="font-semibold text-white/85">training support stipends</strong> for wrestling-related expenses,
+            so families aren&apos;t choosing between bills and the next step in their athlete&apos;s journey.
           </p>
-          <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-white/52">
-            Named scholarship funds award <strong className="font-semibold text-white/70">training support stipends</strong> for wrestling-related costs —
-            not college tuition, academic awards, or NCAA athletic scholarships. Amount and story are listed on each fund.
+          <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-white/55">
+            These stipends are not college tuition, academic prizes, or NCAA athletic scholarships; every fund&apos;s page
+            spells out the story and the numbers.
           </p>
           <HardLink
             href="/fundraising"
