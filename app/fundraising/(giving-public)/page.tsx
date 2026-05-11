@@ -24,8 +24,8 @@ export default async function FundraisingPortalHomePage() {
     fetchDonorHallOfFameFromStripe(),
   ])
 
-  const leaderboardPreview = snapshot.leaderboard.slice(0, 5).map((r, i) => ({ ...r, rank: i + 1 }))
-  const liveFeedInitial = snapshot.activity.slice(0, 15)
+  const leaderboardRows = snapshot.leaderboard.map((r, i) => ({ ...r, rank: i + 1 }))
+  const liveFeedInitial = snapshot.activity
 
   return (
     <div id="fundraising-hub-root" className="min-h-screen bg-[#0B2545] text-white">
@@ -34,7 +34,7 @@ export default async function FundraisingPortalHomePage() {
       <ScholarshipsSoonSection />
       <CorporatePartners />
       <WhyNCUnited hero={snapshot.hero} />
-      <LeaderboardPreview rows={leaderboardPreview} hubTransparency={snapshot.hubTransparency} />
+      <LeaderboardPreview rows={leaderboardRows} hubTransparency={snapshot.hubTransparency} />
       <LiveDonationStream initial={liveFeedInitial} hubTransparency={snapshot.hubTransparency} />
       <ActiveCampaigns campaigns={snapshot.campaigns} />
       <TopDonorsPreview

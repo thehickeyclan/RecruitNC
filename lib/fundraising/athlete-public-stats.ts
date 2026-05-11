@@ -277,10 +277,14 @@ function statsFromStripeCreditedForCode(
   return statsFromStripeCreditedForCodes(allCorrected, [codeUpper])
 }
 
+function sliceGiftRows<T>(sorted: T[], limit: number): T[] {
+  if (!Number.isFinite(limit) || limit <= 0) return sorted
+  return sorted.slice(0, Math.min(sorted.length, Math.max(1, limit)))
+}
+
 function giftsFromStripeCredited(rows: SpartanFayettevilleDonation[], limit: number): AthleteRecentGiftRow[] {
-  const lim = Math.min(250, Math.max(1, limit))
   const sorted = [...rows].sort((a, b) => b.createdUnix - a.createdUnix)
-  return sorted.slice(0, lim).map((row) => ({
+  return sliceGiftRows(sorted, limit).map((row) => ({
     created_at: row.createdIso,
     donorLabel: publicSupporterDisplayName(row),
     amountCents: row.amountCents,
@@ -305,8 +309,8 @@ function statsFromMirrorCredited(credited: DonationSelectRow[]): AthleteFundrais
 }
 
 function giftsFromMirrorCredited(credited: DonationSelectRow[], limit: number): AthleteRecentGiftRow[] {
-  const lim = Math.min(250, Math.max(1, limit))
-  return credited.slice(0, lim).map((row) => ({
+  const sorted = [...credited].sort((a, b) => +new Date(String(b.created_at ?? "")) - +new Date(String(a.created_at ?? "")))
+  return sliceGiftRows(sorted, limit).map((row) => ({
     created_at: String(row.created_at ?? ""),
     donorLabel: mirrorRowPublicDonorLabel(row),
     amountCents: typeof row.amount_cents === "number" ? row.amount_cents : 0,
@@ -349,7 +353,10 @@ export async function getAthleteRecentGifts(code: string, limit: number): Promis
 /**
  * Public totals + gift table: Stripe-first (cached campaign window + uncached retry), mirror merge fallback.
  * Pass multiple ledger codes to sum credits when slug, `primary_fundraising_code`, and roster disagree.
+ * `giftLimit` ≤ 0 means list every gift in the loaded window (newest first); otherwise cap the table to that many rows.
  */
+export const ATHLETE_PUBLIC_GIFTS_NO_ROW_CAP = 0
+
 export async function getAthleteFundraisingPublicSnapshot(
   ledgerCodesInput: string | string[],
   giftLimit: number,

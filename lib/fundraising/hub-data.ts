@@ -303,7 +303,7 @@ function computeLeaderboard(
     if (dn.length > a.displayName.length) a.displayName = dn
   }
 
-  const sorted = [...byCode.entries()].sort((x, y) => y[1].raisedCents - x[1].raisedCents).slice(0, 10)
+  const sorted = [...byCode.entries()].sort((x, y) => y[1].raisedCents - x[1].raisedCents)
 
   const topRaised = sorted[0]?.[1].raisedCents ?? 1
   const canon = canonicalAthleteCodes(rows)
@@ -330,7 +330,7 @@ function computeLeaderboard(
 }
 
 function rowsToActivity(rows: HubDonationRow[]): FundraisingHubActivityRow[] {
-  return rows.slice(0, 20).map((r) => {
+  return rows.map((r) => {
     const codeRaw = r.athlete_code?.trim() ?? ""
     const athleteCredit = !codeRaw
       ? "NC United general fund"
@@ -422,13 +422,13 @@ export async function buildFundraisingHubSnapshot(admin?: SupabaseClient): Promi
     )
     const enrichedAll = attachPublicSupporterFields(allHubStripeRows, codeToFullName)
     const actSorted = [...enrichedAll].sort((a, b) => b.createdUnix - a.createdUnix)
-    activity = stripeEnrichedToActivity(actSorted.slice(0, 20))
+    activity = stripeEnrichedToActivity(actSorted)
   } else {
     const allCampaignDbRows = filterHubRowsForAllRegisteredCampaignsLookback(allRowsAdjusted, lookbackDays)
     hero = computeHero(allCampaignDbRows)
     leaderboard = computeLeaderboard(allCampaignDbRows, codeToFullName, schoolByCodeLower)
     const activitySorted = [...allCampaignDbRows].sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at))
-    activity = rowsToActivity(activitySorted.slice(0, 20))
+    activity = rowsToActivity(activitySorted)
   }
 
   const metrics = aggregateByCampaign(allRowsAdjusted)

@@ -3,7 +3,12 @@ import type { Metadata } from "next"
 import QRCode from "qrcode"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { resolveFundraisingAthletePublicBySlugForRequest } from "@/lib/fundraising/athlete-fundraising-profiles"
-import { getAthleteFundraisingPublicSnapshot, getAthleteOwnerThankYouRowsForLedgerCodes, type AthleteFundraisingPublicStats } from "@/lib/fundraising/athlete-public-stats"
+import {
+  ATHLETE_PUBLIC_GIFTS_NO_ROW_CAP,
+  getAthleteFundraisingPublicSnapshot,
+  getAthleteOwnerThankYouRowsForLedgerCodes,
+  type AthleteFundraisingPublicStats,
+} from "@/lib/fundraising/athlete-public-stats"
 import { HardLink } from "@/components/hard-link"
 import { createClient } from "@/lib/supabase/server"
 import { DEFAULT_FUNDRAISING_CAMPAIGN, FUNDRAISING_GIVE_PAGE_PATH } from "@/lib/fundraising/campaign-registry"
@@ -107,7 +112,9 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
   const snapshotLedger =
     resolved.ledgerCodes.length > 0 ? resolved.ledgerCodes : code != null ? [code] : []
   const [snapshot, recruitingPhotoUrl, ownerThankYouRows, thankAckLedgerKeys, wiringSnapshot] = await Promise.all([
-    snapshotLedger.length > 0 ? getAthleteFundraisingPublicSnapshot(snapshotLedger, 250) : Promise.resolve(null),
+    snapshotLedger.length > 0
+      ? getAthleteFundraisingPublicSnapshot(snapshotLedger, ATHLETE_PUBLIC_GIFTS_NO_ROW_CAP)
+      : Promise.resolve(null),
     athleteId ? fetchRecruitingProfilePhoto(admin, athleteId) : Promise.resolve(null),
     isFundraisingManager && snapshotLedger.length > 0
       ? getAthleteOwnerThankYouRowsForLedgerCodes(snapshotLedger)
@@ -409,8 +416,10 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
             <h2 className="font-[family-name:var(--font-fundraising-display)] text-sm font-bold uppercase tracking-wide text-white">
               Gift activity
             </h2>
-            <p className="mt-1 text-xs text-white/45">Public names only — up to {publicGifts.length} recent gifts shown.</p>
-            <div className="mt-3 overflow-hidden rounded-lg border border-white/10 bg-black/20">
+            <p className="mt-1 text-xs text-white/45">
+              Public names only — every athlete-credited gift in this campaign window ({DEFAULT_FUNDRAISING_CAMPAIGN.campaignDisplayName}), newest first.
+            </p>
+            <div className="mt-3 max-h-[min(70vh,28rem)] overflow-y-auto overflow-x-hidden rounded-lg border border-white/10 bg-black/20">
               <div className="hidden grid-cols-[5.25rem_minmax(0,10.5rem)_minmax(0,1fr)_auto] gap-x-3 border-b border-white/10 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-white/40 sm:grid">
                 <span>Date</span>
                 <span>Campaign</span>

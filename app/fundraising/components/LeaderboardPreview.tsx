@@ -82,12 +82,12 @@ export function LeaderboardPreview({
               Leaderboard
             </p>
             <h2 className={`${displayFont("mt-2 text-2xl font-black uppercase tracking-tight text-white sm:text-3xl")}`}>
-              Top athletes
+              Athlete leaderboard
             </h2>
             <p className="mt-2 max-w-xl text-sm text-white">
-              Top five athletes by athlete-credited paid gifts in the last{" "}
-              <span className="tabular-nums text-white">{hubTransparency.lookbackDays}</span> days — same combined NC United
-              hub scope as the headline totals above.
+              Every athlete with athlete-credited paid gifts in the last{" "}
+              <span className="tabular-nums text-white">{hubTransparency.lookbackDays}</span> days — same combined NC United hub
+              scope as the headline totals above (sorted by amount raised).
             </p>
           </div>
           <HardLink
@@ -100,7 +100,7 @@ export function LeaderboardPreview({
           </HardLink>
         </div>
 
-        <ul className="mt-10 space-y-3 md:hidden" aria-label="Top athletes, mobile layout">
+        <ul className="mt-10 max-h-[min(70vh,36rem)] space-y-3 overflow-y-auto overscroll-y-contain pr-1 md:hidden" aria-label="Athletes by funds raised, mobile layout">
           {rows.length === 0 ? (
             <li className="rounded-xl border border-white/10 bg-[#0B2545]/55 px-4 py-10 text-center text-sm text-white/85">
               Paid gifts will populate this board as athletes earn support.
@@ -146,7 +146,7 @@ export function LeaderboardPreview({
           )}
         </ul>
 
-        <div className="mt-10 hidden overflow-x-auto rounded-xl border border-white/10 bg-[#0B2545]/55 md:block">
+        <div className="mt-10 hidden max-h-[min(70vh,36rem)] overflow-auto overscroll-y-contain rounded-xl border border-white/10 bg-[#0B2545]/55 md:block">
           <table className="w-full min-w-[520px] text-left text-sm">
             <thead>
               <tr className={`${displayFont("border-b border-white/10 text-[10px] font-extrabold uppercase tracking-[0.18em] text-white/70")}`}>
