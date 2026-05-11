@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
     typeof body.fundraisingHubReturnSlug === "string" ? body.fundraisingHubReturnSlug.trim().toLowerCase() : ""
   let fundraisingHubReturnSlug = ""
   if (fundraisingHubReturnSlugRaw) {
-    if (!FUNDRAISING_ATHLETE_SLUG_RE.test(fundraisingHubReturnSlugRaw)) {
+    if (!FUNDRAISING_HUB_RETURN_SLUG_RE.test(fundraisingHubReturnSlugRaw)) {
       return NextResponse.json({ error: "Invalid return page." }, { status: 400 })
     }
     fundraisingHubReturnSlug = fundraisingHubReturnSlugRaw
