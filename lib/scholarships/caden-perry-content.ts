@@ -7,7 +7,7 @@
 export const CADEN_CLOSING_TAGLINE_FULLWIDTH = "The future is bright for those who refuse to quit."
 
 /** “About Caden” — main biography on the public scholarship page. */
-export const CADEN_ABOUT_PLACEHOLDER_BODY = `Caden Perry was the definition of a warrior. From the wrestling rooms of New Jersey, to the deserts of Arizona, and finally the mats of North Carolina, Caden carried himself with grit, toughness, and heart far beyond his years. Wrestling was never just a sport to him — it was the foundation that built his character, his discipline, and his relentless mindset.
+export const CADEN_ABOUT_PLACEHOLDER_BODY = `Caden Perry was the definition of a warrior. From the wrestling rooms of New Jersey, all the way to Eastern Europe in Estonia, to the deserts of Arizona, and finally the mats of North Carolina, Caden carried himself with grit, toughness, and heart far beyond his years. Wrestling was never just a sport to him — it was the foundation that built his character, his discipline, and his relentless mindset.
 
 At just 13 years old, Caden was faced with the fight of his life when he was diagnosed with terminal brain cancer. A diagnosis that would break most people only revealed the incredible strength that lived inside of him. For more than three years, Caden battled every single day with courage that inspired everyone around him. Through surgeries, treatments, pain, and uncertainty, he refused to quit. He fought with the same mentality he learned on the wrestling mat — never back down, never surrender, and keep battling no matter how tough the situation becomes.
 
@@ -27,17 +27,14 @@ export const CADEN_PUBLIC_PAGE_FALLBACKS = {
   award_announcement_date: "2026-06-15",
 } as const
 
-/** Shown above the spirit-of-the-award body (not labeled “verbatim”). */
-export const CADEN_SPIRIT_ATTRIBUTION = "Words from Justin Perry"
+/** Intent of the award — written to match the “About Caden” story on this page. Edit with family approval when copy changes. */
+export const CADEN_AWARD_SPIRIT = `This award honors a North Carolina wrestler who carries the kind of warrior spirit Caden lived — grit, heart, and discipline forged on the mat and carried into life. For Caden, wrestling was never only wins and losses; it was the foundation that built his character and his relentless mindset. The recipient we seek has faced genuine adversity — on or off the mat — and refused to be defined by it.
 
-/** Intent of the award — Perry family voice (edit only with family approval). */
-export const CADEN_AWARD_SPIRIT = `This scholarship is awarded to a student-athlete who embodies the true spirit of scholastic wrestling — someone who has faced adversity head-on and refused to be defined by it. Wrestling is not just a sport; it is a test of character, resilience, and inner strength. The recipient of this award has demonstrated an unwavering commitment to growth, even in the face of hardship, setbacks, and challenging circumstances.
+They push forward when others might step back: through grueling practices, setbacks, pain, or uncertainty outside the gym. Caden showed us that toughness is not pretending hurt does not exist — it is choosing to keep moving anyway. That is the same mat mentality he carried into the hardest fight of his life: never back down, never surrender, keep battling when the situation is unbearably tough.
 
-Through long practices, tough losses, and demanding expectations, this individual has shown the mental toughness required to push forward when others might step back. They understand that success is not measured solely by victories on the mat, but by the courage to continue when things are difficult and the discipline to improve every single day.
+True strength, in the spirit of this award, is not measured by trophies alone. It shows in courage when life is unfair; in resilience teammates, coaches, and communities can see; and in the selfless way a young person carries hardship without losing heart.
 
-This athlete has embraced adversity as an opportunity — not an obstacle — using it as fuel to grow stronger, more focused, and more determined. Their willingness to persevere through trying times reflects a maturity beyond their years and a mindset that will carry them far beyond the sport of wrestling.
-
-This award recognizes not only athletic effort, but personal development — the ability to rise, adapt, and thrive in even the toughest conditions. It honors a young individual who represents resilience, grit, and the relentless pursuit of excellence.`
+This scholarship recognizes an athlete who embodies that mindset — who faces adversity head on, embraces the struggle, and never stops fighting — and who reminds us that a warrior spirit is defined by how you show up when it matters most.`
 
 export const CADEN_WHO_CAN_BE_NOMINATED = `Any NC wrestler who is actively competing or training — middle school, high school, or club level. Any gender. Any program or affiliation. NC United membership is not required. There is no minimum record, ranking, or academic threshold.
 
