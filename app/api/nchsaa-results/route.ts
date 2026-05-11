@@ -37,11 +37,12 @@ export async function GET(request: Request) {
     let name = athleteNameParam
     let wrestlingName = ""
     let nchsaaJson: unknown = undefined
+    let schoolHint: string | undefined = (searchParams.get("highschool") ?? "").trim() || undefined
 
     if (athleteId) {
       const { data: row } = await supabase
         .from("athletes")
-        .select("name, wrestling_name, graduationyear")
+        .select("name, wrestling_name, graduationyear, highschool")
         .eq("id", athleteId)
         .maybeSingle()
 
@@ -49,6 +50,10 @@ export async function GET(request: Request) {
         const rowName = (row.name ?? "").toString().trim()
         if (rowName) name = rowName
         wrestlingName = (row.wrestling_name ?? "").toString().trim()
+        const rowSchool = (row as { highschool?: unknown }).highschool
+        if (!schoolHint && rowSchool != null && String(rowSchool).trim()) {
+          schoolHint = String(rowSchool).trim()
+        }
         const gy = Number((row as { graduationyear?: unknown }).graduationyear)
         if (Number.isFinite(gy) && gy >= 1990 && gy <= 2100) {
           gradYear = gy
@@ -62,7 +67,7 @@ export async function GET(request: Request) {
 
     let byName: Awaited<ReturnType<typeof getNCHSAAResultsForProfile>> = []
     try {
-      byName = await getNCHSAAResultsForProfile(supabase, name, gradYear)
+      byName = await getNCHSAAResultsForProfile(supabase, name, gradYear, schoolHint)
     } catch (e) {
       console.warn("[RecruitNC] /api/nchsaa-results: table query (name) failed", e)
     }
@@ -70,7 +75,7 @@ export async function GET(request: Request) {
     let byWrestling: Awaited<ReturnType<typeof getNCHSAAResultsForProfile>> = []
     if (wrestlingName && wrestlingName.toLowerCase() !== name.toLowerCase()) {
       try {
-        byWrestling = await getNCHSAAResultsForProfile(supabase, wrestlingName, gradYear)
+        byWrestling = await getNCHSAAResultsForProfile(supabase, wrestlingName, gradYear, schoolHint)
       } catch (e) {
         console.warn("[RecruitNC] /api/nchsaa-results: table query (wrestling_name) failed", e)
       }

@@ -31,8 +31,9 @@ export async function POST(request: NextRequest) {
     }
 
     const gradYear = Number(athlete.graduationyear) || new Date().getFullYear()
+    const schoolHint = (athlete.highschool ?? "").toString().trim() || undefined
     const [nchsaaRows, nhscaRows] = await Promise.all([
-      getNCHSAAResultsForProfile(supabase, (athlete.name ?? "").trim(), gradYear),
+      getNCHSAAResultsForProfile(supabase, (athlete.name ?? "").trim(), gradYear, schoolHint),
       getNHSCAFromTables(supabase, (athlete.name ?? "").trim(), gradYear),
     ])
     const nchsaaResults = nchsaaRows

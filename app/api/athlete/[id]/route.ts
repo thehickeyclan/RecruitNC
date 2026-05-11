@@ -129,9 +129,9 @@ export async function GET(
       (async () => {
         try {
           const [byName, byWrestling] = await Promise.all([
-            getNCHSAAResultsForProfile(supabase, name, gradYear),
+            getNCHSAAResultsForProfile(supabase, name, gradYear, highSchool || undefined),
             wrestlingName && wrestlingName !== name
-              ? getNCHSAAResultsForProfile(supabase, wrestlingName, gradYear)
+              ? getNCHSAAResultsForProfile(supabase, wrestlingName, gradYear, highSchool || undefined)
               : Promise.resolve([] as Awaited<ReturnType<typeof getNCHSAAResultsForProfile>>),
           ])
           const fromAthleteRow = nchsaaJsonToProfileRows(athleteRow.nchsaa_results, name)

@@ -19,10 +19,11 @@ export async function GET(request: Request) {
     const name = (searchParams.get("name") || "").trim()
     const yearParam = searchParams.get("year")
     const gradYearParam = searchParams.get("gradYear")
+    const schoolHint = (searchParams.get("school") ?? searchParams.get("highschool") ?? "").trim() || undefined
 
     if (!name) {
       return NextResponse.json(
-        { error: "Missing name. Use ?name=First+Last and optional &year=2026&gradYear=2026" },
+        { error: "Missing name. Use ?name=First+Last and optional &year=2026&gradYear=2026&school=..." },
         { status: 400, headers: { "Cache-Control": "no-store" } },
       )
     }
@@ -30,7 +31,7 @@ export async function GET(request: Request) {
     const db = createAdminClient()
     const gradYear = gradYearParam ? parseInt(gradYearParam, 10) : undefined
 
-    const profileStyle = await getNCHSAAResultsForProfile(db, name, gradYear)
+    const profileStyle = await getNCHSAAResultsForProfile(db, name, gradYear, schoolHint)
 
     const lastWord = name.split(/\s+/).filter(Boolean).pop() || name
     const lastPattern = "%" + escapeForIlike(lastWord) + "%"

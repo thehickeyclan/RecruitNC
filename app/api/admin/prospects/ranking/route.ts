@@ -54,11 +54,12 @@ export async function GET(request: NextRequest) {
     const athletesWithNchsaa = await Promise.all(
       (athletes || []).map(async (athlete) => {
         const gradYear = Number(athlete.graduationyear) || 0
-        const byName = await getNCHSAAResultsForProfile(supabase, athlete.name || "", gradYear || undefined)
+        const schoolHint = (athlete.highschool ?? "").toString().trim() || undefined
+        const byName = await getNCHSAAResultsForProfile(supabase, athlete.name || "", gradYear || undefined, schoolHint)
         const wrestlingName = (athlete.wrestling_name || "").trim()
         const byWrestling =
           wrestlingName && wrestlingName !== (athlete.name || "").trim()
-            ? await getNCHSAAResultsForProfile(supabase, wrestlingName, gradYear || undefined)
+            ? await getNCHSAAResultsForProfile(supabase, wrestlingName, gradYear || undefined, schoolHint)
             : []
         const nchsaa_results = mergeNchsaaResults(byName, byWrestling).map((r) => ({
           year: r.year,

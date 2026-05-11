@@ -67,9 +67,15 @@ export async function GET(request: Request) {
       )
     }
 
+    const highSchoolHint =
+      (resolvedAthlete
+        ? (resolvedAthlete.highschool ?? resolvedAthlete.highSchool ?? "").toString()
+        : (searchParams.get("high_school") ?? searchParams.get("highschool") ?? "")
+      ).trim() || undefined
+
     let byName: Awaited<ReturnType<typeof getNCHSAAResultsForProfile>> = []
     try {
-      byName = await getNCHSAAResultsForProfile(supabase, athleteName, graduationYear)
+      byName = await getNCHSAAResultsForProfile(supabase, athleteName, graduationYear, highSchoolHint)
     } catch (e) {
       console.warn(
         "[RecruitNC] wrestling-achievements: NCHSAA table query failed (by name); using athlete row JSON if present",
@@ -80,7 +86,7 @@ export async function GET(request: Request) {
     let byWrestling: Awaited<ReturnType<typeof getNCHSAAResultsForProfile>> = []
     if (wrestlingName && wrestlingName !== athleteName) {
       try {
-        byWrestling = await getNCHSAAResultsForProfile(supabase, wrestlingName, graduationYear)
+        byWrestling = await getNCHSAAResultsForProfile(supabase, wrestlingName, graduationYear, highSchoolHint)
       } catch (e) {
         console.warn(
           "[RecruitNC] wrestling-achievements: NCHSAA table query failed (wrestling name); using athlete row JSON if present",
