@@ -6,7 +6,6 @@ import { formatUsdWhole } from "@/app/fundraising/components/FundraisingHero"
 import { HardLink } from "@/components/hard-link"
 import { ScholarshipSubmissionCountdown } from "@/components/scholarships/scholarship-submission-countdown"
 import {
-  CADEN_ABOUT_COMING_SOON_LINE,
   CADEN_ABOUT_PLACEHOLDER_BODY,
   CADEN_APPLICATION_AI_NOTE,
   CADEN_APPLICATION_DETAILS,
@@ -242,7 +241,6 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
             <section className="mt-14">
               <h2 className={df("text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]")}>About Caden</h2>
               <div className="mt-5 whitespace-pre-wrap text-base leading-relaxed text-white/78">{CADEN_ABOUT_PLACEHOLDER_BODY}</div>
-              <p className="mt-6 text-sm italic leading-relaxed text-white/55">{CADEN_ABOUT_COMING_SOON_LINE}</p>
             </section>
 
             <section className="mt-12" aria-label="Caden Perry photo gallery">
@@ -295,7 +293,6 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
                   <li key={line}>{line}</li>
                 ))}
               </ul>
-              <p className="mt-6 border-t border-white/[0.08] pt-5 text-sm leading-relaxed text-white/58">{TRAINING_AWARD_NOT_COLLEGE_PARAGRAPH}</p>
             </section>
 
             <section className="mt-16 border-t border-white/[0.06] pt-14">
