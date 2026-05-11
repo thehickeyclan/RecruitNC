@@ -59,8 +59,6 @@ function creditLabel(r: FundraisingHubActivityRow): string {
   return r.athleteCredit
 }
 
-const FEED_LIMIT = 15
-
 export function LiveDonationStream({
   initial,
   hubTransparency,
@@ -72,7 +70,7 @@ export function LiveDonationStream({
   const [feedCampaignFilter, setFeedCampaignFilter] = useState<string>("all")
 
   useEffect(() => {
-    setRows(initial.slice(0, FEED_LIMIT))
+    setRows(initial)
   }, [initial])
 
   const visibleRows = useMemo(
@@ -83,7 +81,7 @@ export function LiveDonationStream({
   const mergeIncoming = useCallback((mapped: FundraisingHubActivityRow) => {
     setRows((prev) => {
       const without = prev.filter((r) => r.id !== mapped.id)
-      return [mapped, ...without].slice(0, FEED_LIMIT)
+      return [mapped, ...without]
     })
   }, [])
 
@@ -120,7 +118,7 @@ export function LiveDonationStream({
       void fetch("/api/fundraising/hub-data")
         .then((r) => r.json())
         .then((j: { activity?: FundraisingHubActivityRow[] }) => {
-          if (Array.isArray(j.activity)) setRows(j.activity.slice(0, FEED_LIMIT))
+          if (Array.isArray(j.activity)) setRows(j.activity)
         })
         .catch(() => {})
     }, 55000)
@@ -157,9 +155,9 @@ export function LiveDonationStream({
           </span>
         </div>
         <p className="mt-3 max-w-2xl text-sm text-white">
-          Last {FEED_LIMIT} paid gifts across <strong className="text-white">all NC United hub campaigns</strong> in Stripe,
-          last <span className="tabular-nums text-white">{hubTransparency.lookbackDays}</span> days (newest first) — same
-          combined scope as the headline totals. Filter by campaign below when you want a single drive.
+          <strong className="text-white">Every paid gift</strong> across <strong className="text-white">all NC United hub campaigns</strong> in
+          Stripe, last <span className="tabular-nums text-white">{hubTransparency.lookbackDays}</span> days (newest first) — same combined scope as
+          the headline totals. Filter by campaign below when you want a single drive. The table scrolls when the list is long.
         </p>
 
         <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
@@ -208,7 +206,7 @@ export function LiveDonationStream({
 
         <p className="mt-2 text-center text-[11px] text-white/45 sm:hidden">Swipe campaign links sideways →</p>
 
-        <ul className="mt-8 divide-y divide-white/[0.06] overflow-hidden rounded-xl border border-white/10 bg-[#0B2545]/45">
+        <ul className="mt-8 max-h-[min(70vh,48rem)] divide-y divide-white/[0.06] overflow-y-auto overscroll-y-contain rounded-xl border border-white/10 bg-[#0B2545]/45 pr-1">
           {visibleRows.length === 0 ? (
             <li className="px-4 py-12 text-center text-sm text-white/90">
               {rows.length === 0
