@@ -25,7 +25,6 @@ import {
   CADEN_SELECTION_CRITERIA_CARDS,
   CADEN_SELECTION_FOOTNOTE,
   CADEN_SELECTION_INTRO,
-  CADEN_SPIRIT_ATTRIBUTION,
   CADEN_WHO_CAN_BE_NOMINATED,
   CADEN_WHO_CAN_NOMINATE,
 } from "@/lib/scholarships/caden-perry-content"
@@ -297,7 +296,6 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
 
             <section className="mt-16 border-t border-white/[0.06] pt-14">
               <h2 className={df("text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]")}>The spirit of the award</h2>
-              <p className="mt-5 text-sm italic leading-relaxed text-[#C8A94A]/90">{CADEN_SPIRIT_ATTRIBUTION}</p>
               <div className="mt-6 space-y-5 text-[15px] leading-[1.75] text-white/82">
                 {awardParagraphs.map((para, i) => (
                   <p key={i} className="text-pretty">
