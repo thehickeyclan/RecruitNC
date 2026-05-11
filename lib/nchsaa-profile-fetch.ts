@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { plausibleNchsaaYearsForGradYear } from "@/lib/nchsaa-plausible-years"
 
 /**
  * NCHSAA rows for unified / view-profile — same shape as `NchsaaRowForProfile` in `lib/nchsaa-results.ts`.
@@ -125,9 +126,8 @@ export function parseFirstLastForNchsaa(athleteName: string): { first: string; l
  * Fetch NCHSAA state results for profile using **two** ILIKEs (first + last token), so both
  * `Ryan Thompson` and `Thompson, Ryan` match — a single `%Ryan Thompson%` does **not** match `Thompson, Ryan`.
  *
- * When `graduationYear` is set, the query adds a **year window** aligned with `plausibleNchsaaYearsForGradYear`
- * so we stay under
- * PostgREST default row limits when many athletes share tokens like "Ryan" + "Thompson".
+ * When `graduationYear` is set, the query uses **`plausibleNchsaaYearsForGradYear`** (same as `getNCHSAAResultsForProfile`)
+ * so we stay under PostgREST default row limits when many athletes share tokens like "Ryan" + "Thompson".
  *
  * @see docs/2026-STATE-QUALIFIERS-FOR-RECRUITNC.md — canonical table `wrestling_nchsaa_results`
  * @see docs/RECRUITNC-PROFILE-NAME-MATCHING-DETTORE.md — "2026 missing (e.g. Ryan Thompson)"
@@ -154,9 +154,8 @@ export async function fetchNchsaaResultsForAthleteProfile(
       .ilike("wrestler_name", pLast)
 
     if (gy != null && !Number.isNaN(Number(gy))) {
-      const y = Number(gy)
-      /** Keep in sync with `plausibleNchsaaYearsForGradYear` in nchsaa-results.ts (wide enough for young grads + SQ). */
-      q = q.gte("year", y - 14).lte("year", y + 4)
+      const { min, max } = plausibleNchsaaYearsForGradYear(Number(gy))
+      q = q.gte("year", min).lte("year", max)
     }
 
     const { data, error } = await q.order("year", { ascending: false })

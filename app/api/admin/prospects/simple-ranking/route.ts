@@ -50,11 +50,12 @@ export async function GET(request: Request) {
         const athleteName = (athlete.name || "").trim()
         const wrestlingName = (athlete.wrestling_name || "").trim()
         const gradYear = Number(athlete.graduationyear) || gradYearNum
+        const schoolHint = (athlete.highschool ?? "").toString().trim() || undefined
 
-        const byName = await getNCHSAAResultsForProfile(db, athleteName, gradYear)
+        const byName = await getNCHSAAResultsForProfile(db, athleteName, gradYear, schoolHint)
         const byWrestling =
           wrestlingName && wrestlingName !== athleteName
-            ? await getNCHSAAResultsForProfile(db, wrestlingName, gradYear)
+            ? await getNCHSAAResultsForProfile(db, wrestlingName, gradYear, schoolHint)
             : []
         const athleteNchsaa = mergeNchsaaResults(byName, byWrestling).map((r) => ({
           year: r.year,

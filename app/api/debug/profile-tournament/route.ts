@@ -15,7 +15,7 @@ export async function GET(request: Request) {
   const supabase = createAdminClient()
   const { data: athlete, error: athleteError } = await supabase
     .from("athletes")
-    .select("id, name, wrestling_name, graduationyear")
+    .select("id, name, wrestling_name, graduationyear, highschool")
     .eq("id", id)
     .single()
 
@@ -26,10 +26,11 @@ export async function GET(request: Request) {
   const name = (athlete.name ?? "").toString().trim()
   const wrestlingName = (athlete.wrestling_name ?? "").toString().trim()
   const gradYear = Number(athlete.graduationyear) || new Date().getFullYear()
+  const schoolHint = (athlete.highschool ?? "").toString().trim() || undefined
   const namesToTry = [...new Set([...getNameVariants(name), ...(wrestlingName ? getNameVariants(wrestlingName) : [])])]
 
   const [nchsaa, nhsca, super32] = await Promise.all([
-    getNCHSAAResultsForProfile(supabase, name, gradYear),
+    getNCHSAAResultsForProfile(supabase, name, gradYear, schoolHint),
     (async () => {
       const merged: Awaited<ReturnType<typeof getNHSCAFromTables>> = []
       const seen = new Set<string>()

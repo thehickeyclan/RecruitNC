@@ -1,7 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { fetchNchsaaResultsForAthleteProfile } from "@/lib/nchsaa-profile-fetch"
+import { plausibleNchsaaYearsForGradYear } from "@/lib/nchsaa-plausible-years"
 import type { NchsaaRowForProfile } from "@/lib/nchsaa-results-json"
 export { nchsaaJsonToProfileRows, type NchsaaRowForProfile } from "@/lib/nchsaa-results-json"
+export { plausibleNchsaaYearsForGradYear } from "@/lib/nchsaa-plausible-years"
 
 /**
  * Normalize name for matching: same person "Aaron Ellison" and "Ellison, Aaron" => same string.
@@ -117,18 +119,22 @@ export function getNameVariations(name: string): string[] {
 }
 
 /**
- * Plausible NCHSAA tournament years for a graduation year.
- * Upper bound keeps late entries; lower bound must include early high-school / middle-school state years
- * (e.g. **2026 SQ with class of 2031+** was dropped when min was only `gradYear - 4`).
- * Upper bound uses **gradYear + 4** (not +2): profiles often mis-state class year by 1–2;
- * `+ 2` capped **2026** out for `graduation_year` **2023** while **2025** rows still matched.
+ * When profile lists a school, keep only NCHSAA rows whose `school` matches (substring, case-insensitive).
+ * Rows with an empty `school` are ignored for this filter so we do not invent a match.
+ * If no row matches, return the original list (typos in the table vs profile).
  */
-export function plausibleNchsaaYearsForGradYear(graduationYear: number): { min: number; max: number } {
-  const y = Number(graduationYear)
-  if (!y || isNaN(y)) return { min: 0, max: 9999 }
-  const maxYear = Math.min(2035, y + 4)
-  const minYear = Math.max(1990, y - 14)
-  return { min: minYear, max: maxYear }
+export function filterNchsaaRowsBySchoolOptional(
+  rows: NchsaaRowForProfile[],
+  athleteHighSchool?: string
+): NchsaaRowForProfile[] {
+  const a = (athleteHighSchool ?? "").trim().toLowerCase()
+  if (!a) return rows
+  const filtered = rows.filter((r) => {
+    const b = (r.school ?? "").toString().trim().toLowerCase()
+    if (!b) return false
+    return b.includes(a) || a.includes(b)
+  })
+  return filtered.length > 0 ? filtered : rows
 }
 
 /**
@@ -137,11 +143,13 @@ export function plausibleNchsaaYearsForGradYear(graduationYear: number): { min: 
  * and unified profiles show identical placement.
  * When graduationYear is provided, results are filtered to plausible tournament years only
  * (see `plausibleNchsaaYearsForGradYear`) so we don't merge a different person with the same name.
+ * When highSchoolHint is set, rows are narrowed by `school` when at least one row matches (same idea as Super32).
  */
 export async function getNCHSAAResultsForProfile(
   supabase: SupabaseClient,
   athleteName: string,
-  graduationYear?: number
+  graduationYear?: number,
+  highSchoolHint?: string
 ): Promise<NchsaaRowForProfile[]> {
   if (!(athleteName ?? "").trim()) return []
   const yearRange = graduationYear ? plausibleNchsaaYearsForGradYear(graduationYear) : null
@@ -264,10 +272,12 @@ export async function getNCHSAAResultsForProfile(
       ? merged.filter((r) => r.year >= yearRange.min && r.year <= yearRange.max)
       : merged
 
+  const scoped = filterNchsaaRowsBySchoolOptional(byYear, highSchoolHint)
+
   const placerKeys = new Set(
-    byYear.filter((r) => r.place != null && r.place >= 1).map((r) => `${r.year}-${r.classification}-${r.weight_class}`)
+    scoped.filter((r) => r.place != null && r.place >= 1).map((r) => `${r.year}-${r.classification}-${r.weight_class}`)
   )
-  return byYear.filter((r) => {
+  return scoped.filter((r) => {
     if (r.place != null && r.place === 0) {
       if (placerKeys.has(`${r.year}-${r.classification}-${r.weight_class}`)) return false
     }
