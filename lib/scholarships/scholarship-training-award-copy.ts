@@ -4,18 +4,18 @@
  */
 
 export const TRAINING_AWARD_TYPICAL_USES: string[] = [
-  "Club or school wrestling dues and team fees tied to participation",
+  "Club or school wrestling dues and team fees",
   "Tournament entry, weigh-in, or dual fees",
-  "Wrestling camps, clinics, or coaching focused on skills and technique",
-  "Season gear and equipment (shoes, headgear, singlet, necessary training gear)",
-  "Travel or lodging when it is directly tied to scholastic or club competition — within reason and documented if requested",
+  "Wrestling camps, clinics, or coaching sessions",
+  "Season gear and equipment (shoes, headgear, singlet, training gear)",
+  "Competition travel and lodging — documented and tied directly to scholastic or club competition",
 ]
 
 export const TRAINING_AWARD_NOT_COLLEGE_PARAGRAPH =
-  "This is a training support stipend for wrestling — not a college tuition scholarship, academic scholarship, financial aid package, or NCAA / NJCAA athletic scholarship. It does not guarantee admission or roster placement at any college or university. Recipients use the award for costs that keep them training and competing on their current pathway."
+  "This is a wrestling development award. It is not a college tuition scholarship, academic scholarship, or NCAA athletic scholarship. It does not guarantee admission or roster placement at any institution."
 
 export function trainingAwardOpeningSentenceUsd(amountFormatted: string): string {
-  return `One athlete selected by the committee receives ${amountFormatted} as a direct training support stipend — cash assistance meant for wrestling-related expenses so the recipient can keep training and competing.`
+  return `One athlete receives ${amountFormatted} as a training support stipend — applied directly to wrestling-related expenses so they can keep training and competing at their highest level.`
 }
 
 export const TRAINING_AWARD_OPENING_NO_AMOUNT =
