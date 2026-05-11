@@ -90,6 +90,11 @@ export default async function ScholarshipsHubPage() {
                       ? "border-[#C8A94A]/45 bg-[#C8A94A]/12 text-[#f5e6b8]"
                       : "border-white/15 bg-white/5 text-white/65"
 
+                const hero = (s.hero_image_url ?? "").trim()
+                const tileSrc =
+                  hero ||
+                  (s.slug.trim().toLowerCase() === "caden-perry" ? CADEN_PERRY_HUB_CARD_IMAGE_SRC : "")
+
                 return (
                   <li
                     key={s.id}
