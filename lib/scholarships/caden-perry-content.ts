@@ -6,14 +6,16 @@
 /** PRD standalone headline tagline — also mirrored from scholarships.tagline when seeded. */
 export const CADEN_CLOSING_TAGLINE_FULLWIDTH = "The future is bright for those who refuse to quit."
 
-/**
- * Placeholder until Perry family approves final wording — swap / augment via Supabase description later if preferred.
- */
-export const CADEN_ABOUT_PLACEHOLDER_BODY = `This scholarship was established in memory of Caden Perry — a North Carolina wrestler who began competing at age six, faced a terminal diagnosis at thirteen, and spent three more years proving that the mat builds something medicine cannot measure.`
+/** “About Caden” — main biography on the public scholarship page. */
+export const CADEN_ABOUT_PLACEHOLDER_BODY = `Caden Perry was the definition of a warrior. From the wrestling rooms of New Jersey, to the deserts of Arizona, and finally the mats of North Carolina, Caden carried himself with grit, toughness, and heart far beyond his years. Wrestling was never just a sport to him — it was the foundation that built his character, his discipline, and his relentless mindset.
 
-/** Signals fuller biography is forthcoming — keep until family approves expanded story. */
-export const CADEN_ABOUT_COMING_SOON_LINE =
-  "More about Caden's story coming soon — shared with the blessing of his family."
+At just 13 years old, Caden was faced with the fight of his life when he was diagnosed with terminal brain cancer. A diagnosis that would break most people only revealed the incredible strength that lived inside of him. For more than three years, Caden battled every single day with courage that inspired everyone around him. Through surgeries, treatments, pain, and uncertainty, he refused to quit. He fought with the same mentality he learned on the wrestling mat — never back down, never surrender, and keep battling no matter how tough the situation becomes.
+
+Wrestling taught Caden how to embrace adversity. It taught him that toughness is not about never feeling pain, but about continuing to move forward despite it. That warrior mentality became the driving force behind his fight. Even in the hardest moments, Caden showed unbelievable resilience, determination, and heart. He inspired teammates, coaches, family members, and entire communities with the way he carried himself through unimaginable hardship.
+
+Though Caden's life was far too short, his legacy will live forever. His story is a reminder that true strength is measured not by victories on a scoreboard, but by the courage to keep fighting when life becomes unfair. Caden Perry showed the world what it means to be mentally tough, fearless, and selfless. He proved that a warrior's spirit can never be defeated.
+
+At just 16 years old, Caden gained his eternal peace, but the impact he left behind will continue to motivate generations of wrestlers and young athletes to face adversity head on, embrace the struggle, and never stop fighting.`
 
 /**
  * When Supabase row fields are empty, show these on the public page so deadlines and award amount are never blank for Year 1.
