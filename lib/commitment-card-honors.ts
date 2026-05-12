@@ -16,6 +16,12 @@ export type NchsaaHonorRowInput = {
 
 function honorPlaceNum(p: unknown): number {
   if (p == null || p === "") return NaN
+  if (typeof p === "string") {
+    const t = p.trim()
+    if (t === "") return NaN
+    const n = Number(t)
+    return Number.isNaN(n) ? NaN : n
+  }
   const n = Number(p)
   return Number.isNaN(n) ? NaN : n
 }
@@ -54,6 +60,18 @@ export function stateHonorsFromNchsaaMergedRows(rows: NchsaaHonorRowInput[]): st
   }
 
   return (["State Champion", "State Placer", "State Qualifier"] as const).filter((b) => found.has(b))
+}
+
+/**
+ * Final honor row for the flip card: never show "State Qualifier" alongside a higher state honor.
+ * Table/API rows can lag (SQ only) while profile prose or columns already show champ/placer — the badge row should not contradict.
+ */
+export function mergeCommitmentHonorBadgesForDisplay(profileHonors: string[], serverStateHonors: string[]): string[] {
+  const merged = new Set<string>([...profileHonors, ...serverStateHonors])
+  if (merged.has("State Champion") || merged.has("State Placer")) {
+    merged.delete("State Qualifier")
+  }
+  return COMMITMENT_CARD_HONOR_ORDER.filter((b) => merged.has(b))
 }
 
 const HONOR_PLACEMENT_SNIPPET_KEYS = [
@@ -276,6 +294,10 @@ export function getCommitmentHonorBadgesForAthlete(athlete: Record<string, unkno
     const placementEntries = collectHonorPlacementEntries(athlete)
     applyNationalBracketTop8FromSnippets(found, placementEntries, athlete)
     applyNchsaaJsonStateHonors(found, athlete.nchsaa_results)
+
+    if (found.has("State Champion") || found.has("State Placer")) {
+      found.delete("State Qualifier")
+    }
 
     return COMMITMENT_CARD_HONOR_ORDER.filter((b) => found.has(b))
   } catch (e) {
