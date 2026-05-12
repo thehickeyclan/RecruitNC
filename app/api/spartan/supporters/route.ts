@@ -77,6 +77,7 @@ export async function GET(request: NextRequest) {
       attribution: r.attribution,
       raceParticipantName: r.publicRaceParticipantName,
       spartanCampaignSlug: r.spartanCampaignSlug,
+      fundraisingCheckoutSurface: r.fundraisingCheckoutSurface,
     }))
 
     const byAthlete = buildSpartanPublicByAthlete(rows, codeToFullName)
@@ -100,7 +101,8 @@ export async function GET(request: NextRequest) {
       entries,
       byAthlete,
     })
-    res.headers.set("Cache-Control", "s-maxage=60, stale-while-revalidate=120")
+    /** Live totals: avoid shared CDN caching so `/fundraising/leaderboard` matches Stripe after new checkouts. */
+    res.headers.set("Cache-Control", "private, no-store, must-revalidate")
     return res
   } catch (e) {
     console.error("[spartan/supporters]", e)

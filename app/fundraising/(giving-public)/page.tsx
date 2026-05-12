@@ -1,5 +1,8 @@
 import type { Metadata } from "next"
 import { getFundraisingHubSnapshot } from "@/lib/fundraising/hub-data"
+
+/** Hub hero, leaderboard, and feeds read Stripe + Supabase — must not serve a stale RSC shell from the full route cache. */
+export const dynamic = "force-dynamic"
 import { fetchDonorHallOfFameFromStripe, DONOR_RECOGNITION_MIN_AMOUNT_CENTS } from "@/lib/fundraising/donor-hall-of-fame"
 import { FundraisingHero } from "@/app/fundraising/components/FundraisingHero"
 import { ActiveCampaigns } from "@/app/fundraising/components/ActiveCampaigns"

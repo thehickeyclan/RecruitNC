@@ -8,7 +8,7 @@ import {
   fundraisingCampaignByStripeSlug,
 } from "@/lib/fundraising/campaign-registry"
 import { fundraisingAthletePublicHrefFromCode } from "@/lib/fundraising/athlete-fundraising-slug"
-import { hubActivityCampaignFromStripeSlug } from "@/lib/fundraising/hub-activity-meta"
+import { hubActivityCampaignWithCheckoutSurface } from "@/lib/fundraising/hub-activity-meta"
 
 const NAVY = "#03154C"
 const GOLD = "#CBAF5D"
@@ -21,6 +21,7 @@ type Entry = {
   athleteCode: string | null
   creditLabel: string | null
   spartanCampaignSlug: string | null
+  fundraisingCheckoutSurface?: string | null
 }
 
 export type FundraisingActivityCampaignOption = {
@@ -232,7 +233,10 @@ export function FundraisingActivityClient({ campaigns }: { campaigns: Fundraisin
                 </thead>
                 <tbody className="text-slate-800">
                   {sorted.map((e) => {
-                    const { campaignShortLabel } = hubActivityCampaignFromStripeSlug(e.spartanCampaignSlug)
+                    const { campaignShortLabel } = hubActivityCampaignWithCheckoutSurface(
+                      e.spartanCampaignSlug,
+                      e.fundraisingCheckoutSurface,
+                    )
                     const credit = (e.creditLabel ?? "").trim() || e.athleteCode || "NC United fund"
                     const href = fundraisingAthletePublicHrefFromCode(e.athleteCode)
                     return (

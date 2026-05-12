@@ -3,7 +3,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { HardLink } from "@/components/hard-link"
 import { FUNDRAISING_CAMPAIGNS } from "@/lib/fundraising/campaign-registry"
-import { hubActivityCampaignFromStripeSlug, hubActivityRowMatchesCampaignFilter } from "@/lib/fundraising/hub-activity-meta"
+import {
+  fundraisingCheckoutSurfaceFromRawMetadata,
+  hubActivityCampaignWithCheckoutSurface,
+  hubActivityRowMatchesCampaignFilter,
+} from "@/lib/fundraising/hub-activity-meta"
 import type { FundraisingHubActivityRow, FundraisingHubTransparencyMeta } from "@/lib/fundraising/hub-data"
 import { fundraisingAthletePublicHrefFromCode } from "@/lib/fundraising/athlete-fundraising-slug"
 import { formatUsdWhole } from "./FundraisingHero"
@@ -40,7 +44,8 @@ function mapRealtimeRow(payload: Record<string, unknown>): FundraisingHubActivit
     typeof payload.spartan_campaign === "string" && payload.spartan_campaign.trim()
       ? payload.spartan_campaign.trim()
       : null
-  const { campaignStripeSlug, campaignShortLabel } = hubActivityCampaignFromStripeSlug(spartanRaw)
+  const surface = fundraisingCheckoutSurfaceFromRawMetadata(payload.raw_metadata)
+  const { campaignStripeSlug, campaignShortLabel } = hubActivityCampaignWithCheckoutSurface(spartanRaw, surface)
 
   return {
     id,
