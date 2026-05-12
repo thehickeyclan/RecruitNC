@@ -954,14 +954,35 @@ function pushAchievementLines(lines: string[], v: string[] | string | undefined)
   }
 }
 
-function collectHonorPlacementSnippets(athlete: Athlete): string[] {
+function collectHonorPlacementEntries(athlete: Athlete): { key: (typeof HONOR_PLACEMENT_SNIPPET_KEYS)[number]; snippet: string }[] {
   const r = athlete as Record<string, unknown>
-  const out: string[] = []
+  const out: { key: (typeof HONOR_PLACEMENT_SNIPPET_KEYS)[number]; snippet: string }[] = []
   for (const k of HONOR_PLACEMENT_SNIPPET_KEYS) {
     const v = r[k]
-    if (v != null && String(v).trim() !== "") out.push(String(v))
+    if (v != null && String(v).trim() !== "") out.push({ key: k, snippet: String(v) })
   }
   return out
+}
+
+/** Same-year tournament record column for a *_placement key (nhsca_2025_placement → nhsca_2025_record). */
+function tournamentRecordKeyForPlacementKey(placementKey: string): string {
+  return placementKey.replace(/_placement$/, "_record")
+}
+
+/**
+ * Admins sometimes put **wins** (first number of W–L) in the placement field (e.g. "1" + record "1-2").
+ * That must not become All-American / 1st place.
+ */
+function barePlacementLooksLikeWinCountFromRecord(snippet: string, recordRaw: string | undefined): boolean {
+  const t = String(snippet ?? "").trim()
+  const bare = t.match(/^\s*(\d{1,2})\s*$/)
+  if (!bare) return false
+  const n = Number.parseInt(bare[1], 10)
+  const rec = String(recordRaw ?? "").trim().replace(/^\(|\)$/g, "").trim()
+  const rm = rec.match(/^(\d{1,2})\s*[-–]\s*\d+$/)
+  if (!rm) return false
+  const wins = Number.parseInt(rm[1], 10)
+  return wins === n
 }
 
 /** Parse 1–16 placement from placement strings; skip win–loss shaped tokens like "15-2". */
@@ -1023,7 +1044,8 @@ function numericPlacementLooksStateOrRegionalOnly(low: string): boolean {
 }
 
 /** National AA only — profile fields can hold "State finalist" etc.; those must not flip All-American. */
-function snippetImpliesNationalAllAmerican(snippet: string): boolean {
+function snippetImpliesNationalAllAmerican(snippet: string, opts?: { trustedNationalPlacementColumn?: boolean }): boolean {
+  const trusted = opts?.trustedNationalPlacementColumn === true
   const raw = String(snippet ?? "").trim()
   if (!raw) return false
   const low = raw.toLowerCase()
@@ -1049,20 +1071,38 @@ function snippetImpliesNationalAllAmerican(snippet: string): boolean {
   const rank = parseBracketPlacementRank(raw)
   if (rank != null && rank >= 1 && rank <= 8) {
     if (numericPlacementLooksStateOrRegionalOnly(low)) return false
+    // Only nhsca_* / super_32_* column values are known national-bracket fields; bare ordinals elsewhere are unsafe.
+    if (!trusted) return false
     return true
   }
 
-  // NHSCA / Super 32 event + deep bracket wording (no bare "finalist" — often state-level)
-  if (/\b(nhsca|super\s*-?\s*32)\b/.test(low) && /\b(finalist|semifinal|semis)\b/.test(low)) {
+  // NHSCA / Super 32 + bracket wording only when **national** context is explicit (avoid "NHSCA" + stray "finalist")
+  if (
+    /\b(nhsca|super\s*-?\s*32)\b/.test(low) &&
+    /\b(finalist|semifinal|semis)\b/.test(low) &&
+    /\b(nationals?|national\s+final|hs\s+nationals|high\s+school\s+nationals|virginia\s+beach|all[\s-]?american)\b/i.test(
+      low,
+    )
+  ) {
     return true
   }
 
   return false
 }
 
-function applyNationalBracketTop8FromSnippets(found: Set<string>, snippets: string[]) {
-  for (const s of snippets) {
-    if (snippetImpliesNationalAllAmerican(s)) {
+function applyNationalBracketTop8FromSnippets(
+  found: Set<string>,
+  entries: { key: (typeof HONOR_PLACEMENT_SNIPPET_KEYS)[number]; snippet: string }[],
+  athlete: Athlete,
+) {
+  const r = athlete as Record<string, unknown>
+  for (const { key, snippet } of entries) {
+    const recordKey = tournamentRecordKeyForPlacementKey(key)
+    const pairedRecord = r[recordKey]
+    if (barePlacementLooksLikeWinCountFromRecord(snippet, pairedRecord != null ? String(pairedRecord) : undefined)) {
+      continue
+    }
+    if (snippetImpliesNationalAllAmerican(snippet, { trustedNationalPlacementColumn: true })) {
       found.add("All-American")
       return
     }
@@ -1078,16 +1118,9 @@ function applyNchsaaJsonStateHonors(found: Set<string>, raw: unknown) {
   }
 }
 
-function applyHonorPatternsFromHay(found: Set<string>, hay: string) {
+/** State-only honor cues from achievements text — NOT All-American (too many false positives from free text). */
+function applyAchievementTextStateHonorsOnly(found: Set<string>, hay: string) {
   if (!hay.trim()) return
-
-  if (
-    /\ball[\s-]?american\b|\bnational\s+all[\s-]?american\b|\bnational\s+placer\b|\bnational\s+finalist\b|\bnhsca\b.*\ball[\s-]?american\b|\ball american\b/i.test(
-      hay,
-    )
-  ) {
-    found.add("All-American")
-  }
 
   if (
     /\bstate\s+champion\b|\bstate\s+champ\b|\bnchsaa\b.*\b(champ|champion)\b|\b\d+\s*x\s*state\s+champ|\bmulti[\s-]?time\s+state\s+champ/i.test(
@@ -1119,10 +1152,10 @@ function getCommitmentHonorBadgesForAthlete(athlete: Athlete): string[] {
     pushAchievementLines(textLines, athlete.achievements)
     pushAchievementLines(textLines, athlete.additional_achievements)
     const hayText = textLines.join("\n").toLowerCase().replace(/_/g, " ")
-    applyHonorPatternsFromHay(found, hayText)
+    applyAchievementTextStateHonorsOnly(found, hayText)
 
-    const snippets = collectHonorPlacementSnippets(athlete)
-    applyNationalBracketTop8FromSnippets(found, snippets)
+    const placementEntries = collectHonorPlacementEntries(athlete)
+    applyNationalBracketTop8FromSnippets(found, placementEntries, athlete)
     applyNchsaaJsonStateHonors(found, (athlete as Record<string, unknown>).nchsaa_results)
 
     return COMMITMENT_HONOR_ORDER.filter((b) => found.has(b))
