@@ -49,4 +49,20 @@ describe("commitment-card-honors", () => {
     })
     expect(badges).not.toContain("All-American")
   })
+
+  it("RankWrestler 'All American' in achievements does not add NHSCA/Super32 All-American chip", () => {
+    const badges = getCommitmentHonorBadgesForAthlete({
+      id: "68df5d96-e4c3-4f1b-b1aa-4a09046cb763",
+      name: "James Campos",
+      achievements: [
+        "FR DNP",
+        "SO 2nd 1A states 132",
+        "JR 3rd 3A states 132",
+        "SR  1st 6A states 144",
+        "X2 RankWrestler All American",
+      ],
+      additional_achievements: "",
+    })
+    expect(badges).not.toContain("All-American")
+  })
 })
