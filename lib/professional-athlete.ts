@@ -15,6 +15,7 @@ export type ProfessionalAthlete = {
   commitmentdate?: string
   photourl?: string
   achievements?: string[]
+  additional_achievements?: string[]
   location?: string
   ncUnitedTeam?: string
   instagram?: string
@@ -141,6 +142,17 @@ export function normalizeAthlete(input: any): ProfessionalAthlete {
       .filter(Boolean)
   }
 
+  let additional_achievements: string[] | undefined
+  if (Array.isArray(input?.additional_achievements)) {
+    additional_achievements = (input.additional_achievements as unknown[]).map((x) => String(x).trim()).filter(Boolean)
+  } else if (typeof input?.additional_achievements === "string") {
+    additional_achievements = input.additional_achievements
+      .split(/[\n,]+/)
+      .map((s: string) => s.trim())
+      .filter(Boolean)
+  }
+  if (additional_achievements?.length === 0) additional_achievements = undefined
+
   const location: string | undefined = input?.location ?? undefined
   const ncUnitedTeam: string | undefined = input?.ncUnitedTeam ?? input?.team ?? input?.nc_united_team ?? undefined
   const instagram: string | undefined =
@@ -197,6 +209,7 @@ export function normalizeAthlete(input: any): ProfessionalAthlete {
     commitmentdate,
     photourl,
     achievements,
+    additional_achievements,
     location,
     ncUnitedTeam,
     instagram,
