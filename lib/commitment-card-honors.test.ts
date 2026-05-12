@@ -1,10 +1,31 @@
 import { describe, expect, it } from "vitest"
+import type { NchsaaHonorRowInput } from "./commitment-card-honors"
 import {
   barePlacementLooksLikeWinCountFromRecord,
   getCommitmentHonorBadgesForAthlete,
   mergeCommitmentHonorBadgesForDisplay,
   stateHonorsFromNchsaaMergedRows,
 } from "./commitment-card-honors"
+
+/**
+ * Same pipeline as `ProfessionalCommitmentCard`: profile `getCommitmentHonorBadgesForAthlete` +
+ * `/api/wrestling-achievements`-shaped payload → `mergeCommitmentHonorBadgesForDisplay`.
+ */
+function commitmentCardHonorBadgesE2E(
+  athlete: Record<string, unknown>,
+  achievementsPayload: {
+    state_championships?: unknown[]
+    all_results?: { nchsaa?: NchsaaHonorRowInput[] }
+  },
+): string[] {
+  const honorBadges = getCommitmentHonorBadgesForAthlete(athlete)
+  const found = new Set(stateHonorsFromNchsaaMergedRows(achievementsPayload.all_results?.nchsaa ?? []))
+  if (Array.isArray(achievementsPayload.state_championships) && achievementsPayload.state_championships.length > 0) {
+    found.add("State Champion")
+  }
+  const serverStateHonors = (["State Champion", "State Placer", "State Qualifier"] as const).filter((b) => found.has(b))
+  return mergeCommitmentHonorBadgesForDisplay(honorBadges, [...serverStateHonors])
+}
 
 describe("commitment-card-honors", () => {
   it("does not award All-American when placement digit equals wins from W–L record (Super 32 style)", () => {
@@ -99,6 +120,64 @@ describe("commitment-card-honors", () => {
     const merged = mergeCommitmentHonorBadgesForDisplay([], ["State Placer", "State Qualifier"])
     expect(merged).toContain("State Placer")
     expect(merged).not.toContain("State Qualifier")
+  })
+
+  it("E2E card pipeline: API only SQ rows + profile says NCHSAA 1st → State Champion, not State Qualifier", () => {
+    const athlete = {
+      id: "e2e-lydia",
+      name: "Lydia Alley",
+      achievements: ["2026 NCHSAA Girls 132 — 1st place", "North Davidson"],
+    }
+    const api = {
+      state_championships: [] as unknown[],
+      all_results: {
+        nchsaa: [
+          { year: 2026, classification: "A", weight_class: "132", place: 0 },
+          { year: 2026, classification: "", weight_class: "", place: 0 },
+        ],
+      },
+    }
+    const chips = commitmentCardHonorBadgesE2E(athlete, api)
+    expect(chips).toContain("State Champion")
+    expect(chips).not.toContain("State Qualifier")
+  })
+
+  it("E2E card pipeline: API only SQ + profile nchsaa_results JSON place 1 → State Champion, not State Qualifier", () => {
+    const athlete = {
+      id: "e2e-json-champ",
+      name: "Example Athlete",
+      achievements: [],
+      nchsaa_results: [{ year: 2026, classification: "A", weight_class: "132", place: 1 }],
+    }
+    const api = {
+      state_championships: [] as unknown[],
+      all_results: {
+        nchsaa: [{ year: 2026, weight_class: "132", place: 0 }],
+      },
+    }
+    const chips = commitmentCardHonorBadgesE2E(athlete, api)
+    expect(chips).toContain("State Champion")
+    expect(chips).not.toContain("State Qualifier")
+  })
+
+  it("E2E card pipeline: API has champ row + duplicate SQ same year → State Champion, not State Qualifier", () => {
+    const athlete = {
+      id: "e2e-api-champ",
+      name: "Example Athlete",
+      achievements: [],
+    }
+    const api = {
+      state_championships: [{ year: 2026, place: 1 }],
+      all_results: {
+        nchsaa: [
+          { year: 2026, weight_class: "132", place: 0 },
+          { year: 2026, weight_class: "132", place: 1 },
+        ],
+      },
+    }
+    const chips = commitmentCardHonorBadgesE2E(athlete, api)
+    expect(chips).toContain("State Champion")
+    expect(chips).not.toContain("State Qualifier")
   })
 
   it("stateHonorsFromNchsaaMergedRows: SQ + champ same year/weight (classification mismatch) → champion only", () => {
