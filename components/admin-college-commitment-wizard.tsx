@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
   GraduationCap,
   ChevronLeft,
@@ -9,6 +9,7 @@ import {
   AlertTriangle,
   Plus,
   ImageIcon,
+  Copy,
 } from "lucide-react"
 import {
   Dialog,
@@ -30,6 +31,7 @@ import { mappedAthleteToFormUpdatePayload } from "@/lib/mapped-athlete-update-pa
 import { COLLEGE_WEIGHT_CLASSES } from "@/lib/college-weight-classes"
 import { COLLEGE_DIVISION_OPTIONS } from "@/types/college"
 import type { Athlete } from "@/types/athlete"
+import { buildCommitmentInstagramCaption } from "@/lib/commitment-instagram-caption"
 
 const STEPS = 4
 
@@ -82,6 +84,11 @@ export function AdminCollegeCommitmentWizard({
   const [newCollegeDivision, setNewCollegeDivision] = useState("NCAA Division I")
   const [addingCollege, setAddingCollege] = useState(false)
   const [skippedCollegeLogo, setSkippedCollegeLogo] = useState(false)
+  const [matchUploadStatus, setMatchUploadStatus] = useState<"idle" | "loading" | "has_data" | "no_data" | "error">(
+    "idle",
+  )
+  /** College location is not in the DB; used only for the Instagram caption. */
+  const [instagramCollegeCity, setInstagramCollegeCity] = useState("")
 
   const genderKey = (athlete.gender === "Female" ? "Female" : "Male") as keyof typeof COLLEGE_WEIGHT_CLASSES
   const weightOptions = COLLEGE_WEIGHT_CLASSES[genderKey] || COLLEGE_WEIGHT_CLASSES.Male
@@ -96,12 +103,14 @@ export function AdminCollegeCommitmentWizard({
   useEffect(() => {
     if (!open) return
 
+    setMatchUploadStatus("idle")
     setStep(1)
     setSaving(false)
     setShowAddCollege(false)
     setNewCollegeName("")
     setNewCollegeDivision("NCAA Division I")
     setSkippedCollegeLogo(false)
+    setInstagramCollegeCity("")
     const id = (athlete.college_id as string) || ""
     const name = (athlete.college as string) || ""
     setCollegeId(id)
@@ -153,7 +162,106 @@ export function AdminCollegeCommitmentWizard({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- initialize once per dialog open
   }, [open])
 
+  useEffect(() => {
+    if (!open || step !== 4 || !athleteId) return
+
+    let cancelled = false
+    setMatchUploadStatus("loading")
+    ;(async () => {
+      try {
+        const res = await fetch("/api/admin/match-upload-progress", { cache: "no-store" })
+        const data = await res.json()
+        if (cancelled) return
+        if (!data.success || !Array.isArray(data.progress)) {
+          setMatchUploadStatus("error")
+          return
+        }
+        const row = data.progress.find((p: { athleteId: string }) => p.athleteId === athleteId)
+        const hasData =
+          row &&
+          (row.matchesFound > 0 ||
+            row.totalMatches > 0 ||
+            Object.values(row.years ?? {}).some(
+              (y: { uploaded?: boolean }) => typeof y === "object" && y && y.uploaded === true,
+            ))
+        setMatchUploadStatus(hasData ? "has_data" : "no_data")
+      } catch {
+        if (!cancelled) setMatchUploadStatus("error")
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [open, step, athleteId])
+
   const selectedCollegeName = selectedCollege?.name ?? ""
+
+  const athleteFullName = useMemo(() => {
+    const a = `${(athlete.firstName ?? "").trim()} ${(athlete.lastName ?? "").trim()}`.trim()
+    if (a) return a
+    return (athlete.name ?? "").trim() || "Athlete"
+  }, [athlete.firstName, athlete.lastName, athlete.name])
+
+  const athleteFirstNameForCaption = useMemo(() => {
+    const f = (athlete.firstName ?? "").trim()
+    if (f) return f
+    return athleteFullName.split(/\s+/)[0] || "Athlete"
+  }, [athlete.firstName, athleteFullName])
+
+  const highSchoolForCaption = useMemo(
+    () => ((athlete.highschool ?? athlete.highSchool ?? "") as string).trim() || "[High school]",
+    [athlete.highschool, athlete.highSchool],
+  )
+
+  const classYearForCaption = useMemo(() => {
+    const y = athlete.graduationYear ?? athlete.graduationyear
+    if (y == null || y === "" || Number.isNaN(Number(y))) return "[Year]"
+    return String(y)
+  }, [athlete.graduationYear, athlete.graduationyear])
+
+  const appBaseUrlForCaption =
+    (typeof process !== "undefined" && process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "")) ||
+    "https://app.ncwrestlingunited.com"
+
+  const instagramCaption = useMemo(() => {
+    if (!selectedCollegeName || !selectedCollege) return ""
+    const division = (selectedCollege.division ?? "").trim() || "[Division]"
+    return buildCommitmentInstagramCaption({
+      athleteFullName,
+      athleteFirstName: athleteFirstNameForCaption,
+      highSchool: highSchoolForCaption,
+      classYear: classYearForCaption,
+      collegeName: selectedCollegeName,
+      collegeDivision: division,
+      collegeCity: instagramCollegeCity,
+      gender: athlete.gender as string | undefined,
+      appBaseUrl: appBaseUrlForCaption,
+    })
+  }, [
+    athlete.gender,
+    athleteFirstNameForCaption,
+    athleteFullName,
+    appBaseUrlForCaption,
+    classYearForCaption,
+    highSchoolForCaption,
+    instagramCollegeCity,
+    selectedCollege,
+    selectedCollegeName,
+  ])
+
+  const copyInstagramCaption = async () => {
+    if (!instagramCaption.trim()) {
+      toast({ title: "Caption not ready", description: "Finish college selection first.", variant: "destructive" })
+      return
+    }
+    try {
+      await navigator.clipboard.writeText(instagramCaption)
+      toast({ title: "Copied", description: "Instagram caption is on your clipboard." })
+    } catch {
+      toast({ title: "Copy failed", description: "Select the text manually or try again.", variant: "destructive" })
+    }
+  }
 
   const canNext = (() => {
     if (step === 1) {
@@ -271,6 +379,9 @@ export function AdminCollegeCommitmentWizard({
       if (metaAtSave && !metaAtSave.logo_url?.trim() && skippedCollegeLogo) {
         extras = " This school still has no logo — add one from Admin → Colleges when you can."
       }
+      if (matchUploadStatus === "no_data") {
+        extras += " No season match records were found — use Match Manager in Admin to add them."
+      }
       toast({
         title: "Commitment saved",
         description: `${athlete.firstName ?? ""} ${athlete.lastName ?? ""} is committed to ${selectedCollegeName}.${extras}`,
@@ -303,7 +414,8 @@ export function AdminCollegeCommitmentWizard({
             </div>
             <DialogTitle className="text-xl sm:text-2xl font-semibold text-white">College commitment</DialogTitle>
             <DialogDescription className="text-white/85 text-sm">
-              Step {step} of {STEPS} — everything here: school list, logo, dates, and announcement photo.
+              Step {step} of {STEPS} — school directory, school logo (not the announcement graphic), date, weight, then
+              optional commitment picture.
             </DialogDescription>
           </DialogHeader>
           <div className="mt-4 flex gap-1.5">
@@ -417,8 +529,9 @@ export function AdminCollegeCommitmentWizard({
                       <AlertTitle className="text-[#002147]">No logo for this school yet</AlertTitle>
                       <AlertDescription className="space-y-3 text-muted-foreground">
                         <p className="text-sm">
-                          Upload a mark so commitment cards and profiles don&apos;t fall back to a generic logo. This updates
-                          the college record and logo lookup — you don&apos;t need the enhanced logo manager.
+                          This is the <strong className="font-semibold text-[#002147]">school / athletic department</strong>{" "}
+                          logo — not the athlete&apos;s commitment announcement graphic (that is step {STEPS}).
+                          Upload a mark so cards don&apos;t fall back to a generic logo. This updates the college record.
                         </p>
                         <div className="rounded-lg border border-[#002147]/10 bg-white p-3">
                           <div className="flex items-center gap-2 text-[#002147] text-sm font-medium mb-2">
@@ -485,7 +598,7 @@ export function AdminCollegeCommitmentWizard({
 
           {step === 4 && (
             <div className="space-y-3">
-              <Label className="text-[#002147] font-medium">Commitment picture</Label>
+              <Label className="text-[#002147] font-medium">Commitment announcement graphic</Label>
               <ImageUpload
                 category="commitment"
                 onUploadComplete={(url) => setCommitmentPhotoUrl(url)}
@@ -493,7 +606,72 @@ export function AdminCollegeCommitmentWizard({
                 entityName={`${athlete.firstName ?? "athlete"}-${athlete.lastName ?? "commitment"}-wizard`}
                 aspectRatio="announcement"
               />
-              <p className="text-xs text-muted-foreground">Optional — announcement graphic for the athlete.</p>
+              <p className="text-xs text-muted-foreground">
+                Optional — not the same as the college logo in step 1. Click the preview to choose a file.
+              </p>
+
+              <div className="rounded-xl border border-[#002147]/15 bg-white p-4 space-y-3 shadow-sm">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-[#002147]">Instagram caption</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Filled from this wizard; add the college location (not stored in the roster).
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="border-[#002147]/30 text-[#002147] shrink-0"
+                    disabled={!instagramCaption}
+                    onClick={copyInstagramCaption}
+                  >
+                    <Copy className="h-4 w-4 mr-1.5" />
+                    Copy caption
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="wiz-instagram-college-city" className="text-[#002147] text-xs font-medium">
+                    College city (for caption)
+                  </Label>
+                  <Input
+                    id="wiz-instagram-college-city"
+                    value={instagramCollegeCity}
+                    onChange={(e) => setInstagramCollegeCity(e.target.value)}
+                    placeholder="e.g. Chapel Hill, NC"
+                    className="border-[#002147]/25 text-sm"
+                  />
+                </div>
+                <pre className="text-xs leading-relaxed whitespace-pre-wrap break-words rounded-lg bg-[#f8fafc] border border-[#002147]/10 p-3 max-h-[220px] overflow-y-auto font-sans text-foreground">
+                  {instagramCaption || "Select a college with division in steps 1–3 for the caption preview."}
+                </pre>
+              </div>
+
+              {(matchUploadStatus === "no_data" || matchUploadStatus === "error") && (
+                <Alert className="border-[#c9a227]/50 bg-[#fffbf0]">
+                  <AlertTriangle className="h-4 w-4 text-[#B31B1B]" />
+                  <AlertTitle className="text-[#002147]">Season match data</AlertTitle>
+                  <AlertDescription className="text-sm text-muted-foreground space-y-2">
+                    {matchUploadStatus === "error" ? (
+                      <p>Could not check match uploads. If this athlete has no matches yet, add them in Match Manager.</p>
+                    ) : (
+                      <p>
+                        We couldn&apos;t find match records for this athlete yet. Add their season results so profiles and
+                        records stay complete.
+                      </p>
+                    )}
+                    <p>
+                      <a
+                        href={`/admin/match-manager?athlete=${encodeURIComponent(athleteId)}`}
+                        className="font-semibold text-[#002147] underline underline-offset-2 hover:text-[#B31B1B]"
+                      >
+                        Open Match Manager
+                      </a>{" "}
+                      (this athlete is pre-selected when possible).
+                    </p>
+                  </AlertDescription>
+                </Alert>
+              )}
             </div>
           )}
 

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
@@ -41,6 +42,7 @@ interface UploadProgress {
 }
 
 export default function MatchManagerPage() {
+  const searchParams = useSearchParams()
   const [athletes, setAthletes] = useState<Athlete[]>([])
   const [highSchools, setHighSchools] = useState<HighSchool[]>([])
   const [selectedAthlete, setSelectedAthlete] = useState<string>("")
@@ -68,6 +70,14 @@ export default function MatchManagerPage() {
     loadHighSchools()
     loadUploadProgress()
   }, [])
+
+  useEffect(() => {
+    const aid = searchParams.get("athlete")?.trim()
+    if (!aid || athletes.length === 0) return
+    if (athletes.some((a) => a.id === aid)) {
+      setSelectedAthlete(aid)
+    }
+  }, [searchParams, athletes])
 
   const loadAthletes = async () => {
     try {

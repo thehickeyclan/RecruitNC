@@ -344,7 +344,7 @@ export default function EditAthletePage() {
             </AlertDescription>
           </Alert>
         )}
-        <AthleteForm onSubmit={handleSubmit} initialData={athlete} />
+        <AthleteForm onSubmit={handleSubmit} initialData={athlete} useWizardForCommitmentPhoto />
         {saveSuccess && (
           <Card className="mt-8 overflow-hidden rounded-2xl border border-[#002147]/10 shadow-md">
             <CardHeader className="bg-gradient-to-r from-[#002147] to-[#003366] text-white py-4">
