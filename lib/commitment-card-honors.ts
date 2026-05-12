@@ -6,6 +6,56 @@ import { nchsaaJsonToProfileRows } from "@/lib/nchsaa-results-json"
 
 export const COMMITMENT_CARD_HONOR_ORDER = ["All-American", "State Champion", "State Placer", "State Qualifier"] as const
 
+/** Rows from `all_results.nchsaa` (table + JSON merge) — minimal fields for state chips. */
+export type NchsaaHonorRowInput = {
+  year?: unknown
+  classification?: unknown
+  weight_class?: unknown
+  place?: unknown
+}
+
+function honorPlaceNum(p: unknown): number {
+  if (p == null || p === "") return NaN
+  const n = Number(p)
+  return Number.isNaN(n) ? NaN : n
+}
+
+/**
+ * State honor chips from merged NCHSAA rows (API `all_results.nchsaa`).
+ * Buckets by **calendar year** only: one NC season → one state bracket per athlete, so any `place >= 1`
+ * in that year suppresses `place === 0` for that year (duplicate SQ rows, empty `weight_class`,
+ * mismatched classification/merge keys). Across years, SQ and champion can both appear.
+ */
+export function stateHonorsFromNchsaaMergedRows(rows: NchsaaHonorRowInput[]): string[] {
+  const byYear = new Map<number, NchsaaHonorRowInput[]>()
+  for (const r of rows) {
+    const y = Number(r.year)
+    if (!Number.isFinite(y)) continue
+    const list = byYear.get(y)
+    if (list) list.push(r)
+    else byYear.set(y, [r])
+  }
+
+  const found = new Set<string>()
+  for (const list of byYear.values()) {
+    let hasChamp = false
+    let hasPlacer = false
+    let hasSq = false
+    for (const r of list) {
+      const pn = honorPlaceNum(r.place)
+      if (Number.isNaN(pn)) continue
+      if (pn === 1) hasChamp = true
+      else if (pn >= 2 && pn <= 24) hasPlacer = true
+      else if (pn === 0) hasSq = true
+    }
+    if (hasChamp) found.add("State Champion")
+    else if (hasPlacer) found.add("State Placer")
+    else if (hasSq) found.add("State Qualifier")
+  }
+
+  return (["State Champion", "State Placer", "State Qualifier"] as const).filter((b) => found.has(b))
+}
+
 const HONOR_PLACEMENT_SNIPPET_KEYS = [
   "nhsca_2025_placement",
   "nhsca_2024_placement",
