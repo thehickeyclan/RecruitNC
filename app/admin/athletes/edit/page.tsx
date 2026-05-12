@@ -6,12 +6,12 @@
  */
 import { useState, useEffect } from "react"
 import { AthleteForm } from "@/components/athlete-form"
-import { TournamentResultsEditor } from "@/components/tournament-results-editor"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
 import { updateAthleteAction } from "@/lib/athlete-actions"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertCircle, CheckCircle2, ArrowLeft, Sparkles } from "lucide-react"
+import { AlertCircle, CheckCircle2, ArrowLeft, Sparkles, GraduationCap } from "lucide-react"
+import { AdminCollegeCommitmentWizard } from "@/components/admin-college-commitment-wizard"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -33,6 +33,7 @@ export default function EditAthletePage() {
   const [generatingBio, setGeneratingBio] = useState(false)
   const [editableBio, setEditableBio] = useState("")
   const [editableHeadline, setEditableHeadline] = useState("")
+  const [commitmentWizardOpen, setCommitmentWizardOpen] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
 
@@ -146,8 +147,8 @@ export default function EditAthletePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="bg-gradient-to-r from-[#002147] to-[#003366] text-white shadow-lg">
+      <div className="min-h-screen bg-gradient-to-b from-slate-100 via-[#f4f6fa] to-[#e8edf4]">
+        <div className="bg-gradient-to-r from-[#002147] via-[#002952] to-[#003366] text-white shadow-xl border-b-4 border-[#c9a227]">
           <div className="container mx-auto px-4 py-8">
             <h1 className="text-3xl md:text-4xl font-bold mb-2">Edit Athlete</h1>
             <p className="text-blue-200">Loading athlete data...</p>
@@ -165,8 +166,8 @@ export default function EditAthletePage() {
 
   if (!id) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="bg-gradient-to-r from-[#002147] to-[#003366] text-white shadow-lg">
+      <div className="min-h-screen bg-gradient-to-b from-slate-100 via-[#f4f6fa] to-[#e8edf4]">
+        <div className="bg-gradient-to-r from-[#002147] via-[#002952] to-[#003366] text-white shadow-xl border-b-4 border-[#c9a227]">
           <div className="container mx-auto px-4 py-8">
             <h1 className="text-3xl md:text-4xl font-bold mb-2">Edit Athlete</h1>
             <p className="text-blue-200">Missing athlete id</p>
@@ -186,8 +187,8 @@ export default function EditAthletePage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="bg-gradient-to-r from-[#002147] to-[#003366] text-white shadow-lg">
+      <div className="min-h-screen bg-gradient-to-b from-slate-100 via-[#f4f6fa] to-[#e8edf4]">
+        <div className="bg-gradient-to-r from-[#002147] via-[#002952] to-[#003366] text-white shadow-xl border-b-4 border-[#c9a227]">
           <div className="container mx-auto px-4 py-8">
             <h1 className="text-3xl md:text-4xl font-bold mb-2">Edit Athlete</h1>
             <p className="text-blue-200">Error loading athlete</p>
@@ -215,8 +216,8 @@ export default function EditAthletePage() {
 
   if (!athlete) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="bg-gradient-to-r from-[#002147] to-[#003366] text-white shadow-lg">
+      <div className="min-h-screen bg-gradient-to-b from-slate-100 via-[#f4f6fa] to-[#e8edf4]">
+        <div className="bg-gradient-to-r from-[#002147] via-[#002952] to-[#003366] text-white shadow-xl border-b-4 border-[#c9a227]">
           <div className="container mx-auto px-4 py-8">
             <h1 className="text-3xl md:text-4xl font-bold mb-2">Edit Athlete</h1>
             <p className="text-blue-200">Athlete not found</p>
@@ -235,50 +236,60 @@ export default function EditAthletePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-gradient-to-r from-[#002147] to-[#003366] text-white shadow-lg">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div className="min-h-screen bg-gradient-to-b from-slate-100 via-[#f4f6fa] to-[#e8edf4]">
+      <div className="bg-gradient-to-r from-[#002147] via-[#002952] to-[#003366] text-white shadow-xl border-b-4 border-[#c9a227]">
+        <div className="container mx-auto px-4 py-8 max-w-6xl">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
             <div className="flex items-center gap-4">
-              <Button variant="outline" size="sm" onClick={() => window.location.href = "/admin/athletes"} className="bg-white/15 text-white border-white/60 hover:bg-white/25 hover:border-white">
+              <Button variant="outline" size="sm" onClick={() => (window.location.href = "/admin/athletes")} className="bg-white/15 text-white border-white/60 hover:bg-white/25 hover:border-white">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Athletes
               </Button>
               <div>
-                <h1 className="text-3xl md:text-4xl font-bold mb-2">Edit Athlete</h1>
-                <p className="text-blue-200 text-lg">{athlete.name}</p>
+                <p className="text-[#f0d77a] text-xs font-semibold uppercase tracking-widest mb-1">RecruitNC Admin</p>
+                <h1 className="text-3xl md:text-4xl font-bold mb-1 tracking-tight">Athlete profile</h1>
+                <p className="text-blue-100 text-lg font-medium">{athlete.name}</p>
               </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" asChild className="bg-white text-[#002147] border-white hover:bg-gray-100">
+            <div className="flex flex-wrap gap-2 w-full lg:w-auto lg:justify-end">
+              <Button
+                type="button"
+                size="sm"
+                className="bg-[#f0d77a] text-[#002147] hover:bg-[#e8cf63] font-semibold shadow-md border-0 gap-1.5"
+                onClick={() => setCommitmentWizardOpen(true)}
+              >
+                <GraduationCap className="h-4 w-4" />
+                College commitment
+              </Button>
+              <Button variant="outline" size="sm" asChild className="bg-white text-[#002147] border-white hover:bg-[#f8f6f0]">
                 <a href={`/admin/athletes/images/${id}`}>Upload Images</a>
               </Button>
-              <Button variant="outline" size="sm" asChild className="bg-white text-[#002147] border-white hover:bg-gray-100">
+              <Button variant="outline" size="sm" asChild className="bg-white text-[#002147] border-white hover:bg-[#f8f6f0]">
                 <a href={`/view-profile?id=${encodeURIComponent(id)}`}>View profile</a>
               </Button>
             </div>
           </div>
-          <div className="flex flex-wrap gap-3 mt-6">
-            {athlete.highschool && <Badge className="bg-white/20 text-white border-white/30">{athlete.highschool}</Badge>}
-            {athlete.graduationyear && <Badge className="bg-white/20 text-white border-white/30">Class of {athlete.graduationyear}</Badge>}
-            {athlete.weightclass && <Badge className="bg-white/20 text-white border-white/30">{athlete.weightclass} lbs</Badge>}
+          <div className="flex flex-wrap gap-2 mt-6">
+            {athlete.highschool && <Badge className="bg-[#002147]/40 text-white border border-white/25 px-3 py-0.5">{athlete.highschool}</Badge>}
+            {athlete.graduationyear && <Badge className="bg-[#002147]/40 text-white border border-white/25 px-3 py-0.5">Class of {athlete.graduationyear}</Badge>}
+            {athlete.weightclass && <Badge className="bg-[#002147]/40 text-white border border-white/25 px-3 py-0.5">{athlete.weightclass} lbs</Badge>}
             {athlete.recruiting_status && (
-              <Badge className={`${athlete.recruiting_status?.toLowerCase() === "committed" || athlete.recruiting_status?.toLowerCase() === "college athlete" ? "bg-green-500" : athlete.recruiting_status?.toLowerCase() === "uncommitted" ? "bg-yellow-500" : "bg-white/20"} text-white border-0`}>
+              <Badge className={`${athlete.recruiting_status?.toLowerCase() === "committed" || athlete.recruiting_status?.toLowerCase() === "college athlete" ? "bg-emerald-600/90" : athlete.recruiting_status?.toLowerCase() === "uncommitted" ? "bg-[#c9a227] text-[#002147]" : "bg-white/20"} text-white border-0 px-3 py-0.5`}>
                 {athlete.recruiting_status}
               </Badge>
             )}
           </div>
         </div>
       </div>
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-4">
-          <Button variant="outline" size="sm" asChild className="hover:bg-gray-100">
-            <a href={`/debug/athlete-form/${id}`} target="_blank" rel="noopener noreferrer">View Debug Data</a>
-          </Button>
-        </div>
-        <Card className="mb-6 shadow-lg border-t-4 border-t-[#B31B1B]">
-          <CardHeader className="bg-gradient-to-r from-[#002147] to-[#003366] text-white">
-            <CardTitle className="flex items-center gap-2"><Sparkles className="h-5 w-5" />AI Bio Generation</CardTitle>
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <p className="text-xs text-[#002147]/50 mb-4">
+          <a href={`/debug/athlete-form/${id}`} className="underline underline-offset-2 hover:text-[#002147]">
+            Debug / raw data
+          </a>
+        </p>
+        <Card className="mb-8 overflow-hidden rounded-2xl shadow-lg border border-[#002147]/12 border-t-4 border-t-[#B31B1B] bg-white">
+          <CardHeader className="bg-gradient-to-br from-[#002147] via-[#002952] to-[#003366] text-white pb-5">
+            <CardTitle className="flex items-center gap-2 text-lg"><Sparkles className="h-5 w-5 text-[#f0d77a]" />AI bio &amp; headline</CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
@@ -311,67 +322,79 @@ export default function EditAthletePage() {
           </CardContent>
         </Card>
         {saveSuccess && (
-          <Alert className="mb-6 bg-blue-50 border-[#002147] border-2 shadow-sm">
+          <Alert className="mb-8 rounded-xl border-2 border-[#c9a227]/50 bg-gradient-to-r from-[#fef9ec] to-white shadow-sm">
             <CheckCircle2 className="h-4 w-4 text-[#002147]" />
-            <AlertTitle className="text-[#002147] font-semibold">Save Successful</AlertTitle>
+            <AlertTitle className="text-[#002147] font-semibold">Saved</AlertTitle>
             <AlertDescription className="text-gray-700">
               {saveTimestamp && <p className="text-sm mb-2 font-medium">Last saved: {saveTimestamp}</p>}
-              {updatedFields.length > 0 ? <><p className="mb-2">The following fields were updated:</p><div className="flex flex-wrap gap-2 mt-2">{updatedFields.map((field) => <Badge key={field} className="bg-[#002147] text-white border-0">{field}</Badge>)}</div></> : <p>All athlete information was saved successfully.</p>}
+              {updatedFields.length > 0 ? (
+                <>
+                  <p className="mb-2">Updated fields:</p>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {updatedFields.map((field) => (
+                      <Badge key={field} className="bg-[#002147] text-white border-0">
+                        {field}
+                      </Badge>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <p>All athlete information was saved successfully.</p>
+              )}
             </AlertDescription>
           </Alert>
         )}
-        <div className="py-6">
-          <TournamentResultsEditor
-            athleteId={id}
-            nhscaResults={athlete.nhsca_results || []}
-            super32Results={athlete.super32_results || []}
-            onSave={async () => {
-              const res = await fetch(`/api/admin/athletes/${encodeURIComponent(id)}`, { credentials: "include" })
-              const refreshResult = await res.json().catch(() => ({}))
-              if (refreshResult.success && refreshResult.data) {
-                setAthlete(refreshResult.data)
-                if (editableBio === athlete.bio || !editableBio) setEditableBio(refreshResult.data.bio || "")
-                if (editableHeadline === athlete.bio_headline || !editableHeadline) setEditableHeadline(refreshResult.data.bio_headline || "")
-              }
-              toast({ title: "Success", description: "Tournament results saved successfully!" })
-            }}
-          />
-        </div>
         <AthleteForm onSubmit={handleSubmit} initialData={athlete} />
         {saveSuccess && (
-          <Card className="mt-6 shadow-lg border-t-4 border-t-[#002147]">
-            <CardHeader className="bg-gradient-to-r from-[#002147] to-[#003366] text-white">
-              <CardTitle className="text-lg font-semibold">Validation Summary</CardTitle>
+          <Card className="mt-8 overflow-hidden rounded-2xl border border-[#002147]/10 shadow-md">
+            <CardHeader className="bg-gradient-to-r from-[#002147] to-[#003366] text-white py-4">
+              <CardTitle className="text-lg font-semibold">Validation summary</CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
               <p className="text-gray-700 font-medium">All required fields are valid and data was saved successfully.</p>
               {Object.keys(fieldChanges).length > 0 && (
-                <div className="mt-4">
-                  <h3 className="font-semibold text-[#002147] mb-2">Changed Fields:</h3>
-                  <div className="bg-white rounded-md p-3 border-2 border-gray-200 shadow-sm">
-                    <table className="w-full text-sm">
-                      <thead><tr className="border-b border-gray-300"><th className="text-left py-2 px-2 text-[#002147] font-semibold">Field</th><th className="text-left py-2 px-2 text-[#002147] font-semibold">Before</th><th className="text-left py-2 px-2 text-[#002147] font-semibold">After</th></tr></thead>
-                      <tbody>
-                        {Object.entries(fieldChanges).map(([field, values]: [string, any]) => (
-                          <tr key={field} className="border-b border-gray-100">
-                            <td className="py-2 px-2 font-medium">{field}</td>
-                            <td className="py-2 px-2">{typeof values.before === "object" ? JSON.stringify(values.before) : values.before}</td>
-                            <td className="py-2 px-2">{typeof values.after === "object" ? JSON.stringify(values.after) : values.after}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                <div className="mt-4 space-y-3">
+                  <h3 className="font-semibold text-[#002147] text-sm uppercase tracking-wide">Changed fields</h3>
+                  {Object.entries(fieldChanges).map(([field, values]: [string, any]) => (
+                    <div key={field} className="rounded-xl border border-[#002147]/10 bg-[#f8fafc] p-4 flex flex-col gap-2 sm:flex-row sm:gap-6">
+                      <span className="font-semibold text-[#002147] sm:min-w-[140px]">{field}</span>
+                      <div className="flex-1 space-y-2 text-sm">
+                        <div>
+                          <span className="text-xs font-medium text-muted-foreground uppercase">Before</span>
+                          <p className="text-gray-600">{typeof values.before === "object" ? JSON.stringify(values.before) : String(values.before)}</p>
+                        </div>
+                        <div>
+                          <span className="text-xs font-medium text-[#B31B1B] uppercase">After</span>
+                          <p className="text-[#002147] font-medium">{typeof values.after === "object" ? JSON.stringify(values.after) : String(values.after)}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
-              <div className="mt-4 flex justify-end gap-2">
-                <Button variant="outline" size="sm" asChild className="hover:bg-[#002147] hover:text-white">
+              <div className="mt-6 flex justify-end gap-2">
+                <Button variant="outline" size="sm" asChild className="border-[#002147]/30 text-[#002147] hover:bg-[#002147]/5">
                   <a href={`/view-profile?id=${encodeURIComponent(id)}`}>View profile</a>
                 </Button>
               </div>
             </CardContent>
           </Card>
         )}
+        <AdminCollegeCommitmentWizard
+          open={commitmentWizardOpen}
+          onOpenChange={setCommitmentWizardOpen}
+          athleteId={id}
+          athlete={athlete}
+          headlineDraft={editableHeadline}
+          bioDraft={editableBio}
+          onSaved={(data) => {
+            setAthlete(data)
+            setOriginalAthlete(JSON.parse(JSON.stringify(data)))
+            setEditableBio(data.bio || "")
+            setEditableHeadline(data.bio_headline || "")
+            router.refresh()
+          }}
+        />
         {debugInfo && (
           <Card className="mt-6 shadow-sm border-t-4 border-t-gray-400">
             <CardHeader className="bg-gradient-to-r from-gray-100 to-gray-200 flex flex-row items-center justify-between">

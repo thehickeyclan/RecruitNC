@@ -13,8 +13,8 @@ import { ImageUpload } from "@/components/image-upload"
 import { useToast } from "@/components/ui/use-toast"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Athlete } from "@/types/athlete"
-import { Switch } from "@/components/ui/switch"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { COLLEGE_WEIGHT_CLASSES } from "@/lib/college-weight-classes"
 import { AlertCircle } from "lucide-react"
 interface AthleteFormProps {
   onSubmit: (data: any) => Promise<any>
@@ -51,33 +51,6 @@ const HS_WEIGHT_CLASSES = {
     { value: "165", label: "165 lbs" },
     { value: "185", label: "185 lbs" },
     { value: "235", label: "235 lbs" },
-  ],
-}
-
-const COLLEGE_WEIGHT_CLASSES = {
-  Male: [
-    { value: "125", label: "125 lbs" },
-    { value: "133", label: "133 lbs" },
-    { value: "141", label: "141 lbs" },
-    { value: "149", label: "149 lbs" },
-    { value: "157", label: "157 lbs" },
-    { value: "165", label: "165 lbs" },
-    { value: "174", label: "174 lbs" },
-    { value: "184", label: "184 lbs" },
-    { value: "197", label: "197 lbs" },
-    { value: "285", label: "285 lbs" },
-  ],
-  Female: [
-    { value: "103", label: "103 lbs" },
-    { value: "110", label: "110 lbs" },
-    { value: "117", label: "117 lbs" },
-    { value: "124", label: "124 lbs" },
-    { value: "131", label: "131 lbs" },
-    { value: "138", label: "138 lbs" },
-    { value: "145", label: "145 lbs" },
-    { value: "160", label: "160 lbs" },
-    { value: "180", label: "180 lbs" },
-    { value: "207", label: "207 lbs" },
   ],
 }
 
@@ -291,10 +264,6 @@ const AthleteForm: React.FC<AthleteFormProps> = ({ onSubmit, initialData }) => {
         return newErrors
       })
     }
-  }
-
-  const handleSwitchChange = (name: string, checked: boolean) => {
-    setFormData((prev) => ({ ...prev, [name]: checked }))
   }
 
   const handleSelectChange = (name: string, value: string) => {
@@ -555,20 +524,53 @@ const AthleteForm: React.FC<AthleteFormProps> = ({ onSubmit, initialData }) => {
     HS_WEIGHT_CLASSES[formData.gender as keyof typeof HS_WEIGHT_CLASSES] || HS_WEIGHT_CLASSES.Male
 
   return (
-    <Card className="border-t-4 border-t-[#002147] shadow-md">
-      <CardHeader className="bg-gradient-to-r from-[#002147] to-[#003366] text-white">
-        <CardTitle className="text-xl">{initialData?.id ? "Edit" : "Add"} Athlete Details</CardTitle>
+    <Card className="overflow-hidden rounded-2xl border border-[#002147]/15 border-t-4 border-t-[#B31B1B] bg-white shadow-lg shadow-[#002147]/08">
+      <CardHeader className="bg-gradient-to-br from-[#002147] via-[#002952] to-[#003366] text-white pb-5">
+        <CardTitle className="text-xl font-semibold tracking-tight">
+          {initialData?.id ? "Edit" : "Add"} Athlete Details
+        </CardTitle>
+        <p className="text-sm font-normal text-white/80 mt-1">RecruitNC admin — keep roster and bio data current.</p>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="pt-6">
           <Tabs defaultValue="basic" value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-6 bg-gray-100">
-              <TabsTrigger value="basic" className="data-[state=active]:bg-[#002147] data-[state=active]:text-white">Basic Info</TabsTrigger>
-              <TabsTrigger value="school" className="data-[state=active]:bg-[#002147] data-[state=active]:text-white">School & Club</TabsTrigger>
-              <TabsTrigger value="college" className="data-[state=active]:bg-[#002147] data-[state=active]:text-white">College</TabsTrigger>
-              <TabsTrigger value="achievements" className="data-[state=active]:bg-[#002147] data-[state=active]:text-white">Achievements</TabsTrigger>
-              <TabsTrigger value="academics" className="data-[state=active]:bg-[#002147] data-[state=active]:text-white">Academics</TabsTrigger>
-              <TabsTrigger value="additional" className="data-[state=active]:bg-[#002147] data-[state=active]:text-white">Additional</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-6 gap-1 rounded-xl bg-[#002147]/08 p-1 h-auto">
+              <TabsTrigger
+                value="basic"
+                className="rounded-lg data-[state=active]:bg-[#002147] data-[state=active]:text-white data-[state=active]:shadow-sm text-[#002147]/90"
+              >
+                Basic Info
+              </TabsTrigger>
+              <TabsTrigger
+                value="school"
+                className="rounded-lg data-[state=active]:bg-[#002147] data-[state=active]:text-white data-[state=active]:shadow-sm text-[#002147]/90"
+              >
+                School & Club
+              </TabsTrigger>
+              <TabsTrigger
+                value="college"
+                className="rounded-lg data-[state=active]:bg-[#002147] data-[state=active]:text-white data-[state=active]:shadow-sm text-[#002147]/90"
+              >
+                College
+              </TabsTrigger>
+              <TabsTrigger
+                value="achievements"
+                className="rounded-lg data-[state=active]:bg-[#002147] data-[state=active]:text-white data-[state=active]:shadow-sm text-[#002147]/90"
+              >
+                Achievements
+              </TabsTrigger>
+              <TabsTrigger
+                value="academics"
+                className="rounded-lg data-[state=active]:bg-[#002147] data-[state=active]:text-white data-[state=active]:shadow-sm text-[#002147]/90"
+              >
+                Academics
+              </TabsTrigger>
+              <TabsTrigger
+                value="additional"
+                className="rounded-lg data-[state=active]:bg-[#002147] data-[state=active]:text-white data-[state=active]:shadow-sm text-[#002147]/90"
+              >
+                Additional
+              </TabsTrigger>
             </TabsList>
 
             {/* Basic Info Tab */}
@@ -729,27 +731,6 @@ const AthleteForm: React.FC<AthleteFormProps> = ({ onSubmit, initialData }) => {
                     />
                   </div>
                 )}
-
-                <div className="space-y-2">
-                  <Label htmlFor="prospect_notes">Internal Notes</Label>
-                  <Textarea
-                    id="prospect_notes"
-                    name="prospect_notes"
-                    value={formData.prospect_notes || ""}
-                    onChange={handleChange}
-                    placeholder="Internal recruiting notes..."
-                    rows={3}
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="featured"
-                  checked={formData.featured}
-                  onCheckedChange={(checked) => handleSwitchChange("featured", checked)}
-                />
-                <Label htmlFor="featured">Featured Athlete (appears on homepage)</Label>
               </div>
             </TabsContent>
 
@@ -839,17 +820,6 @@ const AthleteForm: React.FC<AthleteFormProps> = ({ onSubmit, initialData }) => {
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="contactEmail">Wrestling Club Logo URL</Label>
-                  <Input
-                    id="contactEmail"
-                    name="contactEmail"
-                    value={formData.contactEmail}
-                    onChange={handleChange}
-                    placeholder="https://example.com/logo.png"
-                  />
-                </div>
-
-                <div className="space-y-2">
                   <Label htmlFor="instagramUrl">Location</Label>
                   <Input
                     id="instagramUrl"
@@ -921,18 +891,6 @@ const AthleteForm: React.FC<AthleteFormProps> = ({ onSubmit, initialData }) => {
                     </SelectContent>
                   </Select>
                   {validationErrors.college && <p className="text-sm text-red-500 mt-1">{validationErrors.college}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="collegeLogoUrl">College Logo URL</Label>
-                  <Input
-                    id="collegeLogoUrl"
-                    name="collegeLogoUrl"
-                    value={formData.collegeLogoUrl || ""}
-                    onChange={handleChange}
-                    placeholder="https://example.com/logo.png"
-                    disabled={formData.recruiting_status === "Uncommitted"}
-                  />
                 </div>
 
                 <div className="space-y-2">
@@ -1018,152 +976,9 @@ const AthleteForm: React.FC<AthleteFormProps> = ({ onSubmit, initialData }) => {
 
             {/* Achievements Tab */}
             <TabsContent value="achievements" className="space-y-4 pt-4">
-              <div className="border-t pt-6 space-y-4">
-                <h3 className="text-lg font-medium">Super 32 Competition</h3>
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="super_32_2023_record">2023 Super 32 Record</Label>
-                    <Input
-                      id="super_32_2023_record"
-                      name="super_32_2023_record"
-                      value={formData.super_32_2023_record}
-                      onChange={handleChange}
-                      placeholder="e.g., 3-2"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="super_32_2023_placement">2023 Super 32 Placement</Label>
-                    <Input
-                      id="super_32_2023_placement"
-                      name="super_32_2023_placement"
-                      value={formData.super_32_2023_placement}
-                      onChange={handleChange}
-                      placeholder="e.g., 5th Place, Semifinalist"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="super_32_2024_record">2024 Super 32 Record</Label>
-                    <Input
-                      id="super_32_2024_record"
-                      name="super_32_2024_record"
-                      value={formData.super_32_2024_record}
-                      onChange={handleChange}
-                      placeholder="e.g., 4-2"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="super_32_2024_placement">2024 Super 32 Placement</Label>
-                    <Input
-                      id="super_32_2024_placement"
-                      name="super_32_2024_placement"
-                      value={formData.super_32_2024_placement}
-                      onChange={handleChange}
-                      placeholder="e.g., 3rd Place, Quarterfinalist"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="super_32_2025_record">2025 Super 32 Record</Label>
-                    <Input
-                      id="super_32_2025_record"
-                      name="super_32_2025_record"
-                      value={formData.super_32_2025_record}
-                      onChange={handleChange}
-                      placeholder="e.g., 5-1"
-                    />
-                    <p className="text-xs text-muted-foreground">Tournament scheduled for end of October 2025</p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="super_32_2025_placement">2025 Super 32 Placement</Label>
-                    <Input
-                      id="super_32_2025_placement"
-                      name="super_32_2025_placement"
-                      value={formData.super_32_2025_placement}
-                      onChange={handleChange}
-                      placeholder="e.g., Champion, 2nd Place"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* NHSCA Competition Section */}
-              <div className="border-t pt-6 space-y-4">
-                <h3 className="text-lg font-medium">NHSCA Competition</h3>
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="nhsca_2023_record">2023 NHSCA Record</Label>
-                    <Input
-                      id="nhsca_2023_record"
-                      name="nhsca_2023_record"
-                      value={formData.nhsca_2023_record}
-                      onChange={handleChange}
-                      placeholder="e.g., 3-2"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="nhsca_2023_placement">2023 NHSCA Placement</Label>
-                    <Input
-                      id="nhsca_2023_placement"
-                      name="nhsca_2023_placement"
-                      value={formData.nhsca_2023_placement}
-                      onChange={handleChange}
-                      placeholder="e.g., All-American, 5th Place"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="nhsca_2024_record">2024 NHSCA Record</Label>
-                    <Input
-                      id="nhsca_2024_record"
-                      name="nhsca_2024_record"
-                      value={formData.nhsca_2024_record}
-                      onChange={handleChange}
-                      placeholder="e.g., 4-2"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="nhsca_2024_placement">2024 NHSCA Placement</Label>
-                    <Input
-                      id="nhsca_2024_placement"
-                      name="nhsca_2024_placement"
-                      value={formData.nhsca_2024_placement}
-                      onChange={handleChange}
-                      placeholder="e.g., All-American, 3rd Place"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="nhsca_2025_record">2025 NHSCA Record</Label>
-                    <Input
-                      id="nhsca_2025_record"
-                      name="nhsca_2025_record"
-                      value={formData.nhsca_2025_record}
-                      onChange={handleChange}
-                      placeholder="e.g., 5-1"
-                    />
-                    <p className="text-xs text-muted-foreground">Tournament scheduled for March 2025</p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="nhsca_2025_placement">2025 NHSCA Placement</Label>
-                    <Input
-                      id="nhsca_2025_placement"
-                      name="nhsca_2025_placement"
-                      value={formData.nhsca_2025_placement}
-                      onChange={handleChange}
-                      placeholder="e.g., Champion, All-American"
-                    />
-                  </div>
-                </div>
-              </div>
+              <p className="text-sm text-muted-foreground">
+                NHSCA and Super 32 placements and records are sourced from imported tournament tables (not edited here).
+              </p>
 
               <div className="border-t pt-6 space-y-4">
                 <h3 className="text-lg font-medium">Nationally Ranked Wins</h3>
@@ -1452,11 +1267,11 @@ const AthleteForm: React.FC<AthleteFormProps> = ({ onSubmit, initialData }) => {
           )}
         </CardContent>
 
-        <CardFooter className="flex justify-end gap-3 bg-gray-50 border-t">
-          <Button 
-            type="submit" 
+        <CardFooter className="flex justify-end gap-3 rounded-b-2xl border-t border-[#002147]/10 bg-gradient-to-r from-[#fef9f0] via-white to-[#f0f4fa]">
+          <Button
+            type="submit"
             disabled={isSubmitting}
-            className="bg-[#B31B1B] hover:bg-[#8B1515] text-white px-8"
+            className="bg-[#B31B1B] hover:bg-[#8B1515] text-white px-8 shadow-md"
           >
             {isSubmitting ? "Saving..." : initialData?.id ? "Save Changes" : "Add Athlete"}
           </Button>
