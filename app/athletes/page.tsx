@@ -133,11 +133,14 @@ export default function AthletesPage() {
   }, [selectedYear, selectedGender, selectedDivision])
 
   const filteredAthletes = athletes.filter((athlete) => {
+    const name = (athlete.name ?? "").toLowerCase()
+    const college = (athlete.college ?? "").toLowerCase()
+    const highschool = (athlete.highschool ?? "").toLowerCase()
     const matchesSearch =
       searchTerm === "" ||
-      athlete.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      athlete.college.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      athlete.highschool.toLowerCase().includes(searchTerm.toLowerCase())
+      name.includes(searchTerm.toLowerCase()) ||
+      college.includes(searchTerm.toLowerCase()) ||
+      highschool.includes(searchTerm.toLowerCase())
     return matchesSearch
   })
 

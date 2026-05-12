@@ -337,7 +337,10 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
         const data = await res.json()
         if (cancelled || !data?.success || !data?.achievements) return
 
-        if (Array.isArray(data.commitment_card_honor_badges)) {
+        if (
+          Array.isArray(data.commitment_card_honor_badges) &&
+          data.commitment_card_honor_badges.length > 0
+        ) {
           setServerCommitmentHonors(data.commitment_card_honor_badges)
           return
         }

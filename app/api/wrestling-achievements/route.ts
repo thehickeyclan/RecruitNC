@@ -176,11 +176,17 @@ export async function GET(request: Request) {
     /** Full DB row → same honor rules as commitment card, merged with table-backed state rows (fixes list cards missing `additional_achievements` / `nchsaa_results`). */
     let commitment_card_honor_badges: string[] | undefined
     if (resolvedAthlete) {
-      const profileHonors = getCommitmentHonorBadgesForAthlete(resolvedAthlete)
-      const serverFound = new Set(stateHonorsFromNchsaaMergedRows(nchsaaResults))
-      if (achievements.state_championships.length > 0) serverFound.add("State Champion")
-      const serverState = (["State Champion", "State Placer", "State Qualifier"] as const).filter((b) => serverFound.has(b))
-      commitment_card_honor_badges = mergeCommitmentHonorBadgesForDisplay(profileHonors, [...serverState])
+      try {
+        const profileHonors = getCommitmentHonorBadgesForAthlete(resolvedAthlete)
+        const serverFound = new Set(stateHonorsFromNchsaaMergedRows(nchsaaResults))
+        if (achievements.state_championships.length > 0) serverFound.add("State Champion")
+        const serverState = (["State Champion", "State Placer", "State Qualifier"] as const).filter((b) =>
+          serverFound.has(b),
+        )
+        commitment_card_honor_badges = mergeCommitmentHonorBadgesForDisplay(profileHonors, [...serverState])
+      } catch (e) {
+        console.error("[RecruitNC] wrestling-achievements: commitment_card_honor_badges failed:", e)
+      }
     }
 
     return NextResponse.json({
