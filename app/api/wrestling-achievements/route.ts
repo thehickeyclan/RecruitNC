@@ -137,9 +137,18 @@ export async function GET(request: Request) {
         if (/^seed\s+\d+$/i.test(pl)) return false
         return true
       }) || []
+    const placeNum = (row: { place?: unknown }) => {
+      const v = row?.place
+      if (v == null || v === "") return NaN
+      const n = Number(v)
+      return Number.isNaN(n) ? NaN : n
+    }
     const achievements = {
-      state_championships: nchsaaResults?.filter((r) => r.place === 1) || [],
-      state_placers: nchsaaResults?.filter((r) => r.place && r.place <= 8) || [],
+      state_championships: nchsaaResults?.filter((r) => placeNum(r) === 1) || [],
+      state_placers: nchsaaResults?.filter((r) => {
+        const n = placeNum(r)
+        return !Number.isNaN(n) && n >= 2 && n <= 24
+      }) || [],
       /** Rows with a placement string (medal / place); record-only NHSCA rows are excluded here. */
       national_placers: nhscaWithPlacement,
       all_results: {

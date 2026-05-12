@@ -187,7 +187,7 @@ function applyAchievementTextStateHonorsOnly(found: Set<string>, hay: string) {
   if (!hay.trim()) return
 
   if (
-    /\bstate\s+champion\b|\bstate\s+champ\b|\bnchsaa\b.*\b(champ|champion)\b|\b\d+\s*x\s*state\s+champ|\bmulti[\s-]?time\s+state\s+champ/i.test(
+    /\bstate\s+champion\b|\bstate\s+champ\b|\bnchsaa\b.*\b(champ|champion)\b|\b\d+\s*x\s*state\s+champ|\bmulti[\s-]?time\s+state\s+champ|\bnchsaa\b.*(\b1\s*st\b|\bfirst\s+place\b)/i.test(
       hay,
     )
   ) {
@@ -195,7 +195,7 @@ function applyAchievementTextStateHonorsOnly(found: Set<string>, hay: string) {
   }
 
   if (
-    /\bstate\s+placer\b|\bstate\s+finalist\b|\b(state\s+)?runner[\s-]?up\b|\b\d+\s*x\s*state\s+final|\bnchsaa\b.*\b(finalist|semifinal|\d+\s*(?:st|nd|rd|th))\b/i.test(
+    /\bstate\s+placer\b|\bstate\s+finalist\b|\b(state\s+)?runner[\s-]?up\b|\b\d+\s*x\s*state\s+final|\bnchsaa\b.*\b(finalist|semifinal|(?!1\s*st)\d+\s*(?:st|nd|rd|th))\b/i.test(
       hay,
     )
   ) {
