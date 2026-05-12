@@ -16,7 +16,10 @@ import {
   type SpartanCreditCorrectionsIndex,
 } from "@/lib/spartan-credit-corrections"
 import { loadCorrectedStripeDonationsForAllHubCampaignsWindow } from "@/lib/fundraising/stripe-transparency-pipeline"
-import { hubActivityCampaignFromStripeSlug } from "@/lib/fundraising/hub-activity-meta"
+import {
+  fundraisingCheckoutSurfaceFromRawMetadata,
+  hubActivityCampaignWithCheckoutSurface,
+} from "@/lib/fundraising/hub-activity-meta"
 import {
   attachPublicSupporterFields,
   buildSpartanPublicSupporterSummary,
@@ -241,7 +244,10 @@ function stripeEnrichedToActivity(rows: SpartanDonationWithPublicFields[]): Fund
   return rows.map((r) => {
     const codeRaw = r.athleteCode?.trim() ?? ""
     const label = (r.creditLabel ?? "").trim()
-    const { campaignStripeSlug, campaignShortLabel } = hubActivityCampaignFromStripeSlug(r.spartanCampaignSlug)
+    const { campaignStripeSlug, campaignShortLabel } = hubActivityCampaignWithCheckoutSurface(
+      r.spartanCampaignSlug,
+      r.fundraisingCheckoutSurface,
+    )
     return {
       id: r.sessionId,
       createdIso: r.createdIso,
@@ -335,7 +341,11 @@ function rowsToActivity(rows: HubDonationRow[]): FundraisingHubActivityRow[] {
     const athleteCredit = !codeRaw
       ? "NC United general fund"
       : (r.athlete_display_name ?? "").trim() || codeRaw || "NC United general fund"
-    const { campaignStripeSlug, campaignShortLabel } = hubActivityCampaignFromStripeSlug(r.spartan_campaign)
+    const surface = fundraisingCheckoutSurfaceFromRawMetadata(r.raw_metadata)
+    const { campaignStripeSlug, campaignShortLabel } = hubActivityCampaignWithCheckoutSurface(
+      r.spartan_campaign,
+      surface,
+    )
     return {
       id: r.id,
       createdIso: r.created_at,

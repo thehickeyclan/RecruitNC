@@ -18,6 +18,23 @@ const TEE_SIZES = new Set(["XS", "S", "M", "L", "XL", "2XL", "3XL"])
 const FUNDRAISING_HUB_RETURN_SLUG_RE =
   /^(?:[a-z0-9]+(?:-[a-z0-9]+)*|training-fund|scholarships\/[a-z0-9]+(?:-[a-z0-9]+)*)$/
 
+function hubFundraisingCheckoutSurfaceMetadata(
+  fundraisingHub: boolean,
+  returnSlug: string,
+): Record<string, string> {
+  if (!fundraisingHub || !returnSlug) return {}
+  if (returnSlug === "training-fund") {
+    return { fundraising_checkout_surface: "training_fund" }
+  }
+  if (returnSlug.startsWith("scholarships/")) {
+    return { fundraising_checkout_surface: "scholarship_fund" }
+  }
+  return {
+    fundraising_checkout_surface: "athlete_page",
+    fundraising_athlete_slug: returnSlug,
+  }
+}
+
 /** One-time tax-deductible donation; email captured for Spartan code fulfillment per partner process. */
 export async function POST(request: NextRequest) {
   if (!stripeSecret?.trim()) {
@@ -276,6 +293,7 @@ export async function POST(request: NextRequest) {
         category: "donation",
         athlete_code: athleteCode || "",
         spartan_campaign: "fayetteville_2026",
+        ...hubFundraisingCheckoutSurfaceMetadata(fundraisingHub, fundraisingHubReturnSlug),
         tier_preference: tierPreference || "unspecified",
         donor_name: donorName,
         payer_type: payerTypeNormalized,

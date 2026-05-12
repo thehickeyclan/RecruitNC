@@ -3,6 +3,7 @@ import {
   FUNDRAISING_CAMPAIGNS,
   fundraisingCampaignByStripeSlug,
   normalizeRegistryStripeCampaignSlug,
+  publicGiftCampaignLabel,
 } from "@/lib/fundraising/campaign-registry"
 
 /** Stripe `spartan_campaign` metadata → hub feed / gift-log display fields. */
@@ -39,6 +40,48 @@ export function hubActivityCampaignFromStripeSlug(raw: string | null | undefined
     campaignStripeSlug: reg?.stripeCampaignSlug ?? norm,
     campaignShortLabel: reg?.tabLabel ?? norm,
   }
+}
+
+/** Stripe `fundraising_checkout_surface` → short prefix before campaign tab label (donor activity / hub feeds). */
+const CHECKOUT_SURFACE_PREFIX: Record<string, string> = {
+  athlete_page: "Athlete page",
+  training_fund: "Training fund",
+  scholarship_fund: "Scholarship",
+}
+
+/** Like {@link hubActivityCampaignFromStripeSlug}, but prefixes the display label when checkout was not the main team page. */
+export function hubActivityCampaignWithCheckoutSurface(
+  spartanSlug: string | null | undefined,
+  fundraisingCheckoutSurface: string | null | undefined,
+): { campaignStripeSlug: string | null; campaignShortLabel: string } {
+  const base = hubActivityCampaignFromStripeSlug(spartanSlug)
+  const s = fundraisingCheckoutSurface?.trim()
+  if (!s) return base
+  const prefix = CHECKOUT_SURFACE_PREFIX[s]
+  if (!prefix) return base
+  return { ...base, campaignShortLabel: `${prefix} · ${base.campaignShortLabel}` }
+}
+
+/**
+ * Athlete `/fundraising/athletes/...` gift table: same labels as {@link publicGiftCampaignLabel}, plus checkout surface when present.
+ */
+export function publicGiftCampaignLabelWithCheckoutSurface(
+  metadataSlug: string | null | undefined,
+  giftIsoUtc: string,
+  fundraisingCheckoutSurface: string | null | undefined,
+): string {
+  const base = publicGiftCampaignLabel(metadataSlug, giftIsoUtc)
+  const s = fundraisingCheckoutSurface?.trim()
+  if (!s) return base
+  const prefix = CHECKOUT_SURFACE_PREFIX[s]
+  if (!prefix) return base
+  return `${prefix} · ${base}`
+}
+
+export function fundraisingCheckoutSurfaceFromRawMetadata(raw: unknown): string | null {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null
+  const v = (raw as Record<string, unknown>).fundraising_checkout_surface
+  return typeof v === "string" && v.trim() ? v.trim() : null
 }
 
 export function hubActivityRowMatchesCampaignFilter(

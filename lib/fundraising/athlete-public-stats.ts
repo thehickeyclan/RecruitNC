@@ -7,8 +7,11 @@ import {
 import {
   DEFAULT_FUNDRAISING_CAMPAIGN,
   hubSpartanDonationRowMatchesCampaign,
-  publicGiftCampaignLabel,
 } from "@/lib/fundraising/campaign-registry"
+import {
+  fundraisingCheckoutSurfaceFromRawMetadata,
+  publicGiftCampaignLabelWithCheckoutSurface,
+} from "@/lib/fundraising/hub-activity-meta"
 import { loadCorrectedStripeDonationsForCampaignWindow, loadCorrectedStripeDonationsForSpartanPublicWindow } from "@/lib/fundraising/stripe-transparency-pipeline"
 import {
   aggregateSpartanByAthlete,
@@ -288,7 +291,11 @@ function giftsFromStripeCredited(rows: SpartanFayettevilleDonation[], limit: num
     created_at: row.createdIso,
     donorLabel: publicSupporterDisplayName(row),
     amountCents: row.amountCents,
-    campaignLabel: publicGiftCampaignLabel(row.spartanCampaignSlug, row.createdIso),
+    campaignLabel: publicGiftCampaignLabelWithCheckoutSurface(
+      row.spartanCampaignSlug,
+      row.createdIso,
+      row.fundraisingCheckoutSurface,
+    ),
   }))
 }
 
@@ -310,12 +317,19 @@ function statsFromMirrorCredited(credited: DonationSelectRow[]): AthleteFundrais
 
 function giftsFromMirrorCredited(credited: DonationSelectRow[], limit: number): AthleteRecentGiftRow[] {
   const sorted = [...credited].sort((a, b) => +new Date(String(b.created_at ?? "")) - +new Date(String(a.created_at ?? "")))
-  return sliceGiftRows(sorted, limit).map((row) => ({
-    created_at: String(row.created_at ?? ""),
-    donorLabel: mirrorRowPublicDonorLabel(row),
-    amountCents: typeof row.amount_cents === "number" ? row.amount_cents : 0,
-    campaignLabel: publicGiftCampaignLabel(spartanCampaignFromDonationMirrorRow(row), String(row.created_at ?? "")),
-  }))
+  return sliceGiftRows(sorted, limit).map((row) => {
+    const created = String(row.created_at ?? "")
+    return {
+      created_at: created,
+      donorLabel: mirrorRowPublicDonorLabel(row),
+      amountCents: typeof row.amount_cents === "number" ? row.amount_cents : 0,
+      campaignLabel: publicGiftCampaignLabelWithCheckoutSurface(
+        spartanCampaignFromDonationMirrorRow(row),
+        created,
+        fundraisingCheckoutSurfaceFromRawMetadata(row.raw_metadata),
+      ),
+    }
+  })
 }
 
 /**
