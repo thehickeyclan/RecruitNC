@@ -42,11 +42,54 @@ export function hubActivityCampaignFromStripeSlug(raw: string | null | undefined
   }
 }
 
-/** Stripe `fundraising_checkout_surface` → short prefix before campaign tab label (donor activity / hub feeds). */
+/** Human label for where checkout started (hub live feed + SQL `fundraising_checkout_surface`). */
 const CHECKOUT_SURFACE_PREFIX: Record<string, string> = {
   athlete_page: "Athlete page",
   training_fund: "Training fund",
   scholarship_fund: "Scholarship",
+  spartan_team_page: "Spartan page",
+  hub_give: "Hub give",
+}
+
+/** Mirror row or legacy session with no captured surface (run DB migration + deploy webhook attribution). */
+export const HUB_GIFT_SOURCE_UNSPECIFIED = "Unspecified"
+
+export type HubActivityGiftSourceLabels = {
+  campaignStripeSlug: string | null
+  /** Registry tab label only — Stripe campaign (e.g. Spartan Spring '26). */
+  campaignNameLabel: string
+  /** Athlete page, Spartan page, Hub give, … */
+  giftSourceLabel: string
+}
+
+/** Single place for “where did this gift start?” + campaign name (no combined string). */
+export function hubActivityGiftSourceLabels(
+  spartanSlug: string | null | undefined,
+  fundraisingCheckoutSurface: string | null | undefined,
+): HubActivityGiftSourceLabels {
+  const base = hubActivityCampaignFromStripeSlug(spartanSlug)
+  const s = fundraisingCheckoutSurface?.trim()
+  if (!s) {
+    return {
+      campaignStripeSlug: base.campaignStripeSlug,
+      campaignNameLabel: base.campaignShortLabel,
+      giftSourceLabel: HUB_GIFT_SOURCE_UNSPECIFIED,
+    }
+  }
+  const prefix = CHECKOUT_SURFACE_PREFIX[s]
+  const giftSourceLabel =
+    prefix ??
+    s
+      .replace(/_/g, " ")
+      .split(" ")
+      .filter(Boolean)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(" ")
+  return {
+    campaignStripeSlug: base.campaignStripeSlug,
+    campaignNameLabel: base.campaignShortLabel,
+    giftSourceLabel,
+  }
 }
 
 /** Like {@link hubActivityCampaignFromStripeSlug}, but prefixes the display label when checkout was not the main team page. */
@@ -82,6 +125,16 @@ export function fundraisingCheckoutSurfaceFromRawMetadata(raw: unknown): string 
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null
   const v = (raw as Record<string, unknown>).fundraising_checkout_surface
   return typeof v === "string" && v.trim() ? v.trim() : null
+}
+
+/** Prefer `spartan_donations.fundraising_checkout_surface`; fall back to JSON metadata. */
+export function resolveFundraisingCheckoutSurface(
+  column: string | null | undefined,
+  rawMetadata: unknown,
+): string | null {
+  const c = typeof column === "string" ? column.trim() : ""
+  if (c) return c
+  return fundraisingCheckoutSurfaceFromRawMetadata(rawMetadata)
 }
 
 export function hubActivityRowMatchesCampaignFilter(

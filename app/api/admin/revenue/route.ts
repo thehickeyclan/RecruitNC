@@ -131,7 +131,7 @@ export async function GET(request: Request) {
 
   const { data: spartanData } = await supabase
     .from("spartan_donations")
-    .select("id, amount_cents, athlete_code, athlete_display_name")
+    .select("id, amount_cents, athlete_code, athlete_display_name, fundraising_checkout_surface")
     .eq("status", "paid")
     .gte("created_at", start.toISOString())
     .lte("created_at", end.toISOString())
@@ -140,11 +140,20 @@ export async function GET(request: Request) {
   const spartanTotal = spartanRows.reduce((s, r) => s + (r.amount_cents ?? 0) / 100, 0)
 
   const spartanByAthlete: Record<string, { name: string; total: number }> = {}
+  const spartanByCheckoutSurface: Record<string, { count: number; total: number }> = {}
   spartanRows.forEach((r) => {
     const key = r.athlete_code || "__general__"
     const name = r.athlete_code ? r.athlete_display_name || r.athlete_code : "General Fund"
     if (!spartanByAthlete[key]) spartanByAthlete[key] = { name, total: 0 }
     spartanByAthlete[key].total += (r.amount_cents ?? 0) / 100
+
+    const surface = (typeof r.fundraising_checkout_surface === "string" && r.fundraising_checkout_surface.trim()
+      ? r.fundraising_checkout_surface.trim()
+      : "unknown"
+    ).toLowerCase()
+    if (!spartanByCheckoutSurface[surface]) spartanByCheckoutSurface[surface] = { count: 0, total: 0 }
+    spartanByCheckoutSurface[surface].count += 1
+    spartanByCheckoutSurface[surface].total += (r.amount_cents ?? 0) / 100
   })
 
   const bookingRevenue = Number(guildData.bookingRevenue ?? 0)
@@ -180,6 +189,7 @@ export async function GET(request: Request) {
     spartan: {
       total: spartanTotal,
       byAthlete: Object.values(spartanByAthlete).sort((a, b) => b.total - a.total),
+      byCheckoutSurface: spartanByCheckoutSurface,
     },
   })
 }

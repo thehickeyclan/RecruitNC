@@ -4,9 +4,9 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { HardLink } from "@/components/hard-link"
 import { FUNDRAISING_CAMPAIGNS } from "@/lib/fundraising/campaign-registry"
 import {
-  fundraisingCheckoutSurfaceFromRawMetadata,
-  hubActivityCampaignWithCheckoutSurface,
+  hubActivityGiftSourceLabels,
   hubActivityRowMatchesCampaignFilter,
+  resolveFundraisingCheckoutSurface,
 } from "@/lib/fundraising/hub-activity-meta"
 import type { FundraisingHubActivityRow, FundraisingHubTransparencyMeta } from "@/lib/fundraising/hub-data"
 import { fundraisingAthletePublicHrefFromCode } from "@/lib/fundraising/athlete-fundraising-slug"
@@ -44,8 +44,11 @@ function mapRealtimeRow(payload: Record<string, unknown>): FundraisingHubActivit
     typeof payload.spartan_campaign === "string" && payload.spartan_campaign.trim()
       ? payload.spartan_campaign.trim()
       : null
-  const surface = fundraisingCheckoutSurfaceFromRawMetadata(payload.raw_metadata)
-  const { campaignStripeSlug, campaignShortLabel } = hubActivityCampaignWithCheckoutSurface(spartanRaw, surface)
+  const surface = resolveFundraisingCheckoutSurface(
+    typeof payload.fundraising_checkout_surface === "string" ? payload.fundraising_checkout_surface : undefined,
+    payload.raw_metadata,
+  )
+  const { campaignStripeSlug, giftSourceLabel, campaignNameLabel } = hubActivityGiftSourceLabels(spartanRaw, surface)
 
   return {
     id,
@@ -55,7 +58,9 @@ function mapRealtimeRow(payload: Record<string, unknown>): FundraisingHubActivit
     athleteCredit,
     athleteCode: athlete_code || null,
     campaignStripeSlug,
-    campaignShortLabel,
+    giftSourceLabel,
+    campaignNameLabel,
+    campaignShortLabel: campaignNameLabel,
   }
 }
 
@@ -162,7 +167,8 @@ export function LiveDonationStream({
         <p className="mt-3 max-w-2xl text-sm text-white">
           <strong className="text-white">Every paid gift</strong> across <strong className="text-white">all NC United hub campaigns</strong> in
           Stripe, last <span className="tabular-nums text-white">{hubTransparency.lookbackDays}</span> days (newest first) — same combined scope as
-          the headline totals. Filter by campaign below when you want a single drive. The table scrolls when the list is long.
+          the headline totals. Each row shows <strong className="text-white">source</strong> (where checkout started) and{" "}
+          <strong className="text-white">campaign</strong> (Stripe drive). Filter by campaign below when you want a single drive.
         </p>
 
         <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
@@ -222,7 +228,6 @@ export function LiveDonationStream({
             visibleRows.map((r) => {
               const label = creditLabel(r)
               const href = fundraisingAthletePublicHrefFromCode(r.athleteCode)
-              const campaignBadge = r.campaignShortLabel ?? "—"
               return (
                 <li
                   key={r.id}
@@ -232,11 +237,18 @@ export function LiveDonationStream({
                     <span className="w-28 shrink-0 font-mono text-[11px] tabular-nums text-white/75">
                       {formatRelativeOrAbsolute(r.createdIso)}
                     </span>
-                    <div className="flex shrink-0 items-center gap-2 sm:contents">
+                    <div className="flex shrink-0 flex-wrap items-center gap-1.5 sm:contents">
+                      <span
+                        className={`${displayFont("rounded border border-[#CC0000]/35 bg-[#CC0000]/12 px-2 py-1 text-[10px] font-extrabold uppercase tracking-wide text-[#ffb4b4]")}`}
+                        title="Where checkout started"
+                      >
+                        {r.giftSourceLabel}
+                      </span>
                       <span
                         className={`${displayFont("rounded border border-white/10 bg-black/20 px-2 py-1 text-[10px] font-extrabold uppercase tracking-wide text-[#C8A94A]")}`}
+                        title="Stripe fundraising campaign"
                       >
-                        {campaignBadge}
+                        {r.campaignNameLabel}
                       </span>
                       <span className={`${displayFont("font-extrabold tabular-nums text-[#C8A94A]")}`}>
                         {formatUsdWhole(r.amountCents)}

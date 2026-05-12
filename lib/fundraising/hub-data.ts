@@ -17,8 +17,8 @@ import {
 } from "@/lib/spartan-credit-corrections"
 import { loadCorrectedStripeDonationsForAllHubCampaignsWindow } from "@/lib/fundraising/stripe-transparency-pipeline"
 import {
-  fundraisingCheckoutSurfaceFromRawMetadata,
-  hubActivityCampaignWithCheckoutSurface,
+  hubActivityGiftSourceLabels,
+  resolveFundraisingCheckoutSurface,
 } from "@/lib/fundraising/hub-activity-meta"
 import {
   attachPublicSupporterFields,
@@ -37,6 +37,9 @@ export type HubDonationRow = {
   athlete_code: string | null
   athlete_display_name: string | null
   spartan_campaign: string | null
+  /** Checkout origin (metadata or success_url at webhook). Query in SQL without Stripe. */
+  fundraising_checkout_surface?: string | null
+  fundraising_athlete_slug?: string | null
   /** Present when synced from Stripe webhook — used for PI-keyed credit corrections. */
   raw_metadata?: unknown
 }
@@ -98,7 +101,11 @@ export type FundraisingHubActivityRow = {
   athleteCode: string | null
   /** Normalized registry Stripe slug when known. */
   campaignStripeSlug?: string | null
-  /** Short tab label for filters / badges (e.g. Spartan Spring '26). */
+  /** Where checkout started — Athlete page, Spartan page, Unspecified, … */
+  giftSourceLabel: string
+  /** Registry campaign name only (e.g. Spartan Spring '26). */
+  campaignNameLabel: string
+  /** @deprecated Prefer {@link giftSourceLabel} + {@link campaignNameLabel}. Kept = campaignNameLabel for older consumers. */
   campaignShortLabel?: string
 }
 
@@ -131,7 +138,7 @@ async function fetchAllPaidHubDonations(admin: SupabaseClient): Promise<HubDonat
     const { data, error } = await admin
       .from("spartan_donations")
       .select(
-        "id, created_at, amount_cents, donor_email, donor_name, athlete_code, athlete_display_name, spartan_campaign, raw_metadata",
+        "id, created_at, amount_cents, donor_email, donor_name, athlete_code, athlete_display_name, spartan_campaign, fundraising_checkout_surface, fundraising_athlete_slug, raw_metadata",
       )
       .eq("status", "paid")
       .order("created_at", { ascending: true })
@@ -244,7 +251,7 @@ function stripeEnrichedToActivity(rows: SpartanDonationWithPublicFields[]): Fund
   return rows.map((r) => {
     const codeRaw = r.athleteCode?.trim() ?? ""
     const label = (r.creditLabel ?? "").trim()
-    const { campaignStripeSlug, campaignShortLabel } = hubActivityCampaignWithCheckoutSurface(
+    const { campaignStripeSlug, campaignNameLabel, giftSourceLabel } = hubActivityGiftSourceLabels(
       r.spartanCampaignSlug,
       r.fundraisingCheckoutSurface,
     )
@@ -256,7 +263,9 @@ function stripeEnrichedToActivity(rows: SpartanDonationWithPublicFields[]): Fund
       athleteCredit: !codeRaw ? "NC United general fund" : label || codeRaw,
       athleteCode: codeRaw ? r.athleteCode!.trim() : null,
       campaignStripeSlug,
-      campaignShortLabel,
+      giftSourceLabel,
+      campaignNameLabel,
+      campaignShortLabel: campaignNameLabel,
     }
   })
 }
@@ -341,8 +350,8 @@ function rowsToActivity(rows: HubDonationRow[]): FundraisingHubActivityRow[] {
     const athleteCredit = !codeRaw
       ? "NC United general fund"
       : (r.athlete_display_name ?? "").trim() || codeRaw || "NC United general fund"
-    const surface = fundraisingCheckoutSurfaceFromRawMetadata(r.raw_metadata)
-    const { campaignStripeSlug, campaignShortLabel } = hubActivityCampaignWithCheckoutSurface(
+    const surface = resolveFundraisingCheckoutSurface(r.fundraising_checkout_surface, r.raw_metadata)
+    const { campaignStripeSlug, campaignNameLabel, giftSourceLabel } = hubActivityGiftSourceLabels(
       r.spartan_campaign,
       surface,
     )
@@ -354,7 +363,9 @@ function rowsToActivity(rows: HubDonationRow[]): FundraisingHubActivityRow[] {
       athleteCredit,
       athleteCode: codeRaw ? codeRaw : null,
       campaignStripeSlug,
-      campaignShortLabel,
+      giftSourceLabel,
+      campaignNameLabel,
+      campaignShortLabel: campaignNameLabel,
     }
   })
 }

@@ -4,8 +4,8 @@ import { useEffect, useRef, useState, useCallback } from "react"
 import { HardLink } from "@/components/hard-link"
 import type { FundraisingHubActivityRow, FundraisingHubTransparencyMeta } from "@/lib/fundraising/hub-data"
 import {
-  fundraisingCheckoutSurfaceFromRawMetadata,
-  hubActivityCampaignWithCheckoutSurface,
+  hubActivityGiftSourceLabels,
+  resolveFundraisingCheckoutSurface,
 } from "@/lib/fundraising/hub-activity-meta"
 import { fundraisingAthletePublicHrefFromCode } from "@/lib/fundraising/athlete-fundraising-slug"
 import { formatUsdWhole } from "./FundraisingHero"
@@ -32,8 +32,11 @@ function mapRealtimeRow(payload: Record<string, unknown>): FundraisingHubActivit
     typeof payload.spartan_campaign === "string" && payload.spartan_campaign.trim()
       ? payload.spartan_campaign.trim()
       : null
-  const surface = fundraisingCheckoutSurfaceFromRawMetadata(payload.raw_metadata)
-  const { campaignStripeSlug, campaignShortLabel } = hubActivityCampaignWithCheckoutSurface(spartanRaw, surface)
+  const surface = resolveFundraisingCheckoutSurface(
+    typeof payload.fundraising_checkout_surface === "string" ? payload.fundraising_checkout_surface : undefined,
+    payload.raw_metadata,
+  )
+  const { campaignStripeSlug, giftSourceLabel, campaignNameLabel } = hubActivityGiftSourceLabels(spartanRaw, surface)
 
   return {
     id,
@@ -43,7 +46,9 @@ function mapRealtimeRow(payload: Record<string, unknown>): FundraisingHubActivit
     athleteCredit,
     athleteCode: athlete_code || null,
     campaignStripeSlug,
-    campaignShortLabel,
+    giftSourceLabel,
+    campaignNameLabel,
+    campaignShortLabel: campaignNameLabel,
   }
 }
 
@@ -171,7 +176,8 @@ export function DonorActivityFeed({
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/80">
           Most recent {FEED_LIMIT} paid gifts across all NC United hub campaigns in the last{" "}
           <strong className="tabular-nums text-white">{hubTransparency.lookbackDays}</strong> days — same combined scope as
-          the headline hub totals.{" "}
+          the headline hub totals. Each row shows <strong className="text-white">source</strong> and{" "}
+          <strong className="text-white">campaign</strong> separately.{" "}
           <HardLink href={`/fundraising/activity?campaign=all&days=${hubTransparency.lookbackDays}`} className="text-[#C8A94A] underline-offset-4 hover:underline">
             Full gift log
           </HardLink>
@@ -211,8 +217,13 @@ export function DonorActivityFeed({
                       minute: "2-digit",
                     })}
                   </span>
-                  <span className="shrink-0 rounded border border-white/10 bg-black/20 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-[#C8A94A]">
-                    {r.campaignShortLabel ?? "—"}
+                  <span className="flex shrink-0 flex-wrap items-center gap-1">
+                    <span className="rounded border border-[#CC0000]/35 bg-[#CC0000]/12 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-[#ffb4b4]">
+                      {r.giftSourceLabel}
+                    </span>
+                    <span className="rounded border border-white/10 bg-black/20 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-[#C8A94A]">
+                      {r.campaignNameLabel}
+                    </span>
                   </span>
                   <span className="min-w-0 flex-1 font-semibold text-white">{r.donorDisplay}</span>
                   <span className={`${displayFont("shrink-0 font-extrabold tabular-nums text-[#C8A94A]")}`}>

@@ -12,6 +12,7 @@ import {
   buildSpartanPublicSupporterSummary,
 } from "@/lib/spartan-public-supporter-feed"
 import { listSpartanFayettevilleDonations, listSpartanFayettevilleDonationsAllRegisteredCampaigns } from "@/lib/spartan-fayetteville-stripe"
+import { hubActivityGiftSourceLabels } from "@/lib/fundraising/hub-activity-meta"
 import { DEFAULT_FUNDRAISING_CAMPAIGN, resolveFundraisingCampaignQueryParam } from "@/lib/fundraising/campaign-registry"
 
 export const dynamic = "force-dynamic"
@@ -63,22 +64,30 @@ export async function GET(request: NextRequest) {
     }
 
     const enriched = attachPublicSupporterFields(rows, codeToFullName)
-    const entries = enriched.map((r) => ({
-      id: r.sessionId,
-      createdIso: r.createdIso,
-      amountCents: r.amountCents,
-      currency: r.currency,
-      displayName: r.publicDisplayName,
-      raceSignup: r.raceParticipant,
-      giftType: r.fundraisingType,
-      athleteCode: r.athleteCode,
-      manualCreditName: r.manualCreditName,
-      creditLabel: r.creditLabel,
-      attribution: r.attribution,
-      raceParticipantName: r.publicRaceParticipantName,
-      spartanCampaignSlug: r.spartanCampaignSlug,
-      fundraisingCheckoutSurface: r.fundraisingCheckoutSurface,
-    }))
+    const entries = enriched.map((r) => {
+      const { giftSourceLabel, campaignNameLabel } = hubActivityGiftSourceLabels(
+        r.spartanCampaignSlug,
+        r.fundraisingCheckoutSurface,
+      )
+      return {
+        id: r.sessionId,
+        createdIso: r.createdIso,
+        amountCents: r.amountCents,
+        currency: r.currency,
+        displayName: r.publicDisplayName,
+        raceSignup: r.raceParticipant,
+        giftType: r.fundraisingType,
+        athleteCode: r.athleteCode,
+        manualCreditName: r.manualCreditName,
+        creditLabel: r.creditLabel,
+        attribution: r.attribution,
+        raceParticipantName: r.publicRaceParticipantName,
+        spartanCampaignSlug: r.spartanCampaignSlug,
+        fundraisingCheckoutSurface: r.fundraisingCheckoutSurface,
+        giftSourceLabel,
+        campaignNameLabel,
+      }
+    })
 
     const byAthlete = buildSpartanPublicByAthlete(rows, codeToFullName)
     const summary = buildSpartanPublicSupporterSummary(rows)
