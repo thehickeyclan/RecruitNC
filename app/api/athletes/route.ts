@@ -57,7 +57,7 @@ export async function GET(request: Request) {
             id, name, highschool, college, college_id,
             graduationyear, photourl, commitmentPhotoUrl,
             weightclass, wrestlingClub,
-            achievements, additional_achievements, nchsaa_results,
+            achievements, additional_achievements,
             ncUnitedTeam, gender, commitmentdate,
             firstName, lastName,
             nhsca_2023_record, nhsca_2023_placement,
@@ -221,7 +221,6 @@ export async function GET(request: Request) {
                 .map((a: string) => a.trim())
                 .filter(Boolean)
             : undefined,
-        nchsaa_results: athlete.nchsaa_results ?? undefined,
         team: athlete.ncUnitedTeam || "",
         gender: athlete.gender || "male",
         commitmentdate: athlete.commitmentdate || "",
