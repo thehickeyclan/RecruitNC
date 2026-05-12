@@ -983,15 +983,51 @@ function parseBracketPlacementRank(text: string): number | null {
   return null
 }
 
+/** National AA only — profile fields can hold "State finalist" etc.; those must not flip All-American. */
+function snippetImpliesNationalAllAmerican(snippet: string): boolean {
+  const raw = String(snippet ?? "").trim()
+  if (!raw) return false
+  const low = raw.toLowerCase()
+
+  if (/\ball[\s-]?american\b|\ball\s+american\b/.test(low)) return true
+  if (/\bnational\s+finalist\b|\bnational\s+placer\b/.test(low)) return true
+
+  // HS state / NCHSAA state series — not NHSCA High School *Nationals* / Super 32, unless the same line names those events
+  const hasNationalTournamentContext =
+    /\ball[\s-]?american\b|\ball\s+american\b|\bnational\s+finalist\b|\bnational\s+placer\b|\b(nhsca|super\s*-?\s*32)\b/.test(low)
+
+  if (
+    /\bstate\s+(final|finals|finalist|champ|championship|tournament|qual|qualifier)\b/.test(low) &&
+    !hasNationalTournamentContext
+  ) {
+    return false
+  }
+
+  if (/\bnchsaa\s+state\b|\bstate\s+series\b/i.test(low) && !hasNationalTournamentContext) {
+    return false
+  }
+
+  const rank = parseBracketPlacementRank(raw)
+  if (rank != null && rank >= 1 && rank <= 8) {
+    return true
+  }
+
+  // Deep national-bracket wording only when tied to NHSCA or Super 32 (not bare "finalist" → state finalist)
+  if (/\b(nhsca|super\s*-?\s*32)\b/.test(low) && /\b(finalist|semifinal|semis)\b/.test(low)) {
+    return true
+  }
+
+  // Profile keys are national placements; bare "Finalist"/"Semis" means national bracket, not "state finalist" (excluded above)
+  if (/\b(finalist|semifinal|semis)\b/.test(low)) {
+    return true
+  }
+
+  return false
+}
+
 function applyNationalBracketTop8FromSnippets(found: Set<string>, snippets: string[]) {
   for (const s of snippets) {
-    const rank = parseBracketPlacementRank(s)
-    if (rank != null && rank >= 1 && rank <= 8) {
-      found.add("All-American")
-      return
-    }
-    const low = s.toLowerCase()
-    if (/\ball[\s-]?american\b|\bnational\s+finalist\b|\bfinalist\b|\bsemifinal\b/.test(low)) {
+    if (snippetImpliesNationalAllAmerican(s)) {
       found.add("All-American")
       return
     }

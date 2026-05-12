@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useRef, useEffect, useId } from "react"
+import { useState, useRef, useId, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
 import Image from "next/image"
@@ -131,6 +131,11 @@ export function ImageUpload({
     }
   }
 
+  useEffect(() => {
+    setPreviewUrl(existingImageUrl ?? null)
+    setImageError(false)
+  }, [existingImageUrl])
+
   const handleImageError = () => {
     console.log("Image failed to load:", previewUrl)
     setImageError(true)
@@ -146,56 +151,77 @@ export function ImageUpload({
     }
   }
 
-  return (
-    <div className={`space-y-4 ${enableDarkMode ? "dark" : ""}`}>
-      <div
-        className={`relative border-2 border-dashed rounded-lg overflow-hidden w-32 h-32 transition-colors ${
-          disabled ? "opacity-50 cursor-not-allowed" : ""
-        } ${
-          previewUrl && !imageError
-            ? "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
-            : "border-slate-300 dark:border-slate-700 bg-gray-50 dark:bg-slate-900/60"
-        }`}
-      >
-        {previewUrl && !imageError ? (
-          // Show preview or existing image
-          <Image
-            src={previewUrl || "/placeholder.svg"}
-            alt="Preview"
-            fill
-            className="object-cover"
-            onError={handleImageError}
-            onLoad={handleImageLoad}
-            unoptimized={previewUrl.startsWith("blob:")}
-          />
-        ) : (
-          // Show upload placeholder
-          <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-slate-600 dark:text-slate-300">
-            <svg
-              className="w-10 h-10 text-slate-400 dark:text-slate-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-            <p className="mt-2 text-sm">
-              {imageError ? "Failed to load image. Click to upload a new one." : "Click to upload an image"}
+  const uploadSuccessDescription =
+    category === "commitment"
+      ? "Commitment graphic uploaded successfully"
+      : category === "colleges"
+        ? "College logo uploaded successfully"
+        : "Image uploaded successfully"
+
+  const previewBox = (
+    <div
+      className={`relative border-2 border-dashed rounded-lg overflow-hidden w-32 h-32 transition-colors ${
+        disabled ? "opacity-50 cursor-not-allowed" : ""
+      } ${
+        previewUrl && !imageError
+          ? "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
+          : "border-slate-300 dark:border-slate-700 bg-gray-50 dark:bg-slate-900/60"
+      }`}
+    >
+      {previewUrl && !imageError ? (
+        <Image
+          src={previewUrl || "/placeholder.svg"}
+          alt="Preview"
+          fill
+          className="object-cover"
+          onError={handleImageError}
+          onLoad={handleImageLoad}
+          unoptimized={previewUrl.startsWith("blob:")}
+        />
+      ) : (
+        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-slate-600 dark:text-slate-300 pointer-events-none">
+          <svg
+            className="w-10 h-10 text-slate-400 dark:text-slate-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
+          </svg>
+          <p className="mt-2 text-sm">
+            {imageError ? "Failed to load. Choose a new file below." : "Choose an image file"}
+          </p>
+          {imageError && previewUrl && (
+            <p className="mt-1 text-xs text-red-500 break-all">
+              Error loading: {previewUrl.length > 50 ? previewUrl.substring(0, 50) + "..." : previewUrl}
             </p>
-            {imageError && previewUrl && (
-              <p className="mt-1 text-xs text-red-500 break-all">
-                Error loading: {previewUrl.length > 50 ? previewUrl.substring(0, 50) + "..." : previewUrl}
-              </p>
-            )}
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+
+  return (
+    <div className={`space-y-3 ${enableDarkMode ? "dark" : ""}`}>
+      {disabled ? (
+        previewBox
+      ) : (
+        <label
+          htmlFor={inputId}
+          className={`block w-fit ${isUploading ? "cursor-wait opacity-70" : "cursor-pointer"}`}
+        >
+          <span className="sr-only">
+            {previewUrl ? "Change image — opens file chooser" : "Upload image — opens file chooser"}
+          </span>
+          {previewBox}
+        </label>
+      )}
 
       <input
         id={inputId}
@@ -205,21 +231,10 @@ export function ImageUpload({
         accept="image/*"
         className="sr-only"
         tabIndex={-1}
+        disabled={disabled}
       />
 
-      <div className="flex space-x-2">
-        <Button
-          type="button"
-          variant="outline"
-          disabled={isUploading || disabled}
-          className="bg-white dark:bg-slate-900/70 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800"
-          asChild
-        >
-          <label htmlFor={inputId} className="cursor-pointer flex items-center justify-center min-w-[8rem]">
-            {isUploading ? "Uploading..." : previewUrl ? "Change Image" : "Upload Image"}
-          </label>
-        </Button>
-
+      <div className="flex flex-wrap gap-2">
         {previewUrl && !disabled && (
           <Button
             type="button"
@@ -256,7 +271,7 @@ export function ImageUpload({
 
       {uploadSuccess && !imageError && previewUrl !== existingImageUrl && (
         <div className="text-sm text-green-600 dark:text-green-300 bg-green-50 dark:bg-green-900/40 p-2 rounded">
-          ✓ Profile picture uploaded successfully
+          ✓ {uploadSuccessDescription}
         </div>
       )}
 

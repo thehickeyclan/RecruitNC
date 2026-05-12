@@ -19,6 +19,8 @@ import { AlertCircle } from "lucide-react"
 interface AthleteFormProps {
   onSubmit: (data: any) => Promise<any>
   initialData?: Partial<Athlete>
+  /** Admin edit page: commitment announcement graphic is edited via College commitment wizard only. */
+  useWizardForCommitmentPhoto?: boolean
 }
 
 const HS_WEIGHT_CLASSES = {
@@ -107,7 +109,7 @@ const WRESTLING_CLUBS = [
   "CLUB IS NOT LISTED",
 ]
 
-const AthleteForm: React.FC<AthleteFormProps> = ({ onSubmit, initialData }) => {
+const AthleteForm: React.FC<AthleteFormProps> = ({ onSubmit, initialData, useWizardForCommitmentPhoto = false }) => {
   const [wrestlingClubs, setWrestlingClubs] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({})
@@ -952,25 +954,39 @@ const AthleteForm: React.FC<AthleteFormProps> = ({ onSubmit, initialData }) => {
               </div>
 
               <div className="space-y-2">
-                <Label>Commitment Photo</Label>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="w-full max-w-[250px]">
-                    <ImageUpload
-                      category="commitment"
-                      onUploadComplete={(url) => handleImageUpload(url, "commitment")}
-                      existingImageUrl={formData.commitmentPhotoUrl}
-                      entityName={`${formData.photoUrl || "athlete"}-commitment`}
-                      aspectRatio="announcement"
-                    />
-                  </div>
-                  {formData.commitmentPhotoUrl && (
-                    <div className="flex items-center">
-                      <p className="text-sm text-muted-foreground">
-                        Current image: {formData.commitmentPhotoUrl.split("/").pop()}
-                      </p>
+                <Label>Commitment photo</Label>
+                {useWizardForCommitmentPhoto ? (
+                  <Alert className="border-muted-foreground/25 bg-muted/30">
+                    <AlertDescription className="text-sm text-foreground">
+                      Announcement graphic is uploaded in the <strong className="font-semibold">College commitment</strong>{" "}
+                      flow at the top of this page so you are not asked twice.
+                      {formData.commitmentPhotoUrl ? (
+                        <span className="block mt-2 text-muted-foreground">
+                          Current file: {formData.commitmentPhotoUrl.split("/").pop()}
+                        </span>
+                      ) : null}
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="w-full max-w-[250px]">
+                      <ImageUpload
+                        category="commitment"
+                        onUploadComplete={(url) => handleImageUpload(url, "commitment")}
+                        existingImageUrl={formData.commitmentPhotoUrl}
+                        entityName={`${formData.photoUrl || "athlete"}-commitment`}
+                        aspectRatio="announcement"
+                      />
                     </div>
-                  )}
-                </div>
+                    {formData.commitmentPhotoUrl && (
+                      <div className="flex items-center">
+                        <p className="text-sm text-muted-foreground">
+                          Current image: {formData.commitmentPhotoUrl.split("/").pop()}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </TabsContent>
 
