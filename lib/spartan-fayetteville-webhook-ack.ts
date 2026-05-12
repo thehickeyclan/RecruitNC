@@ -6,6 +6,7 @@ import {
 } from "@/lib/email/ncu-donation-acknowledgment"
 import { recordFundraisingLedgerSpartanCheckout } from "@/lib/fundraising/ledger"
 import { stripeSpartanCampaignMetadataMatchesRequested } from "@/lib/fundraising/campaign-registry"
+import { deriveCheckoutAttributionFromStripeSession } from "@/lib/spartan-donation-checkout-attribution"
 import { SPARTAN_FAYETTEVILLE_CAMPAIGN } from "@/lib/spartan-fayetteville-stripe"
 
 function autoAckEnabled() {
@@ -94,6 +95,13 @@ export async function upsertSpartanDonationFromCheckoutSession(
       : null
   const rawMetadata: Record<string, string> = meta ? { ...meta } : {}
   if (stripePaymentIntentId) rawMetadata.stripe_payment_intent_id = stripePaymentIntentId
+  const attribution = deriveCheckoutAttributionFromStripeSession(session)
+  if (attribution.fundraisingCheckoutSurface) {
+    rawMetadata.fundraising_checkout_surface = attribution.fundraisingCheckoutSurface
+  }
+  if (attribution.fundraisingAthleteSlug) {
+    rawMetadata.fundraising_athlete_slug = attribution.fundraisingAthleteSlug
+  }
 
   const { error: spartanErr } = await admin.from("spartan_donations").upsert(
     {
@@ -109,6 +117,8 @@ export async function upsertSpartanDonationFromCheckoutSession(
       donor_email: session.customer_details?.email || null,
       donor_name: session.customer_details?.name || null,
       stripe_charge_id: session.id,
+      fundraising_checkout_surface: attribution.fundraisingCheckoutSurface,
+      fundraising_athlete_slug: attribution.fundraisingAthleteSlug,
       raw_metadata: rawMetadata,
     },
     { onConflict: "id" },

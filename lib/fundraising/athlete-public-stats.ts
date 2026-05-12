@@ -9,8 +9,8 @@ import {
   hubSpartanDonationRowMatchesCampaign,
 } from "@/lib/fundraising/campaign-registry"
 import {
-  fundraisingCheckoutSurfaceFromRawMetadata,
   publicGiftCampaignLabelWithCheckoutSurface,
+  resolveFundraisingCheckoutSurface,
 } from "@/lib/fundraising/hub-activity-meta"
 import { loadCorrectedStripeDonationsForCampaignWindow, loadCorrectedStripeDonationsForSpartanPublicWindow } from "@/lib/fundraising/stripe-transparency-pipeline"
 import {
@@ -41,9 +41,11 @@ type DonationSelectRow = {
   created_at?: string
   donor_name?: string | null
   spartan_campaign?: string | null
+  fundraising_checkout_surface?: string | null
+  fundraising_athlete_slug?: string | null
 }
 
-const DONATION_SELECT = "id, athlete_code, amount_cents, raw_metadata"
+const DONATION_SELECT = "id, athlete_code, amount_cents, raw_metadata, fundraising_checkout_surface, fundraising_athlete_slug"
 
 function spartanCampaignFromDonationMirrorRow(row: DonationSelectRow): string | null {
   const col =
@@ -326,7 +328,7 @@ function giftsFromMirrorCredited(credited: DonationSelectRow[], limit: number): 
       campaignLabel: publicGiftCampaignLabelWithCheckoutSurface(
         spartanCampaignFromDonationMirrorRow(row),
         created,
-        fundraisingCheckoutSurfaceFromRawMetadata(row.raw_metadata),
+        resolveFundraisingCheckoutSurface(row.fundraising_checkout_surface, row.raw_metadata),
       ),
     }
   })

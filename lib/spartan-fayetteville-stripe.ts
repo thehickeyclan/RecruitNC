@@ -4,6 +4,7 @@ import {
   stripeSpartanCampaignMetadataMatchesAnyRegisteredCampaign,
   stripeSpartanCampaignMetadataMatchesRequested,
 } from "@/lib/fundraising/campaign-registry"
+import { deriveCheckoutAttributionFromStripeSession } from "@/lib/spartan-donation-checkout-attribution"
 import { normalizeSpartanPublicAthleteDisplay, scoreSpartanPublicDisplayRichness } from "@/lib/spartan-fundraising-code"
 
 /** @deprecated Prefer `DEFAULT_FUNDRAISING_CAMPAIGN.stripeCampaignSlug` or pass `campaignSlug` into list helpers. */
@@ -78,6 +79,22 @@ function parseDonorListPublic(m: Record<string, string> | null | undefined): boo
   if (v === "false" || v === "0" || v === "no") return false
   if (v === "true" || v === "1" || v === "yes") return true
   return true
+}
+
+/** Metadata may omit surface on older checkouts — Stripe session still has success_url. */
+function fundraisingSurfaceFromSessionOrMeta(
+  s: Stripe.Checkout.Session,
+  surfaceFromMeta: string | null,
+  slugFromMeta: string | null,
+): { fundraisingCheckoutSurface: string | null; fundraisingAthleteSlug: string | null } {
+  if (surfaceFromMeta) {
+    return { fundraisingCheckoutSurface: surfaceFromMeta, fundraisingAthleteSlug: slugFromMeta }
+  }
+  const d = deriveCheckoutAttributionFromStripeSession(s)
+  return {
+    fundraisingCheckoutSurface: d.fundraisingCheckoutSurface,
+    fundraisingAthleteSlug: d.fundraisingAthleteSlug ?? slugFromMeta,
+  }
 }
 
 /**
@@ -157,14 +174,19 @@ export async function listSpartanFayettevilleDonations(
 
       const spartanCampaignSlug =
         typeof m.spartan_campaign === "string" && m.spartan_campaign.trim() ? m.spartan_campaign.trim() : null
-      const fundraisingCheckoutSurface =
+      const fundraisingCheckoutSurfaceRaw =
         typeof m.fundraising_checkout_surface === "string" && m.fundraising_checkout_surface.trim()
           ? m.fundraising_checkout_surface.trim()
           : null
-      const fundraisingAthleteSlug =
+      const fundraisingAthleteSlugRaw =
         typeof m.fundraising_athlete_slug === "string" && m.fundraising_athlete_slug.trim()
           ? m.fundraising_athlete_slug.trim().toLowerCase()
           : null
+      const { fundraisingCheckoutSurface, fundraisingAthleteSlug } = fundraisingSurfaceFromSessionOrMeta(
+        s,
+        fundraisingCheckoutSurfaceRaw,
+        fundraisingAthleteSlugRaw,
+      )
 
       const payerTypeRaw = typeof m.payer_type === "string" ? m.payer_type.trim().toLowerCase() : ""
       const payerType: SpartanFayettevilleDonation["payerType"] =
@@ -293,14 +315,19 @@ export async function listSpartanFayettevilleDonationsAllRegisteredCampaigns(
 
       const spartanCampaignSlug =
         typeof m.spartan_campaign === "string" && m.spartan_campaign.trim() ? m.spartan_campaign.trim() : null
-      const fundraisingCheckoutSurface =
+      const fundraisingCheckoutSurfaceRaw =
         typeof m.fundraising_checkout_surface === "string" && m.fundraising_checkout_surface.trim()
           ? m.fundraising_checkout_surface.trim()
           : null
-      const fundraisingAthleteSlug =
+      const fundraisingAthleteSlugRaw =
         typeof m.fundraising_athlete_slug === "string" && m.fundraising_athlete_slug.trim()
           ? m.fundraising_athlete_slug.trim().toLowerCase()
           : null
+      const { fundraisingCheckoutSurface, fundraisingAthleteSlug } = fundraisingSurfaceFromSessionOrMeta(
+        s,
+        fundraisingCheckoutSurfaceRaw,
+        fundraisingAthleteSlugRaw,
+      )
 
       const payerTypeRaw = typeof m.payer_type === "string" ? m.payer_type.trim().toLowerCase() : ""
       const payerType: SpartanFayettevilleDonation["payerType"] =

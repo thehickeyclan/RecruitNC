@@ -8,7 +8,7 @@ import {
   fundraisingCampaignByStripeSlug,
 } from "@/lib/fundraising/campaign-registry"
 import { fundraisingAthletePublicHrefFromCode } from "@/lib/fundraising/athlete-fundraising-slug"
-import { hubActivityCampaignWithCheckoutSurface } from "@/lib/fundraising/hub-activity-meta"
+import { hubActivityGiftSourceLabels } from "@/lib/fundraising/hub-activity-meta"
 
 const NAVY = "#03154C"
 const GOLD = "#CBAF5D"
@@ -22,6 +22,8 @@ type Entry = {
   creditLabel: string | null
   spartanCampaignSlug: string | null
   fundraisingCheckoutSurface?: string | null
+  giftSourceLabel?: string
+  campaignNameLabel?: string
 }
 
 export type FundraisingActivityCampaignOption = {
@@ -148,7 +150,9 @@ export function FundraisingActivityClient({ campaigns }: { campaigns: Fundraisin
             Donor activity
           </h1>
           <p className="mt-4 max-w-2xl text-pretty text-base leading-relaxed text-white/88">
-            Paid checkouts in the selected window. Names follow public listing preferences on each gift.
+            Paid checkouts in the selected window. Each row shows <strong className="text-white">source</strong> (where
+            checkout started) and <strong className="text-white">campaign</strong> (Stripe drive). Supporter names follow
+            public listing preferences.
           </p>
         </div>
       </header>
@@ -221,10 +225,11 @@ export function FundraisingActivityClient({ campaigns }: { campaigns: Fundraisin
             <p className="mt-10 text-center text-sm text-red-600">{error}</p>
           ) : (
             <div className="mt-8 overflow-x-auto rounded-xl border border-slate-200">
-              <table className="w-full min-w-[640px] text-left text-sm">
+              <table className="w-full min-w-[720px] text-left text-sm">
                 <thead>
                   <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
                     <th className="px-4 py-3">When</th>
+                    <th className="px-4 py-3">Source</th>
                     <th className="px-4 py-3">Campaign</th>
                     <th className="px-4 py-3">Supporter</th>
                     <th className="px-4 py-3 text-right">Amount</th>
@@ -233,16 +238,16 @@ export function FundraisingActivityClient({ campaigns }: { campaigns: Fundraisin
                 </thead>
                 <tbody className="text-slate-800">
                   {sorted.map((e) => {
-                    const { campaignShortLabel } = hubActivityCampaignWithCheckoutSurface(
-                      e.spartanCampaignSlug,
-                      e.fundraisingCheckoutSurface,
-                    )
+                    const labels = hubActivityGiftSourceLabels(e.spartanCampaignSlug, e.fundraisingCheckoutSurface)
+                    const giftSourceLabel = e.giftSourceLabel ?? labels.giftSourceLabel
+                    const campaignNameLabel = e.campaignNameLabel ?? labels.campaignNameLabel
                     const credit = (e.creditLabel ?? "").trim() || e.athleteCode || "NC United fund"
                     const href = fundraisingAthletePublicHrefFromCode(e.athleteCode)
                     return (
                       <tr key={e.id} className="border-b border-slate-100 last:border-0">
                         <td className="px-4 py-3 tabular-nums text-slate-600">{formatWhen(e.createdIso)}</td>
-                        <td className="px-4 py-3 text-xs font-semibold text-slate-700">{campaignShortLabel}</td>
+                        <td className="px-4 py-3 text-xs font-semibold text-slate-800">{giftSourceLabel}</td>
+                        <td className="px-4 py-3 text-xs font-semibold text-slate-700">{campaignNameLabel}</td>
                         <td className="px-4 py-3 font-medium text-slate-900">{e.displayName}</td>
                         <td className="px-4 py-3 text-right font-semibold tabular-nums">{formatUsd(e.amountCents)}</td>
                         <td className="px-4 py-3">
