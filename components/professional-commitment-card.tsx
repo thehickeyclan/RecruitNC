@@ -6,7 +6,11 @@ import Link from "next/link"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { RotateCw, ExternalLink, Instagram, Calendar } from "lucide-react"
-import { getCommitmentHonorBadgesForAthlete, COMMITMENT_CARD_HONOR_ORDER } from "@/lib/commitment-card-honors"
+import {
+  getCommitmentHonorBadgesForAthlete,
+  COMMITMENT_CARD_HONOR_ORDER,
+  stateHonorsFromNchsaaMergedRows,
+} from "@/lib/commitment-card-honors"
 interface Athlete {
   id: string
   name: string
@@ -327,21 +331,15 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
         const data = await res.json()
         if (cancelled || !data?.success || !data?.achievements) return
 
-        const found = new Set<string>()
         const ach = data.achievements as {
           state_championships?: unknown[]
-          all_results?: { nchsaa?: Array<{ place?: number | null }> }
+          all_results?: {
+            nchsaa?: Array<{ year?: unknown; classification?: unknown; weight_class?: unknown; place?: unknown }>
+          }
         }
+        const found = new Set<string>(stateHonorsFromNchsaaMergedRows(ach.all_results?.nchsaa ?? []))
         if (Array.isArray(ach.state_championships) && ach.state_championships.length > 0) {
           found.add("State Champion")
-        }
-        const nchsaa = Array.isArray(ach.all_results?.nchsaa) ? ach.all_results!.nchsaa! : []
-        for (const r of nchsaa) {
-          const p = r?.place
-          const pn = p == null || p === "" ? NaN : Number(p)
-          if (pn === 1) found.add("State Champion")
-          else if (!Number.isNaN(pn) && pn >= 2 && pn <= 24) found.add("State Placer")
-          else if (pn === 0) found.add("State Qualifier")
         }
 
         setServerStateHonors(
@@ -477,7 +475,13 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
   const honorBadges = useMemo(() => getCommitmentHonorBadgesForAthlete(athlete), [athlete])
 
   const honorBadgesMerged = useMemo(() => {
-    const merged = new Set<string>([...honorBadges, ...serverStateHonors])
+    const server = new Set(serverStateHonors)
+    const fromProfile = honorBadges.filter((label) => {
+      if (label !== "State Qualifier") return true
+      if (server.has("State Champion") && !server.has("State Qualifier")) return false
+      return true
+    })
+    const merged = new Set<string>([...fromProfile, ...serverStateHonors])
     return HONOR_BADGE_DISPLAY_ORDER.filter((b) => merged.has(b))
   }, [honorBadges, serverStateHonors])
 

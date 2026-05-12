@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   barePlacementLooksLikeWinCountFromRecord,
   getCommitmentHonorBadgesForAthlete,
+  stateHonorsFromNchsaaMergedRows,
 } from "./commitment-card-honors"
 
 describe("commitment-card-honors", () => {
@@ -74,5 +75,59 @@ describe("commitment-card-honors", () => {
     })
     expect(badges).toContain("State Champion")
     expect(badges).not.toContain("State Placer")
+  })
+
+  it("stateHonorsFromNchsaaMergedRows: SQ + champ same year/weight (classification mismatch) → champion only", () => {
+    expect(
+      stateHonorsFromNchsaaMergedRows([
+        { year: 2026, classification: "", weight_class: "132", place: 0 },
+        { year: 2026, classification: "A", weight_class: "132", place: 1 },
+      ]),
+    ).toEqual(["State Champion"])
+  })
+
+  it("stateHonorsFromNchsaaMergedRows: SQ + 3rd same year/weight → placer only", () => {
+    expect(
+      stateHonorsFromNchsaaMergedRows([
+        { year: 2026, weight_class: "132", place: 0 },
+        { year: 2026, weight_class: "132", place: 3 },
+      ]),
+    ).toEqual(["State Placer"])
+  })
+
+  it("stateHonorsFromNchsaaMergedRows: SQ only different year keeps qualifier", () => {
+    expect(
+      stateHonorsFromNchsaaMergedRows([
+        { year: 2025, weight_class: "132", place: 0 },
+        { year: 2026, weight_class: "132", place: 0 },
+      ]),
+    ).toEqual(["State Qualifier"])
+  })
+
+  it("stateHonorsFromNchsaaMergedRows: SQ same year, empty weight + champ at 132 → champion only", () => {
+    expect(
+      stateHonorsFromNchsaaMergedRows([
+        { year: 2026, classification: "A", weight_class: "", place: 0 },
+        { year: 2026, classification: "A", weight_class: "132", place: 1 },
+      ]),
+    ).toEqual(["State Champion"])
+  })
+
+  it("stateHonorsFromNchsaaMergedRows: 2025 SQ + 2026 champ → both badges", () => {
+    expect(
+      stateHonorsFromNchsaaMergedRows([
+        { year: 2025, weight_class: "126", place: 0 },
+        { year: 2026, weight_class: "132", place: 1 },
+      ]),
+    ).toEqual(["State Champion", "State Qualifier"])
+  })
+
+  it("stateHonorsFromNchsaaMergedRows: normalizes 132 lbs", () => {
+    expect(
+      stateHonorsFromNchsaaMergedRows([
+        { year: 2026, weight_class: "132 lbs", place: 0 },
+        { year: 2026, weight_class: "132", place: 1 },
+      ]),
+    ).toEqual(["State Champion"])
   })
 })
