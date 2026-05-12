@@ -65,4 +65,14 @@ describe("commitment-card-honors", () => {
     })
     expect(badges).not.toContain("All-American")
   })
+
+  it("NCHSAA + 1st / first place in achievements is State Champion, not placer-only", () => {
+    const badges = getCommitmentHonorBadgesForAthlete({
+      id: "t",
+      name: "Lydia Alley",
+      achievements: ["2026 NCHSAA Girls 132 — 1st place", "North Davidson"],
+    })
+    expect(badges).toContain("State Champion")
+    expect(badges).not.toContain("State Placer")
+  })
 })

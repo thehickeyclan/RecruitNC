@@ -338,9 +338,10 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
         const nchsaa = Array.isArray(ach.all_results?.nchsaa) ? ach.all_results!.nchsaa! : []
         for (const r of nchsaa) {
           const p = r?.place
-          if (p === 1) found.add("State Champion")
-          else if (p != null && typeof p === "number" && p >= 2 && p <= 24) found.add("State Placer")
-          else if (p === 0) found.add("State Qualifier")
+          const pn = p == null || p === "" ? NaN : Number(p)
+          if (pn === 1) found.add("State Champion")
+          else if (!Number.isNaN(pn) && pn >= 2 && pn <= 24) found.add("State Placer")
+          else if (pn === 0) found.add("State Qualifier")
         }
 
         setServerStateHonors(
