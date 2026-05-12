@@ -969,18 +969,57 @@ function parseBracketPlacementRank(text: string): number | null {
   const t = text.toLowerCase().trim()
   if (!t || t === "-" || t === "—") return null
   if (/^\d+\s*[-–]\s*\d+$/.test(t)) return null
-  if (/\bchamp|first\s+place|\b1\s*st\b|^1st\b|\b1\s*st\s+place\b/.test(t)) return 1
+  // Not bracket placement: grade level / class year noise
+  if (/\b\d{1,2}(?:st|nd|rd|th)\s+grader\b|\b\d{1,2}(?:st|nd|rd|th)\s+grade\b(?!\s*point)/i.test(text)) {
+    return null
+  }
+
+  if (/\bchampion\b|first\s+place|\b1\s*st\b|^1st\b|\b1\s*st\s+place\b/.test(t)) return 1
+
   const top = t.match(/\btop\s*(\d{1,2})\b/)
   if (top) {
     const n = Number.parseInt(top[1], 10)
-    if (n >= 1 && n <= 8) return n
+    if (n >= 1 && n <= 8) {
+      if (/\btop\s*\d+\b.*\bstate\b/i.test(t) && !/\b(nhsca|super\s*-?\s*32)\b/i.test(t)) return null
+      return n
+    }
   }
-  const m = t.match(/\b(\d{1,2})\s*(?:st|nd|rd|th)?(?:\s+place)?\b/)
-  if (m) {
-    const n = Number.parseInt(m[1], 10)
+
+  const ord = t.match(/\b(\d{1,2})(?:st|nd|rd|th)(?:\s+place)?\b/i)
+  if (ord) {
+    if (/\b\d{1,2}(?:st|nd|rd|th)\s+grader\b/i.test(t)) return null
+    const n = Number.parseInt(ord[1], 10)
     if (n >= 1 && n <= 16) return n
   }
+
+  const bare = t.match(/^\s*(\d{1,2})\s*$/)
+  if (bare) {
+    const n = Number.parseInt(bare[1], 10)
+    if (n >= 1 && n <= 8) return n
+  }
+
   return null
+}
+
+/** Ordinals in these strings are usually NCHSAA / regional / state — not NHSCA HS Nationals or Super 32 AA. */
+function numericPlacementLooksStateOrRegionalOnly(low: string): boolean {
+  if (
+    /\b(at|in|for)\s+state\b|\bstate\s+(champ|championship|championships|final|finals|tournament)\b|\bhigh\s+school\s+state\b/i.test(
+      low,
+    )
+  ) {
+    return true
+  }
+  if (
+    /\bnchsaa\b/i.test(low) &&
+    !/\bnational|nationals|virginia\s+beach|hs\s+nationals|high\s+school\s+nationals/i.test(low)
+  ) {
+    return true
+  }
+  if (/\bregional\b/i.test(low) && !/\b(nhsca|super\s*-?\s*32)\b/i.test(low)) {
+    return true
+  }
+  return false
 }
 
 /** National AA only — profile fields can hold "State finalist" etc.; those must not flip All-American. */
@@ -1009,16 +1048,12 @@ function snippetImpliesNationalAllAmerican(snippet: string): boolean {
 
   const rank = parseBracketPlacementRank(raw)
   if (rank != null && rank >= 1 && rank <= 8) {
+    if (numericPlacementLooksStateOrRegionalOnly(low)) return false
     return true
   }
 
-  // Deep national-bracket wording only when tied to NHSCA or Super 32 (not bare "finalist" → state finalist)
+  // NHSCA / Super 32 event + deep bracket wording (no bare "finalist" — often state-level)
   if (/\b(nhsca|super\s*-?\s*32)\b/.test(low) && /\b(finalist|semifinal|semis)\b/.test(low)) {
-    return true
-  }
-
-  // Profile keys are national placements; bare "Finalist"/"Semis" means national bracket, not "state finalist" (excluded above)
-  if (/\b(finalist|semifinal|semis)\b/.test(low)) {
     return true
   }
 
@@ -1087,9 +1122,6 @@ function getCommitmentHonorBadgesForAthlete(athlete: Athlete): string[] {
     applyHonorPatternsFromHay(found, hayText)
 
     const snippets = collectHonorPlacementSnippets(athlete)
-    const haySnippets = snippets.join("\n").toLowerCase().replace(/_/g, " ")
-    applyHonorPatternsFromHay(found, haySnippets)
-
     applyNationalBracketTop8FromSnippets(found, snippets)
     applyNchsaaJsonStateHonors(found, (athlete as Record<string, unknown>).nchsaa_results)
 
