@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   barePlacementLooksLikeWinCountFromRecord,
   getCommitmentHonorBadgesForAthlete,
+  mergeCommitmentHonorBadgesForDisplay,
   stateHonorsFromNchsaaMergedRows,
 } from "./commitment-card-honors"
 
@@ -75,6 +76,29 @@ describe("commitment-card-honors", () => {
     })
     expect(badges).toContain("State Champion")
     expect(badges).not.toContain("State Placer")
+    expect(badges).not.toContain("State Qualifier")
+  })
+
+  it("getCommitmentHonorBadgesForAthlete: state champion drops state qualifier from same profile", () => {
+    const badges = getCommitmentHonorBadgesForAthlete({
+      id: "t",
+      name: "Test",
+      achievements: ["2026 NCHSAA 132 — 1st place", "State Qualifier"],
+    })
+    expect(badges).toContain("State Champion")
+    expect(badges).not.toContain("State Qualifier")
+  })
+
+  it("mergeCommitmentHonorBadgesForDisplay: API SQ + profile State Champion → no qualifier chip", () => {
+    const merged = mergeCommitmentHonorBadgesForDisplay(["State Champion"], ["State Qualifier"])
+    expect(merged).toContain("State Champion")
+    expect(merged).not.toContain("State Qualifier")
+  })
+
+  it("mergeCommitmentHonorBadgesForDisplay: State Placer drops SQ", () => {
+    const merged = mergeCommitmentHonorBadgesForDisplay([], ["State Placer", "State Qualifier"])
+    expect(merged).toContain("State Placer")
+    expect(merged).not.toContain("State Qualifier")
   })
 
   it("stateHonorsFromNchsaaMergedRows: SQ + champ same year/weight (classification mismatch) → champion only", () => {

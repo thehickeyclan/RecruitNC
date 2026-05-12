@@ -9,6 +9,7 @@ import { RotateCw, ExternalLink, Instagram, Calendar } from "lucide-react"
 import {
   getCommitmentHonorBadgesForAthlete,
   COMMITMENT_CARD_HONOR_ORDER,
+  mergeCommitmentHonorBadgesForDisplay,
   stateHonorsFromNchsaaMergedRows,
 } from "@/lib/commitment-card-honors"
 interface Athlete {
@@ -474,16 +475,10 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
 
   const honorBadges = useMemo(() => getCommitmentHonorBadgesForAthlete(athlete), [athlete])
 
-  const honorBadgesMerged = useMemo(() => {
-    const server = new Set(serverStateHonors)
-    const fromProfile = honorBadges.filter((label) => {
-      if (label !== "State Qualifier") return true
-      if (server.has("State Champion") && !server.has("State Qualifier")) return false
-      return true
-    })
-    const merged = new Set<string>([...fromProfile, ...serverStateHonors])
-    return HONOR_BADGE_DISPLAY_ORDER.filter((b) => merged.has(b))
-  }, [honorBadges, serverStateHonors])
+  const honorBadgesMerged = useMemo(
+    () => mergeCommitmentHonorBadgesForDisplay(honorBadges, serverStateHonors),
+    [honorBadges, serverStateHonors],
+  )
 
   const legacyAwardBadges = useMemo(() => getNcLegacyAwardBadges(athlete.name), [athlete.name])
 
