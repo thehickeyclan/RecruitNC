@@ -18,6 +18,11 @@ export async function PATCH(
     const updates: Record<string, unknown> = {}
     if (typeof body.division === "string") updates.division = body.division
     if (typeof body.name === "string" && body.name.trim()) updates.name = body.name.trim()
+    if (typeof body.logo_url === "string" && body.logo_url.trim()) {
+      updates.logo_url = body.logo_url.trim()
+    } else if (body.logo_url === null || body.logo_url === "") {
+      updates.logo_url = null
+    }
     if (Object.keys(updates).length === 0) {
       return NextResponse.json({ success: false, error: "No valid updates" }, { status: 400 })
     }
