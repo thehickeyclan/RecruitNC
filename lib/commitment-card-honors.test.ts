@@ -180,6 +180,20 @@ describe("commitment-card-honors", () => {
     expect(chips).not.toContain("State Qualifier")
   })
 
+  it("mergeCommitmentHonorBadgesForDisplay: champ only in additional_achievements + API SQ → State Champion", () => {
+    const profileHonors = getCommitmentHonorBadgesForAthlete({
+      id: "x",
+      name: "Lydia Alley",
+      achievements: [],
+      additional_achievements: ["2026 NCHSAA Girls 132 — 1st place"],
+    })
+    const serverState = stateHonorsFromNchsaaMergedRows([{ year: 2026, classification: "A", weight_class: "132", place: 0 }])
+    expect(serverState).toContain("State Qualifier")
+    const merged = mergeCommitmentHonorBadgesForDisplay(profileHonors, serverState)
+    expect(merged).toContain("State Champion")
+    expect(merged).not.toContain("State Qualifier")
+  })
+
   it("stateHonorsFromNchsaaMergedRows: SQ + champ same year/weight (classification mismatch) → champion only", () => {
     expect(
       stateHonorsFromNchsaaMergedRows([

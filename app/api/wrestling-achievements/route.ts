@@ -7,6 +7,11 @@ import {
 } from "@/lib/nchsaa-results"
 import { getNHSCAForAthlete } from "@/lib/athlete-nhsca"
 import { getNameVariants, getSuper32FromTable } from "@/lib/tournament-tables"
+import {
+  getCommitmentHonorBadgesForAthlete,
+  mergeCommitmentHonorBadgesForDisplay,
+  stateHonorsFromNchsaaMergedRows,
+} from "@/lib/commitment-card-honors"
 
 export async function GET(request: Request) {
   try {
@@ -168,11 +173,22 @@ export async function GET(request: Request) {
       total_super32: achievements.all_results.super32.length,
     })
 
+    /** Full DB row → same honor rules as commitment card, merged with table-backed state rows (fixes list cards missing `additional_achievements` / `nchsaa_results`). */
+    let commitment_card_honor_badges: string[] | undefined
+    if (resolvedAthlete) {
+      const profileHonors = getCommitmentHonorBadgesForAthlete(resolvedAthlete)
+      const serverFound = new Set(stateHonorsFromNchsaaMergedRows(nchsaaResults))
+      if (achievements.state_championships.length > 0) serverFound.add("State Champion")
+      const serverState = (["State Champion", "State Placer", "State Qualifier"] as const).filter((b) => serverFound.has(b))
+      commitment_card_honor_badges = mergeCommitmentHonorBadgesForDisplay(profileHonors, [...serverState])
+    }
+
     return NextResponse.json({
       success: true,
       athlete_name: athleteName,
       achievements,
       total_records: (nchsaaResults?.length || 0) + (nhscaResults?.length || 0) + super32Results.length,
+      ...(commitment_card_honor_badges != null ? { commitment_card_honor_badges } : {}),
     })
   } catch (error) {
     console.error("[v0] Wrestling achievements API error:", error)

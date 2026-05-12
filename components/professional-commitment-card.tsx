@@ -42,6 +42,8 @@ interface Athlete {
   achievements?: string[] | string
   /** Extra honors text from profile/API when present */
   additional_achievements?: string[] | string
+  /** NCHSAA state rows JSON on athlete (optional on list payloads) */
+  nchsaa_results?: unknown
   location?: string
   ncUnitedTeam?: string
   rankings?: { nc_rank: string }
@@ -121,6 +123,8 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
   } | null>(null)
   /** NCHSAA rows from /api/wrestling-achievements (table-backed state champ / placer / SQ). */
   const [serverStateHonors, setServerStateHonors] = useState<string[]>([])
+  /** When present, honors were resolved on the server from the full `athletes` row + NCHSAA merge (authoritative for list pages). */
+  const [serverCommitmentHonors, setServerCommitmentHonors] = useState<string[] | null>(null)
 
   useEffect(() => {
     setIsFlipped(false)
@@ -320,6 +324,7 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
 
   useEffect(() => {
     setServerStateHonors([])
+    setServerCommitmentHonors(null)
     const id = athlete.id?.trim()
     if (!id || id.includes("fallback") || id.startsWith("row-") || id.startsWith("recover-")) return
 
@@ -331,6 +336,11 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
         })
         const data = await res.json()
         if (cancelled || !data?.success || !data?.achievements) return
+
+        if (Array.isArray(data.commitment_card_honor_badges)) {
+          setServerCommitmentHonors(data.commitment_card_honor_badges)
+          return
+        }
 
         const ach = data.achievements as {
           state_championships?: unknown[]
@@ -475,10 +485,12 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
 
   const honorBadges = useMemo(() => getCommitmentHonorBadgesForAthlete(athlete), [athlete])
 
-  const honorBadgesMerged = useMemo(
-    () => mergeCommitmentHonorBadgesForDisplay(honorBadges, serverStateHonors),
-    [honorBadges, serverStateHonors],
-  )
+  const honorBadgesMerged = useMemo(() => {
+    if (serverCommitmentHonors != null) {
+      return HONOR_BADGE_DISPLAY_ORDER.filter((b) => serverCommitmentHonors.includes(b))
+    }
+    return mergeCommitmentHonorBadgesForDisplay(honorBadges, serverStateHonors)
+  }, [serverCommitmentHonors, honorBadges, serverStateHonors])
 
   const legacyAwardBadges = useMemo(() => getNcLegacyAwardBadges(athlete.name), [athlete.name])
 
