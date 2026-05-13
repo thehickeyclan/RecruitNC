@@ -24,6 +24,8 @@ const CODE_RE = /^NCU-[A-Za-z0-9]+-\d{2}$/i
 export type AthleteFundraisingPublicStats = {
   raisedCents: number
   giftCount: number
+  /** Paid sessions with race entry flag — same rollup as Spartan `byAthlete` when sourced from Stripe. */
+  raceSignupCount: number
   /** Mean gift when giftCount > 0 */
   avgGiftCents: number | null
   /** Receipt type ≈ organization (tax receipt) when Stripe metadata is available */
@@ -251,10 +253,12 @@ function statsFromStripeCreditedForCodes(
   const agg = aggregateSpartanByAthlete(allCorrected)
   let raisedCents = 0
   let giftCount = 0
+  let raceSignupCount = 0
   for (const a of agg) {
     if (keySet.has(a.athleteCode.trim().toLowerCase())) {
       raisedCents += a.totalCents
       giftCount += a.donationCount
+      raceSignupCount += a.raceSignupCount
     }
   }
 
@@ -268,6 +272,7 @@ function statsFromStripeCreditedForCodes(
   return {
     raisedCents,
     giftCount,
+    raceSignupCount,
     avgGiftCents: giftCount > 0 ? Math.round(raisedCents / giftCount) : null,
     organizationGiftCount,
     individualGiftCount,
@@ -310,6 +315,7 @@ function statsFromMirrorCredited(credited: DonationSelectRow[]): AthleteFundrais
   return {
     raisedCents,
     giftCount,
+    raceSignupCount: 0,
     avgGiftCents: giftCount > 0 ? Math.round(raisedCents / giftCount) : null,
     organizationGiftCount: 0,
     individualGiftCount: 0,

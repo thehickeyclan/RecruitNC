@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect, useCallback, useRef } from "react"
+import { useSearchParams } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -48,6 +49,7 @@ interface UserProfile {
 }
 
 export function ProfileClient() {
+  const searchParams = useSearchParams()
   const { user, isAuthenticated, isLoading: authLoading } = useAuth()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -201,22 +203,27 @@ export function ProfileClient() {
     }
   }, [])
 
-  const onProfileTabChange = useCallback(
-    (v: string) => {
-      setActiveProfileTab(v)
-      if (v !== "fundraise" || authLoading || !isAuthenticated) return
-      if (spartanWalletPrimedRef.current) return
-      spartanWalletPrimedRef.current = true
-      setSpartanFundraisingLoading(true)
-      setSpartanWalletPanelActivated(true)
-      void (async () => {
-        await tryGuildAutoLink()
-        await fetchSpartanFundraisingTotals()
-        await fetchSpartanSupporterContacts()
-      })()
-    },
-    [authLoading, isAuthenticated, tryGuildAutoLink],
-  )
+  const onProfileTabChange = useCallback((v: string) => {
+    setActiveProfileTab(v)
+  }, [])
+
+  useEffect(() => {
+    if (searchParams.get("tab") !== "fundraise") return
+    setActiveProfileTab("fundraise")
+  }, [searchParams])
+
+  useEffect(() => {
+    if (activeProfileTab !== "fundraise" || authLoading || !isAuthenticated) return
+    if (spartanWalletPrimedRef.current) return
+    spartanWalletPrimedRef.current = true
+    setSpartanWalletPanelActivated(true)
+    setSpartanFundraisingLoading(true)
+    void (async () => {
+      await tryGuildAutoLink()
+      await fetchSpartanFundraisingTotals()
+      await fetchSpartanSupporterContacts()
+    })()
+  }, [activeProfileTab, authLoading, isAuthenticated, tryGuildAutoLink]) // eslint-disable-line react-hooks/exhaustive-deps -- fetch helpers omitted; prime on tab/auth transitions only
 
   useEffect(() => {
     if (!profile || linkedLoading) return

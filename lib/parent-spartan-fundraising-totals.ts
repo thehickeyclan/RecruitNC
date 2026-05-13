@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { fetchReimbursementPaidCentsByAthleteIdInWindow } from "@/lib/athlete-reimbursement-net"
+import { userCanManageFundraisingForAthlete } from "@/lib/fundraising/athlete-fundraising-access"
 import { fetchGuildReservedCentsByAthleteId } from "@/lib/guild-credit-allocations"
 import { getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
 import {
@@ -61,34 +62,14 @@ export type ParentSpartanFundraisingAthleteRow = {
 }
 
 /**
- * NC United ledger totals per linked athlete for a RecruitNC account (`parent_athlete_links` and/or `user_profiles.athlete_id`).
- * Same basis as GET /api/profile/spartan-fundraising-totals.
+ * Build wallet rows for specific athlete ids — same Stripe / reimbursement / Guild basis as Profile → Digital wallet.
  */
-export async function computeParentSpartanFundraisingTotalsForUser(
+export async function buildParentSpartanFundraisingRowsForAthleteIds(
   admin: SupabaseClient,
   userId: string,
-): Promise<{ campaign: string; athletes: ParentSpartanFundraisingAthleteRow[] }> {
-  const { data: profileRow } = await admin.from("user_profiles").select("athlete_id").eq("user_id", userId).maybeSingle()
-
-  const { data: linkRows, error: linkError } = await admin
-    .from("parent_athlete_links")
-    .select("athlete_id")
-    .eq("user_id", userId)
-
-  if (linkError && linkError.code !== "42P01") {
-    throw new Error(linkError.message)
-  }
-
-  const ids = new Set<string>()
-  const aid = (profileRow as { athlete_id?: string | null } | null)?.athlete_id
-  if (aid) ids.add(aid)
-  for (const r of linkRows ?? []) {
-    if ((r as { athlete_id?: string }).athlete_id) ids.add((r as { athlete_id: string }).athlete_id)
-  }
-  const athleteIds = [...ids]
-  if (athleteIds.length === 0) {
-    return { campaign: SPARTAN_FAYETTEVILLE_CAMPAIGN, athletes: [] }
-  }
+  athleteIds: string[],
+): Promise<ParentSpartanFundraisingAthleteRow[]> {
+  if (athleteIds.length === 0) return []
 
   const { data: nameRows, error: nameError } = await admin.from("athletes").select("id, name").in("id", athleteIds)
   if (nameError) {
@@ -130,7 +111,7 @@ export async function computeParentSpartanFundraisingTotalsForUser(
     if (picked) codeByAthleteId.set(id, picked)
   }
 
-  const athletes: ParentSpartanFundraisingAthleteRow[] = athleteIds.map((id) => {
+  return athleteIds.map((id) => {
     const code = codeByAthleteId.get(id) ?? null
     const name = nameById.get(id) ?? "—"
     const paidOut = reimbByAthleteId.get(id) ?? 0
@@ -164,7 +145,52 @@ export async function computeParentSpartanFundraisingTotalsForUser(
       codeUnavailable: false,
     }
   })
+}
 
+/** Server-only: digital-wallet row for `/fundraising/athletes/[slug]` when the viewer may manage this athlete. */
+export async function getFundraisingAthletePageWalletRowForViewer(
+  admin: SupabaseClient,
+  userId: string,
+  athleteId: string,
+): Promise<ParentSpartanFundraisingAthleteRow | null> {
+  if (!(await userCanManageFundraisingForAthlete(admin, userId, athleteId))) {
+    return null
+  }
+  const rows = await buildParentSpartanFundraisingRowsForAthleteIds(admin, userId, [athleteId])
+  return rows[0] ?? null
+}
+
+/**
+ * NC United ledger totals per linked athlete for a RecruitNC account (`parent_athlete_links` and/or `user_profiles.athlete_id`).
+ * Same basis as GET /api/profile/spartan-fundraising-totals.
+ */
+export async function computeParentSpartanFundraisingTotalsForUser(
+  admin: SupabaseClient,
+  userId: string,
+): Promise<{ campaign: string; athletes: ParentSpartanFundraisingAthleteRow[] }> {
+  const { data: profileRow } = await admin.from("user_profiles").select("athlete_id").eq("user_id", userId).maybeSingle()
+
+  const { data: linkRows, error: linkError } = await admin
+    .from("parent_athlete_links")
+    .select("athlete_id")
+    .eq("user_id", userId)
+
+  if (linkError && linkError.code !== "42P01") {
+    throw new Error(linkError.message)
+  }
+
+  const ids = new Set<string>()
+  const aid = (profileRow as { athlete_id?: string | null } | null)?.athlete_id
+  if (aid) ids.add(aid)
+  for (const r of linkRows ?? []) {
+    if ((r as { athlete_id?: string }).athlete_id) ids.add((r as { athlete_id: string }).athlete_id)
+  }
+  const athleteIds = [...ids]
+  if (athleteIds.length === 0) {
+    return { campaign: SPARTAN_FAYETTEVILLE_CAMPAIGN, athletes: [] }
+  }
+
+  const athletes = await buildParentSpartanFundraisingRowsForAthleteIds(admin, userId, athleteIds)
   athletes.sort((a, b) => a.name.localeCompare(b.name))
   return { campaign: SPARTAN_FAYETTEVILLE_CAMPAIGN, athletes }
 }
