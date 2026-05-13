@@ -120,10 +120,12 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
       athleteId ? getFundraisingWiringAdminSnapshot(admin, athleteId) : Promise.resolve(null),
       fetchPendingActivationUserIdsForSlug(admin, slugNorm),
       user?.id && athleteId && isFundraisingManager
-        ? getFundraisingAthletePageWalletRowForViewer(admin, user.id, athleteId).catch((e) => {
-            console.error("[fundraising-athlete-public] wallet row", e)
-            return null
-          })
+        ? getFundraisingAthletePageWalletRowForViewer(admin, user.id, athleteId, resolved.guildLookupAthleteIds).catch(
+            (e) => {
+              console.error("[fundraising-athlete-public] wallet row", e)
+              return null
+            },
+          )
         : Promise.resolve(null),
     ])
 

@@ -1,7 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { fetchReimbursementPaidCentsByAthleteIdInWindow } from "@/lib/athlete-reimbursement-net"
 import { userCanManageFundraisingForAthlete } from "@/lib/fundraising/athlete-fundraising-access"
-import { fetchGuildReservedCentsByAthleteId } from "@/lib/guild-credit-allocations"
+import {
+  fetchGuildReservedCentsByAthleteId,
+  sumGuildReservedAllocationCentsForAthleteIds,
+} from "@/lib/guild-credit-allocations"
 import { getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
 import {
   type FayettevilleCodeStats,
@@ -152,12 +155,20 @@ export async function getFundraisingAthletePageWalletRowForViewer(
   admin: SupabaseClient,
   userId: string,
   athleteId: string,
+  guildLookupAthleteIds: string[],
 ): Promise<ParentSpartanFundraisingAthleteRow | null> {
   if (!(await userCanManageFundraisingForAthlete(admin, userId, athleteId))) {
     return null
   }
   const rows = await buildParentSpartanFundraisingRowsForAthleteIds(admin, userId, [athleteId])
-  return rows[0] ?? null
+  const base = rows[0]
+  if (!base) return null
+  const ids = guildLookupAthleteIds.length > 0 ? guildLookupAthleteIds : [athleteId]
+  const householdGuildCents = await sumGuildReservedAllocationCentsForAthleteIds(admin, ids)
+  return {
+    ...base,
+    guildAllocationsCents: householdGuildCents,
+  }
 }
 
 /**

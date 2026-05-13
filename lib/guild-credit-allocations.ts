@@ -104,3 +104,30 @@ export async function fetchGuildReservedCentsByAthleteIdGlobal(admin: SupabaseCl
   }
   return map
 }
+
+/**
+ * Sum Guild reservations (`pending` + `guild_applied`) for these athlete UUIDs and **any** parent account.
+ * Use {@link fetchGuildReservedCentsByAthleteId} when you need per-user caps; use this for a household /
+ * multi-roster-id rollup (athlete gift page).
+ */
+export async function sumGuildReservedAllocationCentsForAthleteIds(
+  admin: SupabaseClient,
+  athleteIds: string[],
+): Promise<number> {
+  const uniq = [...new Set(athleteIds.filter((id) => typeof id === "string" && id.length > 0))]
+  if (uniq.length === 0) return 0
+
+  const { data, error } = await admin
+    .from("guild_credit_allocations")
+    .select("amount_cents")
+    .in("athlete_id", uniq)
+    .in("status", ["pending", "guild_applied"])
+
+  if (error) {
+    if (error.code === "42P01" || error.message?.includes("does not exist")) {
+      return 0
+    }
+    throw new Error(error.message)
+  }
+  return (data ?? []).reduce((s, r) => s + Number((r as { amount_cents: number }).amount_cents), 0)
+}
