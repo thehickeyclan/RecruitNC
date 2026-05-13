@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -9,10 +9,12 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { Users, Shield, ShieldCheck, AlertCircle, Database, Settings, Loader2, RefreshCw, Download, Mail } from "lucide-react"
+import { Users, Shield, ShieldCheck, AlertCircle, Database, Settings, Loader2, RefreshCw, Download, Mail, LayoutDashboard } from "lucide-react"
 import Link from "next/link"
 import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/components/ui/use-toast"
+import { HardLink } from "@/components/hard-link"
+import { cn } from "@/lib/utils"
 
 interface User {
   id: number
@@ -433,6 +435,14 @@ export default function UsersPage() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
+                          <HardLink
+                            href={`/admin/users/${user.user_id}/crm`}
+                            className={cn(buttonVariants({ variant: "outline", size: "sm" }), "no-underline shrink-0")}
+                            title="CRM hub (read-only snapshot)"
+                          >
+                            <LayoutDashboard className="h-4 w-4" />
+                            Hub
+                          </HardLink>
                           <Select
                             value={user.role}
                             onValueChange={(value) => updateUserRole(user.id, value)}
