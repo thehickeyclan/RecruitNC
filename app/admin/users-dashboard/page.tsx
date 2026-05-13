@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import { formatPhoneForDisplay } from "@/lib/phone-format"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
@@ -38,7 +38,10 @@ import {
   Download,
   ClipboardCopy,
   ChevronDown,
+  LayoutDashboard,
 } from "lucide-react"
+import { HardLink } from "@/components/hard-link"
+import { cn } from "@/lib/utils"
 import { 
   LineChart, 
   Line, 
@@ -662,6 +665,14 @@ export default function UsersDashboardPage() {
         </td>
         <td className="px-4 py-3">
           <div className="flex items-center gap-2">
+            <HardLink
+              href={`/admin/users/${user.user_id}/crm`}
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "no-underline")}
+              title="CRM hub (read-only snapshot)"
+            >
+              <LayoutDashboard className="h-4 w-4" />
+              Hub
+            </HardLink>
             <Button
               variant="ghost"
               size="sm"
@@ -1139,13 +1150,23 @@ export default function UsersDashboardPage() {
                           {new Date(user.created_at).toLocaleDateString()}
                         </td>
                         <td className="px-4 py-3">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openEditDialog(user)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            <HardLink
+                              href={`/admin/users/${user.user_id}/crm`}
+                              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "no-underline")}
+                              title="CRM hub (read-only snapshot)"
+                            >
+                              <LayoutDashboard className="h-4 w-4" />
+                              Hub
+                            </HardLink>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openEditDialog(user)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     ))}

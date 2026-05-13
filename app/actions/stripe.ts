@@ -19,6 +19,16 @@ export type CreatePaymentIntentParams = {
   discount: number
   total: number
   promoCode?: string
+  /** Logged-in store customer (RecruitNC auth user); stored on order when migration present. */
+  recruitncUserId?: string | null
+}
+
+const RECRUITNC_AUTH_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+function recruitncUserIdForOrder(raw: string | null | undefined): string | null {
+  const s = (raw || "").trim()
+  if (!s || !RECRUITNC_AUTH_UUID.test(s)) return null
+  return s
 }
 
 const ORDER_NUMBER_PREFIX = "NC"
@@ -101,6 +111,8 @@ export async function createPaymentIntent(
       total: String(params.total),
     }
     if (params.promoCode) metadata.promo_code = params.promoCode
+    const rid = recruitncUserIdForOrder(params.recruitncUserId ?? undefined)
+    if (rid) metadata.recruitnc_user_id = rid
 
     const pi = await stripe.paymentIntents.create({
       amount: amountCents,
@@ -131,30 +143,32 @@ async function createFreeOrderInternal(
   const shippingName = shippingNameFromCustomerName(params.customerName)
   const flatShipping = flatShippingFromAddress(params.shippingAddress as Record<string, unknown>)
   const flatBilling = flatBillingFromAddress(params.shippingAddress as Record<string, unknown>)
-  const { error: orderError } = await supabase.from("orders").insert({
-    id: orderId,
-    order_number: orderNumber,
-    customer_email: params.customerEmail,
-    email: params.customerEmail,
-    customer_name: params.customerName,
-    shipping_first_name: shippingName.shipping_first_name,
-    shipping_last_name: shippingName.shipping_last_name,
-    billing_first_name: shippingName.shipping_first_name,
-    billing_last_name: shippingName.shipping_last_name,
-    ...flatShipping,
-    ...flatBilling,
-    shipping_address: params.shippingAddress,
-    shipping_method: params.shippingMethod,
-    subtotal: params.subtotal,
-    shipping_cost: params.shipping,
-    tax: params.tax,
-    discount: params.discount,
-    total: params.total,
-    status: "paid",
-    stripe_payment_intent_id: null,
-    stripe_session_id: null,
-    promo_code: params.promoCode ?? null,
-  })
+    const ridFree = recruitncUserIdForOrder(params.recruitncUserId ?? undefined)
+    const { error: orderError } = await supabase.from("orders").insert({
+      id: orderId,
+      order_number: orderNumber,
+      customer_email: params.customerEmail,
+      email: params.customerEmail,
+      customer_name: params.customerName,
+      shipping_first_name: shippingName.shipping_first_name,
+      shipping_last_name: shippingName.shipping_last_name,
+      billing_first_name: shippingName.shipping_first_name,
+      billing_last_name: shippingName.shipping_last_name,
+      ...flatShipping,
+      ...flatBilling,
+      shipping_address: params.shippingAddress,
+      shipping_method: params.shippingMethod,
+      subtotal: params.subtotal,
+      shipping_cost: params.shipping,
+      tax: params.tax,
+      discount: params.discount,
+      total: params.total,
+      status: "paid",
+      stripe_payment_intent_id: null,
+      stripe_session_id: null,
+      promo_code: params.promoCode ?? null,
+      recruitnc_user_id: ridFree,
+    })
 
   if (orderError) {
     console.error("[store] createFreeOrder insert order:", orderError)
@@ -228,6 +242,7 @@ function parseOrderFromMetadata(metadata: Record<string, string>): CreatePayment
       discount: Number(metadata.discount) || 0,
       total: Number(metadata.total) || 0,
       promoCode: metadata.promo_code || undefined,
+      recruitncUserId: recruitncUserIdForOrder(metadata.recruitnc_user_id),
     }
   } catch {
     return null
@@ -247,6 +262,7 @@ async function createOrderFromPaymentIntentMetadata(
   const shippingName = shippingNameFromCustomerName(payload.customerName)
   const flatShipping = flatShippingFromAddress(payload.shippingAddress as Record<string, unknown>)
   const flatBilling = flatBillingFromAddress(payload.shippingAddress as Record<string, unknown>)
+  const ridPi = recruitncUserIdForOrder(payload.recruitncUserId ?? undefined)
   const { error: orderError } = await supabase.from("orders").insert({
     id: orderId,
     order_number: orderNumber,
@@ -269,6 +285,7 @@ async function createOrderFromPaymentIntentMetadata(
     status: "paid",
     stripe_payment_intent_id: paymentIntentId,
     promo_code: payload.promoCode ?? null,
+    recruitnc_user_id: ridPi,
   })
 
   if (orderError) {
@@ -661,6 +678,8 @@ export async function createOrderFromSession(
       const shippingName = shippingNameFromCustomerName(customerName)
       const flatShipping = flatShippingFromAddress(shippingAddress as Record<string, unknown>)
       const flatBilling = flatBillingFromAddress(shippingAddress as Record<string, unknown>)
+      const sessMeta = (session.metadata || {}) as Record<string, string>
+      const ridNoPayload = recruitncUserIdForOrder(sessMeta.recruitnc_user_id)
       await supabase.from("orders").insert({
         id: orderId,
         order_number: orderNumber,
@@ -683,6 +702,7 @@ export async function createOrderFromSession(
         status: "paid",
         stripe_session_id: sessionId,
         stripe_payment_intent_id: piId,
+        recruitnc_user_id: ridNoPayload,
       })
       for (let idx = 0; idx < lineItems.length; idx++) {
         const li = lineItems[idx] as { id?: string; description?: string; quantity?: number; amount_subtotal?: number }
@@ -756,6 +776,7 @@ export async function createOrderFromSession(
       stripe_payment_intent_id: piId,
       stripe_session_id: sessionId,
       promo_code: payload.promoCode ?? null,
+      recruitnc_user_id: recruitncUserIdForOrder(payload.recruitncUserId ?? undefined),
     })
     if (orderErr) {
       console.error("[store] createOrderFromSession insert order:", orderErr)
