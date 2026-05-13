@@ -4,6 +4,7 @@ import { sendScholarshipApplicationEmails } from "@/lib/email/scholarship-applic
 import { allocateScholarshipAnonymousId } from "@/lib/scholarships/anonymous-id"
 import { scholarshipApplicationsAreOpen } from "@/lib/scholarships/applications-open"
 import { getScholarshipBySlug } from "@/lib/scholarships/public-queries"
+import { parseScholarshipVideoBlobUrl, parseScholarshipVideoPageUrl } from "@/lib/scholarships/scholarship-video-url"
 import { countWords } from "@/lib/scholarships/word-count"
 import { createAdminClient } from "@/lib/supabase/admin"
 
@@ -84,6 +85,47 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ slug: 
   const wrestlingMomentRaw = String(body.wrestling_moment ?? "").trim()
   const wrestlingMoment = wrestlingMomentRaw ? truncate(wrestlingMomentRaw, 8000) : ""
 
+  const submissionFormatRaw = String(body.submission_format ?? "written").toLowerCase()
+  const submissionFormat = submissionFormatRaw === "video" ? "video" : "written"
+
+  const videoUrlRaw = typeof body.video_url === "string" ? body.video_url.trim() : ""
+  const videoBlobUrlRaw = typeof body.video_blob_url === "string" ? body.video_blob_url.trim() : ""
+
+  let videoUrl: string | null = null
+  let videoBlobUrl: string | null = null
+  let writtenStatementToStore = writtenStatement
+
+  if (submissionFormat === "video") {
+    const parsedLink = videoUrlRaw ? parseScholarshipVideoPageUrl(videoUrlRaw) : null
+    const parsedBlob = videoBlobUrlRaw ? parseScholarshipVideoBlobUrl(videoBlobUrlRaw) : null
+    if (parsedLink && !parsedLink.ok && videoUrlRaw) {
+      return NextResponse.json({ error: parsedLink.error }, { status: 400 })
+    }
+    if (parsedBlob && !parsedBlob.ok && videoBlobUrlRaw) {
+      return NextResponse.json({ error: parsedBlob.error }, { status: 400 })
+    }
+    if (parsedLink?.ok && parsedBlob?.ok) {
+      return NextResponse.json(
+        { error: "Choose either a YouTube/Vimeo link or an uploaded file — not both." },
+        { status: 400 },
+      )
+    }
+    if (parsedLink?.ok) videoUrl = parsedLink.normalized
+    if (parsedBlob?.ok) videoBlobUrl = parsedBlob.normalized
+    if (!videoUrl && !videoBlobUrl) {
+      return NextResponse.json(
+        { error: "Video nominations need a YouTube/Vimeo link or an uploaded video file." },
+        { status: 400 },
+      )
+    }
+    writtenStatementToStore = ""
+  } else {
+    const wcEssay = countWords(writtenStatement)
+    if (wcEssay < 400 || wcEssay > 600) {
+      return NextResponse.json({ error: `Essay must be 400–600 words (yours: ${wcEssay}).` }, { status: 400 })
+    }
+  }
+
   const referenceName = truncate(String(body.reference_name ?? ""), 200)
   const referenceRelationship = truncate(String(body.reference_relationship ?? ""), 120)
   const referenceEmail = truncate(String(body.reference_email ?? ""), 320)
@@ -111,11 +153,6 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ slug: 
   }
   if (nominatorKnownDuration.length < 2) {
     return NextResponse.json({ error: "Please tell us how long you have known this athlete." }, { status: 400 })
-  }
-
-  const wcEssay = countWords(writtenStatement)
-  if (wcEssay < 400 || wcEssay > 600) {
-    return NextResponse.json({ error: `Essay must be 400–600 words (yours: ${wcEssay}).` }, { status: 400 })
   }
 
   if (referenceName.length < 2 || referenceRelationship.length < 2 || !referenceEmail || !EMAIL_RE.test(referenceEmail)) {
@@ -186,7 +223,10 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ slug: 
       nominator_phone: nominatorPhone || null,
       is_parent_nominating_own_child: isParentNominating,
       nominator_known_duration: nominatorKnownDuration || null,
-      written_statement: writtenStatement.slice(0, 12000),
+      submission_format: submissionFormat,
+      video_url: videoUrl,
+      video_blob_url: videoBlobUrl,
+      written_statement: writtenStatementToStore.slice(0, 12000),
       wrestling_moment: additionalBlock ? truncate(additionalBlock, 8000) : null,
       reference_name: referenceName,
       reference_relationship: referenceRelationship,
@@ -202,13 +242,37 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ slug: 
 
     if (inserted.error) {
       const msg = inserted.error.message ?? ""
-      const missingCol =
+      const needsVideoMigration =
+        submissionFormat === "video" &&
+        inserted.error.code === "42703" &&
+        (msg.includes("submission_format") || msg.includes("video_url") || msg.includes("video_blob_url"))
+
+      if (needsVideoMigration) {
+        return NextResponse.json(
+          {
+            error:
+              "Video nominations need one SQL migration: run lib/scholarships/sql/scholarship-applications-video-columns.sql in the Supabase SQL editor, then try again.",
+          },
+          { status: 503 },
+        )
+      }
+
+      const missingColLegacy =
         inserted.error.code === "42703" ||
         msg.includes("anonymous_id") ||
         msg.includes("is_parent_nominating_own_child") ||
         msg.includes("nominator_known_duration")
 
-      if (missingCol) {
+      if (missingColLegacy) {
+        if (submissionFormat === "video") {
+          return NextResponse.json(
+            {
+              error:
+                "Video nominations require the latest scholarship applications table (run Supabase migrations through lib/scholarships/sql/, including scholarship-applications-video-columns.sql).",
+            },
+            { status: 503 },
+          )
+        }
         usedMinimalInsert = true
         const fallback: Record<string, unknown> = {
           scholarship_id: scholarship.id,
@@ -222,7 +286,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ slug: 
           nominator_relationship: nominatorRelationship,
           nominator_email: nominatorEmail,
           nominator_phone: nominatorPhone || null,
-          written_statement: writtenStatement.slice(0, 12000),
+          written_statement: writtenStatementToStore.slice(0, 12000),
           wrestling_moment: additionalBlock ? truncate(additionalBlock, 8000) : null,
           reference_name: referenceName,
           reference_relationship: referenceRelationship,
@@ -262,6 +326,9 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ slug: 
       applicationsCloseDate: formatUsDate(scholarship.applications_close_date ?? null),
       awardAnnouncementDate: formatUsDate(scholarship.award_announcement_date ?? null),
       adminNotifyEmail: null,
+      submissionFormat,
+      videoUrl,
+      videoBlobUrl,
     })
 
     return NextResponse.json({ ok: true, id: inserted.data?.id, anonymous_id: anonUsed })

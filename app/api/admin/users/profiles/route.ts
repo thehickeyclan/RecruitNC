@@ -73,9 +73,7 @@ export async function GET() {
 
     console.log(`[v0] Total auth users fetched: ${allAuthUsers.length}`)
 
-    const { data: userProfiles, error: profileError } = await supabaseAdmin
-      .from("user_profiles")
-      .select(`
+    const profileSelectBase = `
         user_id, 
         full_name, 
         role, 
@@ -88,10 +86,37 @@ export async function GET() {
         schools:school_id (
           name
         )
-      `)
+      `
 
-    if (profileError) {
-      console.error("[v0] Error fetching user profiles:", profileError)
+    const withAthlete = await supabaseAdmin.from("user_profiles").select(
+      `
+        user_id, 
+        full_name, 
+        role, 
+        profile_type, 
+        cell_phone, 
+        is_admin,
+        verified_coach,
+        verification_status,
+        school_id,
+        athlete_id,
+        schools:school_id (
+          name
+        )
+      `,
+    )
+
+    let userProfiles = withAthlete.data
+    if (withAthlete.error && (withAthlete.error as { code?: string }).code === "42703") {
+      const noAthlete = await supabaseAdmin.from("user_profiles").select(profileSelectBase)
+      userProfiles = noAthlete.data
+      if (noAthlete.error) {
+        console.error("[v0] Error fetching user profiles (no athlete_id):", noAthlete.error)
+      } else {
+        console.warn("[v0] user_profiles.athlete_id missing; fetched profiles without athlete_id")
+      }
+    } else if (withAthlete.error) {
+      console.error("[v0] Error fetching user profiles:", withAthlete.error)
     }
 
     // Create a map of user profiles for quick lookup
@@ -112,6 +137,7 @@ export async function GET() {
         verification_status: profile?.verification_status || null,
         school_id: profile?.school_id || null,
         school_name: profile?.schools?.name || null,
+        athlete_id: (profile as { athlete_id?: string | null } | undefined)?.athlete_id ?? null,
         created_at: user.created_at,
         last_sign_in_at: user.last_sign_in_at || null,
       }
