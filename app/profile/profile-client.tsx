@@ -189,6 +189,18 @@ export function ProfileClient() {
     }
   }
 
+  const tryGuildAutoLink = useCallback(async () => {
+    try {
+      await fetch("/api/profile/guild-auto-link", {
+        method: "POST",
+        credentials: "include",
+        cache: "no-store",
+      })
+    } catch {
+      /* wallet still loads */
+    }
+  }, [])
+
   const onProfileTabChange = useCallback(
     (v: string) => {
       setActiveProfileTab(v)
@@ -198,11 +210,12 @@ export function ProfileClient() {
       setSpartanFundraisingLoading(true)
       setSpartanWalletPanelActivated(true)
       void (async () => {
+        await tryGuildAutoLink()
         await fetchSpartanFundraisingTotals()
         await fetchSpartanSupporterContacts()
       })()
     },
-    [authLoading, isAuthenticated],
+    [authLoading, isAuthenticated, tryGuildAutoLink],
   )
 
   useEffect(() => {
@@ -251,6 +264,7 @@ export function ProfileClient() {
       setSpartanFundraisingLoading(true)
       setSpartanWalletPanelActivated(true)
       void (async () => {
+        await tryGuildAutoLink()
         await fetchSpartanFundraisingTotals()
         await fetchSpartanSupporterContacts()
       })()
@@ -869,6 +883,7 @@ export function ProfileClient() {
             linkedAthletes={linkedAthletes}
             onSpartanTotalsRefresh={() => {
               void (async () => {
+                await tryGuildAutoLink()
                 await fetchSpartanFundraisingTotals()
                 await fetchSpartanSupporterContacts()
               })()

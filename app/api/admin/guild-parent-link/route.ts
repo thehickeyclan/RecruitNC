@@ -27,16 +27,84 @@ export async function GET(request: NextRequest) {
   }
 
   const admin = createAdminClient()
-  const { data: profiles, error: profErr } = await admin
+
+  /**
+   * Match RecruitNC parents by both `user_profiles.email` **and** `auth.users.email`.
+   * They often diverge when profile email is null/stale while the parent still logs in with Auth.
+   */
+  const { data: profilesByEmail, error: profErr } = await admin
     .from("user_profiles")
     .select("user_id, email, guild_parent_user_id")
     .ilike("email", safe)
-    .limit(10)
+    .limit(25)
 
   if (profErr) {
     console.error("[admin/guild-parent-link] user_profiles", profErr)
     return NextResponse.json({ error: profErr.message }, { status: 500 })
   }
+
+  let authByEmail: { id: string; email: string | null }[] = []
+  let recruitNcAuthLookupError: string | null = null
+  const { data: authRows, error: authErr } = await admin
+    .schema("auth")
+    .from("users")
+    .select("id, email")
+    .ilike("email", safe)
+    .limit(25)
+
+  if (authErr) {
+    console.warn("[admin/guild-parent-link] auth.users", authErr.message)
+    recruitNcAuthLookupError = authErr.message
+  } else {
+    authByEmail = (authRows ?? []) as { id: string; email: string | null }[]
+  }
+
+  const idSet = new Set<string>()
+  for (const p of profilesByEmail ?? []) {
+    idSet.add(String((p as { user_id: string }).user_id))
+  }
+  for (const u of authByEmail) {
+    idSet.add(String(u.id))
+  }
+
+  let fullProfiles: { user_id: string; email: string | null; guild_parent_user_id: string | null }[] = []
+  if (idSet.size > 0) {
+    const ids = [...idSet]
+    for (let i = 0; i < ids.length; i += 100) {
+      const chunk = ids.slice(i, i + 100)
+      const { data: fp, error: fpErr } = await admin
+        .from("user_profiles")
+        .select("user_id, email, guild_parent_user_id")
+        .in("user_id", chunk)
+      if (fpErr) {
+        console.error("[admin/guild-parent-link] user_profiles by id", fpErr)
+        return NextResponse.json({ error: fpErr.message }, { status: 500 })
+      }
+      fullProfiles = fullProfiles.concat((fp ?? []) as typeof fullProfiles)
+    }
+  }
+
+  const profById = new Map(fullProfiles.map((p) => [p.user_id, p]))
+  const authById = new Map(authByEmail.map((u) => [u.id, u]))
+
+  const recruitNcProfiles = [...idSet].map((user_id) => {
+    const prof = profById.get(user_id)
+    const au = authById.get(user_id)
+    const email = (prof?.email?.trim() || au?.email?.trim() || null) as string | null
+    return {
+      user_id,
+      email,
+      guild_parent_user_id: prof?.guild_parent_user_id ?? null,
+      profileRowExists: Boolean(prof),
+      /** `user_profiles.email` empty; we showed Auth email instead. */
+      emailResolvedFromAuth: Boolean(au?.email?.trim()) && !prof?.email?.trim(),
+    }
+  })
+
+  recruitNcProfiles.sort((a, b) => {
+    if (a.profileRowExists !== b.profileRowExists) return a.profileRowExists ? -1 : 1
+    return (a.email ?? "").localeCompare(b.email ?? "")
+  })
 
   const guildConfigured = isGuildSupabaseConfigured()
   const guildResult = guildConfigured ? await fetchGuildParentUsersByEmail(safe) : null
@@ -44,7 +112,8 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     emailQuery: safe,
     guildSupabaseConfigured: guildConfigured,
-    recruitNcProfiles: profiles ?? [],
+    recruitNcProfiles,
+    recruitNcAuthLookupError,
     guildParentUsers:
       guildResult && guildResult.ok ? guildResult.rows : [],
     guildLookupError: guildResult && !guildResult.ok ? guildResult.error : null,
