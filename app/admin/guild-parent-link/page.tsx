@@ -16,6 +16,10 @@ type RecruitNcProfile = {
   user_id: string
   email: string | null
   guild_parent_user_id: string | null
+  /** False when account exists in Auth but there is no public.user_profiles row. */
+  profileRowExists?: boolean
+  /** Auth email used because user_profiles.email was empty. */
+  emailResolvedFromAuth?: boolean
 }
 
 type GuildParent = {
@@ -49,6 +53,7 @@ export default function AdminGuildParentLinkPage() {
   const [guildParents, setGuildParents] = useState<GuildParent[] | null>(null)
   const [guildConfigured, setGuildConfigured] = useState<boolean | null>(null)
   const [guildLookupError, setGuildLookupError] = useState<string | null>(null)
+  const [recruitNcAuthLookupError, setRecruitNcAuthLookupError] = useState<string | null>(null)
   const [roster, setRoster] = useState<LinkedRosterRow[] | null>(null)
   const [rosterLoading, setRosterLoading] = useState(true)
   const [rosterErr, setRosterErr] = useState<string | null>(null)
@@ -91,6 +96,7 @@ export default function AdminGuildParentLinkPage() {
     }
     setLoading(true)
     setGuildLookupError(null)
+    setRecruitNcAuthLookupError(null)
     try {
       const res = await fetch(`/api/admin/guild-parent-link?email=${encodeURIComponent(q)}`, {
         credentials: "include",
@@ -103,6 +109,9 @@ export default function AdminGuildParentLinkPage() {
       setProfiles((data as { recruitNcProfiles?: RecruitNcProfile[] }).recruitNcProfiles ?? [])
       setGuildParents((data as { guildParentUsers?: GuildParent[] }).guildParentUsers ?? [])
       setGuildConfigured(Boolean((data as { guildSupabaseConfigured?: boolean }).guildSupabaseConfigured))
+      setRecruitNcAuthLookupError(
+        (data as { recruitNcAuthLookupError?: string | null }).recruitNcAuthLookupError ?? null,
+      )
       const gle = (data as { guildLookupError?: string | null }).guildLookupError
       setGuildLookupError(gle ?? null)
     } catch (e) {
@@ -253,10 +262,12 @@ export default function AdminGuildParentLinkPage() {
           <CardHeader>
             <CardTitle>Match by email</CardTitle>
             <CardDescription>
-              Finds RecruitNC <code className="text-xs">user_profiles</code> and Wrestling Guild{" "}
+              Finds RecruitNC accounts by <strong>login email</strong> (<code className="text-xs">auth.users</code>) and{" "}
+              <code className="text-xs">user_profiles.email</code> (they can differ), and Wrestling Guild{" "}
               <code className="text-xs">public.users</code> with the same email and{" "}
               <code className="text-xs">role = parent</code>. Linking sets{" "}
-              <code className="text-xs">guild_parent_user_id</code> for Fundraise → Guild credits.
+              <code className="text-xs">guild_parent_user_id</code> on RecruitNC{" "}
+              <code className="text-xs">user_profiles</code> — that row must exist first.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -278,6 +289,13 @@ export default function AdminGuildParentLinkPage() {
               </Button>
             </div>
 
+            {recruitNcAuthLookupError && (
+              <p className="text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+                Could not read RecruitNC Auth users (auth.users): {recruitNcAuthLookupError}. Profile-only matching still
+                ran.
+              </p>
+            )}
+
             {guildConfigured === false && (
               <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
                 Guild lookup is off until you set{" "}
@@ -291,13 +309,25 @@ export default function AdminGuildParentLinkPage() {
               <div className="space-y-2">
                 <h3 className="text-sm font-semibold text-gray-900">RecruitNC</h3>
                 {(profiles ?? []).length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No user_profiles with that email.</p>
+                  <p className="text-sm text-muted-foreground">No RecruitNC Auth or user_profiles match for that email.</p>
                 ) : (
                   <ul className="text-sm border rounded-md divide-y bg-white">
                     {profiles.map((p) => (
                       <li key={p.user_id} className="px-3 py-2 space-y-1">
                         <div className="font-mono text-xs text-muted-foreground break-all">{p.user_id}</div>
-                        <div>{p.email}</div>
+                        <div>
+                          {p.email}
+                          {p.emailResolvedFromAuth ? (
+                            <span className="ml-2 text-xs text-muted-foreground">(from Auth — profile email blank)</span>
+                          ) : null}
+                        </div>
+                        {p.profileRowExists === false ? (
+                          <p className="text-xs font-medium text-amber-800 bg-amber-50 border border-amber-100 rounded px-2 py-1.5">
+                            This user can sign in to RecruitNC, but there is no{" "}
+                            <code className="text-[10px]">user_profiles</code> row yet. Create or repair the profile
+                            before linking — the button is disabled.
+                          </p>
+                        ) : null}
                         <div className="text-xs">
                           Current <code>guild_parent_user_id</code>:{" "}
                           {p.guild_parent_user_id ? (
@@ -346,7 +376,7 @@ export default function AdminGuildParentLinkPage() {
                               type="button"
                               size="sm"
                               variant="secondary"
-                              disabled={linking !== null}
+                              disabled={linking !== null || p.profileRowExists === false}
                               onClick={() => void linkPair(p.user_id, g.id)}
                             >
                               {linking === `${p.user_id}:${g.id}` ? (
