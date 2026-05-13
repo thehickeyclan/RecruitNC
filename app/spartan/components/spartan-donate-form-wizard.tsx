@@ -1095,7 +1095,7 @@ export function SpartanDonateFormWizard({
           </div>
           <p className="mt-1.5 text-center text-[11px] text-[#666]">
             {formatUsd(amountCents)}
-            {!teeEligible && amountCents > 0 && amountCents < TEE_THRESHOLD_CENTS && (
+            {!athleteGiftPageEmbed && !teeEligible && amountCents > 0 && amountCents < TEE_THRESHOLD_CENTS && (
               <span className="text-[#555]"> · +{formatUsd(TEE_THRESHOLD_CENTS - amountCents)} to $100 unlocks a tee</span>
             )}
             {teeEligible && <span className="text-[#C8A94A]"> · Tee eligible</span>}

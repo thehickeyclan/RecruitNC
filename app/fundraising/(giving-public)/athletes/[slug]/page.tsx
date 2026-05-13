@@ -142,6 +142,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
   const publicGifts = snapshot?.gifts ?? []
 
   const displayName = publicTitleName(resolved)
+  const athleteFirstName = (displayName.split(/\s+/).filter(Boolean)[0] ?? displayName).trim()
   const schoolLine =
     resolved.entry && resolved.entry.label.includes("·")
       ? resolved.entry.label.split("·").slice(1).join("·").trim()
@@ -287,8 +288,17 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           </p>
           {code ? (
             <p className="mt-4 text-sm leading-relaxed text-white/85">
-              Many families use NC United to help cover travel, training, and competition costs. When this page is activated for gifts,
-              your support helps <strong className="text-white">{displayName}</strong> directly through NC United Wrestling.
+              {checkoutLive ? (
+                <>
+                  Your gift goes directly to {athleteFirstName}&apos;s training, travel, and competition costs — credited to their account,
+                  applied to approved wrestling expenses, and fully tax-deductible.
+                </>
+              ) : (
+                <>
+                  Families often use NC United to offset travel, training, and tournament costs. Checkout on this link is off until NC United
+                  finishes activation—the banner above explains next steps for families. You can still read how giving works below.
+                </>
+              )}
             </p>
           ) : null}
           <ul className="mt-4 list-none space-y-3 text-sm leading-relaxed text-white/85">

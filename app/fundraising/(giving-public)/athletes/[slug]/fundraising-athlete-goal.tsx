@@ -130,6 +130,10 @@ export function FundraisingAthleteGoalSection({
   const showPublicGoal = goalCents != null && goalCents > 0
   const familyMayEdit = checkoutLive || isRecruitNcAdmin
 
+  if (!checkoutLive && !canEdit && !isRecruitNcAdmin && !showPublicGoal) {
+    return null
+  }
+
   if (canEdit && !familyMayEdit) {
     return (
       <section className="mt-8 rounded-xl border border-[#C8A94A]/30 bg-[#0B2545]/45 px-4 py-5 sm:px-6 sm:py-6">
@@ -280,11 +284,11 @@ export function FundraisingAthleteGoalSection({
           <p className="text-sm font-semibold text-white/90">Set {firstName}&apos;s fundraising goal</p>
           <p className="mt-2 text-sm italic text-white/55">Add a target for when this page is live for gifts.</p>
         </button>
-      ) : (
+      ) : checkoutLive ? (
         <p className="mt-4 text-sm leading-relaxed text-white/55">
-          A goal and progress will show here after NC United activates gifts on this page.
+          {firstName} hasn&apos;t set a fundraising goal yet.
         </p>
-      )}
+      ) : null}
     </section>
   )
 }
