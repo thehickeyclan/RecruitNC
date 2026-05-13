@@ -1,5 +1,8 @@
 import "server-only"
 import type { SupabaseClient } from "@supabase/supabase-js"
+import type { ParentSpartanFundraisingAthleteRow } from "@/lib/parent-spartan-fundraising-totals"
+import { computeParentSpartanFundraisingTotalsForUser } from "@/lib/parent-spartan-fundraising-totals"
+import { FAYETTEVILLE_STRIPE_LOOKBACK_DAYS } from "@/lib/spartan-fayetteville-totals-by-code"
 
 export type CrmSection<T> = { ok: true; data: T } | { ok: false; error: string }
 
@@ -99,6 +102,30 @@ export type CrmAuditRow = {
   metadata: Record<string, unknown>
 }
 
+export type CrmExpenseRequestHistoryRow = {
+  id: string
+  athlete_id: string
+  athlete_name: string | null
+  expense_type: string | null
+  amount_cents: number
+  amount_approved_cents: number | null
+  payment_method: string | null
+  status: string | null
+  parent_notes: string | null
+  admin_notes: string | null
+  created_at: string | null
+  paid_at: string | null
+}
+
+export type CrmSpartanDonorChargeRow = {
+  id: string
+  amount_cents: number
+  created_unix: number
+  athlete_code: string
+  campaign: string
+  status: string
+}
+
 export type AdminCrmUserHubPayload = {
   userId: string
   generatedAt: string
@@ -115,6 +142,16 @@ export type AdminCrmUserHubPayload = {
   crmNotes: CrmSection<CrmNoteRow[]>
   crmSettings: CrmSection<CrmContactSettingsRow | null>
   crmAuditRecent: CrmSection<CrmAuditRow[]>
+  /** Per linked / primary athlete: Stripe window totals, reimbursements, Guild reservations — same basis as Profile → Digital wallet. */
+  fundraisingWallet: CrmSection<{
+    campaign: string
+    lookbackDays: number
+    athletes: ParentSpartanFundraisingAthleteRow[]
+  }>
+  /** Parent-submitted reimbursement history for this account. */
+  athleteExpenseRequests: CrmSection<CrmExpenseRequestHistoryRow[]>
+  /** Checkout charges where this contact’s email was the payer (Spartan / NCU channel). */
+  spartanDonorCharges: CrmSection<{ rows: CrmSpartanDonorChargeRow[]; note?: string }>
 }
 
 function sectionError<T>(message: string): CrmSection<T> {
@@ -532,6 +569,129 @@ async function loadCrmAuditRecent(admin: SupabaseClient, contactUserId: string):
   }
 }
 
+async function loadFundraisingWallet(
+  admin: SupabaseClient,
+  userId: string,
+): Promise<
+  CrmSection<{
+    campaign: string
+    lookbackDays: number
+    athletes: ParentSpartanFundraisingAthleteRow[]
+  }>
+> {
+  try {
+    const { campaign, athletes } = await computeParentSpartanFundraisingTotalsForUser(admin, userId)
+    return {
+      ok: true,
+      data: {
+        campaign,
+        lookbackDays: FAYETTEVILLE_STRIPE_LOOKBACK_DAYS,
+        athletes,
+      },
+    }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e)
+    return sectionError(msg)
+  }
+}
+
+async function loadAthleteExpenseRequestHistory(
+  admin: SupabaseClient,
+  userId: string,
+): Promise<CrmSection<CrmExpenseRequestHistoryRow[]>> {
+  try {
+    const { data, error } = await admin
+      .from("athlete_expense_requests")
+      .select(
+        "id, athlete_id, expense_type, amount_cents, amount_approved_cents, payment_method, status, parent_notes, admin_notes, created_at, paid_at, athletes ( name )",
+      )
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(100)
+
+    if (error) {
+      if (isMissingTable(error)) return { ok: true, data: [] }
+      return sectionError(error.message)
+    }
+
+    const rows: CrmExpenseRequestHistoryRow[] = (data ?? []).map((raw) => {
+      const r = raw as {
+        id: string
+        athlete_id: string
+        expense_type: string | null
+        amount_cents: number
+        amount_approved_cents: number | null
+        payment_method: string | null
+        status: string | null
+        parent_notes: string | null
+        admin_notes: string | null
+        created_at: string | null
+        paid_at: string | null
+        athletes: { name: string } | { name: string }[] | null
+      }
+      const a = r.athletes
+      const athleteName = a == null ? null : Array.isArray(a) ? a[0]?.name ?? null : a.name ?? null
+      return {
+        id: r.id,
+        athlete_id: r.athlete_id,
+        athlete_name: athleteName,
+        expense_type: r.expense_type,
+        amount_cents: r.amount_cents,
+        amount_approved_cents: r.amount_approved_cents,
+        payment_method: r.payment_method,
+        status: r.status,
+        parent_notes: r.parent_notes,
+        admin_notes: r.admin_notes,
+        created_at: r.created_at,
+        paid_at: r.paid_at,
+      }
+    })
+    return { ok: true, data: rows }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e)
+    return sectionError(msg)
+  }
+}
+
+async function loadSpartanDonorChargesForEmail(
+  emailLower: string | null,
+): Promise<CrmSection<{ rows: CrmSpartanDonorChargeRow[]; note?: string }>> {
+  if (!emailLower) {
+    return {
+      ok: true,
+      data: { rows: [], note: "No email on file — cannot match Stripe charges to this donor." },
+    }
+  }
+  const stripeSecret = process.env.STRIPE_SECRET_KEY?.trim()
+  if (!stripeSecret) {
+    return { ok: true, data: { rows: [], note: "Stripe not configured." } }
+  }
+  try {
+    const Stripe = (await import("stripe")).default
+    const stripe = new Stripe(stripeSecret)
+    const charges = await stripe.charges.list({ limit: 100 })
+    const matches = charges.data.filter((c) => {
+      if (c.metadata?.channel !== "spartan") return false
+      const r = (c.receipt_email ?? "").trim().toLowerCase()
+      const b = (c.billing_details?.email ?? "").trim().toLowerCase()
+      return r === emailLower || b === emailLower
+    })
+    matches.sort((a, b) => b.created - a.created)
+    const rows: CrmSpartanDonorChargeRow[] = matches.slice(0, 40).map((c) => ({
+      id: c.id,
+      amount_cents: c.amount,
+      created_unix: c.created,
+      athlete_code: c.metadata?.athlete_code ?? c.metadata?.fundraising_code ?? "",
+      campaign: c.metadata?.spartan_campaign ?? "",
+      status: c.status ?? "",
+    }))
+    return { ok: true, data: { rows } }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e)
+    return sectionError(msg)
+  }
+}
+
 /**
  * Read-only admin CRM snapshot for one auth user. Each subsection is isolated;
  * a failure in one area does not prevent others from returning data.
@@ -559,6 +719,9 @@ export async function fetchAdminCrmUserHub(admin: SupabaseClient, userId: string
     crmNotes,
     crmSettings,
     crmAuditRecent,
+    fundraisingWallet,
+    athleteExpenseRequests,
+    spartanDonorCharges,
   ] = await Promise.all([
     loadLinkedAthletes(admin, userId),
     loadOrders(admin, userId, emailUsedForLookup),
@@ -570,6 +733,9 @@ export async function fetchAdminCrmUserHub(admin: SupabaseClient, userId: string
     loadCrmNotes(admin, userId),
     loadCrmSettings(admin, userId),
     loadCrmAuditRecent(admin, userId),
+    loadFundraisingWallet(admin, userId),
+    loadAthleteExpenseRequestHistory(admin, userId),
+    loadSpartanDonorChargesForEmail(emailUsedForLookup),
   ])
 
   return {
@@ -588,5 +754,8 @@ export async function fetchAdminCrmUserHub(admin: SupabaseClient, userId: string
     crmNotes,
     crmSettings,
     crmAuditRecent,
+    fundraisingWallet,
+    athleteExpenseRequests,
+    spartanDonorCharges,
   }
 }

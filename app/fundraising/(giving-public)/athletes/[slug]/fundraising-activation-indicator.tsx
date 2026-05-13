@@ -8,7 +8,7 @@ type Props = {
   wiringSnapshot: FundraisingWiringAdminSnapshot
 }
 
-/** Green/red status for staff + page owners only — matches Profile digital-wallet access wiring (`parent_athlete_links` or wrestler profile). */
+/** Green/red wiring status — staff-only on the public gift URL so donors and families never see internal activation messaging. */
 export function FundraisingActivationIndicator({ wiringSnapshot }: Props) {
   const activated = fundraisingWiringLooksReadyForNonAdminEdits(wiringSnapshot)
 

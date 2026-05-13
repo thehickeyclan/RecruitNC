@@ -8,18 +8,20 @@ export function CrmHubLayout({
   overviewSlot,
   familySlot,
   programsSlot,
+  fundraisingSlot,
   timelineSlot,
   className,
 }: {
   overviewSlot: ReactNode
   familySlot: ReactNode
   programsSlot: ReactNode
+  fundraisingSlot: ReactNode
   timelineSlot: ReactNode
   className?: string
 }) {
   return (
     <Tabs defaultValue="overview" className={cn("w-full gap-6", className)}>
-      <TabsList className="mb-2 grid h-auto w-full grid-cols-2 gap-2 rounded-xl bg-muted/60 p-1.5 sm:grid-cols-4">
+      <TabsList className="mb-2 grid h-auto w-full grid-cols-2 gap-2 rounded-xl bg-muted/60 p-1.5 sm:grid-cols-3 lg:grid-cols-5">
         <TabsTrigger
           value="overview"
           className="rounded-lg py-2.5 text-xs font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm sm:text-sm"
@@ -39,6 +41,12 @@ export function CrmHubLayout({
           Programs
         </TabsTrigger>
         <TabsTrigger
+          value="fundraising"
+          className="rounded-lg py-2.5 text-xs font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm sm:text-sm"
+        >
+          Fundraising
+        </TabsTrigger>
+        <TabsTrigger
           value="timeline"
           className="rounded-lg py-2.5 text-xs font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm sm:text-sm"
         >
@@ -53,6 +61,9 @@ export function CrmHubLayout({
       </TabsContent>
       <TabsContent value="programs" className="mt-0 space-y-6 outline-none">
         {programsSlot}
+      </TabsContent>
+      <TabsContent value="fundraising" className="mt-0 space-y-6 outline-none">
+        {fundraisingSlot}
       </TabsContent>
       <TabsContent value="timeline" className="mt-0 space-y-6 outline-none">
         {timelineSlot}

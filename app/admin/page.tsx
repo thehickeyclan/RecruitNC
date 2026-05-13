@@ -479,6 +479,16 @@ export default function AdminDashboard() {
               </Card>
             </Link>
 
+            <HardLink href="/admin/crm" className="block h-full">
+              <Card className="border-t-4 border-t-[#D3B574] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+                <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
+                  <LayoutDashboard className="h-10 w-10 text-[#003366] mb-3" />
+                  <h3 className="font-bold text-[#003366] mb-1">User CRM</h3>
+                  <p className="text-xs text-gray-600">Command center · filter users · open contact workspace</p>
+                </CardContent>
+              </Card>
+            </HardLink>
+
             {/* Users Dashboard */}
             <Link href="/admin/users-dashboard">
               <Card className="border-t-4 border-t-[#003366] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">

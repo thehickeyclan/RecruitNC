@@ -18,7 +18,7 @@ import { FundraisingAthleteQrCard } from "./fundraising-athlete-qr-card"
 import { FundraisingAthleteEmbeddedCheckout } from "./fundraising-athlete-embedded-checkout"
 import { FundraisingAthleteGoalSection } from "./fundraising-athlete-goal"
 import { FundraisingAthleteMessageSection } from "./fundraising-athlete-message"
-import { FundraisingMilestoneTrophy } from "./fundraising-milestone-trophy"
+import { FundraisingMilestoneFunnel } from "./fundraising-milestone-funnel"
 import { FundraisingOwnerPanel } from "./fundraising-owner-panel"
 import { FundraisingAdminAssignmentPanel } from "./fundraising-admin-assignment-panel"
 import { FundraisingActivationIndicator } from "./fundraising-activation-indicator"
@@ -95,6 +95,9 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
   const isFundraisingManager =
     !!(user?.id && athleteId && (await userCanManageFundraisingForAthlete(admin, user.id, athleteId)))
   const viewerIsRecruitNcAdmin = !!(user?.id && (await userIsRecruitNcAdmin(admin, user.id)))
+  const showOwnerHints = isFundraisingManager || viewerIsRecruitNcAdmin
+  /** Roster credit codes are operational — don’t surface to casual donors. */
+  const showInternalCodes = showOwnerHints
 
   /** Pending family activation on this slug — wiring chips only (recruitnc admins). */
   let latestActivationStatus: "none" | "pending" | "approved" | "rejected" = "none"
@@ -120,7 +123,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
       ? getAthleteOwnerThankYouRowsForLedgerCodes(snapshotLedger)
       : Promise.resolve([]),
     isFundraisingManager && athleteId ? fetchThankYouAckLedgerKeys(admin, athleteId) : Promise.resolve(new Set<string>()),
-    athleteId && isFundraisingManager ? getFundraisingWiringAdminSnapshot(admin, athleteId) : Promise.resolve(null),
+    athleteId && viewerIsRecruitNcAdmin ? getFundraisingWiringAdminSnapshot(admin, athleteId) : Promise.resolve(null),
   ])
 
   const ownerThankYouRowsWithAck = ownerThankYouRows.map((r) => ({
@@ -194,7 +197,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           </HardLink>
         </div>
 
-        {athleteId && wiringSnapshot && isFundraisingManager ? (
+        {athleteId && wiringSnapshot && viewerIsRecruitNcAdmin ? (
           <FundraisingActivationIndicator wiringSnapshot={wiringSnapshot} />
         ) : null}
 
@@ -253,19 +256,48 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           )}
         </h1>
         {schoolLine ? <p className="mt-2 text-base text-white/65">{schoolLine}</p> : null}
-        {code ? <p className="mt-2 font-mono text-xs text-white/40">{code}</p> : null}
+        {code && showInternalCodes ? <p className="mt-2 font-mono text-xs text-white/40">{code}</p> : null}
 
         {code ? (
           <div className="mt-5 flex flex-col items-stretch gap-2 sm:items-center">
             <HardLink href={giveOnThisPageHref} className={PRIMARY_DONATE_CTA_CLASS}>
               Donate now
             </HardLink>
-            <p className="text-center text-[11px] leading-snug text-white/45 sm:max-w-md">
-              Opens secure checkout on this page (below). Most people finish in about 10 minutes. Everything underneath is optional
-              context.
+            <p className="text-center text-[11px] leading-snug text-white/50 sm:max-w-md">
+              Secure checkout is on this page below. Most people finish in about 10 minutes — you&apos;ll get a receipt by email.
             </p>
           </div>
         ) : null}
+
+        <div className="mt-8 rounded-xl border border-[#C8A94A]/25 bg-[#0B2545]/55 px-4 py-5 sm:px-6 sm:py-6">
+          <p className="font-[family-name:var(--font-fundraising-display)] text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]">
+            {code ? "Why give through this page" : "Why donors choose NC United"}
+          </p>
+          <ul className="mt-4 list-none space-y-3 text-sm leading-relaxed text-white/85">
+            <li>
+              <strong className="text-white">Tax-deductible.</strong> NC United Wrestling is a 501(c)(3). Your email receipt is your record (check spam or
+              promotions).
+            </li>
+            <li>
+              <strong className="text-white">100% of your payment is credited to {displayName}</strong>
+              {code ? (
+                <> — the full amount you give counts toward their campaign here.</>
+              ) : (
+                <> when you complete a gift to this campaign.</>
+              )}
+            </li>
+            <li>
+              <strong className="text-white">NC United covers card processing fees</strong> so what&apos;s credited isn&apos;t reduced by the processor.
+            </li>
+          </ul>
+          <p className="mt-4 text-xs leading-relaxed text-white/50">
+            EIN <span className="tabular-nums">99-3757238</span>
+            {" · "}
+            <HardLink href={hubGiveHref} className="text-[#C8A94A] underline-offset-4 hover:underline">
+              Other ways to give
+            </HardLink>
+          </p>
+        </div>
 
         {athleteId ? (
           <>
@@ -295,58 +327,15 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           </>
         ) : null}
 
-        <div className="mt-8 rounded-xl border border-white/10 bg-[#0B2545]/55 px-4 py-4 sm:px-5 sm:py-5">
-          <p className="text-sm leading-relaxed text-white/80">
-            <span className="font-[family-name:var(--font-fundraising-display)] font-bold uppercase tracking-wide text-[#C8A94A]">
-              New to NC United?
-            </span>{" "}
-            We&apos;re a North Carolina-based nonprofit that helps young wrestlers and local teams—covering real costs like
-            travel, events, and training. Gifts on this page are made to NC United (your receipt reflects the nonprofit).{" "}
-            <strong className="text-white/95">The full amount you pay is credited to {displayName}</strong> for this drive—their
-            NCU code is what ties checkout to their campaign total.{" "}
-            <strong className="text-white/95">NC United pays card-processing fees</strong> so that credited amount isn&apos;t
-            reduced by Stripe.
-          </p>
-          <div className="mt-4 space-y-3 border-t border-white/10 pt-4 text-sm leading-relaxed text-white/78">
-            <p>
-              <strong className="text-white/92">Email receipt.</strong> After payment you&apos;ll get an email receipt—check spam
-              or promotions if needed.
-            </p>
-            {code ? (
-              <p>
-                <strong className="text-white/92">Campaign credit.</strong> Totals and gift activity here match our Spartan
-                fundraiser rules: paid checkout with <strong className="text-white/92">{displayName}</strong>&apos;s code is
-                credited to them for this campaign window.
-              </p>
-            ) : null}
-          </div>
-          <p className="mt-3 text-xs leading-relaxed text-white/55">
-            501(c)(3) EIN <span className="tabular-nums">99-3757238</span>. Need the{" "}
-            <HardLink href={hubGiveHref} className="text-[#C8A94A] underline-offset-4 hover:underline">
-              full gift hub
+        {!code ? (
+          <p className="mt-6 text-center text-sm leading-snug text-white/60">
+            Online giving isn&apos;t turned on for this link yet.{" "}
+            <HardLink href={hubGiveHref} className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
+              Make a gift
             </HardLink>{" "}
-            (training fund or directory)?
+            to find {displayName} or support NC United another way.
           </p>
-        </div>
-
-        <p className="mt-6 text-sm leading-snug text-white/70">
-          {code ? (
-            <>
-              <strong className="text-[#C8A94A]">How giving works.</strong>{" "}
-              <strong className="text-white/90">{displayName}</strong> is already selected for credit. When you&apos;re ready,
-              use <strong className="text-white/90">secure checkout at the bottom</strong> of this page — you&apos;ll finish
-              payment on <strong className="text-white/90">Stripe</strong>, then see our thank-you page.
-            </>
-          ) : (
-            <>
-              This page needs an NC United credit code to show checkout here. Use the{" "}
-              <HardLink href={hubGiveHref} className="text-[#C8A94A] underline-offset-4 hover:underline">
-                gift hub
-              </HardLink>{" "}
-              to search athletes or give to the training fund.
-            </>
-          )}
-        </p>
+        ) : null}
 
         {code && stats ? (
           <>
@@ -366,37 +355,27 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
                 </p>
               </div>
               <div className="rounded-xl border border-white/10 bg-[#0B2545]/70 px-4 py-4">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-[#C8A94A]">Receipt type</p>
+                <p className="text-[10px] font-bold uppercase tracking-wide text-[#C8A94A]">Gift mix</p>
                 <p className="mt-2 text-xs leading-snug text-white/80">
                   {stats.payerTypeBreakdownKnown ? (
                     <>
-                      <span className="font-semibold text-white">{stats.individualGiftCount}</span> individual
+                      <span className="font-semibold text-white">{stats.individualGiftCount}</span> individual gifts
                       <span className="text-white/40"> · </span>
-                      <span className="font-semibold text-white">{stats.organizationGiftCount}</span> org
+                      <span className="font-semibold text-white">{stats.organizationGiftCount}</span> from organizations
                     </>
                   ) : (
-                    <span className="text-white/55">Org vs individual — shown when available</span>
+                    <span className="text-white/50">—</span>
                   )}
                 </p>
               </div>
             </div>
-            <FundraisingMilestoneTrophy
+            <FundraisingMilestoneFunnel
               raisedCents={stats.raisedCents}
               goalCents={goalCents}
               athleteLabel={displayName}
+              showOwnerHints={showOwnerHints}
             />
           </>
-        ) : null}
-
-        {code ? (
-          <p className="mt-8 text-center text-xs text-white/45">
-            Totals and gift list use the same credit rules and campaign scope as our{" "}
-            <HardLink href="/spartan" className="text-[#C8A94A] underline-offset-4 hover:underline">
-              team fundraiser page
-            </HardLink>{" "}
-            ({DEFAULT_FUNDRAISING_CAMPAIGN.campaignDisplayName}). They load from our donation ledger and typically appear within
-            a short time after checkout; live Stripe totals may update slightly sooner.
-          </p>
         ) : null}
 
         {code && stats && stats.giftCount === 0 ? (
@@ -405,20 +384,12 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           </p>
         ) : null}
 
-        {!code ? (
-          <p className="mt-4 text-center text-sm text-white/50">
-            Add a fundraising credit code to enable giving on this page, or use the hub link above.
-          </p>
-        ) : null}
-
         {publicGifts.length > 0 ? (
           <div className="mt-10">
             <h2 className="font-[family-name:var(--font-fundraising-display)] text-sm font-bold uppercase tracking-wide text-white">
-              Gift activity
+              Recent supporters
             </h2>
-            <p className="mt-1 text-xs text-white/45">
-              Public names only — every athlete-credited gift in this campaign window ({DEFAULT_FUNDRAISING_CAMPAIGN.campaignDisplayName}), newest first.
-            </p>
+            <p className="mt-1 text-xs text-white/45">Shown when people choose to be listed publicly. Newest first.</p>
             <div className="mt-3 max-h-[min(70vh,28rem)] overflow-y-auto overflow-x-hidden rounded-lg border border-white/10 bg-black/20">
               <div className="hidden grid-cols-[5.25rem_minmax(0,10.5rem)_minmax(0,1fr)_auto] gap-x-3 border-b border-white/10 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-white/40 sm:grid">
                 <span>Date</span>
@@ -480,9 +451,8 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
             Secure checkout
           </h2>
           <p className="mx-auto mt-2 max-w-md text-center text-[13px] leading-snug text-white/70">
-            <strong className="font-semibold text-white/85">Tax-deductible</strong> gift ($5 minimum). Plan about{" "}
-            <strong className="font-semibold text-white/85">10 minutes</strong> for the steps, then you finish on Stripe; your receipt
-            arrives by email.
+            <strong className="font-semibold text-white/85">Tax-deductible</strong> gift (minimum $5). You&apos;ll complete payment in secure checkout and
+            receive an <strong className="font-semibold text-white/85">email receipt</strong>. Plan about <strong className="font-semibold text-white/85">10 minutes</strong>.
           </p>
           <div className="mt-6 w-full text-left">
             <FundraisingAthleteEmbeddedCheckout
@@ -494,7 +464,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
         </section>
 
         <p className="mt-12 border-t border-white/10 pt-8 text-center text-xs text-white/45">
-          Your gift supports NC United Wrestling, a North Carolina 501(c)(3) nonprofit.
+          NC United Wrestling — North Carolina 501(c)(3). Thank you for supporting {displayName}.
         </p>
       </div>
     </div>
