@@ -10,6 +10,8 @@ import { ensureParentAthleteLinkAdmin } from "@/lib/fundraising/ensure-parent-at
 export type ActivationRequestRow = {
   id: string
   user_id: string
+  /** Copy of auth email at submit time — may be null for older rows or edge auth states. */
+  requester_email: string | null
   athlete_id: string | null
   fundraising_slug: string
   status: string
@@ -44,15 +46,26 @@ export async function submitFundraisingActivationRequestAction(params: {
     return { ok: true }
   }
 
+  const requesterEmail =
+    typeof user.email === "string" && user.email.trim() ? user.email.trim().toLowerCase() : null
+
   const { error } = await supabase.from("fundraising_activation_requests").insert({
     user_id: user.id,
     athlete_id: params.athleteId,
     fundraising_slug: slug,
     status: "pending",
+    requester_email: requesterEmail,
   })
 
   if (error) {
     if (error.code === "23505") return { ok: true }
+    if (error.code === "42703" || error.message?.includes("requester_email")) {
+      return {
+        ok: false,
+        error:
+          "Database needs column requester_email — run scripts/supabase-fundraising-activation-requester-email.sql in Supabase, or contact support.",
+      }
+    }
     if (error.code === "42P01" || error.message?.includes("does not exist")) {
       return { ok: false, error: "Database table missing — run scripts/supabase-fundraising-activation.sql in Supabase." }
     }
@@ -192,7 +205,9 @@ export async function listFundraisingActivationRequestsAdmin(): Promise<Activati
   const admin = createAdminClient()
   const { data, error } = await admin
     .from("fundraising_activation_requests")
-    .select("id, user_id, athlete_id, fundraising_slug, status, created_at, reviewed_at, reviewed_by, admin_note")
+    .select(
+      "id, user_id, requester_email, athlete_id, fundraising_slug, status, created_at, reviewed_at, reviewed_by, admin_note",
+    )
     .order("created_at", { ascending: false })
     .limit(200)
 

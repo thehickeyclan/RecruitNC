@@ -12,20 +12,19 @@ type Props = {
   displayName: string
   /** Public Stripe embed allowed (staff turns on after activation approval). */
   checkoutLive: boolean
-  slugHasPendingActivation: boolean
-  viewerUserId: string | null
+  /** This viewer already has a pending request for this slug. */
   viewerHasPendingActivation: boolean
-  isFundraisingManager: boolean
+  viewerUserId: string | null
 }
 
 function resolveTone({
   athleteId,
   checkoutLive,
-  slugHasPendingActivation,
-}: Pick<Props, "athleteId" | "checkoutLive" | "slugHasPendingActivation">): PublicationTone {
-  if (!athleteId) return "neutral"
+  viewerHasPendingActivation,
+}: Pick<Props, "athleteId" | "checkoutLive" | "viewerHasPendingActivation">): PublicationTone {
   if (checkoutLive) return "live"
-  if (slugHasPendingActivation) return "pending"
+  if (viewerHasPendingActivation) return "pending"
+  if (!athleteId) return "neutral"
   return "inactive"
 }
 
@@ -58,22 +57,16 @@ export function FundraisingPublicationBanner({
   athleteId,
   displayName,
   checkoutLive,
-  slugHasPendingActivation,
-  viewerUserId,
   viewerHasPendingActivation,
-  isFundraisingManager,
+  viewerUserId,
 }: Props) {
-  const tone = resolveTone({ athleteId, checkoutLive, slugHasPendingActivation })
+  const tone = resolveTone({ athleteId, checkoutLive, viewerHasPendingActivation })
   const s = TONE_STYLES[tone]
 
   const signInHref = `/auth/signin?returnTo=${encodeURIComponent(athletePagePath)}`
 
-  const showRequestButton =
-    !!athleteId &&
-    isFundraisingManager &&
-    !checkoutLive &&
-    !slugHasPendingActivation &&
-    !!viewerUserId
+  /** Any signed-in user may request — staff verify identity via stored email + user_id before approve. */
+  const showRequestButton = !!viewerUserId && !checkoutLive && !viewerHasPendingActivation
 
   let body: ReactNode
   if (tone === "neutral") {
@@ -81,8 +74,8 @@ export function FundraisingPublicationBanner({
       <>
         <p className="mt-1 text-xs leading-snug text-white/72">
           Public athlete pages exist for every roster wrestler. <strong className="text-white/90">Gifts stay off</strong> until NC United
-          activates checkout after a parent or athlete completes activation. If you&apos;re {displayName}&apos;s parent or guardian, sign in
-          to request activation.
+          activates checkout after someone on the family requests it and staff approves. Sign in below to request activation for{" "}
+          <strong className="text-white/90">{displayName}</strong> — we&apos;ll use your account email to verify before turning gifts on.
         </p>
         {!viewerUserId ? (
           <p className="mt-2 text-xs">
@@ -91,7 +84,7 @@ export function FundraisingPublicationBanner({
             </HardLink>{" "}
             to request activation.
           </p>
-        ) : isFundraisingManager ? (
+        ) : showRequestButton ? (
           <FundraisingActivationRequestButton fundraisingSlug={fundraisingSlug} athleteId={athleteId} />
         ) : null}
       </>
@@ -100,53 +93,42 @@ export function FundraisingPublicationBanner({
     body = (
       <p className="mt-1 text-xs leading-snug text-white/72">
         This page is activated for tax-deductible gifts. NC United has verified a family connection; checkout below credits{" "}
-        <strong className="text-white/90">{displayName}</strong>. Parents and athletes with access can edit the story and goal; private
-        donor contacts stay manager-only.
+        <strong className="text-white/90">{displayName}</strong>. Linked family accounts can edit the story and goal; private donor contacts
+        stay manager-only.
       </p>
     )
   } else if (tone === "pending") {
     body = (
       <>
         <p className="mt-1 text-xs leading-snug text-white/72">
-          <strong className="text-white/90">Checkout is off</strong> while NC United reviews an activation request. No gifts are accepted on
-          this URL until activation is approved — use{" "}
+          <strong className="text-white/90">Checkout is off</strong> while NC United reviews your activation request for this page. No gifts
+          are accepted on this URL until staff approves — use{" "}
           <HardLink href="/fundraising/give" className="font-semibold text-[#C8A94A] underline-offset-2 hover:underline">
             Make a gift
           </HardLink>{" "}
           for the training fund or another active page if you need to give today.
         </p>
-        {viewerHasPendingActivation ? (
-          <p className="mt-2 text-xs font-medium text-amber-100/90">You submitted a request — we&apos;ll follow up by email.</p>
-        ) : null}
+        <p className="mt-2 text-xs font-medium text-amber-100/90">We received your request — we&apos;ll follow up using your account email.</p>
       </>
     )
   } else {
     body = (
       <>
         <p className="mt-1 text-xs leading-snug text-white/72">
-          <strong className="text-white/90">This page is not accepting gifts yet.</strong> NC United turns on secure checkout only after a
-          parent or athlete requests activation and staff approves — so we don&apos;t fundraise under a wrestler&apos;s name without that
-          chain. You can still read about NC United below.
+          <strong className="text-white/90">This page is not accepting gifts yet.</strong> NC United turns on secure checkout after you request
+          activation (sign in required) and staff approves — so we don&apos;t fundraise under a wrestler&apos;s name without that review. You
+          can still read about NC United below.
         </p>
         {!viewerUserId ? (
           <p className="mt-2 text-xs">
             <HardLink href={signInHref} className="font-semibold text-[#C8A94A] underline-offset-2 hover:underline">
               Sign in
             </HardLink>{" "}
-            as the linked parent or athlete, then tap Request activation.
+            to request activation — we&apos;ll record your account email for staff review.
           </p>
         ) : null}
         {showRequestButton ? (
           <FundraisingActivationRequestButton fundraisingSlug={fundraisingSlug} athleteId={athleteId} />
-        ) : null}
-        {viewerUserId && !isFundraisingManager ? (
-          <p className="mt-2 text-xs text-white/50">
-            Signed in as an account not linked to this athlete yet — use Profile → family tools, or email{" "}
-            <a href="mailto:info@ncwrestlingunited.com" className="text-[#C8A94A] hover:underline">
-              info@ncwrestlingunited.com
-            </a>
-            .
-          </p>
         ) : null}
       </>
     )

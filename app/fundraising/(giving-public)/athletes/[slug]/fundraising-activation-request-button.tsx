@@ -28,7 +28,7 @@ export function FundraisingActivationRequestButton({ fundraisingSlug, athleteId 
           if (res.ok) {
             toast({
               title: "Request sent",
-              description: "NC United will review and link your account when everything checks out.",
+              description: "NC United will review using your signed-in email, then link your account if we approve.",
             })
             router.refresh()
             return

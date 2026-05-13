@@ -201,10 +201,8 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           athleteId={athleteId}
           displayName={displayName}
           checkoutLive={checkoutLive}
-          slugHasPendingActivation={slugHasPendingActivation}
-          viewerUserId={user?.id ?? null}
           viewerHasPendingActivation={viewerHasPendingActivation}
-          isFundraisingManager={isFundraisingManager}
+          viewerUserId={user?.id ?? null}
         />
 
         {viewerIsRecruitNcAdmin ? (

@@ -2361,12 +2361,10 @@ export default function AdminFundraisingPage() {
                       <strong className="text-foreground">Attach parent</strong> — same dialogs as on the live donor page when you&apos;re logged in as admin.
                       Table{" "}
                       <code className="rounded bg-muted px-1 text-[11px]">athlete_fundraising_profiles</code>.{" "}
-                      <strong className="text-foreground">Gift-page edits</strong> column: green/red dots —{" "}
-                      <strong className="text-foreground">Links</strong> ={" "}
-                      <code className="rounded bg-muted px-1 text-[10px]">parent_athlete_links</code> count;{" "}
-                      <strong className="text-foreground">Claim</strong> ={" "}
-                      <code className="rounded bg-muted px-1 text-[10px]">user_profiles.athlete_id</code> count. Either green usually means
-                      non-admin story edits are wired (roster email match can still apply without dots).{" "}
+                      <strong className="text-foreground">Parent links</strong> column: green when{" "}
+                      <code className="rounded bg-muted px-1 text-[10px]">parent_athlete_links</code> ≥ 1 (use{" "}
+                      <strong className="text-foreground">Attach parent</strong>). Linked parents see the wallet and can edit the gift page when checkout
+                      is on. Athletes who claimed their recruiting profile also get edit access from their own login — that is not a separate row here.{" "}
                       <strong className="text-foreground">Sync from directory</strong> creates missing rows (slug = lowercase NCU) for every real roster athlete — run once after deploy or when pages say “no donor profile”.
                     </CardDescription>
                   </div>
@@ -2425,7 +2423,7 @@ export default function AdminFundraisingPage() {
                           <TableHead>Active</TableHead>
                           <TableHead className="whitespace-nowrap">Gift checkout</TableHead>
                           <TableHead className="whitespace-nowrap min-w-[7.5rem] text-[11px] leading-tight">
-                            Gift-page edits
+                            Parent links
                           </TableHead>
                           <TableHead className="text-right min-w-[11rem]">Actions</TableHead>
                         </TableRow>
@@ -2496,7 +2494,7 @@ export default function AdminFundraisingPage() {
                                 <div className="flex flex-col gap-1.5 text-[11px] leading-tight">
                                   <div
                                     className="flex items-center gap-1.5"
-                                    title="parent_athlete_links — parent or wrestler via Attach parent"
+                                    title="parent_athlete_links — use Attach parent on this row"
                                   >
                                     <span
                                       className={cn(
@@ -2507,19 +2505,6 @@ export default function AdminFundraisingPage() {
                                     />
                                     <span className="text-muted-foreground">Links</span>
                                     <span className="font-medium tabular-nums text-foreground">{p.wiring.parentAthleteLinkCount}</span>
-                                  </div>
-                                  <div className="flex items-center gap-1.5" title="user_profiles.athlete_id — wrestler claimed roster row">
-                                    <span
-                                      className={cn(
-                                        "inline-block h-2 w-2 shrink-0 rounded-full",
-                                        p.wiring.userProfilesAthleteIdMatchCount > 0 ? "bg-emerald-500" : "bg-red-600",
-                                      )}
-                                      aria-hidden
-                                    />
-                                    <span className="text-muted-foreground">Claim</span>
-                                    <span className="font-medium tabular-nums text-foreground">
-                                      {p.wiring.userProfilesAthleteIdMatchCount}
-                                    </span>
                                   </div>
                                 </div>
                               </TableCell>

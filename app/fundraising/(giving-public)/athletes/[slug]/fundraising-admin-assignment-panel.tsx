@@ -37,7 +37,7 @@ type Props = {
   athleteId: string | null
   athleteDisplayLabel: string
   ncuHint: string | null
-  /** Server snapshot — parent links vs claimed athlete profile for non-admin gift-page edits. */
+  /** Server snapshot — parent links for gift-page managers (see Attach parent). */
   wiringSnapshot: FundraisingWiringAdminSnapshot | null
   /** Latest family activation request — drives yellow “pending” on status chips. */
   latestActivationStatus: ActivationWireStatus
@@ -73,9 +73,7 @@ export function FundraisingAdminAssignmentPanel({
 
   const activationPending = latestActivationStatus === "pending"
   const parentLinked = !!(wiringSnapshot && wiringSnapshot.parentAthleteLinkCount > 0)
-  const wrestlerClaimed = !!(wiringSnapshot && wiringSnapshot.userProfilesAthleteIdMatchCount > 0)
   const parentTone = wiringSnapshot ? wiringChipTone(parentLinked, activationPending) : "bad"
-  const claimTone = wiringSnapshot ? wiringChipTone(wrestlerClaimed, activationPending) : "bad"
 
   function chipSubtitle(tone: WiringChipTone, connectedLabel: string) {
     if (tone === "good") return connectedLabel
@@ -150,24 +148,15 @@ export function FundraisingAdminAssignmentPanel({
           . NCU hint: <span className="font-mono text-[11px] text-white/55">{ncuLine}</span>
         </p>
         {athleteId && wiringSnapshot ? (
-          <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Gift-page login wiring">
+          <div className="mt-3" role="status" aria-label="Parent linked for gift-page management">
             <div
               className={cn(
-                "min-h-[52px] min-w-[min(100%,160px)] flex-1 rounded-lg border px-3 py-2 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]",
+                "min-h-[52px] rounded-lg border px-3 py-2 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]",
                 CHIP_TONE_CLASS[parentTone],
               )}
             >
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] opacity-90">Parent account</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] opacity-90">Family (parent link)</p>
               <p className="mt-1 text-xs font-semibold">{chipSubtitle(parentTone, "Linked")}</p>
-            </div>
-            <div
-              className={cn(
-                "min-h-[52px] min-w-[min(100%,160px)] flex-1 rounded-lg border px-3 py-2 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]",
-                CHIP_TONE_CLASS[claimTone],
-              )}
-            >
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] opacity-90">Wrestler login</p>
-              <p className="mt-1 text-xs font-semibold">{chipSubtitle(claimTone, "Claimed")}</p>
             </div>
           </div>
         ) : null}
