@@ -27,6 +27,8 @@ import { fetchThankYouAckLedgerKeys } from "@/lib/fundraising/supporter-thank-yo
 import { getFundraisingWiringAdminSnapshot } from "@/lib/fundraising/fundraising-wiring-status"
 import { fetchPendingActivationUserIdsForSlug } from "@/lib/fundraising/fundraising-activation-status"
 import { isProfileCheckoutLive } from "@/lib/fundraising/fundraising-checkout-live"
+import { getFundraisingAthletePageWalletRowForViewer } from "@/lib/parent-spartan-fundraising-totals"
+import { FundraisingAthleteWalletPanel } from "./fundraising-athlete-wallet-panel"
 
 const HERO_FALLBACK_SILHOUETTE = "/wrestler-silhouette.png"
 
@@ -105,7 +107,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
 
   const snapshotLedger =
     resolved.ledgerCodes.length > 0 ? resolved.ledgerCodes : code != null ? [code] : []
-  const [snapshot, recruitingPhotoUrl, ownerThankYouRows, thankAckLedgerKeys, wiringSnapshot, pendingActivationUserIds] =
+  const [snapshot, recruitingPhotoUrl, ownerThankYouRows, thankAckLedgerKeys, wiringSnapshot, pendingActivationUserIds, managerWalletRow] =
     await Promise.all([
       snapshotLedger.length > 0
         ? getAthleteFundraisingPublicSnapshot(snapshotLedger, ATHLETE_PUBLIC_GIFTS_NO_ROW_CAP)
@@ -117,6 +119,12 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
       isFundraisingManager && athleteId ? fetchThankYouAckLedgerKeys(admin, athleteId) : Promise.resolve(new Set<string>()),
       athleteId ? getFundraisingWiringAdminSnapshot(admin, athleteId) : Promise.resolve(null),
       fetchPendingActivationUserIdsForSlug(admin, slugNorm),
+      user?.id && athleteId && isFundraisingManager
+        ? getFundraisingAthletePageWalletRowForViewer(admin, user.id, athleteId).catch((e) => {
+            console.error("[fundraising-athlete-public] wallet row", e)
+            return null
+          })
+        : Promise.resolve(null),
     ])
 
   const slugHasPendingActivation = pendingActivationUserIds.length > 0
@@ -133,6 +141,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
   const EMPTY_STATS: AthleteFundraisingPublicStats = {
     raisedCents: 0,
     giftCount: 0,
+    raceSignupCount: 0,
     avgGiftCents: null,
     organizationGiftCount: 0,
     individualGiftCount: 0,
@@ -410,6 +419,14 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
               showOwnerHints={showOwnerHints && checkoutLive}
             />
           </>
+        ) : null}
+
+        {managerWalletRow ? (
+          <FundraisingAthleteWalletPanel
+            row={managerWalletRow}
+            firstName={athleteFirstName}
+            ledgerPublicStats={stats}
+          />
         ) : null}
 
         {code && stats && checkoutLive && stats.giftCount === 0 ? (
