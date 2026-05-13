@@ -21,11 +21,12 @@ export default async function AdminFundraisingActivationRequestsPage() {
         </HardLink>
         <h1 className="mt-2 text-2xl font-bold tracking-tight text-gray-900">Activation requests</h1>
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          Families submit these from the athlete&apos;s gift page (<strong>Request activation</strong>) or from the members fundraising playbook (
-          <strong>Request staff link</strong>) — same queue. Approving resolves the athlete from the slug (when possible), inserts{" "}
-          <code className="rounded bg-muted px-1">parent_athlete_links</code> for that parent user, then marks the request approved — same wiring as the
-          manual parent-athlete link API. If approval fails with a resolve/link error, fix the profile or link manually, then approve again. Ensure tables
-          exist: <code className="rounded bg-muted px-1">scripts/supabase-fundraising-activation.sql</code>.
+          Any <strong>signed-in</strong> user can request activation from the athlete gift page — we store their{" "}
+          <strong>account email</strong> and <code className="rounded bg-muted px-1">user_id</code> for your review. Approving resolves the
+          athlete from the slug, creates <code className="rounded bg-muted px-1">parent_athlete_links</code> for that requester, and turns on
+          checkout when possible. Reject bogus requests. Table script:{" "}
+          <code className="rounded bg-muted px-1">scripts/supabase-fundraising-activation.sql</code>; email column:{" "}
+          <code className="rounded bg-muted px-1">scripts/supabase-fundraising-activation-requester-email.sql</code>.
         </p>
       </div>
 
@@ -35,6 +36,7 @@ export default async function AdminFundraisingActivationRequestsPage() {
             <TableRow>
               <TableHead>Created</TableHead>
               <TableHead>Slug</TableHead>
+              <TableHead>Requester email</TableHead>
               <TableHead>User id</TableHead>
               <TableHead>Athlete id</TableHead>
               <TableHead>Status</TableHead>
@@ -44,7 +46,7 @@ export default async function AdminFundraisingActivationRequestsPage() {
           <TableBody>
             {rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
                   No rows loaded — run the SQL script or wait for family submissions.
                 </TableCell>
               </TableRow>
@@ -64,6 +66,9 @@ export default async function AdminFundraisingActivationRequestsPage() {
                     >
                       {r.fundraising_slug}
                     </HardLink>
+                  </TableCell>
+                  <TableCell className="max-w-[14rem] truncate text-xs text-muted-foreground">
+                    {r.requester_email ?? "—"}
                   </TableCell>
                   <TableCell className="max-w-[10rem] truncate font-mono text-xs">{r.user_id}</TableCell>
                   <TableCell className="max-w-[10rem] truncate font-mono text-xs">{r.athlete_id ?? "—"}</TableCell>
