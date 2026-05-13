@@ -3,7 +3,6 @@
  * One module so chat does not depend on route.ts.
  */
 
-import type { SupabaseClient } from "@supabase/supabase-js"
 import { getSupabaseAdmin } from "@/lib/server-supabase"
 import { getAthleteProfileUrl } from "@/lib/athlete-profile-links"
 import { escapeForIlike } from "@/lib/nchsaa-results"
@@ -13,6 +12,7 @@ import {
   type NchsaaRowForProfile,
 } from "@/lib/profile-tournament-data"
 import { getNHSCAForAthlete, type TournamentResultForDisplay } from "@/lib/public-profile-data"
+import { namesMatch } from "@/lib/nhsca-live/names-match"
 import { getUltimateClubDualsFromTables } from "@/lib/tournament-tables"
 
 function athleteDisplayName(row: Record<string, unknown>): string {
@@ -75,6 +75,24 @@ function formatSuper32Row(r: Record<string, unknown>): string {
   return `- ${year}:${record ? ` ${record}` : ""}${weight ? ` (${weight})` : ""}`
 }
 
+/** Directory name vs tournament row (handles "Last, First" in DB). */
+function dossierNamesMatch(directoryFullName: string, rowName: string): boolean {
+  const dtrim = directoryFullName.trim()
+  const rtrim = rowName.trim()
+  if (!dtrim || !rtrim) return false
+  if (namesMatch(dtrim, rtrim)) return true
+  const comma = rtrim.indexOf(",")
+  if (comma > 0) {
+    const last = rtrim.slice(0, comma).trim()
+    const rest = rtrim.slice(comma + 1).trim()
+    if (last && rest) {
+      const flipped = `${rest} ${last}`
+      if (namesMatch(dtrim, flipped)) return true
+    }
+  }
+  return false
+}
+
 /**
  * Build legacy-style Markdown dossier for one athlete id (RecruitNC DB).
  */
@@ -107,6 +125,10 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
     Number(rawGrad) <= 2050
   const gradYear = hasValidGrad ? Math.floor(Number(rawGrad)) : new Date().getFullYear()
   const profileAthlete = toAthleteForProfile(athlete)
+
+  /** Earliest NCHSAA season year we query (≈ freshman spring through grad year + 1). Same for school dual / MOW. */
+  const yearMin = hasValidGrad ? gradYear - 4 : 1990
+  const yearMax = hasValidGrad ? gradYear + 1 : 2035
 
   const [tournament, nhscaDisplay, ncUnited] = await Promise.all([
     loadProfileTournamentData(supabase, profileAthlete, { allTime: true }),
@@ -141,8 +163,6 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
     }
   }
 
-  const yearMin = hasValidGrad ? gradYear - 4 : 1990
-  const yearMax = hasValidGrad ? gradYear + 1 : 2035
   let stateDualLines: string[] = []
   if (highSchool) {
     const { data: dualRows } = await supabase
@@ -167,6 +187,9 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
   if (stateDualLines.length > 0) {
     lines.push("")
     lines.push("🏆 State Dual Team Championships:")
+    lines.push(
+      `_(School team championships — everyone on the ${highSchool} varsity in this class window shares this list. Individual MOW below matches the **named** wrestler only.)_`,
+    )
     stateDualLines.forEach((l) => lines.push(l))
   }
 
@@ -179,10 +202,9 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
     .order("year", { ascending: false })
     .limit(200)
 
-  const lastTok = nameForQueries.toLowerCase().split(/\s+/).pop() ?? ""
   const mowFiltered = (mowRows ?? []).filter((m: Record<string, unknown>) => {
-    const mn = String(m.mow_name ?? "").toLowerCase()
-    return lastTok && (mn.includes(lastTok) || nameForQueries.toLowerCase().split(/\s+/).every((t) => t.length > 1 && mn.includes(t)))
+    const mn = String(m.mow_name ?? "").trim()
+    return mn.length > 0 && dossierNamesMatch(nameForQueries, mn)
   })
 
   if (mowFiltered.length > 0) {
@@ -190,7 +212,8 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
     lines.push("🏆 State Duals Most Outstanding Wrestler (MOW):")
     for (const m of mowFiltered) {
       const w = m.mow_weight_lb ? ` (${m.mow_weight_lb}lbs)` : ""
-      lines.push(`- ${m.year}: ${m.division} Dual Meet MOW${w} (${m.mow_school})`)
+      const who = String(m.mow_name ?? "").trim()
+      lines.push(`- ${m.year}: ${m.division} Dual Meet MOW — **${who}**${w} (${m.mow_school})`)
     }
   }
 
@@ -233,17 +256,18 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
     }
   }
 
+  const daveLast = nameForQueries.toLowerCase().split(/\s+/).filter(Boolean).pop() ?? ""
   const { data: daveRows } = await supabase
     .from("dave_schultz_award")
     .select("year, name, high_school")
-    .ilike("name", `%${escapeForIlike(lastTok)}%`)
+    .ilike("name", `%${escapeForIlike(daveLast)}%`)
+    .gte("year", yearMin)
+    .lte("year", yearMax)
     .order("year", { ascending: false })
-    .limit(20)
+    .limit(40)
 
   const daveFiltered = (daveRows ?? []).filter((d: Record<string, unknown>) =>
-    String(d.name ?? "")
-      .toLowerCase()
-      .includes(nameForQueries.toLowerCase().split(/\s+/).pop() ?? "x"),
+    dossierNamesMatch(nameForQueries, String(d.name ?? "").trim()),
   )
 
   if (daveFiltered.length > 0) {
