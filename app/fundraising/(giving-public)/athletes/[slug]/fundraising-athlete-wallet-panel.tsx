@@ -61,7 +61,7 @@ export function FundraisingAthleteWalletPanel({ row, firstName, ledgerPublicStat
             </h2>
             <p className="mt-1 text-xs leading-snug text-white/55">
               {ledgerAligned
-                ? "Raised and gift count match Total raised and Gifts on this page (same ledger)."
+                ? "Raised and gift count match the totals above. Each wrestler has their own balance: Guild sends from Profile are saved under the child you pick there — they show in Spent on that child’s page only (Mom’s and Dad’s accounts both roll up here)."
                 : "Profile → Digital wallet may use a different code when multiple NCU codes exist — link below for full ledger tools."}
             </p>
           </div>

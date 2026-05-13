@@ -63,6 +63,12 @@ export type ResolvedFundraisingAthletePublic = {
    * when checkout metadata differs from profile primary.
    */
   ledgerCodes: string[]
+  /**
+   * All `athletes.id` values from the directory that carry an NCU code in {@link ledgerCodes}, plus the profile’s
+   * athlete_id. Guild transfers in `guild_credit_allocations` sometimes sit under a sibling roster row UUID; the
+   * family wallet sums Guild across **these** ids so transfers still show on this gift page.
+   */
+  guildLookupAthleteIds: string[]
 }
 
 function coerceProfileRow(raw: unknown): AthleteFundraisingProfileRow {
@@ -120,6 +126,32 @@ function uniqueCoercedCodes(parts: (string | null | undefined)[]): string[] {
 }
 
 /**
+ * UUIDs to use when summing `guild_credit_allocations` for this gift page — profile id, preferred entry id, and
+ * any roster row id whose NCU code appears in `ledgerCodes` (collision / duplicate roster safety).
+ */
+function collectGuildLookupAthleteIds(
+  entries: FundraisingAthleteEntry[],
+  ledgerCodes: string[],
+  profileAthleteId: string | null | undefined,
+  preferredEntryId: string | null | undefined,
+): string[] {
+  const ids = new Set<string>()
+  if (profileAthleteId && ATHLETE_UUID_RE.test(profileAthleteId)) ids.add(profileAthleteId)
+  if (preferredEntryId && ATHLETE_UUID_RE.test(preferredEntryId)) ids.add(preferredEntryId)
+  const codeSet = new Set<string>()
+  for (const lc of ledgerCodes) {
+    const c = coerceNcuCode(lc)
+    if (c) codeSet.add(c)
+  }
+  for (const e of entries) {
+    if (e.id.startsWith("spartan-fundraising:")) continue
+    const c = coerceNcuCode(e.code)
+    if (c && codeSet.has(c)) ids.add(e.id)
+  }
+  return [...ids]
+}
+
+/**
  * Map URL slug → profile (if any) + NCU code for Stripe-linked stats / checkout.
  * Legacy URLs without a profile row still work when slug is the lowercase NCU code.
  */
@@ -155,13 +187,14 @@ export async function resolveFundraisingAthletePublic(
      *  so bad `primary_fundraising_code` / roster `entry.code` cannot zero out totals while checkout still shows the athlete. */
     const code = legacyCode ?? fromPrimary ?? entry?.code?.toUpperCase() ?? null
     const ledgerCodes = uniqueCoercedCodes([legacyCode, fromPrimary, ...rosterCodes, code])
+    const guildLookupAthleteIds = collectGuildLookupAthleteIds(entries, ledgerCodes, row.athlete_id, entry?.id ?? null)
     let fallbackDisplayName: string | null = null
     if (!entry) {
       const { data: ath } = await admin.from("athletes").select("name").eq("id", row.athlete_id).maybeSingle()
       const nm = typeof ath?.name === "string" ? ath.name.trim() : ""
       fallbackDisplayName = nm || null
     }
-    return { profile: row, code, entry, fallbackDisplayName, ledgerCodes }
+    return { profile: row, code, entry, fallbackDisplayName, ledgerCodes, guildLookupAthleteIds }
   }
 
   if (!legacyCode) return null
@@ -171,7 +204,8 @@ export async function resolveFundraisingAthletePublic(
       ? allCoercedLedgerCodesForAthleteId(entries, entry.id)
       : []
   const ledgerCodes = uniqueCoercedCodes([legacyCode, ...rosterCodes])
-  return { profile: null, code: legacyCode, entry, fallbackDisplayName: null, ledgerCodes }
+  const guildLookupAthleteIds = collectGuildLookupAthleteIds(entries, ledgerCodes, entry?.id ?? null, entry?.id ?? null)
+  return { profile: null, code: legacyCode, entry, fallbackDisplayName: null, ledgerCodes, guildLookupAthleteIds }
 }
 
 /**
