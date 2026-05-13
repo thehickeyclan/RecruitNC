@@ -9,6 +9,9 @@ export async function sendScholarshipApplicationEmails(params: {
   applicationsCloseDate: string | null
   awardAnnouncementDate: string | null
   adminNotifyEmail?: string | null
+  submissionFormat?: "written" | "video"
+  videoUrl?: string | null
+  videoBlobUrl?: string | null
 }): Promise<{ ok: boolean; error?: string }> {
   if (!process.env.RESEND_API_KEY) {
     console.warn("[scholarships] RESEND_API_KEY missing — skipping application emails")
@@ -66,6 +69,14 @@ export async function sendScholarshipApplicationEmails(params: {
       ? `<li><strong>Blind-review id:</strong> ${escapeHtml(params.anonymousId)}</li>`
       : ""
 
+    const format = params.submissionFormat === "video" ? "video" : "written"
+    const videoLines =
+      format === "video"
+        ? `<li><strong>Format:</strong> video</li>
+    ${params.videoUrl ? `<li><strong>Video link:</strong> <a href="${escapeAttr(params.videoUrl)}">${escapeHtml(params.videoUrl)}</a></li>` : ""}
+    ${params.videoBlobUrl ? `<li><strong>Uploaded file:</strong> <a href="${escapeAttr(params.videoBlobUrl)}">${escapeHtml(params.videoBlobUrl)}</a></li>` : ""}`
+        : `<li><strong>Format:</strong> written essay</li>`
+
     const adminHtml = `
 <!DOCTYPE html>
 <html><head><meta charset="utf-8"/></head>
@@ -74,6 +85,7 @@ export async function sendScholarshipApplicationEmails(params: {
   <ul>
     <li><strong>Scholarship:</strong> ${escapeHtml(params.scholarshipName)}</li>
     ${anonAdmin}
+    ${videoLines}
     <li><strong>Nominator:</strong> ${escapeHtml(params.nominatorName)} (${escapeHtml(params.nominatorEmail)})</li>
   </ul>
   <p style="margin-top:16px;"><a href="${adminScholarshipsUrl}">Open scholarship admin</a></p>
@@ -95,6 +107,10 @@ export async function sendScholarshipApplicationEmails(params: {
     console.error("[scholarships] sendScholarshipApplicationEmails:", e)
     return { ok: false, error: msg }
   }
+}
+
+function escapeAttr(s: string): string {
+  return escapeHtml(s).replace(/'/g, "&#39;")
 }
 
 function escapeHtml(s: string): string {

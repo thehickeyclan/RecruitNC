@@ -38,6 +38,8 @@ export type ScholarshipAwardPublicRow = {
   awarded_at: string
 }
 
+export type ScholarshipSubmissionFormat = "written" | "video"
+
 export type ScholarshipApplicationRow = {
   id: string
   scholarship_id: string
@@ -55,6 +57,9 @@ export type ScholarshipApplicationRow = {
   nominator_phone: string | null
   is_parent_nominating_own_child?: boolean
   nominator_known_duration?: string | null
+  submission_format?: ScholarshipSubmissionFormat
+  video_url?: string | null
+  video_blob_url?: string | null
   written_statement: string
   wrestling_moment: string | null
   reference_name: string | null

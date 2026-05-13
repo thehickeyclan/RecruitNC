@@ -1,8 +1,10 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import { upload } from "@vercel/blob/client"
 
 import { HardLink } from "@/components/hard-link"
+import { parseScholarshipVideoPageUrl } from "@/lib/scholarships/scholarship-video-url"
 import { countWords } from "@/lib/scholarships/word-count"
 
 function wordCountLabel(wc: number): string {
@@ -41,6 +43,13 @@ export function ScholarshipApplicationForm({
   const [writtenStatement, setWrittenStatement] = useState("")
   const [wrestlingMoment, setWrestlingMoment] = useState("")
   const [parentNominating, setParentNominating] = useState(false)
+  const [submissionKind, setSubmissionKind] = useState<"written" | "video">("written")
+  const [videoDelivery, setVideoDelivery] = useState<"youtube" | "upload">("youtube")
+  const [videoLink, setVideoLink] = useState("")
+  const [uploadedVideoUrl, setUploadedVideoUrl] = useState<string | null>(null)
+  const [uploadFile, setUploadFile] = useState<File | null>(null)
+  const [uploadBusy, setUploadBusy] = useState(false)
+  const [uploadErr, setUploadErr] = useState<string | null>(null)
 
   const [refRelSelect, setRefRelSelect] = useState("")
   const [refRelOther, setRefRelOther] = useState("")
@@ -51,6 +60,39 @@ export function ScholarshipApplicationForm({
   const wcMoment = useMemo(() => countWords(wrestlingMoment), [wrestlingMoment])
   const essayOk = wcMain >= 400 && wcMain <= 600
   const extraOk = wcMoment <= 200
+
+  const videoLinkParsed = useMemo(
+    () => (videoLink.trim() ? parseScholarshipVideoPageUrl(videoLink) : null),
+    [videoLink],
+  )
+  const videoUrlOk = videoDelivery === "youtube" && videoLinkParsed?.ok === true
+  const videoUploadOk = videoDelivery === "upload" && Boolean(uploadedVideoUrl?.trim())
+  const videoOk = submissionKind === "video" && (videoUrlOk || videoUploadOk)
+
+  const canSubmit = extraOk && (submissionKind === "written" ? essayOk : videoOk)
+
+  async function runBlobUpload() {
+    setUploadErr(null)
+    if (!uploadFile) {
+      setUploadErr("Choose a video file first.")
+      return
+    }
+    setUploadBusy(true)
+    try {
+      const result = await upload(uploadFile.name, uploadFile, {
+        access: "public",
+        handleUploadUrl: "/api/scholarships/video-upload",
+        clientPayload: JSON.stringify({ scholarshipSlug: slug }),
+      })
+      setUploadedVideoUrl(result.url)
+      setUploadErr(null)
+    } catch (e) {
+      setUploadedVideoUrl(null)
+      setUploadErr(e instanceof Error ? e.message : "Upload failed.")
+    } finally {
+      setUploadBusy(false)
+    }
+  }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -72,8 +114,18 @@ export function ScholarshipApplicationForm({
       }
     }
 
-    if (!essayOk || !extraOk) {
-      setError("Check word counts before submitting.")
+    if (!canSubmit) {
+      setError(
+        submissionKind === "video"
+          ? "Add a valid YouTube/Vimeo link, or upload a video file, before submitting."
+          : "Check word counts before submitting.",
+      )
+      setStatus("error")
+      return
+    }
+
+    if (submissionKind === "video" && videoDelivery === "youtube" && videoLink.trim() && videoLinkParsed && !videoLinkParsed.ok) {
+      setError(videoLinkParsed.error)
       setStatus("error")
       return
     }
@@ -97,7 +149,10 @@ export function ScholarshipApplicationForm({
       nominator_phone: String(fd.get("nominator_phone") ?? ""),
       nominator_known_duration: String(fd.get("nominator_known_duration") ?? ""),
       is_parent_nominating_own_child: parentNominating,
-      written_statement: writtenStatement,
+      submission_format: submissionKind,
+      written_statement: submissionKind === "written" ? writtenStatement : "",
+      video_url: submissionKind === "video" && videoDelivery === "youtube" ? videoLink.trim() : "",
+      video_blob_url: submissionKind === "video" && videoDelivery === "upload" ? (uploadedVideoUrl ?? "").trim() : "",
       wrestling_moment: wrestlingMoment.trim(),
       reference_name: String(fd.get("reference_name") ?? ""),
       reference_relationship: refRel,
@@ -130,6 +185,12 @@ export function ScholarshipApplicationForm({
       setRefRelOther("")
       setSecRefRelSelect("")
       setSecRefRelOther("")
+      setSubmissionKind("written")
+      setVideoDelivery("youtube")
+      setVideoLink("")
+      setUploadedVideoUrl(null)
+      setUploadFile(null)
+      setUploadErr(null)
     } catch {
       setError("Network error.")
       setStatus("error")
@@ -249,26 +310,166 @@ export function ScholarshipApplicationForm({
         </fieldset>
 
         <fieldset className="space-y-4 rounded-xl border border-white/10 bg-[#0B2545]/35 p-4 sm:p-5">
-          <legend className={`${label} px-1 text-[#C8A94A]`}>Section 3 — Your essay *</legend>
-          <div>
-            <label className={label}>The heart of this application</label>
-            <p className="mt-2 text-xs leading-relaxed text-white/50">
-              Describe a specific moment or period when this athlete faced genuine adversity — on or off the mat — and what their response
-              revealed about their character. Use concrete examples. Tell us what you saw.
-            </p>
-            <textarea
-              rows={10}
-              required
-              value={writtenStatement}
-              onChange={(e) => setWrittenStatement(e.target.value)}
-              className={`${field} resize-y`}
-            />
-            <p className={`mt-2 text-xs tabular-nums leading-relaxed ${essayOk ? "text-emerald-400/90" : "text-white/45"}`}>
-              <span className="font-medium text-white/55">{wordCountLabel(wcMain)}</span>
-              <span className="text-white/35"> · </span>
-              {essayStatusHint(wcMain)}
-            </p>
+          <legend className={`${label} px-1 text-[#C8A94A]`}>Section 3 — Written essay or video *</legend>
+          <p className="text-xs leading-relaxed text-white/50">
+            Pick <strong className="text-white/70">one</strong>: a 400–600 word essay, or a 3–5 minute video answering the same prompt (speak
+            straight to camera — phone recording is fine).
+          </p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <label
+              className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 text-sm ${
+                submissionKind === "written" ? "border-[#C8A94A]/55 bg-[#C8A94A]/10" : "border-white/12 bg-black/10"
+              }`}
+            >
+              <input
+                type="radio"
+                name="submission_kind_ui"
+                className="accent-[#C8A94A]"
+                checked={submissionKind === "written"}
+                onChange={() => setSubmissionKind("written")}
+              />
+              Written essay (400–600 words)
+            </label>
+            <label
+              className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 text-sm ${
+                submissionKind === "video" ? "border-[#C8A94A]/55 bg-[#C8A94A]/10" : "border-white/12 bg-black/10"
+              }`}
+            >
+              <input
+                type="radio"
+                name="submission_kind_ui"
+                className="accent-[#C8A94A]"
+                checked={submissionKind === "video"}
+                onChange={() => setSubmissionKind("video")}
+              />
+              Video (3–5 minutes)
+            </label>
           </div>
+
+          {submissionKind === "written" ? (
+            <div>
+              <label className={label}>The heart of this application</label>
+              <p className="mt-2 text-xs leading-relaxed text-white/50">
+                Describe a specific moment or period when this athlete faced genuine adversity — on or off the mat — and what their response
+                revealed about their character. Use concrete examples. Tell us what you saw.
+              </p>
+              <textarea
+                rows={10}
+                required
+                value={writtenStatement}
+                onChange={(e) => setWrittenStatement(e.target.value)}
+                className={`${field} resize-y`}
+              />
+              <p className={`mt-2 text-xs tabular-nums leading-relaxed ${essayOk ? "text-emerald-400/90" : "text-white/45"}`}>
+                <span className="font-medium text-white/55">{wordCountLabel(wcMain)}</span>
+                <span className="text-white/35"> · </span>
+                {essayStatusHint(wcMain)}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <p className={`${label} text-white/75`}>Same prompt as the written version</p>
+                <p className="mt-2 text-xs leading-relaxed text-white/50">
+                  Describe a specific moment or period when this athlete faced genuine adversity — on or off the mat — and what their response
+                  revealed about their character. Use concrete examples. Say what you saw.
+                </p>
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                <label
+                  className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm ${
+                    videoDelivery === "youtube" ? "border-[#C8A94A]/45 bg-[#C8A94A]/8" : "border-white/12"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    className="accent-[#C8A94A]"
+                    checked={videoDelivery === "youtube"}
+                    onChange={() => {
+                      setVideoDelivery("youtube")
+                      setUploadedVideoUrl(null)
+                      setUploadFile(null)
+                      setUploadErr(null)
+                    }}
+                  />
+                  YouTube or Vimeo link (unlisted is OK)
+                </label>
+                <label
+                  className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm ${
+                    videoDelivery === "upload" ? "border-[#C8A94A]/45 bg-[#C8A94A]/8" : "border-white/12"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    className="accent-[#C8A94A]"
+                    checked={videoDelivery === "upload"}
+                    onChange={() => {
+                      setVideoDelivery("upload")
+                      setVideoLink("")
+                      setUploadErr(null)
+                    }}
+                  />
+                  Upload MP4, WebM, or MOV
+                </label>
+              </div>
+
+              {videoDelivery === "youtube" ? (
+                <div>
+                  <label className={label}>Video URL *</label>
+                  <input
+                    type="url"
+                    value={videoLink}
+                    onChange={(e) => setVideoLink(e.target.value)}
+                    placeholder="https://www.youtube.com/watch?v=… or https://youtu.be/… or Vimeo"
+                    className={field}
+                  />
+                  {videoLink.trim() && videoLinkParsed && !videoLinkParsed.ok ? (
+                    <p className="mt-2 text-xs text-amber-400/90">{videoLinkParsed.error}</p>
+                  ) : videoUrlOk ? (
+                    <p className="mt-2 text-xs text-emerald-400/90">Link looks valid.</p>
+                  ) : (
+                    <p className="mt-2 text-xs text-white/45">Paste a full https link.</p>
+                  )}
+                </div>
+              ) : (
+                <div className="rounded-lg border border-white/12 bg-black/15 p-4">
+                  <label className={label}>Video file *</label>
+                  <p className="mt-1 text-[11px] leading-relaxed text-white/45">
+                    Large files upload directly to secure cloud storage. Upload requires the Vercel Blob token on the server (see deployment
+                    docs). Maximum size about 450 MB.
+                  </p>
+                  <input
+                    type="file"
+                    accept="video/mp4,video/webm,video/quicktime,.mp4,.mov,.webm"
+                    className={`${field} mt-2`}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0] ?? null
+                      setUploadFile(f)
+                      setUploadedVideoUrl(null)
+                      setUploadErr(null)
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => void runBlobUpload()}
+                    disabled={uploadBusy || !uploadFile}
+                    className="mt-3 w-full rounded-lg border border-[#C8A94A]/45 bg-[#C8A94A]/15 px-4 py-2.5 text-sm font-semibold text-[#f5e6b8] hover:bg-[#C8A94A]/25 disabled:opacity-45 sm:w-auto"
+                  >
+                    {uploadBusy ? "Uploading…" : uploadedVideoUrl ? "Upload again" : "Upload video"}
+                  </button>
+                  {uploadErr ? <p className="mt-2 text-xs text-amber-400/90">{uploadErr}</p> : null}
+                  {uploadedVideoUrl ? (
+                    <p className="mt-3 break-all text-xs text-emerald-400/90">
+                      Uploaded:{" "}
+                      <a href={uploadedVideoUrl} className="underline hover:text-emerald-200" target="_blank" rel="noopener noreferrer">
+                        open file
+                      </a>
+                    </p>
+                  ) : null}
+                </div>
+              )}
+            </div>
+          )}
         </fieldset>
 
         <fieldset className="space-y-4 rounded-xl border border-white/10 bg-[#0B2545]/35 p-4 sm:p-5">
@@ -376,7 +577,7 @@ export function ScholarshipApplicationForm({
 
         <button
           type="submit"
-          disabled={status === "submitting" || !essayOk || !extraOk}
+          disabled={status === "submitting" || !canSubmit}
           className="font-[family-name:var(--font-fundraising-display)] w-full min-h-[52px] rounded-sm bg-[#CC0000] px-6 text-sm font-extrabold uppercase tracking-[0.14em] text-white shadow-[0_14px_44px_-10px_rgba(204,0,0,0.55)] hover:bg-[#a80000] disabled:opacity-50"
         >
           {status === "submitting" ? "Submitting…" : "Submit application →"}

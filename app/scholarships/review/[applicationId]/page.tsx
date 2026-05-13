@@ -62,6 +62,9 @@ export default async function ScholarshipApplicationReviewPage({
 
   const committeeBlind = role === "committee" && !committeeIdentityReleased(app.status)
 
+  const isVideoSubmission =
+    app.submission_format === "video" || Boolean(app.video_url?.trim() || app.video_blob_url?.trim())
+
   const blindAdditionalContext = committeeBlind ? committeeSafeAdditionalContext(app.wrestling_moment) : app.wrestling_moment
 
   const displayTitle =
@@ -95,7 +98,8 @@ export default async function ScholarshipApplicationReviewPage({
 
       {committeeBlind ? (
         <p className="mt-6 rounded-lg border border-emerald-500/25 bg-emerald-950/20 px-4 py-3 text-sm leading-relaxed text-emerald-100/90">
-          Blind review: essay and optional context only. Athlete name, school, and nominator identity stay hidden until finalists are named.
+          Blind review: written essay or video (link / file) and optional context only. Athlete name, school, and nominator identity stay
+          hidden until finalists are named.
         </p>
       ) : null}
 
@@ -171,9 +175,43 @@ export default async function ScholarshipApplicationReviewPage({
 
       <section className="mt-6 rounded-xl border border-white/10 bg-[#0B2545]/45 p-4 sm:p-6">
         <h2 className="font-[family-name:var(--font-fundraising-display)] text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]">
-          Essay
+          {isVideoSubmission ? "Video submission" : "Written essay"}
         </h2>
-        <div className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-white/82">{app.written_statement}</div>
+        {isVideoSubmission ? (
+          <div className="mt-4 space-y-3 text-sm leading-relaxed text-white/82">
+            {app.video_url ? (
+              <p>
+                <span className="text-white/55">Hosted link: </span>
+                <a
+                  href={app.video_url}
+                  className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {app.video_url}
+                </a>
+              </p>
+            ) : null}
+            {app.video_blob_url ? (
+              <p>
+                <span className="text-white/55">Uploaded file: </span>
+                <a
+                  href={app.video_blob_url}
+                  className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Open video
+                </a>
+              </p>
+            ) : null}
+            {!app.video_url && !app.video_blob_url ? (
+              <p className="text-white/55">No video URL on file.</p>
+            ) : null}
+          </div>
+        ) : (
+          <div className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-white/82">{app.written_statement}</div>
+        )}
       </section>
 
       {blindAdditionalContext ? (

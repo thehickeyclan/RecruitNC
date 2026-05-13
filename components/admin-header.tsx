@@ -11,6 +11,11 @@ const adminNavItems = [
     icon: "🏠",
   },
   {
+    title: "User CRM",
+    href: "/admin/crm",
+    icon: "🧭",
+  },
+  {
     title: "Submissions",
     href: "/admin/submissions-manager",
     icon: "📝",
