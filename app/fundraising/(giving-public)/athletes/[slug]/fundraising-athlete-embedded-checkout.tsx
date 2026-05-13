@@ -27,6 +27,10 @@ function FundraisingAthleteCheckoutHashScroll() {
   return null
 }
 
+function FormFallback() {
+  return <p className="py-10 text-center text-sm text-white/50">Loading checkout…</p>
+}
+
 type Props = {
   /** NCU code — checkout only embedded when present */
   athleteCode: string | null
@@ -34,13 +38,20 @@ type Props = {
   athleteDirectoryLabel: string
   /** URL slug for Stripe thanks/cancel */
   fundraisingSlug: string
+  /** Server-enforced gate — must match profile.checkout_live */
+  checkoutLive: boolean
 }
 
-function FormFallback() {
-  return <p className="py-10 text-center text-sm text-white/50">Loading checkout…</p>
-}
+export function FundraisingAthleteEmbeddedCheckout({
+  athleteCode,
+  athleteDirectoryLabel,
+  fundraisingSlug,
+  checkoutLive,
+}: Props) {
+  if (!checkoutLive) {
+    return null
+  }
 
-export function FundraisingAthleteEmbeddedCheckout({ athleteCode, athleteDirectoryLabel, fundraisingSlug }: Props) {
   if (!athleteCode?.trim()) {
     return (
       <p className="text-center text-sm text-white/60">

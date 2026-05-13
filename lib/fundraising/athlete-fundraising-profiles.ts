@@ -48,6 +48,8 @@ export type AthleteFundraisingProfileRow = {
   campaign_goal_cents: number | null
   total_raised_cents: number | null
   primary_fundraising_code: string | null
+  /** When true, public athlete page may embed Stripe checkout (staff sets after activation approval). */
+  checkout_live: boolean
 }
 
 export type ResolvedFundraisingAthletePublic = {
@@ -61,6 +63,14 @@ export type ResolvedFundraisingAthletePublic = {
    * when checkout metadata differs from profile primary.
    */
   ledgerCodes: string[]
+}
+
+function coerceProfileRow(raw: unknown): AthleteFundraisingProfileRow {
+  const r = raw as Record<string, unknown>
+  return {
+    ...(r as unknown as AthleteFundraisingProfileRow),
+    checkout_live: r.checkout_live === true,
+  }
 }
 
 export function normalizeFundraisingProfileSlug(raw: string): string {
@@ -124,7 +134,7 @@ export async function resolveFundraisingAthletePublic(
   const { data: profile, error } = await admin
     .from("athlete_fundraising_profiles")
     .select(
-      "id, created_at, updated_at, athlete_id, slug, bio, photo_url, is_active, campaign_goal_cents, total_raised_cents, primary_fundraising_code",
+      "id, created_at, updated_at, athlete_id, slug, bio, photo_url, is_active, campaign_goal_cents, total_raised_cents, primary_fundraising_code, checkout_live",
     )
     .eq("slug", slug)
     .eq("is_active", true)
@@ -137,7 +147,7 @@ export async function resolveFundraisingAthletePublic(
   const legacyCode = coerceNcuCode(fundraisingCodeFromSlug(slug))
 
   if (profile) {
-    const row = profile as AthleteFundraisingProfileRow
+    const row = coerceProfileRow(profile)
     const fromPrimary = coerceNcuCode(row.primary_fundraising_code)
     const entry = pickPreferredFundraisingEntryForAthlete(entries, row.athlete_id)
     const rosterCodes = allCoercedLedgerCodesForAthleteId(entries, row.athlete_id)

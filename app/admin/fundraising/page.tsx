@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Switch } from "@/components/ui/switch"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
 import { HardLink } from "@/components/hard-link"
@@ -96,6 +97,8 @@ type AdminAthleteFundraisingProfileRow = {
   bio: string | null
   photo_url: string | null
   is_active: boolean
+  /** When true, Stripe checkout may embed on /fundraising/athletes/{slug}. */
+  checkout_live: boolean
   campaign_goal_cents: number | null
   total_raised_cents: number | null
   primary_fundraising_code: string | null
@@ -348,6 +351,8 @@ export default function AdminFundraisingPage() {
   const [profileGoalDollars, setProfileGoalDollars] = useState("")
   const [profilePrimaryCode, setProfilePrimaryCode] = useState("")
   const [profileActive, setProfileActive] = useState(true)
+  const [profileCheckoutLive, setProfileCheckoutLive] = useState(false)
+  const [checkoutLiveToggleBusyId, setCheckoutLiveToggleBusyId] = useState<string | null>(null)
   const [profileSaveBusy, setProfileSaveBusy] = useState(false)
   /** Donor profile row → Attach athlete dialog */
   const [attachAthleteProfile, setAttachAthleteProfile] = useState<AdminAthleteFundraisingProfileRow | null>(null)
@@ -1294,6 +1299,7 @@ export default function AdminFundraisingPage() {
     setProfileGoalDollars("")
     setProfilePrimaryCode("")
     setProfileActive(true)
+    setProfileCheckoutLive(false)
     setProfileDialogOpen(true)
   }
 
@@ -1310,7 +1316,37 @@ export default function AdminFundraisingPage() {
     )
     setProfilePrimaryCode(row.primary_fundraising_code ?? "")
     setProfileActive(row.is_active)
+    setProfileCheckoutLive(row.checkout_live === true)
     setProfileDialogOpen(true)
+  }
+
+  const patchFundraisingProfileCheckoutLive = async (row: AdminAthleteFundraisingProfileRow, next: boolean) => {
+    setCheckoutLiveToggleBusyId(row.id)
+    try {
+      const res = await fetch("/api/admin/athlete-fundraising-profiles", {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: row.id, checkout_live: next }),
+      })
+      const j = (await res.json()) as { error?: string }
+      if (!res.ok) {
+        toast({
+          title: "Could not update checkout",
+          description: j.error ?? res.statusText,
+          variant: "destructive",
+        })
+        return
+      }
+      toast({
+        title: next ? "Checkout activated on gift page" : "Checkout paused",
+        description: `${row.slug} — Stripe ${next ? "will" : "will not"} embed for this slug.`,
+      })
+      await loadFundraisingProfiles()
+      await loadAthleteMatrix()
+    } finally {
+      setCheckoutLiveToggleBusyId(null)
+    }
   }
 
   const saveFundraisingProfile = async () => {
@@ -1342,6 +1378,7 @@ export default function AdminFundraisingPage() {
             bio: profileBio.trim() || null,
             photo_url: profilePhotoUrl.trim() || null,
             is_active: profileActive,
+            checkout_live: profileCheckoutLive,
             campaign_goal_cents: goalCents,
             primary_fundraising_code: profilePrimaryCode.trim() ? profilePrimaryCode.trim().toUpperCase() : null,
           }),
@@ -2386,6 +2423,7 @@ export default function AdminFundraisingPage() {
                           <TableHead>NCU (roster / override)</TableHead>
                           <TableHead>Goal</TableHead>
                           <TableHead>Active</TableHead>
+                          <TableHead className="whitespace-nowrap">Gift checkout</TableHead>
                           <TableHead className="whitespace-nowrap min-w-[7.5rem] text-[11px] leading-tight">
                             Gift-page edits
                           </TableHead>
@@ -2428,6 +2466,31 @@ export default function AdminFundraisingPage() {
                                     No
                                   </Badge>
                                 )}
+                              </TableCell>
+                              <TableCell className="align-top">
+                                <div className="flex flex-col items-start gap-1.5">
+                                  {p.checkout_live ? (
+                                    <Badge className="bg-emerald-600 text-xs hover:bg-emerald-600">Live</Badge>
+                                  ) : (
+                                    <Badge variant="outline" className="text-xs text-muted-foreground">
+                                      Off
+                                    </Badge>
+                                  )}
+                                  <Button
+                                    type="button"
+                                    variant="secondary"
+                                    size="sm"
+                                    className="h-7 text-[11px]"
+                                    disabled={checkoutLiveToggleBusyId === p.id}
+                                    onClick={() => void patchFundraisingProfileCheckoutLive(p, !p.checkout_live)}
+                                  >
+                                    {checkoutLiveToggleBusyId === p.id
+                                      ? "Updating…"
+                                      : p.checkout_live
+                                        ? "Pause checkout"
+                                        : "Activate checkout"}
+                                  </Button>
+                                </div>
                               </TableCell>
                               <TableCell className="align-top">
                                 <div className="flex flex-col gap-1.5 text-[11px] leading-tight">
@@ -3579,6 +3642,26 @@ export default function AdminFundraisingPage() {
                   Active (public directory lists active profiles only)
                 </Label>
               </div>
+              {profileEditingId ? (
+                <div className="flex items-start justify-between gap-3 rounded-md border border-border bg-muted/30 px-3 py-2.5">
+                  <div className="min-w-0 space-y-0.5">
+                    <Label htmlFor="fp-checkout-live" className="text-foreground font-medium">
+                      Gift page checkout (Stripe)
+                    </Label>
+                    <p className="text-muted-foreground text-xs leading-snug">
+                      Off until families complete activation (or you turn it on after wiring). Matches{" "}
+                      <code className="rounded bg-muted px-1 text-[10px]">checkout_live</code> in Supabase.
+                    </p>
+                  </div>
+                  <Switch
+                    id="fp-checkout-live"
+                    checked={profileCheckoutLive}
+                    onCheckedChange={(c) => setProfileCheckoutLive(c === true)}
+                    disabled={profileSaveBusy}
+                    className="mt-0.5 shrink-0"
+                  />
+                </div>
+              ) : null}
             </div>
             <DialogFooter className="gap-2 sm:gap-0">
               <Button type="button" variant="secondary" onClick={() => setProfileDialogOpen(false)} disabled={profileSaveBusy}>

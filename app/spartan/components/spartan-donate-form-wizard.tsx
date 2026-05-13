@@ -387,7 +387,8 @@ export function SpartanDonateFormWizard({
   }, [tierPreference, flow])
 
   const amountCents = useMemo(() => dollarsToCents(amountDollars), [amountDollars])
-  const teeEligible = flow === "race" || amountCents >= TEE_THRESHOLD_CENTS
+  /** Athlete gift page embed has no Spartan race tee unlock — keep copy and steps aligned. */
+  const teeEligible = !athleteGiftPageEmbed && (flow === "race" || amountCents >= TEE_THRESHOLD_CENTS)
 
   const codeForCheckout = fundraisingCode.trim() || undefined
   const manualCreditTrimmed = manualCreditName.trim()

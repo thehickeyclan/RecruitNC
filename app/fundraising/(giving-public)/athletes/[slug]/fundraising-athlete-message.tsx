@@ -13,6 +13,8 @@ type Props = {
   canEdit: boolean
   /** RecruitNC staff — may edit the note even before a profile row exists (saving creates the profile when possible). */
   isRecruitNcAdmin: boolean
+  /** False until staff approves activation — families cannot edit until then (admins still can). */
+  checkoutLive: boolean
   initialBio: string
 }
 
@@ -22,6 +24,7 @@ export function FundraisingAthleteMessageSection({
   hasFundraisingProfile,
   canEdit,
   isRecruitNcAdmin,
+  checkoutLive,
   initialBio,
 }: Props) {
   const router = useRouter()
@@ -76,8 +79,22 @@ export function FundraisingAthleteMessageSection({
 
   const trimmed = bio.trim()
   const showPublicMessage = trimmed.length > 0
-  /** Managers (athlete login + athlete_id, linked parent, or staff) may edit; first save can create the profile from roster NCU. */
-  const showPencil = canEdit
+  const familyMayEdit = checkoutLive || isRecruitNcAdmin
+  const showPencil = canEdit && familyMayEdit
+
+  if (canEdit && !familyMayEdit) {
+    return (
+      <section className="mt-8 rounded-xl border border-[#C8A94A]/30 bg-[#0B2545]/45 px-4 py-5 sm:px-6 sm:py-6">
+        <h2 className="font-[family-name:var(--font-fundraising-display)] text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]">
+          A note from {firstName}
+        </h2>
+        <p className="mt-3 text-sm leading-relaxed text-white/65">
+          After NC United <strong className="text-white/85">activates</strong> this page, you&apos;ll be able to add a personal note for donors. Use{" "}
+          <strong className="text-[#C8A94A]">Request activation</strong> above if you still need to.
+        </p>
+      </section>
+    )
+  }
 
   return (
     <section className="mt-8 rounded-xl border border-[#C8A94A]/30 bg-[#0B2545]/45 px-4 py-5 sm:px-6 sm:py-6">
@@ -101,7 +118,7 @@ export function FundraisingAthleteMessageSection({
       {showPencil && editing ? (
         <>
           <p className="mt-2 text-xs leading-relaxed text-white/50">
-            This message appears on this gift page. The first save may create the page record when a roster fundraising code is on file.
+            Shown on this page once fundraising is live. First save may create the profile when a roster code is on file.
           </p>
           <textarea
             value={bio}
@@ -137,7 +154,7 @@ export function FundraisingAthleteMessageSection({
         <>
           {canEdit && !hasFundraisingProfile && !isRecruitNcAdmin ? (
             <p className="mt-3 text-sm leading-relaxed text-white/65">
-              Use <strong className="text-white/90">Edit</strong> above or the button below — saving creates the gift-page record when this wrestler is on our roster. If something fails, contact NC United for help.
+              Saving can create the gift-page record when this wrestler has a roster code. Activation is still required before donors can give on this URL.
             </p>
           ) : null}
 
@@ -161,13 +178,11 @@ export function FundraisingAthleteMessageSection({
               className="mt-4 w-full rounded-lg border border-dashed border-[#C8A94A]/35 bg-black/15 px-4 py-4 text-left transition hover:border-[#C8A94A]/55 hover:bg-black/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A94A]/60"
             >
               <p className="text-sm font-semibold text-white/90">Write {firstName}&apos;s note for donors</p>
-              <p className="mt-2 text-sm leading-relaxed text-white/55">
-                Opens the editor — same as <span className="text-[#C8A94A]">Edit</span> in the corner. This note appears at the top of the gift page.
-              </p>
+              <p className="mt-2 text-sm leading-relaxed text-white/55">A short thank-you or season goal helps friends and family connect with why they&apos;re giving.</p>
             </button>
           ) : (
             <p className="mt-4 text-sm italic text-white/50">
-              We&apos;ll share a personal note from {firstName} here when it&apos;s added — scroll down to give anytime.
+              A personal note from {firstName} will appear here once the family adds one and the page is live for gifts.
             </p>
           )}
         </>

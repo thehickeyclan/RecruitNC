@@ -35,6 +35,8 @@ type AdminAthleteFundraisingProfileRow = {
   bio: string | null
   photo_url: string | null
   is_active: boolean
+  /** When true, Stripe checkout is allowed for this athlete slug (activation approved). */
+  checkout_live: boolean
   campaign_goal_cents: number | null
   total_raised_cents: number | null
   primary_fundraising_code: string | null
@@ -83,6 +85,7 @@ export async function GET() {
       bio: (p.bio as string | null) ?? null,
       photo_url: (p.photo_url as string | null) ?? null,
       is_active: p.is_active === true,
+      checkout_live: p.checkout_live === true,
       campaign_goal_cents: typeof p.campaign_goal_cents === "number" ? p.campaign_goal_cents : null,
       total_raised_cents: typeof p.total_raised_cents === "number" ? p.total_raised_cents : null,
       primary_fundraising_code: (p.primary_fundraising_code as string | null) ?? null,
@@ -150,6 +153,7 @@ export async function POST(request: NextRequest) {
     bio: typeof body.bio === "string" ? body.bio.trim() || null : null,
     photo_url: typeof body.photo_url === "string" ? body.photo_url.trim() || null : null,
     is_active: body.is_active !== false,
+    checkout_live: false,
     campaign_goal_cents: typeof body.campaign_goal_cents === "number" ? Math.max(0, Math.round(body.campaign_goal_cents)) : null,
     primary_fundraising_code: primary,
     updated_at: now,
@@ -182,6 +186,7 @@ export async function PATCH(request: NextRequest) {
     bio?: string | null
     photo_url?: string | null
     is_active?: boolean
+    checkout_live?: boolean
     campaign_goal_cents?: number | null
     primary_fundraising_code?: string | null
   } = {}
@@ -229,6 +234,9 @@ export async function PATCH(request: NextRequest) {
   }
   if (body.is_active !== undefined) {
     patch.is_active = body.is_active === true
+  }
+  if (body.checkout_live !== undefined) {
+    patch.checkout_live = body.checkout_live === true
   }
   if (body.campaign_goal_cents !== undefined) {
     patch.campaign_goal_cents =

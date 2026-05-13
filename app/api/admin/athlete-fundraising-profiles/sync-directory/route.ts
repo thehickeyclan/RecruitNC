@@ -97,6 +97,7 @@ export async function POST() {
       bio: null as string | null,
       photo_url: null as string | null,
       is_active: true,
+      checkout_live: false,
       campaign_goal_cents: null as number | null,
       primary_fundraising_code: codeUpper,
       updated_at: now,

@@ -165,6 +165,17 @@ export async function reviewFundraisingActivationRequestAdminAction(
     return { ok: false, error: error.message }
   }
 
+  if (nextStatus === "approved" && resolvedAthleteIdForApprove) {
+    const { error: liveErr } = await admin
+      .from("athlete_fundraising_profiles")
+      .update({ checkout_live: true, updated_at: now })
+      .eq("athlete_id", resolvedAthleteIdForApprove)
+      .eq("is_active", true)
+    if (liveErr) {
+      console.warn("[reviewFundraisingActivationRequest] checkout_live on profile", liveErr.message)
+    }
+  }
+
   const slugOut = typeof reqRow.fundraising_slug === "string" ? reqRow.fundraising_slug : null
   if (slugOut) {
     revalidatePath(`/fundraising/athletes/${slugOut.trim().toLowerCase()}`)
