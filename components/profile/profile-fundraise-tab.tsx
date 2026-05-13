@@ -6,6 +6,7 @@ import { ProfileFundraiseThankYousSection } from "@/components/profile/profile-f
 import { DEFAULT_FUNDRAISING_CAMPAIGN } from "@/lib/fundraising/campaign-registry"
 import type { ProfileSpartanSupportersAthletePayload } from "@/app/api/profile/spartan-fundraising-supporters/route"
 import { Loader2, Wallet } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
 
 const LOOKBACK_DAYS = DEFAULT_FUNDRAISING_CAMPAIGN.defaultLookbackDays
 
@@ -25,6 +26,8 @@ type SpartanRow = {
 type LinkedAthlete = { id: string; name: string }
 
 type ProfileFundraiseTabProps = {
+  /** False until the parent triggers wallet loads (tab open or linked athlete). */
+  walletPanelActivated: boolean
   spartanFundraising: { athletes: SpartanRow[] } | null
   spartanFundraisingLoading: boolean
   supporterContactsLoading: boolean
@@ -48,6 +51,7 @@ function spentSubLabel(reimb: number, guild: number): string {
 }
 
 export function ProfileFundraiseTab({
+  walletPanelActivated,
   spartanFundraising,
   spartanFundraisingLoading,
   supporterContactsLoading,
@@ -58,6 +62,10 @@ export function ProfileFundraiseTab({
   linkedAthletes,
   onSpartanTotalsRefresh,
 }: ProfileFundraiseTabProps) {
+  /** First open: hide expense / Guild / thank-yous so the tab doesn’t look “empty but ready” while Stripe sync runs. */
+  const deferFundraiseExtras =
+    walletPanelActivated && spartanFundraisingLoading && spartanFundraising === null
+
   return (
     <div className="space-y-6">
       <section className="overflow-hidden rounded-2xl border border-[#003366]/12 bg-white shadow-md shadow-[#003366]/8">
@@ -74,9 +82,43 @@ export function ProfileFundraiseTab({
           </div>
 
           {spartanFundraisingLoading ? (
-            <div className="flex items-center gap-2 rounded-xl border border-[#003366]/10 bg-slate-50/80 px-4 py-6 text-sm text-slate-600">
-              <Loader2 className="h-5 w-5 shrink-0 animate-spin text-[#03154C]" aria-hidden />
-              Loading balances…
+            <div
+              role="status"
+              aria-live="polite"
+              className="rounded-xl border-2 border-[#03154C]/20 bg-gradient-to-b from-[#03154C]/[0.06] to-slate-50/90 px-4 py-6 shadow-inner sm:px-6 sm:py-8"
+            >
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-5">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#03154C] text-[#CBAF5D] shadow-md">
+                  <Loader2 className="h-6 w-6 animate-spin" aria-hidden />
+                </span>
+                <div className="min-w-0 flex-1 space-y-2">
+                  <p className="text-base font-semibold text-[#03154C] sm:text-lg">Loading your wallet…</p>
+                  <p className="text-sm leading-relaxed text-slate-700">
+                    Syncing gifts for your wrestlers from payment records. This usually completes in a few seconds.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                <div className="space-y-2 rounded-lg bg-white/80 px-4 py-4 ring-1 ring-[#003366]/10">
+                  <Skeleton className="h-3 w-24 bg-slate-200/90" />
+                  <Skeleton className="h-9 w-28 max-w-full bg-slate-200/90" />
+                  <Skeleton className="h-3 w-full bg-slate-200/70" />
+                </div>
+                <div className="space-y-2 rounded-lg bg-white/80 px-4 py-4 ring-1 ring-[#003366]/10">
+                  <Skeleton className="h-3 w-20 bg-slate-200/90" />
+                  <Skeleton className="h-8 w-24 max-w-full bg-slate-200/90" />
+                  <Skeleton className="h-3 w-full bg-slate-200/70" />
+                </div>
+                <div className="space-y-2 rounded-lg bg-white/80 px-4 py-4 ring-1 ring-[#003366]/10">
+                  <Skeleton className="h-3 w-16 bg-slate-200/90" />
+                  <Skeleton className="h-8 w-20 max-w-full bg-slate-200/90" />
+                  <Skeleton className="h-3 w-full bg-slate-200/70" />
+                </div>
+              </div>
+            </div>
+          ) : !walletPanelActivated ? (
+            <div className="rounded-xl border border-[#003366]/10 bg-slate-50/80 px-4 py-6 text-sm text-slate-600">
+              Open <span className="font-semibold text-[#03154C]">Digital wallet</span> above to load campaign balances (Stripe-backed; may take a few seconds the first time).
             </div>
           ) : !spartanFundraising || spartanFundraising.athletes.length === 0 ? (
             <div className="rounded-xl border border-dashed border-[#003366]/20 bg-slate-50/60 px-4 py-10 text-center">
@@ -145,26 +187,30 @@ export function ProfileFundraiseTab({
         </div>
       </section>
 
-      <ExpenseRequestSection linkedAthletes={linkedAthletes} />
+      {deferFundraiseExtras ? null : (
+        <>
+          <ExpenseRequestSection linkedAthletes={linkedAthletes} />
 
-      <GuildCreditAllocationSection
-        onSpartanTotalsRefresh={onSpartanTotalsRefresh}
-        spartanLoading={spartanFundraisingLoading}
-        spartanAthletes={
-          spartanFundraising?.athletes?.map((a) => ({
-            athleteId: a.athleteId,
-            name: a.name,
-            netAfterReimbursementsCents: a.netAfterReimbursementsCents ?? a.totalCents,
-            codeUnavailable: a.codeUnavailable,
-          })) ?? []
-        }
-      />
+          <GuildCreditAllocationSection
+            onSpartanTotalsRefresh={onSpartanTotalsRefresh}
+            spartanLoading={spartanFundraisingLoading}
+            spartanAthletes={
+              spartanFundraising?.athletes?.map((a) => ({
+                athleteId: a.athleteId,
+                name: a.name,
+                netAfterReimbursementsCents: a.netAfterReimbursementsCents ?? a.totalCents,
+                codeUnavailable: a.codeUnavailable,
+              })) ?? []
+            }
+          />
 
-      <ProfileFundraiseThankYousSection
-        loading={supporterContactsLoading}
-        lookbackDays={supporterLookbackDays}
-        athletes={supporterContacts}
-      />
+          <ProfileFundraiseThankYousSection
+            loading={supporterContactsLoading}
+            lookbackDays={supporterLookbackDays}
+            athletes={supporterContacts}
+          />
+        </>
+      )}
     </div>
   )
 }

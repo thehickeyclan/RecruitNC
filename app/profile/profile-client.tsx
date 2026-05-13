@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -84,10 +84,14 @@ export function ProfileClient() {
       netAfterReimbursementsCents: number
     }[]
   } | null>(null)
-  const [spartanFundraisingLoading, setSpartanFundraisingLoading] = useState(true)
+  const [spartanFundraisingLoading, setSpartanFundraisingLoading] = useState(false)
   const [supporterContacts, setSupporterContacts] = useState<ProfileSpartanSupportersAthletePayload[] | null>(null)
   const [supporterLookbackDays, setSupporterLookbackDays] = useState<number | null>(null)
-  const [supporterContactsLoading, setSupporterContactsLoading] = useState(true)
+  const [supporterContactsLoading, setSupporterContactsLoading] = useState(false)
+  /** Wallet Stripe totals are expensive; load only when the user opens Digital wallet (or links an athlete). */
+  const [spartanWalletPanelActivated, setSpartanWalletPanelActivated] = useState(false)
+  const [activeProfileTab, setActiveProfileTab] = useState("account")
+  const spartanWalletPrimedRef = useRef(false)
 
   useEffect(() => {
     console.log("[v0] ProfileClient useEffect:", { authLoading, isAuthenticated, user: !!user })
@@ -97,14 +101,16 @@ export function ProfileClient() {
       fetchBlueMemberships()
       fetchLinkedAthletes()
       fetchEventHubs()
-      void fetchSpartanFundraisingTotals()
-      void fetchSpartanSupporterContacts()
     } else if (!authLoading && !isAuthenticated) {
       setIsLoading(false)
       setBlueLoading(false)
       setLinkedLoading(false)
       setEventHubsLoading(false)
       setSpartanFundraisingLoading(false)
+      setSpartanFundraising(null)
+      spartanWalletPrimedRef.current = false
+      setSpartanWalletPanelActivated(false)
+      setActiveProfileTab("account")
       setSupporterContacts(null)
       setSupporterLookbackDays(null)
       setSupporterContactsLoading(false)
@@ -183,6 +189,22 @@ export function ProfileClient() {
     }
   }
 
+  const onProfileTabChange = useCallback(
+    (v: string) => {
+      setActiveProfileTab(v)
+      if (v !== "fundraise" || authLoading || !isAuthenticated) return
+      if (spartanWalletPrimedRef.current) return
+      spartanWalletPrimedRef.current = true
+      setSpartanFundraisingLoading(true)
+      setSpartanWalletPanelActivated(true)
+      void (async () => {
+        await fetchSpartanFundraisingTotals()
+        await fetchSpartanSupporterContacts()
+      })()
+    },
+    [authLoading, isAuthenticated],
+  )
+
   useEffect(() => {
     if (!profile || linkedLoading) return
     const ids = [...new Set([profile.athlete_id, ...linkedAthletes.map((a) => a.id)].filter(Boolean) as string[])]
@@ -225,8 +247,13 @@ export function ProfileClient() {
       setAthleteSearchResults([])
       setSuccess(data.message ?? "Athlete linked.")
       fetchLinkedAthletes()
-      void fetchSpartanFundraisingTotals()
-      void fetchSpartanSupporterContacts()
+      spartanWalletPrimedRef.current = true
+      setSpartanFundraisingLoading(true)
+      setSpartanWalletPanelActivated(true)
+      void (async () => {
+        await fetchSpartanFundraisingTotals()
+        await fetchSpartanSupporterContacts()
+      })()
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not link athlete")
     } finally {
@@ -519,7 +546,7 @@ export function ProfileClient() {
           </div>
         </div>
 
-        <Tabs defaultValue="account" className="w-full space-y-6">
+        <Tabs value={activeProfileTab} onValueChange={onProfileTabChange} className="w-full space-y-6">
           <TabsList className="mb-0 grid w-full grid-cols-2 sm:grid-cols-4 gap-2 rounded-2xl border border-[#003366]/12 bg-gradient-to-b from-white to-slate-50/90 p-2 h-auto shadow-md shadow-[#003366]/5">
             <TabsTrigger
               value="account"
@@ -831,6 +858,7 @@ export function ProfileClient() {
 
         <TabsContent value="fundraise" className="mt-0 space-y-0 focus-visible:outline-none">
           <ProfileFundraiseTab
+            walletPanelActivated={spartanWalletPanelActivated}
             spartanFundraising={spartanFundraising}
             spartanFundraisingLoading={spartanFundraisingLoading}
             supporterContactsLoading={supporterContactsLoading}
@@ -840,8 +868,10 @@ export function ProfileClient() {
             linkedCount={linkedAthletes.length}
             linkedAthletes={linkedAthletes}
             onSpartanTotalsRefresh={() => {
-              void fetchSpartanFundraisingTotals()
-              void fetchSpartanSupporterContacts()
+              void (async () => {
+                await fetchSpartanFundraisingTotals()
+                await fetchSpartanSupporterContacts()
+              })()
             }}
           />
         </TabsContent>

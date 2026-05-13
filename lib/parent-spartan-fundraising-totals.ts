@@ -98,7 +98,19 @@ export async function computeParentSpartanFundraisingTotalsForUser(
     (nameRows ?? []).map((r) => [String((r as { id: string }).id), String((r as { name: string | null }).name ?? "—")]),
   )
 
-  const entries = await getFundraisingAthleteEntries(admin)
+  const sinceMs = Date.now() - FAYETTEVILLE_STRIPE_LOOKBACK_DAYS * 24 * 60 * 60 * 1000
+  const [entries, statsByCode, reimbByAthleteId, guildReservedByAthlete] = await Promise.all([
+    getFundraisingAthleteEntries(admin),
+    getFayettevilleStatsByAthleteCodeLowercase().catch((e) => {
+      console.error("[parent-spartan-fundraising-totals] Stripe totals", e)
+      return new Map<string, FayettevilleCodeStats>()
+    }),
+    fetchReimbursementPaidCentsByAthleteIdInWindow(admin, sinceMs),
+    fetchGuildReservedCentsByAthleteId(admin, userId).catch((e) => {
+      console.warn("[parent-spartan-fundraising-totals] guild reservations", e)
+      return new Map<string, number>()
+    }),
+  ])
 
   /** Same UUID may map to multiple NCU codes — never overwrite arbitrarily (last loop iteration wins). */
   const codesByAthleteId = new Map<string, Set<string>>()
@@ -111,28 +123,11 @@ export async function computeParentSpartanFundraisingTotalsForUser(
     codesByAthleteId.set(e.id, set)
   }
 
-  let statsByCode = new Map<string, FayettevilleCodeStats>()
-  try {
-    statsByCode = await getFayettevilleStatsByAthleteCodeLowercase()
-  } catch (e) {
-    console.error("[parent-spartan-fundraising-totals] Stripe totals", e)
-  }
-
   const codeByAthleteId = new Map<string, string>()
   for (const id of athleteIds) {
     const candidates = codesByAthleteId.get(id)
     const picked = candidates?.size ? pickBestFundraisingCodeForAthlete(candidates, statsByCode) : null
     if (picked) codeByAthleteId.set(id, picked)
-  }
-
-  const sinceMs = Date.now() - FAYETTEVILLE_STRIPE_LOOKBACK_DAYS * 24 * 60 * 60 * 1000
-  const reimbByAthleteId = await fetchReimbursementPaidCentsByAthleteIdInWindow(admin, sinceMs)
-
-  let guildReservedByAthlete = new Map<string, number>()
-  try {
-    guildReservedByAthlete = await fetchGuildReservedCentsByAthleteId(admin, userId)
-  } catch (e) {
-    console.warn("[parent-spartan-fundraising-totals] guild reservations", e)
   }
 
   const athletes: ParentSpartanFundraisingAthleteRow[] = athleteIds.map((id) => {

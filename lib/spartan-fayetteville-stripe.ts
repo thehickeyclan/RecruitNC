@@ -114,7 +114,7 @@ export async function listSpartanFayettevilleDonations(
     const res = await stripe.checkout.sessions.list({
       created: { gte: createdGteUnix },
       limit: 100,
-      expand: ["data.payment_intent"],
+      /** Skip expand: `payment_intent` is present as an id string on paid sessions; expand balloons payload + latency. */
       ...(startingAfter ? { starting_after: startingAfter } : {}),
     })
 
@@ -255,7 +255,7 @@ export async function listSpartanFayettevilleDonationsAllRegisteredCampaigns(
     const res = await stripe.checkout.sessions.list({
       created: { gte: createdGteUnix },
       limit: 100,
-      expand: ["data.payment_intent"],
+      /** Skip expand: `payment_intent` is present as an id string on paid sessions; expand balloons payload + latency. */
       ...(startingAfter ? { starting_after: startingAfter } : {}),
     })
 

@@ -15,7 +15,7 @@ import { DEFAULT_FUNDRAISING_CAMPAIGN, type FundraisingCampaignDefinition } from
 
 const STRIPE_DONATION_LIST_CACHE_SECONDS = Math.min(
   600,
-  Math.max(60, Number(process.env.RECRUITNC_FUNDRAISING_STRIPE_LIST_CACHE_SECONDS) || 120),
+  Math.max(60, Number(process.env.RECRUITNC_FUNDRAISING_STRIPE_LIST_CACHE_SECONDS) || 180),
 )
 
 async function loadCorrectedStripeDonationsForCampaignWindowUncached(
