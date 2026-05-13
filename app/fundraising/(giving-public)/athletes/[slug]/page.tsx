@@ -264,7 +264,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
               Donate now
             </HardLink>
             <p className="text-center text-[11px] leading-snug text-white/50 sm:max-w-md">
-              Secure checkout is on this page below. Most people finish in about 10 minutes — you&apos;ll get a receipt by email.
+              Secure checkout is on this page below. Most people finish in a couple of minutes — you&apos;ll get a receipt by email.
             </p>
           </div>
         ) : null}
@@ -273,6 +273,13 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           <p className="font-[family-name:var(--font-fundraising-display)] text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]">
             {code ? "Why give through this page" : "Why donors choose NC United"}
           </p>
+          {code ? (
+            <p className="mt-4 text-sm leading-relaxed text-white/85">
+              Access to training and competition is often constrained by financial resources. Our aim is to help fund{" "}
+              <strong className="text-white">{displayName}&apos;s</strong> training this spring and summer so they can make real
+              progress as an athlete and grow as a young person through those sessions.
+            </p>
+          ) : null}
           <ul className="mt-4 list-none space-y-3 text-sm leading-relaxed text-white/85">
             <li>
               <strong className="text-white">Tax-deductible.</strong> NC United Wrestling is a 501(c)(3). Your email receipt is your record (check spam or
@@ -452,7 +459,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           </h2>
           <p className="mx-auto mt-2 max-w-md text-center text-[13px] leading-snug text-white/70">
             <strong className="font-semibold text-white/85">Tax-deductible</strong> gift (minimum $5). You&apos;ll complete payment in secure checkout and
-            receive an <strong className="font-semibold text-white/85">email receipt</strong>. Plan about <strong className="font-semibold text-white/85">10 minutes</strong>.
+            receive an <strong className="font-semibold text-white/85">email receipt</strong> — typically just a couple of minutes.
           </p>
           <div className="mt-6 w-full text-left">
             <FundraisingAthleteEmbeddedCheckout
