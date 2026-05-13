@@ -79,7 +79,7 @@ export function FundraisingMilestoneFunnel({ raisedCents, goalCents, athleteLabe
           <div className="relative h-full w-[14px] overflow-hidden rounded-full border border-[#C8A94A]/45 bg-[#020814]/90 shadow-[inset_0_2px_8px_rgba(0,0,0,0.45)]">
             {/* Fill */}
             <div
-              className="absolute bottom-0 left-0 right-0 rounded-b-full bg-gradient-to-t from-[#5c1518] via-[#b91c1c] to-[#C8A94A] transition-[height] duration-500 ease-out"
+              className="absolute bottom-0 left-0 right-0 rounded-b-full bg-gradient-to-t from-[#0B2545] via-[#0d9488] to-[#4ade80] transition-[height] duration-500 ease-out"
               style={{ height: `${fillRatio * 100}%` }}
             />
             {/* Milestone ticks */}
@@ -95,7 +95,7 @@ export function FundraisingMilestoneFunnel({ raisedCents, goalCents, athleteLabe
                   aria-hidden
                 >
                   <div
-                    className={`h-full w-full rounded-full ${hit ? "bg-[#f5e6a8] shadow-[0_0_6px_rgba(200,169,74,0.45)]" : "bg-white/22"}`}
+                    className={`h-full w-full rounded-full ${hit ? "bg-emerald-300 shadow-[0_0_6px_rgba(52,211,153,0.55)]" : "bg-white/22"}`}
                   />
                 </div>
               )

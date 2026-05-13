@@ -21,10 +21,11 @@ import { FundraisingAthleteMessageSection } from "./fundraising-athlete-message"
 import { FundraisingMilestoneFunnel } from "./fundraising-milestone-funnel"
 import { FundraisingOwnerPanel } from "./fundraising-owner-panel"
 import { FundraisingAdminAssignmentPanel } from "./fundraising-admin-assignment-panel"
-import { FundraisingActivationIndicator } from "./fundraising-activation-indicator"
+import { FundraisingPublicationBanner } from "./fundraising-publication-banner"
 import { recruitingProfilePhotoFromRow } from "@/lib/recruiting-profile-photo"
 import { fetchThankYouAckLedgerKeys } from "@/lib/fundraising/supporter-thank-you-ack"
-import { getFundraisingWiringAdminSnapshot } from "@/lib/fundraising/fundraising-wiring-status"
+import { getFundraisingWiringAdminSnapshot, fundraisingWiringLooksReadyForNonAdminEdits } from "@/lib/fundraising/fundraising-wiring-status"
+import { fetchPendingActivationUserIdsForSlug } from "@/lib/fundraising/fundraising-activation-status"
 
 const HERO_FALLBACK_SILHOUETTE = "/wrestler-silhouette.png"
 
@@ -99,32 +100,28 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
   /** Roster credit codes are operational — don’t surface to casual donors. */
   const showInternalCodes = showOwnerHints
 
-  /** Pending family activation on this slug — wiring chips only (recruitnc admins). */
-  let latestActivationStatus: "none" | "pending" | "approved" | "rejected" = "none"
-  if (viewerIsRecruitNcAdmin) {
-    const slugNorm = slug.trim().toLowerCase()
-    const { data: pendRows } = await admin
-      .from("fundraising_activation_requests")
-      .select("status")
-      .eq("fundraising_slug", slugNorm)
-      .eq("status", "pending")
-      .limit(1)
-    if (pendRows?.length) latestActivationStatus = "pending"
-  }
+  const slugNorm = slug.trim().toLowerCase()
 
   const snapshotLedger =
     resolved.ledgerCodes.length > 0 ? resolved.ledgerCodes : code != null ? [code] : []
-  const [snapshot, recruitingPhotoUrl, ownerThankYouRows, thankAckLedgerKeys, wiringSnapshot] = await Promise.all([
-    snapshotLedger.length > 0
-      ? getAthleteFundraisingPublicSnapshot(snapshotLedger, ATHLETE_PUBLIC_GIFTS_NO_ROW_CAP)
-      : Promise.resolve(null),
-    athleteId ? fetchRecruitingProfilePhoto(admin, athleteId) : Promise.resolve(null),
-    isFundraisingManager && snapshotLedger.length > 0
-      ? getAthleteOwnerThankYouRowsForLedgerCodes(snapshotLedger)
-      : Promise.resolve([]),
-    isFundraisingManager && athleteId ? fetchThankYouAckLedgerKeys(admin, athleteId) : Promise.resolve(new Set<string>()),
-    athleteId && viewerIsRecruitNcAdmin ? getFundraisingWiringAdminSnapshot(admin, athleteId) : Promise.resolve(null),
-  ])
+  const [snapshot, recruitingPhotoUrl, ownerThankYouRows, thankAckLedgerKeys, wiringSnapshot, pendingActivationUserIds] =
+    await Promise.all([
+      snapshotLedger.length > 0
+        ? getAthleteFundraisingPublicSnapshot(snapshotLedger, ATHLETE_PUBLIC_GIFTS_NO_ROW_CAP)
+        : Promise.resolve(null),
+      athleteId ? fetchRecruitingProfilePhoto(admin, athleteId) : Promise.resolve(null),
+      isFundraisingManager && snapshotLedger.length > 0
+        ? getAthleteOwnerThankYouRowsForLedgerCodes(snapshotLedger)
+        : Promise.resolve([]),
+      isFundraisingManager && athleteId ? fetchThankYouAckLedgerKeys(admin, athleteId) : Promise.resolve(new Set<string>()),
+      athleteId ? getFundraisingWiringAdminSnapshot(admin, athleteId) : Promise.resolve(null),
+      fetchPendingActivationUserIdsForSlug(admin, slugNorm),
+    ])
+
+  const slugHasPendingActivation = pendingActivationUserIds.length > 0
+  const latestActivationStatus: "none" | "pending" = slugHasPendingActivation ? "pending" : "none"
+  const viewerHasPendingActivation = !!(user?.id && pendingActivationUserIds.includes(user.id))
+  const wiringReady = !!(wiringSnapshot && fundraisingWiringLooksReadyForNonAdminEdits(wiringSnapshot))
 
   const ownerThankYouRowsWithAck = ownerThankYouRows.map((r) => ({
     ...r,
@@ -197,9 +194,17 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           </HardLink>
         </div>
 
-        {athleteId && wiringSnapshot && viewerIsRecruitNcAdmin ? (
-          <FundraisingActivationIndicator wiringSnapshot={wiringSnapshot} />
-        ) : null}
+        <FundraisingPublicationBanner
+          athletePagePath={athletePagePath}
+          fundraisingSlug={slugNorm}
+          athleteId={athleteId}
+          displayName={displayName}
+          wiringReady={wiringReady}
+          slugHasPendingActivation={slugHasPendingActivation}
+          viewerUserId={user?.id ?? null}
+          viewerHasPendingActivation={viewerHasPendingActivation}
+          isFundraisingManager={isFundraisingManager}
+        />
 
         {viewerIsRecruitNcAdmin ? (
           <FundraisingAdminAssignmentPanel
