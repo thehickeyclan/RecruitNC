@@ -4,6 +4,7 @@ import {
   fundraisingCampaignByStripeSlug,
   normalizeRegistryStripeCampaignSlug,
   publicGiftCampaignLabel,
+  seasonYearLabelForGiftDate,
 } from "@/lib/fundraising/campaign-registry"
 
 /** Stripe `spartan_campaign` metadata → hub feed / gift-log display fields. */
@@ -107,14 +108,19 @@ export function hubActivityCampaignWithCheckoutSurface(
 
 /**
  * Athlete `/fundraising/athletes/...` gift table: same labels as {@link publicGiftCampaignLabel}, plus checkout surface when present.
+ *
+ * When checkout started on the **athlete** gift page (`athlete_page`), the second segment is a **neutral** season/year
+ * (same calendar rules as unknown-campaign gifts). Stripe still carries `spartan_campaign` for ledger routing; that
+ * must not read as “this was a Spartan team-page gift” in the public table.
  */
 export function publicGiftCampaignLabelWithCheckoutSurface(
   metadataSlug: string | null | undefined,
   giftIsoUtc: string,
   fundraisingCheckoutSurface: string | null | undefined,
 ): string {
-  const base = publicGiftCampaignLabel(metadataSlug, giftIsoUtc)
   const s = fundraisingCheckoutSurface?.trim()
+  const base =
+    s === "athlete_page" ? seasonYearLabelForGiftDate(giftIsoUtc) : publicGiftCampaignLabel(metadataSlug, giftIsoUtc)
   if (!s) return base
   const prefix = CHECKOUT_SURFACE_PREFIX[s]
   if (!prefix) return base
