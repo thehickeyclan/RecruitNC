@@ -220,6 +220,7 @@ function HubBody({
   const ntCount = payload.nationalTeamRegistrations.ok ? payload.nationalTeamRegistrations.data.length : 0
   const noteCount = payload.crmNotes.ok ? payload.crmNotes.data.length : 0
 
+  const overviewSlot = (
     <>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <StatTile label="Linked athletes" value={athCount} icon={Users} />
