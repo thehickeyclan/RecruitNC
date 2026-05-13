@@ -100,11 +100,6 @@ export function ProfileFundraiseTab({
               </div>
               <div className="mt-6 grid gap-3 sm:grid-cols-3">
                 <div className="space-y-2 rounded-lg bg-white/80 px-4 py-4 ring-1 ring-[#003366]/10">
-                  <Skeleton className="h-3 w-24 bg-slate-200/90" />
-                  <Skeleton className="h-9 w-28 max-w-full bg-slate-200/90" />
-                  <Skeleton className="h-3 w-full bg-slate-200/70" />
-                </div>
-                <div className="space-y-2 rounded-lg bg-white/80 px-4 py-4 ring-1 ring-[#003366]/10">
                   <Skeleton className="h-3 w-20 bg-slate-200/90" />
                   <Skeleton className="h-8 w-24 max-w-full bg-slate-200/90" />
                   <Skeleton className="h-3 w-full bg-slate-200/70" />
@@ -112,6 +107,11 @@ export function ProfileFundraiseTab({
                 <div className="space-y-2 rounded-lg bg-white/80 px-4 py-4 ring-1 ring-[#003366]/10">
                   <Skeleton className="h-3 w-16 bg-slate-200/90" />
                   <Skeleton className="h-8 w-20 max-w-full bg-slate-200/90" />
+                  <Skeleton className="h-3 w-full bg-slate-200/70" />
+                </div>
+                <div className="space-y-2 rounded-lg bg-white/80 px-4 py-4 ring-1 ring-[#003366]/10">
+                  <Skeleton className="h-3 w-24 bg-slate-200/90" />
+                  <Skeleton className="h-9 w-28 max-w-full bg-slate-200/90" />
                   <Skeleton className="h-3 w-full bg-slate-200/70" />
                 </div>
               </div>
@@ -156,7 +156,21 @@ export function ProfileFundraiseTab({
 
                     <div className="grid gap-3 sm:grid-cols-3">
                       <div className="rounded-lg bg-white px-4 py-3 ring-1 ring-[#003366]/10 sm:py-4">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#B31B1B]">Available</p>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#03154C]">Raised</p>
+                        <p className="mt-1 text-xl font-bold tabular-nums text-[#03154C] sm:text-2xl">
+                          {formatUsd(row.totalCents)}
+                        </p>
+                        <p className="mt-1 text-[11px] leading-snug text-slate-500">Started with · credited gifts</p>
+                      </div>
+                      <div className="rounded-lg bg-white px-4 py-3 ring-1 ring-[#003366]/10 sm:py-4">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#B31B1B]/90">Spent</p>
+                        <p className="mt-1 text-xl font-bold tabular-nums text-[#B31B1B] sm:text-2xl">
+                          {usedTotal > 0 ? formatUsd(usedTotal) : "—"}
+                        </p>
+                        <p className="mt-1 text-[11px] leading-snug text-slate-500">{spentSubLabel(reimb, guildAlloc)}</p>
+                      </div>
+                      <div className="rounded-lg bg-white px-4 py-3 ring-1 ring-[#003366]/10 sm:py-4">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-800">Available</p>
                         <p
                           className={`mt-1 text-2xl font-bold tabular-nums tracking-tight sm:text-3xl ${
                             remainingAfterGuild < 0 ? "text-red-600" : "text-emerald-700"
@@ -165,18 +179,6 @@ export function ProfileFundraiseTab({
                           {formatUsd(remainingAfterGuild)}
                         </p>
                         <p className="mt-1 text-[11px] leading-snug text-slate-500">After reimbursements & Guild holds</p>
-                      </div>
-                      <div className="rounded-lg bg-white px-4 py-3 ring-1 ring-[#003366]/10 sm:py-4">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#03154C]/65">Raised</p>
-                        <p className="mt-1 text-xl font-bold tabular-nums text-[#03154C] sm:text-2xl">{formatUsd(row.totalCents)}</p>
-                        <p className="mt-1 text-[11px] leading-snug text-slate-500">Started with · credited gifts</p>
-                      </div>
-                      <div className="rounded-lg bg-white px-4 py-3 ring-1 ring-[#003366]/10 sm:py-4">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#03154C]/65">Spent</p>
-                        <p className="mt-1 text-xl font-bold tabular-nums text-[#03154C] sm:text-2xl">
-                          {usedTotal > 0 ? formatUsd(usedTotal) : "—"}
-                        </p>
-                        <p className="mt-1 text-[11px] leading-snug text-slate-500">{spentSubLabel(reimb, guildAlloc)}</p>
                       </div>
                     </div>
                   </li>
