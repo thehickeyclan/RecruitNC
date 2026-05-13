@@ -53,7 +53,7 @@ type Props = {
 export function GuildCreditAllocationSection({ spartanAthletes, spartanLoading, onSpartanTotalsRefresh }: Props) {
   const { toast } = useToast()
   const [open, setOpen] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [guildParentUserId, setGuildParentUserId] = useState<string | null>(null)
   const [grantConfigured, setGrantConfigured] = useState(false)
@@ -87,8 +87,9 @@ export function GuildCreditAllocationSection({ spartanAthletes, spartanLoading, 
   }, [toast])
 
   useEffect(() => {
+    if (!open) return
     void load()
-  }, [load])
+  }, [open, load])
 
   const allocatable = useMemo((): AllocatableRow[] => {
     return spartanAthletes.map((row) => {

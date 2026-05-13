@@ -1,15 +1,12 @@
-import Stripe from "stripe"
-import { createAdminClient } from "@/lib/supabase/admin"
-import {
-  applySpartanCreditCorrectionsToDonations,
-  fetchSpartanCreditCorrectionsIndex,
-} from "@/lib/spartan-credit-corrections"
+import { DEFAULT_FUNDRAISING_CAMPAIGN } from "@/lib/fundraising/campaign-registry"
+import { loadCorrectedStripeDonationsForCampaignWindow } from "@/lib/fundraising/stripe-transparency-pipeline"
 import { buildSpartanPublicSupporterSummary } from "@/lib/spartan-public-supporter-feed"
-import { aggregateSpartanByAthlete, listSpartanFayettevilleDonations } from "@/lib/spartan-fayetteville-stripe"
+import { aggregateSpartanByAthlete } from "@/lib/spartan-fayetteville-stripe"
 
 /**
  * Must match the default in Admin → Fundraising (`/api/admin/spartan-donations?days=120`)
  * so parent profile totals match the admin table unless you change the admin lookback.
+ * Keep in sync with {@link DEFAULT_FUNDRAISING_CAMPAIGN}.`defaultLookbackDays`.
  */
 export const FAYETTEVILLE_STRIPE_LOOKBACK_DAYS = 120
 
@@ -21,26 +18,6 @@ export type FayettevilleCodeStats = {
   raceSignupCount: number
 }
 
-type StripeWindowCache = {
-  expiresAt: number
-  statsByAthleteCodeLowercase: Map<string, FayettevilleCodeStats>
-  /** All paid Fayetteville sessions in window (same as admin `grossSessionTotalCents`). */
-  grossSessionTotalCents: number
-  /** Pooled NC United fund checkouts (same rules as `/spartan` summary — intentional “no wrestler”). */
-  ncUnitedCommunityFund120dCents: number
-}
-let stripeWindowCache: StripeWindowCache | null = null
-
-/**
- * Short TTL avoids hammering Stripe on every Profile → Wallet tab focus while staying aligned with admin/playbook data.
- * Override seconds globally via RECRUITNC_FUNDRAISING_STRIPE_LIST_CACHE_SECONDS (same as hub Stripe caches).
- */
-function fayettevilleStripeWindowCacheTtlMs(): number {
-  const raw = Number(process.env.RECRUITNC_FUNDRAISING_STRIPE_LIST_CACHE_SECONDS)
-  const sec = Number.isFinite(raw) && raw > 0 ? Math.min(600, Math.max(30, raw)) : 90
-  return sec * 1000
-}
-
 export type FayettevilleStripeWindowSnapshot = {
   statsByAthleteCodeLowercase: Map<string, FayettevilleCodeStats>
   grossSessionTotalCents: number
@@ -49,40 +26,25 @@ export type FayettevilleStripeWindowSnapshot = {
 
 /**
  * Fayetteville Stripe window: per-code aggregates (coded gifts only) plus **campaign gross** (every paid session).
- * Use gross to reconcile Admin → Fundraising totals vs parent-linked-only rollups.
+ * Uses {@link loadCorrectedStripeDonationsForCampaignWindow} so listing hits **Next/Vercel Data Cache**
+ * (shared across serverless instances), not only process memory — profile wallet and hub reuse one Stripe pass.
  */
 export async function getFayettevilleStripeWindowSnapshot(): Promise<FayettevilleStripeWindowSnapshot> {
-  const now = Date.now()
-  if (stripeWindowCache && stripeWindowCache.expiresAt > now) {
-    return {
-      statsByAthleteCodeLowercase: stripeWindowCache.statsByAthleteCodeLowercase,
-      grossSessionTotalCents: stripeWindowCache.grossSessionTotalCents,
-      ncUnitedCommunityFund120dCents: stripeWindowCache.ncUnitedCommunityFund120dCents,
-    }
-  }
-
   const stripeSecret = process.env.STRIPE_SECRET_KEY?.trim()
   if (!stripeSecret) {
     const empty = new Map<string, FayettevilleCodeStats>()
-    stripeWindowCache = {
-      expiresAt: now + fayettevilleStripeWindowCacheTtlMs(),
-      statsByAthleteCodeLowercase: empty,
-      grossSessionTotalCents: 0,
-      ncUnitedCommunityFund120dCents: 0,
-    }
     return { statsByAthleteCodeLowercase: empty, grossSessionTotalCents: 0, ncUnitedCommunityFund120dCents: 0 }
   }
 
-  const since = Math.floor((Date.now() - FAYETTEVILLE_STRIPE_LOOKBACK_DAYS * 24 * 60 * 60 * 1000) / 1000)
-  const stripe = new Stripe(stripeSecret)
-  const raw = await listSpartanFayettevilleDonations(stripe, since)
-  const admin = createAdminClient()
-  const correctionIndex = await fetchSpartanCreditCorrectionsIndex(admin)
-  const donationsRaw = applySpartanCreditCorrectionsToDonations(raw, correctionIndex)
-  const grossSessionTotalCents = donationsRaw.reduce((s, d) => s + d.amountCents, 0)
-  const ncUnitedCommunityFund120dCents = buildSpartanPublicSupporterSummary(donationsRaw).ncUnitedCommunityFundCents
+  const donations = await loadCorrectedStripeDonationsForCampaignWindow(DEFAULT_FUNDRAISING_CAMPAIGN, null)
+  if (!donations) {
+    throw new Error("Could not load Stripe campaign window (fundraising totals)")
+  }
 
-  const agg = aggregateSpartanByAthlete(donationsRaw)
+  const grossSessionTotalCents = donations.reduce((s, d) => s + d.amountCents, 0)
+  const ncUnitedCommunityFund120dCents = buildSpartanPublicSupporterSummary(donations).ncUnitedCommunityFundCents
+
+  const agg = aggregateSpartanByAthlete(donations)
   const statsByAthleteCodeLowercase = new Map<string, FayettevilleCodeStats>()
   for (const a of agg) {
     const k = a.athleteCode.trim().toLowerCase()
@@ -93,12 +55,6 @@ export async function getFayettevilleStripeWindowSnapshot(): Promise<Fayettevill
     })
   }
 
-  stripeWindowCache = {
-    expiresAt: now + fayettevilleStripeWindowCacheTtlMs(),
-    statsByAthleteCodeLowercase,
-    grossSessionTotalCents,
-    ncUnitedCommunityFund120dCents,
-  }
   return { statsByAthleteCodeLowercase, grossSessionTotalCents, ncUnitedCommunityFund120dCents }
 }
 
