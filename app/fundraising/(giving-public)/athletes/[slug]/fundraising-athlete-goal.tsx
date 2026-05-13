@@ -147,14 +147,14 @@ export function FundraisingAthleteGoalSection({
 
       {canEdit && !hasFundraisingProfile && !isRecruitNcAdmin ? (
         <p className="mt-3 text-sm leading-relaxed text-white/65">
-          Use <strong className="text-white/90">Edit</strong> above or tap below — saving creates your gift page record if this wrestler is on the roster with an NCU code (same as the note section).
+          Use <strong className="text-white/90">Edit</strong> above or tap below — saving creates your gift page when this wrestler is on our roster with a fundraising code.
         </p>
       ) : null}
 
       {canEdit && editing ? (
         <>
           <p className="mt-2 text-xs leading-relaxed text-white/50">
-            Donors see this above your note. The trophy fills as gifts come in and reaches full when totals reach this goal.
+            Donors see this above your note. The milestone tracker fills as gifts come in and hits 100% when totals reach this goal.
           </p>
           <label className="mt-4 block text-xs font-semibold uppercase tracking-wide text-white/55">
             Goal (USD)
@@ -228,7 +228,7 @@ export function FundraisingAthleteGoalSection({
               </div>
               <p className="mt-3 text-[11px] font-semibold uppercase tracking-wide text-[#C8A94A]/90">Tap to edit goal</p>
               <p className="mt-2 text-xs leading-relaxed text-white/45">
-                The trophy below fills with the same running total and reaches full at this goal.
+                The milestone tracker below uses the same running total and fills to 100% at this goal.
               </p>
             </button>
           ) : (
@@ -250,7 +250,7 @@ export function FundraisingAthleteGoalSection({
                 />
               </div>
               <p className="mt-3 text-xs leading-relaxed text-white/45">
-                The trophy below fills with the same running total and reaches full at this goal.
+                The milestone tracker below uses the same running total and fills to 100% at this goal.
               </p>
             </>
           )}
@@ -268,8 +268,7 @@ export function FundraisingAthleteGoalSection({
         </button>
       ) : (
         <p className="mt-4 text-sm leading-relaxed text-white/55">
-          No personal goal is shown here yet. RecruitNC staff, this wrestler, or a <strong className="text-white/80">parent account linked to this athlete</strong>{" "}
-          can add one when signed in — same as the note below.
+          Progress toward a fundraising goal will show here when {firstName} or their family adds one — it doesn&apos;t affect giving; you can donate anytime below.
         </p>
       )}
     </section>

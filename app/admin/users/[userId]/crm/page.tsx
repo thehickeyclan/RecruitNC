@@ -29,6 +29,9 @@ import {
   ExternalLink,
   Building2,
   StickyNote,
+  Coins,
+  Receipt,
+  Gift,
 } from "lucide-react"
 
 export const dynamic = "force-dynamic"
@@ -590,6 +593,200 @@ function HubBody({
     </>
   )
 
+  const fundraisingSlot = (
+    <>
+      <Alert className="border-[#D3B574]/35 bg-[#D3B574]/8">
+        <AlertCircle className="h-4 w-4 text-[#8a7040]" />
+        <AlertTitle>Fundraising & digital wallet</AlertTitle>
+        <AlertDescription className="text-sm leading-relaxed">
+          Ledger rows match what families see under <strong>Profile → Digital wallet</strong>: gifts credited to each child’s NCU code in the campaign
+          lookback window, reimbursements <em>paid</em> in that same window, and Guild amounts reserved from this login. Athletes come from the primary
+          profile <code className="rounded bg-muted px-1 text-[11px]">athlete_id</code> plus <code className="rounded bg-muted px-1 text-[11px]">parent_athlete_links</code> (all kids tied to this parent account).
+        </AlertDescription>
+      </Alert>
+
+      <SectionCRM
+        title="Wallet by athlete (all kids)"
+        description="Per-child totals — use this as the admin view of the digital wallet."
+        icon={Coins}
+        section={payload.fundraisingWallet}
+      >
+        {payload.fundraisingWallet.ok &&
+          (payload.fundraisingWallet.data.athletes.length === 0 ? (
+            <EmptyQuiet>No primary or linked athlete — no wallet rows for this login.</EmptyQuiet>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-xs text-muted-foreground">
+                Stripe campaign{" "}
+                <span className="font-mono">{payload.fundraisingWallet.data.campaign}</span> · lookback{" "}
+                <span className="font-medium tabular-nums">{payload.fundraisingWallet.data.lookbackDays}</span> days
+              </p>
+              <DataTableShell>
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/40 hover:bg-muted/40">
+                      <TableHead className="font-medium">Athlete</TableHead>
+                      <TableHead className="font-medium">NCU code</TableHead>
+                      <TableHead className="text-right font-medium">Raised</TableHead>
+                      <TableHead className="text-right font-medium">Gifts</TableHead>
+                      <TableHead className="text-right font-medium">Race</TableHead>
+                      <TableHead className="text-right font-medium">Reimb. paid</TableHead>
+                      <TableHead className="text-right font-medium">Net</TableHead>
+                      <TableHead className="text-right font-medium">Guild</TableHead>
+                      <TableHead className="text-right font-medium"> </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {payload.fundraisingWallet.data.athletes.map((a) => (
+                      <TableRow key={a.athleteId} className="border-border/50">
+                        <TableCell className="font-medium">{a.name}</TableCell>
+                        <TableCell>
+                          {a.fundraisingCode ? (
+                            <span className="font-mono text-xs">{a.fundraisingCode}</span>
+                          ) : (
+                            <Badge variant="outline" className="text-[10px] font-normal">
+                              {a.codeUnavailable ? "No roster code" : "—"}
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums text-sm">{formatMoneyCents(a.totalCents)}</TableCell>
+                        <TableCell className="text-right text-sm tabular-nums">{a.giftCount}</TableCell>
+                        <TableCell className="text-right text-sm tabular-nums">{a.raceSignupCount}</TableCell>
+                        <TableCell className="text-right tabular-nums text-sm text-muted-foreground">
+                          {formatMoneyCents(a.reimbursementsPaidCents)}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums text-sm font-semibold">
+                          {formatMoneyCents(a.netAfterReimbursementsCents)}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums text-sm">{formatMoneyCents(a.guildAllocationsCents)}</TableCell>
+                        <TableCell className="text-right">
+                          <HardLink
+                            href={`/view-profile?id=${encodeURIComponent(a.athleteId)}`}
+                            className="text-xs font-medium text-primary underline-offset-4 hover:underline"
+                          >
+                            Public profile
+                          </HardLink>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </DataTableShell>
+            </div>
+          ))}
+      </SectionCRM>
+
+      <SectionCRM
+        title="Reimbursement history"
+        description="Every athlete_expense_requests row for this user_id (Submitted → paid pipeline)."
+        icon={Receipt}
+        section={payload.athleteExpenseRequests}
+      >
+        {payload.athleteExpenseRequests.ok &&
+          (payload.athleteExpenseRequests.data.length === 0 ? (
+            <EmptyQuiet>No reimbursement requests filed from this account.</EmptyQuiet>
+          ) : (
+            <DataTableShell>
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/40 hover:bg-muted/40">
+                    <TableHead className="font-medium">Submitted</TableHead>
+                    <TableHead className="font-medium">Athlete</TableHead>
+                    <TableHead className="font-medium">Type</TableHead>
+                    <TableHead className="text-right font-medium">Ask</TableHead>
+                    <TableHead className="text-right font-medium">Approved</TableHead>
+                    <TableHead className="font-medium">Payout</TableHead>
+                    <TableHead className="font-medium">Status</TableHead>
+                    <TableHead className="font-medium">Paid</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {payload.athleteExpenseRequests.data.map((r) => (
+                    <TableRow key={r.id} className="border-border/50">
+                      <TableCell className="whitespace-nowrap text-sm text-muted-foreground">{formatWhen(r.created_at)}</TableCell>
+                      <TableCell className="text-sm">{r.athlete_name ?? r.athlete_id.slice(0, 8) + "…"}</TableCell>
+                      <TableCell className="text-sm capitalize">{r.expense_type ?? "—"}</TableCell>
+                      <TableCell className="text-right tabular-nums text-sm">{formatMoneyCents(r.amount_cents)}</TableCell>
+                      <TableCell className="text-right tabular-nums text-sm">
+                        {r.amount_approved_cents != null ? formatMoneyCents(r.amount_approved_cents) : "—"}
+                      </TableCell>
+                      <TableCell className="text-xs uppercase text-muted-foreground">{r.payment_method ?? "—"}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="font-normal capitalize">
+                          {r.status ?? "—"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-sm text-muted-foreground">{formatWhen(r.paid_at)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </DataTableShell>
+          ))}
+      </SectionCRM>
+
+      <SectionCRM
+        title="Their gifts (this email as donor)"
+        description="Spartan-channel Stripe charges where receipt or billing email matched this contact. Scan is capped at the 100 most recent charges on the Stripe account."
+        icon={Gift}
+        section={payload.spartanDonorCharges}
+      >
+        {payload.spartanDonorCharges.ok && (
+          <div className="space-y-3">
+            {payload.spartanDonorCharges.data.note ? (
+              <p className="text-xs text-muted-foreground">{payload.spartanDonorCharges.data.note}</p>
+            ) : null}
+            {payload.spartanDonorCharges.data.rows.length === 0 ? (
+              <EmptyQuiet>No Spartan-tagged donor charges matched this email in the recent scan.</EmptyQuiet>
+            ) : (
+              <DataTableShell>
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/40 hover:bg-muted/40">
+                      <TableHead className="font-medium">When</TableHead>
+                      <TableHead className="text-right font-medium">Amount</TableHead>
+                      <TableHead className="font-medium">Athlete code</TableHead>
+                      <TableHead className="font-medium">Campaign</TableHead>
+                      <TableHead className="font-medium">Charge</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {payload.spartanDonorCharges.data.rows.map((row) => (
+                      <TableRow key={row.id} className="border-border/50">
+                        <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                          {new Date(row.created_unix * 1000).toLocaleString(undefined, {
+                            dateStyle: "medium",
+                            timeStyle: "short",
+                          })}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums text-sm font-semibold">
+                          {formatMoneyCents(row.amount_cents)}
+                        </TableCell>
+                        <TableCell className="font-mono text-xs">{row.athlete_code.trim() ? row.athlete_code : "—"}</TableCell>
+                        <TableCell className="text-xs">{row.campaign.trim() ? row.campaign : "—"}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="font-mono text-[10px] font-normal">
+                            {row.status}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </DataTableShell>
+            )}
+          </div>
+        )}
+      </SectionCRM>
+
+      <div className="flex flex-wrap justify-end gap-2">
+        <HardLink href="/admin/expense-requests" className="text-sm font-medium text-primary underline-offset-4 hover:underline">
+          Staff reimbursement queue →
+        </HardLink>
+      </div>
+    </>
+  )
+
   const timelineSlot = (
     <>
       {!payload.crmSettings.ok ? (
@@ -661,6 +858,7 @@ function HubBody({
       overviewSlot={overviewSlot}
       familySlot={familySlot}
       programsSlot={programsSlot}
+      fundraisingSlot={fundraisingSlot}
       timelineSlot={timelineSlot}
     />
   )

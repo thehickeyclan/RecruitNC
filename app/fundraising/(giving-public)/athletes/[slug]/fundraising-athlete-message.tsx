@@ -101,7 +101,7 @@ export function FundraisingAthleteMessageSection({
       {showPencil && editing ? (
         <>
           <p className="mt-2 text-xs leading-relaxed text-white/50">
-            This message appears at the top of this gift page. Saving may create your fundraising profile the first time if your NCU code is on file.
+            This message appears on this gift page. The first save may create the page record when a roster fundraising code is on file.
           </p>
           <textarea
             value={bio}
@@ -137,8 +137,7 @@ export function FundraisingAthleteMessageSection({
         <>
           {canEdit && !hasFundraisingProfile && !isRecruitNcAdmin ? (
             <p className="mt-3 text-sm leading-relaxed text-white/65">
-              Use <strong className="text-white/90">Edit</strong> above or the button below — saving creates your gift page record if this wrestler is on
-              the roster with an NCU code. If save fails, staff can add the profile in Fundraising admin.
+              Use <strong className="text-white/90">Edit</strong> above or the button below — saving creates the gift-page record when this wrestler is on our roster. If something fails, contact NC United for help.
             </p>
           ) : null}
 

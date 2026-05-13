@@ -44,11 +44,11 @@ export function FundraisingAthleteEmbeddedCheckout({ athleteCode, athleteDirecto
   if (!athleteCode?.trim()) {
     return (
       <p className="text-center text-sm text-white/60">
-        This page does not have an NC United credit code yet — use{" "}
+        This page isn&apos;t open for gifts yet — go to{" "}
         <a href="/fundraising/give" className="font-medium text-[#C8A94A] underline underline-offset-2">
           Make a gift
         </a>{" "}
-        to search or give to the training fund.
+        to find an athlete or support the training fund.
       </p>
     )
   }
