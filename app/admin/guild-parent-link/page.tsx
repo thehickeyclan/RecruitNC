@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { HardLink } from "@/components/hard-link"
 import { ArrowLeft, Link2, Loader2, Search } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
@@ -23,6 +24,21 @@ type GuildParent = {
   role: string | null
 }
 
+type LinkedRosterRow = {
+  userId: string
+  email: string | null
+  guildParentUserId: string | null
+  appliedToGuildCents: number
+  pendingCents: number
+  appliedTransferCount: number
+  pendingTransferCount: number
+  failedTransferCount: number
+}
+
+function money(cents: number) {
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100)
+}
+
 export default function AdminGuildParentLinkPage() {
   const { user, isAdmin, loading: authLoading } = useAuth()
   const { toast } = useToast()
@@ -33,6 +49,39 @@ export default function AdminGuildParentLinkPage() {
   const [guildParents, setGuildParents] = useState<GuildParent[] | null>(null)
   const [guildConfigured, setGuildConfigured] = useState<boolean | null>(null)
   const [guildLookupError, setGuildLookupError] = useState<string | null>(null)
+  const [roster, setRoster] = useState<LinkedRosterRow[] | null>(null)
+  const [rosterLoading, setRosterLoading] = useState(true)
+  const [rosterErr, setRosterErr] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (authLoading || !user || !isAdmin) return
+    let cancelled = false
+    void (async () => {
+      setRosterLoading(true)
+      setRosterErr(null)
+      try {
+        const res = await fetch("/api/admin/guild-parent-linked-roster", { credentials: "include", cache: "no-store" })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) {
+          throw new Error((data as { error?: string }).error || "Failed to load roster")
+        }
+        const rows = ((data as { roster?: LinkedRosterRow[] }).roster ?? []).slice()
+        rows.sort((a, b) => {
+          const d = b.appliedToGuildCents - a.appliedToGuildCents
+          if (d !== 0) return d
+          return (a.email ?? "").localeCompare(b.email ?? "")
+        })
+        if (!cancelled) setRoster(rows)
+      } catch (e) {
+        if (!cancelled) setRosterErr(e instanceof Error ? e.message : "Error")
+      } finally {
+        if (!cancelled) setRosterLoading(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [authLoading, user, isAdmin])
 
   const lookup = useCallback(async () => {
     const q = email.trim()
@@ -86,6 +135,17 @@ export default function AdminGuildParentLinkPage() {
         }
         toast({ title: "Linked", description: "guild_parent_user_id saved on RecruitNC." })
         await lookup()
+        const r = await fetch("/api/admin/guild-parent-linked-roster", { credentials: "include", cache: "no-store" })
+        const rd = await r.json().catch(() => ({}))
+        if (r.ok) {
+          const rows = ((rd as { roster?: LinkedRosterRow[] }).roster ?? []).slice()
+          rows.sort((a, b) => {
+            const d = b.appliedToGuildCents - a.appliedToGuildCents
+            if (d !== 0) return d
+            return (a.email ?? "").localeCompare(b.email ?? "")
+          })
+          setRoster(rows)
+        }
       } catch (e) {
         toast({
           title: "Could not link",
@@ -117,7 +177,7 @@ export default function AdminGuildParentLinkPage() {
   return (
     <div className="min-h-screen bg-gray-50/80">
       <AdminHeader />
-      <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+      <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
         <div className="flex flex-wrap items-center gap-3">
           <Button variant="outline" size="sm" asChild>
             <HardLink href="/admin">
@@ -127,6 +187,67 @@ export default function AdminGuildParentLinkPage() {
           </Button>
           <h1 className="text-2xl font-bold text-gray-900">Guild parent link (email)</h1>
         </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Linked parents</CardTitle>
+            <CardDescription>
+              RecruitNC accounts with <code className="text-xs">guild_parent_user_id</code> set, and totals from{" "}
+              <code className="text-xs">guild_credit_allocations</code>.{" "}
+              <span className="text-[#B31B1B] font-medium">Applied</span> means the transfer reached Guild (
+              <code className="text-xs">guild_applied</code>). See every row on{" "}
+              <HardLink href="/admin/guild-credit-allocations" className="underline font-medium">
+                Guild credit allocations
+              </HardLink>
+              .
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {rosterErr && <p className="text-sm text-destructive mb-3">{rosterErr}</p>}
+            {rosterLoading ? (
+              <p className="text-sm text-muted-foreground flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Loading roster…
+              </p>
+            ) : !roster || roster.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No linked parents yet. Use lookup below to set Guild ids.</p>
+            ) : (
+              <div className="overflow-x-auto rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>RecruitNC email</TableHead>
+                      <TableHead>Guild parent user id</TableHead>
+                      <TableHead className="text-right">Applied to Guild</TableHead>
+                      <TableHead className="text-right">Pending</TableHead>
+                      <TableHead className="text-right text-muted-foreground"># applied</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {roster.map((r) => (
+                      <TableRow key={r.userId}>
+                        <TableCell className="font-medium">{r.email ?? "—"}</TableCell>
+                        <TableCell className="font-mono text-xs break-all max-w-[220px]">
+                          {r.guildParentUserId ?? "—"}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums text-emerald-800 font-semibold">
+                          {money(r.appliedToGuildCents)}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">{money(r.pendingCents)}</TableCell>
+                        <TableCell className="text-right tabular-nums text-muted-foreground">
+                          {r.appliedTransferCount}
+                          {r.failedTransferCount > 0 ? (
+                            <span className="text-destructive ml-1">({r.failedTransferCount} failed)</span>
+                          ) : null}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>
@@ -247,7 +368,8 @@ export default function AdminGuildParentLinkPage() {
             <p className="text-xs text-muted-foreground">
               <HardLink href="/admin/guild-credit-allocations" className="underline">
                 Guild credit allocations
-              </HardLink>
+              </HardLink>{" "}
+              (full ledger of each transfer)
             </p>
           </CardContent>
         </Card>
