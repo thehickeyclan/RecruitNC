@@ -15,6 +15,8 @@ type Props = {
   hasFundraisingProfile: boolean
   canEdit: boolean
   isRecruitNcAdmin: boolean
+  /** False until staff approves activation — families cannot edit goal/bio until then (admins still can). */
+  checkoutLive: boolean
   initialGoalCents: number | null
   raisedCents: number
 }
@@ -30,6 +32,7 @@ export function FundraisingAthleteGoalSection({
   hasFundraisingProfile,
   canEdit,
   isRecruitNcAdmin,
+  checkoutLive,
   initialGoalCents,
   raisedCents,
 }: Props) {
@@ -125,6 +128,21 @@ export function FundraisingAthleteGoalSection({
   }, [goalCents])
 
   const showPublicGoal = goalCents != null && goalCents > 0
+  const familyMayEdit = checkoutLive || isRecruitNcAdmin
+
+  if (canEdit && !familyMayEdit) {
+    return (
+      <section className="mt-8 rounded-xl border border-[#C8A94A]/30 bg-[#0B2545]/45 px-4 py-5 sm:px-6 sm:py-6">
+        <h2 className="font-[family-name:var(--font-fundraising-display)] text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]">
+          {firstName}&apos;s fundraising goal
+        </h2>
+        <p className="mt-3 text-sm leading-relaxed text-white/65">
+          After NC United <strong className="text-white/85">activates</strong> this page for gifts, you&apos;ll be able to set a goal here. Tap{" "}
+          <strong className="text-[#C8A94A]">Request activation</strong> in the status box above if you haven&apos;t yet.
+        </p>
+      </section>
+    )
+  }
 
   return (
     <section className="mt-8 rounded-xl border border-[#C8A94A]/30 bg-[#0B2545]/45 px-4 py-5 sm:px-6 sm:py-6">
@@ -147,14 +165,14 @@ export function FundraisingAthleteGoalSection({
 
       {canEdit && !hasFundraisingProfile && !isRecruitNcAdmin ? (
         <p className="mt-3 text-sm leading-relaxed text-white/65">
-          Use <strong className="text-white/90">Edit</strong> above or tap below — saving creates your gift page when this wrestler is on our roster with a fundraising code.
+          Saving creates your gift page profile when this wrestler has a roster code — activation still required before donors can give here.
         </p>
       ) : null}
 
       {canEdit && editing ? (
         <>
           <p className="mt-2 text-xs leading-relaxed text-white/50">
-            Donors see this above your note. The milestone tracker fills as gifts come in and hits 100% when totals reach this goal.
+            Donors see this above the note. The milestone tracker uses the same running total once gifts are live.
           </p>
           <label className="mt-4 block text-xs font-semibold uppercase tracking-wide text-white/55">
             Goal (USD)
@@ -227,9 +245,7 @@ export function FundraisingAthleteGoalSection({
                 />
               </div>
               <p className="mt-3 text-[11px] font-semibold uppercase tracking-wide text-[#C8A94A]/90">Tap to edit goal</p>
-              <p className="mt-2 text-xs leading-relaxed text-white/45">
-                The milestone tracker below uses the same running total and fills to 100% at this goal.
-              </p>
+              <p className="mt-2 text-xs leading-relaxed text-white/45">The milestone trail below uses the same total when fundraising is live.</p>
             </button>
           ) : (
             <>
@@ -250,7 +266,7 @@ export function FundraisingAthleteGoalSection({
                 />
               </div>
               <p className="mt-3 text-xs leading-relaxed text-white/45">
-                The milestone tracker below uses the same running total and fills to 100% at this goal.
+                The milestone trail below uses the same total when fundraising is live.
               </p>
             </>
           )}
@@ -262,13 +278,11 @@ export function FundraisingAthleteGoalSection({
           className="mt-4 w-full rounded-lg border border-dashed border-[#C8A94A]/35 bg-black/15 px-4 py-4 text-left transition hover:border-[#C8A94A]/55 hover:bg-black/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A94A]/60"
         >
           <p className="text-sm font-semibold text-white/90">Set {firstName}&apos;s fundraising goal</p>
-          <p className="mt-2 text-sm italic text-white/55">
-            Tap here or use <span className="text-[#C8A94A]">Edit</span> — supporters see progress toward this target.
-          </p>
+          <p className="mt-2 text-sm italic text-white/55">Add a target for when this page is live for gifts.</p>
         </button>
       ) : (
         <p className="mt-4 text-sm leading-relaxed text-white/55">
-          Progress toward a fundraising goal will show here when {firstName} or their family adds one — it doesn&apos;t affect giving; you can donate anytime below.
+          A goal and progress will show here after NC United activates gifts on this page.
         </p>
       )}
     </section>

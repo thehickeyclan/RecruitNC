@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 
-import { userCanManageFundraisingForAthlete } from "@/lib/fundraising/athlete-fundraising-access"
+import { userCanManageFundraisingForAthlete, userIsRecruitNcAdmin } from "@/lib/fundraising/athlete-fundraising-access"
 import { getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
 import { normalizeFundraisingProfileSlug } from "@/lib/fundraising/athlete-fundraising-profiles"
 import { fundraisingSlugFromCode } from "@/lib/fundraising/athlete-fundraising-slug"
@@ -91,9 +91,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return NextResponse.json({ error: "Not authorized" }, { status: 403 })
     }
 
+    const isAdmin = await userIsRecruitNcAdmin(admin, user.id)
+
     const { data: profile, error: pErr } = await admin
       .from("athlete_fundraising_profiles")
-      .select("id, athlete_id, slug, bio, campaign_goal_cents")
+      .select("id, athlete_id, slug, bio, campaign_goal_cents, checkout_live")
       .eq("athlete_id", athleteId)
       .maybeSingle()
 
@@ -102,7 +104,6 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return NextResponse.json({ error: "Could not load fundraising page" }, { status: 500 })
     }
     if (!profile) {
-      /** Same auto-create path staff used to have only — now any athlete/parent who already passes userCanManageFundraisingForAthlete. */
       const entries = await getFundraisingAthleteEntries(admin)
       const entry = entries.find((e) => e.id === athleteId)
       const fromCode = entry?.code?.trim() ? normalizeFundraisingProfileSlug(fundraisingSlugFromCode(entry.code)) : ""
@@ -145,6 +146,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
           is_active: true,
           campaign_goal_cents: goalForInsert,
           primary_fundraising_code: primary,
+          checkout_live: false,
           updated_at: now,
         })
         .select("id, slug, bio, campaign_goal_cents, updated_at")
@@ -162,6 +164,17 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       }
 
       return NextResponse.json({ success: true, profile: created })
+    }
+
+    const checkoutLive = (profile as { checkout_live?: boolean }).checkout_live === true
+    if (!checkoutLive && !isAdmin) {
+      return NextResponse.json(
+        {
+          error:
+            "This gift page is not activated for edits yet. Complete NC United activation first, then you can update the note and goal.",
+        },
+        { status: 403 },
+      )
     }
 
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() }

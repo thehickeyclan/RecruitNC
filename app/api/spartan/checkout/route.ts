@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
 import { getSpartanRaceTierOrDefault, isSpartanRaceTierId } from "@/app/spartan/data"
+import { createAdminClient } from "@/lib/supabase/admin"
+import { isAthleteFundraisingSlugCheckoutLive } from "@/lib/fundraising/fundraising-checkout-live"
 
 export const dynamic = "force-dynamic"
 
@@ -124,6 +126,23 @@ export async function POST(request: NextRequest) {
   }
   if (fundraisingHubReturnSlug && !fundraisingHub) {
     return NextResponse.json({ error: "fundraisingHubReturnSlug requires fundraisingHub." }, { status: 400 })
+  }
+
+  if (fundraisingHub && fundraisingHubReturnSlug) {
+    const ret = fundraisingHubReturnSlug
+    if (ret !== "training-fund" && !ret.startsWith("scholarships/")) {
+      const admin = createAdminClient()
+      const live = await isAthleteFundraisingSlugCheckoutLive(admin, ret)
+      if (!live) {
+        return NextResponse.json(
+          {
+            error:
+              "This athlete page is not activated for public gifts yet. Ask the family to complete NC United activation, or use Make a gift to donate to the training fund or another active page.",
+          },
+          { status: 403 },
+        )
+      }
+    }
   }
   /** Super 10K tier → donor expects Spartan entry code path; omit for donate-only. */
   const raceEntryRequested = Boolean(tierPreference && tierPreference.length > 0)

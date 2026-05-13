@@ -24,8 +24,9 @@ import { FundraisingAdminAssignmentPanel } from "./fundraising-admin-assignment-
 import { FundraisingPublicationBanner } from "./fundraising-publication-banner"
 import { recruitingProfilePhotoFromRow } from "@/lib/recruiting-profile-photo"
 import { fetchThankYouAckLedgerKeys } from "@/lib/fundraising/supporter-thank-you-ack"
-import { getFundraisingWiringAdminSnapshot, fundraisingWiringLooksReadyForNonAdminEdits } from "@/lib/fundraising/fundraising-wiring-status"
+import { getFundraisingWiringAdminSnapshot } from "@/lib/fundraising/fundraising-wiring-status"
 import { fetchPendingActivationUserIdsForSlug } from "@/lib/fundraising/fundraising-activation-status"
+import { isProfileCheckoutLive } from "@/lib/fundraising/fundraising-checkout-live"
 
 const HERO_FALLBACK_SILHOUETTE = "/wrestler-silhouette.png"
 
@@ -121,7 +122,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
   const slugHasPendingActivation = pendingActivationUserIds.length > 0
   const latestActivationStatus: "none" | "pending" = slugHasPendingActivation ? "pending" : "none"
   const viewerHasPendingActivation = !!(user?.id && pendingActivationUserIds.includes(user.id))
-  const wiringReady = !!(wiringSnapshot && fundraisingWiringLooksReadyForNonAdminEdits(wiringSnapshot))
+  const checkoutLive = isProfileCheckoutLive(profile)
 
   const ownerThankYouRowsWithAck = ownerThankYouRows.map((r) => ({
     ...r,
@@ -178,7 +179,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
       style={{ fontFamily: "var(--font-fundraising-body), system-ui, sans-serif" }}
     >
       <div className="mx-auto w-full max-w-lg sm:max-w-2xl">
-        {cancelledCheckout ? (
+        {cancelledCheckout && checkoutLive ? (
           <div className="mt-6 rounded-lg border border-amber-400/35 bg-amber-500/10 px-4 py-3 text-sm text-amber-100/95">
             Checkout was cancelled — nothing was charged. You can finish a gift in secure checkout at the bottom when you&apos;re
             ready.
@@ -199,7 +200,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           fundraisingSlug={slugNorm}
           athleteId={athleteId}
           displayName={displayName}
-          wiringReady={wiringReady}
+          checkoutLive={checkoutLive}
           slugHasPendingActivation={slugHasPendingActivation}
           viewerUserId={user?.id ?? null}
           viewerHasPendingActivation={viewerHasPendingActivation}
@@ -263,7 +264,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
         {schoolLine ? <p className="mt-2 text-base text-white/65">{schoolLine}</p> : null}
         {code && showInternalCodes ? <p className="mt-2 font-mono text-xs text-white/40">{code}</p> : null}
 
-        {code ? (
+        {code && checkoutLive ? (
           <div className="mt-5 flex flex-col items-stretch gap-2 sm:items-center">
             <HardLink href={giveOnThisPageHref} className={PRIMARY_DONATE_CTA_CLASS}>
               Donate now
@@ -271,6 +272,14 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
             <p className="text-center text-[11px] leading-snug text-white/50 sm:max-w-md">
               Secure checkout is on this page below. Most people finish in a couple of minutes — you&apos;ll get a receipt by email.
             </p>
+          </div>
+        ) : code && !checkoutLive ? (
+          <div className="mt-5 rounded-lg border border-white/15 bg-black/25 px-4 py-3 text-center text-sm text-white/65">
+            Gifts on this URL are not turned on yet. Use{" "}
+            <HardLink href="/fundraising/give" className="font-semibold text-[#C8A94A] underline-offset-2 hover:underline">
+              Make a gift
+            </HardLink>{" "}
+            for the training fund or another active athlete page, or see the status note above if you&apos;re family.
           </div>
         ) : null}
 
@@ -280,9 +289,8 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           </p>
           {code ? (
             <p className="mt-4 text-sm leading-relaxed text-white/85">
-              Access to training and competition is often constrained by financial resources. Our aim is to help fund{" "}
-              <strong className="text-white">{displayName}&apos;s</strong> training this spring and summer so they can make real
-              progress as an athlete and grow as a young person through those sessions.
+              Many families use NC United to help cover travel, training, and competition costs. When this page is activated for gifts,
+              your support helps <strong className="text-white">{displayName}</strong> directly through NC United Wrestling.
             </p>
           ) : null}
           <ul className="mt-4 list-none space-y-3 text-sm leading-relaxed text-white/85">
@@ -293,7 +301,11 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
             <li>
               <strong className="text-white">100% of your payment is credited to {displayName}</strong>
               {code ? (
-                <> — the full amount you give counts toward their campaign here.</>
+                checkoutLive ? (
+                  <> — the full amount you give counts toward their campaign here.</>
+                ) : (
+                  <> — once NC United activates gifts on this page, the amount you give will count toward their campaign here.</>
+                )
               ) : (
                 <> when you complete a gift to this campaign.</>
               )}
@@ -324,6 +336,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
               hasFundraisingProfile={profile != null}
               canEdit={isFundraisingManager}
               isRecruitNcAdmin={viewerIsRecruitNcAdmin}
+              checkoutLive={checkoutLive}
               initialGoalCents={goalCents}
               raisedCents={raisedForBar}
             />
@@ -334,6 +347,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
               hasFundraisingProfile={profile != null}
               canEdit={isFundraisingManager}
               isRecruitNcAdmin={viewerIsRecruitNcAdmin}
+              checkoutLive={checkoutLive}
               initialBio={profile?.bio?.trim() ?? ""}
             />
           </>
@@ -349,7 +363,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           </p>
         ) : null}
 
-        {code && stats ? (
+        {code && stats && checkoutLive ? (
           <>
             <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <div className="rounded-xl border border-white/10 bg-[#0B2545]/70 px-4 py-4">
@@ -385,18 +399,18 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
               raisedCents={stats.raisedCents}
               goalCents={goalCents}
               athleteLabel={displayName}
-              showOwnerHints={showOwnerHints}
+              showOwnerHints={showOwnerHints && checkoutLive}
             />
           </>
         ) : null}
 
-        {code && stats && stats.giftCount === 0 ? (
+        {code && stats && checkoutLive && stats.giftCount === 0 ? (
           <p className="mt-4 text-center text-sm text-white/50">
             Be the first to support {displayName} — your gift will appear here after checkout.
           </p>
         ) : null}
 
-        {publicGifts.length > 0 ? (
+        {checkoutLive && publicGifts.length > 0 ? (
           <div className="mt-10">
             <h2 className="font-[family-name:var(--font-fundraising-display)] text-sm font-bold uppercase tracking-wide text-white">
               Recent supporters
@@ -435,7 +449,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           </div>
         ) : null}
 
-        {isFundraisingManager && athleteId && snapshotLedger.length > 0 ? (
+        {checkoutLive && isFundraisingManager && athleteId && snapshotLedger.length > 0 ? (
           <FundraisingOwnerPanel
             athleteId={athleteId}
             fundraisingSlug={slug}
@@ -447,32 +461,47 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           />
         ) : null}
 
-        <div className="mt-10 flex justify-center lg:mt-8">
-          <FundraisingAthleteQrCard
-            qrSrc={athleteQrDataUrl}
-            donateUrl={athleteAbsoluteUrl}
-            athleteDisplayName={displayName}
-          />
-        </div>
+        {checkoutLive ? (
+          <div className="mt-10 flex justify-center lg:mt-8">
+            <FundraisingAthleteQrCard
+              qrSrc={athleteQrDataUrl}
+              donateUrl={athleteAbsoluteUrl}
+              athleteDisplayName={displayName}
+            />
+          </div>
+        ) : null}
 
         <section
           id={checkoutAnchor}
           className="mt-10 scroll-mt-28 rounded-xl border border-[#C8A94A]/25 bg-[#0B2545]/35 p-4 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.45)] backdrop-blur-sm sm:p-6"
         >
           <h2 className="font-[family-name:var(--font-fundraising-display)] text-center text-lg font-bold uppercase tracking-wide text-white">
-            Secure checkout
+            {checkoutLive ? "Secure checkout" : "Gifts not available on this link yet"}
           </h2>
-          <p className="mx-auto mt-2 max-w-md text-center text-[13px] leading-snug text-white/70">
-            <strong className="font-semibold text-white/85">Tax-deductible</strong> gift (minimum $5). You&apos;ll complete payment in secure checkout and
-            receive an <strong className="font-semibold text-white/85">email receipt</strong> — typically just a couple of minutes.
-          </p>
-          <div className="mt-6 w-full text-left">
-            <FundraisingAthleteEmbeddedCheckout
-              athleteCode={code}
-              athleteDirectoryLabel={directoryLabelForCheckout}
-              fundraisingSlug={slug}
-            />
-          </div>
+          {checkoutLive ? (
+            <>
+              <p className="mx-auto mt-2 max-w-md text-center text-[13px] leading-snug text-white/70">
+                <strong className="font-semibold text-white/85">Tax-deductible</strong> gift (minimum $5). You&apos;ll complete payment in secure checkout and
+                receive an <strong className="font-semibold text-white/85">email receipt</strong> — typically just a couple of minutes.
+              </p>
+              <div className="mt-6 w-full text-left">
+                <FundraisingAthleteEmbeddedCheckout
+                  athleteCode={code}
+                  athleteDirectoryLabel={directoryLabelForCheckout}
+                  fundraisingSlug={slug}
+                  checkoutLive
+                />
+              </div>
+            </>
+          ) : (
+            <p className="mx-auto mt-3 max-w-md text-center text-sm leading-relaxed text-white/65">
+              NC United turns on Stripe checkout here only after a parent or athlete completes activation and staff approves. Until then, use{" "}
+              <HardLink href="/fundraising/give" className="font-semibold text-[#C8A94A] underline-offset-2 hover:underline">
+                Make a gift
+              </HardLink>{" "}
+              to support the training fund or another activated athlete.
+            </p>
+          )}
         </section>
 
         <p className="mt-12 border-t border-white/10 pt-8 text-center text-xs text-white/45">
