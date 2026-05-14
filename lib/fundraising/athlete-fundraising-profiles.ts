@@ -5,6 +5,7 @@ import type { FundraisingAthleteEntry } from "@/lib/spartan-fundraising-code"
 import { getFundraisingAthleteEntries, scoreSpartanPublicDisplayRichness } from "@/lib/spartan-fundraising-code"
 import { fundraisingCodeFromSlug } from "@/lib/fundraising/athlete-fundraising-slug"
 import { recruitingProfilePhotoFromRow } from "@/lib/recruiting-profile-photo"
+import { normalizeFundraisingSchoolDisplay } from "@/lib/fundraising/normalize-fundraising-school-display"
 
 const NCU_CODE_RE = /^NCU-[A-Za-z0-9]+-\d{2}$/i
 
@@ -275,7 +276,9 @@ export async function getFundraisingAthletesIndexRows(
       athleteId: e.id,
       code: primary ?? e.code,
       displayName: e.fullName || e.label,
-      sublabel: e.label.includes("·") ? e.label.split("·").slice(1).join("·").trim() : null,
+      sublabel: e.label.includes("·")
+        ? normalizeFundraisingSchoolDisplay(e.label.split("·").slice(1).join("·").trim()) || null
+        : null,
       hrefSlug,
       photoUrl: pickDirectoryPhotoUrl(e.id, profile?.photo_url ?? null),
       totalRaisedCents: typeof profile?.total_raised_cents === "number" ? profile.total_raised_cents : null,
