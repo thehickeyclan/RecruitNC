@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { userCanManageFundraisingForAthlete, userIsRecruitNcAdmin } from "@/lib/fundraising/athlete-fundraising-access"
+import { userCanManageFundraisingForAthlete } from "@/lib/fundraising/athlete-fundraising-access"
 import { getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
 import {
   normalizeFundraisingProfileSlug,
@@ -75,15 +75,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const allowed = await userCanManageFundraisingForAthlete(admin, user.id, athleteId)
   if (!allowed) {
     return NextResponse.json({ error: "Not authorized" }, { status: 403 })
-  }
-
-  const isAdmin = await userIsRecruitNcAdmin(admin, user.id)
-  const checkoutLive = profile.checkout_live === true
-  if (!checkoutLive && !isAdmin) {
-    return NextResponse.json(
-      { error: "Videos can be managed after this gift page is activated for checkout." },
-      { status: 403 },
-    )
   }
 
   const videoPath = fundraisingVideoObjectPath(athleteId, ext)
@@ -175,15 +166,6 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   const allowed = await userCanManageFundraisingForAthlete(admin, user.id, athleteId)
   if (!allowed) {
     return NextResponse.json({ error: "Not authorized" }, { status: 403 })
-  }
-
-  const isAdmin = await userIsRecruitNcAdmin(admin, user.id)
-  const checkoutLive = profile.checkout_live === true
-  if (!checkoutLive && !isAdmin) {
-    return NextResponse.json(
-      { error: "Videos can be managed after this gift page is activated for checkout." },
-      { status: 403 },
-    )
   }
 
   const videoPath = profile.fundraising_video_url?.trim()

@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast"
 type Props = {
   fundraisingSlug: string
   athleteId: string | null
-  variant?: "card" | "inlineLink"
+  variant?: "card" | "inlineLink" | "hero"
   label?: string
 }
 
@@ -26,6 +26,9 @@ export function FundraisingActivationRequestButton({
     "mt-3 w-full touch-manipulation rounded-md bg-white/12 px-4 py-2.5 text-sm font-bold uppercase tracking-wide text-white ring-1 ring-white/25 hover:bg-white/16 disabled:opacity-50 sm:w-auto"
   const inlineClass =
     "inline touch-manipulation rounded-none border-0 bg-transparent p-0 text-sm font-semibold text-[#C8A94A] underline underline-offset-2 hover:text-[#d4b55c] disabled:opacity-50"
+  /** Full-width primary CTA — matches gift-page emphasis (mobile-first). */
+  const heroClass =
+    "font-[family-name:var(--font-fundraising-display)] mt-4 w-full touch-manipulation rounded-sm bg-[#C8A94A] px-6 py-4 text-center text-sm font-extrabold uppercase tracking-[0.12em] text-[#061224] shadow-[0_14px_40px_-12px_rgba(200,169,74,0.5)] hover:bg-[#d4b75c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A94A] focus-visible:ring-offset-2 focus-visible:ring-offset-[#061224] disabled:opacity-50 sm:min-h-[56px] sm:px-8"
 
   const defaultLabel = variant === "inlineLink" ? "Request activation →" : "Request activation"
   const buttonLabel = label ?? defaultLabel
@@ -55,7 +58,7 @@ export function FundraisingActivationRequestButton({
           })
         })
       }}
-      className={variant === "inlineLink" ? inlineClass : cardClass}
+      className={variant === "inlineLink" ? inlineClass : variant === "hero" ? heroClass : cardClass}
     >
       {isPending ? "Sending…" : buttonLabel}
     </button>
