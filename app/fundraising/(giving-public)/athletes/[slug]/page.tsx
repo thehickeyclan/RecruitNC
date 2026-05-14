@@ -29,6 +29,7 @@ import { fetchPendingActivationUserIdsForSlug } from "@/lib/fundraising/fundrais
 import { isProfileCheckoutLive } from "@/lib/fundraising/fundraising-checkout-live"
 import { getFundraisingAthletePageWalletRowForViewer } from "@/lib/parent-spartan-fundraising-totals"
 import { FundraisingAthleteWalletPanel } from "./fundraising-athlete-wallet-panel"
+import { normalizeFundraisingSchoolDisplay } from "@/lib/fundraising/normalize-fundraising-school-display"
 
 const HERO_FALLBACK_SILHOUETTE = "/wrestler-silhouette.png"
 
@@ -154,10 +155,11 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
 
   const displayName = publicTitleName(resolved)
   const athleteFirstName = (displayName.split(/\s+/).filter(Boolean)[0] ?? displayName).trim()
-  const schoolLine =
+  const schoolLineRaw =
     resolved.entry && resolved.entry.label.includes("·")
       ? resolved.entry.label.split("·").slice(1).join("·").trim()
       : null
+  const schoolLine = schoolLineRaw ? normalizeFundraisingSchoolDisplay(schoolLineRaw) : null
 
   const viewProfileHref = athleteId ? `/view-profile?id=${encodeURIComponent(athleteId)}` : null
   const fundraisingPhoto = profile?.photo_url
