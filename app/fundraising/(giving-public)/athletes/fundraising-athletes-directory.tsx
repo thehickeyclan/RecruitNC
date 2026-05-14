@@ -46,7 +46,7 @@ export function FundraisingAthletesDirectory({ rows }: { rows: FundraisingAthlet
       ) : (
         <ul className="mt-6 grid gap-3 sm:grid-cols-2">
           {filtered.map((r) => (
-            <li key={r.athleteId}>
+            <li key={r.hrefSlug}>
               <HardLink
                 href={`/fundraising/athletes/${r.hrefSlug}`}
                 className="flex min-h-[4.5rem] touch-manipulation flex-row items-center gap-4 rounded-lg border border-white/10 bg-[#0B2545]/80 px-4 py-4 transition hover:border-[#C8A94A]/40"
