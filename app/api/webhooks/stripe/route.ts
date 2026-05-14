@@ -272,6 +272,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true })
     }
 
+    // Spartan / athlete-page gifts: `checkout.session.completed` owns spartan_donations + ledger + household SMS.
+    // PaymentIntent metadata often has email but no store `items` — never synthesize a store order here (order_items.subtotal NOT NULL).
+    if (meta.channel === "spartan") {
+      return NextResponse.json({ received: true })
+    }
+
     // Fallback: national team $250 payment — if checkout.session.completed didn't run or failed, mark registration paid from payment_intent.succeeded
     if (!hasStoreMetadata && paymentIntent.amount === 25000) {
       try {
@@ -331,6 +337,7 @@ export async function POST(request: NextRequest) {
                 variant: { color: "N/A", size: "N/A" },
                 quantity: 1,
                 price: totalCents / 100,
+                subtotal: totalCents / 100,
                 image_url: null,
               })
             }
@@ -507,6 +514,9 @@ export async function POST(request: NextRequest) {
       const product = i.id && i.id !== "drop-in" ? findProductByIdOrPrefix(productsList, String(i.id)) : null
       const resolvedProductId = product?.id ?? (typeof i.id === "string" && /^[0-9a-f-]{36}$/i.test(i.id) ? i.id : null)
       const name = product?.name || i.name
+      const qty = Math.max(1, Number(i.quantity) || 1)
+      const unit = Number(i.price)
+      const lineSubtotal = (Number.isFinite(unit) ? unit : 0) * qty
       return {
         order_id: orderId,
         product_id: resolvedProductId,
@@ -520,6 +530,7 @@ export async function POST(request: NextRequest) {
         variant: i.variant,
         quantity: i.quantity,
         price: i.price,
+        subtotal: lineSubtotal,
         image_url: i.image ?? product?.image_url ?? null,
       }
     })
@@ -739,6 +750,7 @@ export async function POST(request: NextRequest) {
             variant: { color: "N/A", size: "N/A" },
             quantity: 1,
             price: totalCents / 100,
+            subtotal: totalCents / 100,
             image_url: null,
           })
         }
@@ -897,6 +909,7 @@ export async function POST(request: NextRequest) {
           variant: { color: "N/A", size: "N/A" },
           quantity: 1,
           price: amountTotal,
+          subtotal: amountTotal,
           image_url: null,
         })
         try {

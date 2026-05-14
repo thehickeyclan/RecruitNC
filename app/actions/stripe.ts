@@ -178,6 +178,8 @@ async function createFreeOrderInternal(
   const orderItems = params.items.map((i, idx) => {
     const idStr = String(i.id)
     const uuidProduct = /^[0-9a-f-]{36}$/i.test(idStr) ? idStr : null
+    const qty = Math.max(1, Number(i.quantity) || 1)
+    const unit = Number(i.price)
     return {
       order_id: orderId,
       product_id: idStr,
@@ -191,6 +193,7 @@ async function createFreeOrderInternal(
       variant: i.variant,
       quantity: i.quantity,
       price: i.price,
+      subtotal: (Number.isFinite(unit) ? unit : 0) * qty,
       image_url: i.image ?? null,
     }
   })
@@ -325,6 +328,8 @@ async function createOrderFromPaymentIntentMetadata(
     (i: { id: number; name: string; price: number; quantity: number; variant: { color: string; size: string }; image?: string }, idx: number) => {
       const idStr = String(i.id)
       const uuidProduct = /^[0-9a-f-]{36}$/i.test(idStr) ? idStr : null
+      const qty = Math.max(1, Number(i.quantity) || 1)
+      const unit = Number(i.price)
       return {
         order_id: orderId,
         product_id: idStr,
@@ -338,6 +343,7 @@ async function createOrderFromPaymentIntentMetadata(
         variant: i.variant,
         quantity: i.quantity,
         price: i.price,
+        subtotal: (Number.isFinite(unit) ? unit : 0) * qty,
         image_url: i.image ?? null,
       }
     },
@@ -459,6 +465,7 @@ async function createOrderFromCharge(
       variant: { color: "N/A", size: "N/A" },
       quantity: 1,
       price: amount,
+      subtotal: amount,
       image_url: null,
     })
     if (itemsError) {
@@ -706,6 +713,9 @@ export async function createOrderFromSession(
       })
       for (let idx = 0; idx < lineItems.length; idx++) {
         const li = lineItems[idx] as { id?: string; description?: string; quantity?: number; amount_subtotal?: number }
+        const q = Math.max(1, li.quantity ?? 1)
+        const lineCents = li.amount_subtotal ?? 0
+        const lineTotal = lineCents / 100
         await supabase.from("order_items").insert({
           order_id: orderId,
           product_name: li.description ?? "Item",
@@ -716,8 +726,9 @@ export async function createOrderFromSession(
             dedupeKey: `${orderId}:${li.id ?? idx}`,
           }),
           variant: { color: "N/A", size: "N/A" },
-          quantity: li.quantity ?? 1,
-          price: (li.amount_subtotal ?? 0) / 100 / (li.quantity ?? 1),
+          quantity: q,
+          price: lineTotal / q,
+          subtotal: lineTotal,
         })
       }
       try {
@@ -786,6 +797,8 @@ export async function createOrderFromSession(
       (i: { id: number; name: string; price: number; quantity: number; variant: { color: string; size: string }; image?: string }, idx: number) => {
         const idStr = String(i.id)
         const uuidProduct = /^[0-9a-f-]{36}$/i.test(idStr) ? idStr : null
+        const qty = Math.max(1, Number(i.quantity) || 1)
+        const unit = Number(i.price)
         return {
           order_id: orderId,
           product_id: idStr,
@@ -799,6 +812,7 @@ export async function createOrderFromSession(
           variant: i.variant,
           quantity: i.quantity,
           price: i.price,
+          subtotal: (Number.isFinite(unit) ? unit : 0) * qty,
           image_url: i.image ?? null,
         }
       },

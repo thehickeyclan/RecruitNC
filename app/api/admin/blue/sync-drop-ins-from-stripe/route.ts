@@ -187,6 +187,7 @@ export async function POST() {
       variant: { color: "N/A", size: "N/A" },
       quantity: 1,
       price: amountTotal,
+      subtotal: amountTotal,
       image_url: null,
     })
     if (itemsErr) {
