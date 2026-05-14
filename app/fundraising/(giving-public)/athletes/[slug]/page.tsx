@@ -204,17 +204,25 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
 
   let fundraisingVideoSignedUrl: string | null = null
   let fundraisingThumbSignedUrl: string | null = null
-  if (checkoutLive && profile?.fundraising_video_url?.trim()) {
+  const rawVideoPath = profile?.fundraising_video_url?.trim() ?? ""
+  if (checkoutLive && rawVideoPath) {
     fundraisingVideoSignedUrl = await createFundraisingVideoSignedUrl(
       admin,
-      profile.fundraising_video_url,
+      profile!.fundraising_video_url,
       FUNDRAISING_VIDEO_SIGNED_URL_TTL,
     )
-    if (profile.fundraising_video_thumbnail_url?.trim()) {
+    if (profile?.fundraising_video_thumbnail_url?.trim()) {
       fundraisingThumbSignedUrl = await createFundraisingVideoSignedUrl(
         admin,
         profile.fundraising_video_thumbnail_url,
         FUNDRAISING_VIDEO_SIGNED_URL_TTL,
+      )
+    }
+    if (!fundraisingVideoSignedUrl) {
+      console.warn(
+        "[fundraising-athlete-public] fundraising_video_url set but signed URL failed — check storage bucket/paths",
+        slugNorm,
+        rawVideoPath.slice(0, 120),
       )
     }
   }
@@ -375,21 +383,14 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
 
         {showFundraisingStoryBlock ? (
           <>
-            <FundraisingAthleteGoalSection
-              key={
-                profile
-                  ? `${profile.updated_at}-${goalCents ?? "none"}-goal`
-                  : `${slug}-${goalCents ?? "none"}-goal`
-              }
-              displayName={displayName}
-              athleteId={athleteId}
-              hasFundraisingProfile={profile != null}
-              canEdit={isFundraisingManager}
-              isRecruitNcAdmin={viewerIsRecruitNcAdmin}
-              checkoutLive={checkoutLive}
-              initialGoalCents={goalCents}
-              raisedCents={raisedForBar}
-            />
+            {viewerIsRecruitNcAdmin && checkoutLive && rawVideoPath && !fundraisingVideoSignedUrl ? (
+              <div className="mt-8 rounded-lg border border-amber-400/40 bg-amber-500/15 px-4 py-3 text-xs text-amber-100/95">
+                <strong className="font-semibold">Admin:</strong> This profile has a fundraising video path in the database, but
+                creating a signed URL failed. Confirm the <code className="rounded bg-black/30 px-1">fundraising-videos</code> bucket
+                and that <code className="rounded bg-black/30 px-1">fundraising_video_url</code> is a storage object path (e.g.{" "}
+                <code className="rounded bg-black/30 px-1">athlete/…/fundraising.mp4</code>), not a full URL.
+              </div>
+            ) : null}
             <FundraisingAthleteVideosSection
               fundraisingSlug={slug}
               athleteFirstName={athleteFirstName}
@@ -409,6 +410,21 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
                 />
               </div>
             ) : null}
+            <FundraisingAthleteGoalSection
+              key={
+                profile
+                  ? `${profile.updated_at}-${goalCents ?? "none"}-goal`
+                  : `${slug}-${goalCents ?? "none"}-goal`
+              }
+              displayName={displayName}
+              athleteId={athleteId}
+              hasFundraisingProfile={profile != null}
+              canEdit={isFundraisingManager}
+              isRecruitNcAdmin={viewerIsRecruitNcAdmin}
+              checkoutLive={checkoutLive}
+              initialGoalCents={goalCents}
+              raisedCents={raisedForBar}
+            />
             <FundraisingAthleteMessageSection
               key={profile ? `${profile.updated_at}-msg` : `${slug}-msg`}
               displayName={displayName}

@@ -9,7 +9,7 @@ function publicAppOrigin(): string {
 }
 
 /**
- * Email (always when we have an address) + optional SMS when `notify_sms_fundraising_activation` is true.
+ * Email (always when we have an address) + SMS when `notify_sms_fundraising_activation` is not explicitly false (default on).
  * Does not throw — logs warnings only.
  */
 export async function sendFundraisingActivationApprovedNotifications(
@@ -65,7 +65,7 @@ export async function sendFundraisingActivationApprovedNotifications(
     return
   }
 
-  if (prof?.notify_sms_fundraising_activation === true) {
+  if (prof?.notify_sms_fundraising_activation !== false) {
     const e164 = toE164(prof.cell_phone ?? null)
     if (e164) {
       const first = athleteName.split(/\s+/)[0] || athleteName

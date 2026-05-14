@@ -146,8 +146,8 @@ export function FundraisingAthleteVideosSection({
         Your fundraising page video
       </h2>
       <p className="mt-2 text-xs leading-relaxed text-white/50">
-        Optional — film on your phone (MP4, MOV, or WebM, up to 100MB). Shown above your written note once this page is live for gifts. Short
-        and authentic works best.
+        Optional — film on your phone (MP4, MOV, or WebM, up to 100MB). Donors see it on this page (with your goal and written note) once
+        checkout is live. Short and authentic works best.
       </p>
       {!checkoutLive && canEdit ? (
         <p className="mt-2 rounded-md border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-xs leading-relaxed text-amber-100/90">
