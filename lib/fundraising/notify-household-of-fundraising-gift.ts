@@ -86,29 +86,70 @@ export async function notifyHouseholdOfFundraisingGiftIfEligible(
   admin: SupabaseClient,
   session: Stripe.Checkout.Session,
 ): Promise<void> {
-  if (session.metadata?.channel !== "spartan") return
-  if (session.payment_status !== "paid") return
+  const cs = session.id
+  const log = (msg: string, extra?: Record<string, unknown>) => {
+    if (extra) console.warn("[fundraising-household-gift]", msg, cs, extra)
+    else console.warn("[fundraising-household-gift]", msg, cs)
+  }
+
+  if (session.metadata?.channel !== "spartan") {
+    log("skip: metadata.channel is not spartan")
+    return
+  }
+  if (session.payment_status !== "paid") {
+    log(
+      "skip: payment_status not paid — household notify runs when paid (some checkouts follow up with checkout.session.async_payment_succeeded)",
+      { payment_status: session.payment_status },
+    )
+    return
+  }
   const amountCents = session.amount_total ?? 0
-  if (amountCents < 1) return
+  if (amountCents < 1) {
+    log("skip: amount_cents < 1")
+    return
+  }
 
   const attribution = deriveCheckoutAttributionFromStripeSession(session)
-  if (attribution.fundraisingCheckoutSurface !== ATHLETE_PAGE_SURFACE) return
+  if (attribution.fundraisingCheckoutSurface !== ATHLETE_PAGE_SURFACE) {
+    log("skip: not athlete_page gift", {
+      surface: attribution.fundraisingCheckoutSurface,
+      slug: attribution.fundraisingAthleteSlug,
+    })
+    return
+  }
   const slug = attribution.fundraisingAthleteSlug?.trim().toLowerCase()
-  if (!slug) return
+  if (!slug) {
+    log("skip: no fundraising athlete slug", { surface: attribution.fundraisingCheckoutSurface })
+    return
+  }
 
   const sessionId = session.id
-  if (!sessionId.startsWith("cs_")) return
+  if (!sessionId.startsWith("cs_")) {
+    log("skip: session id not cs_")
+    return
+  }
 
   const shouldSend = await tryInsertNotifyLog(admin, sessionId)
-  if (!shouldSend) return
+  if (!shouldSend) {
+    log(
+      "skip: duplicate checkout session (notify log) — idempotent replay; same session will not send household SMS again",
+    )
+    return
+  }
 
   const entries = await getFundraisingAthleteEntries(admin)
   const resolved = await resolveFundraisingAthletePublic(admin, slug, entries)
-  if (!resolved) return
+  if (!resolved) {
+    log("skip: could not resolve fundraising profile/slug", { slug })
+    return
+  }
   const aid =
     (typeof resolved.profile?.athlete_id === "string" ? resolved.profile.athlete_id.trim() : "") ||
     (resolved.entry?.id && !resolved.entry.id.startsWith("spartan-fundraising:") ? resolved.entry.id.trim() : "")
-  if (!aid) return
+  if (!aid) {
+    log("skip: no athlete_id for household lookup — ensure athlete_fundraising_profiles.athlete_id is set", { slug })
+    return
+  }
 
   const athleteName =
     resolved.entry?.fullName?.trim() ||
@@ -127,7 +168,13 @@ export async function notifyHouseholdOfFundraisingGiftIfEligible(
   const amountDisplay = formatUsd(amountCents)
 
   const userIds = await loadLinkedHouseholdUserIds(admin, aid)
-  if (userIds.length === 0) return
+  if (userIds.length === 0) {
+    log("skip: no household users — no parent_athlete_links or claimed user_profiles for this athlete_id", {
+      athlete_id: aid,
+      slug,
+    })
+    return
+  }
 
   const profileSelect = "user_id, cell_phone, notify_email_fundraising_gifts, notify_sms_fundraising_gifts"
   let profErr: { message: string; code?: string } | null = null
@@ -178,15 +225,23 @@ export async function notifyHouseholdOfFundraisingGiftIfEligible(
     if (prefs.notifySmsFundraisingGifts) {
       const phone = (prow.cell_phone as string | null | undefined) ?? null
       const e164 = toE164(phone)
-      if (e164) {
-        const thank =
-          donorLabel === "Anonymous" || donorLabel === "A supporter"
-            ? "Thank your supporter personally."
-            : `Thank ${donorLabel} personally.`
-        const body = `NC United: ${donorLabel} gave ${amountDisplay} to ${athleteName}. Total ~ ${walletTotalDisplay}. ${thank} ${giftPageUrl}`
-        const ok = await sendSms(e164, body.slice(0, 320))
-        if (!ok) console.warn("[fundraising-household-gift] SMS not sent for", uid)
+      if (!e164) {
+        log("sms skipped: need valid 10-digit US cell_phone on user_profiles", { user_id: uid, athlete_id: aid })
+        continue
       }
+      const thank =
+        donorLabel === "Anonymous" || donorLabel === "A supporter"
+          ? "Thank your supporter personally."
+          : `Thank ${donorLabel} personally.`
+      const body = `NC United: ${donorLabel} gave ${amountDisplay} to ${athleteName}. Total ~ ${walletTotalDisplay}. ${thank} ${giftPageUrl}`
+      const ok = await sendSms(e164, body.slice(0, 320))
+      if (!ok) {
+        log("sms failed or Twilio not configured — check TWILIO_* on server", { user_id: uid })
+      }
+    } else {
+      log("sms skipped: notify_sms_fundraising_gifts is false in DB for user", { user_id: uid })
     }
   }
+
+  log("household notify completed for slug", { slug, athlete_id: aid, linked_users: userIds.length })
 }
