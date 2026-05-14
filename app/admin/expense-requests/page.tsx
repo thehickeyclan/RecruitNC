@@ -490,7 +490,7 @@ export default function AdminExpenseRequestsPage() {
             </CardTitle>
             <CardDescription className="text-amber-950/80 text-sm leading-relaxed max-w-3xl">
               Download a single CSV with every request: timestamps (submitted, updated, reviewed, paid), parent and athlete
-              IDs, expense category, requested and approved amounts, Zelle/Venmo payout details, parent and staff notes, and{" "}
+              IDs, expense category, requested and approved amounts, Venmo payout details (legacy Zelle rows if present), parent and staff notes, and{" "}
               <strong>direct URLs to uploaded receipts or invoices</strong>. Store this file with your books; retrieve
               attachments from the links (or archive them separately) for examiner review.
             </CardDescription>

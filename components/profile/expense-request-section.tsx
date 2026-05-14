@@ -63,8 +63,6 @@ export function ExpenseRequestSection({ linkedAthletes = [] }: { linkedAthletes?
   const [athleteId, setAthleteId] = useState("")
   const [expenseType, setExpenseType] = useState("")
   const [amount, setAmount] = useState("")
-  const [paymentMethod, setPaymentMethod] = useState<"zelle" | "venmo" | "">("")
-  const [zelleInfo, setZelleInfo] = useState("")
   const [venmoInfo, setVenmoInfo] = useState("")
   const [parentNotes, setParentNotes] = useState("")
   const [file, setFile] = useState<File | null>(null)
@@ -104,7 +102,7 @@ export function ExpenseRequestSection({ linkedAthletes = [] }: { linkedAthletes?
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!athleteId || !expenseType || !amount || !paymentMethod) {
+    if (!athleteId || !expenseType || !amount || !venmoInfo.trim()) {
       toast({ title: "Fill in all required fields", variant: "destructive" })
       return
     }
@@ -114,9 +112,8 @@ export function ExpenseRequestSection({ linkedAthletes = [] }: { linkedAthletes?
       fd.set("athleteId", athleteId)
       fd.set("expenseType", expenseType)
       fd.set("amountDollars", amount)
-      fd.set("paymentMethod", paymentMethod)
-      if (paymentMethod === "zelle") fd.set("zelleInfo", zelleInfo)
-      if (paymentMethod === "venmo") fd.set("venmoInfo", venmoInfo)
+      fd.set("paymentMethod", "venmo")
+      fd.set("venmoInfo", venmoInfo)
       if (parentNotes) fd.set("parentNotes", parentNotes)
       if (file) fd.set("document", file)
 
@@ -131,7 +128,6 @@ export function ExpenseRequestSection({ linkedAthletes = [] }: { linkedAthletes?
       }
       setAmount("")
       setParentNotes("")
-      setZelleInfo("")
       setVenmoInfo("")
       setFile(null)
       await load()
@@ -322,46 +318,17 @@ export function ExpenseRequestSection({ linkedAthletes = [] }: { linkedAthletes?
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Payout method</Label>
-                  <Select
-                    value={paymentMethod || undefined}
-                    onValueChange={(v) => setPaymentMethod(v as "zelle" | "venmo")}
+                  <Label htmlFor="venmo">Venmo @username</Label>
+                  <p className="text-xs text-slate-600">Reimbursements are sent via Venmo only.</p>
+                  <Input
+                    id="venmo"
+                    autoComplete="off"
+                    placeholder="@yourname"
+                    value={venmoInfo}
+                    onChange={(e) => setVenmoInfo(e.target.value)}
                     required
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Zelle or Venmo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="zelle">Zelle</SelectItem>
-                      <SelectItem value="venmo">Venmo</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  />
                 </div>
-                {paymentMethod === "zelle" && (
-                  <div className="space-y-2">
-                    <Label htmlFor="zelle">Zelle email or phone</Label>
-                    <Input
-                      id="zelle"
-                      autoComplete="off"
-                      value={zelleInfo}
-                      onChange={(e) => setZelleInfo(e.target.value)}
-                      required
-                    />
-                  </div>
-                )}
-                {paymentMethod === "venmo" && (
-                  <div className="space-y-2">
-                    <Label htmlFor="venmo">Venmo @username</Label>
-                    <Input
-                      id="venmo"
-                      autoComplete="off"
-                      placeholder="@yourname"
-                      value={venmoInfo}
-                      onChange={(e) => setVenmoInfo(e.target.value)}
-                      required
-                    />
-                  </div>
-                )}
                 <div className="space-y-2">
                   <Label htmlFor="exp-notes">Notes (optional)</Label>
                   <Textarea

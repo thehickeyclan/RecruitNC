@@ -1,5 +1,6 @@
 export type ExpenseRequestStatus = "pending" | "under_review" | "approved" | "rejected" | "paid"
 
+/** Stored on rows; new submissions use `"venmo"` only. */
 export type ExpensePaymentMethod = "zelle" | "venmo"
 
 export const EXPENSE_TYPE_OPTIONS: { value: string; label: string }[] = [
@@ -26,7 +27,7 @@ export const EXPENSE_STATUS_LABELS: Record<ExpenseRequestStatus, string> = {
 export const EXPENSE_STATUS_PARENT_DESCRIPTIONS: Record<ExpenseRequestStatus, string> = {
   pending: "We received your request and will review it soon.",
   under_review: "Staff is reviewing your request.",
-  approved: "Approved — we will send payment to your Zelle or Venmo when processed.",
+  approved: "Approved — we will send payment to your Venmo when processed.",
   rejected: "This request was not approved. See staff note if provided.",
   paid: "Reimbursement has been sent.",
 }
