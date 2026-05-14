@@ -5,8 +5,12 @@ export type FundraisingGiftHouseholdEmailInput = {
   athleteName: string
   donorLabel: string
   amountDisplay: string
-  /** Running campaign total; may be "—" when totals are still catching up */
-  walletTotalDisplay: string
+  /** Same rollup as the public gift page (credited gifts). */
+  raisedDisplay: string
+  /** Net after paid reimbursements (digital wallet), when known */
+  balanceAfterPayoutsDisplay: string | null
+  /** Notional available outside Guild reservations, when Guild hold > 0 */
+  availableAfterGuildDisplay: string | null
   giftPageUrl: string
 }
 
@@ -47,7 +51,9 @@ export async function sendFundraisingGiftHouseholdEmail(
 <div style="background:#f0fdf4;border-radius:12px;padding:28px;border:1px solid #bbf7d0;">
 <p style="margin:0 0 12px;font-size:16px;font-weight:700;color:#14532d;">New donation</p>
 <p style="margin:0 0 8px;"><strong>${escapeHtml(data.donorLabel)}</strong> gave <strong>${escapeHtml(data.amountDisplay)}</strong> to ${escapeHtml(athlete)}&apos;s campaign.</p>
-<p style="margin:0 0 8px;"><strong>Campaign total (best available):</strong> ${escapeHtml(data.walletTotalDisplay)}</p>
+<p style="margin:0 0 8px;"><strong>Total raised (campaign):</strong> ${escapeHtml(data.raisedDisplay)}</p>
+${data.balanceAfterPayoutsDisplay ? `<p style="margin:0 0 8px;"><strong>Balance after NC United payouts:</strong> ${escapeHtml(data.balanceAfterPayoutsDisplay)}</p>` : ""}
+${data.availableAfterGuildDisplay ? `<p style="margin:0 0 8px;"><strong>Available outside Guild hold:</strong> ${escapeHtml(data.availableAfterGuildDisplay)}</p>` : ""}
 <p style="margin:16px 0 0;">${thankReminderLine(data.donorLabel)}</p>
 <p style="margin:16px 0 0;"><a href="${escapeAttr(data.giftPageUrl)}" style="color:#b45309;font-weight:600;">View ${escapeHtml(athlete)}&apos;s gift page</a></p>
 <p style="margin:24px 0 0;font-size:13px;color:#64748b;">— NC United Wrestling</p>

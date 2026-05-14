@@ -6,6 +6,8 @@ import { resolveFundraisingAthletePublic } from "@/lib/fundraising/athlete-fundr
 import { getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
 import { deriveCheckoutAttributionFromStripeSession } from "@/lib/spartan-donation-checkout-attribution"
 import { sendSms, toE164 } from "@/lib/sms"
+import { buildParentSpartanFundraisingRowsForAthleteIds } from "@/lib/parent-spartan-fundraising-totals"
+import { sumGuildReservedAllocationCentsForAthleteIds } from "@/lib/guild-credit-allocations"
 
 const ATHLETE_PAGE_SURFACE = "athlete_page"
 
@@ -24,7 +26,7 @@ function formatUsd(cents: number): string {
   }).format(cents / 100)
 }
 
-/** Donor label for household email + thank-you line — respects donor_list_public on session metadata. */
+/** Donor label for public surfaces — respects donor_list_public on session metadata. */
 export function householdDonorLabelFromCheckoutSession(session: Stripe.Checkout.Session): string {
   const meta = (session.metadata ?? {}) as Record<string, string>
   const v = meta.donor_list_public
@@ -35,6 +37,19 @@ export function householdDonorLabelFromCheckoutSession(session: Stripe.Checkout.
     (typeof meta.donor_name === "string" ? meta.donor_name.trim() : "")
   if (name) return name
   return "A supporter"
+}
+
+/**
+ * Household email/SMS: use payer name from Checkout when Stripe captured it so families can thank the right person.
+ * Falls back to {@link householdDonorLabelFromCheckoutSession} only when no name is present.
+ */
+export function householdGiftDonorDisplayForFamily(session: Stripe.Checkout.Session): string {
+  const meta = (session.metadata ?? {}) as Record<string, string>
+  const name =
+    ((session.customer_details?.name as string | undefined) ?? "").trim() ||
+    (typeof meta.donor_name === "string" ? meta.donor_name.trim() : "")
+  if (name) return name
+  return householdDonorLabelFromCheckoutSession(session)
 }
 
 async function tryInsertNotifyLog(admin: SupabaseClient, checkoutSessionId: string): Promise<boolean> {
@@ -157,16 +172,6 @@ export async function notifyHouseholdOfFundraisingGiftIfEligible(
     resolved.fallbackDisplayName?.trim() ||
     "Your athlete"
 
-  const ledgerCodes =
-    resolved.ledgerCodes.length > 0 ? resolved.ledgerCodes : resolved.code ? [resolved.code] : []
-  const snap = ledgerCodes.length > 0 ? await getAthleteFundraisingPublicSnapshot(ledgerCodes, 1) : null
-  const walletTotalDisplay =
-    snap?.stats?.raisedCents != null ? formatUsd(snap.stats.raisedCents) : "— (open your wallet for the latest total)"
-
-  const giftPageUrl = `${publicAppOrigin()}/fundraising/athletes/${encodeURIComponent(slug)}`
-  const donorLabel = householdDonorLabelFromCheckoutSession(session)
-  const amountDisplay = formatUsd(amountCents)
-
   const userIds = await loadLinkedHouseholdUserIds(admin, aid)
   if (userIds.length === 0) {
     log("skip: no household users — no parent_athlete_links or claimed user_profiles for this athlete_id", {
@@ -176,6 +181,61 @@ export async function notifyHouseholdOfFundraisingGiftIfEligible(
     return
   }
 
+  const ledgerCodes =
+    resolved.ledgerCodes.length > 0 ? resolved.ledgerCodes : resolved.code ? [resolved.code] : []
+  const snap = ledgerCodes.length > 0 ? await getAthleteFundraisingPublicSnapshot(ledgerCodes, 1) : null
+
+  const donorLabel = householdGiftDonorDisplayForFamily(session)
+  const amountDisplay = formatUsd(amountCents)
+  const giftPageUrl = `${publicAppOrigin()}/fundraising/athletes/${encodeURIComponent(slug)}`
+
+  const raisedCents = snap?.stats?.raisedCents
+  const raisedDisplay = raisedCents != null ? formatUsd(raisedCents) : "— (totals updating)"
+
+  let netAfterPayoutsCents: number | null = null
+  let availableAfterGuildCents: number | null = null
+  try {
+    const wrows = await buildParentSpartanFundraisingRowsForAthleteIds(admin, userIds[0]!, [aid])
+    const wrow = wrows[0]
+    if (wrow && !wrow.codeUnavailable) {
+      netAfterPayoutsCents = wrow.netAfterReimbursementsCents
+      const gids = resolved.guildLookupAthleteIds.length > 0 ? resolved.guildLookupAthleteIds : [aid]
+      const guildHeld = await sumGuildReservedAllocationCentsForAthleteIds(admin, gids)
+      if (guildHeld > 0) {
+        availableAfterGuildCents = Math.max(0, wrow.netAfterReimbursementsCents - guildHeld)
+      }
+    }
+  } catch (e) {
+    console.warn("[fundraising-household-gift] wallet snapshot for notify", e)
+  }
+
+  const netDisplay = netAfterPayoutsCents != null ? formatUsd(netAfterPayoutsCents) : null
+  const availableDisplay = availableAfterGuildCents != null ? formatUsd(availableAfterGuildCents) : null
+
+  const buildSmsBody = (): string => {
+    const thank =
+      donorLabel === "Anonymous" || donorLabel === "A supporter"
+        ? "Thank your supporter personally."
+        : `Thank ${donorLabel} personally.`
+    const parts: string[] = [
+      `NC United: ${donorLabel} gave ${amountDisplay} to ${athleteName}`,
+      `Raised ${raisedDisplay}`,
+    ]
+    if (
+      netAfterPayoutsCents != null &&
+      raisedCents != null &&
+      netAfterPayoutsCents !== raisedCents
+    ) {
+      parts.push(`Balance ${netDisplay} after payouts`)
+    }
+    if (availableDisplay) {
+      parts.push(`${availableDisplay} available outside Guild hold`)
+    }
+    parts.push(`${thank} ${giftPageUrl}`)
+    return parts.join(". ").slice(0, 320)
+  }
+
+  const smsBody = buildSmsBody()
   const profileSelect = "user_id, cell_phone, notify_email_fundraising_gifts, notify_sms_fundraising_gifts"
   let profErr: { message: string; code?: string } | null = null
   let profilesPayload = await admin.from("user_profiles").select(profileSelect).in("user_id", userIds)
@@ -214,7 +274,14 @@ export async function notifyHouseholdOfFundraisingGiftIfEligible(
         athleteName,
         donorLabel,
         amountDisplay,
-        walletTotalDisplay,
+        raisedDisplay,
+        balanceAfterPayoutsDisplay:
+          netAfterPayoutsCents != null &&
+          raisedCents != null &&
+          netAfterPayoutsCents !== raisedCents
+            ? netDisplay
+            : null,
+        availableAfterGuildDisplay: availableDisplay,
         giftPageUrl,
       })
       if (!send.success) {
@@ -229,12 +296,7 @@ export async function notifyHouseholdOfFundraisingGiftIfEligible(
         log("sms skipped: need valid 10-digit US cell_phone on user_profiles", { user_id: uid, athlete_id: aid })
         continue
       }
-      const thank =
-        donorLabel === "Anonymous" || donorLabel === "A supporter"
-          ? "Thank your supporter personally."
-          : `Thank ${donorLabel} personally.`
-      const body = `NC United: ${donorLabel} gave ${amountDisplay} to ${athleteName}. Total ~ ${walletTotalDisplay}. ${thank} ${giftPageUrl}`
-      const ok = await sendSms(e164, body.slice(0, 320))
+      const ok = await sendSms(e164, smsBody)
       if (!ok) {
         log("sms failed or Twilio not configured — check TWILIO_* on server", { user_id: uid })
       }
