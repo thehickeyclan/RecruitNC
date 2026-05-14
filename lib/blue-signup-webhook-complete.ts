@@ -271,6 +271,7 @@ export async function completeBlueSignupAfterStripePayment(
         variant: { color: "N/A", size: "N/A" },
         quantity: 1,
         price: amountTotalDollars,
+        subtotal: amountTotalDollars,
         image_url: null,
       })
     } else if ((orderErr as { code?: string }).code !== "23505") {
