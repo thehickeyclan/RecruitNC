@@ -28,8 +28,14 @@ import { fetchThankYouAckLedgerKeys } from "@/lib/fundraising/supporter-thank-yo
 import { getFundraisingWiringAdminSnapshot } from "@/lib/fundraising/fundraising-wiring-status"
 import { fetchPendingActivationUserIdsForSlug } from "@/lib/fundraising/fundraising-activation-status"
 import { isProfileCheckoutLive } from "@/lib/fundraising/fundraising-checkout-live"
+import {
+  createFundraisingVideoSignedUrl,
+  FUNDRAISING_VIDEO_SIGNED_URL_TTL,
+} from "@/lib/fundraising/fundraising-video-storage"
 import { getFundraisingAthletePageWalletRowForViewer } from "@/lib/parent-spartan-fundraising-totals"
+import { FundraisingPublicVideo } from "@/components/fundraising/fundraising-public-video"
 import { FundraisingAthleteWalletPanel } from "./fundraising-athlete-wallet-panel"
+import { FundraisingAthleteVideosSection } from "./fundraising-athlete-videos-section"
 import { normalizeFundraisingSchoolDisplay } from "@/lib/fundraising/normalize-fundraising-school-display"
 
 const HERO_FALLBACK_SILHOUETTE = "/wrestler-silhouette.png"
@@ -190,6 +196,23 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
 
   const goalCents = profile?.campaign_goal_cents ?? null
   const raisedForBar = stats?.raisedCents ?? 0
+
+  let fundraisingVideoSignedUrl: string | null = null
+  let fundraisingThumbSignedUrl: string | null = null
+  if (checkoutLive && profile?.fundraising_video_url?.trim()) {
+    fundraisingVideoSignedUrl = await createFundraisingVideoSignedUrl(
+      admin,
+      profile.fundraising_video_url,
+      FUNDRAISING_VIDEO_SIGNED_URL_TTL,
+    )
+    if (profile.fundraising_video_thumbnail_url?.trim()) {
+      fundraisingThumbSignedUrl = await createFundraisingVideoSignedUrl(
+        admin,
+        profile.fundraising_video_thumbnail_url,
+        FUNDRAISING_VIDEO_SIGNED_URL_TTL,
+      )
+    }
+  }
 
   return (
     <div
@@ -361,6 +384,27 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
               initialGoalCents={goalCents}
               raisedCents={raisedForBar}
             />
+            <FundraisingAthleteVideosSection
+              fundraisingSlug={slug}
+              athleteFirstName={athleteFirstName}
+              hasFundraisingProfile={profile != null}
+              canEdit={isFundraisingManager}
+              isRecruitNcAdmin={viewerIsRecruitNcAdmin}
+              checkoutLive={checkoutLive}
+              fundraisingVideoPath={profile?.fundraising_video_url ?? null}
+              fundraisingThumbPath={profile?.fundraising_video_thumbnail_url ?? null}
+              thankyouVideoPath={profile?.thankyou_video_url ?? null}
+              thankyouThumbPath={profile?.thankyou_video_thumbnail_url ?? null}
+            />
+            {fundraisingVideoSignedUrl ? (
+              <div className="mt-8">
+                <FundraisingPublicVideo
+                  videoUrl={fundraisingVideoSignedUrl}
+                  posterUrl={fundraisingThumbSignedUrl}
+                  athleteFirstName={athleteFirstName}
+                />
+              </div>
+            ) : null}
             <FundraisingAthleteMessageSection
               key={profile ? `${profile.updated_at}-msg` : `${slug}-msg`}
               displayName={displayName}
