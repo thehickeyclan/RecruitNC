@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   buildFundraisingEntries,
   enrichRosterOnlyEntriesWithCanonicalAthleteNames,
+  filterFundraisingEntriesByQuery,
   fundraisingCodeToFullNameMap,
   mergeFundraisingAthleteEntries,
   normalizeSpartanPublicAthleteDisplay,
@@ -25,6 +26,52 @@ function entry(
     searchBlob: partial.searchBlob ?? "",
   }
 }
+
+describe("filterFundraisingEntriesByQuery", () => {
+  const shared = "5e4f145f-6cda-4d5f-a4a3-89fc536f0ec2"
+  it("returns at most one hit per pinned athletes.id (collision codes)", () => {
+    const entries: FundraisingAthleteEntry[] = [
+      {
+        id: shared,
+        code: "NCU-APONTEV1-31",
+        label: "J. Aponte '31 · Cardinal Gibbons",
+        fullName: "Jack Aponte",
+        searchBlob: "jack aponte ncu-apontev1-31 cardinal gibbons",
+      },
+      {
+        id: shared,
+        code: "NCU-APONTEJ-31",
+        label: "J. Aponte '31 · Cardinal Gibbons",
+        fullName: "Jack Aponte",
+        searchBlob: "jack aponte ncu-apontej-31 cardinal gibbons",
+      },
+    ]
+    const out = filterFundraisingEntriesByQuery(entries, "aponte", 25)
+    expect(out).toHaveLength(1)
+    expect(out[0].code.startsWith("NCU-APONTE")).toBe(true)
+  })
+
+  it("still returns separate rows for roster-only codes (spartan-fundraising ids)", () => {
+    const entries: FundraisingAthleteEntry[] = [
+      {
+        id: "spartan-fundraising:NCU-SMITH-27",
+        code: "NCU-SMITH-27",
+        label: "Pat Smith",
+        fullName: "Pat Smith",
+        searchBlob: "pat smith ncu-smith-27",
+      },
+      {
+        id: "spartan-fundraising:NCU-JONES-27",
+        code: "NCU-JONES-27",
+        label: "Alex Jones",
+        fullName: "Alex Jones",
+        searchBlob: "alex jones ncu-jones-27",
+      },
+    ]
+    const out = filterFundraisingEntriesByQuery(entries, "ncu", 25)
+    expect(out.length).toBeGreaterThanOrEqual(2)
+  })
+})
 
 describe("enrichRosterOnlyEntriesWithCanonicalAthleteNames", () => {
   it("pulls full name from athletes profile when Stripe/manual NCU code differs (e.g. ADAMSM vs ADAMS)", () => {
