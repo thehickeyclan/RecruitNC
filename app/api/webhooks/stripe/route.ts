@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { sendOrderConfirmationEmail } from "@/lib/email"
+import { sendOrderConfirmationEmail, formatOrderItemVariantForEmail } from "@/lib/email"
 import { findProductByIdOrPrefix } from "@/lib/store/product-utils"
 import { findAndEnrichAthlete, enrichmentFromOrderCustomer, buildEnrichmentPayload } from "@/lib/enrich-athlete-profile"
 import { orderShippingFields } from "@/lib/order-shipping"
@@ -506,7 +506,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true })
     }
     if (payload.items.length === 0 && payload.total > 0) {
-      payload.items = [{ id: "drop-in", name: "Order items", quantity: 1, price: payload.total, variant: { color: "N/A", size: "N/A" } }]
+      payload.items = [
+        {
+          id: "drop-in",
+          name: "NC United Store purchase",
+          quantity: 1,
+          price: payload.total,
+          variant: { color: "", size: "" },
+        },
+      ]
     }
     const { data: productCache } = await admin.from("products").select("id, name, image_url").limit(5000)
     const productsList = productCache ?? []
@@ -570,12 +578,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Order items insert failed" }, { status: 500 })
     }
     try {
+      const sumLineSubtotals = orderItems.reduce((s, r) => s + (Number(r.subtotal) || 0), 0)
+      const metaSub = Number(payload.subtotal) || 0
+      const emailSubtotal =
+        metaSub > 0
+          ? metaSub
+          : sumLineSubtotals > 0
+            ? sumLineSubtotals
+            : Math.max(0, Number(payload.total) - Number(payload.shipping) - Number(payload.tax) + Number(payload.discount))
+
       await sendOrderConfirmationEmail({
         orderNumber,
         customerName: payload.customerName,
         customerEmail: payload.customerEmail,
-        items: payload.items.map((i) => ({ name: i.name, variant: `${i.variant?.color ?? ""} / ${i.variant?.size ?? ""}`.trim() || "—", quantity: i.quantity, price: i.price })),
-        subtotal: payload.subtotal,
+        items: orderItems.map((row) => ({
+          name: String(row.product_name || "Item"),
+          variant: formatOrderItemVariantForEmail(row.variant),
+          quantity: Number(row.quantity) || 1,
+          price: Number(row.price) || 0,
+        })),
+        subtotal: emailSubtotal,
         shipping: payload.shipping,
         tax: payload.tax,
         discount: payload.discount,
