@@ -557,11 +557,17 @@ export function filterFundraisingEntriesByQuery(
     return a.e.label.localeCompare(b.e.label)
   })
 
-  const seen = new Set<string>()
+  const seenCode = new Set<string>()
+  const seenPinnedAthleteId = new Set<string>()
   const out: { code: string; label: string }[] = []
   for (const { e } of scored) {
-    if (seen.has(e.code)) continue
-    seen.add(e.code)
+    const codeKey = e.code.trim().toLowerCase()
+    if (seenCode.has(codeKey)) continue
+    if (ATHLETE_UUID_RE.test(e.id)) {
+      if (seenPinnedAthleteId.has(e.id)) continue
+      seenPinnedAthleteId.add(e.id)
+    }
+    seenCode.add(codeKey)
     out.push({ code: e.code, label: e.label })
     if (out.length >= limit) break
   }

@@ -272,6 +272,7 @@ export async function getFundraisingAthletesIndexRows(
     profile: AthleteFundraisingProfileRow | undefined,
   ): FundraisingAthleteIndexRow => {
     const primary = profile ? coerceNcuCode(profile.primary_fundraising_code) : null
+    const hrefSlug = profile?.slug ?? e.code.trim().toLowerCase()
     return {
       athleteId: e.id,
       code: primary ?? e.code,
@@ -333,5 +334,19 @@ export async function getFundraisingAthletesIndexRows(
   combined.sort((a, b) =>
     a.displayName.localeCompare(b.displayName, undefined, { sensitivity: "base" }),
   )
-  return combined
+
+  const seenSlug = new Set<string>()
+  const seenPinnedAthlete = new Set<string>()
+  const deduped: FundraisingAthleteIndexRow[] = []
+  for (const row of combined) {
+    const slugKey = row.hrefSlug.trim().toLowerCase()
+    if (seenSlug.has(slugKey)) continue
+    if (ATHLETE_UUID_RE.test(row.athleteId)) {
+      if (seenPinnedAthlete.has(row.athleteId)) continue
+      seenPinnedAthlete.add(row.athleteId)
+    }
+    seenSlug.add(slugKey)
+    deduped.push(row)
+  }
+  return deduped
 }
