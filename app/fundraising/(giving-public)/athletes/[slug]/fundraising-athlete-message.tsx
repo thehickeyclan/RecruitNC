@@ -118,7 +118,8 @@ export function FundraisingAthleteMessageSection({
       {showPencil && editing ? (
         <>
           <p className="mt-2 text-xs leading-relaxed text-white/50">
-            Shown on this page once fundraising is live. First save may create the profile when a roster code is on file.
+            Shown on this page once giving is turned on. The first save may finish setup once this wrestler is on the NC United
+            roster.
           </p>
           <textarea
             value={bio}
@@ -154,7 +155,8 @@ export function FundraisingAthleteMessageSection({
         <>
           {canEdit && !hasFundraisingProfile && !isRecruitNcAdmin ? (
             <p className="mt-3 text-sm leading-relaxed text-white/65">
-              Saving can create the gift-page record when this wrestler has a roster code. Activation is still required before donors can give on this URL.
+              Saving can finish gift-page setup once this wrestler is on the roster. Staff still needs to activate this page before
+              donors can use this link.
             </p>
           ) : null}
 

@@ -11,7 +11,7 @@ function formatUsd(cents: number): string {
 function spentSubLabel(reimb: number, guild: number): string {
   const parts: string[] = []
   if (reimb > 0) parts.push("Reimbursements")
-  if (guild > 0) parts.push("Guild")
+  if (guild > 0) parts.push("Program reserve")
   return parts.length > 0 ? parts.join(" · ") : "None yet"
 }
 
@@ -32,7 +32,6 @@ type Props = {
 export function FundraisingAthleteWalletPanel({ row, firstName, ledgerPublicStats }: Props) {
   const raisedCents = ledgerPublicStats != null ? ledgerPublicStats.raisedCents : row.totalCents
   const giftCount = ledgerPublicStats != null ? ledgerPublicStats.giftCount : row.giftCount
-  const raceSignupCount = ledgerPublicStats != null ? ledgerPublicStats.raceSignupCount : row.raceSignupCount
   const ledgerAligned = ledgerPublicStats != null
 
   const reimb = row.reimbursementsPaidCents ?? 0
@@ -60,9 +59,16 @@ export function FundraisingAthleteWalletPanel({ row, firstName, ledgerPublicStat
               {firstName}&apos;s digital wallet
             </h2>
             <p className="mt-1 text-xs leading-snug text-white/55">
-              {ledgerAligned
-                ? "Raised and gift count match the totals above. Each wrestler has their own balance: Guild sends from Profile are saved under the child you pick there — they show in Spent on that child’s page only (Mom’s and Dad’s accounts both roll up here)."
-                : "Profile → Digital wallet may use a different code when multiple NCU codes exist — link below for full ledger tools."}
+              Total raised (all time), what has already been spent or reimbursed, and what is still available for this
+              athlete. Submit reimbursement requests from your parent profile under{" "}
+              <span className="text-white/70">Fundraise</span>.
+              {!ledgerAligned ? (
+                <>
+                  {" "}
+                  If the totals look off, confirm you&apos;re viewing the right athlete under{" "}
+                  <span className="text-white/70">Family &amp; athletes</span>.
+                </>
+              ) : null}
             </p>
           </div>
         </div>
@@ -85,15 +91,7 @@ export function FundraisingAthleteWalletPanel({ row, firstName, ledgerPublicStat
         <div className="rounded-lg border border-white/10 bg-black/25 px-4 py-3 sm:py-4">
           <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#C8A94A]">Raised</p>
           <p className="mt-1 text-xl font-black tabular-nums text-white sm:text-2xl">{formatUsd(raisedCents)}</p>
-          <p className="mt-1 text-[11px] leading-snug text-white/45">
-            {giftCount} gifts
-            {raceSignupCount > 0 ? (
-              <>
-                {" "}
-                · {raceSignupCount} race{raceSignupCount === 1 ? "" : "s"}
-              </>
-            ) : null}
-          </p>
+          <p className="mt-1 text-[11px] leading-snug text-white/45">{giftCount} gifts</p>
         </div>
         <div className="rounded-lg border border-white/10 bg-black/25 px-4 py-3 sm:py-4">
           <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#ff6b6b]">Spent</p>
@@ -111,7 +109,7 @@ export function FundraisingAthleteWalletPanel({ row, firstName, ledgerPublicStat
           >
             {formatUsd(remainingAfterGuild)}
           </p>
-          <p className="mt-1 text-[11px] leading-snug text-white/45">After reimbursements &amp; Guild holds</p>
+          <p className="mt-1 text-[11px] leading-snug text-white/45">What&apos;s left after spending and reimbursements</p>
         </div>
       </div>
     </section>

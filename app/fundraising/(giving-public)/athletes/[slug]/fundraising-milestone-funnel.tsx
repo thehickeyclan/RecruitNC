@@ -61,9 +61,10 @@ export function FundraisingMilestoneFunnel({ raisedCents, goalCents, athleteLabe
             {" "}
             ·{" "}
             <span className="text-white/65">
-              visual target <span className="tabular-nums text-[#C8A94A]">{formatUsdWhole(DEFAULT_FUNNEL_GOAL_CENTS)}</span>
+              sample chart target{" "}
+              <span className="tabular-nums text-[#C8A94A]">{formatUsdWhole(DEFAULT_FUNNEL_GOAL_CENTS)}</span>
             </span>
-            <span className="text-white/45"> (set a custom goal in the gold section)</span>
+            <span className="text-white/45"> (set a real goal in the section above)</span>
           </>
         ) : null}
       </p>
@@ -144,15 +145,15 @@ export function FundraisingMilestoneFunnel({ raisedCents, goalCents, athleteLabe
         <p className="mt-5 text-center text-[11px] leading-snug text-white/40">
           {hasCustomGoal ? (
             <>
-              Fill matches the <strong className="text-white/55">goal</strong> in the gold section — same running total as the counter above.
-              Checkmarks mark tiers along the way (milestones stay within your goal range).
+              Same dollars as <strong className="text-white/55">{labelForHints}&apos;s fundraising goal</strong> and the
+              totals higher on this page. Checkmarks are milestones along the way.
             </>
           ) : (
             <>
-              Until a custom goal is set in the gold section, fill scales to a <span className="tabular-nums text-white/55">{formatUsdWhole(DEFAULT_FUNNEL_GOAL_CENTS)}</span> visual target (
-              <span className="tabular-nums text-white/55">{fillPctRounded}%</span> at{" "}
-              <span className="tabular-nums text-white/55">{formatUsdWhole(raisedCents)}</span> raised). Set{" "}
-              <strong className="text-white/55">{labelForHints}&apos;s goal</strong> there so this matches your real target.
+              Until you set <strong className="text-white/55">{labelForHints}&apos;s goal</strong> above, this bar uses a{" "}
+              <span className="tabular-nums text-white/55">{formatUsdWhole(DEFAULT_FUNNEL_GOAL_CENTS)}</span> sample target (
+              <span className="tabular-nums text-white/55">{fillPctRounded}%</span> with{" "}
+              <span className="tabular-nums text-white/55">{formatUsdWhole(raisedCents)}</span> raised so far).
             </>
           )}
         </p>

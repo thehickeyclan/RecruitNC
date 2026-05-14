@@ -162,9 +162,9 @@ export function FundraisingAdminAssignmentPanel({
         ) : null}
         {!profileId && athleteId ? (
           <p className="mt-3 text-xs leading-relaxed text-white/55">
-            This URL is backed by the roster + NCU code only — there isn&apos;t a{" "}
-            <span className="font-mono text-[10px] text-white/70">athlete_fundraising_profiles</span> row yet (bio/goal/custom slug).
-            <strong className="text-white/85"> Parent linking below still works.</strong> One click creates the row so Attach athlete and edits behave like other donor pages.
+            This link works from the roster and fundraising code, but there isn&apos;t a saved gift-page profile yet (no bio,
+            goal, or custom settings in our system).
+            <strong className="text-white/85"> You can still link a parent below.</strong> Use &quot;Create donor profile&quot; to add that saved page so tools match other athletes.
           </p>
         ) : null}
         <div className="mt-4 flex flex-wrap gap-2">

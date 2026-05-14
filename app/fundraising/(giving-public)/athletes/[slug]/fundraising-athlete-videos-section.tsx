@@ -147,11 +147,11 @@ export function FundraisingAthleteVideosSection({
       </h2>
       <p className="mt-2 text-xs leading-relaxed text-white/50">
         Optional — film on your phone (MP4, MOV, or WebM, up to 100MB). Donors see it on this page (with your goal and written note) once
-        checkout is live. Short and authentic works best.
+        giving is turned on. Short and authentic works best.
       </p>
       {!checkoutLive && canEdit ? (
         <p className="mt-2 rounded-md border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-xs leading-relaxed text-amber-100/90">
-          You can upload or replace the clip now; donors will only see it after NC United activates checkout on this page.
+          You can upload or replace the clip now; donors will only see it after NC United turns on giving for this page.
         </p>
       ) : null}
 
