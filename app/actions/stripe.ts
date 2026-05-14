@@ -2,7 +2,7 @@
 
 import { stripe } from "@/lib/stripe"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { sendOrderConfirmationEmail } from "@/lib/email"
+import { sendOrderConfirmationEmail, formatOrderItemVariantForEmail } from "@/lib/email"
 import { shippingNameFromCustomerName, flatShippingFromAddress, flatBillingFromAddress } from "@/lib/order-shipping"
 import { findAndEnrichAthlete, enrichmentFromOrderCustomer } from "@/lib/enrich-athlete-profile"
 import { syntheticOrderItemSku } from "@/lib/order-item-sku"
@@ -206,17 +206,24 @@ async function createFreeOrderInternal(
   }
 
   try {
+    const sumLines = params.items.reduce((s, i) => {
+      const q = Math.max(1, Number(i.quantity) || 1)
+      const u = Number(i.price)
+      return s + (Number.isFinite(u) ? u * q : 0)
+    }, 0)
+    const emailSubtotal = params.subtotal > 0 ? params.subtotal : sumLines > 0 ? sumLines : Math.max(0, params.total - params.shipping - params.tax + params.discount)
+
     await sendOrderConfirmationEmail({
       orderNumber,
       customerName: params.customerName,
       customerEmail: params.customerEmail,
       items: params.items.map((i) => ({
         name: i.name,
-        variant: `${i.variant?.color ?? ""} / ${i.variant?.size ?? ""}`.trim() || "—",
+        variant: formatOrderItemVariantForEmail(i.variant),
         quantity: i.quantity,
         price: i.price,
       })),
-      subtotal: params.subtotal,
+      subtotal: emailSubtotal,
       shipping: params.shipping,
       tax: params.tax,
       discount: params.discount,

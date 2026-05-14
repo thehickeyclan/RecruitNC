@@ -165,6 +165,56 @@ export async function sendEditRequestNotification({
   }
 }
 
+function escapeHtmlReceipt(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+}
+
+/** Variant from order_items JSON / cart — hide useless "N/A / N/A" in receipts. */
+export function formatOrderItemVariantForEmail(variant: unknown): string {
+  if (variant == null) return ""
+  if (typeof variant === "string") {
+    const t = variant.trim()
+    if (!t || /^n\/a(\s*\/\s*n\/a)?$/i.test(t)) return ""
+    return t
+  }
+  if (typeof variant === "object" && !Array.isArray(variant)) {
+    const o = variant as Record<string, unknown>
+    const c = String(o.color ?? "").trim()
+    const s = String(o.size ?? "").trim()
+    const isBad = (x: string) => !x || /^n\/a$/i.test(x)
+    if (isBad(c) && isBad(s)) return ""
+    if (isBad(c)) return s
+    if (isBad(s)) return c
+    return `${c} / ${s}`
+  }
+  return ""
+}
+
+/** Shipping JSON from checkout / Stripe — single-line summary for emails. */
+export function formatStoreShippingAddressPlain(shippingAddress: Record<string, unknown> | null | undefined): string {
+  if (!shippingAddress || typeof shippingAddress !== "object") return ""
+  const a = shippingAddress as Record<string, unknown>
+  const str = (k: string) => {
+    const v = a[k]
+    return v != null && String(v).trim() ? String(v).trim() : ""
+  }
+  const name = [str("firstName"), str("lastName")].filter(Boolean).join(" ")
+  const line1 = str("address1") || str("line1") || str("address")
+  const line2 = str("address2") || str("line2") || str("apartment")
+  const city = str("city")
+  const state = str("state")
+  const zip = str("zipCode") || str("zip") || str("postal_code")
+  const country = str("country")
+  const cityPart = [city, state].filter(Boolean).join(", ")
+  const cityZip = [cityPart, zip].filter(Boolean).join(" ")
+  const parts = [name, line1, line2, cityZip, country].filter(Boolean)
+  return parts.join(", ")
+}
+
 /** Order confirmation email for store purchases (Resend). */
 export interface SendOrderConfirmationParams {
   orderNumber: string
@@ -193,15 +243,13 @@ export async function sendOrderConfirmationEmail(
     const { orderNumber, customerName, customerEmail, items, subtotal, shipping, tax, discount, total, shippingAddress } = params
 
     const itemsRows = items
-      .map(
-        (i) =>
-          `<tr><td>${i.name} (${i.variant})</td><td>${i.quantity}</td><td>$${Number(i.price).toFixed(2)}</td></tr>`
-      )
+      .map((i) => {
+        const v = (i.variant ?? "").trim()
+        const label = v ? `${i.name} (${v})` : i.name
+        return `<tr><td>${escapeHtmlReceipt(label)}</td><td style="text-align:center">${escapeHtmlReceipt(String(i.quantity))}</td><td style="text-align:right">$${Number(i.price).toFixed(2)}</td></tr>`
+      })
       .join("")
-    const addr = shippingAddress as Record<string, string>
-    const addressBlock = [addr.address1 || addr.address, addr.address2, addr.city, addr.state, addr.zipCode || addr.zip]
-      .filter(Boolean)
-      .join(", ")
+    const addressBlock = formatStoreShippingAddressPlain(shippingAddress)
 
     const html = `
 <!DOCTYPE html>
@@ -212,8 +260,8 @@ export async function sendOrderConfirmationEmail(
     <h1 style="color: white; margin: 0; font-size: 22px;">NC United Store</h1>
   </div>
   <div style="background: #fff; padding: 28px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
-    <p>Hi ${customerName},</p>
-    <p>Thanks for your order. Order number: <strong>${orderNumber}</strong>.</p>
+    <p>Hi ${escapeHtmlReceipt(customerName)},</p>
+    <p>Thanks for your order. Order number: <strong>${escapeHtmlReceipt(orderNumber)}</strong>.</p>
     <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
       <thead><tr style="border-bottom: 1px solid #e5e7eb;"><th style="text-align: left;">Item</th><th>Qty</th><th style="text-align: right;">Price</th></tr></thead>
       <tbody>${itemsRows}</tbody>
@@ -223,7 +271,11 @@ export async function sendOrderConfirmationEmail(
     ${tax > 0 ? `<p style="margin: 8px 0;">Tax: $${Number(tax).toFixed(2)}</p>` : ""}
     ${discount > 0 ? `<p style="margin: 8px 0;">Discount: -$${Number(discount).toFixed(2)}</p>` : ""}
     <p style="margin: 16px 0; font-weight: bold;">Total: $${Number(total).toFixed(2)}</p>
-    <p style="margin: 16px 0;">Shipping to: ${addressBlock}</p>
+    ${
+      addressBlock
+        ? `<p style="margin: 16px 0;">Shipping to: ${escapeHtmlReceipt(addressBlock)}</p>`
+        : `<p style="margin: 16px 0; color: #6b7280; font-size: 14px;">No shipping address was stored on this receipt (common for digital-only orders or when only billing details were collected). If you expected a ship-to address, reply to this email and we&apos;ll help.</p>`
+    }
     <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
     <p style="color: #6b7280; font-size: 14px;">Questions? Contact <a href="mailto:info@ncwrestlingunited.com" style="color: #003366;">info@ncwrestlingunited.com</a></p>
   </div>
