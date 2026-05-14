@@ -2,7 +2,7 @@ import { put } from "@vercel/blob"
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { EXPENSE_TYPE_OPTIONS, type ExpensePaymentMethod } from "@/lib/athlete-expense-requests"
+import { EXPENSE_TYPE_OPTIONS } from "@/lib/athlete-expense-requests"
 import { notifyStaffNewReimbursementRequestDegraded } from "@/lib/reimbursement-notify"
 import { nanoid } from "nanoid"
 
@@ -18,7 +18,6 @@ function parseDollarsToCents(raw: string): number | null {
   return Math.min(Math.round(n * 100), 100_000_000)
 }
 
-const VALID_METHODS: ExpensePaymentMethod[] = ["zelle", "venmo"]
 const TYPE_VALUES = new Set(EXPENSE_TYPE_OPTIONS.map((o) => o.value))
 
 export async function GET() {
@@ -92,8 +91,7 @@ export async function POST(request: NextRequest) {
   const athleteId = (form.get("athleteId") as string) || ""
   const expenseType = (form.get("expenseType") as string) || ""
   const amountRaw = (form.get("amountDollars") as string) || ""
-  const paymentMethod = (form.get("paymentMethod") as string) || ""
-  const zelleInfo = ((form.get("zelleInfo") as string) || "").trim() || null
+  const paymentMethod = ((form.get("paymentMethod") as string) || "venmo").trim().toLowerCase()
   const venmoInfo = ((form.get("venmoInfo") as string) || "").trim() || null
   const parentNotes = ((form.get("parentNotes") as string) || "").trim() || null
   const file = form.get("document") as File | null
@@ -108,13 +106,10 @@ export async function POST(request: NextRequest) {
   if (amountCents == null) {
     return NextResponse.json({ error: "Invalid amount" }, { status: 400 })
   }
-  if (!VALID_METHODS.includes(paymentMethod as ExpensePaymentMethod)) {
-    return NextResponse.json({ error: "Choose Zelle or Venmo" }, { status: 400 })
+  if (paymentMethod !== "venmo") {
+    return NextResponse.json({ error: "Reimbursements are paid via Venmo only." }, { status: 400 })
   }
-  if (paymentMethod === "zelle" && !zelleInfo) {
-    return NextResponse.json({ error: "Enter the email or phone for Zelle" }, { status: 400 })
-  }
-  if (paymentMethod === "venmo" && !venmoInfo) {
+  if (!venmoInfo) {
     return NextResponse.json({ error: "Enter your Venmo @username" }, { status: 400 })
   }
 
@@ -152,9 +147,9 @@ export async function POST(request: NextRequest) {
     athlete_id: athleteId,
     expense_type: expenseType,
     amount_cents: amountCents,
-    payment_method: paymentMethod,
-    zelle_info: paymentMethod === "zelle" ? zelleInfo : null,
-    venmo_info: paymentMethod === "venmo" ? venmoInfo : null,
+    payment_method: "venmo" as const,
+    zelle_info: null,
+    venmo_info: venmoInfo,
     parent_notes: parentNotes,
     document_url: documentUrl,
     status: "pending" as const,
