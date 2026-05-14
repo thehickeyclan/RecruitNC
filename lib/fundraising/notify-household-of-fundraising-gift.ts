@@ -213,26 +213,45 @@ export async function notifyHouseholdOfFundraisingGiftIfEligible(
   const availableDisplay = availableAfterGuildCents != null ? formatUsd(availableAfterGuildCents) : null
 
   const buildSmsBody = (): string => {
+    const MAX = 320
     const thank =
       donorLabel === "Anonymous" || donorLabel === "A supporter"
         ? "Thank your supporter personally."
         : `Thank ${donorLabel} personally.`
-    const parts: string[] = [
-      `NC United: ${donorLabel} gave ${amountDisplay} to ${athleteName}`,
-      `Raised ${raisedDisplay}`,
-    ]
+    const opener = `NC United: ${donorLabel} gave ${amountDisplay} to ${athleteName}`
+    const pageLine = `Athlete page: ${giftPageUrl}`
+    const statParts: string[] = [`Raised ${raisedDisplay}`]
     if (
       netAfterPayoutsCents != null &&
       raisedCents != null &&
       netAfterPayoutsCents !== raisedCents
     ) {
-      parts.push(`Balance ${netDisplay} after payouts`)
+      statParts.push(`Balance ${netDisplay} after payouts`)
     }
     if (availableDisplay) {
-      parts.push(`${availableDisplay} available outside Guild hold`)
+      statParts.push(`${availableDisplay} available outside Guild hold`)
     }
-    parts.push(`${thank} ${giftPageUrl}`)
-    return parts.join(". ").slice(0, 320)
+    const core = `${opener}. ${pageLine}`
+    const withStats = (stats: string[]): string => {
+      const mid = stats.length > 0 ? `. ${stats.join(". ")}` : ""
+      return `${core}${mid}. ${thank}`
+    }
+    let stats = [...statParts]
+    let body = withStats(stats)
+    while (body.length > MAX && stats.length > 0) {
+      stats.pop()
+      body = withStats(stats)
+    }
+    if (body.length > MAX) {
+      body = withStats([])
+    }
+    if (body.length > MAX) {
+      body = core
+    }
+    if (body.length > MAX) {
+      body = core.length <= MAX ? core : `${opener.slice(0, Math.max(0, MAX - 1))}…`
+    }
+    return body
   }
 
   const smsBody = buildSmsBody()

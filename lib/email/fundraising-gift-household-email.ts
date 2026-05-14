@@ -55,7 +55,8 @@ export async function sendFundraisingGiftHouseholdEmail(
 ${data.balanceAfterPayoutsDisplay ? `<p style="margin:0 0 8px;"><strong>Balance after NC United payouts:</strong> ${escapeHtml(data.balanceAfterPayoutsDisplay)}</p>` : ""}
 ${data.availableAfterGuildDisplay ? `<p style="margin:0 0 8px;"><strong>Available outside Guild hold:</strong> ${escapeHtml(data.availableAfterGuildDisplay)}</p>` : ""}
 <p style="margin:16px 0 0;">${thankReminderLine(data.donorLabel)}</p>
-<p style="margin:16px 0 0;"><a href="${escapeAttr(data.giftPageUrl)}" style="color:#b45309;font-weight:600;">View ${escapeHtml(athlete)}&apos;s gift page</a></p>
+<p style="margin:16px 0 0;"><a href="${escapeAttr(data.giftPageUrl)}" style="color:#b45309;font-weight:600;">View ${escapeHtml(athlete)}&apos;s athlete page</a></p>
+<p style="margin:8px 0 0;font-size:13px;word-break:break-all;color:#334155;line-height:1.5;"><a href="${escapeAttr(data.giftPageUrl)}" style="color:#003366;">${escapeHtml(data.giftPageUrl)}</a></p>
 <p style="margin:24px 0 0;font-size:13px;color:#64748b;">— NC United Wrestling</p>
 </div></body></html>`
 
