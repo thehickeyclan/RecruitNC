@@ -424,7 +424,7 @@ export function ProfileClient() {
           notify_email_new_messages: profile.notify_email_new_messages,
           notify_email_fundraising_gifts: profile.notify_email_fundraising_gifts !== false,
           notify_sms_fundraising_gifts: profile.notify_sms_fundraising_gifts !== false,
-          notify_sms_fundraising_activation: !!profile.notify_sms_fundraising_activation,
+          notify_sms_fundraising_activation: profile.notify_sms_fundraising_activation !== false,
         }),
       })
 
@@ -859,17 +859,18 @@ export function ProfileClient() {
                       <Bell className="h-4 w-4 text-[#003366]" />
                       Text me when my page is activated
                     </div>
-                    <p className="text-xs text-muted-foreground">Opt-in — staff approval of your activation request.</p>
+                    <p className="text-xs text-muted-foreground">Default on — requires cell phone above.</p>
                   </div>
                   <Switch
-                    checked={!!profile.notify_sms_fundraising_activation}
+                    checked={profile.notify_sms_fundraising_activation !== false}
                     onCheckedChange={(checked) =>
                       profile && setProfile({ ...profile, notify_sms_fundraising_activation: checked })
                     }
                   />
                 </div>
                 {!profile.cell_phone?.trim() &&
-                  (profile.notify_sms_fundraising_gifts !== false || !!profile.notify_sms_fundraising_activation) && (
+                  (profile.notify_sms_fundraising_gifts !== false ||
+                    profile.notify_sms_fundraising_activation !== false) && (
                     <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
                       Add your cell phone in Profile Information so we can send fundraising texts.
                     </p>
