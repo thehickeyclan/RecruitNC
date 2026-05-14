@@ -937,7 +937,6 @@ export default function AdminFundraisingPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "preview",
-          sessionId: receiptRow?.sessionId,
           firstName: receiptFirstName.trim(),
           amountCents: cents,
           currency: "usd",

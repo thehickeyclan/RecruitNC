@@ -6,9 +6,6 @@ export const FUNDRAISING_VIDEOS_BUCKET = "fundraising-videos"
 /** Seconds — public gift page video (refreshed each page load). */
 export const FUNDRAISING_VIDEO_SIGNED_URL_TTL = 60 * 60
 
-/** Seconds — donor thank-you link in acknowledgment email. */
-export const THANKYOU_VIDEO_SIGNED_URL_TTL = 60 * 60 * 24 * 7
-
 const VIDEO_EXT_BY_MIME: Record<string, string> = {
   "video/mp4": "mp4",
   "video/webm": "webm",
@@ -20,13 +17,13 @@ export function extensionForVideoMime(mime: string): string | null {
   return VIDEO_EXT_BY_MIME[m] ?? null
 }
 
-export function fundraisingVideoObjectPath(athleteId: string, ext: string, kind: "fundraising" | "thankyou"): string {
+export function fundraisingVideoObjectPath(athleteId: string, ext: string): string {
   const safeExt = ext.replace(/[^a-z0-9]/gi, "").slice(0, 8) || "mp4"
-  return `athlete/${athleteId.trim()}/${kind}.${safeExt}`
+  return `athlete/${athleteId.trim()}/fundraising.${safeExt}`
 }
 
-export function fundraisingVideoThumbnailPath(athleteId: string, kind: "fundraising" | "thankyou"): string {
-  return `athlete/${athleteId.trim()}/${kind}-thumb.jpg`
+export function fundraisingVideoThumbnailPath(athleteId: string): string {
+  return `athlete/${athleteId.trim()}/fundraising-thumb.jpg`
 }
 
 export async function createFundraisingVideoSignedUrl(
