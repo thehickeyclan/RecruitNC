@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
+import type { ReactNode } from "react"
+import { Check } from "lucide-react"
 import QRCode from "qrcode"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { resolveFundraisingAthletePublicBySlugForRequest } from "@/lib/fundraising/athlete-fundraising-profiles"
@@ -42,6 +44,20 @@ const HERO_FALLBACK_SILHOUETTE = "/wrestler-silhouette.png"
 
 const PRIMARY_DONATE_CTA_CLASS =
   "font-[family-name:var(--font-fundraising-display)] flex min-h-[52px] w-full touch-manipulation items-center justify-center rounded-sm bg-[#CC0000] px-8 text-sm font-extrabold uppercase tracking-[0.14em] text-white shadow-[0_14px_44px_-10px_rgba(204,0,0,0.55)] hover:bg-[#a80000] sm:inline-flex sm:w-auto sm:min-w-[240px]"
+
+function WhyGiveBullet({ children }: { children: ReactNode }) {
+  return (
+    <li className="flex gap-3.5 text-sm leading-snug text-white/85 sm:leading-relaxed">
+      <span
+        className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 ring-1 ring-emerald-400/40"
+        aria-hidden
+      >
+        <Check className="h-3.5 w-3.5" strokeWidth={2.75} />
+      </span>
+      <span className="min-w-0 flex-1">{children}</span>
+    </li>
+  )
+}
 
 async function fetchRecruitingProfilePhoto(admin: ReturnType<typeof createAdminClient>, athleteId: string): Promise<string | null> {
   const { data, error } = await admin.from("athletes").select("*").eq("id", athleteId).maybeSingle()
@@ -333,50 +349,57 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
 
         <div className="mt-8 rounded-xl border border-[#C8A94A]/25 bg-[#0B2545]/55 px-4 py-5 sm:px-6 sm:py-6">
           <p className="font-[family-name:var(--font-fundraising-display)] text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]">
-            {code ? "Why give through this page" : "Why donors choose NC United"}
+            {code ? "How your support helps" : "How NC United honors your gift"}
           </p>
-          {code ? (
-            <p className="mt-4 text-sm leading-relaxed text-white/85">
-              {checkoutLive ? (
-                <>
-                  Your gift goes directly to {athleteFirstName}&apos;s training, travel, and competition costs — credited to their account,
-                  applied to approved wrestling expenses, and fully tax-deductible.
-                </>
-              ) : (
-                <>
-                  Families often use NC United to offset travel, training, and tournament costs. Checkout on this link stays off until NC United
-                  finishes activation — use the <strong className="text-white">Request activation</strong> button at the top if you&apos;re a linked
-                  parent or athlete. You can still read how giving works below.
-                </>
-              )}
-            </p>
-          ) : null}
-          <ul className="mt-4 list-none space-y-3 text-sm leading-relaxed text-white/85">
-            <li>
-              <strong className="text-white">Tax-deductible.</strong> NC United Wrestling is a 501(c)(3). Your email receipt is your record (check spam or
-              promotions).
-            </li>
-            <li>
-              <strong className="text-white">100% of your payment is credited to {displayName}</strong>
+          <ul className="mt-4 list-none space-y-3.5 sm:space-y-4">
+            {code && checkoutLive ? (
+              <WhyGiveBullet>
+                Gifts here go straight to {athleteFirstName}&apos;s training, travel, and competition costs — kept on their account for approved
+                wrestling expenses. Everything is tax-deductible for you.
+              </WhyGiveBullet>
+            ) : null}
+            {code && !checkoutLive ? (
+              <>
+                <WhyGiveBullet>
+                  Many families use NC United to ease travel, training, and tournament costs — we&apos;re glad you&apos;re reading along.
+                </WhyGiveBullet>
+                <WhyGiveBullet>
+                  <span className="block">
+                    We haven&apos;t turned on giving for this link quite yet. If you&apos;re a linked parent or athlete, you can tap{" "}
+                    <strong className="text-white">Request activation</strong> at the top when you&apos;re ready.
+                  </span>
+                  <span className="mt-1.5 block text-white/70">
+                    The notes below still walk through how NC United handles gifts and receipts.
+                  </span>
+                </WhyGiveBullet>
+              </>
+            ) : null}
+            <WhyGiveBullet>
+              <strong className="text-white">Tax-deductible.</strong> NC United Wrestling is a 501(c)(3). Your email receipt is your record (peek in spam or
+              promotions if needed).
+            </WhyGiveBullet>
+            <WhyGiveBullet>
+              <strong className="text-white">Every dollar is credited to {displayName}</strong>
               {code ? (
                 checkoutLive ? (
-                  <> — the full amount you give counts toward their campaign here.</>
+                  <> — the full amount you share shows up on their campaign here.</>
                 ) : (
-                  <> — once NC United activates gifts on this page, the amount you give will count toward their campaign here.</>
+                  <> — once we open gifts on this page, the same will apply for their campaign here.</>
                 )
               ) : (
-                <> when you complete a gift to this campaign.</>
+                <> when you finish a gift to this campaign.</>
               )}
-            </li>
-            <li>
-              <strong className="text-white">NC United covers card processing fees</strong> so what&apos;s credited isn&apos;t reduced by the processor.
-            </li>
+            </WhyGiveBullet>
+            <WhyGiveBullet>
+              <strong className="text-white">We cover card processing fees</strong> so more of what you intended reaches their balance — nothing shaved off
+              by the payment network.
+            </WhyGiveBullet>
           </ul>
-          <p className="mt-4 text-xs leading-relaxed text-white/50">
+          <p className="mt-5 text-xs leading-relaxed text-white/50">
             EIN <span className="tabular-nums">99-3757238</span>
             {" · "}
             <HardLink href={hubGiveHref} className="text-[#C8A94A] underline-offset-4 hover:underline">
-              Other ways to give
+              More ways to support NC United
             </HardLink>
           </p>
         </div>
