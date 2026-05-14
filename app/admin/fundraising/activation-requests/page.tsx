@@ -26,7 +26,9 @@ export default async function AdminFundraisingActivationRequestsPage() {
           athlete from the slug, creates <code className="rounded bg-muted px-1">parent_athlete_links</code> for that requester, and turns on
           checkout when possible. Reject bogus requests. Table script:{" "}
           <code className="rounded bg-muted px-1">scripts/supabase-fundraising-activation.sql</code>; email column:{" "}
-          <code className="rounded bg-muted px-1">scripts/supabase-fundraising-activation-requester-email.sql</code>.
+          <code className="rounded bg-muted px-1">scripts/supabase-fundraising-activation-requester-email.sql</code>. Approving now sends the
+          family a <strong>page is live</strong> email (and optional SMS if they opt in). Household gift alerts after checkout: run{" "}
+          <code className="rounded bg-muted px-1">scripts/supabase-fundraising-household-notifications.sql</code>.
         </p>
       </div>
 

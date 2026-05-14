@@ -51,6 +51,28 @@ describe("filterFundraisingEntriesByQuery", () => {
     expect(out[0].code.startsWith("NCU-APONTE")).toBe(true)
   })
 
+  it("dedupes different athlete ids when name and school match (duplicate directory rows)", () => {
+    const entries: FundraisingAthleteEntry[] = [
+      {
+        id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+        code: "NCU-APONTE-30",
+        label: "Jack Aponte '30 · Cardinal Gibbons",
+        fullName: "Jack Aponte",
+        searchBlob: "jack aponte ncu-aponte-30 cardinal gibbons",
+      },
+      {
+        id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+        code: "NCU-APONTE-31",
+        label: "Jack Aponte '31 · Cardinal Gibbons",
+        fullName: "Jack Aponte",
+        searchBlob: "jack aponte ncu-aponte-31 cardinal gibbons",
+      },
+    ]
+    const out = filterFundraisingEntriesByQuery(entries, "aponte", 25)
+    expect(out).toHaveLength(1)
+    expect(out[0].code).toBe("NCU-APONTE-31")
+  })
+
   it("still returns separate rows for roster-only codes (spartan-fundraising ids)", () => {
     const entries: FundraisingAthleteEntry[] = [
       {

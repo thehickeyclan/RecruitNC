@@ -6,6 +6,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { fundraisingDirectoryIdentityKey, ncuCodeGradYearSuffix } from "@/lib/fundraising/fundraising-directory-identity"
 
 export function sanitizeLast(s: string): string {
   return s
@@ -554,11 +555,15 @@ export function filterFundraisingEntriesByQuery(
 
   scored.sort((a, b) => {
     if (a.rank !== b.rank) return a.rank - b.rank
-    return a.e.label.localeCompare(b.e.label)
+    const yb = ncuCodeGradYearSuffix(b.e.code)
+    const ya = ncuCodeGradYearSuffix(a.e.code)
+    if (yb !== ya) return yb - ya
+    return b.e.code.localeCompare(a.e.code)
   })
 
   const seenCode = new Set<string>()
   const seenPinnedAthleteId = new Set<string>()
+  const seenVisualIdentity = new Set<string>()
   const out: { code: string; label: string }[] = []
   for (const { e } of scored) {
     const codeKey = e.code.trim().toLowerCase()
@@ -567,6 +572,10 @@ export function filterFundraisingEntriesByQuery(
       if (seenPinnedAthleteId.has(e.id)) continue
       seenPinnedAthleteId.add(e.id)
     }
+    const schoolPart = e.label.includes("·") ? e.label.split("·").slice(1).join("·").trim() : null
+    const vid = fundraisingDirectoryIdentityKey(e.fullName || e.label, schoolPart, e.id)
+    if (seenVisualIdentity.has(vid)) continue
+    seenVisualIdentity.add(vid)
     seenCode.add(codeKey)
     out.push({ code: e.code, label: e.label })
     if (out.length >= limit) break
