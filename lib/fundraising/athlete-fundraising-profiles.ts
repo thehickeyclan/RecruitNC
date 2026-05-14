@@ -52,6 +52,14 @@ export type AthleteFundraisingProfileRow = {
   primary_fundraising_code: string | null
   /** When true, public athlete page may embed Stripe checkout (staff sets after activation approval). */
   checkout_live: boolean
+  /**
+   * Supabase Storage object paths in bucket `fundraising-videos` (not https URLs).
+   * @see lib/fundraising/fundraising-video-storage.ts
+   */
+  fundraising_video_url?: string | null
+  fundraising_video_thumbnail_url?: string | null
+  thankyou_video_url?: string | null
+  thankyou_video_thumbnail_url?: string | null
 }
 
 export type ResolvedFundraisingAthletePublic = {
@@ -168,7 +176,7 @@ export async function resolveFundraisingAthletePublic(
   const { data: profile, error } = await admin
     .from("athlete_fundraising_profiles")
     .select(
-      "id, created_at, updated_at, athlete_id, slug, bio, photo_url, is_active, campaign_goal_cents, total_raised_cents, primary_fundraising_code, checkout_live",
+      "id, created_at, updated_at, athlete_id, slug, bio, photo_url, is_active, campaign_goal_cents, total_raised_cents, primary_fundraising_code, checkout_live, fundraising_video_url, fundraising_video_thumbnail_url, thankyou_video_url, thankyou_video_thumbnail_url",
     )
     .eq("slug", slug)
     .eq("is_active", true)
