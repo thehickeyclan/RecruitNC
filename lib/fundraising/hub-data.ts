@@ -146,7 +146,11 @@ async function fetchAllPaidHubDonations(admin: SupabaseClient): Promise<HubDonat
 
     if (error) {
       if (error.code === "42P01" || error.message?.includes("does not exist")) {
-        console.warn("[fundraising/hub-data] spartan_donations unavailable:", error.message)
+        const hint =
+          /fundraising_checkout_surface|fundraising_athlete_slug|42703/i.test(error.message ?? "")
+            ? " Run scripts/supabase-spartan-donations-checkout-surface.sql in Supabase SQL Editor (adds missing columns)."
+            : ""
+        console.warn("[fundraising/hub-data] spartan_donations unavailable:", error.message, hint)
       } else {
         console.error("[fundraising/hub-data] spartan_donations:", error.message)
       }
