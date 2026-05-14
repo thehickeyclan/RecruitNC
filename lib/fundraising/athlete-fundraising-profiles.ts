@@ -266,22 +266,41 @@ export async function getFundraisingAthletesIndexRows(
     return fromProfile ?? fromRecruiting ?? null
   }
 
-  const fromRoster: FundraisingAthleteIndexRow[] = entries.map((e) => {
-    const p = byAthlete.get(e.id)
-    const hrefSlug = p?.slug ?? e.code.trim().toLowerCase()
+  const buildIndexRowFromEntry = (
+    e: FundraisingAthleteEntry,
+    profile: AthleteFundraisingProfileRow | undefined,
+  ): FundraisingAthleteIndexRow => {
+    const primary = profile ? coerceNcuCode(profile.primary_fundraising_code) : null
     return {
       athleteId: e.id,
-      code: e.code,
+      code: primary ?? e.code,
       displayName: e.fullName || e.label,
       sublabel: e.label.includes("·") ? e.label.split("·").slice(1).join("·").trim() : null,
       hrefSlug,
-      photoUrl: pickDirectoryPhotoUrl(e.id, p?.photo_url ?? null),
-      totalRaisedCents: typeof p?.total_raised_cents === "number" ? p.total_raised_cents : null,
+      photoUrl: pickDirectoryPhotoUrl(e.id, profile?.photo_url ?? null),
+      totalRaisedCents: typeof profile?.total_raised_cents === "number" ? profile.total_raised_cents : null,
     }
-  })
+  }
 
-  const rosterIds = new Set(entries.map((e) => e.id))
-  const orphanProfiles = [...byAthlete.values()].filter((p) => !rosterIds.has(p.athlete_id))
+  /** One directory row per pinned `athletes.id` — multiple `spartan_fundraising_athletes` codes must not duplicate cards. */
+  const rosterAthleteIdSet = new Set(
+    entries.filter((e) => ATHLETE_UUID_RE.test(e.id)).map((e) => e.id),
+  )
+  const fromRosterPinned: FundraisingAthleteIndexRow[] = []
+  for (const athleteId of rosterAthleteIdSet) {
+    const win = pickPreferredFundraisingEntryForAthlete(entries, athleteId)
+    if (!win) continue
+    const p = byAthlete.get(athleteId)
+    fromRosterPinned.push(buildIndexRowFromEntry(win, p))
+  }
+
+  const fromRosterRosterOnly: FundraisingAthleteIndexRow[] = entries
+    .filter((e) => !ATHLETE_UUID_RE.test(e.id))
+    .map((e) => buildIndexRowFromEntry(e, undefined))
+
+  const fromRoster = [...fromRosterPinned, ...fromRosterRosterOnly]
+
+  const orphanProfiles = [...byAthlete.values()].filter((p) => !rosterAthleteIdSet.has(p.athlete_id))
   const nameById = new Map<string, string>()
   if (orphanProfiles.length > 0) {
     const ids = [...new Set(orphanProfiles.map((p) => p.athlete_id))]

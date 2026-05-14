@@ -62,6 +62,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { firstNameFromDonorName } from "@/lib/email/ncu-donation-acknowledgment"
 
 type SpartanDonationRow = {
@@ -218,6 +220,8 @@ function scrollToFundraisingSection(elementId: string) {
   })
 }
 
+type OpsMainTab = "queue" | "ledger" | "roster" | "payments" | "more"
+
 function WiringDot({ ok, title }: { ok: boolean; title: string }) {
   return (
     <span title={title} className="inline-flex items-center justify-center">
@@ -357,6 +361,15 @@ export default function AdminFundraisingPage() {
   /** Donor profile row → Attach athlete dialog */
   const [attachAthleteProfile, setAttachAthleteProfile] = useState<AdminAthleteFundraisingProfileRow | null>(null)
   const [walletGuideOpen, setWalletGuideOpen] = useState(false)
+  const [opsMainTab, setOpsMainTab] = useState<OpsMainTab>("queue")
+
+  const scrollAfterTab = useCallback((elementId: string) => {
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        document.getElementById(elementId)?.scrollIntoView({ behavior: "smooth", block: "start" })
+      })
+    })
+  }, [])
 
   const [kidLedgerFilter, setKidLedgerFilter] = useState("")
   const [expenseRollupByAthleteId, setExpenseRollupByAthleteId] = useState<
@@ -396,6 +409,7 @@ export default function AdminFundraisingPage() {
     setDonationTableMode("all")
     setReceiptAckFilter("all")
     setAdminView("all")
+    setOpsMainTab("queue")
   }, [campaign.adminContextKey])
 
   useEffect(() => {
@@ -660,10 +674,9 @@ export default function AdminFundraisingPage() {
     const c = code.trim()
     setAthleteFilter(c)
     setAdminView("all")
+    setOpsMainTab("payments")
     toast({ title: "Filtered", description: `Payments list shows ${c}.` })
-    window.requestAnimationFrame(() => {
-      document.getElementById("admin-fundraising-stripe-donations")?.scrollIntoView({ behavior: "smooth", block: "start" })
-    })
+    scrollAfterTab("admin-fundraising-stripe-donations")
   }
 
   const submitSpartanFundraisingPin = useCallback(
@@ -1159,19 +1172,22 @@ export default function AdminFundraisingPage() {
   const goDirectoryGapTable = () => {
     setParentCoverageView("attention")
     setAttentionKind("directory")
-    scrollToFundraisingSection("admin-fundraising-directory-gaps")
+    setOpsMainTab("roster")
+    scrollAfterTab("admin-fundraising-directory-gaps")
   }
 
   const goRosterOnlyTable = () => {
     setParentCoverageView("attention")
     setAttentionKind("roster")
-    scrollToFundraisingSection("admin-fundraising-parent-coverage")
+    setOpsMainTab("roster")
+    scrollAfterTab("admin-fundraising-parent-coverage")
   }
 
   const goNeedsParentTable = () => {
     setParentCoverageView("attention")
     setAttentionKind("no_parent")
-    scrollToFundraisingSection("admin-fundraising-parent-coverage")
+    setOpsMainTab("roster")
+    scrollAfterTab("admin-fundraising-parent-coverage")
   }
 
   const goOrphanedCheckoutsTable = () => {
@@ -1183,7 +1199,8 @@ export default function AdminFundraisingPage() {
       title: "Filtered payments",
       description: "Only checkouts tied to codes that are still off-directory.",
     })
-    scrollToFundraisingSection("admin-fundraising-stripe-donations")
+    setOpsMainTab("payments")
+    scrollAfterTab("admin-fundraising-stripe-donations")
   }
 
   const loadFundraisingProfiles = useCallback(async () => {
@@ -1444,49 +1461,6 @@ export default function AdminFundraisingPage() {
 
         <AdminHeader />
 
-        <Card id="admin-fundraising-start-here" className="mt-6 overflow-hidden border-[#003366]/25 bg-white shadow-sm">
-          <div
-            className="h-1"
-            style={{ background: `linear-gradient(to right, ${brand.navy}, ${brand.crimson})` }}
-            aria-hidden
-          />
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg text-[#003366] dark:text-blue-100">Start here (new teammate)</CardTitle>
-            <CardDescription className="text-base leading-relaxed text-foreground/85">
-              No prior context needed. When someone says money is not showing for their kid, walk down this list in order.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 pt-0 text-sm leading-relaxed">
-            <ol className="text-muted-foreground list-decimal space-y-2.5 pl-5 marker:font-semibold marker:text-[#003366]">
-              <li>
-                <span className="font-medium text-foreground">Gifts use a wrestler code</span> (looks like{" "}
-                <span className="font-mono text-xs text-foreground">NCU-LASTNAME-28</span>). Stripe stores that on each payment.
-              </li>
-              <li>
-                <span className="font-medium text-foreground">Pin NCU to the athlete</span> — use Directory gaps →{" "}
-                <strong className="text-foreground">Pin any wrestler</strong> (name search). Without Pin, gifts never credit that kid&apos;s wallet.
-              </li>
-              <li>
-                <span className="font-medium text-foreground">Optional:</span> turn on a public donor page (see section Donor-facing athlete profiles). Families do not need this to see balances.
-              </li>
-              <li>
-                <span className="font-medium text-foreground">Link the parent account</span> if Mom/Dad should see Profile → Fundraise (section Parent coverage).
-              </li>
-              <li>
-                <span className="font-medium text-foreground">Use Kids ledger</span> as your cheat sheet: raised vs paid back vs what&apos;s left + flags for open reimbursement requests.
-              </li>
-            </ol>
-            <div className="flex flex-wrap gap-2 border-t border-border pt-3">
-              <Button type="button" variant="outline" size="sm" onClick={() => scrollToFundraisingSection("admin-fundraising-quick-ops")}>
-                Jump to 3-step setup
-              </Button>
-              <Button type="button" variant="outline" size="sm" onClick={() => scrollToFundraisingSection("admin-fundraising-kids-ledger")}>
-                Jump to Kids ledger
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
         {FUNDRAISING_CAMPAIGNS.length > 1 ? (
           <div
             role="tablist"
@@ -1513,8 +1487,38 @@ export default function AdminFundraisingPage() {
           </div>
         ) : null}
 
-        <div className="mt-6 space-y-6">
-            <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+        <Tabs value={opsMainTab} onValueChange={(v) => setOpsMainTab(v as OpsMainTab)} className="mt-6">
+          <TabsList
+            className="mb-4 flex h-auto w-full flex-wrap justify-start gap-1 rounded-lg bg-muted/60 p-1.5 text-muted-foreground shadow-sm"
+            aria-label="Fundraising admin sections"
+          >
+            <TabsTrigger value="queue" className="shrink-0 data-[state=active]:bg-background">
+              Today
+            </TabsTrigger>
+            <TabsTrigger value="ledger" className="shrink-0 gap-1.5 data-[state=active]:bg-background">
+              Ledger
+              {kidLedgerOpenReimbCount > 0 ? (
+                <Badge variant="secondary" className="h-5 px-1.5 tabular-nums">
+                  {kidLedgerOpenReimbCount}
+                </Badge>
+              ) : null}
+            </TabsTrigger>
+            <TabsTrigger value="roster" className="shrink-0 data-[state=active]:bg-background">
+              Roster & wiring
+            </TabsTrigger>
+            <TabsTrigger value="payments" className="shrink-0 data-[state=active]:bg-background">
+              Payments
+            </TabsTrigger>
+            <TabsTrigger value="more" className="shrink-0 text-muted-foreground data-[state=active]:bg-background">
+              Exports & help
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="queue" className="mt-0 space-y-6 focus-visible:outline-none" tabIndex={-1}>
+            <p className="text-muted-foreground text-sm leading-snug">
+              Open the tabs for detailed tools. This view is the daily queue: campaign snapshot, what’s broken, and quick links.
+            </p>
+            <div className="grid gap-4 lg:grid-cols-1">
               <Card id="admin-fundraising-campaign-overview" className="overflow-hidden border-[#003366]/20 bg-white shadow-sm">
                 <div
                   className="h-1"
@@ -1590,7 +1594,7 @@ export default function AdminFundraisingPage() {
                   </div>
                   {dash ? (
                     <p className="text-muted-foreground text-xs leading-snug">
-                      Tap the colored tiles further down to jump to each fix list —{" "}
+                      Use the <strong className="text-foreground">Today</strong> tab tiles to jump to each fix list —{" "}
                       <span className="font-medium tabular-nums text-foreground">{dash.offDirectoryCodes}</span> payments on codes we
                       haven&apos;t matched to a kid yet ·{" "}
                       <span className="font-medium tabular-nums text-foreground">{dash.rosterOnlyKids}</span> roster placeholders (no real athlete row) ·{" "}
@@ -1605,95 +1609,126 @@ export default function AdminFundraisingPage() {
                   ) : null}
                 </CardContent>
               </Card>
-
-              <Card id="admin-fundraising-quick-ops" className="overflow-hidden border-[#003366]/20 bg-white shadow-sm">
-                <div
-                  className="h-1"
-                  style={{ background: `linear-gradient(to right, ${brand.navy}, ${brand.crimson})` }}
-                  aria-hidden
-                />
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">3-step setup</CardTitle>
-                  <CardDescription className="leading-relaxed">
-                    Search the wrestler in{" "}
-                    <HardLink href="/admin/athletes" className="text-primary font-medium underline-offset-2 hover:underline">
-                      Athletes admin
-                    </HardLink>
-                    , copy their <strong className="font-medium text-foreground">ID</strong> (long text with dashes). Then do these in order on this page.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-col gap-2 pt-0">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="h-auto justify-start gap-3 py-3 text-left"
-                    onClick={() => scrollToFundraisingSection("admin-fundraising-directory-gaps")}
-                  >
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#003366]/12 text-sm font-bold text-[#003366]">
-                      1
-                    </span>
-                    <span>
-                      <span className="font-semibold text-foreground">Pin code to athlete</span>
-                      <span className="text-muted-foreground block text-xs font-normal leading-snug">
-                        Tell the system which wrestler owns this NCU checkout code (Directory gaps).
-                      </span>
-                    </span>
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="h-auto justify-start gap-3 py-3 text-left"
-                    onClick={() => scrollToFundraisingSection("admin-fundraising-athlete-profiles")}
-                  >
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#003366]/12 text-sm font-bold text-[#003366]">
-                      2
-                    </span>
-                    <span>
-                      <span className="font-semibold text-foreground">Turn on a public gift page (optional)</span>
-                      <span className="text-muted-foreground block text-xs font-normal leading-snug">
-                        Gives donors a nice link — not required for Profile → Fundraise totals.
-                      </span>
-                    </span>
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="h-auto justify-start gap-3 py-3 text-left"
-                    onClick={() => scrollToFundraisingSection("admin-fundraising-parent-coverage")}
-                  >
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#003366]/12 text-sm font-bold text-[#003366]">
-                      3
-                    </span>
-                    <span>
-                      <span className="font-semibold text-foreground">Link parent</span>
-                      <span className="text-muted-foreground block text-xs font-normal leading-snug">
-                        So a parent login can open Profile → Fundraise for this athlete (Parent coverage).
-                      </span>
-                    </span>
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="mt-1 gap-2 self-start"
-                    onClick={() => scrollToFundraisingSection("admin-fundraising-kids-ledger")}
-                  >
-                    View money table (Kids ledger)
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="gap-2 self-start"
-                    onClick={() => scrollToFundraisingSection("fundraising-athlete-wiring-matrix")}
-                  >
-                    <LayoutGrid className="h-4 w-4 shrink-0" aria-hidden />
-                    Wiring matrix (full roster codes)
-                  </Button>
-                </CardContent>
-              </Card>
             </div>
 
+            {dash ? (
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <button
+                  type="button"
+                  disabled={donationsLoading}
+                  onClick={goDirectoryGapTable}
+                  className={cn(
+                    "rounded-xl border bg-card p-4 text-left shadow-sm outline-none ring-offset-background transition hover:bg-muted/60 hover:border-orange-400/45 focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-45",
+                    dash.offDirectoryCodes > 0 &&
+                      "border-orange-400/55 bg-orange-50/45 dark:border-orange-900/50 dark:bg-orange-950/30",
+                  )}
+                >
+                  <UserRoundX className="mb-2 h-5 w-5 text-orange-600 dark:text-orange-400" />
+                  <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">Off-directory codes</p>
+                  <p className="mt-1 text-3xl font-bold tabular-nums leading-none">{dash.offDirectoryCodes}</p>
+                  <p className="text-muted-foreground mt-2 text-xs leading-snug">
+                    Dollars on NCU codes that don&apos;t match a fundraising profile yet.
+                  </p>
+                </button>
+                <button
+                  type="button"
+                  disabled={donationsLoading}
+                  onClick={goRosterOnlyTable}
+                  className={cn(
+                    "rounded-xl border bg-card p-4 text-left shadow-sm outline-none ring-offset-background transition hover:bg-muted/60 hover:border-amber-500/35 focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-45",
+                    dash.rosterOnlyKids > 0 &&
+                      "border-amber-400/50 bg-amber-50/35 dark:border-amber-900/45 dark:bg-amber-950/25",
+                  )}
+                >
+                  <Layers className="mb-2 h-5 w-5 text-amber-700 dark:text-amber-400" />
+                  <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">Roster-only placeholders</p>
+                  <p className="mt-1 text-3xl font-bold tabular-nums leading-none">{dash.rosterOnlyKids}</p>
+                  <p className="text-muted-foreground mt-2 text-xs leading-snug">
+                    Roster placeholder only — still needs a real athlete row.
+                  </p>
+                </button>
+                <button
+                  type="button"
+                  disabled={donationsLoading}
+                  onClick={goNeedsParentTable}
+                  className={cn(
+                    "rounded-xl border bg-card p-4 text-left shadow-sm outline-none ring-offset-background transition hover:bg-muted/60 hover:border-blue-500/35 focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-45",
+                    dash.needsParentKids > 0 &&
+                      "border-blue-400/45 bg-blue-50/40 dark:border-blue-900/45 dark:bg-blue-950/25",
+                  )}
+                >
+                  <Users className="mb-2 h-5 w-5 text-blue-700 dark:text-blue-400" />
+                  <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">Needs parent link</p>
+                  <p className="mt-1 text-3xl font-bold tabular-nums leading-none">{dash.needsParentKids}</p>
+                  <p className="text-muted-foreground mt-2 text-xs leading-snug">
+                    Profile exists but no parent tied to Fundraise yet.
+                  </p>
+                </button>
+                <button
+                  type="button"
+                  disabled={donationsLoading}
+                  onClick={goOrphanedCheckoutsTable}
+                  className={cn(
+                    "rounded-xl border bg-card p-4 text-left shadow-sm outline-none ring-offset-background transition hover:bg-muted/60 hover:border-rose-500/35 focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-45",
+                    dash.orphanedCheckouts > 0 &&
+                      "border-rose-400/45 bg-rose-50/35 dark:border-rose-900/45 dark:bg-rose-950/25",
+                  )}
+                >
+                  <Gift className="mb-2 h-5 w-5 text-rose-700 dark:text-rose-400" />
+                  <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">Orphaned checkouts</p>
+                  <p className="mt-1 text-3xl font-bold tabular-nums leading-none">{dash.orphanedCheckouts}</p>
+                  <p className="text-muted-foreground mt-2 text-xs leading-snug">
+                    Paid checkouts still mapped to codes missing from the directory.
+                  </p>
+                </button>
+              </div>
+            ) : null}
+
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => {
+                  void loadDonations()
+                  void loadExpenseRollup()
+                  void loadAthleteMatrix()
+                }}
+                disabled={donationsLoading || athleteMatrixLoading}
+              >
+                <RefreshCw
+                  className={cn(
+                    "h-4 w-4 shrink-0",
+                    (donationsLoading || athleteMatrixLoading) && "animate-spin",
+                  )}
+                  aria-hidden
+                />
+                Refresh data
+              </Button>
+              <Button type="button" variant="outline" size="sm" asChild>
+                <HardLink href="/admin/fundraising/activation-requests">Activation queue</HardLink>
+              </Button>
+              <Button type="button" variant="outline" size="sm" asChild>
+                <HardLink href="/admin/fundraising/playbook">Playbook</HardLink>
+              </Button>
+              <Button type="button" variant="outline" size="sm" asChild>
+                <HardLink href={campaign.publicPagePath}>Public campaign</HardLink>
+              </Button>
+              <Button type="button" variant="outline" size="sm" asChild>
+                <a href="https://dashboard.stripe.com/payments" target="_blank" rel="noopener noreferrer">
+                  Stripe
+                </a>
+              </Button>
+              {kidLedgerOpenReimbCount > 0 ? (
+                <Button type="button" variant="secondary" size="sm" onClick={() => setOpsMainTab("ledger")}>
+                  Open reimbursements ({kidLedgerOpenReimbCount})
+                </Button>
+              ) : null}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="ledger" className="mt-0 space-y-6 focus-visible:outline-none" tabIndex={-1}>
             <Card id="admin-fundraising-kids-ledger" className="overflow-hidden border-[#003366]/20 bg-white shadow-sm">
               <div
                 className="h-1"
@@ -1902,7 +1937,10 @@ export default function AdminFundraisingPage() {
                           <button
                             type="button"
                             className="text-[#003366] font-semibold underline-offset-2 hover:underline dark:text-blue-400"
-                            onClick={() => scrollToFundraisingSection("admin-fundraising-directory-gaps")}
+                            onClick={() => {
+                              setOpsMainTab("roster")
+                              scrollAfterTab("admin-fundraising-directory-gaps")
+                            }}
                           >
                             Directory gaps
                           </button>
@@ -1926,7 +1964,10 @@ export default function AdminFundraisingPage() {
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => scrollToFundraisingSection("admin-fundraising-parent-coverage")}
+                        onClick={() => {
+                          setOpsMainTab("roster")
+                          scrollAfterTab("admin-fundraising-parent-coverage")
+                        }}
                       >
                         Jump to parent linking
                       </Button>
@@ -1934,7 +1975,10 @@ export default function AdminFundraisingPage() {
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => scrollToFundraisingSection("fundraising-athlete-wiring-matrix")}
+                        onClick={() => {
+                          setOpsMainTab("roster")
+                          scrollAfterTab("fundraising-athlete-wiring-matrix")
+                        }}
                       >
                         Wiring matrix
                       </Button>
@@ -1944,6 +1988,9 @@ export default function AdminFundraisingPage() {
               </Card>
             </Collapsible>
 
+          </TabsContent>
+
+          <TabsContent value="roster" className="mt-0 space-y-6 focus-visible:outline-none" tabIndex={-1}>
             <Card
               id="fundraising-athlete-wiring-matrix"
               className="overflow-hidden border-[#003366]/20 bg-white shadow-sm"
@@ -2243,79 +2290,6 @@ export default function AdminFundraisingPage() {
                 ) : null}
               </CardContent>
             </Card>
-
-            {dash ? (
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <button
-                  type="button"
-                  disabled={donationsLoading}
-                  onClick={goDirectoryGapTable}
-                  className={cn(
-                    "rounded-xl border bg-card p-4 text-left shadow-sm outline-none ring-offset-background transition hover:bg-muted/60 hover:border-orange-400/45 focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-45",
-                    dash.offDirectoryCodes > 0 &&
-                      "border-orange-400/55 bg-orange-50/45 dark:border-orange-900/50 dark:bg-orange-950/30",
-                  )}
-                >
-                  <UserRoundX className="mb-2 h-5 w-5 text-orange-600 dark:text-orange-400" />
-                  <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">Off-directory codes</p>
-                  <p className="mt-1 text-3xl font-bold tabular-nums leading-none">{dash.offDirectoryCodes}</p>
-                  <p className="text-muted-foreground mt-2 text-xs leading-snug">
-                    Dollars on NCU codes that don&apos;t match a fundraising profile yet.
-                  </p>
-                </button>
-                <button
-                  type="button"
-                  disabled={donationsLoading}
-                  onClick={goRosterOnlyTable}
-                  className={cn(
-                    "rounded-xl border bg-card p-4 text-left shadow-sm outline-none ring-offset-background transition hover:bg-muted/60 hover:border-amber-500/35 focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-45",
-                    dash.rosterOnlyKids > 0 &&
-                      "border-amber-400/50 bg-amber-50/35 dark:border-amber-900/45 dark:bg-amber-950/25",
-                  )}
-                >
-                  <Layers className="mb-2 h-5 w-5 text-amber-700 dark:text-amber-400" />
-                  <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">Roster-only placeholders</p>
-                  <p className="mt-1 text-3xl font-bold tabular-nums leading-none">{dash.rosterOnlyKids}</p>
-                  <p className="text-muted-foreground mt-2 text-xs leading-snug">
-                    Roster placeholder only — still needs a real athlete row.
-                  </p>
-                </button>
-                <button
-                  type="button"
-                  disabled={donationsLoading}
-                  onClick={goNeedsParentTable}
-                  className={cn(
-                    "rounded-xl border bg-card p-4 text-left shadow-sm outline-none ring-offset-background transition hover:bg-muted/60 hover:border-blue-500/35 focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-45",
-                    dash.needsParentKids > 0 &&
-                      "border-blue-400/45 bg-blue-50/40 dark:border-blue-900/45 dark:bg-blue-950/25",
-                  )}
-                >
-                  <Users className="mb-2 h-5 w-5 text-blue-700 dark:text-blue-400" />
-                  <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">Needs parent link</p>
-                  <p className="mt-1 text-3xl font-bold tabular-nums leading-none">{dash.needsParentKids}</p>
-                  <p className="text-muted-foreground mt-2 text-xs leading-snug">
-                    Profile exists but no parent tied to Fundraise yet.
-                  </p>
-                </button>
-                <button
-                  type="button"
-                  disabled={donationsLoading}
-                  onClick={goOrphanedCheckoutsTable}
-                  className={cn(
-                    "rounded-xl border bg-card p-4 text-left shadow-sm outline-none ring-offset-background transition hover:bg-muted/60 hover:border-rose-500/35 focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-45",
-                    dash.orphanedCheckouts > 0 &&
-                      "border-rose-400/45 bg-rose-50/35 dark:border-rose-900/45 dark:bg-rose-950/25",
-                  )}
-                >
-                  <Gift className="mb-2 h-5 w-5 text-rose-700 dark:text-rose-400" />
-                  <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">Orphaned checkouts</p>
-                  <p className="mt-1 text-3xl font-bold tabular-nums leading-none">{dash.orphanedCheckouts}</p>
-                  <p className="text-muted-foreground mt-2 text-xs leading-snug">
-                    Paid checkouts still mapped to codes missing from the directory.
-                  </p>
-                </button>
-              </div>
-            ) : null}
 
             <Card className="border-[#003366]/15 bg-white">
               <CardHeader className="pb-3">
@@ -2966,6 +2940,9 @@ export default function AdminFundraisingPage() {
               </Card>
             ) : null}
 
+          </TabsContent>
+
+          <TabsContent value="payments" className="mt-0 space-y-6 focus-visible:outline-none" tabIndex={-1}>
             <Card id="admin-fundraising-stripe-donations">
               <CardHeader className="flex flex-col gap-3 space-y-0 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0 space-y-1.5">
@@ -3344,6 +3321,183 @@ export default function AdminFundraisingPage() {
               </CardContent>
             </Card>
 
+            <Card className="border-[#003366]/10">
+              <CardHeader>
+                <CardTitle className="text-lg">Charts</CardTitle>
+                <CardDescription>
+                  Same numbers as the tables. Click a bar to filter payments by athlete code.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <SpartanFundraisingVisuals
+                  embedded
+                  donations={donations}
+                  byAthlete={byAthlete}
+                  generalTotalCents={generalTotalCents}
+                  reimbursementsPaidTotalCents={reimbursementsPaidTotalCents}
+                  grossSessionTotalCents={grossSessionTotalCents}
+                  netAfterReimbursementsCents={netAfterReimbursementsCents}
+                  onPickAthlete={(code) => setAthleteFilter(code)}
+                  selectedAthleteFilter={athleteFilter}
+                />
+              </CardContent>
+            </Card>
+
+          </TabsContent>
+
+          <TabsContent value="more" className="mt-0 space-y-6 focus-visible:outline-none" tabIndex={-1}>
+            <p className="text-muted-foreground text-sm leading-snug">
+              Onboarding copy, CSVs, and scratchpads — open only when you need them.
+            </p>
+
+            <Card id="admin-fundraising-start-here" className="overflow-hidden border-[#003366]/25 bg-white shadow-sm">
+              <div
+                className="h-1"
+                style={{ background: `linear-gradient(to right, ${brand.navy}, ${brand.crimson})` }}
+                aria-hidden
+              />
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg text-[#003366] dark:text-blue-100">Start here (new teammate)</CardTitle>
+                <CardDescription className="text-base leading-relaxed text-foreground/85">
+                  No prior context needed. When someone says money is not showing for their kid, walk down this list in order.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 pt-0 text-sm leading-relaxed">
+                <ol className="text-muted-foreground list-decimal space-y-2.5 pl-5 marker:font-semibold marker:text-[#003366]">
+                  <li>
+                    <span className="font-medium text-foreground">Gifts use a wrestler code</span> (looks like{" "}
+                    <span className="font-mono text-xs text-foreground">NCU-LASTNAME-28</span>). Stripe stores that on each payment.
+                  </li>
+                  <li>
+                    <span className="font-medium text-foreground">Pin NCU to the athlete</span> — use Directory gaps →{" "}
+                    <strong className="text-foreground">Pin any wrestler</strong> (name search). Without Pin, gifts never credit that kid&apos;s wallet.
+                  </li>
+                  <li>
+                    <span className="font-medium text-foreground">Optional:</span> turn on a public donor page (see Donor-facing athlete profiles on the{" "}
+                    <Button type="button" variant="link" className="h-auto p-0 align-baseline" onClick={() => setOpsMainTab("roster")}>
+                      Roster & wiring
+                    </Button>{" "}
+                    tab). Families do not need this to see balances.
+                  </li>
+                  <li>
+                    <span className="font-medium text-foreground">Link the parent account</span> if Mom/Dad should see Profile → Fundraise (Parent coverage).
+                  </li>
+                  <li>
+                    <span className="font-medium text-foreground">Use Kids ledger</span> on the{" "}
+                    <Button type="button" variant="link" className="h-auto p-0 align-baseline" onClick={() => setOpsMainTab("ledger")}>
+                      Ledger
+                    </Button>{" "}
+                    tab: raised vs paid back vs what&apos;s left + open reimbursement requests.
+                  </li>
+                </ol>
+                <div className="flex flex-wrap gap-2 border-t border-border pt-3">
+                  <Button type="button" variant="outline" size="sm" onClick={() => scrollAfterTab("admin-fundraising-quick-ops")}>
+                    3-step setup (below)
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => setOpsMainTab("ledger")}>
+                    Kids ledger tab
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card id="admin-fundraising-quick-ops" className="overflow-hidden border-[#003366]/20 bg-white shadow-sm">
+              <div
+                className="h-1"
+                style={{ background: `linear-gradient(to right, ${brand.navy}, ${brand.crimson})` }}
+                aria-hidden
+              />
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">3-step setup</CardTitle>
+                <CardDescription className="leading-relaxed">
+                  Search the wrestler in{" "}
+                  <HardLink href="/admin/athletes" className="text-primary font-medium underline-offset-2 hover:underline">
+                    Athletes admin
+                  </HardLink>
+                  , copy their <strong className="font-medium text-foreground">ID</strong> (long text with dashes). Then do these in order.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-2 pt-0">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="h-auto justify-start gap-3 py-3 text-left"
+                  onClick={() => {
+                    goDirectoryGapTable()
+                  }}
+                >
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#003366]/12 text-sm font-bold text-[#003366]">
+                    1
+                  </span>
+                  <span>
+                    <span className="font-semibold text-foreground">Pin code to athlete</span>
+                    <span className="text-muted-foreground block text-xs font-normal leading-snug">
+                      Tell the system which wrestler owns this NCU checkout code (Directory gaps).
+                    </span>
+                  </span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="h-auto justify-start gap-3 py-3 text-left"
+                  onClick={() => {
+                    setOpsMainTab("roster")
+                    scrollAfterTab("admin-fundraising-athlete-profiles")
+                  }}
+                >
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#003366]/12 text-sm font-bold text-[#003366]">
+                    2
+                  </span>
+                  <span>
+                    <span className="font-semibold text-foreground">Turn on a public gift page (optional)</span>
+                    <span className="text-muted-foreground block text-xs font-normal leading-snug">
+                      Gives donors a nice link — not required for Profile → Fundraise totals.
+                    </span>
+                  </span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="h-auto justify-start gap-3 py-3 text-left"
+                  onClick={() => {
+                    goNeedsParentTable()
+                  }}
+                >
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#003366]/12 text-sm font-bold text-[#003366]">
+                    3
+                  </span>
+                  <span>
+                    <span className="font-semibold text-foreground">Link parent</span>
+                    <span className="text-muted-foreground block text-xs font-normal leading-snug">
+                      So a parent login can open Profile → Fundraise for this athlete (Parent coverage).
+                    </span>
+                  </span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-1 gap-2 self-start"
+                  onClick={() => setOpsMainTab("ledger")}
+                >
+                  View money table (Kids ledger)
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 self-start"
+                  onClick={() => {
+                    setOpsMainTab("roster")
+                    scrollAfterTab("fundraising-athlete-wiring-matrix")
+                  }}
+                >
+                  <LayoutGrid className="h-4 w-4 shrink-0" aria-hidden />
+                  Wiring matrix (full roster codes)
+                </Button>
+              </CardContent>
+            </Card>
+
             <Card className="border-[#003366]/15 bg-white">
               <CardHeader>
                 <CardTitle className="text-base">CSV exports</CardTitle>
@@ -3437,28 +3591,6 @@ export default function AdminFundraisingPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-[#003366]/10">
-              <CardHeader>
-                <CardTitle className="text-lg">Charts</CardTitle>
-                <CardDescription>
-                  Same numbers as the tables. Click a bar to filter payments by athlete code.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <SpartanFundraisingVisuals
-                  embedded
-                  donations={donations}
-                  byAthlete={byAthlete}
-                  generalTotalCents={generalTotalCents}
-                  reimbursementsPaidTotalCents={reimbursementsPaidTotalCents}
-                  grossSessionTotalCents={grossSessionTotalCents}
-                  netAfterReimbursementsCents={netAfterReimbursementsCents}
-                  onPickAthlete={(code) => setAthleteFilter(code)}
-                  selectedAthleteFilter={athleteFilter}
-                />
-              </CardContent>
-            </Card>
-
             <div className="grid gap-6 md:grid-cols-2">
               <Card className="border-[#003366]/10">
                 <CardHeader>
@@ -3490,7 +3622,8 @@ export default function AdminFundraisingPage() {
                 </CardContent>
               </Card>
             </div>
-        </div>
+          </TabsContent>
+        </Tabs>
 
         <AttachAthleteToProfileDialog
           profile={attachAthleteProfile}
