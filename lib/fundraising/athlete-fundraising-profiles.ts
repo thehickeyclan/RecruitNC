@@ -6,6 +6,7 @@ import { getFundraisingAthleteEntries, scoreSpartanPublicDisplayRichness } from 
 import { fundraisingCodeFromSlug } from "@/lib/fundraising/athlete-fundraising-slug"
 import { recruitingProfilePhotoFromRow } from "@/lib/recruiting-profile-photo"
 import { normalizeFundraisingSchoolDisplay } from "@/lib/fundraising/normalize-fundraising-school-display"
+import { fundraisingDirectoryIdentityKey, ncuCodeGradYearSuffix } from "@/lib/fundraising/fundraising-directory-identity"
 
 const NCU_CODE_RE = /^NCU-[A-Za-z0-9]+-\d{2}$/i
 
@@ -348,5 +349,22 @@ export async function getFundraisingAthletesIndexRows(
     seenSlug.add(slugKey)
     deduped.push(row)
   }
-  return deduped
+
+  const identityMerged = new Map<string, FundraisingAthleteIndexRow>()
+  const byStrength = [...deduped].sort((a, b) => {
+    const ra = a.totalRaisedCents ?? 0
+    const rb = b.totalRaisedCents ?? 0
+    if (rb !== ra) return rb - ra
+    const yb = ncuCodeGradYearSuffix(b.code)
+    const ya = ncuCodeGradYearSuffix(a.code)
+    if (yb !== ya) return yb - ya
+    return b.code.localeCompare(a.code)
+  })
+  for (const row of byStrength) {
+    const ik = fundraisingDirectoryIdentityKey(row.displayName, row.sublabel, row.athleteId)
+    if (!identityMerged.has(ik)) identityMerged.set(ik, row)
+  }
+  return [...identityMerged.values()].sort((a, b) =>
+    a.displayName.localeCompare(b.displayName, undefined, { sensitivity: "base" }),
+  )
 }

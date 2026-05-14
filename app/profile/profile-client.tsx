@@ -45,6 +45,10 @@ interface UserProfile {
   athlete_name?: string
   notify_sms_new_messages?: boolean
   notify_email_new_messages?: boolean
+  /** NC United athlete gift page — email when someone donates (default on in DB). */
+  notify_email_fundraising_gifts?: boolean
+  notify_sms_fundraising_gifts?: boolean
+  notify_sms_fundraising_activation?: boolean
   headshot_url?: string | null
 }
 
@@ -418,6 +422,9 @@ export function ProfileClient() {
           bio: profile.bio,
           notify_sms_new_messages: profile.notify_sms_new_messages,
           notify_email_new_messages: profile.notify_email_new_messages,
+          notify_email_fundraising_gifts: profile.notify_email_fundraising_gifts !== false,
+          notify_sms_fundraising_gifts: !!profile.notify_sms_fundraising_gifts,
+          notify_sms_fundraising_activation: !!profile.notify_sms_fundraising_activation,
         }),
       })
 
@@ -801,6 +808,72 @@ export function ProfileClient() {
                     onCheckedChange={(checked) => profile && setProfile({ ...profile, notify_email_new_messages: checked })}
                   />
                 </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-[#003366]/10 shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-[#03154C]">
+                  <Coins className="h-5 w-5 text-[#CBAF5D]" />
+                  Fundraising notifications
+                </CardTitle>
+                <CardDescription className="text-slate-600">
+                  NC United athlete gift pages — get alerts when your page is activated or when someone donates. Use{" "}
+                  <strong>Save Changes</strong> on Profile Information above after changing these.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2 font-medium">
+                      <Mail className="h-4 w-4 text-[#003366]" />
+                      Email me when someone donates to my athlete
+                    </div>
+                    <p className="text-xs text-muted-foreground">Default on — sent to your sign-in email.</p>
+                  </div>
+                  <Switch
+                    checked={profile.notify_email_fundraising_gifts !== false}
+                    onCheckedChange={(checked) =>
+                      profile && setProfile({ ...profile, notify_email_fundraising_gifts: checked })
+                    }
+                  />
+                </div>
+                <div className="flex items-center justify-between gap-4 pt-2 border-t">
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2 font-medium">
+                      <MessageCircle className="h-4 w-4 text-[#003366]" />
+                      Text me when someone donates
+                    </div>
+                    <p className="text-xs text-muted-foreground">Opt-in — requires cell phone above.</p>
+                  </div>
+                  <Switch
+                    checked={!!profile.notify_sms_fundraising_gifts}
+                    onCheckedChange={(checked) =>
+                      profile && setProfile({ ...profile, notify_sms_fundraising_gifts: checked })
+                    }
+                  />
+                </div>
+                <div className="flex items-center justify-between gap-4 pt-2 border-t">
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2 font-medium">
+                      <Bell className="h-4 w-4 text-[#003366]" />
+                      Text me when my page is activated
+                    </div>
+                    <p className="text-xs text-muted-foreground">Opt-in — staff approval of your activation request.</p>
+                  </div>
+                  <Switch
+                    checked={!!profile.notify_sms_fundraising_activation}
+                    onCheckedChange={(checked) =>
+                      profile && setProfile({ ...profile, notify_sms_fundraising_activation: checked })
+                    }
+                  />
+                </div>
+                {!profile.cell_phone?.trim() &&
+                  (!!profile.notify_sms_fundraising_gifts || !!profile.notify_sms_fundraising_activation) && (
+                    <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+                      Add your cell phone in Profile Information so we can send fundraising texts.
+                    </p>
+                  )}
               </CardContent>
             </Card>
 

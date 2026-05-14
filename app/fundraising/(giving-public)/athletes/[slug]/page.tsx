@@ -21,7 +21,8 @@ import { FundraisingAthleteMessageSection } from "./fundraising-athlete-message"
 import { FundraisingMilestoneFunnel } from "./fundraising-milestone-funnel"
 import { FundraisingOwnerPanel } from "./fundraising-owner-panel"
 import { FundraisingAdminAssignmentPanel } from "./fundraising-admin-assignment-panel"
-import { FundraisingPublicationBanner } from "./fundraising-publication-banner"
+import { VerifiedBadge } from "@/components/fundraising/verified-badge"
+import { UnactivatedAthleteGivingPromo } from "@/components/fundraising/unactivated-athlete-giving-promo"
 import { recruitingProfilePhotoFromRow } from "@/lib/recruiting-profile-photo"
 import { fetchThankYouAckLedgerKeys } from "@/lib/fundraising/supporter-thank-you-ack"
 import { getFundraisingWiringAdminSnapshot } from "@/lib/fundraising/fundraising-wiring-status"
@@ -134,6 +135,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
   const latestActivationStatus: "none" | "pending" = slugHasPendingActivation ? "pending" : "none"
   const viewerHasPendingActivation = !!(user?.id && pendingActivationUserIds.includes(user.id))
   const checkoutLive = isProfileCheckoutLive(profile)
+  const showFullGivingExperience = checkoutLive
 
   const ownerThankYouRowsWithAck = ownerThankYouRows.map((r) => ({
     ...r,
@@ -174,12 +176,14 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
   const giveOnThisPageHref = `${athletePagePath}#${checkoutAnchor}`
   /** Hub URL if donor wants training fund or directory search */
   const hubGiveHref = `${FUNDRAISING_GIVE_PAGE_PATH}#${checkoutAnchor}`
-  const athleteQrDataUrl = await QRCode.toDataURL(athleteAbsoluteUrl, {
-    margin: 2,
-    width: 320,
-    errorCorrectionLevel: "H",
-    color: { dark: "#000000", light: "#FFFFFF" },
-  })
+  const athleteQrDataUrl = checkoutLive
+    ? await QRCode.toDataURL(athleteAbsoluteUrl, {
+        margin: 2,
+        width: 320,
+        errorCorrectionLevel: "H",
+        color: { dark: "#000000", light: "#FFFFFF" },
+      })
+    : ""
 
   const directoryLabelForCheckout =
     resolved.entry?.label?.trim() || (schoolLine ? `${displayName} · ${schoolLine}` : displayName)
@@ -208,16 +212,6 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
             ← All athletes
           </HardLink>
         </div>
-
-        <FundraisingPublicationBanner
-          athletePagePath={athletePagePath}
-          fundraisingSlug={slugNorm}
-          athleteId={athleteId}
-          displayName={displayName}
-          checkoutLive={checkoutLive}
-          viewerHasPendingActivation={viewerHasPendingActivation}
-          viewerUserId={user?.id ?? null}
-        />
 
         {viewerIsRecruitNcAdmin ? (
           <FundraisingAdminAssignmentPanel
@@ -261,22 +255,35 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           )}
         </div>
 
-        <h1 className="font-[family-name:var(--font-fundraising-display)] mt-6 text-2xl font-black uppercase leading-tight tracking-tight text-white sm:text-4xl">
-          {viewProfileHref ? (
-            <HardLink
-              href={viewProfileHref}
-              className="text-white decoration-[#C8A94A] decoration-2 underline-offset-4 hover:text-[#C8A94A] hover:underline"
-            >
-              {displayName}
-            </HardLink>
-          ) : (
-            displayName
-          )}
-        </h1>
+        <div className="mt-6 flex flex-wrap items-center gap-2">
+          <h1 className="font-[family-name:var(--font-fundraising-display)] text-2xl font-black uppercase leading-tight tracking-tight text-white sm:text-4xl">
+            {viewProfileHref ? (
+              <HardLink
+                href={viewProfileHref}
+                className="text-white decoration-[#C8A94A] decoration-2 underline-offset-4 hover:text-[#C8A94A] hover:underline"
+              >
+                {displayName}
+              </HardLink>
+            ) : (
+              displayName
+            )}
+          </h1>
+          {checkoutLive ? <VerifiedBadge /> : null}
+        </div>
+        {!checkoutLive ? (
+          <UnactivatedAthleteGivingPromo
+            athletePagePath={athletePagePath}
+            fundraisingSlug={slugNorm}
+            athleteId={athleteId}
+            displayName={displayName}
+            viewerUserId={user?.id ?? null}
+            viewerHasPendingActivation={viewerHasPendingActivation}
+          />
+        ) : null}
         {schoolLine ? <p className="mt-2 text-base text-white/65">{schoolLine}</p> : null}
         {code && showInternalCodes ? <p className="mt-2 font-mono text-xs text-white/40">{code}</p> : null}
 
-        {code && checkoutLive ? (
+        {code && showFullGivingExperience ? (
           <div className="mt-5 flex flex-col items-stretch gap-2 sm:items-center">
             <HardLink href={giveOnThisPageHref} className={PRIMARY_DONATE_CTA_CLASS}>
               Donate now
@@ -284,14 +291,6 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
             <p className="text-center text-[11px] leading-snug text-white/50 sm:max-w-md">
               Secure checkout is on this page below. Most people finish in a couple of minutes — you&apos;ll get a receipt by email.
             </p>
-          </div>
-        ) : code && !checkoutLive ? (
-          <div className="mt-5 rounded-lg border border-white/15 bg-black/25 px-4 py-3 text-center text-sm text-white/65">
-            Gifts on this URL are not turned on yet. Use{" "}
-            <HardLink href="/fundraising/give" className="font-semibold text-[#C8A94A] underline-offset-2 hover:underline">
-              Make a gift
-            </HardLink>{" "}
-            for the training fund or another active athlete page, or see the status note above if you&apos;re family.
           </div>
         ) : null}
 
@@ -308,8 +307,9 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
                 </>
               ) : (
                 <>
-                  Families often use NC United to offset travel, training, and tournament costs. Checkout on this link is off until NC United
-                  finishes activation—the banner above explains next steps for families. You can still read how giving works below.
+                  Families often use NC United to offset travel, training, and tournament costs. Checkout on this link stays off until NC United
+                  finishes activation — families can request that from the line under {athleteFirstName}&apos;s name on this page. You can still read how giving
+                  works below.
                 </>
               )}
             </p>
@@ -344,7 +344,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           </p>
         </div>
 
-        {athleteId ? (
+        {athleteId && showFullGivingExperience ? (
           <>
             <FundraisingAthleteGoalSection
               key={
@@ -425,7 +425,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           </>
         ) : null}
 
-        {managerWalletRow ? (
+        {showFullGivingExperience && managerWalletRow ? (
           <FundraisingAthleteWalletPanel
             row={managerWalletRow}
             firstName={athleteFirstName}
@@ -500,38 +500,28 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           </div>
         ) : null}
 
-        <section
-          id={checkoutAnchor}
-          className="mt-10 scroll-mt-28 rounded-xl border border-[#C8A94A]/25 bg-[#0B2545]/35 p-4 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.45)] backdrop-blur-sm sm:p-6"
-        >
-          <h2 className="font-[family-name:var(--font-fundraising-display)] text-center text-lg font-bold uppercase tracking-wide text-white">
-            {checkoutLive ? "Secure checkout" : "Gifts not available on this link yet"}
-          </h2>
-          {checkoutLive ? (
-            <>
-              <p className="mx-auto mt-2 max-w-md text-center text-[13px] leading-snug text-white/70">
-                <strong className="font-semibold text-white/85">Tax-deductible</strong> gift (minimum $5). You&apos;ll complete payment in secure checkout and
-                receive an <strong className="font-semibold text-white/85">email receipt</strong> — typically just a couple of minutes.
-              </p>
-              <div className="mt-6 w-full text-left">
-                <FundraisingAthleteEmbeddedCheckout
-                  athleteCode={code}
-                  athleteDirectoryLabel={directoryLabelForCheckout}
-                  fundraisingSlug={slug}
-                  checkoutLive
-                />
-              </div>
-            </>
-          ) : (
-            <p className="mx-auto mt-3 max-w-md text-center text-sm leading-relaxed text-white/65">
-              NC United turns on Stripe checkout here only after a parent or athlete completes activation and staff approves. Until then, use{" "}
-              <HardLink href="/fundraising/give" className="font-semibold text-[#C8A94A] underline-offset-2 hover:underline">
-                Make a gift
-              </HardLink>{" "}
-              to support the training fund or another activated athlete.
+        {showFullGivingExperience && code ? (
+          <section
+            id={checkoutAnchor}
+            className="mt-10 scroll-mt-28 rounded-xl border border-[#C8A94A]/25 bg-[#0B2545]/35 p-4 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.45)] backdrop-blur-sm sm:p-6"
+          >
+            <h2 className="font-[family-name:var(--font-fundraising-display)] text-center text-lg font-bold uppercase tracking-wide text-white">
+              Secure checkout
+            </h2>
+            <p className="mx-auto mt-2 max-w-md text-center text-[13px] leading-snug text-white/70">
+              <strong className="font-semibold text-white/85">Tax-deductible</strong> gift (minimum $5). You&apos;ll complete payment in secure checkout and
+              receive an <strong className="font-semibold text-white/85">email receipt</strong> — typically just a couple of minutes.
             </p>
-          )}
-        </section>
+            <div className="mt-6 w-full text-left">
+              <FundraisingAthleteEmbeddedCheckout
+                athleteCode={code}
+                athleteDirectoryLabel={directoryLabelForCheckout}
+                fundraisingSlug={slug}
+                checkoutLive
+              />
+            </div>
+          </section>
+        ) : null}
 
         <p className="mt-12 border-t border-white/10 pt-8 text-center text-xs text-white/45">
           NC United Wrestling — North Carolina 501(c)(3). Thank you for supporting {displayName}.

@@ -5,6 +5,7 @@ import {
   sendNcuDonationAcknowledgmentEmail,
 } from "@/lib/email/ncu-donation-acknowledgment"
 import { recordFundraisingLedgerSpartanCheckout } from "@/lib/fundraising/ledger"
+import { notifyHouseholdOfFundraisingGiftIfEligible } from "@/lib/fundraising/notify-household-of-fundraising-gift"
 import { stripeSpartanCampaignMetadataMatchesRequested } from "@/lib/fundraising/campaign-registry"
 import { deriveCheckoutAttributionFromStripeSession } from "@/lib/spartan-donation-checkout-attribution"
 import { SPARTAN_FAYETTEVILLE_CAMPAIGN } from "@/lib/spartan-fayetteville-stripe"
@@ -129,4 +130,10 @@ export async function upsertSpartanDonationFromCheckoutSession(
   }
 
   await recordFundraisingLedgerSpartanCheckout(admin, session)
+
+  try {
+    await notifyHouseholdOfFundraisingGiftIfEligible(admin, session)
+  } catch (e) {
+    console.error("[spartan-fayetteville-webhook-ack] household gift notify", e)
+  }
 }

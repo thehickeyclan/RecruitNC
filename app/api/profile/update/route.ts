@@ -15,7 +15,19 @@ async function handleUpdate(request: Request) {
   }
 
   const body = await request.json()
-  const { name, role, cell_phone, location, bio, notify_sms_new_messages, notify_email_new_messages, headshot_url } = body
+  const {
+    name,
+    role,
+    cell_phone,
+    location,
+    bio,
+    notify_sms_new_messages,
+    notify_email_new_messages,
+    notify_email_fundraising_gifts,
+    notify_sms_fundraising_gifts,
+    notify_sms_fundraising_activation,
+    headshot_url,
+  } = body
 
   const updatePayload: Record<string, unknown> = {}
   if (name !== undefined) updatePayload.full_name = name
@@ -25,6 +37,15 @@ async function handleUpdate(request: Request) {
   if (bio !== undefined) updatePayload.bio = bio
   if (typeof notify_sms_new_messages === "boolean") updatePayload.notify_sms_new_messages = notify_sms_new_messages
   if (typeof notify_email_new_messages === "boolean") updatePayload.notify_email_new_messages = notify_email_new_messages
+  if (typeof notify_email_fundraising_gifts === "boolean") {
+    updatePayload.notify_email_fundraising_gifts = notify_email_fundraising_gifts
+  }
+  if (typeof notify_sms_fundraising_gifts === "boolean") {
+    updatePayload.notify_sms_fundraising_gifts = notify_sms_fundraising_gifts
+  }
+  if (typeof notify_sms_fundraising_activation === "boolean") {
+    updatePayload.notify_sms_fundraising_activation = notify_sms_fundraising_activation
+  }
   if (headshot_url !== undefined) updatePayload.headshot_url = headshot_url === "" || headshot_url === null ? null : headshot_url
 
   if (Object.keys(updatePayload).length === 0) {
@@ -42,7 +63,17 @@ async function handleUpdate(request: Request) {
   if (error) {
     const msg = String(error.message || "").toLowerCase()
     const maybeMissingColumn = msg.includes("column") && (msg.includes("does not exist") || msg.includes("undefined"))
-    if (maybeMissingColumn && (updatePayload.location !== undefined || updatePayload.bio !== undefined || updatePayload.role !== undefined || updatePayload.notify_sms_new_messages !== undefined || updatePayload.notify_email_new_messages !== undefined)) {
+    if (
+      maybeMissingColumn &&
+      (updatePayload.location !== undefined ||
+        updatePayload.bio !== undefined ||
+        updatePayload.role !== undefined ||
+        updatePayload.notify_sms_new_messages !== undefined ||
+        updatePayload.notify_email_new_messages !== undefined ||
+        updatePayload.notify_email_fundraising_gifts !== undefined ||
+        updatePayload.notify_sms_fundraising_gifts !== undefined ||
+        updatePayload.notify_sms_fundraising_activation !== undefined)
+    ) {
       const safePayload: Record<string, unknown> = {}
       if (name !== undefined) safePayload.full_name = name
       if (cell_phone !== undefined) safePayload.cell_phone = normalizePhoneForStorage(cell_phone)

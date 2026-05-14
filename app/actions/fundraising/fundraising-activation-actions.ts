@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { requireAdmin } from "@/lib/admin-auth"
 import { resolveFundraisingAthletePublicBySlugForRequest } from "@/lib/fundraising/athlete-fundraising-profiles"
 import { ensureParentAthleteLinkAdmin } from "@/lib/fundraising/ensure-parent-athlete-link-admin"
+import { sendFundraisingActivationApprovedNotifications } from "@/lib/fundraising/send-fundraising-activation-approved-notifications"
 
 export type ActivationRequestRow = {
   id: string
@@ -118,7 +119,7 @@ export async function reviewFundraisingActivationRequestAdminAction(
   const admin = createAdminClient()
   const { data: reqRow, error: fetchErr } = await admin
     .from("fundraising_activation_requests")
-    .select("id, user_id, athlete_id, fundraising_slug, status")
+    .select("id, user_id, requester_email, athlete_id, fundraising_slug, status")
     .eq("id", requestId)
     .maybeSingle()
 
@@ -158,6 +159,27 @@ export async function reviewFundraisingActivationRequestAdminAction(
   }
 
   const now = new Date().toISOString()
+
+  if (nextStatus === "approved" && resolvedAthleteIdForApprove) {
+    const { data: activatedProfiles, error: liveErr } = await admin
+      .from("athlete_fundraising_profiles")
+      .update({ checkout_live: true, updated_at: now })
+      .eq("athlete_id", resolvedAthleteIdForApprove)
+      .eq("is_active", true)
+      .select("id")
+
+    if (liveErr) {
+      console.warn("[reviewFundraisingActivationRequest] checkout_live on profile", liveErr.message)
+      return { ok: false, error: liveErr.message }
+    }
+    if (!activatedProfiles?.length) {
+      const msg =
+        "No active athlete fundraising profile found for this athlete — create or sync a profile in admin Fundraising, then approve again."
+      console.warn("[reviewFundraisingActivationRequest]", msg)
+      return { ok: false, error: msg }
+    }
+  }
+
   const updatePayload: Record<string, unknown> = {
     status: nextStatus,
     reviewed_at: now,
@@ -179,13 +201,24 @@ export async function reviewFundraisingActivationRequestAdminAction(
   }
 
   if (nextStatus === "approved" && resolvedAthleteIdForApprove) {
-    const { error: liveErr } = await admin
-      .from("athlete_fundraising_profiles")
-      .update({ checkout_live: true, updated_at: now })
-      .eq("athlete_id", resolvedAthleteIdForApprove)
-      .eq("is_active", true)
-    if (liveErr) {
-      console.warn("[reviewFundraisingActivationRequest] checkout_live on profile", liveErr.message)
+    const parentUserId = typeof reqRow.user_id === "string" ? reqRow.user_id.trim() : ""
+    const slugForNotify =
+      typeof reqRow.fundraising_slug === "string" ? reqRow.fundraising_slug.trim().toLowerCase() : ""
+    const requesterEmail =
+      typeof (reqRow as { requester_email?: string | null }).requester_email === "string"
+        ? (reqRow as { requester_email: string }).requester_email
+        : null
+    if (parentUserId && slugForNotify) {
+      try {
+        await sendFundraisingActivationApprovedNotifications(admin, {
+          parentUserId,
+          requesterEmail,
+          athleteId: resolvedAthleteIdForApprove,
+          fundraisingSlug: slugForNotify,
+        })
+      } catch (e) {
+        console.error("[reviewFundraisingActivationRequest] activation notifications", e)
+      }
     }
   }
 
