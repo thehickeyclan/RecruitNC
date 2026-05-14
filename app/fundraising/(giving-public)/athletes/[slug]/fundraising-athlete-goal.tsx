@@ -169,14 +169,16 @@ export function FundraisingAthleteGoalSection({
 
       {canEdit && !hasFundraisingProfile && !isRecruitNcAdmin ? (
         <p className="mt-3 text-sm leading-relaxed text-white/65">
-          Saving creates your gift page profile when this wrestler has a roster code — activation still required before donors can give here.
+          Saving here finishes your gift-page setup once NC United has this wrestler on the roster. Staff still needs to activate
+          checkout before anyone can donate on this link.
         </p>
       ) : null}
 
       {canEdit && editing ? (
         <>
           <p className="mt-2 text-xs leading-relaxed text-white/50">
-            Donors see this above the note. The milestone tracker uses the same running total once gifts are live.
+            Donors see this above the written note. The milestone chart below will use the same total once giving is turned on for
+            this page.
           </p>
           <label className="mt-4 block text-xs font-semibold uppercase tracking-wide text-white/55">
             Goal (USD)
@@ -249,7 +251,9 @@ export function FundraisingAthleteGoalSection({
                 />
               </div>
               <p className="mt-3 text-[11px] font-semibold uppercase tracking-wide text-[#C8A94A]/90">Tap to edit goal</p>
-              <p className="mt-2 text-xs leading-relaxed text-white/45">The milestone trail below uses the same total when fundraising is live.</p>
+              <p className="mt-2 text-xs leading-relaxed text-white/45">
+                The milestone chart below matches this total once giving is active on this page.
+              </p>
             </button>
           ) : (
             <>
@@ -270,7 +274,7 @@ export function FundraisingAthleteGoalSection({
                 />
               </div>
               <p className="mt-3 text-xs leading-relaxed text-white/45">
-                The milestone trail below uses the same total when fundraising is live.
+                The milestone chart below matches this total once giving is active on this page.
               </p>
             </>
           )}
@@ -282,7 +286,7 @@ export function FundraisingAthleteGoalSection({
           className="mt-4 w-full rounded-lg border border-dashed border-[#C8A94A]/35 bg-black/15 px-4 py-4 text-left transition hover:border-[#C8A94A]/55 hover:bg-black/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A94A]/60"
         >
           <p className="text-sm font-semibold text-white/90">Set {firstName}&apos;s fundraising goal</p>
-          <p className="mt-2 text-sm italic text-white/55">Add a target for when this page is live for gifts.</p>
+          <p className="mt-2 text-sm italic text-white/55">Set a target for when donors can give on this page.</p>
         </button>
       ) : checkoutLive ? (
         <p className="mt-4 text-sm leading-relaxed text-white/55">

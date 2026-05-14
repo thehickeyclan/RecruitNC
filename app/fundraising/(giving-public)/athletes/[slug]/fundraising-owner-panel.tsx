@@ -116,9 +116,8 @@ export function FundraisingOwnerPanel({
         <CollapsibleContent className="overflow-hidden">
           <div className="space-y-10 pt-6">
             <p className="text-sm leading-relaxed text-white/65">
-              Only linked parents (admin parent-athlete link), this athlete when their RecruitNC login matches their profile,
-              or RecruitNC staff see checkout emails and phones here. Visitors never do. Use contacts for personal thank-yous
-              only — don&apos;t add people to lists or share their details.
+              Only linked parents, this athlete on their own account, or NC United staff can open this. Visitors never see it. Use
+              supporter contact info for personal thank-yous only — don&apos;t add people to lists or share their details.
             </p>
 
             {showBioEditor && canEditStory ? (
@@ -161,8 +160,8 @@ export function FundraisingOwnerPanel({
             ) : showBioEditor ? (
               <div className="border-t border-white/10 pt-8">
                 <p className="text-sm text-white/65">
-                  To edit the &quot;what I&apos;m raising for&quot; message on this URL, NC United needs an active fundraising profile
-                  linked to your RecruitNC account. Contact{" "}
+                To edit the &quot;what I&apos;m raising for&quot; message on this page, NC United needs an active gift-page profile
+                linked to your account. Contact{" "}
                   <a href="mailto:info@ncwrestlingunited.com" className="text-[#C8A94A] hover:underline">
                     info@ncwrestlingunited.com
                   </a>{" "}
@@ -173,10 +172,10 @@ export function FundraisingOwnerPanel({
 
             <div className="border-t border-white/10 pt-8">
               <h3 className="font-[family-name:var(--font-fundraising-display)] text-sm font-bold uppercase tracking-wide text-white">
-                Supporters ({lookbackDays}-day campaign window)
+                Supporters (recent gifts, last {lookbackDays} days)
               </h3>
               <p className="mt-1 text-xs text-white/50">
-                Email comes from checkout. Phone appears only if the donor entered it in Stripe — many rows will show “—”.
+                Email comes from checkout. Phone shows only if the donor entered it when paying — many rows will show “—”.
               </p>
               {donorRows.length > 0 ? (
                 <p className="mt-2 text-xs text-white/55">
@@ -185,7 +184,7 @@ export function FundraisingOwnerPanel({
               ) : null}
               {thankAckError ? <p className="mt-2 text-sm text-red-400/90">{thankAckError}</p> : null}
               {donorRows.length === 0 ? (
-                <p className="mt-4 text-sm text-white/55">No credited gifts in this window yet.</p>
+                <p className="mt-4 text-sm text-white/55">No gifts in this list yet (rolling {lookbackDays}-day window).</p>
               ) : (
                 <div className="mt-4 overflow-x-auto rounded-lg border border-white/10">
                   <table className="w-full min-w-[560px] text-left text-sm">
