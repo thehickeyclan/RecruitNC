@@ -104,9 +104,12 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  const isFundraisingManager =
-    !!(user?.id && athleteId && (await userCanManageFundraisingForAthlete(admin, user.id, athleteId)))
   const viewerIsRecruitNcAdmin = !!(user?.id && (await userIsRecruitNcAdmin(admin, user.id)))
+  /** Admins manage any athlete page; families need a linked athlete id. */
+  const isFundraisingManager = !!(
+    user?.id &&
+    (viewerIsRecruitNcAdmin || (!!athleteId && (await userCanManageFundraisingForAthlete(admin, user.id, athleteId))))
+  )
   const showOwnerHints = isFundraisingManager || viewerIsRecruitNcAdmin
   /** Roster credit codes are operational — don’t surface to casual donors. */
   const showInternalCodes = showOwnerHints
@@ -142,6 +145,8 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
   const viewerHasPendingActivation = !!(user?.id && pendingActivationUserIds.includes(user.id))
   const checkoutLive = isProfileCheckoutLive(profile)
   const showFullGivingExperience = checkoutLive
+  /** Goal, note, video: public when checkout live; managers (incl. RecruitNC admin) may edit before/during live. */
+  const showFundraisingStoryBlock = !!athleteId && (showFullGivingExperience || isFundraisingManager)
 
   const ownerThankYouRowsWithAck = ownerThankYouRows.map((r) => ({
     ...r,
@@ -248,6 +253,17 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           />
         ) : null}
 
+        {!checkoutLive ? (
+          <UnactivatedAthleteGivingPromo
+            athletePagePath={athletePagePath}
+            fundraisingSlug={slugNorm}
+            athleteId={athleteId}
+            displayName={displayName}
+            viewerUserId={user?.id ?? null}
+            viewerHasPendingActivation={viewerHasPendingActivation}
+          />
+        ) : null}
+
         <p className="font-[family-name:var(--font-fundraising-display)] mt-8 text-[11px] font-bold uppercase tracking-[0.28em] text-[#CC0000]">
           Official NC United gift page
         </p>
@@ -293,16 +309,6 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           </h1>
           {checkoutLive ? <VerifiedBadge /> : null}
         </div>
-        {!checkoutLive ? (
-          <UnactivatedAthleteGivingPromo
-            athletePagePath={athletePagePath}
-            fundraisingSlug={slugNorm}
-            athleteId={athleteId}
-            displayName={displayName}
-            viewerUserId={user?.id ?? null}
-            viewerHasPendingActivation={viewerHasPendingActivation}
-          />
-        ) : null}
         {schoolLine ? <p className="mt-2 text-base text-white/65">{schoolLine}</p> : null}
         {code && showInternalCodes ? <p className="mt-2 font-mono text-xs text-white/40">{code}</p> : null}
 
@@ -331,8 +337,8 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
               ) : (
                 <>
                   Families often use NC United to offset travel, training, and tournament costs. Checkout on this link stays off until NC United
-                  finishes activation — families can request that from the line under {athleteFirstName}&apos;s name on this page. You can still read how giving
-                  works below.
+                  finishes activation — use the <strong className="text-white">Request activation</strong> button at the top if you&apos;re a linked
+                  parent or athlete. You can still read how giving works below.
                 </>
               )}
             </p>
@@ -367,7 +373,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           </p>
         </div>
 
-        {athleteId && showFullGivingExperience ? (
+        {showFundraisingStoryBlock ? (
           <>
             <FundraisingAthleteGoalSection
               key={

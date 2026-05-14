@@ -59,7 +59,7 @@ function prefsFromRow(row: Record<string, unknown>): ProfileNotifyPrefs {
   const ns = row.notify_sms_fundraising_gifts
   return {
     notifyEmailFundraisingGifts: ne !== false,
-    notifySmsFundraisingGifts: ns === true,
+    notifySmsFundraisingGifts: ns !== false,
   }
 }
 
@@ -159,7 +159,7 @@ export async function notifyHouseholdOfFundraisingGiftIfEligible(
     const prefs =
       "notify_email_fundraising_gifts" in prow || "notify_sms_fundraising_gifts" in prow
         ? prefsFromRow(prow)
-        : { notifyEmailFundraisingGifts: true, notifySmsFundraisingGifts: false }
+        : { notifyEmailFundraisingGifts: true, notifySmsFundraisingGifts: true }
 
     if (prefs.notifyEmailFundraisingGifts) {
       const send = await sendFundraisingGiftHouseholdEmail({
