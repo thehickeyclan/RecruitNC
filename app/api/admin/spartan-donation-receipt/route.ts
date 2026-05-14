@@ -17,7 +17,6 @@ import {
 } from "@/lib/email/ncu-donation-acknowledgment"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
-import { thankYouVideoAckFieldsFromFayettevillePaidSession } from "@/lib/fundraising/checkout-session-thank-you-video-ack"
 import { stripeSpartanCampaignMetadataMatchesRequested } from "@/lib/fundraising/campaign-registry"
 import { SPARTAN_FAYETTEVILLE_CAMPAIGN } from "@/lib/spartan-fayetteville-stripe"
 
@@ -41,7 +40,6 @@ function normEmail(s: string) {
 
 type Body = {
   action: "preview" | "send"
-  /** Optional for preview — when set, thank-you video block matches this checkout (same as send). */
   sessionId?: string
   firstName?: string
   amountCents?: number
@@ -52,7 +50,7 @@ type Body = {
 }
 
 /**
- * POST preview: build acknowledgment HTML (no email). Optional `sessionId` loads thank-you video block like auto-send/send.
+ * POST preview: build acknowledgment HTML (no email). Admin-only.
  * POST send: verify Stripe session (paid, Spartan campaign, amount + email), send Resend, log to spartan_donation_receipt_emails.
  */
 export async function POST(request: NextRequest) {
@@ -85,36 +83,10 @@ export async function POST(request: NextRequest) {
   }
 
   if (body.action === "preview") {
-    let thankYouVideoSignedUrl: string | null = null
-    let athleteFirstNameForThankYou: string | null = null
-    const previewSessionId = typeof body.sessionId === "string" ? body.sessionId.trim() : ""
-    if (previewSessionId) {
-      if (!previewSessionId.startsWith("cs_")) {
-        return NextResponse.json({ error: "sessionId must be a Stripe Checkout Session id (cs_…)." }, { status: 400 })
-      }
-      const stripeSecret = process.env.STRIPE_SECRET_KEY
-      if (!stripeSecret?.trim()) {
-        return NextResponse.json({ error: "STRIPE_SECRET_KEY not set" }, { status: 500 })
-      }
-      const stripe = new Stripe(stripeSecret)
-      let session: Stripe.Checkout.Session
-      try {
-        session = await stripe.checkout.sessions.retrieve(previewSessionId)
-      } catch {
-        return NextResponse.json({ error: "Could not load this Checkout session from Stripe." }, { status: 400 })
-      }
-      const admin = createAdminClient()
-      const extras = await thankYouVideoAckFieldsFromFayettevillePaidSession(admin, session)
-      thankYouVideoSignedUrl = extras.thankYouVideoSignedUrl
-      athleteFirstNameForThankYou = extras.athleteFirstNameForThankYou
-    }
-
     const { html, text, subject, from } = buildNcuDonationAcknowledgmentHtml({
       firstName,
       amountCents,
       donationDateIso,
-      thankYouVideoSignedUrl,
-      athleteFirstNameForThankYou,
     })
     return NextResponse.json({
       ok: true,
@@ -173,18 +145,12 @@ export async function POST(request: NextRequest) {
   }
 
   const admin = createAdminClient()
-  const { thankYouVideoSignedUrl, athleteFirstNameForThankYou } = await thankYouVideoAckFieldsFromFayettevillePaidSession(
-    admin,
-    session,
-  )
 
   const send = await sendNcuDonationAcknowledgmentEmail({
     to: recipientEmail,
     firstName,
     amountCents,
     donationDateIso,
-    thankYouVideoSignedUrl,
-    athleteFirstNameForThankYou,
   })
 
   if (!send.success) {

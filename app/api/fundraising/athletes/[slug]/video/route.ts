@@ -18,8 +18,6 @@ import {
 const MAX_VIDEO_BYTES = 100 * 1024 * 1024
 const MAX_THUMB_BYTES = 5 * 1024 * 1024
 
-type Kind = "fundraising" | "thankyou"
-
 export async function POST(request: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   const { slug: slugRaw } = await params
   const slug = normalizeFundraisingProfileSlug(slugRaw)
@@ -41,9 +39,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   } catch {
     return NextResponse.json({ error: "Expected multipart form" }, { status: 400 })
   }
-
-  const kindRaw = form.get("kind")
-  const kind: Kind = kindRaw === "thankyou" ? "thankyou" : "fundraising"
 
   const videoFile = form.get("video")
   if (!(videoFile instanceof File) || videoFile.size < 1) {
@@ -91,15 +86,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     )
   }
 
-  const videoPath = fundraisingVideoObjectPath(athleteId, ext, kind)
-  const thumbPath = fundraisingVideoThumbnailPath(athleteId, kind)
+  const videoPath = fundraisingVideoObjectPath(athleteId, ext)
+  const thumbPath = fundraisingVideoThumbnailPath(athleteId)
 
-  const oldVideoPath =
-    kind === "fundraising" ? profile.fundraising_video_url?.trim() || null : profile.thankyou_video_url?.trim() || null
-  const oldThumbPath =
-    kind === "fundraising"
-      ? profile.fundraising_video_thumbnail_url?.trim() || null
-      : profile.thankyou_video_thumbnail_url?.trim() || null
+  const oldVideoPath = profile.fundraising_video_url?.trim() || null
+  const oldThumbPath = profile.fundraising_video_thumbnail_url?.trim() || null
 
   const videoBuf = Buffer.from(await videoFile.arrayBuffer())
 
@@ -134,13 +125,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const patch: Record<string, unknown> = {
     updated_at: new Date().toISOString(),
-  }
-  if (kind === "fundraising") {
-    patch.fundraising_video_url = videoPath
-    patch.fundraising_video_thumbnail_url = thumbPathToStore
-  } else {
-    patch.thankyou_video_url = videoPath
-    patch.thankyou_video_thumbnail_url = thumbPathToStore
+    fundraising_video_url: videoPath,
+    fundraising_video_thumbnail_url: thumbPathToStore,
   }
 
   const { error: dbErr } = await admin.from("athlete_fundraising_profiles").update(patch).eq("id", profile.id)
@@ -157,10 +143,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   return NextResponse.json({
     ok: true,
-    fundraising_video_url: kind === "fundraising" ? videoPath : profile.fundraising_video_url,
-    fundraising_video_thumbnail_url: kind === "fundraising" ? thumbPathToStore : profile.fundraising_video_thumbnail_url,
-    thankyou_video_url: kind === "thankyou" ? videoPath : profile.thankyou_video_url,
-    thankyou_video_thumbnail_url: kind === "thankyou" ? thumbPathToStore : profile.thankyou_video_thumbnail_url,
+    fundraising_video_url: videoPath,
+    fundraising_video_thumbnail_url: thumbPathToStore,
   })
 }
 
@@ -178,9 +162,6 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
-
-  const u = new URL(request.url)
-  const kind: Kind = u.searchParams.get("kind") === "thankyou" ? "thankyou" : "fundraising"
 
   const admin = createAdminClient()
   const entries = await getFundraisingAthleteEntries(admin)
@@ -205,19 +186,13 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     )
   }
 
-  const videoPath = kind === "fundraising" ? profile.fundraising_video_url?.trim() : profile.thankyou_video_url?.trim()
-  const thumbPath =
-    kind === "fundraising"
-      ? profile.fundraising_video_thumbnail_url?.trim()
-      : profile.thankyou_video_thumbnail_url?.trim()
+  const videoPath = profile.fundraising_video_url?.trim()
+  const thumbPath = profile.fundraising_video_thumbnail_url?.trim()
 
-  const patch: Record<string, unknown> = { updated_at: new Date().toISOString() }
-  if (kind === "fundraising") {
-    patch.fundraising_video_url = null
-    patch.fundraising_video_thumbnail_url = null
-  } else {
-    patch.thankyou_video_url = null
-    patch.thankyou_video_thumbnail_url = null
+  const patch: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+    fundraising_video_url: null,
+    fundraising_video_thumbnail_url: null,
   }
 
   const { error: dbErr } = await admin.from("athlete_fundraising_profiles").update(patch).eq("id", profile.id)

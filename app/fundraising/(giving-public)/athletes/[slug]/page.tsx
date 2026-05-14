@@ -393,8 +393,6 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
               checkoutLive={checkoutLive}
               fundraisingVideoPath={profile?.fundraising_video_url ?? null}
               fundraisingThumbPath={profile?.fundraising_video_thumbnail_url ?? null}
-              thankyouVideoPath={profile?.thankyou_video_url ?? null}
-              thankyouThumbPath={profile?.thankyou_video_thumbnail_url ?? null}
             />
             {fundraisingVideoSignedUrl ? (
               <div className="mt-8">

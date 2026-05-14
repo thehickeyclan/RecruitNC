@@ -5,7 +5,6 @@ import {
   sendNcuDonationAcknowledgmentEmail,
 } from "@/lib/email/ncu-donation-acknowledgment"
 import { recordFundraisingLedgerSpartanCheckout } from "@/lib/fundraising/ledger"
-import { thankYouVideoAckFieldsFromFayettevillePaidSession } from "@/lib/fundraising/checkout-session-thank-you-video-ack"
 import { notifyHouseholdOfFundraisingGiftIfEligible } from "@/lib/fundraising/notify-household-of-fundraising-gift"
 import { stripeSpartanCampaignMetadataMatchesRequested } from "@/lib/fundraising/campaign-registry"
 import { deriveCheckoutAttributionFromStripeSession } from "@/lib/spartan-donation-checkout-attribution"
@@ -57,18 +56,11 @@ export async function sendFayettevilleDonationAutoAckIfEligible(
   const firstName = firstNameFromDonorName(donorName)
   const donationDateIso = new Date(session.created * 1000).toISOString()
 
-  const { thankYouVideoSignedUrl, athleteFirstNameForThankYou } = await thankYouVideoAckFieldsFromFayettevillePaidSession(
-    admin,
-    session,
-  )
-
   const send = await sendNcuDonationAcknowledgmentEmail({
     to,
     firstName,
     amountCents,
     donationDateIso,
-    thankYouVideoSignedUrl,
-    athleteFirstNameForThankYou,
   })
   if (!send.success) {
     console.error("[spartan-fayetteville-auto-ack] resend send failed", session.id, send.error)
