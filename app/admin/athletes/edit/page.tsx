@@ -11,6 +11,7 @@ import { updateAthleteAction } from "@/lib/athlete-actions"
 import { AdminCollegeCommitmentWizard } from "@/components/admin-college-commitment-wizard"
 import { ContactFormSections } from "./contact-form-sections"
 import { ContactCrmHistory } from "./contact-crm-history"
+import { ContactMessagingTab } from "./contact-messaging-tab"
 import {
   ArrowLeft,
   Sparkles,
@@ -422,6 +423,19 @@ export default function EditAthletePage() {
             athleteFundraising={fundraisingData}
           />
         </div>
+
+        {/* Messaging Section */}
+        {athlete && (athlete.contactEmail || athlete.phone) && (
+          <div className="mt-8">
+            <ContactMessagingTab
+              contactId={id}
+              contactType="athlete"
+              contactName={athlete.name || `${athlete.firstName} ${athlete.lastName}`.trim() || "Athlete"}
+              contactEmail={athlete.contactEmail}
+              contactPhone={athlete.phone}
+            />
+          </div>
+        )}
       </main>
 
       {/* College commitment wizard */}
