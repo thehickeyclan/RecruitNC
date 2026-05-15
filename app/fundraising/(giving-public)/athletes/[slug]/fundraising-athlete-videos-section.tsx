@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation"
 import { useCallback, useRef, useState } from "react"
 import { Loader2, Trash2, Video } from "lucide-react"
+import { createBrowserClient } from "@/lib/supabase/client"
+import { FUNDRAISING_VIDEOS_BUCKET } from "@/lib/fundraising/fundraising-video-storage"
 
 type Props = {
   fundraisingSlug: string
@@ -78,6 +80,8 @@ export function FundraisingAthleteVideosSection({
 
   const slugEnc = encodeURIComponent(fundraisingSlug)
   const api = `/api/fundraising/athletes/${slugEnc}/video`
+  const signedApi = `/api/fundraising/athletes/${slugEnc}/video-signed`
+  const commitApi = `/api/fundraising/athletes/${slugEnc}/video-commit`
 
   const upload = useCallback(
     async (file: File) => {
@@ -87,20 +91,68 @@ export function FundraisingAthleteVideosSection({
         setErr("Video must be 100MB or smaller.")
         return
       }
+      const mime = (file.type || "application/octet-stream").split(";")[0]!.trim().toLowerCase()
       setBusy(true)
-      setProgress(10)
+      setProgress(8)
       try {
         const thumb = await thumbnailBlobFromVideoFile(file)
-        const form = new FormData()
-        form.set("video", file)
-        if (thumb) {
-          form.set("thumbnail", new File([thumb], "fundraising-thumb.jpg", { type: "image/jpeg" }))
+        setProgress(22)
+        const signedRes = await fetch(signedApi, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            mime,
+            videoSize: file.size,
+            hasThumbnail: thumb != null,
+          }),
+        })
+        const signedData = await signedRes.json().catch(() => ({}))
+        if (!signedRes.ok) {
+          setErr(typeof signedData.error === "string" ? signedData.error : "Upload failed")
+          return
         }
-        setProgress(45)
-        const res = await fetch(api, { method: "POST", body: form, credentials: "include" })
-        const data = await res.json().catch(() => ({}))
-        if (!res.ok) {
-          setErr(typeof data.error === "string" ? data.error : "Upload failed")
+        const bucket = typeof signedData.bucket === "string" ? signedData.bucket : FUNDRAISING_VIDEOS_BUCKET
+        const v = signedData.video as { path?: string; token?: string } | undefined
+        const videoContentType =
+          typeof signedData.videoContentType === "string" ? signedData.videoContentType : mime || "video/mp4"
+        if (!v?.path || !v?.token) {
+          setErr("Upload failed")
+          return
+        }
+        const supabase = createBrowserClient()
+        setProgress(40)
+        const { error: vErr } = await supabase.storage.from(bucket).uploadToSignedUrl(v.path, v.token, file, {
+          contentType: videoContentType,
+        })
+        if (vErr) {
+          setErr(vErr.message || "Video upload failed")
+          return
+        }
+        setProgress(70)
+        let thumbPath: string | null = null
+        const t = signedData.thumbnail as { path?: string; token?: string } | null | undefined
+        if (thumb != null && t?.path && t.token) {
+          const thumbFile = new File([thumb], "fundraising-thumb.jpg", { type: "image/jpeg" })
+          const { error: tErr } = await supabase.storage.from(bucket).uploadToSignedUrl(t.path, t.token, thumbFile, {
+            contentType: "image/jpeg",
+          })
+          if (tErr) {
+            setErr(tErr.message || "Thumbnail upload failed")
+            return
+          }
+          thumbPath = t.path
+        }
+        setProgress(90)
+        const commitRes = await fetch(commitApi, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ videoPath: v.path, thumbnailPath: thumbPath }),
+        })
+        const commitData = await commitRes.json().catch(() => ({}))
+        if (!commitRes.ok) {
+          setErr(typeof commitData.error === "string" ? commitData.error : "Could not save video")
           return
         }
         setProgress(100)
@@ -113,7 +165,7 @@ export function FundraisingAthleteVideosSection({
         setProgress(null)
       }
     },
-    [api, router],
+    [signedApi, commitApi, router],
   )
 
   const remove = useCallback(async () => {
