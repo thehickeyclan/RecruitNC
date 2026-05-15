@@ -369,22 +369,20 @@ export default function EditAthletePage() {
       </main>
 
       {/* College commitment wizard */}
-      <AdminCollegeCommitmentWizard
-        open={commitmentWizardOpen}
-        onOpenChange={setCommitmentWizardOpen}
-        athleteId={id}
-        athleteName={displayName}
-        onSuccess={(data) => {
-          setAthlete((prev: any) => ({
-            ...prev,
-            college: data.collegeName,
-            college_id: data.collegeId,
-            commitmentdate: data.commitmentDate,
-            recruiting_status: "Committed",
-          }))
-          toast({ title: "Success", description: "College commitment saved!" })
-        }}
-      />
+      {athlete && (
+        <AdminCollegeCommitmentWizard
+          open={commitmentWizardOpen}
+          onOpenChange={setCommitmentWizardOpen}
+          athleteId={id}
+          athlete={athlete}
+          headlineDraft={editableHeadline}
+          bioDraft={editableBio}
+          onSaved={(data) => {
+            setAthlete(data)
+            toast({ title: "Success", description: "College commitment saved!" })
+          }}
+        />
+      )}
     </div>
   )
 }
