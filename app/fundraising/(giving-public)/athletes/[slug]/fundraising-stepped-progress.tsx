@@ -1,7 +1,7 @@
 /**
  * Stepped fundraising progress - gamified milestone visualization.
+ * Mobile-first design optimized for iPhone (90% of users).
  * Each tier "unlocks" as donations accumulate, creating a sense of achievement.
- * Clean, professional aesthetic inspired by premium sports brands.
  */
 
 "use client"
@@ -12,7 +12,7 @@ import {
   milestonesCentsForGoal,
   resolvedGoalCents,
 } from "@/lib/fundraising/milestone-trail"
-import { Trophy, Star, Target, Flame, Crown } from "lucide-react"
+import { Trophy, Star, Target, Flame, Crown, Check } from "lucide-react"
 
 type Props = {
   raisedCents: number
@@ -47,23 +47,23 @@ export function FundraisingSteppedProgress({ raisedCents, goalCents, athleteLabe
       : 100
 
   return (
-    <div className="mt-8 rounded-xl border border-[#C8A94A]/25 bg-gradient-to-b from-[#0B2545]/70 to-[#061224]/90 px-4 py-5 sm:px-6 sm:py-6">
-      {/* Header */}
-      <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+    <div className="mt-6 rounded-xl border border-[#C8A94A]/25 bg-gradient-to-b from-[#0B2545]/70 to-[#061224]/90 px-4 py-5">
+      {/* Header - stacked on mobile */}
+      <div className="flex flex-col gap-1">
         <h2 className="font-[family-name:var(--font-fundraising-display)] text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]">
           Support Journey
         </h2>
-        <p className="text-[11px] text-white/45">
+        <p className="text-xs text-white/50">
           {completedTiers} of {totalTiers} milestones unlocked
         </p>
       </div>
 
-      {/* Main stats */}
-      <div className="mt-4 flex items-baseline gap-2">
-        <span className="font-[family-name:var(--font-fundraising-display)] text-3xl font-black tabular-nums text-white">
+      {/* Main stats - large touch-friendly display */}
+      <div className="mt-4 flex flex-col">
+        <span className="font-[family-name:var(--font-fundraising-display)] text-4xl font-black tabular-nums text-white">
           {formatUsdWhole(raisedCents)}
         </span>
-        <span className="text-sm text-white/50">
+        <span className="mt-1 text-sm text-white/50">
           {hasCustomGoal ? (
             <>of {formatUsdWhole(goalCents)} goal</>
           ) : showOwnerHints ? (
@@ -74,100 +74,106 @@ export function FundraisingSteppedProgress({ raisedCents, goalCents, athleteLabe
         </span>
       </div>
 
-      {/* Overall progress bar */}
-      <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
+      {/* Overall progress bar - thicker for mobile visibility */}
+      <div className="mt-4 h-3 overflow-hidden rounded-full bg-white/10">
         <div
           className="h-full rounded-full bg-gradient-to-r from-[#C8A94A] to-[#d4b75c] transition-[width] duration-700 ease-out"
           style={{ width: `${overallProgress}%` }}
         />
       </div>
-      <p className="mt-1.5 text-right text-[11px] font-medium tabular-nums text-[#C8A94A]">{overallProgress}%</p>
+      <p className="mt-2 text-right text-xs font-semibold tabular-nums text-[#C8A94A]">{overallProgress}% complete</p>
 
-      {/* Stepped milestones */}
-      <div className="mt-6">
-        <div className="flex items-stretch justify-between gap-1">
-          {milestones.map((cent, idx) => {
-            const isCompleted = raisedCents >= cent
-            const isCurrent = idx === currentTierIndex
-            const isLocked = idx > currentTierIndex
-            const Icon = TIER_ICONS[idx % TIER_ICONS.length]
-            const tierLabel = TIER_LABELS[idx % TIER_LABELS.length]
+      {/* Milestones - vertical stack on mobile for better touch targets */}
+      <div className="mt-6 flex flex-col gap-3">
+        {milestones.map((cent, idx) => {
+          const isCompleted = raisedCents >= cent
+          const isCurrent = idx === currentTierIndex
+          const Icon = TIER_ICONS[idx % TIER_ICONS.length]
+          const tierLabel = TIER_LABELS[idx % TIER_LABELS.length]
 
-            return (
+          return (
+            <div
+              key={cent}
+              className={`flex items-center gap-4 rounded-lg border px-4 py-3 transition-all ${
+                isCompleted
+                  ? "border-[#C8A94A]/40 bg-[#C8A94A]/10"
+                  : isCurrent
+                    ? "border-[#C8A94A]/30 bg-white/5"
+                    : "border-white/10 bg-white/[0.02]"
+              }`}
+            >
+              {/* Icon circle - 44px minimum touch target */}
               <div
-                key={cent}
-                className={`group relative flex flex-1 flex-col items-center ${
-                  idx < milestones.length - 1 ? "after:absolute after:left-[calc(50%+16px)] after:top-5 after:h-[2px] after:w-[calc(100%-32px)] after:content-['']" : ""
-                } ${
+                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 ${
                   isCompleted
-                    ? "after:bg-[#C8A94A]"
+                    ? "border-[#C8A94A] bg-[#C8A94A] text-[#061224]"
                     : isCurrent
-                      ? "after:bg-gradient-to-r after:from-[#C8A94A] after:to-white/15"
-                      : "after:bg-white/10"
+                      ? "border-[#C8A94A] bg-[#C8A94A]/20 text-[#C8A94A]"
+                      : "border-white/20 bg-white/5 text-white/30"
                 }`}
               >
-                {/* Tier circle */}
-                <div
-                  className={`relative z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all duration-300 ${
-                    isCompleted
-                      ? "border-[#C8A94A] bg-[#C8A94A] text-[#061224] shadow-[0_0_20px_rgba(200,169,74,0.4)]"
-                      : isCurrent
-                        ? "border-[#C8A94A] bg-[#C8A94A]/20 text-[#C8A94A]"
-                        : "border-white/20 bg-white/5 text-white/30"
-                  }`}
-                >
-                  <Icon className="h-5 w-5" strokeWidth={isCompleted ? 2.5 : 2} />
+                {isCompleted ? (
+                  <Check className="h-5 w-5" strokeWidth={3} />
+                ) : (
+                  <Icon className="h-5 w-5" strokeWidth={2} />
+                )}
+              </div>
+
+              {/* Tier info */}
+              <div className="min-w-0 flex-1">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span
+                    className={`text-sm font-bold ${
+                      isCompleted ? "text-[#C8A94A]" : isCurrent ? "text-white" : "text-white/40"
+                    }`}
+                  >
+                    {tierLabel}
+                  </span>
+                  <span
+                    className={`text-sm font-semibold tabular-nums ${
+                      isCompleted ? "text-[#C8A94A]" : isCurrent ? "text-white/80" : "text-white/35"
+                    }`}
+                  >
+                    {formatUsdWhole(cent)}
+                  </span>
                 </div>
-
-                {/* Amount label */}
                 <p
-                  className={`mt-2 text-center text-[10px] font-bold tabular-nums uppercase tracking-wide ${
-                    isCompleted ? "text-[#C8A94A]" : isCurrent ? "text-white/80" : "text-white/35"
+                  className={`mt-0.5 text-xs ${
+                    isCompleted ? "text-emerald-400" : isCurrent ? "text-[#C8A94A]/80" : "text-white/30"
                   }`}
                 >
-                  {formatUsdWhole(cent)}
-                </p>
-
-                {/* Tier name - show on hover/focus or when current */}
-                <p
-                  className={`mt-0.5 text-center text-[9px] uppercase tracking-wider transition-opacity ${
-                    isCompleted
-                      ? "text-emerald-400/80"
-                      : isCurrent
-                        ? "text-[#C8A94A]/80"
-                        : "text-white/25"
-                  }`}
-                >
-                  {isCompleted ? "Unlocked" : isCurrent ? "Next" : tierLabel}
+                  {isCompleted ? "Unlocked" : isCurrent ? "In progress" : "Locked"}
                 </p>
               </div>
-            )
-          })}
-        </div>
+            </div>
+          )
+        })}
       </div>
 
       {/* Current tier progress (if not all complete) */}
       {currentTierIndex < totalTiers && (
-        <div className="mt-6 rounded-lg border border-white/10 bg-black/20 px-4 py-3">
+        <div className="mt-5 rounded-lg border border-white/10 bg-black/25 px-4 py-4">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-xs text-white/60">
-              <span className="font-semibold text-white/80">Next milestone:</span>{" "}
-              <span className="tabular-nums text-[#C8A94A]">{formatUsdWhole(nextMilestone)}</span>
+            <p className="text-sm text-white/70">
+              Next: <span className="font-semibold tabular-nums text-[#C8A94A]">{formatUsdWhole(nextMilestone)}</span>
             </p>
-            <p className="text-[11px] font-medium tabular-nums text-white/50">{tierProgress}% there</p>
+            <p className="text-sm font-semibold tabular-nums text-white/60">{tierProgress}%</p>
           </div>
-          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
             <div
               className="h-full rounded-full bg-gradient-to-r from-[#0d9488] to-[#4ade80] transition-[width] duration-500"
               style={{ width: `${tierProgress}%` }}
             />
           </div>
+          <p className="mt-2 text-xs text-white/40">
+            {formatUsdWhole(nextMilestone - raisedCents)} to go
+          </p>
         </div>
       )}
 
       {/* All milestones complete celebration */}
       {completedTiers === totalTiers && (
-        <div className="mt-6 rounded-lg border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-center">
+        <div className="mt-5 rounded-lg border border-emerald-400/30 bg-emerald-500/10 px-4 py-4 text-center">
           <p className="text-sm font-semibold text-emerald-300">
             Goal reached! Thank you to everyone who supported {labelForHints}.
           </p>
@@ -176,24 +182,21 @@ export function FundraisingSteppedProgress({ raisedCents, goalCents, athleteLabe
 
       {/* Footer hint */}
       {showOwnerHints ? (
-        <p className="mt-5 text-center text-[11px] leading-snug text-white/40">
+        <p className="mt-5 text-center text-xs leading-relaxed text-white/40">
           {hasCustomGoal ? (
             <>
-              Milestones are based on <strong className="text-white/55">{labelForHints}&apos;s goal</strong> of{" "}
-              <span className="tabular-nums text-white/55">{formatUsdWhole(goalCents)}</span>. Each tier unlocks as
-              donations accumulate.
+              Milestones based on {labelForHints}&apos;s goal of{" "}
+              <span className="tabular-nums text-white/55">{formatUsdWhole(goalCents)}</span>.
             </>
           ) : (
             <>
-              Set <strong className="text-white/55">{labelForHints}&apos;s goal</strong> above to customize milestones.
-              Currently showing a{" "}
-              <span className="tabular-nums text-white/55">{formatUsdWhole(DEFAULT_FUNNEL_GOAL_CENTS)}</span> sample.
+              Set {labelForHints}&apos;s goal above to customize milestones.
             </>
           )}
         </p>
       ) : (
-        <p className="mt-5 text-center text-[11px] leading-snug text-white/45">
-          Help {labelForHints} unlock the next milestone. Every gift moves the journey forward.
+        <p className="mt-5 text-center text-xs leading-relaxed text-white/45">
+          Help {labelForHints} unlock the next milestone.
         </p>
       )}
     </div>

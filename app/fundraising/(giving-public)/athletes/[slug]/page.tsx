@@ -20,7 +20,6 @@ import { FundraisingAthleteQrCard } from "./fundraising-athlete-qr-card"
 import { FundraisingAthleteEmbeddedCheckout } from "./fundraising-athlete-embedded-checkout"
 import { FundraisingAthleteGoalSection } from "./fundraising-athlete-goal"
 import { FundraisingAthleteMessageSection } from "./fundraising-athlete-message"
-import { FundraisingMilestoneFunnel } from "./fundraising-milestone-funnel"
 import { FundraisingSteppedProgress } from "./fundraising-stepped-progress"
 import { FundraisingOwnerPanel } from "./fundraising-owner-panel"
 import { FundraisingAdminAssignmentPanel } from "./fundraising-admin-assignment-panel"
@@ -504,16 +503,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
                 </p>
               </div>
             </div>
-            {/* NEW: Stepped progress visualization (horizontal milestone tiers) */}
             <FundraisingSteppedProgress
-              raisedCents={stats.raisedCents}
-              goalCents={goalCents}
-              athleteLabel={displayName}
-              showOwnerHints={showOwnerHints && checkoutLive}
-            />
-
-            {/* ORIGINAL: Vertical milestone trail - keeping for comparison */}
-            <FundraisingMilestoneFunnel
               raisedCents={stats.raisedCents}
               goalCents={goalCents}
               athleteLabel={displayName}
