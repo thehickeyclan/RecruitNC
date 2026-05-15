@@ -433,6 +433,7 @@ export default function EditAthletePage() {
               contactName={athlete.name || `${athlete.firstName} ${athlete.lastName}`.trim() || "Athlete"}
               contactEmail={athlete.contactEmail}
               contactPhone={athlete.phone}
+              linkedUserId={linkedUserId}
             />
           </div>
         )}
