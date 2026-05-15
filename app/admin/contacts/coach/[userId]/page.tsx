@@ -575,7 +575,7 @@ export default function CoachContactPage({ params }: { params: Promise<{ userId:
         {profile && (profile.email || profile.cell_phone) && (
           <div className="mt-8">
             <ContactMessagingTab
-              contactId={userId}
+              contactId={resolvedParams.userId}
               contactType="coach"
               contactName={profile.full_name || `${profile.first_name || ""} ${profile.last_name || ""}`.trim() || "Coach"}
               contactEmail={profile.email}
@@ -586,7 +586,7 @@ export default function CoachContactPage({ params }: { params: Promise<{ userId:
 
         {/* Activity & Logins Section */}
         <div className="mt-8">
-          <ContactActivityTab userId={userId} />
+          <ContactActivityTab userId={resolvedParams.userId} />
         </div>
       </main>
     </div>

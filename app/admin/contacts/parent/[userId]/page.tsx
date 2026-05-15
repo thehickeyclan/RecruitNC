@@ -563,7 +563,7 @@ export default function ParentContactPage({ params }: { params: Promise<{ userId
         {profile && (profile.email || profile.cell_phone) && (
           <div className="mt-8">
             <ContactMessagingTab
-              contactId={userId}
+              contactId={resolvedParams.userId}
               contactType="parent"
               contactName={profile.full_name || `${profile.first_name || ""} ${profile.last_name || ""}`.trim() || "Parent"}
               contactEmail={profile.email}
@@ -574,7 +574,7 @@ export default function ParentContactPage({ params }: { params: Promise<{ userId
 
         {/* Activity & Logins Section */}
         <div className="mt-8">
-          <ContactActivityTab userId={userId} />
+          <ContactActivityTab userId={resolvedParams.userId} />
         </div>
       </main>
     </div>
