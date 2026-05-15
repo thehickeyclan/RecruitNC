@@ -128,25 +128,33 @@ export async function POST(request: NextRequest) {
     sendResult = smsOk ? { success: true } : { success: false, error: "SMS delivery failed" }
   }
 
-  // Log the message in database
-  try {
-    await admin.from("crm_contact_messages").insert({
-      contact_id: contactId,
-      contact_type: contactType,
-      sent_by_user_id: auth.user.id,
-      channel,
-      direction: "outbound",
-      subject: channel === "email" ? (subject?.trim() || null) : null,
-      body: body.trim().slice(0, 10000),
-      recipient_email: channel === "email" ? recipientEmail : null,
-      recipient_phone: channel === "sms" ? recipientPhone : null,
-      status: sendResult.success ? "sent" : "failed",
-      external_message_id: sendResult.messageId || null,
-      created_at: new Date().toISOString(),
-    })
-  } catch (logErr) {
-    // Don't fail the request if logging fails, but warn
-    console.warn("[admin/contacts/message] Failed to log message:", logErr)
+  // Log email messages to existing admin_email_threads/messages tables
+  if (channel === "email" && sendResult.success && payload.recipientUserId) {
+    try {
+      // Create or find existing thread for this recipient
+      const emailSubject = subject?.trim() || "Message from RecruitNC"
+      const { data: thread, error: threadErr } = await admin
+        .from("admin_email_threads")
+        .insert({
+          recipient_user_id: payload.recipientUserId,
+          subject: emailSubject,
+          created_by_admin_id: auth.user.id,
+        })
+        .select("id")
+        .single()
+
+      if (!threadErr && thread?.id) {
+        // Add message to thread
+        await admin.from("admin_email_messages").insert({
+          thread_id: thread.id,
+          direction: "outbound",
+          body_text: body.trim().slice(0, 100000),
+          resend_sent_message_id: sendResult.messageId || null,
+        })
+      }
+    } catch (logErr) {
+      console.warn("[admin/contacts/message] Failed to log email thread:", logErr)
+    }
   }
 
   if (!sendResult.success) {
