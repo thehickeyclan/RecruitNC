@@ -36,6 +36,7 @@ export default function EditAthletePage() {
   const [commitmentWizardOpen, setCommitmentWizardOpen] = useState(false)
   const [crmData, setCrmData] = useState<any>(null)
   const [linkedUserId, setLinkedUserId] = useState<string | null>(null)
+  const [fundraisingData, setFundraisingData] = useState<any>(null)
   const router = useRouter()
   const { toast } = useToast()
 
@@ -75,6 +76,17 @@ export default function EditAthletePage() {
           } catch (e) {
             console.error("[v0] CRM data fetch failed:", e)
           }
+        }
+
+        // Fetch athlete-specific fundraising data (by athlete_id, not user_id)
+        try {
+          const fundRes = await fetch(`/api/admin/athletes/${encodeURIComponent(id)}/fundraising`, { credentials: "include" })
+          const fundResult = await fundRes.json().catch(() => ({}))
+          if (fundRes.ok && fundResult.success) {
+            setFundraisingData(fundResult.data)
+          }
+        } catch (e) {
+          console.error("[v0] Fundraising data fetch failed:", e)
         }
       } catch (error) {
         console.error("Error fetching athlete:", error)
@@ -407,6 +419,7 @@ export default function EditAthletePage() {
               profile: crmData?.profile?.ok ? crmData.profile.data : undefined,
             }}
             linkedUserId={linkedUserId}
+            athleteFundraising={fundraisingData}
           />
         </div>
       </main>

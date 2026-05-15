@@ -4,6 +4,38 @@ import { useState } from "react"
 import { ChevronDown, ChevronRight, Package, CreditCard, Users, Heart, User, Calendar, Clock, DollarSign, CheckCircle, XCircle, AlertCircle } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 
+type GiftRow = {
+  created_at: string
+  donorLabel: string
+  amountCents: number
+  campaignLabel: string
+}
+
+type AthleteFundraisingData = {
+  profile: {
+    slug: string
+    checkout_live: boolean
+    campaign_goal_cents: number | null
+    total_raised_cents: number | null
+  } | null
+  fundraisingCode: string | null
+  athleteSlug: string | null
+  fundraisingPageUrl: string | null
+  stats: {
+    raisedCents: number
+    giftCount: number
+    avgGiftCents: number | null
+  } | null
+  wallet: {
+    raisedCents: number
+    spentCents: number
+    reservedCents: number
+    availableCents: number
+  } | null
+  gifts: GiftRow[]
+  expenseRequests: ExpenseRequestRow[]
+}
+
 type CrmHistoryData = {
   orders?: { rows: OrderRow[]; note?: string }
   blueMemberships?: BlueMembershipRow[]
@@ -88,6 +120,7 @@ type AuthSummary = {
 type Props = {
   data: CrmHistoryData
   linkedUserId?: string | null
+  athleteFundraising?: AthleteFundraisingData | null
 }
 
 function formatCurrency(cents: number | null | undefined): string {
@@ -170,7 +203,7 @@ function EmptyState({ message }: { message: string }) {
   return <p className="py-4 text-center text-sm text-white/40">{message}</p>
 }
 
-export function ContactCrmHistory({ data, linkedUserId }: Props) {
+export function ContactCrmHistory({ data, linkedUserId, athleteFundraising }: Props) {
   const orders = data.orders?.rows || []
   const memberships = data.blueMemberships || []
   const nationalTeam = data.nationalTeamRegistrations || []
@@ -181,8 +214,16 @@ export function ContactCrmHistory({ data, linkedUserId }: Props) {
   const auth = data.auth
   const profile = data.profile
 
+  // Athlete-specific fundraising data
+  const athFund = athleteFundraising
+  const gifts = athFund?.gifts || []
+  const athExpenses = athFund?.expenseRequests || []
+
   // Calculate subscription count (all programs)
   const subscriptionCount = memberships.length + nationalTeam.length + dropIns.length + signups.length
+  
+  // Calculate fundraising count
+  const fundraisingCount = (athFund ? 1 : 0) + gifts.length + athExpenses.length
 
   return (
     <div className="space-y-4">
@@ -341,13 +382,123 @@ export function ContactCrmHistory({ data, linkedUserId }: Props) {
       </CollapsibleSection>
 
       {/* Fundraising Section */}
-      <CollapsibleSection title="Fundraising" icon={Heart} count={fundraising.length + expenses.length}>
-        {fundraising.length === 0 && expenses.length === 0 ? (
+      <CollapsibleSection title="Fundraising" icon={Heart} count={fundraisingCount} defaultOpen={!!athFund}>
+        {!athFund && fundraising.length === 0 && expenses.length === 0 ? (
           <EmptyState message="No fundraising activity" />
         ) : (
           <div className="space-y-4">
-            {/* Fundraising Wallets */}
-            {fundraising.length > 0 && (
+            {/* Athlete Fundraising Summary */}
+            {athFund && (
+              <div>
+                {/* Link to Fundraising Page */}
+                {athFund.fundraisingPageUrl && (
+                  <a
+                    href={athFund.fundraisingPageUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mb-4 flex items-center justify-between rounded-lg bg-[#C8A94A]/20 px-4 py-3 hover:bg-[#C8A94A]/30 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Heart className="h-5 w-5 text-[#C8A94A]" />
+                      <span className="font-medium text-white">View Fundraising Page</span>
+                    </div>
+                    <span className="text-xs text-white/60">{athFund.fundraisingCode || athFund.athleteSlug}</span>
+                  </a>
+                )}
+
+                {/* Wallet Summary */}
+                {athFund.wallet && (
+                  <div className="rounded-lg bg-white/5 px-4 py-4 mb-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[#C8A94A] mb-3">Digital Wallet</p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-white/50 text-xs">Total Raised</p>
+                        <p className="text-2xl font-bold text-emerald-400">{formatCurrency(athFund.stats?.raisedCents || athFund.wallet.raisedCents)}</p>
+                      </div>
+                      <div>
+                        <p className="text-white/50 text-xs">Available</p>
+                        <p className="text-2xl font-bold text-white">{formatCurrency(athFund.wallet.availableCents)}</p>
+                      </div>
+                    </div>
+                    <div className="mt-3 grid grid-cols-3 gap-2 text-xs border-t border-white/10 pt-3">
+                      <div>
+                        <p className="text-white/50">Gifts</p>
+                        <p className="font-medium text-white">{athFund.stats?.giftCount || gifts.length}</p>
+                      </div>
+                      <div>
+                        <p className="text-white/50">Spent</p>
+                        <p className="font-medium text-white">{formatCurrency(athFund.wallet.spentCents)}</p>
+                      </div>
+                      <div>
+                        <p className="text-white/50">Reserved</p>
+                        <p className="font-medium text-white">{formatCurrency(athFund.wallet.reservedCents)}</p>
+                      </div>
+                    </div>
+                    {athFund.profile?.campaign_goal_cents && (
+                      <div className="mt-3 pt-3 border-t border-white/10">
+                        <div className="flex justify-between text-xs mb-1">
+                          <span className="text-white/50">Goal Progress</span>
+                          <span className="text-white/70">{Math.round(((athFund.stats?.raisedCents || 0) / athFund.profile.campaign_goal_cents) * 100)}%</span>
+                        </div>
+                        <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+                          <div 
+                            className="h-full rounded-full bg-[#C8A94A]" 
+                            style={{ width: `${Math.min(100, ((athFund.stats?.raisedCents || 0) / athFund.profile.campaign_goal_cents) * 100)}%` }}
+                          />
+                        </div>
+                        <p className="mt-1 text-xs text-white/50">Goal: {formatCurrency(athFund.profile.campaign_goal_cents)}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Recent Donations */}
+                {gifts.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[#C8A94A] mb-2">Recent Donations ({gifts.length})</p>
+                    <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                      {gifts.slice(0, 20).map((gift, idx) => (
+                        <div key={idx} className="flex items-center justify-between rounded-lg bg-white/5 px-3 py-2">
+                          <div>
+                            <p className="text-sm font-medium text-white">{gift.donorLabel}</p>
+                            <p className="text-xs text-white/50">{gift.campaignLabel} · {formatDate(gift.created_at)}</p>
+                          </div>
+                          <p className="text-sm font-semibold text-emerald-400">{formatCurrency(gift.amountCents)}</p>
+                        </div>
+                      ))}
+                    </div>
+                    {gifts.length > 20 && (
+                      <p className="text-center text-xs text-white/40 pt-2">+ {gifts.length - 20} more donations</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Expense Requests (Athlete-specific) */}
+                {athExpenses.length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[#C8A94A] mb-2">Expense Requests</p>
+                    <div className="space-y-2">
+                      {athExpenses.slice(0, 5).map((e) => (
+                        <div key={e.id} className="flex items-center justify-between rounded-lg bg-white/5 px-3 py-2">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-medium text-white">{formatCurrency(e.amount_cents)}</p>
+                              <StatusBadge status={e.status} />
+                            </div>
+                            <p className="mt-1 text-xs text-white/50">
+                              {e.expense_type || "Expense"} · {formatDate(e.created_at)}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Legacy/User-based Fundraising Wallets (from CRM hub) */}
+            {!athFund && fundraising.length > 0 && (
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-[#C8A94A] mb-2">Digital Wallets</p>
                 <div className="space-y-2">
@@ -377,8 +528,8 @@ export function ContactCrmHistory({ data, linkedUserId }: Props) {
               </div>
             )}
 
-            {/* Expense Requests */}
-            {expenses.length > 0 && (
+            {/* Legacy Expense Requests (from CRM hub) */}
+            {!athFund && expenses.length > 0 && (
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-[#C8A94A] mb-2">Expense Requests</p>
                 <div className="space-y-2">
