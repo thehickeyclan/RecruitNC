@@ -12,9 +12,10 @@ interface AthleteImageProps {
   photoUrl?: string | null
   name?: string
   size?: "sm" | "md" | "lg"
+  fill?: boolean
 }
 
-export function AthleteImage({ src, alt, className, width, height, photoUrl, name, size = "md" }: AthleteImageProps) {
+export function AthleteImage({ src, alt, className, width, height, photoUrl, name, size = "md", fill = false }: AthleteImageProps) {
   const [error, setError] = useState(false)
   const fallbackSrc = "/wrestler-silhouette.png"
 
@@ -38,6 +39,19 @@ export function AthleteImage({ src, alt, className, width, height, photoUrl, nam
   const dimensions = sizeMap[size] || sizeMap.md
   const finalWidth = width || dimensions.width
   const finalHeight = height || dimensions.height
+
+  if (fill) {
+    return (
+      <Image
+        src={error ? fallbackSrc : finalSrc}
+        alt={alt || name || "Athlete"}
+        fill
+        className={className}
+        onError={handleError}
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+      />
+    )
+  }
 
   return (
     <Image
