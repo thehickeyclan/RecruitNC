@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { updateAthleteAction } from "@/lib/athlete-actions"
 import { AdminCollegeCommitmentWizard } from "@/components/admin-college-commitment-wizard"
 import { ContactFormSections } from "./contact-form-sections"
+import { ContactCrmHistory } from "./contact-crm-history"
 import {
   ArrowLeft,
   Sparkles,
@@ -33,6 +34,8 @@ export default function EditAthletePage() {
   const [editableBio, setEditableBio] = useState("")
   const [editableHeadline, setEditableHeadline] = useState("")
   const [commitmentWizardOpen, setCommitmentWizardOpen] = useState(false)
+  const [crmData, setCrmData] = useState<any>(null)
+  const [linkedUserId, setLinkedUserId] = useState<string | null>(null)
   const router = useRouter()
   const { toast } = useToast()
 
@@ -59,6 +62,20 @@ export default function EditAthletePage() {
         setAthlete(result.data)
         setEditableBio(result.data.bio || "")
         setEditableHeadline(result.data.bio_headline || "")
+
+        // Fetch CRM data if athlete has a linked user
+        if (result.data.claimed_by_user_id) {
+          setLinkedUserId(result.data.claimed_by_user_id)
+          try {
+            const crmRes = await fetch(`/api/admin/crm/users/${encodeURIComponent(result.data.claimed_by_user_id)}`, { credentials: "include" })
+            const crmResult = await crmRes.json().catch(() => ({}))
+            if (crmRes.ok && crmResult) {
+              setCrmData(crmResult)
+            }
+          } catch (e) {
+            console.error("[v0] CRM data fetch failed:", e)
+          }
+        }
       } catch (error) {
         console.error("Error fetching athlete:", error)
         setError("Failed to load athlete data. Please try again.")
@@ -366,6 +383,32 @@ export default function EditAthletePage() {
           editableBio={editableBio}
           editableHeadline={editableHeadline}
         />
+
+        {/* CRM History Section */}
+        <div className="mt-8">
+          <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-white">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#C8A94A]/20">
+              <svg className="h-4 w-4 text-[#C8A94A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </span>
+            History & Activity
+          </h2>
+          <ContactCrmHistory
+            data={{
+              orders: crmData?.orders?.ok ? crmData.orders.data : undefined,
+              blueMemberships: crmData?.blueMemberships?.ok ? crmData.blueMemberships.data : undefined,
+              nationalTeamRegistrations: crmData?.nationalTeamRegistrations?.ok ? crmData.nationalTeamRegistrations.data : undefined,
+              dropInRequests: crmData?.dropInRequests?.ok ? crmData.dropInRequests.data : undefined,
+              blueSignups: crmData?.blueSignups?.ok ? crmData.blueSignups.data : undefined,
+              fundraisingWallet: crmData?.fundraisingWallet?.ok ? crmData.fundraisingWallet.data : undefined,
+              athleteExpenseRequests: crmData?.athleteExpenseRequests?.ok ? crmData.athleteExpenseRequests.data : undefined,
+              auth: crmData?.auth?.ok ? crmData.auth.data : undefined,
+              profile: crmData?.profile?.ok ? crmData.profile.data : undefined,
+            }}
+            linkedUserId={linkedUserId}
+          />
+        </div>
       </main>
 
       {/* College commitment wizard */}
