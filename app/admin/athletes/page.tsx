@@ -4,14 +4,20 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/components/ui/use-toast"
-import { useRouter } from "next/navigation"
-import AthleteImage from "@/components/athlete-image"
+import { Plus, Upload, Copy, Users, TrendingUp, GraduationCap, Trophy, Loader2, X, AlertTriangle } from "lucide-react"
+import { AthleteCard } from "./athlete-card"
+import { AthleteFilters } from "./athlete-filters"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 export default function AthletesPage() {
   const [athletes, setAthletes] = useState<any[]>([])
@@ -22,72 +28,42 @@ export default function AthletesPage() {
   const [yearFilter, setYearFilter] = useState<string>("all")
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [bulkDeleting, setBulkDeleting] = useState(false)
-  const [duplicateGroups, setDuplicateGroups] = useState<{ name: string; graduationYear: string; count: number; athletes: { id: string; name: string; highschool: string | null }[] }[]>([])
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [athleteToDelete, setAthleteToDelete] = useState<{ id: string; name: string } | null>(null)
+  const [duplicateGroups, setDuplicateGroups] = useState<any[]>([])
   const [duplicatesLoading, setDuplicatesLoading] = useState(false)
-  const [duplicatesExpanded, setDuplicatesExpanded] = useState(false)
+  const [showDuplicates, setShowDuplicates] = useState(false)
   const { toast } = useToast()
-  const router = useRouter()
 
   useEffect(() => {
     async function fetchAthletes() {
       try {
         setLoading(true)
         setError(null)
-
-        console.log("[v0] Admin athletes page: Making API call to /api/admin/athletes")
         const response = await fetch("/api/admin/athletes")
-        console.log("[v0] Admin athletes page: API response status:", response.status)
-
+        
         if (!response.ok) {
-          throw new Error(`Failed to fetch athletes: ${response.status} ${response.statusText}`)
+          throw new Error(`Failed to fetch athletes: ${response.status}`)
         }
 
         const data = await response.json()
-        console.log("[v0] Admin athletes page: Raw API response:", data)
-        console.log("[v0] Admin athletes page: Response type:", typeof data, "Is array:", Array.isArray(data))
-
-        // Handle the wrapped response format
         let athletesArray = data
 
-        // Check if the response is wrapped with an "athletes" key
-        if (data && typeof data === "object" && data.athletes && Array.isArray(data.athletes)) {
+        if (data?.athletes && Array.isArray(data.athletes)) {
           athletesArray = data.athletes
-        } else if (data && typeof data === "object" && !Array.isArray(data)) {
-          // If it's a wrapped response like {success: true, data: [...]}
-          if (data.data && Array.isArray(data.data)) {
-            athletesArray = data.data
-          } else if (data.success === false) {
-            throw new Error(data.error || "Failed to fetch athletes")
-          } else {
-            console.error("Unexpected response format:", data)
-            setError("Invalid data format received from server")
-            return
-          }
+        } else if (data?.data && Array.isArray(data.data)) {
+          athletesArray = data.data
         }
 
         if (!Array.isArray(athletesArray)) {
-          console.error("Expected array of athletes but got:", data)
-          setAthletes([])
-          setError("Invalid data format received from server")
-        } else {
-          console.log(`[v0] Admin athletes page: Successfully loaded ${athletesArray.length} athletes`)
-
-          const tobin = athletesArray.find((athlete) => athlete.name && athlete.name.toLowerCase().includes("tobin"))
-          if (tobin) {
-            console.log("[v0] Admin athletes page: Found Tobin McNair:", tobin)
-          } else {
-            console.log("[v0] Admin athletes page: Tobin McNair NOT found in results")
-            console.log(
-              "[v0] Admin athletes page: All athlete names:",
-              athletesArray.map((a) => a.name),
-            )
-          }
-
-          setAthletes(athletesArray)
+          setError("Invalid data format received")
+          return
         }
-      } catch (error) {
-        console.error("[v0] Admin athletes page: Error fetching athletes:", error)
-        setError("Failed to load athletes. Please try again later.")
+
+        setAthletes(athletesArray)
+      } catch (err) {
+        console.error("Error fetching athletes:", err)
+        setError("Failed to load athletes. Please try again.")
         toast({
           title: "Error",
           description: "Failed to load athletes",
@@ -105,10 +81,10 @@ export default function AthletesPage() {
     setDuplicatesLoading(true)
     try {
       const res = await fetch("/api/admin/athletes/duplicates")
-      if (!res.ok) throw new Error("Failed to load duplicates")
+      if (!res.ok) throw new Error("Failed")
       const data = await res.json()
       setDuplicateGroups(data.groups ?? [])
-      setDuplicatesExpanded(true)
+      setShowDuplicates(true)
     } catch {
       toast({ title: "Error", description: "Could not load duplicate report", variant: "destructive" })
     } finally {
@@ -116,31 +92,25 @@ export default function AthletesPage() {
     }
   }
 
-  const handleDelete = async (id: string, name: string) => {
-    if (window.confirm(`Are you sure you want to delete ${name}?`)) {
-      try {
-        const response = await fetch(`/api/athletes/${id}`, {
-          method: "DELETE",
-        })
+  const handleDeleteClick = (id: string, name: string) => {
+    setAthleteToDelete({ id, name })
+    setDeleteDialogOpen(true)
+  }
 
-        if (!response.ok) {
-          throw new Error(`Failed to delete athlete: ${response.status} ${response.statusText}`)
-        }
+  const handleDeleteConfirm = async () => {
+    if (!athleteToDelete) return
 
-        setAthletes((prev) => prev.filter((athlete) => athlete.id !== id))
+    try {
+      const response = await fetch(`/api/athletes/${athleteToDelete.id}`, { method: "DELETE" })
+      if (!response.ok) throw new Error("Failed to delete")
 
-        toast({
-          title: "Success",
-          description: `${name} has been deleted`,
-        })
-      } catch (error) {
-        console.error("Error deleting athlete:", error)
-        toast({
-          title: "Error",
-          description: "Failed to delete athlete",
-          variant: "destructive",
-        })
-      }
+      setAthletes((prev) => prev.filter((a) => a.id !== athleteToDelete.id))
+      toast({ title: "Deleted", description: `${athleteToDelete.name} has been removed` })
+    } catch {
+      toast({ title: "Error", description: "Failed to delete athlete", variant: "destructive" })
+    } finally {
+      setDeleteDialogOpen(false)
+      setAthleteToDelete(null)
     }
   }
 
@@ -153,44 +123,28 @@ export default function AthletesPage() {
     })
   }
 
-  const selectAllFiltered = () => {
-    setSelectedIds(new Set(filteredAthletes.map((a) => a.id)))
-  }
-
+  const selectAllFiltered = () => setSelectedIds(new Set(filteredAthletes.map((a) => a.id)))
   const clearSelection = () => setSelectedIds(new Set())
 
   const handleBulkDelete = async () => {
     const count = selectedIds.size
     if (count === 0) return
-    const message = `Permanently delete ${count} athlete${count === 1 ? "" : "s"}? This cannot be undone.`
-    if (!window.confirm(message)) return
+    if (!window.confirm(`Delete ${count} athlete${count === 1 ? "" : "s"}? This cannot be undone.`)) return
+    
     setBulkDeleting(true)
     let deleted = 0
-    let failed = 0
-    try {
-      for (const id of selectedIds) {
-        try {
-          const res = await fetch(`/api/athletes/${id}`, { method: "DELETE" })
-          if (res.ok) deleted++
-          else failed++
-        } catch {
-          failed++
-        }
-      }
-      setAthletes((prev) => prev.filter((a) => !selectedIds.has(a.id)))
-      setSelectedIds(new Set())
-      if (failed === 0) {
-        toast({ title: "Deleted", description: `${deleted} athlete${deleted === 1 ? "" : "s"} deleted.` })
-      } else {
-        toast({
-          title: "Bulk delete finished",
-          description: `Deleted ${deleted}, failed ${failed}. Refresh the list to see current state.`,
-          variant: "destructive",
-        })
-      }
-    } finally {
-      setBulkDeleting(false)
+    
+    for (const id of selectedIds) {
+      try {
+        const res = await fetch(`/api/athletes/${id}`, { method: "DELETE" })
+        if (res.ok) deleted++
+      } catch {}
     }
+    
+    setAthletes((prev) => prev.filter((a) => !selectedIds.has(a.id)))
+    setSelectedIds(new Set())
+    setBulkDeleting(false)
+    toast({ title: "Deleted", description: `${deleted} athlete${deleted === 1 ? "" : "s"} removed` })
   }
 
   const filteredAthletes = athletes.filter((athlete) => {
@@ -199,317 +153,294 @@ export default function AthletesPage() {
       athlete?.college?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       athlete?.highschool?.toLowerCase().includes(searchTerm.toLowerCase())
 
-    const matchesRecruitingStatus =
+    const matchesStatus =
       recruitingStatusFilter === "all" ||
       athlete?.recruiting_status?.toLowerCase() === recruitingStatusFilter.toLowerCase()
 
     const matchesYear = yearFilter === "all" || athlete?.graduationyear?.toString() === yearFilter
 
-    return matchesSearch && matchesRecruitingStatus && matchesYear
+    return matchesSearch && matchesStatus && matchesYear
   })
 
-  const uniqueRecruitingStatuses = [...new Set(athletes.map((athlete) => athlete?.recruiting_status).filter(Boolean))]
-  const uniqueYears = [...new Set(athletes.map((athlete) => athlete?.graduationyear).filter(Boolean))].sort(
-    (a, b) => b - a,
-  )
+  const uniqueStatuses = [...new Set(athletes.map((a) => a?.recruiting_status).filter(Boolean))]
+  const uniqueYears = [...new Set(athletes.map((a) => a?.graduationyear).filter(Boolean))].sort((a, b) => b - a)
+
+  // Stats calculations
+  const committedCount = athletes.filter((a) => 
+    a?.recruiting_status?.toLowerCase() === "committed" || 
+    a?.recruiting_status?.toLowerCase() === "college athlete"
+  ).length
+  const currentYear = new Date().getFullYear()
+  const currentClassCount = athletes.filter((a) => a?.graduationyear === currentYear || a?.graduationyear === currentYear + 1).length
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* NC United Branded Header */}
-      <div className="bg-gradient-to-r from-[#002147] to-[#003366] text-white shadow-lg">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div className="min-h-screen bg-[#061224]">
+      {/* Header */}
+      <header className="border-b border-white/10 bg-[#061224]">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          {/* Top row */}
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold mb-2">Manage Athletes</h1>
-              <p className="text-blue-200">Admin Dashboard - Athlete Management</p>
+              <h1 className="text-2xl font-bold text-white sm:text-3xl">Athletes</h1>
+              <p className="mt-1 text-sm text-white/50">Manage your athlete directory</p>
             </div>
-            <div className="flex gap-3 flex-wrap">
-              <Button asChild className="bg-[#B31B1B] hover:bg-[#8B1515] text-white">
-                <Link href="/admin/athletes/add">Add Athlete</Link>
+            
+            {/* Actions */}
+            <div className="flex flex-wrap gap-2">
+              <Button asChild className="min-h-[44px] gap-2 bg-[#C8A94A] font-semibold text-[#061224] hover:bg-[#d4b75c]">
+                <Link href="/admin/athletes/add">
+                  <Plus className="h-4 w-4" />
+                  Add Athlete
+                </Link>
               </Button>
-              <Button asChild variant="outline" className="bg-white/15 text-white border-white/60 hover:bg-white/25 hover:border-white">
-                <Link href="/admin/athletes/bulk-import">Bulk Import</Link>
+              <Button 
+                asChild 
+                variant="outline" 
+                className="min-h-[44px] gap-2 border-white/20 bg-transparent text-white hover:bg-white/10"
+              >
+                <Link href="/admin/athletes/bulk-import">
+                  <Upload className="h-4 w-4" />
+                  Import
+                </Link>
               </Button>
               <Button
                 variant="outline"
-                className="bg-white/15 text-white border-white/60 hover:bg-white/25 hover:border-white"
                 onClick={loadDuplicates}
                 disabled={duplicatesLoading}
+                className="min-h-[44px] gap-2 border-white/20 bg-transparent text-white hover:bg-white/10"
               >
-                {duplicatesLoading ? "Loading…" : "Find duplicates"}
+                {duplicatesLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Copy className="h-4 w-4" />}
+                Duplicates
               </Button>
             </div>
           </div>
-          
-          {/* Stats Summary */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold">{athletes.length}</div>
-              <div className="text-blue-100 text-sm">Total Athletes</div>
+
+          {/* Stats row */}
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#C8A94A]/20">
+                  <Users className="h-5 w-5 text-[#C8A94A]" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold tabular-nums text-white">{athletes.length}</p>
+                  <p className="text-xs text-white/50">Total Athletes</p>
+                </div>
+              </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold">{filteredAthletes.length}</div>
-              <div className="text-blue-100 text-sm">Filtered</div>
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/20">
+                  <Trophy className="h-5 w-5 text-emerald-400" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold tabular-nums text-white">{committedCount}</p>
+                  <p className="text-xs text-white/50">Committed</p>
+                </div>
+              </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold">{uniqueRecruitingStatuses.length}</div>
-              <div className="text-blue-100 text-sm">Status Types</div>
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/20">
+                  <GraduationCap className="h-5 w-5 text-blue-400" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold tabular-nums text-white">{currentClassCount}</p>
+                  <p className="text-xs text-white/50">{currentYear}/{currentYear + 1} Class</p>
+                </div>
+              </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold">{uniqueYears.length}</div>
-              <div className="text-blue-100 text-sm">Grad Years</div>
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-500/20">
+                  <TrendingUp className="h-5 w-5 text-purple-400" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold tabular-nums text-white">{uniqueStatuses.length}</p>
+                  <p className="text-xs text-white/50">Status Types</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
-        <Card className="mb-6 shadow-lg border-t-4 border-t-[#B31B1B]">
-          <CardHeader className="bg-gradient-to-r from-gray-50 to-white">
-            <CardTitle className="text-[#002147]">Search & Filter Athletes</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-          <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Input
-              placeholder="Search athletes..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-
-            <Select value={recruitingStatusFilter} onValueChange={setRecruitingStatusFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by recruiting status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Recruiting Status</SelectItem>
-                {uniqueRecruitingStatuses.map((status) => (
-                  <SelectItem key={status} value={status}>
-                    {status}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={yearFilter} onValueChange={setYearFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by graduation year" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Years</SelectItem>
-                {uniqueYears.map((year) => (
-                  <SelectItem key={year} value={year.toString()}>
-                    {year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+      {/* Main content */}
+      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        {/* Duplicates banner */}
+        {showDuplicates && duplicateGroups.length > 0 && (
+          <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-400" />
+                <div>
+                  <h3 className="font-semibold text-amber-400">
+                    {duplicateGroups.length} Potential Duplicate{duplicateGroups.length !== 1 ? "s" : ""} Found
+                  </h3>
+                  <p className="mt-1 text-sm text-white/60">
+                    Athletes with the same name and graduation year. Review and merge or remove duplicates.
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {duplicateGroups.slice(0, 5).map((g) => (
+                      <Badge 
+                        key={g.name + g.graduationYear} 
+                        variant="outline"
+                        className="border-amber-500/30 bg-amber-500/10 text-amber-400"
+                      >
+                        {g.name} ({g.graduationYear}) × {g.count}
+                      </Badge>
+                    ))}
+                    {duplicateGroups.length > 5 && (
+                      <Badge variant="outline" className="border-white/20 text-white/50">
+                        +{duplicateGroups.length - 5} more
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowDuplicates(false)}
+                className="shrink-0 text-white/50 hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
+        )}
 
-          {loading ? (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B31B1B] mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading athletes...</p>
-            </div>
-          ) : error ? (
-            <div className="text-center py-12">
-              <p className="text-red-600 font-semibold">{error}</p>
-            </div>
-          ) : filteredAthletes.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-gray-500 font-medium">
-                {searchTerm || recruitingStatusFilter !== "all" || yearFilter !== "all"
-                  ? "No athletes found matching your filters"
-                  : "No athletes found"}
-              </div>
-            </div>
-          ) : null}
-        </CardContent>
-      </Card>
+        {/* Filters */}
+        <div className="mb-6">
+          <AthleteFilters
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            recruitingStatusFilter={recruitingStatusFilter}
+            onRecruitingStatusChange={setRecruitingStatusFilter}
+            yearFilter={yearFilter}
+            onYearChange={setYearFilter}
+            uniqueRecruitingStatuses={uniqueStatuses}
+            uniqueYears={uniqueYears}
+            totalCount={athletes.length}
+            filteredCount={filteredAthletes.length}
+          />
+        </div>
 
-      {duplicatesExpanded && duplicateGroups.length > 0 && (
-        <Card className="mb-6 shadow-lg border-t-4 border-t-amber-500">
-          <CardHeader className="bg-amber-50">
-            <CardTitle className="text-[#002147]">Possible duplicates ({duplicateGroups.length} groups)</CardTitle>
-            <p className="text-sm text-gray-600">
-              Same name + graduation year. Review and delete or merge duplicates; keep one profile per athlete.
+        {/* Selection bar */}
+        {selectedIds.size > 0 && (
+          <div className="mb-6 flex flex-wrap items-center gap-3 rounded-xl border border-[#C8A94A]/30 bg-[#C8A94A]/10 p-4">
+            <span className="text-sm font-medium text-[#C8A94A]">
+              {selectedIds.size} selected
+            </span>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={selectAllFiltered}
+                className="h-9 border-white/20 bg-transparent text-white hover:bg-white/10"
+              >
+                Select all ({filteredAthletes.length})
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearSelection}
+                className="h-9 border-white/20 bg-transparent text-white hover:bg-white/10"
+              >
+                Clear
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleBulkDelete}
+                disabled={bulkDeleting}
+                className="h-9 bg-red-600 hover:bg-red-700"
+              >
+                {bulkDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Delete selected
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Loading state */}
+        {loading && (
+          <div className="flex flex-col items-center justify-center py-20">
+            <Loader2 className="h-10 w-10 animate-spin text-[#C8A94A]" />
+            <p className="mt-4 text-white/50">Loading athletes...</p>
+          </div>
+        )}
+
+        {/* Error state */}
+        {error && !loading && (
+          <div className="flex flex-col items-center justify-center py-20">
+            <AlertTriangle className="h-10 w-10 text-red-400" />
+            <p className="mt-4 font-medium text-red-400">{error}</p>
+            <Button
+              variant="outline"
+              onClick={() => window.location.reload()}
+              className="mt-4 border-white/20 text-white hover:bg-white/10"
+            >
+              Try again
+            </Button>
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!loading && !error && filteredAthletes.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-20">
+            <Users className="h-12 w-12 text-white/20" />
+            <p className="mt-4 text-lg font-medium text-white/50">
+              {searchTerm || recruitingStatusFilter !== "all" || yearFilter !== "all"
+                ? "No athletes match your filters"
+                : "No athletes yet"}
             </p>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <ul className="space-y-3">
-              {duplicateGroups.map((g) => (
-                <li key={g.name + g.graduationYear} className="flex flex-wrap items-center gap-2 border-b pb-2 last:border-0">
-                  <span className="font-medium">{g.name}</span>
-                  <Badge variant="secondary">{g.graduationYear}</Badge>
-                  <span className="text-sm text-gray-500">{g.count} profiles</span>
-                  {g.athletes.map((a) => (
-                    <Button key={a.id} asChild variant="outline" size="sm">
-                      <Link href={`/admin/athletes/edit?id=${encodeURIComponent(a.id)}`}>
-                        Edit {a.highschool ? `(${a.highschool})` : a.id.slice(0, 8)}
-                      </Link>
-                    </Button>
-                  ))}
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      )}
+            {!searchTerm && recruitingStatusFilter === "all" && yearFilter === "all" && (
+              <Button asChild className="mt-4 bg-[#C8A94A] text-[#061224] hover:bg-[#d4b75c]">
+                <Link href="/admin/athletes/add">Add your first athlete</Link>
+              </Button>
+            )}
+          </div>
+        )}
 
-      {!loading && !error && filteredAthletes.length > 0 && (
-        <Card className="shadow-lg border-t-4 border-t-[#B31B1B]">
-          <CardHeader className="bg-gradient-to-r from-[#002147] to-[#003366] text-white">
-            <CardTitle className="flex items-center justify-between flex-wrap gap-2">
-              <span>Athletes Results</span>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm font-normal text-blue-200">{filteredAthletes.length} athletes</span>
-                {selectedIds.size > 0 && (
-                  <>
-                    <span className="text-sm text-gray-600">({selectedIds.size} selected)</span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={clearSelection}
-                      disabled={bulkDeleting}
-                    >
-                      Clear selection
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      className="bg-[#B31B1B] hover:bg-[#8B1515]"
-                      onClick={handleBulkDelete}
-                      disabled={bulkDeleting}
-                    >
-                      {bulkDeleting ? "Deleting…" : `Delete selected (${selectedIds.size})`}
-                    </Button>
-                  </>
-                )}
-              </div>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-gray-50 hover:bg-gray-50">
-                    <TableHead className="w-10 font-semibold text-gray-700">
-                      <Checkbox
-                        checked={filteredAthletes.length > 0 && filteredAthletes.every((a) => selectedIds.has(a.id))}
-                        onCheckedChange={(checked) => (checked ? selectAllFiltered() : clearSelection())}
-                        aria-label="Select all on page"
-                      />
-                    </TableHead>
-                    <TableHead className="font-semibold text-gray-700">Photo</TableHead>
-                    <TableHead className="font-semibold text-gray-700">Name</TableHead>
-                    <TableHead className="font-semibold text-gray-700">High School</TableHead>
-                    <TableHead className="font-semibold text-gray-700">State</TableHead>
-                    <TableHead className="font-semibold text-gray-700">College</TableHead>
-                    <TableHead className="font-semibold text-gray-700">Division</TableHead>
-                    <TableHead className="font-semibold text-gray-700">Weight Class</TableHead>
-                    <TableHead className="font-semibold text-gray-700">Graduation Year</TableHead>
-                    <TableHead className="font-semibold text-gray-700">Recruiting Status</TableHead>
-                    <TableHead className="font-semibold text-gray-700">Commitment Date</TableHead>
-                    <TableHead className="font-semibold text-gray-700">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredAthletes.map((athlete) => (
-                    <TableRow key={athlete.id}>
-                      <TableCell>
-                        <Checkbox
-                          checked={selectedIds.has(athlete.id)}
-                          onCheckedChange={() => toggleSelection(athlete.id)}
-                          aria-label={`Select ${athlete.name || athlete.id}`}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <AthleteImage
-                          photoUrl={athlete.photourl}
-                          name={athlete.name}
-                          size="sm"
-                          alt={`${athlete.name || "Athlete"} photo`}
-                        />
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        <a href={`/view-profile?id=${encodeURIComponent(athlete.id)}`} className="text-[#002147] hover:underline">
-                          {athlete.name || "N/A"}
-                        </a>
-                      </TableCell>
-                      <TableCell>{athlete.highschool || "N/A"}</TableCell>
-                      <TableCell>{athlete.state || athlete.state_abbreviation || athlete.hometown_state || "N/A"}</TableCell>
-                      <TableCell>{athlete.college || "N/A"}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="bg-[#002147] text-white border-[#002147]">
-                          {athlete.division || "N/A"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="font-medium">{athlete.weightclass || "N/A"}</TableCell>
-                      <TableCell className="font-medium">{athlete.graduationyear || "N/A"}</TableCell>
-                      <TableCell>
-                        <Badge
-                          className={
-                            athlete.recruiting_status?.toLowerCase() === "committed" || 
-                            athlete.recruiting_status?.toLowerCase() === "college athlete"
-                              ? "bg-green-600 text-white hover:bg-green-700"
-                              : athlete.recruiting_status?.toLowerCase() === "uncommitted"
-                              ? "bg-yellow-500 text-white hover:bg-yellow-600"
-                              : "bg-gray-500 text-white hover:bg-gray-600"
-                          }
-                        >
-                          {athlete.recruiting_status || "N/A"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {athlete.commitmentdate ? new Date(athlete.commitmentdate).toLocaleDateString() : "N/A"}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-2">
-                          <Button asChild variant="outline" size="sm" className="hover:bg-[#002147] hover:text-white">
-                            <a href={`/view-profile?id=${encodeURIComponent(athlete.id)}`}>View profile</a>
-                          </Button>
-                          <Button asChild variant="outline" size="sm" className="hover:bg-[#002147] hover:text-white">
-                            <Link href={`/admin/athletes/edit?id=${encodeURIComponent(athlete.id)}`}>Edit</Link>
-                          </Button>
-                          <Button asChild variant="outline" size="sm" className="hover:bg-[#002147] hover:text-white">
-                            <Link href={`/admin/athletes/images/${athlete.id}`}>Images</Link>
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            className="bg-[#B31B1B] hover:bg-[#8B1515]"
-                            onClick={() => handleDelete(athlete.id, athlete.name)}
-                          >
-                            Delete
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+        {/* Athletes grid */}
+        {!loading && !error && filteredAthletes.length > 0 && (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {filteredAthletes.map((athlete) => (
+              <AthleteCard
+                key={athlete.id}
+                athlete={athlete}
+                isSelected={selectedIds.has(athlete.id)}
+                onToggleSelect={toggleSelection}
+                onDelete={handleDeleteClick}
+              />
+            ))}
+          </div>
+        )}
+      </main>
 
-        {/* Debug Info */}
-        <Card className="mt-6 shadow-sm">
-          <CardHeader className="bg-gray-50">
-            <CardTitle className="text-sm text-gray-700">Debug Info</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-sm text-gray-600 space-y-1">
-              <p><span className="font-semibold">Total Athletes:</span> {athletes.length}</p>
-              <p><span className="font-semibold">Filtered Athletes:</span> {filteredAthletes.length}</p>
-              <p><span className="font-semibold">Loading:</span> {loading ? "Yes" : "No"}</p>
-              <p><span className="font-semibold">Error:</span> {error || "None"}</p>
-              <p><span className="font-semibold">Recruiting Status Filter:</span> {recruitingStatusFilter}</p>
-              <p><span className="font-semibold">Year Filter:</span> {yearFilter}</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent className="border-white/10 bg-[#061224] text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Athlete</AlertDialogTitle>
+            <AlertDialogDescription className="text-white/60">
+              Are you sure you want to delete {athleteToDelete?.name}? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="border-white/20 bg-transparent text-white hover:bg-white/10">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
