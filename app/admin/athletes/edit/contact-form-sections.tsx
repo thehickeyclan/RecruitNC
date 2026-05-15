@@ -67,64 +67,67 @@ export function ContactFormSections({ initialData, onSubmit, editableBio, editab
   const [collegeList, setCollegeList] = useState<{ id: string; name: string }[]>([])
   const { toast } = useToast()
 
+  // Ensure we have a valid data object
+  const data = initialData || {}
+
   // Form state
   const [formData, setFormData] = useState({
-    firstName: initialData?.firstName || initialData?.name?.split(" ")[0] || "",
-    lastName: initialData?.lastName || initialData?.name?.split(" ").slice(1).join(" ") || "",
-    gender: initialData?.gender || "",
-    birthdate: initialData?.birthdate ? (initialData.birthdate.includes("T") ? initialData.birthdate.split("T")[0] : initialData.birthdate) : "",
-    graduationYear: initialData?.graduationYear?.toString() || initialData?.graduationyear?.toString() || "",
-    weightClass: initialData?.weightclass || "",
-    collegeWeightClass: initialData?.college_weight_class || "",
-    highSchool: initialData?.highschool || "",
-    highSchoolDivision: initialData?.highSchoolDivision || "",
-    wrestlingClub: initialData?.wrestlingClub || initialData?.wrestling_club || "",
-    location: initialData?.location || "",
+    firstName: data.firstName || data.name?.split(" ")[0] || "",
+    lastName: data.lastName || data.name?.split(" ").slice(1).join(" ") || "",
+    gender: data.gender || "Male",
+    birthdate: data.birthdate ? (data.birthdate.includes("T") ? data.birthdate.split("T")[0] : data.birthdate) : "",
+    graduationYear: data.graduationYear?.toString() || data.graduationyear?.toString() || "",
+    weightClass: data.weightclass || "",
+    collegeWeightClass: data.college_weight_class || "",
+    highSchool: data.highschool || "",
+    highSchoolDivision: data.highSchoolDivision || "",
+    wrestlingClub: data.wrestlingClub || data.wrestling_club || "",
+    location: data.location || "",
     // College
-    college: initialData?.college || "",
-    college_id: initialData?.college_id ?? "",
-    commitmentDate: initialData?.commitmentdate ? new Date(initialData.commitmentdate).toISOString().split("T")[0] : "",
-    recruiting_status: initialData?.recruiting_status || "Uncommitted",
-    prospect_ranking: initialData?.prospect_ranking || "",
+    college: data.college || "",
+    college_id: data.college_id ?? "",
+    commitmentDate: data.commitmentdate ? new Date(data.commitmentdate).toISOString().split("T")[0] : "",
+    recruiting_status: data.recruiting_status || "Uncommitted",
+    prospect_ranking: data.prospect_ranking || "",
     // Media
-    photoUrl: initialData?.photoUrl || initialData?.photourl || "",
-    highlightVideoUrl: initialData?.highlight_video_url || "",
-    floProfileUrl: initialData?.flo_profile_url || "",
-    trackWrestlingProfileUrl: initialData?.track_wrestling_profile_url || "",
+    photoUrl: data.photoUrl || data.photourl || "",
+    highlightVideoUrl: data.highlight_video_url || "",
+    floProfileUrl: data.flo_profile_url || "",
+    trackWrestlingProfileUrl: data.track_wrestling_profile_url || "",
     // Social
-    twitterUrl: initialData?.socialMedia?.twitter || "",
-    instagramUrl: initialData?.socialMedia?.instagram || "",
+    twitterUrl: data.socialMedia?.twitter || "",
+    instagramUrl: data.socialMedia?.instagram || "",
     // Contact
-    contactEmail: initialData?.contactEmail || "",
-    phone: initialData?.phone || "",
+    contactEmail: data.contactEmail || "",
+    phone: data.phone || "",
     // Wrestling stats
-    careerRecord: initialData?.careerRecord || "",
-    achievements: Array.isArray(initialData?.achievements) ? initialData.achievements.join(", ") : "",
-    additional_achievements: initialData?.additional_achievements || "",
-    nationally_ranked_wins: initialData?.nationally_ranked_wins || "",
+    careerRecord: data.careerRecord || "",
+    achievements: Array.isArray(data.achievements) ? data.achievements.join(", ") : "",
+    additional_achievements: data.additional_achievements || "",
+    nationally_ranked_wins: data.nationally_ranked_wins || "",
     // Academics
-    academicGPA: initialData?.academic_gpa?.toString() || "",
-    academicSAT: initialData?.academic_sat?.toString() || "",
-    academicACT: initialData?.academic_act?.toString() || "",
-    academicSummary: initialData?.academic_summary || "",
-    academicInterest: initialData?.academic_interest || "",
+    academicGPA: data.academic_gpa?.toString() || "",
+    academicSAT: data.academic_sat?.toString() || "",
+    academicACT: data.academic_act?.toString() || "",
+    academicSummary: data.academic_summary || "",
+    academicInterest: data.academic_interest || "",
     // Tournament results
-    super_32_2023_record: initialData?.super_32_2023_record || "",
-    super_32_2023_placement: initialData?.super_32_2023_placement || "",
-    super_32_2024_record: initialData?.super_32_2024_record || "",
-    super_32_2024_placement: initialData?.super_32_2024_placement || "",
-    super_32_2025_record: initialData?.super_32_2025_record || "",
-    super_32_2025_placement: initialData?.super_32_2025_placement || "",
-    nhsca_2023_record: initialData?.nhsca_2023_record || "",
-    nhsca_2023_placement: initialData?.nhsca_2023_placement || "",
-    nhsca_2024_record: initialData?.nhsca_2024_record || "",
-    nhsca_2024_placement: initialData?.nhsca_2024_placement || "",
-    nhsca_2025_record: initialData?.nhsca_2025_record || "",
-    nhsca_2025_placement: initialData?.nhsca_2025_placement || "",
-    college_opens_experience: initialData?.college_opens_experience || "",
+    super_32_2023_record: data.super_32_2023_record || "",
+    super_32_2023_placement: data.super_32_2023_placement || "",
+    super_32_2024_record: data.super_32_2024_record || "",
+    super_32_2024_placement: data.super_32_2024_placement || "",
+    super_32_2025_record: data.super_32_2025_record || "",
+    super_32_2025_placement: data.super_32_2025_placement || "",
+    nhsca_2023_record: data.nhsca_2023_record || "",
+    nhsca_2023_placement: data.nhsca_2023_placement || "",
+    nhsca_2024_record: data.nhsca_2024_record || "",
+    nhsca_2024_placement: data.nhsca_2024_placement || "",
+    nhsca_2025_record: data.nhsca_2025_record || "",
+    nhsca_2025_placement: data.nhsca_2025_placement || "",
+    college_opens_experience: data.college_opens_experience || "",
     // Admin
-    featured: initialData?.featured || false,
-    prospect_notes: initialData?.prospect_notes || "",
+    featured: data.featured || false,
+    prospect_notes: data.prospect_notes || "",
   })
 
   useEffect(() => {
@@ -170,8 +173,9 @@ export function ContactFormSections({ initialData, onSubmit, editableBio, editab
     }
   }
 
-  const weightClassOptions = HS_WEIGHT_CLASSES[formData.gender as keyof typeof HS_WEIGHT_CLASSES] || HS_WEIGHT_CLASSES.Male
-  const collegeWeightOptions = COLLEGE_WEIGHT_CLASSES[formData.gender as keyof typeof COLLEGE_WEIGHT_CLASSES] || COLLEGE_WEIGHT_CLASSES.Male
+  const gender = formData.gender || "Male"
+  const weightClassOptions = HS_WEIGHT_CLASSES[gender as keyof typeof HS_WEIGHT_CLASSES] || HS_WEIGHT_CLASSES.Male
+  const collegeWeightOptions = COLLEGE_WEIGHT_CLASSES[gender as keyof typeof COLLEGE_WEIGHT_CLASSES] || COLLEGE_WEIGHT_CLASSES.Male
 
   const sections = [
     {
