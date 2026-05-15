@@ -81,7 +81,7 @@ export async function GET(
       .from("fundraising_ledger_entries")
       .select("*")
       .eq("athlete_id", athleteId)
-      .order("created_at", { ascending: false })
+      .order("occurred_at", { ascending: false })
       .limit(100)
 
     if (walletError) {
