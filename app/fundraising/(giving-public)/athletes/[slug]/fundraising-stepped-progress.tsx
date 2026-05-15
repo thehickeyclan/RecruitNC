@@ -19,12 +19,13 @@ type Props = {
   goalCents?: number | null
   athleteLabel?: string
   showOwnerHints?: boolean
+  giftCount?: number
 }
 
 const TIER_ICONS = [Target, Flame, Star, Trophy, Crown]
 const TIER_LABELS = ["Starter", "Rising", "Strong", "Elite", "Champion"]
 
-export function FundraisingSteppedProgress({ raisedCents, goalCents, athleteLabel, showOwnerHints = false }: Props) {
+export function FundraisingSteppedProgress({ raisedCents, goalCents, athleteLabel, showOwnerHints = false, giftCount }: Props) {
   const goalForFill = resolvedGoalCents(goalCents)
   const milestones = milestonesCentsForGoal(goalForFill)
   const hasCustomGoal = goalCents != null && goalCents > 0
@@ -59,19 +60,29 @@ export function FundraisingSteppedProgress({ raisedCents, goalCents, athleteLabe
       </div>
 
       {/* Main stats - large touch-friendly display */}
-      <div className="mt-4 flex flex-col">
-        <span className="font-[family-name:var(--font-fundraising-display)] text-4xl font-black tabular-nums text-white">
-          {formatUsdWhole(raisedCents)}
-        </span>
-        <span className="mt-1 text-sm text-white/50">
-          {hasCustomGoal ? (
-            <>of {formatUsdWhole(goalCents)} goal</>
-          ) : showOwnerHints ? (
-            <>raised (set a goal above)</>
-          ) : (
-            <>raised</>
-          )}
-        </span>
+      <div className="mt-4 flex items-end justify-between gap-4">
+        <div className="flex flex-col">
+          <span className="font-[family-name:var(--font-fundraising-display)] text-4xl font-black tabular-nums text-white">
+            {formatUsdWhole(raisedCents)}
+          </span>
+          <span className="mt-1 text-sm text-white/50">
+            {hasCustomGoal ? (
+              <>of {formatUsdWhole(goalCents)} goal</>
+            ) : showOwnerHints ? (
+              <>raised (set a goal above)</>
+            ) : (
+              <>raised</>
+            )}
+          </span>
+        </div>
+        {giftCount != null && giftCount > 0 && (
+          <div className="flex flex-col items-end">
+            <span className="font-[family-name:var(--font-fundraising-display)] text-2xl font-black tabular-nums text-white">
+              {giftCount}
+            </span>
+            <span className="text-xs text-white/50">{giftCount === 1 ? "gift" : "gifts"}</span>
+          </div>
+        )}
       </div>
 
       {/* Overall progress bar - thicker for mobile visibility */}

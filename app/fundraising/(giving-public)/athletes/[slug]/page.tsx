@@ -472,44 +472,13 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
         ) : null}
 
         {code && stats && checkoutLive ? (
-          <>
-            <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <div className="rounded-xl border border-white/10 bg-[#0B2545]/70 px-4 py-4">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-[#C8A94A]">Total raised</p>
-                <p className="mt-2 text-lg font-black tabular-nums text-white sm:text-xl">{formatUsdWhole(stats.raisedCents)}</p>
-              </div>
-              <div className="rounded-xl border border-white/10 bg-[#0B2545]/70 px-4 py-4">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-[#C8A94A]">Gifts</p>
-                <p className="mt-2 text-lg font-black tabular-nums text-white sm:text-xl">{stats.giftCount}</p>
-              </div>
-              <div className="rounded-xl border border-white/10 bg-[#0B2545]/70 px-4 py-4">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-[#C8A94A]">Avg gift</p>
-                <p className="mt-2 text-lg font-black tabular-nums text-white sm:text-xl">
-                  {stats.avgGiftCents != null ? formatUsdWhole(stats.avgGiftCents) : "—"}
-                </p>
-              </div>
-              <div className="rounded-xl border border-white/10 bg-[#0B2545]/70 px-4 py-4">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-[#C8A94A]">Gift mix</p>
-                <p className="mt-2 text-xs leading-snug text-white/80">
-                  {stats.payerTypeBreakdownKnown ? (
-                    <>
-                      <span className="font-semibold text-white">{stats.individualGiftCount}</span> individual gifts
-                      <span className="text-white/40"> · </span>
-                      <span className="font-semibold text-white">{stats.organizationGiftCount}</span> from organizations
-                    </>
-                  ) : (
-                    <span className="text-white/50">—</span>
-                  )}
-                </p>
-              </div>
-            </div>
-            <FundraisingSteppedProgress
-              raisedCents={stats.raisedCents}
-              goalCents={goalCents}
-              athleteLabel={displayName}
-              showOwnerHints={showOwnerHints && checkoutLive}
-            />
-          </>
+          <FundraisingSteppedProgress
+            raisedCents={stats.raisedCents}
+            goalCents={goalCents}
+            athleteLabel={displayName}
+            showOwnerHints={showOwnerHints && checkoutLive}
+            giftCount={stats.giftCount}
+          />
         ) : null}
 
         {showFullGivingExperience && managerWalletRow ? (
@@ -577,8 +546,9 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           />
         ) : null}
 
+        {/* QR code hidden on mobile - users don't scan their own screen */}
         {checkoutLive ? (
-          <div className="mt-10 flex justify-center lg:mt-8">
+          <div className="mt-10 hidden justify-center lg:mt-8 lg:flex">
             <FundraisingAthleteQrCard
               qrSrc={athleteQrDataUrl}
               donateUrl={athleteAbsoluteUrl}
