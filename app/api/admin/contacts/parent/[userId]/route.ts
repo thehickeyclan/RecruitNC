@@ -1,4 +1,5 @@
-import { createClient, createServiceClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 import { getCachedAdminCheck } from "@/lib/cached-auth-check"
 
@@ -52,7 +53,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ user
     let loginHistory: { timestamp: string; method: string | null; ip: string | null; userAgent: string | null }[] = []
 
     try {
-      const admin = await createServiceClient()
+      const admin = createAdminClient()
       const { data: authData, error: authError } = await admin.auth.admin.getUserById(userId)
 
       if (!authError && authData?.user) {
