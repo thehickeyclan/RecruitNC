@@ -12,6 +12,7 @@ import { AdminCollegeCommitmentWizard } from "@/components/admin-college-commitm
 import { ContactFormSections } from "./contact-form-sections"
 import { ContactCrmHistory } from "./contact-crm-history"
 import { ContactMessagingTab } from "./contact-messaging-tab"
+import { ContactActivityTab } from "./contact-activity-tab"
 import {
   ArrowLeft,
   Sparkles,
@@ -435,6 +436,13 @@ export default function EditAthletePage() {
               contactPhone={athlete.phone}
               linkedUserId={linkedUserId}
             />
+          </div>
+        )}
+
+        {/* Activity & Logins Section */}
+        {linkedUserId && (
+          <div className="mt-8">
+            <ContactActivityTab userId={linkedUserId} />
           </div>
         )}
       </main>

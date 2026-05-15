@@ -23,6 +23,7 @@ import {
 } from "lucide-react"
 import { AthleteImage } from "@/components/athlete-image"
 import { ContactMessagingTab } from "@/app/admin/athletes/edit/contact-messaging-tab"
+import { ContactActivityTab } from "@/app/admin/athletes/edit/contact-activity-tab"
 
 type CoachProfile = {
   user_id: string
@@ -582,6 +583,11 @@ export default function CoachContactPage({ params }: { params: Promise<{ userId:
             />
           </div>
         )}
+
+        {/* Activity & Logins Section */}
+        <div className="mt-8">
+          <ContactActivityTab userId={userId} />
+        </div>
       </main>
     </div>
   )
