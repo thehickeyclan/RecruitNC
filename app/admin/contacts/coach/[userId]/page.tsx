@@ -22,6 +22,7 @@ import {
   AlertCircle,
 } from "lucide-react"
 import { AthleteImage } from "@/components/athlete-image"
+import { ContactMessagingTab } from "@/app/admin/athletes/edit/contact-messaging-tab"
 
 type CoachProfile = {
   user_id: string
@@ -567,6 +568,19 @@ export default function CoachContactPage({ params }: { params: Promise<{ userId:
               )}
             </div>
           </CollapsibleSection>
+        )}
+
+        {/* Messaging Section */}
+        {profile && (profile.email || profile.cell_phone) && (
+          <div className="mt-8">
+            <ContactMessagingTab
+              contactId={userId}
+              contactType="coach"
+              contactName={profile.full_name || `${profile.first_name || ""} ${profile.last_name || ""}`.trim() || "Coach"}
+              contactEmail={profile.email}
+              contactPhone={profile.cell_phone}
+            />
+          </div>
         )}
       </main>
     </div>

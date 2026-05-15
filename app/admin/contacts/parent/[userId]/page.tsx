@@ -22,6 +22,7 @@ import {
   ExternalLink,
 } from "lucide-react"
 import { AthleteImage } from "@/components/athlete-image"
+import { ContactMessagingTab } from "@/app/admin/athletes/edit/contact-messaging-tab"
 
 type ParentProfile = {
   user_id: string
@@ -556,6 +557,19 @@ export default function ParentContactPage({ params }: { params: Promise<{ userId
             </div>
           )}
         </CollapsibleSection>
+
+        {/* Messaging Section */}
+        {profile && (profile.email || profile.cell_phone) && (
+          <div className="mt-8">
+            <ContactMessagingTab
+              contactId={userId}
+              contactType="parent"
+              contactName={profile.full_name || `${profile.first_name || ""} ${profile.last_name || ""}`.trim() || "Parent"}
+              contactEmail={profile.email}
+              contactPhone={profile.cell_phone}
+            />
+          </div>
+        )}
       </main>
     </div>
   )
