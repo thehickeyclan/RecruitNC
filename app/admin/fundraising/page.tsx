@@ -125,18 +125,18 @@ async function getFundraisingData() {
     .gte("created_at", thirtyDaysAgo.toISOString())
   
   // Calculate NC United Fund directly from DB with credit corrections applied
-  // Step 1: Get all paid donations with their session_id and attribution
+  // Step 1: Get all paid donations (stripe_charge_id is the join key to corrections)
   const { data: allSpartanDonations } = await admin
     .from("spartan_donations")
-    .select("session_id, amount_cents, raw_metadata, fundraising_checkout_surface")
+    .select("stripe_charge_id, amount_cents, raw_metadata, fundraising_checkout_surface")
     .eq("status", "paid")
   
-  // Step 2: Get credit corrections
+  // Step 2: Get credit corrections (session_id = stripe payment intent ID = stripe_charge_id)
   const { data: creditCorrections } = await admin
     .from("spartan_credit_corrections")
     .select("session_id, athlete_code, general_fund")
   
-  // Build a lookup of corrections by session_id
+  // Build a lookup of corrections by session_id (maps to stripe_charge_id)
   const correctionMap = new Map<string, { athlete_code: string | null; general_fund: boolean }>()
   creditCorrections?.forEach((c: { session_id: string; athlete_code: string | null; general_fund: boolean }) => {
     correctionMap.set(c.session_id, c)
@@ -147,19 +147,9 @@ async function getFundraisingData() {
   let athletePageCheckoutCents = 0
   let athletePageCheckoutCount = 0
   
-  // Debug: check data shapes
-  const sampleDonation = allSpartanDonations?.[0]
-  console.log("[v0] allSpartanDonations count:", allSpartanDonations?.length)
-  console.log("[v0] creditCorrections count:", creditCorrections?.length)
-  console.log("[v0] sample donation raw_metadata type:", typeof sampleDonation?.raw_metadata, "value:", JSON.stringify(sampleDonation?.raw_metadata)?.slice(0, 200))
-  
-  // Check how many have general_nc_united attribution
-  let ncuFromAttrib = 0
-  let ncuFromCorrection = 0
-  
-  allSpartanDonations?.forEach((d: { session_id: string; amount_cents: number; raw_metadata: Record<string, unknown> | null; fundraising_checkout_surface: string | null }) => {
+  allSpartanDonations?.forEach((d: { stripe_charge_id: string | null; amount_cents: number; raw_metadata: Record<string, unknown> | null; fundraising_checkout_surface: string | null }) => {
     const cents = d.amount_cents || 0
-    const correction = correctionMap.get(d.session_id)
+    const correction = d.stripe_charge_id ? correctionMap.get(d.stripe_charge_id) : null
     
     // Determine if this donation is NC United fund:
     // - If there's a correction with general_fund=true -> YES (moved TO NCU)
@@ -168,15 +158,12 @@ async function getFundraisingData() {
     if (correction) {
       if (correction.general_fund) {
         ncuFundCents += cents
-        ncuFromCorrection++
       }
-      // If correction has athlete_code, it's athlete-credited (not NCU)
     } else {
       const meta = d.raw_metadata
       const attribution = typeof meta?.fundraising_attribution === 'string' ? meta.fundraising_attribution : ''
       if (attribution === 'general_nc_united') {
         ncuFundCents += cents
-        ncuFromAttrib++
       }
     }
     
@@ -186,8 +173,6 @@ async function getFundraisingData() {
       athletePageCheckoutCount++
     }
   })
-  
-  console.log("[v0] ncuFundCents:", ncuFundCents, "ncuFromAttrib:", ncuFromAttrib, "ncuFromCorrection:", ncuFromCorrection)
   
   const fundraisingStreams = {
     spartanTotal: hubSnapshot.hero.totalRaisedCents,
