@@ -124,15 +124,29 @@ async function getFundraisingData() {
     .like("page_url", "%/fundraising/athletes/%")
     .gte("created_at", thirtyDaysAgo.toISOString())
   
-  // Fundraising streams come from hubSnapshot (Stripe source of truth)
-  // - Spartan Campaign total = hubSnapshot.hero.totalRaisedCents
-  // - NC United fund = hubSnapshot.hero.ncUnitedCommunityFundCents (donations not credited to any athlete)
-  // - Athlete credited = total - NC United fund
+  // Fundraising streams from hubSnapshot (Stripe source of truth)
+  // NC United fund = attribution="general_nc_united" + no athleteCode + no manualCreditName
+  // Athlete credited = has athleteCode (or manualCreditName)
+  //
+  // Athlete page checkouts = fundraising_checkout_surface = 'athlete_page' (WHERE checkout happened)
+  // This is different from WHO gets credit (athleteCode)
+  const { data: athletePageCheckouts } = await admin
+    .from("spartan_donations")
+    .select("amount_cents")
+    .eq("status", "paid")
+    .eq("fundraising_checkout_surface", "athlete_page")
+  
+  const athletePageTotal = athletePageCheckouts?.reduce((sum, d) => sum + (d.amount_cents || 0), 0) || 0
+  const athletePageCount = athletePageCheckouts?.length || 0
+  
   const fundraisingStreams = {
     spartanTotal: hubSnapshot.hero.totalRaisedCents,
     spartanGiftCount: hubSnapshot.hero.giftCount,
     ncuFundCents: hubSnapshot.hero.ncUnitedCommunityFundCents,
-    athleteCreditedCents: hubSnapshot.hero.totalRaisedCents - hubSnapshot.hero.ncUnitedCommunityFundCents
+    athleteCreditedCents: hubSnapshot.hero.totalRaisedCents - hubSnapshot.hero.ncUnitedCommunityFundCents,
+    // Athlete page checkouts (WHERE they checked out, not WHO gets credit)
+    athletePageCheckoutCents: athletePageTotal,
+    athletePageCheckoutCount: athletePageCount,
   }
   
   // Get NC United Fund outflows (awards, guild allocations)

@@ -428,7 +428,7 @@ function ActivationRequestRow({
       <td className="px-4 py-3">
         <code className="rounded bg-gray-100 px-2 py-0.5 text-xs">{request.fundraising_slug}</code>
       </td>
-      <td className="px-4 py-3 text-gray-600">{request.requester_email || "�����������������������"}</td>
+      <td className="px-4 py-3 text-gray-600">{request.requester_email || "�������������������������"}</td>
       <td className="px-4 py-3">
         {status === "pending" && (
           <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800">
@@ -631,6 +631,9 @@ type FundraisingStreams = {
   spartanGiftCount: number
   ncuFundCents: number
   athleteCreditedCents: number
+  // WHERE checkout happened (not WHO gets credit)
+  athletePageCheckoutCents: number
+  athletePageCheckoutCount: number
 }
 
 type NCUnitedFund = {
@@ -849,7 +852,7 @@ export function FundraisingCommandCenter({
                 <div className="h-full bg-[#003366]" style={{ width: `${totalRaised > 0 ? (fundraisingStreams.spartanTotal / totalRaised) * 100 : 0}%` }} />
               </div>
               <p className="text-[10px] text-gray-400">{fundraisingStreams.spartanGiftCount} gifts</p>
-              {/* Sub-breakdown */}
+              {/* Sub-breakdown by WHO gets credit */}
               <div className="mt-2 pl-3 border-l-2 border-gray-200 space-y-1">
                 <div className="flex items-center justify-between text-[10px]">
                   <span className="text-gray-500">Athlete credited</span>
@@ -860,6 +863,15 @@ export function FundraisingCommandCenter({
                   <span className="text-gray-600">{fmtCents(fundraisingStreams.ncuFundCents)}</span>
                 </div>
               </div>
+              {/* Sub-breakdown by WHERE checkout happened */}
+              {fundraisingStreams.athletePageCheckoutCount > 0 && (
+                <div className="mt-2 pt-2 border-t border-gray-100">
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className="text-gray-500">via Athlete Pages</span>
+                    <span className="text-gray-600">{fmtCents(fundraisingStreams.athletePageCheckoutCents)} ({fundraisingStreams.athletePageCheckoutCount})</span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
