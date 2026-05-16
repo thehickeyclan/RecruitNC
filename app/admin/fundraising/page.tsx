@@ -124,27 +124,26 @@ async function getFundraisingData() {
     .like("page_url", "%/fundraising/athletes/%")
     .gte("created_at", thirtyDaysAgo.toISOString())
   
-  // Get fundraising streams breakdown using fundraising_checkout_surface (SOURCE OF TRUTH)
-  // spartan_team_page = Spartan Race checkout
-  // athlete_page = Athlete Page checkout
-  const { data: spartanDonations } = await admin
-    .from("spartan_donations")
-    .select("amount_cents, fundraising_checkout_surface")
-    .eq("status", "paid")
+  // Get fundraising streams breakdown from donations_unified (SOURCE OF TRUTH)
+  // is_race_checkout = true: Spartan Race page checkout
+  // is_race_checkout = false: Athlete Page checkout
+  const { data: unifiedDonations } = await admin
+    .from("donations_unified")
+    .select("amount_cents, is_race_checkout")
+    .eq("is_paid", true)
   
   const fundraisingStreams = {
     spartan: { count: 0, totalCents: 0 },
     athletePages: { count: 0, totalCents: 0 }
   }
   
-  spartanDonations?.forEach((d: { amount_cents: number; fundraising_checkout_surface: string | null }) => {
-    if (d.fundraising_checkout_surface === "athlete_page") {
-      fundraisingStreams.athletePages.count++
-      fundraisingStreams.athletePages.totalCents += d.amount_cents || 0
-    } else {
-      // spartan_team_page, hub_give, training_fund, or any other = Spartan
+  unifiedDonations?.forEach((d: { amount_cents: number; is_race_checkout: boolean }) => {
+    if (d.is_race_checkout) {
       fundraisingStreams.spartan.count++
       fundraisingStreams.spartan.totalCents += d.amount_cents || 0
+    } else {
+      fundraisingStreams.athletePages.count++
+      fundraisingStreams.athletePages.totalCents += d.amount_cents || 0
     }
   })
   
