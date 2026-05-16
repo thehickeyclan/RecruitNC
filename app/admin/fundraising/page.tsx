@@ -1,56 +1,77 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/components/auth-provider"
-import {
-  DollarSign,
-  TrendingUp,
-  Users,
-  Receipt,
-  CheckCircle,
-  Clock,
-  ArrowRight,
-  Gift,
-  Trophy,
-  FileText,
-  Wallet,
-  Download,
-  RefreshCw,
-  AlertCircle,
+import { 
+  AlertTriangle, CheckCircle, Users, DollarSign, Link2, FileText,
+  Loader2, Search, ArrowUpRight, UserPlus, RefreshCw, Zap, 
+  AlertCircle, XCircle, Check, ChevronDown, Receipt, Wallet,
+  Trophy, Gift, Download
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
 
-interface DashboardStats {
-  totalRaised: number
-  totalSpent: number
-  totalAvailable: number
-  totalDonations: number
-  pendingActivations: number
-  pendingReimbursements: number
-  activeCampaigns: number
-  activeAthletePages: number
+type IssueSeverity = "critical" | "warning" | "info"
+type IssueType = 
+  | "no_family" 
+  | "no_parent_linked" 
+  | "no_code" 
+  | "page_inactive" 
+  | "has_donations_no_family"
+
+interface AthleteIssue {
+  athlete_id: string
+  athlete_name: string
+  school: string | null
+  grad_year: number | null
+  issues: {
+    type: IssueType
+    severity: IssueSeverity
+    message: string
+  }[]
+  total_raised_cents: number
+  has_page: boolean
+  page_active: boolean
+  has_family: boolean
+  has_parent: boolean
+  spartan_code: string | null
+  page_slug: string | null
 }
 
-interface RecentDonation {
-  id: string
-  amount: number
-  donor_name: string
-  athlete_name: string | null
-  campaign_name: string | null
-  type: "spartan" | "campaign"
-  created_at: string
+interface HealthStats {
+  total_athletes_with_fundraising: number
+  fully_connected: number
+  needs_attention: number
+  critical_issues: number
+  total_raised_cents: number
 }
 
-export default function FundraisingDashboardPage() {
+const severityConfig = {
+  critical: { color: "bg-red-500", textColor: "text-red-400", icon: XCircle, label: "Critical" },
+  warning: { color: "bg-amber-500", textColor: "text-amber-400", icon: AlertTriangle, label: "Warning" },
+  info: { color: "bg-blue-500", textColor: "text-blue-400", icon: AlertCircle, label: "Info" }
+}
+
+const issueLabels: Record<IssueType, string> = {
+  no_family: "No family assigned",
+  no_parent_linked: "No parent linked",
+  no_code: "No donation code",
+  page_inactive: "Page is inactive",
+  has_donations_no_family: "Has donations but no family"
+}
+
+export default function FundraisingHealthDashboard() {
   const { user, isAdmin, isLoading: authLoading } = useAuth()
   const router = useRouter()
-  const [stats, setStats] = useState<DashboardStats | null>(null)
-  const [recentDonations, setRecentDonations] = useState<RecentDonation[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState("")
+  const [loading, setLoading] = useState(true)
+  const [stats, setStats] = useState<HealthStats | null>(null)
+  const [issues, setIssues] = useState<AthleteIssue[]>([])
+  const [search, setSearch] = useState("")
+  const [severityFilter, setSeverityFilter] = useState<IssueSeverity | "all">("all")
+  const [expandedAthletes, setExpandedAthletes] = useState<Set<string>>(new Set())
+  const [fixing, setFixing] = useState<string | null>(null)
 
   useEffect(() => {
     if (!authLoading && (!user || !isAdmin)) {
@@ -60,417 +81,503 @@ export default function FundraisingDashboardPage() {
 
   useEffect(() => {
     if (user && isAdmin) {
-      fetchDashboardData()
+      fetchHealthData()
     }
   }, [user, isAdmin])
 
-  const fetchDashboardData = async () => {
-    setIsLoading(true)
-    setError("")
+  const fetchHealthData = async () => {
+    setLoading(true)
     try {
-      const [statsRes, donationsRes] = await Promise.all([
-        fetch("/api/admin/fundraising/dashboard-stats"),
-        fetch("/api/admin/fundraising/recent-donations?limit=10"),
-      ])
-
-      if (statsRes.ok) {
-        const statsData = await statsRes.json()
-        setStats(statsData)
+      const res = await fetch("/api/admin/fundraising/health-check")
+      if (res.ok) {
+        const data = await res.json()
+        setStats(data.stats)
+        setIssues(data.issues)
       }
-
-      if (donationsRes.ok) {
-        const donationsData = await donationsRes.json()
-        setRecentDonations(donationsData.donations || [])
-      }
-    } catch {
-      setError("Failed to load dashboard data")
+    } catch (error) {
+      console.error("Failed to fetch health data:", error)
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
   }
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount)
-  }
-
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
+  const toggleExpanded = (athleteId: string) => {
+    setExpandedAthletes(prev => {
+      const next = new Set(prev)
+      if (next.has(athleteId)) {
+        next.delete(athleteId)
+      } else {
+        next.add(athleteId)
+      }
+      return next
     })
   }
 
-  if (authLoading) {
+  const handleQuickFix = async (athleteId: string, action: string) => {
+    setFixing(`${athleteId}-${action}`)
+    try {
+      const res = await fetch("/api/admin/fundraising/quick-fix", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ athlete_id: athleteId, action })
+      })
+      if (res.ok) {
+        await fetchHealthData()
+      }
+    } catch (error) {
+      console.error("Quick fix failed:", error)
+    } finally {
+      setFixing(null)
+    }
+  }
+
+  const filteredIssues = issues.filter(athlete => {
+    const matchesSearch = search === "" || 
+      athlete.athlete_name.toLowerCase().includes(search.toLowerCase()) ||
+      athlete.school?.toLowerCase().includes(search.toLowerCase())
+    
+    const matchesSeverity = severityFilter === "all" || 
+      athlete.issues.some(i => i.severity === severityFilter)
+    
+    return matchesSearch && matchesSeverity
+  })
+
+  const healthScore = stats ? Math.round((stats.fully_connected / Math.max(stats.total_athletes_with_fundraising, 1)) * 100) : 0
+
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-[#0A1628] flex items-center justify-center">
-        <RefreshCw className="h-8 w-8 animate-spin text-[#D3B574]" />
+        <div className="flex flex-col items-center gap-3 text-white">
+          <Loader2 className="h-8 w-8 animate-spin text-[#D3B574]" />
+          <span className="text-gray-300">Analyzing fundraising health...</span>
+          <span className="text-xs text-gray-500">Checking athletes, families, codes, pages...</span>
+        </div>
       </div>
     )
   }
-
-  const quickActions = [
-    {
-      label: "Recent Donations",
-      description: "View last 100 donations",
-      href: "/admin/fundraising/donations",
-      icon: Gift,
-      color: "text-green-400",
-    },
-    {
-      label: "Leaderboard",
-      description: "Top fundraisers",
-      href: "/admin/fundraising/leaderboard",
-      icon: Trophy,
-      color: "text-[#D3B574]",
-    },
-    {
-      label: "Activations",
-      description: "Pending requests",
-      href: "/admin/fundraising/activations",
-      icon: CheckCircle,
-      color: "text-blue-400",
-      badge: stats?.pendingActivations,
-    },
-    {
-      label: "Reimbursements",
-      description: "Review receipts",
-      href: "/admin/reimbursements",
-      icon: Receipt,
-      color: "text-orange-400",
-      badge: stats?.pendingReimbursements,
-    },
-    {
-      label: "Wallets",
-      description: "Family balances",
-      href: "/admin/fundraising/wallets",
-      icon: Wallet,
-      color: "text-purple-400",
-    },
-    {
-      label: "Audit Ledger",
-      description: "Full transaction log",
-      href: "/admin/fundraising/ledger",
-      icon: FileText,
-      color: "text-gray-400",
-    },
-  ]
 
   return (
     <div className="min-h-screen bg-[#0A1628]">
       {/* Header */}
       <div className="bg-gradient-to-b from-[#13294B] to-[#0A1628] border-b border-[#1e3a5f]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-[#D3B574]">Admin</p>
-              <h1 className="mt-1 text-2xl sm:text-3xl font-bold text-white">Fundraising</h1>
-              <p className="text-gray-400 text-sm mt-1">Manage donations, wallets, and reimbursements</p>
+              <div className="flex items-center gap-2">
+                <Zap className="h-5 w-5 text-[#D3B574]" />
+                <p className="text-xs font-semibold uppercase tracking-wider text-[#D3B574]">Fundraising Command Center</p>
+              </div>
+              <h1 className="mt-1 text-2xl sm:text-3xl font-bold text-white">Health Dashboard</h1>
+              <p className="text-gray-400 text-sm mt-1">I scan every athlete and surface what needs your attention</p>
             </div>
-            <div className="flex items-center gap-3">
-              <Button
+            <div className="flex gap-2">
+              <Button 
+                onClick={fetchHealthData}
                 variant="outline"
-                size="sm"
-                onClick={fetchDashboardData}
                 className="border-[#1e3a5f] text-gray-300 hover:bg-[#1e3a5f]"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
               </Button>
-              <Button
-                size="sm"
-                className="bg-[#D3B574] hover:bg-[#c4a665] text-[#0A1628] font-semibold"
+              <Button 
                 onClick={() => router.push("/admin/fundraising/ledger?export=true")}
+                className="bg-[#D3B574] hover:bg-[#c4a665] text-[#0A1628]"
               >
                 <Download className="h-4 w-4 mr-2" />
-                Export Audit
+                Audit Export
               </Button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {error && (
-          <div className="mb-6 p-4 bg-red-900/30 border border-red-800 rounded-lg flex items-center gap-3 text-red-200">
-            <AlertCircle className="h-5 w-5 shrink-0" />
-            {error}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+        {/* Health Score + Stats */}
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+          {/* Health Score - Large */}
+          <div className="col-span-2 lg:col-span-1 bg-[#0F1E32] rounded-xl border border-[#1e3a5f] p-6">
+            <p className="text-gray-400 text-sm mb-2">Health Score</p>
+            <div className="flex items-end gap-2">
+              <span className={`text-4xl font-bold ${healthScore >= 80 ? 'text-green-400' : healthScore >= 50 ? 'text-amber-400' : 'text-red-400'}`}>
+                {healthScore}%
+              </span>
+            </div>
+            <div className="mt-3 h-2 bg-[#1e3a5f] rounded-full overflow-hidden">
+              <div 
+                className={`h-full transition-all ${healthScore >= 80 ? 'bg-green-500' : healthScore >= 50 ? 'bg-amber-500' : 'bg-red-500'}`}
+                style={{ width: `${healthScore}%` }}
+              />
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              {stats?.fully_connected} of {stats?.total_athletes_with_fundraising} fully connected
+            </p>
           </div>
-        )}
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Card className="bg-[#0F1E32] border-[#1e3a5f]">
-            <CardContent className="p-4 sm:p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs sm:text-sm text-gray-400">Total Raised</p>
-                  {isLoading ? (
-                    <Skeleton className="h-8 w-24 mt-1 bg-[#1e3a5f]" />
-                  ) : (
-                    <p className="text-xl sm:text-2xl font-bold text-green-400">
-                      {formatCurrency(stats?.totalRaised || 0)}
-                    </p>
-                  )}
-                </div>
-                <div className="h-10 w-10 rounded-lg bg-green-500/20 flex items-center justify-center">
-                  <TrendingUp className="h-5 w-5 text-green-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Stat Cards */}
+          <div className="bg-[#0F1E32] rounded-xl border border-[#1e3a5f] p-4">
+            <div className="flex items-center gap-2 text-gray-400 text-sm mb-1">
+              <Users className="h-4 w-4" />
+              <span>Total Athletes</span>
+            </div>
+            <p className="text-2xl font-bold text-white">{stats?.total_athletes_with_fundraising || 0}</p>
+          </div>
 
-          <Card className="bg-[#0F1E32] border-[#1e3a5f]">
-            <CardContent className="p-4 sm:p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs sm:text-sm text-gray-400">Total Spent</p>
-                  {isLoading ? (
-                    <Skeleton className="h-8 w-24 mt-1 bg-[#1e3a5f]" />
-                  ) : (
-                    <p className="text-xl sm:text-2xl font-bold text-orange-400">
-                      {formatCurrency(stats?.totalSpent || 0)}
-                    </p>
-                  )}
-                </div>
-                <div className="h-10 w-10 rounded-lg bg-orange-500/20 flex items-center justify-center">
-                  <Receipt className="h-5 w-5 text-orange-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="bg-[#0F1E32] rounded-xl border border-[#1e3a5f] p-4">
+            <div className="flex items-center gap-2 text-green-400 text-sm mb-1">
+              <CheckCircle className="h-4 w-4" />
+              <span>Fully Connected</span>
+            </div>
+            <p className="text-2xl font-bold text-green-400">{stats?.fully_connected || 0}</p>
+          </div>
 
-          <Card className="bg-[#0F1E32] border-[#1e3a5f]">
-            <CardContent className="p-4 sm:p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs sm:text-sm text-gray-400">Available</p>
-                  {isLoading ? (
-                    <Skeleton className="h-8 w-24 mt-1 bg-[#1e3a5f]" />
-                  ) : (
-                    <p className="text-xl sm:text-2xl font-bold text-[#D3B574]">
-                      {formatCurrency(stats?.totalAvailable || 0)}
-                    </p>
-                  )}
-                </div>
-                <div className="h-10 w-10 rounded-lg bg-[#D3B574]/20 flex items-center justify-center">
-                  <Wallet className="h-5 w-5 text-[#D3B574]" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="bg-[#0F1E32] rounded-xl border border-[#1e3a5f] p-4">
+            <div className="flex items-center gap-2 text-amber-400 text-sm mb-1">
+              <AlertTriangle className="h-4 w-4" />
+              <span>Needs Attention</span>
+            </div>
+            <p className="text-2xl font-bold text-amber-400">{stats?.needs_attention || 0}</p>
+          </div>
 
-          <Card className="bg-[#0F1E32] border-[#1e3a5f]">
-            <CardContent className="p-4 sm:p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs sm:text-sm text-gray-400">Donations</p>
-                  {isLoading ? (
-                    <Skeleton className="h-8 w-16 mt-1 bg-[#1e3a5f]" />
-                  ) : (
-                    <p className="text-xl sm:text-2xl font-bold text-white">
-                      {stats?.totalDonations?.toLocaleString() || 0}
-                    </p>
-                  )}
-                </div>
-                <div className="h-10 w-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                  <Gift className="h-5 w-5 text-blue-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="bg-[#0F1E32] rounded-xl border border-[#1e3a5f] p-4">
+            <div className="flex items-center gap-2 text-red-400 text-sm mb-1">
+              <XCircle className="h-4 w-4" />
+              <span>Critical</span>
+            </div>
+            <p className="text-2xl font-bold text-red-400">{stats?.critical_issues || 0}</p>
+          </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold text-white mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            {quickActions.map((action) => {
-              const Icon = action.icon
+        {/* What This Dashboard Does */}
+        <div className="bg-[#0F1E32] rounded-xl border border-[#1e3a5f] p-4">
+          <h3 className="text-white font-semibold mb-3">What I check for each athlete:</h3>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
+            <div className="flex items-start gap-2">
+              <XCircle className="h-4 w-4 text-red-400 mt-0.5 shrink-0" />
+              <span className="text-gray-300"><strong className="text-red-400">Critical:</strong> Has donations but no family (money stuck)</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-400 mt-0.5 shrink-0" />
+              <span className="text-gray-300"><strong className="text-amber-400">Warning:</strong> No parent linked (can&apos;t manage wallet)</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-400 mt-0.5 shrink-0" />
+              <span className="text-gray-300"><strong className="text-amber-400">Warning:</strong> No donation code assigned</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <AlertCircle className="h-4 w-4 text-blue-400 mt-0.5 shrink-0" />
+              <span className="text-gray-300"><strong className="text-blue-400">Info:</strong> Page exists but is inactive</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <CheckCircle className="h-4 w-4 text-green-400 mt-0.5 shrink-0" />
+              <span className="text-gray-300"><strong className="text-green-400">Fully Connected:</strong> Family + Parent + Code + Active Page</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+            <Input
+              placeholder="Search athlete or school..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10 bg-[#0F1E32] border-[#1e3a5f] text-white placeholder:text-gray-500"
+            />
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            {(["all", "critical", "warning", "info"] as const).map((sev) => (
+              <Button
+                key={sev}
+                variant={severityFilter === sev ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSeverityFilter(sev)}
+                className={severityFilter === sev 
+                  ? "bg-[#D3B574] text-[#0A1628] hover:bg-[#c4a665]" 
+                  : "border-[#1e3a5f] text-gray-400 hover:bg-[#1e3a5f] hover:text-white"
+                }
+              >
+                {sev === "all" ? "All" : severityConfig[sev].label}
+                {sev !== "all" && (
+                  <span className="ml-1 text-xs">
+                    ({issues.filter(i => i.issues.some(iss => iss.severity === sev)).length})
+                  </span>
+                )}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {/* Issues List */}
+        {filteredIssues.length === 0 ? (
+          <div className="bg-[#0F1E32] rounded-xl border border-[#1e3a5f] p-12 text-center">
+            <CheckCircle className="h-12 w-12 text-green-400 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-white mb-2">All Clear!</h3>
+            <p className="text-gray-400">
+              {issues.length === 0 
+                ? "No athletes with fundraising activity found, or all are fully connected."
+                : "No issues match your current filters."}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filteredIssues.map((athlete) => {
+              const isExpanded = expandedAthletes.has(athlete.athlete_id)
+              const highestSeverity = athlete.issues.reduce((highest, issue) => {
+                const order = { critical: 0, warning: 1, info: 2 }
+                return order[issue.severity] < order[highest] ? issue.severity : highest
+              }, "info" as IssueSeverity)
+              const SeverityIcon = severityConfig[highestSeverity].icon
+
               return (
-                <button
-                  key={action.href}
-                  onClick={() => router.push(action.href)}
-                  className="relative p-4 bg-[#0F1E32] border border-[#1e3a5f] rounded-xl hover:bg-[#1e3a5f] hover:border-[#D3B574]/50 transition-all text-left group"
+                <div 
+                  key={athlete.athlete_id}
+                  className="bg-[#0F1E32] rounded-xl border border-[#1e3a5f] overflow-hidden"
                 >
-                  {action.badge !== undefined && action.badge > 0 && (
-                    <span className="absolute -top-2 -right-2 h-5 w-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
-                      {action.badge}
-                    </span>
+                  {/* Main Row */}
+                  <button
+                    onClick={() => toggleExpanded(athlete.athlete_id)}
+                    className="w-full px-4 py-4 flex items-center gap-4 hover:bg-[#1e3a5f]/30 transition-colors text-left"
+                  >
+                    <div className={`p-2 rounded-lg ${severityConfig[highestSeverity].color}/20`}>
+                      <SeverityIcon className={`h-5 w-5 ${severityConfig[highestSeverity].textColor}`} />
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold text-white">{athlete.athlete_name}</span>
+                        {athlete.school && (
+                          <span className="text-gray-500 text-sm">
+                            {athlete.school} {athlete.grad_year ? `'${String(athlete.grad_year).slice(-2)}` : ''}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        {athlete.issues.slice(0, 2).map((issue, i) => (
+                          <Badge 
+                            key={i} 
+                            variant="outline" 
+                            className={`text-xs border-0 ${severityConfig[issue.severity].textColor} ${severityConfig[issue.severity].color}/20`}
+                          >
+                            {issueLabels[issue.type]}
+                          </Badge>
+                        ))}
+                        {athlete.issues.length > 2 && (
+                          <span className="text-xs text-gray-500">+{athlete.issues.length - 2} more</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {athlete.total_raised_cents > 0 && (
+                      <div className="text-right hidden sm:block">
+                        <p className="text-sm text-gray-400">Raised</p>
+                        <p className="font-semibold text-[#D3B574]">
+                          ${(athlete.total_raised_cents / 100).toLocaleString()}
+                        </p>
+                      </div>
+                    )}
+
+                    <ChevronDown className={`h-5 w-5 text-gray-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {/* Expanded Details */}
+                  {isExpanded && (
+                    <div className="px-4 pb-4 pt-0 border-t border-[#1e3a5f]">
+                      <div className="pt-4 space-y-4">
+                        {/* Current Status */}
+                        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                          <div className="flex items-center gap-2">
+                            {athlete.has_family ? (
+                              <CheckCircle className="h-4 w-4 text-green-400" />
+                            ) : (
+                              <XCircle className="h-4 w-4 text-red-400" />
+                            )}
+                            <span className="text-sm text-gray-300">Family assigned</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {athlete.has_parent ? (
+                              <CheckCircle className="h-4 w-4 text-green-400" />
+                            ) : (
+                              <XCircle className="h-4 w-4 text-red-400" />
+                            )}
+                            <span className="text-sm text-gray-300">Parent linked</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {athlete.spartan_code || athlete.page_slug ? (
+                              <CheckCircle className="h-4 w-4 text-green-400" />
+                            ) : (
+                              <XCircle className="h-4 w-4 text-red-400" />
+                            )}
+                            <span className="text-sm text-gray-300">
+                              Code: {athlete.spartan_code || athlete.page_slug || "None"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {athlete.page_active ? (
+                              <CheckCircle className="h-4 w-4 text-green-400" />
+                            ) : (
+                              <XCircle className="h-4 w-4 text-red-400" />
+                            )}
+                            <span className="text-sm text-gray-300">Page active</span>
+                          </div>
+                        </div>
+
+                        {/* Issues & Actions */}
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium text-gray-400">Issues & Quick Actions:</p>
+                          {athlete.issues.map((issue, i) => (
+                            <div 
+                              key={i}
+                              className="flex items-center justify-between gap-4 bg-[#0A1628] rounded-lg px-3 py-2"
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className={`w-2 h-2 rounded-full shrink-0 ${severityConfig[issue.severity].color}`} />
+                                <span className="text-sm text-gray-300 truncate">{issue.message}</span>
+                              </div>
+                              <div className="shrink-0">
+                                {issue.type === "no_family" && (
+                                  <Button
+                                    size="sm"
+                                    onClick={(e) => { e.stopPropagation(); handleQuickFix(athlete.athlete_id, "create_family") }}
+                                    disabled={fixing === `${athlete.athlete_id}-create_family`}
+                                    className="bg-[#D3B574] hover:bg-[#c4a665] text-[#0A1628] text-xs"
+                                  >
+                                    {fixing === `${athlete.athlete_id}-create_family` ? (
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                    ) : (
+                                      <>
+                                        <UserPlus className="h-3 w-3 mr-1" />
+                                        Create Family
+                                      </>
+                                    )}
+                                  </Button>
+                                )}
+                                {issue.type === "has_donations_no_family" && (
+                                  <Button
+                                    size="sm"
+                                    onClick={(e) => { e.stopPropagation(); handleQuickFix(athlete.athlete_id, "create_family") }}
+                                    disabled={fixing === `${athlete.athlete_id}-create_family`}
+                                    className="bg-red-600 hover:bg-red-700 text-white text-xs"
+                                  >
+                                    {fixing === `${athlete.athlete_id}-create_family` ? (
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                    ) : (
+                                      <>
+                                        <UserPlus className="h-3 w-3 mr-1" />
+                                        Fix Now
+                                      </>
+                                    )}
+                                  </Button>
+                                )}
+                                {issue.type === "page_inactive" && (
+                                  <Button
+                                    size="sm"
+                                    onClick={(e) => { e.stopPropagation(); handleQuickFix(athlete.athlete_id, "activate_page") }}
+                                    disabled={fixing === `${athlete.athlete_id}-activate_page`}
+                                    className="bg-[#D3B574] hover:bg-[#c4a665] text-[#0A1628] text-xs"
+                                  >
+                                    {fixing === `${athlete.athlete_id}-activate_page` ? (
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                    ) : (
+                                      <>
+                                        <Check className="h-3 w-3 mr-1" />
+                                        Activate
+                                      </>
+                                    )}
+                                  </Button>
+                                )}
+                                {issue.type === "no_code" && (
+                                  <Button
+                                    size="sm"
+                                    onClick={(e) => { e.stopPropagation(); handleQuickFix(athlete.athlete_id, "generate_code") }}
+                                    disabled={fixing === `${athlete.athlete_id}-generate_code`}
+                                    className="bg-[#D3B574] hover:bg-[#c4a665] text-[#0A1628] text-xs"
+                                  >
+                                    {fixing === `${athlete.athlete_id}-generate_code` ? (
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                    ) : (
+                                      <>
+                                        <Link2 className="h-3 w-3 mr-1" />
+                                        Generate
+                                      </>
+                                    )}
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* View Full Profile */}
+                        <div className="flex justify-end pt-2">
+                          <a
+                            href={`/prospects/${athlete.athlete_id}`}
+                            className="text-sm text-[#D3B574] hover:underline flex items-center gap-1"
+                          >
+                            View athlete profile
+                            <ArrowUpRight className="h-3 w-3" />
+                          </a>
+                        </div>
+                      </div>
+                    </div>
                   )}
-                  <Icon className={`h-6 w-6 ${action.color} mb-2`} />
-                  <p className="font-medium text-white text-sm">{action.label}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{action.description}</p>
-                </button>
+                </div>
               )
             })}
           </div>
+        )}
+
+        {/* Quick Links to Other Tools */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pt-6 border-t border-[#1e3a5f]">
+          <a 
+            href="/admin/fundraising/donations"
+            className="bg-[#0F1E32] rounded-xl border border-[#1e3a5f] p-4 hover:border-[#D3B574]/50 transition-colors group"
+          >
+            <Gift className="h-5 w-5 text-green-400 mb-2" />
+            <p className="font-medium text-white text-sm group-hover:text-[#D3B574]">Donations</p>
+            <p className="text-xs text-gray-500">Recent 100</p>
+          </a>
+          <a 
+            href="/admin/fundraising/leaderboard"
+            className="bg-[#0F1E32] rounded-xl border border-[#1e3a5f] p-4 hover:border-[#D3B574]/50 transition-colors group"
+          >
+            <Trophy className="h-5 w-5 text-[#D3B574] mb-2" />
+            <p className="font-medium text-white text-sm group-hover:text-[#D3B574]">Leaderboard</p>
+            <p className="text-xs text-gray-500">Top fundraisers</p>
+          </a>
+          <a 
+            href="/admin/fundraising/activations"
+            className="bg-[#0F1E32] rounded-xl border border-[#1e3a5f] p-4 hover:border-[#D3B574]/50 transition-colors group"
+          >
+            <FileText className="h-5 w-5 text-blue-400 mb-2" />
+            <p className="font-medium text-white text-sm group-hover:text-[#D3B574]">Activations</p>
+            <p className="text-xs text-gray-500">Page approvals</p>
+          </a>
+          <a 
+            href="/admin/fundraising/wallets"
+            className="bg-[#0F1E32] rounded-xl border border-[#1e3a5f] p-4 hover:border-[#D3B574]/50 transition-colors group"
+          >
+            <Wallet className="h-5 w-5 text-purple-400 mb-2" />
+            <p className="font-medium text-white text-sm group-hover:text-[#D3B574]">Wallets</p>
+            <p className="text-xs text-gray-500">Family balances</p>
+          </a>
+          <a 
+            href="/admin/reimbursements"
+            className="bg-[#0F1E32] rounded-xl border border-[#1e3a5f] p-4 hover:border-[#D3B574]/50 transition-colors group"
+          >
+            <Receipt className="h-5 w-5 text-orange-400 mb-2" />
+            <p className="font-medium text-white text-sm group-hover:text-[#D3B574]">Reimburse</p>
+            <p className="text-xs text-gray-500">Expense review</p>
+          </a>
+          <a 
+            href="/admin/fundraising/ledger"
+            className="bg-[#0F1E32] rounded-xl border border-[#1e3a5f] p-4 hover:border-[#D3B574]/50 transition-colors group"
+          >
+            <DollarSign className="h-5 w-5 text-gray-400 mb-2" />
+            <p className="font-medium text-white text-sm group-hover:text-[#D3B574]">Ledger</p>
+            <p className="text-xs text-gray-500">Audit trail</p>
+          </a>
         </div>
-
-        {/* Two Column Layout */}
-        <div className="grid lg:grid-cols-2 gap-6">
-          {/* Recent Donations */}
-          <Card className="bg-[#0F1E32] border-[#1e3a5f]">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-white text-lg">Recent Donations</CardTitle>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => router.push("/admin/fundraising/donations")}
-                  className="text-[#D3B574] hover:text-white hover:bg-[#1e3a5f]"
-                >
-                  View All
-                  <ArrowRight className="h-4 w-4 ml-1" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              {isLoading ? (
-                <div className="space-y-3">
-                  {[...Array(5)].map((_, i) => (
-                    <Skeleton key={i} className="h-14 w-full bg-[#1e3a5f]" />
-                  ))}
-                </div>
-              ) : recentDonations.length === 0 ? (
-                <p className="text-gray-500 text-sm py-8 text-center">No recent donations</p>
-              ) : (
-                <div className="space-y-2">
-                  {recentDonations.slice(0, 5).map((donation) => (
-                    <div
-                      key={donation.id}
-                      className="flex items-center justify-between p-3 rounded-lg bg-[#0A1628] border border-[#1e3a5f]/50"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-white truncate">
-                          {donation.donor_name || "Anonymous"}
-                        </p>
-                        <p className="text-xs text-gray-500 truncate">
-                          {donation.type === "spartan"
-                            ? donation.athlete_name || "Spartan"
-                            : donation.campaign_name || "Campaign"}
-                        </p>
-                      </div>
-                      <div className="text-right ml-3">
-                        <p className="text-sm font-semibold text-green-400">
-                          {formatCurrency(donation.amount)}
-                        </p>
-                        <p className="text-xs text-gray-500">{formatDate(donation.created_at)}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Pending Items */}
-          <Card className="bg-[#0F1E32] border-[#1e3a5f]">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-white text-lg">Needs Attention</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0 space-y-3">
-              <button
-                onClick={() => router.push("/admin/fundraising/activations")}
-                className="w-full flex items-center justify-between p-4 rounded-lg bg-[#0A1628] border border-[#1e3a5f]/50 hover:border-[#D3B574]/50 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                    <Clock className="h-5 w-5 text-blue-400" />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-sm font-medium text-white">Activation Requests</p>
-                    <p className="text-xs text-gray-500">Athlete page approvals</p>
-                  </div>
-                </div>
-                {isLoading ? (
-                  <Skeleton className="h-8 w-8 rounded-full bg-[#1e3a5f]" />
-                ) : (
-                  <span className="h-8 w-8 rounded-full bg-blue-500/20 text-blue-400 font-bold text-sm flex items-center justify-center">
-                    {stats?.pendingActivations || 0}
-                  </span>
-                )}
-              </button>
-
-              <button
-                onClick={() => router.push("/admin/reimbursements")}
-                className="w-full flex items-center justify-between p-4 rounded-lg bg-[#0A1628] border border-[#1e3a5f]/50 hover:border-[#D3B574]/50 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-orange-500/20 flex items-center justify-center">
-                    <Receipt className="h-5 w-5 text-orange-400" />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-sm font-medium text-white">Reimbursements</p>
-                    <p className="text-xs text-gray-500">Pending receipt reviews</p>
-                  </div>
-                </div>
-                {isLoading ? (
-                  <Skeleton className="h-8 w-8 rounded-full bg-[#1e3a5f]" />
-                ) : (
-                  <span className="h-8 w-8 rounded-full bg-orange-500/20 text-orange-400 font-bold text-sm flex items-center justify-center">
-                    {stats?.pendingReimbursements || 0}
-                  </span>
-                )}
-              </button>
-
-              <div className="pt-4 border-t border-[#1e3a5f]">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-400">Active Campaigns</span>
-                  {isLoading ? (
-                    <Skeleton className="h-5 w-8 bg-[#1e3a5f]" />
-                  ) : (
-                    <span className="text-white font-medium">{stats?.activeCampaigns || 0}</span>
-                  )}
-                </div>
-                <div className="flex items-center justify-between text-sm mt-2">
-                  <span className="text-gray-400">Active Athlete Pages</span>
-                  {isLoading ? (
-                    <Skeleton className="h-5 w-8 bg-[#1e3a5f]" />
-                  ) : (
-                    <span className="text-white font-medium">{stats?.activeAthletePages || 0}</span>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Campaign vs Spartan Quick Toggle */}
-        <Card className="bg-[#0F1E32] border-[#1e3a5f] mt-6">
-          <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <h3 className="font-medium text-white">View by Type</h3>
-                <p className="text-sm text-gray-500">Filter donations by fundraising type</p>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => router.push("/admin/fundraising/donations?type=spartan")}
-                  className="border-[#1e3a5f] text-gray-300 hover:bg-[#1e3a5f] hover:text-white"
-                >
-                  <Users className="h-4 w-4 mr-2" />
-                  Spartan (Athletes)
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => router.push("/admin/fundraising/donations?type=campaign")}
-                  className="border-[#1e3a5f] text-gray-300 hover:bg-[#1e3a5f] hover:text-white"
-                >
-                  <DollarSign className="h-4 w-4 mr-2" />
-                  Campaigns
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   )
