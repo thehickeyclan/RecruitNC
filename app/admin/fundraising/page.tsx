@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
+import { buildFundraisingHubSnapshot } from "@/lib/fundraising/hub-data"
 import { 
   DollarSign, 
   Users, 
@@ -15,12 +16,14 @@ import {
 async function getFundraisingStats() {
   const supabase = await createClient()
   
-  // Get counts and totals from ACTUAL data tables
+  // Use the SAME data source as the public giving hub
+  const hubSnapshot = await buildFundraisingHubSnapshot()
+  
+  // Get counts and reimbursements from database
   const [
     { count: pendingActivations },
     { count: totalAthletes },
     { count: activePages },
-    { data: donations },
     { data: paidExpenses }
   ] = await Promise.all([
     supabase
@@ -34,10 +37,6 @@ async function getFundraisingStats() {
       .from("athlete_fundraising_profiles")
       .select("*", { count: "exact", head: true })
       .eq("is_active", true),
-    // Get donations from donations_unified (where your $21k+ actually is!)
-    supabase
-      .from("donations_unified")
-      .select("amount_cents"),
     // Get paid reimbursements
     supabase
       .from("athlete_expense_requests")
@@ -45,12 +44,12 @@ async function getFundraisingStats() {
       .eq("status", "paid")
   ])
 
-  // Calculate totals - ensure we're parsing numbers correctly
-  const totalRaised = donations?.reduce((sum, d) => sum + (Number(d.amount_cents) || 0), 0) || 0
-  const totalSpent = paidExpenses?.reduce((sum, e) => sum + (Number(e.amount_cents) || 0), 0) || 0
+  // Raised comes from hub (same as public page)
+  const totalRaised = hubSnapshot.hero.totalRaisedCents
+  const donationCount = hubSnapshot.hero.giftCount
   
-  console.log("[v0] Paid expenses count:", paidExpenses?.length, "Total:", totalSpent)
-  console.log("[v0] Sample expense:", paidExpenses?.[0])
+  // Spent = sum of paid reimbursements
+  const totalSpent = paidExpenses?.reduce((sum, e) => sum + (Number(e.amount_cents) || 0), 0) || 0
 
   return {
     pendingActivations: pendingActivations || 0,
@@ -58,6 +57,7 @@ async function getFundraisingStats() {
     activePages: activePages || 0,
     totalRaised,
     totalSpent,
+    donationCount,
     available: totalRaised - totalSpent
   }
 }
@@ -109,11 +109,12 @@ export default async function AdminFundraisingPage() {
             <DollarSign className="h-5 w-5 text-green-600" />
           </div>
           <p className="mt-2 text-2xl font-bold text-gray-900">{fmtCents(stats.totalRaised)}</p>
+          <p className="text-xs text-gray-500">{stats.donationCount} donations</p>
         </div>
 
         <div className="rounded-xl border bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-gray-500">Total Spent</p>
+            <p className="text-sm font-medium text-gray-500">Reimbursed</p>
             <Receipt className="h-5 w-5 text-red-600" />
           </div>
           <p className="mt-2 text-2xl font-bold text-gray-900">{fmtCents(stats.totalSpent)}</p>
