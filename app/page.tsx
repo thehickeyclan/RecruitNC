@@ -106,8 +106,8 @@ export default function HomePage() {
       try {
         setRankingsLoading(true)
         const [response2026, response2027] = await Promise.all([
-          fetch(`/api/public-rankings?year=2026&gender=Male`, { method: "GET", headers: { "Content-Type": "application/json" }, cache: "no-store" }),
-          fetch(`/api/public-rankings?year=2027&gender=Male`, { method: "GET", headers: { "Content-Type": "application/json" }, cache: "no-store" }),
+          fetch(`/api/public-rankings?year=2026&gender=Male&limit=3`, { method: "GET", headers: { "Content-Type": "application/json" }, cache: "no-store" }),
+          fetch(`/api/public-rankings?year=2027&gender=Male&limit=3`, { method: "GET", headers: { "Content-Type": "application/json" }, cache: "no-store" }),
         ])
         const data2026 = response2026.ok ? await response2026.json() : { rankings: [] }
         const data2027 = response2027.ok ? await response2027.json() : { rankings: [] }
