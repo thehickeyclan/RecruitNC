@@ -387,6 +387,98 @@ function WalletPreviewModal({
   )
 }
 
+// Activation Request Row with inline approve/reject
+function ActivationRequestRow({ 
+  request, 
+  fmtDate 
+}: { 
+  request: ActivationRequest
+  fmtDate: (iso: string) => string 
+}) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+  const [status, setStatus] = useState(request.status)
+
+  const handleAction = async (action: "approved" | "rejected") => {
+    setLoading(true)
+    setError("")
+    try {
+      const { reviewFundraisingActivationRequestAdminAction } = await import(
+        "@/app/actions/fundraising/fundraising-activation-actions"
+      )
+      const result = await reviewFundraisingActivationRequestAdminAction(request.id, action)
+      if (result.ok) {
+        setStatus(action)
+      } else {
+        setError(result.error || "Failed")
+      }
+    } catch (e) {
+      setError("Failed to process")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <tr className="hover:bg-gray-50">
+      <td className="whitespace-nowrap px-4 py-3 text-gray-600">{fmtDate(request.created_at)}</td>
+      <td className="px-4 py-3 font-medium text-gray-900">
+        {request.athlete_first_name} {request.athlete_last_name}
+      </td>
+      <td className="px-4 py-3">
+        <code className="rounded bg-gray-100 px-2 py-0.5 text-xs">{request.fundraising_slug}</code>
+      </td>
+      <td className="px-4 py-3 text-gray-600">{request.requester_email || "—"}</td>
+      <td className="px-4 py-3">
+        {status === "pending" && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800">
+            <Clock className="h-3 w-3" /> Pending
+          </span>
+        )}
+        {status === "approved" && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
+            <CheckCircle className="h-3 w-3" /> Approved
+          </span>
+        )}
+        {status === "rejected" && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-800">
+            <X className="h-3 w-3" /> Rejected
+          </span>
+        )}
+      </td>
+      <td className="px-4 py-3">
+        {status === "pending" ? (
+          <div className="flex items-center gap-2">
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+            ) : (
+              <>
+                <button
+                  onClick={() => handleAction("approved")}
+                  disabled={loading}
+                  className="rounded bg-green-600 px-3 py-1 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                >
+                  Approve
+                </button>
+                <button
+                  onClick={() => handleAction("rejected")}
+                  disabled={loading}
+                  className="rounded bg-gray-200 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-300 disabled:opacity-50"
+                >
+                  Reject
+                </button>
+              </>
+            )}
+            {error && <span className="text-xs text-red-600">{error}</span>}
+          </div>
+        ) : (
+          <span className="text-xs text-gray-400">—</span>
+        )}
+      </td>
+    </tr>
+  )
+}
+
 type ExpenseRow = {
   id: string
   amount_cents: number
@@ -934,29 +1026,11 @@ export function FundraisingCommandCenter({
               </thead>
               <tbody className="divide-y">
                 {filteredRequests.map((r) => (
-                  <tr key={r.id} className="hover:bg-gray-50">
-                    <td className="whitespace-nowrap px-4 py-3 text-gray-600">{fmtDate(r.created_at)}</td>
-                    <td className="px-4 py-3 font-medium text-gray-900">
-                      {r.athlete_first_name} {r.athlete_last_name}
-                    </td>
-                    <td className="px-4 py-3">
-                      <code className="rounded bg-gray-100 px-2 py-0.5 text-xs">{r.fundraising_slug}</code>
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">{r.requester_email || "—"}</td>
-                    <td className="px-4 py-3">
-                      <StatusBadge status={r.status} />
-                    </td>
-                    <td className="px-4 py-3">
-                      {r.status === "pending" && (
-                        <Link
-                          href="/admin/fundraising/activation-requests"
-                          className="text-sm font-medium text-amber-600 hover:text-amber-800"
-                        >
-                          Review
-                        </Link>
-                      )}
-                    </td>
-                  </tr>
+                  <ActivationRequestRow 
+                    key={r.id} 
+                    request={r} 
+                    fmtDate={fmtDate}
+                  />
                 ))}
               </tbody>
             </table>
