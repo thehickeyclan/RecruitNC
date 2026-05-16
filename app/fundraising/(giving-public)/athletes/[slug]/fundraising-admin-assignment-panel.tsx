@@ -123,6 +123,22 @@ export function FundraisingAdminAssignmentPanel({
     }
   }
 
+  // If fully connected (parent linked), show minimal green indicator
+  if (parentLinked && profileId && athleteId) {
+    return (
+      <div 
+        className="mb-4 mt-4 flex items-center gap-2 px-1"
+        role="status" 
+        aria-label="Page fully connected"
+      >
+        <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.6)]" />
+        <span className="text-[10px] font-medium uppercase tracking-wide text-emerald-400/80">
+          Connected
+        </span>
+      </div>
+    )
+  }
+
   return (
     <>
       <section
@@ -147,8 +163,8 @@ export function FundraisingAdminAssignmentPanel({
           ) : null}
           . NCU hint: <span className="font-mono text-[11px] text-white/55">{ncuLine}</span>
         </p>
-        {athleteId && wiringSnapshot ? (
-          <div className="mt-3" role="status" aria-label="Parent linked for gift-page management">
+        {athleteId && wiringSnapshot && !parentLinked ? (
+          <div className="mt-3" role="status" aria-label="Parent link status">
             <div
               className={cn(
                 "min-h-[52px] rounded-lg border px-3 py-2 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]",

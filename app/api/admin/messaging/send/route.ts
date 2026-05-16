@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
   const adminUserId = (auth as { user: { id: string } }).user.id
 
-  let body: { profile?: string; group?: string; subject?: string; body?: string; testEmail?: string; logoVariant?: string; channels?: { inApp?: boolean; email?: boolean; sms?: boolean } } = {}
+  let body: { profile?: string; group?: string; subject?: string; body?: string; bodyHtml?: string; testEmail?: string; logoVariant?: string; channels?: { inApp?: boolean; email?: boolean; sms?: boolean } } = {}
   try {
     body = await request.json()
   } catch {
@@ -95,13 +95,14 @@ export async function POST(request: NextRequest) {
   const group = typeof body.group === "string" ? body.group.trim() || null : null
   const subject = typeof body.subject === "string" ? body.subject.trim() || "Update from RecruitNC" : "Update from RecruitNC"
   const rawBody = typeof body.body === "string" ? body.body.trim() : ""
+  const rawBodyHtml = typeof body.bodyHtml === "string" ? body.bodyHtml.trim() : ""
   const testEmail = typeof body.testEmail === "string" ? body.testEmail.trim() || null : null
   const logoVariant = body.logoVariant === "nc-united" ? "nc-united" : "recruitnc"
   const channels = body.channels && typeof body.channels === "object"
     ? { inApp: !!body.channels.inApp, email: !!body.channels.email, sms: !!body.channels.sms }
     : { inApp: false, email: false, sms: false }
 
-  if (!rawBody) return NextResponse.json({ error: "Message body is required" }, { status: 400 })
+  if (!rawBody && !rawBodyHtml) return NextResponse.json({ error: "Message body is required" }, { status: 400 })
   if (!channels.inApp && !channels.email && !channels.sms) {
     return NextResponse.json({ error: "Select at least one channel (In-app, Email, or SMS)" }, { status: 400 })
   }
@@ -117,8 +118,9 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const htmlBody = markdownToHtml(rawBody)
-  const plainBody = toPlainText(rawBody)
+  // Use provided HTML if available (from rich text editor), otherwise convert markdown
+  const htmlBody = rawBodyHtml || markdownToHtml(rawBody)
+  const plainBody = rawBody || toPlainText(rawBodyHtml)
   const smsBody = plainBody.length > 1500 ? plainBody.slice(0, 1497) + "…" : plainBody
 
   const result: { inApp?: { sent: boolean; threadId?: string; error?: string }; email: { sent: number; failed: number }; sms: { sent: number; failed: number } } = {

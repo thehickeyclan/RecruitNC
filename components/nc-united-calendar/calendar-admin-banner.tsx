@@ -1,6 +1,6 @@
 "use client"
 
-import { Calendar, Settings } from "lucide-react"
+import { Settings } from "lucide-react"
 import { HardLink } from "@/components/hard-link"
 import { useAuth } from "@/contexts/auth-context"
 
@@ -13,18 +13,16 @@ export function CalendarAdminBanner() {
   if (isLoading || !isAdmin) return null
 
   return (
-    <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-nc-navy/15 bg-white px-4 py-3 shadow-sm">
-      <p className="text-sm text-nc-navy-900">
-        <Calendar className="mr-1 inline h-4 w-4 align-text-bottom" aria-hidden />
-        You’re signed in as an admin — create and edit events in calendar admin (drop-in checkout uses Stripe on practice
-        events).
+    <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#1e3a5f] bg-[#0F1E32] px-4 py-3">
+      <p className="text-sm text-gray-400">
+        Admin access — manage events, drop-ins, and practices.
       </p>
       <HardLink
         href="/admin/calendar"
-        className="inline-flex items-center gap-2 rounded-lg bg-nc-navy-950 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-nc-navy-800"
+        className="inline-flex items-center gap-2 rounded-lg bg-[#D3B574] px-4 py-2 text-sm font-semibold text-[#0A1628] transition-colors hover:bg-[#c4a665]"
       >
         <Settings className="h-4 w-4" aria-hidden />
-        Calendar admin
+        Manage Calendar
       </HardLink>
     </div>
   )

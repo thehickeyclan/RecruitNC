@@ -90,8 +90,13 @@ export function AdminCollegeCommitmentWizard({
   /** College location is not in the DB; used only for the Instagram caption. */
   const [instagramCollegeCity, setInstagramCollegeCity] = useState("")
 
-  const genderKey = (athlete.gender === "Female" ? "Female" : "Male") as keyof typeof COLLEGE_WEIGHT_CLASSES
+  const genderKey = (athlete?.gender === "Female" ? "Female" : "Male") as keyof typeof COLLEGE_WEIGHT_CLASSES
   const weightOptions = COLLEGE_WEIGHT_CLASSES[genderKey] || COLLEGE_WEIGHT_CLASSES.Male
+
+  // Guard against undefined athlete
+  if (!athlete) {
+    return null
+  }
 
   const selectedCollege = collegeList.find((c) => c.id === collegeId) ?? null
   const hasCollegeLogo = Boolean(selectedCollege?.logo_url?.trim())

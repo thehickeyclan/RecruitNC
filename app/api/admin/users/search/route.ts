@@ -59,10 +59,9 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const query = searchParams.get("q") || ""
+    const roleFilter = searchParams.get("role") || ""
     const queryTrim = query.trim()
     const queryLower = queryTrim.toLowerCase()
-
-    console.log("[v0] Searching users with query:", query)
 
     if (!queryTrim) {
       return NextResponse.json({ users: [] })
@@ -95,8 +94,13 @@ export async function GET(request: Request) {
 
       return {
         id: authUser.id,
+        user_id: authUser.id, // Add user_id for compatibility
         email: authUser.email,
         full_name: fullName,
+        first_name: profile?.first_name || null,
+        last_name: profile?.last_name || null,
+        cell_phone: (profile as any)?.cell_phone || null,
+        profile_image_url: (profile as any)?.profile_image_url || null,
         role: profile?.role || null,
         school_id: profile?.school_id || null,
         institution: profile?.institution || null,
@@ -107,7 +111,10 @@ export async function GET(request: Request) {
     const filteredUsers = users.filter((user, idx) => {
       const authUser = authUserList[idx]!
       const profile = profileList.find((p) => p.user_id === authUser.id)
-      return userMatchesSearch(authUser, profile, user.full_name, queryLower)
+      const matchesQuery = userMatchesSearch(authUser, profile, user.full_name, queryLower)
+      // Apply role filter if specified
+      const matchesRole = !roleFilter || user.role === roleFilter
+      return matchesQuery && matchesRole
     })
 
     const capped = filteredUsers.slice(0, 40)

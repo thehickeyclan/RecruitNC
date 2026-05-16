@@ -28,7 +28,7 @@ export type FundraisingCampaignDefinition = {
    */
   hubDefaultGoalCents?: number
   /**
-   * Athlete gift-activity table (e.g. "Spring Spartan 2026"). Use registry campaigns when metadata matches;
+   * Athlete gift-activity table (e.g. "Spring / Summer 2026"). Use registry campaigns when metadata matches;
    * otherwise the UI falls back to calendar season + year.
    */
   athleteGiftHistoryLabel: string
@@ -45,13 +45,13 @@ export const FUNDRAISING_CAMPAIGNS = [
   {
     adminContextKey: "spartan-spring-2026",
     stripeCampaignSlug: "fayetteville_2026",
-    tabLabel: "Spartan Spring ’26",
-    campaignDisplayName: "Spartan Spring 2026 — Fayetteville",
+    tabLabel: "Spring / Summer ’26",
+    campaignDisplayName: "Spring / Summer 2026 Fundraising",
     publicPagePath: "/spartan",
     athleteQueryParam: "athlete",
     defaultLookbackDays: 120,
     hubDefaultGoalCents: 1_000_000,
-    athleteGiftHistoryLabel: "Spring Spartan 2026",
+    athleteGiftHistoryLabel: "Spring / Summer 2026",
     playbookOperationalBanner:
       "Primary Spartan checkout drive has wound down; gifts may still trickle in. Use this admin hub year-round for NCU pins, donor pages, and parent/athlete wiring so Profile → Fundraise shows balances.",
   },

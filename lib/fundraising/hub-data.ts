@@ -276,14 +276,22 @@ function stripeEnrichedToActivity(rows: SpartanDonationWithPublicFields[]): Fund
 
 function computeHero(rows: HubDonationRow[]): FundraisingHubHeroStats {
   let totalRaisedCents = 0
+  let ncUnitedCommunityFundCents = 0
   for (const r of rows) {
-    totalRaisedCents += r.amount_cents ?? 0
+    const cents = r.amount_cents ?? 0
+    totalRaisedCents += cents
+    // NC United fund = raw_metadata.fundraising_attribution === 'general_nc_united'
+    const meta = r.raw_metadata as Record<string, unknown> | null | undefined
+    const attribution = typeof meta?.fundraising_attribution === 'string' ? meta.fundraising_attribution : ''
+    if (attribution === 'general_nc_united') {
+      ncUnitedCommunityFundCents += cents
+    }
   }
   return {
     totalRaisedCents,
     giftCount: rows.length,
     raceEntryCount: 0,
-    ncUnitedCommunityFundCents: 0,
+    ncUnitedCommunityFundCents,
   }
 }
 

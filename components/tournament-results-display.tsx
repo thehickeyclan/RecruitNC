@@ -140,12 +140,12 @@ export function TournamentResultsDisplay({
               NC United National Team
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-6">
+          <CardContent className="p-4 md:p-6">
             <p className="text-sm text-gray-600 mb-4">
               National team competition: Ultimate Club Duals and NHSCA National Duals
             </p>
-            <div className="rounded-lg border overflow-hidden">
-              <Table>
+            <div className="rounded-lg border overflow-x-auto">
+              <Table className="min-w-[400px]">
                 <TableHeader>
                   <TableRow className="bg-gray-50">
                     <TableHead className="font-semibold">Event</TableHead>
@@ -183,16 +183,16 @@ export function TournamentResultsDisplay({
 
       {/* 2. NCHSAA State Championships */}
       {(nchsaaResults.length > 0 || alwaysShowStructure) && (
-        <Card className="border-t-4 border-t-yellow-500 shadow-md">
-          <CardHeader className="bg-gradient-to-r from-yellow-500 to-amber-500 py-4">
+        <Card className="border-t-4 border-t-[#D3B574] shadow-md">
+          <CardHeader className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] py-4">
             <CardTitle className="text-white flex items-center gap-2 text-lg">
-              <Trophy className="h-5 w-5" />
+              <Trophy className="h-5 w-5 text-[#D3B574]" />
               NCHSAA State Championships
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-6">
-            <div className="rounded-lg border overflow-hidden">
-              <Table>
+          <CardContent className="p-4 md:p-6">
+            <div className="rounded-lg border overflow-x-auto">
+              <Table className="min-w-[480px]">
                 <TableHeader>
                   <TableRow className="bg-gray-50">
                     <TableHead className="font-semibold">Year</TableHead>
@@ -222,7 +222,7 @@ export function TournamentResultsDisplay({
 
                       return (
                         <TableRow key={index} className="hover:bg-gray-50 transition-colors">
-                          <TableCell className="font-semibold text-yellow-600">{result.year}</TableCell>
+                          <TableCell className="font-semibold text-[#13294B]">{result.year}</TableCell>
                           <TableCell>{getPlacementBadge(placementText)}</TableCell>
                           <TableCell>{result.classification}</TableCell>
                           <TableCell>{result.weight_class}</TableCell>
@@ -245,16 +245,16 @@ export function TournamentResultsDisplay({
 
       {/* 3. NHSCA National Championship */}
       {(nhscaResults.length > 0 || alwaysShowStructure) && (
-        <Card className="border-t-4 border-t-[#002147] shadow-md">
-          <CardHeader className="bg-gradient-to-r from-[#002147] to-[#003366] py-4">
+        <Card className="border-t-4 border-t-[#D3B574] shadow-md">
+          <CardHeader className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] py-4">
             <CardTitle className="text-white flex items-center gap-2 text-lg">
-              <Trophy className="h-5 w-5" />
+              <Trophy className="h-5 w-5 text-[#D3B574]" />
               NHSCA National Championship
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-6">
-            <div className="rounded-lg border overflow-hidden">
-              <Table>
+          <CardContent className="p-4 md:p-6">
+            <div className="rounded-lg border overflow-x-auto">
+              <Table className="min-w-[540px]">
                 <TableHeader>
                   <TableRow className="bg-gray-50">
                     <TableHead className="font-semibold">Year</TableHead>
@@ -291,16 +291,16 @@ export function TournamentResultsDisplay({
 
       {/* 4. Super 32 */}
       {(super32Results.length > 0 || alwaysShowStructure) && (
-        <Card className="border-t-4 border-t-[#B31B1B] shadow-md">
-          <CardHeader className="bg-gradient-to-r from-[#B31B1B] to-[#8B1515] py-4">
+        <Card className="border-t-4 border-t-[#D3B574] shadow-md">
+          <CardHeader className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] py-4">
             <CardTitle className="text-white flex items-center gap-2 text-lg">
-              <Trophy className="h-5 w-5" />
+              <Trophy className="h-5 w-5 text-[#D3B574]" />
               Super 32
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-6">
-            <div className="rounded-lg border overflow-hidden">
-              <Table>
+          <CardContent className="p-4 md:p-6">
+            <div className="rounded-lg border overflow-x-auto">
+              <Table className="min-w-[480px]">
                 <TableHeader>
                   <TableRow className="bg-gray-50">
                     <TableHead className="font-semibold">Year</TableHead>
@@ -313,7 +313,7 @@ export function TournamentResultsDisplay({
                   {super32Results.length > 0 ? (
                     super32Results.map((result, index) => (
                       <TableRow key={index} className="hover:bg-gray-50 transition-colors">
-                        <TableCell className="font-semibold text-[#B31B1B]">{result.year}</TableCell>
+                        <TableCell className="font-semibold text-[#13294B]">{result.year}</TableCell>
                         <TableCell>{getPlacementBadge(result.placement, 'default', 'DNP')}</TableCell>
                         <TableCell className="font-mono">{result.record || "—"}</TableCell>
                         <TableCell>{result.weight || "—"}</TableCell>

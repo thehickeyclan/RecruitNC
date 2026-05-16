@@ -100,9 +100,7 @@ export function ProfileClient() {
   const spartanWalletPrimedRef = useRef(false)
 
   useEffect(() => {
-    console.log("[v0] ProfileClient useEffect:", { authLoading, isAuthenticated, user: !!user })
     if (!authLoading && isAuthenticated) {
-      console.log("[v0] Fetching profile from API")
       fetchProfile()
       fetchBlueMemberships()
       fetchLinkedAthletes()
@@ -362,7 +360,6 @@ export function ProfileClient() {
 
   const fetchProfile = async () => {
     try {
-      console.log("[v0] ProfileClient fetchProfile called")
       setIsLoading(true)
       setError("")
       const controller = new AbortController()
@@ -370,18 +367,13 @@ export function ProfileClient() {
       const response = await fetch("/api/profile", { credentials: "include", signal: controller.signal })
       clearTimeout(timeoutId)
 
-      console.log("[v0] Profile API response status:", response.status)
-
       if (response.ok) {
         const data = await response.json()
-        console.log("[v0] Profile data received:", !!data)
         setProfile({
           ...data,
           name: data.name ?? data.full_name ?? "",
         })
       } else {
-        const errorText = await response.text()
-        console.error("[v0] Profile API error:", response.status, errorText)
         if (response.status === 401) {
           setError("Session expired or not available. Please sign in again.")
         } else {
@@ -390,10 +382,8 @@ export function ProfileClient() {
       }
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
-        console.error("[v0] Profile fetch timed out")
         setError("Request timed out. Check your connection and try again.")
       } else {
-        console.error("[v0] Error fetching profile:", error)
         setError("An error occurred while loading your profile")
       }
     } finally {
@@ -501,10 +491,10 @@ export function ProfileClient() {
 
   if (authLoading || isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-100/90 via-white to-[#003366]/[0.04] flex items-center justify-center">
-        <div className="flex items-center gap-2 text-[#03154C]">
-          <Loader2 className="h-6 w-6 animate-spin text-[#003366]" />
-          <span>Loading your profile...</span>
+      <div className="min-h-screen bg-[#0A1628] flex items-center justify-center">
+        <div className="flex items-center gap-3 text-white">
+          <Loader2 className="h-6 w-6 animate-spin text-[#D3B574]" />
+          <span className="text-gray-300">Loading your profile...</span>
         </div>
       </div>
     )
@@ -512,14 +502,14 @@ export function ProfileClient() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen bg-[#0A1628] flex items-center justify-center px-4">
+        <Card className="w-full max-w-md bg-[#0F1E32] border-[#1e3a5f]">
           <CardHeader>
-            <CardTitle>Access Denied</CardTitle>
-            <CardDescription>Please sign in to view your profile</CardDescription>
+            <CardTitle className="text-white">Access Denied</CardTitle>
+            <CardDescription className="text-gray-400">Please sign in to view your profile</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button asChild className="w-full">
+            <Button asChild className="w-full bg-[#D3B574] hover:bg-[#c4a665] text-[#0A1628] font-semibold">
               <a href="/auth/signin">Sign In</a>
             </Button>
           </CardContent>
@@ -530,24 +520,24 @@ export function ProfileClient() {
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen bg-[#0A1628] flex items-center justify-center px-4">
+        <Card className="w-full max-w-md bg-[#0F1E32] border-[#1e3a5f]">
           <CardHeader>
-            <CardTitle>Profile Not Found</CardTitle>
-            <CardDescription>We couldn't find your profile information</CardDescription>
+            <CardTitle className="text-white">Profile Not Found</CardTitle>
+            <CardDescription className="text-gray-400">We couldn&apos;t find your profile information</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {error && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="bg-red-900/30 border-red-800 text-red-200">
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
             <div className="flex flex-col gap-2">
-              <Button onClick={fetchProfile} className="w-full">
+              <Button onClick={fetchProfile} className="w-full bg-[#D3B574] hover:bg-[#c4a665] text-[#0A1628] font-semibold">
                 Try Again
               </Button>
               {error?.toLowerCase().includes("session") && (
-                <Button asChild variant="outline" className="w-full">
+                <Button asChild variant="outline" className="w-full border-[#1e3a5f] text-gray-300 hover:bg-[#1e3a5f]">
                   <a href="/auth/signin">Sign in again</a>
                 </Button>
               )}
@@ -559,26 +549,24 @@ export function ProfileClient() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-100/90 via-white to-[#003366]/[0.04]">
-      <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
-        <div className="mb-8 rounded-2xl border border-[#003366]/10 bg-white/60 px-5 py-6 shadow-sm shadow-[#003366]/5 backdrop-blur-sm sm:px-7">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-[#B31B1B]">RecruitNC</p>
-              <h1 className="mt-1 text-2xl sm:text-3xl font-bold tracking-tight text-[#03154C]">My profile</h1>
-              <p className="text-slate-600 text-sm sm:text-base mt-1.5 max-w-2xl">
-                Account, family &amp; athletes, digital wallet, and NC United Blue — all in one place.
-              </p>
-            </div>
-            <div className="hidden h-12 w-1 shrink-0 rounded-full bg-gradient-to-b from-[#03154C] via-[#B31B1B] to-[#CBAF5D] sm:block" aria-hidden />
-          </div>
+    <div className="min-h-screen bg-[#0A1628]">
+      {/* Dark Hero Header */}
+      <div className="bg-gradient-to-b from-[#13294B] to-[#0A1628] border-b border-[#1e3a5f]">
+        <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#D3B574]">RecruitNC</p>
+          <h1 className="mt-2 text-3xl sm:text-4xl font-bold tracking-tight text-white">My Profile</h1>
+          <p className="text-gray-400 text-sm sm:text-base mt-2 max-w-2xl">
+            Account, family &amp; athletes, digital wallet, and NC United Blue — all in one place.
+          </p>
         </div>
+      </div>
 
+      <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
         <Tabs value={activeProfileTab} onValueChange={onProfileTabChange} className="w-full space-y-6">
-          <TabsList className="mb-0 grid w-full grid-cols-2 sm:grid-cols-4 gap-2 rounded-2xl border border-[#003366]/12 bg-gradient-to-b from-white to-slate-50/90 p-2 h-auto shadow-md shadow-[#003366]/5">
+          <TabsList className="mb-0 grid w-full grid-cols-2 sm:grid-cols-4 gap-2 rounded-xl bg-[#0F1E32] border border-[#1e3a5f] p-2 h-auto">
             <TabsTrigger
               value="account"
-              className="rounded-xl py-2.5 px-2 text-xs sm:text-sm font-semibold text-slate-600 transition-all data-[state=active]:bg-[#03154C] data-[state=active]:text-white data-[state=active]:shadow-md data-[state=inactive]:hover:bg-white/70"
+              className="rounded-lg py-2.5 px-2 text-xs sm:text-sm font-semibold text-gray-400 transition-all data-[state=active]:bg-[#D3B574] data-[state=active]:text-[#0A1628] data-[state=active]:shadow-md data-[state=inactive]:hover:bg-[#1e3a5f] data-[state=inactive]:hover:text-white"
             >
               <span className="inline-flex items-center justify-center gap-1.5 min-w-0">
                 <User className="h-4 w-4 shrink-0" />
@@ -588,7 +576,7 @@ export function ProfileClient() {
             <TabsTrigger
               value="family"
               title="Family and athletes"
-              className="rounded-xl py-2.5 px-2 text-xs sm:text-sm font-semibold text-slate-600 transition-all data-[state=active]:bg-[#03154C] data-[state=active]:text-white data-[state=active]:shadow-md data-[state=inactive]:hover:bg-white/70"
+              className="rounded-lg py-2.5 px-2 text-xs sm:text-sm font-semibold text-gray-400 transition-all data-[state=active]:bg-[#D3B574] data-[state=active]:text-[#0A1628] data-[state=active]:shadow-md data-[state=inactive]:hover:bg-[#1e3a5f] data-[state=inactive]:hover:text-white"
             >
               <span className="inline-flex items-center justify-center gap-1.5 min-w-0">
                 <Users className="h-4 w-4 shrink-0" />
@@ -599,7 +587,7 @@ export function ProfileClient() {
             <TabsTrigger
               value="fundraise"
               title="Digital wallet"
-              className="rounded-xl py-2.5 px-2 text-xs sm:text-sm font-semibold text-slate-600 transition-all data-[state=active]:bg-[#03154C] data-[state=active]:text-white data-[state=active]:shadow-md data-[state=inactive]:hover:bg-white/70"
+              className="rounded-lg py-2.5 px-2 text-xs sm:text-sm font-semibold text-gray-400 transition-all data-[state=active]:bg-[#D3B574] data-[state=active]:text-[#0A1628] data-[state=active]:shadow-md data-[state=inactive]:hover:bg-[#1e3a5f] data-[state=inactive]:hover:text-white"
             >
               <span className="inline-flex items-center justify-center gap-1.5 min-w-0">
                 <Coins className="h-4 w-4 shrink-0" />
@@ -609,7 +597,7 @@ export function ProfileClient() {
             </TabsTrigger>
             <TabsTrigger
               value="blue"
-              className="rounded-xl py-2.5 px-2 text-xs sm:text-sm font-semibold text-slate-600 transition-all data-[state=active]:bg-[#03154C] data-[state=active]:text-white data-[state=active]:shadow-md data-[state=inactive]:hover:bg-white/70"
+              className="rounded-lg py-2.5 px-2 text-xs sm:text-sm font-semibold text-gray-400 transition-all data-[state=active]:bg-[#D3B574] data-[state=active]:text-[#0A1628] data-[state=active]:shadow-md data-[state=inactive]:hover:bg-[#1e3a5f] data-[state=inactive]:hover:text-white"
             >
               <span className="inline-flex items-center justify-center gap-1.5 min-w-0">
                 <CreditCard className="h-4 w-4 shrink-0" />
@@ -983,24 +971,24 @@ export function ProfileClient() {
                     billingPortalError={blueBillingPortalError || undefined}
                   />
                 ) : (
-                  <Card className="border-[#003366]/12 border-dashed bg-white/90 shadow-md overflow-hidden">
-                    <div className="h-1 w-full bg-gradient-to-r from-[#03154C] via-[#B31B1B] to-[#CBAF5D]" aria-hidden />
+                  <Card className="bg-[#0F1E32] border-[#1e3a5f] shadow-md overflow-hidden">
+                    <div className="h-1 w-full bg-gradient-to-r from-[#D3B574] to-[#c4a665]" aria-hidden />
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-[#03154C]">
-                        <CreditCard className="h-5 w-5 text-[#003366]" />
+                      <CardTitle className="flex items-center gap-2 text-white">
+                        <CreditCard className="h-5 w-5 text-[#D3B574]" />
                         NC United Blue
                       </CardTitle>
-                      <CardDescription className="text-slate-600">
+                      <CardDescription className="text-gray-400">
                         Training, apparel, and member benefits — billed separately when you join.
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <p className="text-sm text-slate-600">
+                      <p className="text-sm text-gray-400">
                         You don&apos;t have an active Blue membership on this account yet. Parents who join can manage billing here.
                       </p>
                       <HardLink
                         href="/blue"
-                        className="inline-flex h-10 items-center justify-center rounded-lg border-2 border-[#03154C] bg-[#03154C] px-4 text-sm font-semibold text-white shadow-md transition-colors hover:bg-[#0a2a6e]"
+                        className="inline-flex h-10 items-center justify-center rounded-lg bg-[#D3B574] hover:bg-[#c4a665] px-4 text-sm font-semibold text-[#0A1628] shadow-md transition-colors"
                       >
                         Learn about NC United Blue
                       </HardLink>
