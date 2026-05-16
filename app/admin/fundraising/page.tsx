@@ -58,14 +58,21 @@ async function getFundraisingData() {
       paid_at,
       athlete_id,
       user_id,
-      athletes(firstName, lastName),
-      user_profiles(full_name, email)
+      athletes(firstName, lastName)
     `)
     .order("created_at", { ascending: false })
   
   if (expenseErr) {
     console.error("[v0] Expense query error:", expenseErr.message)
   }
+  
+  // Get user profiles for parent info (separate query since no FK)
+  const userIds = [...new Set((expenses || []).map((e: any) => e.user_id).filter(Boolean))]
+  const { data: userProfiles } = userIds.length > 0 
+    ? await admin.from("user_profiles").select("user_id, full_name, email").in("user_id", userIds)
+    : { data: [] }
+  
+  const userProfileMap = new Map((userProfiles || []).map((u: any) => [u.user_id, u]))
   
   // Get activation requests with athlete info
   const { data: activationRequests } = await admin
@@ -117,22 +124,23 @@ async function getFundraisingData() {
     .like("page_url", "%/fundraising/athletes/%")
     .gte("created_at", thirtyDaysAgo.toISOString())
   
-  console.log("[v0] Expenses fetched:", expenses?.length || 0)
-  
   // Transform expenses
-  const expenseRows: ExpenseRow[] = (expenses || []).map((e: any) => ({
-    id: e.id,
-    amount_cents: e.amount_cents || 0,
-    status: e.status,
-    expense_type: e.expense_type,
-    created_at: e.created_at,
-    paid_at: e.paid_at,
-    athlete_id: e.athlete_id,
-    athlete_first_name: e.athletes?.firstName || null,
-    athlete_last_name: e.athletes?.lastName || null,
-    parent_email: e.user_profiles?.email || null,
-    parent_name: e.user_profiles?.full_name || null,
-  }))
+  const expenseRows: ExpenseRow[] = (expenses || []).map((e: any) => {
+    const userProfile = userProfileMap.get(e.user_id)
+    return {
+      id: e.id,
+      amount_cents: e.amount_cents || 0,
+      status: e.status,
+      expense_type: e.expense_type,
+      created_at: e.created_at,
+      paid_at: e.paid_at,
+      athlete_id: e.athlete_id,
+      athlete_first_name: e.athletes?.firstName || null,
+      athlete_last_name: e.athletes?.lastName || null,
+      parent_email: userProfile?.email || null,
+      parent_name: userProfile?.full_name || null,
+    }
+  })
   
   // Transform activation requests
   const requestRows: ActivationRequest[] = (activationRequests || []).map((r: any) => ({
