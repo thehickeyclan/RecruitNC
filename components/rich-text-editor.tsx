@@ -85,12 +85,12 @@ function MenuBar({ editor }: { editor: Editor | null }) {
   if (!editor) return null
 
   return (
-    <div className="flex flex-wrap items-center gap-1 p-2 border rounded-t-md bg-gray-50 border-b-0">
+    <div className="flex flex-wrap items-center gap-1 px-3 py-2 border-b border-gray-200 bg-gray-50">
       <Button
         type="button"
         variant="ghost"
         size="sm"
-        className={cn("h-8 w-8 p-0", editor.isActive("bold") && "bg-gray-200")}
+        className={cn("h-8 w-8 p-0 text-gray-600 hover:text-gray-900 hover:bg-gray-200", editor.isActive("bold") && "bg-gray-200 text-gray-900")}
         onClick={() => editor.chain().focus().toggleBold().run()}
         title="Bold (Ctrl+B)"
       >
@@ -100,7 +100,7 @@ function MenuBar({ editor }: { editor: Editor | null }) {
         type="button"
         variant="ghost"
         size="sm"
-        className={cn("h-8 w-8 p-0", editor.isActive("italic") && "bg-gray-200")}
+        className={cn("h-8 w-8 p-0 text-gray-600 hover:text-gray-900 hover:bg-gray-200", editor.isActive("italic") && "bg-gray-200 text-gray-900")}
         onClick={() => editor.chain().focus().toggleItalic().run()}
         title="Italic (Ctrl+I)"
       >
@@ -110,20 +110,20 @@ function MenuBar({ editor }: { editor: Editor | null }) {
         type="button"
         variant="ghost"
         size="sm"
-        className={cn("h-8 w-8 p-0", editor.isActive("heading", { level: 2 }) && "bg-gray-200")}
+        className={cn("h-8 w-8 p-0 text-gray-600 hover:text-gray-900 hover:bg-gray-200", editor.isActive("heading", { level: 2 }) && "bg-gray-200 text-gray-900")}
         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
         title="Heading"
       >
         <Heading2 className="h-4 w-4" />
       </Button>
 
-      <div className="w-px h-6 bg-gray-300 mx-1" />
+      <div className="w-px h-5 bg-gray-300 mx-1" />
 
       <Button
         type="button"
         variant="ghost"
         size="sm"
-        className={cn("h-8 w-8 p-0", editor.isActive("bulletList") && "bg-gray-200")}
+        className={cn("h-8 w-8 p-0 text-gray-600 hover:text-gray-900 hover:bg-gray-200", editor.isActive("bulletList") && "bg-gray-200 text-gray-900")}
         onClick={() => editor.chain().focus().toggleBulletList().run()}
         title="Bullet list"
       >
@@ -133,14 +133,14 @@ function MenuBar({ editor }: { editor: Editor | null }) {
         type="button"
         variant="ghost"
         size="sm"
-        className={cn("h-8 w-8 p-0", editor.isActive("orderedList") && "bg-gray-200")}
+        className={cn("h-8 w-8 p-0 text-gray-600 hover:text-gray-900 hover:bg-gray-200", editor.isActive("orderedList") && "bg-gray-200 text-gray-900")}
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
         title="Numbered list"
       >
         <ListOrdered className="h-4 w-4" />
       </Button>
 
-      <div className="w-px h-6 bg-gray-300 mx-1" />
+      <div className="w-px h-5 bg-gray-300 mx-1" />
 
       {showLinkInput ? (
         <div className="flex items-center gap-1">
@@ -148,8 +148,8 @@ function MenuBar({ editor }: { editor: Editor | null }) {
             type="url"
             value={linkUrl}
             onChange={(e) => setLinkUrl(e.target.value)}
-            placeholder="https://example.com"
-            className="h-8 w-48 text-sm"
+            placeholder="https://..."
+            className="h-8 w-40 text-sm"
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault()
@@ -161,10 +161,10 @@ function MenuBar({ editor }: { editor: Editor | null }) {
             }}
             autoFocus
           />
-          <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={setLink}>
+          <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-600" onClick={setLink}>
             <Link2 className="h-4 w-4" />
           </Button>
-          <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => { setShowLinkInput(false); setLinkUrl("") }}>
+          <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-600" onClick={() => { setShowLinkInput(false); setLinkUrl("") }}>
             <X className="h-4 w-4" />
           </Button>
         </div>
@@ -173,7 +173,7 @@ function MenuBar({ editor }: { editor: Editor | null }) {
           type="button"
           variant="ghost"
           size="sm"
-          className={cn("h-8 w-8 p-0", editor.isActive("link") && "bg-gray-200")}
+          className={cn("h-8 w-8 p-0 text-gray-600 hover:text-gray-900 hover:bg-gray-200", editor.isActive("link") && "bg-gray-200 text-gray-900")}
           onClick={() => {
             if (editor.isActive("link")) {
               editor.chain().focus().unsetLink().run()
@@ -189,25 +189,25 @@ function MenuBar({ editor }: { editor: Editor | null }) {
         </Button>
       )}
 
-      <div className="w-px h-6 bg-gray-300 mx-1" />
+      <div className="w-px h-5 bg-gray-300 mx-1" />
 
       <Popover>
         <PopoverTrigger asChild>
-          <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" title="Insert emoji">
+          <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-600 hover:text-gray-900 hover:bg-gray-200" title="Emoji">
             <Smile className="h-4 w-4" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-72 p-2" align="start">
+        <PopoverContent className="w-72 p-3" align="start">
           <div className="space-y-3">
             {EMOJI_CATEGORIES.map((category) => (
               <div key={category.name}>
-                <p className="text-xs font-medium text-gray-500 mb-1">{category.name}</p>
-                <div className="flex flex-wrap gap-1">
+                <p className="text-xs font-medium text-gray-500 mb-1.5">{category.name}</p>
+                <div className="flex flex-wrap gap-0.5">
                   {category.emojis.map((emoji) => (
                     <button
                       key={emoji}
                       type="button"
-                      className="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 text-lg"
+                      className="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 text-lg transition-colors"
                       onClick={() => insertEmoji(emoji)}
                     >
                       {emoji}
@@ -226,7 +226,7 @@ function MenuBar({ editor }: { editor: Editor | null }) {
         type="button"
         variant="ghost"
         size="sm"
-        className="h-8 w-8 p-0"
+        className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600 disabled:opacity-30"
         onClick={() => editor.chain().focus().undo().run()}
         disabled={!editor.can().undo()}
         title="Undo"
@@ -237,7 +237,7 @@ function MenuBar({ editor }: { editor: Editor | null }) {
         type="button"
         variant="ghost"
         size="sm"
-        className="h-8 w-8 p-0"
+        className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600 disabled:opacity-30"
         onClick={() => editor.chain().focus().redo().run()}
         disabled={!editor.can().redo()}
         title="Redo"
@@ -305,7 +305,7 @@ export function RichTextEditor({ value, onChange, placeholder, className }: Rich
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
-          class: "text-[#003366] underline",
+          class: "text-blue-600 underline",
         },
       }),
       Placeholder.configure({
@@ -315,7 +315,7 @@ export function RichTextEditor({ value, onChange, placeholder, className }: Rich
     content: value,
     editorProps: {
       attributes: {
-        class: "prose prose-sm max-w-none focus:outline-none min-h-[200px] px-4 py-3",
+        class: "prose prose-sm max-w-none focus:outline-none min-h-[180px] px-4 py-3 text-gray-900",
       },
     },
     onUpdate: ({ editor }) => {
@@ -333,11 +333,11 @@ export function RichTextEditor({ value, onChange, placeholder, className }: Rich
   }, [value, editor])
 
   return (
-    <div className={cn("border rounded-md bg-white", className)}>
+    <div className={cn("rounded-lg overflow-hidden border border-gray-200 bg-white shadow-sm", className)}>
       <MenuBar editor={editor} />
       <EditorContent 
         editor={editor} 
-        className="[&_.ProseMirror]:min-h-[200px] [&_.ProseMirror]:px-4 [&_.ProseMirror]:py-3 [&_.ProseMirror_p.is-editor-empty:first-child::before]:text-gray-400 [&_.ProseMirror_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)] [&_.ProseMirror_p.is-editor-empty:first-child::before]:float-left [&_.ProseMirror_p.is-editor-empty:first-child::before]:h-0 [&_.ProseMirror_p.is-editor-empty:first-child::before]:pointer-events-none [&_.ProseMirror_ul]:list-disc [&_.ProseMirror_ul]:pl-6 [&_.ProseMirror_ol]:list-decimal [&_.ProseMirror_ol]:pl-6 [&_.ProseMirror_h2]:text-lg [&_.ProseMirror_h2]:font-bold [&_.ProseMirror_h2]:mt-4 [&_.ProseMirror_h2]:mb-2 [&_.ProseMirror_a]:text-[#003366] [&_.ProseMirror_a]:underline"
+        className="[&_.ProseMirror]:min-h-[180px] [&_.ProseMirror]:px-4 [&_.ProseMirror]:py-3 [&_.ProseMirror]:text-gray-900 [&_.ProseMirror_p.is-editor-empty:first-child::before]:text-gray-400 [&_.ProseMirror_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)] [&_.ProseMirror_p.is-editor-empty:first-child::before]:float-left [&_.ProseMirror_p.is-editor-empty:first-child::before]:h-0 [&_.ProseMirror_p.is-editor-empty:first-child::before]:pointer-events-none [&_.ProseMirror_ul]:list-disc [&_.ProseMirror_ul]:pl-6 [&_.ProseMirror_ol]:list-decimal [&_.ProseMirror_ol]:pl-6 [&_.ProseMirror_h2]:text-lg [&_.ProseMirror_h2]:font-bold [&_.ProseMirror_h2]:mt-4 [&_.ProseMirror_h2]:mb-2 [&_.ProseMirror_a]:text-blue-600 [&_.ProseMirror_a]:underline"
       />
     </div>
   )

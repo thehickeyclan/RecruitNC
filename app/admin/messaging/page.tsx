@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -15,7 +15,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox"
 import { AdminHeader } from "@/components/admin-header"
 import { HardLink } from "@/components/hard-link"
-import { MessageSquare, Users, Loader2, ArrowLeft, Send, Inbox, FolderOpen, Trash2, Eye, Mail } from "lucide-react"
+import { Loader2, ArrowLeft, Send, Inbox, FolderOpen, Trash2, Eye, Mail, Users, ChevronDown, ChevronUp } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { RichTextEditor } from "@/components/rich-text-editor"
 import type { ProfileOption, AudienceGroupOption } from "@/app/api/admin/messaging/audiences/route"
@@ -34,12 +34,13 @@ export default function AdminMessagingPage() {
   const [error, setError] = useState<string | null>(null)
   const [subject, setSubject] = useState("")
   const [body, setBody] = useState("")
-  const [channels, setChannels] = useState({ inApp: true, email: true, sms: false })
+  const [channels, setChannels] = useState({ inApp: false, email: true, sms: false })
   const [logoVariant, setLogoVariant] = useState<"recruitnc" | "nc-united">("recruitnc")
   const [testEmail, setTestEmail] = useState("")
   const [sending, setSending] = useState(false)
   const [sendResult, setSendResult] = useState<{ recipientCount: number; result: { inApp?: { sent: boolean; threadId?: string; error?: string }; email: { sent: number; failed: number }; sms: { sent: number; failed: number } } } | null>(null)
   const [bodyHtml, setBodyHtml] = useState("")
+  const [showRecipients, setShowRecipients] = useState(false)
 
   const [activeTab, setActiveTab] = useState<"compose" | "sent" | "folders">("compose")
   const [sent, setSent] = useState<SentBlastRow[]>([])
@@ -84,9 +85,7 @@ export default function AdminMessagingPage() {
   }
 
   useEffect(() => {
-    if (!loadingAudiences && (profile !== "all" || group !== "all")) {
-      loadRecipients()
-    } else if (!loadingAudiences && profile === "all" && group === "all") {
+    if (!loadingAudiences) {
       loadRecipients()
     }
   }, [loadingAudiences, profile, group])
@@ -127,57 +126,72 @@ export default function AdminMessagingPage() {
     if (activeTab === "folders") loadFoldersAndThreads()
   }, [activeTab])
 
+  const audienceLabel = () => {
+    const parts: string[] = []
+    if (profile !== "all") {
+      const p = profiles.find(p => p.value === profile)
+      parts.push(p?.label || profile)
+    }
+    if (group !== "all") {
+      const g = groups.find(g => g.id === group)
+      parts.push(g?.name || group)
+    }
+    return parts.length > 0 ? parts.join(" + ") : "All members"
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-gradient-to-r from-[#003366] to-[#004080] text-white shadow-lg">
-        <div className="container mx-auto px-4 py-6">
+    <div className="min-h-screen bg-[#061224]">
+      {/* Header */}
+      <div className="border-b border-white/10 bg-[#0A1628]">
+        <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="text-white hover:bg-white/10" asChild>
+            <Button variant="ghost" size="icon" className="text-white/70 hover:text-white hover:bg-white/10" asChild>
               <HardLink href="/admin"><ArrowLeft className="h-5 w-5" /></HardLink>
             </Button>
-            <div className="flex items-center gap-3">
-              <MessageSquare className="h-8 w-8 text-[#C8A94A]" />
-              <div>
-                <h1 className="text-2xl font-bold">Messaging & Command Center</h1>
-                <p className="text-blue-200 text-sm">Select RecruitNC members by profile and group for announcements and blasts</p>
-              </div>
+            <div>
+              <h1 className="text-xl font-bold text-white">Mass Email</h1>
+              <p className="text-white/50 text-sm">Send announcements to RecruitNC members</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-6">
         <AdminHeader />
 
-        <div className="flex flex-wrap items-end gap-1 border-b border-[#003366]/20 mb-6 max-w-4xl">
+        {/* Tabs */}
+        <div className="flex items-center gap-1 mb-6">
           <button
-            type="button"
             onClick={() => setActiveTab("compose")}
             className={cn(
-              "min-h-[44px] px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
-              activeTab === "compose" ? "border-[#003366] text-[#003366]" : "border-transparent text-gray-600 hover:text-[#003366]"
+              "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+              activeTab === "compose" 
+                ? "bg-[#C8A94A] text-[#061224]" 
+                : "text-white/60 hover:text-white hover:bg-white/5"
             )}
           >
             <Send className="inline w-4 h-4 mr-2" />
             Compose
           </button>
           <button
-            type="button"
             onClick={() => setActiveTab("sent")}
             className={cn(
-              "min-h-[44px] px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
-              activeTab === "sent" ? "border-[#003366] text-[#003366]" : "border-transparent text-gray-600 hover:text-[#003366]"
+              "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+              activeTab === "sent" 
+                ? "bg-[#C8A94A] text-[#061224]" 
+                : "text-white/60 hover:text-white hover:bg-white/5"
             )}
           >
             <Inbox className="inline w-4 h-4 mr-2" />
             Sent
           </button>
           <button
-            type="button"
             onClick={() => setActiveTab("folders")}
             className={cn(
-              "min-h-[44px] px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
-              activeTab === "folders" ? "border-[#003366] text-[#003366]" : "border-transparent text-gray-600 hover:text-[#003366]"
+              "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+              activeTab === "folders" 
+                ? "bg-[#C8A94A] text-[#061224]" 
+                : "text-white/60 hover:text-white hover:bg-white/5"
             )}
           >
             <FolderOpen className="inline w-4 h-4 mr-2" />
@@ -185,82 +199,70 @@ export default function AdminMessagingPage() {
           </button>
           <HardLink
             href="/admin/messaging/email-replies"
-            className="ml-auto mb-px flex min-h-[44px] items-center gap-1.5 rounded-t px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-[#003366]"
+            className="ml-auto px-4 py-2 rounded-lg text-sm font-medium text-white/60 hover:text-white hover:bg-white/5"
           >
-            <Mail className="h-4 w-4" />
-            Email replies
+            <Mail className="inline w-4 h-4 mr-2" />
+            Replies
           </HardLink>
         </div>
 
+        {/* Sent Tab */}
         {activeTab === "sent" && (
-          <Card className="max-w-3xl border-[#003366]/20">
-            <CardHeader>
-              <CardTitle className="text-[#003366]">Sent</CardTitle>
-              <CardDescription>History of blasts you’ve sent from Command Center.</CardDescription>
-            </CardHeader>
-            <CardContent>
+          <div className="rounded-xl bg-[#0A1628] border border-white/10 overflow-hidden">
+            <div className="p-4 border-b border-white/10">
+              <h2 className="text-lg font-semibold text-white">Sent Messages</h2>
+              <p className="text-sm text-white/50">History of blasts sent from Command Center</p>
+            </div>
+            <div className="p-4">
               {sentLoading && sent.length === 0 ? (
-                <div className="flex items-center gap-2 text-gray-500 py-8"><Loader2 className="h-5 w-5 animate-spin" /> Loading…</div>
+                <div className="flex items-center gap-2 text-white/50 py-8 justify-center">
+                  <Loader2 className="h-5 w-5 animate-spin" /> Loading...
+                </div>
               ) : sent.length === 0 ? (
-                <p className="text-gray-500 py-8">No sent blasts yet. Use Compose to send one.</p>
+                <p className="text-white/50 py-8 text-center">No sent blasts yet</p>
               ) : (
-                <>
-                  <div className="border rounded-md overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="text-left p-2">Date</th>
-                          <th className="text-left p-2">Audience</th>
-                          <th className="text-left p-2">Subject</th>
-                          <th className="text-left p-2">Channels</th>
-                          <th className="text-right p-2">Recipients</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {sent.map((row) => (
-                          <tr key={row.id} className="border-t">
-                            <td className="p-2 whitespace-nowrap">{new Date(row.sent_at).toLocaleString()}</td>
-                            <td className="p-2">
-                              {row.audience_group || row.audience_profile || "All"}
-                            </td>
-                            <td className="p-2 max-w-[180px] truncate" title={row.subject ?? undefined}>{row.subject || "—"}</td>
-                            <td className="p-2">
-                              {[row.channels_in_app && "In-app", row.channels_email && "Email", row.channels_sms && "SMS"].filter(Boolean).join(", ")}
-                            </td>
-                            <td className="p-2 text-right">{row.recipient_count}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                <div className="space-y-2">
+                  {sent.map((row) => (
+                    <div key={row.id} className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-white truncate">{row.subject || "No subject"}</p>
+                        <p className="text-sm text-white/50">
+                          {new Date(row.sent_at).toLocaleDateString()} - {row.audience_group || row.audience_profile || "All"} - {row.recipient_count} recipients
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-white/40">
+                        {row.channels_email && <span className="px-2 py-1 rounded bg-white/10">Email</span>}
+                        {row.channels_sms && <span className="px-2 py-1 rounded bg-white/10">SMS</span>}
+                        {row.channels_in_app && <span className="px-2 py-1 rounded bg-white/10">In-app</span>}
+                      </div>
+                    </div>
+                  ))}
                   {sentHasMore && (
-                    <Button variant="outline" className="mt-4" disabled={sentLoading} onClick={() => loadSent(sent[sent.length - 1]?.id)}>
+                    <Button variant="outline" className="w-full mt-2 border-white/20 text-white/70" disabled={sentLoading} onClick={() => loadSent(sent[sent.length - 1]?.id)}>
                       {sentLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Load more"}
                     </Button>
                   )}
-                </>
+                </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
+        {/* Folders Tab */}
         {activeTab === "folders" && (
-          <Card className="max-w-3xl border-[#003366]/20">
-            <CardHeader>
-              <CardTitle className="text-[#003366]">Folders</CardTitle>
-              <CardDescription>Organize threads into folders. Create a folder, then assign threads below.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex gap-2 flex-wrap items-end">
-                <div>
-                  <Label className="text-[#003366] text-xs">New folder</Label>
-                  <Input
-                    value={newFolderName}
-                    onChange={(e) => setNewFolderName(e.target.value)}
-                    placeholder="e.g. Blue, NHSCA"
-                    className="mt-1 w-48"
-                  />
-                </div>
+          <div className="rounded-xl bg-[#0A1628] border border-white/10 overflow-hidden">
+            <div className="p-4 border-b border-white/10">
+              <h2 className="text-lg font-semibold text-white">Folders</h2>
+              <p className="text-sm text-white/50">Organize threads into folders</p>
+            </div>
+            <div className="p-4 space-y-6">
+              <div className="flex gap-2">
+                <Input
+                  value={newFolderName}
+                  onChange={(e) => setNewFolderName(e.target.value)}
+                  placeholder="New folder name..."
+                  className="max-w-xs bg-white/5 border-white/20 text-white placeholder:text-white/40"
+                />
                 <Button
                   disabled={!newFolderName.trim() || creatingFolder}
                   onClick={async () => {
@@ -272,137 +274,71 @@ export default function AdminMessagingPage() {
                         credentials: "include",
                         body: JSON.stringify({ name: newFolderName.trim() }),
                       })
-                      const data = await res.json()
-                      if (res.ok && data.folder) {
+                      if (res.ok) {
                         setNewFolderName("")
                         loadFoldersAndThreads()
-                      } else {
-                        setError(data.error ?? "Failed to create folder")
                       }
                     } finally {
                       setCreatingFolder(false)
                     }
                   }}
+                  className="bg-[#C8A94A] hover:bg-[#B89A3A] text-[#061224]"
                 >
-                  {creatingFolder ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create folder"}
+                  {creatingFolder ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create"}
                 </Button>
               </div>
+              
               {folders.length > 0 && (
-                <div>
-                  <Label className="text-[#003366] text-sm">Your folders</Label>
-                  <ul className="mt-2 space-y-1">
-                    {folders.map((f) => (
-                      <li key={f.id} className="flex items-center justify-between py-2 border-b">
-                        <span className="font-medium">{f.name}</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-red-600 hover:text-red-700"
-                          onClick={async () => {
-                            if (!confirm("Delete this folder? Threads will be unassigned.")) return
-                            const res = await fetch(`/api/admin/messaging/folders/${f.id}`, { method: "DELETE", credentials: "include" })
-                            if (res.ok) loadFoldersAndThreads()
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </li>
-                    ))}
-                  </ul>
+                <div className="space-y-1">
+                  {folders.map((f) => (
+                    <div key={f.id} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+                      <span className="font-medium text-white">{f.name}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                        onClick={async () => {
+                          if (!confirm("Delete this folder?")) return
+                          await fetch(`/api/admin/messaging/folders/${f.id}`, { method: "DELETE", credentials: "include" })
+                          loadFoldersAndThreads()
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
               )}
-              <div>
-                <Label className="text-[#003366] text-sm">Threads — assign to folder</Label>
-                {foldersLoading && threads.length === 0 ? (
-                  <p className="text-gray-500 py-4">Loading threads…</p>
-                ) : threads.length === 0 ? (
-                  <p className="text-gray-500 py-4">No threads. You’ll see threads here when you’re a member of event or group chats (e.g. from hub).</p>
-                ) : (
-                  <div className="mt-2 border rounded-md divide-y">
-                    {threads.map((t) => (
-                      <div key={t.id} className="flex items-center justify-between gap-4 p-3">
-                        <div className="min-w-0 flex-1">
-                          <p className="font-medium truncate">{t.name}</p>
-                          <p className="text-xs text-gray-500">{t.context_type}/{t.context_id || "—"}</p>
-                        </div>
-                        <Select
-                          value={t.folder_id ?? "none"}
-                          onValueChange={async (val) => {
-                            const folderId = val === "none" ? null : val
-                            const res = await fetch(`/api/admin/messaging/threads/${t.id}/folder`, {
-                              method: "PUT",
-                              headers: { "Content-Type": "application/json" },
-                              credentials: "include",
-                              body: JSON.stringify({ folder_id: folderId }),
-                            })
-                            if (res.ok) loadFoldersAndThreads()
-                          }}
-                        >
-                          <SelectTrigger className="w-40">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">No folder</SelectItem>
-                            {folders.map((f) => (
-                              <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Button variant="ghost" size="sm" asChild>
-                          <a href={`/forum`}>Open</a>
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
+        {/* Compose Tab */}
         {activeTab === "compose" && (
-        <>
-        <Card className="max-w-3xl border-[#003366]/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-[#003366]">
-              <Users className="h-5 w-5" />
-              Select audience
-            </CardTitle>
-            <CardDescription>
-              Choose RecruitNC members, then narrow by profile (role) and/or group (Blue Program, NHSCA Duals 2026, forum groups, etc.).
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {loadingAudiences ? (
-              <div className="flex items-center gap-2 text-gray-500 py-4">
-                <Loader2 className="h-5 w-5 animate-spin" />
-                Loading options…
-              </div>
-            ) : (
-              <>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <Label className="text-[#003366]">Profile (role)</Label>
+          <div className="max-w-3xl space-y-4">
+            {/* Audience Selection */}
+            <div className="rounded-xl bg-[#0A1628] border border-white/10 p-4">
+              <div className="flex flex-wrap items-end gap-4">
+                <div className="flex-1 min-w-[200px]">
+                  <Label className="text-white/70 text-sm">To</Label>
+                  <div className="flex gap-2 mt-1">
                     <Select value={profile} onValueChange={setProfile}>
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="All profiles" />
+                      <SelectTrigger className="bg-white/5 border-white/20 text-white">
+                        <SelectValue placeholder="All roles" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All profiles</SelectItem>
+                        <SelectItem value="all">All roles</SelectItem>
                         {profiles.map((p) => (
                           <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                  </div>
-                  <div>
-                    <Label className="text-[#003366]">Group</Label>
                     <Select value={group} onValueChange={setGroup}>
-                      <SelectTrigger className="mt-1">
+                      <SelectTrigger className="bg-white/5 border-white/20 text-white">
                         <SelectValue placeholder="All groups" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All RecruitNC members</SelectItem>
+                        <SelectItem value="all">All groups</SelectItem>
                         {groups.map((g) => (
                           <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
                         ))}
@@ -410,207 +346,199 @@ export default function AdminMessagingPage() {
                     </Select>
                   </div>
                 </div>
-
-                {error && (
-                  <p className="text-sm text-red-600">{error}</p>
-                )}
-
-                {loadingRecipients ? (
-                  <div className="flex items-center gap-2 text-gray-500 py-4">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    Counting recipients…
-                  </div>
-                ) : count !== null ? (
-                  <div className="rounded-lg border border-[#003366]/20 bg-[#003366]/5 p-4">
-                    <p className="text-lg font-semibold text-[#003366]">
-                      {count} recipient{count !== 1 ? "s" : ""} selected
-                    </p>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Use this audience for in-app announcements, email, or SMS when those features are enabled.
-                    </p>
-                    {recipients.length > 0 && (
-                      <div className="mt-4 max-h-48 overflow-y-auto border rounded-md bg-white">
-                        <table className="w-full text-sm">
-                          <thead className="bg-gray-50 sticky top-0">
-                            <tr>
-                              <th className="text-left p-2">Name</th>
-                              <th className="text-left p-2">Email</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {recipients.slice(0, 50).map((r) => (
-                              <tr key={r.user_id} className="border-t">
-                                <td className="p-2">{r.display_name || "—"}</td>
-                                <td className="p-2">{r.email || "—"}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                        {recipients.length > 50 && (
-                          <p className="text-xs text-gray-500 p-2 border-t">Showing first 50 of {recipients.length}</p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ) : null}
-
-                <div className="flex gap-2 pt-2">
-                  <Button onClick={loadRecipients} disabled={loadingRecipients} variant="outline" className="border-[#003366]/30">
-                    {loadingRecipients ? <Loader2 className="h-4 w-4 animate-spin" /> : "Refresh count"}
-                  </Button>
+                <div className="flex items-center gap-3">
+                  {loadingRecipients ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-white/50" />
+                  ) : count !== null ? (
+                    <button 
+                      onClick={() => setShowRecipients(!showRecipients)}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#C8A94A]/10 text-[#C8A94A] text-sm font-medium hover:bg-[#C8A94A]/20"
+                    >
+                      <Users className="h-4 w-4" />
+                      {count} recipient{count !== 1 ? "s" : ""}
+                      {showRecipients ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                    </button>
+                  ) : null}
                 </div>
+              </div>
 
-                <div className="pt-4 border-t border-gray-200 mt-4">
-                  <Label className="text-[#003366]">Test email (optional)</Label>
+              {/* Expandable recipients list */}
+              {showRecipients && recipients.length > 0 && (
+                <div className="mt-4 max-h-48 overflow-y-auto rounded-lg bg-white/5 divide-y divide-white/5">
+                  {recipients.slice(0, 50).map((r) => (
+                    <div key={r.user_id} className="px-3 py-2 text-sm">
+                      <span className="text-white">{r.display_name || "Unknown"}</span>
+                      <span className="text-white/40 ml-2">{r.email}</span>
+                    </div>
+                  ))}
+                  {recipients.length > 50 && (
+                    <p className="px-3 py-2 text-xs text-white/40">+ {recipients.length - 50} more</p>
+                  )}
+                </div>
+              )}
+
+              {/* Test email */}
+              <div className="mt-4 pt-4 border-t border-white/10">
+                <div className="flex items-center gap-2">
                   <Input
                     type="email"
                     value={testEmail}
                     onChange={(e) => setTestEmail(e.target.value)}
-                    placeholder="e.g. you@example.com — send only to this address"
-                    className="mt-1 max-w-md"
+                    placeholder="Test email (optional) - send only to this address"
+                    className="flex-1 bg-white/5 border-white/20 text-white placeholder:text-white/40"
                   />
-                  <p className="text-xs text-gray-500 mt-1">When set, the blast is sent only to this address (no audience). Use to test before sending to everyone.</p>
                 </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+              </div>
+            </div>
 
-        {((count !== null && count > 0) || testEmail.trim() !== "") && (
-          <Card className="max-w-3xl mt-6 border-[#003366]/20">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-[#003366]">
-                <Send className="h-5 w-5" />
-                Compose & send
-              </CardTitle>
-              <CardDescription>
-                Rich text editor with formatting toolbar. Supports bold, italic, headings, bullet/numbered lists, links, and emojis. 
-                Same message is sent as HTML email and plain text SMS.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label className="text-[#003366]">Email header logo</Label>
-                <Select value={logoVariant} onValueChange={(v) => setLogoVariant(v as "recruitnc" | "nc-united")}>
-                  <SelectTrigger className="mt-1 max-w-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="recruitnc">RecruitNC (shield)</SelectItem>
-                    <SelectItem value="nc-united">NC United (stacked)</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-gray-500 mt-1">Choose which logo appears in the email header. Preview to compare.</p>
-              </div>
-              <div>
-                <Label className="text-[#003366]">Subject (for email)</Label>
-                <Input
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
-                  placeholder="Update from RecruitNC"
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label className="text-[#003366]">Message</Label>
-                <p className="text-xs text-gray-500 mb-2">
-                  Use the toolbar to format: bold, italic, headings, bullet lists, links, and emojis. 
-                  Your message will be converted to clean HTML for email and plain text for SMS.
-                </p>
-                <RichTextEditor
-                  value={bodyHtml}
-                  onChange={(html, markdown) => {
-                    setBodyHtml(html)
-                    setBody(markdown)
-                  }}
-                  placeholder="Write your message..."
-                />
-              </div>
-              <div className="flex flex-wrap items-center gap-4">
-                <Label className="text-[#003366]">Send via</Label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <Checkbox checked={channels.inApp} onCheckedChange={(c) => setChannels((prev) => ({ ...prev, inApp: !!c }))} />
-                  <span className="text-sm">In-app (announcement in group thread)</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <Checkbox checked={channels.email} onCheckedChange={(c) => setChannels((prev) => ({ ...prev, email: !!c }))} />
-                  <span className="text-sm">Email</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <Checkbox checked={channels.sms} onCheckedChange={(c) => setChannels((prev) => ({ ...prev, sms: !!c }))} />
-                  <span className="text-sm">SMS (text)</span>
-                </label>
-              </div>
-              {sendResult && (
-                <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-sm">
-                  <p className="font-medium text-green-800">Sent to {sendResult.recipientCount} recipients</p>
-                  {sendResult.result.inApp !== undefined && (
-                    <p>In-app: {sendResult.result.inApp.sent ? "Posted as announcement" : sendResult.result.inApp.error ?? "Skipped"}</p>
-                  )}
-                  <p>Email: {sendResult.result.email.sent} sent{sendResult.result.email.failed > 0 ? `, ${sendResult.result.email.failed} failed` : ""}</p>
-                  <p>SMS: {sendResult.result.sms.sent} sent{sendResult.result.sms.failed > 0 ? `, ${sendResult.result.sms.failed} failed` : ""}</p>
+            {/* Compose Message */}
+            {((count !== null && count > 0) || testEmail.trim() !== "") && (
+              <div className="rounded-xl bg-[#0A1628] border border-white/10 p-4 space-y-4">
+                {/* Subject */}
+                <div>
+                  <Label className="text-white/70 text-sm">Subject</Label>
+                  <Input
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    placeholder="Update from RecruitNC"
+                    className="mt-1 bg-white/5 border-white/20 text-white placeholder:text-white/40"
+                  />
                 </div>
-              )}
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="border-[#003366]/40 text-[#003366] hover:bg-[#003366]/10"
-                  onClick={() => {
-                    const params = new URLSearchParams()
-                    if (subject.trim()) params.set("subject", subject.trim())
-                    if (body.trim()) params.set("b64", btoa(unescape(encodeURIComponent(body.trim()))))
-                    if (bodyHtml.trim()) params.set("html64", btoa(unescape(encodeURIComponent(bodyHtml.trim()))))
-                    params.set("logo", logoVariant)
-                    window.open(`/admin/messaging/preview?${params.toString()}`, "_blank", "noopener,noreferrer")
-                  }}
-                >
-                  <Eye className="h-4 w-4 mr-2" />
-                  Preview email
-                </Button>
-                <Button
-                  disabled={!body.trim() || sending || (!channels.inApp && !channels.email && !channels.sms)}
-                onClick={async () => {
-                  setSendResult(null)
-                  setSending(true)
-                  try {
-                    const res = await fetch("/api/admin/messaging/send", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      credentials: "include",
-                      body: JSON.stringify({
-                        profile: profile === "all" ? undefined : profile,
-                        group: group === "all" ? undefined : group,
-                        subject: subject || "Update from RecruitNC",
-                        body: body.trim(),
-                        bodyHtml: bodyHtml.trim() || undefined,
-                        testEmail: testEmail.trim() || undefined,
-                        logoVariant,
-                        channels,
-                      }),
-                    })
-                    const data = await res.json().catch(() => ({}))
-                    if (res.ok && data.ok) {
-                      setSendResult({ recipientCount: data.recipientCount, result: data.result })
-                    } else {
-                      setError(data.error ?? "Send failed")
-                    }
-                  } catch {
-                    setError("Request failed")
-                  } finally {
-                    setSending(false)
-                  }
-                }}
-                className="bg-[#003366] hover:bg-[#003366]/90"
-              >
-                  {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                  {sending ? " Sending…" : " Send blast"}
-                </Button>
+
+                {/* Message Editor */}
+                <div>
+                  <Label className="text-white/70 text-sm">Message</Label>
+                  <div className="mt-1">
+                    <RichTextEditor
+                      value={bodyHtml}
+                      onChange={(html, markdown) => {
+                        setBodyHtml(html)
+                        setBody(markdown)
+                      }}
+                      placeholder="Write your message..."
+                    />
+                  </div>
+                </div>
+
+                {/* Options Row */}
+                <div className="flex flex-wrap items-center gap-4 pt-2">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-white/50">Send via:</span>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <Checkbox 
+                        checked={channels.email} 
+                        onCheckedChange={(c) => setChannels((prev) => ({ ...prev, email: !!c }))}
+                        className="border-white/30 data-[state=checked]:bg-[#C8A94A] data-[state=checked]:border-[#C8A94A]"
+                      />
+                      <span className="text-sm text-white/70">Email</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <Checkbox 
+                        checked={channels.sms} 
+                        onCheckedChange={(c) => setChannels((prev) => ({ ...prev, sms: !!c }))}
+                        className="border-white/30 data-[state=checked]:bg-[#C8A94A] data-[state=checked]:border-[#C8A94A]"
+                      />
+                      <span className="text-sm text-white/70">SMS</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <Checkbox 
+                        checked={channels.inApp} 
+                        onCheckedChange={(c) => setChannels((prev) => ({ ...prev, inApp: !!c }))}
+                        className="border-white/30 data-[state=checked]:bg-[#C8A94A] data-[state=checked]:border-[#C8A94A]"
+                      />
+                      <span className="text-sm text-white/70">In-app</span>
+                    </label>
+                  </div>
+                  <div className="flex items-center gap-2 ml-auto">
+                    <Select value={logoVariant} onValueChange={(v) => setLogoVariant(v as "recruitnc" | "nc-united")}>
+                      <SelectTrigger className="w-[140px] bg-white/5 border-white/20 text-white text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="recruitnc">RecruitNC</SelectItem>
+                        <SelectItem value="nc-united">NC United</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Error */}
+                {error && (
+                  <p className="text-sm text-red-400 bg-red-500/10 px-3 py-2 rounded-lg">{error}</p>
+                )}
+
+                {/* Success Result */}
+                {sendResult && (
+                  <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-4 text-sm text-emerald-400">
+                    <p className="font-medium">Sent to {sendResult.recipientCount} recipient{sendResult.recipientCount !== 1 ? "s" : ""}</p>
+                    <div className="mt-1 text-emerald-400/70">
+                      {sendResult.result.email.sent > 0 && <span>Email: {sendResult.result.email.sent} sent. </span>}
+                      {sendResult.result.sms.sent > 0 && <span>SMS: {sendResult.result.sms.sent} sent. </span>}
+                      {sendResult.result.inApp?.sent && <span>In-app: Posted. </span>}
+                    </div>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    className="border-white/20 text-white/70 hover:text-white hover:bg-white/10"
+                    onClick={() => {
+                      const params = new URLSearchParams()
+                      if (subject.trim()) params.set("subject", subject.trim())
+                      if (body.trim()) params.set("b64", btoa(unescape(encodeURIComponent(body.trim()))))
+                      if (bodyHtml.trim()) params.set("html64", btoa(unescape(encodeURIComponent(bodyHtml.trim()))))
+                      params.set("logo", logoVariant)
+                      window.open(`/admin/messaging/preview?${params.toString()}`, "_blank", "noopener,noreferrer")
+                    }}
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    Preview
+                  </Button>
+                  <Button
+                    disabled={!body.trim() || sending || (!channels.inApp && !channels.email && !channels.sms)}
+                    onClick={async () => {
+                      setSendResult(null)
+                      setError(null)
+                      setSending(true)
+                      try {
+                        const res = await fetch("/api/admin/messaging/send", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          credentials: "include",
+                          body: JSON.stringify({
+                            profile: profile === "all" ? undefined : profile,
+                            group: group === "all" ? undefined : group,
+                            subject: subject || "Update from RecruitNC",
+                            body: body.trim(),
+                            bodyHtml: bodyHtml.trim() || undefined,
+                            testEmail: testEmail.trim() || undefined,
+                            logoVariant,
+                            channels,
+                          }),
+                        })
+                        const data = await res.json().catch(() => ({}))
+                        if (res.ok && data.ok) {
+                          setSendResult({ recipientCount: data.recipientCount, result: data.result })
+                        } else {
+                          setError(data.error ?? "Send failed")
+                        }
+                      } catch {
+                        setError("Request failed")
+                      } finally {
+                        setSending(false)
+                      }
+                    }}
+                    className="bg-[#C8A94A] hover:bg-[#B89A3A] text-[#061224] font-medium"
+                  >
+                    {sending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
+                    {sending ? "Sending..." : "Send"}
+                  </Button>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        )}
-        </>
+            )}
+          </div>
         )}
       </div>
     </div>
