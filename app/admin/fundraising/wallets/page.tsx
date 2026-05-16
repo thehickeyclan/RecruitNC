@@ -23,24 +23,30 @@ import {
   TrendingUp,
   Receipt,
   AlertCircle,
-  ExternalLink,
   CheckCircle,
   XCircle,
+  ChevronRight,
 } from "lucide-react"
 
+interface AthleteBreakdown {
+  athlete_id: string
+  athlete_name: string
+  raised_cents: number
+  spent_cents: number
+}
+
 interface FamilyWallet {
-  athleteId: string
-  athleteName: string
-  athleteCode: string | null
+  familyId: string | null
+  familyName: string | null
+  athletes: { id: string; name: string }[]
+  athleteBreakdown: AthleteBreakdown[]
   parentEmail: string | null
   parentName: string | null
-  raisedCents: number
-  reimbursedCents: number
-  guildAllocationsCents: number
+  totalRaisedCents: number
+  totalSpentCents: number
   availableCents: number
-  donationCount: number
+  lastTransactionAt: string | null
   hasParentLink: boolean
-  profileActive: boolean
 }
 
 export default function AdminWalletsPage() {
@@ -92,16 +98,17 @@ export default function AdminWalletsPage() {
   const filteredWallets = wallets.filter((w) => {
     if (!searchQuery) return true
     const q = searchQuery.toLowerCase()
+    const athleteNames = w.athletes.map((a) => a.name.toLowerCase()).join(" ")
     return (
-      w.athleteName.toLowerCase().includes(q) ||
-      w.athleteCode?.toLowerCase().includes(q) ||
+      athleteNames.includes(q) ||
+      w.familyName?.toLowerCase().includes(q) ||
       w.parentEmail?.toLowerCase().includes(q) ||
       w.parentName?.toLowerCase().includes(q)
     )
   })
 
-  const totalRaised = wallets.reduce((sum, w) => sum + w.raisedCents, 0)
-  const totalSpent = wallets.reduce((sum, w) => sum + w.reimbursedCents + w.guildAllocationsCents, 0)
+  const totalRaised = wallets.reduce((sum, w) => sum + w.totalRaisedCents, 0)
+  const totalSpent = wallets.reduce((sum, w) => sum + w.totalSpentCents, 0)
   const totalAvailable = wallets.reduce((sum, w) => sum + w.availableCents, 0)
 
   if (authLoading) {
@@ -231,7 +238,7 @@ export default function AdminWalletsPage() {
         <div className="relative mb-6">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
           <Input
-            placeholder="Search by athlete, parent, or code..."
+            placeholder="Search by family, athlete, or parent..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 bg-[#0F1E32] border-[#1e3a5f] text-white placeholder:text-gray-500"
@@ -252,9 +259,9 @@ export default function AdminWalletsPage() {
               </CardContent>
             </Card>
           ) : (
-            filteredWallets.map((wallet) => (
+            filteredWallets.map((wallet, idx) => (
               <button
-                key={wallet.athleteId}
+                key={wallet.familyId || idx}
                 onClick={() => setSelectedWallet(wallet)}
                 className="w-full text-left"
               >
@@ -271,31 +278,33 @@ export default function AdminWalletsPage() {
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">
-                          <p className="font-medium text-white truncate">{wallet.athleteName}</p>
+                          <p className="font-medium text-white truncate">
+                            {wallet.familyName || wallet.athletes.map((a) => a.name).join(", ")}
+                          </p>
+                          {wallet.athletes.length > 1 && (
+                            <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-xs">
+                              {wallet.athletes.length} athletes
+                            </Badge>
+                          )}
                           {!wallet.hasParentLink && (
                             <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30 text-xs">
-                              No parent link
+                              No parent
                             </Badge>
                           )}
                         </div>
                         <p className="text-sm text-gray-400 truncate">
                           {wallet.parentEmail || "No parent connected"}
                         </p>
-                        {wallet.athleteCode && (
-                          <p className="text-xs text-gray-500 font-mono mt-0.5">{wallet.athleteCode}</p>
-                        )}
                       </div>
 
                       <div className="hidden sm:grid sm:grid-cols-3 gap-4 text-right">
                         <div>
                           <p className="text-xs text-gray-500">Raised</p>
-                          <p className="font-semibold text-green-400">{formatCurrency(wallet.raisedCents)}</p>
+                          <p className="font-semibold text-green-400">{formatCurrency(wallet.totalRaisedCents)}</p>
                         </div>
                         <div>
                           <p className="text-xs text-gray-500">Spent</p>
-                          <p className="font-semibold text-orange-400">
-                            {formatCurrency(wallet.reimbursedCents + wallet.guildAllocationsCents)}
-                          </p>
+                          <p className="font-semibold text-orange-400">{formatCurrency(wallet.totalSpentCents)}</p>
                         </div>
                         <div>
                           <p className="text-xs text-gray-500">Available</p>
@@ -305,8 +314,10 @@ export default function AdminWalletsPage() {
 
                       <div className="sm:hidden text-right">
                         <p className="font-bold text-[#D3B574]">{formatCurrency(wallet.availableCents)}</p>
-                        <p className="text-xs text-gray-500">{wallet.donationCount} donations</p>
+                        <p className="text-xs text-gray-500">{wallet.athletes.length} athlete(s)</p>
                       </div>
+
+                      <ChevronRight className="h-5 w-5 text-gray-500 shrink-0" />
                     </div>
                   </CardContent>
                 </Card>
@@ -318,87 +329,83 @@ export default function AdminWalletsPage() {
 
       {/* Detail Dialog */}
       <Dialog open={!!selectedWallet} onOpenChange={() => setSelectedWallet(null)}>
-        <DialogContent className="bg-[#0F1E32] border-[#1e3a5f] text-white max-w-md">
+        <DialogContent className="bg-[#0F1E32] border-[#1e3a5f] text-white max-w-lg">
           <DialogHeader>
-            <DialogTitle className="text-white">Wallet Details</DialogTitle>
+            <DialogTitle className="text-white">
+              {selectedWallet?.familyName || "Wallet Details"}
+            </DialogTitle>
           </DialogHeader>
 
           {selectedWallet && (
             <div className="space-y-4">
+              {/* Parent Info */}
               <div className="p-4 bg-[#0A1628] rounded-lg space-y-3">
-                <div>
-                  <p className="text-xs text-gray-500">Athlete</p>
-                  <p className="font-medium text-white">{selectedWallet.athleteName}</p>
-                  {selectedWallet.athleteCode && (
-                    <p className="text-xs text-gray-500 font-mono">{selectedWallet.athleteCode}</p>
-                  )}
-                </div>
-
                 <div className="flex items-center gap-2">
-                  <p className="text-xs text-gray-500">Parent Link:</p>
+                  <p className="text-xs text-gray-500">Parent Linked:</p>
                   {selectedWallet.hasParentLink ? (
                     <CheckCircle className="h-4 w-4 text-green-400" />
                   ) : (
                     <XCircle className="h-4 w-4 text-red-400" />
                   )}
                 </div>
-
                 {selectedWallet.parentEmail && (
                   <div>
-                    <p className="text-xs text-gray-500">Parent Email</p>
-                    <p className="text-white">{selectedWallet.parentEmail}</p>
-                  </div>
-                )}
-
-                {selectedWallet.parentName && (
-                  <div>
-                    <p className="text-xs text-gray-500">Parent Name</p>
-                    <p className="text-white">{selectedWallet.parentName}</p>
+                    <p className="text-xs text-gray-500">Parent</p>
+                    <p className="text-white">{selectedWallet.parentName || selectedWallet.parentEmail}</p>
+                    {selectedWallet.parentName && (
+                      <p className="text-sm text-gray-400">{selectedWallet.parentEmail}</p>
+                    )}
                   </div>
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <Card className="bg-[#0A1628] border-[#1e3a5f]">
-                  <CardContent className="p-3">
-                    <p className="text-xs text-gray-500">Total Raised</p>
-                    <p className="text-lg font-bold text-green-400">
-                      {formatCurrency(selectedWallet.raisedCents)}
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-[#0A1628] border-[#1e3a5f]">
-                  <CardContent className="p-3">
-                    <p className="text-xs text-gray-500">Donations</p>
-                    <p className="text-lg font-bold text-white">{selectedWallet.donationCount}</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-[#0A1628] border-[#1e3a5f]">
-                  <CardContent className="p-3">
-                    <p className="text-xs text-gray-500">Reimbursed</p>
-                    <p className="text-lg font-bold text-orange-400">
-                      {formatCurrency(selectedWallet.reimbursedCents)}
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-[#0A1628] border-[#1e3a5f]">
-                  <CardContent className="p-3">
-                    <p className="text-xs text-gray-500">Guild Used</p>
-                    <p className="text-lg font-bold text-purple-400">
-                      {formatCurrency(selectedWallet.guildAllocationsCents)}
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-
+              {/* Wallet Summary */}
               <Card className="bg-[#D3B574]/10 border-[#D3B574]/30">
-                <CardContent className="p-4 text-center">
-                  <p className="text-xs text-[#D3B574]">Available Balance</p>
-                  <p className="text-2xl font-bold text-[#D3B574]">
-                    {formatCurrency(selectedWallet.availableCents)}
-                  </p>
+                <CardContent className="p-4">
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                      <p className="text-xs text-gray-400">Raised</p>
+                      <p className="text-lg font-bold text-green-400">
+                        {formatCurrency(selectedWallet.totalRaisedCents)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400">Spent</p>
+                      <p className="text-lg font-bold text-orange-400">
+                        {formatCurrency(selectedWallet.totalSpentCents)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-[#D3B574]">Available</p>
+                      <p className="text-lg font-bold text-[#D3B574]">
+                        {formatCurrency(selectedWallet.availableCents)}
+                      </p>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
+
+              {/* Athlete Breakdown */}
+              {selectedWallet.athleteBreakdown.length > 0 && (
+                <div>
+                  <p className="text-sm font-medium text-gray-300 mb-2">Per-Athlete Breakdown</p>
+                  <div className="space-y-2">
+                    {selectedWallet.athleteBreakdown.map((ab) => (
+                      <Card key={ab.athlete_id} className="bg-[#0A1628] border-[#1e3a5f]">
+                        <CardContent className="p-3">
+                          <div className="flex items-center justify-between">
+                            <p className="font-medium text-white">{ab.athlete_name}</p>
+                            <div className="flex gap-4 text-sm">
+                              <span className="text-green-400">+{formatCurrency(ab.raised_cents)}</span>
+                              <span className="text-orange-400">-{formatCurrency(ab.spent_cents)}</span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <Button
                 variant="outline"
