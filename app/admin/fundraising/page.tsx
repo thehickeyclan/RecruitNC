@@ -80,22 +80,29 @@ export default function FundraisingHealthDashboard() {
   }, [user, isAdmin, authLoading, router])
 
   useEffect(() => {
+    console.log("[v0] Auth state:", { user: !!user, isAdmin, authLoading })
     if (user && isAdmin) {
       fetchHealthData()
     }
-  }, [user, isAdmin])
+  }, [user, isAdmin, authLoading])
 
   const fetchHealthData = async () => {
+    console.log("[v0] Fetching health data...")
     setLoading(true)
     try {
       const res = await fetch("/api/admin/fundraising/health-check")
+      console.log("[v0] Health check response status:", res.status)
       if (res.ok) {
         const data = await res.json()
+        console.log("[v0] Health data received:", data)
         setStats(data.stats)
-        setIssues(data.issues)
+        setIssues(data.issues || [])
+      } else {
+        const errorData = await res.text()
+        console.error("[v0] Health check error response:", errorData)
       }
     } catch (error) {
-      console.error("Failed to fetch health data:", error)
+      console.error("[v0] Failed to fetch health data:", error)
     } finally {
       setLoading(false)
     }
