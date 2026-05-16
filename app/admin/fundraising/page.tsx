@@ -145,6 +145,31 @@ async function getFundraisingData() {
     }
   })
   
+  // Get NC United Fund data (scholarship donations, awards, guild allocations)
+  const { data: scholarshipDonations } = await admin
+    .from("scholarship_donations")
+    .select("amount_cents")
+  
+  const { data: scholarshipAwards } = await admin
+    .from("scholarship_awards")
+    .select("award_amount_cents")
+  
+  const { data: guildAllocations } = await admin
+    .from("guild_credit_allocations")
+    .select("amount_cents")
+    .eq("status", "confirmed")
+  
+  const ncUnitedFund = {
+    donationsCents: scholarshipDonations?.reduce((sum, d) => sum + (d.amount_cents || 0), 0) || 0,
+    donationsCount: scholarshipDonations?.length || 0,
+    awardsCents: scholarshipAwards?.reduce((sum, a) => sum + (a.award_amount_cents || 0), 0) || 0,
+    awardsCount: scholarshipAwards?.length || 0,
+    guildCents: guildAllocations?.reduce((sum, g) => sum + (g.amount_cents || 0), 0) || 0,
+    guildCount: guildAllocations?.length || 0,
+  }
+  // Delta = donations - awards - guild allocations (available in fund)
+  const fundDelta = ncUnitedFund.donationsCents - ncUnitedFund.awardsCents - ncUnitedFund.guildCents
+  
   // Transform expenses
   const expenseRows: ExpenseRow[] = (expenses || []).map((e: any) => {
     const userProfile = userProfileMap.get(e.user_id)
@@ -220,6 +245,7 @@ async function getFundraisingData() {
     linkedAthletesCount: linkedAthletesCount || 0,
     totalPageViews: pageViews?.length || 0,
     campaignBreakdown,
+    ncUnitedFund: { ...ncUnitedFund, deltaCents: fundDelta },
     donations: hubSnapshot.activity,
     expenses: expenseRows,
     activationRequests: requestRows,
@@ -263,6 +289,7 @@ export default async function FundraisingAdminPage() {
           linkedAthletesCount={data.linkedAthletesCount}
           totalPageViews={data.totalPageViews}
           campaignBreakdown={data.campaignBreakdown}
+          ncUnitedFund={data.ncUnitedFund}
           donations={data.donations}
           expenses={data.expenses}
           activationRequests={data.activationRequests}
