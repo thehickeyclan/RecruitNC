@@ -428,7 +428,7 @@ function ActivationRequestRow({
       <td className="px-4 py-3">
         <code className="rounded bg-gray-100 px-2 py-0.5 text-xs">{request.fundraising_slug}</code>
       </td>
-      <td className="px-4 py-3 text-gray-600">{request.requester_email || "�������������������"}</td>
+      <td className="px-4 py-3 text-gray-600">{request.requester_email || "���������������������"}</td>
       <td className="px-4 py-3">
         {status === "pending" && (
           <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800">
@@ -629,12 +629,19 @@ type Panel = "donations" | "reimbursements" | "requests" | "profiles" | null
 type FundraisingStreams = {
   spartanTotal: { count: number; totalCents: number }
   athleteCredited: { count: number; totalCents: number }
-  ncuCredited: { count: number; totalCents: number }
+  spartanNcuCredited: { count: number; totalCents: number }
 }
 
 type NCUnitedFund = {
+  // Total donations to NC United Fund
   donationsCents: number
   donationsCount: number
+  // Breakdown by source
+  spartanNcuCents: number
+  spartanNcuCount: number
+  directCents: number
+  directCount: number
+  // Outflows
   awardsCents: number
   awardsCount: number
   guildCents: number
@@ -839,38 +846,38 @@ export function FundraisingCommandCenter({
             <TrendingUp className="h-5 w-5 text-slate-600" />
           </div>
           <div className="space-y-3">
-            {/* Spartan Campaign - Total */}
+            {/* Spartan Campaign - Athlete credited only */}
             <div>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-medium text-gray-700">Spartan Campaign</span>
-                <span className="font-semibold text-[#003366]">{fmtCents(fundraisingStreams.spartanTotal.totalCents)}</span>
+                <span className="font-semibold text-[#003366]">{fmtCents(fundraisingStreams.athleteCredited.totalCents)}</span>
               </div>
               <div className="mt-1 h-2 rounded-full bg-gray-200 overflow-hidden">
-                <div className="h-full bg-[#003366]" style={{ width: `${totalRaised > 0 ? (fundraisingStreams.spartanTotal.totalCents / totalRaised) * 100 : 0}%` }} />
+                <div className="h-full bg-[#003366]" style={{ width: `${totalRaised > 0 ? (fundraisingStreams.athleteCredited.totalCents / totalRaised) * 100 : 0}%` }} />
               </div>
-              <p className="text-[10px] text-gray-400">{fundraisingStreams.spartanTotal.count} gifts</p>
-              {/* Sub-breakdown by credit attribution */}
-              <div className="mt-2 pl-3 border-l-2 border-gray-200 space-y-1">
-                <div className="flex items-center justify-between text-[10px]">
-                  <span className="text-gray-500">Athlete credited</span>
-                  <span className="text-gray-600">{fmtCents(fundraisingStreams.athleteCredited.totalCents)} ({fundraisingStreams.athleteCredited.count})</span>
-                </div>
-                <div className="flex items-center justify-between text-[10px]">
-                  <span className="text-gray-500">NC United credited</span>
-                  <span className="text-gray-600">{fmtCents(fundraisingStreams.ncuCredited.totalCents)} ({fundraisingStreams.ncuCredited.count})</span>
-                </div>
-              </div>
+              <p className="text-[10px] text-gray-400">{fundraisingStreams.athleteCredited.count} gifts credited to athletes</p>
             </div>
-            {/* NC United Fund (scholarship_donations table - direct /fundraising donations) */}
+            {/* NC United Fund - TOTAL from both sources */}
             <div>
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-gray-700">Direct Donations</span>
+                <span className="text-xs font-medium text-gray-700">NC United Fund</span>
                 <span className="font-semibold text-emerald-600">{fmtCents(ncUnitedFund.donationsCents)}</span>
               </div>
               <div className="mt-1 h-2 rounded-full bg-gray-200 overflow-hidden">
                 <div className="h-full bg-emerald-500" style={{ width: `${totalRaised > 0 ? (ncUnitedFund.donationsCents / totalRaised) * 100 : 0}%` }} />
               </div>
-              <p className="text-[10px] text-gray-400">{ncUnitedFund.donationsCount} gifts via /fundraising</p>
+              <p className="text-[10px] text-gray-400">{ncUnitedFund.donationsCount} gifts</p>
+              {/* Sub-breakdown by source */}
+              <div className="mt-2 pl-3 border-l-2 border-gray-200 space-y-1">
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-gray-500">via Spartan</span>
+                  <span className="text-gray-600">{fmtCents(ncUnitedFund.spartanNcuCents)} ({ncUnitedFund.spartanNcuCount})</span>
+                </div>
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-gray-500">via /fundraising</span>
+                  <span className="text-gray-600">{fmtCents(ncUnitedFund.directCents)} ({ncUnitedFund.directCount})</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
