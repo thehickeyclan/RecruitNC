@@ -130,6 +130,7 @@ async function getFundraisingData() {
   //
   // Athlete page checkouts = fundraising_checkout_surface = 'athlete_page' (WHERE checkout happened)
   // This is different from WHO gets credit (athleteCode)
+  
   const { data: athletePageCheckouts } = await admin
     .from("spartan_donations")
     .select("amount_cents")
