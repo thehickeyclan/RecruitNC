@@ -482,30 +482,39 @@ export default function ParentContactPage({ params }: { params: Promise<{ userId
               {fundraising.length > 0 && (
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-[#C8A94A] mb-2">Digital Wallets</p>
-                  {fundraising.map((f: any) => (
-                    <div key={f.athleteId} className="rounded-lg bg-white/5 px-3 py-3">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium text-white">
-                          {f.firstName} {f.lastName}
-                        </p>
-                        <p className="text-sm font-semibold text-emerald-400">{formatCurrency(f.availableCents)}</p>
+                  {fundraising.map((f: any) => {
+                    const availableCents = (f.netAfterReimbursementsCents || 0) - (f.guildAllocationsCents || 0)
+                    return (
+                      <div key={f.athleteId} className="rounded-lg bg-white/5 px-3 py-3 mb-2">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-white">{f.name}</p>
+                            {f.fundraisingCode && (
+                              <p className="text-xs text-white/40">{f.fundraisingCode}</p>
+                            )}
+                          </div>
+                          <p className="text-sm font-semibold text-emerald-400">{formatCurrency(availableCents)}</p>
+                        </div>
+                        <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
+                          <div>
+                            <p className="text-white/50">Raised</p>
+                            <p className="font-medium text-white">{formatCurrency(f.totalCents)}</p>
+                          </div>
+                          <div>
+                            <p className="text-white/50">Reimbursed</p>
+                            <p className="font-medium text-white">{formatCurrency(f.reimbursementsPaidCents)}</p>
+                          </div>
+                          <div>
+                            <p className="text-white/50">Guild Reserve</p>
+                            <p className="font-medium text-white">{formatCurrency(f.guildAllocationsCents)}</p>
+                          </div>
+                        </div>
+                        {f.giftCount > 0 && (
+                          <p className="mt-2 text-xs text-white/40">{f.giftCount} gift{f.giftCount !== 1 ? 's' : ''}</p>
+                        )}
                       </div>
-                      <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
-                        <div>
-                          <p className="text-white/50">Raised</p>
-                          <p className="font-medium text-white">{formatCurrency(f.raisedCents)}</p>
-                        </div>
-                        <div>
-                          <p className="text-white/50">Spent</p>
-                          <p className="font-medium text-white">{formatCurrency(f.spentCents)}</p>
-                        </div>
-                        <div>
-                          <p className="text-white/50">Reserved</p>
-                          <p className="font-medium text-white">{formatCurrency(f.reservedCents)}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
 

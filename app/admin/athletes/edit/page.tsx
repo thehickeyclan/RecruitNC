@@ -13,6 +13,7 @@ import { ContactFormSections } from "./contact-form-sections"
 import { ContactCrmHistory } from "./contact-crm-history"
 import { ContactMessagingTab } from "./contact-messaging-tab"
 import { ContactActivityTab } from "./contact-activity-tab"
+import { AthleteParentLinks } from "./athlete-parent-links"
 import {
   ArrowLeft,
   Sparkles,
@@ -397,6 +398,14 @@ export default function EditAthletePage() {
           editableBio={editableBio}
           editableHeadline={editableHeadline}
         />
+
+        {/* Linked Parents Section */}
+        <div className="mt-8">
+          <AthleteParentLinks 
+            athleteId={id} 
+            athleteName={displayName}
+          />
+        </div>
 
         {/* CRM History Section */}
         <div className="mt-8">
