@@ -147,6 +147,16 @@ async function getFundraisingData() {
   let athletePageCheckoutCents = 0
   let athletePageCheckoutCount = 0
   
+  // Debug: check data shapes
+  const sampleDonation = allSpartanDonations?.[0]
+  console.log("[v0] allSpartanDonations count:", allSpartanDonations?.length)
+  console.log("[v0] creditCorrections count:", creditCorrections?.length)
+  console.log("[v0] sample donation raw_metadata type:", typeof sampleDonation?.raw_metadata, "value:", JSON.stringify(sampleDonation?.raw_metadata)?.slice(0, 200))
+  
+  // Check how many have general_nc_united attribution
+  let ncuFromAttrib = 0
+  let ncuFromCorrection = 0
+  
   allSpartanDonations?.forEach((d: { session_id: string; amount_cents: number; raw_metadata: Record<string, unknown> | null; fundraising_checkout_surface: string | null }) => {
     const cents = d.amount_cents || 0
     const correction = correctionMap.get(d.session_id)
@@ -158,6 +168,7 @@ async function getFundraisingData() {
     if (correction) {
       if (correction.general_fund) {
         ncuFundCents += cents
+        ncuFromCorrection++
       }
       // If correction has athlete_code, it's athlete-credited (not NCU)
     } else {
@@ -165,6 +176,7 @@ async function getFundraisingData() {
       const attribution = typeof meta?.fundraising_attribution === 'string' ? meta.fundraising_attribution : ''
       if (attribution === 'general_nc_united') {
         ncuFundCents += cents
+        ncuFromAttrib++
       }
     }
     
@@ -174,6 +186,8 @@ async function getFundraisingData() {
       athletePageCheckoutCount++
     }
   })
+  
+  console.log("[v0] ncuFundCents:", ncuFundCents, "ncuFromAttrib:", ncuFromAttrib, "ncuFromCorrection:", ncuFromCorrection)
   
   const fundraisingStreams = {
     spartanTotal: hubSnapshot.hero.totalRaisedCents,
