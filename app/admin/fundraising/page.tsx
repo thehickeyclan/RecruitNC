@@ -127,11 +127,10 @@ async function getFundraisingData() {
   // Get fundraising streams breakdown from donations_unified (SOURCE OF TRUTH)
   // 
   // Spartan Campaign = ALL donations in donations_unified (~$21k total)
-  // Each donation is CREDITED to either:
-  //   - An athlete (athlete_code is set) - ~$19k
-  //   - NC United fund (athlete_code is NULL) - ~$1,850
+  // - Credited to athletes = athlete_code is set
+  // - Credited to NC United fund = athlete_code is NULL (shown in leaderboard as "NC United fund")
   //
-  // SEPARATELY, there's also scholarship_donations table for /fundraising page direct donations
+  // NC United Fund TOTAL = Spartan NCU credited + scholarship_donations (direct /fundraising donations)
   const { data: unifiedDonations } = await admin
     .from("donations_unified")
     .select("amount_cents, athlete_code")
@@ -140,22 +139,24 @@ async function getFundraisingData() {
   const fundraisingStreams = {
     // Spartan Campaign total (all donations_unified)
     spartanTotal: { count: 0, totalCents: 0 },
-    // Breakdown by credit attribution
+    // Athlete-credited donations (athlete_code is set)
     athleteCredited: { count: 0, totalCents: 0 },
-    ncuCredited: { count: 0, totalCents: 0 }
+    // NC United fund credited within Spartan (athlete_code is NULL) - part of NCU Fund total
+    spartanNcuCredited: { count: 0, totalCents: 0 }
   }
   
   unifiedDonations?.forEach((d: { amount_cents: number; athlete_code: string | null }) => {
-    // Add to total
+    // Add to Spartan total
     fundraisingStreams.spartanTotal.count++
     fundraisingStreams.spartanTotal.totalCents += d.amount_cents || 0
-    // Add to breakdown by credit attribution
+    // Breakdown by credit attribution
     if (d.athlete_code && d.athlete_code.trim() !== "") {
       fundraisingStreams.athleteCredited.count++
       fundraisingStreams.athleteCredited.totalCents += d.amount_cents || 0
     } else {
-      fundraisingStreams.ncuCredited.count++
-      fundraisingStreams.ncuCredited.totalCents += d.amount_cents || 0
+      // NC United fund credited (shows as "NC United fund" in leaderboard)
+      fundraisingStreams.spartanNcuCredited.count++
+      fundraisingStreams.spartanNcuCredited.totalCents += d.amount_cents || 0
     }
   })
   
@@ -173,15 +174,26 @@ async function getFundraisingData() {
     .select("amount_cents")
     .eq("status", "confirmed")
   
+  // NC United Fund TOTAL = Spartan NCU credited + scholarship_donations (direct /fundraising)
+  const directDonationsCents = scholarshipDonations?.reduce((sum, d) => sum + (d.amount_cents || 0), 0) || 0
+  const directDonationsCount = scholarshipDonations?.length || 0
+  
   const ncUnitedFund = {
-    donationsCents: scholarshipDonations?.reduce((sum, d) => sum + (d.amount_cents || 0), 0) || 0,
-    donationsCount: scholarshipDonations?.length || 0,
+    // TOTAL donations to NC United Fund (both sources combined)
+    donationsCents: fundraisingStreams.spartanNcuCredited.totalCents + directDonationsCents,
+    donationsCount: fundraisingStreams.spartanNcuCredited.count + directDonationsCount,
+    // Breakdown by source
+    spartanNcuCents: fundraisingStreams.spartanNcuCredited.totalCents,
+    spartanNcuCount: fundraisingStreams.spartanNcuCredited.count,
+    directCents: directDonationsCents,
+    directCount: directDonationsCount,
+    // Outflows
     awardsCents: scholarshipAwards?.reduce((sum, a) => sum + (a.award_amount_cents || 0), 0) || 0,
     awardsCount: scholarshipAwards?.length || 0,
     guildCents: guildAllocations?.reduce((sum, g) => sum + (g.amount_cents || 0), 0) || 0,
     guildCount: guildAllocations?.length || 0,
   }
-  // Delta = donations - awards - guild allocations (available in fund)
+  // Delta = total donations - awards - guild allocations (available in fund)
   const fundDelta = ncUnitedFund.donationsCents - ncUnitedFund.awardsCents - ncUnitedFund.guildCents
   
   // Transform expenses
