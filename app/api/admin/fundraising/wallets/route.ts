@@ -2,6 +2,13 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { requireAdmin } from "@/lib/admin-auth"
 
+interface AthleteBreakdown {
+  athlete_id: string
+  athlete_name: string
+  raised_cents: number
+  spent_cents: number
+}
+
 export async function GET() {
   const adminCheck = await requireAdmin()
   if (adminCheck instanceof NextResponse) return adminCheck
@@ -9,125 +16,207 @@ export async function GET() {
   const supabase = await createClient()
 
   try {
-    // Get all athletes with fundraising profiles
-    const { data: profiles, error: profilesError } = await supabase
-      .from("athlete_fundraising_profiles")
-      .select(`
-        id,
-        athlete_id,
-        slug,
-        is_active,
-        checkout_live,
-        primary_fundraising_code,
-        total_raised_cents
-      `)
+    // Get all families with their wallet details using the new view
+    const { data: familyWallets, error: walletsError } = await supabase
+      .from("family_wallet_details")
+      .select("*")
 
-    if (profilesError) throw profilesError
+    if (walletsError) {
+      // Fall back to old method if view doesn't exist yet
+      return getFallbackWallets(supabase)
+    }
 
-    // Get athlete details
-    const athleteIds = profiles?.map((p) => p.athlete_id) || []
-    const { data: athletes } = await supabase
-      .from("athletes")
-      .select("id, name")
-      .in("id", athleteIds)
-
-    const athleteMap = (athletes || []).reduce((acc, a) => {
-      acc[a.id] = a.name
-      return acc
-    }, {} as Record<string, string>)
-
-    // Get parent links
-    const { data: parentLinks } = await supabase
-      .from("parent_athlete_links")
-      .select("athlete_id, user_id")
-      .in("athlete_id", athleteIds)
-
-    const parentLinksMap = (parentLinks || []).reduce((acc, link) => {
-      acc[link.athlete_id] = link.user_id
-      return acc
-    }, {} as Record<string, string>)
-
-    // Get user emails for parents
-    const userIds = Object.values(parentLinksMap)
-    let userEmailsMap: Record<string, { email: string; name: string | null }> = {}
+    // Get family members for parent info
+    const familyIds = familyWallets?.map((fw) => fw.family_id) || []
     
-    if (userIds.length > 0) {
-      const { data: users } = await supabase
-        .from("users")
-        .select("id, email, display_name")
-        .in("id", userIds)
+    const { data: familyMembers } = await supabase
+      .from("family_members")
+      .select("family_id, user_id, is_primary, role")
+      .in("family_id", familyIds)
 
-      userEmailsMap = (users || []).reduce((acc, u) => {
-        acc[u.id] = { email: u.email, name: u.display_name }
-        return acc
-      }, {} as Record<string, { email: string; name: string | null }>)
-    }
+    // Get user profiles for parents
+    const userIds = familyMembers?.map((fm) => fm.user_id) || []
+    const { data: userProfiles } = await supabase
+      .from("user_profiles")
+      .select("user_id, email, display_name, first_name, last_name")
+      .in("user_id", userIds)
 
-    // Get donations by athlete code
-    const codes = profiles?.map((p) => p.primary_fundraising_code).filter(Boolean) || []
-    let donationsByCode: Record<string, { cents: number; count: number }> = {}
-
-    if (codes.length > 0) {
-      const { data: donations } = await supabase
-        .from("spartan_donations")
-        .select("athlete_code, amount_cents")
-        .in("athlete_code", codes)
-
-      donationsByCode = (donations || []).reduce((acc, d) => {
-        const code = d.athlete_code
-        if (!code) return acc
-        if (!acc[code]) acc[code] = { cents: 0, count: 0 }
-        acc[code].cents += d.amount_cents || 0
-        acc[code].count += 1
-        return acc
-      }, {} as Record<string, { cents: number; count: number }>)
-    }
-
-    // Get reimbursements by athlete
-    const { data: reimbursements } = await supabase
-      .from("expense_requests")
-      .select("athlete_id, amount_approved_cents, status")
-      .in("athlete_id", athleteIds)
-      .eq("status", "paid")
-
-    const reimbursementsByAthlete = (reimbursements || []).reduce((acc, r) => {
-      if (!acc[r.athlete_id]) acc[r.athlete_id] = 0
-      acc[r.athlete_id] += r.amount_approved_cents || 0
+    const userMap = (userProfiles || []).reduce((acc, u) => {
+      acc[u.user_id] = {
+        email: u.email,
+        name: u.display_name || `${u.first_name || ""} ${u.last_name || ""}`.trim() || null,
+      }
       return acc
-    }, {} as Record<string, number>)
+    }, {} as Record<string, { email: string; name: string | null }>)
 
-    // Build wallet data
-    const wallets = (profiles || []).map((profile) => {
-      const code = profile.primary_fundraising_code
-      const donations = code ? donationsByCode[code] : null
-      const raisedCents = donations?.cents || profile.total_raised_cents || 0
-      const reimbursedCents = reimbursementsByAthlete[profile.athlete_id] || 0
-      const guildAllocationsCents = 0 // Could be expanded later
-      const parentUserId = parentLinksMap[profile.athlete_id]
-      const parentInfo = parentUserId ? userEmailsMap[parentUserId] : null
+    // Get family athletes for athlete details
+    const { data: familyAthletes } = await supabase
+      .from("family_athletes")
+      .select(`
+        family_id,
+        athlete_id,
+        athletes (
+          id,
+          "firstName",
+          "lastName"
+        )
+      `)
+      .in("family_id", familyIds)
+
+    // Build wallet data with family structure
+    const wallets = (familyWallets || []).map((fw) => {
+      // Find primary parent for this family
+      const primaryMember = familyMembers?.find(
+        (fm) => fm.family_id === fw.family_id && fm.is_primary
+      )
+      const parentInfo = primaryMember ? userMap[primaryMember.user_id] : null
+
+      // Get athletes in this family
+      const athletes = familyAthletes
+        ?.filter((fa) => fa.family_id === fw.family_id)
+        .map((fa) => ({
+          id: fa.athlete_id,
+          name: fa.athletes ? `${fa.athletes.firstName} ${fa.athletes.lastName}` : "Unknown",
+        })) || []
+
+      // Parse athlete breakdown
+      const breakdown = (fw.athlete_breakdown as AthleteBreakdown[] | null) || []
 
       return {
-        athleteId: profile.athlete_id,
-        athleteName: athleteMap[profile.athlete_id] || "Unknown",
-        athleteCode: profile.primary_fundraising_code,
+        familyId: fw.family_id,
+        familyName: fw.family_name,
+        athletes,
+        athleteBreakdown: breakdown,
         parentEmail: parentInfo?.email || null,
         parentName: parentInfo?.name || null,
-        raisedCents,
-        reimbursedCents,
-        guildAllocationsCents,
-        availableCents: raisedCents - reimbursedCents - guildAllocationsCents,
-        donationCount: donations?.count || 0,
-        hasParentLink: !!parentUserId,
-        profileActive: profile.is_active && profile.checkout_live,
+        totalRaisedCents: fw.total_raised_cents || 0,
+        totalSpentCents: fw.total_spent_cents || 0,
+        availableCents: fw.available_cents || 0,
+        lastTransactionAt: fw.last_transaction_at,
+        hasParentLink: !!primaryMember,
       }
     })
 
     // Sort by available balance descending
     wallets.sort((a, b) => b.availableCents - a.availableCents)
 
-    return NextResponse.json({ wallets })
+    return NextResponse.json({ wallets, usesNewModel: true })
   } catch (error) {
     console.error("Wallets error:", error)
     return NextResponse.json({ error: "Failed to fetch wallets" }, { status: 500 })
   }
+}
+
+// Fallback for old data model (athletes without families)
+async function getFallbackWallets(supabase: Awaited<ReturnType<typeof createClient>>) {
+  // Get all athletes with fundraising profiles
+  const { data: profiles, error: profilesError } = await supabase
+    .from("athlete_fundraising_profiles")
+    .select(`
+      id,
+      athlete_id,
+      slug,
+      is_active,
+      checkout_live,
+      primary_fundraising_code,
+      spartan_code,
+      total_raised_cents
+    `)
+
+  if (profilesError) throw profilesError
+
+  // Get athlete details
+  const athleteIds = profiles?.map((p) => p.athlete_id) || []
+  const { data: athletes } = await supabase
+    .from("athletes")
+    .select('id, "firstName", "lastName"')
+    .in("id", athleteIds)
+
+  const athleteMap = (athletes || []).reduce((acc, a) => {
+    acc[a.id] = `${a.firstName} ${a.lastName}`
+    return acc
+  }, {} as Record<string, string>)
+
+  // Get parent links
+  const { data: parentLinks } = await supabase
+    .from("parent_athlete_links")
+    .select("athlete_id, user_id")
+    .in("athlete_id", athleteIds)
+
+  const parentLinksMap = (parentLinks || []).reduce((acc, link) => {
+    acc[link.athlete_id] = link.user_id
+    return acc
+  }, {} as Record<string, string>)
+
+  // Get user profiles for parents
+  const userIds = Object.values(parentLinksMap)
+  let userEmailsMap: Record<string, { email: string; name: string | null }> = {}
+
+  if (userIds.length > 0) {
+    const { data: users } = await supabase
+      .from("user_profiles")
+      .select("user_id, email, display_name, first_name, last_name")
+      .in("user_id", userIds)
+
+    userEmailsMap = (users || []).reduce((acc, u) => {
+      acc[u.user_id] = {
+        email: u.email,
+        name: u.display_name || `${u.first_name || ""} ${u.last_name || ""}`.trim() || null,
+      }
+      return acc
+    }, {} as Record<string, { email: string; name: string | null }>)
+  }
+
+  // Get ledger totals by athlete
+  const { data: ledgerEntries } = await supabase
+    .from("fundraising_ledger_entries")
+    .select("athlete_id, direction, amount_cents")
+    .in("athlete_id", athleteIds)
+
+  const ledgerByAthlete = (ledgerEntries || []).reduce((acc, entry) => {
+    if (!acc[entry.athlete_id]) {
+      acc[entry.athlete_id] = { raised: 0, spent: 0 }
+    }
+    if (entry.direction === "in") {
+      acc[entry.athlete_id].raised += entry.amount_cents
+    } else if (entry.direction === "out") {
+      acc[entry.athlete_id].spent += entry.amount_cents
+    }
+    return acc
+  }, {} as Record<string, { raised: number; spent: number }>)
+
+  // Build wallet data (one per athlete, old model)
+  const wallets = (profiles || []).map((profile) => {
+    const ledger = ledgerByAthlete[profile.athlete_id] || { raised: 0, spent: 0 }
+    const raisedCents = ledger.raised || profile.total_raised_cents || 0
+    const spentCents = ledger.spent
+    const parentUserId = parentLinksMap[profile.athlete_id]
+    const parentInfo = parentUserId ? userEmailsMap[parentUserId] : null
+
+    return {
+      familyId: null,
+      familyName: null,
+      athletes: [{ id: profile.athlete_id, name: athleteMap[profile.athlete_id] || "Unknown" }],
+      athleteBreakdown: [{
+        athlete_id: profile.athlete_id,
+        athlete_name: athleteMap[profile.athlete_id] || "Unknown",
+        raised_cents: raisedCents,
+        spent_cents: spentCents,
+      }],
+      parentEmail: parentInfo?.email || null,
+      parentName: parentInfo?.name || null,
+      totalRaisedCents: raisedCents,
+      totalSpentCents: spentCents,
+      availableCents: raisedCents - spentCents,
+      lastTransactionAt: null,
+      hasParentLink: !!parentUserId,
+      athleteCode: profile.primary_fundraising_code || profile.spartan_code,
+      profileActive: profile.is_active && profile.checkout_live,
+    }
+  })
+
+  // Sort by available balance descending
+  wallets.sort((a, b) => b.availableCents - a.availableCents)
+
+  return NextResponse.json({ wallets, usesNewModel: false })
 }
