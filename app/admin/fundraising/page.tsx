@@ -15,11 +15,10 @@ import { Badge } from "@/components/ui/badge"
 
 type IssueSeverity = "critical" | "warning" | "info"
 type IssueType = 
-  | "no_family" 
-  | "no_parent_linked" 
+  | "no_parent" 
   | "no_code" 
   | "page_inactive" 
-  | "has_donations_no_family"
+  | "has_donations_no_parent"
 
 interface AthleteIssue {
   athlete_id: string
@@ -34,7 +33,6 @@ interface AthleteIssue {
   total_raised_cents: number
   has_page: boolean
   page_active: boolean
-  has_family: boolean
   has_parent: boolean
   spartan_code: string | null
   page_slug: string | null
@@ -55,11 +53,10 @@ const severityConfig = {
 }
 
 const issueLabels: Record<IssueType, string> = {
-  no_family: "No family assigned",
-  no_parent_linked: "No parent linked",
+  no_parent: "No parent linked",
   no_code: "No donation code",
   page_inactive: "Page is inactive",
-  has_donations_no_family: "Has donations but no family"
+  has_donations_no_parent: "Has donations, no parent"
 }
 
 export default function FundraisingHealthDashboard() {
@@ -257,26 +254,22 @@ export default function FundraisingHealthDashboard() {
         {/* What This Dashboard Does */}
         <div className="bg-[#0F1E32] rounded-xl border border-[#1e3a5f] p-4">
           <h3 className="text-white font-semibold mb-3">What I check for each athlete:</h3>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
             <div className="flex items-start gap-2">
               <XCircle className="h-4 w-4 text-red-400 mt-0.5 shrink-0" />
-              <span className="text-gray-300"><strong className="text-red-400">Critical:</strong> Has donations but no family (money stuck)</span>
+              <span className="text-gray-300"><strong className="text-red-400">Critical:</strong> Has donations but no parent linked</span>
             </div>
             <div className="flex items-start gap-2">
               <AlertTriangle className="h-4 w-4 text-amber-400 mt-0.5 shrink-0" />
-              <span className="text-gray-300"><strong className="text-amber-400">Warning:</strong> No parent linked (can&apos;t manage wallet)</span>
+              <span className="text-gray-300"><strong className="text-amber-400">Warning:</strong> No parent account linked</span>
             </div>
             <div className="flex items-start gap-2">
               <AlertTriangle className="h-4 w-4 text-amber-400 mt-0.5 shrink-0" />
-              <span className="text-gray-300"><strong className="text-amber-400">Warning:</strong> No donation code assigned</span>
-            </div>
-            <div className="flex items-start gap-2">
-              <AlertCircle className="h-4 w-4 text-blue-400 mt-0.5 shrink-0" />
-              <span className="text-gray-300"><strong className="text-blue-400">Info:</strong> Page exists but is inactive</span>
+              <span className="text-gray-300"><strong className="text-amber-400">Warning:</strong> No donation code</span>
             </div>
             <div className="flex items-start gap-2">
               <CheckCircle className="h-4 w-4 text-green-400 mt-0.5 shrink-0" />
-              <span className="text-gray-300"><strong className="text-green-400">Fully Connected:</strong> Family + Parent + Code + Active Page</span>
+              <span className="text-gray-300"><strong className="text-green-400">Fully Connected:</strong> Parent + Code + Active Page</span>
             </div>
           </div>
         </div>
@@ -392,15 +385,7 @@ export default function FundraisingHealthDashboard() {
                     <div className="px-4 pb-4 pt-0 border-t border-[#1e3a5f]">
                       <div className="pt-4 space-y-4">
                         {/* Current Status */}
-                        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                          <div className="flex items-center gap-2">
-                            {athlete.has_family ? (
-                              <CheckCircle className="h-4 w-4 text-green-400" />
-                            ) : (
-                              <XCircle className="h-4 w-4 text-red-400" />
-                            )}
-                            <span className="text-sm text-gray-300">Family assigned</span>
-                          </div>
+                        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                           <div className="flex items-center gap-2">
                             {athlete.has_parent ? (
                               <CheckCircle className="h-4 w-4 text-green-400" />
@@ -442,7 +427,7 @@ export default function FundraisingHealthDashboard() {
                                 <span className="text-sm text-gray-300 truncate">{issue.message}</span>
                               </div>
                               <div className="shrink-0">
-                                {issue.type === "no_family" && (
+                                {issue.type === "no_parent" && (
                                   <Button
                                     size="sm"
                                     onClick={(e) => { e.stopPropagation(); handleQuickFix(athlete.athlete_id, "create_family") }}
