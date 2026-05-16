@@ -124,6 +124,30 @@ async function getFundraisingData() {
     .like("page_url", "%/fundraising/athletes/%")
     .gte("created_at", thirtyDaysAgo.toISOString())
   
+  // Get fundraising streams breakdown using fundraising_checkout_surface (SOURCE OF TRUTH)
+  // spartan_team_page = Spartan Race checkout
+  // athlete_page = Athlete Page checkout
+  const { data: spartanDonations } = await admin
+    .from("spartan_donations")
+    .select("amount_cents, fundraising_checkout_surface")
+    .eq("status", "paid")
+  
+  const fundraisingStreams = {
+    spartan: { count: 0, totalCents: 0 },
+    athletePages: { count: 0, totalCents: 0 }
+  }
+  
+  spartanDonations?.forEach((d: { amount_cents: number; fundraising_checkout_surface: string | null }) => {
+    if (d.fundraising_checkout_surface === "athlete_page") {
+      fundraisingStreams.athletePages.count++
+      fundraisingStreams.athletePages.totalCents += d.amount_cents || 0
+    } else {
+      // spartan_team_page, hub_give, training_fund, or any other = Spartan
+      fundraisingStreams.spartan.count++
+      fundraisingStreams.spartan.totalCents += d.amount_cents || 0
+    }
+  })
+  
   // Get NC United Fund data (scholarship donations, awards, guild allocations)
   const { data: scholarshipDonations } = await admin
     .from("scholarship_donations")
@@ -223,6 +247,7 @@ async function getFundraisingData() {
     activeProfileCount,
     linkedAthletesCount: linkedAthletesCount || 0,
     totalPageViews: pageViews?.length || 0,
+    fundraisingStreams,
     ncUnitedFund: { ...ncUnitedFund, deltaCents: fundDelta },
     donations: hubSnapshot.activity,
     expenses: expenseRows,
@@ -266,6 +291,7 @@ export default async function FundraisingAdminPage() {
           activeProfileCount={data.activeProfileCount}
           linkedAthletesCount={data.linkedAthletesCount}
           totalPageViews={data.totalPageViews}
+          fundraisingStreams={data.fundraisingStreams}
           ncUnitedFund={data.ncUnitedFund}
           donations={data.donations}
           expenses={data.expenses}
