@@ -428,7 +428,7 @@ function ActivationRequestRow({
       <td className="px-4 py-3">
         <code className="rounded bg-gray-100 px-2 py-0.5 text-xs">{request.fundraising_slug}</code>
       </td>
-      <td className="px-4 py-3 text-gray-600">{request.requester_email || "���������������"}</td>
+      <td className="px-4 py-3 text-gray-600">{request.requester_email || "�����������������"}</td>
       <td className="px-4 py-3">
         {status === "pending" && (
           <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800">
@@ -627,8 +627,9 @@ type ActiveProfile = {
 type Panel = "donations" | "reimbursements" | "requests" | "profiles" | null
 
 type FundraisingStreams = {
-  spartan: { count: number; totalCents: number }
-  athletePages: { count: number; totalCents: number }
+  spartanTotal: { count: number; totalCents: number }
+  viaRacePage: { count: number; totalCents: number }
+  viaAthletePages: { count: number; totalCents: number }
 }
 
 type NCUnitedFund = {
@@ -838,27 +839,27 @@ export function FundraisingCommandCenter({
             <TrendingUp className="h-5 w-5 text-slate-600" />
           </div>
           <div className="space-y-3">
-            {/* Spartan Race */}
+            {/* Spartan Campaign - Total */}
             <div>
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-gray-700">Spartan Race</span>
-                <span className="font-semibold text-[#003366]">{fmtCents(fundraisingStreams.spartan.totalCents)}</span>
+                <span className="text-xs font-medium text-gray-700">Spartan Campaign</span>
+                <span className="font-semibold text-[#003366]">{fmtCents(fundraisingStreams.spartanTotal.totalCents)}</span>
               </div>
               <div className="mt-1 h-2 rounded-full bg-gray-200 overflow-hidden">
-                <div className="h-full bg-[#003366]" style={{ width: `${totalRaised > 0 ? (fundraisingStreams.spartan.totalCents / totalRaised) * 100 : 0}%` }} />
+                <div className="h-full bg-[#003366]" style={{ width: `${totalRaised > 0 ? (fundraisingStreams.spartanTotal.totalCents / totalRaised) * 100 : 0}%` }} />
               </div>
-              <p className="text-[10px] text-gray-400">{fundraisingStreams.spartan.count} gifts</p>
-            </div>
-            {/* Athlete Pages */}
-            <div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-gray-700">Athlete Pages</span>
-                <span className="font-semibold text-[#D3B574]">{fmtCents(fundraisingStreams.athletePages.totalCents)}</span>
+              <p className="text-[10px] text-gray-400">{fundraisingStreams.spartanTotal.count} gifts</p>
+              {/* Sub-breakdown by checkout location */}
+              <div className="mt-2 pl-3 border-l-2 border-gray-200 space-y-1">
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-gray-500">via Race Page</span>
+                  <span className="text-gray-600">{fmtCents(fundraisingStreams.viaRacePage.totalCents)} ({fundraisingStreams.viaRacePage.count})</span>
+                </div>
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-gray-500">via Athlete Pages</span>
+                  <span className="text-gray-600">{fmtCents(fundraisingStreams.viaAthletePages.totalCents)} ({fundraisingStreams.viaAthletePages.count})</span>
+                </div>
               </div>
-              <div className="mt-1 h-2 rounded-full bg-gray-200 overflow-hidden">
-                <div className="h-full bg-[#D3B574]" style={{ width: `${totalRaised > 0 ? (fundraisingStreams.athletePages.totalCents / totalRaised) * 100 : 0}%` }} />
-              </div>
-              <p className="text-[10px] text-gray-400">{fundraisingStreams.athletePages.count} gifts</p>
             </div>
             {/* NC United Fund */}
             <div>

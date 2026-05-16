@@ -125,25 +125,35 @@ async function getFundraisingData() {
     .gte("created_at", thirtyDaysAgo.toISOString())
   
   // Get fundraising streams breakdown from donations_unified (SOURCE OF TRUTH)
-  // is_race_checkout = true: Spartan Race page checkout
-  // is_race_checkout = false: Athlete Page checkout
+  // Spartan Campaign = ALL donations in donations_unified ($21k total)
+  //   - Breakdown by checkout location:
+  //     - is_race_checkout = true: checked out via /spartan race page
+  //     - is_race_checkout = false: checked out via athlete fundraising page
+  // NC United Fund = scholarship_donations (separate, ~$1k)
   const { data: unifiedDonations } = await admin
     .from("donations_unified")
     .select("amount_cents, is_race_checkout")
     .eq("is_paid", true)
   
   const fundraisingStreams = {
-    spartan: { count: 0, totalCents: 0 },
-    athletePages: { count: 0, totalCents: 0 }
+    // Spartan Campaign total (all donations_unified)
+    spartanTotal: { count: 0, totalCents: 0 },
+    // Breakdown by checkout location
+    viaRacePage: { count: 0, totalCents: 0 },
+    viaAthletePages: { count: 0, totalCents: 0 }
   }
   
   unifiedDonations?.forEach((d: { amount_cents: number; is_race_checkout: boolean }) => {
+    // Add to total
+    fundraisingStreams.spartanTotal.count++
+    fundraisingStreams.spartanTotal.totalCents += d.amount_cents || 0
+    // Add to breakdown
     if (d.is_race_checkout) {
-      fundraisingStreams.spartan.count++
-      fundraisingStreams.spartan.totalCents += d.amount_cents || 0
+      fundraisingStreams.viaRacePage.count++
+      fundraisingStreams.viaRacePage.totalCents += d.amount_cents || 0
     } else {
-      fundraisingStreams.athletePages.count++
-      fundraisingStreams.athletePages.totalCents += d.amount_cents || 0
+      fundraisingStreams.viaAthletePages.count++
+      fundraisingStreams.viaAthletePages.totalCents += d.amount_cents || 0
     }
   })
   
