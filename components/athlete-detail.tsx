@@ -846,16 +846,17 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                       href={instagramUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="hover:opacity-80 transition-opacity flex items-center justify-center"
+                      className="inline-flex items-center gap-2 rounded-lg bg-white/15 hover:bg-white/25 px-3 py-2 text-white text-sm font-medium transition-colors"
                       aria-label="Instagram"
                     >
                       <Image
                         src={instagramLogo}
                         alt="Instagram"
-                        width={84}
-                        height={84}
-                        className="w-[84px] h-[84px] object-contain"
+                        width={20}
+                        height={20}
+                        className="w-5 h-5 object-contain"
                       />
+                      <span>Instagram</span>
                     </a>
                   )}
                   {canSeePrivateInfo && cellPhone && (
@@ -873,17 +874,17 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                       href={athlete.flo_profile_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="hover:opacity-80 transition-opacity inline-block overflow-hidden flex items-center justify-center"
+                      className="inline-flex items-center gap-2 rounded-lg bg-white/15 hover:bg-white/25 px-3 py-2 text-white text-sm font-medium transition-colors"
                       aria-label="Flo Wrestling"
                     >
                       <Image
                         src={floLogo}
-                        alt="Flo Wrestling"
-                        width={28}
-                        height={28}
-                        className="w-7 h-7 object-contain border-0 outline-none"
-                        style={{ border: 'none', outline: 'none', imageRendering: 'crisp-edges' }}
+                        alt="Flo"
+                        width={18}
+                        height={18}
+                        className="w-[18px] h-[18px] object-contain"
                       />
+                      <span>Flo</span>
                     </a>
                   )}
                   {athlete?.track_wrestling_profile_url && trackWrestlingLogo && (
@@ -891,16 +892,17 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                       href={athlete.track_wrestling_profile_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="hover:opacity-80 transition-opacity flex items-center justify-center"
+                      className="inline-flex items-center gap-2 rounded-lg bg-white/15 hover:bg-white/25 px-3 py-2 text-white text-sm font-medium transition-colors"
                       aria-label="Track Wrestling"
                     >
                       <Image
                         src={trackWrestlingLogo}
-                        alt="Track Wrestling"
-                        width={28}
-                        height={28}
-                        className="w-7 h-7 object-contain"
+                        alt="Track"
+                        width={18}
+                        height={18}
+                        className="w-[18px] h-[18px] object-contain"
                       />
+                      <span>Track</span>
                     </a>
                   )}
                   {canEdit && !cellPhone && (
@@ -1045,16 +1047,17 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                           href={instagramUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="hover:opacity-80 transition-opacity flex items-center justify-center"
+                          className="inline-flex items-center gap-2 rounded-lg bg-white/15 hover:bg-white/25 px-3 py-2 text-white text-sm font-medium transition-colors"
                           aria-label="Instagram"
                         >
                           <Image
                             src={instagramLogo}
                             alt="Instagram"
-                            width={84}
-                            height={84}
-                            className="w-[84px] h-[84px] object-contain"
+                            width={20}
+                            height={20}
+                            className="w-5 h-5 object-contain"
                           />
+                          <span>Instagram</span>
                         </a>
                       )}
                       {canSeePrivateInfo && cellPhone && (
@@ -1072,17 +1075,17 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                           href={athlete.flo_profile_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="hover:opacity-80 transition-opacity inline-block overflow-hidden flex items-center justify-center"
+                          className="inline-flex items-center gap-2 rounded-lg bg-white/15 hover:bg-white/25 px-3 py-2 text-white text-sm font-medium transition-colors"
                           aria-label="Flo Wrestling"
                         >
                           <Image
                             src={floLogo}
-                            alt="Flo Wrestling"
-                            width={28}
-                            height={28}
-                            className="w-7 h-7 object-contain border-0 outline-none"
-                            style={{ border: 'none', outline: 'none', imageRendering: 'crisp-edges' }}
+                            alt="Flo"
+                            width={18}
+                            height={18}
+                            className="w-[18px] h-[18px] object-contain"
                           />
+                          <span>Flo</span>
                         </a>
                       )}
                       {athlete?.track_wrestling_profile_url && trackWrestlingLogo && (
@@ -1090,16 +1093,17 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                           href={athlete.track_wrestling_profile_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="hover:opacity-80 transition-opacity flex items-center justify-center"
+                          className="inline-flex items-center gap-2 rounded-lg bg-white/15 hover:bg-white/25 px-3 py-2 text-white text-sm font-medium transition-colors"
                           aria-label="Track Wrestling"
                         >
                           <Image
                             src={trackWrestlingLogo}
-                            alt="Track Wrestling"
-                            width={28}
-                            height={28}
-                            className="w-7 h-7 object-contain"
+                            alt="Track"
+                            width={18}
+                            height={18}
+                            className="w-[18px] h-[18px] object-contain"
                           />
+                          <span>Track</span>
                         </a>
                       )}
                       {canEdit && !cellPhone && (
@@ -1126,8 +1130,8 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
 
       {/* Weight Section (edit form when canEdit) */}
       {canEdit && editingSection === "weight" && (
-        <Card className="border-t-4 border-t-amber-600 shadow-md">
-          <div className="bg-gradient-to-r from-amber-700 to-amber-800 p-6">
+        <Card className="border-t-4 border-t-[#D3B574] shadow-md">
+          <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6">
             <div className="flex items-center gap-3">
               <h2 className="text-2xl font-bold text-white">Weight Class</h2>
             </div>
@@ -1145,8 +1149,8 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
       )}
 
       {/* 2. Athlete Profile (Bio) - always show for consistent structure */}
-      <Card className="border-t-4 border-t-[#002147] shadow-md" data-section="bio">
-        <div className="bg-gradient-to-r from-[#002147] to-[#003366] p-6">
+      <Card className="border-t-4 border-t-[#D3B574] shadow-md" data-section="bio">
+        <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <TrendingUp className="h-6 w-6 text-white" />
@@ -1196,8 +1200,8 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
         </Card>
 
       {/* 3. High School and Programs - always show for consistent structure */}
-      <Card className="border-t-4 border-t-green-600 shadow-md" data-section="high-school-programs">
-          <div className="bg-gradient-to-r from-green-700 to-green-800 p-6">
+      <Card className="border-t-4 border-t-[#D3B574] shadow-md" data-section="high-school-programs">
+          <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <GraduationCap className="h-6 w-6 text-white" />
@@ -1299,8 +1303,8 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
       {tournamentResultsComponent}
 
       {/* 5. Contact Information - always show for consistent structure */}
-      <Card className="border-t-4 border-t-blue-600 shadow-md" data-section="contact">
-        <div className="bg-gradient-to-r from-blue-900 to-blue-800 p-6">
+      <Card className="border-t-4 border-t-[#D3B574] shadow-md" data-section="contact">
+        <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Shield className="h-6 w-6 text-white" />
@@ -1406,8 +1410,8 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
       </Card>
 
       {/* 6. Academics - always show for consistent structure */}
-      <Card className="border-t-4 border-t-[#002147] shadow-md" data-section="academics">
-        <div className="bg-gradient-to-r from-[#002147] to-[#003366] p-6">
+      <Card className="border-t-4 border-t-[#D3B574] shadow-md" data-section="academics">
+        <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <GraduationCap className="h-6 w-6 text-white" />
@@ -1491,8 +1495,8 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
         </Card>
 
       {/* 7. Highlight Reel - always show for consistent structure */}
-      <Card className="border-t-4 border-t-[#BC0B03] shadow-md" data-section="highlight-reel">
-        <div className="bg-gradient-to-r from-[#BC0B03] to-[#9a0902] p-6">
+      <Card className="border-t-4 border-t-[#D3B574] shadow-md" data-section="highlight-reel">
+        <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Video className="h-6 w-6 text-white" />
@@ -1554,27 +1558,27 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
         </Card>
 
       {/* 8. College Opens Experience - always show for consistent structure */}
-      <Card className="shadow-lg border-l-4 border-l-blue-600 border-t-4 border-t-blue-600" data-section="college-opens">
-            <CardHeader className="bg-gradient-to-r from-blue-50 to-white">
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2 text-[#13294B]">
-                  <Trophy className="h-6 w-6 text-blue-600" />
-                  College Opens Experience
-                </CardTitle>
-                {canEdit && !editingSection && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="text-[#13294B] hover:bg-blue-100"
-                    onClick={() => setEditingSection("college-opens")}
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className="p-6">
+      <Card className="border-t-4 border-t-[#D3B574] shadow-md" data-section="college-opens">
+        <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Trophy className="h-6 w-6 text-white" />
+              <h2 className="text-2xl font-bold text-white">College Opens Experience</h2>
+            </div>
+            {canEdit && !editingSection && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-white hover:bg-white/20"
+                onClick={() => setEditingSection("college-opens")}
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
+              </Button>
+            )}
+          </div>
+        </div>
+        <div className="p-8">
               {editingSection === "college-opens" ? (
                 <InlineCollegeOpensEditor
                   athleteId={athlete.id}
@@ -1583,35 +1587,35 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                   onCancel={() => setEditingSection(null)}
                 />
               ) : (
-                <div className="whitespace-pre-line text-gray-700 leading-relaxed">
-                  {athleteData.college_opens_experience || (canEdit ? "No college opens experience listed. Click Edit to add." : "No college opens experience listed.")}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+            <div className="whitespace-pre-line text-gray-700 leading-relaxed">
+            {athleteData.college_opens_experience || (canEdit ? "No college opens experience listed. Click Edit to add." : "No college opens experience listed.")}
+          </div>
+          )}
+        </div>
+      </Card>
 
       {/* 9. Achievements - always show for consistent structure */}
-      <Card className="border-t-4 border-t-[#1D4ED8] shadow-md" data-section="achievements">
-            <div className="bg-gradient-to-r from-[#1D4ED8] to-[#1E3A8A] p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Award className="h-6 w-6 text-white" />
-                  <h2 className="text-2xl font-bold text-white">Achievements</h2>
-                </div>
-                {canEdit && !editingSection && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="text-white hover:bg-white/20"
-                    onClick={() => setEditingSection("achievements")}
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit
-                  </Button>
-                )}
-              </div>
+      <Card className="border-t-4 border-t-[#D3B574] shadow-md" data-section="achievements">
+        <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Award className="h-6 w-6 text-white" />
+              <h2 className="text-2xl font-bold text-white">Achievements</h2>
             </div>
-            <div className="p-8">
+            {canEdit && !editingSection && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-white hover:bg-white/20"
+                onClick={() => setEditingSection("achievements")}
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
+              </Button>
+            )}
+          </div>
+        </div>
+        <div className="p-8">
               {editingSection === "achievements" ? (
                 <InlineAchievementsEditor
                   athleteId={athlete.id}
