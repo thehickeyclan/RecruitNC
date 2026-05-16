@@ -278,7 +278,7 @@ export default function CalendarPage() {
             {/* Day Headers */}
             <div className="grid grid-cols-7 border-b border-[#1e3a5f]">
               {DAYS.map((day) => (
-                <div key={day} className="py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                <div key={day} className="py-3 text-center text-xs font-medium text-gray-300 uppercase">
                   {day}
                 </div>
               ))}
@@ -302,7 +302,7 @@ export default function CalendarPage() {
                         <>
                           <div className={cn(
                             "text-sm font-medium mb-1",
-                            isToday ? "text-[#D3B574]" : "text-gray-400"
+                            isToday ? "text-[#D3B574]" : "text-white"
                           )}>
                             {day}
                           </div>
@@ -318,7 +318,7 @@ export default function CalendarPage() {
                               </button>
                             ))}
                             {dayEvents.length > 3 && (
-                              <div className="text-xs text-gray-500 px-1">+{dayEvents.length - 3} more</div>
+                              <div className="text-xs text-gray-300 px-1">+{dayEvents.length - 3} more</div>
                             )}
                           </div>
                         </>
