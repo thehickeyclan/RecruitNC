@@ -328,9 +328,6 @@ export default function ParentContactPage({ params }: { params: Promise<{ userId
   const signups = crmData?.blueSignups?.ok ? crmData.blueSignups.data || [] : []
   const fundraising = crmData?.fundraisingWallet?.ok ? crmData.fundraisingWallet.data?.athletes || [] : []
   const expenses = crmData?.athleteExpenseRequests?.ok ? crmData.athleteExpenseRequests.data || [] : []
-  
-  console.log("[v0] Parent page fundraising data:", JSON.stringify(fundraising, null, 2))
-  console.log("[v0] Full fundraisingWallet:", JSON.stringify(crmData?.fundraisingWallet, null, 2))
 
   return (
     <div className="min-h-screen bg-[#061224]">
