@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { buildFundraisingHubSnapshot } from "@/lib/fundraising/hub-data"
 import { 
   DollarSign, 
@@ -15,11 +16,12 @@ import {
 
 async function getFundraisingStats() {
   const supabase = await createClient()
+  const admin = createAdminClient()
   
   // Use the SAME data source as the public giving hub
   const hubSnapshot = await buildFundraisingHubSnapshot()
   
-  // Get counts and reimbursements from database
+  // Get counts from regular client, expenses from admin (bypasses RLS)
   const [
     { count: pendingActivations },
     { count: totalAthletes },
@@ -37,8 +39,8 @@ async function getFundraisingStats() {
       .from("athlete_fundraising_profiles")
       .select("*", { count: "exact", head: true })
       .eq("is_active", true),
-    // Get paid reimbursements
-    supabase
+    // Use admin client to bypass RLS and get ALL paid reimbursements
+    admin
       .from("athlete_expense_requests")
       .select("amount_cents")
       .eq("status", "paid")
@@ -48,7 +50,7 @@ async function getFundraisingStats() {
   const totalRaised = hubSnapshot.hero.totalRaisedCents
   const donationCount = hubSnapshot.hero.giftCount
   
-  // Spent = sum of paid reimbursements
+  // Reimbursed = sum of paid expense requests
   const totalSpent = paidExpenses?.reduce((sum, e) => sum + (Number(e.amount_cents) || 0), 0) || 0
 
   return {
