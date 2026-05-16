@@ -90,6 +90,28 @@ async function getFundraisingData() {
     .eq("is_active", true)
     .order("total_raised_cents", { ascending: false })
   
+  // Get parent-athlete connection stats
+  const { count: linkedAthletesCount } = await admin
+    .from("parent_athlete_links")
+    .select("athlete_id", { count: "exact", head: true })
+  
+  // Get total active profiles for comparison
+  const { count: totalActiveProfiles } = await admin
+    .from("athlete_fundraising_profiles")
+    .select("*", { count: "exact", head: true })
+    .eq("is_active", true)
+  
+  // Get page view stats for athlete pages (last 30 days)
+  const thirtyDaysAgo = new Date()
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+  
+  const { data: pageViews } = await admin
+    .from("user_analytics")
+    .select("page_url")
+    .eq("event_type", "page_view")
+    .like("page_url", "%/fundraising/athletes/%")
+    .gte("created_at", thirtyDaysAgo.toISOString())
+  
   // Transform expenses
   const expenseRows: ExpenseRow[] = (expenses || []).map((e: any) => ({
     id: e.id,
@@ -135,6 +157,22 @@ async function getFundraisingData() {
   const totalReimbursed = paidExpenses.reduce((sum, e) => sum + e.amount_cents, 0)
   const pendingRequests = requestRows.filter(r => r.status === "pending")
   const activeProfileCount = profileRows.length
+  
+  // Count page views per slug
+  const pageViewsMap: Record<string, number> = {}
+  pageViews?.forEach((pv: any) => {
+    const match = pv.page_url?.match(/\/fundraising\/athletes\/([^/?]+)/)
+    if (match) {
+      const slug = match[1]
+      pageViewsMap[slug] = (pageViewsMap[slug] || 0) + 1
+    }
+  })
+  
+  // Add page views to profiles
+  const profilesWithViews = profileRows.map(p => ({
+    ...p,
+    page_views_30d: pageViewsMap[p.slug] || 0
+  }))
 
   return {
     totalRaised,
@@ -143,10 +181,12 @@ async function getFundraisingData() {
     reimbursementCount: paidExpenses.length,
     pendingRequestCount: pendingRequests.length,
     activeProfileCount,
+    linkedAthletesCount: linkedAthletesCount || 0,
+    totalPageViews: pageViews?.length || 0,
     donations: hubSnapshot.activity,
     expenses: expenseRows,
     activationRequests: requestRows,
-    activeProfiles: profileRows,
+    activeProfiles: profilesWithViews,
   }
 }
 
@@ -183,6 +223,8 @@ export default async function FundraisingAdminPage() {
           reimbursementCount={data.reimbursementCount}
           pendingRequestCount={data.pendingRequestCount}
           activeProfileCount={data.activeProfileCount}
+          linkedAthletesCount={data.linkedAthletesCount}
+          totalPageViews={data.totalPageViews}
           donations={data.donations}
           expenses={data.expenses}
           activationRequests={data.activationRequests}
