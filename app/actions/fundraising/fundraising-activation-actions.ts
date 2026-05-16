@@ -22,6 +22,20 @@ export type ActivationRequestRow = {
   admin_note: string | null
 }
 
+export type WiringStatus = {
+  athleteResolved: boolean
+  profileActive: boolean
+  checkoutLive: boolean
+  parentLinked: boolean
+  notificationSent: boolean
+}
+
+export type EnrichedActivationRow = ActivationRequestRow & {
+  wiring: WiringStatus
+  /** True when status=approved but at least one wiring step is false */
+  wiringIncomplete: boolean
+}
+
 export async function submitFundraisingActivationRequestAction(params: {
   fundraisingSlug: string
   athleteId: string | null
@@ -313,4 +327,159 @@ export async function listFundraisingActivationRequestsAdmin(): Promise<Activati
     return []
   }
   return (data ?? []) as ActivationRequestRow[]
+}
+
+/* ─────────────── Enriched listing with wiring status ─────────────── */
+
+export async function listEnrichedActivationRequestsAdmin(): Promise<EnrichedActivationRow[]> {
+  const rows = await listFundraisingActivationRequestsAdmin()
+  if (rows.length === 0) return []
+
+  const admin = createAdminClient()
+
+  // Collect all athlete_ids that are non-null
+  const athleteIds = rows
+    .map((r) => r.athlete_id)
+    .filter((id): id is string => typeof id === "string" && id.trim().length > 0)
+  const uniqueAthleteIds = [...new Set(athleteIds)]
+
+  // Collect all user_id + athlete_id pairs for parent link checks
+  const userAthleteKeys = rows
+    .filter((r) => r.athlete_id)
+    .map((r) => ({ userId: r.user_id, athleteId: r.athlete_id! }))
+
+  // Batch query: fundraising profiles
+  let profileMap = new Map<string, { is_active: boolean; checkout_live: boolean }>()
+  if (uniqueAthleteIds.length > 0) {
+    const { data: profiles } = await admin
+      .from("athlete_fundraising_profiles")
+      .select("athlete_id, is_active, checkout_live")
+      .in("athlete_id", uniqueAthleteIds)
+    for (const p of profiles ?? []) {
+      profileMap.set(p.athlete_id, { is_active: !!p.is_active, checkout_live: !!p.checkout_live })
+    }
+  }
+
+  // Batch query: parent links
+  let linkSet = new Set<string>()
+  if (userAthleteKeys.length > 0) {
+    const { data: links } = await admin
+      .from("parent_athlete_links")
+      .select("user_id, athlete_id")
+    for (const l of links ?? []) {
+      linkSet.add(`${l.user_id}:${l.athlete_id}`)
+    }
+  }
+
+  return rows.map((r) => {
+    const athleteResolved = typeof r.athlete_id === "string" && r.athlete_id.trim().length > 0
+    const profile = athleteResolved ? profileMap.get(r.athlete_id!) : undefined
+    const profileActive = profile?.is_active ?? false
+    const checkoutLive = profile?.checkout_live ?? false
+    const parentLinked = athleteResolved ? linkSet.has(`${r.user_id}:${r.athlete_id}`) : false
+    const notificationSent = r.reviewed_at !== null && r.status === "approved"
+
+    const wiring: WiringStatus = {
+      athleteResolved,
+      profileActive,
+      checkoutLive,
+      parentLinked,
+      notificationSent,
+    }
+
+    const wiringIncomplete =
+      r.status === "approved" &&
+      (!athleteResolved || !profileActive || !checkoutLive || !parentLinked || !notificationSent)
+
+    return { ...r, wiring, wiringIncomplete }
+  })
+}
+
+/* ─────────────── Fix actions for broken wiring ─────────────── */
+
+export async function fixParentLinkAction(
+  requestId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const gate = await requireAdmin()
+  if (!gate.ok) return { ok: false, error: gate.error }
+
+  const admin = createAdminClient()
+  const { data: req } = await admin
+    .from("fundraising_activation_requests")
+    .select("user_id, athlete_id")
+    .eq("id", requestId)
+    .single()
+
+  if (!req?.athlete_id || !req?.user_id) {
+    return { ok: false, error: "Request missing user or athlete ID." }
+  }
+
+  const result = await ensureParentAthleteLinkAdmin(admin, {
+    parentUserId: req.user_id,
+    athleteId: req.athlete_id,
+  })
+
+  revalidatePath("/admin/fundraising/activation-requests")
+  return result
+}
+
+export async function fixProfileActiveAction(
+  requestId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const gate = await requireAdmin()
+  if (!gate.ok) return { ok: false, error: gate.error }
+
+  const admin = createAdminClient()
+  const { data: req } = await admin
+    .from("fundraising_activation_requests")
+    .select("athlete_id")
+    .eq("id", requestId)
+    .single()
+
+  if (!req?.athlete_id) {
+    return { ok: false, error: "Request missing athlete ID." }
+  }
+
+  const { error } = await admin
+    .from("athlete_fundraising_profiles")
+    .update({ is_active: true, checkout_live: true, updated_at: new Date().toISOString() })
+    .eq("athlete_id", req.athlete_id)
+
+  if (error) return { ok: false, error: error.message }
+
+  revalidatePath("/admin/fundraising/activation-requests")
+  return { ok: true }
+}
+
+export async function resendNotificationAction(
+  requestId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const gate = await requireAdmin()
+  if (!gate.ok) return { ok: false, error: gate.error }
+
+  const admin = createAdminClient()
+  const { data: req } = await admin
+    .from("fundraising_activation_requests")
+    .select("user_id, athlete_id, fundraising_slug, requester_email")
+    .eq("id", requestId)
+    .single()
+
+  if (!req?.athlete_id || !req?.user_id || !req?.fundraising_slug) {
+    return { ok: false, error: "Request missing required fields." }
+  }
+
+  try {
+    await sendFundraisingActivationApprovedNotifications(admin, {
+      parentUserId: req.user_id,
+      requesterEmail: req.requester_email ?? null,
+      athleteId: req.athlete_id,
+      fundraisingSlug: req.fundraising_slug,
+    })
+  } catch (e) {
+    console.error("[resendNotificationAction]", e)
+    return { ok: false, error: "Failed to send notification." }
+  }
+
+  revalidatePath("/admin/fundraising/activation-requests")
+  return { ok: true }
 }
