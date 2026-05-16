@@ -124,29 +124,6 @@ async function getFundraisingData() {
     .like("page_url", "%/fundraising/athletes/%")
     .gte("created_at", thirtyDaysAgo.toISOString())
   
-  // Get campaign breakdown from donations_unified (SOURCE OF TRUTH)
-  // athlete_code present = Athlete Page donation
-  // athlete_code null/empty = Spartan General donation
-  const { data: unifiedDonations } = await admin
-    .from("donations_unified")
-    .select("amount_cents, athlete_code")
-    .eq("is_paid", true)
-  
-  const campaignBreakdown = {
-    spartanGeneral: { count: 0, totalCents: 0 },
-    athletePages: { count: 0, totalCents: 0 }
-  }
-  
-  unifiedDonations?.forEach((d: { amount_cents: number; athlete_code: string | null }) => {
-    if (d.athlete_code && d.athlete_code.trim() !== "") {
-      campaignBreakdown.athletePages.count++
-      campaignBreakdown.athletePages.totalCents += d.amount_cents || 0
-    } else {
-      campaignBreakdown.spartanGeneral.count++
-      campaignBreakdown.spartanGeneral.totalCents += d.amount_cents || 0
-    }
-  })
-  
   // Get NC United Fund data (scholarship donations, awards, guild allocations)
   const { data: scholarshipDonations } = await admin
     .from("scholarship_donations")
@@ -246,7 +223,6 @@ async function getFundraisingData() {
     activeProfileCount,
     linkedAthletesCount: linkedAthletesCount || 0,
     totalPageViews: pageViews?.length || 0,
-    campaignBreakdown,
     ncUnitedFund: { ...ncUnitedFund, deltaCents: fundDelta },
     donations: hubSnapshot.activity,
     expenses: expenseRows,
@@ -290,7 +266,6 @@ export default async function FundraisingAdminPage() {
           activeProfileCount={data.activeProfileCount}
           linkedAthletesCount={data.linkedAthletesCount}
           totalPageViews={data.totalPageViews}
-          campaignBreakdown={data.campaignBreakdown}
           ncUnitedFund={data.ncUnitedFund}
           donations={data.donations}
           expenses={data.expenses}

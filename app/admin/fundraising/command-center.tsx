@@ -428,7 +428,7 @@ function ActivationRequestRow({
       <td className="px-4 py-3">
         <code className="rounded bg-gray-100 px-2 py-0.5 text-xs">{request.fundraising_slug}</code>
       </td>
-      <td className="px-4 py-3 text-gray-600">{request.requester_email || "�����������"}</td>
+      <td className="px-4 py-3 text-gray-600">{request.requester_email || "�������������"}</td>
       <td className="px-4 py-3">
         {status === "pending" && (
           <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800">
@@ -626,11 +626,6 @@ type ActiveProfile = {
 
 type Panel = "donations" | "reimbursements" | "requests" | "profiles" | null
 
-type CampaignBreakdown = {
-  spartanGeneral: { count: number; totalCents: number }
-  athletePages: { count: number; totalCents: number }
-}
-
 type NCUnitedFund = {
   donationsCents: number
   donationsCount: number
@@ -650,7 +645,6 @@ interface Props {
   activeProfileCount: number
   linkedAthletesCount: number
   totalPageViews: number
-  campaignBreakdown: CampaignBreakdown
   ncUnitedFund: NCUnitedFund
   donations: FundraisingHubActivityRow[]
   expenses: ExpenseRow[]
@@ -690,7 +684,6 @@ export function FundraisingCommandCenter({
   activeProfileCount,
   linkedAthletesCount,
   totalPageViews,
-  campaignBreakdown,
   ncUnitedFund,
   donations,
   expenses,
@@ -831,47 +824,14 @@ export function FundraisingCommandCenter({
           <p className="text-sm text-gray-500">{reimbursementCount} paid - click to view</p>
         </button>
 
-        {/* Fundraising Streams Breakdown */}
-        <div className="rounded-xl border bg-gradient-to-br from-slate-50 to-white p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-medium text-gray-500">Fundraising Streams</p>
-            <TrendingUp className="h-5 w-5 text-slate-600" />
+        {/* Available Balance */}
+        <div className="rounded-xl border bg-gradient-to-br from-blue-50 to-white p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-gray-500">Available Balance</p>
+            <TrendingUp className="h-5 w-5 text-blue-600" />
           </div>
-          <div className="space-y-3">
-            {/* Spartan Race */}
-            <div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-gray-700">Spartan Race</span>
-                <span className="font-semibold text-[#003366]">{fmtCents(campaignBreakdown.spartanGeneral.totalCents)}</span>
-              </div>
-              <div className="mt-1 h-2 rounded-full bg-gray-200 overflow-hidden">
-                <div className="h-full bg-[#003366]" style={{ width: `${totalRaised > 0 ? (campaignBreakdown.spartanGeneral.totalCents / totalRaised) * 100 : 0}%` }} />
-              </div>
-              <p className="text-[10px] text-gray-400">{campaignBreakdown.spartanGeneral.count} gifts</p>
-            </div>
-            {/* Athlete Pages */}
-            <div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-gray-700">Athlete Pages</span>
-                <span className="font-semibold text-[#D3B574]">{fmtCents(campaignBreakdown.athletePages.totalCents)}</span>
-              </div>
-              <div className="mt-1 h-2 rounded-full bg-gray-200 overflow-hidden">
-                <div className="h-full bg-[#D3B574]" style={{ width: `${totalRaised > 0 ? (campaignBreakdown.athletePages.totalCents / totalRaised) * 100 : 0}%` }} />
-              </div>
-              <p className="text-[10px] text-gray-400">{campaignBreakdown.athletePages.count} gifts</p>
-            </div>
-            {/* NC United Fund */}
-            <div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-gray-700">NC United Fund</span>
-                <span className="font-semibold text-emerald-600">{fmtCents(ncUnitedFund.donationsCents)}</span>
-              </div>
-              <div className="mt-1 h-2 rounded-full bg-gray-200 overflow-hidden">
-                <div className="h-full bg-emerald-500" style={{ width: `${totalRaised > 0 ? (ncUnitedFund.donationsCents / totalRaised) * 100 : 0}%` }} />
-              </div>
-              <p className="text-[10px] text-gray-400">{ncUnitedFund.donationsCount} gifts</p>
-            </div>
-          </div>
+          <p className="mt-2 text-3xl font-bold text-blue-700">{fmtCents(available)}</p>
+          <p className="text-sm text-gray-500">Raised minus reimbursed</p>
         </div>
 
         {/* Active Pages */}
