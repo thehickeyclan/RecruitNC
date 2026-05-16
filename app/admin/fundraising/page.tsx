@@ -1,255 +1,193 @@
 import Link from "next/link"
-import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { buildFundraisingHubSnapshot } from "@/lib/fundraising/hub-data"
-import { 
-  DollarSign, 
-  Users, 
-  FileCheck, 
-  Receipt, 
-  TrendingUp, 
-  BookOpen,
-  ExternalLink,
-  AlertCircle,
-  CheckCircle
-} from "lucide-react"
+import { buildFundraisingHubSnapshot, type FundraisingHubActivityRow } from "@/lib/fundraising/hub-data"
+import { FundraisingCommandCenter } from "./command-center"
 
-async function getFundraisingStats() {
-  const supabase = await createClient()
+export const dynamic = "force-dynamic"
+
+type ExpenseRow = {
+  id: string
+  amount_cents: number
+  status: string
+  expense_type: string | null
+  created_at: string
+  paid_at: string | null
+  athlete_id: string
+  athlete_first_name: string | null
+  athlete_last_name: string | null
+  parent_email: string | null
+  parent_name: string | null
+}
+
+type ActivationRequest = {
+  id: string
+  fundraising_slug: string
+  status: string
+  created_at: string
+  requester_email: string | null
+  athlete_first_name: string | null
+  athlete_last_name: string | null
+}
+
+type ActiveProfile = {
+  id: string
+  slug: string
+  athlete_id: string
+  athlete_first_name: string | null
+  athlete_last_name: string | null
+  total_raised_cents: number
+  campaign_goal_cents: number
+  checkout_live: boolean
+}
+
+async function getFundraisingData() {
   const admin = createAdminClient()
   
-  // Use the SAME data source as the public giving hub
+  // Use the SAME data source as the public giving hub for donations
   const hubSnapshot = await buildFundraisingHubSnapshot()
   
-  // Get counts from regular client, expenses from admin (bypasses RLS)
-  const [
-    { count: pendingActivations },
-    { count: totalAthletes },
-    { count: activePages },
-    { data: paidExpenses }
-  ] = await Promise.all([
-    supabase
-      .from("fundraising_activation_requests")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "pending"),
-    supabase
-      .from("athlete_fundraising_profiles")
-      .select("*", { count: "exact", head: true }),
-    supabase
-      .from("athlete_fundraising_profiles")
-      .select("*", { count: "exact", head: true })
-      .eq("is_active", true),
-    // Use admin client to bypass RLS and get ALL paid reimbursements
-    admin
-      .from("athlete_expense_requests")
-      .select("amount_cents")
-      .eq("status", "paid")
-  ])
-
-  // Raised comes from hub (same as public page)
+  // Get detailed expense data with athlete info
+  const { data: expenses } = await admin
+    .from("athlete_expense_requests")
+    .select(`
+      id,
+      amount_cents,
+      status,
+      expense_type,
+      created_at,
+      paid_at,
+      athlete_id,
+      athletes!inner(firstName, lastName),
+      user_profiles(full_name, email)
+    `)
+    .order("created_at", { ascending: false })
+  
+  // Get activation requests with athlete info
+  const { data: activationRequests } = await admin
+    .from("fundraising_activation_requests")
+    .select(`
+      id,
+      fundraising_slug,
+      status,
+      created_at,
+      requester_email,
+      athletes(firstName, lastName)
+    `)
+    .order("created_at", { ascending: false })
+  
+  // Get active fundraising profiles
+  const { data: activeProfiles } = await admin
+    .from("athlete_fundraising_profiles")
+    .select(`
+      id,
+      slug,
+      athlete_id,
+      total_raised_cents,
+      campaign_goal_cents,
+      checkout_live,
+      athletes(firstName, lastName)
+    `)
+    .eq("is_active", true)
+    .order("total_raised_cents", { ascending: false })
+  
+  // Transform expenses
+  const expenseRows: ExpenseRow[] = (expenses || []).map((e: any) => ({
+    id: e.id,
+    amount_cents: e.amount_cents || 0,
+    status: e.status,
+    expense_type: e.expense_type,
+    created_at: e.created_at,
+    paid_at: e.paid_at,
+    athlete_id: e.athlete_id,
+    athlete_first_name: e.athletes?.firstName || null,
+    athlete_last_name: e.athletes?.lastName || null,
+    parent_email: e.user_profiles?.email || null,
+    parent_name: e.user_profiles?.full_name || null,
+  }))
+  
+  // Transform activation requests
+  const requestRows: ActivationRequest[] = (activationRequests || []).map((r: any) => ({
+    id: r.id,
+    fundraising_slug: r.fundraising_slug,
+    status: r.status,
+    created_at: r.created_at,
+    requester_email: r.requester_email,
+    athlete_first_name: r.athletes?.firstName || null,
+    athlete_last_name: r.athletes?.lastName || null,
+  }))
+  
+  // Transform active profiles
+  const profileRows: ActiveProfile[] = (activeProfiles || []).map((p: any) => ({
+    id: p.id,
+    slug: p.slug,
+    athlete_id: p.athlete_id,
+    athlete_first_name: p.athletes?.firstName || null,
+    athlete_last_name: p.athletes?.lastName || null,
+    total_raised_cents: p.total_raised_cents || 0,
+    campaign_goal_cents: p.campaign_goal_cents || 0,
+    checkout_live: p.checkout_live,
+  }))
+  
+  // Calculate totals
   const totalRaised = hubSnapshot.hero.totalRaisedCents
   const donationCount = hubSnapshot.hero.giftCount
-  
-  // Reimbursed = sum of paid expense requests
-  const totalSpent = paidExpenses?.reduce((sum, e) => sum + (Number(e.amount_cents) || 0), 0) || 0
+  const paidExpenses = expenseRows.filter(e => e.status === "paid")
+  const totalReimbursed = paidExpenses.reduce((sum, e) => sum + e.amount_cents, 0)
+  const pendingRequests = requestRows.filter(r => r.status === "pending")
+  const activeProfileCount = profileRows.length
 
   return {
-    pendingActivations: pendingActivations || 0,
-    totalAthletes: totalAthletes || 0,
-    activePages: activePages || 0,
     totalRaised,
-    totalSpent,
     donationCount,
-    available: totalRaised - totalSpent
+    totalReimbursed,
+    reimbursementCount: paidExpenses.length,
+    pendingRequestCount: pendingRequests.length,
+    activeProfileCount,
+    donations: hubSnapshot.activity,
+    expenses: expenseRows,
+    activationRequests: requestRows,
+    activeProfiles: profileRows,
   }
 }
 
-function fmtCents(cents: number): string {
-  return (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })
-}
-
-export default async function AdminFundraisingPage() {
-  const stats = await getFundraisingStats()
+export default async function FundraisingAdminPage() {
+  const data = await getFundraisingData()
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8 p-6 pb-12">
-      {/* Header */}
-      <div>
-        <Link href="/admin" className="text-sm font-medium text-blue-600 underline-offset-4 hover:underline">
-          &larr; Admin home
-        </Link>
-        <h1 className="mt-2 text-2xl font-bold tracking-tight text-gray-900">Fundraising Console</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Manage athlete fundraising pages, donations, and reimbursements.
-        </p>
-      </div>
-
-      {/* Pending Alert */}
-      {stats.pendingActivations > 0 && (
-        <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
-          <AlertCircle className="h-5 w-5 text-amber-600" />
-          <div className="flex-1">
-            <p className="font-medium text-amber-900">
-              {stats.pendingActivations} pending activation request{stats.pendingActivations !== 1 ? "s" : ""}
-            </p>
-            <p className="text-sm text-amber-700">Families are waiting for their pages to go live.</p>
-          </div>
-          <Link
-            href="/admin/fundraising/activation-requests"
-            className="rounded-md bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700"
-          >
-            Review Now
-          </Link>
-        </div>
-      )}
-
-      {/* Stats Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-xl border bg-white p-5 shadow-sm">
+    <div className="min-h-screen bg-gray-50">
+      {/* NC United Branded Header */}
+      <div className="bg-gradient-to-r from-[#003366] to-[#004080] text-white shadow-lg">
+        <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-gray-500">Total Raised</p>
-            <DollarSign className="h-5 w-5 text-green-600" />
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <svg className="h-10 w-10 text-[#C8102E]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h1 className="text-4xl font-bold">Fundraising Command Center</h1>
+              </div>
+              <p className="text-blue-200 text-lg">NC United - Donations, Reimbursements & Athlete Pages</p>
+            </div>
+            <Link href="/admin" className="bg-white text-[#003366] hover:bg-gray-100 px-4 py-2 rounded-md font-semibold">
+              Back to Admin
+            </Link>
           </div>
-          <p className="mt-2 text-2xl font-bold text-gray-900">{fmtCents(stats.totalRaised)}</p>
-          <p className="text-xs text-gray-500">{stats.donationCount} donations</p>
-        </div>
-
-        <div className="rounded-xl border bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-gray-500">Reimbursed</p>
-            <Receipt className="h-5 w-5 text-red-600" />
-          </div>
-          <p className="mt-2 text-2xl font-bold text-gray-900">{fmtCents(stats.totalSpent)}</p>
-        </div>
-
-        <div className="rounded-xl border bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-gray-500">Available</p>
-            <TrendingUp className="h-5 w-5 text-blue-600" />
-          </div>
-          <p className="mt-2 text-2xl font-bold text-gray-900">{fmtCents(stats.available)}</p>
-        </div>
-
-        <div className="rounded-xl border bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-gray-500">Active Pages</p>
-            <Users className="h-5 w-5 text-purple-600" />
-          </div>
-          <p className="mt-2 text-2xl font-bold text-gray-900">
-            {stats.activePages} <span className="text-sm font-normal text-gray-500">/ {stats.totalAthletes}</span>
-          </p>
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Link
-          href="/admin/fundraising/activation-requests"
-          className="group flex items-start gap-4 rounded-xl border bg-white p-5 shadow-sm transition-colors hover:border-blue-200 hover:bg-blue-50"
-        >
-          <div className="rounded-lg bg-blue-100 p-3">
-            <FileCheck className="h-6 w-6 text-blue-600" />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-semibold text-gray-900 group-hover:text-blue-700">Page Activations</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              Review and approve family requests to activate their athlete fundraising pages.
-            </p>
-            {stats.pendingActivations > 0 && (
-              <span className="mt-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
-                {stats.pendingActivations} pending
-              </span>
-            )}
-          </div>
-          <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-blue-500" />
-        </Link>
-
-        <Link
-          href="/admin/expense-requests"
-          className="group flex items-start gap-4 rounded-xl border bg-white p-5 shadow-sm transition-colors hover:border-blue-200 hover:bg-blue-50"
-        >
-          <div className="rounded-lg bg-green-100 p-3">
-            <Receipt className="h-6 w-6 text-green-600" />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-semibold text-gray-900 group-hover:text-blue-700">Reimbursements</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              Review expense requests, approve reimbursements, and mark them as paid.
-            </p>
-          </div>
-          <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-blue-500" />
-        </Link>
-
-        <Link
-          href="/admin/fundraising-ledger"
-          className="group flex items-start gap-4 rounded-xl border bg-white p-5 shadow-sm transition-colors hover:border-blue-200 hover:bg-blue-50"
-        >
-          <div className="rounded-lg bg-purple-100 p-3">
-            <BookOpen className="h-6 w-6 text-purple-600" />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-semibold text-gray-900 group-hover:text-blue-700">Audit Ledger</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              Full transaction history with CSV export for accountant review.
-            </p>
-          </div>
-          <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-blue-500" />
-        </Link>
-
-        <Link
-          href="/admin/fundraising/rankings"
-          className="group flex items-start gap-4 rounded-xl border bg-white p-5 shadow-sm transition-colors hover:border-blue-200 hover:bg-blue-50"
-        >
-          <div className="rounded-lg bg-amber-100 p-3">
-            <TrendingUp className="h-6 w-6 text-amber-600" />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-semibold text-gray-900 group-hover:text-blue-700">Leaderboard</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              See top fundraisers ranked by amount raised.
-            </p>
-          </div>
-          <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-blue-500" />
-        </Link>
-
-        <Link
-          href="/admin/fundraising/playbook"
-          className="group flex items-start gap-4 rounded-xl border bg-white p-5 shadow-sm transition-colors hover:border-blue-200 hover:bg-blue-50"
-        >
-          <div className="rounded-lg bg-gray-100 p-3">
-            <BookOpen className="h-6 w-6 text-gray-600" />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-semibold text-gray-900 group-hover:text-blue-700">Playbook</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              Documentation and guides for managing fundraising.
-            </p>
-          </div>
-          <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-blue-500" />
-        </Link>
-      </div>
-
-      {/* Status Indicators */}
-      <div className="rounded-xl border bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-gray-900">System Status</h2>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <div className="flex items-center gap-2">
-            <CheckCircle className="h-4 w-4 text-green-500" />
-            <span className="text-sm text-gray-700">Parent-athlete links working</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <CheckCircle className="h-4 w-4 text-green-500" />
-            <span className="text-sm text-gray-700">Stripe checkout connected</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <CheckCircle className="h-4 w-4 text-green-500" />
-            <span className="text-sm text-gray-700">Ledger tracking donations</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <CheckCircle className="h-4 w-4 text-green-500" />
-            <span className="text-sm text-gray-700">Reimbursement workflow active</span>
-          </div>
-        </div>
+      <div className="container mx-auto px-4 py-8">
+        <FundraisingCommandCenter 
+          totalRaised={data.totalRaised}
+          donationCount={data.donationCount}
+          totalReimbursed={data.totalReimbursed}
+          reimbursementCount={data.reimbursementCount}
+          pendingRequestCount={data.pendingRequestCount}
+          activeProfileCount={data.activeProfileCount}
+          donations={data.donations}
+          expenses={data.expenses}
+          activationRequests={data.activationRequests}
+          activeProfiles={data.activeProfiles}
+        />
       </div>
     </div>
   )
