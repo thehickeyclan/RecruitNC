@@ -60,7 +60,7 @@ function WhyGiveBullet({ children }: { children: ReactNode }) {
 }
 
 async function fetchRecruitingProfilePhoto(admin: ReturnType<typeof createAdminClient>, athleteId: string): Promise<string | null> {
-  const { data, error } = await admin.from("athletes").select("*").eq("id", athleteId).maybeSingle()
+  const { data, error } = await admin.from("athletes").select("photo_url, headshot_url, profile_image_url").eq("id", athleteId).maybeSingle()
   if (error || !data) return null
   return recruitingProfilePhotoFromRow(data as Record<string, unknown>)
 }
@@ -109,14 +109,18 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
   const sp = (await searchParams) ?? {}
   const cancelledCheckout = sp.cancelled === "1"
   const admin = createAdminClient()
-  const resolved = await resolveFundraisingAthletePublicBySlugForRequest(slug)
+
+  // Parallelize slug resolution + auth check — these are independent
+  const [resolved, supabase] = await Promise.all([
+    resolveFundraisingAthletePublicBySlugForRequest(slug),
+    createClient(),
+  ])
   if (!resolved) notFound()
 
   const code = resolved.code
   const athleteId = resolved.profile?.athlete_id ?? resolved.entry?.id ?? null
   const profile = resolved.profile
 
-  const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -127,34 +131,49 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
     (viewerIsRecruitNcAdmin || (!!athleteId && (await userCanManageFundraisingForAthlete(admin, user.id, athleteId))))
   )
   const showOwnerHints = isFundraisingManager || viewerIsRecruitNcAdmin
-  /** Roster credit codes are operational — don’t surface to casual donors. */
+  /** Roster credit codes are operational — don't surface to casual donors. */
   const showInternalCodes = showOwnerHints
 
   const slugNorm = slug.trim().toLowerCase()
 
   const snapshotLedger =
     resolved.ledgerCodes.length > 0 ? resolved.ledgerCodes : code != null ? [code] : []
-  const [snapshot, recruitingPhotoUrl, ownerThankYouRows, thankAckLedgerKeys, wiringSnapshot, pendingActivationUserIds, managerWalletRow] =
-    await Promise.all([
-      snapshotLedger.length > 0
-        ? getAthleteFundraisingPublicSnapshot(snapshotLedger, ATHLETE_PUBLIC_GIFTS_NO_ROW_CAP)
-        : Promise.resolve(null),
-      athleteId ? fetchRecruitingProfilePhoto(admin, athleteId) : Promise.resolve(null),
-      isFundraisingManager && snapshotLedger.length > 0
-        ? getAthleteOwnerThankYouRowsForLedgerCodes(snapshotLedger)
-        : Promise.resolve([]),
-      isFundraisingManager && athleteId ? fetchThankYouAckLedgerKeys(admin, athleteId) : Promise.resolve(new Set<string>()),
-      athleteId ? getFundraisingWiringAdminSnapshot(admin, athleteId) : Promise.resolve(null),
-      fetchPendingActivationUserIdsForSlug(admin, slugNorm),
-      user?.id && athleteId && isFundraisingManager
-        ? getFundraisingAthletePageWalletRowForViewer(admin, user.id, athleteId, resolved.guildLookupAthleteIds).catch(
-            (e) => {
-              console.error("[fundraising-athlete-public] wallet row", e)
-              return null
-            },
-          )
-        : Promise.resolve(null),
-    ])
+
+  // Core public data — always fetched in parallel
+  const publicDataPromise = Promise.all([
+    snapshotLedger.length > 0
+      ? getAthleteFundraisingPublicSnapshot(snapshotLedger, ATHLETE_PUBLIC_GIFTS_NO_ROW_CAP)
+      : Promise.resolve(null),
+    athleteId ? fetchRecruitingProfilePhoto(admin, athleteId) : Promise.resolve(null),
+    fetchPendingActivationUserIdsForSlug(admin, slugNorm),
+  ])
+
+  // Manager-only data — only fetched when needed (saves ~3 DB round-trips for public visitors)
+  const managerDataPromise = isFundraisingManager
+    ? Promise.all([
+        snapshotLedger.length > 0
+          ? getAthleteOwnerThankYouRowsForLedgerCodes(snapshotLedger)
+          : Promise.resolve([]),
+        athleteId ? fetchThankYouAckLedgerKeys(admin, athleteId) : Promise.resolve(new Set<string>()),
+        athleteId ? getFundraisingWiringAdminSnapshot(admin, athleteId) : Promise.resolve(null),
+        user?.id && athleteId
+          ? getFundraisingAthletePageWalletRowForViewer(admin, user.id, athleteId, resolved.guildLookupAthleteIds).catch(
+              (e) => {
+                console.error("[fundraising-athlete-public] wallet row", e)
+                return null
+              },
+            )
+          : Promise.resolve(null),
+      ])
+    : Promise.resolve([
+        [] as Awaited<ReturnType<typeof getAthleteOwnerThankYouRowsForLedgerCodes>>,
+        new Set<string>(),
+        athleteId ? getFundraisingWiringAdminSnapshot(admin, athleteId) : null,
+        null,
+      ] as const)
+
+  const [[snapshot, recruitingPhotoUrl, pendingActivationUserIds], [ownerThankYouRows, thankAckLedgerKeys, wiringSnapshot, managerWalletRow]] =
+    await Promise.all([publicDataPromise, managerDataPromise])
 
   const slugHasPendingActivation = pendingActivationUserIds.length > 0
   const latestActivationStatus: "none" | "pending" = slugHasPendingActivation ? "pending" : "none"
