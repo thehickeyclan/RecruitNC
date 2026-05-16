@@ -89,14 +89,25 @@ export async function GET() {
     const profileMap = new Map(profileAthletes?.map(p => [p.athlete_id, p]) || [])
     const spartanMap = new Map(spartanAthletes?.map(s => [s.athlete_id, s]) || [])
     
+    console.log("[v0] Parent links count:", parentLinks?.length)
+    console.log("[v0] Claimed athletes count:", claimedAthletes?.length)
+    console.log("[v0] Sample parent link:", parentLinks?.[0])
+    
     // Parent links: athlete has parent if in parent_athlete_links OR claimed_by_user_id is set
     const athletesWithParent = new Set<string>()
     parentLinks?.forEach(pl => {
-      if (pl.athlete_id) athletesWithParent.add(pl.athlete_id)
+      if (pl.athlete_id) {
+        athletesWithParent.add(String(pl.athlete_id))
+      }
     })
     claimedAthletes?.forEach(ca => {
-      if (ca.id && ca.claimed_by_user_id) athletesWithParent.add(ca.id)
+      if (ca.id && ca.claimed_by_user_id) {
+        athletesWithParent.add(String(ca.id))
+      }
     })
+    
+    console.log("[v0] Athletes with parent count:", athletesWithParent.size)
+    console.log("[v0] Sample athlete with parent:", Array.from(athletesWithParent)[0])
 
     // Calculate ledger totals per athlete
     const athleteLedgerTotals = new Map<string, number>()
@@ -154,7 +165,12 @@ export async function GET() {
     for (const athlete of athletes || []) {
       const profile = profileMap.get(athlete.id)
       const spartan = spartanMap.get(athlete.id)
-      const hasParent = athletesWithParent.has(athlete.id)
+      const hasParent = athletesWithParent.has(String(athlete.id))
+      
+      // Debug first few athletes
+      if (athletes && athletes.indexOf(athlete) < 3) {
+        console.log("[v0] Checking athlete:", athlete.firstName, athlete.lastName, "ID:", athlete.id, "hasParent:", hasParent)
+      }
       
       // Calculate total raised from multiple sources
       const profileRaised = profile?.total_raised_cents || 0
