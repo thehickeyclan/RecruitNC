@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,8 +15,9 @@ import {
 import { Checkbox } from "@/components/ui/checkbox"
 import { AdminHeader } from "@/components/admin-header"
 import { HardLink } from "@/components/hard-link"
-import { MessageSquare, Users, Loader2, ArrowLeft, Bold, Italic, Link2, List, ListOrdered, Send, Inbox, FolderOpen, Trash2, Eye, Mail } from "lucide-react"
+import { MessageSquare, Users, Loader2, ArrowLeft, Send, Inbox, FolderOpen, Trash2, Eye, Mail } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { RichTextEditor } from "@/components/rich-text-editor"
 import type { ProfileOption, AudienceGroupOption } from "@/app/api/admin/messaging/audiences/route"
 import type { RecipientRow } from "@/app/api/admin/messaging/recipients/route"
 import type { SentBlastRow } from "@/app/api/admin/messaging/sent/route"
@@ -38,7 +39,7 @@ export default function AdminMessagingPage() {
   const [testEmail, setTestEmail] = useState("")
   const [sending, setSending] = useState(false)
   const [sendResult, setSendResult] = useState<{ recipientCount: number; result: { inApp?: { sent: boolean; threadId?: string; error?: string }; email: { sent: number; failed: number }; sms: { sent: number; failed: number } } } | null>(null)
-  const bodyRef = useRef<HTMLTextAreaElement>(null)
+  const [bodyHtml, setBodyHtml] = useState("")
 
   const [activeTab, setActiveTab] = useState<"compose" | "sent" | "folders">("compose")
   const [sent, setSent] = useState<SentBlastRow[]>([])
@@ -49,24 +50,6 @@ export default function AdminMessagingPage() {
   const [foldersLoading, setFoldersLoading] = useState(false)
   const [newFolderName, setNewFolderName] = useState("")
   const [creatingFolder, setCreatingFolder] = useState(false)
-
-  const insertAtCursor = (before: string, after: string = "") => {
-    const ta = bodyRef.current
-    if (!ta) {
-      setBody((prev) => prev + before + after)
-      return
-    }
-    const start = ta.selectionStart
-    const end = ta.selectionEnd
-    const text = body
-    const newText = text.slice(0, start) + before + (text.slice(start, end) || "text") + after + text.slice(end)
-    setBody(newText)
-    setTimeout(() => {
-      ta.focus()
-      const pos = start + before.length + (end - start || 4) + after.length
-      ta.setSelectionRange(pos, pos)
-    }, 0)
-  }
 
   useEffect(() => {
     fetch("/api/admin/messaging/audiences", { credentials: "include" })
@@ -501,7 +484,8 @@ export default function AdminMessagingPage() {
                 Compose & send
               </CardTitle>
               <CardDescription>
-                Supports **bold**, *italic*, [link](url), bare URLs (auto-linked), bullets (- * • or 1.), ## headings. Paste from Docs/Word is normalized. Same message → In-app, Email (HTML), SMS (plain).
+                Rich text editor with formatting toolbar. Supports bold, italic, headings, bullet/numbered lists, links, and emojis. 
+                Same message is sent as HTML email and plain text SMS.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -529,30 +513,17 @@ export default function AdminMessagingPage() {
               </div>
               <div>
                 <Label className="text-[#003366]">Message</Label>
-                <div className="mt-1 flex flex-wrap gap-1 p-2 border rounded-t-md bg-gray-50 border-b-0">
-                  <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertAtCursor("**", "**")} title="Bold">
-                    <Bold className="h-4 w-4" />
-                  </Button>
-                  <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertAtCursor("*", "*")} title="Italic">
-                    <Italic className="h-4 w-4" />
-                  </Button>
-                  <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertAtCursor("[", "](https://)")} title="Link">
-                    <Link2 className="h-4 w-4" />
-                  </Button>
-                  <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertAtCursor("\n- ", "")} title="Bullet">
-                    <List className="h-4 w-4" />
-                  </Button>
-                  <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertAtCursor("\n1. ", "")} title="Numbered list">
-                    <ListOrdered className="h-4 w-4" />
-                  </Button>
-                </div>
-                <textarea
-                  ref={bodyRef}
-                  value={body}
-                  onChange={(e) => setBody(e.target.value)}
-                  placeholder="Write your message…"
-                  rows={8}
-                  className="w-full rounded-b-md border border-t-0 px-3 py-2 text-sm min-h-[120px] resize-y"
+                <p className="text-xs text-gray-500 mb-2">
+                  Use the toolbar to format: bold, italic, headings, bullet lists, links, and emojis. 
+                  Your message will be converted to clean HTML for email and plain text for SMS.
+                </p>
+                <RichTextEditor
+                  value={bodyHtml}
+                  onChange={(html, markdown) => {
+                    setBodyHtml(html)
+                    setBody(markdown)
+                  }}
+                  placeholder="Write your message..."
                 />
               </div>
               <div className="flex flex-wrap items-center gap-4">
@@ -589,6 +560,7 @@ export default function AdminMessagingPage() {
                     const params = new URLSearchParams()
                     if (subject.trim()) params.set("subject", subject.trim())
                     if (body.trim()) params.set("b64", btoa(unescape(encodeURIComponent(body.trim()))))
+                    if (bodyHtml.trim()) params.set("html64", btoa(unescape(encodeURIComponent(bodyHtml.trim()))))
                     params.set("logo", logoVariant)
                     window.open(`/admin/messaging/preview?${params.toString()}`, "_blank", "noopener,noreferrer")
                   }}
@@ -611,6 +583,7 @@ export default function AdminMessagingPage() {
                         group: group === "all" ? undefined : group,
                         subject: subject || "Update from RecruitNC",
                         body: body.trim(),
+                        bodyHtml: bodyHtml.trim() || undefined,
                         testEmail: testEmail.trim() || undefined,
                         logoVariant,
                         channels,

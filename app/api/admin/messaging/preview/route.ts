@@ -16,12 +16,12 @@ async function requireAdmin() {
   return { ok: true as const }
 }
 
-/** POST: { subject?, body? } (body = markdown). Returns { html } for the email preview. */
+/** POST: { subject?, body?, bodyHtml? } (body = markdown, bodyHtml = rich text HTML). Returns { html } for the email preview. */
 export async function POST(request: NextRequest) {
   const auth = await requireAdmin()
   if (!auth.ok) return NextResponse.json({ error: "Unauthorized" }, { status: auth.status })
 
-  let body: { subject?: string; body?: string; logoVariant?: string } = {}
+  let body: { subject?: string; body?: string; bodyHtml?: string; logoVariant?: string } = {}
   try {
     body = await request.json()
   } catch {
@@ -29,8 +29,11 @@ export async function POST(request: NextRequest) {
   }
   const subject = typeof body.subject === "string" ? body.subject.trim() || "Update from RecruitNC" : "Update from RecruitNC"
   const rawBody = typeof body.body === "string" ? body.body.trim() : ""
+  const rawBodyHtml = typeof body.bodyHtml === "string" ? body.bodyHtml.trim() : ""
   const logoVariant = body.logoVariant === "nc-united" ? "nc-united" : "recruitnc"
-  const htmlBody = markdownToHtml(rawBody || "Your message here.")
+  
+  // Use provided HTML if available (from rich text editor), otherwise convert markdown
+  const htmlBody = rawBodyHtml || markdownToHtml(rawBody || "Your message here.")
   const baseUrl = (SITE_URL || "").replace(/\/$/, "")
   const html = buildAdminBlastEmailHtml(subject, htmlBody, baseUrl, logoVariant)
   return NextResponse.json({ html })

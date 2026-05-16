@@ -14,6 +14,7 @@ export default function AdminMessagingPreviewPage() {
   const searchParams = useSearchParams()
   const [subject, setSubject] = useState("")
   const [body, setBody] = useState("")
+  const [bodyHtml, setBodyHtml] = useState("")
   const [logoVariant, setLogoVariant] = useState<"recruitnc" | "nc-united">("recruitnc")
   const [iframeHtml, setIframeHtml] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -30,6 +31,7 @@ export default function AdminMessagingPreviewPage() {
         body: JSON.stringify({
           subject: subject || "Update from RecruitNC",
           body: body || "Your message here.",
+          bodyHtml: bodyHtml || undefined,
           logoVariant,
         }),
       })
@@ -44,27 +46,37 @@ export default function AdminMessagingPreviewPage() {
     } finally {
       setLoading(false)
     }
-  }, [subject, body, logoVariant])
+  }, [subject, body, bodyHtml, logoVariant])
 
   useEffect(() => {
     const sub = searchParams?.get("subject")
     const b = searchParams?.get("body")
     const b64 = searchParams?.get("b64")
+    const html64 = searchParams?.get("html64")
     const logo = searchParams?.get("logo")
     let nextSub = ""
     let nextBody = ""
+    let nextBodyHtml = ""
     if (typeof sub === "string") nextSub = decodeURIComponent(sub)
     if (typeof b === "string") nextBody = decodeURIComponent(b)
     else if (typeof b64 === "string") {
       try {
-        nextBody = atob(decodeURIComponent(b64))
+        nextBody = decodeURIComponent(escape(atob(decodeURIComponent(b64))))
       } catch {
         nextBody = ""
+      }
+    }
+    if (typeof html64 === "string") {
+      try {
+        nextBodyHtml = decodeURIComponent(escape(atob(decodeURIComponent(html64))))
+      } catch {
+        nextBodyHtml = ""
       }
     }
     if (logo === "nc-united") setLogoVariant("nc-united")
     setSubject((prev) => (nextSub || prev))
     setBody((prev) => (nextBody || prev))
+    setBodyHtml(nextBodyHtml)
     setLoading(true)
     setError(null)
     fetch("/api/admin/messaging/preview", {
@@ -74,6 +86,7 @@ export default function AdminMessagingPreviewPage() {
       body: JSON.stringify({
         subject: nextSub || "Update from RecruitNC",
         body: nextBody || "Your message here.",
+        bodyHtml: nextBodyHtml || undefined,
         logoVariant: logo === "nc-united" ? "nc-united" : "recruitnc",
       }),
     })
