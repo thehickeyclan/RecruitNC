@@ -1,4 +1,4 @@
-import { HardLink } from "@/components/hard-link"
+import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import { 
   DollarSign, 
@@ -70,9 +70,9 @@ export default async function AdminFundraisingPage() {
     <div className="mx-auto max-w-5xl space-y-8 p-6 pb-12">
       {/* Header */}
       <div>
-        <HardLink href="/admin" className="text-sm font-medium text-blue-600 underline-offset-4 hover:underline">
+        <Link href="/admin" className="text-sm font-medium text-blue-600 underline-offset-4 hover:underline">
           &larr; Admin home
-        </HardLink>
+        </Link>
         <h1 className="mt-2 text-2xl font-bold tracking-tight text-gray-900">Fundraising Console</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Manage athlete fundraising pages, donations, and reimbursements.
@@ -89,12 +89,12 @@ export default async function AdminFundraisingPage() {
             </p>
             <p className="text-sm text-amber-700">Families are waiting for their pages to go live.</p>
           </div>
-          <HardLink
+          <Link
             href="/admin/fundraising/activation-requests"
             className="rounded-md bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700"
           >
             Review Now
-          </HardLink>
+          </Link>
         </div>
       )}
 
@@ -137,7 +137,7 @@ export default async function AdminFundraisingPage() {
 
       {/* Quick Actions */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <HardLink
+        <Link
           href="/admin/fundraising/activation-requests"
           className="group flex items-start gap-4 rounded-xl border bg-white p-5 shadow-sm transition-colors hover:border-blue-200 hover:bg-blue-50"
         >
@@ -156,9 +156,9 @@ export default async function AdminFundraisingPage() {
             )}
           </div>
           <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-blue-500" />
-        </HardLink>
+        </Link>
 
-        <HardLink
+        <Link
           href="/admin/expense-requests"
           className="group flex items-start gap-4 rounded-xl border bg-white p-5 shadow-sm transition-colors hover:border-blue-200 hover:bg-blue-50"
         >
@@ -172,9 +172,9 @@ export default async function AdminFundraisingPage() {
             </p>
           </div>
           <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-blue-500" />
-        </HardLink>
+        </Link>
 
-        <HardLink
+        <Link
           href="/admin/fundraising-ledger"
           className="group flex items-start gap-4 rounded-xl border bg-white p-5 shadow-sm transition-colors hover:border-blue-200 hover:bg-blue-50"
         >
@@ -188,9 +188,9 @@ export default async function AdminFundraisingPage() {
             </p>
           </div>
           <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-blue-500" />
-        </HardLink>
+        </Link>
 
-        <HardLink
+        <Link
           href="/admin/fundraising/rankings"
           className="group flex items-start gap-4 rounded-xl border bg-white p-5 shadow-sm transition-colors hover:border-blue-200 hover:bg-blue-50"
         >
@@ -204,9 +204,9 @@ export default async function AdminFundraisingPage() {
             </p>
           </div>
           <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-blue-500" />
-        </HardLink>
+        </Link>
 
-        <HardLink
+        <Link
           href="/admin/fundraising/playbook"
           className="group flex items-start gap-4 rounded-xl border bg-white p-5 shadow-sm transition-colors hover:border-blue-200 hover:bg-blue-50"
         >
@@ -220,7 +220,7 @@ export default async function AdminFundraisingPage() {
             </p>
           </div>
           <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-blue-500" />
-        </HardLink>
+        </Link>
       </div>
 
       {/* Status Indicators */}
