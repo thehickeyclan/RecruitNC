@@ -128,7 +128,7 @@ async function getFundraisingData() {
   const { data: allDonations } = await admin
     .from("spartan_donations")
     .select("amount_cents, fundraising_athlete_slug")
-    .eq("status", "succeeded")
+    .eq("status", "paid")
   
   const campaignBreakdown = {
     spartanGeneral: { count: 0, totalCents: 0 },
