@@ -5,7 +5,8 @@ import Link from "next/link"
 import { 
   DollarSign, Users, FileCheck, Receipt, TrendingUp, 
   ChevronDown, ChevronUp, Search, ExternalLink,
-  AlertCircle, Sparkles, RefreshCw, Lightbulb
+  AlertCircle, Sparkles, RefreshCw, Lightbulb, Wallet,
+  Eye, Link2, CheckCircle, Clock
 } from "lucide-react"
 import type { FundraisingHubActivityRow } from "@/lib/fundraising/hub-data"
 
@@ -135,6 +136,7 @@ type ActiveProfile = {
   total_raised_cents: number
   campaign_goal_cents: number
   checkout_live: boolean
+  page_views_30d: number
 }
 
 type Panel = "donations" | "reimbursements" | "requests" | "profiles" | null
@@ -146,6 +148,8 @@ interface Props {
   reimbursementCount: number
   pendingRequestCount: number
   activeProfileCount: number
+  linkedAthletesCount: number
+  totalPageViews: number
   donations: FundraisingHubActivityRow[]
   expenses: ExpenseRow[]
   activationRequests: ActivationRequest[]
@@ -182,6 +186,8 @@ export function FundraisingCommandCenter({
   reimbursementCount,
   pendingRequestCount,
   activeProfileCount,
+  linkedAthletesCount,
+  totalPageViews,
   donations,
   expenses,
   activationRequests,
@@ -351,8 +357,8 @@ export function FundraisingCommandCenter({
         </button>
       </div>
 
-      {/* Secondary Tiles */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      {/* Secondary Tiles - Row 1 */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <button
           onClick={() => togglePanel("requests")}
           className={`rounded-xl border-2 p-4 text-left shadow-sm transition-all hover:shadow-md ${
@@ -366,7 +372,7 @@ export function FundraisingCommandCenter({
               <FileCheck className="h-5 w-5 text-amber-600" />
             </div>
             <div>
-              <p className="font-semibold text-gray-900">Activation Requests</p>
+              <p className="font-semibold text-gray-900">Activations</p>
               <p className="text-sm text-gray-500">
                 {pendingRequestCount} pending / {activationRequests.length} total
               </p>
@@ -374,6 +380,53 @@ export function FundraisingCommandCenter({
           </div>
         </button>
 
+        <Link
+          href="/admin/fundraising/wallets"
+          className="rounded-xl border bg-white p-4 shadow-sm transition-all hover:border-[#D3B574] hover:shadow-md"
+        >
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-[#D3B574]/20 p-2">
+              <Wallet className="h-5 w-5 text-[#D3B574]" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-gray-900">Family Wallets</p>
+              <p className="text-sm text-gray-500">Balances & parent links</p>
+            </div>
+            <ExternalLink className="h-4 w-4 text-gray-400" />
+          </div>
+        </Link>
+
+        <div className="rounded-xl border bg-white p-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-indigo-100 p-2">
+              <Link2 className="h-5 w-5 text-indigo-600" />
+            </div>
+            <div>
+              <p className="font-semibold text-gray-900">Parent Links</p>
+              <p className="text-sm text-gray-500">
+                {linkedAthletesCount} connected / {activeProfileCount} active
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-xl border bg-white p-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-cyan-100 p-2">
+              <Eye className="h-5 w-5 text-cyan-600" />
+            </div>
+            <div>
+              <p className="font-semibold text-gray-900">Page Views</p>
+              <p className="text-sm text-gray-500">
+                {totalPageViews.toLocaleString()} last 30 days
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Secondary Tiles - Row 2 */}
+      <div className="grid gap-4 sm:grid-cols-3">
         <Link
           href="/admin/expense-requests"
           className="rounded-xl border bg-white p-4 shadow-sm transition-all hover:border-blue-200 hover:shadow-md"
@@ -384,7 +437,7 @@ export function FundraisingCommandCenter({
             </div>
             <div className="flex-1">
               <p className="font-semibold text-gray-900">Expense Requests</p>
-              <p className="text-sm text-gray-500">Review & approve requests</p>
+              <p className="text-sm text-gray-500">Review & approve</p>
             </div>
             <ExternalLink className="h-4 w-4 text-gray-400" />
           </div>
@@ -392,7 +445,7 @@ export function FundraisingCommandCenter({
 
         <Link
           href="/admin/fundraising-ledger"
-          className="rounded-xl border bg-white p-4 shadow-sm transition-all hover:border-blue-200 hover:shadow-md"
+          className="rounded-xl border bg-white p-4 shadow-sm transition-all hover:border-gray-300 hover:shadow-md"
         >
           <div className="flex items-center gap-3">
             <div className="rounded-lg bg-gray-100 p-2">
@@ -401,6 +454,22 @@ export function FundraisingCommandCenter({
             <div className="flex-1">
               <p className="font-semibold text-gray-900">Full Ledger</p>
               <p className="text-sm text-gray-500">Export for accountant</p>
+            </div>
+            <ExternalLink className="h-4 w-4 text-gray-400" />
+          </div>
+        </Link>
+
+        <Link
+          href="/admin/fundraising/activation-requests"
+          className="rounded-xl border bg-white p-4 shadow-sm transition-all hover:border-amber-200 hover:shadow-md"
+        >
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-amber-100 p-2">
+              <FileCheck className="h-5 w-5 text-amber-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-gray-900">Review Activations</p>
+              <p className="text-sm text-gray-500">Approve/reject pages</p>
             </div>
             <ExternalLink className="h-4 w-4 text-gray-400" />
           </div>
@@ -636,6 +705,7 @@ export function FundraisingCommandCenter({
                   <th className="px-4 py-3">Raised</th>
                   <th className="px-4 py-3">Goal</th>
                   <th className="px-4 py-3">Progress</th>
+                  <th className="px-4 py-3">Views (30d)</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Action</th>
                 </tr>
@@ -668,6 +738,12 @@ export function FundraisingCommandCenter({
                             />
                           </div>
                           <span className="text-xs text-gray-500">{progress}%</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1.5">
+                          <Eye className="h-4 w-4 text-gray-400" />
+                          <span className="text-gray-700">{p.page_views_30d.toLocaleString()}</span>
                         </div>
                       </td>
                       <td className="px-4 py-3">
