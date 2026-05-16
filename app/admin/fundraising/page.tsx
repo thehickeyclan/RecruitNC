@@ -124,24 +124,21 @@ async function getFundraisingData() {
     .like("page_url", "%/fundraising/athletes/%")
     .gte("created_at", thirtyDaysAgo.toISOString())
   
-  // Get campaign breakdown (Spartan General vs Athlete Pages)
-  const { data: allDonations } = await admin
-    .from("spartan_donations")
-    .select("amount_cents, fundraising_athlete_slug")
-    .eq("status", "paid")
-  
+  // Get campaign breakdown from hubSnapshot (Stripe source of truth)
+  // Spartan General = gifts to "NC United general fund" (no athlete code)
+  // Athlete Pages = gifts credited to specific athletes
   const campaignBreakdown = {
     spartanGeneral: { count: 0, totalCents: 0 },
     athletePages: { count: 0, totalCents: 0 }
   }
   
-  allDonations?.forEach((d: any) => {
-    if (d.fundraising_athlete_slug) {
+  hubSnapshot.activity.forEach((d) => {
+    if (d.athleteCode) {
       campaignBreakdown.athletePages.count++
-      campaignBreakdown.athletePages.totalCents += d.amount_cents || 0
+      campaignBreakdown.athletePages.totalCents += d.amountCents || 0
     } else {
       campaignBreakdown.spartanGeneral.count++
-      campaignBreakdown.spartanGeneral.totalCents += d.amount_cents || 0
+      campaignBreakdown.spartanGeneral.totalCents += d.amountCents || 0
     }
   })
   
