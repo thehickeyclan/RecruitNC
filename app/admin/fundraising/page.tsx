@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useAuth } from "@/components/auth-provider"
+import { useAuth } from "@/contexts/auth-context"
 import { 
   AlertTriangle, CheckCircle, Users, DollarSign, Link2, FileText,
   Loader2, Search, ArrowUpRight, UserPlus, RefreshCw, Zap, 
