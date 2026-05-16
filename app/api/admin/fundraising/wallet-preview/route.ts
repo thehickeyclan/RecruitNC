@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { requireAdmin } from "@/lib/auth-utils"
+import { requireAdmin } from "@/lib/admin-auth"
 
 export const dynamic = "force-dynamic"
 
 export async function GET(request: Request) {
   const adminCheck = await requireAdmin()
-  if ("error" in adminCheck) {
+  if (!adminCheck.ok) {
     return NextResponse.json({ error: adminCheck.error }, { status: adminCheck.status })
   }
 

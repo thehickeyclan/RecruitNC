@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic"
 
 export async function GET() {
   const adminCheck = await requireAdmin()
-  if ("error" in adminCheck) {
+  if (!adminCheck.ok) {
     return NextResponse.json({ error: adminCheck.error }, { status: adminCheck.status })
   }
 
