@@ -32,97 +32,146 @@ export async function GET() {
   const supabase = await createClient()
   
   try {
-    // Get all athletes with fundraising activity (either has a page, spartan code, or donations)
+    // Step 1: Get all athletes with fundraising profiles
+    const { data: profileAthletes, error: profileError } = await supabase
+      .from("athlete_fundraising_profiles")
+      .select(`
+        athlete_id,
+        slug,
+        spartan_code,
+        total_raised_cents,
+        is_active,
+        primary_fundraising_code
+      `)
+    
+    if (profileError) {
+      console.error("[v0] Error fetching fundraising profiles:", profileError)
+    }
+
+    // Step 2: Get all spartan fundraising athletes
+    const { data: spartanAthletes, error: spartanError } = await supabase
+      .from("spartan_fundraising_athletes")
+      .select("athlete_id, code, first_name, last_name, school, grad_year")
+    
+    if (spartanError) {
+      console.error("[v0] Error fetching spartan athletes:", spartanError)
+    }
+
+    // Step 3: Get ledger totals grouped by athlete
+    const { data: ledgerData, error: ledgerError } = await supabase
+      .from("fundraising_ledger_entries")
+      .select("athlete_id, amount_cents, direction")
+      .not("athlete_id", "is", null)
+    
+    if (ledgerError) {
+      console.error("[v0] Error fetching ledger entries:", ledgerError)
+    }
+
+    // Step 4: Get family athlete links
+    const { data: familyAthleteLinks, error: familyError } = await supabase
+      .from("family_athletes")
+      .select("athlete_id, family_id")
+    
+    if (familyError) {
+      console.error("[v0] Error fetching family athletes:", familyError)
+    }
+
+    // Step 5: Get family members (to check if parents are linked)
+    const { data: familyMembers, error: membersError } = await supabase
+      .from("family_members")
+      .select("family_id, user_id")
+    
+    if (membersError) {
+      console.error("[v0] Error fetching family members:", membersError)
+    }
+
+    // Build lookup maps
+    const profileMap = new Map(profileAthletes?.map(p => [p.athlete_id, p]) || [])
+    const spartanMap = new Map(spartanAthletes?.map(s => [s.athlete_id, s]) || [])
+    const familyAthleteMap = new Map(familyAthleteLinks?.map(fa => [fa.athlete_id, fa.family_id]) || [])
+    const familyMemberCounts = new Map<string, number>()
+    familyMembers?.forEach(fm => {
+      const count = familyMemberCounts.get(fm.family_id) || 0
+      familyMemberCounts.set(fm.family_id, count + 1)
+    })
+
+    // Calculate ledger totals per athlete
+    const athleteLedgerTotals = new Map<string, number>()
+    ledgerData?.forEach(entry => {
+      if (entry.athlete_id && entry.direction === "in") {
+        const current = athleteLedgerTotals.get(entry.athlete_id) || 0
+        athleteLedgerTotals.set(entry.athlete_id, current + (entry.amount_cents || 0))
+      }
+    })
+
+    // Collect all unique athlete IDs with any fundraising activity
+    const athleteIdsWithActivity = new Set<string>()
+    profileAthletes?.forEach(p => {
+      if (p.athlete_id) athleteIdsWithActivity.add(p.athlete_id)
+    })
+    spartanAthletes?.forEach(s => {
+      if (s.athlete_id) athleteIdsWithActivity.add(s.athlete_id)
+    })
+    ledgerData?.forEach(l => {
+      if (l.athlete_id) athleteIdsWithActivity.add(l.athlete_id)
+    })
+
+    console.log("[v0] Athletes with activity:", athleteIdsWithActivity.size)
+
+    // Step 6: Fetch athlete details for all with activity
+    const athleteIds = Array.from(athleteIdsWithActivity)
+    
+    if (athleteIds.length === 0) {
+      return NextResponse.json({
+        stats: {
+          total_athletes_with_fundraising: 0,
+          fully_connected: 0,
+          needs_attention: 0,
+          critical_issues: 0,
+          total_raised_cents: 0
+        },
+        issues: []
+      })
+    }
+
     const { data: athletes, error: athletesError } = await supabase
       .from("athletes")
-      .select(`
-        id,
-        "firstName",
-        "lastName",
-        school,
-        "graduationYear",
-        athlete_fundraising_profiles (
-          id,
-          slug,
-          spartan_code,
-          total_raised_cents,
-          is_active,
-          primary_fundraising_code
-        ),
-        family_athletes (
-          family_id,
-          families (
-            id,
-            name,
-            family_members (
-              user_id,
-              is_primary
-            )
-          )
-        )
-      `)
-      .order("lastName", { ascending: true })
+      .select(`id, "firstName", "lastName", highschool, graduationyear`)
+      .in("id", athleteIds)
     
     if (athletesError) {
-      console.error("Error fetching athletes:", athletesError)
+      console.error("[v0] Error fetching athletes:", athletesError)
       return NextResponse.json({ error: "Failed to fetch athletes" }, { status: 500 })
     }
 
-    // Also get spartan fundraising athletes (legacy system)
-    const { data: spartanAthletes } = await supabase
-      .from("spartan_fundraising_athletes")
-      .select("athlete_id, code, total_raised_cents")
-    
-    const spartanMap = new Map(spartanAthletes?.map(s => [s.athlete_id, s]) || [])
-
-    // Get ledger totals by athlete
-    const { data: ledgerTotals } = await supabase
-      .from("fundraising_ledger_entries")
-      .select("athlete_id, amount_cents, direction")
-    
-    const athleteTotals = new Map<string, number>()
-    ledgerTotals?.forEach(entry => {
-      if (entry.athlete_id) {
-        const current = athleteTotals.get(entry.athlete_id) || 0
-        if (entry.direction === "in") {
-          athleteTotals.set(entry.athlete_id, current + entry.amount_cents)
-        }
-      }
-    })
+    console.log("[v0] Fetched athletes:", athletes?.length)
 
     // Analyze each athlete
     const issuesList: AthleteIssue[] = []
     let fullyConnected = 0
-    let needsAttention = 0
     let criticalCount = 0
+    let totalRaisedAll = 0
 
     for (const athlete of athletes || []) {
-      const profile = athlete.athlete_fundraising_profiles?.[0]
+      const profile = profileMap.get(athlete.id)
       const spartan = spartanMap.get(athlete.id)
-      const familyLink = athlete.family_athletes?.[0]
-      const family = familyLink?.families
-      const familyMembers = family?.family_members || []
+      const familyId = familyAthleteMap.get(athlete.id)
+      const parentCount = familyId ? (familyMemberCounts.get(familyId) || 0) : 0
       
       // Calculate total raised from multiple sources
       const profileRaised = profile?.total_raised_cents || 0
-      const spartanRaised = spartan?.total_raised_cents || 0
-      const ledgerRaised = athleteTotals.get(athlete.id) || 0
-      const totalRaised = Math.max(profileRaised, spartanRaised, ledgerRaised)
-      
-      // Skip athletes with no fundraising activity
-      const hasPage = !!profile
-      const hasSpartanCode = !!spartan?.code || !!profile?.spartan_code
-      const hasAnyCode = hasSpartanCode || !!profile?.slug || !!profile?.primary_fundraising_code
-      
-      if (!hasPage && !hasSpartanCode && totalRaised === 0) {
-        continue // No fundraising activity
-      }
+      const ledgerRaised = athleteLedgerTotals.get(athlete.id) || 0
+      const totalRaised = Math.max(profileRaised, ledgerRaised)
+      totalRaisedAll += totalRaised
 
       const issues: AthleteIssue["issues"] = []
       
-      const hasFamily = !!family
-      const hasParent = familyMembers.length > 0
+      const hasPage = !!profile
       const pageActive = profile?.is_active ?? false
+      const hasFamily = !!familyId
+      const hasParent = parentCount > 0
+      const hasSpartanCode = !!spartan?.code || !!profile?.spartan_code
+      const hasAnyCode = hasSpartanCode || !!profile?.slug || !!profile?.primary_fundraising_code
 
       // Critical: Has donations but no family (money is stuck)
       if (totalRaised > 0 && !hasFamily) {
@@ -172,13 +221,12 @@ export async function GET() {
       if (issues.length > 0) {
         const hasCritical = issues.some(i => i.severity === "critical")
         if (hasCritical) criticalCount++
-        needsAttention++
 
         issuesList.push({
           athlete_id: athlete.id,
-          athlete_name: `${athlete.firstName} ${athlete.lastName}`,
-          school: athlete.school,
-          grad_year: athlete.graduationYear,
+          athlete_name: `${athlete.firstName || ""} ${athlete.lastName || ""}`.trim() || "Unknown",
+          school: athlete.highschool || spartan?.school || null,
+          grad_year: athlete.graduationyear || spartan?.grad_year || null,
           issues,
           total_raised_cents: totalRaised,
           has_page: hasPage,
@@ -202,20 +250,22 @@ export async function GET() {
       return b.total_raised_cents - a.total_raised_cents
     })
 
-    const totalWithFundraising = fullyConnected + needsAttention
+    const needsAttention = issuesList.length
+
+    console.log("[v0] Health check complete:", { fullyConnected, needsAttention, criticalCount })
 
     return NextResponse.json({
       stats: {
-        total_athletes_with_fundraising: totalWithFundraising,
+        total_athletes_with_fundraising: fullyConnected + needsAttention,
         fully_connected: fullyConnected,
         needs_attention: needsAttention,
         critical_issues: criticalCount,
-        total_raised_cents: Array.from(athleteTotals.values()).reduce((a, b) => a + b, 0)
+        total_raised_cents: totalRaisedAll
       },
       issues: issuesList
     })
   } catch (error) {
-    console.error("Health check error:", error)
+    console.error("[v0] Health check error:", error)
     return NextResponse.json({ error: "Failed to run health check" }, { status: 500 })
   }
 }
