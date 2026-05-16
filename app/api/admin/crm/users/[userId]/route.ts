@@ -30,7 +30,6 @@ export async function GET(_request: Request, { params }: { params: Promise<{ use
   try {
     const admin = createAdminClient()
     const payload = await fetchAdminCrmUserHub(admin, userId)
-    console.log("[v0] CRM fundraisingWallet for", userId, ":", JSON.stringify(payload.fundraisingWallet, null, 2))
     return NextResponse.json(payload)
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e)
