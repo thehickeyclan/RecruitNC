@@ -124,30 +124,64 @@ async function getFundraisingData() {
     .like("page_url", "%/fundraising/athletes/%")
     .gte("created_at", thirtyDaysAgo.toISOString())
   
-  // Fundraising streams from hubSnapshot (Stripe source of truth)
-  // NC United fund = attribution="general_nc_united" + no athleteCode + no manualCreditName
-  // Athlete credited = has athleteCode (or manualCreditName)
-  //
-  // Athlete page checkouts = fundraising_checkout_surface = 'athlete_page' (WHERE checkout happened)
-  // This is different from WHO gets credit (athleteCode)
-  
-  const { data: athletePageCheckouts } = await admin
+  // Calculate NC United Fund directly from DB with credit corrections applied
+  // Step 1: Get all paid donations with their session_id and attribution
+  const { data: allSpartanDonations } = await admin
     .from("spartan_donations")
-    .select("amount_cents")
+    .select("session_id, amount_cents, raw_metadata, fundraising_checkout_surface")
     .eq("status", "paid")
-    .eq("fundraising_checkout_surface", "athlete_page")
   
-  const athletePageTotal = athletePageCheckouts?.reduce((sum, d) => sum + (d.amount_cents || 0), 0) || 0
-  const athletePageCount = athletePageCheckouts?.length || 0
+  // Step 2: Get credit corrections
+  const { data: creditCorrections } = await admin
+    .from("spartan_credit_corrections")
+    .select("session_id, athlete_code, general_fund")
+  
+  // Build a lookup of corrections by session_id
+  const correctionMap = new Map<string, { athlete_code: string | null; general_fund: boolean }>()
+  creditCorrections?.forEach((c: { session_id: string; athlete_code: string | null; general_fund: boolean }) => {
+    correctionMap.set(c.session_id, c)
+  })
+  
+  // Step 3: Calculate NCU fund with corrections applied
+  let ncuFundCents = 0
+  let athletePageCheckoutCents = 0
+  let athletePageCheckoutCount = 0
+  
+  allSpartanDonations?.forEach((d: { session_id: string; amount_cents: number; raw_metadata: Record<string, unknown> | null; fundraising_checkout_surface: string | null }) => {
+    const cents = d.amount_cents || 0
+    const correction = correctionMap.get(d.session_id)
+    
+    // Determine if this donation is NC United fund:
+    // - If there's a correction with general_fund=true -> YES (moved TO NCU)
+    // - If there's a correction with athlete_code -> NO (moved to specific athlete)
+    // - Otherwise, check raw_metadata.fundraising_attribution
+    if (correction) {
+      if (correction.general_fund) {
+        ncuFundCents += cents
+      }
+      // If correction has athlete_code, it's athlete-credited (not NCU)
+    } else {
+      const meta = d.raw_metadata
+      const attribution = typeof meta?.fundraising_attribution === 'string' ? meta.fundraising_attribution : ''
+      if (attribution === 'general_nc_united') {
+        ncuFundCents += cents
+      }
+    }
+    
+    // Track athlete page checkouts
+    if (d.fundraising_checkout_surface === 'athlete_page') {
+      athletePageCheckoutCents += cents
+      athletePageCheckoutCount++
+    }
+  })
   
   const fundraisingStreams = {
     spartanTotal: hubSnapshot.hero.totalRaisedCents,
     spartanGiftCount: hubSnapshot.hero.giftCount,
-    ncuFundCents: hubSnapshot.hero.ncUnitedCommunityFundCents,
-    athleteCreditedCents: hubSnapshot.hero.totalRaisedCents - hubSnapshot.hero.ncUnitedCommunityFundCents,
-    // Athlete page checkouts (WHERE they checked out, not WHO gets credit)
-    athletePageCheckoutCents: athletePageTotal,
-    athletePageCheckoutCount: athletePageCount,
+    ncuFundCents,
+    athleteCreditedCents: hubSnapshot.hero.totalRaisedCents - ncuFundCents,
+    athletePageCheckoutCents,
+    athletePageCheckoutCount,
   }
   
   // Get NC United Fund outflows (awards, guild allocations)
