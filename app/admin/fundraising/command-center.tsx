@@ -6,8 +6,15 @@ import {
   DollarSign, Users, FileCheck, Receipt, TrendingUp, 
   ChevronDown, ChevronUp, Search, ExternalLink,
   AlertCircle, Sparkles, RefreshCw, Lightbulb, Wallet,
-  Eye, Link2, CheckCircle, Clock
+  Eye, Link2, CheckCircle, Clock, X, TrendingDown,
+  User, Gift, Loader2
 } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import type { FundraisingHubActivityRow } from "@/lib/fundraising/hub-data"
 
 // AI Insights Component
@@ -100,6 +107,283 @@ function AIInsights() {
         </button>
       </div>
     </div>
+  )
+}
+
+// Wallet Preview Modal - Shows exactly what the parent sees
+type WalletPreviewData = {
+  athlete: {
+    id: string
+    firstName: string | null
+    lastName: string | null
+    gradYear: number | null
+    highschool: string | null
+  }
+  profile: {
+    slug: string
+    isActive: boolean
+    checkoutLive: boolean
+    goalCents: number
+    fundraisingCode: string | null
+  } | null
+  parent: {
+    id: string
+    email: string
+    name: string | null
+  } | null
+  hasParentLink: boolean
+  wallet: {
+    totalRaisedCents: number
+    totalSpentCents: number
+    availableCents: number
+    pendingExpensesCents: number
+    giftCount: number
+    expenseCount: number
+    pendingExpenseCount: number
+  }
+  recentDonations: {
+    id: string
+    amountCents: number
+    donorName: string | null
+    donorEmail: string | null
+    message: string | null
+    createdAt: string
+  }[]
+  recentExpenses: {
+    id: string
+    amountCents: number
+    category: string | null
+    description: string | null
+    status: string
+    createdAt: string
+    paidAt: string | null
+  }[]
+}
+
+function WalletPreviewModal({ 
+  athleteId, 
+  athleteName,
+  onClose 
+}: { 
+  athleteId: string
+  athleteName: string
+  onClose: () => void 
+}) {
+  const [data, setData] = useState<WalletPreviewData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+
+  useEffect(() => {
+    const fetchWallet = async () => {
+      setLoading(true)
+      setError("")
+      try {
+        const res = await fetch(`/api/admin/fundraising/wallet-preview?athleteId=${athleteId}`)
+        if (res.ok) {
+          const json = await res.json()
+          setData(json)
+        } else {
+          setError("Failed to load wallet")
+        }
+      } catch {
+        setError("Failed to load wallet")
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchWallet()
+  }, [athleteId])
+
+  const fmtUsd = (cents: number) => 
+    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100)
+
+  const fmtDate = (iso: string) => 
+    new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-[#0A1628] border-[#1e3a5f] text-white">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-3 text-white">
+            <div className="rounded-lg bg-[#D3B574]/20 p-2">
+              <Wallet className="h-5 w-5 text-[#D3B574]" />
+            </div>
+            <div>
+              <span className="text-lg">{athleteName}&apos;s Digital Wallet</span>
+              <p className="text-xs font-normal text-white/50 mt-0.5">
+                What the parent sees in their profile
+              </p>
+            </div>
+          </DialogTitle>
+        </DialogHeader>
+
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-[#D3B574]" />
+          </div>
+        ) : error ? (
+          <div className="py-8 text-center text-red-400">{error}</div>
+        ) : data ? (
+          <div className="space-y-5">
+            {/* Parent Connection Status */}
+            <div className="rounded-lg bg-white/5 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <User className="h-5 w-5 text-white/50" />
+                  <div>
+                    <p className="text-sm font-medium text-white">Parent Connection</p>
+                    {data.parent ? (
+                      <p className="text-xs text-white/60">{data.parent.name || data.parent.email}</p>
+                    ) : (
+                      <p className="text-xs text-amber-400">No parent linked</p>
+                    )}
+                  </div>
+                </div>
+                {data.hasParentLink ? (
+                  <CheckCircle className="h-5 w-5 text-green-400" />
+                ) : (
+                  <AlertCircle className="h-5 w-5 text-amber-400" />
+                )}
+              </div>
+            </div>
+
+            {/* Wallet Stats - Exactly like parent sees */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="rounded-lg bg-[#13294B]/50 p-4">
+                <div className="flex items-center gap-1.5 text-white/50">
+                  <TrendingUp className="h-3.5 w-3.5" />
+                  <span className="text-[10px] font-medium uppercase tracking-wide">Raised</span>
+                </div>
+                <p className="mt-1 text-xl font-bold tabular-nums text-white">
+                  {fmtUsd(data.wallet.totalRaisedCents)}
+                </p>
+                <p className="mt-0.5 text-[10px] text-white/40">
+                  {data.wallet.giftCount} gift{data.wallet.giftCount !== 1 ? "s" : ""}
+                </p>
+              </div>
+
+              <div className="rounded-lg bg-[#13294B]/50 p-4">
+                <div className="flex items-center gap-1.5 text-white/50">
+                  <TrendingDown className="h-3.5 w-3.5" />
+                  <span className="text-[10px] font-medium uppercase tracking-wide">Spent</span>
+                </div>
+                <p className="mt-1 text-xl font-bold tabular-nums text-red-400">
+                  {fmtUsd(data.wallet.totalSpentCents)}
+                </p>
+                <p className="mt-0.5 text-[10px] text-white/40">
+                  {data.wallet.expenseCount} reimbursement{data.wallet.expenseCount !== 1 ? "s" : ""}
+                </p>
+              </div>
+
+              <div className="rounded-lg bg-[#D3B574]/10 p-4">
+                <div className="flex items-center gap-1.5 text-[#D3B574]/70">
+                  <DollarSign className="h-3.5 w-3.5" />
+                  <span className="text-[10px] font-medium uppercase tracking-wide">Available</span>
+                </div>
+                <p className={`mt-1 text-xl font-bold tabular-nums ${
+                  data.wallet.availableCents < 0 ? "text-red-400" : "text-[#D3B574]"
+                }`}>
+                  {fmtUsd(data.wallet.availableCents)}
+                </p>
+                {data.wallet.pendingExpenseCount > 0 && (
+                  <p className="mt-0.5 text-[10px] text-amber-400">
+                    {data.wallet.pendingExpenseCount} pending
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Fundraising Info */}
+            {data.profile && (
+              <div className="rounded-lg bg-white/5 p-4">
+                <p className="text-xs font-medium text-white/50 uppercase tracking-wide mb-2">
+                  Fundraising Page
+                </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-white">
+                      Code: <span className="font-mono text-[#D3B574]">{data.profile.fundraisingCode || "Not assigned"}</span>
+                    </p>
+                    <p className="text-xs text-white/50 mt-1">
+                      Slug: /fundraising/athletes/{data.profile.slug}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {data.profile.isActive ? (
+                      <span className="inline-flex items-center gap-1 text-xs text-green-400">
+                        <CheckCircle className="h-3 w-3" /> Active
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-xs text-gray-400">
+                        <Clock className="h-3 w-3" /> Inactive
+                      </span>
+                    )}
+                    {data.profile.checkoutLive && (
+                      <span className="inline-flex items-center gap-1 text-xs text-green-400">
+                        <DollarSign className="h-3 w-3" /> Checkout Live
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Recent Donations */}
+            {data.recentDonations.length > 0 && (
+              <div>
+                <p className="text-xs font-medium text-white/50 uppercase tracking-wide mb-2 flex items-center gap-2">
+                  <Gift className="h-3.5 w-3.5" /> Recent Donations
+                </p>
+                <div className="space-y-2">
+                  {data.recentDonations.map(d => (
+                    <div key={d.id} className="flex items-center justify-between rounded-lg bg-white/5 px-3 py-2">
+                      <div>
+                        <p className="text-sm text-white">{d.donorName || "Anonymous"}</p>
+                        <p className="text-xs text-white/40">{fmtDate(d.createdAt)}</p>
+                      </div>
+                      <p className="font-semibold text-green-400">+{fmtUsd(d.amountCents)}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Recent Expenses */}
+            {data.recentExpenses.length > 0 && (
+              <div>
+                <p className="text-xs font-medium text-white/50 uppercase tracking-wide mb-2 flex items-center gap-2">
+                  <Receipt className="h-3.5 w-3.5" /> Recent Expenses
+                </p>
+                <div className="space-y-2">
+                  {data.recentExpenses.map(e => (
+                    <div key={e.id} className="flex items-center justify-between rounded-lg bg-white/5 px-3 py-2">
+                      <div>
+                        <p className="text-sm text-white">{e.category || "Expense"}</p>
+                        <p className="text-xs text-white/40">{e.description?.slice(0, 30) || fmtDate(e.createdAt)}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className={`font-semibold ${e.status === "paid" ? "text-red-400" : "text-amber-400"}`}>
+                          -{fmtUsd(e.amountCents)}
+                        </p>
+                        <p className="text-[10px] text-white/40 capitalize">{e.status}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Empty State */}
+            {data.recentDonations.length === 0 && data.recentExpenses.length === 0 && (
+              <div className="py-6 text-center">
+                <Wallet className="mx-auto h-10 w-10 text-white/20" />
+                <p className="mt-3 text-sm text-white/50">No transactions yet</p>
+              </div>
+            )}
+          </div>
+        ) : null}
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -196,6 +480,7 @@ export function FundraisingCommandCenter({
   const [activePanel, setActivePanel] = useState<Panel>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [walletPreview, setWalletPreview] = useState<{ athleteId: string; athleteName: string } | null>(null)
 
   const togglePanel = (panel: Panel) => {
     setActivePanel(activePanel === panel ? null : panel)
@@ -715,10 +1000,17 @@ export function FundraisingCommandCenter({
                   const progress = p.campaign_goal_cents > 0 
                     ? Math.min(100, Math.round((p.total_raised_cents / p.campaign_goal_cents) * 100))
                     : 0
+                  const athleteName = `${p.athlete_first_name || ""} ${p.athlete_last_name || ""}`.trim() || "Athlete"
                   return (
                     <tr key={p.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 font-medium text-gray-900">
-                        {p.athlete_first_name} {p.athlete_last_name}
+                      <td className="px-4 py-3">
+                        <button
+                          onClick={() => setWalletPreview({ athleteId: p.athlete_id, athleteName })}
+                          className="flex items-center gap-2 font-medium text-gray-900 hover:text-purple-700 transition-colors"
+                        >
+                          <Wallet className="h-4 w-4 text-[#D3B574]" />
+                          {athleteName}
+                        </button>
                       </td>
                       <td className="px-4 py-3">
                         <code className="rounded bg-gray-100 px-2 py-0.5 text-xs">{p.slug}</code>
@@ -773,6 +1065,15 @@ export function FundraisingCommandCenter({
             </table>
           </div>
         </div>
+      )}
+
+      {/* Wallet Preview Modal */}
+      {walletPreview && (
+        <WalletPreviewModal
+          athleteId={walletPreview.athleteId}
+          athleteName={walletPreview.athleteName}
+          onClose={() => setWalletPreview(null)}
+        />
       )}
     </div>
   )
