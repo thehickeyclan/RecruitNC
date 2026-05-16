@@ -428,7 +428,7 @@ function ActivationRequestRow({
       <td className="px-4 py-3">
         <code className="rounded bg-gray-100 px-2 py-0.5 text-xs">{request.fundraising_slug}</code>
       </td>
-      <td className="px-4 py-3 text-gray-600">{request.requester_email || "���"}</td>
+      <td className="px-4 py-3 text-gray-600">{request.requester_email || "�����"}</td>
       <td className="px-4 py-3">
         {status === "pending" && (
           <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800">
@@ -911,54 +911,15 @@ export function FundraisingCommandCenter({
         </div>
       </div>
 
-      {/* Secondary Tiles - Row 2 */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Link
-          href="/admin/expense-requests"
-          className="rounded-xl border bg-white p-4 shadow-sm transition-all hover:border-blue-200 hover:shadow-md"
-        >
-          <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-blue-100 p-2">
-              <Receipt className="h-5 w-5 text-blue-600" />
-            </div>
-            <div className="flex-1">
-              <p className="font-semibold text-gray-900">Expense Requests</p>
-              <p className="text-sm text-gray-500">Review & approve</p>
-            </div>
-            <ExternalLink className="h-4 w-4 text-gray-400" />
-          </div>
-        </Link>
-
+      {/* Export Link */}
+      <div className="flex justify-end">
         <Link
           href="/admin/fundraising-ledger"
-          className="rounded-xl border bg-white p-4 shadow-sm transition-all hover:border-gray-300 hover:shadow-md"
+          className="inline-flex items-center gap-2 rounded-lg border bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:shadow-md"
         >
-          <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-gray-100 p-2">
-              <TrendingUp className="h-5 w-5 text-gray-600" />
-            </div>
-            <div className="flex-1">
-              <p className="font-semibold text-gray-900">Full Ledger</p>
-              <p className="text-sm text-gray-500">Export for accountant</p>
-            </div>
-            <ExternalLink className="h-4 w-4 text-gray-400" />
-          </div>
-        </Link>
-
-        <Link
-          href="/admin/fundraising/activation-requests"
-          className="rounded-xl border bg-white p-4 shadow-sm transition-all hover:border-amber-200 hover:shadow-md"
-        >
-          <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-amber-100 p-2">
-              <FileCheck className="h-5 w-5 text-amber-600" />
-            </div>
-            <div className="flex-1">
-              <p className="font-semibold text-gray-900">Review Activations</p>
-              <p className="text-sm text-gray-500">Approve/reject pages</p>
-            </div>
-            <ExternalLink className="h-4 w-4 text-gray-400" />
-          </div>
+          <TrendingUp className="h-4 w-4 text-gray-500" />
+          Export Full Ledger
+          <ExternalLink className="h-3 w-3 text-gray-400" />
         </Link>
       </div>
 
