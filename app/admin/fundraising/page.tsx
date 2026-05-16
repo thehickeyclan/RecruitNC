@@ -15,12 +15,13 @@ import {
 async function getFundraisingStats() {
   const supabase = await createClient()
   
-  // Get counts
+  // Get counts and totals from ACTUAL data tables
   const [
     { count: pendingActivations },
     { count: totalAthletes },
     { count: activePages },
-    { data: ledgerTotals }
+    { data: donations },
+    { data: paidExpenses }
   ] = await Promise.all([
     supabase
       .from("fundraising_activation_requests")
@@ -33,21 +34,20 @@ async function getFundraisingStats() {
       .from("athlete_fundraising_profiles")
       .select("*", { count: "exact", head: true })
       .eq("is_active", true),
+    // Get donations from donations_unified (where your $21k+ actually is!)
     supabase
-      .from("fundraising_ledger_entries")
-      .select("amount_cents, direction")
+      .from("donations_unified")
+      .select("amount_cents"),
+    // Get paid reimbursements
+    supabase
+      .from("athlete_expense_requests")
+      .select("amount_cents")
+      .eq("status", "paid")
   ])
 
-  // Calculate totals from ledger
-  let totalRaised = 0
-  let totalSpent = 0
-  ledgerTotals?.forEach(entry => {
-    if (entry.direction === "money_in") {
-      totalRaised += entry.amount_cents || 0
-    } else if (entry.direction === "money_out") {
-      totalSpent += entry.amount_cents || 0
-    }
-  })
+  // Calculate totals
+  const totalRaised = donations?.reduce((sum, d) => sum + (d.amount_cents || 0), 0) || 0
+  const totalSpent = paidExpenses?.reduce((sum, e) => sum + (e.amount_cents || 0), 0) || 0
 
   return {
     pendingActivations: pendingActivations || 0,
