@@ -428,7 +428,7 @@ function ActivationRequestRow({
       <td className="px-4 py-3">
         <code className="rounded bg-gray-100 px-2 py-0.5 text-xs">{request.fundraising_slug}</code>
       </td>
-      <td className="px-4 py-3 text-gray-600">{request.requester_email || "�������"}</td>
+      <td className="px-4 py-3 text-gray-600">{request.requester_email || "���������"}</td>
       <td className="px-4 py-3">
         {status === "pending" && (
           <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800">
@@ -631,6 +631,16 @@ type CampaignBreakdown = {
   athletePages: { count: number; totalCents: number }
 }
 
+type NCUnitedFund = {
+  donationsCents: number
+  donationsCount: number
+  awardsCents: number
+  awardsCount: number
+  guildCents: number
+  guildCount: number
+  deltaCents: number
+}
+
 interface Props {
   totalRaised: number
   donationCount: number
@@ -641,6 +651,7 @@ interface Props {
   linkedAthletesCount: number
   totalPageViews: number
   campaignBreakdown: CampaignBreakdown
+  ncUnitedFund: NCUnitedFund
   donations: FundraisingHubActivityRow[]
   expenses: ExpenseRow[]
   activationRequests: ActivationRequest[]
@@ -680,6 +691,7 @@ export function FundraisingCommandCenter({
   linkedAthletesCount,
   totalPageViews,
   campaignBreakdown,
+  ncUnitedFund,
   donations,
   expenses,
   activationRequests,
@@ -871,6 +883,45 @@ export function FundraisingCommandCenter({
           <p className="mt-2 text-3xl font-bold text-gray-900">{activeProfileCount}</p>
           <p className="text-sm text-gray-500">Live fundraising pages</p>
         </button>
+      </div>
+
+      {/* NC United Fund Section */}
+      <div className="rounded-xl border-2 border-[#003366]/20 bg-gradient-to-r from-[#003366]/5 to-[#D3B574]/5 p-5 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-[#003366] p-2">
+              <Gift className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900">NC United Fund</h3>
+              <p className="text-xs text-gray-500">Scholarship donations, awards & guild allocations</p>
+            </div>
+          </div>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-4">
+          <div className="rounded-lg bg-white p-4 shadow-sm">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Donations</p>
+            <p className="mt-1 text-2xl font-bold text-green-600">{fmtCents(ncUnitedFund.donationsCents)}</p>
+            <p className="text-xs text-gray-400">{ncUnitedFund.donationsCount} contribution{ncUnitedFund.donationsCount !== 1 ? "s" : ""}</p>
+          </div>
+          <div className="rounded-lg bg-white p-4 shadow-sm">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Scholarships Awarded</p>
+            <p className="mt-1 text-2xl font-bold text-red-600">{fmtCents(ncUnitedFund.awardsCents)}</p>
+            <p className="text-xs text-gray-400">{ncUnitedFund.awardsCount} award{ncUnitedFund.awardsCount !== 1 ? "s" : ""}</p>
+          </div>
+          <div className="rounded-lg bg-white p-4 shadow-sm">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Guild Allocations</p>
+            <p className="mt-1 text-2xl font-bold text-amber-600">{fmtCents(ncUnitedFund.guildCents)}</p>
+            <p className="text-xs text-gray-400">{ncUnitedFund.guildCount} allocation{ncUnitedFund.guildCount !== 1 ? "s" : ""}</p>
+          </div>
+          <div className="rounded-lg bg-[#003366] p-4 shadow-sm">
+            <p className="text-xs font-medium text-white/70 uppercase tracking-wide">Fund Balance (Delta)</p>
+            <p className={`mt-1 text-2xl font-bold ${ncUnitedFund.deltaCents >= 0 ? "text-[#D3B574]" : "text-red-400"}`}>
+              {fmtCents(ncUnitedFund.deltaCents)}
+            </p>
+            <p className="text-xs text-white/50">Available to award</p>
+          </div>
+        </div>
       </div>
 
       {/* Secondary Tiles - Row 1 */}
