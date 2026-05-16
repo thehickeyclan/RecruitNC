@@ -428,7 +428,7 @@ function ActivationRequestRow({
       <td className="px-4 py-3">
         <code className="rounded bg-gray-100 px-2 py-0.5 text-xs">{request.fundraising_slug}</code>
       </td>
-      <td className="px-4 py-3 text-gray-600">{request.requester_email || "���������������������������"}</td>
+      <td className="px-4 py-3 text-gray-600">{request.requester_email || "�����������������������������"}</td>
       <td className="px-4 py-3">
         {status === "pending" && (
           <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800">
@@ -970,6 +970,22 @@ export function FundraisingCommandCenter({
             <div className="flex-1">
               <p className="font-semibold text-gray-900">Family Wallets</p>
               <p className="text-sm text-gray-500">Balances & parent links</p>
+            </div>
+            <ExternalLink className="h-4 w-4 text-gray-400" />
+          </div>
+        </Link>
+
+        <Link
+          href="/admin/fundraising/activation-requests"
+          className="rounded-xl border bg-white p-4 shadow-sm transition-all hover:border-amber-400 hover:shadow-md"
+        >
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-amber-100 p-2">
+              <FileCheck className="h-5 w-5 text-amber-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-gray-900">Activation Requests</p>
+              <p className="text-sm text-gray-500">Review new athlete pages</p>
             </div>
             <ExternalLink className="h-4 w-4 text-gray-400" />
           </div>
