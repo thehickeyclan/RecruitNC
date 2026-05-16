@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { verifyAdminSession } from "@/lib/admin-auth"
+import { requireAdmin } from "@/lib/admin-auth"
 
 export async function POST(request: Request) {
-  const adminCheck = await verifyAdminSession()
-  if (!adminCheck.isAdmin) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const adminCheck = await requireAdmin()
+  if ("error" in adminCheck) {
+    return NextResponse.json({ error: adminCheck.error }, { status: adminCheck.status })
   }
 
   const supabase = await createClient()
