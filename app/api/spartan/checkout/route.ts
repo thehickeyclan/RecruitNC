@@ -24,7 +24,14 @@ function hubFundraisingCheckoutSurfaceMetadata(
   fundraisingHub: boolean,
   returnSlug: string,
 ): Record<string, string> {
-  if (!fundraisingHub || !returnSlug) return {}
+  // Spartan page checkout (not hub)
+  if (!fundraisingHub) {
+    return { fundraising_checkout_surface: "spartan_team_page" }
+  }
+  // Hub checkout with no specific return slug
+  if (!returnSlug) {
+    return { fundraising_checkout_surface: "hub_give" }
+  }
   if (returnSlug === "training-fund") {
     return { fundraising_checkout_surface: "training_fund" }
   }
