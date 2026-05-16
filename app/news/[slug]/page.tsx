@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { MessageCircle } from "lucide-react"
+import { ArrowLeft, MessageCircle, Calendar, User, Clock } from "lucide-react"
 import { getAnnouncementBySlug, getAnnouncementSlugs } from "@/lib/news"
 import { FirstFlight2026Content } from "../content/first-flight-2026-nc-united-shoe"
 import { NhscaMostOutstandingWrestlerAward2026Content } from "../content/nhsca-most-outstanding-wrestler-award-2026"
@@ -39,98 +39,128 @@ export default async function NewsAnnouncementPage({
   const Content = ANNOUNCEMENT_CONTENT[slug]
   if (!Content) notFound()
 
+  const skipHeroImage = slug === "class-of-2026-senior-sendoff" || slug === "real-cost-elite-wrestling-nc-smarter-build"
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <div className="container mx-auto px-4 py-8 max-w-3xl">
-        <div className="mb-6">
+    <div className="min-h-screen bg-[#0A1628]">
+      {/* Hero Header */}
+      <header className="relative bg-gradient-to-br from-[#13294B] via-[#1a3a5c] to-[#0A1628]">
+        {/* Hero Image */}
+        {item.image && !skipHeroImage && (
+          <div className="absolute inset-0 overflow-hidden">
+            <Image
+              src={item.image}
+              alt=""
+              fill
+              className={`object-cover opacity-30 ${
+                item.imagePosition === "top" ? "object-top" : "object-center"
+              }`}
+              sizes="100vw"
+              priority
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#13294B]/50 via-[#13294B]/80 to-[#0A1628]" />
+          </div>
+        )}
+
+        <div className="relative container mx-auto px-4 py-8 md:py-12 max-w-4xl">
+          {/* Back Link */}
           <Link
             href="/news"
-            className="inline-flex items-center gap-2 rounded-md border-2 border-[#C20017] bg-transparent px-4 py-2 text-sm font-medium text-[#C20017] hover:bg-[#C20017] hover:text-white transition-colors"
+            className="inline-flex items-center gap-2 text-sm font-medium text-white/60 hover:text-white transition-colors mb-8"
           >
-            ← All News
+            <ArrowLeft className="h-4 w-4" />
+            All News
           </Link>
-        </div>
-        <header className="mb-6">
-          {item.category && (
-            <span
-              className={`inline-block rounded px-2 py-0.5 text-xs font-medium text-white ${item.categoryBadgeClass ?? "bg-[#003366]"}`}
-            >
-              {item.category}
-            </span>
-          )}
-          <h1 className="mt-2 text-2xl md:text-3xl font-bold text-[#003366]">
-            {item.title}
-          </h1>
-          {item.subtitle ? (
-            <p className="mt-2 text-lg md:text-xl font-medium leading-snug text-slate-600">{item.subtitle}</p>
-          ) : null}
-          <p className="mt-2 text-slate-500 text-sm">
-            {new Date(item.date).toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-            {item.author ? <span className="text-slate-600"> · By {item.author}</span> : null}
-          </p>
-        </header>
-        {/* Class of 2026 sendoff & real-cost financial piece: hero lives inside article body to avoid showing the same banner twice. */}
-        {item.image && slug !== "class-of-2026-senior-sendoff" && slug !== "real-cost-elite-wrestling-nc-smarter-build" ? (
-          <div
-            className={`mb-6 overflow-hidden rounded-xl border border-slate-200 shadow-sm ${item.imageBannerBgClass ?? "bg-slate-100"}`}
-          >
-            <div
-              className={`relative w-full overflow-hidden ${
-                item.imageFit === "contain"
-                  ? "h-64 sm:h-72 md:h-96"
-                  : "h-48 sm:h-56 md:h-72"
-              }`}
-            >
-              <Image
-                src={item.image}
-                alt={item.title}
-                fill
-                className={
-                  item.imageFit === "contain"
-                    ? "object-contain object-center p-2 sm:p-4"
-                    : [
-                        "object-cover",
-                        item.imagePosition === "top" ? "object-top" : "object-center",
-                        item.imageBannerZoom
-                          ? "origin-center scale-110 sm:scale-125 md:scale-[1.38]"
-                          : "",
-                      ]
-                        .filter(Boolean)
-                        .join(" ")
-                }
-                sizes="(max-width: 768px) 100vw, 48rem"
-                priority
-              />
+
+          {/* Article Header */}
+          <div className="max-w-3xl">
+            {item.category && (
+              <span className="inline-block rounded-full bg-[#D3B574] px-3 py-1 text-xs font-semibold text-[#13294B] uppercase tracking-wide mb-4">
+                {item.category}
+              </span>
+            )}
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight">
+              {item.title}
+            </h1>
+            {item.subtitle && (
+              <p className="mt-4 text-xl text-white/70 leading-relaxed">
+                {item.subtitle}
+              </p>
+            )}
+            <div className="mt-6 flex flex-wrap items-center gap-4 text-sm text-white/50">
+              <span className="inline-flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                {new Date(item.date).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </span>
+              {item.author && (
+                <span className="inline-flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  {item.author}
+                </span>
+              )}
+              {item.readTime && (
+                <span className="inline-flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  {item.readTime}
+                </span>
+              )}
             </div>
           </div>
-        ) : null}
-        <div className="bg-white rounded-lg border border-slate-200 p-4 sm:p-6 md:p-8 shadow-sm overflow-x-hidden">
-          <div className="mb-6 flex flex-col gap-3 border-b border-slate-200 pb-6 sm:flex-row sm:items-center sm:justify-between">
+        </div>
+      </header>
+
+      {/* Article Content */}
+      <main className="container mx-auto px-4 py-8 md:py-12 max-w-4xl">
+        <article className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          {/* Reactions Bar */}
+          <div className="flex flex-col gap-3 border-b border-slate-200 p-4 sm:p-6 sm:flex-row sm:items-center sm:justify-between bg-slate-50">
             <NchsaaArticleReactions articleSlug={slug} />
             <a
               href="#article-feedback"
-              className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-[#003366] transition-colors hover:bg-slate-50"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-[#13294B] transition-colors hover:bg-white hover:border-[#13294B]"
             >
               <MessageCircle className="h-4 w-4" />
-              Leave feedback
+              Leave Feedback
             </a>
           </div>
-          <Content />
-          <div className="mt-6 border-t border-slate-200 pt-6">
+
+          {/* Article Body */}
+          <div className="p-4 sm:p-6 md:p-10 prose prose-slate max-w-none prose-headings:text-[#13294B] prose-a:text-[#13294B] prose-strong:text-[#13294B]">
+            <Content />
+          </div>
+
+          {/* Bottom Reactions */}
+          <div className="border-t border-slate-200 p-4 sm:p-6 bg-slate-50">
             <NchsaaArticleReactions articleSlug={slug} />
           </div>
-        </div>
-        <div
+        </article>
+
+        {/* Comments Section */}
+        <section
           id="article-feedback"
-          className="mt-6 bg-white rounded-lg border border-slate-200 p-4 sm:p-6 md:p-8 shadow-sm"
+          className="mt-8 bg-[#13294B]/50 rounded-2xl border border-white/10 p-4 sm:p-6 md:p-8"
         >
-          <NchsaaArticleComments articleSlug={slug} />
+          <h2 className="text-xl font-bold text-white mb-6">Feedback & Comments</h2>
+          <div className="bg-white rounded-xl p-4 sm:p-6">
+            <NchsaaArticleComments articleSlug={slug} />
+          </div>
+        </section>
+
+        {/* Back to News */}
+        <div className="mt-8 text-center">
+          <Link
+            href="/news"
+            className="inline-flex items-center gap-2 text-[#D3B574] hover:text-white transition-colors font-medium"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to All News
+          </Link>
         </div>
-      </div>
+      </main>
     </div>
   )
 }
