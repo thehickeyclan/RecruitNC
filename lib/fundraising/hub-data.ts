@@ -280,9 +280,10 @@ function computeHero(rows: HubDonationRow[]): FundraisingHubHeroStats {
   for (const r of rows) {
     const cents = r.amount_cents ?? 0
     totalRaisedCents += cents
-    // NC United fund = no athlete_code (using same logic as Stripe path)
-    const code = typeof r.athlete_code === 'string' ? r.athlete_code.trim() : ''
-    if (!code) {
+    // NC United fund = raw_metadata.fundraising_attribution === 'general_nc_united'
+    const meta = r.raw_metadata as Record<string, unknown> | null | undefined
+    const attribution = typeof meta?.fundraising_attribution === 'string' ? meta.fundraising_attribution : ''
+    if (attribution === 'general_nc_united') {
       ncUnitedCommunityFundCents += cents
     }
   }
