@@ -17,7 +17,9 @@ const SURFACE = {
   HUB_GIVE: "hub_give",
 } as const
 
-/** Derive attribution for webhook upsert (metadata first, then success_url path). */
+/** Derive attribution for webhook upsert (metadata first, then success_url path).
+ *  success_url is used as a cross-check: if it clearly indicates an athlete page
+ *  but metadata says otherwise, the URL wins (guards against stale/wrong metadata). */
 export function deriveCheckoutAttributionFromStripeSession(session: Stripe.Checkout.Session): SpartanDonationCheckoutAttribution {
   const meta = session.metadata ?? {}
   const fromMeta = typeof meta.fundraising_checkout_surface === "string" ? meta.fundraising_checkout_surface.trim() : ""
@@ -25,11 +27,24 @@ export function deriveCheckoutAttributionFromStripeSession(session: Stripe.Check
     typeof meta.fundraising_athlete_slug === "string" && meta.fundraising_athlete_slug.trim()
       ? meta.fundraising_athlete_slug.trim().toLowerCase()
       : null
+
+  // Always parse success_url so we can cross-check against metadata
+  const urlAttribution = deriveFromSuccessUrl(session.success_url)
+
+  // If success_url clearly says athlete_page but metadata disagrees, trust the URL
+  if (urlAttribution.fundraisingCheckoutSurface === SURFACE.ATHLETE_PAGE && fromMeta && fromMeta !== SURFACE.ATHLETE_PAGE) {
+    return urlAttribution
+  }
+
   if (fromMeta) {
     return { fundraisingCheckoutSurface: fromMeta, fundraisingAthleteSlug: slugMeta }
   }
 
-  const url = session.success_url?.trim()
+  return urlAttribution
+}
+
+function deriveFromSuccessUrl(successUrl: string | null | undefined): SpartanDonationCheckoutAttribution {
+  const url = successUrl?.trim()
   if (!url) {
     return { fundraisingCheckoutSurface: null, fundraisingAthleteSlug: null }
   }
