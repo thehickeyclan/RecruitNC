@@ -45,9 +45,12 @@ async function getFundraisingStats() {
       .eq("status", "paid")
   ])
 
-  // Calculate totals
-  const totalRaised = donations?.reduce((sum, d) => sum + (d.amount_cents || 0), 0) || 0
-  const totalSpent = paidExpenses?.reduce((sum, e) => sum + (e.amount_cents || 0), 0) || 0
+  // Calculate totals - ensure we're parsing numbers correctly
+  const totalRaised = donations?.reduce((sum, d) => sum + (Number(d.amount_cents) || 0), 0) || 0
+  const totalSpent = paidExpenses?.reduce((sum, e) => sum + (Number(e.amount_cents) || 0), 0) || 0
+  
+  console.log("[v0] Paid expenses count:", paidExpenses?.length, "Total:", totalSpent)
+  console.log("[v0] Sample expense:", paidExpenses?.[0])
 
   return {
     pendingActivations: pendingActivations || 0,
