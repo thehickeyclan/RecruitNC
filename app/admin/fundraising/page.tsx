@@ -124,6 +124,27 @@ async function getFundraisingData() {
     .like("page_url", "%/fundraising/athletes/%")
     .gte("created_at", thirtyDaysAgo.toISOString())
   
+  // Get campaign breakdown (Spartan General vs Athlete Pages)
+  const { data: allDonations } = await admin
+    .from("spartan_donations")
+    .select("amount_cents, fundraising_athlete_slug")
+    .eq("status", "succeeded")
+  
+  const campaignBreakdown = {
+    spartanGeneral: { count: 0, totalCents: 0 },
+    athletePages: { count: 0, totalCents: 0 }
+  }
+  
+  allDonations?.forEach((d: any) => {
+    if (d.fundraising_athlete_slug) {
+      campaignBreakdown.athletePages.count++
+      campaignBreakdown.athletePages.totalCents += d.amount_cents || 0
+    } else {
+      campaignBreakdown.spartanGeneral.count++
+      campaignBreakdown.spartanGeneral.totalCents += d.amount_cents || 0
+    }
+  })
+  
   // Transform expenses
   const expenseRows: ExpenseRow[] = (expenses || []).map((e: any) => {
     const userProfile = userProfileMap.get(e.user_id)
@@ -198,6 +219,7 @@ async function getFundraisingData() {
     activeProfileCount,
     linkedAthletesCount: linkedAthletesCount || 0,
     totalPageViews: pageViews?.length || 0,
+    campaignBreakdown,
     donations: hubSnapshot.activity,
     expenses: expenseRows,
     activationRequests: requestRows,
@@ -240,6 +262,7 @@ export default async function FundraisingAdminPage() {
           activeProfileCount={data.activeProfileCount}
           linkedAthletesCount={data.linkedAthletesCount}
           totalPageViews={data.totalPageViews}
+          campaignBreakdown={data.campaignBreakdown}
           donations={data.donations}
           expenses={data.expenses}
           activationRequests={data.activationRequests}
