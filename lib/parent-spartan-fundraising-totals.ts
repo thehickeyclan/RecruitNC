@@ -163,11 +163,11 @@ export async function getFundraisingAthletePageWalletRowForViewer(
   const rows = await buildParentSpartanFundraisingRowsForAthleteIds(admin, userId, [athleteId])
   const base = rows[0]
   if (!base) return null
-  const ids = guildLookupAthleteIds.length > 0 ? guildLookupAthleteIds : [athleteId]
-  const householdGuildCents = await sumGuildReservedAllocationCentsForAthleteIds(admin, ids)
+  // Only sum guild allocations for THIS specific athlete — not the whole household
+  const athleteGuildCents = await sumGuildReservedAllocationCentsForAthleteIds(admin, [athleteId])
   return {
     ...base,
-    guildAllocationsCents: householdGuildCents,
+    guildAllocationsCents: athleteGuildCents,
   }
 }
 
