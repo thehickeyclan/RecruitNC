@@ -20,6 +20,11 @@ import {
   MessageSquare,
   Clipboard,
   ExternalLink,
+  Plus,
+  X,
+  Search,
+  Loader2,
+  Unlink,
 } from "lucide-react"
 import { AthleteImage } from "@/components/athlete-image"
 import { ContactMessagingTab } from "@/app/admin/athletes/edit/contact-messaging-tab"
@@ -185,6 +190,81 @@ export default function ParentContactPage({ params }: { params: Promise<{ userId
   const [loginHistory, setLoginHistory] = useState<LoginHistoryEntry[]>([])
   const [crmData, setCrmData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  
+  // Link athlete state
+  const [showLinkModal, setShowLinkModal] = useState(false)
+  const [athleteSearch, setAthleteSearch] = useState("")
+  const [searchResults, setSearchResults] = useState<LinkedAthlete[]>([])
+  const [searchLoading, setSearchLoading] = useState(false)
+  const [linkingId, setLinkingId] = useState<string | null>(null)
+  const [unlinkingId, setUnlinkingId] = useState<string | null>(null)
+
+  // Search for athletes to link
+  const searchAthletes = async (query: string) => {
+    if (query.length < 2) {
+      setSearchResults([])
+      return
+    }
+    setSearchLoading(true)
+    try {
+      const res = await fetch(`/api/admin/athletes/search?q=${encodeURIComponent(query)}&limit=10`, { credentials: "include" })
+      const data = await res.json()
+      if (res.ok && data.athletes) {
+        // Filter out already linked athletes
+        const linkedIds = linkedAthletes.map(a => a.id)
+        setSearchResults(data.athletes.filter((a: LinkedAthlete) => !linkedIds.includes(a.id)))
+      }
+    } catch (e) {
+      console.error("Search failed:", e)
+    } finally {
+      setSearchLoading(false)
+    }
+  }
+
+  // Link an athlete
+  const linkAthlete = async (athleteId: string) => {
+    setLinkingId(athleteId)
+    try {
+      const res = await fetch(`/api/admin/contacts/parent/${resolvedParams.userId}/athletes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ athleteId }),
+        credentials: "include",
+      })
+      if (res.ok) {
+        const linked = searchResults.find(a => a.id === athleteId)
+        if (linked) {
+          setLinkedAthletes(prev => [...prev, linked])
+          setSearchResults(prev => prev.filter(a => a.id !== athleteId))
+        }
+        setAthleteSearch("")
+        setShowLinkModal(false)
+      }
+    } catch (e) {
+      console.error("Link failed:", e)
+    } finally {
+      setLinkingId(null)
+    }
+  }
+
+  // Unlink an athlete
+  const unlinkAthlete = async (athleteId: string) => {
+    if (!confirm("Are you sure you want to unlink this athlete? This will disconnect them from this parent's digital wallet.")) return
+    setUnlinkingId(athleteId)
+    try {
+      const res = await fetch(`/api/admin/contacts/parent/${resolvedParams.userId}/athletes?athleteId=${athleteId}`, {
+        method: "DELETE",
+        credentials: "include",
+      })
+      if (res.ok) {
+        setLinkedAthletes(prev => prev.filter(a => a.id !== athleteId))
+      }
+    } catch (e) {
+      console.error("Unlink failed:", e)
+    } finally {
+      setUnlinkingId(null)
+    }
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -324,43 +404,65 @@ export default function ParentContactPage({ params }: { params: Promise<{ userId
           title="Linked Athletes"
           icon={Users}
           count={linkedAthletes.length}
-          defaultOpen={linkedAthletes.length > 0}
+          defaultOpen={true}
         >
+          {/* Link Athlete Button */}
+          <button
+            onClick={() => setShowLinkModal(true)}
+            className="mb-4 flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-white/20 bg-white/5 py-3 text-sm font-medium text-white/70 hover:border-[#C8A94A]/50 hover:bg-white/10 hover:text-white"
+          >
+            <Plus className="h-4 w-4" />
+            Link an Athlete
+          </button>
+
           {linkedAthletes.length === 0 ? (
             <EmptyState message="No linked athletes" />
           ) : (
             <div className="space-y-2">
               {linkedAthletes.map((athlete) => (
-                <Link
-                  key={athlete.id}
-                  href={`/admin/athletes/edit?id=${athlete.id}`}
-                  className="flex items-center gap-3 rounded-lg bg-white/5 p-3 hover:bg-white/10"
-                >
-                  <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-white/10">
-                    {athlete.photourl ? (
-                      <AthleteImage
-                        photoUrl={athlete.photourl}
-                        name={athlete.name}
-                        fill
-                        alt={athlete.name}
-                        className="object-cover"
-                      />
+                <div key={athlete.id} className="flex items-center gap-3 rounded-lg bg-white/5 p-3">
+                  <Link
+                    href={`/admin/athletes/edit?id=${athlete.id}`}
+                    className="flex flex-1 items-center gap-3 hover:opacity-80"
+                  >
+                    <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-white/10">
+                      {athlete.photourl ? (
+                        <AthleteImage
+                          photoUrl={athlete.photourl}
+                          name={athlete.name}
+                          fill
+                          alt={athlete.name}
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-sm font-bold text-white/50">
+                          {athlete.name?.charAt(0) || "?"}
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-white">{athlete.name}</p>
+                      <p className="text-xs text-white/50">
+                        {[athlete.graduationyear, athlete.weightclass && `${athlete.weightclass} lbs`, athlete.highschool]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    </div>
+                    <ExternalLink className="h-4 w-4 text-white/30" />
+                  </Link>
+                  <button
+                    onClick={() => unlinkAthlete(athlete.id)}
+                    disabled={unlinkingId === athlete.id}
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 disabled:opacity-50"
+                    title="Unlink athlete"
+                  >
+                    {unlinkingId === athlete.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center text-sm font-bold text-white/50">
-                        {athlete.name?.charAt(0) || "?"}
-                      </div>
+                      <Unlink className="h-4 w-4" />
                     )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium text-white">{athlete.name}</p>
-                    <p className="text-xs text-white/50">
-                      {[athlete.graduationyear, athlete.weightclass && `${athlete.weightclass} lbs`, athlete.highschool]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </p>
-                  </div>
-                  <ExternalLink className="h-4 w-4 text-white/30" />
-                </Link>
+                  </button>
+                </div>
               ))}
             </div>
           )}
@@ -586,6 +688,95 @@ export default function ParentContactPage({ params }: { params: Promise<{ userId
           <ContactActivityTab userId={resolvedParams.userId} />
         </div>
       </main>
+
+      {/* Link Athlete Modal */}
+      {showLinkModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-md rounded-xl bg-[#0B2545] p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-white">Link an Athlete</h3>
+              <button
+                onClick={() => {
+                  setShowLinkModal(false)
+                  setAthleteSearch("")
+                  setSearchResults([])
+                }}
+                className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white/60 hover:bg-white/20 hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+              <input
+                type="text"
+                value={athleteSearch}
+                onChange={(e) => {
+                  setAthleteSearch(e.target.value)
+                  searchAthletes(e.target.value)
+                }}
+                placeholder="Search athletes by name..."
+                className="w-full rounded-lg border border-white/20 bg-[#061224] py-3 pl-10 pr-4 text-white placeholder:text-white/40 focus:border-[#C8A94A] focus:outline-none"
+                autoFocus
+              />
+              {searchLoading && (
+                <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-white/40" />
+              )}
+            </div>
+
+            {searchResults.length > 0 && (
+              <div className="mt-4 max-h-[300px] space-y-2 overflow-y-auto">
+                {searchResults.map((athlete) => (
+                  <button
+                    key={athlete.id}
+                    onClick={() => linkAthlete(athlete.id)}
+                    disabled={linkingId === athlete.id}
+                    className="flex w-full items-center gap-3 rounded-lg bg-white/5 p-3 text-left hover:bg-white/10 disabled:opacity-50"
+                  >
+                    <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-white/10">
+                      {athlete.photourl ? (
+                        <AthleteImage
+                          photoUrl={athlete.photourl}
+                          name={athlete.name}
+                          fill
+                          alt={athlete.name}
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-sm font-bold text-white/50">
+                          {athlete.name?.charAt(0) || "?"}
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-white">{athlete.name}</p>
+                      <p className="text-xs text-white/50">
+                        {[athlete.graduationyear, athlete.weightclass && `${athlete.weightclass} lbs`, athlete.highschool]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    </div>
+                    {linkingId === athlete.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-[#C8A94A]" />
+                    ) : (
+                      <Plus className="h-4 w-4 text-[#C8A94A]" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {athleteSearch.length >= 2 && !searchLoading && searchResults.length === 0 && (
+              <p className="mt-4 text-center text-sm text-white/40">No athletes found</p>
+            )}
+
+            {athleteSearch.length < 2 && (
+              <p className="mt-4 text-center text-sm text-white/40">Type at least 2 characters to search</p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
