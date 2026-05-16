@@ -428,7 +428,7 @@ function ActivationRequestRow({
       <td className="px-4 py-3">
         <code className="rounded bg-gray-100 px-2 py-0.5 text-xs">{request.fundraising_slug}</code>
       </td>
-      <td className="px-4 py-3 text-gray-600">{request.requester_email || "�������������������������"}</td>
+      <td className="px-4 py-3 text-gray-600">{request.requester_email || "���������������������������"}</td>
       <td className="px-4 py-3">
         {status === "pending" && (
           <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800">
@@ -842,10 +842,10 @@ export function FundraisingCommandCenter({
             <TrendingUp className="h-5 w-5 text-slate-600" />
           </div>
           <div className="space-y-3">
-            {/* Spartan Campaign Total */}
+            {/* Spring / Summer '26 Campaign Total */}
             <div>
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-gray-700">Spartan Campaign</span>
+                <span className="text-xs font-medium text-gray-700">Spring / Summer &apos;26</span>
                 <span className="font-semibold text-[#003366]">{fmtCents(fundraisingStreams.spartanTotal)}</span>
               </div>
               <div className="mt-1 h-2 rounded-full bg-gray-200 overflow-hidden">
