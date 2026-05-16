@@ -60,7 +60,7 @@ function WhyGiveBullet({ children }: { children: ReactNode }) {
 }
 
 async function fetchRecruitingProfilePhoto(admin: ReturnType<typeof createAdminClient>, athleteId: string): Promise<string | null> {
-  const { data, error } = await admin.from("athletes").select("photo_url, headshot_url, profile_image_url").eq("id", athleteId).maybeSingle()
+  const { data, error } = await admin.from("athletes").select("photourl, headshot_url, commitmentPhotoUrl").eq("id", athleteId).maybeSingle()
   if (error || !data) return null
   return recruitingProfilePhotoFromRow(data as Record<string, unknown>)
 }
