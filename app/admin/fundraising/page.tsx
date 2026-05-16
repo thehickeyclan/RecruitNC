@@ -124,23 +124,26 @@ async function getFundraisingData() {
     .like("page_url", "%/fundraising/athletes/%")
     .gte("created_at", thirtyDaysAgo.toISOString())
   
-  // Get campaign breakdown from hubSnapshot (Stripe source of truth)
-  // Uses giftSourceLabel to determine WHERE checkout happened:
-  // - "Athlete page" = checkout from an athlete's fundraising page
-  // - "Spartan page" or other = checkout from /spartan or general hub
+  // Get campaign breakdown from donations_unified (SOURCE OF TRUTH)
+  // athlete_code present = Athlete Page donation
+  // athlete_code null/empty = Spartan General donation
+  const { data: unifiedDonations } = await admin
+    .from("donations_unified")
+    .select("amount_cents, athlete_code")
+    .eq("is_paid", true)
+  
   const campaignBreakdown = {
     spartanGeneral: { count: 0, totalCents: 0 },
     athletePages: { count: 0, totalCents: 0 }
   }
   
-  hubSnapshot.activity.forEach((d) => {
-    if (d.giftSourceLabel === "Athlete page") {
+  unifiedDonations?.forEach((d: { amount_cents: number; athlete_code: string | null }) => {
+    if (d.athlete_code && d.athlete_code.trim() !== "") {
       campaignBreakdown.athletePages.count++
-      campaignBreakdown.athletePages.totalCents += d.amountCents || 0
+      campaignBreakdown.athletePages.totalCents += d.amount_cents || 0
     } else {
-      // Spartan page, Hub give, Unspecified, etc = Spartan Race general
       campaignBreakdown.spartanGeneral.count++
-      campaignBreakdown.spartanGeneral.totalCents += d.amountCents || 0
+      campaignBreakdown.spartanGeneral.totalCents += d.amount_cents || 0
     }
   })
   
