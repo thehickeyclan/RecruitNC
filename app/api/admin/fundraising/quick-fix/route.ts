@@ -3,15 +3,18 @@ import { createClient } from "@/lib/supabase/server"
 import { requireAdmin } from "@/lib/admin-auth"
 
 export async function POST(request: Request) {
-  const adminCheck = await requireAdmin()
-  if ("error" in adminCheck) {
-    return NextResponse.json({ error: adminCheck.error }, { status: adminCheck.status })
-  }
-
-  const supabase = await createClient()
+  console.log("[v0] Quick-fix POST called")
   
   try {
+    const adminCheck = await requireAdmin()
+    console.log("[v0] Admin check result:", adminCheck)
+    if ("error" in adminCheck) {
+      return NextResponse.json({ error: adminCheck.error }, { status: adminCheck.status })
+    }
+
+    const supabase = await createClient()
     const { athlete_id, action } = await request.json()
+    console.log("[v0] Quick-fix request:", { athlete_id, action })
 
     if (!athlete_id || !action) {
       return NextResponse.json({ error: "Missing athlete_id or action" }, { status: 400 })
@@ -150,7 +153,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Unknown action" }, { status: 400 })
     }
   } catch (error) {
-    console.error("Quick fix error:", error)
-    return NextResponse.json({ error: "Failed to apply fix" }, { status: 500 })
+    console.error("[v0] Quick fix error:", error)
+    return NextResponse.json({ error: String(error) }, { status: 500 })
   }
 }
