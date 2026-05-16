@@ -161,27 +161,85 @@ export async function reviewFundraisingActivationRequestAdminAction(
   const now = new Date().toISOString()
 
   if (nextStatus === "approved" && resolvedAthleteIdForApprove) {
-    // Activate the existing profile - set is_active AND checkout_live to true
-    // Profile already exists (every athlete has one), just needs activation
-    const { data: updatedProfiles, error: activateErr } = await admin
-      .from("athlete_fundraising_profiles")
-      .update({ 
-        is_active: true, 
-        checkout_live: true, 
-        updated_at: now 
-      })
-      .eq("athlete_id", resolvedAthleteIdForApprove)
-      .select("id")
-
-    if (activateErr) {
-      console.warn("[reviewFundraisingActivationRequest] activate profile", activateErr.message)
-      return { ok: false, error: activateErr.message }
-    }
+    const slug = typeof reqRow.fundraising_slug === "string" ? reqRow.fundraising_slug.trim().toLowerCase() : ""
     
-    if (!updatedProfiles?.length) {
-      return { 
-        ok: false, 
-        error: "No fundraising profile found for this athlete. Profile should exist - check athlete ID match." 
+    // First check if profile exists
+    const { data: existingProfile } = await admin
+      .from("athlete_fundraising_profiles")
+      .select("id")
+      .eq("athlete_id", resolvedAthleteIdForApprove)
+      .maybeSingle()
+
+    if (existingProfile) {
+      // Profile exists - just activate it
+      const { error: activateErr } = await admin
+        .from("athlete_fundraising_profiles")
+        .update({ 
+          is_active: true, 
+          checkout_live: true, 
+          updated_at: now 
+        })
+        .eq("athlete_id", resolvedAthleteIdForApprove)
+
+      if (activateErr) {
+        console.warn("[reviewFundraisingActivationRequest] activate profile", activateErr.message)
+        return { ok: false, error: activateErr.message }
+      }
+    } else {
+      // No profile exists - CREATE one
+      // Get athlete info for the fundraising code
+      const { data: athleteData } = await admin
+        .from("athletes")
+        .select("id, \"firstName\", \"lastName\", gradYear")
+        .eq("id", resolvedAthleteIdForApprove)
+        .single()
+      
+      const firstName = athleteData?.firstName || "Athlete"
+      const lastName = athleteData?.lastName || "Unknown"
+      const gradYear = athleteData?.gradYear || new Date().getFullYear() + 4
+      
+      // Generate fundraising code: NCU-LASTNAME-YY
+      const code = `NCU-${lastName.toUpperCase().replace(/[^A-Z]/g, "").slice(0, 10)}-${String(gradYear).slice(-2)}`
+      
+      const { error: createErr } = await admin
+        .from("athlete_fundraising_profiles")
+        .insert({
+          athlete_id: resolvedAthleteIdForApprove,
+          slug: slug,
+          is_active: true,
+          checkout_live: true,
+          primary_fundraising_code: code,
+          campaign_goal_cents: 50000, // $500 default
+          total_raised_cents: 0,
+          created_at: now,
+          updated_at: now,
+        })
+
+      if (createErr) {
+        // If slug collision, try with unique suffix
+        if (createErr.code === "23505") {
+          const uniqueSlug = `${slug}-${Date.now().toString(36).slice(-4)}`
+          const { error: retryErr } = await admin
+            .from("athlete_fundraising_profiles")
+            .insert({
+              athlete_id: resolvedAthleteIdForApprove,
+              slug: uniqueSlug,
+              is_active: true,
+              checkout_live: true,
+              primary_fundraising_code: code,
+              campaign_goal_cents: 50000,
+              total_raised_cents: 0,
+              created_at: now,
+              updated_at: now,
+            })
+          if (retryErr) {
+            console.warn("[reviewFundraisingActivationRequest] create profile retry", retryErr.message)
+            return { ok: false, error: retryErr.message }
+          }
+        } else {
+          console.warn("[reviewFundraisingActivationRequest] create profile", createErr.message)
+          return { ok: false, error: createErr.message }
+        }
       }
     }
   }
