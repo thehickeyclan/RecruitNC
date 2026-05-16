@@ -428,7 +428,7 @@ function ActivationRequestRow({
       <td className="px-4 py-3">
         <code className="rounded bg-gray-100 px-2 py-0.5 text-xs">{request.fundraising_slug}</code>
       </td>
-      <td className="px-4 py-3 text-gray-600">{request.requester_email || "—"}</td>
+      <td className="px-4 py-3 text-gray-600">{request.requester_email || "���"}</td>
       <td className="px-4 py-3">
         {status === "pending" && (
           <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800">
@@ -459,6 +459,115 @@ function ActivationRequestRow({
                   className="rounded bg-green-600 px-3 py-1 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50"
                 >
                   Approve
+                </button>
+                <button
+                  onClick={() => handleAction("rejected")}
+                  disabled={loading}
+                  className="rounded bg-gray-200 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-300 disabled:opacity-50"
+                >
+                  Reject
+                </button>
+              </>
+            )}
+            {error && <span className="text-xs text-red-600">{error}</span>}
+          </div>
+        ) : (
+          <span className="text-xs text-gray-400">—</span>
+        )}
+      </td>
+    </tr>
+  )
+}
+
+// Expense Request Row with inline mark paid/reject
+function ExpenseRequestRow({ 
+  expense, 
+  fmtDate,
+  fmtCents
+}: { 
+  expense: ExpenseRow
+  fmtDate: (iso: string) => string 
+  fmtCents: (cents: number) => string
+}) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+  const [status, setStatus] = useState(expense.status)
+
+  const handleAction = async (action: "paid" | "rejected") => {
+    setLoading(true)
+    setError("")
+    try {
+      const res = await fetch("/api/admin/fundraising/expense-action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ expenseId: expense.id, action })
+      })
+      if (res.ok) {
+        setStatus(action)
+      } else {
+        const data = await res.json()
+        setError(data.error || "Failed")
+      }
+    } catch {
+      setError("Failed to process")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <tr className="hover:bg-gray-50">
+      <td className="whitespace-nowrap px-4 py-3 text-gray-600">
+        {fmtDate(expense.paid_at || expense.created_at)}
+      </td>
+      <td className="px-4 py-3 font-medium text-gray-900">
+        {expense.athlete_first_name} {expense.athlete_last_name}
+      </td>
+      <td className="px-4 py-3">
+        <div>
+          <p className="text-gray-900">{expense.parent_name || "—"}</p>
+          {expense.parent_email && <p className="text-xs text-gray-500">{expense.parent_email}</p>}
+        </div>
+      </td>
+      <td className="px-4 py-3 text-gray-600 capitalize">{expense.expense_type?.replace(/_/g, " ") || "—"}</td>
+      <td className="px-4 py-3">
+        {status === "pending" && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800">
+            <Clock className="h-3 w-3" /> Pending
+          </span>
+        )}
+        {status === "approved" && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+            <CheckCircle className="h-3 w-3" /> Approved
+          </span>
+        )}
+        {status === "paid" && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
+            <CheckCircle className="h-3 w-3" /> Paid
+          </span>
+        )}
+        {status === "rejected" && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-800">
+            <X className="h-3 w-3" /> Rejected
+          </span>
+        )}
+      </td>
+      <td className="whitespace-nowrap px-4 py-3 text-right font-semibold text-red-700">
+        {fmtCents(expense.amount_cents)}
+      </td>
+      <td className="px-4 py-3">
+        {(status === "pending" || status === "approved") ? (
+          <div className="flex items-center gap-2">
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+            ) : (
+              <>
+                <button
+                  onClick={() => handleAction("paid")}
+                  disabled={loading}
+                  className="rounded bg-green-600 px-3 py-1 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                >
+                  Mark Paid
                 </button>
                 <button
                   onClick={() => handleAction("rejected")}
@@ -951,31 +1060,12 @@ export function FundraisingCommandCenter({
                   <th className="px-4 py-3">Type</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3 text-right">Amount</th>
+                  <th className="px-4 py-3">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {filteredExpenses.map((e) => (
-                  <tr key={e.id} className="hover:bg-gray-50">
-                    <td className="whitespace-nowrap px-4 py-3 text-gray-600">
-                      {fmtDate(e.paid_at || e.created_at)}
-                    </td>
-                    <td className="px-4 py-3 font-medium text-gray-900">
-                      {e.athlete_first_name} {e.athlete_last_name}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div>
-                        <p className="text-gray-900">{e.parent_name || "—"}</p>
-                        {e.parent_email && <p className="text-xs text-gray-500">{e.parent_email}</p>}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">{e.expense_type || "—"}</td>
-                    <td className="px-4 py-3">
-                      <StatusBadge status={e.status} />
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-right font-semibold text-red-700">
-                      {fmtCents(e.amount_cents)}
-                    </td>
-                  </tr>
+                  <ExpenseRequestRow key={e.id} expense={e} fmtDate={fmtDate} fmtCents={fmtCents} />
                 ))}
               </tbody>
             </table>
