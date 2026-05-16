@@ -1,0 +1,607 @@
+"use client"
+
+import { useState, useMemo } from "react"
+import Link from "next/link"
+import { 
+  DollarSign, Users, FileCheck, Receipt, TrendingUp, 
+  ChevronDown, ChevronUp, Search, Filter, ExternalLink,
+  CheckCircle, Clock, XCircle, AlertCircle
+} from "lucide-react"
+import type { FundraisingHubActivityRow } from "@/lib/fundraising/hub-data"
+
+type ExpenseRow = {
+  id: string
+  amount_cents: number
+  status: string
+  expense_type: string | null
+  created_at: string
+  paid_at: string | null
+  athlete_id: string
+  athlete_first_name: string | null
+  athlete_last_name: string | null
+  parent_email: string | null
+  parent_name: string | null
+}
+
+type ActivationRequest = {
+  id: string
+  fundraising_slug: string
+  status: string
+  created_at: string
+  requester_email: string | null
+  athlete_first_name: string | null
+  athlete_last_name: string | null
+}
+
+type ActiveProfile = {
+  id: string
+  slug: string
+  athlete_id: string
+  athlete_first_name: string | null
+  athlete_last_name: string | null
+  total_raised_cents: number
+  campaign_goal_cents: number
+  checkout_live: boolean
+}
+
+type Panel = "donations" | "reimbursements" | "requests" | "profiles" | null
+
+interface Props {
+  totalRaised: number
+  donationCount: number
+  totalReimbursed: number
+  reimbursementCount: number
+  pendingRequestCount: number
+  activeProfileCount: number
+  donations: FundraisingHubActivityRow[]
+  expenses: ExpenseRow[]
+  activationRequests: ActivationRequest[]
+  activeProfiles: ActiveProfile[]
+}
+
+function fmtCents(cents: number): string {
+  return (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })
+}
+
+function fmtDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const styles: Record<string, string> = {
+    paid: "bg-green-100 text-green-800",
+    approved: "bg-green-100 text-green-800",
+    pending: "bg-amber-100 text-amber-800",
+    rejected: "bg-red-100 text-red-800",
+    denied: "bg-red-100 text-red-800",
+  }
+  return (
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${styles[status] || "bg-gray-100 text-gray-800"}`}>
+      {status}
+    </span>
+  )
+}
+
+export function FundraisingCommandCenter({
+  totalRaised,
+  donationCount,
+  totalReimbursed,
+  reimbursementCount,
+  pendingRequestCount,
+  activeProfileCount,
+  donations,
+  expenses,
+  activationRequests,
+  activeProfiles,
+}: Props) {
+  const [activePanel, setActivePanel] = useState<Panel>(null)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState<string>("all")
+
+  const togglePanel = (panel: Panel) => {
+    setActivePanel(activePanel === panel ? null : panel)
+    setSearchTerm("")
+    setStatusFilter("all")
+  }
+
+  // Filtered donations
+  const filteredDonations = useMemo(() => {
+    return donations.filter(d => {
+      const search = searchTerm.toLowerCase()
+      if (!search) return true
+      return (
+        d.donorDisplay.toLowerCase().includes(search) ||
+        d.athleteCredit.toLowerCase().includes(search) ||
+        (d.athleteCode?.toLowerCase().includes(search)) ||
+        d.campaignNameLabel.toLowerCase().includes(search)
+      )
+    })
+  }, [donations, searchTerm])
+
+  // Filtered expenses
+  const filteredExpenses = useMemo(() => {
+    return expenses.filter(e => {
+      const search = searchTerm.toLowerCase()
+      const matchesSearch = !search || 
+        (e.athlete_first_name?.toLowerCase().includes(search)) ||
+        (e.athlete_last_name?.toLowerCase().includes(search)) ||
+        (e.parent_name?.toLowerCase().includes(search)) ||
+        (e.expense_type?.toLowerCase().includes(search))
+      const matchesStatus = statusFilter === "all" || e.status === statusFilter
+      return matchesSearch && matchesStatus
+    })
+  }, [expenses, searchTerm, statusFilter])
+
+  // Filtered activation requests
+  const filteredRequests = useMemo(() => {
+    return activationRequests.filter(r => {
+      const search = searchTerm.toLowerCase()
+      const matchesSearch = !search || 
+        (r.athlete_first_name?.toLowerCase().includes(search)) ||
+        (r.athlete_last_name?.toLowerCase().includes(search)) ||
+        r.fundraising_slug.toLowerCase().includes(search) ||
+        (r.requester_email?.toLowerCase().includes(search))
+      const matchesStatus = statusFilter === "all" || r.status === statusFilter
+      return matchesSearch && matchesStatus
+    })
+  }, [activationRequests, searchTerm, statusFilter])
+
+  // Filtered profiles
+  const filteredProfiles = useMemo(() => {
+    return activeProfiles.filter(p => {
+      const search = searchTerm.toLowerCase()
+      if (!search) return true
+      return (
+        (p.athlete_first_name?.toLowerCase().includes(search)) ||
+        (p.athlete_last_name?.toLowerCase().includes(search)) ||
+        p.slug.toLowerCase().includes(search)
+      )
+    })
+  }, [activeProfiles, searchTerm])
+
+  const available = totalRaised - totalReimbursed
+
+  return (
+    <div className="space-y-6">
+      {/* Pending Alert */}
+      {pendingRequestCount > 0 && (
+        <div className="flex items-center gap-3 rounded-lg border-2 border-amber-300 bg-amber-50 p-4">
+          <AlertCircle className="h-6 w-6 text-amber-600" />
+          <div className="flex-1">
+            <p className="font-semibold text-amber-900">
+              {pendingRequestCount} pending activation request{pendingRequestCount !== 1 ? "s" : ""}
+            </p>
+            <p className="text-sm text-amber-700">Families are waiting for their pages to go live.</p>
+          </div>
+          <button
+            onClick={() => togglePanel("requests")}
+            className="rounded-md bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700"
+          >
+            Review Now
+          </button>
+        </div>
+      )}
+
+      {/* Stat Tiles - Clickable */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Total Raised */}
+        <button
+          onClick={() => togglePanel("donations")}
+          className={`rounded-xl border-2 p-5 text-left shadow-sm transition-all hover:shadow-md ${
+            activePanel === "donations" 
+              ? "border-green-500 bg-green-50" 
+              : "border-transparent bg-white hover:border-green-200"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-gray-500">Total Raised</p>
+            <div className="flex items-center gap-1">
+              <DollarSign className="h-5 w-5 text-green-600" />
+              {activePanel === "donations" ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </div>
+          </div>
+          <p className="mt-2 text-3xl font-bold text-gray-900">{fmtCents(totalRaised)}</p>
+          <p className="text-sm text-gray-500">{donationCount} donations - click to view</p>
+        </button>
+
+        {/* Reimbursed */}
+        <button
+          onClick={() => togglePanel("reimbursements")}
+          className={`rounded-xl border-2 p-5 text-left shadow-sm transition-all hover:shadow-md ${
+            activePanel === "reimbursements" 
+              ? "border-red-500 bg-red-50" 
+              : "border-transparent bg-white hover:border-red-200"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-gray-500">Reimbursed</p>
+            <div className="flex items-center gap-1">
+              <Receipt className="h-5 w-5 text-red-600" />
+              {activePanel === "reimbursements" ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </div>
+          </div>
+          <p className="mt-2 text-3xl font-bold text-gray-900">{fmtCents(totalReimbursed)}</p>
+          <p className="text-sm text-gray-500">{reimbursementCount} paid - click to view</p>
+        </button>
+
+        {/* Available */}
+        <div className="rounded-xl border bg-gradient-to-br from-blue-50 to-white p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-gray-500">Available Balance</p>
+            <TrendingUp className="h-5 w-5 text-blue-600" />
+          </div>
+          <p className="mt-2 text-3xl font-bold text-blue-700">{fmtCents(available)}</p>
+          <p className="text-sm text-gray-500">Raised minus reimbursed</p>
+        </div>
+
+        {/* Active Pages */}
+        <button
+          onClick={() => togglePanel("profiles")}
+          className={`rounded-xl border-2 p-5 text-left shadow-sm transition-all hover:shadow-md ${
+            activePanel === "profiles" 
+              ? "border-purple-500 bg-purple-50" 
+              : "border-transparent bg-white hover:border-purple-200"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-gray-500">Active Pages</p>
+            <div className="flex items-center gap-1">
+              <Users className="h-5 w-5 text-purple-600" />
+              {activePanel === "profiles" ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </div>
+          </div>
+          <p className="mt-2 text-3xl font-bold text-gray-900">{activeProfileCount}</p>
+          <p className="text-sm text-gray-500">Live fundraising pages</p>
+        </button>
+      </div>
+
+      {/* Secondary Tiles */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        <button
+          onClick={() => togglePanel("requests")}
+          className={`rounded-xl border-2 p-4 text-left shadow-sm transition-all hover:shadow-md ${
+            activePanel === "requests" 
+              ? "border-amber-500 bg-amber-50" 
+              : "border-transparent bg-white hover:border-amber-200"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-amber-100 p-2">
+              <FileCheck className="h-5 w-5 text-amber-600" />
+            </div>
+            <div>
+              <p className="font-semibold text-gray-900">Activation Requests</p>
+              <p className="text-sm text-gray-500">
+                {pendingRequestCount} pending / {activationRequests.length} total
+              </p>
+            </div>
+          </div>
+        </button>
+
+        <Link
+          href="/admin/expense-requests"
+          className="rounded-xl border bg-white p-4 shadow-sm transition-all hover:border-blue-200 hover:shadow-md"
+        >
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-blue-100 p-2">
+              <Receipt className="h-5 w-5 text-blue-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-gray-900">Expense Requests</p>
+              <p className="text-sm text-gray-500">Review & approve requests</p>
+            </div>
+            <ExternalLink className="h-4 w-4 text-gray-400" />
+          </div>
+        </Link>
+
+        <Link
+          href="/admin/fundraising-ledger"
+          className="rounded-xl border bg-white p-4 shadow-sm transition-all hover:border-blue-200 hover:shadow-md"
+        >
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-gray-100 p-2">
+              <TrendingUp className="h-5 w-5 text-gray-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-gray-900">Full Ledger</p>
+              <p className="text-sm text-gray-500">Export for accountant</p>
+            </div>
+            <ExternalLink className="h-4 w-4 text-gray-400" />
+          </div>
+        </Link>
+      </div>
+
+      {/* Expanded Panel - Donations */}
+      {activePanel === "donations" && (
+        <div className="rounded-xl border-2 border-green-200 bg-white p-6 shadow-lg">
+          <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="text-xl font-bold text-gray-900">All Donations ({filteredDonations.length})</h2>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search donor, athlete, campaign..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full rounded-lg border py-2 pl-10 pr-4 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 sm:w-80"
+              />
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b bg-gray-50 text-xs uppercase text-gray-600">
+                <tr>
+                  <th className="px-4 py-3">Date</th>
+                  <th className="px-4 py-3">Donor</th>
+                  <th className="px-4 py-3">Athlete</th>
+                  <th className="px-4 py-3">Campaign</th>
+                  <th className="px-4 py-3">Source</th>
+                  <th className="px-4 py-3 text-right">Amount</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {filteredDonations.slice(0, 100).map((d) => (
+                  <tr key={d.id} className="hover:bg-gray-50">
+                    <td className="whitespace-nowrap px-4 py-3 text-gray-600">{fmtDate(d.createdIso)}</td>
+                    <td className="px-4 py-3 font-medium text-gray-900">{d.donorDisplay}</td>
+                    <td className="px-4 py-3">
+                      <div>
+                        <p className="text-gray-900">{d.athleteCredit}</p>
+                        {d.athleteCode && <p className="text-xs text-gray-500">{d.athleteCode}</p>}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">{d.campaignNameLabel}</td>
+                    <td className="px-4 py-3 text-gray-500">{d.giftSourceLabel}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-right font-semibold text-green-700">
+                      {fmtCents(d.amountCents)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {filteredDonations.length > 100 && (
+              <p className="mt-4 text-center text-sm text-gray-500">
+                Showing 100 of {filteredDonations.length} donations
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Expanded Panel - Reimbursements */}
+      {activePanel === "reimbursements" && (
+        <div className="rounded-xl border-2 border-red-200 bg-white p-6 shadow-lg">
+          <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="text-xl font-bold text-gray-900">All Reimbursements ({filteredExpenses.length})</h2>
+            <div className="flex gap-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search athlete, parent..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full rounded-lg border py-2 pl-10 pr-4 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500 sm:w-64"
+                />
+              </div>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="rounded-lg border px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+              >
+                <option value="all">All Status</option>
+                <option value="paid">Paid</option>
+                <option value="approved">Approved</option>
+                <option value="pending">Pending</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b bg-gray-50 text-xs uppercase text-gray-600">
+                <tr>
+                  <th className="px-4 py-3">Date</th>
+                  <th className="px-4 py-3">Athlete</th>
+                  <th className="px-4 py-3">Parent</th>
+                  <th className="px-4 py-3">Type</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3 text-right">Amount</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {filteredExpenses.map((e) => (
+                  <tr key={e.id} className="hover:bg-gray-50">
+                    <td className="whitespace-nowrap px-4 py-3 text-gray-600">
+                      {fmtDate(e.paid_at || e.created_at)}
+                    </td>
+                    <td className="px-4 py-3 font-medium text-gray-900">
+                      {e.athlete_first_name} {e.athlete_last_name}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div>
+                        <p className="text-gray-900">{e.parent_name || "—"}</p>
+                        {e.parent_email && <p className="text-xs text-gray-500">{e.parent_email}</p>}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">{e.expense_type || "—"}</td>
+                    <td className="px-4 py-3">
+                      <StatusBadge status={e.status} />
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-right font-semibold text-red-700">
+                      {fmtCents(e.amount_cents)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Expanded Panel - Activation Requests */}
+      {activePanel === "requests" && (
+        <div className="rounded-xl border-2 border-amber-200 bg-white p-6 shadow-lg">
+          <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="text-xl font-bold text-gray-900">Activation Requests ({filteredRequests.length})</h2>
+            <div className="flex gap-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search athlete, email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full rounded-lg border py-2 pl-10 pr-4 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 sm:w-64"
+                />
+              </div>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="rounded-lg border px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+              >
+                <option value="all">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b bg-gray-50 text-xs uppercase text-gray-600">
+                <tr>
+                  <th className="px-4 py-3">Date</th>
+                  <th className="px-4 py-3">Athlete</th>
+                  <th className="px-4 py-3">Page Slug</th>
+                  <th className="px-4 py-3">Requester</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {filteredRequests.map((r) => (
+                  <tr key={r.id} className="hover:bg-gray-50">
+                    <td className="whitespace-nowrap px-4 py-3 text-gray-600">{fmtDate(r.created_at)}</td>
+                    <td className="px-4 py-3 font-medium text-gray-900">
+                      {r.athlete_first_name} {r.athlete_last_name}
+                    </td>
+                    <td className="px-4 py-3">
+                      <code className="rounded bg-gray-100 px-2 py-0.5 text-xs">{r.fundraising_slug}</code>
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">{r.requester_email || "—"}</td>
+                    <td className="px-4 py-3">
+                      <StatusBadge status={r.status} />
+                    </td>
+                    <td className="px-4 py-3">
+                      {r.status === "pending" && (
+                        <Link
+                          href="/admin/fundraising/activation-requests"
+                          className="text-sm font-medium text-amber-600 hover:text-amber-800"
+                        >
+                          Review
+                        </Link>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Expanded Panel - Active Profiles */}
+      {activePanel === "profiles" && (
+        <div className="rounded-xl border-2 border-purple-200 bg-white p-6 shadow-lg">
+          <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="text-xl font-bold text-gray-900">Active Fundraising Pages ({filteredProfiles.length})</h2>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search athlete, slug..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full rounded-lg border py-2 pl-10 pr-4 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 sm:w-80"
+              />
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b bg-gray-50 text-xs uppercase text-gray-600">
+                <tr>
+                  <th className="px-4 py-3">Athlete</th>
+                  <th className="px-4 py-3">Page Slug</th>
+                  <th className="px-4 py-3">Raised</th>
+                  <th className="px-4 py-3">Goal</th>
+                  <th className="px-4 py-3">Progress</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {filteredProfiles.map((p) => {
+                  const progress = p.campaign_goal_cents > 0 
+                    ? Math.min(100, Math.round((p.total_raised_cents / p.campaign_goal_cents) * 100))
+                    : 0
+                  return (
+                    <tr key={p.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 font-medium text-gray-900">
+                        {p.athlete_first_name} {p.athlete_last_name}
+                      </td>
+                      <td className="px-4 py-3">
+                        <code className="rounded bg-gray-100 px-2 py-0.5 text-xs">{p.slug}</code>
+                      </td>
+                      <td className="px-4 py-3 font-semibold text-green-700">
+                        {fmtCents(p.total_raised_cents)}
+                      </td>
+                      <td className="px-4 py-3 text-gray-600">
+                        {fmtCents(p.campaign_goal_cents)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 w-24 rounded-full bg-gray-200">
+                            <div 
+                              className="h-2 rounded-full bg-purple-500" 
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                          <span className="text-xs text-gray-500">{progress}%</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        {p.checkout_live ? (
+                          <span className="inline-flex items-center gap-1 text-green-600">
+                            <CheckCircle className="h-4 w-4" /> Live
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-gray-400">
+                            <Clock className="h-4 w-4" /> Paused
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Link
+                          href={`/fundraising/athletes/${p.slug}`}
+                          target="_blank"
+                          className="text-sm font-medium text-purple-600 hover:text-purple-800"
+                        >
+                          View Page
+                        </Link>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
