@@ -125,18 +125,20 @@ async function getFundraisingData() {
     .gte("created_at", thirtyDaysAgo.toISOString())
   
   // Get campaign breakdown from hubSnapshot (Stripe source of truth)
-  // Spartan General = gifts to "NC United general fund" (no athlete code)
-  // Athlete Pages = gifts credited to specific athletes
+  // Uses giftSourceLabel to determine WHERE checkout happened:
+  // - "Athlete page" = checkout from an athlete's fundraising page
+  // - "Spartan page" or other = checkout from /spartan or general hub
   const campaignBreakdown = {
     spartanGeneral: { count: 0, totalCents: 0 },
     athletePages: { count: 0, totalCents: 0 }
   }
   
   hubSnapshot.activity.forEach((d) => {
-    if (d.athleteCode) {
+    if (d.giftSourceLabel === "Athlete page") {
       campaignBreakdown.athletePages.count++
       campaignBreakdown.athletePages.totalCents += d.amountCents || 0
     } else {
+      // Spartan page, Hub give, Unspecified, etc = Spartan Race general
       campaignBreakdown.spartanGeneral.count++
       campaignBreakdown.spartanGeneral.totalCents += d.amountCents || 0
     }
