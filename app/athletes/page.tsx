@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useSearchParams } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search, Users, Trophy, FileSearch, LayoutGrid, List, ArrowLeft } from "lucide-react"
+import { Search, Trophy, FileSearch, LayoutGrid, List, ArrowLeft, GraduationCap } from "lucide-react"
 import { ProfessionalCommitmentCard } from "@/components/professional-commitment-card"
 import { normalizeAthleteList } from "@/lib/professional-athlete"
 import { AthletesLegacySearchContent } from "@/components/athletes-legacy-search-content"
@@ -161,22 +162,34 @@ export default function AthletesPage() {
 
   return (
     <main className="min-h-screen bg-[#0A1628]">
-      {/* Hero Header */}
-      <section className="border-b border-white/10">
-        <div className="container mx-auto px-4 py-10 md:py-14">
+      {/* Hero Header with Background Image */}
+      <section className="relative overflow-hidden border-b border-white/10">
+        <div className="absolute inset-0">
+          <Image
+            src="/hero-banner-nchsaa-2026-arena.png"
+            alt="NCHSAA Wrestling Championship arena"
+            fill
+            className="object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0A1628]/95 via-[#0A1628]/85 to-[#0A1628]/70" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0A1628] via-transparent to-transparent" />
+        </div>
+
+        <div className="container relative mx-auto px-4 py-12 md:py-16">
           <Link href="/" className="inline-flex items-center gap-2 text-sm text-white/50 hover:text-[#D3B574] transition-colors mb-6">
             <ArrowLeft className="h-4 w-4" />
             Back to Home
           </Link>
           <div className="flex items-center gap-4 mb-4">
-            <div className="rounded-xl bg-[#D3B574]/10 p-3">
-              <Users className="h-8 w-8 text-[#D3B574]" />
+            <div className="rounded-xl bg-[#D3B574]/10 p-3 backdrop-blur-sm">
+              <GraduationCap className="h-8 w-8 text-[#D3B574]" />
             </div>
-            <h1 className="text-3xl font-black tracking-tight text-white md:text-4xl">
+            <h1 className="text-4xl font-black tracking-tight text-white md:text-5xl">
               Athletes
             </h1>
           </div>
-          <p className="text-white/60 text-lg max-w-xl leading-relaxed">
+          <p className="text-white/70 text-lg max-w-xl leading-relaxed">
             {tab === "commitments"
               ? "Browse North Carolina wrestlers who have committed to college programs."
               : "Legacy NC: search by name across NHSCA, NCHSAA, awards, Super32, and more."}
@@ -188,7 +201,7 @@ export default function AthletesPage() {
               className={
                 tab === "commitments"
                   ? "bg-[#D3B574] text-[#0A1628] hover:bg-[#c4a665] font-semibold"
-                  : "bg-white/10 text-white/70 hover:bg-white/20 border-0"
+                  : "bg-white/10 text-white/70 hover:bg-white/20 border-0 backdrop-blur-sm"
               }
             >
               <Trophy className="h-4 w-4 mr-1.5" />
@@ -200,7 +213,7 @@ export default function AthletesPage() {
               className={
                 tab === "legacy"
                   ? "bg-[#D3B574] text-[#0A1628] hover:bg-[#c4a665] font-semibold"
-                  : "bg-white/10 text-white/70 hover:bg-white/20 border-0"
+                  : "bg-white/10 text-white/70 hover:bg-white/20 border-0 backdrop-blur-sm"
               }
             >
               <FileSearch className="h-4 w-4 mr-1.5" />
