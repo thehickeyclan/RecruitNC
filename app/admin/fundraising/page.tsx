@@ -47,7 +47,7 @@ async function getFundraisingData() {
   const hubSnapshot = await buildFundraisingHubSnapshot()
   
   // Get detailed expense data with athlete info
-  const { data: expenses } = await admin
+  const { data: expenses, error: expenseErr } = await admin
     .from("athlete_expense_requests")
     .select(`
       id,
@@ -57,10 +57,15 @@ async function getFundraisingData() {
       created_at,
       paid_at,
       athlete_id,
-      athletes!inner(firstName, lastName),
+      user_id,
+      athletes(firstName, lastName),
       user_profiles(full_name, email)
     `)
     .order("created_at", { ascending: false })
+  
+  if (expenseErr) {
+    console.error("[v0] Expense query error:", expenseErr.message)
+  }
   
   // Get activation requests with athlete info
   const { data: activationRequests } = await admin
@@ -111,6 +116,8 @@ async function getFundraisingData() {
     .eq("event_type", "page_view")
     .like("page_url", "%/fundraising/athletes/%")
     .gte("created_at", thirtyDaysAgo.toISOString())
+  
+  console.log("[v0] Expenses fetched:", expenses?.length || 0)
   
   // Transform expenses
   const expenseRows: ExpenseRow[] = (expenses || []).map((e: any) => ({
