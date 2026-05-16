@@ -161,79 +161,27 @@ export async function reviewFundraisingActivationRequestAdminAction(
   const now = new Date().toISOString()
 
   if (nextStatus === "approved" && resolvedAthleteIdForApprove) {
-    // First try to update existing active profile
-    const { data: activatedProfiles, error: liveErr } = await admin
+    // Activate the existing profile - set is_active AND checkout_live to true
+    // Profile already exists (every athlete has one), just needs activation
+    const { data: updatedProfiles, error: activateErr } = await admin
       .from("athlete_fundraising_profiles")
-      .update({ checkout_live: true, updated_at: now })
+      .update({ 
+        is_active: true, 
+        checkout_live: true, 
+        updated_at: now 
+      })
       .eq("athlete_id", resolvedAthleteIdForApprove)
-      .eq("is_active", true)
       .select("id")
 
-    if (liveErr) {
-      console.warn("[reviewFundraisingActivationRequest] checkout_live on profile", liveErr.message)
-      return { ok: false, error: liveErr.message }
+    if (activateErr) {
+      console.warn("[reviewFundraisingActivationRequest] activate profile", activateErr.message)
+      return { ok: false, error: activateErr.message }
     }
     
-    // If no active profile exists, CREATE one
-    if (!activatedProfiles?.length) {
-      const slug = typeof reqRow.fundraising_slug === "string" ? reqRow.fundraising_slug.trim().toLowerCase() : ""
-      
-      // Get athlete info to build the profile
-      const { data: athleteData } = await admin
-        .from("athletes")
-        .select("id, \"firstName\", \"lastName\", gradYear")
-        .eq("id", resolvedAthleteIdForApprove)
-        .single()
-      
-      if (!athleteData) {
-        return { ok: false, error: "Could not find athlete record to create fundraising profile." }
-      }
-      
-      // Generate a fundraising code
-      const firstName = athleteData.firstName || "athlete"
-      const lastName = athleteData.lastName || "unknown"
-      const gradYear = athleteData.gradYear || new Date().getFullYear() + 4
-      const code = `NCU-${lastName.toUpperCase().replace(/[^A-Z]/g, "").slice(0, 8)}${firstName.charAt(0).toUpperCase()}-${String(gradYear).slice(-2)}`
-      
-      const { error: createErr } = await admin
-        .from("athlete_fundraising_profiles")
-        .insert({
-          athlete_id: resolvedAthleteIdForApprove,
-          slug: slug,
-          is_active: true,
-          checkout_live: true,
-          primary_fundraising_code: code,
-          campaign_goal_cents: 50000, // $500 default goal
-          total_raised_cents: 0,
-          created_at: now,
-          updated_at: now,
-        })
-      
-      if (createErr) {
-        // If slug already exists, try with a unique suffix
-        if (createErr.code === "23505") {
-          const uniqueSlug = `${slug}-${Date.now().toString(36)}`
-          const { error: retryErr } = await admin
-            .from("athlete_fundraising_profiles")
-            .insert({
-              athlete_id: resolvedAthleteIdForApprove,
-              slug: uniqueSlug,
-              is_active: true,
-              checkout_live: true,
-              primary_fundraising_code: code,
-              campaign_goal_cents: 50000,
-              total_raised_cents: 0,
-              created_at: now,
-              updated_at: now,
-            })
-          if (retryErr) {
-            console.warn("[reviewFundraisingActivationRequest] create profile retry", retryErr.message)
-            return { ok: false, error: retryErr.message }
-          }
-        } else {
-          console.warn("[reviewFundraisingActivationRequest] create profile", createErr.message)
-          return { ok: false, error: createErr.message }
-        }
+    if (!updatedProfiles?.length) {
+      return { 
+        ok: false, 
+        error: "No fundraising profile found for this athlete. Profile should exist - check athlete ID match." 
       }
     }
   }
