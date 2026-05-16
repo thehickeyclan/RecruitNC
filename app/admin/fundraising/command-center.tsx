@@ -1,13 +1,106 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import Link from "next/link"
 import { 
   DollarSign, Users, FileCheck, Receipt, TrendingUp, 
-  ChevronDown, ChevronUp, Search, Filter, ExternalLink,
-  CheckCircle, Clock, XCircle, AlertCircle
+  ChevronDown, ChevronUp, Search, ExternalLink,
+  AlertCircle, Sparkles, RefreshCw, Lightbulb
 } from "lucide-react"
 import type { FundraisingHubActivityRow } from "@/lib/fundraising/hub-data"
+
+// AI Insights Component
+function AIInsights() {
+  const [insights, setInsights] = useState<{
+    summary: string
+    recommendations: string[]
+    generatedAt: string
+  } | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
+
+  const fetchInsights = async () => {
+    setLoading(true)
+    setError(false)
+    try {
+      const res = await fetch("/api/admin/fundraising/ai-insights")
+      if (res.ok) {
+        const data = await res.json()
+        setInsights(data)
+      } else {
+        setError(true)
+      }
+    } catch {
+      setError(true)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchInsights()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="rounded-xl border-2 border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 p-5">
+        <div className="flex items-center gap-3">
+          <div className="animate-pulse rounded-lg bg-blue-100 p-2">
+            <Sparkles className="h-5 w-5 text-blue-400" />
+          </div>
+          <div className="flex-1">
+            <div className="h-4 w-48 animate-pulse rounded bg-blue-100" />
+            <div className="mt-2 h-3 w-full animate-pulse rounded bg-blue-50" />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !insights) {
+    return null
+  }
+
+  return (
+    <div className="rounded-xl border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 p-5 shadow-sm">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <div className="rounded-lg bg-blue-100 p-2">
+            <Sparkles className="h-5 w-5 text-blue-600" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-semibold text-gray-900">AI Summary</h3>
+            <p className="mt-1 text-sm text-gray-700">{insights.summary}</p>
+            
+            {insights.recommendations.length > 0 && (
+              <div className="mt-3">
+                <div className="flex items-center gap-1 text-xs font-medium text-blue-700">
+                  <Lightbulb className="h-3 w-3" />
+                  Recommendations
+                </div>
+                <ul className="mt-1 space-y-1">
+                  {insights.recommendations.map((rec, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />
+                      {rec}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+        <button
+          onClick={fetchInsights}
+          className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-white hover:text-blue-600"
+          title="Refresh insights"
+        >
+          <RefreshCw className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  )
+}
 
 type ExpenseRow = {
   id: string
@@ -163,6 +256,9 @@ export function FundraisingCommandCenter({
 
   return (
     <div className="space-y-6">
+      {/* AI Insights */}
+      <AIInsights />
+
       {/* Pending Alert */}
       {pendingRequestCount > 0 && (
         <div className="flex items-center gap-3 rounded-lg border-2 border-amber-300 bg-amber-50 p-4">
