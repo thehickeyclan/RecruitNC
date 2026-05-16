@@ -428,7 +428,7 @@ function ActivationRequestRow({
       <td className="px-4 py-3">
         <code className="rounded bg-gray-100 px-2 py-0.5 text-xs">{request.fundraising_slug}</code>
       </td>
-      <td className="px-4 py-3 text-gray-600">{request.requester_email || "�����"}</td>
+      <td className="px-4 py-3 text-gray-600">{request.requester_email || "�������"}</td>
       <td className="px-4 py-3">
         {status === "pending" && (
           <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800">
@@ -626,6 +626,11 @@ type ActiveProfile = {
 
 type Panel = "donations" | "reimbursements" | "requests" | "profiles" | null
 
+type CampaignBreakdown = {
+  spartanGeneral: { count: number; totalCents: number }
+  athletePages: { count: number; totalCents: number }
+}
+
 interface Props {
   totalRaised: number
   donationCount: number
@@ -635,6 +640,7 @@ interface Props {
   activeProfileCount: number
   linkedAthletesCount: number
   totalPageViews: number
+  campaignBreakdown: CampaignBreakdown
   donations: FundraisingHubActivityRow[]
   expenses: ExpenseRow[]
   activationRequests: ActivationRequest[]
@@ -673,6 +679,7 @@ export function FundraisingCommandCenter({
   activeProfileCount,
   linkedAthletesCount,
   totalPageViews,
+  campaignBreakdown,
   donations,
   expenses,
   activationRequests,
@@ -812,14 +819,37 @@ export function FundraisingCommandCenter({
           <p className="text-sm text-gray-500">{reimbursementCount} paid - click to view</p>
         </button>
 
-        {/* Available */}
+        {/* Campaigns Breakdown */}
         <div className="rounded-xl border bg-gradient-to-br from-blue-50 to-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-gray-500">Available Balance</p>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-sm font-medium text-gray-500">Campaigns</p>
             <TrendingUp className="h-5 w-5 text-blue-600" />
           </div>
-          <p className="mt-2 text-3xl font-bold text-blue-700">{fmtCents(available)}</p>
-          <p className="text-sm text-gray-500">Raised minus reimbursed</p>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-gray-600">Spartan General</span>
+              <span className="font-semibold text-gray-900">{fmtCents(campaignBreakdown.spartanGeneral.totalCents)}</span>
+            </div>
+            <div className="h-2 rounded-full bg-gray-200 overflow-hidden">
+              <div 
+                className="h-full bg-[#003366]" 
+                style={{ width: `${totalRaised > 0 ? (campaignBreakdown.spartanGeneral.totalCents / totalRaised) * 100 : 0}%` }}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-gray-600">Athlete Pages</span>
+              <span className="font-semibold text-[#D3B574]">{fmtCents(campaignBreakdown.athletePages.totalCents)}</span>
+            </div>
+            <div className="h-2 rounded-full bg-gray-200 overflow-hidden">
+              <div 
+                className="h-full bg-[#D3B574]" 
+                style={{ width: `${totalRaised > 0 ? (campaignBreakdown.athletePages.totalCents / totalRaised) * 100 : 0}%` }}
+              />
+            </div>
+          </div>
+          <p className="mt-2 text-[10px] text-gray-400">
+            {campaignBreakdown.spartanGeneral.count} general + {campaignBreakdown.athletePages.count} athlete gifts
+          </p>
         </div>
 
         {/* Active Pages */}
@@ -896,15 +926,15 @@ export function FundraisingCommandCenter({
           </div>
         </div>
 
-        <div className="rounded-xl border bg-white p-4 shadow-sm">
+        <div className="rounded-xl border bg-gradient-to-br from-emerald-50 to-white p-4 shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-cyan-100 p-2">
-              <Eye className="h-5 w-5 text-cyan-600" />
+            <div className="rounded-lg bg-emerald-100 p-2">
+              <DollarSign className="h-5 w-5 text-emerald-600" />
             </div>
             <div>
-              <p className="font-semibold text-gray-900">Page Views</p>
-              <p className="text-sm text-gray-500">
-                {totalPageViews.toLocaleString()} last 30 days
+              <p className="font-semibold text-gray-900">Available</p>
+              <p className="text-lg font-bold text-emerald-600">
+                {fmtCents(available)}
               </p>
             </div>
           </div>
