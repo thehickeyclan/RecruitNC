@@ -158,10 +158,10 @@ export function FundraisingAthleteGoalSection({
           <button
             type="button"
             onClick={startEditing}
-            className="-mr-1 -mt-0.5 flex shrink-0 items-center gap-1.5 rounded-md border border-white/15 bg-white/5 px-2.5 py-1.5 text-xs font-semibold text-[#C8A94A] hover:border-[#C8A94A]/50 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A94A]/60"
+            className="-mr-1 flex min-h-[44px] min-w-[44px] shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-md border border-white/15 bg-white/5 px-3 text-xs font-semibold text-[#C8A94A] hover:border-[#C8A94A]/50 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A94A]/60"
             aria-label="Edit fundraising goal"
           >
-            <Pencil className="h-3.5 w-3.5" aria-hidden />
+            <Pencil className="h-4 w-4" aria-hidden />
             Edit
           </button>
         ) : null}
@@ -177,8 +177,7 @@ export function FundraisingAthleteGoalSection({
       {canEdit && editing ? (
         <>
           <p className="mt-2 text-xs leading-relaxed text-white/50">
-            Donors see this above the written note. The milestone chart below will use the same total once giving is turned on for
-            this page.
+            Set a target for donors to see. The milestone tracker below will update automatically.
           </p>
           <label className="mt-4 block text-xs font-semibold uppercase tracking-wide text-white/55">
             Goal (USD)
@@ -190,17 +189,17 @@ export function FundraisingAthleteGoalSection({
               step={1}
               value={dollarInput}
               onChange={(e) => setDollarInput(e.target.value)}
-              className="mt-2 w-full rounded-lg border border-white/18 bg-[#061224] px-3 py-2.5 text-sm tabular-nums text-white/90 placeholder:text-white/35 focus:border-[#C8A94A] focus:outline-none focus:ring-1 focus:ring-[#C8A94A]/45"
+              className="mt-2 w-full rounded-lg border border-white/18 bg-[#061224] px-3 py-3 text-base tabular-nums text-white/90 placeholder:text-white/35 focus:border-[#C8A94A] focus:outline-none focus:ring-1 focus:ring-[#C8A94A]/45"
               placeholder={`e.g. ${MIN_GOAL_DOLLARS * 20}`}
               aria-label="Fundraising goal in dollars"
             />
           </label>
-          <div className="mt-3 flex flex-wrap items-center gap-3">
+          <div className="mt-4 flex flex-wrap items-center gap-3">
             <button
               type="button"
               onClick={() => void saveGoal(false)}
               disabled={saving}
-              className="rounded-md bg-[#C8A94A] px-4 py-2 text-sm font-bold uppercase tracking-wide text-[#061224] hover:bg-[#d4b75c] disabled:opacity-50"
+              className="min-h-[44px] rounded-md bg-[#C8A94A] px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-[#061224] hover:bg-[#d4b75c] disabled:opacity-50"
             >
               {saving ? "Saving…" : "Save goal"}
             </button>
@@ -208,7 +207,7 @@ export function FundraisingAthleteGoalSection({
               type="button"
               onClick={cancelEdit}
               disabled={saving}
-              className="rounded-md border border-white/25 px-4 py-2 text-sm font-semibold text-white/85 hover:bg-white/10 disabled:opacity-50"
+              className="min-h-[44px] rounded-md border border-white/25 px-5 py-2.5 text-sm font-semibold text-white/85 hover:bg-white/10 disabled:opacity-50"
             >
               Cancel
             </button>
@@ -217,68 +216,31 @@ export function FundraisingAthleteGoalSection({
                 type="button"
                 onClick={() => void saveGoal(true)}
                 disabled={saving}
-                className="rounded-md border border-red-400/35 px-4 py-2 text-sm font-semibold text-red-300/90 hover:bg-red-500/10 disabled:opacity-50"
+                className="min-h-[44px] rounded-md border border-red-400/35 px-5 py-2.5 text-sm font-semibold text-red-300/90 hover:bg-red-500/10 disabled:opacity-50"
               >
                 Clear goal
               </button>
             ) : null}
-            {message ? <span className="text-sm text-emerald-400/90">{message}</span> : null}
-            {error ? <span className="text-sm text-red-400/90">{error}</span> : null}
           </div>
+          {message ? <p className="mt-3 text-sm text-emerald-400/90">{message}</p> : null}
+          {error ? <p className="mt-3 text-sm text-red-400/90">{error}</p> : null}
         </>
+      ) : showPublicGoal && canEdit ? (
+        <p className="mt-3 text-sm text-white/60">
+          Goal: <span className="font-semibold text-white/90">{formatUsdWhole(goalCents!)}</span>
+          <span className="text-white/40"> — </span>
+          <button
+            type="button"
+            onClick={startEditing}
+            className="text-[#C8A94A] underline underline-offset-2 hover:text-[#d4b75c]"
+          >
+            Edit
+          </button>
+        </p>
       ) : showPublicGoal ? (
-        <>
-          {canEdit ? (
-            <button
-              type="button"
-              onClick={startEditing}
-              className="mt-4 w-full rounded-lg border border-transparent text-left transition hover:border-[#C8A94A]/35 hover:bg-white/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A94A]/55"
-            >
-              <p className="text-sm text-white/70">
-                <span className="tabular-nums font-semibold text-white/90">{formatUsdWhole(raisedCents)}</span> raised of{" "}
-                <span className="tabular-nums text-white/90">{formatUsdWhole(goalCents!)}</span>
-                {progressPct != null ? (
-                  <>
-                    {" "}
-                    · <span className="tabular-nums text-[#C8A94A]">{progressPct}%</span>
-                  </>
-                ) : null}
-              </p>
-              <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
-                <div
-                  className="h-full rounded-full bg-[#C8A94A] transition-[width] duration-500"
-                  style={{ width: `${progressPct ?? 0}%` }}
-                />
-              </div>
-              <p className="mt-3 text-[11px] font-semibold uppercase tracking-wide text-[#C8A94A]/90">Tap to edit goal</p>
-              <p className="mt-2 text-xs leading-relaxed text-white/45">
-                The milestone chart below matches this total once giving is active on this page.
-              </p>
-            </button>
-          ) : (
-            <>
-              <p className="mt-4 text-sm text-white/70">
-                <span className="tabular-nums font-semibold text-white/90">{formatUsdWhole(raisedCents)}</span> raised of{" "}
-                <span className="tabular-nums text-white/90">{formatUsdWhole(goalCents!)}</span>
-                {progressPct != null ? (
-                  <>
-                    {" "}
-                    · <span className="tabular-nums text-[#C8A94A]">{progressPct}%</span>
-                  </>
-                ) : null}
-              </p>
-              <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
-                <div
-                  className="h-full rounded-full bg-[#C8A94A] transition-[width] duration-500"
-                  style={{ width: `${progressPct ?? 0}%` }}
-                />
-              </div>
-              <p className="mt-3 text-xs leading-relaxed text-white/45">
-                The milestone chart below matches this total once giving is active on this page.
-              </p>
-            </>
-          )}
-        </>
+        <p className="mt-3 text-sm text-white/60">
+          Goal: <span className="font-semibold text-white/90">{formatUsdWhole(goalCents!)}</span>
+        </p>
       ) : canEdit ? (
         <button
           type="button"

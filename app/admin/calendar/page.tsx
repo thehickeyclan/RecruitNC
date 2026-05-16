@@ -2,16 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useSearchParams } from "next/navigation"
-import { AdminHeader } from "@/components/admin-header"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -26,7 +17,7 @@ import {
 import { HardLink } from "@/components/hard-link"
 import { eventCategories } from "@/lib/nc-united-calendar/calendar-config"
 import type { EventCategory } from "@/lib/nc-united-calendar/types"
-import { Calendar, Pencil, Plus, Trash2, Users } from "lucide-react"
+import { Calendar, Pencil, Plus, Trash2, Users, X, Loader2, ExternalLink, ChevronDown, ChevronUp } from "lucide-react"
 import type { EventDropInStats } from "@/lib/nc-united-calendar/aggregate-drop-in-stats"
 
 type DbEvent = {
@@ -103,6 +94,7 @@ export default function AdminCalendarPage() {
   const [dropInDialogEvent, setDropInDialogEvent] = useState<DbEvent | null>(null)
   const [dropInRows, setDropInRows] = useState<DropInRequestRow[]>([])
   const [dropInLoading, setDropInLoading] = useState(false)
+  const [showAdvanced, setShowAdvanced] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -113,7 +105,7 @@ export default function AdminCalendarPage() {
       if (!res.ok) {
         const msg =
           res.status === 403
-            ? "Admin access required. Ask an owner to set is_admin on your account in user_profiles."
+            ? "Admin access required."
             : res.status === 401
               ? "Sign in to manage calendar events."
               : data.error || "Failed to load events"
@@ -181,6 +173,7 @@ export default function AdminCalendarPage() {
   function openCreate() {
     setEditingId(null)
     setForm(emptyForm())
+    setShowAdvanced(false)
     setDialogOpen(true)
   }
 
@@ -206,6 +199,7 @@ export default function AdminCalendarPage() {
       dropInRegistrationLink: ev.drop_in_registration_link || "",
       maxDropIns: ev.max_drop_ins != null ? String(ev.max_drop_ins) : "10",
     })
+    setShowAdvanced(true)
     setDialogOpen(true)
   }
 
@@ -246,11 +240,7 @@ export default function AdminCalendarPage() {
       })
       const data = await res.json()
       if (!res.ok) {
-        setError(
-          res.status === 403
-            ? "Admin access required to save."
-            : data.error || "Save failed",
-        )
+        setError(res.status === 403 ? "Admin access required." : data.error || "Save failed")
         return
       }
       setDialogOpen(false)
@@ -263,7 +253,7 @@ export default function AdminCalendarPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Delete this event? Drop-in requests for this event will be removed (cascade).")) return
+    if (!confirm("Delete this event?")) return
     setError(null)
     try {
       const res = await fetch(`/api/admin/calendar/events/${id}`, { method: "DELETE", credentials: "include" })
@@ -279,416 +269,435 @@ export default function AdminCalendarPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="border-b bg-[#003366] text-white">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-6">
-          <div className="flex items-center gap-3">
-            <Calendar className="h-8 w-8" />
-            <div>
-              <h1 className="text-2xl font-bold">NC United Calendar</h1>
-              <p className="text-sm text-blue-100">
-                Add events, edit any row, delete when needed. Blue/Gold practices use Stripe drop-ins; see counts below.
-              </p>
+    <div className="min-h-screen bg-[#0A1628]">
+      {/* Header */}
+      <div className="bg-gradient-to-b from-[#13294B] to-[#0A1628] border-b border-[#1e3a5f]">
+        <div className="max-w-6xl mx-auto px-4 py-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <Calendar className="h-8 w-8 text-[#D3B574]" />
+              <div>
+                <h1 className="text-2xl font-bold text-white">Calendar Admin</h1>
+                <p className="text-sm text-gray-400">Manage events, practices, and tournaments</p>
+              </div>
             </div>
-          </div>
-          <div className="flex gap-2">
-            <HardLink href="/calendar" className="rounded-md bg-white px-4 py-2 text-sm font-semibold text-[#003366]">
-              View public calendar
-            </HardLink>
-            <Button type="button" onClick={openCreate} className="bg-amber-500 text-white hover:bg-amber-600">
-              <Plus className="mr-1 h-4 w-4" />
-              New event
-            </Button>
+            <div className="flex gap-2">
+              <HardLink
+                href="/calendar"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[#1e3a5f] text-gray-300 hover:text-white hover:border-gray-500 text-sm font-medium transition-colors"
+              >
+                <ExternalLink className="h-4 w-4" />
+                View Public
+              </HardLink>
+              <Button onClick={openCreate} className="bg-[#D3B574] hover:bg-[#c4a665] text-[#0A1628] font-semibold">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Event
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 py-6">
-        <AdminHeader />
-
+      <div className="max-w-6xl mx-auto px-4 py-6">
+        {/* Error Alert */}
         {error && (
-          <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
+          <div className="mb-4 p-4 rounded-lg bg-red-900/30 border border-red-800 text-red-200 text-sm">
             {error}
           </div>
         )}
 
-        <div className="mb-6 grid gap-4 sm:grid-cols-3">
-          <Card className="border-l-4 border-l-amber-500">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <Users className="h-4 w-4" />
-                Drop-ins (toward cap)
-              </div>
-              <p className="mt-1 text-2xl font-bold text-[#003366]">{dropInTotals.towardCapacity}</p>
-              <p className="text-xs text-muted-foreground">Pending Stripe checkout + paid</p>
-            </CardContent>
-          </Card>
-          <Card className="border-l-4 border-l-green-600">
-            <CardContent className="pt-6">
-              <p className="text-sm font-medium text-muted-foreground">Paid registrations</p>
-              <p className="mt-1 text-2xl font-bold text-green-800">{dropInTotals.paid}</p>
-              <p className="text-xs text-muted-foreground">payment_status = paid</p>
-            </CardContent>
-          </Card>
-          <Card className="border-l-4 border-l-amber-600">
-            <CardContent className="pt-6">
-              <p className="text-sm font-medium text-muted-foreground">Awaiting payment</p>
-              <p className="mt-1 text-2xl font-bold text-amber-900">{dropInTotals.awaitingPayment}</p>
-              <p className="text-xs text-muted-foreground">Checkout started, not completed</p>
-            </CardContent>
-          </Card>
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="p-4 rounded-xl bg-[#0F1E32] border border-[#1e3a5f]">
+            <div className="flex items-center gap-2 text-gray-400 text-sm mb-1">
+              <Users className="h-4 w-4" />
+              Drop-ins
+            </div>
+            <p className="text-2xl font-bold text-white">{dropInTotals.towardCapacity}</p>
+          </div>
+          <div className="p-4 rounded-xl bg-[#0F1E32] border border-[#1e3a5f]">
+            <p className="text-gray-400 text-sm mb-1">Paid</p>
+            <p className="text-2xl font-bold text-green-400">{dropInTotals.paid}</p>
+          </div>
+          <div className="p-4 rounded-xl bg-[#0F1E32] border border-[#1e3a5f]">
+            <p className="text-gray-400 text-sm mb-1">Awaiting</p>
+            <p className="text-2xl font-bold text-amber-400">{dropInTotals.awaitingPayment}</p>
+          </div>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Events</CardTitle>
-            <CardDescription>
-              Sorted by start date. Use <strong>New event</strong> or <strong>Edit</strong> on a row. Drop-in usage counts toward{" "}
-              <strong>max drop-ins</strong> (pending + paid). Open <strong>Drop-ins</strong> for full request details.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <p className="text-gray-600">Loading…</p>
-            ) : events.length === 0 ? (
-              <p className="text-gray-600">No events yet. Click “New event”.</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="py-2 pr-4">Date</th>
-                      <th className="py-2 pr-4">Title</th>
-                      <th className="py-2 pr-4">Category</th>
-                      <th className="py-2 pr-4">Location</th>
-                      <th className="py-2 pr-4">Drop-in usage</th>
-                      <th className="py-2 pr-4">Max</th>
-                      <th className="py-2 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {events.map((ev) => {
-                      const st = dropInStatsByEventId[String(ev.id)]
-                      const max = ev.max_drop_ins ?? null
-                      const toward = st?.towardCapacity ?? 0
-                      const paid = st?.paid ?? 0
-                      const awaiting = st?.awaitingPayment ?? 0
-                      return (
-                        <tr key={String(ev.id)} className="border-b border-gray-100">
-                          <td className="py-2 pr-4 whitespace-nowrap">{ev.start_date?.slice(0, 10) ?? ev.start_date}</td>
-                          <td className="py-2 pr-4 font-medium">{ev.title}</td>
-                          <td className="py-2 pr-4">{eventCategories[ev.category as EventCategory]?.label ?? ev.category}</td>
-                          <td className="py-2 pr-4 max-w-[180px] truncate">{ev.location || "—"}</td>
-                          <td className="py-2 pr-4 text-xs">
-                            {st && st.total > 0 ? (
-                              <span>
-                                <span className="font-semibold text-[#003366]">
-                                  {toward}
-                                  {max != null ? ` / ${max}` : ""}
-                                </span>
-                                <span className="text-muted-foreground">
-                                  {" "}
-                                  cap · {paid} paid · {awaiting} awaiting pay
-                                </span>
-                              </span>
-                            ) : (
-                              <span className="text-muted-foreground">—</span>
-                            )}
-                          </td>
-                          <td className="py-2 pr-4">{max ?? "—"}</td>
-                          <td className="py-2 text-right whitespace-nowrap">
-                            <Button
-                              type="button"
-                              variant="secondary"
-                              size="sm"
-                              className="mr-1"
-                              onClick={() => openDropInDialog(ev)}
-                            >
-                              Drop-ins
-                            </Button>
-                            <Button type="button" variant="outline" size="sm" className="mr-1" onClick={() => openEdit(ev)}>
-                              <Pencil className="mr-1 h-4 w-4" />
-                              Edit
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="text-red-700"
-                              onClick={() => handleDelete(String(ev.id))}
-                            >
-                              <Trash2 className="mr-1 h-4 w-4" />
-                              Delete
-                            </Button>
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{editingId ? "Edit event" : "New event"}</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-3 py-2">
-            <div>
-              <Label htmlFor="title">Title *</Label>
-              <Input
-                id="title"
-                value={form.title}
-                onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                placeholder="e.g. Blue practice"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <Label htmlFor="startDate">Start date *</Label>
-                <Input
-                  id="startDate"
-                  type="date"
-                  value={form.startDate}
-                  onChange={(e) => setForm((f) => ({ ...f, startDate: e.target.value }))}
-                />
-              </div>
-              <div>
-                <Label htmlFor="endDate">End date</Label>
-                <Input
-                  id="endDate"
-                  type="date"
-                  value={form.endDate}
-                  onChange={(e) => setForm((f) => ({ ...f, endDate: e.target.value }))}
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <Label htmlFor="startTime">Start time</Label>
-                <Input
-                  id="startTime"
-                  type="time"
-                  value={form.startTime}
-                  onChange={(e) => setForm((f) => ({ ...f, startTime: e.target.value }))}
-                />
-              </div>
-              <div>
-                <Label htmlFor="endTime">End time</Label>
-                <Input
-                  id="endTime"
-                  type="time"
-                  value={form.endTime}
-                  onChange={(e) => setForm((f) => ({ ...f, endTime: e.target.value }))}
-                />
-              </div>
-            </div>
-            <div>
-              <Label>Category *</Label>
-              <Select
-                value={form.category}
-                onValueChange={(v) => setForm((f) => ({ ...f, category: v as EventCategory }))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CATEGORIES.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {eventCategories[c].label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="location">Location</Label>
-              <Input
-                id="location"
-                value={form.location}
-                onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
-              />
-            </div>
-            <div>
-              <Label htmlFor="coach">Coach</Label>
-              <Input id="coach" value={form.coach} onChange={(e) => setForm((f) => ({ ...f, coach: e.target.value }))} />
-            </div>
-            <div>
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                rows={3}
-                value={form.description}
-                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-              />
-            </div>
-            <div>
-              <Label htmlFor="maxDropIns">Max drop-ins (practices)</Label>
-              <Input
-                id="maxDropIns"
-                type="number"
-                min={1}
-                value={form.maxDropIns}
-                onChange={(e) => setForm((f) => ({ ...f, maxDropIns: e.target.value }))}
-              />
-              <p className="mt-1 text-xs text-muted-foreground">Caps pending + paid Stripe drop-ins for this session.</p>
-            </div>
-            <div>
-              <Label htmlFor="dropInRegistrationLink">Drop-in registration link (optional)</Label>
-              <Input
-                id="dropInRegistrationLink"
-                value={form.dropInRegistrationLink}
-                onChange={(e) => setForm((f) => ({ ...f, dropInRegistrationLink: e.target.value }))}
-                placeholder="https://..."
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <Label htmlFor="registrationDeadline">Registration deadline</Label>
-                <Input
-                  id="registrationDeadline"
-                  type="date"
-                  value={form.registrationDeadline}
-                  onChange={(e) => setForm((f) => ({ ...f, registrationDeadline: e.target.value }))}
-                />
-              </div>
-              <div>
-                <Label htmlFor="entryFee">Entry fee ($)</Label>
-                <Input
-                  id="entryFee"
-                  type="number"
-                  step="0.01"
-                  value={form.entryFee}
-                  onChange={(e) => setForm((f) => ({ ...f, entryFee: e.target.value }))}
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="travelInfo">Travel info</Label>
-              <Textarea
-                id="travelInfo"
-                rows={2}
-                value={form.travelInfo}
-                onChange={(e) => setForm((f) => ({ ...f, travelInfo: e.target.value }))}
-              />
-            </div>
-            <div>
-              <Label htmlFor="weightClasses">Weight classes (comma-separated)</Label>
-              <Input
-                id="weightClasses"
-                value={form.weightClasses}
-                onChange={(e) => setForm((f) => ({ ...f, weightClasses: e.target.value }))}
-                placeholder="106, 113, 120"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="rsvp"
-                checked={form.rsvpRequired}
-                onCheckedChange={(c) => setForm((f) => ({ ...f, rsvpRequired: c === true }))}
-              />
-              <Label htmlFor="rsvp" className="font-normal">
-                RSVP required
-              </Label>
-            </div>
-            <div>
-              <Label htmlFor="externalLink">External link</Label>
-              <Input
-                id="externalLink"
-                value={form.externalLink}
-                onChange={(e) => setForm((f) => ({ ...f, externalLink: e.target.value }))}
-              />
-            </div>
-            <div>
-              <Label htmlFor="logoUrl">Logo URL</Label>
-              <Input
-                id="logoUrl"
-                value={form.logoUrl}
-                onChange={(e) => setForm((f) => ({ ...f, logoUrl: e.target.value }))}
-              />
-            </div>
+        {/* Events List */}
+        <div className="rounded-xl bg-[#0F1E32] border border-[#1e3a5f] overflow-hidden">
+          <div className="p-4 border-b border-[#1e3a5f]">
+            <h2 className="font-semibold text-white">Events</h2>
+            <p className="text-sm text-gray-500">Sorted by date</p>
           </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="button" onClick={handleSave} disabled={saving}>
-              {saving ? "Saving…" : "Save"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
-      <Dialog
-        open={dropInDialogOpen}
-        onOpenChange={(open) => {
-          setDropInDialogOpen(open)
-          if (!open) setDropInDialogEvent(null)
-        }}
-      >
-        <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Drop-in requests</DialogTitle>
-            {dropInDialogEvent && (
-              <p className="text-sm text-muted-foreground">
-                {dropInDialogEvent.title} · {dropInDialogEvent.start_date?.slice(0, 10) ?? dropInDialogEvent.start_date}
-              </p>
-            )}
-          </DialogHeader>
-          {dropInLoading ? (
-            <p className="text-sm text-muted-foreground">Loading…</p>
-          ) : dropInRows.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No drop-in requests for this event.</p>
+          {loading ? (
+            <div className="p-8 text-center">
+              <Loader2 className="h-6 w-6 animate-spin text-[#D3B574] mx-auto" />
+            </div>
+          ) : events.length === 0 ? (
+            <div className="p-8 text-center text-gray-500">
+              No events yet. Click &quot;Add Event&quot; to create one.
+            </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b">
-                    <th className="py-2 pr-3">Wrestler</th>
-                    <th className="py-2 pr-3">Parent</th>
-                    <th className="py-2 pr-3">Email</th>
-                    <th className="py-2 pr-3">Status</th>
-                    <th className="py-2 pr-3">Payment</th>
-                    <th className="py-2 pr-3">Amount</th>
-                    <th className="py-2">Created</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {dropInRows.map((r) => (
-                    <tr key={r.id} className="border-b border-gray-100">
-                      <td className="py-2 pr-3">
-                        {r.wrestler_name}
-                        {r.wrestler_age != null ? ` (${r.wrestler_age})` : ""}
-                      </td>
-                      <td className="py-2 pr-3">{r.parent_name}</td>
-                      <td className="py-2 pr-3 break-all">{r.parent_email}</td>
-                      <td className="py-2 pr-3">{r.status}</td>
-                      <td className="py-2 pr-3">{r.payment_status}</td>
-                      <td className="py-2 pr-3">
-                        {r.payment_amount_cents != null
-                          ? `$${(r.payment_amount_cents / 100).toFixed(2)}`
-                          : "—"}
-                      </td>
-                      <td className="py-2 whitespace-nowrap text-xs text-muted-foreground">
-                        {r.created_at ? new Date(r.created_at).toLocaleString() : "—"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="divide-y divide-[#1e3a5f]">
+              {events.map((ev) => {
+                const st = dropInStatsByEventId[String(ev.id)]
+                const max = ev.max_drop_ins ?? null
+                const toward = st?.towardCapacity ?? 0
+                return (
+                  <div key={String(ev.id)} className="p-4 hover:bg-[#1e3a5f]/30 transition-colors">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                      {/* Date */}
+                      <div className="flex-shrink-0 w-16 text-center hidden sm:block">
+                        <div className="text-xl font-bold text-white">
+                          {new Date(ev.start_date).getDate()}
+                        </div>
+                        <div className="text-xs text-gray-500 uppercase">
+                          {new Date(ev.start_date).toLocaleDateString("en-US", { month: "short" })}
+                        </div>
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-[#1e3a5f] text-gray-300">
+                            {eventCategories[ev.category as EventCategory]?.label ?? ev.category}
+                          </span>
+                          <span className="text-xs text-gray-500 sm:hidden">
+                            {ev.start_date?.slice(0, 10)}
+                          </span>
+                        </div>
+                        <h3 className="font-medium text-white truncate">{ev.title}</h3>
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-gray-500">
+                          {ev.location && <span className="truncate">{ev.location}</span>}
+                          {st && st.total > 0 && (
+                            <span>
+                              {toward}{max != null ? `/${max}` : ""} drop-ins
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {st && st.total > 0 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openDropInDialog(ev)}
+                            className="text-gray-400 hover:text-white hover:bg-[#1e3a5f]"
+                          >
+                            <Users className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openEdit(ev)}
+                          className="text-gray-400 hover:text-white hover:bg-[#1e3a5f]"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(String(ev.id))}
+                          className="text-gray-400 hover:text-red-400 hover:bg-red-900/20"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           )}
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setDropInDialogOpen(false)}>
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </div>
+
+      {/* Add/Edit Event Modal */}
+      {dialogOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setDialogOpen(false)} />
+          <div className="relative w-full sm:max-w-lg mx-auto bg-[#0F1E32] rounded-t-2xl sm:rounded-2xl border border-[#1e3a5f] max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-[#0F1E32] border-b border-[#1e3a5f] p-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-white">
+                {editingId ? "Edit Event" : "Add Event"}
+              </h2>
+              <button onClick={() => setDialogOpen(false)} className="text-gray-400 hover:text-white">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-4 space-y-4">
+              {/* Title */}
+              <div>
+                <Label htmlFor="title" className="text-gray-300">Title *</Label>
+                <Input
+                  id="title"
+                  value={form.title}
+                  onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+                  placeholder="e.g. Blue Practice"
+                  className="mt-1 bg-[#0A1628] border-[#1e3a5f] text-white placeholder:text-gray-500"
+                />
+              </div>
+
+              {/* Category */}
+              <div>
+                <Label className="text-gray-300">Category *</Label>
+                <Select
+                  value={form.category}
+                  onValueChange={(v) => setForm((f) => ({ ...f, category: v as EventCategory }))}
+                >
+                  <SelectTrigger className="mt-1 bg-[#0A1628] border-[#1e3a5f] text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#0F1E32] border-[#1e3a5f]">
+                    {CATEGORIES.map((c) => (
+                      <SelectItem key={c} value={c} className="text-gray-300 focus:bg-[#1e3a5f] focus:text-white">
+                        {eventCategories[c].label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Date & Time */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="startDate" className="text-gray-300">Start Date *</Label>
+                  <Input
+                    id="startDate"
+                    type="date"
+                    value={form.startDate}
+                    onChange={(e) => setForm((f) => ({ ...f, startDate: e.target.value }))}
+                    className="mt-1 bg-[#0A1628] border-[#1e3a5f] text-white"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="endDate" className="text-gray-300">End Date</Label>
+                  <Input
+                    id="endDate"
+                    type="date"
+                    value={form.endDate}
+                    onChange={(e) => setForm((f) => ({ ...f, endDate: e.target.value }))}
+                    className="mt-1 bg-[#0A1628] border-[#1e3a5f] text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="startTime" className="text-gray-300">Start Time</Label>
+                  <Input
+                    id="startTime"
+                    type="time"
+                    value={form.startTime}
+                    onChange={(e) => setForm((f) => ({ ...f, startTime: e.target.value }))}
+                    className="mt-1 bg-[#0A1628] border-[#1e3a5f] text-white"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="endTime" className="text-gray-300">End Time</Label>
+                  <Input
+                    id="endTime"
+                    type="time"
+                    value={form.endTime}
+                    onChange={(e) => setForm((f) => ({ ...f, endTime: e.target.value }))}
+                    className="mt-1 bg-[#0A1628] border-[#1e3a5f] text-white"
+                  />
+                </div>
+              </div>
+
+              {/* Location */}
+              <div>
+                <Label htmlFor="location" className="text-gray-300">Location</Label>
+                <Input
+                  id="location"
+                  value={form.location}
+                  onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
+                  placeholder="e.g. Cary Wrestling Center"
+                  className="mt-1 bg-[#0A1628] border-[#1e3a5f] text-white placeholder:text-gray-500"
+                />
+              </div>
+
+              {/* Description */}
+              <div>
+                <Label htmlFor="description" className="text-gray-300">Description</Label>
+                <Textarea
+                  id="description"
+                  rows={2}
+                  value={form.description}
+                  onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                  className="mt-1 bg-[#0A1628] border-[#1e3a5f] text-white placeholder:text-gray-500"
+                />
+              </div>
+
+              {/* Advanced Options Toggle */}
+              <button
+                type="button"
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                className="w-full flex items-center justify-between py-2 text-sm text-gray-400 hover:text-white transition-colors"
+              >
+                <span>Advanced Options</span>
+                {showAdvanced ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </button>
+
+              {showAdvanced && (
+                <div className="space-y-4 pt-2 border-t border-[#1e3a5f]">
+                  <div>
+                    <Label htmlFor="coach" className="text-gray-300">Coach</Label>
+                    <Input
+                      id="coach"
+                      value={form.coach}
+                      onChange={(e) => setForm((f) => ({ ...f, coach: e.target.value }))}
+                      className="mt-1 bg-[#0A1628] border-[#1e3a5f] text-white"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label htmlFor="maxDropIns" className="text-gray-300">Max Drop-ins</Label>
+                      <Input
+                        id="maxDropIns"
+                        type="number"
+                        min={1}
+                        value={form.maxDropIns}
+                        onChange={(e) => setForm((f) => ({ ...f, maxDropIns: e.target.value }))}
+                        className="mt-1 bg-[#0A1628] border-[#1e3a5f] text-white"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="entryFee" className="text-gray-300">Entry Fee ($)</Label>
+                      <Input
+                        id="entryFee"
+                        type="number"
+                        step="0.01"
+                        value={form.entryFee}
+                        onChange={(e) => setForm((f) => ({ ...f, entryFee: e.target.value }))}
+                        className="mt-1 bg-[#0A1628] border-[#1e3a5f] text-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="externalLink" className="text-gray-300">External Link</Label>
+                    <Input
+                      id="externalLink"
+                      value={form.externalLink}
+                      onChange={(e) => setForm((f) => ({ ...f, externalLink: e.target.value }))}
+                      placeholder="https://..."
+                      className="mt-1 bg-[#0A1628] border-[#1e3a5f] text-white placeholder:text-gray-500"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="rsvp"
+                      checked={form.rsvpRequired}
+                      onCheckedChange={(c) => setForm((f) => ({ ...f, rsvpRequired: c === true }))}
+                      className="border-[#1e3a5f] data-[state=checked]:bg-[#D3B574] data-[state=checked]:border-[#D3B574]"
+                    />
+                    <Label htmlFor="rsvp" className="text-gray-400 font-normal">RSVP required</Label>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="sticky bottom-0 bg-[#0F1E32] border-t border-[#1e3a5f] p-4 flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setDialogOpen(false)}
+                className="flex-1 border-[#1e3a5f] text-gray-300 hover:text-white hover:bg-[#1e3a5f]"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSave}
+                disabled={saving}
+                className="flex-1 bg-[#D3B574] hover:bg-[#c4a665] text-[#0A1628] font-semibold"
+              >
+                {saving ? "Saving..." : "Save Event"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Drop-in Dialog */}
+      {dropInDialogOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setDropInDialogOpen(false)} />
+          <div className="relative w-full sm:max-w-2xl mx-auto bg-[#0F1E32] rounded-t-2xl sm:rounded-2xl border border-[#1e3a5f] max-h-[85vh] overflow-y-auto">
+            <div className="sticky top-0 bg-[#0F1E32] border-b border-[#1e3a5f] p-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-white">Drop-in Requests</h2>
+                {dropInDialogEvent && (
+                  <p className="text-sm text-gray-400">
+                    {dropInDialogEvent.title} - {dropInDialogEvent.start_date?.slice(0, 10)}
+                  </p>
+                )}
+              </div>
+              <button onClick={() => setDropInDialogOpen(false)} className="text-gray-400 hover:text-white">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-4">
+              {dropInLoading ? (
+                <div className="py-8 text-center">
+                  <Loader2 className="h-6 w-6 animate-spin text-[#D3B574] mx-auto" />
+                </div>
+              ) : dropInRows.length === 0 ? (
+                <p className="py-8 text-center text-gray-500">No drop-in requests for this event.</p>
+              ) : (
+                <div className="space-y-3">
+                  {dropInRows.map((r) => (
+                    <div key={r.id} className="p-3 rounded-lg bg-[#0A1628] border border-[#1e3a5f]">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className="font-medium text-white">
+                            {r.wrestler_name}
+                            {r.wrestler_age != null && <span className="text-gray-500"> ({r.wrestler_age})</span>}
+                          </p>
+                          <p className="text-sm text-gray-400">{r.parent_name} - {r.parent_email}</p>
+                        </div>
+                        <div className="text-right">
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${
+                            r.payment_status === "paid" 
+                              ? "bg-green-900/50 text-green-400" 
+                              : "bg-amber-900/50 text-amber-400"
+                          }`}>
+                            {r.payment_status}
+                          </span>
+                          {r.payment_amount_cents != null && (
+                            <p className="text-sm text-gray-400 mt-1">
+                              ${(r.payment_amount_cents / 100).toFixed(2)}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="sticky bottom-0 bg-[#0F1E32] border-t border-[#1e3a5f] p-4">
+              <Button
+                variant="outline"
+                onClick={() => setDropInDialogOpen(false)}
+                className="w-full border-[#1e3a5f] text-gray-300 hover:text-white hover:bg-[#1e3a5f]"
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

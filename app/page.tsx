@@ -14,10 +14,11 @@ import { normalizeAthleteList } from "@/lib/professional-athlete"
 import { StoreProductPromotion } from "@/components/store-product-promotion"
 import { HomeNewsHighlightsCarousel } from "@/components/home-news-highlights-carousel"
 import { FundraisingPlaybookHomeBanner } from "@/components/fundraising-playbook-home-banner"
+import { Users, GraduationCap, Trophy, ArrowRight, TrendingUp } from "lucide-react"
 
 type YearFilter = "All" | "2025" | "2026"
 
-// Homepage hero background. To fall back to the previous banner, use: "/hero-banner-nc-wrestling-arena.png"
+// Homepage hero background
 const HERO_BACKGROUND_IMAGE = "/hero-banner-nchsaa-2026-arena.png"
 
 interface Athlete {
@@ -60,41 +61,19 @@ export default function HomePage() {
       try {
         setError(null)
         setAthletesLoading(true)
-
         const url = yearFilter === "All" ? "/api/featured-athletes" : `/api/featured-athletes?year=${yearFilter}`
-
-        const response = await fetch(url, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          cache: "no-store",
-        })
-
-        if (!response.ok) {
-          const errorText = await response.text()
-          throw new Error(`API error: ${response.status} - ${errorText}`)
-        }
-
+        const response = await fetch(url, { method: "GET", headers: { "Content-Type": "application/json" }, cache: "no-store" })
+        if (!response.ok) throw new Error(`API error: ${response.status}`)
         const data = await response.json()
-
-        if (!data.success) {
-          throw new Error(data.error || "API returned unsuccessful response")
-        }
-
-        const athletes = Array.isArray(data.athletes) ? data.athletes : []
-
-        setFeaturedAthletes(normalizeAthleteList(athletes))
-        setError(null)
+        if (!data.success) throw new Error(data.error || "API returned unsuccessful response")
+        setFeaturedAthletes(normalizeAthleteList(Array.isArray(data.athletes) ? data.athletes : []))
       } catch (err) {
         console.error("Error fetching featured athletes:", err)
-        setError(`Featured athletes error: ${err instanceof Error ? err.message : String(err)}`)
-        setFeaturedAthletes([]) // FIX: Always set to empty array on error
+        setFeaturedAthletes([])
       } finally {
         setAthletesLoading(false)
       }
     }
-
     fetchFeaturedAthletes()
   }, [yearFilter])
 
@@ -102,53 +81,23 @@ export default function HomePage() {
     const fetchStats = async () => {
       try {
         setLoading(true)
-        setError(null)
-
         const url = yearFilter === "All" ? "/api/stats" : `/api/stats?year=${yearFilter}`
-
-        const response = await fetch(url, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          cache: "no-store",
-        })
-
-        if (!response.ok) {
-          const errorText = await response.text()
-          throw new Error(`API error: ${response.status} - ${errorText}`)
-        }
-
+        const response = await fetch(url, { method: "GET", headers: { "Content-Type": "application/json" }, cache: "no-store" })
+        if (!response.ok) throw new Error(`API error: ${response.status}`)
         const data = await response.json()
-
-        if (!data.success) {
-          throw new Error(data.error || "API returned unsuccessful response")
-        }
-
-        const apiStats = data.stats
-
-        const newStats = {
-          total: apiStats.totalAthletes || 0,
-          male: apiStats.genderBreakdown?.male || 0,
-          female: apiStats.genderBreakdown?.female || 0,
-        }
-
-        setStats(newStats)
-        setError(null)
+        if (!data.success) throw new Error(data.error || "API returned unsuccessful response")
+        setStats({
+          total: data.stats.totalAthletes || 0,
+          male: data.stats.genderBreakdown?.male || 0,
+          female: data.stats.genderBreakdown?.female || 0,
+        })
       } catch (err) {
         console.error("Error fetching stats:", err)
-        setError(`Stats fetch error: ${err instanceof Error ? err.message : String(err)}`)
-
-        setStats({
-          total: 0,
-          male: 0,
-          female: 0,
-        })
+        setStats({ total: 0, male: 0, female: 0 })
       } finally {
         setLoading(false)
       }
     }
-
     fetchStats()
   }, [yearFilter])
 
@@ -156,29 +105,12 @@ export default function HomePage() {
     const fetchFeaturedRankings = async () => {
       try {
         setRankingsLoading(true)
-        setError(null)
-
-        // Use public-rankings API (same source as rankings pages) so featured data is always present
         const [response2026, response2027] = await Promise.all([
-          fetch(`/api/public-rankings?year=2026&gender=Male`, {
-            method: "GET",
-            headers: { "Content-Type": "application/json" },
-            cache: "no-store",
-          }),
-          fetch(`/api/public-rankings?year=2027&gender=Male`, {
-            method: "GET",
-            headers: { "Content-Type": "application/json" },
-            cache: "no-store",
-          }),
+          fetch(`/api/public-rankings?year=2026&gender=Male`, { method: "GET", headers: { "Content-Type": "application/json" }, cache: "no-store" }),
+          fetch(`/api/public-rankings?year=2027&gender=Male`, { method: "GET", headers: { "Content-Type": "application/json" }, cache: "no-store" }),
         ])
-
         const data2026 = response2026.ok ? await response2026.json() : { rankings: [] }
         const data2027 = response2027.ok ? await response2027.json() : { rankings: [] }
-
-        const rankings2026 = Array.isArray(data2026.rankings) ? data2026.rankings : []
-        const rankings2027 = Array.isArray(data2027.rankings) ? data2027.rankings : []
-
-        // Map to Athlete shape: id, name, highschool, graduationyear, photourl, prospect_ranking, weightclass, achievements
         const mapRankingToAthlete = (r: any) => ({
           id: r.id,
           name: r.name || "Unknown",
@@ -187,25 +119,18 @@ export default function HomePage() {
           photourl: r.photourl || "",
           prospect_ranking: r.prospect_ranking,
           weightclass: r.weight_display ? String(r.weight_display).replace(/\s*lbs$/i, "").trim() : "",
-          achievements: r.state_championship_summary || r.nhsca_record_display || r.super_32_record_display
-            ? [r.state_championship_summary, r.nhsca_record_display, r.super_32_record_display].filter(Boolean)
-            : [],
+          achievements: [r.state_championship_summary, r.nhsca_record_display, r.super_32_record_display].filter(Boolean),
         })
-
-        const top2026 = rankings2026.slice(0, 3).map(mapRankingToAthlete)
-        const top2027 = rankings2027.slice(0, 3).map(mapRankingToAthlete)
-
+        const top2026 = (data2026.rankings || []).slice(0, 3).map(mapRankingToAthlete)
+        const top2027 = (data2027.rankings || []).slice(0, 3).map(mapRankingToAthlete)
         setFeaturedRankings([...top2026, ...top2027])
-        setError(null)
       } catch (err) {
         console.error("Error fetching featured rankings:", err)
-        setError(`Rankings error: ${err instanceof Error ? err.message : String(err)}`)
         setFeaturedRankings([])
       } finally {
         setRankingsLoading(false)
       }
     }
-
     fetchFeaturedRankings()
   }, [])
 
@@ -213,534 +138,273 @@ export default function HomePage() {
     const fetchLatestCommits = async () => {
       try {
         setCommitsLoading(true)
-        setError(null)
-
-        const response = await fetch(`/api/featured-athletes?limit=10`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-          cache: "no-store",
-        })
-
-        if (!response.ok) {
-          const errorText = await response.text()
-          throw new Error(`API error: ${response.status} - ${errorText}`)
-        }
-
+        const response = await fetch(`/api/featured-athletes?limit=10`, { method: "GET", headers: { "Content-Type": "application/json" }, cache: "no-store" })
+        if (!response.ok) throw new Error(`API error: ${response.status}`)
         const data = await response.json()
-
-        if (!data.success) {
-          throw new Error(data.error || "API returned unsuccessful response")
-        }
-
-        const athletes = Array.isArray(data.athletes) ? data.athletes : []
-        
-        // API already returns top 3 most recent commits, sorted
-        const recentCommits = athletes.slice(0, 3)
-
-        setLatestCommits(normalizeAthleteList(recentCommits))
-        setError(null)
+        if (!data.success) throw new Error(data.error || "API returned unsuccessful response")
+        setLatestCommits(normalizeAthleteList((data.athletes || []).slice(0, 3)))
       } catch (err) {
         console.error("Error fetching latest commits:", err)
-        setError(`Latest commits error: ${err instanceof Error ? err.message : String(err)}`)
         setLatestCommits([])
       } finally {
         setCommitsLoading(false)
       }
     }
-
     fetchLatestCommits()
   }, [])
 
-  const getDisplayAthletes = () => {
-    if (!Array.isArray(featuredAthletes)) return []
-    return featuredAthletes.slice(0, 3)
-  }
+  // Ranking card component for DRY code
+  const RankingCard = ({ athlete }: { athlete: Athlete }) => (
+    <Link href={`/view-profile?id=${encodeURIComponent(athlete.id)}`} className="group block">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#0f1c2e] to-[#1a2d47] p-1 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-[#D3B574]/10">
+        <div className="rounded-lg bg-[#0A1628] p-4">
+          <div className="flex items-center gap-4">
+            {athlete.photourl ? (
+              <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg ring-2 ring-[#D3B574]/30">
+                <Image src={athlete.photourl} alt={athlete.name} fill className="object-cover object-top" />
+              </div>
+            ) : (
+              <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-lg bg-[#13294B] ring-2 ring-[#D3B574]/30">
+                <span className="text-xl font-bold text-white/50">{athlete.name?.charAt(0)}</span>
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="font-bold text-white truncate">{athlete.name}</h3>
+                {athlete.prospect_ranking && (
+                  <span className="flex-shrink-0 rounded bg-[#D3B574] px-2 py-0.5 text-xs font-bold text-[#0A1628]">
+                    #{athlete.prospect_ranking}
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-white/60 truncate">{athlete.highschool}</p>
+              <p className="text-xs text-[#D3B574]">{athlete.weightclass} lbs</p>
+            </div>
+            <ArrowRight className="h-5 w-5 text-white/30 transition-transform group-hover:translate-x-1 group-hover:text-[#D3B574]" />
+          </div>
+        </div>
+      </div>
+    </Link>
+  )
 
   return (
-    <main className="bg-white">
+    <main className="min-h-screen bg-[#0A1628]">
       <FundraisingPlaybookHomeBanner />
-      <div className="container mx-auto px-4 py-8">
-
-      {/* Hero Section - Modern Two-Column Layout */}
-      <section className="relative mb-16 overflow-hidden rounded-xl shadow-2xl">
-        {/* Background Image Layer */}
-        <div className="absolute inset-0 z-0">
+      
+      {/* Hero Section */}
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0">
           <Image
             src={HERO_BACKGROUND_IMAGE}
             alt="NCHSAA Wrestling Championship arena"
             fill
-            className="object-cover object-center"
+            className="object-cover"
             priority
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
           />
-          {/* Brand-aligned navy + gold overlay - balanced for image visibility */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#003366]/60 via-[#003366]/70 to-[#003366]/60 transition-opacity duration-300" />
-          <div className="absolute inset-y-0 left-0 w-2/3 bg-gradient-to-tr from-[#D3B574]/20 via-transparent to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0A1628]/95 via-[#0A1628]/80 to-[#0A1628]/60" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0A1628] via-transparent to-transparent" />
         </div>
 
-        {/* Content Layer - Two Column Layout on Desktop */}
-        <div className="relative z-10 min-h-[400px] md:min-h-[500px] flex flex-col md:flex-row">
-          {/* Left Column: Text Content */}
-          <div className="flex-1 flex flex-col justify-center p-8 md:p-12 lg:p-16">
-            <div className="max-w-2xl">
-              <h1 className="mb-6 text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-tight">
-                Recruit<span className="underline decoration-4 underline-offset-4" style={{ color: "#D3B574" }}>NC</span> Portal
-              </h1>
-              <p className="mb-8 text-lg md:text-xl text-white/95 leading-relaxed max-w-xl">
-                Tracking North Carolina's top wrestling prospects and their college commitments. Stay updated with the
-                latest prospect rankings and explore where NC wrestlers are heading for their collegiate careers.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                {/* Commitments Button */}
-                <Link href="/athletes">
-                  <Button 
-                    className="min-h-[52px] px-6 md:px-8 text-base md:text-lg font-semibold text-white hover:opacity-95 transition-all hover:scale-105 shadow-lg" 
-                    style={{ backgroundColor: "#BC0B03" }}
-                  >
-                    Commitments
-                  </Button>
-                </Link>
-                {/* Rankings Button */}
-                <Link href="/public-rankings">
-                  <Button
-                    variant="outline"
-                    className="min-h-[52px] px-6 md:px-8 text-base md:text-lg font-semibold bg-transparent border-2 border-white text-white hover:bg-white/15 hover:text-white hover:border-white/80 transition-all hover:scale-105"
-                  >
-                    Rankings
-                  </Button>
-                </Link>
-                {/* Prospects Button */}
-                <Link href="/prospects/all">
-                  <Button
-                    className="min-h-[52px] px-6 md:px-8 text-base md:text-lg font-semibold text-white hover:opacity-95 transition-all hover:scale-105 shadow-lg"
-                    style={{ backgroundColor: "#003366" }}
-                  >
-                    Prospects
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column: Image Showcase (Desktop Only) */}
-          <div className="hidden lg:block flex-1 relative">
-            <div className="absolute inset-0 flex items-center justify-center p-8">
-              <div className="relative w-full h-full max-w-md">
-                {/* Subtle decorative element or additional visual */}
-                <div className="absolute inset-0 bg-gradient-to-br from-[#D3B574]/10 to-transparent rounded-2xl"></div>
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile Scroll Indicator */}
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 md:hidden animate-bounce">
-            <div className="flex flex-col items-center text-white/80">
-              <span className="text-xs mb-1">Scroll for more</span>
-              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* News highlights carousel — main story + others, linked to posts */}
-      <HomeNewsHighlightsCarousel />
-
-      {/* Store Product Promotion Banner */}
-      <StoreProductPromotion />
-
-      {/* Features Section */}
-      <section className="mb-12">
-        <h2 className="mb-6 text-2xl font-bold" style={{ color: "#003366" }}>
-          Features
-        </h2>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          <Link href="/prospects/all" className="block">
-            <Card className="overflow-hidden border-t-4 transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer" style={{ borderTopColor: "#BC0B03" }}>
-              <CardContent className="p-6">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
-                  <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    />
-                  </svg>
-                </div>
-                <h3 className="mb-2 text-xl font-semibold" style={{ color: "#BC0B03" }}>
-                  Athlete Profiles
-                </h3>
-                <p className="text-gray-600">
-                  Detailed profiles of NC wrestlers including their high school, graduation year, college commitment, and
-                  achievements.
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link href="/colleges" className="block">
-            <Card className="overflow-hidden border-t-4 transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer" style={{ borderTopColor: "#003366" }}>
-              <CardContent className="p-6">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50">
-                  <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                    />
-                  </svg>
-                </div>
-                <h3 className="mb-2 text-xl font-semibold" style={{ color: "#003366" }}>
-                  College Insights
-                </h3>
-                <p className="text-gray-600">
-                  Explore which colleges are recruiting NC wrestlers and see the breakdown by division and conference.
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link href="/public-rankings" className="block">
-            <Card className="overflow-hidden border-t-4 transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer" style={{ borderTopColor: "#D3B574" }}>
-              <CardContent className="p-6">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-yellow-50">
-                  <svg className="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"
-                    />
-                  </svg>
-                </div>
-                <h3 className="mb-2 text-xl font-semibold" style={{ color: "#D3B574" }}>
-                  Prospect Rankings
-                </h3>
-                <p className="text-gray-600">
-                  View comprehensive rankings of top wrestling prospects by graduation year, weight class, and style.
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
-        </div>
-      </section>
-
-      {/* Featured Rankings Section */}
-      <section className="mb-12">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold" style={{ color: "#003366" }}>
-            Featured Rankings
-          </h2>
-          <Link href="/public-rankings">
-            <Button
-              variant="outline"
-              size="sm"
-              className="hover:opacity-80 bg-transparent"
-              style={{ borderColor: "#003366", color: "#003366" }}
-            >
-              View All Rankings
-            </Button>
-          </Link>
-        </div>
-
-        {rankingsLoading ? (
-          <div className="text-center py-8">
-            <p className="text-gray-500">Loading featured rankings...</p>
-          </div>
-        ) : featuredRankings.length > 0 ? (
-          <div className="space-y-8">
-            {/* Class of 2026 Section */}
-            {featuredRankings.filter((a) => a.graduationyear === 2026).length > 0 && (
-              <div>
-                <h3 className="text-lg font-semibold mb-4" style={{ color: "#003366" }}>
-                  Class of 2026
-                </h3>
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                  {featuredRankings
-                    .filter((athlete) => athlete.graduationyear === 2026)
-                    .map((athlete) => (
-                      <a
-                        key={athlete.id}
-                        href={`/view-profile?id=${encodeURIComponent(athlete.id)}`}
-                        className="block"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          window.location.href = `/view-profile?id=${encodeURIComponent(athlete.id)}`
-                        }}
-                      >
-                        <Card className="overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer">
-                          <CardContent className="p-6">
-                            <div className="flex items-start gap-4">
-                              {athlete.photourl && (
-                                <div className="relative h-20 w-20 flex-shrink-0 rounded-lg overflow-hidden">
-                                  <Image
-                                    src={athlete.photourl}
-                                    alt={athlete.name}
-                                    fill
-                                    className="object-cover object-top"
-                                  />
-                                </div>
-                              )}
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <h3 className="font-bold text-lg" style={{ color: "#003366" }}>
-                                    {athlete.name}
-                                  </h3>
-                                  {athlete.prospect_ranking && (
-                                    <span className="px-2 py-0.5 rounded text-xs font-bold text-white" style={{ backgroundColor: "#D3B574" }}>
-                                      #{athlete.prospect_ranking}
-                                    </span>
-                                  )}
-                                </div>
-                                <p className="text-sm text-gray-600 mb-1">{athlete.highschool}</p>
-                                <p className="text-xs text-gray-500">
-                                  {athlete.weightclass} lbs
-                                </p>
-                                {athlete.achievements && athlete.achievements.length > 0 && (
-                                  <p className="text-xs text-gray-600 mt-2 line-clamp-2">
-                                    {Array.isArray(athlete.achievements) 
-                                      ? athlete.achievements.slice(0, 2).join(", ")
-                                      : athlete.achievements}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </a>
-                    ))}
-                </div>
-              </div>
-            )}
-
-            {/* Class of 2027 Section */}
-            {featuredRankings.filter((a) => a.graduationyear === 2027).length > 0 && (
-              <div>
-                <h3 className="text-lg font-semibold mb-4" style={{ color: "#003366" }}>
-                  Class of 2027
-                </h3>
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                  {featuredRankings
-                    .filter((athlete) => athlete.graduationyear === 2027)
-                    .map((athlete) => (
-                      <a
-                        key={athlete.id}
-                        href={`/view-profile?id=${encodeURIComponent(athlete.id)}`}
-                        className="block"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          window.location.href = `/view-profile?id=${encodeURIComponent(athlete.id)}`
-                        }}
-                      >
-                        <Card className="overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer">
-                          <CardContent className="p-6">
-                            <div className="flex items-start gap-4">
-                              {athlete.photourl && (
-                                <div className="relative h-20 w-20 flex-shrink-0 rounded-lg overflow-hidden">
-                                  <Image
-                                    src={athlete.photourl}
-                                    alt={athlete.name}
-                                    fill
-                                    className="object-cover object-top"
-                                  />
-                                </div>
-                              )}
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <h3 className="font-bold text-lg" style={{ color: "#003366" }}>
-                                    {athlete.name}
-                                  </h3>
-                                  {athlete.prospect_ranking && (
-                                    <span className="px-2 py-0.5 rounded text-xs font-bold text-white" style={{ backgroundColor: "#D3B574" }}>
-                                      #{athlete.prospect_ranking}
-                                    </span>
-                                  )}
-                                </div>
-                                <p className="text-sm text-gray-600 mb-1">{athlete.highschool}</p>
-                                <p className="text-xs text-gray-500">
-                                  {athlete.weightclass} lbs
-                                </p>
-                                {athlete.achievements && athlete.achievements.length > 0 && (
-                                  <p className="text-xs text-gray-600 mt-2 line-clamp-2">
-                                    {Array.isArray(athlete.achievements) 
-                                      ? athlete.achievements.slice(0, 2).join(", ")
-                                      : athlete.achievements}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </a>
-                    ))}
-                </div>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <p className="text-gray-500">No ranked prospects available for Class of 2026 or 2027.</p>
-          </div>
-        )}
-      </section>
-
-      {/* Commitment Statistics */}
-      <section className="mb-12">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-          <h2 className="text-2xl font-bold" style={{ color: "#003366" }}>
-            Commitment Statistics
-          </h2>
-
-          <div className="flex flex-wrap gap-2">
-            {(["All", "2025", "2026"] as YearFilter[]).map((year) => (
-              <Button
-                key={year}
-                variant={yearFilter === year ? "default" : "outline"}
-                size="sm"
-                onClick={() => setYearFilter(year)}
-                className="text-xs sm:text-sm"
-                style={{
-                  backgroundColor: yearFilter === year ? "#003366" : "transparent",
-                  borderColor: "#003366",
-                  color: yearFilter === year ? "white" : "#003366",
-                }}
-              >
-                {year === "All" ? "All Years" : `Class of ${year}`}
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="text-center py-8">
-            <p className="text-gray-500">Loading statistics...</p>
-          </div>
-        ) : (
-          <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-1 lg:max-w-md">
-            <Card className="border overflow-hidden border-blue-200" style={{ borderColor: "#003366", borderOpacity: 0.3 }}>
-              <div className="h-2" style={{ backgroundColor: "#003366" }}></div>
-              <CardContent className="p-4">
-                <h3 className="text-lg font-medium mb-1" style={{ color: "#003366" }}>
-                  Total Commitments
-                </h3>
-                <p className="text-xs mb-2" style={{ color: "#003366", opacity: 0.7 }}>
-                  Tracking Class of 2025 and beyond
-                </p>
-                <div className="flex justify-between items-center py-2">
-                  <div className="flex flex-col items-center">
-                    <span className="text-xl font-semibold" style={{ color: "#003366" }}>
-                      {stats.male}
-                    </span>
-                    <span className="text-xs" style={{ color: "#003366", opacity: 0.7 }}>
-                      Male
-                    </span>
-                  </div>
-
-                  <span className="text-4xl lg:text-5xl font-bold text-center" style={{ color: "#003366" }}>
-                    {stats.total}
-                  </span>
-
-                  <div className="flex flex-col items-center">
-                    <span className="text-xl font-semibold" style={{ color: "#BC0B03" }}>
-                      {stats.female}
-                    </span>
-                    <span className="text-xs" style={{ color: "#BC0B03", opacity: 0.7 }}>
-                      Female
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-      </section>
-
-      {/* Latest Commits Section */}
-      <section className="mb-12">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold" style={{ color: "#003366" }}>
-            Latest Commits
-          </h2>
-          <Link href="/athletes">
-            <Button
-              variant="outline"
-              size="sm"
-              className="hover:opacity-80 bg-transparent"
-              style={{ borderColor: "#003366", color: "#003366" }}
-            >
-              View All Athletes
-            </Button>
-          </Link>
-        </div>
-
-        {commitsLoading ? (
-          <div className="text-center py-8">
-            <p className="text-gray-500">Loading latest commits...</p>
-          </div>
-        ) : latestCommits.length > 0 ? (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            {latestCommits.map((athlete) => (
-              <ProfessionalCommitmentCard key={athlete.id} athlete={athlete} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <p className="text-gray-500">No recent commits available at this time.</p>
-            {error && (
-              <p className="text-sm mt-2" style={{ color: "#BC0B03" }}>
-                {error}
-              </p>
-            )}
-          </div>
-        )}
-
-        <div className="mt-6 flex justify-center">
-          <Link href="/athletes">
-            <Button className="text-white hover:opacity-90" style={{ backgroundColor: "#003366" }}>
-              View All Commitments
-            </Button>
-          </Link>
-        </div>
-      </section>
-
-      {/* Information Banner */}
-      <div className="mb-12 rounded-lg p-4 text-white" style={{ backgroundColor: "#003366" }}>
-        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-          <div>
-            <h2 className="text-xl font-bold">Submit or Update Wrestling Information</h2>
-            <p>
-              Help us keep our database current by submitting new commitments or requesting updates to existing
-              profiles.
+        <div className="container relative mx-auto px-4 py-20 md:py-32">
+          <div className="max-w-3xl">
+            <h1 className="mb-6 text-5xl font-black tracking-tight text-white md:text-6xl lg:text-7xl">
+              Recruit<span className="text-[#D3B574]">NC</span>
+            </h1>
+            <p className="mb-8 text-lg text-white/80 md:text-xl max-w-xl leading-relaxed">
+              The premier destination for tracking North Carolina&apos;s top wrestling prospects, college commitments, and prospect rankings.
             </p>
-          </div>
-          <div className="flex flex-wrap gap-4">
-            <Link href="/submit-commitment">
-              <Button
-                className="flex items-center gap-2 text-white hover:opacity-90"
-                style={{ backgroundColor: "#BC0B03" }}
-              >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                Submit New Commitment
-              </Button>
-            </Link>
-            <Link href="/request-edit">
-              <Button variant="outline" className="border-white bg-transparent text-white hover:bg-white/10">
-                Request Profile Edit
-              </Button>
-            </Link>
+            <div className="flex flex-wrap gap-4">
+              <Link href="/athletes">
+                <Button className="h-12 px-6 text-base font-semibold bg-[#BC0B03] text-white hover:bg-[#a00a03] transition-all hover:scale-105">
+                  View Commitments
+                </Button>
+              </Link>
+              <Link href="/public-rankings">
+                <Button variant="outline" className="h-12 px-6 text-base font-semibold border-2 border-[#D3B574] text-[#D3B574] bg-transparent hover:bg-[#D3B574]/10">
+                  Prospect Rankings
+                </Button>
+              </Link>
+              <Link href="/prospects/all">
+                <Button className="h-12 px-6 text-base font-semibold bg-[#13294B] text-white hover:bg-[#1a3a5f] transition-all">
+                  Browse Prospects
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* Stats Bar */}
+      <section className="border-y border-white/10 bg-[#0f1c2e]">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-3 divide-x divide-white/10">
+            <div className="py-8 text-center">
+              <div className="text-3xl font-black text-white md:text-4xl">{loading ? "..." : stats.total}</div>
+              <div className="mt-1 text-sm text-white/50 uppercase tracking-wider">Total Commits</div>
+            </div>
+            <div className="py-8 text-center">
+              <div className="text-3xl font-black text-[#D3B574] md:text-4xl">{loading ? "..." : stats.male}</div>
+              <div className="mt-1 text-sm text-white/50 uppercase tracking-wider">Male Athletes</div>
+            </div>
+            <div className="py-8 text-center">
+              <div className="text-3xl font-black text-[#BC0B03] md:text-4xl">{loading ? "..." : stats.female}</div>
+              <div className="mt-1 text-sm text-white/50 uppercase tracking-wider">Female Athletes</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="container mx-auto px-4 py-12">
+        {/* News Carousel */}
+        <HomeNewsHighlightsCarousel />
+
+        {/* Store Promotion */}
+        <StoreProductPromotion />
+
+        {/* Features Section */}
+        <section className="mb-16">
+          <h2 className="mb-8 text-2xl font-bold text-white">Explore</h2>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            <Link href="/prospects/all" className="group block">
+              <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#BC0B03]/20 to-[#BC0B03]/5 p-6 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl border border-[#BC0B03]/20 hover:border-[#BC0B03]/40">
+                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[#BC0B03]/20">
+                  <Users className="h-6 w-6 text-[#BC0B03]" />
+                </div>
+                <h3 className="mb-2 text-xl font-bold text-white">Athlete Profiles</h3>
+                <p className="text-white/60 text-sm leading-relaxed">
+                  Detailed profiles including high school, graduation year, college commitment, and achievements.
+                </p>
+                <ArrowRight className="absolute bottom-6 right-6 h-5 w-5 text-white/30 transition-transform group-hover:translate-x-1 group-hover:text-[#BC0B03]" />
+              </div>
+            </Link>
+
+            <Link href="/colleges" className="group block">
+              <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#13294B]/40 to-[#13294B]/10 p-6 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl border border-[#13294B]/30 hover:border-[#13294B]/50">
+                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[#13294B]/40">
+                  <GraduationCap className="h-6 w-6 text-white" />
+                </div>
+                <h3 className="mb-2 text-xl font-bold text-white">College Insights</h3>
+                <p className="text-white/60 text-sm leading-relaxed">
+                  Explore which colleges are recruiting NC wrestlers with breakdown by division and conference.
+                </p>
+                <ArrowRight className="absolute bottom-6 right-6 h-5 w-5 text-white/30 transition-transform group-hover:translate-x-1 group-hover:text-white" />
+              </div>
+            </Link>
+
+            <Link href="/public-rankings" className="group block">
+              <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#D3B574]/20 to-[#D3B574]/5 p-6 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl border border-[#D3B574]/20 hover:border-[#D3B574]/40">
+                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[#D3B574]/20">
+                  <Trophy className="h-6 w-6 text-[#D3B574]" />
+                </div>
+                <h3 className="mb-2 text-xl font-bold text-white">Prospect Rankings</h3>
+                <p className="text-white/60 text-sm leading-relaxed">
+                  Comprehensive rankings by graduation year, weight class, and wrestling style.
+                </p>
+                <ArrowRight className="absolute bottom-6 right-6 h-5 w-5 text-white/30 transition-transform group-hover:translate-x-1 group-hover:text-[#D3B574]" />
+              </div>
+            </Link>
+          </div>
+        </section>
+
+        {/* Featured Rankings Section */}
+        <section className="mb-16">
+          <div className="mb-8 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <TrendingUp className="h-6 w-6 text-[#D3B574]" />
+              <h2 className="text-2xl font-bold text-white">Featured Rankings</h2>
+            </div>
+            <Link href="/public-rankings">
+              <Button variant="outline" size="sm" className="border-white/20 text-white/70 hover:bg-white/10 hover:text-white">
+                View All
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+
+          {rankingsLoading ? (
+            <div className="py-12 text-center text-white/50">Loading rankings...</div>
+          ) : featuredRankings.length > 0 ? (
+            <div className="space-y-8">
+              {/* Class of 2026 */}
+              {featuredRankings.filter((a) => a.graduationyear === 2026).length > 0 && (
+                <div>
+                  <h3 className="mb-4 text-lg font-semibold text-white/80">Class of 2026</h3>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    {featuredRankings.filter((a) => a.graduationyear === 2026).map((athlete) => (
+                      <RankingCard key={athlete.id} athlete={athlete} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Class of 2027 */}
+              {featuredRankings.filter((a) => a.graduationyear === 2027).length > 0 && (
+                <div>
+                  <h3 className="mb-4 text-lg font-semibold text-white/80">Class of 2027</h3>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    {featuredRankings.filter((a) => a.graduationyear === 2027).map((athlete) => (
+                      <RankingCard key={athlete.id} athlete={athlete} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="py-12 text-center text-white/50">No ranked prospects available.</div>
+          )}
+        </section>
+
+        {/* Latest Commits Section */}
+        <section className="mb-16">
+          <div className="mb-8 flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-white">Latest Commits</h2>
+            <Link href="/athletes">
+              <Button variant="outline" size="sm" className="border-white/20 text-white/70 hover:bg-white/10 hover:text-white">
+                View All
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+
+          {commitsLoading ? (
+            <div className="py-12 text-center text-white/50">Loading commits...</div>
+          ) : latestCommits.length > 0 ? (
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+              {latestCommits.map((athlete) => (
+                <ProfessionalCommitmentCard key={athlete.id} athlete={athlete} />
+              ))}
+            </div>
+          ) : (
+            <div className="py-12 text-center text-white/50">No recent commits available.</div>
+          )}
+        </section>
+
+        {/* CTA Banner */}
+        <section className="mb-8">
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#13294B] to-[#1a3a5f] p-8 md:p-12">
+            <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
+            <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h2 className="mb-2 text-2xl font-bold text-white">Submit or Update Information</h2>
+                <p className="text-white/70 max-w-lg">
+                  Help us keep our database current by submitting new commitments or requesting updates to existing profiles.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-4">
+                <Link href="/submit-commitment">
+                  <Button className="bg-[#BC0B03] text-white hover:bg-[#a00a03]">
+                    Submit Commitment
+                  </Button>
+                </Link>
+                <Link href="/request-edit">
+                  <Button variant="outline" className="border-white/30 text-white hover:bg-white/10">
+                    Request Edit
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </main>
   )

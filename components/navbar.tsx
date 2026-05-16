@@ -161,9 +161,13 @@ export function Navbar() {
   ]
   const profilesItem = { href: "/prospects/all", label: "Athlete Profiles" }
   const rankingsItem = { href: "/public-rankings", label: "Rankings" }
-  const athletesItems = [...commitmentItems, profilesItem, rankingsItem]
+  const recruitingItem = { href: "/recruiting/tournaments", label: "Recruiting" }
+  const athletesItems = [...commitmentItems, profilesItem, rankingsItem, recruitingItem]
 
-  const nationalTeamItems = [{ href: "/national-team", label: "National Team" }]
+  const programsItems = [
+    { href: "/blue", label: "NC United Blue", description: "Training, apparel, and member benefits" },
+    { href: "/national-team", label: "National Team", description: "NC United national competition teams" },
+  ]
 
   type EventsMegaLink = {
     href: string
@@ -242,18 +246,19 @@ export function Navbar() {
     },
   ]
 
+  const eventsLegacyColumn: EventsMegaLink[] = [
+    { href: "/athletes?tab=legacy", label: "Wrestlers", icon: Users },
+    { href: "/schools", label: "Schools", icon: Medal },
+    { href: "/dave-schultz-award", label: "Dave Schultz Award", icon: Trophy },
+    { href: "/tricia-saunders-award", label: "Tricia Saunders Award", icon: Trophy },
+  ]
+
   const eventsNavItemsForActive = [
     ...eventsStatesColumn,
     ...eventsNationalsColumn,
     ...eventsSuper32Column,
+    ...eventsLegacyColumn,
   ].map((i) => ({ href: i.href }))
-
-  const legacyNcItems = [
-    { href: "/athletes?tab=legacy", label: "Wrestlers", description: "Search by name: NHSCA, NCHSAA, awards & more", icon: Users },
-    { href: "/schools", label: "Schools", description: "NC high school wrestling", icon: Medal },
-    { href: "/dave-schultz-award", label: "Dave Schultz Award", description: "NC male wrestler award winners", icon: Trophy },
-    { href: "/tricia-saunders-award", label: "Tricia Saunders Award", description: "NC female wrestler award winners", icon: Trophy },
-  ]
 
   /** Giving hub + athlete directory + playbook + scholarships (desktop dropdown + mobile section). */
   const fundraisingNavItems = [
@@ -353,6 +358,10 @@ export function Navbar() {
                   <DropdownMenuItem asChild>
                     <a href={rankingsItem.href} className="block w-full cursor-pointer">{rankingsItem.label}</a>
                   </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <a href={recruitingItem.href} className="block w-full cursor-pointer">{recruitingItem.label}</a>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
               <DropdownMenu>
@@ -364,9 +373,9 @@ export function Navbar() {
                 <DropdownMenuContent
                   align="start"
                   sideOffset={8}
-                  className="w-[min(56rem,calc(100vw-1.5rem))] max-h-[min(90vh,720px)] overflow-y-auto p-0"
+                  className="w-[min(72rem,calc(100vw-1.5rem))] max-h-[min(90vh,720px)] overflow-y-auto p-0"
                 >
-                  <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x bg-popover text-popover-foreground rounded-md">
+                  <div className="grid grid-cols-1 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x bg-popover text-popover-foreground rounded-md">
                     {/* Column: States */}
                     <div className="p-4 min-w-0">
                       <div className="flex items-center gap-2 font-semibold text-foreground">
@@ -466,22 +475,62 @@ export function Navbar() {
                         })}
                       </div>
                     </div>
+                    {/* Column: LegacyNC */}
+                    <div className="p-4 min-w-0">
+                      <div className="flex items-center gap-2 font-semibold text-foreground">
+                        <Archive className="h-4 w-4 shrink-0 text-amber-600" aria-hidden />
+                        LegacyNC
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1 mb-3">NC Wrestling history</p>
+                      <div className="flex flex-col gap-0.5">
+                        {eventsLegacyColumn.map((sub) => {
+                          const Icon = sub.icon
+                          return (
+                            <a
+                              key={sub.href}
+                              href={sub.href}
+                              className="flex gap-3 rounded-md px-2 py-2.5 hover:bg-muted/80 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            >
+                              <Icon className="h-5 w-5 shrink-0 text-muted-foreground mt-0.5" aria-hidden />
+                              <div className="min-w-0 flex-1">
+                                <span className="font-semibold text-sm text-foreground">{sub.label}</span>
+                              </div>
+                            </a>
+                          )
+                        })}
+                      </div>
+                    </div>
                   </div>
                 </DropdownMenuContent>
               </DropdownMenu>
+              <DropdownMenu>
+                <DropdownMenuTrigger className={navTriggerClass(programsItems)}>
+                  Programs
+                  <ChevronDown className="h-4 w-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-64">
+                  {programsItems.map((item) => (
+                    <DropdownMenuItem key={item.href} asChild>
+                      <a href={item.href} className="flex flex-col cursor-pointer py-2">
+                        <span className="font-medium">{item.label}</span>
+                        <span className="text-xs text-muted-foreground">{item.description}</span>
+                      </a>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
               <HardLink href="/calendar" className={navLinkClass("")}>Calendar</HardLink>
-              <a href="/blue" className={navLinkClass("/blue")}>Blue</a>
               <DropdownMenu>
                 <DropdownMenuTrigger className={navTriggerClass(fundraisingNavActiveRefs)}>
                   <Gift className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
-                  Giving hub
+                  Give
                   <ChevronDown className="h-4 w-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-80 max-h-[min(85vh,560px)] overflow-y-auto">
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex items-center gap-2 font-semibold">
                       <Gift className="h-4 w-4" aria-hidden />
-                      Giving hub
+                      Give
                     </div>
                     <p className="text-xs text-muted-foreground font-normal mt-1">
                       Tax-deductible 501(c)(3) giving · NC United Wrestling
@@ -504,41 +553,7 @@ export function Navbar() {
                   })}
                 </DropdownMenuContent>
               </DropdownMenu>
-              <a href="/national-team" className={navLinkClass("/national-team")}>National Team</a>
-              <a href="/recruiting/tournaments" className={navLinkClass("/recruiting/tournaments")}>Recruiting</a>
               <a href="/news" className={navLinkClass("/news")}>News</a>
-              <DropdownMenu>
-                <DropdownMenuTrigger className={navTriggerClass(legacyNcItems)}>
-                  LegacyNC
-                  <ChevronDown className="h-4 w-4" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-72">
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex items-center gap-2 font-semibold">
-                      <Users className="h-4 w-4" />
-                      LegacyNC
-                    </div>
-                    <p className="text-xs text-muted-foreground font-normal mt-1">
-                      Comprehensive history of NC Wrestling
-                    </p>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {legacyNcItems.map((sub) => {
-                    const Icon = sub.icon
-                    return (
-                      <DropdownMenuItem key={sub.href} asChild>
-                        <a href={sub.href} className="flex flex-1 cursor-pointer items-start gap-3 py-2">
-                          <Icon className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
-                          <div className="flex flex-col gap-0.5">
-                            <span className="font-medium">{sub.label}</span>
-                            <span className="text-xs text-muted-foreground">{sub.description}</span>
-                          </div>
-                        </a>
-                      </DropdownMenuItem>
-                    )
-                  })}
-                </DropdownMenuContent>
-              </DropdownMenu>
               <StoreNavLink className={navLinkClass("/store-app")}>Store</StoreNavLink>
               {highlightNavItems.map((item) => (
                 <a
@@ -873,6 +888,7 @@ export function Navbar() {
                       ))}
                       <a href={profilesItem.href} className={mobileSubLinkClass(profilesItem.href)} onClick={() => setIsOpen(false)}>{profilesItem.label}</a>
                       <a href={rankingsItem.href} className={mobileSubLinkClass(rankingsItem.href)} onClick={() => setIsOpen(false)}>{rankingsItem.label}</a>
+                      <a href={recruitingItem.href} className={mobileSubLinkClass(recruitingItem.href)} onClick={() => setIsOpen(false)}>{recruitingItem.label}</a>
                     </div>
                   </div>
                   <div className="px-3">
@@ -921,12 +937,29 @@ export function Navbar() {
                           Champions
                         </a>
                       </div>
+                      <div>
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 pl-1">LegacyNC</p>
+                        <div className="space-y-1">
+                          {eventsLegacyColumn.map((sub) => (
+                            <a key={sub.href} href={sub.href} className={mobileSubLinkClass(sub.href.split("?")[0])} onClick={() => setIsOpen(false)}>
+                              {sub.label}
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="px-3">
+                    <div className={mobileMenuParentClass(isDropdownActive(programsItems))}>Programs</div>
+                    <div className="space-y-2">
+                      {programsItems.map((item) => (
+                        <a key={item.href} href={item.href} className={mobileSubLinkClass(item.href)} onClick={() => setIsOpen(false)}>{item.label}</a>
+                      ))}
                     </div>
                   </div>
                   <HardLink href="/calendar" className={mobileLinkClass("")} onNavigate={() => setIsOpen(false)}>Calendar</HardLink>
-                  <a href="/blue" className={mobileLinkClass("/blue")} onClick={() => setIsOpen(false)}>Blue</a>
                   <div className="px-3">
-                    <div className={mobileMenuParentClass(isDropdownActive(fundraisingNavActiveRefs))}>Giving hub</div>
+                    <div className={mobileMenuParentClass(isDropdownActive(fundraisingNavActiveRefs))}>Give</div>
                     <div className="space-y-2">
                       {fundraisingNavItems.map((sub) => (
                         <HardLink
@@ -940,8 +973,6 @@ export function Navbar() {
                       ))}
                     </div>
                   </div>
-                  <a href="/national-team" className={mobileLinkClass("/national-team")} onClick={() => setIsOpen(false)}>National Team</a>
-                  <a href="/recruiting/tournaments" className={mobileLinkClass("/recruiting/tournaments")} onClick={() => setIsOpen(false)}>Recruiting</a>
                   <a href="/news" className={mobileLinkClass("/news")} onClick={() => setIsOpen(false)}>News</a>
                   {user && (
                     <>
@@ -951,14 +982,6 @@ export function Navbar() {
                       </a>
                     </>
                   )}
-                  <div className="px-3">
-                    <div className={mobileMenuParentClass(isDropdownActive(legacyNcItems))}>LegacyNC</div>
-                    <div className="space-y-2">
-                      {legacyNcItems.map((sub) => (
-                        <a key={sub.href} href={sub.href} className={mobileSubLinkClass(sub.href)} onClick={() => setIsOpen(false)}>{sub.label}</a>
-                      ))}
-                    </div>
-                  </div>
                   <StoreNavLink className={mobileLinkClass("/store-app") + " block min-h-[44px] w-full text-left"} onNavigate={() => setIsOpen(false)}>Store</StoreNavLink>
                   <a href="/cart" target="_top" className={mobileLinkClass("/cart") + " flex items-center gap-2 min-h-[44px] w-full text-left"} onClick={() => setIsOpen(false)} aria-label={cartCount > 0 ? `Cart (${cartCount} items)` : "Cart"}>
                     <ShoppingCart className="h-5 w-5 shrink-0" />

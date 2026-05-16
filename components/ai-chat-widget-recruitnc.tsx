@@ -2,7 +2,7 @@
 
 // This is a RecruitNC-specific version of the Data Dawg widget
 // Updated with RecruitNC-specific prompts and context
-// Original component maintained in LegacyNC
+// Modernized with dark theme matching site aesthetic
 
 import { useState, useRef, useEffect } from "react"
 import { usePathname, useRouter } from "next/navigation"
@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { MessageCircle, X, Send, Loader2, Mic, MicOff, Home } from "lucide-react"
+import { X, Send, Loader2, Mic, MicOff, Home, Sparkles } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { formatDataDawgMessage } from "@/lib/data-dawg-render-links"
 
@@ -25,27 +25,20 @@ interface Message {
 }
 
 // RecruitNC-specific suggested prompts based on current page
-// These questions are aligned with LegacyNC and can actually be answered
 const getSuggestedPrompts = (pathname: string): string[] => {
-  // Rankings-specific prompts when on rankings pages
   if (pathname?.includes("/rankings") || pathname?.includes("/public-rankings")) {
     return [
       "Show me all Class of 2026 rankings",
       "Show me all Class of 2027 rankings",
       "Who are the top 10 ranked prospects?",
       "What athletes are ranked in the top 30?",
-      "Show me rankings by weight class",
     ]
   }
   
-  // Use the same prompts as LegacyNC - questions we can actually answer
   return [
     "Show me all Class of 2026 rankings",
     "Show me all Class of 2027 rankings",
     "What was our best year for NHSCA All-Americans?",
-    "When are NHSCA's?",
-    "Who is the all time winningest wrestler?",
-    "Who won the Dave Schultz Award in 2025?",
     "Who are our 4x state champions?",
   ]
 }
@@ -56,7 +49,6 @@ const DATA_DAWG_IMAGE_URL =
 const DATA_DAWG_LEGACY_CHAT_API = "/api/ai/chat"
 const DATA_DAWG_AGENT_V2_API = "/api/ai/data-dawg-agent"
 
-/** Default: tool-calling agent v2. Set NEXT_PUBLIC_DATA_DAWG_USE_LEGACY_CHAT=true to use the monolithic /api/ai/chat. Feedback stays on legacy. */
 const DATA_DAWG_USE_LEGACY =
   typeof process !== "undefined" &&
   process.env.NEXT_PUBLIC_DATA_DAWG_USE_LEGACY_CHAT === "true"
@@ -80,7 +72,6 @@ export function AIChatWidget() {
   const inputRef = useRef<HTMLInputElement>(null)
   const recognitionRef = useRef<any>(null)
 
-  // Get contextual suggested prompts based on current page
   const suggestedPrompts = getSuggestedPrompts(pathname || "")
 
   // Check if Speech Recognition is supported
@@ -102,11 +93,8 @@ export function AIChatWidget() {
         }
 
         recognition.onerror = (event: any) => {
-          console.error("Speech recognition error:", event.error)
           setIsRecording(false)
-          if (event.error === "no-speech") {
-            // User didn't speak, just stop recording
-          } else if (event.error === "not-allowed") {
+          if (event.error === "not-allowed") {
             alert("Microphone permission denied. Please enable microphone access in your browser settings.")
           }
         }
@@ -120,20 +108,15 @@ export function AIChatWidget() {
     }
   }, [])
 
-  // Intro splash disabled: do not pop up Data Dawg on login/visit (mobile or desktop). Users can open the chat via the floating button.
-
-  // Set avatar state based on loading
   useEffect(() => {
     if (isLoading) {
       setAvatarState("thinking")
     } else if (messages.length > 0 && !isLoading) {
-      // Brief success animation after response
       setAvatarState("success")
       setTimeout(() => setAvatarState("idle"), 1000)
     }
   }, [isLoading, messages.length])
 
-  // Greeting animation when chat opens
   useEffect(() => {
     if (isOpen && messages.length === 0) {
       setAvatarState("greeting")
@@ -148,7 +131,6 @@ export function AIChatWidget() {
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
-      // Delay focus slightly to allow layout to settle
       setTimeout(() => {
         inputRef.current?.focus()
       }, 100)
@@ -173,7 +155,6 @@ export function AIChatWidget() {
     return () => window.removeEventListener("keydown", onKeyDown)
   }, [isOpen])
 
-  // Auto-detect project from URL
   const detectProject = () => {
     if (typeof window === "undefined") return "recruit-nc"
     const hostname = window.location.hostname
@@ -203,8 +184,6 @@ export function AIChatWidget() {
 
     try {
       const project = detectProject()
-      // Send conversation history for context (last 5 messages)
-      // Include query results from previous assistant messages for follow-up filtering
       const conversationHistory = messages.slice(-5).map(m => ({
         role: m.role,
         content: m.content,
@@ -220,9 +199,7 @@ export function AIChatWidget() {
 
       let response = await fetch(DATA_DAWG_MESSAGE_API, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(chatPayload),
       })
 
@@ -240,7 +217,6 @@ export function AIChatWidget() {
         data = {}
       }
 
-      // v2 requires OPENAI_API_KEY; if missing, server returns data_dawg_agent_v2_config — fall back to legacy once.
       if (
         !DATA_DAWG_USE_LEGACY &&
         data.queryType === "data_dawg_agent_v2_config" &&
@@ -248,9 +224,7 @@ export function AIChatWidget() {
       ) {
         response = await fetch(DATA_DAWG_LEGACY_CHAT_API, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(chatPayload),
         })
         rawText = await response.text()
@@ -261,8 +235,6 @@ export function AIChatWidget() {
         }
       }
 
-      // Some API paths incorrectly return 4xx/5xx while still sending a user-facing `answer`.
-      // Never discard that — show it instead of the generic "Sorry, I encountered an error."
       if (!response.ok && !(typeof data.answer === "string" && data.answer.trim().length > 0)) {
         throw new Error(data.error || "Failed to get response")
       }
@@ -271,15 +243,12 @@ export function AIChatWidget() {
         role: "assistant",
         content: data.answer || "I couldn't find an answer to that question.",
         timestamp: new Date(),
-        messageId: data.messageId || `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Use server-generated messageId if available
+        messageId: data.messageId || `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       }
 
       setMessages((prev) => [...prev, assistantMessage])
 
-      // Store query results for follow-up filtering (if available)
       if (data.results && data.results.length > 0) {
-        // Store in a way that can be passed to next query
-        // We'll include this in conversation history metadata
         assistantMessage.queryResults = data.results
         assistantMessage.queryType = data.queryType
       }
@@ -315,22 +284,18 @@ export function AIChatWidget() {
     if (!recognitionRef.current) return
 
     if (isRecording) {
-      // Stop recording
       recognitionRef.current.stop()
       setIsRecording(false)
     } else {
-      // Start recording
       try {
         recognitionRef.current.start()
         setIsRecording(true)
-      } catch (error) {
-        console.error("Error starting speech recognition:", error)
+      } catch {
         setIsRecording(false)
       }
     }
   }
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (recognitionRef.current && isRecording) {
@@ -343,32 +308,22 @@ export function AIChatWidget() {
     <>
       {/* Splash Screen */}
       {showSplash && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-[fadeIn_0.3s_ease-out]">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-[fadeIn_0.3s_ease-out]">
           <style jsx>{`
             @keyframes fadeIn {
-              from {
-                opacity: 0;
-              }
-              to {
-                opacity: 1;
-              }
+              from { opacity: 0; }
+              to { opacity: 1; }
             }
             @keyframes slideUp {
-              from {
-                opacity: 0;
-                transform: translateY(20px) scale(0.95);
-              }
-              to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-              }
+              from { opacity: 0; transform: translateY(20px) scale(0.95); }
+              to { opacity: 1; transform: translateY(0) scale(1); }
             }
           `}</style>
-          <Card className="relative max-w-md w-[90vw] bg-white shadow-2xl border-2 border-[#f4c542] animate-[slideUp_0.4s_ease-out]">
-            <CardHeader className="bg-gradient-to-br from-[#003366] to-[#002244] text-white p-6 text-center border-b-2 border-[#f4c542]">
+          <Card className="relative max-w-md w-[90vw] bg-[#0F1E32] shadow-2xl border border-[#1e3a5f] animate-[slideUp_0.4s_ease-out]">
+            <CardHeader className="bg-gradient-to-br from-[#13294B] to-[#0A1628] text-white p-6 text-center border-b border-[#D3B574]/30">
               <div className="flex justify-center mb-4">
                 <div className={cn(
-                  "relative h-40 w-40 overflow-hidden shadow-lg",
+                  "relative h-32 w-32 overflow-hidden",
                   avatarState === "greeting" && "avatar-greeting",
                   avatarState === "thinking" && "avatar-thinking",
                   avatarState === "success" && "avatar-success"
@@ -382,29 +337,25 @@ export function AIChatWidget() {
                 </div>
               </div>
               <CardTitle className="text-2xl font-bold mb-2">Meet Data Dawg</CardTitle>
-              <p className="text-sm text-white/90">
+              <p className="text-sm text-gray-400">
                 Your NC wrestling recruiting assistant
               </p>
             </CardHeader>
             <CardContent className="p-6 space-y-4">
-              <p className="text-sm text-slate-700 text-center">
+              <p className="text-sm text-gray-400 text-center">
                 I can help you find information about:
               </p>
-              <ul className="space-y-2 text-sm text-slate-600">
+              <ul className="space-y-2 text-sm text-gray-300">
                 <li className="flex items-start gap-2">
-                  <span className="text-[#f4c542] font-bold">•</span>
+                  <span className="text-[#D3B574]">•</span>
                   <span>College commitments and recruiting status</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-[#f4c542] font-bold">•</span>
+                  <span className="text-[#D3B574]">•</span>
                   <span>High school career records and match history</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-[#f4c542] font-bold">•</span>
-                  <span>Season-by-season statistics</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-[#f4c542] font-bold">•</span>
+                  <span className="text-[#D3B574]">•</span>
                   <span>Prospect rankings and achievements</span>
                 </li>
               </ul>
@@ -414,14 +365,14 @@ export function AIChatWidget() {
                     handleSplashDismiss()
                     setIsOpen(true)
                   }}
-                  className="flex-1 bg-[#003366] hover:bg-[#002244] text-white font-semibold"
+                  className="flex-1 bg-[#D3B574] hover:bg-[#c4a665] text-[#0A1628] font-semibold"
                 >
                   Ask Data Dawg
                 </Button>
                 <Button
                   onClick={handleSplashDismiss}
                   variant="outline"
-                  className="border-[#003366] text-[#003366] hover:bg-slate-50"
+                  className="border-[#1e3a5f] text-gray-300 hover:bg-[#1e3a5f]"
                 >
                   Got it
                 </Button>
@@ -431,7 +382,7 @@ export function AIChatWidget() {
         </div>
       )}
 
-      {/* Floating launcher */}
+      {/* Floating launcher with glow effect */}
       <div
         className={cn(
           "fixed bottom-20 sm:bottom-4 right-4 z-50 flex items-center gap-3 transition-all duration-500",
@@ -441,15 +392,16 @@ export function AIChatWidget() {
         <Button
           onClick={() => setIsOpen(true)}
           className={cn(
-            "h-20 w-20 shadow-xl",
-            "bg-transparent hover:bg-transparent",
-            "flex items-center justify-center p-0 overflow-visible"
+            "h-16 w-16 rounded-full shadow-lg shadow-[#D3B574]/20",
+            "bg-gradient-to-br from-[#13294B] to-[#0A1628] hover:from-[#1e3a5f] hover:to-[#13294B]",
+            "border-2 border-[#D3B574]/50 hover:border-[#D3B574]",
+            "flex items-center justify-center p-0 overflow-hidden transition-all duration-300"
           )}
           size="icon"
           aria-label="Open Data Dawg chat"
         >
           <div className={cn(
-            "relative h-full w-full",
+            "relative h-12 w-12",
             avatarState === "greeting" && "avatar-greeting",
             avatarState === "thinking" && "avatar-thinking",
             avatarState === "success" && "avatar-success"
@@ -466,28 +418,25 @@ export function AIChatWidget() {
           <button
             type="button"
             onClick={() => setIsOpen(true)}
-            className="rounded-full bg-white text-[#003366] shadow-md px-4 py-2 text-sm font-semibold border border-slate-200 hover:bg-slate-50 transition-colors"
+            className="rounded-full bg-[#0F1E32] text-[#D3B574] shadow-lg px-4 py-2 text-sm font-semibold border border-[#1e3a5f] hover:bg-[#1e3a5f] hover:text-white transition-all duration-200"
           >
-            Ask Data Dawg
+            <span className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4" />
+              Ask Data Dawg
+            </span>
           </button>
         </div>
       </div>
 
-      {/* Chat panel */}
+      {/* Chat panel - Dark theme */}
       {isOpen && (
         <div className="fixed inset-0 z-50 flex md:justify-end">
-          <div className="absolute inset-0 bg-black/50 md:bg-black/30" onClick={() => setIsOpen(false)} />
-          <Card className="relative h-full w-full md:h-full md:w-full md:max-w-md bg-white shadow-2xl border-0 md:border border-slate-200 animate-[slideIn_0.2s_ease-out_forwards] flex flex-col max-h-screen md:max-h-full">
+          <div className="absolute inset-0 bg-black/60 md:bg-black/40 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
+          <Card className="relative h-full w-full md:h-full md:w-full md:max-w-md bg-[#0A1628] shadow-2xl border-0 md:border md:border-[#1e3a5f] animate-[slideIn_0.2s_ease-out_forwards] flex flex-col max-h-screen md:max-h-full">
             <style jsx>{`
               @keyframes slideIn {
-                from {
-                  opacity: 0;
-                  transform: translateX(100%);
-                }
-                to {
-                  opacity: 1;
-                  transform: translateX(0);
-                }
+                from { opacity: 0; transform: translateX(100%); }
+                to { opacity: 1; transform: translateX(0); }
               }
               @keyframes greeting {
                 0%, 100% { transform: scale(1) rotate(0deg); }
@@ -496,42 +445,28 @@ export function AIChatWidget() {
                 75% { transform: scale(1.1) rotate(-3deg); }
               }
               @keyframes thinking {
-                0%, 100% {
-                  transform: scale(1);
-                  opacity: 1;
-                }
-                50% {
-                  transform: scale(1.05);
-                  opacity: 0.8;
-                }
+                0%, 100% { transform: scale(1); opacity: 1; }
+                50% { transform: scale(1.05); opacity: 0.8; }
               }
               @keyframes thinkingPulse {
-                0%, 100% {
-                  box-shadow: 0 0 0 0 rgba(244, 197, 66, 0.7);
-                }
-                50% {
-                  box-shadow: 0 0 0 8px rgba(244, 197, 66, 0);
-                }
+                0%, 100% { box-shadow: 0 0 0 0 rgba(211, 181, 116, 0.7); }
+                50% { box-shadow: 0 0 0 8px rgba(211, 181, 116, 0); }
               }
               @keyframes success {
                 0%, 100% { transform: scale(1); }
                 50% { transform: scale(1.1); }
               }
-              .avatar-greeting {
-                animation: greeting 1.5s ease-in-out;
-              }
-              .avatar-thinking {
-                animation: thinking 1.5s ease-in-out infinite, thinkingPulse 2s ease-in-out infinite;
-              }
-              .avatar-success {
-                animation: success 0.5s ease-in-out;
-              }
+              .avatar-greeting { animation: greeting 1.5s ease-in-out; }
+              .avatar-thinking { animation: thinking 1.5s ease-in-out infinite, thinkingPulse 2s ease-in-out infinite; }
+              .avatar-success { animation: success 0.5s ease-in-out; }
             `}</style>
-            <CardHeader className="bg-[#003366] text-white p-4 sm:p-4 border-b-2 border-[#f4c542]/60">
+            
+            {/* Header */}
+            <CardHeader className="bg-gradient-to-r from-[#13294B] to-[#0F1E32] text-white p-4 border-b border-[#D3B574]/30">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   <div className={cn(
-                    "h-12 w-12 sm:h-12 sm:w-12 overflow-hidden flex-shrink-0",
+                    "h-10 w-10 overflow-hidden flex-shrink-0",
                     avatarState === "greeting" && "avatar-greeting",
                     avatarState === "thinking" && "avatar-thinking",
                     avatarState === "success" && "avatar-success"
@@ -539,22 +474,24 @@ export function AIChatWidget() {
                     <Image
                       src={DATA_DAWG_IMAGE_URL}
                       alt="Data Dawg"
-                      width={48}
-                      height={48}
+                      width={40}
+                      height={40}
                       className="object-contain"
                     />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <CardTitle className="text-base sm:text-sm font-bold leading-tight truncate">Ask Data Dawg</CardTitle>
-                    <p className="text-xs sm:text-[11px] text-white/80 truncate">Your NC wrestling recruiting assistant</p>
+                    <CardTitle className="text-base font-bold leading-tight truncate flex items-center gap-2">
+                      Data Dawg
+                      <Sparkles className="h-4 w-4 text-[#D3B574]" />
+                    </CardTitle>
+                    <p className="text-xs text-gray-400 truncate">NC wrestling AI assistant</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {/* Mobile: Home button to go back to main page */}
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="md:hidden h-10 w-10 text-white hover:bg-blue-600/80 hover:text-white flex-shrink-0 rounded-full border-2 border-white/40 bg-white/10 backdrop-blur-sm"
+                    className="md:hidden h-9 w-9 text-gray-400 hover:bg-[#1e3a5f] hover:text-white flex-shrink-0 rounded-lg"
                     onClick={(e) => {
                       e.stopPropagation()
                       setIsOpen(false)
@@ -562,57 +499,59 @@ export function AIChatWidget() {
                     }}
                     aria-label="Go to home page"
                   >
-                    <Home className="h-5 w-5 font-bold" strokeWidth={2.5} />
+                    <Home className="h-5 w-5" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-10 w-10 sm:h-9 sm:w-9 text-white hover:bg-red-600/80 hover:text-white flex-shrink-0 rounded-full border-2 border-white/40 bg-white/10 backdrop-blur-sm"
+                    className="h-9 w-9 text-gray-400 hover:bg-red-900/50 hover:text-red-400 flex-shrink-0 rounded-lg"
                     onClick={(e) => {
                       e.stopPropagation()
                       setIsOpen(false)
                     }}
                     aria-label="Close Data Dawg chat"
                   >
-                    <X className="h-6 w-6 sm:h-5 sm:w-5 font-bold" strokeWidth={2.5} />
+                    <X className="h-5 w-5" />
                   </Button>
                 </div>
               </div>
             </CardHeader>
 
+            {/* Messages */}
             <CardContent className="flex-1 flex flex-col p-0 overflow-hidden min-h-0" style={{ maxHeight: 'calc(100vh - 80px)' }}>
-              <ScrollArea className="flex-1 p-4 sm:p-4 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 180px)' }}>
+              <ScrollArea className="flex-1 p-4 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 180px)' }}>
                 {messages.length === 0 ? (
-                  <div className="text-sm text-slate-600 space-y-4">
+                  <div className="space-y-4">
+                    {/* Welcome message */}
                     <div className="flex items-start gap-3">
                       <div className={cn(
-                        "h-10 w-10 overflow-hidden flex-shrink-0",
-                        avatarState === "greeting" && "avatar-greeting",
-                        avatarState === "thinking" && "avatar-thinking",
-                        avatarState === "success" && "avatar-success"
+                        "h-9 w-9 overflow-hidden flex-shrink-0",
+                        avatarState === "greeting" && "avatar-greeting"
                       )}>
                         <Image
                           src={DATA_DAWG_IMAGE_URL}
                           alt="Data Dawg"
-                          width={40}
-                          height={40}
+                          width={36}
+                          height={36}
                           className="object-contain"
                         />
                       </div>
-                      <div className="bg-slate-100 rounded-2xl px-3 py-2">
-                        <p className="text-xs text-slate-900">
-                          Hey, I&apos;m Data Dawg. Ask me anything about North Carolina wrestling recruiting — college commitments, career records, match history, or prospect rankings.
+                      <div className="bg-[#0F1E32] border border-[#1e3a5f] rounded-2xl rounded-tl-sm px-4 py-3">
+                        <p className="text-sm text-gray-300">
+                          Hey, I&apos;m Data Dawg. Ask me anything about North Carolina wrestling recruiting — college commitments, career records, or prospect rankings.
                         </p>
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <p className="text-[11px] font-semibold text-slate-700">Try one of these:</p>
+                    
+                    {/* Suggested prompts */}
+                    <div className="space-y-3 pt-2">
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Try asking:</p>
                       <div className="flex flex-wrap gap-2">
                         {suggestedPrompts.map((prompt) => (
                           <button
                             key={prompt}
                             type="button"
-                            className="text-[11px] rounded-full border border-slate-300 px-3 py-1 bg-white hover:bg-slate-50 text-slate-800"
+                            className="text-xs rounded-lg border border-[#1e3a5f] px-3 py-2 bg-[#0F1E32] hover:bg-[#1e3a5f] hover:border-[#D3B574]/50 text-gray-300 hover:text-white transition-all duration-200"
                             onClick={() => handleSuggestionClick(prompt)}
                           >
                             {prompt}
@@ -632,35 +571,38 @@ export function AIChatWidget() {
                         >
                           {!isUser && (
                             <div className={cn(
-                              "mr-2 mt-1 h-9 w-9 overflow-hidden flex-shrink-0",
+                              "mr-2 mt-1 h-8 w-8 overflow-hidden flex-shrink-0",
                               isLoading && index === messages.length - 1 && "avatar-thinking"
                             )}>
                               <Image
                                 src={DATA_DAWG_IMAGE_URL}
                                 alt="Data Dawg"
-                                width={36}
-                                height={36}
+                                width={32}
+                                height={32}
                                 className="object-contain"
                               />
                             </div>
                           )}
                           <div
                             className={cn(
-                              "max-w-[80%] rounded-2xl px-3 py-2 text-xs",
+                              "max-w-[85%] rounded-2xl px-4 py-3 text-sm",
                               isUser
-                                ? "bg-[#003366] text-white"
-                                : "bg-slate-100 text-slate-900"
+                                ? "bg-[#D3B574] text-[#0A1628] rounded-tr-sm"
+                                : "bg-[#0F1E32] border border-[#1e3a5f] text-gray-200 rounded-tl-sm"
                             )}
                           >
                             {isUser ? (
                               <p className="whitespace-pre-wrap">{message.content}</p>
                             ) : (
                               <div
-                                className="whitespace-pre-wrap [&_a]:text-blue-600 [&_a]:hover:text-blue-800 [&_a]:underline"
+                                className="whitespace-pre-wrap [&_a]:text-[#D3B574] [&_a]:hover:text-[#c4a665] [&_a]:underline"
                                 dangerouslySetInnerHTML={{ __html: formatDataDawgMessage(message.content) }}
                               />
                             )}
-                            <p className="text-[10px] opacity-60 mt-1">
+                            <p className={cn(
+                              "text-[10px] mt-2",
+                              isUser ? "text-[#0A1628]/60" : "text-gray-500"
+                            )}>
                               {message.timestamp.toLocaleTimeString([], {
                                 hour: "2-digit",
                                 minute: "2-digit",
@@ -671,7 +613,7 @@ export function AIChatWidget() {
                       )
                     })}
                     {isLoading && (
-                      <div className="flex items-center gap-2 text-xs text-slate-500">
+                      <div className="flex items-center gap-2 text-sm text-gray-400">
                         <div className="h-6 w-6 flex items-center justify-center avatar-thinking">
                           <Image
                             src={DATA_DAWG_IMAGE_URL}
@@ -681,7 +623,7 @@ export function AIChatWidget() {
                             className="object-contain"
                           />
                         </div>
-                        <span>Data Dawg is thinking…</span>
+                        <span>Thinking...</span>
                       </div>
                     )}
                     <div ref={messagesEndRef} />
@@ -689,25 +631,26 @@ export function AIChatWidget() {
                 )}
               </ScrollArea>
 
-              <div className="border-t-2 border-slate-300 p-3 sm:p-3 md:p-4 space-y-1 bg-white flex-shrink-0" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
-                <div className="flex gap-2 sm:gap-2">
+              {/* Input area */}
+              <div className="border-t border-[#1e3a5f] p-3 space-y-2 bg-[#0F1E32] flex-shrink-0" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+                <div className="flex gap-2">
                   {isSpeechSupported && (
                     <Button
                       type="button"
                       onClick={handleVoiceRecord}
                       disabled={isLoading}
                       className={cn(
-                        "flex-shrink-0 h-auto py-2 sm:py-2 px-3 sm:px-3",
+                        "flex-shrink-0 h-10 w-10 rounded-lg p-0",
                         isRecording
                           ? "bg-red-600 hover:bg-red-700 text-white animate-pulse"
-                          : "bg-slate-200 hover:bg-slate-300 text-slate-700"
+                          : "bg-[#1e3a5f] hover:bg-[#2a4a6f] text-gray-300"
                       )}
                       aria-label={isRecording ? "Stop recording" : "Start voice recording"}
                     >
                       {isRecording ? (
-                        <MicOff className="h-4 w-4 sm:h-4 sm:w-4" />
+                        <MicOff className="h-4 w-4" />
                       ) : (
-                        <Mic className="h-4 w-4 sm:h-4 sm:w-4" />
+                        <Mic className="h-4 w-4" />
                       )}
                     </Button>
                   )}
@@ -716,11 +659,10 @@ export function AIChatWidget() {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder={isSpeechSupported ? "Ask Data Dawg or tap mic to speak…" : "Ask Data Dawg anything about NC wrestling…"}
+                    placeholder={isSpeechSupported ? "Ask anything or tap mic..." : "Ask about NC wrestling..."}
                     disabled={isLoading || isRecording}
-                    className="flex-1 text-sm sm:text-sm px-3 sm:px-3 py-2 sm:py-2 min-w-0 border-2"
+                    className="flex-1 text-sm px-4 py-2 min-w-0 bg-[#0A1628] border-[#1e3a5f] text-white placeholder:text-gray-500 focus:border-[#D3B574] focus:ring-[#D3B574]/20"
                     onFocus={(e) => {
-                      // Scroll input into view when keyboard opens
                       setTimeout(() => {
                         e.target.scrollIntoView({ behavior: 'smooth', block: 'end' })
                       }, 300)
@@ -729,23 +671,20 @@ export function AIChatWidget() {
                   <Button
                     onClick={handleSend}
                     disabled={!input.trim() || isLoading || isRecording}
-                    className="bg-[#003366] hover:bg-[#002244] text-white px-4 sm:px-3 md:px-4 flex-shrink-0 h-auto py-2 sm:py-2"
+                    className="bg-[#D3B574] hover:bg-[#c4a665] text-[#0A1628] px-4 flex-shrink-0 h-10 rounded-lg disabled:opacity-50"
                   >
                     {isLoading ? (
-                      <Loader2 className="h-4 w-4 sm:h-4 sm:w-4 animate-spin" />
+                      <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      <Send className="h-4 w-4 sm:h-4 sm:w-4" />
+                      <Send className="h-4 w-4" />
                     )}
                   </Button>
                 </div>
                 {isRecording && (
-                  <p className="text-[10px] text-red-600 text-center animate-pulse">
-                    🎤 Listening... Speak your question
+                  <p className="text-xs text-red-400 text-center animate-pulse">
+                    Listening... Speak your question
                   </p>
                 )}
-                <p className="text-[9px] sm:text-[10px] text-slate-400 text-center sm:text-right pr-1 pt-1">
-                  Powered by RecruitNC data.
-                </p>
               </div>
             </CardContent>
           </Card>
@@ -754,4 +693,3 @@ export function AIChatWidget() {
     </>
   )
 }
-
