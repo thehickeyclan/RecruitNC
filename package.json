@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "2.0.24",
+    "@fal-ai/serverless-client": "^0.15.0",
     "@hello-pangea/dnd": "latest",
     "@hookform/resolvers": "^3.9.1",
     "@neondatabase/serverless": "latest",

@@ -1,18 +1,59 @@
 "use server"
 
 import { createAdminClient } from "@/lib/supabase/admin"
+import { sendOrderStatusEmail } from "@/lib/email"
 
 export async function updateOrderStatus(
   orderId: string,
-  newStatus: string
+  newStatus: string,
+  options?: { sendEmail?: boolean }
 ): Promise<{ success: true } | { success: false; error: string }> {
   try {
     const supabase = createAdminClient()
+    
+    // Get order details for email
+    const { data: order, error: fetchError } = await supabase
+      .from("orders")
+      .select("order_number, customer_email, customer_name, tracking_info, status")
+      .eq("id", orderId)
+      .single()
+    
+    if (fetchError || !order) {
+      return { success: false, error: fetchError?.message || "Order not found" }
+    }
+    
+    // Don't send email if status hasn't changed
+    const shouldSendEmail = options?.sendEmail !== false && 
+      order.status !== newStatus &&
+      ["shipped", "delivered", "processing"].includes(newStatus)
+    
     const { error } = await supabase
       .from("orders")
       .update({ status: newStatus })
       .eq("id", orderId)
+    
     if (error) return { success: false, error: error.message }
+    
+    // Send status notification email
+    if (shouldSendEmail && order.customer_email) {
+      const trackingInfo = order.tracking_info as { carrier?: string; tracking_number?: string } | null
+      
+      try {
+        await sendOrderStatusEmail({
+          orderNumber: order.order_number || orderId,
+          customerName: order.customer_name || "Customer",
+          customerEmail: order.customer_email,
+          status: newStatus as "shipped" | "delivered" | "processing",
+          trackingNumber: trackingInfo?.tracking_number,
+          trackingCarrier: trackingInfo?.carrier,
+          orderUrl: `${process.env.NEXT_PUBLIC_SITE_URL || "https://app.ncwrestlingunited.com"}/order-status?order=${order.order_number || orderId}`,
+        })
+      } catch (emailErr) {
+        // Log email error but don't fail the status update
+        console.error("[orders] Failed to send status email:", emailErr)
+      }
+    }
+    
     return { success: true }
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to update order status"
@@ -43,10 +84,23 @@ export async function deleteOrder(orderId: string): Promise<{ success: true } | 
 export async function addTrackingInfo(
   orderId: string,
   carrier: string,
-  trackingNumber: string
+  trackingNumber: string,
+  options?: { sendEmail?: boolean }
 ): Promise<{ success: true } | { success: false; error: string }> {
   try {
     const supabase = createAdminClient()
+    
+    // Get order details for email
+    const { data: order, error: fetchError } = await supabase
+      .from("orders")
+      .select("order_number, customer_email, customer_name")
+      .eq("id", orderId)
+      .single()
+    
+    if (fetchError || !order) {
+      return { success: false, error: fetchError?.message || "Order not found" }
+    }
+    
     const trackingInfo = { carrier, tracking_number: trackingNumber }
     const { error } = await supabase
       .from("orders")
@@ -55,7 +109,26 @@ export async function addTrackingInfo(
         tracking_info: trackingInfo,
       })
       .eq("id", orderId)
+    
     if (error) return { success: false, error: error.message }
+    
+    // Send shipped notification email with tracking
+    if (options?.sendEmail !== false && order.customer_email) {
+      try {
+        await sendOrderStatusEmail({
+          orderNumber: order.order_number || orderId,
+          customerName: order.customer_name || "Customer",
+          customerEmail: order.customer_email,
+          status: "shipped",
+          trackingNumber,
+          trackingCarrier: carrier,
+          orderUrl: `${process.env.NEXT_PUBLIC_SITE_URL || "https://app.ncwrestlingunited.com"}/order-status?order=${order.order_number || orderId}`,
+        })
+      } catch (emailErr) {
+        console.error("[orders] Failed to send shipped email:", emailErr)
+      }
+    }
+    
     return { success: true }
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to add tracking"
