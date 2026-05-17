@@ -8,7 +8,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { 
   ShoppingBag, Package, Ticket, ArrowRight, ArrowLeft, DollarSign, 
   TrendingUp, TrendingDown, Users, Clock, CheckCircle, Truck, 
-  AlertTriangle, BarChart3, PackageCheck, RefreshCw
+  AlertTriangle, BarChart3, PackageCheck, RefreshCw, Wand2
 } from "lucide-react"
 import { HardLink } from "@/components/hard-link"
 import { createClient } from "@/lib/supabase/client"
@@ -456,6 +456,7 @@ export default function AdminStoreHubPage() {
                 { href: "/admin/products", title: "Products", description: "Manage catalog", icon: Package, color: "#8B5CF6" },
                 { href: "/admin/inventory", title: "Inventory", description: "Stock & alerts", icon: Package, color: "#EAB308" },
                 { href: "/admin/store/analytics", title: "Analytics", description: "Reports & trends", icon: BarChart3, color: "#EC4899" },
+                { href: "/admin/store/process-images", title: "Process Images", description: "Batch background removal", icon: Wand2, color: "#F59E0B" },
               ].map(({ href, title, description, icon: Icon, color }) => (
                 <HardLink key={href} href={href} className="block">
                   <Card className="bg-[#0f1c2e] border-white/10 hover:border-white/20 transition-all hover:scale-[1.02] cursor-pointer h-full">
