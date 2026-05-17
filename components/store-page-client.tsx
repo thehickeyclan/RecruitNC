@@ -137,7 +137,7 @@ export function StorePageClient({ initialProducts }: StorePageClientProps) {
   const activeFiltersCount = selectedSizes.length + selectedPriceRanges.length
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#0A1628]">
       <StoreHeader searchQuery={searchQuery} onSearchChange={setSearchQuery} />
       <StoreBanner
         onShopAll={() => {
@@ -159,13 +159,16 @@ export function StorePageClient({ initialProducts }: StorePageClientProps) {
       <ShoeRaffleHero />
       <FeaturedProductsSection products={initialProducts} />
 
-      <div id="products" className="container mx-auto px-4 py-8">
-        <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+      <div id="products" className="container mx-auto px-4 py-12">
+        <div className="mb-8 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <div className="flex flex-wrap gap-2">
             <Button
               variant={selectedCategories.length === 0 ? "default" : "outline"}
               onClick={() => setSelectedCategories([])}
-              className="rounded-full"
+              className={selectedCategories.length === 0
+                ? "rounded-full bg-[#D3B574] text-[#0A1628] hover:bg-[#c4a665] font-semibold"
+                : "rounded-full bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white"
+              }
             >
               All Products
             </Button>
@@ -174,7 +177,10 @@ export function StorePageClient({ initialProducts }: StorePageClientProps) {
                 key={category.id}
                 variant={selectedCategories.includes(category.id) ? "default" : "outline"}
                 onClick={() => handleCategoryToggle(category.id)}
-                className="rounded-full"
+                className={selectedCategories.includes(category.id)
+                  ? "rounded-full bg-[#D3B574] text-[#0A1628] hover:bg-[#c4a665] font-semibold"
+                  : "rounded-full bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white"
+                }
               >
                 {category.label}
               </Button>
@@ -193,15 +199,15 @@ export function StorePageClient({ initialProducts }: StorePageClientProps) {
           />
         </div>
 
-        <div className="mb-6">
+        <div className="mb-8">
           <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
             <Input
               type="search"
               placeholder="Search products..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-12 text-base"
+              className="pl-10 h-12 text-base bg-white/5 border-white/10 text-white placeholder:text-white/40 focus:border-[#D3B574]/50 focus:ring-[#D3B574]/20"
             />
           </div>
         </div>

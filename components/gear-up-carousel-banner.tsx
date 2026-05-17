@@ -16,16 +16,16 @@ export function GearUpCarouselBanner() {
           sizes="100vw"
           priority={false}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" aria-hidden />
-        <div className="absolute bottom-4 left-0 right-0 flex flex-col items-center justify-center text-center px-4 gap-3">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white drop-shadow-lg">
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0A1628] via-[#0A1628]/30 to-transparent" aria-hidden />
+        <div className="absolute bottom-6 left-0 right-0 flex flex-col items-center justify-center text-center px-4 gap-4">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white drop-shadow-lg tracking-tight">
             Gear Up for Nationals
           </h2>
           <StoreNavLink
-            className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-base font-semibold text-[#002147] hover:bg-gray-100 transition-colors shadow-lg"
+            className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-[#D3B574] px-8 py-3 text-base font-bold text-[#0A1628] hover:bg-[#c4a665] transition-colors shadow-lg"
           >
             <ShoppingBag className="h-5 w-5" aria-hidden />
-            Shop gear
+            Shop Gear
           </StoreNavLink>
         </div>
       </div>
