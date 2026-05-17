@@ -76,33 +76,61 @@ export async function GET(
       }
     }
 
-    // 4. Get wallet/ledger data
-    const { data: walletEntries, error: walletError } = await admin
+    const codeForLedger = typeof fundraisingCode === "string" ? fundraisingCode.trim() : ""
+
+    const { data: ledgerByAthleteId, error: wErr1 } = await admin
       .from("fundraising_ledger_entries")
       .select("*")
       .eq("athlete_id", athleteId)
       .order("occurred_at", { ascending: false })
       .limit(100)
 
-    if (walletError) {
-      console.warn("[admin/athletes/fundraising] wallet fetch error:", walletError.message)
+    if (wErr1) {
+      console.warn("[admin/athletes/fundraising] wallet fetch (athlete_id):", wErr1.message)
     }
 
-    // Calculate wallet totals from ledger
+    let walletEntries = ledgerByAthleteId ?? []
+
+    if (codeForLedger) {
+      const { data: ledgerByCode, error: wErr2 } = await admin
+        .from("fundraising_ledger_entries")
+        .select("*")
+        .ilike("athlete_code", codeForLedger)
+        .order("occurred_at", { ascending: false })
+        .limit(100)
+
+      if (wErr2) {
+        console.warn("[admin/athletes/fundraising] wallet fetch (athlete_code):", wErr2.message)
+      }
+
+      const byId = new Map<string, (typeof walletEntries)[0]>()
+      for (const row of [...walletEntries, ...(ledgerByCode ?? [])]) {
+        const id = String((row as { id?: string }).id ?? "")
+        if (id) byId.set(id, row as (typeof walletEntries)[0])
+      }
+      walletEntries = [...byId.values()].sort((a, b) => {
+        const ta = String((a as { occurred_at?: string }).occurred_at ?? "")
+        const tb = String((b as { occurred_at?: string }).occurred_at ?? "")
+        return tb.localeCompare(ta)
+      }).slice(0, 100)
+    }
+
+    // Calculate wallet totals from ledger (column is `entry_kind`, not `entry_type`)
     let walletRaisedCents = 0
     let walletSpentCents = 0
     let walletReservedCents = 0
 
     for (const entry of walletEntries ?? []) {
       const amt = typeof entry.amount_cents === "number" ? entry.amount_cents : 0
-      const type = entry.entry_type || ""
-      
-      if (type === "donation" || type === "credit") {
+      const kind = String((entry as { entry_kind?: string }).entry_kind ?? "")
+      const direction = String((entry as { direction?: string }).direction ?? "")
+
+      if (kind === "stripe_spartan_checkout" && direction === "money_in") {
         walletRaisedCents += amt
-      } else if (type === "expense" || type === "debit") {
-        walletSpentCents += Math.abs(amt)
-      } else if (type === "reserved") {
-        walletReservedCents += Math.abs(amt)
+      } else if (kind === "reimbursement_paid" && direction === "money_out") {
+        walletSpentCents += amt
+      } else if (kind === "guild_credit_allocation" && direction === "internal_move") {
+        walletReservedCents += amt
       }
     }
 

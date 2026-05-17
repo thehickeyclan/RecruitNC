@@ -136,6 +136,40 @@ function uniqueCoercedCodes(parts: (string | null | undefined)[]): string[] {
 }
 
 /**
+ * Same NCU code union as `/fundraising/athletes/{slug}` → {@link getAthleteFundraisingPublicSnapshot}
+ * (slug-derived code + profile primary + roster collision variants + optional DB pins).
+ * Use for Profile digital wallet so "Raised" matches the public gift page.
+ */
+export function ledgerCodesForFundraisingWallet(
+  profile: AthleteFundraisingProfileRow | null,
+  entries: FundraisingAthleteEntry[],
+  athleteId: string,
+  extraPinnedCodes: readonly string[] = [],
+): { ledgerCodes: string[]; guildLookupAthleteIds: string[]; fundraisingCode: string | null } {
+  const pinned = uniqueCoercedCodes([...extraPinnedCodes])
+
+  if (profile?.athlete_id === athleteId) {
+    const legacyCode = coerceNcuCode(fundraisingCodeFromSlug(profile.slug))
+    const fromPrimary = coerceNcuCode(profile.primary_fundraising_code)
+    const entry = pickPreferredFundraisingEntryForAthlete(entries, profile.athlete_id)
+    const rosterCodes = allCoercedLedgerCodesForAthleteId(entries, profile.athlete_id)
+    const code = legacyCode ?? fromPrimary ?? entry?.code?.toUpperCase() ?? null
+    const ledgerCodes = uniqueCoercedCodes([legacyCode, fromPrimary, ...rosterCodes, code, ...pinned])
+    const guildLookupAthleteIds = collectGuildLookupAthleteIds(entries, ledgerCodes, profile.athlete_id, entry?.id ?? null)
+    const fundraisingCode = code ?? ledgerCodes[0] ?? null
+    return { ledgerCodes, guildLookupAthleteIds, fundraisingCode }
+  }
+
+  const entry = pickPreferredFundraisingEntryForAthlete(entries, athleteId)
+  const rosterCodes = allCoercedLedgerCodesForAthleteId(entries, athleteId)
+  const ledgerCodes = uniqueCoercedCodes([...rosterCodes, entry?.code ?? null, ...pinned])
+  const guildLookupAthleteIds = collectGuildLookupAthleteIds(entries, ledgerCodes, athleteId, entry?.id ?? null)
+  const fundraisingCode =
+    coerceNcuCode(entry?.code ?? null) ?? (rosterCodes[0] ? coerceNcuCode(rosterCodes[0]) : null) ?? pinned[0] ?? null
+  return { ledgerCodes, guildLookupAthleteIds, fundraisingCode }
+}
+
+/**
  * UUIDs to use when summing `guild_credit_allocations` for this gift page — profile id, preferred entry id, and
  * any roster row id whose NCU code appears in `ledgerCodes` (collision / duplicate roster safety).
  */
