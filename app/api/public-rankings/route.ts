@@ -1,5 +1,4 @@
 import { createAdminClient } from "@/lib/supabase/admin"
-import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { buildSchoolClassificationMap } from "@/lib/classification-data"
 import { buildPublicProfileTournamentData } from "@/lib/public-profile-data"
@@ -45,18 +44,11 @@ async function getNCHSAAResults(supabase: any, athleteName: string, graduationYe
 
 export async function GET(request: Request) {
   try {
-    const authSupabase = await createClient()
-    const {
-      data: { user },
-      error: authError,
-    } = await authSupabase.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
     const { searchParams } = new URL(request.url)
     const year = searchParams.get("year") || "2026"
     const gender = searchParams.get("gender") || "Male"
+    const limitParam = searchParams.get("limit")
+    const requestedLimit = limitParam ? parseInt(limitParam, 10) : null
 
     const yearNum = parseInt(String(year), 10)
     // Public /public-rankings pages: cap how many ranked athletes we return (reduces payload + enrichment work).
@@ -149,9 +141,12 @@ export async function GET(request: Request) {
     const schoolNames = [...new Set((athletes as { highschool?: string }[]).map((a) => a.highschool).filter(Boolean))] as string[]
     const divisionMap = await buildSchoolClassificationMap(supabase, schoolNames)
 
+    // If a limit was requested (e.g. homepage only needs top 3), only enrich that many athletes
+    const athletesToEnrich = requestedLimit && requestedLimit > 0 ? athletes.slice(0, requestedLimit) : athletes
+
     const gradYearNum = Number.isFinite(yearNum) ? yearNum : parseInt(String(year), 10) || 0
     const rankings = await Promise.all(
-      athletes.map(async (athlete) => {
+      athletesToEnrich.map(async (athlete) => {
         const fromFirstLast = `${athlete.firstName ?? ""} ${athlete.lastName ?? ""}`.trim()
         const athleteName =
           fromFirstLast ||

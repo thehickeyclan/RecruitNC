@@ -71,23 +71,23 @@ export function FilterSidebar({
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
+        <Button variant="outline" size="sm" className="gap-2 bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white">
           <SlidersHorizontal className="w-4 h-4" />
           Filters
           {activeFiltersCount > 0 && (
-            <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#003366] px-1.5 text-xs text-white">
+            <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#D3B574] px-1.5 text-xs font-bold text-[#0A1628]">
               {activeFiltersCount}
             </span>
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="w-full sm:max-w-sm overflow-y-auto">
+      <SheetContent side="right" className="w-full sm:max-w-sm overflow-y-auto bg-[#0f1c2e] border-white/10">
         <SheetHeader>
-          <SheetTitle>Filters</SheetTitle>
+          <SheetTitle className="text-white">Filters</SheetTitle>
         </SheetHeader>
         <div className="mt-6 space-y-8">
           <div>
-            <p className="text-sm font-medium mb-3">Category</p>
+            <p className="text-sm font-medium mb-3 text-white/70">Category</p>
             <div className="space-y-2">
               {CATEGORY_OPTIONS.map((cat) => (
                 <label
@@ -98,13 +98,13 @@ export function FilterSidebar({
                     checked={selectedCategories.includes(cat.id)}
                     onCheckedChange={() => toggleCategory(cat.id)}
                   />
-                  <span className="text-sm">{cat.label}</span>
+                  <span className="text-sm text-white/70">{cat.label}</span>
                 </label>
               ))}
             </div>
           </div>
           <div>
-            <p className="text-sm font-medium mb-3">Size</p>
+            <p className="text-sm font-medium mb-3 text-white/70">Size</p>
             <div className="flex flex-wrap gap-2">
               {SIZE_OPTIONS.map((size) => (
                 <label
@@ -115,13 +115,13 @@ export function FilterSidebar({
                     checked={selectedSizes.includes(size)}
                     onCheckedChange={() => toggleSize(size)}
                   />
-                  <span className="text-sm">{size}</span>
+                  <span className="text-sm text-white/70">{size}</span>
                 </label>
               ))}
             </div>
           </div>
           <div>
-            <p className="text-sm font-medium mb-3">Price</p>
+            <p className="text-sm font-medium mb-3 text-white/70">Price</p>
             <div className="space-y-2">
               {PRICE_RANGES.map((range) => (
                 <label
@@ -132,7 +132,7 @@ export function FilterSidebar({
                     checked={selectedPriceRanges.includes(range.id)}
                     onCheckedChange={() => togglePriceRange(range.id)}
                   />
-                  <span className="text-sm">{range.label}</span>
+                  <span className="text-sm text-white/70">{range.label}</span>
                 </label>
               ))}
             </div>
@@ -143,7 +143,7 @@ export function FilterSidebar({
               onClearFilters()
               setOpen(false)
             }}
-            className="w-full"
+            className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10"
           >
             Clear filters
           </Button>

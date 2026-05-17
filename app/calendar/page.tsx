@@ -312,13 +312,13 @@ export default function CalendarPage() {
                                 key={event.id}
                                 onClick={() => setSelectedEvent(event)}
                                 className="w-full text-left px-1.5 py-0.5 rounded text-xs truncate hover:opacity-80 transition-opacity"
-                                style={{ backgroundColor: eventCategories[event.category as EventCategory]?.color || "#D3B574", color: "#0A1628" }}
+                                style={{ backgroundColor: eventCategories[event.category as EventCategory]?.color || "#D3B574", color: "white" }}
                               >
                                 {event.title}
                               </button>
                             ))}
                             {dayEvents.length > 3 && (
-                              <div className="text-xs text-gray-300 px-1">+{dayEvents.length - 3} more</div>
+                              <div className="text-xs text-white px-1">+{dayEvents.length - 3} more</div>
                             )}
                           </div>
                         </>
