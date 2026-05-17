@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { X, Upload, Loader2, GripVertical, ImagePlus } from "lucide-react"
+import { X, Upload, Loader2, GripVertical, ImagePlus, Wand2 } from "lucide-react"
 import { toast } from "sonner"
 
 export interface ImageWithColor {
@@ -27,6 +27,7 @@ export function ImageUploadWithColors({
   const [uploading, setUploading] = useState(false)
   const [isDragOver, setIsDragOver] = useState(false)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
+  const [removingBackgroundIndex, setRemovingBackgroundIndex] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFiles = async (files: FileList | null) => {
@@ -151,6 +152,35 @@ export function ImageUploadWithColors({
     onChange(newImages)
   }
 
+  const removeBackground = async (index: number) => {
+    setRemovingBackgroundIndex(index)
+    try {
+      const response = await fetch("/api/remove-background", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageUrl: images[index].url }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}))
+        throw new Error((error as { error?: string }).error || "Background removal failed")
+      }
+
+      const data = (await response.json()) as { imageUrl?: string }
+      if (data.imageUrl) {
+        const updatedImages = [...images]
+        updatedImages[index] = { ...updatedImages[index], url: data.imageUrl }
+        onChange(updatedImages)
+        toast.success("Background removed successfully")
+      }
+    } catch (error) {
+      console.error("[removeBackground] Error:", error)
+      toast.error(error instanceof Error ? error.message : "Failed to remove background")
+    } finally {
+      setRemovingBackgroundIndex(null)
+    }
+  }
+
   return (
     <div className="space-y-4">
       {/* Drag and drop zone */}
@@ -248,6 +278,28 @@ export function ImageUploadWithColors({
                   onClick={() => removeImage(index)}
                 >
                   <X className="h-4 w-4" />
+                </Button>
+
+                {/* Remove Background button */}
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={removingBackgroundIndex === index}
+                  className="absolute bottom-2 left-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-white text-xs h-7"
+                  onClick={() => removeBackground(index)}
+                >
+                  {removingBackgroundIndex === index ? (
+                    <>
+                      <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                      Removing...
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="h-3 w-3 mr-1" />
+                      Remove BG
+                    </>
+                  )}
                 </Button>
 
                 {/* Image */}
