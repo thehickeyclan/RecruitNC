@@ -35,36 +35,36 @@ interface ProductGridProps {
 export function ProductGrid({ products, sortBy, onSortChange }: ProductGridProps) {
   return (
     <div className="flex-1" id="products">
-      <div className="flex items-center justify-between mb-6">
-        <p className="text-muted-foreground">
-          <span className="font-semibold text-foreground">{products.length}</span>{" "}
-          items
+      <div className="flex items-center justify-between mb-8">
+        <p className="text-white/50">
+          <span className="font-semibold text-white">{products.length}</span>{" "}
+          {products.length === 1 ? "item" : "items"}
         </p>
 
         <Select
           value={sortBy}
           onValueChange={(value) => onSortChange(value as SortOption)}
         >
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger className="w-[200px] bg-white/5 border-white/10 text-white/80">
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="featured">Featured</SelectItem>
-            <SelectItem value="price-low">Price: Low to High</SelectItem>
-            <SelectItem value="price-high">Price: High to Low</SelectItem>
-            <SelectItem value="newest">Newest</SelectItem>
+          <SelectContent className="bg-[#0f1c2e] border-white/10">
+            <SelectItem value="featured" className="text-white/80 focus:bg-white/10 focus:text-white">Featured</SelectItem>
+            <SelectItem value="price-low" className="text-white/80 focus:bg-white/10 focus:text-white">Price: Low to High</SelectItem>
+            <SelectItem value="price-high" className="text-white/80 focus:bg-white/10 focus:text-white">Price: High to Low</SelectItem>
+            <SelectItem value="newest" className="text-white/80 focus:bg-white/10 focus:text-white">Newest</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       {products.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground text-lg">
+        <div className="text-center py-20">
+          <p className="text-white/40 text-lg">
             No products found matching your filters.
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {products.map((product) => (
             <ProductCard key={String(product.id)} product={product} />
           ))}
