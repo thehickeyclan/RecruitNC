@@ -409,7 +409,13 @@ export function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
                       </TableCell>
                       <TableCell>
                         <div>
-                          <div className="font-medium text-white">{order.customerName}</div>
+                          <Link
+                            href={`/admin/crm?search=${encodeURIComponent(order.customerEmail !== "—" ? order.customerEmail : order.customerName)}`}
+                            className="font-medium text-white hover:text-[#D3B574] hover:underline flex items-center gap-1"
+                          >
+                            {order.customerName}
+                            <User className="h-3 w-3 opacity-50" />
+                          </Link>
                           <div className="text-xs text-white/50">{order.customerEmail}</div>
                         </div>
                       </TableCell>

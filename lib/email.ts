@@ -512,3 +512,158 @@ function escapeHtml(s: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
 }
+
+// ============================================================
+// ORDER STATUS NOTIFICATION EMAILS (shipped, delivered, etc.)
+// ============================================================
+
+export interface OrderStatusEmailParams {
+  orderNumber: string
+  customerName: string
+  customerEmail: string
+  status: "shipped" | "delivered" | "processing"
+  trackingNumber?: string
+  trackingCarrier?: string
+  orderUrl?: string
+}
+
+/** Send order status update email to customer (shipped, delivered, etc). */
+export async function sendOrderStatusEmail(
+  params: OrderStatusEmailParams
+): Promise<{ success: boolean; error?: string }> {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("RESEND_API_KEY not configured, skipping order status email")
+    return { success: false, error: "Email service not configured" }
+  }
+
+  try {
+    const { Resend } = await import("resend")
+    const resend = new Resend(process.env.RESEND_API_KEY)
+    const { orderNumber, customerName, customerEmail, status, trackingNumber, trackingCarrier, orderUrl } = params
+
+    const statusConfig: Record<string, { subject: string; heading: string; message: string; color: string; icon: string }> = {
+      processing: {
+        subject: `Order ${orderNumber} is being prepared`,
+        heading: "Your order is being prepared",
+        message: "We're getting your items ready for shipment. You'll receive another email with tracking information once it ships.",
+        color: "#3B82F6",
+        icon: "📦",
+      },
+      shipped: {
+        subject: `Order ${orderNumber} has shipped!`,
+        heading: "Your order is on the way!",
+        message: "Great news! Your order has been shipped and is heading your way.",
+        color: "#8B5CF6",
+        icon: "🚚",
+      },
+      delivered: {
+        subject: `Order ${orderNumber} has been delivered`,
+        heading: "Your order has been delivered!",
+        message: "Your order has arrived. We hope you love it!",
+        color: "#10B981",
+        icon: "✅",
+      },
+    }
+
+    const config = statusConfig[status]
+    if (!config) {
+      return { success: false, error: `Unknown status: ${status}` }
+    }
+
+    const trackingUrl = trackingNumber && trackingCarrier
+      ? getTrackingUrl(trackingCarrier, trackingNumber)
+      : null
+
+    const trackingSection = status === "shipped" && trackingNumber
+      ? `
+      <div style="background: #f3f4f6; border-radius: 8px; padding: 16px; margin: 20px 0;">
+        <p style="margin: 0 0 8px 0; font-weight: 600; color: #374151;">Tracking Information</p>
+        <p style="margin: 0; color: #6b7280;">
+          Carrier: <strong>${escapeHtml(trackingCarrier || "Standard")}</strong><br>
+          Tracking: <strong>${escapeHtml(trackingNumber)}</strong>
+        </p>
+        ${trackingUrl ? `
+        <p style="margin: 12px 0 0 0;">
+          <a href="${escapeHtml(trackingUrl)}" style="display: inline-block; background: ${config.color}; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px;">Track Package</a>
+        </p>
+        ` : ""}
+      </div>
+      `
+      : ""
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background: #f9fafb;">
+  <div style="background: #003366; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 22px;">NC United Store</h1>
+  </div>
+  <div style="background: #fff; padding: 28px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+    <div style="text-align: center; margin-bottom: 24px;">
+      <span style="font-size: 48px;">${config.icon}</span>
+      <h2 style="color: #1f2937; margin: 12px 0 0 0;">${config.heading}</h2>
+    </div>
+    
+    <p>Hi ${escapeHtml(customerName)},</p>
+    <p>${config.message}</p>
+    
+    <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin: 20px 0;">
+      <p style="margin: 0; color: #6b7280; font-size: 14px;">Order Number</p>
+      <p style="margin: 4px 0 0 0; font-weight: 600; font-size: 18px; color: #1f2937;">${escapeHtml(orderNumber)}</p>
+    </div>
+    
+    ${trackingSection}
+    
+    ${orderUrl ? `
+    <p style="margin: 24px 0; text-align: center;">
+      <a href="${escapeHtml(orderUrl)}" style="display: inline-block; background: #003366; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold;">View Order</a>
+    </p>
+    ` : ""}
+    
+    <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
+    <p style="color: #6b7280; font-size: 14px; margin: 0;">
+      Questions about your order? Contact us at 
+      <a href="mailto:info@ncwrestlingunited.com" style="color: #003366;">info@ncwrestlingunited.com</a>
+    </p>
+  </div>
+</body>
+</html>
+    `
+
+    const result = await resend.emails.send({
+      from: FROM_BLUE,
+      to: [customerEmail.trim()],
+      subject: config.subject,
+      html,
+    })
+
+    if (result.error) {
+      console.error("Resend order status error:", result.error)
+      return { success: false, error: result.error.message }
+    }
+    return { success: true }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to send email"
+    console.error("sendOrderStatusEmail:", err)
+    return { success: false, error: message }
+  }
+}
+
+/** Generate tracking URL for common carriers */
+function getTrackingUrl(carrier: string, trackingNumber: string): string | null {
+  const c = carrier.toLowerCase()
+  if (c.includes("usps")) {
+    return `https://tools.usps.com/go/TrackConfirmAction?tLabels=${trackingNumber}`
+  }
+  if (c.includes("ups")) {
+    return `https://www.ups.com/track?tracknum=${trackingNumber}`
+  }
+  if (c.includes("fedex")) {
+    return `https://www.fedex.com/fedextrack/?trknbr=${trackingNumber}`
+  }
+  if (c.includes("dhl")) {
+    return `https://www.dhl.com/en/express/tracking.html?AWB=${trackingNumber}`
+  }
+  return null
+}
