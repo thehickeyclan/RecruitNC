@@ -30,15 +30,17 @@ interface StatsEvent {
 
 async function processImage(imageUrl: string): Promise<string | null> {
   try {
-    const result = await fal.subscribe('fal-ai/background-remover', {
+    console.log('[v0] Processing image:', imageUrl)
+    const result = await fal.subscribe('fal-ai/birefnet', {
       input: {
         image_url: imageUrl,
       },
     })
+    console.log('[v0] Fal result:', JSON.stringify(result))
 
     return (result as { image?: { url?: string } }).image?.url || null
   } catch (error) {
-    console.error('Error processing image:', error)
+    console.error('[v0] Error processing image:', error)
     return null
   }
 }
