@@ -15,14 +15,17 @@ export function ShoeRaffleHero() {
 
   return (
     <section
-      className="relative w-full bg-primary text-primary-foreground overflow-hidden"
+      className="relative w-full overflow-hidden border-y border-white/10"
       aria-label="First Flight — Official 2026 NC United Shoe"
     >
-      <div className="container mx-auto px-4 py-10 md:py-14 lg:py-16">
+      {/* Background gradient instead of `bg-primary` for dark theme consistency */}
+      <div className="absolute inset-0 bg-gradient-to-r from-[#0A1628] via-[#0f1c2e] to-[#0A1628]" />
+
+      <div className="container relative mx-auto px-4 py-10 md:py-14 lg:py-16">
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-8 md:gap-12">
-          {/* Lead: winning sneaker image */}
+          {/* Winning sneaker image */}
           <div className="flex-shrink-0 w-full max-w-[280px] md:max-w-[320px] mx-auto md:mx-0 order-2 md:order-1">
-            <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-white border-2 border-white/40 shadow-xl">
+            <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-white/5 border border-white/10 shadow-2xl">
               <Image
                 src={WINNING_SHOE_IMAGE}
                 alt={winningName}
@@ -33,31 +36,31 @@ export function ShoeRaffleHero() {
                 unoptimized
               />
             </div>
-            <p className="text-center md:text-left mt-2 text-sm font-medium text-primary-foreground/90">
+            <p className="text-center md:text-left mt-3 text-sm font-medium text-white/70">
               {winningName}
             </p>
           </div>
 
           {/* Copy + CTA */}
           <div className="flex-1 text-center md:text-left order-1 md:order-2">
-            <div className="inline-flex items-center gap-2 rounded-full bg-primary-foreground/15 px-3 py-1 text-xs font-medium mb-3">
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#D3B574]/10 border border-[#D3B574]/20 px-3 py-1 text-xs font-semibold text-[#D3B574] mb-4">
               <span>{CAMPAIGN_COPY.heroWinningLabel}</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-3">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-white mb-3 text-balance">
               {CAMPAIGN_COPY.heroHeadline}
-            </h1>
-            <p className="text-base md:text-lg text-primary-foreground/90 mb-4">
+            </h2>
+            <p className="text-base md:text-lg text-white/60 mb-4 leading-relaxed">
               {CAMPAIGN_COPY.heroCta}
             </p>
             {CAMPAIGN_COPY.heroUrgency ? (
-              <p className="text-sm text-primary-foreground/80 mb-6">
+              <p className="text-sm text-white/40 mb-6">
                 {CAMPAIGN_COPY.heroUrgency}
               </p>
             ) : null}
             <Button
               asChild
               size="lg"
-              className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold text-base px-6 py-5 rounded-lg shadow-lg"
+              className="bg-[#D3B574] hover:bg-[#c4a665] text-[#0A1628] font-bold text-base px-8 py-5 rounded-xl shadow-lg"
             >
               <Link
                 href="https://v0-new-college-commits-l0vrkmn4p-matthickey-gyaanais-projects.vercel.app/news/first-flight-2026-nc-united-shoe"

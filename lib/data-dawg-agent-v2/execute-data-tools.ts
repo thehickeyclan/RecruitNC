@@ -821,12 +821,17 @@ export async function toolWrestlingCrossStoreSearch(args: {
       ? Math.floor(Number(gyRaw))
       : null
   const narrowOpts = { directoryHighSchool: directoryHs || undefined, gradYear: parsedGrad }
+  
+  // Only apply year/school narrowing if we have high confidence (i.e., matched a directory athlete).
+  // If there's no directory athlete, show all tournament results to avoid hiding alumni with old school names.
+  const hasDirMatch = directoryHs != null || parsedGrad != null
+  const safeNarrowOpts = hasDirMatch ? narrowOpts : { directoryHighSchool: undefined, gradYear: null }
 
-  const nchsaa_state_narrowed = filterCrossStoreByDirectoryContext(nchsaa_state, narrowOpts)
-  const nhsca_placements_narrowed = filterCrossStoreByDirectoryContext(nhsca_placements, narrowOpts)
-  const nhsca_legacy_narrowed = filterCrossStoreByDirectoryContext(nhsca_legacy_table, narrowOpts)
-  const super32_narrowed = filterCrossStoreByDirectoryContext(super32, narrowOpts)
-  const nc_united_narrowed = filterCrossStoreByDirectoryContext(nc_united_roster, narrowOpts)
+  const nchsaa_state_narrowed = filterCrossStoreByDirectoryContext(nchsaa_state, safeNarrowOpts)
+  const nhsca_placements_narrowed = filterCrossStoreByDirectoryContext(nhsca_placements, safeNarrowOpts)
+  const nhsca_legacy_narrowed = filterCrossStoreByDirectoryContext(nhsca_legacy_table, safeNarrowOpts)
+  const super32_narrowed = filterCrossStoreByDirectoryContext(super32, safeNarrowOpts)
+  const nc_united_narrowed = filterCrossStoreByDirectoryContext(nc_united_roster, safeNarrowOpts)
 
   const narrowedNote =
     directoryHs || parsedGrad != null
