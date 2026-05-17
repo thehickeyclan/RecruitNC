@@ -14,12 +14,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Image URL is required" }, { status: 400 })
     }
 
-    // Use fal's background removal model
-    const result = await fal.subscribe("fal-ai/background-remover", {
+    console.log('[v0] Removing background from:', imageUrl)
+    
+    // Use fal's birefnet model for background removal
+    const result = await fal.subscribe("fal-ai/birefnet", {
       input: {
         image_url: imageUrl,
       },
     })
+
+    console.log('[v0] Fal result:', JSON.stringify(result))
 
     const outputImageUrl = (result as { image?: { url?: string } }).image?.url
 
@@ -29,7 +33,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ imageUrl: outputImageUrl })
   } catch (error) {
-    console.error("[remove-background] Error:", error)
+    console.error("[v0] remove-background Error:", error)
     const message = error instanceof Error ? error.message : "Failed to remove background"
     return NextResponse.json({ error: message }, { status: 500 })
   }
