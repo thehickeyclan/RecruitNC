@@ -2,51 +2,58 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { fetchReimbursementPaidCentsByAthleteIdInWindow } from "@/lib/athlete-reimbursement-net"
 import { userCanManageFundraisingForAthlete } from "@/lib/fundraising/athlete-fundraising-access"
 import {
+  type AthleteFundraisingProfileRow,
+  ledgerCodesForFundraisingWallet,
+} from "@/lib/fundraising/athlete-fundraising-profiles"
+import {
+  getAthleteFundraisingPublicSnapshot,
+  ATHLETE_PUBLIC_GIFTS_NO_ROW_CAP,
+} from "@/lib/fundraising/athlete-public-stats"
+import {
   fetchGuildReservedCentsByAthleteId,
   sumGuildReservedAllocationCentsForAthleteIds,
 } from "@/lib/guild-credit-allocations"
 import { getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
-import {
-  type FayettevilleCodeStats,
-  FAYETTEVILLE_STRIPE_LOOKBACK_DAYS,
-  getFayettevilleStatsByAthleteCodeLowercase,
-} from "@/lib/spartan-fayetteville-totals-by-code"
+import { FAYETTEVILLE_STRIPE_LOOKBACK_DAYS } from "@/lib/spartan-fayetteville-totals-by-code"
 import { SPARTAN_FAYETTEVILLE_CAMPAIGN } from "@/lib/spartan-fayetteville-stripe"
 
 /**
- * Same athlete UUID can appear twice in fundraising entries (directory-computed NCU vs playbook row with
- * `athlete_id` + collision suffix, e.g. NCU-APONTE-31 vs NCU-APONTEJ-31). Stripe credits the checkout code —
- * pick the candidate that matches paid totals; tie-break favors gift count then longer code (pinned suffix).
+ * Profile / athlete-row pins — merged inside {@link ledgerCodesForFundraisingWallet}.
  */
-function pickBestFundraisingCodeForAthlete(
-  candidates: Set<string>,
-  statsByCode: Map<string, FayettevilleCodeStats>,
-): string | null {
-  const list = [...candidates].map((c) => c.trim()).filter(Boolean)
-  if (list.length === 0) return null
-  if (list.length === 1) return list[0]!
+async function fetchPinnedFundraisingCodesByAthleteId(
+  admin: SupabaseClient,
+  athleteIds: string[],
+): Promise<Map<string, Set<string>>> {
+  const out = new Map<string, Set<string>>()
+  if (athleteIds.length === 0) return out
 
-  let best = list[0]!
-  let bestS = statsByCode.get(best.toLowerCase())
-  let bestTotal = bestS?.totalCents ?? 0
-  let bestGifts = bestS?.giftCount ?? 0
+  const add = (athleteId: string, raw: string | null | undefined) => {
+    const code = typeof raw === "string" ? raw.trim() : ""
+    if (!athleteId.trim() || !code) return
+    const set = out.get(athleteId) ?? new Set<string>()
+    set.add(code)
+    out.set(athleteId, set)
+  }
 
-  for (let i = 1; i < list.length; i++) {
-    const c = list[i]!
-    const s = statsByCode.get(c.toLowerCase())
-    const total = s?.totalCents ?? 0
-    const gifts = s?.giftCount ?? 0
-    if (
-      total > bestTotal ||
-      (total === bestTotal && gifts > bestGifts) ||
-      (total === bestTotal && gifts === bestGifts && c.length > best.length)
-    ) {
-      best = c
-      bestTotal = total
-      bestGifts = gifts
+  const { data: profiles } = await admin
+    .from("athlete_fundraising_profiles")
+    .select("athlete_id, primary_fundraising_code")
+    .in("athlete_id", athleteIds)
+
+  for (const r of profiles ?? []) {
+    const row = r as { athlete_id?: string | null; primary_fundraising_code?: string | null }
+    if (row.athlete_id) add(String(row.athlete_id), row.primary_fundraising_code ?? null)
+  }
+
+  const { data: athletesRows, error } = await admin.from("athletes").select("id, fundraising_code").in("id", athleteIds)
+  if (!error) {
+    for (const r of athletesRows ?? []) {
+      const row = r as { id?: string | null; fundraising_code?: string | null }
+      if (row.id) add(String(row.id), row.fundraising_code ?? null)
     }
   }
-  return best
+
+  return out
 }
 
 export type ParentSpartanFundraisingAthleteRow = {
@@ -65,7 +72,7 @@ export type ParentSpartanFundraisingAthleteRow = {
 }
 
 /**
- * Build wallet rows for specific athlete ids — same Stripe / reimbursement / Guild basis as Profile → Digital wallet.
+ * Build wallet rows for specific athlete ids — same ledger code union + Stripe snapshot as `/fundraising/athletes/{slug}`.
  */
 export async function buildParentSpartanFundraisingRowsForAthleteIds(
   admin: SupabaseClient,
@@ -83,43 +90,78 @@ export async function buildParentSpartanFundraisingRowsForAthleteIds(
   )
 
   const sinceMs = Date.now() - FAYETTEVILLE_STRIPE_LOOKBACK_DAYS * 24 * 60 * 60 * 1000
-  const [entries, statsByCode, reimbByAthleteId, guildReservedByAthlete] = await Promise.all([
+  const [entries, reimbByAthleteId, guildReservedByAthlete, profileRes, pinnedCodesByAthleteId] = await Promise.all([
     getFundraisingAthleteEntries(admin),
-    getFayettevilleStatsByAthleteCodeLowercase().catch((e) => {
-      console.error("[parent-spartan-fundraising-totals] Stripe totals", e)
-      return new Map<string, FayettevilleCodeStats>()
-    }),
     fetchReimbursementPaidCentsByAthleteIdInWindow(admin, sinceMs),
     fetchGuildReservedCentsByAthleteId(admin, userId).catch((e) => {
       console.warn("[parent-spartan-fundraising-totals] guild reservations", e)
       return new Map<string, number>()
     }),
+    admin
+      .from("athlete_fundraising_profiles")
+      .select(
+        "id, created_at, updated_at, athlete_id, slug, bio, photo_url, is_active, campaign_goal_cents, total_raised_cents, primary_fundraising_code, checkout_live",
+      )
+      .in("athlete_id", athleteIds)
+      .eq("is_active", true),
+    fetchPinnedFundraisingCodesByAthleteId(admin, athleteIds),
   ])
 
-  /** Same UUID may map to multiple NCU codes — never overwrite arbitrarily (last loop iteration wins). */
-  const codesByAthleteId = new Map<string, Set<string>>()
-  for (const e of entries) {
-    if (e.id.startsWith("spartan-fundraising:")) continue
-    const code = typeof e.code === "string" ? e.code.trim() : ""
-    if (!code) continue
-    const set = codesByAthleteId.get(e.id) ?? new Set<string>()
-    set.add(code)
-    codesByAthleteId.set(e.id, set)
+  if (profileRes.error) {
+    console.warn("[parent-spartan-fundraising-totals] profiles:", profileRes.error.message)
   }
 
-  const codeByAthleteId = new Map<string, string>()
-  for (const id of athleteIds) {
-    const candidates = codesByAthleteId.get(id)
-    const picked = candidates?.size ? pickBestFundraisingCodeForAthlete(candidates, statsByCode) : null
-    if (picked) codeByAthleteId.set(id, picked)
+  const profileByAthleteId = new Map<string, AthleteFundraisingProfileRow>()
+  for (const r of profileRes.data ?? []) {
+    const row = r as AthleteFundraisingProfileRow
+    if (!profileByAthleteId.has(row.athlete_id)) {
+      profileByAthleteId.set(row.athlete_id, {
+        ...row,
+        checkout_live: row.checkout_live === true,
+      })
+    }
   }
+
+  type Pack = {
+    fundraisingCode: string | null
+    ledgerCodes: string[]
+    stats: { raisedCents: number; giftCount: number; raceSignupCount: number } | null
+  }
+  const packById = new Map<string, Pack>()
+
+  await Promise.all(
+    athleteIds.map(async (id) => {
+      const profile = profileByAthleteId.get(id) ?? null
+      const pinned = [...(pinnedCodesByAthleteId.get(id) ?? [])]
+      const { ledgerCodes, fundraisingCode } = ledgerCodesForFundraisingWallet(profile, entries, id, pinned)
+      const snapshot =
+        ledgerCodes.length > 0
+          ? await getAthleteFundraisingPublicSnapshot(ledgerCodes, ATHLETE_PUBLIC_GIFTS_NO_ROW_CAP)
+          : null
+      const st = snapshot?.stats
+      packById.set(id, {
+        fundraisingCode,
+        ledgerCodes,
+        stats: st
+          ? {
+              raisedCents: st.raisedCents,
+              giftCount: st.giftCount,
+              raceSignupCount: st.raceSignupCount,
+            }
+          : null,
+      })
+    }),
+  )
 
   return athleteIds.map((id) => {
-    const code = codeByAthleteId.get(id) ?? null
     const name = nameById.get(id) ?? "—"
     const paidOut = reimbByAthleteId.get(id) ?? 0
     const guildAlloc = guildReservedByAthlete.get(id) ?? 0
-    if (!code) {
+    const pack = packById.get(id)
+    const ledgerCodes = pack?.ledgerCodes ?? []
+    const code = pack?.fundraisingCode ?? null
+
+    if (!pack || ledgerCodes.length === 0) {
       return {
         athleteId: id,
         name,
@@ -133,19 +175,22 @@ export async function buildParentSpartanFundraisingRowsForAthleteIds(
         codeUnavailable: true,
       }
     }
-    const s = statsByCode.get(code.toLowerCase())
-    const totalCents = s?.totalCents ?? 0
+
+    const totalCents = pack.stats?.raisedCents ?? 0
+    const giftCount = pack.stats?.giftCount ?? 0
+    const raceSignupCount = pack.stats?.raceSignupCount ?? 0
+
     return {
       athleteId: id,
       name,
       fundraisingCode: code,
       totalCents,
-      giftCount: s?.giftCount ?? 0,
-      raceSignupCount: s?.raceSignupCount ?? 0,
+      giftCount,
+      raceSignupCount,
       reimbursementsPaidCents: paidOut,
       netAfterReimbursementsCents: totalCents - paidOut,
       guildAllocationsCents: guildAlloc,
-      codeUnavailable: false,
+      codeUnavailable: !code && totalCents === 0 && giftCount === 0,
     }
   })
 }
