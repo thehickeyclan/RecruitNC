@@ -10,9 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { formatCurrency, formatDateTime, getStatusColor, type Order } from "@/lib/admin-data"
-import { MoreVertical, Mail, Phone, Package, CreditCard, CheckCircle2 } from "lucide-react"
+import { MoreVertical, Mail, Phone, Package, CreditCard, CheckCircle2, User, ExternalLink } from "lucide-react"
 import { updateOrderStatus, addTrackingInfo, addOrderNote } from "@/app/actions/orders"
 import { useToast } from "@/hooks/use-toast"
+import Link from "next/link"
 
 interface OrderDetailViewProps {
   order: Order
@@ -287,10 +288,15 @@ export function OrderDetailView({ order, onClose }: OrderDetailViewProps) {
               </div>
               <Separator />
               <div>
-                <Button variant="link" className="h-auto p-0 text-sm">
-                  View Customer Profile
-                </Button>
-                <div className="text-xs text-muted-foreground mt-1">5 total orders • $487 lifetime value</div>
+                <Link
+                  href={`/admin/crm?search=${encodeURIComponent(order.customerEmail !== "—" ? order.customerEmail : order.customerName)}`}
+                  className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline font-medium"
+                >
+                  <User className="h-3.5 w-3.5" />
+                  View in CRM
+                  <ExternalLink className="h-3 w-3" />
+                </Link>
+                <div className="text-xs text-muted-foreground mt-1">View full customer history & contact details</div>
               </div>
             </CardContent>
           </Card>
