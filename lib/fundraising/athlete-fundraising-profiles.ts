@@ -136,8 +136,8 @@ function uniqueCoercedCodes(parts: (string | null | undefined)[]): string[] {
 }
 
 /**
- * Same NCU code union as `/fundraising/athletes/{slug}` → {@link getAthleteFundraisingPublicSnapshot}
- * (slug-derived code + profile primary + roster collision variants + optional DB pins).
+ * Same NCU code union on `/fundraising/athletes/{slug}` as {@link getAthleteFundraisingPublicSnapshot}
+ * / {@link getAthleteFundraisingWalletSnapshot} (slug-derived code + primary + roster + optional DB pins).
  * Use for Profile digital wallet so "Raised" matches the public gift page.
  */
 export function ledgerCodesForFundraisingWallet(

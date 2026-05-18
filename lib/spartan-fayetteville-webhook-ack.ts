@@ -8,6 +8,7 @@ import { recordFundraisingLedgerSpartanCheckout } from "@/lib/fundraising/ledger
 import { notifyHouseholdOfFundraisingGiftIfEligible } from "@/lib/fundraising/notify-household-of-fundraising-gift"
 import { stripeSpartanCampaignMetadataMatchesRequested } from "@/lib/fundraising/campaign-registry"
 import { deriveCheckoutAttributionFromStripeSession } from "@/lib/spartan-donation-checkout-attribution"
+import { resolveAthleteCodeForSpartanCheckout } from "@/lib/spartan-donation-athlete-code"
 import { SPARTAN_FAYETTEVILLE_CAMPAIGN } from "@/lib/spartan-fayetteville-stripe"
 
 function autoAckEnabled() {
@@ -104,6 +105,12 @@ export async function upsertSpartanDonationFromCheckoutSession(
     rawMetadata.fundraising_athlete_slug = attribution.fundraisingAthleteSlug
   }
 
+  const resolvedAthleteCode = await resolveAthleteCodeForSpartanCheckout(admin, session, attribution)
+  const athleteCodeForRow = resolvedAthleteCode ?? (typeof meta.athlete_code === "string" && meta.athlete_code.trim() ? meta.athlete_code.trim().toUpperCase() : null)
+  if (resolvedAthleteCode) {
+    rawMetadata.athlete_code = resolvedAthleteCode
+  }
+
   const { error: spartanErr } = await admin.from("spartan_donations").upsert(
     {
       id: session.id,
@@ -111,7 +118,7 @@ export async function upsertSpartanDonationFromCheckoutSession(
       amount_cents: session.amount_total ?? 0,
       currency: session.currency ?? "usd",
       status: "paid",
-      athlete_code: meta.athlete_code || null,
+      athlete_code: athleteCodeForRow,
       athlete_display_name: meta.athlete_display_name || null,
       fundraising_type: meta.fundraising_type || null,
       spartan_campaign: meta.spartan_campaign || null,
@@ -129,7 +136,7 @@ export async function upsertSpartanDonationFromCheckoutSession(
     return
   }
 
-  await recordFundraisingLedgerSpartanCheckout(admin, session)
+  await recordFundraisingLedgerSpartanCheckout(admin, session, resolvedAthleteCode ?? null)
 
   try {
     await notifyHouseholdOfFundraisingGiftIfEligible(admin, session)

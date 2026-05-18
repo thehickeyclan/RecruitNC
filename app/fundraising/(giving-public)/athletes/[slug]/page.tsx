@@ -188,7 +188,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
     thanked: thankAckLedgerKeys.has(r.ledgerKey),
   }))
 
-  /** Totals use the same corrected Stripe aggregate as `/spartan` (via cached campaign session list — typically within 60–120s of live). If Stripe + mirror fail, show zeros — do not substitute `profile.total_raised_cents`. */
+  /** Totals use the same mirror + ledger codes as Profile → Digital wallet ({@link getAthleteFundraisingWalletSnapshot}). */
   const EMPTY_STATS: AthleteFundraisingPublicStats = {
     raisedCents: 0,
     giftCount: 0,
