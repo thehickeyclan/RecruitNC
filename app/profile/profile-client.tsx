@@ -988,6 +988,8 @@ export function ProfileClient() {
             linkedLoading={linkedLoading}
             linkedCount={linkedAthletes.length}
             linkedAthletes={linkedAthletes}
+            unlinkAthlete={unlinkLinkedAthlete}
+            unlinkAthleteId={unlinkAthleteId}
             onSpartanTotalsRefresh={() => {
               void (async () => {
                 await tryGuildAutoLink()
