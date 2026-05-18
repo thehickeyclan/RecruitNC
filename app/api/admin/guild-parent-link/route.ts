@@ -10,6 +10,10 @@ import {
 
 export const dynamic = "force-dynamic"
 
+/** Auth Admin API (GoTrue) — works when PostgREST blocks `auth` schema queries. */
+const LIST_AUTH_USERS_PAGE_SIZE = 1000
+const LIST_AUTH_USERS_MAX_PAGES = 50
+
 /**
  * GET ?email= — RecruitNC profile(s) + Guild parent user(s) with same email (case-insensitive).
  * POST { recruitNcUserId, guildParentUserId } — set user_profiles.guild_parent_user_id after Guild role check.
@@ -45,18 +49,26 @@ export async function GET(request: NextRequest) {
 
   let authByEmail: { id: string; email: string | null }[] = []
   let recruitNcAuthLookupError: string | null = null
-  const { data: authRows, error: authErr } = await admin
-    .schema("auth")
-    .from("users")
-    .select("id, email")
-    .ilike("email", safe)
-    .limit(25)
-
-  if (authErr) {
-    console.warn("[admin/guild-parent-link] auth.users", authErr.message)
-    recruitNcAuthLookupError = authErr.message
-  } else {
-    authByEmail = (authRows ?? []) as { id: string; email: string | null }[]
+  try {
+    const safeLower = safe.toLowerCase()
+    for (let page = 1; page <= LIST_AUTH_USERS_MAX_PAGES && authByEmail.length < 25; page++) {
+      const { data, error } = await admin.auth.admin.listUsers({ page, perPage: LIST_AUTH_USERS_PAGE_SIZE })
+      if (error) {
+        recruitNcAuthLookupError = error.message
+        break
+      }
+      for (const u of data.users) {
+        const em = u.email?.trim()
+        if (em && em.toLowerCase() === safeLower) {
+          authByEmail.push({ id: u.id, email: em })
+          if (authByEmail.length >= 25) break
+        }
+      }
+      if (data.users.length < LIST_AUTH_USERS_PAGE_SIZE) break
+    }
+  } catch (e) {
+    recruitNcAuthLookupError = e instanceof Error ? e.message : String(e)
+    console.warn("[admin/guild-parent-link] auth.admin.listUsers", e)
   }
 
   const idSet = new Set<string>()
