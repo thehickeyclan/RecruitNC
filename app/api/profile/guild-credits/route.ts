@@ -30,7 +30,7 @@ export async function GET() {
 
   const { data: profile, error: profErr } = await admin
     .from("user_profiles")
-    .select("guild_parent_user_id, athlete_id")
+    .select("guild_parent_user_id, athlete_id, email")
     .eq("user_id", user.id)
     .maybeSingle()
 
@@ -48,7 +48,9 @@ export async function GET() {
   // user_profiles.guild_parent_user_id. If that column was cleared or never set after
   // an email match became possible, retry the same auto-link used on Fundraise tab load.
   if (!guildParentUserId && profErr?.code !== "42703") {
-    const attempt = await tryGuildAutoLinkForSessionUser(admin, user.id, user.email)
+    const attempt = await tryGuildAutoLinkForSessionUser(admin, user.id, user.email, {
+      profileEmail: (profile as { email?: string | null } | null)?.email ?? null,
+    })
     if (attempt.linked) {
       guildParentUserId = attempt.guildParentUserId
     }
