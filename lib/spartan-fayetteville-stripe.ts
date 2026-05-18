@@ -101,16 +101,23 @@ function fundraisingSurfaceFromSessionOrMeta(
  * Paid Checkout sessions where metadata `spartan_campaign` matches `campaignSlug`
  * (see `lib/fundraising/campaign-registry.ts`).
  */
+export type ListSpartanStripeDonationsOpts = {
+  /** Override default pagination cap ({@link SPARTAN_STRIPE_LIST_MAX_PAGES} pages ≈ sessions). */
+  maxPages?: number
+}
+
 export async function listSpartanFayettevilleDonations(
   stripe: Stripe,
   createdGteUnix: number,
   campaignSlug: string = SPARTAN_FAYETTEVILLE_CAMPAIGN,
+  opts?: ListSpartanStripeDonationsOpts,
 ): Promise<SpartanFayettevilleDonation[]> {
   const rows: SpartanFayettevilleDonation[] = []
   let startingAfter: string | undefined
   let pages = 0
+  const pageCap = opts?.maxPages ?? SPARTAN_STRIPE_LIST_MAX_PAGES
 
-  while (pages < SPARTAN_STRIPE_LIST_MAX_PAGES) {
+  while (pages < pageCap) {
     const res = await stripe.checkout.sessions.list({
       created: { gte: createdGteUnix },
       limit: 100,
@@ -246,12 +253,14 @@ export async function listSpartanFayettevilleDonations(
 export async function listSpartanFayettevilleDonationsAllRegisteredCampaigns(
   stripe: Stripe,
   createdGteUnix: number,
+  opts?: ListSpartanStripeDonationsOpts,
 ): Promise<SpartanFayettevilleDonation[]> {
   const rows: SpartanFayettevilleDonation[] = []
   let startingAfter: string | undefined
   let pages = 0
+  const pageCap = opts?.maxPages ?? SPARTAN_STRIPE_LIST_MAX_PAGES
 
-  while (pages < SPARTAN_STRIPE_LIST_MAX_PAGES) {
+  while (pages < pageCap) {
     const res = await stripe.checkout.sessions.list({
       created: { gte: createdGteUnix },
       limit: 100,

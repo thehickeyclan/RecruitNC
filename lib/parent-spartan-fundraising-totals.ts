@@ -6,7 +6,7 @@ import {
   ledgerCodesForFundraisingWallet,
 } from "@/lib/fundraising/athlete-fundraising-profiles"
 import { getAthleteFundraisingWalletSnapshot, ATHLETE_PUBLIC_GIFTS_NO_ROW_CAP, getAthleteHubLeaderboardAlignedTotals } from "@/lib/fundraising/athlete-public-stats"
-import { loadCorrectedStripeDonationsForAllHubCampaignsWindow } from "@/lib/fundraising/stripe-transparency-pipeline"
+import { loadCorrectedStripeDonationsForAllHubCampaignsWindow, loadCorrectedStripeDonationsForWalletLifetime } from "@/lib/fundraising/stripe-transparency-pipeline"
 import { DEFAULT_FUNDRAISING_CAMPAIGN } from "@/lib/fundraising/campaign-registry"
 import {
   fetchGuildReservedCentsForAthleteIds,
@@ -167,6 +167,12 @@ export async function buildParentSpartanFundraisingRowsForAthleteIds(
   }
   const packById = new Map<string, Pack>()
 
+  const lookbackDays = DEFAULT_FUNDRAISING_CAMPAIGN.defaultLookbackDays
+  const [preloadedStripeWindow, stripeLifetimeRows] = await Promise.all([
+    loadCorrectedStripeDonationsForAllHubCampaignsWindow(lookbackDays, null),
+    loadCorrectedStripeDonationsForWalletLifetime(null),
+  ])
+
   await Promise.all(
     athleteIds.map(async (id) => {
       const profile = profileByAthleteId.get(id) ?? null
@@ -176,6 +182,7 @@ export async function buildParentSpartanFundraisingRowsForAthleteIds(
         ledgerCodes.length > 0
           ? await getAthleteFundraisingWalletSnapshot(ledgerCodes, ATHLETE_PUBLIC_GIFTS_NO_ROW_CAP, {
               mirrorFundraisingSlugs,
+              ...(stripeLifetimeRows != null ? { preloadedStripeLifetimeRows: stripeLifetimeRows } : {}),
             })
           : null
       const st = snapshot?.stats
@@ -193,9 +200,6 @@ export async function buildParentSpartanFundraisingRowsForAthleteIds(
       })
     }),
   )
-
-  const lookbackDays = DEFAULT_FUNDRAISING_CAMPAIGN.defaultLookbackDays
-  const preloadedStripeWindow = await loadCorrectedStripeDonationsForAllHubCampaignsWindow(lookbackDays, null)
 
   const hubById = new Map<string, Awaited<ReturnType<typeof getAthleteHubLeaderboardAlignedTotals>>>()
   await Promise.all(

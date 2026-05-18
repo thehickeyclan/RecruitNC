@@ -19,6 +19,7 @@ import {
   loadCorrectedStripeDonationsForAllHubCampaignsWindow,
   loadCorrectedStripeDonationsForCampaignWindow,
   loadCorrectedStripeDonationsForSpartanPublicWindow,
+  loadCorrectedStripeDonationsForWalletLifetime,
 } from "@/lib/fundraising/stripe-transparency-pipeline"
 import type { SpartanFayettevilleDonation } from "@/lib/spartan-fayetteville-stripe"
 
@@ -183,21 +184,27 @@ async function fetchAthleteMirrorCreditedRows(
 export type AthleteWalletMirrorOpts = {
   /** Profile URL slug(s) for this athlete — credits `fundraising_athlete_slug` when the column or metadata lacked the NCU. */
   mirrorFundraisingSlugs?: string[]
+  /** Parent batch loaders only: shared {@link loadCorrectedStripeDonationsForWalletLifetime} result (Stripe source of truth for Raised). */
+  preloadedStripeLifetimeRows?: SpartanFayettevilleDonation[] | null
 }
 
 type MirrorCreditedOpts = { allRegisteredCampaigns?: boolean; mirrorFundraisingSlugs?: string[] }
 
+/**
+ * Rows whose `fundraising_athlete_slug` matches profile gift-page slug(s), same attribution scope as Stripe hub slug expansion.
+ * Do **not** require `effectiveAthleteCode` ∈ pinned ledger codes — collision / variant Checkout codes may still tie to this slug while
+ * corrections differ from roster pins (`sumStripeHubWindowForLedgerCodes` expands codes from slug-tied Stripe rows the same way).
+ */
 async function mergePaidDonationsByProfileSlugs(
   admin: ReturnType<typeof createAdminClient>,
   merged: Map<string, DonationSelectRow>,
-  codesUpper: string[],
+  _codesUpper: string[],
   opts?: MirrorCreditedOpts,
 ): Promise<void> {
   const slugList = [...new Set((opts?.mirrorFundraisingSlugs ?? []).map((s) => s.trim().toLowerCase()).filter(Boolean))]
   if (slugList.length === 0) return
 
   const idx = await fetchSpartanCreditCorrectionsIndex(admin)
-  const codesSet = new Set(codesUpper)
   const sel = `${DONATION_SELECT}, created_at, donor_name, donor_email, spartan_campaign`
 
   const orSlug = slugList.map((s) => `fundraising_athlete_slug.ilike.${s}`).join(",")
@@ -221,16 +228,6 @@ async function mergePaidDonationsByProfileSlugs(
 
     const slugNorm = (row as DonationSelectRow).fundraising_athlete_slug?.trim().toLowerCase()
     if (!slugNorm || !slugList.includes(slugNorm)) continue
-
-    const eff = effectiveAthleteCodeForDonationLedgerRow(
-      {
-        id: sid,
-        athlete_code: (row as DonationSelectRow).athlete_code,
-        raw_metadata: (row as DonationSelectRow).raw_metadata,
-      },
-      idx,
-    )
-    if (eff && !codesSet.has(eff)) continue
 
     merged.set(sid, row as DonationSelectRow)
   }
@@ -292,6 +289,29 @@ function statsFromMirrorCredited(credited: DonationSelectRow[]): AthleteFundrais
   }
 }
 
+function statsFromStripeAthleteSessions(rows: SpartanFayettevilleDonation[]): AthleteFundraisingPublicStats {
+  let raisedCents = 0
+  let raceSignupCount = 0
+  let organizationGiftCount = 0
+  let individualGiftCount = 0
+  for (const row of rows) {
+    raisedCents += typeof row.amountCents === "number" ? row.amountCents : 0
+    if (row.raceParticipant) raceSignupCount += 1
+    if (row.payerType === "organization") organizationGiftCount += 1
+    else individualGiftCount += 1
+  }
+  const giftCount = rows.length
+  return {
+    raisedCents,
+    giftCount,
+    raceSignupCount,
+    avgGiftCents: giftCount > 0 ? Math.round(raisedCents / giftCount) : null,
+    organizationGiftCount,
+    individualGiftCount,
+    payerTypeBreakdownKnown: true,
+  }
+}
+
 export type AthleteRecentGiftRow = {
   created_at: string
   donorLabel: string
@@ -317,6 +337,27 @@ function giftsFromMirrorCredited(credited: DonationSelectRow[], limit: number): 
   })
 }
 
+function giftsFromStripeAttributedSessions(rows: SpartanFayettevilleDonation[], limit: number): AthleteRecentGiftRow[] {
+  const sorted = [...rows].sort((a, b) => b.createdUnix - a.createdUnix)
+  return sliceGiftRows(sorted, limit).map((row) => {
+    const donorLabel = row.donorListPublic
+      ? row.donorName?.trim()
+        ? row.donorName.trim()
+        : "Supporter"
+      : "Anonymous"
+    return {
+      created_at: row.createdIso,
+      donorLabel,
+      amountCents: typeof row.amountCents === "number" ? row.amountCents : 0,
+      campaignLabel: publicGiftCampaignLabelWithCheckoutSurface(
+        row.spartanCampaignSlug,
+        row.createdIso,
+        resolveFundraisingCheckoutSurface(row.fundraisingCheckoutSurface, undefined),
+      ),
+    }
+  })
+}
+
 /**
  * Hub-aligned headline totals (see {@link AthleteHubLeaderboardAlignedTotals}) vs lifetime mirror snapshot.
  * All paid `spartan_donations` rows — gift lists & reimbursement math use lifetime {@link getAthleteFundraisingWalletSnapshot}.
@@ -336,11 +377,14 @@ export type AthleteHubLeaderboardAlignedOpts = {
   preloadedStripeWindow?: SpartanFayettevilleDonation[] | null
 }
 
-export function sumStripeHubWindowForLedgerCodes(
+/**
+ * Same NCU slug expansion + credited-code filter as `/fundraising` Stripe rolls — reused for hub window totals and Profile wallet lifetime.
+ */
+export function stripeCheckoutSessionsAttributedToAthlete(
   stripeRows: SpartanFayettevilleDonation[],
   ledgerCodesInput: string[],
-  mirrorOpts?: AthleteWalletMirrorOpts,
-): { raisedCents: number; giftCount: number } {
+  mirrorOpts?: Pick<AthleteWalletMirrorOpts, "mirrorFundraisingSlugs">,
+): SpartanFayettevilleDonation[] {
   const slugNorm = new Set(
     (mirrorOpts?.mirrorFundraisingSlugs ?? []).map((s) => s.trim().toLowerCase()).filter(Boolean),
   )
@@ -348,6 +392,7 @@ export function sumStripeHubWindowForLedgerCodes(
   const codeSet = new Set(
     [...new Set(ledgerCodesInput.map((c) => c.trim().toUpperCase()).filter((c) => CODE_RE.test(c)))],
   )
+
   /** Roster pins can miss a collision variant still present on Stripe; pull codes from sessions tied to this gift-page slug. */
   for (const r of stripeRows) {
     if (r.attribution === "general_nc_united") continue
@@ -358,8 +403,7 @@ export function sumStripeHubWindowForLedgerCodes(
   }
 
   const seenSession = new Set<string>()
-  let raisedCents = 0
-  let giftCount = 0
+  const out: SpartanFayettevilleDonation[] = []
   for (const r of stripeRows) {
     if (r.attribution === "general_nc_united") continue
     const ac = (r.athleteCode ?? "").trim().toUpperCase()
@@ -367,6 +411,20 @@ export function sumStripeHubWindowForLedgerCodes(
     const sid = r.sessionId.trim()
     if (!sid || seenSession.has(sid)) continue
     seenSession.add(sid)
+    out.push(r)
+  }
+  return out
+}
+
+export function sumStripeHubWindowForLedgerCodes(
+  stripeRows: SpartanFayettevilleDonation[],
+  ledgerCodesInput: string[],
+  mirrorOpts?: AthleteWalletMirrorOpts,
+): { raisedCents: number; giftCount: number } {
+  const sessions = stripeCheckoutSessionsAttributedToAthlete(stripeRows, ledgerCodesInput, mirrorOpts)
+  let raisedCents = 0
+  let giftCount = 0
+  for (const r of sessions) {
     raisedCents += typeof r.amountCents === "number" ? r.amountCents : 0
     giftCount += 1
   }
@@ -414,7 +472,8 @@ export async function getAthleteHubLeaderboardAlignedTotals(
 }
 
 /**
- * All paid mirror rows (lifetime) for ledger codes — recent gifts table and lifetime gross for reimbursement math.
+ * Stripe-first lifetime snapshot (corrected Checkout, same attribution as hub) → recent gifts mirror the same slice.
+ * Falls back to `spartan_donations` mirror only when Stripe list is unavailable (`STRIPE_SECRET_KEY` missing / Stripe errors).
  */
 export async function getAthleteFundraisingWalletSnapshot(
   ledgerCodesInput: string | string[],
@@ -424,6 +483,20 @@ export async function getAthleteFundraisingWalletSnapshot(
   const raw = Array.isArray(ledgerCodesInput) ? ledgerCodesInput : [ledgerCodesInput]
   const codes = [...new Set(raw.map((c) => c.trim().toUpperCase()).filter((c) => CODE_RE.test(c)))]
   if (codes.length === 0) return null
+
+  let stripeRows: SpartanFayettevilleDonation[] | null | undefined = mirrorOpts?.preloadedStripeLifetimeRows
+  if (stripeRows === undefined) {
+    stripeRows = await loadCorrectedStripeDonationsForWalletLifetime(null)
+  }
+
+  if (stripeRows != null) {
+    const sessions = stripeCheckoutSessionsAttributedToAthlete(stripeRows, codes, mirrorOpts)
+    return {
+      stats: statsFromStripeAthleteSessions(sessions),
+      gifts: giftsFromStripeAttributedSessions(sessions, giftLimit),
+    }
+  }
+
   const rows = await fetchAthleteMirrorCreditedRowsMerged(createAdminClient(), codes, {
     allRegisteredCampaigns: true,
     mirrorFundraisingSlugs: mirrorOpts?.mirrorFundraisingSlugs,
