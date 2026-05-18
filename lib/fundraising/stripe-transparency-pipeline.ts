@@ -18,6 +18,20 @@ const STRIPE_DONATION_LIST_CACHE_SECONDS = Math.min(
   Math.max(60, Number(process.env.RECRUITNC_FUNDRAISING_STRIPE_LIST_CACHE_SECONDS) || 180),
 )
 
+/** Stripe-only Profile wallet attribution — mirrors hub logic over a multi-year span (defaults ~15 calendar years). */
+function walletStripeLifetimeLookbackDays(): number {
+  const raw = Number(process.env.RECRUITNC_FUNDRAISING_WALLET_STRIPE_LOOKBACK_DAYS)
+  if (!Number.isFinite(raw) || raw < 366) return 5475
+  return Math.floor(Math.min(raw, 7300))
+}
+
+/** Extra Stripe Checkout list pagination for lifetime wallet merges (Stripe max 100 sessions/page). */
+function walletStripeLifetimeListMaxPages(): number {
+  const raw = Number(process.env.RECRUITNC_STRIPE_WALLET_LIST_MAX_PAGES)
+  if (!Number.isFinite(raw) || raw < 80) return 400
+  return Math.floor(Math.min(raw, 2000))
+}
+
 async function loadCorrectedStripeDonationsForCampaignWindowUncached(
   campaign: FundraisingCampaignDefinition,
   preloadedCorrectionIndex: SpartanCreditCorrectionsIndex | null,
@@ -122,4 +136,59 @@ export async function loadCorrectedStripeDonationsForAllHubCampaignsWindow(
   const fromCache = await cachedLoader()
   if (fromCache != null) return fromCache
   return loadCorrectedStripeDonationsForAllHubCampaignsWindowUncached(lookbackDays, null)
+}
+
+async function loadCorrectedStripeDonationsForWalletLifetimeUncached(
+  lookbackDays: number,
+  listMaxPages: number,
+  preloadedCorrectionIndex: SpartanCreditCorrectionsIndex | null,
+): Promise<SpartanFayettevilleDonation[] | null> {
+  const key = process.env.STRIPE_SECRET_KEY?.trim()
+  if (!key) return null
+  try {
+    const stripe = new Stripe(key)
+    const since = Math.floor((Date.now() - lookbackDays * 86400000) / 1000)
+    const [raw, idx] = await Promise.all([
+      listSpartanFayettevilleDonationsAllRegisteredCampaigns(stripe, since, {
+        maxPages: listMaxPages,
+      }),
+      preloadedCorrectionIndex != null
+        ? Promise.resolve(preloadedCorrectionIndex)
+        : fetchSpartanCreditCorrectionsIndex(createAdminClient()),
+    ])
+    return applySpartanCreditCorrectionsToDonations(raw, idx)
+  } catch (e) {
+    console.error("[stripe-transparency-pipeline] wallet lifetime", e)
+    return null
+  }
+}
+
+/**
+ * Long lookback Stripe list (every registered hub campaign) + corrections — single source used with
+ * `stripeCheckoutSessionsAttributedToAthlete` for Profile/digital wallet Raised / gift totals.
+ *
+ * Separate cache key from the hub leaderboard window loader so changing defaultLookbackDays does not poison wallet merges.
+ */
+export async function loadCorrectedStripeDonationsForWalletLifetime(
+  preloadedCorrectionIndex: SpartanCreditCorrectionsIndex | null = null,
+): Promise<SpartanFayettevilleDonation[] | null> {
+  const lookbackDays = walletStripeLifetimeLookbackDays()
+  const listMaxPages = walletStripeLifetimeListMaxPages()
+
+  if (preloadedCorrectionIndex != null) {
+    return loadCorrectedStripeDonationsForWalletLifetimeUncached(lookbackDays, listMaxPages, preloadedCorrectionIndex)
+  }
+
+  const cachedLoader = unstable_cache(
+    async () => loadCorrectedStripeDonationsForWalletLifetimeUncached(lookbackDays, listMaxPages, null),
+    [
+      "spartan-corrected-stripe-wallet-lifetime",
+      String(lookbackDays),
+      String(listMaxPages),
+    ],
+    { revalidate: STRIPE_DONATION_LIST_CACHE_SECONDS },
+  )
+  const fromCache = await cachedLoader()
+  if (fromCache != null) return fromCache
+  return loadCorrectedStripeDonationsForWalletLifetimeUncached(lookbackDays, listMaxPages, null)
 }
