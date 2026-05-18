@@ -75,10 +75,18 @@ export function FundraisingActivityClient({ campaigns }: { campaigns: Fundraisin
     return Math.min(400, Math.floor(n))
   }, [searchParams, resolvedCampaign])
 
+  const hubDefaultDays = DEFAULT_FUNDRAISING_CAMPAIGN.defaultLookbackDays
+
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [entries, setEntries] = useState<Entry[]>([])
   const [metaTitle, setMetaTitle] = useState<string | null>(null)
+  const [summary, setSummary] = useState<{
+    totalRaisedCents: number
+    giftCount: number
+    raceEntryCount: number
+    ncUnitedCommunityFundCents: number
+  } | null>(null)
 
   const commit = useCallback(
     (campaign: string, days: number) => {
@@ -105,16 +113,34 @@ export function FundraisingActivityClient({ campaigns }: { campaigns: Fundraisin
           error?: string
           entries?: Entry[]
           campaignDisplayName?: string
+          summary?: {
+            totalRaisedCents?: number
+            giftCount?: number
+            raceEntryCount?: number
+            ncUnitedCommunityFundCents?: number
+          }
         }
         if (!res.ok) throw new Error(j.error || "Could not load")
         if (cancelled) return
         setEntries(Array.isArray(j.entries) ? j.entries : [])
         setMetaTitle(j.campaignDisplayName ?? null)
+        const s = j.summary
+        if (s && typeof s.totalRaisedCents === "number") {
+          setSummary({
+            totalRaisedCents: s.totalRaisedCents,
+            giftCount: typeof s.giftCount === "number" ? s.giftCount : 0,
+            raceEntryCount: typeof s.raceEntryCount === "number" ? s.raceEntryCount : 0,
+            ncUnitedCommunityFundCents: typeof s.ncUnitedCommunityFundCents === "number" ? s.ncUnitedCommunityFundCents : 0,
+          })
+        } else {
+          setSummary(null)
+        }
       } catch (e) {
         if (!cancelled) {
           setError(e instanceof Error ? e.message : "Failed")
           setEntries([])
           setMetaTitle(null)
+          setSummary(null)
         }
       } finally {
         if (!cancelled) setLoading(false)
@@ -126,6 +152,8 @@ export function FundraisingActivityClient({ campaigns }: { campaigns: Fundraisin
   }, [resolvedCampaign, resolvedDays])
 
   const sorted = useMemo(() => [...entries].sort((a, b) => +new Date(b.createdIso) - +new Date(a.createdIso)), [entries])
+
+  const sumRowCents = useMemo(() => sorted.reduce((s, e) => s + (Number(e.amountCents) || 0), 0), [sorted])
 
   const dayPresets = [30, 90, 120, 365]
 
@@ -150,9 +178,12 @@ export function FundraisingActivityClient({ campaigns }: { campaigns: Fundraisin
             Donor activity
           </h1>
           <p className="mt-4 max-w-2xl text-pretty text-base leading-relaxed text-white/88">
-            Paid checkouts in the selected window. Each row shows <strong className="text-white">source</strong> (where
-            checkout started) and <strong className="text-white">campaign</strong> (Stripe drive). Supporter names follow
-            public listing preferences.
+            Paid checkouts in the <strong className="text-white">lookback window you select below</strong>. A wider window
+            only changes totals when there are older checkouts <em>outside</em> the shorter window — if your drive is newer
+            than that, presets usually show the same raised amount. The <strong className="text-white">totals card</strong> is
+            the Stripe-backed rollup for this page&apos;s filters and should match the sum of the table. The hub{" "}
+            <strong className="text-white">leaderboard</strong> sums athlete-credited gifts only; headline &ldquo;Raised&rdquo;
+            also includes NC United general-fund gifts, so adding leaderboard rows may be less than the hero.
           </p>
         </div>
       </header>
@@ -203,8 +234,65 @@ export function FundraisingActivityClient({ campaigns }: { campaigns: Fundraisin
           <p className="mt-1 text-xs text-slate-500 tabular-nums">
             {resolvedCampaign === "all"
               ? "Every registered NC United Stripe campaign in this window."
-              : `Stripe campaign · ${resolvedCampaign}`}
+              : `Stripe campaign · ${resolvedCampaign}`}{" "}
+            · <span className="font-semibold text-slate-700">{resolvedDays} days</span>
           </p>
+
+          {resolvedDays !== hubDefaultDays ? (
+            <div
+              className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
+              role="status"
+            >
+              <strong className="font-semibold">Hub headline uses a fixed lookback.</strong>{" "}
+              <HardLink href="/fundraising" className="font-semibold underline underline-offset-2">
+                /fundraising
+              </HardLink>{" "}
+              &ldquo;Raised&rdquo; is computed with the last <span className="tabular-nums font-semibold">{hubDefaultDays} days</span>;
+              this page is <span className="tabular-nums font-semibold">{resolvedDays} days</span>. If every checkout falls
+              inside both windows, totals should still match. If anything older than {hubDefaultDays} days exists, this page can
+              show more when set wider.{" "}
+              <button
+                type="button"
+                className="ml-1 font-semibold text-[#03154C] underline underline-offset-2"
+                onClick={() => commit(resolvedCampaign, hubDefaultDays)}
+              >
+                Use {hubDefaultDays} days (match hub setting)
+              </button>
+            </div>
+          ) : null}
+
+          {!loading && !error && summary ? (
+            <div className="mt-6 grid gap-3 rounded-xl border border-slate-200 bg-slate-50/80 p-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Total raised (this view)</p>
+                <p className="mt-1 text-xl font-bold tabular-nums text-slate-900">{formatUsd(summary.totalRaisedCents)}</p>
+                <p className="mt-0.5 text-[11px] text-slate-500">Stripe paid sessions + credit corrections</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Checkouts</p>
+                <p className="mt-1 text-xl font-bold tabular-nums text-slate-900">{summary.giftCount}</p>
+                <p className="mt-0.5 text-[11px] text-slate-500">Rows below: {sorted.length}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Event / race signups</p>
+                <p className="mt-1 text-xl font-bold tabular-nums text-slate-900">{summary.raceEntryCount}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">NC United fund (uncoded)</p>
+                <p className="mt-1 text-xl font-bold tabular-nums text-slate-900">
+                  {formatUsd(summary.ncUnitedCommunityFundCents)}
+                </p>
+                <p className="mt-0.5 text-[11px] text-slate-500">Included in total raised</p>
+              </div>
+            </div>
+          ) : null}
+
+          {!loading && !error && summary && Math.abs(sumRowCents - summary.totalRaisedCents) > 2 ? (
+            <p className="mt-3 text-xs font-medium text-amber-800">
+              Row sum ({formatUsd(sumRowCents)}) differs from API total ({formatUsd(summary.totalRaisedCents)}). Refresh the page;
+              if it persists, contact support with this URL.
+            </p>
+          ) : null}
 
           <div className="mt-4 flex flex-wrap gap-3 text-sm">
             <span className="text-slate-500">Give</span>
