@@ -6,7 +6,7 @@ import {
   type GuildCreditAllocationRow,
 } from "@/lib/guild-credit-allocations"
 import { isGuildGrantConfigured } from "@/lib/guild-grant-client"
-import { FAYETTEVILLE_STRIPE_LOOKBACK_DAYS } from "@/lib/spartan-fayetteville-totals-by-code"
+import { getWalletAthleteIdsForParentUser } from "@/lib/parent-spartan-fundraising-totals"
 
 export const dynamic = "force-dynamic"
 
@@ -43,14 +43,8 @@ export async function GET() {
       ? null
       : ((profile as { guild_parent_user_id?: string | null } | null)?.guild_parent_user_id ?? null)
 
-  const { data: linkRows } = await admin.from("parent_athlete_links").select("athlete_id").eq("user_id", user.id)
-  const linkedAthleteIds = new Set<string>()
-  const aid = (profile as { athlete_id?: string | null } | null)?.athlete_id
-  if (aid) linkedAthleteIds.add(aid)
-  for (const r of linkRows ?? []) {
-    const id = (r as { athlete_id?: string }).athlete_id
-    if (id) linkedAthleteIds.add(id)
-  }
+  const walletAthleteIds = await getWalletAthleteIdsForParentUser(admin, user.id)
+  const linkedAthleteIds = new Set(walletAthleteIds)
 
   let reservedByAthlete: Record<string, number> = {}
   try {
@@ -102,7 +96,6 @@ export async function GET() {
   return NextResponse.json({
     guildParentUserId,
     guildGrantConfigured: isGuildGrantConfigured(),
-    lookbackDays: FAYETTEVILLE_STRIPE_LOOKBACK_DAYS,
     reservedByAthlete,
     allocations,
   })

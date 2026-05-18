@@ -2,8 +2,7 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { computeParentSpartanFundraisingTotalsForUser } from "@/lib/parent-spartan-fundraising-totals"
-import { getAthleteOwnerThankYouRows } from "@/lib/fundraising/athlete-public-stats"
-import { FAYETTEVILLE_STRIPE_LOOKBACK_DAYS } from "@/lib/spartan-fayetteville-totals-by-code"
+import { getAthleteOwnerThankYouRowsForWalletLedgerCodes } from "@/lib/fundraising/athlete-public-stats"
 import { fundraisingSlugFromCode } from "@/lib/fundraising/athlete-fundraising-slug"
 import { fetchThankYouAckLedgerKeysForAthletes } from "@/lib/fundraising/supporter-thank-you-ack"
 
@@ -77,7 +76,9 @@ export async function GET() {
         continue
       }
 
-      const rows = await getAthleteOwnerThankYouRows(code)
+      const rows = await getAthleteOwnerThankYouRowsForWalletLedgerCodes(
+        a.ledgerCodes.length > 0 ? a.ledgerCodes : code ? [code] : [],
+      )
       const ackSet = ackByAthlete.get(a.athleteId) ?? new Set<string>()
       let thankedCount = 0
       for (const r of rows) {
@@ -94,7 +95,6 @@ export async function GET() {
     }
 
     return NextResponse.json({
-      lookbackDays: FAYETTEVILLE_STRIPE_LOOKBACK_DAYS,
       athletes: payload,
     })
   } catch (e) {

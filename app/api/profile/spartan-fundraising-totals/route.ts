@@ -2,7 +2,6 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { computeParentSpartanFundraisingTotalsForUser } from "@/lib/parent-spartan-fundraising-totals"
-import { FAYETTEVILLE_STRIPE_LOOKBACK_DAYS } from "@/lib/spartan-fayetteville-totals-by-code"
 
 export const dynamic = "force-dynamic"
 
@@ -10,6 +9,7 @@ export type SpartanFundraisingTotalRow = {
   athleteId: string
   name: string
   fundraisingCode: string | null
+  ledgerCodes: string[]
   totalCents: number
   giftCount: number
   raceSignupCount: number
@@ -20,7 +20,7 @@ export type SpartanFundraisingTotalRow = {
 }
 
 /**
- * GET: NC United ledger totals per athlete the signed-in account manages (parent_athlete_links and/or user_profiles.athlete_id).
+ * GET: NC United wallet totals per linked athlete (lifetime `spartan_donations` + all-time reimbursements).
  */
 export async function GET() {
   const supabase = await createClient()
@@ -38,8 +38,7 @@ export async function GET() {
     const { campaign, athletes } = await computeParentSpartanFundraisingTotalsForUser(admin, user.id)
     return NextResponse.json({
       campaign,
-      source: "stripe_fayetteville_with_corrections",
-      lookbackDays: FAYETTEVILLE_STRIPE_LOOKBACK_DAYS,
+      source: "spartan_donations_mirror_lifetime",
       athletes,
     })
   } catch (e) {

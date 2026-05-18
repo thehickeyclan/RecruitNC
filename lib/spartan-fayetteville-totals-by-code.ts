@@ -4,11 +4,11 @@ import { buildSpartanPublicSupporterSummary } from "@/lib/spartan-public-support
 import { aggregateSpartanByAthlete } from "@/lib/spartan-fayetteville-stripe"
 
 /**
- * Must match the default in Admin → Fundraising (`/api/admin/spartan-donations?days=120`)
+ * Must match the default in Admin → Fundraising (`/api/admin/spartan-donations?days=…`)
  * so parent profile totals match the admin table unless you change the admin lookback.
- * Keep in sync with {@link DEFAULT_FUNDRAISING_CAMPAIGN}.`defaultLookbackDays`.
+ * Value is {@link DEFAULT_FUNDRAISING_CAMPAIGN}.`defaultLookbackDays` (single source of truth).
  */
-export const FAYETTEVILLE_STRIPE_LOOKBACK_DAYS = 120
+export const FAYETTEVILLE_STRIPE_LOOKBACK_DAYS = DEFAULT_FUNDRAISING_CAMPAIGN.defaultLookbackDays
 
 export type FayettevilleCodeStats = {
   totalCents: number

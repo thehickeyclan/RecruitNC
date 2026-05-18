@@ -599,8 +599,8 @@ function HubBody({
         <AlertCircle className="h-4 w-4 text-[#8a7040]" />
         <AlertTitle>Fundraising & digital wallet</AlertTitle>
         <AlertDescription className="text-sm leading-relaxed">
-          Ledger rows match what families see under <strong>Profile → Digital wallet</strong>: gifts credited to each child’s NCU code in the campaign
-          lookback window, reimbursements <em>paid</em> in that same window, and Guild amounts reserved from this login. Athletes come from the primary
+          Ledger rows match what families see under <strong>Profile → Digital wallet</strong>: all paid gifts credited to each child’s NCU code that we have on
+          file (across tracked NC United campaigns), all-time reimbursements <em>paid</em>, and Guild amounts reserved from this login. Athletes come from the primary
           profile <code className="rounded bg-muted px-1 text-[11px]">athlete_id</code> plus <code className="rounded bg-muted px-1 text-[11px]">parent_athlete_links</code> (all kids tied to this parent account).
         </AlertDescription>
       </Alert>
@@ -617,9 +617,8 @@ function HubBody({
           ) : (
             <div className="space-y-3">
               <p className="text-xs text-muted-foreground">
-                Stripe campaign{" "}
-                <span className="font-mono">{payload.fundraisingWallet.data.campaign}</span> · lookback{" "}
-                <span className="font-medium tabular-nums">{payload.fundraisingWallet.data.lookbackDays}</span> days
+                Campaign label <span className="font-mono">{payload.fundraisingWallet.data.campaign}</span> · totals are{" "}
+                <strong>all-time</strong> (paid gifts on file + all paid reimbursements), same as the parent profile wallet.
               </p>
               <DataTableShell>
                 <Table>

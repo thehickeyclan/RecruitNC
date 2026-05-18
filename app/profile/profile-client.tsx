@@ -92,9 +92,8 @@ export function ProfileClient() {
   } | null>(null)
   const [spartanFundraisingLoading, setSpartanFundraisingLoading] = useState(false)
   const [supporterContacts, setSupporterContacts] = useState<ProfileSpartanSupportersAthletePayload[] | null>(null)
-  const [supporterLookbackDays, setSupporterLookbackDays] = useState<number | null>(null)
   const [supporterContactsLoading, setSupporterContactsLoading] = useState(false)
-  /** Wallet Stripe totals are expensive; load only when the user opens Digital wallet (or links an athlete). */
+  /** Wallet totals load when the user opens Digital wallet (or links an athlete). */
   const [spartanWalletPanelActivated, setSpartanWalletPanelActivated] = useState(false)
   const [activeProfileTab, setActiveProfileTab] = useState("account")
   const spartanWalletPrimedRef = useRef(false)
@@ -116,7 +115,6 @@ export function ProfileClient() {
       setSpartanWalletPanelActivated(false)
       setActiveProfileTab("account")
       setSupporterContacts(null)
-      setSupporterLookbackDays(null)
       setSupporterContactsLoading(false)
     }
   }, [authLoading, isAuthenticated])
@@ -144,17 +142,13 @@ export function ProfileClient() {
       if (res.ok) {
         const data = (await res.json().catch(() => ({}))) as {
           athletes?: ProfileSpartanSupportersAthletePayload[]
-          lookbackDays?: number
         }
         setSupporterContacts(data.athletes ?? [])
-        setSupporterLookbackDays(typeof data.lookbackDays === "number" ? data.lookbackDays : null)
       } else {
         setSupporterContacts(null)
-        setSupporterLookbackDays(null)
       }
     } catch {
       setSupporterContacts(null)
-      setSupporterLookbackDays(null)
     } finally {
       setSupporterContactsLoading(false)
     }
@@ -173,6 +167,7 @@ export function ProfileClient() {
             athleteId: string
             name: string
             fundraisingCode: string | null
+            ledgerCodes?: string[]
             totalCents: number
             giftCount?: number
             raceSignupCount?: number
@@ -946,7 +941,6 @@ export function ProfileClient() {
             spartanFundraisingLoading={spartanFundraisingLoading}
             supporterContactsLoading={supporterContactsLoading}
             supporterContacts={supporterContacts}
-            supporterLookbackDays={supporterLookbackDays}
             linkedLoading={linkedLoading}
             linkedCount={linkedAthletes.length}
             linkedAthletes={linkedAthletes}

@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { EXPENSE_TYPE_OPTIONS } from "@/lib/athlete-expense-requests"
 import { notifyStaffNewReimbursementRequestDegraded } from "@/lib/reimbursement-notify"
+import { getWalletAthleteIdsForParentUser } from "@/lib/parent-spartan-fundraising-totals"
 import { nanoid } from "nanoid"
 
 export const runtime = "nodejs"
@@ -114,15 +115,21 @@ export async function POST(request: NextRequest) {
   }
 
   const admin = createAdminClient()
-  const { data: link, error: linkErr } = await admin
-    .from("parent_athlete_links")
-    .select("athlete_id")
-    .eq("user_id", user.id)
-    .eq("athlete_id", athleteId)
-    .maybeSingle()
+  let walletIds: string[]
+  try {
+    walletIds = await getWalletAthleteIdsForParentUser(admin, user.id)
+  } catch (e) {
+    console.error("[RecruitNC] expense-requests POST wallet scope", e)
+    return NextResponse.json({ error: "Could not verify athletes for this account" }, { status: 500 })
+  }
 
-  if (linkErr || !link) {
-    return NextResponse.json({ error: "Link the athlete in Your athletes before submitting" }, { status: 403 })
+  if (!walletIds.includes(athleteId)) {
+    return NextResponse.json(
+      {
+        error: "Link the athlete in Family & athletes before submitting a reimbursement for them.",
+      },
+      { status: 403 },
+    )
   }
 
   let documentUrl: string | null = null
