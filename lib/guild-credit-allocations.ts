@@ -83,6 +83,49 @@ export async function fetchGuildReservedCentsByAthleteId(
   return map
 }
 
+/**
+ * All RecruitNC accounts: pending + guild_applied totals per athlete (any `user_id` on the row).
+ * Use for **family digital wallet** and allocate caps so transfers done under another login (same athlete_id) still count.
+ */
+export async function fetchGuildReservedCentsForAthleteIds(
+  admin: SupabaseClient,
+  athleteIds: string[],
+): Promise<Map<string, number>> {
+  const uniq = [...new Set(athleteIds.filter((id) => typeof id === "string" && id.trim().length > 0).map((id) => id.trim()))]
+  if (uniq.length === 0) return new Map()
+
+  const { data, error } = await admin
+    .from("guild_credit_allocations")
+    .select("athlete_id, amount_cents")
+    .in("athlete_id", uniq)
+    .in("status", ["pending", "guild_applied"])
+
+  if (error) {
+    if (error.code === "42P01" || error.message?.includes("does not exist")) {
+      return new Map()
+    }
+    throw new Error(error.message)
+  }
+  const map = new Map<string, number>()
+  for (const r of data ?? []) {
+    const row = r as { athlete_id: string; amount_cents: number }
+    const id = String(row.athlete_id)
+    map.set(id, (map.get(id) ?? 0) + Number(row.amount_cents))
+  }
+  return map
+}
+
+/** Cap checks: sum reserved/applied for this athlete from every parent account (prevents double-allocation). */
+export async function sumReservedGuildAllocationCentsForAthleteAnyUser(
+  admin: SupabaseClient,
+  athleteId: string,
+): Promise<number> {
+  const id = typeof athleteId === "string" ? athleteId.trim() : ""
+  if (!id) return 0
+  const map = await fetchGuildReservedCentsForAthleteIds(admin, [id])
+  return map.get(id) ?? 0
+}
+
 /** All parents: sum pending + guild_applied per athlete (admin Spartan rollup). */
 export async function fetchGuildReservedCentsByAthleteIdGlobal(admin: SupabaseClient): Promise<Map<string, number>> {
   const { data, error } = await admin
@@ -106,9 +149,8 @@ export async function fetchGuildReservedCentsByAthleteIdGlobal(admin: SupabaseCl
 }
 
 /**
- * Sum Guild reservations (`pending` + `guild_applied`) for these athlete UUIDs and **any** parent account.
- * Use {@link fetchGuildReservedCentsByAthleteId} when you need per-user caps; use this for a household /
- * multi-roster-id rollup (athlete gift page).
+ * Sum Guild reservations (`pending` + `guild_applied`) for these athlete UUIDs and **any** RecruitNC account.
+ * Use {@link fetchGuildReservedCentsByAthleteId} only when you need rows scoped to a single `user_id`.
  */
 export async function sumGuildReservedAllocationCentsForAthleteIds(
   admin: SupabaseClient,
