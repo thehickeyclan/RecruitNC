@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { AthleteDetail } from "@/components/athlete-detail"
 import { TournamentResultsDisplay } from "@/components/tournament-results-display"
 import { ProfileViewTracker } from "@/components/profile-view-tracker"
@@ -14,27 +15,26 @@ type NchsaaResult = { year: number; place: number | null; classification: string
 /**
  * Profile by ?id= — no dynamic segment, so the document request can complete.
  * Tournament data: single GET /api/athlete/[id] (NHSCA + NCHSAA merge + Super32 + national team on the server).
+ *
+ * useSearchParams (inside Suspense) avoids a mount race where a separate effect set `id` from
+ * window.location after the fetch effect ran with "" and stuck on "Missing id".
  */
-export default function ViewProfilePage() {
+function ViewProfileContent() {
   const { user } = useAuth()
-  const [id, setId] = useState("")
+  const searchParams = useSearchParams()
+  const id = searchParams.get("id")?.trim() ?? ""
   const [athlete, setAthlete] = useState<AthleteRecord | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    if (typeof window === "undefined") return
-    const params = new URLSearchParams(window.location.search)
-    const q = params.get("id")?.trim() ?? ""
-    setId(q)
-  }, [])
+  const [loading, setLoading] = useState(() => Boolean(id))
 
   useEffect(() => {
     if (!id) {
-      setLoading(false)
+      setAthlete(null)
       setError("Missing id. Use ?id= athlete-uuid")
+      setLoading(false)
       return
     }
+
     const apiUrl = `/api/athlete/${encodeURIComponent(id)}`
     const FETCH_TIMEOUT_MS = 30000
     const controller = new AbortController()
@@ -111,8 +111,12 @@ export default function ViewProfilePage() {
           <h1 className="text-xl font-bold text-gray-900 mb-2">Profile not found</h1>
           <p className="text-sm text-red-600 font-mono mb-4">{error ?? "No data"}</p>
           <div className="flex flex-wrap gap-4">
-            <a href={`/view-profile?id=${encodeURIComponent(id)}`} className="text-[#002147] underline">Try again</a>
-            <a href="/prospects/all" className="text-[#002147] underline">View all prospects</a>
+            <a href={`/view-profile?id=${encodeURIComponent(id)}`} className="text-[#002147] underline">
+              Try again
+            </a>
+            <a href="/prospects/all" className="text-[#002147] underline">
+              View all prospects
+            </a>
           </div>
         </div>
       </div>
@@ -146,5 +150,19 @@ export default function ViewProfilePage() {
         }
       />
     </div>
+  )
+}
+
+export default function ViewProfilePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+          <div className="text-[#002147] font-medium">Loading profile…</div>
+        </div>
+      }
+    >
+      <ViewProfileContent />
+    </Suspense>
   )
 }
