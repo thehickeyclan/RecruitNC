@@ -20,8 +20,7 @@ type Props = {
   /** First name for headings — same derivation as goal section */
   firstName: string
   /**
-   * When set (same object as the public stats grid / milestone), Raised + gift line use this so the family
-   * wallet matches donor-facing totals for this page’s ledger codes. Reimbursements and Guild still come from `row`.
+   * Optional legacy aligner when hub window fields are absent — same snapshot as public stats / milestone section.
    */
   ledgerPublicStats?: AthleteFundraisingPublicStats | null
 }
@@ -30,16 +29,29 @@ type Props = {
  * Family / staff only — reimbursements & Guild from Profile wallet; Raised aligns with public snapshot when provided.
  */
 export function FundraisingAthleteWalletPanel({ row, firstName, ledgerPublicStats }: Props) {
-  const raisedCents = ledgerPublicStats != null ? ledgerPublicStats.raisedCents : row.totalCents
-  const giftCount = ledgerPublicStats != null ? ledgerPublicStats.giftCount : row.giftCount
-  const ledgerAligned = ledgerPublicStats != null
+  const displayRaised =
+    typeof row.hubWindowRaisedCents === "number"
+      ? row.hubWindowRaisedCents
+      : ledgerPublicStats != null
+        ? ledgerPublicStats.raisedCents
+        : row.totalCents
+  const displayGiftCount =
+    typeof row.hubWindowGiftCount === "number"
+      ? row.hubWindowGiftCount
+      : ledgerPublicStats != null
+        ? ledgerPublicStats.giftCount
+        : row.giftCount
+  const ledgerAligned =
+    typeof row.hubWindowRaisedCents === "number" || ledgerPublicStats != null
 
   const reimb = row.reimbursementsPaidCents ?? 0
   const guildAlloc = row.guildAllocationsCents ?? 0
-  const net = raisedCents - reimb
+  /** Always all-time net from ledger math — do not subtract reimbursements from the hub headline alone. */
+  const net = row.netAfterReimbursementsCents ?? row.totalCents - reimb
   const remainingAfterGuild = net - guildAlloc
   const usedTotal = reimb + guildAlloc
   const showCodeHint = !row.fundraisingCode || row.codeUnavailable
+  const hubDays = row.hubLookbackDays
 
   return (
     <section
@@ -59,8 +71,8 @@ export function FundraisingAthleteWalletPanel({ row, firstName, ledgerPublicStat
               {firstName}&apos;s digital wallet
             </h2>
             <p className="mt-1 text-xs leading-snug text-white/55">
-              Total raised (all time), what has already been spent or reimbursed, and what is still available for this
-              athlete. Submit reimbursement requests from your parent profile under{" "}
+              Total raised (hub leaderboard window when shown), what has already been spent or reimbursed, and what is still
+              available for this athlete. Submit reimbursement requests from your parent profile under{" "}
               <span className="text-white/70">Fundraise</span>.
               {!ledgerAligned ? (
                 <>
@@ -90,8 +102,11 @@ export function FundraisingAthleteWalletPanel({ row, firstName, ledgerPublicStat
       <div className="mt-5 grid gap-3 sm:grid-cols-3">
         <div className="rounded-lg border border-white/10 bg-black/25 px-4 py-3 sm:py-4">
           <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#C8A94A]">Raised</p>
-          <p className="mt-1 text-xl font-black tabular-nums text-white sm:text-2xl">{formatUsd(raisedCents)}</p>
-          <p className="mt-1 text-[11px] leading-snug text-white/45">{giftCount} gifts</p>
+          <p className="mt-1 text-xl font-black tabular-nums text-white sm:text-2xl">{formatUsd(displayRaised)}</p>
+          <p className="mt-1 text-[11px] leading-snug text-white/45">
+            {displayGiftCount} gifts
+            {typeof hubDays === "number" ? ` · Same hub reporting window as /fundraising leaderboard` : ""}
+          </p>
         </div>
         <div className="rounded-lg border border-white/10 bg-black/25 px-4 py-3 sm:py-4">
           <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#ff6b6b]">Spent</p>

@@ -99,7 +99,9 @@ export default function AdminFundraisingRankingsPage() {
 
   const ranked = useMemo(() => [...byAthlete].sort((a, b) => b.totalCents - a.totalCents), [byAthlete])
 
-  const dayPresets = [30, 90, 120, 365]
+  const hubDefaultDays = DEFAULT_FUNDRAISING_CAMPAIGN.defaultLookbackDays
+
+  const dayPresets = useMemo(() => [...new Set([30, 90, hubDefaultDays, 365])].sort((a, b) => a - b), [hubDefaultDays])
 
   const csvHref = (kind: string) =>
     `/api/admin/spartan-export?kind=${kind}&days=${days}&campaign=${encodeURIComponent(campaignSlug)}`
@@ -158,7 +160,7 @@ export default function AdminFundraisingRankingsPage() {
             </select>
           </div>
           <div className="flex flex-col gap-2">
-            <span className="text-sm font-medium">Window (days)</span>
+            <span className="text-sm font-medium">Lookback window</span>
             <div className="flex flex-wrap gap-2">
               {dayPresets.map((d) => (
                 <Button
@@ -169,7 +171,7 @@ export default function AdminFundraisingRankingsPage() {
                   className={days === d ? "" : "border-[#003366]/20"}
                   onClick={() => setDays(d)}
                 >
-                  {d}d
+                  {d === hubDefaultDays ? "Hub default" : `${d}d`}
                 </Button>
               ))}
             </div>

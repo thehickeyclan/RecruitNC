@@ -38,7 +38,7 @@ function csvCell(v: string | number | null | undefined): string {
 }
 
 /**
- * GET ?kind=runners|receipts|credits|tees|ledger&days=120&campaign=
+ * GET `?kind=runners|receipts|credits|tees|ledger&days=<n>&campaign=`
  * CSV downloads for fundraising ops (campaign-filtered Stripe sessions).
  */
 export async function GET(request: NextRequest) {

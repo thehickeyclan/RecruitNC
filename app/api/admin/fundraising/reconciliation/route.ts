@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic"
  * GET /api/admin/fundraising/reconciliation
  *
  * Compares `athlete_fundraising_profiles.total_raised_cents` to mirror-based lifetime totals (same as Profile wallet),
- * plus 120-day window totals, all-time reimbursements, Guild holds, and optional ledger Spartan checkout sums.
+ * plus hub lookback window totals, all-time reimbursements, Guild holds, and optional ledger Spartan checkout sums.
  *
  * Query:
  * - `athlete_id` — single athlete (ignores limit/offset)

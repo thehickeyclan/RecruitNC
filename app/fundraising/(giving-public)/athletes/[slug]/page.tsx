@@ -9,11 +9,12 @@ import {
   ATHLETE_PUBLIC_GIFTS_NO_ROW_CAP,
   getAthleteFundraisingPublicSnapshot,
   getAthleteOwnerThankYouRowsForLedgerCodes,
+  getAthleteHubLeaderboardAlignedTotals,
   type AthleteFundraisingPublicStats,
 } from "@/lib/fundraising/athlete-public-stats"
 import { HardLink } from "@/components/hard-link"
 import { createClient } from "@/lib/supabase/server"
-import { DEFAULT_FUNDRAISING_CAMPAIGN, FUNDRAISING_GIVE_PAGE_PATH } from "@/lib/fundraising/campaign-registry"
+import { FUNDRAISING_GIVE_PAGE_PATH } from "@/lib/fundraising/campaign-registry"
 import { formatUsdWhole } from "@/app/fundraising/components/FundraisingHero"
 import { userCanManageFundraisingForAthlete, userIsRecruitNcAdmin } from "@/lib/fundraising/athlete-fundraising-access"
 import { FundraisingAthleteQrCard } from "./fundraising-athlete-qr-card"
@@ -146,6 +147,9 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           mirrorFundraisingSlugs: [slugNorm],
         })
       : Promise.resolve(null),
+    snapshotLedger.length > 0
+      ? getAthleteHubLeaderboardAlignedTotals(snapshotLedger, { mirrorFundraisingSlugs: [slugNorm] })
+      : Promise.resolve(null),
     athleteId ? fetchRecruitingProfilePhoto(admin, athleteId) : Promise.resolve(null),
     fetchPendingActivationUserIdsForSlug(admin, slugNorm),
   ])
@@ -174,7 +178,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
         null,
       ] as const)
 
-  const [[snapshot, recruitingPhotoUrl, pendingActivationUserIds], [ownerThankYouRows, thankAckLedgerKeys, wiringSnapshot, managerWalletRow]] =
+  const [[snapshot, hubLeaderboardTotals, recruitingPhotoUrl, pendingActivationUserIds], [ownerThankYouRows, thankAckLedgerKeys, wiringSnapshot, managerWalletRow]] =
     await Promise.all([publicDataPromise, managerDataPromise])
 
   const slugHasPendingActivation = pendingActivationUserIds.length > 0
@@ -190,7 +194,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
     thanked: thankAckLedgerKeys.has(r.ledgerKey),
   }))
 
-  /** Totals use the same mirror + ledger codes as Profile → Digital wallet ({@link getAthleteFundraisingWalletSnapshot}). */
+  /** Lifetime mirror stats for gift tables / race counts; headline raised uses {@link hubLeaderboardTotals} when present. */
   const EMPTY_STATS: AthleteFundraisingPublicStats = {
     raisedCents: 0,
     giftCount: 0,
@@ -237,7 +241,9 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
     resolved.entry?.label?.trim() || (schoolLine ? `${displayName} · ${schoolLine}` : displayName)
 
   const goalCents = profile?.campaign_goal_cents ?? null
-  const raisedForBar = stats?.raisedCents ?? 0
+  /** Headline raised + goal progress: same hub Stripe basis as `/fundraising` leaderboard (not lifetime-only mirror). */
+  const raisedForBar = hubLeaderboardTotals?.raisedCents ?? stats?.raisedCents ?? 0
+  const milestoneGiftCount = hubLeaderboardTotals?.giftCount ?? stats?.giftCount ?? 0
 
   let fundraisingVideoSignedUrl: string | null = null
   let fundraisingThumbSignedUrl: string | null = null
@@ -494,11 +500,11 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
 
         {code && stats && checkoutLive ? (
           <FundraisingSteppedProgress
-            raisedCents={stats.raisedCents}
+            raisedCents={raisedForBar}
             goalCents={goalCents}
             athleteLabel={displayName}
             showOwnerHints={showOwnerHints && checkoutLive}
-            giftCount={stats.giftCount}
+            giftCount={milestoneGiftCount}
           />
         ) : null}
 
@@ -563,7 +569,6 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
             canEditStory={false}
             initialBio=""
             donorRows={ownerThankYouRowsWithAck}
-            lookbackDays={DEFAULT_FUNDRAISING_CAMPAIGN.defaultLookbackDays}
           />
         ) : null}
 

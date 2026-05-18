@@ -17,7 +17,6 @@ type Props = {
   canEditStory: boolean
   initialBio: string
   donorRows: AthleteOwnerThankYouRowWithAck[]
-  lookbackDays: number
 }
 
 export function FundraisingOwnerPanel({
@@ -27,7 +26,6 @@ export function FundraisingOwnerPanel({
   canEditStory,
   initialBio,
   donorRows,
-  lookbackDays,
 }: Props) {
   const router = useRouter()
   const [bio, setBio] = useState(initialBio)
@@ -172,7 +170,7 @@ export function FundraisingOwnerPanel({
 
             <div className="border-t border-white/10 pt-8">
               <h3 className="font-[family-name:var(--font-fundraising-display)] text-sm font-bold uppercase tracking-wide text-white">
-                Supporters (recent gifts, last {lookbackDays} days)
+                Supporters (recent gifts, hub reporting window)
               </h3>
               <p className="mt-1 text-xs text-white/50">
                 Email comes from checkout. Phone shows only if the donor entered it when paying — many rows will show “—”.
@@ -184,7 +182,7 @@ export function FundraisingOwnerPanel({
               ) : null}
               {thankAckError ? <p className="mt-2 text-sm text-red-400/90">{thankAckError}</p> : null}
               {donorRows.length === 0 ? (
-                <p className="mt-4 text-sm text-white/55">No gifts in this list yet (rolling {lookbackDays}-day window).</p>
+                <p className="mt-4 text-sm text-white/55">No gifts in this list yet for the current hub reporting window.</p>
               ) : (
                 <div className="mt-4 overflow-x-auto rounded-lg border border-white/10">
                   <table className="w-full min-w-[560px] text-left text-sm">

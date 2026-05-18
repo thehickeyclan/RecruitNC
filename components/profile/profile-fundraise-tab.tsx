@@ -12,8 +12,13 @@ type SpartanRow = {
   name: string
   fundraisingCode: string | null
   ledgerCodes?: string[]
+  /** Lifetime gross (mirror) — reimbursements/net use this. */
   totalCents: number
   giftCount?: number
+  /** When set, matches `/fundraising` athlete leaderboard (hub lookback window). */
+  hubWindowRaisedCents?: number
+  hubWindowGiftCount?: number
+  hubLookbackDays?: number
   raceSignupCount?: number
   codeUnavailable?: boolean
   reimbursementsPaidCents?: number
@@ -75,11 +80,11 @@ export function ProfileFundraiseTab({
             <div>
               <h2 className="text-lg font-bold text-white">Digital Wallet</h2>
               <p className="text-xs text-white/50">
-                All-time: every paid gift credited to your athlete’s NCU code(s) that we have on file, across NC United
-                campaigns we track, minus reimbursements paid and Guild holds. Wrong name on a card? Use{" "}
-                <strong className="text-white/70">Remove from my account</strong> on that row (or under{" "}
-                <strong className="text-white/70">Family &amp; athletes</strong>). If they are only your Account-tab athlete,
-                change that on <strong className="text-white/70">Account</strong>.
+                <strong className="text-white/70">Raised</strong> matches the NC United fundraising hub leaderboard (same rolling
+                window of athlete-credited paid gifts as <span className="text-white/70">/fundraising</span>).{" "}
+                <strong className="text-white/70">Available</strong> is after all-time reimbursements and Guild holds. Wrong name on a
+                card? Use <strong className="text-white/70">Remove from my account</strong> on that row (or under{" "}
+                <strong className="text-white/70">Family &amp; athletes</strong>).
               </p>
             </div>
           </div>
@@ -127,10 +132,12 @@ export function ProfileFundraiseTab({
           ) : (
             <div className="space-y-4">
               {spartanFundraising.athletes.map((row) => {
-                const net = row.netAfterReimbursementsCents ?? row.totalCents
+                const raisedShown = row.hubWindowRaisedCents ?? row.totalCents
+                const giftsShown = row.hubWindowGiftCount ?? row.giftCount ?? 0
+                const reimb = row.reimbursementsPaidCents ?? 0
+                const net = row.netAfterReimbursementsCents ?? row.totalCents - reimb
                 const guildAlloc = row.guildAllocationsCents ?? 0
                 const available = net - guildAlloc
-                const reimb = row.reimbursementsPaidCents ?? 0
                 const spent = reimb + guildAlloc
                 const showSetupHint = !row.fundraisingCode || row.codeUnavailable
                 const linkMeta = linkedAthletes.find((a) => a.id === row.athleteId)
@@ -190,10 +197,13 @@ export function ProfileFundraiseTab({
                           <span className="text-[10px] font-medium uppercase tracking-wide">Raised</span>
                         </div>
                         <p className="mt-1 text-lg font-bold tabular-nums text-white sm:text-xl">
-                          {formatUsd(row.totalCents)}
+                          {formatUsd(raisedShown)}
                         </p>
                         <p className="mt-0.5 text-[10px] text-white/40">
-                          {row.giftCount ?? 0} gift{(row.giftCount ?? 0) !== 1 ? "s" : ""}
+                          {giftsShown} gift{giftsShown !== 1 ? "s" : ""}
+                          {typeof row.hubLookbackDays === "number"
+                            ? ` · hub window (${row.hubLookbackDays}d)`
+                            : ""}
                         </p>
                       </div>
 

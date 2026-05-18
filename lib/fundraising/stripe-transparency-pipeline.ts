@@ -72,7 +72,7 @@ export async function loadCorrectedStripeDonationsForCampaignWindow(
 
 /**
  * **Uncached** paid Spartan checkouts for `campaign.defaultLookbackDays`, with the same corrections as
- * `GET /api/spartan/supporters` when called with `days` equal to that value (e.g. 120 for Fayetteville 2026).
+ * `GET /api/spartan/supporters` when called with `days` equal to `campaign.defaultLookbackDays`.
  * Use for **public athlete gift pages** so raised totals match the Spartan supporter board exactly.
  */
 export async function loadCorrectedStripeDonationsForSpartanPublicWindow(

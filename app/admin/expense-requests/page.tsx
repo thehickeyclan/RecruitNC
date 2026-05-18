@@ -84,11 +84,11 @@ type ParentAthleteRollup = {
   }
   globalReimbursementsPaidAllTimeCents: number
   /** Full Fayetteville Stripe window gross — ties to Admin → Fundraising. */
-  fayettevilleGross120dCents: number
-  raisedOutsideLinkedAthleteRows120dCents: number
+  fayettevilleGrossHubWindowCents: number
+  raisedOutsideLinkedAthleteRowsHubWindowCents: number
   reimbursementsPaidAllTimeOutsideLinkedRowsCents: number
-  ncUnitedCommunityFund120dCents: number
-  raisedAthleteAttributedOutsideParentLinks120dCents: number
+  ncUnitedCommunityFundHubWindowCents: number
+  raisedAthleteAttributedOutsideParentLinksHubWindowCents: number
 }
 
 function formatMoney(cents: number) {
@@ -329,9 +329,9 @@ export default function AdminExpenseRequestsPage() {
                   </Card>
                   <Card>
                     <CardHeader className="pb-2">
-                      <CardDescription>Fayetteville gross ({parentAthleteRollup.lookbackDays}d, all sessions)</CardDescription>
+                      <CardDescription>Fayetteville gross (hub window, all sessions)</CardDescription>
                       <CardTitle className="text-2xl tabular-nums">
-                        {formatMoney(parentAthleteRollup.fayettevilleGross120dCents)}
+                        {formatMoney(parentAthleteRollup.fayettevilleGrossHubWindowCents)}
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="pt-0 text-xs text-muted-foreground">
@@ -340,9 +340,9 @@ export default function AdminExpenseRequestsPage() {
                   </Card>
                   <Card>
                     <CardHeader className="pb-2">
-                      <CardDescription>NC United fund ({parentAthleteRollup.lookbackDays}d)</CardDescription>
+                      <CardDescription>NC United fund (hub window)</CardDescription>
                       <CardTitle className="text-2xl tabular-nums">
-                        {formatMoney(parentAthleteRollup.ncUnitedCommunityFund120dCents ?? 0)}
+                        {formatMoney(parentAthleteRollup.ncUnitedCommunityFundHubWindowCents ?? 0)}
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="pt-0 text-xs text-muted-foreground">
@@ -351,15 +351,15 @@ export default function AdminExpenseRequestsPage() {
                   </Card>
                   <Card
                     className={
-                      (parentAthleteRollup.raisedAthleteAttributedOutsideParentLinks120dCents ?? 0) > 0
+                      (parentAthleteRollup.raisedAthleteAttributedOutsideParentLinksHubWindowCents ?? 0) > 0
                         ? "border-amber-400/70 bg-amber-50/50"
                         : ""
                     }
                   >
                     <CardHeader className="pb-2">
-                      <CardDescription>Athlete $ outside parent links ({parentAthleteRollup.lookbackDays}d)</CardDescription>
+                      <CardDescription>Athlete $ outside parent links (hub window)</CardDescription>
                       <CardTitle className="text-2xl tabular-nums">
-                        {formatMoney(parentAthleteRollup.raisedAthleteAttributedOutsideParentLinks120dCents ?? 0)}
+                        {formatMoney(parentAthleteRollup.raisedAthleteAttributedOutsideParentLinksHubWindowCents ?? 0)}
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="pt-0 text-xs text-muted-foreground">
@@ -382,7 +382,7 @@ export default function AdminExpenseRequestsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <Card>
                     <CardHeader className="pb-2">
-                      <CardDescription>Spartan raised ({parentAthleteRollup.lookbackDays}d, linked rows only)</CardDescription>
+                      <CardDescription>Spartan raised (hub window, linked rows only)</CardDescription>
                       <CardTitle className="text-2xl tabular-nums">
                         {formatMoney(parentAthleteRollup.totalsForLinkedAthletes.raisedCents)}
                       </CardTitle>
@@ -408,10 +408,10 @@ export default function AdminExpenseRequestsPage() {
                     <CardHeader className="pb-2">
                       <CardDescription className="text-slate-600">Check: gross ≈ linked + NC United + athlete gap</CardDescription>
                       <CardTitle className="text-base font-normal text-slate-700 tabular-nums leading-snug">
-                        {formatMoney(parentAthleteRollup.fayettevilleGross120dCents)} ≈{" "}
+                        {formatMoney(parentAthleteRollup.fayettevilleGrossHubWindowCents)} ≈{" "}
                         {formatMoney(parentAthleteRollup.totalsForLinkedAthletes.raisedCents)} +{" "}
-                        {formatMoney(parentAthleteRollup.ncUnitedCommunityFund120dCents ?? 0)} +{" "}
-                        {formatMoney(parentAthleteRollup.raisedAthleteAttributedOutsideParentLinks120dCents ?? 0)}
+                        {formatMoney(parentAthleteRollup.ncUnitedCommunityFundHubWindowCents ?? 0)} +{" "}
+                        {formatMoney(parentAthleteRollup.raisedAthleteAttributedOutsideParentLinksHubWindowCents ?? 0)}
                       </CardTitle>
                     </CardHeader>
                   </Card>
@@ -429,11 +429,11 @@ export default function AdminExpenseRequestsPage() {
                         <TableRow>
                           <TableHead>Athlete</TableHead>
                           <TableHead>Code</TableHead>
-                          <TableHead className="text-right">Raised ({parentAthleteRollup.lookbackDays}d)</TableHead>
-                          <TableHead className="text-right">Reimb paid ({parentAthleteRollup.lookbackDays}d)</TableHead>
+                          <TableHead className="text-right">Raised (hub)</TableHead>
+                          <TableHead className="text-right">Reimb paid (hub)</TableHead>
                           <TableHead className="text-right">Guild</TableHead>
                           <TableHead className="text-right">Spent (reimb+Guild)</TableHead>
-                          <TableHead className="text-right">Net ({parentAthleteRollup.lookbackDays}d)</TableHead>
+                          <TableHead className="text-right">Net (hub)</TableHead>
                           <TableHead className="text-right">Remaining</TableHead>
                           <TableHead className="text-right">Reimb paid (all-time)</TableHead>
                         </TableRow>

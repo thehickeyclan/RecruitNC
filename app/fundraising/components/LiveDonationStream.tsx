@@ -219,7 +219,7 @@ export function LiveDonationStream({
         </div>
         <p className="mt-3 max-w-2xl text-sm text-white">
           <strong className="text-white">Every paid gift</strong> across <strong className="text-white">all NC United hub campaigns</strong> in
-          Stripe, last <span className="tabular-nums text-white">{hubTransparency.lookbackDays}</span> days (newest first) — same combined scope as
+          Stripe within the hub reporting window (newest first) — same combined scope as
           the headline totals. Each row shows <strong className="text-white">source</strong> (where checkout started) and{" "}
           <strong className="text-white">campaign</strong> (Stripe drive). Filter by campaign below when you want a single drive.
         </p>

@@ -85,8 +85,7 @@ export function LeaderboardPreview({
               Athlete leaderboard
             </h2>
             <p className="mt-2 max-w-xl text-sm text-white">
-              Every athlete with athlete-credited paid gifts in the last{" "}
-              <span className="tabular-nums text-white">{hubTransparency.lookbackDays}</span> days — same combined NC United hub
+              Every athlete with athlete-credited paid gifts in the hub reporting window — same combined NC United hub
               scope as the headline totals above (sorted by amount raised).
             </p>
           </div>

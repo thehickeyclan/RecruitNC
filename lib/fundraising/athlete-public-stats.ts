@@ -15,7 +15,11 @@ import {
   publicGiftCampaignLabelWithCheckoutSurface,
   resolveFundraisingCheckoutSurface,
 } from "@/lib/fundraising/hub-activity-meta"
-import { loadCorrectedStripeDonationsForCampaignWindow, loadCorrectedStripeDonationsForSpartanPublicWindow } from "@/lib/fundraising/stripe-transparency-pipeline"
+import {
+  loadCorrectedStripeDonationsForAllHubCampaignsWindow,
+  loadCorrectedStripeDonationsForCampaignWindow,
+  loadCorrectedStripeDonationsForSpartanPublicWindow,
+} from "@/lib/fundraising/stripe-transparency-pipeline"
 import type { SpartanFayettevilleDonation } from "@/lib/spartan-fayetteville-stripe"
 
 const CODE_RE = /^NCU-[A-Za-z0-9]+-\d{2}$/i
@@ -314,8 +318,103 @@ function giftsFromMirrorCredited(credited: DonationSelectRow[], limit: number): 
 }
 
 /**
- * All paid `spartan_donations` rows credited to these NCU codes (credit corrections, every registered campaign,
- * all time). Same headline totals for Profile → Digital wallet and the public athlete gift page.
+ * Hub-aligned headline totals (see {@link AthleteHubLeaderboardAlignedTotals}) vs lifetime mirror snapshot.
+ * All paid `spartan_donations` rows — gift lists & reimbursement math use lifetime {@link getAthleteFundraisingWalletSnapshot}.
+ */
+export type AthleteHubLeaderboardAlignedTotals = {
+  raisedCents: number
+  giftCount: number
+  lookbackDays: number
+  source: "stripe" | "mirror"
+}
+
+export type AthleteHubLeaderboardAlignedOpts = {
+  /**
+   * When provided, skips calling `loadCorrectedStripeDonationsForAllHubCampaignsWindow` — use one shared list for
+   * multi-athlete parent wallet loads (same Stripe cache as the hub).
+   */
+  preloadedStripeWindow?: SpartanFayettevilleDonation[] | null
+}
+
+export function sumStripeHubWindowForLedgerCodes(
+  stripeRows: SpartanFayettevilleDonation[],
+  ledgerCodesInput: string[],
+  mirrorOpts?: AthleteWalletMirrorOpts,
+): { raisedCents: number; giftCount: number } {
+  const slugNorm = new Set(
+    (mirrorOpts?.mirrorFundraisingSlugs ?? []).map((s) => s.trim().toLowerCase()).filter(Boolean),
+  )
+
+  const codeSet = new Set(
+    [...new Set(ledgerCodesInput.map((c) => c.trim().toUpperCase()).filter((c) => CODE_RE.test(c)))],
+  )
+  /** Roster pins can miss a collision variant still present on Stripe; pull codes from sessions tied to this gift-page slug. */
+  for (const r of stripeRows) {
+    if (r.attribution === "general_nc_united") continue
+    const sl = (r.fundraisingAthleteSlug ?? "").trim().toLowerCase()
+    if (!sl || !slugNorm.has(sl)) continue
+    const ac = (r.athleteCode ?? "").trim().toUpperCase()
+    if (ac && CODE_RE.test(ac)) codeSet.add(ac)
+  }
+
+  const seenSession = new Set<string>()
+  let raisedCents = 0
+  let giftCount = 0
+  for (const r of stripeRows) {
+    if (r.attribution === "general_nc_united") continue
+    const ac = (r.athleteCode ?? "").trim().toUpperCase()
+    if (!ac || !codeSet.has(ac)) continue
+    const sid = r.sessionId.trim()
+    if (!sid || seenSession.has(sid)) continue
+    seenSession.add(sid)
+    raisedCents += typeof r.amountCents === "number" ? r.amountCents : 0
+    giftCount += 1
+  }
+  return { raisedCents, giftCount }
+}
+
+/**
+ * Raised in the hub lookback window (`defaultLookbackDays` from the campaign registry) for the athlete’s NCU ledger codes — matches `/fundraising` athlete
+ * leaderboard when Stripe lists load; falls back to dated `spartan_donations` mirror rows (same fallback as the hub).
+ */
+export async function getAthleteHubLeaderboardAlignedTotals(
+  ledgerCodesInput: string[],
+  mirrorOpts?: AthleteWalletMirrorOpts,
+  alignedOpts?: AthleteHubLeaderboardAlignedOpts,
+): Promise<AthleteHubLeaderboardAlignedTotals | null> {
+  const raw = [...new Set(ledgerCodesInput.map((c) => c.trim().toUpperCase()).filter((c) => CODE_RE.test(c)))]
+  if (raw.length === 0) return null
+
+  const lookbackDays = DEFAULT_FUNDRAISING_CAMPAIGN.defaultLookbackDays
+
+  let stripeRows: SpartanFayettevilleDonation[] | null | undefined = alignedOpts?.preloadedStripeWindow
+  if (stripeRows === undefined) {
+    stripeRows = await loadCorrectedStripeDonationsForAllHubCampaignsWindow(lookbackDays, null)
+  }
+  if (stripeRows != null) {
+    const { raisedCents, giftCount } = sumStripeHubWindowForLedgerCodes(stripeRows, ledgerCodesInput, mirrorOpts)
+    return { raisedCents, giftCount, lookbackDays, source: "stripe" }
+  }
+
+  const merged = await fetchAthleteMirrorCreditedRowsMerged(createAdminClient(), raw, {
+    allRegisteredCampaigns: true,
+    mirrorFundraisingSlugs: mirrorOpts?.mirrorFundraisingSlugs,
+  })
+  if (merged == null) return null
+  const cutoff = Date.now() - lookbackDays * 24 * 60 * 60 * 1000
+  let raisedCents = 0
+  let giftCount = 0
+  for (const row of merged) {
+    const t = new Date(row.created_at ?? 0).getTime()
+    if (!Number.isFinite(t) || t < cutoff) continue
+    raisedCents += typeof row.amount_cents === "number" ? row.amount_cents : 0
+    giftCount += 1
+  }
+  return { raisedCents, giftCount, lookbackDays, source: "mirror" }
+}
+
+/**
+ * All paid mirror rows (lifetime) for ledger codes — recent gifts table and lifetime gross for reimbursement math.
  */
 export async function getAthleteFundraisingWalletSnapshot(
   ledgerCodesInput: string | string[],
