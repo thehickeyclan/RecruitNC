@@ -33,7 +33,19 @@ export async function getFundraisingWiringSnapshotsForAthleteIds(
   ])
 
   if (linkErr) console.warn("[fundraising-wiring-status] parent_athlete_links", linkErr.message)
-  if (profErr) console.warn("[fundraising-wiring-status] user_profiles athlete_id", profErr.message)
+
+  // 42P01 = missing table; 42703 = missing column — some prod DBs lack user_profiles.athlete_id.
+  let profileRows: { athlete_id?: string | null }[] = []
+  if (profErr) {
+    const code = (profErr as { code?: string }).code
+    if (code === "42P01" || code === "42703") {
+      profileRows = []
+    } else {
+      console.warn("[fundraising-wiring-status] user_profiles athlete_id", profErr.message)
+    }
+  } else {
+    profileRows = profiles ?? []
+  }
 
   for (const row of links ?? []) {
     const aid = typeof row.athlete_id === "string" ? row.athlete_id.trim() : ""
@@ -41,7 +53,7 @@ export async function getFundraisingWiringSnapshotsForAthleteIds(
     const cur = map.get(aid)!
     map.set(aid, { ...cur, parentAthleteLinkCount: cur.parentAthleteLinkCount + 1 })
   }
-  for (const row of profiles ?? []) {
+  for (const row of profileRows) {
     const aid = typeof row.athlete_id === "string" ? row.athlete_id.trim() : ""
     if (!aid || !map.has(aid)) continue
     const cur = map.get(aid)!
