@@ -78,6 +78,7 @@ export async function GET() {
 
       const rows = await getAthleteOwnerThankYouRowsForWalletLedgerCodes(
         a.ledgerCodes.length > 0 ? a.ledgerCodes : code ? [code] : [],
+        { mirrorFundraisingSlugs: a.mirrorFundraisingSlugs },
       )
       const ackSet = ackByAthlete.get(a.athleteId) ?? new Set<string>()
       let thankedCount = 0

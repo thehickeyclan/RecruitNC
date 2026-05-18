@@ -25,6 +25,22 @@ export function athleteCodeFromStripeSessionMetadata(
   return null
 }
 
+/**
+ * `spartan_donations.raw_metadata` — same as live Stripe metadata plus normalized keys written on upsert.
+ * Used when `athlete_code` column is NULL on legacy rows but metadata still has the NCU.
+ */
+export function athleteCodeFromPersistedDonationRawMetadata(raw: unknown): string | null {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null
+  const m = raw as Record<string, unknown>
+  const sessionShape = athleteCodeFromStripeSessionMetadata(m as Record<string, string | undefined>)
+  if (sessionShape) return sessionShape
+  for (const key of ["fundraising_code", "Fundraising_code"] as const) {
+    const v = m[key]
+    if (typeof v === "string" && NCU_CODE_RE.test(v.trim())) return v.trim().toUpperCase()
+  }
+  return null
+}
+
 /** Parse `?athlete=NCU-...` (and variants) from Checkout success_url — common on /spartan and hub flows. */
 export function athleteCodeFromCheckoutSuccessUrl(successUrl: string | null | undefined): string | null {
   const u = successUrl?.trim()

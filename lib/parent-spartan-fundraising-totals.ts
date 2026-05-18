@@ -58,6 +58,8 @@ export type ParentSpartanFundraisingAthleteRow = {
   fundraisingCode: string | null
   /** NCU codes merged for wallet totals (pin + profile + roster). */
   ledgerCodes: string[]
+  /** Profile gift-page slug(s) — include `spartan_donations.fundraising_athlete_slug` rows in wallet totals. */
+  mirrorFundraisingSlugs: string[]
   totalCents: number
   giftCount: number
   raceSignupCount: number
@@ -69,6 +71,14 @@ export type ParentSpartanFundraisingAthleteRow = {
   codeUnavailable?: boolean
 }
 
+export type BuildParentSpartanFundraisingRowsOpts = {
+  /**
+   * `active_only` (default): same as family Profile wallet.
+   * `any`: include inactive `athlete_fundraising_profiles` (prefer active row when both exist) — admin ledger / reconciliation.
+   */
+  fundraisingProfiles?: "active_only" | "any"
+}
+
 /**
  * Build wallet rows for linked athletes — lifetime paid gifts from `spartan_donations` (all registry campaigns)
  * plus all-time reimbursements; same ledger-code union as public athlete pages.
@@ -77,8 +87,11 @@ export async function buildParentSpartanFundraisingRowsForAthleteIds(
   admin: SupabaseClient,
   _viewerUserId: string,
   athleteIds: string[],
+  opts?: BuildParentSpartanFundraisingRowsOpts,
 ): Promise<ParentSpartanFundraisingAthleteRow[]> {
   if (athleteIds.length === 0) return []
+
+  const profileScope = opts?.fundraisingProfiles ?? "active_only"
 
   const { data: nameRows, error: nameError } = await admin.from("athletes").select("id, name").in("id", athleteIds)
   if (nameError) {
@@ -88,16 +101,20 @@ export async function buildParentSpartanFundraisingRowsForAthleteIds(
     (nameRows ?? []).map((r) => [String((r as { id: string }).id), String((r as { name: string | null }).name ?? "—")]),
   )
 
+  let profileQuery = admin
+    .from("athlete_fundraising_profiles")
+    .select(
+      "id, created_at, updated_at, athlete_id, slug, bio, photo_url, is_active, campaign_goal_cents, total_raised_cents, primary_fundraising_code, checkout_live",
+    )
+    .in("athlete_id", athleteIds)
+  if (profileScope === "active_only") {
+    profileQuery = profileQuery.eq("is_active", true)
+  }
+
   const [entries, reimbByAthleteId, profileRes, pinnedCodesByAthleteId] = await Promise.all([
     getFundraisingAthleteEntries(admin),
     fetchReimbursementPaidCentsByAthleteIdAllTime(admin),
-    admin
-      .from("athlete_fundraising_profiles")
-      .select(
-        "id, created_at, updated_at, athlete_id, slug, bio, photo_url, is_active, campaign_goal_cents, total_raised_cents, primary_fundraising_code, checkout_live",
-      )
-      .in("athlete_id", athleteIds)
-      .eq("is_active", true),
+    profileQuery,
     fetchPinnedFundraisingCodesByAthleteId(admin, athleteIds),
   ])
 
@@ -112,8 +129,18 @@ export async function buildParentSpartanFundraisingRowsForAthleteIds(
     console.warn("[parent-spartan-fundraising-totals] profiles:", profileRes.error.message)
   }
 
+  const profileRows = profileRes.data ?? []
+  const profileRowsSorted =
+    profileScope === "any"
+      ? [...profileRows].sort(
+          (a, b) =>
+            Number((b as { is_active?: boolean }).is_active === true) -
+            Number((a as { is_active?: boolean }).is_active === true),
+        )
+      : profileRows
+
   const profileByAthleteId = new Map<string, AthleteFundraisingProfileRow>()
-  for (const r of profileRes.data ?? []) {
+  for (const r of profileRowsSorted) {
     const row = r as AthleteFundraisingProfileRow
     if (!profileByAthleteId.has(row.athlete_id)) {
       profileByAthleteId.set(row.athlete_id, {
@@ -126,6 +153,7 @@ export async function buildParentSpartanFundraisingRowsForAthleteIds(
   type Pack = {
     fundraisingCode: string | null
     ledgerCodes: string[]
+    mirrorFundraisingSlugs: string[]
     stats: { raisedCents: number; giftCount: number; raceSignupCount: number } | null
   }
   const packById = new Map<string, Pack>()
@@ -134,13 +162,18 @@ export async function buildParentSpartanFundraisingRowsForAthleteIds(
     athleteIds.map(async (id) => {
       const profile = profileByAthleteId.get(id) ?? null
       const pinned = [...(pinnedCodesByAthleteId.get(id) ?? [])]
-      const { ledgerCodes, fundraisingCode } = ledgerCodesForFundraisingWallet(profile, entries, id, pinned)
+      const { ledgerCodes, fundraisingCode, mirrorFundraisingSlugs } = ledgerCodesForFundraisingWallet(profile, entries, id, pinned)
       const snapshot =
-        ledgerCodes.length > 0 ? await getAthleteFundraisingWalletSnapshot(ledgerCodes, ATHLETE_PUBLIC_GIFTS_NO_ROW_CAP) : null
+        ledgerCodes.length > 0
+          ? await getAthleteFundraisingWalletSnapshot(ledgerCodes, ATHLETE_PUBLIC_GIFTS_NO_ROW_CAP, {
+              mirrorFundraisingSlugs,
+            })
+          : null
       const st = snapshot?.stats
       packById.set(id, {
         fundraisingCode,
         ledgerCodes,
+        mirrorFundraisingSlugs,
         stats: st
           ? {
               raisedCents: st.raisedCents,
@@ -158,6 +191,7 @@ export async function buildParentSpartanFundraisingRowsForAthleteIds(
     const guildAlloc = guildReservedByAthlete.get(id) ?? 0
     const pack = packById.get(id)
     const ledgerCodes = pack?.ledgerCodes ?? []
+    const mirrorFundraisingSlugs = pack?.mirrorFundraisingSlugs ?? []
     const code = pack?.fundraisingCode ?? null
 
     if (!pack || ledgerCodes.length === 0) {
@@ -166,6 +200,7 @@ export async function buildParentSpartanFundraisingRowsForAthleteIds(
         name,
         fundraisingCode: null,
         ledgerCodes: [],
+        mirrorFundraisingSlugs: [],
         totalCents: 0,
         giftCount: 0,
         raceSignupCount: 0,
@@ -185,6 +220,7 @@ export async function buildParentSpartanFundraisingRowsForAthleteIds(
       name,
       fundraisingCode: code,
       ledgerCodes,
+      mirrorFundraisingSlugs,
       totalCents,
       giftCount,
       raceSignupCount,

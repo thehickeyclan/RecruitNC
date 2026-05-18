@@ -142,7 +142,9 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
   // Core public data — always fetched in parallel
   const publicDataPromise = Promise.all([
     snapshotLedger.length > 0
-      ? getAthleteFundraisingPublicSnapshot(snapshotLedger, ATHLETE_PUBLIC_GIFTS_NO_ROW_CAP)
+      ? getAthleteFundraisingPublicSnapshot(snapshotLedger, ATHLETE_PUBLIC_GIFTS_NO_ROW_CAP, {
+          mirrorFundraisingSlugs: [slugNorm],
+        })
       : Promise.resolve(null),
     athleteId ? fetchRecruitingProfilePhoto(admin, athleteId) : Promise.resolve(null),
     fetchPendingActivationUserIdsForSlug(admin, slugNorm),
@@ -152,7 +154,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
   const managerDataPromise = isFundraisingManager
     ? Promise.all([
         snapshotLedger.length > 0
-          ? getAthleteOwnerThankYouRowsForLedgerCodes(snapshotLedger)
+          ? getAthleteOwnerThankYouRowsForLedgerCodes(snapshotLedger, { mirrorFundraisingSlugs: [slugNorm] })
           : Promise.resolve([]),
         athleteId ? fetchThankYouAckLedgerKeys(admin, athleteId) : Promise.resolve(new Set<string>()),
         athleteId ? getFundraisingWiringAdminSnapshot(admin, athleteId) : Promise.resolve(null),

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/admin-auth"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getAthleteFundraisingPublicSnapshot, ATHLETE_PUBLIC_GIFTS_NO_ROW_CAP } from "@/lib/fundraising/athlete-public-stats"
+import { normalizeFundraisingProfileSlug } from "@/lib/fundraising/athlete-fundraising-profiles"
 
 export const dynamic = "force-dynamic"
 
@@ -69,7 +70,10 @@ export async function GET(
     }> = []
 
     if (fundraisingCode) {
-      const snapshot = await getAthleteFundraisingPublicSnapshot(fundraisingCode, ATHLETE_PUBLIC_GIFTS_NO_ROW_CAP)
+      const slugNorm = athleteSlug?.trim() ? normalizeFundraisingProfileSlug(athleteSlug) : null
+      const snapshot = await getAthleteFundraisingPublicSnapshot(fundraisingCode, ATHLETE_PUBLIC_GIFTS_NO_ROW_CAP, {
+        mirrorFundraisingSlugs: slugNorm ? [slugNorm] : undefined,
+      })
       if (snapshot) {
         stats = snapshot.stats
         gifts = snapshot.gifts

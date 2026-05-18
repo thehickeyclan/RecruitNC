@@ -3,6 +3,8 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import {
   fetchSpartanCreditCorrectionsIndex,
   effectiveAthleteCodeForDonationLedgerRow,
+  matchesGeneralFundLedgerIds,
+  stripePaymentIntentIdFromDonationRawMetadata,
 } from "@/lib/spartan-credit-corrections"
 import {
   DEFAULT_FUNDRAISING_CAMPAIGN,
@@ -141,6 +143,19 @@ async function fetchAthleteMirrorCreditedRows(
     mergeDonationRows(byId, data as DonationSelectRow[])
   }
 
+  /** Legacy rows: NULL `athlete_code` column but code still in persisted Stripe metadata. */
+  const metaOr = `raw_metadata->athlete_code.ilike.${codeUpper},raw_metadata->fundraising_code.ilike.${codeUpper}`
+  const { data: byPersistedMetaKeys, error: eMetaKeys } = await admin
+    .from("spartan_donations")
+    .select(sel)
+    .eq("status", "paid")
+    .or(metaOr)
+  if (eMetaKeys) {
+    console.warn("[athlete-public-stats] raw_metadata NCU keys", eMetaKeys.message)
+  } else {
+    mergeDonationRows(byId, byPersistedMetaKeys as DonationSelectRow[])
+  }
+
   const credited: DonationSelectRow[] = []
   for (const row of byId.values()) {
     const rowSlug = spartanCampaignFromDonationMirrorRow(row)
@@ -161,11 +176,65 @@ async function fetchAthleteMirrorCreditedRows(
   return credited
 }
 
+export type AthleteWalletMirrorOpts = {
+  /** Profile URL slug(s) for this athlete — credits `fundraising_athlete_slug` when the column or metadata lacked the NCU. */
+  mirrorFundraisingSlugs?: string[]
+}
+
+type MirrorCreditedOpts = { allRegisteredCampaigns?: boolean; mirrorFundraisingSlugs?: string[] }
+
+async function mergePaidDonationsByProfileSlugs(
+  admin: ReturnType<typeof createAdminClient>,
+  merged: Map<string, DonationSelectRow>,
+  codesUpper: string[],
+  opts?: MirrorCreditedOpts,
+): Promise<void> {
+  const slugList = [...new Set((opts?.mirrorFundraisingSlugs ?? []).map((s) => s.trim().toLowerCase()).filter(Boolean))]
+  if (slugList.length === 0) return
+
+  const idx = await fetchSpartanCreditCorrectionsIndex(admin)
+  const codesSet = new Set(codesUpper)
+  const sel = `${DONATION_SELECT}, created_at, donor_name, donor_email, spartan_campaign`
+
+  const orSlug = slugList.map((s) => `fundraising_athlete_slug.ilike.${s}`).join(",")
+  if (error) {
+    console.warn("[athlete-public-stats] fundraising_athlete_slug mirror", error.message)
+    return
+  }
+
+  for (const row of data ?? []) {
+    const rowCamp = spartanCampaignFromDonationMirrorRow(row as DonationSelectRow)
+    const inCampaignScope = opts?.allRegisteredCampaigns
+      ? hubSpartanDonationRowMatchesAnyRegisteredCampaign(rowCamp)
+      : hubSpartanDonationRowMatchesCampaign(rowCamp, DEFAULT_FUNDRAISING_CAMPAIGN)
+    if (!inCampaignScope) continue
+
+    const sid = typeof row.id === "string" ? row.id.trim() : ""
+    const pi = stripePaymentIntentIdFromDonationRawMetadata((row as DonationSelectRow).raw_metadata)
+    if (matchesGeneralFundLedgerIds(sid, pi, idx.generalFundSessionOrPi)) continue
+
+    const slugNorm = (row as DonationSelectRow).fundraising_athlete_slug?.trim().toLowerCase()
+    if (!slugNorm || !slugList.includes(slugNorm)) continue
+
+    const eff = effectiveAthleteCodeForDonationLedgerRow(
+      {
+        id: sid,
+        athlete_code: (row as DonationSelectRow).athlete_code,
+        raw_metadata: (row as DonationSelectRow).raw_metadata,
+      },
+      idx,
+    )
+    if (eff && !codesSet.has(eff)) continue
+
+    merged.set(sid, row as DonationSelectRow)
+  }
+}
+
 /** Same rules as single-code fetch; merges unique donation ids across codes (e.g. slug vs primary mismatch). */
 async function fetchAthleteMirrorCreditedRowsMerged(
   admin: ReturnType<typeof createAdminClient>,
   codesUpper: string[],
-  opts?: { allRegisteredCampaigns?: boolean },
+  opts?: MirrorCreditedOpts,
 ): Promise<DonationSelectRow[] | null> {
   const merged = new Map<string, DonationSelectRow>()
   for (const c of codesUpper) {
@@ -173,6 +242,7 @@ async function fetchAthleteMirrorCreditedRowsMerged(
     if (rows == null) return null
     for (const r of rows) merged.set(r.id, r)
   }
+  await mergePaidDonationsByProfileSlugs(admin, merged, codesUpper, opts)
   const out = [...merged.values()]
   out.sort((a, b) => +new Date(b.created_at ?? 0) - +new Date(a.created_at ?? 0))
   return out
@@ -248,12 +318,14 @@ function giftsFromMirrorCredited(credited: DonationSelectRow[], limit: number): 
 export async function getAthleteFundraisingWalletSnapshot(
   ledgerCodesInput: string | string[],
   giftLimit: number,
+  mirrorOpts?: AthleteWalletMirrorOpts,
 ): Promise<{ stats: AthleteFundraisingPublicStats; gifts: AthleteRecentGiftRow[] } | null> {
   const raw = Array.isArray(ledgerCodesInput) ? ledgerCodesInput : [ledgerCodesInput]
   const codes = [...new Set(raw.map((c) => c.trim().toUpperCase()).filter((c) => CODE_RE.test(c)))]
   if (codes.length === 0) return null
   const rows = await fetchAthleteMirrorCreditedRowsMerged(createAdminClient(), codes, {
     allRegisteredCampaigns: true,
+    mirrorFundraisingSlugs: mirrorOpts?.mirrorFundraisingSlugs,
   })
   if (rows == null) return null
   return {
@@ -262,20 +334,27 @@ export async function getAthleteFundraisingWalletSnapshot(
   }
 }
 
-export async function getAthleteFundraisingPublicStats(code: string): Promise<AthleteFundraisingPublicStats | null> {
+export async function getAthleteFundraisingPublicStats(
+  code: string,
+  mirrorOpts?: AthleteWalletMirrorOpts,
+): Promise<AthleteFundraisingPublicStats | null> {
   const c = code.trim().toUpperCase()
   if (!CODE_RE.test(c)) return null
-  const snap = await getAthleteFundraisingWalletSnapshot([c], 0)
+  const snap = await getAthleteFundraisingWalletSnapshot([c], 0, mirrorOpts)
   return snap?.stats ?? null
 }
 
 /** `giftLimit` ≤ 0 means return every gift (newest first). */
 export const ATHLETE_PUBLIC_GIFTS_NO_ROW_CAP = 0
 
-export async function getAthleteRecentGifts(code: string, limit: number): Promise<AthleteRecentGiftRow[]> {
+export async function getAthleteRecentGifts(
+  code: string,
+  limit: number,
+  mirrorOpts?: AthleteWalletMirrorOpts,
+): Promise<AthleteRecentGiftRow[]> {
   const c = code.trim().toUpperCase()
   if (!CODE_RE.test(c)) return []
-  const snap = await getAthleteFundraisingWalletSnapshot([c], limit)
+  const snap = await getAthleteFundraisingWalletSnapshot([c], limit, mirrorOpts)
   return snap?.gifts ?? []
 }
 
@@ -283,8 +362,9 @@ export async function getAthleteRecentGifts(code: string, limit: number): Promis
 export async function getAthleteFundraisingPublicSnapshot(
   ledgerCodesInput: string | string[],
   giftLimit: number,
+  mirrorOpts?: AthleteWalletMirrorOpts,
 ): Promise<{ stats: AthleteFundraisingPublicStats; gifts: AthleteRecentGiftRow[] } | null> {
-  return getAthleteFundraisingWalletSnapshot(ledgerCodesInput, giftLimit)
+  return getAthleteFundraisingWalletSnapshot(ledgerCodesInput, giftLimit, mirrorOpts)
 }
 
 export type AthleteOwnerThankYouRow = {
@@ -409,14 +489,16 @@ export async function getAthleteOwnerThankYouRows(code: string): Promise<Athlete
 }
 
 /**
- * Same contact rows as {@link getAthleteOwnerThankYouRows}, for every ledger code that credits this athlete
- * (e.g. slug vs roster code). Stripe path loads once; mirror path merges per-code lists.
+ * Same contact rows as owner thank-you flows, for every ledger code — when live Stripe is unavailable, uses the same
+ * mirror + slug rules as {@link getAthleteFundraisingWalletSnapshot}.
  */
-export async function getAthleteOwnerThankYouRowsForLedgerCodes(ledgerCodesInput: string | string[]): Promise<AthleteOwnerThankYouRow[]> {
+export async function getAthleteOwnerThankYouRowsForLedgerCodes(
+  ledgerCodesInput: string | string[],
+  mirrorOpts?: AthleteWalletMirrorOpts,
+): Promise<AthleteOwnerThankYouRow[]> {
   const raw = Array.isArray(ledgerCodesInput) ? ledgerCodesInput : [ledgerCodesInput]
   const codes = [...new Set(raw.map((c) => c.trim().toUpperCase()).filter((c) => CODE_RE.test(c)))]
   if (codes.length === 0) return []
-  if (codes.length === 1) return getAthleteOwnerThankYouRows(codes[0]!)
 
   const corrected = await loadCorrectedStripeForAthletePublicPage()
   if (corrected != null) {
@@ -437,18 +519,7 @@ export async function getAthleteOwnerThankYouRowsForLedgerCodes(ledgerCodesInput
     }))
   }
 
-  const seenLedger = new Set<string>()
-  const out: AthleteOwnerThankYouRow[] = []
-  for (const c of codes) {
-    const rows = await getAthleteOwnerThankYouRows(c)
-    for (const r of rows) {
-      if (seenLedger.has(r.ledgerKey)) continue
-      seenLedger.add(r.ledgerKey)
-      out.push(r)
-    }
-  }
-  out.sort((a, b) => +new Date(b.createdIso) - +new Date(a.createdIso))
-  return out
+  return getAthleteOwnerThankYouRowsForWalletLedgerCodes(ledgerCodesInput, mirrorOpts)
 }
 
 /**
@@ -456,12 +527,14 @@ export async function getAthleteOwnerThankYouRowsForLedgerCodes(ledgerCodesInput
  */
 export async function getAthleteOwnerThankYouRowsForWalletLedgerCodes(
   ledgerCodesInput: string | string[],
+  mirrorOpts?: AthleteWalletMirrorOpts,
 ): Promise<AthleteOwnerThankYouRow[]> {
   const raw = Array.isArray(ledgerCodesInput) ? ledgerCodesInput : [ledgerCodesInput]
   const codes = [...new Set(raw.map((c) => c.trim().toUpperCase()).filter((c) => CODE_RE.test(c)))]
   if (codes.length === 0) return []
   const rows = await fetchAthleteMirrorCreditedRowsMerged(createAdminClient(), codes, {
     allRegisteredCampaigns: true,
+    mirrorFundraisingSlugs: mirrorOpts?.mirrorFundraisingSlugs,
   })
   if (rows == null || rows.length === 0) return []
 

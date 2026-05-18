@@ -145,7 +145,12 @@ export function ledgerCodesForFundraisingWallet(
   entries: FundraisingAthleteEntry[],
   athleteId: string,
   extraPinnedCodes: readonly string[] = [],
-): { ledgerCodes: string[]; guildLookupAthleteIds: string[]; fundraisingCode: string | null } {
+): {
+  ledgerCodes: string[]
+  guildLookupAthleteIds: string[]
+  fundraisingCode: string | null
+  mirrorFundraisingSlugs: string[]
+} {
   const pinned = uniqueCoercedCodes([...extraPinnedCodes])
 
   if (profile?.athlete_id === athleteId) {
@@ -157,7 +162,9 @@ export function ledgerCodesForFundraisingWallet(
     const ledgerCodes = uniqueCoercedCodes([legacyCode, fromPrimary, ...rosterCodes, code, ...pinned])
     const guildLookupAthleteIds = collectGuildLookupAthleteIds(entries, ledgerCodes, profile.athlete_id, entry?.id ?? null)
     const fundraisingCode = code ?? ledgerCodes[0] ?? null
-    return { ledgerCodes, guildLookupAthleteIds, fundraisingCode }
+    const slugNorm = profile.slug?.trim() ? normalizeFundraisingProfileSlug(profile.slug) : null
+    const mirrorFundraisingSlugs = slugNorm ? [slugNorm] : []
+    return { ledgerCodes, guildLookupAthleteIds, fundraisingCode, mirrorFundraisingSlugs }
   }
 
   const entry = pickPreferredFundraisingEntryForAthlete(entries, athleteId)
@@ -166,7 +173,7 @@ export function ledgerCodesForFundraisingWallet(
   const guildLookupAthleteIds = collectGuildLookupAthleteIds(entries, ledgerCodes, athleteId, entry?.id ?? null)
   const fundraisingCode =
     coerceNcuCode(entry?.code ?? null) ?? (rosterCodes[0] ? coerceNcuCode(rosterCodes[0]) : null) ?? pinned[0] ?? null
-  return { ledgerCodes, guildLookupAthleteIds, fundraisingCode }
+  return { ledgerCodes, guildLookupAthleteIds, fundraisingCode, mirrorFundraisingSlugs: [] }
 }
 
 /**
