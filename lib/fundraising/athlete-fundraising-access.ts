@@ -43,7 +43,10 @@ export async function getFundraisingPageManagerAccess(
 async function userProfileAthleteId(admin: SupabaseClient, userId: string): Promise<string | null> {
   const { data, error } = await admin.from("user_profiles").select("athlete_id").eq("user_id", userId).maybeSingle()
   if (error) {
-    console.warn("[athlete-fundraising-access] user_profiles athlete_id", error.message)
+    const code = (error as { code?: string }).code
+    if (code !== "42P01" && code !== "42703") {
+      console.warn("[athlete-fundraising-access] user_profiles athlete_id", error.message)
+    }
     return null
   }
   const aid = (data as { athlete_id?: string | null } | null)?.athlete_id
