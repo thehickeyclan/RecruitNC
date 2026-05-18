@@ -101,16 +101,15 @@ function normalizeGuildResponse(raw: unknown): unknown {
 /**
  * When `user_profiles.guild_parent_user_id` was cleared but this login already has successful
  * Guild grants, recover the parent id from {@link guild_credit_allocations} and re-save it.
- * Requires Guild Supabase for role verification (same as email auto-link).
+ *
+ * When Guild Supabase is configured, we verify `role === parent` before writing.
+ * When it is **not** configured (HTTP-only grant setup), we only restore from
+ * `guild_parent_user_id_at_grant` — values already used successfully for grants.
  */
 export async function tryRestoreGuildParentFromPriorAllocations(
   admin: SupabaseClient,
   recruitNcUserId: string,
 ): Promise<GuildLinkAttemptResult> {
-  if (!isGuildSupabaseConfigured()) {
-    return { linked: false, reason: "guild_not_configured" }
-  }
-
   const { data: profile, error: pErr } = await admin
     .from("user_profiles")
     .select("guild_parent_user_id")
@@ -165,14 +164,47 @@ export async function tryRestoreGuildParentFromPriorAllocations(
     return { linked: false, reason: `allocations_error:${allocErr.message}` }
   }
 
+  const guildSupabase = isGuildSupabaseConfigured()
+
+  const fromColumnOnly = new Set<string>()
   const candidates = new Set<string>()
   for (const r of rows ?? []) {
     const row = r as { guild_response?: unknown; guild_parent_user_id_at_grant?: string | null }
     const fromCol = parseUuidString(row.guild_parent_user_id_at_grant)
-    if (fromCol) candidates.add(fromCol)
+    if (fromCol) {
+      fromColumnOnly.add(fromCol)
+      candidates.add(fromCol)
+    }
     const gr = normalizeGuildResponse(row.guild_response)
     const fromJson = extractGuildParentIdFromGrantResponseJson(gr)
     if (fromJson) candidates.add(fromJson)
+  }
+
+  /** HTTP-only stacks: grants already used this id; no Guild DB to verify. */
+  if (!guildSupabase) {
+    if (fromColumnOnly.size === 1) {
+      const guildParentUserId = [...fromColumnOnly][0]!
+      const { error: updErr } = await admin
+        .from("user_profiles")
+        .update({ guild_parent_user_id: guildParentUserId })
+        .eq("user_id", recruitNcUserId)
+      if (updErr) {
+        console.error("[guild-restore] profile update (no supabase)", updErr)
+        return { linked: false, reason: `update_failed:${updErr.message}` }
+      }
+      console.info("[RecruitNC] guild parent restored from at_grant (HTTP-only stack)", {
+        recruitNcUserId,
+        guildParentUserId,
+      })
+      return { linked: true, guildParentUserId }
+    }
+    if (fromColumnOnly.size > 1) {
+      return { linked: false, reason: "ambiguous_allocation_parent_ids" }
+    }
+    return {
+      linked: false,
+      reason: "guild_supabase_or_grant_column_required",
+    }
   }
 
   if (candidates.size > 1) {

@@ -126,8 +126,6 @@ export async function runGuildLinkForProfile(
     "already_linked",
     "column_missing",
     "no_user_profiles_row",
-    "guild_not_configured",
-    "disabled_by_env",
   ])
   if (skipRestore.has(first.reason)) return first
 

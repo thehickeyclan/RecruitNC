@@ -47,10 +47,12 @@ export async function GET() {
   // Self-heal: wallet history is keyed by RecruitNC user_id, but transfers need
   // user_profiles.guild_parent_user_id. If that column was cleared or never set after
   // an email match became possible, retry the same auto-link used on Fundraise tab load.
+  let guildLinkFailureReason: string | null = null
   if (!guildParentUserId && profErr?.code !== "42703") {
     const attempt = await runGuildLinkForProfile(admin, user.id, user.email, {
       profileEmail: (profile as { email?: string | null } | null)?.email ?? null,
     })
+    guildLinkFailureReason = attempt.linked ? null : attempt.reason
     if (attempt.linked) {
       guildParentUserId = attempt.guildParentUserId
     }
@@ -109,6 +111,7 @@ export async function GET() {
   return NextResponse.json({
     guildParentUserId,
     guildGrantConfigured: isGuildGrantConfigured(),
+    guildLinkFailureReason,
     reservedByAthlete,
     allocations,
   })

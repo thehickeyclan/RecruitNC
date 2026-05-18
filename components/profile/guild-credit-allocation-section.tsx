@@ -44,6 +44,28 @@ function statusBadge(status: GuildCreditAllocationRow["status"]) {
   )
 }
 
+function humanizeGuildLinkFailureReason(code: string): string {
+  if (code === "guild_supabase_or_grant_column_required") {
+    return "Transfers ran over HTTP, but automatic re-link needs either Wrestling Guild database credentials on RecruitNC (for email match) or the SQL column guild_parent_user_id_at_grant on past transfers. Staff can set your link in admin if needed."
+  }
+  if (code === "no_parent_id_in_allocation_history") {
+    return "We could not find a Guild parent id stored with your past transfers (empty or unfamiliar response). Staff may need to set the link once."
+  }
+  if (code === "ambiguous_allocation_parent_ids") {
+    return "Your transfer history points to more than one Guild parent id — staff must pick the correct link."
+  }
+  if (code === "guild_role_verify_failed") {
+    return "Found a candidate id in history, but it is not a Guild parent account on file."
+  }
+  if (code.startsWith("no_guild_parent_match") || code.includes("guild_lookup")) {
+    return "No Wrestling Guild parent account matches this email (or Guild lookup failed)."
+  }
+  if (code === "ambiguous_guild_parent") {
+    return "More than one Guild parent uses this email — fix duplicate Guild accounts first."
+  }
+  return `Automatic link did not complete (${code}).`
+}
+
 type Props = {
   spartanAthletes: GuildSectionSpartanAthlete[]
   spartanLoading: boolean
@@ -59,6 +81,7 @@ export function GuildCreditAllocationSection({ spartanAthletes, spartanLoading, 
   const [grantConfigured, setGrantConfigured] = useState(false)
   const [reservedByAthlete, setReservedByAthlete] = useState<Record<string, number>>({})
   const [allocations, setAllocations] = useState<GuildCreditAllocationRow[]>([])
+  const [guildLinkFailureReason, setGuildLinkFailureReason] = useState<string | null>(null)
   const [athleteId, setAthleteId] = useState("")
   const [amount, setAmount] = useState("")
 
@@ -71,6 +94,7 @@ export function GuildCreditAllocationSection({ spartanAthletes, spartanLoading, 
         throw new Error((data as { error?: string }).error || "Could not load")
       }
       setGuildParentUserId((data as { guildParentUserId?: string | null }).guildParentUserId ?? null)
+      setGuildLinkFailureReason((data as { guildLinkFailureReason?: string | null }).guildLinkFailureReason ?? null)
       setGrantConfigured(Boolean((data as { guildGrantConfigured?: boolean }).guildGrantConfigured))
       setReservedByAthlete((data as { reservedByAthlete?: Record<string, number> }).reservedByAthlete ?? {})
       setAllocations((data as { allocations?: GuildCreditAllocationRow[] }).allocations ?? [])
@@ -235,6 +259,11 @@ export function GuildCreditAllocationSection({ spartanAthletes, spartanLoading, 
                   </>
                 )}
               </p>
+              {guildLinkFailureReason ? (
+                <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                  {humanizeGuildLinkFailureReason(guildLinkFailureReason)}
+                </p>
+              ) : null}
             </div>
           ) : !grantConfigured ? (
             <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
