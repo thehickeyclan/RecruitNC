@@ -27,6 +27,8 @@ type ProfileFundraiseTabProps = {
   walletPanelActivated: boolean
   spartanFundraising: { athletes: SpartanRow[] } | null
   spartanFundraisingLoading: boolean
+  /** Present when GET /api/profile/spartan-fundraising-totals failed (not an empty wallet). */
+  spartanWalletError?: string | null
   supporterContactsLoading: boolean
   supporterContacts: ProfileSpartanSupportersAthletePayload[] | null
   linkedLoading: boolean
@@ -46,6 +48,7 @@ export function ProfileFundraiseTab({
   walletPanelActivated,
   spartanFundraising,
   spartanFundraisingLoading,
+  spartanWalletError = null,
   supporterContactsLoading,
   supporterContacts,
   linkedLoading,
@@ -56,7 +59,8 @@ export function ProfileFundraiseTab({
   onSpartanTotalsRefresh,
 }: ProfileFundraiseTabProps) {
   const deferFundraiseExtras =
-    walletPanelActivated && spartanFundraisingLoading && spartanFundraising === null
+    walletPanelActivated &&
+    (linkedLoading || (spartanFundraisingLoading && spartanFundraising === null))
 
   return (
     <div className="space-y-6">
@@ -83,11 +87,28 @@ export function ProfileFundraiseTab({
 
         {/* Content */}
         <div className="p-5 sm:p-6">
-          {spartanFundraisingLoading ? (
+          {spartanWalletError ? (
+            <div className="py-8 text-center">
+              <p className="text-sm text-red-300">{spartanWalletError}</p>
+              {onSpartanTotalsRefresh && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-4 border-white/20 text-white hover:bg-white/10"
+                  onClick={() => void onSpartanTotalsRefresh()}
+                >
+                  Try again
+                </Button>
+              )}
+            </div>
+          ) : spartanFundraisingLoading || (walletPanelActivated && linkedLoading) ? (
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
                 <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#D3B574]" />
-                <p className="mt-3 text-sm text-white/60">Loading wallet data...</p>
+                <p className="mt-3 text-sm text-white/60">
+                  {linkedLoading ? "Loading your linked athletes…" : "Loading wallet data…"}
+                </p>
               </div>
             </div>
           ) : !walletPanelActivated ? (
@@ -100,7 +121,7 @@ export function ProfileFundraiseTab({
               <p className="mt-3 text-sm text-white/50">
                 {!linkedLoading && linkedCount === 0
                   ? "Link athletes under Family & Athletes to see balances."
-                  : "No fundraising data yet. Add graduation year under Family & Athletes."}
+                  : "No fundraising data yet. Add graduation year under Family & Athletes so we can match NCU gift codes to this roster."}
               </p>
             </div>
           ) : (

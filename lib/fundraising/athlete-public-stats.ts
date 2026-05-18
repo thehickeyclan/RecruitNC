@@ -197,6 +197,8 @@ async function mergePaidDonationsByProfileSlugs(
   const sel = `${DONATION_SELECT}, created_at, donor_name, donor_email, spartan_campaign`
 
   const orSlug = slugList.map((s) => `fundraising_athlete_slug.ilike.${s}`).join(",")
+  const { data, error } = await admin.from("spartan_donations").select(sel).eq("status", "paid").or(orSlug)
+
   if (error) {
     console.warn("[athlete-public-stats] fundraising_athlete_slug mirror", error.message)
     return

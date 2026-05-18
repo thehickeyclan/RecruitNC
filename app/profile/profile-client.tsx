@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useSearchParams } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
@@ -100,12 +100,13 @@ export function ProfileClient() {
     }[]
   } | null>(null)
   const [spartanFundraisingLoading, setSpartanFundraisingLoading] = useState(false)
+  /** Set when GET /api/profile/spartan-fundraising-totals fails so we do not show the grad-year empty-state hint. */
+  const [spartanWalletError, setSpartanWalletError] = useState<string | null>(null)
   const [supporterContacts, setSupporterContacts] = useState<ProfileSpartanSupportersAthletePayload[] | null>(null)
   const [supporterContactsLoading, setSupporterContactsLoading] = useState(false)
   /** Wallet totals load when the user opens Digital wallet (or links an athlete). */
   const [spartanWalletPanelActivated, setSpartanWalletPanelActivated] = useState(false)
   const [activeProfileTab, setActiveProfileTab] = useState("account")
-  const spartanWalletPrimedRef = useRef(false)
 
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
@@ -120,7 +121,7 @@ export function ProfileClient() {
       setEventHubsLoading(false)
       setSpartanFundraisingLoading(false)
       setSpartanFundraising(null)
-      spartanWalletPrimedRef.current = false
+      setSpartanWalletError(null)
       setSpartanWalletPanelActivated(false)
       setActiveProfileTab("account")
       setSupporterContacts(null)
@@ -165,6 +166,7 @@ export function ProfileClient() {
 
   const fetchSpartanFundraisingTotals = async () => {
     setSpartanFundraisingLoading(true)
+    setSpartanWalletError(null)
     try {
       const res = await fetch("/api/profile/spartan-fundraising-totals", {
         credentials: "include",
@@ -188,9 +190,18 @@ export function ProfileClient() {
         }
         setSpartanFundraising({ athletes: data.athletes ?? [] })
       } else {
+        const body = (await res.json().catch(() => ({}))) as { error?: string }
+        setSpartanWalletError(
+          typeof body.error === "string" && body.error.trim()
+            ? body.error.trim()
+            : res.status === 401
+              ? "Session expired. Sign in again to load your wallet."
+              : "Could not load wallet balances. Try again in a moment.",
+        )
         setSpartanFundraising({ athletes: [] })
       }
     } catch {
+      setSpartanWalletError("Could not load wallet balances. Check your connection and try again.")
       setSpartanFundraising({ athletes: [] })
     } finally {
       setSpartanFundraisingLoading(false)
@@ -218,18 +229,17 @@ export function ProfileClient() {
     setActiveProfileTab("fundraise")
   }, [searchParams])
 
+  // Load wallet after Family & athletes scope is known — avoids an empty state while `/api/profile/linked-athletes` is still in flight.
   useEffect(() => {
     if (activeProfileTab !== "fundraise" || authLoading || !isAuthenticated) return
-    if (spartanWalletPrimedRef.current) return
-    spartanWalletPrimedRef.current = true
     setSpartanWalletPanelActivated(true)
-    setSpartanFundraisingLoading(true)
+    if (linkedLoading) return
     void (async () => {
       await tryGuildAutoLink()
       await fetchSpartanFundraisingTotals()
       await fetchSpartanSupporterContacts()
     })()
-  }, [activeProfileTab, authLoading, isAuthenticated, tryGuildAutoLink]) // eslint-disable-line react-hooks/exhaustive-deps -- fetch helpers omitted; prime on tab/auth transitions only
+  }, [activeProfileTab, authLoading, isAuthenticated, linkedLoading, tryGuildAutoLink]) // eslint-disable-line react-hooks/exhaustive-deps -- refresh when linked roster finishes loading
 
   useEffect(() => {
     if (!profile || linkedLoading) return
@@ -273,7 +283,6 @@ export function ProfileClient() {
       setAthleteSearchResults([])
       setSuccess(data.message ?? "Athlete linked.")
       fetchLinkedAthletes()
-      spartanWalletPrimedRef.current = true
       setSpartanFundraisingLoading(true)
       setSpartanWalletPanelActivated(true)
       void (async () => {
@@ -308,7 +317,6 @@ export function ProfileClient() {
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(typeof data.error === "string" ? data.error : "Could not remove link")
       await fetchLinkedAthletes()
-      spartanWalletPrimedRef.current = true
       setSpartanWalletPanelActivated(true)
       void (async () => {
         await fetchSpartanFundraisingTotals()
@@ -983,6 +991,7 @@ export function ProfileClient() {
             walletPanelActivated={spartanWalletPanelActivated}
             spartanFundraising={spartanFundraising}
             spartanFundraisingLoading={spartanFundraisingLoading}
+            spartanWalletError={spartanWalletError}
             supporterContactsLoading={supporterContactsLoading}
             supporterContacts={supporterContacts}
             linkedLoading={linkedLoading}
@@ -992,6 +1001,7 @@ export function ProfileClient() {
             unlinkAthleteId={unlinkAthleteId}
             onSpartanTotalsRefresh={() => {
               void (async () => {
+                setSpartanWalletError(null)
                 await tryGuildAutoLink()
                 await fetchSpartanFundraisingTotals()
                 await fetchSpartanSupporterContacts()
