@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { buildLinkedAthletesPayloadForWallet, type ProfileLinkedAthleteDbRow } from "@/lib/profile-linked-athletes-payload"
 import { getWalletAthleteIdsForParentUser } from "@/lib/parent-spartan-fundraising-totals"
 
 export const dynamic = "force-dynamic"
@@ -59,46 +60,12 @@ export async function GET() {
 
   if (athleteError) return NextResponse.json({ error: athleteError.message }, { status: 500 })
 
-  const byId = new Map(
-    (athletes ?? []).map((a) => {
-      const row = a as {
-        id: string
-        name: string | null
-        profile_verified?: boolean | null
-        updated_at?: string | null
-        claimed_by_user_id?: string | null
-      }
-      return [
-        String(row.id),
-        {
-          id: row.id,
-          name: row.name ?? "—",
-          profileVerified: !!row.profile_verified,
-          updatedAt: row.updated_at ?? null,
-          claimedByUserId: row.claimed_by_user_id ?? null,
-          canUnlink: linkedViaFamilyTable.has(String(row.id)),
-          isProfilePrimaryAthlete: profileAthleteId != null && String(row.id) === profileAthleteId,
-        },
-      ] as const
-    }),
-  )
-
-  const list = athleteIds.map((rawId) => {
-    const id = String(rawId).trim()
-    const found = byId.get(id)
-    if (found) return { ...found }
-    return {
-      id,
-      name: "Athlete",
-      profileVerified: false,
-      updatedAt: null as string | null,
-      claimedByUserId: null as string | null,
-      canUnlink: linkedViaFamilyTable.has(id),
-      isProfilePrimaryAthlete: profileAthleteId != null && id === profileAthleteId,
-    }
+  const list = buildLinkedAthletesPayloadForWallet({
+    walletAthleteIds: athleteIds,
+    athleteRows: (athletes ?? []) as ProfileLinkedAthleteDbRow[],
+    parentLinkAthleteIds: linkedViaFamilyTable,
+    profileAthleteId,
   })
-
-  list.sort((a, b) => a.name.localeCompare(b.name))
 
   return NextResponse.json({ athletes: list, profileAthleteId })
 }
