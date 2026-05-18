@@ -44,6 +44,60 @@ function extractGuildParentIdShallow(raw: unknown): string | null {
   return null
 }
 
+const MAX_UUID_WALK_DEPTH = 14
+const MAX_UUID_STRINGS_PER_ROW = 80
+
+/** Collect string UUIDs anywhere in JSON (Guild bodies vary). */
+export function collectUuidStringsDeep(raw: unknown, out: Set<string>, depth = 0): void {
+  if (depth > MAX_UUID_WALK_DEPTH) return
+  const id = parseUuidString(raw)
+  if (id) {
+    out.add(id)
+    return
+  }
+  if (Array.isArray(raw)) {
+    for (const item of raw) {
+      if (out.size >= MAX_UUID_STRINGS_PER_ROW) return
+      collectUuidStringsDeep(item, out, depth + 1)
+    }
+    return
+  }
+  if (raw && typeof raw === "object") {
+    for (const v of Object.values(raw as Record<string, unknown>)) {
+      if (out.size >= MAX_UUID_STRINGS_PER_ROW) return
+      collectUuidStringsDeep(v, out, depth + 1)
+    }
+  }
+}
+
+async function resolveUniqueParentIdsFromGrantBodies(
+  rows: { guild_response?: unknown }[],
+): Promise<Set<string>> {
+  const uuidBag = new Set<string>()
+  for (const r of rows) {
+    const chunk = new Set<string>()
+    collectUuidStringsDeep(r.guild_response, chunk, 0)
+    for (const u of chunk) uuidBag.add(u)
+  }
+  const parentIds = new Set<string>()
+  for (const uid of uuidBag) {
+    const u = await fetchGuildUserById(uid)
+    if (u?.role === "parent") parentIds.add(uid)
+  }
+  return parentIds
+}
+
+function normalizeGuildResponse(raw: unknown): unknown {
+  if (typeof raw === "string") {
+    try {
+      return JSON.parse(raw) as unknown
+    } catch {
+      return raw
+    }
+  }
+  return raw
+}
+
 /**
  * When `user_profiles.guild_parent_user_id` was cleared but this login already has successful
  * Guild grants, recover the parent id from {@link guild_credit_allocations} and re-save it.
@@ -84,7 +138,7 @@ export async function tryRestoreGuildParentFromPriorAllocations(
     .eq("user_id", recruitNcUserId)
     .eq("status", "guild_applied")
     .order("created_at", { ascending: false })
-    .limit(40)
+    .limit(50)
 
   let { data: rows, error: allocErr } = await q
 
@@ -98,7 +152,7 @@ export async function tryRestoreGuildParentFromPriorAllocations(
       .eq("user_id", recruitNcUserId)
       .eq("status", "guild_applied")
       .order("created_at", { ascending: false })
-      .limit(40)
+      .limit(50)
     rows = res2.data
     allocErr = res2.error
   }
@@ -116,18 +170,35 @@ export async function tryRestoreGuildParentFromPriorAllocations(
     const row = r as { guild_response?: unknown; guild_parent_user_id_at_grant?: string | null }
     const fromCol = parseUuidString(row.guild_parent_user_id_at_grant)
     if (fromCol) candidates.add(fromCol)
-    const fromJson = extractGuildParentIdFromGrantResponseJson(row.guild_response)
+    const gr = normalizeGuildResponse(row.guild_response)
+    const fromJson = extractGuildParentIdFromGrantResponseJson(gr)
     if (fromJson) candidates.add(fromJson)
   }
 
-  if (candidates.size === 0) {
-    return { linked: false, reason: "no_parent_id_in_allocation_history" }
-  }
   if (candidates.size > 1) {
     return { linked: false, reason: "ambiguous_allocation_parent_ids" }
   }
 
-  const guildParentUserId = [...candidates][0]!
+  let guildParentUserId: string | null = candidates.size === 1 ? [...candidates][0]! : null
+
+  if (!guildParentUserId) {
+    const fromBodies = await resolveUniqueParentIdsFromGrantBodies(
+      (rows ?? []).map((r) => {
+        const row = r as { guild_response?: unknown }
+        return { guild_response: normalizeGuildResponse(row.guild_response) }
+      }),
+    )
+    if (fromBodies.size === 1) {
+      guildParentUserId = [...fromBodies][0]!
+    } else if (fromBodies.size > 1) {
+      return { linked: false, reason: "ambiguous_allocation_parent_ids" }
+    }
+  }
+
+  if (!guildParentUserId) {
+    return { linked: false, reason: "no_parent_id_in_allocation_history" }
+  }
+
   const verify = await fetchGuildUserById(guildParentUserId)
   if (!verify || verify.role !== "parent") {
     return { linked: false, reason: "guild_role_verify_failed" }
