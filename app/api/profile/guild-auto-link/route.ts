@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { tryGuildAutoLinkForSessionUser } from "@/lib/guild-auto-link"
+import { runGuildLinkForProfile } from "@/lib/guild-auto-link"
 
 export const dynamic = "force-dynamic"
 
@@ -23,7 +23,7 @@ export async function POST() {
 
   const admin = createAdminClient()
   const { data: pe } = await admin.from("user_profiles").select("email").eq("user_id", user.id).maybeSingle()
-  const result = await tryGuildAutoLinkForSessionUser(admin, user.id, user.email, {
+  const result = await runGuildLinkForProfile(admin, user.id, user.email, {
     profileEmail: (pe as { email?: string | null } | null)?.email ?? null,
   })
 

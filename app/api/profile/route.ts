@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient, createAdminClientFresh } from "@/lib/supabase/admin"
-import { tryGuildAutoLinkForSessionUser } from "@/lib/guild-auto-link"
+import { runGuildLinkForProfile } from "@/lib/guild-auto-link"
 import { buildUserProfileUpsertPayload } from "@/lib/user-profile-from-auth"
 import { NextResponse } from "next/server"
 
@@ -63,7 +63,7 @@ export async function GET() {
       try {
         const admin = createAdminClient()
         const profileEmail = typeof profileRow.email === "string" ? profileRow.email : null
-        const linkResult = await tryGuildAutoLinkForSessionUser(admin, user.id, user.email, {
+        const linkResult = await runGuildLinkForProfile(admin, user.id, user.email, {
           profileEmail,
         })
         if (linkResult.linked) {

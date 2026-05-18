@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { computeParentSpartanFundraisingTotalsForUser } from "@/lib/parent-spartan-fundraising-totals"
-import { tryGuildAutoLinkForSessionUser } from "@/lib/guild-auto-link"
+import { runGuildLinkForProfile } from "@/lib/guild-auto-link"
 
 export const dynamic = "force-dynamic"
 
@@ -44,7 +44,7 @@ export async function GET() {
     const gpid = (gp as { guild_parent_user_id?: string | null } | null)?.guild_parent_user_id
     if (!(typeof gpid === "string" && gpid.trim())) {
       try {
-        await tryGuildAutoLinkForSessionUser(admin, user.id, user.email, {
+        await runGuildLinkForProfile(admin, user.id, user.email, {
           profileEmail: (gp as { email?: string | null } | null)?.email ?? null,
         })
       } catch {

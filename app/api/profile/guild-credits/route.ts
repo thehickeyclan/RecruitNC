@@ -6,7 +6,7 @@ import {
   type GuildCreditAllocationRow,
 } from "@/lib/guild-credit-allocations"
 import { isGuildGrantConfigured } from "@/lib/guild-grant-client"
-import { tryGuildAutoLinkForSessionUser } from "@/lib/guild-auto-link"
+import { runGuildLinkForProfile } from "@/lib/guild-auto-link"
 import { getWalletAthleteIdsForParentUser } from "@/lib/parent-spartan-fundraising-totals"
 
 export const dynamic = "force-dynamic"
@@ -48,7 +48,7 @@ export async function GET() {
   // user_profiles.guild_parent_user_id. If that column was cleared or never set after
   // an email match became possible, retry the same auto-link used on Fundraise tab load.
   if (!guildParentUserId && profErr?.code !== "42703") {
-    const attempt = await tryGuildAutoLinkForSessionUser(admin, user.id, user.email, {
+    const attempt = await runGuildLinkForProfile(admin, user.id, user.email, {
       profileEmail: (profile as { email?: string | null } | null)?.email ?? null,
     })
     if (attempt.linked) {

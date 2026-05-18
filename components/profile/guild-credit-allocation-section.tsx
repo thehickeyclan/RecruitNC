@@ -221,11 +221,11 @@ export function GuildCreditAllocationSection({ spartanAthletes, spartanLoading, 
               <p className="rounded-xl border border-amber-200/90 bg-amber-50 px-4 py-3 text-sm text-amber-950">
                 {hasSuccessfulTransfer || hasTransferHistory ? (
                   <>
-                    RecruitNC normally <strong className="font-semibold">links Guild automatically</strong> from your
-                    login email. Your transfer history is here, but the link flag on this session is missing — tap{" "}
-                    <strong className="font-semibold">Refresh</strong> (we retry on every profile and wallet load too).
-                    If it still won&apos;t connect, your RecruitNC email may not match your Guild parent email, or Guild
-                    may list more than one parent for that email.
+                    RecruitNC first tries your <strong className="font-semibold">email</strong>, then{" "}
+                    <strong className="font-semibold">rebuilds your Guild link from past successful transfers</strong> on
+                    this login when the profile flag was cleared. Tap <strong className="font-semibold">Refresh</strong>.
+                    If it still fails, your RecruitNC email may not match Guild or Guild has more than one parent on that
+                    email.
                   </>
                 ) : (
                   <>
