@@ -6,6 +6,7 @@ import {
   type GuildCreditAllocationRow,
 } from "@/lib/guild-credit-allocations"
 import { isGuildGrantConfigured } from "@/lib/guild-grant-client"
+import { tryGuildAutoLinkForSessionUser } from "@/lib/guild-auto-link"
 import { getWalletAthleteIdsForParentUser } from "@/lib/parent-spartan-fundraising-totals"
 
 export const dynamic = "force-dynamic"
@@ -38,10 +39,20 @@ export async function GET() {
     return NextResponse.json({ error: profErr.message }, { status: 500 })
   }
 
-  const guildParentUserId =
+  let guildParentUserId =
     profErr?.code === "42703"
       ? null
       : ((profile as { guild_parent_user_id?: string | null } | null)?.guild_parent_user_id ?? null)
+
+  // Self-heal: wallet history is keyed by RecruitNC user_id, but transfers need
+  // user_profiles.guild_parent_user_id. If that column was cleared or never set after
+  // an email match became possible, retry the same auto-link used on Fundraise tab load.
+  if (!guildParentUserId && profErr?.code !== "42703") {
+    const attempt = await tryGuildAutoLinkForSessionUser(admin, user.id, user.email)
+    if (attempt.linked) {
+      guildParentUserId = attempt.guildParentUserId
+    }
+  }
 
   const walletAthleteIds = await getWalletAthleteIdsForParentUser(admin, user.id)
   const linkedAthleteIds = new Set(walletAthleteIds)
