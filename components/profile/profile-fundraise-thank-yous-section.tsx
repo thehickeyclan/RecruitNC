@@ -6,10 +6,9 @@ import type { ProfileSpartanSupportersAthletePayload } from "@/app/api/profile/s
 
 export function ProfileFundraiseThankYousSection(props: {
   loading: boolean
-  lookbackDays: number | null
   athletes: ProfileSpartanSupportersAthletePayload[] | null
 }) {
-  const { loading, lookbackDays, athletes } = props
+  const { loading, athletes } = props
 
   if (loading) {
     return (
@@ -33,8 +32,6 @@ export function ProfileFundraiseThankYousSection(props: {
     return null
   }
 
-  const windowLabel = lookbackDays != null ? `${lookbackDays}-day window` : "campaign window"
-
   return (
     <section className="overflow-hidden rounded-2xl border border-[#003366]/12 bg-white shadow-md shadow-[#003366]/5">
       <div className="h-1 w-full bg-gradient-to-r from-[#03154C] via-[#B31B1B] to-[#CBAF5D]" aria-hidden />
@@ -54,7 +51,7 @@ export function ProfileFundraiseThankYousSection(props: {
 
       <div className="space-y-3 px-4 py-5 sm:px-6 sm:py-6">
         {!hasAnySupporters ? (
-          <p className="text-sm text-slate-600">Supporter counts appear when gifts credit in the last {windowLabel}.</p>
+          <p className="text-sm text-slate-600">Counts include all recorded credited gifts we have for each athlete.</p>
         ) : null}
 
         <ul className="m-0 list-none space-y-3 p-0">
@@ -90,7 +87,7 @@ export function ProfileFundraiseThankYousSection(props: {
                           {remainingThanks > 0 ? ` · ${remainingThanks} left` : allMarkedThanked ? " · all set" : ""}
                         </>
                       ) : (
-                        <>No credited gifts in the last {windowLabel}.</>
+                        <>No credited gifts on file yet.</>
                       )}
                     </p>
                   </div>

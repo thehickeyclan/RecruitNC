@@ -2,7 +2,6 @@ import "server-only"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import type { ParentSpartanFundraisingAthleteRow } from "@/lib/parent-spartan-fundraising-totals"
 import { computeParentSpartanFundraisingTotalsForUser } from "@/lib/parent-spartan-fundraising-totals"
-import { FAYETTEVILLE_STRIPE_LOOKBACK_DAYS } from "@/lib/spartan-fayetteville-totals-by-code"
 
 export type CrmSection<T> = { ok: true; data: T } | { ok: false; error: string }
 
@@ -142,10 +141,9 @@ export type AdminCrmUserHubPayload = {
   crmNotes: CrmSection<CrmNoteRow[]>
   crmSettings: CrmSection<CrmContactSettingsRow | null>
   crmAuditRecent: CrmSection<CrmAuditRow[]>
-  /** Per linked / primary athlete: Stripe window totals, reimbursements, Guild reservations — same basis as Profile → Digital wallet. */
+  /** Per linked / primary athlete: all-time wallet totals — same basis as Profile → Digital wallet. */
   fundraisingWallet: CrmSection<{
     campaign: string
-    lookbackDays: number
     athletes: ParentSpartanFundraisingAthleteRow[]
   }>
   /** Parent-submitted reimbursement history for this account. */
@@ -575,7 +573,6 @@ async function loadFundraisingWallet(
 ): Promise<
   CrmSection<{
     campaign: string
-    lookbackDays: number
     athletes: ParentSpartanFundraisingAthleteRow[]
   }>
 > {
@@ -585,7 +582,6 @@ async function loadFundraisingWallet(
       ok: true,
       data: {
         campaign,
-        lookbackDays: FAYETTEVILLE_STRIPE_LOOKBACK_DAYS,
         athletes,
       },
     }

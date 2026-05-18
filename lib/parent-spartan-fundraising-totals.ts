@@ -1,20 +1,16 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
-import { fetchReimbursementPaidCentsByAthleteIdInWindow } from "@/lib/athlete-reimbursement-net"
+import { fetchReimbursementPaidCentsByAthleteIdAllTime } from "@/lib/athlete-reimbursement-net"
 import { userCanManageFundraisingForAthlete } from "@/lib/fundraising/athlete-fundraising-access"
 import {
   type AthleteFundraisingProfileRow,
   ledgerCodesForFundraisingWallet,
 } from "@/lib/fundraising/athlete-fundraising-profiles"
-import {
-  getAthleteFundraisingPublicSnapshot,
-  ATHLETE_PUBLIC_GIFTS_NO_ROW_CAP,
-} from "@/lib/fundraising/athlete-public-stats"
+import { getAthleteFundraisingWalletSnapshot, ATHLETE_PUBLIC_GIFTS_NO_ROW_CAP } from "@/lib/fundraising/athlete-public-stats"
 import {
   fetchGuildReservedCentsForAthleteIds,
   sumGuildReservedAllocationCentsForAthleteIds,
 } from "@/lib/guild-credit-allocations"
 import { getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
-import { FAYETTEVILLE_STRIPE_LOOKBACK_DAYS } from "@/lib/spartan-fayetteville-totals-by-code"
 import { SPARTAN_FAYETTEVILLE_CAMPAIGN } from "@/lib/spartan-fayetteville-stripe"
 
 /**
@@ -60,11 +56,13 @@ export type ParentSpartanFundraisingAthleteRow = {
   athleteId: string
   name: string
   fundraisingCode: string | null
+  /** NCU codes merged for wallet totals (pin + profile + roster). */
+  ledgerCodes: string[]
   totalCents: number
   giftCount: number
   raceSignupCount: number
   reimbursementsPaidCents: number
-  /** Gifts in window minus reimbursements paid in window (before Guild allocations). */
+  /** Lifetime credited gifts minus reimbursements paid all-time (before Guild allocations). */
   netAfterReimbursementsCents: number
   /** Sum of guild_credit_allocations pending + guild_applied for this athlete (any RecruitNC user — same household may use another login). */
   guildAllocationsCents: number
@@ -72,7 +70,8 @@ export type ParentSpartanFundraisingAthleteRow = {
 }
 
 /**
- * Build wallet rows for specific athlete ids — same ledger code union + Stripe snapshot as `/fundraising/athletes/{slug}`.
+ * Build wallet rows for linked athletes — lifetime paid gifts from `spartan_donations` (all registry campaigns)
+ * plus all-time reimbursements; same ledger-code union as public athlete pages.
  */
 export async function buildParentSpartanFundraisingRowsForAthleteIds(
   admin: SupabaseClient,
@@ -89,10 +88,9 @@ export async function buildParentSpartanFundraisingRowsForAthleteIds(
     (nameRows ?? []).map((r) => [String((r as { id: string }).id), String((r as { name: string | null }).name ?? "—")]),
   )
 
-  const sinceMs = Date.now() - FAYETTEVILLE_STRIPE_LOOKBACK_DAYS * 24 * 60 * 60 * 1000
   const [entries, reimbByAthleteId, profileRes, pinnedCodesByAthleteId] = await Promise.all([
     getFundraisingAthleteEntries(admin),
-    fetchReimbursementPaidCentsByAthleteIdInWindow(admin, sinceMs),
+    fetchReimbursementPaidCentsByAthleteIdAllTime(admin),
     admin
       .from("athlete_fundraising_profiles")
       .select(
@@ -138,9 +136,7 @@ export async function buildParentSpartanFundraisingRowsForAthleteIds(
       const pinned = [...(pinnedCodesByAthleteId.get(id) ?? [])]
       const { ledgerCodes, fundraisingCode } = ledgerCodesForFundraisingWallet(profile, entries, id, pinned)
       const snapshot =
-        ledgerCodes.length > 0
-          ? await getAthleteFundraisingPublicSnapshot(ledgerCodes, ATHLETE_PUBLIC_GIFTS_NO_ROW_CAP)
-          : null
+        ledgerCodes.length > 0 ? await getAthleteFundraisingWalletSnapshot(ledgerCodes, ATHLETE_PUBLIC_GIFTS_NO_ROW_CAP) : null
       const st = snapshot?.stats
       packById.set(id, {
         fundraisingCode,
@@ -169,6 +165,7 @@ export async function buildParentSpartanFundraisingRowsForAthleteIds(
         athleteId: id,
         name,
         fundraisingCode: null,
+        ledgerCodes: [],
         totalCents: 0,
         giftCount: 0,
         raceSignupCount: 0,
@@ -187,6 +184,7 @@ export async function buildParentSpartanFundraisingRowsForAthleteIds(
       athleteId: id,
       name,
       fundraisingCode: code,
+      ledgerCodes,
       totalCents,
       giftCount,
       raceSignupCount,
@@ -220,13 +218,13 @@ export async function getFundraisingAthletePageWalletRowForViewer(
 }
 
 /**
- * NC United ledger totals per linked athlete for a RecruitNC account (`parent_athlete_links` and/or `user_profiles.athlete_id`).
- * Same basis as GET /api/profile/spartan-fundraising-totals.
+ * Athlete ids tied to this login for fundraising / digital wallet: `user_profiles.athlete_id`
+ * plus every `parent_athlete_links` row. This is independent of Blue (subscription billing).
  */
-export async function computeParentSpartanFundraisingTotalsForUser(
+export async function collectLinkedAthleteIdsForParentUser(
   admin: SupabaseClient,
   userId: string,
-): Promise<{ campaign: string; athletes: ParentSpartanFundraisingAthleteRow[] }> {
+): Promise<string[]> {
   const { data: profileRow } = await admin.from("user_profiles").select("athlete_id").eq("user_id", userId).maybeSingle()
 
   const { data: linkRows, error: linkError } = await admin
@@ -240,11 +238,32 @@ export async function computeParentSpartanFundraisingTotalsForUser(
 
   const ids = new Set<string>()
   const aid = (profileRow as { athlete_id?: string | null } | null)?.athlete_id
-  if (aid) ids.add(aid)
+  if (aid?.trim()) ids.add(aid.trim())
   for (const r of linkRows ?? []) {
-    if ((r as { athlete_id?: string }).athlete_id) ids.add((r as { athlete_id: string }).athlete_id)
+    const x = (r as { athlete_id?: string }).athlete_id
+    if (x?.trim()) ids.add(x.trim())
   }
-  const athleteIds = [...ids]
+  return [...ids]
+}
+
+/** Same as {@link collectLinkedAthleteIdsForParentUser} — wallet and Guild credit scope follow fundraising links only. */
+export async function getWalletAthleteIdsForParentUser(
+  admin: SupabaseClient,
+  userId: string,
+): Promise<string[]> {
+  return collectLinkedAthleteIdsForParentUser(admin, userId)
+}
+
+/**
+ * NC United ledger totals per linked athlete for a RecruitNC account (`parent_athlete_links` and/or `user_profiles.athlete_id`).
+ * Same basis as GET /api/profile/spartan-fundraising-totals.
+ */
+export async function computeParentSpartanFundraisingTotalsForUser(
+  admin: SupabaseClient,
+  userId: string,
+): Promise<{ campaign: string; athletes: ParentSpartanFundraisingAthleteRow[] }> {
+  const athleteIds = await getWalletAthleteIdsForParentUser(admin, userId)
+
   if (athleteIds.length === 0) {
     return { campaign: SPARTAN_FAYETTEVILLE_CAMPAIGN, athletes: [] }
   }

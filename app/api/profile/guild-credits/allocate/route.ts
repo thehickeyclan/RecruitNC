@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { computeParentSpartanFundraisingTotalsForUser } from "@/lib/parent-spartan-fundraising-totals"
+import { computeParentSpartanFundraisingTotalsForUser, getWalletAthleteIdsForParentUser } from "@/lib/parent-spartan-fundraising-totals"
 import {
   computeGuildAllocatableCents,
   sumReservedGuildAllocationCentsForAthleteAnyUser,
@@ -55,19 +55,17 @@ export async function POST(request: NextRequest) {
 
   const admin = createAdminClient()
 
-  const { data: link } = await admin
-    .from("parent_athlete_links")
-    .select("athlete_id")
-    .eq("user_id", user.id)
-    .eq("athlete_id", athleteId)
-    .maybeSingle()
+  const walletIds = await getWalletAthleteIdsForParentUser(admin, user.id)
+  const walletOk = walletIds.includes(athleteId)
 
-  const { data: profileRow } = await admin.from("user_profiles").select("athlete_id").eq("user_id", user.id).maybeSingle()
-  const profileAthleteId = (profileRow as { athlete_id?: string | null } | null)?.athlete_id
-  const linkedOk = Boolean(link) || profileAthleteId === athleteId
-
-  if (!linkedOk) {
-    return NextResponse.json({ error: "Link this athlete under Family & athletes first." }, { status: 403 })
+  if (!walletOk) {
+    return NextResponse.json(
+      {
+        error:
+          "Link this athlete under Family & athletes first. Only linked athletes can use wallet Guild allocation.",
+      },
+      { status: 403 },
+    )
   }
 
   const { data: guildProf, error: gErr } = await admin

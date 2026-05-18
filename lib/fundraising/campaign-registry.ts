@@ -103,6 +103,20 @@ export function hubSpartanDonationRowMatchesCampaign(
   return stripeSpartanCampaignMetadataMatchesRequested(c, campaign.stripeCampaignSlug)
 }
 
+/**
+ * Profile digital wallet (lifetime): paid `spartan_donations` rows for any registry campaign — no rolling day window.
+ * Empty/missing `spartan_campaign` is treated like {@link hubSpartanDonationRowMatchesCampaign} when only one drive exists.
+ */
+export function hubSpartanDonationRowMatchesAnyRegisteredCampaign(
+  rowSpartanCampaign: string | null | undefined,
+): boolean {
+  const c = (rowSpartanCampaign ?? "").trim()
+  if (!c) {
+    return FUNDRAISING_CAMPAIGNS.length === 1
+  }
+  return stripeSpartanCampaignMetadataMatchesAnyRegisteredCampaign(c)
+}
+
 /** Maps DB / metadata slug to registry `stripeCampaignSlug` for hub rollups (cards, metrics). */
 export function normalizeRegistryStripeCampaignSlug(metadataSlug: string | null | undefined): string {
   const s = (metadataSlug ?? "").trim()

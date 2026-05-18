@@ -6,6 +6,7 @@ import {
 } from "@/lib/spartan-credit-corrections"
 import {
   DEFAULT_FUNDRAISING_CAMPAIGN,
+  hubSpartanDonationRowMatchesAnyRegisteredCampaign,
   hubSpartanDonationRowMatchesCampaign,
 } from "@/lib/fundraising/campaign-registry"
 import {
@@ -42,6 +43,7 @@ type DonationSelectRow = {
   raw_metadata?: unknown
   created_at?: string
   donor_name?: string | null
+  donor_email?: string | null
   spartan_campaign?: string | null
   fundraising_checkout_surface?: string | null
   fundraising_athlete_slug?: string | null
@@ -99,6 +101,7 @@ function mirrorRowPublicDonorLabel(row: DonationSelectRow): string {
 async function fetchAthleteMirrorCreditedRows(
   admin: ReturnType<typeof createAdminClient>,
   codeUpper: string,
+  opts?: { allRegisteredCampaigns?: boolean },
 ): Promise<DonationSelectRow[] | null> {
   const idx = await fetchSpartanCreditCorrectionsIndex(admin)
 
@@ -110,7 +113,7 @@ async function fetchAthleteMirrorCreditedRows(
   const piIds = [...keysForC].filter((k) => k.startsWith("pi_"))
 
   const byId = new Map<string, DonationSelectRow>()
-  const sel = `${DONATION_SELECT}, created_at, donor_name, spartan_campaign`
+  const sel = `${DONATION_SELECT}, created_at, donor_name, donor_email, spartan_campaign`
 
   const { data: byAthleteMeta, error: e1 } = await admin
     .from("spartan_donations")
@@ -144,12 +147,11 @@ async function fetchAthleteMirrorCreditedRows(
 
   const credited: DonationSelectRow[] = []
   for (const row of byId.values()) {
-    if (
-      !hubSpartanDonationRowMatchesCampaign(
-        spartanCampaignFromDonationMirrorRow(row),
-        DEFAULT_FUNDRAISING_CAMPAIGN,
-      )
-    ) {
+    const rowSlug = spartanCampaignFromDonationMirrorRow(row)
+    const inCampaignScope = opts?.allRegisteredCampaigns
+      ? hubSpartanDonationRowMatchesAnyRegisteredCampaign(rowSlug)
+      : hubSpartanDonationRowMatchesCampaign(rowSlug, DEFAULT_FUNDRAISING_CAMPAIGN)
+    if (!inCampaignScope) {
       continue
     }
     const eff = effectiveAthleteCodeForDonationLedgerRow(
@@ -167,10 +169,11 @@ async function fetchAthleteMirrorCreditedRows(
 async function fetchAthleteMirrorCreditedRowsMerged(
   admin: ReturnType<typeof createAdminClient>,
   codesUpper: string[],
+  opts?: { allRegisteredCampaigns?: boolean },
 ): Promise<DonationSelectRow[] | null> {
   const merged = new Map<string, DonationSelectRow>()
   for (const c of codesUpper) {
-    const rows = await fetchAthleteMirrorCreditedRows(admin, c)
+    const rows = await fetchAthleteMirrorCreditedRows(admin, c, opts)
     if (rows == null) return null
     for (const r of rows) merged.set(r.id, r)
   }
@@ -308,14 +311,19 @@ function giftsFromStripeCredited(rows: SpartanFayettevilleDonation[], limit: num
 
 function statsFromMirrorCredited(credited: DonationSelectRow[]): AthleteFundraisingPublicStats {
   let raisedCents = 0
+  let raceSignupCount = 0
   for (const row of credited) {
     raisedCents += typeof row.amount_cents === "number" ? row.amount_cents : 0
+    const meta = row.raw_metadata && typeof row.raw_metadata === "object" && !Array.isArray(row.raw_metadata)
+      ? (row.raw_metadata as Record<string, unknown>)
+      : null
+    if (meta && meta.race_entry_requested === "true") raceSignupCount++
   }
   const giftCount = credited.length
   return {
     raisedCents,
     giftCount,
-    raceSignupCount: 0,
+    raceSignupCount,
     avgGiftCents: giftCount > 0 ? Math.round(raisedCents / giftCount) : null,
     organizationGiftCount: 0,
     individualGiftCount: 0,
@@ -397,6 +405,27 @@ export async function getAthleteFundraisingPublicSnapshot(
   return {
     stats: statsFromMirrorCredited(loaded.rows),
     gifts: giftsFromMirrorCredited(loaded.rows, giftLimit),
+  }
+}
+
+/**
+ * Profile digital wallet: all paid `spartan_donations` rows credited to these ledger codes for any registered
+ * NC United campaign (no rolling day cutoff). Reimbursements in wallet are paired separately (all-time paid).
+ */
+export async function getAthleteFundraisingWalletSnapshot(
+  ledgerCodesInput: string | string[],
+  giftLimit: number,
+): Promise<{ stats: AthleteFundraisingPublicStats; gifts: AthleteRecentGiftRow[] } | null> {
+  const raw = Array.isArray(ledgerCodesInput) ? ledgerCodesInput : [ledgerCodesInput]
+  const codes = [...new Set(raw.map((c) => c.trim().toUpperCase()).filter((c) => CODE_RE.test(c)))]
+  if (codes.length === 0) return null
+  const rows = await fetchAthleteMirrorCreditedRowsMerged(createAdminClient(), codes, {
+    allRegisteredCampaigns: true,
+  })
+  if (rows == null) return null
+  return {
+    stats: statsFromMirrorCredited(rows),
+    gifts: giftsFromMirrorCredited(rows, giftLimit),
   }
 }
 
@@ -559,6 +588,40 @@ export async function getAthleteOwnerThankYouRowsForLedgerCodes(ledgerCodesInput
       seenLedger.add(r.ledgerKey)
       out.push(r)
     }
+  }
+  out.sort((a, b) => +new Date(b.createdIso) - +new Date(a.createdIso))
+  return out
+}
+
+/**
+ * Thank-you list aligned with {@link getAthleteFundraisingWalletSnapshot}: mirror only, all registry campaigns, no day cap.
+ */
+export async function getAthleteOwnerThankYouRowsForWalletLedgerCodes(
+  ledgerCodesInput: string | string[],
+): Promise<AthleteOwnerThankYouRow[]> {
+  const raw = Array.isArray(ledgerCodesInput) ? ledgerCodesInput : [ledgerCodesInput]
+  const codes = [...new Set(raw.map((c) => c.trim().toUpperCase()).filter((c) => CODE_RE.test(c)))]
+  if (codes.length === 0) return []
+  const rows = await fetchAthleteMirrorCreditedRowsMerged(createAdminClient(), codes, {
+    allRegisteredCampaigns: true,
+  })
+  if (rows == null || rows.length === 0) return []
+
+  const seen = new Set<string>()
+  const out: AthleteOwnerThankYouRow[] = []
+  for (const row of rows) {
+    const ledgerKey = ledgerKeyForMirrorDonationRow(row)
+    if (seen.has(ledgerKey)) continue
+    seen.add(ledgerKey)
+    out.push({
+      ledgerKey,
+      createdIso: row.created_at ? new Date(row.created_at).toISOString() : "",
+      donorName: typeof row.donor_name === "string" && row.donor_name.trim() ? row.donor_name.trim() : null,
+      donorEmail: typeof row.donor_email === "string" && row.donor_email.trim() ? row.donor_email.trim() : null,
+      donorPhone: null,
+      notificationEmail: null,
+      amountCents: typeof row.amount_cents === "number" ? row.amount_cents : 0,
+    })
   }
   out.sort((a, b) => +new Date(b.createdIso) - +new Date(a.createdIso))
   return out

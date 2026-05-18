@@ -3,16 +3,14 @@
 import { ExpenseRequestSection } from "@/components/profile/expense-request-section"
 import { GuildCreditAllocationSection } from "@/components/profile/guild-credit-allocation-section"
 import { ProfileFundraiseThankYousSection } from "@/components/profile/profile-fundraise-thank-yous-section"
-import { DEFAULT_FUNDRAISING_CAMPAIGN } from "@/lib/fundraising/campaign-registry"
 import type { ProfileSpartanSupportersAthletePayload } from "@/app/api/profile/spartan-fundraising-supporters/route"
 import { Loader2, Wallet, TrendingUp, TrendingDown, DollarSign } from "lucide-react"
-
-const LOOKBACK_DAYS = DEFAULT_FUNDRAISING_CAMPAIGN.defaultLookbackDays
 
 type SpartanRow = {
   athleteId: string
   name: string
   fundraisingCode: string | null
+  ledgerCodes?: string[]
   totalCents: number
   giftCount?: number
   raceSignupCount?: number
@@ -30,7 +28,6 @@ type ProfileFundraiseTabProps = {
   spartanFundraisingLoading: boolean
   supporterContactsLoading: boolean
   supporterContacts: ProfileSpartanSupportersAthletePayload[] | null
-  supporterLookbackDays: number | null
   linkedLoading: boolean
   linkedCount: number
   linkedAthletes: LinkedAthlete[]
@@ -47,7 +44,6 @@ export function ProfileFundraiseTab({
   spartanFundraisingLoading,
   supporterContactsLoading,
   supporterContacts,
-  supporterLookbackDays,
   linkedLoading,
   linkedCount,
   linkedAthletes,
@@ -68,7 +64,10 @@ export function ProfileFundraiseTab({
             </div>
             <div>
               <h2 className="text-lg font-bold text-white">Digital Wallet</h2>
-              <p className="text-xs text-white/50">Campaign gifts - last {LOOKBACK_DAYS} days</p>
+              <p className="text-xs text-white/50">
+                All-time: every paid gift credited to your athlete’s NCU code(s) that we have on file, across NC United
+                campaigns we track, minus reimbursements paid and Guild holds.
+              </p>
             </div>
           </div>
         </div>
@@ -200,11 +199,7 @@ export function ProfileFundraiseTab({
             }
           />
 
-          <ProfileFundraiseThankYousSection
-            loading={supporterContactsLoading}
-            lookbackDays={supporterLookbackDays}
-            athletes={supporterContacts}
-          />
+          <ProfileFundraiseThankYousSection loading={supporterContactsLoading} athletes={supporterContacts} />
         </>
       )}
     </div>
