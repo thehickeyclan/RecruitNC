@@ -509,11 +509,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
         ) : null}
 
         {showFullGivingExperience && managerWalletRow ? (
-          <FundraisingAthleteWalletPanel
-            row={managerWalletRow}
-            firstName={athleteFirstName}
-            ledgerPublicStats={stats}
-          />
+          <FundraisingAthleteWalletPanel row={managerWalletRow} firstName={athleteFirstName} />
         ) : null}
 
         {code && stats && checkoutLive && stats.giftCount === 0 ? (
