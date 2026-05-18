@@ -159,7 +159,9 @@ export async function buildFundraisingReconciliationReport(
   const rows: FundraisingReconciliationRow[] = []
 
   for (const part of chunkArr(uniqueIds, chunkSize)) {
-    const walletRows = await buildParentSpartanFundraisingRowsForAthleteIds(admin, viewerUserId, part)
+    const walletRows = await buildParentSpartanFundraisingRowsForAthleteIds(admin, viewerUserId, part, {
+      fundraisingProfiles: "any",
+    })
     const byId = new Map(walletRows.map((r) => [r.athleteId, r]))
     for (const athleteId of part) {
       const w = byId.get(athleteId)

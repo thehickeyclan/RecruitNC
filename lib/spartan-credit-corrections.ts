@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { athleteCodeFromPersistedDonationRawMetadata } from "@/lib/spartan-donation-athlete-code"
 import type { SpartanFayettevilleDonation } from "@/lib/spartan-fayetteville-stripe"
 
 /**
@@ -104,7 +105,9 @@ export function effectiveAthleteCodeForDonationLedgerRow(
   const corrected = correctionAthleteCodeFromIndex(sid, pi, index.athleteBySessionOrPi)
   if (corrected) return corrected.toUpperCase()
   const raw = row.athlete_code?.trim()
-  return raw ? raw.toUpperCase() : null
+  if (raw) return raw.toUpperCase()
+  const fromPersistedMeta = athleteCodeFromPersistedDonationRawMetadata(row.raw_metadata)
+  return fromPersistedMeta ?? null
 }
 
 function correctionAthleteCodeFromIndex(

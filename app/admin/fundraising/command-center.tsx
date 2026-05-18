@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react"
 import Link from "next/link"
+import { HardLink } from "@/components/hard-link"
 import { 
   DollarSign, Users, FileCheck, Receipt, TrendingUp, 
   ChevronDown, ChevronUp, Search, ExternalLink,
@@ -899,7 +900,7 @@ export function FundraisingCommandCenter({
 
       {/* NC United Fund Section */}
       <div className="rounded-xl border-2 border-[#003366]/20 bg-gradient-to-r from-[#003366]/5 to-[#D3B574]/5 p-5 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex items-center gap-3">
             <div className="rounded-lg bg-[#003366] p-2">
               <Gift className="h-5 w-5 text-white" />
@@ -909,6 +910,14 @@ export function FundraisingCommandCenter({
               <p className="text-xs text-gray-500">Scholarship donations, awards & guild allocations</p>
             </div>
           </div>
+          <HardLink
+            href="/admin/fundraising/digital-wallet-ledger"
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-[#003366]/30 bg-white px-4 py-2.5 text-sm font-semibold text-[#003366] shadow-sm transition-all hover:border-[#003366]/50 hover:shadow-md"
+          >
+            <Receipt className="h-4 w-4" />
+            Digital wallet ledger
+            <ExternalLink className="h-3.5 w-3.5 opacity-60" />
+          </HardLink>
         </div>
         <div className="grid gap-4 sm:grid-cols-4">
           <div className="rounded-lg bg-white p-4 shadow-sm">
@@ -958,6 +967,22 @@ export function FundraisingCommandCenter({
             </div>
           </div>
         </button>
+
+        <HardLink
+          href="/admin/fundraising/digital-wallet-ledger"
+          className="rounded-xl border bg-white p-4 shadow-sm transition-all hover:border-emerald-500 hover:shadow-md"
+        >
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-emerald-100 p-2">
+              <Receipt className="h-5 w-5 text-emerald-700" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-gray-900">Digital wallet ledger</p>
+              <p className="text-sm text-gray-500">Athletes + training fund, registry reconciliation</p>
+            </div>
+            <ExternalLink className="h-4 w-4 text-gray-400" />
+          </div>
+        </HardLink>
 
         <Link
           href="/admin/fundraising/wallets"

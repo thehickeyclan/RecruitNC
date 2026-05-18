@@ -183,7 +183,10 @@ export async function notifyHouseholdOfFundraisingGiftIfEligible(
 
   const ledgerCodes =
     resolved.ledgerCodes.length > 0 ? resolved.ledgerCodes : resolved.code ? [resolved.code] : []
-  const snap = ledgerCodes.length > 0 ? await getAthleteFundraisingPublicSnapshot(ledgerCodes, 1) : null
+  const snap =
+    ledgerCodes.length > 0
+      ? await getAthleteFundraisingPublicSnapshot(ledgerCodes, 1, { mirrorFundraisingSlugs: [slug] })
+      : null
 
   const donorLabel = householdGiftDonorDisplayForFamily(session)
   const amountDisplay = formatUsd(amountCents)
