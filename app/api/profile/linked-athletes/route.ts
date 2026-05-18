@@ -26,7 +26,28 @@ export async function GET() {
     return NextResponse.json({ error: e instanceof Error ? e.message : "Server error" }, { status: 500 })
   }
 
-  if (athleteIds.length === 0) return NextResponse.json({ athletes: [] })
+  if (athleteIds.length === 0) return NextResponse.json({ athletes: [], profileAthleteId: null as string | null })
+
+  const { data: prof } = await admin.from("user_profiles").select("athlete_id").eq("user_id", user.id).maybeSingle()
+  const profileAthleteId =
+    typeof (prof as { athlete_id?: string | null } | null)?.athlete_id === "string"
+      ? String((prof as { athlete_id: string }).athlete_id).trim() || null
+      : null
+
+  const { data: linkRows, error: linkErr } = await admin
+    .from("parent_athlete_links")
+    .select("athlete_id")
+    .eq("user_id", user.id)
+
+  if (linkErr && linkErr.code !== "42P01") {
+    console.error("[profile/linked-athletes] links", linkErr)
+  }
+
+  const linkedViaFamilyTable = new Set(
+    (linkRows ?? [])
+      .map((r) => String((r as { athlete_id?: string }).athlete_id ?? "").trim())
+      .filter(Boolean),
+  )
 
   const { data: athletes, error: athleteError } = await supabase
     .from("athletes")
@@ -41,7 +62,9 @@ export async function GET() {
     profileVerified: !!a.profile_verified,
     updatedAt: a.updated_at ?? null,
     claimedByUserId: (a as Record<string, unknown>).claimed_by_user_id as string | null ?? null,
+    canUnlink: linkedViaFamilyTable.has(String(a.id)),
+    isProfilePrimaryAthlete: profileAthleteId != null && String(a.id) === profileAthleteId,
   }))
 
-  return NextResponse.json({ athletes: list })
+  return NextResponse.json({ athletes: list, profileAthleteId })
 }

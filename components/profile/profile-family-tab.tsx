@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import { PublicImageUpload } from "@/components/public-image-upload"
 import { HardLink } from "@/components/hard-link"
-import { Loader2, Camera, CheckCircle, LayoutDashboard, Link2, Search, ExternalLink, Sparkles, Users, ArrowRight } from "lucide-react"
+import { Loader2, Camera, CheckCircle, LayoutDashboard, Link2, Search, ExternalLink, Sparkles, Users, ArrowRight, UserMinus } from "lucide-react"
 
 const ATHLETE_COMPLETENESS_LABELS: Record<string, string> = {
   bio: "Bio",
@@ -23,6 +23,8 @@ type Linked = {
   profileVerified: boolean
   updatedAt: string | null
   claimedByUserId: string | null
+  canUnlink?: boolean
+  isProfilePrimaryAthlete?: boolean
 }
 
 export type UserProfileForFamily = {
@@ -50,6 +52,8 @@ type ProfileFamilyTabProps = {
   eventHubs: { id: string; slug: string; name: string; href: string }[]
   eventHubsLoading: boolean
   onProfilePhotoUploaded?: (url: string) => void
+  unlinkAthlete?: (athleteId: string) => void
+  unlinkAthleteId?: string | null
 }
 
 export function ProfileFamilyTab({
@@ -69,6 +73,8 @@ export function ProfileFamilyTab({
   eventHubs,
   eventHubsLoading,
   onProfilePhotoUploaded,
+  unlinkAthlete,
+  unlinkAthleteId,
 }: ProfileFamilyTabProps) {
   return (
     <div className="space-y-6">
@@ -291,7 +297,37 @@ export function ProfileFamilyTab({
                         {comp && comp.percent === 0 ? "Complete profile" : "Edit profile"}
                       </a>
                     </Button>
+                    {unlinkAthlete && a.canUnlink ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={unlinkAthleteId === a.id}
+                        className="border-red-900/60 text-red-300 hover:bg-red-950/40 hover:text-red-100"
+                        onClick={() => unlinkAthlete(a.id)}
+                      >
+                        {unlinkAthleteId === a.id ? (
+                          <>
+                            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                            Removing…
+                          </>
+                        ) : (
+                          <>
+                            <UserMinus className="mr-1.5 h-3.5 w-3.5" />
+                            Remove from my account
+                          </>
+                        )}
+                      </Button>
+                    ) : null}
                   </div>
+                  {a.isProfilePrimaryAthlete ? (
+                    <p className="text-[11px] text-gray-500 mt-2">
+                      Also set as your athlete on the <strong className="text-gray-400">Account</strong> tab — change there if this login should not be their parent account.
+                    </p>
+                  ) : null}
+                  {unlinkAthlete && !a.canUnlink && !a.isProfilePrimaryAthlete ? (
+                    <p className="text-[11px] text-amber-500/90 mt-2">This row isn&apos;t from a family link we can remove here. Contact support if the wrong name still shows.</p>
+                  ) : null}
                 </div>
               )
             })}
