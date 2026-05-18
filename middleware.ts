@@ -5,6 +5,8 @@ function isFundraisingHubPublicPath(p: string): boolean {
   if (p === "/fundraising" || p === "/fundraising/") return true
   if (p.startsWith("/fundraising/athletes")) return true
   if (p.startsWith("/fundraising/scholarships")) return true
+  if (p.startsWith("/fundraising/leaderboard")) return true
+  if (p.startsWith("/fundraising/activity")) return true
   if (p.startsWith("/fundraising/") && p.includes("/thanks")) return true
   return false
 }

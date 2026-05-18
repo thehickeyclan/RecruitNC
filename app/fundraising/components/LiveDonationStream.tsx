@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { HardLink } from "@/components/hard-link"
 import { FUNDRAISING_CAMPAIGNS } from "@/lib/fundraising/campaign-registry"
 import {
@@ -8,9 +8,16 @@ import {
   hubActivityRowMatchesCampaignFilter,
   resolveFundraisingCheckoutSurface,
 } from "@/lib/fundraising/hub-activity-meta"
-import type { FundraisingHubActivityRow, FundraisingHubTransparencyMeta } from "@/lib/fundraising/hub-data"
+import type {
+  FundraisingHubActivityRow,
+  FundraisingHubCreditCorrectionsClient,
+  FundraisingHubSnapshot,
+  FundraisingHubTransparencyMeta,
+} from "@/lib/fundraising/hub-data"
 import { fundraisingAthletePublicHrefFromCode } from "@/lib/fundraising/athlete-fundraising-slug"
 import { formatUsdWhole } from "./FundraisingHero"
+import { matchesGeneralFundLedgerIds, stripePaymentIntentIdFromDonationRawMetadata } from "@/lib/spartan-credit-corrections"
+import { fallbackAthleteLabelFromCode } from "@/lib/spartan-fayetteville-stripe"
 
 function displayFont(c: string) {
   return `font-[family-name:var(--font-fundraising-display)] ${c}`
@@ -26,7 +33,23 @@ function formatRelativeOrAbsolute(iso: string): string {
   return d.toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
 }
 
-function mapRealtimeRow(payload: Record<string, unknown>): FundraisingHubActivityRow | null {
+function lookupCorrectedAthleteCode(
+  sessionId: string,
+  rawMetadata: unknown,
+  athleteBySessionId: Record<string, string>,
+): string | undefined {
+  const direct = athleteBySessionId[sessionId]?.trim()
+  if (direct) return direct
+  const pi = stripePaymentIntentIdFromDonationRawMetadata(rawMetadata)
+  if (pi) return athleteBySessionId[pi]?.trim()
+  return undefined
+}
+
+/** `spartan_donations` realtime payloads omit merged credits — apply same index as `/api/spartan/supporters`. */
+function mapRealtimeRow(
+  payload: Record<string, unknown>,
+  corrections: FundraisingHubCreditCorrectionsClient | null,
+): FundraisingHubActivityRow | null {
   if (payload.status !== "paid") return null
   const id = typeof payload.id === "string" ? payload.id : null
   const created_at = typeof payload.created_at === "string" ? payload.created_at : null
@@ -34,12 +57,32 @@ function mapRealtimeRow(payload: Record<string, unknown>): FundraisingHubActivit
   const amount_cents = typeof payload.amount_cents === "number" ? payload.amount_cents : 0
   const donor_name = typeof payload.donor_name === "string" ? payload.donor_name.trim() : ""
   const donorDisplay = donor_name || "Anonymous supporter"
-  const athlete_display_name =
+  let athlete_display_name =
     typeof payload.athlete_display_name === "string" ? payload.athlete_display_name.trim() : ""
-  const athlete_code = typeof payload.athlete_code === "string" ? payload.athlete_code.trim() : ""
-  const athleteCredit = !athlete_code && !athlete_display_name
-    ? "NC United general fund"
-    : athlete_display_name || athlete_code || "NC United general fund"
+  let athlete_code = typeof payload.athlete_code === "string" ? payload.athlete_code.trim() : ""
+
+  if (corrections) {
+    const fundSet = new Set(corrections.generalFundIds)
+    const pi = stripePaymentIntentIdFromDonationRawMetadata(payload.raw_metadata)
+    if (fundSet.size > 0 && matchesGeneralFundLedgerIds(id, pi, fundSet)) {
+      athlete_code = ""
+      athlete_display_name = ""
+    } else {
+      const oc = lookupCorrectedAthleteCode(id, payload.raw_metadata, corrections.athleteBySessionId)
+      if (oc) {
+        athlete_code = oc
+        athlete_display_name = ""
+      }
+    }
+  }
+
+  const athleteCredit =
+    !athlete_code && !athlete_display_name
+      ? "NC United general fund"
+      : athlete_display_name ||
+        fallbackAthleteLabelFromCode(athlete_code) ||
+        athlete_code ||
+        "NC United general fund"
   const spartanRaw =
     typeof payload.spartan_campaign === "string" && payload.spartan_campaign.trim()
       ? payload.spartan_campaign.trim()
@@ -72,12 +115,21 @@ function creditLabel(r: FundraisingHubActivityRow): string {
 export function LiveDonationStream({
   initial,
   hubTransparency,
+  creditCorrections: creditCorrectionsProp,
 }: {
   initial: FundraisingHubActivityRow[]
   hubTransparency: FundraisingHubTransparencyMeta
+  creditCorrections: FundraisingHubCreditCorrectionsClient
 }) {
   const [rows, setRows] = useState(initial)
   const [feedCampaignFilter, setFeedCampaignFilter] = useState<string>("all")
+  const [creditCorrections, setCreditCorrections] = useState(creditCorrectionsProp)
+  const correctionsRef = useRef(creditCorrections)
+  correctionsRef.current = creditCorrections
+
+  useEffect(() => {
+    setCreditCorrections(creditCorrectionsProp)
+  }, [creditCorrectionsProp])
 
   useEffect(() => {
     setRows(initial)
@@ -109,7 +161,7 @@ export function LiveDonationStream({
             { event: "*", schema: "public", table: "spartan_donations" },
             (payload) => {
               const row = (payload.new ?? {}) as Record<string, unknown>
-              const mapped = mapRealtimeRow(row)
+              const mapped = mapRealtimeRow(row, correctionsRef.current)
               if (!mapped) return
               mergeIncoming(mapped)
             },
@@ -127,8 +179,9 @@ export function LiveDonationStream({
     const iv = setInterval(() => {
       void fetch("/api/fundraising/hub-data")
         .then((r) => r.json())
-        .then((j: { activity?: FundraisingHubActivityRow[] }) => {
+        .then((j: Partial<FundraisingHubSnapshot>) => {
           if (Array.isArray(j.activity)) setRows(j.activity)
+          if (j.creditCorrections) setCreditCorrections(j.creditCorrections)
         })
         .catch(() => {})
     }, 55000)

@@ -91,6 +91,21 @@ export type FundraisingHubTransparencyMeta = {
   timedDriveArchived: boolean
 }
 
+/** Serializable mirror of `spartan_credit_corrections` for the hub live feed (realtime rows are raw DB). */
+export type FundraisingHubCreditCorrectionsClient = {
+  /** Checkout session ids (`cs_…`) and PaymentIntent ids (`pi_…`) credited to NC United fund, not an athlete. */
+  generalFundIds: string[]
+  /** Overrides: session or PI id → NCU athlete code. */
+  athleteBySessionId: Record<string, string>
+}
+
+function hubCreditCorrectionsForClient(index: SpartanCreditCorrectionsIndex): FundraisingHubCreditCorrectionsClient {
+  return {
+    generalFundIds: [...index.generalFundSessionOrPi],
+    athleteBySessionId: Object.fromEntries(index.athleteBySessionOrPi),
+  }
+}
+
 export type FundraisingHubActivityRow = {
   id: string
   createdIso: string
@@ -115,6 +130,7 @@ export type FundraisingHubSnapshot = {
   leaderboard: FundraisingHubLeaderRow[]
   activity: FundraisingHubActivityRow[]
   hubTransparency: FundraisingHubTransparencyMeta
+  creditCorrections: FundraisingHubCreditCorrectionsClient
 }
 
 const PAGE = 900
@@ -477,7 +493,7 @@ export async function buildFundraisingHubSnapshot(admin?: SupabaseClient): Promi
     timedDriveArchived: Boolean(DEFAULT_FUNDRAISING_CAMPAIGN.playbookOperationalBanner),
   }
 
-  return { hero, campaigns, leaderboard, activity, hubTransparency }
+  return { hero, campaigns, leaderboard, activity, hubTransparency, creditCorrections: hubCreditCorrectionsForClient(correctionIndex) }
 }
 
 export async function getFundraisingHubSnapshot(): Promise<FundraisingHubSnapshot> {

@@ -142,6 +142,20 @@ export function FundraisingHero({ hero }: { hero: FundraisingHubHeroStats }) {
           </div>
         </div>
 
+        {hero.ncUnitedCommunityFundCents > 0 ? (
+          <p className="mx-auto mt-5 max-w-2xl text-center text-sm leading-relaxed text-white/82 sm:mx-0 sm:text-left">
+            <span className="text-white/70">NC United general fund</span>{" "}
+            <span className="font-semibold tabular-nums text-white">
+              {formatUsdWhole(hero.ncUnitedCommunityFundCents)}
+            </span>
+            <span className="text-white/70">
+              {" "}
+              — gifts with no athlete credit at checkout. The leaderboard below shows athlete-credited amounts only; add this line
+              to reconcile with &ldquo;Raised&rdquo; above.
+            </span>
+          </p>
+        ) : null}
+
         <p className="mx-auto mt-8 text-center text-sm text-white/88 sm:mx-0 sm:text-left">
           Registered <span className="font-semibold text-white">501(c)(3)</span> public charity · EIN{" "}
           <span className="tabular-nums text-white">99-3757238</span>

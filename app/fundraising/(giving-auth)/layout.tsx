@@ -4,7 +4,7 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { FUNDRAISING_AUTH_RETURN_COOKIE } from "@/lib/fundraising/fundraising-auth-return-cookie"
 
-/** Nested hub routes requiring login: playbook, leaderboard, campaigns, training fund, scholarship **apply**, etc. Public: `/fundraising`, `/fundraising/athletes/**`, `/fundraising/scholarships/**` except segments served only from `(giving-auth)` (e.g. `.../apply`). */
+/** Nested hub routes requiring login: playbook, training fund, scholarship **apply**, campaign checkout pages, etc. Public: `/fundraising`, `/fundraising/leaderboard`, `/fundraising/activity`, `/fundraising/athletes/**`, `/fundraising/scholarships/**` except segments served only from `(giving-auth)` (e.g. `.../apply`). */
 export default async function GivingHubAuthLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient()
   const {

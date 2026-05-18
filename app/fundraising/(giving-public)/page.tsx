@@ -38,7 +38,11 @@ export default async function FundraisingPortalHomePage() {
       <CorporatePartners />
       <WhyNCUnited hero={snapshot.hero} />
       <LeaderboardPreview rows={leaderboardRows} hubTransparency={snapshot.hubTransparency} />
-      <LiveDonationStream initial={liveFeedInitial} hubTransparency={snapshot.hubTransparency} />
+      <LiveDonationStream
+        initial={liveFeedInitial}
+        hubTransparency={snapshot.hubTransparency}
+        creditCorrections={snapshot.creditCorrections}
+      />
       <ActiveCampaigns campaigns={snapshot.campaigns} />
       <TopDonorsPreview
         individuals={hallOfFame?.individuals ?? []}
