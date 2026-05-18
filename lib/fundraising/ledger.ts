@@ -52,10 +52,12 @@ function formatUsdFromCents(cents: number): string {
 /**
  * Paid Spartan-channel Stripe Checkout → money in (athlete credit or training fund).
  * Call after `spartan_donations` upsert succeeds.
+ * @param resolvedAthleteCode When set, Stripe metadata omitted `athlete_code` but we resolved NCU from slug/URL (keeps ledger aligned with mirror).
  */
 export async function recordFundraisingLedgerSpartanCheckout(
   admin: SupabaseClient,
   session: Stripe.Checkout.Session,
+  resolvedAthleteCode?: string | null,
 ): Promise<void> {
   if (session.metadata?.channel !== "spartan") return
   if (session.payment_status !== "paid") return
@@ -63,7 +65,7 @@ export async function recordFundraisingLedgerSpartanCheckout(
   if (amountCents < 1) return
 
   const meta = session.metadata as Record<string, string>
-  const athleteCodeRaw = (meta.athlete_code || "").trim()
+  const athleteCodeRaw = ((resolvedAthleteCode ?? meta.athlete_code) || "").trim()
   const athleteCode = athleteCodeRaw ? athleteCodeRaw.toUpperCase() : null
   const manualName = (meta.manual_athlete_name || "").trim() || null
 
