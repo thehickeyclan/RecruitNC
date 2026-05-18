@@ -4,7 +4,8 @@ import { ExpenseRequestSection } from "@/components/profile/expense-request-sect
 import { GuildCreditAllocationSection } from "@/components/profile/guild-credit-allocation-section"
 import { ProfileFundraiseThankYousSection } from "@/components/profile/profile-fundraise-thank-yous-section"
 import type { ProfileSpartanSupportersAthletePayload } from "@/app/api/profile/spartan-fundraising-supporters/route"
-import { Loader2, Wallet, TrendingUp, TrendingDown, DollarSign } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Loader2, Wallet, TrendingUp, TrendingDown, DollarSign, UserMinus } from "lucide-react"
 
 type SpartanRow = {
   athleteId: string
@@ -20,7 +21,7 @@ type SpartanRow = {
   guildAllocationsCents?: number
 }
 
-type LinkedAthlete = { id: string; name: string }
+type LinkedAthlete = { id: string; name: string; canUnlink?: boolean; isProfilePrimaryAthlete?: boolean }
 
 type ProfileFundraiseTabProps = {
   walletPanelActivated: boolean
@@ -31,6 +32,9 @@ type ProfileFundraiseTabProps = {
   linkedLoading: boolean
   linkedCount: number
   linkedAthletes: LinkedAthlete[]
+  /** Same handler as Family tab — removes a `parent_athlete_links` row. */
+  unlinkAthlete?: (athleteId: string) => void
+  unlinkAthleteId?: string | null
   onSpartanTotalsRefresh?: () => void | Promise<void>
 }
 
@@ -47,6 +51,8 @@ export function ProfileFundraiseTab({
   linkedLoading,
   linkedCount,
   linkedAthletes,
+  unlinkAthlete,
+  unlinkAthleteId,
   onSpartanTotalsRefresh,
 }: ProfileFundraiseTabProps) {
   const deferFundraiseExtras =
@@ -66,8 +72,10 @@ export function ProfileFundraiseTab({
               <h2 className="text-lg font-bold text-white">Digital Wallet</h2>
               <p className="text-xs text-white/50">
                 All-time: every paid gift credited to your athlete’s NCU code(s) that we have on file, across NC United
-                campaigns we track, minus reimbursements paid and Guild holds. If you see the wrong wrestler, open{" "}
-                <strong className="text-white/70">Family &amp; athletes</strong> and use <strong className="text-white/70">Remove from my account</strong>.
+                campaigns we track, minus reimbursements paid and Guild holds. Wrong name on a card? Use{" "}
+                <strong className="text-white/70">Remove from my account</strong> on that row (or under{" "}
+                <strong className="text-white/70">Family &amp; athletes</strong>). If they are only your Account-tab athlete,
+                change that on <strong className="text-white/70">Account</strong>.
               </p>
             </div>
           </div>
@@ -104,6 +112,8 @@ export function ProfileFundraiseTab({
                 const reimb = row.reimbursementsPaidCents ?? 0
                 const spent = reimb + guildAlloc
                 const showSetupHint = !row.fundraisingCode || row.codeUnavailable
+                const linkMeta = linkedAthletes.find((a) => a.id === row.athleteId)
+                const showWalletRemove = Boolean(unlinkAthlete && linkMeta?.canUnlink)
 
                 return (
                   <div
@@ -111,15 +121,43 @@ export function ProfileFundraiseTab({
                     className="rounded-lg bg-white/5 p-4"
                   >
                     {/* Athlete Name */}
-                    <div className="mb-4 flex items-center justify-between">
+                    <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                       <h3 className="text-base font-semibold text-white">
                         {row.name?.trim() || "Athlete"}
                       </h3>
-                      {showSetupHint && (
-                        <span className="text-xs text-amber-400">
-                          Add grad year to match gifts
-                        </span>
-                      )}
+                      <div className="flex flex-wrap items-center gap-2 justify-end">
+                        {showSetupHint && (
+                          <span className="text-xs text-amber-400">
+                            Add grad year to match gifts
+                          </span>
+                        )}
+                        {showWalletRemove ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={unlinkAthleteId === row.athleteId}
+                            className="h-8 border-red-900/60 text-red-300 hover:bg-red-950/40 hover:text-red-100"
+                            onClick={() => unlinkAthlete!(row.athleteId)}
+                          >
+                            {unlinkAthleteId === row.athleteId ? (
+                              <>
+                                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                                Removing…
+                              </>
+                            ) : (
+                              <>
+                                <UserMinus className="mr-1.5 h-3.5 w-3.5" />
+                                Remove from my account
+                              </>
+                            )}
+                          </Button>
+                        ) : linkMeta?.isProfilePrimaryAthlete ? (
+                          <span className="text-[11px] text-white/40 max-w-[220px] text-right">
+                            Set on <strong className="text-white/60">Account</strong> if this login shouldn&apos;t be their parent.
+                          </span>
+                        ) : null}
+                      </div>
                     </div>
 
                     {/* Stats Grid */}

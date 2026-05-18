@@ -49,22 +49,56 @@ export async function GET() {
       .filter(Boolean),
   )
 
-  const { data: athletes, error: athleteError } = await supabase
+  // Use service role here so the list matches the digital wallet (admin-backed totals).
+  // User-scoped SELECT on `athletes` can omit rows under RLS, which hid linked kids from
+  // Family & athletes — parents saw strangers on the wallet but had no "Remove" target.
+  const { data: athletes, error: athleteError } = await admin
     .from("athletes")
     .select("id, name, profile_verified, updated_at, claimed_by_user_id")
     .in("id", athleteIds)
 
   if (athleteError) return NextResponse.json({ error: athleteError.message }, { status: 500 })
 
-  const list = (athletes ?? []).map((a) => ({
-    id: a.id,
-    name: a.name ?? "—",
-    profileVerified: !!a.profile_verified,
-    updatedAt: a.updated_at ?? null,
-    claimedByUserId: (a as Record<string, unknown>).claimed_by_user_id as string | null ?? null,
-    canUnlink: linkedViaFamilyTable.has(String(a.id)),
-    isProfilePrimaryAthlete: profileAthleteId != null && String(a.id) === profileAthleteId,
-  }))
+  const byId = new Map(
+    (athletes ?? []).map((a) => {
+      const row = a as {
+        id: string
+        name: string | null
+        profile_verified?: boolean | null
+        updated_at?: string | null
+        claimed_by_user_id?: string | null
+      }
+      return [
+        String(row.id),
+        {
+          id: row.id,
+          name: row.name ?? "—",
+          profileVerified: !!row.profile_verified,
+          updatedAt: row.updated_at ?? null,
+          claimedByUserId: row.claimed_by_user_id ?? null,
+          canUnlink: linkedViaFamilyTable.has(String(row.id)),
+          isProfilePrimaryAthlete: profileAthleteId != null && String(row.id) === profileAthleteId,
+        },
+      ] as const
+    }),
+  )
+
+  const list = athleteIds.map((rawId) => {
+    const id = String(rawId).trim()
+    const found = byId.get(id)
+    if (found) return { ...found }
+    return {
+      id,
+      name: "Athlete",
+      profileVerified: false,
+      updatedAt: null as string | null,
+      claimedByUserId: null as string | null,
+      canUnlink: linkedViaFamilyTable.has(id),
+      isProfilePrimaryAthlete: profileAthleteId != null && id === profileAthleteId,
+    }
+  })
+
+  list.sort((a, b) => a.name.localeCompare(b.name))
 
   return NextResponse.json({ athletes: list, profileAthleteId })
 }
