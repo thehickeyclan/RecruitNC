@@ -73,7 +73,7 @@ export type ParentSpartanFundraisingAthleteRow = {
   codeUnavailable?: boolean
   /**
    * Gross in the hub lookback window — same basis as `/fundraising` athlete leaderboard.
-   * Optional; when set, Profile + public athlete page show this as headline “Raised”.
+   * Optional — Stripe-aligned hub window totals for `/fundraising` leaderboard comparison only (lifetime wallet math uses mirror).
    */
   hubWindowRaisedCents?: number
   hubWindowGiftCount?: number

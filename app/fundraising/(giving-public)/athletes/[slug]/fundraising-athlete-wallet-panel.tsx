@@ -1,7 +1,6 @@
 import { Wallet } from "lucide-react"
 
 import { HardLink } from "@/components/hard-link"
-import type { AthleteFundraisingPublicStats } from "@/lib/fundraising/athlete-public-stats"
 import type { ParentSpartanFundraisingAthleteRow } from "@/lib/parent-spartan-fundraising-totals"
 
 function formatUsd(cents: number): string {
@@ -19,39 +18,24 @@ type Props = {
   row: ParentSpartanFundraisingAthleteRow
   /** First name for headings — same derivation as goal section */
   firstName: string
-  /**
-   * Optional legacy aligner when hub window fields are absent — same snapshot as public stats / milestone section.
-   */
-  ledgerPublicStats?: AthleteFundraisingPublicStats | null
 }
 
 /**
- * Family / staff only — reimbursements & Guild from Profile wallet; Raised aligns with public snapshot when provided.
+ * Family / staff only — Raised uses lifetime mirror gross so it matches Available math; hub leaderboard shown when it differs.
  */
-export function FundraisingAthleteWalletPanel({ row, firstName, ledgerPublicStats }: Props) {
-  const displayRaised =
-    typeof row.hubWindowRaisedCents === "number"
-      ? row.hubWindowRaisedCents
-      : ledgerPublicStats != null
-        ? ledgerPublicStats.raisedCents
-        : row.totalCents
-  const displayGiftCount =
-    typeof row.hubWindowGiftCount === "number"
-      ? row.hubWindowGiftCount
-      : ledgerPublicStats != null
-        ? ledgerPublicStats.giftCount
-        : row.giftCount
-  const ledgerAligned =
-    typeof row.hubWindowRaisedCents === "number" || ledgerPublicStats != null
+export function FundraisingAthleteWalletPanel({ row, firstName }: Props) {
+  const lifetimeRaised = row.totalCents
+  const lifetimeGiftCount = row.giftCount
+  const hubRaised = row.hubWindowRaisedCents
+  const hubGiftCount = row.hubWindowGiftCount
 
   const reimb = row.reimbursementsPaidCents ?? 0
   const guildAlloc = row.guildAllocationsCents ?? 0
-  /** Always all-time net from ledger math — do not subtract reimbursements from the hub headline alone. */
   const net = row.netAfterReimbursementsCents ?? row.totalCents - reimb
   const remainingAfterGuild = net - guildAlloc
   const usedTotal = reimb + guildAlloc
   const showCodeHint = !row.fundraisingCode || row.codeUnavailable
-  const hubDays = row.hubLookbackDays
+  const hubPresent = typeof hubRaised === "number"
 
   return (
     <section
@@ -71,10 +55,10 @@ export function FundraisingAthleteWalletPanel({ row, firstName, ledgerPublicStat
               {firstName}&apos;s digital wallet
             </h2>
             <p className="mt-1 text-xs leading-snug text-white/55">
-              Total raised (hub leaderboard window when shown), what has already been spent or reimbursed, and what is still
-              available for this athlete. Submit reimbursement requests from your parent profile under{" "}
+              <strong className="text-white/65">Raised</strong> is lifetime credited gross so it nets with Spend and Available; a hub
+              line appears when Stripe differs from ledger. Submit reimbursement requests from your parent profile under{" "}
               <span className="text-white/70">Fundraise</span>.
-              {!ledgerAligned ? (
+              {!hubPresent ? (
                 <>
                   {" "}
                   If the totals look off, confirm you&apos;re viewing the right athlete under{" "}
@@ -102,11 +86,24 @@ export function FundraisingAthleteWalletPanel({ row, firstName, ledgerPublicStat
       <div className="mt-5 grid gap-3 sm:grid-cols-3">
         <div className="rounded-lg border border-white/10 bg-black/25 px-4 py-3 sm:py-4">
           <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#C8A94A]">Raised</p>
-          <p className="mt-1 text-xl font-black tabular-nums text-white sm:text-2xl">{formatUsd(displayRaised)}</p>
+          <p className="mt-1 text-xl font-black tabular-nums text-white sm:text-2xl">{formatUsd(lifetimeRaised)}</p>
           <p className="mt-1 text-[11px] leading-snug text-white/45">
-            {displayGiftCount} gifts
-            {typeof hubDays === "number" ? ` · Same hub reporting window as /fundraising leaderboard` : ""}
+            {lifetimeGiftCount} gift{lifetimeGiftCount !== 1 ? "s" : ""} · lifetime credited
           </p>
+          {hubPresent ? (
+            hubRaised !== lifetimeRaised ||
+            (typeof hubGiftCount === "number" && hubGiftCount !== lifetimeGiftCount) ? (
+              <p className="mt-1 text-[10px] leading-snug text-white/35">
+                Hub leaderboard {formatUsd(hubRaised)}
+                {typeof hubGiftCount === "number"
+                  ? ` · ${hubGiftCount} gift${hubGiftCount !== 1 ? "s" : ""}`
+                  : ""}{" "}
+                (Stripe window)
+              </p>
+            ) : (
+              <p className="mt-1 text-[10px] text-emerald-400/70">Matches hub leaderboard gross for this athlete</p>
+            )
+          ) : null}
         </div>
         <div className="rounded-lg border border-white/10 bg-black/25 px-4 py-3 sm:py-4">
           <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#ff6b6b]">Spent</p>

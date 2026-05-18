@@ -80,10 +80,13 @@ export function ProfileFundraiseTab({
             <div>
               <h2 className="text-lg font-bold text-white">Digital Wallet</h2>
               <p className="text-xs text-white/50">
-                <strong className="text-white/70">Raised</strong> matches the NC United fundraising hub leaderboard (same rolling
-                window of athlete-credited paid gifts as <span className="text-white/70">/fundraising</span>).{" "}
-                <strong className="text-white/70">Available</strong> is after all-time reimbursements and Guild holds. Wrong name on a
-                card? Use <strong className="text-white/70">Remove from my account</strong> on that row (or under{" "}
+                <strong className="text-white/70">Raised</strong> is lifetime credited paid gifts—it must line up with{" "}
+                <strong className="text-white/70">Spent</strong> + <strong className="text-white/70">Available</strong>.
+                When Stripe hub data loads, {" "}
+                <strong className="text-white/70">Hub leaderboard</strong> shows the rolling total from{" "}
+                <span className="text-white/70">/fundraising</span> (Stripe can diverge briefly from ledger lifetime totals). Wrong
+                card? {" "}
+                <strong className="text-white/70">Remove from my account</strong> on that row (or under{" "}
                 <strong className="text-white/70">Family &amp; athletes</strong>).
               </p>
             </div>
@@ -132,8 +135,10 @@ export function ProfileFundraiseTab({
           ) : (
             <div className="space-y-4">
               {spartanFundraising.athletes.map((row) => {
-                const raisedShown = row.hubWindowRaisedCents ?? row.totalCents
-                const giftsShown = row.hubWindowGiftCount ?? row.giftCount ?? 0
+                const lifetimeRaised = row.totalCents
+                const lifetimeGifts = row.giftCount ?? 0
+                const hubRaised = row.hubWindowRaisedCents
+                const hubGiftCount = row.hubWindowGiftCount
                 const reimb = row.reimbursementsPaidCents ?? 0
                 const net = row.netAfterReimbursementsCents ?? row.totalCents - reimb
                 const guildAlloc = row.guildAllocationsCents ?? 0
@@ -197,13 +202,23 @@ export function ProfileFundraiseTab({
                           <span className="text-[10px] font-medium uppercase tracking-wide">Raised</span>
                         </div>
                         <p className="mt-1 text-lg font-bold tabular-nums text-white sm:text-xl">
-                          {formatUsd(raisedShown)}
+                          {formatUsd(lifetimeRaised)}
                         </p>
-                        <p className="mt-0.5 text-[10px] text-white/40">
-                          {giftsShown} gift{giftsShown !== 1 ? "s" : ""}
-                          {typeof row.hubLookbackDays === "number"
-                            ? ` · hub window (${row.hubLookbackDays}d)`
-                            : ""}
+                        <p className="mt-0.5 text-[10px] text-white/40 leading-snug">
+                          {lifetimeGifts} gift{lifetimeGifts !== 1 ? "s" : ""} · lifetime credited
+                          {typeof hubRaised === "number" &&
+                          typeof hubGiftCount === "number" &&
+                          (hubRaised !== lifetimeRaised || hubGiftCount !== lifetimeGifts) ? (
+                            <span className="mt-1 block text-white/35">
+                              Hub leaderboard {formatUsd(hubRaised)}
+                              {hubGiftCount > 0
+                                ? ` · ${hubGiftCount} gift${hubGiftCount !== 1 ? "s" : ""}`
+                                : ""}{" "}
+                              (Stripe window)
+                            </span>
+                          ) : typeof hubRaised === "number" ? (
+                            <span className="mt-1 block text-emerald-500/65">Matches hub leaderboard gross for this athlete</span>
+                          ) : null}
                         </p>
                       </div>
 
@@ -263,7 +278,8 @@ export function ProfileFundraiseTab({
               spartanFundraising?.athletes?.map((a) => ({
                 athleteId: a.athleteId,
                 name: a.name,
-                netAfterReimbursementsCents: a.netAfterReimbursementsCents ?? a.totalCents,
+                netAfterReimbursementsCents:
+                  a.netAfterReimbursementsCents ?? a.totalCents - (a.reimbursementsPaidCents ?? 0),
                 codeUnavailable: a.codeUnavailable,
               })) ?? []
             }
