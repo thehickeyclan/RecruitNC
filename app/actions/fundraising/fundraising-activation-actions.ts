@@ -165,11 +165,9 @@ export async function reviewFundraisingActivationRequestAdminAction(
       }
     }
 
-    const linked = await ensureParentAthleteLinkAdmin(admin, {
-      parentUserId,
-      athleteId: resolvedAthleteIdForApprove,
-    })
-    if (!linked.ok) return { ok: false, error: linked.error }
+    // Do not auto-insert parent_athlete_links here. Approval activates fundraising only; linking belongs in
+    // Profile → Family & athletes (or Admin → parent-athlete-link). Staff submitting requests while logged in as
+    // themselves used to pollute the approver's digital wallet. Use fixParentLinkAction if a row needs repair.
   }
 
   const now = new Date().toISOString()

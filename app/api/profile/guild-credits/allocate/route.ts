@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { computeParentSpartanFundraisingTotalsForUser } from "@/lib/parent-spartan-fundraising-totals"
 import {
   computeGuildAllocatableCents,
-  sumReservedGuildAllocationCentsByAthlete,
+  sumReservedGuildAllocationCentsForAthleteAnyUser,
 } from "@/lib/guild-credit-allocations"
 import { recordFundraisingLedgerGuildAllocation } from "@/lib/fundraising/ledger"
 import { isGuildGrantConfigured, postGuildCreditGrant } from "@/lib/guild-grant-client"
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Athlete not found" }, { status: 404 })
   }
 
-  const reserved = await sumReservedGuildAllocationCentsByAthlete(admin, user.id, athleteId)
+  const reserved = await sumReservedGuildAllocationCentsForAthleteAnyUser(admin, athleteId)
   const allocatable = computeGuildAllocatableCents(athlete, reserved)
   if (amountCents > allocatable) {
     return NextResponse.json(

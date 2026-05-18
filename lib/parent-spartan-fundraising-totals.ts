@@ -10,7 +10,7 @@ import {
   ATHLETE_PUBLIC_GIFTS_NO_ROW_CAP,
 } from "@/lib/fundraising/athlete-public-stats"
 import {
-  fetchGuildReservedCentsByAthleteId,
+  fetchGuildReservedCentsForAthleteIds,
   sumGuildReservedAllocationCentsForAthleteIds,
 } from "@/lib/guild-credit-allocations"
 import { getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
@@ -66,7 +66,7 @@ export type ParentSpartanFundraisingAthleteRow = {
   reimbursementsPaidCents: number
   /** Gifts in window minus reimbursements paid in window (before Guild allocations). */
   netAfterReimbursementsCents: number
-  /** Sum of guild_credit_allocations pending + guild_applied for this athlete (parent ledger). */
+  /** Sum of guild_credit_allocations pending + guild_applied for this athlete (any RecruitNC user — same household may use another login). */
   guildAllocationsCents: number
   codeUnavailable?: boolean
 }
@@ -76,7 +76,7 @@ export type ParentSpartanFundraisingAthleteRow = {
  */
 export async function buildParentSpartanFundraisingRowsForAthleteIds(
   admin: SupabaseClient,
-  userId: string,
+  _viewerUserId: string,
   athleteIds: string[],
 ): Promise<ParentSpartanFundraisingAthleteRow[]> {
   if (athleteIds.length === 0) return []
@@ -90,13 +90,9 @@ export async function buildParentSpartanFundraisingRowsForAthleteIds(
   )
 
   const sinceMs = Date.now() - FAYETTEVILLE_STRIPE_LOOKBACK_DAYS * 24 * 60 * 60 * 1000
-  const [entries, reimbByAthleteId, guildReservedByAthlete, profileRes, pinnedCodesByAthleteId] = await Promise.all([
+  const [entries, reimbByAthleteId, profileRes, pinnedCodesByAthleteId] = await Promise.all([
     getFundraisingAthleteEntries(admin),
     fetchReimbursementPaidCentsByAthleteIdInWindow(admin, sinceMs),
-    fetchGuildReservedCentsByAthleteId(admin, userId).catch((e) => {
-      console.warn("[parent-spartan-fundraising-totals] guild reservations", e)
-      return new Map<string, number>()
-    }),
     admin
       .from("athlete_fundraising_profiles")
       .select(
@@ -106,6 +102,13 @@ export async function buildParentSpartanFundraisingRowsForAthleteIds(
       .eq("is_active", true),
     fetchPinnedFundraisingCodesByAthleteId(admin, athleteIds),
   ])
+
+  let guildReservedByAthlete = new Map<string, number>()
+  try {
+    guildReservedByAthlete = await fetchGuildReservedCentsForAthleteIds(admin, athleteIds)
+  } catch (e) {
+    console.warn("[parent-spartan-fundraising-totals] guild reservations", e)
+  }
 
   if (profileRes.error) {
     console.warn("[parent-spartan-fundraising-totals] profiles:", profileRes.error.message)
