@@ -151,6 +151,9 @@ export function GuildCreditAllocationSection({ spartanAthletes, spartanLoading, 
 
   const selected = allocatable.find((a) => a.athleteId === athleteId)
 
+  const hasTransferHistory = allocations.length > 0
+  const hasSuccessfulTransfer = allocations.some((a) => a.status === "guild_applied")
+
   return (
     <Collapsible open={open} onOpenChange={setOpen} className="overflow-hidden rounded-2xl border border-[#003366]/12 bg-white shadow-md shadow-[#003366]/5">
       <CollapsibleTrigger asChild>
@@ -166,10 +169,16 @@ export function GuildCreditAllocationSection({ spartanAthletes, spartanLoading, 
               role="status"
               className={cn(
                 "h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-white/60 transition-colors",
-                loading ? "animate-pulse bg-[#03154C]/30" : guildParentUserId ? "bg-emerald-500" : "bg-[#03154C]/35",
+                loading ? "animate-pulse bg-[#03154C]/30" : guildParentUserId ? "bg-emerald-500" : hasTransferHistory ? "bg-amber-500" : "bg-[#03154C]/35",
               )}
               aria-label={
-                loading ? "Checking Guild connection" : guildParentUserId ? "Guild connected" : "Guild not linked yet"
+                loading
+                  ? "Checking Guild connection"
+                  : guildParentUserId
+                    ? "Guild connected"
+                    : hasTransferHistory
+                      ? "Guild link missing but transfer history exists"
+                      : "Guild not linked yet"
               }
             />
             <span className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#03154C] sm:text-sm">Transfer to Guild</span>
@@ -208,9 +217,20 @@ export function GuildCreditAllocationSection({ spartanAthletes, spartanLoading, 
               Loading…
             </p>
           ) : !guildParentUserId ? (
-            <p className="rounded-xl border border-amber-200/90 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-              Guild isn&apos;t linked to this account yet. Contact NC United staff.
-            </p>
+            <div className="space-y-2">
+              <p className="rounded-xl border border-amber-200/90 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+                {hasSuccessfulTransfer || hasTransferHistory ? (
+                  <>
+                    You have Guild transfer history on this RecruitNC login, but a{" "}
+                    <strong className="font-semibold">Guild parent link</strong> isn&apos;t set right now (or it was
+                    cleared). Tap <strong className="font-semibold">Refresh</strong> to retry email-based linking; if it
+                    still fails, NC United staff can restore your link.
+                  </>
+                ) : (
+                  <>Guild isn&apos;t linked to this account yet. Contact NC United staff.</>
+                )}
+              </p>
+            </div>
           ) : !grantConfigured ? (
             <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
               Transfers aren&apos;t enabled yet for your account. Contact NC United if this is unexpected.
