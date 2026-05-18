@@ -65,9 +65,18 @@ export function ProfileClient() {
   const [portalLoading, setPortalLoading] = useState<string | null>(null)
   const [blueBillingPortalError, setBlueBillingPortalError] = useState("")
   const [linkedAthletes, setLinkedAthletes] = useState<
-    { id: string; name: string; profileVerified: boolean; updatedAt: string | null; claimedByUserId: string | null }[]
+    {
+      id: string
+      name: string
+      profileVerified: boolean
+      updatedAt: string | null
+      claimedByUserId: string | null
+      canUnlink?: boolean
+      isProfilePrimaryAthlete?: boolean
+    }[]
   >([])
   const [linkedLoading, setLinkedLoading] = useState(true)
+  const [unlinkAthleteId, setUnlinkAthleteId] = useState<string | null>(null)
   const [athleteCompleteness, setAthleteCompleteness] = useState<Record<string, { percent: number; completed: string[]; missing: string[] }>>({})
   const [completenessLoading, setCompletenessLoading] = useState(false)
   const [athleteSearchQuery, setAthleteSearchQuery] = useState("")
@@ -276,6 +285,39 @@ export function ProfileClient() {
       setError(e instanceof Error ? e.message : "Could not link athlete")
     } finally {
       setLinkAthleteLoading(null)
+    }
+  }
+
+  const unlinkLinkedAthlete = async (athleteId: string) => {
+    if (
+      !window.confirm(
+        "Remove this wrestler from your linked family? They will disappear from your digital wallet unless they are still set as your athlete on the Account tab.",
+      )
+    ) {
+      return
+    }
+    setUnlinkAthleteId(athleteId)
+    setError("")
+    try {
+      const res = await fetch("/api/profile/unlink-athlete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ athleteId }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(typeof data.error === "string" ? data.error : "Could not remove link")
+      await fetchLinkedAthletes()
+      spartanWalletPrimedRef.current = true
+      setSpartanWalletPanelActivated(true)
+      void (async () => {
+        await fetchSpartanFundraisingTotals()
+        await fetchSpartanSupporterContacts()
+      })()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not remove link")
+    } finally {
+      setUnlinkAthleteId(null)
     }
   }
 
@@ -931,6 +973,8 @@ export function ProfileClient() {
               completenessLoading={completenessLoading}
               eventHubs={eventHubs}
               eventHubsLoading={eventHubsLoading}
+              unlinkAthlete={unlinkLinkedAthlete}
+              unlinkAthleteId={unlinkAthleteId}
             />
         </TabsContent>
 

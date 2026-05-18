@@ -66,7 +66,8 @@ export function ProfileFundraiseTab({
               <h2 className="text-lg font-bold text-white">Digital Wallet</h2>
               <p className="text-xs text-white/50">
                 All-time: every paid gift credited to your athlete’s NCU code(s) that we have on file, across NC United
-                campaigns we track, minus reimbursements paid and Guild holds.
+                campaigns we track, minus reimbursements paid and Guild holds. If you see the wrong wrestler, open{" "}
+                <strong className="text-white/70">Family &amp; athletes</strong> and use <strong className="text-white/70">Remove from my account</strong>.
               </p>
             </div>
           </div>
