@@ -30,11 +30,11 @@ describe("publicGiftCampaignLabelWithCheckoutSurface", () => {
 
   it("spartan_team_page still shows registry gift label after the surface prefix", () => {
     expect(publicGiftCampaignLabelWithCheckoutSurface("fayetteville_2026", may2026Utc, "spartan_team_page")).toBe(
-      "Spartan page · Spring Spartan 2026",
+      "Spartan page · Spring / Summer 2026",
     )
   })
 
   it("no surface keeps full campaign label", () => {
-    expect(publicGiftCampaignLabelWithCheckoutSurface("fayetteville_2026", may2026Utc, null)).toBe("Spring Spartan 2026")
+    expect(publicGiftCampaignLabelWithCheckoutSurface("fayetteville_2026", may2026Utc, null)).toBe("Spring / Summer 2026")
   })
 })
