@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { computeParentSpartanFundraisingTotalsForUser } from "@/lib/parent-spartan-fundraising-totals"
+import { tryGuildAutoLinkForSessionUser } from "@/lib/guild-auto-link"
 
 export const dynamic = "force-dynamic"
 
@@ -35,6 +36,22 @@ export async function GET() {
   const admin = createAdminClient()
 
   try {
+    const { data: gp } = await admin
+      .from("user_profiles")
+      .select("guild_parent_user_id, email")
+      .eq("user_id", user.id)
+      .maybeSingle()
+    const gpid = (gp as { guild_parent_user_id?: string | null } | null)?.guild_parent_user_id
+    if (!(typeof gpid === "string" && gpid.trim())) {
+      try {
+        await tryGuildAutoLinkForSessionUser(admin, user.id, user.email, {
+          profileEmail: (gp as { email?: string | null } | null)?.email ?? null,
+        })
+      } catch {
+        /* wallet totals still return */
+      }
+    }
+
     const { campaign, athletes } = await computeParentSpartanFundraisingTotalsForUser(admin, user.id)
     return NextResponse.json({
       campaign,

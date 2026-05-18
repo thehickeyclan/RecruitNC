@@ -221,13 +221,18 @@ export function GuildCreditAllocationSection({ spartanAthletes, spartanLoading, 
               <p className="rounded-xl border border-amber-200/90 bg-amber-50 px-4 py-3 text-sm text-amber-950">
                 {hasSuccessfulTransfer || hasTransferHistory ? (
                   <>
-                    You have Guild transfer history on this RecruitNC login, but a{" "}
-                    <strong className="font-semibold">Guild parent link</strong> isn&apos;t set right now (or it was
-                    cleared). Tap <strong className="font-semibold">Refresh</strong> to retry email-based linking; if it
-                    still fails, NC United staff can restore your link.
+                    RecruitNC normally <strong className="font-semibold">links Guild automatically</strong> from your
+                    login email. Your transfer history is here, but the link flag on this session is missing — tap{" "}
+                    <strong className="font-semibold">Refresh</strong> (we retry on every profile and wallet load too).
+                    If it still won&apos;t connect, your RecruitNC email may not match your Guild parent email, or Guild
+                    may list more than one parent for that email.
                   </>
                 ) : (
-                  <>Guild isn&apos;t linked to this account yet. Contact NC United staff.</>
+                  <>
+                    Guild linking runs automatically when your RecruitNC email matches exactly one Wrestling Guild parent.
+                    Tap <strong className="font-semibold">Refresh</strong> to retry. If this never connects, use the same
+                    email in both places (or fix duplicate Guild parent rows for that email).
+                  </>
                 )}
               </p>
             </div>

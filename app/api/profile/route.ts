@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
-import { createAdminClientFresh } from "@/lib/supabase/admin"
+import { createAdminClient, createAdminClientFresh } from "@/lib/supabase/admin"
+import { tryGuildAutoLinkForSessionUser } from "@/lib/guild-auto-link"
 import { buildUserProfileUpsertPayload } from "@/lib/user-profile-from-auth"
 import { NextResponse } from "next/server"
 
@@ -52,6 +53,24 @@ export async function GET() {
       } catch (adminErr) {
         console.error("[api/profile] admin client unavailable for profile repair:", adminErr)
         return NextResponse.json({ error: "Profile not found" }, { status: 404 })
+      }
+    }
+
+    const guildPid = profileRow.guild_parent_user_id
+    const needsGuildLink =
+      guildPid == null || (typeof guildPid === "string" && guildPid.trim().length === 0)
+    if (needsGuildLink) {
+      try {
+        const admin = createAdminClient()
+        const profileEmail = typeof profileRow.email === "string" ? profileRow.email : null
+        const linkResult = await tryGuildAutoLinkForSessionUser(admin, user.id, user.email, {
+          profileEmail,
+        })
+        if (linkResult.linked) {
+          profileRow = { ...profileRow, guild_parent_user_id: linkResult.guildParentUserId }
+        }
+      } catch (e) {
+        console.warn("[api/profile] guild auto-link:", e)
       }
     }
 

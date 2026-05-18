@@ -26,11 +26,15 @@ function guildAutoLinkEnabledFromEnv(): boolean {
  *
  * Skips when: Guild env missing, feature disabled, no profile row, already linked,
  * zero or multiple Guild parent matches, or Guild user fails parent verification.
+ *
+ * {@link options.profileEmail} is used when Auth email is missing (e.g. some OAuth flows);
+ * must match the same person — we only use it to find the Guild parent row, then verify role/email.
  */
 export async function tryGuildAutoLinkForSessionUser(
   admin: SupabaseClient,
   recruitNcUserId: string,
   authEmail: string | null | undefined,
+  options?: { profileEmail?: string | null },
 ): Promise<GuildAutoLinkAttemptResult> {
   if (!isGuildSupabaseConfigured()) {
     return { linked: false, reason: "guild_not_configured" }
@@ -39,7 +43,10 @@ export async function tryGuildAutoLinkForSessionUser(
     return { linked: false, reason: "disabled_by_env" }
   }
 
-  const email = sanitizeEmailForIlike(authEmail ?? "")
+  let email = sanitizeEmailForIlike(authEmail ?? "")
+  if (!email.includes("@") && options?.profileEmail) {
+    email = sanitizeEmailForIlike(options.profileEmail)
+  }
   if (!email.includes("@")) {
     return { linked: false, reason: "no_auth_email" }
   }
