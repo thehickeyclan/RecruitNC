@@ -54,12 +54,12 @@ export function FundraisingPlaybookHeader({
           <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">
             Numbers below use Stripe campaign{" "}
             <code className="rounded bg-muted px-1 font-mono text-[11px]">{campaign.stripeCampaignSlug}</code>
-            , last <strong className="font-medium text-foreground">{campaign.defaultLookbackDays} days</strong>, for reporting. Family-facing balances still follow how each code is pinned to an athlete.
+            , aligned with the public hub reporting window for reporting. Family-facing balances still follow how each code is pinned to an athlete.
           </p>
           <p className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
             <span>
               Reporting window:{" "}
-              <strong className="text-foreground font-medium">{campaign.defaultLookbackDays} days</strong>
+              <strong className="text-foreground font-medium">matches public hub headline</strong>
             </span>
             <span className="text-muted-foreground/60">·</span>
             <span>

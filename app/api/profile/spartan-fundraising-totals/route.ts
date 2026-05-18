@@ -11,6 +11,7 @@ export type SpartanFundraisingTotalRow = {
   name: string
   fundraisingCode: string | null
   ledgerCodes: string[]
+  /** Lifetime credited gross (mirror) — used for net/reimbursement math. */
   totalCents: number
   giftCount: number
   raceSignupCount: number
@@ -18,10 +19,14 @@ export type SpartanFundraisingTotalRow = {
   netAfterReimbursementsCents: number
   guildAllocationsCents: number
   codeUnavailable?: boolean
+  /** Same basis as `/fundraising` athlete leaderboard (Stripe or mirror for the hub window). */
+  hubWindowRaisedCents?: number
+  hubWindowGiftCount?: number
+  hubLookbackDays?: number
 }
 
 /**
- * GET: NC United wallet totals per linked athlete (lifetime `spartan_donations` + all-time reimbursements).
+ * GET: NC United wallet per linked athlete — lifetime mirror for reimbursements; `hubWindow*` aligns headline Raised with the hub leaderboard.
  */
 export async function GET() {
   const supabase = await createClient()

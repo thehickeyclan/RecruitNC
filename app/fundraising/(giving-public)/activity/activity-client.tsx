@@ -155,7 +155,10 @@ export function FundraisingActivityClient({ campaigns }: { campaigns: Fundraisin
 
   const sumRowCents = useMemo(() => sorted.reduce((s, e) => s + (Number(e.amountCents) || 0), 0), [sorted])
 
-  const dayPresets = [30, 90, 120, 365]
+  const dayPresets = useMemo(() => {
+    const hub = hubDefaultDays
+    return [...new Set([30, 90, hub, 365])].sort((a, b) => a - b)
+  }, [hubDefaultDays])
 
   return (
     <div className="min-h-[70vh] bg-slate-100 pb-16">
@@ -223,7 +226,7 @@ export function FundraisingActivityClient({ campaigns }: { campaigns: Fundraisin
                     }`}
                     onClick={() => commit(resolvedCampaign, d)}
                   >
-                    {d} days
+                    {d === hubDefaultDays ? "Hub default" : `${d} days`}
                   </button>
                 ))}
               </div>
@@ -235,7 +238,15 @@ export function FundraisingActivityClient({ campaigns }: { campaigns: Fundraisin
             {resolvedCampaign === "all"
               ? "Every registered NC United Stripe campaign in this window."
               : `Stripe campaign · ${resolvedCampaign}`}{" "}
-            · <span className="font-semibold text-slate-700">{resolvedDays} days</span>
+            ·{" "}
+            {resolvedDays === hubDefaultDays ? (
+              <span className="font-semibold text-slate-700">Hub reporting window</span>
+            ) : (
+              <>
+                <span className="tabular-nums font-semibold text-slate-700">{resolvedDays}</span>
+                <span className="text-slate-700"> days</span>
+              </>
+            )}
           </p>
 
           {resolvedDays !== hubDefaultDays ? (
@@ -243,20 +254,19 @@ export function FundraisingActivityClient({ campaigns }: { campaigns: Fundraisin
               className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
               role="status"
             >
-              <strong className="font-semibold">Hub headline uses a fixed lookback.</strong>{" "}
+              <strong className="font-semibold">Hub headline uses the fixed campaign reporting window.</strong>{" "}
               <HardLink href="/fundraising" className="font-semibold underline underline-offset-2">
                 /fundraising
               </HardLink>{" "}
-              &ldquo;Raised&rdquo; is computed with the last <span className="tabular-nums font-semibold">{hubDefaultDays} days</span>;
-              this page is <span className="tabular-nums font-semibold">{resolvedDays} days</span>. If every checkout falls
-              inside both windows, totals should still match. If anything older than {hubDefaultDays} days exists, this page can
-              show more when set wider.{" "}
+              &ldquo;Raised&rdquo; uses that window; this page uses the lookback you selected above. If every checkout falls
+              inside both, totals should still match. If older checkouts sit outside the shorter window, widening this page
+              can show more.{" "}
               <button
                 type="button"
                 className="ml-1 font-semibold text-[#03154C] underline underline-offset-2"
                 onClick={() => commit(resolvedCampaign, hubDefaultDays)}
               >
-                Use {hubDefaultDays} days (match hub setting)
+                Match hub window
               </button>
             </div>
           ) : null}

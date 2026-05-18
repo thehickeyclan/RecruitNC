@@ -12,7 +12,7 @@ export type FundraisingReconciliationRow = {
   /** Same basis as Profile → Digital wallet “raised” (mirror + credit corrections, registered campaigns, lifetime). */
   mirrorLifetimeRaisedCents: number
   mirrorGiftCount: number
-  /** Same 120d Fayetteville window as Admin → Fundraising / hub when Stripe loads. */
+  /** Same hub Fayetteville window as Admin → Fundraising / hub when Stripe loads. */
   windowRaisedCents: number
   windowGiftCount: number
   reimbursementsPaidAllTimeCents: number
@@ -125,7 +125,7 @@ export type BuildFundraisingReconciliationParams = {
 }
 
 /**
- * Admin-only: side-by-side profile column, mirror wallet totals, 120d Stripe window, reimbursements, Guild, optional ledger.
+ * Admin-only: side-by-side profile column, mirror wallet totals, hub Stripe window, reimbursements, Guild, optional ledger.
  */
 export async function buildFundraisingReconciliationReport(
   admin: SupabaseClient,

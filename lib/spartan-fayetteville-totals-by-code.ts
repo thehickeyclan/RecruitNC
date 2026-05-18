@@ -21,7 +21,7 @@ export type FayettevilleCodeStats = {
 export type FayettevilleStripeWindowSnapshot = {
   statsByAthleteCodeLowercase: Map<string, FayettevilleCodeStats>
   grossSessionTotalCents: number
-  ncUnitedCommunityFund120dCents: number
+  ncUnitedCommunityFundHubWindowCents: number
 }
 
 /**
@@ -33,7 +33,7 @@ export async function getFayettevilleStripeWindowSnapshot(): Promise<Fayettevill
   const stripeSecret = process.env.STRIPE_SECRET_KEY?.trim()
   if (!stripeSecret) {
     const empty = new Map<string, FayettevilleCodeStats>()
-    return { statsByAthleteCodeLowercase: empty, grossSessionTotalCents: 0, ncUnitedCommunityFund120dCents: 0 }
+    return { statsByAthleteCodeLowercase: empty, grossSessionTotalCents: 0, ncUnitedCommunityFundHubWindowCents: 0 }
   }
 
   const donations = await loadCorrectedStripeDonationsForCampaignWindow(DEFAULT_FUNDRAISING_CAMPAIGN, null)
@@ -42,7 +42,7 @@ export async function getFayettevilleStripeWindowSnapshot(): Promise<Fayettevill
   }
 
   const grossSessionTotalCents = donations.reduce((s, d) => s + d.amountCents, 0)
-  const ncUnitedCommunityFund120dCents = buildSpartanPublicSupporterSummary(donations).ncUnitedCommunityFundCents
+  const ncUnitedCommunityFundHubWindowCents = buildSpartanPublicSupporterSummary(donations).ncUnitedCommunityFundCents
 
   const agg = aggregateSpartanByAthlete(donations)
   const statsByAthleteCodeLowercase = new Map<string, FayettevilleCodeStats>()
@@ -55,7 +55,7 @@ export async function getFayettevilleStripeWindowSnapshot(): Promise<Fayettevill
     })
   }
 
-  return { statsByAthleteCodeLowercase, grossSessionTotalCents, ncUnitedCommunityFund120dCents }
+  return { statsByAthleteCodeLowercase, grossSessionTotalCents, ncUnitedCommunityFundHubWindowCents }
 }
 
 /**

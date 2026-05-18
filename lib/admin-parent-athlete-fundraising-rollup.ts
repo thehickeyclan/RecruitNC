@@ -48,15 +48,15 @@ export type AdminParentAthleteFundRollup = {
   /** Every paid reimbursement in the system (all athletes), for the “total paid out” tile. */
   globalReimbursementsPaidAllTimeCents: number
   /** Sum of paid Fayetteville Checkout sessions in the lookback window (matches Admin → Fundraising gross). */
-  fayettevilleGross120dCents: number
+  fayettevilleGrossHubWindowCents: number
   /** Gross minus sum of “Raised” on linked-athlete rows (community fund + coded gifts for non-linked wrestlers + gifts with no athlete_code). */
-  raisedOutsideLinkedAthleteRows120dCents: number
+  raisedOutsideLinkedAthleteRowsHubWindowCents: number
   /** Paid reimbursement cents for athletes not appearing in the linked table (still in global total). */
   reimbursementsPaidAllTimeOutsideLinkedRowsCents: number
   /** NC United pooled fund in window (Stripe attribution — expected without parent-athlete rows). */
-  ncUnitedCommunityFund120dCents: number
+  ncUnitedCommunityFundHubWindowCents: number
   /** Raised outside linked-athlete rows minus NC United pool; ideally → $0 after links + directory fixes. */
-  raisedAthleteAttributedOutsideParentLinks120dCents: number
+  raisedAthleteAttributedOutsideParentLinksHubWindowCents: number
 }
 
 async function collectAthleteIdsWithParentAssociation(admin: SupabaseClient): Promise<string[]> {
@@ -94,7 +94,7 @@ async function collectAthleteIdsWithParentAssociation(admin: SupabaseClient): Pr
 /**
  * Spartan + reimbursement + Guild rollups for every athlete tied to a parent (`parent_athlete_links`, plus
  * `user_profiles.athlete_id` when that column exists),
- * plus a global “all reimbursements paid” total. Same 120d Stripe window and Guild global ledger as admin fundraising.
+ * plus a global “all reimbursements paid” total. Same hub Stripe window and Guild global ledger as admin fundraising.
  */
 export async function fetchAdminParentAthleteFundraisingRollup(): Promise<
   { ok: true; data: AdminParentAthleteFundRollup } | { ok: false; error: string }
@@ -104,19 +104,19 @@ export async function fetchAdminParentAthleteFundraisingRollup(): Promise<
     const athleteIds = await collectAthleteIdsWithParentAssociation(admin)
     if (athleteIds.length === 0) {
       const globalReimbursementsPaidAllTimeCents = await fetchTotalReimbursementPaidCentsAllTime(admin)
-      let fayettevilleGross120dCents = 0
-      let ncUnitedCommunityFund120dCents = 0
+      let fayettevilleGrossHubWindowCents = 0
+      let ncUnitedCommunityFundHubWindowCents = 0
       try {
         const snap = await getFayettevilleStripeWindowSnapshot()
-        fayettevilleGross120dCents = snap.grossSessionTotalCents
-        ncUnitedCommunityFund120dCents = snap.ncUnitedCommunityFund120dCents
+        fayettevilleGrossHubWindowCents = snap.grossSessionTotalCents
+        ncUnitedCommunityFundHubWindowCents = snap.ncUnitedCommunityFundHubWindowCents
       } catch (e) {
         console.error("[admin-parent-athlete-rollup] Stripe gross (no linked athletes)", e)
       }
-      const raisedOutsideLinkedAthleteRows120dCents = Math.max(0, fayettevilleGross120dCents)
-      const raisedAthleteAttributedOutsideParentLinks120dCents = Math.max(
+      const raisedOutsideLinkedAthleteRowsHubWindowCents = Math.max(0, fayettevilleGrossHubWindowCents)
+      const raisedAthleteAttributedOutsideParentLinksHubWindowCents = Math.max(
         0,
-        raisedOutsideLinkedAthleteRows120dCents - ncUnitedCommunityFund120dCents,
+        raisedOutsideLinkedAthleteRowsHubWindowCents - ncUnitedCommunityFundHubWindowCents,
       )
       return {
         ok: true,
@@ -132,11 +132,11 @@ export async function fetchAdminParentAthleteFundraisingRollup(): Promise<
             remainingNotionalCents: 0,
           },
           globalReimbursementsPaidAllTimeCents,
-          fayettevilleGross120dCents,
-          raisedOutsideLinkedAthleteRows120dCents,
+          fayettevilleGrossHubWindowCents,
+          raisedOutsideLinkedAthleteRowsHubWindowCents,
           reimbursementsPaidAllTimeOutsideLinkedRowsCents: Math.max(0, globalReimbursementsPaidAllTimeCents),
-          ncUnitedCommunityFund120dCents,
-          raisedAthleteAttributedOutsideParentLinks120dCents,
+          ncUnitedCommunityFundHubWindowCents,
+          raisedAthleteAttributedOutsideParentLinksHubWindowCents,
         },
       }
     }
@@ -162,13 +162,13 @@ export async function fetchAdminParentAthleteFundraisingRollup(): Promise<
     const sinceMs = Date.now() - FAYETTEVILLE_STRIPE_LOOKBACK_DAYS * 24 * 60 * 60 * 1000
 
     let statsByCode = new Map<string, { totalCents: number; giftCount: number; raceSignupCount: number }>()
-    let fayettevilleGross120dCents = 0
-    let ncUnitedCommunityFund120dCents = 0
+    let fayettevilleGrossHubWindowCents = 0
+    let ncUnitedCommunityFundHubWindowCents = 0
     try {
       const snap = await getFayettevilleStripeWindowSnapshot()
       statsByCode = snap.statsByAthleteCodeLowercase
-      fayettevilleGross120dCents = snap.grossSessionTotalCents
-      ncUnitedCommunityFund120dCents = snap.ncUnitedCommunityFund120dCents
+      fayettevilleGrossHubWindowCents = snap.grossSessionTotalCents
+      ncUnitedCommunityFundHubWindowCents = snap.ncUnitedCommunityFundHubWindowCents
     } catch (e) {
       console.error("[admin-parent-athlete-rollup] Stripe totals", e)
     }
@@ -242,13 +242,13 @@ export async function fetchAdminParentAthleteFundraisingRollup(): Promise<
       },
     )
 
-    const raisedOutsideLinkedAthleteRows120dCents = Math.max(
+    const raisedOutsideLinkedAthleteRowsHubWindowCents = Math.max(
       0,
-      fayettevilleGross120dCents - totalsForLinkedAthletes.raisedCents,
+      fayettevilleGrossHubWindowCents - totalsForLinkedAthletes.raisedCents,
     )
-    const raisedAthleteAttributedOutsideParentLinks120dCents = Math.max(
+    const raisedAthleteAttributedOutsideParentLinksHubWindowCents = Math.max(
       0,
-      raisedOutsideLinkedAthleteRows120dCents - ncUnitedCommunityFund120dCents,
+      raisedOutsideLinkedAthleteRowsHubWindowCents - ncUnitedCommunityFundHubWindowCents,
     )
     const reimbursementsPaidAllTimeOutsideLinkedRowsCents = Math.max(
       0,
@@ -263,11 +263,11 @@ export async function fetchAdminParentAthleteFundraisingRollup(): Promise<
         athletes,
         totalsForLinkedAthletes,
         globalReimbursementsPaidAllTimeCents: globalPaidAllTime,
-        fayettevilleGross120dCents,
-        raisedOutsideLinkedAthleteRows120dCents,
+        fayettevilleGrossHubWindowCents,
+        raisedOutsideLinkedAthleteRowsHubWindowCents,
         reimbursementsPaidAllTimeOutsideLinkedRowsCents,
-        ncUnitedCommunityFund120dCents,
-        raisedAthleteAttributedOutsideParentLinks120dCents,
+        ncUnitedCommunityFundHubWindowCents,
+        raisedAthleteAttributedOutsideParentLinksHubWindowCents,
       },
     }
   } catch (e) {

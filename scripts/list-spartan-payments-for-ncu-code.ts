@@ -5,13 +5,14 @@
  * Requires .env.local: STRIPE_SECRET_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
  *
  *   npx tsx scripts/list-spartan-payments-for-ncu-code.ts [NCU-CODE] [days]
- *   npx tsx scripts/list-spartan-payments-for-ncu-code.ts NCU-PALMER-29 120
+ *   npx tsx scripts/list-spartan-payments-for-ncu-code.ts NCU-PALMER-29
  */
 
 import fs from "fs"
 import path from "path"
 import { fileURLToPath } from "url"
 import Stripe from "stripe"
+import { DEFAULT_FUNDRAISING_CAMPAIGN } from "../lib/fundraising/campaign-registry"
 import { listSpartanFayettevilleDonations } from "../lib/spartan-fayetteville-stripe"
 import {
   applySpartanCreditCorrectionsToDonations,
@@ -45,8 +46,9 @@ loadEnvFile(".env.local")
 loadEnvFile(".env")
 
 const codeArg = (process.argv[2] ?? "NCU-PALMER-29").trim().toUpperCase()
-const daysArg = Number(process.argv[3] ?? "120")
-const days = !Number.isFinite(daysArg) || daysArg < 1 ? 120 : Math.min(400, daysArg)
+const defaultDays = DEFAULT_FUNDRAISING_CAMPAIGN.defaultLookbackDays
+const daysArg = Number(process.argv[3] ?? String(defaultDays))
+const days = !Number.isFinite(daysArg) || daysArg < 1 ? defaultDays : Math.min(400, daysArg)
 
 const stripeKey = process.env.STRIPE_SECRET_KEY?.trim()
 if (!stripeKey) {

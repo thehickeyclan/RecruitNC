@@ -97,6 +97,9 @@ export function ProfileClient() {
       codeUnavailable?: boolean
       reimbursementsPaidCents: number
       netAfterReimbursementsCents: number
+      hubWindowRaisedCents?: number
+      hubWindowGiftCount?: number
+      hubLookbackDays?: number
     }[]
   } | null>(null)
   const [spartanFundraisingLoading, setSpartanFundraisingLoading] = useState(false)

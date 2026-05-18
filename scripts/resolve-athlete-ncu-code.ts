@@ -109,7 +109,7 @@ async function main() {
     console.log("  { \"session_id\": \"cs_… or pi_…\", \"athlete_code\": \"NCU-…-YY\" }")
     const first = byId.get(candidates[0].id)
     if (first) {
-      console.log(`• List recent payments for this code: npm run spartan:list-by-code -- ${first.code} 120`)
+      console.log(`• List recent payments for this code: npm run spartan:list-by-code -- ${first.code}`)
     }
     console.log("• Link parent: insert into public.parent_athlete_links (user_id, athlete_id) values (")
     console.log("    '<parent user_profiles.user_id (auth)>',", `'${candidates[0].id}'`, ");")

@@ -27,7 +27,7 @@ async function requireAdmin(): Promise<{ ok: true } | { ok: false; status: 401 |
 
 /**
  * JSON rollup for admin: shirt sizes from paid checkouts (`tee_sz` in Stripe metadata).
- * GET ?days=120&campaign=
+ * GET `?days=<n>&campaign=` (defaults match campaign registry when `days` omitted)
  */
 export async function GET(request: NextRequest) {
   const auth = await requireAdmin()

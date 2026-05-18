@@ -177,7 +177,10 @@ export function FundraisingLeaderboardContent({ campaigns }: { campaigns: Leader
   const displayTitle = meta?.campaignDisplayName ?? campaignDefinition.campaignDisplayName
   const giveHref = resolvedCampaignSlug === "all" ? "/fundraising" : campaignDefinition.publicPagePath
 
-  const dayPresets = [30, 90, 120, 365]
+  const dayPresets = useMemo(() => {
+    const hub = campaignDefinition.defaultLookbackDays
+    return [...new Set([30, 90, hub, 365])].sort((a, b) => a - b)
+  }, [campaignDefinition.defaultLookbackDays])
 
   const avgGiftCents =
     summary && summary.giftCount > 0 ? Math.round(summary.totalRaisedCents / summary.giftCount) : null
@@ -287,7 +290,7 @@ export function FundraisingLeaderboardContent({ campaigns }: { campaigns: Leader
                     }`}
                     onClick={() => commitFilters(resolvedCampaignSlug, d)}
                   >
-                    {d} days
+                    {d === campaignDefinition.defaultLookbackDays ? "Hub default" : `${d} days`}
                   </button>
                 ))}
               </div>
@@ -300,7 +303,12 @@ export function FundraisingLeaderboardContent({ campaigns }: { campaigns: Leader
               {resolvedCampaignSlug === "all"
                 ? "Athlete totals combine every registered NC United Stripe campaign in this window."
                 : `Stripe campaign · ${resolvedCampaignSlug}`}{" "}
-              · <span className="text-white/75">{resolvedDays}-day window</span>
+              ·{" "}
+              {resolvedDays === campaignDefinition.defaultLookbackDays ? (
+                <span className="text-white/75">Hub reporting window</span>
+              ) : (
+                <span className="text-white/75">{resolvedDays}-day window</span>
+              )}
             </p>
           </div>
 

@@ -74,7 +74,7 @@ async function requireAdmin(): Promise<{ ok: true } | { ok: false; status: 401 |
 
 /**
  * GET: List paid Checkout Sessions for a fundraising campaign (`spartan_campaign` metadata).
- * Query: days= lookback (default 120, max 400); campaign= Stripe slug (default: registry default).
+ * Query: `days` = lookback (defaults to campaign registry `defaultLookbackDays`; max 400); `campaign` = Stripe slug (default: registry default).
  * Optional: includeParentCoverage=1 adds Fundraise-tab parent link coverage (Supabase).
  */
 export async function GET(request: NextRequest) {

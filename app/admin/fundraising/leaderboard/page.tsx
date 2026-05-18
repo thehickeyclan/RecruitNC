@@ -47,7 +47,7 @@ export default function AdminLeaderboardPage() {
   const router = useRouter()
 
   const [campaignSlug, setCampaignSlug] = useState(DEFAULT_FUNDRAISING_CAMPAIGN.stripeCampaignSlug)
-  const [days, setDays] = useState(120)
+  const [days, setDays] = useState(DEFAULT_FUNDRAISING_CAMPAIGN.defaultLookbackDays)
   const [rankings, setRankings] = useState<AthleteRanking[]>([])
   const [totals, setTotals] = useState<{
     grossCents: number

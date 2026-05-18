@@ -5,7 +5,9 @@ import {
   type AthleteFundraisingProfileRow,
   ledgerCodesForFundraisingWallet,
 } from "@/lib/fundraising/athlete-fundraising-profiles"
-import { getAthleteFundraisingWalletSnapshot, ATHLETE_PUBLIC_GIFTS_NO_ROW_CAP } from "@/lib/fundraising/athlete-public-stats"
+import { getAthleteFundraisingWalletSnapshot, ATHLETE_PUBLIC_GIFTS_NO_ROW_CAP, getAthleteHubLeaderboardAlignedTotals } from "@/lib/fundraising/athlete-public-stats"
+import { loadCorrectedStripeDonationsForAllHubCampaignsWindow } from "@/lib/fundraising/stripe-transparency-pipeline"
+import { DEFAULT_FUNDRAISING_CAMPAIGN } from "@/lib/fundraising/campaign-registry"
 import {
   fetchGuildReservedCentsForAthleteIds,
   sumGuildReservedAllocationCentsForAthleteIds,
@@ -69,6 +71,13 @@ export type ParentSpartanFundraisingAthleteRow = {
   /** Sum of guild_credit_allocations pending + guild_applied for this athlete (any RecruitNC user — same household may use another login). */
   guildAllocationsCents: number
   codeUnavailable?: boolean
+  /**
+   * Gross in the hub lookback window — same basis as `/fundraising` athlete leaderboard.
+   * Optional; when set, Profile + public athlete page show this as headline “Raised”.
+   */
+  hubWindowRaisedCents?: number
+  hubWindowGiftCount?: number
+  hubLookbackDays?: number
 }
 
 export type BuildParentSpartanFundraisingRowsOpts = {
@@ -185,6 +194,26 @@ export async function buildParentSpartanFundraisingRowsForAthleteIds(
     }),
   )
 
+  const lookbackDays = DEFAULT_FUNDRAISING_CAMPAIGN.defaultLookbackDays
+  const preloadedStripeWindow = await loadCorrectedStripeDonationsForAllHubCampaignsWindow(lookbackDays, null)
+
+  const hubById = new Map<string, Awaited<ReturnType<typeof getAthleteHubLeaderboardAlignedTotals>>>()
+  await Promise.all(
+    athleteIds.map(async (id) => {
+      const pack = packById.get(id)
+      if (!pack || pack.ledgerCodes.length === 0) {
+        hubById.set(id, null)
+        return
+      }
+      const h = await getAthleteHubLeaderboardAlignedTotals(
+        pack.ledgerCodes,
+        { mirrorFundraisingSlugs: pack.mirrorFundraisingSlugs },
+        { preloadedStripeWindow },
+      )
+      hubById.set(id, h)
+    }),
+  )
+
   return athleteIds.map((id) => {
     const name = nameById.get(id) ?? "—"
     const paidOut = reimbByAthleteId.get(id) ?? 0
@@ -214,6 +243,7 @@ export async function buildParentSpartanFundraisingRowsForAthleteIds(
     const totalCents = pack.stats?.raisedCents ?? 0
     const giftCount = pack.stats?.giftCount ?? 0
     const raceSignupCount = pack.stats?.raceSignupCount ?? 0
+    const hub = hubById.get(id) ?? null
 
     return {
       athleteId: id,
@@ -228,6 +258,9 @@ export async function buildParentSpartanFundraisingRowsForAthleteIds(
       netAfterReimbursementsCents: totalCents - paidOut,
       guildAllocationsCents: guildAlloc,
       codeUnavailable: !code && totalCents === 0 && giftCount === 0,
+      hubWindowRaisedCents: hub?.raisedCents,
+      hubWindowGiftCount: hub?.giftCount,
+      hubLookbackDays: hub?.lookbackDays,
     }
   })
 }
