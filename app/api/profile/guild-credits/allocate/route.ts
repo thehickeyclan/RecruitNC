@@ -119,17 +119,29 @@ export async function POST(request: NextRequest) {
 
   const now = new Date().toISOString()
   const allocationId = crypto.randomUUID()
-  const { error: insErr } = await admin.from("guild_credit_allocations").insert({
+  const insertBase = {
     id: allocationId,
     user_id: user.id,
     athlete_id: athleteId,
     amount_cents: amountCents,
-    status: "pending",
+    status: "pending" as const,
     idempotency_key: allocationId,
     campaign: "fayetteville_spartan",
     created_at: now,
     updated_at: now,
-  })
+  }
+  let insErr = (
+    await admin.from("guild_credit_allocations").insert({
+      ...insertBase,
+      guild_parent_user_id_at_grant: guildParentUserId,
+    })
+  ).error
+  if (
+    insErr &&
+    (insErr.code === "42703" || insErr.message?.includes("guild_parent_user_id_at_grant"))
+  ) {
+    insErr = (await admin.from("guild_credit_allocations").insert(insertBase)).error
+  }
 
   if (insErr) {
     if (insErr.code === "42P01" || insErr.message?.includes("does not exist")) {
@@ -182,17 +194,29 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const { error: guildUpErr } = await admin
-    .from("guild_credit_allocations")
-    .update({
-      status: "guild_applied",
-      guild_credit_ids: grant.creditIds.length ? grant.creditIds : null,
-      guild_balance_cents_after: grant.balanceCentsAfter,
-      guild_response: grant.raw as object,
-      error_message: null,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", allocationId)
+  const updateBase = {
+    status: "guild_applied" as const,
+    guild_credit_ids: grant.creditIds.length ? grant.creditIds : null,
+    guild_balance_cents_after: grant.balanceCentsAfter,
+    guild_response: grant.raw as object,
+    error_message: null,
+    updated_at: new Date().toISOString(),
+  }
+  let guildUpErr = (
+    await admin
+      .from("guild_credit_allocations")
+      .update({
+        ...updateBase,
+        guild_parent_user_id_at_grant: guildParentUserId,
+      })
+      .eq("id", allocationId)
+  ).error
+  if (
+    guildUpErr &&
+    (guildUpErr.code === "42703" || guildUpErr.message?.includes("guild_parent_user_id_at_grant"))
+  ) {
+    guildUpErr = (await admin.from("guild_credit_allocations").update(updateBase).eq("id", allocationId)).error
+  }
 
   if (!guildUpErr) {
     await recordFundraisingLedgerGuildAllocation(admin, {

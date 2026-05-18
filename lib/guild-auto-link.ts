@@ -5,10 +5,10 @@ import {
   isGuildSupabaseConfigured,
   sanitizeEmailForIlike,
 } from "@/lib/guild-supabase-admin"
+import type { GuildLinkAttemptResult } from "@/lib/guild-restore-from-allocations"
+import { tryRestoreGuildParentFromPriorAllocations } from "@/lib/guild-restore-from-allocations"
 
-export type GuildAutoLinkAttemptResult =
-  | { linked: true; guildParentUserId: string }
-  | { linked: false; reason: string }
+export type GuildAutoLinkAttemptResult = GuildLinkAttemptResult
 
 /**
  * When unset or not "0"/"false", wallet load may set `user_profiles.guild_parent_user_id` if the
@@ -107,4 +107,29 @@ export async function tryGuildAutoLinkForSessionUser(
 
   console.info("[RecruitNC] guild auto-link ok", { recruitNcUserId, guildParentUserId })
   return { linked: true, guildParentUserId }
+}
+
+/**
+ * Email-based auto-link first; if that fails, restore {@link user_profiles.guild_parent_user_id}
+ * from successful `guild_credit_allocations` for this login (self-heal when the flag was cleared).
+ */
+export async function runGuildLinkForProfile(
+  admin: SupabaseClient,
+  recruitNcUserId: string,
+  authEmail: string | null | undefined,
+  options?: { profileEmail?: string | null },
+): Promise<GuildAutoLinkAttemptResult> {
+  const first = await tryGuildAutoLinkForSessionUser(admin, recruitNcUserId, authEmail, options)
+  if (first.linked) return first
+
+  const skipRestore = new Set([
+    "already_linked",
+    "column_missing",
+    "no_user_profiles_row",
+    "guild_not_configured",
+    "disabled_by_env",
+  ])
+  if (skipRestore.has(first.reason)) return first
+
+  return tryRestoreGuildParentFromPriorAllocations(admin, recruitNcUserId)
 }
