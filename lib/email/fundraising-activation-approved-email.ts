@@ -40,8 +40,8 @@ export async function sendFundraisingActivationApprovedEmail(
 <p style="margin:0 0 16px;font-size:17px;color:#0f172a;">${escapeHtml(name)}&apos;s fundraising page is now active. You can start sharing it immediately.</p>
 <p style="margin:0 0 8px;"><strong>Your page:</strong><br/>
 <a href="${escapeAttr(data.pageUrl)}" style="color:#b45309;font-weight:600;">${escapeHtml(data.pageUrl)}</a></p>
-<p style="margin:16px 0 0;">Every donation is tax-deductible, tracked in real time, and credited directly to ${escapeHtml(name)}&apos;s wallet.</p>
-<p style="margin:12px 0 0;">Log in to view your wallet, set a fundraising goal, and add a personal note to your page.</p>
+<p style="margin:16px 0 0;">Donations received through NC United are charitable gifts to the organization—subject to exempt purpose—not personal gifts to wrestlers; preferences you record at checkout are handled under NC United policy. Activity is tracked for families inside RecruitNC for transparency.</p>
+<p style="margin:12px 0 0;">Log in to view your ledger, set a fundraising goal, and add a personal note to your page.</p>
 <p style="margin:28px 0 0;font-weight:700;color:#0f172a;">Let&apos;s go. — NC United</p>
 <p style="margin:24px 0 0;font-size:13px;color:#64748b;">Questions? <a href="mailto:info@ncwrestlingunited.com">info@ncwrestlingunited.com</a></p>
 </div></body></html>`
