@@ -8,7 +8,7 @@ import { FundraisingAthletesDirectory } from "./fundraising-athletes-directory"
 export const metadata: Metadata = {
   title: "Athletes | NC United Fundraising",
   description:
-    "NC United Wrestling athlete pages — charitable gifts for the NC United Training Fund noted in relation to wrestlers where donors choose at checkout.",
+    "Training Fund gifts through NC United Wrestling — optional athlete name when you give. Fundraising directory, not recruiting profiles.",
 }
 
 export default async function FundraisingAthletesIndexPage() {
@@ -29,9 +29,9 @@ export default async function FundraisingAthletesIndexPage() {
           Fundraising — Athletes
         </h1>
         <p className="mt-4 max-w-2xl text-base leading-relaxed text-white/70">
-          Contributions are charitable gifts to NC United Wrestling for the NC United Training Fund — name an athlete at checkout when you want the acknowledgement
-          framed for qualifying training and competition tied to them. Built for families, fans, and sponsors —{" "}
-          <strong className="text-white/90">not</strong> college recruiting profiles.
+          Gifts go to NC United Wrestling for the Training Fund — name an athlete when you give so acknowledgement reflects donor preference toward their program.
+          For fundraising supporters;{" "}
+          <strong className="text-white/90">not</strong> recruiting profiles.
         </p>
         <HardLink
           href="/fundraising"
