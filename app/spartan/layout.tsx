@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   },
   title: "Team NC × Spartan — Fayetteville May 2–3, 2026 · Race or sponsor NC wrestling",
   description:
-    "Race any Spartan distance with Team NC, or sponsor a wrestler or donate to NC United — tax-deductible 501(c)(3). Fayetteville weekend May 2–3, 2026.",
+    "Race any Spartan distance with Team NC, or sponsor / give through NC United — charitable gifts documented for the NC United Training Fund (501(c)(3)); consult your advisor on deductions. Fayetteville weekend May 2–3, 2026.",
   openGraph: {
     title: "Team NC × Spartan — Fayetteville 2026 · Race, sponsor, or donate",
     description:

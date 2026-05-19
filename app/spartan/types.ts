@@ -10,7 +10,7 @@ export interface SpartanRaceTier {
   scheduleChip: string
   dates: string
   priceLabel: string
-  /** Typical Spartan list price — suggested tax-deductible gift to NC United (editable at checkout) */
+  /** Typical Spartan list price — suggested charitable gift routed through NC United checkout (editable; deduction eligibility donor-specific). */
   suggestedGiftCents: number
   /** NC United crew / team race highlight */
   featured?: boolean

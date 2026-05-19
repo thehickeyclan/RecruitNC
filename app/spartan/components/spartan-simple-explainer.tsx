@@ -10,13 +10,12 @@ export function SpartanSimpleExplainer() {
         </p>
         <ul className="mt-5 list-none space-y-2.5 text-[15px] leading-relaxed text-neutral-300">
           <li>
-            <strong className="text-white">Race</strong> (Spartan + credit a wrestler) or <strong className="text-white">Donate</strong>{" "}
-            (a wrestler or the NC United Training Fund) — short steps, then Stripe.
+            <strong className="text-white">Race</strong> (Training Fund tagging for a wrestler at checkout when you choose one) or <strong className="text-white">Donate</strong>{" "}
+            (Training Fund notation for a wrestler or the NC United Training Fund pool) — short steps, then Stripe.
           </li>
           <li>
-            <strong className="text-white">Wrestler credit</strong> — search the directory. <strong className="text-white">Racing</strong>{" "}
-            — we need an email (parent is fine) for Spartan to send race codes. Your gift here is the tax-deductible team
-            support in checkout, not the Spartan.com entry.
+            <strong className="text-white">Wrestler name on checkout</strong> — search the directory. <strong className="text-white">Racing</strong>{" "}
+            — we need an email (parent is fine) for Spartan to send race codes. Your gift is the charitable contribution to NC United Wrestling (Training Fund-supported program costs) flowing through nonprofit checkout—not the Spartan.com retail checkout.
           </li>
           <li>
             <strong className="text-white">Gifts go to training, travel, and competition — 501(c)(3).</strong>

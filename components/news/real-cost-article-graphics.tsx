@@ -318,7 +318,7 @@ export function RealCostQuoteTilesGraphic() {
 
 export function RealCostNonprofitMissionGraphic() {
   const items = [
-    { icon: Users, title: "Community investment", text: "Tax-advantaged giving through a recognized 501(c)(3)." },
+    { icon: Users, title: "Community investment", text: "Charitable pathways through NC United Wrestling, a recognized 501(c)(3)." },
     { icon: Landmark, title: "Statewide coordination", text: "One developmental home for NC wrestling — not clubs in isolation." },
     { icon: Trophy, title: "Athlete-first funding", text: "Training, travel, and access — with accountability." },
     { icon: Briefcase, title: "Pathways beyond the mat", text: "Mentorship, internships, and career connections." },
@@ -343,7 +343,10 @@ export function RealCostNonprofitMissionGraphic() {
       </ul>
       <div className="mt-8 border-t border-white/20 pt-5 text-sm leading-relaxed text-slate-100">
         <p className="font-medium text-white">The structure exists to serve the athlete.</p>
-        <p className="mt-1">Every dollar accountable. Every gift tax-deductible. That&apos;s why NC United is built this way.</p>
+        <p className="mt-1">
+          Every dollar accountable. Receipts engineered for IRC charitable acknowledgement—consult your CPA on deductions. That&apos;s why NC United is built this
+          way.
+        </p>
         <p className="mt-3 text-xs text-slate-300">
           <a href="https://ncunitedwrestling.com" className="font-semibold text-amber-200/90 underline" target="_blank" rel="noopener noreferrer">
             NCUnitedWrestling.com
@@ -363,11 +366,11 @@ export function RealCostSpartanCampaignGraphic() {
     },
     {
       title: "Sponsor",
-      body: "Make a tax-deductible donation in support of a specific wrestler. Search their name at checkout — your gift credits directly to their training and competition costs.",
+      body: "Charitable gift to NC United Wrestling for the NC United Training Fund, documented at checkout toward a wrestler you support—not cash routed straight to families; eligible wrestling costs administered under nonprofit policy.",
     },
     {
       title: "Give",
-      body: "Make a direct tax-deductible donation to the NC United training fund — supporting NC wrestlers statewide.",
+      body: "Contribute directly to NC United Wrestling for the Training Fund pool powering statewide wrestling support—IRC-compliant acknowledgements emailed after checkout.",
     },
   ]
   return (
@@ -385,7 +388,7 @@ export function RealCostSpartanCampaignGraphic() {
             ))}
           </ul>
           <p className="mt-4 text-xs text-slate-600">
-            Every dollar is a fully tax-deductible charitable gift to NC United. No race required to make an impact.
+            Every dollar routed through charitable checkout to NC United Wrestling is documented as exempt-organization giving; deductions depend on each donor&apos;s IRS facts—ask your tax advisor—not a Spartan race purchase requirement.
           </p>
         </div>
         <div className="space-y-4">
@@ -393,8 +396,13 @@ export function RealCostSpartanCampaignGraphic() {
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-600">Your dollars land where you choose</p>
             <h4 className="mt-1 font-bold text-slate-900">Two designations</h4>
             <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-slate-700">
-              <li>Designate a specific athlete — directed to that wrestler&apos;s training and competition costs.</li>
-              <li>Support NC United&apos;s athlete fund — pooled and allocated across statewide athlete needs.</li>
+              <li>
+                Wrestler-named checkout — charitable gift for the NC United Training Fund administered under NC United policy toward eligible wrestling
+                training/competition costs (not informal cash payouts).
+              </li>
+              <li>
+                Pool gift — support NC United Wrestling through the statewide Training Fund; allocations remain under nonprofit stewardship and board policy.
+              </li>
             </ul>
           </div>
           <div className="rounded-xl border-2 border-amber-400/70 bg-gradient-to-r from-amber-50 to-amber-100/80 p-4 sm:p-5">
@@ -403,8 +411,7 @@ export function RealCostSpartanCampaignGraphic() {
               10 donors × $155 = <span className="text-[#C20017]">$1,550</span>
             </p>
             <p className="mt-2 text-sm text-slate-700">
-              Directly to that wrestler&apos;s training fund. Not overhead. Not a general pool. Earned by making 10 intentional asks — and every
-              donor gets a tax deduction.
+              Training Fund notation at checkout rallies friends behind your wrestler — ask your accountant which supporters may claim charitable deductions; never promise tax outcomes verbally.
             </p>
             <p className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-600">
               <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
@@ -419,7 +426,9 @@ export function RealCostSpartanCampaignGraphic() {
               <span aria-hidden>·</span>
               <span>EIN: 99-3757238</span>
             </p>
-            <p className="mt-1 text-[11px] text-slate-500">All donations are fully tax-deductible. NC United is a registered 501(c)(3) nonprofit.</p>
+            <p className="mt-1 text-[11px] text-slate-500">
+              Contributions are charitable gifts to NC United Wrestling (EIN 99-3757238). IRC-aligned acknowledgements are emailed after checkout — confirm deductibility with your CPA.
+            </p>
           </div>
         </div>
       </div>

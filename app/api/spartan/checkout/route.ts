@@ -48,7 +48,7 @@ function hubFundraisingCheckoutSurfaceMetadata(
   }
 }
 
-/** One-time tax-deductible donation; email captured for Spartan code fulfillment per partner process. */
+/** One-time charitable contribution to NC United (Training Fund/program paths via metadata); email captured per Spartan fulfillment process. Donor deduction questions belong with their tax advisor. */
 export async function POST(request: NextRequest) {
   if (!stripeSecret?.trim()) {
     return NextResponse.json(
@@ -291,12 +291,12 @@ export async function POST(request: NextRequest) {
 
   let productDescription =
     raceEntryRequested && raceTier
-      ? `Tax-deductible gift to NC United (501(c)(3)). Race intent: ${raceTier.name} — ${raceTier.detail}. ${raceTier.dates}. Register and choose Open vs Age Group on Spartan.com. After your gift, NC United coordinates with Spartan—entry details follow their process.`
+      ? `Charitable contribution to NC United Wrestling (501(c)(3)) for program costs—including Spartan coordination. Race intent: ${raceTier.name} — ${raceTier.detail}. ${raceTier.dates}. Register and choose Open vs Age Group on Spartan.com. After your gift, NC United coordinates entry logistics per Spartan's process (not a Spartan retail purchase). Receipt follows IRC acknowledgement standards—ask your tax advisor about deductions.`
       : scholarshipSlugFromReturn
-        ? `Tax-deductible gift to NC United (501(c)(3)) designated for the scholarship fund on file (${scholarshipSlugFromReturn}).`
-        : "Tax-deductible gift to NC United (501(c)(3)). This is support only—no Spartan race entry. If you chose a wrestler at checkout, your gift counts toward their fundraising."
+        ? `Charitable gift to NC United Wrestling (501(c)(3)) for the scholarship fund on file (${scholarshipSlugFromReturn}). Receipt follows IRC standards—consult your advisor on deductibility.`
+        : "Charitable gift to NC United Wrestling (501(c)(3)) for the NC United Training Fund—not a Spartan race purchase. Naming a wrestler at checkout aligns your contribution under nonprofit policy toward eligible wrestling training/competition expenses (not a personal payment). IRC-aligned acknowledgement emailed after payment."
   if (raceEntryRequested && raceTier?.id === "super") {
-    productDescription += " Team NC’s crew race is the Super 10K (May 3)."
+    productDescription += " Team NC's crew race is the Super 10K (May 3)."
   }
   if (teeEligible) {
     productDescription +=

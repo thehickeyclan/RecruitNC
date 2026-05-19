@@ -79,14 +79,14 @@ export function LeaderboardPreview({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className={`${displayFont("text-[10px] font-extrabold uppercase tracking-[0.28em] text-[#C8A94A]")}`}>
-              Leaderboard
+              NC United Training Fund
             </p>
             <h2 className={`${displayFont("mt-2 text-2xl font-black uppercase tracking-tight text-white sm:text-3xl")}`}>
-              Athlete leaderboard
+              Athlete contributions
             </h2>
             <p className="mt-2 max-w-xl text-sm text-white">
-              Athletes receiving paid checkout amounts attributed via donor preference in the hub reporting window — same
-              combined NC United hub scope as the headline totals above (sorted by attributed amount raised).
+              Training Fund-linked supporter totals by wrestler for this hub reporting window — paid checkout routed to NC United Wrestling when donors noted an
+              athlete at checkout (same combined hub scope as the headline totals above; sorted by contribution amount).
             </p>
           </div>
           <HardLink
@@ -95,14 +95,14 @@ export function LeaderboardPreview({
               "-mx-1 inline-flex min-h-[48px] touch-manipulation items-center justify-end rounded-lg px-3 py-2 text-right text-sm font-extrabold uppercase tracking-wide text-[#C8A94A] underline-offset-4 hover:bg-white/[0.06] hover:underline sm:justify-start sm:text-left",
             )}`}
           >
-            View full leaderboard →
+            View Training Fund contribution leaderboard →
           </HardLink>
         </div>
 
-        <ul className="mt-10 max-h-[min(70vh,36rem)] space-y-3 overflow-y-auto overscroll-y-contain pr-1 md:hidden" aria-label="Athletes by funds raised, mobile layout">
+        <ul className="mt-10 max-h-[min(70vh,36rem)] space-y-3 overflow-y-auto overscroll-y-contain pr-1 md:hidden" aria-label="Athletes by Training Fund-linked contributions received, mobile layout">
           {rows.length === 0 ? (
             <li className="rounded-xl border border-white/10 bg-[#0B2545]/55 px-4 py-10 text-center text-sm text-white/85">
-              Paid gifts will populate this board as athletes earn support.
+              Paid Training Fund-linked gifts will populate this board as wrestlers earn support.
             </li>
           ) : (
             rows.map((r) => {
@@ -152,7 +152,7 @@ export function LeaderboardPreview({
                 <th className="px-4 py-3">Rank</th>
                 <th className="px-4 py-3">Athlete</th>
                 <th className="px-4 py-3">School</th>
-                <th className="px-4 py-3 text-right">Raised</th>
+                <th className="px-4 py-3 text-right">Contributions</th>
                 <th className="min-w-[120px] px-4 py-3">Momentum</th>
               </tr>
             </thead>
@@ -160,7 +160,7 @@ export function LeaderboardPreview({
               {rows.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-4 py-12 text-center text-white/85">
-                    Paid gifts will populate this board as athletes earn support.
+                    Paid Training Fund-linked gifts will populate this board as wrestlers earn support.
                   </td>
                 </tr>
               ) : (

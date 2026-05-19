@@ -47,8 +47,8 @@ export function CampaignCards({ campaigns }: { campaigns: FundraisingHubCampaign
             </div>
             <div className="px-6 py-8">
               <p className="leading-relaxed text-white">
-                No timed drives are live on the board right now — NC United nonprofit checkout stays open year-round so you can
-                give to the organization and record donor preference for a wrestler or the Training Fund at checkout.
+                No timed drives are live on the board right now — NC United nonprofit checkout stays open year-round so you can give to NC United Wrestling for
+                the NC United Training Fund—with a wrestler noted at checkout, or to the unrestricted training pool.
               </p>
               <HardLink
                 href="/fundraising/athletes"

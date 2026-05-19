@@ -533,7 +533,7 @@ export function Navbar() {
                       Give
                     </div>
                     <p className="text-xs text-muted-foreground font-normal mt-1">
-                      Tax-deductible 501(c)(3) giving · NC United Wrestling
+                      501(c)(3) charitable gifts · IRC-aligned acknowledgement — confirm deductions with your advisor
                     </p>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />

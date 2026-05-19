@@ -71,7 +71,7 @@ export function SpartanDonateMissionCard() {
         />
       </div>
       <p id="donate-mission-hint" className="mt-2 text-xs text-[#888]">
-        Fully tax-deductible · 501(c)(3) nonprofit
+        Charitable gift to NC United Wrestling for the NC United Training Fund · 501(c)(3) · consult your advisor on deductions
       </p>
 
       <div className="mt-4 flex flex-wrap gap-2">

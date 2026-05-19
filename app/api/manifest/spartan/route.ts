@@ -10,7 +10,7 @@ const MANIFEST = {
   name: "Team NC × Spartan — Fayetteville 2026",
   short_name: "Team NC × Spartan",
   description:
-    "Race with Team NC, sponsor a wrestler, or give to NC United — tax-deductible. Fayetteville May 2–3, 2026.",
+    "Race with Team NC, sponsor a wrestler, or give to NC United — charitable checkout with IRC-aligned acknowledgements (deductibility is donor-specific; ask your advisor). Fayetteville May 2–3, 2026.",
   start_url: "/spartan",
   scope: "/",
   display: "standalone",

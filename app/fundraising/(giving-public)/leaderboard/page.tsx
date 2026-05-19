@@ -4,9 +4,9 @@ import { FUNDRAISING_CAMPAIGNS } from "@/lib/fundraising/campaign-registry"
 import { FundraisingLeaderboardContent, LeaderboardSkeleton } from "./leaderboard-client"
 
 export const metadata: Metadata = {
-  title: "Fundraising leaderboard | NC United",
+  title: "NC United Training Fund — athlete contributions | NC United Fundraising",
   description:
-    "Athlete totals from paid NC United fundraising gifts. Anonymous donor preferences are respected on supporter feeds.",
+    "Paid Training Fund supporter checkout attributed to wrestlers — NC United transparency. Contribution totals reflect charitable gifts documented in wrestlers' names toward the NC United Training Fund.",
 }
 
 export default function FundraisingLeaderboardPage() {

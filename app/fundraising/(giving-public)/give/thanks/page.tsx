@@ -4,7 +4,8 @@ import { NC_UNITED_CONTRIBUTIONS_TAX_DISCLAIMER } from "@/lib/fundraising/donor-
 
 export const metadata: Metadata = {
   title: "Thank you | NC United Fundraising",
-  description: "Your NC United Wrestling gift is processing — acknowledgement email follows checkout.",
+  description:
+    "Training Fund charitable gift processing — NC United acknowledgement shortly; IRC-compliant receipt wording—consult your advisor on deductions.",
 }
 
 export default function FundraisingGiveThanksPage() {
@@ -38,8 +39,8 @@ export default function FundraisingGiveThanksPage() {
           Thank you
         </h1>
         <p className="mx-auto mt-6 max-w-md text-base leading-relaxed text-white/78">
-          Thank you — your gift to NC United Wrestling is processing. Watch for acknowledgement email shortly (check spam or
-          promotions). Your generosity supports North Carolina wrestling through NC United.
+          Thank you — your charitable gift to NC United Wrestling for the NC United Training Fund is processing. Watch for acknowledgement email shortly
+          (check spam or promotions)—written for IRC charitable-gift standards. Ask your advisor how it applies on your taxes.
         </p>
         <p className="mx-auto mt-4 max-w-md text-xs leading-relaxed text-white/50">{NC_UNITED_CONTRIBUTIONS_TAX_DISCLAIMER}</p>
         <p className="mx-auto mt-5 max-w-md text-sm leading-relaxed text-white/55">

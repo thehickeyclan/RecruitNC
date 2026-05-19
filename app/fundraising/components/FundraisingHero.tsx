@@ -19,7 +19,7 @@ const HUB_JUMP_LINKS: ReadonlyArray<{ href: string; label: string; primary?: tru
   { href: "/fundraising/scholarships", label: "Scholarships" },
   { href: "#fundraising-corporate-partners", label: "Sponsors" },
   { href: "#fundraising-why-nc-united", label: "Why NC United" },
-  { href: "#fundraising-leaderboard-preview", label: "Leaderboard" },
+  { href: "#fundraising-leaderboard-preview", label: "Training Fund ranks" },
   { href: "#fundraising-live-donor-stream", label: "Live feed" },
   { href: "#fundraising-active-campaigns", label: "Campaigns" },
   { href: "#fundraising-top-donors", label: "Top donors" },
@@ -77,9 +77,10 @@ export function FundraisingHero({ hero }: { hero: FundraisingHubHeroStats }) {
         </h1>
 
         <p className="mx-auto mt-6 max-w-2xl text-base font-medium leading-relaxed text-white sm:mx-0 sm:text-lg">
-          Make a charitable gift to NC United Wrestling (501(c)(3)) to advance NC wrestlers. Choose an athlete or the training fund at checkout to
-          record donor preference for how NC United directs support consistent with exempt purpose — not gifts to individuals. Where possible NC United
-          absorbs card fees; ask your tax advisor about deductions.
+          Make a charitable gift to NC United Wrestling (501(c)(3)) for the NC United Training Fund—a nonprofit pool that fuels year-round training and
+          competition support. Naming a wrestler at checkout aligns your contribution with eligible training and competition costs under exempt-purpose nonprofit
+          policy (not informal cash to individuals); you can also choose the unrestricted training pool. Acknowledgements follow IRC charitable-gift standards. Where possible NC United
+          absorbs card fees — ask your advisor how deductions fit your tax situation.
         </p>
 
         <nav aria-label="Jump to section on this page" className="mt-8 border-y border-white/10 py-5">
@@ -151,8 +152,9 @@ export function FundraisingHero({ hero }: { hero: FundraisingHubHeroStats }) {
             </span>
             <span className="text-white/70">
               {" "}
-              — gifts recorded without athlete preference attribution at checkout. The leaderboard below shows amounts attributed to wrestlers via donor
-              preference only; include this figure to reconcile with &ldquo;Raised&rdquo; above.
+              — checkout without a wrestler named on the NC United Training Fund path. Below we rank{" "}
+              <strong className="text-white">Training Fund contributions noted for athletes</strong> only; include this figure to reconcile with
+              &ldquo;Raised&rdquo; above.
             </span>
           </p>
         ) : null}
