@@ -92,9 +92,10 @@ export function FundraisingPublicationBanner({
   } else if (tone === "live") {
     body = (
       <p className="mt-1 text-xs leading-snug text-white/72">
-        This page is activated for tax-deductible gifts. NC United has verified a family connection; checkout below credits{" "}
-        <strong className="text-white/90">{displayName}</strong>. Linked family accounts can edit the story and goal; private donor contacts
-        stay manager-only.
+        Checkout is activated for charitable gifts to NC United Wrestling; we verified a family connection before turning this page on.
+        Donors may express preferences regarding support for wrestling programs—including{" "}
+        <strong className="text-white/90">{displayName}</strong>—as allowed at checkout, subject to NC United policies and exempt-purpose rules (not gifts to individuals).
+        Linked accounts can edit the story and goal; private donor contacts stay manager-only.
       </p>
     )
   } else if (tone === "pending") {

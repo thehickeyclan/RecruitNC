@@ -41,6 +41,7 @@ import { FundraisingAthleteWalletPanel } from "./fundraising-athlete-wallet-pane
 import { FundraisingAthleteVideosSection } from "./fundraising-athlete-videos-section"
 import { normalizeFundraisingSchoolDisplay } from "@/lib/fundraising/normalize-fundraising-school-display"
 import { isFundraisingAthletePageDonationsDisabled } from "@/lib/fundraising/fundraising-pause"
+import { athletePageSupportHelpParagraph } from "@/lib/fundraising/donor-facing-disclosures"
 
 const HERO_FALLBACK_SILHOUETTE = "/wrestler-silhouette.png"
 
@@ -102,7 +103,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const name = publicTitleName(resolved)
   return {
     title: `Support ${name} | NC United Fundraising`,
-    description: `Support ${name} and NC United Wrestling — tax-deductible 501(c)(3) gifts help North Carolina wrestlers and teams. Secure checkout.`,
+    description: `Make a charitable gift to NC United Wrestling (501(c)(3)) and express support for wrestlers—including ${name}—consistent with donor-preference guidelines. Secure nonprofit checkout.`,
   }
 }
 
@@ -392,10 +393,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           </p>
           <ul className="mt-4 list-none space-y-3.5 sm:space-y-4">
             {code && checkoutLive ? (
-              <WhyGiveBullet>
-                Gifts here go straight to {athleteFirstName}&apos;s training, travel, and competition costs — kept on their account for approved
-                wrestling expenses. Everything is tax-deductible for you.
-              </WhyGiveBullet>
+              <WhyGiveBullet>{athletePageSupportHelpParagraph(displayName, athleteFirstName)}</WhyGiveBullet>
             ) : null}
             {code && !checkoutLive ? (
               <>
@@ -414,24 +412,12 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
               </>
             ) : null}
             <WhyGiveBullet>
-              <strong className="text-white">Tax-deductible.</strong> NC United Wrestling is a 501(c)(3). Your email receipt is your record (peek in spam or
-              promotions if needed).
+              <strong className="text-white">Receipts & taxes.</strong> NC United Wrestling is a 501(c)(3); you&apos;ll get email acknowledgment for
+              qualifying gifts (check spam). Whether and how much you may deduct depends on IRS rules — ask your tax professional.
             </WhyGiveBullet>
             <WhyGiveBullet>
-              <strong className="text-white">Every dollar is credited to {displayName}</strong>
-              {code ? (
-                checkoutLive ? (
-                  <> — the full amount you share shows up on their campaign here.</>
-                ) : (
-                  <> — once we open gifts on this page, the same will apply for their campaign here.</>
-                )
-              ) : (
-                <> when you finish a gift to this campaign.</>
-              )}
-            </WhyGiveBullet>
-            <WhyGiveBullet>
-              <strong className="text-white">We cover card processing fees</strong> so more of what you intended reaches their balance — nothing shaved off
-              by the payment network.
+              <strong className="text-white">Payment processing.</strong> Where possible NC United absorbs card-processing costs so donor intent isn&apos;t
+              eaten by checkout fees — that does not convert your gift into a contribution held for any one individual apart from nonprofit discretion.
             </WhyGiveBullet>
           </ul>
           <p className="mt-5 text-xs leading-relaxed text-white/50">
@@ -600,8 +586,9 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
               Secure checkout
             </h2>
             <p className="mx-auto mt-2 max-w-md text-center text-[13px] leading-snug text-white/70">
-              <strong className="font-semibold text-white/85">Tax-deductible</strong> gift (minimum $5). You&apos;ll complete payment in secure checkout and
-              receive an <strong className="font-semibold text-white/85">email receipt</strong> — typically just a couple of minutes.
+              You&apos;re donating to NC United Wrestling (minimum $5). You may indicate a supporter preference toward this athlete&apos;s program costs at
+              checkout — NC United applies gifts under its exempt purpose and policies. You&apos;ll get an acknowledgment by email shortly after checkout.
+              Consult your tax advisor about deductions.
             </p>
             <div className="mt-6 w-full text-left">
               <FundraisingAthleteEmbeddedCheckout

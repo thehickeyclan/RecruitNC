@@ -249,8 +249,8 @@ export function PlaybookMembersContent() {
           categories of support are completely inaccessible.
         </li>
         <li>
-          <Strong>Central platform.</Strong> Every donation tracked. Every dollar attributed to the right athlete. Automatic tax receipts emailed the moment a
-          gift is made. A clean nonprofit ledger that satisfies IRS expectations.
+          <Strong>Central platform.</Strong> Donations flow to NC United; donor preferences indicated at checkout are recorded and reviewed under policy.
+          Approved reimbursements attach to documentation. Automated acknowledgments reduce administrative load—your CPA validates final tax treatment for each campaign.
         </li>
         <li>
           <Strong>Community network.</Strong> The entire NC wrestling community investing collectively in athlete development — not every family carrying the
@@ -261,8 +261,8 @@ export function PlaybookMembersContent() {
           are still yours.
         </li>
         <li>
-          <Strong>Radical transparency.</Strong> Every donation is public. Every dollar tracked in real time. Live leaderboards show progress. IRS-compliant
-          receipts generated and emailed automatically. Transparency builds social proof and donor confidence.
+          <Strong>Radical transparency.</Strong> Approved gifts publish where campaigns allow; families see totals and disbursements aligned with reimbursement review.
+          Acknowledgments go out systematically. Transparency complements—but does not replace—sound nonprofit procedures and CPA advice.
         </li>
       </ol>
 
@@ -270,15 +270,16 @@ export function PlaybookMembersContent() {
 
       <DH as="h2">Your athlete&apos;s digital wallet</DH>
       <P>
-        Every dollar raised through NC United flows into your athlete&apos;s personal digital wallet — not a general fund, not a shared pool, not a personal
-        Venmo balance. Theirs.
+        In RecruitNC, families see an NC United-hosted ledger—not a consumer payment app—for gifts made to NC United where donors expressed support for{" "}
+        <em>their</em> wrestler&apos;s qualifying costs. Contributions remain assets of NC United unless and until disbursed for approved wrestling-related
+        expenses under policy.
       </P>
       <p className="mt-6 font-[family-name:var(--font-fundraising-display)] text-xs font-black uppercase tracking-[0.14em] text-[#C8A94A]">
         How it works
       </p>
       <P>
-        Every donation made in your athlete&apos;s name is credited to their wallet in real time. Parents can log in and see exactly what has come in,
-        what has been spent, and what is available — at any moment, from any device.
+        When donors select your wrestler at checkout, NC United records donor preference toward that athlete&apos;s program support. Ledger updates usually
+        follow quickly online; disbursements stay subject to reimbursement review—you see what cleared, what&apos;s pending, and what&apos;s available for the next submission.
       </P>
       <P>
         When it comes time to use the funds, parents submit a reimbursement request through the platform — expense category, amount, vendor, and a receipt.
@@ -319,8 +320,8 @@ export function PlaybookMembersContent() {
         credibility with serious donors who want to know their gift was handled properly.
       </P>
       <P>
-        The NC United wallet is a nonprofit ledger. Every dollar that comes in is tracked against an athlete. Every dollar that goes out is approved against
-        an IRS-eligible expense category. Donors can see their gift credited publicly. Families can see exactly how funds are being used.
+        The NC United workflow is nonprofit accounting: inbound gifts attributed with donor preference, outbound payments approved against eligible categories.
+        Families have visibility consistent with reconciliation—donors may see acknowledgement-level activity elsewhere on campaigns—but legal control rests with NC United staff review.
       </P>
       <p className="mt-6 font-[family-name:var(--font-fundraising-display)] text-xs font-black uppercase tracking-[0.14em] text-[#C8A94A]">
         What the wallet can pay for
@@ -330,8 +331,8 @@ export function PlaybookMembersContent() {
         Transportation to NC United programming
       </P>
       <P>
-        This is what separates a real fundraising system from a social post with a payment handle. The money is accountable. The athlete earns it. The family
-        controls how it is spent — within a structure that protects everyone.
+        This is what separates a structured nonprofit program from a social post with a payment handle—the organization documents decisions. Families steer requests;
+        NC United approves disbursements aligned with exempt purpose—not informal peer-to-peer cash.
       </P>
 
       <DigitalWalletGovernancePlaybook />
@@ -499,9 +500,9 @@ export function PlaybookMembersContent() {
         Contact your top 20 most likely donors personally. Text. Call. In-person. Not a mass post as your primary strategy.
       </P>
       <blockquote className="mt-4 border-l-4 border-[#C8A94A]/80 bg-white/[0.04] px-4 py-3 text-sm italic leading-relaxed text-white/85">
-        &quot;Hey [name] — I&apos;m raising money for my wrestling training and competition this season. I&apos;m trying to get to [specific goal] and I&apos;m
-        asking people who have supported me to consider giving [specific amount]. All donations go through NC United Wrestling — it&apos;s a nonprofit so
-        it&apos;s tax-deductible. Here&apos;s the link: [link]. Would you be willing to help?&quot;
+        &quot;Hey [name] — I&apos;m raising funds for wrestling training and competition this season. I&apos;m trying to get to [specific goal]. Would you consider a gift{" "}
+        <strong className="not-italic font-semibold text-white/90">to NC United Wrestling</strong>? They&apos;re our 501(c)(3); you indicate support for athletes like me when you donate—ask your accountant about deductions. Link:{" "}
+        [link]. Would you be willing to help?&quot;
       </blockquote>
 
       <DH as="h3">Week 2 — social media</DH>

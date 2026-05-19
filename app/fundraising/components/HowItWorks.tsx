@@ -8,8 +8,8 @@ function displayFont(c: string) {
 const STEPS = [
   {
     n: "01",
-    title: "Choose the beneficiary",
-    body: "Pick a specific wrestler or the NC United Training Fund — gift credit follows your choice at checkout.",
+    title: "Choose where to express preference",
+    body: "Give to NC United and pick a wrestler or the Training Fund — we record donor preference for program support at checkout; NC United applies funds under exempt purpose.",
   },
   {
     n: "02",
@@ -19,7 +19,7 @@ const STEPS = [
   {
     n: "03",
     title: "Receipt & tax documentation",
-    body: "When your gift qualifies as tax-deductible, documentation arrives by email — NC United is a 501(c)(3); ask your advisor about your return.",
+    body: "Email acknowledgment arrives from NC United Wrestling (501(c)(3)) for qualifying gifts — consult your advisor about deductions.",
   },
 ] as const
 
@@ -57,7 +57,7 @@ export function HowItWorks() {
             How giving works
           </h2>
           <p className="mx-auto max-w-2xl text-sm leading-relaxed text-white/70 sm:mx-0">
-            Choose athlete or NC United Training Fund → secure nonprofit checkout → email receipt and tax documentation when your gift qualifies.
+            Choose athlete or NC United Training Fund → secure nonprofit checkout → email acknowledgment — consult your tax advisor about deductions.
           </p>
         </div>
 
@@ -96,7 +96,7 @@ export function HowItWorks() {
             Two ways to give
           </h3>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-white/72 sm:mx-0">
-            Pick a wrestler or give to the NC United Training Fund — email receipt and NC United credit either way. Scholarship funds and
+            Pick a wrestler or the Training Fund — donations go to NC United with donor preference tracked at checkout. Scholarship funds and
             corporate sponsors follow in the next sections.
           </p>
 

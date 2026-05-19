@@ -76,9 +76,9 @@ export function FundraisingHero({ hero }: { hero: FundraisingHubHeroStats }) {
         </h1>
 
         <p className="mx-auto mt-6 max-w-2xl text-base font-medium leading-relaxed text-white sm:mx-0 sm:text-lg">
-          Support NC wrestlers with a tax-deductible gift to NC United (501(c)(3)). Choose an athlete or the training fund at checkout — your
-          receipt reflects the nonprofit, and credit follows the wrestler you select. NC United absorbs card-processing fees so their campaign
-          total reflects what you pay.
+          Make a charitable gift to NC United Wrestling (501(c)(3)) to advance NC wrestlers. Choose an athlete or the training fund at checkout to
+          record donor preference for how NC United directs support consistent with exempt purpose — not gifts to individuals. Where possible NC United
+          absorbs card fees; ask your tax advisor about deductions.
         </p>
 
         <nav aria-label="Jump to section on this page" className="mt-8 border-y border-white/10 py-5">
