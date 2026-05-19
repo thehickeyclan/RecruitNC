@@ -1,14 +1,14 @@
 import type { Metadata } from "next"
 import { HardLink } from "@/components/hard-link"
 
-/** All partnership inquiries from this page go to NC United’s main inbox. */
+/** All partnership inquiries from this page go to NC United's main inbox. */
 const NC_UNITED_INFO_EMAIL = "info@ncwrestlingunited.com"
 const corporatePartnershipsMailto = `mailto:${NC_UNITED_INFO_EMAIL}?subject=${encodeURIComponent("Corporate partnership — NC United")}`
 
 export const metadata: Metadata = {
   title: "Corporate partners | NC United Fundraising",
   description:
-    "Corporate and foundation giving through NC United Wrestling — 501(c)(3) tax documentation, recognition tiers, and matching gifts.",
+    "Corporate and foundation giving through NC United Wrestling (501(c)(3)) — nonprofit acknowledgements, recognition, and structured giving workflows.",
 }
 
 function displayFont(c: string) {
@@ -29,8 +29,9 @@ export default function FundraisingCorporatePage() {
           Partner with NC United
         </h1>
         <p className="mt-6 text-base leading-relaxed text-white">
-          Businesses and foundations can support NC United Wrestling with tax-deductible gifts, employer matching, and public
-          recognition — structured through our 501(c)(3) nonprofit (EIN 99-3757238), not consumer crowdfunding.
+          Businesses and foundations can support NC United Wrestling with charitable contributions that may qualify for
+          deductions or matching programs (subject to IRC rules and your counsel), alongside public recognition — structured through
+          our 501(c)(3) nonprofit (EIN 99-3757238), not consumer crowdfunding.
         </p>
         <p className="mt-4 text-base leading-relaxed text-white">
           Tell us about your organization&apos;s goals — sponsorship, team challenges, matching gifts, or event presence —

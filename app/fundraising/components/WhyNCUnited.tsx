@@ -22,14 +22,14 @@ export function WhyNCUnited({ hero }: { hero: FundraisingHubHeroStats }) {
             Why give through NC United
           </h2>
           <p className="mt-5 text-base leading-relaxed text-white">
-            Giving through NC United means tax documentation when your gift qualifies, clear credit to an athlete or the
-            training fund, and one nonprofit ledger our team can stand behind—without treating your gift like a casual app
-            transfer or a generic crowdfunding page.
+            Giving through NC United means acknowledgement materials when checkout completes, donor preference attribution on our
+            reconciliation views (toward an athlete&apos;s programming or the broader training fund), and one nonprofit ledger our
+            team can defend—without treating your gift like a casual app transfer or a generic crowdfunding page.
           </p>
           <p className="mt-4 text-base leading-relaxed text-white">
-            NC United is a registered 501(c)(3) public charity (EIN 99-3757238). That status is what opens the door to
-            deductible gifts for many donors, plus matching, corporate, and foundation giving—in a way that works very
-            differently from typical person-to-person apps or personal fundraising sites.
+            NC United is a registered 501(c)(3) public charity (EIN 99-3757238). That pathway may allow eligible donors to
+            claim charitable deductions (subject to IRC rules and counsel), plus matching, corporate, and foundation
+            giving—in a way that works very differently from typical person-to-person apps or personal fundraising sites.
           </p>
         </div>
 
@@ -78,7 +78,7 @@ export function WhyNCUnited({ hero }: { hero: FundraisingHubHeroStats }) {
                 <td className="px-3 py-2.5 text-center text-xs text-white/60">No</td>
               </tr>
               <tr className="border-b border-white/[0.05]">
-                <td className="px-3 py-2.5">Athlete / program credit in our ledger</td>
+                <td className="px-3 py-2.5">Preference / attribution in our reconciliation</td>
                 <td className="px-3 py-2.5 text-center text-sm font-semibold text-emerald-300/95">Yes</td>
                 <td className="px-3 py-2.5 text-center text-xs text-white/60">Varies</td>
                 <td className="px-3 py-2.5 text-center text-xs text-white/60">Manual</td>
@@ -97,12 +97,17 @@ export function WhyNCUnited({ hero }: { hero: FundraisingHubHeroStats }) {
               </tr>
             </tbody>
           </table>
+          <p className="px-3 pb-3 pt-2 text-[10px] leading-snug text-white/55">
+            *Deduction eligibility is donor-specific—confirm whether your gifts qualify under IRC rules with your tax
+            advisor or counsel.
+          </p>
         </div>
       </div>
 
       {illustrativeFeesCents > 0 ? (
         <div className="mx-auto mt-10 max-w-6xl rounded-xl border border-white/10 bg-black/20 px-5 py-4 text-xs leading-relaxed text-white/90 sm:px-6">
-          At a rough 3% platform-fee illustration (not NC United’s pricing), the {formatUsdWhole(hero.totalRaisedCents)} raised
+          At a rough 3% platform-fee illustration (not NC United&apos;s pricing), the{" "}
+          {formatUsdWhole(hero.totalRaisedCents)} raised
           through NC United in this hub window might have meant on the order of ~{formatUsdWhole(illustrativeFeesCents)} in
           third-party fees in a consumer fundraising flow. Illustration only—talk with your CPA about what applies to you.
         </div>

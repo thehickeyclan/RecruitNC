@@ -234,7 +234,8 @@ export function FundraisingLeaderboardContent({ campaigns }: { campaigns: Leader
                 Fundraising leaderboard
               </h1>
               <p className="mt-4 max-w-2xl text-pretty text-base leading-relaxed text-white/88">
-                Paid gifts credited to athletes for the window you choose — same paid Stripe ledger NC United uses across hub
+                Paid gifts attributed to athletes via donor preference for the window you choose — same paid Stripe ledger NC
+                United uses across hub
                 fundraising. Donor names elsewhere respect listing preferences.
               </p>
             </div>

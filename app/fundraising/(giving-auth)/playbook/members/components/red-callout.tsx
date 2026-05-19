@@ -17,14 +17,15 @@ export function PlaybookInformalGivingNote() {
         Informal apps (Venmo, Cash App, GoFundMe) vs NC United checkout
       </h2>
       <p className="mt-4 max-w-[68ch] text-sm leading-relaxed text-white/85 sm:text-[15px]">
-        Lots of families start with Venmo, Cash App, or a viral social link — it feels fast because it mirrors asking a friend for cash. For
-        wrestling-season fundraising credited through NC United, that spontaneity trades away deductions, employer matching, corporate gifts, and
-        foundation-grade paperwork donors may already qualify for — the nonprofit checkout is built for those lanes.
+        Lots of families start with Venmo, Cash App, or a viral social link — it feels fast because it mirrors asking a friend for cash. Compared with
+        gifts made <strong className="text-white/95">through NC United</strong> nonprofit checkout—with donor preference, documentation, and review under
+        policy—that spontaneity often trades away pathways serious donors rely on (charitable acknowledgement, employer matching where offered, structured
+        business/foundation routes). Exact tax outcomes are donor-specific—donors should ask a CPA.
       </p>
       <p className="mt-3 max-w-[68ch] text-sm leading-relaxed text-white/82 sm:text-[15px]">
         A credibility lift beats dozens of households independently begging on whatever link looks trendy this week. NC United routes the same circle of
-        supporters through receipts, attribution, and transparency that holds up for schools, employers, and the IRS when donors expect their gifts to be
-        charitable — not just convenient peer transfers.
+        supporters through receipts, attribution, and transparency that fits how schools and employers vet charitable gifts—without confusing peer transfers
+        for organizational gifting.
       </p>
       <p className="mt-3 max-w-[68ch] text-sm leading-relaxed text-white/80 sm:text-[15px]">
         NC United is a registered 501(c)(3). Athlete profiles and links take about ten minutes to stand up; staff can help if you get stuck.

@@ -8,7 +8,7 @@ export function SpartanDonorMixGrounding() {
         <strong className="font-semibold text-[#C8A94A]">Grounded in Spartan Spring Fayetteville — NC United nonprofit checkout.</strong> Paid
         records from that timed campaign window showed roughly{" "}
         <strong className="text-white">$20,000+</strong> raised, <strong className="text-white">200+</strong> paid gifts,{" "}
-        <strong className="text-white">37</strong> race-linked participants, and athlete-designated credits across{" "}
+        <strong className="text-white">37</strong> race-linked participants, with donor-preferred attribution across{" "}
         <strong className="text-white">29</strong> wrestlers. The segments below describe how those gifts showed up in practice — not a generic
         fundraising textbook.
       </p>

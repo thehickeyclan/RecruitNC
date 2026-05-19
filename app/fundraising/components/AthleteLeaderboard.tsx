@@ -87,7 +87,7 @@ export function AthleteLeaderboard({
               Athlete leaderboard
             </h2>
             <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/80">
-              Top ten athletes by athlete-credited paid gifts in the hub reporting window — all NC United hub
+              Top ten athletes by paid gifts attributed via donor preference in the hub reporting window — all NC United hub
               campaigns combined. Gifts = checkout sessions; donors = distinct payer emails.
             </p>
           </div>

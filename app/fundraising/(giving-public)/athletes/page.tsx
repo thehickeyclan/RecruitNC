@@ -8,7 +8,7 @@ import { FundraisingAthletesDirectory } from "./fundraising-athletes-directory"
 export const metadata: Metadata = {
   title: "Athletes | NC United Fundraising",
   description:
-    "Support NC United wrestlers — donor-facing pages. Tax-deductible 501(c)(3) gifts. Not college recruiting profiles.",
+    "NC United Wrestling athlete gift pages — gifts to NC United with donor preference for a wrestler. 501(c)(3). Not recruiting profiles.",
 }
 
 export default async function FundraisingAthletesIndexPage() {
@@ -29,8 +29,8 @@ export default async function FundraisingAthletesIndexPage() {
           Fundraising — Athletes
         </h1>
         <p className="mt-4 max-w-2xl text-base leading-relaxed text-white/70">
-          Give toward a specific wrestler. These pages are for families, fans, and sponsors —{" "}
-          <strong className="text-white/90">not</strong> college recruiting profiles.
+          Gifts on these pages are made to NC United Wrestling; donors may express preference for a particular wrestler at checkout.
+          For families, fans, and sponsors — <strong className="text-white/90">not</strong> college recruiting profiles.
         </p>
         <HardLink
           href="/fundraising"

@@ -68,14 +68,16 @@ export function PlaybookMembersContent() {
 
       <DH as="h2">Before you post that Venmo or Cash App link</DH>
       <P>
-        If you are raising money for your athlete through Venmo, Cash App, GoFundMe, or informal social posts — read this first.
+        If you are directing supporters toward qualifying athlete costs via Venmo, Cash App, GoFundMe, or informal social posts — read this first.
       </P>
       <P>
-        You are leaving real money on the table. Your donors are not getting the tax benefit they deserve. Businesses and foundations cannot give.
-        Employer matching does not apply. And serious donors hesitate without a formal receipt.
+        You are leaving institutional giving on the table. Informal rails rarely pair with charitable acknowledgement, structured business or foundation routes,
+        or employer matching where offered—and many donors above ~$250 want documentation before they wire real money. Whether a supporter can deduct a gift depends
+        on their own tax facts; they should confirm with a tax advisor.
       </P>
       <P>
-        NC United is a registered 501(c)(3). The system is already built. Getting set up takes 10 minutes.
+        NC United is a registered 501(c)(3): gifts are made to NC United with donor preference recorded at checkout—not as personal transfers to families. The
+        system is already built; onboarding is quick.
       </P>
       <p className="mt-6">
         <Strong>Get set up → </Strong>
@@ -148,7 +150,7 @@ export function PlaybookMembersContent() {
             <td className="px-3 py-2.5 align-top text-[#C8A94A]/95">$2,000 raised</td>
           </tr>
           <tr className="bg-black/10">
-            <td className="px-3 py-2.5 align-top">Tax deduction for donors</td>
+            <td className="px-3 py-2.5 align-top">Individual charitable deduction (typical*)</td>
             <td className="px-3 py-2.5 align-top text-white/50">❌</td>
             <td className="px-3 py-2.5 align-top text-emerald-300/95">✅</td>
           </tr>
@@ -168,7 +170,7 @@ export function PlaybookMembersContent() {
             <td className="px-3 py-2.5 align-top text-emerald-300/95">✅</td>
           </tr>
           <tr className="bg-black/10">
-            <td className="px-3 py-2.5 align-top">Automatic IRS receipt</td>
+            <td className="px-3 py-2.5 align-top">Formal email acknowledgement from NC United</td>
             <td className="px-3 py-2.5 align-top text-white/50">❌</td>
             <td className="px-3 py-2.5 align-top text-emerald-300/95">✅</td>
           </tr>
@@ -179,6 +181,10 @@ export function PlaybookMembersContent() {
           </tr>
         </tbody>
       </DataTable>
+
+      <P className="text-xs leading-relaxed text-white/55">
+        *Deduction eligibility depends on each donor&apos;s situation and IRC rules. Athletes should not promise tax outcomes — ask donors to confirm with a CPA or tax advisor.
+      </P>
 
       <P>
         Same ask. Same community. <Strong>30–50% more money.</Strong>
@@ -191,8 +197,9 @@ export function PlaybookMembersContent() {
         <li>
           <Strong>GoFundMe and standalone crowdfunding</Strong>
           <br />
-          Platform fees on every donation. No formal 501(c)(3) receipt. No athlete attribution. Culturally associated with hardship and emergency — not
-          investment in an athlete. Potentially taxable income for the recipient.
+          Platform fees on every donation. No nonprofit charitable acknowledgement path through NC United. No donor-preference ledger tied to wrestling program
+          support. Culturally associated with hardship and emergency — not exempt-purpose programming. Potential tax issues for whoever ultimately receives funds—get
+          professional advice if amounts are meaningful.
         </li>
         <li>
           <Strong>Venmo and Cash App as the main vehicle</Strong>
@@ -245,8 +252,9 @@ export function PlaybookMembersContent() {
       <P>Five things no individual family, club, or for-profit platform can replicate alone.</P>
       <ol className="mt-6 list-decimal space-y-5 pl-5 text-white/82 marker:font-black marker:text-[#C8A94A]">
         <li>
-          <Strong>501(c)(3) structure.</Strong> Tax-deductible giving for individuals, businesses, corporations, and foundations. Without this, entire
-          categories of support are completely inaccessible.
+          <Strong>501(c)(3) structure.</Strong> Organizational status that unlocks charitable giving pathways many households, businesses, and foundations use—
+          with deductibility determined case-by-case (donors/working controllers should coordinate with CPAs). Without it, structured charitable support is largely
+          off the table.
         </li>
         <li>
           <Strong>Central platform.</Strong> Donations flow to NC United; donor preferences indicated at checkout are recorded and reviewed under policy.
@@ -316,8 +324,8 @@ export function PlaybookMembersContent() {
         What makes it different from Venmo
       </p>
       <P>
-        A Venmo balance is just money sitting in an app. There is no receipt trail, no IRS documentation, no accountability for how it is used, and no
-        credibility with serious donors who want to know their gift was handled properly.
+        A Venmo balance is informal peer-to-peer cash—usually no charitable gift acknowledgement, no standardized trail for auditors or accountants, uneven
+        accountability for exempt-purpose use, and weaker credibility when donors ask how gifts are governed.
       </P>
       <P>
         The NC United workflow is nonprofit accounting: inbound gifts attributed with donor preference, outbound payments approved against eligible categories.
@@ -358,8 +366,10 @@ export function PlaybookMembersContent() {
         Service, Carolina Heating &amp; Air, and North State Sport &amp; Spine — all giving through NC United&apos;s nonprofit checkout.
       </P>
       <P>
-        For business owners, charitable gifts to a 501(c)(3) carry real financial advantages. At a 32–37% combined tax bracket, a $1,000 donation effectively
-        costs $630–$680 after the deduction. Community visibility, employee engagement, and network access add to the case.
+        For business owners, charitable gifts to a 501(c)(3) can carry financial upside when structuring and rules line up—that math depends on entity type,
+        limits, and their CPA&apos;s memo. Rough illustration only: assuming a hypothetical 32–37% combined marginal rate applies to deductible amounts,{" "}
+        <Strong>a $1,000 deductible gift might net out around $630–$680 cash cost</Strong>. Community visibility, employee engagement, and network access still
+        matter independently of IRS math—always validate with whoever files the return.
       </P>
       <P>
         <Strong>Best approach:</Strong> brief in-person visit with a one-page proposal, a specific ask amount, and the NC United EIN:{" "}
@@ -378,16 +388,18 @@ export function PlaybookMembersContent() {
         development, education — and apply through NC United.
       </P>
 
-      <DH as="h3">Matching gift programs — free money most families never claim</DH>
+      <DH as="h3">Matching gift programs — often missed when families stick to informal apps</DH>
       <P>
         Many employers match charitable donations dollar-for-dollar. Sometimes 2:1 or 3:1. Matching almost always requires a 501(c)(3) recipient.
       </P>
       <Ul>
         <Li>
-          <Strong>$200 donation + 1:1 employer match = $400</Strong> for your athlete.
+          <Strong>$200 gift to NC United + a 1:1 employer match (when offered)</Strong> → up to{" "}
+          <Strong>$400</Strong> flowing through NC United program support—with donor preference attributed under policy, subject to employer rules.
         </Li>
         <Li>
-          <Strong>$200 donation + 2:1 employer match = $600</Strong> for your athlete.
+          <Strong>$200 gift to NC United + a 2:1 employer match (when offered)</Strong> → up to{" "}
+          <Strong>$600</Strong> same structure—matching is employer-dependent, never guaranteed.
         </Li>
       </Ul>
       <p className="mt-6 font-[family-name:var(--font-fundraising-display)] text-xs font-black uppercase tracking-[0.14em] text-[#C8A94A]">
@@ -417,7 +429,9 @@ export function PlaybookMembersContent() {
         extra cost.&quot;
       </blockquote>
       <P>
-        Identify 3–5 donors whose employers likely have matching programs. One successful match at $500 is $500 in free money for your training fund.
+        Identify 3–5 donors whose employers likely have matching programs. One successful match at $500 can be up to{" "}
+        <Strong>$500 of additional organizational support through NC United</Strong>—not cash sitting in anyone&apos;s personal app balance—still subject to
+        employer timelines and approvals.
       </P>
 
       <Rule />
@@ -437,13 +451,13 @@ export function PlaybookMembersContent() {
         </thead>
         <tbody className="divide-y divide-white/10">
           {[
-            ["Friend gives $100", "No deduction", "Tax-deductible"],
-            ["Local business gives $500", "No deduction", "Tax-deductible"],
-            ["Corporation gives $5,000", "No tax vehicle", "Tax-deductible path"],
-            ["Foundation grant", "Not eligible", "Eligible"],
-            ["Employer matching", "Not eligible", "Eligible"],
-            ["Automatic receipt", "❌", "✅ Instant email"],
-            ["Athlete attribution", "❌", "✅ Named credit"],
+            ["Friend gives $100", "No deduction", "May qualify — ask CPA"],
+            ["Local business gives $500", "No deduction", "May qualify — ask CPA"],
+            ["Corporation gives $5,000", "No tax vehicle", "Charitable structure—confirm with finance/tax counsel"],
+            ["Foundation grant", "Not eligible", "Eligible pathway"],
+            ["Employer matching", "Not eligible", "Eligible when employer offers"],
+            ["Automatic receipt", "❌", "✅ Email acknowledgement"],
+            ["Donor preference on record", "❌", "✅ Attribution / ledger display"],
             ["Live leaderboard", "❌", "✅ Real-time"],
           ].map(([a, b, c]) => (
             <tr key={String(a)} className="bg-black/10">
@@ -454,6 +468,11 @@ export function PlaybookMembersContent() {
           ))}
         </tbody>
       </DataTable>
+
+      <P className="text-xs leading-relaxed text-white/55">
+        NC United acknowledges gifts consistent with exempt-organization procedures; wording on filings and deductibility stays between each donor or company and
+        their CPA.
+      </P>
 
       <Rule />
 
@@ -474,8 +493,8 @@ export function PlaybookMembersContent() {
           </P>
         </li>
         <li>
-          <Strong>A donation link through NC United.</Strong> Mobile-friendly checkout. Instant tax receipt. Credit to the right athlete. Live leaderboard shows
-          your progress publicly in real time.
+          <Strong>A donation link through NC United.</Strong> Mobile-friendly checkout. Automated email acknowledgement. Donor preference routed to campaign
+          policy—not a segregated legal account for individuals. Leaderboards publish progress where campaigns allow.
           <div className="mt-4">
             <HardLink
               href="/fundraising/athletes"
@@ -528,8 +547,8 @@ export function PlaybookMembersContent() {
       <DH as="h2">Thank every donor personally</DH>
       <P>For every donation, the athlete owns the thank-you.</P>
       <P>
-        A personal text within 48 hours is the minimum. Name the donor. Name what their gift supports. A handwritten note is better. People repeat gifts when
-        they feel seen — not when a ledger silently ticks up.
+        A personal text within 48 hours is the minimum. Name the donor. Name what their gift supports toward NC United programming. A handwritten note is better.
+        People repeat gifts when they feel seen — not because a progress bar quietly updates without gratitude.
       </P>
       <P>
         Parents: help with logistics but keep the athlete&apos;s voice in front. Authenticity compounds trust and repeat donations.
@@ -556,7 +575,7 @@ export function PlaybookMembersContent() {
           <p className="font-[family-name:var(--font-fundraising-display)] text-sm font-black uppercase tracking-wide text-white">The business blitz</p>
           <P>
             Map businesses connected to your families. Pair each athlete with 2–3 businesses they have a connection to. Parent and athlete visit in person with
-            a one-page proposal. Clear ask. NC United checkout for clean receipts and tax documentation.
+            a one-page proposal. Clear ask. NC United checkout so supporters receive nonprofit acknowledgements they can route through finance or their CPA when needed.
           </P>
           <p className="mt-3 text-sm italic text-white/55">20 businesses × $500 average ≈ $10,000 in one coordinated week.</p>
         </section>
@@ -576,7 +595,8 @@ export function PlaybookMembersContent() {
           </p>
           <P>
             Each parent identifies 3–5 professional contacts — colleagues, clients, business owners. Parents make the introduction. Athletes make the personal
-            ask. Focus specifically on employers with matching gift programs where the same $200 ask becomes $400 or $600.
+            ask. Prioritize workplaces that advertise matching—the same $200 gift to NC United can become $400–$600 of organizational receipts when employers
+            actually match and timelines clear.
           </P>
           <p className="mt-3 text-sm italic text-white/55">20 families × 3 contacts × $200 average ≈ $12,000 before matching.</p>
         </section>
@@ -612,7 +632,7 @@ export function PlaybookMembersContent() {
       <div className="mt-16 space-y-2 border-t border-white/10 pt-10 text-xs leading-relaxed text-white/50">
         <p>NC United Wrestling is a registered 501(c)(3) nonprofit organization.</p>
         <p>
-          EIN: <span className="tabular-nums text-white/65">99-3757238</span> · All donations are tax-deductible to the extent allowed by law.
+          EIN: <span className="tabular-nums text-white/65">99-3757238</span> · Contributions may be tax-deductible to the extent allowed by law; donors should confirm with a tax advisor.
         </p>
         <p>
           NCUnitedWrestling.com ·{" "}

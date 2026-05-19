@@ -18,7 +18,7 @@ import { FundraisingFooter } from "@/app/fundraising/components/FundraisingFoote
 export const metadata: Metadata = {
   title: "Give | NC United Wrestling",
   description:
-    "Tax-deductible 501(c)(3) gifts to NC United Wrestling — support a wrestler or the training fund, secure checkout, leaderboards, and public gift activity. EIN 99-3757238.",
+    "Charitable gifts to NC United Wrestling (501(c)(3), EIN 99-3757238) — record donor preference for a wrestler or the training fund via secure checkout. Leaderboards and activity feeds. Deduction eligibility is donor-specific; consult a tax advisor.",
 }
 
 export default async function FundraisingPortalHomePage() {

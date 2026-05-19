@@ -41,7 +41,11 @@ import { FundraisingAthleteWalletPanel } from "./fundraising-athlete-wallet-pane
 import { FundraisingAthleteVideosSection } from "./fundraising-athlete-videos-section"
 import { normalizeFundraisingSchoolDisplay } from "@/lib/fundraising/normalize-fundraising-school-display"
 import { isFundraisingAthletePageDonationsDisabled } from "@/lib/fundraising/fundraising-pause"
-import { athletePageSupportHelpParagraph } from "@/lib/fundraising/donor-facing-disclosures"
+import {
+  athletePageCheckoutAcknowledgementNote,
+  athletePageSupportHelpParagraph,
+  NC_UNITED_CONTRIBUTIONS_TAX_DISCLAIMER,
+} from "@/lib/fundraising/donor-facing-disclosures"
 
 const HERO_FALLBACK_SILHOUETTE = "/wrestler-silhouette.png"
 
@@ -393,7 +397,12 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           </p>
           <ul className="mt-4 list-none space-y-3.5 sm:space-y-4">
             {code && checkoutLive ? (
-              <WhyGiveBullet>{athletePageSupportHelpParagraph(displayName, athleteFirstName)}</WhyGiveBullet>
+              <li className="space-y-4">
+                <p className="text-sm leading-relaxed text-white/88">
+                  {athletePageSupportHelpParagraph(displayName, athleteFirstName)}
+                </p>
+                <p className="text-sm leading-relaxed text-white/72">{athletePageCheckoutAcknowledgementNote()}</p>
+              </li>
             ) : null}
             {code && !checkoutLive ? (
               <>
@@ -411,14 +420,19 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
                 </WhyGiveBullet>
               </>
             ) : null}
-            <WhyGiveBullet>
-              <strong className="text-white">Receipts & taxes.</strong> NC United Wrestling is a 501(c)(3); you&apos;ll get email acknowledgment for
-              qualifying gifts (check spam). Whether and how much you may deduct depends on IRS rules — ask your tax professional.
-            </WhyGiveBullet>
-            <WhyGiveBullet>
-              <strong className="text-white">Payment processing.</strong> Where possible NC United absorbs card-processing costs so donor intent isn&apos;t
-              eaten by checkout fees — that does not convert your gift into a contribution held for any one individual apart from nonprofit discretion.
-            </WhyGiveBullet>
+            {code && !checkoutLive ? (
+              <WhyGiveBullet>
+                <strong className="text-white">Receipts & checkout.</strong>{" "}
+                {athletePageCheckoutAcknowledgementNote()}
+              </WhyGiveBullet>
+            ) : null}
+            {!code ? (
+              <WhyGiveBullet>
+                <strong className="text-white">Gifts through NC United.</strong> NC United Wrestling (501(c)(3)) acknowledges qualifying gifts by email after
+                checkout — check spam — and absorbs card-processing fees where campaign rules allow.{" "}
+                {NC_UNITED_CONTRIBUTIONS_TAX_DISCLAIMER}
+              </WhyGiveBullet>
+            ) : null}
           </ul>
           <p className="mt-5 text-xs leading-relaxed text-white/50">
             EIN <span className="tabular-nums">99-3757238</span>
@@ -586,9 +600,9 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
               Secure checkout
             </h2>
             <p className="mx-auto mt-2 max-w-md text-center text-[13px] leading-snug text-white/70">
-              You&apos;re donating to NC United Wrestling (minimum $5). You may indicate a supporter preference toward this athlete&apos;s program costs at
-              checkout — NC United applies gifts under its exempt purpose and policies. You&apos;ll get an acknowledgment by email shortly after checkout.
-              Consult your tax advisor about deductions.
+              Minimum $5. You&apos;ll choose whether donor preference stays with this wrestler or supports the NC United Training Fund — either way the gift is to
+              NC United Wrestling. Preferences are recorded at checkout subject to exempt purpose and policy. An acknowledgement email follows checkout.{" "}
+              {NC_UNITED_CONTRIBUTIONS_TAX_DISCLAIMER}
             </p>
             <div className="mt-6 w-full text-left">
               <FundraisingAthleteEmbeddedCheckout

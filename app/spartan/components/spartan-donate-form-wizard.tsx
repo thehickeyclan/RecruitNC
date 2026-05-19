@@ -4,6 +4,7 @@ import Image from "next/image"
 import { useSearchParams } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import { HardLink } from "@/components/hard-link"
+import { NC_UNITED_CONTRIBUTIONS_TAX_DISCLAIMER } from "@/lib/fundraising/donor-facing-disclosures"
 import type { SpartanRaceTierId } from "../types"
 import {
   DEFAULT_SPARTAN_RACE_TIER_ID,
@@ -116,7 +117,7 @@ export function SpartanDonateFormWizard({
   fundraisingHubDefaultTrainingFund = false,
 }: {
   fundraisingHub?: boolean
-  /** On athlete fundraising pages: skip wrestler search and start at amount step */
+  /** On athlete pages: donor picks this wrestler (preference) or training fund before amount — both are gifts to NC United. */
   fundraisingHubPrefillCode?: string | null
   fundraisingHubPrefillLabel?: string | null
   /** Slug for Stripe return URLs (thanks/cancel on this athlete page) */
@@ -304,11 +305,13 @@ export function SpartanDonateFormWizard({
       if (preCode && ATHLETE_CODE_RE.test(preCode)) {
         setFlow("donate")
         setTierPreference("")
-        setDonateMode("athlete")
+        /** Athlete embed: choose training fund vs this wrestler (both → NC United) before amount step. Hub give page: unchanged. */
+        const embed = fh && Boolean((fundraisingHubReturnSlug ?? "").trim())
+        setDonateMode(embed ? null : "athlete")
         setFundraisingCode(preCode.toUpperCase())
         setAthleteQuery(preLabel)
         setManualCreditName("")
-        setDonateStep(3)
+        setDonateStep(embed ? 1 : 3)
         setAmountDollars("50")
         return
       }
@@ -659,6 +662,11 @@ export function SpartanDonateFormWizard({
       return
     }
     if (donateStep === 3 && donateMode === "athlete") {
+      if (athleteGiftPageEmbed) {
+        setDonateStep(1)
+        setDonateMode(null)
+        return
+      }
       setDonateStep(2)
       return
     }
@@ -820,6 +828,10 @@ export function SpartanDonateFormWizard({
 
   const dismissHighlight = (id: string) => setFieldHighlights((f) => f.filter((x) => x !== id))
 
+  const athleteEmbedGiftTitle = athleteGiftPageEmbed
+    ? (fundraisingHubPrefillLabel?.trim() || athleteQuery.trim() || "this wrestler").trim()
+    : ""
+
   return (
     <form
       onSubmit={submit}
@@ -915,40 +927,98 @@ export function SpartanDonateFormWizard({
         <div
           className={`mt-5 space-y-3 rounded border border-l-4 border-l-[#C8A94A] p-3 sm:p-4 ${fh ? "border-white/15 bg-[#0B2545]/45" : "border-[#4a3d1a] bg-[#141008]"}`}
         >
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#C8A94A]">
-            {fh ? "Support an athlete or the training fund" : "Who should this support?"}
-          </p>
-          <p className="text-xs text-[#9ca3af]">
-            {fh
-              ? "Choose how your gift should count — both options use the same secure checkout ($5 minimum)."
-              : "Credit a wrestler, or the NC United Training Fund."}
-          </p>
-          <div
-            id="spartan-donate-step1"
-            className={`grid gap-2 rounded-md sm:grid-cols-2 ${fieldHighlights.includes("spartan-donate-step1") ? `p-0.5 ring-2 ring-amber-500/90 ring-offset-2 ${ringOff}` : ""}`}
-          >
-            <button
-              type="button"
-              onClick={() => {
-                setDonateMode("athlete")
-                setError(null)
-                dismissHighlight("spartan-donate-step1")
-                setDonateStep(2)
-              }}
-              className="min-h-[48px] rounded border border-[#C8A94A] bg-[#1a170d] px-3 text-sm font-bold text-[#C8A94A] hover:bg-[#252014]"
-            >
-              {fh ? "Support an athlete" : "A specific wrestler"}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                goToDonateGeneralFund()
-              }}
-              className={`min-h-[48px] rounded border px-2 py-2.5 text-[13px] font-bold leading-snug text-[#ccc] hover:border-[#666] sm:px-3 sm:text-sm ${dField}`}
-            >
-              {fh ? "Donate to the NC United Training Fund" : "NC United Training Fund"}
-            </button>
-          </div>
+          {athleteGiftPageEmbed ? (
+            <>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#C8A94A]">Choose how to give</p>
+              <p className="text-xs leading-snug text-[#9ca3af]">
+                Both options complete the same secure checkout ($5 minimum). Gifts are made to NC United Wrestling.
+              </p>
+              <div
+                id="spartan-donate-step1"
+                className={`grid gap-3 sm:grid-cols-2 ${fieldHighlights.includes("spartan-donate-step1") ? `p-0.5 ring-2 ring-amber-500/90 ring-offset-2 ${ringOff}` : ""}`}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    const c = (fundraisingHubPrefillCode ?? "").trim().toUpperCase()
+                    const lab = (fundraisingHubPrefillLabel ?? "").trim()
+                    if (!ATHLETE_CODE_RE.test(c)) {
+                      setError("Athlete fundraiser code unavailable — reload the page or use the fundraising hub.")
+                      setFieldHighlights(["spartan-donate-step1"])
+                      return
+                    }
+                    setDonateMode("athlete")
+                    setFundraisingCode(c)
+                    setAthleteQuery(lab)
+                    setManualCreditName("")
+                    setAthleteHits([])
+                    setAthleteMenuOpen(false)
+                    setError(null)
+                    dismissHighlight("spartan-donate-step1")
+                    setDonateStep(3)
+                  }}
+                  className="min-h-[48px] rounded border border-[#C8A94A] bg-[#1a170d] px-3 py-3 text-left text-sm font-bold text-[#C8A94A] hover:bg-[#252014]"
+                >
+                  <span className="block">Support {athleteEmbedGiftTitle}</span>
+                  <span className="mt-2 block text-[11px] font-normal leading-snug text-[#cbb87a]">
+                    Gift to NC United with donor preference recorded for this wrestler&apos;s training and competition costs.
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setError(null)
+                    dismissHighlight("spartan-donate-step1")
+                    goToDonateGeneralFund()
+                  }}
+                  className={`min-h-[48px] rounded border px-3 py-3 text-left text-[13px] font-bold leading-snug text-[#ccc] hover:border-[#666] sm:text-sm ${dField}`}
+                >
+                  <span className="block text-white/90">NC United Training Fund</span>
+                  <span className="mt-2 block text-[11px] font-normal leading-snug text-[#9ca3af]">
+                    Gift to NC United supporting wrestler development across North Carolina.
+                  </span>
+                </button>
+              </div>
+              <p className="text-[11px] leading-snug text-white/50">{NC_UNITED_CONTRIBUTIONS_TAX_DISCLAIMER}</p>
+            </>
+          ) : (
+            <>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#C8A94A]">
+                {fh ? "Support an athlete or the training fund" : "Who should this support?"}
+              </p>
+              <p className="text-xs text-[#9ca3af]">
+                {fh
+                  ? "Choose how your gift should count — both options use the same secure checkout ($5 minimum)."
+                  : "Credit a wrestler, or the NC United Training Fund."}
+              </p>
+              <div
+                id="spartan-donate-step1"
+                className={`grid gap-2 rounded-md sm:grid-cols-2 ${fieldHighlights.includes("spartan-donate-step1") ? `p-0.5 ring-2 ring-amber-500/90 ring-offset-2 ${ringOff}` : ""}`}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDonateMode("athlete")
+                    setError(null)
+                    dismissHighlight("spartan-donate-step1")
+                    setDonateStep(2)
+                  }}
+                  className="min-h-[48px] rounded border border-[#C8A94A] bg-[#1a170d] px-3 text-sm font-bold text-[#C8A94A] hover:bg-[#252014]"
+                >
+                  {fh ? "Support an athlete" : "A specific wrestler"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    goToDonateGeneralFund()
+                  }}
+                  className={`min-h-[48px] rounded border px-2 py-2.5 text-[13px] font-bold leading-snug text-[#ccc] hover:border-[#666] sm:px-3 sm:text-sm ${dField}`}
+                >
+                  {fh ? "Donate to the NC United Training Fund" : "NC United Training Fund"}
+                </button>
+              </div>
+            </>
+          )}
         </div>
       )}
 
