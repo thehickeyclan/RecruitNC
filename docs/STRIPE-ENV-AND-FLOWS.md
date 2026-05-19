@@ -43,3 +43,15 @@ So:
 1. **Webhook secret:** See “Flows that hit the same webhook URL” above. Recommend **adding** the new destination’s secret to `STRIPE_WEBHOOK_SECRET` (comma-separated) unless the user has only one destination.
 2. **Other Stripe env:** Confirm which flow uses it (Blue vs store vs national team). Changing `STRIPE_BLUE_PRICE_ID` only affects Blue; changing `STRIPE_SECRET_KEY` affects the whole Stripe account (same key for all flows).
 3. **Docs:** Point to this file when explaining “will this break X?” for Stripe/env.
+
+---
+
+## Fundraising pause (NC United gifts — optional)
+
+| Env var | Effect |
+|--------|--------|
+| **`RECRUITNC_FUNDRAISING_RECEIPTS_PAUSED`** | Set to `1` / `true` / `yes` — stops **donor 501(c)(3) acknowledgment** emails (Resend) from the Spartan Stripe webhook auto-ack path and from the admin “send receipt” API. Does **not** stop Stripe webhooks, `spartan_donations` upserts, or Store/Blue/Store checkout. |
+| **`RECRUITNC_FUNDRAISING_ATHLETE_DONATIONS_DISABLED`** | Set to `1` / `true` / `yes` — hides athlete gift-page checkout UI (`/fundraising/athletes/[slug]`) and returns **503** for `/api/spartan/checkout` when the request is for an **athlete gift page** (hub + athlete slug). **`/fundraising/give`**, **training fund**, and **scholarship** hub checkouts are unchanged. |
+
+Unset or any other value = normal behavior. See `lib/fundraising/fundraising-pause.ts`.
+

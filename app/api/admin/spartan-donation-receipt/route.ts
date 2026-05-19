@@ -19,6 +19,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { stripeSpartanCampaignMetadataMatchesRequested } from "@/lib/fundraising/campaign-registry"
 import { SPARTAN_FAYETTEVILLE_CAMPAIGN } from "@/lib/spartan-fayetteville-stripe"
+import { isFundraisingReceiptsPaused } from "@/lib/fundraising/fundraising-pause"
 
 export const dynamic = "force-dynamic"
 
@@ -96,6 +97,13 @@ export async function POST(request: NextRequest) {
 
   if (body.action !== "send") {
     return NextResponse.json({ error: "action must be preview or send" }, { status: 400 })
+  }
+
+  if (isFundraisingReceiptsPaused()) {
+    return NextResponse.json(
+      { error: "Receipt sending is temporarily paused (RECRUITNC_FUNDRAISING_RECEIPTS_PAUSED)." },
+      { status: 503 },
+    )
   }
 
   const sessionId = typeof body.sessionId === "string" ? body.sessionId.trim() : ""

@@ -1,3 +1,5 @@
+import { isFundraisingReceiptsPaused } from "@/lib/fundraising/fundraising-pause"
+
 export const NCU_WRESTLING_EIN = "99-3757238"
 
 const FROM = "NC United Wrestling <info@ncwrestlingunited.com>"
@@ -97,6 +99,12 @@ export async function sendNcuDonationAcknowledgmentEmail(input: {
   amountCents: number
   donationDateIso: string
 }): Promise<{ success: true } | { success: false; error: string }> {
+  if (isFundraisingReceiptsPaused()) {
+    return {
+      success: false,
+      error: "Receipt sending is temporarily paused (RECRUITNC_FUNDRAISING_RECEIPTS_PAUSED).",
+    }
+  }
   if (!process.env.RESEND_API_KEY) {
     return { success: false, error: "RESEND_API_KEY is not configured" }
   }

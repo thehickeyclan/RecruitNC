@@ -40,6 +40,7 @@ import { FundraisingPublicVideo } from "@/components/fundraising/fundraising-pub
 import { FundraisingAthleteWalletPanel } from "./fundraising-athlete-wallet-panel"
 import { FundraisingAthleteVideosSection } from "./fundraising-athlete-videos-section"
 import { normalizeFundraisingSchoolDisplay } from "@/lib/fundraising/normalize-fundraising-school-display"
+import { isFundraisingAthletePageDonationsDisabled } from "@/lib/fundraising/fundraising-pause"
 
 const HERO_FALLBACK_SILHOUETTE = "/wrestler-silhouette.png"
 
@@ -185,6 +186,9 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
   const latestActivationStatus: "none" | "pending" = slugHasPendingActivation ? "pending" : "none"
   const viewerHasPendingActivation = !!(user?.id && pendingActivationUserIds.includes(user.id))
   const checkoutLive = isProfileCheckoutLive(profile)
+  const athleteDonationsPaused = isFundraisingAthletePageDonationsDisabled()
+  /** Public donate UI (CTA, embedded checkout, QR) — separate from profile “live” for owners. */
+  const showAthleteDonationUi = checkoutLive && !athleteDonationsPaused
   const showFullGivingExperience = checkoutLive
   /** Goal, note, video: public when checkout live; managers (incl. RecruitNC admin) may edit before/during live. */
   const showFundraisingStoryBlock = !!athleteId && (showFullGivingExperience || isFundraisingManager)
@@ -276,10 +280,18 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
       style={{ fontFamily: "var(--font-fundraising-body), system-ui, sans-serif" }}
     >
       <div className="mx-auto w-full max-w-lg sm:max-w-2xl">
-        {cancelledCheckout && checkoutLive ? (
+        {cancelledCheckout && showAthleteDonationUi ? (
           <div className="mt-6 rounded-lg border border-amber-400/35 bg-amber-500/10 px-4 py-3 text-sm text-amber-100/95">
             Checkout was cancelled — nothing was charged. You can finish a gift in secure checkout at the bottom when you&apos;re
             ready.
+          </div>
+        ) : null}
+
+        {athleteDonationsPaused && checkoutLive ? (
+          <div className="mt-6 rounded-lg border border-amber-400/40 bg-amber-500/15 px-4 py-3 text-sm text-amber-100/95">
+            <strong className="font-semibold">Gifts paused:</strong> online checkout on athlete pages is temporarily turned off.
+            Donor acknowledgment emails may also be on hold. Other ways to support NC United (hub, training fund) may still be
+            available — thank you for your patience.
           </div>
         ) : null}
 
@@ -363,7 +375,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
         {schoolLine ? <p className="mt-2 text-base text-white/65">{schoolLine}</p> : null}
         {code && showInternalCodes ? <p className="mt-2 font-mono text-xs text-white/40">{code}</p> : null}
 
-        {code && showFullGivingExperience ? (
+        {code && showAthleteDonationUi ? (
           <div className="mt-5 flex flex-col items-stretch gap-2 sm:items-center">
             <HardLink href={giveOnThisPageHref} className={PRIMARY_DONATE_CTA_CLASS}>
               Donate now
@@ -512,7 +524,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           <FundraisingAthleteWalletPanel row={managerWalletRow} firstName={athleteFirstName} />
         ) : null}
 
-        {code && stats && checkoutLive && stats.giftCount === 0 ? (
+        {code && stats && checkoutLive && stats.giftCount === 0 && showAthleteDonationUi ? (
           <p className="mt-4 text-center text-sm text-white/50">
             Be the first to support {displayName} — your gift will appear here after checkout.
           </p>
@@ -569,7 +581,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
         ) : null}
 
         {/* QR code hidden on mobile - users don't scan their own screen */}
-        {checkoutLive ? (
+        {checkoutLive && showAthleteDonationUi ? (
           <div className="mt-10 hidden justify-center lg:mt-8 lg:flex">
             <FundraisingAthleteQrCard
               qrSrc={athleteQrDataUrl}
@@ -579,7 +591,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           </div>
         ) : null}
 
-        {showFullGivingExperience && code ? (
+        {showAthleteDonationUi && code ? (
           <section
             id={checkoutAnchor}
             className="mt-10 scroll-mt-28 rounded-xl border border-[#C8A94A]/25 bg-[#0B2545]/35 p-4 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.45)] backdrop-blur-sm sm:p-6"

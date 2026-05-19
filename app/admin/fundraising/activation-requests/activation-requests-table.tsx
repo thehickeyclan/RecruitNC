@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useState, useTransition, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
 import { ChevronDown, ChevronRight, Check, X, AlertTriangle, Link2, Power, Bell } from "lucide-react"
 import { HardLink } from "@/components/hard-link"
@@ -9,11 +9,11 @@ import { toast } from "@/hooks/use-toast"
 import {
   type EnrichedActivationRow,
   type WiringStatus,
-  fixParentLinkAction,
   fixProfileActiveAction,
   resendNotificationAction,
 } from "@/app/actions/fundraising/fundraising-activation-actions"
 import { ActivationRequestReviewButtons } from "./activation-request-review-buttons"
+import { ActivationLinkParentDialog } from "./activation-link-parent-dialog"
 
 const WIRING_STEPS: { key: keyof WiringStatus; label: string; fixKey?: "parentLink" | "profileActive" | "notification" }[] = [
   { key: "athleteResolved", label: "Athlete resolved" },
@@ -79,6 +79,7 @@ function FixButtons({ row }: { row: EnrichedActivationRow }) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [fixingKey, setFixingKey] = useState<string | null>(null)
+  const [linkParentOpen, setLinkParentOpen] = useState(false)
 
   const runFix = (key: string, action: (id: string) => Promise<{ ok: boolean; error?: string }>) => {
     setFixingKey(key)
@@ -94,14 +95,15 @@ function FixButtons({ row }: { row: EnrichedActivationRow }) {
     })
   }
 
-  const fixes: { key: string; show: boolean; label: string; icon: React.ReactNode; action: (id: string) => Promise<{ ok: boolean; error?: string }> }[] = [
-    {
-      key: "parentLink",
-      show: !row.wiring.parentLinked && row.wiring.athleteResolved,
-      label: "Link parent",
-      icon: <Link2 className="mr-1.5 h-3.5 w-3.5" />,
-      action: fixParentLinkAction,
-    },
+  const showParentPicker = !row.wiring.parentLinked && row.wiring.athleteResolved
+
+  const fixes: {
+    key: string
+    show: boolean
+    label: string
+    icon: ReactNode
+    action: (id: string) => Promise<{ ok: boolean; error?: string }>
+  }[] = [
     {
       key: "profileActive",
       show: (!row.wiring.profileActive || !row.wiring.checkoutLive) && row.wiring.athleteResolved,
@@ -119,23 +121,55 @@ function FixButtons({ row }: { row: EnrichedActivationRow }) {
   ]
 
   const visibleFixes = fixes.filter((f) => f.show)
-  if (visibleFixes.length === 0) return null
+  if (!showParentPicker && visibleFixes.length === 0) return null
 
   return (
-    <div className="flex flex-wrap gap-2 pt-2">
-      {visibleFixes.map((f) => (
-        <Button
-          key={f.key}
-          size="sm"
-          variant="outline"
-          disabled={pending}
-          className="h-7 text-xs"
-          onClick={() => runFix(f.key, f.action)}
-        >
-          {fixingKey === f.key ? "Fixing..." : <>{f.icon}{f.label}</>}
-        </Button>
-      ))}
-    </div>
+    <>
+      <ActivationLinkParentDialog
+        open={linkParentOpen}
+        onOpenChange={setLinkParentOpen}
+        requestId={row.id}
+        fundraisingSlug={row.fundraising_slug}
+        onSuccess={() => router.refresh()}
+      />
+      <div className="flex flex-col gap-2 pt-2">
+        <p className="text-[11px] leading-snug text-amber-800/90 dark:text-amber-200/80">
+          <strong className="font-medium">Link parent</strong> opens a picker — choose the parent&apos;s RecruitNC login (Auth{" "}
+          <code className="rounded bg-muted px-1 py-px text-[10px]">user.id</code>). Nothing links until you confirm an account.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {showParentPicker ? (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={pending}
+              className="h-7 text-xs"
+              onClick={() => setLinkParentOpen(true)}
+            >
+              <Link2 className="mr-1.5 h-3.5 w-3.5" />
+              Link parent…
+            </Button>
+          ) : null}
+          {visibleFixes.map((f) => (
+            <Button
+              key={f.key}
+              size="sm"
+              variant="outline"
+              disabled={pending}
+              className="h-7 text-xs"
+              onClick={() => runFix(f.key, f.action)}
+            >
+              {fixingKey === f.key ? "Fixing..." : (
+                <>
+                  {f.icon}
+                  {f.label}
+                </>
+              )}
+            </Button>
+          ))}
+        </div>
+      </div>
+    </>
   )
 }
 
