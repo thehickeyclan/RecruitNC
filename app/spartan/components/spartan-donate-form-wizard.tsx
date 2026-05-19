@@ -415,7 +415,7 @@ export function SpartanDonateFormWizard({
     const items: { id: string; kicker: string; text: string }[] = []
     if (!flow) return items
     if (flow === "race") {
-      items.push({ id: "path", kicker: "Path", text: "Race + wrestler credit" })
+      items.push({ id: "path", kicker: "Path", text: "Race + Training Fund wrestler notation" })
       if (raceFor) {
         items.push({
           id: "runner",
@@ -854,7 +854,7 @@ export function SpartanDonateFormWizard({
                 Race
               </button>
               <p className="text-[10px] leading-snug text-[#777]">
-                Spartan distance + <strong className="text-[#999]">credit a wrestler</strong>. You get registration follow-up{" "}
+                Spartan distance + <strong className="text-[#999]">name a wrestler for Training Fund tagging</strong>. You get registration follow-up{" "}
                 <strong className="text-[#999]">after</strong> you pay.
               </p>
             </div>
@@ -877,7 +877,7 @@ export function SpartanDonateFormWizard({
             </div>
           </div>
           <p className="mt-3 rounded border border-[#C8A94A]/35 bg-[#1a170d] px-3 py-2.5 text-[11px] leading-snug text-[#bbb] sm:text-xs">
-            <strong className="text-[#C8A94A]">Two kids?</strong> Finish once, then start again for the second credit.
+            <strong className="text-[#C8A94A]">Two kids?</strong> Finish checkout once for the first wrestler notation, then start again for the second.
           </p>
         </div>
       )}
@@ -931,7 +931,8 @@ export function SpartanDonateFormWizard({
             <>
               <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#C8A94A]">Choose how to give</p>
               <p className="text-xs leading-snug text-[#9ca3af]">
-                Both options complete the same secure checkout ($5 minimum). Gifts are made to NC United Wrestling.
+                Both options complete the same secure checkout ($5 minimum). Gifts are charitable contributions to NC United Wrestling for the NC United
+                Training Fund.
               </p>
               <div
                 id="spartan-donate-step1"
@@ -961,7 +962,8 @@ export function SpartanDonateFormWizard({
                 >
                   <span className="block">Support {athleteEmbedGiftTitle}</span>
                   <span className="mt-2 block text-[11px] font-normal leading-snug text-[#cbb87a]">
-                    Gift to NC United with donor preference recorded for this wrestler&apos;s training and competition costs.
+                    Training Fund contribution noted in connection with this wrestler for eligible wrestling costs under nonprofit policy—not cash to them
+                    personally.
                   </span>
                 </button>
                 <button
@@ -988,8 +990,8 @@ export function SpartanDonateFormWizard({
               </p>
               <p className="text-xs text-[#9ca3af]">
                 {fh
-                  ? "Choose how your gift should count — both options use the same secure checkout ($5 minimum)."
-                  : "Credit a wrestler, or the NC United Training Fund."}
+                  ? "Same Training Fund checkout—choose whether yours is broadly program-wide or noted for a wrestler."
+                  : "Note a wrestler so your Training Fund gift is documented accordingly, or give to the unrestricted training pool."}
               </p>
               <div
                 id="spartan-donate-step1"
@@ -1027,7 +1029,7 @@ export function SpartanDonateFormWizard({
         <div
           className={`relative mt-5 rounded-lg border border-l-4 border-l-[#C8A94A] p-3 sm:p-4 ${fh ? "border-white/15 bg-[#0B2545]/45" : "border-[#4a3d1a] bg-[#141008]"}`}
         >
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#C8A94A]">Wrestler to credit</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#C8A94A]">Name on Training Fund gift</p>
           <p className="mt-1 text-xs leading-snug text-[#b9a86e]">Search and select — or type a name if they are not in the list.</p>
           <label className="mt-3 block text-sm font-medium text-[#ddd]" htmlFor="spartan-athlete-search">
             Search
@@ -1309,7 +1311,7 @@ export function SpartanDonateFormWizard({
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#888]">Review</p>
           <ul className="mt-2 space-y-1.5 text-sm text-[#ccc]">
             <li>
-              <span className="text-[#666]">Type:</span> {donateMode === "general" ? "NC United Training Fund" : "Wrestler credit"}
+              <span className="text-[#666]">Type:</span> {donateMode === "general" ? "NC United Training Fund" : "Training Fund — wrestler noted"}
             </li>
             {donateMode === "athlete" && (
               <li>
@@ -1351,7 +1353,7 @@ export function SpartanDonateFormWizard({
       {flow === "race" && raceStep === 1 && (
         <div className="mt-5 space-y-3 rounded border border-[#CC0000]/30 bg-[#1a0a0a] p-3 sm:p-4">
           <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#C8A94A]">Who is paying (receipt)?</p>
-          <p className="text-xs text-[#9ca3af]">Name and email for the card / tax receipt. The wrestler you credit is in a later step.</p>
+          <p className="text-xs text-[#9ca3af]">Name and email for the card / tax acknowledgement. Naming a wrestler for the Training Fund comes in another step.</p>
           <div>
             <label htmlFor="spartan-race-donor-name" className="text-sm font-medium text-[#ccc]">
               Full name or organization
@@ -1528,8 +1530,10 @@ export function SpartanDonateFormWizard({
 
       {flow === "race" && raceStep === 4 && (
         <div className="relative mt-5 rounded-lg border border-[#4a3d1a] border-l-4 border-l-[#C8A94A] bg-[#141008] p-3 sm:p-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#C8A94A]">Wrestler to credit (required)</p>
-          <p className="mt-1 text-xs text-[#b9a86e]">Search and select, or use manual name. Parent pays, child gets credit is fine.</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#C8A94A]">Training Fund — wrestler name (required)</p>
+          <p className="mt-1 text-xs text-[#b9a86e]">
+            Search/select or manual entry—fine when a parent checks out naming the wrestler benefiting from administered program expenses (not informal cash).
+          </p>
           <label className="mt-2 block text-sm text-[#ddd]" htmlFor="spartan-race-athlete-search">
             Search
           </label>
@@ -1637,9 +1641,9 @@ export function SpartanDonateFormWizard({
           <p className="mt-1.5 text-[12px] leading-relaxed text-[#aaa]">
             <strong className="font-medium text-[#e5e5e5]">Recommended</strong> team fundraising for{" "}
             {SPARTAN_RACE_TIERS.find((t) => t.id === tierOrDefault)?.name ?? "this distance"}. It aligns with the usual
-            suggested gift for that race — not a second Spartan entry fee. This is your tax-deductible{" "}
-            <span className="text-[#ccc]">donation to NC United</span>; change the number to give more, less, or the same
-            (minimum $5).
+            suggested gift for that race — not a second Spartan entry fee. This is a charitable contribution to NC United Wrestling (Training Fund / program paths
+            as documented at checkout) — not a Spartan retail purchase. Acknowledgement follows IRC standards; deductible treatment varies by donor — ask your tax
+            advisor. Change the dollar amount to give more, less, or the same (minimum $5).
           </p>
           <label className="mt-3 block text-xs text-[#888]" htmlFor="spartan-amount-usd-r">
             Gift amount (dollars)
@@ -1717,7 +1721,7 @@ export function SpartanDonateFormWizard({
               <span className="text-[#666]">Distance:</span> {SPARTAN_RACE_TIERS.find((t) => t.id === tierOrDefault)?.name}
             </li>
             <li>
-              <span className="text-[#666]">Wrestler credit:</span>{" "}
+              <span className="text-[#666]">Training Fund wrestler notation:</span>{" "}
               {athleteQuery.trim() || manualCreditTrimmed || "—"}
             </li>
             <li>
@@ -1792,7 +1796,7 @@ export function SpartanDonateFormWizard({
       )}
 
       {flow === "race" && raceStep === RACE_STEPS && !hasAthleteCredit && (
-        <p className="mt-2 text-center text-[11px] text-amber-200/90">Go back to the wrestler step and select or enter a name to credit.</p>
+        <p className="mt-2 text-center text-[11px] text-amber-200/90">Go back to the wrestler step and select or enter a name so we can flag the Training Fund gift correctly.</p>
       )}
 
       {!flow && !fundraisingHub && <p className="mt-4 text-center text-[11px] text-[#666]">Choose Race or Donate to begin.</p>}

@@ -88,7 +88,7 @@ export default async function FundraisingCampaignLandingPage({
               className="font-medium underline-offset-4 hover:underline"
               style={{ color: NAVY }}
             >
-              Campaign leaderboard
+              Training Fund leaderboard (this campaign)
             </HardLink>
             <HardLink href="/fundraising" className="font-medium underline-offset-4 hover:underline" style={{ color: NAVY }}>
               ← All fundraising campaigns

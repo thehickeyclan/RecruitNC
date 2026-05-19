@@ -1,24 +1,30 @@
 /**
- * Donor-facing copy aligned with nonprofit treatment of designated / preferred gifts:
- * contribution to NC United, organizational discretion, donor preference — not personal gifts to athletes.
+ * Donor-facing disclosures — wording reviewed with NC United accountants.
  *
- * CPA should review periodically; wording may be adjusted after legal counsel.
+ * Receipts/acknowledgements are prepared for IRC charitable-gift documentation.
+ * Website copy should not imply every donor may deduct—but should encourage donors
+ * to confirm how gifts fit their own tax situation with an advisor (no over-correction away from lawful treatment).
  */
 
 /**
- * Neutral tax line for NC United fundraising checkout — same for donor-preference athlete paths and the training fund.
- * CPA may adjust wording; avoid implying certainty of deductibility on either path (both are gifts to NC United via Stripe checkout).
+ * Default tax line across checkout, hub, athlete pages — confident on receipt correctness; donor-specific on deductions.
  */
 export const NC_UNITED_CONTRIBUTIONS_TAX_DISCLAIMER =
-  "Contributions are made to NC United Wrestling. Whether your gift is deductible depends on IRS rules and your tax advisor."
+  "NC United acknowledgements are prepared consistently with IRC rules for charitable gifts. Whether your gift is deductible on your tax return depends on your situation—consult your tax advisor."
 
-/** Paragraph for athlete “How your support helps” blocks (checkout live — keep concise; CPA may refine). */
+/**
+ * Brief reassurance below Training Fund-focused copy (CPA: governance / charter path in good order for this pool).
+ */
+export const NC_UNITED_TRAINING_FUND_GOVERNANCE_DISCLAIMER =
+  "Training Fund gifts are made to NC United Wrestling under our nonprofit governance for exempt-purpose wrestling support."
+
+/** Paragraph for athlete “How your support helps” blocks (checkout live — keep concise). */
 export function athletePageSupportHelpParagraph(displayName: string, athleteFirstName: string): string {
   const who = athleteFirstName.trim() || displayName.trim() || "this athlete"
-  return `Your gift is made to NC United Wrestling (501(c)(3)), not as a personal payment to ${who}. When you complete checkout, you may express donor preference toward ${who}'s training and competition costs; NC United applies gifts under exempt purpose and its policies.`
+  return `Your contribution is made to NC United Wrestling for the NC United Training Fund, noted in ${who}'s name, and is administered toward eligible training and competition costs under NC United policy—not cash or property paid directly to ${who}.`
 }
 
-/** Brief receipt / checkout note paired with athletePageSupportHelpParagraph — avoids a long checklist before “Donate”. */
+/** Brief receipt note paired with athletePageSupportHelpParagraph — avoids a long checklist before Donate. */
 export function athletePageCheckoutAcknowledgementNote(): string {
-  return "You'll receive email acknowledgment from NC United Wrestling after you give (check spam). NC United absorbs card-processing fees on hub fundraising checkouts where campaign rules allow — your contribution stays governed as a charitable gift to NC United. Ask your tax advisor if you have questions about deductions."
+  return "After checkout, NC United emails your charitable gift acknowledgement (consistent with IRC documentation rules)—check spam. NC United absorbs card-processing fees on hub fundraising checkouts where campaign rules allow. Ask your advisor how deductions apply to you."
 }

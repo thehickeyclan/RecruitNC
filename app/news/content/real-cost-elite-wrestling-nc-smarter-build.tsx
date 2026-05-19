@@ -368,34 +368,38 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
         It is a wrestling family taking care of the wrestling community.
       </p>
       <p>
-        <strong>Three ways to participate — all fully tax-deductible:</strong>
+        <strong>Three ways to participate — each runs through nonprofit checkout to NC United Wrestling for the NC United Training Fund:</strong>
       </p>
       <ul>
         <li>
-          <strong>Race</strong> — Register for any Spartan Race event at a discounted rate through NC United. Designate your donation to a specific
-          athlete or the NC United general training fund. Spartan sends your entry code directly.
+          <strong>Race</strong> — Register through NC United checkout for Fayetteville Spartan; document your charitable gift naming a wrestler (or broader
+          Training Fund support) exactly as prompts guide. Spartan sends registration follow-up separately from how NC United acknowledges the gift.
         </li>
         <li>
-          <strong>Sponsor an athlete</strong> — Make a tax-deductible donation in support of a specific wrestler. Search their name at checkout —
-          your gift credits directly to their training and competition costs.
+          <strong>Sponsor (name a wrestler)</strong> — Charitable contribution to NC United Wrestling for the NC United Training Fund, documented in checkout in
+          connection with that wrestler for eligible wrestling training/competition expenses under nonprofit policy—not cash paid directly into their pocket.
         </li>
         <li>
-          <strong>Give</strong> — Make a direct tax-deductible donation to the NC United training fund, supporting NC wrestlers statewide.
+          <strong>Give</strong> — Contribution to NC United Wrestling for the NC United Training Fund pool supporting wrestling programs statewide —
+          acknowledgements follow IRC charitable-gift documentation rules; deductible treatment varies by donor.
         </li>
       </ul>
 
-      <h3>What the deduction actually means</h3>
+      <h3>What the charitable pathway can unlock</h3>
       <p>
-        Say your uncle donates $500 to NC United in your wrestler&apos;s name. At tax time he deducts $500 from his taxable income. In a 22% bracket
-        that saves him $110 on his tax bill — his $500 donation effectively costs him $390 out of pocket. And 100% of it goes to your athlete&apos;s
-        training. Compare that to paying fees to a non-501(c)(3): no deduction, no accountability, no benefit at tax time.
+        When uncle gives $500 to NC United Wrestling (documented toward your wrestler for the NC United Training Fund checkout path), IRC rules—and his own
+        tax facts—might let him deduct that gift on his schedule A the way many donors do when they itemize charitable contributions. Nobody should promise that
+        math from the athlete hallway: his CPA decides whether thresholds, taxable income assumptions, substantiation timing, etc. beat out the standard deduction
+        story. Compared with dumping fees through a bucket that&apos;s{" "}
+        <strong>not</strong> a recognized exempt organization checkout, charitable gifts routed through NC United carry nonprofit accountability plus the
+        documentation serious donors attach to filings when they qualify.
       </p>
 
       <h3>The math every athlete needs to run</h3>
       <p>
         <strong>10 donors × $155 = $1,550 toward your summer training fund.</strong>
       </p>
-      <p>Not a general pool. Not overhead. Directly to your camps, travel, and competition costs. Earned by making 10 phone calls.</p>
+      <p>Not phantom overhead—NC United administers disbursements consistent with exempt purpose so families know how training and competition costs line up policy-wise.</p>
       <p>
         Athletes — build your network. Make the ask. Show up for your own development the way you show up on the mat.
       </p>
@@ -417,7 +421,8 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
       <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-1 shadow-sm">
         <RealCostSpartanCampaignGraphic />
         <figcaption className="border-t border-slate-200 bg-white px-3 py-2.5 text-center text-sm text-slate-600">
-          Three ways to participate; every dollar is a charitable gift to NC United. See live options on the campaign page.
+          Three ways to participate via NC United&apos;s charitable checkout — each acknowledgment follows IRC charitable-gift standards while donors confirm their
+          own deductibility questions with tax counsel.
         </figcaption>
       </figure>
 
@@ -428,8 +433,9 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
         athlete to become.
       </p>
       <p>
-        A 501(c)(3) nonprofit doesn&apos;t eliminate the cost of wrestling. But it does something no for-profit organization ever could — it turns
-        the entire community into investors in your athlete&apos;s development, with the IRS sharing the cost through the tax code.
+        A 501(c)(3) nonprofit doesn&apos;t eliminate the cost of wrestling. But it does something no for-profit organization ever could — it turns the entire
+        community into partners behind athlete development—with charitable recognition and documentation rails so donors who qualify can work legitimate tax
+        benefits into their filings alongside NC United stewardship.
       </p>
       <p>
         <strong>That&apos;s not a small thing. That&apos;s the whole game.</strong>
@@ -443,7 +449,8 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
       <footer className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
         <p className="my-2">
           <em>
-            NC United Wrestling is a registered 501(c)(3) nonprofit. EIN: <strong>99-3757238</strong>. All donations are fully tax-deductible.
+            NC United Wrestling is a registered 501(c)(3) nonprofit. EIN: <strong>99-3757238</strong>. Contributions are charitable gifts routed through exempt
+            organization stewardship; IRC-aligned acknowledgements support donors who qualify; whether your gift is deductible for you sits with IRS rules plus your CPA.
             Nothing in this article is tax, legal, or investment advice — consult a licensed professional before making planning decisions.
           </em>
         </p>

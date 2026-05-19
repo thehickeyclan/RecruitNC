@@ -27,7 +27,7 @@ export function DonationSection() {
         </div>
 
         <p className="mt-8 text-xs text-[#555]">
-          501(c)(3) · EIN {NCU_EIN} ·{" "}
+          501(c)(3) · EIN {NCU_EIN} · IRC-aligned acknowledgement; whether you deduct is donor-specific ·{" "}
           <a href="mailto:info@ncwrestlingunited.com" className="text-[#C8A94A] hover:underline">
             help
           </a>

@@ -64,8 +64,8 @@ export function DigitalWalletGovernancePlaybook() {
           fast payout — often same business day when paperwork is complete (bank cutoffs and staffing can shift timing).
         </li>
         <li>
-          <strong className="text-white/95">Transparency where donors &amp; boards expect it.</strong> Public athlete pages and hub leaderboards show
-          donor-visible activity where campaigns publish it; the wallet shows family-facing raised vs spent vs available — together they answer “what came
+          <strong className="text-white/95">Transparency where donors &amp; boards expect it.</strong> Public athlete pages and hub Training Fund contribution
+          rankings show donor-visible activity where campaigns publish it; the wallet shows family-facing raised vs spent vs available — together they answer “what came
           in” and “what moved out under policy.”
         </li>
         <li>

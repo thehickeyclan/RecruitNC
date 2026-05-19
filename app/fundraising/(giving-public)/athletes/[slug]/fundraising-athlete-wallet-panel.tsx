@@ -21,7 +21,7 @@ type Props = {
 }
 
 /**
- * Family / staff only — Raised uses lifetime mirror gross so it matches Available math; hub leaderboard shown when it differs.
+ * Family / staff only — Raised uses lifetime mirror gross so it matches Available math; Training Fund hub window total shown when it differs from lifetime.
  */
 export function FundraisingAthleteWalletPanel({ row, firstName }: Props) {
   const lifetimeRaised = row.totalCents
@@ -94,14 +94,14 @@ export function FundraisingAthleteWalletPanel({ row, firstName }: Props) {
             hubRaised !== lifetimeRaised ||
             (typeof hubGiftCount === "number" && hubGiftCount !== lifetimeGiftCount) ? (
               <p className="mt-1 text-[10px] leading-snug text-white/35">
-                Hub leaderboard {formatUsd(hubRaised)}
+                Training Fund hub window total {formatUsd(hubRaised)}
                 {typeof hubGiftCount === "number"
                   ? ` · ${hubGiftCount} gift${hubGiftCount !== 1 ? "s" : ""}`
                   : ""}{" "}
                 (Stripe window)
               </p>
             ) : (
-              <p className="mt-1 text-[10px] text-emerald-400/70">Matches hub leaderboard gross for this athlete</p>
+              <p className="mt-1 text-[10px] text-emerald-400/70">Matches Training Fund leaderboard gross for this wrestler</p>
             )
           ) : null}
         </div>

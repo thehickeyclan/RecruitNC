@@ -10,7 +10,7 @@ const CHECKOUT_ANCHOR = "spartan-checkout"
 export const metadata: Metadata = {
   title: "NC United Training Fund | Fundraising",
   description:
-    "Support the NC United Wrestling Training Fund — broad program funding for wrestlers training and competing year-round. Gifts to NC United (501(c)(3)); ask your advisor about deductions.",
+    "Support NC United Wrestling's NC United Training Fund — year-round wrestling support with nonprofit oversight and IRC-aligned acknowledgement; ask your advisor about your deduction.",
 }
 
 export default async function FundraisingTrainingFundPage({
@@ -44,10 +44,10 @@ export default async function FundraisingTrainingFundPage({
           Training Fund
         </h1>
         <p className="mt-3 text-base leading-relaxed text-white/70">
-          The <strong className="text-white/90">NC United Training Fund</strong> supports wrestlers who need resources to train
-          and compete <strong className="text-white/90">nationally, year-round</strong>. Gifts are made to NC United Wrestling —
-          North Carolina <strong className="text-white/90">501(c)(3)</strong> — for the general training fund, not as a personal
-          transfer to one athlete. Consult your tax advisor about deductibility.
+          The <strong className="text-white/90">NC United Training Fund</strong> backs wrestlers who need resources to train and compete nationally,
+          year-round. Gifts are charitable contributions to NC United Wrestling — North Carolina <strong className="text-white/90">501(c)(3)</strong> — for this
+          governed program pool, not informal cash to one athlete&apos;s pocket. Receipts comply with IRC charitable documentation standards; deductible
+          treatment still depends on your tax facts — consult your tax advisor.
         </p>
 
         {cancelled ? (

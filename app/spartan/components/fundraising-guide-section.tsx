@@ -1,8 +1,8 @@
 export function FundraisingGuideSection() {
   const items = [
     {
-      q: "How does credit go to the right wrestler?",
-      a: 'At checkout, search and tap the athlete. "Your name" is only who pays — credit follows whoever you select in search.',
+      q: "How does a gift show for the right wrestler?",
+      a: "At checkout, search and tap the wrestler — your charitable gift stays with NC United Wrestling for the NC United Training Fund noted in connection with them. Who pays by card isn't always the same person cheering from the sidelines; that payer name drives the emailed acknowledgement.",
     },
     {
       q: "Is there a minimum gift? Can I enter any amount?",
@@ -14,11 +14,11 @@ export function FundraisingGuideSection() {
     },
     {
       q: "Can I sign up for any race distance and still align to an athlete?",
-      a: "Yes. Pick any distance from the menu at checkout, then search and select the wrestler to credit. You can also sponsor or donate without racing — use Sponsoring (one athlete) or Donating (NC United fund only).",
+      a: "Yes. Pick any distance from the menu at checkout, then search and select the wrestler to document on your Training Fund gift. You can also sponsor or donate without racing — sponsoring (Training Fund notation for one wrestler) or donating to the NC United Training Fund pool.",
     },
     {
-      q: "Are gifts tax-deductible?",
-      a: "Yes. NC United is a 501(c)(3); you’ll get a receipt.",
+      q: "Are gifts charitable / deductible?",
+      a: "Gifts complete as charitable contributions to NC United Wrestling — you'll receive an IRC-style acknowledgment email. Whether you may deduct on your taxes depends on your situation (AGI floors, filing status, QCD rules, etc.) — confirm with your tax advisor.",
     },
     {
       q: "What can money be used for?",

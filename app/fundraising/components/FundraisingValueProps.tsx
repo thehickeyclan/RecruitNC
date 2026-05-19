@@ -7,7 +7,7 @@ function displayFont(c: string) {
 
 /**
  * Illustrative only — mid-range estimate often cited for consumer donation / crowdfunding
- * platform + processing bundles. Not NC United’s actual fee structure or a guarantee.
+ * platform + processing bundles. Not NC United's actual fee structure or a guarantee.
  */
 const ILLUSTRATIVE_PLATFORM_FEE_RATE = 0.032
 
@@ -19,8 +19,8 @@ const CARDS: Card[] = [
     body: "NC United Wrestling is a North Carolina public charity (EIN 99-3757238). Deduction eligibility is donor-specific; the nonprofit pathway still unlocks matching gifts, corporate giving, and institutional support in ways typical P2P apps and most personal crowdfunding pages do not.",
   },
   {
-    title: "Donor preference for a wrestler or the training fund",
-    body: "At checkout you indicate support for NC United — a specific wrestler (NCU code) or the NC United Training Fund. Donor preference drives what we display in nonprofit reporting; funds flow under NC United policy, including approved reimbursement workflows for eligible costs.",
+    title: "NC United Training Fund — optionally in a wrestler's name",
+    body: "Your gift funds NC United Wrestling's NC United Training Fund. Naming a wrestler at checkout aligns your contribution under policy with qualifying training and travel—plus public recognition totals—rather than implying an informal payout to families.",
   },
   {
     title: "Nonprofit checkout — built for wrestling",

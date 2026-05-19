@@ -27,9 +27,9 @@ export function WhyNCUnited({ hero }: { hero: FundraisingHubHeroStats }) {
             team can defend—without treating your gift like a casual app transfer or a generic crowdfunding page.
           </p>
           <p className="mt-4 text-base leading-relaxed text-white">
-            NC United is a registered 501(c)(3) public charity (EIN 99-3757238). That pathway may allow eligible donors to
-            claim charitable deductions (subject to IRC rules and counsel), plus matching, corporate, and foundation
-            giving—in a way that works very differently from typical person-to-person apps or personal fundraising sites.
+            NC United is a registered 501(c)(3) public charity (EIN 99-3757238). Gifts run through exempt-purpose stewardship with acknowledgements aligned to
+            IRC charitable-gift standards; deductible treatment depends on each donor&apos;s situation—matching, corporate, and foundation giving still work far
+            more effectively here than via informal transfers.
           </p>
         </div>
 
@@ -48,8 +48,8 @@ export function WhyNCUnited({ hero }: { hero: FundraisingHubHeroStats }) {
             </thead>
             <tbody className="text-white/85">
               <tr className="border-b border-white/[0.05]">
-                <td className="px-3 py-2.5">Tax-deductible (when eligible)</td>
-                <td className="px-3 py-2.5 text-center text-sm font-semibold text-emerald-300/95">Yes</td>
+                <td className="px-3 py-2.5">Charitable deductions (eligible donors*)</td>
+                <td className="px-3 py-2.5 text-center text-sm font-semibold text-emerald-300/95">Yes*</td>
                 <td className="px-3 py-2.5 text-center text-xs text-white/60">Usually no</td>
                 <td className="px-3 py-2.5 text-center text-xs text-white/60">Usually no</td>
               </tr>

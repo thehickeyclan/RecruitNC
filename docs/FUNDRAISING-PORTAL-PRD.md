@@ -267,5 +267,8 @@ Prefer colocating under `app/fundraising/**` and `components/fundraising/**` as 
 
 ---
 
-*NC United Wrestling — 501(c)(3). EIN: 99-3757238.*  
+*NC United Wrestling — 501(c)(3). EIN: 99-3757238.*
+
+*Stakeholder-facing or archived copy about gifts/receipts should match [`archive/docs/CHARITABLE-GIVING-COPY-BASELINE.md`](../archive/docs/CHARITABLE-GIVING-COPY-BASELINE.md) (Training Fund / NC United framing, IRC-style acknowledgments, checkout naming as documentation — no unconditional “tax-deductible”; donors confirm deductibility with their advisor).*
+
 *This PRD is an internal planning document; tax and legal claims in public copy require professional review.*

@@ -184,10 +184,10 @@ export function FundraisingActivityClient({ campaigns }: { campaigns: Fundraisin
             Paid checkouts in the <strong className="text-white">lookback window you select below</strong>. A wider window
             only changes totals when there are older checkouts <em>outside</em> the shorter window — if your drive is newer
             than that, presets usually show the same raised amount. The <strong className="text-white">totals card</strong> is
-            the Stripe-backed rollup for this page&apos;s filters and should match the sum of the table. The hub{" "}
-            <strong className="text-white">leaderboard</strong> sums gifts attributed via donor preference to athletes only;
+            the Stripe-backed rollup for this page&apos;s filters and should match the sum of the table.             The hub{" "}
+            <strong className="text-white">Training Fund contribution leaderboard</strong> sums gifts documented for wrestlers for the NC United Training Fund only;
             headline &ldquo;Raised&rdquo;
-            also includes NC United general-fund gifts, so adding leaderboard rows may be less than the hero.
+            also includes NC United general-fund gifts, so adding Training Fund leaderboard rows may be less than the hero.
           </p>
         </div>
       </header>

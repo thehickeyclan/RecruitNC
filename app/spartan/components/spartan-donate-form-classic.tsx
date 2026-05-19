@@ -997,16 +997,18 @@ export function SpartanDonateFormClassic() {
         <div className="mt-5 rounded border border-[#2a2a2a] bg-[#0f0f0f] px-3 py-3 text-[12px] leading-snug text-[#9ca3af]">
           <p>
             {donateMode === "general"
-              ? "Tax-deductible gift to the NC United Training Fund."
-              : "Tax-deductible gift to NC United — support only, not a race registration."}
+              ? "Charitable contribution to NC United Wrestling for the NC United Training Fund pool — IRC-aligned acknowledgement; deductibility varies by donor (ask your advisor)."
+              : "Charitable contribution to NC United Wrestling for the NC United Training Fund with wrestler notation as selected — support only through nonprofit checkout (not Spartan retail)."}{" "}
           </p>
           {donateMode === "athlete" && codeForCheckout && athleteQuery.trim() && (
-            <p className="mt-1.5 font-medium text-[#ccc]">Credit: {athleteQuery}</p>
+            <p className="mt-1.5 font-medium text-[#ccc]">Training Fund notation: {athleteQuery}</p>
           )}
           {donateMode === "athlete" && !codeForCheckout && hasManualCredit && (
-            <p className="mt-1.5 font-medium text-[#ccc]">Credit request: {manualCreditTrimmed}</p>
+            <p className="mt-1.5 font-medium text-[#ccc]">Training Fund notation (manual): {manualCreditTrimmed}</p>
           )}
-          <p className="mt-2 text-[11px] text-[#666]">Stripe emails your receipt after you pay.</p>
+          <p className="mt-2 text-[11px] text-[#666]">
+            Stripe emails acknowledgement after payment. Whether you deduct is between you and your tax advisor — not tax advice here.
+          </p>
         </div>
       )}
 

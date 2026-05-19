@@ -57,7 +57,7 @@ export function RaceTierCard({ tier, variant = "default" }: RaceTierCardProps) {
             {gift}
           </p>
           <p className="mt-2 text-xs leading-snug text-[#888]">
-            Suggested gift · Tax-deductible · Spartan registration steps arrive by email after checkout
+            Suggested charitable gift toward NC United (Training Fund notation at checkout as applicable) · IRC-aligned acknowledgement emailed after checkout · Spartan registration steps separately
           </p>
         </>
       )}

@@ -51,8 +51,8 @@ export function ScholarshipFundCheckout({
             Secure checkout
           </h2>
           <p className="mx-auto mt-2 max-w-md text-center text-[13px] leading-snug text-white/70">
-            <strong className="font-semibold text-white/85">{scholarshipName}</strong> — tax-deductible gifts ($5 minimum).
-            Your receipt arrives by email after you finish checkout.
+            <strong className="font-semibold text-white/85">{scholarshipName}</strong> — charitable contributions to NC United Wrestling from{" "}
+            <span className="tabular-nums">$5</span>+. IRC-aligned acknowledgement by email after checkout; deductible treatment varies by donor — confirm with your tax advisor.
           </p>
           <div className="mt-6 w-full text-left">
             <Suspense fallback={<FormFallback />}>

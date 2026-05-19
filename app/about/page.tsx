@@ -80,8 +80,9 @@ export default function AboutPage() {
                 and connect the wrestling community.
               </p>
               <p className="text-sm text-gray-200">
-                All donations are tax-deductible to the extent allowed by law. We are committed to using resources 
-                to serve athletes, families, and coaches across North Carolina.
+                NC United Wrestling provides charitable acknowledgement consistent with IRC rules for exempt-organization contributions. Deduction eligibility
+                depends on each donor&apos;s tax situation — please confirm with a tax advisor. We remain committed to using resources to serve athletes,
+                families, and coaches across North Carolina.
               </p>
             </CardContent>
           </Card>

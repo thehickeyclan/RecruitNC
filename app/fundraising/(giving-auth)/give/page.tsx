@@ -5,7 +5,7 @@ import { FundraisingGiveCheckout } from "./fundraising-give-checkout"
 export const metadata: Metadata = {
   title: "Give | NC United Fundraising",
   description:
-    "Give to NC United Wrestling with donor preference for a wrestler or the Training Fund ($5+) — secure nonprofit checkout.",
+    "Give to NC United Wrestling for the NC United Training Fund—with a wrestler noted at checkout if you wish, or the general training pool ($5+).",
 }
 
 export default async function FundraisingGivePage({
@@ -53,9 +53,10 @@ export default async function FundraisingGivePage({
           Make a gift
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-white/75">
-          <strong className="text-white/88">Support a wrestler</strong> — gift to NC United with donor preference at checkout —
-          or <strong className="text-white/88">give to the NC United Training Fund</strong>. Minimum{" "}
-          <span className="tabular-nums">$5</span>. Acknowledgement email follows checkout; consult your tax advisor about deductions.
+          <strong className="text-white/88">Gift in a wrestler&apos;s name</strong> — contribute to NC United Wrestling for the{" "}
+          <strong className="text-white/88">NC United Training Fund</strong> with checkout noting that wrestler—or give to the
+          unrestricted training fund pool. Minimum <span className="tabular-nums">$5</span>. IRC-aligned acknowledgement email follows checkout; ask your
+          advisor whether you may deduct.
         </p>
       </header>
 

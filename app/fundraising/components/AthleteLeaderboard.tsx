@@ -79,23 +79,24 @@ export function AthleteLeaderboard({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className={`${displayFont("text-[11px] font-extrabold uppercase tracking-[0.28em] text-[#CC0000]")}`}>
-              Field report
+              NC United Training Fund
             </p>
             <h2
               className={`${displayFont("mt-2 text-[clamp(1.85rem,4.5vw,2.65rem)] font-black uppercase tracking-tight text-white")}`}
             >
-              Athlete leaderboard
+              Athlete contributions
             </h2>
             <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/80">
-              Top ten athletes by paid gifts attributed via donor preference in the hub reporting window — all NC United hub
-              campaigns combined. Gifts = checkout sessions; donors = distinct payer emails.
+              Top ten wrestlers by paid Training Fund-linked supporter totals in this hub reporting window — all fundraising hub campaigns combined. Each row is
+              NC United Wrestling checkout where donors documented a wrestler for the NC United Training Fund (gifts = checkout sessions; donors = distinct payer
+              emails).
             </p>
           </div>
           <HardLink
             href={`/fundraising/leaderboard?campaign=all&days=${hubTransparency.lookbackDays}`}
             className={`${displayFont("shrink-0 text-sm font-extrabold uppercase tracking-wide text-[#C8A94A] underline-offset-4 hover:underline")}`}
           >
-            View all athletes →
+            View all Training Fund contributions →
           </HardLink>
         </div>
 
@@ -103,7 +104,7 @@ export function AthleteLeaderboard({
         <div className="mt-12 space-y-4 md:hidden">
           {rows.length === 0 ? (
             <p className="rounded-xl border border-white/10 bg-[#0B2545]/50 px-4 py-12 text-center text-sm text-white/45">
-              Paid gifts will populate this board as athletes earn support.
+              Paid Training Fund-linked gifts will populate this board as wrestlers earn support.
             </p>
           ) : (
             rows.map((r) => (
@@ -169,7 +170,7 @@ export function AthleteLeaderboard({
                 <th className="px-4 py-4">#</th>
                 <th className="px-4 py-4">Athlete</th>
                 <th className="px-4 py-4">School</th>
-                <th className="px-4 py-4 text-right">Raised</th>
+                <th className="px-4 py-4 text-right">Contributions</th>
                 <th className="px-4 py-4 text-right">Gifts</th>
                 <th className="px-4 py-4 text-right">Donors</th>
                 <th className="min-w-[160px] px-4 py-4">Momentum</th>
@@ -179,7 +180,7 @@ export function AthleteLeaderboard({
               {rows.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-14 text-center text-white/45">
-                    Paid gifts will populate this board as athletes earn support.
+                    Paid Training Fund-linked gifts will populate this board as wrestlers earn support.
                   </td>
                 </tr>
               ) : (

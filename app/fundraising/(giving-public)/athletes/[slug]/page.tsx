@@ -107,7 +107,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const name = publicTitleName(resolved)
   return {
     title: `Support ${name} | NC United Fundraising`,
-    description: `Make a charitable gift to NC United Wrestling (501(c)(3)) and express support for wrestlers—including ${name}—consistent with donor-preference guidelines. Secure nonprofit checkout.`,
+    description: `Make a charitable gift to NC United Wrestling (501(c)(3)) for the NC United Training Fund—with checkout context for qualifying wrestling support tied to ${name}. Secure nonprofit checkout.`,
   }
 }
 

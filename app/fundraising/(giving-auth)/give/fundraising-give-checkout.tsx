@@ -49,8 +49,8 @@ export function FundraisingGiveCheckout() {
             Secure checkout
           </h2>
           <p className="mx-auto mt-2 max-w-md text-center text-[13px] leading-snug text-white/70">
-            Search for a wrestler to show donor preference for, or choose the training fund. Minimum{" "}
-            <span className="tabular-nums">$5</span>. Checkout is on Stripe; acknowledgement is emailed to you.
+            Search for a wrestler to leave your NC United Training Fund gift in their name, or choose the general training fund pool. Minimum{" "}
+            <span className="tabular-nums">$5</span>. Checkout on Stripe; NC United emails your charitable acknowledgement after payment.
           </p>
           <div className="mt-6 w-full text-left">
             <Suspense fallback={<FormFallback />}>

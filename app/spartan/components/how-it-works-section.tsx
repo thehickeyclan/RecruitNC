@@ -3,12 +3,12 @@ export function HowItWorksSection() {
     {
       n: "01",
       title: "Pay & receipt",
-      body: "Secure checkout; NC United emails your 501(c)(3) receipt.",
+      body: "Secure checkout; NC United emails your charitable gift acknowledgement under IRC nonprofit standards.",
     },
     {
       n: "02",
-      title: "Who gets credit",
-      body: "Racing or sponsoring? Search the wrestler — one athlete per checkout.",
+      title: "Who gets documented at checkout",
+      body: "Racing or sponsoring? Search the wrestler — nonprofit checkout ties your Training Fund gift to one athlete per checkout.",
     },
     {
       n: "03",

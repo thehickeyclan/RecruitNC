@@ -62,7 +62,7 @@ export function FundraisingFooter() {
               ·
             </span>
             <HardLink href="/fundraising/leaderboard" className={FOOTER_LINK_CLASS}>
-              Leaderboard
+              Training Fund leaderboard
             </HardLink>
             <span className="hidden text-white/25 sm:inline" aria-hidden>
               ·

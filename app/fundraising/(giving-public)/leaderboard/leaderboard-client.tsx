@@ -83,7 +83,7 @@ export function LeaderboardSkeleton() {
           </div>
           <div className="mt-10 h-64 animate-pulse rounded-xl bg-white/5" />
           <p className={`${displayFont("mt-10 text-center text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]/70")}`}>
-            Loading leaderboard…
+            Loading Training Fund contribution totals…
           </p>
         </div>
       </div>
@@ -147,7 +147,7 @@ export function FundraisingLeaderboardContent({ campaigns }: { campaigns: Leader
           byAthlete?: SpartanByAthlete[]
           campaignDisplayName?: string
         }
-        if (!res.ok) throw new Error(j.error || "Could not load leaderboard")
+        if (!res.ok) throw new Error(j.error || "Could not load Training Fund contribution leaderboard")
         if (cancelled) return
         setSummary(j.summary ?? null)
         setByAthlete(Array.isArray(j.byAthlete) ? j.byAthlete : [])
@@ -217,7 +217,7 @@ export function FundraisingLeaderboardContent({ campaigns }: { campaigns: Leader
             <span className="text-white/25" aria-hidden>
               /
             </span>
-            <span className="text-white/60">Leaderboard</span>
+            <span className="text-white/60">Training Fund contributions</span>
           </nav>
 
           <div className="mt-8 flex flex-wrap items-start gap-4">
@@ -231,12 +231,13 @@ export function FundraisingLeaderboardContent({ campaigns }: { campaigns: Leader
               <h1
                 className={`${displayFont("mt-3 text-balance text-[clamp(1.85rem,5vw,3rem)] font-black uppercase leading-[0.95] tracking-tight text-white")}`}
               >
-                Fundraising leaderboard
+                NC United Training Fund — athlete contributions
               </h1>
               <p className="mt-4 max-w-2xl text-pretty text-base leading-relaxed text-white/88">
-                Paid gifts attributed to athletes via donor preference for the window you choose — same paid Stripe ledger NC
-                United uses across hub
-                fundraising. Donor names elsewhere respect listing preferences.
+                Rows sum paid supporter checkout routed to NC United Wrestling for the <strong className="text-white">NC United Training Fund</strong>
+                {" — "}
+                when donors name a wrestler at checkout we show totals as that athlete&apos;s Training Fund-linked contributions for the reporting window you
+                pick (same Stripe ledger as the fundraising hub). Donor names elsewhere respect listing preferences.
               </p>
             </div>
           </div>
@@ -302,7 +303,7 @@ export function FundraisingLeaderboardContent({ campaigns }: { campaigns: Leader
             <p className={`${displayFont("text-lg font-black uppercase tracking-tight text-white")}`}>{displayTitle}</p>
             <p className="mt-2 text-sm tabular-nums text-white/55">
               {resolvedCampaignSlug === "all"
-                ? "Athlete totals combine every registered NC United Stripe campaign in this window."
+                ? "Athlete-linked Training Fund contribution totals combine every registered NC United Stripe campaign in this window."
                 : `Stripe campaign · ${resolvedCampaignSlug}`}{" "}
               ·{" "}
               {resolvedDays === campaignDefinition.defaultLookbackDays ? (
@@ -325,7 +326,7 @@ export function FundraisingLeaderboardContent({ campaigns }: { campaigns: Leader
             </div>
           ) : error ? (
             <div className="mt-12 rounded-xl border border-amber-500/30 bg-amber-500/10 px-5 py-6 text-center">
-              <p className="font-semibold text-amber-100">Could not load leaderboard</p>
+              <p className="font-semibold text-amber-100">Could not load Training Fund contribution totals</p>
               <p className="mt-2 text-sm text-amber-100/85">{error}</p>
               <p className="mt-4 text-xs text-amber-100/70">
                 Check your connection and try again — totals load directly from our supporter API.
@@ -393,7 +394,7 @@ export function FundraisingLeaderboardContent({ campaigns }: { campaigns: Leader
                     >
                       <th className="px-4 py-4">Rank</th>
                       <th className="px-4 py-4">Athlete</th>
-                      <th className="px-4 py-4 text-right">Raised</th>
+                      <th className="px-4 py-4 text-right">Contribution total</th>
                       <th className="px-4 py-4 text-right">Gifts</th>
                       <th className="px-4 py-4 text-right">Event</th>
                     </tr>

@@ -76,7 +76,7 @@ export function HeroSection() {
         </p>
 
         <p className="mt-4 max-w-lg text-[11px] leading-relaxed tracking-[0.03em] text-neutral-500">
-          501(c)(3) tax-deductible — NC United emails your receipt after payment.
+          501(c)(3) nonprofit checkout — NC United emails your charitable acknowledgement (IRC-aligned) after payment; ask your tax advisor whether your gift may be deducted.
         </p>
       </div>
     </section>
