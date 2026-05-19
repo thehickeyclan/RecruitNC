@@ -48,8 +48,8 @@ export function WhyNCUnited({ hero }: { hero: FundraisingHubHeroStats }) {
             </thead>
             <tbody className="text-white/85">
               <tr className="border-b border-white/[0.05]">
-                <td className="px-3 py-2.5">Charitable deductions (eligible donors*)</td>
-                <td className="px-3 py-2.5 text-center text-sm font-semibold text-emerald-300/95">Yes*</td>
+                <td className="px-3 py-2.5">May qualify for charitable deduction (eligible donors*)</td>
+                <td className="px-3 py-2.5 text-center text-sm font-semibold text-emerald-300/95">Possible*</td>
                 <td className="px-3 py-2.5 text-center text-xs text-white/60">Usually no</td>
                 <td className="px-3 py-2.5 text-center text-xs text-white/60">Usually no</td>
               </tr>
@@ -84,8 +84,10 @@ export function WhyNCUnited({ hero }: { hero: FundraisingHubHeroStats }) {
                 <td className="px-3 py-2.5 text-center text-xs text-white/60">Manual</td>
               </tr>
               <tr className="border-b border-white/[0.05]">
-                <td className="px-3 py-2.5">Platform fees (illustrative)</td>
-                <td className="px-3 py-2.5 text-center text-sm font-semibold text-emerald-300/90">None added</td>
+                <td className="px-3 py-2.5">Fundraising platform fee (illustrative)</td>
+                <td className="px-3 py-2.5 text-center text-sm font-semibold text-emerald-300/90">
+                  None added<sup className="text-[0.65em] text-emerald-200/90">†</sup>
+                </td>
                 <td className="px-3 py-2.5 text-center text-sm text-white/65">Often ~3%</td>
                 <td className="px-3 py-2.5 text-center text-sm text-white/65">Varies</td>
               </tr>
@@ -97,10 +99,16 @@ export function WhyNCUnited({ hero }: { hero: FundraisingHubHeroStats }) {
               </tr>
             </tbody>
           </table>
-          <p className="px-3 pb-3 pt-2 text-[10px] leading-snug text-white/55">
-            *Deduction eligibility is donor-specific—confirm whether your gifts qualify under IRC rules with your tax
-            advisor or counsel.
-          </p>
+          <div className="space-y-1.5 px-3 pb-3 pt-2 text-[10px] leading-snug text-white/55">
+            <p>
+              *Deduction eligibility is donor-specific—confirm whether your gifts qualify under IRC rules with your tax
+              advisor or counsel.
+            </p>
+            <p>
+              <span className="text-white/65">†</span> No consumer fundraising-style platform fee is added on these NC
+              United checkouts; card networks and processors still charge their normal payment processing fees.
+            </p>
+          </div>
         </div>
       </div>
 
