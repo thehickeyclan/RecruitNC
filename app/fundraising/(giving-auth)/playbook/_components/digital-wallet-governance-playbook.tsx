@@ -21,8 +21,9 @@ export function DigitalWalletGovernancePlaybook() {
           Digital Wallet · 501(c)(3) governance (not Venmo economics)
         </h2>
         <p className="mt-4 text-base leading-relaxed text-white/85">
-          Donors give through <strong className="text-white">NC United nonprofit checkout</strong>; gifts are credited to athletes under campaign rules.
-          Families track the result in RecruitNC under{" "}
+          Donors give through <strong className="text-white">NC United nonprofit checkout</strong>; NC United retains control of all gifts, records donor preference
+          for reporting and reimbursement workflow under campaign policy (not personal custody for the athlete&apos;s wallet).
+          Families track ledger views in RecruitNC under{" "}
           <strong className="text-white">Profile → Digital wallet</strong> (coins / Wallet tab). Informal Venmo/Cash App puts money{" "}
           <strong className="text-white">outside</strong> that nonprofit custody chain — so you lose institutional lanes, unified receipts, and an
           organization-backed trail for how dollars move after checkout.
@@ -31,13 +32,14 @@ export function DigitalWalletGovernancePlaybook() {
 
       <ul className="list-disc space-y-3 pl-5 text-sm leading-relaxed text-white/82 marker:text-[#C8A94A]">
         <li>
-          <strong className="text-white/95">Governance &amp; documentation.</strong> Qualified donors get NC United documentation through nonprofit
-          rails — not “friends paying friends.” Employer matching, business gifts, and foundations overwhelmingly expect that structure.
+          <strong className="text-white/95">Governance &amp; documentation.</strong> Donors who complete nonprofit checkout receive NC United acknowledgement
+          materials through exempt-organization rails — not “friends paying friends.” Employer matching, business gifts, and foundations overwhelmingly expect that
+          structure; whether any particular gift is deductible belongs with each donor&apos;s CPA.
         </li>
         <li>
           <strong className="text-white/95">Ledger-backed balances.</strong> The wallet&apos;s <strong className="text-white">Raised</strong> view
-          reflects credited paid gifts tied to your wrestler&apos;s NC United codes for the active campaign window (same aggregates families already
-          trust on public athlete pages and the hub). It&apos;s one story — not a screenshot of personal notifications.
+          aggregates paid checkout amounts linked through donor preference to your wrestler&apos;s NC United codes for the active campaign window (same
+          aggregates families already trust on public athlete pages and the hub). It&apos;s one story — not a screenshot of personal notifications.
         </li>
         <li>
           <strong className="text-white/95">Reimbursements with records.</strong> Eligible training and competition costs run through NC United{" "}
@@ -46,14 +48,15 @@ export function DigitalWalletGovernancePlaybook() {
           “did we already pay that hotel?”
         </li>
         <li>
-          <strong className="text-white/95">Guild &amp; program holds.</strong> NC United <strong className="text-white">Guild</strong> and similar
-          allocations show alongside reimbursements so “money obligated to programming” doesn&apos;t disappear inside an informal balance — families see{" "}
-          <strong className="text-white">Available</strong> after reimbursements and holds.
+          <strong className="text-white/95">Program holds &amp; allocations.</strong> Some balances show amounts reserved toward approved NC United programming
+          (for example reimbursed training costs or allocations families initiate under NC United policy) so money committed to wrestling development
+          doesn&apos;t disappear from the reconciliation view — you still see{" "}
+          <strong className="text-white">Available</strong> after reimbursements and documented holds.
         </li>
         <li>
           <strong className="text-white/95">Card fees absorbed on hub campaigns.</strong> NC United absorbs Stripe/card processing on hub fundraising
-          checkouts so the credited athlete total reflects what donors pay — unlike typical crowdfunding rake or opaque peer-to-peer fees (always confirm
-          current campaign rules if something changes season to season).
+          checkouts so ledger totals attributed under campaign rules align with donor-paid amounts — unlike typical crowdfunding rake or opaque peer-to-peer
+          fees (always confirm current campaign rules if something changes season to season).
         </li>
         <li>
           <strong className="text-white/95">Speed without hiding the nonprofit.</strong> Paid checkout flows through nonprofit banking rails; balances
@@ -67,8 +70,8 @@ export function DigitalWalletGovernancePlaybook() {
         </li>
         <li>
           <strong className="text-white/95">Thank-you reminders tied to real gifts.</strong> The same Digital wallet tab surfaces supporter prompts so athlete
-          gratitude stays attached to credited donors — not divorced from the ledger (still read the gratitude section above: texts minimum, notes
-          preferred).
+          gratitude stays attached to recorded supporters — not divorced from the reconciliation view (still read the gratitude section above: texts minimum,
+          notes preferred).
         </li>
       </ul>
 

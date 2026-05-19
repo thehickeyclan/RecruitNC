@@ -34,8 +34,9 @@ export default async function ScholarshipDonatePage({ params }: { params: Promis
           Donate
         </h1>
         <p className="mt-4 text-sm leading-relaxed text-white/65">
-          Your gift goes to <strong className="text-white/85">{s.name}</strong>. NC United Wrestling is a North Carolina
-          501(c)(3); tax-deductible gifts are processed securely and your receipt is emailed after checkout.
+          Your gift supports <strong className="text-white/85">{s.name}</strong> as a charitable contribution to NC United
+          Wrestling — North Carolina 501(c)(3) — administered under NC United policy. Checkout is secure; acknowledgement email follows
+          payment. Ask your tax advisor whether your gift qualifies as a charitable deduction for you.
         </p>
       </div>
       <ScholarshipFundCheckout scholarshipSlug={s.slug} scholarshipName={s.name} />

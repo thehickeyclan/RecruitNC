@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect } from "react"
 import { SpartanDonateForm } from "@/app/spartan/components/spartan-donate-form"
+import { NC_UNITED_CONTRIBUTIONS_TAX_DISCLAIMER } from "@/lib/fundraising/donor-facing-disclosures"
 
 const CHECKOUT_ANCHOR_ID = "spartan-checkout"
 
@@ -47,10 +48,11 @@ export function FundraisingTrainingFundCheckout() {
             Secure checkout
           </h2>
           <p className="mx-auto mt-2 max-w-md text-center text-[13px] leading-snug text-white/70">
-            <strong className="font-semibold text-white/85">NC United Training Fund</strong> — tax-deductible gifts ($5
-            minimum) that support training, travel, and national competition year-round. You&apos;ll finish on Stripe; your
-            501(c)(3) receipt arrives by email.
+            <strong className="font-semibold text-white/85">NC United Training Fund</strong> — gifts to NC United from{" "}
+            <span className="tabular-nums">$5</span> upward for training, travel, and national competition year-round. You finish on Stripe; acknowledgement
+            email follows checkout.
           </p>
+          <p className="mx-auto mt-2 max-w-md text-center text-[11px] leading-snug text-white/48">{NC_UNITED_CONTRIBUTIONS_TAX_DISCLAIMER}</p>
           <div className="mt-6 w-full text-left">
             <Suspense fallback={<FormFallback />}>
               <SpartanDonateForm

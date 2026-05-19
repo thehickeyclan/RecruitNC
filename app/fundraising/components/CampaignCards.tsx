@@ -47,8 +47,8 @@ export function CampaignCards({ campaigns }: { campaigns: FundraisingHubCampaign
             </div>
             <div className="px-6 py-8">
               <p className="leading-relaxed text-white">
-                No timed drives are live in the board right now — general NC United giving stays open. Tax-deductible
-                gifts with athlete credit at checkout.
+                No timed drives are live on the board right now — NC United nonprofit checkout stays open year-round so you can
+                give to the organization and record donor preference for a wrestler or the Training Fund at checkout.
               </p>
               <HardLink
                 href="/fundraising/athletes"

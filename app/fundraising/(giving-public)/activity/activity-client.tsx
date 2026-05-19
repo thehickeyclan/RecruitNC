@@ -185,7 +185,8 @@ export function FundraisingActivityClient({ campaigns }: { campaigns: Fundraisin
             only changes totals when there are older checkouts <em>outside</em> the shorter window — if your drive is newer
             than that, presets usually show the same raised amount. The <strong className="text-white">totals card</strong> is
             the Stripe-backed rollup for this page&apos;s filters and should match the sum of the table. The hub{" "}
-            <strong className="text-white">leaderboard</strong> sums athlete-credited gifts only; headline &ldquo;Raised&rdquo;
+            <strong className="text-white">leaderboard</strong> sums gifts attributed via donor preference to athletes only;
+            headline &ldquo;Raised&rdquo;
             also includes NC United general-fund gifts, so adding leaderboard rows may be less than the hero.
           </p>
         </div>
@@ -276,7 +277,7 @@ export function FundraisingActivityClient({ campaigns }: { campaigns: Fundraisin
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Total raised (this view)</p>
                 <p className="mt-1 text-xl font-bold tabular-nums text-slate-900">{formatUsd(summary.totalRaisedCents)}</p>
-                <p className="mt-0.5 text-[11px] text-slate-500">Stripe paid sessions + credit corrections</p>
+                <p className="mt-0.5 text-[11px] text-slate-500">Stripe settled payments + attribution fixes</p>
               </div>
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Checkouts</p>
@@ -331,7 +332,7 @@ export function FundraisingActivityClient({ campaigns }: { campaigns: Fundraisin
                     <th className="px-4 py-3">Campaign</th>
                     <th className="px-4 py-3">Supporter</th>
                     <th className="px-4 py-3 text-right">Amount</th>
-                    <th className="px-4 py-3">Credited to</th>
+                    <th className="px-4 py-3">Preference shown as</th>
                   </tr>
                 </thead>
                 <tbody className="text-slate-800">

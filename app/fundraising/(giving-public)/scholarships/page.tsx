@@ -246,8 +246,9 @@ export default async function ScholarshipsHubPage() {
         <section className="mt-16 rounded-2xl border border-[#CC0000]/35 bg-[#CC0000]/10 px-5 py-8 text-center sm:px-8">
           <p className={df("text-[11px] font-bold uppercase tracking-[0.22em] text-[#CC0000]")}>Give</p>
           <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-white/78">
-            Gifts to a named scholarship support that program directly and are tax-deductible through NC United Wrestling,
-            our North Carolina 501(c)(3).
+            Contributions toward a named scholarship are charitable gifts to NC United Wrestling — our North Carolina 501(c)(3) —
+            administered consistent with NC United policies for that fund. Whether your contribution is deductible is between you
+            and your tax advisor.
           </p>
           <HardLink
             href="/fundraising/scholarships#scholarship-funds"

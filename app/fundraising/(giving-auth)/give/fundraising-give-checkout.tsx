@@ -49,8 +49,8 @@ export function FundraisingGiveCheckout() {
             Secure checkout
           </h2>
           <p className="mx-auto mt-2 max-w-md text-center text-[13px] leading-snug text-white/70">
-            Search for a wrestler to credit, or choose the training fund. Minimum <span className="tabular-nums">$5</span>.
-            Checkout is on Stripe; your tax receipt is emailed to you.
+            Search for a wrestler to show donor preference for, or choose the training fund. Minimum{" "}
+            <span className="tabular-nums">$5</span>. Checkout is on Stripe; acknowledgement is emailed to you.
           </p>
           <div className="mt-6 w-full text-left">
             <Suspense fallback={<FormFallback />}>

@@ -1,5 +1,6 @@
 import type { FundraisingHubHeroStats } from "@/lib/fundraising/hub-data"
 import { HardLink } from "@/components/hard-link"
+import { NC_UNITED_CONTRIBUTIONS_TAX_DISCLAIMER } from "@/lib/fundraising/donor-facing-disclosures"
 import { AthleteSearchBar } from "./AthleteSearchBar"
 
 const NAVY = "#0B2545"
@@ -66,7 +67,7 @@ export function FundraisingHero({ hero }: { hero: FundraisingHubHeroStats }) {
         <p
           className={`${displayFont("text-[10px] font-extrabold uppercase tracking-[0.32em] text-[#C8A94A] sm:text-[11px]")}`}
         >
-          Tax-deductible giving · 501(c)(3)
+          Charitable gifts to NC United · 501(c)(3)
         </p>
 
         <h1
@@ -150,15 +151,16 @@ export function FundraisingHero({ hero }: { hero: FundraisingHubHeroStats }) {
             </span>
             <span className="text-white/70">
               {" "}
-              — gifts with no athlete credit at checkout. The leaderboard below shows athlete-credited amounts only; add this line
-              to reconcile with &ldquo;Raised&rdquo; above.
+              — gifts recorded without athlete preference attribution at checkout. The leaderboard below shows amounts attributed to wrestlers via donor
+              preference only; include this figure to reconcile with &ldquo;Raised&rdquo; above.
             </span>
           </p>
         ) : null}
 
-        <p className="mx-auto mt-8 text-center text-sm text-white/88 sm:mx-0 sm:text-left">
+        <p className="mx-auto mt-8 max-w-2xl text-center text-sm text-white/88 sm:mx-0 sm:text-left">
           Registered <span className="font-semibold text-white">501(c)(3)</span> public charity · EIN{" "}
           <span className="tabular-nums text-white">99-3757238</span>
+          <span className="mt-3 block text-xs leading-snug text-white/60">{NC_UNITED_CONTRIBUTIONS_TAX_DISCLAIMER}</span>
         </p>
 
         <div className="mx-auto mt-8 max-w-xl sm:mx-0">

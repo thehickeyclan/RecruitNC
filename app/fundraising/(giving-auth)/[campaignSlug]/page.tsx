@@ -29,7 +29,7 @@ export async function generateMetadata({
   if (!c) return { title: "Campaign | NC United Fundraising" }
   return {
     title: `${c.campaignDisplayName} | Fundraising`,
-    description: `Tax-deductible giving — ${c.campaignDisplayName}. NC United Wrestling 501(c)(3).`,
+    description: `Support ${c.campaignDisplayName} through NC United Wrestling — nonprofit checkout, gifts to NC United (501(c)(3)).`,
   }
 }
 

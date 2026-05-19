@@ -28,8 +28,8 @@ export function FundraisingFooter() {
           <p>
             NC United Wrestling is a registered 501(c)(3) nonprofit.
             <br />
-            EIN: <span className="tabular-nums text-white">99-3757238</span> · All donations are fully tax-deductible to
-            the extent allowed by law.
+            EIN: <span className="tabular-nums text-white">99-3757238</span> · Contributions may be deductible to the
+            extent permitted by IRC rules and each donor&apos;s situation — confirm with your tax advisor.
           </p>
           <p>
             <a

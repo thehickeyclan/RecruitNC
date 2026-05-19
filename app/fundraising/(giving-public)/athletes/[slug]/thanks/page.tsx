@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { HardLink } from "@/components/hard-link"
+import { NC_UNITED_CONTRIBUTIONS_TAX_DISCLAIMER } from "@/lib/fundraising/donor-facing-disclosures"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
 import { resolveFundraisingAthletePublic } from "@/lib/fundraising/athlete-fundraising-profiles"
@@ -20,7 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     "Athlete"
   return {
     title: `Thank you · ${name} | NC United Fundraising`,
-    description: "Your tax-deductible gift is processing.",
+    description: `Thank you — your NC United Wrestling gift (${name}) is processing; acknowledgement follows checkout.`,
   }
 }
 
@@ -65,9 +66,11 @@ export default async function FundraisingAthleteThanksPage({ params }: Props) {
           Thank you
         </h1>
         <p className="mx-auto mt-6 max-w-md text-base leading-relaxed text-white/78">
-          Your tax-deductible gift is processing. You&apos;ll receive a receipt by email shortly (check spam or promotions).
-          Thank you for supporting {name} and NC United Wrestling.
+          Thank you — your gift to NC United Wrestling is processing. Watch for acknowledgement email shortly (check spam or
+          promotions). Donor preference toward {name} is recorded where you indicated at checkout — still a charitable gift
+          to NC United, not as a personal gift to {name}.
         </p>
+        <p className="mx-auto mt-4 max-w-md text-xs leading-relaxed text-white/50">{NC_UNITED_CONTRIBUTIONS_TAX_DISCLAIMER}</p>
         <p className="mx-auto mt-5 max-w-md text-sm leading-relaxed text-white/55">
           EIN <span className="tabular-nums">99-3757238</span>
           {" · "}

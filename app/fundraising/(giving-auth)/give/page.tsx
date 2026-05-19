@@ -5,7 +5,7 @@ import { FundraisingGiveCheckout } from "./fundraising-give-checkout"
 export const metadata: Metadata = {
   title: "Give | NC United Fundraising",
   description:
-    "Credit an NC wrestler at checkout or give to the NC United Training Fund. Tax-deductible gifts from $5 — secure checkout.",
+    "Give to NC United Wrestling with donor preference for a wrestler or the Training Fund ($5+) — secure nonprofit checkout.",
 }
 
 export default async function FundraisingGivePage({
@@ -53,9 +53,9 @@ export default async function FundraisingGivePage({
           Make a gift
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-white/75">
-          <strong className="text-white/88">Credit an athlete</strong> in the form below, or{" "}
-          <strong className="text-white/88">give to the NC United Training Fund</strong>. Minimum gift{" "}
-          <span className="tabular-nums">$5</span>. All gifts are tax-deductible; you&apos;ll get your receipt by email after checkout.
+          <strong className="text-white/88">Support a wrestler</strong> — gift to NC United with donor preference at checkout —
+          or <strong className="text-white/88">give to the NC United Training Fund</strong>. Minimum{" "}
+          <span className="tabular-nums">$5</span>. Acknowledgement email follows checkout; consult your tax advisor about deductions.
         </p>
       </header>
 

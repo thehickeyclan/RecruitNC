@@ -1,9 +1,10 @@
 import type { Metadata } from "next"
 import { HardLink } from "@/components/hard-link"
+import { NC_UNITED_CONTRIBUTIONS_TAX_DISCLAIMER } from "@/lib/fundraising/donor-facing-disclosures"
 
 export const metadata: Metadata = {
   title: "Thank you | NC United Fundraising",
-  description: "Your tax-deductible gift to NC United Wrestling is processing.",
+  description: "Your NC United Wrestling gift is processing — acknowledgement email follows checkout.",
 }
 
 export default function FundraisingGiveThanksPage() {
@@ -37,9 +38,10 @@ export default function FundraisingGiveThanksPage() {
           Thank you
         </h1>
         <p className="mx-auto mt-6 max-w-md text-base leading-relaxed text-white/78">
-          Your tax-deductible gift is processing. You&apos;ll receive a receipt by email shortly (check spam or promotions).
-          Your support helps North Carolina wrestlers and teams through NC United Wrestling.
+          Thank you — your gift to NC United Wrestling is processing. Watch for acknowledgement email shortly (check spam or
+          promotions). Your generosity supports North Carolina wrestling through NC United.
         </p>
+        <p className="mx-auto mt-4 max-w-md text-xs leading-relaxed text-white/50">{NC_UNITED_CONTRIBUTIONS_TAX_DISCLAIMER}</p>
         <p className="mx-auto mt-5 max-w-md text-sm leading-relaxed text-white/55">
           EIN <span className="tabular-nums">99-3757238</span>
           {" · "}

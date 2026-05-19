@@ -1,5 +1,6 @@
 import { Heart, Search } from "lucide-react"
 import { HardLink } from "@/components/hard-link"
+import { NC_UNITED_CONTRIBUTIONS_TAX_DISCLAIMER } from "@/lib/fundraising/donor-facing-disclosures"
 
 function displayFont(c: string) {
   return `font-[family-name:var(--font-fundraising-display)] ${c}`
@@ -14,7 +15,7 @@ const STEPS = [
   {
     n: "02",
     title: "Secure checkout",
-    body: "Complete payment through NC United&apos;s nonprofit Stripe checkout — encrypted like any major retailer.",
+    body: "Complete payment through NC United's nonprofit Stripe checkout — encrypted like any major retailer.",
   },
   {
     n: "03",
@@ -27,14 +28,14 @@ const GIVE_PATHS = [
   {
     icon: Search,
     headline: "Support a Wrestler",
-    body: "Search by name and donate directly to a specific athlete's training fund.",
+    body: "Find a wrestler and give through NC United — donor preference toward that athlete is recorded at nonprofit checkout subject to exempt purpose and policy.",
     cta: "Search athletes →",
     href: "/fundraising/athletes",
   },
   {
     icon: Heart,
     headline: "Support the Training Fund",
-    body: "Tax-deductible giving to the NC United Training Fund — supporting wrestlers who need help training and competing nationally, year-round.",
+    body: "Giving to NC United Wrestling through the Training Fund — organizational support that helps wrestlers train and compete year-round statewide.",
     cta: "Give now →",
     href: "/fundraising/training-fund",
   },
@@ -99,6 +100,8 @@ export function HowItWorks() {
             Pick a wrestler or the Training Fund — donations go to NC United with donor preference tracked at checkout. Scholarship funds and
             corporate sponsors follow in the next sections.
           </p>
+
+          <p className="mx-auto mt-6 max-w-2xl text-xs leading-snug text-white/55 sm:mx-0">{NC_UNITED_CONTRIBUTIONS_TAX_DISCLAIMER}</p>
 
           <ul className="mx-auto mt-10 grid max-w-4xl list-none gap-6 sm:grid-cols-2">
             {GIVE_PATHS.map((c) => {

@@ -85,8 +85,8 @@ export function LeaderboardPreview({
               Athlete leaderboard
             </h2>
             <p className="mt-2 max-w-xl text-sm text-white">
-              Every athlete with athlete-credited paid gifts in the hub reporting window — same combined NC United hub
-              scope as the headline totals above (sorted by amount raised).
+              Athletes receiving paid checkout amounts attributed via donor preference in the hub reporting window — same
+              combined NC United hub scope as the headline totals above (sorted by attributed amount raised).
             </p>
           </div>
           <HardLink
