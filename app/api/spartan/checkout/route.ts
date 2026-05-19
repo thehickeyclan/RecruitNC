@@ -3,6 +3,10 @@ import Stripe from "stripe"
 import { getSpartanRaceTierOrDefault, isSpartanRaceTierId } from "@/app/spartan/data"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { isAthleteFundraisingSlugCheckoutLive } from "@/lib/fundraising/fundraising-checkout-live"
+import {
+  isAthleteGiftPageHubCheckout,
+  isFundraisingAthletePageDonationsDisabled,
+} from "@/lib/fundraising/fundraising-pause"
 
 export const dynamic = "force-dynamic"
 
@@ -150,6 +154,22 @@ export async function POST(request: NextRequest) {
         )
       }
     }
+  }
+
+  if (
+    isFundraisingAthletePageDonationsDisabled() &&
+    isAthleteGiftPageHubCheckout({
+      fundraisingHub,
+      fundraisingHubReturnSlug: fundraisingHubReturnSlug || undefined,
+    })
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "Online gifts from athlete pages are temporarily unavailable. Use “Make a gift” on the fundraising hub or try again later.",
+      },
+      { status: 503 },
+    )
   }
   /** Super 10K tier → donor expects Spartan entry code path; omit for donate-only. */
   const raceEntryRequested = Boolean(tierPreference && tierPreference.length > 0)

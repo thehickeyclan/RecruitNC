@@ -167,7 +167,7 @@ export async function reviewFundraisingActivationRequestAdminAction(
 
     // Do not auto-insert parent_athlete_links here. Approval activates fundraising only; linking belongs in
     // Profile → Family & athletes (or Admin → parent-athlete-link). Staff submitting requests while logged in as
-    // themselves used to pollute the approver's digital wallet. Use fixParentLinkAction if a row needs repair.
+    // themselves used to pollute the approver's digital wallet. Admin uses fixParentLinkAction with an explicit parent picker.
   }
 
   const now = new Date().toISOString()
@@ -395,30 +395,78 @@ export async function listEnrichedActivationRequestsAdmin(): Promise<EnrichedAct
 
 /* ─────────────── Fix actions for broken wiring ─────────────── */
 
+function looksLikeAuthUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value.trim())
+}
+
+/**
+ * Staff wiring: attach athlete ↔ parent RecruitNC auth user (`parentUserId` chosen explicitly in Admin UI — never inferred from row alone).
+ * Updates `fundraising_activation_requests.user_id` so wiring checks match who received the link.
+ */
 export async function fixParentLinkAction(
   requestId: string,
-): Promise<{ ok: boolean; error?: string }> {
+  params: { parentUserId: string },
+): Promise<{ ok: boolean; error?: string; warning?: string }> {
   const gate = await requireAdmin()
   if (!gate.ok) return { ok: false, error: gate.error }
+
+  const session = await createClient()
+  const {
+    data: { user },
+  } = await session.auth.getUser()
+  if (!user?.id?.trim()) {
+    return { ok: false, error: "Could not resolve your session user." }
+  }
+
+  const parentUserId = typeof params.parentUserId === "string" ? params.parentUserId.trim() : ""
+  if (!parentUserId || !looksLikeAuthUuid(parentUserId)) {
+    return { ok: false, error: "Choose a valid parent RecruitNC account (Supabase Auth user UUID)." }
+  }
+
+  if (parentUserId === user.id.trim()) {
+    return {
+      ok: false,
+      error:
+        "Cannot link this athlete to your admin login — pick the parent's Auth user id from search or CRM.",
+    }
+  }
 
   const admin = createAdminClient()
   const { data: req } = await admin
     .from("fundraising_activation_requests")
-    .select("user_id, athlete_id")
+    .select("athlete_id")
     .eq("id", requestId)
     .single()
 
-  if (!req?.athlete_id || !req?.user_id) {
-    return { ok: false, error: "Request missing user or athlete ID." }
+  const athleteId = typeof req?.athlete_id === "string" ? req.athlete_id.trim() : ""
+  if (!athleteId) {
+    return { ok: false, error: "Request missing athlete ID — approve after slug resolves to an athlete UUID." }
   }
 
-  const result = await ensureParentAthleteLinkAdmin(admin, {
-    parentUserId: req.user_id,
-    athleteId: req.athlete_id,
+  const linkResult = await ensureParentAthleteLinkAdmin(admin, {
+    parentUserId,
+    athleteId,
   })
+  if (!linkResult.ok) {
+    return linkResult
+  }
+
+  const { error: rowErr } = await admin
+    .from("fundraising_activation_requests")
+    .update({ user_id: parentUserId })
+    .eq("id", requestId)
 
   revalidatePath("/admin/fundraising/activation-requests")
-  return result
+
+  if (rowErr) {
+    console.warn("[fixParentLinkAction] linked OK but activation row user_id update failed:", rowErr.message)
+    return {
+      ok: true,
+      warning: `Linked wallet access, but updating activation row user_id failed (${rowErr.message}). Wiring may stay incomplete until Supabase is fixed.`,
+    }
+  }
+
+  return { ok: true }
 }
 
 export async function fixProfileActiveAction(

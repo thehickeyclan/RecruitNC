@@ -76,6 +76,7 @@ export default function AdminDigitalWalletLedgerPage() {
   const { user, isAdmin, isLoading: authLoading } = useAuth()
   const router = useRouter()
   const [rows, setRows] = useState<LedgerRow[]>([])
+  const [totals, setTotals] = useState<Totals | null>(null)
   const [summary, setSummary] = useState<Summary | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")

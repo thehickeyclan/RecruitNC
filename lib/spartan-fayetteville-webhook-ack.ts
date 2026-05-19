@@ -4,6 +4,7 @@ import {
   firstNameFromDonorName,
   sendNcuDonationAcknowledgmentEmail,
 } from "@/lib/email/ncu-donation-acknowledgment"
+import { isFundraisingReceiptsPaused } from "@/lib/fundraising/fundraising-pause"
 import { recordFundraisingLedgerSpartanCheckout } from "@/lib/fundraising/ledger"
 import { notifyHouseholdOfFundraisingGiftIfEligible } from "@/lib/fundraising/notify-household-of-fundraising-gift"
 import { stripeSpartanCampaignMetadataMatchesRequested } from "@/lib/fundraising/campaign-registry"
@@ -26,6 +27,7 @@ export async function sendFayettevilleDonationAutoAckIfEligible(
   admin: SupabaseClient,
   session: Stripe.Checkout.Session,
 ): Promise<void> {
+  if (isFundraisingReceiptsPaused()) return
   if (!autoAckEnabled()) return
   const meta = session.metadata
   if (
