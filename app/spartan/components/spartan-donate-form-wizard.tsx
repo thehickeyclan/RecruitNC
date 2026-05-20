@@ -122,7 +122,7 @@ export function SpartanDonateFormWizard({
   fundraisingHubPrefillLabel?: string | null
   /** Slug for Stripe return URLs (thanks/cancel on this athlete page) */
   fundraisingHubReturnSlug?: string | null
-  /** Open donate flow on NC United Training Fund (same checkout as general on /fundraising/give). */
+  /** Open donate flow on NC United Training Fund (`/fundraising/training-fund`). */
   fundraisingHubDefaultTrainingFund?: boolean
 }) {
   const searchParams = useSearchParams()

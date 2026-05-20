@@ -37,7 +37,7 @@ export function UnactivatedAthleteGivingPromo({
         </p>
         <p className="mt-3 text-sm leading-relaxed text-amber-50/95">
           NC United will follow up using your account email. To give today, use{" "}
-          <HardLink href="/fundraising/give" className="font-semibold text-white underline-offset-2 hover:underline">
+          <HardLink href="/fundraising/training-fund" className="font-semibold text-white underline-offset-2 hover:underline">
             Make a gift
           </HardLink>
           .

@@ -104,7 +104,7 @@ export function FundraisingPublicationBanner({
         <p className="mt-1 text-xs leading-snug text-white/72">
           <strong className="text-white/90">Checkout is off</strong> while NC United reviews your activation request for this page. No gifts
           are accepted on this URL until staff approves — use{" "}
-          <HardLink href="/fundraising/give" className="font-semibold text-[#C8A94A] underline-offset-2 hover:underline">
+          <HardLink href="/fundraising/training-fund" className="font-semibold text-[#C8A94A] underline-offset-2 hover:underline">
             Make a gift
           </HardLink>{" "}
           for the training fund or another active page if you need to give today.

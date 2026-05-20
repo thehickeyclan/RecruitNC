@@ -55,11 +55,15 @@ export function FundraisingAthleteEmbeddedCheckout({
   if (!athleteCode?.trim()) {
     return (
       <p className="text-center text-sm text-white/60">
-        This page isn&apos;t open for gifts yet — go to{" "}
-        <a href="/fundraising/give" className="font-medium text-[#C8A94A] underline underline-offset-2">
-          Make a gift
+        This page isn&apos;t open for gifts yet — browse{" "}
+        <a href="/fundraising/athletes" className="font-medium text-[#C8A94A] underline underline-offset-2">
+          athlete pages
         </a>{" "}
-        to find an athlete or support the training fund.
+        or give to the{" "}
+        <a href="/fundraising/training-fund" className="font-medium text-[#C8A94A] underline underline-offset-2">
+          NC United Training Fund
+        </a>
+        .
       </p>
     )
   }

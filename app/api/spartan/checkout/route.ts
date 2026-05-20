@@ -32,9 +32,9 @@ function hubFundraisingCheckoutSurfaceMetadata(
   if (!fundraisingHub) {
     return { fundraising_checkout_surface: "spartan_team_page" }
   }
-  // Hub checkout with no specific return slug
+  // Hub checkout with no specific return slug (legacy — routes now default to Training Fund surfaces)
   if (!returnSlug) {
-    return { fundraising_checkout_surface: "hub_give" }
+    return { fundraising_checkout_surface: "training_fund" }
   }
   if (returnSlug === "training-fund") {
     return { fundraising_checkout_surface: "training_fund" }
@@ -85,9 +85,9 @@ export async function POST(request: NextRequest) {
     shipState?: string
     shipPostal?: string
     shipCountry?: string
-    /** When true, Stripe return URLs point at /fundraising/give (hub checkout), not /spartan. */
+    /** When true, Stripe return URLs point at fundraising hub surfaces (`/fundraising/training-fund`, athlete pages, scholarships), not `/spartan`. */
     fundraisingHub?: boolean
-    /** With fundraisingHub: thanks/cancel on `/fundraising/athletes/{slug}` instead of /fundraising/give */
+    /** With fundraisingHub: thanks/cancel on `/fundraising/athletes/{slug}` (or training fund / scholarships) instead of `/spartan`. */
     fundraisingHubReturnSlug?: string
   } = {}
   try {
@@ -272,7 +272,7 @@ export async function POST(request: NextRequest) {
         ? `/fundraising/scholarships/${scholarshipSlugFromReturn}/thanks`
         : fundraisingHubReturnSlug
           ? `/fundraising/athletes/${fundraisingHubReturnSlug}/thanks`
-          : "/fundraising/give/thanks"
+          : "/fundraising/training-fund/thanks"
   const hubCancelPath =
     fundraisingHubReturnSlug === "training-fund"
       ? `/fundraising/training-fund?cancelled=1`
@@ -280,7 +280,7 @@ export async function POST(request: NextRequest) {
         ? `/fundraising/scholarships/${scholarshipSlugFromReturn}?cancelled=1`
         : fundraisingHubReturnSlug
           ? `/fundraising/athletes/${fundraisingHubReturnSlug}?cancelled=1`
-          : "/fundraising/give?cancelled=1"
+          : "/fundraising/training-fund?cancelled=1"
   const stripe = new Stripe(stripeSecret)
 
   const raceTier = raceEntryRequested && tierPreference ? getSpartanRaceTierOrDefault(tierPreference) : null

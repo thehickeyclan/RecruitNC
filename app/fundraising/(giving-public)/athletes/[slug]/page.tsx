@@ -14,7 +14,6 @@ import {
 } from "@/lib/fundraising/athlete-public-stats"
 import { HardLink } from "@/components/hard-link"
 import { createClient } from "@/lib/supabase/server"
-import { FUNDRAISING_GIVE_PAGE_PATH } from "@/lib/fundraising/campaign-registry"
 import { formatUsdWhole } from "@/app/fundraising/components/FundraisingHero"
 import { userCanManageFundraisingForAthlete, userIsRecruitNcAdmin } from "@/lib/fundraising/athlete-fundraising-access"
 import { FundraisingAthleteQrCard } from "./fundraising-athlete-qr-card"
@@ -235,8 +234,6 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
   const athletePagePath = `/fundraising/athletes/${encodeURIComponent(slug)}`
   const athleteAbsoluteUrl = `${publicGiftSiteOrigin()}${athletePagePath}`
   const giveOnThisPageHref = `${athletePagePath}#${checkoutAnchor}`
-  /** Hub URL if donor wants training fund or directory search */
-  const hubGiveHref = `${FUNDRAISING_GIVE_PAGE_PATH}#${checkoutAnchor}`
   const athleteQrDataUrl = checkoutLive
     ? await QRCode.toDataURL(athleteAbsoluteUrl, {
         margin: 2,
@@ -437,7 +434,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
           <p className="mt-5 text-xs leading-relaxed text-white/50">
             EIN <span className="tabular-nums">99-3757238</span>
             {" · "}
-            <HardLink href={hubGiveHref} className="text-[#C8A94A] underline-offset-4 hover:underline">
+            <HardLink href="/fundraising" className="text-[#C8A94A] underline-offset-4 hover:underline">
               More ways to support NC United
             </HardLink>
           </p>
@@ -503,7 +500,7 @@ export default async function FundraisingAthletePublicPage({ params, searchParam
         {!code ? (
           <p className="mt-6 text-center text-sm leading-snug text-white/60">
             Online giving isn&apos;t turned on for this link yet.{" "}
-            <HardLink href={hubGiveHref} className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
+            <HardLink href="/fundraising/athletes" className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
               Make a gift
             </HardLink>{" "}
             to find {displayName} or support NC United another way.
