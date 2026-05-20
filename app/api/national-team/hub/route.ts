@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { getUserFromRequest } from "@/lib/supabase/auth-from-request"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getEventName, getEventSlugForApi, normalizeEventSlugForLookup } from "@/lib/national-team-events"
 
@@ -67,25 +68,12 @@ export type HubResponse = {
  * NHSCA hub data: paid reg / lineup / workspace / admin roster access; otherwise `nhscaInfoOnly`
  * returns empty `events[]` while the SPA still renders schedules, FAQs, and Flo guidance.
  */
-export async function GET(_request: NextRequest): Promise<NextResponse<HubResponse>> {
-  const supabase = await createClient()
-  let user: { id: string; email?: string } | null = null
-  let authError: Error | null = null
-  const bearer = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim()
-  if (bearer) {
-    const tokenResult = await supabase.auth.getUser(bearer)
-    user = tokenResult.data?.user ?? null
-    authError = tokenResult.error ?? null
-  }
-  if (!user) {
-    const cookieResult = await supabase.auth.getUser()
-    user = cookieResult.data?.user ?? null
-    authError = cookieResult.error ?? null
-  }
+export async function GET(request: NextRequest): Promise<NextResponse<HubResponse>> {
+  const user = await getUserFromRequest(request)
 
   const debugInfo = (): HubResponse["_debug"] => ({ hasUser: !!user, userEmail: user?.email ?? null })
 
-  if (authError || !user?.email) {
+  if (!user?.email) {
     return NextResponse.json({ allowed: false, reason: "signed_out", _debug: debugInfo() })
   }
 
