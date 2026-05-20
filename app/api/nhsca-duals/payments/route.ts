@@ -35,25 +35,17 @@ export async function GET(req: NextRequest) {
 
     const { data: nhscaPayments } = await nhscaQuery
 
-    // Fetch from old orders table (national team registrations)
-    let ordersQuery = supabase
+    // Fetch from old orders table (ALL orders, real columns)
+    const { data: legacyOrders } = await supabase
       .from("orders")
-      .select("id, customer_id, athlete_name, registration_fee, apparel_fee, total_amount, status, created_at")
-      .eq("campaign", "national_team")
+      .select("id, customer_id, customer_name, email, status, total, created_at")
       .order("created_at", { ascending: false })
-
-    // Regular users only see their own orders - use customer_id not user_id
-    if (!isAdmin) {
-      ordersQuery = ordersQuery.eq("customer_id", user.id)
-    }
-
-    const { data: legacyOrders } = await ordersQuery
 
     // Transform and merge both
     const nhscaFormatted = (nhscaPayments || []).map(p => ({
       id: p.id,
       user_id: p.user_id,
-      athlete_name: p.athlete_name || "—",
+      name: p.athlete_name || "—",
       amount_cents: p.amount_cents,
       status: p.status,
       created_at: p.created_at,
@@ -64,11 +56,11 @@ export async function GET(req: NextRequest) {
     const legacyFormatted = (legacyOrders || []).map(o => ({
       id: o.id,
       user_id: o.customer_id,
-      athlete_name: o.athlete_name || "—",
-      amount_cents: (o.total_amount || 0) * 100,
+      name: o.customer_name || o.email || "—",
+      amount_cents: Math.round((parseFloat(o.total) || 0) * 100),
       status: o.status,
       created_at: o.created_at,
-      items: [{ name: `Registration: $${o.registration_fee || 0}, Apparel: $${o.apparel_fee || 0}` }],
+      items: [{ name: "National Team Registration" }],
       type: "national_team"
     }))
 
