@@ -80,6 +80,7 @@ export function NhscaPaymentTab() {
 
   const [mode, setMode] = useState<"bundle" | "individual">("bundle")
   const [cart, setCart] = useState<CartItem[]>([])
+  const [includeRegistration, setIncludeRegistration] = useState(false)
   const [singletQty, setSingletQty] = useState(0)
   const [singletSize, setSingletSize] = useState("")
   const [shortsSize, setShortsSize] = useState("")
@@ -130,13 +131,15 @@ export function NhscaPaymentTab() {
         },
       })
     } else {
-      // Individual mode - registration is required
-      newCart.push({
-        productId: PRODUCTS.registration.id,
-        name: PRODUCTS.registration.name,
-        priceInCents: PRODUCTS.registration.priceInCents,
-        quantity: 1,
-      })
+      // Individual mode - only add selected items
+      if (includeRegistration) {
+        newCart.push({
+          productId: PRODUCTS.registration.id,
+          name: PRODUCTS.registration.name,
+          priceInCents: PRODUCTS.registration.priceInCents,
+          quantity: 1,
+        })
+      }
       
       // Add singlets
       if (singletQty > 0 && singletSize) {
@@ -417,13 +420,22 @@ if (longSleeveSize && longSleeveSize !== "none" && longSleeveSize !== "") {
           ) : (
             /* Individual mode */
             <div className="space-y-4">
-              {/* Registration - required */}
-              <div className="p-4 bg-[#0a1628] rounded-lg flex justify-between items-center">
-                <div>
-                  <h4 className="font-semibold text-white">Tournament Registration & Team Fee</h4>
-                  <p className="text-xs text-white/50">Required</p>
+              {/* Registration - optional */}
+              <div className="p-4 bg-[#0a1628] rounded-lg">
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    id="registration"
+                    checked={includeRegistration}
+                    onCheckedChange={(c) => setIncludeRegistration(!!c)}
+                    className="mt-1 border-[#1a3a5c] data-[state=checked]:bg-[#c9a227] data-[state=checked]:border-[#c9a227]"
+                  />
+                  <div>
+                    <Label htmlFor="registration" className="text-white font-semibold cursor-pointer">
+                      Tournament Registration & Team Fee
+                    </Label>
+                    <p className="text-xs text-white/50">$75 (skip if already paid)</p>
+                  </div>
                 </div>
-                <div className="text-[#c9a227] font-bold">$75</div>
               </div>
 
               {/* Singlet */}
