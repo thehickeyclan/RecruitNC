@@ -586,28 +586,8 @@ if (longSleeveSize && longSleeveSize !== "none" && longSleeveSize !== "") {
                   </div>
                 </div>
               </div>
-          )}
-
-          {/* Transportation - TBD */}
-          <div className="p-4 bg-[#0a1628] rounded-lg">
-            <div className="flex items-start gap-3">
-              <Checkbox
-                id="transport"
-                checked={wantTransport}
-                onCheckedChange={(c) => setWantTransport(!!c)}
-                className="mt-1 border-[#1a3a5c] data-[state=checked]:bg-[#c9a227] data-[state=checked]:border-[#c9a227]"
-              />
-              <div>
-                <Label htmlFor="transport" className="text-white font-semibold cursor-pointer">
-                  Transportation / Van Fee
-                </Label>
-                <p className="text-xs text-white/50">Round-trip from Raleigh — Price TBD</p>
-                {wantTransport && (
-                  <p className="text-xs text-[#c9a227] mt-1">We&apos;ll contact you with pricing details.</p>
-                )}
-              </div>
             </div>
-          </div>
+          )}
 
           {/* Order summary */}
           <div className="border-t border-[#1a3a5c] pt-4">
