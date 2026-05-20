@@ -14,9 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { hubPanelClass } from "@/components/national-team/nhsca-hub-theme"
-import { NhscaHubTeamGearShowcase } from "@/components/national-team/nhsca-hub-team-gear-showcase"
 import { NhscaHubTravelRoster } from "@/components/national-team/nhsca-hub-travel-roster"
-import { NHSCA_INTEREST_WEIGHT_CLASSES } from "@/lib/national-team-weight-classes"
 import {
   buildIndividualLineItems,
   buildTeamPackageLineItems,
@@ -114,7 +112,6 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
   const [team, setTeam] = useState<"nhsca-duals-2026" | "nhsca-duals-2026-select">("nhsca-duals-2026")
   const [parentName, setParentName] = useState("")
   const [wrestlerName, setWrestlerName] = useState("")
-  const [primaryWeight, setPrimaryWeight] = useState("")
 
   const [bundleSizes, setBundleSizes] = useState({
     singletSize: "",
@@ -154,7 +151,6 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
   const validate = (): string | null => {
     if (!parentName.trim()) return "Parent name is required."
     if (!wrestlerName.trim()) return "Athlete name is required."
-    if (!primaryWeight) return "Weight class is required."
     if (fullPackage) {
       if (!bundleSizes.singletSize || !bundleSizes.shortsSize || !bundleSizes.shortSleeveSize || !bundleSizes.longSleeveSize) {
         return "Select all apparel sizes for the team package."
@@ -200,7 +196,6 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
           eventSlug: team,
           parentName: parentName.trim(),
           wrestlerName: wrestlerName.trim(),
-          primaryWeight,
           teamPackage: { ...bundleSizes, vanTravel, hotel },
           singletSize: bundleSizes.singletSize,
           shortsSize: bundleSizes.shortsSize,
@@ -226,14 +221,9 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
 
   return (
     <div className="space-y-4">
-      <NhscaHubTeamGearShowcase />
-
       <article className={cn(hubPanelClass, "overflow-hidden")}>
         <div className="p-4 sm:p-5 md:p-6 space-y-5">
-          <div>
-            <h3 className="text-lg font-bold text-white">NHSCA Duals payment</h3>
-            <p className="text-xs text-white/50 mt-1">One checkout — pick the full package or choose items à la carte.</p>
-          </div>
+          <p className="text-xs text-white/50">One checkout — pick the full package or choose items à la carte.</p>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5 sm:col-span-2">
@@ -260,25 +250,7 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
                 autoComplete="off"
               />
             </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs text-white/70">
-                Weight <span className="text-red-400">*</span>
-              </Label>
-              <Select value={primaryWeight || NONE} onValueChange={(v) => setPrimaryWeight(v === NONE ? "" : v)}>
-                <SelectTrigger className={hubSelectTrigger}>
-                  <SelectValue placeholder="Select weight" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NONE}>Select weight</SelectItem>
-                  {NHSCA_INTEREST_WEIGHT_CLASSES.map((w) => (
-                    <SelectItem key={w} value={w}>
-                      {w}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 sm:col-span-2">
               <Label className="text-xs text-white/70">
                 Team <span className="text-red-400">*</span>
               </Label>
@@ -416,8 +388,8 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
             <label className="flex items-center gap-3 p-4 cursor-pointer min-h-[48px]">
               <Checkbox checked={hotel} onCheckedChange={(c) => setHotel(!!c)} className="h-5 w-5 data-[state=checked]:bg-[#CBAF5D]" />
               <span className="text-sm text-white flex-1">
-                Hotel room{" "}
-                <span className="text-[#CBAF5D]">{hotelCents > 0 ? `${formatDollars(hotelCents)} / room` : ""}</span>
+                Team hotel (3 nights){" "}
+                <span className="text-[#CBAF5D]">{hotelCents > 0 ? `${formatDollars(hotelCents)} / person` : ""}</span>
               </span>
             </label>
           </div>

@@ -46,7 +46,7 @@ export function NhscaHubTravelRoster({ compact = false, className }: { compact?:
       <header className={hubPanelHeaderClass}>
         <h3 className={hubPanelTitleClass}>Travel sign-ups</h3>
         <p className={hubPanelDescClass}>
-          Athletes who have signed up for NC United van transportation or team hotel room through hub checkout.
+          Athletes who have paid for team van or hotel through hub checkout.
         </p>
       </header>
       <div className="p-5 md:p-6 grid sm:grid-cols-2 gap-4">
