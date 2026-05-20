@@ -103,9 +103,9 @@ function TravelOptions({
           className="h-5 w-5 border-white/30 data-[state=checked]:bg-[#CBAF5D]"
         />
         <span className="text-sm text-white flex-1">
-          Van Transportation{" "}
+          Van transportation{" "}
           <span className="text-[#CBAF5D]">
-            {vanCents > 0 ? formatDollars(vanCents) : "$0.00"}
+            {vanCents > 0 ? `${formatDollars(vanCents)} / person` : "$0.00"}
           </span>
           {vanCents === 0 && pending ? (
             <span className="block text-xs text-white/45">{pending}</span>
@@ -201,7 +201,16 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
         return "Select all apparel sizes for the team package."
       }
     } else {
-      if (!individual.registration && individual.singletQty === 0 && !individual.shorts && !individual.shortSleeve && !individual.longSleeve) {
+      const hasPaidTravel =
+        (individual.vanTravel && nhscaVanTravelFeeCents() > 0) || (individual.hotel && nhscaHotelFeeCents() > 0)
+      if (
+        !individual.registration &&
+        individual.singletQty === 0 &&
+        !individual.shorts &&
+        !individual.shortSleeve &&
+        !individual.longSleeve &&
+        !hasPaidTravel
+      ) {
         return "Select registration, apparel, or travel."
       }
       if (individual.singletQty > 0 && !individual.singletSize) return "Select singlet size."

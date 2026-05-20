@@ -15,6 +15,7 @@ import {
   type NhscaHubIndividualSelections,
   type NhscaHubTeamPackageSelections,
 } from "@/lib/nhsca-hub-checkout-pricing"
+import { insertPendingNationalTeamRegistration } from "@/lib/national-team-registration-insert"
 
 export const dynamic = "force-dynamic"
 
@@ -126,7 +127,7 @@ export async function POST(request: NextRequest) {
 
   const admin = createAdminClient()
 
-  const insertPayload: Record<string, unknown> = {
+  const regResult = await insertPendingNationalTeamRegistration(admin, {
     event_slug: eventSlug,
     athlete_first_name: athleteFirstName,
     athlete_last_name: athleteLastName || "—",
@@ -139,23 +140,17 @@ export async function POST(request: NextRequest) {
     primary_weight: primaryWeight,
     reg_fee_cents,
     apparel_fee_cents,
-    status: "pending",
-    updated_at: new Date().toISOString(),
-  }
-  if (singletSize) insertPayload.singlet_size = singletSize
-  if (shortsSize) insertPayload.shorts_size = shortsSize
-  if (shirtSize) insertPayload.shirt_size = shirtSize
+    singlet_size: singletSize,
+    shorts_size: shortsSize,
+    shirt_size: shirtSize,
+  })
 
-  const { data: reg, error: regError } = await admin
-    .from("national_team_event_registrations")
-    .insert(insertPayload)
-    .select("id")
-    .single()
-
-  if (regError || !reg) {
-    console.error("[national-team/hub/checkout] insert:", regError)
-    return NextResponse.json({ error: "Failed to save registration." }, { status: 500 })
+  if ("error" in regResult) {
+    console.error("[national-team/hub/checkout] insert:", regResult.pgError ?? regResult.error)
+    return NextResponse.json({ error: regResult.error }, { status: 500 })
   }
+
+  const reg = { id: regResult.id }
 
   try {
     await findAndEnrichAthlete(
