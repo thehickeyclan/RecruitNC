@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import useSWR from "swr"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -271,7 +272,18 @@ if (longSleeveSize && longSleeveSize !== "none" && longSleeveSize !== "") {
   const paidPayments = existingPayments.filter(p => p.status === "paid")
 
   return (
-    <div className="space-y-6">
+    <Tabs defaultValue="place-order" className="w-full">
+      <TabsList className="grid w-full grid-cols-2 bg-[#0a2040] border border-[#1a3a5c] rounded-xl p-1">
+        <TabsTrigger value="place-order" className="data-[state=active]:bg-[#c9a227] data-[state=active]:text-[#002147]">
+          Place an Order
+        </TabsTrigger>
+        <TabsTrigger value="past-orders" className="data-[state=active]:bg-[#c9a227] data-[state=active]:text-[#002147]">
+          Past Orders ({orders.length})
+        </TabsTrigger>
+      </TabsList>
+
+      {/* Place an Order Tab */}
+      <TabsContent value="place-order" className="mt-6 space-y-6">
       {cancelled && (
         <div className="flex items-center gap-2 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-yellow-200">
           <AlertCircle className="h-5 w-5 shrink-0" />
@@ -637,8 +649,10 @@ if (longSleeveSize && longSleeveSize !== "none" && longSleeveSize !== "") {
           </p>
         </CardContent>
       </Card>
+      </TabsContent>
 
-      {/* Your Orders */}
+      {/* Past Orders Tab */}
+      <TabsContent value="past-orders" className="mt-6">
       <Card className="border-[#1a3a5c] bg-[#0a1628] mt-8">
         <CardHeader>
           <CardTitle className="text-white">Your Orders</CardTitle>
@@ -704,6 +718,7 @@ if (longSleeveSize && longSleeveSize !== "none" && longSleeveSize !== "") {
           )}
         </CardContent>
       </Card>
-    </div>
+      </TabsContent>
+    </Tabs>
   )
 }
