@@ -658,40 +658,34 @@ if (longSleeveSize && longSleeveSize !== "none" && longSleeveSize !== "") {
                 <thead>
                   <tr className="border-b border-[#1a3a5c]">
                     <th className="text-left py-3 px-2 text-white/80 font-semibold">Athlete</th>
-                    <th className="text-left py-3 px-2 text-white/80 font-semibold">Date</th>
-                    <th className="text-left py-3 px-2 text-white/80 font-semibold">Items</th>
-                    <th className="text-left py-3 px-2 text-white/80 font-semibold">Amount</th>
+                    <th className="text-left py-3 px-2 text-white/80 font-semibold">Email</th>
+                    <th className="text-left py-3 px-2 text-white/80 font-semibold">School</th>
+                    <th className="text-left py-3 px-2 text-white/80 font-semibold">Reg</th>
+                    <th className="text-left py-3 px-2 text-white/80 font-semibold">Apparel</th>
+                    <th className="text-left py-3 px-2 text-white/80 font-semibold">Total</th>
                     <th className="text-left py-3 px-2 text-white/80 font-semibold">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {orders.map((order: any) => (
                     <tr key={order.id} className="border-b border-[#0d1f38] hover:bg-[#0d1f38]">
-                      <td className="py-3 px-2 text-white/75 font-semibold">
+                      <td className="py-3 px-2 text-white font-semibold whitespace-nowrap">
                         {order.athlete_name || order.name || "—"}
                       </td>
-                      <td className="py-3 px-2 text-white/75">
-                        {new Date(order.created_at).toLocaleDateString()}
+                      <td className="py-3 px-2 text-white/75 text-xs">
+                        {order.parent_email || "—"}
+                      </td>
+                      <td className="py-3 px-2 text-white/75 text-xs">
+                        {order.school || "—"}
                       </td>
                       <td className="py-3 px-2 text-white/75">
-                        {order.items ? (
-                          <div className="text-xs space-y-1">
-                            {Array.isArray(order.items) ? (
-                              order.items.map((item: any, idx: number) => (
-                                <div key={idx}>{item.name}</div>
-                              ))
-                            ) : typeof order.items === 'string' ? (
-                              <div>{order.items}</div>
-                            ) : (
-                              <div>Bundle package</div>
-                            )}
-                          </div>
-                        ) : (
-                          '-'
-                        )}
+                        ${(order.reg_fee_cents || 0) / 100}
+                      </td>
+                      <td className="py-3 px-2 text-white/75">
+                        ${(order.apparel_fee_cents || 0) / 100}
                       </td>
                       <td className="py-3 px-2 font-semibold text-[#c9a227]">
-                        {formatPrice(order.amount_cents)}
+                        ${(order.amount_cents || 0) / 100}
                       </td>
                       <td className="py-3 px-2">
                         <span
@@ -702,6 +696,14 @@ if (longSleeveSize && longSleeveSize !== "none" && longSleeveSize !== "") {
                               ? 'bg-yellow-500/20 text-yellow-300'
                               : 'bg-red-500/20 text-red-300'
                           }`}
+                        >
+                          {order.status?.charAt(0).toUpperCase() + order.status?.slice(1) || 'Unknown'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
                         >
                           {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                         </span>
