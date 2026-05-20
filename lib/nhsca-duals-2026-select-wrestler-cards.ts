@@ -11,8 +11,7 @@ const CARD_BASE = "/national-team/nhsca-duals-2026/select-cards"
 
 /** Sorted lightest → HWT. Add imageSrc when card art is uploaded (slug-weight.png). */
 export const NHSCA_DUALS_2026_SELECT_WRESTLER_CARDS: SelectWrestlerCard[] = [
-  // Missing art — user will provide
-  { weightClass: "106", wrestler: "Kristopher Kerr" },
+  { weightClass: "106", wrestler: "Kristopher Kerr Jr.", imageSrc: `${CARD_BASE}/kristopher-kerr-106.png` },
   { weightClass: "113", wrestler: "Xavier Bernthal", imageSrc: `${CARD_BASE}/xavier-bernthal-113.png` },
   { weightClass: "120", wrestler: "Adam Walker", imageSrc: `${CARD_BASE}/adam-walker-120.png` },
   { weightClass: "120", wrestler: "Danny McDermott", imageSrc: `${CARD_BASE}/danny-mcdermott-120.png` },
@@ -26,8 +25,7 @@ export const NHSCA_DUALS_2026_SELECT_WRESTLER_CARDS: SelectWrestlerCard[] = [
   { weightClass: "183", wrestler: "Manny Kahsai", imageSrc: `${CARD_BASE}/manny-kahsai-183.png` },
   { weightClass: "190", wrestler: "Tillman Caskey", imageSrc: `${CARD_BASE}/tillman-caskey-190.png` },
   { weightClass: "220", wrestler: "Cory Thomas", imageSrc: `${CARD_BASE}/cory-thomas-220.png` },
-  // Missing art
-  { weightClass: "HWT", wrestler: "Mason Hocker" },
+  { weightClass: "HWT", wrestler: "Mason Hocker", imageSrc: `${CARD_BASE}/mason-hocker-hwt.png` },
 ]
 
 export function getSelectWrestlerCardsWithArt(): Array<SelectWrestlerCard & { imageSrc: string }> {

@@ -4,9 +4,8 @@ import { useCallback, useEffect, useState } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Loader2, Lock } from "lucide-react"
-import { NHSCADuals2026TeamHubFaq } from "@/components/national-team/nhsca-duals-2026-team-hub-faq"
-import { NHSCADuals2026HowToWatch } from "@/components/national-team/nhsca-duals-2026-how-to-watch"
 import { NhscaHubHero } from "@/components/national-team/nhsca-hub-hero"
+import { NhscaHubTabs } from "@/components/national-team/nhsca-hub-tabs"
 import type { HubResponse, HubEvent } from "@/app/api/national-team/hub/route"
 import { HardLink } from "@/components/hard-link"
 import { cn } from "@/lib/utils"
@@ -19,7 +18,6 @@ import {
 import { TeamContactRoster } from "@/components/national-team/team-contact-roster"
 import { NationalTeamWrestlerCards } from "@/components/national-team/national-team-wrestler-cards"
 import { SelectTeamWrestlerCards } from "@/components/national-team/select-team-wrestler-cards"
-import { NhscaHubSection } from "@/components/national-team/nhsca-hub-section"
 import {
   hubInfoBannerClass,
   hubMainClass,
@@ -181,83 +179,73 @@ export default function NationalTeamHubPage() {
           </div>
         )}
 
-        {rosterSections && rosterSections.length > 0 && (
-          <NhscaHubSection
-            id="roster"
-            title="Team rosters"
-            description="National team cards and contact lists; Select team contacts by weight class."
-          >
-            <div className="space-y-8">
-              {rosterSections.map((s, i) =>
-                s.type === "single" ? (
-                  <EventHubSection
-                    key={s.event.eventSlug}
-                    event={s.event}
-                    onRefetch={refetchHub}
-                    sectionId={i === 0 ? "roster" : undefined}
-                  />
-                ) : (
-                  <GroupedEventHubSection
-                    key={s.groupKey}
-                    groupName={s.groupName}
-                    eventsWithLabels={s.eventsWithLabels}
-                    onRefetch={refetchHub}
-                    sectionId={i === 0 ? "roster" : undefined}
-                  />
-                )
-              )}
-            </div>
-          </NhscaHubSection>
-        )}
-
-        {events.length === 0 && !nhscaInfoOnly && (
-          <article className={hubPanelClass}>
-            <header className={hubPanelHeaderClass}>
-              <h2 className={hubPanelTitleClass}>Register for NHSCA Duals</h2>
-              <p className={hubPanelDescClass}>Complete invite-only registration to access team hub resources here.</p>
-            </header>
-            <div className="p-5 flex flex-wrap gap-3">
-              <Button asChild className="bg-[#B31B1B] hover:bg-[#9a1616] min-h-[44px]">
-                <a href={REG_PAGE_PATH}>Registration page</a>
-              </Button>
-              <Button asChild variant="outline" className="border-white/25 text-white hover:bg-white/10 min-h-[44px]">
-                <a href="/national-team">National Team</a>
-              </Button>
-            </div>
-          </article>
-        )}
-
-        <NhscaHubSection id="how-to-watch" title="How to watch" description="FloWrestling live stream and NHSCA brackets">
-          <NHSCADuals2026HowToWatch hubTheme embedded />
-        </NhscaHubSection>
-
-        <NhscaHubSection id="faq" title="Team FAQ" description="Travel, weigh-ins, hotel, tickets, and day-of questions">
-          <article className={hubPanelClass}>
-            <div className="p-5 md:p-6">
-              <NHSCADuals2026TeamHubFaq />
-            </div>
-          </article>
-        </NhscaHubSection>
-
-        {data.isAdmin && events.length === 0 && !nhscaInfoOnly && (
-          <article className={cn(hubPanelClass, "border-[#CBAF5D]/40")}>
-            <header className={hubPanelHeaderClass}>
-              <h2 className={hubPanelTitleClass}>Admin: send to families</h2>
-              <p className={hubPanelDescClass}>Share registration URL and create invite codes.</p>
-            </header>
-            <div className="p-5 space-y-3">
-              <p className="text-sm font-mono bg-black/20 border border-white/10 rounded-lg px-3 py-2 break-all text-white/90">{REG_PAGE_PATH}</p>
-              <div className="flex flex-wrap gap-2">
-                <Button asChild size="sm" className="bg-[#CBAF5D] text-[#002147] hover:bg-[#D3B574]">
-                  <a href={REG_PAGE_PATH}>Open registration</a>
-                </Button>
-                <Button asChild size="sm" variant="outline" className="border-white/25 text-white hover:bg-white/10">
-                  <a href="/admin/national-team/invite-codes">Invite codes</a>
-                </Button>
+        <NhscaHubTabs
+          rosterContent={
+            rosterSections && rosterSections.length > 0 ? (
+              <div className="space-y-6 md:space-y-8">
+                {rosterSections.map((s, i) =>
+                  s.type === "single" ? (
+                    <EventHubSection
+                      key={s.event.eventSlug}
+                      event={s.event}
+                      onRefetch={refetchHub}
+                      sectionId={i === 0 ? "roster" : undefined}
+                    />
+                  ) : (
+                    <GroupedEventHubSection
+                      key={s.groupKey}
+                      groupName={s.groupName}
+                      eventsWithLabels={s.eventsWithLabels}
+                      onRefetch={refetchHub}
+                      sectionId={i === 0 ? "roster" : undefined}
+                    />
+                  )
+                )}
               </div>
-            </div>
-          </article>
-        )}
+            ) : null
+          }
+          registrationFallback={
+            events.length === 0 && !nhscaInfoOnly ? (
+              <>
+                <p className="mb-4">Complete invite-only registration to see team rosters and contacts.</p>
+                <div className="flex flex-wrap justify-center gap-3">
+                  <Button asChild className="bg-[#B31B1B] hover:bg-[#9a1616] min-h-[44px]">
+                    <a href={REG_PAGE_PATH}>Registration page</a>
+                  </Button>
+                  <Button asChild variant="outline" className="border-white/25 text-white hover:bg-white/10 min-h-[44px]">
+                    <a href="/national-team">National Team</a>
+                  </Button>
+                </div>
+              </>
+            ) : (
+              "No roster linked to this account yet."
+            )
+          }
+          adminBlock={
+            data.isAdmin && events.length === 0 && !nhscaInfoOnly ? (
+              <article className={cn(hubPanelClass, "border-[#CBAF5D]/40")}>
+                <header className={hubPanelHeaderClass}>
+                  <h3 className={hubPanelTitleClass}>Admin: send to families</h3>
+                  <p className={hubPanelDescClass}>Share registration URL and create invite codes.</p>
+                </header>
+                <div className="p-5 space-y-3">
+                  <p className="text-sm font-mono bg-black/20 border border-white/10 rounded-lg px-3 py-2 break-all text-white/90">
+                    {REG_PAGE_PATH}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button asChild size="sm" className="bg-[#CBAF5D] text-[#002147] hover:bg-[#D3B574]">
+                      <a href={REG_PAGE_PATH}>Open registration</a>
+                    </Button>
+                    <Button asChild size="sm" variant="outline" className="border-white/25 text-white hover:bg-white/10">
+                      <a href="/admin/national-team/invite-codes">Invite codes</a>
+                    </Button>
+                  </div>
+                </div>
+              </article>
+            ) : undefined
+          }
+        />
+
       </main>
     </div>
   )
