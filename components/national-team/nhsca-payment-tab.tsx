@@ -116,12 +116,18 @@ const [longSleeveSize, setLongSleeveSize] = useState("none")
     const newCart: CartItem[] = []
     
     if (mode === "bundle") {
+      // Bundle includes: registration, 2 singlets, shorts, short sleeve, long sleeve
       newCart.push({
         productId: PRODUCTS.bundle.id,
         name: PRODUCTS.bundle.name,
         priceInCents: PRODUCTS.bundle.priceInCents,
         quantity: 1,
-        size: singletSize,
+        sizes: {
+          singlet: singletSize,
+          shorts: shortsSize,
+          shortSleeve: shortSleeveSize,
+          longSleeve: longSleeveSize,
+        },
       })
     } else {
       // Individual mode - registration is required
@@ -334,10 +340,10 @@ if (longSleeveSize && longSleeveSize !== "none") {
           </div>
 
           {mode === "bundle" ? (
-            /* Bundle mode - just need size */
+            /* Bundle mode - collect all apparel sizes */
             <div className="space-y-4">
-              <div className="p-4 bg-[#0a1628] rounded-lg space-y-3">
-                <div className="flex justify-between items-start">
+              <div className="p-4 bg-[#0a1628] rounded-lg space-y-4">
+                <div className="flex justify-between items-start mb-4">
                   <div>
                     <h4 className="font-semibold text-white">NHSCA Team Package</h4>
                     <p className="text-sm text-white/60 mt-1">
@@ -346,9 +352,56 @@ if (longSleeveSize && longSleeveSize !== "none") {
                   </div>
                   <div className="text-[#c9a227] font-bold text-lg">$250</div>
                 </div>
+
+                {/* Singlet Size */}
                 <div className="space-y-2">
                   <Label className="text-white/80 text-sm">Singlet Size *</Label>
                   <Select value={singletSize} onValueChange={setSingletSize}>
+                    <SelectTrigger className="bg-[#0d1f38] border-[#1a3a5c] text-white">
+                      <SelectValue placeholder="Select size" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SIZES.map(s => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Shorts Size */}
+                <div className="space-y-2">
+                  <Label className="text-white/80 text-sm">Shorts Size *</Label>
+                  <Select value={shortsSize} onValueChange={setShortsSize}>
+                    <SelectTrigger className="bg-[#0d1f38] border-[#1a3a5c] text-white">
+                      <SelectValue placeholder="Select size" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SIZES.map(s => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Short Sleeve Size */}
+                <div className="space-y-2">
+                  <Label className="text-white/80 text-sm">Short Sleeve Tee Size *</Label>
+                  <Select value={shortSleeveSize} onValueChange={setShortSleeveSize}>
+                    <SelectTrigger className="bg-[#0d1f38] border-[#1a3a5c] text-white">
+                      <SelectValue placeholder="Select size" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SIZES.map(s => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Long Sleeve Size */}
+                <div className="space-y-2">
+                  <Label className="text-white/80 text-sm">Long Sleeve Tee Size *</Label>
+                  <Select value={longSleeveSize} onValueChange={setLongSleeveSize}>
                     <SelectTrigger className="bg-[#0d1f38] border-[#1a3a5c] text-white">
                       <SelectValue placeholder="Select size" />
                     </SelectTrigger>
