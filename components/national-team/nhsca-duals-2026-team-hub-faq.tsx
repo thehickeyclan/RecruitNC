@@ -161,9 +161,12 @@ export function NHSCADuals2026TeamHubFaq() {
       </section>
 
       <section>
-        <h3 className="text-[#D3B574] font-semibold uppercase tracking-wide text-xs mb-2">Food / recovery</h3>
+        <h3 className="text-[#D3B574] font-semibold uppercase tracking-wide text-xs mb-2">Team Parent / Snacks & Recovery</h3>
         <p>
-          <strong>Coordinator:</strong> Cheryl Shuster
+          <strong>Coordinator:</strong>{" "}
+          <a href="tel:+16463168062" className="text-[#D3B574] font-medium hover:text-white hover:underline">
+            Cheryl Shuster (646) 316-8062
+          </a>
         </p>
         <p className="mt-2">
           <strong>Snack signup:</strong> SignUp Genius + Venmo &amp; Zelle (details in GroupMe).
@@ -223,7 +226,10 @@ export function NHSCADuals2026TeamHubFaq() {
             </a>
           </li>
           <li>
-            <strong>Food:</strong> Cheryl Shuster
+            <strong>Team Parent:</strong>{" "}
+            <a href="tel:+16463168062" className="text-[#D3B574] font-medium hover:text-white hover:underline">
+              Cheryl Shuster (646) 316-8062
+            </a>
           </li>
         </ul>
       </section>
