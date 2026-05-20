@@ -8,6 +8,7 @@ import type {
 } from "@/lib/nhsca-duals-live-results/types"
 
 export type CommandCenterScope = "all" | "national" | "select"
+export type CommandCenterDayFilter = "all" | string
 
 export type DualFeedItem = {
   dual: NhscaDualsDualRow
@@ -42,7 +43,40 @@ function dualFeedSortScore(d: NhscaDualsDualRow): number {
   return 2
 }
 
-export function buildDualFeed(snapshot: NhscaDualsResultsSnapshot, scope: CommandCenterScope): DualFeedItem[] {
+function dualMatchesDay(dual: NhscaDualsDualRow, dayFilter: CommandCenterDayFilter): boolean {
+  return dayFilter === "all" || dual.day_id === dayFilter
+}
+
+function summaryForTeam(
+  snapshot: NhscaDualsResultsSnapshot,
+  teamType: "national" | "select",
+  dayFilter: CommandCenterDayFilter
+): NhscaDualsTeamSummary {
+  if (dayFilter === "all") return snapshot.summaries[teamType]
+  const team = snapshot.teams.find((t) => t.team_type === teamType)
+  if (!team) {
+    return {
+      dualWins: 0,
+      dualLosses: 0,
+      matchWins: 0,
+      matchLosses: 0,
+      pointsFor: 0,
+      pointsAgainst: 0,
+      undefeated: [],
+      topScorers: [],
+    }
+  }
+  const duals = snapshot.duals.filter((d) => d.team_id === team.id && dualMatchesDay(d, dayFilter))
+  const dualIds = new Set(duals.map((d) => d.id))
+  const matches = snapshot.matches.filter((m) => dualIds.has(m.dual_id))
+  return buildTeamSummary(team.id, duals, matches, snapshot.wrestlers)
+}
+
+export function buildDualFeed(
+  snapshot: NhscaDualsResultsSnapshot,
+  scope: CommandCenterScope,
+  dayFilter: CommandCenterDayFilter = "all"
+): DualFeedItem[] {
   const types: ("national" | "select")[] =
     scope === "all" ? ["national", "select"] : [scope === "select" ? "select" : "national"]
 
@@ -52,7 +86,7 @@ export function buildDualFeed(snapshot: NhscaDualsResultsSnapshot, scope: Comman
     const team = snapshot.teams.find((t) => t.team_type === teamType)
     if (!team) continue
     const duals = snapshot.duals
-      .filter((d) => d.team_id === team.id && d.published)
+      .filter((d) => d.team_id === team.id && d.published && dualMatchesDay(d, dayFilter))
       .sort((a, b) => a.sort_order - b.sort_order)
 
     for (const dual of duals) {
@@ -87,12 +121,14 @@ export function buildDualFeed(snapshot: NhscaDualsResultsSnapshot, scope: Comman
 
 export function getWrestlerRecords(
   snapshot: NhscaDualsResultsSnapshot,
-  teamType: "national" | "select"
+  teamType: "national" | "select",
+  dayFilter: CommandCenterDayFilter = "all"
 ): NhscaDualsWrestlerRecord[] {
   const team = snapshot.teams.find((t) => t.team_type === teamType)
   if (!team) return []
-  const summary = snapshot.summaries[teamType]
-  const teamDualIds = new Set(snapshot.duals.filter((d) => d.team_id === team.id).map((d) => d.id))
+  const teamDualIds = new Set(
+    snapshot.duals.filter((d) => d.team_id === team.id && dualMatchesDay(d, dayFilter)).map((d) => d.id)
+  )
   const teamMatches = snapshot.matches.filter((m) => teamDualIds.has(m.dual_id))
 
   const byWrestler = new Map<string, NhscaDualsWrestlerRecord>()
@@ -126,20 +162,25 @@ export function getWrestlerRecords(
 
 export function getSummaryForScope(
   snapshot: NhscaDualsResultsSnapshot,
-  scope: CommandCenterScope
+  scope: CommandCenterScope,
+  dayFilter: CommandCenterDayFilter = "all"
 ): NhscaDualsTeamSummary {
-  if (scope === "national") return snapshot.summaries.national
-  if (scope === "select") return snapshot.summaries.select
-  return combineSummaries(snapshot.summaries.national, snapshot.summaries.select)
+  if (scope === "national") return summaryForTeam(snapshot, "national", dayFilter)
+  if (scope === "select") return summaryForTeam(snapshot, "select", dayFilter)
+  return combineSummaries(
+    summaryForTeam(snapshot, "national", dayFilter),
+    summaryForTeam(snapshot, "select", dayFilter)
+  )
 }
 
 export function getWrestlersForScope(
   snapshot: NhscaDualsResultsSnapshot,
-  scope: CommandCenterScope
+  scope: CommandCenterScope,
+  dayFilter: CommandCenterDayFilter = "all"
 ): NhscaDualsWrestlerRecord[] {
-  if (scope === "national") return getWrestlerRecords(snapshot, "national")
-  if (scope === "select") return getWrestlerRecords(snapshot, "select")
-  return [...getWrestlerRecords(snapshot, "national"), ...getWrestlerRecords(snapshot, "select")].sort(
+  if (scope === "national") return getWrestlerRecords(snapshot, "national", dayFilter)
+  if (scope === "select") return getWrestlerRecords(snapshot, "select", dayFilter)
+  return [...getWrestlerRecords(snapshot, "national", dayFilter), ...getWrestlerRecords(snapshot, "select", dayFilter)].sort(
     (a, b) => b.pointsFor - a.pointsFor
   )
 }

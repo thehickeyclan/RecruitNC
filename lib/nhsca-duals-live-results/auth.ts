@@ -10,6 +10,11 @@ export async function isNhscaDualsAdmin(user: User | null): Promise<boolean> {
     profile = (
       await admin.from("user_profiles").select("is_admin, role").eq("user_id", user.id).maybeSingle()
     ).data as { is_admin?: boolean; role?: string } | null
+    if (!profile) {
+      profile = (
+        await admin.from("user_profiles").select("is_admin, role").eq("id", user.id).maybeSingle()
+      ).data as { is_admin?: boolean; role?: string } | null
+    }
   }
   if (!profile && user.email) {
     profile = (

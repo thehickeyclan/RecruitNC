@@ -130,7 +130,9 @@ export function DualsWrestlerFlipCard({
                     No bouts recorded yet. Scores update live on the Results tab during the event.
                   </p>
                 ) : (
-                  <div className="overflow-x-auto">
+                  <div>
+                    <p className="text-[9px] text-white/40 text-center py-1 sm:hidden">Swipe table for full details →</p>
+                    <div className="overflow-x-auto">
                     <table className="w-full text-[10px] text-white">
                       <thead>
                         <tr className="border-b border-white/15 text-white/50">
@@ -192,6 +194,7 @@ export function DualsWrestlerFlipCard({
                         </tr>
                       </tfoot>
                     </table>
+                    </div>
                   </div>
                 )}
               </div>
