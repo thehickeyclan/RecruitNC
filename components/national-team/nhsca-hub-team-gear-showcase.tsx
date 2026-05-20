@@ -1,4 +1,5 @@
-import Image from "next/image"
+import { NhscaDuals2026SingletPreview } from "@/components/national-team/nhsca-duals-2026-singlet-preview"
+import { NhscaDuals2026ApparelPreview } from "@/components/national-team/nhsca-duals-2026-apparel-preview"
 import {
   NHSCA_LONG_SLEEVE_CENTS,
   NHSCA_SHORT_SLEEVE_CENTS,
@@ -14,7 +15,11 @@ function formatDollars(cents: number) {
 }
 
 const GEAR_ITEMS = [
-  { label: "Competition singlet", price: formatDollars(NHSCA_SINGLET_EACH_CENTS), note: `2 for ${formatDollars(NHSCA_SINGLET_TWO_CENTS)} in package` },
+  {
+    label: "Singlet — blue or white",
+    price: `${formatDollars(NHSCA_SINGLET_EACH_CENTS)} each`,
+    note: `Both ${formatDollars(NHSCA_SINGLET_TWO_CENTS)}`,
+  },
   { label: "Shorts", price: formatDollars(NHSCA_SHORTS_CENTS) },
   { label: "Short sleeve tee", price: formatDollars(NHSCA_SHORT_SLEEVE_CENTS) },
   { label: "Long sleeve tee", price: formatDollars(NHSCA_LONG_SLEEVE_CENTS) },
@@ -45,31 +50,18 @@ export function NhscaHubTeamGearShowcase({ compact = false, className }: { compa
           ) : null}
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
-          <figure className="rounded-lg bg-white p-2 sm:p-3 ring-1 ring-white/10">
-            <div className="relative aspect-[4/3] w-full">
-              <Image
-                src="/images/nhsca-duals-2026-singlet.png"
-                alt="NC United competition singlet — North Carolina script front, custom name on back"
-                fill
-                className="object-contain"
-                sizes="(max-width: 640px) 100vw, 320px"
-              />
-            </div>
-            <figcaption className="mt-2 text-center text-[11px] font-semibold text-[#002147]/80">Competition singlet</figcaption>
-          </figure>
-          <figure className="rounded-lg bg-white p-2 sm:p-3 ring-1 ring-white/10">
-            <div className="relative aspect-[4/3] w-full">
-              <Image
-                src="/images/nhsca-duals-2026-apparel.png"
-                alt="NC United team apparel — long sleeve, shorts, and short sleeve tee"
-                fill
-                className="object-contain"
-                sizes="(max-width: 640px) 100vw, 320px"
-              />
-            </div>
-            <figcaption className="mt-2 text-center text-[11px] font-semibold text-[#002147]/80">Shorts &amp; team tees</figcaption>
-          </figure>
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#CBAF5D]/80 mb-2">
+            Singlets — blue or white
+          </p>
+          <NhscaDuals2026SingletPreview detailed={!compact} className="mx-auto w-full" />
+        </div>
+
+        <div className="mt-4 sm:mt-5">
+          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#CBAF5D]/80 mb-2">
+            Shorts &amp; team tees
+          </p>
+          <NhscaDuals2026ApparelPreview className="mx-auto w-full" />
         </div>
 
         <ul className={cn("mt-3 grid gap-1.5", compact ? "grid-cols-1 sm:grid-cols-2" : "sm:grid-cols-2")}>
@@ -87,7 +79,7 @@ export function NhscaHubTeamGearShowcase({ compact = false, className }: { compa
         </ul>
 
         <p className="mt-3 text-[11px] text-white/45 leading-relaxed">
-          Athlete name on singlet back. Required at weigh-ins — wear your NC United singlet.
+          Blue or white singlet — pick one ({formatDollars(NHSCA_SINGLET_EACH_CENTS)}) or both ({formatDollars(NHSCA_SINGLET_TWO_CENTS)}). Athlete name on the back. Required at weigh-ins.
         </p>
       </div>
     </section>

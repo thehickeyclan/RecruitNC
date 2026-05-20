@@ -96,6 +96,7 @@ function LineItemSummary({ items }: { items: { name: string; amountCents: number
 const EMPTY_INDIVIDUAL: NhscaHubIndividualSelections = {
   registration: false,
   singletQty: 0,
+  singletColor: "",
   singletSize: "",
   shorts: false,
   shortsSize: "",
@@ -169,6 +170,7 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
         return "Select at least one item below, or choose the full team package."
       }
       if (individual.singletQty > 0 && !individual.singletSize) return "Select singlet size."
+      if (individual.singletQty === 1 && !individual.singletColor) return "Select blue or white singlet."
       if (individual.shorts && !individual.shortsSize) return "Select shorts size."
       if (individual.shortSleeve && !individual.shortSleeveSize) return "Select short sleeve size."
       if (individual.longSleeve && !individual.longSleeveSize) return "Select long sleeve size."
@@ -285,7 +287,7 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
               <span className="flex-1 min-w-0">
                 <span className="font-semibold text-white block">Full team package</span>
                 <span className="text-xs text-white/55 block mt-0.5">
-                  Registration, 2 singlets, shorts, short &amp; long sleeve tees
+                  Registration, 2 singlets (blue &amp; white), shorts, short &amp; long sleeve tees
                 </span>
               </span>
               <span className="text-[#CBAF5D] font-bold shrink-0">{formatDollars(NHSCA_TEAM_PACKAGE_CENTS)}</span>
@@ -293,7 +295,7 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
 
             {fullPackage ? (
               <div className="p-4 grid grid-cols-1 min-[400px]:grid-cols-2 sm:grid-cols-4 gap-3">
-                <SizeSelect label="Singlet" value={bundleSizes.singletSize} onChange={(v) => setBundleSizes((s) => ({ ...s, singletSize: v }))} required compact />
+                <SizeSelect label="Singlet (blue & white)" value={bundleSizes.singletSize} onChange={(v) => setBundleSizes((s) => ({ ...s, singletSize: v }))} required compact />
                 <SizeSelect label="Shorts" value={bundleSizes.shortsSize} onChange={(v) => setBundleSizes((s) => ({ ...s, shortsSize: v }))} required compact />
                 <SizeSelect label="SS tee" value={bundleSizes.shortSleeveSize} onChange={(v) => setBundleSizes((s) => ({ ...s, shortSleeveSize: v }))} required compact />
                 <SizeSelect label="LS tee" value={bundleSizes.longSleeveSize} onChange={(v) => setBundleSizes((s) => ({ ...s, longSleeveSize: v }))} required compact />
@@ -319,12 +321,15 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
                       onCheckedChange={(c) =>
                         updateIndividual({
                           singletQty: c ? 1 : 0,
+                          singletColor: c ? individual.singletColor : "",
                           singletSize: c ? individual.singletSize : "",
                         })
                       }
                       className="h-5 w-5 data-[state=checked]:bg-[#CBAF5D]"
                     />
-                    <span className="text-sm text-white flex-1">Singlet</span>
+                    <span className="text-sm text-white flex-1">
+                      Singlet <span className="text-white/45 text-xs">(blue or white)</span>
+                    </span>
                   </div>
                   {individual.singletQty > 0 ? (
                     <>
@@ -333,21 +338,50 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
                         onValueChange={(v) =>
                           updateIndividual({
                             singletQty: v === "2" ? 2 : 1,
+                            singletColor: v === "2" ? "" : individual.singletColor,
                           })
                         }
                       >
-                        <SelectTrigger className={cn(hubSelectTrigger, "w-[130px]")}>
+                        <SelectTrigger className={cn(hubSelectTrigger, "w-[150px]")}>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="1">1 — {formatDollars(NHSCA_SINGLET_EACH_CENTS)}</SelectItem>
-                          <SelectItem value="2">2 — {formatDollars(NHSCA_SINGLET_TWO_CENTS)}</SelectItem>
+                          <SelectItem value="2">Both — {formatDollars(NHSCA_SINGLET_TWO_CENTS)}</SelectItem>
                         </SelectContent>
                       </Select>
+                      {individual.singletQty === 1 ? (
+                        <div className="space-y-1.5 w-full sm:max-w-[140px]">
+                          <Label className="text-xs text-white/70">
+                            Color <span className="text-red-400">*</span>
+                          </Label>
+                          <Select
+                            value={individual.singletColor || NONE}
+                            onValueChange={(v) =>
+                              updateIndividual({
+                                singletColor: v === NONE ? "" : (v as "blue" | "white"),
+                              })
+                            }
+                          >
+                            <SelectTrigger className={hubSelectTrigger}>
+                              <SelectValue placeholder="Blue or white" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value={NONE}>Color</SelectItem>
+                              <SelectItem value="blue">Blue</SelectItem>
+                              <SelectItem value="white">White</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-white/50 pb-2 self-center">Blue &amp; white</span>
+                      )}
                       <SizeSelect label="Size" value={individual.singletSize} onChange={(v) => updateIndividual({ singletSize: v })} required compact />
                     </>
                   ) : (
-                    <span className="text-xs text-white/40 pb-2">1 {formatDollars(NHSCA_SINGLET_EACH_CENTS)} · 2 {formatDollars(NHSCA_SINGLET_TWO_CENTS)}</span>
+                    <span className="text-xs text-white/40 pb-2">
+                      {formatDollars(NHSCA_SINGLET_EACH_CENTS)} blue or white · both {formatDollars(NHSCA_SINGLET_TWO_CENTS)}
+                    </span>
                   )}
                 </div>
 

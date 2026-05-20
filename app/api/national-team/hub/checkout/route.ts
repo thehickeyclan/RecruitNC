@@ -8,6 +8,7 @@ import {
   buildTeamPackageLineItems,
   encodeLineItemsMetadata,
   formatShirtSizeForDb,
+  formatSingletSizeForDb,
   lineItemsTotalCents,
   normalizeGearSizeForDb,
   splitFeesFromLineItems,
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
     if (!singlet || !shorts || !ss || !ls) {
       return NextResponse.json({ error: "Select all apparel sizes for the team package." }, { status: 400 })
     }
-    singletSize = normalizeGearSizeForDb(singlet)
+    singletSize = formatSingletSizeForDb(singlet, { qty: 2 })
     shortsSize = normalizeGearSizeForDb(shorts)
     shirtSize = formatShirtSizeForDb(ss, ls)
     lineItems = buildTeamPackageLineItems({ vanTravel: vanTravelRequested, hotel: hotelRequested })
@@ -83,6 +84,8 @@ export async function POST(request: NextRequest) {
     const individual: NhscaHubIndividualSelections = {
       registration: !!sel?.registration,
       singletQty: sel?.singletQty === 2 ? 2 : sel?.singletQty === 1 ? 1 : 0,
+      singletColor:
+        sel?.singletColor === "blue" || sel?.singletColor === "white" ? sel.singletColor : "",
       singletSize: typeof sel?.singletSize === "string" ? sel.singletSize : "",
       shorts: !!sel?.shorts,
       shortsSize: typeof sel?.shortsSize === "string" ? sel.shortsSize : "",
@@ -98,6 +101,9 @@ export async function POST(request: NextRequest) {
     if (individual.singletQty > 0 && !individual.singletSize) {
       return NextResponse.json({ error: "Select singlet size." }, { status: 400 })
     }
+    if (individual.singletQty === 1 && !individual.singletColor) {
+      return NextResponse.json({ error: "Select blue or white singlet." }, { status: 400 })
+    }
     if (individual.shorts && !individual.shortsSize) {
       return NextResponse.json({ error: "Select shorts size." }, { status: 400 })
     }
@@ -108,7 +114,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Select long sleeve size." }, { status: 400 })
     }
     lineItems = buildIndividualLineItems(individual)
-    if (individual.singletQty > 0) singletSize = normalizeGearSizeForDb(individual.singletSize)
+    if (individual.singletQty > 0) {
+      singletSize = formatSingletSizeForDb(individual.singletSize, {
+        qty: individual.singletQty,
+        color: individual.singletColor,
+      })
+    }
     if (individual.shorts) shortsSize = normalizeGearSizeForDb(individual.shortsSize)
     shirtSize = formatShirtSizeForDb(
       individual.shortSleeve ? individual.shortSleeveSize : "",
@@ -190,7 +201,7 @@ export async function POST(request: NextRequest) {
     line_items: stripeLineItems,
     customer_email: parentEmail,
     success_url: `${baseUrl}/national-team/register/${returnSlug}/success?session_id={CHECKOUT_SESSION_ID}&from=hub`,
-    cancel_url: `${baseUrl}/national-team/hub?tab=payment&cancelled=1`,
+    cancel_url: `${baseUrl}/national-team/hub?tab=payments&cancelled=1`,
     metadata: {
       business: "nc_united",
       channel: "recruitnc",

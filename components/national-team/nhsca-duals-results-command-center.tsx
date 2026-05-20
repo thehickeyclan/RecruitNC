@@ -64,7 +64,7 @@ export function NhscaDualsResultsCommandCenter({ snapshot }: { snapshot: NhscaDu
                 </span>
               ) : null}
             </div>
-            <h2 className="text-lg font-black text-white tracking-tight">NHSCA Duals Results</h2>
+            <h2 className="text-lg font-black text-white tracking-tight">NHSCA Duals Live</h2>
           </div>
           <Activity className="h-6 w-6 text-[#CBAF5D]/50 shrink-0" aria-hidden />
         </div>

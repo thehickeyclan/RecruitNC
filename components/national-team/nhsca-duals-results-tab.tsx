@@ -159,7 +159,7 @@ export function NhscaDualsResultsTab() {
             )}
             onClick={() => setAdminMode(false)}
           >
-            View results
+            View live
           </button>
           <button
             type="button"

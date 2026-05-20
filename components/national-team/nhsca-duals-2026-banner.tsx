@@ -3,6 +3,8 @@
 import Image from "next/image"
 import { ArrowRight, Radio } from "lucide-react"
 import { HardLink } from "@/components/hard-link"
+import { NhscaDuals2026SingletPreview } from "@/components/national-team/nhsca-duals-2026-singlet-preview"
+import { NhscaDuals2026ApparelPreview } from "@/components/national-team/nhsca-duals-2026-apparel-preview"
 import { cn } from "@/lib/utils"
 import {
   NhscaDualsCountdownFace,
@@ -179,6 +181,15 @@ export function NhscaDuals2026Banner({
                 <ArrowRight className="ml-2 h-5 w-5 text-[#D3B574]" aria-hidden />
               </HardLink>
               <HardLink
+                href="/national-team/hub?tab=payments"
+                className={cn(
+                  "inline-flex items-center justify-center rounded-xl bg-[#B31B1B] font-bold text-white shadow-md transition hover:bg-[#9a1616]",
+                  isHero ? "min-h-[52px] px-6 py-3 text-base" : "min-h-[48px] px-5 py-2.5 text-sm"
+                )}
+              >
+                Order team gear
+              </HardLink>
+              <HardLink
                 href="/national-team"
                 className={cn(
                   "inline-flex items-center justify-center rounded-xl border-2 border-[#002147] bg-white/80 font-semibold text-[#002147] transition hover:bg-white",
@@ -190,7 +201,9 @@ export function NhscaDuals2026Banner({
             </div>
           </div>
 
-          <div className={cn("w-full shrink-0", isHero ? "lg:max-w-md xl:max-w-lg" : "lg:max-w-sm xl:max-w-md")}>
+          <div className={cn("w-full shrink-0 space-y-3", isHero ? "lg:max-w-md xl:max-w-lg" : "lg:max-w-sm xl:max-w-md")}>
+            <NhscaDuals2026SingletPreview compact className="w-full mx-auto lg:mx-0" />
+            <NhscaDuals2026ApparelPreview compact className="w-full mx-auto lg:mx-0 max-w-sm lg:max-w-none" />
             <CountdownPanel large={isHero} dark />
           </div>
         </div>
