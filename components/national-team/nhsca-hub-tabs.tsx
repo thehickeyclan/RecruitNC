@@ -6,8 +6,7 @@ import { useSearchParams } from "next/navigation"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { NHSCADuals2026HowToWatch } from "@/components/national-team/nhsca-duals-2026-how-to-watch"
 import { NHSCADuals2026TeamHubFaq } from "@/components/national-team/nhsca-duals-2026-team-hub-faq"
-import { NhscaHubApparelTab } from "@/components/national-team/nhsca-hub-apparel-tab"
-import { NhscaHubGearSprinkle } from "@/components/national-team/nhsca-hub-gear-sprinkle"
+import { NhscaHubEventInfo } from "@/components/national-team/nhsca-hub-event-info"
 import { NhscaHubMediaTab } from "@/components/national-team/nhsca-hub-media-tab"
 import { NhscaHubPaymentsTab } from "@/components/national-team/nhsca-hub-payments-tab"
 import { NhscaDualsResultsTab } from "@/components/national-team/nhsca-duals-results-tab"
@@ -58,8 +57,9 @@ export function NhscaHubTabs({
         <TabsTrigger value="results" className={cn(tabTriggerClass, "shrink-0 snap-start min-w-[38%] sm:min-w-0 px-3")}>
           Live
         </TabsTrigger>
-        <TabsTrigger value="apparel" className={cn(tabTriggerClass, "shrink-0 snap-start min-w-[38%] sm:min-w-0 px-3")}>
-          Apparel
+        <TabsTrigger value="event-info" className={cn(tabTriggerClass, "shrink-0 snap-start min-w-[38%] sm:min-w-0 px-3")}>
+          <span className="sm:hidden">Info</span>
+          <span className="hidden sm:inline">Event Info</span>
         </TabsTrigger>
         <TabsTrigger value="payments" className={cn(tabTriggerClass, "shrink-0 snap-start min-w-[38%] sm:min-w-0 px-3")}>
           Payments
@@ -74,8 +74,8 @@ export function NhscaHubTabs({
         </TabsList>
       </div>
 
-      <TabsContent value="apparel" className="mt-0 space-y-6 focus-visible:outline-none">
-        <NhscaHubApparelTab />
+      <TabsContent value="event-info" className="mt-0 space-y-6 focus-visible:outline-none">
+        <NhscaHubEventInfo />
         <article className={hubPanelClass}>
           <header className={hubPanelHeaderClass}>
             <h3 className={hubPanelTitleClass}>Team FAQ</h3>
@@ -99,8 +99,7 @@ export function NhscaHubTabs({
         <NhscaHubMediaTab isAdmin={isAdmin} userId={userId} />
       </TabsContent>
 
-      <TabsContent value="rosters" className="mt-0 focus-visible:outline-none space-y-6">
-        <NhscaHubGearSprinkle />
+      <TabsContent value="rosters" className="mt-0 focus-visible:outline-none">
         {rosterContent ?? (
           <article className={hubPanelClass}>
             <div className="p-8 text-center text-sm text-white/60">{registrationFallback}</div>

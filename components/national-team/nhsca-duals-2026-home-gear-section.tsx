@@ -16,7 +16,7 @@ export function NhscaDuals2026HomeGearSection() {
           </div>
           <div className="flex flex-wrap gap-2">
             <HardLink
-              href="/national-team/hub?tab=apparel"
+              href="/national-team/hub?tab=payments"
               className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-white/20 px-4 text-sm font-semibold text-white hover:bg-white/10"
             >
               Apparel
