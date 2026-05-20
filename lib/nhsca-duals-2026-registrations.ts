@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { gearSummaryFromRegistration } from "@/lib/nhsca-hub-checkout-pricing"
 
 /** NHSCA Duals 2026 — National & Select event slugs (same as admin payments). */
 export const NHSCA_DUALS_2026_EVENT_SLUGS = ["nhsca-duals-2026", "nhsca-duals-2026-select"] as const
@@ -19,9 +20,28 @@ export type NhscaDuals2026Registration = {
   apparel_fee_cents: number
   status: string
   order_id: string | null
+  order_number?: string | null
   record?: string | null
   created_at: string
+  updated_at?: string | null
+  shirt_size?: string | null
+  singlet_size?: string | null
+  shorts_size?: string | null
   fee_receipt_email_sent_at?: string | null
+}
+
+/** Hub Payment → Orders tab (paid only). */
+export type NhscaDuals2026PaidOrderRow = {
+  id: string
+  athlete: string
+  parent_email: string
+  weight: string
+  amount_cents: number
+  /** Stripe order number when available. */
+  code: string
+  team: string
+  items: string
+  paid_at: string
 }
 
 function normalizeEmail(email: string | null | undefined): string {
@@ -54,6 +74,23 @@ async function enrichLinkedAccountEmails(
   for (const r of registrations) {
     const uid = r.parent_user_id
     r.linked_account_email = uid ? linkedEmailByUserId.get(uid) ?? null : null
+  }
+}
+
+async function attachOrderNumbers(
+  admin: SupabaseClient,
+  registrations: NhscaDuals2026Registration[]
+): Promise<void> {
+  const orderIds = [...new Set(registrations.map((r) => r.order_id).filter(Boolean))] as string[]
+  if (orderIds.length === 0) return
+  const { data: orders } = await admin.from("orders").select("id, order_number").in("id", orderIds)
+  const byId = new Map<string, string>()
+  for (const o of orders ?? []) {
+    const row = o as { id: string; order_number?: string | null }
+    if (row.order_number?.trim()) byId.set(row.id, row.order_number.trim())
+  }
+  for (const r of registrations) {
+    r.order_number = r.order_id ? byId.get(r.order_id) ?? null : null
   }
 }
 
@@ -95,7 +132,7 @@ export async function listNhscaDuals2026Registrations(
   const eventSlugs = opts.eventSlug ? [opts.eventSlug] : [...NHSCA_DUALS_2026_EVENT_SLUGS]
 
   const selectCols =
-    "id, event_slug, athlete_first_name, athlete_last_name, athlete_email, parent_email, parent_user_id, high_school, graduation_year, primary_weight, reg_fee_cents, apparel_fee_cents, status, order_id, record, created_at"
+    "id, event_slug, athlete_first_name, athlete_last_name, athlete_email, parent_email, parent_user_id, high_school, graduation_year, primary_weight, reg_fee_cents, apparel_fee_cents, status, order_id, record, created_at, shirt_size, singlet_size, shorts_size, updated_at"
 
   let rows: NhscaDuals2026Registration[] = []
 
@@ -140,8 +177,44 @@ export async function listNhscaDuals2026Registrations(
   }
 
   await enrichLinkedAccountEmails(admin, rows)
+  await attachOrderNumbers(admin, rows)
   await attachReceiptSentAt(admin, rows)
   return rows
+}
+
+/** Paid NHSCA Duals orders for hub Past orders — athlete, parent, weight, amount, code only. */
+export async function listNhscaDuals2026PaidOrders(
+  admin: SupabaseClient,
+  opts: {
+    isAdmin: boolean
+    viewerUserId?: string | null
+    viewerEmail?: string | null
+    eventSlug?: string | null
+  }
+): Promise<NhscaDuals2026PaidOrderRow[]> {
+  const all = await listNhscaDuals2026Registrations(admin, opts)
+  return all
+    .filter((r) => nhscaDualsRegistrationIsPaid(r))
+    .map((r) => toPaidOrderRow(r))
+}
+
+export function nhscaDualsOrderCode(r: Pick<NhscaDuals2026Registration, "order_number" | "event_slug">): string {
+  if (r.order_number?.trim()) return r.order_number.trim()
+  return nhscaDualsTeamShortLabel(r.event_slug)
+}
+
+function toPaidOrderRow(r: NhscaDuals2026Registration): NhscaDuals2026PaidOrderRow {
+  return {
+    id: r.id,
+    athlete: `${r.athlete_first_name} ${r.athlete_last_name}`.trim(),
+    parent_email: r.parent_email,
+    weight: r.primary_weight,
+    amount_cents: nhscaDualsRegistrationTotalCents(r),
+    code: nhscaDualsOrderCode(r),
+    team: nhscaDualsTeamShortLabel(r.event_slug),
+    items: gearSummaryFromRegistration(r),
+    paid_at: r.updated_at ?? r.created_at,
+  }
 }
 
 export function nhscaDualsRegistrationTotalCents(r: Pick<NhscaDuals2026Registration, "reg_fee_cents" | "apparel_fee_cents">) {
