@@ -65,7 +65,7 @@ export default function NationalTeamHubPage() {
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0, ready: false })
   const refetchedWithToken = useRef(false)
 
- = useCallback((): RequestInit => {
+  const hubFetchOptions = useCallback((): RequestInit => {
     const opts: RequestInit = { credentials: "include" }
     if (session?.access_token) {
       (opts as RequestInit & { headers?: Record<string, string> }).headers = {
