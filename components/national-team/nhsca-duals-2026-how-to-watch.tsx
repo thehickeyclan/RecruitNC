@@ -9,27 +9,45 @@ import {
   hubPanelTitleClass,
 } from "@/components/national-team/nhsca-hub-theme"
 
-const FLO_MAIN = "https://www.flowrestling.org/"
+const FLO_HOW_TO_WATCH =
+  "https://www.flowrestling.org/articles/15686324-how-to-watch-2026-nhsca-national-duals-wrestling?classic=true"
 const NHSCA_DUALS_PAGE = "https://nhsca-events.com/national-duals/"
 
-export function NHSCADuals2026HowToWatch({ hubTheme = false }: { hubTheme?: boolean }) {
+export function NHSCADuals2026HowToWatch({
+  hubTheme = false,
+  embedded = false,
+}: {
+  hubTheme?: boolean
+  /** Parent NhscaHubSection supplies the section title when embedded on the hub page. */
+  embedded?: boolean
+}) {
   if (hubTheme) {
     return (
-      <article id="how-to-watch" className={cn(hubPanelClass, "scroll-mt-8")}>
-        <header className={hubPanelHeaderClass}>
-          <h2 className={cn(hubPanelTitleClass, "flex items-center gap-2")}>
-            <Tv className="h-5 w-5 text-[#CBAF5D]" />
-            How to watch
-          </h2>
-          <p className={hubPanelDescClass}>FloWrestling streams competition Sat–Mon; brackets on NHSCA.</p>
-        </header>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-[#B31B1B] px-5 py-5 text-white border-b border-white/10">
+      <article
+        id={embedded ? undefined : "how-to-watch"}
+        className={cn(hubPanelClass, !embedded && "scroll-mt-8")}
+      >
+        {!embedded && (
+          <header className={hubPanelHeaderClass}>
+            <h2 className={cn(hubPanelTitleClass, "flex items-center gap-2")}>
+              <Tv className="h-5 w-5 text-[#CBAF5D]" />
+              How to watch
+            </h2>
+            <p className={hubPanelDescClass}>FloWrestling streams competition Sat–Mon; brackets on NHSCA.</p>
+          </header>
+        )}
+        <div
+          className={cn(
+            "flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-[#B31B1B] px-5 py-5 text-white",
+            embedded ? "rounded-t-2xl" : "border-b border-white/10"
+          )}
+        >
           <div>
             <p className="text-lg font-bold">Watch live on FloWrestling</p>
             <p className="text-sm text-white/90 mt-1">Sat May 23 – Mon May 25, 2026</p>
           </div>
           <Button asChild className="shrink-0 bg-white text-[#B31B1B] hover:bg-gray-100 font-bold min-h-[44px]">
-            <a href={FLO_MAIN} target="_blank" rel="noopener noreferrer">
+            <a href={FLO_HOW_TO_WATCH} target="_blank" rel="noopener noreferrer">
               <PlayCircle className="h-4 w-4 mr-2" />
               Watch live
               <ExternalLink className="h-3.5 w-3.5 ml-1 opacity-70" />
@@ -63,7 +81,7 @@ export function NHSCADuals2026HowToWatch({ hubTheme = false }: { hubTheme?: bool
               variant="outline"
               className="flex-1 min-h-[44px] border-white/25 bg-transparent text-white hover:bg-white/10 hover:text-white font-semibold"
             >
-              <a href={FLO_MAIN} target="_blank" rel="noopener noreferrer">
+              <a href={FLO_HOW_TO_WATCH} target="_blank" rel="noopener noreferrer">
                 FloWrestling
                 <ExternalLink className="h-3.5 w-3.5 ml-1" />
               </a>
@@ -106,7 +124,7 @@ export function NHSCADuals2026HowToWatch({ hubTheme = false }: { hubTheme?: bool
             <p className="text-sm text-white/90 mt-1">Sat May 23 – Mon May 25, 2026</p>
           </div>
           <Button asChild className="shrink-0 bg-white text-[#B31B1B] hover:bg-gray-100 font-bold">
-            <a href={FLO_MAIN} target="_blank" rel="noopener noreferrer">
+            <a href={FLO_HOW_TO_WATCH} target="_blank" rel="noopener noreferrer">
               <PlayCircle className="h-4 w-4 mr-2" />
               Watch live
               <ExternalLink className="h-3.5 w-3.5 ml-1 opacity-70" />
@@ -136,7 +154,7 @@ export function NHSCADuals2026HowToWatch({ hubTheme = false }: { hubTheme?: bool
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
             <Button asChild variant="outline" className="flex-1 border-[#003366] text-[#003366] font-semibold">
-              <a href={FLO_MAIN} target="_blank" rel="noopener noreferrer">
+              <a href={FLO_HOW_TO_WATCH} target="_blank" rel="noopener noreferrer">
                 FloWrestling
                 <ExternalLink className="h-3.5 w-3.5 ml-1" />
               </a>

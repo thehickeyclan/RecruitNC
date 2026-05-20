@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Loader2, Lock } from "lucide-react"
-import { NHSCA2026EventBlock } from "@/components/national-team/nhsca-2026-event-block"
 import { NHSCADuals2026TeamHubFaq } from "@/components/national-team/nhsca-duals-2026-team-hub-faq"
 import { NHSCADuals2026HowToWatch } from "@/components/national-team/nhsca-duals-2026-how-to-watch"
 import { NhscaHubHero } from "@/components/national-team/nhsca-hub-hero"
@@ -15,12 +14,13 @@ import { getHubGroupForEvent, HUB_EVENT_GROUPS } from "@/lib/national-team-event
 import {
   getDualsHubContactRoster,
   isNationalTeamEventSlug,
+  isSelectTeamEventSlug,
 } from "@/lib/nhsca-duals-2026-hub-contact-roster"
 import { TeamContactRoster } from "@/components/national-team/team-contact-roster"
 import { NationalTeamWrestlerCards } from "@/components/national-team/national-team-wrestler-cards"
+import { SelectTeamWrestlerCards } from "@/components/national-team/select-team-wrestler-cards"
 import { NhscaHubSection } from "@/components/national-team/nhsca-hub-section"
 import {
-  hubEventDetailsInnerClass,
   hubInfoBannerClass,
   hubMainClass,
   hubPageClass,
@@ -227,24 +227,14 @@ export default function NationalTeamHubPage() {
           </article>
         )}
 
-        <NHSCADuals2026HowToWatch hubTheme />
-
-        <NhscaHubSection id="faq" title="Team FAQ" description="Travel, weigh-ins, hotel, and day-of questions">
-          <article className={hubPanelClass}>
-            <div className="p-4 md:p-6 max-h-[min(70vh,640px)] overflow-y-auto">
-              <NHSCADuals2026TeamHubFaq />
-            </div>
-          </article>
+        <NhscaHubSection id="how-to-watch" title="How to watch" description="FloWrestling live stream and NHSCA brackets">
+          <NHSCADuals2026HowToWatch hubTheme embedded />
         </NhscaHubSection>
 
-        <NhscaHubSection
-          id="event-info"
-          title="Event details"
-          description="Coaches, schedule, venue, format, and rules"
-        >
+        <NhscaHubSection id="faq" title="Team FAQ" description="Travel, weigh-ins, hotel, tickets, and day-of questions">
           <article className={hubPanelClass}>
-            <div className={hubEventDetailsInnerClass}>
-              <NHSCA2026EventBlock />
+            <div className="p-5 md:p-6">
+              <NHSCADuals2026TeamHubFaq />
             </div>
           </article>
         </NhscaHubSection>
@@ -282,10 +272,12 @@ function hubContactRowCount(eventSlug: string): number | null {
 function HubRosterTable({ event }: { event: HubEvent }) {
   const contactRows = getDualsHubContactRoster(event.eventSlug)
   const showNationalCards = isNationalTeamEventSlug(event.eventSlug)
+  const showSelectCards = isSelectTeamEventSlug(event.eventSlug)
   if (contactRows) {
     return (
       <>
         {showNationalCards && <NationalTeamWrestlerCards />}
+        {showSelectCards && <SelectTeamWrestlerCards />}
         <p className="md:hidden text-xs text-white/60 font-medium px-5 py-2 border-b border-white/10" role="status">
           Scroll right → for parent contact column
         </p>
