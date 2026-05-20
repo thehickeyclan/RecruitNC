@@ -20,12 +20,13 @@ import type {
   NhscaDualsResultType,
   NhscaDualsResultsSnapshot,
 } from "@/lib/nhsca-duals-live-results/types"
-import { NHSCA_DUALS_DAY_1_NAME } from "@/lib/nhsca-duals-live-results/rosters"
 import { notifyNhscaDualsResultsUpdated } from "@/lib/nhsca-duals-results-events"
 import { NHSCA_DUALS_WEIGHTS, resultTypeLabel } from "@/lib/nhsca-duals-live-results/scoring"
+import { HorizontalScrollRow } from "@/components/ui/horizontal-scroll-row"
 import { cn } from "@/lib/utils"
 
 type TeamView = "national" | "select"
+type DayFilter = "all" | string
 
 const QUICK_NC: { result: NhscaDualsResultType; label: string }[] = [
   { result: "decision", label: "DEC" },
@@ -94,16 +95,14 @@ export function NhscaDualsResultsAdmin({
     () => [...snapshot.days].sort((a, b) => a.sort_order - b.sort_order),
     [snapshot.days]
   )
-  const [activeDayId, setActiveDayId] = useState(
-    () => sortedDays.find((d) => d.name === NHSCA_DUALS_DAY_1_NAME)?.id ?? sortedDays[0]?.id ?? ""
-  )
+  const [activeDayId, setActiveDayId] = useState<DayFilter>("all")
 
   const ncTeam = snapshot.teams.find((t) => t.team_type === teamView)
 
   const teamDuals = useMemo(() => {
     if (!ncTeam) return []
     return snapshot.duals
-      .filter((d) => d.team_id === ncTeam.id && (!activeDayId || d.day_id === activeDayId))
+      .filter((d) => d.team_id === ncTeam.id && (activeDayId === "all" || d.day_id === activeDayId))
       .sort((a, b) => a.sort_order - b.sort_order)
   }, [snapshot.duals, ncTeam, activeDayId])
 
@@ -220,8 +219,8 @@ export function NhscaDualsResultsAdmin({
 
   useEffect(() => {
     if (!sortedDays.length) return
-    if (!activeDayId || !sortedDays.some((d) => d.id === activeDayId)) {
-      setActiveDayId(sortedDays.find((d) => d.name === NHSCA_DUALS_DAY_1_NAME)?.id ?? sortedDays[0].id)
+    if (activeDayId !== "all" && !sortedDays.some((d) => d.id === activeDayId)) {
+      setActiveDayId("all")
     }
   }, [sortedDays, activeDayId])
 
@@ -295,8 +294,23 @@ export function NhscaDualsResultsAdmin({
         ))}
       </div>
 
-      {sortedDays.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-none mb-1">
+      {sortedDays.length > 0 && (
+        <HorizontalScrollRow hint="Swipe for more days" className="mb-2" showHint={sortedDays.length > 2}>
+          <button
+            type="button"
+            onClick={() => {
+              setActiveDayId("all")
+              setDualId("")
+            }}
+            className={cn(
+              "shrink-0 snap-start min-h-[36px] px-3.5 rounded-lg text-sm font-semibold border",
+              activeDayId === "all"
+                ? "bg-[#CBAF5D] text-[#002147] border-[#CBAF5D]"
+                : "bg-[#0a2040] text-white/75 border-white/15"
+            )}
+          >
+            All
+          </button>
           {sortedDays.map((d) => (
             <button
               key={d.id}
@@ -306,7 +320,7 @@ export function NhscaDualsResultsAdmin({
                 setDualId("")
               }}
               className={cn(
-                "shrink-0 min-h-[40px] px-4 rounded-lg text-sm font-semibold border",
+                "shrink-0 snap-start min-h-[36px] px-3.5 rounded-lg text-sm font-semibold border",
                 d.id === activeDayId
                   ? "bg-[#CBAF5D] text-[#002147] border-[#CBAF5D]"
                   : "bg-[#0a2040] text-white/75 border-white/15"
@@ -315,23 +329,26 @@ export function NhscaDualsResultsAdmin({
               {d.name}
             </button>
           ))}
-        </div>
+        </HorizontalScrollRow>
       )}
 
       {teamDuals.length > 0 ? (
-        <div className="flex gap-2 overflow-x-auto pb-3 -mx-1 px-1 scrollbar-none">
+        <HorizontalScrollRow hint="Swipe for more opponents" className="pb-2" edgeClassName="from-[#001a33]">
           {teamDuals.map((d) => (
             <button
               key={d.id}
               type="button"
               onClick={() => setDualId(d.id)}
               className={cn(
-                "shrink-0 min-h-[52px] px-3 rounded-xl text-left border min-w-[140px] max-w-[200px]",
+                "shrink-0 snap-start min-h-[48px] px-3 rounded-xl text-left border min-w-[130px] max-w-[180px]",
                 d.id === effectiveDualId
                   ? "bg-[#CBAF5D] text-[#002147] border-[#CBAF5D]"
                   : "bg-[#0a2040] text-white/85 border-white/15"
               )}
             >
+              <span className="block text-[10px] font-semibold opacity-80">
+                {sortedDays.find((day) => day.id === d.day_id)?.name ?? "Day"}
+              </span>
               <span className="block text-xs font-semibold">{shortRound(d.round_name)}</span>
               <span className="block text-sm font-bold truncate">vs {d.opponent_team_name}</span>
               <span className="block text-[10px] tabular-nums mt-0.5 opacity-80">
@@ -340,7 +357,7 @@ export function NhscaDualsResultsAdmin({
               </span>
             </button>
           ))}
-        </div>
+        </HorizontalScrollRow>
       ) : (
         <p className="text-sm text-amber-200/90 text-center py-4">
           No duals for this day yet. Day 1 schedule is loaded from code — use Initialize if empty, or ask dev to add

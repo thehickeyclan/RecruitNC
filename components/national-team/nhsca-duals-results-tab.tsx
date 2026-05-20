@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { Loader2 } from "lucide-react"
+import { ChevronDown, Loader2 } from "lucide-react"
 import {
   hubPanelClass,
   hubPanelDescClass,
@@ -21,11 +21,12 @@ type SnapshotResponse = NhscaDualsResultsSnapshot & {
   message?: string
 }
 
-export function NhscaDualsResultsTab({ isAdmin = false }: { isAdmin?: boolean }) {
+export function NhscaDualsResultsTab() {
   const [data, setData] = useState<SnapshotResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [adminMode, setAdminMode] = useState(isAdmin)
+  const [adminMode, setAdminMode] = useState(false)
+  const [cardsOpen, setCardsOpen] = useState(false)
 
   const load = useCallback(async (seed?: boolean) => {
     setError(null)
@@ -79,19 +80,23 @@ export function NhscaDualsResultsTab({ isAdmin = false }: { isAdmin?: boolean })
     }
   }, [load])
 
-  const showAdmin = isAdmin && data?.isAdmin
+  const canEnterResults = data?.isAdmin === true
   const tablesReady = data?.tablesReady !== false && (data?.teams?.length ?? 0) > 0
 
-  /** Fans (and admin preview) see score updates without manual refresh. */
   useEffect(() => {
-    if (!tablesReady || (adminMode && showAdmin)) return
+    if (!canEnterResults) setAdminMode(false)
+  }, [canEnterResults])
+
+  /** Fans see score updates without manual refresh; admins in entry mode use POST responses. */
+  useEffect(() => {
+    if (!tablesReady || (adminMode && canEnterResults)) return
     const id = window.setInterval(() => {
       void load()
         .then((json) => setData(json))
         .catch(() => {})
     }, 10_000)
     return () => window.clearInterval(id)
-  }, [tablesReady, adminMode, showAdmin, load])
+  }, [tablesReady, adminMode, canEnterResults, load])
 
   if (loading) {
     return (
@@ -120,7 +125,7 @@ export function NhscaDualsResultsTab({ isAdmin = false }: { isAdmin?: boolean })
         </header>
         <div className="p-5 space-y-3 text-sm text-white/70">
           <p>{data?.message ?? "Tables missing in Supabase."}</p>
-          {showAdmin && (
+          {canEnterResults && (
             <button
               type="button"
               className="min-h-[44px] w-full rounded-xl bg-[#CBAF5D] px-4 py-3 font-semibold text-[#002147]"
@@ -144,7 +149,7 @@ export function NhscaDualsResultsTab({ isAdmin = false }: { isAdmin?: boolean })
 
   return (
     <div className="space-y-4">
-      {showAdmin && (
+      {canEnterResults && (
         <div className="flex rounded-xl bg-[#0a2040] border border-white/10 p-1 gap-1">
           <button
             type="button"
@@ -169,13 +174,30 @@ export function NhscaDualsResultsTab({ isAdmin = false }: { isAdmin?: boolean })
         </div>
       )}
 
-      {adminMode && showAdmin ? (
+      {adminMode && canEnterResults ? (
         <NhscaDualsResultsAdmin snapshot={snapshot} onSaved={applySnapshot} />
       ) : (
         <>
           <NhscaDualsResultsPublic snapshot={snapshot} />
-          <NationalTeamWrestlerCards resultsSnapshot={snapshot} className="rounded-2xl border border-white/10 overflow-hidden bg-[#0a2040]/40" />
-          <SelectTeamWrestlerCards resultsSnapshot={snapshot} className="rounded-2xl border border-white/10 overflow-hidden bg-[#0a2040]/40" />
+          <section className="rounded-2xl border border-white/10 overflow-hidden bg-[#0a2040]/40">
+            <button
+              type="button"
+              className="w-full flex items-center justify-between gap-2 px-4 py-3 text-left border-b border-white/10 bg-[#002147]/35"
+              onClick={() => setCardsOpen((o) => !o)}
+              aria-expanded={cardsOpen}
+            >
+              <span className="text-sm font-bold text-white">Team flip cards</span>
+              <ChevronDown className={cn("h-4 w-4 text-white/45 transition-transform", cardsOpen && "rotate-180")} />
+            </button>
+            {cardsOpen ? (
+              <>
+                <NationalTeamWrestlerCards resultsSnapshot={snapshot} />
+                <SelectTeamWrestlerCards resultsSnapshot={snapshot} />
+              </>
+            ) : (
+              <p className="px-4 py-3 text-xs text-white/45">Tap to view National &amp; Select athlete cards with bout stats.</p>
+            )}
+          </section>
         </>
       )}
     </div>

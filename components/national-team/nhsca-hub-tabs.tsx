@@ -63,7 +63,7 @@ export function NhscaHubTabs({
       </TabsContent>
 
       <TabsContent value="results" className="mt-0 focus-visible:outline-none">
-        <NhscaDualsResultsTab isAdmin={isAdmin} />
+        <NhscaDualsResultsTab />
       </TabsContent>
 
       <TabsContent value="payment" className="mt-0 focus-visible:outline-none">
