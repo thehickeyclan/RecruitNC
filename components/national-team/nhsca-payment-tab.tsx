@@ -96,30 +96,24 @@ export function NhscaPaymentTab() {
   const [wantHotel, setWantHotel] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
+  const [athleteName, setAthleteName] = useState("")
+  const [team, setTeam] = useState<"national" | "select">("national")
+  const [cancelled, setCancelled] = useState(false)
+  const searchParams = useSearchParams()
+
+  // Check for payment status in URL
+  useEffect(() => {
+    const status = searchParams.get("status")
+    if (status === "cancelled") {
+      setCancelled(true)
+    }
+  }, [searchParams])
 
   // Fetch user's orders
   const { data: ordersData } = useSWR("/api/nhsca-duals/payments", fetcher, { revalidateOnFocus: false })
   const orders = ordersData?.payments || []
   const [existingPayments, setExistingPayments] = useState<Array<{ id: string; status: string; amount_cents: number; created_at: string; items: unknown[] }>>([])
   const [loadingPayments, setLoadingPayments] = useState(true)
-
-  // Load existing payments
-  useEffect(() => {
-    async function loadPayments() {
-      try {
-        const res = await fetch("/api/nhsca-duals/payments")
-        if (res.ok) {
-          const data = await res.json()
-          setExistingPayments(data.payments || [])
-        }
-      } catch {
-        // ignore
-      } finally {
-        setLoadingPayments(false)
-      }
-    }
-    loadPayments()
-  }, [success])
 
   // Calculate cart based on mode
   useEffect(() => {
@@ -251,21 +245,6 @@ if (longSleeveSize && longSleeveSize !== "none" && longSleeveSize !== "") {
     } finally {
       setSubmitting(false)
     }
-  }
-
-  // Show success state
-  if (success) {
-    return (
-      <Card className="bg-[#0d1f38] border-[#1a3a5c]">
-        <CardContent className="pt-8 pb-8 text-center">
-          <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Check className="h-8 w-8 text-green-500" />
-          </div>
-          <h3 className="text-xl font-bold text-white mb-2">Payment Successful!</h3>
-          <p className="text-white/70">Thank you for your payment. You will receive a confirmation email shortly.</p>
-        </CardContent>
-      </Card>
-    )
   }
 
   // Show existing paid payments
