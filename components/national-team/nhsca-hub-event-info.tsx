@@ -1,19 +1,52 @@
 "use client"
 
 import Image from "next/image"
-import { Calendar, Clock, ExternalLink, MapPin } from "lucide-react"
+import { Calendar, Clock, ExternalLink, MapPin, ChevronDown } from "lucide-react"
 import { hubPanelClass, hubPanelDescClass, hubPanelHeaderClass, hubPanelTitleClass } from "@/components/national-team/nhsca-hub-theme"
 import { cn } from "@/lib/utils"
+import { useState } from "react"
 
 const VBSC_MAPS =
   "https://www.google.com/maps/search/?api=1&query=Virginia+Beach+Sports+Center"
 const NHSCA_OFFICIAL = "https://nhsca-events.com/national-duals/"
 
 const SCHEDULE_ROWS = [
-  { day: "Friday, May 22", event: "Travel + weigh-ins" },
-  { day: "Saturday, May 23", event: "Day 1 — 3 duals (pool)" },
-  { day: "Sunday, May 24", event: "Day 2 — min. 3 duals" },
-  { day: "Monday, May 25", event: "Championship bracket (advancing teams only)" },
+  {
+    day: "Friday, May 22",
+    event: "Travel + weigh-ins",
+    details: [
+      { time: "9:00 AM", desc: "Depart Raleigh (NC United transportation)" },
+      { time: "2:00–4:00 PM", desc: "Early weigh-ins at VBSC (optional)" },
+      { time: "6:00–7:30 PM", desc: "Regular weigh-ins at VBSC" },
+    ],
+  },
+  {
+    day: "Saturday, May 23",
+    event: "Day 1 — 3 duals (pool)",
+    details: [
+      { time: "8:00 AM", desc: "Athlete check-in" },
+      { time: "9:00 AM", desc: "First dual begins" },
+      { time: "TBD", desc: "See official NHSCA schedule for exact times" },
+    ],
+  },
+  {
+    day: "Sunday, May 24",
+    event: "Day 2 — min. 3 duals",
+    details: [
+      { time: "8:00 AM", desc: "Athlete check-in" },
+      { time: "9:00 AM", desc: "Duals begin" },
+      { time: "TBD", desc: "See official NHSCA schedule for exact times" },
+    ],
+  },
+  {
+    day: "Monday, May 25",
+    event: "Championship bracket (advancing teams only)",
+    details: [
+      { time: "8:00 AM", desc: "Athlete check-in for bracket teams" },
+      { time: "9:00 AM", desc: "Championship bracket begins" },
+      { time: "TBD", desc: "See official NHSCA schedule" },
+    ],
+  },
 ] as const
 
 function HubInfoCard({
@@ -45,17 +78,39 @@ function HubInfoCard({
 
 /** Event Info tab — schedule, venue, travel summary (dark hub panels). */
 export function NhscaHubEventInfo() {
+  const [expandedDay, setExpandedDay] = useState<string | null>("Friday, May 22")
+
   return (
     <div className="space-y-5 md:space-y-6">
       <HubInfoCard icon={Calendar} title="Schedule">
-        <ul className="space-y-4">
-          {SCHEDULE_ROWS.map(({ day, event }) => (
-            <li
-              key={day}
-              className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1 border-b border-white/10 pb-4 last:border-0 last:pb-0"
-            >
-              <span className="font-semibold text-white">{day}</span>
-              <span className="text-[#D3B574] font-medium sm:text-right">{event}</span>
+        <ul className="space-y-2">
+          {SCHEDULE_ROWS.map(({ day, event, details }) => (
+            <li key={day} className="border-b border-white/10 last:border-0">
+              <button
+                onClick={() => setExpandedDay(expandedDay === day ? null : day)}
+                className="w-full flex items-center justify-between gap-3 py-4 text-left hover:bg-white/5 rounded-lg px-2 -mx-2 transition-colors"
+              >
+                <div className="flex-1">
+                  <span className="font-semibold text-white">{day}</span>
+                  <span className="ml-2 text-[#D3B574] font-medium">{event}</span>
+                </div>
+                <ChevronDown
+                  className={cn(
+                    "h-5 w-5 text-white/60 transition-transform shrink-0",
+                    expandedDay === day && "rotate-180"
+                  )}
+                />
+              </button>
+              {expandedDay === day && (
+                <div className="pb-3 pl-2 space-y-2">
+                  {details.map((detail, idx) => (
+                    <div key={idx} className="flex gap-3 text-sm">
+                      <span className="font-semibold text-[#CBAF5D] min-w-fit">{detail.time}</span>
+                      <span className="text-white/75">{detail.desc}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </li>
           ))}
         </ul>
