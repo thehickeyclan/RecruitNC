@@ -67,6 +67,7 @@ export function NhscaDuals2026Banner({
   className,
 }: NhscaDuals2026BannerProps) {
   const isHero = variant === "hero"
+  const isHome = variant === "home"
 
   return (
     <section
@@ -180,6 +181,7 @@ export function NhscaDuals2026Banner({
                 Open NHSCA team hub
                 <ArrowRight className="ml-2 h-5 w-5 text-[#D3B574]" aria-hidden />
               </HardLink>
+              {!isHome ? (
               <HardLink
                 href="/national-team/hub?tab=payments"
                 className={cn(
@@ -189,6 +191,8 @@ export function NhscaDuals2026Banner({
               >
                 Order team gear
               </HardLink>
+              ) : null}
+              {!isHome ? (
               <HardLink
                 href="/national-team"
                 className={cn(
@@ -198,12 +202,17 @@ export function NhscaDuals2026Banner({
               >
                 NC United National Team
               </HardLink>
+              ) : null}
             </div>
           </div>
 
           <div className={cn("w-full shrink-0 space-y-3", isHero ? "lg:max-w-md xl:max-w-lg" : "lg:max-w-sm xl:max-w-md")}>
-            <NhscaDuals2026SingletPreview compact className="w-full mx-auto lg:mx-0" />
-            <NhscaDuals2026ApparelPreview compact className="w-full mx-auto lg:mx-0 max-w-sm lg:max-w-none" />
+            {isHero ? (
+              <>
+                <NhscaDuals2026SingletPreview compact className="w-full mx-auto lg:mx-0" />
+                <NhscaDuals2026ApparelPreview compact className="w-full mx-auto lg:mx-0 max-w-sm lg:max-w-none" />
+              </>
+            ) : null}
             <CountdownPanel large={isHero} dark />
           </div>
         </div>
