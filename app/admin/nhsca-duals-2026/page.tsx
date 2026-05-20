@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Plus, Trophy, Users, Clock, MapPin, Megaphone, RefreshCw, ChevronDown, ChevronUp, Trash2, Check } from "lucide-react"
+import { ArrowLeft, Plus, Trophy, Users, Clock, MapPin, Megaphone, RefreshCw, ChevronDown, ChevronUp, Trash2, Check, Image as ImageIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { HardLink } from "@/components/hard-link"
+import { NhscaMediaAdmin } from "@/components/national-team/nhsca-media-admin"
 
 type Dual = {
   id: string
@@ -246,10 +247,13 @@ export default function NhscaDualsCommandCenter() {
             <TabsTrigger value="duals" className="data-[state=active]:bg-[#c9a227] data-[state=active]:text-[#002147]">
               Duals
             </TabsTrigger>
-            <TabsTrigger value="announcements" className="data-[state=active]:bg-[#c9a227] data-[state=active]:text-[#002147]">
-              Announcements
-            </TabsTrigger>
-          </TabsList>
+<TabsTrigger value="announcements" className="data-[state=active]:bg-[#c9a227] data-[state=active]:text-[#002147]">
+Announcements
+</TabsTrigger>
+<TabsTrigger value="media" className="data-[state=active]:bg-[#c9a227] data-[state=active]:text-[#002147]">
+Media
+</TabsTrigger>
+</TabsList>
 
           {/* Duals Tab */}
           <TabsContent value="duals" className="space-y-4">
@@ -543,6 +547,11 @@ export default function NhscaDualsCommandCenter() {
                 </div>
               )}
             </div>
+          </TabsContent>
+
+          {/* Media Tab */}
+          <TabsContent value="media">
+            <NhscaMediaAdmin />
           </TabsContent>
         </Tabs>
       </main>
