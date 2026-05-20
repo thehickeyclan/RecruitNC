@@ -11,6 +11,8 @@ import {
 
 const FLO_HOW_TO_WATCH =
   "https://www.flowrestling.org/articles/15686324-how-to-watch-2026-nhsca-national-duals-wrestling?classic=true"
+const FLO_BRACKETS_RESULTS =
+  "https://www.flowrestling.org/nextgen/events/15686311/information"
 const NHSCA_DUALS_PAGE = "https://nhsca-events.com/national-duals/"
 
 export function NHSCADuals2026HowToWatch({
@@ -33,7 +35,7 @@ export function NHSCADuals2026HowToWatch({
               <Tv className="h-5 w-5 text-[#CBAF5D]" />
               How to watch
             </h2>
-            <p className={hubPanelDescClass}>FloWrestling streams competition Sat–Mon; brackets on NHSCA.</p>
+            <p className={hubPanelDescClass}>FloWrestling streams competition Sat–Mon; brackets and results on Flo.</p>
           </header>
         )}
         <div
@@ -75,28 +77,37 @@ export function NHSCADuals2026HowToWatch({
               </div>
             </div>
           </div>
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col gap-3">
             <Button
               asChild
               variant="outline"
-              className="flex-1 min-h-[44px] border-white/25 bg-transparent text-white hover:bg-white/10 hover:text-white font-semibold"
+              className="w-full min-h-[44px] border-white/25 bg-transparent text-white hover:bg-white/10 hover:text-white font-semibold"
             >
               <a href={FLO_HOW_TO_WATCH} target="_blank" rel="noopener noreferrer">
-                FloWrestling
+                <PlayCircle className="h-4 w-4 mr-2" />
+                How to watch live
                 <ExternalLink className="h-3.5 w-3.5 ml-1" />
               </a>
             </Button>
             <Button
               asChild
               variant="outline"
-              className="flex-1 min-h-[44px] border-white/25 bg-transparent text-white hover:bg-white/10 hover:text-white font-semibold"
+              className="w-full min-h-[44px] border-[#CBAF5D]/40 bg-[#CBAF5D]/10 text-white hover:bg-[#CBAF5D]/20 hover:text-white font-semibold"
             >
-              <a href={NHSCA_DUALS_PAGE} target="_blank" rel="noopener noreferrer">
+              <a href={FLO_BRACKETS_RESULTS} target="_blank" rel="noopener noreferrer">
                 <Trophy className="h-4 w-4 mr-2" />
-                Brackets &amp; results
+                How to watch brackets &amp; results
                 <ExternalLink className="h-3.5 w-3.5 ml-1" />
               </a>
             </Button>
+            <a
+              href={NHSCA_DUALS_PAGE}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-white/45 hover:text-white/70 text-center underline underline-offset-2"
+            >
+              NHSCA official event page
+            </a>
           </div>
           <p className="text-xs text-white/50 leading-relaxed">
             Archived footage may be available to Flo subscribers after the event — check Flo for replay terms.
@@ -114,7 +125,7 @@ export function NHSCADuals2026HowToWatch({
           How to watch
         </CardTitle>
         <CardDescription className="text-white/80">
-          FloWrestling streams competition Sat–Mon; brackets on NHSCA.
+          FloWrestling streams competition Sat–Mon; brackets and results on Flo.
         </CardDescription>
       </CardHeader>
       <CardContent className="p-0">
@@ -152,20 +163,29 @@ export function NHSCADuals2026HowToWatch({
               </div>
             </div>
           </div>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Button asChild variant="outline" className="flex-1 border-[#003366] text-[#003366] font-semibold">
+          <div className="flex flex-col gap-3">
+            <Button asChild variant="outline" className="w-full border-[#003366] text-[#003366] font-semibold min-h-[44px]">
               <a href={FLO_HOW_TO_WATCH} target="_blank" rel="noopener noreferrer">
-                FloWrestling
+                <PlayCircle className="h-4 w-4 mr-2" />
+                How to watch live
                 <ExternalLink className="h-3.5 w-3.5 ml-1" />
               </a>
             </Button>
-            <Button asChild variant="outline" className="flex-1 border-[#003366] text-[#003366] font-semibold">
-              <a href={NHSCA_DUALS_PAGE} target="_blank" rel="noopener noreferrer">
+            <Button asChild variant="outline" className="w-full border-[#003366] bg-[#CBAF5D]/15 text-[#003366] font-semibold min-h-[44px]">
+              <a href={FLO_BRACKETS_RESULTS} target="_blank" rel="noopener noreferrer">
                 <Trophy className="h-4 w-4 mr-2" />
-                Brackets &amp; results
+                How to watch brackets &amp; results
                 <ExternalLink className="h-3.5 w-3.5 ml-1" />
               </a>
             </Button>
+            <a
+              href={NHSCA_DUALS_PAGE}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-gray-500 hover:text-[#003366] text-center underline underline-offset-2"
+            >
+              NHSCA official event page
+            </a>
           </div>
           <p className="text-xs text-gray-500 leading-relaxed">
             Archived footage may be available to Flo subscribers after the event — check Flo for replay terms.
