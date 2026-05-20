@@ -14,6 +14,7 @@ export type NhscaDualsWrestlerBoutRow = {
   resultLabel: string
   teamPoints: number
   opponentWrestler: string
+  note: string | null
 }
 
 export type NhscaDualsWrestlerCardStats = {
@@ -119,6 +120,7 @@ export function buildWrestlerCardStats(
       resultLabel: resultTypeLabel(m.result_type),
       teamPoints: m.nc_points ?? 0,
       opponentWrestler: m.opponent_wrestler_name?.trim() || "—",
+      note: m.notes?.trim() || null,
     })
   }
 

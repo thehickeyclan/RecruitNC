@@ -104,7 +104,7 @@ export default function NHSCAOverview() {
                 {/* End tournament banner */}
 
                 {/* Countdown Clock */}
-                <NHSCACountdown targetDate={new Date("2026-03-27")} />
+                <NHSCACountdown />
 
                 <p className="text-[#002147] leading-relaxed">
                   The National High School Coaches Association (NHSCA) National Championships represents the pinnacle of

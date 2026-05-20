@@ -100,6 +100,7 @@ export async function POST(request: NextRequest) {
           matchId: String(body.matchId ?? ""),
           nc_wrestler_id: body.nc_wrestler_id as string | null | undefined,
           opponent_wrestler_name: body.opponent_wrestler_name as string | undefined,
+          notes: body.notes as string | null | undefined,
           winner: body.winner as NhscaDualsMatchWinner | null | undefined,
           result_type: body.result_type as NhscaDualsResultType | null | undefined,
         })

@@ -306,6 +306,7 @@ export async function saveNhscaDualsMatch(
     matchId: string
     nc_wrestler_id?: string | null
     opponent_wrestler_name?: string
+    notes?: string | null
     winner?: NhscaDualsMatchWinner | null
     result_type?: NhscaDualsResultType | null
   }
@@ -328,6 +329,7 @@ export async function saveNhscaDualsMatch(
   }
   if (input.nc_wrestler_id !== undefined) patch.nc_wrestler_id = input.nc_wrestler_id
   if (input.opponent_wrestler_name !== undefined) patch.opponent_wrestler_name = input.opponent_wrestler_name
+  if (input.notes !== undefined) patch.notes = input.notes
   if (input.winner !== undefined) patch.winner = input.winner
   if (input.result_type !== undefined) patch.result_type = input.result_type
 
@@ -446,6 +448,8 @@ const CLEARED_MATCH_PATCH = {
   result_type: null,
   nc_points: 0,
   opponent_points: 0,
+  opponent_wrestler_name: "",
+  notes: null,
 }
 
 export async function clearMatchResult(
