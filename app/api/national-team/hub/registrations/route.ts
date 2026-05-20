@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getUserFromRequest } from "@/lib/supabase/auth-from-request"
-import {
-  listNhscaDuals2026Registrations,
-  nhscaDualsRegistrationIsPaid,
-} from "@/lib/nhsca-duals-2026-registrations"
+import { listNhscaDuals2026PaidOrders } from "@/lib/nhsca-duals-2026-registrations"
 
 export const dynamic = "force-dynamic"
 
@@ -40,20 +37,16 @@ export async function GET(request: NextRequest) {
   const eventParam = request.nextUrl.searchParams.get("event")?.trim() || null
 
   try {
-    const registrations = await listNhscaDuals2026Registrations(admin, {
+    const orders = await listNhscaDuals2026PaidOrders(admin, {
       isAdmin,
       viewerUserId: user.id,
       viewerEmail: user.email,
       eventSlug: eventParam,
     })
 
-    const paid = registrations.filter((r) => nhscaDualsRegistrationIsPaid(r))
-    const pending = registrations.filter((r) => !nhscaDualsRegistrationIsPaid(r))
-
     return NextResponse.json({
-      registrations,
-      paidCount: paid.length,
-      pendingCount: pending.length,
+      orders,
+      paidCount: orders.length,
       isAdmin,
     })
   } catch (error) {

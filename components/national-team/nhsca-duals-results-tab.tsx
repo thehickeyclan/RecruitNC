@@ -23,7 +23,7 @@ export function NhscaDualsResultsTab({ isAdmin = false }: { isAdmin?: boolean })
   const [data, setData] = useState<SnapshotResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [adminMode, setAdminMode] = useState(false)
+  const [adminMode, setAdminMode] = useState(isAdmin)
 
   const load = useCallback(async (seed?: boolean) => {
     setError(null)

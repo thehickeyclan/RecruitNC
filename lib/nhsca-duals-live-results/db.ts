@@ -235,15 +235,18 @@ export async function saveNhscaDualsMatch(
 }
 
 export async function refreshDualScores(admin: SupabaseClient, dualId: string): Promise<void> {
+  const { data: dual } = await admin.from("nhsca_duals_duals").select("status").eq("id", dualId).single()
   const { data: matches } = await admin.from("nhsca_duals_matches").select("nc_points, opponent_points").eq("dual_id", dualId)
   const scores = sumDualScores((matches ?? []) as { nc_points: number; opponent_points: number }[])
   const hasAny = (matches ?? []).some((m) => (m.nc_points ?? 0) + (m.opponent_points ?? 0) > 0)
+  const keepFinal = dual?.status === "final"
+  const status = keepFinal ? "final" : hasAny ? "in_progress" : "not_started"
   await admin
     .from("nhsca_duals_duals")
     .update({
       nc_score: scores.nc_score,
       opponent_score: scores.opponent_score,
-      status: hasAny ? "in_progress" : "not_started",
+      status,
       updated_at: new Date().toISOString(),
     })
     .eq("id", dualId)

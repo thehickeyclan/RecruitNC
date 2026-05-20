@@ -15,6 +15,7 @@ import {
   upsertSpartanDonationFromCheckoutSession,
 } from "@/lib/spartan-fayetteville-webhook-ack"
 import { syntheticOrderItemSku } from "@/lib/order-item-sku"
+import { decodeLineItemsMetadata } from "@/lib/nhsca-hub-checkout-pricing"
 
 export const dynamic = "force-dynamic"
 
@@ -760,21 +761,39 @@ export async function POST(request: NextRequest) {
           const { data: existingOrder } = await admin.from("orders").select("id").eq("stripe_payment_intent_id", paymentIntentId).maybeSingle()
           orderIdToUse = (existingOrder as { id?: string } | null)?.id ?? orderId
         } else if (!orderErr && totalCents > 0) {
-          await admin.from("order_items").insert({
-            order_id: orderId,
-            product_id: bundleProduct?.id ?? null,
-            product_name: bundleProduct?.name ?? "NHSCA 2026 – Registration + Apparel",
-            sku: syntheticOrderItemSku({
-              productId: bundleProduct?.id ?? null,
-              label: bundleProduct?.name ?? "NHSCA 2026 – Registration + Apparel",
-              dedupeKey: paymentIntentId,
-            }),
-            variant: { color: "N/A", size: "N/A" },
-            quantity: 1,
-            price: totalCents / 100,
-            subtotal: totalCents / 100,
-            image_url: null,
-          })
+          const linesEncoded = (session.metadata?.checkout_lines as string | undefined) ?? ""
+          const decoded = decodeLineItemsMetadata(linesEncoded)
+          const itemsToInsert =
+            decoded.length > 0
+              ? decoded
+              : [
+                  {
+                    key: "bundle",
+                    name: bundleProduct?.name ?? "NHSCA 2026 – Registration + Apparel",
+                    amountCents: totalCents,
+                    quantity: 1,
+                  },
+                ]
+          for (let i = 0; i < itemsToInsert.length; i++) {
+            const item = itemsToInsert[i]
+            const itemCents = item.amountCents * (item.quantity ?? 1)
+            if (itemCents <= 0) continue
+            await admin.from("order_items").insert({
+              order_id: orderId,
+              product_id: bundleProduct?.id ?? null,
+              product_name: item.name,
+              sku: syntheticOrderItemSku({
+                productId: bundleProduct?.id ?? null,
+                label: item.name,
+                dedupeKey: `${paymentIntentId}-${item.key}-${i}`,
+              }),
+              variant: { color: "N/A", size: "N/A" },
+              quantity: item.quantity ?? 1,
+              price: item.amountCents / 100,
+              subtotal: itemCents / 100,
+              image_url: null,
+            })
+          }
         }
         const parentEmail = (reg.parent_email ?? "").trim().toLowerCase()
         let parentUserId: string | null = null
