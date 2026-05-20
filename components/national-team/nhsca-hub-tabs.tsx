@@ -7,6 +7,7 @@ import { NHSCADuals2026TeamHubFaq } from "@/components/national-team/nhsca-duals
 import { NhscaHubEventInfo } from "@/components/national-team/nhsca-hub-event-info"
 import { NhscaResultsClient } from "@/components/national-team/nhsca-results-client"
 import { NhscaMediaGallery } from "@/components/national-team/nhsca-media-gallery"
+import { NhscaPaymentTab } from "@/components/national-team/nhsca-payment-tab"
 import { hubPanelClass, hubPanelHeaderClass, hubPanelTitleClass } from "@/components/national-team/nhsca-hub-theme"
 import { cn } from "@/lib/utils"
 
@@ -26,12 +27,15 @@ export function NhscaHubTabs({
     <Tabs defaultValue="event-info" className="w-full">
       <TabsList
         className={cn(
-          "grid w-full h-auto grid-cols-5 gap-1 rounded-xl bg-[#0a2040] p-1.5",
+          "grid w-full h-auto grid-cols-6 gap-1 rounded-xl bg-[#0a2040] p-1.5",
           "border border-white/10 shadow-inner mb-6 md:mb-8"
         )}
       >
         <TabsTrigger value="event-info" className={tabTriggerClass}>
           Event Info
+        </TabsTrigger>
+        <TabsTrigger value="payment" className={tabTriggerClass}>
+          Payment
         </TabsTrigger>
         <TabsTrigger value="results" className={tabTriggerClass}>
           Results
@@ -58,6 +62,10 @@ export function NhscaHubTabs({
           </div>
         </article>
         {adminBlock}
+      </TabsContent>
+
+      <TabsContent value="payment" className="mt-0 focus-visible:outline-none">
+        <NhscaPaymentTab />
       </TabsContent>
 
       <TabsContent value="results" className="mt-0 focus-visible:outline-none">
