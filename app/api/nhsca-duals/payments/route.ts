@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json(payments || [])
+    return NextResponse.json({ payments: payments || [] })
   } catch (e) {
     console.error("[nhsca-payments]", e)
     return NextResponse.json({ error: String(e) }, { status: 500 })
