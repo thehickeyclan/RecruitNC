@@ -27,6 +27,7 @@ import {
   NHSCA_SHORT_SLEEVE_CENTS,
   NHSCA_SHORTS_CENTS,
   NHSCA_SINGLET_EACH_CENTS,
+  NHSCA_SINGLET_TWO_CENTS,
   NHSCA_TEAM_PACKAGE_CENTS,
   travelPendingLabel,
   type NhscaHubCheckoutMode,
@@ -167,7 +168,7 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
   const [bundleTravel, setBundleTravel] = useState({ vanTravel: false, hotel: false })
 
   const [individual, setIndividual] = useState<NhscaHubIndividualSelections>({
-    registration: true,
+    registration: false,
     singletQty: 0,
     singletSize: "",
     shorts: false,
@@ -440,7 +441,7 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
                       <SelectContent>
                         <SelectItem value="0">None</SelectItem>
                         <SelectItem value="1">1 — {formatDollars(NHSCA_SINGLET_EACH_CENTS)}</SelectItem>
-                        <SelectItem value="2">2 — {formatDollars(NHSCA_SINGLET_EACH_CENTS * 2)}</SelectItem>
+                        <SelectItem value="2">2 — {formatDollars(NHSCA_SINGLET_TWO_CENTS)}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

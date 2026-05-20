@@ -1,6 +1,7 @@
 /** NHSCA hub checkout — pricing, line items, and Stripe helpers. */
 
-export const NHSCA_HUB_GEAR_SIZES = ["YS", "YM", "YL", "AS", "AM", "AL", "AXL", "A2XL"] as const
+/** Adult apparel only — no youth sizes on hub checkout. */
+export const NHSCA_HUB_GEAR_SIZES = ["S", "M", "L", "XL", "2XL"] as const
 export type NhscaHubGearSize = (typeof NHSCA_HUB_GEAR_SIZES)[number]
 
 export const NHSCA_TEAM_PACKAGE_CENTS = 25_000
@@ -9,6 +10,7 @@ export const NHSCA_SHORTS_CENTS = 4_000
 export const NHSCA_SHORT_SLEEVE_CENTS = 3_000
 export const NHSCA_LONG_SLEEVE_CENTS = 4_000
 export const NHSCA_SINGLET_EACH_CENTS = 5_000
+export const NHSCA_SINGLET_TWO_CENTS = 9_000
 
 /** Van to VBSC — $125 per wrestler (override via env if needed). */
 export const NHSCA_VAN_TRAVEL_FEE_DEFAULT_CENTS = 12_500
@@ -105,12 +107,17 @@ export function buildIndividualLineItems(sel: NhscaHubIndividualSelections): Nhs
   if (sel.registration) {
     items.push({ key: "registration", name: "Tournament Registration & Team Fee", amountCents: NHSCA_REG_FEE_CENTS })
   }
-  if (sel.singletQty > 0) {
+  if (sel.singletQty === 2) {
+    items.push({
+      key: "singlet",
+      name: `NC United Singlet ×2 (${sel.singletSize || "size TBD"})`,
+      amountCents: NHSCA_SINGLET_TWO_CENTS,
+    })
+  } else if (sel.singletQty === 1) {
     items.push({
       key: "singlet",
       name: `NC United Singlet (${sel.singletSize || "size TBD"})`,
       amountCents: NHSCA_SINGLET_EACH_CENTS,
-      quantity: sel.singletQty,
     })
   }
   if (sel.shorts) {
