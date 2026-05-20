@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { CreditCard, Loader2, Package, Shirt } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { Input } from "@/components/ui/input"
@@ -34,7 +34,6 @@ import {
 } from "@/lib/nhsca-hub-checkout-pricing"
 import { cn } from "@/lib/utils"
 
-const GRAD_YEARS = ["2026", "2027", "2028", "2029", "2030"]
 const NONE = "__none__"
 
 const hubInputClass =
@@ -155,12 +154,8 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
   const { user } = useAuth()
   const [mode, setMode] = useState<NhscaHubCheckoutMode>("team_package")
   const [team, setTeam] = useState<"nhsca-duals-2026" | "nhsca-duals-2026-select">("nhsca-duals-2026")
+  const [parentName, setParentName] = useState("")
   const [wrestlerName, setWrestlerName] = useState("")
-  const [code, setCode] = useState("")
-  const [athleteEmail, setAthleteEmail] = useState("")
-  const [parentEmail, setParentEmail] = useState(user?.email ?? "")
-  const [highSchool, setHighSchool] = useState("")
-  const [graduationYear, setGraduationYear] = useState("2027")
   const [primaryWeight, setPrimaryWeight] = useState("")
 
   const [bundleSizes, setBundleSizes] = useState({
@@ -188,10 +183,6 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (user?.email && !parentEmail) setParentEmail(user.email)
-  }, [user?.email, parentEmail])
-
   const lineItems = useMemo(() => {
     if (mode === "team_package") {
       return buildTeamPackageLineItems(bundleTravel)
@@ -202,10 +193,9 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
   const totalCents = lineItemsTotalCents(lineItems)
 
   const validate = (): string | null => {
-    if (!code.trim()) return "Invite code is required."
-    if (!wrestlerName.trim()) return "Wrestler name is required."
-    if (!athleteEmail.trim() || !parentEmail.trim()) return "Athlete and parent email are required."
-    if (!highSchool.trim() || !primaryWeight) return "High school and weight class are required."
+    if (!parentName.trim()) return "Parent name is required."
+    if (!wrestlerName.trim()) return "Athlete name is required."
+    if (!primaryWeight) return "Weight class is required."
     if (mode === "team_package") {
       if (!bundleSizes.singletSize || !bundleSizes.shortsSize || !bundleSizes.shortSleeveSize || !bundleSizes.longSleeveSize) {
         return "Select all apparel sizes for the team package."
@@ -239,13 +229,9 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           mode,
-          code: code.trim(),
           eventSlug: team,
+          parentName: parentName.trim(),
           wrestlerName: wrestlerName.trim(),
-          athleteEmail: athleteEmail.trim(),
-          parentEmail: parentEmail.trim(),
-          highSchool: highSchool.trim(),
-          graduationYear,
           primaryWeight,
           teamPackage: { ...bundleSizes, ...bundleTravel },
           singletSize: bundleSizes.singletSize,
@@ -312,76 +298,32 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5 sm:col-span-2">
               <Label className="text-xs text-white/70">
-                Wrestler name <span className="text-red-400">*</span>
+                Parent name <span className="text-red-400">*</span>
+              </Label>
+              <Input
+                className={hubInputClass}
+                placeholder="First Last"
+                value={parentName}
+                onChange={(e) => setParentName(e.target.value)}
+                autoComplete="name"
+              />
+            </div>
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label className="text-xs text-white/70">
+                Athlete name <span className="text-red-400">*</span>
               </Label>
               <Input
                 className={hubInputClass}
                 placeholder="First Last"
                 value={wrestlerName}
                 onChange={(e) => setWrestlerName(e.target.value)}
+                autoComplete="off"
               />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs text-white/70">Team</Label>
-              <Select value={team} onValueChange={(v) => setTeam(v as typeof team)}>
-                <SelectTrigger className={hubSelectTrigger}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="nhsca-duals-2026">National Team</SelectItem>
-                  <SelectItem value="nhsca-duals-2026-select">Select Team</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs text-white/70">
-                Invite code <span className="text-red-400">*</span>
+                Weight <span className="text-red-400">*</span>
               </Label>
-              <Input
-                className={hubInputClass}
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1.5 sm:col-span-2">
-              <Label className="text-xs text-white/70">Athlete email</Label>
-              <Input
-                className={hubInputClass}
-                type="email"
-                value={athleteEmail}
-                onChange={(e) => setAthleteEmail(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1.5 sm:col-span-2">
-              <Label className="text-xs text-white/70">Parent email (Stripe receipt)</Label>
-              <Input
-                className={hubInputClass}
-                type="email"
-                value={parentEmail}
-                onChange={(e) => setParentEmail(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs text-white/70">High school</Label>
-              <Input className={hubInputClass} value={highSchool} onChange={(e) => setHighSchool(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs text-white/70">Grad year</Label>
-              <Select value={graduationYear} onValueChange={setGraduationYear}>
-                <SelectTrigger className={hubSelectTrigger}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {GRAD_YEARS.map((y) => (
-                    <SelectItem key={y} value={y}>
-                      {y}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5 sm:col-span-2">
-              <Label className="text-xs text-white/70">Weight class</Label>
               <Select value={primaryWeight || NONE} onValueChange={(v) => setPrimaryWeight(v === NONE ? "" : v)}>
                 <SelectTrigger className={hubSelectTrigger}>
                   <SelectValue placeholder="Select weight" />
@@ -396,7 +338,24 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-white/70">
+                Team <span className="text-red-400">*</span>
+              </Label>
+              <Select value={team} onValueChange={(v) => setTeam(v as typeof team)}>
+                <SelectTrigger className={hubSelectTrigger}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="nhsca-duals-2026">National Team</SelectItem>
+                  <SelectItem value="nhsca-duals-2026-select">Select Team</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+          {user?.email ? (
+            <p className="text-xs text-white/45">Stripe receipt will go to {user.email}</p>
+          ) : null}
 
           {mode === "team_package" ? (
             <>

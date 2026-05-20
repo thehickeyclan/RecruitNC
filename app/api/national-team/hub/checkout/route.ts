@@ -40,25 +40,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 })
   }
 
-  const code = typeof body.code === "string" ? body.code.trim() : ""
   const eventSlug =
     body.eventSlug === "nhsca-duals-2026-select" ? "nhsca-duals-2026-select" : "nhsca-duals-2026"
   const mode = (body.mode === "individual" ? "individual" : "team_package") as NhscaHubCheckoutMode
+  const parentName = typeof body.parentName === "string" ? body.parentName.trim() : ""
   const wrestlerName = typeof body.wrestlerName === "string" ? body.wrestlerName.trim() : ""
-  const athleteEmail = typeof body.athleteEmail === "string" ? body.athleteEmail.trim() : ""
-  const parentEmail =
-    (typeof body.parentEmail === "string" ? body.parentEmail.trim() : "") || user.email.trim()
-  const highSchool = typeof body.highSchool === "string" ? body.highSchool.trim() : ""
-  const graduationYear = typeof body.graduationYear === "string" ? body.graduationYear.trim() : ""
   const primaryWeight = typeof body.primaryWeight === "string" ? body.primaryWeight.trim() : ""
+  const parentEmail = user.email.trim()
 
-  if (!code) return NextResponse.json({ error: "Invite code is required." }, { status: 400 })
-  if (!wrestlerName) return NextResponse.json({ error: "Wrestler name is required." }, { status: 400 })
-  if (!athleteEmail) return NextResponse.json({ error: "Athlete email is required." }, { status: 400 })
-  if (!parentEmail) return NextResponse.json({ error: "Parent email is required." }, { status: 400 })
-  if (!highSchool || !graduationYear || !primaryWeight) {
-    return NextResponse.json({ error: "High school, graduation year, and weight are required." }, { status: 400 })
-  }
+  if (!parentName) return NextResponse.json({ error: "Parent name is required." }, { status: 400 })
+  if (!wrestlerName) return NextResponse.json({ error: "Athlete name is required." }, { status: 400 })
+  if (!primaryWeight) return NextResponse.json({ error: "Weight is required." }, { status: 400 })
 
   const { first: athleteFirstName, last: athleteLastName } = parseName(wrestlerName)
   if (!athleteFirstName) {
@@ -134,34 +126,16 @@ export async function POST(request: NextRequest) {
 
   const admin = createAdminClient()
 
-  const { data: inviteRow, error: inviteError } = await admin
-    .from("national_team_invite_codes")
-    .select("id, max_uses, uses_count, expires_at")
-    .eq("event_slug", eventSlug)
-    .eq("code", code)
-    .maybeSingle()
-
-  if (inviteError || !inviteRow) {
-    return NextResponse.json({ error: "Invalid or expired invite code." }, { status: 400 })
-  }
-  if (inviteRow.expires_at && new Date(inviteRow.expires_at) < new Date()) {
-    return NextResponse.json({ error: "This invite code has expired." }, { status: 400 })
-  }
-  const usesCount = Number(inviteRow.uses_count) ?? 0
-  const maxUses = inviteRow.max_uses != null ? Number(inviteRow.max_uses) : null
-  if (maxUses != null && usesCount >= maxUses) {
-    return NextResponse.json({ error: "This invite code has reached its maximum uses." }, { status: 400 })
-  }
-
   const insertPayload: Record<string, unknown> = {
     event_slug: eventSlug,
     athlete_first_name: athleteFirstName,
     athlete_last_name: athleteLastName || "—",
-    athlete_email: athleteEmail,
+    athlete_email: parentEmail,
     parent_email: parentEmail,
+    parent_name: parentName,
     parent_user_id: user.id,
-    high_school: highSchool,
-    graduation_year: graduationYear,
+    high_school: "—",
+    graduation_year: "—",
     primary_weight: primaryWeight,
     reg_fee_cents,
     apparel_fee_cents,
@@ -184,20 +158,16 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const gradYear = parseInt(graduationYear, 10)
     await findAndEnrichAthlete(
       admin,
       {
-        email: athleteEmail,
+        email: parentEmail,
         name: `${athleteFirstName} ${athleteLastName}`.trim(),
-        graduationYear: Number.isFinite(gradYear) ? gradYear : undefined,
-        school: highSchool,
       },
       buildEnrichmentPayload({
-        contact_email: athleteEmail,
+        contact_email: parentEmail,
         firstname: athleteFirstName,
         lastname: athleteLastName,
-        highschool: highSchool,
         weightclass: primaryWeight,
       })
     )

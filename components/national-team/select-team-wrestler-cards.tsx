@@ -1,12 +1,19 @@
 "use client"
 
 import { DualsTeamWrestlerCards } from "@/components/national-team/duals-team-wrestler-cards"
+import type { NhscaDualsResultsSnapshot } from "@/lib/nhsca-duals-live-results/types"
 import {
   getSelectWrestlerCardsPendingCount,
   getSelectWrestlerCardsWithArt,
 } from "@/lib/nhsca-duals-2026-select-wrestler-cards"
 
-export function SelectTeamWrestlerCards({ className }: { className?: string }) {
+export function SelectTeamWrestlerCards({
+  className,
+  resultsSnapshot,
+}: {
+  className?: string
+  resultsSnapshot?: NhscaDualsResultsSnapshot | null
+}) {
   const cards = getSelectWrestlerCardsWithArt()
   const pending = getSelectWrestlerCardsPendingCount()
   if (cards.length === 0 && pending === 0) return null
@@ -16,6 +23,7 @@ export function SelectTeamWrestlerCards({ className }: { className?: string }) {
       teamLabel="Select"
       pendingCount={pending}
       className={className}
+      resultsSnapshot={resultsSnapshot}
     />
   )
 }

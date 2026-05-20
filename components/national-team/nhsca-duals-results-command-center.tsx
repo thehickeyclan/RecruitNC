@@ -2,36 +2,26 @@
 
 import type { ReactNode } from "react"
 import { useMemo, useState } from "react"
-import {
-  Activity,
-  ChevronDown,
-  ChevronUp,
-  Shield,
-  Star,
-  Trophy,
-  Users,
-  Zap,
-} from "lucide-react"
+import { Activity, Radio, Shield, Star, Trophy, Users, Zap } from "lucide-react"
 import type { CommandCenterScope } from "@/lib/nhsca-duals-command-center"
 import {
   buildDualFeed,
   getSummaryForScope,
   getWrestlersForScope,
 } from "@/lib/nhsca-duals-command-center"
-import type { NhscaDualsResultsSnapshot } from "@/lib/nhsca-duals-live-results/types"
+import type { NhscaDualsMatchRow, NhscaDualsResultsSnapshot } from "@/lib/nhsca-duals-live-results/types"
 import { NHSCA_DUALS_WEIGHTS, resultTypeLabel } from "@/lib/nhsca-duals-live-results/scoring"
 import { cn } from "@/lib/utils"
 
 const STATUS: Record<string, { label: string; className: string }> = {
   not_started: { label: "Upcoming", className: "bg-white/10 text-white/70" },
-  in_progress: { label: "Live", className: "bg-red-600/90 text-white animate-pulse" },
+  in_progress: { label: "Live", className: "bg-green-600 text-white animate-pulse shadow-[0_0_12px_rgba(34,197,94,0.5)]" },
   final: { label: "Final", className: "bg-[#CBAF5D]/20 text-[#CBAF5D] border border-[#CBAF5D]/40" },
 }
 
 export function NhscaDualsResultsCommandCenter({ snapshot }: { snapshot: NhscaDualsResultsSnapshot }) {
   const [scope, setScope] = useState<CommandCenterScope>("all")
   const [athleteId, setAthleteId] = useState<string | null>(null)
-  const [expandedDualId, setExpandedDualId] = useState<string | null>(null)
 
   const summary = useMemo(() => getSummaryForScope(snapshot, scope), [snapshot, scope])
   const wrestlers = useMemo(() => getWrestlersForScope(snapshot, scope), [snapshot, scope])
@@ -208,10 +198,6 @@ export function NhscaDualsResultsCommandCenter({ snapshot }: { snapshot: NhscaDu
                   key={item.dual.id}
                   item={item}
                   snapshot={snapshot}
-                  expanded={expandedDualId === item.dual.id}
-                  onToggle={() =>
-                    setExpandedDualId((id) => (id === item.dual.id ? null : item.dual.id))
-                  }
                   highlightAthleteId={athleteId}
                 />
               ))
@@ -340,9 +326,12 @@ function AthleteFocusPanel({
       const team = snapshot.teams.find((t) => t.id === dual.team_id)
       if (!team || !teamTypes.includes(team.team_type as "national" | "select")) continue
       const day = snapshot.days.find((d) => d.id === dual.day_id)
+      const oppWrestler = m.opponent_wrestler_name?.trim()
       rows.push({
         round: dual.round_name,
         opponent: dual.opponent_team_name,
+        opponentWrestler: oppWrestler || null,
+        note: m.notes?.trim() || null,
         day: day?.name ?? "",
         result: resultTypeLabel(m.result_type),
         pts: m.nc_points,
@@ -386,7 +375,9 @@ function AthleteFocusPanel({
               </p>
               <p className="text-xs text-white/50">
                 {b.day} · {b.win ? "Win" : "Loss"} {b.result} · +{b.pts} tp
+                {b.opponentWrestler ? ` · vs ${b.opponentWrestler}` : ""}
               </p>
+              {b.note ? <p className="text-[11px] text-amber-200/75 mt-0.5">{b.note}</p> : null}
             </li>
           ))}
         </ul>
@@ -397,25 +388,161 @@ function AthleteFocusPanel({
   )
 }
 
+type DualMatchRow = {
+  weight: string
+  match: NhscaDualsMatchRow | undefined
+  wrestlerName: string
+}
+
+function matchIsComplete(m: DualMatchRow["match"]) {
+  return !!(m?.winner && m?.result_type)
+}
+
+function DualBoutRow({
+  variant,
+  weight,
+  wrestlerName,
+  opponentWrestler,
+  note,
+  resultLabel,
+  points,
+  highlight,
+}: {
+  variant: "live" | "next" | "upcoming" | "final"
+  weight: string
+  wrestlerName: string
+  opponentWrestler?: string | null
+  note?: string | null
+  resultLabel?: string
+  points?: string
+  highlight?: boolean
+}) {
+  const isLive = variant === "live"
+  const isNext = variant === "next" || variant === "upcoming"
+  const isFinal = variant === "final"
+
+  return (
+    <div
+      className={cn(
+        "rounded-lg border px-3 py-2.5 flex items-center gap-3 transition-colors",
+        isLive && "border-green-500/60 bg-green-950/35 ring-1 ring-green-500/30",
+        isNext && "border-white/10 bg-white/[0.03] opacity-55",
+        isFinal && "border-[#CBAF5D]/30 bg-[#CBAF5D]/5",
+        highlight && isLive && "ring-[#CBAF5D]/40"
+      )}
+    >
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2 mb-0.5">
+          {isLive ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-green-600 px-2 py-0.5 text-[9px] font-bold uppercase text-white animate-pulse">
+              <Radio className="h-2.5 w-2.5" aria-hidden />
+              Live · updating
+            </span>
+          ) : isFinal ? (
+            <span className="text-[9px] font-bold uppercase tracking-wider text-[#CBAF5D]">Last bout</span>
+          ) : (
+            <span className="text-[9px] font-bold uppercase tracking-wider text-white/40">
+              {variant === "upcoming" ? "Up next" : "On deck"}
+            </span>
+          )}
+        </div>
+        <p className={cn("font-mono font-bold", isLive ? "text-green-400" : "text-white/50")}>{weight} lbs</p>
+        <p className={cn("text-sm truncate", isLive ? "text-white font-semibold" : "text-white/45")}>{wrestlerName}</p>
+        {opponentWrestler ? (
+          <p className={cn("text-[11px] truncate", isLive ? "text-white/55" : "text-white/35")}>vs {opponentWrestler}</p>
+        ) : null}
+        {note && (isFinal || isLive) ? (
+          <p className="text-[11px] text-amber-200/80 truncate mt-0.5">{note}</p>
+        ) : null}
+      </div>
+      {resultLabel ? (
+        <div className="text-right shrink-0">
+          <p className={cn("text-xs font-bold", isLive ? "text-green-400" : "text-white/50")}>{resultLabel}</p>
+          {points ? <p className="text-[10px] text-[#CBAF5D]/80 tabular-nums">{points}</p> : null}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+function DualBoutFocus({
+  dual,
+  dualMatches,
+  highlightAthleteId,
+}: {
+  dual: ReturnType<typeof buildDualFeed>[number]["dual"]
+  dualMatches: DualMatchRow[]
+  highlightAthleteId: string | null
+}) {
+  const firstOpenIdx = dualMatches.findIndex(({ match }) => !matchIsComplete(match))
+
+  if (dual.status === "final") {
+    const lastDone = [...dualMatches].reverse().find(({ match }) => matchIsComplete(match))
+    if (!lastDone?.match) {
+      return <p className="text-xs text-white/45 text-center py-1">Dual final</p>
+    }
+    const ncWon = lastDone.match!.winner === "nc"
+    return (
+      <DualBoutRow
+        variant="final"
+        weight={lastDone.weight}
+        wrestlerName={lastDone.wrestlerName}
+        opponentWrestler={lastDone.match!.opponent_wrestler_name?.trim() || null}
+        note={lastDone.match!.notes?.trim() || null}
+        resultLabel={resultTypeLabel(lastDone.match!.result_type)}
+        points={ncWon ? `+${lastDone.match!.nc_points} tp` : undefined}
+        highlight={!!(highlightAthleteId && lastDone.match?.nc_wrestler_id === highlightAthleteId)}
+      />
+    )
+  }
+
+  if (firstOpenIdx < 0) {
+    return <p className="text-xs text-white/45 text-center py-1">All weights complete</p>
+  }
+
+  const onDeck = dualMatches[firstOpenIdx]
+  const upNext =
+    firstOpenIdx + 1 < dualMatches.length && !matchIsComplete(dualMatches[firstOpenIdx + 1].match)
+      ? dualMatches[firstOpenIdx + 1]
+      : null
+  const isLive = dual.status === "in_progress"
+
+  return (
+    <div className="space-y-2">
+      {isLive ? (
+        <DualBoutRow
+          variant="live"
+          weight={onDeck.weight}
+          wrestlerName={onDeck.wrestlerName}
+          opponentWrestler={onDeck.match?.opponent_wrestler_name?.trim() || null}
+          highlight={!!(highlightAthleteId && onDeck.match?.nc_wrestler_id === highlightAthleteId)}
+        />
+      ) : (
+        <DualBoutRow variant="upcoming" weight={onDeck.weight} wrestlerName={onDeck.wrestlerName} />
+      )}
+      {upNext ? (
+        <DualBoutRow variant="next" weight={upNext.weight} wrestlerName={upNext.wrestlerName} />
+      ) : null}
+    </div>
+  )
+}
+
 function DualFeedCard({
   item,
   snapshot,
-  expanded,
-  onToggle,
   highlightAthleteId,
 }: {
   item: ReturnType<typeof buildDualFeed>[number]
   snapshot: NhscaDualsResultsSnapshot
-  expanded: boolean
-  onToggle: () => void
   highlightAthleteId: string | null
 }) {
   const { dual, teamName, dayName, poolNumber, weightsEntered, weightsTotal } = item
   const status = STATUS[dual.status] ?? STATUS.not_started
   const ncWinning = dual.nc_score > dual.opponent_score
   const progress = weightsTotal > 0 ? (weightsEntered / weightsTotal) * 100 : 0
+  const isLiveDual = dual.status === "in_progress"
 
-  const dualMatches = NHSCA_DUALS_WEIGHTS.map((weight) => {
+  const dualMatches: DualMatchRow[] = NHSCA_DUALS_WEIGHTS.map((weight) => {
     const m = snapshot.matches.find((x) => x.dual_id === dual.id && x.weight === weight)
     const wrestler = m?.nc_wrestler_id
       ? snapshot.wrestlers.find((w) => w.id === m.nc_wrestler_id)
@@ -429,12 +556,12 @@ function DualFeedCard({
     <article
       className={cn(
         "rounded-xl border overflow-hidden transition-colors",
-        dual.status === "in_progress"
-          ? "border-red-500/40 bg-[#002147]/80 shadow-[0_0_24px_rgba(239,68,68,0.12)]"
+        isLiveDual
+          ? "border-green-500/45 bg-[#002147]/80 shadow-[0_0_20px_rgba(34,197,94,0.12)]"
           : "border-white/10 bg-[#002147]/40"
       )}
     >
-      <button type="button" className="w-full text-left p-4" onClick={onToggle}>
+      <div className="p-4">
         <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
           <div className="min-w-0 flex-1">
             <p className="text-[10px] uppercase tracking-wider text-[#CBAF5D]/90">
@@ -461,63 +588,20 @@ function DualFeedCard({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 mb-3">
           <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
             <div
-              className="h-full bg-[#CBAF5D] transition-all duration-500"
+              className={cn("h-full transition-all duration-500", isLiveDual ? "bg-green-500" : "bg-[#CBAF5D]")}
               style={{ width: `${progress}%` }}
             />
           </div>
           <span className="text-[10px] text-white/45 tabular-nums shrink-0">
             {weightsEntered}/{weightsTotal} wt
           </span>
-          {expanded ? <ChevronUp className="h-4 w-4 text-white/40" /> : <ChevronDown className="h-4 w-4 text-white/40" />}
         </div>
-      </button>
 
-      {expanded && (
-        <div className="border-t border-white/10 overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="text-white/45 border-b border-white/10">
-                <th className="py-2 pl-4 pr-2 text-left">Wt</th>
-                <th className="py-2 pr-2 text-left">NC wrestler</th>
-                <th className="py-2 pr-2 text-left">Result</th>
-                <th className="py-2 pr-4 text-right">Pts</th>
-              </tr>
-            </thead>
-            <tbody>
-              {dualMatches.map(({ weight, match, wrestlerName }) => {
-                const done = !!(match?.winner && match?.result_type)
-                const ncWon = match?.winner === "nc"
-                const highlight = highlightAthleteId && match?.nc_wrestler_id === highlightAthleteId
-                return (
-                  <tr
-                    key={weight}
-                    className={cn(
-                      "border-b border-white/5",
-                      highlight && "bg-[#CBAF5D]/10",
-                      done && ncWon && "bg-green-950/20",
-                      done && match?.winner === "opponent" && "bg-red-950/15"
-                    )}
-                  >
-                    <td className="py-2 pl-4 font-mono text-[#CBAF5D]">{weight}</td>
-                    <td className="py-2 pr-2 max-w-[8rem] truncate">{wrestlerName}</td>
-                    <td className="py-2 pr-2">{done ? resultTypeLabel(match!.result_type) : "—"}</td>
-                    <td className="py-2 pr-4 text-right tabular-nums">
-                      {done && ncWon ? (
-                        <span className="text-[#CBAF5D] font-bold">+{match!.nc_points}</span>
-                      ) : (
-                        "—"
-                      )}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+        <DualBoutFocus dual={dual} dualMatches={dualMatches} highlightAthleteId={highlightAthleteId} />
+      </div>
     </article>
   )
 }

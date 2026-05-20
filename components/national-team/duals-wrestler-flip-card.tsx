@@ -173,6 +173,9 @@ export function DualsWrestlerFlipCard({
                                 {b.outcome === "win" ? "W" : b.outcome === "loss" ? "L" : "—"}
                               </span>
                               <span className="block text-[9px] text-white/45">{b.resultLabel}</span>
+                              {b.note ? (
+                                <span className="block text-[9px] text-amber-200/70 truncate max-w-[4.5rem]">{b.note}</span>
+                              ) : null}
                             </td>
                             <td className="py-1.5 pr-2 pl-1 text-right align-top font-bold tabular-nums text-[#CBAF5D]">
                               {b.teamPoints > 0 ? `+${b.teamPoints}` : "0"}

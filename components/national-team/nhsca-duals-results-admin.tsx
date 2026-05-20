@@ -21,6 +21,7 @@ import type {
   NhscaDualsResultsSnapshot,
 } from "@/lib/nhsca-duals-live-results/types"
 import { NHSCA_DUALS_DAY_1_NAME } from "@/lib/nhsca-duals-live-results/rosters"
+import { notifyNhscaDualsResultsUpdated } from "@/lib/nhsca-duals-results-events"
 import { NHSCA_DUALS_WEIGHTS, resultTypeLabel } from "@/lib/nhsca-duals-live-results/scoring"
 import { cn } from "@/lib/utils"
 
@@ -40,6 +41,19 @@ const QUICK_OPP: { result: NhscaDualsResultType; label: string }[] = [
   { result: "tech_fall", label: "TF" },
   { result: "fall", label: "PIN" },
 ]
+
+const NOTE_TAGS = ["Big win", "Call out", "T-bout", "Fall out"] as const
+
+function notesFromTags(tags: readonly string[]): string | null {
+  const parts = tags.map((t) => t.trim()).filter(Boolean)
+  return parts.length ? parts.join(" · ") : null
+}
+
+function parseNoteTags(notes: string | null | undefined): string[] {
+  if (!notes?.trim()) return []
+  const parts = notes.split("·").map((s) => s.trim())
+  return NOTE_TAGS.filter((tag) => parts.includes(tag))
+}
 
 function matchIsComplete(m: NhscaDualsMatchRow | undefined) {
   return !!(m?.winner && m?.result_type)
@@ -73,6 +87,8 @@ export function NhscaDualsResultsAdmin({
   const [activeWeight, setActiveWeight] = useState<string>(NHSCA_DUALS_WEIGHTS[0])
   const [flash, setFlash] = useState<string | null>(null)
   const [showTesting, setShowTesting] = useState(false)
+  const [opponentName, setOpponentName] = useState("")
+  const [selectedNoteTags, setSelectedNoteTags] = useState<string[]>([])
 
   const sortedDays = useMemo(
     () => [...snapshot.days].sort((a, b) => a.sort_order - b.sort_order),
@@ -111,6 +127,7 @@ export function NhscaDualsResultsAdmin({
     async (json: unknown) => {
       if (isSnapshotBody(json)) await onSaved(json)
       else await onSaved()
+      notifyNhscaDualsResultsUpdated()
     },
     [onSaved]
   )
@@ -162,21 +179,38 @@ export function NhscaDualsResultsAdmin({
     [dualMatches]
   )
 
+  const boutExtras = useCallback(
+    () => ({
+      opponent_wrestler_name: opponentName.trim(),
+      notes: notesFromTags(selectedNoteTags),
+    }),
+    [opponentName, selectedNoteTags]
+  )
+
   const saveMatch = useCallback(
     async (
       matchId: string,
       fields: {
         nc_wrestler_id?: string | null
-        winner: NhscaDualsMatchWinner
-        result_type: NhscaDualsResultType
+        winner?: NhscaDualsMatchWinner
+        result_type?: NhscaDualsResultType
+        opponent_wrestler_name?: string
+        notes?: string | null
       }
     ) => {
       setSaving(true)
       try {
         await post({ action: "save_match", matchId, ...fields })
-        setFlash(`${activeWeight} ✓`)
-        window.setTimeout(() => setFlash(null), 900)
-        goToNextWeight(activeWeight)
+        if (fields.winner != null) {
+          setFlash(`${activeWeight} ✓`)
+          window.setTimeout(() => setFlash(null), 900)
+          setOpponentName("")
+          setSelectedNoteTags([])
+          goToNextWeight(activeWeight)
+        } else {
+          setFlash(`${activeWeight} details saved`)
+          window.setTimeout(() => setFlash(null), 900)
+        }
       } finally {
         setSaving(false)
       }
@@ -203,9 +237,15 @@ export function NhscaDualsResultsAdmin({
     setActiveWeight(firstOpen ?? NHSCA_DUALS_WEIGHTS[0])
   }, [dual?.id])
 
+  const activeMatch = dual ? dualMatches.get(activeWeight) : undefined
+
+  useEffect(() => {
+    setOpponentName(activeMatch?.opponent_wrestler_name?.trim() ?? "")
+    setSelectedNoteTags(parseNoteTags(activeMatch?.notes))
+  }, [dual?.id, activeWeight, activeMatch?.winner, activeMatch?.notes, activeMatch?.opponent_wrestler_name])
+
   if (!ncTeam) return null
 
-  const activeMatch = dual ? dualMatches.get(activeWeight) : undefined
   const activeWrestlers = wrestlersForWeight(activeWeight)
   const ncWrestlerId = activeMatch?.nc_wrestler_id ?? activeWrestlers[0]?.id ?? null
   const ncName = activeWrestlers.find((w) => w.id === ncWrestlerId)?.name ?? activeWrestlers[0]?.name ?? "NC"
@@ -217,7 +257,17 @@ export function NhscaDualsResultsAdmin({
       winner,
       result_type,
       nc_wrestler_id: winner === "nc" ? (wrestlerId ?? ncWrestlerId) : ncWrestlerId,
+      ...boutExtras(),
     })
+  }
+
+  const saveBoutDetailsOnly = () => {
+    if (!activeMatch) return
+    void saveMatch(activeMatch.id, boutExtras())
+  }
+
+  const toggleNoteTag = (tag: string) => {
+    setSelectedNoteTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]))
   }
 
   return (
@@ -370,6 +420,12 @@ export function NhscaDualsResultsAdmin({
                 <p className="text-xs text-white/55">
                   {resultTypeLabel(activeMatch.result_type!)} —{" "}
                   {activeMatch.winner === "nc" ? "NC" : dual.opponent_team_name}
+                  {activeMatch.opponent_wrestler_name?.trim() ? (
+                    <span className="block text-white/40">vs {activeMatch.opponent_wrestler_name.trim()}</span>
+                  ) : null}
+                  {activeMatch.notes?.trim() ? (
+                    <span className="block text-amber-200/80">{activeMatch.notes.trim()}</span>
+                  ) : null}
                 </p>
               ) : (
                 <p className="text-xs text-[#CBAF5D]/80">Tap NC or Opp to save</p>
@@ -385,6 +441,52 @@ export function NhscaDualsResultsAdmin({
             >
               <ChevronRight className="h-5 w-5" />
             </button>
+          </div>
+
+          <div className="rounded-xl border border-white/10 bg-[#0a2040]/80 p-3 mb-3 space-y-2">
+            <label className="block">
+              <span className="text-[10px] font-bold uppercase tracking-wide text-white/45">Opponent wrestler (optional)</span>
+              <input
+                type="text"
+                value={opponentName}
+                onChange={(e) => setOpponentName(e.target.value)}
+                placeholder="Last name or full name"
+                className="mt-1 w-full min-h-[44px] rounded-lg border border-white/15 bg-[#001a33] px-3 text-sm text-white placeholder:text-white/30"
+                autoComplete="off"
+              />
+            </label>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wide text-white/45 mb-1.5">Note (optional)</p>
+              <div className="flex flex-wrap gap-1.5">
+                {NOTE_TAGS.map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => toggleNoteTag(tag)}
+                    className={cn(
+                      "min-h-[36px] px-2.5 rounded-lg text-xs font-semibold border",
+                      selectedNoteTags.includes(tag)
+                        ? "border-amber-400/70 bg-amber-500/20 text-amber-100"
+                        : "border-white/15 bg-[#001a33] text-white/55"
+                    )}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {matchIsComplete(activeMatch) &&
+            (opponentName.trim() !== (activeMatch.opponent_wrestler_name?.trim() ?? "") ||
+              notesFromTags(selectedNoteTags) !== (activeMatch.notes?.trim() ? activeMatch.notes.trim() : null)) ? (
+              <button
+                type="button"
+                disabled={saving}
+                onClick={saveBoutDetailsOnly}
+                className="w-full min-h-[40px] rounded-lg border border-amber-500/40 text-amber-100 text-xs font-semibold"
+              >
+                Save opponent / note
+              </button>
+            ) : null}
           </div>
 
           {activeWeight === "120" && activeWrestlers.length > 1 && (

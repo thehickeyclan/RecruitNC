@@ -2,105 +2,207 @@
 
 import { useEffect, useState } from "react"
 import { Scale } from "lucide-react"
+import {
+  NHSCA_FIRST_ROUND_TARGET_MS,
+  NHSCA_WEIGH_IN_TARGET_MS,
+  type NhscaDualsCountdownPhase,
+  easternCalendarDaysUntil,
+  formatCountdownDuration,
+  getNhscaDualsCountdownPhase,
+  nhscaDualsCalendarDayLabel,
+  nhscaDualsCountdownReadyMessage,
+  nhscaDualsCountdownTargetMs,
+} from "@/lib/nhsca-duals-event-times"
 import { cn } from "@/lib/utils"
 
-/** Friday May 22, 2026 · 2:00 PM Eastern — NC United early weigh-ins at VBSC */
-export const NHSCA_WEIGH_IN_TARGET_MS = new Date("2026-05-22T14:00:00-04:00").getTime()
+export { NHSCA_WEIGH_IN_TARGET_MS, NHSCA_FIRST_ROUND_TARGET_MS } from "@/lib/nhsca-duals-event-times"
 
 function pad2(n: number) {
   return String(n).padStart(2, "0")
 }
 
 export type WeighInCountdownState = {
-  days: number
+  phase: NhscaDualsCountdownPhase
+  /** Calendar days until active target (ET) */
+  calendarDays: number
   hours: number
   minutes: number
   seconds: number
+  durationLabel: string
   ready: boolean
+  firstRoundMs: number
 }
 
-export function useWeighInCountdown(targetMs = NHSCA_WEIGH_IN_TARGET_MS): WeighInCountdownState {
+export function useWeighInCountdown(): WeighInCountdownState {
   const [countdown, setCountdown] = useState<WeighInCountdownState>({
-    days: 0,
+    phase: "weigh_in",
+    calendarDays: 0,
     hours: 0,
     minutes: 0,
     seconds: 0,
+    durationLabel: "",
     ready: false,
+    firstRoundMs: Math.max(0, NHSCA_FIRST_ROUND_TARGET_MS - Date.now()),
   })
 
   useEffect(() => {
     const tick = () => {
-      const d = Math.max(0, targetMs - Date.now())
-      if (d <= 0) {
-        setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0, ready: true })
+      const now = Date.now()
+      const phase = getNhscaDualsCountdownPhase(now)
+      const firstRoundMs = Math.max(0, NHSCA_FIRST_ROUND_TARGET_MS - now)
+
+      if (phase === "underway") {
+        setCountdown({
+          phase,
+          calendarDays: 0,
+          hours: 0,
+          minutes: 0,
+          seconds: 0,
+          durationLabel: "",
+          ready: true,
+          firstRoundMs: 0,
+        })
         return
       }
+
+      const targetMs = nhscaDualsCountdownTargetMs(phase)
+      const remaining = Math.max(0, targetMs - now)
+      const calendarDays = easternCalendarDaysUntil(now, targetMs)
+
       setCountdown({
-        days: Math.floor(d / 86400000),
-        hours: Math.floor((d % 86400000) / 3600000),
-        minutes: Math.floor((d % 3600000) / 60000),
-        seconds: Math.floor((d % 60000) / 1000),
+        phase,
+        calendarDays,
+        hours: Math.floor(remaining / 3600000),
+        minutes: Math.floor((remaining % 3600000) / 60000),
+        seconds: Math.floor((remaining % 60000) / 1000),
+        durationLabel: formatCountdownDuration(remaining),
         ready: false,
+        firstRoundMs,
       })
     }
     tick()
     const id = setInterval(tick, 1000)
     return () => clearInterval(id)
-  }, [targetMs])
+  }, [])
 
   return countdown
 }
 
-function CountdownDigits({
+function phaseTimeHint(phase: NhscaDualsCountdownPhase): string {
+  if (phase === "first_round") return "8:00 AM ET"
+  return "2:00 PM ET"
+}
+
+/** Shared countdown face — home, national team, hub hero, sticky bar */
+export function NhscaDualsCountdownFace({
   countdown,
+  large,
+  dark,
   compact,
 }: {
   countdown: WeighInCountdownState
+  large?: boolean
+  dark?: boolean
   compact?: boolean
 }) {
+  const digitClass = large
+    ? "text-3xl sm:text-4xl md:text-5xl"
+    : compact
+      ? "text-xl sm:text-2xl"
+      : "text-2xl sm:text-3xl md:text-4xl"
+  const labelClass = large ? "text-[10px] sm:text-xs" : compact ? "text-[9px] sm:text-[10px]" : "text-[9px] sm:text-[10px]"
+
   if (countdown.ready) {
     return (
-      <p className={cn("font-black text-[#D3B574]", compact ? "text-lg sm:text-xl" : "text-2xl md:text-3xl")}>
-        We&apos;re here — weigh-ins open
+      <p
+        className={cn(
+          "font-black text-center py-2",
+          dark ? "text-white" : "text-[#002147]",
+          compact ? "text-lg sm:text-xl" : "text-2xl sm:text-3xl"
+        )}
+      >
+        {nhscaDualsCountdownReadyMessage(countdown.phase)}
       </p>
     )
   }
 
-  const units = [
-    { value: countdown.days, label: "Days" },
-    { value: countdown.hours, label: "Hrs" },
-    { value: countdown.minutes, label: "Min" },
-    { value: countdown.seconds, label: "Sec" },
-  ]
+  if (countdown.calendarDays >= 1) {
+    return (
+      <div className={cn("text-center", compact ? "py-1" : "py-2")}>
+        <p
+          className={cn(
+            "font-black tabular-nums leading-none",
+            digitClass,
+            dark ? "text-white" : "text-[#002147]",
+            compact && !dark && "text-4xl sm:text-5xl"
+          )}
+        >
+          {countdown.calendarDays}
+        </p>
+        <p
+          className={cn(
+            "mt-1.5 sm:mt-2 font-bold uppercase tracking-wider",
+            compact ? "text-[10px]" : "text-sm",
+            dark ? "text-[#D3B574]" : "text-[#002147]/80"
+          )}
+        >
+          {nhscaDualsCalendarDayLabel(countdown.phase, countdown.calendarDays)}
+        </p>
+        <p
+          className={cn(
+            "mt-1 sm:mt-2 tabular-nums",
+            compact ? "text-[10px]" : "text-xs",
+            dark ? "text-white/55" : "text-[#002147]/65"
+          )}
+        >
+          {countdown.durationLabel}
+          {compact ? ` · ${phaseTimeHint(countdown.phase)}` : " remaining (Eastern)"}
+        </p>
+      </div>
+    )
+  }
 
   return (
-    <div className={cn("flex items-center justify-center sm:justify-end gap-1.5 sm:gap-3", compact && "gap-1 sm:gap-2")}>
-      {units.map((u, i) => (
-        <span key={u.label} className="flex items-center gap-1.5 sm:gap-2">
-          {i > 0 && (
-            <span className={cn("font-bold text-white/40", compact ? "text-sm" : "text-lg md:text-2xl")} aria-hidden>
-              :
-            </span>
+    <div
+      className={cn(
+        compact
+          ? "flex items-center justify-center gap-1.5 sm:gap-3 sm:justify-end"
+          : "grid grid-cols-3 gap-2 sm:gap-3"
+      )}
+    >
+      {[
+        { v: countdown.hours, l: "Hrs" },
+        { v: countdown.minutes, l: "Min" },
+        { v: countdown.seconds, l: "Sec" },
+      ].map(({ v, l }) => (
+        <div
+          key={l}
+          className={cn(
+            compact ? "text-center min-w-[2.25rem] sm:min-w-[2.75rem]" : "rounded-xl px-1 py-2.5 sm:py-3 text-center",
+            !compact && (dark ? "bg-white/10" : "bg-[#002147]/5"),
+            compact && dark && "rounded-lg bg-white/10 px-1 py-2.5 backdrop-blur-sm"
           )}
-          <span className="text-center min-w-[2.25rem] sm:min-w-[2.75rem]">
-            <span
-              className={cn(
-                "block font-black tabular-nums leading-none text-[#D3B574]",
-                compact ? "text-xl sm:text-2xl" : "text-2xl sm:text-4xl md:text-5xl"
-              )}
-            >
-              {u.label === "Days" ? u.value : pad2(u.value)}
-            </span>
-            <span
-              className={cn(
-                "block uppercase tracking-wider text-white/70 font-semibold",
-                compact ? "text-[9px] sm:text-[10px]" : "text-[10px] sm:text-xs"
-              )}
-            >
-              {u.label}
-            </span>
-          </span>
-        </span>
+        >
+          <div
+            className={cn(
+              "font-black tabular-nums leading-none",
+              digitClass,
+              dark ? "text-white" : "text-[#002147]",
+              compact && dark && "text-xl sm:text-2xl"
+            )}
+          >
+            {compact ? pad2(v) : pad2(v)}
+          </div>
+          <div
+            className={cn(
+              "mt-1 font-bold uppercase tracking-wider",
+              labelClass,
+              dark ? "text-[#D3B574]" : "text-[#002147]/65"
+            )}
+          >
+            {l}
+          </div>
+        </div>
       ))}
     </div>
   )
@@ -125,19 +227,21 @@ export function NhscaWeighInCountdown({
           className
         )}
         aria-live="polite"
-        aria-label="Countdown to NHSCA weigh-ins"
+        aria-label="Countdown to NHSCA Duals"
       >
         <div className="mx-auto flex max-w-3xl flex-col gap-2 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-4 sm:py-3">
           <div className="flex min-w-0 items-start gap-2 sm:items-center">
             <Scale className="h-5 w-5 shrink-0 text-[#D3B574] mt-0.5 sm:mt-0" aria-hidden />
             <div>
-              <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#D3B574]">Weigh-ins open</p>
+              <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#D3B574]">
+                NHSCA Duals 2026
+              </p>
               <p className="text-xs sm:text-sm font-medium text-white/95 leading-snug">
-                Friday, May 22 · 2:00 PM ET · Virginia Beach Sports Center
+                Fri May 22 · 2:00 PM ET weigh-ins · First round Sat May 23 · 8:00 AM ET
               </p>
             </div>
           </div>
-          <CountdownDigits countdown={countdown} compact />
+          <NhscaDualsCountdownFace countdown={countdown} dark compact />
         </div>
       </section>
     )
@@ -151,11 +255,13 @@ export function NhscaWeighInCountdown({
       )}
       aria-live="polite"
     >
-      <p className="text-center text-[#D3B574] font-bold uppercase tracking-wider text-xs sm:text-sm mb-1">Weigh-ins open</p>
+      <p className="text-center text-[#D3B574] font-bold uppercase tracking-wider text-xs sm:text-sm mb-1">
+        NHSCA Duals 2026
+      </p>
       <p className="text-center text-white/90 text-sm sm:text-lg font-medium mb-5">
         Friday, May 22, 2026 · 2:00 PM ET · Virginia Beach Sports Center
       </p>
-      <CountdownDigits countdown={countdown} />
+      <NhscaDualsCountdownFace countdown={countdown} dark />
     </section>
   )
 }

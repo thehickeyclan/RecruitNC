@@ -4,11 +4,10 @@ import Image from "next/image"
 import { ArrowRight, Radio } from "lucide-react"
 import { HardLink } from "@/components/hard-link"
 import { cn } from "@/lib/utils"
-import { useWeighInCountdown } from "@/components/national-team/nhsca-weigh-in-countdown"
-
-function pad2(n: number) {
-  return String(n).padStart(2, "0")
-}
+import {
+  NhscaDualsCountdownFace,
+  useWeighInCountdown,
+} from "@/components/national-team/nhsca-weigh-in-countdown"
 
 function CountdownPanel({
   large,
@@ -24,13 +23,8 @@ function CountdownPanel({
     ? "rounded-2xl bg-[#002147] p-4 sm:p-5 shadow-xl ring-1 ring-[#001428]/60"
     : "rounded-2xl border-2 border-[#002147]/15 bg-white/90 p-4 sm:p-5 shadow-lg backdrop-blur-sm"
 
-  const digitClass = large
-    ? "text-3xl sm:text-4xl md:text-5xl"
-    : "text-2xl sm:text-3xl md:text-4xl"
-  const labelClass = large ? "text-[10px] sm:text-xs" : "text-[9px] sm:text-[10px]"
-
   return (
-    <div className={panelClass} aria-live="polite" aria-label="Countdown to NHSCA Duals weigh-ins">
+    <div className={panelClass} aria-live="polite" aria-label="Countdown to NHSCA Duals">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-[#B31B1B] px-3 py-1 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-white shadow-sm">
           <Radio className="h-3 w-3" aria-hidden />
@@ -45,55 +39,13 @@ function CountdownPanel({
           Weigh-ins open
         </p>
       </div>
-      <p className={cn("text-xs sm:text-sm mb-4", dark ? "text-white/75" : "text-[#002147]/75")}>
+      <p className={cn("text-xs sm:text-sm mb-1", dark ? "text-white/75" : "text-[#002147]/75")}>
         Friday, May 22, 2026 · 2:00 PM ET · Virginia Beach Sports Center
       </p>
-      {countdown.ready ? (
-        <p
-          className={cn(
-            "font-black text-center py-2",
-            dark ? "text-white text-2xl sm:text-3xl" : "text-[#002147] text-2xl sm:text-3xl"
-          )}
-        >
-          We&apos;re here — Duals week!
-        </p>
-      ) : (
-        <div className="grid grid-cols-4 gap-2 sm:gap-3">
-          {[
-            { v: countdown.days, l: "Days", pad: false },
-            { v: countdown.hours, l: "Hrs", pad: true },
-            { v: countdown.minutes, l: "Min", pad: true },
-            { v: countdown.seconds, l: "Sec", pad: true },
-          ].map(({ v, l, pad }) => (
-            <div
-              key={l}
-              className={cn(
-                "rounded-xl px-1 py-2.5 sm:py-3 text-center",
-                dark ? "bg-white/10" : "bg-[#002147]/5"
-              )}
-            >
-              <div
-                className={cn(
-                  "font-black tabular-nums leading-none",
-                  digitClass,
-                  dark ? "text-white" : "text-[#002147]"
-                )}
-              >
-                {pad ? pad2(v) : v}
-              </div>
-              <div
-                className={cn(
-                  "mt-1 font-bold uppercase tracking-wider",
-                  labelClass,
-                  dark ? "text-[#D3B574]" : "text-[#002147]/65"
-                )}
-              >
-                {l}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      <p className={cn("text-[11px] sm:text-xs mb-4", dark ? "text-white/55" : "text-[#002147]/60")}>
+        First round wrestling Saturday, May 23 · 8:00 AM ET
+      </p>
+      <NhscaDualsCountdownFace countdown={countdown} large={large} dark={dark} />
     </div>
   )
 }

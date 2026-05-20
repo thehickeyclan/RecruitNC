@@ -2,41 +2,37 @@
 
 import { useEffect, useState } from "react"
 import { Clock } from "lucide-react"
+import {
+  NHSCA_NATIONALS_2026_DAY_MS,
+  easternCalendarDaysUntil,
+} from "@/lib/nhsca-duals-event-times"
 
-interface NHSCACountdownProps {
-  targetDate: Date
-}
-
-export function NHSCACountdown({ targetDate }: NHSCACountdownProps) {
+/** Days until NHSCA High School Nationals (America/New_York calendar). */
+export function NHSCACountdown() {
   const [daysRemaining, setDaysRemaining] = useState<number | null>(null)
   const [isPast, setIsPast] = useState(false)
 
   useEffect(() => {
     const calculateDays = () => {
-      const now = new Date()
-      // Set to start of day for accurate calculation
-      now.setHours(0, 0, 0, 0)
-      const target = new Date(targetDate)
-      target.setHours(0, 0, 0, 0)
+      const now = Date.now()
+      const endOfNationalsDay = NHSCA_NATIONALS_2026_DAY_MS + 86400000
 
-      const diffTime = target.getTime() - now.getTime()
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-
-      if (diffDays < 0) {
-        setIsPast(true)
-        setDaysRemaining(Math.abs(diffDays))
-      } else {
+      if (now < NHSCA_NATIONALS_2026_DAY_MS) {
         setIsPast(false)
-        setDaysRemaining(diffDays)
+        setDaysRemaining(easternCalendarDaysUntil(now, NHSCA_NATIONALS_2026_DAY_MS))
+      } else if (now < endOfNationalsDay) {
+        setIsPast(false)
+        setDaysRemaining(0)
+      } else {
+        setIsPast(true)
+        setDaysRemaining(easternCalendarDaysUntil(NHSCA_NATIONALS_2026_DAY_MS, now))
       }
     }
 
     calculateDays()
-    // Update every minute to keep it accurate
-    const interval = setInterval(calculateDays, 60000)
-
+    const interval = setInterval(calculateDays, 60_000)
     return () => clearInterval(interval)
-  }, [targetDate])
+  }, [])
 
   if (daysRemaining === null) {
     return null
@@ -61,7 +57,7 @@ export function NHSCACountdown({ targetDate }: NHSCACountdownProps) {
       <div className="flex items-center gap-3 md:gap-4">
         <Clock className="w-6 h-6 md:w-8 md:h-8 flex-shrink-0" />
         <div className="flex-1">
-          <div className="text-xs md:text-sm text-white/90 mb-1">Days Until NHSCA Nationals</div>
+          <div className="text-xs md:text-sm text-white/90 mb-1">Days until NHSCA Nationals (ET)</div>
           <div className="font-bold text-2xl md:text-4xl">
             {daysRemaining === 0 ? (
               <span className="animate-pulse">Today!</span>
@@ -69,6 +65,7 @@ export function NHSCACountdown({ targetDate }: NHSCACountdownProps) {
               `${daysRemaining} day${daysRemaining !== 1 ? "s" : ""}`
             )}
           </div>
+          <p className="text-[10px] md:text-xs text-white/75 mt-1">March 27, 2026 · Eastern</p>
         </div>
       </div>
     </div>

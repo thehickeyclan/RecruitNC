@@ -3,14 +3,13 @@
 import Image from "next/image"
 import { ExternalLink } from "lucide-react"
 import { HardLink } from "@/components/hard-link"
-import { useWeighInCountdown } from "@/components/national-team/nhsca-weigh-in-countdown"
+import {
+  NhscaDualsCountdownFace,
+  useWeighInCountdown,
+} from "@/components/national-team/nhsca-weigh-in-countdown"
 
 const GROUPME_URL = "https://groupme.com/join_group/113432813/Vdugtepr"
 const NHSCA_OFFICIAL = "https://nhsca-events.com/national-duals/"
-
-function pad2(n: number) {
-  return String(n).padStart(2, "0")
-}
 
 /** Gold hero band on navy hub — opaque background so text stays readable. */
 export function NhscaHubHero() {
@@ -74,34 +73,12 @@ export function NhscaHubHero() {
                       Live
                     </span>
                     <p className="text-[11px] font-semibold uppercase tracking-wider text-[#D3B574]">
-                      Weigh-ins open
+                      {countdown.phase === "first_round" ? "First round soon" : "Weigh-ins open"}
                     </p>
                   </div>
-                  <p className="text-xs text-white/75 mb-3">Fri May 22 · 2:00 PM ET</p>
-                  {countdown.ready ? (
-                    <p className="text-center text-2xl font-black text-white py-2">We&apos;re here!</p>
-                  ) : (
-                    <div className="grid grid-cols-4 gap-2">
-                      {[
-                        { v: countdown.days, l: "Days", pad: false },
-                        { v: countdown.hours, l: "Hrs", pad: true },
-                        { v: countdown.minutes, l: "Min", pad: true },
-                        { v: countdown.seconds, l: "Sec", pad: true },
-                      ].map(({ v, l, pad }) => (
-                        <div
-                          key={l}
-                          className="rounded-lg bg-white/10 px-1 py-2.5 text-center backdrop-blur-sm"
-                        >
-                          <div className="text-xl sm:text-2xl font-black tabular-nums text-white leading-none">
-                            {pad ? pad2(v) : v}
-                          </div>
-                          <div className="mt-1 text-[9px] font-bold uppercase tracking-wider text-[#D3B574]">
-                            {l}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  <p className="text-xs text-white/75 mb-1">Fri May 22 · 2:00 PM ET weigh-ins</p>
+                  <p className="text-[10px] text-white/50 mb-3">First round Sat May 23 · 8:00 AM ET</p>
+                  <NhscaDualsCountdownFace countdown={countdown} dark compact />
                 </div>
               </div>
             </div>
@@ -111,19 +88,19 @@ export function NhscaHubHero() {
                 href={GROUPME_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex min-h-[48px] flex-1 sm:flex-none items-center justify-center gap-2 rounded-xl bg-[#002147] px-5 py-3 text-sm font-bold text-white hover:bg-[#003366] transition-colors shadow-md"
+                className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl bg-[#002147] px-4 text-sm font-bold text-white hover:bg-[#003366]"
               >
-                Join GroupMe
-                <ExternalLink className="h-4 w-4 opacity-80" />
+                GroupMe
+                <ExternalLink className="h-4 w-4 text-[#D3B574]" aria-hidden />
               </a>
               <a
                 href={NHSCA_OFFICIAL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex min-h-[48px] flex-1 sm:flex-none items-center justify-center gap-2 rounded-xl border-2 border-[#002147] bg-white px-5 py-3 text-sm font-bold text-[#002147] hover:bg-[#002147]/5 transition-colors"
+                className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#002147]/25 bg-white/70 px-4 text-sm font-semibold text-[#002147] hover:bg-white"
               >
                 NHSCA official site
-                <ExternalLink className="h-4 w-4 opacity-70" />
+                <ExternalLink className="h-4 w-4" aria-hidden />
               </a>
             </div>
           </div>
