@@ -108,6 +108,31 @@ export function NHSCA2026EventBlock() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MapPin className="h-5 w-5 text-[#003366]" />
+            Team hotel
+          </CardTitle>
+          <CardDescription>Official NC United block · ~20 min from VBSC</CardDescription>
+        </CardHeader>
+        <CardContent className="text-gray-700 text-sm md:text-base space-y-2">
+          <p>
+            <strong>SpringHill Suites Norfolk Virginia Beach</strong> — coordinate rooming with staff if your athlete stays with the team.
+            Parents may book separately.
+          </p>
+          <a
+            href="https://www.google.com/maps/search/?api=1&query=SpringHill+Suites+Norfolk+Virginia+Beach"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-[#003366] font-medium hover:underline"
+          >
+            Open in Maps
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MapPin className="h-5 w-5 text-[#003366]" />
             Virginia Beach Sports Center
           </CardTitle>
           <CardDescription>Host venue for the 27th Annual National Duals</CardDescription>

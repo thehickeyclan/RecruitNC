@@ -1,103 +1,159 @@
 import { Smartphone, Trophy, Tv, ExternalLink, PlayCircle } from "lucide-react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
+import {
+  hubPanelClass,
+  hubPanelDescClass,
+  hubPanelHeaderClass,
+  hubPanelTitleClass,
+} from "@/components/national-team/nhsca-hub-theme"
 
-/** NHSCA National Duals 2026 — streaming & brackets (subscriber services; links open externally). */
 const FLO_MAIN = "https://www.flowrestling.org/"
-/** NHSCA official duals landing (brackets / results when posted). */
 const NHSCA_DUALS_PAGE = "https://nhsca-events.com/national-duals/"
 
-export function NHSCADuals2026HowToWatch() {
-  return (
-    <section
-      id="how-to-watch"
-      className="scroll-mt-28 rounded-2xl border border-white/25 bg-[#061428]/90 shadow-xl overflow-hidden"
-      aria-labelledby="how-to-watch-heading"
-    >
-      <div className="border-b border-white/10 px-5 py-4">
-        <h2 id="how-to-watch-heading" className="text-lg font-bold text-white tracking-tight">
-          How to watch
-        </h2>
-        <p className="text-sm text-white/70 mt-1">
-          NHSCA National Duals is broadcast on FloWrestling; brackets and placement info post on NHSCA.
-        </p>
-      </div>
-
-      {/* Flo hero strip */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gradient-to-r from-[#B31B1B] via-[#9a1717] to-[#7f1414] px-5 py-5 sm:px-6 border-b border-white/10">
-        <div className="min-w-0">
-          <p className="text-xl sm:text-2xl font-black text-white leading-tight">Watch Live on FloWrestling</p>
-          <p className="text-white/95 text-sm sm:text-base mt-1">
-            Stream every match from Sat May 23–Mon May 25, 2026 (NHSCA competition days · weigh-ins Fri May 22)
+export function NHSCADuals2026HowToWatch({ hubTheme = false }: { hubTheme?: boolean }) {
+  if (hubTheme) {
+    return (
+      <article id="how-to-watch" className={cn(hubPanelClass, "scroll-mt-8")}>
+        <header className={hubPanelHeaderClass}>
+          <h2 className={cn(hubPanelTitleClass, "flex items-center gap-2")}>
+            <Tv className="h-5 w-5 text-[#CBAF5D]" />
+            How to watch
+          </h2>
+          <p className={hubPanelDescClass}>FloWrestling streams competition Sat–Mon; brackets on NHSCA.</p>
+        </header>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-[#B31B1B] px-5 py-5 text-white border-b border-white/10">
+          <div>
+            <p className="text-lg font-bold">Watch live on FloWrestling</p>
+            <p className="text-sm text-white/90 mt-1">Sat May 23 – Mon May 25, 2026</p>
+          </div>
+          <Button asChild className="shrink-0 bg-white text-[#B31B1B] hover:bg-gray-100 font-bold min-h-[44px]">
+            <a href={FLO_MAIN} target="_blank" rel="noopener noreferrer">
+              <PlayCircle className="h-4 w-4 mr-2" />
+              Watch live
+              <ExternalLink className="h-3.5 w-3.5 ml-1 opacity-70" />
+            </a>
+          </Button>
+        </div>
+        <div className="p-5 md:p-6 space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="rounded-xl border border-white/10 bg-white/[0.06] p-4">
+              <div className="flex gap-3">
+                <Tv className="h-5 w-5 text-[#CBAF5D] shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-white">On your TV</p>
+                  <p className="text-sm text-white/70 mt-1">FloSports app — Roku, Fire TV, Apple TV, and more.</p>
+                </div>
+              </div>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-white/[0.06] p-4">
+              <div className="flex gap-3">
+                <Smartphone className="h-5 w-5 text-[#CBAF5D] shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-white">On your phone</p>
+                  <p className="text-sm text-white/70 mt-1">FloSports app for iOS and Android.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button
+              asChild
+              variant="outline"
+              className="flex-1 min-h-[44px] border-white/25 bg-transparent text-white hover:bg-white/10 hover:text-white font-semibold"
+            >
+              <a href={FLO_MAIN} target="_blank" rel="noopener noreferrer">
+                FloWrestling
+                <ExternalLink className="h-3.5 w-3.5 ml-1" />
+              </a>
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              className="flex-1 min-h-[44px] border-white/25 bg-transparent text-white hover:bg-white/10 hover:text-white font-semibold"
+            >
+              <a href={NHSCA_DUALS_PAGE} target="_blank" rel="noopener noreferrer">
+                <Trophy className="h-4 w-4 mr-2" />
+                Brackets &amp; results
+                <ExternalLink className="h-3.5 w-3.5 ml-1" />
+              </a>
+            </Button>
+          </div>
+          <p className="text-xs text-white/50 leading-relaxed">
+            Archived footage may be available to Flo subscribers after the event — check Flo for replay terms.
           </p>
         </div>
-        <a
-          href={FLO_MAIN}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-[#B31B1B] shadow hover:bg-gray-50 transition-colors"
-        >
-          <PlayCircle className="h-5 w-5" aria-hidden />
-          Watch Live
-          <ExternalLink className="h-4 w-4 opacity-70" aria-hidden />
-        </a>
-      </div>
+      </article>
+    )
+  }
 
-      <div className="p-5 space-y-4">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="rounded-xl border border-[#003366]/40 bg-[#0B2545] p-4">
-            <div className="flex items-start gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#D3B574]/25 text-[#D3B574] shrink-0" aria-hidden>
-                <Tv className="h-5 w-5" />
-              </span>
-              <div className="min-w-0">
-                <p className="font-bold text-white">On your TV</p>
-                <p className="text-sm text-white/80 mt-1 leading-snug">
-                  Download the FloSports app — available on Roku, Fire TV, Google TV, Apple TV, Samsung, VIZIO, &amp; LG.
-                </p>
+  return (
+    <Card id="how-to-watch" className="scroll-mt-20 border-2 border-[#002147] overflow-hidden">
+      <CardHeader className="bg-[#002147] text-white">
+        <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+          <Tv className="h-5 w-5 text-[#CBAF5D]" />
+          How to watch
+        </CardTitle>
+        <CardDescription className="text-white/80">
+          FloWrestling streams competition Sat–Mon; brackets on NHSCA.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="p-0">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-[#B31B1B] px-5 py-5 text-white">
+          <div>
+            <p className="text-lg font-bold">Watch live on FloWrestling</p>
+            <p className="text-sm text-white/90 mt-1">Sat May 23 – Mon May 25, 2026</p>
+          </div>
+          <Button asChild className="shrink-0 bg-white text-[#B31B1B] hover:bg-gray-100 font-bold">
+            <a href={FLO_MAIN} target="_blank" rel="noopener noreferrer">
+              <PlayCircle className="h-4 w-4 mr-2" />
+              Watch live
+              <ExternalLink className="h-3.5 w-3.5 ml-1 opacity-70" />
+            </a>
+          </Button>
+        </div>
+        <div className="p-5 md:p-6 space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="rounded-lg border border-[#002147]/15 bg-[#CBAF5D]/10 p-4">
+              <div className="flex gap-3">
+                <Tv className="h-5 w-5 text-[#003366] shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-[#002147]">On your TV</p>
+                  <p className="text-sm text-gray-600 mt-1">FloSports app — Roku, Fire TV, Apple TV, and more.</p>
+                </div>
+              </div>
+            </div>
+            <div className="rounded-lg border border-[#002147]/15 bg-[#CBAF5D]/10 p-4">
+              <div className="flex gap-3">
+                <Smartphone className="h-5 w-5 text-[#003366] shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-[#002147]">On your phone</p>
+                  <p className="text-sm text-gray-600 mt-1">FloSports app for iOS and Android.</p>
+                </div>
               </div>
             </div>
           </div>
-          <div className="rounded-xl border border-[#003366]/40 bg-[#0B2545] p-4">
-            <div className="flex items-start gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#D3B574]/25 text-[#D3B574] shrink-0" aria-hidden>
-                <Smartphone className="h-5 w-5" />
-              </span>
-              <div className="min-w-0">
-                <p className="font-bold text-white">On the go</p>
-                <p className="text-sm text-white/80 mt-1 leading-snug">
-                  Download the FloSports app on iOS or Android.
-                </p>
-              </div>
-            </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button asChild variant="outline" className="flex-1 border-[#003366] text-[#003366] font-semibold">
+              <a href={FLO_MAIN} target="_blank" rel="noopener noreferrer">
+                FloWrestling
+                <ExternalLink className="h-3.5 w-3.5 ml-1" />
+              </a>
+            </Button>
+            <Button asChild variant="outline" className="flex-1 border-[#003366] text-[#003366] font-semibold">
+              <a href={NHSCA_DUALS_PAGE} target="_blank" rel="noopener noreferrer">
+                <Trophy className="h-4 w-4 mr-2" />
+                Brackets &amp; results
+                <ExternalLink className="h-3.5 w-3.5 ml-1" />
+              </a>
+            </Button>
           </div>
+          <p className="text-xs text-gray-500 leading-relaxed">
+            Archived footage may be available to Flo subscribers after the event — check Flo for replay terms.
+          </p>
         </div>
-
-        <div className="flex flex-col sm:flex-row gap-3">
-          <a
-            href={FLO_MAIN}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex flex-1 min-h-[48px] items-center justify-center gap-2 rounded-xl bg-[#D3B574] px-4 py-3 text-[#0B2545] font-bold hover:bg-[#E5C97A] transition-colors"
-          >
-            <Tv className="h-5 w-5 shrink-0" aria-hidden />
-            Live stream
-            <ExternalLink className="h-4 w-4 shrink-0 opacity-80" aria-hidden />
-          </a>
-          <a
-            href={NHSCA_DUALS_PAGE}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex flex-1 min-h-[48px] items-center justify-center gap-2 rounded-xl border-2 border-white/80 bg-white px-4 py-3 text-[#002147] font-bold hover:bg-white/95 transition-colors"
-          >
-            <Trophy className="h-5 w-5 shrink-0 text-[#002147]" aria-hidden />
-            Brackets &amp; results
-            <ExternalLink className="h-4 w-4 shrink-0 opacity-70" aria-hidden />
-          </a>
-        </div>
-
-        <p className="text-xs text-white/65 leading-relaxed border-t border-white/10 pt-4">
-          <strong className="text-white/85">Archived footage:</strong> Video from the event is typically archived for FloWrestling subscribers according to Flo&apos;s terms — check Flo for replay availability after the event.
-        </p>
-      </div>
-    </section>
+      </CardContent>
+    </Card>
   )
 }
