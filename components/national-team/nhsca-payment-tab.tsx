@@ -66,13 +66,13 @@ const PRODUCTS = {
     id: "nhsca-2026-transport",
     name: "Van Transportation",
     description: "Round-trip from Raleigh",
-    priceInCents: 0,
+    priceInCents: 0, // TBD per athlete
   },
   hotel: {
     id: "nhsca-2026-hotel",
     name: "Hotel",
     description: "Shared hotel accommodations",
-    priceInCents: 0,
+    priceInCents: 0, // TBD per athlete
   },
 }
 
@@ -98,9 +98,11 @@ export function NhscaPaymentTab() {
   const [cancelled, setCancelled] = useState(false)
   const searchParams = useSearchParams()
   
+  // Orders state - simple fetch pattern
   const [orders, setOrders] = useState<any[]>([])
   const [loadingOrders, setLoadingOrders] = useState(true)
 
+  // Check for payment status in URL
   useEffect(() => {
     const status = searchParams.get("status")
     if (status === "cancelled") {
@@ -108,6 +110,7 @@ export function NhscaPaymentTab() {
     }
   }, [searchParams])
 
+  // Load orders on mount
   useEffect(() => {
     async function loadOrders() {
       try {
@@ -125,17 +128,26 @@ export function NhscaPaymentTab() {
     loadOrders()
   }, [])
 
+  // Calculate cart based on mode
   useEffect(() => {
     const newCart: CartItem[] = []
     
     if (mode === "bundle") {
+      // Bundle includes: registration, 2 singlets, shorts, short sleeve, long sleeve
       newCart.push({
         productId: PRODUCTS.bundle.id,
         name: PRODUCTS.bundle.name,
         priceInCents: PRODUCTS.bundle.priceInCents,
         quantity: 1,
+        sizes: {
+          singlet: singletSize,
+          shorts: shortsSize,
+          shortSleeve: shortSleeveSize,
+          longSleeve: longSleeveSize,
+        },
       })
     } else {
+      // Individual mode - only add selected items
       if (includeRegistration) {
         newCart.push({
           productId: PRODUCTS.registration.id,
@@ -145,6 +157,7 @@ export function NhscaPaymentTab() {
         })
       }
       
+      // Add singlets
       if (singletQty > 0 && singletSize) {
         newCart.push({
           productId: PRODUCTS.singlet.id,
@@ -155,25 +168,26 @@ export function NhscaPaymentTab() {
         })
       }
       
-      if (shortsSize && shortsSize !== "none" && shortsSize !== "") {
+// Add individual apparel items
+if (shortsSize && shortsSize !== "none" && shortsSize !== "") {
         newCart.push({
           productId: PRODUCTS.shorts.id,
           name: PRODUCTS.shorts.name,
           priceInCents: PRODUCTS.shorts.priceInCents,
           quantity: 1,
           size: shortsSize,
-        })
-      }
-      if (shortSleeveSize && shortSleeveSize !== "none" && shortSleeveSize !== "") {
+})
+}
+if (shortSleeveSize && shortSleeveSize !== "none" && shortSleeveSize !== "") {
         newCart.push({
           productId: PRODUCTS.shortSleeve.id,
           name: PRODUCTS.shortSleeve.name,
           priceInCents: PRODUCTS.shortSleeve.priceInCents,
           quantity: 1,
           size: shortSleeveSize,
-        })
-      }
-      if (longSleeveSize && longSleeveSize !== "none" && longSleeveSize !== "") {
+})
+}
+if (longSleeveSize && longSleeveSize !== "none" && longSleeveSize !== "") {
         newCart.push({
           productId: PRODUCTS.longSleeve.id,
           name: PRODUCTS.longSleeve.name,
@@ -183,6 +197,7 @@ export function NhscaPaymentTab() {
         })
       }
 
+      // Add travel items
       if (wantTransport && PRODUCTS.transport.priceInCents > 0) {
         newCart.push({
           productId: PRODUCTS.transport.id,
@@ -245,6 +260,7 @@ export function NhscaPaymentTab() {
     }
   }
 
+  // Show existing paid payments
   const paidPayments = orders.filter(p => p.status === "paid")
 
   return (
@@ -258,291 +274,448 @@ export function NhscaPaymentTab() {
         </TabsTrigger>
       </TabsList>
 
+      {/* Place an Order Tab */}
       <TabsContent value="place-order" className="mt-6 space-y-6">
-        {cancelled && (
-          <div className="flex items-center gap-2 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-yellow-200">
-            <AlertCircle className="h-5 w-5 shrink-0" />
-            <span>Payment was cancelled. You can try again below.</span>
-          </div>
-        )}
+      {cancelled && (
+        <div className="flex items-center gap-2 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-yellow-200">
+          <AlertCircle className="h-5 w-5 shrink-0" />
+          <span>Payment was cancelled. You can try again below.</span>
+        </div>
+      )}
 
-        {paidPayments.length > 0 && (
-          <Card className="bg-green-500/10 border-green-500/30">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-white flex items-center gap-2 text-base">
-                <Check className="h-5 w-5 text-green-500" />
-                Paid
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {paidPayments.map(p => (
-                <div key={p.id} className="flex justify-between items-center text-sm">
-                  <span className="text-white/80">{new Date(p.created_at).toLocaleDateString()}</span>
-                  <Badge variant="outline" className="bg-green-500/20 text-green-300 border-green-500/50">
-                    {formatPrice(p.amount_cents)}
-                  </Badge>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
-
-        <Card className="bg-[#0a1628] border-[#1a3a5c]">
-          <CardHeader>
-            <CardTitle className="text-white">Team Package Selection</CardTitle>
+      {/* Existing payments */}
+      {paidPayments.length > 0 && (
+        <Card className="bg-green-500/10 border-green-500/30">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-white flex items-center gap-2 text-base">
+              <Check className="h-5 w-5 text-green-500" />
+              Paid
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => setMode("bundle")}
-                className={`p-4 rounded-lg border-2 transition-all text-center ${
-                  mode === "bundle"
-                    ? "border-[#c9a227] bg-[#c9a227]/10"
-                    : "border-[#1a3a5c] bg-[#0d1f38] hover:border-[#c9a227]"
-                }`}
-              >
-                <Package className="h-6 w-6 mx-auto mb-2 text-[#c9a227]" />
-                <div className="font-semibold text-white">Bundle</div>
-                <div className="text-xs text-white/60">{formatPrice(PRODUCTS.bundle.priceInCents)}</div>
-              </button>
-              <button
-                onClick={() => setMode("individual")}
-                className={`p-4 rounded-lg border-2 transition-all text-center ${
-                  mode === "individual"
-                    ? "border-[#c9a227] bg-[#c9a227]/10"
-                    : "border-[#1a3a5c] bg-[#0d1f38] hover:border-[#c9a227]"
-                }`}
-              >
-                <Shirt className="h-6 w-6 mx-auto mb-2 text-[#c9a227]" />
-                <div className="font-semibold text-white">Individual</div>
-                <div className="text-xs text-white/60">Pick items</div>
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              <div>
-                <Label className="text-white/80">Wrestler Name</Label>
-                <Input
-                  value={athleteName}
-                  onChange={(e) => setAthleteName(e.target.value)}
-                  placeholder="Full name"
-                  className="bg-[#0d1f38] border-[#1a3a5c] text-white placeholder:text-white/40 mt-1"
-                />
+          <CardContent className="space-y-2">
+            {paidPayments.map(p => (
+              <div key={p.id} className="flex justify-between items-center text-sm">
+                <span className="text-white/80">{new Date(p.created_at).toLocaleDateString()}</span>
+                <Badge variant="outline" className="bg-green-500/20 text-green-300 border-green-500/50">
+                  {formatPrice(p.amount_cents)}
+                </Badge>
               </div>
-
-              <div>
-                <Label className="text-white/80">Team</Label>
-                <Select value={team} onValueChange={(v: any) => setTeam(v)}>
-                  <SelectTrigger className="bg-[#0d1f38] border-[#1a3a5c] text-white mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="national">National Team</SelectItem>
-                    <SelectItem value="select">Select Team</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              {mode === "bundle" && (
-                <div className="space-y-2 text-sm text-white/60">
-                  <p>✓ Tournament Registration</p>
-                  <p>✓ 2 Singlets</p>
-                  <p>✓ Shorts & Apparel</p>
-                </div>
-              )}
-
-              {mode === "individual" && (
-                <>
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      checked={includeRegistration}
-                      onCheckedChange={(e) => setIncludeRegistration(!!e)}
-                      className="border-[#1a3a5c]"
-                    />
-                    <span className="text-white/80">{PRODUCTS.registration.name} - {formatPrice(PRODUCTS.registration.priceInCents)}</span>
-                  </div>
-
-                  <div className="space-y-2 border-t border-[#1a3a5c] pt-3">
-                    <div>
-                      <Label className="text-white/80 text-xs">Singlets</Label>
-                      <div className="flex gap-2 mt-1">
-                        <Input
-                          type="number"
-                          min="0"
-                          max="5"
-                          value={singletQty}
-                          onChange={(e) => setSingletQty(parseInt(e.target.value) || 0)}
-                          className="w-16 bg-[#0d1f38] border-[#1a3a5c] text-white"
-                          placeholder="Qty"
-                        />
-                        <Select value={singletSize} onValueChange={setSingletSize} disabled={singletQty === 0}>
-                          <SelectTrigger className="flex-1 bg-[#0d1f38] border-[#1a3a5c] text-white">
-                            <SelectValue placeholder="Size" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {SIZES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div>
-                      <Label className="text-white/80 text-xs">Shorts Size</Label>
-                      <Select value={shortsSize} onValueChange={setShortsSize}>
-                        <SelectTrigger className="bg-[#0d1f38] border-[#1a3a5c] text-white mt-1">
-                          <SelectValue placeholder="Select size" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">—</SelectItem>
-                          {SIZES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label className="text-white/80 text-xs">Short Sleeve Size</Label>
-                      <Select value={shortSleeveSize} onValueChange={setShortSleeveSize}>
-                        <SelectTrigger className="bg-[#0d1f38] border-[#1a3a5c] text-white mt-1">
-                          <SelectValue placeholder="Select size" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">—</SelectItem>
-                          {SIZES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label className="text-white/80 text-xs">Long Sleeve Size</Label>
-                      <Select value={longSleeveSize} onValueChange={setLongSleeveSize}>
-                        <SelectTrigger className="bg-[#0d1f38] border-[#1a3a5c] text-white mt-1">
-                          <SelectValue placeholder="Select size" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">—</SelectItem>
-                          {SIZES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 border-t border-[#1a3a5c] pt-3">
-                    <div className="flex items-center gap-2">
-                      <Checkbox
-                        checked={wantTransport}
-                        onCheckedChange={(e) => setWantTransport(!!e)}
-                        className="border-[#1a3a5c]"
-                      />
-                      <span className="text-white/80 text-sm">{PRODUCTS.transport.name} - TBD</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Checkbox
-                        checked={wantHotel}
-                        onCheckedChange={(e) => setWantHotel(!!e)}
-                        className="border-[#1a3a5c]"
-                      />
-                      <span className="text-white/80 text-sm">{PRODUCTS.hotel.name} - TBD</span>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-
-            {error && <div className="p-3 bg-red-500/20 border border-red-500/30 rounded text-red-300 text-sm">{error}</div>}
-
-            <div className="pt-4 border-t border-[#1a3a5c]">
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-white/80">Total</span>
-                <span className="text-2xl font-bold text-[#c9a227]">{formatPrice(total)}</span>
-              </div>
-              <Button
-                onClick={handleCheckout}
-                disabled={submitting || total === 0}
-                className="w-full bg-[#c9a227] hover:bg-[#d4bc6a] text-[#002147] font-bold text-lg h-12"
-              >
-                {submitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <CreditCard className="mr-2 h-5 w-5" />
-                    Proceed to Checkout
-                  </>
-                )}
-              </Button>
-            </div>
+            ))}
           </CardContent>
         </Card>
+      )}
+
+      {/* Mode selector */}
+      <div className="grid grid-cols-2 gap-3">
+        <button
+          onClick={() => setMode("bundle")}
+          className={`p-4 rounded-xl border-2 transition-all text-left ${
+            mode === "bundle"
+              ? "border-[#c9a227] bg-[#c9a227]/10"
+              : "border-[#1a3a5c] bg-[#0d1f38] hover:border-[#2a4a6c]"
+          }`}
+        >
+          <Package className={`h-6 w-6 mb-2 ${mode === "bundle" ? "text-[#c9a227]" : "text-white/60"}`} />
+          <div className={`font-bold ${mode === "bundle" ? "text-[#c9a227]" : "text-white"}`}>Team Package</div>
+          <div className="text-sm text-white/60">$250 — Best Value</div>
+        </button>
+        <button
+          onClick={() => setMode("individual")}
+          className={`p-4 rounded-xl border-2 transition-all text-left ${
+            mode === "individual"
+              ? "border-[#c9a227] bg-[#c9a227]/10"
+              : "border-[#1a3a5c] bg-[#0d1f38] hover:border-[#2a4a6c]"
+          }`}
+        >
+          <Shirt className={`h-6 w-6 mb-2 ${mode === "individual" ? "text-[#c9a227]" : "text-white/60"}`} />
+          <div className={`font-bold ${mode === "individual" ? "text-[#c9a227]" : "text-white"}`}>Individual Items</div>
+          <div className="text-sm text-white/60">Build your own</div>
+        </button>
+      </div>
+
+      <Card className="bg-[#0d1f38] border-[#1a3a5c]">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <CreditCard className="h-5 w-5 text-[#c9a227]" />
+            {mode === "bundle" ? "NHSCA Team Package" : "Individual Items"}
+          </CardTitle>
+          <CardDescription className="text-white/60">
+            {mode === "bundle" 
+              ? "Registration + 2 Singlets + Full Apparel Set"
+              : "Select the items you need"
+            }
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Wrestler info */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label className="text-white/80">Wrestler Name *</Label>
+              <Input
+                value={athleteName}
+                onChange={e => setAthleteName(e.target.value)}
+                placeholder="First Last"
+                className="bg-[#0a1628] border-[#1a3a5c] text-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-white/80">Team</Label>
+              <Select value={team} onValueChange={(v) => setTeam(v as "national" | "select")}>
+                <SelectTrigger className="bg-[#0a1628] border-[#1a3a5c] text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="national">National Team</SelectItem>
+                  <SelectItem value="select">Select Team</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {mode === "bundle" ? (
+            /* Bundle mode - collect all apparel sizes */
+            <div className="space-y-4">
+              <div className="p-4 bg-[#0a1628] rounded-lg space-y-4">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h4 className="font-semibold text-white">NHSCA Team Package</h4>
+                    <p className="text-sm text-white/60 mt-1">
+                      Tournament Registration & Team Fee, 2 NC United Singlets, Team Shorts, Short Sleeve Tee, Long Sleeve Tee
+                    </p>
+                  </div>
+                  <div className="text-[#c9a227] font-bold text-lg">$250</div>
+                </div>
+
+                {/* Singlet Size */}
+                <div className="space-y-2">
+                  <Label className="text-white/80 text-sm">Singlet Size *</Label>
+                  <Select value={singletSize} onValueChange={setSingletSize}>
+                    <SelectTrigger className="bg-[#0d1f38] border-[#1a3a5c] text-white">
+                      <SelectValue placeholder="Select size" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SIZES.map(s => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Shorts Size */}
+                <div className="space-y-2">
+                  <Label className="text-white/80 text-sm">Shorts Size *</Label>
+                  <Select value={shortsSize} onValueChange={setShortsSize}>
+                    <SelectTrigger className="bg-[#0d1f38] border-[#1a3a5c] text-white">
+                      <SelectValue placeholder="Select size" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SIZES.map(s => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Short Sleeve Size */}
+                <div className="space-y-2">
+                  <Label className="text-white/80 text-sm">Short Sleeve Tee Size *</Label>
+                  <Select value={shortSleeveSize} onValueChange={setShortSleeveSize}>
+                    <SelectTrigger className="bg-[#0d1f38] border-[#1a3a5c] text-white">
+                      <SelectValue placeholder="Select size" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SIZES.map(s => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Long Sleeve Size */}
+                <div className="space-y-2">
+                  <Label className="text-white/80 text-sm">Long Sleeve Tee Size *</Label>
+                  <Select value={longSleeveSize} onValueChange={setLongSleeveSize}>
+                    <SelectTrigger className="bg-[#0d1f38] border-[#1a3a5c] text-white">
+                      <SelectValue placeholder="Select size" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SIZES.map(s => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* Individual mode */
+            <div className="space-y-4">
+              {/* Registration - optional */}
+              <div className="p-4 bg-[#0a1628] rounded-lg">
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    id="registration"
+                    checked={includeRegistration}
+                    onCheckedChange={(c) => setIncludeRegistration(!!c)}
+                    className="mt-1 border-[#1a3a5c] data-[state=checked]:bg-[#c9a227] data-[state=checked]:border-[#c9a227]"
+                  />
+                  <div>
+                    <Label htmlFor="registration" className="text-white font-semibold cursor-pointer">
+                      Tournament Registration & Team Fee
+                    </Label>
+                    <p className="text-xs text-white/50">$75 (skip if already paid)</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Singlet */}
+              <div className="p-4 bg-[#0a1628] rounded-lg space-y-3">
+                <h4 className="font-semibold text-white mb-2">Apparel — Singlet (Optional)</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-white/80 text-xs">Quantity</Label>
+                    <Select value={String(singletQty)} onValueChange={(v) => setSingletQty(Number(v))}>
+                      <SelectTrigger className="bg-[#0d1f38] border-[#1a3a5c] text-white">
+                        <SelectValue placeholder="0" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[0, 1, 2, 3, 4].map(n => (
+                          <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-white/80 text-xs">Size</Label>
+                    <Select value={singletSize} onValueChange={setSingletSize} disabled={singletQty === 0}>
+                      <SelectTrigger className="bg-[#0d1f38] border-[#1a3a5c] text-white">
+                        <SelectValue placeholder="Size" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SIZES.map(s => (
+                          <SelectItem key={s} value={s}>{s}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Other Apparel */}
+              <div className="p-4 bg-[#0a1628] rounded-lg space-y-3">
+                <h4 className="font-semibold text-white mb-2">Apparel — Other Items (Optional)</h4>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-white/80 text-xs">Shorts — $40</Label>
+                    <Select value={shortsSize} onValueChange={setShortsSize}>
+                      <SelectTrigger className="bg-[#0d1f38] border-[#1a3a5c] text-white text-sm">
+                        <SelectValue placeholder="None" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {SIZES.map(s => (
+                          <SelectItem key={s} value={s}>{s}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-white/80 text-xs">Short Sleeve — $30</Label>
+                    <Select value={shortSleeveSize} onValueChange={setShortSleeveSize}>
+                      <SelectTrigger className="bg-[#0d1f38] border-[#1a3a5c] text-white text-sm">
+                        <SelectValue placeholder="None" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {SIZES.map(s => (
+                          <SelectItem key={s} value={s}>{s}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-white/80 text-xs">Long Sleeve — $40</Label>
+                    <Select value={longSleeveSize} onValueChange={setLongSleeveSize}>
+                      <SelectTrigger className="bg-[#0d1f38] border-[#1a3a5c] text-white text-sm">
+                        <SelectValue placeholder="None" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {SIZES.map(s => (
+                          <SelectItem key={s} value={s}>{s}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Travel Section */}
+              <div className="border-t border-[#1a3a5c] pt-4 mt-4">
+                <h4 className="font-semibold text-white mb-3">Travel (Optional)</h4>
+                <div className="space-y-3">
+                  {/* Van Transportation */}
+                  <div className="p-4 bg-[#0a1628] rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <Checkbox
+                        id="transport"
+                        checked={wantTransport}
+                        onCheckedChange={(c) => setWantTransport(!!c)}
+                        className="mt-1 border-[#1a3a5c] data-[state=checked]:bg-[#c9a227] data-[state=checked]:border-[#c9a227]"
+                      />
+                      <div className="flex-1">
+                        <Label htmlFor="transport" className="text-white font-semibold cursor-pointer">
+                          Van Transportation
+                        </Label>
+                        <p className="text-xs text-white/50">Round-trip from Raleigh — Per-athlete cost TBD</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Hotel */}
+                  <div className="p-4 bg-[#0a1628] rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <Checkbox
+                        id="hotel"
+                        checked={wantHotel}
+                        onCheckedChange={(c) => setWantHotel(!!c)}
+                        className="mt-1 border-[#1a3a5c] data-[state=checked]:bg-[#c9a227] data-[state=checked]:border-[#c9a227]"
+                      />
+                      <div className="flex-1">
+                        <Label htmlFor="hotel" className="text-white font-semibold cursor-pointer">
+                          Hotel
+                        </Label>
+                        <p className="text-xs text-white/50">Shared accommodations — Per-athlete cost TBD</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Order summary */}
+          <div className="border-t border-[#1a3a5c] pt-4">
+            <div className="space-y-2 mb-4">
+              {cart.map((item, i) => (
+                <div key={i} className="flex justify-between text-sm">
+                  <span className="text-white/80">
+                    {item.name} {item.quantity > 1 && `x${item.quantity}`} {item.size && `(${item.size})`}
+                  </span>
+                  <span className="text-white">{formatPrice(item.priceInCents * item.quantity)}</span>
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-between items-center text-lg font-bold">
+              <span className="text-white">Total</span>
+              <span className="text-[#c9a227]">{formatPrice(total)}</span>
+            </div>
+          </div>
+
+          {error && (
+            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-300 text-sm">
+              {error}
+            </div>
+          )}
+
+          <Button
+            onClick={handleCheckout}
+            disabled={submitting || total === 0 || (mode === "bundle" && !singletSize)}
+            className="w-full bg-[#c9a227] text-[#002147] hover:bg-[#d4b84a] font-bold h-12"
+          >
+            {submitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              <>
+                <CreditCard className="mr-2 h-4 w-4" />
+                Checkout — {formatPrice(total)}
+              </>
+            )}
+          </Button>
+
+          <p className="text-xs text-white/40 text-center">
+            Transport and hotel pricing will be calculated per-athlete. We&apos;ll contact you with final costs.
+          </p>
+        </CardContent>
+      </Card>
       </TabsContent>
 
+      {/* Past Orders Tab */}
       <TabsContent value="past-orders" className="mt-6">
-        <Card className="bg-[#0a1628] border-[#1a3a5c]">
-          <CardHeader>
-            <CardTitle className="text-white">Past Orders</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loadingOrders ? (
-              <div className="text-white/60">Loading...</div>
-            ) : orders.length === 0 ? (
-              <div className="text-white/60">No orders yet.</div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-[#1a3a5c]">
-                      <th className="text-left py-3 px-2 text-white/80 font-semibold">Athlete</th>
-                      <th className="text-left py-3 px-2 text-white/80 font-semibold">Email</th>
-                      <th className="text-left py-3 px-2 text-white/80 font-semibold">School</th>
-                      <th className="text-left py-3 px-2 text-white/80 font-semibold">Reg</th>
-                      <th className="text-left py-3 px-2 text-white/80 font-semibold">Apparel</th>
-                      <th className="text-left py-3 px-2 text-white/80 font-semibold">Total</th>
-                      <th className="text-left py-3 px-2 text-white/80 font-semibold">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {orders.map((order: any) => (
-                      <tr key={order.id} className="border-b border-[#0d1f38] hover:bg-[#0d1f38]">
-                        <td className="py-3 px-2 text-white font-semibold whitespace-nowrap">
-                          {order.athlete_name || order.name || "—"}
-                        </td>
-                        <td className="py-3 px-2 text-white/75 text-xs">
-                          {order.parent_email || "—"}
-                        </td>
-                        <td className="py-3 px-2 text-white/75 text-xs">
-                          {order.school || "—"}
-                        </td>
-                        <td className="py-3 px-2 text-white/75">
-                          ${(order.reg_fee_cents || 0) / 100}
-                        </td>
-                        <td className="py-3 px-2 text-white/75">
-                          ${(order.apparel_fee_cents || 0) / 100}
-                        </td>
-                        <td className="py-3 px-2 font-semibold text-[#c9a227]">
-                          ${(order.amount_cents || 0) / 100}
-                        </td>
-                        <td className="py-3 px-2">
-                          <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+      <Card className="border-[#1a3a5c] bg-[#0a1628] mt-8">
+        <CardHeader>
+          <CardTitle className="text-white">Your Orders</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {!orders || orders.length === 0 ? (
+            <p className="text-sm text-white/60">No orders yet.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-[#1a3a5c]">
+                    <th className="text-left py-3 px-2 text-white/80 font-semibold">Athlete</th>
+                    <th className="text-left py-3 px-2 text-white/80 font-semibold">Email</th>
+                    <th className="text-left py-3 px-2 text-white/80 font-semibold">School</th>
+                    <th className="text-left py-3 px-2 text-white/80 font-semibold">Reg</th>
+                    <th className="text-left py-3 px-2 text-white/80 font-semibold">Apparel</th>
+                    <th className="text-left py-3 px-2 text-white/80 font-semibold">Total</th>
+                    <th className="text-left py-3 px-2 text-white/80 font-semibold">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.map((order: any) => (
+                    <tr key={order.id} className="border-b border-[#0d1f38] hover:bg-[#0d1f38]">
+                      <td className="py-3 px-2 text-white font-semibold whitespace-nowrap">
+                        {order.athlete_name || order.name || "—"}
+                      </td>
+                      <td className="py-3 px-2 text-white/75 text-xs">
+                        {order.parent_email || "—"}
+                      </td>
+                      <td className="py-3 px-2 text-white/75 text-xs">
+                        {order.school || "—"}
+                      </td>
+                      <td className="py-3 px-2 text-white/75">
+                        ${(order.reg_fee_cents || 0) / 100}
+                      </td>
+                      <td className="py-3 px-2 text-white/75">
+                        ${(order.apparel_fee_cents || 0) / 100}
+                      </td>
+                      <td className="py-3 px-2 font-semibold text-[#c9a227]">
+                        ${(order.amount_cents || 0) / 100}
+                      </td>
+                      <td className="py-3 px-2">
+                        <span
+                          className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
                             order.status === 'paid'
                               ? 'bg-green-500/20 text-green-300'
                               : order.status === 'pending'
                               ? 'bg-yellow-500/20 text-yellow-300'
                               : 'bg-red-500/20 text-red-300'
-                          }`}>
-                            {order.status?.charAt(0).toUpperCase() + order.status?.slice(1) || 'Unknown'}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                          }`}
+                        >
+                          {order.status?.charAt(0).toUpperCase() + order.status?.slice(1) || 'Unknown'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+                        >
+                          {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
       </TabsContent>
     </Tabs>
   )
