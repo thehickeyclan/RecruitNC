@@ -22,31 +22,18 @@ export async function GET(req: NextRequest) {
     const isAdmin = profile?.role === "admin"
     const statusFilter = req.nextUrl.searchParams.get("status")
 
-    // Fetch from NHSCA Duals payments table
-    let nhscaQuery = supabase
+    // Fetch from NHSCA Duals payments table - show ALL orders
+    const { data: nhscaPayments } = await supabase
       .from("nhsca_duals_payments")
       .select("id, user_id, athlete_name, team, status, amount_cents, items, stripe_session_id, paid_at, created_at")
+      .order("created_at", { ascending: false })
 
-    if (!isAdmin) {
-      nhscaQuery = nhscaQuery.eq("user_id", user.id)
-    }
-    if (statusFilter && statusFilter !== "all") {
-      nhscaQuery = nhscaQuery.eq("status", statusFilter)
-    }
-
-    const { data: nhscaPayments } = await nhscaQuery.order("created_at", { ascending: false })
-
-    // Fetch from old orders table (national team registrations)
-    let ordersQuery = supabase
+    // Fetch from old orders table (national team registrations) - show ALL orders
+    const { data: legacyOrders } = await supabase
       .from("orders")
       .select("id, user_id, athlete_name, registration_fee, apparel_fee, total_amount, status, created_at")
       .eq("campaign", "national_team")
-
-    if (!isAdmin) {
-      ordersQuery = ordersQuery.eq("user_id", user.id)
-    }
-
-    const { data: legacyOrders } = await ordersQuery.order("created_at", { ascending: false })
+      .order("created_at", { ascending: false })
 
     // Transform and merge both
     const nhscaFormatted = (nhscaPayments || []).map(p => ({
