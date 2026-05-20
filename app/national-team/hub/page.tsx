@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -63,7 +63,6 @@ export default function NationalTeamHubPage() {
   const [data, setData] = useState<HubResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0, ready: false })
-  const refetchedWithToken = useRef(false)
 
   const hubFetchOptions = useCallback((): RequestInit => {
     const opts: RequestInit = { credentials: "include" }
@@ -82,24 +81,27 @@ export default function NationalTeamHubPage() {
       .catch(() => {})
   }, [hubFetchOptions])
 
+  // Same-session auth as elsewhere: Bearer when available + cookies (`auth-from-request` on API).
+  // Do not gate on session.access_token only — Safari/cookie quirks used to strand this page.
   useEffect(() => {
     if (authLoading) return
-    if (user && !session?.access_token) return
+    let cancelled = false
+    setLoading(true)
     fetch(HUB_API, hubFetchOptions())
       .then((r) => r.json())
-      .then(setData)
-      .catch(() => setData({ allowed: false, reason: "signed_out" }))
-      .finally(() => setLoading(false))
-  }, [authLoading, user, session?.access_token, hubFetchOptions])
-
-  useEffect(() => {
-    if (authLoading || loading || data?.allowed || refetchedWithToken.current || !user || !session?.access_token) return
-    refetchedWithToken.current = true
-    fetch(HUB_API, hubFetchOptions())
-      .then((r) => r.json())
-      .then(setData)
-      .catch(() => {})
-  }, [authLoading, loading, data?.allowed, user, session?.access_token, hubFetchOptions])
+      .then((json) => {
+        if (!cancelled) setData(json as HubResponse)
+      })
+      .catch(() => {
+        if (!cancelled) setData({ allowed: false, reason: "signed_out" })
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [authLoading, hubFetchOptions])
 
   useEffect(() => {
     const tick = () => {
@@ -140,17 +142,28 @@ export default function NationalTeamHubPage() {
               National Team Hub
             </CardTitle>
             <CardDescription className="text-white/80">
-              The NHSCA Duals hub is available to signed-in RecruitNC accounts only (no separate access code). Sign in to continue —
-              or reload if your session just came back after login.
+              We couldn’t load NHSCA hub data yet. Reload usually fixes this after login (the rest of RecruitNC already knows you&apos;re signed in).
+              {data?.reason === "no_access"
+                ? " If this persists, the server returned no_access (e.g. database or env)."
+                : null}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <HardLink
-              href="/auth/signin?returnTo=/national-team/hub"
+            <Button
+              type="button"
               className="flex w-full min-h-[44px] items-center justify-center rounded-xl bg-[#D3B574] px-4 py-3 font-semibold text-[#0B2545] hover:bg-[#E5C97A]"
+              onClick={() => window.location.reload()}
             >
-              Sign in
-            </HardLink>
+              Reload hub
+            </Button>
+            {user?.email ? null : (
+              <HardLink
+                href="/auth/signin?returnTo=/national-team/hub"
+                className="flex w-full min-h-[44px] items-center justify-center rounded-xl border border-white/30 px-4 py-3 font-semibold text-white hover:bg-white/10"
+              >
+                Sign in
+              </HardLink>
+            )}
             <Button asChild variant="outline" className="w-full border-white/30 text-white hover:bg-white/10">
               <a href="/national-team">Back to National Team</a>
             </Button>
