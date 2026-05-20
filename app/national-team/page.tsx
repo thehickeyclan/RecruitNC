@@ -7,15 +7,13 @@ import { Trophy, Star, Target, Loader2, Users, Calendar } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { HardLink } from "@/components/hard-link"
+import { NhscaDuals2026Banner } from "@/components/national-team/nhsca-duals-2026-banner"
 import { useEffect, useState } from "react"
 import { getTournaments, type Tournament, getTournamentResults } from "@/lib/nc-united-api"
-
-const NHSCA_WEIGH_IN_START = new Date("2026-05-22T14:00:00-04:00").getTime()
 
 export default function NCUnitedNationalTeam() {
   const [tournaments, setTournaments] = useState<Tournament[]>([])
   const [loading, setLoading] = useState(true)
-  const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0, ready: false })
   const [aggregateStats, setAggregateStats] = useState({
     totalAthletes: 0,
     totalTeamWins: 0,
@@ -32,27 +30,6 @@ export default function NCUnitedNationalTeam() {
       .then((r) => r.json())
       .then((d) => (d.ok && typeof d.total === "number" ? setNhscaLineupCount(d.total) : null))
       .catch(() => {})
-  }, [])
-
-  useEffect(() => {
-    const tick = () => {
-      const now = Date.now()
-      const d = Math.max(0, NHSCA_WEIGH_IN_START - now)
-      if (d <= 0) {
-        setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0, ready: true })
-        return
-      }
-      setCountdown({
-        days: Math.floor(d / 86400000),
-        hours: Math.floor((d % 86400000) / 3600000),
-        minutes: Math.floor((d % 3600000) / 60000),
-        seconds: Math.floor((d % 60000) / 1000),
-        ready: false,
-      })
-    }
-    tick()
-    const id = setInterval(tick, 1000)
-    return () => clearInterval(id)
   }, [])
 
   useEffect(() => {
@@ -135,8 +112,10 @@ export default function NCUnitedNationalTeam() {
 
   return (
     <div className="min-h-screen bg-white">
+      <NhscaDuals2026Banner variant="hero" lineupCount={nhscaLineupCount} />
+
       {/* Hero Section */}
-      <section id="about" className="relative text-white py-16 md:py-24 bg-[#002147]">
+      <section id="about" className="relative text-white py-12 md:py-20 bg-[#002147]">
         {/* Content */}
         <div className="relative z-10 container mx-auto px-4 text-center">
           <div className="max-w-5xl mx-auto">
@@ -215,59 +194,17 @@ export default function NCUnitedNationalTeam() {
             <h2 className="text-2xl md:text-3xl font-bold text-[#002147] mb-2 text-center">National Team Schedule</h2>
             <p className="text-gray-600 text-center mb-8">Roster, event info &amp; comms (registered families only)</p>
             <div className="grid sm:grid-cols-2 gap-4">
-              {/* NHSCA — static gold block + countdown to weigh-ins */}
-              <div className="sm:col-span-2 rounded-2xl border-2 border-[#B8982E] bg-gradient-to-br from-[#CBAF5D]/30 via-[#D4BC6A]/25 to-[#B8982E]/30 p-6 md:p-8 shadow-lg">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-                  <div>
-                    <span className="text-[#002147] font-bold text-xl">NHSCA Duals 2026</span>
-                    <p className="text-sm text-[#002147]/80 mt-1">
-                      Fri May 22 – Mon May 25 · Virginia Beach Sports Center
-                    </p>
-                    <p className="text-xs text-[#002147]/70 mt-1 max-w-xl">
-                      Friday travel &amp; weigh-ins · Sat–Sun competition · Monday championship bracket (advancers)
-                    </p>
-                    <p className="text-sm text-[#003366] font-medium mt-2">
-                      Roster, gear, &amp; team chat
-                      {nhscaLineupCount !== null && nhscaLineupCount > 0 && (
-                        <span className="text-[#002147] font-semibold"> · {nhscaLineupCount} on lineup</span>
-                      )}
-                    </p>
-                    <div className="mt-3 flex flex-col sm:flex-row flex-wrap gap-2">
-                      <HardLink
-                        href="/national-team/hub"
-                        className="inline-flex min-h-[40px] items-center justify-center rounded-xl bg-[#002147] px-4 py-2 text-sm font-semibold text-[#D3B574] hover:bg-[#003366] transition-colors"
-                      >
-                        NHSCA team hub
-                      </HardLink>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-center md:items-end shrink-0">
-                    <p className="text-[#002147] font-bold uppercase tracking-wider text-xs mb-2">Weigh-ins open</p>
-                    <p className="text-[#002147]/80 text-sm mb-4">Fri, May 22, 2026 · 2:00 PM</p>
-                    {countdown.ready ? (
-                      <p className="text-2xl md:text-3xl font-black text-[#002147]">We&apos;re here!</p>
-                    ) : (
-                      <div className="flex gap-4 md:gap-6">
-                        <div className="text-center">
-                          <div className="text-2xl md:text-4xl font-black tabular-nums text-[#002147]">{countdown.days}</div>
-                          <div className="text-xs font-semibold uppercase tracking-wider text-[#002147]/70">Days</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-2xl md:text-4xl font-black tabular-nums text-[#002147]">{countdown.hours}</div>
-                          <div className="text-xs font-semibold uppercase tracking-wider text-[#002147]/70">Hours</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-2xl md:text-4xl font-black tabular-nums text-[#002147]">{countdown.minutes}</div>
-                          <div className="text-xs font-semibold uppercase tracking-wider text-[#002147]/70">Min</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-2xl md:text-4xl font-black tabular-nums text-[#002147]">{countdown.seconds}</div>
-                          <div className="text-xs font-semibold uppercase tracking-wider text-[#002147]/70">Sec</div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+              <div className="sm:col-span-2 rounded-2xl border-2 border-[#B8982E]/60 bg-[#002147]/5 p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <p className="text-[#002147] font-bold">NHSCA Duals 2026</p>
+                  <p className="text-sm text-gray-600 mt-0.5">Countdown &amp; live updates are at the top of this page.</p>
                 </div>
+                <HardLink
+                  href="/national-team/hub"
+                  className="inline-flex min-h-[44px] shrink-0 items-center justify-center rounded-xl bg-[#002147] px-5 py-2.5 text-sm font-semibold text-[#D3B574] hover:bg-[#003366] transition-colors"
+                >
+                  NHSCA team hub →
+                </HardLink>
               </div>
               {/* AAU — blue tile (coming soon) */}
               <Link

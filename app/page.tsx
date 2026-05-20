@@ -14,6 +14,7 @@ import { normalizeAthleteList } from "@/lib/professional-athlete"
 import { StoreProductPromotion } from "@/components/store-product-promotion"
 import { HomeNewsHighlightsCarousel } from "@/components/home-news-highlights-carousel"
 import { FundraisingPlaybookHomeBanner } from "@/components/fundraising-playbook-home-banner"
+import { NhscaDuals2026Banner } from "@/components/national-team/nhsca-duals-2026-banner"
 import { Users, GraduationCap, Trophy, ArrowRight, TrendingUp } from "lucide-react"
 
 type YearFilter = "All" | "2025" | "2026"
@@ -190,7 +191,8 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-[#0A1628]">
       <FundraisingPlaybookHomeBanner />
-      
+      <NhscaDuals2026Banner variant="home" />
+
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
