@@ -15,6 +15,7 @@ import { Switch } from "@/components/ui/switch"
 import { HardLink } from "@/components/hard-link"
 import { NhscaMediaAdmin } from "@/components/national-team/nhsca-media-admin"
 import { NhscaOrdersAdmin } from "@/components/national-team/nhsca-orders-admin"
+import { NhscaResultsAdmin } from "@/components/national-team/nhsca-results-admin"
 
 type Dual = {
   id: string
@@ -253,6 +254,9 @@ Announcements
 </TabsTrigger>
 <TabsTrigger value="orders" className="data-[state=active]:bg-[#c9a227] data-[state=active]:text-[#002147]">
 Orders
+</TabsTrigger>
+<TabsTrigger value="results" className="data-[state=active]:bg-[#c9a227] data-[state=active]:text-[#002147]">
+Results
 </TabsTrigger>
 <TabsTrigger value="media" className="data-[state=active]:bg-[#c9a227] data-[state=active]:text-[#002147]">
 Media
@@ -561,6 +565,11 @@ Media
           {/* Orders Tab */}
           <TabsContent value="orders">
             <NhscaOrdersAdmin />
+          </TabsContent>
+
+          {/* Results Tab */}
+          <TabsContent value="results">
+            <NhscaResultsAdmin />
           </TabsContent>
         </Tabs>
       </main>
