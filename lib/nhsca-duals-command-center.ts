@@ -1,0 +1,148 @@
+import { buildTeamSummary } from "@/lib/nhsca-duals-live-results/summaries"
+import { NHSCA_DUALS_WEIGHTS } from "@/lib/nhsca-duals-live-results/scoring"
+import type {
+  NhscaDualsDualRow,
+  NhscaDualsResultsSnapshot,
+  NhscaDualsTeamSummary,
+  NhscaDualsWrestlerRecord,
+} from "@/lib/nhsca-duals-live-results/types"
+
+export type CommandCenterScope = "all" | "national" | "select"
+
+export type DualFeedItem = {
+  dual: NhscaDualsDualRow
+  teamType: "national" | "select"
+  teamName: string
+  dayName: string
+  poolNumber: number | null
+  weightsEntered: number
+  weightsTotal: number
+}
+
+function combineSummaries(a: NhscaDualsTeamSummary, b: NhscaDualsTeamSummary): NhscaDualsTeamSummary {
+  const topScorers = [...a.topScorers, ...b.topScorers]
+    .sort((x, y) => y.pointsFor - x.pointsFor)
+    .slice(0, 8)
+  const undefeated = [...a.undefeated, ...b.undefeated].sort((x, y) => y.pointsFor - x.pointsFor)
+  return {
+    dualWins: a.dualWins + b.dualWins,
+    dualLosses: a.dualLosses + b.dualLosses,
+    matchWins: a.matchWins + b.matchWins,
+    matchLosses: a.matchLosses + b.matchLosses,
+    pointsFor: a.pointsFor + b.pointsFor,
+    pointsAgainst: a.pointsAgainst + b.pointsAgainst,
+    undefeated,
+    topScorers,
+  }
+}
+
+function dualFeedSortScore(d: NhscaDualsDualRow): number {
+  if (d.status === "in_progress") return 0
+  if (d.status === "not_started") return 1
+  return 2
+}
+
+export function buildDualFeed(snapshot: NhscaDualsResultsSnapshot, scope: CommandCenterScope): DualFeedItem[] {
+  const types: ("national" | "select")[] =
+    scope === "all" ? ["national", "select"] : [scope === "select" ? "select" : "national"]
+
+  const items: DualFeedItem[] = []
+
+  for (const teamType of types) {
+    const team = snapshot.teams.find((t) => t.team_type === teamType)
+    if (!team) continue
+    const duals = snapshot.duals
+      .filter((d) => d.team_id === team.id && d.published)
+      .sort((a, b) => a.sort_order - b.sort_order)
+
+    for (const dual of duals) {
+      const day = snapshot.days.find((d) => d.id === dual.day_id)
+      const pool = snapshot.pools.find((p) => p.id === dual.pool_id)
+      const dualMatches = snapshot.matches.filter((m) => m.dual_id === dual.id)
+      const weightsEntered = NHSCA_DUALS_WEIGHTS.filter((w) => {
+        const m = dualMatches.find((x) => x.weight === w)
+        return !!(m?.winner && m?.result_type)
+      }).length
+
+      items.push({
+        dual,
+        teamType,
+        teamName: team.name,
+        dayName: day?.name ?? "Day 1",
+        poolNumber: pool?.pool_number ?? null,
+        weightsEntered,
+        weightsTotal: NHSCA_DUALS_WEIGHTS.length,
+      })
+    }
+  }
+
+  return items.sort((a, b) => {
+    const sa = dualFeedSortScore(a.dual)
+    const sb = dualFeedSortScore(b.dual)
+    if (sa !== sb) return sa - sb
+    if (a.teamType !== b.teamType) return a.teamType === "national" ? -1 : 1
+    return a.dual.sort_order - b.dual.sort_order
+  })
+}
+
+export function getWrestlerRecords(
+  snapshot: NhscaDualsResultsSnapshot,
+  teamType: "national" | "select"
+): NhscaDualsWrestlerRecord[] {
+  const team = snapshot.teams.find((t) => t.team_type === teamType)
+  if (!team) return []
+  const summary = snapshot.summaries[teamType]
+  const teamDualIds = new Set(snapshot.duals.filter((d) => d.team_id === team.id).map((d) => d.id))
+  const teamMatches = snapshot.matches.filter((m) => teamDualIds.has(m.dual_id))
+
+  const byWrestler = new Map<string, NhscaDualsWrestlerRecord>()
+  for (const w of snapshot.wrestlers.filter((x) => x.team_id === team.id && x.active)) {
+    byWrestler.set(w.id, {
+      wrestlerId: w.id,
+      name: w.name,
+      displayWeight: w.display_weight,
+      wins: 0,
+      losses: 0,
+      pointsFor: 0,
+      pointsAgainst: 0,
+    })
+  }
+
+  for (const m of teamMatches) {
+    if (!m.nc_wrestler_id || !byWrestler.has(m.nc_wrestler_id)) continue
+    const rec = byWrestler.get(m.nc_wrestler_id)!
+    rec.pointsFor += m.nc_points
+    rec.pointsAgainst += m.opponent_points
+    if (m.winner === "nc") rec.wins++
+    else if (m.winner === "opponent") rec.losses++
+  }
+
+  return [...byWrestler.values()].sort((a, b) => {
+    if (b.pointsFor !== a.pointsFor) return b.pointsFor - a.pointsFor
+    if (b.wins !== a.wins) return b.wins - a.wins
+    return parseInt(a.displayWeight, 10) - parseInt(b.displayWeight, 10)
+  })
+}
+
+export function getSummaryForScope(
+  snapshot: NhscaDualsResultsSnapshot,
+  scope: CommandCenterScope
+): NhscaDualsTeamSummary {
+  if (scope === "national") return snapshot.summaries.national
+  if (scope === "select") return snapshot.summaries.select
+  return combineSummaries(snapshot.summaries.national, snapshot.summaries.select)
+}
+
+export function getWrestlersForScope(
+  snapshot: NhscaDualsResultsSnapshot,
+  scope: CommandCenterScope
+): NhscaDualsWrestlerRecord[] {
+  if (scope === "national") return getWrestlerRecords(snapshot, "national")
+  if (scope === "select") return getWrestlerRecords(snapshot, "select")
+  return [...getWrestlerRecords(snapshot, "national"), ...getWrestlerRecords(snapshot, "select")].sort(
+    (a, b) => b.pointsFor - a.pointsFor
+  )
+}
+
+/** Re-export for tests — summaries already built on snapshot. */
+export { buildTeamSummary }
