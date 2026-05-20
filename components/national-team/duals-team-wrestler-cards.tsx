@@ -1,6 +1,12 @@
 "use client"
 
-import Image from "next/image"
+import { useCallback, useEffect, useState } from "react"
+import { Loader2 } from "lucide-react"
+import { DualsWrestlerFlipCard } from "@/components/national-team/duals-wrestler-flip-card"
+import {
+  cardStatsKey,
+  type NhscaDualsWrestlerCardStats,
+} from "@/lib/nhsca-duals-wrestler-card-stats"
 import { cn } from "@/lib/utils"
 
 export type DualsWrestlerCardItem = {
@@ -9,28 +15,9 @@ export type DualsWrestlerCardItem = {
   imageSrc: string
 }
 
-function WrestlerCard({ card, teamLabel }: { card: DualsWrestlerCardItem; teamLabel: string }) {
-  const wtLabel = card.weightClass.toUpperCase() === "HWT" ? "HWT" : `${card.weightClass} lbs`
-  const alt = `${card.wrestler}, ${wtLabel} — NC United ${teamLabel} Team, NHSCA Duals 2026`
-  return (
-    <figure className="group">
-      <div className="relative overflow-hidden rounded-xl border-2 border-white/10 bg-[#0a1628] shadow-md transition-shadow group-hover:shadow-lg group-hover:border-[#CBAF5D]/40">
-        <div className="relative aspect-[3/4] w-full">
-          <Image
-            src={card.imageSrc}
-            alt={alt}
-            fill
-            className="object-cover object-center"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          />
-        </div>
-      </div>
-      <figcaption className="mt-2 text-center">
-        <p className="text-sm font-semibold text-white">{card.wrestler}</p>
-        <p className="text-xs text-white/65 tabular-nums">{wtLabel}</p>
-      </figcaption>
-    </figure>
-  )
+type StatsResponse = {
+  ready: boolean
+  stats: Record<string, NhscaDualsWrestlerCardStats>
 }
 
 export function DualsTeamWrestlerCards({
@@ -45,13 +32,47 @@ export function DualsTeamWrestlerCards({
   pendingCount?: number
   className?: string
 }) {
+  const teamApi = teamLabel === "Select" ? "select" : "national"
+  const [statsByKey, setStatsByKey] = useState<Record<string, NhscaDualsWrestlerCardStats>>({})
+  const [statsLoading, setStatsLoading] = useState(true)
+
+  const loadStats = useCallback(async () => {
+    try {
+      const r = await fetch(`/api/national-team/duals-wrestler-stats?team=${teamApi}`, {
+        credentials: "include",
+      })
+      if (!r.ok) return
+      const json = (await r.json()) as StatsResponse
+      if (json.stats) setStatsByKey(json.stats)
+    } catch {
+      /* roster cards still render without live stats */
+    } finally {
+      setStatsLoading(false)
+    }
+  }, [teamApi])
+
+  useEffect(() => {
+    setStatsLoading(true)
+    void loadStats()
+    const id = window.setInterval(() => void loadStats(), 15_000)
+    return () => window.clearInterval(id)
+  }, [loadStats])
+
   if (cards.length === 0 && pendingCount === 0) return null
 
   return (
     <div className={cn("px-5 py-5 md:px-6 md:py-6 border-b border-white/10", className)}>
       <div className="mb-5">
         <h3 className="text-base font-bold text-white">Team cards</h3>
-        <p className="text-xs text-white/65 mt-1">Representing NC at NHSCA Duals 2026 — {teamLabel} team</p>
+        <p className="text-xs text-white/65 mt-1">
+          Representing NC at NHSCA Duals 2026 — {teamLabel} team. Tap a card to flip for live duals stats.
+        </p>
+        {statsLoading ? (
+          <p className="text-xs text-white/40 mt-2 flex items-center gap-1.5">
+            <Loader2 className="h-3 w-3 animate-spin" aria-hidden />
+            Loading live results…
+          </p>
+        ) : null}
         {pendingCount > 0 ? (
           <p className="text-xs text-[#CBAF5D]/90 mt-2">
             {pendingCount} card{pendingCount === 1 ? "" : "s"} coming soon — contact table below has full roster.
@@ -59,9 +80,16 @@ export function DualsTeamWrestlerCards({
         ) : null}
       </div>
       {cards.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {cards.map((card) => (
-            <WrestlerCard key={`${card.weightClass}-${card.wrestler}`} card={card} teamLabel={teamLabel} />
+            <DualsWrestlerFlipCard
+              key={`${card.weightClass}-${card.wrestler}`}
+              wrestler={card.wrestler}
+              weightClass={card.weightClass}
+              imageSrc={card.imageSrc}
+              teamLabel={teamLabel}
+              stats={statsByKey[cardStatsKey(card.weightClass, card.wrestler)] ?? null}
+            />
           ))}
         </div>
       ) : null}

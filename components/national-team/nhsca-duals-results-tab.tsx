@@ -43,6 +43,22 @@ export function NhscaDualsResultsTab({ isAdmin = false }: { isAdmin?: boolean })
     return json
   }, [load])
 
+  const applySnapshot = useCallback(
+    async (updated?: NhscaDualsResultsSnapshot) => {
+      if (updated) {
+        setData((prev) => ({
+          ...(prev ?? {}),
+          ...updated,
+          tablesReady: true,
+          isAdmin: prev?.isAdmin,
+        }))
+        return updated
+      }
+      return refresh()
+    },
+    [refresh]
+  )
+
   useEffect(() => {
     let cancelled = false
     setLoading(true)
@@ -61,9 +77,19 @@ export function NhscaDualsResultsTab({ isAdmin = false }: { isAdmin?: boolean })
     }
   }, [load])
 
+  const showAdmin = isAdmin && data?.isAdmin
   const tablesReady = data?.tablesReady !== false && (data?.teams?.length ?? 0) > 0
 
-  const showAdmin = isAdmin && data?.isAdmin
+  /** Fans (and admin preview) see score updates without manual refresh. */
+  useEffect(() => {
+    if (!tablesReady || (adminMode && showAdmin)) return
+    const id = window.setInterval(() => {
+      void load()
+        .then((json) => setData(json))
+        .catch(() => {})
+    }, 10_000)
+    return () => window.clearInterval(id)
+  }, [tablesReady, adminMode, showAdmin, load])
 
   if (loading) {
     return (
@@ -142,7 +168,7 @@ export function NhscaDualsResultsTab({ isAdmin = false }: { isAdmin?: boolean })
       )}
 
       {adminMode && showAdmin ? (
-        <NhscaDualsResultsAdmin snapshot={snapshot} onSaved={refresh} />
+        <NhscaDualsResultsAdmin snapshot={snapshot} onSaved={applySnapshot} />
       ) : (
         <NhscaDualsResultsPublic snapshot={snapshot} />
       )}

@@ -4,12 +4,19 @@ import { getUserFromRequest } from "@/lib/supabase/auth-from-request"
 import { isNhscaDualsAdmin } from "@/lib/nhsca-duals-live-results/auth"
 import {
   TABLES_MISSING,
+  clearDualResults,
+  clearMatchResult,
   createDual,
+  createDualForTeam,
   createEventDay,
   createPool,
+  deleteAllEventDuals,
+  deleteDual,
+  bootstrapNhscaDualsEvent,
+  ensureNhscaDualsDay1Schedule,
   fetchNhscaDualsSnapshot,
+  resetAllEventMatchResults,
   saveNhscaDualsMatch,
-  seedNhscaDualsIfEmpty,
   setDualStatus,
   updateDualMeta,
 } from "@/lib/nhsca-duals-live-results/db"
@@ -32,13 +39,21 @@ export async function GET(request: NextRequest) {
 
   if (isAdmin && request.nextUrl.searchParams.get("seed") === "1") {
     try {
-      await seedNhscaDualsIfEmpty(admin)
+      await bootstrapNhscaDualsEvent(admin)
     } catch (e) {
-      console.error("[RecruitNC] nhsca duals seed", e)
+      console.error("[RecruitNC] nhsca duals bootstrap", e)
     }
   }
 
-  const snap = await fetchNhscaDualsSnapshot(admin)
+  let snap = await fetchNhscaDualsSnapshot(admin)
+  if (snap.ok && snap.data.teams.length > 0 && snap.data.duals.length === 0) {
+    try {
+      await ensureNhscaDualsDay1Schedule(admin)
+      snap = await fetchNhscaDualsSnapshot(admin)
+    } catch (e) {
+      console.error("[RecruitNC] nhsca duals day1 schedule", e)
+    }
+  }
   if (!snap.ok) {
     return NextResponse.json({
       tablesReady: false,
@@ -76,7 +91,7 @@ export async function POST(request: NextRequest) {
   try {
     switch (action) {
       case "seed": {
-        await seedNhscaDualsIfEmpty(admin)
+        await bootstrapNhscaDualsEvent(admin)
         const snap = await fetchNhscaDualsSnapshot(admin)
         return NextResponse.json(snap.ok ? { ok: true, ...snap.data } : { ok: false, code: TABLES_MISSING })
       }
@@ -108,15 +123,51 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ ok: true, id: result.id })
       }
       case "add_dual": {
-        const result = await createDual(admin, {
-          team_id: String(body.teamId ?? ""),
-          day_id: String(body.dayId ?? ""),
-          pool_id: String(body.poolId ?? ""),
-          round_name: String(body.roundName ?? "Round"),
-          opponent_team_name: String(body.opponentTeamName ?? "Opponent"),
-        })
+        const teamId = String(body.teamId ?? "")
+        const dayId = String(body.dayId ?? "")
+        const poolId = String(body.poolId ?? "")
+        const result = poolId
+          ? await createDual(admin, {
+              team_id: teamId,
+              day_id: dayId,
+              pool_id: poolId,
+              round_name: String(body.roundName ?? "Round"),
+              opponent_team_name: String(body.opponentTeamName ?? "Opponent"),
+            })
+          : await createDualForTeam(admin, {
+              team_id: teamId,
+              day_id: dayId,
+              opponent_team_name: String(body.opponentTeamName ?? "Opponent"),
+              round_name: String(body.roundName ?? "Round 1"),
+              pool_number: Number(body.poolNumber ?? 1),
+            })
         if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 })
         return NextResponse.json({ ok: true, id: result.id })
+      }
+      case "clear_match": {
+        const result = await clearMatchResult(admin, String(body.matchId ?? ""))
+        if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 })
+        break
+      }
+      case "clear_dual": {
+        const result = await clearDualResults(admin, String(body.dualId ?? ""))
+        if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 })
+        break
+      }
+      case "delete_dual": {
+        const result = await deleteDual(admin, String(body.dualId ?? ""))
+        if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 })
+        break
+      }
+      case "reset_all_results": {
+        const result = await resetAllEventMatchResults(admin)
+        if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 })
+        break
+      }
+      case "reset_all_duals": {
+        const result = await deleteAllEventDuals(admin)
+        if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 })
+        break
       }
       case "update_dual": {
         const result = await updateDualMeta(admin, String(body.dualId ?? ""), {

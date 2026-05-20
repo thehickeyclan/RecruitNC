@@ -1,33 +1,31 @@
 "use client"
 
-import type { ReactNode } from "react"
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { ChevronDown, ChevronLeft, ChevronRight, Loader2, Settings2 } from "lucide-react"
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { hubPanelClass, hubPanelTitleClass } from "@/components/national-team/nhsca-hub-theme"
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import type {
   NhscaDualsMatchRow,
   NhscaDualsMatchWinner,
   NhscaDualsResultType,
   NhscaDualsResultsSnapshot,
 } from "@/lib/nhsca-duals-live-results/types"
-import { NHSCA_DUALS_WEIGHTS, RESULT_TYPE_OPTIONS, resultTypeLabel } from "@/lib/nhsca-duals-live-results/scoring"
+import { NHSCA_DUALS_DAY_1_NAME } from "@/lib/nhsca-duals-live-results/rosters"
+import { NHSCA_DUALS_WEIGHTS, resultTypeLabel } from "@/lib/nhsca-duals-live-results/scoring"
 import { cn } from "@/lib/utils"
 
 type TeamView = "national" | "select"
 
-const ROUND_PRESETS = ["Round 1", "Round 2", "Round 3", "Bracket Round", "Custom Round"]
-
-/** One-tap combos for mat-side (most common first). */
 const QUICK_NC: { result: NhscaDualsResultType; label: string }[] = [
   { result: "decision", label: "DEC" },
   { result: "major_decision", label: "MD" },
@@ -47,35 +45,51 @@ function matchIsComplete(m: NhscaDualsMatchRow | undefined) {
   return !!(m?.winner && m?.result_type)
 }
 
+function isSnapshotBody(json: unknown): json is NhscaDualsResultsSnapshot {
+  return !!json && typeof json === "object" && Array.isArray((json as NhscaDualsResultsSnapshot).teams)
+}
+
+function shortRound(round: string) {
+  return round.replace(/^Round\s+/i, "R")
+}
+
+function poolLabel(snapshot: NhscaDualsResultsSnapshot, dual: { day_id: string; pool_id: string }) {
+  const day = snapshot.days.find((d) => d.id === dual.day_id)?.name ?? "Day"
+  const pool = snapshot.pools.find((p) => p.id === dual.pool_id)?.pool_number
+  return pool != null ? `${day} · Pool ${pool}` : day
+}
+
 export function NhscaDualsResultsAdmin({
   snapshot,
   onSaved,
 }: {
   snapshot: NhscaDualsResultsSnapshot
-  onSaved: () => Promise<unknown>
+  onSaved: (updated?: NhscaDualsResultsSnapshot) => Promise<unknown>
 }) {
   const [teamView, setTeamView] = useState<TeamView>("national")
-  const [dayId, setDayId] = useState(snapshot.days[0]?.id ?? "")
-  const [poolId, setPoolId] = useState("")
   const [dualId, setDualId] = useState("")
-  const [showSetup, setShowSetup] = useState(false)
-  const [showManage, setShowManage] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [busy, setBusy] = useState(false)
+  const [resetBusy, setResetBusy] = useState(false)
   const [activeWeight, setActiveWeight] = useState<string>(NHSCA_DUALS_WEIGHTS[0])
   const [flash, setFlash] = useState<string | null>(null)
+  const [showTesting, setShowTesting] = useState(false)
+
+  const sortedDays = useMemo(
+    () => [...snapshot.days].sort((a, b) => a.sort_order - b.sort_order),
+    [snapshot.days]
+  )
+  const [activeDayId, setActiveDayId] = useState(
+    () => sortedDays.find((d) => d.name === NHSCA_DUALS_DAY_1_NAME)?.id ?? sortedDays[0]?.id ?? ""
+  )
 
   const ncTeam = snapshot.teams.find((t) => t.team_type === teamView)
 
-  const teamPools = useMemo(() => {
-    if (!ncTeam || !dayId) return []
-    return snapshot.pools.filter((p) => p.team_id === ncTeam.id && p.day_id === dayId)
-  }, [snapshot.pools, ncTeam, dayId])
-
   const teamDuals = useMemo(() => {
     if (!ncTeam) return []
-    return snapshot.duals.filter((d) => d.team_id === ncTeam.id).sort((a, b) => a.sort_order - b.sort_order)
-  }, [snapshot.duals, ncTeam])
+    return snapshot.duals
+      .filter((d) => d.team_id === ncTeam.id && (!activeDayId || d.day_id === activeDayId))
+      .sort((a, b) => a.sort_order - b.sort_order)
+  }, [snapshot.duals, ncTeam, activeDayId])
 
   const effectiveDualId = dualId || teamDuals[0]?.id || ""
   const dual = teamDuals.find((d) => d.id === effectiveDualId)
@@ -93,9 +107,17 @@ export function NhscaDualsResultsAdmin({
     return NHSCA_DUALS_WEIGHTS.filter((w) => matchIsComplete(dualMatches.get(w))).length
   }, [dualMatches])
 
+  const applySnapshot = useCallback(
+    async (json: unknown) => {
+      if (isSnapshotBody(json)) await onSaved(json)
+      else await onSaved()
+    },
+    [onSaved]
+  )
+
   const post = useCallback(
-    async (body: Record<string, unknown>) => {
-      setBusy(true)
+    async (body: Record<string, unknown>, opts?: { fullScreenBusy?: boolean }) => {
+      if (opts?.fullScreenBusy) setResetBusy(true)
       try {
         const r = await fetch("/api/national-team/duals-results", {
           method: "POST",
@@ -107,12 +129,14 @@ export function NhscaDualsResultsAdmin({
           const d = await r.json().catch(() => ({}))
           throw new Error((d as { error?: string }).error ?? "Save failed")
         }
-        await onSaved()
+        const json = await r.json()
+        await applySnapshot(json)
+        return json as { id?: string }
       } finally {
-        setBusy(false)
+        if (opts?.fullScreenBusy) setResetBusy(false)
       }
     },
-    [onSaved]
+    [applySnapshot]
   )
 
   const wrestlersForWeight = useCallback(
@@ -143,18 +167,16 @@ export function NhscaDualsResultsAdmin({
       matchId: string,
       fields: {
         nc_wrestler_id?: string | null
-        opponent_wrestler_name?: string
         winner: NhscaDualsMatchWinner
         result_type: NhscaDualsResultType
-      },
-      advanceAfter = true
+      }
     ) => {
       setSaving(true)
       try {
         await post({ action: "save_match", matchId, ...fields })
-        setFlash(`${activeWeight} saved`)
-        window.setTimeout(() => setFlash(null), 1200)
-        if (advanceAfter) goToNextWeight(activeWeight)
+        setFlash(`${activeWeight} ✓`)
+        window.setTimeout(() => setFlash(null), 900)
+        goToNextWeight(activeWeight)
       } finally {
         setSaving(false)
       }
@@ -163,182 +185,149 @@ export function NhscaDualsResultsAdmin({
   )
 
   useEffect(() => {
+    if (!sortedDays.length) return
+    if (!activeDayId || !sortedDays.some((d) => d.id === activeDayId)) {
+      setActiveDayId(sortedDays.find((d) => d.name === NHSCA_DUALS_DAY_1_NAME)?.id ?? sortedDays[0].id)
+    }
+  }, [sortedDays, activeDayId])
+
+  useEffect(() => {
+    if (!ncTeam) return
+    const first = teamDuals[0]?.id ?? ""
+    if (!dualId || !teamDuals.some((d) => d.id === dualId)) setDualId(first)
+  }, [ncTeam?.id, teamDuals, dualId])
+
+  useEffect(() => {
     if (!dual) return
     const firstOpen = NHSCA_DUALS_WEIGHTS.find((w) => !matchIsComplete(dualMatches.get(w)))
     setActiveWeight(firstOpen ?? NHSCA_DUALS_WEIGHTS[0])
   }, [dual?.id])
 
-  const markFinal = () => {
-    if (!dual) return
-    void post({ action: "set_dual_status", dualId: dual.id, status: "final" })
-  }
-
   if (!ncTeam) return null
 
   const activeMatch = dual ? dualMatches.get(activeWeight) : undefined
   const activeWrestlers = wrestlersForWeight(activeWeight)
+  const ncWrestlerId = activeMatch?.nc_wrestler_id ?? activeWrestlers[0]?.id ?? null
+  const ncName = activeWrestlers.find((w) => w.id === ncWrestlerId)?.name ?? activeWrestlers[0]?.name ?? "NC"
+
+  const tap = (winner: NhscaDualsMatchWinner, result_type: NhscaDualsResultType, wrestlerId?: string | null) => {
+    if (!activeMatch) return
+    if (winner === "nc" && !(wrestlerId ?? ncWrestlerId)) return
+    void saveMatch(activeMatch.id, {
+      winner,
+      result_type,
+      nc_wrestler_id: winner === "nc" ? (wrestlerId ?? ncWrestlerId) : ncWrestlerId,
+    })
+  }
 
   return (
-    <div className="pb-32">
-      {dual && (
-        <div className="sticky top-0 z-30 -mx-1 px-1 pt-1 pb-2 bg-[#001a33]/95 backdrop-blur-sm border-b border-[#CBAF5D]/25">
-          <div className="rounded-xl bg-[#002147] border border-[#CBAF5D]/40 p-3 shadow-lg">
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <div className="flex gap-1 rounded-lg bg-[#0a2040] p-0.5 flex-1">
-                {(["national", "select"] as const).map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    className={cn(
-                      "flex-1 min-h-[40px] rounded-md text-xs font-bold",
-                      teamView === t ? "bg-[#CBAF5D] text-[#002147]" : "text-white/70"
-                    )}
-                    onClick={() => {
-                      setTeamView(t)
-                      setDualId("")
-                      setPoolId("")
-                    }}
-                  >
-                    {t === "national" ? "National" : "Select"}
-                  </button>
-                ))}
-              </div>
-              <button
-                type="button"
-                aria-label="Dual settings"
-                className="min-h-[40px] min-w-[40px] rounded-lg border border-white/20 text-white/80 flex items-center justify-center"
-                onClick={() => setShowSetup((s) => !s)}
-              >
-                <Settings2 className="h-5 w-5" />
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-2 text-center">
-              <div>
-                <p className="text-3xl font-bold text-[#CBAF5D] tabular-nums leading-none">{dual.nc_score}</p>
-                <p className="text-[10px] text-white/50 mt-1">NC</p>
-              </div>
-              <div>
-                <p className="text-3xl font-bold text-white tabular-nums leading-none">{dual.opponent_score}</p>
-                <p className="text-[10px] text-white/50 mt-1 truncate px-1">{dual.opponent_team_name}</p>
-              </div>
-            </div>
-            <p className="text-center text-xs text-white/55 mt-2">
-              {dual.round_name} · {completedCount}/{NHSCA_DUALS_WEIGHTS.length} weights
-            </p>
-            {flash ? (
-              <p className="text-center text-xs font-bold text-[#CBAF5D] mt-1 animate-pulse">{flash}</p>
-            ) : null}
-          </div>
+    <div className="pb-28">
+      <p className="text-center text-[11px] text-white/45 mb-2">
+        Tap a result — live score updates for fans on View results
+      </p>
+
+      <div className="flex gap-1 rounded-lg bg-[#0a2040] p-0.5 mb-3">
+        {(["national", "select"] as const).map((t) => (
+          <button
+            key={t}
+            type="button"
+            className={cn(
+              "flex-1 min-h-[48px] rounded-md text-sm font-bold",
+              teamView === t ? "bg-[#CBAF5D] text-[#002147]" : "text-white/70"
+            )}
+            onClick={() => {
+              setTeamView(t)
+              setDualId("")
+            }}
+          >
+            {t === "national" ? "National" : "Select"}
+          </button>
+        ))}
+      </div>
+
+      {sortedDays.length > 1 && (
+        <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-none mb-1">
+          {sortedDays.map((d) => (
+            <button
+              key={d.id}
+              type="button"
+              onClick={() => {
+                setActiveDayId(d.id)
+                setDualId("")
+              }}
+              className={cn(
+                "shrink-0 min-h-[40px] px-4 rounded-lg text-sm font-semibold border",
+                d.id === activeDayId
+                  ? "bg-[#CBAF5D] text-[#002147] border-[#CBAF5D]"
+                  : "bg-[#0a2040] text-white/75 border-white/15"
+              )}
+            >
+              {d.name}
+            </button>
+          ))}
         </div>
       )}
 
-      {dual && (
-        <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-none">
+      {teamDuals.length > 0 ? (
+        <div className="flex gap-2 overflow-x-auto pb-3 -mx-1 px-1 scrollbar-none">
           {teamDuals.map((d) => (
             <button
               key={d.id}
               type="button"
               onClick={() => setDualId(d.id)}
               className={cn(
-                "shrink-0 min-h-[44px] px-4 rounded-full text-sm font-semibold border",
+                "shrink-0 min-h-[52px] px-3 rounded-xl text-left border min-w-[140px] max-w-[200px]",
                 d.id === effectiveDualId
                   ? "bg-[#CBAF5D] text-[#002147] border-[#CBAF5D]"
-                  : "bg-[#0a2040] text-white/80 border-white/15"
+                  : "bg-[#0a2040] text-white/85 border-white/15"
               )}
             >
-              {d.round_name}
-              {d.status === "final" ? " ✓" : ""}
+              <span className="block text-xs font-semibold">{shortRound(d.round_name)}</span>
+              <span className="block text-sm font-bold truncate">vs {d.opponent_team_name}</span>
+              <span className="block text-[10px] tabular-nums mt-0.5 opacity-80">
+                {d.nc_score}–{d.opponent_score}
+                {d.status === "final" ? " · Final" : ""}
+              </span>
             </button>
           ))}
         </div>
-      )}
-
-      {showSetup && dual && (
-        <article className={cn(hubPanelClass, "mb-3")}>
-          <div className="p-4 space-y-3">
-            <p className={hubPanelTitleClass}>Dual setup</p>
-            <MobileSelect label="Day" value={dayId} onChange={setDayId}>
-              {snapshot.days.map((d) => (
-                <SelectItem key={d.id} value={d.id}>
-                  {d.name}
-                </SelectItem>
-              ))}
-            </MobileSelect>
-            <MobileSelect
-              label="Pool"
-              value={poolId || dual.pool_id}
-              onChange={setPoolId}
-            >
-              {teamPools.map((p) => (
-                <SelectItem key={p.id} value={p.id}>
-                  Pool {p.pool_number}
-                </SelectItem>
-              ))}
-            </MobileSelect>
-            <button
-              type="button"
-              className="text-xs text-white/50 underline"
-              onClick={() => setShowManage((s) => !s)}
-            >
-              {showManage ? "Hide" : "Add"} day / pool / dual
-            </button>
-            {showManage && (
-              <div className="space-y-2 pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full min-h-[44px] border-white/25 text-white"
-                  disabled={busy}
-                  onClick={() => {
-                    const name = prompt("Day name (e.g. Day 2)")
-                    if (name) void post({ action: "add_day", name })
-                  }}
-                >
-                  + Add day
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full min-h-[44px] border-white/25 text-white"
-                  disabled={busy || !dayId}
-                  onClick={() => {
-                    const n = prompt("Pool number")
-                    if (n && ncTeam)
-                      void post({ action: "add_pool", dayId, teamId: ncTeam.id, poolNumber: parseInt(n, 10) })
-                  }}
-                >
-                  + Add pool
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full min-h-[44px] border-white/25 text-white"
-                  disabled={busy}
-                  onClick={() => {
-                    const opp = prompt("Opponent team name")
-                    const rnd = prompt("Round name", "Round 1")
-                    if (opp && ncTeam)
-                      void post({
-                        action: "add_dual",
-                        teamId: ncTeam.id,
-                        dayId,
-                        poolId: poolId || dual.pool_id,
-                        opponentTeamName: opp,
-                        roundName: rnd || "Round 1",
-                      })
-                  }}
-                >
-                  + Add dual
-                </Button>
-              </div>
-            )}
-          </div>
-        </article>
+      ) : (
+        <p className="text-sm text-amber-200/90 text-center py-4">
+          No duals for this day yet. Day 1 schedule is loaded from code — use Initialize if empty, or ask dev to add
+          Day 2 in rosters.
+        </p>
       )}
 
       {dual && activeMatch && (
         <>
-          <div className="grid grid-cols-4 gap-1.5 mb-4">
+          <div className="sticky top-0 z-30 -mx-1 px-1 pt-1 pb-2 bg-[#001a33]/95 backdrop-blur-sm border-b border-[#CBAF5D]/25">
+            <div className="rounded-xl bg-[#002147] border border-[#CBAF5D]/40 p-3 shadow-lg">
+              <p className="text-[10px] uppercase tracking-wider text-[#CBAF5D]/90 text-center mb-1">
+                {poolLabel(snapshot, dual)} · {dual.round_name}
+              </p>
+              <h2 className="text-center text-base font-black text-white leading-tight mb-2">
+                NC {teamView === "national" ? "National" : "Select"}{" "}
+                <span className="text-white/50 font-semibold">vs</span>{" "}
+                <span className="text-[#CBAF5D]">{dual.opponent_team_name}</span>
+              </h2>
+              <div className="grid grid-cols-2 gap-3 text-center">
+                <div>
+                  <p className="text-4xl font-black text-[#CBAF5D] tabular-nums leading-none">{dual.nc_score}</p>
+                  <p className="text-[10px] text-white/50 mt-1">NC United</p>
+                </div>
+                <div>
+                  <p className="text-4xl font-black text-white tabular-nums leading-none">{dual.opponent_score}</p>
+                  <p className="text-[10px] text-white/50 mt-1 truncate px-1">{dual.opponent_team_name}</p>
+                </div>
+              </div>
+              <p className="text-center text-xs text-white/55 mt-2">
+                {completedCount}/{NHSCA_DUALS_WEIGHTS.length} weights
+                {flash ? <span className="text-[#CBAF5D] font-bold ml-2">{flash}</span> : null}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-4 gap-1.5 mb-3">
             {NHSCA_DUALS_WEIGHTS.map((w) => {
               const m = dualMatches.get(w)
               const done = matchIsComplete(m)
@@ -349,7 +338,7 @@ export function NhscaDualsResultsAdmin({
                   type="button"
                   onClick={() => setActiveWeight(w)}
                   className={cn(
-                    "min-h-[52px] rounded-lg font-mono font-bold text-base border-2 transition-colors",
+                    "min-h-[48px] rounded-lg font-mono font-bold text-sm border-2",
                     active
                       ? "border-[#CBAF5D] bg-[#CBAF5D]/20 text-[#CBAF5D]"
                       : done
@@ -363,55 +352,111 @@ export function NhscaDualsResultsAdmin({
             })}
           </div>
 
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-2">
             <button
               type="button"
-              className="min-h-[48px] min-w-[48px] rounded-xl bg-[#0a2040] border border-white/15 flex items-center justify-center text-white"
+              className="min-h-[44px] min-w-[44px] rounded-xl bg-[#0a2040] border border-white/15 flex items-center justify-center text-white"
               onClick={() => {
                 const i = NHSCA_DUALS_WEIGHTS.indexOf(activeWeight as (typeof NHSCA_DUALS_WEIGHTS)[number])
                 if (i > 0) setActiveWeight(NHSCA_DUALS_WEIGHTS[i - 1])
               }}
             >
-              <ChevronLeft className="h-6 w-6" />
+              <ChevronLeft className="h-5 w-5" />
             </button>
             <div className="text-center flex-1 px-2">
               <p className="text-2xl font-mono font-bold text-[#CBAF5D]">{activeWeight} lbs</p>
+              <p className="text-sm font-semibold text-white truncate">{ncName}</p>
               {matchIsComplete(activeMatch) ? (
-                <p className="text-xs text-white/60 mt-0.5">
-                  Saved — tap a button below to change
+                <p className="text-xs text-white/55">
+                  {resultTypeLabel(activeMatch.result_type!)} —{" "}
+                  {activeMatch.winner === "nc" ? "NC" : dual.opponent_team_name}
                 </p>
               ) : (
-                <p className="text-xs text-white/60 mt-0.5">Tap NC or Opp result to save</p>
+                <p className="text-xs text-[#CBAF5D]/80">Tap NC or Opp to save</p>
               )}
             </div>
             <button
               type="button"
-              className="min-h-[48px] min-w-[48px] rounded-xl bg-[#0a2040] border border-white/15 flex items-center justify-center text-white"
+              className="min-h-[44px] min-w-[44px] rounded-xl bg-[#0a2040] border border-white/15 flex items-center justify-center text-white"
               onClick={() => {
                 const i = NHSCA_DUALS_WEIGHTS.indexOf(activeWeight as (typeof NHSCA_DUALS_WEIGHTS)[number])
                 if (i < NHSCA_DUALS_WEIGHTS.length - 1) setActiveWeight(NHSCA_DUALS_WEIGHTS[i + 1])
               }}
             >
-              <ChevronRight className="h-6 w-6" />
+              <ChevronRight className="h-5 w-5" />
             </button>
           </div>
 
-          <MobileMatchEntry
-            key={`${activeMatch.id}-${activeMatch.updated_at}`}
-            match={activeMatch}
-            wrestlers={activeWrestlers}
-            saving={saving}
-            onQuickSave={(winner, result_type, nc_wrestler_id, opponent_wrestler_name) =>
-              saveMatch(activeMatch.id, { winner, result_type, nc_wrestler_id, opponent_wrestler_name })
-            }
-          />
+          {activeWeight === "120" && activeWrestlers.length > 1 && (
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              {activeWrestlers.map((w) => (
+                <button
+                  key={w.id}
+                  type="button"
+                  disabled={saving}
+                  onClick={() => tap("nc", "decision", w.id)}
+                  className="min-h-[52px] rounded-xl border-2 border-[#B31B1B] bg-[#B31B1B]/90 text-white font-bold text-sm active:scale-95 disabled:opacity-50"
+                >
+                  {w.name.split(" ")[0]}
+                  <span className="block text-[10px] font-normal opacity-80">NC DEC</span>
+                </button>
+              ))}
+            </div>
+          )}
 
-          <div className="fixed bottom-0 left-0 right-0 z-40 p-3 bg-[#001a33]/95 border-t border-white/10 backdrop-blur-sm safe-area-pb">
+          <div className="mb-2">
+            <p className="text-[10px] font-bold text-[#CBAF5D] uppercase tracking-wide mb-1.5 text-center">NC wins</p>
+            <div className="grid grid-cols-5 gap-1.5">
+              {QUICK_NC.map(({ result, label }) => (
+                <button
+                  key={result}
+                  type="button"
+                  disabled={saving || !ncWrestlerId}
+                  onClick={() => tap("nc", result)}
+                  className="min-h-[56px] rounded-xl bg-[#B31B1B] hover:bg-[#9a1616] active:scale-95 text-white font-bold text-sm disabled:opacity-40"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mb-3">
+            <p className="text-[10px] font-bold text-white/45 uppercase tracking-wide mb-1.5 text-center truncate px-2">
+              {dual.opponent_team_name} wins
+            </p>
+            <div className="grid grid-cols-4 gap-1.5">
+              {QUICK_OPP.map(({ result, label }) => (
+                <button
+                  key={result}
+                  type="button"
+                  disabled={saving}
+                  onClick={() => tap("opponent", result)}
+                  className="min-h-[56px] rounded-xl bg-[#0a2040] border-2 border-white/25 active:scale-95 text-white font-bold text-sm disabled:opacity-40"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {matchIsComplete(activeMatch) && (
+            <button
+              type="button"
+              className="w-full text-xs text-amber-300/90 underline mb-2"
+              disabled={saving}
+              onClick={() => void post({ action: "clear_match", matchId: activeMatch.id })}
+            >
+              Undo {activeWeight} lbs
+            </button>
+          )}
+
+          <div className="fixed bottom-0 left-0 right-0 z-40 p-3 bg-[#001a33]/95 border-t border-white/10 backdrop-blur-sm">
             <Button
               type="button"
               className="w-full min-h-[52px] bg-[#CBAF5D] text-[#002147] font-bold text-base"
-              disabled={busy || dual.status === "final"}
-              onClick={markFinal}
+              disabled={saving || resetBusy || dual.status === "final"}
+              onClick={() => void post({ action: "set_dual_status", dualId: dual.id, status: "final" })}
             >
               Mark dual final
             </Button>
@@ -419,201 +464,79 @@ export function NhscaDualsResultsAdmin({
         </>
       )}
 
-      {!dual && (
-        <p className="text-center text-sm text-white/60 py-8">Select a team and dual to enter results.</p>
-      )}
-
-      {busy && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <Loader2 className="h-12 w-12 animate-spin text-[#CBAF5D]" />
-        </div>
-      )}
-    </div>
-  )
-}
-
-function MobileSelect({
-  label,
-  value,
-  onChange,
-  children,
-}: {
-  label: string
-  value: string
-  onChange: (v: string) => void
-  children: ReactNode
-}) {
-  return (
-    <div className="space-y-1">
-      <Label className="text-xs text-white/60">{label}</Label>
-      <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className="min-h-[48px] bg-[#0a2040] border-white/20 text-white">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>{children}</SelectContent>
-      </Select>
-    </div>
-  )
-}
-
-function MobileMatchEntry({
-  match,
-  wrestlers,
-  saving,
-  onQuickSave,
-}: {
-  match: NhscaDualsMatchRow
-  wrestlers: { id: string; name: string }[]
-  saving: boolean
-  onQuickSave: (
-    winner: NhscaDualsMatchWinner,
-    result_type: NhscaDualsResultType,
-    nc_wrestler_id: string | null,
-    opponent_wrestler_name: string
-  ) => void | Promise<void>
-}) {
-  const defaultNcId = match.nc_wrestler_id ?? wrestlers[0]?.id ?? ""
-  const [ncId, setNcId] = useState(defaultNcId)
-  const [oppName, setOppName] = useState(match.opponent_wrestler_name ?? "")
-  const [showMore, setShowMore] = useState(false)
-
-  useEffect(() => {
-    setNcId(match.nc_wrestler_id ?? wrestlers[0]?.id ?? "")
-    setOppName(match.opponent_wrestler_name ?? "")
-  }, [match.id, match.updated_at, match.nc_wrestler_id, match.opponent_wrestler_name, wrestlers])
-
-  const ncName = wrestlers.find((w) => w.id === ncId)?.name ?? "NC wrestler"
-
-  const tap = (winner: NhscaDualsMatchWinner, result_type: NhscaDualsResultType) => {
-    if (!ncId && winner === "nc") return
-    void onQuickSave(winner, result_type, ncId || null, oppName)
-  }
-
-  return (
-    <div className="space-y-4">
-      {wrestlers.length > 1 ? (
-        <div className="grid grid-cols-2 gap-2">
-          {wrestlers.map((w) => (
-            <button
-              key={w.id}
+      <div className="mt-6 border-t border-white/10 pt-3">
+        <button
+          type="button"
+          className="text-xs text-white/40 underline w-full text-center"
+          onClick={() => setShowTesting((s) => !s)}
+        >
+          {showTesting ? "Hide testing tools" : "Testing only"}
+        </button>
+        {showTesting && dual && (
+          <div className="mt-3 space-y-2">
+            <Button
               type="button"
-              disabled={saving}
-              onClick={() => setNcId(w.id)}
-              className={cn(
-                "min-h-[52px] rounded-xl px-2 text-sm font-bold border-2",
-                ncId === w.id
-                  ? "border-[#CBAF5D] bg-[#CBAF5D]/15 text-[#CBAF5D]"
-                  : "border-white/15 bg-[#0a2040] text-white/80"
-              )}
+              variant="outline"
+              className="w-full min-h-[44px] border-amber-500/40 text-amber-100 text-sm"
+              disabled={resetBusy}
+              onClick={() => void post({ action: "clear_dual", dualId: dual.id }, { fullScreenBusy: true })}
             >
-              {w.name}
-            </button>
-          ))}
-        </div>
-      ) : (
-        <p className="text-center text-lg font-bold text-white">{ncName}</p>
-      )}
-
-      <div>
-        <p className="text-xs font-bold text-[#CBAF5D] uppercase tracking-wide mb-2">NC wins — tap to save</p>
-        <div className="grid grid-cols-5 gap-1.5">
-          {QUICK_NC.map(({ result, label }) => (
-            <button
-              key={result}
-              type="button"
-              disabled={saving || !ncId}
-              onClick={() => tap("nc", result)}
-              className="min-h-[56px] rounded-xl bg-[#B31B1B] hover:bg-[#9a1616] active:scale-95 text-white font-bold text-sm disabled:opacity-40 transition-transform"
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <p className="text-xs font-bold text-white/50 uppercase tracking-wide mb-2">Opponent wins — tap to save</p>
-        <div className="grid grid-cols-4 gap-1.5">
-          {QUICK_OPP.map(({ result, label }) => (
-            <button
-              key={result}
-              type="button"
-              disabled={saving}
-              onClick={() => tap("opponent", result)}
-              className="min-h-[56px] rounded-xl bg-[#0a2040] border-2 border-white/25 hover:border-white/40 active:scale-95 text-white font-bold text-sm disabled:opacity-40 transition-transform"
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <button
-        type="button"
-        className="w-full min-h-[44px] flex items-center justify-center gap-1 text-sm text-white/55"
-        onClick={() => setShowMore((s) => !s)}
-      >
-        {showMore ? "Less" : "More"}
-        <ChevronDown className={cn("h-4 w-4 transition-transform", showMore && "rotate-180")} />
-      </button>
-
-      {showMore && (
-        <div className="space-y-3 rounded-xl bg-[#0a2040] border border-white/10 p-4">
-          <div className="space-y-1">
-            <Label className="text-xs text-white/60">Opponent name (optional)</Label>
-            <Input
-              className="min-h-[48px] bg-[#002147] border-white/20 text-white text-base"
-              placeholder="Last name"
-              value={oppName}
-              onChange={(e) => setOppName(e.target.value)}
+              Clear this dual (all weights)
+            </Button>
+            <ConfirmButton
+              label="Clear all Day 1 scores (both teams)"
+              description="Wipes match results; keeps schedule."
+              disabled={resetBusy}
+              onConfirm={() => void post({ action: "reset_all_results" }, { fullScreenBusy: true })}
             />
           </div>
-          <p className="text-xs text-white/45">Other results</p>
-          <div className="grid grid-cols-3 gap-1.5">
-            {RESULT_TYPE_OPTIONS.filter((o) => !QUICK_NC.some((q) => q.result === o.value)).map((o) => (
-              <button
-                key={o.value}
-                type="button"
-                disabled={saving}
-                onClick={() => tap("nc", o.value)}
-                className="min-h-[44px] rounded-lg bg-[#0a2040] border border-white/15 text-xs text-white/80 font-semibold"
-              >
-                NC {o.short}
-              </button>
-            ))}
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              disabled={saving}
-              onClick={() => tap("draw", "draw")}
-              className="min-h-[48px] rounded-xl border border-white/20 text-white font-semibold"
-            >
-              Draw
-            </button>
-            <button
-              type="button"
-              disabled={saving}
-              onClick={() => tap("no_match", "no_match")}
-              className="min-h-[48px] rounded-xl border border-white/20 text-white font-semibold"
-            >
-              No match
-            </button>
-          </div>
-          {match.winner && match.result_type ? (
-            <p className="text-xs text-center text-white/50">
-              Current: {resultTypeLabel(match.result_type)} —{" "}
-              {match.winner === "nc" ? "NC" : match.winner === "opponent" ? "Opp" : match.winner}
-            </p>
-          ) : null}
-        </div>
-      )}
+        )}
+      </div>
 
-      {saving && (
-        <div className="flex justify-center py-2">
-          <Loader2 className="h-8 w-8 animate-spin text-[#CBAF5D]" />
+      {resetBusy && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 pointer-events-none">
+          <Loader2 className="h-10 w-10 animate-spin text-[#CBAF5D]" />
         </div>
       )}
     </div>
+  )
+}
+
+function ConfirmButton({
+  label,
+  description,
+  onConfirm,
+  disabled,
+}: {
+  label: string
+  description: string
+  onConfirm: () => void
+  disabled?: boolean
+}) {
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full min-h-[44px] text-sm border-white/25 text-white"
+          disabled={disabled}
+        >
+          {label}
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent className="bg-[#002147] border-white/20 text-white">
+        <AlertDialogHeader>
+          <AlertDialogTitle>{label}</AlertDialogTitle>
+          <AlertDialogDescription className="text-white/70">{description}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel className="border-white/20 bg-transparent text-white">Cancel</AlertDialogCancel>
+          <AlertDialogAction className="bg-[#CBAF5D] text-[#002147]" onClick={onConfirm}>
+            Confirm
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   )
 }

@@ -58,3 +58,6 @@ export const NHSCA_DUALS_SELECT_INITIAL_DUALS = [
 
 export const NHSCA_DUALS_NATIONAL_POOL = 6
 export const NHSCA_DUALS_SELECT_POOL = 26
+
+/** Day 1 schedule is seeded from the arrays above. Day 2+ is added in code (not admin UI). */
+export const NHSCA_DUALS_DAY_1_NAME = "Day 1"
