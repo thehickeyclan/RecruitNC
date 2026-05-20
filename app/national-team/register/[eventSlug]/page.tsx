@@ -161,7 +161,8 @@ export default function NationalTeamRegisterEventPage() {
     )
   }
 
-  const isNhsca2026 = urlSlug === "nhsca-2026" || urlSlug === "nhsca-duals-2026"
+  const isNhsca2026 =
+    urlSlug === "nhsca-2026" || urlSlug === "nhsca-duals-2026" || urlSlug === "nhsca-duals-2026-select"
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">

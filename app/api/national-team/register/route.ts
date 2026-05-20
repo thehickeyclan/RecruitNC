@@ -171,6 +171,7 @@ export async function POST(request: NextRequest) {
         category: "registration",
         source: "national_team",
         registration_id: reg.id,
+        event_slug: eventSlug,
       },
     })
 

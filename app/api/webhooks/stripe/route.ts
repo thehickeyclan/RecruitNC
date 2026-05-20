@@ -776,31 +776,30 @@ export async function POST(request: NextRequest) {
             image_url: null,
           })
         }
-        if (totalCents > 0) {
-          const parentEmail = (reg.parent_email ?? "").trim().toLowerCase()
-          let parentUserId: string | null = null
-          if (parentEmail) {
-            const { data: profile } = await admin
-              .from("user_profiles")
-              .select("user_id")
-              .ilike("email", parentEmail)
-              .limit(1)
-              .maybeSingle()
-            if (profile && (profile as { user_id?: string }).user_id) {
-              parentUserId = (profile as { user_id: string }).user_id
-            }
+        const parentEmail = (reg.parent_email ?? "").trim().toLowerCase()
+        let parentUserId: string | null = null
+        if (parentEmail) {
+          const { data: profile } = await admin
+            .from("user_profiles")
+            .select("user_id")
+            .ilike("email", parentEmail)
+            .limit(1)
+            .maybeSingle()
+          if (profile && (profile as { user_id?: string }).user_id) {
+            parentUserId = (profile as { user_id: string }).user_id
           }
-          await admin
-            .from("national_team_event_registrations")
-            .update({
-              status: "paid",
-              order_id: orderIdToUse,
-              stripe_session_id: session.id,
-              ...(parentUserId ? { parent_user_id: parentUserId } : {}),
-              updated_at: new Date().toISOString(),
-            })
-            .eq("id", registrationId)
         }
+        await admin
+          .from("national_team_event_registrations")
+          .update({
+            status: "paid",
+            order_id: totalCents > 0 ? orderIdToUse : reg.order_id ?? null,
+            stripe_session_id: session.id,
+            stripe_payment_intent_id: paymentIntentId,
+            ...(parentUserId ? { parent_user_id: parentUserId } : {}),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", registrationId)
         try {
           const r = reg as { athlete_first_name?: string; athlete_last_name?: string; athlete_email?: string; athlete_phone?: string | null; high_school?: string; club_team?: string | null; graduation_year?: string; primary_weight?: string }
           const enrichPayload = buildEnrichmentPayload({

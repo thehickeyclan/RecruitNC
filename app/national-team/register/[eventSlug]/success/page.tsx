@@ -9,7 +9,7 @@ import { CheckCircle2, MessageCircle, Hotel, Shirt, LayoutDashboard, User } from
 import { getEventName, getRosterLabel } from "@/lib/national-team-events"
 import { HardLink } from "@/components/hard-link"
 
-const NHSCA_2026_SLUGS = ["nhsca-2026", "nhsca-duals-2026"]
+const NHSCA_2026_SLUGS = ["nhsca-2026", "nhsca-duals-2026", "nhsca-duals-2026-select"]
 
 const GEAR_DEADLINE = "Sunday, March 15"
 
@@ -65,11 +65,11 @@ export default function NationalTeamRegisterSuccessPage() {
                 Use this link for roster, gear sizes, and GroupMe. Bookmark it or find it anytime under <strong>My Profile → Event hubs</strong>.
               </p>
               <p className="text-xs font-mono text-gray-500 mb-3 break-all bg-white/80 rounded px-2 py-1.5 border border-[#003366]/10">
-                /national-team/nhsca-duals-2026
+                /national-team/hub
               </p>
               <div className="flex flex-col gap-2">
                 <Button asChild className="w-full bg-[#003366] hover:bg-[#003366]/90" size="lg">
-                  <HardLink href="/national-team/nhsca-duals-2026">
+                  <HardLink href="/national-team/hub">
                     Go to Team Hub — update sizes &amp; join GroupMe
                   </HardLink>
                 </Button>

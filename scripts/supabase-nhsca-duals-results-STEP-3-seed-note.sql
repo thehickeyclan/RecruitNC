@@ -1,0 +1,3 @@
+-- NHSCA Duals 2026 — optional manual seed
+-- Prefer: after STEP 1 + 2, sign in as admin → Team Hub → Results → "Initialize data"
+-- That runs seedNhscaDualsIfEmpty() with rosters, Day 1, Pool 6/26, and 3 duals per team.

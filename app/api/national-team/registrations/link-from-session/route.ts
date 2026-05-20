@@ -55,12 +55,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ linked: false, reason: "not_paid" }, { status: 400 })
   }
 
-  const customerEmail = (session.customer_email ?? (session.customer_details as { email?: string })?.email ?? "").trim().toLowerCase()
-  const userEmail = (authUser.email ?? "").trim().toLowerCase()
-  if (!customerEmail || !userEmail || customerEmail !== userEmail) {
-    return NextResponse.json({ linked: false, reason: "email_mismatch" }, { status: 403 })
-  }
-
   const admin = createAdminClient()
   const { data: reg, error: regError } = await admin
     .from("national_team_event_registrations")
@@ -70,6 +64,20 @@ export async function POST(request: NextRequest) {
 
   if (regError || !reg) {
     return NextResponse.json({ linked: false, reason: "registration_not_found" }, { status: 404 })
+  }
+
+  const customerEmail = (session.customer_email ?? (session.customer_details as { email?: string })?.email ?? "")
+    .trim()
+    .toLowerCase()
+  const userEmail = (authUser.email ?? "").trim().toLowerCase()
+  const regParentEmail = ((reg as { parent_email?: string }).parent_email ?? "").trim().toLowerCase()
+  const emailOk =
+    userEmail &&
+    (userEmail === customerEmail ||
+      userEmail === regParentEmail ||
+      (customerEmail && customerEmail === regParentEmail))
+  if (!emailOk) {
+    return NextResponse.json({ linked: false, reason: "email_mismatch" }, { status: 403 })
   }
 
   const row = reg as { parent_user_id?: string | null; status?: string }
