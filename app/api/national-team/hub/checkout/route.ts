@@ -46,12 +46,10 @@ export async function POST(request: NextRequest) {
   const mode = (body.mode === "individual" ? "individual" : "team_package") as NhscaHubCheckoutMode
   const parentName = typeof body.parentName === "string" ? body.parentName.trim() : ""
   const wrestlerName = typeof body.wrestlerName === "string" ? body.wrestlerName.trim() : ""
-  const primaryWeight = typeof body.primaryWeight === "string" ? body.primaryWeight.trim() : ""
   const parentEmail = user.email.trim()
 
   if (!parentName) return NextResponse.json({ error: "Parent name is required." }, { status: 400 })
   if (!wrestlerName) return NextResponse.json({ error: "Athlete name is required." }, { status: 400 })
-  if (!primaryWeight) return NextResponse.json({ error: "Weight is required." }, { status: 400 })
 
   const { first: athleteFirstName, last: athleteLastName } = parseName(wrestlerName)
   if (!athleteFirstName) {
@@ -137,7 +135,7 @@ export async function POST(request: NextRequest) {
     parent_user_id: user.id,
     high_school: "—",
     graduation_year: "—",
-    primary_weight: primaryWeight,
+    primary_weight: "—",
     reg_fee_cents,
     apparel_fee_cents,
     singlet_size: singletSize,
@@ -163,7 +161,6 @@ export async function POST(request: NextRequest) {
         contact_email: parentEmail,
         firstname: athleteFirstName,
         lastname: athleteLastName,
-        weightclass: primaryWeight,
       })
     )
   } catch (enrichErr) {
