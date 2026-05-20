@@ -37,7 +37,7 @@ const CAROUSEL_PRICES: Record<string, string> = {
   "long-sleeve-back": formatDollars(NHSCA_LONG_SLEEVE_CENTS),
 }
 
-/** NC United NHSCA Duals 2026 singlet + apparel mockups for hub checkout and Apparel tab. */
+/** NC United NHSCA Duals 2026 singlet + apparel — Payments checkout carousel. */
 export function NhscaHubTeamGearShowcase({
   compact = false,
   carousel = false,

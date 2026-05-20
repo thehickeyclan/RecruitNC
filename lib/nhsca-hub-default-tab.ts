@@ -2,7 +2,7 @@
 export const NHSCA_HUB_TAB_IDS = [
   "rosters",
   "results",
-  "apparel",
+  "event-info",
   "payments",
   "media",
   "watch",
@@ -11,7 +11,7 @@ export const NHSCA_HUB_TAB_IDS = [
 export type NhscaHubTabId = (typeof NHSCA_HUB_TAB_IDS)[number]
 
 const TAB_ALIASES: Record<string, NhscaHubTabId> = {
-  "event-info": "apparel",
+  apparel: "payments",
   payment: "payments",
 }
 
