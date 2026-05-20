@@ -1,6 +1,8 @@
 "use client"
 
 import type { ReactNode } from "react"
+import { useMemo } from "react"
+import { useSearchParams } from "next/navigation"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { NHSCADuals2026HowToWatch } from "@/components/national-team/nhsca-duals-2026-how-to-watch"
 import { NHSCADuals2026TeamHubFaq } from "@/components/national-team/nhsca-duals-2026-team-hub-faq"
@@ -9,6 +11,7 @@ import { NhscaHubMediaTab } from "@/components/national-team/nhsca-hub-media-tab
 import { NhscaHubPaymentsTab } from "@/components/national-team/nhsca-hub-payments-tab"
 import { NhscaDualsResultsTab } from "@/components/national-team/nhsca-duals-results-tab"
 import { hubPanelClass, hubPanelHeaderClass, hubPanelTitleClass } from "@/components/national-team/nhsca-hub-theme"
+import { nhscaHubDefaultTab, parseNhscaHubTabParam } from "@/lib/nhsca-hub-default-tab"
 import { cn } from "@/lib/utils"
 
 const tabTriggerClass =
@@ -20,15 +23,26 @@ export function NhscaHubTabs({
   adminBlock,
   isAdmin = false,
   userId = null,
+  nhscaInfoOnly = false,
+  hasRoster = false,
 }: {
   rosterContent: ReactNode | null
   registrationFallback?: ReactNode
   adminBlock?: ReactNode
   isAdmin?: boolean
   userId?: string | null
+  nhscaInfoOnly?: boolean
+  hasRoster?: boolean
 }) {
+  const searchParams = useSearchParams()
+  const defaultTab = useMemo(() => {
+    const fromUrl = parseNhscaHubTabParam(searchParams.get("tab"))
+    if (fromUrl) return fromUrl
+    return nhscaHubDefaultTab({ nhscaInfoOnly, hasRoster })
+  }, [searchParams, nhscaInfoOnly, hasRoster])
+
   return (
-    <Tabs defaultValue="results" className="w-full">
+    <Tabs defaultValue={defaultTab} className="w-full">
       <div className="relative mb-6 md:mb-8 -mx-1 px-1 sm:mx-0 sm:px-0">
         <p className="text-[10px] text-white/40 mb-1.5 sm:hidden">Swipe for more tabs →</p>
         <TabsList
