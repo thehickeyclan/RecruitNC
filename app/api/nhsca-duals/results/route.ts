@@ -92,21 +92,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const { pool, results } = await req.json()
+    const body = await req.json()
+    const { pool, match_id, team1_name, team2_name, team1_score, team2_score } = body
 
-    // Insert results into database
+    if (!pool || !match_id || team1_score === undefined || team2_score === undefined) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+    }
+
+    // Insert result into database
     const { error } = await supabase
       .from("nhsca_duals_results")
-      .insert(
-        results.map((r: any) => ({
-          pool,
-          matchup_id: r.matchupId,
-          team1_score: parseInt(r.team1Score) || 0,
-          team2_score: parseInt(r.team2Score) || 0,
-          created_by: user.id,
-          created_at: new Date().toISOString()
-        }))
-      )
+      .insert({
+        pool,
+        match_id,
+        team1_name,
+        team2_name,
+        team1_score: parseInt(team1_score),
+        team2_score: parseInt(team2_score),
+        created_by: user.id,
+        created_at: new Date().toISOString()
+      })
 
     if (error) {
       console.error("[results]", error)
