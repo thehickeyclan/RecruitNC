@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { HardLink } from "@/components/hard-link"
 import { NhscaMediaAdmin } from "@/components/national-team/nhsca-media-admin"
+import { NhscaOrdersAdmin } from "@/components/national-team/nhsca-orders-admin"
 
 type Dual = {
   id: string
@@ -249,6 +250,9 @@ export default function NhscaDualsCommandCenter() {
             </TabsTrigger>
 <TabsTrigger value="announcements" className="data-[state=active]:bg-[#c9a227] data-[state=active]:text-[#002147]">
 Announcements
+</TabsTrigger>
+<TabsTrigger value="orders" className="data-[state=active]:bg-[#c9a227] data-[state=active]:text-[#002147]">
+Orders
 </TabsTrigger>
 <TabsTrigger value="media" className="data-[state=active]:bg-[#c9a227] data-[state=active]:text-[#002147]">
 Media
@@ -552,6 +556,11 @@ Media
           {/* Media Tab */}
           <TabsContent value="media">
             <NhscaMediaAdmin />
+          </TabsContent>
+
+          {/* Orders Tab */}
+          <TabsContent value="orders">
+            <NhscaOrdersAdmin />
           </TabsContent>
         </Tabs>
       </main>
