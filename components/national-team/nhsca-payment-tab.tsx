@@ -657,6 +657,7 @@ if (longSleeveSize && longSleeveSize !== "none" && longSleeveSize !== "") {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[#1a3a5c]">
+                    <th className="text-left py-3 px-2 text-white/80 font-semibold">Athlete</th>
                     <th className="text-left py-3 px-2 text-white/80 font-semibold">Date</th>
                     <th className="text-left py-3 px-2 text-white/80 font-semibold">Items</th>
                     <th className="text-left py-3 px-2 text-white/80 font-semibold">Amount</th>
@@ -666,6 +667,9 @@ if (longSleeveSize && longSleeveSize !== "none" && longSleeveSize !== "") {
                 <tbody>
                   {orders.map((order: any) => (
                     <tr key={order.id} className="border-b border-[#0d1f38] hover:bg-[#0d1f38]">
+                      <td className="py-3 px-2 text-white/75 font-semibold">
+                        {order.athlete_name || order.name || "—"}
+                      </td>
                       <td className="py-3 px-2 text-white/75">
                         {new Date(order.created_at).toLocaleDateString()}
                       </td>
