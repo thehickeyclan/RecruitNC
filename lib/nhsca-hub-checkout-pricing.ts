@@ -10,10 +10,16 @@ export const NHSCA_SHORT_SLEEVE_CENTS = 3_000
 export const NHSCA_LONG_SLEEVE_CENTS = 4_000
 export const NHSCA_SINGLET_EACH_CENTS = 5_000
 
-/** Set in env when final pricing is ready (default 0 = shown as TBD, not charged). */
+/** Van to VBSC — $125 per wrestler (override via env if needed). */
+export const NHSCA_VAN_TRAVEL_FEE_DEFAULT_CENTS = 12_500
+
 export function nhscaVanTravelFeeCents(): number {
-  const n = parseInt(process.env.NHSCA_VAN_TRAVEL_FEE_CENTS ?? "0", 10)
-  return Number.isFinite(n) && n >= 0 ? n : 0
+  const raw =
+    process.env.NHSCA_VAN_TRAVEL_FEE_CENTS ??
+    process.env.NEXT_PUBLIC_NHSCA_VAN_TRAVEL_FEE_CENTS ??
+    String(NHSCA_VAN_TRAVEL_FEE_DEFAULT_CENTS)
+  const n = parseInt(raw, 10)
+  return Number.isFinite(n) && n >= 0 ? n : NHSCA_VAN_TRAVEL_FEE_DEFAULT_CENTS
 }
 
 export function nhscaHotelFeeCents(): number {
@@ -86,7 +92,7 @@ export function buildTeamPackageLineItems(travel: NhscaHubTravelSelections): Nhs
   const van = nhscaVanTravelFeeCents()
   const hotel = nhscaHotelFeeCents()
   if (travel.vanTravel && van > 0) {
-    items.push({ key: "van_travel", name: "Van Transportation", amountCents: van })
+    items.push({ key: "van_travel", name: "Van Transportation (per wrestler)", amountCents: van })
   }
   if (travel.hotel && hotel > 0) {
     items.push({ key: "hotel", name: "Hotel", amountCents: hotel })
@@ -131,7 +137,7 @@ export function buildIndividualLineItems(sel: NhscaHubIndividualSelections): Nhs
   const van = nhscaVanTravelFeeCents()
   const hotel = nhscaHotelFeeCents()
   if (sel.vanTravel && van > 0) {
-    items.push({ key: "van_travel", name: "Van Transportation", amountCents: van })
+    items.push({ key: "van_travel", name: "Van Transportation (per wrestler)", amountCents: van })
   }
   if (sel.hotel && hotel > 0) {
     items.push({ key: "hotel", name: "Hotel", amountCents: hotel })
