@@ -117,13 +117,10 @@ export function NhscaPaymentTab() {
         const res = await fetch("/api/nhsca-duals/payments")
         if (res.ok) {
           const data = await res.json()
-          console.log("[v0] Orders loaded:", data.payments?.length, "orders")
           setOrders(data.payments || [])
-        } else {
-          console.log("[v0] API error:", res.status)
         }
       } catch (err) {
-        console.error("[v0] Failed to load orders:", err)
+        console.error("Failed to load orders:", err)
       } finally {
         setLoadingOrders(false)
       }
