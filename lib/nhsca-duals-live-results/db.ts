@@ -503,6 +503,42 @@ export async function deleteDual(
   return error ? { ok: false, error: error.message } : { ok: true }
 }
 
+/** Remove admin test duals (e.g. Day 2 vs "test") and empty non–Day 1 event days. */
+export async function pruneNhscaDualsTestDuals(admin: SupabaseClient): Promise<void> {
+  const { data: teams } = await admin
+    .from("nhsca_duals_teams")
+    .select("id")
+    .eq("event_key", NHSCA_DUALS_EVENT_KEY)
+  const teamIds = (teams ?? []).map((t) => t.id as string)
+  if (!teamIds.length) return
+
+  const { data: testDuals } = await admin
+    .from("nhsca_duals_duals")
+    .select("id")
+    .in("team_id", teamIds)
+    .ilike("opponent_team_name", "test")
+
+  for (const d of testDuals ?? []) {
+    await deleteDual(admin, d.id as string)
+  }
+
+  const { data: days } = await admin
+    .from("nhsca_duals_event_days")
+    .select("id, name")
+    .eq("event_key", NHSCA_DUALS_EVENT_KEY)
+
+  for (const day of days ?? []) {
+    if (day.name === NHSCA_DUALS_DAY_1_NAME) continue
+    const { count } = await admin
+      .from("nhsca_duals_duals")
+      .select("id", { count: "exact", head: true })
+      .eq("day_id", day.id)
+    if ((count ?? 0) > 0) continue
+    await admin.from("nhsca_duals_pools").delete().eq("day_id", day.id)
+    await admin.from("nhsca_duals_event_days").delete().eq("id", day.id)
+  }
+}
+
 /** Testing: wipe scores on every dual for this event (keeps duals / structure). */
 export async function resetAllEventMatchResults(admin: SupabaseClient): Promise<{ ok: boolean; error?: string }> {
   const { data: teams, error: teamErr } = await admin

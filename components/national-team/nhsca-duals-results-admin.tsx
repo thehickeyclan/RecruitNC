@@ -43,7 +43,7 @@ const QUICK_OPP: { result: NhscaDualsResultType; label: string }[] = [
   { result: "fall", label: "PIN" },
 ]
 
-const NOTE_TAGS = ["Big win", "Call out", "T-bout", "Fall out"] as const
+const NOTE_TAGS = ["Big win", "Ranked win", "Ranked loss"] as const
 
 function notesFromTags(tags: readonly string[]): string | null {
   const parts = tags.map((t) => t.trim()).filter(Boolean)
@@ -270,7 +270,7 @@ export function NhscaDualsResultsAdmin({
   }
 
   return (
-    <div className="pb-28">
+    <div className="pb-[calc(8rem+env(safe-area-inset-bottom))]">
       <p className="text-center text-[11px] text-white/45 mb-2">
         Tap a result — live score updates for fans on View results
       </p>
@@ -303,7 +303,7 @@ export function NhscaDualsResultsAdmin({
               setDualId("")
             }}
             className={cn(
-              "shrink-0 snap-start min-h-[36px] px-3.5 rounded-lg text-sm font-semibold border",
+              "shrink-0 snap-start min-h-[44px] px-3.5 rounded-lg text-sm font-semibold border",
               activeDayId === "all"
                 ? "bg-[#CBAF5D] text-[#002147] border-[#CBAF5D]"
                 : "bg-[#0a2040] text-white/75 border-white/15"
@@ -320,7 +320,7 @@ export function NhscaDualsResultsAdmin({
                 setDualId("")
               }}
               className={cn(
-                "shrink-0 snap-start min-h-[36px] px-3.5 rounded-lg text-sm font-semibold border",
+                "shrink-0 snap-start min-h-[44px] px-3.5 rounded-lg text-sm font-semibold border",
                 d.id === activeDayId
                   ? "bg-[#CBAF5D] text-[#002147] border-[#CBAF5D]"
                   : "bg-[#0a2040] text-white/75 border-white/15"
@@ -350,7 +350,7 @@ export function NhscaDualsResultsAdmin({
                 {sortedDays.find((day) => day.id === d.day_id)?.name ?? "Day"}
               </span>
               <span className="block text-xs font-semibold">{shortRound(d.round_name)}</span>
-              <span className="block text-sm font-bold truncate">vs {d.opponent_team_name}</span>
+              <span className="block text-sm font-bold line-clamp-2 leading-tight">vs {d.opponent_team_name}</span>
               <span className="block text-[10px] tabular-nums mt-0.5 opacity-80">
                 {d.nc_score}–{d.opponent_score}
                 {d.status === "final" ? " · Final" : ""}
@@ -367,12 +367,12 @@ export function NhscaDualsResultsAdmin({
 
       {dual && activeMatch && (
         <>
-          <div className="sticky top-0 z-30 -mx-1 px-1 pt-1 pb-2 bg-[#001a33]/95 backdrop-blur-sm border-b border-[#CBAF5D]/25">
+          <div className="sticky top-0 z-30 -mx-1 px-1 pt-[max(0.25rem,env(safe-area-inset-top))] pb-2 bg-[#001a33]/95 backdrop-blur-sm border-b border-[#CBAF5D]/25">
             <div className="rounded-xl bg-[#002147] border border-[#CBAF5D]/40 p-3 shadow-lg">
               <p className="text-[10px] uppercase tracking-wider text-[#CBAF5D]/90 text-center mb-1">
                 {poolLabel(snapshot, dual)} · {dual.round_name}
               </p>
-              <h2 className="text-center text-base font-black text-white leading-tight mb-2">
+              <h2 className="text-center text-sm sm:text-base font-black text-white leading-snug mb-2 px-1">
                 NC {teamView === "national" ? "National" : "Select"}{" "}
                 <span className="text-white/50 font-semibold">vs</span>{" "}
                 <span className="text-[#CBAF5D]">{dual.opponent_team_name}</span>
@@ -481,7 +481,7 @@ export function NhscaDualsResultsAdmin({
                     type="button"
                     onClick={() => toggleNoteTag(tag)}
                     className={cn(
-                      "min-h-[36px] px-2.5 rounded-lg text-xs font-semibold border",
+                      "min-h-[44px] px-2.5 rounded-lg text-xs font-semibold border",
                       selectedNoteTags.includes(tag)
                         ? "border-amber-400/70 bg-amber-500/20 text-amber-100"
                         : "border-white/15 bg-[#001a33] text-white/55"
@@ -525,14 +525,14 @@ export function NhscaDualsResultsAdmin({
 
           <div className="mb-2">
             <p className="text-[10px] font-bold text-[#CBAF5D] uppercase tracking-wide mb-1.5 text-center">NC wins</p>
-            <div className="grid grid-cols-5 gap-1.5">
+            <div className="grid grid-cols-3 min-[400px]:grid-cols-5 gap-1.5">
               {QUICK_NC.map(({ result, label }) => (
                 <button
                   key={result}
                   type="button"
                   disabled={saving || !ncWrestlerId}
                   onClick={() => tap("nc", result)}
-                  className="min-h-[56px] rounded-xl bg-[#B31B1B] hover:bg-[#9a1616] active:scale-95 text-white font-bold text-sm disabled:opacity-40"
+                  className="min-h-[52px] sm:min-h-[56px] rounded-xl bg-[#B31B1B] hover:bg-[#9a1616] active:scale-95 text-white font-bold text-xs sm:text-sm disabled:opacity-40"
                 >
                   {label}
                 </button>
@@ -544,14 +544,14 @@ export function NhscaDualsResultsAdmin({
             <p className="text-[10px] font-bold text-white/45 uppercase tracking-wide mb-1.5 text-center truncate px-2">
               {dual.opponent_team_name} wins
             </p>
-            <div className="grid grid-cols-4 gap-1.5">
+            <div className="grid grid-cols-2 min-[400px]:grid-cols-4 gap-1.5">
               {QUICK_OPP.map(({ result, label }) => (
                 <button
                   key={result}
                   type="button"
                   disabled={saving}
                   onClick={() => tap("opponent", result)}
-                  className="min-h-[56px] rounded-xl bg-[#0a2040] border-2 border-white/25 active:scale-95 text-white font-bold text-sm disabled:opacity-40"
+                  className="min-h-[52px] sm:min-h-[56px] rounded-xl bg-[#0a2040] border-2 border-white/25 active:scale-95 text-white font-bold text-xs sm:text-sm disabled:opacity-40"
                 >
                   {label}
                 </button>
@@ -570,7 +570,7 @@ export function NhscaDualsResultsAdmin({
             </button>
           )}
 
-          <div className="fixed bottom-0 left-0 right-0 z-40 p-3 bg-[#001a33]/95 border-t border-white/10 backdrop-blur-sm">
+          <div className="fixed bottom-0 left-0 right-0 z-40 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-[#001a33]/95 border-t border-white/10 backdrop-blur-sm">
             <Button
               type="button"
               className="w-full min-h-[52px] bg-[#CBAF5D] text-[#002147] font-bold text-base"

@@ -9,11 +9,14 @@ export const NHSCA_REG_FEE_CENTS = 7_500
 export const NHSCA_SHORTS_CENTS = 4_000
 export const NHSCA_SHORT_SLEEVE_CENTS = 3_000
 export const NHSCA_LONG_SLEEVE_CENTS = 4_000
-export const NHSCA_SINGLET_EACH_CENTS = 5_000
-export const NHSCA_SINGLET_TWO_CENTS = 9_000
+export const NHSCA_SINGLET_EACH_CENTS = 6_500
+export const NHSCA_SINGLET_TWO_CENTS = 12_500
 
 /** Van to VBSC — $125 per wrestler (override via env if needed). */
 export const NHSCA_VAN_TRAVEL_FEE_DEFAULT_CENTS = 12_500
+
+/** Team hotel room — $265 per room (override via env if needed). */
+export const NHSCA_HOTEL_FEE_DEFAULT_CENTS = 26_500
 
 export function nhscaVanTravelFeeCents(): number {
   const raw =
@@ -25,8 +28,12 @@ export function nhscaVanTravelFeeCents(): number {
 }
 
 export function nhscaHotelFeeCents(): number {
-  const n = parseInt(process.env.NHSCA_HOTEL_FEE_CENTS ?? "0", 10)
-  return Number.isFinite(n) && n >= 0 ? n : 0
+  const raw =
+    process.env.NHSCA_HOTEL_FEE_CENTS ??
+    process.env.NEXT_PUBLIC_NHSCA_HOTEL_FEE_CENTS ??
+    String(NHSCA_HOTEL_FEE_DEFAULT_CENTS)
+  const n = parseInt(raw, 10)
+  return Number.isFinite(n) && n >= 0 ? n : NHSCA_HOTEL_FEE_DEFAULT_CENTS
 }
 
 export type NhscaHubCheckoutMode = "team_package" | "individual"
@@ -97,7 +104,7 @@ export function buildTeamPackageLineItems(travel: NhscaHubTravelSelections): Nhs
     items.push({ key: "van_travel", name: "Van Transportation (per wrestler)", amountCents: van })
   }
   if (travel.hotel && hotel > 0) {
-    items.push({ key: "hotel", name: "Hotel", amountCents: hotel })
+    items.push({ key: "hotel", name: "Hotel room", amountCents: hotel })
   }
   return items
 }
@@ -147,7 +154,7 @@ export function buildIndividualLineItems(sel: NhscaHubIndividualSelections): Nhs
     items.push({ key: "van_travel", name: "Van Transportation (per wrestler)", amountCents: van })
   }
   if (sel.hotel && hotel > 0) {
-    items.push({ key: "hotel", name: "Hotel", amountCents: hotel })
+    items.push({ key: "hotel", name: "Hotel room", amountCents: hotel })
   }
   return items
 }

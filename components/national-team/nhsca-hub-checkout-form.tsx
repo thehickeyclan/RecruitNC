@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { CreditCard, Loader2, Package, Shirt } from "lucide-react"
+import { CreditCard, Loader2 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { hubPanelClass } from "@/components/national-team/nhsca-hub-theme"
+import { NhscaHubTravelRoster } from "@/components/national-team/nhsca-hub-travel-roster"
 import { NHSCA_INTEREST_WEIGHT_CLASSES } from "@/lib/national-team-weight-classes"
 import {
   buildIndividualLineItems,
@@ -29,8 +30,6 @@ import {
   NHSCA_SINGLET_EACH_CENTS,
   NHSCA_SINGLET_TWO_CENTS,
   NHSCA_TEAM_PACKAGE_CENTS,
-  travelPendingLabel,
-  type NhscaHubCheckoutMode,
   type NhscaHubIndividualSelections,
 } from "@/lib/nhsca-hub-checkout-pricing"
 import { cn } from "@/lib/utils"
@@ -50,24 +49,26 @@ function SizeSelect({
   value,
   onChange,
   required,
+  compact,
 }: {
   label: string
   value: string
   onChange: (v: string) => void
   required?: boolean
+  compact?: boolean
 }) {
   return (
-    <div className="space-y-1.5">
+    <div className={cn("space-y-1.5", compact && "w-full sm:max-w-[140px]")}>
       <Label className="text-xs text-white/70">
         {label}
         {required ? <span className="text-red-400 ml-0.5">*</span> : null}
       </Label>
       <Select value={value || NONE} onValueChange={(v) => onChange(v === NONE ? "" : v)}>
         <SelectTrigger className={hubSelectTrigger}>
-          <SelectValue placeholder="Select size" />
+          <SelectValue placeholder="Size" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value={NONE}>Select size</SelectItem>
+          <SelectItem value={NONE}>Size</SelectItem>
           {NHSCA_HUB_GEAR_SIZES.map((s) => (
             <SelectItem key={s} value={s}>
               {s}
@@ -79,81 +80,36 @@ function SizeSelect({
   )
 }
 
-function TravelOptions({
-  vanTravel,
-  hotel,
-  onVan,
-  onHotel,
-}: {
-  vanTravel: boolean
-  hotel: boolean
-  onVan: (v: boolean) => void
-  onHotel: (v: boolean) => void
-}) {
-  const vanCents = nhscaVanTravelFeeCents()
-  const hotelCents = nhscaHotelFeeCents()
-  const pending = travelPendingLabel()
-
-  return (
-    <div className="rounded-xl bg-[#0a2040] border border-white/10 p-4 space-y-3">
-      <p className="text-sm font-semibold text-white/80">Travel (optional)</p>
-      <label className="flex items-center gap-3 min-h-[48px] cursor-pointer">
-        <Checkbox
-          checked={vanTravel}
-          onCheckedChange={(c) => onVan(!!c)}
-          className="h-5 w-5 border-white/30 data-[state=checked]:bg-[#CBAF5D]"
-        />
-        <span className="text-sm text-white flex-1">
-          Van transportation{" "}
-          <span className="text-[#CBAF5D]">
-            {vanCents > 0 ? `${formatDollars(vanCents)} / person` : "$0.00"}
-          </span>
-          {vanCents === 0 && pending ? (
-            <span className="block text-xs text-white/45">{pending}</span>
-          ) : null}
-        </span>
-      </label>
-      <label className="flex items-center gap-3 min-h-[48px] cursor-pointer">
-        <Checkbox
-          checked={hotel}
-          onCheckedChange={(c) => onHotel(!!c)}
-          className="h-5 w-5 border-white/30 data-[state=checked]:bg-[#CBAF5D]"
-        />
-        <span className="text-sm text-white flex-1">
-          Hotel{" "}
-          <span className="text-[#CBAF5D]">
-            {hotelCents > 0 ? formatDollars(hotelCents) : "$0.00"}
-          </span>
-          {hotelCents === 0 && pending ? (
-            <span className="block text-xs text-white/45">{pending}</span>
-          ) : null}
-        </span>
-      </label>
-    </div>
-  )
-}
-
 function LineItemSummary({ items }: { items: { name: string; amountCents: number; quantity?: number }[] }) {
   return (
     <ul className="space-y-1.5 text-sm">
       {items.map((item) => (
-        <li key={item.name} className="flex justify-between gap-2 text-white/80">
-          <span className="min-w-0">
-            {item.name}
-            {(item.quantity ?? 1) > 1 ? ` ×${item.quantity}` : ""}
-          </span>
-          <span className="tabular-nums text-[#CBAF5D] shrink-0">
-            {formatDollars(item.amountCents * (item.quantity ?? 1))}
-          </span>
+        <li key={item.name} className="flex justify-between gap-3 text-white/80">
+          <span className="min-w-0 break-words">{item.name}</span>
+          <span className="tabular-nums text-[#CBAF5D] shrink-0">{formatDollars(item.amountCents * (item.quantity ?? 1))}</span>
         </li>
       ))}
     </ul>
   )
 }
 
+const EMPTY_INDIVIDUAL: NhscaHubIndividualSelections = {
+  registration: false,
+  singletQty: 0,
+  singletSize: "",
+  shorts: false,
+  shortsSize: "",
+  shortSleeve: false,
+  shortSleeveSize: "",
+  longSleeve: false,
+  longSleeveSize: "",
+  vanTravel: false,
+  hotel: false,
+}
+
 export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?: () => void }) {
   const { user } = useAuth()
-  const [mode, setMode] = useState<NhscaHubCheckoutMode>("team_package")
+  const [fullPackage, setFullPackage] = useState(true)
   const [team, setTeam] = useState<"nhsca-duals-2026" | "nhsca-duals-2026-select">("nhsca-duals-2026")
   const [parentName, setParentName] = useState("")
   const [wrestlerName, setWrestlerName] = useState("")
@@ -165,45 +121,45 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
     shortSleeveSize: "",
     longSleeveSize: "",
   })
-  const [bundleTravel, setBundleTravel] = useState({ vanTravel: false, hotel: false })
 
-  const [individual, setIndividual] = useState<NhscaHubIndividualSelections>({
-    registration: false,
-    singletQty: 0,
-    singletSize: "",
-    shorts: false,
-    shortsSize: "",
-    shortSleeve: false,
-    shortSleeveSize: "",
-    longSleeve: false,
-    longSleeveSize: "",
-    vanTravel: false,
-    hotel: false,
-  })
+  const [individual, setIndividual] = useState<NhscaHubIndividualSelections>(EMPTY_INDIVIDUAL)
+  const [vanTravel, setVanTravel] = useState(false)
+  const [hotel, setHotel] = useState(false)
 
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const vanCents = nhscaVanTravelFeeCents()
+  const hotelCents = nhscaHotelFeeCents()
+
   const lineItems = useMemo(() => {
-    if (mode === "team_package") {
-      return buildTeamPackageLineItems(bundleTravel)
-    }
-    return buildIndividualLineItems(individual)
-  }, [mode, bundleTravel, individual])
+    const travel = { vanTravel, hotel }
+    if (fullPackage) return buildTeamPackageLineItems(travel)
+    return buildIndividualLineItems({ ...individual, vanTravel, hotel })
+  }, [fullPackage, bundleSizes, individual, vanTravel, hotel])
 
   const totalCents = lineItemsTotalCents(lineItems)
+
+  const selectFullPackage = (on: boolean) => {
+    setFullPackage(on)
+    if (on) setIndividual(EMPTY_INDIVIDUAL)
+  }
+
+  const updateIndividual = (patch: Partial<NhscaHubIndividualSelections>) => {
+    setIndividual((s) => ({ ...s, ...patch }))
+    if (fullPackage) setFullPackage(false)
+  }
 
   const validate = (): string | null => {
     if (!parentName.trim()) return "Parent name is required."
     if (!wrestlerName.trim()) return "Athlete name is required."
     if (!primaryWeight) return "Weight class is required."
-    if (mode === "team_package") {
+    if (fullPackage) {
       if (!bundleSizes.singletSize || !bundleSizes.shortsSize || !bundleSizes.shortSleeveSize || !bundleSizes.longSleeveSize) {
         return "Select all apparel sizes for the team package."
       }
     } else {
-      const hasPaidTravel =
-        (individual.vanTravel && nhscaVanTravelFeeCents() > 0) || (individual.hotel && nhscaHotelFeeCents() > 0)
+      const hasPaidTravel = (vanTravel && vanCents > 0) || (hotel && hotelCents > 0)
       if (
         !individual.registration &&
         individual.singletQty === 0 &&
@@ -212,7 +168,7 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
         !individual.longSleeve &&
         !hasPaidTravel
       ) {
-        return "Select registration, apparel, or travel."
+        return "Select at least one item below, or choose the full team package."
       }
       if (individual.singletQty > 0 && !individual.singletSize) return "Select singlet size."
       if (individual.shorts && !individual.shortsSize) return "Select shorts size."
@@ -233,6 +189,7 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
 
     setSubmitting(true)
     try {
+      const mode = fullPackage ? "team_package" : "individual"
       const res = await fetch("/api/national-team/hub/checkout", {
         method: "POST",
         credentials: "include",
@@ -243,14 +200,14 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
           parentName: parentName.trim(),
           wrestlerName: wrestlerName.trim(),
           primaryWeight,
-          teamPackage: { ...bundleSizes, ...bundleTravel },
+          teamPackage: { ...bundleSizes, vanTravel, hotel },
           singletSize: bundleSizes.singletSize,
           shortsSize: bundleSizes.shortsSize,
           shortSleeveSize: bundleSizes.shortSleeveSize,
           longSleeveSize: bundleSizes.longSleeveSize,
-          vanTravel: bundleTravel.vanTravel,
-          hotel: bundleTravel.hotel,
-          individual,
+          vanTravel,
+          hotel,
+          individual: fullPackage ? { ...EMPTY_INDIVIDUAL, vanTravel, hotel } : { ...individual, vanTravel, hotel },
         }),
       })
       const data = await res.json().catch(() => ({}))
@@ -268,42 +225,12 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
-        <button
-          type="button"
-          onClick={() => setMode("team_package")}
-          className={cn(
-            "rounded-xl border-2 p-4 text-left min-h-[88px]",
-            mode === "team_package"
-              ? "border-[#CBAF5D] bg-[#CBAF5D]/10"
-              : "border-white/15 bg-[#0a2040]"
-          )}
-        >
-          <Package className={cn("h-6 w-6 mb-2", mode === "team_package" ? "text-[#CBAF5D]" : "text-white/50")} />
-          <p className="font-bold text-white text-sm">Team Package</p>
-          <p className="text-xs text-white/60">{formatDollars(NHSCA_TEAM_PACKAGE_CENTS)}</p>
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode("individual")}
-          className={cn(
-            "rounded-xl border-2 p-4 text-left min-h-[88px]",
-            mode === "individual"
-              ? "border-[#CBAF5D] bg-[#CBAF5D]/10"
-              : "border-white/15 bg-[#0a2040]"
-          )}
-        >
-          <Shirt className={cn("h-6 w-6 mb-2", mode === "individual" ? "text-[#CBAF5D]" : "text-white/50")} />
-          <p className="font-bold text-white text-sm">Individual</p>
-          <p className="text-xs text-white/60">Reg · apparel · travel</p>
-        </button>
-      </div>
-
       <article className={cn(hubPanelClass, "overflow-hidden")}>
-        <div className="p-5 md:p-6 space-y-5">
-          <p className="text-xs text-white/50">
-            Secure payment via Stripe. You&apos;ll return here after checkout.
-          </p>
+        <div className="p-4 sm:p-5 md:p-6 space-y-5">
+          <div>
+            <h3 className="text-lg font-bold text-white">NHSCA Duals payment</h3>
+            <p className="text-xs text-white/50 mt-1">One checkout — pick the full package or choose items à la carte.</p>
+          </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5 sm:col-span-2">
@@ -363,152 +290,147 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
               </Select>
             </div>
           </div>
-          {user?.email ? (
-            <p className="text-xs text-white/45">Stripe receipt will go to {user.email}</p>
-          ) : null}
+          {user?.email ? <p className="text-xs text-white/45">Receipt → {user.email}</p> : null}
 
-          {mode === "team_package" ? (
-            <>
-              <div className="rounded-xl bg-[#0a2040] border border-white/10 p-4 space-y-3">
-                <p className="font-semibold text-white">Package includes</p>
-                <p className="text-xs text-white/55">
-                  Registration, 2 singlets, shorts, short sleeve &amp; long sleeve tees — sizes required below.
-                </p>
-                <div className="grid sm:grid-cols-2 gap-3">
-                  <SizeSelect
-                    label="Singlet"
-                    value={bundleSizes.singletSize}
-                    onChange={(v) => setBundleSizes((s) => ({ ...s, singletSize: v }))}
-                    required
-                  />
-                  <SizeSelect
-                    label="Shorts"
-                    value={bundleSizes.shortsSize}
-                    onChange={(v) => setBundleSizes((s) => ({ ...s, shortsSize: v }))}
-                    required
-                  />
-                  <SizeSelect
-                    label="Short sleeve tee"
-                    value={bundleSizes.shortSleeveSize}
-                    onChange={(v) => setBundleSizes((s) => ({ ...s, shortSleeveSize: v }))}
-                    required
-                  />
-                  <SizeSelect
-                    label="Long sleeve tee"
-                    value={bundleSizes.longSleeveSize}
-                    onChange={(v) => setBundleSizes((s) => ({ ...s, longSleeveSize: v }))}
-                    required
-                  />
-                </div>
-              </div>
-              <TravelOptions
-                vanTravel={bundleTravel.vanTravel}
-                hotel={bundleTravel.hotel}
-                onVan={(v) => setBundleTravel((s) => ({ ...s, vanTravel: v }))}
-                onHotel={(v) => setBundleTravel((s) => ({ ...s, hotel: v }))}
+          <div className="rounded-xl bg-[#0a2040] border border-white/10 divide-y divide-white/10">
+            <label
+              className={cn(
+                "flex items-start gap-3 p-4 cursor-pointer min-h-[52px]",
+                fullPackage && "bg-[#CBAF5D]/10"
+              )}
+            >
+              <Checkbox
+                checked={fullPackage}
+                onCheckedChange={(c) => selectFullPackage(!!c)}
+                className="h-5 w-5 mt-0.5 data-[state=checked]:bg-[#CBAF5D]"
               />
-            </>
-          ) : (
-            <div className="space-y-4">
-              <label className="flex items-center gap-3 rounded-xl bg-[#0a2040] border border-white/10 p-4 cursor-pointer min-h-[52px]">
-                <Checkbox
-                  checked={individual.registration}
-                  onCheckedChange={(c) => setIndividual((s) => ({ ...s, registration: !!c }))}
-                  className="h-5 w-5 data-[state=checked]:bg-[#CBAF5D]"
-                />
-                <span className="font-medium text-white flex-1">Registration &amp; team fee</span>
-                <span className="text-[#CBAF5D] font-semibold">{formatDollars(NHSCA_REG_FEE_CENTS)}</span>
-              </label>
+              <span className="flex-1 min-w-0">
+                <span className="font-semibold text-white block">Full team package</span>
+                <span className="text-xs text-white/55 block mt-0.5">
+                  Registration, 2 singlets, shorts, short &amp; long sleeve tees
+                </span>
+              </span>
+              <span className="text-[#CBAF5D] font-bold shrink-0">{formatDollars(NHSCA_TEAM_PACKAGE_CENTS)}</span>
+            </label>
 
-              <div className="rounded-xl bg-[#0a2040] border border-white/10 p-4 space-y-3">
-                <p className="text-sm font-semibold text-white/80">Apparel — singlet</p>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-white/70">Qty</Label>
-                    <Select
-                      value={String(individual.singletQty)}
-                      onValueChange={(v) =>
-                        setIndividual((s) => ({
-                          ...s,
-                          singletQty: v === "2" ? 2 : v === "1" ? 1 : 0,
-                          ...(v === "0" ? { singletSize: "" } : {}),
-                        }))
+            {fullPackage ? (
+              <div className="p-4 grid grid-cols-1 min-[400px]:grid-cols-2 sm:grid-cols-4 gap-3">
+                <SizeSelect label="Singlet" value={bundleSizes.singletSize} onChange={(v) => setBundleSizes((s) => ({ ...s, singletSize: v }))} required compact />
+                <SizeSelect label="Shorts" value={bundleSizes.shortsSize} onChange={(v) => setBundleSizes((s) => ({ ...s, shortsSize: v }))} required compact />
+                <SizeSelect label="SS tee" value={bundleSizes.shortSleeveSize} onChange={(v) => setBundleSizes((s) => ({ ...s, shortSleeveSize: v }))} required compact />
+                <SizeSelect label="LS tee" value={bundleSizes.longSleeveSize} onChange={(v) => setBundleSizes((s) => ({ ...s, longSleeveSize: v }))} required compact />
+              </div>
+            ) : null}
+
+            {!fullPackage ? (
+              <>
+                <label className="flex items-center gap-3 p-4 cursor-pointer min-h-[48px]">
+                  <Checkbox
+                    checked={individual.registration}
+                    onCheckedChange={(c) => updateIndividual({ registration: !!c })}
+                    className="h-5 w-5 data-[state=checked]:bg-[#CBAF5D]"
+                  />
+                  <span className="text-sm text-white flex-1">Registration &amp; team fee</span>
+                  <span className="text-sm text-[#CBAF5D] font-semibold">{formatDollars(NHSCA_REG_FEE_CENTS)}</span>
+                </label>
+
+                <div className="p-4 flex flex-wrap items-end gap-3">
+                  <div className="flex items-center gap-3 flex-1 min-w-[200px]">
+                    <Checkbox
+                      checked={individual.singletQty > 0}
+                      onCheckedChange={(c) =>
+                        updateIndividual({
+                          singletQty: c ? 1 : 0,
+                          singletSize: c ? individual.singletSize : "",
+                        })
                       }
-                    >
-                      <SelectTrigger className={hubSelectTrigger}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="0">None</SelectItem>
-                        <SelectItem value="1">1 — {formatDollars(NHSCA_SINGLET_EACH_CENTS)}</SelectItem>
-                        <SelectItem value="2">2 — {formatDollars(NHSCA_SINGLET_TWO_CENTS)}</SelectItem>
-                      </SelectContent>
-                    </Select>
+                      className="h-5 w-5 data-[state=checked]:bg-[#CBAF5D]"
+                    />
+                    <span className="text-sm text-white flex-1">Singlet</span>
                   </div>
                   {individual.singletQty > 0 ? (
-                    <SizeSelect
-                      label="Singlet size"
-                      value={individual.singletSize}
-                      onChange={(v) => setIndividual((s) => ({ ...s, singletSize: v }))}
-                      required
-                    />
-                  ) : null}
+                    <>
+                      <Select
+                        value={String(individual.singletQty)}
+                        onValueChange={(v) =>
+                          updateIndividual({
+                            singletQty: v === "2" ? 2 : 1,
+                          })
+                        }
+                      >
+                        <SelectTrigger className={cn(hubSelectTrigger, "w-[130px]")}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1 — {formatDollars(NHSCA_SINGLET_EACH_CENTS)}</SelectItem>
+                          <SelectItem value="2">2 — {formatDollars(NHSCA_SINGLET_TWO_CENTS)}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <SizeSelect label="Size" value={individual.singletSize} onChange={(v) => updateIndividual({ singletSize: v })} required compact />
+                    </>
+                  ) : (
+                    <span className="text-xs text-white/40 pb-2">1 {formatDollars(NHSCA_SINGLET_EACH_CENTS)} · 2 {formatDollars(NHSCA_SINGLET_TWO_CENTS)}</span>
+                  )}
                 </div>
-              </div>
 
-              <div className="rounded-xl bg-[#0a2040] border border-white/10 p-4 space-y-3">
-                <p className="text-sm font-semibold text-white/80">Apparel — other</p>
-                <div className="space-y-3">
-                  {(
-                    [
-                      { key: "shorts" as const, label: "Shorts", cents: NHSCA_SHORTS_CENTS, sizeKey: "shortsSize" as const },
-                      { key: "shortSleeve" as const, label: "Short sleeve tee", cents: NHSCA_SHORT_SLEEVE_CENTS, sizeKey: "shortSleeveSize" as const },
-                      { key: "longSleeve" as const, label: "Long sleeve tee", cents: NHSCA_LONG_SLEEVE_CENTS, sizeKey: "longSleeveSize" as const },
-                    ] as const
-                  ).map((item) => (
-                    <div key={item.key} className="space-y-2">
-                      <label className="flex items-center gap-3 cursor-pointer min-h-[44px]">
-                        <Checkbox
-                          checked={individual[item.key]}
-                          onCheckedChange={(c) =>
-                            setIndividual((s) => ({
-                              ...s,
-                              [item.key]: !!c,
-                              ...(c ? {} : { [item.sizeKey]: "" }),
-                            }))
-                          }
-                          className="h-5 w-5 data-[state=checked]:bg-[#CBAF5D]"
-                        />
-                        <span className="text-sm text-white flex-1">{item.label}</span>
-                        <span className="text-sm text-[#CBAF5D]">{formatDollars(item.cents)}</span>
-                      </label>
-                      {individual[item.key] ? (
-                        <SizeSelect
-                          label={`${item.label} size`}
-                          value={individual[item.sizeKey]}
-                          onChange={(v) => setIndividual((s) => ({ ...s, [item.sizeKey]: v }))}
-                          required
-                        />
-                      ) : null}
-                    </div>
-                  ))}
-                </div>
-              </div>
+                {(
+                  [
+                    { key: "shorts" as const, label: "Shorts", cents: NHSCA_SHORTS_CENTS, sizeKey: "shortsSize" as const },
+                    { key: "shortSleeve" as const, label: "Short sleeve tee", cents: NHSCA_SHORT_SLEEVE_CENTS, sizeKey: "shortSleeveSize" as const },
+                    { key: "longSleeve" as const, label: "Long sleeve tee", cents: NHSCA_LONG_SLEEVE_CENTS, sizeKey: "longSleeveSize" as const },
+                  ] as const
+                ).map((item) => (
+                  <div key={item.key} className="p-4 space-y-3">
+                    <label className="flex items-center gap-3 cursor-pointer min-h-[44px]">
+                      <Checkbox
+                        checked={individual[item.key]}
+                        onCheckedChange={(c) =>
+                          updateIndividual({
+                            [item.key]: !!c,
+                            ...(c ? {} : { [item.sizeKey]: "" }),
+                          })
+                        }
+                        className="h-5 w-5 data-[state=checked]:bg-[#CBAF5D]"
+                      />
+                      <span className="text-sm text-white flex-1">{item.label}</span>
+                      <span className="text-sm text-[#CBAF5D]">{formatDollars(item.cents)}</span>
+                    </label>
+                    {individual[item.key] ? (
+                      <SizeSelect label="Size" value={individual[item.sizeKey]} onChange={(v) => updateIndividual({ [item.sizeKey]: v })} required compact />
+                    ) : null}
+                  </div>
+                ))}
+              </>
+            ) : null}
 
-              <TravelOptions
-                vanTravel={individual.vanTravel}
-                hotel={individual.hotel}
-                onVan={(v) => setIndividual((s) => ({ ...s, vanTravel: v }))}
-                onHotel={(v) => setIndividual((s) => ({ ...s, hotel: v }))}
-              />
-            </div>
-          )}
+            <label className="flex items-center gap-3 p-4 cursor-pointer min-h-[48px]">
+              <Checkbox checked={vanTravel} onCheckedChange={(c) => setVanTravel(!!c)} className="h-5 w-5 data-[state=checked]:bg-[#CBAF5D]" />
+              <span className="text-sm text-white flex-1">
+                Van transportation{" "}
+                <span className="text-[#CBAF5D]">{vanCents > 0 ? `${formatDollars(vanCents)} / person` : ""}</span>
+              </span>
+            </label>
+            <label className="flex items-center gap-3 p-4 cursor-pointer min-h-[48px]">
+              <Checkbox checked={hotel} onCheckedChange={(c) => setHotel(!!c)} className="h-5 w-5 data-[state=checked]:bg-[#CBAF5D]" />
+              <span className="text-sm text-white flex-1">
+                Hotel room{" "}
+                <span className="text-[#CBAF5D]">{hotelCents > 0 ? `${formatDollars(hotelCents)} / room` : ""}</span>
+              </span>
+            </label>
+          </div>
+
+          {!fullPackage ? (
+            <p className="text-xs text-white/45 text-center">
+              Need everything? Check <strong className="text-white/70">Full team package</strong> above instead.
+            </p>
+          ) : null}
+
+          <NhscaHubTravelRoster compact />
 
           <div className="rounded-xl bg-[#002147] border border-[#CBAF5D]/30 p-4 space-y-3">
-            <p className="text-xs font-bold text-[#CBAF5D] uppercase">Stripe checkout</p>
             <LineItemSummary items={lineItems} />
             <div className="flex justify-between items-center border-t border-white/10 pt-3">
-              <span className="font-bold text-white text-lg">Total due today</span>
+              <span className="font-bold text-white">Total</span>
               <span className="font-bold text-[#CBAF5D] text-2xl tabular-nums">{formatDollars(totalCents)}</span>
             </div>
           </div>
@@ -526,7 +448,7 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
             ) : (
               <>
                 <CreditCard className="h-6 w-6" />
-                Pay with Stripe — {formatDollars(totalCents)}
+                Pay {formatDollars(totalCents)}
               </>
             )}
           </button>

@@ -105,7 +105,7 @@ export function NhscaDualsResultsCommandCenter({ snapshot }: { snapshot: NhscaDu
                   type="button"
                   onClick={() => setAthleteId(active ? null : w.wrestlerId)}
                   className={cn(
-                    "shrink-0 snap-start min-w-[100px] rounded-lg border px-2.5 py-2 text-left transition-colors",
+                    "shrink-0 snap-start min-w-[100px] min-h-[44px] rounded-lg border px-2.5 py-2 text-left transition-colors",
                     active
                       ? "bg-[#CBAF5D] text-[#002147] border-[#CBAF5D]"
                       : "bg-[#002147]/50 text-white/85 border-white/12 hover:border-[#CBAF5D]/35"
@@ -131,7 +131,7 @@ export function NhscaDualsResultsCommandCenter({ snapshot }: { snapshot: NhscaDu
           </p>
           <span className="text-[10px] text-white/35">Updates every 10s</span>
         </div>
-        <div className="p-3 space-y-2.5 max-h-[min(65vh,640px)] overflow-y-auto">
+        <div className="p-3 sm:p-3 space-y-2.5 sm:max-h-[min(65vh,640px)] sm:overflow-y-auto">
           {filteredFeed.length === 0 ? (
             <p className="text-sm text-white/50 text-center py-8">
               {athleteId ? "No bouts for this athlete yet." : "Duals will appear here when the event starts."}
@@ -226,7 +226,7 @@ function FilterBar({
             key={o.id}
             type="button"
             className={cn(
-              "flex-1 min-h-[40px] rounded-md text-xs sm:text-sm font-bold transition-colors",
+              "flex-1 min-h-[44px] rounded-md text-xs sm:text-sm font-bold transition-colors px-1",
               scope === o.id ? "bg-[#CBAF5D] text-[#002147]" : "text-white/65 hover:text-white"
             )}
             onClick={() => onScopeChange(o.id)}
@@ -253,7 +253,7 @@ function FilterPill({
       type="button"
       onClick={onClick}
       className={cn(
-        "shrink-0 snap-start min-h-[36px] px-3.5 rounded-lg text-sm font-semibold border transition-colors",
+        "shrink-0 snap-start min-h-[44px] px-3.5 rounded-lg text-sm font-semibold border transition-colors",
         active
           ? "bg-[#CBAF5D] text-[#002147] border-[#CBAF5D]"
           : "bg-[#0a2040] text-white/75 border-white/12 hover:border-white/25"
@@ -324,7 +324,7 @@ function LeaderList({
               <button
                 type="button"
                 onClick={item.onClick}
-                className="w-full flex items-center gap-2 rounded-lg bg-[#002147]/45 border border-white/8 px-2.5 py-2 text-left hover:border-[#CBAF5D]/30 transition-colors"
+                className="w-full flex items-center gap-2 rounded-lg bg-[#002147]/45 border border-white/8 px-2.5 py-2.5 min-h-[44px] text-left hover:border-[#CBAF5D]/30 transition-colors"
               >
                 {item.rank != null ? (
                   <span className="text-sm font-black text-[#CBAF5D]/70 w-5 tabular-nums">{item.rank}</span>
@@ -489,7 +489,7 @@ function DualFeedCard({
               {dayName}
               {poolNumber != null ? ` · Pool ${poolNumber}` : ""} · {dual.round_name}
             </p>
-            <p className="text-sm font-bold text-white truncate">
+            <p className="text-sm font-bold text-white leading-snug line-clamp-2">
               {teamName} vs {dual.opponent_team_name}
             </p>
           </div>
@@ -506,7 +506,7 @@ function DualFeedCard({
           <span className="text-white/25 text-xs font-bold">vs</span>
           <div className="flex-1 text-center rounded-md py-1.5 border border-white/10">
             <p className="text-2xl font-black tabular-nums text-white leading-none">{dual.opponent_score}</p>
-            <p className="text-[9px] text-white/40 mt-0.5 truncate max-w-[6rem] mx-auto">{dual.opponent_team_name}</p>
+            <p className="text-[9px] text-white/40 mt-0.5 line-clamp-2 leading-tight px-0.5">{dual.opponent_team_name}</p>
           </div>
         </div>
 
