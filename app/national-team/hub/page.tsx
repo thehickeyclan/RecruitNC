@@ -180,6 +180,7 @@ export default function NationalTeamHubPage() {
         )}
 
         <NhscaHubTabs
+          isAdmin={!!data.isAdmin}
           rosterContent={
             rosterSections && rosterSections.length > 0 ? (
               <div className="space-y-6 md:space-y-8">
