@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import useSWR from "swr"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,8 +13,6 @@ import { Loader2, CreditCard, Check, Package, Shirt, Bus, AlertCircle } from "lu
 import { useSearchParams } from "next/navigation"
 
 const SIZES = ["YS", "YM", "YL", "AS", "AM", "AL", "AXL", "A2XL"]
-
-const fetcher = (url: string) => fetch(url).then(r => r.json())
 
 interface CartItem {
   productId: string
@@ -100,6 +97,10 @@ export function NhscaPaymentTab() {
   const [team, setTeam] = useState<"national" | "select">("national")
   const [cancelled, setCancelled] = useState(false)
   const searchParams = useSearchParams()
+  
+  // Orders state - simple fetch pattern
+  const [orders, setOrders] = useState<any[]>([])
+  const [loadingOrders, setLoadingOrders] = useState(true)
 
   // Check for payment status in URL
   useEffect(() => {
@@ -109,14 +110,23 @@ export function NhscaPaymentTab() {
     }
   }, [searchParams])
 
-  // Fetch user's orders
-  const { data: ordersData, mutate: mutateOrders } = useSWR("/api/nhsca-duals/payments", fetcher, { 
-    revalidateOnFocus: true,
-    dedupingInterval: 0
-  })
-  const orders = ordersData?.payments || []
-  const [existingPayments, setExistingPayments] = useState<Array<{ id: string; status: string; amount_cents: number; created_at: string; items: unknown[] }>>([])
-  const [loadingPayments, setLoadingPayments] = useState(true)
+  // Load orders on mount
+  useEffect(() => {
+    async function loadOrders() {
+      try {
+        const res = await fetch("/api/nhsca-duals/payments")
+        if (res.ok) {
+          const data = await res.json()
+          setOrders(data.payments || [])
+        }
+      } catch (err) {
+        console.error("Failed to load orders:", err)
+      } finally {
+        setLoadingOrders(false)
+      }
+    }
+    loadOrders()
+  }, [])
 
   // Calculate cart based on mode
   useEffect(() => {
@@ -251,7 +261,7 @@ if (longSleeveSize && longSleeveSize !== "none" && longSleeveSize !== "") {
   }
 
   // Show existing paid payments
-  const paidPayments = existingPayments.filter(p => p.status === "paid")
+  const paidPayments = orders.filter(p => p.status === "paid")
 
   return (
     <Tabs defaultValue="place-order" className="w-full">
