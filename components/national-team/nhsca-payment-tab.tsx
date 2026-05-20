@@ -82,9 +82,9 @@ export function NhscaPaymentTab() {
   const [cart, setCart] = useState<CartItem[]>([])
   const [singletQty, setSingletQty] = useState(1)
   const [singletSize, setSingletSize] = useState("")
-  const [shortsSize, setShortsSize] = useState("")
-  const [shortSleeveSize, setShortSleeveSize] = useState("")
-  const [longSleeveSize, setLongSleeveSize] = useState("")
+const [shortsSize, setShortsSize] = useState("none")
+const [shortSleeveSize, setShortSleeveSize] = useState("none")
+const [longSleeveSize, setLongSleeveSize] = useState("none")
   const [wantTransport, setWantTransport] = useState(false)
   const [athleteName, setAthleteName] = useState("")
   const [team, setTeam] = useState<"national" | "select">("national")
@@ -143,26 +143,26 @@ export function NhscaPaymentTab() {
         })
       }
       
-      // Add individual apparel items
-      if (shortsSize) {
+// Add individual apparel items
+if (shortsSize && shortsSize !== "none") {
         newCart.push({
           productId: PRODUCTS.shorts.id,
           name: PRODUCTS.shorts.name,
           priceInCents: PRODUCTS.shorts.priceInCents,
           quantity: 1,
           size: shortsSize,
-        })
-      }
-      if (shortSleeveSize) {
+})
+}
+if (shortSleeveSize && shortSleeveSize !== "none") {
         newCart.push({
           productId: PRODUCTS.shortSleeve.id,
           name: PRODUCTS.shortSleeve.name,
           priceInCents: PRODUCTS.shortSleeve.priceInCents,
           quantity: 1,
           size: shortSleeveSize,
-        })
-      }
-      if (longSleeveSize) {
+})
+}
+if (longSleeveSize && longSleeveSize !== "none") {
         newCart.push({
           productId: PRODUCTS.longSleeve.id,
           name: PRODUCTS.longSleeve.name,
@@ -422,7 +422,7 @@ export function NhscaPaymentTab() {
                         <SelectValue placeholder="None" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
                         {SIZES.map(s => (
                           <SelectItem key={s} value={s}>{s}</SelectItem>
                         ))}
@@ -436,7 +436,7 @@ export function NhscaPaymentTab() {
                         <SelectValue placeholder="None" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
                         {SIZES.map(s => (
                           <SelectItem key={s} value={s}>{s}</SelectItem>
                         ))}
@@ -450,7 +450,7 @@ export function NhscaPaymentTab() {
                         <SelectValue placeholder="None" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
                         {SIZES.map(s => (
                           <SelectItem key={s} value={s}>{s}</SelectItem>
                         ))}
