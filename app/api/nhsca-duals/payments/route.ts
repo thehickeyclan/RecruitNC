@@ -22,18 +22,32 @@ export async function GET(req: NextRequest) {
     const isAdmin = profile?.role === "admin"
     const statusFilter = req.nextUrl.searchParams.get("status")
 
-    // Fetch from NHSCA Duals payments table - show ALL orders
-    const { data: nhscaPayments } = await supabase
+    // Fetch from NHSCA Duals payments table
+    let nhscaQuery = supabase
       .from("nhsca_duals_payments")
       .select("id, user_id, athlete_name, team, status, amount_cents, items, stripe_session_id, paid_at, created_at")
       .order("created_at", { ascending: false })
 
-    // Fetch from old orders table (national team registrations) - show ALL orders
-    const { data: legacyOrders } = await supabase
+    // Regular users only see their own orders
+    if (!isAdmin) {
+      nhscaQuery = nhscaQuery.eq("user_id", user.id)
+    }
+
+    const { data: nhscaPayments } = await nhscaQuery
+
+    // Fetch from old orders table (national team registrations)
+    let ordersQuery = supabase
       .from("orders")
-      .select("id, user_id, athlete_name, registration_fee, apparel_fee, total_amount, status, created_at")
+      .select("id, customer_id, athlete_name, registration_fee, apparel_fee, total_amount, status, created_at")
       .eq("campaign", "national_team")
       .order("created_at", { ascending: false })
+
+    // Regular users only see their own orders - use customer_id not user_id
+    if (!isAdmin) {
+      ordersQuery = ordersQuery.eq("customer_id", user.id)
+    }
+
+    const { data: legacyOrders } = await ordersQuery
 
     // Transform and merge both
     const nhscaFormatted = (nhscaPayments || []).map(p => ({
@@ -49,7 +63,7 @@ export async function GET(req: NextRequest) {
 
     const legacyFormatted = (legacyOrders || []).map(o => ({
       id: o.id,
-      user_id: o.user_id,
+      user_id: o.customer_id,
       athlete_name: o.athlete_name || "—",
       amount_cents: (o.total_amount || 0) * 100,
       status: o.status,
