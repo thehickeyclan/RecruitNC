@@ -38,12 +38,8 @@ export const NHSCA_DUALS_2026_SELECT_ROSTER: NhscaDualsContactRosterRow[] = [
   { wrestler: "Cole Schuster", weightClass: "138", phone: "646-992-1092", parentContact: "Cheryl 646-316-8062" },
   { wrestler: "Shane Schuster", weightClass: "132", phone: "646-992-1090", parentContact: "Cheryl 646-316-8062" },
   { wrestler: "Holt Quincy", weightClass: "126", phone: "252-886-0930", parentContact: "Hunter 252-266-6457" },
-  {
-    wrestler: "Adam Walker / Danny McDermott",
-    weightClass: "120",
-    phone: "252-619-3943 · 862-505-3009",
-    parentContact: "Dan Walker 252-619-3943 · Jackie 973-229-7608",
-  },
+  { wrestler: "Adam Walker", weightClass: "120", phone: "252-619-3943", parentContact: "Dan Walker 252-619-3943" },
+  { wrestler: "Danny McDermott", weightClass: "120", phone: "862-505-3009", parentContact: "Jackie 973-229-7608" },
   { wrestler: "Xavier Bernthal", weightClass: "113", phone: "252-259-3102", parentContact: "Jim 252-259-3416" },
   { wrestler: "Kristopher Kerr", weightClass: "106", phone: "609-667-3349", parentContact: "Heather 609-605-4801" },
 ]

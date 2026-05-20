@@ -12,82 +12,120 @@ function pad2(n: number) {
   return String(n).padStart(2, "0")
 }
 
-/** Matches National Team schedule tile — gold band + weigh-in countdown (single place for dates). */
+/** Gold hero band on navy hub — opaque background so text stays readable. */
 export function NhscaHubHero() {
   const countdown = useWeighInCountdown()
 
   return (
-    <section className="text-white pt-6 md:pt-8 pb-4">
+    <section className="pt-6 md:pt-8 pb-4">
       <div className="container mx-auto px-4 sm:px-6 max-w-4xl">
         <HardLink
           href="/national-team"
-          className="inline-flex min-h-[40px] items-center text-sm font-medium text-white/80 hover:text-white mb-6"
+          className="inline-flex min-h-[40px] items-center text-sm font-medium text-white/80 hover:text-white mb-5"
         >
           ← National Team
         </HardLink>
 
-        <div className="rounded-2xl border-2 border-[#B8982E] bg-gradient-to-br from-[#CBAF5D]/30 via-[#D4BC6A]/25 to-[#B8982E]/30 p-5 md:p-8 shadow-lg text-[#002147]">
-          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
-            <div className="min-w-0 flex-1">
-              <Image
-                src="/images/nhsca-national-duals-logo.png"
-                alt="NHSCA National Duals"
-                width={160}
-                height={64}
-                className="h-10 sm:h-12 w-auto object-contain mb-3"
-                priority
-              />
-              <h1 className="text-2xl md:text-3xl font-black leading-tight">NHSCA Duals 2026</h1>
-              <p className="text-sm md:text-base text-[#002147]/85 mt-1">
-                Fri May 22 – Mon May 25 · Virginia Beach Sports Center
-              </p>
-              <p className="text-sm font-medium text-[#003366] mt-2">
-                Team hub for registered NC United families — roster, logistics, watch links
-              </p>
-            </div>
+        <div className="relative overflow-hidden rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.45)] ring-1 ring-[#002147]/20">
+          <div
+            className="absolute inset-0 bg-gradient-to-br from-[#F2E8C9] via-[#D4BC6A] to-[#B8982E]"
+            aria-hidden
+          />
+          <div
+            className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.35),transparent_55%)]"
+            aria-hidden
+          />
 
-            <div className="shrink-0 md:text-right">
-              <p className="font-bold uppercase tracking-wider text-xs mb-1">Weigh-ins open</p>
-              <p className="text-sm text-[#002147]/80 mb-3">Fri May 22 · 2:00 PM ET</p>
-              {countdown.ready ? (
-                <p className="text-xl md:text-2xl font-black">We&apos;re here!</p>
-              ) : (
-                <div className="flex gap-3 md:gap-4 md:justify-end">
-                  {[
-                    { v: countdown.days, l: "Days", pad: false },
-                    { v: countdown.hours, l: "Hrs", pad: true },
-                    { v: countdown.minutes, l: "Min", pad: true },
-                    { v: countdown.seconds, l: "Sec", pad: true },
-                  ].map(({ v, l, pad }) => (
-                    <div key={l} className="text-center">
-                      <div className="text-2xl md:text-3xl font-black tabular-nums">{pad ? pad2(v) : v}</div>
-                      <div className="text-[10px] font-semibold uppercase tracking-wider text-[#002147]/70">{l}</div>
-                    </div>
-                  ))}
+          <div className="relative p-5 sm:p-6 md:p-8 text-[#002147]">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+              <div className="min-w-0 flex-1 space-y-3">
+                <div className="inline-flex rounded-xl bg-white p-2.5 shadow-md ring-1 ring-[#002147]/10">
+                  <Image
+                    src="/images/nhsca-national-duals-logo.png"
+                    alt="NHSCA National Duals"
+                    width={180}
+                    height={72}
+                    className="h-9 sm:h-11 w-auto object-contain"
+                    priority
+                  />
                 </div>
-              )}
-            </div>
-          </div>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#003366]/80">
+                    NC United · Team Hub
+                  </p>
+                  <h1 className="mt-1 text-2xl sm:text-3xl md:text-4xl font-black leading-tight tracking-tight text-[#002147]">
+                    NHSCA Duals 2026
+                  </h1>
+                </div>
+                <p className="text-sm sm:text-base font-medium text-[#002147]/90 leading-snug">
+                  Fri May 22 – Mon May 25
+                  <span className="text-[#002147]/50 mx-1.5">·</span>
+                  Virginia Beach Sports Center
+                </p>
+                <p className="text-sm text-[#003366]/85 max-w-lg leading-relaxed">
+                  Rosters, logistics, and watch links for registered NC United families.
+                </p>
+              </div>
 
-          <div className="mt-6 flex flex-col sm:flex-row flex-wrap gap-2 border-t border-[#002147]/15 pt-5">
-            <a
-              href={GROUPME_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex min-h-[44px] flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-xl bg-[#002147] px-4 py-2.5 text-sm font-semibold text-[#D3B574] hover:bg-[#003366] transition-colors"
-            >
-              Join GroupMe
-              <ExternalLink className="h-3.5 w-3.5" />
-            </a>
-            <a
-              href={NHSCA_OFFICIAL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex min-h-[44px] flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-xl border-2 border-[#002147]/30 bg-white/60 px-4 py-2.5 text-sm font-semibold text-[#002147] hover:bg-white transition-colors"
-            >
-              NHSCA official site
-              <ExternalLink className="h-3.5 w-3.5" />
-            </a>
+              <div className="w-full lg:w-auto lg:min-w-[280px] shrink-0">
+                <div className="rounded-xl bg-[#002147] p-4 shadow-lg ring-1 ring-[#001428]/50">
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                    <span className="inline-flex items-center rounded-full bg-[#B31B1B] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+                      Live
+                    </span>
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-[#D3B574]">
+                      Weigh-ins open
+                    </p>
+                  </div>
+                  <p className="text-xs text-white/75 mb-3">Fri May 22 · 2:00 PM ET</p>
+                  {countdown.ready ? (
+                    <p className="text-center text-2xl font-black text-white py-2">We&apos;re here!</p>
+                  ) : (
+                    <div className="grid grid-cols-4 gap-2">
+                      {[
+                        { v: countdown.days, l: "Days", pad: false },
+                        { v: countdown.hours, l: "Hrs", pad: true },
+                        { v: countdown.minutes, l: "Min", pad: true },
+                        { v: countdown.seconds, l: "Sec", pad: true },
+                      ].map(({ v, l, pad }) => (
+                        <div
+                          key={l}
+                          className="rounded-lg bg-white/10 px-1 py-2.5 text-center backdrop-blur-sm"
+                        >
+                          <div className="text-xl sm:text-2xl font-black tabular-nums text-white leading-none">
+                            {pad ? pad2(v) : v}
+                          </div>
+                          <div className="mt-1 text-[9px] font-bold uppercase tracking-wider text-[#D3B574]">
+                            {l}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-col sm:flex-row gap-2 border-t border-[#002147]/15 pt-5">
+              <a
+                href={GROUPME_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-[48px] flex-1 sm:flex-none items-center justify-center gap-2 rounded-xl bg-[#002147] px-5 py-3 text-sm font-bold text-white hover:bg-[#003366] transition-colors shadow-md"
+              >
+                Join GroupMe
+                <ExternalLink className="h-4 w-4 opacity-80" />
+              </a>
+              <a
+                href={NHSCA_OFFICIAL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-[48px] flex-1 sm:flex-none items-center justify-center gap-2 rounded-xl border-2 border-[#002147] bg-white px-5 py-3 text-sm font-bold text-[#002147] hover:bg-[#002147]/5 transition-colors"
+              >
+                NHSCA official site
+                <ExternalLink className="h-4 w-4 opacity-70" />
+              </a>
+            </div>
           </div>
         </div>
       </div>

@@ -1,47 +1,31 @@
 "use client"
 
+const NHSCA_TICKETS_URL =
+  "https://www.etix.com/ticket/p/81773822/2026-nhsca-national-duals-wrestling-virginia-beach-virginia-beach-sports-center"
+
 /** NHSCA Duals 2026 — NC United team hub FAQ (in-person reference). */
 export function NHSCADuals2026TeamHubFaq() {
   return (
     <div className="space-y-8 text-sm text-white/90">
-      <header>
-        <p className="text-[#D3B574] font-bold uppercase tracking-wider text-xs mb-1">NHSCA Duals 2026</p>
-        <h2 className="text-lg font-bold text-white">NC United Team Hub — FAQ</h2>
-      </header>
-
       <section>
-        <h3 className="text-[#D3B574] font-semibold uppercase tracking-wide text-xs mb-2">Event overview</h3>
-        <dl className="space-y-3">
-          <div>
-            <dt className="font-semibold text-white">When is NHSCA Duals?</dt>
-            <dd className="mt-1 text-white/85">
-              <strong>Friday May 22 – Monday May 25, 2026</strong>
-              <ul className="mt-2 list-disc pl-5 space-y-1">
-                <li>Friday = travel + weigh-ins</li>
-                <li>Saturday = Day 1 competition</li>
-                <li>Sunday = Day 2 competition</li>
-                <li>Monday = Championship bracket only (advancing teams)</li>
-              </ul>
-            </dd>
-          </div>
-          <div>
-            <dt className="font-semibold text-white">Where?</dt>
-            <dd className="mt-1 text-white/85">
-              <strong>Virginia Beach Sports Center (VBSC)</strong>
-            </dd>
-          </div>
-          <div>
-            <dt className="font-semibold text-white">How many matches is my athlete guaranteed?</dt>
-            <dd className="mt-1 text-white/85">
-              Every team receives a <strong>minimum of 6 dual matches</strong>.
-              <ul className="mt-2 list-disc pl-5 space-y-1">
-                <li>Day 1 = 3 duals</li>
-                <li>Day 2 = minimum 3 duals</li>
-                <li>Day 3 only for teams that advance to the championship bracket</li>
-              </ul>
-            </dd>
-          </div>
-        </dl>
+        <h3 className="text-[#D3B574] font-semibold uppercase tracking-wide text-xs mb-2">At a glance</h3>
+        <ul className="space-y-2 list-disc pl-5 text-white/85">
+          <li>
+            <strong>Minimum 6 dual matches</strong> per team (3 on Day 1, at least 3 on Day 2; Monday only if you
+            advance).
+          </li>
+          <li>
+            Full NHSCA schedule, rules, and brackets:{" "}
+            <a
+              href="https://nhsca-events.com/national-duals/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-[#D3B574] underline underline-offset-2 hover:text-white"
+            >
+              nhsca-events.com/national-duals
+            </a>
+          </li>
+        </ul>
       </section>
 
       <section>
@@ -136,10 +120,15 @@ export function NHSCADuals2026TeamHubFaq() {
         <h3 className="text-[#D3B574] font-semibold uppercase tracking-wide text-xs mb-2">Tickets</h3>
         <ul className="space-y-2 list-disc pl-5">
           <li>
-            <strong>Ticket link:</strong>{" "}
-            <span className="text-white/70 italic">
-              Insert ticket URL when ready — meanwhile check GroupMe for the direct link.
-            </span>
+            <strong>Tickets:</strong>{" "}
+            <a
+              href={NHSCA_TICKETS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-[#D3B574] underline underline-offset-2 hover:text-white"
+            >
+              Buy on Etix (Virginia Beach Sports Center)
+            </a>
           </li>
           <li><strong>Saturday:</strong> Everyone wrestles.</li>
           <li><strong>Sunday:</strong> Everyone wrestles.</li>
@@ -211,20 +200,32 @@ export function NHSCADuals2026TeamHubFaq() {
 
       <section>
         <h3 className="text-[#D3B574] font-semibold uppercase tracking-wide text-xs mb-2">Contacts</h3>
-        <ul className="space-y-2">
+        <ul className="space-y-3">
           <li>
-            <strong>Operations:</strong> Matt Hickey · Lisa Hickey
+            <strong>Operations:</strong> Matt Hickey{" "}
+            <a href="tel:+16316625409" className="text-[#D3B574] font-medium hover:text-white hover:underline">
+              (631) 662-5409
+            </a>
+            {" · "}Lisa Hickey
           </li>
           <li>
-            <strong>Coaches:</strong> Colton Palmer · Michael Macchiavello · Araad Fischer
+            <strong>Coaches:</strong>{" "}
+            <a href="tel:+19194519864" className="text-[#D3B574] font-medium hover:text-white hover:underline">
+              Colton Palmer
+            </a>
+            {" · "}
+            <a href="tel:+17048917436" className="text-[#D3B574] font-medium hover:text-white hover:underline">
+              Michael Macchiavello
+            </a>
+            {" · "}
+            <a href="tel:+19194508266" className="text-[#D3B574] font-medium hover:text-white hover:underline">
+              Araad Fischer
+            </a>
           </li>
           <li>
             <strong>Food:</strong> Cheryl Shuster
           </li>
         </ul>
-        <p className="mt-3 text-white/75 text-xs">
-          Main operations line (631) 662-5409 and coach phones are listed in Event details · coaches below.
-        </p>
       </section>
     </div>
   )
