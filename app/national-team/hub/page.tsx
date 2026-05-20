@@ -174,6 +174,7 @@ export default function NationalTeamHubPage() {
   }
 
   const nhscaInfoOnly = data.nhscaInfoOnly ?? false
+  const events = data.events ?? []
 
   return (
     <div className="min-h-screen bg-[#0B2545]">
