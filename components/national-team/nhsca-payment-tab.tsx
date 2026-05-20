@@ -80,11 +80,11 @@ export function NhscaPaymentTab() {
 
   const [mode, setMode] = useState<"bundle" | "individual">("bundle")
   const [cart, setCart] = useState<CartItem[]>([])
-  const [singletQty, setSingletQty] = useState(1)
+  const [singletQty, setSingletQty] = useState(0)
   const [singletSize, setSingletSize] = useState("")
-const [shortsSize, setShortsSize] = useState("none")
-const [shortSleeveSize, setShortSleeveSize] = useState("none")
-const [longSleeveSize, setLongSleeveSize] = useState("none")
+  const [shortsSize, setShortsSize] = useState("")
+  const [shortSleeveSize, setShortSleeveSize] = useState("")
+  const [longSleeveSize, setLongSleeveSize] = useState("")
   const [wantTransport, setWantTransport] = useState(false)
   const [athleteName, setAthleteName] = useState("")
   const [team, setTeam] = useState<"national" | "select">("national")
@@ -150,7 +150,7 @@ const [longSleeveSize, setLongSleeveSize] = useState("none")
       }
       
 // Add individual apparel items
-if (shortsSize && shortsSize !== "none") {
+if (shortsSize && shortsSize !== "none" && shortsSize !== "") {
         newCart.push({
           productId: PRODUCTS.shorts.id,
           name: PRODUCTS.shorts.name,
@@ -159,7 +159,7 @@ if (shortsSize && shortsSize !== "none") {
           size: shortsSize,
 })
 }
-if (shortSleeveSize && shortSleeveSize !== "none") {
+if (shortSleeveSize && shortSleeveSize !== "none" && shortSleeveSize !== "") {
         newCart.push({
           productId: PRODUCTS.shortSleeve.id,
           name: PRODUCTS.shortSleeve.name,
@@ -168,7 +168,7 @@ if (shortSleeveSize && shortSleeveSize !== "none") {
           size: shortSleeveSize,
 })
 }
-if (longSleeveSize && longSleeveSize !== "none") {
+if (longSleeveSize && longSleeveSize !== "none" && longSleeveSize !== "") {
         newCart.push({
           productId: PRODUCTS.longSleeve.id,
           name: PRODUCTS.longSleeve.name,
