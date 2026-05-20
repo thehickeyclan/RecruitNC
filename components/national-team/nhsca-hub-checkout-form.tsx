@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { hubPanelClass } from "@/components/national-team/nhsca-hub-theme"
+import { NhscaHubTeamGearShowcase } from "@/components/national-team/nhsca-hub-team-gear-showcase"
 import { NhscaHubTravelRoster } from "@/components/national-team/nhsca-hub-travel-roster"
 import { NHSCA_INTEREST_WEIGHT_CLASSES } from "@/lib/national-team-weight-classes"
 import {
@@ -225,6 +226,8 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
 
   return (
     <div className="space-y-4">
+      <NhscaHubTeamGearShowcase />
+
       <article className={cn(hubPanelClass, "overflow-hidden")}>
         <div className="p-4 sm:p-5 md:p-6 space-y-5">
           <div>
