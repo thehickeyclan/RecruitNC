@@ -259,6 +259,38 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ received: true })
   }
 
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object as Stripe.Checkout.Session
+    const meta = (session.metadata || {}) as Record<string, string>
+
+    // NHSCA Duals 2026 — mark payment as paid
+    if (meta.category === "nhsca_duals_2026") {
+      const paymentRecordId = meta.payment_record_id
+      const sessionId = session.id
+      
+      if (paymentRecordId) {
+        const { error } = await admin
+          .from("nhsca_duals_payments")
+          .update({
+            status: "paid",
+            stripe_payment_intent_id: session.payment_intent as string || null,
+            paid_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", paymentRecordId)
+        
+        if (error) {
+          console.error("[webhooks/stripe] NHSCA duals payment update:", error)
+        } else {
+          console.log("[webhooks/stripe] NHSCA duals payment marked paid:", paymentRecordId)
+        }
+      }
+      return NextResponse.json({ received: true })
+    }
+
+    return NextResponse.json({ received: true })
+  }
+
   if (event.type === "payment_intent.succeeded") {
     const paymentIntent = event.data.object as Stripe.PaymentIntent
     const meta = (paymentIntent.metadata || {}) as Record<string, string>
