@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import useSWR from "swr"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -12,6 +13,8 @@ import { Loader2, CreditCard, Check, Package, Shirt, Bus, AlertCircle } from "lu
 import { useSearchParams } from "next/navigation"
 
 const SIZES = ["YS", "YM", "YL", "AS", "AM", "AL", "AXL", "A2XL"]
+
+const fetcher = (url: string) => fetch(url).then(r => r.json())
 
 interface CartItem {
   productId: string
@@ -80,10 +83,6 @@ function formatPrice(cents: number): string {
 }
 
 export function NhscaPaymentTab() {
-  const searchParams = useSearchParams()
-  const success = searchParams.get("success") === "1"
-  const cancelled = searchParams.get("cancelled") === "1"
-
   const [mode, setMode] = useState<"bundle" | "individual">("bundle")
   const [cart, setCart] = useState<CartItem[]>([])
   const [includeRegistration, setIncludeRegistration] = useState(false)
@@ -94,10 +93,12 @@ export function NhscaPaymentTab() {
   const [longSleeveSize, setLongSleeveSize] = useState("")
   const [wantTransport, setWantTransport] = useState(false)
   const [wantHotel, setWantHotel] = useState(false)
-  const [athleteName, setAthleteName] = useState("")
-  const [team, setTeam] = useState<"national" | "select">("national")
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
+
+  // Fetch user's orders
+  const { data: ordersData } = useSWR("/api/nhsca-duals/payments", fetcher, { revalidateOnFocus: false })
+  const orders = ordersData?.payments || []
   const [existingPayments, setExistingPayments] = useState<Array<{ id: string; status: string; amount_cents: number; created_at: string; items: unknown[] }>>([])
   const [loadingPayments, setLoadingPayments] = useState(true)
 
@@ -634,6 +635,73 @@ if (longSleeveSize && longSleeveSize !== "none" && longSleeveSize !== "") {
           <p className="text-xs text-white/40 text-center">
             Transport and hotel pricing will be calculated per-athlete. We&apos;ll contact you with final costs.
           </p>
+        </CardContent>
+      </Card>
+
+      {/* Your Orders */}
+      <Card className="border-[#1a3a5c] bg-[#0a1628] mt-8">
+        <CardHeader>
+          <CardTitle className="text-white">Your Orders</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {!orders || orders.length === 0 ? (
+            <p className="text-sm text-white/60">No orders yet.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-[#1a3a5c]">
+                    <th className="text-left py-3 px-2 text-white/80 font-semibold">Date</th>
+                    <th className="text-left py-3 px-2 text-white/80 font-semibold">Items</th>
+                    <th className="text-left py-3 px-2 text-white/80 font-semibold">Amount</th>
+                    <th className="text-left py-3 px-2 text-white/80 font-semibold">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.map((order: any) => (
+                    <tr key={order.id} className="border-b border-[#0d1f38] hover:bg-[#0d1f38]">
+                      <td className="py-3 px-2 text-white/75">
+                        {new Date(order.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="py-3 px-2 text-white/75">
+                        {order.items ? (
+                          <div className="text-xs space-y-1">
+                            {Array.isArray(order.items) ? (
+                              order.items.map((item: any, idx: number) => (
+                                <div key={idx}>{item.name}</div>
+                              ))
+                            ) : typeof order.items === 'string' ? (
+                              <div>{order.items}</div>
+                            ) : (
+                              <div>Bundle package</div>
+                            )}
+                          </div>
+                        ) : (
+                          '-'
+                        )}
+                      </td>
+                      <td className="py-3 px-2 font-semibold text-[#c9a227]">
+                        {formatPrice(order.amount_cents)}
+                      </td>
+                      <td className="py-3 px-2">
+                        <span
+                          className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                            order.status === 'paid'
+                              ? 'bg-green-500/20 text-green-300'
+                              : order.status === 'pending'
+                              ? 'bg-yellow-500/20 text-yellow-300'
+                              : 'bg-red-500/20 text-red-300'
+                          }`}
+                        >
+                          {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
