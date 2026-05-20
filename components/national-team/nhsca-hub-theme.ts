@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils"
 /** Shared NHSCA team hub — full-page navy, spaced panels (no white body + stacked blue headers). */
 export const hubPageClass = "min-h-screen bg-[#001428] text-white"
 
-export const hubMainClass = "container mx-auto px-4 sm:px-6 py-8 md:py-12 max-w-4xl space-y-10 md:space-y-14"
+export const hubMainClass = "container mx-auto px-4 sm:px-6 py-6 md:py-10 max-w-4xl space-y-6"
 
 export const hubSectionHeadingClass = "space-y-2 mb-6"
 

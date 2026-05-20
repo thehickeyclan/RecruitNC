@@ -41,7 +41,7 @@ export const NHSCA_DUALS_2026_SELECT_ROSTER: NhscaDualsContactRosterRow[] = [
   { wrestler: "Adam Walker", weightClass: "120", phone: "252-619-3943", parentContact: "Dan Walker 252-619-3943" },
   { wrestler: "Danny McDermott", weightClass: "120", phone: "862-505-3009", parentContact: "Jackie 973-229-7608" },
   { wrestler: "Xavier Bernthal", weightClass: "113", phone: "252-259-3102", parentContact: "Jim 252-259-3416" },
-  { wrestler: "Kristopher Kerr", weightClass: "106", phone: "609-667-3349", parentContact: "Heather 609-605-4801" },
+  { wrestler: "Kristopher Kerr Jr.", weightClass: "106", phone: "609-667-3349", parentContact: "Heather 609-605-4801" },
 ]
 
 export function isNationalTeamEventSlug(eventSlug: string): boolean {
