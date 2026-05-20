@@ -1,5 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // API routes that touch `public/` via fs cause NFT to trace the whole folder (~250MB).
+  // These assets are served statically by Vercel; exclude from serverless function bundles.
+  outputFileTracingExcludes: {
+    "/*": [
+      "public/images/**",
+      "public/national-team/**",
+      "public/scholarships/**",
+    ],
+  },
   eslint: {
     ignoreDuringBuilds: true,
   },
