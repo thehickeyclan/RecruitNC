@@ -1,14 +1,14 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { useSearchParams } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Loader2, Lock, UserPlus, Phone, Calendar, Scale, Clock, History, ExternalLink, UsersRound, AlertCircle, MapPin, LayoutDashboard, Megaphone, Hotel, ChevronDown, ChevronRight } from "lucide-react"
+import { Loader2, Lock, UserPlus, Phone, Calendar, Scale, Clock, History, ExternalLink, UsersRound, AlertCircle, MapPin, LayoutDashboard, Megaphone, ChevronDown, ChevronRight } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { NHSCA2026EventBlock } from "@/components/national-team/nhsca-2026-event-block"
+import { NHSCADuals2026TeamHubFaq } from "@/components/national-team/nhsca-duals-2026-team-hub-faq"
+import { NHSCADuals2026HowToWatch } from "@/components/national-team/nhsca-duals-2026-how-to-watch"
 import type { HubResponse, HubEvent } from "@/app/api/national-team/hub/route"
 import { HubPresenceBubbles } from "@/components/hub-presence-bubbles"
 import { HardLink } from "@/components/hard-link"
@@ -19,24 +19,9 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 
 const REG_PAGE_PATH = "/national-team/register/nhsca-2026"
 
-/** Open hub: when API fails we still show the roster section (empty tables), never hide it. */
-const OPEN_HUB_EMPTY_EVENTS: HubEvent[] = [
-  "nhsca-duals-2026",
-  "nhsca-duals-2026-select",
-].map((eventSlug) => ({
-  eventSlug,
-  eventName: getEventName(eventSlug),
-  roster: [],
-  myRegistrations: [],
-  threadId: null,
-  forumGroupId: null,
-  forumChannelId: null,
-  forumMessageCount: 0,
-}))
-
 const WEIGH_IN_START = new Date("2026-05-22T14:00:00-04:00").getTime()
 
-/** Collapsible section for hub info blocks; keeps the page scannable and lets users jump to roster. */
+const HUB_API = "/api/national-team/hub"
 function HubCollapsibleSection({
   id,
   title,
@@ -74,29 +59,13 @@ function HubCollapsibleSection({
 }
 
 export default function NationalTeamHubPage() {
-  const searchParams = useSearchParams()
-  const openMode = searchParams.get("open") === "1"
   const { user, session, profile, isLoading: authLoading } = useAuth()
   const [data, setData] = useState<HubResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0, ready: false })
-  const [hubAccessCode, setHubAccessCode] = useState("")
-  const [hubAccessSubmitting, setHubAccessSubmitting] = useState(false)
-  const [hubAccessError, setHubAccessError] = useState<string | null>(null)
   const refetchedWithToken = useRef(false)
 
-  const events = data?.events ?? []
-  /** In open mode always show the roster section (never "Your team hub" / sign-in). Use empty tables when no data yet. */
-  const displayEvents = openMode && events.length === 0 ? OPEN_HUB_EMPTY_EVENTS : events
-  const eventSlugs = displayEvents.map((e) => e.eventSlug)
-
-  const getHubApiUrl = useCallback(() => {
-    if (typeof window === "undefined") return "/api/national-team/hub"
-    const code = new URLSearchParams(window.location.search).get("code")?.trim()
-    return code ? `/api/national-team/hub?code=${encodeURIComponent(code)}` : "/api/national-team/hub"
-  }, [])
-
-  const hubFetchOptions = useCallback((): RequestInit => {
+ = useCallback((): RequestInit => {
     const opts: RequestInit = { credentials: "include" }
     if (session?.access_token) {
       (opts as RequestInit & { headers?: Record<string, string> }).headers = {
@@ -107,52 +76,30 @@ export default function NationalTeamHubPage() {
   }, [session?.access_token])
 
   const refetchHub = useCallback(() => {
-    if (openMode) {
-      fetch("/api/national-team/hub/open")
-        .then((r) => (r.ok ? r.json() : { events: OPEN_HUB_EMPTY_EVENTS }))
-        .then((res) => setData({ allowed: true, events: res?.events?.length ? res.events : OPEN_HUB_EMPTY_EVENTS, accessByCode: true }))
-        .catch(() => setData({ allowed: true, events: OPEN_HUB_EMPTY_EVENTS, accessByCode: true }))
-      return
-    }
-    fetch(getHubApiUrl(), hubFetchOptions())
+    fetch(HUB_API, hubFetchOptions())
       .then((r) => r.json())
       .then(setData)
       .catch(() => {})
-  }, [openMode, getHubApiUrl, hubFetchOptions])
+  }, [hubFetchOptions])
 
-  // Open link (no auth): fetch public roster and show full hub. On fail still show roster section with empty tables (never hide the table).
   useEffect(() => {
-    if (!openMode) return
-    fetch("/api/national-team/hub/open")
-      .then((r) => {
-        if (r.ok) return r.json().then((res) => ({ events: res?.events?.length ? res.events : OPEN_HUB_EMPTY_EVENTS }))
-        return { events: OPEN_HUB_EMPTY_EVENTS }
-      })
-      .then(({ events }) => setData({ allowed: true, events, accessByCode: true }))
-      .catch(() => setData({ allowed: true, events: OPEN_HUB_EMPTY_EVENTS, accessByCode: true }))
-      .finally(() => setLoading(false))
-  }, [openMode])
-
-  // Wait for auth to finish. If user exists, also wait for session so we always send Bearer (session can lag one render after isLoading).
-  useEffect(() => {
-    if (openMode || authLoading) return
+    if (authLoading) return
     if (user && !session?.access_token) return
-    fetch(getHubApiUrl(), hubFetchOptions())
+    fetch(HUB_API, hubFetchOptions())
       .then((r) => r.json())
       .then(setData)
-      .catch(() => setData({ allowed: false, reason: "no_access" }))
+      .catch(() => setData({ allowed: false, reason: "signed_out" }))
       .finally(() => setLoading(false))
-  }, [openMode, authLoading, user, session?.access_token, getHubApiUrl, hubFetchOptions])
+  }, [authLoading, user, session?.access_token, hubFetchOptions])
 
-  // If we had no session on first fetch and now we do (e.g. session loaded after auth), refetch once so API sees the user.
   useEffect(() => {
-    if (openMode || authLoading || loading || data?.allowed || refetchedWithToken.current || !user || !session?.access_token) return
+    if (authLoading || loading || data?.allowed || refetchedWithToken.current || !user || !session?.access_token) return
     refetchedWithToken.current = true
-    fetch(getHubApiUrl(), hubFetchOptions())
+    fetch(HUB_API, hubFetchOptions())
       .then((r) => r.json())
       .then(setData)
       .catch(() => {})
-  }, [openMode, authLoading, loading, data?.allowed, user, session?.access_token, getHubApiUrl, hubFetchOptions])
+  }, [authLoading, loading, data?.allowed, user, session?.access_token, hubFetchOptions])
 
   useEffect(() => {
     const tick = () => {
@@ -183,72 +130,27 @@ export default function NationalTeamHubPage() {
     )
   }
 
-  if (!data?.allowed && !openMode) {
+  if (!data?.allowed) {
     return (
       <div className="min-h-screen bg-[#0B2545] py-12 px-4 flex items-center justify-center">
         <Card className="max-w-md w-full border-white/20 bg-white/5 text-white">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-white">
               <Lock className="h-5 w-5 text-[#D3B574]" />
-              Team hub
+              National Team Hub
             </CardTitle>
             <CardDescription className="text-white/80">
-              Enter the access code you received to view rosters, schedule, and updates.
+              The NHSCA Duals hub is available to signed-in RecruitNC accounts only (no separate access code). Sign in to continue —
+              or reload if your session just came back after login.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault()
-                const code = hubAccessCode.trim()
-                if (!code || hubAccessSubmitting) return
-                setHubAccessError(null)
-                setHubAccessSubmitting(true)
-                try {
-                  const res = await fetch("/api/national-team/hub/access", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    credentials: "include",
-                    body: JSON.stringify({ code }),
-                  })
-                  const json = await res.json().catch(() => ({}))
-                  if (res.ok && json.success) {
-                    // Pass code in URL for this one load so hub GET can grant and upsert DB (logged-in users often don't send cookie)
-                    const oneTimeQuery = `?code=${encodeURIComponent(code)}`
-                    setTimeout(() => {
-                      window.location.href = `/national-team/hub${oneTimeQuery}`
-                    }, 100)
-                    return
-                  }
-                  setHubAccessError(json.error || "Invalid code. Try again.")
-                } catch {
-                  setHubAccessError("Something went wrong. Try again.")
-                } finally {
-                  setHubAccessSubmitting(false)
-                }
-              }}
-              className="space-y-3"
+            <HardLink
+              href="/auth/signin?returnTo=/national-team/hub"
+              className="flex w-full min-h-[44px] items-center justify-center rounded-xl bg-[#D3B574] px-4 py-3 font-semibold text-[#0B2545] hover:bg-[#E5C97A]"
             >
-              <Input
-                type="text"
-                placeholder="Access code"
-                value={hubAccessCode}
-                onChange={(e) => { setHubAccessCode(e.target.value); setHubAccessError(null) }}
-                className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
-                autoComplete="off"
-                disabled={hubAccessSubmitting}
-              />
-              {hubAccessError && (
-                <p className="text-sm text-[#fca5a5]">{hubAccessError}</p>
-              )}
-              <Button
-                type="submit"
-                className="w-full bg-[#D3B574] hover:bg-[#E5C97A] text-[#0B2545] font-semibold"
-                disabled={!hubAccessCode.trim() || hubAccessSubmitting}
-              >
-                {hubAccessSubmitting ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : "View hub"}
-              </Button>
-            </form>
+              Sign in
+            </HardLink>
             <Button asChild variant="outline" className="w-full border-white/30 text-white hover:bg-white/10">
               <a href="/national-team">Back to National Team</a>
             </Button>
@@ -257,6 +159,8 @@ export default function NationalTeamHubPage() {
       </div>
     )
   }
+
+  const nhscaInfoOnly = data.nhscaInfoOnly ?? false
 
   return (
     <div className="min-h-screen bg-[#0B2545]">
@@ -282,11 +186,16 @@ export default function NationalTeamHubPage() {
               priority
             />
             <Badge className="mb-2 sm:mb-3 bg-[#D3B574] text-[#003366] hover:bg-[#D3B574] border-0 font-semibold text-xs sm:text-sm">
-              NC United National Team · Team Hub
+              NHSCA Duals 2026 · National Team info hub
             </Badge>
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-1 drop-shadow leading-tight">27th Annual National Duals</h1>
-            <p className="text-blue-100 text-sm sm:text-lg md:text-xl font-medium">Memorial Day Weekend · May 23–25, 2026</p>
+            <p className="text-blue-100 text-sm sm:text-lg md:text-xl font-medium">
+              Fri May 22 – Mon May 25 · travel & weigh-ins Fri · wrestling Sat–Sun · Mon bracket (advancers)
+            </p>
             <p className="text-[#D3B574] mt-1 sm:mt-2 text-sm sm:text-base md:text-lg font-medium">Virginia Beach Sports Center</p>
+            <p className="text-white/85 text-xs sm:text-sm mt-3 max-w-lg mx-auto">
+              One page for logistics, FAQs, roster &amp; gear, and where to watch (Flo + NHSCA).
+            </p>
           </div>
         </div>
         <div className="w-full bg-[#002147] px-4 py-3 flex flex-wrap items-center justify-center gap-2 sm:gap-4">
@@ -301,24 +210,27 @@ export default function NationalTeamHubPage() {
           </a>
         </div>
         <div className="w-full bg-[#002147]/95 px-4 py-2.5 flex flex-wrap items-center justify-center gap-2 border-t border-white/10">
-          <a href="#roster" className="rounded-md bg-white/10 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/20">Roster &amp; gear</a>
-          <a href="#event-details" className="rounded-md bg-white/10 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/20">Event details</a>
-          <a href="#qa" className="rounded-md bg-white/10 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/20">Q&amp;A</a>
+          <a href="#nhsca-event-info" className="rounded-md bg-white/10 px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#D3B574] hover:text-[#0B2545] transition-colors">
+            Event info
+          </a>
+          <a href="#roster" className="rounded-md bg-white/10 px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#D3B574] hover:text-[#0B2545] transition-colors">
+            Rosters &amp; gear
+          </a>
+          <a href="#how-to-watch" className="rounded-md bg-white/10 px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#D3B574] hover:text-[#0B2545] transition-colors">
+            How to watch
+          </a>
           <a href="/national-team#archives" className="rounded-md bg-white/5 px-3 py-1.5 text-xs font-medium text-white/80 hover:bg-white/10">Past teams</a>
         </div>
       </section>
 
       <div className="max-w-3xl mx-auto px-4 py-6 sm:py-8 space-y-10 sm:space-y-8">
-        {openMode && (
-          <p className="text-center text-sm text-white/80 bg-white/10 rounded-xl px-4 py-2">
-            Update gear sizes in the tables below. If you just paid, give it a minute and refresh.
+        {nhscaInfoOnly && (
+          <p className="text-center text-sm text-amber-100/95 bg-[#78350f]/40 border border-amber-500/35 rounded-xl px-4 py-2">
+            No NHSCA roster is linked to this account yet — you still have schedules, FAQs, and watch links on this page. After you&apos;re officially on the team and payment clears, the roster blocks below will populate automatically for the matching parent email.
           </p>
         )}
-        {data.accessByCode && !openMode && (
-          <p className="text-center text-sm text-white/80 bg-white/10 rounded-xl px-4 py-2">
-            Viewing with access code. Sign in with the parent email from your registration to update gear sizes.
-          </p>
-        )}
+
+        <div id="nhsca-event-info" className="scroll-mt-28 space-y-10 sm:space-y-8">
         {/* Countdown to weigh-ins — big and bold */}
         <section className="rounded-2xl border-2 border-[#B31B1B]/40 bg-gradient-to-br from-[#002147] to-[#003366] px-6 py-8 text-white shadow-lg">
           <p className="text-center text-[#D3B574] font-bold uppercase tracking-wider text-sm mb-2">Weigh-ins open</p>
@@ -348,12 +260,22 @@ export default function NationalTeamHubPage() {
         </section>
 
         {/* Hotel */}
-        {events.length > 0 && (
+        {data?.allowed && (
           <HubCollapsibleSection dark title="Hotel" className="border-white/20 bg-white/5">
-            <div className="px-5 pb-5 pt-0">
-              <p className="text-sm text-white/90">
-                Hotel info coming soon; we&apos;ll post in the Hub and in GroupMe.
+            <div className="px-5 pb-5 pt-0 space-y-2 text-sm text-white/90">
+              <p>
+                <strong>Official NC United hotel:</strong>{" "}
+                <a
+                  href="https://www.google.com/maps/search/?api=1&query=SpringHill+Suites+Norfolk+Virginia+Beach"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#D3B574] font-medium underline hover:text-[#E5C97A]"
+                >
+                  SpringHill Suites Norfolk Virginia Beach
+                </a>{" "}
+                (~20 minutes from VBSC).
               </p>
+              <p>Athletes may stay with the team — coordinate with staff. Parents staying separately are fine.</p>
             </div>
           </HubCollapsibleSection>
         )}
@@ -365,14 +287,15 @@ export default function NationalTeamHubPage() {
           </div>
         </HubCollapsibleSection>
 
-        {events.length === 0 && !openMode ? (
+        {events.length === 0 && !nhscaInfoOnly && (
           <>
             <Card className="rounded-2xl border-white/20 bg-white/5 overflow-hidden text-white">
               <CardHeader className="pb-6">
-                <CardTitle className="text-xl text-white">Your team hub</CardTitle>
+                <CardTitle className="text-xl text-white">Get on the hub</CardTitle>
                 <CardDescription className="text-white/80 max-w-xl">
-                  Once you register and pay for an event, this page will show your event roster, registration details, and the GroupMe link in one place.
+                  This NHSCA Duals 2026 page is our National Team info hub — schedule, FAQs, streams, plus roster &amp; gear farther down once you&apos;re registered. Register to unlock the roster blocks after payment clears.
                 </CardDescription>
+
               </CardHeader>
               <CardContent className="space-y-5">
                 <p className="text-sm text-white/90">
@@ -390,7 +313,7 @@ export default function NationalTeamHubPage() {
                   </Button>
                 </div>
                 <p className="text-xs text-white/60">
-                  Already registered? Sign in with the parent email from your registration so your events appear here.
+                  Use the same email you&apos;ll register with for NHSCA (parent/guardian) so roster tools match your account automatically.
                 </p>
               </CardContent>
             </Card>
@@ -422,15 +345,45 @@ export default function NationalTeamHubPage() {
               </Card>
             )}
           </>
-        ) : (
+        )}
+
+        {events.length > 0 && (
+          <HubCollapsibleSection dark id="announcements" title="Announcements by weight" className="border-white/20 bg-white/5">
+            <div className="px-5 pb-5 pt-0">
+              <p className="text-sm text-white/90">
+                Posts and updates for each weight class will be added here. Check back before the event.
+              </p>
+            </div>
+          </HubCollapsibleSection>
+        )}
+
+        <HubCollapsibleSection dark id="qa" title="Team hub FAQ" defaultOpen={false} className="border-white/20 bg-white/5 scroll-mt-24">
+          <div className="px-5 pb-6 pt-0 max-h-[min(70vh,600px)] overflow-y-auto border-t border-white/10">
+            <NHSCADuals2026TeamHubFaq />
+          </div>
+        </HubCollapsibleSection>
+
+        {events.length > 0 && (
+          <HubCollapsibleSection dark title="Apparel, schedule & coaches" className="border-white/20 bg-white/5">
+            <div className="px-5 pb-5 pt-0">
+              <p className="text-sm text-white/90">
+                Photos, sizing, daily agenda, and coach bios will be added here before the event.
+              </p>
+            </div>
+          </HubCollapsibleSection>
+        )}
+        </div>
+
+        {/* Rosters — gear & dashboards when your account has NHSCA event access. */}
+        {events.length > 0 &&
           (() => {
             type Section =
               | { type: "single"; event: HubEvent }
               | { type: "group"; groupKey: string; groupName: string; eventsWithLabels: { event: HubEvent; label: string }[] }
-            const eventBySlug = new Map(displayEvents.map((e) => [e.eventSlug, e]))
+            const eventBySlug = new Map(events.map((e) => [e.eventSlug, e]))
             const groupKeyToEvents = new Map<string, HubEvent[]>()
             const standalone: HubEvent[] = []
-            for (const event of displayEvents) {
+            for (const event of events) {
               const group = getHubGroupForEvent(event.eventSlug)
               if (!group) {
                 standalone.push(event)
@@ -465,59 +418,37 @@ export default function NationalTeamHubPage() {
             for (const event of standalone) {
               sections.push({ type: "single", event })
             }
-            return sections.map((s, i) =>
-              s.type === "single" ? (
-                <EventHubSection
-                  key={s.event.eventSlug}
-                  event={s.event}
-                  currentUserId={user?.id ?? ""}
-                  onRefetch={refetchHub}
-                  hideEventInfo
-                  sectionId={i === 0 ? "roster" : undefined}
-                />
-              ) : (
-                <GroupedEventHubSection
-                  key={s.groupKey}
-                  groupName={s.groupName}
-                  eventsWithLabels={s.eventsWithLabels}
-                  currentUserId={user?.id ?? ""}
-                  onRefetch={refetchHub}
-                  hideEventInfo
-                  sectionId={i === 0 ? "roster" : undefined}
-                />
-              )
+            return (
+              <div className="space-y-10 sm:space-y-8">
+                {sections.map((s, i) =>
+                  s.type === "single" ? (
+                    <EventHubSection
+                      key={s.event.eventSlug}
+                      event={s.event}
+                      currentUserId={user?.id ?? ""}
+                      onRefetch={refetchHub}
+                      hideEventInfo
+                      sectionId={i === 0 ? "roster" : undefined}
+                    />
+                  ) : (
+                    <GroupedEventHubSection
+                      key={s.groupKey}
+                      groupName={s.groupName}
+                      eventsWithLabels={s.eventsWithLabels}
+                      currentUserId={user?.id ?? ""}
+                      onRefetch={refetchHub}
+                      hideEventInfo
+                      sectionId={i === 0 ? "roster" : undefined}
+                    />
+                  )
+                )}
+              </div>
             )
-          })()
-        )}
+          })()}
 
-        {/* Single “what’s coming” note instead of three placeholder cards */}
-        {events.length > 0 && (
-          <HubCollapsibleSection dark id="announcements" title="Announcements by weight" className="border-white/20 bg-white/5">
-            <div className="px-5 pb-5 pt-0">
-              <p className="text-sm text-white/90">
-                Posts and updates for each weight class will be added here. Check back before the event.
-              </p>
-            </div>
-          </HubCollapsibleSection>
-        )}
-
-        <HubCollapsibleSection dark id="qa" title="Q&A" className="border-white/20 bg-white/5 scroll-mt-24">
-          <div className="px-5 pb-5 pt-0">
-            <p className="text-sm text-white/90">
-              Common questions and answers will be added here. If you have a question now, contact the staff or ask in GroupMe.
-            </p>
-          </div>
-        </HubCollapsibleSection>
-
-        {events.length > 0 && (
-          <HubCollapsibleSection dark title="Apparel, schedule & coaches" className="border-white/20 bg-white/5">
-            <div className="px-5 pb-5 pt-0">
-              <p className="text-sm text-white/90">
-                Photos, sizing, daily agenda, and coach bios will be added here before the event.
-              </p>
-            </div>
-          </HubCollapsibleSection>
-        )}
+        <div className="mt-10 sm:mt-12 scroll-mt-28">
+          <NHSCADuals2026HowToWatch />
+        </div>
 
       </div>
     </div>
@@ -540,7 +471,7 @@ function NHSCA2026HubInfo() {
               className="h-12 w-auto sm:h-14 object-contain"
             />
           </div>
-          <p className="text-center sm:text-right text-white/90 text-sm font-medium">27th Annual · May 23–25, 2026</p>
+          <p className="text-center sm:text-right text-white/90 text-sm font-medium">27th Annual · Fri May 22 – Mon May 25</p>
         </div>
       </div>
       <div className="relative bg-gradient-to-br from-[#002147] to-[#003366]">
@@ -563,14 +494,17 @@ function NHSCA2026HubInfo() {
 
       <div className="p-4 sm:p-6 space-y-6">
         {/* Main contact — prominent, gold */}
-        <a
-          href="tel:+16316625409"
-          className="flex min-h-[52px] flex-wrap items-center justify-center gap-2 rounded-xl bg-[#D3B574]/20 px-4 py-3 text-[#002147] transition-colors hover:bg-[#D3B574]/30 active:bg-[#D3B574]/40 border-2 border-[#D3B574]/40"
-        >
-          <Phone className="h-5 w-5 shrink-0 text-[#003366]" />
-          <span className="font-semibold text-sm sm:text-base">Main contact:</span>
-          <span className="font-medium text-sm sm:text-base">Matt Hickey (631) 662-5409</span>
-        </a>
+        <div className="text-center px-4">
+          <a
+            href="tel:+16316625409"
+            className="flex min-h-[52px] flex-wrap items-center justify-center gap-2 rounded-xl bg-[#D3B574]/20 px-4 py-3 text-[#002147] transition-colors hover:bg-[#D3B574]/30 active:bg-[#D3B574]/40 border-2 border-[#D3B574]/40"
+          >
+            <Phone className="h-5 w-5 shrink-0 text-[#003366]" />
+            <span className="font-semibold text-sm sm:text-base">Main contact:</span>
+            <span className="font-medium text-sm sm:text-base">Matt Hickey (631) 662-5409</span>
+          </a>
+          <p className="text-xs text-gray-600 mt-2">Operations · Lisa Hickey (see GroupMe for staff lines)</p>
+        </div>
 
         {/* Two-column layout on desktop: left = when/where + schedule, right = coaches */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
@@ -579,7 +513,9 @@ function NHSCA2026HubInfo() {
               <h4 className="text-xs font-semibold uppercase tracking-wider text-[#003366] mb-2 flex items-center gap-2">
                 <Calendar className="h-4 w-4" /> When & where
               </h4>
-              <p className="text-sm text-gray-700 leading-relaxed">May 23–25, 2026 (Memorial Day weekend) · Virginia Beach Sports Center · 208 teams · Min 6 matches.</p>
+              <p className="text-sm text-gray-700 leading-relaxed">
+                Fri May 22 – Mon May 25, 2026 · VBSC · 208-team field ·                 Minimum <strong>six duals</strong> guaranteed (three on Day 1, at least three on Day 2; Monday for advancing teams).
+              </p>
             </div>
             <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-4">
               <h4 className="text-xs font-semibold uppercase tracking-wider text-[#003366] mb-1.5 flex items-center gap-2">
@@ -589,15 +525,19 @@ function NHSCA2026HubInfo() {
                 <AlertCircle className="h-3.5 w-3.5 shrink-0" /> Tentative; subject to change.
               </p>
               <ul className="space-y-1.5 text-sm text-gray-700">
-                <li><strong className="text-[#002147]">Fri May 22:</strong> Weigh-ins 2pm / 6pm · close 4pm / 7:30pm</li>
-                <li><strong className="text-[#002147]">Sat–Mon:</strong> Day 1 · Day 2 · Day 3 (championship)</li>
+                <li><strong className="text-[#002147]">Fri May 22:</strong> Travel + weigh-ins · early NC United pre-paid 2–4 PM · regular 6–7:30 PM</li>
+                <li><strong className="text-[#002147]">Sat May 23:</strong> Day 1 (3 duals) · late weigh-in only (assigned): Holt Quincy, Tillman Caskey — 7 AM</li>
+                <li><strong className="text-[#002147]">Sun May 24:</strong> Day 2 (minimum 3 duals)</li>
+                <li><strong className="text-[#002147]">Mon May 25:</strong> Championship bracket — advancing teams only</li>
               </ul>
             </div>
             <div className="rounded-xl border border-[#003366]/15 bg-[#003366]/5 p-4">
               <h4 className="text-xs font-semibold uppercase tracking-wider text-[#003366] flex items-center gap-2">
                 <Scale className="h-4 w-4" /> Early weigh-ins
               </h4>
-              <p className="text-sm text-gray-700 mt-1">NC United has purchased. Teams need 7+ wrestlers.</p>
+              <p className="text-sm text-gray-700 mt-1">
+                NC United <strong>prepaid early weigh-ins for both teams</strong>. Athletes may weigh individually Fri 2–4 PM at VBSC. Regular Fri 6–7:30 PM. Late assignments Sat 7 AM (see FAQ / schedule).
+              </p>
               <a href="https://nhsca-events.com/national-duals/" target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-[#003366] hover:underline">
                 Directions (official site) <ExternalLink className="h-3.5 w-3.5" />
               </a>
@@ -635,7 +575,7 @@ function NHSCA2026HubInfo() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
             <div>
               <p className="font-semibold text-[#002147] text-xs uppercase tracking-wider">Format</p>
-              <p className="text-gray-700 mt-0.5 text-xs">Day 1: pools, 3 matches. Day 2: champ/consi, min 3. Day 3: bracket, min 2.</p>
+              <p className="text-gray-700 mt-0.5 text-xs">Day 1: 4-team pools, 3 duals. Day 2: Champ vs Consi from Day 1; Consi exits. Mon: championship bracket, reseeded.</p>
             </div>
             <div>
               <p className="font-semibold text-[#002147] text-xs uppercase tracking-wider">Weights</p>
@@ -654,7 +594,7 @@ function NHSCA2026HubInfo() {
 
         {/* Links: one compact row */}
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm border-t border-gray-100 pt-4">
-          <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=NHSCA+National+Duals+2026&dates=20260523/20260526&details=Virginia+Beach+Sports+Center&location=Virginia+Beach+Sports+Center,+VA" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 font-medium text-[#003366] hover:underline">
+          <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=NHSCA+National+Duals+2026&dates=20260522/20260526&details=Virginia+Beach+Sports+Center&location=Virginia+Beach+Sports+Center,+VA" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 font-medium text-[#003366] hover:underline">
             <Calendar className="h-3.5 w-3.5" /> Add to Calendar
           </a>
           <a href="https://www.google.com/maps/search/?api=1&query=Virginia+Beach+Sports+Center" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 font-medium text-[#003366] hover:underline">
@@ -700,15 +640,11 @@ function RosterSizeCell({
     if (!registrationId || !editable) return
     setSaving(true)
     setSaveError(false)
-    const openMode = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("open") === "1"
-    const url =
-      openMode && !isInterestRow
-        ? `/api/national-team/registrations/${registrationId}/size/open`
-        : isInterestRow
-          ? `/api/national-team/interest-forms/${registrationId.replace(/^interest-/, "")}/size`
-          : `/api/national-team/registrations/${registrationId}/size`
+    const url = isInterestRow
+      ? `/api/national-team/interest-forms/${registrationId.replace(/^interest-/, "")}/size`
+      : `/api/national-team/registrations/${registrationId}/size`
     const headers: Record<string, string> = { "Content-Type": "application/json" }
-    if (!openMode && session?.access_token) headers.Authorization = `Bearer ${session.access_token}`
+    if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`
     const opts: RequestInit = {
       method: "PATCH",
       headers,

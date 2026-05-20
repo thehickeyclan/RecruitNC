@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
-import { cookies } from "next/headers"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getEventName, getEventSlugForApi, normalizeEventSlugForLookup } from "@/lib/national-team-events"
 
-const HUB_ACCESS_COOKIE = "nc_hub_access"
-/** Event slugs that accept hub access via code (cookie or national_team_hub_access_grants). Add when adding new tournaments. */
 const NHSCA_HUB_SLUGS = ["nhsca-duals-2026", "nhsca-duals-2026-select"]
 
 export type HubRegistration = {
@@ -59,18 +56,18 @@ export type HubResponse = {
   events?: HubEvent[]
   isAdmin?: boolean
   isPrimaryRegistrant?: boolean
-  accessByCode?: boolean
+  /** Signed-in RecruitNC user without NHSCA roster/workspace — NHSCA info & FAQ only (no roster). */
+  nhscaInfoOnly?: boolean
   /** Only set when allowed: false — so you can see if the API saw the user (F12 → Network → hub response). */
   _debug?: { hasUser: boolean; userEmail: string | null }
 }
 
 /**
- * GET: Return hub data if the caller has access.
- * Access is granted by: (1) paid reg or lineup with matching parent/contact email,
- * (2) event_workspace_members, (3) admin, or (4) valid hub code via cookie or national_team_hub_access_grants.
- * For new tournaments, add event slugs to NHSCA_HUB_SLUGS and to the access route's HUB_CODE_EVENT_SLUGS.
+ * GET: Requires a signed-in RecruitNC user (`user.email`).
+ * NHSCA hub data: paid reg / lineup / workspace / admin roster access; otherwise `nhscaInfoOnly`
+ * returns empty `events[]` while the SPA still renders schedules, FAQs, and Flo guidance.
  */
-export async function GET(request: NextRequest): Promise<NextResponse<HubResponse>> {
+export async function GET(_request: NextRequest): Promise<NextResponse<HubResponse>> {
   const supabase = await createClient()
   let user: { id: string; email?: string } | null = null
   let authError: Error | null = null
@@ -86,77 +83,10 @@ export async function GET(request: NextRequest): Promise<NextResponse<HubRespons
     authError = cookieResult.error ?? null
   }
 
-  let accessByCode = false
-
-  // One-time code param: after form submit we redirect to /hub?code=XXX so this request can grant and upsert (logged-in users often don't send cookie)
-  const codeParam = request.nextUrl.searchParams.get("code")?.trim()
-  if (codeParam && user?.id) {
-    const adminForCode = createAdminClient()
-    const { data: codeRows } = await adminForCode
-      .from("national_team_invite_codes")
-      .select("id, code, expires_at, max_uses, uses_count")
-      .in("event_slug", NHSCA_HUB_SLUGS)
-      .limit(50)
-    const codeRow = Array.isArray(codeRows)
-      ? codeRows.find((r) => (r as { code?: string }).code?.trim().toLowerCase() === codeParam.toLowerCase())
-      : null
-    if (codeRow) {
-      const cr = codeRow as { code?: string; expires_at?: string | null; max_uses?: number | null; uses_count?: number }
-      const notExpired = !cr.expires_at || new Date(cr.expires_at) >= new Date()
-      const maxUses = cr.max_uses != null ? Number(cr.max_uses) : null
-      const usesCount = Number(cr.uses_count) ?? 0
-      const underLimit = maxUses == null || usesCount < maxUses
-      if (notExpired && underLimit) {
-        accessByCode = true
-        const valueToStore = (cr.code ?? codeParam).trim()
-        try {
-          const expiresAt = new Date()
-          expiresAt.setDate(expiresAt.getDate() + 30)
-          await adminForCode
-            .from("national_team_hub_access_grants")
-            .upsert(
-              { user_id: user.id, code: valueToStore, expires_at: expiresAt.toISOString() },
-              { onConflict: "user_id" }
-            )
-        } catch {
-          // table may not exist
-        }
-      }
-    }
-  }
-
-  async function validateHubCookie(): Promise<boolean> {
-    const cookieStore = await cookies()
-    const hubCode = cookieStore.get(HUB_ACCESS_COOKIE)?.value?.trim()
-    if (!hubCode) return false
-    const hubCodeLower = hubCode.toLowerCase()
-    const adminCheck = createAdminClient()
-    const { data: codeRows, error: codeErr } = await adminCheck
-      .from("national_team_invite_codes")
-      .select("id, code, expires_at, max_uses, uses_count")
-      .in("event_slug", NHSCA_HUB_SLUGS)
-      .limit(50)
-    const codeRow =
-      codeErr || !Array.isArray(codeRows)
-        ? null
-        : codeRows.find((r) => (r as { code?: string }).code?.trim().toLowerCase() === hubCodeLower)
-    if (!codeRow) return false
-    const row = codeRow as { expires_at?: string | null; max_uses?: number | null; uses_count?: number }
-    if (row.expires_at && new Date(row.expires_at) < new Date()) return false
-    const maxUses = row.max_uses != null ? Number(row.max_uses) : null
-    const usesCount = Number(row.uses_count) ?? 0
-    if (maxUses != null && usesCount >= maxUses) return false
-    return true
-  }
-
   const debugInfo = (): HubResponse["_debug"] => ({ hasUser: !!user, userEmail: user?.email ?? null })
 
   if (authError || !user?.email) {
-    if (!(await validateHubCookie())) {
-      console.warn("[RecruitNC] hub GET: no user and no valid cookie", { authError: !!authError, hasUser: !!user, hasEmail: !!user?.email })
-      return NextResponse.json({ allowed: false, reason: "signed_out", _debug: debugInfo() })
-    }
-    accessByCode = true
+    return NextResponse.json({ allowed: false, reason: "signed_out", _debug: debugInfo() })
   }
 
   const admin = createAdminClient()
@@ -204,7 +134,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<HubRespons
     .select("id, event_slug, athlete_first_name, athlete_last_name, athlete_email, parent_email, parent_user_id, high_school, graduation_year, primary_weight, status, created_at, updated_at, updated_by_user_id, shirt_size, singlet_size, shorts_size")
     .eq("status", "paid")
 
-  if (regError && !isAdmin && !accessByCode) {
+  if (regError && !isAdmin) {
     if ((regError as { code?: string })?.code === "42P01") {
       return NextResponse.json(
         { allowed: false, reason: "no_access", _debug: debugInfo() },
@@ -214,7 +144,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<HubRespons
     console.error("[national-team/hub]", regError)
     return NextResponse.json({ allowed: false, reason: "no_access", _debug: debugInfo() }, { status: 200 })
   }
-  if (regError && (isAdmin || accessByCode)) {
+  if (regError && isAdmin) {
     console.warn("[national-team/hub] Registrations query failed", regError)
   }
 
@@ -246,12 +176,10 @@ export async function GET(request: NextRequest): Promise<NextResponse<HubRespons
   if (loggedInParentEventSlugs.length > 0) {
     eventSlugsToShow = [...new Set(loggedInParentEventSlugs.map(toCanonical).filter(Boolean))]
     if (eventSlugsToShow.length === 0) eventSlugsToShow = [...NHSCA_HUB_SLUGS]
-  } else if (accessByCode) {
-    eventSlugsToShow = [...NHSCA_HUB_SLUGS]
   } else if (isAdmin) {
     const fromRegs = [...new Set(paidRegs.map((r) => toCanonical(r.event_slug)))]
     eventSlugsToShow = fromRegs.length > 0 ? fromRegs : ["nhsca-duals-2026", "nhsca-duals-2026-select"]
-  } else if (user?.email) {
+  } else {
     const emailLower = (user.email ?? "").trim().toLowerCase()
     let myEventSlugs = new Set(
       paidRegs
@@ -306,61 +234,16 @@ export async function GET(request: NextRequest): Promise<NextResponse<HubRespons
       // table or column may not exist
     }
     if (myEventSlugs.size === 0) {
-      let granted = false
-      try {
-        const { data: grantRow } = await admin
-          .from("national_team_hub_access_grants")
-          .select("code")
-          .eq("user_id", user.id)
-          .gt("expires_at", new Date().toISOString())
-          .limit(1)
-          .maybeSingle()
-        if (grantRow && (grantRow as { code?: string }).code) {
-          const grantCode = ((grantRow as { code: string }).code ?? "").trim().toLowerCase()
-          const { data: codeRows } = await admin
-            .from("national_team_invite_codes")
-            .select("id, code, expires_at, max_uses, uses_count")
-            .in("event_slug", NHSCA_HUB_SLUGS)
-            .limit(50)
-          const codeRow = Array.isArray(codeRows)
-            ? codeRows.find((r) => (r as { code?: string }).code?.trim().toLowerCase() === grantCode)
-            : null
-          if (codeRow) {
-            const cr = codeRow as { expires_at?: string | null; max_uses?: number | null; uses_count?: number }
-            const notExpired = !cr.expires_at || new Date(cr.expires_at) >= new Date()
-            const maxUses = cr.max_uses != null ? Number(cr.max_uses) : null
-            const usesCount = Number(cr.uses_count) ?? 0
-            const underLimit = maxUses == null || usesCount < maxUses
-            if (notExpired && underLimit) granted = true
-          }
-        }
-      } catch {
-        // Table may not exist yet; fall back to cookie
-      }
-      if (!granted) granted = await validateHubCookie()
-      if (granted) {
-        accessByCode = true
-        eventSlugsToShow = [...NHSCA_HUB_SLUGS]
-      } else {
-        const sampleParentEmails = paidRegs.slice(0, 5).map((r) => (r.parent_email ?? "").trim())
-        console.warn("[RecruitNC] hub GET: logged-in user has no matching reg and no grant/cookie", {
-          userEmail: user?.email?.trim().toLowerCase(),
-          paidRegCount: paidRegs.length,
-          sampleParentEmails,
-        })
-        return NextResponse.json({ allowed: false, reason: "no_access", _debug: debugInfo() })
-      }
-    } else {
-      eventSlugsToShow = [...myEventSlugs]
+      return NextResponse.json({
+        allowed: true,
+        events: [],
+        isAdmin,
+        isPrimaryRegistrant: false,
+        nhscaInfoOnly: true,
+        _debug: debugInfo(),
+      })
     }
-  } else {
-    const cookieValid = await validateHubCookie()
-    if (cookieValid) {
-      accessByCode = true
-      eventSlugsToShow = [...NHSCA_HUB_SLUGS]
-    } else {
-      return NextResponse.json({ allowed: false, reason: "no_access", _debug: debugInfo() })
-    }
+    eventSlugsToShow = [...myEventSlugs]
   }
 
   const emailLower = (user?.email ?? "").trim().toLowerCase()
@@ -726,6 +609,5 @@ export async function GET(request: NextRequest): Promise<NextResponse<HubRespons
     events,
     isAdmin,
     isPrimaryRegistrant,
-    accessByCode: accessByCode || undefined,
   })
 }

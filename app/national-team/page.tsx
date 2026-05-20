@@ -220,21 +220,26 @@ export default function NCUnitedNationalTeam() {
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
                   <div>
                     <span className="text-[#002147] font-bold text-xl">NHSCA Duals 2026</span>
-                    <p className="text-sm text-[#002147]/80 mt-1">May 23–25 · Virginia Beach Sports Center</p>
+                    <p className="text-sm text-[#002147]/80 mt-1">
+                      Fri May 22 – Mon May 25 · Virginia Beach Sports Center
+                    </p>
+                    <p className="text-xs text-[#002147]/70 mt-1 max-w-xl">
+                      Friday travel &amp; weigh-ins · Sat–Sun competition · Monday championship bracket (advancers)
+                    </p>
                     <p className="text-sm text-[#003366] font-medium mt-2">
                       Roster, gear, &amp; team chat
                       {nhscaLineupCount !== null && nhscaLineupCount > 0 && (
                         <span className="text-[#002147] font-semibold"> · {nhscaLineupCount} on lineup</span>
                       )}
                     </p>
-                    <span className="mt-3 inline-block">
+                    <div className="mt-3 flex flex-col sm:flex-row flex-wrap gap-2">
                       <HardLink
-                        href="/national-team/nhsca-duals-2026/access"
+                        href="/national-team/hub"
                         className="inline-flex min-h-[40px] items-center justify-center rounded-xl bg-[#002147] px-4 py-2 text-sm font-semibold text-[#D3B574] hover:bg-[#003366] transition-colors"
                       >
-                        Team hub — enter access code
+                        NHSCA team hub
                       </HardLink>
-                    </span>
+                    </div>
                   </div>
                   <div className="flex flex-col items-center md:items-end shrink-0">
                     <p className="text-[#002147] font-bold uppercase tracking-wider text-xs mb-2">Weigh-ins open</p>
@@ -887,7 +892,7 @@ export default function NCUnitedNationalTeam() {
                 <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-6">
                   <div className="flex-shrink-0">
                     <Badge className="bg-[#002147] text-white text-sm md:text-base px-4 py-2 rounded-full">
-                      May 23-25, 2026
+                      May 22–25, 2026
                     </Badge>
                   </div>
                   <div className="flex-1">
@@ -895,7 +900,7 @@ export default function NCUnitedNationalTeam() {
                       27th Annual National Duals
                     </h3>
                     <p className="text-base md:text-lg text-gray-700 mb-2">
-                      Memorial Day Weekend
+                      Fri–Mon · travel & weigh-ins Fri · VBSC
                     </p>
                     <p className="text-sm md:text-base text-gray-600">
                       Join NC United as we compete in this premier national dual team tournament featuring elite teams from across the country.

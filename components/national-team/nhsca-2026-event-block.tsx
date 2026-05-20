@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Calendar, MapPin, Trophy, Scale, Clock, AlertCircle, Award, BookOpen, ExternalLink, UsersRound, Phone } from "lucide-react"
+import { Calendar, MapPin, Trophy, Scale, Clock, AlertCircle, Award, BookOpen, ExternalLink, UsersRound, Phone, ClipboardList } from "lucide-react"
 import Image from "next/image"
 
 /** Shared NHSCA 2026 event content: coaches through competition rules. Used on event page and hub. */
@@ -87,7 +87,7 @@ export function NHSCA2026EventBlock() {
         </CardHeader>
         <CardContent className="space-y-4 text-gray-700">
           <p><strong>Event:</strong> NHSCA National Duals 2026</p>
-          <p><strong>Dates:</strong> May 23–25, 2026 (Memorial Day Weekend)</p>
+          <p><strong>Dates:</strong> Fri May 22 – Mon May 25, 2026 (travel/weigh-ins Friday; competition Sat–Sun; Monday championship bracket for advancing teams)</p>
           <p className="flex items-start gap-2">
             <MapPin className="h-5 w-5 shrink-0 mt-0.5 text-[#003366]" />
             <span><strong>Venue:</strong> Virginia Beach Sports Center</span>
@@ -151,12 +151,11 @@ export function NHSCA2026EventBlock() {
             </ul>
           </div>
           <div>
-            <h4 className="font-semibold text-gray-900 mb-2">Day 3</h4>
+            <h4 className="font-semibold text-gray-900 mb-2">Day 3 (Monday)</h4>
             <ul className="list-disc pl-5 space-y-1">
-              <li>Teams that place 1st or 2nd in their Day 2 Championship pool advance to the Day 3 Championship Bracket.</li>
-              <li>Day 3 Championship brackets are re-seeded based on on-site rosters and results.</li>
-              <li>Each team wrestles a minimum of two times on Day 3.</li>
-              <li>Pigtail round: winning teams = 3 matches (minimum); losing teams = 2 matches.</li>
+              <li>Only teams that advance from Day 2 <strong>Championship</strong> pools wrestle Monday.</li>
+              <li>Championship bracket is <strong>re-seeded</strong> using on-site roster and pool results.</li>
+              <li>Consi teams from Day 2 do not continue to Monday.</li>
             </ul>
           </div>
         </CardContent>
@@ -218,15 +217,19 @@ export function NHSCA2026EventBlock() {
           </div>
           <div>
             <h4 className="font-semibold text-gray-900 mb-1">Saturday, May 23</h4>
-            <p>Day 1 of competition</p>
+            <p>Day 1 of competition (3 duals per team).</p>
+            <p className="mt-1 text-amber-800/90 text-sm">
+              <strong>Late weigh-ins (assigned only):</strong> Saturday <strong>7:00 AM</strong> at VBSC — <strong>Holt Quincy</strong>,{" "}
+              <strong>Tillman Caskey</strong>. Must weigh before first match.
+            </p>
           </div>
           <div>
             <h4 className="font-semibold text-gray-900 mb-1">Sunday, May 24</h4>
-            <p>Day 2 of competition</p>
+            <p>Day 2 of competition (minimum 3 duals).</p>
           </div>
           <div>
             <h4 className="font-semibold text-gray-900 mb-1">Monday, May 25</h4>
-            <p>Day 3 of competition (championship bracket)</p>
+            <p>Championship bracket only — advancing teams.</p>
           </div>
           <p className="text-gray-600 italic">* Team-specific and pool schedules will be announced prior to the event.</p>
         </CardContent>
@@ -236,13 +239,42 @@ export function NHSCA2026EventBlock() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-[#003366]">
             <Scale className="h-5 w-5" />
-            Early weigh-ins (NC United)
+            Weigh-ins (NC United · Duals)
           </CardTitle>
-          <CardDescription>We have purchased early weigh-ins for the team</CardDescription>
+          <CardDescription>NC United prepaid early weigh-ins for both NC United teams</CardDescription>
         </CardHeader>
         <CardContent className="space-y-2 text-gray-700 text-sm">
-          <p>Teams must have <strong>7 wrestlers or more</strong> to participate in early weigh-ins.</p>
-          <p><strong>How to pre-purchase:</strong> Team contacts can purchase when the team is registered, or add early weigh-ins after registration if spots are still available. <a href="https://nhsca-events.com/national-duals/" target="_blank" rel="noopener noreferrer" className="text-[#003366] font-medium hover:underline">Click here for directions</a> (official event page).</p>
+          <p>
+            <strong>Early weigh-ins:</strong> Friday <strong>2:00 PM – 4:00 PM</strong> at VBSC. Athletes may weigh{" "}
+            <strong>individually</strong> — the full team does not need to arrive together.
+          </p>
+          <p>
+            <strong>Regular weigh-ins:</strong> Friday <strong>6:00 PM – 7:30 PM</strong> at VBSC.
+          </p>
+          <p>
+            NHSCA also runs onsite early-weigh sales and general rules — see{" "}
+            <a href="https://nhsca-events.com/national-duals/" target="_blank" rel="noopener noreferrer" className="text-[#003366] font-medium hover:underline">
+              official Duals page
+            </a>{" "}
+            for organizer-level detail.
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ClipboardList className="h-5 w-5 text-[#003366]" />
+            Pool tiebreakers
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="text-gray-700 text-sm space-y-2">
+          <ol className="list-decimal pl-5 space-y-1">
+            <li>Head-to-head dual result</li>
+            <li>Team points scored (FOR)</li>
+            <li>Team points allowed (AGAINST)</li>
+          </ol>
+          <p>Bonus points matter for advancement — protect team points.</p>
         </CardContent>
       </Card>
 
