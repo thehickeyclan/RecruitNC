@@ -272,7 +272,7 @@ export function NhscaDualsResultsAdmin({
   return (
     <div className="pb-[calc(8rem+env(safe-area-inset-bottom))]">
       <p className="text-center text-[11px] text-white/45 mb-2">
-        Tap a result — live score updates for fans on View results
+        Tap a result — live score updates for fans on View live
       </p>
 
       <div className="flex gap-1 rounded-lg bg-[#0a2040] p-0.5 mb-3">

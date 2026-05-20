@@ -2,20 +2,27 @@
 export const NHSCA_HUB_TAB_IDS = [
   "rosters",
   "results",
-  "event-info",
-  "payment",
+  "apparel",
+  "payments",
   "media",
   "watch",
 ] as const
 
 export type NhscaHubTabId = (typeof NHSCA_HUB_TAB_IDS)[number]
 
+const TAB_ALIASES: Record<string, NhscaHubTabId> = {
+  "event-info": "apparel",
+  payment: "payments",
+}
+
 /** Sat May 23, 2026 · 8:00 AM Eastern (first round). */
 export const NHSCA_DUALS_2026_COMPETITION_START_MS = Date.parse("2026-05-23T12:00:00.000Z")
 
 export function parseNhscaHubTabParam(raw: string | null | undefined): NhscaHubTabId | null {
   if (!raw?.trim()) return null
-  return (NHSCA_HUB_TAB_IDS as readonly string[]).includes(raw) ? (raw as NhscaHubTabId) : null
+  const t = raw.trim()
+  if ((NHSCA_HUB_TAB_IDS as readonly string[]).includes(t)) return t as NhscaHubTabId
+  return TAB_ALIASES[t] ?? null
 }
 
 /**

@@ -3,6 +3,8 @@
 import Image from "next/image"
 import { ExternalLink } from "lucide-react"
 import { HardLink } from "@/components/hard-link"
+import { NhscaDuals2026SingletPreview } from "@/components/national-team/nhsca-duals-2026-singlet-preview"
+import { NhscaDuals2026ApparelPreview } from "@/components/national-team/nhsca-duals-2026-apparel-preview"
 import {
   NhscaDualsCountdownFace,
   useWeighInCountdown,
@@ -66,7 +68,23 @@ export function NhscaHubHero() {
                 </p>
               </div>
 
-              <div className="w-full lg:w-auto lg:min-w-[280px] shrink-0">
+              <div className="w-full lg:w-auto lg:min-w-[280px] shrink-0 space-y-3">
+                <NhscaDuals2026SingletPreview compact className="w-full max-w-sm mx-auto lg:mx-0" />
+                <NhscaDuals2026ApparelPreview compact className="w-full max-w-sm mx-auto lg:mx-0" />
+                <div className="flex gap-2">
+                  <HardLink
+                    href="/national-team/hub?tab=apparel"
+                    className="inline-flex min-h-[40px] flex-1 items-center justify-center rounded-lg border border-[#002147]/20 bg-white/80 px-3 text-xs font-semibold text-[#002147] hover:bg-white"
+                  >
+                    Apparel
+                  </HardLink>
+                  <HardLink
+                    href="/national-team/hub?tab=payments"
+                    className="inline-flex min-h-[40px] flex-1 items-center justify-center rounded-lg bg-[#002147] px-3 text-xs font-bold text-[#D3B574] hover:bg-[#003366]"
+                  >
+                    Payments
+                  </HardLink>
+                </div>
                 <div className="rounded-xl bg-[#002147] p-4 shadow-lg ring-1 ring-[#001428]/50">
                   <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
                     <span className="inline-flex items-center rounded-full bg-[#B31B1B] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">

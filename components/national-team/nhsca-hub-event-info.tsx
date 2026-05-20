@@ -3,7 +3,6 @@
 import Image from "next/image"
 import { Calendar, Clock, ExternalLink, MapPin } from "lucide-react"
 import { hubPanelClass, hubPanelDescClass, hubPanelHeaderClass, hubPanelTitleClass } from "@/components/national-team/nhsca-hub-theme"
-import { NhscaHubTeamGearShowcase } from "@/components/national-team/nhsca-hub-team-gear-showcase"
 import { NhscaHubTravelRoster } from "@/components/national-team/nhsca-hub-travel-roster"
 import { cn } from "@/lib/utils"
 
@@ -45,7 +44,7 @@ function HubInfoCard({
   )
 }
 
-/** Event Info tab — schedule, venue, travel summary (dark hub panels). */
+/** Schedule, venue, and travel — shown under Apparel tab. */
 export function NhscaHubEventInfo() {
   return (
     <div className="space-y-5 md:space-y-6">
@@ -114,18 +113,6 @@ export function NhscaHubEventInfo() {
           </ul>
         </HubInfoCard>
       </div>
-
-      <article className={hubPanelClass}>
-        <header className={hubPanelHeaderClass}>
-          <h3 className={hubPanelTitleClass}>Team gear</h3>
-          <p className={hubPanelDescClass}>
-            NC United singlet and apparel for NHSCA Duals 2026 — order on the Payment tab.
-          </p>
-        </header>
-        <div className="p-4 sm:p-5 md:p-6">
-          <NhscaHubTeamGearShowcase compact />
-        </div>
-      </article>
 
       <NhscaHubTravelRoster />
     </div>

@@ -1,5 +1,12 @@
 /** NHSCA hub checkout — pricing, line items, and Stripe helpers. */
 
+import {
+  NHSCA_SINGLET_COLOR_LABELS,
+  type NhscaSingletColor,
+} from "@/lib/nhsca-duals-2026-gear-images"
+
+export type { NhscaSingletColor }
+
 /** Adult apparel only — no youth sizes on hub checkout. */
 export const NHSCA_HUB_GEAR_SIZES = ["S", "M", "L", "XL", "2XL"] as const
 export type NhscaHubGearSize = (typeof NHSCA_HUB_GEAR_SIZES)[number]
@@ -46,6 +53,8 @@ export type NhscaHubTravelSelections = {
 export type NhscaHubIndividualSelections = NhscaHubTravelSelections & {
   registration: boolean
   singletQty: 0 | 1 | 2
+  /** Required when singletQty === 1. */
+  singletColor: NhscaSingletColor | ""
   singletSize: string
   shorts: boolean
   shortsSize: string
@@ -67,6 +76,16 @@ export type NhscaCheckoutLineItem = {
   name: string
   amountCents: number
   quantity?: number
+}
+
+export function formatSingletSizeForDb(
+  size: string,
+  opts: { qty: 1 | 2; color?: NhscaSingletColor | "" }
+): string {
+  const normalized = normalizeGearSizeForDb(size)
+  if (opts.qty === 2) return `${normalized} · Blue & White`
+  const color = opts.color && NHSCA_SINGLET_COLOR_LABELS[opts.color]
+  return color ? `${normalized} · ${color}` : normalized
 }
 
 export function normalizeGearSizeForDb(size: string): string {
@@ -94,7 +113,7 @@ export function buildTeamPackageLineItems(travel: NhscaHubTravelSelections): Nhs
   const items: NhscaCheckoutLineItem[] = [
     {
       key: "team_package",
-      name: "NHSCA Team Package (Registration + 2 Singlets + Shorts + Tees)",
+      name: "NHSCA Team Package (Registration + 2 Singlets — Blue & White + Shorts + Tees)",
       amountCents: NHSCA_TEAM_PACKAGE_CENTS,
     },
   ]
@@ -117,13 +136,14 @@ export function buildIndividualLineItems(sel: NhscaHubIndividualSelections): Nhs
   if (sel.singletQty === 2) {
     items.push({
       key: "singlet",
-      name: `NC United Singlet ×2 (${sel.singletSize || "size TBD"})`,
+      name: `NC United Singlets ×2 — Blue & White (${sel.singletSize || "size TBD"})`,
       amountCents: NHSCA_SINGLET_TWO_CENTS,
     })
   } else if (sel.singletQty === 1) {
+    const colorLabel = sel.singletColor ? NHSCA_SINGLET_COLOR_LABELS[sel.singletColor] : "Blue or White"
     items.push({
       key: "singlet",
-      name: `NC United Singlet (${sel.singletSize || "size TBD"})`,
+      name: `NC United Singlet — ${colorLabel} (${sel.singletSize || "size TBD"})`,
       amountCents: NHSCA_SINGLET_EACH_CENTS,
     })
   }
