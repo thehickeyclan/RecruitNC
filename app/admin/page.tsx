@@ -402,6 +402,17 @@ export default function AdminDashboard() {
               </Card>
             </Link>
 
+            {/* NHSCA Duals Command Center */}
+            <HardLink href="/admin/nhsca-duals-2026" className="block h-full">
+              <Card className="border-t-4 border-t-[#c9a227] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+                <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
+                  <Trophy className="h-10 w-10 text-[#c9a227] mb-3" />
+                  <h3 className="font-bold text-[#003366] mb-1">NHSCA Command Center</h3>
+                  <p className="text-xs text-gray-600">Live scoring, results, announcements</p>
+                </CardContent>
+              </Card>
+            </HardLink>
+
             {/* NC United Calendar — events CRUD, public /calendar. HardLink for reliable admin nav. */}
             <HardLink href="/admin/calendar" className="block h-full">
               <Card className="border-t-4 border-t-[#0f172a] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">

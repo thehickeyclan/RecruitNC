@@ -1,0 +1,72 @@
+import { NextRequest, NextResponse } from "next/server"
+import { createClient } from "@/lib/supabase/server"
+
+export const dynamic = "force-dynamic"
+
+/** GET: Public API for published duals (requires login) */
+export async function GET(request: NextRequest) {
+  const supabase = await createClient()
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) {
+    return NextResponse.json({ error: "Login required" }, { status: 401 })
+  }
+
+  const searchParams = request.nextUrl.searchParams
+  const team = searchParams.get('team')
+  const day = searchParams.get('day')
+
+  // Use the user's session to query (RLS will filter to published only)
+  let query = supabase
+    .from('nhsca_duals')
+    .select('*')
+    .eq('event_year', 2026)
+    .eq('published', true)
+    .order('day')
+    .order('start_time')
+
+  if (team) query = query.eq('team', team)
+  if (day) query = query.eq('day', parseInt(day))
+
+  const { data: duals, error: dualsError } = await query
+  if (dualsError) {
+    return NextResponse.json({ error: dualsError.message }, { status: 500 })
+  }
+
+  // Fetch matches for published duals
+  const dualIds = (duals ?? []).map(d => d.id)
+  let matches: Record<string, unknown>[] = []
+  if (dualIds.length > 0) {
+    const { data: matchData } = await supabase
+      .from('nhsca_dual_matches')
+      .select('*')
+      .in('dual_id', dualIds)
+    matches = matchData ?? []
+  }
+
+  // Fetch published announcements
+  const { data: announcements } = await supabase
+    .from('nhsca_duals_announcements')
+    .select('*')
+    .eq('published', true)
+    .order('created_at', { ascending: false })
+    .limit(10)
+
+  // Calculate team records
+  const stats = {
+    national: {
+      wins: (duals ?? []).filter(d => d.team === 'national' && d.status === 'final' && d.nc_score > d.opponent_score).length,
+      losses: (duals ?? []).filter(d => d.team === 'national' && d.status === 'final' && d.nc_score < d.opponent_score).length,
+    },
+    select: {
+      wins: (duals ?? []).filter(d => d.team === 'select' && d.status === 'final' && d.nc_score > d.opponent_score).length,
+      losses: (duals ?? []).filter(d => d.team === 'select' && d.status === 'final' && d.nc_score < d.opponent_score).length,
+    },
+  }
+
+  return NextResponse.json({
+    duals: duals ?? [],
+    matches,
+    announcements: announcements ?? [],
+    stats,
+  })
+}
