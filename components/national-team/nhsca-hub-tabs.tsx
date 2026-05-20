@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { NHSCADuals2026HowToWatch } from "@/components/national-team/nhsca-duals-2026-how-to-watch"
 import { NHSCADuals2026TeamHubFaq } from "@/components/national-team/nhsca-duals-2026-team-hub-faq"
 import { NhscaHubEventInfo } from "@/components/national-team/nhsca-hub-event-info"
+import { NhscaHubMediaTab } from "@/components/national-team/nhsca-hub-media-tab"
 import { NhscaHubPaymentsTab } from "@/components/national-team/nhsca-hub-payments-tab"
 import { NhscaDualsResultsTab } from "@/components/national-team/nhsca-duals-results-tab"
 import { hubPanelClass, hubPanelHeaderClass, hubPanelTitleClass } from "@/components/national-team/nhsca-hub-theme"
@@ -18,11 +19,13 @@ export function NhscaHubTabs({
   registrationFallback,
   adminBlock,
   isAdmin = false,
+  userId = null,
 }: {
   rosterContent: ReactNode | null
   registrationFallback?: ReactNode
   adminBlock?: ReactNode
   isAdmin?: boolean
+  userId?: string | null
 }) {
   return (
     <Tabs defaultValue="results" className="w-full">
@@ -30,7 +33,7 @@ export function NhscaHubTabs({
         <p className="text-[10px] text-white/40 mb-1.5 sm:hidden">Swipe for more tabs →</p>
         <TabsList
           className={cn(
-            "flex w-max min-w-full sm:w-full h-auto flex-nowrap sm:grid sm:grid-cols-5 gap-1 rounded-xl bg-[#0a2040] p-1.5",
+            "flex w-max min-w-full sm:w-full h-auto flex-nowrap sm:grid sm:grid-cols-6 gap-1 rounded-xl bg-[#0a2040] p-1.5",
             "border border-white/10 shadow-inner overflow-x-auto scrollbar-none snap-x snap-proximity sm:overflow-visible"
           )}
         >
@@ -46,6 +49,9 @@ export function NhscaHubTabs({
         </TabsTrigger>
         <TabsTrigger value="payment" className={cn(tabTriggerClass, "shrink-0 snap-start min-w-[38%] sm:min-w-0 px-3")}>
           Payment
+        </TabsTrigger>
+        <TabsTrigger value="media" className={cn(tabTriggerClass, "shrink-0 snap-start min-w-[38%] sm:min-w-0 px-3")}>
+          Media
         </TabsTrigger>
         <TabsTrigger value="watch" className={cn(tabTriggerClass, "shrink-0 snap-start min-w-[38%] sm:min-w-0 px-3")}>
           <span className="sm:hidden">Watch</span>
@@ -73,6 +79,10 @@ export function NhscaHubTabs({
 
       <TabsContent value="payment" className="mt-0 focus-visible:outline-none">
         <NhscaHubPaymentsTab isAdmin={isAdmin} />
+      </TabsContent>
+
+      <TabsContent value="media" className="mt-0 focus-visible:outline-none">
+        <NhscaHubMediaTab isAdmin={isAdmin} userId={userId} />
       </TabsContent>
 
       <TabsContent value="rosters" className="mt-0 focus-visible:outline-none">
