@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { NHSCA2026EventBlock } from "@/components/national-team/nhsca-2026-event-block"
 import { NHSCADuals2026TeamHubFaq } from "@/components/national-team/nhsca-duals-2026-team-hub-faq"
 import { NHSCADuals2026HowToWatch } from "@/components/national-team/nhsca-duals-2026-how-to-watch"
+import { NhscaWeighInCountdown } from "@/components/national-team/nhsca-weigh-in-countdown"
 import type { HubResponse, HubEvent } from "@/app/api/national-team/hub/route"
 import { HubPresenceBubbles } from "@/components/hub-presence-bubbles"
 import { HardLink } from "@/components/hard-link"
@@ -19,9 +20,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 
 const REG_PAGE_PATH = "/national-team/register/nhsca-2026"
 
-const WEIGH_IN_START = new Date("2026-05-22T14:00:00-04:00").getTime()
-
 const HUB_API = "/api/national-team/hub"
+
 function HubCollapsibleSection({
   id,
   title,
@@ -62,7 +62,6 @@ export default function NationalTeamHubPage() {
   const { user, session, profile, isLoading: authLoading } = useAuth()
   const [data, setData] = useState<HubResponse | null>(null)
   const [loading, setLoading] = useState(true)
-  const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0, ready: false })
 
   const hubFetchOptions = useCallback((): RequestInit => {
     const opts: RequestInit = { credentials: "include" }
@@ -103,27 +102,6 @@ export default function NationalTeamHubPage() {
     }
   }, [authLoading, hubFetchOptions])
 
-  useEffect(() => {
-    const tick = () => {
-      const now = Date.now()
-      const d = Math.max(0, WEIGH_IN_START - now)
-      if (d <= 0) {
-        setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0, ready: true })
-        return
-      }
-      setCountdown({
-        days: Math.floor(d / 86400000),
-        hours: Math.floor((d % 86400000) / 3600000),
-        minutes: Math.floor((d % 3600000) / 60000),
-        seconds: Math.floor((d % 60000) / 1000),
-        ready: false,
-      })
-    }
-    tick()
-    const id = setInterval(tick, 1000)
-    return () => clearInterval(id)
-  }, [])
-
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0B2545] flex items-center justify-center">
@@ -142,7 +120,9 @@ export default function NationalTeamHubPage() {
               National Team Hub
             </CardTitle>
             <CardDescription className="text-white/80">
-              We couldn’t load NHSCA hub data yet. Reload usually fixes this after login (the rest of RecruitNC already knows you&apos;re signed in).
+              {data?.reason === "signed_out"
+                ? "Sign in with your RecruitNC account to open the NHSCA Duals 2026 team hub (schedules, roster, gear, and watch links)."
+                : "We couldn’t load NHSCA hub data yet. Reload usually fixes this after login."}
               {data?.reason === "no_access"
                 ? " If this persists, the server returned no_access (e.g. database or env)."
                 : null}
@@ -178,7 +158,8 @@ export default function NationalTeamHubPage() {
 
   return (
     <div className="min-h-screen bg-[#0B2545]">
-      {/* Banner + links + GroupMe — mobile: stack cleanly, extra right padding so floating widget doesn’t cover CTAs */}
+      <NhscaWeighInCountdown variant="sticky" />
+      {/* Banner + links + GroupMe — mobile-first family info */}
       <section className="w-full bg-gradient-to-br from-[#002147] via-[#003366] to-[#002147] text-white">
         <div className="relative w-full aspect-[21/9] min-h-[180px] sm:min-h-[220px] md:min-h-[280px] max-h-[400px]">
           <Image
@@ -200,15 +181,15 @@ export default function NationalTeamHubPage() {
               priority
             />
             <Badge className="mb-2 sm:mb-3 bg-[#D3B574] text-[#003366] hover:bg-[#D3B574] border-0 font-semibold text-xs sm:text-sm">
-              NHSCA Duals 2026 · National Team info hub
+              NHSCA Duals 2026 · Family info hub
             </Badge>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-1 drop-shadow leading-tight">27th Annual National Duals</h1>
-            <p className="text-blue-100 text-sm sm:text-lg md:text-xl font-medium">
-              Fri May 22 – Mon May 25 · travel & weigh-ins Fri · wrestling Sat–Sun · Mon bracket (advancers)
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-1 drop-shadow leading-tight">NC United at National Duals</h1>
+            <p className="text-blue-100 text-sm sm:text-lg md:text-xl font-medium px-1">
+              Fri May 22 – Mon May 25 · Virginia Beach Sports Center
             </p>
-            <p className="text-[#D3B574] mt-1 sm:mt-2 text-sm sm:text-base md:text-lg font-medium">Virginia Beach Sports Center</p>
-            <p className="text-white/85 text-xs sm:text-sm mt-3 max-w-lg mx-auto">
-              One page for logistics, FAQs, roster &amp; gear, and where to watch (Flo + NHSCA).
+            <p className="text-[#D3B574] mt-1 sm:mt-2 text-sm sm:text-base font-medium">Schedules, hotel, weigh-ins, watch links &amp; team roster</p>
+            <p className="text-white/85 text-xs sm:text-sm mt-3 max-w-lg mx-auto leading-relaxed">
+              Built for parents and families — everything you need at the tournament in one mobile-friendly page.
             </p>
           </div>
         </div>
@@ -239,43 +220,14 @@ export default function NationalTeamHubPage() {
 
       <div className="max-w-3xl mx-auto px-4 py-6 sm:py-8 space-y-10 sm:space-y-8">
         {nhscaInfoOnly && (
-          <p className="text-center text-sm text-amber-100/95 bg-[#78350f]/40 border border-amber-500/35 rounded-xl px-4 py-2">
-            No NHSCA roster is linked to this account yet — you still have schedules, FAQs, and watch links on this page. After you&apos;re officially on the team and payment clears, the roster blocks below will populate automatically for the matching parent email.
+          <p className="text-center text-sm text-amber-100/95 bg-[#78350f]/40 border border-amber-500/35 rounded-xl px-4 py-3 leading-relaxed">
+            No NHSCA roster is linked to this account yet — schedules, FAQs, and watch links are still here. After you&apos;re on the team and payment clears, your roster block fills in automatically for your parent email.
           </p>
         )}
 
-        <div id="nhsca-event-info" className="scroll-mt-28 space-y-10 sm:space-y-8">
-        {/* Countdown to weigh-ins — big and bold */}
-        <section className="rounded-2xl border-2 border-[#B31B1B]/40 bg-gradient-to-br from-[#002147] to-[#003366] px-6 py-8 text-white shadow-lg">
-          <p className="text-center text-[#D3B574] font-bold uppercase tracking-wider text-sm mb-2">Weigh-ins open</p>
-          <p className="text-center text-white/90 text-lg font-medium mb-6">Friday, May 22, 2026 · 2:00 PM · Virginia Beach Sports Center</p>
-          {countdown.ready ? (
-            <p className="text-center text-2xl md:text-3xl font-black text-[#D3B574]">We&apos;re here!</p>
-          ) : (
-            <div className="flex flex-wrap justify-center gap-4 md:gap-8">
-              <div className="text-center">
-                <div className="text-3xl md:text-5xl font-black tabular-nums text-[#D3B574]">{countdown.days}</div>
-                <div className="text-xs md:text-sm font-semibold uppercase tracking-wider text-white/80">Days</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl md:text-5xl font-black tabular-nums text-[#D3B574]">{countdown.hours}</div>
-                <div className="text-xs md:text-sm font-semibold uppercase tracking-wider text-white/80">Hours</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl md:text-5xl font-black tabular-nums text-[#D3B574]">{countdown.minutes}</div>
-                <div className="text-xs md:text-sm font-semibold uppercase tracking-wider text-white/80">Min</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl md:text-5xl font-black tabular-nums text-[#D3B574]">{countdown.seconds}</div>
-                <div className="text-xs md:text-sm font-semibold uppercase tracking-wider text-white/80">Sec</div>
-              </div>
-            </div>
-          )}
-        </section>
-
+        <div id="nhsca-event-info" className="scroll-mt-36 space-y-8 sm:space-y-8">
         {/* Hotel */}
-        {data?.allowed && (
-          <HubCollapsibleSection dark title="Hotel" className="border-white/20 bg-white/5">
+        <HubCollapsibleSection dark title="Hotel" defaultOpen className="border-white/20 bg-white/5">
             <div className="px-5 pb-5 pt-0 space-y-2 text-sm text-white/90">
               <p>
                 <strong>Official NC United hotel:</strong>{" "}
@@ -292,10 +244,9 @@ export default function NationalTeamHubPage() {
               <p>Athletes may stay with the team — coordinate with staff. Parents staying separately are fine.</p>
             </div>
           </HubCollapsibleSection>
-        )}
 
         {/* Event details */}
-        <HubCollapsibleSection dark id="event-details" title="Event details (coaches, schedule, venue)" className="border-white/20 bg-white/5">
+        <HubCollapsibleSection dark id="event-details" title="Event details (coaches, schedule, venue)" defaultOpen className="border-white/20 bg-white/5">
           <div className="p-4 pt-0">
             <NHSCA2026EventBlock />
           </div>
@@ -637,18 +588,20 @@ function RosterSizeCell({
   value,
   sizes,
   onSave,
+  readOnly,
 }: {
   registrationId: string | null
   field: GearField
   value: string
   sizes: string[]
   onSave?: () => void
+  readOnly?: boolean
 }) {
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState(false)
   const { session } = useAuth()
   const isInterestRow = !!registrationId && String(registrationId).startsWith("interest-")
-  const editable = !!registrationId
+  const editable = !!registrationId && !readOnly
 
   const handleChange = (newVal: string) => {
     if (!registrationId || !editable) return
