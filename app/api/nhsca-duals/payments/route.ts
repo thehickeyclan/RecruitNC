@@ -20,6 +20,7 @@ export async function GET(req: NextRequest) {
       .single()
 
     const isAdmin = profile?.role === "admin"
+    console.log("[v0] Admin check:", user.id, "isAdmin:", isAdmin, "profile:", profile)
     const statusFilter = req.nextUrl.searchParams.get("status")
 
     // Fetch from NHSCA Duals payments table
@@ -76,6 +77,8 @@ export async function GET(req: NextRequest) {
     const allPayments = [...nhscaFormatted, ...legacyFormatted].sort((a, b) => 
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     )
+    
+    console.log("[v0] Payments result:", "nhsca:", nhscaFormatted.length, "legacy:", legacyFormatted.length, "total:", allPayments.length)
 
     return NextResponse.json({ payments: allPayments })
   } catch (e) {
