@@ -25,7 +25,6 @@ import {
   Gift,
   BookOpen,
   GraduationCap,
-  CircleDollarSign,
 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { useCartStore } from "@/lib/store/cart-store"
@@ -280,12 +279,6 @@ export function Navbar() {
       label: "Fundraising playbook",
       description: "NC United team fundraising guide",
       icon: BookOpen,
-    },
-    {
-      href: "/fundraising/give",
-      label: "Make a gift",
-      description: "Hub checkout — choose amount & receipt name",
-      icon: CircleDollarSign,
     },
     {
       href: "/fundraising/training-fund",

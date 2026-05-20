@@ -167,12 +167,6 @@ export function publicGiftCampaignLabel(metadataSlug: string | null | undefined,
   return seasonYearLabelForGiftDate(giftIsoUtc)
 }
 
-/**
- * Campaign-agnostic checkout (hub branding). Same `/api/spartan/checkout` + metadata as `/spartan`.
- * Public athlete donor pages (`/fundraising/athletes/...`) use this path so gifts are not routed through the `/spartan` landing.
- */
-export const FUNDRAISING_GIVE_PAGE_PATH = "/fundraising/give"
-
 export function fundraisingCampaignByContextKey(key: string): FundraisingCampaignDefinition | undefined {
   return FUNDRAISING_CAMPAIGNS.find((c) => c.adminContextKey === key)
 }

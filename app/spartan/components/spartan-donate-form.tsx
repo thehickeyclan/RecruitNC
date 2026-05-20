@@ -5,7 +5,7 @@ import { SpartanDonateFormClassic } from "./spartan-donate-form-classic"
 import { SpartanDonateFormWizard } from "./spartan-donate-form-wizard"
 
 type SpartanDonateFormProps = {
-  /** When true (e.g. `/fundraising/give`): donate-only entry, hub palette — no Race vs Donate split. */
+  /** When true (fundraising hub): donate-only entry, hub palette — no Race vs Donate split. */
   fundraisingHub?: boolean
   fundraisingHubPrefillCode?: string | null
   fundraisingHubPrefillLabel?: string | null

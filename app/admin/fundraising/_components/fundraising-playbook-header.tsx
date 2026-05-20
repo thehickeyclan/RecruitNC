@@ -86,7 +86,7 @@ export function FundraisingPlaybookHeader({
               Public leaderboard
             </HardLink>
             <span className="text-muted-foreground/60">·</span>
-            <HardLink href="/fundraising/give" className="text-primary font-medium underline-offset-4 hover:underline">
+            <HardLink href="/fundraising/training-fund" className="text-primary font-medium underline-offset-4 hover:underline">
               Fundraising hub / give
             </HardLink>
             <span className="text-muted-foreground/60">·</span>
