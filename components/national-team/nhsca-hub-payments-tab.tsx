@@ -115,10 +115,10 @@ export function NhscaHubPaymentsTab({ isAdmin = false }: { isAdmin?: boolean }) 
           ) : (
             <ul className="divide-y divide-white/10">
               {orders.map((o) => (
-                <li key={o.id} className="px-5 py-4 md:px-6 space-y-1.5">
+                <li key={o.id} className="px-4 py-4 sm:px-5 md:px-6 space-y-1.5">
                   <div className="flex flex-wrap items-start justify-between gap-2">
-                    <div>
-                      <p className="font-semibold text-white">{o.athlete}</p>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-white break-words">{o.athlete}</p>
                       <p className="text-xs text-[#CBAF5D]">{o.team} team · {o.weight} lbs</p>
                     </div>
                     <p className="text-lg font-bold text-[#CBAF5D] tabular-nums shrink-0">
@@ -126,7 +126,7 @@ export function NhscaHubPaymentsTab({ isAdmin = false }: { isAdmin?: boolean }) 
                     </p>
                   </div>
                   <p className="text-sm text-white/75 break-all">{o.parent_email}</p>
-                  <p className="text-xs text-white/55">{o.items}</p>
+                  <p className="text-xs text-white/55 break-words">{o.items}</p>
                   <div className="flex flex-wrap gap-3 text-xs text-white/45">
                     <span>Order {o.code}</span>
                     <span>{formatDate(o.paid_at)}</span>

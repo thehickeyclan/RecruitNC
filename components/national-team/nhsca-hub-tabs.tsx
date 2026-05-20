@@ -25,29 +25,34 @@ export function NhscaHubTabs({
   isAdmin?: boolean
 }) {
   return (
-    <Tabs defaultValue="event-info" className="w-full">
-      <TabsList
-        className={cn(
-          "grid w-full h-auto grid-cols-2 sm:grid-cols-5 gap-1 rounded-xl bg-[#0a2040] p-1.5",
-          "border border-white/10 shadow-inner mb-6 md:mb-8"
-        )}
-      >
-        <TabsTrigger value="event-info" className={tabTriggerClass}>
-          Event Info
-        </TabsTrigger>
-        <TabsTrigger value="results" className={tabTriggerClass}>
-          Results
-        </TabsTrigger>
-        <TabsTrigger value="payment" className={tabTriggerClass}>
-          Payment
-        </TabsTrigger>
-        <TabsTrigger value="rosters" className={tabTriggerClass}>
+    <Tabs defaultValue="results" className="w-full">
+      <div className="relative mb-6 md:mb-8 -mx-1 px-1 sm:mx-0 sm:px-0">
+        <p className="text-[10px] text-white/40 mb-1.5 sm:hidden">Swipe for more tabs →</p>
+        <TabsList
+          className={cn(
+            "flex w-max min-w-full sm:w-full h-auto flex-nowrap sm:grid sm:grid-cols-5 gap-1 rounded-xl bg-[#0a2040] p-1.5",
+            "border border-white/10 shadow-inner overflow-x-auto scrollbar-none snap-x snap-proximity sm:overflow-visible"
+          )}
+        >
+        <TabsTrigger value="rosters" className={cn(tabTriggerClass, "shrink-0 snap-start min-w-[38%] sm:min-w-0 px-3")}>
           Rosters
         </TabsTrigger>
-        <TabsTrigger value="watch" className={tabTriggerClass}>
-          How to Watch
+        <TabsTrigger value="results" className={cn(tabTriggerClass, "shrink-0 snap-start min-w-[38%] sm:min-w-0 px-3")}>
+          Results
         </TabsTrigger>
-      </TabsList>
+        <TabsTrigger value="event-info" className={cn(tabTriggerClass, "shrink-0 snap-start min-w-[38%] sm:min-w-0 px-3")}>
+          <span className="sm:hidden">Info</span>
+          <span className="hidden sm:inline">Event Info</span>
+        </TabsTrigger>
+        <TabsTrigger value="payment" className={cn(tabTriggerClass, "shrink-0 snap-start min-w-[38%] sm:min-w-0 px-3")}>
+          Payment
+        </TabsTrigger>
+        <TabsTrigger value="watch" className={cn(tabTriggerClass, "shrink-0 snap-start min-w-[38%] sm:min-w-0 px-3")}>
+          <span className="sm:hidden">Watch</span>
+          <span className="hidden sm:inline">How to Watch</span>
+        </TabsTrigger>
+        </TabsList>
+      </div>
 
       <TabsContent value="event-info" className="mt-0 space-y-6 focus-visible:outline-none">
         <NhscaHubEventInfo />

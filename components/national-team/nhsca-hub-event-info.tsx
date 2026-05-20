@@ -3,6 +3,7 @@
 import Image from "next/image"
 import { Calendar, Clock, ExternalLink, MapPin } from "lucide-react"
 import { hubPanelClass, hubPanelDescClass, hubPanelHeaderClass, hubPanelTitleClass } from "@/components/national-team/nhsca-hub-theme"
+import { NhscaHubTravelRoster } from "@/components/national-team/nhsca-hub-travel-roster"
 import { cn } from "@/lib/utils"
 
 const VBSC_MAPS =
@@ -112,6 +113,8 @@ export function NhscaHubEventInfo() {
           </ul>
         </HubInfoCard>
       </div>
+
+      <NhscaHubTravelRoster />
     </div>
   )
 }

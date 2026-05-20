@@ -52,7 +52,7 @@ export function HorizontalScrollRow({
         <div
           ref={ref}
           className={cn(
-            "flex gap-2 overflow-x-auto pb-1 -mx-0.5 px-0.5 scrollbar-none scroll-smooth snap-x snap-proximity",
+            "flex gap-2 overflow-x-auto pb-1 pr-3 -mx-0.5 px-0.5 scrollbar-none scroll-smooth snap-x snap-proximity touch-pan-x",
             className
           )}
         >

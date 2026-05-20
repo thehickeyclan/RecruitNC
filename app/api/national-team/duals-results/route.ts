@@ -15,6 +15,7 @@ import {
   bootstrapNhscaDualsEvent,
   ensureNhscaDualsDay1Schedule,
   fetchNhscaDualsSnapshot,
+  pruneNhscaDualsTestDuals,
   resetAllEventMatchResults,
   saveNhscaDualsMatch,
   setDualStatus,
@@ -43,6 +44,12 @@ export async function GET(request: NextRequest) {
     } catch (e) {
       console.error("[RecruitNC] nhsca duals bootstrap", e)
     }
+  }
+
+  try {
+    await pruneNhscaDualsTestDuals(admin)
+  } catch (e) {
+    console.error("[RecruitNC] nhsca duals prune test duals", e)
   }
 
   let snap = await fetchNhscaDualsSnapshot(admin)

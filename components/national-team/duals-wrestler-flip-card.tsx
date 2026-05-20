@@ -44,7 +44,7 @@ export function DualsWrestlerFlipCard({
 
   return (
     <figure className="mx-auto w-full max-w-[350px]">
-      <div className="perspective-1000 h-[480px] w-full">
+      <div className="perspective-1000 h-[360px] sm:h-[420px] md:h-[480px] w-full">
         <div
           className={cn(
             "relative h-full w-full transition-transform duration-700 preserve-3d",
@@ -103,7 +103,7 @@ export function DualsWrestlerFlipCard({
                     e.stopPropagation()
                     setIsFlipped(false)
                   }}
-                  className="shrink-0 rounded-full p-2 bg-[#B31B1B] text-white shadow-md"
+                  className="shrink-0 rounded-full min-h-[44px] min-w-[44px] flex items-center justify-center bg-[#B31B1B] text-white shadow-md"
                   aria-label="Flip to front"
                 >
                   <RotateCw className="h-3.5 w-3.5" />
