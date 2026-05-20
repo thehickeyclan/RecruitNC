@@ -10,6 +10,7 @@ import {
   hubPanelTitleClass,
 } from "@/components/national-team/nhsca-hub-theme"
 import type { NhscaHubMediaRow } from "@/lib/nhsca-hub-media"
+import { NhscaHubMediaShareButtons } from "@/components/national-team/nhsca-hub-media-share-buttons"
 import { cn } from "@/lib/utils"
 
 function formatWhen(iso: string) {
@@ -228,11 +229,12 @@ export function NhscaHubMediaTab({
                         />
                       )}
                     </button>
-                    <div className="mt-1.5 px-0.5">
+                    <div className="mt-1.5 px-0.5 space-y-1.5">
                       <p className="text-[11px] font-semibold text-white/85 truncate">
                         {item.uploader_name || item.uploader_email || "Parent"}
                       </p>
                       <p className="text-[10px] text-white/40">{formatWhen(item.created_at)}</p>
+                      <NhscaHubMediaShareButtons url={item.url} caption={item.caption} compact />
                     </div>
                     {canDelete ? (
                       <button
@@ -298,6 +300,9 @@ export function NhscaHubMediaTab({
             )}
           </div>
           {viewer.caption ? <p className="mt-3 text-sm text-white/80 text-center shrink-0">{viewer.caption}</p> : null}
+          <div className="mt-3 shrink-0 max-w-md mx-auto w-full">
+            <NhscaHubMediaShareButtons url={viewer.url} caption={viewer.caption} />
+          </div>
         </div>
       ) : null}
     </div>
