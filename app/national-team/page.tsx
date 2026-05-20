@@ -152,22 +152,70 @@ export default function NCUnitedNationalTeam() {
               Elite wrestlers representing North Carolina on the national stage
             </p>
 
-            {/* Hero CTAs — primary (interest) + secondary (schedule) */}
-            <div className="mb-10 md:mb-12 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link
-                href="/national-team/interest-form"
-                className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-[#B31B1B] px-6 py-3 text-base font-bold text-white shadow-lg hover:bg-[#9a1616] transition-colors border-2 border-white/20"
-              >
-                Express interest · 2026
-              </Link>
-              <Link
-                href="#schedule"
-                className="inline-flex min-h-[48px] items-center justify-center rounded-xl border-2 border-[#CBAF5D] bg-transparent px-6 py-3 text-base font-semibold text-[#CBAF5D] hover:bg-[#CBAF5D]/20 transition-colors"
-              >
-                View schedule
-              </Link>
+            {/* NHSCA Duals 2026 — Main Event Banner */}
+            <div className="mb-10 md:mb-12 max-w-3xl mx-auto">
+              <div className="rounded-2xl border-2 border-[#CBAF5D] bg-gradient-to-br from-[#CBAF5D]/20 via-[#D4BC6A]/15 to-[#B8982E]/20 p-6 md:p-8 backdrop-blur-sm">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                  <div className="text-left">
+                    <div className="inline-flex items-center gap-2 mb-2">
+                      <span className="inline-flex items-center rounded-full bg-[#C41E3A] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white animate-pulse">
+                        Live Event
+                      </span>
+                    </div>
+                    <h2 className="text-2xl md:text-3xl font-black text-white mb-1">NHSCA Duals 2026</h2>
+                    <p className="text-sm text-white/80">May 22-25 · Virginia Beach Sports Center</p>
+                    {nhscaLineupCount !== null && nhscaLineupCount > 0 && (
+                      <p className="text-sm text-[#CBAF5D] font-semibold mt-1">{nhscaLineupCount} athletes on lineup</p>
+                    )}
+                  </div>
+                  <div className="flex flex-col items-center md:items-end shrink-0">
+                    <p className="text-[#CBAF5D] font-bold uppercase tracking-wider text-xs mb-2">Weigh-ins open</p>
+                    {countdown.ready ? (
+                      <p className="text-2xl md:text-3xl font-black text-white">We&apos;re here!</p>
+                    ) : (
+                      <div className="flex gap-3 md:gap-4">
+                        <div className="text-center">
+                          <div className="text-2xl md:text-3xl font-black tabular-nums text-white">{countdown.days}</div>
+                          <div className="text-[10px] font-semibold uppercase tracking-wider text-white/60">Days</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl md:text-3xl font-black tabular-nums text-white">{countdown.hours}</div>
+                          <div className="text-[10px] font-semibold uppercase tracking-wider text-white/60">Hrs</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl md:text-3xl font-black tabular-nums text-white">{countdown.minutes}</div>
+                          <div className="text-[10px] font-semibold uppercase tracking-wider text-white/60">Min</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl md:text-3xl font-black tabular-nums text-white">{countdown.seconds}</div>
+                          <div className="text-[10px] font-semibold uppercase tracking-wider text-white/60">Sec</div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <HardLink
+                    href="/national-team/hub"
+                    className="w-full sm:w-auto inline-flex min-h-[52px] items-center justify-center rounded-xl bg-[#CBAF5D] px-8 py-3 text-base font-bold text-[#002147] hover:bg-[#D4BC6A] transition-colors shadow-lg"
+                  >
+                    NHSCA Duals Hub
+                  </HardLink>
+                  <Link
+                    href="#schedule"
+                    className="w-full sm:w-auto inline-flex min-h-[48px] items-center justify-center rounded-xl border-2 border-white/40 bg-transparent px-6 py-3 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
+                  >
+                    See Full Schedule
+                  </Link>
+                  <Link
+                    href="/national-team/interest-form"
+                    className="w-full sm:w-auto inline-flex min-h-[48px] items-center justify-center rounded-xl border-2 border-[#C41E3A]/60 bg-[#C41E3A]/20 px-6 py-3 text-sm font-semibold text-white hover:bg-[#C41E3A]/30 transition-colors"
+                  >
+                    Express Interest
+                  </Link>
+                </div>
+              </div>
             </div>
-            <p className="text-sm text-blue-100/90">Get considered for NHSCA Duals, AAU, Deep South &amp; more</p>
 
             {/* Stats Grid - Aggregate Stats Across All Tournaments */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mt-12 md:mt-16 px-4">
