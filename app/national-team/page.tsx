@@ -232,12 +232,12 @@ export default function NCUnitedNationalTeam() {
                         <span className="text-[#002147] font-semibold"> · {nhscaLineupCount} on lineup</span>
                       )}
                     </p>
-                    <div className="mt-3 flex flex-col sm:flex-row flex-wrap gap-2">
+                    <div className="mt-4 flex flex-col sm:flex-row flex-wrap gap-3">
                       <HardLink
                         href="/national-team/hub"
-                        className="inline-flex min-h-[40px] items-center justify-center rounded-xl bg-[#002147] px-4 py-2 text-sm font-semibold text-[#D3B574] hover:bg-[#003366] transition-colors"
+                        className="inline-flex min-h-[52px] items-center justify-center rounded-xl bg-[#002147] px-6 py-3 text-base font-bold text-[#D3B574] hover:bg-[#003366] transition-colors shadow-lg border-2 border-[#D3B574]/30"
                       >
-                        NHSCA team hub
+                        NHSCA Duals Hub
                       </HardLink>
                     </div>
                   </div>
