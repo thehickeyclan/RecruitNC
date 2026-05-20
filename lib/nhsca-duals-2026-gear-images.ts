@@ -94,3 +94,9 @@ export const NHSCA_DUALS_2026_SINGLETS = [
     alt: "NC United white competition singlet — navy, red, and white with NC logo",
   },
 ] as const
+
+/** All product photos — singlets first, then apparel (carousel order). */
+export const NHSCA_DUALS_2026_ALL_GEAR_PHOTOS: NhscaGearPhoto[] = [
+  ...NHSCA_DUALS_2026_SINGLET_PHOTOS,
+  ...NHSCA_DUALS_2026_APPAREL_PHOTOS,
+]

@@ -224,7 +224,7 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
 
   return (
     <div className="space-y-4">
-      <NhscaHubTeamGearShowcase />
+      <NhscaHubTeamGearShowcase carousel />
 
       <article className={cn(hubPanelClass, "overflow-hidden")}>
         <div className="p-4 sm:p-5 md:p-6 space-y-5">
