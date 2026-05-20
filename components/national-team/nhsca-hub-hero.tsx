@@ -26,26 +26,26 @@ export function NhscaHubHero() {
           ← National Team
         </HardLink>
 
-        <div className="relative overflow-hidden rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.45)] ring-1 ring-[#002147]/20">
+        <div className="relative overflow-hidden rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.45)] ring-1 ring-[#D4BC6A]/40">
           <div
-            className="absolute inset-0 bg-gradient-to-br from-[#F2E8C9] via-[#D4BC6A] to-[#B8982E]"
+            className="absolute inset-0 bg-gradient-to-br from-[#E8DDB8] via-[#D4BC6A] to-[#B8982E]"
             aria-hidden
           />
           <div
-            className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.35),transparent_55%)]"
+            className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.15),transparent_60%)]"
             aria-hidden
           />
 
           <div className="relative p-5 sm:p-6 md:p-8 text-[#002147]">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
               <div className="min-w-0 flex-1 space-y-3">
-                <div className="inline-flex rounded-xl bg-white p-2.5 shadow-md ring-1 ring-[#002147]/10">
+                <div className="inline-flex rounded-lg bg-white/90 p-2 shadow-md ring-1 ring-[#002147]/15 backdrop-blur-sm">
                   <Image
                     src="/images/nhsca-national-duals-logo.png"
                     alt="NHSCA National Duals"
                     width={180}
                     height={72}
-                    className="h-9 sm:h-11 w-auto object-contain"
+                    className="h-8 sm:h-10 w-auto object-contain"
                     priority
                   />
                 </div>
@@ -68,9 +68,9 @@ export function NhscaHubHero() {
               </div>
 
               <div className="w-full lg:w-auto lg:min-w-[280px] shrink-0">
-                <div className="rounded-xl bg-[#002147] p-4 shadow-lg ring-1 ring-[#001428]/50">
+                <div className="rounded-xl bg-[#002147]/95 p-4 shadow-md ring-1 ring-[#D4BC6A]/30 backdrop-blur-sm">
                   <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-                    <span className="inline-flex items-center rounded-full bg-[#B31B1B] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+                    <span className="inline-flex items-center rounded-full bg-[#C41E3A] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
                       Live
                     </span>
                     <p className="text-[11px] font-semibold uppercase tracking-wider text-[#D3B574]">
