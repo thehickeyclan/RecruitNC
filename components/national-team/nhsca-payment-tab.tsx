@@ -110,7 +110,10 @@ export function NhscaPaymentTab() {
   }, [searchParams])
 
   // Fetch user's orders
-  const { data: ordersData } = useSWR("/api/nhsca-duals/payments", fetcher, { revalidateOnFocus: false })
+  const { data: ordersData, mutate: mutateOrders } = useSWR("/api/nhsca-duals/payments", fetcher, { 
+    revalidateOnFocus: true,
+    dedupingInterval: 0
+  })
   const orders = ordersData?.payments || []
   const [existingPayments, setExistingPayments] = useState<Array<{ id: string; status: string; amount_cents: number; created_at: string; items: unknown[] }>>([])
   const [loadingPayments, setLoadingPayments] = useState(true)
