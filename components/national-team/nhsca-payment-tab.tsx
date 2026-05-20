@@ -63,9 +63,15 @@ const PRODUCTS = {
   },
   transport: {
     id: "nhsca-2026-transport",
-    name: "Transportation / Van Fee",
+    name: "Van Transportation",
     description: "Round-trip from Raleigh",
-    priceInCents: 0, // TBD
+    priceInCents: 0, // TBD per athlete
+  },
+  hotel: {
+    id: "nhsca-2026-hotel",
+    name: "Hotel",
+    description: "Shared hotel accommodations",
+    priceInCents: 0, // TBD per athlete
   },
 }
 
@@ -87,6 +93,7 @@ export function NhscaPaymentTab() {
   const [shortSleeveSize, setShortSleeveSize] = useState("")
   const [longSleeveSize, setLongSleeveSize] = useState("")
   const [wantTransport, setWantTransport] = useState(false)
+  const [wantHotel, setWantHotel] = useState(false)
   const [athleteName, setAthleteName] = useState("")
   const [team, setTeam] = useState<"national" | "select">("national")
   const [submitting, setSubmitting] = useState(false)
@@ -180,10 +187,28 @@ if (longSleeveSize && longSleeveSize !== "none" && longSleeveSize !== "") {
           size: longSleeveSize,
         })
       }
+
+      // Add travel items
+      if (wantTransport && PRODUCTS.transport.priceInCents > 0) {
+        newCart.push({
+          productId: PRODUCTS.transport.id,
+          name: PRODUCTS.transport.name,
+          priceInCents: PRODUCTS.transport.priceInCents,
+          quantity: 1,
+        })
+      }
+      if (wantHotel && PRODUCTS.hotel.priceInCents > 0) {
+        newCart.push({
+          productId: PRODUCTS.hotel.id,
+          name: PRODUCTS.hotel.name,
+          priceInCents: PRODUCTS.hotel.priceInCents,
+          quantity: 1,
+        })
+      }
     }
     
     setCart(newCart)
-  }, [mode, singletQty, singletSize, shortsSize, shortSleeveSize, longSleeveSize])
+  }, [mode, singletQty, singletSize, shortsSize, shortSleeveSize, longSleeveSize, includeRegistration, wantTransport, wantHotel])
 
   const total = cart.reduce((sum, item) => sum + item.priceInCents * item.quantity, 0)
 
@@ -440,18 +465,13 @@ if (longSleeveSize && longSleeveSize !== "none" && longSleeveSize !== "") {
 
               {/* Singlet */}
               <div className="p-4 bg-[#0a1628] rounded-lg space-y-3">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="font-semibold text-white">NC United Singlet</h4>
-                    <p className="text-xs text-white/50">$75 each</p>
-                  </div>
-                </div>
+                <h4 className="font-semibold text-white mb-2">Apparel — Singlet (Optional)</h4>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <Label className="text-white/80 text-xs">Quantity</Label>
-                    <Select value={String(singletQty)} onValueChange={v => setSingletQty(Number(v))}>
+                    <Select value={String(singletQty)} onValueChange={(v) => setSingletQty(Number(v))}>
                       <SelectTrigger className="bg-[#0d1f38] border-[#1a3a5c] text-white">
-                        <SelectValue />
+                        <SelectValue placeholder="0" />
                       </SelectTrigger>
                       <SelectContent>
                         {[0, 1, 2, 3, 4].map(n => (
@@ -476,9 +496,9 @@ if (longSleeveSize && longSleeveSize !== "none" && longSleeveSize !== "") {
                 </div>
               </div>
 
-              {/* Individual apparel */}
+              {/* Other Apparel */}
               <div className="p-4 bg-[#0a1628] rounded-lg space-y-3">
-                <h4 className="font-semibold text-white mb-2">Apparel (Optional)</h4>
+                <h4 className="font-semibold text-white mb-2">Apparel — Other Items (Optional)</h4>
                 <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1">
                     <Label className="text-white/80 text-xs">Shorts — $40</Label>
@@ -524,7 +544,48 @@ if (longSleeveSize && longSleeveSize !== "none" && longSleeveSize !== "") {
                   </div>
                 </div>
               </div>
-            </div>
+
+              {/* Travel Section */}
+              <div className="border-t border-[#1a3a5c] pt-4 mt-4">
+                <h4 className="font-semibold text-white mb-3">Travel (Optional)</h4>
+                <div className="space-y-3">
+                  {/* Van Transportation */}
+                  <div className="p-4 bg-[#0a1628] rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <Checkbox
+                        id="transport"
+                        checked={wantTransport}
+                        onCheckedChange={(c) => setWantTransport(!!c)}
+                        className="mt-1 border-[#1a3a5c] data-[state=checked]:bg-[#c9a227] data-[state=checked]:border-[#c9a227]"
+                      />
+                      <div className="flex-1">
+                        <Label htmlFor="transport" className="text-white font-semibold cursor-pointer">
+                          Van Transportation
+                        </Label>
+                        <p className="text-xs text-white/50">Round-trip from Raleigh — Per-athlete cost TBD</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Hotel */}
+                  <div className="p-4 bg-[#0a1628] rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <Checkbox
+                        id="hotel"
+                        checked={wantHotel}
+                        onCheckedChange={(c) => setWantHotel(!!c)}
+                        className="mt-1 border-[#1a3a5c] data-[state=checked]:bg-[#c9a227] data-[state=checked]:border-[#c9a227]"
+                      />
+                      <div className="flex-1">
+                        <Label htmlFor="hotel" className="text-white font-semibold cursor-pointer">
+                          Hotel
+                        </Label>
+                        <p className="text-xs text-white/50">Shared accommodations — Per-athlete cost TBD</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
           )}
 
           {/* Transportation - TBD */}
@@ -591,7 +652,7 @@ if (longSleeveSize && longSleeveSize !== "none" && longSleeveSize !== "") {
           </Button>
 
           <p className="text-xs text-white/40 text-center">
-            Hotel is handled separately and not included in checkout.
+            Transport and hotel pricing will be calculated per-athlete. We&apos;ll contact you with final costs.
           </p>
         </CardContent>
       </Card>
