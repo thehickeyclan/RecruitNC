@@ -757,11 +757,11 @@ export async function POST(request: NextRequest) {
           business: ntSessionBusiness,
         })
         let orderIdToUse = orderId
+        const linesEncoded = (session.metadata?.checkout_lines as string | undefined) ?? ""
         if ((orderErr as { code?: string })?.code === "23505") {
           const { data: existingOrder } = await admin.from("orders").select("id").eq("stripe_payment_intent_id", paymentIntentId).maybeSingle()
           orderIdToUse = (existingOrder as { id?: string } | null)?.id ?? orderId
         } else if (!orderErr && totalCents > 0) {
-          const linesEncoded = (session.metadata?.checkout_lines as string | undefined) ?? ""
           const decoded = decodeLineItemsMetadata(linesEncoded)
           const itemsToInsert =
             decoded.length > 0
@@ -815,6 +815,8 @@ export async function POST(request: NextRequest) {
             order_id: totalCents > 0 ? orderIdToUse : reg.order_id ?? null,
             stripe_session_id: session.id,
             stripe_payment_intent_id: paymentIntentId,
+            checkout_lines: linesEncoded.slice(0, 500) || ((reg as { checkout_lines?: string }).checkout_lines ?? null),
+            checkout_mode: (session.metadata?.checkout_mode as string | undefined) ?? (reg as { checkout_mode?: string }).checkout_mode ?? null,
             ...(parentUserId ? { parent_user_id: parentUserId } : {}),
             updated_at: new Date().toISOString(),
           })

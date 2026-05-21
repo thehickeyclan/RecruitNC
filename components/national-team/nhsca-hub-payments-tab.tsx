@@ -13,6 +13,33 @@ import {
 import type { NhscaDuals2026PaidOrderRow } from "@/lib/nhsca-duals-2026-registrations"
 import { cn } from "@/lib/utils"
 
+function OrderLineItemsList({
+  lineItems,
+  fallbackText,
+  className,
+}: {
+  lineItems: NhscaDuals2026PaidOrderRow["line_items"]
+  fallbackText?: string
+  className?: string
+}) {
+  if (lineItems?.length) {
+    return (
+      <ul className={cn("space-y-1 text-sm", className)}>
+        {lineItems.map((item, idx) => (
+          <li key={`${item.name}-${idx}`} className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+            <span className="text-white/85 break-words min-w-0">{item.name}</span>
+            <span className="text-[#CBAF5D] tabular-nums shrink-0">{formatDollars(item.amount_cents)}</span>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+  if (fallbackText?.trim()) {
+    return <p className={cn("text-xs text-white/55 break-words", className)}>{fallbackText}</p>
+  }
+  return null
+}
+
 function formatDollars(cents: number) {
   return `$${(cents / 100).toFixed(2)}`
 }
@@ -126,8 +153,8 @@ export function NhscaHubPaymentsTab({ isAdmin = false }: { isAdmin?: boolean }) 
                     </p>
                   </div>
                   <p className="text-sm text-white/75 break-all">{o.parent_email}</p>
-                  <p className="text-xs text-white/55 break-words">{o.items}</p>
-                  <div className="flex flex-wrap gap-3 text-xs text-white/45">
+                  <OrderLineItemsList lineItems={o.line_items} fallbackText={o.items} />
+                  <div className="flex flex-wrap gap-3 text-xs text-white/45 pt-1">
                     <span>Order {o.code}</span>
                     <span>{formatDate(o.paid_at)}</span>
                   </div>
