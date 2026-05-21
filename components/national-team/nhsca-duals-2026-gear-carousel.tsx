@@ -15,7 +15,7 @@ type NhscaDuals2026GearCarouselProps = {
   className?: string
 }
 
-/** Premium gear stage — Payments checkout (kids / families first look). */
+/** Gear browser — swipe or arrows (Payments checkout). */
 export function NhscaDuals2026GearCarousel({
   photos = NHSCA_DUALS_2026_ALL_GEAR_PHOTOS,
   className,
@@ -53,8 +53,7 @@ export function NhscaDuals2026GearCarousel({
   }, [count])
 
   return (
-    <div className={cn("space-y-4", className)}>
-      {/* Hero stage */}
+    <div className={cn("space-y-3", className)}>
       <div className="relative">
         <div
           ref={trackRef}
@@ -66,33 +65,20 @@ export function NhscaDuals2026GearCarousel({
             return (
               <figure
                 key={photo.id}
-                className="w-full shrink-0 snap-center snap-always flex flex-col items-center px-8 sm:px-12"
+                className="w-full shrink-0 snap-center snap-always flex justify-center px-10"
               >
-                <div
-                  className={cn(
-                    "relative w-full max-w-[300px] sm:max-w-[340px] md:max-w-[380px] aspect-[3/4]",
-                    "rounded-2xl overflow-hidden",
-                    "bg-[radial-gradient(ellipse_at_50%_38%,rgba(203,175,93,0.22)_0%,rgba(255,255,255,0.07)_42%,transparent_72%)]",
-                    "ring-1 ring-[#CBAF5D]/35",
-                    "shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_24px_48px_rgba(0,0,0,0.55)]"
-                  )}
-                >
-                  {/* Floor glow */}
-                  <div
-                    className="pointer-events-none absolute inset-x-[12%] bottom-[6%] h-[14%] rounded-full bg-[#CBAF5D]/20 blur-2xl"
-                    aria-hidden
-                  />
+                <div className="relative w-full max-w-[280px] sm:max-w-[320px] aspect-[3/4]">
                   <Image
                     src={photo.src}
                     alt={photo.alt}
                     fill
                     className={cn(
-                      "object-contain p-3 sm:p-4",
+                      "object-contain",
                       localBlackBg
-                        ? "mix-blend-screen scale-[1.02]"
-                        : "drop-shadow-[0_12px_32px_rgba(0,0,0,0.55)]"
+                        ? "mix-blend-screen"
+                        : "drop-shadow-[0_8px_24px_rgba(0,0,0,0.4)]"
                     )}
-                    sizes="(max-width: 640px) 300px, 380px"
+                    sizes="320px"
                     draggable={false}
                     priority={photo.id === "blue-front"}
                   />
@@ -106,8 +92,8 @@ export function NhscaDuals2026GearCarousel({
           type="button"
           onClick={() => scrollToIndex(active - 1)}
           disabled={active <= 0}
-          className="absolute left-0 top-[42%] -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-[#002147]/95 text-white shadow-xl ring-1 ring-[#CBAF5D]/40 disabled:opacity-25 hover:bg-[#003366] hover:ring-[#CBAF5D]/60 transition-colors"
-          aria-label="Previous product"
+          className="absolute left-0 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-[#002147]/90 text-white disabled:opacity-30"
+          aria-label="Previous"
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
@@ -115,61 +101,14 @@ export function NhscaDuals2026GearCarousel({
           type="button"
           onClick={() => scrollToIndex(active + 1)}
           disabled={active >= count - 1}
-          className="absolute right-0 top-[42%] -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-[#002147]/95 text-white shadow-xl ring-1 ring-[#CBAF5D]/40 disabled:opacity-25 hover:bg-[#003366] hover:ring-[#CBAF5D]/60 transition-colors"
-          aria-label="Next product"
+          className="absolute right-0 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-[#002147]/90 text-white disabled:opacity-30"
+          aria-label="Next"
         >
           <ChevronRight className="h-5 w-5" />
         </button>
       </div>
 
-      {/* Active product title */}
-      <div className="text-center px-2">
-        <p className="text-base sm:text-lg font-bold text-white tracking-tight">{current?.label}</p>
-        <p className="mt-1 text-[11px] sm:text-xs text-[#CBAF5D]/80 uppercase tracking-[0.14em]">
-          NC United · NHSCA Duals 2026
-        </p>
-      </div>
-
-      {/* Product picker — horizontal chips */}
-      <div
-        className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none snap-x snap-mandatory -mx-1 px-1"
-        role="tablist"
-        aria-label="Browse team gear"
-      >
-        {photos.map((photo, i) => (
-          <button
-            key={photo.id}
-            type="button"
-            role="tab"
-            aria-selected={i === active}
-            onClick={() => scrollToIndex(i)}
-            className={cn(
-              "shrink-0 snap-start rounded-full px-3 py-1.5 text-[11px] sm:text-xs font-semibold transition-all",
-              i === active
-                ? "bg-[#CBAF5D] text-[#002147] shadow-md shadow-[#CBAF5D]/25"
-                : "bg-white/10 text-white/65 hover:bg-white/15 hover:text-white ring-1 ring-white/10"
-            )}
-          >
-            {photo.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Dot progress */}
-      <div className="flex justify-center gap-1.5">
-        {photos.map((photo, i) => (
-          <button
-            key={photo.id}
-            type="button"
-            onClick={() => scrollToIndex(i)}
-            className={cn(
-              "h-1.5 rounded-full transition-all",
-              i === active ? "w-5 bg-[#CBAF5D]" : "w-1.5 bg-white/25 hover:bg-white/40"
-            )}
-            aria-label={`View ${photo.label}`}
-          />
-        ))}
-      </div>
+      <p className="text-center text-sm font-semibold text-white/90">{current?.label}</p>
     </div>
   )
 }
