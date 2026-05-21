@@ -8,10 +8,12 @@ import {
   NHSCA_HUB_MEDIA_EVENT_SLUG,
   NHSCA_HUB_MEDIA_MAX_IMAGE_BYTES,
   NHSCA_HUB_MEDIA_MAX_VIDEO_BYTES,
+  NHSCA_HUB_MEDIA_SELECT,
   NHSCA_HUB_MEDIA_TABLE,
   nhscaHubMediaTypeFromMime,
   type NhscaHubMediaRow,
 } from "@/lib/nhsca-hub-media"
+import { enrichNhscaHubMediaWithLikes } from "@/lib/nhsca-hub-media-likes"
 
 export const dynamic = "force-dynamic"
 
@@ -141,9 +143,7 @@ export async function POST(request: NextRequest) {
         content_type: file.type,
         file_size_bytes: file.size,
       })
-      .select(
-        "id, event_slug, user_id, uploader_email, uploader_name, media_type, url, filename, caption, content_type, created_at"
-      )
+      .select(NHSCA_HUB_MEDIA_SELECT)
       .single()
 
     if (error) {
@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    inserted.push(data as NhscaHubMediaRow)
+    inserted.push({ ...(data as NhscaHubMediaRow), like_count: 0, liked_by_me: false })
   }
 
   return NextResponse.json({ items: inserted })

@@ -8,7 +8,6 @@ import {
   useWeighInCountdown,
 } from "@/components/national-team/nhsca-weigh-in-countdown"
 
-const GROUPME_URL = "https://groupme.com/join_group/113432813/Vdugtepr"
 const NHSCA_OFFICIAL = "https://nhsca-events.com/national-duals/"
 
 /** Gold hero band on navy hub — opaque background so text stays readable. */
@@ -91,21 +90,12 @@ export function NhscaHubHero() {
               </div>
             </div>
 
-            <div className="mt-6 flex flex-col sm:flex-row gap-2 border-t border-[#002147]/15 pt-5">
-              <a
-                href={GROUPME_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl bg-[#002147] px-4 text-sm font-bold text-white hover:bg-[#003366]"
-              >
-                Join GroupMe
-                <ExternalLink className="h-4 w-4 text-[#D3B574]" aria-hidden />
-              </a>
+            <div className="mt-6 border-t border-[#002147]/15 pt-5">
               <a
                 href={NHSCA_OFFICIAL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#002147]/25 bg-white/70 px-4 text-sm font-semibold text-[#002147] hover:bg-white"
+                className="inline-flex min-h-[44px] w-full sm:w-auto items-center justify-center gap-2 rounded-xl border-2 border-[#002147]/25 bg-white/70 px-5 text-sm font-semibold text-[#002147] hover:bg-white"
               >
                 NHSCA official site
                 <ExternalLink className="h-4 w-4" aria-hidden />
