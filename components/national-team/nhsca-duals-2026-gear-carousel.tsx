@@ -53,8 +53,8 @@ export function NhscaDuals2026GearCarousel({
   }, [count])
 
   return (
-    <div className={cn("space-y-3", className)}>
-      <div className="relative">
+    <div className={cn("space-y-2", className)}>
+      <div className="relative max-w-[240px] mx-auto">
         <div
           ref={trackRef}
           className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-none"
@@ -65,20 +65,20 @@ export function NhscaDuals2026GearCarousel({
             return (
               <figure
                 key={photo.id}
-                className="w-full shrink-0 snap-center snap-always flex justify-center px-10"
+                className="w-full shrink-0 snap-center snap-always flex justify-center px-7"
               >
-                <div className="relative w-full max-w-[280px] sm:max-w-[320px] aspect-[3/4]">
+                <div className="relative w-[130px] sm:w-[150px] h-[175px] sm:h-[195px]">
                   <Image
                     src={photo.src}
                     alt={photo.alt}
                     fill
                     className={cn(
-                      "object-contain",
+                      "object-contain object-center",
                       localBlackBg
                         ? "mix-blend-screen"
-                        : "drop-shadow-[0_8px_24px_rgba(0,0,0,0.4)]"
+                        : "drop-shadow-[0_6px_16px_rgba(0,0,0,0.35)]"
                     )}
-                    sizes="320px"
+                    sizes="150px"
                     draggable={false}
                     priority={photo.id === "blue-front"}
                   />
@@ -92,23 +92,23 @@ export function NhscaDuals2026GearCarousel({
           type="button"
           onClick={() => scrollToIndex(active - 1)}
           disabled={active <= 0}
-          className="absolute left-0 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-[#002147]/90 text-white disabled:opacity-30"
+          className="absolute -left-1 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-[#002147]/90 text-white disabled:opacity-30"
           aria-label="Previous"
         >
-          <ChevronLeft className="h-5 w-5" />
+          <ChevronLeft className="h-4 w-4" />
         </button>
         <button
           type="button"
           onClick={() => scrollToIndex(active + 1)}
           disabled={active >= count - 1}
-          className="absolute right-0 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-[#002147]/90 text-white disabled:opacity-30"
+          className="absolute -right-1 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-[#002147]/90 text-white disabled:opacity-30"
           aria-label="Next"
         >
-          <ChevronRight className="h-5 w-5" />
+          <ChevronRight className="h-4 w-4" />
         </button>
       </div>
 
-      <p className="text-center text-sm font-semibold text-white/90">{current?.label}</p>
+      <p className="text-center text-xs text-white/75">{current?.label}</p>
     </div>
   )
 }

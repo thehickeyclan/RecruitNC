@@ -44,7 +44,7 @@ export function NhscaHubTeamGearShowcase({
       )}
       aria-label="2026 team gear"
     >
-      <div className={cn("p-4 sm:p-5", compact && "p-3")}>
+      <div className={cn(compact ? "p-3" : carousel ? "px-3 py-3 sm:px-4" : "p-4 sm:p-5")}>
         {!carousel ? (
           <div className="flex flex-wrap items-baseline justify-between gap-2 mb-3">
             <div>
@@ -61,11 +61,7 @@ export function NhscaHubTeamGearShowcase({
               </p>
             ) : null}
           </div>
-        ) : (
-          <p className="text-xs font-bold uppercase tracking-wider text-[#CBAF5D]/90 mb-3">
-            2026 team gear
-          </p>
-        )}
+        ) : null}
 
         {carousel ? (
           <NhscaDuals2026GearCarousel />
