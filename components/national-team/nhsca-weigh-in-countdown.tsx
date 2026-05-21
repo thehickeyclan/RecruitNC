@@ -25,6 +25,8 @@ export type WeighInCountdownState = {
   phase: NhscaDualsCountdownPhase
   /** Calendar days until active target (ET) */
   calendarDays: number
+  /** Ms until active target — used for four-box DAY/HRS/MIN/SEC display */
+  remainingMs: number
   hours: number
   minutes: number
   seconds: number
@@ -37,6 +39,7 @@ export function useWeighInCountdown(): WeighInCountdownState {
   const [countdown, setCountdown] = useState<WeighInCountdownState>({
     phase: "weigh_in",
     calendarDays: 0,
+    remainingMs: 0,
     hours: 0,
     minutes: 0,
     seconds: 0,
@@ -55,6 +58,7 @@ export function useWeighInCountdown(): WeighInCountdownState {
         setCountdown({
           phase,
           calendarDays: 0,
+          remainingMs: 0,
           hours: 0,
           minutes: 0,
           seconds: 0,
@@ -72,7 +76,8 @@ export function useWeighInCountdown(): WeighInCountdownState {
       setCountdown({
         phase,
         calendarDays,
-        hours: Math.floor(remaining / 3600000),
+        remainingMs: remaining,
+        hours: Math.floor((remaining % 86400000) / 3600000),
         minutes: Math.floor((remaining % 3600000) / 60000),
         seconds: Math.floor((remaining % 60000) / 1000),
         durationLabel: formatCountdownDuration(remaining),
@@ -93,17 +98,33 @@ function phaseTimeHint(phase: NhscaDualsCountdownPhase): string {
   return "2:00 PM ET"
 }
 
+function fourBoxSegments(remainingMs: number) {
+  const days = Math.floor(remainingMs / 86400000)
+  const hours = Math.floor((remainingMs % 86400000) / 3600000)
+  const minutes = Math.floor((remainingMs % 3600000) / 60000)
+  const seconds = Math.floor((remainingMs % 60000) / 1000)
+  return [
+    { v: String(days), l: "Days" },
+    { v: pad2(hours), l: "Hrs" },
+    { v: pad2(minutes), l: "Min" },
+    { v: pad2(seconds), l: "Sec" },
+  ]
+}
+
 /** Shared countdown face — home, national team, hub hero, sticky bar */
 export function NhscaDualsCountdownFace({
   countdown,
   large,
   dark,
   compact,
+  layout = "default",
 }: {
   countdown: WeighInCountdownState
   large?: boolean
   dark?: boolean
   compact?: boolean
+  /** Hub hero / banner — always four navy boxes (Days, Hrs, Min, Sec). */
+  layout?: "default" | "fourBox"
 }) {
   const digitClass = large
     ? "text-3xl sm:text-4xl md:text-5xl"
@@ -123,6 +144,26 @@ export function NhscaDualsCountdownFace({
       >
         {nhscaDualsCountdownReadyMessage(countdown.phase)}
       </p>
+    )
+  }
+
+  if (layout === "fourBox") {
+    return (
+      <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
+        {fourBoxSegments(countdown.remainingMs).map(({ v, l }) => (
+          <div
+            key={l}
+            className="rounded-lg bg-[#001428]/80 px-0.5 py-2.5 sm:py-3 text-center ring-1 ring-white/5"
+          >
+            <div className="text-xl sm:text-2xl md:text-3xl font-black tabular-nums leading-none text-white">
+              {v}
+            </div>
+            <div className="mt-1.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-[#D3B574]">
+              {l}
+            </div>
+          </div>
+        ))}
+      </div>
     )
   }
 

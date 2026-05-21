@@ -47,11 +47,24 @@ async function main() {
   const ids = process.argv.slice(2).filter(Boolean)
 
   if (!process.env.FAL_KEY) {
-    console.error("Missing FAL_KEY in .env.local")
+    console.error(`
+Missing FAL_KEY.
+
+Create Recruit-NC-main/.env.local with:
+  FAL_KEY=...                    (fal.ai API key — same as store Remove BG)
+  BLOB_READ_WRITE_TOKEN=...      (Vercel → Storage → Blob)
+
+Or pull from Vercel (if linked):
+  vercel env pull .env.local
+
+Then: npm run nhsca:gear-bg
+`)
     process.exit(1)
   }
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    console.error("Missing BLOB_READ_WRITE_TOKEN in .env.local")
+    console.error(`
+Missing BLOB_READ_WRITE_TOKEN in .env.local (Vercel Blob — same as store uploads).
+`)
     process.exit(1)
   }
 

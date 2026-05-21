@@ -35,7 +35,7 @@ export async function processNhscaGearImage(
     return { id, label: photo.label, status: "error", message: "No public file mapping" }
   }
 
-  const relativeSrc = photo.src.startsWith("/") ? photo.src : `/${photo.src}`
+  const relativeSrc = `/images/nhsca-duals-2026-gear/${filename}`
   const localPath = publicGearPath(relativeSrc)
 
   try {
@@ -64,6 +64,7 @@ export async function processNhscaGearImage(
     const blob = await put(`nhsca-duals-2026-gear/${id}.png`, buffer, {
       access: "public",
       contentType: "image/png",
+      allowOverwrite: true,
     })
 
     let savedLocal = false
