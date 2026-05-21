@@ -342,13 +342,21 @@ export default function AdminBlueNationalTeamPaymentsPage() {
               <ArrowLeft className="h-4 w-4" />
             </a>
           </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-[#13294B]">National team – NHSCA 2026 payments</h1>
-            <p className="text-sm text-muted-foreground">
-              Who has paid and what they ordered (registration, van, hotel, gear, team package). Paid rows can send a
-              payment receipt email (preview first — email must match Stripe checkout).
-            </p>
-          </div>
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <h1 className="text-2xl font-bold text-[#13294B]">National team – NHSCA 2026 payments</h1>
+                <p className="text-sm text-muted-foreground">
+                  Who has paid and what they ordered (registration, van, hotel, gear, team package). Paid rows can send a
+                  payment receipt email (preview first — email must match Stripe checkout).
+                </p>
+              </div>
+              <a
+                href="/admin/blue/national-team-orders-report"
+                className="text-sm font-medium text-[#03154C] hover:underline shrink-0"
+              >
+                Full orders report →
+              </a>
+            </div>
         </div>
 
         {error && isBlueAuthError(error) && <BlueAdminAuthBanner returnTo="/admin/blue/national-team-payments" />}
