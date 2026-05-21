@@ -23,6 +23,11 @@ function gearPhotoSrc(id: string, localPath: string): string {
   return localPath
 }
 
+/** Local public/ crops (often black matte) — carousel uses screen blend until Blob manifest is set. */
+export function isLocalNhscaGearSrc(src: string): boolean {
+  return src.startsWith(`${GEAR}/`) || src.startsWith("/images/nhsca-duals-2026-gear/")
+}
+
 /** Legacy composite paths — prefer individual crops in GEAR folder. */
 export const NHSCA_DUALS_2026_SINGLET_NATIONAL = "/images/nhsca-duals-2026-singlet-national.png"
 export const NHSCA_DUALS_2026_SINGLET_SELECT = "/images/nhsca-duals-2026-singlet-select.png"
