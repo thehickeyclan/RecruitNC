@@ -16,6 +16,7 @@ import {
 } from "@/lib/spartan-fayetteville-webhook-ack"
 import { syntheticOrderItemSku } from "@/lib/order-item-sku"
 import { decodeLineItemsMetadata } from "@/lib/nhsca-hub-checkout-pricing"
+import { ensureNationalTeamOrderLineItems } from "@/lib/national-team-order-items"
 
 export const dynamic = "force-dynamic"
 
@@ -382,6 +383,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true })
     }
 
+    // Hub checkout (any total): payment_intent often fires before checkout.session.completed and would create a generic store order.
+    if (!hasStoreMetadata) {
+      try {
+        const stripe = getStripe()
+        const sessions = await stripe.checkout.sessions.list({ payment_intent: paymentIntent.id, limit: 1 })
+        if (sessions.data[0]?.metadata?.source === "national_team") {
+          return NextResponse.json({ received: true })
+        }
+      } catch (e) {
+        console.warn("[webhooks/stripe] national team session check in payment_intent.succeeded:", e)
+      }
+    }
+
     let chargeBilling: { email?: string; name?: string } = {}
     if (paymentIntent.latest_charge) {
       try {
@@ -722,79 +736,77 @@ export async function POST(request: NextRequest) {
         .select("*")
         .eq("id", registrationId)
         .single()
-      if (reg && reg.status !== "paid") {
+      if (reg) {
         const { data: products } = await admin
           .from("products")
           .select("id, name, slug")
           .eq("category", "national_team")
         const bundleProduct = products?.find((p) => (p as { slug?: string }).slug === "nhsca-2026-bundle") ?? products?.[0]
-        const orderNumber = generateOrderNumber()
-        const orderId = crypto.randomUUID()
         const regCents = Number(reg.reg_fee_cents) || 0
         const apparelCents = Number(reg.apparel_fee_cents) || 0
         const totalCents = regCents + apparelCents
         const customerEmail = (session as { customer_email?: string }).customer_email ?? (session.customer_details as { email?: string })?.email ?? reg.parent_email ?? ""
         const customerName = [reg.athlete_first_name, reg.athlete_last_name].filter(Boolean).join(" ") || "National team registrant"
         const { channel: ntSessionChannel, business: ntSessionBusiness } = channelBusinessFromMetadata(session.metadata)
-        const { error: orderErr } = await admin.from("orders").insert({
-          id: orderId,
-          order_number: orderNumber,
-          customer_email: customerEmail,
-          email: customerEmail,
-          customer_name: customerName,
-          ...orderShippingFields(customerName, {}),
-          shipping_address: {},
-          shipping_method: { name: "National team event", price: 0 },
-          subtotal: totalCents / 100,
-          shipping_cost: 0,
-          tax: 0,
-          discount: 0,
-          total: totalCents / 100,
-          status: "paid",
-          stripe_payment_intent_id: paymentIntentId,
-          promo_code: null,
-          channel: ntSessionChannel,
-          business: ntSessionBusiness,
-        })
-        let orderIdToUse = orderId
         const linesEncoded = (session.metadata?.checkout_lines as string | undefined) ?? ""
-        if ((orderErr as { code?: string })?.code === "23505") {
-          const { data: existingOrder } = await admin.from("orders").select("id").eq("stripe_payment_intent_id", paymentIntentId).maybeSingle()
-          orderIdToUse = (existingOrder as { id?: string } | null)?.id ?? orderId
-        } else if (!orderErr && totalCents > 0) {
-          const decoded = decodeLineItemsMetadata(linesEncoded)
-          const itemsToInsert =
-            decoded.length > 0
-              ? decoded
-              : [
-                  {
-                    key: "bundle",
-                    name: bundleProduct?.name ?? "NHSCA 2026 – Registration + Apparel",
-                    amountCents: totalCents,
-                    quantity: 1,
-                  },
-                ]
-          for (let i = 0; i < itemsToInsert.length; i++) {
-            const item = itemsToInsert[i]
-            const itemCents = item.amountCents * (item.quantity ?? 1)
-            if (itemCents <= 0) continue
-            await admin.from("order_items").insert({
-              order_id: orderId,
-              product_id: bundleProduct?.id ?? null,
-              product_name: item.name,
-              sku: syntheticOrderItemSku({
-                productId: bundleProduct?.id ?? null,
-                label: item.name,
-                dedupeKey: `${paymentIntentId}-${item.key}-${i}`,
-              }),
-              variant: { color: "N/A", size: "N/A" },
-              quantity: item.quantity ?? 1,
-              price: item.amountCents / 100,
-              subtotal: itemCents / 100,
-              image_url: null,
-            })
+
+        let orderIdToUse = (reg.order_id as string | null) ?? null
+        const { data: existingByPi } = await admin
+          .from("orders")
+          .select("id")
+          .eq("stripe_payment_intent_id", paymentIntentId)
+          .maybeSingle()
+        if (existingByPi?.id) orderIdToUse = existingByPi.id
+
+        if (!orderIdToUse && reg.status !== "paid") {
+          const orderNumber = generateOrderNumber()
+          const orderId = crypto.randomUUID()
+          const { error: orderErr } = await admin.from("orders").insert({
+            id: orderId,
+            order_number: orderNumber,
+            customer_email: customerEmail,
+            email: customerEmail,
+            customer_name: customerName,
+            ...orderShippingFields(customerName, {}),
+            shipping_address: {},
+            shipping_method: { name: "National team event", price: 0 },
+            subtotal: totalCents / 100,
+            shipping_cost: 0,
+            tax: 0,
+            discount: 0,
+            total: totalCents / 100,
+            status: "paid",
+            stripe_payment_intent_id: paymentIntentId,
+            promo_code: null,
+            channel: ntSessionChannel,
+            business: ntSessionBusiness,
+          })
+          if ((orderErr as { code?: string })?.code === "23505") {
+            orderIdToUse = (existingByPi as { id?: string } | null)?.id ?? orderId
+          } else if (!orderErr) {
+            orderIdToUse = orderId
           }
         }
+
+        if (orderIdToUse && totalCents > 0) {
+          await ensureNationalTeamOrderLineItems(admin, {
+            orderId: orderIdToUse,
+            paymentIntentId,
+            linesEncoded,
+            totalCents,
+            bundleProduct: bundleProduct as { id?: string; name?: string } | null,
+          })
+          await admin
+            .from("orders")
+            .update({
+              shipping_method: { name: "National team event", price: 0 },
+              subtotal: totalCents / 100,
+              total: totalCents / 100,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", orderIdToUse)
+        }
+
         const parentEmail = (reg.parent_email ?? "").trim().toLowerCase()
         let parentUserId: string | null = null
         if (parentEmail) {
@@ -821,26 +833,28 @@ export async function POST(request: NextRequest) {
             updated_at: new Date().toISOString(),
           })
           .eq("id", registrationId)
-        try {
-          const r = reg as { athlete_first_name?: string; athlete_last_name?: string; athlete_email?: string; athlete_phone?: string | null; high_school?: string; club_team?: string | null; graduation_year?: string; primary_weight?: string }
-          const enrichPayload = buildEnrichmentPayload({
-            contact_email: r.athlete_email,
-            phone: r.athlete_phone,
-            firstname: r.athlete_first_name,
-            lastname: r.athlete_last_name,
-            highschool: r.high_school,
-            weightclass: r.primary_weight,
-            wrestling_club: r.club_team,
-          })
-          const gradYear = parseInt(String(r.graduation_year ?? ""), 10)
-          await findAndEnrichAthlete(admin, {
-            email: r.athlete_email,
-            name: [r.athlete_first_name, r.athlete_last_name].filter(Boolean).join(" "),
-            graduationYear: Number.isFinite(gradYear) ? gradYear : undefined,
-            school: r.high_school,
-          }, enrichPayload)
-        } catch (enrichErr) {
-          console.error("[webhooks/stripe] national team athlete enrichment (session):", enrichErr)
+        if (reg.status !== "paid") {
+          try {
+            const r = reg as { athlete_first_name?: string; athlete_last_name?: string; athlete_email?: string; athlete_phone?: string | null; high_school?: string; club_team?: string | null; graduation_year?: string; primary_weight?: string }
+            const enrichPayload = buildEnrichmentPayload({
+              contact_email: r.athlete_email,
+              phone: r.athlete_phone,
+              firstname: r.athlete_first_name,
+              lastname: r.athlete_last_name,
+              highschool: r.high_school,
+              weightclass: r.primary_weight,
+              wrestling_club: r.club_team,
+            })
+            const gradYear = parseInt(String(r.graduation_year ?? ""), 10)
+            await findAndEnrichAthlete(admin, {
+              email: r.athlete_email,
+              name: [r.athlete_first_name, r.athlete_last_name].filter(Boolean).join(" "),
+              graduationYear: Number.isFinite(gradYear) ? gradYear : undefined,
+              school: r.high_school,
+            }, enrichPayload)
+          } catch (enrichErr) {
+            console.error("[webhooks/stripe] national team athlete enrichment (session):", enrichErr)
+          }
         }
       }
       return NextResponse.json({ received: true })

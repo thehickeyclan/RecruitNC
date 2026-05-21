@@ -2,6 +2,11 @@
 
 import { createAdminClient } from "@/lib/supabase/admin"
 import { sendOrderStatusEmail } from "@/lib/email"
+import {
+  nhscaDualsRegistrationOrderLines,
+  nhscaDualsRegistrationOrderSummary,
+} from "@/lib/nhsca-duals-2026-registrations"
+import { isGenericPlaceholderOrderItemName } from "@/lib/national-team-order-items"
 
 export async function updateOrderStatus(
   orderId: string,
@@ -184,9 +189,37 @@ export async function getOrderDetails(orderId: string): Promise<
       return { success: false, error: itemsError.message }
     }
 
+    let nationalTeamRegistration: Record<string, unknown> | null = null
+    let nationalTeamLineItems: { name: string; amount_cents: number; quantity?: number }[] | null = null
+    let nationalTeamSummary: string | null = null
+
+    const { data: ntReg } = await supabase
+      .from("national_team_event_registrations")
+      .select(
+        "id, athlete_first_name, athlete_last_name, event_slug, reg_fee_cents, apparel_fee_cents, singlet_size, shorts_size, shirt_size, checkout_lines"
+      )
+      .eq("order_id", order.id)
+      .maybeSingle()
+
+    if (ntReg) {
+      nationalTeamRegistration = ntReg as Record<string, unknown>
+      nationalTeamLineItems = nhscaDualsRegistrationOrderLines(ntReg as Parameters<typeof nhscaDualsRegistrationOrderLines>[0])
+      nationalTeamSummary = nhscaDualsRegistrationOrderSummary(ntReg as Parameters<typeof nhscaDualsRegistrationOrderSummary>[0])
+    }
+
+    const itemsList = orderItems ?? []
+    const displayUsesNationalTeam =
+      Boolean(nationalTeamLineItems?.length) &&
+      (itemsList.length === 0 ||
+        itemsList.every((i) => isGenericPlaceholderOrderItemName((i as { product_name?: string }).product_name)))
+
     const orderWithItems = {
       ...order,
       order_items: orderItems ?? [],
+      national_team_registration: nationalTeamRegistration,
+      national_team_line_items: nationalTeamLineItems,
+      national_team_summary: nationalTeamSummary,
+      display_uses_national_team: displayUsesNationalTeam,
     }
 
     return { success: true, order: orderWithItems }

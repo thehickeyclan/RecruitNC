@@ -24,7 +24,33 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
   const order = result.order
   const addr = order.shipping_address || {}
 
-  const orderItems = (order.order_items || []).map((item: any, index: number) => {
+  const ntReg = order.national_team_registration as {
+    athlete_first_name?: string
+    athlete_last_name?: string
+    event_slug?: string
+  } | null
+  const ntLineItems = (order.national_team_line_items ?? []) as Array<{
+    name: string
+    amount_cents: number
+    quantity?: number
+  }>
+  const useNationalTeamDisplay = Boolean(order.display_uses_national_team && ntLineItems.length > 0)
+
+  const orderItems = (useNationalTeamDisplay ? ntLineItems : order.order_items || []).map((item: any, index: number) => {
+    if (useNationalTeamDisplay) {
+      const qty = item.quantity ?? 1
+      const unit = (item.amount_cents ?? 0) / 100 / qty
+      return {
+        id: `nt-${index}`,
+        name: item.name,
+        variant: "NHSCA hub checkout",
+        sku: "national-team",
+        quantity: qty,
+        price: unit,
+        image: "/placeholder.svg",
+      }
+    }
+
     const variantObj = item.variant || {}
     const color = variantObj.color || ""
     const size = variantObj.size || "One Size"
@@ -97,8 +123,9 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
     phone,
   }
 
-  const shippingMethod =
-    typeof order.shipping_method === "string"
+  const shippingMethod = useNationalTeamDisplay
+    ? "National team event (no shipping)"
+    : typeof order.shipping_method === "string"
       ? order.shipping_method
       : (order.shipping_method as any)?.name ??
         (order.shipping_method as any)?.description ??
@@ -174,6 +201,11 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
     updatedAt: order.updated_at ?? order.created_at,
     shippedAt: order.shipped_at ?? null,
     deliveredAt: order.delivered_at ?? null,
+    nationalTeamAthlete: ntReg
+      ? `${ntReg.athlete_first_name ?? ""} ${ntReg.athlete_last_name ?? ""}`.trim()
+      : null,
+    nationalTeamSummary: (order.national_team_summary as string | null) ?? null,
+    isNationalTeamOrder: useNationalTeamDisplay,
   }
 
   return <AdminOrderDetailClient order={orderData} />

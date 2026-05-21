@@ -59,6 +59,9 @@ interface OrderDetailClientProps {
       completed: boolean
     }>
     phone: string | null
+    isNationalTeamOrder?: boolean
+    nationalTeamAthlete?: string | null
+    nationalTeamSummary?: string | null
   }
 }
 
@@ -250,15 +253,30 @@ export function AdminOrderDetailClient({ order }: OrderDetailClientProps) {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Order Items</CardTitle>
-                {order.items === 0 && (
+                {order.items === 0 || order.orderItems.some((i) => i.sku === "national-team" || /store purchase/i.test(i.name)) ? (
                   <Button size="sm" variant="outline" onClick={handleRecoverItems} disabled={isRecoveringItems}>
                     <RefreshCw className={`h-4 w-4 mr-2 ${isRecoveringItems ? "animate-spin" : ""}`} />
                     Recover Items from Stripe
                   </Button>
-                )}
+                ) : null}
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
+              {order.isNationalTeamOrder ? (
+                <div className="rounded-md border border-[#CBAF5D]/40 bg-[#002147]/5 px-3 py-2 text-sm">
+                  <p className="font-medium text-[#13294B]">NHSCA hub registration — not a store shipment</p>
+                  {order.nationalTeamAthlete ? (
+                    <p className="text-muted-foreground mt-0.5">Athlete: {order.nationalTeamAthlete}</p>
+                  ) : null}
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    Line items below are from hub checkout (registration, van, hotel, gear). Use{" "}
+                    <a href="/admin/blue/national-team-payments" className="text-[#03154C] underline font-medium">
+                      National team payments
+                    </a>{" "}
+                    for the full roster view.
+                  </p>
+                </div>
+              ) : null}
               {!order.orderItems || order.orderItems.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
