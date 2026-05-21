@@ -4,7 +4,6 @@ import Image from "next/image"
 import { ArrowRight, Radio } from "lucide-react"
 import { HardLink } from "@/components/hard-link"
 import { NhscaDuals2026SingletPreview } from "@/components/national-team/nhsca-duals-2026-singlet-preview"
-import { NhscaDuals2026ApparelPreview } from "@/components/national-team/nhsca-duals-2026-apparel-preview"
 import { cn } from "@/lib/utils"
 import {
   NhscaDualsCountdownFace,
@@ -210,10 +209,7 @@ export function NhscaDuals2026Banner({
 
           <div className={cn("w-full shrink-0 space-y-3", isHero ? "lg:max-w-md xl:max-w-lg" : "lg:max-w-sm xl:max-w-md")}>
             {isHero ? (
-              <>
-                <NhscaDuals2026SingletPreview compact className="w-full mx-auto lg:mx-0" />
-                <NhscaDuals2026ApparelPreview compact className="w-full mx-auto lg:mx-0 max-w-sm lg:max-w-none" />
-              </>
+              <NhscaDuals2026SingletPreview compact className="w-full mx-auto lg:mx-0" />
             ) : null}
             <CountdownPanel large={isHero} dark />
           </div>

@@ -54,7 +54,7 @@ export function NhscaDuals2026GearCarousel({
 
   return (
     <div className={cn("space-y-2", className)}>
-      <div className="relative max-w-[240px] mx-auto">
+      <div className="relative max-w-[min(360px,calc(100%-1.5rem))] mx-auto px-1">
         <div
           ref={trackRef}
           className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-none"
@@ -65,9 +65,9 @@ export function NhscaDuals2026GearCarousel({
             return (
               <figure
                 key={photo.id}
-                className="w-full shrink-0 snap-center snap-always flex justify-center px-7"
+                className="w-full shrink-0 snap-center snap-always flex justify-center px-8 sm:px-10"
               >
-                <div className="relative w-[130px] sm:w-[150px] h-[175px] sm:h-[195px]">
+                <div className="relative w-[min(195px,46vw)] h-[min(263px,36vh)] sm:w-[min(225px,38vw)] sm:h-[min(293px,40vh)]">
                   <Image
                     src={photo.src}
                     alt={photo.alt}
@@ -78,7 +78,7 @@ export function NhscaDuals2026GearCarousel({
                         ? "mix-blend-screen"
                         : "drop-shadow-[0_6px_16px_rgba(0,0,0,0.35)]"
                     )}
-                    sizes="150px"
+                    sizes="(max-width: 640px) 195px, 225px"
                     draggable={false}
                     priority={photo.id === "blue-front"}
                   />
@@ -92,7 +92,7 @@ export function NhscaDuals2026GearCarousel({
           type="button"
           onClick={() => scrollToIndex(active - 1)}
           disabled={active <= 0}
-          className="absolute -left-1 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-[#002147]/90 text-white disabled:opacity-30"
+          className="absolute left-0 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-[#002147]/90 text-white disabled:opacity-30"
           aria-label="Previous"
         >
           <ChevronLeft className="h-4 w-4" />
@@ -101,7 +101,7 @@ export function NhscaDuals2026GearCarousel({
           type="button"
           onClick={() => scrollToIndex(active + 1)}
           disabled={active >= count - 1}
-          className="absolute -right-1 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-[#002147]/90 text-white disabled:opacity-30"
+          className="absolute right-0 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-[#002147]/90 text-white disabled:opacity-30"
           aria-label="Next"
         >
           <ChevronRight className="h-4 w-4" />
