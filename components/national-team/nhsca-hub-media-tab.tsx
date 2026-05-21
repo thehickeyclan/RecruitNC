@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import Image from "next/image"
-import { ImagePlus, Loader2, Play, Trash2, X } from "lucide-react"
+import { ChevronLeft, ChevronRight, ImagePlus, Loader2, Play, Trash2, X } from "lucide-react"
 import {
   hubPanelClass,
   hubPanelDescClass,
@@ -41,8 +41,56 @@ export function NhscaHubMediaTab({
   const [caption, setCaption] = useState("")
   const [uploading, setUploading] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
-  const [viewer, setViewer] = useState<NhscaHubMediaRow | null>(null)
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null)
+  const touchStartX = useRef<number | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+
+  const viewer = viewerIndex !== null ? items[viewerIndex] ?? null : null
+  const canSlideshow = items.length > 1
+
+  const openViewer = useCallback(
+    (item: NhscaHubMediaRow) => {
+      const i = items.findIndex((x) => x.id === item.id)
+      if (i >= 0) setViewerIndex(i)
+    },
+    [items]
+  )
+
+  const closeViewer = useCallback(() => setViewerIndex(null), [])
+
+  const goPrev = useCallback(() => {
+    setViewerIndex((i) => {
+      if (i === null || items.length === 0) return i
+      return i <= 0 ? items.length - 1 : i - 1
+    })
+  }, [items.length])
+
+  const goNext = useCallback(() => {
+    setViewerIndex((i) => {
+      if (i === null || items.length === 0) return i
+      return i >= items.length - 1 ? 0 : i + 1
+    })
+  }, [items.length])
+
+  useEffect(() => {
+    if (viewerIndex === null) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeViewer()
+      if (e.key === "ArrowLeft") goPrev()
+      if (e.key === "ArrowRight") goNext()
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [viewerIndex, closeViewer, goPrev, goNext])
+
+  useEffect(() => {
+    if (viewerIndex === null) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [viewerIndex])
 
   const load = useCallback(async () => {
     setError(null)
@@ -115,8 +163,17 @@ export function NhscaHubMediaTab({
       })
       const data = await r.json().catch(() => ({}))
       if (!r.ok) throw new Error((data as { error?: string }).error ?? "Delete failed.")
-      setItems((prev) => prev.filter((x) => x.id !== item.id))
-      if (viewer?.id === item.id) setViewer(null)
+      setItems((prev) => {
+        const next = prev.filter((x) => x.id !== item.id)
+        if (viewer?.id === item.id) {
+          setViewerIndex((idx) => {
+            if (idx === null || next.length === 0) return null
+            if (idx >= next.length) return next.length - 1
+            return idx
+          })
+        }
+        return next
+      })
     } catch (err) {
       setError(err instanceof Error ? err.message : "Delete failed.")
     } finally {
@@ -203,7 +260,7 @@ export function NhscaHubMediaTab({
                     <button
                       type="button"
                       className="relative w-full aspect-square rounded-xl overflow-hidden border border-white/10 bg-[#002147]/50 text-left"
-                      onClick={() => setViewer(item)}
+                      onClick={() => openViewer(item)}
                     >
                       {item.media_type === "video" ? (
                         <div className="relative h-full w-full flex items-center justify-center bg-black/40">
@@ -271,41 +328,96 @@ export function NhscaHubMediaTab({
         </div>
       </article>
 
-      {viewer ? (
+      {viewer && viewerIndex !== null ? (
         <div
-          className="fixed inset-0 z-50 bg-black/85 flex flex-col p-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
+          className="fixed inset-0 z-50 bg-black/90 flex flex-col p-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
           role="dialog"
           aria-modal="true"
+          aria-label="Media slideshow"
         >
           <div className="flex items-center justify-between gap-3 mb-3 shrink-0">
             <div className="min-w-0">
               <p className="text-sm font-semibold text-white truncate">
                 {viewer.uploader_name || viewer.uploader_email || "Parent"}
               </p>
-              <p className="text-xs text-white/50">{formatWhen(viewer.created_at)}</p>
+              <p className="text-xs text-white/50">
+                {formatWhen(viewer.created_at)}
+                {canSlideshow ? (
+                  <span className="text-white/35">
+                    {" "}
+                    · {viewerIndex + 1} of {items.length}
+                  </span>
+                ) : null}
+              </p>
             </div>
             <button
               type="button"
-              onClick={() => setViewer(null)}
+              onClick={closeViewer}
               className="min-h-[44px] min-w-[44px] rounded-full bg-white/10 text-white flex items-center justify-center"
               aria-label="Close"
             >
               <X className="h-5 w-5" />
             </button>
           </div>
-          <div className="flex-1 min-h-0 flex items-center justify-center">
+
+          <div
+            className="relative flex-1 min-h-0 flex items-center justify-center"
+            onTouchStart={(e) => {
+              touchStartX.current = e.changedTouches[0]?.clientX ?? null
+            }}
+            onTouchEnd={(e) => {
+              if (!canSlideshow || touchStartX.current === null) return
+              const dx = (e.changedTouches[0]?.clientX ?? 0) - touchStartX.current
+              touchStartX.current = null
+              if (Math.abs(dx) < 48) return
+              if (dx > 0) goPrev()
+              else goNext()
+            }}
+          >
+            {canSlideshow ? (
+              <>
+                <button
+                  type="button"
+                  onClick={goPrev}
+                  className="absolute left-0 z-10 min-h-[44px] min-w-[44px] rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70"
+                  aria-label="Previous"
+                >
+                  <ChevronLeft className="h-6 w-6" />
+                </button>
+                <button
+                  type="button"
+                  onClick={goNext}
+                  className="absolute right-0 z-10 min-h-[44px] min-w-[44px] rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70"
+                  aria-label="Next"
+                >
+                  <ChevronRight className="h-6 w-6" />
+                </button>
+              </>
+            ) : null}
+
             {viewer.media_type === "video" ? (
-              <video src={viewer.url} controls playsInline className="max-h-full max-w-full rounded-lg" />
+              <video
+                key={viewer.id}
+                src={viewer.url}
+                controls
+                playsInline
+                className="max-h-full max-w-full rounded-lg px-10"
+              />
             ) : (
               // eslint-disable-next-line @next/next/no-img-element
               <img
+                key={viewer.id}
                 src={viewer.url}
                 alt={viewer.caption || viewer.filename || "Team photo"}
-                className="max-h-full max-w-full object-contain rounded-lg"
+                className="max-h-full max-w-full object-contain rounded-lg px-10 sm:px-14"
               />
             )}
           </div>
+
           {viewer.caption ? <p className="mt-3 text-sm text-white/80 text-center shrink-0">{viewer.caption}</p> : null}
+          {canSlideshow ? (
+            <p className="mt-1 text-[11px] text-white/40 text-center shrink-0">Swipe or use arrows to browse</p>
+          ) : null}
           <div className="mt-3 shrink-0 max-w-md mx-auto w-full">
             <NhscaHubMediaShareButtons
               url={viewer.url}
