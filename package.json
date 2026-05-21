@@ -15,6 +15,7 @@
     "prebuild": "npm run validate-auth",
     "generate-icons": "node scripts/generate-pwa-icons.js",
     "nhsca:import": "node scripts/import-nhsca-placements.mjs",
+    "nhsca:gear-bg": "tsx scripts/process-nhsca-gear-images.ts",
     "nhsca:lookup": "tsx scripts/test-nhsca-lookup.ts",
     "nhsca:all-years": "tsx scripts/show-nhsca-all-years.ts",
     "nhsca:roster-tsv-to-sql": "node scripts/tsv-roster-to-nhsca-placements-sql.mjs",

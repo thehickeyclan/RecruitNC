@@ -22,6 +22,12 @@ const sections = [
     icon: DollarSign,
   },
   {
+    href: "/admin/national-team/gear-images",
+    title: "Gear images (BG removal)",
+    description: "Remove backgrounds from NHSCA Duals 2026 team gear mockups for the Payments carousel.",
+    icon: Trophy,
+  },
+  {
     href: "/admin/national-team/invite-codes",
     title: "Invite codes",
     description: "Create and manage invite codes for NHSCA 2026 registration. Copy the private registration URL to send to invitees.",

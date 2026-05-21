@@ -11,15 +11,12 @@ import { cn } from "@/lib/utils"
 
 type NhscaDuals2026GearCarouselProps = {
   photos?: NhscaGearPhoto[]
-  /** Optional price line under the active slide label. */
-  priceByPhotoId?: Record<string, string>
   className?: string
 }
 
 /** Compact gear browser — side nav + swipe/arrow slides (Payments checkout). */
 export function NhscaDuals2026GearCarousel({
   photos = NHSCA_DUALS_2026_ALL_GEAR_PHOTOS,
-  priceByPhotoId,
   className,
 }: NhscaDuals2026GearCarouselProps) {
   const [active, setActive] = useState(0)
@@ -49,8 +46,6 @@ export function NhscaDuals2026GearCarousel({
     track.addEventListener("scroll", onScroll, { passive: true })
     return () => track.removeEventListener("scroll", onScroll)
   }, [count])
-
-  const current = photos[active]
 
   return (
     <div className={cn("flex flex-col sm:flex-row gap-3 min-h-0", className)}>
@@ -82,25 +77,25 @@ export function NhscaDuals2026GearCarousel({
         <p className="text-[10px] text-white/45 mb-1.5 sm:hidden">Swipe photos →</p>
         <div
           ref={trackRef}
-          className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-none rounded-lg bg-white/95 ring-1 ring-white/10"
+          className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-none"
           aria-live="polite"
         >
           {photos.map((photo) => (
             <figure
               key={photo.id}
-              className="w-full shrink-0 snap-center snap-always flex flex-col items-center p-2 sm:p-3"
+              className="w-full shrink-0 snap-center snap-always flex flex-col items-center px-10 sm:px-12 py-1"
             >
-              <div className="relative w-full max-w-[200px] mx-auto aspect-[3/4]">
+              <div className="relative w-full max-w-[220px] aspect-[3/4] flex items-center justify-center">
                 <Image
                   src={photo.src}
                   alt={photo.alt}
                   fill
-                  className="object-contain"
-                  sizes="200px"
+                  className="object-contain p-2 drop-shadow-[0_8px_24px_rgba(0,0,0,0.35)]"
+                  sizes="220px"
                   draggable={false}
                 />
               </div>
-              <figcaption className="mt-1.5 text-center text-[11px] font-semibold text-[#002147]/85">
+              <figcaption className="mt-2 text-center text-[11px] font-semibold text-white/85">
                 {photo.label}
               </figcaption>
             </figure>
@@ -111,7 +106,7 @@ export function NhscaDuals2026GearCarousel({
           type="button"
           onClick={() => scrollToIndex(active - 1)}
           disabled={active <= 0}
-          className="absolute left-1 top-1/2 -translate-y-1/2 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-[#002147]/85 text-white shadow-md disabled:opacity-30 hover:bg-[#002147]"
+          className="absolute left-0 top-[calc(50%-12px)] -translate-y-1/2 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-[#002147]/90 text-white shadow-lg ring-1 ring-white/20 disabled:opacity-30 hover:bg-[#002147]"
           aria-label="Previous product"
         >
           <ChevronLeft className="h-5 w-5" />
@@ -120,18 +115,15 @@ export function NhscaDuals2026GearCarousel({
           type="button"
           onClick={() => scrollToIndex(active + 1)}
           disabled={active >= count - 1}
-          className="absolute right-1 top-1/2 -translate-y-1/2 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-[#002147]/85 text-white shadow-md disabled:opacity-30 hover:bg-[#002147]"
+          className="absolute right-0 top-[calc(50%-12px)] -translate-y-1/2 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-[#002147]/90 text-white shadow-lg ring-1 ring-white/20 disabled:opacity-30 hover:bg-[#002147]"
           aria-label="Next product"
         >
           <ChevronRight className="h-5 w-5" />
         </button>
 
-        <div className="mt-2 flex items-center justify-between gap-2 text-xs">
-          <span className="text-white/75 truncate">{current?.label}</span>
-          <span className="text-[#CBAF5D] font-semibold tabular-nums shrink-0">
-            {current && priceByPhotoId?.[current.id] ? priceByPhotoId[current.id] : `${active + 1} / ${count}`}
-          </span>
-        </div>
+        <p className="mt-2 text-center text-[10px] text-white/40 tabular-nums">
+          {active + 1} / {count}
+        </p>
       </div>
     </div>
   )
