@@ -14,6 +14,7 @@ export type NhscaHubGearSize = (typeof NHSCA_HUB_GEAR_SIZES)[number]
 export const NHSCA_TEAM_PACKAGE_CENTS = 25_000
 export const NHSCA_REG_FEE_CENTS = 7_500
 export const NHSCA_SHORTS_CENTS = 4_000
+export const NHSCA_SHORT_SLEEVE_CENTS = 3_000
 export const NHSCA_LONG_SLEEVE_CENTS = 4_000
 export const NHSCA_SINGLET_EACH_CENTS = 6_500
 export const NHSCA_SINGLET_TWO_CENTS = 12_500
@@ -57,6 +58,8 @@ export type NhscaHubIndividualSelections = NhscaHubTravelSelections & {
   singletSize: string
   shorts: boolean
   shortsSize: string
+  shortSleeve: boolean
+  shortSleeveSize: string
   longSleeve: boolean
   longSleeveSize: string
 }
@@ -64,6 +67,7 @@ export type NhscaHubIndividualSelections = NhscaHubTravelSelections & {
 export type NhscaHubTeamPackageSelections = NhscaHubTravelSelections & {
   singletSize: string
   shortsSize: string
+  shortSleeveSize: string
   longSleeveSize: string
 }
 
@@ -96,8 +100,11 @@ export function normalizeGearSizeForDb(size: string): string {
   return map[t] ?? t
 }
 
-export function formatShirtSizeForDb(longSleeve: string): string | null {
+export function formatShirtSizeForDb(shortSleeve: string, longSleeve: string): string | null {
+  const ss = shortSleeve.trim()
   const ls = longSleeve.trim()
+  if (ss && ls) return `SS-${normalizeGearSizeForDb(ss)}, LS-${normalizeGearSizeForDb(ls)}`
+  if (ss) return normalizeGearSizeForDb(ss)
   if (ls) return `LS-${normalizeGearSizeForDb(ls)}`
   return null
 }
@@ -106,7 +113,7 @@ export function buildTeamPackageLineItems(travel: NhscaHubTravelSelections): Nhs
   const items: NhscaCheckoutLineItem[] = [
     {
       key: "team_package",
-      name: "NHSCA Team Package (Registration + 2 Singlets — Blue & White + Shorts + Long Sleeve Tee)",
+      name: "NHSCA Team Package (Registration + 2 Singlets — Blue & White + Shorts + Tees)",
       amountCents: NHSCA_TEAM_PACKAGE_CENTS,
     },
   ]
@@ -145,6 +152,13 @@ export function buildIndividualLineItems(sel: NhscaHubIndividualSelections): Nhs
       key: "shorts",
       name: `Team Shorts (${sel.shortsSize || "size TBD"})`,
       amountCents: NHSCA_SHORTS_CENTS,
+    })
+  }
+  if (sel.shortSleeve) {
+    items.push({
+      key: "short_sleeve",
+      name: `Short Sleeve Tee (${sel.shortSleeveSize || "size TBD"})`,
+      amountCents: NHSCA_SHORT_SLEEVE_CENTS,
     })
   }
   if (sel.longSleeve) {

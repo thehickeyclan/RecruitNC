@@ -238,6 +238,7 @@ export function NhscaHubMediaTab({
                         url={item.url}
                         caption={item.caption}
                         mediaType={item.media_type}
+                        filename={item.filename}
                         compact
                       />
                     </div>
@@ -310,6 +311,7 @@ export function NhscaHubMediaTab({
               url={viewer.url}
               caption={viewer.caption}
               mediaType={viewer.media_type}
+              filename={viewer.filename}
             />
           </div>
         </div>

@@ -3,6 +3,7 @@ import { NhscaDuals2026GearCarousel } from "@/components/national-team/nhsca-dua
 import { NhscaDuals2026SingletPreview } from "@/components/national-team/nhsca-duals-2026-singlet-preview"
 import {
   NHSCA_LONG_SLEEVE_CENTS,
+  NHSCA_SHORT_SLEEVE_CENTS,
   NHSCA_SHORTS_CENTS,
   NHSCA_SINGLET_EACH_CENTS,
   NHSCA_SINGLET_TWO_CENTS,
@@ -21,6 +22,7 @@ const GEAR_ITEMS = [
     note: `Both ${formatDollars(NHSCA_SINGLET_TWO_CENTS)}`,
   },
   { label: "Shorts", price: formatDollars(NHSCA_SHORTS_CENTS) },
+  { label: "Short sleeve tee", price: formatDollars(NHSCA_SHORT_SLEEVE_CENTS) },
   { label: "Long sleeve tee", price: formatDollars(NHSCA_LONG_SLEEVE_CENTS) },
 ] as const
 

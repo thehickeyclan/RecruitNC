@@ -15,7 +15,7 @@ import { nhscaHubDefaultTab, parseNhscaHubTabParam } from "@/lib/nhsca-hub-defau
 import { cn } from "@/lib/utils"
 
 const tabTriggerClass =
-  "rounded-lg min-h-[44px] text-sm font-semibold text-white/65 data-[state=active]:bg-[#CBAF5D] data-[state=active]:text-[#002147] data-[state=active]:shadow-sm hover:text-white/90 transition-colors"
+  "w-full rounded-lg min-h-[44px] px-2 sm:px-3 text-xs sm:text-sm font-semibold text-white/65 data-[state=active]:bg-[#CBAF5D] data-[state=active]:text-[#002147] data-[state=active]:shadow-sm hover:text-white/90 transition-colors"
 
 export function NhscaHubTabs({
   rosterContent,
@@ -43,36 +43,34 @@ export function NhscaHubTabs({
 
   return (
     <Tabs key={defaultTab} defaultValue={defaultTab} className="w-full">
-      <div className="relative mb-6 md:mb-8 -mx-1 px-1 sm:mx-0 sm:px-0">
-        <p className="text-[10px] text-white/40 mb-1.5 sm:hidden">Swipe for more tabs →</p>
-        <TabsList
-          className={cn(
-            "flex w-max min-w-full sm:w-full h-auto flex-nowrap sm:grid sm:grid-cols-6 gap-1 rounded-xl bg-[#0a2040] p-1.5",
-            "border border-white/10 shadow-inner overflow-x-auto scrollbar-none snap-x snap-proximity sm:overflow-visible"
-          )}
-        >
-        <TabsTrigger value="rosters" className={cn(tabTriggerClass, "shrink-0 snap-start min-w-[38%] sm:min-w-0 px-3")}>
+      <TabsList
+        className={cn(
+          "grid w-full h-auto grid-cols-3 gap-1.5 sm:grid-cols-6 sm:gap-1",
+          "rounded-xl bg-[#0a2040] p-1.5 border border-white/10 shadow-inner mb-6 md:mb-8"
+        )}
+      >
+        <TabsTrigger value="rosters" className={tabTriggerClass}>
           Rosters
         </TabsTrigger>
-        <TabsTrigger value="results" className={cn(tabTriggerClass, "shrink-0 snap-start min-w-[38%] sm:min-w-0 px-3")}>
+        <TabsTrigger value="results" className={tabTriggerClass}>
           Live
         </TabsTrigger>
-        <TabsTrigger value="event-info" className={cn(tabTriggerClass, "shrink-0 snap-start min-w-[38%] sm:min-w-0 px-3")}>
+        <TabsTrigger value="event-info" className={tabTriggerClass}>
           <span className="sm:hidden">Info</span>
           <span className="hidden sm:inline">Event Info</span>
         </TabsTrigger>
-        <TabsTrigger value="payments" className={cn(tabTriggerClass, "shrink-0 snap-start min-w-[38%] sm:min-w-0 px-3")}>
-          Payments
+        <TabsTrigger value="payments" className={tabTriggerClass}>
+          <span className="sm:hidden">Pay</span>
+          <span className="hidden sm:inline">Payments</span>
         </TabsTrigger>
-        <TabsTrigger value="media" className={cn(tabTriggerClass, "shrink-0 snap-start min-w-[38%] sm:min-w-0 px-3")}>
+        <TabsTrigger value="media" className={tabTriggerClass}>
           Media
         </TabsTrigger>
-        <TabsTrigger value="watch" className={cn(tabTriggerClass, "shrink-0 snap-start min-w-[38%] sm:min-w-0 px-3")}>
+        <TabsTrigger value="watch" className={tabTriggerClass}>
           <span className="sm:hidden">Watch</span>
           <span className="hidden sm:inline">How to Watch</span>
         </TabsTrigger>
-        </TabsList>
-      </div>
+      </TabsList>
 
       <TabsContent value="event-info" className="mt-0 space-y-6 focus-visible:outline-none">
         <NhscaHubEventInfo />

@@ -12,6 +12,7 @@ export const NHSCA_GEAR_PUBLIC_FILE_BY_ID: Record<string, string> = {
   "long-sleeve-front": "apparel-long-sleeve-front.png",
   "long-sleeve-back": "apparel-long-sleeve-back.png",
   shorts: "apparel-shorts.png",
+  "short-sleeve-tee": "apparel-short-sleeve-tee.png",
 }
 
 function gearPhotoSrc(id: string, localPath: string): string {
@@ -96,6 +97,12 @@ export const NHSCA_DUALS_2026_APPAREL_PHOTOS: NhscaGearPhoto[] = [
     src: gearPhotoSrc("shorts", `${GEAR}/apparel-shorts.png`),
     label: "Team shorts",
     alt: "NC United black team shorts with NC Wrestling logo",
+  },
+  {
+    id: "short-sleeve-tee",
+    src: gearPhotoSrc("short-sleeve-tee", `${GEAR}/apparel-short-sleeve-tee.png`),
+    label: "Short sleeve tee",
+    alt: "NC United white short sleeve tee — Wrestling United logo",
   },
 ]
 

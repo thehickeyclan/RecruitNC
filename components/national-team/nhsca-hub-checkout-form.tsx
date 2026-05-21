@@ -25,6 +25,7 @@ import {
   NHSCA_HUB_GEAR_SIZES,
   NHSCA_LONG_SLEEVE_CENTS,
   NHSCA_REG_FEE_CENTS,
+  NHSCA_SHORT_SLEEVE_CENTS,
   NHSCA_SHORTS_CENTS,
   NHSCA_SINGLET_EACH_CENTS,
   NHSCA_SINGLET_TWO_CENTS,
@@ -99,6 +100,8 @@ const EMPTY_INDIVIDUAL: NhscaHubIndividualSelections = {
   singletSize: "",
   shorts: false,
   shortsSize: "",
+  shortSleeve: false,
+  shortSleeveSize: "",
   longSleeve: false,
   longSleeveSize: "",
   vanTravel: false,
@@ -115,6 +118,7 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
   const [bundleSizes, setBundleSizes] = useState({
     singletSize: "",
     shortsSize: "",
+    shortSleeveSize: "",
     longSleeveSize: "",
   })
 
@@ -150,7 +154,7 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
     if (!parentName.trim()) return "Parent name is required."
     if (!wrestlerName.trim()) return "Athlete name is required."
     if (fullPackage) {
-      if (!bundleSizes.singletSize || !bundleSizes.shortsSize || !bundleSizes.longSleeveSize) {
+      if (!bundleSizes.singletSize || !bundleSizes.shortsSize || !bundleSizes.shortSleeveSize || !bundleSizes.longSleeveSize) {
         return "Select all apparel sizes for the team package."
       }
     } else {
@@ -159,6 +163,7 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
         !individual.registration &&
         individual.singletQty === 0 &&
         !individual.shorts &&
+        !individual.shortSleeve &&
         !individual.longSleeve &&
         !hasPaidTravel
       ) {
@@ -167,6 +172,7 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
       if (individual.singletQty > 0 && !individual.singletSize) return "Select singlet size."
       if (individual.singletQty === 1 && !individual.singletColor) return "Select blue or white singlet."
       if (individual.shorts && !individual.shortsSize) return "Select shorts size."
+      if (individual.shortSleeve && !individual.shortSleeveSize) return "Select short sleeve size."
       if (individual.longSleeve && !individual.longSleeveSize) return "Select long sleeve size."
     }
     if (totalCents <= 0) return "Total must be greater than $0 to pay through Stripe."
@@ -196,6 +202,7 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
           teamPackage: { ...bundleSizes, vanTravel, hotel },
           singletSize: bundleSizes.singletSize,
           shortsSize: bundleSizes.shortsSize,
+          shortSleeveSize: bundleSizes.shortSleeveSize,
           longSleeveSize: bundleSizes.longSleeveSize,
           vanTravel,
           hotel,
@@ -280,16 +287,17 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
               <span className="flex-1 min-w-0">
                 <span className="font-semibold text-white block">Full team package</span>
                 <span className="text-xs text-white/55 block mt-0.5">
-                  Registration, 2 singlets (blue &amp; white), shorts, long sleeve tee
+                  Registration, 2 singlets (blue &amp; white), shorts, short &amp; long sleeve tees
                 </span>
               </span>
               <span className="text-[#CBAF5D] font-bold shrink-0">{formatDollars(NHSCA_TEAM_PACKAGE_CENTS)}</span>
             </label>
 
             {fullPackage ? (
-              <div className="p-4 grid grid-cols-1 min-[400px]:grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="p-4 grid grid-cols-1 min-[400px]:grid-cols-2 sm:grid-cols-4 gap-3">
                 <SizeSelect label="Singlet (blue & white)" value={bundleSizes.singletSize} onChange={(v) => setBundleSizes((s) => ({ ...s, singletSize: v }))} required compact />
                 <SizeSelect label="Shorts" value={bundleSizes.shortsSize} onChange={(v) => setBundleSizes((s) => ({ ...s, shortsSize: v }))} required compact />
+                <SizeSelect label="SS tee" value={bundleSizes.shortSleeveSize} onChange={(v) => setBundleSizes((s) => ({ ...s, shortSleeveSize: v }))} required compact />
                 <SizeSelect label="LS tee" value={bundleSizes.longSleeveSize} onChange={(v) => setBundleSizes((s) => ({ ...s, longSleeveSize: v }))} required compact />
               </div>
             ) : null}
@@ -380,6 +388,7 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
                 {(
                   [
                     { key: "shorts" as const, label: "Shorts", cents: NHSCA_SHORTS_CENTS, sizeKey: "shortsSize" as const },
+                    { key: "shortSleeve" as const, label: "Short sleeve tee", cents: NHSCA_SHORT_SLEEVE_CENTS, sizeKey: "shortSleeveSize" as const },
                     { key: "longSleeve" as const, label: "Long sleeve tee", cents: NHSCA_LONG_SLEEVE_CENTS, sizeKey: "longSleeveSize" as const },
                   ] as const
                 ).map((item) => (
