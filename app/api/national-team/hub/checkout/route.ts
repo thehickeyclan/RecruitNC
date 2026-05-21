@@ -68,15 +68,16 @@ export async function POST(request: NextRequest) {
     const pkg = body.teamPackage as Partial<NhscaHubTeamPackageSelections> | undefined
     const singlet = typeof body.singletSize === "string" ? body.singletSize.trim() : pkg?.singletSize?.trim() ?? ""
     const shorts = typeof body.shortsSize === "string" ? body.shortsSize.trim() : pkg?.shortsSize?.trim() ?? ""
+    const ss = typeof body.shortSleeveSize === "string" ? body.shortSleeveSize.trim() : pkg?.shortSleeveSize?.trim() ?? ""
     const ls = typeof body.longSleeveSize === "string" ? body.longSleeveSize.trim() : pkg?.longSleeveSize?.trim() ?? ""
     vanTravelRequested = !!(pkg?.vanTravel ?? body.vanTravel)
     hotelRequested = !!(pkg?.hotel ?? body.hotel)
-    if (!singlet || !shorts || !ls) {
+    if (!singlet || !shorts || !ss || !ls) {
       return NextResponse.json({ error: "Select all apparel sizes for the team package." }, { status: 400 })
     }
     singletSize = formatSingletSizeForDb(singlet, { qty: 2 })
     shortsSize = normalizeGearSizeForDb(shorts)
-    shirtSize = formatShirtSizeForDb(ls)
+    shirtSize = formatShirtSizeForDb(ss, ls)
     lineItems = buildTeamPackageLineItems({ vanTravel: vanTravelRequested, hotel: hotelRequested })
   } else {
     const sel = body.individual as Partial<NhscaHubIndividualSelections> | undefined
@@ -88,6 +89,8 @@ export async function POST(request: NextRequest) {
       singletSize: typeof sel?.singletSize === "string" ? sel.singletSize : "",
       shorts: !!sel?.shorts,
       shortsSize: typeof sel?.shortsSize === "string" ? sel.shortsSize : "",
+      shortSleeve: !!sel?.shortSleeve,
+      shortSleeveSize: typeof sel?.shortSleeveSize === "string" ? sel.shortSleeveSize : "",
       longSleeve: !!sel?.longSleeve,
       longSleeveSize: typeof sel?.longSleeveSize === "string" ? sel.longSleeveSize : "",
       vanTravel: !!sel?.vanTravel,
@@ -104,6 +107,9 @@ export async function POST(request: NextRequest) {
     if (individual.shorts && !individual.shortsSize) {
       return NextResponse.json({ error: "Select shorts size." }, { status: 400 })
     }
+    if (individual.shortSleeve && !individual.shortSleeveSize) {
+      return NextResponse.json({ error: "Select short sleeve size." }, { status: 400 })
+    }
     if (individual.longSleeve && !individual.longSleeveSize) {
       return NextResponse.json({ error: "Select long sleeve size." }, { status: 400 })
     }
@@ -115,7 +121,10 @@ export async function POST(request: NextRequest) {
       })
     }
     if (individual.shorts) shortsSize = normalizeGearSizeForDb(individual.shortsSize)
-    shirtSize = formatShirtSizeForDb(individual.longSleeve ? individual.longSleeveSize : "")
+    shirtSize = formatShirtSizeForDb(
+      individual.shortSleeve ? individual.shortSleeveSize : "",
+      individual.longSleeve ? individual.longSleeveSize : ""
+    )
   }
 
   const totalCents = lineItemsTotalCents(lineItems)
