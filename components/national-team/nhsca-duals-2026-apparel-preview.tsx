@@ -2,7 +2,7 @@ import { NHSCA_DUALS_2026_APPAREL_PHOTOS } from "@/lib/nhsca-duals-2026-gear-ima
 import { NhscaDuals2026GearPhotoGrid } from "@/components/national-team/nhsca-duals-2026-gear-photo-grid"
 import { cn } from "@/lib/utils"
 
-/** Individual long sleeve, shorts, and tee photos. */
+/** Individual long sleeve and shorts photos. */
 export function NhscaDuals2026ApparelPreview({
   compact = false,
   className,
