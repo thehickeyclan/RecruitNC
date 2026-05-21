@@ -11,6 +11,7 @@ import {
 } from "@/components/national-team/nhsca-hub-theme"
 import type { NhscaHubMediaRow } from "@/lib/nhsca-hub-media"
 import { NhscaHubMediaShareButtons } from "@/components/national-team/nhsca-hub-media-share-buttons"
+import { NhscaHubMediaLikeButton } from "@/components/national-team/nhsca-hub-media-like-button"
 import { cn } from "@/lib/utils"
 
 function formatWhen(iso: string) {
@@ -150,6 +151,12 @@ export function NhscaHubMediaTab({
     }
   }
 
+  const applyLikeUpdate = useCallback((mediaId: string, likeCount: number, likedByMe: boolean) => {
+    setItems((prev) =>
+      prev.map((x) => (x.id === mediaId ? { ...x, like_count: likeCount, liked_by_me: likedByMe } : x))
+    )
+  }, [])
+
   const onDelete = async (item: NhscaHubMediaRow) => {
     const canDelete = isAdmin || (userId && item.user_id === userId)
     if (!canDelete) return
@@ -257,35 +264,66 @@ export function NhscaHubMediaTab({
                 const canDelete = isAdmin || (userId && item.user_id === userId)
                 return (
                   <li key={item.id} className="relative group">
-                    <button
-                      type="button"
-                      className="relative w-full aspect-square rounded-xl overflow-hidden border border-white/10 bg-[#002147]/50 text-left"
-                      onClick={() => openViewer(item)}
-                    >
-                      {item.media_type === "video" ? (
-                        <div className="relative h-full w-full flex items-center justify-center bg-black/40">
-                          <video
+                    <div className="relative">
+                      <button
+                        type="button"
+                        className="relative w-full aspect-square rounded-xl overflow-hidden border border-white/10 bg-[#002147]/50 text-left"
+                        onClick={() => openViewer(item)}
+                      >
+                        {item.media_type === "video" ? (
+                          <div className="relative h-full w-full flex items-center justify-center bg-black/40">
+                            <video
+                              src={item.url}
+                              className="absolute inset-0 h-full w-full object-cover"
+                              muted
+                              playsInline
+                              preload="metadata"
+                            />
+                            <span className="relative z-10 rounded-full bg-black/55 p-2.5">
+                              <Play className="h-6 w-6 text-white fill-white" />
+                            </span>
+                          </div>
+                        ) : (
+                          <Image
                             src={item.url}
-                            className="absolute inset-0 h-full w-full object-cover"
-                            muted
-                            playsInline
-                            preload="metadata"
+                            alt={item.caption || item.filename || "Team photo"}
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 640px) 50vw, 200px"
+                            unoptimized
                           />
-                          <span className="relative z-10 rounded-full bg-black/55 p-2.5">
-                            <Play className="h-6 w-6 text-white fill-white" />
-                          </span>
-                        </div>
-                      ) : (
-                        <Image
-                          src={item.url}
-                          alt={item.caption || item.filename || "Team photo"}
-                          fill
-                          className="object-cover"
-                          sizes="(max-width: 640px) 50vw, 200px"
-                          unoptimized
-                        />
-                      )}
-                    </button>
+                        )}
+                      </button>
+                      <NhscaHubMediaLikeButton
+                        mediaId={item.id}
+                        likeCount={item.like_count ?? 0}
+                        likedByMe={!!item.liked_by_me}
+                        onUpdated={applyLikeUpdate}
+                        overlay
+                        className="absolute bottom-2 left-2 z-10"
+                      />
+                      {canDelete ? (
+                        <button
+                          type="button"
+                          aria-label="Remove"
+                          disabled={deletingId === item.id}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            void onDelete(item)
+                          }}
+                          className={cn(
+                            "absolute top-2 right-2 min-h-[36px] min-w-[36px] rounded-lg bg-red-600/90 text-white flex items-center justify-center",
+                            "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 transition-opacity shadow-md z-10"
+                          )}
+                        >
+                          {deletingId === item.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                        </button>
+                      ) : null}
+                    </div>
                     <div className="mt-1.5 px-0.5 space-y-1.5">
                       <p className="text-[11px] font-semibold text-white/85 truncate">
                         {item.uploader_name || item.uploader_email || "Parent"}
@@ -299,27 +337,6 @@ export function NhscaHubMediaTab({
                         compact
                       />
                     </div>
-                    {canDelete ? (
-                      <button
-                        type="button"
-                        aria-label="Remove"
-                        disabled={deletingId === item.id}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          void onDelete(item)
-                        }}
-                        className={cn(
-                          "absolute top-2 right-2 min-h-[36px] min-w-[36px] rounded-lg bg-red-600/90 text-white flex items-center justify-center",
-                          "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 transition-opacity shadow-md"
-                        )}
-                      >
-                        {deletingId === item.id ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="h-4 w-4" />
-                        )}
-                      </button>
-                    ) : null}
                   </li>
                 )
               })}
@@ -350,14 +367,22 @@ export function NhscaHubMediaTab({
                 ) : null}
               </p>
             </div>
-            <button
-              type="button"
-              onClick={closeViewer}
-              className="min-h-[44px] min-w-[44px] rounded-full bg-white/10 text-white flex items-center justify-center"
-              aria-label="Close"
-            >
-              <X className="h-5 w-5" />
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              <NhscaHubMediaLikeButton
+                mediaId={viewer.id}
+                likeCount={viewer.like_count ?? 0}
+                likedByMe={!!viewer.liked_by_me}
+                onUpdated={applyLikeUpdate}
+              />
+              <button
+                type="button"
+                onClick={closeViewer}
+                className="min-h-[44px] min-w-[44px] rounded-full bg-white/10 text-white flex items-center justify-center"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
           </div>
 
           <div

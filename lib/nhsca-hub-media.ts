@@ -1,6 +1,7 @@
 /** NHSCA team hub — shared photo/video gallery for signed-in families. */
 
 export const NHSCA_HUB_MEDIA_TABLE = "nhsca_hub_media"
+export const NHSCA_HUB_MEDIA_LIKES_TABLE = "nhsca_hub_media_likes"
 export const NHSCA_HUB_MEDIA_EVENT_SLUG = "nhsca-duals-2026"
 
 export const NHSCA_HUB_MEDIA_MAX_IMAGE_BYTES = 10 * 1024 * 1024
@@ -31,6 +32,8 @@ export type NhscaHubMediaRow = {
   caption: string | null
   content_type: string | null
   created_at: string
+  like_count?: number
+  liked_by_me?: boolean
 }
 
 export function nhscaHubMediaTypeFromMime(mime: string): NhscaHubMediaType | null {
@@ -44,3 +47,14 @@ export function isMissingNhscaHubMediaTableError(message?: string | null): boole
   const m = message.toLowerCase()
   return m.includes("nhsca_hub_media") && (m.includes("does not exist") || m.includes("relation"))
 }
+
+export function isMissingNhscaHubMediaLikesTableError(message?: string | null): boolean {
+  if (!message) return false
+  const m = message.toLowerCase()
+  return m.includes("nhsca_hub_media_likes") && (m.includes("does not exist") || m.includes("relation"))
+}
+
+const MEDIA_SELECT =
+  "id, event_slug, user_id, uploader_email, uploader_name, media_type, url, filename, caption, content_type, created_at"
+
+export { MEDIA_SELECT as NHSCA_HUB_MEDIA_SELECT }
