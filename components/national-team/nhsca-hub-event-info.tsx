@@ -4,6 +4,7 @@ import Image from "next/image"
 import { Calendar, Clock, ExternalLink, MapPin } from "lucide-react"
 import { hubPanelClass, hubPanelDescClass, hubPanelHeaderClass, hubPanelTitleClass } from "@/components/national-team/nhsca-hub-theme"
 import { NhscaHubTravelRoster } from "@/components/national-team/nhsca-hub-travel-roster"
+import { NHSCA_DUALS_2026_VAN_PICKUP } from "@/lib/nhsca-duals-2026-van-pickup"
 import { cn } from "@/lib/utils"
 
 const VBSC_MAPS =
@@ -98,10 +99,24 @@ export function NhscaHubEventInfo() {
           </a>
         </HubInfoCard>
 
-        <HubInfoCard icon={Clock} title="Team departure" description="NC United transportation">
+        <HubInfoCard icon={Clock} title="Van pickup" description="NC United transportation — Raleigh">
           <ul className="space-y-3 list-disc pl-5">
             <li>
-              <strong className="text-white">Raleigh:</strong> Friday <strong>9:00 AM</strong>
+              <strong className="text-white">{NHSCA_DUALS_2026_VAN_PICKUP.when}</strong>
+            </li>
+            <li>
+              <strong className="text-white">Address:</strong> {NHSCA_DUALS_2026_VAN_PICKUP.label}
+            </li>
+            <li>
+              <a
+                href={NHSCA_DUALS_2026_VAN_PICKUP.mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 font-semibold text-[#D3B574] hover:text-white"
+              >
+                Open pickup in Maps
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
             </li>
             <li>Need a ride? Check GroupMe for the transportation form.</li>
             <li>
