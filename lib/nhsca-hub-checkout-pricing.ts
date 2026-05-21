@@ -251,6 +251,29 @@ export type NhscaOrderLineDisplay = {
   quantity?: number
 }
 
+/** Placeholder order_items from mis-routed payment_intent webhooks — not real product detail. */
+export function isGenericPlaceholderOrderItemName(name: string | null | undefined): boolean {
+  const n = (name ?? "").trim().toLowerCase()
+  if (!n) return true
+  return (
+    n.includes("nc united store purchase") ||
+    n.includes("recovered item") ||
+    n === "order items" ||
+    /^nhsca 2026 – registration \+ apparel$/i.test(n)
+  )
+}
+
+export function orderLineItemsArePlaceholders(
+  items: { product_name?: string | null; name?: string }[] | null | undefined
+): boolean {
+  if (!items?.length) return true
+  return items.every((i) =>
+    isGenericPlaceholderOrderItemName(
+      (i as { product_name?: string | null }).product_name ?? (i as { name?: string }).name
+    )
+  )
+}
+
 export function formatCheckoutLineItemsSummary(items: NhscaCheckoutLineItem[]): string {
   return items
     .map((i) => {
@@ -388,13 +411,8 @@ export function resolveRegistrationOrderLines(row: {
     subtotal?: number | null
   }[]
 }): NhscaOrderLineDisplay[] {
-  if (row.order_line_items?.length) {
-    const fromDb = orderLineItemsToDisplay(row.order_line_items)
-    const isGenericBundle =
-      fromDb.length === 1 &&
-      /registration \+ apparel|nhsca 2026/i.test(fromDb[0]?.name ?? "") &&
-      !row.checkout_lines?.trim()
-    if (!isGenericBundle) return fromDb
+  if (row.order_line_items?.length && !orderLineItemsArePlaceholders(row.order_line_items)) {
+    return orderLineItemsToDisplay(row.order_line_items)
   }
   if (row.checkout_lines?.trim()) {
     const decoded = decodeLineItemsMetadata(row.checkout_lines)
