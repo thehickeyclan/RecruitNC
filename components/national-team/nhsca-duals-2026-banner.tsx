@@ -41,13 +41,15 @@ function CountdownPanel({
           Weigh-ins open
         </p>
       </div>
-      <p className={cn("text-xs sm:text-sm mb-1", dark ? "text-white/75" : "text-[#002147]/75")}>
-        Friday, May 22, 2026 · 2:00 PM ET · Virginia Beach Sports Center
+      <p className={cn("text-xs sm:text-sm mb-4", dark ? "text-white/75" : "text-[#002147]/75")}>
+        Fri May 22 · 2:00 PM ET
       </p>
-      <p className={cn("text-[11px] sm:text-xs mb-4", dark ? "text-white/55" : "text-[#002147]/60")}>
-        First round wrestling Saturday, May 23 · 8:00 AM ET
-      </p>
-      <NhscaDualsCountdownFace countdown={countdown} large={large} dark={dark} />
+      <NhscaDualsCountdownFace
+        countdown={countdown}
+        large={large}
+        dark={dark}
+        layout={dark ? "fourBox" : "default"}
+      />
     </div>
   )
 }

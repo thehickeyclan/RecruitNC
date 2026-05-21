@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { ExternalLink } from "lucide-react"
+import { ExternalLink, Radio } from "lucide-react"
 import { HardLink } from "@/components/hard-link"
 import {
   NhscaDualsCountdownFace,
@@ -66,19 +66,27 @@ export function NhscaHubHero() {
                 </p>
               </div>
 
-              <div className="w-full lg:w-auto lg:min-w-[280px] shrink-0">
-                <div className="rounded-xl bg-[#002147] p-4 shadow-lg ring-1 ring-[#001428]/50">
+              <div className="w-full lg:w-auto lg:min-w-[300px] xl:min-w-[340px] shrink-0">
+                <div
+                  className="rounded-2xl bg-[#002147] p-4 sm:p-5 shadow-xl ring-1 ring-[#001428]/60"
+                  aria-live="polite"
+                  aria-label="Countdown to NHSCA Duals weigh-ins"
+                >
                   <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-                    <span className="inline-flex items-center rounded-full bg-[#B31B1B] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#B31B1B] px-3 py-1 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-white shadow-sm">
+                      <Radio className="h-3 w-3" aria-hidden />
                       Live
                     </span>
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-[#D3B574]">
+                    <p className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-[#D3B574]">
                       {countdown.phase === "first_round" ? "First round soon" : "Weigh-ins open"}
                     </p>
                   </div>
-                  <p className="text-xs text-white/75 mb-1">Fri May 22 · 2:00 PM ET weigh-ins</p>
-                  <p className="text-[10px] text-white/50 mb-3">First round Sat May 23 · 8:00 AM ET</p>
-                  <NhscaDualsCountdownFace countdown={countdown} dark compact />
+                  <p className="text-xs sm:text-sm text-white/75 mb-4">
+                    {countdown.phase === "first_round"
+                      ? "Sat May 23 · 8:00 AM ET"
+                      : "Fri May 22 · 2:00 PM ET"}
+                  </p>
+                  <NhscaDualsCountdownFace countdown={countdown} dark layout="fourBox" />
                 </div>
               </div>
             </div>
@@ -90,7 +98,7 @@ export function NhscaHubHero() {
                 rel="noopener noreferrer"
                 className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl bg-[#002147] px-4 text-sm font-bold text-white hover:bg-[#003366]"
               >
-                GroupMe
+                Join GroupMe
                 <ExternalLink className="h-4 w-4 text-[#D3B574]" aria-hidden />
               </a>
               <a
