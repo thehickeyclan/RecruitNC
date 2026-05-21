@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { FileText, DollarSign, ArrowRight, ArrowLeft, Trophy, KeyRound, Coins } from "lucide-react"
+import { FileText, DollarSign, ArrowRight, ArrowLeft, Trophy, KeyRound, Coins, BarChart3 } from "lucide-react"
 import { HardLink } from "@/components/hard-link"
 
 const NATIONAL_TEAM_NAVY = "#003366"
@@ -20,6 +20,12 @@ const sections = [
     title: "National team payments",
     description: "NHSCA 2026 (and other events): who has paid, who has not. Registrations and store orders for revenue by product.",
     icon: DollarSign,
+  },
+  {
+    href: "/admin/blue/national-team-orders-report",
+    title: "Orders report",
+    description: "Filterable report of every NHSCA hub order — registration, van, hotel, gear — with CSV export.",
+    icon: BarChart3,
   },
   {
     href: "/admin/national-team/gear-images",
