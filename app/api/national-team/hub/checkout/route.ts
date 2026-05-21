@@ -220,10 +220,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Could not create checkout session." }, { status: 500 })
   }
 
-  await admin
-    .from("national_team_event_registrations")
-    .update({ stripe_session_id: session.id, updated_at: new Date().toISOString() })
-    .eq("id", reg.id)
+  const sessionPatch = {
+    stripe_session_id: session.id,
+    checkout_lines: linesMeta.slice(0, 500),
+    checkout_mode: mode,
+    updated_at: new Date().toISOString(),
+  }
+  let patchResult = await admin.from("national_team_event_registrations").update(sessionPatch).eq("id", reg.id)
+  if (patchResult.error && (patchResult.error as { code?: string }).code === "42703") {
+    await admin
+      .from("national_team_event_registrations")
+      .update({ stripe_session_id: session.id, updated_at: sessionPatch.updated_at })
+      .eq("id", reg.id)
+  }
 
   return NextResponse.json({ checkoutUrl: session.url })
 }

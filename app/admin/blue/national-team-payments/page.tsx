@@ -19,6 +19,12 @@ import { ArrowLeft, Loader2, ExternalLink, DollarSign, Mail } from "lucide-react
 import { BlueAdminAuthBanner, isBlueAuthError } from "@/components/blue-admin-auth-banner"
 import { useToast } from "@/hooks/use-toast"
 
+type OrderLineItem = {
+  name: string
+  amount_cents: number
+  quantity?: number
+}
+
 type Registration = {
   id: string
   event_slug: string
@@ -38,6 +44,8 @@ type Registration = {
   record?: string | null
   created_at: string
   fee_receipt_email_sent_at?: string | null
+  order_summary?: string
+  line_items?: OrderLineItem[]
 }
 
 function dateToInputValue(iso: string) {
@@ -65,8 +73,36 @@ function teamShortLabel(eventSlug: string) {
   return eventSlug === "nhsca-duals-2026-select" ? "Select" : "National"
 }
 
+function formatLineItemDollars(cents: number) {
+  return `$${(cents / 100).toFixed(2)}`
+}
+
+function RegistrationOrderItems({ r }: { r: Registration }) {
+  const items = r.line_items ?? []
+  if (items.length > 0) {
+    return (
+      <ul className="space-y-1 text-xs max-w-[280px]">
+        {items.map((item, idx) => (
+          <li key={`${item.name}-${idx}`} className="leading-snug">
+            <span className="font-medium text-[#13294B]">{item.name}</span>
+            <span className="text-muted-foreground tabular-nums"> · {formatLineItemDollars(item.amount_cents)}</span>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+  if (r.order_summary?.trim()) {
+    return <p className="text-xs text-muted-foreground max-w-[280px] leading-snug">{r.order_summary}</p>
+  }
+  return <span className="text-muted-foreground text-sm">—</span>
+}
+
 function totalCents(r: Registration) {
   return (r.reg_fee_cents || 0) + (r.apparel_fee_cents || 0)
+}
+
+function formatCentsCell(cents: number) {
+  return (cents / 100).toFixed(2)
 }
 
 function parseDollarsToCents(s: string): number | null {
@@ -144,7 +180,7 @@ export default function AdminBlueNationalTeamPaymentsPage() {
         ? registrations.filter((r) => r.status !== "paid" && !r.order_id)
         : registrations
 
-  const formatCents = (cents: number) => (cents / 100).toFixed(2)
+  const formatCents = (cents: number) => formatCentsCell(cents)
   const totalPaid = registrations
     .filter((r) => r.status === "paid" || r.order_id)
     .reduce((sum, r) => sum + totalCents(r), 0)
@@ -309,8 +345,8 @@ export default function AdminBlueNationalTeamPaymentsPage() {
           <div>
             <h1 className="text-2xl font-bold text-[#13294B]">National team – NHSCA 2026 payments</h1>
             <p className="text-sm text-muted-foreground">
-              Who has paid and who has not. Paid rows can send a payment receipt email (preview first — email must match
-              Stripe checkout).
+              Who has paid and what they ordered (registration, van, hotel, gear, team package). Paid rows can send a
+              payment receipt email (preview first — email must match Stripe checkout).
             </p>
           </div>
         </div>
@@ -405,8 +441,7 @@ export default function AdminBlueNationalTeamPaymentsPage() {
                           <TableHead>Parent email</TableHead>
                           <TableHead>School</TableHead>
                           <TableHead>Weight</TableHead>
-                          <TableHead>Reg</TableHead>
-                          <TableHead>Apparel</TableHead>
+                          <TableHead className="min-w-[240px]">What they ordered</TableHead>
                           <TableHead>Total</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead className="whitespace-nowrap">Receipt</TableHead>
@@ -441,8 +476,9 @@ export default function AdminBlueNationalTeamPaymentsPage() {
                               {r.high_school} ({r.graduation_year})
                             </TableCell>
                             <TableCell>{r.primary_weight}</TableCell>
-                            <TableCell>${formatCents(r.reg_fee_cents || 0)}</TableCell>
-                            <TableCell>${formatCents(r.apparel_fee_cents || 0)}</TableCell>
+                            <TableCell>
+                              <RegistrationOrderItems r={r} />
+                            </TableCell>
                             <TableCell className="font-medium">${formatCents(totalCents(r))}</TableCell>
                             <TableCell>
                               {isPaid(r) ? (

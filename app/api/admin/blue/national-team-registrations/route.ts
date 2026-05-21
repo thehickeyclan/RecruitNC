@@ -5,6 +5,8 @@ import {
   listNhscaDuals2026Registrations,
   NHSCA_DUALS_2026_EVENT_SLUGS,
   nhscaDualsRegistrationIsPaid,
+  nhscaDualsRegistrationOrderLines,
+  nhscaDualsRegistrationOrderSummary,
 } from "@/lib/nhsca-duals-2026-registrations"
 
 async function requireAdmin() {
@@ -34,7 +36,11 @@ export async function GET(request: NextRequest) {
     const eventSlugs = eventParam ? [eventParam] : [...NHSCA_DUALS_2026_EVENT_SLUGS]
 
     return NextResponse.json({
-      registrations,
+      registrations: registrations.map((r) => ({
+        ...r,
+        order_summary: nhscaDualsRegistrationOrderSummary(r),
+        line_items: nhscaDualsRegistrationOrderLines(r),
+      })),
       paidCount: paid.length,
       pendingCount: pending.length,
       eventSlugs,

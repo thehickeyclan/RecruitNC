@@ -244,3 +244,167 @@ export function gearSummaryFromRegistration(row: {
   if (row.shirt_size) parts.push(`Tees ${row.shirt_size}`)
   return parts.length ? parts.join(" · ") : "—"
 }
+
+export type NhscaOrderLineDisplay = {
+  name: string
+  amount_cents: number
+  quantity?: number
+}
+
+export function formatCheckoutLineItemsSummary(items: NhscaCheckoutLineItem[]): string {
+  return items
+    .map((i) => {
+      const cents = i.amountCents * (i.quantity ?? 1)
+      const dollars = (cents / 100).toFixed(2)
+      return `${i.name} ($${dollars})`
+    })
+    .join(" · ")
+}
+
+export function formatOrderLineItemsSummary(
+  items: { product_name?: string | null; quantity?: number | null; price?: number | null; subtotal?: number | null }[]
+): string {
+  if (!items.length) return ""
+  return items
+    .map((i) => {
+      const name = (i.product_name ?? "Item").trim()
+      const qty = i.quantity ?? 1
+      const subtotal =
+        i.subtotal != null && Number.isFinite(Number(i.subtotal))
+          ? Math.round(Number(i.subtotal) * 100)
+          : Math.round((i.price ?? 0) * 100) * qty
+      const dollars = (subtotal / 100).toFixed(2)
+      return qty > 1 ? `${name} ×${qty} ($${dollars})` : `${name} ($${dollars})`
+    })
+    .join(" · ")
+}
+
+export function orderLineItemsToDisplay(
+  items: { product_name?: string | null; quantity?: number | null; price?: number | null; subtotal?: number | null }[]
+): NhscaOrderLineDisplay[] {
+  return items.map((i) => {
+    const qty = i.quantity ?? 1
+    const subtotal =
+      i.subtotal != null && Number.isFinite(Number(i.subtotal))
+        ? Math.round(Number(i.subtotal) * 100)
+        : Math.round((i.price ?? 0) * 100) * qty
+    return {
+      name: (i.product_name ?? "Item").trim(),
+      amount_cents: subtotal,
+      quantity: qty,
+    }
+  })
+}
+
+export function checkoutLineItemsToDisplay(items: NhscaCheckoutLineItem[]): NhscaOrderLineDisplay[] {
+  return items.map((i) => ({
+    name: i.name,
+    amount_cents: i.amountCents * (i.quantity ?? 1),
+    quantity: i.quantity ?? 1,
+  }))
+}
+
+/** Reconstruct line labels from fee split when order_items / checkout_lines are missing. */
+export function inferOrderSummaryFromFees(row: {
+  reg_fee_cents?: number | null
+  apparel_fee_cents?: number | null
+  singlet_size?: string | null
+  shorts_size?: string | null
+  shirt_size?: string | null
+}): NhscaOrderLineDisplay[] {
+  const items: NhscaOrderLineDisplay[] = []
+  let reg = row.reg_fee_cents || 0
+  let apparel = row.apparel_fee_cents || 0
+
+  if (reg >= NHSCA_TEAM_PACKAGE_CENTS) {
+    items.push({ name: "NHSCA Team Package", amount_cents: NHSCA_TEAM_PACKAGE_CENTS })
+    reg -= NHSCA_TEAM_PACKAGE_CENTS
+  } else if (reg >= NHSCA_REG_FEE_CENTS) {
+    items.push({ name: "Tournament Registration & Team Fee", amount_cents: NHSCA_REG_FEE_CENTS })
+    reg -= NHSCA_REG_FEE_CENTS
+  }
+
+  const van = nhscaVanTravelFeeCents()
+  if (reg >= van && van > 0) {
+    items.push({ name: "Van Transportation (per wrestler)", amount_cents: van })
+    reg -= van
+  }
+  const hotel = nhscaHotelFeeCents()
+  if (reg >= hotel && hotel > 0) {
+    items.push({ name: "Team hotel (3 nights, per person)", amount_cents: hotel })
+    reg -= hotel
+  }
+  if (reg > 0) {
+    items.push({ name: "Registration / travel fees", amount_cents: reg })
+    reg = 0
+  }
+
+  if (apparel >= NHSCA_SINGLET_TWO_CENTS) {
+    items.push({
+      name: row.singlet_size ? `NC United Singlets ×2 (${row.singlet_size})` : "NC United Singlets ×2",
+      amount_cents: NHSCA_SINGLET_TWO_CENTS,
+    })
+    apparel -= NHSCA_SINGLET_TWO_CENTS
+  } else if (apparel >= NHSCA_SINGLET_EACH_CENTS) {
+    items.push({
+      name: row.singlet_size ? `NC United Singlet (${row.singlet_size})` : "NC United Singlet",
+      amount_cents: NHSCA_SINGLET_EACH_CENTS,
+    })
+    apparel -= NHSCA_SINGLET_EACH_CENTS
+  }
+  if (apparel >= NHSCA_SHORTS_CENTS) {
+    items.push({
+      name: row.shorts_size ? `Team Shorts (${row.shorts_size})` : "Team Shorts",
+      amount_cents: NHSCA_SHORTS_CENTS,
+    })
+    apparel -= NHSCA_SHORTS_CENTS
+  }
+  if (apparel >= NHSCA_LONG_SLEEVE_CENTS) {
+    items.push({ name: "Long Sleeve Tee", amount_cents: NHSCA_LONG_SLEEVE_CENTS })
+    apparel -= NHSCA_LONG_SLEEVE_CENTS
+  }
+  if (apparel >= NHSCA_SHORT_SLEEVE_CENTS) {
+    items.push({ name: "Short Sleeve Tee", amount_cents: NHSCA_SHORT_SLEEVE_CENTS })
+    apparel -= NHSCA_SHORT_SLEEVE_CENTS
+  }
+  if (apparel > 0) {
+    items.push({ name: "Apparel", amount_cents: apparel })
+  }
+
+  return items
+}
+
+export function resolveRegistrationOrderLines(row: {
+  reg_fee_cents?: number | null
+  apparel_fee_cents?: number | null
+  singlet_size?: string | null
+  shorts_size?: string | null
+  shirt_size?: string | null
+  checkout_lines?: string | null
+  order_line_items?: {
+    product_name?: string | null
+    quantity?: number | null
+    price?: number | null
+    subtotal?: number | null
+  }[]
+}): NhscaOrderLineDisplay[] {
+  if (row.order_line_items?.length) {
+    const fromDb = orderLineItemsToDisplay(row.order_line_items)
+    const isGenericBundle =
+      fromDb.length === 1 &&
+      /registration \+ apparel|nhsca 2026/i.test(fromDb[0]?.name ?? "") &&
+      !row.checkout_lines?.trim()
+    if (!isGenericBundle) return fromDb
+  }
+  if (row.checkout_lines?.trim()) {
+    const decoded = decodeLineItemsMetadata(row.checkout_lines)
+    if (decoded.length) return checkoutLineItemsToDisplay(decoded)
+  }
+  return inferOrderSummaryFromFees(row)
+}
+
+export function resolveRegistrationOrderSummary(row: Parameters<typeof resolveRegistrationOrderLines>[0]): string {
+  const lines = resolveRegistrationOrderLines(row)
+  if (!lines.length) return gearSummaryFromRegistration(row)
+  return lines.map((l) => `${l.name} ($${(l.amount_cents / 100).toFixed(2)})`).join(" · ")
+}
