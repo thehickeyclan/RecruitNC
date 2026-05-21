@@ -1,5 +1,7 @@
 "use client"
 
+import { NHSCA_DUALS_2026_VAN_PICKUP } from "@/lib/nhsca-duals-2026-van-pickup"
+
 const NHSCA_TICKETS_URL =
   "https://www.etix.com/ticket/p/81773822/2026-nhsca-national-duals-wrestling-virginia-beach-virginia-beach-sports-center"
 
@@ -150,7 +152,18 @@ export function NHSCADuals2026TeamHubFaq() {
         <h3 className="text-[#D3B574] font-semibold uppercase tracking-wide text-xs mb-2">Transportation</h3>
         <ul className="space-y-2 list-disc pl-5">
           <li>
-            <strong>Team departure:</strong> Raleigh — <strong>Friday 9 AM</strong>
+            <strong>Van pickup:</strong> {NHSCA_DUALS_2026_VAN_PICKUP.when} —{" "}
+            <strong className="text-white">{NHSCA_DUALS_2026_VAN_PICKUP.label}</strong>
+          </li>
+          <li>
+            <a
+              href={NHSCA_DUALS_2026_VAN_PICKUP.mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-[#D3B574] underline underline-offset-2 hover:text-white"
+            >
+              Open pickup location in Maps
+            </a>
           </li>
           <li>Need a ride? Complete the transportation form (link in GroupMe).</li>
           <li>

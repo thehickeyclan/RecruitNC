@@ -110,7 +110,7 @@ const EMPTY_INDIVIDUAL: NhscaHubIndividualSelections = {
 
 export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?: () => void }) {
   const { user } = useAuth()
-  const [fullPackage, setFullPackage] = useState(true)
+  const [fullPackage, setFullPackage] = useState(false)
   const [team, setTeam] = useState<"nhsca-duals-2026" | "nhsca-duals-2026-select">("nhsca-duals-2026")
   const [parentName, setParentName] = useState("")
   const [wrestlerName, setWrestlerName] = useState("")

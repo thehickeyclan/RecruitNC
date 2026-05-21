@@ -234,7 +234,12 @@ export function NhscaHubMediaTab({
                         {item.uploader_name || item.uploader_email || "Parent"}
                       </p>
                       <p className="text-[10px] text-white/40">{formatWhen(item.created_at)}</p>
-                      <NhscaHubMediaShareButtons url={item.url} caption={item.caption} compact />
+                      <NhscaHubMediaShareButtons
+                        url={item.url}
+                        caption={item.caption}
+                        mediaType={item.media_type}
+                        compact
+                      />
                     </div>
                     {canDelete ? (
                       <button
@@ -301,7 +306,11 @@ export function NhscaHubMediaTab({
           </div>
           {viewer.caption ? <p className="mt-3 text-sm text-white/80 text-center shrink-0">{viewer.caption}</p> : null}
           <div className="mt-3 shrink-0 max-w-md mx-auto w-full">
-            <NhscaHubMediaShareButtons url={viewer.url} caption={viewer.caption} />
+            <NhscaHubMediaShareButtons
+              url={viewer.url}
+              caption={viewer.caption}
+              mediaType={viewer.media_type}
+            />
           </div>
         </div>
       ) : null}
