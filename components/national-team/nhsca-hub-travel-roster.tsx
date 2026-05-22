@@ -24,18 +24,18 @@ function TravelList({ title, icon: Icon, names }: { title: string; icon: typeof 
   )
 }
 
-/** Van + hotel sign-up lists for parents on Event Info and Payment checkout. */
+/** Van + hotel lists for parents on Event Info and Payment checkout (coordination — not payment status). */
 export function NhscaHubTravelRoster({ compact = false, className }: { compact?: boolean; className?: string }) {
   if (compact) {
     return (
       <div className={cn("rounded-xl border border-white/10 bg-[#0a2040]/60 p-4 space-y-4", className)}>
         <div>
-          <p className="text-xs font-bold uppercase tracking-wider text-[#CBAF5D]/90 mb-2">Current sign-ups</p>
-          <p className="text-xs text-white/50 mb-3">Athletes who have paid for team van or hotel through hub checkout.</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-[#CBAF5D]/90 mb-2">Travel lists</p>
+          <p className="text-xs text-white/50 mb-3">Van list and hotel room list — for team coordination, not payment confirmation.</p>
         </div>
         <div className="grid sm:grid-cols-2 gap-3">
-          <TravelList title="Van transportation" icon={Bus} names={NHSCA_DUALS_2026_VAN_TRANSPORTATION} />
-          <TravelList title="Hotel accommodations" icon={Hotel} names={NHSCA_DUALS_2026_HOTEL_ACCOMMODATIONS} />
+          <TravelList title="Van list" icon={Bus} names={NHSCA_DUALS_2026_VAN_TRANSPORTATION} />
+          <TravelList title="Hotel room list" icon={Hotel} names={NHSCA_DUALS_2026_HOTEL_ACCOMMODATIONS} />
         </div>
       </div>
     )
@@ -44,14 +44,14 @@ export function NhscaHubTravelRoster({ compact = false, className }: { compact?:
   return (
     <article className={cn(hubPanelClass, className)}>
       <header className={hubPanelHeaderClass}>
-        <h3 className={hubPanelTitleClass}>Travel sign-ups</h3>
+        <h3 className={hubPanelTitleClass}>Travel lists</h3>
         <p className={hubPanelDescClass}>
-          Athletes who have paid for team van or hotel through hub checkout.
+          Van list and hotel room list — for team coordination, not payment confirmation.
         </p>
       </header>
       <div className="p-5 md:p-6 grid sm:grid-cols-2 gap-4">
-        <TravelList title="Van transportation" icon={Bus} names={NHSCA_DUALS_2026_VAN_TRANSPORTATION} />
-        <TravelList title="Hotel accommodations" icon={Hotel} names={NHSCA_DUALS_2026_HOTEL_ACCOMMODATIONS} />
+        <TravelList title="Van list" icon={Bus} names={NHSCA_DUALS_2026_VAN_TRANSPORTATION} />
+        <TravelList title="Hotel room list" icon={Hotel} names={NHSCA_DUALS_2026_HOTEL_ACCOMMODATIONS} />
       </div>
     </article>
   )
