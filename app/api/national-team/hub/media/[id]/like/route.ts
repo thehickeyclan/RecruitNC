@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getUserFromRequest } from "@/lib/supabase/auth-from-request"
-import { createAdminClient } from "@/lib/supabase/admin"
+import { createAdminClientFresh } from "@/lib/supabase/admin"
 import {
   isMissingNhscaHubMediaLikesTableError,
   isMissingNhscaHubMediaTableError,
+  nhscaHubMediaDbErrorMessage,
   NHSCA_HUB_MEDIA_LIKES_TABLE,
   NHSCA_HUB_MEDIA_TABLE,
 } from "@/lib/nhsca-hub-media"
@@ -24,7 +25,7 @@ export async function POST(
     return NextResponse.json({ error: "Missing media id." }, { status: 400 })
   }
 
-  const admin = createAdminClient()
+  const admin = createAdminClientFresh()
 
   const { data: media, error: mediaErr } = await admin
     .from(NHSCA_HUB_MEDIA_TABLE)
@@ -78,7 +79,10 @@ export async function POST(
     })
     if (insErr) {
       console.error("[RecruitNC] nhsca hub media like", insErr)
-      return NextResponse.json({ error: insErr.message }, { status: 500 })
+      return NextResponse.json(
+        { error: nhscaHubMediaDbErrorMessage(insErr.message, insErr.code) },
+        { status: 500 }
+      )
     }
   }
 

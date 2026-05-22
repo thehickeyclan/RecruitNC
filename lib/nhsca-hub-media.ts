@@ -54,6 +54,21 @@ export function isMissingNhscaHubMediaLikesTableError(message?: string | null): 
   return m.includes("nhsca_hub_media_likes") && (m.includes("does not exist") || m.includes("relation"))
 }
 
+export function isNhscaHubMediaRlsError(message?: string | null, code?: string | null): boolean {
+  if (!message) return false
+  const m = message.toLowerCase()
+  return code === "42501" || m.includes("row-level security") || m.includes("row level security")
+}
+
+/** User-facing hint when Supabase rejects an insert/delete (wrong service key or missing RLS policy). */
+export function nhscaHubMediaDbErrorMessage(message: string, code?: string | null): string {
+  if (!isNhscaHubMediaRlsError(message, code)) return message
+  return (
+    "Upload blocked by database security (RLS). In Vercel, confirm SUPABASE_SERVICE_ROLE_KEY is the " +
+    "service_role secret (not anon), then redeploy. Also run scripts/supabase-nhsca-hub-media-rls.sql in Supabase SQL Editor."
+  )
+}
+
 const MEDIA_SELECT =
   "id, event_slug, user_id, uploader_email, uploader_name, media_type, url, filename, caption, content_type, created_at"
 

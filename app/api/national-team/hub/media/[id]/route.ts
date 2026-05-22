@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { del } from "@vercel/blob"
 import { getUserFromRequest } from "@/lib/supabase/auth-from-request"
-import { createAdminClient } from "@/lib/supabase/admin"
+import { createAdminClientFresh } from "@/lib/supabase/admin"
 import { isNhscaDualsAdmin } from "@/lib/nhsca-duals-live-results/auth"
-import { isMissingNhscaHubMediaTableError, NHSCA_HUB_MEDIA_TABLE } from "@/lib/nhsca-hub-media"
+import {
+  isMissingNhscaHubMediaTableError,
+  nhscaHubMediaDbErrorMessage,
+  NHSCA_HUB_MEDIA_TABLE,
+} from "@/lib/nhsca-hub-media"
 
 export const dynamic = "force-dynamic"
 
@@ -21,7 +25,7 @@ export async function DELETE(
     return NextResponse.json({ error: "Missing media id." }, { status: 400 })
   }
 
-  const admin = createAdminClient()
+  const admin = createAdminClientFresh()
   const { data: row, error: fetchErr } = await admin
     .from(NHSCA_HUB_MEDIA_TABLE)
     .select("id, user_id, url")
@@ -54,7 +58,10 @@ export async function DELETE(
   const { error: deleteErr } = await admin.from(NHSCA_HUB_MEDIA_TABLE).delete().eq("id", id)
   if (deleteErr) {
     console.error("[RecruitNC] nhsca hub media delete", deleteErr)
-    return NextResponse.json({ error: deleteErr.message }, { status: 500 })
+    return NextResponse.json(
+      { error: nhscaHubMediaDbErrorMessage(deleteErr.message, deleteErr.code) },
+      { status: 500 }
+    )
   }
 
   return NextResponse.json({ ok: true })
