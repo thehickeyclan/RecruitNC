@@ -24,9 +24,3 @@ CREATE INDEX IF NOT EXISTS idx_nhsca_hub_media_user
   ON nhsca_hub_media (user_id);
 
 COMMENT ON TABLE nhsca_hub_media IS 'NHSCA team hub — parent-shared photos and videos; admins delete via API.';
-
--- RLS (required if Supabase enables RLS on new tables or someone toggles it in the dashboard)
-ALTER TABLE public.nhsca_hub_media ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "Service role full access nhsca_hub_media" ON public.nhsca_hub_media;
-CREATE POLICY "Service role full access nhsca_hub_media"
-  ON public.nhsca_hub_media FOR ALL TO service_role USING (true) WITH CHECK (true);
