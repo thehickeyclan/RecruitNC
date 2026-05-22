@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
   } else {
     const sel = body.individual as Partial<NhscaHubIndividualSelections> | undefined
     const individual: NhscaHubIndividualSelections = {
-      registration: !!sel?.registration,
+      registration: false,
       singletQty: sel?.singletQty === 2 ? 2 : sel?.singletQty === 1 ? 1 : 0,
       singletColor:
         sel?.singletColor === "blue" || sel?.singletColor === "white" ? sel.singletColor : "",

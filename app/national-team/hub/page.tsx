@@ -32,6 +32,20 @@ import {
 const REG_PAGE_PATH = "/national-team/register/nhsca-2026"
 const HUB_API = "/api/national-team/hub"
 
+function inferHubCheckoutEventSlug(events: HubEvent[]): "nhsca-duals-2026" | "nhsca-duals-2026-select" {
+  for (const ev of events) {
+    const slug = ev.myRegistrations?.[0]?.event_slug
+    if (slug === "nhsca-duals-2026-select" || slug === "nhsca-duals-2026") return slug
+  }
+  const nhsca = events.filter(
+    (e) => e.eventSlug === "nhsca-duals-2026" || e.eventSlug === "nhsca-duals-2026-select"
+  )
+  if (nhsca.length === 1) {
+    return nhsca[0].eventSlug as "nhsca-duals-2026" | "nhsca-duals-2026-select"
+  }
+  return "nhsca-duals-2026"
+}
+
 export default function NationalTeamHubPage() {
   const { user, session, isLoading: authLoading } = useAuth()
   const [data, setData] = useState<HubResponse | null>(null)
@@ -123,6 +137,7 @@ export default function NationalTeamHubPage() {
 
   const nhscaInfoOnly = data.nhscaInfoOnly ?? false
   const events = data.events ?? []
+  const checkoutEventSlug = inferHubCheckoutEventSlug(events)
 
   const rosterSections = (() => {
     if (events.length === 0) return null
@@ -184,6 +199,7 @@ export default function NationalTeamHubPage() {
           userId={user?.id ?? null}
           nhscaInfoOnly={nhscaInfoOnly}
           hasRoster={!!(rosterSections && rosterSections.length > 0)}
+          checkoutEventSlug={checkoutEventSlug}
           rosterContent={
             rosterSections && rosterSections.length > 0 ? (
               <div className="space-y-6 md:space-y-8">
