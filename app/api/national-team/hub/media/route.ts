@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from "next/server"
 import { put } from "@vercel/blob"
 import { nanoid } from "nanoid"
 import { getUserFromRequest } from "@/lib/supabase/auth-from-request"
-import { createAdminClient } from "@/lib/supabase/admin"
+import { createAdminClientFresh } from "@/lib/supabase/admin"
 import {
   isMissingNhscaHubMediaTableError,
+  nhscaHubMediaDbErrorMessage,
   NHSCA_HUB_MEDIA_EVENT_SLUG,
   NHSCA_HUB_MEDIA_MAX_IMAGE_BYTES,
   NHSCA_HUB_MEDIA_MAX_VIDEO_BYTES,
@@ -13,7 +14,6 @@ import {
   nhscaHubMediaTypeFromMime,
   type NhscaHubMediaRow,
 } from "@/lib/nhsca-hub-media"
-import { enrichNhscaHubMediaWithLikes } from "@/lib/nhsca-hub-media-likes"
 
 export const dynamic = "force-dynamic"
 
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
   }
 
   const eventSlug = request.nextUrl.searchParams.get("event")?.trim() || NHSCA_HUB_MEDIA_EVENT_SLUG
-  const admin = createAdminClient()
+  const admin = createAdminClientFresh()
 
   const { data, error } = await admin
     .from(NHSCA_HUB_MEDIA_TABLE)
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const admin = createAdminClient()
+  const admin = createAdminClientFresh()
   const inserted: NhscaHubMediaRow[] = []
 
   for (const file of validFiles) {
@@ -156,7 +156,10 @@ export async function POST(request: NextRequest) {
           { status: 503 }
         )
       }
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json(
+        { error: nhscaHubMediaDbErrorMessage(error.message, error.code) },
+        { status: 500 }
+      )
     }
 
     inserted.push({ ...(data as NhscaHubMediaRow), like_count: 0, liked_by_me: false })
