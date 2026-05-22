@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import Image from "next/image"
+import { upload } from "@vercel/blob/client"
 import { ChevronLeft, ChevronRight, ImagePlus, Loader2, Play, Trash2, X } from "lucide-react"
+import { useAuth } from "@/contexts/auth-context"
 import {
   hubPanelClass,
   hubPanelDescClass,
@@ -10,6 +12,7 @@ import {
   hubPanelTitleClass,
 } from "@/components/national-team/nhsca-hub-theme"
 import type { NhscaHubMediaRow } from "@/lib/nhsca-hub-media"
+import { NHSCA_HUB_MEDIA_EVENT_SLUG, resolveNhscaHubMediaFile } from "@/lib/nhsca-hub-media"
 import { NhscaHubMediaShareButtons } from "@/components/national-team/nhsca-hub-media-share-buttons"
 import { NhscaHubMediaLikeButton } from "@/components/national-team/nhsca-hub-media-like-button"
 import { cn } from "@/lib/utils"
@@ -34,6 +37,7 @@ export function NhscaHubMediaTab({
   isAdmin?: boolean
   userId?: string | null
 }) {
+  const { session } = useAuth()
   const [items, setItems] = useState<NhscaHubMediaRow[]>([])
   const [loading, setLoading] = useState(true)
   const [tablesReady, setTablesReady] = useState(true)
@@ -45,6 +49,17 @@ export function NhscaHubMediaTab({
   const [viewerIndex, setViewerIndex] = useState<number | null>(null)
   const touchStartX = useRef<number | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+
+  const authFetchInit = useCallback(
+    (init: RequestInit = {}): RequestInit => {
+      const headers = new Headers(init.headers)
+      if (session?.access_token) {
+        headers.set("Authorization", `Bearer ${session.access_token}`)
+      }
+      return { ...init, credentials: "include", headers }
+    },
+    [session?.access_token]
+  )
 
   const viewer = viewerIndex !== null ? items[viewerIndex] ?? null : null
   const canSlideshow = items.length > 1
@@ -95,7 +110,7 @@ export function NhscaHubMediaTab({
 
   const load = useCallback(async () => {
     setError(null)
-    const r = await fetch("/api/national-team/hub/media", { credentials: "include" })
+    const r = await fetch("/api/national-team/hub/media", authFetchInit())
     if (!r.ok) {
       if (r.status === 401) throw new Error("Sign in required.")
       const d = await r.json().catch(() => ({}))
@@ -105,7 +120,7 @@ export function NhscaHubMediaTab({
     setItems(data.items ?? [])
     setTablesReady(data.tablesReady !== false)
     setSetupMessage(data.message ?? null)
-  }, [])
+  }, [authFetchInit])
 
   useEffect(() => {
     let cancelled = false
@@ -129,22 +144,81 @@ export function NhscaHubMediaTab({
     if (!files?.length) return
     setError(null)
     setUploading(true)
+    const captionTrimmed = caption.trim()
+    const added: NhscaHubMediaRow[] = []
+
     try {
-      const form = new FormData()
-      Array.from(files).forEach((f) => form.append("file", f))
-      if (caption.trim()) form.append("caption", caption.trim())
-      const r = await fetch("/api/national-team/hub/media", {
-        method: "POST",
-        credentials: "include",
-        body: form,
-      })
-      const data = await r.json().catch(() => ({}))
-      if (!r.ok) throw new Error((data as { error?: string }).error ?? "Upload failed.")
-      const added = (data as { items?: NhscaHubMediaRow[] }).items ?? []
-      setItems((prev) => [...added, ...prev])
-      setCaption("")
-      if (fileRef.current) fileRef.current.value = ""
+      for (const file of Array.from(files)) {
+        const resolved = resolveNhscaHubMediaFile(file)
+        if (!resolved) {
+          throw new Error("Use JPEG, PNG, GIF, WebP, HEIC, MP4, MOV, or WebM files only.")
+        }
+
+        const uploadHeaders: Record<string, string> = {}
+        if (session?.access_token) {
+          uploadHeaders.Authorization = `Bearer ${session.access_token}`
+        }
+
+        const storagePath = `nhsca-hub-media/${NHSCA_HUB_MEDIA_EVENT_SLUG}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`
+
+        const blob = await upload(storagePath, file, {
+          access: "public",
+          handleUploadUrl: "/api/national-team/hub/media/client-upload",
+          headers: uploadHeaders,
+          clientPayload: JSON.stringify({
+            caption: captionTrimmed || undefined,
+            eventSlug: NHSCA_HUB_MEDIA_EVENT_SLUG,
+            mediaType: resolved.mediaType,
+            contentType: resolved.contentType,
+            originalName: file.name,
+          }),
+        })
+
+        let item: NhscaHubMediaRow | null = null
+        for (let attempt = 0; attempt < 5; attempt++) {
+          const r = await fetch(
+            `/api/national-team/hub/media/client-upload?url=${encodeURIComponent(blob.url)}`,
+            authFetchInit()
+          )
+          if (r.ok) {
+            const data = (await r.json()) as { item?: NhscaHubMediaRow }
+            if (data.item) {
+              item = { ...data.item, like_count: 0, liked_by_me: false }
+              break
+            }
+          }
+          await new Promise((resolve) => setTimeout(resolve, 400))
+        }
+
+        if (!item) {
+          item = {
+            id: blob.url,
+            event_slug: NHSCA_HUB_MEDIA_EVENT_SLUG,
+            user_id: userId ?? "",
+            uploader_email: null,
+            uploader_name: null,
+            media_type: resolved.mediaType,
+            url: blob.url,
+            filename: file.name,
+            caption: captionTrimmed || null,
+            content_type: resolved.contentType,
+            created_at: new Date().toISOString(),
+            like_count: 0,
+            liked_by_me: false,
+          }
+        }
+
+        added.push(item)
+      }
+
+      if (added.length) {
+        setItems((prev) => [...added, ...prev])
+        setCaption("")
+        if (fileRef.current) fileRef.current.value = ""
+        void load()
+      }
     } catch (err) {
+      console.error("[RecruitNC] nhsca hub media upload", err)
       setError(err instanceof Error ? err.message : "Upload failed.")
     } finally {
       setUploading(false)
@@ -166,7 +240,7 @@ export function NhscaHubMediaTab({
     try {
       const r = await fetch(`/api/national-team/hub/media/${item.id}`, {
         method: "DELETE",
-        credentials: "include",
+        ...authFetchInit(),
       })
       const data = await r.json().catch(() => ({}))
       if (!r.ok) throw new Error((data as { error?: string }).error ?? "Delete failed.")
@@ -219,7 +293,7 @@ export function NhscaHubMediaTab({
                 <input
                   ref={fileRef}
                   type="file"
-                  accept="image/jpeg,image/png,image/gif,image/webp,image/heic,image/heif,video/mp4,video/quicktime,video/webm"
+                  accept="image/*,video/*,.heic,.heif,.HEIC,.HEIF"
                   multiple
                   className="sr-only"
                   onChange={(e) => void onUpload(e.target.files)}

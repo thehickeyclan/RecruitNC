@@ -11,7 +11,7 @@ import {
   NHSCA_HUB_MEDIA_MAX_VIDEO_BYTES,
   NHSCA_HUB_MEDIA_SELECT,
   NHSCA_HUB_MEDIA_TABLE,
-  nhscaHubMediaTypeFromMime,
+  resolveNhscaHubMediaFile,
   type NhscaHubMediaRow,
 } from "@/lib/nhsca-hub-media"
 
@@ -86,19 +86,20 @@ export async function POST(request: NextRequest) {
   }
 
   for (const file of validFiles) {
-    const mediaType = nhscaHubMediaTypeFromMime(file.type)
-    if (!mediaType) {
+    const resolved = resolveNhscaHubMediaFile(file)
+    if (!resolved) {
       return NextResponse.json(
         { error: "Use JPEG, PNG, GIF, WebP, HEIC, MP4, MOV, or WebM files only." },
         { status: 400 }
       )
     }
-    const max = mediaType === "video" ? NHSCA_HUB_MEDIA_MAX_VIDEO_BYTES : NHSCA_HUB_MEDIA_MAX_IMAGE_BYTES
+    const max =
+      resolved.mediaType === "video" ? NHSCA_HUB_MEDIA_MAX_VIDEO_BYTES : NHSCA_HUB_MEDIA_MAX_IMAGE_BYTES
     if (file.size > max) {
       return NextResponse.json(
         {
           error:
-            mediaType === "video"
+            resolved.mediaType === "video"
               ? "Each video must be 80 MB or smaller."
               : "Each photo must be 10 MB or smaller.",
         },
@@ -111,7 +112,8 @@ export async function POST(request: NextRequest) {
   const inserted: NhscaHubMediaRow[] = []
 
   for (const file of validFiles) {
-    const mediaType = nhscaHubMediaTypeFromMime(file.type)!
+    const resolved = resolveNhscaHubMediaFile(file)!
+    const { mediaType, contentType } = resolved
     const ext = file.name.split(".").pop()?.toLowerCase() || (mediaType === "video" ? "mp4" : "jpg")
     const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_").slice(0, 80)
     const storagePath = `nhsca-hub-media/${eventSlug}/${user.id}/${Date.now()}-${nanoid(8)}-${safeName || `file.${ext}`}`
@@ -140,7 +142,7 @@ export async function POST(request: NextRequest) {
         storage_path: storagePath,
         filename: file.name,
         caption,
-        content_type: file.type,
+        content_type: contentType,
         file_size_bytes: file.size,
       })
       .select(NHSCA_HUB_MEDIA_SELECT)

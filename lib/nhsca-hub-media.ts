@@ -37,10 +37,65 @@ export type NhscaHubMediaRow = {
 }
 
 export function nhscaHubMediaTypeFromMime(mime: string): NhscaHubMediaType | null {
-  if ((NHSCA_HUB_IMAGE_TYPES as readonly string[]).includes(mime)) return "image"
-  if ((NHSCA_HUB_VIDEO_TYPES as readonly string[]).includes(mime)) return "video"
+  const normalized = mime.split(";")[0]?.trim().toLowerCase() ?? ""
+  if (!normalized) return null
+  if (normalized === "image/jpg" || normalized === "image/pjpeg") return "image"
+  if ((NHSCA_HUB_IMAGE_TYPES as readonly string[]).includes(normalized)) return "image"
+  if ((NHSCA_HUB_VIDEO_TYPES as readonly string[]).includes(normalized)) return "video"
   return null
 }
+
+const IMAGE_EXTENSIONS = new Set(["jpg", "jpeg", "png", "gif", "webp", "heic", "heif"])
+const VIDEO_EXTENSIONS = new Set(["mp4", "mov", "webm", "m4v"])
+
+export function nhscaHubMediaTypeFromFilename(filename: string): NhscaHubMediaType | null {
+  const ext = filename.split(".").pop()?.toLowerCase() ?? ""
+  if (IMAGE_EXTENSIONS.has(ext)) return "image"
+  if (VIDEO_EXTENSIONS.has(ext)) return "video"
+  return null
+}
+
+/** iOS Safari often sends an empty `file.type` for camera-roll photos — fall back to extension. */
+export function resolveNhscaHubMediaFile(file: { type?: string; name?: string }): {
+  mediaType: NhscaHubMediaType
+  contentType: string
+} | null {
+  const fromMime = nhscaHubMediaTypeFromMime(file.type ?? "")
+  if (fromMime) {
+    const mime = (file.type ?? "").split(";")[0]?.trim().toLowerCase() ?? ""
+    const contentType =
+      mime === "image/jpg" || mime === "image/pjpeg"
+        ? "image/jpeg"
+        : mime || (fromMime === "video" ? "video/mp4" : "image/jpeg")
+    return { mediaType: fromMime, contentType }
+  }
+  const fromName = nhscaHubMediaTypeFromFilename(file.name ?? "")
+  if (!fromName) return null
+  const ext = file.name?.split(".").pop()?.toLowerCase() ?? ""
+  const contentType =
+    fromName === "video"
+      ? ext === "mov"
+        ? "video/quicktime"
+        : "video/mp4"
+      : ext === "heic" || ext === "heif"
+        ? `image/${ext}`
+        : ext === "png"
+          ? "image/png"
+          : ext === "gif"
+            ? "image/gif"
+            : ext === "webp"
+              ? "image/webp"
+              : "image/jpeg"
+  return { mediaType: fromName, contentType }
+}
+
+export const NHSCA_HUB_BLOB_ALLOWED_CONTENT_TYPES = [
+  ...NHSCA_HUB_IMAGE_TYPES,
+  "image/jpg",
+  "image/pjpeg",
+  ...NHSCA_HUB_VIDEO_TYPES,
+  "application/octet-stream",
+] as const
 
 export function isMissingNhscaHubMediaTableError(message?: string | null): boolean {
   if (!message) return false
