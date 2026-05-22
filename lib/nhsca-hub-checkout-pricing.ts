@@ -113,7 +113,7 @@ export function buildTeamPackageLineItems(travel: NhscaHubTravelSelections): Nhs
   const items: NhscaCheckoutLineItem[] = [
     {
       key: "team_package",
-      name: "NHSCA Team Package (Registration + 2 Singlets — Blue & White + Shorts + Tees)",
+      name: "NHSCA Team Package (2 Singlets — Blue & White + Shorts + Tees)",
       amountCents: NHSCA_TEAM_PACKAGE_CENTS,
     },
   ]

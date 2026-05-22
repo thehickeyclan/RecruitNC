@@ -57,7 +57,7 @@ export function NhscaHubTeamGearShowcase({
             </div>
             {!compact ? (
               <p className="text-xs text-white/50 text-right max-w-[11rem] leading-snug">
-                Full package {formatDollars(NHSCA_TEAM_PACKAGE_CENTS)} — registration + everything below
+                Full package {formatDollars(NHSCA_TEAM_PACKAGE_CENTS)} — everything below
               </p>
             ) : null}
           </div>

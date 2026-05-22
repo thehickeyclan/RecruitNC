@@ -55,7 +55,13 @@ function formatDate(iso: string) {
 const tabTriggerClass =
   "rounded-lg min-h-[44px] text-sm font-semibold text-white/65 data-[state=active]:bg-[#CBAF5D] data-[state=active]:text-[#002147]"
 
-export function NhscaHubPaymentsTab({ isAdmin = false }: { isAdmin?: boolean }) {
+export function NhscaHubPaymentsTab({
+  isAdmin = false,
+  checkoutEventSlug = "nhsca-duals-2026",
+}: {
+  isAdmin?: boolean
+  checkoutEventSlug?: "nhsca-duals-2026" | "nhsca-duals-2026-select"
+}) {
   const [orders, setOrders] = useState<NhscaDuals2026PaidOrderRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -102,7 +108,7 @@ export function NhscaHubPaymentsTab({ isAdmin = false }: { isAdmin?: boolean }) 
       </TabsList>
 
       <TabsContent value="checkout" className="mt-0">
-        <NhscaHubCheckoutForm onPaymentComplete={loadOrders} />
+        <NhscaHubCheckoutForm onPaymentComplete={loadOrders} eventSlug={checkoutEventSlug} />
       </TabsContent>
 
       <TabsContent value="orders" className="mt-0">

@@ -24,7 +24,6 @@ import {
   nhscaVanTravelFeeCents,
   NHSCA_HUB_GEAR_SIZES,
   NHSCA_LONG_SLEEVE_CENTS,
-  NHSCA_REG_FEE_CENTS,
   NHSCA_SHORT_SLEEVE_CENTS,
   NHSCA_SHORTS_CENTS,
   NHSCA_SINGLET_EACH_CENTS,
@@ -108,10 +107,15 @@ const EMPTY_INDIVIDUAL: NhscaHubIndividualSelections = {
   hotel: false,
 }
 
-export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?: () => void }) {
+export function NhscaHubCheckoutForm({
+  onPaymentComplete,
+  eventSlug = "nhsca-duals-2026",
+}: {
+  onPaymentComplete?: () => void
+  eventSlug?: "nhsca-duals-2026" | "nhsca-duals-2026-select"
+}) {
   const { user } = useAuth()
   const [fullPackage, setFullPackage] = useState(false)
-  const [team, setTeam] = useState<"nhsca-duals-2026" | "nhsca-duals-2026-select">("nhsca-duals-2026")
   const [parentName, setParentName] = useState("")
   const [wrestlerName, setWrestlerName] = useState("")
 
@@ -160,7 +164,6 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
     } else {
       const hasPaidTravel = (vanTravel && vanCents > 0) || (hotel && hotelCents > 0)
       if (
-        !individual.registration &&
         individual.singletQty === 0 &&
         !individual.shorts &&
         !individual.shortSleeve &&
@@ -196,7 +199,7 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           mode,
-          eventSlug: team,
+          eventSlug,
           parentName: parentName.trim(),
           wrestlerName: wrestlerName.trim(),
           teamPackage: { ...bundleSizes, vanTravel, hotel },
@@ -255,20 +258,6 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
                 autoComplete="off"
               />
             </div>
-            <div className="space-y-1.5 sm:col-span-2">
-              <Label className="text-xs text-white/70">
-                Team <span className="text-red-400">*</span>
-              </Label>
-              <Select value={team} onValueChange={(v) => setTeam(v as typeof team)}>
-                <SelectTrigger className={hubSelectTrigger}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="nhsca-duals-2026">National Team</SelectItem>
-                  <SelectItem value="nhsca-duals-2026-select">Select Team</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
           {user?.email ? <p className="text-xs text-white/45">Receipt → {user.email}</p> : null}
 
@@ -287,7 +276,7 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
               <span className="flex-1 min-w-0">
                 <span className="font-semibold text-white block">Full team package</span>
                 <span className="text-xs text-white/55 block mt-0.5">
-                  Registration, 2 singlets (blue &amp; white), shorts, short &amp; long sleeve tees
+                  2 singlets (blue &amp; white), shorts, short &amp; long sleeve tees
                 </span>
               </span>
               <span className="text-[#CBAF5D] font-bold shrink-0">{formatDollars(NHSCA_TEAM_PACKAGE_CENTS)}</span>
@@ -304,16 +293,6 @@ export function NhscaHubCheckoutForm({ onPaymentComplete }: { onPaymentComplete?
 
             {!fullPackage ? (
               <>
-                <label className="flex items-center gap-3 p-4 cursor-pointer min-h-[48px]">
-                  <Checkbox
-                    checked={individual.registration}
-                    onCheckedChange={(c) => updateIndividual({ registration: !!c })}
-                    className="h-5 w-5 data-[state=checked]:bg-[#CBAF5D]"
-                  />
-                  <span className="text-sm text-white flex-1">Registration &amp; team fee</span>
-                  <span className="text-sm text-[#CBAF5D] font-semibold">{formatDollars(NHSCA_REG_FEE_CENTS)}</span>
-                </label>
-
                 <div className="p-4 flex flex-wrap items-end gap-3">
                   <div className="flex items-center gap-3 flex-1 min-w-[200px]">
                     <Checkbox
