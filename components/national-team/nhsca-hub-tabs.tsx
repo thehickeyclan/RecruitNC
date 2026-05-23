@@ -55,7 +55,7 @@ export function NhscaHubTabs({
           Rosters
         </TabsTrigger>
         <TabsTrigger value="results" className={tabTriggerClass}>
-          Live
+          Results
         </TabsTrigger>
         <TabsTrigger value="event-info" className={tabTriggerClass}>
           <span className="sm:hidden">Info</span>
