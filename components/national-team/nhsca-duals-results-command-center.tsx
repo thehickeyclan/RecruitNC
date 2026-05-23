@@ -2,8 +2,9 @@
 
 import type { ReactNode } from "react"
 import { useMemo, useState } from "react"
-import { Activity, ChevronDown, Radio, Shield, Star, Trophy, Zap } from "lucide-react"
+import { Activity, Radio, Trophy, Zap } from "lucide-react"
 import { HorizontalScrollRow } from "@/components/ui/horizontal-scroll-row"
+import { NhscaDualsTeamDashboard } from "@/components/national-team/nhsca-duals-team-dashboard"
 import type { CommandCenterDayFilter, CommandCenterScope } from "@/lib/nhsca-duals-command-center"
 import {
   buildDualFeed,
@@ -24,7 +25,7 @@ export function NhscaDualsResultsCommandCenter({ snapshot }: { snapshot: NhscaDu
   const [scope, setScope] = useState<CommandCenterScope>("all")
   const [dayFilter, setDayFilter] = useState<CommandCenterDayFilter>("all")
   const [athleteId, setAthleteId] = useState<string | null>(null)
-  const [leadersOpen, setLeadersOpen] = useState(false)
+  const [view, setView] = useState<"dashboard" | "duals">("dashboard")
 
   const sortedDays = useMemo(
     () => [...snapshot.days].sort((a, b) => a.sort_order - b.sort_order),
@@ -70,6 +71,29 @@ export function NhscaDualsResultsCommandCenter({ snapshot }: { snapshot: NhscaDu
         </div>
       </header>
 
+      <div className="flex rounded-lg bg-[#0a2040] border border-white/10 p-0.5 gap-0.5">
+        <button
+          type="button"
+          className={cn(
+            "flex-1 min-h-[44px] rounded-md text-xs sm:text-sm font-bold transition-colors",
+            view === "dashboard" ? "bg-[#CBAF5D] text-[#002147]" : "text-white/65 hover:text-white"
+          )}
+          onClick={() => setView("dashboard")}
+        >
+          Team dashboard
+        </button>
+        <button
+          type="button"
+          className={cn(
+            "flex-1 min-h-[44px] rounded-md text-xs sm:text-sm font-bold transition-colors",
+            view === "duals" ? "bg-[#CBAF5D] text-[#002147]" : "text-white/65 hover:text-white"
+          )}
+          onClick={() => setView("duals")}
+        >
+          Live duals
+        </button>
+      </div>
+
       <FilterBar
         sortedDays={sortedDays}
         dayFilter={dayFilter}
@@ -86,6 +110,19 @@ export function NhscaDualsResultsCommandCenter({ snapshot }: { snapshot: NhscaDu
 
       <KpiStrip summary={summary} dayLabel={dayLabel} scope={scope} />
 
+      {view === "dashboard" ? (
+        <NhscaDualsTeamDashboard
+          snapshot={snapshot}
+          scope={scope}
+          dayFilter={dayFilter}
+          dayLabel={dayLabel}
+          onSelectAthlete={(id) => {
+            setAthleteId(id)
+            setView("duals")
+          }}
+        />
+      ) : (
+        <>
       {wrestlers.length > 0 ? (
         <section className="rounded-xl border border-white/10 bg-[#0a2040]/60 p-3">
           <div className="flex items-center justify-between gap-2 mb-2">
@@ -143,48 +180,8 @@ export function NhscaDualsResultsCommandCenter({ snapshot }: { snapshot: NhscaDu
           )}
         </div>
       </section>
-
-      <section className="rounded-xl border border-white/10 bg-[#0a2040]/60 overflow-hidden">
-        <button
-          type="button"
-          className="w-full flex items-center justify-between gap-2 px-3 py-2.5 border-b border-white/10 bg-[#002147]/35 text-left"
-          onClick={() => setLeadersOpen((o) => !o)}
-          aria-expanded={leadersOpen}
-        >
-          <span className="text-sm font-bold text-white">Leaders</span>
-          <ChevronDown className={cn("h-4 w-4 text-white/45 transition-transform", leadersOpen && "rotate-180")} />
-        </button>
-        {leadersOpen ? (
-          <div className="p-3 grid sm:grid-cols-2 gap-3">
-            <LeaderList
-              title="Undefeated"
-              icon={<Shield className="h-3.5 w-3.5" />}
-              empty="None yet."
-              items={summary.undefeated.map((u) => ({
-                key: u.wrestlerId,
-                primary: u.name,
-                secondary: `${u.wins}–0 · +${u.pointsFor}`,
-                onClick: () => setAthleteId(u.wrestlerId),
-              }))}
-            />
-            <LeaderList
-              title="Top scorers"
-              icon={<Star className="h-3.5 w-3.5" />}
-              empty="Points appear as bouts are entered."
-              items={summary.topScorers.map((s, i) => ({
-                key: `${s.name}-${s.displayWeight}-${i}`,
-                primary: s.name,
-                secondary: `${s.displayWeight} lbs · +${s.pointsFor}`,
-                rank: i + 1,
-                onClick: () => {
-                  const w = wrestlers.find((x) => x.name === s.name && x.displayWeight === s.displayWeight)
-                  if (w) setAthleteId(w.wrestlerId)
-                },
-              }))}
-            />
-          </div>
-        ) : null}
-      </section>
+        </>
+      )}
     </div>
   )
 }
@@ -294,48 +291,6 @@ function KpiStrip({
           </div>
         ))}
       </div>
-    </div>
-  )
-}
-
-function LeaderList({
-  title,
-  icon,
-  empty,
-  items,
-}: {
-  title: string
-  icon: ReactNode
-  empty: string
-  items: { key: string; primary: string; secondary: string; rank?: number; onClick: () => void }[]
-}) {
-  return (
-    <div>
-      <p className="text-[10px] font-bold uppercase tracking-wider text-[#CBAF5D] flex items-center gap-1 mb-2">
-        {icon}
-        {title}
-      </p>
-      {items.length === 0 ? (
-        <p className="text-xs text-white/40 py-2">{empty}</p>
-      ) : (
-        <ul className="space-y-1.5">
-          {items.map((item) => (
-            <li key={item.key}>
-              <button
-                type="button"
-                onClick={item.onClick}
-                className="w-full flex items-center gap-2 rounded-lg bg-[#002147]/45 border border-white/8 px-2.5 py-2.5 min-h-[44px] text-left hover:border-[#CBAF5D]/30 transition-colors"
-              >
-                {item.rank != null ? (
-                  <span className="text-sm font-black text-[#CBAF5D]/70 w-5 tabular-nums">{item.rank}</span>
-                ) : null}
-                <span className="text-sm font-semibold text-white truncate flex-1">{item.primary}</span>
-                <span className="text-[10px] text-white/45 tabular-nums shrink-0">{item.secondary}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
     </div>
   )
 }
