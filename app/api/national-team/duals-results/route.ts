@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
   }
 
   let snap = await fetchNhscaDualsSnapshot(admin)
-  if (snap.ok && snap.data.teams.length > 0 && snap.data.duals.length === 0) {
+  if (snap.ok && snap.data.teams.length > 0) {
     try {
       await ensureNhscaDualsDay1Schedule(admin)
       snap = await fetchNhscaDualsSnapshot(admin)

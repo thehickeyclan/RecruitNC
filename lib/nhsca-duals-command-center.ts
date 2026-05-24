@@ -1,5 +1,6 @@
 import { buildTeamSummary } from "@/lib/nhsca-duals-live-results/summaries"
 import { NHSCA_DUALS_WEIGHTS } from "@/lib/nhsca-duals-live-results/scoring"
+import { resolveNcWrestlerIdForMatch } from "@/lib/nhsca-duals-resolve-nc-wrestler"
 import type {
   NhscaDualsDualRow,
   NhscaDualsResultsSnapshot,
@@ -145,8 +146,10 @@ export function getWrestlerRecords(
   }
 
   for (const m of teamMatches) {
-    if (!m.nc_wrestler_id || !byWrestler.has(m.nc_wrestler_id)) continue
-    const rec = byWrestler.get(m.nc_wrestler_id)!
+    const dual = snapshot.duals.find((d) => d.id === m.dual_id)
+    const wid = resolveNcWrestlerIdForMatch(m, dual, snapshot.wrestlers)
+    if (!wid || !byWrestler.has(wid)) continue
+    const rec = byWrestler.get(wid)!
     rec.pointsFor += m.nc_points
     rec.pointsAgainst += m.opponent_points
     if (m.winner === "nc") rec.wins++

@@ -61,6 +61,30 @@ export function resultTypeLabel(resultType: NhscaDualsResultType | null | undefi
   return RESULT_TYPE_OPTIONS.find((o) => o.value === resultType)?.short ?? resultType
 }
 
+/** Track/Flo-style abbreviations for bout headers (F, TF, MD, DEC). */
+export function resultTypeTrackShort(resultType: NhscaDualsResultType | null | undefined): string {
+  switch (resultType) {
+    case "fall":
+      return "F"
+    case "tech_fall":
+      return "TF"
+    case "major_decision":
+      return "MD"
+    case "decision":
+      return "DEC"
+    case "forfeit":
+      return "FOR"
+    case "injury_default":
+      return "INJ"
+    case "dq":
+      return "DQ"
+    case "draw":
+      return "DRAW"
+    default:
+      return resultTypeLabel(resultType)
+  }
+}
+
 export function computeMatchPoints(
   winner: NhscaDualsMatchWinner | null,
   resultType: NhscaDualsResultType | null

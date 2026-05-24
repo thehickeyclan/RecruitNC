@@ -17,10 +17,12 @@ import {
   NHSCA_DUALS_NATIONAL_ROSTER,
   NHSCA_DUALS_NATIONAL_TEAM_LABEL,
   NHSCA_DUALS_SELECT_INITIAL_DUALS,
+  NHSCA_DUALS_SELECT_160_STARTERS,
   NHSCA_DUALS_SELECT_POOL,
   NHSCA_DUALS_SELECT_ROSTER,
   NHSCA_DUALS_SELECT_TEAM_LABEL,
 } from "./rosters"
+import { resolveNcWrestlerIdForMatch } from "@/lib/nhsca-duals-resolve-nc-wrestler"
 
 const TABLES_MISSING = "nhsca_duals_tables_missing"
 
@@ -79,28 +81,192 @@ export async function fetchNhscaDualsSnapshot(
   }
 }
 
-async function ensureMatchRows(
-  admin: SupabaseClient,
-  dualId: string,
-  teamId: string,
-  wrestlers: { id: string; display_weight: string; team_id: string }[]
-) {
+async function ensureMatchRows(admin: SupabaseClient, dualId: string, teamId: string) {
   const { data: existing } = await admin.from("nhsca_duals_matches").select("weight").eq("dual_id", dualId)
   const have = new Set((existing ?? []).map((r) => r.weight))
-  const teamWrestlers = wrestlers.filter((w) => w.team_id === teamId)
+  const { data: teamWrestlers } = await admin
+    .from("nhsca_duals_wrestlers")
+    .select("id, display_weight")
+    .eq("team_id", teamId)
+    .eq("active", true)
 
-  const defaultByWeight = new Map<string, string>()
-  for (const w of teamWrestlers) {
-    if (!defaultByWeight.has(w.display_weight)) defaultByWeight.set(w.display_weight, w.id)
+  const defaultByWeight = new Map<string, string[]>()
+  for (const w of teamWrestlers ?? []) {
+    const list = defaultByWeight.get(w.display_weight) ?? []
+    list.push(w.id as string)
+    defaultByWeight.set(w.display_weight, list)
   }
 
-  const inserts = NHSCA_DUALS_WEIGHTS.filter((wt) => !have.has(wt)).map((weight) => ({
-    dual_id: dualId,
-    weight,
-    nc_wrestler_id: defaultByWeight.get(weight) ?? null,
-    opponent_wrestler_name: "",
-  }))
+  const inserts = NHSCA_DUALS_WEIGHTS.filter((wt) => !have.has(wt)).map((weight) => {
+    const ids = defaultByWeight.get(weight)
+    const nc_wrestler_id = ids?.length === 1 ? ids[0]! : null
+    return {
+      dual_id: dualId,
+      weight,
+      nc_wrestler_id,
+      opponent_wrestler_name: "",
+    }
+  })
   if (inserts.length) await admin.from("nhsca_duals_matches").insert(inserts)
+}
+
+/** Align DB wrestlers with rosters.ts — deactivate removed names, insert new seed rows. */
+async function syncNhscaDualsRostersFromSeed(
+  admin: SupabaseClient,
+  natTeamId: string,
+  selTeamId: string
+): Promise<void> {
+  const { data: existing } = await admin
+    .from("nhsca_duals_wrestlers")
+    .select("id, team_id, name, weight_class, display_weight, active")
+    .in("team_id", [natTeamId, selTeamId])
+
+  const teams: { id: string; roster: typeof NHSCA_DUALS_NATIONAL_ROSTER }[] = [
+    { id: natTeamId, roster: NHSCA_DUALS_NATIONAL_ROSTER },
+    { id: selTeamId, roster: NHSCA_DUALS_SELECT_ROSTER },
+  ]
+
+  for (const { id: teamId, roster } of teams) {
+    const teamWrestlers = (existing ?? []).filter((w) => w.team_id === teamId)
+    const seedNames = new Set(roster.map((r) => r.name))
+
+    for (const r of roster) {
+      const found = teamWrestlers.find((w) => w.name === r.name)
+      const display_weight = toDisplayWeight(r.weightClass)
+      if (found) {
+        const patch: Record<string, unknown> = { active: true }
+        if (found.weight_class !== r.weightClass) patch.weight_class = r.weightClass
+        if (found.display_weight !== display_weight) patch.display_weight = display_weight
+        if (!found.active || patch.weight_class || patch.display_weight) {
+          await admin.from("nhsca_duals_wrestlers").update(patch).eq("id", found.id)
+        }
+      } else {
+        await admin.from("nhsca_duals_wrestlers").insert({
+          team_id: teamId,
+          name: r.name,
+          weight_class: r.weightClass,
+          display_weight,
+          active: true,
+        })
+      }
+    }
+
+    for (const w of teamWrestlers) {
+      if (!seedNames.has(w.name) && w.active) {
+        await admin.from("nhsca_duals_wrestlers").update({ active: false }).eq("id", w.id)
+      }
+    }
+  }
+}
+
+/** Point bout rows at the active wrestler for that weight when the saved NC id was deactivated. */
+async function reassignMatchesFromInactiveWrestlers(admin: SupabaseClient, teamId: string): Promise<void> {
+  const { data: wrestlers } = await admin
+    .from("nhsca_duals_wrestlers")
+    .select("id, display_weight, active")
+    .eq("team_id", teamId)
+
+  const inactiveIds = new Set((wrestlers ?? []).filter((w) => !w.active).map((w) => w.id as string))
+  if (!inactiveIds.size) return
+
+  const activeIdsByWeight = new Map<string, string[]>()
+  for (const w of wrestlers ?? []) {
+    if (!w.active) continue
+    const list = activeIdsByWeight.get(w.display_weight) ?? []
+    list.push(w.id as string)
+    activeIdsByWeight.set(w.display_weight, list)
+  }
+
+  const { data: duals } = await admin.from("nhsca_duals_duals").select("id").eq("team_id", teamId)
+  const dualIds = (duals ?? []).map((d) => d.id as string)
+  if (!dualIds.length) return
+
+  const { data: matches } = await admin
+    .from("nhsca_duals_matches")
+    .select("id, weight, nc_wrestler_id")
+    .in("dual_id", dualIds)
+
+  for (const m of matches ?? []) {
+    const wid = m.nc_wrestler_id as string | null
+    if (!wid || !inactiveIds.has(wid)) continue
+    const actives = activeIdsByWeight.get(m.weight as string) ?? []
+    const replacement = actives.length === 1 ? actives[0]! : null
+    if (replacement !== wid) {
+      await admin
+        .from("nhsca_duals_matches")
+        .update({ nc_wrestler_id: replacement, updated_at: new Date().toISOString() })
+        .eq("id", m.id)
+    }
+  }
+}
+
+/** Pre-assign Select 160 when Jon Burns and Vincent Valentino split pool duals. */
+async function ensureSelect160SplitStarters(admin: SupabaseClient, selectTeamId: string): Promise<void> {
+  const { data: duals } = await admin
+    .from("nhsca_duals_duals")
+    .select("id, opponent_team_name")
+    .eq("team_id", selectTeamId)
+
+  for (const dual of duals ?? []) {
+    const starterName = NHSCA_DUALS_SELECT_160_STARTERS[dual.opponent_team_name as string]
+    if (!starterName) continue
+
+    const { data: wrestler } = await admin
+      .from("nhsca_duals_wrestlers")
+      .select("id")
+      .eq("team_id", selectTeamId)
+      .eq("name", starterName)
+      .eq("display_weight", "160")
+      .eq("active", true)
+      .maybeSingle()
+    if (!wrestler?.id) continue
+
+    const { data: match } = await admin
+      .from("nhsca_duals_matches")
+      .select("id, winner, nc_wrestler_id")
+      .eq("dual_id", dual.id as string)
+      .eq("weight", "160")
+      .maybeSingle()
+    if (!match?.id || match.winner) continue
+    if (match.nc_wrestler_id === wrestler.id) continue
+
+    await admin
+      .from("nhsca_duals_matches")
+      .update({ nc_wrestler_id: wrestler.id, updated_at: new Date().toISOString() })
+      .eq("id", match.id)
+  }
+}
+
+/** Link bouts to NC wrestlers when bulk SQL omitted nc_wrestler_id (fixes 0-0 records). */
+async function backfillMissingNcWrestlerIds(admin: SupabaseClient, teamId: string): Promise<void> {
+  const { data: duals } = await admin
+    .from("nhsca_duals_duals")
+    .select("id, team_id, opponent_team_name")
+    .eq("team_id", teamId)
+  const { data: wrestlers } = await admin
+    .from("nhsca_duals_wrestlers")
+    .select("id, team_id, name, weight_class, display_weight, active")
+    .eq("team_id", teamId)
+
+  const dualIds = (duals ?? []).map((d) => d.id as string)
+  if (!dualIds.length) return
+
+  const { data: matches } = await admin
+    .from("nhsca_duals_matches")
+    .select("*")
+    .in("dual_id", dualIds)
+    .is("nc_wrestler_id", null)
+    .not("winner", "is", null)
+
+  for (const m of (matches ?? []) as NhscaDualsMatchRow[]) {
+    const dual = (duals ?? []).find((d) => d.id === m.dual_id) as NhscaDualsDualRow | undefined
+    const wid = resolveNcWrestlerIdForMatch(m, dual, (wrestlers ?? []) as NhscaDualsResultsSnapshot["wrestlers"])
+    if (!wid) continue
+    await admin
+      .from("nhsca_duals_matches")
+      .update({ nc_wrestler_id: wid, updated_at: new Date().toISOString() })
+      .eq("id", m.id)
+  }
 }
 
 async function ensureTeamRosters(
@@ -170,7 +336,6 @@ async function ensureScheduledDual(
     round_name: string
     opponent_team_name: string
     sort_order: number
-    wrestlers: { id: string; team_id: string; display_weight: string }[]
   }
 ): Promise<void> {
   const { data: existing } = await admin
@@ -199,12 +364,7 @@ async function ensureScheduledDual(
     dualId = dual?.id as string | undefined
   }
   if (dualId) {
-    await ensureMatchRows(
-      admin,
-      dualId,
-      input.team_id,
-      input.wrestlers.filter((w) => w.team_id === input.team_id)
-    )
+    await ensureMatchRows(admin, dualId, input.team_id)
   }
 }
 
@@ -244,7 +404,12 @@ export async function ensureNhscaDualsDay1Schedule(admin: SupabaseClient): Promi
   const selTeam = teams?.find((t) => t.team_type === "select")
   if (!natTeam?.id || !selTeam?.id) return
 
-  const wrestlers = await ensureTeamRosters(admin, natTeam.id, selTeam.id)
+  await ensureTeamRosters(admin, natTeam.id, selTeam.id)
+  await syncNhscaDualsRostersFromSeed(admin, natTeam.id, selTeam.id)
+  await reassignMatchesFromInactiveWrestlers(admin, natTeam.id)
+  await reassignMatchesFromInactiveWrestlers(admin, selTeam.id)
+  await backfillMissingNcWrestlerIds(admin, natTeam.id)
+  await backfillMissingNcWrestlerIds(admin, selTeam.id)
 
   let dayId: string | null = null
   const { data: dayRow } = await admin
@@ -277,7 +442,6 @@ export async function ensureNhscaDualsDay1Schedule(admin: SupabaseClient): Promi
       round_name: d.round,
       opponent_team_name: d.opponent,
       sort_order: i + 1,
-      wrestlers,
     })
   }
 
@@ -290,9 +454,10 @@ export async function ensureNhscaDualsDay1Schedule(admin: SupabaseClient): Promi
       round_name: d.round,
       opponent_team_name: d.opponent,
       sort_order: i + 1,
-      wrestlers,
     })
   }
+
+  await ensureSelect160SplitStarters(admin, selTeam.id)
 }
 
 export async function bootstrapNhscaDualsEvent(admin: SupabaseClient): Promise<void> {
@@ -426,8 +591,7 @@ export async function createDual(
     .single()
   if (error || !data?.id) return { ok: false, error: error?.message ?? "Failed" }
 
-  const { data: wrestlers } = await admin.from("nhsca_duals_wrestlers").select("id, team_id, display_weight").eq("team_id", data.team_id)
-  await ensureMatchRows(admin, data.id, data.team_id, wrestlers ?? [])
+  await ensureMatchRows(admin, data.id, data.team_id)
   return { ok: true, id: data.id }
 }
 
