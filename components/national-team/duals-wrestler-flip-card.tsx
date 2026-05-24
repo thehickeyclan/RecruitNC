@@ -5,6 +5,7 @@ import Image from "next/image"
 import { Card } from "@/components/ui/card"
 import { RotateCw } from "lucide-react"
 import type { NhscaDualsWrestlerCardStats } from "@/lib/nhsca-duals-wrestler-card-stats"
+import { formatNetTeamPoints } from "@/lib/nhsca-duals-live-results/scoring"
 import { cn } from "@/lib/utils"
 
 function shortRound(round: string) {
@@ -116,8 +117,15 @@ export function DualsWrestlerFlipCard({
                   <p className="text-2xl font-black text-white tabular-nums mt-0.5">{record}</p>
                 </div>
                 <div className="rounded-lg bg-[#002147] border border-[#CBAF5D]/35 p-2.5 text-center">
-                  <p className="text-[10px] uppercase tracking-wide text-white/50">Team pts</p>
-                  <p className="text-2xl font-black text-[#CBAF5D] tabular-nums mt-0.5">{teamPts}</p>
+                  <p className="text-[10px] uppercase tracking-wide text-white/50">Net team pts</p>
+                  <p
+                    className={cn(
+                      "text-2xl font-black tabular-nums mt-0.5",
+                      teamPts >= 0 ? "text-[#CBAF5D]" : "text-red-300"
+                    )}
+                  >
+                    {formatNetTeamPoints(teamPts)}
+                  </p>
                 </div>
               </div>
 
@@ -179,8 +187,13 @@ export function DualsWrestlerFlipCard({
                                 <span className="block text-[9px] text-amber-200/70 truncate max-w-[4.5rem]">{b.note}</span>
                               ) : null}
                             </td>
-                            <td className="py-1.5 pr-2 pl-1 text-right align-top font-bold tabular-nums text-[#CBAF5D]">
-                              {b.teamPoints > 0 ? `+${b.teamPoints}` : "0"}
+                            <td
+                              className={cn(
+                                "py-1.5 pr-2 pl-1 text-right align-top font-bold tabular-nums",
+                                b.teamPoints > 0 ? "text-[#CBAF5D]" : b.teamPoints < 0 ? "text-red-300" : "text-white/40"
+                              )}
+                            >
+                              {formatNetTeamPoints(b.teamPoints)}
                             </td>
                           </tr>
                         ))}
@@ -190,7 +203,14 @@ export function DualsWrestlerFlipCard({
                           <td colSpan={3} className="py-1.5 pl-2 text-white/70">
                             Total contributed
                           </td>
-                          <td className="py-1.5 pr-2 text-right text-[#CBAF5D] tabular-nums">+{teamPts}</td>
+                          <td
+                            className={cn(
+                              "py-1.5 pr-2 text-right tabular-nums",
+                              teamPts >= 0 ? "text-[#CBAF5D]" : "text-red-300"
+                            )}
+                          >
+                            {formatNetTeamPoints(teamPts)}
+                          </td>
                         </tr>
                       </tfoot>
                     </table>

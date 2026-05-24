@@ -62,6 +62,9 @@ export const NHSCA_DUALS_SELECT_160_STARTERS: Readonly<Record<string, string>> =
   "Doughboy Black": "Vincent Valentino",
   "University Hawks Wrestling": "Jon Burns",
   "Buffalo Valley Red": "Vincent Valentino",
+  "Rabbit Wrestling Club": "Jon Burns",
+  "BlueWave": "Vincent Valentino",
+  "Freakztyle Black": "Jon Burns",
 }
 
 /** National 195 lbs — Fares (Day 1) vs Luke Padgett (Day 2). Key = opponent_team_name. */
@@ -86,4 +89,11 @@ export const NHSCA_DUALS_NATIONAL_DAY_2_DUALS = [
   { round: "Round 1", opponent: "Storm Wrestling Center" },
   { round: "Round 2", opponent: "Prestige Worldwide" },
   { round: "Round 3", opponent: "The Shop 814" },
+] as const
+
+/** Select Day 2 — Consolation pool (sort_order continues after Day 1). */
+export const NHSCA_DUALS_SELECT_DAY_2_DUALS = [
+  { round: "Round 1", opponent: "Rabbit Wrestling Club" },
+  { round: "Round 2", opponent: "BlueWave" },
+  { round: "Round 3", opponent: "Freakztyle Black" },
 ] as const

@@ -17,6 +17,7 @@ import {
 } from "@/lib/nhsca-duals-command-center"
 import { resolveNcWrestlerIdForMatch } from "@/lib/nhsca-duals-resolve-nc-wrestler"
 import type { NhscaDualsResultsSnapshot } from "@/lib/nhsca-duals-live-results/types"
+import { formatNetTeamPoints, wrestlerNetPoints } from "@/lib/nhsca-duals-live-results/scoring"
 import { cn } from "@/lib/utils"
 
 export function NhscaDualsResultsCommandCenter({ snapshot }: { snapshot: NhscaDualsResultsSnapshot }) {
@@ -279,7 +280,7 @@ function KpiStrip({
   const tiles = [
     { label: "Duals", value: `${summary.dualWins}–${summary.dualLosses}`, icon: Trophy },
     { label: "Bouts", value: `${summary.matchWins}–${summary.matchLosses}`, icon: Activity },
-    { label: "Team pts", value: String(summary.pointsFor), icon: Zap },
+    { label: "Net pts", value: formatNetTeamPoints(wrestlerNetPoints(summary.pointsFor, summary.pointsAgainst)), icon: Zap },
   ]
 
   return (
