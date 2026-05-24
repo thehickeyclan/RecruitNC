@@ -22,6 +22,7 @@ export const NHSCA_DUALS_2026_NATIONAL_WRESTLER_CARDS: NationalWrestlerCard[] = 
   { weightClass: "170", wrestler: "Dom Blue", imageSrc: `${CARD_BASE}/dom-blue-170.png` },
   { weightClass: "182", wrestler: "Brieon Mayfield", imageSrc: `${CARD_BASE}/brieon-mayfield-182.png` },
   { weightClass: "195", wrestler: "Fares Alkurdasi", imageSrc: "/national-team/nhsca-duals-2026/select-cards/fares-alkurdasi-160.png" },
+  { weightClass: "195", wrestler: "Luke Padgett", imageSrc: `${CARD_BASE}/luke-padgett-195.png` },
   { weightClass: "220", wrestler: "Gavin Lopez", imageSrc: `${CARD_BASE}/gavin-lopez-220.png` },
   { weightClass: "HWT", wrestler: "Keyshon Morrison", imageSrc: `${CARD_BASE}/keyshon-morrison-hwt.png` },
 ]

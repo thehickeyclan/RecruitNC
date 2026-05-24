@@ -18,6 +18,7 @@ export const NHSCA_DUALS_NATIONAL_ROSTER: NhscaDualsRosterSeed[] = [
   { name: "Dominic Blue", weightClass: "170" },
   { name: "Brieon Mayfield", weightClass: "182" },
   { name: "Fares Alkurdasi", weightClass: "195" },
+  { name: "Luke Padgett", weightClass: "195" },
   { name: "Gavin Lopez", weightClass: "220" },
   { name: "Keyshon Morrison", weightClass: "HWT" },
 ]
@@ -63,8 +64,26 @@ export const NHSCA_DUALS_SELECT_160_STARTERS: Readonly<Record<string, string>> =
   "Buffalo Valley Red": "Vincent Valentino",
 }
 
+/** National 195 lbs — Fares (Day 1) vs Luke Padgett (Day 2). Key = opponent_team_name. */
+export const NHSCA_DUALS_NATIONAL_195_STARTERS: Readonly<Record<string, string>> = {
+  "TNWC Silver Fox": "Fares Alkurdasi",
+  "Lucky Duck Wrestling Club": "Fares Alkurdasi",
+  "Team Gotcha": "Fares Alkurdasi",
+  "Storm Wrestling Center": "Luke Padgett",
+  "Prestige Worldwide": "Luke Padgett",
+  "The Shop 814": "Luke Padgett",
+}
+
 export const NHSCA_DUALS_NATIONAL_POOL = 6
 export const NHSCA_DUALS_SELECT_POOL = 26
 
 /** Day 1 schedule is seeded from the arrays above. Day 2+ is added in code (not admin UI). */
 export const NHSCA_DUALS_DAY_1_NAME = "Day 1"
+export const NHSCA_DUALS_DAY_2_NAME = "Day 2"
+
+/** National Day 2 — Championship pool (sort_order continues after Day 1). */
+export const NHSCA_DUALS_NATIONAL_DAY_2_DUALS = [
+  { round: "Round 1", opponent: "Storm Wrestling Center" },
+  { round: "Round 2", opponent: "Prestige Worldwide" },
+  { round: "Round 3", opponent: "The Shop 814" },
+] as const

@@ -15,6 +15,7 @@ import {
   getSummaryForScope,
   getWrestlersForScope,
 } from "@/lib/nhsca-duals-command-center"
+import { resolveNcWrestlerIdForMatch } from "@/lib/nhsca-duals-resolve-nc-wrestler"
 import type { NhscaDualsResultsSnapshot } from "@/lib/nhsca-duals-live-results/types"
 import { cn } from "@/lib/utils"
 
@@ -37,9 +38,11 @@ export function NhscaDualsResultsCommandCenter({ snapshot }: { snapshot: NhscaDu
   const filteredFeed = useMemo(() => {
     if (!athleteId) return feed
     return feed.filter((item) =>
-      snapshot.matches.some(
-        (m) => m.dual_id === item.dual.id && m.nc_wrestler_id === athleteId && m.winner && m.result_type
-      )
+      snapshot.matches.some((m) => {
+        if (m.dual_id !== item.dual.id || !m.winner || !m.result_type) return false
+        const dual = snapshot.duals.find((d) => d.id === m.dual_id)
+        return resolveNcWrestlerIdForMatch(m, dual, snapshot.wrestlers) === athleteId
+      })
     )
   }, [feed, athleteId, snapshot.matches])
 
