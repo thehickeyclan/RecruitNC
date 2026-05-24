@@ -5,6 +5,7 @@ import type {
   NhscaDualsWrestlerRecord,
   NhscaDualsWrestlerRow,
 } from "./types"
+import { resolveNcWrestlerIdForMatch } from "@/lib/nhsca-duals-resolve-nc-wrestler"
 
 export function buildTeamSummary(
   teamId: string,
@@ -48,8 +49,10 @@ export function buildTeamSummary(
     if (m.winner === "nc") matchWins++
     else if (m.winner === "opponent") matchLosses++
 
-    if (m.nc_wrestler_id && byWrestler.has(m.nc_wrestler_id)) {
-      const rec = byWrestler.get(m.nc_wrestler_id)!
+    const dual = duals.find((d) => d.id === m.dual_id)
+    const wid = resolveNcWrestlerIdForMatch(m, dual, wrestlers)
+    if (wid && byWrestler.has(wid)) {
+      const rec = byWrestler.get(wid)!
       rec.pointsFor += m.nc_points
       rec.pointsAgainst += m.opponent_points
       if (m.winner === "nc") rec.wins++

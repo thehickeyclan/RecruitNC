@@ -2,30 +2,28 @@
 
 import type { ReactNode } from "react"
 import { useMemo, useState } from "react"
-import { Activity, Radio, Trophy, Zap } from "lucide-react"
+import { Activity, Trophy, Zap } from "lucide-react"
 import { HorizontalScrollRow } from "@/components/ui/horizontal-scroll-row"
 import { NhscaDualsTeamDashboard } from "@/components/national-team/nhsca-duals-team-dashboard"
-import type { CommandCenterDayFilter, CommandCenterScope } from "@/lib/nhsca-duals-command-center"
+import {
+  NhscaDualsDualDetailSheet,
+  NhscaDualSummaryCard,
+} from "@/components/national-team/nhsca-duals-dual-detail-sheet"
+import type { CommandCenterDayFilter, CommandCenterScope, DualFeedItem } from "@/lib/nhsca-duals-command-center"
 import {
   buildDualFeed,
   getSummaryForScope,
   getWrestlersForScope,
 } from "@/lib/nhsca-duals-command-center"
-import type { NhscaDualsMatchRow, NhscaDualsResultsSnapshot } from "@/lib/nhsca-duals-live-results/types"
-import { NHSCA_DUALS_WEIGHTS, resultTypeLabel } from "@/lib/nhsca-duals-live-results/scoring"
+import type { NhscaDualsResultsSnapshot } from "@/lib/nhsca-duals-live-results/types"
 import { cn } from "@/lib/utils"
-
-const STATUS: Record<string, { label: string; className: string }> = {
-  not_started: { label: "Upcoming", className: "bg-white/10 text-white/70" },
-  in_progress: { label: "Live", className: "bg-green-600 text-white animate-pulse" },
-  final: { label: "Final", className: "bg-[#CBAF5D]/20 text-[#CBAF5D] border border-[#CBAF5D]/40" },
-}
 
 export function NhscaDualsResultsCommandCenter({ snapshot }: { snapshot: NhscaDualsResultsSnapshot }) {
   const [scope, setScope] = useState<CommandCenterScope>("all")
   const [dayFilter, setDayFilter] = useState<CommandCenterDayFilter>("all")
   const [athleteId, setAthleteId] = useState<string | null>(null)
   const [view, setView] = useState<"dashboard" | "duals">("dashboard")
+  const [openDual, setOpenDual] = useState<DualFeedItem | null>(null)
 
   const sortedDays = useMemo(
     () => [...snapshot.days].sort((a, b) => a.sort_order - b.sort_order),
@@ -51,6 +49,9 @@ export function NhscaDualsResultsCommandCenter({ snapshot }: { snapshot: NhscaDu
 
   return (
     <div className="space-y-4">
+      {openDual ? (
+        <NhscaDualsDualDetailSheet item={openDual} snapshot={snapshot} onClose={() => setOpenDual(null)} />
+      ) : null}
       <header className="rounded-xl border border-white/10 bg-[#0a2040]/80 px-4 py-3">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
@@ -120,6 +121,7 @@ export function NhscaDualsResultsCommandCenter({ snapshot }: { snapshot: NhscaDu
             setAthleteId(id)
             setView("duals")
           }}
+          onOpenDual={setOpenDual}
         />
       ) : (
         <>
@@ -163,10 +165,10 @@ export function NhscaDualsResultsCommandCenter({ snapshot }: { snapshot: NhscaDu
         <div className="flex items-center justify-between gap-2 px-3 py-2.5 border-b border-white/10 bg-[#002147]/35">
           <p className="text-sm font-bold text-white flex items-center gap-1.5">
             <Zap className="h-3.5 w-3.5 text-[#CBAF5D]" />
-            Duals
+            All duals
             {athleteId ? <span className="text-white/40 font-normal text-xs">· filtered</span> : null}
           </p>
-          <span className="text-[10px] text-white/35">Updates every 10s</span>
+          <span className="text-[10px] text-white/35">Tap for bout results</span>
         </div>
         <div className="p-3 sm:p-3 space-y-2.5 sm:max-h-[min(65vh,640px)] sm:overflow-y-auto">
           {filteredFeed.length === 0 ? (
@@ -175,7 +177,7 @@ export function NhscaDualsResultsCommandCenter({ snapshot }: { snapshot: NhscaDu
             </p>
           ) : (
             filteredFeed.map((item) => (
-              <DualFeedCard key={item.dual.id} item={item} snapshot={snapshot} highlightAthleteId={athleteId} />
+              <NhscaDualSummaryCard key={item.dual.id} item={item} onClick={() => setOpenDual(item)} />
             ))
           )}
         </div>
@@ -292,193 +294,5 @@ function KpiStrip({
         ))}
       </div>
     </div>
-  )
-}
-
-type DualMatchRow = {
-  weight: string
-  match: NhscaDualsMatchRow | undefined
-  wrestlerName: string
-}
-
-function matchIsComplete(m: DualMatchRow["match"]) {
-  return !!(m?.winner && m?.result_type)
-}
-
-function DualBoutRow({
-  variant,
-  weight,
-  wrestlerName,
-  opponentWrestler,
-  resultLabel,
-  highlight,
-}: {
-  variant: "live" | "next" | "upcoming" | "final"
-  weight: string
-  wrestlerName: string
-  opponentWrestler?: string | null
-  resultLabel?: string
-  highlight?: boolean
-}) {
-  const isLive = variant === "live"
-  const isFinal = variant === "final"
-
-  return (
-    <div
-      className={cn(
-        "rounded-lg border px-2.5 py-2 flex items-center gap-2",
-        isLive && "border-green-500/50 bg-green-950/30",
-        (variant === "next" || variant === "upcoming") && "border-white/8 bg-white/[0.02] opacity-60",
-        isFinal && "border-[#CBAF5D]/25 bg-[#CBAF5D]/5",
-        highlight && isLive && "ring-1 ring-[#CBAF5D]/40"
-      )}
-    >
-      <div className="min-w-0 flex-1">
-        {isLive ? (
-          <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase text-green-400 mb-0.5">
-            <Radio className="h-2.5 w-2.5" aria-hidden />
-            On the mat
-          </span>
-        ) : isFinal ? (
-          <span className="text-[9px] font-bold uppercase text-[#CBAF5D]/80">Last bout</span>
-        ) : (
-          <span className="text-[9px] font-bold uppercase text-white/35">Up next</span>
-        )}
-        <p className="text-sm font-mono font-bold text-white/90">{weight} lbs</p>
-        <p className={cn("text-xs truncate", isLive ? "text-white font-medium" : "text-white/45")}>{wrestlerName}</p>
-        {opponentWrestler ? <p className="text-[10px] text-white/40 truncate">vs {opponentWrestler}</p> : null}
-      </div>
-      {resultLabel ? <p className="text-xs font-bold text-[#CBAF5D] shrink-0">{resultLabel}</p> : null}
-    </div>
-  )
-}
-
-function DualBoutFocus({
-  dual,
-  dualMatches,
-  highlightAthleteId,
-}: {
-  dual: ReturnType<typeof buildDualFeed>[number]["dual"]
-  dualMatches: DualMatchRow[]
-  highlightAthleteId: string | null
-}) {
-  const firstOpenIdx = dualMatches.findIndex(({ match }) => !matchIsComplete(match))
-
-  if (dual.status === "final") {
-    const lastDone = [...dualMatches].reverse().find(({ match }) => matchIsComplete(match))
-    if (!lastDone?.match) return null
-    const ncWon = lastDone.match!.winner === "nc"
-    return (
-      <DualBoutRow
-        variant="final"
-        weight={lastDone.weight}
-        wrestlerName={lastDone.wrestlerName}
-        opponentWrestler={lastDone.match!.opponent_wrestler_name?.trim() || null}
-        resultLabel={ncWon ? resultTypeLabel(lastDone.match!.result_type) : undefined}
-        highlight={!!(highlightAthleteId && lastDone.match?.nc_wrestler_id === highlightAthleteId)}
-      />
-    )
-  }
-
-  if (firstOpenIdx < 0) return null
-
-  const onDeck = dualMatches[firstOpenIdx]
-  const upNext =
-    firstOpenIdx + 1 < dualMatches.length && !matchIsComplete(dualMatches[firstOpenIdx + 1].match)
-      ? dualMatches[firstOpenIdx + 1]
-      : null
-  const isLive = dual.status === "in_progress"
-
-  return (
-    <div className="space-y-1.5">
-      {isLive ? (
-        <DualBoutRow
-          variant="live"
-          weight={onDeck.weight}
-          wrestlerName={onDeck.wrestlerName}
-          opponentWrestler={onDeck.match?.opponent_wrestler_name?.trim() || null}
-          highlight={!!(highlightAthleteId && onDeck.match?.nc_wrestler_id === highlightAthleteId)}
-        />
-      ) : (
-        <DualBoutRow variant="upcoming" weight={onDeck.weight} wrestlerName={onDeck.wrestlerName} />
-      )}
-      {upNext ? <DualBoutRow variant="next" weight={upNext.weight} wrestlerName={upNext.wrestlerName} /> : null}
-    </div>
-  )
-}
-
-function DualFeedCard({
-  item,
-  snapshot,
-  highlightAthleteId,
-}: {
-  item: ReturnType<typeof buildDualFeed>[number]
-  snapshot: NhscaDualsResultsSnapshot
-  highlightAthleteId: string | null
-}) {
-  const { dual, teamName, dayName, poolNumber, weightsEntered, weightsTotal } = item
-  const status = STATUS[dual.status] ?? STATUS.not_started
-  const ncWinning = dual.nc_score > dual.opponent_score
-  const progress = weightsTotal > 0 ? (weightsEntered / weightsTotal) * 100 : 0
-  const isLiveDual = dual.status === "in_progress"
-
-  const dualMatches: DualMatchRow[] = NHSCA_DUALS_WEIGHTS.map((weight) => {
-    const m = snapshot.matches.find((x) => x.dual_id === dual.id && x.weight === weight)
-    const wrestler = m?.nc_wrestler_id
-      ? snapshot.wrestlers.find((w) => w.id === m.nc_wrestler_id)
-      : snapshot.wrestlers.find((w) => w.team_id === dual.team_id && w.display_weight === weight && w.active)
-    return { weight, match: m, wrestlerName: wrestler?.name ?? "—" }
-  })
-
-  return (
-    <article
-      className={cn(
-        "rounded-lg border overflow-hidden",
-        isLiveDual ? "border-green-500/40 bg-[#002147]/70" : "border-white/10 bg-[#002147]/35"
-      )}
-    >
-      <div className="p-3">
-        <div className="flex items-start justify-between gap-2 mb-2">
-          <div className="min-w-0 flex-1">
-            <p className="text-[10px] text-white/45 truncate">
-              {dayName}
-              {poolNumber != null ? ` · Pool ${poolNumber}` : ""} · {dual.round_name}
-            </p>
-            <p className="text-sm font-bold text-white leading-snug line-clamp-2">
-              {teamName} vs {dual.opponent_team_name}
-            </p>
-          </div>
-          <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase", status.className)}>
-            {status.label}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-3 mb-2">
-          <div className={cn("flex-1 text-center rounded-md py-1.5 border", ncWinning ? "border-[#CBAF5D]/35 bg-[#CBAF5D]/10" : "border-white/10")}>
-            <p className="text-2xl font-black tabular-nums text-[#CBAF5D] leading-none">{dual.nc_score}</p>
-            <p className="text-[9px] text-white/40 mt-0.5">NC</p>
-          </div>
-          <span className="text-white/25 text-xs font-bold">vs</span>
-          <div className="flex-1 text-center rounded-md py-1.5 border border-white/10">
-            <p className="text-2xl font-black tabular-nums text-white leading-none">{dual.opponent_score}</p>
-            <p className="text-[9px] text-white/40 mt-0.5 line-clamp-2 leading-tight px-0.5">{dual.opponent_team_name}</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 mb-2">
-          <div className="flex-1 h-1 rounded-full bg-white/10 overflow-hidden">
-            <div
-              className={cn("h-full transition-all duration-500", isLiveDual ? "bg-green-500" : "bg-[#CBAF5D]")}
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <span className="text-[9px] text-white/40 tabular-nums shrink-0">
-            {weightsEntered}/{weightsTotal}
-          </span>
-        </div>
-
-        <DualBoutFocus dual={dual} dualMatches={dualMatches} highlightAthleteId={highlightAthleteId} />
-      </div>
-    </article>
   )
 }

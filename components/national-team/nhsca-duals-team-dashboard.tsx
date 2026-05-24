@@ -2,7 +2,8 @@
 
 import { useMemo } from "react"
 import { Shield, Star, Trophy } from "lucide-react"
-import type { CommandCenterDayFilter, CommandCenterScope } from "@/lib/nhsca-duals-command-center"
+import { NhscaDualSummaryCard } from "@/components/national-team/nhsca-duals-dual-detail-sheet"
+import type { CommandCenterDayFilter, CommandCenterScope, DualFeedItem } from "@/lib/nhsca-duals-command-center"
 import {
   buildDualFeed,
   getSummaryForScope,
@@ -34,76 +35,36 @@ function enrichWrestlerRows(
   })
 }
 
-function DualResultsTable({
+function DualResultsList({
   snapshot,
   scope,
   dayFilter,
+  onOpenDual,
 }: {
   snapshot: NhscaDualsResultsSnapshot
   scope: CommandCenterScope
   dayFilter: CommandCenterDayFilter
+  onOpenDual: (item: DualFeedItem) => void
 }) {
   const completed = useMemo(
-    () => buildDualFeed(snapshot, scope, dayFilter).filter((f) => f.dual.status === "final"),
+    () => buildDualFeed(snapshot, scope, dayFilter).filter((f) => f.dual.status === "final" || f.dual.status === "in_progress"),
     [snapshot, scope, dayFilter]
   )
 
   if (completed.length === 0) {
     return (
-      <p className="text-xs text-white/45 px-1 py-2">Completed team duals will show here after each match.</p>
+      <p className="text-xs text-white/45 px-1 py-2">Team duals will show here — tap one to see every bout.</p>
     )
   }
 
   return (
-    <div className="overflow-x-auto -mx-1">
-      <table className="w-full min-w-[320px] text-sm">
-        <thead>
-          <tr className="text-left text-[10px] uppercase tracking-wider text-white/40 border-b border-white/10">
-            <th className="py-2 pl-1 pr-2 font-semibold">Team</th>
-            <th className="py-2 pr-2 font-semibold">Opponent</th>
-            <th className="py-2 pr-2 font-semibold text-center">Score</th>
-            <th className="py-2 pr-1 font-semibold text-right">Result</th>
-          </tr>
-        </thead>
-        <tbody>
-          {completed.map(({ dual, teamName, dayName, poolNumber }) => {
-            const ncWin = dual.nc_score > dual.opponent_score
-            const ncLoss = dual.opponent_score > dual.nc_score
-            return (
-              <tr key={dual.id} className="border-b border-white/5 last:border-0">
-                <td className="py-2.5 pl-1 pr-2 align-top">
-                  <p className="font-semibold text-white text-xs leading-tight">{teamName}</p>
-                  <p className="text-[10px] text-white/40 mt-0.5">
-                    {dayName}
-                    {poolNumber != null ? ` · P${poolNumber}` : ""}
-                  </p>
-                </td>
-                <td className="py-2.5 pr-2 align-top text-xs text-white/80 max-w-[120px]">
-                  {dual.opponent_team_name}
-                </td>
-                <td className="py-2.5 pr-2 align-top text-center tabular-nums font-bold text-white whitespace-nowrap">
-                  <span className="text-[#CBAF5D]">{dual.nc_score}</span>
-                  <span className="text-white/30 mx-1">–</span>
-                  <span>{dual.opponent_score}</span>
-                </td>
-                <td className="py-2.5 pr-1 align-top text-right">
-                  <span
-                    className={cn(
-                      "inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase",
-                      ncWin && "bg-emerald-600/25 text-emerald-300",
-                      ncLoss && "bg-red-600/20 text-red-300",
-                      !ncWin && !ncLoss && "bg-white/10 text-white/60"
-                    )}
-                  >
-                    {ncWin ? "Win" : ncLoss ? "Loss" : "Tie"}
-                  </span>
-                </td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
-    </div>
+    <ul className="space-y-2">
+      {completed.map((item) => (
+        <li key={item.dual.id}>
+          <NhscaDualSummaryCard item={item} onClick={() => onOpenDual(item)} />
+        </li>
+      ))}
+    </ul>
   )
 }
 
@@ -135,12 +96,14 @@ export function NhscaDualsTeamDashboard({
   dayFilter,
   dayLabel,
   onSelectAthlete,
+  onOpenDual,
 }: {
   snapshot: NhscaDualsResultsSnapshot
   scope: CommandCenterScope
   dayFilter: CommandCenterDayFilter
   dayLabel: string
   onSelectAthlete?: (wrestlerId: string) => void
+  onOpenDual?: (item: DualFeedItem) => void
 }) {
   const summary = useMemo(() => getSummaryForScope(snapshot, scope, dayFilter), [snapshot, scope, dayFilter])
   const rows = useMemo(
@@ -167,23 +130,58 @@ export function NhscaDualsTeamDashboard({
             Team dual results
           </h3>
           <p className="text-[10px] text-white/40 mt-0.5">
-            {scopeLabel} · {dayLabel} · {summary.dualWins}–{summary.dualLosses} in completed duals
+            Tap a dual to see every bout · {scopeLabel} · {dayLabel}
           </p>
         </header>
         <div className="p-3">
-          <DualResultsTable snapshot={snapshot} scope={scope} dayFilter={dayFilter} />
+          <DualResultsList
+            snapshot={snapshot}
+            scope={scope}
+            dayFilter={dayFilter}
+            onOpenDual={(item) => onOpenDual?.(item)}
+          />
         </div>
       </section>
 
-      <div className="grid lg:grid-cols-[1fr_min(280px,32%)] gap-4">
+      <div className="space-y-4 lg:grid lg:grid-cols-[1fr_min(280px,32%)] lg:gap-4 lg:space-y-0">
         <section className="rounded-xl border border-white/10 bg-[#0a2040]/60 overflow-hidden min-w-0">
           <header className="px-3 py-2.5 border-b border-white/10 bg-[#002147]/35">
             <h3 className="text-sm font-bold text-white">Athlete records</h3>
-            <p className="text-[10px] text-white/40 mt-0.5">
-              Every bout across all duals · sorted by team points
-            </p>
+            <p className="text-[10px] text-white/40 mt-0.5">All bouts · sorted by team points</p>
           </header>
-          <div className="overflow-x-auto">
+
+          {/* Mobile: simple cards */}
+          <ul className="md:hidden divide-y divide-white/5">
+            {rows.length === 0 ? (
+              <li className="py-8 text-center text-xs text-white/45">No bout results yet.</li>
+            ) : (
+              rows.map((r) => (
+                <li key={r.wrestlerId}>
+                  <button
+                    type="button"
+                    onClick={() => onSelectAthlete?.(r.wrestlerId)}
+                    className="w-full flex items-center gap-3 px-3 py-3 min-h-[52px] text-left active:bg-white/5"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-white truncate">{r.name}</p>
+                      <p className="text-[10px] text-white/45 mt-0.5">
+                        {r.displayWeight} lbs
+                        {scope === "all" ? ` · ${r.teamLabel}` : ""}
+                        {undefeatedIds.has(r.wrestlerId) && r.bouts > 0 ? " · Undefeated" : ""}
+                      </p>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <p className="text-sm font-black tabular-nums text-white">{r.wins}–{r.losses}</p>
+                      <p className="text-xs font-bold tabular-nums text-[#CBAF5D]">+{r.pointsFor} pts</p>
+                    </div>
+                  </button>
+                </li>
+              ))
+            )}
+          </ul>
+
+          {/* Desktop: table */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full min-w-[480px] text-sm">
               <thead>
                 <tr className="text-left text-[10px] uppercase tracking-wider text-white/40 border-b border-white/10 bg-[#002147]/25">
@@ -268,7 +266,7 @@ export function NhscaDualsTeamDashboard({
           </div>
         </section>
 
-        <div className="space-y-3">
+        <div className="space-y-3 lg:space-y-3">
           <LeaderPanel title="Undefeated" icon={<Shield className="h-3.5 w-3.5" />} empty="No undefeated wrestlers yet.">
             {undefeatedRows.length > 0 ? (
               <ul className="space-y-1.5">

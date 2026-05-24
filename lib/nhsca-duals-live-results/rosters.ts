@@ -17,7 +17,7 @@ export const NHSCA_DUALS_NATIONAL_ROSTER: NhscaDualsRosterSeed[] = [
   { name: "Tobin McNair", weightClass: "160" },
   { name: "Dominic Blue", weightClass: "170" },
   { name: "Brieon Mayfield", weightClass: "182" },
-  { name: "Luke Padgett", weightClass: "190" },
+  { name: "Fares Alkurdasi", weightClass: "195" },
   { name: "Gavin Lopez", weightClass: "220" },
   { name: "Keyshon Morrison", weightClass: "HWT" },
 ]
@@ -25,14 +25,14 @@ export const NHSCA_DUALS_NATIONAL_ROSTER: NhscaDualsRosterSeed[] = [
 export const NHSCA_DUALS_SELECT_ROSTER: NhscaDualsRosterSeed[] = [
   { name: "Kristopher Kerr Jr.", weightClass: "106" },
   { name: "Xavier Bernthal", weightClass: "113" },
-  { name: "Adam Walker", weightClass: "120" },
   { name: "Danny McDermott", weightClass: "120" },
   { name: "Holt Quincy", weightClass: "126" },
   { name: "Shane Shuster", weightClass: "132" },
   { name: "Cole Shuster", weightClass: "138" },
   { name: "Jack Kancler", weightClass: "144" },
   { name: "Jacob Perry", weightClass: "152" },
-  { name: "Fares Alkurdasi", weightClass: "160" },
+  { name: "Jon Burns", weightClass: "160" },
+  { name: "Vincent Valentino", weightClass: "160" },
   { name: "John Bane", weightClass: "170" },
   { name: "Manny Kahsai", weightClass: "183" },
   { name: "Tillman Caskey", weightClass: "190" },
@@ -55,6 +55,13 @@ export const NHSCA_DUALS_SELECT_INITIAL_DUALS = [
   { round: "Round 2", opponent: "University Hawks Wrestling" },
   { round: "Round 3", opponent: "Buffalo Valley Red" },
 ] as const
+
+/** Select 160 lbs — two wrestlers split pool duals. Key = opponent_team_name on the dual row. */
+export const NHSCA_DUALS_SELECT_160_STARTERS: Readonly<Record<string, string>> = {
+  "Doughboy Black": "Vincent Valentino",
+  "University Hawks Wrestling": "Jon Burns",
+  "Buffalo Valley Red": "Vincent Valentino",
+}
 
 export const NHSCA_DUALS_NATIONAL_POOL = 6
 export const NHSCA_DUALS_SELECT_POOL = 26

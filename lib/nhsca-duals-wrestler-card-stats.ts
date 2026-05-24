@@ -4,6 +4,7 @@ import type {
   NhscaDualsTeamType,
 } from "@/lib/nhsca-duals-live-results/types"
 import { resultTypeLabel, toDisplayWeight } from "@/lib/nhsca-duals-live-results/scoring"
+import { resolveNcWrestlerIdForMatch } from "@/lib/nhsca-duals-resolve-nc-wrestler"
 
 export type NhscaDualsWrestlerBoutRow = {
   roundName: string
@@ -104,10 +105,10 @@ export function buildWrestlerCardStats(
 
   for (const m of snapshot.matches) {
     if (!teamDualIds.has(m.dual_id)) continue
-    if (m.nc_wrestler_id !== wrestler.id) continue
+    const dual = snapshot.duals.find((d) => d.id === m.dual_id)
+    if (resolveNcWrestlerIdForMatch(m, dual, snapshot.wrestlers) !== wrestler.id) continue
     if (!m.winner || !m.result_type) continue
 
-    const dual = snapshot.duals.find((d) => d.id === m.dual_id)
     if (!dual) continue
     const day = snapshot.days.find((d) => d.id === dual.day_id)
 
