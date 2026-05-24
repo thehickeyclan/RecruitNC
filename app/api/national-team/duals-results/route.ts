@@ -14,6 +14,7 @@ import {
   deleteDual,
   bootstrapNhscaDualsEvent,
   ensureNhscaDualsDay1Schedule,
+  ensureNhscaDualsDay2Schedule,
   fetchNhscaDualsSnapshot,
   pruneNhscaDualsTestDuals,
   resetAllEventMatchResults,
@@ -56,6 +57,7 @@ export async function GET(request: NextRequest) {
   if (snap.ok && snap.data.teams.length > 0) {
     try {
       await ensureNhscaDualsDay1Schedule(admin)
+      await ensureNhscaDualsDay2Schedule(admin)
       snap = await fetchNhscaDualsSnapshot(admin)
     } catch (e) {
       console.error("[RecruitNC] nhsca duals day1 schedule", e)

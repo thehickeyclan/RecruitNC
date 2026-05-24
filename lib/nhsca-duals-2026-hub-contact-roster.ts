@@ -22,6 +22,7 @@ export const NHSCA_DUALS_2026_NATIONAL_ROSTER: NhscaDualsContactRosterRow[] = [
   { wrestler: "Dom Blue", weightClass: "170", phone: "910-217-9041", parentContact: "Phillip 843-862-2874" },
   { wrestler: "Brieon Mayfield", weightClass: "182", phone: "757-533-2213", parentContact: "Trevor 757-633-0657" },
   { wrestler: "Fares Alkurdasi", weightClass: "195", phone: "919-519-2856", parentContact: "" },
+  { wrestler: "Luke Padgett", weightClass: "195", phone: "", parentContact: "" },
   { wrestler: "Gavin Lopez", weightClass: "220", phone: "908-566-8816", parentContact: "" },
   { wrestler: "Keyshon Morrison", weightClass: "HWT", phone: "854-854-3078", parentContact: "" },
 ]
