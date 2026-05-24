@@ -1,5 +1,5 @@
 import { buildTeamSummary } from "@/lib/nhsca-duals-live-results/summaries"
-import { NHSCA_DUALS_WEIGHTS } from "@/lib/nhsca-duals-live-results/scoring"
+import { NHSCA_DUALS_WEIGHTS, wrestlerNetPoints } from "@/lib/nhsca-duals-live-results/scoring"
 import { resolveNcWrestlerIdForMatch } from "@/lib/nhsca-duals-resolve-nc-wrestler"
 import type {
   NhscaDualsDualRow,
@@ -23,9 +23,11 @@ export type DualFeedItem = {
 
 function combineSummaries(a: NhscaDualsTeamSummary, b: NhscaDualsTeamSummary): NhscaDualsTeamSummary {
   const topScorers = [...a.topScorers, ...b.topScorers]
-    .sort((x, y) => y.pointsFor - x.pointsFor)
+    .sort((x, y) => y.netPoints - x.netPoints)
     .slice(0, 8)
-  const undefeated = [...a.undefeated, ...b.undefeated].sort((x, y) => y.pointsFor - x.pointsFor)
+  const undefeated = [...a.undefeated, ...b.undefeated].sort(
+    (x, y) => wrestlerNetPoints(y.pointsFor, y.pointsAgainst) - wrestlerNetPoints(x.pointsFor, x.pointsAgainst)
+  )
   return {
     dualWins: a.dualWins + b.dualWins,
     dualLosses: a.dualLosses + b.dualLosses,
@@ -157,7 +159,9 @@ export function getWrestlerRecords(
   }
 
   return [...byWrestler.values()].sort((a, b) => {
-    if (b.pointsFor !== a.pointsFor) return b.pointsFor - a.pointsFor
+    const netA = wrestlerNetPoints(a.pointsFor, a.pointsAgainst)
+    const netB = wrestlerNetPoints(b.pointsFor, b.pointsAgainst)
+    if (netB !== netA) return netB - netA
     if (b.wins !== a.wins) return b.wins - a.wins
     return parseInt(a.displayWeight, 10) - parseInt(b.displayWeight, 10)
   })
@@ -184,7 +188,8 @@ export function getWrestlersForScope(
   if (scope === "national") return getWrestlerRecords(snapshot, "national", dayFilter)
   if (scope === "select") return getWrestlerRecords(snapshot, "select", dayFilter)
   return [...getWrestlerRecords(snapshot, "national", dayFilter), ...getWrestlerRecords(snapshot, "select", dayFilter)].sort(
-    (a, b) => b.pointsFor - a.pointsFor
+    (a, b) =>
+      wrestlerNetPoints(b.pointsFor, b.pointsAgainst) - wrestlerNetPoints(a.pointsFor, a.pointsAgainst)
   )
 }
 

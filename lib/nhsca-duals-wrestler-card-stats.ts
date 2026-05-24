@@ -119,7 +119,8 @@ export function buildWrestlerCardStats(
       weight: m.weight,
       outcome: boutOutcome(m),
       resultLabel: resultTypeLabel(m.result_type),
-      teamPoints: m.nc_points ?? 0,
+      teamPoints:
+        m.winner === "nc" ? (m.nc_points ?? 0) : m.winner === "opponent" ? -(m.opponent_points ?? 0) : 0,
       opponentWrestler: m.opponent_wrestler_name?.trim() || "—",
       note: m.notes?.trim() || null,
     })

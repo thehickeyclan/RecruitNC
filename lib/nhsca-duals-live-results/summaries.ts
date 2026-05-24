@@ -6,6 +6,7 @@ import type {
   NhscaDualsWrestlerRow,
 } from "./types"
 import { resolveNcWrestlerIdForMatch } from "@/lib/nhsca-duals-resolve-nc-wrestler"
+import { wrestlerNetPoints } from "./scoring"
 
 export function buildTeamSummary(
   teamId: string,
@@ -63,10 +64,14 @@ export function buildTeamSummary(
   const records = [...byWrestler.values()]
   const undefeated = records.filter((r) => r.wins > 0 && r.losses === 0)
   const topScorers = records
-    .filter((r) => r.pointsFor > 0)
-    .sort((a, b) => b.pointsFor - a.pointsFor)
+    .filter((r) => r.wins + r.losses > 0)
+    .sort((a, b) => wrestlerNetPoints(b.pointsFor, b.pointsAgainst) - wrestlerNetPoints(a.pointsFor, a.pointsAgainst))
     .slice(0, 5)
-    .map((r) => ({ name: r.name, displayWeight: r.displayWeight, pointsFor: r.pointsFor }))
+    .map((r) => ({
+      name: r.name,
+      displayWeight: r.displayWeight,
+      netPoints: wrestlerNetPoints(r.pointsFor, r.pointsAgainst),
+    }))
 
   return {
     dualWins,

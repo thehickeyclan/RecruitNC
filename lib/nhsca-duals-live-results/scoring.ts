@@ -97,6 +97,16 @@ export function computeMatchPoints(
   return { nc_points: 0, opponent_points: pts }
 }
 
+/** Team points earned on wins minus team points given up on losses. */
+export function wrestlerNetPoints(pointsFor: number, pointsAgainst: number): number {
+  return pointsFor - pointsAgainst
+}
+
+export function formatNetTeamPoints(net: number): string {
+  if (net > 0) return `+${net}`
+  return String(net)
+}
+
 export function sumDualScores(matches: { nc_points: number; opponent_points: number }[]): {
   nc_score: number
   opponent_score: number

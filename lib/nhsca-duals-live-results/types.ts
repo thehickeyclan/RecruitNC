@@ -93,7 +93,7 @@ export type NhscaDualsTeamSummary = {
   pointsFor: number
   pointsAgainst: number
   undefeated: NhscaDualsWrestlerRecord[]
-  topScorers: { name: string; displayWeight: string; pointsFor: number }[]
+  topScorers: { name: string; displayWeight: string; netPoints: number }[]
 }
 
 export type NhscaDualsResultsSnapshot = {

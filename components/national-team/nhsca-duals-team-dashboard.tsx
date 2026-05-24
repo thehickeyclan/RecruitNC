@@ -6,10 +6,10 @@ import { NhscaDualSummaryCard } from "@/components/national-team/nhsca-duals-dua
 import type { CommandCenterDayFilter, CommandCenterScope, DualFeedItem } from "@/lib/nhsca-duals-command-center"
 import {
   buildDualFeed,
-  getSummaryForScope,
   getWrestlersForScope,
 } from "@/lib/nhsca-duals-command-center"
 import type { NhscaDualsResultsSnapshot, NhscaDualsWrestlerRecord } from "@/lib/nhsca-duals-live-results/types"
+import { formatNetTeamPoints, wrestlerNetPoints } from "@/lib/nhsca-duals-live-results/scoring"
 import { cn } from "@/lib/utils"
 
 type WrestlerRow = NhscaDualsWrestlerRecord & {
@@ -105,15 +105,19 @@ export function NhscaDualsTeamDashboard({
   onSelectAthlete?: (wrestlerId: string) => void
   onOpenDual?: (item: DualFeedItem) => void
 }) {
-  const summary = useMemo(() => getSummaryForScope(snapshot, scope, dayFilter), [snapshot, scope, dayFilter])
   const rows = useMemo(
     () => enrichWrestlerRows(snapshot, getWrestlersForScope(snapshot, scope, dayFilter)),
     [snapshot, scope, dayFilter]
   )
 
-  const topPointScorers = useMemo(() => rows.filter((r) => r.pointsFor > 0).slice(0, 12), [rows])
+  const topPointScorers = useMemo(() => rows.filter((r) => r.bouts > 0).slice(0, 12), [rows])
   const undefeatedRows = useMemo(
-    () => rows.filter((r) => r.wins > 0 && r.losses === 0).sort((a, b) => b.pointsFor - a.pointsFor),
+    () =>
+      rows
+        .filter((r) => r.wins > 0 && r.losses === 0)
+        .sort(
+          (a, b) => wrestlerNetPoints(b.pointsFor, b.pointsAgainst) - wrestlerNetPoints(a.pointsFor, a.pointsAgainst)
+        ),
     [rows]
   )
 
@@ -147,7 +151,7 @@ export function NhscaDualsTeamDashboard({
         <section className="rounded-xl border border-white/10 bg-[#0a2040]/60 overflow-hidden min-w-0">
           <header className="px-3 py-2.5 border-b border-white/10 bg-[#002147]/35">
             <h3 className="text-sm font-bold text-white">Athlete records</h3>
-            <p className="text-[10px] text-white/40 mt-0.5">All bouts · sorted by team points</p>
+            <p className="text-[10px] text-white/40 mt-0.5">All bouts · sorted by net team points</p>
           </header>
 
           {/* Mobile: simple cards */}
@@ -155,28 +159,38 @@ export function NhscaDualsTeamDashboard({
             {rows.length === 0 ? (
               <li className="py-8 text-center text-xs text-white/45">No bout results yet.</li>
             ) : (
-              rows.map((r) => (
-                <li key={r.wrestlerId}>
-                  <button
-                    type="button"
-                    onClick={() => onSelectAthlete?.(r.wrestlerId)}
-                    className="w-full flex items-center gap-3 px-3 py-3 min-h-[52px] text-left active:bg-white/5"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-white truncate">{r.name}</p>
-                      <p className="text-[10px] text-white/45 mt-0.5">
-                        {r.displayWeight} lbs
-                        {scope === "all" ? ` · ${r.teamLabel}` : ""}
-                        {undefeatedIds.has(r.wrestlerId) && r.bouts > 0 ? " · Undefeated" : ""}
-                      </p>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <p className="text-sm font-black tabular-nums text-white">{r.wins}–{r.losses}</p>
-                      <p className="text-xs font-bold tabular-nums text-[#CBAF5D]">+{r.pointsFor} pts</p>
-                    </div>
-                  </button>
-                </li>
-              ))
+              rows.map((r) => {
+                const net = wrestlerNetPoints(r.pointsFor, r.pointsAgainst)
+                return (
+                  <li key={r.wrestlerId}>
+                    <button
+                      type="button"
+                      onClick={() => onSelectAthlete?.(r.wrestlerId)}
+                      className="w-full flex items-center gap-3 px-3 py-3 min-h-[52px] text-left active:bg-white/5"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-white truncate">{r.name}</p>
+                        <p className="text-[10px] text-white/45 mt-0.5">
+                          {r.displayWeight} lbs
+                          {scope === "all" ? ` · ${r.teamLabel}` : ""}
+                          {undefeatedIds.has(r.wrestlerId) && r.bouts > 0 ? " · Undefeated" : ""}
+                        </p>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <p className="text-sm font-black tabular-nums text-white">{r.wins}–{r.losses}</p>
+                        <p
+                          className={cn(
+                            "text-xs font-bold tabular-nums",
+                            net >= 0 ? "text-[#CBAF5D]" : "text-red-300"
+                          )}
+                        >
+                          {formatNetTeamPoints(net)} pts
+                        </p>
+                      </div>
+                    </button>
+                  </li>
+                )
+              })
             )}
           </ul>
 
@@ -190,7 +204,7 @@ export function NhscaDualsTeamDashboard({
                   {scope === "all" ? <th className="py-2 pr-2 font-semibold">Team</th> : null}
                   <th className="py-2 pr-2 font-semibold text-center">Record</th>
                   <th className="py-2 pr-2 font-semibold text-center">Bouts</th>
-                  <th className="py-2 pr-3 font-semibold text-right">Team pts</th>
+                  <th className="py-2 pr-3 font-semibold text-right">Net pts</th>
                 </tr>
               </thead>
               <tbody>
@@ -202,6 +216,7 @@ export function NhscaDualsTeamDashboard({
                   </tr>
                 ) : (
                   rows.map((r) => {
+                    const net = wrestlerNetPoints(r.pointsFor, r.pointsAgainst)
                     const isUndefeated = undefeatedIds.has(r.wrestlerId) && r.bouts > 0
                     const isTopScorer = topScorerIds.has(r.wrestlerId)
                     return (
@@ -225,7 +240,7 @@ export function NhscaDualsTeamDashboard({
                               Undefeated
                             </span>
                           ) : null}
-                          {isTopScorer && r.pointsFor > 0 ? (
+                          {isTopScorer && r.bouts > 0 ? (
                             <span className="ml-1 inline-block rounded px-1 py-0.5 text-[9px] font-bold uppercase bg-white/10 text-white/55">
                               Top pts
                             </span>
@@ -254,8 +269,13 @@ export function NhscaDualsTeamDashboard({
                         <td className="py-2.5 pr-2 align-middle text-center tabular-nums text-xs text-white/50">
                           {r.bouts}
                         </td>
-                        <td className="py-2.5 pr-3 align-middle text-right tabular-nums font-black text-[#CBAF5D]">
-                          {r.pointsFor}
+                        <td
+                          className={cn(
+                            "py-2.5 pr-3 align-middle text-right tabular-nums font-black",
+                            net >= 0 ? "text-[#CBAF5D]" : "text-red-300"
+                          )}
+                        >
+                          {formatNetTeamPoints(net)}
                         </td>
                       </tr>
                     )
@@ -270,56 +290,69 @@ export function NhscaDualsTeamDashboard({
           <LeaderPanel title="Undefeated" icon={<Shield className="h-3.5 w-3.5" />} empty="No undefeated wrestlers yet.">
             {undefeatedRows.length > 0 ? (
               <ul className="space-y-1.5">
-                {undefeatedRows.map((u) => (
-                  <li key={u.wrestlerId}>
-                    <button
-                      type="button"
-                      onClick={() => onSelectAthlete?.(u.wrestlerId)}
-                      className="w-full flex items-center justify-between gap-2 rounded-lg bg-[#002147]/45 border border-white/8 px-2.5 py-2 min-h-[44px] text-left hover:border-[#CBAF5D]/35 transition-colors"
-                    >
-                      <span className="min-w-0">
-                        <span className="block text-sm font-semibold text-white truncate">{u.name}</span>
-                        <span className="text-[10px] text-white/45">
-                          {u.displayWeight} lbs
-                          {scope === "all" ? ` · ${u.teamLabel}` : ""}
+                {undefeatedRows.map((u) => {
+                  const net = wrestlerNetPoints(u.pointsFor, u.pointsAgainst)
+                  return (
+                    <li key={u.wrestlerId}>
+                      <button
+                        type="button"
+                        onClick={() => onSelectAthlete?.(u.wrestlerId)}
+                        className="w-full flex items-center justify-between gap-2 rounded-lg bg-[#002147]/45 border border-white/8 px-2.5 py-2 min-h-[44px] text-left hover:border-[#CBAF5D]/35 transition-colors"
+                      >
+                        <span className="min-w-0">
+                          <span className="block text-sm font-semibold text-white truncate">{u.name}</span>
+                          <span className="text-[10px] text-white/45">
+                            {u.displayWeight} lbs
+                            {scope === "all" ? ` · ${u.teamLabel}` : ""}
+                          </span>
                         </span>
-                      </span>
-                      <span className="text-xs font-bold text-emerald-400 tabular-nums shrink-0">
-                        {u.wins}–0 · +{u.pointsFor}
-                      </span>
-                    </button>
-                  </li>
-                ))}
+                        <span className="text-xs font-bold text-emerald-400 tabular-nums shrink-0">
+                          {u.wins}–0 · {formatNetTeamPoints(net)}
+                        </span>
+                      </button>
+                    </li>
+                  )
+                })}
               </ul>
             ) : null}
           </LeaderPanel>
 
           <LeaderPanel
-            title="Most team points"
+            title="Net team points"
             icon={<Star className="h-3.5 w-3.5" />}
             empty="Points appear as bouts are entered."
           >
             {topPointScorers.length > 0 ? (
               <ul className="space-y-1.5">
-                {topPointScorers.map((s, i) => (
-                  <li key={s.wrestlerId}>
-                    <button
-                      type="button"
-                      onClick={() => onSelectAthlete?.(s.wrestlerId)}
-                      className="w-full flex items-center gap-2 rounded-lg bg-[#002147]/45 border border-white/8 px-2.5 py-2 min-h-[44px] text-left hover:border-[#CBAF5D]/35 transition-colors"
-                    >
-                      <span className="text-sm font-black text-[#CBAF5D]/80 w-5 tabular-nums">{i + 1}</span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-sm font-semibold text-white truncate">{s.name}</span>
-                        <span className="text-[10px] text-white/45">
-                          {s.displayWeight} lbs · {s.wins}–{s.losses}
-                          {scope === "all" ? ` · ${s.teamLabel}` : ""}
+                {topPointScorers.map((s, i) => {
+                  const net = wrestlerNetPoints(s.pointsFor, s.pointsAgainst)
+                  return (
+                    <li key={s.wrestlerId}>
+                      <button
+                        type="button"
+                        onClick={() => onSelectAthlete?.(s.wrestlerId)}
+                        className="w-full flex items-center gap-2 rounded-lg bg-[#002147]/45 border border-white/8 px-2.5 py-2 min-h-[44px] text-left hover:border-[#CBAF5D]/35 transition-colors"
+                      >
+                        <span className="text-sm font-black text-[#CBAF5D]/80 w-5 tabular-nums">{i + 1}</span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-sm font-semibold text-white truncate">{s.name}</span>
+                          <span className="text-[10px] text-white/45">
+                            {s.displayWeight} lbs · {s.wins}–{s.losses}
+                            {scope === "all" ? ` · ${s.teamLabel}` : ""}
+                          </span>
                         </span>
-                      </span>
-                      <span className="text-sm font-black text-[#CBAF5D] tabular-nums shrink-0">+{s.pointsFor}</span>
-                    </button>
-                  </li>
-                ))}
+                        <span
+                          className={cn(
+                            "text-sm font-black tabular-nums shrink-0",
+                            net >= 0 ? "text-[#CBAF5D]" : "text-red-300"
+                          )}
+                        >
+                          {formatNetTeamPoints(net)}
+                        </span>
+                      </button>
+                    </li>
+                  )
+                })}
               </ul>
             ) : null}
           </LeaderPanel>
