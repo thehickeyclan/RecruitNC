@@ -1,9 +1,9 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { Shield, Star, Trophy } from "lucide-react"
 import { NhscaDualSummaryCard } from "@/components/national-team/nhsca-duals-dual-detail-sheet"
-import type { CommandCenterDayFilter, CommandCenterScope, DualFeedItem } from "@/lib/nhsca-duals-command-center"
+import type { CommandCenterDayFilter, CommandCenterScope } from "@/lib/nhsca-duals-command-center"
 import {
   buildDualFeed,
   getWrestlersForScope,
@@ -39,13 +39,12 @@ function DualResultsList({
   snapshot,
   scope,
   dayFilter,
-  onOpenDual,
 }: {
   snapshot: NhscaDualsResultsSnapshot
   scope: CommandCenterScope
   dayFilter: CommandCenterDayFilter
-  onOpenDual: (item: DualFeedItem) => void
 }) {
+  const [expandedDualId, setExpandedDualId] = useState<string | null>(null)
   const completed = useMemo(
     () => buildDualFeed(snapshot, scope, dayFilter).filter((f) => f.dual.status === "final" || f.dual.status === "in_progress"),
     [snapshot, scope, dayFilter]
@@ -61,7 +60,14 @@ function DualResultsList({
     <ul className="space-y-2">
       {completed.map((item) => (
         <li key={item.dual.id}>
-          <NhscaDualSummaryCard item={item} onClick={() => onOpenDual(item)} />
+          <NhscaDualSummaryCard
+            item={item}
+            snapshot={snapshot}
+            expanded={expandedDualId === item.dual.id}
+            onToggle={() =>
+              setExpandedDualId((id) => (id === item.dual.id ? null : item.dual.id))
+            }
+          />
         </li>
       ))}
     </ul>
@@ -96,14 +102,12 @@ export function NhscaDualsTeamDashboard({
   dayFilter,
   dayLabel,
   onSelectAthlete,
-  onOpenDual,
 }: {
   snapshot: NhscaDualsResultsSnapshot
   scope: CommandCenterScope
   dayFilter: CommandCenterDayFilter
   dayLabel: string
   onSelectAthlete?: (wrestlerId: string) => void
-  onOpenDual?: (item: DualFeedItem) => void
 }) {
   const rows = useMemo(
     () => enrichWrestlerRows(snapshot, getWrestlersForScope(snapshot, scope, dayFilter)),
@@ -134,16 +138,11 @@ export function NhscaDualsTeamDashboard({
             Team dual results
           </h3>
           <p className="text-[10px] text-white/40 mt-0.5">
-            Tap a dual to see every bout · {scopeLabel} · {dayLabel}
+            Tap a dual to expand every bout · {scopeLabel} · {dayLabel}
           </p>
         </header>
         <div className="p-3">
-          <DualResultsList
-            snapshot={snapshot}
-            scope={scope}
-            dayFilter={dayFilter}
-            onOpenDual={(item) => onOpenDual?.(item)}
-          />
+          <DualResultsList snapshot={snapshot} scope={scope} dayFilter={dayFilter} />
         </div>
       </section>
 

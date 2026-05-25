@@ -233,7 +233,15 @@ export default function NCUnitedNationalTeam() {
           <div className="max-w-4xl mx-auto">
             <h2 className="text-2xl md:text-3xl font-bold text-[#002147] mb-2 text-center">Previous National Teams</h2>
             <p className="text-gray-600 text-center mb-8">Results and highlights from past events</p>
-            <div className="grid sm:grid-cols-3 gap-4">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <HardLink
+                href="/national-team/nhsca-duals-2026-results"
+                className="rounded-xl border-2 border-[#CBAF5D]/35 bg-[#001428] p-5 text-center hover:border-[#CBAF5D]/55 hover:shadow-md transition-all group"
+              >
+                <span className="font-bold text-white block">NHSCA Duals 2026</span>
+                <span className="text-sm text-white/60 block mt-1">National &amp; Select · Results</span>
+                <span className="mt-3 inline-block text-sm font-semibold text-[#CBAF5D] group-hover:underline">View results →</span>
+              </HardLink>
               <Link
                 href="/national-team/ucd-2024-results"
                 className="rounded-xl border-2 border-[#003366]/20 bg-white p-5 text-center hover:border-[#003366]/40 hover:shadow-md transition-all group"

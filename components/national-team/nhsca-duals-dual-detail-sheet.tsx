@@ -1,118 +1,25 @@
 "use client"
 
-import { useEffect } from "react"
-import { ChevronRight, X } from "lucide-react"
+import { ChevronDown } from "lucide-react"
 import type { DualFeedItem } from "@/lib/nhsca-duals-command-center"
 import { buildDualBoutRows } from "@/lib/nhsca-duals-dual-detail"
-import type { NhscaDualsResultsSnapshot } from "@/lib/nhsca-duals-live-results/types"
+import type { NhscaDualsDualRow, NhscaDualsResultsSnapshot } from "@/lib/nhsca-duals-live-results/types"
 import { cn } from "@/lib/utils"
 
-export function NhscaDualsDualDetailSheet({
-  item,
+export function NhscaDualBoutList({
   snapshot,
-  onClose,
+  dual,
 }: {
-  item: DualFeedItem
   snapshot: NhscaDualsResultsSnapshot
-  onClose: () => void
+  dual: NhscaDualsDualRow
 }) {
-  const { dual, teamName, dayName, poolNumber } = item
   const bouts = buildDualBoutRows(snapshot, dual)
-  const ncWin = dual.nc_score > dual.opponent_score
-  const ncLoss = dual.opponent_score > dual.nc_score
-  const entered = bouts.filter((b) => b.hasResult).length
-  const isLive = dual.status === "in_progress"
-  const ncShort = teamName.replace(/^NC United\s+/i, "NC United") || "NC United"
-  const oppShort = dual.opponent_team_name
-
-  useEffect(() => {
-    const prev = document.body.style.overflow
-    document.body.style.overflow = "hidden"
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose()
-    }
-    window.addEventListener("keydown", onKey)
-    return () => {
-      document.body.style.overflow = prev
-      window.removeEventListener("keydown", onKey)
-    }
-  }, [onClose])
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex flex-col bg-[#eef1f5]"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Dual results"
-    >
-      <header className="shrink-0 bg-white border-b border-black/8 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-4 shadow-sm">
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
-              {isLive ? (
-                <span className="inline-flex items-center gap-1 text-green-600 mr-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-green-600 animate-pulse" />
-                  Live
-                </span>
-              ) : dual.status === "final" ? (
-                <span className="text-neutral-400 mr-2">Final</span>
-              ) : null}
-              {dayName}
-              {poolNumber != null ? ` · Pool ${poolNumber}` : ""}
-              {dual.round_name ? ` · ${dual.round_name}` : ""}
-            </p>
-            <p className="text-[10px] text-neutral-400 mt-0.5">{entered} of {bouts.length} bouts</p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="shrink-0 min-h-[44px] min-w-[44px] rounded-full bg-neutral-100 text-neutral-700 flex items-center justify-center"
-            aria-label="Close"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2">
-          <div className="text-center min-w-0">
-            <p className="text-[11px] font-bold uppercase text-[#B31B1B] truncate px-1">{ncShort}</p>
-            <div
-              className={cn(
-                "mt-1 rounded-lg border-2 px-2 py-2",
-                ncWin ? "border-[#B31B1B] bg-[#B31B1B]/5" : "border-neutral-200 bg-neutral-50"
-              )}
-            >
-              {ncWin ? (
-                <p className="text-[10px] font-bold uppercase text-[#B31B1B] mb-0.5">Winner</p>
-              ) : null}
-              <p className="text-3xl font-black tabular-nums text-[#B31B1B] leading-none">{dual.nc_score}</p>
-            </div>
-          </div>
-          <div className="text-center min-w-0">
-            <p className="text-[11px] font-bold uppercase text-emerald-700 truncate px-1 leading-tight line-clamp-2">
-              {oppShort}
-            </p>
-            <div
-              className={cn(
-                "mt-1 rounded-lg border-2 px-2 py-2",
-                ncLoss ? "border-emerald-600 bg-emerald-50" : "border-neutral-200 bg-neutral-50"
-              )}
-            >
-              {ncLoss ? (
-                <p className="text-[10px] font-bold uppercase text-emerald-700 mb-0.5">Winner</p>
-              ) : null}
-              <p className="text-3xl font-black tabular-nums text-emerald-800 leading-none">{dual.opponent_score}</p>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <div className="flex-1 overflow-y-auto overscroll-contain px-3 py-3 pb-[max(1rem,env(safe-area-inset-bottom))] space-y-2">
-        {bouts.map((bout) => (
-          <DualBoutCard key={bout.weight} bout={bout} />
-        ))}
-      </div>
-    </div>
+    <>
+      {bouts.map((bout) => (
+        <DualBoutCard key={bout.weight} bout={bout} />
+      ))}
+    </>
   )
 }
 
@@ -211,77 +118,95 @@ function DualBoutCard({ bout }: { bout: ReturnType<typeof buildDualBoutRows>[num
   )
 }
 
-/** Compact tappable row for dual list on dashboard. */
+/** Expandable dual row — tap to show/hide bout list inline (no full-screen overlay). */
 export function NhscaDualSummaryCard({
   item,
-  onClick,
+  snapshot,
+  expanded = false,
+  onToggle,
 }: {
   item: DualFeedItem
-  onClick: () => void
+  snapshot: NhscaDualsResultsSnapshot
+  expanded?: boolean
+  onToggle: () => void
 }) {
   const { dual, teamName, dayName, poolNumber } = item
   const ncWin = dual.nc_score > dual.opponent_score
   const ncLoss = dual.opponent_score > dual.nc_score
   const isLive = dual.status === "in_progress"
+  const bouts = expanded ? buildDualBoutRows(snapshot, dual) : []
+  const entered = bouts.filter((b) => b.hasResult).length
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <div
       className={cn(
-        "w-full text-left rounded-xl border px-3 py-3 min-h-[56px] active:bg-white/5 transition-colors",
-        isLive ? "border-green-500/40 bg-green-950/20" : "border-white/10 bg-[#002147]/45 hover:border-[#CBAF5D]/35"
+        "rounded-xl border overflow-hidden",
+        isLive ? "border-green-500/40 bg-green-950/20" : "border-white/10 bg-[#002147]/45"
       )}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            {isLive ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-green-600 px-1.5 py-0.5 text-[9px] font-bold uppercase text-white">
-                <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
-                Live
-              </span>
-            ) : dual.status === "final" ? (
-              <span className="text-[9px] font-bold uppercase text-white/40">Final</span>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={expanded}
+        className="w-full text-left px-3 py-3 min-h-[56px] active:bg-white/5 transition-colors hover:border-[#CBAF5D]/35"
+      >
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              {isLive ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-green-600 px-1.5 py-0.5 text-[9px] font-bold uppercase text-white">
+                  <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
+                  Live
+                </span>
+              ) : dual.status === "final" ? (
+                <span className="text-[9px] font-bold uppercase text-white/40">Final</span>
+              ) : (
+                <span className="text-[9px] font-bold uppercase text-white/40">Upcoming</span>
+              )}
+              <p className="text-[10px] text-white/40">
+                {dayName}
+                {poolNumber != null ? ` · P${poolNumber}` : ""}
+              </p>
+            </div>
+            <p className="text-sm font-bold text-white mt-0.5 leading-snug">vs {dual.opponent_team_name}</p>
+            {dual.round_name ? (
+              <p className="text-[10px] text-white/45 mt-0.5">{dual.round_name}</p>
             ) : (
-              <span className="text-[9px] font-bold uppercase text-white/40">Upcoming</span>
+              <p className="text-[10px] text-white/45 mt-0.5">{teamName}</p>
             )}
-            <p className="text-[10px] text-white/40">
-              {dayName}
-              {poolNumber != null ? ` · P${poolNumber}` : ""}
-            </p>
           </div>
-          <p className="text-sm font-bold text-white mt-0.5 leading-snug">
-            vs {dual.opponent_team_name}
-          </p>
-          {dual.round_name ? (
-            <p className="text-[10px] text-white/45 mt-0.5">{dual.round_name}</p>
-          ) : (
-            <p className="text-[10px] text-white/45 mt-0.5">{teamName}</p>
-          )}
+          <div className="shrink-0 text-right">
+            <p className="text-lg font-black tabular-nums leading-none">
+              <span className="text-[#CBAF5D]">{dual.nc_score}</span>
+              <span className="text-white/30 mx-0.5">–</span>
+              <span className="text-white">{dual.opponent_score}</span>
+            </p>
+            <span
+              className={cn(
+                "inline-block mt-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase",
+                ncWin && "bg-emerald-600/25 text-emerald-300",
+                ncLoss && "bg-red-600/20 text-red-300",
+                !ncWin && !ncLoss && "bg-white/10 text-white/50"
+              )}
+            >
+              {ncWin ? "Win" : ncLoss ? "Loss" : "Tie"}
+            </span>
+          </div>
         </div>
-        <div className="shrink-0 text-right">
-          <p className="text-lg font-black tabular-nums leading-none">
-            <span className="text-[#CBAF5D]">{dual.nc_score}</span>
-            <span className="text-white/30 mx-0.5">–</span>
-            <span className="text-white">{dual.opponent_score}</span>
+        <p className="text-[10px] text-[#CBAF5D]/80 mt-2 flex items-center gap-0.5">
+          {expanded ? "Hide bouts" : "View all bouts"}
+          <ChevronDown className={cn("h-3 w-3 transition-transform", expanded && "rotate-180")} />
+        </p>
+      </button>
+
+      {expanded ? (
+        <div className="border-t border-white/10 bg-[#eef1f5] px-2 py-2 space-y-2 max-h-[min(70vh,520px)] overflow-y-auto">
+          <p className="text-[10px] text-neutral-500 px-1 pt-0.5">
+            {entered} of {bouts.length} bouts
           </p>
-          <span
-            className={cn(
-              "inline-block mt-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase",
-              ncWin && "bg-emerald-600/25 text-emerald-300",
-              ncLoss && "bg-red-600/20 text-red-300",
-              !ncWin && !ncLoss && "bg-white/10 text-white/50"
-            )}
-          >
-            {ncWin ? "Win" : ncLoss ? "Loss" : "Tie"}
-          </span>
+          <NhscaDualBoutList snapshot={snapshot} dual={dual} />
         </div>
-      </div>
-      <p className="text-[10px] text-[#CBAF5D]/80 mt-2 flex items-center gap-0.5">
-        View all bouts
-        <ChevronRight className="h-3 w-3" />
-      </p>
-    </button>
+      ) : null}
+    </div>
   )
 }

@@ -1,15 +1,12 @@
 "use client"
 
 import type { ReactNode } from "react"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Activity, Trophy, Zap } from "lucide-react"
 import { HorizontalScrollRow } from "@/components/ui/horizontal-scroll-row"
 import { NhscaDualsTeamDashboard } from "@/components/national-team/nhsca-duals-team-dashboard"
-import {
-  NhscaDualsDualDetailSheet,
-  NhscaDualSummaryCard,
-} from "@/components/national-team/nhsca-duals-dual-detail-sheet"
-import type { CommandCenterDayFilter, CommandCenterScope, DualFeedItem } from "@/lib/nhsca-duals-command-center"
+import { NhscaDualSummaryCard } from "@/components/national-team/nhsca-duals-dual-detail-sheet"
+import type { CommandCenterDayFilter, CommandCenterScope } from "@/lib/nhsca-duals-command-center"
 import {
   buildDualFeed,
   getSummaryForScope,
@@ -20,12 +17,32 @@ import type { NhscaDualsResultsSnapshot } from "@/lib/nhsca-duals-live-results/t
 import { formatNetTeamPoints, wrestlerNetPoints } from "@/lib/nhsca-duals-live-results/scoring"
 import { cn } from "@/lib/utils"
 
-export function NhscaDualsResultsCommandCenter({ snapshot }: { snapshot: NhscaDualsResultsSnapshot }) {
-  const [scope, setScope] = useState<CommandCenterScope>("all")
+export function NhscaDualsResultsCommandCenter({
+  snapshot,
+  initialScope = "all",
+  onScopeChange,
+  archiveMode = false,
+}: {
+  snapshot: NhscaDualsResultsSnapshot
+  initialScope?: CommandCenterScope
+  onScopeChange?: (scope: CommandCenterScope) => void
+  /** Public archive — hide live badge noise, sync scope with page hero toggle */
+  archiveMode?: boolean
+}) {
+  const [scope, setScope] = useState<CommandCenterScope>(initialScope)
   const [dayFilter, setDayFilter] = useState<CommandCenterDayFilter>("all")
   const [athleteId, setAthleteId] = useState<string | null>(null)
   const [view, setView] = useState<"dashboard" | "duals">("dashboard")
-  const [openDual, setOpenDual] = useState<DualFeedItem | null>(null)
+  const [expandedDualId, setExpandedDualId] = useState<string | null>(null)
+
+  useEffect(() => {
+    setScope(initialScope)
+  }, [initialScope])
+
+  const setScopeBoth = (next: CommandCenterScope) => {
+    setScope(next)
+    onScopeChange?.(next)
+  }
 
   const sortedDays = useMemo(
     () => [...snapshot.days].sort((a, b) => a.sort_order - b.sort_order),
@@ -53,29 +70,33 @@ export function NhscaDualsResultsCommandCenter({ snapshot }: { snapshot: NhscaDu
 
   return (
     <div className="space-y-4">
-      {openDual ? (
-        <NhscaDualsDualDetailSheet item={openDual} snapshot={snapshot} onClose={() => setOpenDual(null)} />
-      ) : null}
       <header className="rounded-xl border border-white/10 bg-[#0a2040]/80 px-4 py-3">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <div className="flex items-center gap-2 mb-0.5">
-              <span className="inline-flex items-center gap-1 rounded-full bg-red-600/90 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
-                <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
-                Live
-              </span>
-              {liveDualCount > 0 ? (
-                <span className="text-[10px] text-white/45 truncate">
-                  {liveDualCount} dual{liveDualCount === 1 ? "" : "s"} now
+            {!archiveMode ? (
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="inline-flex items-center gap-1 rounded-full bg-red-600/90 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+                  <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
+                  Live
                 </span>
-              ) : null}
-            </div>
-            <h2 className="text-lg font-black text-white tracking-tight">NHSCA Duals Live</h2>
+                {liveDualCount > 0 ? (
+                  <span className="text-[10px] text-white/45 truncate">
+                    {liveDualCount} dual{liveDualCount === 1 ? "" : "s"} now
+                  </span>
+                ) : null}
+              </div>
+            ) : (
+              <p className="text-[10px] font-bold uppercase tracking-wider text-white/40 mb-0.5">Full results</p>
+            )}
+            <h2 className="text-lg font-black text-white tracking-tight">
+              {archiveMode ? "Duals & records" : "NHSCA Duals Live"}
+            </h2>
           </div>
-          <Activity className="h-6 w-6 text-[#CBAF5D]/50 shrink-0" aria-hidden />
+          {!archiveMode ? <Activity className="h-6 w-6 text-[#CBAF5D]/50 shrink-0" aria-hidden /> : null}
         </div>
       </header>
 
+      {!archiveMode ? (
       <div className="flex rounded-lg bg-[#0a2040] border border-white/10 p-0.5 gap-0.5">
         <button
           type="button"
@@ -98,7 +119,9 @@ export function NhscaDualsResultsCommandCenter({ snapshot }: { snapshot: NhscaDu
           Live duals
         </button>
       </div>
+      ) : null}
 
+      {!archiveMode ? (
       <FilterBar
         sortedDays={sortedDays}
         dayFilter={dayFilter}
@@ -108,10 +131,26 @@ export function NhscaDualsResultsCommandCenter({ snapshot }: { snapshot: NhscaDu
         }}
         scope={scope}
         onScopeChange={(s) => {
-          setScope(s)
+          setScopeBoth(s)
           setAthleteId(null)
         }}
       />
+      ) : (
+      <FilterBar
+        sortedDays={sortedDays}
+        dayFilter={dayFilter}
+        onDayChange={(d) => {
+          setDayFilter(d)
+          setAthleteId(null)
+        }}
+        scope={scope}
+        onScopeChange={(s) => {
+          setScopeBoth(s)
+          setAthleteId(null)
+        }}
+        hideTeamScope
+      />
+      )}
 
       <KpiStrip summary={summary} dayLabel={dayLabel} scope={scope} />
 
@@ -125,7 +164,6 @@ export function NhscaDualsResultsCommandCenter({ snapshot }: { snapshot: NhscaDu
             setAthleteId(id)
             setView("duals")
           }}
-          onOpenDual={setOpenDual}
         />
       ) : (
         <>
@@ -172,7 +210,7 @@ export function NhscaDualsResultsCommandCenter({ snapshot }: { snapshot: NhscaDu
             All duals
             {athleteId ? <span className="text-white/40 font-normal text-xs">· filtered</span> : null}
           </p>
-          <span className="text-[10px] text-white/35">Tap for bout results</span>
+          <span className="text-[10px] text-white/35">Tap to expand bouts</span>
         </div>
         <div className="p-3 sm:p-3 space-y-2.5 sm:max-h-[min(65vh,640px)] sm:overflow-y-auto">
           {filteredFeed.length === 0 ? (
@@ -181,7 +219,15 @@ export function NhscaDualsResultsCommandCenter({ snapshot }: { snapshot: NhscaDu
             </p>
           ) : (
             filteredFeed.map((item) => (
-              <NhscaDualSummaryCard key={item.dual.id} item={item} onClick={() => setOpenDual(item)} />
+              <NhscaDualSummaryCard
+                key={item.dual.id}
+                item={item}
+                snapshot={snapshot}
+                expanded={expandedDualId === item.dual.id}
+                onToggle={() =>
+                  setExpandedDualId((id) => (id === item.dual.id ? null : item.dual.id))
+                }
+              />
             ))
           )}
         </div>
@@ -198,12 +244,14 @@ function FilterBar({
   onDayChange,
   scope,
   onScopeChange,
+  hideTeamScope = false,
 }: {
   sortedDays: { id: string; name: string }[]
   dayFilter: CommandCenterDayFilter
   onDayChange: (d: CommandCenterDayFilter) => void
   scope: CommandCenterScope
   onScopeChange: (s: CommandCenterScope) => void
+  hideTeamScope?: boolean
 }) {
   const teamOptions: { id: CommandCenterScope; label: string }[] = [
     { id: "all", label: "All" },
@@ -223,6 +271,7 @@ function FilterBar({
           </FilterPill>
         ))}
       </HorizontalScrollRow>
+      {!hideTeamScope ? (
       <div className="flex rounded-lg bg-[#0a2040] border border-white/10 p-0.5 gap-0.5">
         {teamOptions.map((o) => (
           <button
@@ -238,6 +287,7 @@ function FilterBar({
           </button>
         ))}
       </div>
+      ) : null}
     </div>
   )
 }
