@@ -19,7 +19,7 @@ export const NHSCA_DUALS_2026_SELECT_WRESTLER_CARDS: SelectWrestlerCard[] = [
   { weightClass: "138", wrestler: "Cole Shuster", imageSrc: `${CARD_BASE}/cole-shuster-138.png` },
   { weightClass: "144", wrestler: "Jack Kancler", imageSrc: `${CARD_BASE}/jack-kancler-144.png` },
   { weightClass: "152", wrestler: "Jacob Perry", imageSrc: `${CARD_BASE}/jacob-perry-152.png` },
-  { weightClass: "160", wrestler: "Jon Burns" },
+  { weightClass: "160", wrestler: "Jon Burns", imageSrc: `${CARD_BASE}/jon-burns-160.png` },
   { weightClass: "160", wrestler: "Vincent Valentino" },
   { weightClass: "170", wrestler: "John Bane", imageSrc: `${CARD_BASE}/john-bane-170.png` },
   { weightClass: "183", wrestler: "Manny Kahsai", imageSrc: `${CARD_BASE}/manny-kahsai-183.png` },
