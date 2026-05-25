@@ -1,8 +1,9 @@
 import { parseNoteTags, splitMatchNotes } from "@/lib/nhsca-duals-match-notes"
-import { resultTypeTrackShort } from "@/lib/nhsca-duals-live-results/scoring"
+import { resultTypeTrackShort, toDisplayWeight } from "@/lib/nhsca-duals-live-results/scoring"
 import type { NhscaDualsResultsSnapshot, NhscaDualsTeamType } from "@/lib/nhsca-duals-live-results/types"
 import { findWrestlerForMatch } from "@/lib/nhsca-duals-resolve-nc-wrestler"
 import { NHSCA_DUALS_2026_BIG_WINS } from "@/lib/nhsca-duals-2026-big-wins"
+import { namesMatchRoster } from "@/lib/nhsca-duals-wrestler-card-stats"
 
 export type NhscaDualsBigWin = {
   id: string
@@ -76,4 +77,20 @@ export function buildNhscaDualsBigWins(snapshot: NhscaDualsResultsSnapshot): Nhs
     if (wt !== 0) return wt
     return a.wrestlerName.localeCompare(b.wrestlerName)
   })
+}
+
+/** Big wins for one athlete card (name + weight + team). */
+export function bigWinsForWrestlerCard(
+  all: NhscaDualsBigWin[],
+  cardName: string,
+  weightClass: string,
+  teamType: NhscaDualsTeamType
+): NhscaDualsBigWin[] {
+  const dw = toDisplayWeight(weightClass)
+  return all.filter(
+    (w) =>
+      w.teamType === teamType &&
+      w.weight === dw &&
+      namesMatchRoster(cardName, w.wrestlerName)
+  )
 }

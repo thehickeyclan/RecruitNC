@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { Loader2 } from "lucide-react"
 import { DualsWrestlerFlipCard } from "@/components/national-team/duals-wrestler-flip-card"
+import { DualsWrestlerSocialCard } from "@/components/national-team/duals-wrestler-social-card"
+import type { NhscaDualsBigWin } from "@/lib/nhsca-duals-big-wins"
+import { bigWinsForWrestlerCard } from "@/lib/nhsca-duals-big-wins"
 import type { NhscaDualsResultsSnapshot, NhscaDualsTeamType } from "@/lib/nhsca-duals-live-results/types"
 import {
   buildTeamWrestlerStatsIndex,
@@ -30,6 +33,7 @@ export function DualsTeamWrestlerCards({
   className,
   resultsSnapshot,
   variant = "hub",
+  bigWins = [],
 }: {
   cards: DualsWrestlerCardItem[]
   teamLabel: "National" | "Select"
@@ -37,6 +41,7 @@ export function DualsTeamWrestlerCards({
   className?: string
   resultsSnapshot?: NhscaDualsResultsSnapshot | null
   variant?: "hub" | "archive"
+  bigWins?: NhscaDualsBigWin[]
 }) {
   const teamApi = teamLabel === "Select" ? "select" : "national"
   const teamType: NhscaDualsTeamType = teamLabel === "Select" ? "select" : "national"
@@ -110,22 +115,46 @@ export function DualsTeamWrestlerCards({
           ) : null}
         </div>
       ) : (
-        <p className="text-[11px] font-bold uppercase tracking-wider text-[#CBAF5D]/80 mb-4">{teamLabel} team</p>
+        <p className="text-[11px] font-bold uppercase tracking-wider text-[#CBAF5D]/80 mb-1">
+          {teamLabel} team
+        </p>
       )}
+      {variant === "archive" ? (
+        <p className="text-xs text-white/50 mb-4">
+          Screenshot-friendly cards — photo, record, and big wins in one view.
+        </p>
+      ) : null}
       {cards.length > 0 ? (
         <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
           {cards.map((card) => {
             const s = effectiveStats[cardStatsKey(card.weightClass, card.wrestler)]
             const statsKey = s ? `${s.wins}-${s.losses}-${s.bouts.length}` : "0"
+            const wrestlerBigWins = bigWinsForWrestlerCard(bigWins, card.wrestler, card.weightClass, teamType)
+            const key = `${card.weightClass}-${card.wrestler}-${statsKey}`
+
+            if (variant === "archive") {
+              return (
+                <DualsWrestlerSocialCard
+                  key={key}
+                  wrestler={card.wrestler}
+                  weightClass={card.weightClass}
+                  imageSrc={card.imageSrc}
+                  teamLabel={teamLabel}
+                  stats={s ?? null}
+                  bigWins={wrestlerBigWins}
+                />
+              )
+            }
+
             return (
-            <DualsWrestlerFlipCard
-              key={`${card.weightClass}-${card.wrestler}-${statsKey}`}
-              wrestler={card.wrestler}
-              weightClass={card.weightClass}
-              imageSrc={card.imageSrc}
-              teamLabel={teamLabel}
-              stats={s ?? null}
-            />
+              <DualsWrestlerFlipCard
+                key={key}
+                wrestler={card.wrestler}
+                weightClass={card.weightClass}
+                imageSrc={card.imageSrc}
+                teamLabel={teamLabel}
+                stats={s ?? null}
+              />
             )
           })}
         </div>
