@@ -14,12 +14,15 @@ import {
   NHSCA_DUALS_DAY_1_NAME,
   NHSCA_DUALS_DAY_2_NAME,
   NHSCA_DUALS_NATIONAL_195_STARTERS,
+  NHSCA_DUALS_DAY_3_NAME,
+  NHSCA_DUALS_NATIONAL_DAY_3_DUALS,
   NHSCA_DUALS_NATIONAL_DAY_2_DUALS,
   NHSCA_DUALS_NATIONAL_INITIAL_DUALS,
   NHSCA_DUALS_NATIONAL_POOL,
   NHSCA_DUALS_NATIONAL_ROSTER,
   NHSCA_DUALS_NATIONAL_TEAM_LABEL,
   NHSCA_DUALS_SELECT_DAY_2_DUALS,
+  NHSCA_DUALS_SELECT_DAY_3_DUALS,
   NHSCA_DUALS_SELECT_INITIAL_DUALS,
   NHSCA_DUALS_SELECT_160_STARTERS,
   NHSCA_DUALS_SELECT_POOL,
@@ -569,10 +572,81 @@ export async function ensureNhscaDualsDay2Schedule(admin: SupabaseClient): Promi
   await backfillMissingNcWrestlerIds(admin, natTeam.id)
 }
 
+/** Idempotent Day 3 schedule from rosters.ts (National + Select). */
+export async function ensureNhscaDualsDay3Schedule(admin: SupabaseClient): Promise<void> {
+  const { data: teams } = await admin
+    .from("nhsca_duals_teams")
+    .select("id, team_type")
+    .eq("event_key", NHSCA_DUALS_EVENT_KEY)
+  const natTeam = teams?.find((t) => t.team_type === "national")
+  const selTeam = teams?.find((t) => t.team_type === "select")
+  if (!natTeam?.id) return
+
+  let dayId: string | null = null
+  const { data: dayRow } = await admin
+    .from("nhsca_duals_event_days")
+    .select("id")
+    .eq("event_key", NHSCA_DUALS_EVENT_KEY)
+    .eq("name", NHSCA_DUALS_DAY_3_NAME)
+    .maybeSingle()
+  dayId = (dayRow?.id as string) ?? null
+  if (!dayId) {
+    const { data: day } = await admin
+      .from("nhsca_duals_event_days")
+      .insert({ event_key: NHSCA_DUALS_EVENT_KEY, name: NHSCA_DUALS_DAY_3_NAME, sort_order: 3 })
+      .select("id")
+      .single()
+    dayId = (day?.id as string) ?? null
+  }
+  if (!dayId) return
+
+  const natPoolId = await ensureDay1Pool(admin, dayId, natTeam.id, NHSCA_DUALS_NATIONAL_POOL)
+  if (!natPoolId) return
+
+  const priorDualCount =
+    NHSCA_DUALS_NATIONAL_INITIAL_DUALS.length + NHSCA_DUALS_NATIONAL_DAY_2_DUALS.length
+  for (let i = 0; i < NHSCA_DUALS_NATIONAL_DAY_3_DUALS.length; i++) {
+    const d = NHSCA_DUALS_NATIONAL_DAY_3_DUALS[i]
+    await ensureScheduledDual(admin, {
+      team_id: natTeam.id,
+      day_id: dayId,
+      pool_id: natPoolId,
+      round_name: d.round,
+      opponent_team_name: d.opponent,
+      sort_order: priorDualCount + i + 1,
+    })
+  }
+
+  if (selTeam?.id) {
+    const selPoolId = await ensureDay1Pool(admin, dayId, selTeam.id, NHSCA_DUALS_SELECT_POOL)
+    if (selPoolId) {
+      const selPriorCount =
+        NHSCA_DUALS_SELECT_INITIAL_DUALS.length + NHSCA_DUALS_SELECT_DAY_2_DUALS.length
+      for (let i = 0; i < NHSCA_DUALS_SELECT_DAY_3_DUALS.length; i++) {
+        const d = NHSCA_DUALS_SELECT_DAY_3_DUALS[i]
+        await ensureScheduledDual(admin, {
+          team_id: selTeam.id,
+          day_id: dayId,
+          pool_id: selPoolId,
+          round_name: d.round,
+          opponent_team_name: d.opponent,
+          sort_order: selPriorCount + i + 1,
+        })
+      }
+      await ensureSelect160SplitStarters(admin, selTeam.id)
+      await backfillMissingNcWrestlerIds(admin, selTeam.id)
+    }
+  }
+
+  await ensureNational195SplitStarters(admin, natTeam.id)
+  await backfillMissingNcWrestlerIds(admin, natTeam.id)
+}
+
 export async function bootstrapNhscaDualsEvent(admin: SupabaseClient): Promise<void> {
   await seedNhscaDualsIfEmpty(admin)
   await ensureNhscaDualsDay1Schedule(admin)
   await ensureNhscaDualsDay2Schedule(admin)
+  await ensureNhscaDualsDay3Schedule(admin)
 }
 
 export async function saveNhscaDualsMatch(

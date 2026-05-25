@@ -65,6 +65,8 @@ export const NHSCA_DUALS_SELECT_160_STARTERS: Readonly<Record<string, string>> =
   "Rabbit Wrestling Club": "Jon Burns",
   "BlueWave": "Vincent Valentino",
   "Freakztyle Black": "Jon Burns",
+  "Team 922": "Jon Burns",
+  "Kraken Black": "Jon Burns",
 }
 
 /** National 195 lbs — Fares (Day 1) vs Luke Padgett (Day 2). Key = opponent_team_name. */
@@ -75,6 +77,8 @@ export const NHSCA_DUALS_NATIONAL_195_STARTERS: Readonly<Record<string, string>>
   "Storm Wrestling Center": "Luke Padgett",
   "Prestige Worldwide": "Luke Padgett",
   "The Shop 814": "Luke Padgett",
+  "BDTC Elite": "Luke Padgett",
+  "Freakztyle Supremacy": "Luke Padgett",
 }
 
 export const NHSCA_DUALS_NATIONAL_POOL = 6
@@ -83,6 +87,7 @@ export const NHSCA_DUALS_SELECT_POOL = 26
 /** Day 1 schedule is seeded from the arrays above. Day 2+ is added in code (not admin UI). */
 export const NHSCA_DUALS_DAY_1_NAME = "Day 1"
 export const NHSCA_DUALS_DAY_2_NAME = "Day 2"
+export const NHSCA_DUALS_DAY_3_NAME = "Day 3"
 
 /** National Day 2 — Championship pool (sort_order continues after Day 1). */
 export const NHSCA_DUALS_NATIONAL_DAY_2_DUALS = [
@@ -96,4 +101,16 @@ export const NHSCA_DUALS_SELECT_DAY_2_DUALS = [
   { round: "Round 1", opponent: "Rabbit Wrestling Club" },
   { round: "Round 2", opponent: "BlueWave" },
   { round: "Round 3", opponent: "Freakztyle Black" },
+] as const
+
+/** National Day 3 — Championship bracket (Monday). */
+export const NHSCA_DUALS_NATIONAL_DAY_3_DUALS = [
+  { round: "Round of 64", opponent: "BDTC Elite" },
+  { round: "Round of 32", opponent: "Freakztyle Supremacy" },
+] as const
+
+/** Select Day 3 — Consolation bracket (Monday). */
+export const NHSCA_DUALS_SELECT_DAY_3_DUALS = [
+  { round: "Round of 64", opponent: "Team 922" },
+  { round: "Consolation Round", opponent: "Kraken Black" },
 ] as const

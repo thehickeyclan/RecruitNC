@@ -8,11 +8,29 @@ export function notesFromTags(tags: readonly string[]): string | null {
   return parts.length ? parts.join(" · ") : null
 }
 
-export function parseNoteTags(notes: string | null | undefined): string[] {
-  const { tagPart } = splitMatchNotes(notes)
-  if (!tagPart) return []
+function tagsFromTagPart(tagPart: string | null | undefined): string[] {
+  if (!tagPart?.trim()) return []
   const parts = tagPart.split("·").map((s) => s.trim())
   return NOTE_TAGS.filter((tag) => parts.includes(tag))
+}
+
+/** True when the whole string is only known admin tags (no score line). */
+function tagsOnlyString(notes: string): string | null {
+  const trimmed = notes.trim()
+  const matched = tagsFromTagPart(trimmed)
+  if (!matched.length) return null
+  return notesFromTags(matched) === trimmed ? trimmed : null
+}
+
+export function parseNoteTags(notes: string | null | undefined): string[] {
+  if (!notes?.trim()) return []
+  const idx = notes.indexOf(SCORE_TAG_SEP)
+  if (idx === -1) {
+    const tagOnly = tagsOnlyString(notes)
+    return tagOnly ? tagsFromTagPart(tagOnly) : []
+  }
+  const tagPart = notes.slice(idx + SCORE_TAG_SEP.length).trim() || null
+  return tagsFromTagPart(tagPart)
 }
 
 export function splitMatchNotes(notes: string | null | undefined): {
@@ -22,10 +40,8 @@ export function splitMatchNotes(notes: string | null | undefined): {
   if (!notes?.trim()) return { scoreLine: null, tagPart: null }
   const idx = notes.indexOf(SCORE_TAG_SEP)
   if (idx === -1) {
-    const tags = parseNoteTags(notes)
-    if (tags.length && notesFromTags(tags) === notes.trim()) {
-      return { scoreLine: null, tagPart: notes.trim() }
-    }
+    const tagOnly = tagsOnlyString(notes)
+    if (tagOnly) return { scoreLine: null, tagPart: tagOnly }
     return { scoreLine: notes.trim(), tagPart: null }
   }
   const scoreLine = notes.slice(0, idx).trim() || null
