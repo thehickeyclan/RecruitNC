@@ -15,6 +15,7 @@ import {
   bootstrapNhscaDualsEvent,
   ensureNhscaDualsDay1Schedule,
   ensureNhscaDualsDay2Schedule,
+  ensureNhscaDualsDay3Schedule,
   fetchNhscaDualsSnapshot,
   pruneNhscaDualsTestDuals,
   resetAllEventMatchResults,
@@ -58,6 +59,7 @@ export async function GET(request: NextRequest) {
     try {
       await ensureNhscaDualsDay1Schedule(admin)
       await ensureNhscaDualsDay2Schedule(admin)
+      await ensureNhscaDualsDay3Schedule(admin)
       snap = await fetchNhscaDualsSnapshot(admin)
     } catch (e) {
       console.error("[RecruitNC] nhsca duals day1 schedule", e)
