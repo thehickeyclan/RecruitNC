@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { Shield, Star, Trophy } from "lucide-react"
+import { Star, Trophy } from "lucide-react"
 import { NhscaDualSummaryCard } from "@/components/national-team/nhsca-duals-dual-detail-sheet"
 import type { CommandCenterDayFilter, CommandCenterScope } from "@/lib/nhsca-duals-command-center"
 import {
@@ -101,12 +101,14 @@ export function NhscaDualsTeamDashboard({
   scope,
   dayFilter,
   dayLabel,
+  archiveMode = false,
   onSelectAthlete,
 }: {
   snapshot: NhscaDualsResultsSnapshot
   scope: CommandCenterScope
   dayFilter: CommandCenterDayFilter
   dayLabel: string
+  archiveMode?: boolean
   onSelectAthlete?: (wrestlerId: string) => void
 }) {
   const rows = useMemo(
@@ -115,19 +117,9 @@ export function NhscaDualsTeamDashboard({
   )
 
   const topPointScorers = useMemo(() => rows.filter((r) => r.bouts > 0).slice(0, 12), [rows])
-  const undefeatedRows = useMemo(
-    () =>
-      rows
-        .filter((r) => r.wins > 0 && r.losses === 0)
-        .sort(
-          (a, b) => wrestlerNetPoints(b.pointsFor, b.pointsAgainst) - wrestlerNetPoints(a.pointsFor, a.pointsAgainst)
-        ),
-    [rows]
-  )
 
   const scopeLabel = scope === "all" ? "Both teams" : scope === "national" ? "National" : "Select"
   const topScorerIds = new Set(topPointScorers.map((s) => s.wrestlerId))
-  const undefeatedIds = new Set(undefeatedRows.map((u) => u.wrestlerId))
 
   return (
     <div className="space-y-4">
@@ -138,7 +130,8 @@ export function NhscaDualsTeamDashboard({
             Team dual results
           </h3>
           <p className="text-[10px] text-white/40 mt-0.5">
-            Tap a dual to expand every bout · {scopeLabel} · {dayLabel}
+            Tap a dual to expand every bout · {scopeLabel}
+            {dayLabel ? ` · ${dayLabel}` : ""}
           </p>
         </header>
         <div className="p-3">
@@ -147,7 +140,7 @@ export function NhscaDualsTeamDashboard({
       </section>
 
       <div className="space-y-4 lg:grid lg:grid-cols-[1fr_min(280px,32%)] lg:gap-4 lg:space-y-0">
-        <section className="rounded-xl border border-white/10 bg-[#0a2040]/60 overflow-hidden min-w-0">
+        <section id={archiveMode ? "leaderboard" : undefined} className="rounded-xl border border-white/10 bg-[#0a2040]/60 overflow-hidden min-w-0 scroll-mt-24">
           <header className="px-3 py-2.5 border-b border-white/10 bg-[#002147]/35">
             <h3 className="text-sm font-bold text-white">Athlete records</h3>
             <p className="text-[10px] text-white/40 mt-0.5">All bouts · sorted by net team points</p>
@@ -172,7 +165,6 @@ export function NhscaDualsTeamDashboard({
                         <p className="text-[10px] text-white/45 mt-0.5">
                           {r.displayWeight} lbs
                           {scope === "all" ? ` · ${r.teamLabel}` : ""}
-                          {undefeatedIds.has(r.wrestlerId) && r.bouts > 0 ? " · Undefeated" : ""}
                         </p>
                       </div>
                       <div className="shrink-0 text-right">
@@ -216,15 +208,11 @@ export function NhscaDualsTeamDashboard({
                 ) : (
                   rows.map((r) => {
                     const net = wrestlerNetPoints(r.pointsFor, r.pointsAgainst)
-                    const isUndefeated = undefeatedIds.has(r.wrestlerId) && r.bouts > 0
                     const isTopScorer = topScorerIds.has(r.wrestlerId)
                     return (
                       <tr
                         key={r.wrestlerId}
-                        className={cn(
-                          "border-b border-white/5 last:border-0 hover:bg-white/[0.03]",
-                          isUndefeated && "bg-[#CBAF5D]/5"
-                        )}
+                        className="border-b border-white/5 last:border-0 hover:bg-white/[0.03]"
                       >
                         <td className="py-2.5 pl-3 pr-2 align-middle">
                           <button
@@ -234,11 +222,6 @@ export function NhscaDualsTeamDashboard({
                           >
                             {r.name}
                           </button>
-                          {isUndefeated ? (
-                            <span className="ml-1.5 inline-block rounded px-1 py-0.5 text-[9px] font-bold uppercase bg-[#CBAF5D]/20 text-[#CBAF5D]">
-                              Undefeated
-                            </span>
-                          ) : null}
                           {isTopScorer && r.bouts > 0 ? (
                             <span className="ml-1 inline-block rounded px-1 py-0.5 text-[9px] font-bold uppercase bg-white/10 text-white/55">
                               Top pts
@@ -286,36 +269,6 @@ export function NhscaDualsTeamDashboard({
         </section>
 
         <div className="space-y-3 lg:space-y-3">
-          <LeaderPanel title="Undefeated" icon={<Shield className="h-3.5 w-3.5" />} empty="No undefeated wrestlers yet.">
-            {undefeatedRows.length > 0 ? (
-              <ul className="space-y-1.5">
-                {undefeatedRows.map((u) => {
-                  const net = wrestlerNetPoints(u.pointsFor, u.pointsAgainst)
-                  return (
-                    <li key={u.wrestlerId}>
-                      <button
-                        type="button"
-                        onClick={() => onSelectAthlete?.(u.wrestlerId)}
-                        className="w-full flex items-center justify-between gap-2 rounded-lg bg-[#002147]/45 border border-white/8 px-2.5 py-2 min-h-[44px] text-left hover:border-[#CBAF5D]/35 transition-colors"
-                      >
-                        <span className="min-w-0">
-                          <span className="block text-sm font-semibold text-white truncate">{u.name}</span>
-                          <span className="text-[10px] text-white/45">
-                            {u.displayWeight} lbs
-                            {scope === "all" ? ` · ${u.teamLabel}` : ""}
-                          </span>
-                        </span>
-                        <span className="text-xs font-bold text-emerald-400 tabular-nums shrink-0">
-                          {u.wins}–0 · {formatNetTeamPoints(net)}
-                        </span>
-                      </button>
-                    </li>
-                  )
-                })}
-              </ul>
-            ) : null}
-          </LeaderPanel>
-
           <LeaderPanel
             title="Net team points"
             icon={<Star className="h-3.5 w-3.5" />}

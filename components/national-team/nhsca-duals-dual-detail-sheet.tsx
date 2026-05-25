@@ -26,24 +26,24 @@ export function NhscaDualBoutList({
 function DualBoutCard({ bout }: { bout: ReturnType<typeof buildDualBoutRows>[number] }) {
   if (!bout.hasResult) {
     return (
-      <div className="rounded-xl border border-neutral-200 bg-white/70 px-3 py-2.5 flex items-center gap-3 opacity-60">
-        <span className="text-[11px] font-bold text-neutral-500 bg-neutral-100 rounded-md px-2 py-1 shrink-0">
+      <div className="rounded-xl border border-white/10 bg-[#002147]/50 px-3 py-2.5 flex items-center gap-3 opacity-70">
+        <span className="text-[11px] font-bold text-white/55 bg-white/10 rounded-md px-2 py-1 shrink-0">
           {bout.weight}
         </span>
-        <span className="text-xs text-neutral-400">Not wrestled yet</span>
+        <span className="text-xs text-white/40">Not wrestled yet</span>
       </div>
     )
   }
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white shadow-sm overflow-hidden">
+    <div className="rounded-xl border border-white/10 bg-[#002147]/55 shadow-sm overflow-hidden">
       <div className="flex items-start gap-2 px-2.5 pt-2.5 pb-2">
-        <span className="text-[11px] font-bold text-neutral-600 bg-neutral-100 rounded-md px-2 py-1 shrink-0 mt-5">
+        <span className="text-[11px] font-bold text-white/70 bg-white/10 rounded-md px-2 py-1 shrink-0 mt-5">
           {bout.weight}
         </span>
 
         <div className="flex-1 min-w-0">
-          <p className="text-center text-[11px] font-bold text-neutral-800 tracking-tight mb-1.5">
+          <p className="text-center text-[11px] font-bold text-white/90 tracking-tight mb-1.5">
             {bout.resultDisplay}
           </p>
 
@@ -51,13 +51,13 @@ function DualBoutCard({ bout }: { bout: ReturnType<typeof buildDualBoutRows>[num
             <div
               className={cn(
                 "rounded-lg border-2 px-2 py-1.5 min-h-[52px] flex flex-col justify-center",
-                bout.ncWon ? "border-[#B31B1B] bg-[#B31B1B]/5" : "border-neutral-200 bg-neutral-50"
+                bout.ncWon ? "border-[#B31B1B] bg-[#B31B1B]/15" : "border-white/15 bg-white/5"
               )}
             >
               <p
                 className={cn(
                   "text-sm font-semibold leading-tight truncate",
-                  bout.ncWon ? "text-[#B31B1B]" : "text-neutral-500"
+                  bout.ncWon ? "text-[#CBAF5D]" : "text-white/45"
                 )}
               >
                 {bout.ncNameShort}
@@ -65,7 +65,7 @@ function DualBoutCard({ bout }: { bout: ReturnType<typeof buildDualBoutRows>[num
               <p
                 className={cn(
                   "text-lg font-black tabular-nums leading-none mt-0.5",
-                  bout.ncPoints > 0 ? "text-[#B31B1B]" : "text-neutral-300"
+                  bout.ncPoints > 0 ? "text-[#CBAF5D]" : "text-white/20"
                 )}
               >
                 {bout.ncPoints}
@@ -75,9 +75,9 @@ function DualBoutCard({ bout }: { bout: ReturnType<typeof buildDualBoutRows>[num
             <div className="flex flex-col items-center justify-center px-0.5 shrink-0" aria-hidden>
               <span
                 className={cn(
-                  "text-[10px] font-bold text-neutral-300",
-                  bout.ncWon && "text-[#B31B1B]",
-                  bout.opponentWon && "text-emerald-600"
+                  "text-[10px] font-bold text-white/25",
+                  bout.ncWon && "text-[#CBAF5D]",
+                  bout.opponentWon && "text-emerald-400"
                 )}
               >
                 {bout.opponentWon ? "▶" : "◀"}
@@ -87,13 +87,13 @@ function DualBoutCard({ bout }: { bout: ReturnType<typeof buildDualBoutRows>[num
             <div
               className={cn(
                 "rounded-lg border-2 px-2 py-1.5 min-h-[52px] flex flex-col justify-center items-end text-right",
-                bout.opponentWon ? "border-emerald-600 bg-emerald-50" : "border-neutral-200 bg-neutral-50"
+                bout.opponentWon ? "border-emerald-500/50 bg-emerald-950/35" : "border-white/15 bg-white/5"
               )}
             >
               <p
                 className={cn(
                   "text-sm font-semibold leading-tight truncate max-w-full",
-                  bout.opponentWon ? "text-emerald-800" : "text-neutral-500"
+                  bout.opponentWon ? "text-emerald-300" : "text-white/45"
                 )}
               >
                 {bout.opponentNameShort || "\u00a0"}
@@ -101,7 +101,7 @@ function DualBoutCard({ bout }: { bout: ReturnType<typeof buildDualBoutRows>[num
               <p
                 className={cn(
                   "text-lg font-black tabular-nums leading-none mt-0.5",
-                  bout.opponentPoints > 0 ? "text-emerald-700" : "text-neutral-300"
+                  bout.opponentPoints > 0 ? "text-emerald-400" : "text-white/20"
                 )}
               >
                 {bout.opponentPoints}
@@ -112,7 +112,7 @@ function DualBoutCard({ bout }: { bout: ReturnType<typeof buildDualBoutRows>[num
       </div>
 
       {bout.noteTags ? (
-        <p className="px-3 pb-2 text-[10px] text-amber-700/90 border-t border-neutral-100 pt-1.5">{bout.noteTags}</p>
+        <p className="px-3 pb-2 text-[10px] text-amber-400/90 border-t border-white/10 pt-1.5">{bout.noteTags}</p>
       ) : null}
     </div>
   )
@@ -200,8 +200,8 @@ export function NhscaDualSummaryCard({
       </button>
 
       {expanded ? (
-        <div className="border-t border-white/10 bg-[#eef1f5] px-2 py-2 space-y-2 max-h-[min(70vh,520px)] overflow-y-auto">
-          <p className="text-[10px] text-neutral-500 px-1 pt-0.5">
+        <div className="border-t border-white/10 bg-[#001428]/90 px-2 py-2 space-y-2 max-h-[min(70vh,520px)] overflow-y-auto">
+          <p className="text-[10px] text-white/45 px-1 pt-0.5">
             {entered} of {bouts.length} bouts
           </p>
           <NhscaDualBoutList snapshot={snapshot} dual={dual} />

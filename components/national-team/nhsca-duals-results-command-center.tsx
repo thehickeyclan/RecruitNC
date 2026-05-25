@@ -135,31 +135,19 @@ export function NhscaDualsResultsCommandCenter({
           setAthleteId(null)
         }}
       />
-      ) : (
-      <FilterBar
-        sortedDays={sortedDays}
-        dayFilter={dayFilter}
-        onDayChange={(d) => {
-          setDayFilter(d)
-          setAthleteId(null)
-        }}
-        scope={scope}
-        onScopeChange={(s) => {
-          setScopeBoth(s)
-          setAthleteId(null)
-        }}
-        hideTeamScope
-      />
-      )}
+      ) : null}
 
-      <KpiStrip summary={summary} dayLabel={dayLabel} scope={scope} />
+      {!archiveMode ? (
+        <KpiStrip summary={summary} dayLabel={dayLabel} scope={scope} hideDayLabel={false} />
+      ) : null}
 
       {view === "dashboard" ? (
         <NhscaDualsTeamDashboard
           snapshot={snapshot}
           scope={scope}
           dayFilter={dayFilter}
-          dayLabel={dayLabel}
+          dayLabel={archiveMode ? "" : dayLabel}
+          archiveMode={archiveMode}
           onSelectAthlete={(id) => {
             setAthleteId(id)
             setView("duals")
@@ -321,10 +309,12 @@ function KpiStrip({
   summary,
   dayLabel,
   scope,
+  hideDayLabel = false,
 }: {
   summary: ReturnType<typeof getSummaryForScope>
   dayLabel: string
   scope: CommandCenterScope
+  hideDayLabel?: boolean
 }) {
   const scopeLabel = scope === "all" ? "Both teams" : scope === "national" ? "National" : "Select"
   const tiles = [
@@ -336,7 +326,8 @@ function KpiStrip({
   return (
     <div>
       <p className="text-[10px] uppercase tracking-wider text-white/35 mb-1.5 px-0.5">
-        {scopeLabel} · {dayLabel}
+        {scopeLabel}
+        {!hideDayLabel && dayLabel ? ` · ${dayLabel}` : ""}
       </p>
       <div className="grid grid-cols-3 gap-2">
         {tiles.map((t) => (
