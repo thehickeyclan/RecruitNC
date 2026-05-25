@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { fetchNhscaDualsSnapshot } from "@/lib/nhsca-duals-live-results/db"
+import {
+  bootstrapNhscaDualsEvent,
+  ensureNhscaDualsDay1Schedule,
+  ensureNhscaDualsDay2Schedule,
+  ensureNhscaDualsDay3Schedule,
+  fetchNhscaDualsSnapshot,
+} from "@/lib/nhsca-duals-live-results/db"
 import { buildNhscaDualsBigWins } from "@/lib/nhsca-duals-big-wins"
 
 export const dynamic = "force-dynamic"
@@ -8,7 +14,29 @@ export const dynamic = "force-dynamic"
 /** Public read-only NHSCA Duals 2026 results for the archive page (no sign-in). */
 export async function GET() {
   const admin = createAdminClient()
-  const snap = await fetchNhscaDualsSnapshot(admin)
+  let snap = await fetchNhscaDualsSnapshot(admin)
+
+  async function ensureSchedules() {
+    if (!snap.ok || snap.data.teams.length === 0) return
+    await ensureNhscaDualsDay1Schedule(admin)
+    await ensureNhscaDualsDay2Schedule(admin)
+    await ensureNhscaDualsDay3Schedule(admin)
+    snap = await fetchNhscaDualsSnapshot(admin)
+  }
+
+  try {
+    if (snap.ok && snap.data.teams.length > 0) {
+      await ensureSchedules()
+    } else {
+      await bootstrapNhscaDualsEvent(admin)
+      snap = await fetchNhscaDualsSnapshot(admin)
+      if (snap.ok && snap.data.teams.length > 0) {
+        await ensureSchedules()
+      }
+    }
+  } catch (e) {
+    console.error("[RecruitNC] nhsca duals public bootstrap", e)
+  }
 
   if (!snap.ok) {
     return NextResponse.json(

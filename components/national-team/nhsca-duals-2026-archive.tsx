@@ -47,16 +47,21 @@ export function NhscaDuals2026ArchivePage() {
   useEffect(() => {
     let cancelled = false
     setLoading(true)
+    setError(null)
     fetch("/api/national-team/duals-results/public", { cache: "no-store" })
-      .then((r) => {
-        if (!r.ok) throw new Error(r.status === 503 ? "Results not ready yet." : `Failed (${r.status})`)
+      .then(async (r) => {
+        if (r.status === 503) {
+          const body = (await r.json().catch(() => ({}))) as { message?: string }
+          throw new Error(body.message ?? "Results not ready yet.")
+        }
+        if (!r.ok) throw new Error(`Failed (${r.status})`)
         return r.json() as Promise<PublicSnapshot>
       })
       .then((json) => {
         if (!cancelled) setData(json)
       })
       .catch((e) => {
-        if (!cancelled) setError(e instanceof Error ? e.message : "Could not load results.")
+        if (!cancelled) setError(e instanceof Error ? e.message : "Could not load dual results.")
       })
       .finally(() => {
         if (!cancelled) setLoading(false)

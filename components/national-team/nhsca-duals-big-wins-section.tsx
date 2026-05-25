@@ -1,9 +1,11 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import Image from "next/image"
 import { ChevronDown, Sparkles, Trophy } from "lucide-react"
 import type { NhscaDualsBigWin } from "@/lib/nhsca-duals-big-wins"
 import type { CommandCenterScope } from "@/lib/nhsca-duals-command-center"
+import { featuredSpotlightsForScope } from "@/lib/nhsca-duals-2026-featured-spotlights"
 import { cn } from "@/lib/utils"
 
 export function NhscaDualsBigWinsSection({
@@ -19,6 +21,8 @@ export function NhscaDualsBigWinsSection({
     if (scope === "all") return bigWins
     return bigWins.filter((w) => w.teamType === scope)
   }, [bigWins, scope])
+
+  const spotlights = useMemo(() => featuredSpotlightsForScope(scope), [scope])
 
   return (
     <section className="rounded-2xl border border-[#CBAF5D]/25 bg-gradient-to-br from-[#0a2040]/90 to-[#001428] overflow-hidden">
@@ -38,14 +42,33 @@ export function NhscaDualsBigWinsSection({
           </span>
         </span>
         <span className="shrink-0 rounded-full bg-[#CBAF5D]/15 px-2.5 py-1 text-sm font-black tabular-nums text-[#CBAF5D]">
-          {filtered.length}
+          {filtered.length + spotlights.length}
         </span>
         <ChevronDown className={cn("h-5 w-5 text-white/45 shrink-0 transition-transform", open && "rotate-180")} />
       </button>
 
       {open ? (
-        <div className="p-4 sm:p-5">
-          {filtered.length === 0 ? (
+        <div className="p-4 sm:p-5 space-y-6">
+          {spotlights.map((spotlight) => (
+            <figure key={spotlight.id} className="overflow-hidden rounded-xl border border-white/10 bg-[#002147]/40">
+              <div className="relative w-full aspect-[3/4] sm:aspect-[4/3] max-h-[480px] sm:max-h-[420px]">
+                <Image
+                  src={spotlight.photoSrc}
+                  alt={`${spotlight.wrestler} at NHSCA Duals 2026`}
+                  fill
+                  className="object-cover object-top sm:object-center"
+                  sizes="(max-width: 768px) 100vw, 896px"
+                />
+              </div>
+              <figcaption className="px-4 sm:px-5 py-4 border-t border-white/10">
+                <p className="text-sm sm:text-base text-white/85 leading-relaxed italic text-center max-w-2xl mx-auto">
+                  {spotlight.caption}
+                </p>
+              </figcaption>
+            </figure>
+          ))}
+
+          {filtered.length === 0 && spotlights.length === 0 ? (
             <div className="rounded-xl border border-dashed border-white/15 bg-white/[0.02] px-4 py-10 text-center">
               <Sparkles className="h-8 w-8 mx-auto mb-3 text-[#CBAF5D]/40" aria-hidden />
               <p className="text-sm font-semibold text-white/75">Big wins coming soon</p>
@@ -54,6 +77,10 @@ export function NhscaDualsBigWinsSection({
                 we&apos;ll add them — or tag bouts as &quot;Big win&quot; in Enter results.
               </p>
             </div>
+          ) : filtered.length === 0 && spotlights.length > 0 ? (
+            <p className="text-center text-xs text-white/40 italic">
+              Individual bout cards appear here as more wins are tagged in results.
+            </p>
           ) : (
             <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {filtered.map((win) => (

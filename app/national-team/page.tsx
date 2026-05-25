@@ -24,6 +24,34 @@ export default function NCUnitedNationalTeam() {
     teamRecordWinPercentage: 0,
   })
   const [nhscaLineupCount, setNhscaLineupCount] = useState<number | null>(null)
+  const [nhsca2026Stats, setNhsca2026Stats] = useState<{
+    dualRecord: string
+    individual: string
+    winPct: number | null
+    ready: boolean
+  } | null>(null)
+
+  useEffect(() => {
+    fetch("/api/national-team/duals-results/public", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data?.summaries?.national || !data?.summaries?.select) return
+        const n = data.summaries.national
+        const s = data.summaries.select
+        const dualW = n.dualWins + s.dualWins
+        const dualL = n.dualLosses + s.dualLosses
+        const matchW = n.matchWins + s.matchWins
+        const matchL = n.matchLosses + s.matchLosses
+        const total = matchW + matchL
+        setNhsca2026Stats({
+          dualRecord: `${dualW}-${dualL}`,
+          individual: `${matchW}-${matchL}`,
+          winPct: total > 0 ? Math.round((matchW / total) * 100) : null,
+          ready: true,
+        })
+      })
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     fetch("/api/national-team/lineup/nhsca-2026", { credentials: "include" })
@@ -199,12 +227,20 @@ export default function NCUnitedNationalTeam() {
                   <p className="text-[#002147] font-bold">NHSCA Duals 2026</p>
                   <p className="text-sm text-gray-600 mt-0.5">Countdown &amp; live updates are at the top of this page.</p>
                 </div>
-                <HardLink
-                  href="/national-team/hub"
-                  className="inline-flex min-h-[44px] shrink-0 items-center justify-center rounded-xl bg-[#002147] px-5 py-2.5 text-sm font-semibold text-[#D3B574] hover:bg-[#003366] transition-colors"
-                >
-                  NHSCA team hub →
-                </HardLink>
+                <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+                  <HardLink
+                    href="/national-team/nhsca-duals-2026-results"
+                    className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-[#CBAF5D] px-5 py-2.5 text-sm font-semibold text-[#002147] hover:bg-[#d4bc7a] transition-colors"
+                  >
+                    View results &amp; cards →
+                  </HardLink>
+                  <HardLink
+                    href="/national-team/hub"
+                    className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-[#002147] px-5 py-2.5 text-sm font-semibold text-[#D3B574] hover:bg-[#003366] transition-colors"
+                  >
+                    Team hub →
+                  </HardLink>
+                </div>
               </div>
               {/* AAU — blue tile (coming soon) */}
               <Link
@@ -305,6 +341,67 @@ export default function NCUnitedNationalTeam() {
             </div>
           ) : (
             <div className="grid lg:grid-cols-2 gap-8 md:gap-12 max-w-7xl mx-auto">
+              {/* NHSCA Duals 2026 — National & Select */}
+              <Card className="overflow-hidden shadow-lg border-0 lg:col-span-2">
+                <div
+                  className="relative h-64 md:h-80 bg-cover bg-center bg-no-repeat"
+                  style={{ backgroundImage: "url('/national-team/nhsca-duals-2026/both-teams-photo.png')" }}
+                >
+                  <div className="absolute inset-0 bg-black/45"></div>
+                  <div className="relative z-10 p-6 md:p-8 h-full flex flex-col justify-end text-white">
+                    <Badge className="w-fit mb-3 md:mb-4 bg-[#CBAF5D] hover:bg-[#CBAF5D] text-[#002147] border-0">
+                      2026
+                    </Badge>
+                    <h3 className="text-2xl md:text-3xl font-bold mb-2 md:mb-3">NHSCA Duals</h3>
+                    <p className="text-gray-100 text-base md:text-lg">Virginia Beach, VA · National &amp; Select teams</p>
+                  </div>
+                </div>
+                <CardContent className="p-6 md:p-8">
+                  <div className="space-y-4 md:space-y-6">
+                    <div className="grid grid-cols-2 gap-4 md:gap-6">
+                      <div className="text-center p-3 md:p-4 bg-[#002147] rounded-lg">
+                        <div className="text-2xl md:text-3xl font-bold text-white mb-1">
+                          {nhsca2026Stats?.ready ? nhsca2026Stats.dualRecord : "—"}
+                        </div>
+                        <div className="text-xs md:text-sm text-blue-200">Combined Dual Record</div>
+                      </div>
+                      <div className="text-center p-3 md:p-4 bg-gray-100 rounded-lg">
+                        <div className="text-2xl md:text-3xl font-bold text-[#002147] mb-1">
+                          {nhsca2026Stats?.ready ? nhsca2026Stats.individual : "—"}
+                        </div>
+                        <div className="text-xs md:text-sm text-gray-600">Individual Matches</div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 md:gap-6">
+                      <div className="text-center p-3 md:p-4 bg-gray-100 rounded-lg">
+                        <div className="text-2xl md:text-3xl font-bold text-[#002147] mb-1">
+                          {nhsca2026Stats?.ready && nhsca2026Stats.winPct != null
+                            ? `${nhsca2026Stats.winPct}%`
+                            : "—"}
+                        </div>
+                        <div className="text-xs md:text-sm text-gray-600">Win Percentage</div>
+                      </div>
+                      <div className="text-center p-3 md:p-4 bg-[#CBAF5D]/10 rounded-lg">
+                        <div className="text-lg md:text-2xl font-bold text-[#CBAF5D] mb-1">
+                          National &amp; Select
+                        </div>
+                        <div className="text-xs md:text-sm text-gray-600">Teams</div>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 md:pt-6 border-t">
+                      <HardLink
+                        href="/national-team/nhsca-duals-2026-results"
+                        className="flex w-full min-h-[48px] items-center justify-center rounded-md bg-[#B31B1B] px-4 py-2 text-sm font-semibold text-white hover:bg-[#9a1616] transition-colors"
+                      >
+                        View Full Results &amp; Athlete Cards
+                      </HardLink>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* UCD 2025 */}
               {ucd2025 && (
                 <Card className="overflow-hidden shadow-lg border-0">

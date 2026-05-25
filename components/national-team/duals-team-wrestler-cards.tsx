@@ -61,8 +61,12 @@ export function DualsTeamWrestlerCards({
 
   const loadStats = useCallback(async () => {
     try {
-      const r = await fetch(`/api/national-team/duals-wrestler-stats?team=${teamApi}&_=${Date.now()}`, {
-        credentials: "include",
+      const statsPath =
+        variant === "archive"
+          ? `/api/national-team/duals-wrestler-stats/public?team=${teamApi}`
+          : `/api/national-team/duals-wrestler-stats?team=${teamApi}`
+      const r = await fetch(`${statsPath}&_=${Date.now()}`, {
+        credentials: variant === "archive" ? "same-origin" : "include",
         cache: "no-store",
       })
       if (!r.ok) return
@@ -73,7 +77,7 @@ export function DualsTeamWrestlerCards({
     } finally {
       setStatsLoading(false)
     }
-  }, [teamApi])
+  }, [teamApi, variant])
 
   useEffect(() => {
     if (resultsSnapshot) {
@@ -120,12 +124,12 @@ export function DualsTeamWrestlerCards({
         </p>
       )}
       {variant === "archive" ? (
-        <p className="text-xs text-white/50 mb-4">
-          Screenshot-friendly cards — photo, record, and big wins in one view.
+        <p className="text-xs text-white/50 mb-3 sm:mb-4 leading-relaxed">
+          Designed card art with live duals stats — use the gallery at the bottom for in-action tournament photos.
         </p>
       ) : null}
       {cards.length > 0 ? (
-        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
           {cards.map((card) => {
             const s = effectiveStats[cardStatsKey(card.weightClass, card.wrestler)]
             const statsKey = s ? `${s.wins}-${s.losses}-${s.bouts.length}` : "0"
