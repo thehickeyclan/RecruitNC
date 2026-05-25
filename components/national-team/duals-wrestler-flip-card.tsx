@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Image from "next/image"
-import { Card } from "@/components/ui/card"
-import { RotateCw } from "lucide-react"
+import { ChevronDown, RotateCw } from "lucide-react"
 import type { NhscaDualsWrestlerCardStats } from "@/lib/nhsca-duals-wrestler-card-stats"
 import { formatNetTeamPoints } from "@/lib/nhsca-duals-live-results/scoring"
 import { cn } from "@/lib/utils"
@@ -15,6 +14,38 @@ function shortRound(round: string) {
 function weightLabel(weightClass: string) {
   const u = weightClass.trim().toUpperCase()
   return u === "HWT" ? "HWT" : `${weightClass} lbs`
+}
+
+function BoutRow({ b }: { b: NhscaDualsWrestlerCardStats["bouts"][number] }) {
+  return (
+    <div
+      className={cn(
+        "rounded-lg border px-2.5 py-2 text-[11px]",
+        b.outcome === "win" ? "border-emerald-500/30 bg-emerald-950/20" : "border-red-500/20 bg-red-950/15"
+      )}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="font-semibold text-white/90">{shortRound(b.roundName)}</span>
+        <span
+          className={cn(
+            "font-black tabular-nums",
+            b.teamPoints > 0 ? "text-[#CBAF5D]" : b.teamPoints < 0 ? "text-red-300" : "text-white/40"
+          )}
+        >
+          {formatNetTeamPoints(b.teamPoints)}
+        </span>
+      </div>
+      <p className="text-white/55 truncate mt-0.5">vs {b.opponentTeam}</p>
+      <div className="flex items-center justify-between gap-2 mt-1">
+        <span className={cn("font-bold", b.outcome === "win" ? "text-emerald-400" : "text-red-300")}>
+          {b.outcome === "win" ? "W" : "L"} · {b.resultLabel}
+        </span>
+        {b.opponentWrestler !== "—" ? (
+          <span className="text-white/40 truncate max-w-[45%]">{b.opponentWrestler}</span>
+        ) : null}
+      </div>
+    </div>
+  )
 }
 
 export function DualsWrestlerFlipCard({
@@ -44,83 +75,87 @@ export function DualsWrestlerFlipCard({
   const bouts = stats?.bouts ?? []
 
   return (
-    <figure className="mx-auto w-full max-w-[350px]">
-      <div className="perspective-1000 h-[360px] sm:h-[420px] md:h-[480px] w-full">
+    <figure className="mx-auto w-full max-w-[320px]">
+      <div className="group [perspective:1200px] h-[340px] sm:h-[380px] w-full">
         <div
           className={cn(
-            "relative h-full w-full transition-transform duration-700 preserve-3d",
-            isFlipped && "rotate-y-180"
+            "relative h-full w-full transition-transform duration-500 ease-out [transform-style:preserve-3d]",
+            isFlipped && "[transform:rotateY(180deg)]"
           )}
         >
-          <Card
+          {/* Front */}
+          <button
+            type="button"
+            onClick={() => setIsFlipped(true)}
             className={cn(
-              "absolute inset-0 h-full w-full overflow-hidden rounded-xl border-2 border-white/10 shadow-lg backface-hidden cursor-pointer p-0 gap-0",
+              "absolute inset-0 h-full w-full overflow-hidden rounded-2xl border border-white/15 bg-[#001a33] shadow-[0_12px_40px_rgba(0,0,0,0.45)] text-left",
+              "[backface-visibility:hidden] [-webkit-backface-visibility:hidden]",
               !isFlipped ? "z-20" : "z-10"
             )}
-            onClick={() => setIsFlipped(true)}
           >
             <div className="relative h-full w-full">
               <Image
                 src={imageError ? "/wrestler-silhouette.png" : imageSrc}
-                alt={`${wrestler}, ${wt} — NC United ${teamLabel}`}
+                alt={`${wrestler}, ${wt}`}
                 fill
-                className="object-cover object-center [object-position:center_18%]"
-                sizes="(max-width: 640px) 100vw, 350px"
+                className="object-cover object-[center_15%] scale-[1.02] group-hover:scale-105 transition-transform duration-500"
+                sizes="(max-width: 640px) 50vw, 320px"
                 onError={() => setImageError(true)}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#001a33]/95 via-[#001a33]/25 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-4 text-center text-white">
-                <h3 className="text-xl font-black leading-tight">{wrestler}</h3>
-                <p className="text-sm font-semibold text-[#CBAF5D] tabular-nums mt-1">{wt}</p>
-                <p className="text-[11px] text-white/55 mt-2">NHSCA Duals 2026 · {teamLabel}</p>
-                <p className="text-xs text-white/45 mt-1">Tap to flip</p>
+              <div className="absolute inset-0 bg-gradient-to-t from-[#001428] via-[#001428]/20 to-transparent" />
+              <div className="absolute top-3 left-3 rounded-full bg-black/45 backdrop-blur-sm px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#CBAF5D]">
+                {teamLabel}
+              </div>
+              <div className="absolute bottom-0 left-0 right-0 p-4">
+                <h3 className="text-xl font-black text-white leading-tight tracking-tight">{wrestler}</h3>
+                <p className="text-sm font-semibold text-[#CBAF5D] tabular-nums mt-0.5">{wt}</p>
+                {stats && stats.wins + stats.losses > 0 ? (
+                  <p className="text-xs text-white/70 mt-2 tabular-nums">
+                    {record} · {formatNetTeamPoints(teamPts)} net pts
+                  </p>
+                ) : null}
+                <p className="text-[11px] text-white/45 mt-2 inline-flex items-center gap-1">
+                  View stats
+                  <ChevronDown className="h-3 w-3 rotate-[-90deg]" aria-hidden />
+                </p>
               </div>
             </div>
-          </Card>
+          </button>
 
-          <Card
+          {/* Back */}
+          <div
             className={cn(
-              "absolute inset-0 h-full w-full overflow-auto rounded-xl border-2 border-[#CBAF5D]/30 shadow-lg backface-hidden card-back p-0 gap-0",
+              "absolute inset-0 h-full w-full overflow-hidden rounded-2xl border border-[#CBAF5D]/30 bg-[#0a1638] shadow-lg",
+              "[backface-visibility:hidden] [-webkit-backface-visibility:hidden] [transform:rotateY(180deg)]",
               isFlipped ? "z-20" : "z-10"
             )}
-            style={{
-              transform: "rotateY(180deg)",
-              WebkitTransform: "rotateY(180deg)",
-              backgroundColor: "#0D1A4D",
-            }}
           >
-            <div className="p-3.5 min-h-full flex flex-col">
-              <div
-                className="flex items-start justify-between gap-2 mb-3 sticky top-0 py-1 -mt-1 z-10"
-                style={{ backgroundColor: "rgba(13, 26, 77, 0.97)" }}
-              >
+            <div className="p-3.5 h-full flex flex-col min-h-0">
+              <div className="flex items-start justify-between gap-2 mb-3 shrink-0">
                 <div className="min-w-0 text-left">
                   <h3 className="text-base font-bold text-white truncate">{wrestler}</h3>
                   <p className="text-xs text-[#CBAF5D] tabular-nums">{wt}</p>
                 </div>
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setIsFlipped(false)
-                  }}
-                  className="shrink-0 rounded-full min-h-[44px] min-w-[44px] flex items-center justify-center bg-[#B31B1B] text-white shadow-md"
+                  onClick={() => setIsFlipped(false)}
+                  className="shrink-0 rounded-full min-h-[44px] min-w-[44px] flex items-center justify-center bg-white/10 text-white hover:bg-white/15 transition-colors"
                   aria-label="Flip to front"
                 >
-                  <RotateCw className="h-3.5 w-3.5" />
+                  <RotateCw className="h-4 w-4" />
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 mb-3">
-                <div className="rounded-lg bg-[#002147] border border-[#CBAF5D]/35 p-2.5 text-center">
-                  <p className="text-[10px] uppercase tracking-wide text-white/50">Duals record</p>
-                  <p className="text-2xl font-black text-white tabular-nums mt-0.5">{record}</p>
+              <div className="grid grid-cols-2 gap-2 mb-3 shrink-0">
+                <div className="rounded-xl bg-[#002147]/80 border border-white/10 p-2.5 text-center">
+                  <p className="text-[10px] uppercase tracking-wide text-white/45">Record</p>
+                  <p className="text-2xl font-black text-white tabular-nums">{record}</p>
                 </div>
-                <div className="rounded-lg bg-[#002147] border border-[#CBAF5D]/35 p-2.5 text-center">
-                  <p className="text-[10px] uppercase tracking-wide text-white/50">Net team pts</p>
+                <div className="rounded-xl bg-[#002147]/80 border border-white/10 p-2.5 text-center">
+                  <p className="text-[10px] uppercase tracking-wide text-white/45">Net pts</p>
                   <p
                     className={cn(
-                      "text-2xl font-black tabular-nums mt-0.5",
+                      "text-2xl font-black tabular-nums",
                       teamPts >= 0 ? "text-[#CBAF5D]" : "text-red-300"
                     )}
                   >
@@ -129,127 +164,23 @@ export function DualsWrestlerFlipCard({
                 </div>
               </div>
 
-              <div className="flex-1 rounded-lg overflow-hidden border border-white/10 mb-2">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-[#CBAF5D] bg-[#0a2040] px-2 py-1.5 text-center">
-                  Bout results by round
+              <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-2 pr-0.5">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-white/40 sticky top-0 bg-[#0a1638] py-1">
+                  Bout log
                 </p>
                 {bouts.length === 0 ? (
-                  <p className="text-xs text-white/55 text-center px-3 py-6 leading-relaxed">
-                    No bouts recorded yet. Scores update live on the Results tab during the event.
-                  </p>
+                  <p className="text-xs text-white/50 text-center py-6">No bouts recorded.</p>
                 ) : (
-                  <div>
-                    <p className="text-[9px] text-white/40 text-center py-1 sm:hidden">Swipe table for full details →</p>
-                    <div className="overflow-x-auto">
-                    <table className="w-full text-[10px] text-white">
-                      <thead>
-                        <tr className="border-b border-white/15 text-white/50">
-                          <th className="text-left py-1.5 pl-2 pr-1 font-semibold">Round</th>
-                          <th className="text-left py-1.5 px-1 font-semibold">vs</th>
-                          <th className="text-center py-1.5 px-1 font-semibold">Rslt</th>
-                          <th className="text-right py-1.5 pr-2 pl-1 font-semibold">Pts</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {bouts.map((b, i) => (
-                          <tr
-                            key={`${b.roundName}-${b.opponentTeam}-${i}`}
-                            className={cn(
-                              "border-b border-white/8",
-                              b.outcome === "win" ? "bg-green-950/25" : b.outcome === "loss" ? "bg-red-950/20" : ""
-                            )}
-                          >
-                            <td className="py-1.5 pl-2 pr-1 align-top">
-                              <span className="font-semibold text-white/90">{shortRound(b.roundName)}</span>
-                              <span className="block text-[9px] text-white/40">{b.dayName}</span>
-                            </td>
-                            <td className="py-1.5 px-1 align-top">
-                              <span className="font-medium text-white/85 block truncate max-w-[7rem]">
-                                {b.opponentTeam}
-                              </span>
-                              {b.opponentWrestler !== "—" ? (
-                                <span className="text-[9px] text-white/40 block truncate max-w-[7rem]">
-                                  {b.opponentWrestler}
-                                </span>
-                              ) : null}
-                            </td>
-                            <td className="py-1.5 px-1 text-center align-top">
-                              <span
-                                className={cn(
-                                  "font-bold",
-                                  b.outcome === "win" ? "text-green-400" : b.outcome === "loss" ? "text-red-300" : "text-white/60"
-                                )}
-                              >
-                                {b.outcome === "win" ? "W" : b.outcome === "loss" ? "L" : "—"}
-                              </span>
-                              <span className="block text-[9px] text-white/45">{b.resultLabel}</span>
-                              {b.note ? (
-                                <span className="block text-[9px] text-amber-200/70 truncate max-w-[4.5rem]">{b.note}</span>
-                              ) : null}
-                            </td>
-                            <td
-                              className={cn(
-                                "py-1.5 pr-2 pl-1 text-right align-top font-bold tabular-nums",
-                                b.teamPoints > 0 ? "text-[#CBAF5D]" : b.teamPoints < 0 ? "text-red-300" : "text-white/40"
-                              )}
-                            >
-                              {formatNetTeamPoints(b.teamPoints)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                      <tfoot>
-                        <tr className="bg-[#001a33] font-bold">
-                          <td colSpan={3} className="py-1.5 pl-2 text-white/70">
-                            Total contributed
-                          </td>
-                          <td
-                            className={cn(
-                              "py-1.5 pr-2 text-right tabular-nums",
-                              teamPts >= 0 ? "text-[#CBAF5D]" : "text-red-300"
-                            )}
-                          >
-                            {formatNetTeamPoints(teamPts)}
-                          </td>
-                        </tr>
-                      </tfoot>
-                    </table>
-                    </div>
-                  </div>
+                  bouts.map((b, i) => <BoutRow key={`${b.roundName}-${b.opponentTeam}-${i}`} b={b} />)
                 )}
               </div>
             </div>
-          </Card>
+          </div>
         </div>
       </div>
-
-      <figcaption className="mt-2 text-center sr-only">
+      <figcaption className="sr-only">
         {wrestler}, {wt}
       </figcaption>
-
-      <style jsx>{`
-        .perspective-1000 {
-          perspective: 1000px;
-        }
-        .preserve-3d {
-          transform-style: preserve-3d;
-          -webkit-transform-style: preserve-3d;
-        }
-        .backface-hidden {
-          backface-visibility: hidden;
-          -webkit-backface-visibility: hidden;
-        }
-        .rotate-y-180 {
-          transform: rotateY(180deg);
-          -webkit-transform: rotateY(180deg);
-        }
-        @media (max-width: 640px) {
-          .card-back {
-            transform: translateZ(0);
-            -webkit-transform: translateZ(0);
-          }
-        }
-      `}</style>
     </figure>
   )
 }

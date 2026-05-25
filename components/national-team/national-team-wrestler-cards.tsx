@@ -7,9 +7,11 @@ import { getNationalWrestlerCardsSorted } from "@/lib/nhsca-duals-2026-national-
 export function NationalTeamWrestlerCards({
   className,
   resultsSnapshot,
+  variant = "hub",
 }: {
   className?: string
   resultsSnapshot?: NhscaDualsResultsSnapshot | null
+  variant?: "hub" | "archive"
 }) {
   const cards = getNationalWrestlerCardsSorted()
   if (cards.length === 0) return null
@@ -19,6 +21,7 @@ export function NationalTeamWrestlerCards({
       teamLabel="National"
       className={className}
       resultsSnapshot={resultsSnapshot}
+      variant={variant}
     />
   )
 }

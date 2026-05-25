@@ -10,9 +10,11 @@ import {
 export function SelectTeamWrestlerCards({
   className,
   resultsSnapshot,
+  variant = "hub",
 }: {
   className?: string
   resultsSnapshot?: NhscaDualsResultsSnapshot | null
+  variant?: "hub" | "archive"
 }) {
   const cards = getSelectWrestlerCardsWithArt()
   const pending = getSelectWrestlerCardsPendingCount()
@@ -24,6 +26,7 @@ export function SelectTeamWrestlerCards({
       pendingCount={pending}
       className={className}
       resultsSnapshot={resultsSnapshot}
+      variant={variant}
     />
   )
 }

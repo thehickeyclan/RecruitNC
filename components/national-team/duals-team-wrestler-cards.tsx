@@ -28,15 +28,15 @@ export function DualsTeamWrestlerCards({
   teamLabel,
   pendingCount = 0,
   className,
-  /** When provided (e.g. results tab), card backs update instantly from this snapshot. */
   resultsSnapshot,
+  variant = "hub",
 }: {
   cards: DualsWrestlerCardItem[]
   teamLabel: "National" | "Select"
-  /** Wrestlers on roster without card art yet */
   pendingCount?: number
   className?: string
   resultsSnapshot?: NhscaDualsResultsSnapshot | null
+  variant?: "hub" | "archive"
 }) {
   const teamApi = teamLabel === "Select" ? "select" : "national"
   const teamType: NhscaDualsTeamType = teamLabel === "Select" ? "select" : "national"
@@ -90,26 +90,30 @@ export function DualsTeamWrestlerCards({
   if (cards.length === 0 && pendingCount === 0) return null
 
   return (
-    <div className={cn("px-5 py-5 md:px-6 md:py-6 border-b border-white/10", className)}>
-      <div className="mb-5">
-        <h3 className="text-base font-bold text-white">Team cards</h3>
-        <p className="text-xs text-white/65 mt-1">
-          Representing NC at NHSCA Duals 2026 — {teamLabel} team. Tap a card to flip for live duals stats.
-        </p>
-        {statsLoading ? (
-          <p className="text-xs text-white/40 mt-2 flex items-center gap-1.5">
-            <Loader2 className="h-3 w-3 animate-spin" aria-hidden />
-            Loading live results…
+    <div className={cn(variant === "archive" ? "px-4 py-5 sm:px-5" : "px-5 py-5 md:px-6 md:py-6 border-b border-white/10", className)}>
+      {variant === "hub" ? (
+        <div className="mb-5">
+          <h3 className="text-base font-bold text-white">Team cards</h3>
+          <p className="text-xs text-white/65 mt-1">
+            Representing NC at NHSCA Duals 2026 — {teamLabel} team. Tap a card to flip for live duals stats.
           </p>
-        ) : null}
-        {pendingCount > 0 ? (
-          <p className="text-xs text-[#CBAF5D]/90 mt-2">
-            {pendingCount} card{pendingCount === 1 ? "" : "s"} coming soon — contact table below has full roster.
-          </p>
-        ) : null}
-      </div>
+          {statsLoading ? (
+            <p className="text-xs text-white/40 mt-2 flex items-center gap-1.5">
+              <Loader2 className="h-3 w-3 animate-spin" aria-hidden />
+              Loading live results…
+            </p>
+          ) : null}
+          {pendingCount > 0 ? (
+            <p className="text-xs text-[#CBAF5D]/90 mt-2">
+              {pendingCount} card{pendingCount === 1 ? "" : "s"} coming soon — contact table below has full roster.
+            </p>
+          ) : null}
+        </div>
+      ) : (
+        <p className="text-[11px] font-bold uppercase tracking-wider text-[#CBAF5D]/80 mb-4">{teamLabel} team</p>
+      )}
       {cards.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
           {cards.map((card) => {
             const s = effectiveStats[cardStatsKey(card.weightClass, card.wrestler)]
             const statsKey = s ? `${s.wins}-${s.losses}-${s.bouts.length}` : "0"
