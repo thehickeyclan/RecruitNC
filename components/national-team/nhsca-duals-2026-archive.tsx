@@ -154,13 +154,15 @@ export function NhscaDuals2026ArchivePage() {
         <section className="rounded-2xl border border-white/10 bg-[#0a2040]/50 overflow-hidden">
           <header className="px-4 py-4 sm:px-5 border-b border-white/10 bg-[#002147]/35">
             <h2 className="text-lg font-bold text-white">Athlete cards</h2>
-            <p className="text-xs text-white/55 mt-1">Tap any card to flip — duals record, net team points, and bout log.</p>
+            <p className="text-xs text-white/55 mt-1">
+              Photo, duals record, net team points, and big wins — ready to screenshot or share.
+            </p>
           </header>
           {(scope === "all" || scope === "national") && (
-            <NationalTeamWrestlerCards resultsSnapshot={snapshot} variant="archive" />
+            <NationalTeamWrestlerCards resultsSnapshot={snapshot} variant="archive" bigWins={bigWins} />
           )}
           {(scope === "all" || scope === "select") && (
-            <SelectTeamWrestlerCards resultsSnapshot={snapshot} variant="archive" />
+            <SelectTeamWrestlerCards resultsSnapshot={snapshot} variant="archive" bigWins={bigWins} />
           )}
         </section>
 

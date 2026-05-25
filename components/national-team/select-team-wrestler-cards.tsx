@@ -1,6 +1,7 @@
 "use client"
 
 import { DualsTeamWrestlerCards } from "@/components/national-team/duals-team-wrestler-cards"
+import type { NhscaDualsBigWin } from "@/lib/nhsca-duals-big-wins"
 import type { NhscaDualsResultsSnapshot } from "@/lib/nhsca-duals-live-results/types"
 import {
   getSelectWrestlerCardsPendingCount,
@@ -11,10 +12,12 @@ export function SelectTeamWrestlerCards({
   className,
   resultsSnapshot,
   variant = "hub",
+  bigWins = [],
 }: {
   className?: string
   resultsSnapshot?: NhscaDualsResultsSnapshot | null
   variant?: "hub" | "archive"
+  bigWins?: NhscaDualsBigWin[]
 }) {
   const cards = getSelectWrestlerCardsWithArt()
   const pending = getSelectWrestlerCardsPendingCount()
@@ -27,6 +30,7 @@ export function SelectTeamWrestlerCards({
       className={className}
       resultsSnapshot={resultsSnapshot}
       variant={variant}
+      bigWins={bigWins}
     />
   )
 }
