@@ -702,7 +702,7 @@ export async function refreshDualScores(admin: SupabaseClient, dualId: string): 
       nc_score: scores.nc_score,
       opponent_score: scores.opponent_score,
       status,
-      ...(status === "final" ? { published: true } : {}),
+      ...(status === "final" || status === "in_progress" ? { published: true } : {}),
       updated_at: new Date().toISOString(),
     })
     .eq("id", dualId)

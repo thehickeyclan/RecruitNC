@@ -24,21 +24,25 @@ export async function GET() {
     snap = await fetchNhscaDualsSnapshot(admin)
   }
 
+  async function publishRecordedDuals() {
+    await admin
+      .from("nhsca_duals_duals")
+      .update({ published: true, updated_at: new Date().toISOString() })
+      .in("status", ["final", "in_progress"])
+      .eq("published", false)
+    snap = await fetchNhscaDualsSnapshot(admin)
+  }
+
   try {
     if (snap.ok && snap.data.teams.length > 0) {
       await ensureSchedules()
-      // Backfill publish flag for completed duals (archive page reads finals even when unpublished).
-      await admin
-        .from("nhsca_duals_duals")
-        .update({ published: true, updated_at: new Date().toISOString() })
-        .eq("status", "final")
-        .eq("published", false)
-      snap = await fetchNhscaDualsSnapshot(admin)
+      await publishRecordedDuals()
     } else {
       await bootstrapNhscaDualsEvent(admin)
       snap = await fetchNhscaDualsSnapshot(admin)
       if (snap.ok && snap.data.teams.length > 0) {
         await ensureSchedules()
+        await publishRecordedDuals()
       }
     }
   } catch (e) {
