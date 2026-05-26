@@ -9,10 +9,13 @@ import { HardLink } from "@/components/hard-link"
 import { NhscaDualsBigWinsSection } from "@/components/national-team/nhsca-duals-big-wins-section"
 import { NhscaDualsResultsCommandCenter } from "@/components/national-team/nhsca-duals-results-command-center"
 import { NhscaDuals2026RecapSections, NhscaDuals2026ClosingSection } from "@/components/national-team/nhsca-duals-2026-recap-sections"
+import { NhscaDualsTournamentMomentMedia } from "@/components/national-team/nhsca-duals-tournament-moment-media"
+import { NHSCA_DUALS_2026_APPAREL_VIDEO_MOMENT } from "@/lib/nhsca-duals-2026-tournament-moments"
 import { NhscaDuals2026TournamentGallery } from "@/components/national-team/nhsca-duals-2026-tournament-gallery"
 import { NationalTeamWrestlerCards } from "@/components/national-team/national-team-wrestler-cards"
 import { SelectTeamWrestlerCards } from "@/components/national-team/select-team-wrestler-cards"
 import type { NhscaDualsBigWin } from "@/lib/nhsca-duals-big-wins"
+import type { CommandCenterScope } from "@/lib/nhsca-duals-command-center"
 import type { NhscaDualsResultsSnapshot } from "@/lib/nhsca-duals-live-results/types"
 import {
   buildHeroStatTiles,
@@ -23,6 +26,7 @@ import {
   scopeSubheadline,
 } from "@/lib/nhsca-duals-public-hero-stats"
 import { heroTeamPhotoForScope } from "@/lib/nhsca-duals-2026-team-photos"
+import { cn } from "@/lib/utils"
 
 type PublicSnapshot = NhscaDualsResultsSnapshot & {
   tablesReady?: boolean
@@ -33,8 +37,16 @@ type PublicSnapshot = NhscaDualsResultsSnapshot & {
 /** Recap page always shows combined National + Select story. Team filter lives in Results only. */
 const PAGE_SCOPE = "all" as const
 
+type HeroStatsScope = Extract<CommandCenterScope, "national" | "select">
+
+const HERO_STATS_TEAM_OPTIONS: { id: HeroStatsScope; label: string }[] = [
+  { id: "national", label: "National" },
+  { id: "select", label: "Select" },
+]
+
 const NAV_LINKS = [
   { href: "#recap", label: "Recap" },
+  { href: "#apparel", label: "Team gear" },
   { href: "#mow", label: "MOWs" },
   { href: "#results", label: "Results" },
   { href: "#cards", label: "Athlete cards" },
@@ -48,6 +60,7 @@ export function NhscaDuals2026PublicResults() {
   const [bigWins, setBigWins] = useState<NhscaDualsBigWin[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [heroStatsScope, setHeroStatsScope] = useState<HeroStatsScope>("national")
 
   const loadResults = useCallback(async () => {
     const r = await fetch("/api/national-team/duals-results/public", { cache: "no-store" })
@@ -95,15 +108,16 @@ export function NhscaDuals2026PublicResults() {
 
   const heroStats = useMemo(() => {
     if (!snapshot?.summaries) return null
-    return buildPublicHeroStats(snapshot, PAGE_SCOPE)
-  }, [snapshot])
+    return buildPublicHeroStats(snapshot, heroStatsScope)
+  }, [snapshot, heroStatsScope])
 
   const heroStatTiles = useMemo(
-    () => (heroStats ? buildHeroStatTiles(heroStats, PAGE_SCOPE) : []),
-    [heroStats]
+    () => (heroStats ? buildHeroStatTiles(heroStats, heroStatsScope) : []),
+    [heroStats, heroStatsScope]
   )
 
   const achievementLine = scopeAchievementLine(PAGE_SCOPE)
+  const heroStatsAchievementLine = scopeAchievementLine(heroStatsScope)
   const heroPhoto = useMemo(() => heroTeamPhotoForScope(PAGE_SCOPE), [])
 
   return (
@@ -145,22 +159,52 @@ export function NhscaDuals2026PublicResults() {
           </div>
 
           {heroStatTiles.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 max-w-2xl">
-              {heroStatTiles.map((stat) => (
-                <div
-                  key={stat.label}
-                  className="rounded-xl border border-white/15 bg-[#0a2040]/60 px-2 py-3 sm:px-3 text-center"
-                >
-                  <p className="text-[9px] sm:text-[10px] uppercase tracking-wide text-blue-200/80 font-semibold">
-                    {stat.label}
-                  </p>
-                  <p className="text-lg sm:text-xl font-black text-[#CBAF5D] tabular-nums mt-0.5 leading-tight">
-                    {stat.value}
-                  </p>
+            <div className="max-w-2xl">
+              <div className="flex items-center justify-between gap-3 mb-2">
+                <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-white/45">
+                  Team stats
+                </p>
+                <div className="flex rounded-lg bg-[#0a2040] border border-white/10 p-0.5 gap-0.5">
+                  {HERO_STATS_TEAM_OPTIONS.map((o) => (
+                    <button
+                      key={o.id}
+                      type="button"
+                      onClick={() => setHeroStatsScope(o.id)}
+                      className={cn(
+                        "min-h-[36px] rounded-md px-3 text-xs font-bold transition-colors",
+                        heroStatsScope === o.id ? "bg-[#CBAF5D] text-[#002147]" : "text-white/65 hover:text-white"
+                      )}
+                    >
+                      {o.label}
+                    </button>
+                  ))}
                 </div>
-              ))}
+              </div>
+              <p className="text-[11px] text-blue-100/55 mb-2">{heroStatsAchievementLine}</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
+                {heroStatTiles.map((stat) => (
+                  <div
+                    key={stat.label}
+                    className="rounded-xl border border-white/15 bg-[#0a2040]/60 px-2 py-3 sm:px-3 text-center"
+                  >
+                    <p className="text-[9px] sm:text-[10px] uppercase tracking-wide text-blue-200/80 font-semibold">
+                      {stat.label}
+                    </p>
+                    <p className="text-lg sm:text-xl font-black text-[#CBAF5D] tabular-nums mt-0.5 leading-tight">
+                      {stat.value}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
           ) : null}
+
+          <HardLink
+            href="/national-team/hub"
+            className="inline-flex items-center min-h-[44px] mt-5 sm:mt-6 rounded-xl border border-[#CBAF5D]/40 bg-[#CBAF5D]/15 px-5 py-2.5 text-sm font-bold text-[#CBAF5D] hover:bg-[#CBAF5D]/25 transition-colors"
+          >
+            NC United team hub →
+          </HardLink>
         </div>
       </section>
 
@@ -171,6 +215,12 @@ export function NhscaDuals2026PublicResults() {
       >
         <div className="container mx-auto max-w-5xl px-4">
           <div className="flex gap-2 overflow-x-auto py-2.5 snap-x snap-mandatory scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <HardLink
+              href="/national-team/hub"
+              className="snap-start shrink-0 min-h-[40px] inline-flex items-center rounded-full border border-[#CBAF5D]/35 bg-[#CBAF5D]/10 px-3.5 sm:px-4 text-xs sm:text-sm font-bold text-[#CBAF5D] hover:bg-[#CBAF5D]/20 transition-colors"
+            >
+              Team hub
+            </HardLink>
             {NAV_LINKS.map((link) => (
               <a
                 key={link.href}
@@ -204,6 +254,13 @@ export function NhscaDuals2026PublicResults() {
             </p>
           </div>
         </div>
+
+        <figure id="apparel" className="scroll-mt-28 max-w-2xl mx-auto mb-8 sm:mb-10">
+          <NhscaDualsTournamentMomentMedia moment={NHSCA_DUALS_2026_APPAREL_VIDEO_MOMENT} />
+          <figcaption className="text-center text-sm text-white/55 italic mt-4 leading-relaxed px-2">
+            {NHSCA_DUALS_2026_APPAREL_VIDEO_MOMENT.caption}
+          </figcaption>
+        </figure>
 
         <NhscaDuals2026RecapSections scope={PAGE_SCOPE} snapshot={snapshot} />
 

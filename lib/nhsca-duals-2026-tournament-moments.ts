@@ -42,6 +42,37 @@ export const NHSCA_DUALS_2026_DAY2_TEAM_DINNER_PHOTO =
 export const NHSCA_DUALS_2026_COLTON_PALMER_DAY2_RECAP_VIDEO =
   "/national-team/nhsca-duals-2026/videos/colton-palmer-day-2-recap.mov"
 
+export const NHSCA_DUALS_2026_MOW_TOBIN_DANNY_VIDEO =
+  "/national-team/nhsca-duals-2026/videos/mow-tobin-danny.mov"
+
+export const NHSCA_DUALS_2026_XAN_JAXON_INTERVIEW_VIDEO =
+  "/national-team/nhsca-duals-2026/videos/xan-moody-jaxon-thomas-interview.mov"
+
+export const NHSCA_DUALS_2026_XAN_MOODY_HIGHLIGHT_REEL_VIDEO =
+  "/national-team/nhsca-duals-2026/videos/xan-moody-highlight-reel.mov"
+
+export const NHSCA_DUALS_2026_NC_UNITED_APPAREL_VIDEO =
+  "/national-team/nhsca-duals-2026/videos/nc-united-apparel.mov"
+
+export const NHSCA_DUALS_2026_APPAREL_VIDEO_MOMENT: NhscaDualsVideoMoment = {
+  id: "nc-united-apparel",
+  type: "video",
+  videoSrc: NHSCA_DUALS_2026_NC_UNITED_APPAREL_VIDEO,
+  caption:
+    'NC United team apparel — official "Pepsi" and "Pinstripes" singlets, plus black long sleeve, shorts, and tee',
+  ariaLabel: "NC United NHSCA Duals 2026 team apparel including Pepsi and Pinstripes singlets",
+  aspectClass: "aspect-[9/16] sm:aspect-video max-w-2xl mx-auto",
+}
+
+export const NHSCA_DUALS_2026_MOW_VIDEO_MOMENT: NhscaDualsVideoMoment = {
+  id: "mow-tobin-danny-video",
+  type: "video",
+  videoSrc: NHSCA_DUALS_2026_MOW_TOBIN_DANNY_VIDEO,
+  caption: "Tobin McNair and Danny McDermott — NC United Most Outstanding Wrestlers",
+  ariaLabel: "Highlight video of Tobin McNair and Danny McDermott, NHSCA Duals 2026 Most Outstanding Wrestlers",
+  aspectClass: "aspect-[9/16] sm:aspect-video max-w-2xl mx-auto",
+}
+
 export const NHSCA_DUALS_2026_TOURNAMENT_MOMENTS: NhscaDualsTournamentMoment[] = [
   {
     id: "day-2-palmer-recap",
@@ -49,6 +80,24 @@ export const NHSCA_DUALS_2026_TOURNAMENT_MOMENTS: NhscaDualsTournamentMoment[] =
     videoSrc: NHSCA_DUALS_2026_COLTON_PALMER_DAY2_RECAP_VIDEO,
     caption: "Head Coach Colton Palmer recapping a phenomenal Day 2",
     ariaLabel: "Head Coach Colton Palmer recaps NC United Day 2 at NHSCA Duals 2026",
+    aspectClass: "aspect-[9/16] sm:aspect-video max-w-2xl mx-auto",
+  },
+  {
+    id: "xan-moody-jaxon-thomas-interview",
+    type: "video",
+    team: "national",
+    videoSrc: NHSCA_DUALS_2026_XAN_JAXON_INTERVIEW_VIDEO,
+    caption: "Xan Moody and Jaxon Thomas — NHSCA Duals 2026 interview",
+    ariaLabel: "Interview with National team wrestlers Xan Moody and Jaxon Thomas at NHSCA Duals 2026",
+    aspectClass: "aspect-[9/16] sm:aspect-video max-w-2xl mx-auto",
+  },
+  {
+    id: "xan-moody-highlight-reel",
+    type: "video",
+    team: "national",
+    videoSrc: NHSCA_DUALS_2026_XAN_MOODY_HIGHLIGHT_REEL_VIDEO,
+    caption: "Xan Moody — NHSCA Duals 2026 highlight reel",
+    ariaLabel: "Highlight reel for National team wrestler Xan Moody at NHSCA Duals 2026",
     aspectClass: "aspect-[9/16] sm:aspect-video max-w-2xl mx-auto",
   },
   {
