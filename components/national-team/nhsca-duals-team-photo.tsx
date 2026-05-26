@@ -2,22 +2,20 @@
 
 import Image from "next/image"
 import type { CommandCenterScope } from "@/lib/nhsca-duals-command-center"
-import {
-  NHSCA_DUALS_2026_BOTH_TEAMS_PHOTO,
-  NHSCA_DUALS_2026_NATIONAL_TEAM_PHOTO,
-  NHSCA_DUALS_2026_SELECT_TEAM_PHOTO,
-} from "@/lib/nhsca-duals-2026-team-photos"
+import { heroTeamPhotoForScope } from "@/lib/nhsca-duals-2026-team-photos"
 import { cn } from "@/lib/utils"
 
 function TeamPhotoCard({
   src,
   label,
   aspectClass = "aspect-[16/10] sm:aspect-[2/1]",
+  objectPosition = "center center",
   priority = false,
 }: {
   src: string
   label: string
   aspectClass?: string
+  objectPosition?: string
   priority?: boolean
 }) {
   return (
@@ -27,7 +25,8 @@ function TeamPhotoCard({
           src={src}
           alt={`NC United ${label} at NHSCA Duals 2026`}
           fill
-          className="object-cover object-center"
+          className="object-cover"
+          style={{ objectPosition }}
           sizes="(max-width: 768px) 100vw, 960px"
           priority={priority}
         />
@@ -43,12 +42,14 @@ function TeamPhotoCard({
 
 export function NhscaDualsTeamPhotos({ scope }: { scope: CommandCenterScope }) {
   if (scope === "all") {
+    const photo = heroTeamPhotoForScope("all")
     return (
       <section>
         <TeamPhotoCard
-          src={NHSCA_DUALS_2026_BOTH_TEAMS_PHOTO}
+          src={photo.src}
           label="National & Select Teams"
-          aspectClass="aspect-[3/4] sm:aspect-[4/5] w-full max-w-lg sm:max-w-2xl mx-auto"
+          aspectClass="aspect-[4/3] sm:aspect-[16/9] w-full max-w-3xl mx-auto"
+          objectPosition={photo.objectPosition}
           priority
         />
       </section>
@@ -56,17 +57,29 @@ export function NhscaDualsTeamPhotos({ scope }: { scope: CommandCenterScope }) {
   }
 
   if (scope === "national") {
+    const photo = heroTeamPhotoForScope("national")
     return (
       <section>
-        <TeamPhotoCard src={NHSCA_DUALS_2026_NATIONAL_TEAM_PHOTO} label="National Team" priority />
+        <TeamPhotoCard
+          src={photo.src}
+          label="National Team"
+          objectPosition={photo.objectPosition}
+          priority
+        />
       </section>
     )
   }
 
   if (scope === "select") {
+    const photo = heroTeamPhotoForScope("select")
     return (
       <section>
-        <TeamPhotoCard src={NHSCA_DUALS_2026_SELECT_TEAM_PHOTO} label="Select Team" priority />
+        <TeamPhotoCard
+          src={photo.src}
+          label="Select Team"
+          objectPosition={photo.objectPosition}
+          priority
+        />
       </section>
     )
   }
