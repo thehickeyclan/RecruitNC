@@ -28,8 +28,8 @@ type PublicSnapshot = NhscaDualsResultsSnapshot & {
 }
 
 function parseTeamScope(raw: string | null): CommandCenterScope {
-  if (raw === "national" || raw === "select") return raw
-  return "all"
+  if (raw === "national" || raw === "select" || raw === "all") return raw
+  return "national"
 }
 
 export function NhscaDuals2026ArchivePage() {
@@ -125,9 +125,9 @@ export function NhscaDuals2026ArchivePage() {
           <div className="flex rounded-xl bg-[#0a2040] border border-white/10 p-1 gap-1 max-w-md">
             {(
               [
-                { id: "all", label: "Both teams" },
                 { id: "national", label: "National" },
                 { id: "select", label: "Select" },
+                { id: "all", label: "Both teams" },
               ] as const
             ).map((o) => (
               <button

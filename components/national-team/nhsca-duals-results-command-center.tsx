@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils"
 
 export function NhscaDualsResultsCommandCenter({
   snapshot,
-  initialScope = "all",
+  initialScope = "national",
   onScopeChange,
   archiveMode = false,
 }: {
@@ -260,9 +260,9 @@ function FilterBar({
   teamFilterLabel?: string
 }) {
   const teamOptions: { id: CommandCenterScope; label: string }[] = [
-    { id: "all", label: "Both teams" },
     { id: "national", label: "National" },
     { id: "select", label: "Select" },
+    { id: "all", label: "Both teams" },
   ]
 
   return (

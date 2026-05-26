@@ -17,7 +17,7 @@ import {
   NHSCA_DUALS_2026_MOW_PHOTO,
   weightLabel,
 } from "@/lib/nhsca-duals-2026-most-outstanding-wrestlers"
-import { tournamentMomentsForScope } from "@/lib/nhsca-duals-2026-tournament-moments"
+import { tournamentMomentsForScope, NHSCA_DUALS_2026_MOW_VIDEO_MOMENT } from "@/lib/nhsca-duals-2026-tournament-moments"
 import { NhscaDualsTournamentMomentMedia } from "@/components/national-team/nhsca-duals-tournament-moment-media"
 import type { NhscaDualsResultsSnapshot } from "@/lib/nhsca-duals-live-results/types"
 
@@ -142,6 +142,15 @@ export function NhscaDuals2026RecapSections({
             {mowPhotoCaption(scope)}
           </p>
         </div>
+      ) : null}
+
+      {mows.length > 0 ? (
+        <figure className="max-w-2xl mx-auto">
+          <NhscaDualsTournamentMomentMedia moment={NHSCA_DUALS_2026_MOW_VIDEO_MOMENT} />
+          <figcaption className="text-center text-sm text-white/55 italic mt-4 leading-relaxed">
+            {NHSCA_DUALS_2026_MOW_VIDEO_MOMENT.caption}
+          </figcaption>
+        </figure>
       ) : null}
 
       {/* Tournament moments — video, team photos & candid shots */}
