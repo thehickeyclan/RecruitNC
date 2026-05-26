@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { Award, Star } from "lucide-react"
+import { Award, Camera, Star } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { getWrestlersForScope } from "@/lib/nhsca-duals-command-center"
 import type { CommandCenterScope } from "@/lib/nhsca-duals-command-center"
@@ -18,6 +18,7 @@ import {
   weightLabel,
 } from "@/lib/nhsca-duals-2026-most-outstanding-wrestlers"
 import { tournamentMomentsForScope, NHSCA_DUALS_2026_MOW_VIDEO_MOMENT } from "@/lib/nhsca-duals-2026-tournament-moments"
+import { NhscaDualsCollapsibleSection } from "@/components/national-team/nhsca-duals-collapsible-section"
 import { NhscaDualsTournamentMomentMedia } from "@/components/national-team/nhsca-duals-tournament-moment-media"
 import type { NhscaDualsResultsSnapshot } from "@/lib/nhsca-duals-live-results/types"
 
@@ -79,92 +80,113 @@ export function NhscaDuals2026RecapSections({
           Tournament performance
         </h2>
         <p className="text-sm sm:text-base leading-relaxed text-white/65 max-w-3xl">
-          NC United brought depth across the lineup — from lightweights to heavyweights. Use{" "}
+          NC United brought depth across the lineup — from lightweights to heavyweights. Browse{" "}
+          <a href="#media" className="text-[#CBAF5D] font-semibold hover:underline">
+            interviews &amp; highlights
+          </a>
+          , then use{" "}
           <a href="#results" className="text-[#CBAF5D] font-semibold hover:underline">
             Results
           </a>{" "}
-          below to filter National or Select team duals and individual athlete records.
+          to filter National or Select team duals and individual athlete records.
         </p>
       </div>
 
-      {/* MOW cards */}
-      {showMowGrid ? (
-        <div className="max-w-xl">
-          <Card className="border-[#CBAF5D]/25 bg-[#0a2040]/70 shadow-lg">
-            <CardContent className="p-5 sm:p-6">
-              <div className="flex items-center gap-3 mb-5">
-                <Award className="w-7 h-7 text-[#CBAF5D] shrink-0" aria-hidden />
-                <h3 className="text-lg sm:text-xl font-bold text-white">Most Outstanding Wrestlers</h3>
+      {/* MOW — collapsible */}
+      {showMowGrid || mows.length > 0 ? (
+        <NhscaDualsCollapsibleSection
+          id="mow"
+          title="Most Outstanding Wrestlers"
+          subtitle="Tournament MOW honors, photo, and highlight video."
+          count={mows.length}
+          defaultOpen
+          icon={<Award className="h-5 w-5" aria-hidden />}
+        >
+          <div className="space-y-8">
+            {showMowGrid ? (
+              <div className="max-w-xl">
+                <Card className="border-[#CBAF5D]/25 bg-[#0a2040]/70 shadow-lg">
+                  <CardContent className="p-5 sm:p-6">
+                    <ul className="space-y-2.5">
+                      {mows.map((mow) => {
+                        const record = dualRecordForMow(mow, records)
+                        return (
+                          <li
+                            key={mow.id}
+                            className="rounded-lg border border-[#CBAF5D]/20 bg-[#002147]/45 px-3 py-3"
+                          >
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-[#CBAF5D] mb-1">
+                              {mow.team === "national" ? "National team" : "Select team"}
+                            </p>
+                            <p className="text-base sm:text-lg font-black text-white">{mow.name}</p>
+                            <p className="text-xs text-white/50 tabular-nums mt-0.5">
+                              {weightLabel(mow.weightClass)}
+                              {record ? ` · ${record} dual record` : ""}
+                            </p>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  </CardContent>
+                </Card>
               </div>
-              <ul className="space-y-2.5">
-                {mows.map((mow) => {
-                  const record = dualRecordForMow(mow, records)
-                  return (
-                    <li
-                      key={mow.id}
-                      className="rounded-lg border border-[#CBAF5D]/20 bg-[#002147]/45 px-3 py-3"
-                    >
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-[#CBAF5D] mb-1">
-                        {mow.team === "national" ? "National team" : "Select team"}
-                      </p>
-                      <p className="text-base sm:text-lg font-black text-white">{mow.name}</p>
-                      <p className="text-xs text-white/50 tabular-nums mt-0.5">
-                        {weightLabel(mow.weightClass)}
-                        {record ? ` · ${record} dual record` : ""}
-                      </p>
-                    </li>
-                  )
-                })}
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
-      ) : null}
+            ) : null}
 
-      {/* MOW photo — portrait shot; keep compact on desktop */}
-      {mows.length > 0 ? (
-        <div id="mow" className="scroll-mt-28 w-full max-w-[280px] sm:max-w-[320px] mx-auto">
-          <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden border border-white/10 bg-[#002147]/40">
-            <Image
-              src={NHSCA_DUALS_2026_MOW_PHOTO}
-              alt={
-                scope === "all"
-                  ? "Tobin McNair and Danny McDermott, NC United Most Outstanding Wrestlers at NHSCA Duals 2026"
-                  : `${mows[0].name}, NC United Most Outstanding Wrestler at NHSCA Duals 2026`
-              }
-              fill
-              className="object-cover"
-              style={{ objectPosition: "center 12%" }}
-              sizes="(max-width: 640px) 280px, 320px"
-            />
+            {mows.length > 0 ? (
+              <div className="w-full max-w-[280px] sm:max-w-[320px] mx-auto">
+                <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden border border-white/10 bg-[#002147]/40">
+                  <Image
+                    src={NHSCA_DUALS_2026_MOW_PHOTO}
+                    alt={
+                      scope === "all"
+                        ? "Tobin McNair and Danny McDermott, NC United Most Outstanding Wrestlers at NHSCA Duals 2026"
+                        : `${mows[0].name}, NC United Most Outstanding Wrestler at NHSCA Duals 2026`
+                    }
+                    fill
+                    className="object-cover"
+                    style={{ objectPosition: "center 12%" }}
+                    sizes="(max-width: 640px) 280px, 320px"
+                  />
+                </div>
+                <p className="text-center text-sm text-white/55 italic mt-4 leading-relaxed">
+                  {mowPhotoCaption(scope)}
+                </p>
+              </div>
+            ) : null}
+
+            {mows.length > 0 ? (
+              <figure className="max-w-2xl mx-auto">
+                <NhscaDualsTournamentMomentMedia moment={NHSCA_DUALS_2026_MOW_VIDEO_MOMENT} />
+                <figcaption className="text-center text-sm text-white/55 italic mt-4 leading-relaxed">
+                  {NHSCA_DUALS_2026_MOW_VIDEO_MOMENT.caption}
+                </figcaption>
+              </figure>
+            ) : null}
           </div>
-          <p className="text-center text-sm text-white/55 italic mt-4 leading-relaxed">
-            {mowPhotoCaption(scope)}
-          </p>
-        </div>
+        </NhscaDualsCollapsibleSection>
       ) : null}
 
-      {mows.length > 0 ? (
-        <figure className="max-w-2xl mx-auto">
-          <NhscaDualsTournamentMomentMedia moment={NHSCA_DUALS_2026_MOW_VIDEO_MOMENT} />
-          <figcaption className="text-center text-sm text-white/55 italic mt-4 leading-relaxed">
-            {NHSCA_DUALS_2026_MOW_VIDEO_MOMENT.caption}
-          </figcaption>
-        </figure>
-      ) : null}
-
-      {/* Tournament moments — video, team photos & candid shots */}
+      {/* Candid photos & coach recap — collapsible */}
       {tournamentMoments.length > 0 ? (
-        <div className="space-y-8">
-          {tournamentMoments.map((moment) => (
-            <figure key={moment.id} id={moment.id === "day-2-palmer-recap" ? "day-2-recap" : undefined}>
-              <NhscaDualsTournamentMomentMedia moment={moment} />
-              <figcaption className="text-center text-sm text-white/55 italic mt-4 max-w-2xl mx-auto leading-relaxed">
-                {moment.caption}
-              </figcaption>
-            </figure>
-          ))}
-        </div>
+        <NhscaDualsCollapsibleSection
+          id="moments"
+          title="Tournament moments"
+          subtitle="Coach recaps, team dinners, warm-ups, and candid shots from Virginia Beach."
+          count={tournamentMoments.length}
+          defaultOpen={tournamentMoments.length <= 4}
+          icon={<Camera className="h-5 w-5" aria-hidden />}
+        >
+          <div className="space-y-8">
+            {tournamentMoments.map((moment) => (
+              <figure key={moment.id} id={moment.id === "day-2-palmer-recap" ? "day-2-recap" : undefined}>
+                <NhscaDualsTournamentMomentMedia moment={moment} />
+                <figcaption className="text-center text-sm text-white/55 italic mt-4 max-w-2xl mx-auto leading-relaxed">
+                  {moment.caption}
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </NhscaDualsCollapsibleSection>
       ) : null}
     </section>
   )
@@ -172,35 +194,43 @@ export function NhscaDuals2026RecapSections({
 
 export function NhscaDuals2026ClosingSection() {
   return (
-    <section className="mb-10 sm:mb-14 space-y-4 sm:space-y-6">
-      <Card className="border-[#CBAF5D]/25 bg-[#0a2040]/80 shadow-lg">
-        <CardContent className="p-5 sm:p-8">
-          <div className="flex items-center gap-3 mb-4">
-            <Star className="w-7 h-7 text-[#CBAF5D] shrink-0" aria-hidden />
-            <h2 className="text-xl sm:text-2xl font-bold text-white">Coaching &amp; leadership</h2>
-          </div>
-          <p className="text-sm sm:text-base leading-relaxed text-white/75 mb-4">
-            NC United was led by an exceptional coaching staff including Michael Macchiavello, Colton Palmer,
-            Araad Fischer, Justin Perry, and Matt Hickey — plus club coaches who supported the team in every corner
-            and on the mat throughout the tournament.
-          </p>
-          <p className="text-sm sm:text-base leading-relaxed text-white/75">
-            Special thanks to every parent, supporter, and club program that helped our National and Select squads
-            compete at the highest level in Virginia Beach.
-          </p>
-        </CardContent>
-      </Card>
+    <NhscaDualsCollapsibleSection
+      title="Coaching & looking ahead"
+      subtitle="Staff credits and thank-yous from Virginia Beach."
+      defaultOpen={false}
+      icon={<Star className="h-5 w-5" aria-hidden />}
+      className="mb-10 sm:mb-14"
+    >
+      <div className="space-y-4 sm:space-y-6">
+        <Card className="border-[#CBAF5D]/25 bg-[#0a2040]/80 shadow-lg">
+          <CardContent className="p-5 sm:p-8">
+            <div className="flex items-center gap-3 mb-4">
+              <Star className="w-7 h-7 text-[#CBAF5D] shrink-0" aria-hidden />
+              <h2 className="text-xl sm:text-2xl font-bold text-white">Coaching &amp; leadership</h2>
+            </div>
+            <p className="text-sm sm:text-base leading-relaxed text-white/75 mb-4">
+              NC United was led by an exceptional coaching staff including Michael Macchiavello, Colton Palmer,
+              Araad Fischer, Justin Perry, and Matt Hickey — plus club coaches who supported the team in every corner
+              and on the mat throughout the tournament.
+            </p>
+            <p className="text-sm sm:text-base leading-relaxed text-white/75">
+              Special thanks to every parent, supporter, and club program that helped our National and Select squads
+              compete at the highest level in Virginia Beach.
+            </p>
+          </CardContent>
+        </Card>
 
-      <Card className="border-white/10 bg-gradient-to-br from-[#002147] to-[#0a2040] shadow-lg">
-        <CardContent className="p-5 sm:p-8">
-          <h2 className="text-xl sm:text-2xl font-bold text-white mb-3">Looking ahead</h2>
-          <p className="text-sm sm:text-base leading-relaxed text-white/80 mb-4">
-            NHSCA Duals is a proving ground for North Carolina wrestling — and another step forward for NC United.
-            Thank you for following along with every dual, bout, and big win.
-          </p>
-          <p className="text-lg sm:text-xl font-bold text-[#CBAF5D]">The best is yet to come for NC United Wrestling.</p>
-        </CardContent>
-      </Card>
-    </section>
+        <Card className="border-white/10 bg-gradient-to-br from-[#002147] to-[#0a2040] shadow-lg">
+          <CardContent className="p-5 sm:p-8">
+            <h2 className="text-xl sm:text-2xl font-bold text-white mb-3">Looking ahead</h2>
+            <p className="text-sm sm:text-base leading-relaxed text-white/80 mb-4">
+              NHSCA Duals is a proving ground for North Carolina wrestling — and another step forward for NC United.
+              Thank you for following along with every dual, bout, and big win.
+            </p>
+            <p className="text-lg sm:text-xl font-bold text-[#CBAF5D]">The best is yet to come for NC United Wrestling.</p>
+          </CardContent>
+        </Card>
+      </div>
+    </NhscaDualsCollapsibleSection>
   )
 }

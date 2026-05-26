@@ -18,7 +18,7 @@ export function NhscaDualsBigWinsSection({
   bigWins: NhscaDualsBigWin[]
   scope: CommandCenterScope
 }) {
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(false)
 
   const filtered = useMemo(() => {
     if (scope === "all") return bigWins
