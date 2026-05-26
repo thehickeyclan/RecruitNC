@@ -39,15 +39,20 @@ function DualResultsList({
   snapshot,
   scope,
   dayFilter,
+  archiveMode = false,
 }: {
   snapshot: NhscaDualsResultsSnapshot
   scope: CommandCenterScope
   dayFilter: CommandCenterDayFilter
+  archiveMode?: boolean
 }) {
   const [expandedDualId, setExpandedDualId] = useState<string | null>(null)
   const completed = useMemo(
-    () => buildDualFeed(snapshot, scope, dayFilter).filter((f) => f.dual.status === "final" || f.dual.status === "in_progress"),
-    [snapshot, scope, dayFilter]
+    () =>
+      buildDualFeed(snapshot, scope, dayFilter, { includeUnpublishedFinals: archiveMode }).filter(
+        (f) => f.dual.status === "final" || f.dual.status === "in_progress"
+      ),
+    [snapshot, scope, dayFilter, archiveMode]
   )
 
   if (completed.length === 0) {
@@ -135,7 +140,7 @@ export function NhscaDualsTeamDashboard({
           </p>
         </header>
         <div className="p-3">
-          <DualResultsList snapshot={snapshot} scope={scope} dayFilter={dayFilter} />
+          <DualResultsList snapshot={snapshot} scope={scope} dayFilter={dayFilter} archiveMode={archiveMode} />
         </div>
       </section>
 

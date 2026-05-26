@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { ArrowRight, Radio } from "lucide-react"
+import { ArrowRight, Radio, Trophy } from "lucide-react"
 import { HardLink } from "@/components/hard-link"
 import { NhscaDuals2026SingletPreview } from "@/components/national-team/nhsca-duals-2026-singlet-preview"
 import { cn } from "@/lib/utils"
@@ -9,6 +9,15 @@ import {
   NhscaDualsCountdownFace,
   useWeighInCountdown,
 } from "@/components/national-team/nhsca-weigh-in-countdown"
+import {
+  NHSCA_DUALS_2026_NATIONAL_ACHIEVEMENT,
+  NHSCA_DUALS_2026_SELECT_ACHIEVEMENT,
+  scopeHeadline,
+  scopeSubheadline,
+} from "@/lib/nhsca-duals-public-hero-stats"
+import { NHSCA_DUALS_2026_NATIONAL_TEAM_PHOTO } from "@/lib/nhsca-duals-2026-team-photos"
+
+const NHSCA_2026_RESULTS_HREF = "/national-team/nhsca-duals-2026-results"
 
 function CountdownPanel({
   large,
@@ -69,6 +78,113 @@ export function NhscaDuals2026Banner({
 }: NhscaDuals2026BannerProps) {
   const isHero = variant === "hero"
   const isHome = variant === "home"
+
+  if (isHome) {
+    return (
+      <section
+        className={cn(
+          "relative overflow-hidden text-[#002147] border-b border-[#B8982E]/50 shadow-lg",
+          className
+        )}
+        aria-label="NHSCA Duals 2026 tournament recap"
+      >
+        <div
+          className="absolute inset-0 bg-gradient-to-br from-[#F5EDD4] via-[#D4BC6A] to-[#A88B28]"
+          aria-hidden
+        />
+        <div
+          className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(255,255,255,0.45),transparent_50%)]"
+          aria-hidden
+        />
+        <div
+          className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(0,33,71,0.08),transparent_55%)]"
+          aria-hidden
+        />
+
+        <div className="relative container mx-auto px-4 py-8 md:py-10">
+          <div className="mx-auto flex max-w-5xl flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+            <div className="min-w-0 flex-1 space-y-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center rounded-full bg-[#B31B1B] px-3 py-1 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-white shadow-sm">
+                  <Trophy className="h-3 w-3 mr-1" aria-hidden />
+                  Tournament recap
+                </span>
+                <span className="inline-flex items-center rounded-full bg-[#002147] px-3 py-1 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#D3B574]">
+                  NHSCA Duals 2026
+                </span>
+              </div>
+
+              <div className="flex flex-wrap items-start gap-4">
+                <div className="rounded-xl bg-white p-2.5 shadow-md ring-1 ring-[#002147]/10 shrink-0">
+                  <Image
+                    src="/images/nhsca-national-duals-logo.png"
+                    alt="NHSCA National Duals"
+                    width={200}
+                    height={80}
+                    className="h-9 sm:h-10 w-auto object-contain"
+                  />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#003366]/85">
+                    NC United · National Team
+                  </p>
+                  <h2 className="mt-1 text-2xl sm:text-3xl md:text-4xl font-black leading-[1.08] tracking-tight text-[#002147]">
+                    {scopeHeadline("national")}
+                  </h2>
+                </div>
+              </div>
+
+              <p className="text-sm sm:text-base md:text-lg font-medium text-[#002147]/90 leading-snug max-w-2xl">
+                {scopeSubheadline("national")}. View full dual results, athlete cards, interviews, highlight reels,
+                and tournament photos.
+              </p>
+
+              <p className="text-sm text-[#003366]/85">
+                May 23–26, 2026 · Virginia Beach Sports Center
+                <span className="text-[#002147]/70">
+                  {" "}
+                  · Select team reached the {NHSCA_DUALS_2026_SELECT_ACHIEVEMENT}
+                </span>
+              </p>
+
+              <div className="flex flex-col sm:flex-row flex-wrap gap-3 pt-1">
+                <HardLink
+                  href={NHSCA_2026_RESULTS_HREF}
+                  className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-[#002147] px-5 py-2.5 text-sm sm:text-base font-bold text-white shadow-lg transition hover:bg-[#003366]"
+                >
+                  NHSCA 2026 Portal
+                  <ArrowRight className="ml-2 h-5 w-5 text-[#D3B574]" aria-hidden />
+                </HardLink>
+                <HardLink
+                  href="/national-team"
+                  className="inline-flex min-h-[48px] items-center justify-center rounded-xl border-2 border-[#002147] bg-white/80 px-5 py-2.5 text-sm font-semibold text-[#002147] transition hover:bg-white"
+                >
+                  NC United National Team
+                </HardLink>
+              </div>
+            </div>
+
+            <div className="w-full shrink-0 lg:max-w-sm xl:max-w-md">
+              <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border-2 border-[#002147]/15 bg-[#002147]/10 shadow-xl ring-1 ring-white/40">
+                <Image
+                  src={NHSCA_DUALS_2026_NATIONAL_TEAM_PHOTO}
+                  alt="NC United National Team at NHSCA Duals 2026"
+                  fill
+                  className="object-cover"
+                  style={{ objectPosition: "center 72%" }}
+                  sizes="(max-width: 1024px) 100vw, 384px"
+                />
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#002147]/90 via-[#002147]/55 to-transparent px-4 py-3">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#CBAF5D]">Bracket finish</p>
+                  <p className="text-lg font-black text-white">{NHSCA_DUALS_2026_NATIONAL_ACHIEVEMENT}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    )
+  }
 
   return (
     <section

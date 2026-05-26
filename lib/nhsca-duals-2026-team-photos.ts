@@ -17,6 +17,13 @@ export const NHSCA_DUALS_2026_BOTH_TEAMS_WARMUP_PHOTO =
 export const NHSCA_DUALS_2026_MAIN_BANNER_PHOTO =
   "/national-team/nhsca-duals-2026/main-banner-both-teams.png"
 
+/** Wide journey-card hero — portrait team shot needs a higher focal point than banner hero. */
+export const NHSCA_DUALS_2026_NATIONAL_JOURNEY_CARD_PHOTO: NhscaDualsHeroTeamPhoto = {
+  src: NHSCA_DUALS_2026_NATIONAL_TEAM_PHOTO,
+  alt: "NC United National Team at NHSCA Duals 2026",
+  objectPosition: "center 36%",
+}
+
 export type NhscaDualsHeroTeamPhoto = {
   src: string
   alt: string
