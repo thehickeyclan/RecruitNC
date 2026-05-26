@@ -51,6 +51,9 @@ export const NHSCA_DUALS_2026_XAN_JAXON_INTERVIEW_VIDEO =
 export const NHSCA_DUALS_2026_XAN_MOODY_HIGHLIGHT_REEL_VIDEO =
   "/national-team/nhsca-duals-2026/videos/xan-moody-highlight-reel.mov"
 
+export const NHSCA_DUALS_2026_JAXON_THOMAS_HIGHLIGHT_REEL_VIDEO =
+  "/national-team/nhsca-duals-2026/videos/jaxon-thomas-highlight.mov"
+
 export const NHSCA_DUALS_2026_NC_UNITED_APPAREL_VIDEO =
   "/national-team/nhsca-duals-2026/videos/nc-united-apparel.mov"
 

@@ -1,6 +1,7 @@
 import type { CommandCenterScope } from "@/lib/nhsca-duals-command-center"
 import type { NhscaDualsVideoMoment } from "@/lib/nhsca-duals-2026-tournament-moments"
 import {
+  NHSCA_DUALS_2026_JAXON_THOMAS_HIGHLIGHT_REEL_VIDEO,
   NHSCA_DUALS_2026_XAN_JAXON_INTERVIEW_VIDEO,
   NHSCA_DUALS_2026_XAN_MOODY_HIGHLIGHT_REEL_VIDEO,
 } from "@/lib/nhsca-duals-2026-tournament-moments"
@@ -37,6 +38,17 @@ export const NHSCA_DUALS_2026_ATHLETE_MEDIA: NhscaDualsAthleteMediaItem[] = [
     videoSrc: NHSCA_DUALS_2026_XAN_MOODY_HIGHLIGHT_REEL_VIDEO,
     caption: "Xan Moody — NHSCA Duals 2026 highlight reel",
     ariaLabel: "Highlight reel for National team wrestler Xan Moody at NHSCA Duals 2026",
+    aspectClass: "aspect-[9/16] sm:aspect-video",
+  },
+  {
+    id: "jaxon-thomas-highlight-reel",
+    type: "video",
+    category: "highlight",
+    team: "national",
+    athletes: ["Jaxon Thomas"],
+    videoSrc: NHSCA_DUALS_2026_JAXON_THOMAS_HIGHLIGHT_REEL_VIDEO,
+    caption: "Jaxon Thomas — NHSCA Duals 2026 highlight reel",
+    ariaLabel: "Highlight reel for National team wrestler Jaxon Thomas at NHSCA Duals 2026",
     aspectClass: "aspect-[9/16] sm:aspect-video",
   },
 ]
