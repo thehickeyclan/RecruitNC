@@ -10,11 +10,62 @@ import { HardLink } from "@/components/hard-link"
 import { useEffect, useState } from "react"
 import { getTournaments, type Tournament, getTournamentResults } from "@/lib/nc-united-api"
 import { NHSCA_DUALS_2026_NATIONAL_ACHIEVEMENT } from "@/lib/nhsca-duals-public-hero-stats"
+import type { NhscaDualsResultsSnapshot } from "@/lib/nhsca-duals-live-results/types"
+
+function normalizeAthleteName(name: string): string {
+  return name.trim().toLowerCase().replace(/\s+/g, " ")
+}
+
+function isNhscaDuals2026Tournament(t: Tournament): boolean {
+  return t.year === 2026 && /nhsca/i.test(t.name) && /dual/i.test(t.name)
+}
+
+function mergeNhsca2026NationalIntoAggregate(
+  dualsData: (NhscaDualsResultsSnapshot & { tablesReady?: boolean }) | null,
+  hasNhsca2026InDb: boolean,
+  totals: {
+    tournamentCount: number
+    totalTeamWins: number
+    totalTeamLosses: number
+    totalIndividualWins: number
+    totalIndividualLosses: number
+    uniqueAthletes: Set<string>
+  }
+): { dualRecord: string; individual: string; winPct: number | null; ready: boolean } | null {
+  if (hasNhsca2026InDb || !dualsData?.summaries?.national || !dualsData.tablesReady) return null
+
+  const nationalTeam = dualsData.teams?.find((t) => t.team_type === "national")
+  if (!nationalTeam) return null
+
+  const n = dualsData.summaries.national
+  totals.tournamentCount += 1
+  totals.totalTeamWins += n.dualWins
+  totals.totalTeamLosses += n.dualLosses
+  totals.totalIndividualWins += n.matchWins
+  totals.totalIndividualLosses += n.matchLosses
+
+  for (const wrestler of dualsData.wrestlers ?? []) {
+    if (wrestler.team_id !== nationalTeam.id) continue
+    const normalized = normalizeAthleteName(wrestler.name)
+    if (normalized) totals.uniqueAthletes.add(normalized)
+  }
+
+  const matchW = n.matchWins
+  const matchL = n.matchLosses
+  const total = matchW + matchL
+  return {
+    dualRecord: `${n.dualWins}-${n.dualLosses}`,
+    individual: `${matchW}-${matchL}`,
+    winPct: total > 0 ? Math.round((matchW / total) * 100) : null,
+    ready: true,
+  }
+}
 
 export default function NCUnitedNationalTeam() {
   const [tournaments, setTournaments] = useState<Tournament[]>([])
   const [loading, setLoading] = useState(true)
   const [aggregateStats, setAggregateStats] = useState({
+    tournamentCount: 0,
     totalAthletes: 0,
     totalTeamWins: 0,
     totalTeamLosses: 0,
@@ -31,40 +82,26 @@ export default function NCUnitedNationalTeam() {
   } | null>(null)
 
   useEffect(() => {
-    fetch("/api/national-team/duals-results/public", { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (!data?.summaries?.national) return
-        const n = data.summaries.national
-        const matchW = n.matchWins
-        const matchL = n.matchLosses
-        const total = matchW + matchL
-        setNhsca2026Stats({
-          dualRecord: `${n.dualWins}-${n.dualLosses}`,
-          individual: `${matchW}-${matchL}`,
-          winPct: total > 0 ? Math.round((matchW / total) * 100) : null,
-          ready: true,
-        })
-      })
-      .catch(() => {})
-  }, [])
-
-  useEffect(() => {
-    async function loadTournaments() {
+    async function loadNationalTeamStats() {
       try {
-        const data = await getTournaments()
+        const [data, dualsRes] = await Promise.all([
+          getTournaments(),
+          fetch("/api/national-team/duals-results/public", { cache: "no-store" })
+            .then((r) => (r.ok ? r.json() : null))
+            .catch(() => null),
+        ])
+
         setTournaments(data)
 
-        // Calculate aggregate stats
+        let tournamentCount = data.length
         let totalTeamWins = 0
         let totalTeamLosses = 0
         let totalIndividualWins = 0
         let totalIndividualLosses = 0
-        const uniqueWrestlerIds = new Set<string>()
+        const uniqueAthletes = new Set<string>()
+        const hasNhsca2026InDb = data.some(isNhscaDuals2026Tournament)
 
-        // Fetch results for each tournament to count unique athletes
         for (const tournament of data) {
-          // Parse team record (format: "7-2" or "7-1")
           if (tournament.team_record) {
             const recordMatch = tournament.team_record.match(/(\d+)-(\d+)/)
             if (recordMatch) {
@@ -73,7 +110,6 @@ export default function NCUnitedNationalTeam() {
             }
           }
 
-          // Sum individual match stats
           if (tournament.individual_wins !== null) {
             totalIndividualWins += tournament.individual_wins
           }
@@ -81,45 +117,55 @@ export default function NCUnitedNationalTeam() {
             totalIndividualLosses += tournament.individual_losses
           }
 
-          // Fetch results to count unique wrestlers
           try {
             const results = await getTournamentResults(tournament.id)
-            results.forEach((result) => {
-              uniqueWrestlerIds.add(result.wrestler_id)
-            })
+            for (const result of results) {
+              const name = normalizeAthleteName(
+                `${result.wrestler.first_name} ${result.wrestler.last_name}`
+              )
+              if (name) uniqueAthletes.add(name)
+            }
           } catch (err) {
             console.error(`Error loading results for ${tournament.name} ${tournament.year}:`, err)
           }
         }
 
-        // Calculate team record win percentage (dual meets)
-        const totalTeamMatches = totalTeamWins + totalTeamLosses
-        const teamRecordWinPercentage = totalTeamMatches > 0
-          ? Math.round((totalTeamWins / totalTeamMatches) * 100)
-          : 0
-
-        // Calculate overall win percentage (individual matches)
-        const totalMatches = totalIndividualWins + totalIndividualLosses
-        const overallWinPercentage = totalMatches > 0
-          ? Math.round((totalIndividualWins / totalMatches) * 100)
-          : 0
-
-        setAggregateStats({
-          totalAthletes: uniqueWrestlerIds.size,
+        const totals = {
+          tournamentCount,
           totalTeamWins,
           totalTeamLosses,
           totalIndividualWins,
           totalIndividualLosses,
+          uniqueAthletes,
+        }
+        const nhsca2026 = mergeNhsca2026NationalIntoAggregate(dualsRes, hasNhsca2026InDb, totals)
+        if (nhsca2026) setNhsca2026Stats(nhsca2026)
+
+        const totalTeamMatches = totals.totalTeamWins + totals.totalTeamLosses
+        const teamRecordWinPercentage =
+          totalTeamMatches > 0 ? Math.round((totals.totalTeamWins / totalTeamMatches) * 100) : 0
+
+        const totalMatches = totals.totalIndividualWins + totals.totalIndividualLosses
+        const overallWinPercentage =
+          totalMatches > 0 ? Math.round((totals.totalIndividualWins / totalMatches) * 100) : 0
+
+        setAggregateStats({
+          tournamentCount: totals.tournamentCount,
+          totalAthletes: totals.uniqueAthletes.size,
+          totalTeamWins: totals.totalTeamWins,
+          totalTeamLosses: totals.totalTeamLosses,
+          totalIndividualWins: totals.totalIndividualWins,
+          totalIndividualLosses: totals.totalIndividualLosses,
           overallWinPercentage,
           teamRecordWinPercentage,
         })
       } catch (error) {
-        console.error("Error loading tournaments:", error)
+        console.error("Error loading national team stats:", error)
       } finally {
         setLoading(false)
       }
     }
-    loadTournaments()
+    loadNationalTeamStats()
   }, [])
 
   // Find specific tournaments for stats
@@ -169,11 +215,11 @@ export default function NCUnitedNationalTeam() {
             </div>
             <p className="text-sm text-blue-100/90">Get considered for NHSCA Duals, AAU, Deep South &amp; more</p>
 
-            {/* National team stats — UCD + NHSCA (National squad only; excludes Select) */}
+            {/* National team stats — UCD + NHSCA through 2026 (National squad only; excludes Select) */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mt-12 md:mt-16 px-4">
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 md:p-6 border border-white/20">
                 <div className="text-2xl md:text-3xl font-bold text-[#CBAF5D] mb-1 md:mb-2">
-                  {loading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : tournaments.length}
+                  {loading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : aggregateStats.tournamentCount}
                 </div>
                 <div className="text-xs md:text-sm font-medium text-white">National Tournaments</div>
               </div>

@@ -2,13 +2,15 @@
 
 import { useMemo, useState } from "react"
 import Image from "next/image"
-import { Camera } from "lucide-react"
+import { Camera, ChevronDown } from "lucide-react"
 import { getWrestlersForScope } from "@/lib/nhsca-duals-command-center"
 import type { CommandCenterScope } from "@/lib/nhsca-duals-command-center"
 import { formatGalleryRecord, recordForGalleryPhoto } from "@/lib/nhsca-duals-gallery-record-lookup"
 import { galleryPhotosForScope } from "@/lib/nhsca-duals-2026-tournament-gallery"
 import type { NhscaDualsResultsSnapshot } from "@/lib/nhsca-duals-live-results/types"
 import { cn } from "@/lib/utils"
+
+const INITIAL_GALLERY_VISIBLE = 16
 
 function weightLabel(weightClass: string) {
   const u = weightClass.trim().toUpperCase()
@@ -27,36 +29,65 @@ export function NhscaDuals2026TournamentGallery({
     () => (snapshot ? getWrestlersForScope(snapshot, scope) : []),
     [snapshot, scope]
   )
+  const [open, setOpen] = useState(photos.length <= 8)
+  const [visible, setVisible] = useState(INITIAL_GALLERY_VISIBLE)
+  const shown = photos.slice(0, visible)
+  const hasMore = photos.length > visible
 
   return (
-    <section id="gallery" className="scroll-mt-20 bg-white text-[#002147] py-12 md:py-16 -mx-0 border-t border-white/10">
+    <section id="gallery" className="scroll-mt-20 bg-white text-[#002147] py-8 md:py-12 -mx-0 border-t border-white/10">
       <div className="container mx-auto px-4 max-w-6xl">
-        <div className="text-center mb-8 md:mb-10">
-          <div className="inline-flex items-center justify-center gap-2 mb-2">
-            <Camera className="h-6 w-6 text-[#002147]/70" aria-hidden />
-            <h2 className="text-2xl md:text-4xl font-black text-[#002147]">Team gallery</h2>
-          </div>
-          <p className="text-sm md:text-base text-gray-600 max-w-2xl mx-auto">
-            NC United wrestlers in action at NHSCA Duals 2026 — Virginia Beach Sports Center
-          </p>
-        </div>
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          className="w-full flex items-center gap-3 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-4 sm:px-5 text-left hover:bg-gray-100/80 transition-colors mb-6"
+          aria-expanded={open}
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#002147]/10 text-[#002147]">
+            <Camera className="h-5 w-5" aria-hidden />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-lg font-black text-[#002147]">Team gallery</span>
+            <span className="block text-xs text-gray-600 mt-0.5">
+              NC United wrestlers in action — Virginia Beach Sports Center
+            </span>
+          </span>
+          <span className="shrink-0 rounded-full bg-[#002147]/10 px-2.5 py-1 text-sm font-black tabular-nums text-[#002147]">
+            {photos.length}
+          </span>
+          <ChevronDown className={cn("h-5 w-5 text-gray-400 shrink-0 transition-transform", open && "rotate-180")} />
+        </button>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-          {photos.map((photo) => (
-            <GalleryTile
-              key={photo.id}
-              photo={photo}
-              record={formatGalleryRecord(recordForGalleryPhoto(photo, records))}
-            />
-          ))}
-        </div>
+        {open ? (
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+              {shown.map((photo) => (
+                <GalleryTile
+                  key={photo.id}
+                  photo={photo}
+                  record={formatGalleryRecord(recordForGalleryPhoto(photo, records))}
+                />
+              ))}
+            </div>
 
-        <p className="text-center text-xs sm:text-sm text-gray-500 italic mt-8 md:mt-10">
-          Photos from NHSCA National Duals 2026 — showcasing NC United on the national stage
-        </p>
-        <p className="text-center text-xs text-gray-500 italic mt-2">
-          Records reflect on-the-mat dual results only.
-        </p>
+            {hasMore ? (
+              <button
+                type="button"
+                onClick={() => setVisible((n) => n + INITIAL_GALLERY_VISIBLE)}
+                className="mt-6 w-full min-h-[44px] rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm font-semibold text-[#002147] hover:bg-gray-100 transition-colors"
+              >
+                Show more photos ({photos.length - visible} remaining)
+              </button>
+            ) : null}
+
+            <p className="text-center text-xs sm:text-sm text-gray-500 italic mt-8 md:mt-10">
+              Photos from NHSCA National Duals 2026 — showcasing NC United on the national stage
+            </p>
+            <p className="text-center text-xs text-gray-500 italic mt-2">
+              Records reflect on-the-mat dual results only.
+            </p>
+          </>
+        ) : null}
       </div>
     </section>
   )

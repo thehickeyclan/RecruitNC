@@ -2,13 +2,15 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 import Image from "next/image"
-import { ArrowLeft, Calendar, Loader2, MapPin, Trophy } from "lucide-react"
+import { ArrowLeft, Calendar, Loader2, MapPin, Shirt, Trophy, Users } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { HardLink } from "@/components/hard-link"
 import { NhscaDualsBigWinsSection } from "@/components/national-team/nhsca-duals-big-wins-section"
 import { NhscaDualsResultsCommandCenter } from "@/components/national-team/nhsca-duals-results-command-center"
 import { NhscaDuals2026RecapSections, NhscaDuals2026ClosingSection } from "@/components/national-team/nhsca-duals-2026-recap-sections"
+import { NhscaDuals2026AthleteMediaSection } from "@/components/national-team/nhsca-duals-2026-athlete-media-section"
+import { NhscaDualsCollapsibleSection } from "@/components/national-team/nhsca-duals-collapsible-section"
 import { NhscaDualsTournamentMomentMedia } from "@/components/national-team/nhsca-duals-tournament-moment-media"
 import { NHSCA_DUALS_2026_APPAREL_VIDEO_MOMENT } from "@/lib/nhsca-duals-2026-tournament-moments"
 import { NhscaDuals2026TournamentGallery } from "@/components/national-team/nhsca-duals-2026-tournament-gallery"
@@ -46,8 +48,10 @@ const HERO_STATS_TEAM_OPTIONS: { id: HeroStatsScope; label: string }[] = [
 
 const NAV_LINKS = [
   { href: "#recap", label: "Recap" },
+  { href: "#media", label: "Interviews" },
   { href: "#apparel", label: "Team gear" },
   { href: "#mow", label: "MOWs" },
+  { href: "#moments", label: "Moments" },
   { href: "#results", label: "Results" },
   { href: "#cards", label: "Athlete cards" },
   { href: "#big-wins", label: "Big wins" },
@@ -255,14 +259,25 @@ export function NhscaDuals2026PublicResults() {
           </div>
         </div>
 
-        <figure id="apparel" className="scroll-mt-28 max-w-2xl mx-auto mb-8 sm:mb-10">
-          <NhscaDualsTournamentMomentMedia moment={NHSCA_DUALS_2026_APPAREL_VIDEO_MOMENT} />
-          <figcaption className="text-center text-sm text-white/55 italic mt-4 leading-relaxed px-2">
-            {NHSCA_DUALS_2026_APPAREL_VIDEO_MOMENT.caption}
-          </figcaption>
-        </figure>
+        <NhscaDualsCollapsibleSection
+          id="apparel"
+          title="Team gear"
+          subtitle='Official NC United "Pepsi" and "Pinstripes" singlets plus apparel.'
+          defaultOpen={false}
+          icon={<Shirt className="h-5 w-5" aria-hidden />}
+          className="mb-8 sm:mb-10"
+        >
+          <figure className="max-w-2xl mx-auto">
+            <NhscaDualsTournamentMomentMedia moment={NHSCA_DUALS_2026_APPAREL_VIDEO_MOMENT} />
+            <figcaption className="text-center text-sm text-white/55 italic mt-4 leading-relaxed px-2">
+              {NHSCA_DUALS_2026_APPAREL_VIDEO_MOMENT.caption}
+            </figcaption>
+          </figure>
+        </NhscaDualsCollapsibleSection>
 
         <NhscaDuals2026RecapSections scope={PAGE_SCOPE} snapshot={snapshot} />
+
+        <NhscaDuals2026AthleteMediaSection scope={PAGE_SCOPE} />
 
         {/* Results — hub data, team filter lives here only */}
         <section id="results" className="scroll-mt-28 mb-10 sm:mb-14">
@@ -283,17 +298,20 @@ export function NhscaDuals2026PublicResults() {
           )}
         </section>
 
-        {/* Athlete cards — both teams always */}
-        <section id="cards" className="scroll-mt-28 mb-10 sm:mb-14 rounded-2xl border border-white/10 bg-[#0a2040]/50 overflow-hidden">
-          <header className="px-4 sm:px-5 py-4 border-b border-white/10 bg-[#002147]/35">
-            <h2 className="text-xl sm:text-2xl font-black text-white">Athlete cards</h2>
-            <p className="text-xs sm:text-sm text-white/55 mt-1 leading-relaxed">
-              National and Select — official card art with duals record and highlighted wins.
-            </p>
-          </header>
-          <NationalTeamWrestlerCards resultsSnapshot={snapshot} variant="archive" bigWins={bigWins} />
-          <SelectTeamWrestlerCards resultsSnapshot={snapshot} variant="archive" bigWins={bigWins} />
-        </section>
+        {/* Athlete cards — both teams; collapsed by default (large section) */}
+        <NhscaDualsCollapsibleSection
+          id="cards"
+          title="Athlete cards"
+          subtitle="National and Select — official card art with duals record and highlighted wins."
+          defaultOpen={false}
+          icon={<Users className="h-5 w-5" aria-hidden />}
+          className="mb-10 sm:mb-14"
+        >
+          <div className="rounded-xl border border-white/10 bg-[#002147]/35 overflow-hidden -mx-1 sm:-mx-0">
+            <NationalTeamWrestlerCards resultsSnapshot={snapshot} variant="archive" bigWins={bigWins} />
+            <SelectTeamWrestlerCards resultsSnapshot={snapshot} variant="archive" bigWins={bigWins} />
+          </div>
+        </NhscaDualsCollapsibleSection>
 
         <section id="big-wins" className="scroll-mt-28 mb-10 sm:mb-14">
           <NhscaDualsBigWinsSection bigWins={bigWins} scope={PAGE_SCOPE} />
