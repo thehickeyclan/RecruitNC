@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import Image from "next/image"
 import { ArrowLeft, Calendar, Loader2, MapPin, Shirt, Trophy, Users } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
 import { HardLink } from "@/components/hard-link"
 import { NhscaDualsBigWinsSection } from "@/components/national-team/nhsca-duals-big-wins-section"
 import { NhscaDualsResultsCommandCenter } from "@/components/national-team/nhsca-duals-results-command-center"
@@ -47,12 +46,12 @@ const HERO_STATS_TEAM_OPTIONS: { id: HeroStatsScope; label: string }[] = [
 ]
 
 const NAV_LINKS = [
+  { href: "#results", label: "Dual results" },
   { href: "#recap", label: "Recap" },
   { href: "#media", label: "Interviews" },
   { href: "#apparel", label: "Team gear" },
   { href: "#mow", label: "MOWs" },
   { href: "#moments", label: "Moments" },
-  { href: "#results", label: "Results" },
   { href: "#cards", label: "Athlete cards" },
   { href: "#big-wins", label: "Big wins" },
   { href: "#gallery", label: "Gallery" },
@@ -77,38 +76,38 @@ export function NhscaDuals2026PublicResults() {
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
-    setLoadError(null)
-    loadResults()
-      .then((json) => {
+
+    const refresh = async (initial: boolean) => {
+      if (initial) {
+        setLoading(true)
+        setLoadError(null)
+      }
+      try {
+        const json = await loadResults()
         if (cancelled) return
-        if (json.teams?.length) setSnapshot(json)
+        if (json.teams?.length) {
+          setSnapshot(json)
+          setLoadError(null)
+        } else if (initial) {
+          setLoadError(json.message ?? "Dual results are not available yet.")
+        }
         setBigWins(json.bigWins ?? [])
-      })
-      .catch((e) => {
-        if (!cancelled) setLoadError(e instanceof Error ? e.message : "Results unavailable.")
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
+      } catch (e) {
+        if (!cancelled && initial) {
+          setLoadError(e instanceof Error ? e.message : "Results unavailable.")
+        }
+      } finally {
+        if (!cancelled && initial) setLoading(false)
+      }
+    }
+
+    void refresh(true)
+    const id = window.setInterval(() => void refresh(false), 15_000)
     return () => {
       cancelled = true
+      window.clearInterval(id)
     }
   }, [loadResults])
-
-  /** Same hub snapshot — refresh while page is open */
-  useEffect(() => {
-    if (!snapshot?.teams?.length) return
-    const id = window.setInterval(() => {
-      void loadResults()
-        .then((json) => {
-          if (json.teams?.length) setSnapshot(json)
-          setBigWins(json.bigWins ?? [])
-        })
-        .catch(() => {})
-    }, 30_000)
-    return () => window.clearInterval(id)
-  }, [snapshot?.teams?.length, loadResults])
 
   const heroStats = useMemo(() => {
     if (!snapshot?.summaries) return null
@@ -239,6 +238,46 @@ export function NhscaDuals2026PublicResults() {
       </nav>
 
       <div className="container mx-auto px-4 py-6 sm:py-8 max-w-5xl">
+        {/* Dual results first — primary reason families visit this page */}
+        <section id="results" className="scroll-mt-28 mb-10 sm:mb-14">
+          {loading ? (
+            <div className="flex items-center justify-center gap-2 py-12 sm:py-16 text-white/60">
+              <Loader2 className="w-6 h-6 animate-spin" aria-hidden />
+              <span className="text-sm">Loading dual results…</span>
+            </div>
+          ) : snapshot ? (
+            <NhscaDualsResultsCommandCenter snapshot={snapshot} archiveMode initialScope="all" />
+          ) : (
+            <div className="rounded-xl border border-amber-500/30 bg-amber-950/20 px-5 py-6 sm:p-8 text-center">
+              <p className="text-amber-100 text-sm leading-relaxed">
+                {loadError ?? "Dual results could not be loaded right now."}
+              </p>
+              <button
+                type="button"
+                className="mt-4 min-h-[44px] rounded-xl bg-[#CBAF5D] px-5 py-2.5 text-sm font-bold text-[#002147] hover:bg-[#d4bc6a] transition-colors"
+                onClick={() => {
+                  setLoading(true)
+                  setLoadError(null)
+                  void loadResults()
+                    .then((json) => {
+                      if (json.teams?.length) {
+                        setSnapshot(json)
+                        setLoadError(null)
+                      } else {
+                        setLoadError(json.message ?? "Dual results are not available yet.")
+                      }
+                      setBigWins(json.bigWins ?? [])
+                    })
+                    .catch((e) => setLoadError(e instanceof Error ? e.message : "Results unavailable."))
+                    .finally(() => setLoading(false))
+                }}
+              >
+                Retry
+              </button>
+            </div>
+          )}
+        </section>
+
         <div className="relative w-full aspect-[4/3] sm:aspect-[16/9] max-h-[280px] sm:max-h-[360px] rounded-xl overflow-hidden border border-white/10 mb-8 sm:mb-10">
           <Image
             src={heroPhoto.src}
@@ -278,25 +317,6 @@ export function NhscaDuals2026PublicResults() {
         <NhscaDuals2026RecapSections scope={PAGE_SCOPE} snapshot={snapshot} />
 
         <NhscaDuals2026AthleteMediaSection scope={PAGE_SCOPE} />
-
-        {/* Results — hub data, team filter lives here only */}
-        <section id="results" className="scroll-mt-28 mb-10 sm:mb-14">
-          {loading ? (
-            <div className="flex items-center justify-center gap-2 py-12 sm:py-16 text-white/60">
-              <Loader2 className="w-6 h-6 animate-spin" aria-hidden />
-              <span className="text-sm">Loading results from hub…</span>
-            </div>
-          ) : snapshot ? (
-            <NhscaDualsResultsCommandCenter snapshot={snapshot} archiveMode initialScope="all" />
-          ) : (
-            <Card className="border-amber-500/30 bg-amber-950/20">
-              <CardContent className="p-5 sm:p-6 text-center text-amber-100 text-sm leading-relaxed">
-                {loadError ??
-                  "Dual results are syncing from the team hub. Athlete cards and gallery below are still available."}
-              </CardContent>
-            </Card>
-          )}
-        </section>
 
         {/* Athlete cards — both teams; collapsed by default (large section) */}
         <NhscaDualsCollapsibleSection

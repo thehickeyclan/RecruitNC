@@ -1,6 +1,31 @@
 import { describe, expect, it } from "vitest"
 import { buildDualFeed, getWrestlerRecords } from "@/lib/nhsca-duals-command-center"
+import { buildTeamSummary } from "@/lib/nhsca-duals-live-results/summaries"
+import { matchCountsTowardWrestlerRecord } from "@/lib/nhsca-duals-live-results/scoring"
 import type { NhscaDualsResultsSnapshot } from "@/lib/nhsca-duals-live-results/types"
+
+const emptySummaries = (): NhscaDualsResultsSnapshot["summaries"] => ({
+  national: {
+    dualWins: 0,
+    dualLosses: 0,
+    matchWins: 0,
+    matchLosses: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    undefeated: [],
+    topScorers: [],
+  },
+  select: {
+    dualWins: 0,
+    dualLosses: 0,
+    matchWins: 0,
+    matchLosses: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    undefeated: [],
+    topScorers: [],
+  },
+})
 
 describe("buildDualFeed archive visibility", () => {
   const snapshot: NhscaDualsResultsSnapshot = {
@@ -24,28 +49,7 @@ describe("buildDualFeed archive visibility", () => {
       },
     ],
     matches: [],
-    summaries: {
-      national: {
-        dualWins: 0,
-        dualLosses: 0,
-        matchWins: 0,
-        matchLosses: 0,
-        pointsFor: 0,
-        pointsAgainst: 0,
-        undefeated: [],
-        topScorers: [],
-      },
-      select: {
-        dualWins: 0,
-        dualLosses: 0,
-        matchWins: 0,
-        matchLosses: 0,
-        pointsFor: 0,
-        pointsAgainst: 0,
-        undefeated: [],
-        topScorers: [],
-      },
-    },
+    summaries: emptySummaries(),
   }
 
   it("hides unpublished finals from hub feed by default", () => {
@@ -55,10 +59,23 @@ describe("buildDualFeed archive visibility", () => {
   it("shows unpublished finals on public archive feed", () => {
     expect(buildDualFeed(snapshot, "national", "all", { includeUnpublishedFinals: true })).toHaveLength(1)
   })
+
+  it("shows unpublished in-progress duals on public archive feed", () => {
+    const liveSnapshot: NhscaDualsResultsSnapshot = {
+      ...snapshot,
+      duals: [
+        {
+          ...snapshot.duals[0]!,
+          id: "dual-live",
+          status: "in_progress",
+          nc_score: 9,
+          opponent_score: 3,
+        },
+      ],
+    }
+    expect(buildDualFeed(liveSnapshot, "national", "all", { includeUnpublishedFinals: true })).toHaveLength(1)
+  })
 })
-import { buildTeamSummary } from "@/lib/nhsca-duals-live-results/summaries"
-import { matchCountsTowardWrestlerRecord } from "@/lib/nhsca-duals-live-results/scoring"
-import type { NhscaDualsResultsSnapshot } from "@/lib/nhsca-duals-live-results/types"
 
 describe("matchCountsTowardWrestlerRecord", () => {
   it("excludes forfeits and injury defaults", () => {

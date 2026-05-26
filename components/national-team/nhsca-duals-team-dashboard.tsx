@@ -6,6 +6,7 @@ import { NhscaDualSummaryCard } from "@/components/national-team/nhsca-duals-dua
 import type { CommandCenterDayFilter, CommandCenterScope } from "@/lib/nhsca-duals-command-center"
 import {
   buildDualFeed,
+  dualShouldAppearInArchiveFeed,
   getWrestlersForScope,
 } from "@/lib/nhsca-duals-command-center"
 import type { NhscaDualsResultsSnapshot, NhscaDualsWrestlerRecord } from "@/lib/nhsca-duals-live-results/types"
@@ -49,8 +50,10 @@ function DualResultsList({
   const [expandedDualId, setExpandedDualId] = useState<string | null>(null)
   const completed = useMemo(
     () =>
-      buildDualFeed(snapshot, scope, dayFilter, { includeUnpublishedFinals: archiveMode }).filter(
-        (f) => f.dual.status === "final" || f.dual.status === "in_progress"
+      buildDualFeed(snapshot, scope, dayFilter, { includeUnpublishedFinals: archiveMode }).filter((f) =>
+        archiveMode
+          ? dualShouldAppearInArchiveFeed(snapshot, f.dual)
+          : f.dual.status === "final" || f.dual.status === "in_progress"
       ),
     [snapshot, scope, dayFilter, archiveMode]
   )

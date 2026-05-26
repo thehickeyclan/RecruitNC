@@ -76,8 +76,31 @@ function summaryForTeam(
 }
 
 export type BuildDualFeedOptions = {
-  /** Public archive — show completed duals even if admin never toggled publish. */
+  /** Public archive — show recorded duals even if admin never toggled publish. */
   includeUnpublishedFinals?: boolean
+}
+
+/** Any bout entered on the mat (excludes empty/no-match slots). */
+export function dualHasRecordedResults(
+  snapshot: NhscaDualsResultsSnapshot,
+  dualId: string
+): boolean {
+  return snapshot.matches.some(
+    (m) =>
+      m.dual_id === dualId &&
+      m.winner &&
+      m.result_type &&
+      m.result_type !== "no_match"
+  )
+}
+
+export function dualShouldAppearInArchiveFeed(
+  snapshot: NhscaDualsResultsSnapshot,
+  dual: NhscaDualsDualRow
+): boolean {
+  if (dual.status === "final" || dual.status === "in_progress") return true
+  if ((dual.nc_score ?? 0) + (dual.opponent_score ?? 0) > 0) return true
+  return dualHasRecordedResults(snapshot, dual.id)
 }
 
 export function buildDualFeed(
@@ -99,7 +122,8 @@ export function buildDualFeed(
       .filter((d) => {
         if (d.team_id !== team.id || !dualMatchesDay(d, dayFilter)) return false
         if (d.published) return true
-        return includeUnpublishedFinals && d.status === "final"
+        if (!includeUnpublishedFinals) return false
+        return dualShouldAppearInArchiveFeed(snapshot, d)
       })
       .sort((a, b) => a.sort_order - b.sort_order)
 

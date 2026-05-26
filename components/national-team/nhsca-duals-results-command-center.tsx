@@ -9,6 +9,7 @@ import { NhscaDualSummaryCard } from "@/components/national-team/nhsca-duals-dua
 import type { CommandCenterDayFilter, CommandCenterScope } from "@/lib/nhsca-duals-command-center"
 import {
   buildDualFeed,
+  dualShouldAppearInArchiveFeed,
   getSummaryForScope,
   getWrestlersForScope,
 } from "@/lib/nhsca-duals-command-center"
@@ -57,15 +58,18 @@ export function NhscaDualsResultsCommandCenter({
   )
 
   const filteredFeed = useMemo(() => {
-    if (!athleteId) return feed
-    return feed.filter((item) =>
+    const visible = archiveMode
+      ? feed.filter((item) => dualShouldAppearInArchiveFeed(snapshot, item.dual))
+      : feed.filter((f) => f.dual.status === "final" || f.dual.status === "in_progress")
+    if (!athleteId) return visible
+    return visible.filter((item) =>
       snapshot.matches.some((m) => {
         if (m.dual_id !== item.dual.id || !m.winner || !m.result_type) return false
         const dual = snapshot.duals.find((d) => d.id === m.dual_id)
         return resolveNcWrestlerIdForMatch(m, dual, snapshot.wrestlers) === athleteId
       })
     )
-  }, [feed, athleteId, snapshot.matches])
+  }, [feed, athleteId, snapshot, archiveMode])
 
   const liveDualCount = feed.filter((f) => f.dual.status === "in_progress").length
   const dayLabel =
@@ -221,7 +225,7 @@ export function NhscaDualsResultsCommandCenter({
         <div className="p-3 sm:p-3 space-y-2.5 sm:max-h-[min(65vh,640px)] sm:overflow-y-auto">
           {filteredFeed.length === 0 ? (
             <p className="text-sm text-white/50 text-center py-8">
-              {athleteId ? "No bouts for this athlete yet." : "Duals will appear here when the event starts."}
+              {athleteId ? "No bouts for this athlete yet." : archiveMode ? "No dual results yet." : "Duals will appear here when the event starts."}
             </p>
           ) : (
             filteredFeed.map((item) => (
