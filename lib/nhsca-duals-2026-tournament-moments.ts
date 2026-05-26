@@ -36,6 +36,9 @@ export const NHSCA_DUALS_2026_MAC_JOHNSON_RECOVERING_PHOTO =
 export const NHSCA_DUALS_2026_JEKAI_SEDGWICK_BIRTHDAY_PHOTO =
   "/national-team/nhsca-duals-2026/jekai-sedgwick-birthday-day-2.png"
 
+export const NHSCA_DUALS_2026_DAY2_TEAM_DINNER_PHOTO =
+  "/national-team/nhsca-duals-2026/day-2-team-dinner.png"
+
 export const NHSCA_DUALS_2026_COLTON_PALMER_DAY2_RECAP_VIDEO =
   "/national-team/nhsca-duals-2026/videos/colton-palmer-day-2-recap.mov"
 
@@ -56,6 +59,14 @@ export const NHSCA_DUALS_2026_TOURNAMENT_MOMENTS: NhscaDualsTournamentMoment[] =
     caption: "120 lb National Team birthday boy Jekai Sedgwick turned 17 on May 24 — Day 2",
     alt: "Jekai Sedgwick, NC United National Team 120 lbs, on his 17th birthday at NHSCA Duals 2026",
     aspectClass: "aspect-[3/4] sm:aspect-[4/5] max-w-md mx-auto",
+  },
+  {
+    id: "day-2-team-dinner",
+    type: "photo",
+    photoSrc: NHSCA_DUALS_2026_DAY2_TEAM_DINNER_PHOTO,
+    caption: "Team dinner celebrating a great Day 2 for both squads",
+    alt: "NC United National and Select teams at team dinner after Day 2 at NHSCA Duals 2026",
+    aspectClass: "aspect-[3/4] sm:aspect-[4/5] max-w-2xl mx-auto",
   },
   {
     id: "day-3-warmup",

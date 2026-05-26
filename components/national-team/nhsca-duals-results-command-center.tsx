@@ -86,10 +86,10 @@ export function NhscaDualsResultsCommandCenter({
                 ) : null}
               </div>
             ) : (
-              <p className="text-[10px] font-bold uppercase tracking-wider text-white/40 mb-0.5">Full results</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-white/40 mb-0.5">Results</p>
             )}
             <h2 className="text-lg font-black text-white tracking-tight">
-              {archiveMode ? "Duals & records" : "NHSCA Duals Live"}
+              {archiveMode ? "Team & individual results" : "NHSCA Duals Live"}
             </h2>
           </div>
           {!archiveMode ? <Activity className="h-6 w-6 text-[#CBAF5D]/50 shrink-0" aria-hidden /> : null}
@@ -135,11 +135,25 @@ export function NhscaDualsResultsCommandCenter({
           setAthleteId(null)
         }}
       />
-      ) : null}
+      ) : (
+        <FilterBar
+          sortedDays={sortedDays}
+          dayFilter={dayFilter}
+          onDayChange={(d) => {
+            setDayFilter(d)
+            setAthleteId(null)
+          }}
+          scope={scope}
+          onScopeChange={(s) => {
+            setScopeBoth(s)
+            setAthleteId(null)
+          }}
+          hideDayFilter
+          teamFilterLabel="Filter results by team"
+        />
+      )}
 
-      {!archiveMode ? (
-        <KpiStrip summary={summary} dayLabel={dayLabel} scope={scope} hideDayLabel={false} />
-      ) : null}
+      <KpiStrip summary={summary} dayLabel={dayLabel} scope={scope} hideDayLabel={archiveMode} />
 
       {view === "dashboard" ? (
         <NhscaDualsTeamDashboard
@@ -233,6 +247,8 @@ function FilterBar({
   scope,
   onScopeChange,
   hideTeamScope = false,
+  hideDayFilter = false,
+  teamFilterLabel = "Team",
 }: {
   sortedDays: { id: string; name: string }[]
   dayFilter: CommandCenterDayFilter
@@ -240,41 +256,50 @@ function FilterBar({
   scope: CommandCenterScope
   onScopeChange: (s: CommandCenterScope) => void
   hideTeamScope?: boolean
+  hideDayFilter?: boolean
+  teamFilterLabel?: string
 }) {
   const teamOptions: { id: CommandCenterScope; label: string }[] = [
-    { id: "all", label: "All" },
+    { id: "all", label: "Both teams" },
     { id: "national", label: "National" },
     { id: "select", label: "Select" },
   ]
 
   return (
     <div className="space-y-2">
-      <HorizontalScrollRow hint="Swipe for more days" showHint={sortedDays.length > 2}>
-        <FilterPill active={dayFilter === "all"} onClick={() => onDayChange("all")}>
-          All
-        </FilterPill>
-        {sortedDays.map((d) => (
-          <FilterPill key={d.id} active={dayFilter === d.id} onClick={() => onDayChange(d.id)}>
-            {d.name}
+      {!hideDayFilter ? (
+        <HorizontalScrollRow hint="Swipe for more days" showHint={sortedDays.length > 2}>
+          <FilterPill active={dayFilter === "all"} onClick={() => onDayChange("all")}>
+            All days
           </FilterPill>
-        ))}
-      </HorizontalScrollRow>
+          {sortedDays.map((d) => (
+            <FilterPill key={d.id} active={dayFilter === d.id} onClick={() => onDayChange(d.id)}>
+              {d.name}
+            </FilterPill>
+          ))}
+        </HorizontalScrollRow>
+      ) : null}
       {!hideTeamScope ? (
-      <div className="flex rounded-lg bg-[#0a2040] border border-white/10 p-0.5 gap-0.5">
-        {teamOptions.map((o) => (
-          <button
-            key={o.id}
-            type="button"
-            className={cn(
-              "flex-1 min-h-[44px] rounded-md text-xs sm:text-sm font-bold transition-colors px-1",
-              scope === o.id ? "bg-[#CBAF5D] text-[#002147]" : "text-white/65 hover:text-white"
-            )}
-            onClick={() => onScopeChange(o.id)}
-          >
-            {o.label}
-          </button>
-        ))}
-      </div>
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-white/40 mb-1.5 px-0.5">
+            {teamFilterLabel}
+          </p>
+          <div className="flex rounded-lg bg-[#0a2040] border border-white/10 p-0.5 gap-0.5">
+            {teamOptions.map((o) => (
+              <button
+                key={o.id}
+                type="button"
+                className={cn(
+                  "flex-1 min-h-[44px] rounded-md text-xs sm:text-sm font-bold transition-colors px-1",
+                  scope === o.id ? "bg-[#CBAF5D] text-[#002147]" : "text-white/65 hover:text-white"
+                )}
+                onClick={() => onScopeChange(o.id)}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+        </div>
       ) : null}
     </div>
   )
