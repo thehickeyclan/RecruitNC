@@ -14,6 +14,9 @@ export const NHSCA_DUALS_2026_BOTH_TEAMS_PHOTO =
 export const NHSCA_DUALS_2026_BOTH_TEAMS_WARMUP_PHOTO =
   "/national-team/nhsca-duals-2026/day-3-both-teams-warmup.png"
 
+export const NHSCA_DUALS_2026_MAIN_BANNER_PHOTO =
+  "/national-team/nhsca-duals-2026/main-banner-both-teams.png"
+
 export type NhscaDualsHeroTeamPhoto = {
   src: string
   alt: string
@@ -38,8 +41,8 @@ export function heroTeamPhotoForScope(scope: CommandCenterScope): NhscaDualsHero
     }
   }
   return {
-    src: NHSCA_DUALS_2026_BOTH_TEAMS_WARMUP_PHOTO,
+    src: NHSCA_DUALS_2026_MAIN_BANNER_PHOTO,
     alt: "NC United National and Select teams together at NHSCA Duals 2026",
-    objectPosition: "center center",
+    objectPosition: "center 72%",
   }
 }

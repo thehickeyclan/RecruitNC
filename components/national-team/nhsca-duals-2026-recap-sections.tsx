@@ -171,9 +171,9 @@ export function NhscaDuals2026ClosingSection() {
             <h2 className="text-xl sm:text-2xl font-bold text-white">Coaching &amp; leadership</h2>
           </div>
           <p className="text-sm sm:text-base leading-relaxed text-white/75 mb-4">
-            NC United was led by an exceptional coaching staff including Michael Macchiavello, Colton Palmer, and
-            Araad Fischer — plus club coaches who supported the team in every corner and on the mat throughout the
-            tournament.
+            NC United was led by an exceptional coaching staff including Michael Macchiavello, Colton Palmer,
+            Araad Fischer, Justin Perry, and Matt Hickey — plus club coaches who supported the team in every corner
+            and on the mat throughout the tournament.
           </p>
           <p className="text-sm sm:text-base leading-relaxed text-white/75">
             Special thanks to every parent, supporter, and club program that helped our National and Select squads
