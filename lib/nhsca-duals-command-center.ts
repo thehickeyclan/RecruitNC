@@ -1,5 +1,5 @@
 import { buildTeamSummary } from "@/lib/nhsca-duals-live-results/summaries"
-import { NHSCA_DUALS_WEIGHTS, wrestlerNetPoints } from "@/lib/nhsca-duals-live-results/scoring"
+import { NHSCA_DUALS_WEIGHTS, matchCountsTowardWrestlerRecord, wrestlerNetPoints } from "@/lib/nhsca-duals-live-results/scoring"
 import { resolveNcWrestlerIdForMatch } from "@/lib/nhsca-duals-resolve-nc-wrestler"
 import type {
   NhscaDualsDualRow,
@@ -75,11 +75,18 @@ function summaryForTeam(
   return buildTeamSummary(team.id, duals, matches, snapshot.wrestlers)
 }
 
+export type BuildDualFeedOptions = {
+  /** Public archive — show completed duals even if admin never toggled publish. */
+  includeUnpublishedFinals?: boolean
+}
+
 export function buildDualFeed(
   snapshot: NhscaDualsResultsSnapshot,
   scope: CommandCenterScope,
-  dayFilter: CommandCenterDayFilter = "all"
+  dayFilter: CommandCenterDayFilter = "all",
+  options: BuildDualFeedOptions = {}
 ): DualFeedItem[] {
+  const { includeUnpublishedFinals = false } = options
   const types: ("national" | "select")[] =
     scope === "all" ? ["national", "select"] : [scope === "select" ? "select" : "national"]
 
@@ -89,7 +96,11 @@ export function buildDualFeed(
     const team = snapshot.teams.find((t) => t.team_type === teamType)
     if (!team) continue
     const duals = snapshot.duals
-      .filter((d) => d.team_id === team.id && d.published && dualMatchesDay(d, dayFilter))
+      .filter((d) => {
+        if (d.team_id !== team.id || !dualMatchesDay(d, dayFilter)) return false
+        if (d.published) return true
+        return includeUnpublishedFinals && d.status === "final"
+      })
       .sort((a, b) => a.sort_order - b.sort_order)
 
     for (const dual of duals) {
@@ -154,8 +165,10 @@ export function getWrestlerRecords(
     const rec = byWrestler.get(wid)!
     rec.pointsFor += m.nc_points
     rec.pointsAgainst += m.opponent_points
-    if (m.winner === "nc") rec.wins++
-    else if (m.winner === "opponent") rec.losses++
+    if (matchCountsTowardWrestlerRecord(m.result_type)) {
+      if (m.winner === "nc") rec.wins++
+      else if (m.winner === "opponent") rec.losses++
+    }
   }
 
   return [...byWrestler.values()].sort((a, b) => {

@@ -702,6 +702,7 @@ export async function refreshDualScores(admin: SupabaseClient, dualId: string): 
       nc_score: scores.nc_score,
       opponent_score: scores.opponent_score,
       status,
+      ...(status === "final" ? { published: true } : {}),
       updated_at: new Date().toISOString(),
     })
     .eq("id", dualId)
@@ -712,10 +713,9 @@ export async function setDualStatus(
   dualId: string,
   status: "not_started" | "in_progress" | "final"
 ): Promise<{ ok: boolean; error?: string }> {
-  const { error } = await admin
-    .from("nhsca_duals_duals")
-    .update({ status, updated_at: new Date().toISOString() })
-    .eq("id", dualId)
+  const patch: Record<string, unknown> = { status, updated_at: new Date().toISOString() }
+  if (status === "final") patch.published = true
+  const { error } = await admin.from("nhsca_duals_duals").update(patch).eq("id", dualId)
   return error ? { ok: false, error: error.message } : { ok: true }
 }
 

@@ -287,7 +287,7 @@ export function NhscaDuals2026PublicResults() {
               <span className="text-sm">Loading results from hub…</span>
             </div>
           ) : snapshot ? (
-            <NhscaDualsResultsCommandCenter snapshot={snapshot} archiveMode />
+            <NhscaDualsResultsCommandCenter snapshot={snapshot} archiveMode initialScope="all" />
           ) : (
             <Card className="border-amber-500/30 bg-amber-950/20">
               <CardContent className="p-5 sm:p-6 text-center text-amber-100 text-sm leading-relaxed">

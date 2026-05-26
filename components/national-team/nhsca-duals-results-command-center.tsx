@@ -51,7 +51,10 @@ export function NhscaDualsResultsCommandCenter({
 
   const summary = useMemo(() => getSummaryForScope(snapshot, scope, dayFilter), [snapshot, scope, dayFilter])
   const wrestlers = useMemo(() => getWrestlersForScope(snapshot, scope, dayFilter), [snapshot, scope, dayFilter])
-  const feed = useMemo(() => buildDualFeed(snapshot, scope, dayFilter), [snapshot, scope, dayFilter])
+  const feed = useMemo(
+    () => buildDualFeed(snapshot, scope, dayFilter, { includeUnpublishedFinals: archiveMode }),
+    [snapshot, scope, dayFilter, archiveMode]
+  )
 
   const filteredFeed = useMemo(() => {
     if (!athleteId) return feed
@@ -179,6 +182,7 @@ export function NhscaDualsResultsCommandCenter({
               </button>
             ) : null}
           </div>
+          <p className="text-[10px] text-white/40 mb-2">Records exclude forfeits; dual scores still include them.</p>
           <HorizontalScrollRow hint="Swipe for more athletes" edgeClassName="from-[#0a2040]/95">
             {wrestlers.map((w) => {
               const active = athleteId === w.wrestlerId

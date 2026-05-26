@@ -10,6 +10,7 @@ import { HardLink } from "@/components/hard-link"
 import { useEffect, useState } from "react"
 import { getTournaments, type Tournament, getTournamentResults } from "@/lib/nc-united-api"
 import { NHSCA_DUALS_2026_NATIONAL_ACHIEVEMENT } from "@/lib/nhsca-duals-public-hero-stats"
+import { NHSCA_DUALS_2026_NATIONAL_JOURNEY_CARD_PHOTO } from "@/lib/nhsca-duals-2026-team-photos"
 import type { NhscaDualsResultsSnapshot } from "@/lib/nhsca-duals-live-results/types"
 
 function normalizeAthleteName(name: string): string {
@@ -376,11 +377,16 @@ export default function NCUnitedNationalTeam() {
             <div className="grid lg:grid-cols-2 gap-8 md:gap-12 max-w-7xl mx-auto">
               {/* NHSCA Duals 2026 — National Team */}
               <Card className="overflow-hidden shadow-lg border-0 lg:col-span-2">
-                <div
-                  className="relative h-64 md:h-80 bg-cover bg-no-repeat bg-[center_72%]"
-                  style={{ backgroundImage: "url('/national-team/nhsca-duals-2026/national-team-photo.png')" }}
-                >
-                  <div className="absolute inset-0 bg-black/45"></div>
+                <div className="relative w-full h-72 sm:h-80 md:h-[22rem] lg:h-[24rem] overflow-hidden bg-[#002147]">
+                  <Image
+                    src={NHSCA_DUALS_2026_NATIONAL_JOURNEY_CARD_PHOTO.src}
+                    alt={NHSCA_DUALS_2026_NATIONAL_JOURNEY_CARD_PHOTO.alt}
+                    fill
+                    className="object-cover"
+                    style={{ objectPosition: NHSCA_DUALS_2026_NATIONAL_JOURNEY_CARD_PHOTO.objectPosition }}
+                    sizes="(max-width: 768px) 100vw, 1280px"
+                  />
+                  <div className="absolute inset-0 bg-black/45" />
                   <div className="relative z-10 p-6 md:p-8 h-full flex flex-col justify-end text-white">
                     <Badge className="w-fit mb-3 md:mb-4 bg-[#CBAF5D] hover:bg-[#CBAF5D] text-[#002147] border-0">
                       2026

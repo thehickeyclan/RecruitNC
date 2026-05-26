@@ -84,7 +84,7 @@ export function NhscaDuals2026TournamentGallery({
               Photos from NHSCA National Duals 2026 — showcasing NC United on the national stage
             </p>
             <p className="text-center text-xs text-gray-500 italic mt-2">
-              Records reflect on-the-mat dual results only.
+              Records exclude forfeits and reflect on-the-mat dual results only.
             </p>
           </>
         ) : null}

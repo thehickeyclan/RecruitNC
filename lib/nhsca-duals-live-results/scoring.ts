@@ -56,6 +56,18 @@ export function pointsForResultType(resultType: NhscaDualsResultType | null | un
   return RESULT_TYPE_OPTIONS.find((o) => o.value === resultType)?.points ?? 0
 }
 
+/** W-L records exclude forfeits and injury defaults; dual/team points still include them. */
+export function matchCountsTowardWrestlerRecord(
+  resultType: NhscaDualsResultType | null | undefined
+): boolean {
+  return (
+    !!resultType &&
+    resultType !== "no_match" &&
+    resultType !== "forfeit" &&
+    resultType !== "injury_default"
+  )
+}
+
 export function resultTypeLabel(resultType: NhscaDualsResultType | null | undefined): string {
   if (!resultType) return "—"
   return RESULT_TYPE_OPTIONS.find((o) => o.value === resultType)?.short ?? resultType
