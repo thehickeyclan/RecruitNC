@@ -49,9 +49,9 @@ const NAV_LINKS = [
   { href: "#results", label: "Dual results" },
   { href: "#recap", label: "Recap" },
   { href: "#media", label: "Interviews" },
-  { href: "#apparel", label: "Team gear" },
   { href: "#mow", label: "MOWs" },
   { href: "#moments", label: "Moments" },
+  { href: "#apparel", label: "Team gear" },
   { href: "#cards", label: "Athlete cards" },
   { href: "#big-wins", label: "Big wins" },
   { href: "#gallery", label: "Gallery" },
@@ -125,7 +125,7 @@ export function NhscaDuals2026PublicResults() {
 
   return (
     <div className="min-h-screen bg-[#001428]">
-      {/* Hero — tournament story only; no team toggle */}
+      {/* Hero — headline, stats, team photo */}
       <section className="bg-[#002147] text-white border-b border-white/10">
         <div className="container mx-auto px-4 py-6 sm:py-8 md:py-10 max-w-5xl">
           <HardLink
@@ -136,78 +136,102 @@ export function NhscaDuals2026PublicResults() {
             Back to National Team
           </HardLink>
 
-          <Badge className="mb-3 bg-[#B31B1B] text-white border-0 text-xs sm:text-sm rounded-full px-4 py-1">
-            Tournament Recap
-          </Badge>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black leading-[1.1] mb-2 sm:mb-3">
-            {scopeHeadline(PAGE_SCOPE)}
-          </h1>
-          <p className="text-blue-100/90 text-sm sm:text-base md:text-lg mb-5 max-w-2xl leading-relaxed">
-            {scopeSubheadline(PAGE_SCOPE)}
-          </p>
+          <div className="grid gap-8 lg:grid-cols-[1fr_min(300px)] lg:gap-10 xl:grid-cols-[1fr_360px] lg:items-start">
+            <div className="min-w-0">
+              <Badge className="mb-3 bg-[#B31B1B] text-white border-0 text-xs sm:text-sm rounded-full px-4 py-1">
+                Tournament Recap
+              </Badge>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black leading-[1.1] mb-2 sm:mb-3">
+                {scopeHeadline(PAGE_SCOPE)}
+              </h1>
+              <p className="text-blue-100/90 text-sm sm:text-base md:text-lg mb-5 max-w-2xl leading-relaxed">
+                {scopeSubheadline(PAGE_SCOPE)}
+              </p>
 
-          <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-blue-100/90 mb-5 sm:mb-6">
-            <span className="inline-flex items-center gap-1.5">
-              <Calendar className="w-4 h-4 shrink-0" aria-hidden />
-              May 23–26, 2026
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <MapPin className="w-4 h-4 shrink-0" aria-hidden />
-              Virginia Beach, VA
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <Trophy className="w-4 h-4 shrink-0" aria-hidden />
-              {achievementLine ?? "NHSCA National Duals"}
-            </span>
-          </div>
-
-          {heroStatTiles.length > 0 ? (
-            <div className="max-w-2xl">
-              <div className="flex items-center justify-between gap-3 mb-2">
-                <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-white/45">
-                  Team stats
-                </p>
-                <div className="flex rounded-lg bg-[#0a2040] border border-white/10 p-0.5 gap-0.5">
-                  {HERO_STATS_TEAM_OPTIONS.map((o) => (
-                    <button
-                      key={o.id}
-                      type="button"
-                      onClick={() => setHeroStatsScope(o.id)}
-                      className={cn(
-                        "min-h-[36px] rounded-md px-3 text-xs font-bold transition-colors",
-                        heroStatsScope === o.id ? "bg-[#CBAF5D] text-[#002147]" : "text-white/65 hover:text-white"
-                      )}
-                    >
-                      {o.label}
-                    </button>
-                  ))}
-                </div>
+              <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-blue-100/90 mb-5 sm:mb-6">
+                <span className="inline-flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4 shrink-0" aria-hidden />
+                  May 23–26, 2026
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <MapPin className="w-4 h-4 shrink-0" aria-hidden />
+                  Virginia Beach, VA
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Trophy className="w-4 h-4 shrink-0" aria-hidden />
+                  {achievementLine ?? "NHSCA National Duals"}
+                </span>
               </div>
-              <p className="text-[11px] text-blue-100/55 mb-2">{heroStatsAchievementLine}</p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
-                {heroStatTiles.map((stat) => (
-                  <div
-                    key={stat.label}
-                    className="rounded-xl border border-white/15 bg-[#0a2040]/60 px-2 py-3 sm:px-3 text-center"
-                  >
-                    <p className="text-[9px] sm:text-[10px] uppercase tracking-wide text-blue-200/80 font-semibold">
-                      {stat.label}
+
+              {heroStatTiles.length > 0 ? (
+                <div className="max-w-2xl">
+                  <div className="flex items-center justify-between gap-3 mb-2">
+                    <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-white/45">
+                      Team stats
                     </p>
-                    <p className="text-lg sm:text-xl font-black text-[#CBAF5D] tabular-nums mt-0.5 leading-tight">
-                      {stat.value}
-                    </p>
+                    <div className="flex rounded-lg bg-[#0a2040] border border-white/10 p-0.5 gap-0.5">
+                      {HERO_STATS_TEAM_OPTIONS.map((o) => (
+                        <button
+                          key={o.id}
+                          type="button"
+                          onClick={() => setHeroStatsScope(o.id)}
+                          className={cn(
+                            "min-h-[36px] rounded-md px-3 text-xs font-bold transition-colors",
+                            heroStatsScope === o.id ? "bg-[#CBAF5D] text-[#002147]" : "text-white/65 hover:text-white"
+                          )}
+                        >
+                          {o.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                ))}
+                  <p className="text-[11px] text-blue-100/55 mb-2">{heroStatsAchievementLine}</p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
+                    {heroStatTiles.map((stat) => (
+                      <div
+                        key={stat.label}
+                        className="rounded-xl border border-white/15 bg-[#0a2040]/60 px-2 py-3 sm:px-3 text-center"
+                      >
+                        <p className="text-[9px] sm:text-[10px] uppercase tracking-wide text-blue-200/80 font-semibold">
+                          {stat.label}
+                        </p>
+                        <p className="text-lg sm:text-xl font-black text-[#CBAF5D] tabular-nums mt-0.5 leading-tight">
+                          {stat.value}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              <HardLink
+                href="/national-team/hub"
+                className="inline-flex items-center min-h-[44px] mt-5 sm:mt-6 rounded-xl border border-[#CBAF5D]/40 bg-[#CBAF5D]/15 px-5 py-2.5 text-sm font-bold text-[#CBAF5D] hover:bg-[#CBAF5D]/25 transition-colors"
+              >
+                NC United team hub →
+              </HardLink>
+            </div>
+
+            <div className="relative w-full aspect-[4/3] lg:aspect-[5/4] rounded-xl overflow-hidden border border-white/15 shadow-xl">
+              <Image
+                src={heroPhoto.src}
+                alt={heroPhoto.alt}
+                fill
+                className="object-cover"
+                style={{ objectPosition: heroPhoto.objectPosition }}
+                priority
+                sizes="(max-width: 1024px) 100vw, 360px"
+              />
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent px-4 py-3 sm:py-4">
+                <p className="text-sm sm:text-base font-bold text-white leading-tight">
+                  {scopePhotoTitle(PAGE_SCOPE)}
+                </p>
+                <p className="text-xs text-white/85 mt-0.5">
+                  Virginia Beach, VA · {achievementLine ?? "NHSCA Duals 2026"}
+                </p>
               </div>
             </div>
-          ) : null}
-
-          <HardLink
-            href="/national-team/hub"
-            className="inline-flex items-center min-h-[44px] mt-5 sm:mt-6 rounded-xl border border-[#CBAF5D]/40 bg-[#CBAF5D]/15 px-5 py-2.5 text-sm font-bold text-[#CBAF5D] hover:bg-[#CBAF5D]/25 transition-colors"
-          >
-            NC United team hub →
-          </HardLink>
+          </div>
         </div>
       </section>
 
@@ -238,7 +262,7 @@ export function NhscaDuals2026PublicResults() {
       </nav>
 
       <div className="container mx-auto px-4 py-6 sm:py-8 max-w-5xl">
-        {/* Dual results first — primary reason families visit this page */}
+        {/* 1. Dual results */}
         <section id="results" className="scroll-mt-28 mb-10 sm:mb-14">
           {loading ? (
             <div className="flex items-center justify-center gap-2 py-12 sm:py-16 text-white/60">
@@ -246,7 +270,7 @@ export function NhscaDuals2026PublicResults() {
               <span className="text-sm">Loading dual results…</span>
             </div>
           ) : snapshot ? (
-            <NhscaDualsResultsCommandCenter snapshot={snapshot} archiveMode initialScope="all" />
+            <NhscaDualsResultsCommandCenter snapshot={snapshot} archiveMode initialScope="national" />
           ) : (
             <div className="rounded-xl border border-amber-500/30 bg-amber-950/20 px-5 py-6 sm:p-8 text-center">
               <p className="text-amber-100 text-sm leading-relaxed">
@@ -278,26 +302,13 @@ export function NhscaDuals2026PublicResults() {
           )}
         </section>
 
-        <div className="relative w-full aspect-[4/3] sm:aspect-[16/9] max-h-[280px] sm:max-h-[360px] rounded-xl overflow-hidden border border-white/10 mb-8 sm:mb-10">
-          <Image
-            src={heroPhoto.src}
-            alt={heroPhoto.alt}
-            fill
-            className="object-cover"
-            style={{ objectPosition: heroPhoto.objectPosition }}
-            priority
-            sizes="(max-width: 768px) 100vw, 1024px"
-          />
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent px-4 sm:px-6 py-4 sm:py-5">
-            <h2 className="text-lg sm:text-2xl font-bold text-white leading-tight">
-              {scopePhotoTitle(PAGE_SCOPE)}
-            </h2>
-            <p className="text-sm text-white/90 mt-1">
-              Virginia Beach, VA · {achievementLine ?? "NHSCA Duals 2026"}
-            </p>
-          </div>
-        </div>
+        {/* 2. Tournament recap (MOW, moments, coaching) */}
+        <NhscaDuals2026RecapSections scope={PAGE_SCOPE} snapshot={snapshot} />
 
+        {/* 3. Interviews & highlight reels */}
+        <NhscaDuals2026AthleteMediaSection scope={PAGE_SCOPE} />
+
+        {/* 4. Team gear */}
         <NhscaDualsCollapsibleSection
           id="apparel"
           title="Team gear"
@@ -314,11 +325,7 @@ export function NhscaDuals2026PublicResults() {
           </figure>
         </NhscaDualsCollapsibleSection>
 
-        <NhscaDuals2026RecapSections scope={PAGE_SCOPE} snapshot={snapshot} />
-
-        <NhscaDuals2026AthleteMediaSection scope={PAGE_SCOPE} />
-
-        {/* Athlete cards — both teams; collapsed by default (large section) */}
+        {/* 5. Athlete cards */}
         <NhscaDualsCollapsibleSection
           id="cards"
           title="Athlete cards"
@@ -333,6 +340,7 @@ export function NhscaDuals2026PublicResults() {
           </div>
         </NhscaDualsCollapsibleSection>
 
+        {/* 6. Big wins */}
         <section id="big-wins" className="scroll-mt-28 mb-10 sm:mb-14">
           <NhscaDualsBigWinsSection bigWins={bigWins} scope={PAGE_SCOPE} />
         </section>
