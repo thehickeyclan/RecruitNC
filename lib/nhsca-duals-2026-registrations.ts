@@ -305,6 +305,18 @@ export function nhscaDualsRegistrationTotalCents(r: Pick<NhscaDuals2026Registrat
   return (r.reg_fee_cents || 0) + (r.apparel_fee_cents || 0)
 }
 
+/** Prefer line-item total when hub checkout stored fees differently than Stripe. */
+export function nhscaDualsRegistrationDisplayTotalCents(
+  r: Pick<NhscaDuals2026Registration, "reg_fee_cents" | "apparel_fee_cents"> & {
+    line_items?: NhscaOrderLineDisplay[]
+  }
+): number {
+  const fromFees = nhscaDualsRegistrationTotalCents(r)
+  const fromLines = (r.line_items ?? []).reduce((sum, item) => sum + (item.amount_cents || 0), 0)
+  if (fromLines > 0) return Math.max(fromFees, fromLines)
+  return fromFees
+}
+
 export function nhscaDualsRegistrationIsPaid(r: Pick<NhscaDuals2026Registration, "status" | "order_id">) {
   return r.status === "paid" || Boolean(r.order_id)
 }

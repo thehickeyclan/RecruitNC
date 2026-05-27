@@ -1,7 +1,7 @@
 import type { NhscaOrderLineDisplay } from "@/lib/nhsca-hub-checkout-pricing"
 import {
+  nhscaDualsRegistrationDisplayTotalCents,
   nhscaDualsRegistrationIsPaid,
-  nhscaDualsRegistrationTotalCents,
   nhscaDualsTeamShortLabel,
   type NhscaDuals2026Registration,
 } from "@/lib/nhsca-duals-2026-registrations"
@@ -29,7 +29,7 @@ export function toOrdersReportRow(r: NhscaDuals2026Registration & {
 }): NhscaOrdersReportRow {
   return {
     ...r,
-    total_cents: nhscaDualsRegistrationTotalCents(r),
+    total_cents: nhscaDualsRegistrationDisplayTotalCents(r),
     team: nhscaDualsTeamShortLabel(r.event_slug),
     is_paid: nhscaDualsRegistrationIsPaid(r),
     athlete_name: `${r.athlete_first_name ?? ""} ${r.athlete_last_name ?? ""}`.trim() || "—",

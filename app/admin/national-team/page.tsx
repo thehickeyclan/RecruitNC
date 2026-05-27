@@ -18,7 +18,7 @@ const sections = [
   {
     href: "/admin/blue/national-team-payments",
     title: "National team payments",
-    description: "NHSCA 2026 (and other events): who has paid, who has not. Registrations and store orders for revenue by product.",
+    description: "NHSCA 2026 (and other events): who has paid, send payment receipts, and view orders.",
     icon: DollarSign,
   },
   {

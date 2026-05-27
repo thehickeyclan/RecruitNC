@@ -35,6 +35,11 @@ type PublicSnapshot = NhscaDualsResultsSnapshot & {
   message?: string
 }
 
+function publicSnapshotReady(json: PublicSnapshot): boolean {
+  if (json.tablesReady === true) return true
+  return (json.teams?.length ?? 0) > 0 || (json.duals?.length ?? 0) > 0 || (json.matches?.length ?? 0) > 0
+}
+
 /** Recap page always shows combined National + Select story. Team filter lives in Results only. */
 const PAGE_SCOPE = "all" as const
 
@@ -67,11 +72,11 @@ export function NhscaDuals2026PublicResults() {
 
   const loadResults = useCallback(async () => {
     const r = await fetch("/api/national-team/duals-results/public", { cache: "no-store" })
+    const body = (await r.json().catch(() => ({}))) as PublicSnapshot
     if (!r.ok) {
-      const body = (await r.json().catch(() => ({}))) as { message?: string }
       throw new Error(body.message ?? "Could not load dual results.")
     }
-    return r.json() as Promise<PublicSnapshot>
+    return body
   }, [])
 
   useEffect(() => {
@@ -85,7 +90,7 @@ export function NhscaDuals2026PublicResults() {
       try {
         const json = await loadResults()
         if (cancelled) return
-        if (json.teams?.length) {
+        if (publicSnapshotReady(json)) {
           setSnapshot(json)
           setLoadError(null)
         } else if (initial) {
@@ -284,7 +289,7 @@ export function NhscaDuals2026PublicResults() {
                   setLoadError(null)
                   void loadResults()
                     .then((json) => {
-                      if (json.teams?.length) {
+                      if (publicSnapshotReady(json)) {
                         setSnapshot(json)
                         setLoadError(null)
                       } else {

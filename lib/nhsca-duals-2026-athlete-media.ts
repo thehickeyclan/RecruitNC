@@ -1,14 +1,17 @@
 import type { CommandCenterScope } from "@/lib/nhsca-duals-command-center"
-import type { NhscaDualsVideoMoment } from "@/lib/nhsca-duals-2026-tournament-moments"
+import type { NhscaDualsTournamentMoment } from "@/lib/nhsca-duals-2026-tournament-moments"
 import {
+  NHSCA_DUALS_2026_CORY_THOMAS_PORTRAIT_PHOTO,
   NHSCA_DUALS_2026_JAXON_THOMAS_HIGHLIGHT_REEL_VIDEO,
+  NHSCA_DUALS_2026_MAC_JOHNSON_PORTRAIT_PHOTO,
+  NHSCA_DUALS_2026_SAMMY_GANTT_PORTRAIT_PHOTO,
   NHSCA_DUALS_2026_XAN_JAXON_INTERVIEW_VIDEO,
   NHSCA_DUALS_2026_XAN_MOODY_HIGHLIGHT_REEL_VIDEO,
 } from "@/lib/nhsca-duals-2026-tournament-moments"
 
-export type NhscaDualsAthleteMediaCategory = "interview" | "highlight"
+export type NhscaDualsAthleteMediaCategory = "interview" | "highlight" | "photo"
 
-export type NhscaDualsAthleteMediaItem = NhscaDualsVideoMoment & {
+export type NhscaDualsAthleteMediaItem = NhscaDualsTournamentMoment & {
   category: NhscaDualsAthleteMediaCategory
   /** Default: both teams / all scopes */
   team?: "national" | "select" | "both"
@@ -16,7 +19,7 @@ export type NhscaDualsAthleteMediaItem = NhscaDualsVideoMoment & {
   athletes?: string[]
 }
 
-/** Interviews & highlight reels — add new entries here as media is uploaded. */
+/** Interviews, highlight reels & athlete photos — add new entries here as media is uploaded. */
 export const NHSCA_DUALS_2026_ATHLETE_MEDIA: NhscaDualsAthleteMediaItem[] = [
   {
     id: "xan-moody-jaxon-thomas-interview",
@@ -51,6 +54,39 @@ export const NHSCA_DUALS_2026_ATHLETE_MEDIA: NhscaDualsAthleteMediaItem[] = [
     ariaLabel: "Highlight reel for National team wrestler Jaxon Thomas at NHSCA Duals 2026",
     aspectClass: "aspect-[9/16] sm:aspect-video",
   },
+  {
+    id: "cory-thomas-portrait",
+    type: "photo",
+    category: "photo",
+    team: "select",
+    athletes: ["Cory Thomas"],
+    photoSrc: NHSCA_DUALS_2026_CORY_THOMAS_PORTRAIT_PHOTO,
+    alt: "Cory Thomas — NC United Select team at NHSCA Duals 2026",
+    caption: "Cory Thomas — NHSCA Duals 2026",
+    aspectClass: "aspect-[4/5] sm:aspect-[3/4]",
+  },
+  {
+    id: "mac-johnson-portrait",
+    type: "photo",
+    category: "photo",
+    team: "national",
+    athletes: ["Mac Johnson"],
+    photoSrc: NHSCA_DUALS_2026_MAC_JOHNSON_PORTRAIT_PHOTO,
+    alt: "Mac Johnson — NC United National team at NHSCA Duals 2026",
+    caption: "Mac Johnson — NHSCA Duals 2026",
+    aspectClass: "aspect-[4/5] sm:aspect-[3/4]",
+  },
+  {
+    id: "sammy-gantt-portrait",
+    type: "photo",
+    category: "photo",
+    team: "national",
+    athletes: ["Sammy Gantt"],
+    photoSrc: NHSCA_DUALS_2026_SAMMY_GANTT_PORTRAIT_PHOTO,
+    alt: "Sammy Gantt — NC United National team at NHSCA Duals 2026",
+    caption: "Sammy Gantt — NHSCA Duals 2026",
+    aspectClass: "aspect-[4/5] sm:aspect-[3/4]",
+  },
 ]
 
 export function athleteMediaForScope(scope: CommandCenterScope): NhscaDualsAthleteMediaItem[] {
@@ -63,5 +99,7 @@ export function athleteMediaForScope(scope: CommandCenterScope): NhscaDualsAthle
 }
 
 export function athleteMediaCategoryLabel(category: NhscaDualsAthleteMediaCategory): string {
-  return category === "interview" ? "Interview" : "Highlight reel"
+  if (category === "interview") return "Interview"
+  if (category === "highlight") return "Highlight reel"
+  return "Photo"
 }

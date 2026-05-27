@@ -15,6 +15,10 @@ import {
 } from "@/components/ui/select"
 import { ArrowLeft, Download, ExternalLink, Loader2, Search } from "lucide-react"
 import { BlueAdminAuthBanner, isBlueAuthError } from "@/components/blue-admin-auth-banner"
+import {
+  NationalTeamFeeReceiptSendButton,
+  useNationalTeamFeeReceiptDialog,
+} from "@/components/admin/national-team-fee-receipt-dialog"
 import type { NhscaOrderLineDisplay } from "@/lib/nhsca-hub-checkout-pricing"
 import {
   formatLineItemsForCell,
@@ -70,6 +74,8 @@ export default function NationalTeamOrdersReportPage() {
     const list = ((data.registrations ?? []) as ApiRegistration[]).map((reg) => toOrdersReportRow(reg))
     setRows(list)
   }, [])
+
+  const { openReceipt, dialog: receiptDialog } = useNationalTeamFeeReceiptDialog(load)
 
   useEffect(() => {
     let cancelled = false
@@ -305,6 +311,7 @@ export default function NationalTeamOrdersReportPage() {
                           <TableHead>Sizes</TableHead>
                           <TableHead className="text-right">Total</TableHead>
                           <TableHead>Status</TableHead>
+                          <TableHead className="whitespace-nowrap">Receipt</TableHead>
                           <TableHead>Order</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -334,6 +341,9 @@ export default function NationalTeamOrdersReportPage() {
                                 <Badge className="border-0 bg-amber-600 text-white hover:bg-amber-600">Pending</Badge>
                               )}
                             </TableCell>
+                            <TableCell>
+                              <NationalTeamFeeReceiptSendButton registration={r} onClick={() => openReceipt(r)} />
+                            </TableCell>
                             <TableCell className="whitespace-nowrap">
                               {r.order_id ? (
                                 <a
@@ -357,6 +367,7 @@ export default function NationalTeamOrdersReportPage() {
             </Card>
           </>
         )}
+        {receiptDialog}
       </div>
     </div>
   )
