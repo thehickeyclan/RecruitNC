@@ -59,23 +59,22 @@ export const AAU_SCHOLASTIC_TRAVEL_TOTAL_DOLLARS = sumAauScholasticLines(AAU_SCH
 export const AAU_SCHOLASTIC_ESTIMATED_TRIP_TOTAL_DOLLARS =
   AAU_SCHOLASTIC_CHECKOUT_TOTAL_DOLLARS + AAU_SCHOLASTIC_TRAVEL_TOTAL_DOLLARS
 
-export const AAU_SCHOLASTIC_PRICING_CONTEXT =
-  "Flexible à la carte checkout — nothing is pre-selected. Choose tournament entry, individual apparel pieces, hotel/team van, and/or flight, then pay only for what you select in one Stripe checkout."
+/** Cost section — one intro, short parent-facing notes (no duplicate blocks on the page). */
+export const AAU_SCHOLASTIC_PRICING_INTRO =
+  "Select only what your family needs at registration — tournament entry, apparel, lodging, and travel are each optional."
 
-export const AAU_SCHOLASTIC_GEAR_REUSE_NOTE =
-  "Already purchased NC United gear for NHSCA Duals? You can skip duplicate apparel at AAU checkout — the same singlet and team apparel works for this event."
-
-export const AAU_SCHOLASTIC_FLIGHT_NOTE =
-  "NC United locked in a block of 18 flights at a competitive rate before broader World Cup travel demand pushed summer fares higher. Flight inventory is limited — select the flight line at registration if your athlete needs a seat."
-
-export const AAU_SCHOLASTIC_FLEXIBILITY_NOTES = [
-  AAU_SCHOLASTIC_GEAR_REUSE_NOTE,
-  AAU_SCHOLASTIC_FLIGHT_NOTE,
+export const AAU_SCHOLASTIC_PRICING_NOTES = [
+  "Already have NC United gear from NHSCA Duals? Skip the apparel lines.",
+  "Team flights are limited — add the flight line at registration if your athlete needs a seat.",
+  "Meals are not included. Hotel & team van covers lodging and team transportation between the hotel, venue, and team activities.",
 ] as const
 
-/** Meals are family-paid; hotel/van line includes NC United van transportation. */
-export const AAU_SCHOLASTIC_MEALS_NOT_INCLUDED =
-  "Meals are not included in checkout. Hotel & team van covers lodging and NC United van transportation between the hotel, venue, and team activities."
+/** Gear section + registration checkout — keep brief. */
+export const AAU_SCHOLASTIC_GEAR_REUSE_NOTE =
+  "Same uniform as NHSCA Duals — skip apparel at registration if you already have it."
+
+/** @deprecated Use AAU_SCHOLASTIC_PRICING_NOTES */
+export const AAU_SCHOLASTIC_MEALS_NOT_INCLUDED = AAU_SCHOLASTIC_PRICING_NOTES[2]
 
 export const AAU_SCHOLASTIC_DEFAULT_SELECTED_LINE_IDS = AAU_SCHOLASTIC_ALL_CHECKOUT_LINES.map((line) => line.id)
 
@@ -472,15 +471,15 @@ export const AAU_SCHOLASTIC_PARENT_FAQ = [
   },
   {
     q: "What does the registration fee cover?",
-    a: "You choose at checkout — nothing is bundled by default. Options are tournament registration ($75), singlet ($65), long sleeve ($40), shorts ($40), tee ($30), hotel & team van ($315 — lodging plus NC United van transportation), and flight ($355). Select only the lines your family needs; use quantities when registering more than one athlete in the same checkout. Meals are extra.",
+    a: "You choose at registration — nothing is bundled. Options: tournament registration ($75), singlet ($65), long sleeve ($40), shorts ($40), tee ($30), hotel & team van ($315), and flight ($355). Select only what your family needs. Meals are extra.",
   },
   {
     q: "Can we reuse NHSCA Duals gear for AAU?",
-    a: "Yes. If your athlete already has the NC United singlet and apparel from NHSCA Duals, skip those apparel lines at AAU checkout and register for tournament entry, travel, and anything else you still need.",
+    a: "Yes. If your athlete already has the NC United singlet and apparel from NHSCA Duals, skip those lines and register for tournament entry, travel, and anything else you still need.",
   },
   {
     q: "Why is the flight line priced at $355?",
-    a: "NC United secured a block of 18 flights at a competitive rate before broader World Cup travel demand pushed summer fares higher. Inventory is limited — families who need a flight should select that line at registration.",
+    a: "NC United secured a limited block of team flights at a group rate. Seats are first-come at registration — add the flight line if your athlete needs one.",
   },
   {
     q: "Is there a van going down instead of flying?",

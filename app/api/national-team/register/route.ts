@@ -16,6 +16,7 @@ import {
   parseAauScholasticApparelSizesFromBody,
 } from "@/lib/aau-scholastic-apparel-sizes"
 import { parseAthleteDobInput } from "@/lib/athlete-dob"
+import { resolveAauScholasticRegistrationAthlete } from "@/lib/aau-scholastic-registration-resolve"
 
 export const dynamic = "force-dynamic"
 
@@ -38,24 +39,35 @@ export async function POST(request: NextRequest) {
 
     const athleteFirstName = typeof body.athlete_first_name === "string" ? body.athlete_first_name.trim() : ""
     const athleteLastName = typeof body.athlete_last_name === "string" ? body.athlete_last_name.trim() : ""
-    const athleteEmail = typeof body.athlete_email === "string" ? body.athlete_email.trim() : ""
-    const athletePhone = typeof body.athlete_phone === "string" ? body.athlete_phone.trim() || null : null
+    let athleteEmail = typeof body.athlete_email === "string" ? body.athlete_email.trim() : ""
+    let athletePhone = typeof body.athlete_phone === "string" ? body.athlete_phone.trim() || null : null
     const parentEmail = typeof body.parent_email === "string" ? body.parent_email.trim() : ""
     const parentName = typeof body.parent_name === "string" ? body.parent_name.trim() || null : null
-    const highSchool = typeof body.high_school === "string" ? body.high_school.trim() : ""
-    const clubTeam = typeof body.club_team === "string" ? body.club_team.trim() || null : null
-    const graduationYear = typeof body.graduation_year === "string" ? body.graduation_year.trim() : ""
-    const primaryWeight = typeof body.primary_weight === "string" ? body.primary_weight.trim() : ""
+    let highSchool = typeof body.high_school === "string" ? body.high_school.trim() : ""
+    let clubTeam = typeof body.club_team === "string" ? body.club_team.trim() || null : null
+    let graduationYear = typeof body.graduation_year === "string" ? body.graduation_year.trim() : ""
+    let primaryWeight = typeof body.primary_weight === "string" ? body.primary_weight.trim() : ""
     const secondaryWeight = typeof body.secondary_weight === "string" ? body.secondary_weight.trim() || null : null
 
-    if (!athleteFirstName || !athleteLastName || !athleteEmail) {
-      return NextResponse.json({ error: "Athlete first name, last name, and email are required." }, { status: 400 })
+    if (!athleteFirstName || !athleteLastName) {
+      return NextResponse.json({ error: "Athlete first and last name are required." }, { status: 400 })
     }
     if (!parentEmail) {
       return NextResponse.json({ error: "Parent email is required." }, { status: 400 })
     }
-    if (!highSchool || !graduationYear || !primaryWeight) {
-      return NextResponse.json({ error: "High school, graduation year, and primary weight are required." }, { status: 400 })
+    if (isAau && !parentName) {
+      return NextResponse.json({ error: "Parent/guardian name is required." }, { status: 400 })
+    }
+    if (!isAau) {
+      if (!athleteEmail) {
+        return NextResponse.json({ error: "Athlete email is required." }, { status: 400 })
+      }
+      if (!highSchool || !graduationYear || !primaryWeight) {
+        return NextResponse.json(
+          { error: "High school, graduation year, and primary weight are required." },
+          { status: 400 },
+        )
+      }
     }
     if (body.code_of_conduct_accepted !== true) {
       return NextResponse.json(
@@ -64,16 +76,26 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    let athleteDob: string | null = null
-    if (isAau) {
-      const dobResult = parseAthleteDobInput(body.athlete_dob)
-      if (!dobResult.ok) {
-        return NextResponse.json({ error: dobResult.error }, { status: 400 })
-      }
-      athleteDob = dobResult.value
-    }
-
     const admin = createAdminClient()
+    let athleteDob: string | null = null
+
+    if (isAau) {
+      const resolved = await resolveAauScholasticRegistrationAthlete(admin, {
+        firstName: athleteFirstName,
+        lastName: athleteLastName,
+        parentEmail,
+      })
+      athleteEmail = resolved.athleteEmail
+      athletePhone = resolved.athletePhone
+      highSchool = resolved.highSchool
+      graduationYear = resolved.graduationYear
+      primaryWeight = resolved.primaryWeight
+      clubTeam = resolved.clubTeam
+      if (resolved.athleteDob) {
+        const dobResult = parseAthleteDobInput(resolved.athleteDob)
+        if (dobResult.ok) athleteDob = dobResult.value
+      }
+    }
     let parentUserId: string | null = null
     try {
       const supabase = await createClient()
