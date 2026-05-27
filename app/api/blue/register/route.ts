@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getAthletesColumnNames, filterPayloadToSchema } from "@/lib/athletes-schema"
 import { findExistingAthlete } from "@/lib/athlete-duplicate-check"
+import { NC_UNITED_LIABILITY_WAIVER_TYPE, NC_UNITED_LIABILITY_WAIVER_VERSION } from "@/lib/nc-united-liability-waiver"
 
 export const dynamic = "force-dynamic"
 
@@ -206,8 +207,8 @@ export async function POST(request: NextRequest) {
       {
         user_id: payerUserId,
         athlete_id: athleteId,
-        waiver_type: "nc_united_liability",
-        waiver_version: "1",
+        waiver_type: NC_UNITED_LIABILITY_WAIVER_TYPE,
+        waiver_version: NC_UNITED_LIABILITY_WAIVER_VERSION,
         signer_name: signerName || null,
         signed_at: new Date().toISOString(),
       },

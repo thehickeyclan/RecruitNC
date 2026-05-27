@@ -12,6 +12,7 @@ import { eventCategories } from "@/lib/nc-united-calendar/calendar-config"
 import { parseCivilDateFromDatabase, eventIsMultiDay, formatEventDateRangeShort } from "@/lib/nc-united-calendar/calendar-date"
 import { EventShare } from "./event-share"
 import { DropInForm } from "./drop-in-form"
+import { formatPhoneForDisplay } from "@/lib/phone-format"
 import { formatTime } from "@/lib/nc-united-calendar/time-utils"
 import type { DropInRequest } from "@/lib/nc-united-calendar/drop-in-types"
 import { supabase } from "@/lib/supabase"
@@ -267,9 +268,18 @@ export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalPro
                               <div>
                                 <p className="font-medium">{request.wrestler_name}</p>
                                 <p className="text-sm text-gray-600">
-                                  Age: {request.wrestler_age}{" "}
-                                  {request.wrestler_weight && `| Weight: ${request.wrestler_weight}`}
+                                  {request.wrestler_dob
+                                    ? `DOB: ${request.wrestler_dob}`
+                                    : request.wrestler_age != null
+                                      ? `Age: ${request.wrestler_age}`
+                                      : null}
+                                  {request.wrestler_weight && ` | Weight: ${request.wrestler_weight}`}
                                 </p>
+                                {request.wrestler_cell && (
+                                  <p className="text-sm text-gray-600">
+                                    Cell: {formatPhoneForDisplay(request.wrestler_cell)}
+                                  </p>
+                                )}
                                 <p className="text-sm text-gray-600">Parent: {request.parent_name}</p>
                                 <p className="text-sm text-gray-600">Email: {request.parent_email}</p>
                                 <p className="text-xs text-gray-500 mt-1">

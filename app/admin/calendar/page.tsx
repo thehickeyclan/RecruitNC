@@ -46,6 +46,8 @@ type DropInRequestRow = {
   id: string
   wrestler_name: string
   wrestler_age?: number | null
+  wrestler_dob?: string | null
+  wrestler_cell?: string | null
   parent_name: string
   parent_email: string
   parent_phone?: string | null
@@ -661,9 +663,16 @@ export default function AdminCalendarPage() {
                         <div>
                           <p className="font-medium text-white">
                             {r.wrestler_name}
-                            {r.wrestler_age != null && <span className="text-gray-500"> ({r.wrestler_age})</span>}
+                            {r.wrestler_dob ? (
+                              <span className="text-gray-500"> · DOB {r.wrestler_dob}</span>
+                            ) : r.wrestler_age != null ? (
+                              <span className="text-gray-500"> ({r.wrestler_age})</span>
+                            ) : null}
                           </p>
-                          <p className="text-sm text-gray-400">{r.parent_name} - {r.parent_email}</p>
+                          <p className="text-sm text-gray-400">
+                            {r.parent_name} - {r.parent_email}
+                            {r.wrestler_cell ? ` · ${r.wrestler_cell}` : ""}
+                          </p>
                         </div>
                         <div className="text-right">
                           <span className={`text-xs px-2 py-0.5 rounded-full ${

@@ -5,8 +5,9 @@ export interface DropInRequest {
   participant_name?: string | null
   wrestler_name?: string | null
   wrestler_age?: number | null
+  wrestler_dob?: string | null
+  wrestler_cell?: string | null
   wrestler_weight?: string | null
-  wrestler_experience?: string | null
   participant_email?: string | null
   wrestler_email?: string | null
   participant_phone?: string | null

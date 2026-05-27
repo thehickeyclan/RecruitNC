@@ -9,9 +9,10 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils"
+import { formatPhoneInput, normalizePhoneForStorage } from "@/lib/phone-format"
 import {
+  NC_UNITED_DROP_IN_LIABILITY_WAIVER_TEXT,
   NC_UNITED_LIABILITY_WAIVER_CHECKBOX_LABEL,
-  NC_UNITED_LIABILITY_WAIVER_TEXT,
 } from "@/lib/nc-united-liability-waiver"
 
 interface DropInFormProps {
@@ -29,12 +30,12 @@ const brand = {
 export function DropInForm({ eventId, eventTitle, onClose }: DropInFormProps) {
   const [formData, setFormData] = useState({
     wrestlerName: "",
-    wrestlerAge: "",
+    wrestlerDob: "",
     wrestlerWeight: "",
+    wrestlerCell: "",
     parentName: "",
     parentEmail: "",
     parentPhone: "",
-    experienceLevel: "",
     notes: "",
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -58,12 +59,14 @@ export function DropInForm({ eventId, eventTitle, onClose }: DropInFormProps) {
         body: JSON.stringify({
           eventId,
           wrestlerName: formData.wrestlerName.trim(),
-          wrestlerAge: Number.parseInt(formData.wrestlerAge, 10),
+          wrestlerDob: formData.wrestlerDob.trim(),
           wrestlerWeight: formData.wrestlerWeight.trim() || undefined,
+          wrestlerCell: normalizePhoneForStorage(formData.wrestlerCell.trim()),
           parentName: formData.parentName.trim(),
           parentEmail: formData.parentEmail.trim(),
-          parentPhone: formData.parentPhone.trim() || undefined,
-          experienceLevel: formData.experienceLevel.trim() || undefined,
+          parentPhone: formData.parentPhone.trim()
+            ? normalizePhoneForStorage(formData.parentPhone.trim())
+            : undefined,
           notes: formData.notes.trim() || undefined,
           waiverAccepted,
         }),
@@ -168,14 +171,24 @@ export function DropInForm({ eventId, eventTitle, onClose }: DropInFormProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="wrestlerAge">Age *</Label>
+                  <Label htmlFor="wrestlerDob">Date of Birth *</Label>
                   <Input
-                    id="wrestlerAge"
-                    type="number"
-                    min="5"
-                    max="18"
-                    value={formData.wrestlerAge}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, wrestlerAge: e.target.value }))}
+                    id="wrestlerDob"
+                    type="date"
+                    value={formData.wrestlerDob}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, wrestlerDob: e.target.value }))}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="wrestlerCell">Wrestler Cell *</Label>
+                  <Input
+                    id="wrestlerCell"
+                    type="tel"
+                    value={formData.wrestlerCell}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, wrestlerCell: formatPhoneInput(e.target.value) }))}
+                    placeholder="(555) 123-4567"
                     required
                   />
                 </div>
@@ -187,16 +200,6 @@ export function DropInForm({ eventId, eventTitle, onClose }: DropInFormProps) {
                     value={formData.wrestlerWeight}
                     onChange={(e) => setFormData((prev) => ({ ...prev, wrestlerWeight: e.target.value }))}
                     placeholder="e.g., 125"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="experienceLevel">Experience Level</Label>
-                  <Input
-                    id="experienceLevel"
-                    value={formData.experienceLevel}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, experienceLevel: e.target.value }))}
-                    placeholder="Novice, Advanced, State Qualifier..."
                   />
                 </div>
               </div>
@@ -235,12 +238,12 @@ export function DropInForm({ eventId, eventTitle, onClose }: DropInFormProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="parentPhone">Phone Number</Label>
+                  <Label htmlFor="parentPhone">Parent Phone</Label>
                   <Input
                     id="parentPhone"
                     type="tel"
                     value={formData.parentPhone}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, parentPhone: e.target.value }))}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, parentPhone: formatPhoneInput(e.target.value) }))}
                     placeholder="(555) 123-4567"
                   />
                 </div>
@@ -253,7 +256,7 @@ export function DropInForm({ eventId, eventTitle, onClose }: DropInFormProps) {
                 id="notes"
                 value={formData.notes}
                 onChange={(e) => setFormData((prev) => ({ ...prev, notes: e.target.value }))}
-                placeholder="Please share training focus, medical notes, or travel details."
+                placeholder="Please share medical notes, travel details, or other info for coaches."
                 rows={3}
               />
             </section>
@@ -264,11 +267,11 @@ export function DropInForm({ eventId, eventTitle, onClose }: DropInFormProps) {
                   Waiver and Release of Liability
                 </h3>
                 <p className="text-sm text-gray-500">
-                  Required before payment — same NC United liability waiver as full Blue membership.
+                  Required before payment — applies to this registered practice session only.
                 </p>
               </header>
               <div className="max-h-[220px] overflow-y-auto rounded-md border border-gray-200 bg-gray-50 p-4 text-sm whitespace-pre-wrap text-gray-800">
-                {NC_UNITED_LIABILITY_WAIVER_TEXT}
+                {NC_UNITED_DROP_IN_LIABILITY_WAIVER_TEXT}
               </div>
               <div className="flex items-start gap-3">
                 <Checkbox
