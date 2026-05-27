@@ -22,6 +22,14 @@ import {
   NHSCA_INTEREST_WEIGHT_CLASSES,
   formatNationalTeamWeightLabel,
 } from "@/lib/national-team-weight-classes"
+import {
+  AAU_SCHOLASTIC_DUALS_2026,
+  AAU_SCHOLASTIC_OPERATIONS,
+  AAU_SCHOLASTIC_WEIGHTS_DISPLAY,
+  AAU_SCHOLASTIC_CHECKOUT_TOTAL_DOLLARS,
+  formatAauScholasticDollars,
+} from "@/lib/aau-scholastic-duals-2026-content"
+import { AauScholasticPricingTable } from "@/components/national-team/aau-scholastic-pricing-table"
 
 const GRAD_YEARS = ["2026", "2027", "2028", "2029", "2030"]
 
@@ -182,8 +190,11 @@ export default function NationalTeamRegisterEventPage() {
           )}
           <h1 className="text-2xl font-bold text-[#003366]">{eventName} – Registration</h1>
           <p className="text-gray-600 mt-1">Invite-only. Enter your code to continue.</p>
-          <Link href="/national-team" className="text-sm text-[#003366] hover:underline mt-2 inline-block">
-            ← Back to National Team
+          <Link
+            href={isAauRegistration ? "/national-team/scholastic-duals-2026" : "/national-team"}
+            className="text-sm text-[#003366] hover:underline mt-2 inline-block"
+          >
+            ← {isAauRegistration ? "Back to Scholastic Duals info" : "Back to National Team"}
           </Link>
         </div>
 
@@ -224,6 +235,48 @@ export default function NationalTeamRegisterEventPage() {
                   </ul>
                 </div>
                 <p className="text-amber-800 font-medium pt-1">Payment due: {NHSCA_2026_COST.dueDate}</p>
+              </CardContent>
+            </Card>
+          </>
+        )}
+
+        {isAauRegistration && (
+          <>
+            <Card className="mb-6 border-[#B31B1B]/25">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg text-[#003366]">{AAU_SCHOLASTIC_OPERATIONS.eventName}</CardTitle>
+                <CardDescription className="text-base font-medium text-gray-700 mt-1">
+                  {AAU_SCHOLASTIC_OPERATIONS.arrivalWeighIns} · Competition {AAU_SCHOLASTIC_OPERATIONS.competitionDates}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm text-gray-700">
+                <p className="font-medium">
+                  {AAU_SCHOLASTIC_DUALS_2026.venue}
+                  <br />
+                  {AAU_SCHOLASTIC_DUALS_2026.venueAddress}
+                </p>
+                <p className="italic text-gray-600">{AAU_SCHOLASTIC_DUALS_2026.tagline}</p>
+                <p>
+                  <strong>Weight classes:</strong> {AAU_SCHOLASTIC_WEIGHTS_DISPLAY}
+                </p>
+                <p>
+                  <strong>Allowance:</strong> +5 lbs (see certification rules on the{" "}
+                  <a href="/national-team/scholastic-duals-2026#weights" className="text-[#003366] hover:underline">
+                    Scholastic Duals info page
+                  </a>
+                  )
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="mb-6 border-[#D3B574]/50 bg-[#003366]/5">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Pricing</CardTitle>
+                <CardDescription>
+                  {formatAauScholasticDollars(AAU_SCHOLASTIC_CHECKOUT_TOTAL_DOLLARS)} due at Stripe checkout
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <AauScholasticPricingTable compact />
               </CardContent>
             </Card>
           </>
@@ -344,7 +397,10 @@ export default function NationalTeamRegisterEventPage() {
                   </div>
                 </div>
                 <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
-                  <strong>Weights are +3 lbs.</strong> The team is registered for early weigh-ins. Select the weight class you agreed to.
+                  <strong>Weights are {isAauRegistration ? "+5 lbs" : "+3 lbs"}.</strong>{" "}
+                  {isAauRegistration
+                    ? "Select the weight class you agreed to with NC United coaches."
+                    : "The team is registered for early weigh-ins. Select the weight class you agreed to."}
                 </p>
                 {formError && <p className="text-sm text-red-600">{formError}</p>}
                 <div className="flex gap-3 pt-2">

@@ -3,6 +3,12 @@ import Stripe from "stripe"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { findAndEnrichAthlete, buildEnrichmentPayload } from "@/lib/enrich-athlete-profile"
+import {
+  AAU_SCHOLASTIC_APPAREL_FEE_CENTS,
+  AAU_SCHOLASTIC_CHECKOUT_LINES,
+  AAU_SCHOLASTIC_CHECKOUT_TOTAL_DOLLARS,
+  AAU_SCHOLASTIC_REG_FEE_CENTS,
+} from "@/lib/aau-scholastic-duals-2026-content"
 
 export const dynamic = "force-dynamic"
 
@@ -77,11 +83,24 @@ export async function POST(request: NextRequest) {
       .from("products")
       .select("id, name, price, slug")
       .eq("category", "national_team")
-    const product = (products ?? []).find((p: { slug?: string }) => p.slug === "nhsca-2026-bundle") ?? products?.[0]
-    const bundlePrice = product?.price != null ? Number(product.price) : 250
+    const isAau = eventSlug === "aau-2026"
+    const productSlug = isAau ? "aau-2026-bundle" : "nhsca-2026-bundle"
+    const product =
+      (products ?? []).find((p: { slug?: string }) => p.slug === productSlug) ??
+      (products ?? []).find((p: { slug?: string }) => p.slug === "nhsca-2026-bundle") ??
+      products?.[0]
+    const defaultProductName = isAau
+      ? "AAU Scholastic Duals 2026 – Registration + Apparel"
+      : "NHSCA 2026 – Registration + Apparel"
+    const bundlePrice =
+      product?.price != null
+        ? Number(product.price)
+        : isAau
+          ? AAU_SCHOLASTIC_CHECKOUT_TOTAL_DOLLARS
+          : 250
     const totalCents = Math.round(bundlePrice * 100)
-    const regFeeCents = totalCents
-    const apparelFeeCents = 0
+    const regFeeCents = isAau ? AAU_SCHOLASTIC_REG_FEE_CENTS : totalCents
+    const apparelFeeCents = isAau ? AAU_SCHOLASTIC_APPAREL_FEE_CENTS : 0
 
     const insertPayload: Record<string, unknown> = {
       event_slug: eventSlug,
@@ -147,21 +166,36 @@ export async function POST(request: NextRequest) {
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin
     const stripe = new Stripe(stripeSecret)
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      line_items: [
-        {
+
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = isAau
+      ? AAU_SCHOLASTIC_CHECKOUT_LINES.map((line) => ({
           price_data: {
             currency: "usd",
-            unit_amount: totalCents,
+            unit_amount: line.dollars * 100,
             product_data: {
-              name: product?.name ?? "NHSCA 2026 – Registration + Apparel",
-              description: "National team event: registration and apparel bundle",
+              name: line.label,
+              description: "NC United AAU Scholastic Duals 2026",
             },
           },
           quantity: 1,
-        },
-      ],
+        }))
+      : [
+          {
+            price_data: {
+              currency: "usd",
+              unit_amount: totalCents,
+              product_data: {
+                name: product?.name ?? defaultProductName,
+                description: "National team event: registration and apparel bundle",
+              },
+            },
+            quantity: 1,
+          },
+        ]
+
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      line_items: lineItems,
       customer_email: parentEmail,
       success_url: `${baseUrl}/national-team/register/${returnUrlSlug}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/national-team/register/${returnUrlSlug}?cancelled=1`,
