@@ -144,12 +144,12 @@ export function NhscaHubPaymentsTab({
         <div className="mb-6 rounded-xl border border-white/15 bg-[#0a2040]/80 p-4 text-sm text-white/80">
           <p className="font-semibold text-white mb-1">AAU Scholastic Duals registration</p>
           <p className="mb-3">
-            New registrations and payment run on the Scholastic Duals page (invite code required). Your completed
-            orders appear below.
+            Registration and checkout run on the Scholastic Duals page — select the items you want, then pay at
+            Stripe. Your completed orders appear below.
           </p>
           <a
             href="/national-team/scholastic-duals-2026#register"
-            className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-[#CBAF5D] px-4 py-2 text-sm font-bold text-[#002147] hover:bg-[#d4bc7a]"
+            className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-[#B31B1B] px-4 py-2 text-sm font-bold text-white hover:bg-[#9a1616]"
           >
             Scholastic Duals registration →
           </a>

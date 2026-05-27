@@ -29,9 +29,6 @@ export const NATIONAL_TEAM_EVENTS: Record<string, NationalTeamEventConfig> = {
   "aau-2026": {
     name: "AAU Scholastic Duals 2026 – Boys All-Star",
   },
-  "deep-south-2026": {
-    name: "Deep South 2026",
-  },
 }
 
 /** Normalize a stored slug (e.g. from DB) for lookup: trim, lowercase, underscores → hyphens. */
@@ -108,7 +105,6 @@ export function getEventSlugFromGroupName(groupName: string): string | null {
 export const TEAM_HUB_MENU: { slug: string; label: string; href?: string }[] = [
   { slug: "nhsca-duals-2026", label: "NHSCA Duals 2026" },
   { slug: "aau-2026", label: "AAU Scholastic Duals 2026" },
-  { slug: "deep-south-2026", label: "Deep South 2026" },
 ]
 
 /** Hub display grouping: one hub section per key, with multiple event slugs and labels (e.g. Main / Select). */

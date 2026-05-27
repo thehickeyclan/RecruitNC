@@ -20121,7 +20121,7 @@ CRITICAL: Data Dawg can answer questions about ANY of these data sources, regard
       ) {
         // Schedule / when competing again / 2026 – return hardcoded 2026 schedule
         return NextResponse.json({
-          answer: `Great question! NC United is scheduled to compete in the following tournaments in 2026:\n\n1. **27th Annual National Duals**\n   - Memorial Day Weekend (May 23-25, 2026)\n   - Premier national dual team tournament\n\n2. **2026 AAU Scholastic Duals – All-Star Boys**\n   - June 23-26, 2026\n   - Fort Lauderdale, Florida\n   - Features 40-50 elite teams from across the country\n\n3. **Deep South Summer Duals – All-Star Boys**\n   - Late July/Early August 2026 (dates TBD)\n   - Birmingham, Alabama (BJCC)\n   - Participation pending final dates and confirmation\n\nYou can find more details about these tournaments on the [National Team page](https://app.ncwrestlingunited.com/national-team).`,
+          answer: `Great question! NC United is scheduled to compete in the following tournaments in 2026:\n\n1. **27th Annual National Duals**\n   - Memorial Day Weekend (May 23-25, 2026)\n   - Premier national dual team tournament\n\n2. **2026 AAU Scholastic Duals – All-Star Boys**\n   - June 23-26, 2026\n   - Fort Lauderdale, Florida\n   - Features 40-50 elite teams from across the country\n\nYou can find more details about these tournaments on the [National Team page](https://app.ncwrestlingunited.com/national-team).`,
           messageId: messageId || `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         })
       } else if (lowerQuestion.includes("compete") || lowerQuestion.includes("where") || lowerQuestion.includes("tournament")) {

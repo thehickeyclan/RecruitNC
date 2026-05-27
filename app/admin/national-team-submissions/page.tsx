@@ -49,7 +49,7 @@ const ALL_INTEREST_WEIGHT_CLASSES = interestFormWeightClassUnion()
 
 function weightClassesForTournamentTab(tournamentId: string): string[] {
   if (tournamentId === "aau") return AAU_WEIGHT_CLASSES
-  if (tournamentId === "nhsca" || tournamentId === "deep-south") return NHSCA_WEIGHT_CLASSES
+  if (tournamentId === "nhsca") return NHSCA_WEIGHT_CLASSES
   return ALL_INTEREST_WEIGHT_CLASSES
 }
 
@@ -65,7 +65,6 @@ function submissionMatchesSelectedWeight(sub: InterestFormSubmission, selectedWe
 const TOURNAMENTS = {
   nhsca: "NHSCA National Duals (May 23-25)",
   aau: "AAU Scholastic Duals - All-Star Boys (June 24-26)",
-  "deep-south": "Deep South Duals (Date TBA)",
 }
 
 const NHSCA_TEAM_1_LABEL = "Team 1"
@@ -463,7 +462,7 @@ export default function NationalTeamSubmissionsPage() {
     const tournamentSubs = submissions.filter((sub) => sub.tournament_interest.includes(tournamentId))
     const coverage: Record<string, number> = {}
     weightClassesForTournamentTab(tournamentId).forEach((weight) => {
-      if (tournamentId === "nhsca" || tournamentId === "deep-south") {
+      if (tournamentId === "nhsca") {
         coverage[weight] = tournamentSubs.filter(
           (sub) => nearestNhscaInterestWeightClass(sub.primary_weight) === weight
         ).length
@@ -510,8 +509,8 @@ export default function NationalTeamSubmissionsPage() {
   const submissionEditWeightLabelVariant: "nhsca" | "aau" | "neutral" = (() => {
     if (!selectedSubmission) return "neutral"
     const ti = selectedSubmission.tournament_interest
-    if (ti.includes("aau") && !ti.includes("nhsca") && !ti.includes("deep-south")) return "aau"
-    if (ti.includes("nhsca") || ti.includes("deep-south")) return "nhsca"
+    if (ti.includes("aau") && !ti.includes("nhsca")) return "aau"
+    if (ti.includes("nhsca")) return "nhsca"
     return "neutral"
   })()
 
@@ -672,11 +671,10 @@ export default function NationalTeamSubmissionsPage() {
             )}
 
             <Tabs defaultValue="overview" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="nhsca">NHSCA Duals</TabsTrigger>
                 <TabsTrigger value="aau">AAU Duals</TabsTrigger>
-                <TabsTrigger value="deep-south">Deep South</TabsTrigger>
               </TabsList>
 
               <TabsContent value="overview" className="space-y-6">
@@ -768,7 +766,7 @@ export default function NationalTeamSubmissionsPage() {
                                   <div className="flex flex-wrap gap-1">
                                     {sub.tournament_interest.map((tid) => (
                                       <Badge key={tid} variant="secondary" className="text-xs">
-                                        {tid === "nhsca" ? "NHSCA" : tid === "aau" ? "AAU" : "Deep South"}
+                                        {tid === "nhsca" ? "NHSCA" : tid === "aau" ? "AAU" : tid}
                                       </Badge>
                                     ))}
                                   </div>
@@ -1060,7 +1058,7 @@ export default function NationalTeamSubmissionsPage() {
                       {tabWeights.map((weight) => {
                         const weightSubs = tournamentSubs
                           .filter((sub) =>
-                            tournamentId === "nhsca" || tournamentId === "deep-south"
+                            tournamentId === "nhsca"
                               ? nearestNhscaInterestWeightClass(sub.primary_weight) === weight
                               : sub.primary_weight === weight
                           )

@@ -214,7 +214,7 @@ export default function NCUnitedNationalTeam() {
                 NHSCA 2026 Portal →
               </HardLink>
             </div>
-            <p className="text-sm text-blue-100/90">Get considered for NHSCA Duals, AAU, Deep South &amp; more</p>
+            <p className="text-sm text-blue-100/90">Get considered for NHSCA Duals, AAU Scholastic Duals &amp; more</p>
 
             {/* National team stats — UCD + NHSCA through 2026 (National squad only; excludes Select) */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mt-12 md:mt-16 px-4">
@@ -279,19 +279,11 @@ export default function NCUnitedNationalTeam() {
               {/* AAU Scholastic Duals — family info & registration */}
               <HardLink
                 href="/national-team/scholastic-duals-2026"
-                className="flex flex-col rounded-2xl border-2 border-[#003366]/30 bg-[#003366]/8 p-6 hover:border-[#B31B1B]/40 hover:shadow-md transition-all"
+                className="flex flex-col rounded-2xl border-2 border-[#B31B1B]/40 bg-[#001428] p-6 text-white hover:border-[#B31B1B]/70 hover:shadow-md transition-all group"
               >
-                <span className="text-[#002147] font-bold text-lg">AAU Scholastic Duals 2026</span>
-                <span className="text-sm text-gray-600 mt-1">Info, registration &amp; parent FAQ →</span>
+                <span className="font-bold text-lg text-white">AAU Scholastic Duals 2026</span>
+                <span className="text-sm text-[#FF7070] mt-1 group-hover:underline">Info, registration &amp; parent FAQ →</span>
               </HardLink>
-              {/* Deep South — red accent tile (coming soon) */}
-              <Link
-                href="/national-team/coming-soon?event=deep-south-2026"
-                className="flex flex-col rounded-2xl border-2 border-[#B31B1B]/30 bg-[#B31B1B]/8 p-6 opacity-90 hover:opacity-100 transition-all sm:col-span-2 max-w-md mx-auto w-full"
-              >
-                <span className="text-[#002147] font-bold text-lg">Deep South 2026</span>
-                <span className="text-sm text-gray-500 mt-1">Coming soon</span>
-              </Link>
             </div>
           </div>
         </div>
@@ -1018,29 +1010,6 @@ export default function NCUnitedNationalTeam() {
                     >
                       Family info &amp; registration →
                     </HardLink>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 shadow-lg overflow-hidden">
-              <CardContent className="p-6 md:p-8">
-                <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-6">
-                  <div className="flex-shrink-0">
-                    <Badge className="bg-[#CBAF5D] text-[#002147] text-sm md:text-base px-4 py-2 rounded-full">
-                      Late July / Early August 2026
-                    </Badge>
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-xl md:text-2xl font-bold text-[#002147] mb-2 md:mb-3">
-                      Deep South Summer Duals – All-Star Boys
-                    </h3>
-                    <p className="text-base md:text-lg text-gray-700 mb-2">
-                      Birmingham, Alabama (BJCC)
-                    </p>
-                    <p className="text-sm md:text-base text-gray-600 leading-relaxed">
-                      The Deep South Summer Duals features elite All-Star Boys teams competing in high-level national dual competition. While official 2026 event details have not yet been released, we intend to participate pending final dates and confirmation.
-                    </p>
                   </div>
                 </div>
               </CardContent>

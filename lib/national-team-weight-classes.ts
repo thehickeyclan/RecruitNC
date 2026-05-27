@@ -60,7 +60,7 @@ export function interestFormWeightClassUnion(): string[] {
 /** Admin edit / filters: allowed classes for a row based on which tournaments they selected. */
 export function weightOptionsForSubmissionInterest(tournamentIds: string[]): string[] {
   const set = new Set<string>()
-  if (tournamentIds.includes("nhsca") || tournamentIds.includes("deep-south")) {
+  if (tournamentIds.includes("nhsca")) {
     NHSCA_INTEREST_WEIGHT_CLASSES.forEach((w) => set.add(w))
   }
   if (tournamentIds.includes("aau")) {

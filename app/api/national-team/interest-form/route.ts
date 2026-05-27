@@ -104,7 +104,6 @@ export async function POST(request: NextRequest) {
     const tournamentNames: Record<string, string> = {
       nhsca: "NHSCA National Duals (May 23-25)",
       aau: "AAU Scholastic Duals - All-Star Boys (June 24-26)",
-      "deep-south": "Deep South Duals (Date TBA)",
     }
 
     const emailBody = `

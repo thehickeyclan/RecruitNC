@@ -174,7 +174,7 @@ export default function NationalTeamInterestForm() {
       {/* Tournament Cards Section */}
       <section className="py-12 md:py-16 bg-white">
         <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-3 gap-6 md:gap-8 max-w-7xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-6 md:gap-8 max-w-5xl mx-auto">
             {/* NHSCA National Duals Card */}
             <Card className="border-2 border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
               <CardHeader className="bg-gradient-to-br from-[#002147] to-[#003366] text-white">
@@ -268,35 +268,6 @@ export default function NationalTeamInterestForm() {
                     >
                       Learn More <ExternalLink className="w-4 h-4" />
                     </Link>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Deep South Duals Card */}
-            <Card className="border-2 border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <CardHeader className="bg-gradient-to-br from-[#CBAF5D] to-[#b89d4a] text-[#002147]">
-                <div className="flex items-center justify-between mb-3">
-                  <Badge className="bg-[#002147] text-white">TBA</Badge>
-                  <Calendar className="w-5 h-5" />
-                </div>
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="bg-white rounded p-2 flex-shrink-0">
-                    <div className="w-[60px] h-[60px] flex items-center justify-center text-[#002147] font-bold text-xs">
-                      DSD
-                    </div>
-                  </div>
-                  <CardTitle className="text-xl md:text-2xl font-bold">Deep South Duals</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="space-y-4">
-                  <div className="flex items-start gap-2 text-gray-700">
-                    <MapPin className="w-5 h-5 text-[#CBAF5D] flex-shrink-0 mt-0.5" />
-                    <p className="text-sm md:text-base">Location TBA</p>
-                  </div>
-                  <div className="pt-2 border-t">
-                    <p className="text-sm text-gray-600 italic">Information coming soon</p>
                   </div>
                 </div>
               </CardContent>
@@ -571,7 +542,6 @@ export default function NationalTeamInterestForm() {
                         {[
                           { id: "nhsca", label: "NHSCA National Duals (May 23-25)" },
                           { id: "aau", label: "AAU Scholastic Duals - All-Star Boys (June 24-26)" },
-                          { id: "deep-south", label: "Deep South Duals (Date TBA)" },
                         ].map((tournament) => (
                           <div key={tournament.id} className="flex items-center space-x-2">
                             <input
