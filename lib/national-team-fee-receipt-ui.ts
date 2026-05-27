@@ -23,7 +23,8 @@ export type NationalTeamFeeReceiptRegistration = {
 export function nationalTeamProgramLabel(eventSlug: string) {
   if (eventSlug === "nhsca-duals-2026-select") return "NHSCA Duals 2026 — Select team"
   if (eventSlug === "nhsca-duals-2026") return "NHSCA Duals 2026 — National team"
-  return "National Team (NHSCA)"
+  if (eventSlug === "aau-2026") return "AAU Scholastic Duals 2026 — Boys All-Star"
+  return "NC United National Team"
 }
 
 export function nationalTeamReceiptTotalCents(

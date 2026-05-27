@@ -31,6 +31,7 @@ import {
 } from "@/lib/aau-scholastic-duals-2026-content"
 import { AauScholasticPricingTable } from "@/components/national-team/aau-scholastic-pricing-table"
 import { AauScholasticRosterTable } from "@/components/national-team/aau-scholastic-roster-table"
+import { AauScholasticYourPaymentSection } from "@/components/national-team/aau-scholastic-your-payment-section"
 import { AAU_SCHOLASTIC_DUALS_2026_ROSTER } from "@/lib/aau-scholastic-duals-2026-roster"
 
 export const metadata: Metadata = {
@@ -48,6 +49,7 @@ const NAV = [
   { href: "#aau-official", label: "AAU rules" },
   { href: "#weights", label: "Weights" },
   { href: "#cost", label: "Cost" },
+  { href: "#your-payment", label: "Your payment" },
   { href: "#register", label: "Register" },
   { href: "#faq", label: "FAQ" },
 ] as const
@@ -398,6 +400,8 @@ export default function ScholasticDuals2026Page() {
             <AauScholasticPricingTable />
           </CardContent>
         </Card>
+
+        <AauScholasticYourPaymentSection />
 
         <Card id="register" className="border-2 border-[#B31B1B]/30 shadow-md scroll-mt-24">
           <CardHeader className="bg-[#B31B1B]/5">

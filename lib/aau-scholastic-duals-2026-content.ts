@@ -1,4 +1,11 @@
 import { AAU_SCHOLASTIC_WEIGHT_CLASSES } from "@/lib/national-team-weight-classes"
+import {
+  encodeLineItemsMetadata,
+  type NhscaCheckoutLineItem,
+} from "@/lib/nhsca-hub-checkout-pricing"
+
+/** DB / Stripe `event_slug` for AAU Scholastic Duals 2026 registrations. */
+export const AAU_SCHOLASTIC_EVENT_SLUG = "aau-2026"
 
 export type AauScholasticPriceLine = {
   id: string
@@ -35,6 +42,27 @@ export const AAU_SCHOLASTIC_APPAREL_FEE_CENTS = (65 + 40 + 40 + 30) * 100
 
 export function formatAauScholasticDollars(dollars: number): string {
   return dollars % 1 === 0 ? `$${dollars}` : `$${dollars.toFixed(2)}`
+}
+
+export function aauScholasticCheckoutLineItems(): NhscaCheckoutLineItem[] {
+  return AAU_SCHOLASTIC_CHECKOUT_LINES.map((line) => ({
+    key: line.id,
+    name: line.label,
+    amountCents: line.dollars * 100,
+    quantity: 1,
+  }))
+}
+
+/** Stripe webhook metadata → itemized `order_items` for AAU register checkout. */
+export function encodeAauScholasticCheckoutLinesMetadata(): string {
+  return encodeLineItemsMetadata(aauScholasticCheckoutLineItems())
+}
+
+export function aauScholasticOrderLineDisplays(): { name: string; amount_cents: number }[] {
+  return AAU_SCHOLASTIC_CHECKOUT_LINES.map((line) => ({
+    name: line.label,
+    amount_cents: line.dollars * 100,
+  }))
 }
 
 /** NC United – AAU Scholastic Duals 2026 operations reference (parent-facing). */

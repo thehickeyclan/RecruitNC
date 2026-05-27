@@ -4,6 +4,11 @@ import {
   NHSCA_SINGLET_COLOR_LABELS,
   type NhscaSingletColor,
 } from "@/lib/nhsca-duals-2026-gear-images"
+import {
+  AAU_SCHOLASTIC_CHECKOUT_TOTAL_DOLLARS,
+  AAU_SCHOLASTIC_EVENT_SLUG,
+  aauScholasticOrderLineDisplays,
+} from "@/lib/aau-scholastic-duals-2026-content"
 
 export type { NhscaSingletColor }
 
@@ -397,7 +402,26 @@ export function inferOrderSummaryFromFees(row: {
   return items
 }
 
+function inferAauScholasticOrderLinesFromFees(row: {
+  reg_fee_cents?: number | null
+  apparel_fee_cents?: number | null
+}): NhscaOrderLineDisplay[] {
+  const total = (row.reg_fee_cents || 0) + (row.apparel_fee_cents || 0)
+  if (total === AAU_SCHOLASTIC_CHECKOUT_TOTAL_DOLLARS * 100) {
+    return aauScholasticOrderLineDisplays()
+  }
+  const items: NhscaOrderLineDisplay[] = []
+  if (row.reg_fee_cents) {
+    items.push({ name: "Tournament registration", amount_cents: row.reg_fee_cents })
+  }
+  if (row.apparel_fee_cents) {
+    items.push({ name: "Team apparel", amount_cents: row.apparel_fee_cents })
+  }
+  return items
+}
+
 export function resolveRegistrationOrderLines(row: {
+  event_slug?: string | null
   reg_fee_cents?: number | null
   apparel_fee_cents?: number | null
   singlet_size?: string | null
@@ -417,6 +441,9 @@ export function resolveRegistrationOrderLines(row: {
   if (row.checkout_lines?.trim()) {
     const decoded = decodeLineItemsMetadata(row.checkout_lines)
     if (decoded.length) return checkoutLineItemsToDisplay(decoded)
+  }
+  if (row.event_slug === AAU_SCHOLASTIC_EVENT_SLUG) {
+    return inferAauScholasticOrderLinesFromFees(row)
   }
   return inferOrderSummaryFromFees(row)
 }

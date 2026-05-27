@@ -735,14 +735,21 @@ export async function POST(request: NextRequest) {
           .from("products")
           .select("id, name, slug")
           .eq("category", "national_team")
-        const bundleProduct = products?.find((p) => (p as { slug?: string }).slug === "nhsca-2026-bundle") ?? products?.[0]
+        const regEventSlug = String((reg as { event_slug?: string }).event_slug ?? "")
+        const bundleSlug = regEventSlug === "aau-2026" ? "aau-2026-bundle" : "nhsca-2026-bundle"
+        const bundleProduct =
+          products?.find((p) => (p as { slug?: string }).slug === bundleSlug) ??
+          products?.find((p) => (p as { slug?: string }).slug === "nhsca-2026-bundle") ??
+          products?.[0]
         const regCents = Number(reg.reg_fee_cents) || 0
         const apparelCents = Number(reg.apparel_fee_cents) || 0
         const totalCents = regCents + apparelCents
         const customerEmail = (session as { customer_email?: string }).customer_email ?? (session.customer_details as { email?: string })?.email ?? reg.parent_email ?? ""
         const customerName = [reg.athlete_first_name, reg.athlete_last_name].filter(Boolean).join(" ") || "National team registrant"
         const { channel: ntSessionChannel, business: ntSessionBusiness } = channelBusinessFromMetadata(session.metadata)
-        const linesEncoded = (session.metadata?.checkout_lines as string | undefined) ?? ""
+        const linesEncoded =
+          (session.metadata?.checkout_lines as string | undefined) ??
+          String((reg as { checkout_lines?: string | null }).checkout_lines ?? "")
 
         let orderIdToUse = (reg.order_id as string | null) ?? null
         const { data: existingByPi } = await admin

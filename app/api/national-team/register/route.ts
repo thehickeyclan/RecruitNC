@@ -8,6 +8,7 @@ import {
   AAU_SCHOLASTIC_CHECKOUT_LINES,
   AAU_SCHOLASTIC_CHECKOUT_TOTAL_DOLLARS,
   AAU_SCHOLASTIC_REG_FEE_CENTS,
+  encodeAauScholasticCheckoutLinesMetadata,
 } from "@/lib/aau-scholastic-duals-2026-content"
 
 export const dynamic = "force-dynamic"
@@ -206,6 +207,7 @@ export async function POST(request: NextRequest) {
         source: "national_team",
         registration_id: reg.id,
         event_slug: eventSlug,
+        ...(isAau ? { checkout_lines: encodeAauScholasticCheckoutLinesMetadata() } : {}),
       },
     })
 

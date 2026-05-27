@@ -26,6 +26,9 @@ export function NhscaHubTabs({
   nhscaInfoOnly = false,
   hasRoster = false,
   checkoutEventSlug = "nhsca-duals-2026",
+  ordersEventSlug = null,
+  ordersScopeAll = false,
+  showHubCheckout = true,
 }: {
   rosterContent: ReactNode | null
   registrationFallback?: ReactNode
@@ -35,6 +38,9 @@ export function NhscaHubTabs({
   nhscaInfoOnly?: boolean
   hasRoster?: boolean
   checkoutEventSlug?: "nhsca-duals-2026" | "nhsca-duals-2026-select"
+  ordersEventSlug?: string | null
+  ordersScopeAll?: boolean
+  showHubCheckout?: boolean
 }) {
   const searchParams = useSearchParams()
   const defaultTab = useMemo(() => {
@@ -92,7 +98,13 @@ export function NhscaHubTabs({
       </TabsContent>
 
       <TabsContent value="payments" className="mt-0 focus-visible:outline-none">
-        <NhscaHubPaymentsTab isAdmin={isAdmin} checkoutEventSlug={checkoutEventSlug} />
+        <NhscaHubPaymentsTab
+          isAdmin={isAdmin}
+          checkoutEventSlug={checkoutEventSlug}
+          ordersEventSlug={ordersEventSlug}
+          ordersScopeAll={ordersScopeAll}
+          showHubCheckout={showHubCheckout}
+        />
       </TabsContent>
 
       <TabsContent value="media" className="mt-0 focus-visible:outline-none">

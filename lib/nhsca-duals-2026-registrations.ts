@@ -1,12 +1,21 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { AAU_SCHOLASTIC_EVENT_SLUG } from "@/lib/aau-scholastic-duals-2026-content"
 import {
   resolveRegistrationOrderLines,
   resolveRegistrationOrderSummary,
   type NhscaOrderLineDisplay,
 } from "@/lib/nhsca-hub-checkout-pricing"
 
-/** NHSCA Duals 2026 — National & Select event slugs (same as admin payments). */
+/** NHSCA Duals 2026 — National & Select event slugs. */
 export const NHSCA_DUALS_2026_EVENT_SLUGS = ["nhsca-duals-2026", "nhsca-duals-2026-select"] as const
+
+/** All events surfaced on admin national-team payments + family order history. */
+export const NATIONAL_TEAM_PAYMENTS_EVENT_SLUGS = [
+  ...NHSCA_DUALS_2026_EVENT_SLUGS,
+  AAU_SCHOLASTIC_EVENT_SLUG,
+] as const
+
+export { AAU_SCHOLASTIC_EVENT_SLUG }
 
 export type NhscaDuals2026Registration = {
   id: string
@@ -264,6 +273,7 @@ export async function listNhscaDuals2026PaidOrders(
     viewerUserId?: string | null
     viewerEmail?: string | null
     eventSlug?: string | null
+    eventSlugs?: readonly string[]
   }
 ): Promise<NhscaDuals2026PaidOrderRow[]> {
   const all = await listNhscaDuals2026Registrations(admin, opts)
@@ -274,7 +284,7 @@ export async function listNhscaDuals2026PaidOrders(
 
 export function nhscaDualsOrderCode(r: Pick<NhscaDuals2026Registration, "order_number" | "event_slug">): string {
   if (r.order_number?.trim()) return r.order_number.trim()
-  return nhscaDualsTeamShortLabel(r.event_slug)
+  return nationalTeamEventShortLabel(r.event_slug)
 }
 
 function toPaidOrderRow(r: NhscaDuals2026Registration): NhscaDuals2026PaidOrderRow {
@@ -286,7 +296,7 @@ function toPaidOrderRow(r: NhscaDuals2026Registration): NhscaDuals2026PaidOrderR
     weight: r.primary_weight,
     amount_cents: nhscaDualsRegistrationTotalCents(r),
     code: nhscaDualsOrderCode(r),
-    team: nhscaDualsTeamShortLabel(r.event_slug),
+    team: nationalTeamEventShortLabel(r.event_slug),
     items: resolveRegistrationOrderSummary(r),
     line_items: lineItems,
     paid_at: r.updated_at ?? r.created_at,
@@ -321,8 +331,16 @@ export function nhscaDualsRegistrationIsPaid(r: Pick<NhscaDuals2026Registration,
   return r.status === "paid" || Boolean(r.order_id)
 }
 
+export function nationalTeamEventShortLabel(eventSlug: string) {
+  if (eventSlug === "nhsca-duals-2026-select") return "Select"
+  if (eventSlug === AAU_SCHOLASTIC_EVENT_SLUG) return "AAU Scholastic"
+  if (eventSlug === "nhsca-duals-2026") return "National"
+  return eventSlug.replace(/-/g, " ")
+}
+
+/** @deprecated Use {@link nationalTeamEventShortLabel} */
 export function nhscaDualsTeamShortLabel(eventSlug: string) {
-  return eventSlug === "nhsca-duals-2026-select" ? "Select" : "National"
+  return nationalTeamEventShortLabel(eventSlug)
 }
 
 export function parentEmailAccountHint(
