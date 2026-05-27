@@ -7,9 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { CheckCircle2, MessageCircle, Hotel, Shirt, LayoutDashboard, User } from "lucide-react"
 import { getEventName, getRosterLabel } from "@/lib/national-team-events"
+import { AAU_SCHOLASTIC_DUALS_2026 } from "@/lib/aau-scholastic-duals-2026-content"
 import { HardLink } from "@/components/hard-link"
 
-const NHSCA_2026_SLUGS = ["nhsca-2026", "nhsca-duals-2026", "nhsca-duals-2026-select"]
+const AAU_2026_SLUGS = ["aau-2026"]
 
 const GEAR_DEADLINE = "Sunday, March 15"
 
@@ -20,7 +21,7 @@ export default function NationalTeamRegisterSuccessPage() {
   const eventSlug = typeof params?.eventSlug === "string" ? params.eventSlug : ""
   const eventName = getEventName(eventSlug) || "this event"
   const rosterLabel = getRosterLabel(eventSlug)
-  const isNhsca2026 = NHSCA_2026_SLUGS.includes(eventSlug)
+  const isAau2026 = AAU_2026_SLUGS.includes(eventSlug)
   const sessionId = searchParams.get("session_id")?.trim() ?? ""
   const linkAttempted = useRef(false)
 
@@ -46,59 +47,109 @@ export default function NationalTeamRegisterSuccessPage() {
               <div>
                 <CardTitle className="text-xl sm:text-2xl text-white">You&apos;re part of something special</CardTitle>
                 <CardDescription className="text-blue-100 mt-1">
-                  Thank you for registering for {eventName}. Your spot on the roster is confirmed and your account is linked — you have full access to the team hub.
+                  {isAau2026
+                    ? `Thank you for registering for ${eventName}. Your spot on the roster is confirmed — watch for a receipt email and follow-up from NC United.`
+                    : `Thank you for registering for ${eventName}. Your spot on the roster is confirmed and your account is linked — you have full access to the team hub.`}
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="pt-6 space-y-6">
             <p className="text-sm text-gray-700">
-              Payment successful. You&apos;re on the <strong>{rosterLabel} roster</strong>. Go to the team hub (link below) to update your gear sizes and join GroupMe.
+              {isAau2026 ? (
+                <>
+                  Payment successful. You&apos;re on the <strong>NC United {rosterLabel} roster</strong>. NC United will email
+                  travel, van schedule, and roster updates — and this page will stay current for roster changes.
+                </>
+              ) : (
+                <>
+                  Payment successful. You&apos;re on the <strong>{rosterLabel} roster</strong>. Go to the team hub (link
+                  below) to update your gear sizes and join GroupMe.
+                </>
+              )}
             </p>
 
-            <div className="rounded-lg bg-[#003366]/10 border-2 border-[#003366]/25 p-4">
-              <p className="text-sm font-semibold text-[#002147] mb-1 flex items-center gap-2">
-                <LayoutDashboard className="h-4 w-4 shrink-0" />
-                Team hub — do this next
-              </p>
-              <p className="text-sm text-gray-600 mb-3">
-                Use this link for roster, gear sizes, and GroupMe. Bookmark it or find it anytime under <strong>My Profile → Event hubs</strong>.
-              </p>
-              <p className="text-xs font-mono text-gray-500 mb-3 break-all bg-white/80 rounded px-2 py-1.5 border border-[#003366]/10">
-                /national-team/hub
-              </p>
-              <div className="flex flex-col gap-2">
-                <Button asChild className="w-full bg-[#003366] hover:bg-[#003366]/90" size="lg">
-                  <HardLink href="/national-team/hub">
-                    Go to Team Hub — update sizes &amp; join GroupMe
-                  </HardLink>
-                </Button>
-                <Button asChild variant="outline" className="w-full" size="sm">
-                  <a href="/profile" className="inline-flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    My Profile (Event hubs)
-                  </a>
-                </Button>
+            {isAau2026 ? (
+              <div className="rounded-lg bg-[#003366]/10 border-2 border-[#003366]/25 p-4">
+                <p className="text-sm font-semibold text-[#002147] mb-1 flex items-center gap-2">
+                  <LayoutDashboard className="h-4 w-4 shrink-0" />
+                  What happens next
+                </p>
+                <ul className="space-y-2 text-sm text-gray-700 list-none mb-4">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-[#003366] mt-0.5" />
+                    <span>Stripe receipt emailed to the parent/guardian address on your form.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Hotel className="h-4 w-4 shrink-0 text-[#003366] mt-0.5" />
+                    <span>NC United will follow up on hotel, van, and flight details if you selected those lines.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Shirt className="h-4 w-4 shrink-0 text-[#003366] mt-0.5" />
+                    <span>Roster updates and event info stay on the AAU Scholastic Duals page.</span>
+                  </li>
+                </ul>
+                <div className="flex flex-col gap-2">
+                  <Button asChild className="w-full bg-[#003366] hover:bg-[#003366]/90" size="lg">
+                    <HardLink href={AAU_SCHOLASTIC_DUALS_2026.infoPath}>Back to AAU Scholastic Duals info</HardLink>
+                  </Button>
+                  <Button asChild variant="outline" className="w-full" size="sm">
+                    <a href={`mailto:${AAU_SCHOLASTIC_DUALS_2026.contactEmail}`}>Email NC United</a>
+                  </Button>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="rounded-lg bg-[#003366]/10 border-2 border-[#003366]/25 p-4">
+                <p className="text-sm font-semibold text-[#002147] mb-1 flex items-center gap-2">
+                  <LayoutDashboard className="h-4 w-4 shrink-0" />
+                  Team hub — do this next
+                </p>
+                <p className="text-sm text-gray-600 mb-3">
+                  Use this link for roster, gear sizes, and GroupMe. Bookmark it or find it anytime under{" "}
+                  <strong>My Profile → Event hubs</strong>.
+                </p>
+                <p className="text-xs font-mono text-gray-500 mb-3 break-all bg-white/80 rounded px-2 py-1.5 border border-[#003366]/10">
+                  /national-team/hub
+                </p>
+                <div className="flex flex-col gap-2">
+                  <Button asChild className="w-full bg-[#003366] hover:bg-[#003366]/90" size="lg">
+                    <HardLink href="/national-team/hub">Go to Team Hub — update sizes &amp; join GroupMe</HardLink>
+                  </Button>
+                  <Button asChild variant="outline" className="w-full" size="sm">
+                    <a href="/profile" className="inline-flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      My Profile (Event hubs)
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            )}
 
-            <div className="border-t border-gray-200 pt-4">
-              <p className="text-sm font-semibold text-gray-900 mb-3">On the hub you&apos;ll:</p>
-              <ul className="space-y-2 text-sm text-gray-700 list-none">
-                <li className="flex items-start gap-2">
-                  <Shirt className="h-4 w-4 shrink-0 text-[#003366] mt-0.5" />
-                  <span><strong>Update gear sizes</strong> (Singlet, Shorts, Shirt) — due by {GEAR_DEADLINE}.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <MessageCircle className="h-4 w-4 shrink-0 text-[#003366] mt-0.5" />
-                  <span><strong>Join GroupMe</strong> — team chat link is on the hub.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Hotel className="h-4 w-4 shrink-0 text-[#003366] mt-0.5" />
-                  <span><strong>See schedule &amp; travel</strong> — venue, weigh-ins, hotel info.</span>
-                </li>
-              </ul>
-            </div>
+            {!isAau2026 ? (
+              <div className="border-t border-gray-200 pt-4">
+                <p className="text-sm font-semibold text-gray-900 mb-3">On the hub you&apos;ll:</p>
+                <ul className="space-y-2 text-sm text-gray-700 list-none">
+                  <li className="flex items-start gap-2">
+                    <Shirt className="h-4 w-4 shrink-0 text-[#003366] mt-0.5" />
+                    <span>
+                      <strong>Update gear sizes</strong> (Singlet, Shorts, Shirt) — due by {GEAR_DEADLINE}.
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <MessageCircle className="h-4 w-4 shrink-0 text-[#003366] mt-0.5" />
+                    <span>
+                      <strong>Join GroupMe</strong> — team chat link is on the hub.
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Hotel className="h-4 w-4 shrink-0 text-[#003366] mt-0.5" />
+                    <span>
+                      <strong>See schedule &amp; travel</strong> — venue, weigh-ins, hotel info.
+                    </span>
+                  </li>
+                </ul>
+              </div>
+            ) : null}
 
             <div className="flex flex-col gap-2 pt-2">
               <Button asChild variant="outline" className="w-full">

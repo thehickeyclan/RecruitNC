@@ -5,7 +5,7 @@ import {
   ClipboardList,
   ExternalLink,
   MapPin,
-  Phone,
+  MessageCircle,
   Scale,
   ShieldCheck,
   Shirt,
@@ -27,10 +27,14 @@ import {
   AAU_SCHOLASTIC_WEIGHT_RULES,
   AAU_SCHOLASTIC_WEIGHTS_DISPLAY,
   AAU_SCHOLASTIC_FLEXIBILITY_NOTES,
+  AAU_SCHOLASTIC_NC_UNITED_TEAM,
+  AAU_SCHOLASTIC_TEAM_LABEL,
   formatAauScholasticDollars,
 } from "@/lib/aau-scholastic-duals-2026-content"
+import { AauScholasticGearPreview } from "@/components/national-team/aau-scholastic-gear-preview"
 import { AauScholasticPricingTable } from "@/components/national-team/aau-scholastic-pricing-table"
 import { AauScholasticRosterTable } from "@/components/national-team/aau-scholastic-roster-table"
+import { AauScholasticTeamTable } from "@/components/national-team/aau-scholastic-team-table"
 import { AauScholasticYourPaymentSection } from "@/components/national-team/aau-scholastic-your-payment-section"
 import { NcUnitedCodeCallout } from "@/components/national-team/nc-united-code-callout"
 import { AAU_SCHOLASTIC_DUALS_2026_ROSTER } from "@/lib/aau-scholastic-duals-2026-roster"
@@ -56,7 +60,7 @@ import { cn } from "@/lib/utils"
 export const metadata: Metadata = {
   title: "AAU Scholastic Duals 2026 — NC United | Info & Registration",
   description:
-    "NC United operations guide for AAU Scholastic Duals 2026 Boys All-Star — dates, venue, weights, roster, eligibility, pricing, and registration.",
+    "NC United National Team operations guide for AAU Scholastic Duals 2026 — dates, venue, weights, roster, eligibility, pricing, and registration.",
 }
 
 const NAV = [
@@ -67,10 +71,12 @@ const NAV = [
   { href: "#venue", label: "Venue & hotel" },
   { href: "#aau-official", label: "AAU rules" },
   { href: "#weights", label: "Weights" },
+  { href: "#gear", label: "Gear" },
   { href: "#cost", label: "Cost" },
   { href: "#expectations", label: "Expectations" },
   { href: "#register", label: "Register" },
   { href: "#faq", label: "FAQ" },
+  { href: "#nc-united-team", label: "NC United Team" },
 ] as const
 
 function OpsRow({ label, value }: { label: string; value: string }) {
@@ -105,14 +111,24 @@ export default function ScholasticDuals2026Page() {
               </h1>
               <p className="text-lg text-white/85 mb-2">{AAU_SCHOLASTIC_OPERATIONS.eventName}</p>
               <p className="text-white/70 text-sm md:text-base max-w-xl">
-                NC United operations Q&amp;A for parents and families — everything you need before you register.
+                {AAU_SCHOLASTIC_TEAM_LABEL} operations Q&amp;A for parents and families — everything you need before
+                you register.
               </p>
-              <div className="mt-8 flex flex-col sm:flex-row gap-3">
+              <div className="mt-8 flex flex-col sm:flex-row flex-wrap gap-3">
                 <a href={AAU_SCHOLASTIC_DUALS_2026.registerPath} className={aauPrimaryBtnClass}>
                   Register &amp; checkout
                 </a>
-                <a href={AAU_SCHOLASTIC_DUALS_2026.hubPath} className={aauSecondaryBtnClass}>
-                  Team Hub (registered families)
+                <a
+                  href={AAU_SCHOLASTIC_DUALS_2026.groupMeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={aauSecondaryBtnClass + " gap-2"}
+                >
+                  <MessageCircle className="h-5 w-5 shrink-0" aria-hidden />
+                  Join GroupMe
+                </a>
+                <a href="#faq" className={aauSecondaryBtnClass}>
+                  FAQ
                 </a>
               </div>
             </div>
@@ -148,6 +164,15 @@ export default function ScholasticDuals2026Page() {
                 {label}
               </a>
             ))}
+            <a
+              href={AAU_SCHOLASTIC_DUALS_2026.groupMeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={aauNavPillClass + " gap-1.5"}
+            >
+              <MessageCircle className="h-3.5 w-3.5 shrink-0" aria-hidden />
+              Join GroupMe
+            </a>
           </div>
         </div>
       </nav>
@@ -161,10 +186,10 @@ export default function ScholasticDuals2026Page() {
           contentClassName="space-y-4"
         >
           <p>
-            NC United competes in the <strong className="text-white">{AAU_SCHOLASTIC_OPERATIONS.eventName}</strong> at
-            the Broward County Convention Center in Fort Lauderdale. Approximately{" "}
+            <strong className="text-white">{AAU_SCHOLASTIC_TEAM_LABEL}</strong> competes in the AAU Boys All-Star
+            Division at the Broward County Convention Center in Fort Lauderdale. Approximately{" "}
             <strong className="text-white">40–50 elite teams</strong> nationally compete in this premier scholastic duals
-            event.
+            event — NC United fields one National Team roster.
           </p>
           <p>
             Standard roster: <strong className="text-white">{AAU_SCHOLASTIC_OPERATIONS.rosterStarters} starters</strong>
@@ -196,9 +221,10 @@ export default function ScholasticDuals2026Page() {
           <dl>
             <OpsRow label="Event" value={AAU_SCHOLASTIC_OPERATIONS.eventName} />
             <OpsRow label="Division" value={AAU_SCHOLASTIC_OPERATIONS.division} />
-            <OpsRow label="Arrival / weigh-ins" value={AAU_SCHOLASTIC_OPERATIONS.arrivalWeighIns} />
-            <OpsRow label="Competition" value={AAU_SCHOLASTIC_OPERATIONS.competitionDates} />
-            <OpsRow label="Departure" value={AAU_SCHOLASTIC_OPERATIONS.departure} />
+            <OpsRow
+              label="Dates"
+              value={`${AAU_SCHOLASTIC_OPERATIONS.dates} — ${AAU_SCHOLASTIC_OPERATIONS.datesDetail}`}
+            />
             <OpsRow
               label="Venue"
               value={`${AAU_SCHOLASTIC_OPERATIONS.venueName}, ${AAU_SCHOLASTIC_OPERATIONS.venueAddress1}, ${AAU_SCHOLASTIC_OPERATIONS.venueCityStateZip}`}
@@ -217,14 +243,14 @@ export default function ScholasticDuals2026Page() {
 
         <ScholasticDualsSection
           id="roster"
-          title="Team roster"
+          title="National Team roster"
           icon={<Users className="h-5 w-5 text-[#B31B1B]" />}
-          description={`${AAU_SCHOLASTIC_OPERATIONS.rosterStarters} starters · weight shown with +5 lb allowance`}
+          description={`${AAU_SCHOLASTIC_TEAM_LABEL} · ${AAU_SCHOLASTIC_OPERATIONS.rosterStarters} starters · +5 lb allowance`}
           contentClassName="px-0 pb-0"
         >
           <AauScholasticRosterTable rows={AAU_SCHOLASTIC_DUALS_2026_ROSTER} className="mx-5 mb-5 md:mx-6 md:mb-6" />
           <p className="text-xs text-white/45 px-5 pb-5 md:px-6">
-            175 and HWT are open starter slots (TBD). Alternates and any roster changes will be posted in the Team Hub.
+            175 and HWT are open starter slots (TBD). Alternates and any roster changes will be posted on this page.
           </p>
         </ScholasticDualsSection>
 
@@ -317,7 +343,7 @@ export default function ScholasticDuals2026Page() {
 
           <p className={scholasticCalloutClass}>
             <strong>Parking:</strong> $25/day at the convention center.{" "}
-            <strong>Flights:</strong> selectable at registration checkout — Team Hub has travel updates after payment.
+            <strong>Flights:</strong> selectable at registration checkout — NC United will follow up with travel details after payment.
           </p>
         </ScholasticDualsSection>
 
@@ -391,7 +417,7 @@ export default function ScholasticDuals2026Page() {
             </ul>
           </div>
           <p className="text-sm text-white/60">
-            Select the weight class your athlete is wrestling for NC United during registration.
+            Select the weight class your athlete is wrestling for {AAU_SCHOLASTIC_TEAM_LABEL} during registration.
           </p>
         </ScholasticDualsSection>
 
@@ -407,6 +433,17 @@ export default function ScholasticDuals2026Page() {
               </li>
             ))}
           </ul>
+        </ScholasticDualsSection>
+
+        <ScholasticDualsSection
+          id="gear"
+          title="Team gear & apparel"
+          icon={<Shirt className="h-5 w-5 text-[#B31B1B]" />}
+          description="Optional at checkout — same NC United uniform as NHSCA Duals"
+          headerClassName={aauAccentHeaderClass}
+          contentClassName="space-y-4"
+        >
+          <AauScholasticGearPreview />
         </ScholasticDualsSection>
 
         <ScholasticDualsSection
@@ -454,7 +491,7 @@ export default function ScholasticDuals2026Page() {
               "Complete athlete & parent/guardian information.",
               "Select only the items your family needs (registration, apparel, hotel/team van, flight).",
               "Pay securely at Stripe checkout — receipt emailed automatically.",
-              "After payment, go to the Team Hub for gear sizes, travel, and updates.",
+              "Watch for a receipt email and follow-up from NC United with travel and roster updates.",
             ].map((step, i) => (
               <li key={step} className="flex gap-3">
                 <span className={aauStepBadgeClass}>{i + 1}</span>
@@ -482,6 +519,23 @@ export default function ScholasticDuals2026Page() {
         </ScholasticDualsSection>
 
         <ScholasticDualsSection id="faq" title="FAQ for parents" contentClassName="space-y-6">
+          <div className={scholasticInsetClass + " flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"}>
+            <div>
+              <p className="font-semibold text-white">Team chat — {AAU_SCHOLASTIC_DUALS_2026.groupMeLabel}</p>
+              <p className="text-sm text-white/70 mt-1">
+                Parents and athletes should join GroupMe for travel updates, van info, and day-of messages.
+              </p>
+            </div>
+            <a
+              href={AAU_SCHOLASTIC_DUALS_2026.groupMeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(aauSecondaryBtnClass, "gap-2 shrink-0 text-sm px-5 py-2.5 min-h-[44px]")}
+            >
+              <MessageCircle className="h-4 w-4 shrink-0" aria-hidden />
+              Join GroupMe
+            </a>
+          </div>
           {AAU_SCHOLASTIC_PARENT_FAQ.map(({ q, a }) => (
             <div key={q}>
               <h3 className="font-semibold text-white mb-1">{q}</h3>
@@ -490,16 +544,20 @@ export default function ScholasticDuals2026Page() {
           ))}
         </ScholasticDualsSection>
 
-        <ScholasticDualsSection title="Contact" icon={<Phone className="h-5 w-5 text-[#B31B1B]" />} contentClassName="space-y-2">
-          <p>
-            <strong className="text-white">{AAU_SCHOLASTIC_DUALS_2026.contactName}</strong> — NC United National Team
+        <ScholasticDualsSection
+          id="nc-united-team"
+          title="NC United Team"
+          icon={<Users className="h-5 w-5 text-[#B31B1B]" />}
+          description={`${AAU_SCHOLASTIC_TEAM_LABEL} staff for travel, roster, and day-of questions`}
+          contentClassName="space-y-3"
+        >
+          <p className="text-sm text-white/70">
+            Reach the team directly during the event. For AAU tournament rules or weigh-ins, contact Jacob Sunde (AAU)
+            — see FAQ.
           </p>
-          <p>
-            <a href={`tel:${AAU_SCHOLASTIC_DUALS_2026.contactPhoneTel}`} className={scholasticLinkClass}>
-              {AAU_SCHOLASTIC_DUALS_2026.contactPhone}
-            </a>
-          </p>
-          <p>
+          <AauScholasticTeamTable members={AAU_SCHOLASTIC_NC_UNITED_TEAM} />
+          <p className="text-xs text-white/45">
+            General email:{" "}
             <a href={`mailto:${AAU_SCHOLASTIC_DUALS_2026.contactEmail}`} className={scholasticLinkClass}>
               {AAU_SCHOLASTIC_DUALS_2026.contactEmail}
             </a>

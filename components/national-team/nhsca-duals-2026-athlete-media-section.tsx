@@ -9,7 +9,10 @@ import {
   type NhscaDualsAthleteMediaCategory,
   type NhscaDualsAthleteMediaItem,
 } from "@/lib/nhsca-duals-2026-athlete-media"
+import { galleryPhotosForScope } from "@/lib/nhsca-duals-2026-tournament-gallery"
+import type { NhscaDualsResultsSnapshot } from "@/lib/nhsca-duals-live-results/types"
 import { NhscaDualsCollapsibleSection } from "@/components/national-team/nhsca-duals-collapsible-section"
+import { NhscaDualsTournamentGalleryGrid } from "@/components/national-team/nhsca-duals-2026-tournament-gallery"
 import { NhscaDualsTournamentMomentMedia } from "@/components/national-team/nhsca-duals-tournament-moment-media"
 import { cn } from "@/lib/utils"
 
@@ -66,6 +69,7 @@ function MediaGroup({
   items: NhscaDualsAthleteMediaItem[]
 }) {
   const [visible, setVisible] = useState(INITIAL_VISIBLE)
+
   if (items.length === 0) return null
 
   const shown = items.slice(0, visible)
@@ -86,30 +90,66 @@ function MediaGroup({
           <span className="ml-2 text-white/45 tabular-nums">({items.length})</span>
         </h3>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {shown.map((item) => (
-          <AthleteMediaCard key={item.id} item={item} />
-        ))}
-      </div>
-      {hasMore ? (
-        <button
-          type="button"
-          onClick={() => setVisible((n) => n + INITIAL_VISIBLE)}
-          className={cn(
-            "w-full min-h-[44px] rounded-xl border border-white/15 bg-white/5 px-4 py-2.5",
-            "text-sm font-semibold text-[#CBAF5D] hover:bg-white/10 transition-colors"
-          )}
-        >
-          Show more {categoryMoreLabel(category)} (
-          {items.length - visible} remaining)
-        </button>
+      {items.length > 0 ? (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {shown.map((item) => (
+              <AthleteMediaCard key={item.id} item={item} />
+            ))}
+          </div>
+          {hasMore ? (
+            <button
+              type="button"
+              onClick={() => setVisible((n) => n + INITIAL_VISIBLE)}
+              className={cn(
+                "w-full min-h-[44px] rounded-xl border border-white/15 bg-white/5 px-4 py-2.5",
+                "text-sm font-semibold text-[#CBAF5D] hover:bg-white/10 transition-colors"
+              )}
+            >
+              Show more {categoryMoreLabel(category)} ({items.length - visible} remaining)
+            </button>
+          ) : null}
+        </>
       ) : null}
     </div>
   )
 }
 
-export function NhscaDuals2026AthleteMediaSection({ scope }: { scope: CommandCenterScope }) {
+function TeamGallerySection({
+  scope,
+  snapshot,
+}: {
+  scope: CommandCenterScope
+  snapshot?: NhscaDualsResultsSnapshot | null
+}) {
+  const galleryCount = galleryPhotosForScope(scope).length
+  if (galleryCount === 0) return null
+
+  return (
+    <div id="team-gallery" className="scroll-mt-24 space-y-4">
+      <div className="flex items-center gap-2">
+        <Camera className="h-4 w-4 text-[#CBAF5D] shrink-0" aria-hidden />
+        <h3 className="text-sm font-bold uppercase tracking-wider text-[#CBAF5D]">
+          Team gallery
+          <span className="ml-2 text-white/45 tabular-nums">({galleryCount})</span>
+        </h3>
+      </div>
+      <p className="text-xs text-white/55 -mt-2">NC United wrestlers at Virginia Beach Sports Center</p>
+      <NhscaDualsTournamentGalleryGrid scope={scope} snapshot={snapshot} hideHeading />
+    </div>
+  )
+}
+
+export function NhscaDuals2026AthleteMediaSection({
+  scope,
+  snapshot,
+}: {
+  scope: CommandCenterScope
+  snapshot?: NhscaDualsResultsSnapshot | null
+}) {
   const items = useMemo(() => athleteMediaForScope(scope), [scope])
+  const galleryCount = galleryPhotosForScope(scope).length
+  const totalCount = items.length + galleryCount
 
   const grouped = useMemo(() => {
     const map: Record<NhscaDualsAthleteMediaCategory, NhscaDualsAthleteMediaItem[]> = {
@@ -123,15 +163,15 @@ export function NhscaDuals2026AthleteMediaSection({ scope }: { scope: CommandCen
     return map
   }, [items])
 
-  if (items.length === 0) return null
+  if (totalCount === 0) return null
 
   return (
     <NhscaDualsCollapsibleSection
       id="media"
-      title="Interviews & highlights"
-      subtitle="Athlete interviews, highlight reels, and photos from Virginia Beach — more added as they are uploaded."
-      count={items.length}
-      defaultOpen={items.length <= 6}
+      title="Media"
+      subtitle="Interviews, highlight reels, portraits, and team gallery photos from Virginia Beach."
+      count={totalCount}
+      defaultOpen={totalCount <= 6}
       icon={<Clapperboard className="h-5 w-5" aria-hidden />}
       className="mb-10 sm:mb-14 border-[#CBAF5D]/20"
     >
@@ -139,6 +179,7 @@ export function NhscaDuals2026AthleteMediaSection({ scope }: { scope: CommandCen
         {CATEGORY_ORDER.map((category) => (
           <MediaGroup key={category} category={category} items={grouped[category]} />
         ))}
+        <TeamGallerySection scope={scope} snapshot={snapshot} />
       </div>
     </NhscaDualsCollapsibleSection>
   )

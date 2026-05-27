@@ -12,7 +12,6 @@ import { NhscaDuals2026AthleteMediaSection } from "@/components/national-team/nh
 import { NhscaDualsCollapsibleSection } from "@/components/national-team/nhsca-duals-collapsible-section"
 import { NhscaDualsTournamentMomentMedia } from "@/components/national-team/nhsca-duals-tournament-moment-media"
 import { NHSCA_DUALS_2026_APPAREL_VIDEO_MOMENT } from "@/lib/nhsca-duals-2026-tournament-moments"
-import { NhscaDuals2026TournamentGallery } from "@/components/national-team/nhsca-duals-2026-tournament-gallery"
 import { NationalTeamWrestlerCards } from "@/components/national-team/national-team-wrestler-cards"
 import { SelectTeamWrestlerCards } from "@/components/national-team/select-team-wrestler-cards"
 import type { NhscaDualsBigWin } from "@/lib/nhsca-duals-big-wins"
@@ -53,13 +52,13 @@ const HERO_STATS_TEAM_OPTIONS: { id: HeroStatsScope; label: string }[] = [
 const NAV_LINKS = [
   { href: "#results", label: "Dual results" },
   { href: "#recap", label: "Recap" },
-  { href: "#media", label: "Interviews" },
+  { href: "#media", label: "Media" },
+  { href: "#team-gallery", label: "Team gallery" },
   { href: "#mow", label: "MOWs" },
   { href: "#moments", label: "Moments" },
   { href: "#apparel", label: "Team gear" },
   { href: "#cards", label: "Athlete cards" },
   { href: "#big-wins", label: "Big wins" },
-  { href: "#gallery", label: "Gallery" },
 ] as const
 
 /** Public NHSCA Duals 2026 portal */
@@ -310,8 +309,8 @@ export function NhscaDuals2026PublicResults() {
         {/* 2. Tournament recap (MOW, moments, coaching) */}
         <NhscaDuals2026RecapSections scope={PAGE_SCOPE} snapshot={snapshot} />
 
-        {/* 3. Interviews & highlight reels */}
-        <NhscaDuals2026AthleteMediaSection scope={PAGE_SCOPE} />
+        {/* 3. Media — interviews, highlights, portraits, in-action photos */}
+        <NhscaDuals2026AthleteMediaSection scope={PAGE_SCOPE} snapshot={snapshot} />
 
         {/* 4. Team gear */}
         <NhscaDualsCollapsibleSection
@@ -352,8 +351,6 @@ export function NhscaDuals2026PublicResults() {
 
         <NhscaDuals2026ClosingSection />
       </div>
-
-      <NhscaDuals2026TournamentGallery scope={PAGE_SCOPE} snapshot={snapshot} />
     </div>
   )
 }

@@ -7,6 +7,9 @@ import {
 /** DB / Stripe `event_slug` for AAU Scholastic Duals 2026 registrations. */
 export const AAU_SCHOLASTIC_EVENT_SLUG = "aau-2026"
 
+/** NC United sends one squad to AAU Scholastic Duals — the National Team. */
+export const AAU_SCHOLASTIC_TEAM_LABEL = "NC United National Team"
+
 export type AauScholasticPriceLine = {
   id: string
   label: string
@@ -257,8 +260,10 @@ export function aauScholasticAllOrderLineDisplays(): { name: string; amount_cent
 
 /** NC United – AAU Scholastic Duals 2026 operations reference (parent-facing). */
 export const AAU_SCHOLASTIC_OPERATIONS = {
-  eventName: "AAU Scholastic Duals 2026 – Boys All-Star Division",
-  division: "Boys All-Star (District All-Star)",
+  eventName: "AAU Scholastic Duals 2026 — NC United National Team",
+  division: "AAU Boys All-Star Division (District All-Star)",
+  dates: "June 23–27, 2026",
+  datesDetail: "Arrive & weigh-ins Tue Jun 23 · competition Wed–Fri · depart Fri PM or Sat Jun 27 AM",
   arrivalWeighIns: "Tuesday, June 23, 2026",
   competitionDates: "June 24–26, 2026",
   departure: "June 26 (PM) or June 27 (AM)",
@@ -393,21 +398,56 @@ export const AAU_SCHOLASTIC_TEAM_HOTEL = {
 export const AAU_SCHOLASTIC_DUALS_2026 = {
   title: AAU_SCHOLASTIC_OPERATIONS.eventName,
   shortTitle: "AAU Scholastic Duals 2026",
-  tagline: "Boys All-Star Division · District All-Star teams",
-  datesLabel: "June 23–26, 2026",
-  travelNote: "Arrival & weigh-ins Tue Jun 23 · competition Wed–Fri · depart Fri PM or Sat AM",
+  tagline: `${AAU_SCHOLASTIC_TEAM_LABEL} · AAU Boys All-Star Division`,
+  datesLabel: AAU_SCHOLASTIC_OPERATIONS.dates,
+  travelNote: AAU_SCHOLASTIC_OPERATIONS.datesDetail,
   venue: AAU_SCHOLASTIC_OPERATIONS.venueName,
   venueAddress: `${AAU_SCHOLASTIC_OPERATIONS.venueAddress1}, ${AAU_SCHOLASTIC_OPERATIONS.venueCityStateZip}`,
   location: "Fort Lauderdale, Florida",
   mapsQuery: "1950+Eisenhower+Blvd+Fort+Lauderdale+FL+33316",
   officialUrl: "https://aausports.org/wrestling/scholastic-duals",
   registerPath: "/national-team/register/aau-2026",
-  hubPath: "/national-team/hub",
+  infoPath: "/national-team/scholastic-duals-2026",
   contactName: "Matt Hickey",
   contactPhone: "(631) 662-5409",
   contactPhoneTel: "+16316625409",
   contactEmail: "info@ncwrestlingunited.com",
+  groupMeUrl: "https://groupme.com/join_group/115087580/GOSg0W8P",
+  groupMeLabel: "SCHOLASTIC DUALS 2026",
 } as const
+
+/** NC United staff — parent-facing contacts for AAU Scholastic Duals. */
+export type AauScholasticTeamMember = {
+  name: string
+  role: string
+  /** Display format, e.g. (631) 662-5409 */
+  cell?: string
+  /** E.164 for tel: links */
+  cellTel?: string
+}
+
+export const AAU_SCHOLASTIC_NC_UNITED_TEAM: AauScholasticTeamMember[] = [
+  {
+    name: "Matt Hickey",
+    role: "Operations",
+    cell: "(631) 662-5409",
+    cellTel: "+16316625409",
+  },
+  {
+    name: "Lisa Hickey",
+    role: "Operations",
+  },
+  {
+    name: "Isabella Hickey",
+    role: "Team operations",
+  },
+  {
+    name: "Justin Perry",
+    role: "Leadership",
+    cell: "(856) 638-8831",
+    cellTel: "+18566388831",
+  },
+]
 
 export const AAU_SCHOLASTIC_WEIGHTS_DISPLAY = AAU_SCHOLASTIC_WEIGHT_CLASSES.map((w) =>
   w === "285" ? "285" : w,
@@ -416,7 +456,7 @@ export const AAU_SCHOLASTIC_WEIGHTS_DISPLAY = AAU_SCHOLASTIC_WEIGHT_CLASSES.map(
 export const AAU_SCHOLASTIC_PARENT_FAQ = [
   {
     q: "Who can register?",
-    a: "NC United Scholastic Duals families on the team roster. Open the registration link on this page, enter athlete and parent info, select the items you want (tournament entry, apparel, etc.), and complete Stripe checkout.",
+    a: `${AAU_SCHOLASTIC_TEAM_LABEL} families on the roster. Open the registration link on this page, enter athlete and parent info, select the items you want (tournament entry, apparel, etc.), and complete Stripe checkout.`,
   },
   {
     q: "Who is eligible?",
@@ -452,7 +492,11 @@ export const AAU_SCHOLASTIC_PARENT_FAQ = [
   },
   {
     q: "Where do I get updates after I register?",
-    a: "Registered families use the NC United Team Hub for rosters, gear sizing, travel notes, and chat. Link your account after payment on the confirmation screen.",
+    a: "Join the team GroupMe (SCHOLASTIC DUALS 2026) for travel, van schedule, and day-of updates — parents and athletes should both join. NC United will also email your receipt at checkout and follow up from info@ncwrestlingunited.com. Roster changes are posted on this page.",
+  },
+  {
+    q: "How do I join the team GroupMe?",
+    a: "Open the Join GroupMe link at the top of this page or go to https://groupme.com/join_group/115087580/GOSg0W8P on your phone. Turn notifications on after you join.",
   },
   {
     q: "Who do I contact for AAU tournament questions?",

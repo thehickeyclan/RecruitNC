@@ -13,6 +13,7 @@ import { scrollToPageHash } from "@/lib/scroll-to-page-hash"
 import { getTournaments, type Tournament, getTournamentResults } from "@/lib/nc-united-api"
 import { NHSCA_DUALS_2026_NATIONAL_ACHIEVEMENT } from "@/lib/nhsca-duals-public-hero-stats"
 import { NHSCA_DUALS_2026_NATIONAL_JOURNEY_CARD_PHOTO } from "@/lib/nhsca-duals-2026-team-photos"
+import { AAU_SCHOLASTIC_DUALS_2026 } from "@/lib/aau-scholastic-duals-2026-content"
 import type { NhscaDualsResultsSnapshot } from "@/lib/nhsca-duals-live-results/types"
 
 function normalizeAthleteName(name: string): string {
@@ -1004,18 +1005,18 @@ export default function NCUnitedNationalTeam() {
                 <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-6">
                   <div className="flex-shrink-0">
                     <Badge className="bg-[#B31B1B] text-white text-sm md:text-base px-4 py-2 rounded-full">
-                      June 23–26, 2026
+                      {AAU_SCHOLASTIC_DUALS_2026.datesLabel}
                     </Badge>
                   </div>
                   <div className="flex-1">
                     <h3 className="text-xl md:text-2xl font-bold text-[#002147] mb-2 md:mb-3">
-                      AAU Scholastic Duals 2026 – Boys All-Star
+                      AAU Scholastic Duals 2026 — NC United National Team
                     </h3>
                     <p className="text-base md:text-lg text-gray-700 mb-2">
                       Broward County Convention Center · Fort Lauderdale, FL
                     </p>
                     <p className="text-sm text-gray-600 mb-1">
-                      Arrival &amp; weigh-ins Tue Jun 23 · competition Jun 24–26
+                      {AAU_SCHOLASTIC_DUALS_2026.travelNote}
                     </p>
                     <p className="text-sm md:text-base text-gray-600 leading-relaxed mb-4">
                       The 2026 AAU Scholastic Duals (formerly Disney Duals) brings together approximately 40–50 elite teams from across the country to compete in high-level team duals, providing a premier national competition experience for top youth and scholastic wrestlers.
