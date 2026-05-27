@@ -49,6 +49,11 @@ import {
   aauAccentHeaderClass,
 } from "@/components/national-team/aau-scholastic-theme"
 import { scholasticLinkClass } from "@/components/national-team/scholastic-duals-section"
+import {
+  NcUnitedCodeAcknowledgment,
+  NcUnitedCodeConductRequiredDialog,
+  NC_UNITED_CODE_ACK_ID,
+} from "@/components/national-team/nc-united-code-registration-note"
 import { cn } from "@/lib/utils"
 
 const GRAD_YEARS = ["2026", "2027", "2028", "2029", "2030"]
@@ -107,6 +112,9 @@ export default function NationalTeamRegisterEventPage() {
   })
   const [itemsError, setItemsError] = useState("")
   const [sizesError, setSizesError] = useState("")
+  const [codeOfConductAccepted, setCodeOfConductAccepted] = useState(false)
+  const [codeConductDialogOpen, setCodeConductDialogOpen] = useState(false)
+  const [codeAckHighlighted, setCodeAckHighlighted] = useState(false)
 
   const handleValidateCode = async (e: FormEvent) => {
     e.preventDefault()
@@ -171,6 +179,14 @@ export default function NationalTeamRegisterEventPage() {
     }
     setSizesError("")
     setItemsError("")
+    if (!codeOfConductAccepted) {
+      setCodeConductDialogOpen(true)
+      setCodeAckHighlighted(true)
+      requestAnimationFrame(() => {
+        document.getElementById(NC_UNITED_CODE_ACK_ID)?.scrollIntoView({ behavior: "smooth", block: "center" })
+      })
+      return
+    }
     setSubmitting(true)
     try {
       const res = await fetch("/api/national-team/register", {
@@ -201,6 +217,7 @@ export default function NationalTeamRegisterEventPage() {
           graduation_year: graduation_year.trim(),
           primary_weight: weight_class.trim(),
           secondary_weight: null,
+          code_of_conduct_accepted: true,
         }),
       })
       const data = await res.json().catch(() => ({}))
@@ -490,6 +507,16 @@ export default function NationalTeamRegisterEventPage() {
                     variant="dark"
                   />
                   {formError && <p className="text-sm text-red-400">{formError}</p>}
+                  <NcUnitedCodeAcknowledgment
+                    variant="dark"
+                    checked={codeOfConductAccepted}
+                    onCheckedChange={(value) => {
+                      setCodeOfConductAccepted(value)
+                      if (value) setCodeAckHighlighted(false)
+                    }}
+                    highlighted={codeAckHighlighted}
+                    disabled={submitting}
+                  />
                   <Button
                     type="submit"
                     disabled={submitting}
@@ -591,6 +618,15 @@ export default function NationalTeamRegisterEventPage() {
                   />
                 ) : null}
                 {formError && <p className="text-sm text-red-600">{formError}</p>}
+                <NcUnitedCodeAcknowledgment
+                  checked={codeOfConductAccepted}
+                  onCheckedChange={(value) => {
+                    setCodeOfConductAccepted(value)
+                    if (value) setCodeAckHighlighted(false)
+                  }}
+                  highlighted={codeAckHighlighted}
+                  disabled={submitting}
+                />
                 <div className="flex gap-3 pt-2">
                   {!isAauRegistration ? (
                     <Button type="button" variant="outline" onClick={() => setStep("code")} disabled={submitting}>
@@ -608,6 +644,7 @@ export default function NationalTeamRegisterEventPage() {
           )
         )}
       </div>
+      <NcUnitedCodeConductRequiredDialog open={codeConductDialogOpen} onOpenChange={setCodeConductDialogOpen} />
     </div>
   )
 }

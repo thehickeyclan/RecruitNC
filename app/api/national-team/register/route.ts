@@ -57,6 +57,12 @@ export async function POST(request: NextRequest) {
     if (!highSchool || !graduationYear || !primaryWeight) {
       return NextResponse.json({ error: "High school, graduation year, and primary weight are required." }, { status: 400 })
     }
+    if (body.code_of_conduct_accepted !== true) {
+      return NextResponse.json(
+        { error: "You must read and accept the NC United Code before registering." },
+        { status: 400 },
+      )
+    }
 
     let athleteDob: string | null = null
     if (isAau) {
@@ -279,6 +285,7 @@ export async function POST(request: NextRequest) {
         event_slug: eventSlug,
         ...(checkoutLinesMeta ? { checkout_lines: checkoutLinesMeta } : {}),
         ...(additionalAthletesNotes ? { additional_athletes: additionalAthletesNotes.slice(0, 500) } : {}),
+        code_of_conduct_accepted: "1",
       },
     })
 

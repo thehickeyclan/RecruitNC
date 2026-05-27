@@ -33,6 +33,7 @@ import {
 import { AauScholasticPricingTable } from "@/components/national-team/aau-scholastic-pricing-table"
 import { AauScholasticRosterTable } from "@/components/national-team/aau-scholastic-roster-table"
 import { AauScholasticYourPaymentSection } from "@/components/national-team/aau-scholastic-your-payment-section"
+import { NcUnitedCodeCallout } from "@/components/national-team/nc-united-code-callout"
 import { AAU_SCHOLASTIC_DUALS_2026_ROSTER } from "@/lib/aau-scholastic-duals-2026-roster"
 import {
   ScholasticDualsSection,
@@ -69,6 +70,7 @@ const NAV = [
   { href: "#weights", label: "Weights" },
   { href: "#cost", label: "Cost" },
   { href: "#your-payment", label: "Your payment" },
+  { href: "#expectations", label: "Expectations" },
   { href: "#register", label: "Register" },
   { href: "#faq", label: "FAQ" },
 ] as const
@@ -429,6 +431,15 @@ export default function ScholasticDuals2026Page() {
         </ScholasticDualsSection>
 
         <AauScholasticYourPaymentSection />
+
+        <ScholasticDualsSection
+          id="expectations"
+          title="NC United expectations"
+          description="Every national-team athlete represents North Carolina"
+          contentClassName="space-y-4"
+        >
+          <NcUnitedCodeCallout variant="dark" />
+        </ScholasticDualsSection>
 
         <ScholasticDualsSection
           id="register"

@@ -8,6 +8,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { HardLink } from "@/components/hard-link"
 import { useEffect, useState } from "react"
+import { NcUnitedCodeSection } from "@/components/national-team/nc-united-code-section"
 import { getTournaments, type Tournament, getTournamentResults } from "@/lib/nc-united-api"
 import { NHSCA_DUALS_2026_NATIONAL_ACHIEVEMENT } from "@/lib/nhsca-duals-public-hero-stats"
 import { NHSCA_DUALS_2026_NATIONAL_JOURNEY_CARD_PHOTO } from "@/lib/nhsca-duals-2026-team-photos"
@@ -1017,6 +1018,8 @@ export default function NCUnitedNationalTeam() {
           </div>
         </div>
       </section>
+
+      <NcUnitedCodeSection />
 
       {/* Call to Action */}
       <section id="upcoming" className="py-12 md:py-16 bg-[#002147] text-white">
