@@ -2,9 +2,11 @@ import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getDropInFeeCents, getNcUnitedCalendarBaseUrl, getNcUnitedStripe } from "@/lib/nc-united-calendar/stripe"
 import {
-  NC_UNITED_LIABILITY_WAIVER_TYPE,
+  NC_UNITED_DROP_IN_LIABILITY_WAIVER_TYPE,
   NC_UNITED_LIABILITY_WAIVER_VERSION,
 } from "@/lib/nc-united-liability-waiver"
+import { ageFromAthleteDob, parseAthleteDobInput } from "@/lib/athlete-dob"
+import { normalizePhoneForStorage } from "@/lib/phone-format"
 
 const REQUIRED_ENV_VARS = [
   "STRIPE_SECRET_KEY",
@@ -23,14 +25,20 @@ function validateEnv() {
 interface CreateCheckoutRequest {
   eventId: string
   wrestlerName: string
-  wrestlerAge: number
+  wrestlerDob: string
+  wrestlerCell: string
   wrestlerWeight?: string
   parentName: string
   parentEmail: string
   parentPhone?: string
-  experienceLevel?: string
   notes?: string
   waiverAccepted?: boolean
+}
+
+function isUnknownColumnError(err: { message?: string; code?: string } | null, column: string): boolean {
+  if (!err) return false
+  const msg = (err.message ?? "").toLowerCase()
+  return err.code === "42703" || msg.includes(column.toLowerCase())
 }
 
 export async function POST(request: Request) {
@@ -46,7 +54,8 @@ export async function POST(request: Request) {
     const requiredFields: Array<keyof CreateCheckoutRequest> = [
       "eventId",
       "wrestlerName",
-      "wrestlerAge",
+      "wrestlerDob",
+      "wrestlerCell",
       "parentName",
       "parentEmail",
     ]
@@ -58,8 +67,20 @@ export async function POST(request: Request) {
       }
     }
 
-    if (Number.isNaN(Number(body.wrestlerAge)) || body.wrestlerAge < 5 || body.wrestlerAge > 18) {
-      return NextResponse.json({ error: "Wrestler age must be between 5 and 18" }, { status: 400 })
+    const dobResult = parseAthleteDobInput(body.wrestlerDob)
+    if (!dobResult.ok) {
+      return NextResponse.json({ error: dobResult.error }, { status: 400 })
+    }
+
+    const wrestlerDob = dobResult.value
+    const wrestlerAge = ageFromAthleteDob(wrestlerDob)
+    if (wrestlerAge == null || wrestlerAge < 5 || wrestlerAge > 18) {
+      return NextResponse.json({ error: "Wrestler must be between 5 and 18 years old for drop-in practices." }, { status: 400 })
+    }
+
+    const wrestlerCell = normalizePhoneForStorage(body.wrestlerCell)
+    if (wrestlerCell.replace(/\D/g, "").length !== 10) {
+      return NextResponse.json({ error: "Enter a valid 10-digit wrestler cell number." }, { status: 400 })
     }
 
     if (body.waiverAccepted !== true) {
@@ -110,11 +131,10 @@ export async function POST(request: Request) {
     const eventDate =
       typeof rawStart === "string" ? rawStart.slice(0, 10) : new Date().toISOString().split("T")[0]
 
-    const parentPhone = body.parentPhone?.trim() || null
+    const parentPhone = body.parentPhone?.trim() ? normalizePhoneForStorage(body.parentPhone) : null
     const parentEmail = body.parentEmail.trim().toLowerCase()
     const parentName = body.parentName.trim()
     const wrestlerName = body.wrestlerName.trim()
-    const experienceLevel = body.experienceLevel?.trim() || null
     const additionalNotes = body.notes?.trim() || null
     const waiverSignedAt = new Date().toISOString()
 
@@ -123,23 +143,23 @@ export async function POST(request: Request) {
       event_id: event.id,
       participant_name: wrestlerName,
       wrestler_name: wrestlerName,
-      wrestler_age: body.wrestlerAge,
+      wrestler_age: wrestlerAge,
       wrestler_weight: body.wrestlerWeight?.trim() || null,
-      wrestler_experience: experienceLevel,
       participant_email: parentEmail,
       participant_phone: parentPhone,
       parent_name: parentName,
       parent_email: parentEmail,
       parent_phone: parentPhone,
-      experience_level: experienceLevel,
       additional_notes: additionalNotes,
       status: "pending",
       payment_status: "pending",
       payment_amount_cents: amount,
     }
 
-    const insertWithWaiver = {
+    const insertWithExtended = {
       ...insertBase,
+      wrestler_dob: wrestlerDob,
+      wrestler_cell: wrestlerCell,
       waiver_signed_at: waiverSignedAt,
       waiver_signer_name: parentName,
     }
@@ -147,17 +167,28 @@ export async function POST(request: Request) {
     let dropInRecord: Record<string, unknown> | null = null
     let insertError: { message?: string; code?: string } | null = null
 
-    const firstInsert = await admin.from("drop_in_requests").insert(insertWithWaiver).select("*").single()
-    dropInRecord = firstInsert.data as Record<string, unknown> | null
-    insertError = firstInsert.error
+    let payload: Record<string, unknown> = insertWithExtended
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const result = await admin.from("drop_in_requests").insert(payload).select("*").single()
+      dropInRecord = result.data as Record<string, unknown> | null
+      insertError = result.error
+      if (!insertError) break
 
-    if (
-      insertError &&
-      (insertError.code === "42703" || (insertError.message ?? "").toLowerCase().includes("waiver_signed_at"))
-    ) {
-      const retry = await admin.from("drop_in_requests").insert(insertBase).select("*").single()
-      dropInRecord = retry.data as Record<string, unknown> | null
-      insertError = retry.error
+      if (isUnknownColumnError(insertError, "wrestler_dob")) {
+        const { wrestler_dob: _d, ...rest } = payload as typeof insertWithExtended
+        payload = rest
+        continue
+      }
+      if (isUnknownColumnError(insertError, "wrestler_cell")) {
+        const { wrestler_cell: _c, ...rest } = payload as Record<string, unknown>
+        payload = rest
+        continue
+      }
+      if (isUnknownColumnError(insertError, "waiver_signed_at")) {
+        payload = { ...insertBase, wrestler_dob: wrestlerDob, wrestler_cell: wrestlerCell }
+        continue
+      }
+      break
     }
 
     if (insertError || !dropInRecord) {
@@ -189,8 +220,10 @@ export async function POST(request: Request) {
           waiver_accepted: "true",
           waiver_signer_name: parentName,
           waiver_signed_at: waiverSignedAt,
-          waiver_type: NC_UNITED_LIABILITY_WAIVER_TYPE,
+          waiver_type: NC_UNITED_DROP_IN_LIABILITY_WAIVER_TYPE,
           waiver_version: NC_UNITED_LIABILITY_WAIVER_VERSION,
+          wrestler_dob: wrestlerDob,
+          wrestler_cell: wrestlerCell,
           ...(notesForStripe ? { registration_notes: notesForStripe } : {}),
         },
         line_items: [

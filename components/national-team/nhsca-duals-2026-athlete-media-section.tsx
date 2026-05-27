@@ -18,12 +18,13 @@ import { cn } from "@/lib/utils"
 
 const INITIAL_VISIBLE = 12
 
-const CATEGORY_ORDER: NhscaDualsAthleteMediaCategory[] = ["interview", "highlight", "photo"]
+/** Video groups only — still photos live under Team gallery. */
+const VIDEO_CATEGORY_ORDER: NhscaDualsAthleteMediaCategory[] = ["interview", "highlight"]
 
 function categoryHeading(category: NhscaDualsAthleteMediaCategory): string {
   if (category === "interview") return "Interviews"
   if (category === "highlight") return "Highlight reels"
-  return "Photos"
+  return "Team gallery"
 }
 
 function categoryMoreLabel(category: NhscaDualsAthleteMediaCategory): string {
@@ -90,26 +91,22 @@ function MediaGroup({
           <span className="ml-2 text-white/45 tabular-nums">({items.length})</span>
         </h3>
       </div>
-      {items.length > 0 ? (
-        <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {shown.map((item) => (
-              <AthleteMediaCard key={item.id} item={item} />
-            ))}
-          </div>
-          {hasMore ? (
-            <button
-              type="button"
-              onClick={() => setVisible((n) => n + INITIAL_VISIBLE)}
-              className={cn(
-                "w-full min-h-[44px] rounded-xl border border-white/15 bg-white/5 px-4 py-2.5",
-                "text-sm font-semibold text-[#CBAF5D] hover:bg-white/10 transition-colors"
-              )}
-            >
-              Show more {categoryMoreLabel(category)} ({items.length - visible} remaining)
-            </button>
-          ) : null}
-        </>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {shown.map((item) => (
+          <AthleteMediaCard key={item.id} item={item} />
+        ))}
+      </div>
+      {hasMore ? (
+        <button
+          type="button"
+          onClick={() => setVisible((n) => n + INITIAL_VISIBLE)}
+          className={cn(
+            "w-full min-h-[44px] rounded-xl border border-white/15 bg-white/5 px-4 py-2.5",
+            "text-sm font-semibold text-[#CBAF5D] hover:bg-white/10 transition-colors"
+          )}
+        >
+          Show more {categoryMoreLabel(category)} ({items.length - visible} remaining)
+        </button>
       ) : null}
     </div>
   )
@@ -118,12 +115,15 @@ function MediaGroup({
 function TeamGallerySection({
   scope,
   snapshot,
+  portraits,
 }: {
   scope: CommandCenterScope
   snapshot?: NhscaDualsResultsSnapshot | null
+  portraits: NhscaDualsAthleteMediaItem[]
 }) {
-  const galleryCount = galleryPhotosForScope(scope).length
-  if (galleryCount === 0) return null
+  const actionPhotoCount = galleryPhotosForScope(scope).length
+  const totalPhotos = portraits.length + actionPhotoCount
+  if (totalPhotos === 0) return null
 
   return (
     <div id="team-gallery" className="scroll-mt-24 space-y-4">
@@ -131,11 +131,22 @@ function TeamGallerySection({
         <Camera className="h-4 w-4 text-[#CBAF5D] shrink-0" aria-hidden />
         <h3 className="text-sm font-bold uppercase tracking-wider text-[#CBAF5D]">
           Team gallery
-          <span className="ml-2 text-white/45 tabular-nums">({galleryCount})</span>
+          <span className="ml-2 text-white/45 tabular-nums">({totalPhotos})</span>
         </h3>
       </div>
-      <p className="text-xs text-white/55 -mt-2">NC United wrestlers at Virginia Beach Sports Center</p>
-      <NhscaDualsTournamentGalleryGrid scope={scope} snapshot={snapshot} hideHeading />
+      <p className="text-xs text-white/55 -mt-2">
+        Portraits and in-action photos from Virginia Beach Sports Center
+      </p>
+      {portraits.length > 0 ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {portraits.map((item) => (
+            <AthleteMediaCard key={item.id} item={item} />
+          ))}
+        </div>
+      ) : null}
+      {actionPhotoCount > 0 ? (
+        <NhscaDualsTournamentGalleryGrid scope={scope} snapshot={snapshot} hideHeading />
+      ) : null}
     </div>
   )
 }
@@ -169,17 +180,17 @@ export function NhscaDuals2026AthleteMediaSection({
     <NhscaDualsCollapsibleSection
       id="media"
       title="Media"
-      subtitle="Interviews, highlight reels, portraits, and team gallery photos from Virginia Beach."
+      subtitle="Interviews, highlight reels, and team gallery photos from Virginia Beach."
       count={totalCount}
       defaultOpen={totalCount <= 6}
       icon={<Clapperboard className="h-5 w-5" aria-hidden />}
       className="mb-10 sm:mb-14 border-[#CBAF5D]/20"
     >
       <div className="space-y-8">
-        {CATEGORY_ORDER.map((category) => (
+        {VIDEO_CATEGORY_ORDER.map((category) => (
           <MediaGroup key={category} category={category} items={grouped[category]} />
         ))}
-        <TeamGallerySection scope={scope} snapshot={snapshot} />
+        <TeamGallerySection scope={scope} snapshot={snapshot} portraits={grouped.photo} />
       </div>
     </NhscaDualsCollapsibleSection>
   )

@@ -51,3 +51,21 @@ export function parseAthleteDobInput(
   const yyyy = String(date.getFullYear())
   return { ok: true, value: `${mm}/${dd}/${yyyy}` }
 }
+
+/** Age in whole years from stored MM/DD/YYYY DOB (as of today). */
+export function ageFromAthleteDob(dobMmDdYyyy: string): number | null {
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(dobMmDdYyyy.trim())
+  if (!m) return null
+  const month = parseInt(m[1], 10)
+  const day = parseInt(m[2], 10)
+  const year = parseInt(m[3], 10)
+  const birth = new Date(year, month - 1, day)
+  if (birth.getFullYear() !== year || birth.getMonth() !== month - 1 || birth.getDate() !== day) return null
+  const today = new Date()
+  let age = today.getFullYear() - year
+  const hadBirthday =
+    today.getMonth() > birth.getMonth() ||
+    (today.getMonth() === birth.getMonth() && today.getDate() >= birth.getDate())
+  if (!hadBirthday) age -= 1
+  return age
+}

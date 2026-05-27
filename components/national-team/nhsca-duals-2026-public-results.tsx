@@ -53,7 +53,6 @@ const NAV_LINKS = [
   { href: "#results", label: "Dual results" },
   { href: "#recap", label: "Recap" },
   { href: "#media", label: "Media" },
-  { href: "#team-gallery", label: "Team gallery" },
   { href: "#mow", label: "MOWs" },
   { href: "#moments", label: "Moments" },
   { href: "#apparel", label: "Team gear" },
