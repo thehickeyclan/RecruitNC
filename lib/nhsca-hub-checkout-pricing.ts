@@ -6,7 +6,9 @@ import {
 } from "@/lib/nhsca-duals-2026-gear-images"
 import {
   AAU_SCHOLASTIC_CHECKOUT_TOTAL_DOLLARS,
+  AAU_SCHOLASTIC_ESTIMATED_TRIP_TOTAL_DOLLARS,
   AAU_SCHOLASTIC_EVENT_SLUG,
+  aauScholasticAllOrderLineDisplays,
   aauScholasticOrderLineDisplays,
 } from "@/lib/aau-scholastic-duals-2026-content"
 
@@ -407,16 +409,40 @@ function inferAauScholasticOrderLinesFromFees(row: {
   apparel_fee_cents?: number | null
 }): NhscaOrderLineDisplay[] {
   const total = (row.reg_fee_cents || 0) + (row.apparel_fee_cents || 0)
+  if (total === AAU_SCHOLASTIC_ESTIMATED_TRIP_TOTAL_DOLLARS * 100) {
+    return aauScholasticAllOrderLineDisplays()
+  }
   if (total === AAU_SCHOLASTIC_CHECKOUT_TOTAL_DOLLARS * 100) {
     return aauScholasticOrderLineDisplays()
   }
   const items: NhscaOrderLineDisplay[] = []
-  if (row.reg_fee_cents) {
-    items.push({ name: "Tournament registration", amount_cents: row.reg_fee_cents })
+  let reg = row.reg_fee_cents || 0
+  const apparel = row.apparel_fee_cents || 0
+
+  const peel = (amountCents: number, name: string) => {
+    if (reg >= amountCents && amountCents > 0) {
+      items.push({ name, amount_cents: amountCents })
+      reg -= amountCents
+    }
   }
-  if (row.apparel_fee_cents) {
-    items.push({ name: "Team apparel", amount_cents: row.apparel_fee_cents })
+  peel(75 * 100, "Tournament registration")
+  peel(315 * 100, "Hotel and Van")
+  peel(355 * 100, "Flight")
+  if (reg > 0) items.push({ name: "Registration / travel fees", amount_cents: reg })
+
+  let apparelLeft = apparel
+  const peelApparel = (amountCents: number, name: string) => {
+    if (apparelLeft >= amountCents && amountCents > 0) {
+      items.push({ name, amount_cents: amountCents })
+      apparelLeft -= amountCents
+    }
   }
+  peelApparel(65 * 100, "Singlet")
+  peelApparel(40 * 100, "Long sleeve shirt")
+  peelApparel(40 * 100, "Shorts")
+  peelApparel(30 * 100, "Tee")
+  if (apparelLeft > 0) items.push({ name: "Team apparel", amount_cents: apparelLeft })
+
   return items
 }
 

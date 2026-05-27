@@ -358,13 +358,13 @@ export default function ScholasticDuals2026Page() {
           contentClassName="space-y-4 text-sm md:text-base"
         >
           <p>
-            At registration, check each item you want and pay only for your selection. Most NHSCA Duals families bought
-            the full bundle ({formatAauScholasticDollars(AAU_SCHOLASTIC_CHECKOUT_TOTAL_DOLLARS)} at checkout). Plan
-            about{" "}
+            At registration, check each item you want — registration, apparel, hotel/van, and flight. Most families
+            select the full bundle ({formatAauScholasticDollars(AAU_SCHOLASTIC_ESTIMATED_TRIP_TOTAL_DOLLARS)} at
+            checkout). Plan about{" "}
             <strong className="text-white">
               {formatAauScholasticDollars(AAU_SCHOLASTIC_ESTIMATED_TRIP_TOTAL_DOLLARS)} all-in
             </strong>{" "}
-            per athlete including hotel, van, and flight estimates below.
+            per athlete before meals and local ground transport.
           </p>
           <AauScholasticPricingTable />
         </ScholasticDualsSection>
@@ -383,7 +383,7 @@ export default function ScholasticDuals2026Page() {
             {[
               "Open the registration link below.",
               "Complete athlete & parent/guardian information.",
-              "Check each item you want (registration, singlet, apparel).",
+              "Check each item you want (registration, apparel, hotel/van, flight).",
               "Pay securely at Stripe checkout — receipt emailed automatically.",
               "After payment, go to the Team Hub for gear sizes, travel, and updates.",
             ].map((step, i) => (
