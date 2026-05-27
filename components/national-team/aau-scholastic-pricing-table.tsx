@@ -1,4 +1,5 @@
 import {
+  AAU_SCHOLASTIC_ALL_CHECKOUT_LINES,
   AAU_SCHOLASTIC_CHECKOUT_LINES,
   AAU_SCHOLASTIC_CHECKOUT_TOTAL_DOLLARS,
   AAU_SCHOLASTIC_ESTIMATED_TRIP_TOTAL_DOLLARS,
@@ -30,17 +31,17 @@ export function AauScholasticPricingTable({ compact = false }: { compact?: boole
     <div className={compact ? "space-y-4" : "space-y-6"}>
       <p className="text-sm text-white/75 leading-relaxed">{AAU_SCHOLASTIC_PRICING_CONTEXT}</p>
       <div>
-        <p className="font-semibold text-white mb-2">Select at registration (Stripe checkout)</p>
+        <p className="font-semibold text-white mb-2">Registration &amp; apparel</p>
         <PriceRows lines={AAU_SCHOLASTIC_CHECKOUT_LINES} />
-        <p className={cn("mt-2 text-sm font-bold text-right tabular-nums", aauPriceClass)}>
-          Checkout total: {formatAauScholasticDollars(AAU_SCHOLASTIC_CHECKOUT_TOTAL_DOLLARS)}
+        <p className={cn("mt-2 text-sm font-semibold text-right tabular-nums text-white/80")}>
+          Subtotal: {formatAauScholasticDollars(AAU_SCHOLASTIC_CHECKOUT_TOTAL_DOLLARS)}
         </p>
       </div>
       <div>
-        <p className="font-semibold text-white mb-1">Travel (separate — not in registration checkout)</p>
+        <p className="font-semibold text-white mb-1">Travel</p>
         {!compact ? (
           <p className="text-sm text-white/60 mb-2">
-            Estimated per athlete. NC United will share hotel, van, and flight guidance in the Team Hub.
+            Select hotel/van and flight at registration checkout with registration and apparel.
           </p>
         ) : null}
         <PriceRows lines={AAU_SCHOLASTIC_TRAVEL_LINES} />
@@ -48,10 +49,17 @@ export function AauScholasticPricingTable({ compact = false }: { compact?: boole
           Travel subtotal: {formatAauScholasticDollars(AAU_SCHOLASTIC_TRAVEL_TOTAL_DOLLARS)}
         </p>
       </div>
+      <div>
+        <p className="font-semibold text-white mb-2">Full bundle (most families)</p>
+        <PriceRows lines={AAU_SCHOLASTIC_ALL_CHECKOUT_LINES} />
+        <p className={cn("mt-2 text-sm font-bold text-right tabular-nums", aauPriceClass)}>
+          All-in checkout: {formatAauScholasticDollars(AAU_SCHOLASTIC_ESTIMATED_TRIP_TOTAL_DOLLARS)}
+        </p>
+      </div>
       <p className={scholasticInsetClass}>
-        <strong className="text-white">Estimated all-in per athlete:</strong>{" "}
-        {formatAauScholasticDollars(AAU_SCHOLASTIC_ESTIMATED_TRIP_TOTAL_DOLLARS)} (registration + apparel + hotel and
-        van + flight). Meals and ground transport are extra.
+        <strong className="text-white">Meals and local ground transport</strong> are not in checkout. Plan on about{" "}
+        {formatAauScholasticDollars(AAU_SCHOLASTIC_ESTIMATED_TRIP_TOTAL_DOLLARS)} per athlete for the NC United bundle
+        before those extras.
       </p>
     </div>
   )

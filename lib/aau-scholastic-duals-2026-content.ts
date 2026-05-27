@@ -13,7 +13,7 @@ export type AauScholasticPriceLine = {
   dollars: number
 }
 
-/** Paid at Stripe checkout (registration + apparel). */
+/** Registration, apparel, and travel — all selectable at Stripe checkout. */
 export const AAU_SCHOLASTIC_CHECKOUT_LINES: AauScholasticPriceLine[] = [
   { id: "tournament_reg", label: "Tournament registration", dollars: 75 },
   { id: "singlet", label: "Singlet", dollars: 65 },
@@ -22,11 +22,18 @@ export const AAU_SCHOLASTIC_CHECKOUT_LINES: AauScholasticPriceLine[] = [
   { id: "tee", label: "Tee", dollars: 30 },
 ]
 
-/** Travel estimates — coordinated separately; not charged at registration checkout. */
 export const AAU_SCHOLASTIC_TRAVEL_LINES: AauScholasticPriceLine[] = [
   { id: "hotel_van", label: "Hotel and Van", dollars: 315 },
   { id: "flight", label: "Flight", dollars: 355 },
 ]
+
+/** All line items parents can toggle at registration (preserves display order). */
+export const AAU_SCHOLASTIC_ALL_CHECKOUT_LINES: AauScholasticPriceLine[] = [
+  ...AAU_SCHOLASTIC_CHECKOUT_LINES,
+  ...AAU_SCHOLASTIC_TRAVEL_LINES,
+]
+
+const AAU_SCHOLASTIC_APPAREL_LINE_IDS = new Set(["singlet", "long_sleeve", "shorts", "tee"])
 
 export function sumAauScholasticLines(lines: AauScholasticPriceLine[]): number {
   return lines.reduce((s, line) => s + line.dollars, 0)
@@ -38,14 +45,14 @@ export const AAU_SCHOLASTIC_ESTIMATED_TRIP_TOTAL_DOLLARS =
   AAU_SCHOLASTIC_CHECKOUT_TOTAL_DOLLARS + AAU_SCHOLASTIC_TRAVEL_TOTAL_DOLLARS
 
 export const AAU_SCHOLASTIC_PRICING_CONTEXT =
-  "Same model as NHSCA Duals: most families purchased the full NC United apparel bundle. At registration, check each item you want (tournament entry, singlet, shirts, etc.) and pay only for your selection in one Stripe checkout. Hotel, van, and flight are coordinated separately."
+  "Same model as NHSCA Duals: most families purchased the full bundle. At registration, check each item you want — tournament entry, apparel, hotel/van, and flight — and pay only for your selection in one Stripe checkout."
 
-export const AAU_SCHOLASTIC_DEFAULT_SELECTED_LINE_IDS = AAU_SCHOLASTIC_CHECKOUT_LINES.map((line) => line.id)
+export const AAU_SCHOLASTIC_DEFAULT_SELECTED_LINE_IDS = AAU_SCHOLASTIC_ALL_CHECKOUT_LINES.map((line) => line.id)
 
 export function aauScholasticLinesFromSelectedIds(ids: readonly string[]): AauScholasticPriceLine[] {
-  const allowed = new Set(AAU_SCHOLASTIC_CHECKOUT_LINES.map((line) => line.id))
+  const allowed = new Set(AAU_SCHOLASTIC_ALL_CHECKOUT_LINES.map((line) => line.id))
   const picked = new Set(ids.filter((id) => allowed.has(id)))
-  return AAU_SCHOLASTIC_CHECKOUT_LINES.filter((line) => picked.has(line.id))
+  return AAU_SCHOLASTIC_ALL_CHECKOUT_LINES.filter((line) => picked.has(line.id))
 }
 
 export function aauScholasticFeesFromSelectedLines(lines: AauScholasticPriceLine[]): {
@@ -56,8 +63,8 @@ export function aauScholasticFeesFromSelectedLines(lines: AauScholasticPriceLine
   let apparel_fee_cents = 0
   for (const line of lines) {
     const cents = line.dollars * 100
-    if (line.id === "tournament_reg") reg_fee_cents += cents
-    else apparel_fee_cents += cents
+    if (AAU_SCHOLASTIC_APPAREL_LINE_IDS.has(line.id)) apparel_fee_cents += cents
+    else reg_fee_cents += cents
   }
   return { reg_fee_cents, apparel_fee_cents }
 }
@@ -98,6 +105,13 @@ export function encodeAauScholasticCheckoutLinesMetadata(): string {
 
 export function aauScholasticOrderLineDisplays(): { name: string; amount_cents: number }[] {
   return AAU_SCHOLASTIC_CHECKOUT_LINES.map((line) => ({
+    name: line.label,
+    amount_cents: line.dollars * 100,
+  }))
+}
+
+export function aauScholasticAllOrderLineDisplays(): { name: string; amount_cents: number }[] {
+  return AAU_SCHOLASTIC_ALL_CHECKOUT_LINES.map((line) => ({
     name: line.label,
     amount_cents: line.dollars * 100,
   }))
@@ -252,7 +266,7 @@ export const AAU_SCHOLASTIC_PARENT_FAQ = [
   },
   {
     q: "What does the registration fee cover?",
-    a: "You choose at checkout. Options are tournament registration ($75), singlet ($65), long sleeve ($40), shorts ($40), and tee ($30) — check only what you need. Most NHSCA Duals families bought the full bundle ($250 at checkout). Hotel and van ($315) and flight ($355) are separate travel costs; plan on about $920 all-in per athlete before meals and local ground transport. Staff share booking details in the Team Hub.",
+    a: "You choose at checkout. Options are tournament registration ($75), singlet ($65), long sleeve ($40), shorts ($40), tee ($30), hotel and van ($315), and flight ($355). Most families select the full bundle (~$920 at checkout). Meals and local ground transport are extra. NC United shares travel details in the Team Hub after you register.",
   },
   {
     q: "How do I pay?",
