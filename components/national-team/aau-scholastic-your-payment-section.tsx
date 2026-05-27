@@ -41,11 +41,11 @@ export async function AauScholasticYourPaymentSection() {
         description="Payment status is temporarily unavailable."
       >
         <p className="text-sm text-white/75">
-          We could not load your registration right now. Try refreshing, or check the{" "}
-          <a href={`${AAU_SCHOLASTIC_DUALS_2026.hubPath}?tab=payments`} className={scholasticLinkClass}>
-            Team Hub → Payments
+          We could not load your registration right now. Try refreshing this page, or email{" "}
+          <a href={`mailto:${AAU_SCHOLASTIC_DUALS_2026.contactEmail}`} className={scholasticLinkClass}>
+            {AAU_SCHOLASTIC_DUALS_2026.contactEmail}
           </a>{" "}
-          tab after signing in.
+          if payment status still looks wrong.
         </p>
       </ScholasticDualsSection>
     )
@@ -158,11 +158,11 @@ async function AauScholasticYourPaymentSectionInner() {
       })}
 
       <p className="text-xs text-white/45">
-        Full order history is also on the{" "}
-        <a href={`${AAU_SCHOLASTIC_DUALS_2026.hubPath}?tab=payments`} className={scholasticLinkClass}>
-          Team Hub → Payments
-        </a>{" "}
-        tab after you sign in.
+        Questions about your order? Email{" "}
+        <a href={`mailto:${AAU_SCHOLASTIC_DUALS_2026.contactEmail}`} className={scholasticLinkClass}>
+          {AAU_SCHOLASTIC_DUALS_2026.contactEmail}
+        </a>
+        .
       </p>
     </ScholasticDualsSection>
   )

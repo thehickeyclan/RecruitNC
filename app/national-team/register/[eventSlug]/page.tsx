@@ -24,6 +24,7 @@ import {
 import {
   AAU_SCHOLASTIC_DUALS_2026,
   AAU_SCHOLASTIC_OPERATIONS,
+  AAU_SCHOLASTIC_TEAM_LABEL,
   AAU_SCHOLASTIC_WEIGHTS_DISPLAY,
 } from "@/lib/aau-scholastic-duals-2026-content"
 import {
@@ -334,8 +335,7 @@ export default function NationalTeamRegisterEventPage() {
             <header className={cn(aauPanelHeaderClass, aauAccentHeaderClass)}>
               <h2 className={aauPanelTitleClass}>{AAU_SCHOLASTIC_OPERATIONS.eventName}</h2>
               <p className={aauPanelDescClass}>
-                {AAU_SCHOLASTIC_OPERATIONS.arrivalWeighIns} · Competition{" "}
-                {AAU_SCHOLASTIC_OPERATIONS.competitionDates}
+                {AAU_SCHOLASTIC_OPERATIONS.dates} — {AAU_SCHOLASTIC_OPERATIONS.datesDetail}
               </p>
             </header>
             <div className="p-4 sm:p-5 md:p-6 space-y-2 text-sm text-white/80">
@@ -493,7 +493,7 @@ export default function NationalTeamRegisterEventPage() {
                     </div>
                   </div>
                   <p className="text-sm text-white/90 bg-[#B31B1B]/15 border border-[#B31B1B]/30 rounded-lg px-3 py-2">
-                    <strong>Weights are +5 lbs.</strong> Select the weight class your athlete is wrestling for NC United.
+                    <strong>Weights are +5 lbs.</strong> Select the weight class your athlete is wrestling for {AAU_SCHOLASTIC_TEAM_LABEL}.
                     Registering a sibling? Submit a separate registration for each athlete.
                   </p>
                   <AauScholasticCheckoutItems
@@ -603,7 +603,7 @@ export default function NationalTeamRegisterEventPage() {
                 <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
                   <strong>Weights are {isAauRegistration ? "+5 lbs" : "+3 lbs"}.</strong>{" "}
                   {isAauRegistration
-                    ? "Select the weight class your athlete is wrestling for NC United."
+                    ? `Select the weight class your athlete is wrestling for ${AAU_SCHOLASTIC_TEAM_LABEL}.`
                     : "The team is registered for early weigh-ins. Select the weight class you agreed to."}
                 </p>
                 {isAauRegistration ? (

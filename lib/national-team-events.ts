@@ -27,7 +27,7 @@ export const NATIONAL_TEAM_EVENTS: Record<string, NationalTeamEventConfig> = {
     name: "NHSCA Duals 2026 – Select",
   },
   "aau-2026": {
-    name: "AAU Scholastic Duals 2026 – Boys All-Star",
+    name: "AAU Scholastic Duals 2026 — NC United National Team",
   },
 }
 
@@ -58,6 +58,7 @@ export function getEventName(slug: string): string {
 /** Short roster label for success page (e.g. "National", "Select"). Based on URL slug they used to register. */
 export function getRosterLabel(urlSlug: string): string {
   const apiSlug = getEventSlugForApi(urlSlug)
+  if (apiSlug === "aau-2026") return "National Team"
   for (const members of Object.values(HUB_EVENT_GROUPS)) {
     const found = members.find((m) => m.eventSlug === apiSlug)
     if (found) return found.label

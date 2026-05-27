@@ -1,4 +1,4 @@
-/** AAU Scholastic Duals 2026 — Boys All-Star starter lineup (NC United). */
+/** AAU Scholastic Duals 2026 — NC United National Team starter lineup. */
 export type AauScholasticRosterRow = {
   /** e.g. "106+5", "HWT" */
   weightLabel: string
