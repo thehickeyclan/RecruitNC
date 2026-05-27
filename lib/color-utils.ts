@@ -19,6 +19,7 @@ export function getColorHex(colorName: string): string {
 
     // Whites & Grays
     White: "#FFFFFF",
+    Pinstripe: "#002147",
     "Off White": "#F8F8F8",
     Gray: "#AAAAAA",
     Grey: "#AAAAAA",

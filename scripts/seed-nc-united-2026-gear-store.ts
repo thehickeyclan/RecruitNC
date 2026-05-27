@@ -17,6 +17,7 @@ import path from "path"
 import { fileURLToPath } from "url"
 import { createClient } from "@supabase/supabase-js"
 import {
+  NC_UNITED_2026_DEPRECATED_STORE_SLUGS,
   NC_UNITED_2026_STORE_GEAR,
   type NcUnitedStoreGearProduct,
 } from "../lib/nc-united-2026-store-gear"
@@ -172,13 +173,33 @@ async function upsertGearProduct(
   console.log(`  ${variantRows.length} variants (stock ${def.defaultStockPerVariant} each)`)
 }
 
+async function retireDeprecatedProducts(supabase: ReturnType<typeof createClient>) {
+  for (const slug of NC_UNITED_2026_DEPRECATED_STORE_SLUGS) {
+    const { data, error } = await supabase.from("products").select("id, name").eq("slug", slug).maybeSingle()
+    if (error) throw new Error(`Retire lookup ${slug}: ${error.message}`)
+    if (!data?.id) continue
+
+    const { error: updateError } = await supabase
+      .from("products")
+      .update({ in_stock: false, show_in_public_store: false, featured: false })
+      .eq("id", data.id)
+
+    if (updateError) throw new Error(`Retire ${slug}: ${updateError.message}`)
+    console.log(`\n→ Retired deprecated product: ${data.name} (${slug})`)
+  }
+}
+
 async function main() {
   console.log(dryRun ? "DRY RUN — no database writes\n" : "Seeding NC United 2026 store gear…")
 
-  for (const rel of NC_UNITED_2026_STORE_GEAR.flatMap((p) => p.images.map((i) => i.url.replace(/^\//, "")))) {
-    const filePath = path.join(root, "public", rel)
-    if (!fs.existsSync(filePath)) {
-      console.warn(`Warning: missing image file public/${rel}`)
+  for (const def of NC_UNITED_2026_STORE_GEAR) {
+    for (const img of def.images) {
+      if (img.url.startsWith("/images/")) {
+        const filePath = path.join(root, "public", img.url.replace(/^\//, ""))
+        if (!fs.existsSync(filePath)) {
+          console.warn(`Warning: missing local fallback public${img.url}`)
+        }
+      }
     }
   }
 
@@ -186,6 +207,14 @@ async function main() {
 
   for (const def of NC_UNITED_2026_STORE_GEAR) {
     await upsertGearProduct(supabase as ReturnType<typeof createClient>, def)
+  }
+
+  if (!dryRun && supabase) {
+    await retireDeprecatedProducts(supabase)
+  } else if (dryRun) {
+    for (const slug of NC_UNITED_2026_DEPRECATED_STORE_SLUGS) {
+      console.log(`\n→ [dry-run] would retire deprecated slug: ${slug}`)
+    }
   }
 
   console.log(dryRun ? "\nDry run complete." : "\nDone. Check /store for the new products.")
