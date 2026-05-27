@@ -630,7 +630,6 @@ AVAILABLE DATA SOURCES:
    - 2026 SCHEDULE: NC United is scheduled to compete in:
      * 27th Annual National Duals - May 23-25, 2026 (Memorial Day Weekend)
      * 2026 AAU Scholastic Duals – All-Star Boys - June 23-26, 2026 (Fort Lauderdale, Florida) - Features 40-50 elite teams
-     * Deep South Summer Duals – All-Star Boys - Late July/Early August 2026 (Birmingham, Alabama, BJCC) - Dates TBD, participation pending confirmation
    - Tournament data includes:
      * Tournament name, year, location, team record (e.g., "7-1"), overall placement (e.g., "2nd Place Gold Pool", "Round of 16")
      * Individual match records: individual_wins, individual_losses, win_percentage

@@ -4,11 +4,10 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { findAndEnrichAthlete, buildEnrichmentPayload } from "@/lib/enrich-athlete-profile"
 import {
-  AAU_SCHOLASTIC_APPAREL_FEE_CENTS,
-  AAU_SCHOLASTIC_CHECKOUT_LINES,
-  AAU_SCHOLASTIC_CHECKOUT_TOTAL_DOLLARS,
-  AAU_SCHOLASTIC_REG_FEE_CENTS,
-  encodeAauScholasticCheckoutLinesMetadata,
+  AAU_SCHOLASTIC_EVENT_SLUG,
+  aauScholasticFeesFromSelectedLines,
+  aauScholasticLinesFromSelectedIds,
+  encodeAauScholasticCheckoutLinesMetadataFromLines,
 } from "@/lib/aau-scholastic-duals-2026-content"
 
 export const dynamic = "force-dynamic"
@@ -16,16 +15,17 @@ export const dynamic = "force-dynamic"
 const DEFAULT_EVENT_SLUG = "nhsca-duals-2026"
 const stripeSecret = process.env.STRIPE_SECRET_KEY
 
-/** POST: validate code, create national_team_event_registrations row, create Stripe Checkout (one-time payment), return checkoutUrl.
- * Roster (National vs Select) is determined by eventSlug from the REG LINK the user opened, not by the invite code. Same code can work for both links. */
+/** POST: create national_team_event_registrations row + Stripe Checkout.
+ * NHSCA: invite code required. AAU Scholastic: open registration with parent-selected line items. */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}))
     const code = typeof body.code === "string" ? body.code.trim() : ""
     const eventSlug = typeof body.eventSlug === "string" ? body.eventSlug.trim() || DEFAULT_EVENT_SLUG : DEFAULT_EVENT_SLUG
     const returnUrlSlug = typeof body.returnUrlSlug === "string" ? body.returnUrlSlug.trim() || eventSlug : eventSlug
+    const isAau = eventSlug === AAU_SCHOLASTIC_EVENT_SLUG
 
-    if (!code) {
+    if (!isAau && !code) {
       return NextResponse.json({ error: "Invite code is required." }, { status: 400 })
     }
 
@@ -55,53 +55,92 @@ export async function POST(request: NextRequest) {
     let parentUserId: string | null = null
     try {
       const supabase = await createClient()
-      const { data: { user } } = await supabase.auth.getUser()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
       if (user?.id) parentUserId = user.id
     } catch {
       // auth optional
     }
 
-    const { data: inviteRow, error: inviteError } = await admin
-      .from("national_team_invite_codes")
-      .select("id, max_uses, uses_count, expires_at")
-      .eq("event_slug", eventSlug)
-      .eq("code", code)
-      .maybeSingle()
+    if (!isAau) {
+      const { data: inviteRow, error: inviteError } = await admin
+        .from("national_team_invite_codes")
+        .select("id, max_uses, uses_count, expires_at")
+        .eq("event_slug", eventSlug)
+        .eq("code", code)
+        .maybeSingle()
 
-    if (inviteError || !inviteRow) {
-      return NextResponse.json({ error: "Invalid or expired invite code." }, { status: 400 })
-    }
-    if (inviteRow.expires_at && new Date(inviteRow.expires_at) < new Date()) {
-      return NextResponse.json({ error: "This invite code has expired." }, { status: 400 })
-    }
-    const usesCount = Number(inviteRow.uses_count) ?? 0
-    const maxUses = inviteRow.max_uses != null ? Number(inviteRow.max_uses) : null
-    if (maxUses != null && usesCount >= maxUses) {
-      return NextResponse.json({ error: "This invite code has reached its maximum uses." }, { status: 400 })
+      if (inviteError || !inviteRow) {
+        return NextResponse.json({ error: "Invalid or expired invite code." }, { status: 400 })
+      }
+      if (inviteRow.expires_at && new Date(inviteRow.expires_at) < new Date()) {
+        return NextResponse.json({ error: "This invite code has expired." }, { status: 400 })
+      }
+      const usesCount = Number(inviteRow.uses_count) ?? 0
+      const maxUses = inviteRow.max_uses != null ? Number(inviteRow.max_uses) : null
+      if (maxUses != null && usesCount >= maxUses) {
+        return NextResponse.json({ error: "This invite code has reached its maximum uses." }, { status: 400 })
+      }
     }
 
     const { data: products } = await admin
       .from("products")
       .select("id, name, price, slug")
       .eq("category", "national_team")
-    const isAau = eventSlug === "aau-2026"
-    const productSlug = isAau ? "aau-2026-bundle" : "nhsca-2026-bundle"
-    const product =
-      (products ?? []).find((p: { slug?: string }) => p.slug === productSlug) ??
-      (products ?? []).find((p: { slug?: string }) => p.slug === "nhsca-2026-bundle") ??
-      products?.[0]
-    const defaultProductName = isAau
-      ? "AAU Scholastic Duals 2026 – Registration + Apparel"
-      : "NHSCA 2026 – Registration + Apparel"
-    const bundlePrice =
-      product?.price != null
-        ? Number(product.price)
-        : isAau
-          ? AAU_SCHOLASTIC_CHECKOUT_TOTAL_DOLLARS
-          : 250
-    const totalCents = Math.round(bundlePrice * 100)
-    const regFeeCents = isAau ? AAU_SCHOLASTIC_REG_FEE_CENTS : totalCents
-    const apparelFeeCents = isAau ? AAU_SCHOLASTIC_APPAREL_FEE_CENTS : 0
+
+    let regFeeCents = 0
+    let apparelFeeCents = 0
+    let aauSelectedLines: ReturnType<typeof aauScholasticLinesFromSelectedIds> = []
+    let lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = []
+
+    if (isAau) {
+      const rawIds = Array.isArray(body.selectedLineIds)
+        ? body.selectedLineIds.filter((id): id is string => typeof id === "string")
+        : []
+      aauSelectedLines = aauScholasticLinesFromSelectedIds(rawIds)
+      if (aauSelectedLines.length === 0) {
+        return NextResponse.json({ error: "Select at least one item to checkout." }, { status: 400 })
+      }
+      const fees = aauScholasticFeesFromSelectedLines(aauSelectedLines)
+      regFeeCents = fees.reg_fee_cents
+      apparelFeeCents = fees.apparel_fee_cents
+      lineItems = aauSelectedLines.map((line) => ({
+        price_data: {
+          currency: "usd",
+          unit_amount: line.dollars * 100,
+          product_data: {
+            name: line.label,
+            description: "NC United AAU Scholastic Duals 2026",
+          },
+        },
+        quantity: 1,
+      }))
+    } else {
+      const productSlug = "nhsca-2026-bundle"
+      const product =
+        (products ?? []).find((p: { slug?: string }) => p.slug === productSlug) ??
+        (products ?? []).find((p: { slug?: string }) => p.slug === "nhsca-2026-bundle") ??
+        products?.[0]
+      const defaultProductName = "NHSCA 2026 – Registration + Apparel"
+      const bundlePrice = product?.price != null ? Number(product.price) : 250
+      const totalCents = Math.round(bundlePrice * 100)
+      regFeeCents = totalCents
+      apparelFeeCents = 0
+      lineItems = [
+        {
+          price_data: {
+            currency: "usd",
+            unit_amount: totalCents,
+            product_data: {
+              name: product?.name ?? defaultProductName,
+              description: "National team event: registration and apparel bundle",
+            },
+          },
+          quantity: 1,
+        },
+      ]
+    }
 
     const insertPayload: Record<string, unknown> = {
       event_slug: eventSlug,
@@ -132,8 +171,11 @@ export async function POST(request: NextRequest) {
     if (regError || !reg) {
       if ((regError as { code?: string })?.code === "42P01") {
         return NextResponse.json(
-          { error: "Registrations are not set up yet. Run scripts/208-national-team-registrations-and-products.md in Supabase." },
-          { status: 503 }
+          {
+            error:
+              "Registrations are not set up yet. Run scripts/208-national-team-registrations-and-products.md in Supabase.",
+          },
+          { status: 503 },
         )
       }
       console.error("[national-team/register] insert:", regError)
@@ -151,12 +193,16 @@ export async function POST(request: NextRequest) {
         weightclass: primaryWeight,
         wrestling_club: clubTeam,
       })
-      await findAndEnrichAthlete(admin, {
-        email: athleteEmail,
-        name: `${athleteFirstName} ${athleteLastName}`.trim(),
-        graduationYear: Number.isFinite(gradYear) ? gradYear : undefined,
-        school: highSchool,
-      }, enrichPayload)
+      await findAndEnrichAthlete(
+        admin,
+        {
+          email: athleteEmail,
+          name: `${athleteFirstName} ${athleteLastName}`.trim(),
+          graduationYear: Number.isFinite(gradYear) ? gradYear : undefined,
+          school: highSchool,
+        },
+        enrichPayload,
+      )
     } catch (enrichErr) {
       console.error("[national-team/register] athlete enrichment:", enrichErr)
     }
@@ -167,32 +213,7 @@ export async function POST(request: NextRequest) {
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin
     const stripe = new Stripe(stripeSecret)
-
-    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = isAau
-      ? AAU_SCHOLASTIC_CHECKOUT_LINES.map((line) => ({
-          price_data: {
-            currency: "usd",
-            unit_amount: line.dollars * 100,
-            product_data: {
-              name: line.label,
-              description: "NC United AAU Scholastic Duals 2026",
-            },
-          },
-          quantity: 1,
-        }))
-      : [
-          {
-            price_data: {
-              currency: "usd",
-              unit_amount: totalCents,
-              product_data: {
-                name: product?.name ?? defaultProductName,
-                description: "National team event: registration and apparel bundle",
-              },
-            },
-            quantity: 1,
-          },
-        ]
+    const checkoutLinesMeta = isAau ? encodeAauScholasticCheckoutLinesMetadataFromLines(aauSelectedLines) : ""
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -207,7 +228,7 @@ export async function POST(request: NextRequest) {
         source: "national_team",
         registration_id: reg.id,
         event_slug: eventSlug,
-        ...(isAau ? { checkout_lines: encodeAauScholasticCheckoutLinesMetadata() } : {}),
+        ...(checkoutLinesMeta ? { checkout_lines: checkoutLinesMeta } : {}),
       },
     })
 

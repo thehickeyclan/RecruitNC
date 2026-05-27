@@ -14,7 +14,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Loader2, Lock, ArrowRight } from "lucide-react"
-import Link from "next/link"
 import Image from "next/image"
 import { getEventSlugForApi, getEventName, getKnownEventUrlSlugs } from "@/lib/national-team-events"
 import {
@@ -26,10 +25,25 @@ import {
   AAU_SCHOLASTIC_DUALS_2026,
   AAU_SCHOLASTIC_OPERATIONS,
   AAU_SCHOLASTIC_WEIGHTS_DISPLAY,
-  AAU_SCHOLASTIC_CHECKOUT_TOTAL_DOLLARS,
-  formatAauScholasticDollars,
 } from "@/lib/aau-scholastic-duals-2026-content"
-import { AauScholasticPricingTable } from "@/components/national-team/aau-scholastic-pricing-table"
+import {
+  AauScholasticCheckoutItems,
+  AAU_SCHOLASTIC_DEFAULT_SELECTED_LINE_IDS,
+} from "@/components/national-team/aau-scholastic-checkout-items"
+import {
+  aauPageClass,
+  aauPanelClass,
+  aauPanelDescClass,
+  aauPanelHeaderClass,
+  aauPanelTitleClass,
+  aauPrimaryBtnClass,
+  aauInputClass,
+  aauSelectTriggerClass,
+  aauFormLabelClass,
+  aauAccentHeaderClass,
+} from "@/components/national-team/aau-scholastic-theme"
+import { scholasticLinkClass } from "@/components/national-team/scholastic-duals-section"
+import { cn } from "@/lib/utils"
 
 const GRAD_YEARS = ["2026", "2027", "2028", "2029", "2030"]
 
@@ -60,7 +74,7 @@ export default function NationalTeamRegisterEventPage() {
     : [...NHSCA_INTEREST_WEIGHT_CLASSES]
   const registerWeightLabelVariant = isAauRegistration ? "aau" : "nhsca"
 
-  const [step, setStep] = useState<"code" | "form">("code")
+  const [step, setStep] = useState<"code" | "form">(isAauRegistration ? "form" : "code")
   const [code, setCode] = useState("")
   const [codeError, setCodeError] = useState("")
   const [validating, setValidating] = useState(false)
@@ -77,6 +91,8 @@ export default function NationalTeamRegisterEventPage() {
   const [club_team, setClubTeam] = useState("")
   const [graduation_year, setGraduationYear] = useState("")
   const [weight_class, setWeightClass] = useState("")
+  const [selectedLineIds, setSelectedLineIds] = useState<string[]>([...AAU_SCHOLASTIC_DEFAULT_SELECTED_LINE_IDS])
+  const [itemsError, setItemsError] = useState("")
 
   const handleValidateCode = async (e: FormEvent) => {
     e.preventDefault()
@@ -121,15 +137,21 @@ export default function NationalTeamRegisterEventPage() {
       setFormError("High school, graduation year, and weight class are required.")
       return
     }
+    if (isAauRegistration && selectedLineIds.length === 0) {
+      setItemsError("Select at least one item to checkout.")
+      return
+    }
+    setItemsError("")
     setSubmitting(true)
     try {
       const res = await fetch("/api/national-team/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          code: code.trim(),
+          ...(isAauRegistration ? {} : { code: code.trim() }),
           eventSlug,
           returnUrlSlug: urlSlug,
+          ...(isAauRegistration ? { selectedLineIds } : {}),
           athlete_first_name: athlete_first_name.trim(),
           athlete_last_name: athlete_last_name.trim(),
           athlete_email: athlete_email.trim(),
@@ -172,9 +194,17 @@ export default function NationalTeamRegisterEventPage() {
   const isNhsca2026 =
     urlSlug === "nhsca-2026" || urlSlug === "nhsca-duals-2026" || urlSlug === "nhsca-duals-2026-select"
 
+  const pageShellClass = isAauRegistration ? aauPageClass : "min-h-screen bg-gray-50 text-gray-900"
+  const pageInnerClass = isAauRegistration ? "max-w-xl mx-auto py-8 px-4 sm:px-6" : "max-w-xl mx-auto py-8 px-4"
+  const pageTitleClass = isAauRegistration ? "text-2xl font-bold text-white" : "text-2xl font-bold text-[#003366]"
+  const pageDescClass = isAauRegistration ? "text-white/70 mt-1" : "text-gray-600 mt-1"
+  const backLinkClass = isAauRegistration
+    ? cn("text-sm mt-2 inline-block min-h-[44px] leading-[44px]", scholasticLinkClass)
+    : "text-sm text-[#003366] hover:underline mt-2 inline-block"
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-xl mx-auto">
+    <div className={pageShellClass}>
+      <div className={pageInnerClass}>
         <div className="mb-6 text-center">
           {isNhsca2026 && (
             <div className="flex justify-center mb-4">
@@ -188,14 +218,18 @@ export default function NationalTeamRegisterEventPage() {
               />
             </div>
           )}
-          <h1 className="text-2xl font-bold text-[#003366]">{eventName} – Registration</h1>
-          <p className="text-gray-600 mt-1">Invite-only. Enter your code to continue.</p>
-          <Link
+          <h1 className={pageTitleClass}>{eventName} – Registration</h1>
+          <p className={pageDescClass}>
+            {isAauRegistration
+              ? "Enter athlete info, select items, and pay at Stripe checkout."
+              : "Invite-only. Enter your code to continue."}
+          </p>
+          <a
             href={isAauRegistration ? "/national-team/scholastic-duals-2026" : "/national-team"}
-            className="text-sm text-[#003366] hover:underline mt-2 inline-block"
+            className={backLinkClass}
           >
             ← {isAauRegistration ? "Back to Scholastic Duals info" : "Back to National Team"}
-          </Link>
+          </a>
         </div>
 
         {isNhsca2026 && (
@@ -241,56 +275,50 @@ export default function NationalTeamRegisterEventPage() {
         )}
 
         {isAauRegistration && (
-          <>
-            <Card className="mb-6 border-[#B31B1B]/25">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg text-[#003366]">{AAU_SCHOLASTIC_OPERATIONS.eventName}</CardTitle>
-                <CardDescription className="text-base font-medium text-gray-700 mt-1">
-                  {AAU_SCHOLASTIC_OPERATIONS.arrivalWeighIns} · Competition {AAU_SCHOLASTIC_OPERATIONS.competitionDates}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm text-gray-700">
-                <p className="font-medium">
-                  {AAU_SCHOLASTIC_DUALS_2026.venue}
-                  <br />
-                  {AAU_SCHOLASTIC_DUALS_2026.venueAddress}
-                </p>
-                <p className="italic text-gray-600">{AAU_SCHOLASTIC_DUALS_2026.tagline}</p>
-                <p>
-                  <strong>Weight classes:</strong> {AAU_SCHOLASTIC_WEIGHTS_DISPLAY}
-                </p>
-                <p>
-                  <strong>Allowance:</strong> +5 lbs (see certification rules on the{" "}
-                  <a href="/national-team/scholastic-duals-2026#weights" className="text-[#003366] hover:underline">
-                    Scholastic Duals info page
-                  </a>
-                  )
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="mb-6 border-[#D3B574]/50 bg-[#003366]/5">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">Pricing</CardTitle>
-                <CardDescription>
-                  {formatAauScholasticDollars(AAU_SCHOLASTIC_CHECKOUT_TOTAL_DOLLARS)} due at Stripe checkout
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <AauScholasticPricingTable compact />
-              </CardContent>
-            </Card>
-          </>
+          <article className={cn(aauPanelClass, "mb-6")}>
+            <header className={cn(aauPanelHeaderClass, aauAccentHeaderClass)}>
+              <h2 className={aauPanelTitleClass}>{AAU_SCHOLASTIC_OPERATIONS.eventName}</h2>
+              <p className={aauPanelDescClass}>
+                {AAU_SCHOLASTIC_OPERATIONS.arrivalWeighIns} · Competition{" "}
+                {AAU_SCHOLASTIC_OPERATIONS.competitionDates}
+              </p>
+            </header>
+            <div className="p-4 sm:p-5 md:p-6 space-y-2 text-sm text-white/80">
+              <p className="font-medium text-white">
+                {AAU_SCHOLASTIC_DUALS_2026.venue}
+                <br />
+                {AAU_SCHOLASTIC_DUALS_2026.venueAddress}
+              </p>
+              <p className="italic text-white/60">{AAU_SCHOLASTIC_DUALS_2026.tagline}</p>
+              <p>
+                <strong className="text-white">Weight classes:</strong> {AAU_SCHOLASTIC_WEIGHTS_DISPLAY}
+              </p>
+              <p>
+                <strong className="text-white">Allowance:</strong> +5 lbs (see certification rules on the{" "}
+                <a href="/national-team/scholastic-duals-2026#weights" className={scholasticLinkClass}>
+                  Scholastic Duals info page
+                </a>
+                )
+              </p>
+            </div>
+          </article>
         )}
 
         {cancelled && (
-          <Card className="mb-6 border-amber-200 bg-amber-50">
-            <CardContent className="pt-6">
-              <p className="text-amber-800">Checkout was cancelled. You can complete registration below when ready.</p>
-            </CardContent>
-          </Card>
+          isAauRegistration ? (
+            <div className="mb-6 rounded-2xl border border-[#B31B1B]/30 bg-[#B31B1B]/15 px-4 py-3 text-sm text-white/90">
+              Checkout was cancelled. You can complete registration below when ready.
+            </div>
+          ) : (
+            <Card className="mb-6 border-amber-200 bg-amber-50">
+              <CardContent className="pt-6">
+                <p className="text-amber-800">Checkout was cancelled. You can complete registration below when ready.</p>
+              </CardContent>
+            </Card>
+          )
         )}
 
-        {step === "code" && (
+        {!isAauRegistration && step === "code" && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -327,11 +355,106 @@ export default function NationalTeamRegisterEventPage() {
         )}
 
         {step === "form" && (
+          isAauRegistration ? (
+            <article className={aauPanelClass}>
+              <header className={aauPanelHeaderClass}>
+                <h2 className={aauPanelTitleClass}>Event registration</h2>
+                <p className={aauPanelDescClass}>
+                  Register for {eventName}. Select the items you want, then pay securely at Stripe checkout.
+                </p>
+              </header>
+              <div className="p-4 sm:p-5 md:p-6">
+                <form onSubmit={handleSubmitForm} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="athlete_first_name" className={aauFormLabelClass}>Athlete first name *</Label>
+                      <Input id="athlete_first_name" className={aauInputClass} value={athlete_first_name} onChange={(e) => setAthleteFirstName(e.target.value)} required />
+                    </div>
+                    <div>
+                      <Label htmlFor="athlete_last_name" className={aauFormLabelClass}>Athlete last name *</Label>
+                      <Input id="athlete_last_name" className={aauInputClass} value={athlete_last_name} onChange={(e) => setAthleteLastName(e.target.value)} required />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="athlete_email" className={aauFormLabelClass}>Athlete email *</Label>
+                    <Input id="athlete_email" type="email" className={aauInputClass} value={athlete_email} onChange={(e) => setAthleteEmail(e.target.value)} required />
+                  </div>
+                  <div>
+                    <Label htmlFor="athlete_phone" className={aauFormLabelClass}>Athlete phone</Label>
+                    <Input id="athlete_phone" type="tel" className={aauInputClass} value={athlete_phone} onChange={(e) => setAthletePhone(e.target.value)} />
+                  </div>
+                  <div>
+                    <Label htmlFor="parent_email" className={aauFormLabelClass}>Parent/guardian email *</Label>
+                    <Input id="parent_email" type="email" className={aauInputClass} value={parent_email} onChange={(e) => setParentEmail(e.target.value)} required />
+                  </div>
+                  <div>
+                    <Label htmlFor="parent_name" className={aauFormLabelClass}>Parent/guardian name</Label>
+                    <Input id="parent_name" className={aauInputClass} value={parent_name} onChange={(e) => setParentName(e.target.value)} />
+                  </div>
+                  <div>
+                    <Label htmlFor="high_school" className={aauFormLabelClass}>High school *</Label>
+                    <Input id="high_school" className={aauInputClass} value={high_school} onChange={(e) => setHighSchool(e.target.value)} required />
+                  </div>
+                  <div>
+                    <Label htmlFor="club_team" className={aauFormLabelClass}>Club team</Label>
+                    <Input id="club_team" className={aauInputClass} value={club_team} onChange={(e) => setClubTeam(e.target.value)} placeholder="Optional" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className={aauFormLabelClass}>Graduation year *</Label>
+                      <Select value={graduation_year} onValueChange={setGraduationYear} required>
+                        <SelectTrigger className={aauSelectTriggerClass}><SelectValue placeholder="Select" /></SelectTrigger>
+                        <SelectContent>
+                          {GRAD_YEARS.map((y) => (
+                            <SelectItem key={y} value={y}>{y}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className={aauFormLabelClass}>Weight class *</Label>
+                      <Select value={weight_class} onValueChange={setWeightClass} required>
+                        <SelectTrigger className={aauSelectTriggerClass}><SelectValue placeholder="Select weight" /></SelectTrigger>
+                        <SelectContent>
+                          {registerWeightClasses.map((w) => (
+                            <SelectItem key={w} value={w}>
+                              {formatNationalTeamWeightLabel(w, registerWeightLabelVariant)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <p className="text-sm text-white/90 bg-[#B31B1B]/15 border border-[#B31B1B]/30 rounded-lg px-3 py-2">
+                    <strong>Weights are +5 lbs.</strong> Select the weight class your athlete is wrestling for NC United.
+                  </p>
+                  <AauScholasticCheckoutItems
+                    selectedIds={selectedLineIds}
+                    onChange={setSelectedLineIds}
+                    disabled={submitting}
+                    error={itemsError || null}
+                    variant="dark"
+                  />
+                  {formError && <p className="text-sm text-red-400">{formError}</p>}
+                  <Button
+                    type="submit"
+                    disabled={submitting}
+                    className={cn(aauPrimaryBtnClass, "w-full font-bold")}
+                  >
+                    {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                    <span className="ml-2">{submitting ? "Redirecting to payment…" : "Continue to payment"}</span>
+                  </Button>
+                </form>
+              </div>
+            </article>
+          ) : (
           <Card>
             <CardHeader>
               <CardTitle>Event registration</CardTitle>
               <CardDescription>
-                You’re signing up for {eventName} (invite-only). Enter athlete and parent info; you’ll pay the registration + apparel bundle on the next step.
+                {isAauRegistration
+                  ? `Register for ${eventName}. Select the items you want, then pay securely at Stripe checkout.`
+                  : `You’re signing up for ${eventName} (invite-only). Enter athlete and parent info; you’ll pay the registration + apparel bundle on the next step.`}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -385,7 +508,7 @@ export default function NationalTeamRegisterEventPage() {
                   <div>
                     <Label>Weight class *</Label>
                     <Select value={weight_class} onValueChange={setWeightClass} required>
-                      <SelectTrigger><SelectValue placeholder="Select agreed weight" /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder={isAauRegistration ? "Select weight" : "Select agreed weight"} /></SelectTrigger>
                       <SelectContent>
                         {registerWeightClasses.map((w) => (
                           <SelectItem key={w} value={w}>
@@ -399,14 +522,24 @@ export default function NationalTeamRegisterEventPage() {
                 <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
                   <strong>Weights are {isAauRegistration ? "+5 lbs" : "+3 lbs"}.</strong>{" "}
                   {isAauRegistration
-                    ? "Select the weight class you agreed to with NC United coaches."
+                    ? "Select the weight class your athlete is wrestling for NC United."
                     : "The team is registered for early weigh-ins. Select the weight class you agreed to."}
                 </p>
+                {isAauRegistration ? (
+                  <AauScholasticCheckoutItems
+                    selectedIds={selectedLineIds}
+                    onChange={setSelectedLineIds}
+                    disabled={submitting}
+                    error={itemsError || null}
+                  />
+                ) : null}
                 {formError && <p className="text-sm text-red-600">{formError}</p>}
                 <div className="flex gap-3 pt-2">
-                  <Button type="button" variant="outline" onClick={() => setStep("code")} disabled={submitting}>
-                    Back
-                  </Button>
+                  {!isAauRegistration ? (
+                    <Button type="button" variant="outline" onClick={() => setStep("code")} disabled={submitting}>
+                      Back
+                    </Button>
+                  ) : null}
                   <Button type="submit" disabled={submitting} className="flex-1 bg-[#003366] hover:bg-[#003366]/90">
                     {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                     <span className="ml-2">{submitting ? "Redirecting to payment…" : "Continue to payment"}</span>
@@ -415,6 +548,7 @@ export default function NationalTeamRegisterEventPage() {
               </form>
             </CardContent>
           </Card>
+          )
         )}
       </div>
     </div>

@@ -4,7 +4,7 @@
 
 - **NHSCA 2026** (and similar events): **Invite-only registration** — only invited kids/families can sign up. Access via a **private link** and/or an **invite key** you give to invitees. No public “Register now” on the main site.
 - **Costs are not public:** Registration and apparel fees are shown only on the invite-only registration flow (and in the team hub after they’re in). No dollar amounts on public marketing pages.
-- **Private team hub** (not public): One place for **national team members and their parents** only. Tabs per tournament (NHSCA Duals 2026, AAU 2026, Deep South 2026, etc.) with roster, logistics, travel, alerts, and a **GroupMe-like chat** (link or embedded). Fully coordinate travel, roster, and alerts.
+- **Private team hub** (not public): One place for **national team members and their parents** only. Tabs per tournament (NHSCA Duals 2026, AAU 2026, etc.) with roster, logistics, travel, alerts, and a **GroupMe-like chat** (link or embedded). Fully coordinate travel, roster, and alerts.
 
 ---
 
@@ -37,7 +37,7 @@ One table for “paid + roster” per event keeps things simple and repeatable f
 | Column | Type | Purpose |
 |--------|------|--------|
 | id | uuid | PK |
-| event_slug | text | e.g. `nhsca-duals-2026`, `aau-2026`, `deep-south-2026` |
+| event_slug | text | e.g. `nhsca-duals-2026`, `aau-2026` |
 | athlete_first_name | text | |
 | athlete_last_name | text | |
 | athlete_email | text | |
@@ -145,7 +145,7 @@ Only invited athletes should be able to register. Two complementary approaches:
 - **Route:** `/national-team/hub`.
 - **Auth:** User must be signed in. Layout (or API) checks `can-access-hub`; if not allowed, show “Access denied” or redirect.
 - **Layout:**  
-  - **Tabs:** One tab per event (e.g. “NHSCA Duals 2026”, “AAU 2026”, “Deep South 2026”).  
+  - **Tabs:** One tab per event (e.g. “NHSCA Duals 2026”, “AAU 2026”).  
   - Per tab:  
     - **Roster** (from `national_team_event_registrations` for that `event_slug`).  
     - **Logistics:** travel, hotel, schedule (content from DB or markdown; editable by admin).  
@@ -179,7 +179,7 @@ Only invited athletes should be able to register. Two complementary approaches:
 |-------|--------|
 | **1** | DB: `national_team_event_registrations`, `national_team_invite_codes`. NHSCA 2026 public page (no prices, no public register). Invite-only registration route: code entry → form with fees → Stripe → confirmation. |
 | **2** | Hub access API and gated `/national-team/hub` page. Single event tab (NHSCA 2026): roster + logistics + placeholder for alerts and chat link. |
-| **3** | Multiple event tabs (AAU, Deep South). Alerts CRUD and display. GroupMe link in hub **or** first in-app chat (pilot for RecruitNC messaging). Admin: invite code CRUD. |
+| **3** | Multiple event tabs (AAU). Alerts CRUD and display. GroupMe link in hub **or** first in-app chat (pilot for RecruitNC messaging). Admin: invite code CRUD. |
 
 ---
 

@@ -37,6 +37,44 @@ export const AAU_SCHOLASTIC_TRAVEL_TOTAL_DOLLARS = sumAauScholasticLines(AAU_SCH
 export const AAU_SCHOLASTIC_ESTIMATED_TRIP_TOTAL_DOLLARS =
   AAU_SCHOLASTIC_CHECKOUT_TOTAL_DOLLARS + AAU_SCHOLASTIC_TRAVEL_TOTAL_DOLLARS
 
+export const AAU_SCHOLASTIC_PRICING_CONTEXT =
+  "Same model as NHSCA Duals: most families purchased the full NC United apparel bundle. At registration, check each item you want (tournament entry, singlet, shirts, etc.) and pay only for your selection in one Stripe checkout. Hotel, van, and flight are coordinated separately."
+
+export const AAU_SCHOLASTIC_DEFAULT_SELECTED_LINE_IDS = AAU_SCHOLASTIC_CHECKOUT_LINES.map((line) => line.id)
+
+export function aauScholasticLinesFromSelectedIds(ids: readonly string[]): AauScholasticPriceLine[] {
+  const allowed = new Set(AAU_SCHOLASTIC_CHECKOUT_LINES.map((line) => line.id))
+  const picked = new Set(ids.filter((id) => allowed.has(id)))
+  return AAU_SCHOLASTIC_CHECKOUT_LINES.filter((line) => picked.has(line.id))
+}
+
+export function aauScholasticFeesFromSelectedLines(lines: AauScholasticPriceLine[]): {
+  reg_fee_cents: number
+  apparel_fee_cents: number
+} {
+  let reg_fee_cents = 0
+  let apparel_fee_cents = 0
+  for (const line of lines) {
+    const cents = line.dollars * 100
+    if (line.id === "tournament_reg") reg_fee_cents += cents
+    else apparel_fee_cents += cents
+  }
+  return { reg_fee_cents, apparel_fee_cents }
+}
+
+export function aauScholasticCheckoutLineItemsFromPriceLines(lines: AauScholasticPriceLine[]): NhscaCheckoutLineItem[] {
+  return lines.map((line) => ({
+    key: line.id,
+    name: line.label,
+    amountCents: line.dollars * 100,
+    quantity: 1,
+  }))
+}
+
+export function encodeAauScholasticCheckoutLinesMetadataFromLines(lines: AauScholasticPriceLine[]): string {
+  return encodeLineItemsMetadata(aauScholasticCheckoutLineItemsFromPriceLines(lines))
+}
+
 export const AAU_SCHOLASTIC_REG_FEE_CENTS = 75 * 100
 export const AAU_SCHOLASTIC_APPAREL_FEE_CENTS = (65 + 40 + 40 + 30) * 100
 
@@ -198,7 +236,7 @@ export const AAU_SCHOLASTIC_WEIGHTS_DISPLAY = AAU_SCHOLASTIC_WEIGHT_CLASSES.map(
 export const AAU_SCHOLASTIC_PARENT_FAQ = [
   {
     q: "Who can register?",
-    a: "NC United Scholastic Duals is invite-only. Your athlete receives an invite code from staff after selection. Use the registration link on this page and enter that code to continue.",
+    a: "NC United Scholastic Duals families on the team roster. Open the registration link on this page, enter athlete and parent info, select the items you want (tournament entry, apparel, etc.), and complete Stripe checkout.",
   },
   {
     q: "Who is eligible?",
@@ -214,11 +252,11 @@ export const AAU_SCHOLASTIC_PARENT_FAQ = [
   },
   {
     q: "What does the registration fee cover?",
-    a: "Checkout includes tournament registration ($75) plus NC United apparel: singlet ($65), long sleeve shirt ($40), shorts ($40), and tee ($30) — $250 total at registration. Hotel and van ($315) and flight ($355) are separate travel costs (see pricing on this page); staff will share booking details in the Team Hub.",
+    a: "You choose at checkout. Options are tournament registration ($75), singlet ($65), long sleeve ($40), shorts ($40), and tee ($30) — check only what you need. Most NHSCA Duals families bought the full bundle ($250 at checkout). Hotel and van ($315) and flight ($355) are separate travel costs; plan on about $920 all-in per athlete before meals and local ground transport. Staff share booking details in the Team Hub.",
   },
   {
     q: "How do I pay?",
-    a: "After you enter your invite code and complete the athlete form, you are redirected to secure Stripe checkout. A receipt is emailed to the parent/guardian address you provide.",
+    a: "Complete the athlete form, select your items, and continue to secure Stripe checkout. A receipt is emailed to the parent/guardian address you provide.",
   },
   {
     q: "What weight should my wrestler select?",
