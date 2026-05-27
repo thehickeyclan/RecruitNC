@@ -15,6 +15,7 @@ import {
   aauScholasticApparelSizesForDb,
   parseAauScholasticApparelSizesFromBody,
 } from "@/lib/aau-scholastic-apparel-sizes"
+import { parseAthleteDobInput } from "@/lib/athlete-dob"
 
 export const dynamic = "force-dynamic"
 
@@ -55,6 +56,15 @@ export async function POST(request: NextRequest) {
     }
     if (!highSchool || !graduationYear || !primaryWeight) {
       return NextResponse.json({ error: "High school, graduation year, and primary weight are required." }, { status: 400 })
+    }
+
+    let athleteDob: string | null = null
+    if (isAau) {
+      const dobResult = parseAthleteDobInput(body.athlete_dob)
+      if (!dobResult.ok) {
+        return NextResponse.json({ error: dobResult.error }, { status: 400 })
+      }
+      athleteDob = dobResult.value
     }
 
     const admin = createAdminClient()
@@ -185,6 +195,7 @@ export async function POST(request: NextRequest) {
       if (aauApparelDb.shorts_size) insertPayload.shorts_size = aauApparelDb.shorts_size
       if (aauApparelDb.shirt_size) insertPayload.shirt_size = aauApparelDb.shirt_size
     }
+    if (athleteDob) insertPayload.athlete_dob = athleteDob
     if (parentUserId) insertPayload.parent_user_id = parentUserId
 
     const { data: reg, error: regError } = await admin
@@ -194,11 +205,22 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (regError || !reg) {
-      if ((regError as { code?: string })?.code === "42P01") {
+      const pgErr = regError as { code?: string; message?: string } | null
+      if (pgErr?.code === "42P01") {
         return NextResponse.json(
           {
             error:
               "Registrations are not set up yet. Run scripts/208-national-team-registrations-and-products.md in Supabase.",
+          },
+          { status: 503 },
+        )
+      }
+      const msg = (pgErr?.message ?? "").toLowerCase()
+      if (pgErr?.code === "42703" && msg.includes("athlete_dob")) {
+        return NextResponse.json(
+          {
+            error:
+              "Athlete date of birth is not set up in the database yet. Contact NC United to run scripts/add-national-team-athlete-dob.md in Supabase.",
           },
           { status: 503 },
         )

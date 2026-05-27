@@ -22,6 +22,7 @@ import {
   AAU_SCHOLASTIC_OFFICIAL_LINKS,
   AAU_SCHOLASTIC_OPERATIONS,
   AAU_SCHOLASTIC_PARENT_FAQ,
+  AAU_SCHOLASTIC_TEAM_HOTEL,
   AAU_SCHOLASTIC_TOURNAMENT_CONTACT,
   AAU_SCHOLASTIC_WEIGHT_RULES,
   AAU_SCHOLASTIC_WEIGHTS_DISPLAY,
@@ -63,7 +64,7 @@ const NAV = [
   { href: "#operations", label: "Operations" },
   { href: "#roster", label: "Roster" },
   { href: "#schedule", label: "Schedule" },
-  { href: "#venue", label: "Venue" },
+  { href: "#venue", label: "Venue & hotel" },
   { href: "#aau-official", label: "AAU rules" },
   { href: "#weights", label: "Weights" },
   { href: "#cost", label: "Cost" },
@@ -83,6 +84,7 @@ function OpsRow({ label, value }: { label: string; value: string }) {
 
 export default function ScholasticDuals2026Page() {
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${AAU_SCHOLASTIC_DUALS_2026.mapsQuery}`
+  const hotelMapsUrl = `https://www.google.com/maps/search/?api=1&query=${AAU_SCHOLASTIC_TEAM_HOTEL.mapsQuery}`
 
   return (
     <div className={aauPageClass}>
@@ -202,6 +204,10 @@ export default function ScholasticDuals2026Page() {
               value={`${AAU_SCHOLASTIC_OPERATIONS.venueName}, ${AAU_SCHOLASTIC_OPERATIONS.venueAddress1}, ${AAU_SCHOLASTIC_OPERATIONS.venueCityStateZip}`}
             />
             <OpsRow
+              label="Team hotel"
+              value={`${AAU_SCHOLASTIC_OPERATIONS.hotelName}, ${AAU_SCHOLASTIC_OPERATIONS.hotelAddress1}, ${AAU_SCHOLASTIC_OPERATIONS.hotelCityStateZip}`}
+            />
+            <OpsRow
               label="Roster"
               value={`${AAU_SCHOLASTIC_OPERATIONS.rosterCoaches} coaches · ${AAU_SCHOLASTIC_OPERATIONS.rosterStarters} wrestlers · ${AAU_SCHOLASTIC_OPERATIONS.rosterAlternates} alternates · ${AAU_SCHOLASTIC_OPERATIONS.rosterTableWorkers} table worker · EXT +$${AAU_SCHOLASTIC_OPERATIONS.extraAlternateFeeDollars}`}
             />
@@ -243,22 +249,75 @@ export default function ScholasticDuals2026Page() {
 
         <ScholasticDualsSection
           id="venue"
-          title="Venue & travel"
+          title="Venue, hotel & travel"
           icon={<MapPin className="h-5 w-5 text-[#B31B1B]" />}
-          contentClassName="space-y-4"
+          contentClassName="space-y-6"
         >
-          <p>
-            <strong className="text-white">{AAU_SCHOLASTIC_DUALS_2026.venue}</strong>
-            <br />
-            {AAU_SCHOLASTIC_DUALS_2026.venueAddress}
-          </p>
-          <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className={scholasticLinkClass}>
-            Open venue in Google Maps
-            <ExternalLink className="h-3.5 w-3.5" />
-          </a>
+          <div className="space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[#FF7070]">Competition venue</p>
+            <p>
+              <strong className="text-white">{AAU_SCHOLASTIC_DUALS_2026.venue}</strong>
+              <br />
+              {AAU_SCHOLASTIC_DUALS_2026.venueAddress}
+            </p>
+            <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className={scholasticLinkClass}>
+              Open venue in Google Maps
+              <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          </div>
+
+          <div className={scholasticInsetClass + " space-y-4"}>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#FF7070] mb-2">NC United team hotel</p>
+              <p className="font-semibold text-white text-base">{AAU_SCHOLASTIC_TEAM_HOTEL.name}</p>
+              <p className="mt-1 text-sm text-white/70">
+                {AAU_SCHOLASTIC_TEAM_HOTEL.googleRating.toFixed(1)} ·{" "}
+                {AAU_SCHOLASTIC_TEAM_HOTEL.googleReviewCount.toLocaleString()} Google reviews ·{" "}
+                {AAU_SCHOLASTIC_TEAM_HOTEL.starsLabel}
+              </p>
+              <p className="mt-2 text-white/80">
+                {AAU_SCHOLASTIC_TEAM_HOTEL.addressLine1}
+                <br />
+                {AAU_SCHOLASTIC_TEAM_HOTEL.cityStateZip}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm">
+                <a
+                  href={AAU_SCHOLASTIC_TEAM_HOTEL.websiteUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={scholasticLinkClass}
+                >
+                  {AAU_SCHOLASTIC_TEAM_HOTEL.websiteLabel}
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </a>
+                <a href={`tel:${AAU_SCHOLASTIC_TEAM_HOTEL.phoneTel}`} className={scholasticLinkClass}>
+                  {AAU_SCHOLASTIC_TEAM_HOTEL.phone}
+                </a>
+                <a href={hotelMapsUrl} target="_blank" rel="noopener noreferrer" className={scholasticLinkClass}>
+                  Google Maps
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </a>
+              </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {AAU_SCHOLASTIC_TEAM_HOTEL.photos.map((photo) => (
+                <div
+                  key={photo.src}
+                  className="relative aspect-[4/3] overflow-hidden rounded-lg border border-white/10 bg-[#001428]"
+                >
+                  <Image src={photo.src} alt={photo.alt} fill className="object-cover" sizes="(max-width: 640px) 100vw, 50vw" />
+                </div>
+              ))}
+            </div>
+            <p className="text-sm text-white/65">
+              Hotel and van transport are selectable at registration checkout. Room block and van details are coordinated
+              through NC United after you register.
+            </p>
+          </div>
+
           <p className={scholasticCalloutClass}>
             <strong>Parking:</strong> $25/day at the convention center.{" "}
-            <strong>Hotel, van &amp; flights:</strong> NC United details in the Team Hub.
+            <strong>Flights:</strong> selectable at registration checkout — Team Hub has travel updates after payment.
           </p>
         </ScholasticDualsSection>
 
