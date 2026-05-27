@@ -1,12 +1,11 @@
 /**
  * NC United 2026 national team gear — public store catalog (singlets + apparel).
- * Images live under public/images/nhsca-duals-2026-gear/.
+ * Uses processed Blob images (transparent) from nhsca-gear-processed-manifest.json.
  * Seed with: npm run store:seed-2026-gear
  */
 
+import { nhscaGearPhotoSrc } from "@/lib/nhsca-duals-2026-gear-images"
 import { NHSCA_HUB_GEAR_SIZES } from "@/lib/nhsca-hub-checkout-pricing"
-
-const GEAR = "/images/nhsca-duals-2026-gear"
 
 export type NcUnitedStoreGearImage = {
   url: string
@@ -29,24 +28,43 @@ export type NcUnitedStoreGearProduct = {
   defaultStockPerVariant: number
 }
 
+/** Combined singlet listing replaced by separate Blue + Pinstripe products. */
+export const NC_UNITED_2026_DEPRECATED_STORE_SLUGS = ["nc-united-2026-singlet"] as const
+
 export const NC_UNITED_2026_STORE_GEAR: NcUnitedStoreGearProduct[] = [
   {
-    slug: "nc-united-2026-singlet",
-    name: "NC United 2026 Competition Singlet",
+    slug: "nc-united-2026-blue-singlet",
+    name: "NC United 2026 Blue Singlet",
     description:
-      "Official NC United competition singlet — blue or white. Custom name on back. Same gear worn at NHSCA Duals and AAU Scholastic Duals; required at weigh-ins.",
+      'Official NC United "Pepsi" blue competition singlet — light blue top with North Carolina script and custom name on back. Required at weigh-ins for NHSCA Duals and AAU Scholastic Duals.',
     category: "athletic-wear",
     price: 65,
     featured: true,
     displayOrder: 1,
-    skuPrefix: "NCU26-SING",
-    colors: ["Blue", "White"],
+    skuPrefix: "NCU26-SING-BLU",
+    colors: ["Blue"],
     sizes: NHSCA_HUB_GEAR_SIZES,
     images: [
-      { url: `${GEAR}/singlet-blue-front.png`, color: "Blue", displayOrder: 0 },
-      { url: `${GEAR}/singlet-blue-back.png`, color: "Blue", displayOrder: 1 },
-      { url: `${GEAR}/singlet-white-front.png`, color: "White", displayOrder: 2 },
-      { url: `${GEAR}/singlet-white-back.png`, color: "White", displayOrder: 3 },
+      { url: nhscaGearPhotoSrc("blue-front"), color: "Blue", displayOrder: 0 },
+      { url: nhscaGearPhotoSrc("blue-back"), color: "Blue", displayOrder: 1 },
+    ],
+    defaultStockPerVariant: 50,
+  },
+  {
+    slug: "nc-united-2026-pinstripe-singlet",
+    name: "NC United 2026 Pinstripe Singlet",
+    description:
+      'Official NC United "Pinstripes" competition singlet — navy, red, and white with NC logo and custom name on back. Required at weigh-ins for NHSCA Duals and AAU Scholastic Duals.',
+    category: "athletic-wear",
+    price: 65,
+    featured: true,
+    displayOrder: 2,
+    skuPrefix: "NCU26-SING-PIN",
+    colors: ["Pinstripe"],
+    sizes: NHSCA_HUB_GEAR_SIZES,
+    images: [
+      { url: nhscaGearPhotoSrc("white-front"), color: "Pinstripe", displayOrder: 0 },
+      { url: nhscaGearPhotoSrc("white-back"), color: "Pinstripe", displayOrder: 1 },
     ],
     defaultStockPerVariant: 50,
   },
@@ -58,13 +76,13 @@ export const NC_UNITED_2026_STORE_GEAR: NcUnitedStoreGearProduct[] = [
     category: "t-shirts",
     price: 40,
     featured: true,
-    displayOrder: 2,
+    displayOrder: 3,
     skuPrefix: "NCU26-LS",
     colors: ["Black"],
     sizes: NHSCA_HUB_GEAR_SIZES,
     images: [
-      { url: `${GEAR}/apparel-long-sleeve-front.png`, color: "Black", displayOrder: 0 },
-      { url: `${GEAR}/apparel-long-sleeve-back.png`, color: "Black", displayOrder: 1 },
+      { url: nhscaGearPhotoSrc("long-sleeve-front"), color: "Black", displayOrder: 0 },
+      { url: nhscaGearPhotoSrc("long-sleeve-back"), color: "Black", displayOrder: 1 },
     ],
     defaultStockPerVariant: 50,
   },
@@ -75,11 +93,11 @@ export const NC_UNITED_2026_STORE_GEAR: NcUnitedStoreGearProduct[] = [
     category: "athletic-wear",
     price: 40,
     featured: false,
-    displayOrder: 3,
+    displayOrder: 4,
     skuPrefix: "NCU26-SHT",
     colors: ["Black"],
     sizes: NHSCA_HUB_GEAR_SIZES,
-    images: [{ url: `${GEAR}/apparel-shorts.png`, color: "Black", displayOrder: 0 }],
+    images: [{ url: nhscaGearPhotoSrc("shorts"), color: "Black", displayOrder: 0 }],
     defaultStockPerVariant: 50,
   },
   {
@@ -89,11 +107,11 @@ export const NC_UNITED_2026_STORE_GEAR: NcUnitedStoreGearProduct[] = [
     category: "t-shirts",
     price: 30,
     featured: false,
-    displayOrder: 4,
+    displayOrder: 5,
     skuPrefix: "NCU26-TEE",
     colors: ["White"],
     sizes: NHSCA_HUB_GEAR_SIZES,
-    images: [{ url: `${GEAR}/apparel-short-sleeve-tee.png`, color: "White", displayOrder: 0 }],
+    images: [{ url: nhscaGearPhotoSrc("short-sleeve-tee"), color: "White", displayOrder: 0 }],
     defaultStockPerVariant: 50,
   },
 ]

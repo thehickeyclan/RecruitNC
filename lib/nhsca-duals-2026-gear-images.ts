@@ -23,6 +23,11 @@ function gearPhotoSrc(id: string, localPath: string): string {
   return localPath
 }
 
+/** Processed Blob URL when available; otherwise local public/ crop. */
+export function nhscaGearPhotoSrc(id: keyof typeof NHSCA_GEAR_PUBLIC_FILE_BY_ID): string {
+  return gearPhotoSrc(id, `${GEAR}/${NHSCA_GEAR_PUBLIC_FILE_BY_ID[id]}`)
+}
+
 /** Local public/ crops (often black matte) — carousel uses screen blend until Blob manifest is set. */
 export function isLocalNhscaGearSrc(src: string): boolean {
   return src.startsWith(`${GEAR}/`) || src.startsWith("/images/nhsca-duals-2026-gear/")
