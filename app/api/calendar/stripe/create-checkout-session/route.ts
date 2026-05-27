@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getDropInFeeCents, getNcUnitedCalendarBaseUrl, getNcUnitedStripe } from "@/lib/nc-united-calendar/stripe"
+import {
+  NC_UNITED_LIABILITY_WAIVER_TYPE,
+  NC_UNITED_LIABILITY_WAIVER_VERSION,
+} from "@/lib/nc-united-liability-waiver"
 
 const REQUIRED_ENV_VARS = [
   "STRIPE_SECRET_KEY",
@@ -26,6 +30,7 @@ interface CreateCheckoutRequest {
   parentPhone?: string
   experienceLevel?: string
   notes?: string
+  waiverAccepted?: boolean
 }
 
 export async function POST(request: Request) {
@@ -55,6 +60,13 @@ export async function POST(request: Request) {
 
     if (Number.isNaN(Number(body.wrestlerAge)) || body.wrestlerAge < 5 || body.wrestlerAge > 18) {
       return NextResponse.json({ error: "Wrestler age must be between 5 and 18" }, { status: 400 })
+    }
+
+    if (body.waiverAccepted !== true) {
+      return NextResponse.json(
+        { error: "You must accept the Waiver and Release of Liability before continuing to payment." },
+        { status: 400 },
+      )
     }
 
     const admin = createAdminClient()
@@ -100,12 +112,14 @@ export async function POST(request: Request) {
 
     const parentPhone = body.parentPhone?.trim() || null
     const parentEmail = body.parentEmail.trim().toLowerCase()
+    const parentName = body.parentName.trim()
     const wrestlerName = body.wrestlerName.trim()
     const experienceLevel = body.experienceLevel?.trim() || null
     const additionalNotes = body.notes?.trim() || null
+    const waiverSignedAt = new Date().toISOString()
 
     // Columns aligned to public.drop_in_requests (see Supabase schema).
-    const insertPayload = {
+    const insertBase = {
       event_id: event.id,
       participant_name: wrestlerName,
       wrestler_name: wrestlerName,
@@ -114,7 +128,7 @@ export async function POST(request: Request) {
       wrestler_experience: experienceLevel,
       participant_email: parentEmail,
       participant_phone: parentPhone,
-      parent_name: body.parentName.trim(),
+      parent_name: parentName,
       parent_email: parentEmail,
       parent_phone: parentPhone,
       experience_level: experienceLevel,
@@ -124,11 +138,27 @@ export async function POST(request: Request) {
       payment_amount_cents: amount,
     }
 
-    const { data: dropInRecord, error: insertError } = await admin
-      .from("drop_in_requests")
-      .insert(insertPayload)
-      .select("*")
-      .single()
+    const insertWithWaiver = {
+      ...insertBase,
+      waiver_signed_at: waiverSignedAt,
+      waiver_signer_name: parentName,
+    }
+
+    let dropInRecord: Record<string, unknown> | null = null
+    let insertError: { message?: string; code?: string } | null = null
+
+    const firstInsert = await admin.from("drop_in_requests").insert(insertWithWaiver).select("*").single()
+    dropInRecord = firstInsert.data as Record<string, unknown> | null
+    insertError = firstInsert.error
+
+    if (
+      insertError &&
+      (insertError.code === "42703" || (insertError.message ?? "").toLowerCase().includes("waiver_signed_at"))
+    ) {
+      const retry = await admin.from("drop_in_requests").insert(insertBase).select("*").single()
+      dropInRecord = retry.data as Record<string, unknown> | null
+      insertError = retry.error
+    }
 
     if (insertError || !dropInRecord) {
       console.error("[calendar/stripe] Failed to create drop-in request", insertError)
@@ -156,6 +186,11 @@ export async function POST(request: Request) {
           drop_in_request_id: String(dropInRecord.id ?? ""),
           event_id: String(event.id),
           business: "nc_united_calendar",
+          waiver_accepted: "true",
+          waiver_signer_name: parentName,
+          waiver_signed_at: waiverSignedAt,
+          waiver_type: NC_UNITED_LIABILITY_WAIVER_TYPE,
+          waiver_version: NC_UNITED_LIABILITY_WAIVER_VERSION,
           ...(notesForStripe ? { registration_notes: notesForStripe } : {}),
         },
         line_items: [

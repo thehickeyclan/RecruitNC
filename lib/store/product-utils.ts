@@ -16,3 +16,13 @@ export function findProductByIdOrPrefix(
   const found = productCache.find((p) => String(p.id).toLowerCase().startsWith(prefix))
   return found ?? null
 }
+
+/** Store pill filter — NC United singlets (slug/name), not category (shorts share athletic-wear). */
+export function isStoreSingletProduct(product: {
+  slug?: string | null
+  name?: string | null
+}): boolean {
+  const slug = (product.slug ?? "").toLowerCase()
+  const name = (product.name ?? "").toLowerCase()
+  return slug.includes("singlet") || name.includes("singlet")
+}

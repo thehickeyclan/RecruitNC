@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Search } from "lucide-react"
 import { useCartStore } from "@/lib/store/cart-store"
+import { isStoreSingletProduct } from "@/lib/store/product-utils"
 import { useToast } from "@/hooks/use-toast"
 
 interface StorePageClientProps {
@@ -18,6 +19,7 @@ interface StorePageClientProps {
 }
 
 const categories = [
+  { id: "Singlets", label: "Singlets" },
   { id: "T-Shirts", label: "T-Shirts" },
   { id: "Sweatshirts", label: "Sweatshirts" },
   { id: "Headwear", label: "Headwear" },
@@ -71,9 +73,11 @@ export function StorePageClient({ initialProducts }: StorePageClientProps) {
 
     if (selectedCategories.length > 0) {
       filtered = filtered.filter((product) => {
-        if (!product.category) return false
-        const productCategory = product.category.toLowerCase()
-        return selectedCategories.some((cat) => cat.toLowerCase() === productCategory)
+        return selectedCategories.some((cat) => {
+          if (cat === "Singlets") return isStoreSingletProduct(product)
+          if (!product.category) return false
+          return cat.toLowerCase() === product.category.toLowerCase()
+        })
       })
     }
 

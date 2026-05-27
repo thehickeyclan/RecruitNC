@@ -14,6 +14,7 @@ export type SortOption = "featured" | "price-low" | "price-high" | "newest"
 export interface ProductGridProduct {
   id: string | number
   name: string
+  slug?: string | null
   description?: string | null
   price: number
   category?: string | null

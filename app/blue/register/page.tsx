@@ -12,6 +12,10 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader2 } from "lucide-react"
+import {
+  NC_UNITED_LIABILITY_WAIVER_CHECKBOX_LABEL,
+  NC_UNITED_LIABILITY_WAIVER_TEXT,
+} from "@/lib/nc-united-liability-waiver"
 
 const NAVY = "#03154C"
 const TSHIRT_SIZES = ["YS", "YM", "YL", "S", "M", "L", "XL", "2XL", "3XL"] as const
@@ -19,40 +23,6 @@ const PARENT_RELATIONSHIPS = ["Father", "Mother", "Guardian", "Other"] as const
 const HIGHEST_ACHIEVEMENTS = ["All American", "State Champion", "State Placer", "State Qualifier", "None"] as const
 /** Fallback if API fails — matches Blue page default. */
 const BLUE_SHIRT_FALLBACK = "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/eNZzhlbUPjwSpRAahxEPt-Blue%20Team%20Photo.png"
-
-const WAIVER_TEXT = `WAIVER AND RELEASE OF LIABILITY
-
-This Waiver and Release applies to all activities, practices, competitions, events, and related activities organized by NC Wrestling United ("NC United"), including those conducted at facilities owned or operated by The University of North Carolina at Chapel Hill or any other third party.
-
-I, the undersigned parent or legal guardian of the minor participant, acknowledge and agree as follows:
-
-Assumption of Risk
-I understand that wrestling and related training activities are inherently dangerous contact activities. Risks include, but are not limited to: sprains, strains, fractures, dislocations; concussions and head injuries; paralysis or catastrophic injury; permanent disability; death; injuries resulting from contact with other participants; injuries arising from facility conditions or equipment; risks associated with travel to and from events.
-
-I knowingly and voluntarily assume all risks, both known and unknown, even if arising from the negligence of the Released Parties.
-
-Release of Liability
-To the fullest extent permitted by North Carolina law, I release and forever discharge: NC Wrestling United; its officers, directors, employees, volunteers, and agents; The University of North Carolina at Chapel Hill; The University of North Carolina System; The State of North Carolina; their trustees, officers, employees, agents, and representatives (collectively, the "Released Parties") from any and all claims, demands, causes of action, damages, or liabilities arising out of or related to participation in NC United activities, including those caused by negligence.
-
-Indemnification
-I agree to indemnify and hold harmless the Released Parties from any claims arising from the participant's involvement in NC United activities.
-
-Medical Authorization
-I authorize NC United to obtain emergency medical treatment for the participant if necessary. I understand I am financially responsible for any resulting medical expenses.
-
-Insurance
-I understand NC United may carry insurance but that I am responsible for maintaining adequate personal medical insurance for the participant.
-
-Media Release
-I grant permission for photographs and video recordings of the participant to be used for promotional purposes.
-
-Governing Law and Venue
-This agreement shall be governed by the laws of the State of North Carolina. Any disputes shall be brought in a court of competent jurisdiction within North Carolina.
-
-Severability
-If any portion of this agreement is deemed invalid, the remaining provisions shall remain in full force and effect.
-
-I acknowledge that I have read and understand this Waiver and Release of Liability and sign it voluntarily on behalf of myself and the minor participant.`
 
 export default function BlueRegisterPage() {
   const searchParams = useSearchParams()
@@ -567,7 +537,7 @@ export default function BlueRegisterPage() {
               <div className="border-t pt-6 space-y-3">
                 <CardTitle className="text-lg">Waiver and Release of Liability</CardTitle>
                 <div className="max-h-[220px] overflow-y-auto rounded-md border border-input bg-muted/30 p-4 text-sm whitespace-pre-wrap">
-                  {WAIVER_TEXT}
+                  {NC_UNITED_LIABILITY_WAIVER_TEXT}
                 </div>
                 <div className="flex items-start gap-3">
                   <Checkbox
@@ -577,7 +547,7 @@ export default function BlueRegisterPage() {
                     disabled={loading}
                   />
                   <Label htmlFor="waiver" className="text-sm leading-tight cursor-pointer">
-                    I have read and understand this Waiver and Release of Liability and sign it voluntarily on behalf of myself and the minor participant. <span className="text-red-500">*</span>
+                    {NC_UNITED_LIABILITY_WAIVER_CHECKBOX_LABEL} <span className="text-red-500">*</span>
                   </Label>
                 </div>
               </div>

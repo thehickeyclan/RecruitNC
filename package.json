@@ -19,6 +19,7 @@
     "nhsca:lookup": "tsx scripts/test-nhsca-lookup.ts",
     "nhsca:all-years": "tsx scripts/show-nhsca-all-years.ts",
     "store:seed-2026-gear": "tsx scripts/seed-nc-united-2026-gear-store.ts",
+    "athlete:upload-highlight": "tsx scripts/upload-athlete-highlight-video.ts",
     "nhsca:roster-tsv-to-sql": "node scripts/tsv-roster-to-nhsca-placements-sql.mjs",
     "test": "vitest run",
     "test:watch": "vitest",

@@ -1,0 +1,41 @@
+/** Shared NC United liability waiver — Blue membership, practice drop-ins, etc. */
+
+export const NC_UNITED_LIABILITY_WAIVER_TYPE = "nc_united_liability"
+export const NC_UNITED_LIABILITY_WAIVER_VERSION = "1"
+
+export const NC_UNITED_LIABILITY_WAIVER_TEXT = `WAIVER AND RELEASE OF LIABILITY
+
+This Waiver and Release applies to all activities, practices, competitions, events, and related activities organized by NC Wrestling United ("NC United"), including those conducted at facilities owned or operated by The University of North Carolina at Chapel Hill or any other third party.
+
+I, the undersigned parent or legal guardian of the minor participant, acknowledge and agree as follows:
+
+Assumption of Risk
+I understand that wrestling and related training activities are inherently dangerous contact activities. Risks include, but are not limited to: sprains, strains, fractures, dislocations; concussions and head injuries; paralysis or catastrophic injury; permanent disability; death; injuries resulting from contact with other participants; injuries arising from facility conditions or equipment; risks associated with travel to and from events.
+
+I knowingly and voluntarily assume all risks, both known and unknown, even if arising from the negligence of the Released Parties.
+
+Release of Liability
+To the fullest extent permitted by North Carolina law, I release and forever discharge: NC Wrestling United; its officers, directors, employees, volunteers, and agents; The University of North Carolina at Chapel Hill; The University of North Carolina System; The State of North Carolina; their trustees, officers, employees, agents, and representatives (collectively, the "Released Parties") from any and all claims, demands, causes of action, damages, or liabilities arising out of or related to participation in NC United activities, including those caused by negligence.
+
+Indemnification
+I agree to indemnify and hold harmless the Released Parties from any claims arising from the participant's involvement in NC United activities.
+
+Medical Authorization
+I authorize NC United to obtain emergency medical treatment for the participant if necessary. I understand I am financially responsible for any resulting medical expenses.
+
+Insurance
+I understand NC United may carry insurance but that I am responsible for maintaining adequate personal medical insurance for the participant.
+
+Media Release
+I grant permission for photographs and video recordings of the participant to be used for promotional purposes.
+
+Governing Law and Venue
+This agreement shall be governed by the laws of the State of North Carolina. Any disputes shall be brought in a court of competent jurisdiction within North Carolina.
+
+Severability
+If any portion of this agreement is deemed invalid, the remaining provisions shall remain in full force and effect.
+
+I acknowledge that I have read and understand this Waiver and Release of Liability and sign it voluntarily on behalf of myself and the minor participant.`
+
+export const NC_UNITED_LIABILITY_WAIVER_CHECKBOX_LABEL =
+  "I have read and understand this Waiver and Release of Liability and sign it voluntarily on behalf of myself and the minor participant."
