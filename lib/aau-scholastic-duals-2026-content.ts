@@ -35,6 +35,18 @@ export const AAU_SCHOLASTIC_ALL_CHECKOUT_LINES: AauScholasticPriceLine[] = [
 
 const AAU_SCHOLASTIC_APPAREL_LINE_IDS = new Set(["singlet", "long_sleeve", "shorts", "tee"])
 
+export const AAU_SCHOLASTIC_MAX_LINE_QUANTITY = 8
+
+export type AauScholasticLineQuantity = {
+  id: string
+  quantity: number
+}
+
+export type AauScholasticLineSelection = {
+  line: AauScholasticPriceLine
+  quantity: number
+}
+
 export function sumAauScholasticLines(lines: AauScholasticPriceLine[]): number {
   return lines.reduce((s, line) => s + line.dollars, 0)
 }
@@ -49,37 +61,148 @@ export const AAU_SCHOLASTIC_PRICING_CONTEXT =
 
 export const AAU_SCHOLASTIC_DEFAULT_SELECTED_LINE_IDS = AAU_SCHOLASTIC_ALL_CHECKOUT_LINES.map((line) => line.id)
 
+/** Empty — parents opt in to each line item. */
+export function aauScholasticDefaultLineQuantities(): Record<string, number> {
+  return {}
+}
+
+/** Select-all control (~$920 per athlete). */
+export function aauScholasticFullBundleLineQuantities(): Record<string, number> {
+  return Object.fromEntries(AAU_SCHOLASTIC_ALL_CHECKOUT_LINES.map((line) => [line.id, 1]))
+}
+
+export type AauScholasticApparelSizesInput = {
+  singletSize: string
+  shortsSize: string
+  longSleeveSize: string
+  teeSize: string
+}
+
+export function aauScholasticApparelLineSelected(
+  quantities: Record<string, number>,
+  lineId: string,
+): boolean {
+  return (quantities[lineId] ?? 0) > 0
+}
+
+/** Returns an error message or null if valid. */
+export function validateAauScholasticApparelSizes(
+  selections: readonly AauScholasticLineSelection[],
+  sizes: AauScholasticApparelSizesInput,
+): string | null {
+  const has = (id: string) => selections.some((s) => s.line.id === id && s.quantity > 0)
+  if (has("singlet") && !sizes.singletSize.trim()) return "Select a singlet size."
+  if (has("shorts") && !sizes.shortsSize.trim()) return "Select a shorts size."
+  if (has("long_sleeve") && !sizes.longSleeveSize.trim()) return "Select a long sleeve size."
+  if (has("tee") && !sizes.teeSize.trim()) return "Select a tee size."
+  return null
+}
+
+export function parseAauScholasticLineQuantities(input: {
+  selectedLines?: unknown
+  selectedLineIds?: unknown
+}): AauScholasticLineQuantity[] {
+  const allowed = new Set(AAU_SCHOLASTIC_ALL_CHECKOUT_LINES.map((line) => line.id))
+  const clampQty = (n: number) =>
+    Math.min(AAU_SCHOLASTIC_MAX_LINE_QUANTITY, Math.max(1, Math.floor(n) || 1))
+
+  if (Array.isArray(input.selectedLines)) {
+    const out: AauScholasticLineQuantity[] = []
+    for (const raw of input.selectedLines) {
+      if (!raw || typeof raw !== "object") continue
+      const id = typeof (raw as { id?: string }).id === "string" ? (raw as { id: string }).id.trim() : ""
+      if (!allowed.has(id)) continue
+      const quantity = clampQty(Number((raw as { quantity?: number }).quantity))
+      out.push({ id, quantity })
+    }
+    return out
+  }
+
+  const ids = Array.isArray(input.selectedLineIds)
+    ? input.selectedLineIds.filter((id): id is string => typeof id === "string")
+    : []
+  return aauScholasticLinesFromSelectedIds(ids).map((line) => ({ id: line.id, quantity: 1 }))
+}
+
+export function aauScholasticLineSelectionsFromQuantities(
+  quantities: readonly AauScholasticLineQuantity[],
+): AauScholasticLineSelection[] {
+  const lineById = new Map(AAU_SCHOLASTIC_ALL_CHECKOUT_LINES.map((line) => [line.id, line]))
+  return quantities
+    .map(({ id, quantity }) => {
+      const line = lineById.get(id)
+      if (!line || quantity < 1) return null
+      return { line, quantity: Math.min(AAU_SCHOLASTIC_MAX_LINE_QUANTITY, Math.floor(quantity)) }
+    })
+    .filter((x): x is AauScholasticLineSelection => x != null)
+}
+
+export function aauScholasticLineQuantitiesFromRecord(
+  record: Record<string, number>,
+): AauScholasticLineQuantity[] {
+  return Object.entries(record)
+    .filter(([, qty]) => qty > 0)
+    .map(([id, quantity]) => ({ id, quantity: Math.min(AAU_SCHOLASTIC_MAX_LINE_QUANTITY, Math.floor(quantity)) }))
+    .filter(({ id }) => AAU_SCHOLASTIC_ALL_CHECKOUT_LINES.some((line) => line.id === id))
+}
+
 export function aauScholasticLinesFromSelectedIds(ids: readonly string[]): AauScholasticPriceLine[] {
   const allowed = new Set(AAU_SCHOLASTIC_ALL_CHECKOUT_LINES.map((line) => line.id))
   const picked = new Set(ids.filter((id) => allowed.has(id)))
   return AAU_SCHOLASTIC_ALL_CHECKOUT_LINES.filter((line) => picked.has(line.id))
 }
 
-export function aauScholasticFeesFromSelectedLines(lines: AauScholasticPriceLine[]): {
+export function sumAauScholasticSelections(selections: readonly AauScholasticLineSelection[]): number {
+  return selections.reduce((s, { line, quantity }) => s + line.dollars * quantity, 0)
+}
+
+export function aauScholasticFeesFromSelections(selections: readonly AauScholasticLineSelection[]): {
   reg_fee_cents: number
   apparel_fee_cents: number
 } {
   let reg_fee_cents = 0
   let apparel_fee_cents = 0
-  for (const line of lines) {
-    const cents = line.dollars * 100
+  for (const { line, quantity } of selections) {
+    const cents = line.dollars * 100 * quantity
     if (AAU_SCHOLASTIC_APPAREL_LINE_IDS.has(line.id)) apparel_fee_cents += cents
     else reg_fee_cents += cents
   }
   return { reg_fee_cents, apparel_fee_cents }
 }
 
-export function aauScholasticCheckoutLineItemsFromPriceLines(lines: AauScholasticPriceLine[]): NhscaCheckoutLineItem[] {
-  return lines.map((line) => ({
+/** @deprecated Use aauScholasticFeesFromSelections */
+export function aauScholasticFeesFromSelectedLines(lines: AauScholasticPriceLine[]): {
+  reg_fee_cents: number
+  apparel_fee_cents: number
+} {
+  return aauScholasticFeesFromSelections(lines.map((line) => ({ line, quantity: 1 })))
+}
+
+export function aauScholasticCheckoutLineItemsFromSelections(
+  selections: readonly AauScholasticLineSelection[],
+): NhscaCheckoutLineItem[] {
+  return selections.map(({ line, quantity }) => ({
     key: line.id,
-    name: line.label,
+    name: quantity > 1 ? `${line.label} (×${quantity})` : line.label,
     amountCents: line.dollars * 100,
-    quantity: 1,
+    quantity,
   }))
 }
 
+export function encodeAauScholasticCheckoutLinesMetadataFromSelections(
+  selections: readonly AauScholasticLineSelection[],
+): string {
+  return encodeLineItemsMetadata(aauScholasticCheckoutLineItemsFromSelections(selections))
+}
+
+/** @deprecated Use encodeAauScholasticCheckoutLinesMetadataFromSelections */
+export function aauScholasticCheckoutLineItemsFromPriceLines(lines: AauScholasticPriceLine[]): NhscaCheckoutLineItem[] {
+  return aauScholasticCheckoutLineItemsFromSelections(lines.map((line) => ({ line, quantity: 1 })))
+}
+
+/** @deprecated Use encodeAauScholasticCheckoutLinesMetadataFromSelections */
 export function encodeAauScholasticCheckoutLinesMetadataFromLines(lines: AauScholasticPriceLine[]): string {
-  return encodeLineItemsMetadata(aauScholasticCheckoutLineItemsFromPriceLines(lines))
+  return encodeAauScholasticCheckoutLinesMetadataFromSelections(lines.map((line) => ({ line, quantity: 1 })))
 }
 
 export const AAU_SCHOLASTIC_REG_FEE_CENTS = 75 * 100
@@ -266,7 +389,7 @@ export const AAU_SCHOLASTIC_PARENT_FAQ = [
   },
   {
     q: "What does the registration fee cover?",
-    a: "You choose at checkout. Options are tournament registration ($75), singlet ($65), long sleeve ($40), shorts ($40), tee ($30), hotel and van ($315), and flight ($355). Most families select the full bundle (~$920 at checkout). Meals and local ground transport are extra. NC United shares travel details in the Team Hub after you register.",
+    a: "You choose at checkout. Options are tournament registration ($75), singlet ($65), long sleeve ($40), shorts ($40), tee ($30), hotel and van ($315), and flight ($355). Use quantities when registering more than one athlete in the same checkout. Most families select the full bundle (~$920 per athlete). Meals and local ground transport are extra.",
   },
   {
     q: "How do I pay?",
