@@ -13,7 +13,7 @@ export function AauScholasticGearPreview({ className }: { className?: string }) 
   return (
     <div className={cn("space-y-6", className)} aria-label="NC United team gear and apparel">
       <p className={scholasticInsetClass + " text-sm leading-relaxed text-white/85"}>
-        {AAU_SCHOLASTIC_GEAR_REUSE_NOTE} Preview each piece below before you select apparel lines at registration.
+        {AAU_SCHOLASTIC_GEAR_REUSE_NOTE}
       </p>
 
       <div className="space-y-3">

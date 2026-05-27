@@ -45,7 +45,6 @@ import {
   aauPanelTitleClass,
   aauPrimaryBtnClass,
   aauInputClass,
-  aauSelectTriggerClass,
   aauFormLabelClass,
   aauAccentHeaderClass,
 } from "@/components/national-team/aau-scholastic-theme"
@@ -97,7 +96,6 @@ export default function NationalTeamRegisterEventPage() {
   const [athlete_last_name, setAthleteLastName] = useState("")
   const [athlete_email, setAthleteEmail] = useState("")
   const [athlete_phone, setAthletePhone] = useState("")
-  const [athlete_dob, setAthleteDob] = useState("")
   const [parent_email, setParentEmail] = useState("")
   const [parent_name, setParentName] = useState("")
   const [high_school, setHighSchool] = useState("")
@@ -148,21 +146,27 @@ export default function NationalTeamRegisterEventPage() {
   const handleSubmitForm = async (e: FormEvent) => {
     e.preventDefault()
     setFormError("")
-    if (!athlete_first_name.trim() || !athlete_last_name.trim() || !athlete_email.trim()) {
-      setFormError("Athlete first name, last name, and email are required.")
+    if (!athlete_first_name.trim() || !athlete_last_name.trim()) {
+      setFormError("Athlete first and last name are required.")
       return
     }
     if (!parent_email.trim()) {
       setFormError("Parent email is required.")
       return
     }
-    if (!high_school.trim() || !graduation_year || !weight_class) {
-      setFormError("High school, graduation year, and weight class are required.")
+    if (isAauRegistration && !parent_name.trim()) {
+      setFormError("Parent/guardian name is required.")
       return
     }
-    if (isAauRegistration && !athlete_dob.trim()) {
-      setFormError("Athlete date of birth is required.")
-      return
+    if (!isAauRegistration) {
+      if (!athlete_email.trim()) {
+        setFormError("Athlete email is required.")
+        return
+      }
+      if (!high_school.trim() || !graduation_year || !weight_class) {
+        setFormError("High school, graduation year, and weight class are required.")
+        return
+      }
     }
     if (isAauRegistration && aauScholasticLineQuantitiesFromRecord(lineQuantities).length === 0) {
       setItemsError("Select at least one item to checkout.")
@@ -197,6 +201,11 @@ export default function NationalTeamRegisterEventPage() {
           ...(isAauRegistration ? {} : { code: code.trim() }),
           eventSlug,
           returnUrlSlug: urlSlug,
+          athlete_first_name: athlete_first_name.trim(),
+          athlete_last_name: athlete_last_name.trim(),
+          parent_email: parent_email.trim(),
+          parent_name: parent_name.trim() || null,
+          code_of_conduct_accepted: true,
           ...(isAauRegistration
             ? {
                 selectedLines: aauScholasticLineQuantitiesFromRecord(lineQuantities),
@@ -205,20 +214,15 @@ export default function NationalTeamRegisterEventPage() {
                 long_sleeve_size: apparelSizes.longSleeveSize,
                 tee_size: apparelSizes.teeSize,
               }
-            : {}),
-          athlete_first_name: athlete_first_name.trim(),
-          athlete_last_name: athlete_last_name.trim(),
-          athlete_email: athlete_email.trim(),
-          athlete_phone: athlete_phone.trim() || null,
-          ...(isAauRegistration ? { athlete_dob: athlete_dob.trim() } : {}),
-          parent_email: parent_email.trim(),
-          parent_name: parent_name.trim() || null,
-          high_school: high_school.trim(),
-          club_team: club_team.trim() || null,
-          graduation_year: graduation_year.trim(),
-          primary_weight: weight_class.trim(),
-          secondary_weight: null,
-          code_of_conduct_accepted: true,
+            : {
+                athlete_email: athlete_email.trim(),
+                athlete_phone: athlete_phone.trim() || null,
+                high_school: high_school.trim(),
+                club_team: club_team.trim() || null,
+                graduation_year: graduation_year.trim(),
+                primary_weight: weight_class.trim(),
+                secondary_weight: null,
+              }),
         }),
       })
       const data = await res.json().catch(() => ({}))
@@ -277,7 +281,7 @@ export default function NationalTeamRegisterEventPage() {
           <h1 className={pageTitleClass}>{eventName} – Registration</h1>
           <p className={pageDescClass}>
             {isAauRegistration
-              ? "Enter athlete info, select items, and pay at Stripe checkout."
+              ? "Enter athlete and parent info, select items, and pay at Stripe checkout."
               : "Invite-only. Enter your code to continue."}
           </p>
           <a
@@ -415,7 +419,8 @@ export default function NationalTeamRegisterEventPage() {
               <header className={aauPanelHeaderClass}>
                 <h2 className={aauPanelTitleClass}>Event registration</h2>
                 <p className={aauPanelDescClass}>
-                  Register for {eventName}. Select the items you want, then pay securely at Stripe checkout.
+                  Enter athlete and parent contact info, select what you need, then pay at Stripe checkout. School,
+                  weight, and other roster details are pulled from RecruitNC when we match the athlete name.
                 </p>
               </header>
               <div className="p-4 sm:p-5 md:p-6">
@@ -431,70 +436,15 @@ export default function NationalTeamRegisterEventPage() {
                     </div>
                   </div>
                   <div>
-                    <Label htmlFor="athlete_email" className={aauFormLabelClass}>Athlete email *</Label>
-                    <Input id="athlete_email" type="email" className={aauInputClass} value={athlete_email} onChange={(e) => setAthleteEmail(e.target.value)} required />
-                  </div>
-                  <div>
-                    <Label htmlFor="athlete_phone" className={aauFormLabelClass}>Athlete phone</Label>
-                    <Input id="athlete_phone" type="tel" className={aauInputClass} value={athlete_phone} onChange={(e) => setAthletePhone(e.target.value)} />
-                  </div>
-                  <div>
-                    <Label htmlFor="athlete_dob" className={aauFormLabelClass}>Athlete date of birth *</Label>
-                    <Input
-                      id="athlete_dob"
-                      type="date"
-                      className={aauInputClass}
-                      value={athlete_dob}
-                      onChange={(e) => setAthleteDob(e.target.value)}
-                      required
-                    />
-                    <p className="mt-1 text-xs text-white/55">Required for AAU entry. Stored as MM/DD/YYYY.</p>
+                    <Label htmlFor="parent_name" className={aauFormLabelClass}>Parent/guardian name *</Label>
+                    <Input id="parent_name" className={aauInputClass} value={parent_name} onChange={(e) => setParentName(e.target.value)} required />
                   </div>
                   <div>
                     <Label htmlFor="parent_email" className={aauFormLabelClass}>Parent/guardian email *</Label>
                     <Input id="parent_email" type="email" className={aauInputClass} value={parent_email} onChange={(e) => setParentEmail(e.target.value)} required />
                   </div>
-                  <div>
-                    <Label htmlFor="parent_name" className={aauFormLabelClass}>Parent/guardian name</Label>
-                    <Input id="parent_name" className={aauInputClass} value={parent_name} onChange={(e) => setParentName(e.target.value)} />
-                  </div>
-                  <div>
-                    <Label htmlFor="high_school" className={aauFormLabelClass}>High school *</Label>
-                    <Input id="high_school" className={aauInputClass} value={high_school} onChange={(e) => setHighSchool(e.target.value)} required />
-                  </div>
-                  <div>
-                    <Label htmlFor="club_team" className={aauFormLabelClass}>Club team</Label>
-                    <Input id="club_team" className={aauInputClass} value={club_team} onChange={(e) => setClubTeam(e.target.value)} placeholder="Optional" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label className={aauFormLabelClass}>Graduation year *</Label>
-                      <Select value={graduation_year} onValueChange={setGraduationYear} required>
-                        <SelectTrigger className={aauSelectTriggerClass}><SelectValue placeholder="Select" /></SelectTrigger>
-                        <SelectContent>
-                          {GRAD_YEARS.map((y) => (
-                            <SelectItem key={y} value={y}>{y}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label className={aauFormLabelClass}>Weight class *</Label>
-                      <Select value={weight_class} onValueChange={setWeightClass} required>
-                        <SelectTrigger className={aauSelectTriggerClass}><SelectValue placeholder="Select weight" /></SelectTrigger>
-                        <SelectContent>
-                          {registerWeightClasses.map((w) => (
-                            <SelectItem key={w} value={w}>
-                              {formatNationalTeamWeightLabel(w, registerWeightLabelVariant)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <p className="text-sm text-white/90 bg-[#B31B1B]/15 border border-[#B31B1B]/30 rounded-lg px-3 py-2">
-                    <strong>Weights are +5 lbs.</strong> Select the weight class your athlete is wrestling for {AAU_SCHOLASTIC_TEAM_LABEL}.
-                    Registering a sibling? Submit a separate registration for each athlete.
+                  <p className="text-sm text-white/70">
+                    Registering more than one athlete? Submit a separate registration for each wrestler.
                   </p>
                   <AauScholasticCheckoutItems
                     lineQuantities={lineQuantities}

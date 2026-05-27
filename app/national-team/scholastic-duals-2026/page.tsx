@@ -26,7 +26,6 @@ import {
   AAU_SCHOLASTIC_TOURNAMENT_CONTACT,
   AAU_SCHOLASTIC_WEIGHT_RULES,
   AAU_SCHOLASTIC_WEIGHTS_DISPLAY,
-  AAU_SCHOLASTIC_FLEXIBILITY_NOTES,
   AAU_SCHOLASTIC_NC_UNITED_TEAM,
   AAU_SCHOLASTIC_TEAM_LABEL,
   formatAauScholasticDollars,
@@ -453,16 +452,6 @@ export default function ScholasticDuals2026Page() {
           headerClassName={aauAccentHeaderClass}
           contentClassName="space-y-4 text-sm md:text-base"
         >
-          <p>
-            Registration is flexible — check only the lines your family needs. Tournament entry, individual apparel
-            pieces, hotel/team van, and flight are each optional at checkout. Already have NC United gear from NHSCA
-            Duals? Skip duplicate apparel and pay for entry and travel only.
-          </p>
-          <ul className="list-disc pl-5 space-y-2 text-white/75 text-sm">
-            {AAU_SCHOLASTIC_FLEXIBILITY_NOTES.map((note) => (
-              <li key={note}>{note}</li>
-            ))}
-          </ul>
           <AauScholasticPricingTable />
         </ScholasticDualsSection>
 

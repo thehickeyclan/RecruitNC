@@ -1,15 +1,13 @@
 import {
   AAU_SCHOLASTIC_CHECKOUT_LINES,
   AAU_SCHOLASTIC_CHECKOUT_TOTAL_DOLLARS,
-  AAU_SCHOLASTIC_FLEXIBILITY_NOTES,
-  AAU_SCHOLASTIC_MEALS_NOT_INCLUDED,
-  AAU_SCHOLASTIC_PRICING_CONTEXT,
+  AAU_SCHOLASTIC_PRICING_INTRO,
+  AAU_SCHOLASTIC_PRICING_NOTES,
   AAU_SCHOLASTIC_TRAVEL_LINES,
   AAU_SCHOLASTIC_TRAVEL_TOTAL_DOLLARS,
   formatAauScholasticDollars,
   type AauScholasticPriceLine,
 } from "@/lib/aau-scholastic-duals-2026-content"
-import { scholasticInsetClass } from "@/components/national-team/scholastic-duals-section"
 import { cn } from "@/lib/utils"
 
 function PriceRows({ lines }: { lines: AauScholasticPriceLine[] }) {
@@ -28,36 +26,26 @@ function PriceRows({ lines }: { lines: AauScholasticPriceLine[] }) {
 export function AauScholasticPricingTable({ compact = false }: { compact?: boolean }) {
   return (
     <div className={compact ? "space-y-4" : "space-y-6"}>
-      <p className="text-sm text-white/75 leading-relaxed">{AAU_SCHOLASTIC_PRICING_CONTEXT}</p>
-      <div className="space-y-3">
-        {AAU_SCHOLASTIC_FLEXIBILITY_NOTES.map((note) => (
-          <p key={note} className={scholasticInsetClass + " text-sm leading-relaxed"}>
-            {note}
-          </p>
+      <p className="text-sm text-white/75 leading-relaxed">{AAU_SCHOLASTIC_PRICING_INTRO}</p>
+      <ul className="list-disc pl-5 space-y-1.5 text-sm text-white/65 leading-relaxed">
+        {AAU_SCHOLASTIC_PRICING_NOTES.map((note) => (
+          <li key={note}>{note}</li>
         ))}
-      </div>
+      </ul>
       <div>
-        <p className="font-semibold text-white mb-2">Registration &amp; apparel (à la carte)</p>
+        <p className="font-semibold text-white mb-2">Registration &amp; apparel</p>
         <PriceRows lines={AAU_SCHOLASTIC_CHECKOUT_LINES} />
         <p className={cn("mt-2 text-sm text-right tabular-nums text-white/55")}>
-          Example if you selected every apparel + registration line:{" "}
-          {formatAauScholasticDollars(AAU_SCHOLASTIC_CHECKOUT_TOTAL_DOLLARS)}
+          All registration &amp; apparel lines: {formatAauScholasticDollars(AAU_SCHOLASTIC_CHECKOUT_TOTAL_DOLLARS)}
         </p>
       </div>
       <div>
-        <p className="font-semibold text-white mb-1">Travel (à la carte)</p>
-        {!compact ? (
-          <p className="text-sm text-white/60 mb-2">
-            Hotel &amp; team van includes lodging and NC United van transportation. Add flight only if your athlete
-            needs a seat from the team block.
-          </p>
-        ) : null}
+        <p className="font-semibold text-white mb-2">Travel</p>
         <PriceRows lines={AAU_SCHOLASTIC_TRAVEL_LINES} />
         <p className="mt-2 text-sm text-right tabular-nums text-white/55">
-          Example if you selected both travel lines: {formatAauScholasticDollars(AAU_SCHOLASTIC_TRAVEL_TOTAL_DOLLARS)}
+          Both travel lines: {formatAauScholasticDollars(AAU_SCHOLASTIC_TRAVEL_TOTAL_DOLLARS)}
         </p>
       </div>
-      <p className={scholasticInsetClass}>{AAU_SCHOLASTIC_MEALS_NOT_INCLUDED}</p>
     </div>
   )
 }

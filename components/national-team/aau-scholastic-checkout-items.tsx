@@ -21,7 +21,6 @@ import {
   aauScholasticLineSelectionsFromQuantities,
   formatAauScholasticDollars,
   AAU_SCHOLASTIC_GEAR_REUSE_NOTE,
-  AAU_SCHOLASTIC_MEALS_NOT_INCLUDED,
   sumAauScholasticSelections,
   type AauScholasticApparelSizesInput,
   type AauScholasticPriceLine,
@@ -329,6 +328,9 @@ export function AauScholasticCheckoutItems({
           <p className={isDark ? "text-sm font-semibold text-white" : "text-sm font-semibold text-[#002147]"}>
             Apparel sizes
           </p>
+          <p className={isDark ? "text-xs text-white/55 -mt-1" : "text-xs text-gray-500 -mt-1"}>
+            Choose a size for each apparel item you selected above.
+          </p>
           <div className="grid gap-3 sm:grid-cols-2">
             {showSinglet ? (
               <GearSizeSelect
@@ -391,10 +393,7 @@ export function AauScholasticCheckoutItems({
 
       {error ? <p className="text-sm text-red-400">{error}</p> : null}
       <p className={isDark ? "text-xs text-white/50 leading-relaxed" : "text-xs text-gray-500 leading-relaxed"}>
-        {AAU_SCHOLASTIC_GEAR_REUSE_NOTE}
-      </p>
-      <p className={isDark ? "text-xs text-white/50" : "text-xs text-gray-500"}>
-        {AAU_SCHOLASTIC_MEALS_NOT_INCLUDED}
+        {AAU_SCHOLASTIC_GEAR_REUSE_NOTE} Meals are not included.
       </p>
     </div>
   )
