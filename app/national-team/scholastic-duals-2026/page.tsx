@@ -26,8 +26,7 @@ import {
   AAU_SCHOLASTIC_TOURNAMENT_CONTACT,
   AAU_SCHOLASTIC_WEIGHT_RULES,
   AAU_SCHOLASTIC_WEIGHTS_DISPLAY,
-  AAU_SCHOLASTIC_CHECKOUT_TOTAL_DOLLARS,
-  AAU_SCHOLASTIC_ESTIMATED_TRIP_TOTAL_DOLLARS,
+  AAU_SCHOLASTIC_FLEXIBILITY_NOTES,
   formatAauScholasticDollars,
 } from "@/lib/aau-scholastic-duals-2026-content"
 import { AauScholasticPricingTable } from "@/components/national-team/aau-scholastic-pricing-table"
@@ -69,7 +68,6 @@ const NAV = [
   { href: "#aau-official", label: "AAU rules" },
   { href: "#weights", label: "Weights" },
   { href: "#cost", label: "Cost" },
-  { href: "#your-payment", label: "Your payment" },
   { href: "#expectations", label: "Expectations" },
   { href: "#register", label: "Register" },
   { href: "#faq", label: "FAQ" },
@@ -226,7 +224,7 @@ export default function ScholasticDuals2026Page() {
         >
           <AauScholasticRosterTable rows={AAU_SCHOLASTIC_DUALS_2026_ROSTER} className="mx-5 mb-5 md:mx-6 md:mb-6" />
           <p className="text-xs text-white/45 px-5 pb-5 md:px-6">
-            No 175 or HWT starter at this time — alternates and any changes will be posted in the Team Hub.
+            175 and HWT are open starter slots (TBD). Alternates and any roster changes will be posted in the Team Hub.
           </p>
         </ScholasticDualsSection>
 
@@ -312,8 +310,8 @@ export default function ScholasticDuals2026Page() {
               ))}
             </div>
             <p className="text-sm text-white/65">
-              Hotel and van transport are selectable at registration checkout. Room block and van details are coordinated
-              through NC United after you register.
+              Hotel &amp; team van are selectable at registration checkout — lodging plus NC United van transportation.
+              Room block and van schedule details are coordinated through NC United after you register.
             </p>
           </div>
 
@@ -419,14 +417,15 @@ export default function ScholasticDuals2026Page() {
           contentClassName="space-y-4 text-sm md:text-base"
         >
           <p>
-            At registration, check each item you want — registration, apparel, hotel/van, and flight. Most families
-            select the full bundle ({formatAauScholasticDollars(AAU_SCHOLASTIC_ESTIMATED_TRIP_TOTAL_DOLLARS)} at
-            checkout). Plan about{" "}
-            <strong className="text-white">
-              {formatAauScholasticDollars(AAU_SCHOLASTIC_ESTIMATED_TRIP_TOTAL_DOLLARS)} all-in
-            </strong>{" "}
-            per athlete before meals and local ground transport.
+            Registration is flexible — check only the lines your family needs. Tournament entry, individual apparel
+            pieces, hotel/team van, and flight are each optional at checkout. Already have NC United gear from NHSCA
+            Duals? Skip duplicate apparel and pay for entry and travel only.
           </p>
+          <ul className="list-disc pl-5 space-y-2 text-white/75 text-sm">
+            {AAU_SCHOLASTIC_FLEXIBILITY_NOTES.map((note) => (
+              <li key={note}>{note}</li>
+            ))}
+          </ul>
           <AauScholasticPricingTable />
         </ScholasticDualsSection>
 
@@ -453,7 +452,7 @@ export default function ScholasticDuals2026Page() {
             {[
               "Open the registration link below.",
               "Complete athlete & parent/guardian information.",
-              "Check each item you want (registration, apparel, hotel/van, flight).",
+              "Select only the items your family needs (registration, apparel, hotel/team van, flight).",
               "Pay securely at Stripe checkout — receipt emailed automatically.",
               "After payment, go to the Team Hub for gear sizes, travel, and updates.",
             ].map((step, i) => (

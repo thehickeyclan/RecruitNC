@@ -42,13 +42,26 @@ export function AauScholasticRosterTable({
           </tr>
         </thead>
         <tbody>
-          {rows.map((row, i) => (
-            <tr key={row.weightLabel} className={cn("border-t border-white/10", i % 2 === 1 && "bg-white/[0.03]")}>
+          {rows.map((row, i) => {
+            const open = row.openSlot || !row.wrestler.trim()
+            return (
+            <tr
+              key={row.weightLabel}
+              className={cn(
+                "border-t border-white/10",
+                i % 2 === 1 && "bg-white/[0.03]",
+                open && "bg-[#B31B1B]/5",
+              )}
+            >
               <td className={cn("py-2.5 px-3 font-semibold tabular-nums whitespace-nowrap", aauPriceClass)}>
                 {row.weightLabel}
               </td>
               <td className="py-2.5 px-3 font-medium text-white">
-                {row.wrestler.trim() ? row.wrestler : <span className="text-white/35 font-normal">TBD</span>}
+                {row.wrestler.trim() ? (
+                  row.wrestler
+                ) : (
+                  <span className="text-[#FF7070]/90 font-normal italic">Open — TBD</span>
+                )}
               </td>
               <td className="py-2.5 px-3 text-white/75 tabular-nums whitespace-nowrap">
                 {row.dob.trim() ? row.dob : <span className="text-white/35">—</span>}
@@ -57,7 +70,8 @@ export function AauScholasticRosterTable({
                 <Cell text={row.cell} />
               </td>
             </tr>
-          ))}
+            )
+          })}
         </tbody>
       </table>
     </div>

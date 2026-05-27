@@ -23,7 +23,7 @@ export const AAU_SCHOLASTIC_CHECKOUT_LINES: AauScholasticPriceLine[] = [
 ]
 
 export const AAU_SCHOLASTIC_TRAVEL_LINES: AauScholasticPriceLine[] = [
-  { id: "hotel_van", label: "Hotel and Van", dollars: 315 },
+  { id: "hotel_van", label: "Hotel & team van", dollars: 315 },
   { id: "flight", label: "Flight", dollars: 355 },
 ]
 
@@ -57,7 +57,22 @@ export const AAU_SCHOLASTIC_ESTIMATED_TRIP_TOTAL_DOLLARS =
   AAU_SCHOLASTIC_CHECKOUT_TOTAL_DOLLARS + AAU_SCHOLASTIC_TRAVEL_TOTAL_DOLLARS
 
 export const AAU_SCHOLASTIC_PRICING_CONTEXT =
-  "Same model as NHSCA Duals: most families purchased the full bundle. At registration, check each item you want — tournament entry, apparel, hotel/van, and flight — and pay only for your selection in one Stripe checkout."
+  "Flexible à la carte checkout — nothing is pre-selected. Choose tournament entry, individual apparel pieces, hotel/team van, and/or flight, then pay only for what you select in one Stripe checkout."
+
+export const AAU_SCHOLASTIC_GEAR_REUSE_NOTE =
+  "Already purchased NC United gear for NHSCA Duals? You can skip duplicate apparel at AAU checkout — the same singlet and team apparel works for this event."
+
+export const AAU_SCHOLASTIC_FLIGHT_NOTE =
+  "NC United locked in a block of 18 flights at a competitive rate before broader World Cup travel demand pushed summer fares higher. Flight inventory is limited — select the flight line at registration if your athlete needs a seat."
+
+export const AAU_SCHOLASTIC_FLEXIBILITY_NOTES = [
+  AAU_SCHOLASTIC_GEAR_REUSE_NOTE,
+  AAU_SCHOLASTIC_FLIGHT_NOTE,
+] as const
+
+/** Meals are family-paid; hotel/van line includes NC United van transportation. */
+export const AAU_SCHOLASTIC_MEALS_NOT_INCLUDED =
+  "Meals are not included in checkout. Hotel & team van covers lodging and NC United van transportation between the hotel, venue, and team activities."
 
 export const AAU_SCHOLASTIC_DEFAULT_SELECTED_LINE_IDS = AAU_SCHOLASTIC_ALL_CHECKOUT_LINES.map((line) => line.id)
 
@@ -66,7 +81,7 @@ export function aauScholasticDefaultLineQuantities(): Record<string, number> {
   return {}
 }
 
-/** Select-all control (~$920 per athlete). */
+/** Optional shortcut — selects every checkout line; parents still pay only for checked items at Stripe. */
 export function aauScholasticFullBundleLineQuantities(): Record<string, number> {
   return Object.fromEntries(AAU_SCHOLASTIC_ALL_CHECKOUT_LINES.map((line) => [line.id, 1]))
 }
@@ -417,7 +432,15 @@ export const AAU_SCHOLASTIC_PARENT_FAQ = [
   },
   {
     q: "What does the registration fee cover?",
-    a: "You choose at checkout. Options are tournament registration ($75), singlet ($65), long sleeve ($40), shorts ($40), tee ($30), hotel and van ($315), and flight ($355). Use quantities when registering more than one athlete in the same checkout. Most families select the full bundle (~$920 per athlete). Meals and local ground transport are extra.",
+    a: "You choose at checkout — nothing is bundled by default. Options are tournament registration ($75), singlet ($65), long sleeve ($40), shorts ($40), tee ($30), hotel & team van ($315 — lodging plus NC United van transportation), and flight ($355). Select only the lines your family needs; use quantities when registering more than one athlete in the same checkout. Meals are extra.",
+  },
+  {
+    q: "Can we reuse NHSCA Duals gear for AAU?",
+    a: "Yes. If your athlete already has the NC United singlet and apparel from NHSCA Duals, skip those apparel lines at AAU checkout and register for tournament entry, travel, and anything else you still need.",
+  },
+  {
+    q: "Why is the flight line priced at $355?",
+    a: "NC United secured a block of 18 flights at a competitive rate before broader World Cup travel demand pushed summer fares higher. Inventory is limited — families who need a flight should select that line at registration.",
   },
   {
     q: "How do I pay?",
