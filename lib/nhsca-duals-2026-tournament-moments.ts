@@ -54,6 +54,15 @@ export const NHSCA_DUALS_2026_XAN_MOODY_HIGHLIGHT_REEL_VIDEO =
 export const NHSCA_DUALS_2026_JAXON_THOMAS_HIGHLIGHT_REEL_VIDEO =
   "/national-team/nhsca-duals-2026/videos/jaxon-thomas-highlight.mov"
 
+export const NHSCA_DUALS_2026_CORY_THOMAS_PORTRAIT_PHOTO =
+  "/national-team/nhsca-duals-2026/media/cory-thomas-portrait.png"
+
+export const NHSCA_DUALS_2026_MAC_JOHNSON_PORTRAIT_PHOTO =
+  "/national-team/nhsca-duals-2026/media/mac-johnson-portrait.png"
+
+export const NHSCA_DUALS_2026_SAMMY_GANTT_PORTRAIT_PHOTO =
+  "/national-team/nhsca-duals-2026/media/sammy-gantt-portrait.png"
+
 export const NHSCA_DUALS_2026_NC_UNITED_APPAREL_VIDEO =
   "/national-team/nhsca-duals-2026/videos/nc-united-apparel.mov"
 

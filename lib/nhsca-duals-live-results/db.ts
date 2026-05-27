@@ -39,36 +39,117 @@ function isMissingTableError(err: { message?: string; code?: string } | null): b
   return err.code === "42P01" || msg.includes("does not exist") || msg.includes("relation")
 }
 
-export async function fetchNhscaDualsSnapshot(
-  admin: SupabaseClient
-): Promise<{ ok: true; data: NhscaDualsResultsSnapshot } | { ok: false; code: typeof TABLES_MISSING }> {
-  const [teamsRes, wrestlersRes, daysRes, poolsRes, dualsRes, matchesRes] = await Promise.all([
-    admin.from("nhsca_duals_teams").select("id, name, team_type").eq("event_key", NHSCA_DUALS_EVENT_KEY),
-    admin.from("nhsca_duals_wrestlers").select("id, team_id, name, weight_class, display_weight, active"),
-    admin.from("nhsca_duals_event_days").select("id, name, event_date, sort_order").eq("event_key", NHSCA_DUALS_EVENT_KEY).order("sort_order"),
-    admin.from("nhsca_duals_pools").select("id, day_id, team_id, pool_number"),
-    admin
-      .from("nhsca_duals_duals")
-      .select(
-        "id, team_id, day_id, pool_id, round_name, opponent_team_name, status, nc_score, opponent_score, sort_order, published"
-      )
-      .order("sort_order"),
-    admin.from("nhsca_duals_matches").select("*"),
-  ])
+function isUnknownColumnError(err: { message?: string; code?: string } | null, column: string): boolean {
+  if (!err) return false
+  const msg = (err.message ?? "").toLowerCase()
+  return err.code === "42703" || msg.includes(column.toLowerCase())
+}
 
-  const err =
-    teamsRes.error ?? wrestlersRes.error ?? daysRes.error ?? poolsRes.error ?? dualsRes.error ?? matchesRes.error
-  if (isMissingTableError(err)) return { ok: false, code: TABLES_MISSING }
+const NHSCA_DUALS_DUAL_SELECT =
+  "id, team_id, day_id, pool_id, round_name, opponent_team_name, status, nc_score, opponent_score, sort_order"
 
-  const teams = (teamsRes.data ?? []) as NhscaDualsResultsSnapshot["teams"]
-  const wrestlers = (wrestlersRes.data ?? []) as NhscaDualsResultsSnapshot["wrestlers"]
-  const days = (daysRes.data ?? []).map((d) => ({
+async function fetchDualRows(admin: SupabaseClient): Promise<NhscaDualsDualRow[]> {
+  const withPublished = await admin
+    .from("nhsca_duals_duals")
+    .select(`${NHSCA_DUALS_DUAL_SELECT}, published`)
+    .order("sort_order")
+  if (!withPublished.error) return (withPublished.data ?? []) as NhscaDualsDualRow[]
+
+  if (isUnknownColumnError(withPublished.error, "published")) {
+    const base = await admin.from("nhsca_duals_duals").select(NHSCA_DUALS_DUAL_SELECT).order("sort_order")
+    if (!base.error) {
+      return ((base.data ?? []) as Omit<NhscaDualsDualRow, "published">[]).map((d) => ({
+        ...d,
+        published: true,
+      }))
+    }
+    console.error("[RecruitNC] nhsca duals fetch duals", base.error.message)
+    return []
+  }
+
+  console.error("[RecruitNC] nhsca duals fetch duals", withPublished.error.message)
+  return []
+}
+
+async function fetchTeamRows(admin: SupabaseClient): Promise<NhscaDualsResultsSnapshot["teams"]> {
+  const keyed = await admin
+    .from("nhsca_duals_teams")
+    .select("id, name, team_type")
+    .eq("event_key", NHSCA_DUALS_EVENT_KEY)
+  if (keyed.error) {
+    console.error("[RecruitNC] nhsca duals fetch teams", keyed.error.message)
+    return []
+  }
+
+  const teams = (keyed.data ?? []) as NhscaDualsResultsSnapshot["teams"]
+  if (teams.length > 0) return teams
+
+  const all = await admin.from("nhsca_duals_teams").select("id, name, team_type")
+  if (all.error) {
+    console.error("[RecruitNC] nhsca duals fetch teams (fallback)", all.error.message)
+    return []
+  }
+  const fallback = (all.data ?? []) as NhscaDualsResultsSnapshot["teams"]
+  if (fallback.length > 0) {
+    console.warn("[RecruitNC] nhsca duals teams: loaded via fallback (check event_key on nhsca_duals_teams)")
+  }
+  return fallback
+}
+
+async function fetchEventDays(admin: SupabaseClient): Promise<NhscaDualsResultsSnapshot["days"]> {
+  const keyed = await admin
+    .from("nhsca_duals_event_days")
+    .select("id, name, event_date, sort_order")
+    .eq("event_key", NHSCA_DUALS_EVENT_KEY)
+    .order("sort_order")
+  if (!keyed.error && (keyed.data?.length ?? 0) > 0) {
+    return (keyed.data ?? []).map((d) => ({
+      ...d,
+      event_date: d.event_date as string | null,
+    })) as NhscaDualsResultsSnapshot["days"]
+  }
+
+  const all = await admin.from("nhsca_duals_event_days").select("id, name, event_date, sort_order").order("sort_order")
+  if (all.error) {
+    console.error("[RecruitNC] nhsca duals fetch days", all.error.message)
+    return []
+  }
+  return (all.data ?? []).map((d) => ({
     ...d,
     event_date: d.event_date as string | null,
   })) as NhscaDualsResultsSnapshot["days"]
+}
+
+export async function fetchNhscaDualsSnapshot(
+  admin: SupabaseClient
+): Promise<{ ok: true; data: NhscaDualsResultsSnapshot } | { ok: false; code: typeof TABLES_MISSING }> {
+  const [teamsRes, wrestlersRes, poolsRes, matchesRes] = await Promise.all([
+    fetchTeamRows(admin),
+    admin.from("nhsca_duals_wrestlers").select("id, team_id, name, weight_class, display_weight, active"),
+    admin.from("nhsca_duals_pools").select("id, day_id, team_id, pool_number"),
+    admin.from("nhsca_duals_matches").select("*"),
+  ])
+
+  const tableProbe = await admin.from("nhsca_duals_teams").select("id").limit(1)
+  if (isMissingTableError(tableProbe.error)) return { ok: false, code: TABLES_MISSING }
+
+  const days = await fetchEventDays(admin)
+  const duals = await fetchDualRows(admin)
+
+  const err =
+    (typeof wrestlersRes !== "object" || !("error" in wrestlersRes) ? null : wrestlersRes.error) ??
+    poolsRes.error ??
+    matchesRes.error
+  if (isMissingTableError(err)) return { ok: false, code: TABLES_MISSING }
+
+  const teams = teamsRes
+  const wrestlers = ((wrestlersRes.data ?? []) as NhscaDualsResultsSnapshot["wrestlers"])
   const pools = (poolsRes.data ?? []) as NhscaDualsResultsSnapshot["pools"]
-  const duals = (dualsRes.data ?? []) as NhscaDualsDualRow[]
   const matches = (matchesRes.data ?? []) as NhscaDualsMatchRow[]
+
+  if (wrestlersRes.error) console.error("[RecruitNC] nhsca duals fetch wrestlers", wrestlersRes.error.message)
+  if (poolsRes.error) console.error("[RecruitNC] nhsca duals fetch pools", poolsRes.error.message)
+  if (matchesRes.error) console.error("[RecruitNC] nhsca duals fetch matches", matchesRes.error.message)
 
   const nationalTeam = teams.find((t) => t.team_type === "national")
   const selectTeam = teams.find((t) => t.team_type === "select")
@@ -413,22 +494,32 @@ async function ensureScheduledDual(
 
 /** Creates teams + rosters when missing (first-time setup). */
 export async function seedNhscaDualsIfEmpty(admin: SupabaseClient): Promise<void> {
+  const { error: backfillErr } = await admin
+    .from("nhsca_duals_teams")
+    .update({ event_key: NHSCA_DUALS_EVENT_KEY })
+    .is("event_key", null)
+  if (backfillErr && !isUnknownColumnError(backfillErr, "event_key")) {
+    console.error("[RecruitNC] nhsca duals backfill team event_key", backfillErr.message)
+  }
+
   const { count } = await admin
     .from("nhsca_duals_teams")
     .select("id", { count: "exact", head: true })
     .eq("event_key", NHSCA_DUALS_EVENT_KEY)
   if ((count ?? 0) > 0) return
 
-  const { data: natTeam } = await admin
+  const { data: natTeam, error: natErr } = await admin
     .from("nhsca_duals_teams")
     .insert({ name: NHSCA_DUALS_NATIONAL_TEAM_LABEL, team_type: "national", event_key: NHSCA_DUALS_EVENT_KEY })
     .select("id")
     .single()
-  const { data: selTeam } = await admin
+  const { data: selTeam, error: selErr } = await admin
     .from("nhsca_duals_teams")
     .insert({ name: NHSCA_DUALS_SELECT_TEAM_LABEL, team_type: "select", event_key: NHSCA_DUALS_EVENT_KEY })
     .select("id")
     .single()
+  if (natErr) console.error("[RecruitNC] nhsca duals seed national team", natErr.message)
+  if (selErr) console.error("[RecruitNC] nhsca duals seed select team", selErr.message)
   if (!natTeam?.id || !selTeam?.id) return
 
   await ensureTeamRosters(admin, natTeam.id, selTeam.id)

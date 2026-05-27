@@ -2,7 +2,7 @@
 
 import { stripe } from "@/lib/stripe"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { sendOrderConfirmationEmail, formatOrderItemVariantForEmail } from "@/lib/email"
+import { sendOrderReceiptIfEligible } from "@/lib/order-auto-receipt"
 import { shippingNameFromCustomerName, flatShippingFromAddress, flatBillingFromAddress } from "@/lib/order-shipping"
 import { findAndEnrichAthlete, enrichmentFromOrderCustomer } from "@/lib/enrich-athlete-profile"
 import { syntheticOrderItemSku } from "@/lib/order-item-sku"
@@ -206,32 +206,9 @@ async function createFreeOrderInternal(
   }
 
   try {
-    const sumLines = params.items.reduce((s, i) => {
-      const q = Math.max(1, Number(i.quantity) || 1)
-      const u = Number(i.price)
-      return s + (Number.isFinite(u) ? u * q : 0)
-    }, 0)
-    const emailSubtotal = params.subtotal > 0 ? params.subtotal : sumLines > 0 ? sumLines : Math.max(0, params.total - params.shipping - params.tax + params.discount)
-
-    await sendOrderConfirmationEmail({
-      orderNumber,
-      customerName: params.customerName,
-      customerEmail: params.customerEmail,
-      items: params.items.map((i) => ({
-        name: i.name,
-        variant: formatOrderItemVariantForEmail(i.variant),
-        quantity: i.quantity,
-        price: i.price,
-      })),
-      subtotal: emailSubtotal,
-      shipping: params.shipping,
-      tax: params.tax,
-      discount: params.discount,
-      total: params.total,
-      shippingAddress: params.shippingAddress as Record<string, unknown>,
-    })
+    await sendOrderReceiptIfEligible(supabase, orderId)
   } catch (e) {
-    console.warn("[store] sendOrderConfirmationEmail failed:", e)
+    console.warn("[store] sendOrderReceiptIfEligible failed:", e)
   }
 
   return { ok: true, orderId }
@@ -317,6 +294,11 @@ async function createOrderFromPaymentIntentMetadata(
           quantity: r.quantity,
           price: Number(r.price),
         }))
+        try {
+          await sendOrderReceiptIfEligible(supabase, existingOrder.id)
+        } catch (e) {
+          console.warn("[store] sendOrderReceiptIfEligible failed:", e)
+        }
         return {
           orderId: existingOrder.id,
           orderNumber: existingOrder.order_number,
@@ -379,6 +361,12 @@ async function createOrderFromPaymentIntentMetadata(
     await findAndEnrichAthlete(supabase, { email: payload.customerEmail, name: payload.customerName }, enrichPayload)
   } catch (enrichErr) {
     console.error("[store] athlete enrichment from PI metadata:", enrichErr)
+  }
+
+  try {
+    await sendOrderReceiptIfEligible(supabase, orderId)
+  } catch (e) {
+    console.warn("[store] sendOrderReceiptIfEligible failed:", e)
   }
 
   return {
@@ -575,6 +563,11 @@ export async function createOrderFromPaymentIntent(
         .from("order_items")
         .select("product_name, variant, quantity, price")
         .eq("order_id", existing.id)
+      try {
+        await sendOrderReceiptIfEligible(supabase, existing.id)
+      } catch (e) {
+        console.warn("[store] sendOrderReceiptIfEligible failed:", e)
+      }
       return {
         success: true,
         orderId: existing.id,
@@ -622,6 +615,11 @@ export async function createOrderFromPaymentIntent(
           "Could not create order from payment. The Payment Intent has no order metadata, no linked Checkout Session, or charge data could not be used. If this was a store checkout, try recovering by Checkout Session ID (cs_...) if you have it.",
       }
     }
+    try {
+      await sendOrderReceiptIfEligible(supabase, created.orderId)
+    } catch (e) {
+      console.warn("[store] sendOrderReceiptIfEligible failed:", e)
+    }
     return { success: true, orderId: created.orderId, ...created }
   } catch (err) {
     const message = err instanceof Error ? err.message : "Payment lookup failed"
@@ -651,6 +649,11 @@ export async function createOrderFromSession(
         .from("order_items")
         .select("product_name, variant, quantity, price")
         .eq("order_id", existingSessionOrder.id)
+      try {
+        await sendOrderReceiptIfEligible(supabase, existingSessionOrder.id)
+      } catch (e) {
+        console.warn("[store] sendOrderReceiptIfEligible failed:", e)
+      }
       return {
         success: true,
         orderId: existingSessionOrder.id,
@@ -754,6 +757,11 @@ export async function createOrderFromSession(
         quantity: li.quantity ?? 1,
         price: (li.amount_subtotal ?? 0) / 100 / (li.quantity ?? 1),
       }))
+      try {
+        await sendOrderReceiptIfEligible(supabase, orderId)
+      } catch (e) {
+        console.warn("[store] sendOrderReceiptIfEligible failed:", e)
+      }
       return {
         success: true,
         orderId,
@@ -839,6 +847,11 @@ export async function createOrderFromSession(
       await findAndEnrichAthlete(supabase, { email: payload.customerEmail, name: payload.customerName }, enrichPayload)
     } catch (enrichErr) {
       console.error("[store] athlete enrichment from session:", enrichErr)
+    }
+    try {
+      await sendOrderReceiptIfEligible(supabase, orderId)
+    } catch (e) {
+      console.warn("[store] sendOrderReceiptIfEligible failed:", e)
     }
     return {
       success: true,

@@ -193,16 +193,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Registration is not paid — no receipt to verify." }, { status: 400 })
   }
 
-  const expectedTotal = (Number(row.reg_fee_cents) || 0) + (Number(row.apparel_fee_cents) || 0)
-  if (expectedTotal !== amountCents) {
-    return NextResponse.json(
-      {
-        error: `Amount does not match registration (${(expectedTotal / 100).toFixed(2)} vs ${(amountCents / 100).toFixed(2)}).`,
-      },
-      { status: 400 },
-    )
-  }
-
   const stripe = new Stripe(stripeSecret)
   const session = await resolveNationalTeamCheckoutSession(stripe, admin, {
     id: row.id,
@@ -224,11 +214,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Stripe session is not linked to this national team registration." }, { status: 400 })
   }
 
+  const regTotal = (Number(row.reg_fee_cents) || 0) + (Number(row.apparel_fee_cents) || 0)
   const stripeTotal = session.amount_total ?? 0
-  if (stripeTotal !== amountCents) {
+  const authoritativeAmount = stripeTotal > 0 ? stripeTotal : regTotal
+  if (authoritativeAmount < 1) {
+    return NextResponse.json({ error: "Could not determine payment amount for this registration." }, { status: 400 })
+  }
+  if (amountCents !== authoritativeAmount) {
     return NextResponse.json(
       {
-        error: `Stripe amount is ${(stripeTotal / 100).toFixed(2)} — refresh and match that total.`,
+        error: `Amount must be ${(authoritativeAmount / 100).toFixed(2)} (Stripe checkout total).`,
       },
       { status: 400 },
     )

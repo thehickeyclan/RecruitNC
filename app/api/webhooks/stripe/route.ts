@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { sendOrderConfirmationEmail, formatOrderItemVariantForEmail } from "@/lib/email"
+import { sendNationalTeamFeeReceiptAutoIfEligible } from "@/lib/national-team-auto-fee-receipt"
+import { sendOrderReceiptIfEligible } from "@/lib/order-auto-receipt"
 import { findProductByIdOrPrefix } from "@/lib/store/product-utils"
 import { findAndEnrichAthlete, enrichmentFromOrderCustomer, buildEnrichmentPayload } from "@/lib/enrich-athlete-profile"
 import { orderShippingFields } from "@/lib/order-shipping"
@@ -373,6 +374,24 @@ export async function POST(request: NextRequest) {
             } catch (enrichErr) {
               console.error("[webhooks/stripe] national team athlete enrichment (payment_intent):", enrichErr)
             }
+            if (session?.payment_status === "paid") {
+              try {
+                await sendNationalTeamFeeReceiptAutoIfEligible(admin, {
+                  reg: reg as {
+                    id: string
+                    event_slug: string
+                    athlete_first_name: string
+                    athlete_last_name: string
+                    parent_email: string | null
+                    reg_fee_cents: number
+                    apparel_fee_cents: number
+                  },
+                  session,
+                })
+              } catch (receiptErr) {
+                console.error("[webhooks/stripe] national team auto receipt (payment_intent):", receiptErr)
+              }
+            }
           }
           return NextResponse.json({ received: true })
         }
@@ -593,34 +612,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Order items insert failed" }, { status: 500 })
     }
     try {
-      const sumLineSubtotals = orderItems.reduce((s, r) => s + (Number(r.subtotal) || 0), 0)
-      const metaSub = Number(payload.subtotal) || 0
-      const emailSubtotal =
-        metaSub > 0
-          ? metaSub
-          : sumLineSubtotals > 0
-            ? sumLineSubtotals
-            : Math.max(0, Number(payload.total) - Number(payload.shipping) - Number(payload.tax) + Number(payload.discount))
-
-      await sendOrderConfirmationEmail({
-        orderNumber,
-        customerName: payload.customerName,
-        customerEmail: payload.customerEmail,
-        items: orderItems.map((row) => ({
-          name: String(row.product_name || "Item"),
-          variant: formatOrderItemVariantForEmail(row.variant),
-          quantity: Number(row.quantity) || 1,
-          price: Number(row.price) || 0,
-        })),
-        subtotal: emailSubtotal,
-        shipping: payload.shipping,
-        tax: payload.tax,
-        discount: payload.discount,
-        total: payload.total,
-        shippingAddress: payload.shippingAddress as Record<string, unknown>,
-      })
+      await sendOrderReceiptIfEligible(admin, orderId)
     } catch (emailErr) {
-      console.error("[webhooks/stripe] sendOrderConfirmationEmail failed:", emailErr)
+      console.error("[webhooks/stripe] sendOrderReceiptIfEligible failed:", emailErr)
     }
     try {
       const enrichPayload = enrichmentFromOrderCustomer({
@@ -856,6 +850,24 @@ export async function POST(request: NextRequest) {
             console.error("[webhooks/stripe] national team athlete enrichment (session):", enrichErr)
           }
         }
+        if (session.payment_status === "paid") {
+          try {
+            await sendNationalTeamFeeReceiptAutoIfEligible(admin, {
+              reg: reg as {
+                id: string
+                event_slug: string
+                athlete_first_name: string
+                athlete_last_name: string
+                parent_email: string | null
+                reg_fee_cents: number
+                apparel_fee_cents: number
+              },
+              session,
+            })
+          } catch (receiptErr) {
+            console.error("[webhooks/stripe] national team auto receipt (session):", receiptErr)
+          }
+        }
       }
       return NextResponse.json({ received: true })
     }
@@ -977,6 +989,11 @@ export async function POST(request: NextRequest) {
           await findAndEnrichAthlete(admin, { email: customerEmail, name: customerName }, enrichPayload)
         } catch (enrichErr) {
           console.error("[webhooks/stripe] athlete enrichment from drop-in order:", enrichErr)
+        }
+        try {
+          await sendOrderReceiptIfEligible(admin, orderId)
+        } catch (receiptErr) {
+          console.error("[webhooks/stripe] drop-in order receipt:", receiptErr)
         }
       }
     }

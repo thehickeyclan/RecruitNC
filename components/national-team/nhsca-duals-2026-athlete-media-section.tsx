@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { Clapperboard, Mic2 } from "lucide-react"
+import { Clapperboard, Camera, Mic2 } from "lucide-react"
 import type { CommandCenterScope } from "@/lib/nhsca-duals-command-center"
 import {
   athleteMediaCategoryLabel,
@@ -15,7 +15,19 @@ import { cn } from "@/lib/utils"
 
 const INITIAL_VISIBLE = 12
 
-const CATEGORY_ORDER: NhscaDualsAthleteMediaCategory[] = ["interview", "highlight"]
+const CATEGORY_ORDER: NhscaDualsAthleteMediaCategory[] = ["interview", "highlight", "photo"]
+
+function categoryHeading(category: NhscaDualsAthleteMediaCategory): string {
+  if (category === "interview") return "Interviews"
+  if (category === "highlight") return "Highlight reels"
+  return "Photos"
+}
+
+function categoryMoreLabel(category: NhscaDualsAthleteMediaCategory): string {
+  if (category === "interview") return "interviews"
+  if (category === "highlight") return "highlights"
+  return "photos"
+}
 
 function teamLabel(team: NhscaDualsAthleteMediaItem["team"]): string | null {
   if (team === "national") return "National"
@@ -64,11 +76,13 @@ function MediaGroup({
       <div className="flex items-center gap-2">
         {category === "interview" ? (
           <Mic2 className="h-4 w-4 text-[#CBAF5D] shrink-0" aria-hidden />
-        ) : (
+        ) : category === "highlight" ? (
           <Clapperboard className="h-4 w-4 text-[#CBAF5D] shrink-0" aria-hidden />
+        ) : (
+          <Camera className="h-4 w-4 text-[#CBAF5D] shrink-0" aria-hidden />
         )}
         <h3 className="text-sm font-bold uppercase tracking-wider text-[#CBAF5D]">
-          {category === "interview" ? "Interviews" : "Highlight reels"}
+          {categoryHeading(category)}
           <span className="ml-2 text-white/45 tabular-nums">({items.length})</span>
         </h3>
       </div>
@@ -86,7 +100,7 @@ function MediaGroup({
             "text-sm font-semibold text-[#CBAF5D] hover:bg-white/10 transition-colors"
           )}
         >
-          Show more {category === "interview" ? "interviews" : "highlights"} (
+          Show more {categoryMoreLabel(category)} (
           {items.length - visible} remaining)
         </button>
       ) : null}
@@ -101,6 +115,7 @@ export function NhscaDuals2026AthleteMediaSection({ scope }: { scope: CommandCen
     const map: Record<NhscaDualsAthleteMediaCategory, NhscaDualsAthleteMediaItem[]> = {
       interview: [],
       highlight: [],
+      photo: [],
     }
     for (const item of items) {
       map[item.category].push(item)
@@ -114,7 +129,7 @@ export function NhscaDuals2026AthleteMediaSection({ scope }: { scope: CommandCen
     <NhscaDualsCollapsibleSection
       id="media"
       title="Interviews & highlights"
-      subtitle="Athlete interviews and highlight reels from Virginia Beach — more added as they are uploaded."
+      subtitle="Athlete interviews, highlight reels, and photos from Virginia Beach — more added as they are uploaded."
       count={items.length}
       defaultOpen={items.length <= 6}
       icon={<Clapperboard className="h-5 w-5" aria-hidden />}
