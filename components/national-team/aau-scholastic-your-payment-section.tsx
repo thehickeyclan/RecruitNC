@@ -30,6 +30,29 @@ function formatPaidDate(iso: string) {
 }
 
 export async function AauScholasticYourPaymentSection() {
+  try {
+    return await AauScholasticYourPaymentSectionInner()
+  } catch (err) {
+    console.error("[RecruitNC] aau-scholastic-your-payment-section:", err)
+    return (
+      <ScholasticDualsSection
+        id="your-payment"
+        title="Your registration & payment"
+        description="Payment status is temporarily unavailable."
+      >
+        <p className="text-sm text-white/75">
+          We could not load your registration right now. Try refreshing, or check the{" "}
+          <a href={`${AAU_SCHOLASTIC_DUALS_2026.hubPath}?tab=payments`} className={scholasticLinkClass}>
+            Team Hub → Payments
+          </a>{" "}
+          tab after signing in.
+        </p>
+      </ScholasticDualsSection>
+    )
+  }
+}
+
+async function AauScholasticYourPaymentSectionInner() {
   const supabase = await createClient()
   const {
     data: { user },
