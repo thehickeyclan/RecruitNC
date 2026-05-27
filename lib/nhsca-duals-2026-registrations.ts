@@ -156,12 +156,6 @@ export async function listNhscaDuals2026Registrations(
 
   const selectColsWithCheckout =
     "id, event_slug, athlete_first_name, athlete_last_name, athlete_email, athlete_dob, parent_email, parent_user_id, high_school, graduation_year, primary_weight, reg_fee_cents, apparel_fee_cents, status, order_id, record, created_at, shirt_size, singlet_size, shorts_size, checkout_lines, checkout_mode, updated_at"
-  const selectColsBase =
-    "id, event_slug, athlete_first_name, athlete_last_name, athlete_email, athlete_dob, parent_email, parent_user_id, high_school, graduation_year, primary_weight, reg_fee_cents, apparel_fee_cents, status, order_id, record, created_at, shirt_size, singlet_size, shorts_size, updated_at"
-
-  let selectCols = selectColsWithCheckout
-
-  let rows: NhscaDuals2026Registration[] = []
 
   const loadRows = async (cols: string) => {
     if (opts.isAdmin) {
@@ -205,21 +199,42 @@ export async function listNhscaDuals2026Registrations(
     )
   }
 
-  try {
-    rows = await loadRows(selectCols)
-  } catch (error) {
-    const code = (error as { code?: string })?.code
-    const msg = ((error as { message?: string })?.message ?? "").toLowerCase()
-    if (code === "42703" || (msg.includes("column") && msg.includes("checkout"))) {
-      selectCols = selectColsBase
+  const stripMissingColumnFromSelect = (cols: string, msg: string): string | null => {
+    const lower = msg.toLowerCase()
+    if (lower.includes("checkout_lines") || lower.includes("checkout_mode")) {
+      const next = cols
+        .replace(", checkout_lines, checkout_mode", "")
+        .replace("checkout_lines, checkout_mode, ", "")
+      return next === cols ? null : next
+    }
+    if (lower.includes("athlete_dob")) {
+      const next = cols.replace("athlete_dob, ", "").replace(", athlete_dob", "")
+      return next === cols ? null : next
+    }
+    return null
+  }
+
+  let selectCols = selectColsWithCheckout
+  let rows: NhscaDuals2026Registration[] = []
+  let lastError: unknown = null
+
+  for (let attempt = 0; attempt < 6; attempt++) {
+    try {
       rows = await loadRows(selectCols)
-    } else if (code === "42703" && msg.includes("athlete_dob")) {
-      selectCols = selectCols.replace("athlete_dob, ", "").replace(", athlete_dob", "")
-      rows = await loadRows(selectCols)
-    } else {
-      throw error
+      lastError = null
+      break
+    } catch (error) {
+      lastError = error
+      const code = (error as { code?: string })?.code
+      const msg = (error as { message?: string })?.message ?? ""
+      if (code !== "42703") throw error
+      const nextCols = stripMissingColumnFromSelect(selectCols, msg)
+      if (!nextCols) throw error
+      selectCols = nextCols
     }
   }
+
+  if (lastError) throw lastError
 
   await enrichLinkedAccountEmails(admin, rows)
   await attachOrderNumbers(admin, rows)
