@@ -5,9 +5,18 @@ import { useNcUnitedCalendarEvents } from "@/hooks/use-nc-united-calendar-events
 import { eventCategories } from "@/lib/nc-united-calendar/calendar-config"
 import type { CalendarEvent, EventCategory } from "@/lib/nc-united-calendar/types"
 import { CalendarAdminBanner } from "@/components/nc-united-calendar/calendar-admin-banner"
-import { ChevronLeft, ChevronRight, Calendar, MapPin, Clock, Filter, List, Grid3X3, Loader2 } from "lucide-react"
+import { EventDetailModal } from "@/components/nc-united-calendar/event-detail-modal"
+import { ChevronLeft, ChevronRight, Calendar, MapPin, Clock, Filter, List, Grid3X3, Loader2, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import {
+  eventIsUpcoming,
+  eventOccursInMonth,
+  eventOccursOnCalendarDay,
+  eventIsMultiDay,
+  formatEventDateRangeShort,
+  multiDayIndicator,
+} from "@/lib/nc-united-calendar/calendar-date"
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
@@ -21,13 +30,8 @@ function formatTime(time: string | null | undefined): string {
   return `${h12}:${m} ${ampm}`
 }
 
-function formatDateRange(event: CalendarEvent): string {
-  const start = event.date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
-  if (event.endDate && event.endDate.getTime() !== event.date.getTime()) {
-    const end = event.endDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })
-    return `${start} - ${end}`
-  }
-  return start
+function isDropInPractice(category: string): boolean {
+  return category === "blue-practice" || category === "gold-practice"
 }
 
 export default function CalendarPage() {
@@ -48,14 +52,12 @@ export default function CalendarPage() {
   }, [events, visibleCategories])
 
   const eventsThisMonth = useMemo(() => {
-    return filteredEvents.filter((e) => e.date.getFullYear() === year && e.date.getMonth() === month)
+    return filteredEvents.filter((e) => eventOccursInMonth(e, year, month))
   }, [filteredEvents, year, month])
 
   const upcomingEvents = useMemo(() => {
-    const now = new Date()
-    now.setHours(0, 0, 0, 0)
     return filteredEvents
-      .filter((e) => e.date >= now)
+      .filter((e) => eventIsUpcoming(e))
       .sort((a, b) => a.date.getTime() - b.date.getTime())
       .slice(0, 20)
   }, [filteredEvents])
@@ -92,7 +94,8 @@ export default function CalendarPage() {
   }
 
   const getEventsForDay = (day: number) => {
-    return eventsThisMonth.filter((e) => e.date.getDate() === day)
+    const cellDate = new Date(year, month, day)
+    return eventsThisMonth.filter((e) => eventOccursOnCalendarDay(e, cellDate))
   }
 
   if (loading) {
@@ -230,11 +233,21 @@ export default function CalendarPage() {
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                     {/* Date Badge */}
-                    <div className="flex-shrink-0 w-16 text-center">
-                      <div className="text-2xl font-bold text-white">{event.date.getDate()}</div>
-                      <div className="text-xs text-gray-500 uppercase">
-                        {event.date.toLocaleDateString("en-US", { month: "short" })}
-                      </div>
+                    <div className="flex-shrink-0 min-w-[4.75rem] max-w-[6rem] text-center px-1">
+                      {eventIsMultiDay(event) ? (
+                        <>
+                          <div className="text-xs font-bold text-white leading-tight">
+                            {formatEventDateRangeShort(event)}
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="text-2xl font-bold text-white">{event.date.getDate()}</div>
+                          <div className="text-xs text-gray-500 uppercase">
+                            {event.date.toLocaleDateString("en-US", { month: "short" })}
+                          </div>
+                        </>
+                      )}
                     </div>
                     
                     {/* Event Info */}
@@ -263,6 +276,12 @@ export default function CalendarPage() {
                           <span className="flex items-center gap-1 truncate">
                             <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
                             <span className="truncate">{event.location}</span>
+                          </span>
+                        )}
+                        {isDropInPractice(event.category) && eventIsUpcoming(event) && (
+                          <span className="flex items-center gap-1 text-[#D3B574]">
+                            <Users className="h-3.5 w-3.5 flex-shrink-0" />
+                            Drop-in available
                           </span>
                         )}
                       </div>
@@ -307,16 +326,20 @@ export default function CalendarPage() {
                             {day}
                           </div>
                           <div className="space-y-0.5">
-                            {dayEvents.slice(0, 3).map((event) => (
+                            {dayEvents.slice(0, 3).map((event) => {
+                              const cellDate = new Date(year, month, day!)
+                              const label = event.title + multiDayIndicator(event, cellDate)
+                              return (
                               <button
-                                key={event.id}
+                                key={`${event.id}-${day}`}
                                 onClick={() => setSelectedEvent(event)}
                                 className="w-full text-left px-1.5 py-0.5 rounded text-xs truncate hover:opacity-80 transition-opacity"
                                 style={{ backgroundColor: eventCategories[event.category as EventCategory]?.color || "#D3B574", color: "white" }}
+                                title={label}
                               >
-                                {event.title}
+                                {label}
                               </button>
-                            ))}
+                            )})}
                             {dayEvents.length > 3 && (
                               <div className="text-xs text-white px-1">+{dayEvents.length - 3} more</div>
                             )}
@@ -332,82 +355,11 @@ export default function CalendarPage() {
         )}
       </div>
 
-      {/* Event Detail Modal */}
-      {selectedEvent && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-          <div className="absolute inset-0 bg-black/60" onClick={() => setSelectedEvent(null)} />
-          <div className="relative w-full sm:max-w-lg mx-auto bg-[#0F1E32] rounded-t-2xl sm:rounded-2xl border border-[#1e3a5f] max-h-[85vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center gap-2 mb-2">
-                <span
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: eventCategories[selectedEvent.category as EventCategory]?.color || "#D3B574" }}
-                />
-                <span className="text-sm text-gray-400">
-                  {eventCategories[selectedEvent.category as EventCategory]?.label || selectedEvent.category}
-                </span>
-              </div>
-              
-              <h2 className="text-2xl font-bold text-white mb-4">{selectedEvent.title}</h2>
-              
-              <div className="space-y-3 text-gray-300">
-                <div className="flex items-center gap-3">
-                  <Calendar className="h-5 w-5 text-[#D3B574]" />
-                  <span>{formatDateRange(selectedEvent)}</span>
-                </div>
-                
-                {selectedEvent.startTime && (
-                  <div className="flex items-center gap-3">
-                    <Clock className="h-5 w-5 text-[#D3B574]" />
-                    <span>
-                      {formatTime(selectedEvent.startTime)}
-                      {selectedEvent.endTime && ` - ${formatTime(selectedEvent.endTime)}`}
-                    </span>
-                  </div>
-                )}
-                
-                {selectedEvent.location && (
-                  <div className="flex items-center gap-3">
-                    <MapPin className="h-5 w-5 text-[#D3B574]" />
-                    <span>{selectedEvent.location}</span>
-                  </div>
-                )}
-                
-                {selectedEvent.description && (
-                  <p className="pt-3 border-t border-[#1e3a5f] text-gray-400">
-                    {selectedEvent.description}
-                  </p>
-                )}
-
-                {selectedEvent.coach && (
-                  <p className="text-sm text-gray-500">
-                    Coach: <span className="text-gray-400">{selectedEvent.coach}</span>
-                  </p>
-                )}
-              </div>
-              
-              <div className="mt-6 flex gap-3">
-                {selectedEvent.externalLink && (
-                  <a
-                    href={selectedEvent.externalLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 py-2.5 rounded-lg bg-[#D3B574] hover:bg-[#c4a665] text-[#0A1628] font-semibold text-center transition-colors"
-                  >
-                    Register
-                  </a>
-                )}
-                <button
-                  onClick={() => setSelectedEvent(null)}
-                  className="flex-1 py-2.5 rounded-lg border border-[#1e3a5f] text-gray-400 hover:text-white hover:border-gray-500 transition-colors"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <EventDetailModal
+        event={selectedEvent}
+        isOpen={!!selectedEvent}
+        onClose={() => setSelectedEvent(null)}
+      />
     </div>
   )
 }
