@@ -1,98 +1,33 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { getCollegesByIds } from "@/lib/colleges"
-import { matchesDivisionFilter } from "@/lib/division-display"
+import { fetchCommitmentStats, type CommitmentAthleteFilters } from "@/lib/athletes-commitments-fetch"
 
-export const dynamic = "force-dynamic"
-
-/** Map colleges.division (display string) to D1/D2/D3/NAIA/NJCAA for stats. */
-function bucketDivision(division: string | null | undefined): "D1" | "D2" | "D3" | "NAIA" | "NJCAA" | null {
-  const v = (division ?? "").toLowerCase()
-  if (/\bdivision\s*i(?!i)\b|\bd1\b|\bdi\b/.test(v)) return "D1"
-  if (/\bdivision\s*ii\b|\bd2\b|\bdii\b/.test(v)) return "D2"
-  if (/\bdivision\s*iii\b|\bd3\b|\bdiii\b/.test(v)) return "D3"
-  if (/\bnaia\b/.test(v)) return "NAIA"
-  if (/\bnjcaa\b|\bjuco\b/.test(v)) return "NJCAA"
-  return null
-}
+export const revalidate = 120
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-    const yearParam = searchParams.get("year")
-    const genderParam = searchParams.get("gender")
-    const divisionParam = searchParams.get("division")
+    const filters: CommitmentAthleteFilters = {
+      year: searchParams.get("year"),
+      gender: searchParams.get("gender"),
+      division: searchParams.get("division"),
+    }
 
     const supabase = await createClient()
-    let query = supabase
-      .from("athletes")
-      .select("id, college_id, graduationyear, gender")
-      .not("college", "is", null)
-      .neq("college", "")
-      .or("is_prospect.is.null,is_prospect.eq.false")
-
-    if (yearParam && yearParam !== "all") {
-      const y = Number.parseInt(yearParam, 10)
-      if (Number.isFinite(y)) query = query.eq("graduationyear", y)
-    }
-
-    if (genderParam && genderParam !== "all") {
-      if (genderParam === "male") {
-        query = query.or("gender.ilike.male,gender.ilike.m,gender.ilike.men")
-      } else if (genderParam === "female") {
-        query = query.or("gender.ilike.female,gender.ilike.f,gender.ilike.women")
-      }
-    }
-
-    const { data: rows, error } = await query
-
-    if (error) {
-      console.error("[commitment-stats]", error)
-      return NextResponse.json(
-        { success: false, error: error.message, stats: null },
-        { status: 500 },
-      )
-    }
-
-    const collegeIds = [...new Set((rows ?? []).map((r) => r.college_id).filter(Boolean))]
-    const collegesMap = collegeIds.length > 0 ? await getCollegesByIds(supabase, collegeIds) : new Map()
-
-    // Apply division filter (division comes from colleges table)
-    let filteredRows = rows ?? []
-    if (divisionParam && divisionParam !== "all") {
-      filteredRows = filteredRows.filter((r) => {
-        const division = r.college_id ? collegesMap.get(r.college_id)?.division : null
-        return matchesDivisionFilter(division, divisionParam)
-      })
-    }
-
-    const stats = {
-      totalCommitments: filteredRows.length,
-      byYear: { "2025": 0, "2026": 0, other: 0 },
-      byDivision: { D1: 0, D2: 0, D3: 0, NAIA: 0, NJCAA: 0 },
-      byGender: { male: 0, female: 0 },
-    }
-
-    for (const r of filteredRows) {
-      const y = r.graduationyear
-      if (y === 2025) stats.byYear["2025"]++
-      else if (y === 2026) stats.byYear["2026"]++
-      else stats.byYear.other++
-
-      const g = (r.gender ?? "").toLowerCase()
-      if (g === "female") stats.byGender.female++
-      else stats.byGender.male++
-
-      const division = r.college_id ? collegesMap.get(r.college_id)?.division : null
-      const bucket = bucketDivision(division)
-      if (bucket) stats.byDivision[bucket]++
-    }
+    const stats = await fetchCommitmentStats(supabase, filters)
 
     return NextResponse.json(
-      { success: true, stats },
+      {
+        success: true,
+        stats: {
+          totalCommitments: stats.total,
+          byGender: { male: stats.male, female: stats.female },
+          byDivision: stats.divisions,
+        },
+      },
       {
         headers: {
-          "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+          "Cache-Control": "public, s-maxage=120, stale-while-revalidate=300",
         },
       },
     )

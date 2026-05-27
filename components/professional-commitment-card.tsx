@@ -12,6 +12,7 @@ import {
   mergeCommitmentHonorBadgesForDisplay,
   stateHonorsFromNchsaaMergedRows,
 } from "@/lib/commitment-card-honors"
+import { prefetchAthleteProfile } from "@/lib/prefetch-athlete-profile"
 interface Athlete {
   id: string
   name: string
@@ -512,7 +513,10 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
   }
 
   return (
-    <div className="h-[500px] w-full max-w-[350px] mx-auto perspective-1000">
+    <div
+      className="h-[500px] w-full max-w-[350px] mx-auto perspective-1000"
+      onMouseEnter={() => prefetchAthleteProfile(athlete.id)}
+    >
       <div
         className={`relative h-full w-full transition-transform duration-700 preserve-3d ${
           isFlipped ? "rotate-y-180" : ""
@@ -534,7 +538,8 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
                 console.log(`[v0] Image load error for ${athlete.name}, URL: ${athletePhoto}`)
                 setImageError(true)
               }}
-              priority
+              sizes="(max-width: 768px) 100vw, 350px"
+              loading="lazy"
             />
 
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/20" />
