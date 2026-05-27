@@ -5,10 +5,16 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { findAndEnrichAthlete, buildEnrichmentPayload } from "@/lib/enrich-athlete-profile"
 import {
   AAU_SCHOLASTIC_EVENT_SLUG,
-  aauScholasticFeesFromSelectedLines,
-  aauScholasticLinesFromSelectedIds,
-  encodeAauScholasticCheckoutLinesMetadataFromLines,
+  aauScholasticFeesFromSelections,
+  aauScholasticLineSelectionsFromQuantities,
+  encodeAauScholasticCheckoutLinesMetadataFromSelections,
+  parseAauScholasticLineQuantities,
+  validateAauScholasticApparelSizes,
 } from "@/lib/aau-scholastic-duals-2026-content"
+import {
+  aauScholasticApparelSizesForDb,
+  parseAauScholasticApparelSizesFromBody,
+} from "@/lib/aau-scholastic-apparel-sizes"
 
 export const dynamic = "force-dynamic"
 
@@ -91,21 +97,27 @@ export async function POST(request: NextRequest) {
 
     let regFeeCents = 0
     let apparelFeeCents = 0
-    let aauSelectedLines: ReturnType<typeof aauScholasticLinesFromSelectedIds> = []
+    let aauSelections: ReturnType<typeof aauScholasticLineSelectionsFromQuantities> = []
     let lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = []
 
     if (isAau) {
-      const rawIds = Array.isArray(body.selectedLineIds)
-        ? body.selectedLineIds.filter((id): id is string => typeof id === "string")
-        : []
-      aauSelectedLines = aauScholasticLinesFromSelectedIds(rawIds)
-      if (aauSelectedLines.length === 0) {
+      const parsed = parseAauScholasticLineQuantities({
+        selectedLines: body.selectedLines,
+        selectedLineIds: body.selectedLineIds,
+      })
+      aauSelections = aauScholasticLineSelectionsFromQuantities(parsed)
+      if (aauSelections.length === 0) {
         return NextResponse.json({ error: "Select at least one item to checkout." }, { status: 400 })
       }
-      const fees = aauScholasticFeesFromSelectedLines(aauSelectedLines)
+      const apparelSizes = parseAauScholasticApparelSizesFromBody(body)
+      const apparelError = validateAauScholasticApparelSizes(aauSelections, apparelSizes)
+      if (apparelError) {
+        return NextResponse.json({ error: apparelError }, { status: 400 })
+      }
+      const fees = aauScholasticFeesFromSelections(aauSelections)
       regFeeCents = fees.reg_fee_cents
       apparelFeeCents = fees.apparel_fee_cents
-      lineItems = aauSelectedLines.map((line) => ({
+      lineItems = aauSelections.map(({ line, quantity }) => ({
         price_data: {
           currency: "usd",
           unit_amount: line.dollars * 100,
@@ -114,7 +126,7 @@ export async function POST(request: NextRequest) {
             description: "NC United AAU Scholastic Duals 2026",
           },
         },
-        quantity: 1,
+        quantity,
       }))
     } else {
       const productSlug = "nhsca-2026-bundle"
@@ -142,6 +154,14 @@ export async function POST(request: NextRequest) {
       ]
     }
 
+    const additionalAthletesNotes =
+      typeof body.additional_athletes_notes === "string" ? body.additional_athletes_notes.trim().slice(0, 2000) : ""
+
+    const aauApparelDb =
+      isAau && aauSelections.length > 0
+        ? aauScholasticApparelSizesForDb(aauSelections, parseAauScholasticApparelSizesFromBody(body))
+        : null
+
     const insertPayload: Record<string, unknown> = {
       event_slug: eventSlug,
       athlete_first_name: athleteFirstName,
@@ -159,6 +179,11 @@ export async function POST(request: NextRequest) {
       apparel_fee_cents: apparelFeeCents,
       status: "pending",
       updated_at: new Date().toISOString(),
+    }
+    if (aauApparelDb) {
+      if (aauApparelDb.singlet_size) insertPayload.singlet_size = aauApparelDb.singlet_size
+      if (aauApparelDb.shorts_size) insertPayload.shorts_size = aauApparelDb.shorts_size
+      if (aauApparelDb.shirt_size) insertPayload.shirt_size = aauApparelDb.shirt_size
     }
     if (parentUserId) insertPayload.parent_user_id = parentUserId
 
@@ -213,7 +238,9 @@ export async function POST(request: NextRequest) {
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin
     const stripe = new Stripe(stripeSecret)
-    const checkoutLinesMeta = isAau ? encodeAauScholasticCheckoutLinesMetadataFromLines(aauSelectedLines) : ""
+    const checkoutLinesMeta = isAau
+      ? encodeAauScholasticCheckoutLinesMetadataFromSelections(aauSelections)
+      : ""
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -229,6 +256,7 @@ export async function POST(request: NextRequest) {
         registration_id: reg.id,
         event_slug: eventSlug,
         ...(checkoutLinesMeta ? { checkout_lines: checkoutLinesMeta } : {}),
+        ...(additionalAthletesNotes ? { additional_athletes: additionalAthletesNotes.slice(0, 500) } : {}),
       },
     })
 

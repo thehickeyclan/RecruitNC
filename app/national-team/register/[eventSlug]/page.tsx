@@ -28,8 +28,14 @@ import {
 } from "@/lib/aau-scholastic-duals-2026-content"
 import {
   AauScholasticCheckoutItems,
-  AAU_SCHOLASTIC_DEFAULT_SELECTED_LINE_IDS,
+  aauScholasticDefaultLineQuantities,
 } from "@/components/national-team/aau-scholastic-checkout-items"
+import {
+  aauScholasticLineQuantitiesFromRecord,
+  validateAauScholasticApparelSizes,
+  aauScholasticLineSelectionsFromQuantities,
+  type AauScholasticApparelSizesInput,
+} from "@/lib/aau-scholastic-duals-2026-content"
 import {
   aauPageClass,
   aauPanelClass,
@@ -91,8 +97,15 @@ export default function NationalTeamRegisterEventPage() {
   const [club_team, setClubTeam] = useState("")
   const [graduation_year, setGraduationYear] = useState("")
   const [weight_class, setWeightClass] = useState("")
-  const [selectedLineIds, setSelectedLineIds] = useState<string[]>([...AAU_SCHOLASTIC_DEFAULT_SELECTED_LINE_IDS])
+  const [lineQuantities, setLineQuantities] = useState<Record<string, number>>(() => aauScholasticDefaultLineQuantities())
+  const [apparelSizes, setApparelSizes] = useState<AauScholasticApparelSizesInput>({
+    singletSize: "",
+    shortsSize: "",
+    longSleeveSize: "",
+    teeSize: "",
+  })
   const [itemsError, setItemsError] = useState("")
+  const [sizesError, setSizesError] = useState("")
 
   const handleValidateCode = async (e: FormEvent) => {
     e.preventDefault()
@@ -137,10 +150,21 @@ export default function NationalTeamRegisterEventPage() {
       setFormError("High school, graduation year, and weight class are required.")
       return
     }
-    if (isAauRegistration && selectedLineIds.length === 0) {
+    if (isAauRegistration && aauScholasticLineQuantitiesFromRecord(lineQuantities).length === 0) {
       setItemsError("Select at least one item to checkout.")
       return
     }
+    if (isAauRegistration) {
+      const selections = aauScholasticLineSelectionsFromQuantities(
+        aauScholasticLineQuantitiesFromRecord(lineQuantities),
+      )
+      const apparelErr = validateAauScholasticApparelSizes(selections, apparelSizes)
+      if (apparelErr) {
+        setSizesError(apparelErr)
+        return
+      }
+    }
+    setSizesError("")
     setItemsError("")
     setSubmitting(true)
     try {
@@ -151,7 +175,15 @@ export default function NationalTeamRegisterEventPage() {
           ...(isAauRegistration ? {} : { code: code.trim() }),
           eventSlug,
           returnUrlSlug: urlSlug,
-          ...(isAauRegistration ? { selectedLineIds } : {}),
+          ...(isAauRegistration
+            ? {
+                selectedLines: aauScholasticLineQuantitiesFromRecord(lineQuantities),
+                singlet_size: apparelSizes.singletSize,
+                shorts_size: apparelSizes.shortsSize,
+                long_sleeve_size: apparelSizes.longSleeveSize,
+                tee_size: apparelSizes.teeSize,
+              }
+            : {}),
           athlete_first_name: athlete_first_name.trim(),
           athlete_last_name: athlete_last_name.trim(),
           athlete_email: athlete_email.trim(),
@@ -427,12 +459,16 @@ export default function NationalTeamRegisterEventPage() {
                   </div>
                   <p className="text-sm text-white/90 bg-[#B31B1B]/15 border border-[#B31B1B]/30 rounded-lg px-3 py-2">
                     <strong>Weights are +5 lbs.</strong> Select the weight class your athlete is wrestling for NC United.
+                    Registering a sibling? Submit a separate registration for each athlete.
                   </p>
                   <AauScholasticCheckoutItems
-                    selectedIds={selectedLineIds}
-                    onChange={setSelectedLineIds}
+                    lineQuantities={lineQuantities}
+                    onChange={setLineQuantities}
+                    apparelSizes={apparelSizes}
+                    onApparelSizesChange={setApparelSizes}
                     disabled={submitting}
                     error={itemsError || null}
+                    sizesError={sizesError || null}
                     variant="dark"
                   />
                   {formError && <p className="text-sm text-red-400">{formError}</p>}
@@ -527,10 +563,13 @@ export default function NationalTeamRegisterEventPage() {
                 </p>
                 {isAauRegistration ? (
                   <AauScholasticCheckoutItems
-                    selectedIds={selectedLineIds}
-                    onChange={setSelectedLineIds}
+                    lineQuantities={lineQuantities}
+                    onChange={setLineQuantities}
+                    apparelSizes={apparelSizes}
+                    onApparelSizesChange={setApparelSizes}
                     disabled={submitting}
                     error={itemsError || null}
+                    sizesError={sizesError || null}
                   />
                 ) : null}
                 {formError && <p className="text-sm text-red-600">{formError}</p>}

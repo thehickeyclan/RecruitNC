@@ -1,46 +1,169 @@
 "use client"
 
+import { Minus, Plus } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
   AAU_SCHOLASTIC_CHECKOUT_LINES,
-  AAU_SCHOLASTIC_DEFAULT_SELECTED_LINE_IDS,
+  AAU_SCHOLASTIC_MAX_LINE_QUANTITY,
   AAU_SCHOLASTIC_TRAVEL_LINES,
-  aauScholasticLinesFromSelectedIds,
+  aauScholasticApparelLineSelected,
+  aauScholasticDefaultLineQuantities,
+  aauScholasticFullBundleLineQuantities,
+  aauScholasticLineQuantitiesFromRecord,
+  aauScholasticLineSelectionsFromQuantities,
   formatAauScholasticDollars,
-  sumAauScholasticLines,
+  sumAauScholasticSelections,
+  type AauScholasticApparelSizesInput,
   type AauScholasticPriceLine,
 } from "@/lib/aau-scholastic-duals-2026-content"
-import { aauLinkClass, aauPriceClass } from "@/components/national-team/aau-scholastic-theme"
+import { NHSCA_HUB_GEAR_SIZES } from "@/lib/nhsca-hub-checkout-pricing"
+import { aauLinkClass, aauFormLabelClass, aauPriceClass } from "@/components/national-team/aau-scholastic-theme"
 import { cn } from "@/lib/utils"
 
+const NONE = "__none__"
+
 type Props = {
-  selectedIds: string[]
-  onChange: (ids: string[]) => void
+  lineQuantities: Record<string, number>
+  onChange: (lineQuantities: Record<string, number>) => void
+  apparelSizes: AauScholasticApparelSizesInput
+  onApparelSizesChange: (sizes: AauScholasticApparelSizesInput) => void
   disabled?: boolean
   error?: string | null
-  /** Light card on gray register shell (NHSCA-style); default dark for AAU portal. */
+  sizesError?: string | null
   variant?: "dark" | "light"
+}
+
+function QuantityStepper({
+  value,
+  onChange,
+  disabled,
+  isDark,
+  inputId,
+}: {
+  value: number
+  onChange: (next: number) => void
+  disabled?: boolean
+  isDark: boolean
+  inputId: string
+}) {
+  const dec = () => onChange(Math.max(1, value - 1))
+  const inc = () => onChange(Math.min(AAU_SCHOLASTIC_MAX_LINE_QUANTITY, value + 1))
+
+  const btnClass = isDark
+    ? "inline-flex h-8 w-8 items-center justify-center rounded-md border border-[#B31B1B]/30 bg-[#0a2040] text-white hover:bg-[#B31B1B]/20 disabled:opacity-40"
+    : "inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-300 bg-white text-gray-800 hover:bg-gray-50 disabled:opacity-40"
+
+  return (
+    <div className="flex items-center gap-1 shrink-0" role="group" aria-label="Quantity">
+      <button type="button" className={btnClass} disabled={disabled || value <= 1} onClick={dec} aria-label="Decrease quantity">
+        <Minus className="h-3.5 w-3.5" />
+      </button>
+      <label htmlFor={inputId} className="sr-only">
+        Quantity
+      </label>
+      <input
+        id={inputId}
+        type="number"
+        min={1}
+        max={AAU_SCHOLASTIC_MAX_LINE_QUANTITY}
+        value={value}
+        disabled={disabled}
+        onChange={(e) => {
+          const n = parseInt(e.target.value, 10)
+          if (!Number.isFinite(n)) return
+          onChange(Math.min(AAU_SCHOLASTIC_MAX_LINE_QUANTITY, Math.max(1, n)))
+        }}
+        className={
+          isDark
+            ? "h-8 w-10 rounded-md border border-[#B31B1B]/30 bg-[#0a2040] text-center text-sm font-semibold text-white tabular-nums"
+            : "h-8 w-10 rounded-md border border-gray-300 bg-white text-center text-sm font-semibold text-gray-900 tabular-nums"
+        }
+      />
+      <button type="button" className={btnClass} disabled={disabled || value >= AAU_SCHOLASTIC_MAX_LINE_QUANTITY} onClick={inc} aria-label="Increase quantity">
+        <Plus className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  )
+}
+
+function GearSizeSelect({
+  label,
+  value,
+  onChange,
+  disabled,
+  isDark,
+  id,
+  required,
+}: {
+  label: string
+  value: string
+  onChange: (v: string) => void
+  disabled?: boolean
+  isDark: boolean
+  id: string
+  required?: boolean
+}) {
+  const triggerClass = isDark
+    ? "min-h-[44px] bg-[#0a2040] border-[#B31B1B]/25 text-white"
+    : undefined
+
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor={id} className={isDark ? aauFormLabelClass : undefined}>
+        {label}
+        {required ? " *" : null}
+      </Label>
+      <Select value={value || NONE} onValueChange={(v) => onChange(v === NONE ? "" : v)} disabled={disabled}>
+        <SelectTrigger id={id} className={triggerClass}>
+          <SelectValue placeholder="Select size" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={NONE}>Select size</SelectItem>
+          {NHSCA_HUB_GEAR_SIZES.map((s) => (
+            <SelectItem key={s} value={s}>
+              {s}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  )
 }
 
 function LineGroup({
   title,
   lines,
-  selectedSet,
+  lineQuantities,
   disabled,
   isDark,
-  toggle,
+  onToggle,
+  onQuantityChange,
 }: {
   title: string
   lines: AauScholasticPriceLine[]
-  selectedSet: Set<string>
+  lineQuantities: Record<string, number>
   disabled?: boolean
   isDark: boolean
-  toggle: (id: string, checked: boolean) => void
+  onToggle: (id: string, checked: boolean) => void
+  onQuantityChange: (id: string, quantity: number) => void
 }) {
   return (
     <div className="space-y-2">
-      <p className={isDark ? "text-xs font-semibold uppercase tracking-wide text-[#FF7070]" : "text-xs font-semibold uppercase tracking-wide text-[#003366]"}>
+      <p
+        className={
+          isDark
+            ? "text-xs font-semibold uppercase tracking-wide text-[#FF7070]"
+            : "text-xs font-semibold uppercase tracking-wide text-[#003366]"
+        }
+      >
         {title}
       </p>
       <ul
@@ -51,46 +174,66 @@ function LineGroup({
         }
       >
         {lines.map((line) => {
-          const checked = selectedSet.has(line.id)
+          const qty = lineQuantities[line.id] ?? 0
+          const checked = qty > 0
           const inputId = `aau-checkout-${line.id}`
+          const qtyInputId = `aau-checkout-qty-${line.id}`
+          const lineTotal = checked ? line.dollars * qty : line.dollars
+
           return (
             <li key={line.id}>
-              <Label
-                htmlFor={inputId}
+              <div
                 className={
                   isDark
-                    ? "flex cursor-pointer items-start gap-3 px-4 py-3 hover:bg-white/[0.04] has-[[data-disabled=true]]:cursor-not-allowed"
-                    : "flex cursor-pointer items-start gap-3 px-4 py-3 hover:bg-gray-50/80 has-[[data-disabled=true]]:cursor-not-allowed"
+                    ? "flex flex-wrap items-center gap-3 px-4 py-3 hover:bg-white/[0.04]"
+                    : "flex flex-wrap items-center gap-3 px-4 py-3 hover:bg-gray-50/80"
                 }
               >
-                <Checkbox
-                  id={inputId}
-                  checked={checked}
-                  disabled={disabled}
-                  onCheckedChange={(v) => toggle(line.id, v === true)}
-                  className="mt-0.5"
-                />
-                <span className="flex-1 min-w-0">
-                  <span
-                    className={
-                      isDark
-                        ? "block text-sm font-medium text-white/90"
-                        : "block text-sm font-medium text-gray-800"
-                    }
-                  >
-                    {line.label}
+                <Label
+                  htmlFor={inputId}
+                  className="flex flex-1 min-w-[180px] cursor-pointer items-start gap-3 has-[[data-disabled=true]]:cursor-not-allowed"
+                >
+                  <Checkbox
+                    id={inputId}
+                    checked={checked}
+                    disabled={disabled}
+                    onCheckedChange={(v) => onToggle(line.id, v === true)}
+                    className="mt-0.5"
+                  />
+                  <span className="flex-1 min-w-0">
+                    <span
+                      className={
+                        isDark
+                          ? "block text-sm font-medium text-white/90"
+                          : "block text-sm font-medium text-gray-800"
+                      }
+                    >
+                      {line.label}
+                    </span>
+                    <span className={isDark ? "text-xs text-white/45" : "text-xs text-gray-500"}>
+                      {formatAauScholasticDollars(line.dollars)} each
+                    </span>
                   </span>
-                </span>
+                </Label>
+                {checked ? (
+                  <QuantityStepper
+                    value={qty}
+                    onChange={(n) => onQuantityChange(line.id, n)}
+                    disabled={disabled}
+                    isDark={isDark}
+                    inputId={qtyInputId}
+                  />
+                ) : null}
                 <span
                   className={
                     isDark
-                      ? cn("text-sm font-semibold tabular-nums shrink-0", aauPriceClass)
-                      : "text-sm font-semibold text-[#002147] tabular-nums shrink-0"
+                      ? cn("text-sm font-semibold tabular-nums shrink-0 min-w-[4rem] text-right", aauPriceClass)
+                      : "text-sm font-semibold text-[#002147] tabular-nums shrink-0 min-w-[4rem] text-right"
                   }
                 >
-                  {formatAauScholasticDollars(line.dollars)}
+                  {checked ? formatAauScholasticDollars(lineTotal) : formatAauScholasticDollars(line.dollars)}
                 </span>
-              </Label>
+              </div>
             </li>
           )
         })}
@@ -100,22 +243,38 @@ function LineGroup({
 }
 
 export function AauScholasticCheckoutItems({
-  selectedIds,
+  lineQuantities,
   onChange,
+  apparelSizes,
+  onApparelSizesChange,
   disabled,
   error,
+  sizesError,
   variant = "dark",
 }: Props) {
-  const selectedSet = new Set(selectedIds)
-  const total = sumAauScholasticLines(aauScholasticLinesFromSelectedIds(selectedIds))
   const isDark = variant === "dark"
+  const selections = aauScholasticLineSelectionsFromQuantities(aauScholasticLineQuantitiesFromRecord(lineQuantities))
+  const total = sumAauScholasticSelections(selections)
+
+  const showSinglet = aauScholasticApparelLineSelected(lineQuantities, "singlet")
+  const showShorts = aauScholasticApparelLineSelected(lineQuantities, "shorts")
+  const showLongSleeve = aauScholasticApparelLineSelected(lineQuantities, "long_sleeve")
+  const showTee = aauScholasticApparelLineSelected(lineQuantities, "tee")
+  const showApparelSizes = showSinglet || showShorts || showLongSleeve || showTee
 
   const toggle = (id: string, checked: boolean) => {
-    if (checked) {
-      onChange([...new Set([...selectedIds, id])])
-      return
-    }
-    onChange(selectedIds.filter((x) => x !== id))
+    const next = { ...lineQuantities }
+    if (checked) next[id] = 1
+    else delete next[id]
+    onChange(next)
+  }
+
+  const setQuantity = (id: string, quantity: number) => {
+    onChange({ ...lineQuantities, [id]: quantity })
+  }
+
+  const patchSize = (key: keyof AauScholasticApparelSizesInput, value: string) => {
+    onApparelSizesChange({ ...apparelSizes, [key]: value })
   }
 
   return (
@@ -132,27 +291,92 @@ export function AauScholasticCheckoutItems({
               : "text-xs font-medium text-[#003366] hover:underline disabled:opacity-50"
           }
           disabled={disabled}
-          onClick={() => onChange([...AAU_SCHOLASTIC_DEFAULT_SELECTED_LINE_IDS])}
+          onClick={() => onChange(aauScholasticFullBundleLineQuantities())}
         >
           Select all (~$920)
         </button>
       </div>
+
       <LineGroup
         title="Registration & apparel"
         lines={AAU_SCHOLASTIC_CHECKOUT_LINES}
-        selectedSet={selectedSet}
+        lineQuantities={lineQuantities}
         disabled={disabled}
         isDark={isDark}
-        toggle={toggle}
+        onToggle={toggle}
+        onQuantityChange={setQuantity}
       />
       <LineGroup
         title="Travel"
         lines={AAU_SCHOLASTIC_TRAVEL_LINES}
-        selectedSet={selectedSet}
+        lineQuantities={lineQuantities}
         disabled={disabled}
         isDark={isDark}
-        toggle={toggle}
+        onToggle={toggle}
+        onQuantityChange={setQuantity}
       />
+
+      {showApparelSizes ? (
+        <div
+          className={
+            isDark
+              ? "rounded-lg border border-[#B31B1B]/25 bg-[#0a2040]/40 p-4 space-y-3"
+              : "rounded-lg border border-gray-200 bg-gray-50 p-4 space-y-3"
+          }
+        >
+          <p className={isDark ? "text-sm font-semibold text-white" : "text-sm font-semibold text-[#002147]"}>
+            Apparel sizes
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {showSinglet ? (
+              <GearSizeSelect
+                id="aau-singlet-size"
+                label="Singlet"
+                value={apparelSizes.singletSize}
+                onChange={(v) => patchSize("singletSize", v)}
+                disabled={disabled}
+                isDark={isDark}
+                required
+              />
+            ) : null}
+            {showShorts ? (
+              <GearSizeSelect
+                id="aau-shorts-size"
+                label="Shorts"
+                value={apparelSizes.shortsSize}
+                onChange={(v) => patchSize("shortsSize", v)}
+                disabled={disabled}
+                isDark={isDark}
+                required
+              />
+            ) : null}
+            {showLongSleeve ? (
+              <GearSizeSelect
+                id="aau-long-sleeve-size"
+                label="Long sleeve"
+                value={apparelSizes.longSleeveSize}
+                onChange={(v) => patchSize("longSleeveSize", v)}
+                disabled={disabled}
+                isDark={isDark}
+                required
+              />
+            ) : null}
+            {showTee ? (
+              <GearSizeSelect
+                id="aau-tee-size"
+                label="Tee"
+                value={apparelSizes.teeSize}
+                onChange={(v) => patchSize("teeSize", v)}
+                disabled={disabled}
+                isDark={isDark}
+                required
+              />
+            ) : null}
+          </div>
+          {sizesError ? <p className="text-sm text-red-400">{sizesError}</p> : null}
+        </div>
+      ) : null}
+
       <p
         className={
           isDark
@@ -162,12 +386,13 @@ export function AauScholasticCheckoutItems({
       >
         Checkout total: {formatAauScholasticDollars(total)}
       </p>
+
       {error ? <p className="text-sm text-red-400">{error}</p> : null}
       <p className={isDark ? "text-xs text-white/50" : "text-xs text-gray-500"}>
-        Meals and local ground transport are not included. NC United shares booking details in the Team Hub after payment.
+        Check each item you want — nothing is selected by default. Meals and local ground transport are not included.
       </p>
     </div>
   )
 }
 
-export { AAU_SCHOLASTIC_DEFAULT_SELECTED_LINE_IDS }
+export { aauScholasticDefaultLineQuantities, aauScholasticFullBundleLineQuantities }
