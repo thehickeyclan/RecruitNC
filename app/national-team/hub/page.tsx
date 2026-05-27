@@ -29,6 +29,7 @@ import {
   hubPanelTitleClass,
   hubSubteamLabelClass,
 } from "@/components/national-team/nhsca-hub-theme"
+import { NcUnitedCodeCallout } from "@/components/national-team/nc-united-code-callout"
 
 const REG_PAGE_PATH = "/national-team/register/nhsca-2026"
 const HUB_API = "/api/national-team/hub"
@@ -225,6 +226,8 @@ export default function NationalTeamHubPage() {
             No roster is linked to this account yet — everything below is still available. After registration and payment, your athlete&apos;s roster row appears automatically for your parent email.
           </div>
         )}
+
+        <NcUnitedCodeCallout variant="hub" className="mb-6" />
 
         <NhscaHubTabs
           isAdmin={!!data.isAdmin}
