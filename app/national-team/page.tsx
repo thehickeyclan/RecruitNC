@@ -276,14 +276,14 @@ export default function NCUnitedNationalTeam() {
                   NHSCA 2026 Portal →
                 </HardLink>
               </div>
-              {/* AAU — blue tile (coming soon) */}
-              <Link
-                href="/national-team/coming-soon?event=aau-2026"
-                className="flex flex-col rounded-2xl border-2 border-[#003366]/30 bg-[#003366]/8 p-6 opacity-90 hover:opacity-100 transition-all"
+              {/* AAU Scholastic Duals — family info & registration */}
+              <HardLink
+                href="/national-team/scholastic-duals-2026"
+                className="flex flex-col rounded-2xl border-2 border-[#003366]/30 bg-[#003366]/8 p-6 hover:border-[#B31B1B]/40 hover:shadow-md transition-all"
               >
                 <span className="text-[#002147] font-bold text-lg">AAU Scholastic Duals 2026</span>
-                <span className="text-sm text-gray-500 mt-1">Coming soon</span>
-              </Link>
+                <span className="text-sm text-gray-600 mt-1">Info, registration &amp; parent FAQ →</span>
+              </HardLink>
               {/* Deep South — red accent tile (coming soon) */}
               <Link
                 href="/national-team/coming-soon?event=deep-south-2026"
@@ -996,19 +996,28 @@ export default function NCUnitedNationalTeam() {
                 <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-6">
                   <div className="flex-shrink-0">
                     <Badge className="bg-[#B31B1B] text-white text-sm md:text-base px-4 py-2 rounded-full">
-                      June 23-26, 2026
+                      June 23–26, 2026
                     </Badge>
                   </div>
                   <div className="flex-1">
                     <h3 className="text-xl md:text-2xl font-bold text-[#002147] mb-2 md:mb-3">
-                      2026 AAU Scholastic Duals – All-Star Boys
+                      AAU Scholastic Duals 2026 – Boys All-Star
                     </h3>
                     <p className="text-base md:text-lg text-gray-700 mb-2">
-                      Fort Lauderdale, Florida
+                      Broward County Convention Center · Fort Lauderdale, FL
                     </p>
-                    <p className="text-sm md:text-base text-gray-600 leading-relaxed">
+                    <p className="text-sm text-gray-600 mb-1">
+                      Arrival &amp; weigh-ins Tue Jun 23 · competition Jun 24–26
+                    </p>
+                    <p className="text-sm md:text-base text-gray-600 leading-relaxed mb-4">
                       The 2026 AAU Scholastic Duals (formerly Disney Duals) brings together approximately 40–50 elite teams from across the country to compete in high-level team duals, providing a premier national competition experience for top youth and scholastic wrestlers.
                     </p>
+                    <HardLink
+                      href="/national-team/scholastic-duals-2026"
+                      className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-[#B31B1B] px-4 py-2 text-sm font-semibold text-white hover:bg-[#9a1616] transition-colors"
+                    >
+                      Family info &amp; registration →
+                    </HardLink>
                   </div>
                 </div>
               </CardContent>

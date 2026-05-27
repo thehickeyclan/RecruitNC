@@ -27,7 +27,7 @@ export const NATIONAL_TEAM_EVENTS: Record<string, NationalTeamEventConfig> = {
     name: "NHSCA Duals 2026 – Select",
   },
   "aau-2026": {
-    name: "AAU 2026",
+    name: "AAU Scholastic Duals 2026 – Boys All-Star",
   },
   "deep-south-2026": {
     name: "Deep South 2026",
