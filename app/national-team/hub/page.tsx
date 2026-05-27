@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Loader2, Lock } from "lucide-react"
 import { NhscaHubHero } from "@/components/national-team/nhsca-hub-hero"
 import { NhscaHubTabs } from "@/components/national-team/nhsca-hub-tabs"
-import type { HubResponse, HubEvent } from "@/app/api/national-team/hub/route"
+import { AAU_SCHOLASTIC_EVENT_SLUG } from "@/lib/aau-scholastic-duals-2026-content"
+import type { HubEvent, HubResponse } from "@/app/api/national-team/hub/route"
 import { HardLink } from "@/components/hard-link"
 import { cn } from "@/lib/utils"
 import { getHubGroupForEvent, HUB_EVENT_GROUPS } from "@/lib/national-team-events"
@@ -44,6 +45,37 @@ function inferHubCheckoutEventSlug(events: HubEvent[]): "nhsca-duals-2026" | "nh
     return nhsca[0].eventSlug as "nhsca-duals-2026" | "nhsca-duals-2026-select"
   }
   return "nhsca-duals-2026"
+}
+
+function inferHubPaymentsConfig(events: HubEvent[]) {
+  const slugs = new Set(events.map((e) => e.eventSlug))
+  const hasAau = slugs.has(AAU_SCHOLASTIC_EVENT_SLUG)
+  const hasNhsca = slugs.has("nhsca-duals-2026") || slugs.has("nhsca-duals-2026-select")
+
+  if (hasAau && !hasNhsca) {
+    return {
+      checkoutEventSlug: "nhsca-duals-2026" as const,
+      ordersEventSlug: AAU_SCHOLASTIC_EVENT_SLUG,
+      ordersScopeAll: false,
+      showHubCheckout: false,
+    }
+  }
+
+  if (hasAau && hasNhsca) {
+    return {
+      checkoutEventSlug: inferHubCheckoutEventSlug(events),
+      ordersEventSlug: null,
+      ordersScopeAll: true,
+      showHubCheckout: true,
+    }
+  }
+
+  return {
+    checkoutEventSlug: inferHubCheckoutEventSlug(events),
+    ordersEventSlug: null,
+    ordersScopeAll: false,
+    showHubCheckout: true,
+  }
 }
 
 export default function NationalTeamHubPage() {
@@ -137,7 +169,7 @@ export default function NationalTeamHubPage() {
 
   const nhscaInfoOnly = data.nhscaInfoOnly ?? false
   const events = data.events ?? []
-  const checkoutEventSlug = inferHubCheckoutEventSlug(events)
+  const paymentsConfig = inferHubPaymentsConfig(events)
 
   const rosterSections = (() => {
     if (events.length === 0) return null
@@ -199,7 +231,10 @@ export default function NationalTeamHubPage() {
           userId={user?.id ?? null}
           nhscaInfoOnly={nhscaInfoOnly}
           hasRoster={!!(rosterSections && rosterSections.length > 0)}
-          checkoutEventSlug={checkoutEventSlug}
+          checkoutEventSlug={paymentsConfig.checkoutEventSlug}
+          ordersEventSlug={paymentsConfig.ordersEventSlug}
+          ordersScopeAll={paymentsConfig.ordersScopeAll}
+          showHubCheckout={paymentsConfig.showHubCheckout}
           rosterContent={
             rosterSections && rosterSections.length > 0 ? (
               <div className="space-y-6 md:space-y-8">

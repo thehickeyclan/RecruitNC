@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import {
   listNhscaDuals2026Registrations,
-  NHSCA_DUALS_2026_EVENT_SLUGS,
+  NATIONAL_TEAM_PAYMENTS_EVENT_SLUGS,
   nhscaDualsRegistrationIsPaid,
   nhscaDualsRegistrationOrderLines,
   nhscaDualsRegistrationOrderSummary,
@@ -29,11 +29,12 @@ export async function GET(request: NextRequest) {
     const registrations = await listNhscaDuals2026Registrations(admin, {
       isAdmin: true,
       eventSlug: eventParam,
+      eventSlugs: eventParam ? undefined : NATIONAL_TEAM_PAYMENTS_EVENT_SLUGS,
     })
 
     const paid = registrations.filter((r) => nhscaDualsRegistrationIsPaid(r))
     const pending = registrations.filter((r) => !nhscaDualsRegistrationIsPaid(r))
-    const eventSlugs = eventParam ? [eventParam] : [...NHSCA_DUALS_2026_EVENT_SLUGS]
+    const eventSlugs = eventParam ? [eventParam] : [...NATIONAL_TEAM_PAYMENTS_EVENT_SLUGS]
 
     return NextResponse.json({
       registrations: registrations.map((r) => ({

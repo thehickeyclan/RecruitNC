@@ -18,6 +18,8 @@ import {
   nationalTeamRegistrationIsPaid,
   type NationalTeamFeeReceiptRegistration,
 } from "@/lib/national-team-fee-receipt-ui"
+import { nationalTeamEventShortLabel } from "@/lib/nhsca-duals-2026-registrations"
+import { AAU_SCHOLASTIC_EVENT_SLUG } from "@/lib/aau-scholastic-duals-2026-content"
 
 type OrderLineItem = {
   name: string
@@ -38,8 +40,10 @@ type Registration = NationalTeamFeeReceiptRegistration & {
 }
 
 function teamShortLabel(eventSlug: string) {
-  return eventSlug === "nhsca-duals-2026-select" ? "Select" : "National"
+  return nationalTeamEventShortLabel(eventSlug)
 }
+
+type EventFilter = "all" | "nhsca" | "aau"
 
 function formatLineItemDollars(cents: number) {
   return `$${(cents / 100).toFixed(2)}`
@@ -71,6 +75,7 @@ export default function AdminBlueNationalTeamPaymentsPage() {
   const [pendingCount, setPendingCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<"all" | "paid" | "pending">("all")
+  const [eventFilter, setEventFilter] = useState<EventFilter>("all")
   const [error, setError] = useState<string | null>(null)
   const [recordEdits, setRecordEdits] = useState<Record<string, string>>({})
   const [savingId, setSavingId] = useState<string | null>(null)
@@ -113,14 +118,21 @@ export default function AdminBlueNationalTeamPaymentsPage() {
     }
   }, [loadRegistrations])
 
-  const filtered =
-    filter === "paid"
-      ? registrations.filter((r) => nationalTeamRegistrationIsPaid(r))
-      : filter === "pending"
-        ? registrations.filter((r) => !nationalTeamRegistrationIsPaid(r))
+  const filteredByEvent =
+    eventFilter === "aau"
+      ? registrations.filter((r) => r.event_slug === AAU_SCHOLASTIC_EVENT_SLUG)
+      : eventFilter === "nhsca"
+        ? registrations.filter((r) => r.event_slug !== AAU_SCHOLASTIC_EVENT_SLUG)
         : registrations
 
-  const totalPaid = registrations
+  const filtered =
+    filter === "paid"
+      ? filteredByEvent.filter((r) => nationalTeamRegistrationIsPaid(r))
+      : filter === "pending"
+        ? filteredByEvent.filter((r) => !nationalTeamRegistrationIsPaid(r))
+        : filteredByEvent
+
+  const totalPaid = filteredByEvent
     .filter((r) => nationalTeamRegistrationIsPaid(r))
     .reduce((sum, r) => sum + nationalTeamReceiptTotalCents(r), 0)
 
@@ -160,10 +172,10 @@ export default function AdminBlueNationalTeamPaymentsPage() {
           </Button>
           <div className="flex flex-wrap items-start justify-between gap-2 flex-1">
             <div>
-              <h1 className="text-2xl font-bold text-[#13294B]">National team – NHSCA 2026 payments</h1>
+              <h1 className="text-2xl font-bold text-[#13294B]">National team payments</h1>
               <p className="text-sm text-muted-foreground">
-                Paid rows have a <strong>Send receipt</strong> button — emails the official NC United receipt to the
-                Stripe checkout address (e.g. ninaerin2@yahoo.com for Johnson).
+                NHSCA Duals and AAU Scholastic Duals registrations. Paid rows auto-email receipts; use{" "}
+                <strong>Send receipt</strong> to resend.
               </p>
             </div>
             <a
@@ -220,7 +232,7 @@ export default function AdminBlueNationalTeamPaymentsPage() {
                   <CardDescription>{pendingCount} not yet paid</CardDescription>
                 </CardHeader>
               </Card>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button variant={filter === "all" ? "default" : "outline"} size="sm" onClick={() => setFilter("all")}>
                   All
                 </Button>
@@ -233,6 +245,29 @@ export default function AdminBlueNationalTeamPaymentsPage() {
                   onClick={() => setFilter("pending")}
                 >
                   Pending
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                <Button
+                  variant={eventFilter === "all" ? "secondary" : "outline"}
+                  size="sm"
+                  onClick={() => setEventFilter("all")}
+                >
+                  All events
+                </Button>
+                <Button
+                  variant={eventFilter === "nhsca" ? "secondary" : "outline"}
+                  size="sm"
+                  onClick={() => setEventFilter("nhsca")}
+                >
+                  NHSCA
+                </Button>
+                <Button
+                  variant={eventFilter === "aau" ? "secondary" : "outline"}
+                  size="sm"
+                  onClick={() => setEventFilter("aau")}
+                >
+                  AAU Scholastic
                 </Button>
               </div>
             </div>
@@ -272,7 +307,7 @@ export default function AdminBlueNationalTeamPaymentsPage() {
                                 {r.athlete_first_name} {r.athlete_last_name}
                               </div>
                               <div className="text-xs font-normal text-muted-foreground">
-                                {teamShortLabel(r.event_slug)} team
+                                {teamShortLabel(r.event_slug)}
                               </div>
                             </TableCell>
                             <TableCell className="text-sm max-w-[200px]">

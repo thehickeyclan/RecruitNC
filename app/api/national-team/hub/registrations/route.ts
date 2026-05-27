@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getUserFromRequest } from "@/lib/supabase/auth-from-request"
-import { listNhscaDuals2026PaidOrders } from "@/lib/nhsca-duals-2026-registrations"
+import { listNhscaDuals2026PaidOrders, NATIONAL_TEAM_PAYMENTS_EVENT_SLUGS } from "@/lib/nhsca-duals-2026-registrations"
 
 export const dynamic = "force-dynamic"
 
 /**
- * GET: NHSCA Duals 2026 registrations for hub Payment → Past Orders.
- * Admins see all paid/pending registrations (both teams). Families see rows tied to their account or checkout email.
+ * GET: National team registrations for hub Payment → Past Orders.
+ * Admins see all paid/pending registrations. Families see rows tied to their account or checkout email.
+ * Query: `event` = single slug; `scope=all` = NHSCA + AAU payment events.
  */
 export async function GET(request: NextRequest) {
   const user = await getUserFromRequest(request)
@@ -35,6 +36,7 @@ export async function GET(request: NextRequest) {
 
   const isAdmin = !!profile?.is_admin || profile?.role === "admin"
   const eventParam = request.nextUrl.searchParams.get("event")?.trim() || null
+  const scopeAll = request.nextUrl.searchParams.get("scope")?.trim().toLowerCase() === "all"
 
   try {
     const orders = await listNhscaDuals2026PaidOrders(admin, {
@@ -42,6 +44,7 @@ export async function GET(request: NextRequest) {
       viewerUserId: user.id,
       viewerEmail: user.email,
       eventSlug: eventParam,
+      eventSlugs: !eventParam && scopeAll ? NATIONAL_TEAM_PAYMENTS_EVENT_SLUGS : undefined,
     })
 
     return NextResponse.json({
