@@ -483,6 +483,10 @@ export const AAU_SCHOLASTIC_PARENT_FAQ = [
     a: "NC United secured a block of 18 flights at a competitive rate before broader World Cup travel demand pushed summer fares higher. Inventory is limited — families who need a flight should select that line at registration.",
   },
   {
+    q: "Is there a van going down instead of flying?",
+    a: "NC United is not taking a team van to Fort Lauderdale. Driving is absolutely an option — the trip is about 800 miles or 11–12 hours from Raleigh. If you plan to drive, tell us as soon as possible so we can take you off the flight ticket list.",
+  },
+  {
     q: "How do I pay?",
     a: "Complete the athlete form, select your items, and continue to secure Stripe checkout. A receipt is emailed to the parent/guardian address you provide.",
   },

@@ -35,3 +35,4 @@ legacy-nc/
 # Accidental backup files next to ported Data Dawg route
 app/api/ai/chat/route.ts.bak
 app/api/ai/chat/route.ts.bak2
+.env*.local

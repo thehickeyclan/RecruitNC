@@ -18,6 +18,7 @@
     "nhsca:gear-bg": "tsx scripts/process-nhsca-gear-images.ts",
     "nhsca:lookup": "tsx scripts/test-nhsca-lookup.ts",
     "nhsca:all-years": "tsx scripts/show-nhsca-all-years.ts",
+    "store:seed-2026-gear": "tsx scripts/seed-nc-united-2026-gear-store.ts",
     "nhsca:roster-tsv-to-sql": "node scripts/tsv-roster-to-nhsca-placements-sql.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
