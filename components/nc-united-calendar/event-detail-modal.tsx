@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator"
 import { X, Calendar, MapPin, Clock, Users, ExternalLink } from 'lucide-react'
 import type { CalendarEvent, EventCategory } from "@/lib/nc-united-calendar/types"
 import { eventCategories } from "@/lib/nc-united-calendar/calendar-config"
-import { parseCivilDateFromDatabase } from "@/lib/nc-united-calendar/calendar-date"
+import { parseCivilDateFromDatabase, eventIsMultiDay, formatEventDateRangeShort } from "@/lib/nc-united-calendar/calendar-date"
 import { EventShare } from "./event-share"
 import { DropInForm } from "./drop-in-form"
 import { formatTime } from "@/lib/nc-united-calendar/time-utils"
@@ -157,7 +157,9 @@ export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalPro
                     <Calendar className="h-5 w-5 text-blue-600" />
                     <div>
                       <p className="text-sm text-gray-600">Date</p>
-                      <p className="font-semibold">{formatEventDate(event.date)}</p>
+                      <p className="font-semibold">
+                        {eventIsMultiDay(event) ? formatEventDateRangeShort(event) : formatEventDate(event.date)}
+                      </p>
                     </div>
                   </div>
                 </CardContent>
