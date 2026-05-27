@@ -6,6 +6,8 @@ export type AauScholasticRosterRow = {
   /** MM/DD/YYYY */
   dob: string
   cell: string
+  /** Open starter slot — shown as TBD on the public roster */
+  openSlot?: boolean
 }
 
 export const AAU_SCHOLASTIC_DUALS_2026_ROSTER: AauScholasticRosterRow[] = [
@@ -19,8 +21,10 @@ export const AAU_SCHOLASTIC_DUALS_2026_ROSTER: AauScholasticRosterRow[] = [
   { weightLabel: "150+5", wrestler: "Jacob Perry", dob: "12/08/2009", cell: "856-638-8831" },
   { weightLabel: "157+5", wrestler: "Aidan Gore", dob: "08/29/2008", cell: "919-448-7598" },
   { weightLabel: "165+5", wrestler: "Tobin McNair", dob: "05/07/2008", cell: "201-213-3341" },
+  { weightLabel: "175+5", wrestler: "", dob: "", cell: "", openSlot: true },
   { weightLabel: "190+5", wrestler: "Luke Padgett", dob: "02/26/2008", cell: "252-665-3536" },
   { weightLabel: "215+5", wrestler: "Gavin Lopez", dob: "01/21/2009", cell: "908-566-8816" },
+  { weightLabel: "HWT", wrestler: "", dob: "", cell: "", openSlot: true },
 ]
 
 export { phoneDigitsForTel } from "@/lib/nhsca-duals-2026-hub-contact-roster"

@@ -20,6 +20,8 @@ import {
   aauScholasticLineQuantitiesFromRecord,
   aauScholasticLineSelectionsFromQuantities,
   formatAauScholasticDollars,
+  AAU_SCHOLASTIC_GEAR_REUSE_NOTE,
+  AAU_SCHOLASTIC_MEALS_NOT_INCLUDED,
   sumAauScholasticSelections,
   type AauScholasticApparelSizesInput,
   type AauScholasticPriceLine,
@@ -281,7 +283,7 @@ export function AauScholasticCheckoutItems({
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className={isDark ? "text-sm font-semibold text-white" : "text-sm font-semibold text-[#002147]"}>
-          Select items for checkout
+          Select items for checkout (à la carte)
         </p>
         <button
           type="button"
@@ -293,7 +295,7 @@ export function AauScholasticCheckoutItems({
           disabled={disabled}
           onClick={() => onChange(aauScholasticFullBundleLineQuantities())}
         >
-          Select all (~$920)
+          Select all items
         </button>
       </div>
 
@@ -388,8 +390,11 @@ export function AauScholasticCheckoutItems({
       </p>
 
       {error ? <p className="text-sm text-red-400">{error}</p> : null}
+      <p className={isDark ? "text-xs text-white/50 leading-relaxed" : "text-xs text-gray-500 leading-relaxed"}>
+        {AAU_SCHOLASTIC_GEAR_REUSE_NOTE}
+      </p>
       <p className={isDark ? "text-xs text-white/50" : "text-xs text-gray-500"}>
-        Check each item you want — nothing is selected by default. Meals and local ground transport are not included.
+        {AAU_SCHOLASTIC_MEALS_NOT_INCLUDED}
       </p>
     </div>
   )

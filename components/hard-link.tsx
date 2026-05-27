@@ -26,8 +26,10 @@ export function HardLink({
       className={className}
       style={style}
       onClick={(e) => {
-        e.preventDefault()
         onNavigate?.()
+        // Preserve native hash navigation so /path#section lands on the anchor.
+        if (href.includes("#")) return
+        e.preventDefault()
         window.location.href = href
       }}
     >

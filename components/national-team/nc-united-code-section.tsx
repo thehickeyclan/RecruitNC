@@ -2,7 +2,7 @@ import { NC_UNITED_CODE, NC_UNITED_CODE_ANCHOR } from "@/lib/nc-united-code"
 
 export function NcUnitedCodeSection() {
   return (
-    <section id={NC_UNITED_CODE_ANCHOR} className="py-16 md:py-20 bg-white scroll-mt-24">
+    <section id={NC_UNITED_CODE_ANCHOR} className="py-16 md:py-20 bg-white scroll-mt-28">
       <div className="container mx-auto px-4 max-w-4xl">
         <div className="text-center mb-10 md:mb-12">
           <span className="text-[#CBAF5D] text-base md:text-lg font-semibold tracking-wide uppercase mb-3 block">

@@ -9,6 +9,7 @@ import Link from "next/link"
 import { HardLink } from "@/components/hard-link"
 import { useEffect, useState } from "react"
 import { NcUnitedCodeSection } from "@/components/national-team/nc-united-code-section"
+import { scrollToPageHash } from "@/lib/scroll-to-page-hash"
 import { getTournaments, type Tournament, getTournamentResults } from "@/lib/nc-united-api"
 import { NHSCA_DUALS_2026_NATIONAL_ACHIEVEMENT } from "@/lib/nhsca-duals-public-hero-stats"
 import { NHSCA_DUALS_2026_NATIONAL_JOURNEY_CARD_PHOTO } from "@/lib/nhsca-duals-2026-team-photos"
@@ -170,6 +171,18 @@ export default function NCUnitedNationalTeam() {
     loadNationalTeamStats()
   }, [])
 
+  useEffect(() => {
+    scrollToPageHash()
+    const onHashChange = () => scrollToPageHash()
+    window.addEventListener("hashchange", onHashChange)
+    return () => window.removeEventListener("hashchange", onHashChange)
+  }, [])
+
+  useEffect(() => {
+    if (loading) return
+    scrollToPageHash("auto")
+  }, [loading])
+
   // Find specific tournaments for stats
   const ucd2024 = tournaments.find((t) => t.name === "Ultimate Club Duals" && t.year === 2024)
   const ucd2025 = tournaments.find((t) => t.name === "Ultimate Club Duals" && t.year === 2025)
@@ -196,12 +209,12 @@ export default function NCUnitedNationalTeam() {
 
             {/* Hero CTAs */}
             <div className="mb-6 md:mb-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 flex-wrap">
-              <Link
-                href="/national-team/interest-form"
+              <HardLink
+                href="/national-team/scholastic-duals-2026"
                 className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-[#B31B1B] px-6 py-3 text-base font-bold text-white shadow-lg hover:bg-[#9a1616] transition-colors border-2 border-white/20"
               >
-                Express interest · 2026
-              </Link>
+                AAU Scholastic Duals · 2026
+              </HardLink>
               <Link
                 href="#schedule"
                 className="inline-flex min-h-[48px] items-center justify-center rounded-xl border-2 border-[#CBAF5D] bg-transparent px-6 py-3 text-base font-semibold text-[#CBAF5D] hover:bg-[#CBAF5D]/20 transition-colors"
@@ -215,7 +228,9 @@ export default function NCUnitedNationalTeam() {
                 NHSCA 2026 Portal →
               </HardLink>
             </div>
-            <p className="text-sm text-blue-100/90">Get considered for NHSCA Duals, AAU Scholastic Duals &amp; more</p>
+            <p className="text-sm text-blue-100/90">
+              AAU Scholastic Duals info &amp; registration · Fort Lauderdale, June 2026
+            </p>
 
             {/* National team stats — UCD + NHSCA through 2026 (National squad only; excludes Select) */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mt-12 md:mt-16 px-4">

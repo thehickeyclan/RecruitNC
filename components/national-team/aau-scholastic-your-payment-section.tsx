@@ -1,4 +1,4 @@
-import { CheckCircle2, Clock, LogIn } from "lucide-react"
+import { CheckCircle2, Clock } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -18,7 +18,7 @@ import {
   scholasticInsetClass,
   scholasticLinkClass,
 } from "@/components/national-team/scholastic-duals-section"
-import { aauPrimaryBtnClass, aauPriceClass, aauSecondaryBtnClass } from "@/components/national-team/aau-scholastic-theme"
+import { aauPrimaryBtnClass, aauPriceClass } from "@/components/national-team/aau-scholastic-theme"
 import { cn } from "@/lib/utils"
 
 function formatPaidDate(iso: string) {
@@ -59,21 +59,7 @@ async function AauScholasticYourPaymentSectionInner() {
   } = await supabase.auth.getUser()
 
   if (!user?.id && !user?.email) {
-    return (
-      <ScholasticDualsSection
-        id="your-payment"
-        title="Your registration & payment"
-        description="Sign in to see whether your athlete's AAU registration is paid."
-      >
-        <a
-          href={`/auth/signin?returnTo=${encodeURIComponent("/national-team/scholastic-duals-2026#your-payment")}`}
-          className={cn(aauPrimaryBtnClass, "gap-2 px-4 py-2.5 text-sm")}
-        >
-          <LogIn className="h-4 w-4" />
-          Sign in to view payment status
-        </a>
-      </ScholasticDualsSection>
-    )
+    return null
   }
 
   const admin = createAdminClient()
@@ -85,24 +71,7 @@ async function AauScholasticYourPaymentSectionInner() {
   })
 
   if (registrations.length === 0) {
-    return (
-      <ScholasticDualsSection
-        id="your-payment"
-        title="Your registration & payment"
-        description={`No AAU Scholastic registration is linked to this account yet (${user.email}).`}
-      >
-        <p className="mb-3">
-          After you register and select your items, payment status will appear here. Use the same email at Stripe
-          checkout or sign in with the parent account you used on the form.
-        </p>
-        <a
-          href={AAU_SCHOLASTIC_DUALS_2026.registerPath}
-          className={cn(aauSecondaryBtnClass, "min-h-[44px] px-4 py-2 text-sm border-[#B31B1B]/40 text-[#FF7070]")}
-        >
-          Start registration →
-        </a>
-      </ScholasticDualsSection>
-    )
+    return null
   }
 
   return (

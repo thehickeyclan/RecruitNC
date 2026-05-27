@@ -426,7 +426,7 @@ function inferAauScholasticOrderLinesFromFees(row: {
     }
   }
   peel(75 * 100, "Tournament registration")
-  peel(315 * 100, "Hotel and Van")
+  peel(315 * 100, "Hotel & team van")
   peel(355 * 100, "Flight")
   if (reg > 0) items.push({ name: "Registration / travel fees", amount_cents: reg })
 
