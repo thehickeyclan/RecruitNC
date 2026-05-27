@@ -25,6 +25,8 @@ export interface DropInRequest {
   payment_amount_cents?: number | null
   stripe_session_id?: string | null
   stripe_payment_intent_id?: string | null
+  waiver_signed_at?: string | null
+  waiver_signer_name?: string | null
   created_at?: string | null
   updated_at?: string | null
 }

@@ -15,6 +15,7 @@ const PRICE_RANGES = [
 ]
 
 const CATEGORY_OPTIONS = [
+  { id: "Singlets", label: "Singlets" },
   { id: "T-Shirts", label: "T-Shirts" },
   { id: "Sweatshirts", label: "Sweatshirts" },
   { id: "Headwear", label: "Headwear" },

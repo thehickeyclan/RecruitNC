@@ -7,7 +7,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils"
+import {
+  NC_UNITED_LIABILITY_WAIVER_CHECKBOX_LABEL,
+  NC_UNITED_LIABILITY_WAIVER_TEXT,
+} from "@/lib/nc-united-liability-waiver"
 
 interface DropInFormProps {
   eventId: string
@@ -33,6 +38,7 @@ export function DropInForm({ eventId, eventTitle, onClose }: DropInFormProps) {
     notes: "",
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [waiverAccepted, setWaiverAccepted] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [capacityError, setCapacityError] = useState<string | null>(null)
 
@@ -59,6 +65,7 @@ export function DropInForm({ eventId, eventTitle, onClose }: DropInFormProps) {
           parentPhone: formData.parentPhone.trim() || undefined,
           experienceLevel: formData.experienceLevel.trim() || undefined,
           notes: formData.notes.trim() || undefined,
+          waiverAccepted,
         }),
       })
 
@@ -251,6 +258,31 @@ export function DropInForm({ eventId, eventTitle, onClose }: DropInFormProps) {
               />
             </section>
 
+            <section className="space-y-3 border-t border-gray-200 pt-6">
+              <header className="space-y-1">
+                <h3 className="font-semibold text-lg" style={{ color: brand.navy }}>
+                  Waiver and Release of Liability
+                </h3>
+                <p className="text-sm text-gray-500">
+                  Required before payment — same NC United liability waiver as full Blue membership.
+                </p>
+              </header>
+              <div className="max-h-[220px] overflow-y-auto rounded-md border border-gray-200 bg-gray-50 p-4 text-sm whitespace-pre-wrap text-gray-800">
+                {NC_UNITED_LIABILITY_WAIVER_TEXT}
+              </div>
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  id="dropInWaiver"
+                  checked={waiverAccepted}
+                  onCheckedChange={(checked) => setWaiverAccepted(checked === true)}
+                  disabled={isSubmitting}
+                />
+                <Label htmlFor="dropInWaiver" className="text-sm leading-tight cursor-pointer">
+                  {NC_UNITED_LIABILITY_WAIVER_CHECKBOX_LABEL} <span className="text-nc-red-600">*</span>
+                </Label>
+              </div>
+            </section>
+
             {error && (
               <div className="rounded-lg border border-nc-red-200 bg-nc-red-50 px-4 py-3 text-sm text-nc-red-800">{error}</div>
             )}
@@ -269,7 +301,7 @@ export function DropInForm({ eventId, eventTitle, onClose }: DropInFormProps) {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !waiverAccepted}
                   className="border-none text-white"
                   style={{
                     background: `linear-gradient(135deg, ${brand.navy}, ${brand.red})`,

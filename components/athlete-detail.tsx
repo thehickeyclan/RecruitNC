@@ -25,25 +25,7 @@ import { InlineWeightEditor } from "./inline-weight-editor"
 import { InlineHighlightVideoEditor } from "./inline-highlight-video-editor"
 import { WorkingEntityLogo } from "./working-entity-logo"
 import { useToast } from "@/components/ui/use-toast"
-
-// Helper function to extract YouTube video ID from various URL formats
-function getYouTubeVideoId(url: string): string | null {
-  if (!url) return null
-  
-  const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\?\/]+)/,
-    /youtube\.com\/shorts\/([^&\?\/]+)/,
-  ]
-  
-  for (const pattern of patterns) {
-    const match = url.match(pattern)
-    if (match && match[1]) {
-      return match[1]
-    }
-  }
-  
-  return null
-}
+import { getYouTubeVideoId, isDirectHighlightVideoUrl } from "@/lib/highlight-video-url"
 
 interface AthleteDetailProps {
   athlete: {
@@ -1525,11 +1507,30 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
               />
             ) : athleteData?.highlight_video_url ? (
               (() => {
-                const videoId = getYouTubeVideoId(athleteData.highlight_video_url)
+                const url = athleteData.highlight_video_url
+                const videoId = getYouTubeVideoId(url)
+                if (isDirectHighlightVideoUrl(url)) {
+                  return (
+                    <div className="relative w-full overflow-hidden rounded-lg shadow-lg bg-black">
+                      <video
+                        src={url}
+                        controls
+                        playsInline
+                        preload="metadata"
+                        className="w-full max-h-[min(70vh,720px)]"
+                        title={`${athleteData.name ?? "Athlete"} highlight reel`}
+                      >
+                        <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                          Watch highlight video
+                        </a>
+                      </video>
+                    </div>
+                  )
+                }
                 if (!videoId) {
                   return (
                     <p className="text-gray-600">
-                      <a href={athleteData.highlight_video_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                      <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
                         Watch video
                       </a>
                       {canEdit && " — Use Edit to replace with a valid YouTube link for embedding."}
@@ -1551,7 +1552,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
               })()
             ) : (
               <p className="text-gray-600">
-                {canEdit ? "Add a YouTube highlight video. Click the button above to paste your link." : "No highlight video yet."}
+                {canEdit ? "Add a YouTube highlight video or upload a video file via admin. Click the button above to paste your link." : "No highlight video yet."}
               </p>
             )}
           </div>

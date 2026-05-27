@@ -5,7 +5,7 @@ interface StoreBannerProps {
   onShopCategory: (categoryId: string) => void
 }
 
-const categories = ["T-Shirts", "Sweatshirts", "Headwear", "Accessories"]
+const categories = ["Singlets", "T-Shirts", "Sweatshirts", "Headwear", "Accessories"]
 
 export function StoreBanner({ onShopAll, onShopCategory }: StoreBannerProps) {
   return (

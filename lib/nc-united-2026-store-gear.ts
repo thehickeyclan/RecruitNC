@@ -38,7 +38,7 @@ export const NC_UNITED_2026_STORE_GEAR: NcUnitedStoreGearProduct[] = [
     description:
       'Official NC United "Pepsi" blue competition singlet — light blue top with North Carolina script and custom name on back. Required at weigh-ins for NHSCA Duals and AAU Scholastic Duals.',
     category: "athletic-wear",
-    price: 65,
+    price: 75,
     featured: true,
     displayOrder: 1,
     skuPrefix: "NCU26-SING-BLU",
@@ -56,7 +56,7 @@ export const NC_UNITED_2026_STORE_GEAR: NcUnitedStoreGearProduct[] = [
     description:
       'Official NC United "Pinstripes" competition singlet — navy, red, and white with NC logo and custom name on back. Required at weigh-ins for NHSCA Duals and AAU Scholastic Duals.',
     category: "athletic-wear",
-    price: 65,
+    price: 75,
     featured: true,
     displayOrder: 2,
     skuPrefix: "NCU26-SING-PIN",
