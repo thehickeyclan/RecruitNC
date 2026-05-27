@@ -1,65 +1,19 @@
 import { NextResponse } from "next/server"
-import type { SupabaseClient } from "@supabase/supabase-js"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { getNameVariants, getSuper32FromTable, getUltimateClubDualsFromTables } from "@/lib/tournament-tables"
+import { getSuper32FromTable, getUltimateClubDualsFromTables } from "@/lib/tournament-tables"
 import { getNHSCAForAthlete, resolveGraduationYear } from "@/lib/athlete-nhsca"
 import {
   getNCHSAAResultsForProfile,
   mergeNchsaaResults,
   nchsaaJsonToProfileRows,
 } from "@/lib/nchsaa-results"
+import {
+  getNhscaDuals2026LiveProfileResults,
+  getNhscaDuals2026RegistrationPlaceholders,
+  mergeNationalTeamResultsForProfile,
+} from "@/lib/national-team-live-profile-results"
 import { recruitNcDebugLogProfile } from "@/lib/recruitnc-debug"
-import { getNationalTeamResults, mergeNationalTeamResults } from "@/lib/tournament-utils"
-
-const NHSCA_DUALS_2026_SLUG = "nhsca-duals-2026"
-
-/** If athlete is on the paid roster for 2026 NHSCA Duals, returns { member: true, record } (record from registration or "0-0"); else { member: false }. */
-async function getNhscaDuals2026RosterStatus(
-  supabase: SupabaseClient,
-  athleteId: string,
-  athlete: { name: string; highSchool: string; gradYear: number }
-): Promise<{ member: boolean; record: string }> {
-  try {
-    const { data: byId, error } = await supabase
-      .from("national_team_event_registrations")
-      .select("id, record")
-      .eq("event_slug", NHSCA_DUALS_2026_SLUG)
-      .eq("status", "paid")
-      .eq("athlete_id", athleteId)
-      .limit(1)
-    if (!error && byId && byId.length > 0) {
-      const r = byId[0] as { record?: string }
-      return { member: true, record: (r.record ?? "").trim() || "0-0" }
-    }
-  } catch {
-    // athlete_id or record column may not exist yet; fall back to name match
-  }
-
-  const nameVariants = new Set(
-    getNameVariants(athlete.name).map((n) => n.trim().toLowerCase())
-  )
-  const gradStr = String(athlete.gradYear)
-  const highNorm = (athlete.highSchool ?? "").trim().toLowerCase()
-
-  const { data: rows } = await supabase
-    .from("national_team_event_registrations")
-    .select("athlete_first_name, athlete_last_name, high_school, graduation_year, record")
-    .eq("event_slug", NHSCA_DUALS_2026_SLUG)
-    .eq("status", "paid")
-    .eq("graduation_year", gradStr)
-
-  if (!rows?.length) return { member: false, record: "0-0" }
-  for (const r of rows as { athlete_first_name?: string; athlete_last_name?: string; high_school?: string; graduation_year?: string; record?: string }[]) {
-    const regFull = [r.athlete_first_name, r.athlete_last_name].filter(Boolean).join(" ").trim().toLowerCase()
-    if (!regFull) continue
-    const regGrad = (r.graduation_year ?? "").toString().trim()
-    const regSchool = (r.high_school ?? "").trim().toLowerCase()
-    if (nameVariants.has(regFull) && regGrad === gradStr && (!highNorm || regSchool === highNorm)) {
-      return { member: true, record: (r.record ?? "").trim() || "0-0" }
-    }
-  }
-  return { member: false, record: "0-0" }
-}
+import { getNationalTeamResults } from "@/lib/tournament-utils"
 
 /**
  * GET /api/athlete/[id]
@@ -104,7 +58,8 @@ export async function GET(
     if (name) nameBases.push(name)
     if (wrestlingName && wrestlingName.toLowerCase() !== name.toLowerCase()) nameBases.push(wrestlingName)
     const athleteRow = athlete as Record<string, unknown>
-    const [nhscaMerged, super32FromTable, nationalTeamFromTables, nchsaaMergedRows, nhsca2026] = await Promise.all([
+    const [nhscaMerged, super32FromTable, nationalTeamFromTables, nchsaaMergedRows, nhscaDualsLive, nhscaDualsRegistration] =
+      await Promise.all([
       getNHSCAForAthlete(supabase, athleteRow),
       (async () => {
         const bases = nameBases.filter(Boolean)
@@ -145,7 +100,8 @@ export async function GET(
           }
         }
       })(),
-      getNhscaDuals2026RosterStatus(supabase, id.trim(), {
+      getNhscaDuals2026LiveProfileResults(supabase, nameBases),
+      getNhscaDuals2026RegistrationPlaceholders(supabase, id.trim(), {
         name,
         highSchool,
         gradYear,
@@ -158,19 +114,12 @@ export async function GET(
       weight_class: r.weight_class,
     }))
     const nationalTeamFromRow = getNationalTeamResults(athlete)
-    let national_team_results = mergeNationalTeamResults(nationalTeamFromTables, nationalTeamFromRow)
-
-    // 2026 NHSCA Duals — loaded in parallel with tournament merges above
-    if (nhsca2026.member) {
-      const has2026 = national_team_results.some((r) => r.event === "NHSCA Duals" && r.year === 2026)
-      if (!has2026) {
-        const isPlaceholder = !nhsca2026.record || nhsca2026.record === "0-0"
-        national_team_results = [
-          { event: "NHSCA Duals", year: 2026, record: nhsca2026.record || "0-0", isPlaceholder },
-          ...national_team_results,
-        ]
-      }
-    }
+    const national_team_results = mergeNationalTeamResultsForProfile({
+      fromTable: nationalTeamFromTables,
+      fromAthleteRow: nationalTeamFromRow,
+      fromLive: nhscaDualsLive,
+      fromRegistration: nhscaDualsRegistration,
+    })
 
     const athleteWithTournaments = {
       ...athlete,
@@ -190,7 +139,8 @@ export async function GET(
       nchsaaProfileRows: nchsaa_profile.length,
       super32FromTable: super32FromTable.length,
       nationalTeamMerged: national_team_results.length,
-      nhscaDuals2026Member: nhsca2026.member,
+      nhscaDualsLiveRows: nhscaDualsLive.length,
+      nhscaDualsRegistrationRows: nhscaDualsRegistration.length,
     })
 
     return NextResponse.json(
