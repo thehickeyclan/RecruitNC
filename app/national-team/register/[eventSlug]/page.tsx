@@ -91,6 +91,7 @@ export default function NationalTeamRegisterEventPage() {
   const [athlete_last_name, setAthleteLastName] = useState("")
   const [athlete_email, setAthleteEmail] = useState("")
   const [athlete_phone, setAthletePhone] = useState("")
+  const [athlete_dob, setAthleteDob] = useState("")
   const [parent_email, setParentEmail] = useState("")
   const [parent_name, setParentName] = useState("")
   const [high_school, setHighSchool] = useState("")
@@ -150,6 +151,10 @@ export default function NationalTeamRegisterEventPage() {
       setFormError("High school, graduation year, and weight class are required.")
       return
     }
+    if (isAauRegistration && !athlete_dob.trim()) {
+      setFormError("Athlete date of birth is required.")
+      return
+    }
     if (isAauRegistration && aauScholasticLineQuantitiesFromRecord(lineQuantities).length === 0) {
       setItemsError("Select at least one item to checkout.")
       return
@@ -188,6 +193,7 @@ export default function NationalTeamRegisterEventPage() {
           athlete_last_name: athlete_last_name.trim(),
           athlete_email: athlete_email.trim(),
           athlete_phone: athlete_phone.trim() || null,
+          ...(isAauRegistration ? { athlete_dob: athlete_dob.trim() } : {}),
           parent_email: parent_email.trim(),
           parent_name: parent_name.trim() || null,
           high_school: high_school.trim(),
@@ -414,6 +420,18 @@ export default function NationalTeamRegisterEventPage() {
                   <div>
                     <Label htmlFor="athlete_phone" className={aauFormLabelClass}>Athlete phone</Label>
                     <Input id="athlete_phone" type="tel" className={aauInputClass} value={athlete_phone} onChange={(e) => setAthletePhone(e.target.value)} />
+                  </div>
+                  <div>
+                    <Label htmlFor="athlete_dob" className={aauFormLabelClass}>Athlete date of birth *</Label>
+                    <Input
+                      id="athlete_dob"
+                      type="date"
+                      className={aauInputClass}
+                      value={athlete_dob}
+                      onChange={(e) => setAthleteDob(e.target.value)}
+                      required
+                    />
+                    <p className="mt-1 text-xs text-white/55">Required for AAU entry. Stored as MM/DD/YYYY.</p>
                   </div>
                   <div>
                     <Label htmlFor="parent_email" className={aauFormLabelClass}>Parent/guardian email *</Label>

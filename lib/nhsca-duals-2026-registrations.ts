@@ -23,6 +23,7 @@ export type NhscaDuals2026Registration = {
   athlete_first_name: string
   athlete_last_name: string
   athlete_email: string
+  athlete_dob?: string | null
   parent_email: string
   parent_user_id?: string | null
   linked_account_email?: string | null
@@ -154,9 +155,9 @@ export async function listNhscaDuals2026Registrations(
   const eventSlugs = opts.eventSlug ? [opts.eventSlug] : [...NHSCA_DUALS_2026_EVENT_SLUGS]
 
   const selectColsWithCheckout =
-    "id, event_slug, athlete_first_name, athlete_last_name, athlete_email, parent_email, parent_user_id, high_school, graduation_year, primary_weight, reg_fee_cents, apparel_fee_cents, status, order_id, record, created_at, shirt_size, singlet_size, shorts_size, checkout_lines, checkout_mode, updated_at"
+    "id, event_slug, athlete_first_name, athlete_last_name, athlete_email, athlete_dob, parent_email, parent_user_id, high_school, graduation_year, primary_weight, reg_fee_cents, apparel_fee_cents, status, order_id, record, created_at, shirt_size, singlet_size, shorts_size, checkout_lines, checkout_mode, updated_at"
   const selectColsBase =
-    "id, event_slug, athlete_first_name, athlete_last_name, athlete_email, parent_email, parent_user_id, high_school, graduation_year, primary_weight, reg_fee_cents, apparel_fee_cents, status, order_id, record, created_at, shirt_size, singlet_size, shorts_size, updated_at"
+    "id, event_slug, athlete_first_name, athlete_last_name, athlete_email, athlete_dob, parent_email, parent_user_id, high_school, graduation_year, primary_weight, reg_fee_cents, apparel_fee_cents, status, order_id, record, created_at, shirt_size, singlet_size, shorts_size, updated_at"
 
   let selectCols = selectColsWithCheckout
 
@@ -211,6 +212,9 @@ export async function listNhscaDuals2026Registrations(
     const msg = ((error as { message?: string })?.message ?? "").toLowerCase()
     if (code === "42703" || (msg.includes("column") && msg.includes("checkout"))) {
       selectCols = selectColsBase
+      rows = await loadRows(selectCols)
+    } else if (code === "42703" && msg.includes("athlete_dob")) {
+      selectCols = selectCols.replace("athlete_dob, ", "").replace(", athlete_dob", "")
       rows = await loadRows(selectCols)
     } else {
       throw error

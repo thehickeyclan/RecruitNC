@@ -250,6 +250,9 @@ export const AAU_SCHOLASTIC_OPERATIONS = {
   venueName: "Broward County Convention Center",
   venueAddress1: "1950 Eisenhower Blvd",
   venueCityStateZip: "Fort Lauderdale, FL 33316",
+  hotelName: "Embassy Suites by Hilton Fort Lauderdale 17th Street",
+  hotelAddress1: "1100 SE 17th St",
+  hotelCityStateZip: "Fort Lauderdale, FL 33316",
   rosterStarters: 14,
   rosterAlternates: 3,
   rosterCoaches: 3,
@@ -346,6 +349,31 @@ export const AAU_SCHOLASTIC_DIVISION_NOTES = [
   "Recruitment USB distributed to college coaches uses info entered in AAU online registration — complete athlete profiles fully",
   "Late weigh-in requests must be submitted to AAU one week in advance (contact Jacob Sunde)",
 ] as const
+
+/** NC United team hotel — included in hotel/van checkout line. */
+export const AAU_SCHOLASTIC_TEAM_HOTEL = {
+  name: AAU_SCHOLASTIC_OPERATIONS.hotelName,
+  googleRating: 4.0,
+  googleReviewCount: 4718,
+  starsLabel: "3-star hotel",
+  websiteUrl: "https://www.hilton.com/en/hotels/fllenes-embassy-suites-fort-lauderdale-17th-street/",
+  websiteLabel: "hilton.com",
+  phone: "(954) 527-2700",
+  phoneTel: "+19545272700",
+  addressLine1: AAU_SCHOLASTIC_OPERATIONS.hotelAddress1,
+  cityStateZip: AAU_SCHOLASTIC_OPERATIONS.hotelCityStateZip,
+  mapsQuery: "1100+SE+17th+St+Fort+Lauderdale+FL+33316",
+  photos: [
+    {
+      src: "/images/aau-scholastic-2026/hotel-exterior.png",
+      alt: "Exterior of Embassy Suites by Hilton Fort Lauderdale 17th Street",
+    },
+    {
+      src: "/images/aau-scholastic-2026/hotel-room.png",
+      alt: "Guest room at Embassy Suites by Hilton Fort Lauderdale 17th Street",
+    },
+  ],
+} as const
 
 export const AAU_SCHOLASTIC_DUALS_2026 = {
   title: AAU_SCHOLASTIC_OPERATIONS.eventName,

@@ -29,6 +29,7 @@ type OrderLineItem = {
 
 type Registration = NationalTeamFeeReceiptRegistration & {
   athlete_email: string
+  athlete_dob?: string | null
   linked_account_email?: string | null
   high_school: string
   graduation_year: string
@@ -306,6 +307,9 @@ export default function AdminBlueNationalTeamPaymentsPage() {
                               <div>
                                 {r.athlete_first_name} {r.athlete_last_name}
                               </div>
+                              {r.athlete_dob?.trim() ? (
+                                <div className="text-xs font-normal text-muted-foreground">DOB {r.athlete_dob}</div>
+                              ) : null}
                               <div className="text-xs font-normal text-muted-foreground">
                                 {teamShortLabel(r.event_slug)}
                               </div>
