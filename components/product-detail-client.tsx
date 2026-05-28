@@ -31,9 +31,14 @@ interface ProductDetail {
 interface ProductDetailClientProps {
   product: Product & { stock_quantity?: number }
   details: ProductDetail
+  /** Dark NC United store — same image frame as product grid cards. */
+  storeTheme?: boolean
 }
 
-export function ProductDetailClient({ product, details }: ProductDetailClientProps) {
+const STORE_GALLERY_FRAME = "bg-[#0f1c2e] border border-white/5"
+const STORE_THUMB_FRAME = "border-white/15"
+
+export function ProductDetailClient({ product, details, storeTheme = false }: ProductDetailClientProps) {
   const [selectedColor, setSelectedColor] = useState(details.colors[0]?.name ?? "")
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
@@ -62,6 +67,8 @@ export function ProductDetailClient({ product, details }: ProductDetailClientPro
         productName={product.name}
         currentImageIndex={currentImageIndex}
         onImageChange={setCurrentImageIndex}
+        frameClassName={storeTheme ? STORE_GALLERY_FRAME : undefined}
+        thumbnailFrameClassName={storeTheme ? STORE_THUMB_FRAME : undefined}
       />
       <ProductInfo
         product={product}
@@ -73,6 +80,7 @@ export function ProductDetailClient({ product, details }: ProductDetailClientPro
           setCurrentImageIndex(0)
         }}
         currentImage={currentDisplayedImage}
+        storeTheme={storeTheme}
       />
     </div>
   )

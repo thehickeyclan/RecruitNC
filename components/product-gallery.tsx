@@ -12,6 +12,9 @@ interface ProductGalleryProps {
   productName: string
   currentImageIndex?: number
   onImageChange?: (index: number) => void
+  /** Match store grid cards — dark frame so transparent PNGs blend in. */
+  frameClassName?: string
+  thumbnailFrameClassName?: string
 }
 
 export function ProductGallery({
@@ -19,6 +22,8 @@ export function ProductGallery({
   productName,
   currentImageIndex,
   onImageChange,
+  frameClassName = "bg-secondary",
+  thumbnailFrameClassName = "border-border",
 }: ProductGalleryProps) {
   const [internalIndex, setInternalIndex] = useState(0)
   const [isZoomOpen, setIsZoomOpen] = useState(false)
@@ -68,7 +73,10 @@ export function ProductGallery({
   return (
     <div className="space-y-4">
       <div
-        className="relative aspect-square bg-secondary rounded-lg overflow-hidden cursor-zoom-in group"
+        className={cn(
+          "relative aspect-square rounded-lg overflow-hidden cursor-zoom-in group",
+          frameClassName,
+        )}
         onClick={() => setIsZoomOpen(true)}
         onKeyDown={(e) => e.key === "Enter" && setIsZoomOpen(true)}
         role="button"
@@ -103,7 +111,7 @@ export function ProductGallery({
                 "relative flex-shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 transition-all",
                 activeIndex === index
                   ? "border-[#003366] ring-2 ring-[#003366]/20"
-                  : "border-border hover:border-[#003366]/50"
+                  : cn(thumbnailFrameClassName, "hover:border-[#003366]/50")
               )}
             >
               <Image

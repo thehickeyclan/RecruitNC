@@ -59,6 +59,7 @@ interface ProductInfoProps {
   selectedColor: string
   onColorChange: (color: string) => void
   currentImage?: string
+  storeTheme?: boolean
 }
 
 export function ProductInfo({
@@ -68,6 +69,7 @@ export function ProductInfo({
   selectedColor,
   onColorChange,
   currentImage,
+  storeTheme = false,
 }: ProductInfoProps) {
   const productVariants = variants ?? product.variants ?? []
   const [selectedSize, setSelectedSize] = useState("")
@@ -198,32 +200,52 @@ export function ProductInfo({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl lg:text-4xl font-bold text-foreground mb-2">
+        <h1
+          className={cn(
+            "text-3xl lg:text-4xl font-bold mb-2",
+            storeTheme ? "text-white" : "text-foreground",
+          )}
+        >
           {product.name}
         </h1>
-        <p className="text-sm text-muted-foreground mb-3">SKU: {details.sku}</p>
+        <p className={cn("text-sm mb-3", storeTheme ? "text-white/55" : "text-muted-foreground")}>
+          SKU: {details.sku}
+        </p>
 
         <div className="flex items-center gap-3 mb-4">
           <div className="flex items-center gap-1">
             {renderStars(product.rating ?? 0)}
           </div>
-          <a href="#reviews" className="text-sm text-[#003366] hover:underline">
+          <a
+            href="#reviews"
+            className={cn(
+              "text-sm hover:underline",
+              storeTheme ? "text-[#D3B574]" : "text-[#003366]",
+            )}
+          >
             ({details.reviewCount} reviews)
           </a>
         </div>
 
-        <p className="text-3xl font-bold text-foreground">
+        <p className={cn("text-3xl font-bold", storeTheme ? "text-white" : "text-foreground")}>
           ${Number(product.price).toFixed(2)}
         </p>
       </div>
 
-      <div className="border-t pt-6">
-        <p className="text-muted-foreground leading-relaxed mb-4">
+      <div className={cn("border-t pt-6", storeTheme && "border-white/10")}>
+        <p
+          className={cn(
+            "leading-relaxed mb-4",
+            storeTheme ? "text-white/75" : "text-muted-foreground",
+          )}
+        >
           {details.description}
         </p>
 
         <div className="space-y-2">
-          <p className="font-semibold text-sm text-foreground">Features:</p>
+          <p className={cn("font-semibold text-sm", storeTheme ? "text-white" : "text-foreground")}>
+            Features:
+          </p>
           <ul className="space-y-1">
             {details.features.map((feature, index) => (
               <li
@@ -410,6 +432,8 @@ export function ProductInfo({
                 <Check className="w-5 h-5 mr-2" />
                 Added!
               </>
+            ) : details.stockStatus === "out-of-stock" ? (
+              "Sold Out"
             ) : (
               "Add to Cart"
             )}

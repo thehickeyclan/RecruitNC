@@ -32,9 +32,10 @@ export interface RelatedProduct {
 
 interface RelatedProductsProps {
   products: RelatedProduct[]
+  storeTheme?: boolean
 }
 
-export function RelatedProducts({ products }: RelatedProductsProps) {
+export function RelatedProducts({ products, storeTheme = false }: RelatedProductsProps) {
   const [addedProducts, setAddedProducts] = useState<Record<string, boolean>>({})
   const { addItem } = useCartStore()
   const { toast } = useToast()
@@ -91,8 +92,10 @@ export function RelatedProducts({ products }: RelatedProductsProps) {
   if (!products?.length) return null
 
   return (
-    <section className="mt-12 border-t pt-8">
-      <h2 className="text-2xl font-bold mb-6 text-[#003366]">You May Also Like</h2>
+    <section className={cn("mt-12 border-t pt-8", storeTheme && "border-white/10")}>
+      <h2 className={cn("text-2xl font-bold mb-6", storeTheme ? "text-white" : "text-[#003366]")}>
+        You May Also Like
+      </h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {products.map((product) => {
@@ -103,11 +106,19 @@ export function RelatedProducts({ products }: RelatedProductsProps) {
           return (
             <div
               key={productId}
-              className="group border rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
+              className={cn(
+                "group rounded-lg overflow-hidden transition-shadow",
+                storeTheme
+                  ? "border border-white/10 hover:shadow-lg hover:shadow-black/30"
+                  : "border hover:shadow-lg",
+              )}
             >
               <StoreLink
                 href={productUrl}
-                className="relative block aspect-square bg-secondary"
+                className={cn(
+                  "relative block aspect-square",
+                  storeTheme ? "bg-[#0f1c2e] border-b border-white/5" : "bg-secondary",
+                )}
               >
                 {product.image ? (
                   <Image
@@ -133,14 +144,19 @@ export function RelatedProducts({ products }: RelatedProductsProps) {
               <div className="p-4 space-y-3">
                 <div>
                   <StoreLink href={productUrl}>
-                    <h3 className="font-semibold text-lg mb-1 hover:text-[#003366] transition-colors line-clamp-2">
+                    <h3
+                      className={cn(
+                        "font-semibold text-lg mb-1 transition-colors line-clamp-2",
+                        storeTheme ? "text-white hover:text-[#D3B574]" : "hover:text-[#003366]",
+                      )}
+                    >
                       {product.name}
                     </h3>
                   </StoreLink>
                   <div className="flex items-center gap-1 mb-2">
                     {renderStars(product.rating ?? 0)}
                   </div>
-                  <p className="text-xl font-bold text-foreground">
+                  <p className={cn("text-xl font-bold", storeTheme ? "text-white" : "text-foreground")}>
                     ${Number(product.price).toFixed(2)}
                   </p>
                 </div>
