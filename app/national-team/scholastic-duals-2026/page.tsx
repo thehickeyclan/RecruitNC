@@ -60,6 +60,9 @@ import {
 } from "@/components/national-team/aau-scholastic-theme"
 import { cn } from "@/lib/utils"
 
+/** Roster Status column reads live paid registrations — never statically cache this page. */
+export const dynamic = "force-dynamic"
+
 export const metadata: Metadata = {
   title: "AAU Scholastic Duals 2026 — NC United | Info & Registration",
   description:
