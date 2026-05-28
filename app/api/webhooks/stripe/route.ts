@@ -18,6 +18,7 @@ import {
 import { syntheticOrderItemSku } from "@/lib/order-item-sku"
 import { decodeLineItemsMetadata } from "@/lib/nhsca-hub-checkout-pricing"
 import { ensureNationalTeamOrderLineItems } from "@/lib/national-team-order-items"
+import { finalizePendingStoreOrder } from "@/lib/store/checkout-order"
 
 export const dynamic = "force-dynamic"
 
@@ -266,7 +267,7 @@ export async function POST(request: NextRequest) {
     const paymentIntent = event.data.object as Stripe.PaymentIntent
     const meta = (paymentIntent.metadata || {}) as Record<string, string>
     const description = (paymentIntent.description || "").toLowerCase()
-    const hasStoreMetadata = !!(meta.items || meta.customer_email)
+    const hasStoreMetadata = !!(meta.order_id || meta.items || meta.customer_email)
     const isSubscriptionPayment =
       description.includes("subscription") ||
       (Object.keys(meta).length === 0 && (paymentIntent as { invoice?: string }).invoice) ||
@@ -433,7 +434,7 @@ export async function POST(request: NextRequest) {
       chargeBilling.email ||
       ""
     if (!customerEmail || customerEmail.includes("placeholder")) customerEmail = chargeBilling.email || paymentIntent.receipt_email || `payment-${paymentIntent.id}@placeholder.com`
-    if (!meta.customer_email && !meta.items && !chargeBilling.email) {
+    if (!meta.order_id && !meta.customer_email && !meta.items && !chargeBilling.email) {
       return NextResponse.json({ received: true })
     }
     const { data: existing } = await admin
@@ -442,6 +443,20 @@ export async function POST(request: NextRequest) {
       .eq("stripe_payment_intent_id", paymentIntent.id)
       .maybeSingle()
     if (existing) return NextResponse.json({ received: true })
+
+    const pendingOrderId = (meta.order_id || "").trim()
+    if (pendingOrderId) {
+      const finalized = await finalizePendingStoreOrder(admin, pendingOrderId, paymentIntent.id)
+      if (!finalized) {
+        console.error("[webhooks/stripe] pending store order finalize failed", {
+          orderId: pendingOrderId,
+          paymentIntentId: paymentIntent.id,
+        })
+        return NextResponse.json({ error: "Pending order finalize failed" }, { status: 500 })
+      }
+      return NextResponse.json({ received: true })
+    }
+
     const orderNumber = generateOrderNumber()
     const orderId = crypto.randomUUID()
     let payload: {
@@ -898,7 +913,7 @@ export async function POST(request: NextRequest) {
     }
 
     const amountTotal = ((session as { amount_total?: number }).amount_total ?? 0) / 100
-    const hasStoreMetadata = !!(session.metadata?.items && session.metadata?.customer_email)
+    const hasStoreMetadata = !!(session.metadata?.order_id || (session.metadata?.items && session.metadata?.customer_email))
     const shippingLower = (session.metadata?.shipping_method as string)?.toLowerCase() ?? ""
     let isLikelyDropIn =
       amountTotal >= 20 &&
