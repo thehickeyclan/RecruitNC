@@ -4,7 +4,7 @@ import {
   type AauScholasticRosterRow,
 } from "@/lib/aau-scholastic-duals-2026-roster"
 
-function normalizePersonName(name: string): string {
+export function normalizePersonName(name: string): string {
   return name.trim().replace(/\s+/g, " ").toLowerCase()
 }
 

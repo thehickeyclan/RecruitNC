@@ -4,8 +4,10 @@ import {
   Calendar,
   ClipboardList,
   ExternalLink,
+  Hotel,
   MapPin,
   MessageCircle,
+  Plane,
   Scale,
   ShieldCheck,
   Shirt,
@@ -37,6 +39,8 @@ import { AauScholasticTeamTable } from "@/components/national-team/aau-scholasti
 import { AauScholasticYourPaymentSection } from "@/components/national-team/aau-scholastic-your-payment-section"
 import { NcUnitedCodeCallout } from "@/components/national-team/nc-united-code-callout"
 import { AAU_SCHOLASTIC_DUALS_2026_ROSTER } from "@/lib/aau-scholastic-duals-2026-roster"
+import { loadAauScholasticRosterRegistrationStatusMap } from "@/lib/aau-scholastic-roster-registration-status"
+import { createAdminClient } from "@/lib/supabase/admin"
 import {
   ScholasticDualsSection,
   scholasticCalloutClass,
@@ -87,7 +91,10 @@ function OpsRow({ label, value }: { label: string; value: string }) {
   )
 }
 
-export default function ScholasticDuals2026Page() {
+export default async function ScholasticDuals2026Page() {
+  const admin = createAdminClient()
+  const registrationByWrestler = await loadAauScholasticRosterRegistrationStatusMap(admin)
+
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${AAU_SCHOLASTIC_DUALS_2026.mapsQuery}`
   const hotelMapsUrl = `https://www.google.com/maps/search/?api=1&query=${AAU_SCHOLASTIC_TEAM_HOTEL.mapsQuery}`
 
@@ -247,7 +254,31 @@ export default function ScholasticDuals2026Page() {
           description={`${AAU_SCHOLASTIC_TEAM_LABEL} · ${AAU_SCHOLASTIC_OPERATIONS.rosterStarters} starters · +5 lb allowance`}
           contentClassName="px-0 pb-0"
         >
-          <AauScholasticRosterTable rows={AAU_SCHOLASTIC_DUALS_2026_ROSTER} className="mx-5 mb-5 md:mx-6 md:mb-6" />
+          <AauScholasticRosterTable
+            rows={AAU_SCHOLASTIC_DUALS_2026_ROSTER}
+            registrationByWrestler={registrationByWrestler}
+            className="mx-5 mb-3 md:mx-6 md:mb-4"
+          />
+          <p className="text-xs text-white/50 px-5 pb-2 md:px-6 flex flex-wrap items-center gap-x-4 gap-y-1">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="inline-flex h-4 min-w-4 items-center justify-center rounded bg-green-600 px-0.5 text-[9px] font-bold text-white">
+                R
+              </span>
+              Registered &amp; paid
+            </span>
+            <span className="inline-flex items-center gap-1 text-sky-300">
+              <Plane className="h-3.5 w-3.5" aria-hidden />
+              Flight
+            </span>
+            <span className="inline-flex items-center gap-1 text-amber-200">
+              <Hotel className="h-3.5 w-3.5" aria-hidden />
+              Hotel &amp; van
+            </span>
+            <span className="inline-flex items-center gap-1 text-white/65">
+              <Shirt className="h-3.5 w-3.5" aria-hidden />
+              Apparel
+            </span>
+          </p>
           <p className="text-xs text-white/45 px-5 pb-5 md:px-6">
             175 and HWT are open starter slots (TBD). Alternates and any roster changes will be posted on this page.
           </p>

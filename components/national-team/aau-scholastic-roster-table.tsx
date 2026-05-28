@@ -1,8 +1,13 @@
 import { cn } from "@/lib/utils"
+import { Hotel, Plane, Shirt } from "lucide-react"
 import {
   type AauScholasticRosterRow,
   phoneDigitsForTel,
 } from "@/lib/aau-scholastic-duals-2026-roster"
+import {
+  rosterRegistrationStatusForWrestler,
+  type AauScholasticRosterRegistrationStatus,
+} from "@/lib/aau-scholastic-roster-registration-status"
 import { aauLinkClass, aauPriceClass } from "@/components/national-team/aau-scholastic-theme"
 
 function Cell({ text }: { text: string }) {
@@ -20,11 +25,42 @@ function Cell({ text }: { text: string }) {
   )
 }
 
+function RegistrationStatusIcons({ status }: { status: AauScholasticRosterRegistrationStatus | null }) {
+  if (!status?.registered) return <span className="text-white/25">—</span>
+  return (
+    <div className="flex items-center gap-1.5" aria-label="Registration status">
+      <span
+        title="Registered & paid"
+        className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded bg-green-600 px-0.5 text-[10px] font-bold leading-none text-white"
+      >
+        R
+      </span>
+      {status.flight ? (
+        <span title="Flight">
+          <Plane className="h-4 w-4 shrink-0 text-sky-300" aria-hidden />
+        </span>
+      ) : null}
+      {status.hotel ? (
+        <span title="Hotel & team van">
+          <Hotel className="h-4 w-4 shrink-0 text-amber-200" aria-hidden />
+        </span>
+      ) : null}
+      {status.apparel ? (
+        <span title="Apparel ordered">
+          <Shirt className="h-4 w-4 shrink-0 text-white/70" aria-hidden />
+        </span>
+      ) : null}
+    </div>
+  )
+}
+
 export function AauScholasticRosterTable({
   rows,
+  registrationByWrestler,
   className,
 }: {
   rows: AauScholasticRosterRow[]
+  registrationByWrestler?: Record<string, AauScholasticRosterRegistrationStatus>
   className?: string
 }) {
   return (
@@ -39,11 +75,15 @@ export function AauScholasticRosterTable({
             <th className="text-left py-3 px-3 font-semibold">Wrestler</th>
             <th className="text-left py-3 px-3 font-semibold whitespace-nowrap">DOB</th>
             <th className="text-left py-3 px-3 font-semibold">Cell #</th>
+            <th className="text-left py-3 px-3 font-semibold whitespace-nowrap">Status</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((row, i) => {
             const open = row.openSlot || !row.wrestler.trim()
+            const regStatus = registrationByWrestler
+              ? rosterRegistrationStatusForWrestler(row.wrestler, registrationByWrestler)
+              : null
             return (
             <tr
               key={row.weightLabel}
@@ -68,6 +108,9 @@ export function AauScholasticRosterTable({
               </td>
               <td className="py-2.5 px-3">
                 <Cell text={row.cell} />
+              </td>
+              <td className="py-2.5 px-3">
+                <RegistrationStatusIcons status={regStatus} />
               </td>
             </tr>
             )
