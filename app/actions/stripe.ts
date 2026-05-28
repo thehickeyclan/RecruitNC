@@ -107,7 +107,7 @@ export async function createPaymentIntent(
     )
     if (!pending.ok) return { success: false, error: pending.error }
 
-    const metadata = storePaymentIntentMetadata(pending.orderId, customerEmail, params.total)
+    const metadata = storePaymentIntentMetadata(pending.orderId, customerEmail, params.total, rid)
 
     let pi
     try {

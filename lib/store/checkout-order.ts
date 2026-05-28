@@ -85,6 +85,14 @@ type InsertStoreOrderOptions = {
   recruitncUserId?: string | null
 }
 
+function isMissingOrdersColumnError(error: { message?: string }, column: string): boolean {
+  const msg = (error.message ?? "").toLowerCase()
+  return (
+    msg.includes(column.toLowerCase()) &&
+    (msg.includes("schema cache") || msg.includes("could not find") || msg.includes("column"))
+  )
+}
+
 export async function insertStoreOrder(
   supabase: SupabaseClient,
   params: StoreCheckoutParams,
@@ -96,7 +104,7 @@ export async function insertStoreOrder(
   const flatShipping = flatShippingFromAddress(params.shippingAddress)
   const flatBilling = flatBillingFromAddress(params.shippingAddress)
 
-  const { error: orderError } = await supabase.from("orders").insert({
+  const orderRow: Record<string, unknown> = {
     id: orderId,
     order_number: orderNumber,
     customer_email: params.customerEmail,
@@ -119,8 +127,15 @@ export async function insertStoreOrder(
     stripe_payment_intent_id: options.paymentIntentId ?? null,
     stripe_session_id: null,
     promo_code: params.promoCode ?? null,
-    recruitnc_user_id: options.recruitncUserId ?? null,
-  })
+  }
+
+  const optionalRow: Record<string, unknown> = {}
+  if (options.recruitncUserId) optionalRow.recruitnc_user_id = options.recruitncUserId
+
+  let { error: orderError } = await supabase.from("orders").insert({ ...orderRow, ...optionalRow })
+  if (orderError && Object.keys(optionalRow).length > 0 && isMissingOrdersColumnError(orderError, "recruitnc_user_id")) {
+    ;({ error: orderError } = await supabase.from("orders").insert(orderRow))
+  }
 
   if (orderError) {
     console.error("[store] insertStoreOrder insert order:", orderError)
@@ -289,11 +304,18 @@ export async function finalizePendingStoreOrder(
 }
 
 /** Stripe metadata for store PaymentIntents — order lines live in Supabase, not metadata. */
-export function storePaymentIntentMetadata(orderId: string, customerEmail: string, total: number): Record<string, string> {
-  return {
+export function storePaymentIntentMetadata(
+  orderId: string,
+  customerEmail: string,
+  total: number,
+  recruitncUserId?: string | null,
+): Record<string, string> {
+  const metadata: Record<string, string> = {
     order_id: orderId,
     customer_email: customerEmail,
     source: "store",
     total: String(total),
   }
+  if (recruitncUserId) metadata.recruitnc_user_id = recruitncUserId
+  return metadata
 }
