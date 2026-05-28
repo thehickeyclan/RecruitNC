@@ -7,6 +7,7 @@ import { ChevronLeft } from "lucide-react"
 interface ProductHeaderProps {
   productName: string
   category?: string | null
+  variant?: "default" | "store"
 }
 
 const formatCategoryName = (category: string | undefined): string => {
@@ -31,29 +32,44 @@ const formatCategoryName = (category: string | undefined): string => {
   )
 }
 
-export function ProductHeader({ productName, category }: ProductHeaderProps) {
+export function ProductHeader({ productName, category, variant = "default" }: ProductHeaderProps) {
   const categoryDisplayName = formatCategoryName(category ?? undefined)
+  const isStore = variant === "store"
 
   return (
-    <header className="border-b bg-background sticky top-0 z-40 shadow-sm">
+    <header
+      className={
+        isStore
+          ? "border-b border-white/10 bg-[#0A1628]/95 backdrop-blur-xl sticky top-0 z-40"
+          : "border-b bg-background sticky top-0 z-40 shadow-sm"
+      }
+    >
       <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-          <StoreNavLink className="hover:text-foreground flex items-center gap-1 cursor-pointer">
+        <div
+          className={`flex items-center gap-2 text-sm mb-2 ${isStore ? "text-white/60" : "text-muted-foreground"}`}
+        >
+          <StoreNavLink
+            className={`flex items-center gap-1 cursor-pointer ${isStore ? "hover:text-white" : "hover:text-foreground"}`}
+          >
             <ChevronLeft className="w-4 h-4" />
             <span>Back to Store</span>
           </StoreNavLink>
         </div>
 
-        <nav className="text-sm text-muted-foreground">
-          <Link href="/" className="hover:text-foreground">
+        <nav className={`text-sm ${isStore ? "text-white/60" : "text-muted-foreground"}`}>
+          <Link href="/" className={isStore ? "hover:text-white" : "hover:text-foreground"}>
             Home
           </Link>
           <span className="mx-2">&gt;</span>
-          <StoreNavLink className="hover:text-foreground cursor-pointer">Store</StoreNavLink>
+          <StoreNavLink className={isStore ? "hover:text-white cursor-pointer" : "hover:text-foreground cursor-pointer"}>
+            Store
+          </StoreNavLink>
           <span className="mx-2">&gt;</span>
-          <span className="hover:text-foreground">{categoryDisplayName}</span>
+          <span className={isStore ? "hover:text-white" : "hover:text-foreground"}>{categoryDisplayName}</span>
           <span className="mx-2">&gt;</span>
-          <span className="text-foreground font-medium truncate max-w-[200px]">
+          <span
+            className={`font-medium truncate max-w-[200px] ${isStore ? "text-white" : "text-foreground"}`}
+          >
             {productName}
           </span>
         </nav>

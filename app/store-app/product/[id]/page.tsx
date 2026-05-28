@@ -167,8 +167,8 @@ export default async function ProductDetailPage({
   })
 
   return (
-    <div className="min-h-screen bg-background">
-      <ProductHeader productName={product.name} category={product.category} />
+    <div className="min-h-screen bg-[#0A1628] text-white">
+      <ProductHeader productName={product.name} category={product.category} variant="store" />
 
       <div className="container mx-auto px-4 py-8">
         <ProductDetailClient
@@ -179,6 +179,7 @@ export default async function ProductDetailPage({
             variants,
           }}
           details={details}
+          storeTheme
         />
 
         <CustomerReviews
@@ -187,7 +188,7 @@ export default async function ProductDetailPage({
           productId={id}
         />
 
-        <RelatedProducts products={relatedProducts} />
+        <RelatedProducts products={relatedProducts} storeTheme />
       </div>
     </div>
   )

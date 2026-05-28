@@ -128,6 +128,11 @@ export function ProductCard({ product }: ProductCardProps) {
                 Featured
               </Badge>
             )}
+            {stockQty <= 0 && (
+              <Badge className="bg-white/15 text-white/90 font-semibold border border-white/20 text-xs">
+                Sold Out
+              </Badge>
+            )}
             {stockQty <= 5 && stockQty > 0 && (
               <Badge className="bg-[#BC0B03] text-white font-semibold border-0 text-xs">
                 Low Stock
