@@ -6,6 +6,12 @@ import { sendOrderReceiptIfEligible } from "@/lib/order-auto-receipt"
 import { shippingNameFromCustomerName, flatShippingFromAddress, flatBillingFromAddress } from "@/lib/order-shipping"
 import { findAndEnrichAthlete, enrichmentFromOrderCustomer } from "@/lib/enrich-athlete-profile"
 import { syntheticOrderItemSku } from "@/lib/order-item-sku"
+import {
+  deletePendingStoreOrder,
+  finalizePendingStoreOrder,
+  insertStoreOrder,
+  storePaymentIntentMetadata,
+} from "@/lib/store/checkout-order"
 
 export type CreatePaymentIntentParams = {
   customerEmail: string
@@ -89,40 +95,36 @@ export async function createPaymentIntent(
       return { success: false, error: "A valid email address is required for checkout." }
     }
 
-    const metadata: Record<string, string> = {
-      customer_email: customerEmail,
-      customer_name: customerName,
-      shipping_address: JSON.stringify(params.shippingAddress),
-      shipping_method: JSON.stringify(params.shippingMethod),
-      items: JSON.stringify(
-        params.items.map((i) => ({
-          id: i.id,
-          name: i.name,
-          price: i.price,
-          quantity: i.quantity,
-          variant: i.variant,
-          image: i.image,
-        }))
-      ),
-      subtotal: String(params.subtotal),
-      shipping: String(params.shipping),
-      tax: String(params.tax),
-      discount: String(params.discount),
-      total: String(params.total),
-    }
-    if (params.promoCode) metadata.promo_code = params.promoCode
     const rid = recruitncUserIdForOrder(params.recruitncUserId ?? undefined)
-    if (rid) metadata.recruitnc_user_id = rid
+    const pending = await insertStoreOrder(
+      supabase,
+      {
+        ...params,
+        customerEmail,
+        customerName,
+      },
+      { status: "pending", recruitncUserId: rid },
+    )
+    if (!pending.ok) return { success: false, error: pending.error }
 
-    const pi = await stripe.paymentIntents.create({
-      amount: amountCents,
-      currency: "usd",
-      automatic_payment_methods: { enabled: true },
-      metadata,
-      receipt_email: customerEmail,
-    })
+    const metadata = storePaymentIntentMetadata(pending.orderId, customerEmail, params.total)
+
+    let pi
+    try {
+      pi = await stripe.paymentIntents.create({
+        amount: amountCents,
+        currency: "usd",
+        automatic_payment_methods: { enabled: true },
+        metadata,
+        receipt_email: customerEmail,
+      })
+    } catch (piErr) {
+      await deletePendingStoreOrder(supabase, pending.orderId)
+      throw piErr
+    }
 
     if (!pi.client_secret) {
+      await deletePendingStoreOrder(supabase, pending.orderId)
       return { success: false, error: "Stripe did not return a client secret." }
     }
     return { success: true, clientSecret: pi.client_secret }
@@ -137,81 +139,21 @@ async function createFreeOrderInternal(
   supabase: ReturnType<typeof createAdminClient>,
   params: CreatePaymentIntentParams
 ): Promise<{ ok: true; orderId: string } | { ok: false; error: string }> {
-  const orderNumber = generateOrderNumber()
-  const orderId = crypto.randomUUID()
-
-  const shippingName = shippingNameFromCustomerName(params.customerName)
-  const flatShipping = flatShippingFromAddress(params.shippingAddress as Record<string, unknown>)
-  const flatBilling = flatBillingFromAddress(params.shippingAddress as Record<string, unknown>)
-    const ridFree = recruitncUserIdForOrder(params.recruitncUserId ?? undefined)
-    const { error: orderError } = await supabase.from("orders").insert({
-      id: orderId,
-      order_number: orderNumber,
-      customer_email: params.customerEmail,
-      email: params.customerEmail,
-      customer_name: params.customerName,
-      shipping_first_name: shippingName.shipping_first_name,
-      shipping_last_name: shippingName.shipping_last_name,
-      billing_first_name: shippingName.shipping_first_name,
-      billing_last_name: shippingName.shipping_last_name,
-      ...flatShipping,
-      ...flatBilling,
-      shipping_address: params.shippingAddress,
-      shipping_method: params.shippingMethod,
-      subtotal: params.subtotal,
-      shipping_cost: params.shipping,
-      tax: params.tax,
-      discount: params.discount,
-      total: params.total,
-      status: "paid",
-      stripe_payment_intent_id: null,
-      stripe_session_id: null,
-      promo_code: params.promoCode ?? null,
-      recruitnc_user_id: ridFree,
-    })
-
-  if (orderError) {
-    console.error("[store] createFreeOrder insert order:", orderError)
-    return { ok: false, error: orderError.message }
-  }
-
-  const orderItems = params.items.map((i, idx) => {
-    const idStr = String(i.id)
-    const uuidProduct = /^[0-9a-f-]{36}$/i.test(idStr) ? idStr : null
-    const qty = Math.max(1, Number(i.quantity) || 1)
-    const unit = Number(i.price)
-    return {
-      order_id: orderId,
-      product_id: idStr,
-      product_name: i.name,
-      sku: syntheticOrderItemSku({
-        productId: uuidProduct,
-        sourceId: i.id,
-        label: i.name,
-        dedupeKey: `${orderId}:${idx}`,
-      }),
-      variant: i.variant,
-      quantity: i.quantity,
-      price: i.price,
-      subtotal: (Number.isFinite(unit) ? unit : 0) * qty,
-      image_url: i.image ?? null,
-    }
+  const ridFree = recruitncUserIdForOrder(params.recruitncUserId ?? undefined)
+  const inserted = await insertStoreOrder(supabase, params, {
+    status: "paid",
+    paymentIntentId: null,
+    recruitncUserId: ridFree,
   })
-
-  const { error: itemsError } = await supabase.from("order_items").insert(orderItems)
-  if (itemsError) {
-    console.error("[store] createFreeOrder insert order_items:", itemsError)
-    await supabase.from("orders").delete().eq("id", orderId)
-    return { ok: false, error: itemsError.message }
-  }
+  if (!inserted.ok) return { ok: false, error: inserted.error }
 
   try {
-    await sendOrderReceiptIfEligible(supabase, orderId)
+    await sendOrderReceiptIfEligible(supabase, inserted.orderId)
   } catch (e) {
     console.warn("[store] sendOrderReceiptIfEligible failed:", e)
   }
 
-  return { ok: true, orderId }
+  return { ok: true, orderId: inserted.orderId }
 }
 
 function parseOrderFromMetadata(metadata: Record<string, string>): CreatePaymentIntentParams | null {
@@ -241,6 +183,11 @@ async function createOrderFromPaymentIntentMetadata(
   paymentIntentId: string,
   metadata: Record<string, string>
 ): Promise<{ orderId: string; orderNumber: string; totals: Record<string, number>; items: unknown[]; shippingAddress: unknown; shippingMethod: unknown } | null> {
+  const pendingOrderId = (metadata.order_id || "").trim()
+  if (pendingOrderId) {
+    return finalizePendingStoreOrder(supabase, pendingOrderId, paymentIntentId)
+  }
+
   const payload = parseOrderFromMetadata(metadata)
   if (!payload || !payload.customerEmail) return null
 
@@ -620,7 +567,7 @@ export async function createOrderFromPaymentIntent(
     } catch (e) {
       console.warn("[store] sendOrderReceiptIfEligible failed:", e)
     }
-    return { success: true, orderId: created.orderId, ...created }
+    return { success: true, ...created }
   } catch (err) {
     const message = err instanceof Error ? err.message : "Payment lookup failed"
     console.error("[store] createOrderFromPaymentIntent:", err)
