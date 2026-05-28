@@ -1,5 +1,11 @@
+/** Postgres uuid columns reject legacy numeric store ids — only persist real UUIDs. */
+export function resolveOrderItemProductId(sourceId: string | number | null | undefined): string | null {
+  const idStr = String(sourceId ?? "").trim()
+  if (!idStr) return null
+  return /^[0-9a-f-]{36}$/i.test(idStr) ? idStr : null
+}
+
 /**
- * Resolve product by ID or by truncated UUID prefix.
  * Postgres UUID columns don't support LIKE, so we match in JS against a fetched product list.
  * Used by webhook and createOrderFromPaymentIntent so order creation works without manual recovery.
  */

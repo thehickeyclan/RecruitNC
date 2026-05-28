@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { findAndEnrichAthlete, enrichmentFromOrderCustomer } from "@/lib/enrich-athlete-profile"
 import { syntheticOrderItemSku } from "@/lib/order-item-sku"
+import { findProductByIdOrPrefix, resolveOrderItemProductId } from "@/lib/store/product-utils"
 import { sendOrderReceiptIfEligible } from "@/lib/order-auto-receipt"
 import { flatBillingFromAddress, flatShippingFromAddress, shippingNameFromCustomerName } from "@/lib/order-shipping"
 
@@ -54,27 +55,29 @@ export function buildStoreOrderItems(
   items: StoreCheckoutParams["items"],
   orderId: string,
   dedupePrefix: string,
+  productCache?: { id: string; name: string | null; image_url: string | null }[],
 ) {
   return items.map((i, idx) => {
     const idStr = String(i.id)
-    const uuidProduct = /^[0-9a-f-]{36}$/i.test(idStr) ? idStr : null
+    const matched = productCache?.length ? findProductByIdOrPrefix(productCache, idStr) : null
+    const productId = matched?.id ?? resolveOrderItemProductId(i.id)
     const qty = Math.max(1, Number(i.quantity) || 1)
     const unit = Number(i.price)
     return {
       order_id: orderId,
-      product_id: idStr,
-      product_name: i.name,
+      product_id: productId,
+      product_name: matched?.name ?? i.name,
       sku: syntheticOrderItemSku({
-        productId: uuidProduct,
+        productId,
         sourceId: i.id,
-        label: i.name,
+        label: matched?.name ?? i.name,
         dedupeKey: `${dedupePrefix}:${idx}`,
       }),
       variant: i.variant,
       quantity: i.quantity,
       price: i.price,
       subtotal: (Number.isFinite(unit) ? unit : 0) * qty,
-      image_url: i.image ?? null,
+      image_url: i.image ?? matched?.image_url ?? null,
     }
   })
 }
@@ -91,6 +94,59 @@ function isMissingOrdersColumnError(error: { message?: string }, column: string)
     msg.includes(column.toLowerCase()) &&
     (msg.includes("schema cache") || msg.includes("could not find") || msg.includes("column"))
   )
+}
+
+function isSchemaColumnError(error: { message?: string }): boolean {
+  const msg = (error.message ?? "").toLowerCase()
+  return (
+    msg.includes("schema cache") ||
+    msg.includes("could not find") ||
+    msg.includes("invalid input syntax for type uuid") ||
+    (msg.includes("column") && msg.includes("does not exist"))
+  )
+}
+
+function missingColumnFromError(error: { message?: string }): string | null {
+  const msg = error.message ?? ""
+  const match = msg.match(/Could not find the '([^']+)' column/i)
+  return match?.[1] ?? null
+}
+
+/** Retry inserts when production schema differs (missing optional columns, uuid-typed product_id, etc.). */
+async function insertRowWithSchemaFallback(
+  supabase: SupabaseClient,
+  table: "orders" | "order_items",
+  row: Record<string, unknown>,
+): Promise<{ error: { message: string; code?: string } | null }> {
+  let payload: Record<string, unknown> = { ...row }
+  const stripped = new Set<string>()
+
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const result = await supabase.from(table).insert(payload)
+    if (!result.error) return { error: null }
+
+    const err = result.error
+    if (!isSchemaColumnError(err)) return { error: err }
+
+    const msg = (err.message ?? "").toLowerCase()
+    if (msg.includes("invalid input syntax for type uuid") && "product_id" in payload && payload.product_id != null) {
+      payload = { ...payload, product_id: null }
+      continue
+    }
+
+    const missing = missingColumnFromError(err)
+    if (missing && missing in payload && !stripped.has(missing)) {
+      stripped.add(missing)
+      const next = { ...payload }
+      delete next[missing]
+      payload = next
+      continue
+    }
+
+    return { error: err }
+  }
+
+  return { error: { message: "Insert failed after schema fallbacks" } }
 }
 
 export async function insertStoreOrder(
@@ -132,9 +188,9 @@ export async function insertStoreOrder(
   const optionalRow: Record<string, unknown> = {}
   if (options.recruitncUserId) optionalRow.recruitnc_user_id = options.recruitncUserId
 
-  let { error: orderError } = await supabase.from("orders").insert({ ...orderRow, ...optionalRow })
+  let { error: orderError } = await insertRowWithSchemaFallback(supabase, "orders", { ...orderRow, ...optionalRow })
   if (orderError && Object.keys(optionalRow).length > 0 && isMissingOrdersColumnError(orderError, "recruitnc_user_id")) {
-    ;({ error: orderError } = await supabase.from("orders").insert(orderRow))
+    ;({ error: orderError } = await insertRowWithSchemaFallback(supabase, "orders", orderRow))
   }
 
   if (orderError) {
@@ -142,12 +198,16 @@ export async function insertStoreOrder(
     return { ok: false, error: orderError.message }
   }
 
-  const orderItems = buildStoreOrderItems(params.items, orderId, orderId)
-  const { error: itemsError } = await supabase.from("order_items").insert(orderItems)
-  if (itemsError) {
-    console.error("[store] insertStoreOrder insert order_items:", itemsError)
-    await supabase.from("orders").delete().eq("id", orderId)
-    return { ok: false, error: itemsError.message }
+  const { data: productCache } = await supabase.from("products").select("id, name, image_url").limit(5000)
+  const orderItems = buildStoreOrderItems(params.items, orderId, orderId, productCache ?? [])
+  for (const item of orderItems) {
+    const { error: itemsError } = await insertRowWithSchemaFallback(supabase, "order_items", item as Record<string, unknown>)
+    if (itemsError) {
+      console.error("[store] insertStoreOrder insert order_items:", itemsError)
+      await supabase.from("order_items").delete().eq("order_id", orderId)
+      await supabase.from("orders").delete().eq("id", orderId)
+      return { ok: false, error: itemsError.message }
+    }
   }
 
   return { ok: true, orderId, orderNumber }
@@ -251,15 +311,24 @@ export async function finalizePendingStoreOrder(
 
   if (order.status !== "pending") return null
 
-  const { error: updateError } = await supabase
+  const paidUpdate = {
+    status: "paid" as const,
+    stripe_payment_intent_id: paymentIntentId,
+    updated_at: new Date().toISOString(),
+  }
+  let { error: updateError } = await supabase
     .from("orders")
-    .update({
-      status: "paid",
-      stripe_payment_intent_id: paymentIntentId,
-      updated_at: new Date().toISOString(),
-    })
+    .update(paidUpdate)
     .eq("id", orderId)
     .eq("status", "pending")
+
+  if (updateError && isMissingOrdersColumnError(updateError, "updated_at")) {
+    ;({ error: updateError } = await supabase
+      .from("orders")
+      .update({ status: "paid", stripe_payment_intent_id: paymentIntentId })
+      .eq("id", orderId)
+      .eq("status", "pending"))
+  }
 
   if (updateError) {
     const code = (updateError as { code?: string }).code
