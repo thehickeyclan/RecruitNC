@@ -6,6 +6,7 @@ import { sendOrderReceiptIfEligible } from "@/lib/order-auto-receipt"
 import { shippingNameFromCustomerName, flatShippingFromAddress, flatBillingFromAddress } from "@/lib/order-shipping"
 import { findAndEnrichAthlete, enrichmentFromOrderCustomer } from "@/lib/enrich-athlete-profile"
 import { syntheticOrderItemSku } from "@/lib/order-item-sku"
+import { resolveOrderItemProductId } from "@/lib/store/product-utils"
 import {
   deletePendingStoreOrder,
   finalizePendingStoreOrder,
@@ -262,13 +263,12 @@ async function createOrderFromPaymentIntentMetadata(
 
   const orderItems = payload.items.map(
     (i: { id: number; name: string; price: number; quantity: number; variant: { color: string; size: string }; image?: string }, idx: number) => {
-      const idStr = String(i.id)
-      const uuidProduct = /^[0-9a-f-]{36}$/i.test(idStr) ? idStr : null
+      const uuidProduct = resolveOrderItemProductId(i.id)
       const qty = Math.max(1, Number(i.quantity) || 1)
       const unit = Number(i.price)
       return {
         order_id: orderId,
-        product_id: idStr,
+        product_id: uuidProduct,
         product_name: i.name,
         sku: syntheticOrderItemSku({
           productId: uuidProduct,
@@ -757,13 +757,12 @@ export async function createOrderFromSession(
     }
     const orderItems = payload.items.map(
       (i: { id: number; name: string; price: number; quantity: number; variant: { color: string; size: string }; image?: string }, idx: number) => {
-        const idStr = String(i.id)
-        const uuidProduct = /^[0-9a-f-]{36}$/i.test(idStr) ? idStr : null
+        const uuidProduct = resolveOrderItemProductId(i.id)
         const qty = Math.max(1, Number(i.quantity) || 1)
         const unit = Number(i.price)
         return {
           order_id: orderId,
-          product_id: idStr,
+          product_id: uuidProduct,
           product_name: i.name,
           sku: syntheticOrderItemSku({
             productId: uuidProduct,
