@@ -282,8 +282,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true })
     }
 
-    // Fallback: national team $250 payment — if checkout.session.completed didn't run or failed, mark registration paid from payment_intent.succeeded
-    if (!hasStoreMetadata && paymentIntent.amount === 25000) {
+    // Fallback: national team checkout (NHSCA bundle, AAU line items, etc.) — mark paid if session.completed missed
+    if (!hasStoreMetadata) {
       try {
         const stripe = getStripe()
         const sessions = await stripe.checkout.sessions.list({ payment_intent: paymentIntent.id, limit: 1 })
@@ -294,7 +294,15 @@ export async function POST(request: NextRequest) {
           const { data: reg } = await admin.from("national_team_event_registrations").select("*").eq("id", regId).single()
           if (reg && reg.status !== "paid") {
             const { data: products } = await admin.from("products").select("id, name, slug").eq("category", "national_team")
-            const bundleProduct = (products ?? []).find((p: { slug?: string }) => p.slug === "nhsca-2026-bundle") ?? (products ?? [])[0]
+            const regEventSlug = String((reg as { event_slug?: string }).event_slug ?? "")
+            const bundleSlug = regEventSlug === "aau-2026" ? "aau-2026-bundle" : "nhsca-2026-bundle"
+            const bundleProduct =
+              (products ?? []).find((p: { slug?: string }) => p.slug === bundleSlug) ??
+              (products ?? []).find((p: { slug?: string }) => p.slug === "nhsca-2026-bundle") ??
+              (products ?? [])[0]
+            const linesEncoded =
+              (session.metadata?.checkout_lines as string | undefined) ??
+              String((reg as { checkout_lines?: string | null }).checkout_lines ?? "")
             const orderNumber = generateOrderNumber()
             const orderId = crypto.randomUUID()
             const regCents = Number(reg.reg_fee_cents) || 0
@@ -351,6 +359,8 @@ export async function POST(request: NextRequest) {
                 status: "paid",
                 order_id: orderIdToUse,
                 stripe_session_id: session.id,
+                stripe_payment_intent_id: paymentIntent.id,
+                checkout_lines: linesEncoded.slice(0, 500) || ((reg as { checkout_lines?: string }).checkout_lines ?? null),
                 updated_at: new Date().toISOString(),
               })
               .eq("id", regId)
@@ -399,8 +409,10 @@ export async function POST(request: NextRequest) {
       } catch (e) {
         console.warn("[webhooks/stripe] national team fallback in payment_intent.succeeded:", e)
       }
-      // $250 with no store metadata is national team; don't fall through to store order path (avoids 500 from other deployments)
-      return NextResponse.json({ received: true })
+      // Legacy NHSCA bundle amount with no store metadata — never synthesize a store order
+      if (paymentIntent.amount === 25000) {
+        return NextResponse.json({ received: true })
+      }
     }
 
     // Hub checkout (any total): payment_intent often fires before checkout.session.completed and would create a generic store order.
