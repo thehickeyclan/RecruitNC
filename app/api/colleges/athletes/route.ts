@@ -1,51 +1,82 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createClient } from "@supabase/supabase-js"
+import { createClient, type SupabaseClient } from "@supabase/supabase-js"
 import { COLLEGE_LEADERBOARD_MIN_CLASS_YEAR } from "@/lib/colleges"
 
 const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
+/** Columns known to exist on athletes — avoid projected_weight etc. that break prod (42703). */
+const ATHLETE_SELECT =
+  "id, name, highschool, college, gender, graduationyear, commitmentdate, weightclass, photourl, photo_url, headshot_url"
+
+const ATHLETE_SELECT_FALLBACK =
+  "id, name, highschool, college, gender, graduationyear, commitmentdate, weightclass, photourl"
+
+function buildCollegeAthletesQuery(
+  client: SupabaseClient,
+  select: string,
+  college: string,
+  gender: string,
+  year: string,
+) {
+  let query = client
+    .from("athletes")
+    .select(select)
+    .ilike("college", `%${college}%`)
+    .not("highschool", "is", null)
+    .neq("college", "")
+    .neq("college", "Uncommitted")
+    .neq("college", "TBD")
+    .or("is_prospect.is.null,is_prospect.eq.false")
+
+  if (gender !== "all") {
+    const genderValues =
+      gender === "male"
+        ? ["male", "Male", "m", "M", "men", "Men"]
+        : gender === "female"
+          ? ["female", "Female", "f", "F", "women", "Women"]
+          : [gender]
+    query = query.in("gender", genderValues)
+  }
+
+  if (year !== "all") {
+    query = query.eq("graduationyear", Number.parseInt(year, 10))
+  } else {
+    query = query.gte("graduationyear", COLLEGE_LEADERBOARD_MIN_CLASS_YEAR)
+  }
+
+  return query.order("commitmentdate", { ascending: false })
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const college = searchParams.get("college")
+    const college = searchParams.get("college")?.trim()
     const gender = searchParams.get("gender") || "all"
     const year = searchParams.get("year") || "all"
-
-    console.log(`College Athletes API called with: college=${college}, gender=${gender}, year=${year}`)
 
     if (!college) {
       return NextResponse.json({ error: "College parameter is required" }, { status: 400 })
     }
 
-    let query = supabase
-      .from("athletes")
-      .select(
-        "id, name, highschool, college, gender, graduationyear, commitmentdate, rankings, weightclass, college_weight_class, projected_weight, photourl, photo_url",
+    let { data: athletes, error } = await buildCollegeAthletesQuery(
+      supabase,
+      ATHLETE_SELECT,
+      college,
+      gender,
+      year,
+    )
+
+    if (error && /column athletes\.(photo_url|headshot_url)/i.test(error.message)) {
+      const fallback = await buildCollegeAthletesQuery(
+        supabase,
+        ATHLETE_SELECT_FALLBACK,
+        college,
+        gender,
+        year,
       )
-      .ilike("college", college)
-      .not("highschool", "is", null)
-      .neq("college", "")
-      .neq("college", "Uncommitted")
-      .neq("college", "TBD")
-      .or("is_prospect.is.null,is_prospect.eq.false")
-
-    // Apply gender filter with case-insensitive matching
-    if (gender !== "all") {
-      if (gender === "male") {
-        query = query.or("gender.ilike.male,gender.ilike.m,gender.ilike.men")
-      } else if (gender === "female") {
-        query = query.or("gender.ilike.female,gender.ilike.f,gender.ilike.women")
-      }
+      athletes = fallback.data
+      error = fallback.error
     }
-
-    // Apply year filter — "all" means class of 2025+ (matches /colleges banner)
-    if (year !== "all") {
-      query = query.eq("graduationyear", Number.parseInt(year))
-    } else {
-      query = query.gte("graduationyear", COLLEGE_LEADERBOARD_MIN_CLASS_YEAR)
-    }
-
-    const { data: athletes, error } = await query.order("commitmentdate", { ascending: false })
 
     if (error) {
       console.error("College Athletes query error:", error)
@@ -58,14 +89,10 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    console.log(`College Athletes API found ${athletes?.length || 0} athletes for ${college}`)
-
     const normalizedAthletes =
       athletes?.map((athlete) => ({
         ...athlete,
-        college_weight_class: athlete.college_weight_class ?? athlete.projected_weight ?? null,
-        projected_weight: athlete.projected_weight ?? athlete.college_weight_class ?? null,
-        photourl: athlete.photourl ?? athlete.photo_url ?? null,
+        photourl: athlete.photourl ?? athlete.photo_url ?? athlete.headshot_url ?? null,
       })) ?? []
 
     return NextResponse.json({

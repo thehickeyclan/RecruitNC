@@ -196,6 +196,8 @@ export function CollegeLeaderboard({
       const response = await fetch(`/api/colleges/athletes?${params.toString()}`)
 
       if (!response.ok) {
+        const errBody = await response.json().catch(() => ({}))
+        console.error("[RecruitNC] College athletes fetch failed:", response.status, errBody)
         setCollegeAthletes((prev) => ({
           ...prev,
           [collegeName]: [],
@@ -207,7 +209,12 @@ export function CollegeLeaderboard({
       const targetCollege = collegeName.trim().toLowerCase()
       const filteredAthletes = (data.athletes || []).filter((athlete: Athlete) => {
         const athleteCollege = (athlete.college || "").trim().toLowerCase()
-        return athleteCollege === targetCollege
+        if (!athleteCollege) return false
+        return (
+          athleteCollege === targetCollege ||
+          athleteCollege.includes(targetCollege) ||
+          targetCollege.includes(athleteCollege)
+        )
       })
 
       setCollegeAthletes((prev) => ({
