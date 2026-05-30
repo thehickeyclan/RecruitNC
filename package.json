@@ -23,6 +23,7 @@
     "store:seed-nh25-singlet": "tsx scripts/seed-nhsca-duals-2025-singlet.ts",
     "store:seed-uc25w-singlet": "tsx scripts/seed-womens-ultimate-club-duals-2025-singlet.ts",
     "store:seed-uc25wb-singlet": "tsx scripts/seed-womens-blue-ultimate-club-duals-2025-singlet.ts",
+    "store:reprocess-singlets": "tsx scripts/reprocess-store-singlet-images.ts",
     "athlete:upload-highlight": "tsx scripts/upload-athlete-highlight-video.ts",
     "nhsca:roster-tsv-to-sql": "node scripts/tsv-roster-to-nhsca-placements-sql.mjs",
     "test": "vitest run",

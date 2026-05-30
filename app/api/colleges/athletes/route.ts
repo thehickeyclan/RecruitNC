@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
+import { COLLEGE_LEADERBOARD_MIN_CLASS_YEAR } from "@/lib/colleges"
 
 const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
@@ -21,8 +22,12 @@ export async function GET(request: NextRequest) {
       .select(
         "id, name, highschool, college, gender, graduationyear, commitmentdate, rankings, weightclass, college_weight_class, projected_weight, photourl, photo_url",
       )
-      .ilike("college", `%${college}%`)
+      .ilike("college", college)
       .not("highschool", "is", null)
+      .neq("college", "")
+      .neq("college", "Uncommitted")
+      .neq("college", "TBD")
+      .or("is_prospect.is.null,is_prospect.eq.false")
 
     // Apply gender filter with case-insensitive matching
     if (gender !== "all") {
@@ -33,9 +38,11 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Apply year filter
+    // Apply year filter — "all" means class of 2025+ (matches /colleges banner)
     if (year !== "all") {
       query = query.eq("graduationyear", Number.parseInt(year))
+    } else {
+      query = query.gte("graduationyear", COLLEGE_LEADERBOARD_MIN_CLASS_YEAR)
     }
 
     const { data: athletes, error } = await query.order("commitmentdate", { ascending: false })

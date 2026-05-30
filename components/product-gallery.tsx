@@ -15,6 +15,8 @@ interface ProductGalleryProps {
   /** Match store grid cards — dark frame so transparent PNGs blend in. */
   frameClassName?: string
   thumbnailFrameClassName?: string
+  /** Taller frame for singlet mockups (portrait). */
+  portraitFrame?: boolean
 }
 
 export function ProductGallery({
@@ -24,6 +26,7 @@ export function ProductGallery({
   onImageChange,
   frameClassName = "bg-secondary",
   thumbnailFrameClassName = "border-border",
+  portraitFrame = false,
 }: ProductGalleryProps) {
   const [internalIndex, setInternalIndex] = useState(0)
   const [isZoomOpen, setIsZoomOpen] = useState(false)
@@ -74,7 +77,8 @@ export function ProductGallery({
     <div className="space-y-4">
       <div
         className={cn(
-          "relative aspect-square rounded-lg overflow-hidden cursor-zoom-in group",
+          "relative rounded-lg overflow-hidden cursor-zoom-in group",
+          portraitFrame ? "aspect-[3/4]" : "aspect-square",
           frameClassName,
         )}
         onClick={() => setIsZoomOpen(true)}
@@ -83,12 +87,12 @@ export function ProductGallery({
         tabIndex={0}
         aria-label="Zoom image"
       >
-        <div className="absolute inset-4 md:inset-6">
+        <div className="absolute inset-4 md:inset-8">
           <Image
             src={currentSrc}
             alt={`${productName} - Image ${activeIndex + 1}`}
             fill
-            className="object-contain"
+            className="object-contain object-center"
             priority
             sizes="(max-width: 768px) 100vw, 50vw"
             unoptimized={isBlob}

@@ -41,6 +41,11 @@ function NewCollegesPage() {
     setLoading(false)
   }, [])
 
+  // Reset banner stats while leaderboard refetches after filter changes
+  useEffect(() => {
+    setLoading(true)
+  }, [metric, gender, year, division, searchTerm])
+
   const hasActiveFilters = checkActiveFilters()
 
   const getBannerText = () => {
@@ -120,7 +125,7 @@ function NewCollegesPage() {
                   <SelectTrigger className="w-40">
                     <SelectValue placeholder="Sort By" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent position="popper">
                     <SelectItem value="total_commits">Total Commits</SelectItem>
                     <SelectItem value="d1_commits">D1 Commits</SelectItem>
                     <SelectItem value="recent_commits">Recent Commits</SelectItem>
@@ -133,7 +138,7 @@ function NewCollegesPage() {
                   <SelectTrigger className="w-40">
                     <SelectValue placeholder="Gender" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent position="popper">
                     <SelectItem value="all">All Genders</SelectItem>
                     <SelectItem value="male">Men's Wrestling</SelectItem>
                     <SelectItem value="female">Women's Wrestling</SelectItem>
@@ -144,7 +149,7 @@ function NewCollegesPage() {
                   <SelectTrigger className="w-40">
                     <SelectValue placeholder="Division" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent position="popper">
                     <SelectItem value="all">All Divisions</SelectItem>
                     <SelectItem value="DI">Division I</SelectItem>
                     <SelectItem value="DII">Division II</SelectItem>
@@ -159,12 +164,12 @@ function NewCollegesPage() {
                   <SelectTrigger className="w-40">
                     <SelectValue placeholder="Class Year" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Years</SelectItem>
-                    <SelectItem value="2024">Class of 2024</SelectItem>
+                  <SelectContent position="popper">
+                    <SelectItem value="all">All Years (2025+)</SelectItem>
                     <SelectItem value="2025">Class of 2025</SelectItem>
                     <SelectItem value="2026">Class of 2026</SelectItem>
                     <SelectItem value="2027">Class of 2027</SelectItem>
+                    <SelectItem value="2028">Class of 2028</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

@@ -7,10 +7,13 @@ import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
 import { Star, ChevronLeft, ChevronRight } from "lucide-react"
 import { getColorHex } from "@/lib/color-utils"
+import { isStoreSingletProduct } from "@/lib/store/product-utils"
+import { cn } from "@/lib/utils"
 
 interface ProductCardProduct {
   id: string | number
   name: string
+  slug?: string | null
   price: number
   category?: string | null
   image_url?: string | null
@@ -72,6 +75,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const currentImage = getCurrentImage()
   const stockQty = product.stock_quantity ?? 0
   const rating = product.rating ?? 0
+  const isSinglet = isStoreSingletProduct(product)
 
   return (
     <div className="group relative">
@@ -79,14 +83,22 @@ export function ProductCard({ product }: ProductCardProps) {
         href={productUrl}
         className="block cursor-pointer"
       >
-        {/* Image container */}
-        <div className="relative aspect-square overflow-hidden rounded-xl bg-[#0f1c2e] border border-white/5">
+        {/* Image container — portrait for singlets so straps/legs aren't clipped */}
+        <div
+          className={cn(
+            "relative overflow-hidden rounded-xl bg-[#0f1c2e] border border-white/5",
+            isSinglet ? "aspect-[3/4]" : "aspect-square",
+          )}
+        >
           {currentImage ? (
             <Image
               src={currentImage}
               alt={product.name}
               fill
-              className="object-contain p-4 transition-transform duration-500 group-hover:scale-110"
+              className={cn(
+                "object-contain object-center p-5",
+                !isSinglet && "transition-transform duration-500 group-hover:scale-110",
+              )}
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
               unoptimized={currentImage.includes("blob.vercel-storage.com")}
             />

@@ -1,6 +1,13 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { getCollegesByIds } from "@/lib/colleges"
+import {
+  buildCollegeNameLookup,
+  COLLEGE_LEADERBOARD_MIN_CLASS_YEAR,
+  getAllColleges,
+  getCollegesByIds,
+  resolveAthleteCollegeDivision,
+} from "@/lib/colleges"
+import { matchesDivisionFilter } from "@/lib/division-display"
 
 const supabase = createAdminClient()
 
@@ -72,6 +79,10 @@ export async function GET(request: NextRequest) {
       .select("college, college_id, highschool, gender, graduationyear, commitmentdate, rankings, prospect_ranking")
       .not("college", "is", null)
       .not("highschool", "is", null)
+      .neq("college", "")
+      .neq("college", "Uncommitted")
+      .neq("college", "TBD")
+      .or("is_prospect.is.null,is_prospect.eq.false")
 
     // Apply gender filter with case-insensitive matching
     if (gender !== "all") {
@@ -82,9 +93,11 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Apply year filter
+    // Apply year filter — "all" means class of 2025+ (matches page banner)
     if (year !== "all") {
       query = query.eq("graduationyear", Number.parseInt(year))
+    } else {
+      query = query.gte("graduationyear", COLLEGE_LEADERBOARD_MIN_CLASS_YEAR)
     }
 
     const { data: athletes, error } = await query
@@ -110,10 +123,16 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Resolve division from colleges table (athletes.division column no longer exists)
+    // Resolve division from colleges table via college_id or college name
+    const allColleges = await getAllColleges(supabase)
+    const collegesByName = buildCollegeNameLookup(allColleges)
     const collegeIds = [...new Set((athletes as any[]).map((a) => a.college_id).filter(Boolean))]
-    const collegesMap = collegeIds.length > 0 ? await getCollegesByIds(supabase, collegeIds) : new Map()
-    const getDivisionForAthlete = (a: any) => (a.college_id ? collegesMap.get(a.college_id)?.division : null) ?? null
+    const collegesById = collegeIds.length > 0 ? await getCollegesByIds(supabase, collegeIds) : new Map()
+    for (const c of allColleges) {
+      if (!collegesById.has(c.id)) collegesById.set(c.id, c)
+    }
+    const getDivisionForAthlete = (a: any) =>
+      resolveAthleteCollegeDivision(a, collegesById, collegesByName)
 
     // Process athlete data to create college statistics
     const collegeStats = new Map<
@@ -242,6 +261,11 @@ export async function GET(request: NextRequest) {
       const collegeName = athlete.college
       if (!collegeName) return
 
+      const athleteDivisionRaw = getDivisionForAthlete(athlete)
+      if (division !== "all" && !matchesDivisionFilter(athleteDivisionRaw, division)) {
+        return
+      }
+
       const normalizedCollegeName = collegeName.toLowerCase().trim()
 
       let existingCollege = null
@@ -362,27 +386,8 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    // Sort colleges by selected metric
+    // Sort colleges by selected metric (division filter applied per-athlete above)
     let sortedColleges = [...collegesWithLogos]
-
-    if (division !== "all") {
-      sortedColleges = sortedColleges.filter((college) => {
-        // Compare using normalized division values
-        const collegeDivision = college.division
-        const normalizedFilterDivision = normalizeDivision(division)
-        
-        if (division === "DI" || normalizedFilterDivision === "NCAA Division I") {
-          return collegeDivision === "NCAA Division I"
-        } else if (division === "DII" || normalizedFilterDivision === "NCAA Division II") {
-          return collegeDivision === "NCAA Division II"
-        } else if (division === "DIII" || normalizedFilterDivision === "NCAA Division III") {
-          return collegeDivision === "NCAA Division III"
-        } else {
-          return collegeDivision === normalizedFilterDivision || collegeDivision === division
-        }
-      })
-      console.log(`Filtered to ${sortedColleges.length} colleges for division: ${division}`)
-    }
 
     switch (metric) {
       case "d1_commits":

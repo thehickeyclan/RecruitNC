@@ -116,7 +116,8 @@ export function RelatedProducts({ products, storeTheme = false }: RelatedProduct
               <StoreLink
                 href={productUrl}
                 className={cn(
-                  "relative block aspect-square",
+                  "relative block",
+                  /singlet/i.test(product.name) ? "aspect-[3/4]" : "aspect-square",
                   storeTheme ? "bg-[#0f1c2e] border-b border-white/5" : "bg-secondary",
                 )}
               >
@@ -125,7 +126,7 @@ export function RelatedProducts({ products, storeTheme = false }: RelatedProduct
                     src={product.image}
                     alt={product.name}
                     fill
-                    className="object-contain p-4 md:p-6 group-hover:scale-105 transition-transform"
+                    className="object-contain object-center p-5 md:p-6"
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                     unoptimized={product.image.includes("blob.vercel-storage.com")}
                   />

@@ -53,3 +53,67 @@ export async function getCollegesByIds(
   }
   return map
 }
+
+/** Minimum graduation year shown when year filter is "all" (matches /colleges banner). */
+export const COLLEGE_LEADERBOARD_MIN_CLASS_YEAR = 2025
+
+function normalizeCollegeNameKey(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/\b(university|college|state|tech|of)\b/g, "")
+    .replace(/[^\w\s]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
+export async function getAllColleges(supabase: SupabaseClient): Promise<CollegeRow[]> {
+  const { data, error } = await supabase.from("colleges").select("*")
+  if (error || !data || !Array.isArray(data)) return []
+  return data.map((row) => mapRow(row as Record<string, unknown>))
+}
+
+/** Index colleges by lowercase and normalized name for athlete.college string lookup. */
+export function buildCollegeNameLookup(colleges: CollegeRow[]): Map<string, CollegeRow> {
+  const lookup = new Map<string, CollegeRow>()
+  for (const college of colleges) {
+    const raw = college.name.toLowerCase().trim()
+    if (raw && !lookup.has(raw)) lookup.set(raw, college)
+    const norm = normalizeCollegeNameKey(college.name)
+    if (norm && !lookup.has(norm)) lookup.set(norm, college)
+  }
+  return lookup
+}
+
+export function resolveCollegeByName(name: string, lookup: Map<string, CollegeRow>): CollegeRow | null {
+  const trimmed = name.trim()
+  if (!trimmed) return null
+
+  const raw = trimmed.toLowerCase()
+  const direct = lookup.get(raw)
+  if (direct) return direct
+
+  const norm = normalizeCollegeNameKey(trimmed)
+  const normMatch = lookup.get(norm)
+  if (normMatch) return normMatch
+
+  for (const [key, college] of lookup.entries()) {
+    if (raw.includes(key) || key.includes(raw)) return college
+    if (norm.includes(key) || key.includes(norm)) return college
+  }
+
+  return null
+}
+
+export function resolveAthleteCollegeDivision(
+  athlete: { college_id?: string | null; college?: string | null },
+  collegesById: Map<string, CollegeRow>,
+  collegesByName: Map<string, CollegeRow>,
+): string | null {
+  if (athlete.college_id) {
+    const fromId = collegesById.get(String(athlete.college_id))?.division
+    if (fromId) return fromId
+  }
+  const collegeName = athlete.college?.trim()
+  if (!collegeName) return null
+  return resolveCollegeByName(collegeName, collegesByName)?.division ?? null
+}

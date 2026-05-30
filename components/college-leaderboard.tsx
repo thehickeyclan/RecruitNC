@@ -43,7 +43,7 @@ interface Athlete {
 interface CollegeLeaderboardProps {
   metric: "total_commits" | "d1_commits" | "recent_commits" | "ranked_commits" | "nc_commits"
   gender: "all" | "male" | "female"
-  year?: "all" | "2024" | "2025" | "2026" | "2027"
+  year?: "all" | "2025" | "2026" | "2027" | "2028"
   division?: "all" | "Division I" | "Division II" | "Division III" | "NAIA" | "NJCAA" | "Independent" | "DI"
   limit?: number
   searchTerm?: string
@@ -73,6 +73,8 @@ export function CollegeLeaderboard({
       try {
         setLoading(true)
         setError(null)
+        setExpandedColleges(new Set())
+        setCollegeAthletes({})
 
         console.log(
           `Fetching college leaderboard: metric=${metric}, gender=${gender}, year=${year}, division=${division}`,
@@ -96,56 +98,25 @@ export function CollegeLeaderboard({
         }
 
         const data = await response.json()
-        console.log("College leaderboard data received:", data)
 
-        const filteredColleges = data.colleges || []
-
-        // If DI filter is selected, ensure NC State is included regardless of database division value
-        if (division === "DI") {
-          const hasNCState = filteredColleges.some(
-            (college: CollegeStats) =>
-              college.college_name.toLowerCase().includes("nc state") ||
-              college.college_name.toLowerCase().includes("north carolina state") ||
-              college.college_name.toLowerCase().includes("ncsu"),
-          )
-
-          // If NC State is not in the filtered results, fetch all colleges and add NC State
-          if (!hasNCState) {
-            const allCollegesParams = new URLSearchParams({
-              metric,
-              gender,
-              year,
-              division: "all", // Get all divisions to find NC State
-            })
-
-            const allCollegesResponse = await fetch(`/api/colleges/leaderboard?${allCollegesParams.toString()}`)
-            if (allCollegesResponse.ok) {
-              const allCollegesData = await allCollegesResponse.json()
-              const ncState = allCollegesData.colleges?.find(
-                (college: CollegeStats) =>
-                  college.college_name.toLowerCase().includes("nc state") ||
-                  college.college_name.toLowerCase().includes("north carolina state") ||
-                  college.college_name.toLowerCase().includes("ncsu"),
-              )
-
-              if (ncState) {
-                filteredColleges.push(ncState)
-              }
-            }
-          }
-        }
-
-        setColleges(filteredColleges)
+        setColleges(data.colleges || [])
       } catch (err) {
         console.error("College fetch error:", err)
         setError(err instanceof Error ? err.message : "An error occurred")
+        setColleges([])
+        onStatsUpdate?.({
+          totalCommits: 0,
+          maleCommits: 0,
+          femaleCommits: 0,
+          uniqueColleges: 0,
+        })
       } finally {
         setLoading(false)
       }
     }
 
     fetchLeaderboard()
-  }, [metric, gender, year, division])
+  }, [metric, gender, year, division, onStatsUpdate])
 
   // Calculate and update stats when colleges or searchTerm changes
   useEffect(() => {
@@ -217,12 +188,14 @@ export function CollegeLeaderboard({
     setLoadingAthletes((prev) => new Set(prev).add(collegeName))
 
     try {
-      console.log(`🔍 Fetching athletes for college: "${collegeName}"`)
-
-      const response = await fetch("/api/athletes")
+      const params = new URLSearchParams({
+        college: collegeName,
+        gender,
+        year,
+      })
+      const response = await fetch(`/api/colleges/athletes?${params.toString()}`)
 
       if (!response.ok) {
-        console.error("Failed to fetch athletes. Status:", response.status)
         setCollegeAthletes((prev) => ({
           ...prev,
           [collegeName]: [],
@@ -231,48 +204,11 @@ export function CollegeLeaderboard({
       }
 
       const data = await response.json()
-      console.log(`📊 Total athletes fetched: ${data.athletes?.length || 0}`)
-
-      const allAthletes = data.athletes || []
-
-      const collegeAthletesList = allAthletes.filter((athlete: any) => {
-        const athleteCollege = (athlete.college || "").trim()
-        const targetCollege = collegeName.trim()
-
-        // Only match if athlete has a college and it exactly matches the target college
-        if (!athleteCollege) return false
-
-        // Exact match (case insensitive)
-        return athleteCollege.toLowerCase() === targetCollege.toLowerCase()
+      const targetCollege = collegeName.trim().toLowerCase()
+      const filteredAthletes = (data.athletes || []).filter((athlete: Athlete) => {
+        const athleteCollege = (athlete.college || "").trim().toLowerCase()
+        return athleteCollege === targetCollege
       })
-
-      let filteredAthletes = collegeAthletesList
-
-      if (gender !== "all") {
-        filteredAthletes = filteredAthletes.filter((athlete: any) => {
-          const athleteGender = (athlete.gender || "").toLowerCase()
-          return gender === "male"
-            ? athleteGender === "male" || athleteGender === "m"
-            : athleteGender === "female" || athleteGender === "f"
-        })
-      }
-
-      if (year !== "all") {
-        filteredAthletes = filteredAthletes.filter((athlete: any) => {
-          return athlete.graduationyear?.toString() === year
-        })
-      }
-
-      console.log(`✅ Found ${filteredAthletes.length} athletes for ${collegeName}`)
-      console.log(
-        `🎯 Sample athletes:`,
-        filteredAthletes.slice(0, 3).map((a: any) => ({
-          name: a.display_name || a.name,
-          college: a.college,
-          gender: a.gender,
-          year: a.graduationyear,
-        })),
-      )
 
       setCollegeAthletes((prev) => ({
         ...prev,
@@ -430,7 +366,8 @@ export function CollegeLeaderboard({
   if (rankedColleges.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
-        <p>No college data available for this metric.</p>
+        <p>No colleges match the selected filters.</p>
+        <p className="text-sm mt-2">Try clearing filters or choosing a different division or class year.</p>
       </div>
     )
   }
