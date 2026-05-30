@@ -11,6 +11,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 
 interface CollegeStats {
   college_name: string
+  college_names?: string[]
   logo_url?: string
   division: string
   total_commits: number
@@ -180,7 +181,8 @@ export function CollegeLeaderboard({
     }
   }, [colleges, collegeLogos])
 
-  const fetchCollegeAthletes = async (collegeName: string) => {
+  const fetchCollegeAthletes = async (college: CollegeStats) => {
+    const collegeName = college.college_name
     if (collegeAthletes[collegeName] || loadingAthletes.has(collegeName)) {
       return
     }
@@ -188,10 +190,13 @@ export function CollegeLeaderboard({
     setLoadingAthletes((prev) => new Set(prev).add(collegeName))
 
     try {
+      const names = college.college_names?.length ? college.college_names : [collegeName]
       const params = new URLSearchParams({
         college: collegeName,
         gender,
         year,
+        division,
+        collegeNames: names.join("|"),
       })
       const response = await fetch(`/api/colleges/athletes?${params.toString()}`)
 
@@ -206,20 +211,9 @@ export function CollegeLeaderboard({
       }
 
       const data = await response.json()
-      const targetCollege = collegeName.trim().toLowerCase()
-      const filteredAthletes = (data.athletes || []).filter((athlete: Athlete) => {
-        const athleteCollege = (athlete.college || "").trim().toLowerCase()
-        if (!athleteCollege) return false
-        return (
-          athleteCollege === targetCollege ||
-          athleteCollege.includes(targetCollege) ||
-          targetCollege.includes(athleteCollege)
-        )
-      })
-
       setCollegeAthletes((prev) => ({
         ...prev,
-        [collegeName]: filteredAthletes,
+        [collegeName]: data.athletes || [],
       }))
     } catch (err) {
       console.error("Error fetching college athletes:", err)
@@ -236,14 +230,15 @@ export function CollegeLeaderboard({
     }
   }
 
-  const toggleCollegeExpansion = async (collegeName: string) => {
+  const toggleCollegeExpansion = async (college: CollegeStats) => {
+    const collegeName = college.college_name
     const newExpanded = new Set(expandedColleges)
 
     if (expandedColleges.has(collegeName)) {
       newExpanded.delete(collegeName)
     } else {
       newExpanded.add(collegeName)
-      await fetchCollegeAthletes(collegeName)
+      await fetchCollegeAthletes(college)
     }
 
     setExpandedColleges(newExpanded)
@@ -385,7 +380,7 @@ export function CollegeLeaderboard({
         <Collapsible
           key={college.college_name}
           open={expandedColleges.has(college.college_name)}
-          onOpenChange={() => toggleCollegeExpansion(college.college_name)}
+          onOpenChange={() => toggleCollegeExpansion(college)}
         >
           <div className="rounded-lg border border-gray-200 bg-white hover:shadow-sm transition-shadow">
             <CollapsibleTrigger asChild>

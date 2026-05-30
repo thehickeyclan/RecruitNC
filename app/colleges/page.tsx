@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Search, GraduationCap, Trophy } from "lucide-react"
+import { Search, GraduationCap, Trophy, LayoutList, ListOrdered } from "lucide-react"
 import { CollegeLeaderboard } from "@/components/college-leaderboard"
+import { CollegeCommitsTable } from "@/components/college-commits-table"
 
 function NewCollegesPage() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -19,6 +20,7 @@ function NewCollegesPage() {
   const [femaleCommits, setFemaleCommits] = useState(0)
   const [uniqueColleges, setUniqueColleges] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [viewMode, setViewMode] = useState<"rankings" | "table">("rankings")
 
   function clearFilters() {
     setGender("all")
@@ -44,7 +46,7 @@ function NewCollegesPage() {
   // Reset banner stats while leaderboard refetches after filter changes
   useEffect(() => {
     setLoading(true)
-  }, [metric, gender, year, division, searchTerm])
+  }, [metric, gender, year, division, searchTerm, viewMode])
 
   const hasActiveFilters = checkActiveFilters()
 
@@ -102,7 +104,7 @@ function NewCollegesPage() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                 <Input
                   type="text"
-                  placeholder="Search for a specific college..."
+                  placeholder={viewMode === "table" ? "Search athletes, colleges, or high schools..." : "Search for a specific college..."}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 pr-4 py-3 text-lg border-2 border-gray-200 focus:border-[#1e3a8a] rounded-lg"
@@ -121,6 +123,7 @@ function NewCollegesPage() {
               </div>
 
               <div className="flex flex-wrap gap-4 flex-1">
+                {viewMode === "rankings" && (
                 <Select value={metric} onValueChange={setMetric}>
                   <SelectTrigger className="w-40">
                     <SelectValue placeholder="Sort By" />
@@ -133,6 +136,7 @@ function NewCollegesPage() {
                     <SelectItem value="nc_commits">NC Commits</SelectItem>
                   </SelectContent>
                 </Select>
+                )}
 
                 <Select value={gender} onValueChange={setGender}>
                   <SelectTrigger className="w-40">
@@ -220,14 +224,45 @@ function NewCollegesPage() {
         </div>
 
         <div className="container mx-auto px-4 py-8">
-          <CollegeLeaderboard 
-            metric={metric} 
-            gender={gender} 
-            year={year} 
-            division={division} 
-            searchTerm={searchTerm}
-            onStatsUpdate={handleStatsUpdate}
-          />
+          <div className="flex justify-end gap-2 mb-6">
+            <Button
+              variant={viewMode === "rankings" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("rankings")}
+              className={viewMode === "rankings" ? "bg-[#1e3a8a]" : ""}
+            >
+              <ListOrdered className="h-4 w-4 mr-2" />
+              Rankings
+            </Button>
+            <Button
+              variant={viewMode === "table" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("table")}
+              className={viewMode === "table" ? "bg-[#1e3a8a]" : ""}
+            >
+              <LayoutList className="h-4 w-4 mr-2" />
+              Table
+            </Button>
+          </div>
+
+          {viewMode === "rankings" ? (
+            <CollegeLeaderboard
+              metric={metric}
+              gender={gender}
+              year={year}
+              division={division}
+              searchTerm={searchTerm}
+              onStatsUpdate={handleStatsUpdate}
+            />
+          ) : (
+            <CollegeCommitsTable
+              gender={gender as "all" | "male" | "female"}
+              year={year as "all" | "2025" | "2026" | "2027" | "2028"}
+              division={division as "all" | "DI" | "DII" | "DIII" | "NAIA" | "NJCAA" | "Independent"}
+              searchTerm={searchTerm}
+              onStatsUpdate={handleStatsUpdate}
+            />
+          )}
         </div>
       </div>
   )

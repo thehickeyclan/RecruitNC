@@ -4,32 +4,25 @@ import { fetchCollegeCommits } from "@/lib/college-commit-query"
 
 const supabase = createAdminClient()
 
-/** Expand one college bucket — pass all spellings from leaderboard `college_names`. */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const college = searchParams.get("college")?.trim()
     const gender = searchParams.get("gender") || "all"
     const year = searchParams.get("year") || "all"
     const division = searchParams.get("division") || "all"
+    const search = searchParams.get("search") || undefined
 
-    if (!college) {
-      return NextResponse.json({ error: "College parameter is required" }, { status: 400 })
-    }
-
+    // Pipe-separated raw college spellings from a leaderboard bucket
     const collegeNamesParam = searchParams.get("collegeNames")
     const collegeNames = collegeNamesParam
-      ? collegeNamesParam.split("|").map((s) => decodeURIComponent(s.trim())).filter(Boolean)
-      : [college]
-
-    if (!collegeNames.includes(college)) {
-      collegeNames.unshift(college)
-    }
+      ? collegeNamesParam.split("|").map((s) => s.trim()).filter(Boolean)
+      : undefined
 
     const athletes = await fetchCollegeCommits(supabase, {
       gender,
       year,
       division,
+      search,
       collegeNames,
     })
 
@@ -38,10 +31,10 @@ export async function GET(request: NextRequest) {
       total: athletes.length,
     })
   } catch (error) {
-    console.error("[RecruitNC] College athletes API error:", error)
+    console.error("[RecruitNC] College commits API error:", error)
     return NextResponse.json(
       {
-        error: "Failed to fetch college athletes",
+        error: "Failed to fetch college commits",
         details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 },
