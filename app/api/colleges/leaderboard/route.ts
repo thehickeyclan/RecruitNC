@@ -8,6 +8,7 @@ import {
   resolveAthleteCollegeDivision,
 } from "@/lib/colleges"
 import { matchesDivisionFilter } from "@/lib/division-display"
+import { findCollegeGroupKey } from "@/lib/college-name-match"
 
 const supabase = createAdminClient()
 
@@ -86,11 +87,13 @@ export async function GET(request: NextRequest) {
 
     // Apply gender filter with case-insensitive matching
     if (gender !== "all") {
-      if (gender === "male") {
-        query = query.or("gender.ilike.male,gender.ilike.m,gender.ilike.men")
-      } else if (gender === "female") {
-        query = query.or("gender.ilike.female,gender.ilike.f,gender.ilike.women")
-      }
+      const genderValues =
+        gender === "male"
+          ? ["male", "Male", "m", "M", "men", "Men"]
+          : gender === "female"
+            ? ["female", "Female", "f", "F", "women", "Women"]
+            : [gender]
+      query = query.in("gender", genderValues)
     }
 
     // Apply year filter — "all" means class of 2025+ (matches page banner)
@@ -151,7 +154,8 @@ export async function GET(request: NextRequest) {
         division: string
         nc_commits: number
         out_of_state_commits: number
-        divisionCounts: Map<string, number> // Track division frequency for determining most common
+        divisionCounts: Map<string, number>
+        college_names: Set<string>
       }
     >()
 
@@ -267,19 +271,8 @@ export async function GET(request: NextRequest) {
       }
 
       const normalizedCollegeName = collegeName.toLowerCase().trim()
-
-      let existingCollege = null
-      let existingKey = null
-
-      for (const [key, stats] of collegeStats.entries()) {
-        if (normalizedCollegeName.includes(key.toLowerCase()) || key.toLowerCase().includes(normalizedCollegeName)) {
-          existingCollege = stats
-          existingKey = key
-          break
-        }
-      }
-
-      const canonicalName = existingKey || collegeName
+      const existingKey = findCollegeGroupKey(collegeName, collegeStats.keys())
+      const canonicalName = existingKey || collegeName.trim()
 
       if (!collegeStats.has(canonicalName)) {
         collegeStats.set(canonicalName, {
@@ -297,10 +290,12 @@ export async function GET(request: NextRequest) {
           nc_commits: 0,
           out_of_state_commits: 0,
           divisionCounts: new Map<string, number>(),
+          college_names: new Set<string>(),
         })
       }
 
       const stats = collegeStats.get(canonicalName)!
+      stats.college_names.add(collegeName.trim())
       stats.total_commits++
 
       // Division comes from colleges table via college_id (athletes.division no longer exists)
@@ -377,11 +372,11 @@ export async function GET(request: NextRequest) {
 
     const collegesWithLogos = Array.from(collegeStats.values()).map((college) => {
       const logoMapping = findLogoMapping(college.college_name)
-      // Remove divisionCounts from the final output (internal tracking only)
-      const { divisionCounts, ...collegeData } = college
+      const { divisionCounts, college_names, ...collegeData } = college
 
       return {
         ...collegeData,
+        college_names: Array.from(college_names),
         logo_url: logoMapping?.logo_url || null,
       }
     })
