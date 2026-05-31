@@ -94,7 +94,7 @@ export function getSuper32Results(athlete: any): TournamentResult[] {
   const results: TournamentResult[] = []
   const weight = athlete?.weightclass ?? athlete?.weightClass ?? ''
 
-  const years = [2025, 2024, 2023]
+  const years = [2026, 2025, 2024, 2023]
   for (const year of years) {
     const placementSnake = athlete?.[`super_32_${year}_placement`] ?? athlete?.[`super32_${year}_placement`]
     const recordSnake = athlete?.[`super_32_${year}_record`] ?? athlete?.[`super32_${year}_record`]

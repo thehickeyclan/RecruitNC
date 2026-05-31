@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { getNHSCAFromTables, getSuper32FromTable } from "@/lib/tournament-tables"
-import { getMergedNchsaaForAthlete } from "@/lib/nchsaa-results"
+import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
 import { normalizeEntityName } from "@/lib/logo-mappings-normalize"
 import { buildSchoolClassificationMap } from "@/lib/classification-data"
 import { formatPhoneForDisplay } from "@/lib/phone-format"
@@ -47,7 +46,7 @@ export async function GET(request: NextRequest) {
 
     const admin = createAdminClient()
     const supabase = await createClient()
-    const db = admin // use admin for tournament tables too (bypasses RLS, ensures we see all Super32/NHSCA data)
+    const db = admin
 
     const { data: athletes, error } = await admin
       .from("athletes")
@@ -78,69 +77,11 @@ export async function GET(request: NextRequest) {
     const athletesWithResults = []
     for (const a of athletes || []) {
       const athleteName = (a.wrestling_name || a.name || "").trim()
-      const gradYear = Number(a.graduationyear) || yearNum
       const schoolForDivision = String(a.highschool || a.high_school || "").trim()
 
-      let [nchsaaResults, nhscaFromTables, super32FromTable] = await Promise.all([
-        getMergedNchsaaForAthlete(db, a),
-        getNHSCAFromTables(db, athleteName, gradYear),
-        getSuper32FromTable(db, athleteName, gradYear),
-      ])
-      // If still no NHSCA/Super32, try "LastName FirstName" (some tables store names that way)
-      if (nhscaFromTables.length === 0 || super32FromTable.length === 0) {
-        const parts = athleteName.trim().split(/\s+/)
-        if (parts.length >= 2) {
-          const altName = [parts[parts.length - 1], ...parts.slice(0, -1)].join(" ")
-          if (nhscaFromTables.length === 0) {
-            nhscaFromTables = await getNHSCAFromTables(db, altName, gradYear)
-          }
-          if (super32FromTable.length === 0) {
-            super32FromTable = await getSuper32FromTable(db, altName, gradYear)
-          }
-        }
-      }
+      const { nchsaa: nchsaaResults, nhsca: mergedNhsca, super32: mergedSuper32 } =
+        await loadAthleteTournamentBundle(db, a)
 
-      // Merge NHSCA: table data first, fill missing years from athlete row
-      const nhscaByYear = new Map<number, { placement: string; record: string }>()
-      for (const r of nhscaFromTables) {
-        const y = typeof r.year === "number" ? r.year : parseInt(String(r.year), 10)
-        if (!nhscaByYear.has(y)) nhscaByYear.set(y, { placement: r.placement || "", record: r.record || "" })
-      }
-      for (const y of [2023, 2024, 2025]) {
-        if (!nhscaByYear.has(y)) {
-          const rec = a[`nhsca_${y}_record`]
-          const place = a[`nhsca_${y}_placement`]
-          if (rec || place != null) {
-            const placeStr = place != null ? (typeof place === "number" ? String(place) : String(place)) : ""
-            nhscaByYear.set(y, { placement: placeStr, record: (rec || "").toString().trim() })
-          }
-        }
-      }
-      const mergedNhsca = Array.from(nhscaByYear.entries())
-        .sort((a, b) => b[0] - a[0])
-        .map(([year, v]) => ({ year, placement: v.placement, record: v.record }))
-
-      // Merge Super 32: table data first, fill missing years from athlete row
-      const super32ByYear = new Map<number, { placement: string; record: string }>()
-      for (const r of super32FromTable) {
-        const y = typeof r.year === "number" ? r.year : parseInt(String(r.year), 10)
-        if (!super32ByYear.has(y)) super32ByYear.set(y, { placement: r.placement || "", record: r.record || "" })
-      }
-      for (const y of [2023, 2024, 2025]) {
-        if (!super32ByYear.has(y)) {
-          const rec = a[`super_32_${y}_record`]
-          const place = a[`super_32_${y}_placement`]
-          if (rec || place != null) {
-            const placeStr = place != null ? (typeof place === "number" ? String(place) : String(place)) : ""
-            super32ByYear.set(y, { placement: placeStr, record: (rec || "").toString().trim() })
-          }
-        }
-      }
-      const mergedSuper32 = Array.from(super32ByYear.entries())
-        .sort((a, b) => b[0] - a[0])
-        .map(([year, v]) => ({ year, placement: v.placement, record: v.record }))
-
-      // Derive athlete-row style fields from merged (for page display)
       const nh2023 = mergedNhsca.find((r) => r.year === 2023)
       const nh2024 = mergedNhsca.find((r) => r.year === 2024)
       const nh2025 = mergedNhsca.find((r) => r.year === 2025)

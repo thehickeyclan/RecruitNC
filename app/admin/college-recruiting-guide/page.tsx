@@ -44,11 +44,7 @@ function formatPlaceSuffix(p: number | string | null | undefined): string {
   return "th"
 }
 
-function countStateTitles(results: Array<{ place: number; year: number }> | undefined): number {
-  const champs = (results ?? []).filter((r) => r.place === 1)
-  const years = new Set(champs.map((r) => r.year))
-  return years.size > 0 ? years.size : champs.length
-}
+import { countDistinctStateTitleYears, stateChampionBadgeLabel } from "@/lib/nchsaa-state-display"
 
 function formatStateResultLine(r: { place: number; classification?: string; weight_class?: string; year: number }): string {
   const emoji = r.place === 1 ? "🥇" : r.place === 2 ? "🥈" : r.place === 3 ? "🥉" : "🏅"
@@ -96,17 +92,16 @@ export default function CollegeRecruitingGuidePage() {
     const header = ["#", "Name", "School", "Div", "Weight", "Status", "Cell", "State", "NHSCA", "Super 32", "GPA"]
     const rows = athletes.map((a, i) => {
       const stateLines = a.nchsaa_results?.map(formatStateResultLine) ?? []
-      const stateChamps = countStateTitles(a.nchsaa_results)
-      const statePrefix = stateChamps >= 2 ? `${stateChamps}× State Champion — ` : ""
+      const stateChamps = countDistinctStateTitleYears(a.nchsaa_results)
+      const stateBadge = stateChampionBadgeLabel(stateChamps)
+      const statePrefix = stateBadge ? `${stateBadge} — ` : ""
       const state = stateLines.length > 0 ? statePrefix + stateLines.join(" | ") : "—"
       const nhsca = (a.nhsca_results || [])
         .filter((r) => r.placement || r.record)
-        .slice(0, 3)
         .map((r) => `'${String(r.year).slice(-2)}: ${r.placement} ${r.record ? `Record: ${r.record}` : ""}`.trim())
         .join(" | ") || "—"
       const super32 = (a.super32_results || [])
         .filter((r) => r.placement || r.record)
-        .slice(0, 3)
         .map((r) => `'${String(r.year).slice(-2)}: ${r.placement} ${r.record ? `Record: ${r.record}` : ""}`.trim())
         .join(" | ") || "—"
       return [
@@ -235,11 +230,13 @@ export default function CollegeRecruitingGuidePage() {
                     <td className="border border-gray-300 px-2 py-1.5 text-xs">
                       {row.nchsaa_results && row.nchsaa_results.length > 0 ? (
                         <div className="space-y-0.5">
-                          {countStateTitles(row.nchsaa_results) >= 2 && (
-                            <div className="font-semibold text-amber-800">
-                              {countStateTitles(row.nchsaa_results)}× State Champion
-                            </div>
-                          )}
+                          {(() => {
+                            const titles = countDistinctStateTitleYears(row.nchsaa_results)
+                            const badge = stateChampionBadgeLabel(titles)
+                            return badge ? (
+                              <div className="font-semibold text-amber-800">{badge}</div>
+                            ) : null
+                          })()}
                           {row.nchsaa_results.map((r, i) => (
                             <div key={i} className="text-gray-700">
                               {formatStateResultLine(r)}
@@ -255,7 +252,6 @@ export default function CollegeRecruitingGuidePage() {
                         <div className="space-y-0.5">
                           {row.nhsca_results
                             .filter((r) => r.placement || r.record)
-                            .slice(0, 3)
                             .map((r, i) => (
                               <div key={i} className="text-gray-700">
                                 {placementEmoji(r.placement)}
@@ -275,7 +271,6 @@ export default function CollegeRecruitingGuidePage() {
                         <div className="space-y-0.5">
                           {row.super32_results
                             .filter((r) => r.placement || r.record)
-                            .slice(0, 3)
                             .map((r, i) => (
                               <div key={i} className="text-gray-700">
                                 {placementEmoji(r.placement)}

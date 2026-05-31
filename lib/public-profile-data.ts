@@ -10,6 +10,7 @@ import {
   dedupeNhscaByYearForGradYear,
   getNHSCAFromTables,
   getNHSCAFromTablesAllTime,
+  getSuper32FromTable,
   type TournamentResultRow,
 } from "@/lib/tournament-tables"
 import {
@@ -266,6 +267,64 @@ export async function getNHSCAForAthlete(
 
 /** @deprecated Use `getNHSCAForAthlete` — alias for search/replace compatibility. */
 export const mergeNhscaForAthleteRecord = getNHSCAForAthlete
+
+/**
+ * Merge Super32 table rows with athlete row JSON + legacy columns (same year policy as NHSCA).
+ */
+export function mergeSuper32ForPublicRankings(
+  fromTables: TournamentResultRow[],
+  fromProfile: TournamentResultForDisplay[],
+): TournamentResultForDisplay[] {
+  const map = new Map<number, TournamentResultForDisplay>()
+  for (const r of fromTables) {
+    const row: TournamentResultForDisplay = {
+      year: r.year,
+      placement: (r.placement ?? "").trim(),
+      record: (r.record ?? "").trim(),
+      weight: r.weight,
+      division: r.division,
+    }
+    if (!isDisplayRowEmpty(row)) map.set(r.year, row)
+  }
+  for (const r of fromProfile) {
+    const existing = map.get(r.year)
+    if (!existing || isDisplayRowEmpty(existing)) {
+      map.set(r.year, r)
+    }
+  }
+  return [...map.values()]
+    .sort((a, b) => b.year - a.year)
+    .map((r) => {
+      const surf = formatSuper32PlacementForPublicDisplay(r.placement)
+      if (!surf) return r
+      return { ...r, placement: surf }
+    })
+}
+
+/**
+ * **The only Super32 merge for an athlete:** `super32_results` table × name variants,
+ * merged with `super32_results` JSON + legacy columns on the athlete row.
+ */
+export async function getSuper32ForAthlete(
+  supabase: SupabaseClient,
+  athlete: Record<string, unknown>,
+): Promise<TournamentResultForDisplay[]> {
+  const gradYear = resolveGraduationYear(athlete)
+  const highSchool = String(athlete.highschool ?? athlete.high_school ?? "").trim()
+  const name = String(athlete.name ?? "").trim()
+  const wrestlingName = String(athlete.wrestling_name ?? "").trim()
+  const bases = new Set<string>()
+  if (name) bases.add(name)
+  if (wrestlingName && wrestlingName.toLowerCase() !== name.toLowerCase()) bases.add(wrestlingName)
+  const merged: TournamentResultRow[] = []
+  for (const n of bases) {
+    const rows = await getSuper32FromTable(supabase, n, gradYear, { highSchool: highSchool || undefined })
+    merged.push(...rows)
+  }
+  const uniq = uniqNhscaTableRows(merged)
+  const fromRow = buildPublicProfileTournamentData(athlete).super32Results
+  return mergeSuper32ForPublicRankings(uniq, fromRow)
+}
 
 /**
  * Build NHSCA and Super32 results from athlete row - same logic as public-rankings API.

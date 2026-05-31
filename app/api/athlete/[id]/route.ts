@@ -1,12 +1,8 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { getSuper32FromTable, getUltimateClubDualsFromTables } from "@/lib/tournament-tables"
-import { getNHSCAForAthlete, resolveGraduationYear } from "@/lib/athlete-nhsca"
-import {
-  getNCHSAAResultsForProfile,
-  mergeNchsaaResults,
-  nchsaaJsonToProfileRows,
-} from "@/lib/nchsaa-results"
+import { getUltimateClubDualsFromTables } from "@/lib/tournament-tables"
+import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
+import { resolveGraduationYear } from "@/lib/athlete-nhsca"
 import {
   getNhscaDuals2026LiveProfileResults,
   getNhscaDuals2026RegistrationPlaceholders,
@@ -58,47 +54,19 @@ export async function GET(
     if (name) nameBases.push(name)
     if (wrestlingName && wrestlingName.toLowerCase() !== name.toLowerCase()) nameBases.push(wrestlingName)
     const athleteRow = athlete as Record<string, unknown>
-    const [nhscaMerged, super32FromTable, nationalTeamFromTables, nchsaaMergedRows, nhscaDualsLive, nhscaDualsRegistration] =
+    const [bundle, nationalTeamFromTables, nhscaDualsLive, nhscaDualsRegistration] =
       await Promise.all([
-      getNHSCAForAthlete(supabase, athleteRow),
+      loadAthleteTournamentBundle(supabase, athleteRow),
       (async () => {
         const bases = nameBases.filter(Boolean)
         if (!bases.length) return []
         const tries = await Promise.all(
-          bases.map((n) => getSuper32FromTable(supabase, n, gradYear, { highSchool: highSchool || undefined })),
+          bases.map((n) => getUltimateClubDualsFromTables(supabase, n, highSchool || undefined)),
         )
         for (const rows of tries) {
           if (rows.length) return rows
         }
         return []
-      })(),
-      (async () => {
-        const bases = nameBases.filter(Boolean)
-        if (!bases.length) return []
-        const tries = await Promise.all(bases.map((n) => getUltimateClubDualsFromTables(supabase, n, highSchool || undefined)))
-        for (const rows of tries) {
-          if (rows.length) return rows
-        }
-        return []
-      })(),
-      (async () => {
-        try {
-          const [byName, byWrestling] = await Promise.all([
-            getNCHSAAResultsForProfile(supabase, name, gradYear, highSchool || undefined),
-            wrestlingName && wrestlingName !== name
-              ? getNCHSAAResultsForProfile(supabase, wrestlingName, gradYear, highSchool || undefined)
-              : Promise.resolve([] as Awaited<ReturnType<typeof getNCHSAAResultsForProfile>>),
-          ])
-          const fromAthleteRow = nchsaaJsonToProfileRows(athleteRow.nchsaa_results, name)
-          return mergeNchsaaResults(mergeNchsaaResults(byName, byWrestling), fromAthleteRow)
-        } catch (e) {
-          console.warn("[RecruitNC] GET /api/athlete/[id]: NCHSAA merge failed", e)
-          try {
-            return nchsaaJsonToProfileRows(athleteRow.nchsaa_results, name)
-          } catch {
-            return []
-          }
-        }
       })(),
       getNhscaDuals2026LiveProfileResults(supabase, nameBases),
       getNhscaDuals2026RegistrationPlaceholders(supabase, id.trim(), {
@@ -107,6 +75,7 @@ export async function GET(
         gradYear,
       }),
     ])
+    const { nchsaa: nchsaaMergedRows, nhsca: nhscaMerged, super32: super32Merged } = bundle
     const nchsaa_profile = nchsaaMergedRows.map((r) => ({
       year: r.year,
       place: r.place,
@@ -126,7 +95,7 @@ export async function GET(
       nhsca_results: nhscaMerged,
       /** Same merge as /api/wrestling-achievements `all_results.nchsaa` — one request for profiles. */
       nchsaa_profile,
-      super32_results: super32FromTable.length ? super32FromTable : (athlete.super32_results ?? []),
+      super32_results: super32Merged,
       national_team_results,
     }
 
@@ -137,7 +106,7 @@ export async function GET(
       nameBaseCount: nameBases.length,
       nhscaResultRows: nhscaMerged.length,
       nchsaaProfileRows: nchsaa_profile.length,
-      super32FromTable: super32FromTable.length,
+      super32FromTable: super32Merged.length,
       nationalTeamMerged: national_team_results.length,
       nhscaDualsLiveRows: nhscaDualsLive.length,
       nhscaDualsRegistrationRows: nhscaDualsRegistration.length,

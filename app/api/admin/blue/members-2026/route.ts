@@ -101,7 +101,7 @@ export async function GET(request: Request) {
 
   const { data: athletesRaw, error: athletesError } = await admin
     .from("athletes")
-    .select("id, name, highschool, graduationyear, weightclass")
+    .select("id, name, wrestling_name, highschool, high_school, graduationyear, weightclass, nchsaa_results, nhsca_results, super32_results")
     .in("id", Array.from(blueAthleteIds))
 
   if (athletesError) return NextResponse.json({ error: athletesError.message }, { status: 500 })

@@ -1,46 +1,11 @@
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 import { buildSchoolClassificationMap } from "@/lib/classification-data"
-import { buildPublicProfileTournamentData } from "@/lib/public-profile-data"
-import { getNHSCAForAthlete } from "@/lib/athlete-nhsca"
-import { getSuper32FromTable } from "@/lib/tournament-tables"
-
-async function getNCHSAAResults(supabase: any, athleteName: string, graduationYear: number) {
-  if (!graduationYear || isNaN(graduationYear)) {
-    return []
-  }
-  if (!athleteName?.trim()) {
-    return []
-  }
-
-  const currentYear = new Date().getFullYear()
-  const yearsRemaining = graduationYear - currentYear
-
-  // Use athlete's full high-school window (gradYear-4 .. gradYear) for seniors/graduated so we show all 4 years.
-  // Underclassmen: only search years that could already have results (no future years).
-  let yearsToSearch: number[]
-  if (yearsRemaining >= 3) {
-    yearsToSearch = [currentYear]
-  } else if (yearsRemaining === 2) {
-    yearsToSearch = [currentYear, currentYear - 1]
-  } else if (yearsRemaining === 1) {
-    yearsToSearch = [currentYear, currentYear - 1, currentYear - 2]
-  } else {
-    const minY = Math.max(1990, graduationYear - 4)
-    const maxY = Math.min(graduationYear, currentYear)
-    yearsToSearch = []
-    for (let y = minY; y <= maxY; y++) yearsToSearch.push(y)
-  }
-
-  const { data: results, error } = await supabase
-    .from("wrestling_nchsaa_results")
-    .select("*")
-    .ilike("wrestler_name", `%${athleteName}%`)
-    .in("year", yearsToSearch)
-    .order("year", { ascending: false })
-
-  return results || []
-}
+import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
+import {
+  nchsaaRowsToStateResults,
+  stateChampionshipSummaryFromRows,
+} from "@/lib/nchsaa-state-display"
 
 export async function GET(request: Request) {
   try {
@@ -76,6 +41,9 @@ export async function GET(request: Request) {
         photourl,
         headshot_url,
         nhsca_results,
+        nchsaa_results,
+        nhsca_2023_record,
+        nhsca_2023_placement,
         nhsca_2024_record,
         nhsca_2024_placement,
         nhsca_2025_record,
@@ -144,7 +112,6 @@ export async function GET(request: Request) {
     // If a limit was requested (e.g. homepage only needs top 3), only enrich that many athletes
     const athletesToEnrich = requestedLimit && requestedLimit > 0 ? athletes.slice(0, requestedLimit) : athletes
 
-    const gradYearNum = Number.isFinite(yearNum) ? yearNum : parseInt(String(year), 10) || 0
     const rankings = await Promise.all(
       athletesToEnrich.map(async (athlete) => {
         const fromFirstLast = `${athlete.firstName ?? ""} ${athlete.lastName ?? ""}`.trim()
@@ -155,38 +122,13 @@ export async function GET(request: Request) {
           ""
         const athleteRow = athlete as Record<string, unknown>
 
-        const [nchsaaResults, nhscaFinal, super32ToUse] = await Promise.all([
-          getNCHSAAResults(supabase, athleteName, Number.parseInt(String(athlete.graduationyear), 10)),
-          getNHSCAForAthlete(supabase, athleteRow),
-          getSuper32FromTable(
-            supabase,
-            ((athlete.wrestling_name as string) || "").trim() || athleteName,
-            gradYearNum,
-          ),
-        ])
-        const fromAthlete = buildPublicProfileTournamentData(athlete)
-        let super32Final = super32ToUse
-        if (super32Final.length === 0) super32Final = fromAthlete.super32Results
+        const { nchsaa, nhsca: nhscaFinal, super32: super32Final } = await loadAthleteTournamentBundle(
+          supabase,
+          athleteRow,
+        )
 
-        let stateResults = nchsaaResults.map((result: { year: number; place: number; classification?: string }) => {
-          const { year: y, place, classification } = result
-          if (place === 1) return { text: `${y} ${classification || ""} State Champion`, placement: 1, year: y }
-          if (place <= 8) {
-            const ordinal = place === 2 ? "2nd" : place === 3 ? "3rd" : `${place}th`
-            return { text: `${y} ${classification || ""} State ${ordinal}`, placement: place, year: y }
-          }
-          return { text: `${y} ${classification || ""} State Qualifier`, placement: null, year: y }
-        })
-        stateResults.sort((a, b) => b.year - a.year)
-
-        const stateChampionships = stateResults.filter((r) => r.placement === 1)
-        const championshipCount = stateChampionships.length
-        const stateChampionshipSummary =
-          championshipCount >= 2 && championshipCount <= 4
-            ? `${championshipCount}x State Champion`
-            : stateResults.length > 0
-              ? stateResults.map((r) => r.text).join(", ")
-              : "No State Placement"
+        const stateResults = nchsaaRowsToStateResults(nchsaa)
+        const stateChampionshipSummary = stateChampionshipSummaryFromRows(nchsaa)
 
         const toApiResult = (r: { year: number; placement: string; record: string }) => {
           const text = `${r.year}${r.placement ? ` ${r.placement}` : ""}${r.record ? ` (${r.record})` : ""}`.trim()

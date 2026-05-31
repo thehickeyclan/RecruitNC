@@ -6,12 +6,10 @@
 import { getSupabaseAdmin } from "@/lib/server-supabase"
 import { getAthleteProfileUrl } from "@/lib/athlete-profile-links"
 import { escapeForIlike } from "@/lib/nchsaa-results"
-import {
-  loadProfileTournamentData,
-  type AthleteForProfile,
-  type NchsaaRowForProfile,
-} from "@/lib/profile-tournament-data"
-import { getNHSCAForAthlete, type TournamentResultForDisplay } from "@/lib/public-profile-data"
+import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
+import { type NchsaaRowForProfile } from "@/lib/profile-tournament-data"
+import { type TournamentResultForDisplay } from "@/lib/public-profile-data"
+import { countDistinctStateTitleYears } from "@/lib/nchsaa-state-display"
 import { namesMatch } from "@/lib/nhsca-live/names-match"
 import { getUltimateClubDualsFromTables } from "@/lib/tournament-tables"
 
@@ -21,15 +19,6 @@ function athleteDisplayName(row: Record<string, unknown>): string {
   const f = String(row.first_name ?? row.firstName ?? "").trim()
   const l = String(row.last_name ?? row.lastName ?? "").trim()
   return `${f} ${l}`.trim() || "Unknown"
-}
-
-function toAthleteForProfile(row: Record<string, unknown>): AthleteForProfile {
-  return {
-    id: String(row.id ?? ""),
-    name: athleteDisplayName(row),
-    highschool: (row.highschool ?? row.high_school ?? "") as string | null,
-    graduationyear: row.graduationyear ?? row.grad_year ?? row.graduationYear ?? null,
-  }
 }
 
 function formatNchsaaStateLine(r: NchsaaRowForProfile): string {
@@ -124,19 +113,17 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
     Number(rawGrad) >= 1990 &&
     Number(rawGrad) <= 2050
   const gradYear = hasValidGrad ? Math.floor(Number(rawGrad)) : new Date().getFullYear()
-  const profileAthlete = toAthleteForProfile(athlete)
 
   /** Earliest NCHSAA season year we query (≈ freshman spring through grad year + 1). Same for school dual / MOW. */
   const yearMin = hasValidGrad ? gradYear - 4 : 1990
   const yearMax = hasValidGrad ? gradYear + 1 : 2035
 
-  const [tournament, nhscaDisplay, ncUnited] = await Promise.all([
-    loadProfileTournamentData(supabase, profileAthlete, { allTime: true }),
-    getNHSCAForAthlete(supabase, athlete, { tablesAllTime: true }),
+  const [{ nchsaa: nchsaaMerged, nhsca: nhscaDisplay }, ncUnited] = await Promise.all([
+    loadAthleteTournamentBundle(supabase, athlete, { nhscaAllTime: true }),
     getUltimateClubDualsFromTables(supabase, nameForQueries, highSchool || undefined),
   ])
 
-  const nchsaaSorted = [...tournament.nchsaa].sort((a, b) => b.year - a.year)
+  const nchsaaSorted = [...nchsaaMerged].sort((a, b) => b.year - a.year)
 
   const lines: string[] = []
   const linkedName = `[${displayName}](${getAthleteProfileUrl(id)})`
@@ -312,10 +299,10 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
     }
   }
 
-  const champCount = nchsaaSorted.filter((r) => r.place === 1).length
-  if (champCount === 4) {
+  const champCount = countDistinctStateTitleYears(nchsaaSorted)
+  if (champCount >= 2) {
     lines.push("")
-    lines.push("🏆 4x State Champion - One of NC's elite 4-time state champions")
+    lines.push(`🏆 ${champCount}× State Champion${champCount === 4 ? " — one of NC's elite four-time state champions" : ""}`)
   }
 
   return { markdown: lines.join("\n") }
