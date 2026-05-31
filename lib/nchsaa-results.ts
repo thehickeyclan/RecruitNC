@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { fetchNchsaaResultsForAthleteProfile } from "@/lib/nchsaa-profile-fetch"
 import { plausibleNchsaaYearsForGradYear } from "@/lib/nchsaa-plausible-years"
 import type { NchsaaRowForProfile } from "@/lib/nchsaa-results-json"
+import { nchsaaJsonToProfileRows } from "@/lib/nchsaa-results-json"
 export { nchsaaJsonToProfileRows, type NchsaaRowForProfile } from "@/lib/nchsaa-results-json"
 export { plausibleNchsaaYearsForGradYear } from "@/lib/nchsaa-plausible-years"
 
@@ -377,6 +378,33 @@ export function mergeNchsaaResults(
   }
   const out = [...byKey.values()].sort((x, y) => y.year - x.year)
   return out
+}
+
+/** Merge NCHSAA table rows + athlete row JSON — same path as GET /api/athlete/[id] and wrestling-achievements. */
+export async function getMergedNchsaaForAthlete(
+  supabase: SupabaseClient,
+  athlete: {
+    name?: string | null
+    wrestling_name?: string | null
+    nchsaa_results?: unknown
+    highschool?: string | null
+    high_school?: string | null
+    graduationyear?: number | null
+  },
+): Promise<NchsaaRowForProfile[]> {
+  const displayName = String(athlete.name ?? "").trim()
+  const wrestlingName = String(athlete.wrestling_name ?? "").trim()
+  const gradYear = Number(athlete.graduationyear) || undefined
+  const schoolHint = String(athlete.highschool ?? athlete.high_school ?? "").trim() || undefined
+
+  const [byName, byWrestling] = await Promise.all([
+    getNCHSAAResultsForProfile(supabase, displayName, gradYear, schoolHint),
+    wrestlingName && wrestlingName !== displayName
+      ? getNCHSAAResultsForProfile(supabase, wrestlingName, gradYear, schoolHint)
+      : Promise.resolve([] as NchsaaRowForProfile[]),
+  ])
+  const fromAthleteRow = nchsaaJsonToProfileRows(athlete.nchsaa_results, displayName || wrestlingName)
+  return mergeNchsaaResults(mergeNchsaaResults(byName, byWrestling), fromAthleteRow)
 }
 
 /**

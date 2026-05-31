@@ -44,8 +44,10 @@ function formatPlaceSuffix(p: number | string | null | undefined): string {
   return "th"
 }
 
-function countStateTitles(results: Array<{ place: number }> | undefined): number {
-  return (results ?? []).filter((r) => r.place === 1).length
+function countStateTitles(results: Array<{ place: number; year: number }> | undefined): number {
+  const champs = (results ?? []).filter((r) => r.place === 1)
+  const years = new Set(champs.map((r) => r.year))
+  return years.size > 0 ? years.size : champs.length
 }
 
 function formatStateResultLine(r: { place: number; classification?: string; weight_class?: string; year: number }): string {

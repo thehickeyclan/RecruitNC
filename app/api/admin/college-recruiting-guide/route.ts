@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getNHSCAFromTables, getSuper32FromTable } from "@/lib/tournament-tables"
-import { getNCHSAAResultsForProfile, mergeNchsaaResults } from "@/lib/nchsaa-results"
+import { getMergedNchsaaForAthlete } from "@/lib/nchsaa-results"
 import { normalizeEntityName } from "@/lib/logo-mappings-normalize"
 import { buildSchoolClassificationMap } from "@/lib/classification-data"
 import { formatPhoneForDisplay } from "@/lib/phone-format"
@@ -82,15 +82,10 @@ export async function GET(request: NextRequest) {
       const schoolForDivision = String(a.highschool || a.high_school || "").trim()
 
       let [nchsaaResults, nhscaFromTables, super32FromTable] = await Promise.all([
-        getNCHSAAResultsForProfile(db, athleteName, gradYear, schoolForDivision || undefined),
+        getMergedNchsaaForAthlete(db, a),
         getNHSCAFromTables(db, athleteName, gradYear),
         getSuper32FromTable(db, athleteName, gradYear),
       ])
-      const profileName = String(a.name || "").trim()
-      if (profileName && profileName !== athleteName) {
-        const byProfile = await getNCHSAAResultsForProfile(db, profileName, gradYear, schoolForDivision || undefined)
-        nchsaaResults = mergeNchsaaResults(nchsaaResults, byProfile)
-      }
       // If still no NHSCA/Super32, try "LastName FirstName" (some tables store names that way)
       if (nhscaFromTables.length === 0 || super32FromTable.length === 0) {
         const parts = athleteName.trim().split(/\s+/)
@@ -184,6 +179,7 @@ export async function GET(request: NextRequest) {
         super_32_2025_placement: s322025?.placement || a.super_32_2025_placement,
         nchsaa_results: nchsaaResults
           .filter((r) => r.place != null && r.place >= 1)
+          .sort((a, b) => b.year - a.year)
           .map((r) => ({
             year: r.year,
             place: r.place as number,
