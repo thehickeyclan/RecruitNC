@@ -13,6 +13,10 @@ export type PendingNationalTeamRegistrationInput = {
   primary_weight: string
   reg_fee_cents: number
   apparel_fee_cents: number
+  athlete_phone?: string | null
+  club_team?: string | null
+  secondary_weight?: string | null
+  athlete_dob?: string | null
   singlet_size?: string | null
   shorts_size?: string | null
   shirt_size?: string | null
@@ -25,12 +29,15 @@ export function describeRegistrationInsertError(err: PgErr | null): string {
   const code = err.code ?? ""
   const msg = (err.message ?? "").toLowerCase()
 
-  if (code === "42P01" || (msg.includes("does not exist") && msg.includes("national_team"))) {
+  if (code === "42P01") {
     return "Registrations are not set up yet. Contact NC United (database setup required)."
   }
   if (code === "42703" || (msg.includes("column") && msg.includes("does not exist"))) {
     if (msg.includes("singlet") || msg.includes("shirt") || msg.includes("shorts")) {
       return "Gear size columns are missing in the database. Contact NC United to run the shirt-size migration."
+    }
+    if (msg.includes("athlete_dob")) {
+      return "Athlete date of birth is not set up in the database yet. Contact NC United."
     }
     if (msg.includes("parent_name")) {
       return "Registration form is out of sync with the database (parent_name). Contact NC United."
@@ -46,13 +53,48 @@ export function describeRegistrationInsertError(err: PgErr | null): string {
   return "Failed to save registration. Please try again or contact NC United."
 }
 
+async function tryInsert(admin: SupabaseClient, payload: Record<string, unknown>) {
+  return admin.from("national_team_event_registrations").insert(payload).select("id").single()
+}
+
+/** Drop keys whose column name appears in a 42703 missing-column error, then retry patch. */
+async function patchRegistrationOptionalFields(
+  admin: SupabaseClient,
+  regId: string,
+  fields: Record<string, unknown>,
+): Promise<void> {
+  let pending = { ...fields, updated_at: new Date().toISOString() }
+  for (let attempt = 0; attempt < 6 && Object.keys(pending).length > 1; attempt++) {
+    const { error } = await admin.from("national_team_event_registrations").update(pending).eq("id", regId)
+    if (!error) return
+    const pg = error as PgErr
+    if (pg.code !== "42703") {
+      if (pg.code === "23503" && pending.parent_user_id) {
+        const { parent_user_id: _, ...withoutUser } = pending
+        pending = withoutUser
+        continue
+      }
+      console.warn("[national-team] registration patch (non-fatal):", error)
+      return
+    }
+    const msg = (pg.message ?? "").toLowerCase()
+    const dropKey = Object.keys(pending).find((k) => k !== "updated_at" && msg.includes(k))
+    if (!dropKey) {
+      console.warn("[national-team] registration patch unknown column:", error)
+      return
+    }
+    const { [dropKey]: _removed, ...rest } = pending
+    pending = rest
+  }
+}
+
 /**
  * Insert pending registration for hub/register checkout.
- * Core row first (required columns only), then optional patch so missing gear-size columns do not block payment.
+ * Core row first (required columns only), then optional patch so missing gear-size / DOB columns do not block payment.
  */
 export async function insertPendingNationalTeamRegistration(
   admin: SupabaseClient,
-  input: PendingNationalTeamRegistrationInput
+  input: PendingNationalTeamRegistrationInput,
 ): Promise<{ id: string } | { error: string; pgError?: PgErr }> {
   const core: Record<string, unknown> = {
     event_slug: input.event_slug,
@@ -60,24 +102,30 @@ export async function insertPendingNationalTeamRegistration(
     athlete_last_name: input.athlete_last_name,
     athlete_email: input.athlete_email,
     parent_email: input.parent_email,
-    high_school: input.high_school,
-    graduation_year: input.graduation_year,
-    primary_weight: input.primary_weight,
+    high_school: input.high_school || "—",
+    graduation_year: input.graduation_year || "—",
+    primary_weight: input.primary_weight || "—",
     reg_fee_cents: input.reg_fee_cents,
     apparel_fee_cents: input.apparel_fee_cents,
     status: "pending",
   }
 
-  const tryInsert = async (payload: Record<string, unknown>) => {
-    return admin.from("national_team_event_registrations").insert(payload).select("id").single()
+  const withParent = { ...core, parent_name: input.parent_name }
+  const withContact = {
+    ...withParent,
+    ...(input.athlete_phone ? { athlete_phone: input.athlete_phone } : {}),
+    ...(input.club_team ? { club_team: input.club_team } : {}),
+    ...(input.secondary_weight ? { secondary_weight: input.secondary_weight } : {}),
   }
 
-  // Prefer including parent_name when the column exists
-  let result = await tryInsert({ ...core, parent_name: input.parent_name })
+  let result = await tryInsert(admin, withContact)
   let err = result.error as PgErr | null
-
-  if (err && (err.message?.includes("parent_name") || err.code === "42703")) {
-    result = await tryInsert(core)
+  if (err) {
+    result = await tryInsert(admin, withParent)
+    err = result.error as PgErr | null
+  }
+  if (err) {
+    result = await tryInsert(admin, core)
     err = result.error as PgErr | null
   }
 
@@ -88,26 +136,19 @@ export async function insertPendingNationalTeamRegistration(
 
   const regId = result.data.id as string
 
-  const patch: Record<string, unknown> = { updated_at: new Date().toISOString() }
-  if (input.parent_user_id) patch.parent_user_id = input.parent_user_id
-  if (input.singlet_size) patch.singlet_size = input.singlet_size
-  if (input.shorts_size) patch.shorts_size = input.shorts_size
-  if (input.shirt_size) patch.shirt_size = input.shirt_size
+  const optionalPatch: Record<string, unknown> = {}
+  if (input.parent_user_id) optionalPatch.parent_user_id = input.parent_user_id
+  if (input.singlet_size) optionalPatch.singlet_size = input.singlet_size
+  if (input.shorts_size) optionalPatch.shorts_size = input.shorts_size
+  if (input.shirt_size) optionalPatch.shirt_size = input.shirt_size
+  if (input.athlete_dob) optionalPatch.athlete_dob = input.athlete_dob
+  if (input.athlete_phone && !withContact.athlete_phone) optionalPatch.athlete_phone = input.athlete_phone
+  if (input.club_team && !withContact.club_team) optionalPatch.club_team = input.club_team
+  if (input.secondary_weight && !withContact.secondary_weight) optionalPatch.secondary_weight = input.secondary_weight
+  if (input.parent_name && !withParent.parent_name) optionalPatch.parent_name = input.parent_name
 
-  if (input.parent_user_id || input.singlet_size || input.shorts_size || input.shirt_size) {
-    const { error: patchErr } = await admin
-      .from("national_team_event_registrations")
-      .update(patch)
-      .eq("id", regId)
-
-    if (patchErr) {
-      console.warn("[national-team] registration patch (non-fatal):", patchErr)
-      // Retry without parent_user_id if FK failed
-      if ((patchErr as PgErr).code === "23503" && input.parent_user_id) {
-        const { parent_user_id: _, ...withoutUser } = patch
-        await admin.from("national_team_event_registrations").update(withoutUser).eq("id", regId)
-      }
-    }
+  if (Object.keys(optionalPatch).length > 0) {
+    await patchRegistrationOptionalFields(admin, regId, optionalPatch)
   }
 
   return { id: regId }

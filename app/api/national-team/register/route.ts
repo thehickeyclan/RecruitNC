@@ -17,6 +17,7 @@ import {
 } from "@/lib/aau-scholastic-apparel-sizes"
 import { parseAthleteDobInput } from "@/lib/athlete-dob"
 import { resolveAauScholasticRegistrationAthlete } from "@/lib/aau-scholastic-registration-resolve"
+import { insertPendingNationalTeamRegistration } from "@/lib/national-team-registration-insert"
 
 export const dynamic = "force-dynamic"
 
@@ -200,40 +201,31 @@ export async function POST(request: NextRequest) {
         ? aauScholasticApparelSizesForDb(aauSelections, parseAauScholasticApparelSizesFromBody(body))
         : null
 
-    const insertPayload: Record<string, unknown> = {
+    const regResult = await insertPendingNationalTeamRegistration(admin, {
       event_slug: eventSlug,
       athlete_first_name: athleteFirstName,
       athlete_last_name: athleteLastName,
       athlete_email: athleteEmail,
       athlete_phone: athletePhone,
       parent_email: parentEmail,
-      parent_name: parentName,
-      high_school: highSchool,
+      parent_name: parentName || "—",
+      parent_user_id: parentUserId,
+      high_school: highSchool || "—",
       club_team: clubTeam,
-      graduation_year: graduationYear,
-      primary_weight: primaryWeight,
+      graduation_year: graduationYear || "—",
+      primary_weight: primaryWeight || "—",
       secondary_weight: secondaryWeight,
+      athlete_dob: athleteDob,
       reg_fee_cents: regFeeCents,
       apparel_fee_cents: apparelFeeCents,
-      status: "pending",
-      updated_at: new Date().toISOString(),
-    }
-    if (aauApparelDb) {
-      if (aauApparelDb.singlet_size) insertPayload.singlet_size = aauApparelDb.singlet_size
-      if (aauApparelDb.shorts_size) insertPayload.shorts_size = aauApparelDb.shorts_size
-      if (aauApparelDb.shirt_size) insertPayload.shirt_size = aauApparelDb.shirt_size
-    }
-    if (athleteDob) insertPayload.athlete_dob = athleteDob
-    if (parentUserId) insertPayload.parent_user_id = parentUserId
+      singlet_size: aauApparelDb?.singlet_size ?? null,
+      shorts_size: aauApparelDb?.shorts_size ?? null,
+      shirt_size: aauApparelDb?.shirt_size ?? null,
+    })
 
-    const { data: reg, error: regError } = await admin
-      .from("national_team_event_registrations")
-      .insert(insertPayload)
-      .select("id")
-      .single()
-
-    if (regError || !reg) {
-      const pgErr = regError as { code?: string; message?: string } | null
+    if ("error" in regResult) {
+      console.error("[national-team/register] insert:", regResult.pgError ?? regResult.error)
+      const pgErr = regResult.pgError
       if (pgErr?.code === "42P01") {
         return NextResponse.json(
           {
@@ -243,19 +235,10 @@ export async function POST(request: NextRequest) {
           { status: 503 },
         )
       }
-      const msg = (pgErr?.message ?? "").toLowerCase()
-      if (pgErr?.code === "42703" && msg.includes("athlete_dob")) {
-        return NextResponse.json(
-          {
-            error:
-              "Athlete date of birth is not set up in the database yet. Contact NC United to run scripts/add-national-team-athlete-dob.md in Supabase.",
-          },
-          { status: 503 },
-        )
-      }
-      console.error("[national-team/register] insert:", regError)
-      return NextResponse.json({ error: "Failed to save registration. Please try again." }, { status: 500 })
+      return NextResponse.json({ error: regResult.error }, { status: 500 })
     }
+
+    const reg = { id: regResult.id }
 
     try {
       const gradYear = parseInt(graduationYear, 10)
