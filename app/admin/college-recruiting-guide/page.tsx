@@ -44,6 +44,15 @@ function formatPlaceSuffix(p: number | string | null | undefined): string {
   return "th"
 }
 
+function countStateTitles(results: Array<{ place: number }> | undefined): number {
+  return (results ?? []).filter((r) => r.place === 1).length
+}
+
+function formatStateResultLine(r: { place: number; classification?: string; weight_class?: string; year: number }): string {
+  const emoji = r.place === 1 ? "🥇" : r.place === 2 ? "🥈" : r.place === 3 ? "🥉" : "🏅"
+  return `${emoji} ${r.place}${formatPlaceSuffix(r.place)} • ${r.classification || ""} ${r.weight_class || ""} '${String(r.year).slice(-2)}`.trim()
+}
+
 /** Placement from tournament tables is already formatted (e.g. "7th All-American", "Champion"). Don't append suffix. */
 function placementEmoji(placement: string | null | undefined): string {
   if (!placement) return "🏅"
@@ -84,7 +93,10 @@ export default function CollegeRecruitingGuidePage() {
   const copyTableForSlides = useCallback(() => {
     const header = ["#", "Name", "School", "Div", "Weight", "Status", "Cell", "State", "NHSCA", "Super 32", "GPA"]
     const rows = athletes.map((a, i) => {
-      const state = a.nchsaa_results?.slice(0, 2).map((r) => `${r.place}${formatPlaceSuffix(r.place)} • ${r.classification || ""} ${r.weight_class || ""} '${String(r.year).slice(-2)}`).join(" | ") || "—"
+      const stateLines = a.nchsaa_results?.map(formatStateResultLine) ?? []
+      const stateChamps = countStateTitles(a.nchsaa_results)
+      const statePrefix = stateChamps >= 2 ? `${stateChamps}× State Champion — ` : ""
+      const state = stateLines.length > 0 ? statePrefix + stateLines.join(" | ") : "—"
       const nhsca = (a.nhsca_results || [])
         .filter((r) => r.placement || r.record)
         .slice(0, 3)
@@ -221,14 +233,16 @@ export default function CollegeRecruitingGuidePage() {
                     <td className="border border-gray-300 px-2 py-1.5 text-xs">
                       {row.nchsaa_results && row.nchsaa_results.length > 0 ? (
                         <div className="space-y-0.5">
-                          {row.nchsaa_results.slice(0, 2).map((r, i) => {
-                            const emoji = r.place === 1 ? "🥇" : r.place === 2 ? "🥈" : r.place === 3 ? "🥉" : "🏅"
-                            return (
-                              <div key={i} className="text-gray-700">
-                                {emoji} {r.place}{formatPlaceSuffix(r.place)} • {r.classification || ""} {r.weight_class || ""} &apos;{String(r.year).slice(-2)}
-                              </div>
-                            )
-                          })}
+                          {countStateTitles(row.nchsaa_results) >= 2 && (
+                            <div className="font-semibold text-amber-800">
+                              {countStateTitles(row.nchsaa_results)}× State Champion
+                            </div>
+                          )}
+                          {row.nchsaa_results.map((r, i) => (
+                            <div key={i} className="text-gray-700">
+                              {formatStateResultLine(r)}
+                            </div>
+                          ))}
                         </div>
                       ) : (
                         <span className="text-gray-400">—</span>

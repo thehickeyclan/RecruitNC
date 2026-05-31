@@ -437,7 +437,7 @@ export const AAU_SCHOLASTIC_NC_UNITED_TEAM: AauScholasticTeamMember[] = [
     role: "Operations",
   },
   {
-    name: "Isabella Hickey",
+    name: "Isabella Crandall",
     role: "Team operations",
   },
   {
