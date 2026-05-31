@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
-import Stripe from "stripe"
+import type Stripe from "stripe"
 import { createClient } from "@/lib/supabase/server"
+import { getStripe } from "@/lib/stripe"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { findAndEnrichAthlete, buildEnrichmentPayload } from "@/lib/enrich-athlete-profile"
 import {
@@ -22,7 +23,6 @@ import { insertPendingNationalTeamRegistration } from "@/lib/national-team-regis
 export const dynamic = "force-dynamic"
 
 const DEFAULT_EVENT_SLUG = "nhsca-duals-2026"
-const stripeSecret = process.env.STRIPE_SECRET_KEY
 
 /** POST: create national_team_event_registrations row + Stripe Checkout.
  * NHSCA: invite code required. AAU Scholastic: open registration with parent-selected line items. */
@@ -265,34 +265,40 @@ export async function POST(request: NextRequest) {
       console.error("[national-team/register] athlete enrichment:", enrichErr)
     }
 
-    if (!stripeSecret) {
-      return NextResponse.json({ error: "Payment is not configured. Contact the event organizer." }, { status: 503 })
-    }
-
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin
-    const stripe = new Stripe(stripeSecret)
+    const stripe = getStripe()
     const checkoutLinesMeta = isAau
       ? encodeAauScholasticCheckoutLinesMetadataFromSelections(aauSelections)
       : ""
 
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      line_items: lineItems,
-      customer_email: parentEmail,
-      success_url: `${baseUrl}/national-team/register/${returnUrlSlug}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/national-team/register/${returnUrlSlug}?cancelled=1`,
-      metadata: {
-        business: "nc_united",
-        channel: "recruitnc",
-        category: "registration",
-        source: "national_team",
-        registration_id: reg.id,
-        event_slug: eventSlug,
-        ...(checkoutLinesMeta ? { checkout_lines: checkoutLinesMeta } : {}),
-        ...(additionalAthletesNotes ? { additional_athletes: additionalAthletesNotes.slice(0, 500) } : {}),
-        code_of_conduct_accepted: "1",
-      },
-    })
+    let session
+    try {
+      session = await stripe.checkout.sessions.create({
+        mode: "payment",
+        line_items: lineItems,
+        customer_email: parentEmail,
+        success_url: `${baseUrl}/national-team/register/${returnUrlSlug}/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${baseUrl}/national-team/register/${returnUrlSlug}?cancelled=1`,
+        metadata: {
+          business: "nc_united",
+          channel: "recruitnc",
+          category: "registration",
+          source: "national_team",
+          registration_id: reg.id,
+          event_slug: eventSlug,
+          ...(checkoutLinesMeta ? { checkout_lines: checkoutLinesMeta } : {}),
+          ...(additionalAthletesNotes ? { additional_athletes: additionalAthletesNotes.slice(0, 500) } : {}),
+          code_of_conduct_accepted: "1",
+        },
+      })
+    } catch (stripeErr) {
+      console.error("[RecruitNC][national-team/register] Stripe checkout:", stripeErr)
+      const msg = stripeErr instanceof Error ? stripeErr.message : "Stripe checkout failed."
+      return NextResponse.json(
+        { error: `Could not start checkout: ${msg}. Please try again or contact NC United.` },
+        { status: 502 },
+      )
+    }
 
     if (!session.url) {
       return NextResponse.json({ error: "Could not create checkout session. Please try again." }, { status: 500 })
@@ -300,7 +306,13 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, checkoutUrl: session.url })
   } catch (e) {
-    console.error("[national-team/register]", e)
+    console.error("[RecruitNC][national-team/register]", e)
+    if (e instanceof Error && e.message.includes("STRIPE_SECRET_KEY")) {
+      return NextResponse.json(
+        { error: "Payment is not configured. Contact NC United (info@ncwrestlingunited.com)." },
+        { status: 503 },
+      )
+    }
     return NextResponse.json({ error: e instanceof Error ? e.message : "Registration failed." }, { status: 500 })
   }
 }
