@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
-import type Stripe from "stripe"
+import Stripe from "stripe"
 import { createClient } from "@/lib/supabase/server"
-import { getStripe } from "@/lib/stripe"
+import { readStripeSecretKey } from "@/lib/stripe"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { findAndEnrichAthlete, buildEnrichmentPayload } from "@/lib/enrich-athlete-profile"
 import {
@@ -74,6 +74,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "You must read and accept the NC United Code before registering." },
         { status: 400 },
+      )
+    }
+
+    const stripeSecret = readStripeSecretKey()
+    if (!stripeSecret) {
+      console.error("[RecruitNC][national-team/register] STRIPE_SECRET_KEY empty at runtime", {
+        vercelEnv: process.env.VERCEL_ENV,
+      })
+      return NextResponse.json(
+        {
+          error:
+            "Could not start checkout. Please try again in a moment or contact NC United (info@ncwrestlingunited.com).",
+        },
+        { status: 503 },
       )
     }
 
@@ -266,7 +280,7 @@ export async function POST(request: NextRequest) {
     }
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin
-    const stripe = getStripe()
+    const stripe = new Stripe(stripeSecret)
     const checkoutLinesMeta = isAau
       ? encodeAauScholasticCheckoutLinesMetadataFromSelections(aauSelections)
       : ""
@@ -307,12 +321,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, checkoutUrl: session.url })
   } catch (e) {
     console.error("[RecruitNC][national-team/register]", e)
-    if (e instanceof Error && e.message.includes("STRIPE_SECRET_KEY")) {
-      return NextResponse.json(
-        { error: "Payment is not configured. Contact NC United (info@ncwrestlingunited.com)." },
-        { status: 503 },
-      )
-    }
     return NextResponse.json({ error: e instanceof Error ? e.message : "Registration failed." }, { status: 500 })
   }
 }
