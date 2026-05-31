@@ -1,12 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
-import {
-  getNCHSAAResultsForProfile,
-  mergeNchsaaResults,
-  nchsaaJsonToProfileRows,
-} from "@/lib/nchsaa-results"
-import { getNHSCAForAthlete } from "@/lib/athlete-nhsca"
-import { getNameVariants, getSuper32FromTable } from "@/lib/tournament-tables"
+import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
 import {
   getCommitmentHonorBadgesForAthlete,
   mergeCommitmentHonorBadgesForDisplay,
@@ -78,41 +72,20 @@ export async function GET(request: Request) {
         : (searchParams.get("high_school") ?? searchParams.get("highschool") ?? "")
       ).trim() || undefined
 
-    let byName: Awaited<ReturnType<typeof getNCHSAAResultsForProfile>> = []
-    try {
-      byName = await getNCHSAAResultsForProfile(supabase, athleteName, graduationYear, highSchoolHint)
-    } catch (e) {
-      console.warn(
-        "[RecruitNC] wrestling-achievements: NCHSAA table query failed (by name); using athlete row JSON if present",
-        e,
-      )
-    }
-
-    let byWrestling: Awaited<ReturnType<typeof getNCHSAAResultsForProfile>> = []
-    if (wrestlingName && wrestlingName !== athleteName) {
-      try {
-        byWrestling = await getNCHSAAResultsForProfile(supabase, wrestlingName, graduationYear, highSchoolHint)
-      } catch (e) {
-        console.warn(
-          "[RecruitNC] wrestling-achievements: NCHSAA table query failed (wrestling name); using athlete row JSON if present",
-          e,
-        )
-      }
-    }
-
-    const fromAthleteRow = nchsaaJsonToProfileRows(athleteNchsaaJson, athleteName)
-    const nchsaaResults = mergeNchsaaResults(mergeNchsaaResults(byName, byWrestling), fromAthleteRow)
-
     const gradYearNum = graduationYear && !isNaN(graduationYear) ? graduationYear : new Date().getFullYear()
-    const athleteForNhsca: Record<string, unknown> =
+    const athleteForMerge: Record<string, unknown> =
       resolvedAthlete ??
       ({
         name: athleteName,
         ...(wrestlingName ? { wrestling_name: wrestlingName } : {}),
         graduationyear: gradYearNum,
+        highschool: highSchoolHint,
+        nchsaa_results: athleteNchsaaJson,
       } as Record<string, unknown>)
 
-    const nhscaMerged = await getNHSCAForAthlete(supabase, athleteForNhsca)
+    const { nchsaa: nchsaaResults, nhsca: nhscaMerged, super32: super32Merged } =
+      await loadAthleteTournamentBundle(supabase, athleteForMerge)
+
     const nhscaResults = nhscaMerged.map((r) => ({
       year: r.year,
       placement: r.placement,
@@ -121,18 +94,13 @@ export async function GET(request: Request) {
       division: r.division ?? "",
     }))
 
-    const namesToTry = [...new Set([...getNameVariants(athleteName), ...(wrestlingName ? getNameVariants(wrestlingName) : [])])]
-
-    const super32ByYear = new Map<number, { year: number; placement: string; record: string; weight?: string; division?: string }>()
-    for (const searchName of namesToTry) {
-      if (!searchName) continue
-      const rows = await getSuper32FromTable(supabase, searchName, gradYearNum, {})
-      for (const r of rows) {
-        const y = typeof r.year === "number" ? r.year : parseInt(String(r.year), 10)
-        if (!super32ByYear.has(y)) super32ByYear.set(y, { year: r.year, placement: r.placement, record: r.record, weight: r.weight, division: r.division })
-      }
-    }
-    const super32Results = Array.from(super32ByYear.values()).sort((a, b) => b.year - a.year)
+    const super32Results = super32Merged.map((r) => ({
+      year: r.year,
+      placement: r.placement,
+      record: r.record,
+      weight: r.weight,
+      division: r.division,
+    }))
 
     // Process and format achievements
     const nhscaWithPlacement =

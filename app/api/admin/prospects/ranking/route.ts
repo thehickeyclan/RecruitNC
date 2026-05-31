@@ -1,7 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@supabase/ssr"
-import { getNCHSAAResultsForProfile, mergeNchsaaResults } from "@/lib/nchsaa-results"
-import { getNHSCAForAthlete } from "@/lib/athlete-nhsca"
+import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
 
 function getOrdinalSuffix(num: number): string {
   const j = num % 10
@@ -37,7 +36,9 @@ export async function GET(request: NextRequest) {
         nhsca_results,
         nhsca_2023_placement, nhsca_2023_record,
         nhsca_2024_placement, nhsca_2025_placement,         nhsca_2024_record, nhsca_2025_record,
+        super_32_2023_record, super_32_2023_placement,
         super_32_2024_placement, super_32_2025_placement, super_32_2024_record, super_32_2025_record,
+        super32_results, nchsaa_results,
         additional_achievements
       `)
       .eq("graduationyear", Number.parseInt(year))
@@ -53,39 +54,32 @@ export async function GET(request: NextRequest) {
     // Single source of truth: same getNCHSAAResultsForProfile used by unified profile & wrestling-achievements API
     const athletesWithNchsaa = await Promise.all(
       (athletes || []).map(async (athlete) => {
-        const gradYear = Number(athlete.graduationyear) || 0
-        const schoolHint = (athlete.highschool ?? "").toString().trim() || undefined
-        const byName = await getNCHSAAResultsForProfile(supabase, athlete.name || "", gradYear || undefined, schoolHint)
         const wrestlingName = (athlete.wrestling_name || "").trim()
-        const byWrestling =
-          wrestlingName && wrestlingName !== (athlete.name || "").trim()
-            ? await getNCHSAAResultsForProfile(supabase, wrestlingName, gradYear || undefined, schoolHint)
-            : []
-        const nchsaa_results = mergeNchsaaResults(byName, byWrestling).map((r) => ({
+        const { nchsaa, nhsca } = await loadAthleteTournamentBundle(
+          supabase,
+          athlete as Record<string, unknown>,
+        )
+        const nchsaa_results = nchsaa.map((r) => ({
           year: r.year,
           place: r.place,
           classification: r.classification,
           weight_class: r.weight_class,
           school: r.school,
         }))
-        const nhsca_results = (await getNHSCAForAthlete(supabase, athlete as Record<string, unknown>)).map(
-          (r) => ({
-            year: r.year,
-            placement: r.placement,
-            record: r.record,
-            weight: r.weight,
-            division: r.division,
-          }),
-        )
+        const nhsca_results = nhsca.map((r) => ({
+          year: r.year,
+          placement: r.placement,
+          record: r.record,
+          weight: r.weight,
+          division: r.division,
+        }))
         const debugInfo = debug
           ? {
               name: athlete.name || "",
               wrestling_name: wrestlingName || null,
-              nchsaa_queries: [athlete.name || "", ...(wrestlingName && wrestlingName !== (athlete.name || "").trim() ? [wrestlingName] : [])],
-              nchsaa_by_name_count: byName.length,
-              nchsaa_by_wrestling_count: byWrestling.length,
               nchsaa_merged_count: nchsaa_results.length,
               nchsaa_years: [...new Set(nchsaa_results.map((r) => r.year))].sort((a, b) => b - a),
+              merge: "loadAthleteTournamentBundle",
             }
           : undefined
         return { ...athlete, nchsaa_results, nhsca_results, ...(debug && debugInfo ? { _debug: debugInfo } : {}) }
@@ -100,8 +94,7 @@ export async function GET(request: NextRequest) {
         ...(debug
           ? {
               _debug: {
-                source:
-                  "getNCHSAAResultsForProfile (lib/nchsaa-results.ts) — same as unified profile & /api/wrestling-achievements",
+                source: "loadAthleteTournamentBundle (lib/athlete-tournament-bundle.ts)",
                 table: "wrestling_nchsaa_results",
                 total_athletes: athletesWithNchsaa.length,
                 athletes_with_nchsaa: athletesWithNchsaa.filter((a) => a.nchsaa_results?.length > 0).length,

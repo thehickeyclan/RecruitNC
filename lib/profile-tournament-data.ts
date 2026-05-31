@@ -1,11 +1,16 @@
 /**
  * Single loader for NCHSAA + NHSCA + Super32. USE THIS for any new page that needs tournament data.
- * See docs/TOURNAMENT-DATA-SINGLE-PATH.md — do not wire new features to getNHSCAFromTables / getSuper32FromTable / getNCHSAAResultsForProfile directly.
- * Used by: Blue members 2026. Same data as profiles, rankings, commit cards; one entry point keeps new pages from re-discovering options and aggregation.
+ * Delegates to `loadAthleteTournamentBundle` — same merge as profiles and college guide.
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js"
+import {
+  loadAthleteTournamentBundle,
+  useLegacyTournamentBundle,
+  type AthleteTournamentBundle,
+} from "@/lib/athlete-tournament-bundle"
 import { getNCHSAAResultsForProfile } from "@/lib/nchsaa-results"
+import type { NchsaaRowForProfile } from "@/lib/nchsaa-results-json"
 import {
   getNHSCAFromTables,
   getNHSCAFromTablesAllTime,
@@ -13,12 +18,12 @@ import {
   getSuper32FromTableAllTime,
 } from "@/lib/tournament-tables"
 
-export type NchsaaRowForProfile = Awaited<ReturnType<typeof getNCHSAAResultsForProfile>>[number]
+export type { NchsaaRowForProfile } from "@/lib/nchsaa-results-json"
 
 export interface ProfileTournamentData {
   nchsaa: NchsaaRowForProfile[]
-  nhsca: Awaited<ReturnType<typeof getNHSCAFromTables>>
-  super32: Awaited<ReturnType<typeof getSuper32FromTable>>
+  nhsca: AthleteTournamentBundle["nhsca"]
+  super32: AthleteTournamentBundle["super32"]
 }
 
 /** Athlete row minimal fields needed for loading profile tournament data */
@@ -28,14 +33,18 @@ export interface AthleteForProfile {
   highschool?: string | null
   graduationyear?: number | string | null
   weightclass?: string | null
+  wrestling_name?: string | null
+  nchsaa_results?: unknown
+  nhsca_results?: unknown
+  super32_results?: unknown
+  high_school?: string | null
 }
 
 export interface LoadProfileTournamentDataOptions {
-  /** If true, NHSCA and Super32 use all years (2000–2035); use for Blue page all-time tiles. */
+  /** If true, NHSCA tables use all years (e.g. Blue all-time tiles). */
   allTime?: boolean
 }
 
-/** Valid graduation year on profile; avoids defaulting NULL to current year (which hid alumni state/NHSCA rows). */
 function parseGradYearForProfile(athlete: AthleteForProfile): { grad: number; hasValid: boolean } {
   const raw = athlete.graduationyear
   if (raw == null || String(raw).trim() === "") return { grad: new Date().getFullYear(), hasValid: false }
@@ -44,18 +53,15 @@ function parseGradYearForProfile(athlete: AthleteForProfile): { grad: number; ha
   return { grad: Math.floor(n), hasValid: true }
 }
 
-/**
- * Load NCHSAA, NHSCA, and Super32 for one athlete.
- * allTime: true = full-history paths (no bogus grad-year clamp on NCHSAA state); false = grad-year window when year is known.
- */
-export async function loadProfileTournamentData(
+/** Pre-bundle table-only path — restored when RECRUITNC_LEGACY_TOURNAMENT_BUNDLE=1. */
+async function loadProfileTournamentDataLegacy(
   supabase: SupabaseClient,
   athlete: AthleteForProfile,
-  options?: LoadProfileTournamentDataOptions
+  options?: LoadProfileTournamentDataOptions,
 ): Promise<ProfileTournamentData> {
   const name = (athlete.name ?? "").toString().trim()
   const { grad, hasValid } = parseGradYearForProfile(athlete)
-  const highSchool = (athlete.highschool ?? "").toString().trim()
+  const highSchool = (athlete.highschool ?? athlete.high_school ?? "").toString().trim()
   const allTime = options?.allTime === true
 
   const [nchsaa, nhsca, super32] = await Promise.all([
@@ -74,5 +80,34 @@ export async function loadProfileTournamentData(
         : Promise.resolve([]),
   ])
 
-  return { nchsaa, nhsca, super32 }
+  return {
+    nchsaa,
+    nhsca: nhsca.map((r) => ({
+      year: r.year,
+      placement: (r.placement ?? "").toString(),
+      record: (r.record ?? "").toString(),
+      weight: r.weight,
+      division: r.division,
+    })),
+    super32: super32.map((r) => ({
+      year: r.year,
+      placement: (r.placement ?? "").toString(),
+      record: (r.record ?? "").toString(),
+      weight: r.weight,
+      division: r.division,
+    })),
+  }
+}
+
+export async function loadProfileTournamentData(
+  supabase: SupabaseClient,
+  athlete: AthleteForProfile,
+  options?: LoadProfileTournamentDataOptions,
+): Promise<ProfileTournamentData> {
+  if (useLegacyTournamentBundle()) {
+    return loadProfileTournamentDataLegacy(supabase, athlete, options)
+  }
+  return loadAthleteTournamentBundle(supabase, athlete as Record<string, unknown>, {
+    nhscaAllTime: options?.allTime === true,
+  })
 }

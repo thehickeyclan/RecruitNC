@@ -1,9 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
-import { getNCHSAAResultsForProfile, mergeNchsaaResults } from "@/lib/nchsaa-results"
-import { getNHSCAForAthlete } from "@/lib/athlete-nhsca"
-import { getSuper32FromTable } from "@/lib/tournament-tables"
+import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
 
 export async function GET(request: Request) {
   try {
@@ -42,22 +40,13 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Failed to fetch athletes" }, { status: 500 })
     }
 
-    const gradYearNum = Number(yearParam) || new Date().getFullYear()
-
-    // Single source of truth: same getNCHSAAResultsForProfile used by unified profile & wrestling-achievements API
     const athletesWithResults = await Promise.all(
       (athletes || []).map(async (athlete) => {
-        const athleteName = (athlete.name || "").trim()
-        const wrestlingName = (athlete.wrestling_name || "").trim()
-        const gradYear = Number(athlete.graduationyear) || gradYearNum
-        const schoolHint = (athlete.highschool ?? "").toString().trim() || undefined
-
-        const byName = await getNCHSAAResultsForProfile(db, athleteName, gradYear, schoolHint)
-        const byWrestling =
-          wrestlingName && wrestlingName !== athleteName
-            ? await getNCHSAAResultsForProfile(db, wrestlingName, gradYear, schoolHint)
-            : []
-        const athleteNchsaa = mergeNchsaaResults(byName, byWrestling).map((r) => ({
+        const { nchsaa, nhsca, super32 } = await loadAthleteTournamentBundle(
+          db,
+          athlete as Record<string, unknown>,
+        )
+        const athleteNchsaa = nchsaa.map((r) => ({
           year: r.year,
           place: r.place,
           classification: r.classification,
@@ -67,24 +56,17 @@ export async function GET(request: Request) {
 
         const debugInfo = debug
           ? {
-              name: athleteName,
-              wrestling_name: wrestlingName || null,
-              nchsaa_queries: [athleteName, ...(wrestlingName && wrestlingName !== athleteName ? [wrestlingName] : [])],
-              nchsaa_by_name_count: byName.length,
-              nchsaa_by_wrestling_count: byWrestling.length,
+              name: (athlete.name || "").trim(),
+              wrestling_name: (athlete.wrestling_name || "").trim() || null,
               nchsaa_merged_count: athleteNchsaa.length,
               nchsaa_years: [...new Set(athleteNchsaa.map((r) => r.year))].sort((a, b) => b - a),
+              merge: "loadAthleteTournamentBundle",
             }
           : undefined
 
-        const [nhscaMerged, super32FromTable] = await Promise.all([
-          getNHSCAForAthlete(db, athlete as Record<string, unknown>),
-          getSuper32FromTable(db, wrestlingName || athleteName, gradYear),
-        ])
-
-        const s3223 = super32FromTable.find((r) => r.year === 2023)
-        const s3224 = super32FromTable.find((r) => r.year === 2024)
-        const s3225 = super32FromTable.find((r) => r.year === 2025)
+        const s3223 = super32.find((r) => r.year === 2023)
+        const s3224 = super32.find((r) => r.year === 2024)
+        const s3225 = super32.find((r) => r.year === 2025)
 
         return {
           ...athlete,
@@ -96,7 +78,7 @@ export async function GET(request: Request) {
           super_32_2025_record: s3225?.record || athlete.super_32_2025_record,
           super_32_2025_placement: s3225?.placement || athlete.super_32_2025_placement,
           nchsaa_results: athleteNchsaa,
-          nhsca_results: nhscaMerged.map((r) => ({
+          nhsca_results: nhsca.map((r) => ({
             year: r.year,
             placement: r.placement,
             record: r.record,
@@ -118,7 +100,7 @@ export async function GET(request: Request) {
           ? {
               _debug: {
                 source:
-                  "getNCHSAAResultsForProfile (lib/nchsaa-results.ts) — same as unified profile & /api/wrestling-achievements",
+                  "loadAthleteTournamentBundle (lib/athlete-tournament-bundle.ts)",
                 table: "wrestling_nchsaa_results",
                 total_athletes: athletesWithResults.length,
                 athletes_with_nchsaa: athletesWithResults.filter((a) => a.nchsaa_results?.length > 0).length,
