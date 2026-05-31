@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { fetchNchsaaResultsForAthleteProfile } from "@/lib/nchsaa-profile-fetch"
+import { NCHSAA_FOUR_TIME_STATE_CHAMPIONS } from "@/lib/nchsaa-four-time-state-champions-data"
 import { plausibleNchsaaYearsForGradYear } from "@/lib/nchsaa-plausible-years"
 import type { NchsaaRowForProfile } from "@/lib/nchsaa-results-json"
 import { nchsaaJsonToProfileRows } from "@/lib/nchsaa-results-json"
@@ -380,6 +381,35 @@ export function mergeNchsaaResults(
   return out
 }
 
+/**
+ * Overlay curated four-time state titles when the athlete matches a known 4× champ
+ * (e.g. 2026 title not yet in `wrestling_nchsaa_results` or dropped by school filter).
+ */
+export function mergeCuratedFourTimeNchsaaIfMatch(
+  rows: NchsaaRowForProfile[],
+  displayName: string,
+  wrestlingName?: string,
+): NchsaaRowForProfile[] {
+  const names = [displayName, wrestlingName].filter(Boolean) as string[]
+  for (const champ of NCHSAA_FOUR_TIME_STATE_CHAMPIONS) {
+    if (!names.some((n) => namesReferToSamePerson(n, champ.wrestler_name))) continue
+    const curatedYears = new Set(champ.championships.map((c) => c.year))
+    const withoutCuratedTitleYears = rows.filter(
+      (r) => !(r.place === 1 && curatedYears.has(r.year)),
+    )
+    const curatedRows: NchsaaRowForProfile[] = champ.championships.map((c) => ({
+      year: c.year,
+      classification: c.classification,
+      weight_class: c.weight_class,
+      place: 1,
+      school: c.school,
+      wrestler_name: champ.wrestler_name,
+    }))
+    return mergeNchsaaResults(withoutCuratedTitleYears, curatedRows)
+  }
+  return rows
+}
+
 /** Merge NCHSAA table rows + athlete row JSON — same path as GET /api/athlete/[id] and wrestling-achievements. */
 export async function getMergedNchsaaForAthlete(
   supabase: SupabaseClient,
@@ -397,14 +427,25 @@ export async function getMergedNchsaaForAthlete(
   const gradYear = Number(athlete.graduationyear) || undefined
   const schoolHint = String(athlete.highschool ?? athlete.high_school ?? "").trim() || undefined
 
-  const [byName, byWrestling] = await Promise.all([
+  const [byNameSchool, byWrestlingSchool, byNameWide, byWrestlingWide] = await Promise.all([
     getNCHSAAResultsForProfile(supabase, displayName, gradYear, schoolHint),
     wrestlingName && wrestlingName !== displayName
       ? getNCHSAAResultsForProfile(supabase, wrestlingName, gradYear, schoolHint)
       : Promise.resolve([] as NchsaaRowForProfile[]),
+    getNCHSAAResultsForProfile(supabase, displayName, gradYear, undefined),
+    wrestlingName && wrestlingName !== displayName
+      ? getNCHSAAResultsForProfile(supabase, wrestlingName, gradYear, undefined)
+      : Promise.resolve([] as NchsaaRowForProfile[]),
   ])
   const fromAthleteRow = nchsaaJsonToProfileRows(athlete.nchsaa_results, displayName || wrestlingName)
-  return mergeNchsaaResults(mergeNchsaaResults(byName, byWrestling), fromAthleteRow)
+  const merged = mergeNchsaaResults(
+    mergeNchsaaResults(
+      mergeNchsaaResults(byNameSchool, byWrestlingSchool),
+      mergeNchsaaResults(byNameWide, byWrestlingWide),
+    ),
+    fromAthleteRow,
+  )
+  return mergeCuratedFourTimeNchsaaIfMatch(merged, displayName, wrestlingName)
 }
 
 /**
