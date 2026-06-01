@@ -41,6 +41,25 @@ export interface NewsItem {
 /** All news items, newest first. Add new items here; they appear on /news and in home carousel by order. */
 const ALL_NEWS: NewsItem[] = [
   {
+    id: "nc-united-recruiting-awards-2026",
+    slug: "nc-united-recruiting-awards-2026",
+    title: "NC United Recruiting Awards: The Top Colleges Recruiting North Carolina's Class of 2026",
+    subtitle: "Four awards for the programs that won volume, ceiling, value, and a new path into the state.",
+    summary:
+      "Forty-nine verified male commits — UNC Pembroke's top haul, App State's Bentley Sly, Lynchburg's debut class, and The Citadel's emerging Carolinas footprint, with charts by college and division.",
+    href: "/news/nc-united-recruiting-awards-2026",
+    date: "2026-05-31",
+    image: "/images/recruiting-tournaments-hero.png",
+    imagePosition: "center",
+    imageFit: "cover",
+    newsListBanner: true,
+    category: "RECRUITING",
+    categoryBadgeClass: "bg-[#003366]",
+    readTime: "12 min read",
+    author: "NC United",
+    isAnnouncement: true,
+  },
+  {
     id: "finding-flow-on-the-mat",
     slug: "finding-flow-on-the-mat",
     title: "Finding Flow on the Mat",
