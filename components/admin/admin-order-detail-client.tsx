@@ -15,6 +15,8 @@ import { MoreVertical, Mail, Phone, Package, CreditCard, CheckCircle2, ArrowLeft
 import { updateOrderStatus, addTrackingInfo, addOrderNote } from "@/app/actions/orders"
 import { updateOrderAddress } from "@/app/actions/update-order-address"
 import { useToast } from "@/hooks/use-toast"
+import { AdminOrderReceiptPreview } from "@/components/admin/admin-order-receipt-preview"
+import type { OrderReceiptPreview } from "@/lib/store/order-receipt-preview"
 
 interface OrderDetailClientProps {
   order: {
@@ -75,6 +77,7 @@ interface OrderDetailClientProps {
     integrityDetail?: string | null
     fulfillmentUnsafe?: boolean
     showRecoverItems?: boolean
+    receiptPreview?: OrderReceiptPreview | null
   }
 }
 
@@ -272,10 +275,11 @@ export function AdminOrderDetailClient({ order }: OrderDetailClientProps) {
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
-          <Card>
+          <div className="grid gap-6 xl:grid-cols-2">
+            <Card className="h-full">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>Order Items</CardTitle>
+                <CardTitle>Fulfillment</CardTitle>
                 {order.showRecoverItems ? (
                   <Button size="sm" variant="outline" onClick={handleRecoverItems} disabled={isRecoveringItems}>
                     <RefreshCw className={`h-4 w-4 mr-2 ${isRecoveringItems ? "animate-spin" : ""}`} />
@@ -283,6 +287,7 @@ export function AdminOrderDetailClient({ order }: OrderDetailClientProps) {
                   </Button>
                 ) : null}
               </div>
+              <p className="text-xs text-muted-foreground font-normal mt-1">Product images, SKUs, and sizes for packing.</p>
             </CardHeader>
             <CardContent className="space-y-4">
               {order.typeBanner ? (
@@ -399,6 +404,11 @@ export function AdminOrderDetailClient({ order }: OrderDetailClientProps) {
               </div>
             </CardContent>
           </Card>
+
+            {order.receiptPreview ? (
+              <AdminOrderReceiptPreview receipt={order.receiptPreview} />
+            ) : null}
+          </div>
 
           <Card>
             <CardHeader>

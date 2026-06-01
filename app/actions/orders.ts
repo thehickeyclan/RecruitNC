@@ -16,6 +16,7 @@ import {
 import { resolveAdminOrderDisplay } from "@/lib/admin/resolve-order-display"
 import { reconcileStoreOrderItemsFromStripe } from "@/lib/store/reconcile-order-items-from-stripe"
 import { analyzeStoreOrderIntegrity } from "@/lib/store/store-order-integrity"
+import { buildOrderReceiptPreview } from "@/lib/store/order-receipt-preview"
 import { fetchMergedStoreMetadata } from "@/lib/store/stripe-legacy-metadata"
 
 function getStripe(): Stripe {
@@ -365,11 +366,26 @@ export async function getOrderDetails(orderId: string): Promise<
       storeIntegrity,
     })
 
+    let receiptLog: { sent_at?: string | null; recipient_email?: string | null } | null = null
+    try {
+      const { data: receiptRow } = await supabase
+        .from("order_receipt_emails")
+        .select("sent_at, recipient_email")
+        .eq("order_id", order.id)
+        .maybeSingle()
+      if (receiptRow) receiptLog = receiptRow
+    } catch {
+      // table may not exist in some envs
+    }
+
+    const receiptPreview = buildOrderReceiptPreview(order, itemsList, receiptLog)
+
     return {
       success: true,
       order: {
         ...orderWithItems,
         admin_display: adminDisplay,
+        receipt_preview: receiptPreview,
       },
     }
   } catch (err) {
