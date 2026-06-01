@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { getDirectEntityLogoUrl, resolveEntityLogoUrl } from "@/lib/entity-logo-resolve"
+import { normalizeEntityName, normalizeEntityType } from "@/lib/logo-mappings-normalize"
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,51 +10,37 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Missing entityName or entityType" })
     }
 
-    const supabase = createClient()
+    const trimmed = String(entityName).trim()
+    const normalizedType = normalizeEntityType(entityType)
 
-    // First try exact match
-    const { data: exactMatch, error: exactError } = await supabase
-      .from("logo_mappings")
-      .select("logo_url, entity_name")
-      .eq("entity_type", entityType)
-      .ilike("entity_name", entityName)
-      .maybeSingle()
-
-    if (!exactError && exactMatch?.logo_url) {
+    const direct = getDirectEntityLogoUrl(normalizedType, trimmed)
+    if (direct) {
       return NextResponse.json({
         success: true,
-        logoUrl: exactMatch.logo_url,
+        logoUrl: direct,
         matchInfo: {
           confidence: 100,
           matchType: "exact",
-          originalQuery: entityName,
-          matchedName: exactMatch.entity_name,
+          originalQuery: trimmed,
+          matchedName: normalizeEntityName(trimmed),
         },
       })
     }
 
-    // Try fuzzy matching with LIKE
-    const { data: fuzzyMatches, error: fuzzyError } = await supabase
-      .from("logo_mappings")
-      .select("logo_url, entity_name")
-      .eq("entity_type", entityType)
-      .or(`entity_name.ilike.%${entityName}%,entity_name.ilike.%${entityName.split(" ")[0]}%`)
-      .limit(1)
-
-    if (!fuzzyError && fuzzyMatches && fuzzyMatches.length > 0) {
+    const logoUrl = await resolveEntityLogoUrl(normalizedType, trimmed)
+    if (logoUrl) {
       return NextResponse.json({
         success: true,
-        logoUrl: fuzzyMatches[0].logo_url,
+        logoUrl,
         matchInfo: {
-          confidence: 75,
+          confidence: 90,
           matchType: "fuzzy",
-          originalQuery: entityName,
-          matchedName: fuzzyMatches[0].entity_name,
+          originalQuery: trimmed,
+          matchedName: normalizeEntityName(trimmed),
         },
       })
     }
 
-    // No match found
     return NextResponse.json({
       success: false,
       error: "No logo found",

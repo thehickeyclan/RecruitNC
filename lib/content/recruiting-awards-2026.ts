@@ -80,11 +80,18 @@ export const AWARD_WINNERS = [
   featuredAthletes: readonly RecruitingAwardsFeaturedAthlete[]
 }>
 
+/** Names to try against logo_mappings + /public fallbacks (order matters). */
+export const AWARD_COLLEGE_LOGO_LOOKUP: Record<string, readonly string[]> = {
+  "UNC Pembroke": ["UNC Pembroke", "University of North Carolina at Pembroke", "UNCP"],
+  "Appalachian State": ["Appalachian State", "App State", "Appalachian State University"],
+  Lynchburg: ["Lynchburg", "Lynchburg University", "University of Lynchburg"],
+  "The Citadel": ["Citadel", "The Citadel", "Citadel Military College of South Carolina"],
+}
+
 /**
- * News index + homepage carousel card only — not the site-wide homepage hero banner.
- * Replace with dedicated art in public/images/recruiting-awards-2026/ when ready.
+ * News index + homepage carousel + article hero banner.
  */
-export const RECRUITING_AWARDS_CARD_IMAGE = "/images/class-of-2026-senior-sendoff-hero.png"
+export const RECRUITING_AWARDS_CARD_IMAGE = "/images/recruiting-awards-2026/hero.png"
 
 export const IMAGE_PATHS = {
   hero: RECRUITING_AWARDS_CARD_IMAGE,
