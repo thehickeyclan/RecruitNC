@@ -62,7 +62,8 @@ export default function Class2027RankingsPage() {
 
       const response = await fetch(`/api/public-rankings?${params}`)
       if (!response.ok) {
-        throw new Error("Failed to fetch rankings")
+        const errBody = await response.json().catch(() => ({}))
+        throw new Error((errBody as { error?: string }).error || "Failed to fetch rankings")
       }
 
       const data = await response.json()
@@ -481,24 +482,7 @@ export default function Class2027RankingsPage() {
           </div>
 
           {/* Navigation to Other Rankings and Prospects */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12">
-            <Link href="/public-rankings/2026">
-              <Card className="bg-gradient-to-br from-[#003366] to-[#1e3a8a] text-white hover:shadow-xl transition-shadow cursor-pointer h-full">
-                <CardContent className="p-6 sm:p-8 text-center flex flex-col items-center justify-center h-full">
-                  <Trophy className="h-12 w-12 sm:h-16 sm:w-16 mb-4 text-[#D3B574]" />
-                  <h3 className="text-xl sm:text-2xl font-bold mb-2">Class of 2026 Rankings</h3>
-                  <p className="text-blue-100 mb-4">View the Top 30 ranked prospects for 2026</p>
-                  <Button
-                    variant="secondary"
-                    size="lg"
-                    className="bg-[#D3B574] text-gray-900 hover:bg-[#D3B574]/90"
-                  >
-                    View 2026 Rankings
-                  </Button>
-                </CardContent>
-              </Card>
-            </Link>
-
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-8 sm:mb-12">
             <Link href="/public-rankings/2028">
               <Card className="bg-gradient-to-br from-[#B31B1B] to-[#8B1515] text-white hover:shadow-xl transition-shadow cursor-pointer h-full">
                 <CardContent className="p-6 sm:p-8 text-center flex flex-col items-center justify-center h-full">

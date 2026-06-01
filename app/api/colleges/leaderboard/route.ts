@@ -70,9 +70,10 @@ export async function GET(request: NextRequest) {
     const gender = searchParams.get("gender") || "all"
     const year = searchParams.get("year") || "all"
     const division = searchParams.get("division") || "all"
+    const search = searchParams.get("search")?.trim().toLowerCase() || ""
 
     console.log(
-      `College Leaderboard API called with: metric=${metric}, gender=${gender}, year=${year}, division=${division}`,
+      `College Leaderboard API called with: metric=${metric}, gender=${gender}, year=${year}, division=${division}, search=${search || "(none)"}`,
     )
 
     let query = supabase
@@ -264,6 +265,11 @@ export async function GET(request: NextRequest) {
     athletes.forEach((athlete) => {
       const collegeName = athlete.college
       if (!collegeName) return
+
+      if (search) {
+        const hay = `${collegeName} ${athlete.highschool ?? ""}`.toLowerCase()
+        if (!hay.includes(search)) return
+      }
 
       const athleteDivisionRaw = getDivisionForAthlete(athlete)
       if (division !== "all" && !matchesDivisionFilter(athleteDivisionRaw, division)) {

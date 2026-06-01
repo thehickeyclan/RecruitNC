@@ -111,6 +111,8 @@ export function HighSchoolLeaderboard({
         const data = await response.json()
         console.log("Leaderboard data received:", data)
         setSchools(data.schools || [])
+        setExpandedSchools(new Set())
+        setSchoolAthletes({})
       } catch (err) {
         console.error("Fetch error:", err)
         setError(err instanceof Error ? err.message : "An error occurred")

@@ -80,6 +80,17 @@ export default function ClassOf2026RankingsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+            <span className="font-semibold">Archived rankings.</span> The Class of 2026 has graduated. Current prospect
+            rankings:{" "}
+            <Link href="/public-rankings/2027" className="font-semibold text-[#003366] underline underline-offset-2">
+              2027
+            </Link>
+            {" · "}
+            <Link href="/public-rankings/2028" className="font-semibold text-[#003366] underline underline-offset-2">
+              2028
+            </Link>
+          </div>
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#003366] to-[#1e3a8a] p-6 sm:p-12 mb-12 shadow-2xl">
             <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
             <div className="relative z-10 text-center">

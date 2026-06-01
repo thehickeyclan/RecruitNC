@@ -10,7 +10,7 @@ import {
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-    const year = searchParams.get("year") || "2026"
+    const year = searchParams.get("year") || "2027"
     const gender = searchParams.get("gender") || "Male"
     const limitParam = searchParams.get("limit")
     const requestedLimit = limitParam ? parseInt(limitParam, 10) : null
@@ -40,8 +40,6 @@ export async function GET(request: Request) {
         wrestling_name,
         photourl,
         headshot_url,
-        nhsca_results,
-        nchsaa_results,
         nhsca_2023_record,
         nhsca_2023_placement,
         nhsca_2024_record,
@@ -54,7 +52,6 @@ export async function GET(request: Request) {
         super_32_2024_placement,
         super_32_2025_record,
         super_32_2025_placement,
-        super32_results,
         nationally_ranked_wins,
         recruiting_status,
         college,
@@ -114,7 +111,7 @@ export async function GET(request: Request) {
 
     const rankings = await Promise.all(
       athletesToEnrich.map(async (athlete) => {
-        const fromFirstLast = `${athlete.firstName ?? ""} ${athlete.lastName ?? ""}`.trim()
+        const fromFirstLast = `${athlete.firstName ?? athlete.firstname ?? ""} ${athlete.lastName ?? athlete.lastname ?? ""}`.trim()
         const athleteName =
           fromFirstLast ||
           (athlete.name as string | undefined)?.trim() ||

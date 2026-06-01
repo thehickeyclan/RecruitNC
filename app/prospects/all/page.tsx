@@ -502,13 +502,13 @@ export default function AllProspectsPage() {
                 The All Prospects page is temporarily unavailable for maintenance.
               </p>
               <p className="text-sm text-gray-600 mb-6">
-                Please check back soon or visit the <a href="/public-rankings/2026" className="text-[#B31B1B] hover:underline">rankings pages</a> for prospect information.
+                Please check back soon or visit the <a href="/public-rankings" className="text-[#B31B1B] hover:underline">rankings pages</a> for prospect information.
               </p>
               <div className="flex gap-4 justify-center">
                 <a href="/">
                   <Button variant="outline">Return to Home</Button>
                 </a>
-                <a href="/public-rankings/2026">
+                <a href="/public-rankings">
                   <Button className="bg-[#B31B1B] hover:bg-[#8B1515] text-white">View Rankings</Button>
                 </a>
               </div>

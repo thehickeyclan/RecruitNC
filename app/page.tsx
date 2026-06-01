@@ -105,12 +105,12 @@ export default function HomePage() {
     const fetchFeaturedRankings = async () => {
       try {
         setRankingsLoading(true)
-        const [response2026, response2027] = await Promise.all([
-          fetch(`/api/public-rankings?year=2026&gender=Male&limit=3`, { method: "GET", headers: { "Content-Type": "application/json" }, cache: "no-store" }),
+        const [response2027, response2028] = await Promise.all([
           fetch(`/api/public-rankings?year=2027&gender=Male&limit=3`, { method: "GET", headers: { "Content-Type": "application/json" }, cache: "no-store" }),
+          fetch(`/api/public-rankings?year=2028&gender=Male&limit=3`, { method: "GET", headers: { "Content-Type": "application/json" }, cache: "no-store" }),
         ])
-        const data2026 = response2026.ok ? await response2026.json() : { rankings: [] }
         const data2027 = response2027.ok ? await response2027.json() : { rankings: [] }
+        const data2028 = response2028.ok ? await response2028.json() : { rankings: [] }
         const mapRankingToAthlete = (r: any) => ({
           id: r.id,
           name: r.name || "Unknown",
@@ -121,9 +121,9 @@ export default function HomePage() {
           weightclass: r.weight_display ? String(r.weight_display).replace(/\s*lbs$/i, "").trim() : "",
           achievements: [r.state_championship_summary, r.nhsca_record_display, r.super_32_record_display].filter(Boolean),
         })
-        const top2026 = (data2026.rankings || []).slice(0, 3).map(mapRankingToAthlete)
         const top2027 = (data2027.rankings || []).slice(0, 3).map(mapRankingToAthlete)
-        setFeaturedRankings([...top2026, ...top2027])
+        const top2028 = (data2028.rankings || []).slice(0, 3).map(mapRankingToAthlete)
+        setFeaturedRankings([...top2027, ...top2028])
       } catch (err) {
         console.error("Error fetching featured rankings:", err)
         setFeaturedRankings([])
@@ -325,24 +325,24 @@ export default function HomePage() {
             <div className="py-12 text-center text-white/50">Loading rankings...</div>
           ) : featuredRankings.length > 0 ? (
             <div className="space-y-8">
-              {/* Class of 2026 */}
-              {featuredRankings.filter((a) => a.graduationyear === 2026).length > 0 && (
-                <div>
-                  <h3 className="mb-4 text-lg font-semibold text-white/80">Class of 2026</h3>
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                    {featuredRankings.filter((a) => a.graduationyear === 2026).map((athlete) => (
-                      <RankingCard key={athlete.id} athlete={athlete} />
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {/* Class of 2027 */}
               {featuredRankings.filter((a) => a.graduationyear === 2027).length > 0 && (
                 <div>
                   <h3 className="mb-4 text-lg font-semibold text-white/80">Class of 2027</h3>
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     {featuredRankings.filter((a) => a.graduationyear === 2027).map((athlete) => (
+                      <RankingCard key={athlete.id} athlete={athlete} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Class of 2028 */}
+              {featuredRankings.filter((a) => a.graduationyear === 2028).length > 0 && (
+                <div>
+                  <h3 className="mb-4 text-lg font-semibold text-white/80">Class of 2028</h3>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    {featuredRankings.filter((a) => a.graduationyear === 2028).map((athlete) => (
                       <RankingCard key={athlete.id} athlete={athlete} />
                     ))}
                   </div>

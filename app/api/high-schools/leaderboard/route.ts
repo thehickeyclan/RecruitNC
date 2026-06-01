@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
+import { COLLEGE_LEADERBOARD_MIN_CLASS_YEAR } from "@/lib/colleges"
 
 const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
@@ -17,23 +18,26 @@ export async function GET(request: NextRequest) {
       .select("highschool, college, gender, graduationyear, commitmentdate, rankings")
       .not("highschool", "is", null)
       .not("college", "is", null)
-      .not("commitmentdate", "is", null) // Only include athletes with commitment dates
-      .neq("college", "") // Exclude athletes with empty college field
-      .neq("college", "Uncommitted") // Exclude athletes with Uncommitted college
-      .neq("college", "TBD") // Exclude athletes with TBD college
+      .neq("college", "")
+      .neq("college", "Uncommitted")
+      .neq("college", "TBD")
+      .or("is_prospect.is.null,is_prospect.eq.false")
 
-    // Apply gender filter with case-insensitive matching
     if (gender !== "all") {
-      if (gender === "male") {
-        query = query.or("gender.ilike.male,gender.ilike.m,gender.ilike.men")
-      } else if (gender === "female") {
-        query = query.or("gender.ilike.female,gender.ilike.f,gender.ilike.women")
-      }
+      const genderValues =
+        gender === "male"
+          ? ["male", "Male", "m", "M", "men", "Men"]
+          : gender === "female"
+            ? ["female", "Female", "f", "F", "women", "Women"]
+            : [gender]
+      query = query.in("gender", genderValues)
     }
 
-    // Apply year filter
+    // "all" means class of 2025+ (matches page banner)
     if (year !== "all") {
-      query = query.eq("graduationyear", Number.parseInt(year))
+      query = query.eq("graduationyear", Number.parseInt(year, 10))
+    } else {
+      query = query.gte("graduationyear", COLLEGE_LEADERBOARD_MIN_CLASS_YEAR)
     }
 
     const { data: athletes, error } = await query
