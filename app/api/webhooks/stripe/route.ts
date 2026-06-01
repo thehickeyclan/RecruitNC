@@ -936,6 +936,12 @@ export async function POST(request: NextRequest) {
             paymentIntentId,
             linesEncoded,
             totalCents,
+            eventSlug: regEventSlug || "nhsca-duals-2026",
+            apparelSizes: {
+              singlet_size: (reg as { singlet_size?: string | null }).singlet_size,
+              shorts_size: (reg as { shorts_size?: string | null }).shorts_size,
+              shirt_size: (reg as { shirt_size?: string | null }).shirt_size,
+            },
             bundleProduct: bundleProduct as { id?: string; name?: string } | null,
           })
           await admin

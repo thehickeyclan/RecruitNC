@@ -46,11 +46,10 @@ export async function POST(request: Request) {
       const sessions = await stripe.checkout.sessions.list({ payment_intent: piId, limit: 1 })
       const session = sessions.data?.[0]
       if (session?.metadata?.source === "national_team") {
-        const linesEncoded = (session.metadata?.checkout_lines as string | undefined) ?? ""
         const orderTotalCents = Math.round(Number((order as { total?: number }).total ?? 0) * 100)
         const { data: reg } = await admin
           .from("national_team_event_registrations")
-          .select("reg_fee_cents, apparel_fee_cents")
+          .select("reg_fee_cents, apparel_fee_cents, event_slug, singlet_size, shorts_size, shirt_size, checkout_lines")
           .eq("order_id", orderId)
           .maybeSingle()
         const regTotal =
@@ -59,20 +58,33 @@ export async function POST(request: Request) {
               (Number((reg as { apparel_fee_cents?: number }).apparel_fee_cents) || 0)
             : orderTotalCents
         const { data: products } = await admin.from("products").select("id, name, slug").eq("category", "national_team")
+        const regEventSlug = String((reg as { event_slug?: string } | null)?.event_slug ?? "")
+        const bundleSlug = regEventSlug === "aau-2026" ? "aau-2026-bundle" : "nhsca-2026-bundle"
         const bundleProduct =
-          (products ?? []).find((p: { slug?: string }) => p.slug === "nhsca-2026-bundle") ?? (products ?? [])[0]
+          (products ?? []).find((p: { slug?: string }) => p.slug === bundleSlug) ??
+          (products ?? []).find((p: { slug?: string }) => p.slug === "nhsca-2026-bundle") ??
+          (products ?? [])[0]
+        const regCheckoutLines =
+          (session.metadata?.checkout_lines as string | undefined) ??
+          String((reg as { checkout_lines?: string | null } | null)?.checkout_lines ?? "")
         const replaced = await ensureNationalTeamOrderLineItems(admin, {
           orderId,
           paymentIntentId: piId,
-          linesEncoded,
+          linesEncoded: regCheckoutLines,
           totalCents: regTotal > 0 ? regTotal : orderTotalCents,
+          eventSlug: regEventSlug || "nhsca-duals-2026",
+          apparelSizes: {
+            singlet_size: (reg as { singlet_size?: string | null } | null)?.singlet_size,
+            shorts_size: (reg as { shorts_size?: string | null } | null)?.shorts_size,
+            shirt_size: (reg as { shirt_size?: string | null } | null)?.shirt_size,
+          },
           bundleProduct: bundleProduct as { id?: string; name?: string } | null,
         })
         if (replaced) {
-          if (linesEncoded) {
+          if (regCheckoutLines) {
             await admin
               .from("national_team_event_registrations")
-              .update({ checkout_lines: linesEncoded.slice(0, 500), updated_at: new Date().toISOString() })
+              .update({ checkout_lines: regCheckoutLines.slice(0, 500), updated_at: new Date().toISOString() })
               .eq("order_id", orderId)
           }
           await admin

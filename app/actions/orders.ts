@@ -8,7 +8,8 @@ import {
   nhscaDualsRegistrationOrderSummary,
   type NhscaDuals2026Registration,
 } from "@/lib/nhsca-duals-2026-registrations"
-import { isGenericPlaceholderOrderItemName } from "@/lib/national-team-order-items"
+import { orderItemsNeedNationalTeamDetail, ensureNationalTeamOrderLineItems } from "@/lib/national-team-order-items"
+import { findNationalTeamRegistrationForOrder } from "@/lib/national-team-order-lookup"
 import {
   hydrateOrderCustomerFromStripe,
   overlayOrderFromStripeForDisplay,
@@ -16,7 +17,7 @@ import {
 import { resolveAdminOrderDisplay } from "@/lib/admin/resolve-order-display"
 import { reconcileStoreOrderItemsFromStripe } from "@/lib/store/reconcile-order-items-from-stripe"
 import { analyzeStoreOrderIntegrity } from "@/lib/store/store-order-integrity"
-import { buildOrderReceiptPreview } from "@/lib/store/order-receipt-preview"
+import { buildOrderReceiptPreview, buildNationalTeamReceiptPreview } from "@/lib/store/order-receipt-preview"
 import { fetchMergedStoreMetadata } from "@/lib/store/stripe-legacy-metadata"
 
 function getStripe(): Stripe {
@@ -237,29 +238,73 @@ export async function getOrderDetails(orderId: string): Promise<
       return { success: false, error: itemsError.message }
     }
 
+    let itemsList = orderItems ?? []
+
     let nationalTeamRegistration: Record<string, unknown> | null = null
     let nationalTeamLineItems: { name: string; amount_cents: number; quantity?: number }[] | null = null
     let nationalTeamSummary: string | null = null
 
-    const { data: ntReg } = await supabase
-      .from("national_team_event_registrations")
-      .select(
-        "id, athlete_first_name, athlete_last_name, event_slug, reg_fee_cents, apparel_fee_cents, singlet_size, shorts_size, shirt_size, checkout_lines"
-      )
-      .eq("order_id", order.id)
-      .maybeSingle()
+    const ntReg = await findNationalTeamRegistrationForOrder(supabase, order as {
+      id: string
+      customer_email?: string | null
+      email?: string | null
+      customer_name?: string | null
+    })
 
     if (ntReg) {
       nationalTeamRegistration = ntReg as Record<string, unknown>
-      nationalTeamLineItems = nhscaDualsRegistrationOrderLines(ntReg as Parameters<typeof nhscaDualsRegistrationOrderLines>[0])
-      nationalTeamSummary = nhscaDualsRegistrationOrderSummary(ntReg as Parameters<typeof nhscaDualsRegistrationOrderSummary>[0])
+      const regRow = ntReg as NhscaDuals2026Registration & {
+        checkout_lines?: string | null
+        reg_fee_cents?: number | null
+        apparel_fee_cents?: number | null
+      }
+      const linesEncoded = String(regRow.checkout_lines ?? "").trim()
+      const piId = String(order.stripe_payment_intent_id ?? "").trim()
+      if (orderItemsNeedNationalTeamDetail(itemsList) && (linesEncoded || piId)) {
+        try {
+          const regTotalCents =
+            (Number(regRow.reg_fee_cents) || 0) + (Number(regRow.apparel_fee_cents) || 0) ||
+            Math.round(Number(order.total ?? 0) * 100)
+          await ensureNationalTeamOrderLineItems(supabase, {
+            orderId: order.id,
+            paymentIntentId: piId || order.id,
+            linesEncoded,
+            totalCents: regTotalCents,
+            eventSlug: regRow.event_slug ?? "nhsca-duals-2026",
+            apparelSizes: {
+              singlet_size: regRow.singlet_size,
+              shorts_size: regRow.shorts_size,
+              shirt_size: regRow.shirt_size,
+            },
+          })
+          const { data: refreshedItems } = await supabase
+            .from("order_items")
+            .select(
+              `
+        *,
+        product:products (
+          name,
+          image_url,
+          product_images (url, display_order)
+        )
+      `,
+            )
+            .eq("order_id", order.id)
+            .order("created_at")
+          if (refreshedItems) {
+            itemsList = refreshedItems
+          }
+        } catch (expandErr) {
+          console.warn("[orders] ensureNationalTeamOrderLineItems:", expandErr)
+        }
+      }
+      nationalTeamLineItems = nhscaDualsRegistrationOrderLines(regRow)
+      nationalTeamSummary = nhscaDualsRegistrationOrderSummary(regRow)
     }
 
-    const itemsList = orderItems ?? []
     const displayUsesNationalTeam =
       Boolean(nationalTeamLineItems?.length) &&
-      (itemsList.length === 0 ||
-        itemsList.every((i) => isGenericPlaceholderOrderItemName((i as { product_name?: string }).product_name)))
+      (itemsList.length === 0 || orderItemsNeedNationalTeamDetail(itemsList))
 
     let dropInRequest: Record<string, unknown> | null = null
     if (order.stripe_session_id || order.stripe_payment_intent_id) {
@@ -325,7 +370,6 @@ export async function getOrderDetails(orderId: string): Promise<
       try {
         const { meta } = await fetchMergedStoreMetadata(getStripe(), order.stripe_payment_intent_id as string)
         const { data: productCache } = await supabase.from("products").select("id, name, image_url").limit(5000)
-        const itemsList = orderItems ?? []
         const dbQty = itemsList.reduce((s, i) => s + Math.max(1, Number((i as { quantity?: number }).quantity ?? 1)), 0)
         const integrity = analyzeStoreOrderIntegrity({
           meta,
@@ -348,7 +392,7 @@ export async function getOrderDetails(orderId: string): Promise<
 
     const orderWithItems = {
       ...order,
-      order_items: orderItems ?? [],
+      order_items: itemsList,
       national_team_registration: nationalTeamRegistration,
       national_team_line_items: nationalTeamLineItems,
       national_team_summary: nationalTeamSummary,
@@ -378,7 +422,10 @@ export async function getOrderDetails(orderId: string): Promise<
       // table may not exist in some envs
     }
 
-    const receiptPreview = buildOrderReceiptPreview(order, itemsList, receiptLog)
+    const receiptPreview =
+      ntReg && orderItemsNeedNationalTeamDetail(itemsList)
+        ? buildNationalTeamReceiptPreview(order, ntReg, receiptLog)
+        : buildOrderReceiptPreview(order, itemsList, receiptLog)
 
     return {
       success: true,

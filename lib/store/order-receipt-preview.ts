@@ -1,4 +1,8 @@
 import { formatOrderItemVariantForEmail, formatStoreShippingAddressPlain } from "@/lib/email"
+import {
+  nhscaDualsRegistrationOrderLines,
+  type NhscaDuals2026Registration,
+} from "@/lib/nhsca-duals-2026-registrations"
 
 export type OrderReceiptLineItem = {
   name: string
@@ -104,4 +108,46 @@ export function buildOrderReceiptPreview(
     sentAt: receiptLog?.sent_at ?? null,
     sentToEmail: receiptLog?.recipient_email ?? null,
   }
+}
+
+/** Hub checkout lines — what parents selected (singlet, tees, shorts, etc.). */
+export function buildNationalTeamReceiptPreview(
+  order: OrderRow,
+  reg: NhscaDuals2026Registration,
+  receiptLog?: { sent_at?: string | null; recipient_email?: string | null } | null,
+): OrderReceiptPreview {
+  const lines = nhscaDualsRegistrationOrderLines(reg)
+  const items: OrderReceiptLineItem[] = lines.map((line) => {
+    const qty = line.quantity ?? 1
+    const price = (line.amount_cents ?? 0) / 100 / qty
+    return {
+      name: line.name,
+      variant: "",
+      quantity: qty,
+      price,
+      lineLabel: line.name,
+    }
+  })
+
+  const customerEmail = (order.customer_email ?? order.email ?? reg.parent_email ?? "").trim()
+  const subtotal = Number(order.subtotal) || items.reduce((s, i) => s + i.price * i.quantity, 0)
+
+  return {
+    orderNumber: order.order_number ?? "",
+    customerName: (order.customer_name ?? "").trim() || athleteNameFromReg(reg),
+    customerEmail,
+    items,
+    subtotal,
+    shipping: Number(order.shipping_cost) || 0,
+    tax: Number(order.tax) || 0,
+    discount: Number(order.discount) || 0,
+    total: Number(order.total) || 0,
+    shippingAddressPlain: formatStoreShippingAddressPlain(order.shipping_address ?? {}),
+    sentAt: receiptLog?.sent_at ?? null,
+    sentToEmail: receiptLog?.recipient_email ?? null,
+  }
+}
+
+function athleteNameFromReg(reg: NhscaDuals2026Registration): string {
+  return [reg.athlete_first_name, reg.athlete_last_name].filter(Boolean).join(" ").trim() || "Customer"
 }

@@ -11,6 +11,10 @@ import {
   aauScholasticAllOrderLineDisplays,
   aauScholasticOrderLineDisplays,
 } from "@/lib/aau-scholastic-duals-2026-content"
+import {
+  inferNationalTeamLineKey,
+  nationalTeamSkuForLine,
+} from "@/lib/national-team-product-catalog"
 
 export type { NhscaSingletColor }
 
@@ -256,18 +260,25 @@ export type NhscaOrderLineDisplay = {
   name: string
   amount_cents: number
   quantity?: number
+  key?: string
+  sku?: string
 }
 
 /** Placeholder order_items from mis-routed payment_intent webhooks — not real product detail. */
 export function isGenericPlaceholderOrderItemName(name: string | null | undefined): boolean {
   const n = (name ?? "").trim().toLowerCase()
   if (!n) return true
-  return (
+  if (
     n.includes("nc united store purchase") ||
     n.includes("recovered item") ||
-    n === "order items" ||
-    /^nhsca 2026 – registration \+ apparel$/i.test(n)
-  )
+    n === "order items"
+  ) {
+    return true
+  }
+  // Single-line NHSCA / national-team bundle rows (product slug name varies).
+  if (/registration\s*\+\s*apparel/i.test(n) && /nhsca|national team|aau/i.test(n)) return true
+  if (/^nhsca 2026 – registration \+ apparel$/i.test(n)) return true
+  return false
 }
 
 export function orderLineItemsArePlaceholders(
@@ -310,7 +321,14 @@ export function formatOrderLineItemsSummary(
 }
 
 export function orderLineItemsToDisplay(
-  items: { product_name?: string | null; quantity?: number | null; price?: number | null; subtotal?: number | null }[]
+  items: {
+    product_name?: string | null
+    sku?: string | null
+    quantity?: number | null
+    price?: number | null
+    subtotal?: number | null
+  }[],
+  eventSlug = "nhsca-duals-2026",
 ): NhscaOrderLineDisplay[] {
   return items.map((i) => {
     const qty = i.quantity ?? 1
@@ -318,20 +336,45 @@ export function orderLineItemsToDisplay(
       i.subtotal != null && Number.isFinite(Number(i.subtotal))
         ? Math.round(Number(i.subtotal) * 100)
         : Math.round((i.price ?? 0) * 100) * qty
+    const name = (i.product_name ?? "Item").trim()
+    const key = inferNationalTeamLineKey(eventSlug, name)
     return {
-      name: (i.product_name ?? "Item").trim(),
+      name,
       amount_cents: subtotal,
       quantity: qty,
+      key,
+      sku: i.sku?.trim() || nationalTeamSkuForLine(eventSlug, { key, name }),
     }
   })
 }
 
-export function checkoutLineItemsToDisplay(items: NhscaCheckoutLineItem[]): NhscaOrderLineDisplay[] {
+export function checkoutLineItemsToDisplay(
+  items: NhscaCheckoutLineItem[],
+  eventSlug = "nhsca-duals-2026",
+): NhscaOrderLineDisplay[] {
   return items.map((i) => ({
     name: i.name,
     amount_cents: i.amountCents * (i.quantity ?? 1),
     quantity: i.quantity ?? 1,
+    key: i.key,
+    sku: nationalTeamSkuForLine(eventSlug, { key: i.key, name: i.name }),
   }))
+}
+
+function enrichInferredLine(
+  eventSlug: string,
+  name: string,
+  amount_cents: number,
+  quantity = 1,
+): NhscaOrderLineDisplay {
+  const key = inferNationalTeamLineKey(eventSlug, name)
+  return {
+    name,
+    amount_cents,
+    quantity,
+    key,
+    sku: nationalTeamSkuForLine(eventSlug, { key, name }),
+  }
 }
 
 /** Reconstruct line labels from fee split when order_items / checkout_lines are missing. */
@@ -347,58 +390,69 @@ export function inferOrderSummaryFromFees(row: {
   let apparel = row.apparel_fee_cents || 0
 
   if (reg >= NHSCA_TEAM_PACKAGE_CENTS) {
-    items.push({ name: "NHSCA Team Package", amount_cents: NHSCA_TEAM_PACKAGE_CENTS })
+    items.push(enrichInferredLine("nhsca-duals-2026", "NHSCA Team Package", NHSCA_TEAM_PACKAGE_CENTS))
     reg -= NHSCA_TEAM_PACKAGE_CENTS
   } else if (reg >= NHSCA_REG_FEE_CENTS) {
-    items.push({ name: "Tournament Registration & Team Fee", amount_cents: NHSCA_REG_FEE_CENTS })
+    items.push(
+      enrichInferredLine("nhsca-duals-2026", "Tournament Registration & Team Fee", NHSCA_REG_FEE_CENTS),
+    )
     reg -= NHSCA_REG_FEE_CENTS
   }
 
   const van = nhscaVanTravelFeeCents()
   if (reg >= van && van > 0) {
-    items.push({ name: "Van Transportation (per wrestler)", amount_cents: van })
+    items.push(enrichInferredLine("nhsca-duals-2026", "Van Transportation (per wrestler)", van))
     reg -= van
   }
   const hotel = nhscaHotelFeeCents()
   if (reg >= hotel && hotel > 0) {
-    items.push({ name: "Team hotel (3 nights, per person)", amount_cents: hotel })
+    items.push(enrichInferredLine("nhsca-duals-2026", "Team hotel (3 nights, per person)", hotel))
     reg -= hotel
   }
   if (reg > 0) {
-    items.push({ name: "Registration / travel fees", amount_cents: reg })
+    items.push(enrichInferredLine("nhsca-duals-2026", "Registration / travel fees", reg))
     reg = 0
   }
 
   if (apparel >= NHSCA_SINGLET_TWO_CENTS) {
-    items.push({
-      name: row.singlet_size ? `NC United Singlets ×2 (${row.singlet_size})` : "NC United Singlets ×2",
-      amount_cents: NHSCA_SINGLET_TWO_CENTS,
-    })
+    items.push(
+      enrichInferredLine(
+        "nhsca-duals-2026",
+        row.singlet_size ? `NC United Singlets ×2 (${row.singlet_size})` : "NC United Singlets ×2",
+        NHSCA_SINGLET_TWO_CENTS,
+      ),
+    )
     apparel -= NHSCA_SINGLET_TWO_CENTS
   } else if (apparel >= NHSCA_SINGLET_EACH_CENTS) {
-    items.push({
-      name: row.singlet_size ? `NC United Singlet (${row.singlet_size})` : "NC United Singlet",
-      amount_cents: NHSCA_SINGLET_EACH_CENTS,
-    })
+    items.push(
+      enrichInferredLine(
+        "nhsca-duals-2026",
+        row.singlet_size ? `NC United Singlet (${row.singlet_size})` : "NC United Singlet",
+        NHSCA_SINGLET_EACH_CENTS,
+      ),
+    )
     apparel -= NHSCA_SINGLET_EACH_CENTS
   }
   if (apparel >= NHSCA_SHORTS_CENTS) {
-    items.push({
-      name: row.shorts_size ? `Team Shorts (${row.shorts_size})` : "Team Shorts",
-      amount_cents: NHSCA_SHORTS_CENTS,
-    })
+    items.push(
+      enrichInferredLine(
+        "nhsca-duals-2026",
+        row.shorts_size ? `Team Shorts (${row.shorts_size})` : "Team Shorts",
+        NHSCA_SHORTS_CENTS,
+      ),
+    )
     apparel -= NHSCA_SHORTS_CENTS
   }
   if (apparel >= NHSCA_LONG_SLEEVE_CENTS) {
-    items.push({ name: "Long Sleeve Tee", amount_cents: NHSCA_LONG_SLEEVE_CENTS })
+    items.push(enrichInferredLine("nhsca-duals-2026", "Long Sleeve Tee", NHSCA_LONG_SLEEVE_CENTS))
     apparel -= NHSCA_LONG_SLEEVE_CENTS
   }
   if (apparel >= NHSCA_SHORT_SLEEVE_CENTS) {
-    items.push({ name: "Short Sleeve Tee", amount_cents: NHSCA_SHORT_SLEEVE_CENTS })
+    items.push(enrichInferredLine("nhsca-duals-2026", "Short Sleeve Tee", NHSCA_SHORT_SLEEVE_CENTS))
     apparel -= NHSCA_SHORT_SLEEVE_CENTS
   }
   if (apparel > 0) {
-    items.push({ name: "Apparel", amount_cents: apparel })
+    items.push(enrichInferredLine("nhsca-duals-2026", "Apparel", apparel))
   }
 
   return items
@@ -410,10 +464,14 @@ function inferAauScholasticOrderLinesFromFees(row: {
 }): NhscaOrderLineDisplay[] {
   const total = (row.reg_fee_cents || 0) + (row.apparel_fee_cents || 0)
   if (total === AAU_SCHOLASTIC_ESTIMATED_TRIP_TOTAL_DOLLARS * 100) {
-    return aauScholasticAllOrderLineDisplays()
+    return aauScholasticAllOrderLineDisplays().map((l) =>
+      enrichInferredLine(AAU_SCHOLASTIC_EVENT_SLUG, l.name, l.amount_cents),
+    )
   }
   if (total === AAU_SCHOLASTIC_CHECKOUT_TOTAL_DOLLARS * 100) {
-    return aauScholasticOrderLineDisplays()
+    return aauScholasticOrderLineDisplays().map((l) =>
+      enrichInferredLine(AAU_SCHOLASTIC_EVENT_SLUG, l.name, l.amount_cents),
+    )
   }
   const items: NhscaOrderLineDisplay[] = []
   let reg = row.reg_fee_cents || 0
@@ -421,19 +479,19 @@ function inferAauScholasticOrderLinesFromFees(row: {
 
   const peel = (amountCents: number, name: string) => {
     if (reg >= amountCents && amountCents > 0) {
-      items.push({ name, amount_cents: amountCents })
+      items.push(enrichInferredLine(AAU_SCHOLASTIC_EVENT_SLUG, name, amountCents))
       reg -= amountCents
     }
   }
   peel(75 * 100, "Tournament registration")
   peel(315 * 100, "Hotel & team van")
   peel(355 * 100, "Flight")
-  if (reg > 0) items.push({ name: "Registration / travel fees", amount_cents: reg })
+  if (reg > 0) items.push(enrichInferredLine(AAU_SCHOLASTIC_EVENT_SLUG, "Registration / travel fees", reg))
 
   let apparelLeft = apparel
   const peelApparel = (amountCents: number, name: string) => {
     if (apparelLeft >= amountCents && amountCents > 0) {
-      items.push({ name, amount_cents: amountCents })
+      items.push(enrichInferredLine(AAU_SCHOLASTIC_EVENT_SLUG, name, amountCents))
       apparelLeft -= amountCents
     }
   }
@@ -441,7 +499,9 @@ function inferAauScholasticOrderLinesFromFees(row: {
   peelApparel(40 * 100, "Long sleeve shirt")
   peelApparel(40 * 100, "Shorts")
   peelApparel(30 * 100, "Tee")
-  if (apparelLeft > 0) items.push({ name: "Team apparel", amount_cents: apparelLeft })
+  if (apparelLeft > 0) {
+    items.push(enrichInferredLine(AAU_SCHOLASTIC_EVENT_SLUG, "Team apparel", apparelLeft))
+  }
 
   return items
 }
@@ -462,11 +522,15 @@ export function resolveRegistrationOrderLines(row: {
   }[]
 }): NhscaOrderLineDisplay[] {
   if (row.order_line_items?.length && !orderLineItemsArePlaceholders(row.order_line_items)) {
-    return orderLineItemsToDisplay(row.order_line_items)
+    const slug = row.event_slug === AAU_SCHOLASTIC_EVENT_SLUG ? AAU_SCHOLASTIC_EVENT_SLUG : "nhsca-duals-2026"
+    return orderLineItemsToDisplay(row.order_line_items, slug)
   }
   if (row.checkout_lines?.trim()) {
     const decoded = decodeLineItemsMetadata(row.checkout_lines)
-    if (decoded.length) return checkoutLineItemsToDisplay(decoded)
+    if (decoded.length) {
+      const slug = row.event_slug === AAU_SCHOLASTIC_EVENT_SLUG ? AAU_SCHOLASTIC_EVENT_SLUG : "nhsca-duals-2026"
+      return checkoutLineItemsToDisplay(decoded, slug)
+    }
   }
   if (row.event_slug === AAU_SCHOLASTIC_EVENT_SLUG) {
     return inferAauScholasticOrderLinesFromFees(row)
