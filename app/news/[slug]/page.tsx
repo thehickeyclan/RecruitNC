@@ -44,7 +44,10 @@ export default async function NewsAnnouncementPage({
   const Content = ANNOUNCEMENT_CONTENT[slug]
   if (slug !== RECRUITING_AWARDS_SLUG && !Content) notFound()
 
-  const skipHeroImage = slug === "class-of-2026-senior-sendoff" || slug === "real-cost-elite-wrestling-nc-smarter-build"
+  const skipHeroImage =
+    slug === "class-of-2026-senior-sendoff" ||
+    slug === "real-cost-elite-wrestling-nc-smarter-build" ||
+    slug === RECRUITING_AWARDS_SLUG
 
   return (
     <div className="min-h-screen bg-[#0A1628]">

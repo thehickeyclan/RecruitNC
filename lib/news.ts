@@ -4,6 +4,8 @@
  * Newest first; home carousel uses first N items.
  */
 
+import { RECRUITING_AWARDS_CARD_IMAGE } from "@/lib/content/recruiting-awards-2026"
+
 const NCHSAA_YEAR = "2026"
 
 export interface NewsItem {
@@ -49,9 +51,10 @@ const ALL_NEWS: NewsItem[] = [
       "Forty-nine verified male commits — UNC Pembroke's top haul, App State's Bentley Sly, Lynchburg's debut class, and The Citadel's emerging Carolinas footprint, with charts by college and division.",
     href: "/news/nc-united-recruiting-awards-2026",
     date: "2026-05-31",
-    image: "/images/recruiting-tournaments-hero.png",
+    image: RECRUITING_AWARDS_CARD_IMAGE,
     imagePosition: "center",
-    imageFit: "cover",
+    imageFit: "contain",
+    imageBannerBgClass: "bg-slate-100",
     newsListBanner: true,
     category: "RECRUITING",
     categoryBadgeClass: "bg-[#003366]",

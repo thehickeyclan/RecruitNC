@@ -41,7 +41,6 @@ export const AWARD_WINNERS = [
     award: "Top Haul",
     college: "UNC Pembroke",
     stat: "7 commits",
-    logoSrc: "/images/recruiting-awards-2026/uncp-logo.svg",
     featuredAthletes: [
       { name: "Imon Freeman", school: "Montgomery Central", rank: 11 },
       { name: "Gavin Yow", school: "A.L. Brown", rank: 13 },
@@ -51,7 +50,6 @@ export const AWARD_WINNERS = [
     award: "Best Top-End Class",
     college: "Appalachian State",
     stat: "2 D1 commits",
-    logoSrc: "/images/recruiting-awards-2026/appstate-logo.svg",
     featuredAthletes: [
       { name: "Bentley Sly", school: "Stuart Cramer", rank: 1 },
       { name: "Avery Rhymer", school: "St. Stephens", rank: 12 },
@@ -61,7 +59,6 @@ export const AWARD_WINNERS = [
     award: "Best Value Find",
     college: "Lynchburg",
     stat: "6 commits",
-    logoSrc: "/images/recruiting-awards-2026/lynchburg-logo.svg",
     featuredAthletes: [
       { name: "Jacob Reigel", school: "Mount Pleasant", rank: 15 },
       { name: "Cameron Gue", school: "Mount Pleasant", rank: 29 },
@@ -71,7 +68,6 @@ export const AWARD_WINNERS = [
     award: "Emerging Pipeline",
     college: "The Citadel",
     stat: "2 D1 commits",
-    logoSrc: "/images/recruiting-awards-2026/citadel-logo.svg",
     featuredAthletes: [
       { name: "Andrew Meadows", school: "Mount Airy", rank: 6 },
       { name: "Dominic Hittepole", school: "Wheatmore", rank: 22 },
@@ -81,16 +77,21 @@ export const AWARD_WINNERS = [
   award: string
   college: string
   stat: string
-  logoSrc: string
   featuredAthletes: readonly RecruitingAwardsFeaturedAthlete[]
 }>
 
-export const IMAGE_PATHS = {
-  hero: "/images/recruiting-awards-2026/hero.jpg",
-  bentleySly: "/images/recruiting-awards-2026/bentley-sly.jpg",
-  andrewMeadows: "/images/recruiting-awards-2026/andrew-meadows.jpg",
-  lynchburgProgram: "/images/recruiting-awards-2026/lynchburg-program.jpg",
-} as const
+/**
+ * News index + homepage carousel card only — not the site-wide homepage hero banner.
+ * Replace with dedicated art in public/images/recruiting-awards-2026/ when ready.
+ */
+export const RECRUITING_AWARDS_CARD_IMAGE = "/images/class-of-2026-senior-sendoff-hero.png"
 
-/** Feed card hero until editors upload recruiting-awards-2026/hero.jpg */
-export const FEED_HERO_IMAGE = "/images/recruiting-tournaments-hero.png"
+export const IMAGE_PATHS = {
+  hero: RECRUITING_AWARDS_CARD_IMAGE,
+  uncpProgram: "/images/recruiting-awards-2026/unc-pembroke-wrestling.png",
+  appStateProgram: "/images/recruiting-awards-2026/app-state-wrestling.png",
+  bentleySly: "/images/recruiting-awards-2026/bentley-sly.png",
+  andrewMeadows: "/images/recruiting-awards-2026/andrew-meadows.png",
+  citadelProgram: "/images/recruiting-awards-2026/citadel-wrestling.png",
+  lynchburgProgram: "/images/recruiting-awards-2026/lynchburg-wrestling.png",
+} as const
