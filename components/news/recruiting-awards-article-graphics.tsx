@@ -152,8 +152,7 @@ export function RecruitingAwardsDivisionDonutChart() {
       <p className="text-xs font-semibold uppercase tracking-wider text-[#003366]">Division breakdown</p>
       <h3 className="mt-1 text-lg font-bold text-[#13294B]">Where the Class of 2026 Landed</h3>
       <p className="mt-2 text-sm text-slate-600">
-        Includes the single Club commit (Andrew Davis, Liberty) so the total reconciles to 49 — the platform division widget
-        shows 48 because Club is not bucketed there.
+        Forty-nine verified male commits across Division I, II, III, NAIA, NJCAA, and club wrestling.
       </p>
       <div className={`mt-4 w-full min-w-0 ${chartHeightClass}`}>
         {!mounted ? (

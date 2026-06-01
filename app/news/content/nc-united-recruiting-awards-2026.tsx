@@ -13,6 +13,7 @@
  */
 
 import type { ReactNode } from "react"
+import Image from "next/image"
 import { AwardCard } from "@/components/news/award-card"
 import { HardLink } from "@/components/hard-link"
 import { NewsImageSlot } from "@/components/news/news-image-slot"
@@ -56,16 +57,19 @@ export function NcUnitedRecruitingAwards2026Content({
       <p className="text-slate-600 font-medium">By NC United · May 2026</p>
 
       <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm">
-        <div className="relative aspect-[16/10] w-full min-h-[200px]">
-          <NewsImageSlot
+        <div className="relative mx-auto aspect-[387/463] w-full max-h-[min(72vh,560px)] min-h-[240px]">
+          <Image
             src={IMAGE_PATHS.hero}
             alt="North Carolina Class of 2026 wrestling commits"
             fill
-            priority
+            className="object-contain object-center p-2 sm:p-4"
             sizes="(max-width: 768px) 100vw, 48rem"
-            label="Hero — Class of 2026 commits"
+            priority
           />
         </div>
+        <figcaption className="border-t border-slate-200 bg-white px-3 py-2 text-center text-sm text-slate-600">
+          Class of 2026 — where North Carolina&apos;s commits landed.
+        </figcaption>
       </figure>
 
       <p>
@@ -98,7 +102,6 @@ export function NcUnitedRecruitingAwards2026Content({
               award={winner.award}
               college={winner.college}
               stat={winner.stat}
-              logoSrc={winner.logoSrc}
               featuredAthletes={winner.featuredAthletes.map((athlete) => ({
                 name: athlete.name,
                 rank: athlete.rank,
@@ -112,6 +115,23 @@ export function NcUnitedRecruitingAwards2026Content({
       <hr />
 
       <h2>Top Haul: UNC Pembroke</h2>
+      <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm">
+        <div className="relative aspect-[16/10] w-full min-h-[220px]">
+          <NewsImageSlot
+            src={IMAGE_PATHS.uncpProgram}
+            alt="UNC Pembroke Braves wrestling room"
+            width={1200}
+            height={750}
+            fill
+            sizes="(max-width: 768px) 100vw, 48rem"
+            className="object-cover object-center"
+            label="UNC Pembroke wrestling"
+          />
+        </div>
+        <figcaption className="border-t border-slate-200 bg-white px-3 py-2 text-center text-sm text-slate-600">
+          UNC Pembroke Braves wrestling room
+        </figcaption>
+      </figure>
       <p>
         It wasn&apos;t close. UNC Pembroke walked away with seven North Carolina commits — Deyari El-Amin, Gavin Yow,
         James Campos, Cameron Massey, Abe Rodriguez, Kaulton Kuddie, and Imon Freeman — more than any other program in
@@ -140,15 +160,39 @@ export function NcUnitedRecruitingAwards2026Content({
       <hr />
 
       <h2>Best Top-End Class: Appalachian State</h2>
-      <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-sm">
-        <NewsImageSlot
-          src={IMAGE_PATHS.bentleySly}
-          alt="Bentley Sly, Stuart Cramer, App State commit"
-          width={1200}
-          height={800}
-          className="object-cover"
-          label="Bentley Sly — Stuart Cramer"
-        />
+      <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm">
+        <div className="relative aspect-[16/10] w-full min-h-[220px]">
+          <NewsImageSlot
+            src={IMAGE_PATHS.appStateProgram}
+            alt="Appalachian State wrestling at Barker Arena"
+            width={1200}
+            height={750}
+            fill
+            sizes="(max-width: 768px) 100vw, 48rem"
+            className="object-cover object-center"
+            label="App State wrestling"
+          />
+        </div>
+        <figcaption className="border-t border-slate-200 bg-white px-3 py-2 text-center text-sm text-slate-600">
+          Appalachian State wrestling — Barker Arena
+        </figcaption>
+      </figure>
+      <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm">
+        <div className="relative mx-auto aspect-[3/4] w-full max-h-[min(72vh,640px)] min-h-[280px] sm:max-w-md">
+          <NewsImageSlot
+            src={IMAGE_PATHS.bentleySly}
+            alt="Bentley Sly, Stuart Cramer, App State commit"
+            width={900}
+            height={1200}
+            fill
+            sizes="(max-width: 768px) 100vw, 28rem"
+            className="object-contain object-center"
+            label="Bentley Sly — Stuart Cramer"
+          />
+        </div>
+        <figcaption className="border-t border-slate-200 bg-white px-3 py-2 text-center text-sm text-slate-600">
+          Bentley Sly — Stuart Cramer, App State commit
+        </figcaption>
       </figure>
       <p>
         If UNC Pembroke won on volume, Appalachian State won on ceiling. The Mountaineers landed the consensus #1 wrestler
@@ -197,15 +241,22 @@ export function NcUnitedRecruitingAwards2026Content({
         </HardLink>
         .
       </p>
-      <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-sm">
-        <NewsImageSlot
-          src={IMAGE_PATHS.lynchburgProgram}
-          alt="Lynchburg University wrestling"
-          width={1200}
-          height={800}
-          className="object-cover"
-          label="Lynchburg program"
-        />
+      <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm">
+        <div className="relative aspect-[16/10] w-full min-h-[220px]">
+          <NewsImageSlot
+            src={IMAGE_PATHS.lynchburgProgram}
+            alt="Lynchburg Hornets wrestling room"
+            width={1200}
+            height={750}
+            fill
+            sizes="(max-width: 768px) 100vw, 48rem"
+            className="object-cover object-center"
+            label="Lynchburg program"
+          />
+        </div>
+        <figcaption className="border-t border-slate-200 bg-white px-3 py-2 text-center text-sm text-slate-600">
+          Lynchburg Hornets wrestling room
+        </figcaption>
       </figure>
       <p>
         The headline gets are the two ranked wrestlers.{" "}
@@ -232,15 +283,39 @@ export function NcUnitedRecruitingAwards2026Content({
       <hr />
 
       <h2>Emerging Pipeline: The Citadel</h2>
-      <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-sm">
-        <NewsImageSlot
-          src={IMAGE_PATHS.andrewMeadows}
-          alt="Andrew Meadows, Mount Airy, Citadel commit"
-          width={1200}
-          height={800}
-          className="object-cover"
-          label="Andrew Meadows — Mount Airy"
-        />
+      <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm">
+        <div className="relative aspect-[16/10] w-full min-h-[220px]">
+          <NewsImageSlot
+            src={IMAGE_PATHS.citadelProgram}
+            alt="The Citadel Bulldogs wrestling at McAlister Field House"
+            width={1200}
+            height={750}
+            fill
+            sizes="(max-width: 768px) 100vw, 48rem"
+            className="object-cover object-center"
+            label="Citadel wrestling"
+          />
+        </div>
+        <figcaption className="border-t border-slate-200 bg-white px-3 py-2 text-center text-sm text-slate-600">
+          The Citadel Bulldogs — McAlister Field House
+        </figcaption>
+      </figure>
+      <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm">
+        <div className="relative aspect-[16/10] w-full min-h-[220px]">
+          <NewsImageSlot
+            src={IMAGE_PATHS.andrewMeadows}
+            alt="Andrew Meadows signing day with Mount Airy and The Citadel"
+            width={1200}
+            height={750}
+            fill
+            sizes="(max-width: 768px) 100vw, 48rem"
+            className="object-cover object-center"
+            label="Andrew Meadows — Citadel signing day"
+          />
+        </div>
+        <figcaption className="border-t border-slate-200 bg-white px-3 py-2 text-center text-sm text-slate-600">
+          Andrew Meadows — Mount Airy signing day, The Citadel
+        </figcaption>
       </figure>
       <p>
         The fourth award recognizes a program building a brand-new path into North Carolina, and The Citadel made the
@@ -255,11 +330,18 @@ export function NcUnitedRecruitingAwards2026Content({
         (#22) — from a state that hasn&apos;t historically fed their roster.
       </p>
       <p>
-        Meadows is the prize. A three-time state champion out of Mount Airy and an NHSCA All-American, he&apos;s the
-        kind of multi-time champion that anchors a recruiting class. Hittepole brings his own decorated résumé: a two-time
-        state champion at Wheatmore and an NHSCA All-American, with a 4.2 GPA to match. Two Division I-caliber wrestlers,
-        both ranked, both NHSCA All-Americans — that&apos;s not an accident, it&apos;s the start of a new recruiting
-        relationship with the state.
+        At #6 in the class,{" "}
+        <AthleteLink name="Andrew Meadows" school="Mount Airy" profileIdMap={profileIdMap}>
+          Meadows
+        </AthleteLink>{" "}
+        is one of the top-ranked commits in the entire 2026 pool — a three-time state champion out of Mount Airy and an
+        NHSCA All-American.{" "}
+        <AthleteLink name="Dominic Hittepole" school="Wheatmore" profileIdMap={profileIdMap}>
+          Hittepole
+        </AthleteLink>{" "}
+        brings his own decorated résumé: a two-time state champion at Wheatmore and an NHSCA All-American, with a 4.2
+        GPA to match. Two Division I-caliber wrestlers, both ranked, both NHSCA All-Americans — that&apos;s not an
+        accident, it&apos;s the start of a new recruiting relationship with the state.
       </p>
       <p>
         What makes this more than a one-off is the leadership now driving it. In May 2026, The
