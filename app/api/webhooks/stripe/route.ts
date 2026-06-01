@@ -19,6 +19,19 @@ import { syntheticOrderItemSku } from "@/lib/order-item-sku"
 import { decodeLineItemsMetadata } from "@/lib/nhsca-hub-checkout-pricing"
 import { ensureNationalTeamOrderLineItems } from "@/lib/national-team-order-items"
 import { finalizePendingStoreOrder } from "@/lib/store/checkout-order"
+import {
+  isPlaceholderOrderCustomer,
+  mergeStripeStoreMetadata,
+  normalizeStripeStoreMetadata,
+  parseLegacyShippingAddressJson,
+  parseLegacyShippingMethodJson,
+  parseLegacyStoreItems,
+} from "@/lib/store/stripe-legacy-metadata"
+import {
+  buildTruncatedLegacyOrderNote,
+  isTruncatedLegacyStoreMetadata,
+  legacyStoreMetadataHasCart,
+} from "@/lib/store/legacy-checkout-guard"
 
 export const dynamic = "force-dynamic"
 
@@ -232,31 +245,74 @@ export async function POST(request: NextRequest) {
 
   if (event.type === "charge.updated") {
     const charge = event.data.object as Stripe.Charge
-    if (!charge.billing_details?.email || !charge.payment_intent) return NextResponse.json({ received: true })
+    if (!charge.payment_intent) return NextResponse.json({ received: true })
     try {
       const stripe = getStripe()
       const pi = await stripe.paymentIntents.retrieve(charge.payment_intent as string)
-      const orderId = (pi.metadata as Record<string, string> | null)?.order_id
-      if (!orderId) return NextResponse.json({ received: true })
-      const { data: order } = await admin.from("orders").select("id, customer_email, customer_name").eq("id", orderId).single()
+      const merged = mergeStripeStoreMetadata(
+        (pi.metadata || {}) as Record<string, string>,
+        (charge.metadata || {}) as Record<string, string>,
+      )
+      const email =
+        (charge.billing_details?.email ?? "").trim() ||
+        merged.customer_email?.trim() ||
+        ""
+      const name =
+        (charge.billing_details?.name ?? "").trim() ||
+        merged.customer_name?.trim() ||
+        ""
+      if (!email && !name && !merged.shipping_address) return NextResponse.json({ received: true })
+
+      const orderIdFromMeta = merged.order_id?.trim()
+      let orderQuery = admin.from("orders").select("id, customer_email, customer_name, shipping_address, shipping_method")
+      if (orderIdFromMeta) {
+        orderQuery = orderQuery.eq("id", orderIdFromMeta)
+      } else {
+        orderQuery = orderQuery.eq("stripe_payment_intent_id", pi.id)
+      }
+      const { data: order } = await orderQuery.maybeSingle()
       if (!order) return NextResponse.json({ received: true })
-      const isPlaceholder =
-        (order as { customer_email?: string }).customer_email === "unknown@example.com" ||
-        (order as { customer_name?: string }).customer_name === "Unknown" ||
-        !(order as { customer_name?: string }).customer_name?.trim()
-      if (!isPlaceholder) return NextResponse.json({ received: true })
-      const name = charge.billing_details.name || ""
-      const parts = name.trim().split(/\s+/)
-      const firstName = parts[0] || "Customer"
-      const lastName = parts.slice(1).join(" ") || ""
-      await admin
-        .from("orders")
-        .update({
-          customer_email: charge.billing_details.email,
-          customer_name: name.trim() || "Customer",
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", orderId)
+
+      const isPlaceholder = isPlaceholderOrderCustomer(
+        (order as { customer_email?: string }).customer_email ?? null,
+        (order as { customer_name?: string }).customer_name ?? null,
+      )
+      const shippingAddress = parseLegacyShippingAddressJson(merged.shipping_address)
+      const shippingMethod = parseLegacyShippingMethodJson(merged.shipping_method)
+      const addr = (order as { shipping_address?: Record<string, unknown> }).shipping_address ?? {}
+      const needsShipping = !String(addr.address1 ?? addr.line1 ?? "").trim()
+
+      if (!isPlaceholder && !needsShipping) return NextResponse.json({ received: true })
+
+      const resolvedName =
+        name ||
+        [shippingAddress.firstName, shippingAddress.lastName].filter(Boolean).join(" ").trim() ||
+        "Customer"
+      const update: Record<string, unknown> = { updated_at: new Date().toISOString() }
+      if (isPlaceholder && email) {
+        update.customer_email = email
+        update.email = email
+        update.customer_name = resolvedName
+      } else if (isPlaceholder && resolvedName !== "Customer") {
+        update.customer_name = resolvedName
+      }
+      if (needsShipping && Object.keys(shippingAddress).length > 0) {
+        update.shipping_address = shippingAddress
+        update.shipping_method = shippingMethod
+        const parts = resolvedName.split(/\s+/)
+        update.shipping_first_name = shippingAddress.firstName ?? parts[0] ?? ""
+        update.shipping_last_name = shippingAddress.lastName ?? parts.slice(1).join(" ") ?? ""
+        update.shipping_address_line1 = shippingAddress.address1 ?? ""
+        update.shipping_address_line2 = shippingAddress.address2 ?? null
+        update.shipping_city = shippingAddress.city ?? ""
+        update.shipping_state = shippingAddress.state ?? ""
+        update.shipping_postal_code = shippingAddress.zipCode ?? ""
+        update.shipping_country = shippingAddress.country ?? "US"
+        update.shipping_phone = shippingAddress.phone ?? null
+      }
+      if (Object.keys(update).length > 1) {
+        await admin.from("orders").update(update).eq("id", (order as { id: string }).id)
+      }
     } catch (e) {
       console.error("[webhooks/stripe] charge.updated error:", e)
     }
@@ -265,7 +321,20 @@ export async function POST(request: NextRequest) {
 
   if (event.type === "payment_intent.succeeded") {
     const paymentIntent = event.data.object as Stripe.PaymentIntent
-    const meta = (paymentIntent.metadata || {}) as Record<string, string>
+    let chargeMeta: Record<string, string> = {}
+    if (paymentIntent.latest_charge) {
+      try {
+        const stripe = getStripe()
+        const charge = await stripe.charges.retrieve(paymentIntent.latest_charge as string)
+        chargeMeta = (charge.metadata || {}) as Record<string, string>
+      } catch {
+        // ignore
+      }
+    }
+    const meta = mergeStripeStoreMetadata(
+      (paymentIntent.metadata || {}) as Record<string, string>,
+      chargeMeta,
+    )
     const description = (paymentIntent.description || "").toLowerCase()
     const hasStoreMetadata = !!(meta.order_id || meta.items || meta.customer_email)
     const isSubscriptionPayment =
@@ -566,6 +635,53 @@ export async function POST(request: NextRequest) {
     } catch {
       return NextResponse.json({ received: true })
     }
+    const { data: productCache } = await admin.from("products").select("id, name, image_url").limit(5000)
+    const productsList = productCache ?? []
+    const truncatedLegacy =
+      legacyStoreMetadataHasCart(meta) && isTruncatedLegacyStoreMetadata(meta, productsList)
+
+    if (truncatedLegacy) {
+      console.error("[webhooks/stripe] truncated legacy store metadata — order header only", {
+        paymentIntentId: paymentIntent.id,
+        declared: meta.item_count,
+        parsed: payload.items.length,
+      })
+      const { channel: storeChannel, business: storeBusiness } = channelBusinessFromMetadata(meta)
+      const { error: orderError } = await admin.from("orders").insert({
+        id: orderId,
+        order_number: orderNumber,
+        customer_email: payload.customerEmail,
+        email: payload.customerEmail,
+        customer_name: payload.customerName,
+        ...orderShippingFields(payload.customerName, payload.shippingAddress as Record<string, unknown>),
+        shipping_address: payload.shippingAddress,
+        shipping_method: payload.shippingMethod,
+        subtotal: payload.subtotal,
+        shipping_cost: payload.shipping,
+        tax: payload.tax,
+        discount: payload.discount,
+        total: payload.total,
+        status: "paid",
+        stripe_payment_intent_id: paymentIntent.id,
+        promo_code: payload.promoCode ?? null,
+        channel: storeChannel,
+        business: storeBusiness,
+        notes: buildTruncatedLegacyOrderNote(meta, productsList),
+      })
+      if (orderError) {
+        const code = (orderError as { code?: string }).code
+        if (code === "23505") return NextResponse.json({ received: true })
+        console.error("[webhooks/stripe] truncated legacy order insert:", orderError)
+        return NextResponse.json({ error: "Order insert failed" }, { status: 500 })
+      }
+      try {
+        await sendOrderReceiptIfEligible(admin, orderId)
+      } catch (emailErr) {
+        console.error("[webhooks/stripe] sendOrderReceiptIfEligible failed:", emailErr)
+      }
+      return NextResponse.json({ received: true })
+    }
+
     if (payload.items.length === 0 && payload.total > 0) {
       payload.items = [
         {
@@ -577,8 +693,6 @@ export async function POST(request: NextRequest) {
         },
       ]
     }
-    const { data: productCache } = await admin.from("products").select("id, name, image_url").limit(5000)
-    const productsList = productCache ?? []
     const orderItems = payload.items.map((i, idx) => {
       const product = i.id && i.id !== "drop-in" ? findProductByIdOrPrefix(productsList, String(i.id)) : null
       const resolvedProductId = product?.id ?? (typeof i.id === "string" && /^[0-9a-f-]{36}$/i.test(i.id) ? i.id : null)

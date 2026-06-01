@@ -1,7 +1,7 @@
 // Admin dashboard types and helpers
 
 /** Display category for orders list and reporting. Synced with Stripe/product source. */
-export type OrderCategory = "Apparel" | "Blue Sub" | "Drop-In" | "Tournament Fee" | "Other"
+export type OrderCategory = "Apparel" | "Blue Sub" | "Drop-In" | "Tournament Fee" | "Donation" | "Other"
 
 export interface Order {
   id: string

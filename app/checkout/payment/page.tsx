@@ -227,6 +227,13 @@ export default function PaymentPage() {
       }
 
       if (result.success && "clientSecret" in result && result.clientSecret) {
+        if ("orderId" in result && result.orderId) {
+          try {
+            sessionStorage.setItem("store_pending_order_id", result.orderId)
+          } catch {
+            // ignore private mode
+          }
+        }
         setClientSecret(result.clientSecret)
       } else {
         toast({

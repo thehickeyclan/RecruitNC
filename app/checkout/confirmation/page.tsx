@@ -72,6 +72,27 @@ export default function ConfirmationPage() {
       }
 
       if (paymentIntentId?.startsWith("pi_")) {
+        const pendingFromStorage =
+          typeof window !== "undefined" ? sessionStorage.getItem("store_pending_order_id") : null
+        if (pendingFromStorage) {
+          try {
+            sessionStorage.removeItem("store_pending_order_id")
+          } catch {
+            // ignore
+          }
+          try {
+            const result = await getOrder(pendingFromStorage)
+            if (result.success && result.orderNumber) {
+              setOrderNumber(result.orderNumber)
+              setOrderData(result)
+              clearCart()
+              setIsProcessing(false)
+              return
+            }
+          } catch {
+            // fall through to PI finalize
+          }
+        }
         try {
           const result = await createOrderFromPaymentIntent(paymentIntentId)
           if (result.success && result.orderNumber) {

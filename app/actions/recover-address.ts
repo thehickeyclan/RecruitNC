@@ -2,6 +2,7 @@
 
 import Stripe from "stripe"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { fetchMergedStoreMetadata, parseLegacyShippingAddressJson } from "@/lib/store/stripe-legacy-metadata"
 
 const stripeSecret = process.env.STRIPE_SECRET_KEY
 
@@ -31,14 +32,16 @@ export async function recoverAddressFromStripe(
     }
 
     const stripe = getStripe()
-    const pi = await stripe.paymentIntents.retrieve(piId)
-    const meta = (pi.metadata || {}) as Record<string, string>
+    const { meta, paymentIntent: pi } = await fetchMergedStoreMetadata(stripe, piId)
 
-    let shippingAddress: Record<string, unknown> = {}
-    try {
-      shippingAddress = JSON.parse(meta.shipping_address || "{}") as Record<string, unknown>
-    } catch {
-      // ignore
+    let shippingAddress = parseLegacyShippingAddressJson(meta.shipping_address)
+
+    if (Object.keys(shippingAddress).length === 0) {
+      try {
+        shippingAddress = JSON.parse(meta.shipping_address || "{}") as Record<string, unknown>
+      } catch {
+        // ignore
+      }
     }
 
     if (Object.keys(shippingAddress).length === 0 && pi.shipping?.address) {

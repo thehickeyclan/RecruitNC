@@ -2,6 +2,13 @@ import { NextResponse } from "next/server"
 import Stripe from "stripe"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { flatShippingFromAddress, shippingNameFromCustomerName } from "@/lib/order-shipping"
+import {
+  fetchMergedStoreMetadata,
+  isPlaceholderOrderCustomer,
+  parseLegacyShippingAddressJson,
+  parseLegacyShippingMethodJson,
+} from "@/lib/store/stripe-legacy-metadata"
 
 export const dynamic = "force-dynamic"
 
@@ -10,16 +17,6 @@ const stripeSecret = process.env.STRIPE_SECRET_KEY
 function getStripe(): Stripe {
   if (!stripeSecret) throw new Error("STRIPE_SECRET_KEY not set")
   return new Stripe(stripeSecret)
-}
-
-function isPlaceholderCustomer(email: string | null, name: string | null): boolean {
-  if (!email || !email.trim()) return true
-  const e = email.trim().toLowerCase()
-  if (e === "unknown@example.com" || e === "no email" || e.includes("placeholder")) return true
-  if (!name || !name.trim()) return false
-  const n = name.trim().toLowerCase()
-  if (n === "unknown" || n === "customer" || n === "guest") return true
-  return false
 }
 
 async function requireAdmin() {
@@ -31,7 +28,7 @@ async function requireAdmin() {
   return { ok: true as const }
 }
 
-/** POST: Backfill customer_email and customer_name for orders that have stripe_payment_intent_id but missing/placeholder customer. Uses Stripe charge billing_details. */
+/** POST: Backfill customer + shipping from Stripe Charge metadata (legacy store) or billing_details. */
 export async function POST() {
   const auth = await requireAdmin()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
@@ -42,13 +39,14 @@ export async function POST() {
 
     const { data: orders } = await admin
       .from("orders")
-      .select("id, order_number, customer_email, customer_name, stripe_payment_intent_id")
+      .select("id, order_number, customer_email, customer_name, stripe_payment_intent_id, shipping_address, shipping_method")
       .not("stripe_payment_intent_id", "is", null)
 
-    const needBackfill = (orders ?? []).filter(
-      (o: { customer_email?: string | null; customer_name?: string | null }) =>
-        isPlaceholderCustomer(o.customer_email ?? null, o.customer_name ?? null)
-    )
+    const needBackfill = (orders ?? []).filter((o) => {
+      const addr = (o.shipping_address as Record<string, unknown>) || {}
+      const missingAddress = !String(addr.address1 ?? addr.line1 ?? "").trim()
+      return isPlaceholderOrderCustomer(o.customer_email ?? null, o.customer_name ?? null) || missingAddress
+    })
 
     let updated = 0
     let failed = 0
@@ -57,26 +55,68 @@ export async function POST() {
       const piId = order.stripe_payment_intent_id as string
       if (!piId) continue
       try {
-        const pi = await stripe.paymentIntents.retrieve(piId)
-        const chargeId = pi.latest_charge
-        if (!chargeId) {
+        const { meta } = await fetchMergedStoreMetadata(stripe, piId)
+        const email = meta.customer_email?.trim()
+        const name = meta.customer_name?.trim()
+        const shippingAddress = parseLegacyShippingAddressJson(meta.shipping_address)
+        const shippingMethod = parseLegacyShippingMethodJson(meta.shipping_method)
+
+        if (!email && !name && Object.keys(shippingAddress).length === 0) {
+          const pi = await stripe.paymentIntents.retrieve(piId)
+          const chargeId = pi.latest_charge
+          if (chargeId) {
+            const charge = await stripe.charges.retrieve(chargeId as string)
+            const billingEmail = (charge.billing_details?.email ?? "").trim()
+            const billingName = (charge.billing_details?.name ?? "").trim()
+            if (!billingEmail && !billingName) {
+              failed++
+              continue
+            }
+            const update = {
+              customer_email: billingEmail || order.customer_email,
+              email: billingEmail || order.customer_email,
+              customer_name: billingName || order.customer_name || (billingEmail ? billingEmail.split("@")[0] : "Customer"),
+            }
+            const { error } = await admin.from("orders").update(update).eq("id", order.id)
+            if (error) failed++
+            else updated++
+            continue
+          }
           failed++
           continue
         }
-        const charge = await stripe.charges.retrieve(chargeId as string)
-        const email = (charge.billing_details?.email ?? "").trim()
-        const name = (charge.billing_details?.name ?? "").trim()
-        if (!email && !name) {
+
+        const resolvedName =
+          name ||
+          [shippingAddress.firstName, shippingAddress.lastName].filter(Boolean).join(" ").trim() ||
+          order.customer_name ||
+          "Customer"
+
+        const update: Record<string, unknown> = {}
+        if (email && isPlaceholderOrderCustomer(order.customer_email ?? null, order.customer_name ?? null)) {
+          update.customer_email = email
+          update.email = email
+          update.customer_name = resolvedName
+        } else if (name && isPlaceholderOrderCustomer(order.customer_email ?? null, order.customer_name ?? null)) {
+          update.customer_name = name
+        }
+
+        const addr = (order.shipping_address as Record<string, unknown>) || {}
+        if (!String(addr.address1 ?? addr.line1 ?? "").trim() && Object.keys(shippingAddress).length > 0) {
+          const shippingName = shippingNameFromCustomerName(resolvedName)
+          Object.assign(update, flatShippingFromAddress(shippingAddress))
+          update.shipping_first_name = shippingName.shipping_first_name
+          update.shipping_last_name = shippingName.shipping_last_name
+          update.shipping_address = shippingAddress
+          update.shipping_method = shippingMethod
+        }
+
+        if (Object.keys(update).length === 0) {
           failed++
           continue
         }
-        const { error } = await admin
-          .from("orders")
-          .update({
-            customer_email: email || order.customer_email,
-            customer_name: name || order.customer_name || (email ? email.split("@")[0] : "Customer"),
-          })
-          .eq("id", order.id)
+
+        const { error } = await admin.from("orders").update(update).eq("id", order.id)
         if (error) {
           console.error("[admin/orders/backfill-customers] update", order.id, error)
           failed++

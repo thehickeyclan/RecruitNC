@@ -48,6 +48,17 @@ export function CheckoutForm({ clientSecret, total }: CheckoutFormProps) {
       }
 
       if (paymentIntent?.status === "succeeded" && paymentIntent.id) {
+        const pendingOrderId =
+          typeof window !== "undefined" ? sessionStorage.getItem("store_pending_order_id") : null
+        if (pendingOrderId) {
+          try {
+            sessionStorage.removeItem("store_pending_order_id")
+          } catch {
+            // ignore
+          }
+          window.location.href = `/checkout/confirmation?order_id=${pendingOrderId}`
+          return
+        }
         try {
           const orderResult = await createOrderFromPaymentIntent(paymentIntent.id)
           if (orderResult.success && orderResult.orderId) {

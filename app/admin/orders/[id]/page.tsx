@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation"
 import { getOrderDetails } from "@/app/actions/orders"
 import { AdminOrderDetailClient } from "@/components/admin/admin-order-detail-client"
+import { resolveCustomerDisplay } from "@/lib/admin/resolve-order-display"
+import type { ResolvedAdminOrderDisplay } from "@/lib/admin/resolve-order-display"
 
 export const dynamic = "force-dynamic"
 
@@ -22,71 +24,9 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
   }
 
   const order = result.order
+  const display = (order.admin_display ?? null) as ResolvedAdminOrderDisplay | null
   const addr = order.shipping_address || {}
-
-  const ntReg = order.national_team_registration as {
-    athlete_first_name?: string
-    athlete_last_name?: string
-    event_slug?: string
-  } | null
-  const ntLineItems = (order.national_team_line_items ?? []) as Array<{
-    name: string
-    amount_cents: number
-    quantity?: number
-  }>
-  const useNationalTeamDisplay = Boolean(order.display_uses_national_team && ntLineItems.length > 0)
-
-  const orderItems = (useNationalTeamDisplay ? ntLineItems : order.order_items || []).map((item: any, index: number) => {
-    if (useNationalTeamDisplay) {
-      const qty = item.quantity ?? 1
-      const unit = (item.amount_cents ?? 0) / 100 / qty
-      return {
-        id: `nt-${index}`,
-        name: item.name,
-        variant: "NHSCA hub checkout",
-        sku: "national-team",
-        quantity: qty,
-        price: unit,
-        image: "/placeholder.svg",
-      }
-    }
-
-    const variantObj = item.variant || {}
-    const color = variantObj.color || ""
-    const size = variantObj.size || "One Size"
-    let variant = ""
-    if (color && size) variant = `${color} / ${size}`
-    else if (color) variant = color
-    else if (size && size !== "One Size") variant = size
-    else variant = "Standard"
-
-    const imageUrl =
-      item.image_url ||
-      item.product_image_url ||
-      (item.product as any)?.image_url ||
-      "/placeholder.svg"
-
-    return {
-      id: item.id || `${order.id}-item-${index}`,
-      name: item.product_name || (item.product as any)?.name || "Unknown Product",
-      variant: variant.trim(),
-      sku: item.sku || "N/A",
-      quantity: Number(item.quantity || 1),
-      price: Number(item.price || 0),
-      image: imageUrl,
-    }
-  })
-
-  const customerName =
-    addr.firstName && addr.lastName
-      ? `${addr.firstName} ${addr.lastName}`.trim()
-      : order.shipping_first_name && order.shipping_last_name
-        ? `${order.shipping_first_name} ${order.shipping_last_name}`
-        : order.customer_name ||
-          (order.customer_email && order.customer_email !== "unknown@example.com"
-            ? order.customer_email.split("@")[0]
-            : null) ||
-          "Guest"
+  const customer = resolveCustomerDisplay(order)
 
   const line1 =
     order.shipping_address_line1 ??
@@ -107,13 +47,10 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
 
   const shippingAddress = {
     name:
-      [
-        addr.firstName || order.shipping_first_name,
-        addr.lastName || order.shipping_last_name,
-      ]
+      [addr.firstName || order.shipping_first_name, addr.lastName || order.shipping_last_name]
         .filter(Boolean)
         .join(" ")
-        .trim() || customerName || "Customer",
+        .trim() || customer.name || "Customer",
     line1: String(line1).trim(),
     line2: line2 ? String(line2).trim() : null,
     city: String(city).trim(),
@@ -123,29 +60,24 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
     phone,
   }
 
-  const shippingMethod = useNationalTeamDisplay
-    ? "National team event (no shipping)"
-    : typeof order.shipping_method === "string"
-      ? order.shipping_method
-      : (order.shipping_method as any)?.name ??
-        (order.shipping_method as any)?.description ??
-        "Standard Shipping"
-
   const trackingInfo = order.tracking_info
   let trackingNumber: string | null = null
   let carrier: string | null = null
   if (trackingInfo && typeof trackingInfo === "object") {
     trackingNumber =
-      (trackingInfo as any).tracking_number ?? (trackingInfo as any).trackingNumber ?? null
-    carrier = (trackingInfo as any).carrier ?? null
+      (trackingInfo as { tracking_number?: string; trackingNumber?: string }).tracking_number ??
+      (trackingInfo as { trackingNumber?: string }).trackingNumber ??
+      null
+    carrier = (trackingInfo as { carrier?: string }).carrier ?? null
   }
-  if (!trackingNumber && (order as any).tracking_number) {
-    trackingNumber = (order as any).tracking_number
+  if (!trackingNumber && order.tracking_number) {
+    trackingNumber = order.tracking_number as string
   }
-  if (!carrier && (order as any).carrier) {
-    carrier = (order as any).carrier
+  if (!carrier && order.carrier) {
+    carrier = order.carrier as string
   }
 
+  const showFulfillmentTimeline = display?.showShipping ?? true
   const timeline = [
     {
       event: "Order placed",
@@ -157,55 +89,61 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
       date: order.created_at ? new Date(order.created_at) : new Date(),
       completed: order.status !== "pending",
     },
-    {
-      event: "Processing started",
-      date: order.updated_at ? new Date(order.updated_at) : null,
-      completed: ["processing", "shipped", "delivered"].includes(order.status),
-    },
-    {
-      event: "Shipped",
-      date: order.shipped_at ? new Date(order.shipped_at) : null,
-      completed: ["shipped", "delivered"].includes(order.status),
-    },
-    {
-      event: "Delivered",
-      date: order.delivered_at ? new Date(order.delivered_at) : null,
-      completed: order.status === "delivered",
-    },
+    ...(showFulfillmentTimeline
+      ? [
+          {
+            event: "Processing started",
+            date: order.updated_at ? new Date(order.updated_at) : null,
+            completed: ["processing", "shipped", "delivered"].includes(order.status),
+          },
+          {
+            event: "Shipped",
+            date: order.shipped_at ? new Date(order.shipped_at) : null,
+            completed: ["shipped", "delivered"].includes(order.status),
+          },
+          {
+            event: "Delivered",
+            date: order.delivered_at ? new Date(order.delivered_at) : null,
+            completed: order.status === "delivered",
+          },
+        ]
+      : []),
   ]
-
-  const safeOrderItems = Array.isArray(orderItems) ? orderItems : []
 
   const orderData = {
     id: order.id,
     orderNumber: order.order_number || `NC-${String(order.id).slice(0, 8)}`,
-    customerName,
-    customerEmail: order.customer_email || "No email",
+    customerName: customer.name,
+    customerEmail: customer.email,
     date: order.created_at ? new Date(order.created_at) : new Date(),
     status: (order.status || "pending").toLowerCase(),
-    items: safeOrderItems.length,
+    items: display?.lineItems.length ?? 0,
     total: Number(order.total ?? 0),
     subtotal: Number(order.subtotal ?? 0),
     shipping: Number(order.shipping_cost ?? 0),
     tax: Number(order.tax ?? 0),
     discount: Number(order.discount ?? 0),
     promoCode: order.promo_code ?? null,
-    shippingMethod,
+    shippingMethod: display?.fulfillmentLabel ?? "Standard Shipping",
     shippingAddress,
     trackingNumber,
     carrier,
-    orderItems: safeOrderItems,
+    orderItems: display?.lineItems ?? [],
     timeline,
     phone,
     createdAt: order.created_at,
     updatedAt: order.updated_at ?? order.created_at,
     shippedAt: order.shipped_at ?? null,
     deliveredAt: order.delivered_at ?? null,
-    nationalTeamAthlete: ntReg
-      ? `${ntReg.athlete_first_name ?? ""} ${ntReg.athlete_last_name ?? ""}`.trim()
-      : null,
-    nationalTeamSummary: (order.national_team_summary as string | null) ?? null,
-    isNationalTeamOrder: useNationalTeamDisplay,
+    categoryLabel: display?.category ?? "Other",
+    typeBanner: display?.banner ?? null,
+    contextRows: display?.contextRows ?? [],
+    showShipping: display?.showShipping ?? true,
+    showTracking: display?.showTracking ?? true,
+    integritySummary: display?.integritySummary ?? null,
+    integrityDetail: display?.integrityDetail ?? null,
+    fulfillmentUnsafe: display?.fulfillmentUnsafe ?? false,
+    showRecoverItems: display?.showRecoverItems ?? false,
   }
 
   return <AdminOrderDetailClient order={orderData} />

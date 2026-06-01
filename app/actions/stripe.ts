@@ -13,6 +13,12 @@ import {
   insertStoreOrder,
   storePaymentIntentMetadata,
 } from "@/lib/store/checkout-order"
+import {
+  buildTruncatedLegacyOrderNote,
+  isTruncatedLegacyStoreMetadata,
+  legacyStoreMetadataHasCart,
+} from "@/lib/store/legacy-checkout-guard"
+import { mergeStripeStoreMetadata } from "@/lib/store/stripe-legacy-metadata"
 
 export type CreatePaymentIntentParams = {
   customerEmail: string
@@ -65,7 +71,7 @@ function orderRowToTotals(row: {
 export async function createPaymentIntent(
   params: CreatePaymentIntentParams
 ): Promise<
-  | { success: true; clientSecret: string }
+  | { success: true; clientSecret: string; orderId: string }
   | { success: true; isFree: true; orderId: string }
   | { success: false; error: string }
 > {
@@ -128,7 +134,14 @@ export async function createPaymentIntent(
       await deletePendingStoreOrder(supabase, pending.orderId)
       return { success: false, error: "Stripe did not return a client secret." }
     }
-    return { success: true, clientSecret: pi.client_secret }
+
+    await supabase
+      .from("orders")
+      .update({ stripe_payment_intent_id: pi.id })
+      .eq("id", pending.orderId)
+      .eq("status", "pending")
+
+    return { success: true, clientSecret: pi.client_secret, orderId: pending.orderId }
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to create payment"
     console.error("[store] createPaymentIntent:", err)
@@ -192,6 +205,13 @@ async function createOrderFromPaymentIntentMetadata(
   const payload = parseOrderFromMetadata(metadata)
   if (!payload || !payload.customerEmail) return null
 
+  const { data: productCache } = await supabase.from("products").select("id, name, image_url").limit(5000)
+  const productsList = productCache ?? []
+  const truncatedLegacy =
+    !pendingOrderId &&
+    legacyStoreMetadataHasCart(metadata) &&
+    isTruncatedLegacyStoreMetadata(metadata, productsList)
+
   const orderNumber = generateOrderNumber()
   const orderId = crypto.randomUUID()
   const shippingName = shippingNameFromCustomerName(payload.customerName)
@@ -221,6 +241,7 @@ async function createOrderFromPaymentIntentMetadata(
     stripe_payment_intent_id: paymentIntentId,
     promo_code: payload.promoCode ?? null,
     recruitnc_user_id: ridPi,
+    ...(truncatedLegacy ? { notes: buildTruncatedLegacyOrderNote(metadata, productsList) } : {}),
   })
 
   if (orderError) {
@@ -259,6 +280,27 @@ async function createOrderFromPaymentIntentMetadata(
     }
     console.error("[store] createOrderFromPaymentIntentMetadata insert order:", orderError)
     return null
+  }
+
+  if (truncatedLegacy) {
+    console.error("[store] refusing partial legacy line items for PI", paymentIntentId, {
+      declared: metadata.item_count,
+      parsed: payload.items.length,
+    })
+    return {
+      orderId,
+      orderNumber,
+      totals: orderRowToTotals({
+        subtotal: payload.subtotal,
+        shipping_cost: payload.shipping,
+        tax: payload.tax,
+        discount: payload.discount,
+        total: payload.total,
+      }),
+      items: [],
+      shippingAddress: payload.shippingAddress,
+      shippingMethod: payload.shippingMethod,
+    }
   }
 
   const orderItems = payload.items.map(
@@ -533,7 +575,20 @@ export async function createOrderFromPaymentIntent(
     }
 
     const pi = await stripe.paymentIntents.retrieve(paymentIntentId)
-    const meta = (pi.metadata || {}) as Record<string, string>
+    let chargeMeta: Record<string, string> = {}
+    const chargeId = pi.latest_charge
+    if (chargeId && typeof chargeId === "string") {
+      try {
+        const charge = await stripe.charges.retrieve(chargeId)
+        chargeMeta = (charge.metadata || {}) as Record<string, string>
+      } catch {
+        // ignore
+      }
+    }
+    const meta = mergeStripeStoreMetadata(
+      (pi.metadata || {}) as Record<string, string>,
+      chargeMeta,
+    )
     let created = await createOrderFromPaymentIntentMetadata(supabase, paymentIntentId, meta)
 
     // Fallback: Payment Intent from Checkout Session often has no metadata; find Session and create order from it.
@@ -548,7 +603,6 @@ export async function createOrderFromPaymentIntent(
       }
 
       // Last resort: create minimal order from Charge (amount + billing_details) so we have a record.
-      const chargeId = pi.latest_charge
       if (chargeId && typeof chargeId === "string") {
         console.warn("[RecruitNC] recover order: creating minimal order from Charge", chargeId)
         created = await createOrderFromCharge(supabase, paymentIntentId, chargeId)
