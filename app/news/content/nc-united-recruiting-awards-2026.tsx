@@ -16,7 +16,12 @@ import type { ReactNode } from "react"
 import Image from "next/image"
 import { AwardCard } from "@/components/news/award-card"
 import { HardLink } from "@/components/hard-link"
-import { NewsImageSlot } from "@/components/news/news-image-slot"
+import {
+  RecruitingAwardsAthleteLandscapeFigure,
+  RecruitingAwardsAthletePortraitFigure,
+  RecruitingAwardsFloatSection,
+  RecruitingAwardsProgramFigure,
+} from "@/components/news/recruiting-awards-figure"
 import { PullQuote } from "@/components/news/pull-quote"
 import {
   RecruitingAwardsCommitsByCollegeChart,
@@ -48,27 +53,29 @@ function AthleteLink({
 
 export function NcUnitedRecruitingAwards2026Content({
   profileIdMap = {},
+  collegeLogoMap = {},
 }: {
   profileIdMap?: Record<string, string>
+  collegeLogoMap?: Record<string, string>
 }) {
   return (
     <article className="min-w-0 max-w-none overflow-x-hidden text-slate-700 [&_h2]:text-xl [&_h2]:mt-8 [&_h2]:mb-4 [&_h2]:font-bold [&_h2]:text-[#13294B] [&_h3]:text-lg [&_h3]:mt-6 [&_h3]:mb-3 [&_h3]:font-bold [&_p]:my-3 [&_hr]:my-8 [&_hr]:border-slate-200">
       <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">NC United Wrestling</p>
       <p className="text-slate-600 font-medium">By NC United · May 2026</p>
 
-      <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm">
-        <div className="relative mx-auto aspect-[387/463] w-full max-h-[min(72vh,560px)] min-h-[240px]">
+      <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+        <div className="relative aspect-[16/9] w-full bg-[#13294B]">
           <Image
             src={IMAGE_PATHS.hero}
-            alt="North Carolina Class of 2026 wrestling commits"
+            alt="NC United Recruiting Awards — Class of 2026"
             fill
-            className="object-contain object-center p-2 sm:p-4"
+            className="object-cover object-center"
             sizes="(max-width: 768px) 100vw, 48rem"
             priority
           />
         </div>
         <figcaption className="border-t border-slate-200 bg-white px-3 py-2 text-center text-sm text-slate-600">
-          Class of 2026 — where North Carolina&apos;s commits landed.
+          NC United Recruiting Awards — Class of 2026 male commits.
         </figcaption>
       </figure>
 
@@ -102,6 +109,7 @@ export function NcUnitedRecruitingAwards2026Content({
               award={winner.award}
               college={winner.college}
               stat={winner.stat}
+              logoUrl={collegeLogoMap[winner.college]}
               featuredAthletes={winner.featuredAthletes.map((athlete) => ({
                 name: athlete.name,
                 rank: athlete.rank,
@@ -115,23 +123,11 @@ export function NcUnitedRecruitingAwards2026Content({
       <hr />
 
       <h2>Top Haul: UNC Pembroke</h2>
-      <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm">
-        <div className="relative aspect-[16/10] w-full min-h-[220px]">
-          <NewsImageSlot
-            src={IMAGE_PATHS.uncpProgram}
-            alt="UNC Pembroke Braves wrestling room"
-            width={1200}
-            height={750}
-            fill
-            sizes="(max-width: 768px) 100vw, 48rem"
-            className="object-cover object-center"
-            label="UNC Pembroke wrestling"
-          />
-        </div>
-        <figcaption className="border-t border-slate-200 bg-white px-3 py-2 text-center text-sm text-slate-600">
-          UNC Pembroke Braves wrestling room
-        </figcaption>
-      </figure>
+      <RecruitingAwardsProgramFigure
+        src={IMAGE_PATHS.uncpProgram}
+        alt="UNC Pembroke Braves wrestling room"
+        caption="UNC Pembroke Braves wrestling room"
+      />
       <p>
         It wasn&apos;t close. UNC Pembroke walked away with seven North Carolina commits — Deyari El-Amin, Gavin Yow,
         James Campos, Cameron Massey, Abe Rodriguez, Kaulton Kuddie, and Imon Freeman — more than any other program in
@@ -160,69 +156,47 @@ export function NcUnitedRecruitingAwards2026Content({
       <hr />
 
       <h2>Best Top-End Class: Appalachian State</h2>
-      <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm">
-        <div className="relative aspect-[16/10] w-full min-h-[220px]">
-          <NewsImageSlot
-            src={IMAGE_PATHS.appStateProgram}
-            alt="Appalachian State wrestling at Barker Arena"
-            width={1200}
-            height={750}
-            fill
-            sizes="(max-width: 768px) 100vw, 48rem"
-            className="object-cover object-center"
-            label="App State wrestling"
-          />
-        </div>
-        <figcaption className="border-t border-slate-200 bg-white px-3 py-2 text-center text-sm text-slate-600">
-          Appalachian State wrestling — Barker Arena
-        </figcaption>
-      </figure>
-      <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm">
-        <div className="relative mx-auto aspect-[3/4] w-full max-h-[min(72vh,640px)] min-h-[280px] sm:max-w-md">
-          <NewsImageSlot
-            src={IMAGE_PATHS.bentleySly}
-            alt="Bentley Sly, Stuart Cramer, App State commit"
-            width={900}
-            height={1200}
-            fill
-            sizes="(max-width: 768px) 100vw, 28rem"
-            className="object-contain object-center"
-            label="Bentley Sly — Stuart Cramer"
-          />
-        </div>
-        <figcaption className="border-t border-slate-200 bg-white px-3 py-2 text-center text-sm text-slate-600">
-          Bentley Sly — Stuart Cramer, App State commit
-        </figcaption>
-      </figure>
-      <p>
-        If UNC Pembroke won on volume, Appalachian State won on ceiling. The Mountaineers landed the consensus #1 wrestler
-        in the entire class —{" "}
-        <AthleteLink name="Bentley Sly" school="Stuart Cramer" profileIdMap={profileIdMap}>
-          Bentley Sly
-        </AthleteLink>{" "}
-        — along with #12{" "}
-        <AthleteLink name="Avery Rhymer" school="St. Stephens" profileIdMap={profileIdMap}>
-          Avery Rhymer
-        </AthleteLink>
-        , giving them the most decorated single haul of the class.
-      </p>
+      <RecruitingAwardsProgramFigure
+        src={IMAGE_PATHS.appStateProgram}
+        alt="Appalachian State wrestling at Barker Arena"
+        caption="Appalachian State wrestling — Barker Arena"
+      />
+      <RecruitingAwardsFloatSection>
+        <RecruitingAwardsAthletePortraitFigure
+          src={IMAGE_PATHS.bentleySly}
+          alt="Bentley Sly, Stuart Cramer, App State commit"
+          caption="Bentley Sly — Stuart Cramer, App State commit"
+        />
+        <p>
+          If UNC Pembroke won on volume, Appalachian State won on ceiling. The Mountaineers landed the consensus #1 wrestler
+          in the entire class —{" "}
+          <AthleteLink name="Bentley Sly" school="Stuart Cramer" profileIdMap={profileIdMap}>
+            Bentley Sly
+          </AthleteLink>{" "}
+          — along with #12{" "}
+          <AthleteLink name="Avery Rhymer" school="St. Stephens" profileIdMap={profileIdMap}>
+            Avery Rhymer
+          </AthleteLink>
+          , giving them the most decorated single haul of the class.
+        </p>
+        <p>
+          Sly&apos;s résumé is the kind that doesn&apos;t come around often. The Stuart Cramer star is a four-time state
+          champion, a three-time NHSCA All-American, and an Ironman All-American — and as a senior he took second at the App
+          State Open, a college tournament loaded with Division I hammers. Beating that level of competition before
+          he&apos;s even set foot on campus tells you exactly what App State is getting. He is, by any reasonable measure,
+          the crown jewel of North Carolina&apos;s 2026 class, and he&apos;s staying in-state to wrestle Division I at App
+          State.
+        </p>
+        <p>
+          Rhymer wasn&apos;t simply a supporting piece. He finished his career as a state champion, NHSCA All-American, and
+          one of the most consistent upper-weight performers in North Carolina. Two Division I signees, one of them the best
+          wrestler in the state — that&apos;s how you win the top-end award. Quality over quantity, and the quality here is
+          undeniable.
+        </p>
+      </RecruitingAwardsFloatSection>
       <PullQuote attribution="Appalachian State">
         The most decorated single haul of the class.
       </PullQuote>
-      <p>
-        Sly&apos;s résumé is the kind that doesn&apos;t come around often. The Stuart Cramer star is a four-time state
-        champion, a three-time NHSCA All-American, and an Ironman All-American — and as a senior he took second at the App
-        State Open, a college tournament loaded with Division I hammers. Beating that level of competition before
-        he&apos;s even set foot on campus tells you exactly what App State is getting. He is, by any reasonable measure,
-        the crown jewel of North Carolina&apos;s 2026 class, and he&apos;s staying in-state to wrestle Division I at App
-        State.
-      </p>
-      <p>
-        Rhymer wasn&apos;t simply a supporting piece. He finished his career as a state champion, NHSCA All-American, and
-        one of the most consistent upper-weight performers in North Carolina. Two Division I signees, one of them the best
-        wrestler in the state — that&apos;s how you win the top-end award. Quality over quantity, and the quality here is
-        undeniable.
-      </p>
 
       <hr />
 
@@ -241,108 +215,77 @@ export function NcUnitedRecruitingAwards2026Content({
         </HardLink>
         .
       </p>
-      <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm">
-        <div className="relative aspect-[16/10] w-full min-h-[220px]">
-          <NewsImageSlot
-            src={IMAGE_PATHS.lynchburgProgram}
-            alt="Lynchburg Hornets wrestling room"
-            width={1200}
-            height={750}
-            fill
-            sizes="(max-width: 768px) 100vw, 48rem"
-            className="object-cover object-center"
-            label="Lynchburg program"
-          />
-        </div>
-        <figcaption className="border-t border-slate-200 bg-white px-3 py-2 text-center text-sm text-slate-600">
-          Lynchburg Hornets wrestling room
-        </figcaption>
-      </figure>
-      <p>
-        The headline gets are the two ranked wrestlers.{" "}
-        <AthleteLink name="Jacob Reigel" school="Mount Pleasant" profileIdMap={profileIdMap}>
-          Jacob Reigel
-        </AthleteLink>
-        , the #15 wrestler in the class out of Mount Pleasant, is a two-time state runner-up and an NHSCA All-American who
-        closed his senior season placing eighth in the country.{" "}
-        <AthleteLink name="Cameron Gue" school="Mount Pleasant" profileIdMap={profileIdMap}>
-          Cameron Gue
-        </AthleteLink>
-        , ranked #29, brings a 4A state title and a long history of national-tournament reps dating back multiple seasons.
-        Landing two ranked, nationally-tested wrestlers without the recruiting advantages traditionally associated with
-        established Division I or Division II programs is the definition of a value find.
-      </p>
+      <RecruitingAwardsProgramFigure
+        src={IMAGE_PATHS.lynchburgProgram}
+        alt="Lynchburg Hornets wrestling"
+        caption="Lynchburg Hornets wrestling"
+        contain
+      />
+      <RecruitingAwardsFloatSection>
+        <p>
+          The headline gets are the two ranked wrestlers.{" "}
+          <AthleteLink name="Jacob Reigel" school="Mount Pleasant" profileIdMap={profileIdMap}>
+            Jacob Reigel
+          </AthleteLink>
+          , the #15 wrestler in the class out of Mount Pleasant, is a two-time state runner-up and an NHSCA All-American who
+          closed his senior season placing eighth in the country.{" "}
+          <AthleteLink name="Cameron Gue" school="Mount Pleasant" profileIdMap={profileIdMap}>
+            Cameron Gue
+          </AthleteLink>
+          , ranked #29, brings a 4A state title and a long history of national-tournament reps dating back multiple seasons.
+          Landing two ranked, nationally-tested wrestlers without the recruiting advantages traditionally associated with
+          established Division I or Division II programs is the definition of a value find.
+        </p>
+        <p>
+          Six commits, two of them ranked, before the program has wrestled a single match — Barber built a debut class from
+          nothing that programs with decades of history would be proud of.
+        </p>
+      </RecruitingAwardsFloatSection>
       <PullQuote attribution="Lynchburg">
         Six commits, two of them ranked, before the program has wrestled a single match.
       </PullQuote>
-      <p>
-        Six commits, two of them ranked, before the program has wrestled a single match — Barber built a debut class from
-        nothing that programs with decades of history would be proud of.
-      </p>
 
       <hr />
 
       <h2>Emerging Pipeline: The Citadel</h2>
-      <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm">
-        <div className="relative aspect-[16/10] w-full min-h-[220px]">
-          <NewsImageSlot
-            src={IMAGE_PATHS.citadelProgram}
-            alt="The Citadel Bulldogs wrestling at McAlister Field House"
-            width={1200}
-            height={750}
-            fill
-            sizes="(max-width: 768px) 100vw, 48rem"
-            className="object-cover object-center"
-            label="Citadel wrestling"
-          />
-        </div>
-        <figcaption className="border-t border-slate-200 bg-white px-3 py-2 text-center text-sm text-slate-600">
-          The Citadel Bulldogs — McAlister Field House
-        </figcaption>
-      </figure>
-      <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm">
-        <div className="relative aspect-[16/10] w-full min-h-[220px]">
-          <NewsImageSlot
-            src={IMAGE_PATHS.andrewMeadows}
-            alt="Andrew Meadows signing day with Mount Airy and The Citadel"
-            width={1200}
-            height={750}
-            fill
-            sizes="(max-width: 768px) 100vw, 48rem"
-            className="object-cover object-center"
-            label="Andrew Meadows — Citadel signing day"
-          />
-        </div>
-        <figcaption className="border-t border-slate-200 bg-white px-3 py-2 text-center text-sm text-slate-600">
-          Andrew Meadows — Mount Airy signing day, The Citadel
-        </figcaption>
-      </figure>
-      <p>
-        The fourth award recognizes a program building a brand-new path into North Carolina, and The Citadel made the
-        most convincing case. The Bulldogs landed two ranked Division I commits —{" "}
-        <AthleteLink name="Andrew Meadows" school="Mount Airy" profileIdMap={profileIdMap}>
-          Andrew Meadows
-        </AthleteLink>{" "}
-        (#6) and{" "}
-        <AthleteLink name="Dominic Hittepole" school="Wheatmore" profileIdMap={profileIdMap}>
-          Dominic Hittepole
-        </AthleteLink>{" "}
-        (#22) — from a state that hasn&apos;t historically fed their roster.
-      </p>
-      <p>
-        At #6 in the class,{" "}
-        <AthleteLink name="Andrew Meadows" school="Mount Airy" profileIdMap={profileIdMap}>
-          Meadows
-        </AthleteLink>{" "}
-        is one of the top-ranked commits in the entire 2026 pool — a three-time state champion out of Mount Airy and an
-        NHSCA All-American.{" "}
-        <AthleteLink name="Dominic Hittepole" school="Wheatmore" profileIdMap={profileIdMap}>
-          Hittepole
-        </AthleteLink>{" "}
-        brings his own decorated résumé: a two-time state champion at Wheatmore and an NHSCA All-American, with a 4.2
-        GPA to match. Two Division I-caliber wrestlers, both ranked, both NHSCA All-Americans — that&apos;s not an
-        accident, it&apos;s the start of a new recruiting relationship with the state.
-      </p>
+      <RecruitingAwardsProgramFigure
+        src={IMAGE_PATHS.citadelProgram}
+        alt="The Citadel Bulldogs wrestling at McAlister Field House"
+        caption="The Citadel Bulldogs — McAlister Field House"
+      />
+      <RecruitingAwardsFloatSection>
+        <RecruitingAwardsAthleteLandscapeFigure
+          src={IMAGE_PATHS.andrewMeadows}
+          alt="Andrew Meadows signing day with Mount Airy and The Citadel"
+          caption="Andrew Meadows — Mount Airy signing day, The Citadel"
+        />
+        <p>
+          The fourth award recognizes a program building a brand-new path into North Carolina, and The Citadel made the
+          most convincing case. The Bulldogs landed two ranked Division I commits —{" "}
+          <AthleteLink name="Andrew Meadows" school="Mount Airy" profileIdMap={profileIdMap}>
+            Andrew Meadows
+          </AthleteLink>{" "}
+          (#6) and{" "}
+          <AthleteLink name="Dominic Hittepole" school="Wheatmore" profileIdMap={profileIdMap}>
+            Dominic Hittepole
+          </AthleteLink>{" "}
+          (#22) — from a state that hasn&apos;t historically fed their roster.
+        </p>
+        <p>
+          At #6 in the class,{" "}
+          <AthleteLink name="Andrew Meadows" school="Mount Airy" profileIdMap={profileIdMap}>
+            Meadows
+          </AthleteLink>{" "}
+          is one of the top-ranked commits in the entire 2026 pool — a three-time state champion out of Mount Airy and an
+          NHSCA All-American.{" "}
+          <AthleteLink name="Dominic Hittepole" school="Wheatmore" profileIdMap={profileIdMap}>
+            Hittepole
+          </AthleteLink>{" "}
+          brings his own decorated résumé: a two-time state champion at Wheatmore and an NHSCA All-American, with a 4.2
+          GPA to match. Two Division I-caliber wrestlers, both ranked, both NHSCA All-Americans — that&apos;s not an
+          accident, it&apos;s the start of a new recruiting relationship with the state.
+        </p>
+      </RecruitingAwardsFloatSection>
       <p>
         What makes this more than a one-off is the leadership now driving it. In May 2026, The
         Citadel named Tim McCall as the Bulldogs&apos; wrestling head coach, and his background explains everything about

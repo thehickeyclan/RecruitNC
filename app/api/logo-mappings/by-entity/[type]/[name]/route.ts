@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { getDirectEntityLogoUrl, resolveEntityLogoUrl } from "@/lib/entity-logo-resolve"
 import { normalizeEntityName, normalizeEntityType } from "@/lib/logo-mappings-normalize"
 
 export async function GET(
@@ -12,9 +13,31 @@ export async function GET(
     const normalizedName = normalizeEntityName(decodedName)
     const normalizedType = normalizeEntityType(type)
 
+    const directUrl = getDirectEntityLogoUrl(normalizedType, normalizedName)
+    if (directUrl) {
+      return NextResponse.json({
+        success: true,
+        logo_url: directUrl,
+        entity_name: normalizedName || decodedName,
+        matched_entity_type: normalizedType,
+        match_type: "direct",
+      })
+    }
+
+    const resolvedUrl = await resolveEntityLogoUrl(normalizedType, normalizedName)
+    if (resolvedUrl) {
+      return NextResponse.json({
+        success: true,
+        logo_url: resolvedUrl,
+        entity_name: normalizedName || decodedName,
+        matched_entity_type: normalizedType,
+        match_type: "database",
+      })
+    }
+
     const supabase = await createClient()
 
-    // Try exact match first (same normalization as save path so profile name matches logo manager)
+    // Legacy exact match (user session client — kept for debugging fields below)
     const { data: exactMatch, error: exactError } = await supabase
       .from("logo_mappings")
       .select("*")

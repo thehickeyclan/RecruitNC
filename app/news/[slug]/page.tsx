@@ -14,6 +14,7 @@ import { FindingFlowOnTheMatTheZoneContent } from "../content/finding-flow-on-th
 import { NchsaaArticleComments } from "@/components/nchsaa-article-comments"
 import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
 import { getRecruitingAwardsProfileIdMap } from "@/lib/content/recruiting-awards-profile-ids"
+import { getRecruitingAwardsCollegeLogoMap } from "@/lib/content/recruiting-awards-logo-map"
 import { RECRUITING_AWARDS_SLUG } from "@/lib/content/recruiting-awards-2026"
 
 const ANNOUNCEMENT_CONTENT: Record<string, () => JSX.Element> = {
@@ -41,6 +42,8 @@ export default async function NewsAnnouncementPage({
 
   const profileIdMap =
     slug === RECRUITING_AWARDS_SLUG ? await getRecruitingAwardsProfileIdMap() : undefined
+  const collegeLogoMap =
+    slug === RECRUITING_AWARDS_SLUG ? await getRecruitingAwardsCollegeLogoMap() : undefined
   const Content = ANNOUNCEMENT_CONTENT[slug]
   if (slug !== RECRUITING_AWARDS_SLUG && !Content) notFound()
 
@@ -139,7 +142,10 @@ export default async function NewsAnnouncementPage({
           {/* Article Body */}
           <div className="p-4 sm:p-6 md:p-10 prose prose-slate max-w-none prose-headings:text-[#13294B] prose-a:text-[#13294B] prose-strong:text-[#13294B]">
             {slug === RECRUITING_AWARDS_SLUG ? (
-              <NcUnitedRecruitingAwards2026Content profileIdMap={profileIdMap ?? {}} />
+              <NcUnitedRecruitingAwards2026Content
+                profileIdMap={profileIdMap ?? {}}
+                collegeLogoMap={collegeLogoMap ?? {}}
+              />
             ) : (
               Content?.()
             )}
