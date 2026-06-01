@@ -187,7 +187,7 @@ export function NcUnitedRecruitingAwards2026Content({
           Division I at App State.
         </p>
         <p>
-          Rhymer wasn&apos;t simply a supporting piece. He finished his career as a state champion, NHSCA All-American, and
+          Rhymer arrived with a résumé that could stand on its own. He finished his career as a state champion, NHSCA All-American, and
           one of the most consistent upper-weight performers in North Carolina. Two Division I signees, one of them the best
           wrestler in the state — that&apos;s how you win the top-end award. Quality over quantity, and the quality here is
           undeniable.
