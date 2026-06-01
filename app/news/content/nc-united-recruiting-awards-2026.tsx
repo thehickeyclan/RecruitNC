@@ -63,17 +63,16 @@ export function NcUnitedRecruitingAwards2026Content({
       <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">NC United Wrestling</p>
       <p className="text-slate-600 font-medium">By NC United · May 2026</p>
 
-      <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-        <div className="relative aspect-[16/9] w-full bg-[#13294B]">
-          <Image
-            src={IMAGE_PATHS.hero}
-            alt="NC United Recruiting Awards — Class of 2026"
-            fill
-            className="object-cover object-center"
-            sizes="(max-width: 768px) 100vw, 48rem"
-            priority
-          />
-        </div>
+      <figure className="not-prose my-6 overflow-hidden rounded-xl border border-slate-200 bg-[#13294B] shadow-sm">
+        <Image
+          src={IMAGE_PATHS.hero}
+          alt="NC United Recruiting Awards — Class of 2026 male commits"
+          width={1200}
+          height={675}
+          className="block h-auto w-full"
+          sizes="(max-width: 768px) 100vw, 48rem"
+          priority
+        />
         <figcaption className="border-t border-slate-200 bg-white px-3 py-2 text-center text-sm text-slate-600">
           NC United Recruiting Awards — Class of 2026 male commits.
         </figcaption>
