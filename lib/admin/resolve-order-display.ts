@@ -1,14 +1,19 @@
 import { AAU_SCHOLASTIC_EVENT_SLUG } from "@/lib/aau-scholastic-duals-2026-content"
 import type { OrderCategory } from "@/lib/admin-data"
-import { isGenericPlaceholderOrderItemName } from "@/lib/national-team-order-items"
+import { orderItemsNeedNationalTeamDetail } from "@/lib/national-team-order-items"
 import {
   nhscaDualsRegistrationOrderLines,
-  nhscaDualsRegistrationOrderSummary,
   type NhscaDuals2026Registration,
 } from "@/lib/nhsca-duals-2026-registrations"
 import { nhscaGearPhotoSrc } from "@/lib/nhsca-duals-2026-gear-images"
 import type { DropInRequest } from "@/lib/nc-united-calendar/drop-in-types"
 import { formatShippingMethodLabel, isPlaceholderOrderCustomer } from "@/lib/store/stripe-legacy-metadata"
+import {
+  buildNationalTeamAdminContextRows,
+  nationalTeamLineDetailVariant,
+  nationalTeamLineGroup,
+} from "@/lib/admin/national-team-order-detail"
+import { nationalTeamSkuForLine } from "@/lib/national-team-product-catalog"
 
 export type AdminOrderKind =
   | "store_apparel"
@@ -28,6 +33,8 @@ export type AdminDisplayLineItem = {
   quantity: number
   price: number
   image: string
+  /** Tournament orders: Registration & fees | Travel | Apparel */
+  group?: string
 }
 
 export type AdminOrderTypeBanner = {
@@ -225,23 +232,23 @@ function mapNationalTeamLineItems(
   isAau: boolean,
 ): AdminDisplayLineItem[] {
   const imageFor = isAau ? aauLineItemImage : nhscaLineItemImage
-  return nhscaDualsRegistrationOrderLines(reg).map((line, index) => {
+  const resolvedLines = nhscaDualsRegistrationOrderLines(reg)
+  return resolvedLines.map((line, index) => {
     const qty = line.quantity ?? 1
     const unit = (line.amount_cents ?? 0) / 100 / qty
-    let variant = ""
-    if (reg.singlet_size && /singlet/i.test(line.name)) variant = `Singlet · ${reg.singlet_size}`
-    else if (reg.shorts_size && /shorts/i.test(line.name)) variant = `Shorts · ${reg.shorts_size}`
-    else if (reg.shirt_size && /shirt|tee|sleeve/i.test(line.name)) variant = `Apparel · ${reg.shirt_size}`
-    else if (isAau) variant = "AAU Scholastic Duals 2026"
-    else variant = "NHSCA Duals 2026"
+    const variant = nationalTeamLineDetailVariant(reg, line.name, isAau)
     return {
       id: `nt-${orderId}-${index}`,
       name: line.name,
       variant,
-      sku: isAau ? "aau-2026" : "nhsca-duals-2026",
+      sku: line.sku ?? nationalTeamSkuForLine(isAau ? AAU_SCHOLASTIC_EVENT_SLUG : "nhsca-duals-2026", {
+        key: line.key,
+        name: line.name,
+      }),
       quantity: qty,
       price: unit,
       image: imageFor(line.name),
+      group: nationalTeamLineGroup(line.name),
     }
   })
 }
@@ -330,19 +337,22 @@ export function resolveAdminOrderDisplay(input: {
   const ntReg = input.nationalTeamRegistration
   const useNt =
     Boolean(input.useNationalTeamDisplay && ntReg) ||
-    Boolean(ntReg && (items.length === 0 || items.every((i) => isGenericPlaceholderOrderItemName(i.product_name))))
+    Boolean(ntReg && orderItemsNeedNationalTeamDetail(items))
 
   if (useNt && ntReg) {
     const isAau = ntReg.event_slug === AAU_SCHOLASTIC_EVENT_SLUG
     const athlete = [ntReg.athlete_first_name, ntReg.athlete_last_name].filter(Boolean).join(" ").trim()
-    const summary = nhscaDualsRegistrationOrderSummary(ntReg)
+    const resolvedLines = nhscaDualsRegistrationOrderLines(ntReg)
+    const ntContext = buildNationalTeamAdminContextRows(ntReg, resolvedLines)
     return {
       kind: isAau ? "national_team_aau" : "national_team_nhsca",
       category: "Tournament Fee",
       banner: {
         kind: isAau ? "national_team_aau" : "national_team_nhsca",
         title: isAau ? "AAU Scholastic Duals registration" : "NHSCA Duals registration",
-        description: summary || (isAau ? "Team event fees and optional apparel/travel." : "Registration, team package, and optional travel."),
+        description: isAau
+          ? "Each line below is what the parent selected at checkout — registration, apparel sizes, hotel/van, and/or flight are separate toggles."
+          : "Each line below is what the parent selected — registration package, optional van/hotel, and gear sizes.",
         logoSrc: isAau ? "/images/aau-scholastic-2026/hotel-exterior.png" : "/images/nhsca-national-duals-logo.png",
         accentClass: isAau ? "border-orange-500/40 bg-orange-50" : "border-[#CBAF5D]/40 bg-[#002147]/5",
         links: [{ href: "/admin/blue/national-team-payments", label: "National team payments" }],
@@ -353,6 +363,7 @@ export function resolveAdminOrderDisplay(input: {
         ...(ntReg.primary_weight ? [{ label: "Weight", value: ntReg.primary_weight }] : []),
         ...(ntReg.high_school ? [{ label: "High school", value: ntReg.high_school }] : []),
         ...(ntReg.parent_email ? [{ label: "Parent email", value: ntReg.parent_email }] : []),
+        ...ntContext,
       ],
       showShipping: false,
       showTracking: false,

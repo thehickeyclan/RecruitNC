@@ -54,6 +54,7 @@ interface OrderDetailClientProps {
       quantity: number
       price: number
       image: string
+      group?: string
     }>
     timeline: Array<{
       event: string
@@ -98,6 +99,36 @@ export function AdminOrderDetailClient({ order }: OrderDetailClientProps) {
     zip: order.shippingAddress.zip || "",
   })
   const [isRecoveringItems, setIsRecoveringItems] = useState(false)
+
+  const isTournamentOrder =
+    order.typeBanner?.kind === "national_team_nhsca" || order.typeBanner?.kind === "national_team_aau"
+
+  const tournamentLineGroups = isTournamentOrder
+    ? (["Registration & fees", "Travel", "Apparel", "Other"] as const).flatMap((group) => {
+        const items = order.orderItems.filter((i) => (i.group || "Other") === group)
+        return items.length ? [{ group, items }] : []
+      })
+    : []
+
+  const renderFulfillmentLine = (item: OrderDetailClientProps["order"]["orderItems"][number]) => (
+    <div key={item.id} className="flex gap-4 border-b border-muted/60 pb-4 last:border-0 last:pb-0">
+      <img
+        src={item.image || "/placeholder.svg"}
+        alt={item.name}
+        className="h-20 w-20 rounded-md object-cover bg-muted shrink-0 border"
+      />
+      <div className="flex-1 min-w-0">
+        <div className="font-medium text-base">{item.name}</div>
+        <div className="text-sm text-muted-foreground mt-0.5">
+          {item.variant}
+          {item.sku && item.sku !== "N/A" && !isTournamentOrder ? ` • SKU: ${item.sku}` : ""}
+        </div>
+        <div className="text-sm mt-1">
+          Qty: {item.quantity} × {formatCurrency(item.price)} = {formatCurrency(item.price * item.quantity)}
+        </div>
+      </div>
+    </div>
+  )
 
   const handleStatusUpdate = async (newStatus: string) => {
     setIsUpdating(true)
@@ -349,26 +380,20 @@ export function AdminOrderDetailClient({ order }: OrderDetailClientProps) {
                 </div>
               ) : (
                 <>
-                  {order.orderItems.map((item) => (
-                    <div key={item.id} className="flex gap-4 border-b border-muted/60 pb-4 last:border-0 last:pb-0">
-                      <img
-                        src={item.image || "/placeholder.svg"}
-                        alt={item.name}
-                        className="h-20 w-20 rounded-md object-cover bg-muted shrink-0 border"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-base">{item.name}</div>
-                        <div className="text-sm text-muted-foreground mt-0.5">
-                          {item.variant}
-                          {item.sku && item.sku !== "N/A" ? ` • SKU: ${item.sku}` : ""}
+                  {isTournamentOrder && tournamentLineGroups.length > 0 ? (
+                    <div className="space-y-5">
+                      {tournamentLineGroups.map(({ group, items }) => (
+                        <div key={group}>
+                          <h4 className="text-xs font-semibold uppercase tracking-wide text-[#13294B] mb-3 border-b pb-1">
+                            {group}
+                          </h4>
+                          <div className="space-y-4">{items.map(renderFulfillmentLine)}</div>
                         </div>
-                        <div className="text-sm mt-1">
-                          Qty: {item.quantity} × {formatCurrency(item.price)} ={" "}
-                          {formatCurrency(item.price * item.quantity)}
-                        </div>
-                      </div>
+                      ))}
                     </div>
-                  ))}
+                  ) : (
+                    order.orderItems.map(renderFulfillmentLine)
+                  )}
                   <Separator />
                 </>
               )}

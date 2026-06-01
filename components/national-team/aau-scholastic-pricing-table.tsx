@@ -8,6 +8,7 @@ import {
   formatAauScholasticDollars,
   type AauScholasticPriceLine,
 } from "@/lib/aau-scholastic-duals-2026-content"
+import { aauScholasticSkuForLineId } from "@/lib/national-team-product-catalog"
 import { cn } from "@/lib/utils"
 
 function PriceRows({ lines }: { lines: AauScholasticPriceLine[] }) {
@@ -15,7 +16,10 @@ function PriceRows({ lines }: { lines: AauScholasticPriceLine[] }) {
     <ul className="divide-y divide-[#B31B1B]/15 rounded-lg border border-[#B31B1B]/25 overflow-hidden bg-[#0a2040]/60">
       {lines.map((line) => (
         <li key={line.id} className="flex items-center justify-between gap-4 px-4 py-2.5 text-sm">
-          <span className="text-white/85">{line.label}</span>
+          <span className="text-white/85">
+            {line.label}
+            <span className="ml-2 font-mono text-[10px] text-white/40">{aauScholasticSkuForLineId(line.id)}</span>
+          </span>
           <span className="font-semibold tabular-nums text-[#FF7070]">{formatAauScholasticDollars(line.dollars)}</span>
         </li>
       ))}
