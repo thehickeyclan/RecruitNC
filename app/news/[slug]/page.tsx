@@ -3,6 +3,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { ArrowLeft, MessageCircle, Calendar, User, Clock } from "lucide-react"
 import { getAnnouncementBySlug, getAnnouncementSlugs } from "@/lib/news"
+import { NcUnitedRecruitingAwards2026Content } from "../content/nc-united-recruiting-awards-2026"
 import { FirstFlight2026Content } from "../content/first-flight-2026-nc-united-shoe"
 import { NhscaMostOutstandingWrestlerAward2026Content } from "../content/nhsca-most-outstanding-wrestler-award-2026"
 import { NhscaNationalsRecap2026Content } from "../content/nhsca-nationals-recap-2026"
@@ -12,6 +13,8 @@ import { RealCostEliteWrestlingNcSmarterBuildContent } from "../content/real-cos
 import { FindingFlowOnTheMatTheZoneContent } from "../content/finding-flow-on-the-mat-the-zone"
 import { NchsaaArticleComments } from "@/components/nchsaa-article-comments"
 import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
+import { getRecruitingAwardsProfileIdMap } from "@/lib/content/recruiting-awards-profile-ids"
+import { RECRUITING_AWARDS_SLUG } from "@/lib/content/recruiting-awards-2026"
 
 const ANNOUNCEMENT_CONTENT: Record<string, () => JSX.Element> = {
   "finding-flow-on-the-mat": () => <FindingFlowOnTheMatTheZoneContent />,
@@ -36,8 +39,10 @@ export default async function NewsAnnouncementPage({
   const item = getAnnouncementBySlug(slug)
   if (!item) notFound()
 
+  const profileIdMap =
+    slug === RECRUITING_AWARDS_SLUG ? await getRecruitingAwardsProfileIdMap() : undefined
   const Content = ANNOUNCEMENT_CONTENT[slug]
-  if (!Content) notFound()
+  if (slug !== RECRUITING_AWARDS_SLUG && !Content) notFound()
 
   const skipHeroImage = slug === "class-of-2026-senior-sendoff" || slug === "real-cost-elite-wrestling-nc-smarter-build"
 
@@ -130,7 +135,11 @@ export default async function NewsAnnouncementPage({
 
           {/* Article Body */}
           <div className="p-4 sm:p-6 md:p-10 prose prose-slate max-w-none prose-headings:text-[#13294B] prose-a:text-[#13294B] prose-strong:text-[#13294B]">
-            <Content />
+            {slug === RECRUITING_AWARDS_SLUG ? (
+              <NcUnitedRecruitingAwards2026Content profileIdMap={profileIdMap ?? {}} />
+            ) : (
+              Content?.()
+            )}
           </div>
 
           {/* Bottom Reactions */}
