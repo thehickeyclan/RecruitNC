@@ -54,7 +54,7 @@ const ALL_NEWS: NewsItem[] = [
     image: RECRUITING_AWARDS_CARD_IMAGE,
     imagePosition: "center",
     imageFit: "contain",
-    imageBannerBgClass: "bg-[#13294B]",
+    imageBannerBgClass: "bg-stone-100",
     newsListBanner: true,
     category: "RECRUITING",
     categoryBadgeClass: "bg-[#003366]",
