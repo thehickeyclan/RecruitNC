@@ -31,24 +31,7 @@ export default function PublicRankingsHomepage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            <Link href="/public-rankings/2026">
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-[#D3B574]">
-                <CardHeader className="text-center">
-                  <CardTitle className="text-2xl text-[#03154C]">Class of 2026</CardTitle>
-                  <CardDescription className="text-lg">
-                    Seniors entering their final recruiting cycle and solidifying college commitments.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="text-center">
-                  <div className="flex items-center justify-center gap-2 text-[#03154C] font-semibold">
-                    View Rankings
-                    <ArrowRight className="h-5 w-5" />
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <Link href="/public-rankings/2027">
               <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-[#D3B574]">
                 <CardHeader className="text-center">

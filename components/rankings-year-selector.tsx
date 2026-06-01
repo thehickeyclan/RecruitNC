@@ -10,7 +10,7 @@ interface RankingsYearSelectorProps {
 }
 
 export function RankingsYearSelector({
-  availableYears = [2025, 2026, 2027, 2028, 2029],
+  availableYears = [2027, 2028],
   defaultYear = 2025,
 }: RankingsYearSelectorProps) {
   const router = useRouter()

@@ -544,18 +544,18 @@ export default function Class2028RankingsPage() {
               </Card>
             </Link>
 
-            <Link href="/public-rankings/2026">
-              <Card className="bg-gradient-to-br from-[#B31B1B] to-[#8B1515] text-white hover:shadow-xl transition-shadow cursor-pointer h-full">
+            <Link href="/prospects/all">
+              <Card className="bg-gradient-to-br from-[#1e3a8a] to-[#0a2571] text-white hover:shadow-xl transition-shadow cursor-pointer h-full">
                 <CardContent className="p-6 sm:p-8 text-center flex flex-col items-center justify-center h-full">
-                  <Trophy className="h-12 w-12 sm:h-16 sm:w-16 mb-4 text-[#D3B574]" />
-                  <h3 className="text-xl sm:text-2xl font-bold mb-2">Class of 2026 Rankings</h3>
-                  <p className="text-red-100 mb-4">View the Top 30 ranked prospects for 2026</p>
+                  <Users className="h-12 w-12 sm:h-16 sm:w-16 mb-4 text-[#D3B574]" />
+                  <h3 className="text-xl sm:text-2xl font-bold mb-2">All Prospects</h3>
+                  <p className="text-blue-100 mb-4">Browse the complete database of North Carolina prospects</p>
                   <Button
                     variant="secondary"
                     size="lg"
                     className="bg-[#D3B574] text-gray-900 hover:bg-[#D3B574]/90"
                   >
-                    View 2026 Rankings
+                    View All Prospects
                   </Button>
                 </CardContent>
               </Card>

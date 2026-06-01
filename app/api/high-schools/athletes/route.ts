@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
+import { COLLEGE_LEADERBOARD_MIN_CLASS_YEAR } from "@/lib/colleges"
 
 const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
@@ -8,12 +9,15 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const schoolName = searchParams.get("school")
     const gender = searchParams.get("gender") || "all"
+    const year = searchParams.get("year") || "all"
 
     if (!schoolName) {
       return NextResponse.json({ error: "School name is required" }, { status: 400 })
     }
 
-    console.log(`[v0] Searching for athletes from school: "${schoolName}" with gender: "${gender}"`)
+    console.log(
+      `[high-schools/athletes] school="${schoolName}" gender="${gender}" year="${year}"`,
+    )
 
     let athletes, error
     try {
@@ -24,23 +28,28 @@ export async function GET(request: NextRequest) {
         )
         .ilike("highschool", `%${schoolName}%`)
         .not("college", "is", null)
-        .not("commitmentdate", "is", null) // Only include athletes with commitment dates
-        .neq("college", "") // Ensure college is not an empty string
-        .neq("college", "Uncommitted") // Ensure college is not "Uncommitted"
-        .neq("college", "TBD") // Ensure college is not "TBD"
+        .not("highschool", "is", null)
+        .neq("college", "")
+        .neq("college", "Uncommitted")
+        .neq("college", "TBD")
+        .or("is_prospect.is.null,is_prospect.eq.false")
         .order("commitmentdate", { ascending: false })
 
+      if (year !== "all") {
+        query = query.eq("graduationyear", Number.parseInt(year, 10))
+      } else {
+        query = query.gte("graduationyear", COLLEGE_LEADERBOARD_MIN_CLASS_YEAR)
+      }
+
       if (gender !== "all") {
-        // Handle both "male"/"female" and "Male"/"Female" formats
         const genderVariations =
           gender === "male"
-            ? ["male", "Male", "m", "M"]
+            ? ["male", "Male", "m", "M", "men", "Men"]
             : gender === "female"
-              ? ["female", "Female", "f", "F"]
+              ? ["female", "Female", "f", "F", "women", "Women"]
               : [gender]
 
         query = query.in("gender", genderVariations)
-        console.log(`[v0] Filtering by gender variations:`, genderVariations)
       }
 
       const result = await query

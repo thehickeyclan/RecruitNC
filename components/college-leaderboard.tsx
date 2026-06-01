@@ -87,6 +87,7 @@ export function CollegeLeaderboard({
           year,
           division,
         })
+        if (searchTerm.trim()) params.set("search", searchTerm.trim())
 
         const response = await fetch(`/api/colleges/leaderboard?${params.toString()}`)
 
@@ -117,23 +118,16 @@ export function CollegeLeaderboard({
     }
 
     fetchLeaderboard()
-  }, [metric, gender, year, division, onStatsUpdate])
+  }, [metric, gender, year, division, searchTerm, onStatsUpdate])
 
-  // Calculate and update stats when colleges or searchTerm changes
+  // Calculate and update stats when colleges change (search applied server-side)
   useEffect(() => {
     if (onStatsUpdate) {
-      // Apply searchTerm filter to get the final filtered list
-      const searchFilteredColleges = colleges.filter((college) => {
-        if (!searchTerm) return true
-        return college.college_name.toLowerCase().includes(searchTerm.toLowerCase())
-      })
-      
-      // Calculate stats from the filtered colleges (after searchTerm is applied)
-      const totalCommits = searchFilteredColleges.reduce((sum, college) => sum + college.total_commits, 0)
-      const maleCommits = searchFilteredColleges.reduce((sum, college) => sum + college.male_commits, 0)
-      const femaleCommits = searchFilteredColleges.reduce((sum, college) => sum + college.female_commits, 0)
-      const uniqueColleges = searchFilteredColleges.length
-      
+      const totalCommits = colleges.reduce((sum, college) => sum + college.total_commits, 0)
+      const maleCommits = colleges.reduce((sum, college) => sum + college.male_commits, 0)
+      const femaleCommits = colleges.reduce((sum, college) => sum + college.female_commits, 0)
+      const uniqueColleges = colleges.length
+
       onStatsUpdate({
         totalCommits,
         maleCommits,
@@ -141,7 +135,7 @@ export function CollegeLeaderboard({
         uniqueColleges,
       })
     }
-  }, [colleges, searchTerm, onStatsUpdate])
+  }, [colleges, onStatsUpdate])
 
   useEffect(() => {
     const fetchCollegeLogos = async () => {
@@ -248,11 +242,6 @@ export function CollegeLeaderboard({
     window.location.href = `/athletes/${athleteId}`
   }
 
-  const filteredColleges = colleges.filter((college) => {
-    if (!searchTerm) return true
-    return college.college_name.toLowerCase().includes(searchTerm.toLowerCase())
-  })
-
   const getMetricValue = (college: CollegeStats) => {
     switch (metric) {
       case "total_commits":
@@ -292,7 +281,7 @@ export function CollegeLeaderboard({
     return rankings
   }
 
-  const rankedColleges = calculateRankings(filteredColleges)
+  const rankedColleges = calculateRankings(colleges)
 
   const getMetricLabel = (value: number) => {
     switch (metric) {
