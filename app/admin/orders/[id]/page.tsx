@@ -3,6 +3,7 @@ import { getOrderDetails } from "@/app/actions/orders"
 import { AdminOrderDetailClient } from "@/components/admin/admin-order-detail-client"
 import { resolveCustomerDisplay } from "@/lib/admin/resolve-order-display"
 import type { ResolvedAdminOrderDisplay } from "@/lib/admin/resolve-order-display"
+import type { OrderReceiptPreview } from "@/lib/store/order-receipt-preview"
 
 export const dynamic = "force-dynamic"
 
@@ -144,6 +145,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
     integrityDetail: display?.integrityDetail ?? null,
     fulfillmentUnsafe: display?.fulfillmentUnsafe ?? false,
     showRecoverItems: display?.showRecoverItems ?? false,
+    receiptPreview: (order.receipt_preview ?? null) as OrderReceiptPreview | null,
   }
 
   return <AdminOrderDetailClient order={orderData} />

@@ -13,7 +13,8 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js"
-import { sendOrderConfirmationEmail, formatOrderItemVariantForEmail } from "@/lib/email"
+import { sendOrderConfirmationEmail } from "@/lib/email"
+import { buildOrderReceiptPreview, mapOrderItemsToReceiptLines } from "@/lib/store/order-receipt-preview"
 
 function autoReceiptEnabled() {
   const v = process.env.STORE_DISABLE_AUTO_RECEIPT
@@ -63,42 +64,22 @@ export async function sendOrderReceiptIfEligible(admin: SupabaseClient, orderId:
 
   const { data: itemRows } = await admin
     .from("order_items")
-    .select("product_name, variant, quantity, price, subtotal")
+    .select("product_name, variant, color, size, quantity, price, subtotal")
     .eq("order_id", orderId)
 
-  const items = (itemRows ?? []).map((r) => {
-    const rec = r as { product_name: string; variant: unknown; quantity: number; price: number; subtotal: number }
-    return {
-      name: String(rec.product_name || "Item"),
-      variant: formatOrderItemVariantForEmail(rec.variant),
-      quantity: Number(rec.quantity) || 1,
-      price: Number(rec.price) || 0,
-      subtotal: Number(rec.subtotal) || 0,
-    }
-  })
-
-  const sumLineSubtotals = items.reduce((s, i) => s + (Number(i.subtotal) || Number(i.price) * i.quantity || 0), 0)
-  const metaSub = Number(row.subtotal) || 0
-  const emailSubtotal =
-    metaSub > 0
-      ? metaSub
-      : sumLineSubtotals > 0
-        ? sumLineSubtotals
-        : Math.max(
-            0,
-            Number(row.total) - Number(row.shipping_cost) - Number(row.tax) + Number(row.discount),
-          )
+  const preview = buildOrderReceiptPreview(row, itemRows ?? [])
+  const receiptItems = mapOrderItemsToReceiptLines(itemRows ?? [])
 
   const send = await sendOrderConfirmationEmail({
-    orderNumber: row.order_number,
-    customerName: (row.customer_name ?? "").trim() || "Customer",
+    orderNumber: preview.orderNumber,
+    customerName: preview.customerName,
     customerEmail,
-    items: items.map(({ name, variant, quantity, price }) => ({ name, variant, quantity, price })),
-    subtotal: emailSubtotal,
-    shipping: Number(row.shipping_cost) || 0,
-    tax: Number(row.tax) || 0,
-    discount: Number(row.discount) || 0,
-    total: Number(row.total) || 0,
+    items: receiptItems.map(({ name, variant, quantity, price }) => ({ name, variant, quantity, price })),
+    subtotal: preview.subtotal,
+    shipping: preview.shipping,
+    tax: preview.tax,
+    discount: preview.discount,
+    total: preview.total,
     shippingAddress: (row.shipping_address ?? {}) as Record<string, unknown>,
   })
 
