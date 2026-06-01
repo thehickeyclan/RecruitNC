@@ -37,11 +37,22 @@ export async function GET(request: NextRequest) {
     const eventSlugs = eventParam ? [eventParam] : [...NATIONAL_TEAM_PAYMENTS_EVENT_SLUGS]
 
     return NextResponse.json({
-      registrations: registrations.map((r) => ({
-        ...r,
-        order_summary: nhscaDualsRegistrationOrderSummary(r),
-        line_items: nhscaDualsRegistrationOrderLines(r),
-      })),
+      registrations: registrations.map((r) => {
+        try {
+          return {
+            ...r,
+            order_summary: nhscaDualsRegistrationOrderSummary(r),
+            line_items: nhscaDualsRegistrationOrderLines(r),
+          }
+        } catch (rowErr) {
+          console.warn("[admin/blue/national-team-registrations] row:", r.id, rowErr)
+          return {
+            ...r,
+            order_summary: "",
+            line_items: [],
+          }
+        }
+      }),
       paidCount: paid.length,
       pendingCount: pending.length,
       eventSlugs,
