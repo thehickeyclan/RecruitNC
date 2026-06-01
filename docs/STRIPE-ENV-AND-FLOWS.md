@@ -25,7 +25,7 @@ The **same** webhook handler branches on event type and metadata. It does **not*
 
 | Env var | Used by | Single or multiple values? | If you change it |
 |---------|---------|-----------------------------|-------------------|
-| **`STRIPE_SECRET_KEY`** | All flows (Stripe API calls) | Single (one per Stripe account) | All Stripe API usage. Use the key for the same account that sends webhooks. |
+| **`STRIPE_SECRET_KEY`** | All flows (Stripe API calls) | Single (one per Stripe account) | All Stripe API usage. Use the key for the same account that sends webhooks. **In Vercel, enable for Production *and* Preview** if you test checkout on branch preview URLs (`vercelEnv: preview`); Preview-only deploys without this var return 503 on registration checkout. |
 | **`STRIPE_WEBHOOK_SECRET`** | Webhook signature verification only | **Multiple** (one per Stripe destination/endpoint) | **Must include every signing secret** for every destination that sends to this URL. Use **comma-separated** (e.g. `whsec_Blue,whsec_Store`) so Blue, Store, NHSCA, and any other destination all work. Replacing with only one secret breaks the others. |
 | **`STRIPE_BLUE_PRICE_ID`** | Blue signup/register (Checkout Session) | Single | Only Blue checkout. Store, NHSCA, drop-ins unaffected. |
 | **`NEXT_PUBLIC_APP_URL`** | Success/cancel URLs, invite links, emails | Single | All redirects and links that use the app URL. Set once to your production (or preview) URL. |

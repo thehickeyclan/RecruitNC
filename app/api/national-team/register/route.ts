@@ -79,16 +79,13 @@ export async function POST(request: NextRequest) {
 
     const stripeSecret = readStripeSecretKey()
     if (!stripeSecret) {
-      console.error("[RecruitNC][national-team/register] STRIPE_SECRET_KEY empty at runtime", {
-        vercelEnv: process.env.VERCEL_ENV,
-      })
-      return NextResponse.json(
-        {
-          error:
-            "Could not start checkout. Please try again in a moment or contact NC United (info@ncwrestlingunited.com).",
-        },
-        { status: 503 },
-      )
+      const vercelEnv = process.env.VERCEL_ENV
+      console.error("[RecruitNC][national-team/register] STRIPE_SECRET_KEY empty at runtime", { vercelEnv })
+      const error =
+        vercelEnv === "preview"
+          ? "This registration link is a Vercel Preview build (Stripe is not enabled for Preview). Open app.ncwrestlingunited.com/national-team/register/aau-2026 instead, or enable STRIPE_SECRET_KEY for Preview in Vercel and redeploy."
+          : "Could not start checkout. Please try again in a moment or contact NC United (info@ncwrestlingunited.com)."
+      return NextResponse.json({ error }, { status: 503 })
     }
 
     const admin = createAdminClient()

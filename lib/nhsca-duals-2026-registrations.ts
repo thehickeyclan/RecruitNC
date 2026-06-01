@@ -88,9 +88,13 @@ async function enrichLinkedAccountEmails(
     }
     const missing = parentUserIds.filter((id) => !linkedEmailByUserId.has(id))
     if (missing.length > 0) {
-      const { data: { users } } = await admin.auth.admin.listUsers({ perPage: 1000 })
-      for (const u of users ?? []) {
-        if (u.email?.trim() && missing.includes(u.id)) linkedEmailByUserId.set(u.id, u.email.trim())
+      try {
+        const { data: { users } } = await admin.auth.admin.listUsers({ perPage: 1000 })
+        for (const u of users ?? []) {
+          if (u.email?.trim() && missing.includes(u.id)) linkedEmailByUserId.set(u.id, u.email.trim())
+        }
+      } catch (listUsersErr) {
+        console.warn("[nhsca-duals-2026-registrations] auth.admin.listUsers:", listUsersErr)
       }
     }
   }
@@ -150,9 +154,15 @@ export async function listNhscaDuals2026Registrations(
     viewerUserId?: string | null
     viewerEmail?: string | null
     eventSlug?: string | null
+    /** When set (and no single eventSlug), load these slugs — e.g. NHSCA + AAU for admin payments. */
+    eventSlugs?: readonly string[]
   }
 ): Promise<NhscaDuals2026Registration[]> {
-  const eventSlugs = opts.eventSlug ? [opts.eventSlug] : [...NHSCA_DUALS_2026_EVENT_SLUGS]
+  const eventSlugs = opts.eventSlug
+    ? [opts.eventSlug]
+    : opts.eventSlugs?.length
+      ? [...opts.eventSlugs]
+      : [...NHSCA_DUALS_2026_EVENT_SLUGS]
 
   const selectColsWithCheckout =
     "id, event_slug, athlete_first_name, athlete_last_name, athlete_email, athlete_dob, parent_email, parent_user_id, high_school, graduation_year, primary_weight, reg_fee_cents, apparel_fee_cents, status, order_id, record, created_at, shirt_size, singlet_size, shorts_size, checkout_lines, checkout_mode, updated_at"

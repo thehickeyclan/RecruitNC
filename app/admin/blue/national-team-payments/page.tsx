@@ -94,9 +94,10 @@ export default function AdminBlueNationalTeamPaymentsPage() {
       throw new Error(`Failed to load (${r.status})`)
     }
     const data = await r.json()
-    setRegistrations(data.registrations ?? [])
-    setPaidCount(data.paidCount ?? 0)
-    setPendingCount(data.pendingCount ?? 0)
+    const list: Registration[] = Array.isArray(data.registrations) ? data.registrations : []
+    setRegistrations(list)
+    setPaidCount(list.filter((row) => nationalTeamRegistrationIsPaid(row)).length)
+    setPendingCount(list.filter((row) => !nationalTeamRegistrationIsPaid(row)).length)
   }, [])
 
   const { openReceipt, dialog: receiptDialog } = useNationalTeamFeeReceiptDialog(loadRegistrations)
@@ -109,6 +110,8 @@ export default function AdminBlueNationalTeamPaymentsPage() {
         if (!cancelled) {
           setError(err?.message ?? "Could not load registrations.")
           setRegistrations([])
+          setPaidCount(0)
+          setPendingCount(0)
         }
       })
       .finally(() => {
