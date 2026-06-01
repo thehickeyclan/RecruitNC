@@ -7,9 +7,12 @@ import { normalizeEntityName, normalizeEntityType } from "@/lib/logo-mappings-no
 
 /** Lowercase entity name → path under /public or absolute blob URL */
 export const COLLEGE_DIRECT_LOGO_URLS: Record<string, string> = {
-  "appalachian state": "/appalachian-state-mountains.png",
-  "appalachian state university": "/appalachian-state-mountains.png",
-  "app state": "/appalachian-state-mountains.png",
+  "appalachian state":
+    "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/b9jnnu11-1745955862533.png",
+  "appalachian state university":
+    "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/b9jnnu11-1745955862533.png",
+  "app state":
+    "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/b9jnnu11-1745955862533.png",
   "unc chapel hill": "/UNC_Chapel_Hill_Logo.png",
   "university of north carolina": "/UNC_Chapel_Hill_Logo.png",
   "university of north carolina at chapel hill": "/UNC_Chapel_Hill_Logo.png",
@@ -22,9 +25,11 @@ export const COLLEGE_DIRECT_LOGO_URLS: Record<string, string> = {
   queens: "/queens-university-shield.png",
   "belmont abbey": "/belmont-abbey-architectural-detail.png",
   "belmont abbey college": "/belmont-abbey-architectural-detail.png",
-  "unc pembroke": "/unc-pembroke-seal.png",
-  "university of north carolina at pembroke": "/unc-pembroke-seal.png",
-  uncp: "/unc-pembroke-seal.png",
+  "unc pembroke":
+    "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/vaddsdmo-1745958227949.png",
+  "university of north carolina at pembroke":
+    "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/vaddsdmo-1745958227949.png",
+  uncp: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/vaddsdmo-1745958227949.png",
   "greensboro college": "/Greensboro-College-Seal.png",
   "roanoke college": "/roanoke-college-logo.png",
   roanoke: "/roanoke-college-logo.png",
