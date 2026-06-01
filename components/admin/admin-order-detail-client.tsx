@@ -59,9 +59,22 @@ interface OrderDetailClientProps {
       completed: boolean
     }>
     phone: string | null
-    isNationalTeamOrder?: boolean
-    nationalTeamAthlete?: string | null
-    nationalTeamSummary?: string | null
+    categoryLabel?: string
+    typeBanner?: {
+      kind: string
+      title: string
+      description?: string
+      logoSrc?: string
+      accentClass?: string
+      links?: { href: string; label: string }[]
+    } | null
+    contextRows?: Array<{ label: string; value: string }>
+    showShipping?: boolean
+    showTracking?: boolean
+    integritySummary?: string | null
+    integrityDetail?: string | null
+    fulfillmentUnsafe?: boolean
+    showRecoverItems?: boolean
   }
 }
 
@@ -161,7 +174,7 @@ export function AdminOrderDetailClient({ order }: OrderDetailClientProps) {
       const response = await fetch("/api/recover-order-items", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId: order.id }),
+        body: JSON.stringify({ orderId: order.id, force: true }),
       })
 
       if (!response.ok) {
@@ -223,8 +236,18 @@ export function AdminOrderDetailClient({ order }: OrderDetailClientProps) {
           <p className="text-sm text-muted-foreground mt-1" suppressHydrationWarning>
             {formatDateTime(order.date)}
           </p>
+          {order.fulfillmentUnsafe ? (
+            <p className="mt-2 text-sm font-semibold text-red-700 max-w-2xl">
+              {order.integritySummary ?? "Incomplete line items — verify before fulfilling."}
+            </p>
+          ) : null}
         </div>
         <div className="flex items-center gap-2">
+          {order.categoryLabel ? (
+            <Badge variant="outline" className="capitalize">
+              {order.categoryLabel}
+            </Badge>
+          ) : null}
           <Badge variant={getStatusColor(currentStatus as Order["status"])} className="capitalize">
             {currentStatus}
           </Badge>
@@ -253,28 +276,57 @@ export function AdminOrderDetailClient({ order }: OrderDetailClientProps) {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Order Items</CardTitle>
-                {order.items === 0 || order.orderItems.some((i) => i.sku === "national-team" || /store purchase/i.test(i.name)) ? (
+                {order.showRecoverItems ? (
                   <Button size="sm" variant="outline" onClick={handleRecoverItems} disabled={isRecoveringItems}>
                     <RefreshCw className={`h-4 w-4 mr-2 ${isRecoveringItems ? "animate-spin" : ""}`} />
-                    Recover Items from Stripe
+                    Rebuild from Stripe
                   </Button>
                 ) : null}
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {order.isNationalTeamOrder ? (
-                <div className="rounded-md border border-[#CBAF5D]/40 bg-[#002147]/5 px-3 py-2 text-sm">
-                  <p className="font-medium text-[#13294B]">NHSCA hub registration — not a store shipment</p>
-                  {order.nationalTeamAthlete ? (
-                    <p className="text-muted-foreground mt-0.5">Athlete: {order.nationalTeamAthlete}</p>
-                  ) : null}
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    Line items below are from hub checkout (registration, van, hotel, gear). Use{" "}
-                    <a href="/admin/blue/national-team-payments" className="text-[#03154C] underline font-medium">
-                      National team payments
-                    </a>{" "}
-                    for the full roster view.
-                  </p>
+              {order.typeBanner ? (
+                <div
+                  className={`rounded-md border px-3 py-3 text-sm ${order.typeBanner.accentClass ?? "border-muted bg-muted/30"}`}
+                >
+                  <div className="flex items-start gap-3">
+                    {order.typeBanner.logoSrc ? (
+                      <img
+                        src={order.typeBanner.logoSrc}
+                        alt=""
+                        className="h-12 w-12 rounded object-contain bg-white/80 p-1 shrink-0"
+                      />
+                    ) : null}
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-[#13294B]">{order.typeBanner.title}</p>
+                      {order.typeBanner.description ? (
+                        <p className="text-muted-foreground mt-0.5">{order.typeBanner.description}</p>
+                      ) : null}
+                      {order.typeBanner.links?.length ? (
+                        <p className="text-muted-foreground mt-2 text-xs">
+                          {order.typeBanner.links.map((link) => (
+                            <a
+                              key={link.href}
+                              href={link.href}
+                              className="text-[#03154C] underline font-medium mr-3"
+                            >
+                              {link.label}
+                            </a>
+                          ))}
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+              {order.contextRows && order.contextRows.length > 0 ? (
+                <div className="grid gap-2 rounded-md border bg-muted/20 px-3 py-2 text-sm sm:grid-cols-2">
+                  {order.contextRows.map((row) => (
+                    <div key={row.label}>
+                      <span className="text-muted-foreground">{row.label}: </span>
+                      <span className="font-medium">{row.value}</span>
+                    </div>
+                  ))}
                 </div>
               ) : null}
               {!order.orderItems || order.orderItems.length === 0 ? (
@@ -293,16 +345,17 @@ export function AdminOrderDetailClient({ order }: OrderDetailClientProps) {
               ) : (
                 <>
                   {order.orderItems.map((item) => (
-                    <div key={item.id} className="flex gap-4">
+                    <div key={item.id} className="flex gap-4 border-b border-muted/60 pb-4 last:border-0 last:pb-0">
                       <img
                         src={item.image || "/placeholder.svg"}
                         alt={item.name}
-                        className="h-16 w-16 rounded object-cover"
+                        className="h-20 w-20 rounded-md object-cover bg-muted shrink-0 border"
                       />
-                      <div className="flex-1">
-                        <div className="font-medium">{item.name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {item.variant} • SKU: {item.sku}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-base">{item.name}</div>
+                        <div className="text-sm text-muted-foreground mt-0.5">
+                          {item.variant}
+                          {item.sku && item.sku !== "N/A" ? ` • SKU: ${item.sku}` : ""}
                         </div>
                         <div className="text-sm mt-1">
                           Qty: {item.quantity} × {formatCurrency(item.price)} ={" "}
@@ -320,10 +373,12 @@ export function AdminOrderDetailClient({ order }: OrderDetailClientProps) {
                   <span className="text-muted-foreground">Subtotal</span>
                   <span>{formatCurrency(order.subtotal)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Shipping</span>
-                  <span>{formatCurrency(order.shipping)}</span>
-                </div>
+                {order.showShipping !== false ? (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Shipping</span>
+                    <span>{formatCurrency(order.shipping)}</span>
+                  </div>
+                ) : null}
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Tax</span>
                   <span>{formatCurrency(order.tax)}</span>
@@ -417,6 +472,7 @@ export function AdminOrderDetailClient({ order }: OrderDetailClientProps) {
             </CardContent>
           </Card>
 
+          {order.showShipping !== false ? (
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Shipping Information</CardTitle>
@@ -591,8 +647,21 @@ export function AdminOrderDetailClient({ order }: OrderDetailClientProps) {
               )}
             </CardContent>
           </Card>
+          ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Fulfillment</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-sm">
+                <div className="text-muted-foreground">Type</div>
+                <div className="font-medium">{order.shippingMethod}</div>
+              </div>
+            </CardContent>
+          </Card>
+          )}
 
-          {!order.trackingNumber && (
+          {order.showTracking !== false && !order.trackingNumber && (
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
@@ -630,6 +699,23 @@ export function AdminOrderDetailClient({ order }: OrderDetailClientProps) {
                 >
                   Mark as Shipped
                 </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {order.showTracking !== false && order.trackingNumber && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Package className="h-4 w-4" />
+                  Tracking
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm">
+                <div className="font-medium">{order.trackingNumber}</div>
+                {order.carrier ? (
+                  <div className="text-xs text-muted-foreground mt-1">via {order.carrier.toUpperCase()}</div>
+                ) : null}
               </CardContent>
             </Card>
           )}

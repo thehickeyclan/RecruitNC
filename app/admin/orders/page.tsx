@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin"
 import { AdminOrdersClient } from "@/components/admin/admin-orders-client"
 import type { Order, OrderCategory } from "@/lib/admin-data"
+import { resolveOrderCategory } from "@/lib/admin/resolve-order-display"
 
 export const dynamic = "force-dynamic"
 
@@ -50,6 +51,7 @@ function productSummary(
   shippingMethodStr?: string
 ): string {
   const names = (orderItems || []).map((i) => (i.product_name || "").trim()).filter(Boolean)
+  if (category === "Donation") return "Fundraising donation"
   if (category === "Drop-In") {
     if (names.length === 1) return names[0]
     if (names.some((n) => /practice|drop-in|dropin/i.test(n))) return names.find((n) => /practice|drop-in|dropin/i.test(n)) || names[0] || "Practice Drop-In"
@@ -139,13 +141,13 @@ export default async function OrdersPage() {
       .filter((o: any) => isPlaceholderCustomer(o.customer_email ?? null, o.customer_name ?? null) && o.stripe_session_id)
       .map((o: any) => o.stripe_session_id)
 
-    const byOrderId: Record<string, { email: string; name: string }> = {}
+    const byOrderId: Record<string, { email: string; name: string; event_slug?: string }> = {}
     const bySessionId: Record<string, { email: string; name: string }> = {}
 
     if (orderIdsNeedingEnrich.length > 0) {
       const { data: regs } = await supabase
         .from("national_team_event_registrations")
-        .select("order_id, parent_email, athlete_first_name, athlete_last_name")
+        .select("order_id, parent_email, athlete_first_name, athlete_last_name, event_slug")
         .in("order_id", orderIdsNeedingEnrich)
       for (const r of regs ?? []) {
         const oid = (r as { order_id?: string }).order_id
@@ -154,7 +156,13 @@ export default async function OrdersPage() {
         const first = ((r as { athlete_first_name?: string }).athlete_first_name ?? "").trim()
         const last = ((r as { athlete_last_name?: string }).athlete_last_name ?? "").trim()
         const name = [first, last].filter(Boolean).join(" ") || "Registrant"
-        if (email || name) byOrderId[oid] = { email: email || (byOrderId[oid]?.email ?? ""), name: name || (byOrderId[oid]?.name ?? "") }
+        if (email || name) {
+          byOrderId[oid] = {
+            email: email || (byOrderId[oid]?.email ?? ""),
+            name: name || (byOrderId[oid]?.name ?? ""),
+            event_slug: (r as { event_slug?: string }).event_slug,
+          }
+        }
       }
     }
 
@@ -217,13 +225,19 @@ export default async function OrdersPage() {
         typeof order.shipping_method === "string"
           ? order.shipping_method
           : (order.shipping_method?.name ?? order.shipping_method?.description ?? "")
-      const category = deriveCategory(orderItems, shippingMethodStr, Number(order.total))
+      const category = resolveOrderCategory(order, orderItems, {
+        nationalTeamRegistration: byOrderId[order.id]?.event_slug
+          ? { event_slug: byOrderId[order.id].event_slug }
+          : null,
+        spartanDonation:
+          String(order.channel ?? "").toLowerCase() === "spartan" ? { id: order.id } : null,
+      }) as OrderCategory
       const productSummaryStr = productSummary(orderItems, category, shippingMethodStr)
       // When DB has no order_items but we inferred a single-product category, show 1 item so totals make sense
       const itemsCount =
         rawItemsCount > 0
           ? rawItemsCount
-          : category === "Blue Sub" || category === "Tournament Fee" || category === "Drop-In"
+          : category === "Blue Sub" || category === "Tournament Fee" || category === "Drop-In" || category === "Donation"
             ? 1
             : 0
 

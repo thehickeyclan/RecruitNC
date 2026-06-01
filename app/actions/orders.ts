@@ -1,12 +1,28 @@
 "use server"
 
+import Stripe from "stripe"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { sendOrderStatusEmail } from "@/lib/email"
 import {
   nhscaDualsRegistrationOrderLines,
   nhscaDualsRegistrationOrderSummary,
+  type NhscaDuals2026Registration,
 } from "@/lib/nhsca-duals-2026-registrations"
 import { isGenericPlaceholderOrderItemName } from "@/lib/national-team-order-items"
+import {
+  hydrateOrderCustomerFromStripe,
+  overlayOrderFromStripeForDisplay,
+} from "@/lib/store/hydrate-order-from-stripe"
+import { resolveAdminOrderDisplay } from "@/lib/admin/resolve-order-display"
+import { reconcileStoreOrderItemsFromStripe } from "@/lib/store/reconcile-order-items-from-stripe"
+import { analyzeStoreOrderIntegrity } from "@/lib/store/store-order-integrity"
+import { fetchMergedStoreMetadata } from "@/lib/store/stripe-legacy-metadata"
+
+function getStripe(): Stripe {
+  const key = process.env.STRIPE_SECRET_KEY
+  if (!key?.trim()) throw new Error("STRIPE_SECRET_KEY not set")
+  return new Stripe(key)
+}
 
 export async function updateOrderStatus(
   orderId: string,
@@ -179,9 +195,40 @@ export async function getOrderDetails(orderId: string): Promise<
       return { success: false, error: orderError?.message ?? "Order not found." }
     }
 
+    try {
+      await hydrateOrderCustomerFromStripe(supabase, order as Record<string, unknown>)
+      const { data: refreshed } = await supabase.from("orders").select("*").eq("id", order.id).single()
+      if (refreshed) Object.assign(order, refreshed)
+      await overlayOrderFromStripeForDisplay(order as Record<string, unknown>)
+    } catch (hydrateErr) {
+      console.warn("[orders] hydrateOrderCustomerFromStripe:", hydrateErr)
+      try {
+        await overlayOrderFromStripeForDisplay(order as Record<string, unknown>)
+      } catch {
+        // ignore
+      }
+    }
+
+    if (order.stripe_payment_intent_id) {
+      try {
+        await reconcileStoreOrderItemsFromStripe(supabase, order.id, getStripe())
+      } catch (reconcileErr) {
+        console.warn("[orders] reconcileStoreOrderItemsFromStripe:", reconcileErr)
+      }
+    }
+
     const { data: orderItems, error: itemsError } = await supabase
       .from("order_items")
-      .select("*")
+      .select(
+        `
+        *,
+        product:products (
+          name,
+          image_url,
+          product_images (url, display_order)
+        )
+      `,
+      )
       .eq("order_id", order.id)
       .order("created_at")
 
@@ -213,6 +260,91 @@ export async function getOrderDetails(orderId: string): Promise<
       (itemsList.length === 0 ||
         itemsList.every((i) => isGenericPlaceholderOrderItemName((i as { product_name?: string }).product_name)))
 
+    let dropInRequest: Record<string, unknown> | null = null
+    if (order.stripe_session_id || order.stripe_payment_intent_id) {
+      let dropInQuery = supabase
+        .from("drop_in_requests")
+        .select(
+          `
+          *,
+          events ( title, start_date, start_time, location )
+        `,
+        )
+        .limit(1)
+      if (order.stripe_session_id) {
+        dropInQuery = dropInQuery.eq("stripe_session_id", order.stripe_session_id)
+      } else {
+        dropInQuery = dropInQuery.eq("stripe_payment_intent_id", order.stripe_payment_intent_id as string)
+      }
+      const { data: dropInRow } = await dropInQuery.maybeSingle()
+      if (dropInRow) dropInRequest = dropInRow as Record<string, unknown>
+    }
+
+    let blueSignup: Record<string, unknown> | null = null
+    if (order.stripe_session_id) {
+      const { data: signupRow } = await supabase
+        .from("blue_signups")
+        .select(
+          "parent_email, parent_first_name, parent_last_name, athlete_first_name, athlete_last_name, athlete_graduation_year, athlete_high_school",
+        )
+        .eq("stripe_session_id", order.stripe_session_id)
+        .maybeSingle()
+      if (signupRow) blueSignup = signupRow as Record<string, unknown>
+    }
+
+    let blueMembership: Record<string, unknown> | null = null
+    const membershipEmail =
+      (blueSignup?.parent_email as string | undefined)?.trim() ||
+      (order.customer_email as string | undefined)?.trim() ||
+      (order.email as string | undefined)?.trim()
+    if (membershipEmail) {
+      const { data: membershipRow } = await supabase
+        .from("blue_memberships")
+        .select("status, next_billing_at, stripe_subscription_id")
+        .eq("parent_email", membershipEmail)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      if (membershipRow) blueMembership = membershipRow as Record<string, unknown>
+    }
+
+    let spartanDonation: Record<string, unknown> | null = null
+    const sessionId = order.stripe_session_id as string | undefined
+    if (sessionId?.startsWith("cs_")) {
+      const { data: donationRow } = await supabase
+        .from("spartan_donations")
+        .select("id, donor_name, athlete_code, amount_cents, campaign_slug")
+        .eq("id", sessionId)
+        .maybeSingle()
+      if (donationRow) spartanDonation = donationRow as Record<string, unknown>
+    }
+
+    let storeIntegrity: Parameters<typeof resolveAdminOrderDisplay>[0]["storeIntegrity"] = null
+    if (order.stripe_payment_intent_id && !displayUsesNationalTeam && !spartanDonation && !dropInRequest) {
+      try {
+        const { meta } = await fetchMergedStoreMetadata(getStripe(), order.stripe_payment_intent_id as string)
+        const { data: productCache } = await supabase.from("products").select("id, name, image_url").limit(5000)
+        const itemsList = orderItems ?? []
+        const dbQty = itemsList.reduce((s, i) => s + Math.max(1, Number((i as { quantity?: number }).quantity ?? 1)), 0)
+        const integrity = analyzeStoreOrderIntegrity({
+          meta,
+          dbItemCount: itemsList.length,
+          dbQuantitySum: dbQty,
+          subtotal: Number(order.subtotal ?? 0),
+          productsList: productCache ?? [],
+        })
+        if (integrity.fulfillmentUnsafe) {
+          storeIntegrity = {
+            fulfillmentUnsafe: true,
+            summary: integrity.summary,
+            detail: integrity.detail,
+          }
+        }
+      } catch (integrityErr) {
+        console.warn("[orders] analyzeStoreOrderIntegrity:", integrityErr)
+      }
+    }
+
     const orderWithItems = {
       ...order,
       order_items: orderItems ?? [],
@@ -222,7 +354,24 @@ export async function getOrderDetails(orderId: string): Promise<
       display_uses_national_team: displayUsesNationalTeam,
     }
 
-    return { success: true, order: orderWithItems }
+    const adminDisplay = resolveAdminOrderDisplay({
+      order: orderWithItems,
+      nationalTeamRegistration: nationalTeamRegistration as NhscaDuals2026Registration | null,
+      dropInRequest: dropInRequest as Parameters<typeof resolveAdminOrderDisplay>[0]["dropInRequest"],
+      blueSignup: blueSignup as Parameters<typeof resolveAdminOrderDisplay>[0]["blueSignup"],
+      blueMembership: blueMembership as Parameters<typeof resolveAdminOrderDisplay>[0]["blueMembership"],
+      spartanDonation: spartanDonation as Parameters<typeof resolveAdminOrderDisplay>[0]["spartanDonation"],
+      useNationalTeamDisplay: displayUsesNationalTeam,
+      storeIntegrity,
+    })
+
+    return {
+      success: true,
+      order: {
+        ...orderWithItems,
+        admin_display: adminDisplay,
+      },
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to load order"
     console.error("[orders] getOrderDetails:", err)
