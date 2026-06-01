@@ -53,7 +53,7 @@ const ALL_NEWS: NewsItem[] = [
     date: "2026-05-31",
     image: RECRUITING_AWARDS_CARD_IMAGE,
     imagePosition: "center",
-    imageFit: "cover",
+    imageFit: "contain",
     imageBannerBgClass: "bg-[#13294B]",
     newsListBanner: true,
     category: "RECRUITING",

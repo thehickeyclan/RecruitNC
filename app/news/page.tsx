@@ -44,15 +44,21 @@ export default function NewsPage() {
             >
               <div className="grid md:grid-cols-2 gap-0">
                 {/* Image */}
-                <div className="relative aspect-[16/10] md:aspect-auto md:min-h-[400px] overflow-hidden">
+                <div
+                  className={`relative aspect-[16/10] md:aspect-auto md:min-h-[400px] overflow-hidden ${
+                    featured.imageBannerBgClass ?? "bg-[#1a3a5c]"
+                  }`}
+                >
                   {featured.image ? (
                     <Image
                       src={featured.image}
                       alt=""
                       fill
-                      className={`object-cover transition-transform duration-500 group-hover:scale-105 ${
-                        featured.imagePosition === "top" ? "object-top" : "object-center"
-                      }`}
+                      className={`transition-transform duration-500 group-hover:scale-105 ${
+                        featured.imageFit === "contain"
+                          ? "object-contain object-center p-3 sm:p-4"
+                          : "object-cover"
+                      } ${featured.imagePosition === "top" ? "object-top" : "object-center"}`}
                       sizes="(max-width: 768px) 100vw, 50vw"
                       priority
                     />
