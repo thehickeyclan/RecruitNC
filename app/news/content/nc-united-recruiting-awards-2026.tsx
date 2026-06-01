@@ -3,7 +3,7 @@
  * (see IMAGE_PATHS in lib/content/recruiting-awards-2026.ts). Missing files show navy/gold placeholders.
  *
  * RECRUITING_AWARDS_EDITORIAL_RULES:
- * - Bentley Sly is a 4× state champion, 3× NHSCA All-American, Ironman All-American, and App State Open runner-up.
+ * - Bentley Sly is a 4× state champion, 3× NHSCA All-American, Ironman All-American, Super 32 4th (senior), and App State Open runner-up.
  *   He is the ONLY NC wrestler to place at Super 32 in recent years — do NOT attribute Super 32 to anyone else.
  * - Andrew Meadows, Dominic Hittepole, Avery Rhymer, and Jacob Reigel are NHSCA All-Americans (NOT Super 32).
  * - Jacob Reigel's high school is Mount Pleasant.
@@ -180,11 +180,11 @@ export function NcUnitedRecruitingAwards2026Content({
         </p>
         <p>
           Sly&apos;s résumé is the kind that doesn&apos;t come around often. The Stuart Cramer star is a four-time state
-          champion, a three-time NHSCA All-American, and an Ironman All-American — and as a senior he took second at the App
-          State Open, a college tournament loaded with Division I hammers. Beating that level of competition before
-          he&apos;s even set foot on campus tells you exactly what App State is getting. He is, by any reasonable measure,
-          the crown jewel of North Carolina&apos;s 2026 class, and he&apos;s staying in-state to wrestle Division I at App
-          State.
+          champion, a three-time NHSCA All-American, and an Ironman All-American — and as a senior he took fourth at Super
+          32 and second at the App State Open, a college tournament loaded with Division I hammers. Beating that level of
+          competition before he&apos;s even set foot on campus tells you exactly what App State is getting. He is, by any
+          reasonable measure, the crown jewel of North Carolina&apos;s 2026 class, and he&apos;s staying in-state to wrestle
+          Division I at App State.
         </p>
         <p>
           Rhymer wasn&apos;t simply a supporting piece. He finished his career as a state champion, NHSCA All-American, and
