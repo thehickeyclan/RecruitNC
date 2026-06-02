@@ -2,9 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
 import {
-  getCommitmentHonorBadgesForAthlete,
-  mergeCommitmentHonorBadgesForDisplay,
-  stateHonorsFromNchsaaMergedRows,
+  buildCommitmentCardHonorBadges,
 } from "@/lib/commitment-card-honors"
 
 export async function GET(request: Request) {
@@ -145,13 +143,12 @@ export async function GET(request: Request) {
     let commitment_card_honor_badges: string[] | undefined
     if (resolvedAthlete) {
       try {
-        const profileHonors = getCommitmentHonorBadgesForAthlete(resolvedAthlete)
-        const serverFound = new Set(stateHonorsFromNchsaaMergedRows(nchsaaResults))
-        if (achievements.state_championships.length > 0) serverFound.add("State Champion")
-        const serverState = (["State Champion", "State Placer", "State Qualifier"] as const).filter((b) =>
-          serverFound.has(b),
-        )
-        commitment_card_honor_badges = mergeCommitmentHonorBadgesForDisplay(profileHonors, [...serverState])
+        commitment_card_honor_badges = buildCommitmentCardHonorBadges({
+          athlete: resolvedAthlete,
+          nchsaaMergedRows: nchsaaResults,
+          nhscaMergedRows: nhscaResults,
+          super32MergedRows: super32Results,
+        })
       } catch (e) {
         console.error("[RecruitNC] wrestling-achievements: commitment_card_honor_badges failed:", e)
       }

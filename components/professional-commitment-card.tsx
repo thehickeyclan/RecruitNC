@@ -7,10 +7,10 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { RotateCw, ExternalLink, Instagram, Calendar } from "lucide-react"
 import {
+  buildCommitmentCardHonorBadges,
   getCommitmentHonorBadgesForAthlete,
   COMMITMENT_CARD_HONOR_ORDER,
   mergeCommitmentHonorBadgesForDisplay,
-  stateHonorsFromNchsaaMergedRows,
 } from "@/lib/commitment-card-honors"
 import { prefetchAthleteProfile } from "@/lib/prefetch-athlete-profile"
 interface Athlete {
@@ -338,27 +338,27 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
         const data = await res.json()
         if (cancelled || !data?.success || !data?.achievements) return
 
-        if (
-          Array.isArray(data.commitment_card_honor_badges) &&
-          data.commitment_card_honor_badges.length > 0
-        ) {
-          setServerCommitmentHonors(data.commitment_card_honor_badges)
-          return
-        }
-
         const ach = data.achievements as {
           state_championships?: unknown[]
           all_results?: {
             nchsaa?: Array<{ year?: unknown; classification?: unknown; weight_class?: unknown; place?: unknown }>
+            nhsca?: Array<{ placement?: unknown; record?: unknown }>
+            super32?: Array<{ placement?: unknown; record?: unknown }>
           }
         }
-        const found = new Set<string>(stateHonorsFromNchsaaMergedRows(ach.all_results?.nchsaa ?? []))
-        if (Array.isArray(ach.state_championships) && ach.state_championships.length > 0) {
-          found.add("State Champion")
+
+        if (Array.isArray(data.commitment_card_honor_badges)) {
+          setServerCommitmentHonors(data.commitment_card_honor_badges)
+          return
         }
 
-        setServerStateHonors(
-          (["State Champion", "State Placer", "State Qualifier"] as const).filter((b) => found.has(b)),
+        setServerCommitmentHonors(
+          buildCommitmentCardHonorBadges({
+            athlete: athlete as Record<string, unknown>,
+            nchsaaMergedRows: ach.all_results?.nchsaa ?? [],
+            nhscaMergedRows: ach.all_results?.nhsca ?? [],
+            super32MergedRows: ach.all_results?.super32 ?? [],
+          }),
         )
       } catch (e) {
         console.error("[RecruitNC] commitment-card state honors fetch:", e)
@@ -368,7 +368,7 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
     return () => {
       cancelled = true
     }
-  }, [athlete.id])
+  }, [athlete])
 
   const getAthletePhoto = () => {
     if (athlete.name?.toLowerCase().includes("liam hickey")) {
