@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
-import Link from "next/link"
+import { HardLink } from "@/components/hard-link"
+import type { ReactNode } from "react"
 
 function norm(s: string) {
   return (s || "").trim().replace(/\s+/g, " ").toLowerCase()
@@ -21,6 +22,16 @@ function getFullName(row: Record<string, unknown>): string {
   return (row.wrestling_name as string)?.trim() || ""
 }
 
+function ByNameShell({ children }: { children: ReactNode }) {
+  return (
+    <main className="min-h-screen bg-[#0A1628] flex items-center justify-center p-6">
+      <div className="max-w-lg w-full rounded-xl border border-white/10 bg-[#0f1c2e] p-8 text-center">
+        {children}
+      </div>
+    </main>
+  )
+}
+
 export default async function UnifiedProfileByNamePage({
   searchParams,
 }: {
@@ -34,18 +45,19 @@ export default async function UnifiedProfileByNamePage({
 
   if (!name) {
     return (
-      <div className="container mx-auto p-8 text-center">
-        <p className="text-gray-600">Missing name. Use ?name=First+Last&amp;school=School&amp;year=2028</p>
-        <Link href="/public-rankings/2028" className="text-[#13294B] underline mt-4 inline-block">
+      <ByNameShell>
+        <p className="text-white/70 mb-4">
+          Missing name. Use ?name=First+Last&amp;school=School&amp;year=2028
+        </p>
+        <HardLink href="/public-rankings/2028" className="text-[#D3B574] underline underline-offset-4">
           Back to 2028 rankings
-        </Link>
-      </div>
+        </HardLink>
+      </ByNameShell>
     )
   }
 
   const supabase = createAdminClient()
 
-  // Select only columns that exist (no high_school)
   let { data: athletes, error } = await supabase
     .from("athletes")
     .select("id, name, wrestling_name, highschool")
@@ -63,16 +75,21 @@ export default async function UnifiedProfileByNamePage({
 
   if (error || !athletes?.length) {
     return (
-      <div className="container mx-auto p-8 text-center">
-        <p className="text-gray-600">No profile found for {name}{school ? ` at ${school}` : ""}.</p>
-        <Link href="/create-profile" className="text-[#13294B] underline mt-4 inline-block">
-          Create profile
-        </Link>
-        <span className="mx-2">|</span>
-        <Link href="/public-rankings/2028" className="text-[#13294B] underline">
-          Back to rankings
-        </Link>
-      </div>
+      <ByNameShell>
+        <p className="text-white/70 mb-4">
+          No profile found for {name}
+          {school ? ` at ${school}` : ""}.
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-3 text-sm">
+          <HardLink href="/create-profile" className="text-[#D3B574] underline underline-offset-4">
+            Create profile
+          </HardLink>
+          <span className="text-white/30">|</span>
+          <HardLink href="/public-rankings/2028" className="text-[#D3B574] underline underline-offset-4">
+            Back to rankings
+          </HardLink>
+        </div>
+      </ByNameShell>
     )
   }
 
@@ -87,19 +104,24 @@ export default async function UnifiedProfileByNamePage({
     return hs === wantSchoolNorm || hs.includes(wantSchoolNorm) || wantSchoolNorm.includes(hs)
   })
 
-  const id = match ? (match as Record<string, unknown>).id as string : null
+  const id = match ? ((match as Record<string, unknown>).id as string) : null
   if (id) redirect(`/view-profile?id=${encodeURIComponent(id)}`)
 
   return (
-    <div className="container mx-auto p-8 text-center">
-      <p className="text-gray-600">No profile found for {name}{school ? ` at ${school}` : ""}.</p>
-      <Link href="/create-profile" className="text-[#13294B] underline mt-4 inline-block">
-        Create profile
-      </Link>
-      <span className="mx-2">|</span>
-      <Link href="/public-rankings/2028" className="text-[#13294B] underline">
-        Back to rankings
-      </Link>
-    </div>
+    <ByNameShell>
+      <p className="text-white/70 mb-4">
+        No profile found for {name}
+        {school ? ` at ${school}` : ""}.
+      </p>
+      <div className="flex flex-wrap items-center justify-center gap-3 text-sm">
+        <HardLink href="/create-profile" className="text-[#D3B574] underline underline-offset-4">
+          Create profile
+        </HardLink>
+        <span className="text-white/30">|</span>
+        <HardLink href="/public-rankings/2028" className="text-[#D3B574] underline underline-offset-4">
+          Back to rankings
+        </HardLink>
+      </div>
+    </ByNameShell>
   )
 }

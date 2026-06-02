@@ -8,6 +8,15 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Users, Target, ExternalLink, Instagram, Trophy, Clock } from "lucide-react"
 import { RankingsTableView } from "@/components/rankings-table-view"
+import {
+  RANKINGS_ARCHIVED_BANNER,
+  RANKINGS_BODY,
+  RANKINGS_HEADING,
+  RANKINGS_PAGE,
+  RANKINGS_PANEL,
+  RANKINGS_SPOTLIGHT,
+  RANKINGS_SUBHEADING,
+} from "@/lib/public-rankings-theme"
 
 interface Athlete {
   id: string
@@ -64,8 +73,8 @@ export default function ClassOf2026RankingsPage() {
 
   if (loadingAthletes) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-[#B31B1B]"></div>
+      <div className={`flex min-h-screen items-center justify-center ${RANKINGS_PAGE}`}>
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-[#D3B574]" />
       </div>
     )
   }
@@ -78,18 +87,18 @@ export default function ClassOf2026RankingsPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+    <div className={RANKINGS_PAGE}>
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+          <div className={`${RANKINGS_ARCHIVED_BANNER} mb-6`}>
             <span className="font-semibold">Archived rankings.</span> The Class of 2026 has graduated. Current prospect
             rankings:{" "}
-            <Link href="/public-rankings/2027" className="font-semibold text-[#003366] underline underline-offset-2">
+            <HardLink href="/public-rankings/2027" className="font-semibold text-[#D3B574] underline underline-offset-2">
               2027
-            </Link>
+            </HardLink>
             {" · "}
-            <Link href="/public-rankings/2028" className="font-semibold text-[#003366] underline underline-offset-2">
+            <HardLink href="/public-rankings/2028" className="font-semibold text-[#D3B574] underline underline-offset-2">
               2028
-            </Link>
+            </HardLink>
           </div>
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#003366] to-[#1e3a8a] p-6 sm:p-12 mb-12 shadow-2xl">
             <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
@@ -118,8 +127,8 @@ export default function ClassOf2026RankingsPage() {
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl p-4 sm:p-8 shadow-xl">
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Top 3 of the Class of 2026</h2>
+              <div className={RANKINGS_SPOTLIGHT}>
+                <h2 className={`${RANKINGS_SUBHEADING} text-xl sm:text-2xl`}>Top 3 of the Class of 2026</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                   {top3Athletes.map((athlete, index) => (
                     <div key={athlete.id} className="text-center">
@@ -135,15 +144,15 @@ export default function ClassOf2026RankingsPage() {
                           </div>
                         )}
                       </div>
-                      <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1">
-                        <a href={`/view-profile?id=${encodeURIComponent(athlete.id)}`} className="text-gray-900 hover:text-[#D3B574] hover:underline">
+                      <h3 className="text-base sm:text-lg font-bold text-white mb-1">
+                        <a href={`/view-profile?id=${encodeURIComponent(athlete.id)}`} className="text-white hover:text-[#D3B574] hover:underline">
                           {index === 0 && athlete.name.includes("Alston") ? "Lorenzo Alston" : athlete.name}
                         </a>
                       </h3>
-                      <p className="text-sm text-gray-600 mb-2">
+                      <p className="text-sm text-white/60 mb-2">
                         {athlete.highschool}
                         {athlete.high_school_division ? (
-                          <span className="text-gray-500"> · {athlete.high_school_division}</span>
+                          <span className="text-white/40"> · {athlete.high_school_division}</span>
                         ) : null}
                       </p>
                       <Badge className="bg-[#D3B574] text-gray-900">#{index + 1} Ranked</Badge>
@@ -155,13 +164,13 @@ export default function ClassOf2026RankingsPage() {
           </div>
 
           <div className="mb-8 sm:mb-10">
-            <Card className="border-2 border-[#D3B574]/50 bg-gradient-to-br from-white to-slate-50 shadow-md">
+            <Card className={`${RANKINGS_PANEL} border-[#D3B574]/30`}>
               <CardContent className="p-5 sm:p-6">
-                <p className="text-xs font-semibold uppercase tracking-wide text-[#003366]">Editorial</p>
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900 mt-1 mb-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[#D3B574]">Editorial</p>
+                <h2 className={`${RANKINGS_SUBHEADING} text-lg sm:text-xl mt-1 mb-2`}>
                   Final Class of 2026 Rankings: A Senior Sendoff
                 </h2>
-                <p className="text-gray-700 text-sm sm:text-base leading-relaxed mb-4">
+                <p className={`${RANKINGS_BODY} text-sm sm:text-base mb-4`}>
                   The Class of 2026 has closed the book on high school wrestling — from NHSCA and Super 32 to
                   four-time state champions and college opens. Read our full tribute to this class, their families,
                   coaches, and what comes next at the next level.
@@ -177,16 +186,16 @@ export default function ClassOf2026RankingsPage() {
           </div>
 
           <div className="space-y-6 sm:space-y-8 mb-8 sm:mb-12">
-            <Card>
+            <Card className={RANKINGS_PANEL}>
               <CardContent className="p-6 sm:p-8">
-                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">A Unique Class</h2>
-                <p className="text-base sm:text-lg text-gray-700 leading-relaxed mb-4">
+                <h2 className={RANKINGS_HEADING}>A Unique Class</h2>
+                <p className={`${RANKINGS_BODY} mb-4`}>
                   The North Carolina Class of 2026 features a unique distinction: 2 consistently nationally ranked top
                   10 athletes in Lorenzo Alston and Bentley Sly. With 26 state titles, 68 state placements, 2 NHSCA
                   finalist appearances, and 8 NHSCA All-American placements, this class has proven themselves on every
                   stage.
                 </p>
-                <p className="text-base sm:text-lg text-gray-700 leading-relaxed">
+                <p className={RANKINGS_BODY}>
                   Their achievements include a Pembroke Open winner, wins over D1 competitors, and numerous victories
                   over nationally ranked opponents. This combination of consistent national-level performance and depth
                   of talent makes the Class of 2026 stand out in North Carolina wrestling.
@@ -194,18 +203,18 @@ export default function ClassOf2026RankingsPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-gray-50 to-white">
+            <Card className={RANKINGS_PANEL}>
               <CardContent className="p-6 sm:p-8">
-                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center gap-3">
-                  <Users className="h-6 w-6 sm:h-8 sm:w-8 text-[#003366]" />
+                <h2 className={`${RANKINGS_HEADING} flex items-center gap-3`}>
+                  <Users className="h-6 w-6 sm:h-8 sm:w-8 text-[#D3B574]" />
                   Statewide Excellence
                 </h2>
-                <p className="text-base sm:text-lg text-gray-700 leading-relaxed mb-4">
+                <p className={`${RANKINGS_BODY} mb-4`}>
                   This group represents high schools across the state, showcasing the broad reach of elite wrestling
                   development in North Carolina. From the mountains to the coast, these athletes have consistently
                   dominated state competition while also making their mark on the national stage.
                 </p>
-                <p className="text-base sm:text-lg text-gray-700 leading-relaxed">
+                <p className={RANKINGS_BODY}>
                   With 26 state championships and 68 total state placements, the Class of 2026 has established
                   themselves as one of the most accomplished groups in recent North Carolina history. Their success at
                   both the state and national levels demonstrates the rising standard of wrestling across the entire
@@ -214,19 +223,19 @@ export default function ClassOf2026RankingsPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-blue-50 to-white">
+            <Card className={RANKINGS_PANEL}>
               <CardContent className="p-6 sm:p-8">
-                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center gap-3">
-                  <Users className="h-6 w-6 sm:h-8 sm:w-8 text-[#003366]" />
+                <h2 className={`${RANKINGS_HEADING} flex items-center gap-3`}>
+                  <Users className="h-6 w-6 sm:h-8 sm:w-8 text-[#D3B574]" />
                   The NC United Pipeline
                 </h2>
-                <p className="text-base sm:text-lg text-gray-700 leading-relaxed mb-4">
+                <p className={`${RANKINGS_BODY} mb-4`}>
                   The Class of 2026 is deeply connected to the NC United program. 3 of the Top 5 ranked wrestlers have
                   been on the NC United National Team, and 6 of the Top 10 are NC United Blue Program members. This
                   integration has fueled both individual and team success, giving athletes opportunities to compete
                   against the nation's best every Sunday.
                 </p>
-                <p className="text-base sm:text-lg text-gray-700 leading-relaxed">
+                <p className={RANKINGS_BODY}>
                   Access to college-level training environments and resources has prepared these athletes for the next
                   level. The NC United Blue program continues to produce athletes ready for the spotlight, with the
                   Class of 2026 leading the way in demonstrating the program's impact on North Carolina wrestling.
@@ -234,18 +243,18 @@ export default function ClassOf2026RankingsPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-green-50 to-white">
+            <Card className={RANKINGS_PANEL}>
               <CardContent className="p-6 sm:p-8">
-                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center gap-3">
-                  <Target className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
+                <h2 className={`${RANKINGS_HEADING} flex items-center gap-3`}>
+                  <Target className="h-6 w-6 sm:h-8 sm:w-8 text-[#D3B574]" />
                   College Recruiting Success
                 </h2>
-                <p className="text-base sm:text-lg text-gray-700 leading-relaxed mb-4">
+                <p className={`${RANKINGS_BODY} mb-4`}>
                   The Class of 2026 has drawn unprecedented attention from college coaches nationwide. Multiple athletes
                   have already committed to Division I programs, including NC State and Appalachian State, with many
                   more in active recruitment.
                 </p>
-                <p className="text-base sm:text-lg text-gray-700 leading-relaxed">
+                <p className={RANKINGS_BODY}>
                   College coaches from across the country — from local programs like UNC, NC State, Gardner-Webb,
                   Appalachian State, UMO, Greensboro, and Pembroke to national powers including Stanford, Virginia,
                   Brown, Northwestern, and Bucknell — have shown strong interest in this talented group. Their success
@@ -282,12 +291,12 @@ export default function ClassOf2026RankingsPage() {
             </div>
           </Card>
 
-          <Card className="mb-8 sm:mb-12">
+          <Card className={`${RANKINGS_PANEL} mb-8 sm:mb-12`}>
             <CardContent className="p-6 sm:p-8">
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6 text-center">
+              <h2 className={`${RANKINGS_HEADING} text-center`}>
                 Official Rankings
               </h2>
-              <div className="prose prose-base sm:prose-lg max-w-none text-gray-700">
+              <div className="max-w-none text-white/70">
                 <p className="text-center mb-4 sm:mb-6 leading-relaxed">
                   Our rankings prioritize performance at the national level, where athletes measure themselves against
                   the country's best. Quality of wins — especially against nationally ranked opponents — carries
@@ -306,13 +315,13 @@ export default function ClassOf2026RankingsPage() {
           {/* Top 30 Ranked Section */}
           <div className="mb-8 sm:mb-12">
             <div className="mb-6">
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 text-center mb-2">
+              <h2 className={`${RANKINGS_HEADING} text-center mb-2`}>
                 Top 30 Ranked Prospects
               </h2>
               {lastUpdated && (
                 <div className="flex items-center justify-center gap-2 text-sm">
-                  <Clock className="h-4 w-4 text-gray-600" />
-                  <span className="text-gray-600">
+                  <Clock className="h-4 w-4 text-white/40" />
+                  <span className="text-white/50">
                     Last updated: {new Date(lastUpdated).toLocaleString("en-US", {
                       month: "long",
                       day: "numeric",
@@ -327,7 +336,8 @@ export default function ClassOf2026RankingsPage() {
             </div>
             <RankingsTableView 
               athletes={athletes.filter(a => a.prospect_ranking && a.prospect_ranking <= 30)} 
-              loading={loadingAthletes} 
+              loading={loadingAthletes}
+              theme="dark"
             />
           </div>
 

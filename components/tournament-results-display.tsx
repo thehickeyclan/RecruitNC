@@ -52,10 +52,21 @@ export function TournamentResultsDisplay({
 }: TournamentResultsDisplayProps) {
   const isDark = theme === "dark"
   const cardClass = isDark ? "profile-card border-t-4 border-t-[#D3B574] border-white/10 bg-[#0f1c2e] shadow-none" : "border-t-4 border-t-[#D3B574] shadow-md"
-  const contentClass = isDark ? "p-4 md:p-6 bg-[#0f1c2e] text-white/70" : "p-4 md:p-6"
-  const tableHeadClass = isDark ? "bg-white/5 text-white/60" : "bg-gray-50"
-  const tableRowClass = isDark ? "hover:bg-white/5 border-white/10" : "hover:bg-gray-50 transition-colors"
+  const contentClass = isDark ? "p-4 md:p-6 bg-[#0f1c2e] text-white/80" : "p-4 md:p-6"
+  const tableHeadRowClass = isDark ? "bg-white/5 border-white/10" : "bg-gray-50"
+  const tableHeadCellClass = isDark ? "font-semibold text-white/60" : "font-semibold"
+  const tableRowClass = isDark ? "hover:bg-white/5 border-white/10 text-white/80" : "hover:bg-gray-50 transition-colors"
+  const tableWrapClass = isDark ? "rounded-lg border border-white/10 overflow-x-auto" : "rounded-lg border overflow-x-auto"
   const descClass = isDark ? "text-sm text-white/50 mb-4" : "text-sm text-gray-600 mb-4"
+  const cellPrimaryClass = isDark ? "font-medium text-white" : "font-medium text-[#03154C]"
+  const cellYearClass = isDark ? "font-semibold text-white" : "font-semibold text-[#13294B]"
+  const cellYearNhscaClass = isDark ? "font-semibold text-white" : "font-semibold text-[#002147]"
+  const cellMonoClass = isDark ? "font-mono text-white/80" : "font-mono"
+  const cellMonoMutedClass = isDark ? "font-mono text-white/40" : "font-mono text-gray-400"
+  const emptyRowClass = isDark ? "text-center text-white/40 py-6" : "text-center text-gray-500 py-6"
+  const memberHintClass = isDark ? "ml-2 text-xs font-normal text-white/40" : "ml-2 text-xs font-normal text-gray-500"
+  const emptyBadgeClass = isDark ? "text-white/40" : "text-gray-400"
+  const outlineBadgeClass = isDark ? "border-white/30 text-white/80 bg-transparent" : ""
   const hasAnyResults = nhscaResults.length > 0 || super32Results.length > 0 || nchsaaResults.length > 0
 
   if (!hasAnyResults && !alwaysShowStructure) {
@@ -64,7 +75,7 @@ export function TournamentResultsDisplay({
 
   const getPlacementBadge = (placement: string | null | undefined, size: 'default' | 'sm' = 'default', emptyLabel = "—") => {
     if (!placement) {
-      return <span className="text-gray-400">{emptyLabel}</span>
+      return <span className={emptyBadgeClass}>{emptyLabel}</span>
     }
     
     const p = placement.toLowerCase()
@@ -82,7 +93,7 @@ export function TournamentResultsDisplay({
     if (["4th", "5th", "6th", "7th", "8th", "4", "5", "6", "7", "8"].includes(p)) {
       return <Badge className={`bg-[#002147] text-white hover:bg-[#003366] ${badgeClass}`}>{placement}</Badge>
     }
-    return <Badge variant="outline" className={badgeClass}>{placement}</Badge>
+    return <Badge variant="outline" className={`${badgeClass} ${outlineBadgeClass}`}>{placement}</Badge>
   }
 
   // Compact version for cards/smaller displays
@@ -152,32 +163,32 @@ export function TournamentResultsDisplay({
             <p className={descClass}>
               National team competition: Ultimate Club Duals and NHSCA National Duals
             </p>
-            <div className="rounded-lg border overflow-x-auto">
+            <div className={tableWrapClass}>
               <Table className="min-w-[400px]">
                 <TableHeader>
-                  <TableRow className={tableHeadClass}>
-                    <TableHead className="font-semibold">Event</TableHead>
-                    <TableHead className="font-semibold">Year</TableHead>
-                    <TableHead className="font-semibold">Record</TableHead>
+                  <TableRow className={tableHeadRowClass}>
+                    <TableHead className={tableHeadCellClass}>Event</TableHead>
+                    <TableHead className={tableHeadCellClass}>Year</TableHead>
+                    <TableHead className={tableHeadCellClass}>Record</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {nationalTeamResults.length > 0 ? nationalTeamResults.map((result, index) => (
                     <TableRow key={index} className={tableRowClass}>
-                      <TableCell className="font-medium text-[#03154C]">
+                      <TableCell className={cellPrimaryClass}>
                         {result.event}
                         {result.isPlaceholder && (
-                          <span className="ml-2 text-xs font-normal text-gray-500">(Member)</span>
+                          <span className={memberHintClass}>(Member)</span>
                         )}
                       </TableCell>
-                      <TableCell className="font-semibold">{result.year}</TableCell>
-                      <TableCell className={result.isPlaceholder ? "font-mono text-gray-400" : "font-mono"}>
+                      <TableCell className={cellYearClass}>{result.year}</TableCell>
+                      <TableCell className={result.isPlaceholder ? cellMonoMutedClass : cellMonoClass}>
                         {result.record}
                       </TableCell>
                     </TableRow>
                   )) : (
                     <TableRow>
-                      <TableCell colSpan={3} className="text-center text-gray-500 py-6">
+                      <TableCell colSpan={3} className={emptyRowClass}>
                         No national team results recorded
                       </TableCell>
                     </TableRow>
@@ -199,14 +210,14 @@ export function TournamentResultsDisplay({
             </CardTitle>
           </CardHeader>
           <CardContent className={contentClass}>
-            <div className="rounded-lg border overflow-x-auto">
+            <div className={tableWrapClass}>
               <Table className="min-w-[480px]">
                 <TableHeader>
-                  <TableRow className={tableHeadClass}>
-                    <TableHead className="font-semibold">Year</TableHead>
-                    <TableHead className="font-semibold">Placement</TableHead>
-                    <TableHead className="font-semibold">Classification</TableHead>
-                    <TableHead className="font-semibold">Weight</TableHead>
+                  <TableRow className={tableHeadRowClass}>
+                    <TableHead className={tableHeadCellClass}>Year</TableHead>
+                    <TableHead className={tableHeadCellClass}>Placement</TableHead>
+                    <TableHead className={tableHeadCellClass}>Classification</TableHead>
+                    <TableHead className={tableHeadCellClass}>Weight</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -230,7 +241,7 @@ export function TournamentResultsDisplay({
 
                       return (
                         <TableRow key={index} className={tableRowClass}>
-                          <TableCell className="font-semibold text-[#13294B]">{result.year}</TableCell>
+                          <TableCell className={cellYearClass}>{result.year}</TableCell>
                           <TableCell>{getPlacementBadge(placementText)}</TableCell>
                           <TableCell>{result.classification}</TableCell>
                           <TableCell>{result.weight_class}</TableCell>
@@ -239,7 +250,7 @@ export function TournamentResultsDisplay({
                     })
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center text-gray-500 py-6">
+                      <TableCell colSpan={4} className={emptyRowClass}>
                         No NCHSAA results recorded
                       </TableCell>
                     </TableRow>
@@ -261,31 +272,31 @@ export function TournamentResultsDisplay({
             </CardTitle>
           </CardHeader>
           <CardContent className={contentClass}>
-            <div className="rounded-lg border overflow-x-auto">
+            <div className={tableWrapClass}>
               <Table className="min-w-[540px]">
                 <TableHeader>
-                  <TableRow className={tableHeadClass}>
-                    <TableHead className="font-semibold">Year</TableHead>
-                    <TableHead className="font-semibold">Placement</TableHead>
-                    <TableHead className="font-semibold">Record</TableHead>
-                    <TableHead className="font-semibold">Weight</TableHead>
-                    <TableHead className="font-semibold">Division</TableHead>
+                  <TableRow className={tableHeadRowClass}>
+                    <TableHead className={tableHeadCellClass}>Year</TableHead>
+                    <TableHead className={tableHeadCellClass}>Placement</TableHead>
+                    <TableHead className={tableHeadCellClass}>Record</TableHead>
+                    <TableHead className={tableHeadCellClass}>Weight</TableHead>
+                    <TableHead className={tableHeadCellClass}>Division</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {nhscaResults.length > 0 ? (
                     nhscaResults.map((result, index) => (
                       <TableRow key={index} className={tableRowClass}>
-                        <TableCell className="font-semibold text-[#002147]">{result.year}</TableCell>
+                        <TableCell className={cellYearNhscaClass}>{result.year}</TableCell>
                         <TableCell>{getPlacementBadge(result.placement)}</TableCell>
-                        <TableCell className="font-mono">{result.record || "—"}</TableCell>
+                        <TableCell className={cellMonoClass}>{result.record || "—"}</TableCell>
                         <TableCell>{result.weight || "—"}</TableCell>
                         <TableCell>{result.division || "—"}</TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center text-gray-500 py-6">
+                      <TableCell colSpan={5} className={emptyRowClass}>
                         No NHSCA results recorded
                       </TableCell>
                     </TableRow>
@@ -307,29 +318,29 @@ export function TournamentResultsDisplay({
             </CardTitle>
           </CardHeader>
           <CardContent className={contentClass}>
-            <div className="rounded-lg border overflow-x-auto">
+            <div className={tableWrapClass}>
               <Table className="min-w-[480px]">
                 <TableHeader>
-                  <TableRow className={tableHeadClass}>
-                    <TableHead className="font-semibold">Year</TableHead>
-                    <TableHead className="font-semibold">Placement</TableHead>
-                    <TableHead className="font-semibold">Record</TableHead>
-                    <TableHead className="font-semibold">Weight</TableHead>
+                  <TableRow className={tableHeadRowClass}>
+                    <TableHead className={tableHeadCellClass}>Year</TableHead>
+                    <TableHead className={tableHeadCellClass}>Placement</TableHead>
+                    <TableHead className={tableHeadCellClass}>Record</TableHead>
+                    <TableHead className={tableHeadCellClass}>Weight</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {super32Results.length > 0 ? (
                     super32Results.map((result, index) => (
                       <TableRow key={index} className={tableRowClass}>
-                        <TableCell className="font-semibold text-[#13294B]">{result.year}</TableCell>
+                        <TableCell className={cellYearClass}>{result.year}</TableCell>
                         <TableCell>{getPlacementBadge(result.placement, 'default', 'DNP')}</TableCell>
-                        <TableCell className="font-mono">{result.record || "—"}</TableCell>
+                        <TableCell className={cellMonoClass}>{result.record || "—"}</TableCell>
                         <TableCell>{result.weight || "—"}</TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center text-gray-500 py-6">
+                      <TableCell colSpan={4} className={emptyRowClass}>
                         No Super 32 results recorded
                       </TableCell>
                     </TableRow>

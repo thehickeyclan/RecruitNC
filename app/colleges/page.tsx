@@ -10,11 +10,14 @@ import { Badge } from "@/components/ui/badge"
 import { Search, GraduationCap, LayoutList, ListOrdered, ArrowLeft } from "lucide-react"
 import { CollegeLeaderboard } from "@/components/college-leaderboard"
 import { CollegeCommitsTable } from "@/components/college-commits-table"
+import { getDefaultCommitClassYear } from "@/lib/commit-class-year"
+
+const DEFAULT_COMMIT_YEAR = getDefaultCommitClassYear()
 
 function NewCollegesPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [gender, setGender] = useState("all")
-  const [year, setYear] = useState("all")
+  const [year, setYear] = useState(DEFAULT_COMMIT_YEAR)
   const [division, setDivision] = useState("all")
   const [metric, setMetric] = useState("total_commits")
   const [totalCommits, setTotalCommits] = useState(0)
@@ -26,14 +29,20 @@ function NewCollegesPage() {
 
   function clearFilters() {
     setGender("all")
-    setYear("all")
+    setYear(DEFAULT_COMMIT_YEAR)
     setSearchTerm("")
     setDivision("all")
     setMetric("total_commits")
   }
 
   function checkActiveFilters() {
-    return gender !== "all" || year !== "all" || searchTerm !== "" || division !== "all" || metric !== "total_commits"
+    return (
+      gender !== "all" ||
+      year !== DEFAULT_COMMIT_YEAR ||
+      searchTerm !== "" ||
+      division !== "all" ||
+      metric !== "total_commits"
+    )
   }
 
   const handleStatsUpdate = useCallback(
@@ -54,7 +63,7 @@ function NewCollegesPage() {
   const hasActiveFilters = checkActiveFilters()
 
   const statsLabel =
-    year !== "all" ? `Class of ${year}` : "All Classes (2025+)"
+    year === "all" ? "All Classes (2025+)" : `Class of ${year}`
 
   return (
     <main className="min-h-screen bg-[#0A1628]">
@@ -233,8 +242,11 @@ function NewCollegesPage() {
                         : division}
                 </Badge>
               )}
-              {year !== "all" && (
+              {year !== DEFAULT_COMMIT_YEAR && year !== "all" && (
                 <Badge className="bg-[#D3B574] text-[#0A1628] border-0">Class of {year}</Badge>
+              )}
+              {year === "all" && (
+                <Badge className="bg-[#D3B574] text-[#0A1628] border-0">All Years (2025+)</Badge>
               )}
               {searchTerm && (
                 <Badge className="bg-white/10 text-white border-0">{`Search: "${searchTerm}"`}</Badge>

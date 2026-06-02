@@ -13,6 +13,16 @@ import { RankingsTableView } from "@/components/rankings-table-view"
 import { RankingsCardView } from "@/components/rankings-card-view"
 import { Search, Filter, ArrowLeft, Trophy, Users, Clock } from "lucide-react"
 import { AuthGuard } from "@/components/auth-guard"
+import {
+  RANKINGS_BODY,
+  RANKINGS_FILTER_BAR,
+  RANKINGS_HEADING,
+  RANKINGS_INPUT,
+  RANKINGS_PAGE,
+  RANKINGS_PANEL,
+  RANKINGS_SPOTLIGHT,
+  RANKINGS_SUBHEADING,
+} from "@/lib/public-rankings-theme"
 
 interface PublicRanking {
   id: string
@@ -218,7 +228,7 @@ export default function Class2028RankingsPage() {
 
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+      <div className={RANKINGS_PAGE}>
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#003366] via-[#0a2571] to-[#1e3a8a] p-6 sm:p-12 mb-12 shadow-2xl">
             <div className="absolute inset-0 bg-gradient-to-br from-[#003366]/90 via-[#003366]/65 to-[#1e3a8a]/80"></div>
@@ -262,8 +272,8 @@ export default function Class2028RankingsPage() {
                 </div>
 
                 {/* Top 3 Spotlight */}
-                <div className="bg-white/95 rounded-2xl p-4 sm:p-8 shadow-xl">
-                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Top 3 of the Class of 2028</h2>
+                <div className={RANKINGS_SPOTLIGHT}>
+                  <h2 className={`${RANKINGS_SUBHEADING} text-xl sm:text-2xl`}>Top 3 of the Class of 2028</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                     {finalTop3.map((athlete, index) => {
                       const photoUrl = athlete.photourl &&
@@ -275,7 +285,7 @@ export default function Class2028RankingsPage() {
                       const rank = athlete.prospect_ranking || index + 1
                       return (
                         <div key={`${athlete.name}-${index}`} className="text-center">
-                          <div className="relative mb-3 sm:mb-4 mx-auto w-full h-[220px] sm:h-[280px] rounded-lg overflow-hidden shadow-lg bg-gray-100">
+                          <div className="relative mb-3 sm:mb-4 mx-auto w-full h-[220px] sm:h-[280px] rounded-lg overflow-hidden shadow-lg bg-white/5">
                             {photoUrl ? (
                               <img
                                 src={photoUrl}
@@ -304,30 +314,30 @@ export default function Class2028RankingsPage() {
                               <Badge className="bg-[#D3B574] text-gray-900 font-semibold px-3 py-1">#{rank}</Badge>
                             </div>
                           </div>
-                          <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1">
+                          <h3 className="text-base sm:text-lg font-bold text-white mb-1">
                             {athlete.id ? (
-                              <a href={`/view-profile?id=${encodeURIComponent(athlete.id)}`} className="text-gray-900 hover:text-[#D3B574] hover:underline">
+                              <a href={`/view-profile?id=${encodeURIComponent(athlete.id)}`} className="text-white hover:text-[#D3B574] hover:underline">
                                 {athlete.name}
                               </a>
                             ) : (
-                              <a href={getProfileUrl(athlete.name || "", (athlete.school as string) || "", linkResolution)} className="text-gray-900 hover:text-[#D3B574] hover:underline">
+                              <a href={getProfileUrl(athlete.name || "", (athlete.school as string) || "", linkResolution)} className="text-white hover:text-[#D3B574] hover:underline">
                                 {athlete.name}
                               </a>
                             )}
                           </h3>
-                          <p className="text-sm text-gray-600 mb-2">
+                          <p className="text-sm text-white/60 mb-2">
                             {athlete.school}
                             {athlete.high_school_division ? (
-                              <span className="text-gray-500"> · {athlete.high_school_division}</span>
+                              <span className="text-white/40"> · {athlete.high_school_division}</span>
                             ) : null}
                           </p>
-                          <Badge variant="outline" className="border-[#D3B574] text-[#D3B574] mb-2">
+                          <Badge variant="outline" className="border-[#D3B574] text-[#D3B574] bg-transparent mb-2">
                             {athlete.weight}
                           </Badge>
                           <div className="mt-2">
                             <a
                               href={athlete.id ? `/view-profile?id=${encodeURIComponent(athlete.id)}` : getProfileUrl(athlete.name || "", (athlete.school as string) || "", linkResolution)}
-                              className="text-xs text-[#003366] hover:text-[#D3B574] hover:underline"
+                              className="text-xs text-[#D3B574] hover:text-white hover:underline"
                             >
                               View Profile →
                             </a>
@@ -343,12 +353,12 @@ export default function Class2028RankingsPage() {
 
           <div className="space-y-6 sm:space-y-8 mb-8 sm:mb-12">
             {/* A Class Built on National Performance */}
-            <Card>
+            <Card className={RANKINGS_PANEL}>
               <CardContent className="p-6 sm:p-8">
-                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">
+                <h2 className={RANKINGS_HEADING}>
                   A Class Built on National Performance
                 </h2>
-                <p className="text-base sm:text-lg text-gray-700 leading-relaxed">
+                <p className={RANKINGS_BODY}>
                   The Class of 2028 represents a new wave of North Carolina wrestling talent that has proven itself on
                   the national stage as freshmen. With 6 NHSCA All-Americans in the top 7 and consistent participation in
                   elite events like Super32 and Fargo, this class has demonstrated they can compete with the country's
@@ -358,7 +368,7 @@ export default function Class2028RankingsPage() {
             </Card>
 
             {/* Quote Box */}
-            <div className="bg-[#D3B574] text-white p-8 rounded-lg my-12 border-l-4 border-[#D3B574]">
+            <div className="rounded-xl border border-[#D3B574]/30 bg-[#0f1c2e] p-8 my-12">
               <div className="flex flex-col md:flex-row gap-6 items-center">
                 <div className="flex-shrink-0">
                   <img
@@ -368,27 +378,27 @@ export default function Class2028RankingsPage() {
                   />
                 </div>
                 <div className="flex-1">
-                  <blockquote className="text-xl italic leading-relaxed mb-4">
+                  <blockquote className="text-xl italic leading-relaxed mb-4 text-white/80">
                     "The Class of 2028 is special because they're not waiting to compete nationally — they're already
                     doing it as freshmen and sophomores. Seeing six NHSCA All-Americans in one class tells you these
                     athletes are serious about wrestling at the next level. They're building the foundation now."
                   </blockquote>
-                  <cite className="text-[#003366] font-semibold">— Mike Macchiavello, Co-Founder NC United</cite>
+                  <cite className="text-[#D3B574] font-semibold">— Mike Macchiavello, Co-Founder NC United</cite>
                 </div>
               </div>
             </div>
 
             {/* The NC United Pipeline */}
-            <Card>
+            <Card className={RANKINGS_PANEL}>
               <CardContent className="p-6 sm:p-8">
-                <h3 className="text-2xl font-bold text-gray-900 mb-4 sm:mb-6">The NC United Pipeline</h3>
-                <p className="text-base sm:text-lg text-gray-700 leading-relaxed mb-4">
+                <h3 className={RANKINGS_SUBHEADING}>The NC United Pipeline</h3>
+                <p className={`${RANKINGS_BODY} mb-4`}>
                   The success of the Class of 2028 reflects North Carolina's growing wrestling infrastructure. 13 out of
                   25 ranked wrestlers train with NC United Blue, giving them weekly exposure to elite competition and
                   college-level coaching. This investment in high-level training is paying dividends, as evidenced by the
                   class's national tournament success.
                 </p>
-                <p className="text-base sm:text-lg text-gray-700 leading-relaxed">
+                <p className={RANKINGS_BODY}>
                   From Lumberton to Charlotte Catholic to Northwest Guilford, the geographic diversity of this class
                   shows wrestling's expansion across the state. Multiple training hubs are producing nationally
                   competitive athletes, creating a pipeline that college coaches are starting to notice.
@@ -397,10 +407,10 @@ export default function Class2028RankingsPage() {
             </Card>
 
             {/* Official Rankings */}
-            <Card>
+            <Card className={RANKINGS_PANEL}>
               <CardContent className="p-6 sm:p-8">
-                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">Official Rankings</h2>
-                <p className="text-base sm:text-lg text-gray-700 leading-relaxed mb-4">
+                <h2 className={RANKINGS_HEADING}>Official Rankings</h2>
+                <p className={`${RANKINGS_BODY} mb-4`}>
                   Our rankings prioritize national performance above all else — NHSCA and Super32 results carry the most
                   weight, as these events measure athletes against the country's best. Quality wins over nationally ranked
                   opponents and head-to-head results between ranked wrestlers are factored heavily. State championship
@@ -412,63 +422,63 @@ export default function Class2028RankingsPage() {
             </Card>
           </div>
 
-          {/* Search and Filters */}
-          <div className="bg-gray-50 border-b">
-            <div className="container mx-auto px-4 py-8">
-              <div className="max-w-4xl mx-auto space-y-6">
-                {/* Search */}
+          <div className={RANKINGS_FILTER_BAR}>
+            <div className="max-w-4xl mx-auto space-y-6">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/40 h-5 w-5" />
                   <Input
                     type="text"
                     placeholder="Search by name, school, or weight class..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-3 text-lg border-2 focus:border-[#003366] rounded-lg"
+                    className={RANKINGS_INPUT}
                   />
                 </div>
 
-                {/* Filters and View Toggle */}
                 <div className="flex flex-wrap items-center gap-4 justify-between">
                   <div className="flex flex-wrap gap-4">
                     <Select value={selectedGender} onValueChange={setSelectedGender}>
-                      <SelectTrigger className="w-40">
+                      <SelectTrigger className="w-40 bg-white/5 border-white/10 text-white">
                         <SelectValue placeholder="Gender" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Male">Men's Wrestling</SelectItem>
-                        <SelectItem value="Female">Women's Wrestling</SelectItem>
+                        <SelectItem value="Male">Men&apos;s Wrestling</SelectItem>
+                        <SelectItem value="Female">Women&apos;s Wrestling</SelectItem>
                       </SelectContent>
                     </Select>
 
                     {hasActiveFilters && (
-                      <Button variant="outline" onClick={() => setSearchTerm("")} size="sm">
+                      <Button
+                        variant="outline"
+                        onClick={() => setSearchTerm("")}
+                        size="sm"
+                        className="border-white/20 text-white/70 hover:bg-white/10 hover:text-white"
+                      >
                         <Filter className="h-4 w-4 mr-2" />
                         Clear Search
                       </Button>
                     )}
                   </div>
 
-                  <ViewToggle view={viewMode} onChange={setViewMode} />
+                  <ViewToggle view={viewMode} onChange={setViewMode} variant="dark" />
                 </div>
 
-                {/* Active Filters Display */}
                 {hasActiveFilters && (
                   <div className="flex flex-wrap gap-2">
                     {searchTerm && (
-                      <Badge variant="secondary" className="bg-[#003366]/10 text-[#003366] border-[#003366]/20">
-                        Search: "{searchTerm}"
+                      <Badge variant="secondary" className="bg-[#D3B574]/20 text-[#D3B574] border-[#D3B574]/30">
+                        Search: &quot;{searchTerm}&quot;
                       </Badge>
                     )}
                   </div>
                 )}
-              </div>
             </div>
           </div>
 
-          {/* Content */}
-          <div className="container mx-auto px-4 py-8">
-            {error && <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">{error}</div>}
+          <div>
+            {error && (
+              <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-300">{error}</div>
+            )}
 
             {/* Rankings Display */}
             {isLoading ? (
@@ -479,13 +489,13 @@ export default function Class2028RankingsPage() {
               <>
                 <div className="mb-6">
                   <div className="flex items-center justify-between mb-2">
-                    <h2 className="text-2xl font-bold text-gray-900">Top 25 Wrestling Prospects</h2>
-                    <div className="text-sm text-gray-600">Showing {filteredRankings.length} ranked prospects</div>
+                    <h2 className="text-2xl font-bold text-white">Top 25 Wrestling Prospects</h2>
+                    <div className="text-sm text-white/60">Showing {filteredRankings.length} ranked prospects</div>
                   </div>
                   {lastUpdated && (
                     <div className="flex items-center gap-2 text-sm">
-                      <Clock className="h-4 w-4 text-gray-600" />
-                      <span className="text-gray-600">
+                      <Clock className="h-4 w-4 text-white/40" />
+                      <span className="text-white/50">
                         Last updated: {new Date(lastUpdated).toLocaleString("en-US", {
                           month: "long",
                           day: "numeric",
@@ -501,20 +511,20 @@ export default function Class2028RankingsPage() {
 
                 {viewMode === "table" && (
                   <div className="md:hidden mb-4 text-center">
-                    <p className="text-sm text-gray-600 italic">Scroll right to see more data and profile links →</p>
+                    <p className="text-sm text-white/50 italic">Scroll right to see more data and profile links →</p>
                   </div>
                 )}
 
                 {viewMode === "table" ? (
-                  <RankingsTableView athletes={filteredRankings} />
+                  <RankingsTableView athletes={filteredRankings} theme="dark" />
                 ) : (
-                  <RankingsCardView athletes={filteredRankings} />
+                  <RankingsCardView athletes={filteredRankings} theme="dark" />
                 )}
 
                 {filteredRankings.length === 0 && !isLoading && (
                   <div className="text-center py-16">
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">No rankings found</h3>
-                    <p className="text-gray-600">
+                    <h3 className="text-xl font-semibold text-white mb-2">No rankings found</h3>
+                    <p className="text-white/50">
                       {hasActiveFilters
                         ? "Try adjusting your search or filters"
                         : "Rankings for this class and gender are not yet available"}
@@ -562,7 +572,7 @@ export default function Class2028RankingsPage() {
             </Link>
           </div>
 
-          <div className="bg-[#003366] text-white py-16">
+          <div className="rounded-xl border border-white/10 bg-[#0f1c2e] py-16">
             <div className="container mx-auto px-4 text-center">
               <h2 className="text-3xl font-bold mb-4">Join the Legacy</h2>
               <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">

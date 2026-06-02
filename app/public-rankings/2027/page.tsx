@@ -11,6 +11,16 @@ import { ViewToggle } from "@/components/view-toggle"
 import { RankingsTableView } from "@/components/rankings-table-view"
 import { RankingsCardView } from "@/components/rankings-card-view"
 import { Search, Filter, ArrowLeft, Trophy, Users, Clock } from "lucide-react"
+import {
+  RANKINGS_BODY,
+  RANKINGS_FILTER_BAR,
+  RANKINGS_HEADING,
+  RANKINGS_INPUT,
+  RANKINGS_PAGE,
+  RANKINGS_PANEL,
+  RANKINGS_SPOTLIGHT,
+  RANKINGS_SUBHEADING,
+} from "@/lib/public-rankings-theme"
 
 interface PublicRanking {
   id: string
@@ -191,7 +201,7 @@ export default function Class2027RankingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+    <div className={RANKINGS_PAGE}>
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#003366] via-[#0a2571] to-[#1e3a8a] p-6 sm:p-12 mb-12 shadow-2xl">
           {heroImage && (
@@ -245,8 +255,8 @@ export default function Class2027RankingsPage() {
                 </div>
               </div>
 
-              <div className="bg-white/95 rounded-2xl p-4 sm:p-8 shadow-xl">
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Top 3 of the Class of 2027</h2>
+              <div className={RANKINGS_SPOTLIGHT}>
+                <h2 className={`${RANKINGS_SUBHEADING} text-xl sm:text-2xl`}>Top 3 of the Class of 2027</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                   {topRankedAthletes.length > 0 ? (
                     topRankedAthletes.map((athlete, index) => {
@@ -254,7 +264,7 @@ export default function Class2027RankingsPage() {
                       const profileHref = `/view-profile?id=${encodeURIComponent(athlete.id)}`
                       return (
                         <div key={athlete.id} className="text-center">
-                          <div className="relative mb-3 sm:mb-4 mx-auto w-full h-[220px] sm:h-[280px] rounded-lg overflow-hidden shadow-lg bg-gray-100">
+                          <div className="relative mb-3 sm:mb-4 mx-auto w-full h-[220px] sm:h-[280px] rounded-lg overflow-hidden shadow-lg bg-white/5">
                             <img
                               src={photo}
                               alt={athlete.name}
@@ -268,22 +278,22 @@ export default function Class2027RankingsPage() {
                             </div>
                           </div>
                           <a href={profileHref} className="hover:text-[#D3B574] transition-colors">
-                            <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1 cursor-pointer">{athlete.name}</h3>
+                            <h3 className="text-base sm:text-lg font-bold text-white mb-1 cursor-pointer">{athlete.name}</h3>
                           </a>
-                          <p className="text-sm text-gray-600 mb-2">
+                          <p className="text-sm text-white/60 mb-2">
                           {athlete.highschool || "High School TBD"}
                           {athlete.high_school_division ? (
-                            <span className="text-gray-500"> · {athlete.high_school_division}</span>
+                            <span className="text-white/40"> · {athlete.high_school_division}</span>
                           ) : null}
                         </p>
-                          <Badge variant="outline" className="border-[#D3B574] text-[#D3B574]">
+                          <Badge variant="outline" className="border-[#D3B574] text-[#D3B574] bg-transparent">
                             {athlete.weight_display}
                           </Badge>
                         </div>
                       )
                     })
                   ) : (
-                    <div className="col-span-full text-center text-gray-500 text-sm">
+                    <div className="col-span-full text-center text-white/50 text-sm">
                       Rankings are coming soon. Check back shortly for featured athletes.
                     </div>
                   )}
@@ -293,15 +303,15 @@ export default function Class2027RankingsPage() {
           </div>
         </div>
         <div className="space-y-6 sm:space-y-8 mb-8 sm:mb-12">
-          <Card>
+          <Card className={RANKINGS_PANEL}>
             <CardContent className="p-6 sm:p-8">
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">A Historic Class</h2>
-              <p className="text-base sm:text-lg text-gray-700 leading-relaxed mb-4">
+              <h2 className={RANKINGS_HEADING}>A Historic Class</h2>
+              <p className={`${RANKINGS_BODY} mb-4`}>
                 The Class of 2027 represents one of the most accomplished sophomore groups in North Carolina wrestling
                 history. With 12 state champions, 7 NHSCA All-Americans, and 40 total state placements, this class has
                 advanced further on the national stage than any all-North Carolina squad in recent memory.
               </p>
-              <p className="text-base sm:text-lg text-gray-700 leading-relaxed">
+              <p className={RANKINGS_BODY}>
                 What sets this class apart isn't just individual accolades — it's their collective presence on the
                 national stage. Through participation in the most competitive national tournaments and events, they have
                 begun to establish themselves against the country's best.
@@ -309,7 +319,7 @@ export default function Class2027RankingsPage() {
             </CardContent>
           </Card>
 
-          <div className="bg-[#D3B574] text-white p-8 rounded-lg my-12 border-l-4 border-[#D3B574]">
+          <div className="rounded-xl border border-[#D3B574]/30 bg-[#0f1c2e] p-8 my-12">
             <div className="flex flex-col md:flex-row gap-6 items-center">
               <div className="flex-shrink-0">
                 <img
@@ -319,7 +329,7 @@ export default function Class2027RankingsPage() {
                 />
               </div>
               <div className="flex-1">
-                <blockquote className="text-xl italic leading-relaxed mb-4">
+                <blockquote className="text-xl italic leading-relaxed mb-4 text-white/80">
                   "This class embodies everything we've worked to build at NC United. They've not only dominated locally
                   but are now starting to have success on the national stage. What excites me most is their commitment
                   to excellence both on the mat and in the classroom — they're setting the standard for future
@@ -330,10 +340,10 @@ export default function Class2027RankingsPage() {
             </div>
           </div>
 
-          <Card>
+          <Card className={RANKINGS_PANEL}>
             <CardContent className="p-6 sm:p-8">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4 sm:mb-6">The NC United Pipeline</h3>
-              <p className="text-base sm:text-lg text-gray-700 leading-relaxed mb-4">
+              <h3 className={RANKINGS_SUBHEADING}>The NC United Pipeline</h3>
+              <p className={`${RANKINGS_BODY} mb-4`}>
                 The success of the Class of 2027 reflects the strength of their high schools and clubs across North
                 Carolina, which continue to produce athletes ready for the spotlight. In addition, the majority of the
                 ranked wrestlers train as part of the NC United Blue program, giving them the chance to wrestle with the
@@ -343,10 +353,10 @@ export default function Class2027RankingsPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className={RANKINGS_PANEL}>
             <CardContent className="p-6 sm:p-8">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4 sm:mb-6">College Recruiting Success</h3>
-              <p className="text-base sm:text-lg text-gray-700 leading-relaxed mb-4">
+              <h3 className={RANKINGS_SUBHEADING}>College Recruiting Success</h3>
+              <p className={`${RANKINGS_BODY} mb-4`}>
                 This class has already drawn unprecedented attention from college coaches across the country. With the
                 NCAA contact period opening, athletes from this group received interest from local programs like UNC, NC
                 State, Gardner-Webb, Appalachian State, UMO, Greensboro, and Pembroke — and from national powers
@@ -355,10 +365,10 @@ export default function Class2027RankingsPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className={RANKINGS_PANEL}>
             <CardContent className="p-6 sm:p-8">
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">Official Rankings</h2>
-              <p className="text-base sm:text-lg text-gray-700 leading-relaxed mb-4">
+              <h2 className={RANKINGS_HEADING}>Official Rankings</h2>
+              <p className={`${RANKINGS_BODY} mb-4`}>
                 Our rankings prioritize performance at the national level, where athletes measure themselves against the
                 country's best. Quality of wins — especially against nationally ranked opponents — carries significant
                 weight, along with success in college opens, which demonstrate readiness beyond the high school level.
@@ -368,19 +378,17 @@ export default function Class2027RankingsPage() {
             </CardContent>
           </Card>
 
-          {/* Search and Filters */}
-          <div className="bg-gray-50 border-b">
-            <div className="container mx-auto px-4 py-8">
-              <div className="max-w-4xl mx-auto space-y-6">
+          <div className={RANKINGS_FILTER_BAR}>
+            <div className="max-w-4xl mx-auto space-y-6">
                 {/* Search */}
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/40 h-5 w-5" />
                   <Input
                     type="text"
                     placeholder="Search by name, school, or weight class..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-3 text-lg border-2 focus:border-[#003366] rounded-lg"
+                    className={RANKINGS_INPUT}
                   />
                 </div>
 
@@ -388,43 +396,49 @@ export default function Class2027RankingsPage() {
                 <div className="flex flex-wrap items-center gap-4 justify-between">
                   <div className="flex flex-wrap gap-4">
                     <Select value={selectedGender} onValueChange={setSelectedGender}>
-                      <SelectTrigger className="w-40">
+                      <SelectTrigger className="w-40 bg-white/5 border-white/10 text-white">
                         <SelectValue placeholder="Gender" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Male">Men's Wrestling</SelectItem>
-                        <SelectItem value="Female">Women's Wrestling</SelectItem>
+                        <SelectItem value="Male">Men&apos;s Wrestling</SelectItem>
+                        <SelectItem value="Female">Women&apos;s Wrestling</SelectItem>
                       </SelectContent>
                     </Select>
 
                     {hasActiveFilters && (
-                      <Button variant="outline" onClick={() => setSearchTerm("")} size="sm">
+                      <Button
+                        variant="outline"
+                        onClick={() => setSearchTerm("")}
+                        size="sm"
+                        className="border-white/20 text-white/70 hover:bg-white/10 hover:text-white"
+                      >
                         <Filter className="h-4 w-4 mr-2" />
                         Clear Search
                       </Button>
                     )}
                   </div>
 
-                  <ViewToggle view={viewMode} onChange={setViewMode} />
+                  <ViewToggle view={viewMode} onChange={setViewMode} variant="dark" />
                 </div>
 
                 {/* Active Filters Display */}
                 {hasActiveFilters && (
                   <div className="flex flex-wrap gap-2">
                     {searchTerm && (
-                      <Badge variant="secondary" className="bg-[#003366]/10 text-[#003366] border-[#003366]/20">
-                        Search: "{searchTerm}"
+                      <Badge variant="secondary" className="bg-[#D3B574]/20 text-[#D3B574] border-[#D3B574]/30">
+                        Search: &quot;{searchTerm}&quot;
                       </Badge>
                     )}
                   </div>
                 )}
-              </div>
             </div>
           </div>
 
           {/* Content */}
-          <div className="container mx-auto px-4 py-8">
-            {error && <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">{error}</div>}
+          <div>
+            {error && (
+              <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-300">{error}</div>
+            )}
 
             {/* Rankings Display */}
             {isLoading ? (
@@ -462,9 +476,9 @@ export default function Class2027RankingsPage() {
                 )}
 
                 {viewMode === "table" ? (
-                  <RankingsTableView athletes={filteredRankings} />
+                  <RankingsTableView athletes={filteredRankings} theme="dark" />
                 ) : (
-                  <RankingsCardView athletes={filteredRankings} />
+                  <RankingsCardView athletes={filteredRankings} theme="dark" />
                 )}
 
                 {filteredRankings.length === 0 && !isLoading && (
@@ -518,7 +532,7 @@ export default function Class2027RankingsPage() {
             </Link>
           </div>
 
-          <div className="bg-[#003366] text-white py-16">
+          <div className="rounded-xl border border-white/10 bg-[#0f1c2e] py-16">
             <div className="container mx-auto px-4 text-center">
               <h2 className="text-3xl font-bold mb-4">Join the Legacy</h2>
               <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
