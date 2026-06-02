@@ -9,9 +9,14 @@ import {
 describe("isGuildStripeMetadata", () => {
   it("detects explicit channel and business tags", () => {
     expect(isGuildStripeMetadata({ channel: "guild" })).toBe(true)
+    expect(isGuildStripeMetadata({ channel: "bookings" })).toBe(true)
+    expect(isGuildStripeMetadata({ app: "the-guild", source: "guild_register" })).toBe(true)
     expect(isGuildStripeMetadata({ business: "wrestling_guild" })).toBe(true)
     expect(isGuildStripeMetadata({ source: "guild_booking" })).toBe(true)
+    expect(isGuildStripeMetadata({ source: "guild_register" })).toBe(true)
+    expect(isGuildStripeMetadata({ source: "guild_cart" })).toBe(true)
     expect(isGuildStripeMetadata({ booking_id: "abc-123" })).toBe(true)
+    expect(isGuildStripeMetadata({ app: "the-guild", session_id: "sess-1", source: "guild_booking" })).toBe(true)
   })
 
   it("ignores RecruitNC store metadata", () => {
