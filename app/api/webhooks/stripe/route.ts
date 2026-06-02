@@ -34,6 +34,11 @@ import {
 } from "@/lib/store/legacy-checkout-guard"
 import { isGuildCheckoutSession, isGuildStripeMetadata } from "@/lib/stripe-guild-detection"
 import { upsertGuildOrderFromCheckoutSession } from "@/lib/stripe-guild-order"
+import { hasSpartanDonationForPaymentIntent } from "@/lib/spartan-donation-order-lookup"
+import {
+  amountLooksLikeGuild,
+  amountLooksLikePracticeDropIn,
+} from "@/lib/stripe-checkout-amounts"
 
 export const dynamic = "force-dynamic"
 
@@ -543,6 +548,21 @@ export async function POST(request: NextRequest) {
       .eq("stripe_payment_intent_id", paymentIntent.id)
       .maybeSingle()
     if (existing) return NextResponse.json({ received: true })
+
+    if (await hasSpartanDonationForPaymentIntent(admin, paymentIntent.id)) {
+      return NextResponse.json({ received: true })
+    }
+
+    try {
+      const stripe = getStripe()
+      const sessions = await stripe.checkout.sessions.list({ payment_intent: paymentIntent.id, limit: 1 })
+      const session = sessions.data[0]
+      if (session?.metadata?.channel === "spartan") {
+        return NextResponse.json({ received: true })
+      }
+    } catch (_) {
+      /* ignore */
+    }
 
     const pendingOrderId = (meta.order_id || "").trim()
     if (pendingOrderId) {
@@ -1074,27 +1094,49 @@ export async function POST(request: NextRequest) {
     }
 
     const amountTotal = ((session as { amount_total?: number }).amount_total ?? 0) / 100
-    const hasStoreMetadata = !!(session.metadata?.order_id || (session.metadata?.items && session.metadata?.customer_email))
     const shippingLower = (session.metadata?.shipping_method as string)?.toLowerCase() ?? ""
-    let isLikelyDropIn =
-      amountTotal >= 20 &&
-      amountTotal <= 30 &&
-      (shippingLower.includes("practice") || shippingLower.includes("pickup") || shippingLower.includes("suite") || !hasStoreMetadata)
-    if (isLikelyDropIn && isGuildCheckoutSession(session)) {
-      isLikelyDropIn = false
-    }
-    let sessionForLineItems: typeof session = session
-    if (!isLikelyDropIn && amountTotal >= 20 && amountTotal <= 30) {
+
+    // $30 on shared Stripe is almost always Wrestling Guild — never synthesize practice drop-in.
+    if (amountLooksLikeGuild(amountTotal)) {
       try {
         const expanded = await getStripe().checkout.sessions.retrieve(session.id, { expand: ["line_items"] })
-        const desc = (expanded as { line_items?: { data?: { description?: string }[] } }).line_items?.data?.[0]?.description ?? ""
-        if (/drop-in|practice/i.test(desc)) {
+        await upsertGuildOrderFromCheckoutSession(admin, expanded as typeof session, { getStripe })
+      } catch (e) {
+        console.warn("[webhooks/stripe] guild upsert for $30 checkout:", e)
+      }
+      return NextResponse.json({ received: true })
+    }
+
+    let sessionForLineItems: typeof session = session
+    let isLikelyDropIn = false
+    if (amountLooksLikePracticeDropIn(amountTotal)) {
+      if (
+        shippingLower.includes("practice") ||
+        shippingLower.includes("pickup") ||
+        shippingLower.includes("suite") ||
+        session.metadata?.drop_in_request_id
+      ) {
+        isLikelyDropIn = true
+      }
+      try {
+        const expanded = await getStripe().checkout.sessions.retrieve(session.id, { expand: ["line_items"] })
+        if (isGuildCheckoutSession(expanded)) {
+          await upsertGuildOrderFromCheckoutSession(admin, expanded as typeof session, { getStripe })
+          return NextResponse.json({ received: true })
+        }
+        sessionForLineItems = expanded as typeof session
+        const desc =
+          (expanded as { line_items?: { data?: { description?: string }[] } }).line_items?.data?.[0]?.description ?? ""
+        if (/drop-in|practice/i.test(desc) || session.metadata?.drop_in_request_id) {
           isLikelyDropIn = true
-          sessionForLineItems = expanded as typeof session
         }
       } catch (_) {
         /* ignore */
       }
+    }
+    if (isLikelyDropIn && isGuildCheckoutSession(session)) {
+      await upsertGuildOrderFromCheckoutSession(admin, session, { getStripe })
+      return NextResponse.json({ received: true })
     }
     if (paymentIntentId && isLikelyDropIn) {
       const { data: existingOrder } = await admin.from("orders").select("id").eq("stripe_payment_intent_id", paymentIntentId).maybeSingle()

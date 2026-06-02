@@ -6,13 +6,13 @@ import { orderShippingFields } from "@/lib/order-shipping"
 import { findAndEnrichAthlete, enrichmentFromOrderCustomer } from "@/lib/enrich-athlete-profile"
 import { syntheticOrderItemSku } from "@/lib/order-item-sku"
 
+import { amountLooksLikePracticeDropIn } from "@/lib/stripe-checkout-amounts"
+
 export const dynamic = "force-dynamic"
 
 const stripeSecret = process.env.STRIPE_SECRET_KEY
-const DROP_IN_AMOUNT_MIN_CENTS = 2000
-const DROP_IN_AMOUNT_MAX_CENTS = 3000
-/** How far back to look for drop-in sessions (seconds). */
-const CREATED_SINCE_SEC = 24 * 30 * 24 * 60 * 60 // ~24 months
+/** Practice drop-in list window (~24 months). */
+const CREATED_SINCE_SEC = 24 * 30 * 24 * 60 * 60
 
 function getStripe(): Stripe {
   if (!stripeSecret) throw new Error("STRIPE_SECRET_KEY not set")
@@ -32,19 +32,17 @@ async function requireAdmin() {
   return { ok: true as const }
 }
 
-/** Same heuristic as webhook: amount $20–$30 and (shipping_method suggests drop-in or no store metadata). */
+/** Practice drop-ins are $25; require calendar metadata or explicit drop-in signals — not bare amount. */
 function isLikelyDropIn(session: Stripe.Checkout.Session): boolean {
-  const amountTotal = (session.amount_total ?? 0)
-  if (amountTotal < DROP_IN_AMOUNT_MIN_CENTS || amountTotal > DROP_IN_AMOUNT_MAX_CENTS) return false
-  const hasStoreMetadata = !!(session.metadata?.items && session.metadata?.customer_email)
+  const amountTotal = (session.amount_total ?? 0) / 100
+  if (!amountLooksLikePracticeDropIn(amountTotal)) return false
+  if (session.metadata?.drop_in_request_id) return true
   const shippingRaw = (session.metadata?.shipping_method ?? "") as string
   const shippingLower = (typeof shippingRaw === "string" ? shippingRaw : "").toLowerCase()
-  const looksLikeDropIn =
-    shippingLower.includes("practice") ||
-    shippingLower.includes("pickup") ||
-    shippingLower.includes("suite") ||
-    !hasStoreMetadata
-  return looksLikeDropIn
+  if (shippingLower.includes("practice") || shippingLower.includes("pickup") || shippingLower.includes("suite")) {
+    return true
+  }
+  return false
 }
 
 /**

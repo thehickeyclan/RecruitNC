@@ -10,6 +10,7 @@ import {
 } from "@/lib/nhsca-duals-2026-registrations"
 import { orderItemsNeedNationalTeamDetail, ensureNationalTeamOrderLineItems } from "@/lib/national-team-order-items"
 import { findNationalTeamRegistrationForOrder } from "@/lib/national-team-order-lookup"
+import { findSpartanDonationForOrder } from "@/lib/spartan-donation-order-lookup"
 import {
   hydrateOrderCustomerFromStripe,
   overlayOrderFromStripeForDisplay,
@@ -20,6 +21,7 @@ import { analyzeStoreOrderIntegrity } from "@/lib/store/store-order-integrity"
 import { buildOrderReceiptPreview, buildNationalTeamReceiptPreview, buildGuildReceiptPreview } from "@/lib/store/order-receipt-preview"
 import { fetchMergedStoreMetadata } from "@/lib/store/stripe-legacy-metadata"
 import { isGuildOrderRow } from "@/lib/stripe-guild-detection"
+import { reconcileSharedStripeOrder } from "@/lib/orders/reconcile-shared-stripe-order"
 
 function getStripe(): Stripe {
   const key = process.env.STRIPE_SECRET_KEY
@@ -198,6 +200,18 @@ export async function getOrderDetails(orderId: string): Promise<
       return { success: false, error: orderError?.message ?? "Order not found." }
     }
 
+    if (order.stripe_payment_intent_id || String(order.stripe_session_id ?? "").startsWith("cs_")) {
+      try {
+        const reconciled = await reconcileSharedStripeOrder(supabase, order, getStripe)
+        if (reconciled.changed) {
+          const { data: refreshedOrder } = await supabase.from("orders").select("*").eq("id", order.id).single()
+          if (refreshedOrder) Object.assign(order, refreshedOrder)
+        }
+      } catch (repairErr) {
+        console.warn("[orders] reconcileSharedStripeOrder:", repairErr)
+      }
+    }
+
     try {
       await hydrateOrderCustomerFromStripe(supabase, order as Record<string, unknown>)
       const { data: refreshed } = await supabase.from("orders").select("*").eq("id", order.id).single()
@@ -250,6 +264,8 @@ export async function getOrderDetails(orderId: string): Promise<
       customer_email?: string | null
       email?: string | null
       customer_name?: string | null
+      stripe_payment_intent_id?: string | null
+      total?: number | null
     })
 
     if (ntReg) {
@@ -354,15 +370,11 @@ export async function getOrderDetails(orderId: string): Promise<
     }
 
     let spartanDonation: Record<string, unknown> | null = null
-    const sessionId = order.stripe_session_id as string | undefined
-    if (sessionId?.startsWith("cs_")) {
-      const { data: donationRow } = await supabase
-        .from("spartan_donations")
-        .select("id, donor_name, athlete_code, amount_cents, campaign_slug")
-        .eq("id", sessionId)
-        .maybeSingle()
-      if (donationRow) spartanDonation = donationRow as Record<string, unknown>
-    }
+    const spartanRow = await findSpartanDonationForOrder(supabase, {
+      stripe_session_id: order.stripe_session_id as string | undefined,
+      stripe_payment_intent_id: order.stripe_payment_intent_id as string | undefined,
+    })
+    if (spartanRow) spartanDonation = spartanRow as Record<string, unknown>
 
     let storeIntegrity: Parameters<typeof resolveAdminOrderDisplay>[0]["storeIntegrity"] = null
     if (

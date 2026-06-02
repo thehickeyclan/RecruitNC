@@ -2,6 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { AdminOrdersClient } from "@/components/admin/admin-orders-client"
 import type { Order, OrderCategory } from "@/lib/admin-data"
 import { resolveOrderCategory } from "@/lib/admin/resolve-order-display"
+import { amountLooksLikeGuild, amountLooksLikePracticeDropIn } from "@/lib/stripe-checkout-amounts"
 
 export const dynamic = "force-dynamic"
 
@@ -34,13 +35,16 @@ function deriveCategory(
   if (names.length === 0 && total >= 50 && total <= 60) return "Blue Sub"
   // Drop-In only when a line item name explicitly indicates drop-in (not from shipping method alone)
   if (names.some((n) => /drop-?in|dropin/.test(n) || (n.includes("practice") && n.includes("drop")))) return "Drop-In"
-  if (names.some((n) => n.includes("nhsca") || n.includes("national team") || n.includes("registration + apparel"))) return "Tournament Fee"
+  if (names.some((n) => n.includes("nhsca") || n.includes("national team") || n.includes("registration + apparel"))) {
+    return "Tournament Fee"
+  }
   if (method.includes("national team")) return "Tournament Fee"
   if (method.includes("wrestling guild")) return "Guild"
+  if (amountLooksLikeGuild(total) && names.some((n) => /practice drop|order items|nc united store/i.test(n))) return "Guild"
   // When no line items: infer Tournament Fee from typical event total
   if (names.length === 0 && total >= 200 && total <= 300) return "Tournament Fee"
-  // Recovered/minimal orders with no line items: use total + method as fallback for Drop-In
-  if (names.length === 0 && total >= 20 && total <= 35 && (method.includes("pickup") || method.includes("practice") || method.includes("drop-in") || method.includes("drop in"))) return "Drop-In"
+  // Practice drop-in is $25 — not $30 (Guild)
+  if (names.length === 0 && amountLooksLikePracticeDropIn(total) && (method.includes("pickup") || method.includes("practice") || method.includes("drop-in") || method.includes("drop in"))) return "Drop-In"
   if (names.length > 0) return "Apparel"
   return "Other"
 }
@@ -251,9 +255,7 @@ export default async function OrdersPage() {
         return name.includes("practice") || name.includes("drop-in") || name.includes("dropin")
       })
       const isLikelyDropIn =
-        rawItemsCount === 0 &&
-        Number(order.total) >= 20 &&
-        Number(order.total) <= 30 &&
+        amountLooksLikePracticeDropIn(Number(order.total)) &&
         (shippingMethodStr.toLowerCase().includes("pickup") ||
           shippingMethodStr.toLowerCase().includes("practice") ||
           (addr.address1 && String(addr.address1).toLowerCase().includes("practice")))

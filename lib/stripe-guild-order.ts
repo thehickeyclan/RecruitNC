@@ -2,8 +2,8 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import type Stripe from "stripe"
 import { orderShippingFields } from "@/lib/order-shipping"
 import { syntheticOrderItemSku } from "@/lib/order-item-sku"
-import { isGenericPlaceholderOrderItemName } from "@/lib/nhsca-hub-checkout-pricing"
-import { isGuildCheckoutSession } from "@/lib/stripe-guild-detection"
+import { isGuildCheckoutSession, isGuildOrderRow } from "@/lib/stripe-guild-detection"
+import { isMisclassifiedGuildGhostLineName } from "@/lib/stripe-guild-misclassified-line"
 
 function generateOrderNumber(): string {
   return "NC-" + Date.now().toString(36).toUpperCase().slice(-6) + "-" + Math.random().toString(36).slice(2, 6).toUpperCase()
@@ -87,17 +87,24 @@ export async function upsertGuildOrderFromCheckoutSession(
 
     const { data: items } = await admin
       .from("order_items")
-      .select("id, product_name")
+      .select("id, product_name, sku")
       .eq("order_id", existing.id)
 
-    const placeholder = (items ?? []).filter((i) =>
-      isGenericPlaceholderOrderItemName(String((i as { product_name?: string }).product_name ?? "")),
-    )
-    if (placeholder.length === 1 && lineName !== "Wrestling Guild booking") {
-      await admin
-        .from("order_items")
-        .update({ product_name: lineName })
-        .eq("id", (placeholder[0] as { id: string }).id)
+    for (const row of items ?? []) {
+      const productName = String((row as { product_name?: string }).product_name ?? "")
+      if (isMisclassifiedGuildGhostLineName(productName)) {
+        await admin
+          .from("order_items")
+          .update({
+            product_name: lineName,
+            sku: syntheticOrderItemSku({
+              productId: null,
+              label: lineName,
+              dedupeKey: `guild:${paymentIntentId}`,
+            }),
+          })
+          .eq("id", (row as { id: string }).id)
+      }
     }
 
     return existing.id
@@ -159,4 +166,45 @@ export async function upsertGuildOrderFromCheckoutSession(
   }
 
   return orderId
+}
+
+/**
+ * Re-tag orders that were misclassified as practice drop-in or store ghost rows when Stripe session is Guild.
+ */
+export async function repairGuildOrderFromStripeIfNeeded(
+  admin: SupabaseClient,
+  order: {
+    id: string
+    channel?: string | null
+    business?: string | null
+    shipping_method?: unknown
+    stripe_payment_intent_id?: string | null
+    stripe_session_id?: string | null
+  },
+  options: { getStripe: () => Stripe },
+): Promise<boolean> {
+  if (isGuildOrderRow(order)) return false
+  const piId = String(order.stripe_payment_intent_id ?? "").trim()
+  if (!piId) return false
+
+  const stripe = options.getStripe()
+  let session: Stripe.Checkout.Session | undefined
+  const sessionId = String(order.stripe_session_id ?? "").trim()
+  try {
+    if (sessionId.startsWith("cs_")) {
+      session = await stripe.checkout.sessions.retrieve(sessionId)
+    } else {
+      const listed = await stripe.checkout.sessions.list({ payment_intent: piId, limit: 1 })
+      session = listed.data[0]
+    }
+  } catch (e) {
+    console.warn("[stripe-guild-order] repair session retrieve failed:", e)
+    return false
+  }
+
+  if (!session || !isGuildCheckoutSession(session)) return false
+  if (session.metadata?.drop_in_request_id) return false
+
+  await upsertGuildOrderFromCheckoutSession(admin, session, options)
+  return true
 }

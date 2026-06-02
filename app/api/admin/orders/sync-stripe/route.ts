@@ -3,6 +3,7 @@ import Stripe from "stripe"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createOrderFromPaymentIntent, createOrderFromSession } from "@/app/actions/stripe"
+import { checkoutSessionIsNonStoreImport } from "@/lib/stripe-sync-guards"
 
 export const dynamic = "force-dynamic"
 
@@ -60,6 +61,12 @@ export async function POST() {
         continue
       }
       try {
+        const sessions = await stripe.checkout.sessions.list({ payment_intent: pi.id, limit: 1 })
+        const linkedSession = sessions.data[0]
+        if (linkedSession && checkoutSessionIsNonStoreImport(linkedSession)) {
+          skipped++
+          continue
+        }
         const result = await createOrderFromPaymentIntent(pi.id)
         if (result.success && !result.alreadyExisted) created++
         else if (result.success) skipped++
@@ -100,6 +107,10 @@ export async function POST() {
           skipped++
           continue
         }
+      }
+      if (checkoutSessionIsNonStoreImport(session)) {
+        skipped++
+        continue
       }
       try {
         const result = await createOrderFromSession(session.id)
