@@ -10,8 +10,10 @@ import { ChevronDown, ChevronRight } from "lucide-react"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 
 interface CollegeStats {
+  group_key: string
   college_name: string
   college_names?: string[]
+  college_ids?: string[]
   logo_url?: string
   division: string
   total_commits: number
@@ -176,22 +178,22 @@ export function CollegeLeaderboard({
   }, [colleges, collegeLogos])
 
   const fetchCollegeAthletes = async (college: CollegeStats) => {
-    const collegeName = college.college_name
-    if (collegeAthletes[collegeName] || loadingAthletes.has(collegeName)) {
+    const bucketId = college.group_key || college.college_name
+    if (collegeAthletes[bucketId] || loadingAthletes.has(bucketId)) {
       return
     }
 
-    setLoadingAthletes((prev) => new Set(prev).add(collegeName))
+    setLoadingAthletes((prev) => new Set(prev).add(bucketId))
 
     try {
-      const names = college.college_names?.length ? college.college_names : [collegeName]
       const params = new URLSearchParams({
-        college: collegeName,
+        college: college.college_name,
         gender,
         year,
         division,
-        collegeNames: names.join("|"),
       })
+      if (college.group_key) params.set("groupKey", college.group_key)
+
       const response = await fetch(`/api/colleges/athletes?${params.toString()}`)
 
       if (!response.ok) {
@@ -199,7 +201,7 @@ export function CollegeLeaderboard({
         console.error("[RecruitNC] College athletes fetch failed:", response.status, errBody)
         setCollegeAthletes((prev) => ({
           ...prev,
-          [collegeName]: [],
+          [bucketId]: [],
         }))
         return
       }
@@ -207,31 +209,31 @@ export function CollegeLeaderboard({
       const data = await response.json()
       setCollegeAthletes((prev) => ({
         ...prev,
-        [collegeName]: data.athletes || [],
+        [bucketId]: data.athletes || [],
       }))
     } catch (err) {
       console.error("Error fetching college athletes:", err)
       setCollegeAthletes((prev) => ({
         ...prev,
-        [collegeName]: [],
+        [bucketId]: [],
       }))
     } finally {
       setLoadingAthletes((prev) => {
         const newSet = new Set(prev)
-        newSet.delete(collegeName)
+        newSet.delete(bucketId)
         return newSet
       })
     }
   }
 
   const toggleCollegeExpansion = async (college: CollegeStats) => {
-    const collegeName = college.college_name
+    const bucketId = college.group_key || college.college_name
     const newExpanded = new Set(expandedColleges)
 
-    if (expandedColleges.has(collegeName)) {
-      newExpanded.delete(collegeName)
+    if (expandedColleges.has(bucketId)) {
+      newExpanded.delete(bucketId)
     } else {
-      newExpanded.add(collegeName)
+      newExpanded.add(bucketId)
       await fetchCollegeAthletes(college)
     }
 
@@ -363,10 +365,12 @@ export function CollegeLeaderboard({
 
   return (
     <div className="space-y-3">
-      {rankedColleges.map(({ college, rank }) => (
+      {rankedColleges.map(({ college, rank }) => {
+        const bucketId = college.group_key || college.college_name
+        return (
         <Collapsible
-          key={college.college_name}
-          open={expandedColleges.has(college.college_name)}
+          key={bucketId}
+          open={expandedColleges.has(bucketId)}
           onOpenChange={() => toggleCollegeExpansion(college)}
         >
           <div className="rounded-xl border border-white/10 bg-[#0f1c2e] hover:border-white/20 transition-colors">
@@ -410,7 +414,7 @@ export function CollegeLeaderboard({
                   <div className="text-right">
                     <p className="text-lg font-bold text-[#D3B574]">{getMetricLabel(getMetricValue(college))}</p>
                   </div>
-                  {expandedColleges.has(college.college_name) ? (
+                  {expandedColleges.has(bucketId) ? (
                     <ChevronDown className="h-5 w-5 text-white/30" />
                   ) : (
                     <ChevronRight className="h-5 w-5 text-white/30" />
@@ -421,7 +425,7 @@ export function CollegeLeaderboard({
 
             <CollapsibleContent className="px-4 pb-4">
               <div className="border-t border-white/10 pt-4 mt-2">
-                {loadingAthletes.has(college.college_name) ? (
+                {loadingAthletes.has(bucketId) ? (
                   <div className="space-y-3">
                     {Array.from({ length: 3 }).map((_, i) => (
                       <div key={i} className="flex items-center space-x-3">
@@ -433,9 +437,9 @@ export function CollegeLeaderboard({
                       </div>
                     ))}
                   </div>
-                ) : collegeAthletes[college.college_name]?.length > 0 ? (
+                ) : collegeAthletes[bucketId]?.length > 0 ? (
                   <div className="space-y-3">
-                    {collegeAthletes[college.college_name].map((athlete) => {
+                    {collegeAthletes[bucketId].map((athlete) => {
                       const athleteName = athlete.display_name || athlete.name
                       return (
                         <div
@@ -500,7 +504,8 @@ export function CollegeLeaderboard({
             </CollapsibleContent>
           </div>
         </Collapsible>
-      ))}
+        )
+      })}
     </div>
   )
 }

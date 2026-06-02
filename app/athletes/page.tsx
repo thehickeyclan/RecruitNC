@@ -14,6 +14,7 @@ const DEFAULT_FILTERS: CommitmentAthleteFilters = {
   year: "2026",
   gender: "all",
   division: "all",
+  limit: 500,
 }
 
 export default async function AthletesPage() {

@@ -55,6 +55,8 @@ interface Athlete {
 
 interface ProfessionalCommitmentCardProps {
   athlete: Athlete
+  /** Grid/list pages: defer per-card API calls until the card is flipped. */
+  listMode?: boolean
 }
 
 /** Honor pill order on card back — same tuple as `getCommitmentHonorBadgesForAthlete` (`lib/commitment-card-honors`). */
@@ -107,7 +109,7 @@ interface SeasonRecord {
   winPercentage: number
 }
 
-export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCardProps) {
+export function ProfessionalCommitmentCard({ athlete, listMode = false }: ProfessionalCommitmentCardProps) {
   const [isFlipped, setIsFlipped] = useState(false)
   const [imageError, setImageError] = useState(false)
   const [highSchoolLogoUrl, setHighSchoolLogoUrl] = useState<string | null>(null)
@@ -154,6 +156,8 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
   }
 
   useEffect(() => {
+    if (listMode && !isFlipped) return
+
     const loadLogos = async () => {
       try {
         const highSchool = athlete.highschool || athlete.highSchool || athlete.high_school
@@ -226,6 +230,8 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
 
     loadLogos()
   }, [
+    listMode,
+    isFlipped,
     athlete.highschool,
     athlete.highSchool,
     athlete.club,
@@ -236,6 +242,8 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
   ])
 
   useEffect(() => {
+    if (listMode && !isFlipped) return
+
     const fetchCareerRecord = async () => {
       if (!athlete.id) return
 
@@ -321,9 +329,10 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
     }
 
     fetchCareerRecord()
-  }, [athlete.id, athlete.graduationyear, athlete.graduationYear])
+  }, [athlete.id, athlete.graduationyear, athlete.graduationYear, listMode, isFlipped])
 
   useEffect(() => {
+    if (listMode) return
     setServerStateHonors([])
     setServerCommitmentHonors(null)
     const id = athlete.id?.trim()

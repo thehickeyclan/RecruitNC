@@ -5,8 +5,8 @@ import {
   getAllColleges,
   getCollegesByIds,
   resolveAthleteCollegeDivision,
+  resolveCollegeCommitGroup,
 } from "@/lib/colleges"
-import { athleteCollegeInGroup } from "@/lib/college-name-match"
 import { getDivisionDisplayShort, matchesDivisionFilter } from "@/lib/division-display"
 
 export type CollegeCommitFilters = {
@@ -17,6 +17,8 @@ export type CollegeCommitFilters = {
   search?: string
   /** Limit expand to one leaderboard bucket (all spellings) */
   collegeNames?: string[]
+  /** Stable bucket from resolveCollegeCommitGroup — preferred over name-only matching */
+  groupKey?: string
 }
 
 const ATHLETE_SELECT =
@@ -101,7 +103,7 @@ export async function fetchCollegeCommits(
 
   const divisionFilter = filters.division ?? "all"
   const search = filters.search?.trim().toLowerCase()
-  const groupNames = filters.collegeNames?.filter(Boolean)
+  const groupKeyFilter = filters.groupKey?.trim()
 
   const mapped: CollegeCommitRow[] = []
 
@@ -110,7 +112,10 @@ export async function fetchCollegeCommits(
     if (divisionFilter !== "all" && !matchesDivisionFilter(divisionRaw, divisionFilter)) continue
 
     const college = String(row.college ?? "").trim()
-    if (groupNames?.length && !athleteCollegeInGroup(college, groupNames)) continue
+    if (groupKeyFilter) {
+      const rowGroup = resolveCollegeCommitGroup(row, collegesById, collegesByName)
+      if (rowGroup.groupKey !== groupKeyFilter) continue
+    }
 
     const name = String(row.name ?? "")
     if (search) {

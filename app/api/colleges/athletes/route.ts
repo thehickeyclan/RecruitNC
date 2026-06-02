@@ -20,17 +20,16 @@ export async function GET(request: NextRequest) {
     const collegeNamesParam = searchParams.get("collegeNames")
     const collegeNames = collegeNamesParam
       ? collegeNamesParam.split("|").map((s) => decodeURIComponent(s.trim())).filter(Boolean)
-      : [college]
+      : undefined
 
-    if (!collegeNames.includes(college)) {
-      collegeNames.unshift(college)
-    }
+    const groupKey = searchParams.get("groupKey")?.trim() || undefined
 
     const athletes = await fetchCollegeCommits(supabase, {
       gender,
       year,
       division,
       collegeNames,
+      groupKey,
     })
 
     return NextResponse.json({
