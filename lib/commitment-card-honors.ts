@@ -3,6 +3,7 @@
  * Single module so behavior is testable and the UI cannot drift.
  */
 import { nchsaaJsonToProfileRows } from "@/lib/nchsaa-results-json"
+import { getNhscaResults, getSuper32Results } from "@/lib/tournament-utils"
 
 export const COMMITMENT_CARD_HONOR_ORDER = ["All-American", "State Champion", "State Placer", "State Qualifier"] as const
 
@@ -12,6 +13,12 @@ export type NchsaaHonorRowInput = {
   classification?: unknown
   weight_class?: unknown
   place?: unknown
+}
+
+/** Rows from merged NHSCA / Super32 tournament tables (API `all_results`). */
+export type NationalHonorRowInput = {
+  placement?: unknown
+  record?: unknown
 }
 
 function honorPlaceNum(p: unknown): number {
@@ -70,6 +77,47 @@ export function mergeCommitmentHonorBadgesForDisplay(profileHonors: string[], se
   const merged = new Set<string>([...profileHonors, ...serverStateHonors])
   if (merged.has("State Champion") || merged.has("State Placer")) {
     merged.delete("State Qualifier")
+  }
+  return COMMITMENT_CARD_HONOR_ORDER.filter((b) => merged.has(b))
+}
+
+/** NHSCA / Super32 top-8 (or explicit All-American text) from merged tournament rows. */
+export function allAmericanFromMergedNationalRows(
+  nhscaRows: NationalHonorRowInput[],
+  super32Rows: NationalHonorRowInput[] = [],
+): boolean {
+  for (const row of [...nhscaRows, ...super32Rows]) {
+    const snippet = String(row.placement ?? "").trim()
+    if (!snippet) continue
+    const record = row.record != null ? String(row.record) : undefined
+    if (barePlacementLooksLikeWinCountFromRecord(snippet, record)) continue
+    if (snippetImpliesNationalAllAmerican(snippet, { trustedNationalPlacementColumn: true })) {
+      return true
+    }
+  }
+  return false
+}
+
+/**
+ * Full flip-card honor row: profile columns/JSON + table-backed NCHSAA + NHSCA/Super32 merges.
+ * Same pipeline as `/api/wrestling-achievements` → `ProfessionalCommitmentCard`.
+ */
+export function buildCommitmentCardHonorBadges(params: {
+  athlete: Record<string, unknown>
+  nchsaaMergedRows?: NchsaaHonorRowInput[]
+  nhscaMergedRows?: NationalHonorRowInput[]
+  super32MergedRows?: NationalHonorRowInput[]
+}): string[] {
+  const profileHonors = getCommitmentHonorBadgesForAthlete(params.athlete)
+  const serverFound = new Set(stateHonorsFromNchsaaMergedRows(params.nchsaaMergedRows ?? []))
+  const serverState = (["State Champion", "State Placer", "State Qualifier"] as const).filter((b) =>
+    serverFound.has(b),
+  )
+  const merged = new Set(mergeCommitmentHonorBadgesForDisplay(profileHonors, [...serverState]))
+  if (
+    allAmericanFromMergedNationalRows(params.nhscaMergedRows ?? [], params.super32MergedRows ?? [])
+  ) {
+    merged.add("All-American")
   }
   return COMMITMENT_CARD_HONOR_ORDER.filter((b) => merged.has(b))
 }
@@ -277,9 +325,9 @@ function applyAchievementTextStateHonorsOnly(found: Set<string>, hay: string) {
 
 /**
  * Honor labels for the commitment card back (order preserved).
- * All-American comes ONLY from nhsca_*_placement / super_32_*_placement profile columns
- * (after win-count confusion guard). Achievements text never adds All-American.
- * Server /api/wrestling-achievements merge in the component only adds state honors, never All-American.
+ * All-American from profile placement columns, nhsca_results / super32_results JSON, and (via
+ * `buildCommitmentCardHonorBadges`) merged NHSCA/Super32 tournament tables. Achievements prose
+ * never adds All-American (avoids RankWrestler false positives).
  */
 export function getCommitmentHonorBadgesForAthlete(athlete: Record<string, unknown>): string[] {
   try {
@@ -294,6 +342,18 @@ export function getCommitmentHonorBadgesForAthlete(athlete: Record<string, unkno
     const placementEntries = collectHonorPlacementEntries(athlete)
     applyNationalBracketTop8FromSnippets(found, placementEntries, athlete)
     applyNchsaaJsonStateHonors(found, athlete.nchsaa_results)
+
+    const nhscaFromProfile = getNhscaResults(athlete).map((r) => ({
+      placement: r.placement,
+      record: r.record,
+    }))
+    const super32FromProfile = getSuper32Results(athlete).map((r) => ({
+      placement: r.placement,
+      record: r.record,
+    }))
+    if (allAmericanFromMergedNationalRows(nhscaFromProfile, super32FromProfile)) {
+      found.add("All-American")
+    }
 
     if (found.has("State Champion") || found.has("State Placer")) {
       found.delete("State Qualifier")

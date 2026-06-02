@@ -306,25 +306,23 @@ export function CollegeLeaderboard({
       case "Division I":
       case "D1":
       case "DI":
-        return "bg-red-100 text-red-800"
+        return "bg-[#003366]/80 text-white border-0"
       case "NCAA Division II":
       case "Division II":
       case "D2":
       case "DII":
-        return "bg-blue-100 text-blue-800"
+        return "bg-[#012ECD]/80 text-white border-0"
       case "NCAA Division III":
       case "Division III":
       case "D3":
       case "DIII":
-        return "bg-green-100 text-green-800"
+        return "bg-[#13294B]/80 text-white border-0"
       case "NAIA":
-        return "bg-purple-100 text-purple-800"
+        return "bg-[#D3B574]/20 text-[#D3B574] border-0"
       case "NJCAA":
-        return "bg-orange-100 text-orange-800"
-      case "Independent":
-        return "bg-gray-100 text-gray-800"
+        return "bg-[#BC0B03]/20 text-[#BC0B03] border-0"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-white/10 text-white/70 border-0"
     }
   }
 
@@ -348,7 +346,7 @@ export function CollegeLeaderboard({
 
   if (error) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
+      <div className="text-center py-8 text-white/40">
         <p>Error loading college leaderboard: {error}</p>
       </div>
     )
@@ -356,9 +354,9 @@ export function CollegeLeaderboard({
 
   if (rankedColleges.length === 0) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
+      <div className="text-center py-8 text-white/40">
         <p>No colleges match the selected filters.</p>
-        <p className="text-sm mt-2">Try clearing filters or choosing a different division or class year.</p>
+        <p className="text-sm mt-2 text-white/30">Try clearing filters or choosing a different division or class year.</p>
       </div>
     )
   }
@@ -371,12 +369,12 @@ export function CollegeLeaderboard({
           open={expandedColleges.has(college.college_name)}
           onOpenChange={() => toggleCollegeExpansion(college)}
         >
-          <div className="rounded-lg border border-gray-200 bg-white hover:shadow-sm transition-shadow">
+          <div className="rounded-xl border border-white/10 bg-[#0f1c2e] hover:border-white/20 transition-colors">
             <CollapsibleTrigger asChild>
-              <Button variant="ghost" className="w-full p-4 h-auto justify-start hover:bg-gray-50">
+              <Button variant="ghost" className="w-full p-4 h-auto justify-start hover:bg-white/5">
                 <div className="flex items-center space-x-4 min-w-0 flex-1">
-                  <span className="text-sm font-semibold text-gray-600 w-8 text-center">#{rank}</span>
-                  <Avatar className="h-12 w-12 border-2 border-gray-200">
+                  <span className="text-sm font-semibold text-white/40 w-8 text-center">#{rank}</span>
+                  <Avatar className="h-12 w-12 border-2 border-white/10">
                     <AvatarImage
                       src={
                         collegeLogos[college.college_name] ||
@@ -391,7 +389,7 @@ export function CollegeLeaderboard({
                         e.currentTarget.src = `/placeholder.svg?height=48&width=48&query=${encodeURIComponent(college.college_name + " college logo")}`
                       }}
                     />
-                    <AvatarFallback className="text-sm font-semibold bg-gray-100 text-gray-700">
+                    <AvatarFallback className="text-sm font-semibold bg-white/10 text-white/70">
                       {college.college_name
                         .split(" ")
                         .map((word) => word[0])
@@ -400,12 +398,9 @@ export function CollegeLeaderboard({
                     </AvatarFallback>
                   </Avatar>
                   <div className="min-w-0 flex-1 text-left">
-                    <p className="text-base font-semibold text-gray-900 truncate">{college.college_name}</p>
+                    <p className="text-base font-semibold text-white truncate">{college.college_name}</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <Badge
-                        variant="secondary"
-                        className={getDivisionBadgeColor(college.division)}
-                      >
+                      <Badge variant="secondary" className={getDivisionBadgeColor(college.division)}>
                         {college.division}
                       </Badge>
                     </div>
@@ -413,19 +408,19 @@ export function CollegeLeaderboard({
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="text-right">
-                    <p className="text-lg font-bold text-gray-900">{getMetricLabel(getMetricValue(college))}</p>
+                    <p className="text-lg font-bold text-[#D3B574]">{getMetricLabel(getMetricValue(college))}</p>
                   </div>
                   {expandedColleges.has(college.college_name) ? (
-                    <ChevronDown className="h-5 w-5 text-gray-400" />
+                    <ChevronDown className="h-5 w-5 text-white/30" />
                   ) : (
-                    <ChevronRight className="h-5 w-5 text-gray-400" />
+                    <ChevronRight className="h-5 w-5 text-white/30" />
                   )}
                 </div>
               </Button>
             </CollapsibleTrigger>
 
             <CollapsibleContent className="px-4 pb-4">
-              <div className="border-t border-gray-200 pt-4 mt-2">
+              <div className="border-t border-white/10 pt-4 mt-2">
                 {loadingAthletes.has(college.college_name) ? (
                   <div className="space-y-3">
                     {Array.from({ length: 3 }).map((_, i) => (
@@ -445,10 +440,10 @@ export function CollegeLeaderboard({
                       return (
                         <div
                           key={athlete.id}
-                          className="flex items-center justify-between py-3 px-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                          className="flex items-center justify-between py-3 px-4 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
                         >
                           <div className="flex items-center space-x-3">
-                            <Avatar className="h-10 w-10 border border-gray-200">
+                            <Avatar className="h-10 w-10 border border-white/10">
                               <AvatarImage
                                 src={
                                   athlete.photourl ||
@@ -459,7 +454,7 @@ export function CollegeLeaderboard({
                                   console.log(`Photo failed to load for ${athleteName}:`, athlete.photourl)
                                 }}
                               />
-                              <AvatarFallback className="text-sm bg-gray-200 text-gray-700">
+                              <AvatarFallback className="text-sm bg-white/10 text-white/70">
                                 {athleteName
                                   .split(" ")
                                   .map((n) => n[0])
@@ -470,11 +465,11 @@ export function CollegeLeaderboard({
                             <div>
                               <button
                                 onClick={() => navigateToAthlete(athlete.id)}
-                                className="text-sm font-semibold hover:text-red-600 hover:underline cursor-pointer text-left text-gray-900"
+                                className="text-sm font-semibold hover:text-[#D3B574] hover:underline cursor-pointer text-left text-white"
                               >
                                 {athleteName}
                               </button>
-                              <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <div className="flex items-center gap-2 text-sm text-white/60">
                                 <span className="font-medium">{athlete.highschool}</span>
                                 {athlete.weightclass && <span>• {athlete.weightclass}lbs</span>}
                                 {athlete.graduationyear && <span>• Class of {athlete.graduationyear}</span>}
@@ -484,12 +479,12 @@ export function CollegeLeaderboard({
                           <div className="flex items-center gap-2">
                             <Badge
                               variant="secondary"
-                              className={`text-xs ${athlete.gender === "Male" || athlete.gender === "male" ? "bg-blue-100 text-blue-800" : "bg-pink-100 text-pink-800"}`}
+                              className={`text-xs border-0 ${athlete.gender === "Male" || athlete.gender === "male" ? "bg-[#003366]/80 text-white" : "bg-[#BC0B03]/20 text-[#BC0B03]"}`}
                             >
                               {athlete.gender}
                             </Badge>
                             {athlete.commitmentdate && (
-                              <span className="text-sm text-gray-500 font-medium">
+                              <span className="text-sm text-white/40 font-medium">
                                 {new Date(athlete.commitmentdate).getFullYear()}
                               </span>
                             )}
@@ -499,7 +494,7 @@ export function CollegeLeaderboard({
                     })}
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-500 text-center py-6">No athletes found for this college.</p>
+                  <p className="text-sm text-white/40 text-center py-6">No athletes found for this college.</p>
                 )}
               </div>
             </CollapsibleContent>

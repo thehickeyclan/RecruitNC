@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest"
 import type { NchsaaHonorRowInput } from "./commitment-card-honors"
 import {
+  allAmericanFromMergedNationalRows,
   barePlacementLooksLikeWinCountFromRecord,
+  buildCommitmentCardHonorBadges,
   getCommitmentHonorBadgesForAthlete,
   mergeCommitmentHonorBadgesForDisplay,
   stateHonorsFromNchsaaMergedRows,
@@ -15,16 +17,19 @@ function commitmentCardHonorBadgesE2E(
   athlete: Record<string, unknown>,
   achievementsPayload: {
     state_championships?: unknown[]
-    all_results?: { nchsaa?: NchsaaHonorRowInput[] }
+    all_results?: {
+      nchsaa?: NchsaaHonorRowInput[]
+      nhsca?: Array<{ placement?: unknown; record?: unknown }>
+      super32?: Array<{ placement?: unknown; record?: unknown }>
+    }
   },
 ): string[] {
-  const honorBadges = getCommitmentHonorBadgesForAthlete(athlete)
-  const found = new Set(stateHonorsFromNchsaaMergedRows(achievementsPayload.all_results?.nchsaa ?? []))
-  if (Array.isArray(achievementsPayload.state_championships) && achievementsPayload.state_championships.length > 0) {
-    found.add("State Champion")
-  }
-  const serverStateHonors = (["State Champion", "State Placer", "State Qualifier"] as const).filter((b) => found.has(b))
-  return mergeCommitmentHonorBadgesForDisplay(honorBadges, [...serverStateHonors])
+  return buildCommitmentCardHonorBadges({
+    athlete,
+    nchsaaMergedRows: achievementsPayload.all_results?.nchsaa ?? [],
+    nhscaMergedRows: achievementsPayload.all_results?.nhsca ?? [],
+    super32MergedRows: achievementsPayload.all_results?.super32 ?? [],
+  })
 }
 
 describe("commitment-card-honors", () => {
@@ -246,5 +251,44 @@ describe("commitment-card-honors", () => {
         { year: 2026, weight_class: "132", place: 1 },
       ]),
     ).toEqual(["State Champion"])
+  })
+
+  it("allAmericanFromMergedNationalRows: NHSCA 4th with 7-2 record (Carson Worrick style)", () => {
+    expect(
+      allAmericanFromMergedNationalRows([{ placement: "4th All-American", record: "7-2" }]),
+    ).toBe(true)
+    expect(
+      allAmericanFromMergedNationalRows([{ placement: 4, record: "7-2" }]),
+    ).toBe(true)
+  })
+
+  it("E2E card pipeline: table NHSCA 4th place adds All-American chip", () => {
+    const chips = commitmentCardHonorBadgesE2E(
+      {
+        id: "carson-worrick",
+        name: "Carson Worrick",
+        graduationyear: 2027,
+        highschool: "Davie",
+      },
+      {
+        state_championships: [{ year: 2026, place: 1 }],
+        all_results: {
+          nchsaa: [{ year: 2026, weight_class: "165", place: 1 }],
+          nhsca: [{ year: 2026, placement: "4th All-American", record: "7-2", weight: "160" }],
+          super32: [],
+        },
+      },
+    )
+    expect(chips).toContain("All-American")
+    expect(chips).toContain("State Champion")
+  })
+
+  it("getCommitmentHonorBadgesForAthlete: nhsca_results JSON top-8 adds All-American", () => {
+    const badges = getCommitmentHonorBadgesForAthlete({
+      id: "t",
+      name: "Carson Worrick",
+      nhsca_results: [{ year: 2026, placement: 4, record: "7-2" }],
+    })
+    expect(badges).toContain("All-American")
   })
 })

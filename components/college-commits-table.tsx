@@ -2,15 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import { HardLink } from "@/components/hard-link"
 
 export type CollegeCommitAthlete = {
   id: string
@@ -103,7 +96,7 @@ export function CollegeCommitsTable({
     return (
       <div className="space-y-2">
         {Array.from({ length: 8 }).map((_, i) => (
-          <Skeleton key={i} className="h-10 w-full" />
+          <Skeleton key={i} className="h-10 w-full bg-white/5" />
         ))}
       </div>
     )
@@ -111,7 +104,7 @@ export function CollegeCommitsTable({
 
   if (error) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
+      <div className="text-center py-8 text-white/40">
         <p>Error loading commits: {error}</p>
       </div>
     )
@@ -119,60 +112,58 @@ export function CollegeCommitsTable({
 
   if (athletes.length === 0) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
+      <div className="text-center py-8 text-white/40">
         <p>No commits match the selected filters.</p>
       </div>
     )
   }
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-      <div className="px-4 py-3 border-b bg-gray-50 text-sm text-gray-600">
+    <div className="rounded-xl border border-white/10 overflow-hidden overflow-x-auto bg-[#0f1c2e]">
+      <div className="px-4 py-3 border-b border-white/10 text-sm text-white/40">
         {athletes.length} commit{athletes.length === 1 ? "" : "s"}
       </div>
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Athlete</TableHead>
-              <TableHead>High School</TableHead>
-              <TableHead>College</TableHead>
-              <TableHead>Division</TableHead>
-              <TableHead>Class</TableHead>
-              <TableHead>Weight</TableHead>
-              <TableHead>Gender</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {athletes.map((athlete) => (
-              <TableRow key={athlete.id} className="hover:bg-gray-50">
-                <TableCell>
-                  <a
-                    href={`/athletes/${athlete.id}`}
-                    className="font-medium text-[#1e3a8a] hover:underline"
-                  >
-                    {athlete.name}
-                  </a>
-                </TableCell>
-                <TableCell>{athlete.highschool}</TableCell>
-                <TableCell>{athlete.college}</TableCell>
-                <TableCell>
-                  {athlete.division ? (
-                    <Badge variant="secondary" className="text-xs">
-                      {athlete.division}
-                    </Badge>
-                  ) : (
-                    "—"
-                  )}
-                </TableCell>
-                <TableCell>{athlete.graduationyear || "—"}</TableCell>
-                <TableCell>{athlete.weightclass ? `${athlete.weightclass} lbs` : "—"}</TableCell>
-                <TableCell className="capitalize">{athlete.gender || "—"}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      <table className="w-full text-sm min-w-[640px]">
+        <thead className="border-b border-white/10">
+          <tr>
+            <th className="text-left p-3 font-semibold text-white/60 text-xs uppercase tracking-wider">Athlete</th>
+            <th className="text-left p-3 font-semibold text-white/60 text-xs uppercase tracking-wider">High School</th>
+            <th className="text-left p-3 font-semibold text-white/60 text-xs uppercase tracking-wider">College</th>
+            <th className="text-left p-3 font-semibold text-white/60 text-xs uppercase tracking-wider">Division</th>
+            <th className="text-left p-3 font-semibold text-white/60 text-xs uppercase tracking-wider">Class</th>
+            <th className="text-left p-3 font-semibold text-white/60 text-xs uppercase tracking-wider">Weight</th>
+            <th className="text-left p-3 font-semibold text-white/60 text-xs uppercase tracking-wider">Gender</th>
+          </tr>
+        </thead>
+        <tbody>
+          {athletes.map((athlete) => (
+            <tr key={athlete.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+              <td className="p-3">
+                <HardLink
+                  href={`/view-profile?id=${encodeURIComponent(athlete.id)}`}
+                  className="font-medium text-[#D3B574] hover:underline"
+                >
+                  {athlete.name}
+                </HardLink>
+              </td>
+              <td className="p-3 text-white/70">{athlete.highschool}</td>
+              <td className="p-3 text-white/70">{athlete.college}</td>
+              <td className="p-3">
+                {athlete.division ? (
+                  <Badge variant="secondary" className="text-xs bg-white/10 text-white/70 border-0">
+                    {athlete.division}
+                  </Badge>
+                ) : (
+                  <span className="text-white/40">—</span>
+                )}
+              </td>
+              <td className="p-3 text-white/70">{athlete.graduationyear || "—"}</td>
+              <td className="p-3 text-white/70">{athlete.weightclass ? `${athlete.weightclass} lbs` : "—"}</td>
+              <td className="p-3 text-white/70 capitalize">{athlete.gender || "—"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   )
 }
