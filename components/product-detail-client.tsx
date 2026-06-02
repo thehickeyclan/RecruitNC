@@ -72,7 +72,6 @@ export function ProductDetailClient({ product, details, storeTheme = false }: Pr
         frameClassName={storeTheme ? STORE_GALLERY_FRAME : undefined}
         thumbnailFrameClassName={storeTheme ? STORE_THUMB_FRAME : undefined}
         portraitFrame={isSinglet}
-        blendStudioBackground={storeTheme && isSinglet}
       />
       <ProductInfo
         product={product}

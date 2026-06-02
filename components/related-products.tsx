@@ -125,7 +125,6 @@ export function RelatedProducts({ products, storeTheme = false }: RelatedProduct
                     src={product.image}
                     alt={product.name}
                     singlet={/singlet/i.test(product.name)}
-                    blendStudioBackground={storeTheme && /singlet/i.test(product.name)}
                   />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center bg-muted text-muted-foreground">

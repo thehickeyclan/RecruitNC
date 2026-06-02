@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { isStoreMerchandiseOrder } from "@/lib/store/is-store-merchandise-order"
 import { NextResponse } from "next/server"
 import Stripe from "stripe"
 
@@ -12,20 +13,6 @@ export const dynamic = "force-dynamic"
  * see empty store history with the anon/authenticated client. Admin + strict
  * filters (`parent_user_id`, `customer_email`) matches what the user may see of themselves.
  */
-
-function isStoreLikeOrder(row: {
-  channel?: string | null
-  shipping_method?: unknown
-}): boolean {
-  const method = row.shipping_method as { name?: string } | null | undefined
-  const name = method?.name ?? ""
-  if (name === "National team event" || name === "Practice Drop-in" || name === "Blue membership") {
-    return false
-  }
-  const ch = row.channel?.trim() ?? ""
-  if (ch === "store" || ch === "") return true
-  return false
-}
 
 export async function GET() {
   try {
@@ -85,7 +72,7 @@ export async function GET() {
       console.error("[profile/history] orders:", ordersErr.message)
     }
 
-    const storeOrders = (ordersRaw ?? []).filter(isStoreLikeOrder).slice(0, 20)
+    const storeOrders = (ordersRaw ?? []).filter(isStoreMerchandiseOrder).slice(0, 20)
 
     let spartanDonations: Array<{
       id: string
