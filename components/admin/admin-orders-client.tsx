@@ -55,6 +55,7 @@ export function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
   const [isFixingAllOrders, setIsFixingAllOrders] = useState(false)
   const [isBackfillingCustomers, setIsBackfillingCustomers] = useState(false)
   const [isSyncingStripe, setIsSyncingStripe] = useState(false)
+  const [isReclassifying, setIsReclassifying] = useState(false)
   const [isBulkUpdating, setIsBulkUpdating] = useState(false)
 
   // Status counts for tabs
@@ -138,6 +139,37 @@ export function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
       }
     } catch (error) {
       toast.error("Failed to update status")
+    }
+  }
+
+  const handleReclassifyFromStripe = async () => {
+    if (
+      !confirm(
+        "Re-read Stripe for recent orders and fix misclassified payments (Guild $30, Spartan, national team, drop-ins)? This runs in bulk — no per-order SQL.",
+      )
+    ) {
+      return
+    }
+    setIsReclassifying(true)
+    try {
+      const res = await fetch("/api/admin/orders/reclassify-from-stripe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ limit: 500 }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast.error(data.error || "Reclassify failed")
+        return
+      }
+      const parts = [`Fixed ${data.changed} of ${data.processed} orders`]
+      if (data.orphanRegsLinked > 0) parts.push(`${data.orphanRegsLinked} orphan national-team reg(s) linked`)
+      toast.success(parts.join(" · "))
+      router.refresh()
+    } catch {
+      toast.error("Reclassify from Stripe failed")
+    } finally {
+      setIsReclassifying(false)
     }
   }
 
@@ -229,6 +261,15 @@ export function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
+            <Button
+              onClick={handleReclassifyFromStripe}
+              disabled={isReclassifying}
+              variant="outline"
+              className="bg-white/5 border-white/10 text-white hover:bg-white/10"
+            >
+              {isReclassifying ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <RotateCcw className="mr-2 h-4 w-4" />}
+              Fix from Stripe
+            </Button>
             <Button
               onClick={handleSyncFromStripe}
               disabled={isSyncingStripe}

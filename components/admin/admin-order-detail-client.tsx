@@ -101,6 +101,7 @@ export function AdminOrderDetailClient({ order }: OrderDetailClientProps) {
     zip: order.shippingAddress.zip || "",
   })
   const [isRecoveringItems, setIsRecoveringItems] = useState(false)
+  const [isReclassifying, setIsReclassifying] = useState(false)
 
   const isTournamentOrder =
     order.typeBanner?.kind === "national_team_nhsca" || order.typeBanner?.kind === "national_team_aau"
@@ -230,6 +231,48 @@ export function AdminOrderDetailClient({ order }: OrderDetailClientProps) {
     }
   }
 
+  const handleReclassifyFromStripe = async () => {
+    setIsReclassifying(true)
+    try {
+      const res = await fetch("/api/admin/orders/reclassify-from-stripe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId: order.id }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast({
+          title: "Fix failed",
+          description: (data.error as string) || "Could not reclassify from Stripe",
+          variant: "destructive",
+        })
+        return
+      }
+      if (data.changed > 0) {
+        toast({
+          title: "Order updated",
+          description: data.samples?.[0]?.kind
+            ? `Reclassified as ${String(data.samples[0].kind).replace(/_/g, " ")}`
+            : "Classification updated from Stripe",
+        })
+        router.refresh()
+      } else {
+        toast({
+          title: "No changes",
+          description: "Stripe metadata matches current record (or payment is store-only).",
+        })
+      }
+    } catch {
+      toast({
+        title: "Fix failed",
+        description: "Reclassify from Stripe failed",
+        variant: "destructive",
+      })
+    } finally {
+      setIsReclassifying(false)
+    }
+  }
+
   const handleRecoverItems = async () => {
     setIsRecoveringItems(true)
     try {
@@ -316,6 +359,10 @@ export function AdminOrderDetailClient({ order }: OrderDetailClientProps) {
           <Badge variant={getStatusColor(currentStatus as Order["status"])} className="capitalize">
             {currentStatus}
           </Badge>
+          <Button variant="outline" size="sm" onClick={handleReclassifyFromStripe} disabled={isReclassifying}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${isReclassifying ? "animate-spin" : ""}`} />
+            Fix from Stripe
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" disabled={isUpdating}>

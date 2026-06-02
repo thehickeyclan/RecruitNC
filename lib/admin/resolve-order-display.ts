@@ -19,6 +19,8 @@ import {
   nationalTeamVariantForLineKey,
 } from "@/lib/national-team-product-catalog"
 import { isGuildOrderRow } from "@/lib/stripe-guild-detection"
+import { isMisclassifiedGuildGhostLineName, isPracticeDropInShippingMethod } from "@/lib/stripe-guild-misclassified-line"
+import { amountLooksLikeGuild, amountLooksLikePracticeDropIn } from "@/lib/stripe-checkout-amounts"
 import { isGenericPlaceholderOrderItemName } from "@/lib/nhsca-hub-checkout-pricing"
 
 export type AdminOrderKind =
@@ -153,6 +155,7 @@ function isBlueOrder(order: OrderRow, items: OrderItemRow[]): boolean {
 }
 
 function isPracticeDropIn(order: OrderRow, items: OrderItemRow[]): boolean {
+  if (amountLooksLikeGuild(Number(order.total ?? 0))) return false
   const method = shippingMethodStr(order).toLowerCase()
   if (method.includes("practice drop-in") || method.includes("practice drop in")) return true
   return items.some((i) => {
@@ -285,6 +288,16 @@ export function resolveOrderCategory(
   },
 ): OrderCategory | "Donation" {
   if (isGuildOrderRow(order)) return "Guild"
+  const total = Number(order.total) || 0
+  if (
+    amountLooksLikeGuild(total) &&
+    !opts?.dropInRequest &&
+    (isPracticeDropIn(order, items) ||
+      isPracticeDropInShippingMethod(order.shipping_method) ||
+      items.some((i) => isMisclassifiedGuildGhostLineName(i.product_name)))
+  ) {
+    return "Guild"
+  }
   if (opts?.spartanDonation) return "Donation"
   if (opts?.nationalTeamRegistration) return "Tournament Fee"
   if (opts?.dropInRequest) return "Drop-In"
