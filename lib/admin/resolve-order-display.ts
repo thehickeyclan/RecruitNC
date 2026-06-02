@@ -18,6 +18,8 @@ import {
   nationalTeamSkuForLine,
   nationalTeamVariantForLineKey,
 } from "@/lib/national-team-product-catalog"
+import { isGuildOrderRow } from "@/lib/stripe-guild-detection"
+import { isGenericPlaceholderOrderItemName } from "@/lib/nhsca-hub-checkout-pricing"
 
 export type AdminOrderKind =
   | "store_apparel"
@@ -27,6 +29,7 @@ export type AdminOrderKind =
   | "national_team_nhsca"
   | "national_team_aau"
   | "donation"
+  | "guild_booking"
   | "unknown"
 
 export type AdminDisplayLineItem = {
@@ -281,6 +284,7 @@ export function resolveOrderCategory(
     spartanDonation?: SpartanDonationRow | null
   },
 ): OrderCategory | "Donation" {
+  if (isGuildOrderRow(order)) return "Guild"
   if (opts?.spartanDonation) return "Donation"
   if (opts?.nationalTeamRegistration) return "Tournament Fee"
   if (opts?.dropInRequest) return "Drop-In"
@@ -316,6 +320,54 @@ export function resolveAdminOrderDisplay(input: {
   const { order } = input
   const items = order.order_items ?? []
   const orderId = order.id
+
+  if (isGuildOrderRow(order)) {
+    const total = Number(order.total ?? 0)
+    const lineName =
+      items
+        .map((i) => (i.product_name ?? "").trim())
+        .find((n) => n && !isGenericPlaceholderOrderItemName(n)) || "Wrestling Guild booking"
+    return {
+      kind: "guild_booking",
+      category: "Guild",
+      banner: {
+        kind: "guild_booking",
+        title: "Wrestling Guild booking",
+        description: "Paid on wrestlingguild.com — not NC United store apparel or a practice drop-in.",
+        logoSrc: "/images/nc-united-stacked-logo-white.png",
+        accentClass: "border-violet-500/40 bg-violet-50",
+        links: [{ href: "https://www.wrestlingguild.com", label: "Open Wrestling Guild" }],
+      },
+      lineItems: items.length
+        ? items.map((item, index) => ({
+            id: item.id ?? `guild-${orderId}-${index}`,
+            name: isGenericPlaceholderOrderItemName(item.product_name) ? lineName : (item.product_name ?? lineName),
+            variant: "Guild session booking",
+            size: "",
+            sku: item.sku ?? "guild",
+            quantity: Number(item.quantity) || 1,
+            price: Number(item.price) || total,
+            image: item.image_url ?? item.product_image_url ?? "/images/nc-united-stacked-logo-white.png",
+          }))
+        : [
+            {
+              id: `guild-${orderId}`,
+              name: lineName,
+              variant: "Guild session booking",
+              size: "",
+              sku: "guild",
+              quantity: 1,
+              price: total,
+              image: "/images/nc-united-stacked-logo-white.png",
+            },
+          ],
+      contextRows: [],
+      showShipping: false,
+      showTracking: false,
+      showRecoverItems: false,
+      fulfillmentLabel: "Wrestling Guild — no RecruitNC shipment",
+    }
+  }
 
   if (input.spartanDonation) {
     const d = input.spartanDonation
@@ -355,9 +407,7 @@ export function resolveAdminOrderDisplay(input: {
   }
 
   const ntReg = input.nationalTeamRegistration
-  const useNt =
-    Boolean(input.useNationalTeamDisplay && ntReg) ||
-    Boolean(ntReg && orderItemsNeedNationalTeamDetail(items))
+  const useNt = Boolean(ntReg)
 
   if (useNt && ntReg) {
     const isAau = ntReg.event_slug === AAU_SCHOLASTIC_EVENT_SLUG

@@ -36,6 +36,7 @@ function deriveCategory(
   if (names.some((n) => /drop-?in|dropin/.test(n) || (n.includes("practice") && n.includes("drop")))) return "Drop-In"
   if (names.some((n) => n.includes("nhsca") || n.includes("national team") || n.includes("registration + apparel"))) return "Tournament Fee"
   if (method.includes("national team")) return "Tournament Fee"
+  if (method.includes("wrestling guild")) return "Guild"
   // When no line items: infer Tournament Fee from typical event total
   if (names.length === 0 && total >= 200 && total <= 300) return "Tournament Fee"
   // Recovered/minimal orders with no line items: use total + method as fallback for Drop-In
@@ -52,6 +53,10 @@ function productSummary(
 ): string {
   const names = (orderItems || []).map((i) => (i.product_name || "").trim()).filter(Boolean)
   if (category === "Donation") return "Fundraising donation"
+  if (category === "Guild") {
+    if (names.length === 1) return names[0]
+    return names[0] || "Wrestling Guild booking"
+  }
   if (category === "Drop-In") {
     if (names.length === 1) return names[0]
     if (names.some((n) => /practice|drop-in|dropin/i.test(n))) return names.find((n) => /practice|drop-in|dropin/i.test(n)) || names[0] || "Practice Drop-In"

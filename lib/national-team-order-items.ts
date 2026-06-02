@@ -8,8 +8,13 @@ import {
 
 export { isGenericPlaceholderOrderItemName } from "@/lib/nhsca-hub-checkout-pricing"
 
+export function isNationalTeamCatalogSku(sku: string | null | undefined): boolean {
+  const s = (sku ?? "").trim().toUpperCase()
+  return s.startsWith("AAU26-") || s.startsWith("NHSCA26-") || s.startsWith("NH26-")
+}
+
 export function orderItemsNeedNationalTeamDetail(
-  items: { product_name?: string | null }[] | null | undefined
+  items: { product_name?: string | null; sku?: string | null }[] | null | undefined
 ): boolean {
   if (!items?.length) return true
   if (items.length === 1 && isGenericPlaceholderOrderItemName(items[0]?.product_name)) return true
@@ -27,15 +32,23 @@ export async function ensureNationalTeamOrderLineItems(
     eventSlug?: string
     apparelSizes?: NationalTeamApparelSizes
     bundleProduct?: { id?: string | null; name?: string | null } | null
+    /** Replace existing hub/AAU lines (e.g. admin Rebuild from Stripe). */
+    forceReplace?: boolean
   }
 ): Promise<boolean> {
   const { data: existing } = await admin
     .from("order_items")
-    .select("id, product_name")
+    .select("id, product_name, sku")
     .eq("order_id", opts.orderId)
 
   const rows = existing ?? []
-  if (!orderItemsNeedNationalTeamDetail(rows)) return false
+  const allNationalTeamCatalog =
+    rows.length > 0 && rows.every((r) => isNationalTeamCatalogSku((r as { sku?: string }).sku))
+  const shouldReplace =
+    opts.forceReplace ||
+    orderItemsNeedNationalTeamDetail(rows) ||
+    (allNationalTeamCatalog && rows.length > 0)
+  if (!shouldReplace) return false
 
   const eventSlug = opts.eventSlug?.trim() || "nhsca-duals-2026"
   const sizes = opts.apparelSizes ?? {}

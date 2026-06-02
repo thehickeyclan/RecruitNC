@@ -3,6 +3,7 @@ import { AAU_SCHOLASTIC_EVENT_SLUG } from "./aau-scholastic-duals-2026-content"
 import {
   checkoutLineItemsToDisplay,
   isGenericPlaceholderOrderItemName,
+  resolveNationalTeamOrderTotalCents,
   resolveRegistrationOrderLines,
 } from "./nhsca-hub-checkout-pricing"
 
@@ -45,5 +46,18 @@ describe("AAU checkout line SKUs", () => {
       "AAU26-SHORTS",
       "AAU26-TEE",
     ])
+  })
+})
+
+describe("resolveNationalTeamOrderTotalCents", () => {
+  it("prefers checkout_lines over stale reg fee columns", () => {
+    const encoded =
+      "tournament_reg:7500:Tournament%20registration|hotel_van:31500:Hotel%20%26%20team%20van|flight:35500:Flight"
+    const total = resolveNationalTeamOrderTotalCents({
+      checkout_lines: encoded,
+      reg_fee_cents: 6000,
+      apparel_fee_cents: 0,
+    })
+    expect(total).toBe(74500)
   })
 })

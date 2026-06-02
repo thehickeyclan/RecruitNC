@@ -1,5 +1,6 @@
 import { formatOrderItemVariantForEmail, formatStoreShippingAddressPlain } from "@/lib/email"
 import { inferNationalTeamLineKey, nationalTeamVariantForLineKey } from "@/lib/national-team-product-catalog"
+import { resolveNationalTeamOrderTotalCents, isGenericPlaceholderOrderItemName } from "@/lib/nhsca-hub-checkout-pricing"
 import {
   nhscaDualsRegistrationOrderLines,
   type NhscaDuals2026Registration,
@@ -146,7 +147,16 @@ export function buildNationalTeamReceiptPreview(
   })
 
   const customerEmail = (order.customer_email ?? order.email ?? reg.parent_email ?? "").trim()
-  const subtotal = Number(order.subtotal) || items.reduce((s, i) => s + i.price * i.quantity, 0)
+  const linesSubtotal = items.reduce((s, i) => s + i.price * i.quantity, 0)
+  const resolvedTotalCents = resolveNationalTeamOrderTotalCents({
+    checkout_lines: reg.checkout_lines,
+    reg_fee_cents: reg.reg_fee_cents,
+    apparel_fee_cents: reg.apparel_fee_cents,
+  })
+  const resolvedTotal = resolvedTotalCents / 100
+  const dbTotal = Number(order.total) || 0
+  const total = resolvedTotal > 0 ? resolvedTotal : dbTotal
+  const subtotal = linesSubtotal > 0 ? linesSubtotal : total
 
   return {
     orderNumber: order.order_number ?? "",
@@ -157,7 +167,7 @@ export function buildNationalTeamReceiptPreview(
     shipping: Number(order.shipping_cost) || 0,
     tax: Number(order.tax) || 0,
     discount: Number(order.discount) || 0,
-    total: Number(order.total) || 0,
+    total,
     shippingAddressPlain: formatStoreShippingAddressPlain(order.shipping_address ?? {}),
     sentAt: receiptLog?.sent_at ?? null,
     sentToEmail: receiptLog?.recipient_email ?? null,
@@ -166,4 +176,41 @@ export function buildNationalTeamReceiptPreview(
 
 function athleteNameFromReg(reg: NhscaDuals2026Registration): string {
   return [reg.athlete_first_name, reg.athlete_last_name].filter(Boolean).join(" ").trim() || "Customer"
+}
+
+/** Wrestling Guild booking — not NC United store merchandise. */
+export function buildGuildReceiptPreview(
+  order: OrderRow,
+  itemRows: ItemRow[],
+  receiptLog?: { sent_at?: string | null; recipient_email?: string | null } | null,
+): OrderReceiptPreview {
+  const rawName =
+    itemRows.map((r) => String(r.product_name ?? "").trim()).find((n) => n && !isGenericPlaceholderOrderItemName(n)) ??
+    "Wrestling Guild booking"
+  const total = Number(order.total) || 0
+  const items: OrderReceiptLineItem[] = [
+    {
+      name: rawName,
+      variant: "Guild session booking",
+      quantity: 1,
+      price: total,
+      lineLabel: rawName,
+    },
+  ]
+  const customerEmail = (order.customer_email ?? order.email ?? "").trim()
+
+  return {
+    orderNumber: order.order_number ?? "",
+    customerName: (order.customer_name ?? "").trim() || "Customer",
+    customerEmail,
+    items,
+    subtotal: total,
+    shipping: 0,
+    tax: Number(order.tax) || 0,
+    discount: Number(order.discount) || 0,
+    total,
+    shippingAddressPlain: "",
+    sentAt: receiptLog?.sent_at ?? null,
+    sentToEmail: receiptLog?.recipient_email ?? null,
+  }
 }
