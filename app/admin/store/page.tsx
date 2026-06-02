@@ -456,6 +456,7 @@ export default function AdminStoreHubPage() {
                 { href: "/admin/products", title: "Products", description: "Manage catalog", icon: Package, color: "#8B5CF6" },
                 { href: "/admin/inventory", title: "Inventory", description: "Stock & alerts", icon: Package, color: "#EAB308" },
                 { href: "/admin/store/analytics", title: "Analytics", description: "Reports & trends", icon: BarChart3, color: "#EC4899" },
+                { href: "/admin/store/reports", title: "Sales Reports", description: "Units, sizes & top sellers", icon: BarChart3, color: "#14B8A6" },
                 { href: "/admin/store/process-images", title: "Process Images", description: "Batch background removal", icon: Wand2, color: "#F59E0B" },
               ].map(({ href, title, description, icon: Icon, color }) => (
                 <HardLink key={href} href={href} className="block">

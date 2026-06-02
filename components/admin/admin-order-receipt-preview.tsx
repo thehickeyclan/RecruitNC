@@ -56,14 +56,18 @@ export function AdminOrderReceiptPreview({ receipt }: { receipt: OrderReceiptPre
                 <tr className="border-b text-muted-foreground">
                   <th className="text-left py-2 pr-2 font-medium">Item</th>
                   <th className="text-center py-2 px-2 font-medium w-12">Qty</th>
+                  <th className="text-center py-2 px-2 font-medium min-w-[4.5rem]">Size</th>
                   <th className="text-right py-2 pl-2 font-medium w-16">Price</th>
                 </tr>
               </thead>
               <tbody>
                 {receipt.items.map((item, idx) => (
                   <tr key={`${item.lineLabel}-${idx}`} className="border-b border-muted/50 last:border-0">
-                    <td className="py-2 pr-2 align-top">{item.lineLabel}</td>
+                    <td className="py-2 pr-2 align-top">{item.name}</td>
                     <td className="py-2 px-2 text-center align-top">{item.quantity}</td>
+                    <td className="py-2 px-2 text-center align-top text-muted-foreground">
+                      {item.variant?.trim() || "—"}
+                    </td>
                     <td className="py-2 pl-2 text-right align-top whitespace-nowrap">
                       {formatCurrency(item.price)}
                     </td>

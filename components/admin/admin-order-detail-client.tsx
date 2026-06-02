@@ -50,6 +50,7 @@ interface OrderDetailClientProps {
       id: string
       name: string
       variant: string
+      size: string
       sku: string
       quantity: number
       price: number
@@ -110,23 +111,49 @@ export function AdminOrderDetailClient({ order }: OrderDetailClientProps) {
       })
     : []
 
-  const renderFulfillmentLine = (item: OrderDetailClientProps["order"]["orderItems"][number]) => (
-    <div key={item.id} className="flex gap-4 border-b border-muted/60 pb-4 last:border-0 last:pb-0">
-      <img
-        src={item.image || "/placeholder.svg"}
-        alt={item.name}
-        className="h-20 w-20 rounded-md object-cover bg-muted shrink-0 border"
-      />
-      <div className="flex-1 min-w-0">
-        <div className="font-medium text-base">{item.name}</div>
-        <div className="text-sm text-muted-foreground mt-0.5">
-          {item.variant}
-          {item.sku && item.sku !== "N/A" && !isTournamentOrder ? ` • SKU: ${item.sku}` : ""}
-        </div>
-        <div className="text-sm mt-1">
-          Qty: {item.quantity} × {formatCurrency(item.price)} = {formatCurrency(item.price * item.quantity)}
-        </div>
-      </div>
+  const renderFulfillmentTable = (items: OrderDetailClientProps["order"]["orderItems"]) => (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm border-collapse">
+        <thead>
+          <tr className="border-b text-muted-foreground">
+            <th className="text-left py-2 pr-2 font-medium">Item</th>
+            <th className="text-center py-2 px-2 font-medium w-12">Qty</th>
+            <th className="text-center py-2 px-2 font-medium min-w-[4.5rem]">Size</th>
+            <th className="text-right py-2 pl-2 font-medium w-20">Price</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item) => (
+            <tr key={item.id} className="border-b border-muted/50 last:border-0">
+              <td className="py-2 pr-2 align-top">
+                <div className="flex gap-3">
+                  <img
+                    src={item.image || "/placeholder.svg"}
+                    alt={item.name}
+                    className="h-12 w-12 rounded-md object-cover bg-muted shrink-0 border"
+                  />
+                  <div className="min-w-0">
+                    <div className="font-medium">{item.name}</div>
+                    {item.variant ? (
+                      <div className="text-xs text-muted-foreground mt-0.5">{item.variant}</div>
+                    ) : null}
+                    {item.sku && item.sku !== "N/A" && !isTournamentOrder ? (
+                      <div className="text-xs text-muted-foreground mt-0.5">SKU: {item.sku}</div>
+                    ) : null}
+                  </div>
+                </div>
+              </td>
+              <td className="py-2 px-2 text-center align-top">{item.quantity}</td>
+              <td className="py-2 px-2 text-center align-top text-muted-foreground">
+                {item.size?.trim() || "—"}
+              </td>
+              <td className="py-2 pl-2 text-right align-top whitespace-nowrap">
+                {formatCurrency(item.price * item.quantity)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   )
 
@@ -387,12 +414,12 @@ export function AdminOrderDetailClient({ order }: OrderDetailClientProps) {
                           <h4 className="text-xs font-semibold uppercase tracking-wide text-[#13294B] mb-3 border-b pb-1">
                             {group}
                           </h4>
-                          <div className="space-y-4">{items.map(renderFulfillmentLine)}</div>
+                          <div className="space-y-4">{renderFulfillmentTable(items)}</div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    order.orderItems.map(renderFulfillmentLine)
+                    renderFulfillmentTable(order.orderItems)
                   )}
                   <Separator />
                 </>

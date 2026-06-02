@@ -19,7 +19,7 @@ export type AauScholasticPriceLine = {
 /** Registration, apparel, and travel — all selectable at Stripe checkout. */
 export const AAU_SCHOLASTIC_CHECKOUT_LINES: AauScholasticPriceLine[] = [
   { id: "tournament_reg", label: "Tournament registration", dollars: 75 },
-  { id: "singlet", label: "Singlet", dollars: 65 },
+  { id: "singlet", label: "Singlet (Pepsi or Pinstripes)", dollars: 65 },
   { id: "long_sleeve", label: "Long sleeve shirt", dollars: 40 },
   { id: "shorts", label: "Shorts", dollars: 40 },
   { id: "tee", label: "Tee", dollars: 30 },
@@ -90,9 +90,35 @@ export function aauScholasticFullBundleLineQuantities(): Record<string, number> 
 
 export type AauScholasticApparelSizesInput = {
   singletSize: string
+  /** Required when singlet is selected — Pepsi (blue) or Pinstripes. */
+  singletStyle: AauScholasticSingletStyle | ""
   shortsSize: string
   longSleeveSize: string
   teeSize: string
+}
+
+export type AauScholasticSingletStyle = "pepsi" | "pinstripes"
+
+export const AAU_SINGLET_STYLE_OPTIONS: { id: AauScholasticSingletStyle; label: string }[] = [
+  { id: "pepsi", label: "Pepsi (blue singlet)" },
+  { id: "pinstripes", label: "Pinstripes (navy/red/white)" },
+]
+
+export function aauSingletStyleLabel(style: AauScholasticSingletStyle | ""): string | null {
+  if (style === "pepsi") return "Pepsi"
+  if (style === "pinstripes") return "Pinstripes"
+  return null
+}
+
+export function aauScholasticSingletLineLabel(
+  baseLabel: string,
+  size: string,
+  style: AauScholasticSingletStyle | "",
+): string {
+  const styleLabel = aauSingletStyleLabel(style)
+  const sizePart = size.trim() || "size TBD"
+  if (styleLabel) return `${baseLabel} — ${styleLabel} (${sizePart})`
+  return `${baseLabel} (${sizePart})`
 }
 
 export function aauScholasticApparelLineSelected(
@@ -108,6 +134,7 @@ export function validateAauScholasticApparelSizes(
   sizes: AauScholasticApparelSizesInput,
 ): string | null {
   const has = (id: string) => selections.some((s) => s.line.id === id && s.quantity > 0)
+  if (has("singlet") && !sizes.singletStyle.trim()) return "Select Pepsi or Pinstripes singlet."
   if (has("singlet") && !sizes.singletSize.trim()) return "Select a singlet size."
   if (has("shorts") && !sizes.shortsSize.trim()) return "Select a shorts size."
   if (has("long_sleeve") && !sizes.longSleeveSize.trim()) return "Select a long sleeve size."
@@ -197,19 +224,27 @@ export function aauScholasticFeesFromSelectedLines(lines: AauScholasticPriceLine
 
 export function aauScholasticCheckoutLineItemsFromSelections(
   selections: readonly AauScholasticLineSelection[],
+  apparelSizes?: AauScholasticApparelSizesInput,
 ): NhscaCheckoutLineItem[] {
-  return selections.map(({ line, quantity }) => ({
-    key: line.id,
-    name: quantity > 1 ? `${line.label} (×${quantity})` : line.label,
-    amountCents: line.dollars * 100,
-    quantity,
-  }))
+  return selections.map(({ line, quantity }) => {
+    let name = line.label
+    if (line.id === "singlet" && apparelSizes) {
+      name = aauScholasticSingletLineLabel(line.label, apparelSizes.singletSize, apparelSizes.singletStyle)
+    }
+    return {
+      key: line.id,
+      name: quantity > 1 ? `${name} (×${quantity})` : name,
+      amountCents: line.dollars * 100,
+      quantity,
+    }
+  })
 }
 
 export function encodeAauScholasticCheckoutLinesMetadataFromSelections(
   selections: readonly AauScholasticLineSelection[],
+  apparelSizes?: AauScholasticApparelSizesInput,
 ): string {
-  return encodeLineItemsMetadata(aauScholasticCheckoutLineItemsFromSelections(selections))
+  return encodeLineItemsMetadata(aauScholasticCheckoutLineItemsFromSelections(selections, apparelSizes))
 }
 
 /** @deprecated Use encodeAauScholasticCheckoutLinesMetadataFromSelections */

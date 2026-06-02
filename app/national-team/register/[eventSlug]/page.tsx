@@ -105,6 +105,7 @@ export default function NationalTeamRegisterEventPage() {
   const [lineQuantities, setLineQuantities] = useState<Record<string, number>>(() => aauScholasticDefaultLineQuantities())
   const [apparelSizes, setApparelSizes] = useState<AauScholasticApparelSizesInput>({
     singletSize: "",
+    singletStyle: "",
     shortsSize: "",
     longSleeveSize: "",
     teeSize: "",
@@ -209,6 +210,7 @@ export default function NationalTeamRegisterEventPage() {
           ...(isAauRegistration
             ? {
                 selectedLines: aauScholasticLineQuantitiesFromRecord(lineQuantities),
+                singlet_style: apparelSizes.singletStyle,
                 singlet_size: apparelSizes.singletSize,
                 shorts_size: apparelSizes.shortsSize,
                 long_sleeve_size: apparelSizes.longSleeveSize,
