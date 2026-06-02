@@ -1,4 +1,5 @@
 import { formatOrderItemVariantForEmail, formatStoreShippingAddressPlain } from "@/lib/email"
+import { inferNationalTeamLineKey, nationalTeamVariantForLineKey } from "@/lib/national-team-product-catalog"
 import {
   nhscaDualsRegistrationOrderLines,
   type NhscaDuals2026Registration,
@@ -66,9 +67,23 @@ export function mapOrderItemsToReceiptLines(itemRows: ItemRow[]): OrderReceiptLi
     const variant = variantForReceiptItem(r)
     const quantity = Number(r.quantity) || 1
     const price = Number(r.price) || 0
-    const lineLabel = variant ? `${name} (${variant})` : name
-    return { name, variant, quantity, price, lineLabel }
+    return { name, variant, quantity, price, lineLabel: name }
   })
+}
+
+function nationalTeamReceiptVariant(
+  reg: NhscaDuals2026Registration,
+  line: { name: string; key?: string },
+): string {
+  const eventSlug = reg.event_slug ?? "nhsca-duals-2026"
+  const key = line.key ?? inferNationalTeamLineKey(eventSlug, line.name) ?? ""
+  const { size } = nationalTeamVariantForLineKey(eventSlug, key, {
+    singlet_size: reg.singlet_size,
+    shorts_size: reg.shorts_size,
+    shirt_size: reg.shirt_size,
+  })
+  if (!size || size === "TBD" || size === "N/A") return ""
+  return size
 }
 
 export function buildOrderReceiptPreview(
@@ -120,9 +135,10 @@ export function buildNationalTeamReceiptPreview(
   const items: OrderReceiptLineItem[] = lines.map((line) => {
     const qty = line.quantity ?? 1
     const price = (line.amount_cents ?? 0) / 100 / qty
+    const variant = nationalTeamReceiptVariant(reg, line)
     return {
       name: line.name,
-      variant: "",
+      variant,
       quantity: qty,
       price,
       lineLabel: line.name,

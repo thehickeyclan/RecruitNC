@@ -244,9 +244,8 @@ export async function sendOrderConfirmationEmail(
 
     const itemsRows = items
       .map((i) => {
-        const v = (i.variant ?? "").trim()
-        const label = v ? `${i.name} (${v})` : i.name
-        return `<tr><td>${escapeHtmlReceipt(label)}</td><td style="text-align:center">${escapeHtmlReceipt(String(i.quantity))}</td><td style="text-align:right">$${Number(i.price).toFixed(2)}</td></tr>`
+        const sizeCell = (i.variant ?? "").trim() || "—"
+        return `<tr><td>${escapeHtmlReceipt(i.name)}</td><td style="text-align:center">${escapeHtmlReceipt(String(i.quantity))}</td><td style="text-align:center">${escapeHtmlReceipt(sizeCell)}</td><td style="text-align:right">$${Number(i.price).toFixed(2)}</td></tr>`
       })
       .join("")
     const addressBlock = formatStoreShippingAddressPlain(shippingAddress)
@@ -263,7 +262,7 @@ export async function sendOrderConfirmationEmail(
     <p>Hi ${escapeHtmlReceipt(customerName)},</p>
     <p>Thanks for your order. Order number: <strong>${escapeHtmlReceipt(orderNumber)}</strong>.</p>
     <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
-      <thead><tr style="border-bottom: 1px solid #e5e7eb;"><th style="text-align: left;">Item</th><th>Qty</th><th style="text-align: right;">Price</th></tr></thead>
+      <thead><tr style="border-bottom: 1px solid #e5e7eb;"><th style="text-align: left;">Item</th><th>Qty</th><th>Size</th><th style="text-align: right;">Price</th></tr></thead>
       <tbody>${itemsRows}</tbody>
     </table>
     <p style="margin: 8px 0;">Subtotal: $${Number(subtotal).toFixed(2)}</p>

@@ -8,6 +8,7 @@ import {
   AAU_SCHOLASTIC_EVENT_SLUG,
   aauScholasticFeesFromSelections,
   aauScholasticLineSelectionsFromQuantities,
+  aauScholasticSingletLineLabel,
   encodeAauScholasticCheckoutLinesMetadataFromSelections,
   parseAauScholasticLineQuantities,
   validateAauScholasticApparelSizes,
@@ -167,17 +168,23 @@ export async function POST(request: NextRequest) {
       const fees = aauScholasticFeesFromSelections(aauSelections)
       regFeeCents = fees.reg_fee_cents
       apparelFeeCents = fees.apparel_fee_cents
-      lineItems = aauSelections.map(({ line, quantity }) => ({
-        price_data: {
-          currency: "usd",
-          unit_amount: line.dollars * 100,
-          product_data: {
-            name: line.label,
-            description: "NC United AAU Scholastic Duals 2026",
+      lineItems = aauSelections.map(({ line, quantity }) => {
+        const name =
+          line.id === "singlet"
+            ? aauScholasticSingletLineLabel(line.label, apparelSizes.singletSize, apparelSizes.singletStyle)
+            : line.label
+        return {
+          price_data: {
+            currency: "usd",
+            unit_amount: line.dollars * 100,
+            product_data: {
+              name,
+              description: "NC United AAU Scholastic Duals 2026",
+            },
           },
-        },
-        quantity,
-      }))
+          quantity,
+        }
+      })
     } else {
       const productSlug = "nhsca-2026-bundle"
       const product =
@@ -279,7 +286,10 @@ export async function POST(request: NextRequest) {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin
     const stripe = new Stripe(stripeSecret)
     const checkoutLinesMeta = isAau
-      ? encodeAauScholasticCheckoutLinesMetadataFromSelections(aauSelections)
+      ? encodeAauScholasticCheckoutLinesMetadataFromSelections(
+          aauSelections,
+          parseAauScholasticApparelSizesFromBody(body),
+        )
       : ""
 
     let session

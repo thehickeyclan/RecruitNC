@@ -14,6 +14,7 @@ import {
   AAU_SCHOLASTIC_CHECKOUT_LINES,
   AAU_SCHOLASTIC_MAX_LINE_QUANTITY,
   AAU_SCHOLASTIC_TRAVEL_LINES,
+  AAU_SINGLET_STYLE_OPTIONS,
   aauScholasticApparelLineSelected,
   aauScholasticDefaultLineQuantities,
   aauScholasticFullBundleLineQuantities,
@@ -24,6 +25,7 @@ import {
   sumAauScholasticSelections,
   type AauScholasticApparelSizesInput,
   type AauScholasticPriceLine,
+  type AauScholasticSingletStyle,
 } from "@/lib/aau-scholastic-duals-2026-content"
 import { NHSCA_HUB_GEAR_SIZES } from "@/lib/nhsca-hub-checkout-pricing"
 import { aauLinkClass, aauFormLabelClass, aauPriceClass } from "@/components/national-team/aau-scholastic-theme"
@@ -91,6 +93,51 @@ function QuantityStepper({
       <button type="button" className={btnClass} disabled={disabled || value >= AAU_SCHOLASTIC_MAX_LINE_QUANTITY} onClick={inc} aria-label="Increase quantity">
         <Plus className="h-3.5 w-3.5" />
       </button>
+    </div>
+  )
+}
+
+function SingletStyleSelect({
+  value,
+  onChange,
+  disabled,
+  isDark,
+}: {
+  value: AauScholasticSingletStyle | ""
+  onChange: (v: AauScholasticSingletStyle) => void
+  disabled?: boolean
+  isDark: boolean
+}) {
+  return (
+    <div className="space-y-2 sm:col-span-2">
+      <p className={isDark ? aauFormLabelClass : "text-sm font-medium text-[#002147]"}>
+        Singlet style *
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {AAU_SINGLET_STYLE_OPTIONS.map((opt) => {
+          const active = value === opt.id
+          return (
+            <button
+              key={opt.id}
+              type="button"
+              disabled={disabled}
+              onClick={() => onChange(opt.id)}
+              className={cn(
+                "rounded-lg border px-3 py-2 text-sm font-medium transition-colors min-h-[44px]",
+                isDark
+                  ? active
+                    ? "border-[#B31B1B] bg-[#B31B1B]/25 text-white"
+                    : "border-[#B31B1B]/25 bg-[#0a2040] text-white/75 hover:border-[#B31B1B]/50"
+                  : active
+                    ? "border-[#003366] bg-[#003366] text-white"
+                    : "border-gray-300 bg-white text-gray-800 hover:bg-gray-50",
+              )}
+            >
+              {opt.label}
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -274,7 +321,10 @@ export function AauScholasticCheckoutItems({
     onChange({ ...lineQuantities, [id]: quantity })
   }
 
-  const patchSize = (key: keyof AauScholasticApparelSizesInput, value: string) => {
+  const patchSize = <K extends keyof AauScholasticApparelSizesInput>(
+    key: K,
+    value: AauScholasticApparelSizesInput[K],
+  ) => {
     onApparelSizesChange({ ...apparelSizes, [key]: value })
   }
 
@@ -333,15 +383,23 @@ export function AauScholasticCheckoutItems({
           </p>
           <div className="grid gap-3 sm:grid-cols-2">
             {showSinglet ? (
-              <GearSizeSelect
-                id="aau-singlet-size"
-                label="Singlet"
-                value={apparelSizes.singletSize}
-                onChange={(v) => patchSize("singletSize", v)}
-                disabled={disabled}
-                isDark={isDark}
-                required
-              />
+              <>
+                <SingletStyleSelect
+                  value={apparelSizes.singletStyle}
+                  onChange={(v) => patchSize("singletStyle", v)}
+                  disabled={disabled}
+                  isDark={isDark}
+                />
+                <GearSizeSelect
+                  id="aau-singlet-size"
+                  label="Singlet size"
+                  value={apparelSizes.singletSize}
+                  onChange={(v) => patchSize("singletSize", v)}
+                  disabled={disabled}
+                  isDark={isDark}
+                  required
+                />
+              </>
             ) : null}
             {showShorts ? (
               <GearSizeSelect

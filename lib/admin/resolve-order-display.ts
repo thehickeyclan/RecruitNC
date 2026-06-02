@@ -13,7 +13,11 @@ import {
   nationalTeamLineDetailVariant,
   nationalTeamLineGroup,
 } from "@/lib/admin/national-team-order-detail"
-import { nationalTeamSkuForLine } from "@/lib/national-team-product-catalog"
+import {
+  inferNationalTeamLineKey,
+  nationalTeamSkuForLine,
+  nationalTeamVariantForLineKey,
+} from "@/lib/national-team-product-catalog"
 
 export type AdminOrderKind =
   | "store_apparel"
@@ -29,6 +33,8 @@ export type AdminDisplayLineItem = {
   id: string
   name: string
   variant: string
+  /** Apparel / gear size for packing (e.g. M · Pepsi, S, Navy / M). */
+  size: string
   sku: string
   quantity: number
   price: number
@@ -197,12 +203,11 @@ function parseItemVariant(item: OrderItemRow): { color: string; size: string } {
 
 function mapStoreLineItem(orderId: string, item: OrderItemRow, index: number): AdminDisplayLineItem {
   const { color, size: rawSize } = parseItemVariant(item)
-  const size = rawSize || "One Size"
+  const sizePart = rawSize && rawSize !== "One Size" ? rawSize : ""
+  const size = color && sizePart ? `${color} / ${sizePart}` : color || sizePart
   let variant = ""
-  if (color && size) variant = `${color} / ${size}`
-  else if (color) variant = color
-  else if (size && size !== "One Size") variant = size
-  else variant = "Standard"
+  if (!size && color) variant = color
+  else if (!size && !color) variant = "Standard"
 
   const productImages = item.product?.product_images || []
   const sortedImages = [...productImages].sort(
@@ -219,6 +224,7 @@ function mapStoreLineItem(orderId: string, item: OrderItemRow, index: number): A
     id: item.id || `${orderId}-item-${index}`,
     name: item.product_name || item.product?.name || "Unknown Product",
     variant: variant.trim(),
+    size: size.trim(),
     sku: item.sku || "N/A",
     quantity: Number(item.quantity || 1),
     price: Number(item.price || 0),
@@ -233,22 +239,35 @@ function mapNationalTeamLineItems(
 ): AdminDisplayLineItem[] {
   const imageFor = isAau ? aauLineItemImage : nhscaLineItemImage
   const resolvedLines = nhscaDualsRegistrationOrderLines(reg)
+  const eventSlug = isAau ? AAU_SCHOLASTIC_EVENT_SLUG : "nhsca-duals-2026"
   return resolvedLines.map((line, index) => {
     const qty = line.quantity ?? 1
     const unit = (line.amount_cents ?? 0) / 100 / qty
-    const variant = nationalTeamLineDetailVariant(reg, line.name, isAau)
+    const group = nationalTeamLineGroup(line.name)
+    const key = line.key ?? inferNationalTeamLineKey(eventSlug, line.name) ?? ""
+    const apparelSize = nationalTeamVariantForLineKey(eventSlug, key, {
+      singlet_size: reg.singlet_size,
+      shorts_size: reg.shorts_size,
+      shirt_size: reg.shirt_size,
+    }).size
+    const size =
+      group === "Apparel" && apparelSize && apparelSize !== "TBD" && apparelSize !== "N/A"
+        ? apparelSize
+        : ""
+    const variant = group === "Apparel" ? "" : nationalTeamLineDetailVariant(reg, line.name, isAau)
     return {
       id: `nt-${orderId}-${index}`,
       name: line.name,
       variant,
-      sku: line.sku ?? nationalTeamSkuForLine(isAau ? AAU_SCHOLASTIC_EVENT_SLUG : "nhsca-duals-2026", {
+      size,
+      sku: line.sku ?? nationalTeamSkuForLine(eventSlug, {
         key: line.key,
         name: line.name,
       }),
       quantity: qty,
       price: unit,
       image: imageFor(line.name),
-      group: nationalTeamLineGroup(line.name),
+      group,
     }
   })
 }
@@ -317,6 +336,7 @@ export function resolveAdminOrderDisplay(input: {
           id: `donation-${orderId}`,
           name: d.campaign_slug ? `Donation · ${d.campaign_slug}` : "NC United fundraising donation",
           variant: d.athlete_code ? `Athlete code · ${d.athlete_code}` : "General support",
+          size: "",
           sku: "donation",
           quantity: 1,
           price: amount,
@@ -394,6 +414,7 @@ export function resolveAdminOrderDisplay(input: {
           id: `dropin-${orderId}`,
           name: practiceTitle,
           variant: [practiceWhen, ev?.location].filter(Boolean).join(" · ") || "Practice drop-in",
+          size: "",
           sku: "drop-in",
           quantity: 1,
           price: Number(order.total ?? 0) || (d.payment_amount_cents ?? 0) / 100,
@@ -443,6 +464,7 @@ export function resolveAdminOrderDisplay(input: {
           id: `blue-${orderId}`,
           name: "NC United Blue – Monthly",
           variant: `${billingNote} · ${new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(monthly)}/mo`,
+          size: "",
           sku: "blue-subscription",
           quantity: 1,
           price: monthly,
@@ -490,6 +512,7 @@ export function resolveAdminOrderDisplay(input: {
               id: `dropin-${orderId}`,
               name: lineName,
               variant: shippingMethodStr(order),
+              size: "",
               sku: "drop-in",
               quantity: 1,
               price: Number(order.total ?? 0),

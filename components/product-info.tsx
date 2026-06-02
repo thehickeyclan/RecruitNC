@@ -360,13 +360,24 @@ export function ProductInfo({
         </div>
 
         <div>
-          <label className="font-semibold text-sm mb-3 block">Quantity</label>
+          <label
+            className={cn(
+              "font-semibold text-sm mb-3 block",
+              storeTheme ? "text-white" : "text-foreground",
+            )}
+          >
+            Quantity
+          </label>
           <div className="flex items-center gap-3">
             <Button
               variant="outline"
               size="icon"
               onClick={() => handleQuantityChange(-1)}
               disabled={quantity <= 1}
+              className={cn(
+                storeTheme &&
+                  "border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white disabled:opacity-40",
+              )}
             >
               <Minus className="w-4 h-4" />
             </Button>
@@ -381,7 +392,12 @@ export function ProductInfo({
                   )
                 )
               }
-              className="w-16 text-center border rounded-md py-2 font-medium"
+              className={cn(
+                "w-16 text-center border rounded-md py-2 font-medium tabular-nums",
+                storeTheme
+                  ? "bg-white text-[#0A1628] border-white/30 focus:outline-none focus:ring-2 focus:ring-[#D3B574]/50"
+                  : "bg-background text-foreground border-input",
+              )}
               min={1}
               max={maxQty}
             />
@@ -390,6 +406,10 @@ export function ProductInfo({
               size="icon"
               onClick={() => handleQuantityChange(1)}
               disabled={quantity >= maxQty}
+              className={cn(
+                storeTheme &&
+                  "border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white disabled:opacity-40",
+              )}
             >
               <Plus className="w-4 h-4" />
             </Button>
