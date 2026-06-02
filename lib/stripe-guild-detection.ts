@@ -25,7 +25,10 @@ export function stripeUrlLooksLikeGuild(url: string | null | undefined): boolean
 export function isGuildStripeMetadata(metadata: MetadataLike): boolean {
   const m = (metadata ?? {}) as Record<string, string>
   const channel = String(m.channel ?? "").trim().toLowerCase()
-  if (channel === "guild") return true
+  if (channel === "guild" || channel === "bookings") return true
+
+  const app = String(m.app ?? "").trim().toLowerCase()
+  if (app === "the-guild") return true
 
   const business = String(m.business ?? "").trim().toLowerCase()
   if (business === "wrestling_guild" || business === "wrestling guild") return true
@@ -35,7 +38,12 @@ export function isGuildStripeMetadata(metadata: MetadataLike): boolean {
     return true
   }
 
-  if (m.booking_id?.trim() || m.guild_booking_id?.trim() || m.session_booking_id?.trim()) {
+  if (
+    m.booking_id?.trim() ||
+    m.guild_booking_id?.trim() ||
+    m.session_booking_id?.trim() ||
+    (m.session_id?.trim() && (source.startsWith("guild_") || channel === "bookings" || app === "the-guild"))
+  ) {
     return true
   }
 
