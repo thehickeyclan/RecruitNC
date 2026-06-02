@@ -356,6 +356,7 @@ export function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
                   <SelectItem value="Blue Sub" className="text-white hover:bg-white/10">Blue Sub</SelectItem>
                   <SelectItem value="Tournament Fee" className="text-white hover:bg-white/10">Tournament Fee</SelectItem>
                   <SelectItem value="Donation" className="text-white hover:bg-white/10">Donation</SelectItem>
+                  <SelectItem value="Guild" className="text-white hover:bg-white/10">Guild</SelectItem>
                   <SelectItem value="Other" className="text-white hover:bg-white/10">Other</SelectItem>
                 </SelectContent>
               </Select>

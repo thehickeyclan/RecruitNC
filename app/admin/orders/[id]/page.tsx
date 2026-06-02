@@ -4,6 +4,12 @@ import { AdminOrderDetailClient } from "@/components/admin/admin-order-detail-cl
 import { resolveCustomerDisplay } from "@/lib/admin/resolve-order-display"
 import type { ResolvedAdminOrderDisplay } from "@/lib/admin/resolve-order-display"
 import type { OrderReceiptPreview } from "@/lib/store/order-receipt-preview"
+import {
+  nationalTeamOrderTotalMismatch,
+  resolveNationalTeamOrderTotalCents,
+} from "@/lib/nhsca-hub-checkout-pricing"
+import type { NhscaDuals2026Registration } from "@/lib/nhsca-duals-2026-registrations"
+import { isGuildOrderRow } from "@/lib/stripe-guild-detection"
 
 export const dynamic = "force-dynamic"
 
@@ -111,6 +117,30 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
       : []),
   ]
 
+  const receiptPreview = (order.receipt_preview ?? null) as OrderReceiptPreview | null
+  const ntReg = (order.national_team_registration ?? null) as NhscaDuals2026Registration | null
+  const dbTotal = Number(order.total ?? 0)
+  const dbSubtotal = Number(order.subtotal ?? 0)
+  const resolvedTotalCents =
+    ntReg != null
+      ? resolveNationalTeamOrderTotalCents({
+          checkout_lines: ntReg.checkout_lines,
+          reg_fee_cents: ntReg.reg_fee_cents,
+          apparel_fee_cents: ntReg.apparel_fee_cents,
+        })
+      : 0
+  const resolvedTotal = resolvedTotalCents / 100
+  const totalMismatch =
+    ntReg != null &&
+    nationalTeamOrderTotalMismatch(dbTotal, {
+      checkout_lines: ntReg.checkout_lines,
+      reg_fee_cents: ntReg.reg_fee_cents,
+      apparel_fee_cents: ntReg.apparel_fee_cents,
+    })
+  const displayTotal = totalMismatch && resolvedTotal > 0 ? resolvedTotal : dbTotal
+  const displaySubtotal =
+    totalMismatch && receiptPreview ? receiptPreview.subtotal : dbSubtotal > 0 ? dbSubtotal : displayTotal
+
   const orderData = {
     id: order.id,
     orderNumber: order.order_number || `NC-${String(order.id).slice(0, 8)}`,
@@ -119,8 +149,8 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
     date: order.created_at ? new Date(order.created_at) : new Date(),
     status: (order.status || "pending").toLowerCase(),
     items: display?.lineItems.length ?? 0,
-    total: Number(order.total ?? 0),
-    subtotal: Number(order.subtotal ?? 0),
+    total: displayTotal,
+    subtotal: displaySubtotal,
     shipping: Number(order.shipping_cost ?? 0),
     tax: Number(order.tax ?? 0),
     discount: Number(order.discount ?? 0),
@@ -136,7 +166,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
     updatedAt: order.updated_at ?? order.created_at,
     shippedAt: order.shipped_at ?? null,
     deliveredAt: order.delivered_at ?? null,
-    categoryLabel: display?.category ?? "Other",
+    categoryLabel: display?.category ?? (isGuildOrderRow(order) ? "Guild" : "Other"),
     typeBanner: display?.banner ?? null,
     contextRows: display?.contextRows ?? [],
     showShipping: display?.showShipping ?? true,
@@ -145,7 +175,10 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
     integrityDetail: display?.integrityDetail ?? null,
     fulfillmentUnsafe: display?.fulfillmentUnsafe ?? false,
     showRecoverItems: display?.showRecoverItems ?? false,
-    receiptPreview: (order.receipt_preview ?? null) as OrderReceiptPreview | null,
+    receiptPreview: receiptPreview,
+    orderTotalMismatch: totalMismatch
+      ? `Order total in database ($${dbTotal.toFixed(2)}) does not match checkout lines ($${resolvedTotal.toFixed(2)}). Display uses checkout lines — verify charge in Stripe.`
+      : null,
   }
 
   return <AdminOrderDetailClient order={orderData} />

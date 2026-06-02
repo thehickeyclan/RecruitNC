@@ -80,6 +80,7 @@ interface OrderDetailClientProps {
     fulfillmentUnsafe?: boolean
     showRecoverItems?: boolean
     receiptPreview?: OrderReceiptPreview | null
+    orderTotalMismatch?: string | null
   }
 }
 
@@ -301,6 +302,9 @@ export function AdminOrderDetailClient({ order }: OrderDetailClientProps) {
             <p className="mt-2 text-sm font-semibold text-red-700 max-w-2xl">
               {order.integritySummary ?? "Incomplete line items — verify before fulfilling."}
             </p>
+          ) : null}
+          {order.orderTotalMismatch ? (
+            <p className="mt-2 text-sm font-semibold text-amber-800 max-w-2xl">{order.orderTotalMismatch}</p>
           ) : null}
         </div>
         <div className="flex items-center gap-2">

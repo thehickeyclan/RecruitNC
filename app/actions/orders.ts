@@ -17,8 +17,9 @@ import {
 import { resolveAdminOrderDisplay } from "@/lib/admin/resolve-order-display"
 import { reconcileStoreOrderItemsFromStripe } from "@/lib/store/reconcile-order-items-from-stripe"
 import { analyzeStoreOrderIntegrity } from "@/lib/store/store-order-integrity"
-import { buildOrderReceiptPreview, buildNationalTeamReceiptPreview } from "@/lib/store/order-receipt-preview"
+import { buildOrderReceiptPreview, buildNationalTeamReceiptPreview, buildGuildReceiptPreview } from "@/lib/store/order-receipt-preview"
 import { fetchMergedStoreMetadata } from "@/lib/store/stripe-legacy-metadata"
+import { isGuildOrderRow } from "@/lib/stripe-guild-detection"
 
 function getStripe(): Stripe {
   const key = process.env.STRIPE_SECRET_KEY
@@ -211,7 +212,7 @@ export async function getOrderDetails(orderId: string): Promise<
       }
     }
 
-    if (order.stripe_payment_intent_id) {
+    if (order.stripe_payment_intent_id && !isGuildOrderRow(order)) {
       try {
         await reconcileStoreOrderItemsFromStripe(supabase, order.id, getStripe())
       } catch (reconcileErr) {
@@ -302,9 +303,7 @@ export async function getOrderDetails(orderId: string): Promise<
       nationalTeamSummary = nhscaDualsRegistrationOrderSummary(regRow)
     }
 
-    const displayUsesNationalTeam =
-      Boolean(nationalTeamLineItems?.length) &&
-      (itemsList.length === 0 || orderItemsNeedNationalTeamDetail(itemsList))
+    const displayUsesNationalTeam = Boolean(ntReg)
 
     let dropInRequest: Record<string, unknown> | null = null
     if (order.stripe_session_id || order.stripe_payment_intent_id) {
@@ -366,7 +365,13 @@ export async function getOrderDetails(orderId: string): Promise<
     }
 
     let storeIntegrity: Parameters<typeof resolveAdminOrderDisplay>[0]["storeIntegrity"] = null
-    if (order.stripe_payment_intent_id && !displayUsesNationalTeam && !spartanDonation && !dropInRequest) {
+    if (
+      order.stripe_payment_intent_id &&
+      !isGuildOrderRow(order) &&
+      !displayUsesNationalTeam &&
+      !spartanDonation &&
+      !dropInRequest
+    ) {
       try {
         const { meta } = await fetchMergedStoreMetadata(getStripe(), order.stripe_payment_intent_id as string)
         const { data: productCache } = await supabase.from("products").select("id, name, image_url").limit(5000)
@@ -422,9 +427,10 @@ export async function getOrderDetails(orderId: string): Promise<
       // table may not exist in some envs
     }
 
-    const receiptPreview =
-      ntReg && orderItemsNeedNationalTeamDetail(itemsList)
-        ? buildNationalTeamReceiptPreview(order, ntReg, receiptLog)
+    const receiptPreview = ntReg
+      ? buildNationalTeamReceiptPreview(order, ntReg, receiptLog)
+      : isGuildOrderRow(order)
+        ? buildGuildReceiptPreview(order, itemsList, receiptLog)
         : buildOrderReceiptPreview(order, itemsList, receiptLog)
 
     return {

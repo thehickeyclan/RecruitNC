@@ -194,6 +194,29 @@ export function lineItemsTotalCents(items: NhscaCheckoutLineItem[]): number {
   return items.reduce((sum, i) => sum + i.amountCents * (i.quantity ?? 1), 0)
 }
 
+/** Authoritative national-team total — prefer checkout_lines, then reg/apparel columns, then Stripe. */
+export function resolveNationalTeamOrderTotalCents(input: {
+  checkout_lines?: string | null
+  reg_fee_cents?: number | null
+  apparel_fee_cents?: number | null
+  stripeAmountCents?: number | null
+}): number {
+  const fromLines = input.checkout_lines?.trim()
+    ? lineItemsTotalCents(decodeLineItemsMetadata(input.checkout_lines))
+    : 0
+  const fromFees = (Number(input.reg_fee_cents) || 0) + (Number(input.apparel_fee_cents) || 0)
+  const fromStripe = Math.max(0, Number(input.stripeAmountCents) || 0)
+  return Math.max(fromLines, fromFees, fromStripe)
+}
+
+export function nationalTeamOrderTotalMismatch(
+  orderTotalDollars: number,
+  input: Parameters<typeof resolveNationalTeamOrderTotalCents>[0],
+): boolean {
+  const resolved = resolveNationalTeamOrderTotalCents(input) / 100
+  return resolved > 0 && Math.abs((Number(orderTotalDollars) || 0) - resolved) > 0.01
+}
+
 /** Split for national_team_event_registrations columns. */
 export function splitFeesFromLineItems(
   items: NhscaCheckoutLineItem[],

@@ -16,7 +16,7 @@ import {
   upsertSpartanDonationFromCheckoutSession,
 } from "@/lib/spartan-fayetteville-webhook-ack"
 import { syntheticOrderItemSku } from "@/lib/order-item-sku"
-import { decodeLineItemsMetadata } from "@/lib/nhsca-hub-checkout-pricing"
+import { decodeLineItemsMetadata, resolveNationalTeamOrderTotalCents } from "@/lib/nhsca-hub-checkout-pricing"
 import { ensureNationalTeamOrderLineItems } from "@/lib/national-team-order-items"
 import { finalizePendingStoreOrder } from "@/lib/store/checkout-order"
 import {
@@ -32,6 +32,8 @@ import {
   isTruncatedLegacyStoreMetadata,
   legacyStoreMetadataHasCart,
 } from "@/lib/store/legacy-checkout-guard"
+import { isGuildCheckoutSession, isGuildStripeMetadata } from "@/lib/stripe-guild-detection"
+import { upsertGuildOrderFromCheckoutSession } from "@/lib/stripe-guild-order"
 
 export const dynamic = "force-dynamic"
 
@@ -351,12 +353,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true })
     }
 
+    // Wrestling Guild: shared Stripe account — Guild webhook owns booking fulfillment; mirror or skip store synthesis.
+    if (isGuildStripeMetadata(meta)) {
+      return NextResponse.json({ received: true })
+    }
+
     // Fallback: national team checkout (NHSCA bundle, AAU line items, etc.) — mark paid if session.completed missed
     if (!hasStoreMetadata) {
       try {
         const stripe = getStripe()
         const sessions = await stripe.checkout.sessions.list({ payment_intent: paymentIntent.id, limit: 1 })
         const session = sessions.data[0]
+        if (session && isGuildCheckoutSession(session)) {
+          const admin = createAdminClient()
+          await upsertGuildOrderFromCheckoutSession(admin, session, { getStripe })
+          return NextResponse.json({ received: true })
+        }
         const regId = session?.metadata?.registration_id
         if (session?.metadata?.source === "national_team" && regId) {
           const admin = createAdminClient()
@@ -376,7 +388,13 @@ export async function POST(request: NextRequest) {
             const orderId = crypto.randomUUID()
             const regCents = Number(reg.reg_fee_cents) || 0
             const apparelCents = Number(reg.apparel_fee_cents) || 0
-            const totalCents = regCents + apparelCents
+            const totalCents = resolveNationalTeamOrderTotalCents({
+              checkout_lines: linesEncoded,
+              reg_fee_cents: regCents,
+              apparel_fee_cents: apparelCents,
+              stripeAmountCents:
+                (session as { amount_total?: number | null }).amount_total ?? paymentIntent.amount ?? 0,
+            })
             const customerEmail = (reg.parent_email as string) ?? ""
             const customerName = [reg.athlete_first_name, reg.athlete_last_name].filter(Boolean).join(" ") || "National team registrant"
             const { channel: ntChannel, business: ntBusiness } = channelBusinessFromMetadata(session?.metadata)
@@ -489,7 +507,8 @@ export async function POST(request: NextRequest) {
       try {
         const stripe = getStripe()
         const sessions = await stripe.checkout.sessions.list({ payment_intent: paymentIntent.id, limit: 1 })
-        if (sessions.data[0]?.metadata?.source === "national_team") {
+        const session = sessions.data[0]
+        if (session?.metadata?.source === "national_team") {
           return NextResponse.json({ received: true })
         }
       } catch (e) {
@@ -884,13 +903,18 @@ export async function POST(request: NextRequest) {
           products?.[0]
         const regCents = Number(reg.reg_fee_cents) || 0
         const apparelCents = Number(reg.apparel_fee_cents) || 0
-        const totalCents = regCents + apparelCents
         const customerEmail = (session as { customer_email?: string }).customer_email ?? (session.customer_details as { email?: string })?.email ?? reg.parent_email ?? ""
         const customerName = [reg.athlete_first_name, reg.athlete_last_name].filter(Boolean).join(" ") || "National team registrant"
         const { channel: ntSessionChannel, business: ntSessionBusiness } = channelBusinessFromMetadata(session.metadata)
         const linesEncoded =
           (session.metadata?.checkout_lines as string | undefined) ??
           String((reg as { checkout_lines?: string | null }).checkout_lines ?? "")
+        const totalCents = resolveNationalTeamOrderTotalCents({
+          checkout_lines: linesEncoded,
+          reg_fee_cents: regCents,
+          apparel_fee_cents: apparelCents,
+          stripeAmountCents: (session as { amount_total?: number | null }).amount_total ?? 0,
+        })
 
         let orderIdToUse = (reg.order_id as string | null) ?? null
         const { data: existingByPi } = await admin
@@ -1035,6 +1059,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true })
     }
 
+    if (isGuildCheckoutSession(session)) {
+      await upsertGuildOrderFromCheckoutSession(admin, session, { getStripe })
+      return NextResponse.json({ received: true })
+    }
+
     // Sync Spartan donations to spartan_donations + optional auto 501(c)(3) email (Fayetteville campaign)
     if (session.metadata?.channel === "spartan") {
       await upsertSpartanDonationFromCheckoutSession(admin, session)
@@ -1051,6 +1080,9 @@ export async function POST(request: NextRequest) {
       amountTotal >= 20 &&
       amountTotal <= 30 &&
       (shippingLower.includes("practice") || shippingLower.includes("pickup") || shippingLower.includes("suite") || !hasStoreMetadata)
+    if (isLikelyDropIn && isGuildCheckoutSession(session)) {
+      isLikelyDropIn = false
+    }
     let sessionForLineItems: typeof session = session
     if (!isLikelyDropIn && amountTotal >= 20 && amountTotal <= 30) {
       try {
