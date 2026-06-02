@@ -22,6 +22,8 @@ import {
   RANKINGS_PANEL,
   RANKINGS_SPOTLIGHT,
   RANKINGS_SUBHEADING,
+  RANKINGS_TOP3_PHOTO_FRAME,
+  RANKINGS_TOP3_PHOTO_IMG,
 } from "@/lib/public-rankings-theme"
 
 interface PublicRanking {
@@ -285,12 +287,12 @@ export default function Class2028RankingsPage() {
                       const rank = athlete.prospect_ranking || index + 1
                       return (
                         <div key={`${athlete.name}-${index}`} className="text-center">
-                          <div className="relative mb-3 sm:mb-4 mx-auto w-full h-[220px] sm:h-[280px] rounded-lg overflow-hidden shadow-lg bg-white/5">
+                          <div className={RANKINGS_TOP3_PHOTO_FRAME}>
                             {photoUrl ? (
                               <img
                                 src={photoUrl}
                                 alt={`${athlete.name} - ${athlete.school}`}
-                                className="w-full h-full object-cover"
+                                className={RANKINGS_TOP3_PHOTO_IMG}
                                 onError={(e) => {
                                   // Hide image on error and show trophy fallback
                                   const target = e.target as HTMLImageElement

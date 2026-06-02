@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import Image from "next/image"
 import { StoreLink } from "@/components/store-link"
+import { StoreCatalogImage, STORE_CATALOG_FRAME_CLASS } from "@/components/store-catalog-image"
 import { Star, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -117,18 +117,15 @@ export function RelatedProducts({ products, storeTheme = false }: RelatedProduct
                 href={productUrl}
                 className={cn(
                   "relative block",
-                  /singlet/i.test(product.name) ? "aspect-[3/4]" : "aspect-square",
-                  storeTheme ? "bg-[#0f1c2e] border-b border-white/5" : "bg-secondary",
+                  storeTheme ? STORE_CATALOG_FRAME_CLASS : "aspect-square bg-secondary",
                 )}
               >
                 {product.image ? (
-                  <Image
+                  <StoreCatalogImage
                     src={product.image}
                     alt={product.name}
-                    fill
-                    className="object-contain object-center p-5 md:p-6"
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                    unoptimized={product.image.includes("blob.vercel-storage.com")}
+                    singlet={/singlet/i.test(product.name)}
+                    blendStudioBackground={storeTheme && /singlet/i.test(product.name)}
                   />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center bg-muted text-muted-foreground">

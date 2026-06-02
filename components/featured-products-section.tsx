@@ -1,7 +1,7 @@
 "use client"
 
-import Image from "next/image"
 import { StoreLink } from "@/components/store-link"
+import { StoreCatalogImage, STORE_CATALOG_FRAME_CLASS } from "@/components/store-catalog-image"
 import type { ProductGridProduct } from "@/components/product-grid"
 
 interface FeaturedProductsSectionProps {
@@ -25,15 +25,14 @@ export function FeaturedProductsSection({ products }: FeaturedProductsSectionPro
             <StoreLink
               key={String(p.id)}
               href={`/store-app/product/${p.id}`}
-              className="group relative block rounded-xl overflow-hidden bg-[#0f1c2e] border border-white/5 aspect-square"
+              className={`group relative block ${STORE_CATALOG_FRAME_CLASS}`}
             >
-              <Image
+              <StoreCatalogImage
                 src={image}
                 alt={p.name}
-                fill
-                className="object-contain p-4 transition-transform duration-500 group-hover:scale-110"
+                product={p}
+                hoverZoom
                 sizes="(max-width: 768px) 50vw, 25vw"
-                unoptimized={image.includes("blob.vercel-storage.com")}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0A1628]/90 via-transparent to-transparent" />
               <div className="absolute bottom-3 left-3 right-3">

@@ -13,5 +13,9 @@ export const RANKINGS_SELECT =
   "w-40 bg-white/5 border-white/10 text-white [&>span]:text-white"
 export const RANKINGS_SPOTLIGHT =
   "rounded-2xl border border-white/10 bg-[#0f1c2e]/95 backdrop-blur-sm p-4 sm:p-8 shadow-xl"
+/** Commit/announcement art is top-heavy — contain + top anchor avoids cropping heads. */
+export const RANKINGS_TOP3_PHOTO_FRAME =
+  "relative mb-3 sm:mb-4 mx-auto w-full h-[260px] sm:h-[340px] rounded-lg overflow-hidden shadow-lg bg-[#0A1628] border border-white/10"
+export const RANKINGS_TOP3_PHOTO_IMG = "w-full h-full object-contain object-top"
 export const RANKINGS_ARCHIVED_BANNER =
   "rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100"
