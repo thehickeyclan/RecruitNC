@@ -45,7 +45,7 @@ export function AthletesCommitmentsClient({
     else if (searchParams.get("tab") === "commitments" || !searchParams.get("tab")) setTab("commitments")
   }, [searchParams])
 
-  const [loading, setLoading] = useState(initialAthletes.length === 0)
+  const [loading, setLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedGender, setSelectedGender] = useState<"all" | "male" | "female">(
     (initialFilters.gender as "all" | "male" | "female") ?? "all",
@@ -55,7 +55,7 @@ export function AthletesCommitmentsClient({
   )
   const [selectedDivision, setSelectedDivision] = useState<string>(initialFilters.division ?? "all")
   const [stats, setStats] = useState<CommitmentStats>(initialStats)
-  const [statsLoading, setStatsLoading] = useState(initialStats.total === 0 && initialAthletes.length === 0)
+  const [statsLoading, setStatsLoading] = useState(false)
   const [commitViewMode, setCommitViewMode] = useState<CommitViewMode>("cards")
 
   useEffect(() => {
@@ -69,68 +69,43 @@ export function AthletesCommitmentsClient({
     async function fetchAthletes() {
       try {
         setLoading(true)
+        setStatsLoading(true)
         const params = new URLSearchParams()
         if (selectedGender !== "all") params.set("gender", selectedGender)
         if (selectedYear !== "all") params.set("year", selectedYear)
         if (selectedDivision !== "all") params.set("division", selectedDivision)
+        params.set("includeStats", "1")
+        params.set("limit", "500")
 
         const response = await fetch(`/api/athletes?${params.toString()}`)
         if (response.ok) {
           const data = await response.json()
           setAthletes(data.athletes || [])
-        }
-      } catch (error) {
-        console.error("Failed to fetch athletes:", error)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchAthletes()
-  }, [selectedGender, selectedYear, selectedDivision, initialFiltersKey])
-
-  useEffect(() => {
-    const key = commitmentFiltersKey({
-      year: selectedYear,
-      gender: selectedGender,
-      division: selectedDivision,
-    })
-    if (key === initialFiltersKey) return
-
-    async function fetchStats() {
-      try {
-        setStatsLoading(true)
-        const params = new URLSearchParams()
-        if (selectedYear !== "all") params.set("year", selectedYear)
-        if (selectedGender !== "all") params.set("gender", selectedGender)
-        if (selectedDivision !== "all") params.set("division", selectedDivision)
-        const qs = params.toString()
-        const response = await fetch(`/api/commitment-stats${qs ? `?${qs}` : ""}`)
-        if (response.ok) {
-          const data = await response.json()
-          if (data.success && data.stats) {
+          if (data.stats) {
             const s = data.stats
             setStats({
-              total: s.totalCommitments || 0,
-              male: s.byGender?.male || 0,
-              female: s.byGender?.female || 0,
+              total: s.totalCommitments ?? s.total ?? 0,
+              male: s.byGender?.male ?? s.male ?? 0,
+              female: s.byGender?.female ?? s.female ?? 0,
               divisions: {
-                D1: s.byDivision?.D1 || 0,
-                D2: s.byDivision?.D2 || 0,
-                D3: s.byDivision?.D3 || 0,
-                NAIA: s.byDivision?.NAIA || 0,
-                NJCAA: s.byDivision?.NJCAA || 0,
+                D1: s.byDivision?.D1 ?? s.divisions?.D1 ?? 0,
+                D2: s.byDivision?.D2 ?? s.divisions?.D2 ?? 0,
+                D3: s.byDivision?.D3 ?? s.divisions?.D3 ?? 0,
+                NAIA: s.byDivision?.NAIA ?? s.divisions?.NAIA ?? 0,
+                NJCAA: s.byDivision?.NJCAA ?? s.divisions?.NJCAA ?? 0,
               },
             })
           }
         }
       } catch (error) {
-        console.error("Failed to fetch stats:", error)
+        console.error("Failed to fetch athletes:", error)
       } finally {
+        setLoading(false)
         setStatsLoading(false)
       }
     }
-    fetchStats()
-  }, [selectedYear, selectedGender, selectedDivision, initialFiltersKey])
+    fetchAthletes()
+  }, [selectedGender, selectedYear, selectedDivision, initialFiltersKey])
 
   const filteredAthletes = athletes.filter((athlete) => {
     const name = (athlete.name ?? "").toLowerCase()
@@ -462,7 +437,7 @@ export function AthletesCommitmentsClient({
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {normalizeAthleteList(filteredAthletes).map((athlete) => (
-                  <ProfessionalCommitmentCard key={athlete.id} athlete={athlete} />
+                  <ProfessionalCommitmentCard key={athlete.id} athlete={athlete} listMode />
                 ))}
               </div>
             )}

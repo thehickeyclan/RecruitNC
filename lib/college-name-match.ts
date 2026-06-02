@@ -21,7 +21,7 @@ function collegeNameVariants(name: string): string[] {
   return [...variants].filter(Boolean)
 }
 
-/** True when two college strings refer to the same program (handles UNC/NC State abbreviations). */
+/** True when two college strings refer to the same program (exact / normalized / alias only — no substring). */
 export function collegesMatchName(a: string, b: string): boolean {
   const aTrim = a.trim()
   const bTrim = b.trim()
@@ -34,24 +34,17 @@ export function collegesMatchName(a: string, b: string): boolean {
   const aNorm = normalizeCollegeNameKey(aTrim)
   const bNorm = normalizeCollegeNameKey(bTrim)
   if (aNorm && bNorm && aNorm === bNorm) return true
-  if (aLower.includes(bLower) || bLower.includes(aLower)) return true
-  if (aNorm && bNorm && (aNorm.includes(bNorm) || bNorm.includes(aNorm))) return true
 
   for (const av of collegeNameVariants(aTrim)) {
     for (const bv of collegeNameVariants(bTrim)) {
-      if (av === bv || av.includes(bv) || bv.includes(av)) return true
+      if (av === bv) return true
+      const avNorm = normalizeCollegeNameKey(av)
+      const bvNorm = normalizeCollegeNameKey(bv)
+      if (avNorm && bvNorm && avNorm === bvNorm) return true
     }
   }
 
   return false
-}
-
-/** Find an existing leaderboard bucket key for this college name, if any. */
-export function findCollegeGroupKey(collegeName: string, existingKeys: Iterable<string>): string | null {
-  for (const key of existingKeys) {
-    if (collegesMatchName(collegeName, key)) return key
-  }
-  return null
 }
 
 /** True if athlete.college belongs to any name in the group (all spellings in a bucket). */

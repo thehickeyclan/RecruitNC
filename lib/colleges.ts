@@ -84,6 +84,19 @@ export function buildCollegeNameLookup(colleges: CollegeRow[]): Map<string, Coll
   return lookup
 }
 
+function collegeNameLookupVariants(name: string): string[] {
+  const lower = name.toLowerCase().trim()
+  const variants = new Set<string>([lower, normalizeCollegeNameKey(name)])
+  variants.add(lower.replace(/\bnc\b/g, "north carolina"))
+  variants.add(lower.replace(/\bnorth carolina\b/g, "nc"))
+  variants.add(lower.replace(/\bunc\b/g, "university of north carolina"))
+  variants.add(lower.replace(/\buniversity of north carolina\b/g, "unc"))
+  variants.add(lower.replace(/\bnc state\b/g, "north carolina state"))
+  variants.add(lower.replace(/\bnorth carolina state\b/g, "nc state"))
+  return [...variants].filter(Boolean)
+}
+
+/** Exact / normalized / alias lookup only — avoids UNC vs UNC Pembroke substring false positives. */
 export function resolveCollegeByName(name: string, lookup: Map<string, CollegeRow>): CollegeRow | null {
   const trimmed = name.trim()
   if (!trimmed) return null
@@ -96,12 +109,50 @@ export function resolveCollegeByName(name: string, lookup: Map<string, CollegeRo
   const normMatch = lookup.get(norm)
   if (normMatch) return normMatch
 
-  for (const [key, college] of lookup.entries()) {
-    if (raw.includes(key) || key.includes(raw)) return college
-    if (norm.includes(key) || key.includes(norm)) return college
+  for (const variant of collegeNameLookupVariants(trimmed)) {
+    const hit = lookup.get(variant) ?? lookup.get(normalizeCollegeNameKey(variant))
+    if (hit) return hit
   }
 
   return null
+}
+
+export type CollegeCommitGroupInfo = {
+  /** Stable bucket key — same function for leaderboard grouping and expand filter */
+  groupKey: string
+  displayName: string
+  collegeId: string | null
+}
+
+/** Resolve one athlete to a college commit bucket (prefer colleges.id). */
+export function resolveCollegeCommitGroup(
+  athlete: { college_id?: string | null; college?: string | null },
+  collegesById: Map<string, CollegeRow>,
+  collegesByName: Map<string, CollegeRow>,
+): CollegeCommitGroupInfo {
+  const collegeText = String(athlete.college ?? "").trim()
+
+  if (athlete.college_id) {
+    const id = String(athlete.college_id)
+    const row = collegesById.get(id)
+    if (row) {
+      return { groupKey: `id:${id}`, displayName: row.name, collegeId: id }
+    }
+  }
+
+  if (collegeText) {
+    const resolved = resolveCollegeByName(collegeText, collegesByName)
+    if (resolved) {
+      return { groupKey: `id:${resolved.id}`, displayName: resolved.name, collegeId: resolved.id }
+    }
+    return {
+      groupKey: `name:${collegeText.toLowerCase()}`,
+      displayName: collegeText,
+      collegeId: null,
+    }
+  }
+
+  return { groupKey: "unknown", displayName: "Unknown", collegeId: null }
 }
 
 export function resolveAthleteCollegeDivision(

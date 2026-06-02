@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { normalizeCollegeToCanonical } from "@/lib/canonical-college"
-import { fetchCommitmentAthletes, type CommitmentAthleteFilters } from "@/lib/athletes-commitments-fetch"
+import { fetchCommitmentAthletes, fetchCommitmentStats, type CommitmentAthleteFilters } from "@/lib/athletes-commitments-fetch"
 import { jsonSafeClone } from "@/lib/json-safe-clone"
 
 export const revalidate = 120
@@ -17,6 +17,7 @@ export async function GET(request: Request) {
       division: searchParams.get("division"),
     }
 
+    const includeStats = searchParams.get("includeStats") === "1"
     const supabase = await createClient()
     if (!supabase) {
       return NextResponse.json(
@@ -30,7 +31,12 @@ export async function GET(request: Request) {
       )
     }
 
-    const { athletes, total } = await fetchCommitmentAthletes(supabase, filters)
+    const athletesPromise = fetchCommitmentAthletes(supabase, filters)
+    const statsPromise = includeStats ? fetchCommitmentStats(supabase, filters) : null
+    const [{ athletes, total }, stats] = await Promise.all([
+      athletesPromise,
+      statsPromise ?? Promise.resolve(null),
+    ])
     const page = filters.page ?? 1
     const limit = Math.min(filters.limit ?? 100, 500)
     const totalPages = Math.ceil(total / limit)
@@ -39,6 +45,17 @@ export async function GET(request: Request) {
       jsonSafeClone({
         success: true,
         athletes,
+        ...(stats
+          ? {
+              stats: {
+                totalCommitments: stats.total,
+                total: stats.total,
+                byGender: { male: stats.male, female: stats.female },
+                byDivision: stats.divisions,
+                divisions: stats.divisions,
+              },
+            }
+          : {}),
         pagination: {
           page,
           limit,

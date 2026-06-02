@@ -105,9 +105,18 @@ interface AthleteDetailProps {
   }>
   currentUserId?: string | null
   tournamentResultsComponent?: React.ReactNode
+  /** Public view-profile uses dark navy panels to match /athletes and /colleges. */
+  theme?: "light" | "dark"
 }
 
-export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = null, tournamentResultsComponent }: AthleteDetailProps) {
+export function AthleteDetail({
+  athlete,
+  nchsaaResults = [],
+  currentUserId = null,
+  tournamentResultsComponent,
+  theme = "light",
+}: AthleteDetailProps) {
+  const isDark = theme === "dark"
   const { isAdmin, isVerifiedCoach } = useAuth()
   const [imageError, setImageError] = useState(false)
   const [highSchoolLogo, setHighSchoolLogo] = useState<string | null>(null)
@@ -702,9 +711,15 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
   }
 
   return (
-    <div className="space-y-8">
+    <div
+      className={cn(
+        "space-y-8",
+        isDark &&
+          "[&_.profile-card]:border-white/10 [&_.profile-card]:bg-[#0f1c2e] [&_.profile-card-body]:bg-[#0f1c2e] [&_.profile-panel]:border-white/10 [&_.profile-panel]:bg-white/5 [&_.profile-text]:text-white [&_.profile-text-muted]:text-white/50 [&_.profile-label]:text-white/40 [&_.profile-headline]:text-[#D3B574]",
+      )}
+    >
       {/* 1. Banner (hero with photo, name, weight, college) */}
-      <Card className="overflow-hidden">
+      <Card className="profile-card overflow-hidden">
         <div className="relative">
           {/* Mobile view */}
           <div className="block lg:hidden">
@@ -1112,13 +1127,13 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
 
       {/* Weight Section (edit form when canEdit) */}
       {canEdit && editingSection === "weight" && (
-        <Card className="border-t-4 border-t-[#D3B574] shadow-md">
+        <Card className="profile-card border-t-4 border-t-[#D3B574] shadow-md">
           <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6">
             <div className="flex items-center gap-3">
               <h2 className="text-2xl font-bold text-white">Weight Class</h2>
             </div>
           </div>
-          <div className="p-8">
+          <div className="profile-card-body p-8">
             <InlineWeightEditor
               athleteId={athlete.id}
               weightClass={athleteData.weightclass || athleteData.weight_class}
@@ -1131,7 +1146,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
       )}
 
       {/* 2. Athlete Profile (Bio) - always show for consistent structure */}
-      <Card className="border-t-4 border-t-[#D3B574] shadow-md" data-section="bio">
+      <Card className="profile-card border-t-4 border-t-[#D3B574] shadow-md" data-section="bio">
         <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -1151,7 +1166,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
               )}
             </div>
           </div>
-          <div className="p-8">
+          <div className="profile-card-body p-8">
             {editingSection === "bio" ? (
               <InlineBioEditor
                 athleteId={athlete.id}
@@ -1165,16 +1180,16 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                 <div className="mb-4">
                   <div className="flex-1">
                     {athleteData?.bio_headline && (
-                      <h3 className="text-xl font-semibold text-[#002147] mb-4 leading-relaxed">{athleteData.bio_headline}</h3>
+                      <h3 className="profile-headline text-xl font-semibold text-[#002147] mb-4 leading-relaxed">{athleteData.bio_headline}</h3>
                     )}
                   </div>
                 </div>
                 {athleteData?.bio ? (
-                  <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+                  <div className="profile-panel bg-white rounded-lg p-6 shadow-sm border border-gray-100">
                     <p className="text-base text-gray-700 leading-relaxed whitespace-pre-wrap">{athleteData.bio}</p>
                   </div>
                 ) : (
-                  <p className="text-gray-500 italic">{canEdit ? "No bio yet. Click Edit to add." : "No bio available."}</p>
+                  <p className="profile-text-muted text-gray-500 italic">{canEdit ? "No bio yet. Click Edit to add." : "No bio available."}</p>
                 )}
               </>
             )}
@@ -1182,7 +1197,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
         </Card>
 
       {/* 3. High School and Programs - always show for consistent structure */}
-      <Card className="border-t-4 border-t-[#D3B574] shadow-md" data-section="high-school-programs">
+      <Card className="profile-card border-t-4 border-t-[#D3B574] shadow-md" data-section="high-school-programs">
           <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -1202,7 +1217,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
               )}
             </div>
           </div>
-          <div className="p-8">
+          <div className="profile-card-body p-8">
             {editingSection === "school-club" ? (
               <InlineSchoolClubEditor
                 athleteId={athlete.id}
@@ -1215,7 +1230,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {highSchool && highSchool !== "Not specified" && (
-                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                  <div className="profile-panel bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
                     <div className="w-16 h-16 rounded-lg bg-gray-50 p-2 flex items-center justify-center mb-3 border border-gray-200 overflow-hidden">
                       {highSchoolLogo && !highSchoolLogoLoadError ? (
                         <Image
@@ -1231,12 +1246,12 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                         <WorkingEntityLogo entityName={highSchool} entityType="highschool" size={48} />
                       )}
                     </div>
-                    <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2">High School</p>
-                    <p className="text-xl font-bold text-gray-900 leading-tight">{highSchool}</p>
+                    <p className="profile-label text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2">High School</p>
+                    <p className="profile-text text-xl font-bold text-gray-900 leading-tight">{highSchool}</p>
                   </div>
                 )}
                 {wrestlingClub && wrestlingClub !== "Not specified" && (
-                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                  <div className="profile-panel bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
                     <div className="w-16 h-16 rounded-lg bg-gray-50 p-2 flex items-center justify-center mb-3 border border-gray-200 overflow-hidden">
                       {clubLogo && !clubLogoLoadError ? (
                         <Image
@@ -1252,12 +1267,12 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                         <WorkingEntityLogo entityName={wrestlingClub} entityType="club" size={48} />
                       )}
                     </div>
-                    <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2">Wrestling Club</p>
-                    <p className="text-xl font-bold text-gray-900 leading-tight">{wrestlingClub}</p>
+                    <p className="profile-label text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2">Wrestling Club</p>
+                    <p className="profile-text text-xl font-bold text-gray-900 leading-tight">{wrestlingClub}</p>
                   </div>
                 )}
                 {ncUnitedTeam && ncUnitedTeam !== "none" && (
-                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                  <div className="profile-panel bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
                     <div className="w-16 h-16 rounded-lg bg-gray-50 p-2 flex items-center justify-center mb-3 border border-gray-200">
                       <Image
                         src="/nc-united-blue-logo.png"
@@ -1267,14 +1282,14 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                         className="object-contain"
                       />
                     </div>
-                    <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2">NC United Program</p>
-                    <p className="text-xl font-bold text-gray-900 leading-tight">
+                    <p className="profile-label text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2">NC United Program</p>
+                    <p className="profile-text text-xl font-bold text-gray-900 leading-tight">
                       {ncUnitedTeam === "blue" ? "Blue Team" : ncUnitedTeam === "gold" ? "Gold Team" : ncUnitedTeam === "both" ? "Both Teams" : ncUnitedTeam}
                     </p>
                   </div>
                 )}
                 {(!highSchool || highSchool === "Not specified") && (!wrestlingClub || wrestlingClub === "Not specified") && (!ncUnitedTeam || ncUnitedTeam === "none") && (
-                  <p className="text-gray-500 italic col-span-full">{canEdit ? "No school or programs listed. Click Edit to add." : "No school or programs listed."}</p>
+                  <p className="profile-text-muted text-gray-500 italic col-span-full">{canEdit ? "No school or programs listed. Click Edit to add." : "No school or programs listed."}</p>
                 )}
               </div>
             )}
@@ -1285,7 +1300,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
       {tournamentResultsComponent}
 
       {/* 5. Contact Information - always show for consistent structure */}
-      <Card className="border-t-4 border-t-[#D3B574] shadow-md" data-section="contact">
+      <Card className="profile-card border-t-4 border-t-[#D3B574] shadow-md" data-section="contact">
         <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -1320,7 +1335,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
             ) : (
               <div className="space-y-4">
                 {(athleteData.cell || athleteData.cell_number || athleteData.phone) && (
-                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                  <div className="profile-panel bg-white rounded-lg p-4 border border-gray-200">
                     <p className="text-sm text-gray-600 mb-1">Cell Phone</p>
                     <p className="font-semibold text-gray-900">
                       {athleteData.cell || athleteData.cell_number || athleteData.phone}
@@ -1328,7 +1343,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                   </div>
                 )}
                 {(athleteData.email || athleteData.contact_email || athleteData.email_address) && (
-                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                  <div className="profile-panel bg-white rounded-lg p-4 border border-gray-200">
                     <p className="text-sm text-gray-600 mb-1">Email</p>
                     <p className="font-semibold text-gray-900">
                       {athleteData.email || athleteData.contact_email || athleteData.email_address}
@@ -1336,7 +1351,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                   </div>
                 )}
                 {(athleteData.instagram || athleteData.instagram_handle || athleteData.instagram_username) && (
-                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                  <div className="profile-panel bg-white rounded-lg p-4 border border-gray-200">
                     <p className="text-sm text-gray-600 mb-1">Instagram</p>
                     <p className="font-semibold text-gray-900">
                       {athleteData.instagram || athleteData.instagram_handle || athleteData.instagram_username}
@@ -1344,7 +1359,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                   </div>
                 )}
                 {athleteData.highlight_video_url && (
-                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                  <div className="profile-panel bg-white rounded-lg p-4 border border-gray-200">
                     <p className="text-sm text-gray-600 mb-1">Highlight Video</p>
                     <a 
                       href={athleteData.highlight_video_url} 
@@ -1357,7 +1372,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                   </div>
                 )}
                 {!(athleteData.cell || athleteData.cell_number || athleteData.phone) && !(athleteData.email || athleteData.contact_email || athleteData.email_address) && !(athleteData.instagram || athleteData.instagram_handle || athleteData.instagram_username) && !athleteData.highlight_video_url && (
-                  <p className="text-gray-500 italic">No contact information yet. Click Edit to add.</p>
+                  <p className="profile-text-muted text-gray-500 italic">No contact information yet. Click Edit to add.</p>
                 )}
               </div>
             )
@@ -1365,19 +1380,19 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
             (isAdmin || isVerifiedCoach) && (athleteData.cell || athleteData.cell_number || athleteData.phone || athleteData.email || athleteData.contact_email || athleteData.email_address || athleteData.instagram || athleteData.instagram_handle || athleteData.instagram_username) ? (
               <div className="space-y-4">
                 {(athleteData.cell || athleteData.cell_number || athleteData.phone) && (
-                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                  <div className="profile-panel bg-white rounded-lg p-4 border border-gray-200">
                     <p className="text-sm text-gray-600 mb-1">Cell Phone</p>
                     <p className="font-semibold text-gray-900">{athleteData.cell || athleteData.cell_number || athleteData.phone}</p>
                   </div>
                 )}
                 {(athleteData.email || athleteData.contact_email || athleteData.email_address) && (
-                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                  <div className="profile-panel bg-white rounded-lg p-4 border border-gray-200">
                     <p className="text-sm text-gray-600 mb-1">Email</p>
                     <p className="font-semibold text-gray-900">{athleteData.email || athleteData.contact_email || athleteData.email_address}</p>
                   </div>
                 )}
                 {(athleteData.instagram || athleteData.instagram_handle || athleteData.instagram_username) && (
-                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                  <div className="profile-panel bg-white rounded-lg p-4 border border-gray-200">
                     <p className="text-sm text-gray-600 mb-1">Instagram</p>
                     <p className="font-semibold text-gray-900">{athleteData.instagram || athleteData.instagram_handle || athleteData.instagram_username}</p>
                   </div>
@@ -1385,14 +1400,14 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                 <p className="text-xs text-amber-700 flex items-center gap-1"><Shield className="h-3.5 w-3.5" /> Visible to verified coaches and administrators only.</p>
               </div>
             ) : (
-              <p className="text-gray-500 italic">Contact information is available to verified college coaches and administrators.</p>
+              <p className="profile-text-muted text-gray-500 italic">Contact information is available to verified college coaches and administrators.</p>
             )
           )}
         </div>
       </Card>
 
       {/* 6. Academics - always show for consistent structure */}
-      <Card className="border-t-4 border-t-[#D3B574] shadow-md" data-section="academics">
+      <Card className="profile-card border-t-4 border-t-[#D3B574] shadow-md" data-section="academics">
         <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -1412,7 +1427,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
               )}
             </div>
           </div>
-          <div className="p-8">
+          <div className="profile-card-body p-8">
             {editingSection === "academics" ? (
               <InlineAcademicsEditor
                 athleteId={athlete.id}
@@ -1477,7 +1492,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
         </Card>
 
       {/* 7. Highlight Reel - always show for consistent structure */}
-      <Card className="border-t-4 border-t-[#D3B574] shadow-md" data-section="highlight-reel">
+      <Card className="profile-card border-t-4 border-t-[#D3B574] shadow-md" data-section="highlight-reel">
         <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -1497,7 +1512,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
               )}
             </div>
           </div>
-          <div className="p-8">
+          <div className="profile-card-body p-8">
             {editingSection === "highlight-video" ? (
               <InlineHighlightVideoEditor
                 athleteId={athlete.id}
@@ -1559,7 +1574,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
         </Card>
 
       {/* 8. College Opens Experience - always show for consistent structure */}
-      <Card className="border-t-4 border-t-[#D3B574] shadow-md" data-section="college-opens">
+      <Card className="profile-card border-t-4 border-t-[#D3B574] shadow-md" data-section="college-opens">
         <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -1596,7 +1611,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
       </Card>
 
       {/* 9. Achievements - always show for consistent structure */}
-      <Card className="border-t-4 border-t-[#D3B574] shadow-md" data-section="achievements">
+      <Card className="profile-card border-t-4 border-t-[#D3B574] shadow-md" data-section="achievements">
         <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -1661,7 +1676,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                     </div>
                   )}
                   {achievements.length === 0 && additionalAchievements.length === 0 && !(athleteData?.state_qualifier ?? athlete?.state_qualifier)?.toString().trim() && (
-                    <p className="text-gray-500 italic">{canEdit ? "No achievements yet. Click Edit to add." : "No achievements listed."}</p>
+                    <p className="profile-text-muted text-gray-500 italic">{canEdit ? "No achievements yet. Click Edit to add." : "No achievements listed."}</p>
                   )}
                 </>
               )}

@@ -6,9 +6,9 @@ import {
   getAllColleges,
   getCollegesByIds,
   resolveAthleteCollegeDivision,
+  resolveCollegeCommitGroup,
 } from "@/lib/colleges"
 import { matchesDivisionFilter } from "@/lib/division-display"
-import { findCollegeGroupKey } from "@/lib/college-name-match"
 
 const supabase = createAdminClient()
 
@@ -142,6 +142,7 @@ export async function GET(request: NextRequest) {
     const collegeStats = new Map<
       string,
       {
+        group_key: string
         college_name: string
         total_commits: number
         d1_commits: number
@@ -157,6 +158,7 @@ export async function GET(request: NextRequest) {
         out_of_state_commits: number
         divisionCounts: Map<string, number>
         college_names: Set<string>
+        college_ids: Set<string>
       }
     >()
 
@@ -277,12 +279,13 @@ export async function GET(request: NextRequest) {
       }
 
       const normalizedCollegeName = collegeName.toLowerCase().trim()
-      const existingKey = findCollegeGroupKey(collegeName, collegeStats.keys())
-      const canonicalName = existingKey || collegeName.trim()
+      const group = resolveCollegeCommitGroup(athlete, collegesById, collegesByName)
+      const bucketKey = group.groupKey
 
-      if (!collegeStats.has(canonicalName)) {
-        collegeStats.set(canonicalName, {
-          college_name: canonicalName,
+      if (!collegeStats.has(bucketKey)) {
+        collegeStats.set(bucketKey, {
+          group_key: bucketKey,
+          college_name: group.displayName,
           total_commits: 0,
           d1_commits: 0,
           d2_commits: 0,
@@ -297,11 +300,14 @@ export async function GET(request: NextRequest) {
           out_of_state_commits: 0,
           divisionCounts: new Map<string, number>(),
           college_names: new Set<string>(),
+          college_ids: new Set<string>(),
         })
       }
 
-      const stats = collegeStats.get(canonicalName)!
+      const stats = collegeStats.get(bucketKey)!
       stats.college_names.add(collegeName.trim())
+      if (group.collegeId) stats.college_ids.add(group.collegeId)
+      if (group.displayName) stats.college_name = group.displayName
       stats.total_commits++
 
       // Division comes from colleges table via college_id (athletes.division no longer exists)
@@ -378,11 +384,12 @@ export async function GET(request: NextRequest) {
 
     const collegesWithLogos = Array.from(collegeStats.values()).map((college) => {
       const logoMapping = findLogoMapping(college.college_name)
-      const { divisionCounts, college_names, ...collegeData } = college
+      const { divisionCounts, college_names, college_ids, ...collegeData } = college
 
       return {
         ...collegeData,
         college_names: Array.from(college_names),
+        college_ids: Array.from(college_ids),
         logo_url: logoMapping?.logo_url || null,
       }
     })

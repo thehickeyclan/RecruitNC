@@ -38,6 +38,7 @@ interface TournamentResultsDisplayProps {
   compact?: boolean // For smaller displays like cards
   /** When true, always show NHSCA and Super 32 sections (with "No results" when empty) to match public/school profile structure */
   alwaysShowStructure?: boolean
+  theme?: "light" | "dark"
 }
 
 export function TournamentResultsDisplay({
@@ -47,7 +48,14 @@ export function TournamentResultsDisplay({
   nationalTeamResults = [],
   compact = false,
   alwaysShowStructure = true,
+  theme = "light",
 }: TournamentResultsDisplayProps) {
+  const isDark = theme === "dark"
+  const cardClass = isDark ? "profile-card border-t-4 border-t-[#D3B574] border-white/10 bg-[#0f1c2e] shadow-none" : "border-t-4 border-t-[#D3B574] shadow-md"
+  const contentClass = isDark ? "p-4 md:p-6 bg-[#0f1c2e] text-white/70" : "p-4 md:p-6"
+  const tableHeadClass = isDark ? "bg-white/5 text-white/60" : "bg-gray-50"
+  const tableRowClass = isDark ? "hover:bg-white/5 border-white/10" : "hover:bg-gray-50 transition-colors"
+  const descClass = isDark ? "text-sm text-white/50 mb-4" : "text-sm text-gray-600 mb-4"
   const hasAnyResults = nhscaResults.length > 0 || super32Results.length > 0 || nchsaaResults.length > 0
 
   if (!hasAnyResults && !alwaysShowStructure) {
@@ -133,21 +141,21 @@ export function TournamentResultsDisplay({
     <div className="space-y-6">
       {/* 1. NC United National Team - Ultimate Club Duals 2025/2024, NHSCA 2025 */}
       {(nationalTeamResults.length > 0 || alwaysShowStructure) && (
-        <Card className="border-t-4 border-t-[#D3B574] shadow-md">
+        <Card className={cardClass}>
           <CardHeader className="bg-gradient-to-r from-[#03154C] to-[#1e3a8a] py-4">
             <CardTitle className="text-white flex items-center gap-2 text-lg">
               <Trophy className="h-5 w-5 text-[#D3B574]" />
               NC United National Team
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-4 md:p-6">
-            <p className="text-sm text-gray-600 mb-4">
+          <CardContent className={contentClass}>
+            <p className={descClass}>
               National team competition: Ultimate Club Duals and NHSCA National Duals
             </p>
             <div className="rounded-lg border overflow-x-auto">
               <Table className="min-w-[400px]">
                 <TableHeader>
-                  <TableRow className="bg-gray-50">
+                  <TableRow className={tableHeadClass}>
                     <TableHead className="font-semibold">Event</TableHead>
                     <TableHead className="font-semibold">Year</TableHead>
                     <TableHead className="font-semibold">Record</TableHead>
@@ -155,7 +163,7 @@ export function TournamentResultsDisplay({
                 </TableHeader>
                 <TableBody>
                   {nationalTeamResults.length > 0 ? nationalTeamResults.map((result, index) => (
-                    <TableRow key={index} className="hover:bg-gray-50 transition-colors">
+                    <TableRow key={index} className={tableRowClass}>
                       <TableCell className="font-medium text-[#03154C]">
                         {result.event}
                         {result.isPlaceholder && (
@@ -183,18 +191,18 @@ export function TournamentResultsDisplay({
 
       {/* 2. NCHSAA State Championships */}
       {(nchsaaResults.length > 0 || alwaysShowStructure) && (
-        <Card className="border-t-4 border-t-[#D3B574] shadow-md">
+        <Card className={cardClass}>
           <CardHeader className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] py-4">
             <CardTitle className="text-white flex items-center gap-2 text-lg">
               <Trophy className="h-5 w-5 text-[#D3B574]" />
               NCHSAA State Championships
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-4 md:p-6">
+          <CardContent className={contentClass}>
             <div className="rounded-lg border overflow-x-auto">
               <Table className="min-w-[480px]">
                 <TableHeader>
-                  <TableRow className="bg-gray-50">
+                  <TableRow className={tableHeadClass}>
                     <TableHead className="font-semibold">Year</TableHead>
                     <TableHead className="font-semibold">Placement</TableHead>
                     <TableHead className="font-semibold">Classification</TableHead>
@@ -221,7 +229,7 @@ export function TournamentResultsDisplay({
                       }
 
                       return (
-                        <TableRow key={index} className="hover:bg-gray-50 transition-colors">
+                        <TableRow key={index} className={tableRowClass}>
                           <TableCell className="font-semibold text-[#13294B]">{result.year}</TableCell>
                           <TableCell>{getPlacementBadge(placementText)}</TableCell>
                           <TableCell>{result.classification}</TableCell>
@@ -245,18 +253,18 @@ export function TournamentResultsDisplay({
 
       {/* 3. NHSCA National Championship */}
       {(nhscaResults.length > 0 || alwaysShowStructure) && (
-        <Card className="border-t-4 border-t-[#D3B574] shadow-md">
+        <Card className={cardClass}>
           <CardHeader className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] py-4">
             <CardTitle className="text-white flex items-center gap-2 text-lg">
               <Trophy className="h-5 w-5 text-[#D3B574]" />
               NHSCA National Championship
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-4 md:p-6">
+          <CardContent className={contentClass}>
             <div className="rounded-lg border overflow-x-auto">
               <Table className="min-w-[540px]">
                 <TableHeader>
-                  <TableRow className="bg-gray-50">
+                  <TableRow className={tableHeadClass}>
                     <TableHead className="font-semibold">Year</TableHead>
                     <TableHead className="font-semibold">Placement</TableHead>
                     <TableHead className="font-semibold">Record</TableHead>
@@ -267,7 +275,7 @@ export function TournamentResultsDisplay({
                 <TableBody>
                   {nhscaResults.length > 0 ? (
                     nhscaResults.map((result, index) => (
-                      <TableRow key={index} className="hover:bg-gray-50 transition-colors">
+                      <TableRow key={index} className={tableRowClass}>
                         <TableCell className="font-semibold text-[#002147]">{result.year}</TableCell>
                         <TableCell>{getPlacementBadge(result.placement)}</TableCell>
                         <TableCell className="font-mono">{result.record || "—"}</TableCell>
@@ -291,18 +299,18 @@ export function TournamentResultsDisplay({
 
       {/* 4. Super 32 */}
       {(super32Results.length > 0 || alwaysShowStructure) && (
-        <Card className="border-t-4 border-t-[#D3B574] shadow-md">
+        <Card className={cardClass}>
           <CardHeader className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] py-4">
             <CardTitle className="text-white flex items-center gap-2 text-lg">
               <Trophy className="h-5 w-5 text-[#D3B574]" />
               Super 32
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-4 md:p-6">
+          <CardContent className={contentClass}>
             <div className="rounded-lg border overflow-x-auto">
               <Table className="min-w-[480px]">
                 <TableHeader>
-                  <TableRow className="bg-gray-50">
+                  <TableRow className={tableHeadClass}>
                     <TableHead className="font-semibold">Year</TableHead>
                     <TableHead className="font-semibold">Placement</TableHead>
                     <TableHead className="font-semibold">Record</TableHead>
@@ -312,7 +320,7 @@ export function TournamentResultsDisplay({
                 <TableBody>
                   {super32Results.length > 0 ? (
                     super32Results.map((result, index) => (
-                      <TableRow key={index} className="hover:bg-gray-50 transition-colors">
+                      <TableRow key={index} className={tableRowClass}>
                         <TableCell className="font-semibold text-[#13294B]">{result.year}</TableCell>
                         <TableCell>{getPlacementBadge(result.placement, 'default', 'DNP')}</TableCell>
                         <TableCell className="font-mono">{result.record || "—"}</TableCell>
