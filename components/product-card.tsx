@@ -3,12 +3,11 @@
 import type React from "react"
 import { useState } from "react"
 import { StoreLink } from "@/components/store-link"
-import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
 import { Star, ChevronLeft, ChevronRight } from "lucide-react"
 import { getColorHex } from "@/lib/color-utils"
+import { StoreCatalogImage, STORE_CATALOG_FRAME_CLASS } from "@/components/store-catalog-image"
 import { isStoreSingletProduct } from "@/lib/store/product-utils"
-import { cn } from "@/lib/utils"
 
 interface ProductCardProduct {
   id: string | number
@@ -83,24 +82,13 @@ export function ProductCard({ product }: ProductCardProps) {
         href={productUrl}
         className="block cursor-pointer"
       >
-        {/* Image container — portrait for singlets so straps/legs aren't clipped */}
-        <div
-          className={cn(
-            "relative overflow-hidden rounded-xl bg-[#0f1c2e] border border-white/5",
-            isSinglet ? "aspect-[3/4]" : "aspect-square",
-          )}
-        >
+        <div className={STORE_CATALOG_FRAME_CLASS}>
           {currentImage ? (
-            <Image
+            <StoreCatalogImage
               src={currentImage}
               alt={product.name}
-              fill
-              className={cn(
-                "object-contain object-center p-5",
-                !isSinglet && "transition-transform duration-500 group-hover:scale-110",
-              )}
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-              unoptimized={currentImage.includes("blob.vercel-storage.com")}
+              product={product}
+              hoverZoom={!isSinglet}
             />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center text-white/30">
@@ -152,12 +140,13 @@ export function ProductCard({ product }: ProductCardProps) {
             )}
           </div>
 
-          {/* Quick view button on hover */}
-          <div className="absolute bottom-3 inset-x-3 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 z-10">
-            <div className="w-full py-2.5 bg-[#D3B574] text-[#0A1628] font-semibold text-sm rounded-lg text-center">
-              View Product
+          {!isSinglet && (
+            <div className="absolute bottom-3 inset-x-3 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 z-10">
+              <div className="w-full py-2.5 bg-[#D3B574] text-[#0A1628] font-semibold text-sm rounded-lg text-center">
+                View Product
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Product info */}

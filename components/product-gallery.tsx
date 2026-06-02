@@ -17,6 +17,8 @@ interface ProductGalleryProps {
   thumbnailFrameClassName?: string
   /** Taller frame for singlet mockups (portrait). */
   portraitFrame?: boolean
+  /** Hide white JPEG studio backgrounds on dark navy frames. */
+  blendStudioBackground?: boolean
 }
 
 export function ProductGallery({
@@ -27,6 +29,7 @@ export function ProductGallery({
   frameClassName = "bg-secondary",
   thumbnailFrameClassName = "border-border",
   portraitFrame = false,
+  blendStudioBackground = false,
 }: ProductGalleryProps) {
   const [internalIndex, setInternalIndex] = useState(0)
   const [isZoomOpen, setIsZoomOpen] = useState(false)
@@ -72,6 +75,8 @@ export function ProductGallery({
 
   const currentSrc = safeImages[activeIndex] ?? "/placeholder.svg"
   const isBlob = currentSrc.includes("blob.vercel-storage.com")
+  const blendImage =
+    blendStudioBackground && !/transparent/i.test(currentSrc)
 
   return (
     <div className="space-y-4">
@@ -92,7 +97,10 @@ export function ProductGallery({
             src={currentSrc}
             alt={`${productName} - Image ${activeIndex + 1}`}
             fill
-            className="object-contain object-center"
+            className={cn(
+              "object-contain object-center",
+              blendImage && "mix-blend-multiply",
+            )}
             priority
             sizes="(max-width: 768px) 100vw, 50vw"
             unoptimized={isBlob}

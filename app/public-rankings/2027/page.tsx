@@ -20,6 +20,8 @@ import {
   RANKINGS_PANEL,
   RANKINGS_SPOTLIGHT,
   RANKINGS_SUBHEADING,
+  RANKINGS_TOP3_PHOTO_FRAME,
+  RANKINGS_TOP3_PHOTO_IMG,
 } from "@/lib/public-rankings-theme"
 
 interface PublicRanking {
@@ -210,7 +212,7 @@ export default function Class2027RankingsPage() {
               style={{
                 backgroundImage: `url(${heroImage})`,
                 backgroundSize: "cover",
-                backgroundPosition: "center",
+                backgroundPosition: "center top",
                 filter: "saturate(1.1)",
                 opacity: 0.35,
               }}
@@ -264,11 +266,11 @@ export default function Class2027RankingsPage() {
                       const profileHref = `/view-profile?id=${encodeURIComponent(athlete.id)}`
                       return (
                         <div key={athlete.id} className="text-center">
-                          <div className="relative mb-3 sm:mb-4 mx-auto w-full h-[220px] sm:h-[280px] rounded-lg overflow-hidden shadow-lg bg-white/5">
+                          <div className={RANKINGS_TOP3_PHOTO_FRAME}>
                             <img
                               src={photo}
                               alt={athlete.name}
-                              className="w-full h-full object-cover"
+                              className={RANKINGS_TOP3_PHOTO_IMG}
                               onError={(e) => {
                                 e.currentTarget.src = "/diverse-wrestlers.png"
                               }}
