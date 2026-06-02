@@ -14,6 +14,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { sendOrderConfirmationEmail } from "@/lib/email"
+import { notifyStaffStoreOrderSmsIfEligible } from "@/lib/store/order-staff-sms"
 import { buildOrderReceiptPreview, mapOrderItemsToReceiptLines } from "@/lib/store/order-receipt-preview"
 
 function autoReceiptEnabled() {
@@ -24,6 +25,10 @@ function autoReceiptEnabled() {
 
 /** Sends NC United Store order confirmation / receipt once per paid order. */
 export async function sendOrderReceiptIfEligible(admin: SupabaseClient, orderId: string): Promise<void> {
+  void notifyStaffStoreOrderSmsIfEligible(admin, orderId).catch((e) => {
+    console.error("[order-auto-receipt] staff SMS failed", orderId, e)
+  })
+
   if (!autoReceiptEnabled()) return
 
   const { data: existing } = await admin

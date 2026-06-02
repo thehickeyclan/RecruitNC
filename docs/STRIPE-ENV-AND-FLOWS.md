@@ -55,3 +55,25 @@ So:
 
 Unset or any other value = normal behavior. See `lib/fundraising/fundraising-pause.ts`.
 
+---
+
+## Store staff SMS (new orders)
+
+| Env var | Effect |
+|--------|--------|
+| **`RECRUITNC_STORE_NEW_ORDER_SMS_TO`** | Comma-separated US phone numbers to text when a **paid merchandise store order** is placed (not national team, Blue, or drop-ins). Example: `5169673004,6315551234`. Falls back to `RECRUITNC_REIMBURSEMENT_NEW_REQUEST_SMS_TO` if unset. Requires Twilio (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_PHONE_NUMBER` or `TWILIO_MESSAGING_SERVICE_SID`). |
+| **`STORE_DISABLE_STAFF_ORDER_SMS`** | Set to `1` / `true` / `yes` to disable staff texts without changing Twilio config. |
+
+Idempotency log table (run once in Supabase SQL Editor):
+
+```sql
+create table if not exists public.order_staff_sms (
+  order_id uuid primary key references public.orders (id) on delete cascade,
+  sent_at timestamptz not null default now()
+);
+create index if not exists order_staff_sms_sent_at_idx on public.order_staff_sms (sent_at desc);
+alter table public.order_staff_sms enable row level security;
+```
+
+Message format: `NC United Store: Jane Smith placed order NC-ABC123 for $75.00 — 1× NHSCA Duals Singlet (Red, M).`
+

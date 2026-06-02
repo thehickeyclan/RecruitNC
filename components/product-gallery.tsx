@@ -3,9 +3,9 @@
 import { useState } from "react"
 import Image from "next/image"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
-import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react"
+import { ChevronLeft, ChevronRight, X, ZoomIn, ShoppingBag } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { ShoppingBag } from "lucide-react"
+import { STORE_CATALOG_IMAGE_WELL } from "@/components/store-catalog-image"
 
 interface ProductGalleryProps {
   images: string[]
@@ -17,8 +17,6 @@ interface ProductGalleryProps {
   thumbnailFrameClassName?: string
   /** Taller frame for singlet mockups (portrait). */
   portraitFrame?: boolean
-  /** Hide white JPEG studio backgrounds on dark navy frames. */
-  blendStudioBackground?: boolean
 }
 
 export function ProductGallery({
@@ -29,7 +27,6 @@ export function ProductGallery({
   frameClassName = "bg-secondary",
   thumbnailFrameClassName = "border-border",
   portraitFrame = false,
-  blendStudioBackground = false,
 }: ProductGalleryProps) {
   const [internalIndex, setInternalIndex] = useState(0)
   const [isZoomOpen, setIsZoomOpen] = useState(false)
@@ -75,8 +72,6 @@ export function ProductGallery({
 
   const currentSrc = safeImages[activeIndex] ?? "/placeholder.svg"
   const isBlob = currentSrc.includes("blob.vercel-storage.com")
-  const blendImage =
-    blendStudioBackground && !/transparent/i.test(currentSrc)
 
   return (
     <div className="space-y-4">
@@ -92,19 +87,30 @@ export function ProductGallery({
         tabIndex={0}
         aria-label="Zoom image"
       >
-        <div className="absolute inset-4 md:inset-8">
-          <Image
-            src={currentSrc}
-            alt={`${productName} - Image ${activeIndex + 1}`}
-            fill
-            className={cn(
-              "object-contain object-center",
-              blendImage && "mix-blend-multiply",
-            )}
-            priority
-            sizes="(max-width: 768px) 100vw, 50vw"
-            unoptimized={isBlob}
-          />
+        <div className={cn("absolute inset-4 md:inset-8", portraitFrame && "inset-3 md:inset-6")}>
+          {portraitFrame ? (
+            <div className={STORE_CATALOG_IMAGE_WELL}>
+              <Image
+                src={currentSrc}
+                alt={`${productName} - Image ${activeIndex + 1}`}
+                fill
+                className="object-contain object-center object-top"
+                priority
+                sizes="(max-width: 768px) 100vw, 50vw"
+                unoptimized={isBlob}
+              />
+            </div>
+          ) : (
+            <Image
+              src={currentSrc}
+              alt={`${productName} - Image ${activeIndex + 1}`}
+              fill
+              className="object-contain object-center"
+              priority
+              sizes="(max-width: 768px) 100vw, 50vw"
+              unoptimized={isBlob}
+            />
+          )}
         </div>
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center pointer-events-none">
           <ZoomIn className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
