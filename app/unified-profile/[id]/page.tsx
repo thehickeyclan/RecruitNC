@@ -2,10 +2,14 @@
 
 import { useParams } from "next/navigation"
 import { useEffect, useState } from "react"
+import Link from "next/link"
+import Image from "next/image"
+import { ArrowLeft } from "lucide-react"
 import { AthleteDetail } from "@/components/athlete-detail"
 import { TournamentResultsDisplay } from "@/components/tournament-results-display"
 import { ProfileViewTracker } from "@/components/profile-view-tracker"
 import { recruitNcClientLog } from "@/lib/recruitnc-debug-client"
+import { useAuth } from "@/contexts/auth-context"
 
 type AthleteRecord = Record<string, unknown>
 
@@ -17,11 +21,13 @@ type NchsaaResult = { year: number; place: number | null; classification: string
 export default function UnifiedProfilePage() {
   const params = useParams()
   const id = typeof params?.id === "string" ? params.id : ""
+  const { user } = useAuth()
   const [athlete, setAthlete] = useState<AthleteRecord | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [debugResponse, setDebugResponse] = useState<{ status: number; body: string } | null>(null)
   const [debug, setDebug] = useState(false)
+
   useEffect(() => {
     if (typeof window !== "undefined") setDebug(new URLSearchParams(window.location.search).get("debug") === "1")
   }, [])
@@ -98,32 +104,38 @@ export default function UnifiedProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-        <div className="text-[#003366] font-medium">Loading profile…</div>
-      </div>
+      <main className="min-h-screen bg-[#0A1628] flex items-center justify-center p-6">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/20 border-t-[#D3B574]" />
+      </main>
     )
   }
 
   if (error || !athlete) {
     const profileHref = `/unified-profile/${id}`
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-        <div className="max-w-lg w-full bg-white rounded-lg shadow p-6">
-          <h1 className="text-xl font-bold text-gray-900 mb-2">Profile not found</h1>
-          <p className="text-sm text-red-600 font-mono mb-4">{error ?? "No data"}</p>
+      <main className="min-h-screen bg-[#0A1628] flex items-center justify-center p-6">
+        <div className="max-w-lg w-full rounded-xl border border-white/10 bg-[#0f1c2e] p-6">
+          <h1 className="text-xl font-bold text-white mb-2">Profile not found</h1>
+          <p className="text-sm text-red-400 font-mono mb-4">{error ?? "No data"}</p>
           {debug && debugResponse && (
-            <div className="mb-4 p-3 bg-gray-100 rounded text-xs font-mono overflow-auto max-h-48">
-              <div className="font-bold text-gray-700">[RecruitNC] API response (status={debugResponse.status})</div>
+            <div className="mb-4 p-3 rounded-lg border border-white/10 bg-white/5 text-xs font-mono overflow-auto max-h-48 text-white/70">
+              <div className="font-bold text-white/90">[RecruitNC] API response (status={debugResponse.status})</div>
               <pre className="whitespace-pre-wrap break-all mt-1">{debugResponse.body}</pre>
             </div>
           )}
           <div className="flex flex-wrap gap-4">
-            <a href={profileHref} className="text-[#003366] underline">Try again</a>
-            <a href={`${profileHref}?debug=1`} className="text-[#003366] underline">Try again with ?debug=1</a>
-            <a href="/prospects/all" className="text-[#003366] underline">View all prospects</a>
+            <a href={profileHref} className="text-[#D3B574] underline">
+              Try again
+            </a>
+            <a href={`${profileHref}?debug=1`} className="text-[#D3B574] underline">
+              Try again with ?debug=1
+            </a>
+            <a href="/prospects/all" className="text-[#D3B574] underline">
+              View all prospects
+            </a>
           </div>
         </div>
-      </div>
+      </main>
     )
   }
 
@@ -133,26 +145,57 @@ export default function UnifiedProfilePage() {
   const nhscaResults = Array.isArray(athlete.nhsca_results) ? athlete.nhsca_results : []
   const super32Results = Array.isArray(athlete.super32_results) ? athlete.super32_results : []
   const nationalTeamResults = Array.isArray(athlete.national_team_results) ? athlete.national_team_results : []
+  const athleteName = String(athlete.name ?? "Athlete")
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <ProfileViewTracker athleteId={athlete.id as string} athleteName={(athlete.name as string) || "Unknown"} />
-      <AthleteDetail
-        athlete={athlete}
-        nchsaaResults={nchsaaResults}
-        currentUserId={null}
-        tournamentResultsComponent={
-          <div className="w-full">
-            <TournamentResultsDisplay
-              nchsaaResults={nchsaaResults}
-              nhscaResults={nhscaResults}
-              super32Results={super32Results}
-              nationalTeamResults={nationalTeamResults}
-              alwaysShowStructure={true}
-            />
-          </div>
-        }
-      />
-    </div>
+    <main className="min-h-screen bg-[#0A1628]">
+      <section className="relative overflow-hidden border-b border-white/10">
+        <div className="absolute inset-0">
+          <Image
+            src="/hero-banner-nchsaa-2026-arena.png"
+            alt=""
+            fill
+            className="object-cover opacity-30"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0A1628]/95 via-[#0A1628]/90 to-[#0A1628]/80" />
+        </div>
+        <div className="container relative mx-auto px-4 py-8">
+          <Link
+            href="/prospects/all"
+            className="inline-flex items-center gap-2 text-sm text-white/50 hover:text-[#D3B574] transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Prospects
+          </Link>
+          <h1 className="mt-4 text-3xl font-black tracking-tight text-white md:text-4xl">{athleteName}</h1>
+        </div>
+      </section>
+
+      <div className="container mx-auto px-4 py-8">
+        <ProfileViewTracker athleteId={athlete.id as string} athleteName={athleteName} />
+        <AthleteDetail
+          theme="dark"
+          athlete={athlete as Parameters<typeof AthleteDetail>[0]["athlete"]}
+          nchsaaResults={nchsaaResults.map((r) => ({
+            ...r,
+            place: r.place ?? 0,
+          }))}
+          currentUserId={user?.id ?? null}
+          tournamentResultsComponent={
+            <div className="w-full">
+              <TournamentResultsDisplay
+                nchsaaResults={nchsaaResults}
+                nhscaResults={nhscaResults as never[]}
+                super32Results={super32Results as never[]}
+                nationalTeamResults={nationalTeamResults as never[]}
+                alwaysShowStructure={true}
+                theme="dark"
+              />
+            </div>
+          }
+        />
+      </div>
+    </main>
   )
 }

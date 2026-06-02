@@ -40,7 +40,7 @@ interface Athlete {
 interface HighSchoolLeaderboardProps {
   metric: "total_commits" | "d1_commits" | "recent_commits" | "ranked_commits" | "emerging_programs"
   gender: "all" | "male" | "female"
-  year?: "all" | "2024" | "2025" | "2026" | "2027"
+  year?: "all" | "2025" | "2026" | "2027" | "2028"
   limit?: number
   searchTerm?: string
   onStatsUpdate?: (stats: { totalCommits: number; maleCommits: number; femaleCommits: number; uniqueSchools: number }) => void

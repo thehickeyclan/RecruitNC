@@ -34,6 +34,7 @@ interface RankingsCardViewProps {
   loading?: boolean
   showRankBadges?: boolean
   showAdditionalDivider?: boolean
+  theme?: "light" | "dark"
 }
 
 export function RankingsCardView({
@@ -41,7 +42,9 @@ export function RankingsCardView({
   loading,
   showRankBadges = true,
   showAdditionalDivider = true,
+  theme = "light",
 }: RankingsCardViewProps) {
+  const isDark = theme === "dark"
   const { user, profile, isAdmin, isCoach } = useAuth()
   const [canSeeWatchList, setCanSeeWatchList] = useState(false)
   const [starredAthletes, setStarredAthletes] = useState<Set<string>>(new Set())
@@ -129,13 +132,16 @@ export function RankingsCardView({
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {[...Array(9)].map((_, i) => (
-          <Card key={i} className="animate-pulse">
+          <Card
+            key={i}
+            className={`animate-pulse ${isDark ? "border-white/10 bg-[#0f1c2e]" : ""}`}
+          >
             <CardContent className="p-4">
-              <div className="h-4 bg-gray-200 rounded mb-3"></div>
-              <div className="h-16 bg-gray-200 rounded mb-3"></div>
+              <div className={`h-4 rounded mb-3 ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
+              <div className={`h-16 rounded mb-3 ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
               <div className="space-y-2">
-                <div className="h-3 bg-gray-200 rounded"></div>
-                <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                <div className={`h-3 rounded ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
+                <div className={`h-3 rounded w-3/4 ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
               </div>
             </CardContent>
           </Card>
@@ -152,24 +158,51 @@ export function RankingsCardView({
             (athlete.prospect_ranking ?? 0) === 30 &&
             athletes.some((a) => (a.prospect_ranking ?? 0) > 30) && (
               <div key={`divider-${athlete.id}`} className="col-span-full my-6">
-                <div className="flex items-center justify-center gap-3 py-4 rounded-lg bg-gradient-to-r from-gray-50 via-gray-100 to-gray-50">
-                  <div className="h-px bg-gray-300 flex-1 max-w-md"></div>
-                  <span className="text-sm font-semibold text-gray-500 uppercase tracking-wider px-4">
+                <div
+                  className={`flex items-center justify-center gap-3 py-4 rounded-lg ${
+                    isDark
+                      ? "bg-gradient-to-r from-white/5 via-white/10 to-white/5"
+                      : "bg-gradient-to-r from-gray-50 via-gray-100 to-gray-50"
+                  }`}
+                >
+                  <div className={`h-px flex-1 max-w-md ${isDark ? "bg-white/20" : "bg-gray-300"}`} />
+                  <span
+                    className={`text-sm font-semibold uppercase tracking-wider px-4 ${
+                      isDark ? "text-white/50" : "text-gray-500"
+                    }`}
+                  >
                     Additional Ranked Prospects
                   </span>
-                  <div className="h-px bg-gray-300 flex-1 max-w-md"></div>
+                  <div className={`h-px flex-1 max-w-md ${isDark ? "bg-white/20" : "bg-gray-300"}`} />
                 </div>
               </div>
             )}
           <Card
             key={athlete.id ?? `athlete-${index}`}
-          className="hover:shadow-lg transition-all duration-200 border border-gray-200 bg-white rounded-lg overflow-hidden cursor-pointer"
-        >
+            className={`transition-all duration-200 rounded-lg overflow-hidden cursor-pointer ${
+              isDark
+                ? "border border-white/10 bg-[#0f1c2e] hover:border-[#D3B574]/40 hover:shadow-lg hover:shadow-black/20"
+                : "hover:shadow-lg border border-gray-200 bg-white"
+            }`}
+          >
             <CardContent className="p-0">
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 border-b border-gray-100">
+              <div
+                className={`p-3 border-b ${
+                  isDark
+                    ? "bg-gradient-to-r from-[#0A1628] to-[#0f1c2e] border-white/10"
+                    : "bg-gradient-to-r from-blue-50 to-indigo-50 border-gray-100"
+                }`}
+              >
                 <div className="flex items-center justify-between">
                   {showRankBadges && athlete.rank_display === "G" && (
-                    <Badge variant="outline" className="font-medium text-base px-2.5 py-1 border-gray-400 text-gray-600">
+                    <Badge
+                      variant="outline"
+                      className={`font-medium text-base px-2.5 py-1 ${
+                        isDark
+                          ? "border-white/30 text-white/60"
+                          : "border-gray-400 text-gray-600"
+                      }`}
+                    >
                       G
                     </Badge>
                   )}
@@ -186,11 +219,11 @@ export function RankingsCardView({
                         type="button"
                         onClick={(e) => handleStarToggle(athlete.id!, e)}
                         disabled={starringInProgress.has(athlete.id!)}
-                        className="h-7 w-7 p-0 hover:bg-white/50"
+                        className={`h-7 w-7 p-0 ${isDark ? "hover:bg-white/10" : "hover:bg-white/50"}`}
                       >
                         <Star
                           className={`w-4 h-4 ${
-                            starredAthletes.has(athlete.id!) ? "fill-[#D3B574] text-[#D3B574]" : "text-gray-400"
+                            starredAthletes.has(athlete.id!) ? "fill-[#D3B574] text-[#D3B574]" : isDark ? "text-white/30" : "text-gray-400"
                           }`}
                         />
                       </Button>
@@ -199,13 +232,21 @@ export function RankingsCardView({
                       <MessageAthleteButton
                         athleteId={athlete.id}
                         athleteName={athlete.name}
-                        className="inline-flex h-7 w-7 items-center justify-center rounded border bg-white hover:bg-gray-50"
+                        className={`inline-flex h-7 w-7 items-center justify-center rounded border cursor-pointer ${
+                          isDark
+                            ? "border-white/10 bg-white/5 hover:bg-white/10"
+                            : "bg-white hover:bg-gray-50"
+                        }`}
                         size="sm"
                       />
                     )}
                     <a
                       href={athlete.id && isValidProfileId(athlete.id) ? `/view-profile?id=${encodeURIComponent(athlete.id)}` : "/create-profile"}
-                      className="inline-flex h-7 w-7 items-center justify-center rounded border bg-white hover:bg-gray-50 cursor-pointer"
+                      className={`inline-flex h-7 w-7 items-center justify-center rounded border cursor-pointer ${
+                        isDark
+                          ? "border-white/10 bg-white/5 hover:bg-white/10 text-white/70"
+                          : "bg-white hover:bg-gray-50"
+                      }`}
                       aria-label={`View ${athlete.name} profile`}
                     >
                       <ExternalLink className="w-3 h-3" />
@@ -225,14 +266,22 @@ export function RankingsCardView({
                         <img
                           src={athlete.photourl || "/placeholder.svg"}
                           alt={athlete.name}
-                          className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
+                          className={`w-12 h-12 rounded-full object-cover border-2 ${
+                            isDark ? "border-white/20" : "border-gray-200"
+                          }`}
                           onError={(e) => {
                             e.currentTarget.src = "/diverse-wrestlers.png"
                           }}
                         />
                       ) : (
-                        <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
-                          <span className="text-gray-500 font-bold text-sm">
+                        <div
+                          className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                            isDark ? "bg-white/10" : "bg-gray-200"
+                          }`}
+                        >
+                          <span
+                            className={`font-bold text-sm ${isDark ? "text-white/50" : "text-gray-500"}`}
+                          >
                             {athlete.name
                               .split(" ")
                               .map((n) => n[0])
@@ -243,23 +292,43 @@ export function RankingsCardView({
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-lg text-gray-900 leading-tight mb-1 hover:text-[#D3B574] transition-colors">
+                      <h3
+                        className={`font-bold text-lg leading-tight mb-1 transition-colors ${
+                          isDark
+                            ? "text-white hover:text-[#D3B574]"
+                            : "text-gray-900 hover:text-[#D3B574]"
+                        }`}
+                      >
                         {athlete.name}
                       </h3>
-                      <p className="text-gray-600 font-medium text-sm mb-1">
+                      <p
+                        className={`font-medium text-sm mb-1 ${isDark ? "text-white/60" : "text-gray-600"}`}
+                      >
                         {athlete.highschool}
                         {athlete.high_school_division ? (
-                          <span className="text-gray-500 font-normal"> · {athlete.high_school_division}</span>
+                          <span className={isDark ? "text-white/40 font-normal" : "text-gray-500 font-normal"}>
+                            {" "}
+                            · {athlete.high_school_division}
+                          </span>
                         ) : null}
                       </p>
-                      <Badge variant="secondary" className="text-xs font-medium">
+                      <Badge
+                        variant="secondary"
+                        className={`text-xs font-medium ${
+                          isDark ? "bg-white/10 text-white/70 border-white/10" : ""
+                        }`}
+                      >
                         {athlete.weight_display} lbs
                       </Badge>
                     </div>
                   </div>
 
-                  <div className="text-center pt-2 border-t border-gray-100">
-                    <span className="text-xs text-gray-500">
+                  <div
+                    className={`text-center pt-2 border-t ${
+                      isDark ? "border-white/10" : "border-gray-100"
+                    }`}
+                  >
+                    <span className={`text-xs ${isDark ? "text-white/40" : "text-gray-500"}`}>
                       {isValidProfileId(athlete.id) ? "Tap to view full profile & achievements" : "New profile — tap to create"}
                     </span>
                   </div>
@@ -271,7 +340,7 @@ export function RankingsCardView({
       ))}
 
       {athletes.length === 0 && (
-        <div className="col-span-full text-center py-12 text-gray-500">
+        <div className={`col-span-full text-center py-12 ${isDark ? "text-white/50" : "text-gray-500"}`}>
           <p>No rankings available for the selected filters.</p>
         </div>
       )}

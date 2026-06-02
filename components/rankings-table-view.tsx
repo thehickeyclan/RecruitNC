@@ -55,6 +55,7 @@ interface RankingsTableViewProps {
   showRankColumn?: boolean
   defaultSortField?: SortField
   defaultSortDirection?: SortDirection
+  theme?: "light" | "dark"
 }
 
 type SortField = "rank" | "name" | "school" | "weight" | "year"
@@ -69,7 +70,9 @@ export function RankingsTableView({
   showRankColumn = true,
   defaultSortField,
   defaultSortDirection,
+  theme = "light",
 }: RankingsTableViewProps) {
+  const isDark = theme === "dark"
   const [sortField, setSortField] = useState<SortField>(defaultSortField ?? "rank")
   const [sortDirection, setSortDirection] = useState<SortDirection>(defaultSortDirection ?? "asc")
   const [collegeLogos, setCollegeLogos] = useState<Record<string, string>>({})
@@ -292,9 +295,12 @@ export function RankingsTableView({
     return (
       <div className="w-full">
         <div className="animate-pulse">
-          <div className="h-10 bg-gray-200 rounded mb-4"></div>
+          <div className={`h-10 rounded mb-4 ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
           {[...Array(10)].map((_, i) => (
-            <div key={i} className="h-16 bg-gray-100 rounded mb-2"></div>
+            <div
+              key={i}
+              className={`h-16 rounded mb-2 ${isDark ? "bg-white/5" : "bg-gray-100"}`}
+            />
           ))}
         </div>
       </div>
@@ -302,11 +308,13 @@ export function RankingsTableView({
   }
 
   return (
-    <div className="bg-white rounded-lg shadow">
-      {/* Deploy check: remove this bar after confirming production shows it */}
-      <div className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium text-center rounded-t-lg">
-        ✓ Deploy verified — you’re on the latest build
-      </div>
+    <div
+      className={
+        isDark
+          ? "overflow-hidden rounded-xl border border-white/10 bg-[#0f1c2e] shadow-none"
+          : "bg-white rounded-lg shadow"
+      }
+    >
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
@@ -373,7 +381,7 @@ export function RankingsTableView({
               <TableHead className="w-24 text-white font-semibold">Profile</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody className="bg-white">
+          <TableBody className={isDark ? "bg-[#0f1c2e]" : "bg-white"}>
             {sortedAthletes.map((athlete, index) => {
               const rankDisplayG = athlete.rank_display === "G"
               const rankValue =
@@ -392,20 +400,38 @@ export function RankingsTableView({
               return (
                 <Fragment key={athlete.id}>
                   {shouldRenderDivider && (
-                    <TableRow className="bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100">
+                    <TableRow
+                      className={
+                        isDark
+                          ? "bg-gradient-to-r from-white/5 via-white/10 to-white/5"
+                          : "bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100"
+                      }
+                    >
                       <TableCell colSpan={canSeeWatchList ? 9 : 8} className="py-2 text-center">
                         <div className="flex items-center justify-center gap-3">
-                          <div className="h-px bg-gray-300 flex-1 max-w-xs"></div>
-                          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3">
+                          <div
+                            className={`h-px flex-1 max-w-xs ${isDark ? "bg-white/20" : "bg-gray-300"}`}
+                          />
+                          <span
+                            className={`text-xs font-semibold uppercase tracking-wider px-3 ${
+                              isDark ? "text-white/50" : "text-gray-500"
+                            }`}
+                          >
                             {additionalDividerLabel}
                           </span>
-                          <div className="h-px bg-gray-300 flex-1 max-w-xs"></div>
+                          <div
+                            className={`h-px flex-1 max-w-xs ${isDark ? "bg-white/20" : "bg-gray-300"}`}
+                          />
                         </div>
                       </TableCell>
                     </TableRow>
                   )}
                   <TableRow
-                    className={`hover:bg-gray-50 transition-colors ${index % 2 === 0 ? "bg-gray-50" : "bg-white"}`}
+                    className={`transition-colors ${
+                      isDark
+                        ? `hover:bg-white/5 ${index % 2 === 0 ? "bg-white/[0.03]" : "bg-transparent"}`
+                        : `hover:bg-gray-50 ${index % 2 === 0 ? "bg-gray-50" : "bg-white"}`
+                    }`}
                   >
                     {canSeeWatchList && (
                       <TableCell className="text-center">
@@ -415,11 +441,11 @@ export function RankingsTableView({
                             size="sm"
                             onClick={() => handleStarToggle(athlete.id!)}
                             disabled={starringInProgress.has(athlete.id!)}
-                            className="h-8 w-8 p-0 hover:bg-gray-100"
+                            className={`h-8 w-8 p-0 ${isDark ? "hover:bg-white/10" : "hover:bg-gray-100"}`}
                           >
                             <Star
                               className={`w-5 h-5 ${
-                                starredAthletes.has(athlete.id!) ? "fill-[#D3B574] text-[#D3B574]" : "text-gray-400"
+                                starredAthletes.has(athlete.id!) ? "fill-[#D3B574] text-[#D3B574]" : isDark ? "text-white/30" : "text-gray-400"
                               }`}
                             />
                           </Button>
@@ -432,7 +458,13 @@ export function RankingsTableView({
                       <TableCell className="font-medium pr-2">
                         <div className="flex items-center gap-2 min-w-[82px]">
                           {rankDisplayG && (
-                            <div className="px-3 py-1 rounded-full text-sm min-w-[2.5rem] text-center border border-gray-300 text-gray-600 font-medium">
+                            <div
+                              className={`px-3 py-1 rounded-full text-sm min-w-[2.5rem] text-center border font-medium ${
+                                isDark
+                                  ? "border-white/20 text-white/60"
+                                  : "border-gray-300 text-gray-600"
+                              }`}
+                            >
                               G
                             </div>
                           )}
@@ -445,12 +477,24 @@ export function RankingsTableView({
                             </div>
                           )}
                           {!rankDisplayG && rankValue !== null && rankValue > dividerAfterRank && (
-                            <div className="px-3 py-1 rounded-full text-sm min-w-[2.5rem] text-center border border-gray-300 text-gray-600">
+                            <div
+                              className={`px-3 py-1 rounded-full text-sm min-w-[2.5rem] text-center border ${
+                                isDark
+                                  ? "border-white/20 text-white/60"
+                                  : "border-gray-300 text-gray-600"
+                              }`}
+                            >
                               #{rankValue}
                             </div>
                           )}
                           {!rankDisplayG && rankValue === null && (
-                            <div className="px-3 py-1 rounded-full text-sm min-w-[2.5rem] text-center border border-gray-200 text-gray-400">
+                            <div
+                              className={`px-3 py-1 rounded-full text-sm min-w-[2.5rem] text-center border ${
+                                isDark
+                                  ? "border-white/10 text-white/30"
+                                  : "border-gray-200 text-gray-400"
+                              }`}
+                            >
                               —
                             </div>
                           )}
@@ -470,12 +514,18 @@ export function RankingsTableView({
                     <TableCell className="pl-4">
                       <a
                         href={athlete.id && isValidProfileId(athlete.id) ? `/view-profile?id=${encodeURIComponent(athlete.id)}` : "/create-profile"}
-                        className="flex items-center gap-3 leading-tight font-semibold text-gray-900 hover:text-[#D3B574] transition-colors underline"
+                        className={`flex items-center gap-3 leading-tight font-semibold transition-colors underline ${
+                          isDark
+                            ? "text-white hover:text-[#D3B574]"
+                            : "text-gray-900 hover:text-[#D3B574]"
+                        }`}
                       >
                         {athlete.name}
                       </a>
                     </TableCell>
-                    <TableCell className="text-center text-gray-700 font-medium">
+                    <TableCell
+                      className={`text-center font-medium ${isDark ? "text-white/70" : "text-gray-700"}`}
+                    >
                       {athlete.graduation_year ?? "—"}
                     </TableCell>
                     <TableCell className="text-center">
@@ -484,7 +534,13 @@ export function RankingsTableView({
                       athlete.college !== "Not specified" &&
                       athlete.college !== "Undecided" ? (
                         <div className="flex items-center justify-center">
-                          <div className="w-10 h-10 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center p-1">
+                          <div
+                            className={`w-10 h-10 rounded-full flex items-center justify-center p-1 ${
+                              isDark
+                                ? "bg-white/5 border-2 border-white/20"
+                                : "bg-white border-2 border-gray-200"
+                            }`}
+                          >
                             {collegeLogos[athlete.college] ? (
                               <Image
                                 src={collegeLogos[athlete.college] || "/placeholder.svg"}
@@ -498,22 +554,36 @@ export function RankingsTableView({
                                 }}
                               />
                             ) : (
-                              <span className="text-xs text-gray-500">{athlete.college.substring(0, 3)}</span>
+                              <span className={`text-xs ${isDark ? "text-white/50" : "text-gray-500"}`}>
+                                {athlete.college.substring(0, 3)}
+                              </span>
                             )}
                           </div>
                         </div>
                       ) : (
-                        <span className="text-gray-500 text-sm font-medium">
+                        <span
+                          className={`text-sm font-medium ${isDark ? "text-white/50" : "text-gray-500"}`}
+                        >
                           {athlete.commitment_status_display ?? (athlete.recruiting_status || "—")}
                         </span>
                       )}
                     </TableCell>
-                    <TableCell className="text-gray-700 font-medium">{athlete.highschool || "-"}</TableCell>
-                    <TableCell className="text-center text-gray-600 text-sm">
+                    <TableCell
+                      className={`font-medium ${isDark ? "text-white/70" : "text-gray-700"}`}
+                    >
+                      {athlete.highschool || "-"}
+                    </TableCell>
+                    <TableCell
+                      className={`text-center text-sm ${isDark ? "text-white/60" : "text-gray-600"}`}
+                    >
                       {athlete.high_school_division ?? "—"}
                     </TableCell>
                     <TableCell>
-                      <span className="font-semibold text-gray-900">{athlete.weight_display || "-"}</span>
+                      <span
+                        className={`font-semibold ${isDark ? "text-white" : "text-gray-900"}`}
+                      >
+                        {athlete.weight_display || "-"}
+                      </span>
                     </TableCell>
                     <TableCell>
                       <div className="inline-flex items-center gap-1">
@@ -521,15 +591,19 @@ export function RankingsTableView({
                           <MessageAthleteButton
                             athleteId={athlete.id}
                             athleteName={athlete.name}
-                            className="inline-flex h-8 w-8 items-center justify-center rounded border border-transparent hover:bg-gray-100"
+                            className={`inline-flex h-8 w-8 items-center justify-center rounded border border-transparent ${
+                              isDark ? "hover:bg-white/10" : "hover:bg-gray-100"
+                            }`}
                           />
                         )}
                         <a
                           href={athlete.id && isValidProfileId(athlete.id) ? `/view-profile?id=${encodeURIComponent(athlete.id)}` : "/create-profile"}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded border bg-transparent hover:bg-gray-100 cursor-pointer"
+                          className={`inline-flex h-8 w-8 items-center justify-center rounded border bg-transparent cursor-pointer ${
+                            isDark ? "hover:bg-white/10" : "hover:bg-gray-100"
+                          }`}
                           aria-label={`View ${athlete.name} profile`}
                         >
-                          <ExternalLink className="w-3 h-3 text-gray-700" />
+                          <ExternalLink className={`w-3 h-3 ${isDark ? "text-white/70" : "text-gray-700"}`} />
                         </a>
                       </div>
                     </TableCell>
@@ -542,7 +616,7 @@ export function RankingsTableView({
       </div>
 
       {sortedAthletes.length === 0 && (
-        <div className="text-center py-12 text-gray-500">
+        <div className={`text-center py-12 ${isDark ? "text-white/50" : "text-gray-500"}`}>
           <p>No rankings available for the selected filters.</p>
         </div>
       )}

@@ -9,6 +9,9 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { HighSchoolLeaderboard } from "@/components/high-school-leaderboard"
 import { School, Search, ArrowLeft } from "lucide-react"
+import { getDefaultCommitClassYear, type CommitClassYearFilter } from "@/lib/commit-class-year"
+
+const DEFAULT_COMMIT_YEAR = getDefaultCommitClassYear()
 
 interface Stats {
   totalCommits: number
@@ -20,7 +23,7 @@ interface Stats {
 export default function HighSchoolsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedGender, setSelectedGender] = useState<"all" | "male" | "female">("all")
-  const [selectedYear, setSelectedYear] = useState<"all" | "2024" | "2025" | "2026" | "2027">("all")
+  const [selectedYear, setSelectedYear] = useState<CommitClassYearFilter>(DEFAULT_COMMIT_YEAR)
   const [stats, setStats] = useState<Stats | null>(null)
   const [statsLoading, setStatsLoading] = useState(true)
 
@@ -51,14 +54,15 @@ export default function HighSchoolsPage() {
 
   const clearFilters = () => {
     setSelectedGender("all")
-    setSelectedYear("all")
+    setSelectedYear(DEFAULT_COMMIT_YEAR)
     setSearchTerm("")
   }
 
-  const hasActiveFilters = selectedGender !== "all" || selectedYear !== "all" || searchTerm !== ""
+  const hasActiveFilters =
+    selectedGender !== "all" || selectedYear !== DEFAULT_COMMIT_YEAR || searchTerm !== ""
 
   const statsLabel =
-    selectedYear !== "all" ? `Class of ${selectedYear}` : "All Classes (2025+)"
+    selectedYear === "all" ? "All Classes (2025+)" : `Class of ${selectedYear}`
 
   return (
     <main className="min-h-screen bg-[#0A1628]">
@@ -163,6 +167,7 @@ export default function HighSchoolsPage() {
                   <SelectItem value="2025">Class of 2025</SelectItem>
                   <SelectItem value="2026">Class of 2026</SelectItem>
                   <SelectItem value="2027">Class of 2027</SelectItem>
+                  <SelectItem value="2028">Class of 2028</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -186,8 +191,11 @@ export default function HighSchoolsPage() {
                   {selectedGender === "male" ? "Men's Wrestling" : "Women's Wrestling"}
                 </Badge>
               )}
-              {selectedYear !== "all" && (
+              {selectedYear !== DEFAULT_COMMIT_YEAR && selectedYear !== "all" && (
                 <Badge className="bg-[#D3B574] text-[#0A1628] border-0">Class of {selectedYear}</Badge>
+              )}
+              {selectedYear === "all" && (
+                <Badge className="bg-[#D3B574] text-[#0A1628] border-0">All Years (2025+)</Badge>
               )}
               {searchTerm && (
                 <Badge className="bg-white/10 text-white border-0">{`Search: "${searchTerm}"`}</Badge>

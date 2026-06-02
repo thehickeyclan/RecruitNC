@@ -26,6 +26,7 @@ import { InlineHighlightVideoEditor } from "./inline-highlight-video-editor"
 import { WorkingEntityLogo } from "./working-entity-logo"
 import { useToast } from "@/components/ui/use-toast"
 import { getYouTubeVideoId, isDirectHighlightVideoUrl } from "@/lib/highlight-video-url"
+import { PROFILE_DARK_THEME } from "@/lib/profile-dark-theme"
 
 interface AthleteDetailProps {
   athlete: {
@@ -712,11 +713,7 @@ export function AthleteDetail({
 
   return (
     <div
-      className={cn(
-        "space-y-8",
-        isDark &&
-          "[&_.profile-card]:border-white/10 [&_.profile-card]:bg-[#0f1c2e] [&_.profile-card-body]:bg-[#0f1c2e] [&_.profile-panel]:border-white/10 [&_.profile-panel]:bg-white/5 [&_.profile-text]:text-white [&_.profile-text-muted]:text-white/50 [&_.profile-label]:text-white/40 [&_.profile-headline]:text-[#D3B574]",
-      )}
+      className={cn("space-y-8", isDark && PROFILE_DARK_THEME)}
     >
       {/* 1. Banner (hero with photo, name, weight, college) */}
       <Card className="profile-card overflow-hidden">
@@ -1594,7 +1591,7 @@ export function AthleteDetail({
             )}
           </div>
         </div>
-        <div className="p-8">
+        <div className="profile-card-body p-8">
               {editingSection === "college-opens" ? (
                 <InlineCollegeOpensEditor
                   athleteId={athlete.id}
@@ -1631,7 +1628,7 @@ export function AthleteDetail({
             )}
           </div>
         </div>
-        <div className="p-8">
+        <div className="profile-card-body p-8">
               {editingSection === "achievements" ? (
                 <InlineAchievementsEditor
                   athleteId={athlete.id}
@@ -1684,12 +1681,19 @@ export function AthleteDetail({
           </Card>
 
       {/* 10. High School Career Match Results */}
-      <MatchDataSectionImproved athleteId={athlete.id} athleteName={athleteName} graduationYear={graduationYear} />
+      <div className={cn(isDark && "profile-match-data")}>
+        <MatchDataSectionImproved
+          athleteId={athlete.id}
+          athleteName={athleteName}
+          graduationYear={graduationYear}
+          theme={isDark ? "dark" : "light"}
+        />
+      </div>
 
       {/* Last Edited By - Footer */}
       {(athlete.last_edited_by || athlete.last_edited_at) && (
         <div className="container mx-auto px-4 py-4">
-          <p className="text-xs text-gray-500 text-center">
+          <p className={cn("text-xs text-center", isDark ? "text-white/40" : "text-gray-500")}>
             {athlete.last_edited_at && (
               <>
                 Last edited{" "}
@@ -1709,12 +1713,14 @@ export function AthleteDetail({
       {/* Request Edit - only for non-owners (owners use inline edit) */}
       {!canEdit && (
         <div className="container mx-auto px-4 py-8">
-          <Card className="border-2 border-blue-200 bg-blue-50">
+          <Card className={cn("profile-card border-2", isDark ? "border-white/20 bg-white/5" : "border-blue-200 bg-blue-50")}>
             <CardContent className="p-6">
               <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1">Help Keep This Profile Accurate</h3>
-                  <p className="text-sm text-gray-600">
+                  <h3 className={cn("text-lg font-semibold mb-1", isDark ? "text-white" : "text-gray-900")}>
+                    Help Keep This Profile Accurate
+                  </h3>
+                  <p className={cn("text-sm", isDark ? "text-white/60" : "text-gray-600")}>
                     Found an error or have updated information? Request an edit to this profile.
                   </p>
                 </div>
