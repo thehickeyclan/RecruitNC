@@ -40,6 +40,9 @@ export type ParentBlueMembership = {
   stripeDetailsError: string | null
   planName: string | null
   source: "live" | "cached" | "unavailable"
+  paidInvoiceCount: number
+  lifetimePaidFormatted: string | null
+  recentInvoices: { id: string; date: string; amountFormatted: string; amountCents: number; status: string }[]
 }
 
 type ConfirmKind = "pause" | "cancel" | "resume" | "retry"
@@ -384,7 +387,7 @@ export function NcUnitedBlueSection({
                 </div>
               )}
 
-              <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-[13px]">
+              <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-3 text-[13px]">
                 <div>
                   <dt className="text-[11px] uppercase tracking-wide text-gray-400 mb-0.5">Member since</dt>
                   <dd className="font-medium text-gray-900">{formatDate(m.startedAt)}</dd>
@@ -405,6 +408,16 @@ export function NcUnitedBlueSection({
                   </dd>
                 </div>
                 <div>
+                  <dt className="text-[11px] uppercase tracking-wide text-gray-400 mb-0.5">Payments</dt>
+                  <dd className="font-medium text-gray-900">
+                    {m.paidInvoiceCount > 0 ? m.paidInvoiceCount : "—"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-[11px] uppercase tracking-wide text-gray-400 mb-0.5">Total paid</dt>
+                  <dd className="font-medium text-gray-900">{m.lifetimePaidFormatted ?? "—"}</dd>
+                </div>
+                <div>
                   <dt className="text-[11px] uppercase tracking-wide text-gray-400 mb-0.5">Card on file</dt>
                   <dd className="font-medium text-gray-900">
                     {cardDisplay ?? (
@@ -413,6 +426,28 @@ export function NcUnitedBlueSection({
                   </dd>
                 </div>
               </dl>
+
+              {(m.recentInvoices?.length ?? 0) > 0 && (
+                <div className="rounded-lg border border-gray-100 bg-gray-50/80 px-3 py-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Receipt className="h-4 w-4 text-[#03154C]" />
+                    <p className="text-[13px] font-semibold text-[#03154C]">Billing history</p>
+                  </div>
+                  <ul className="divide-y divide-gray-200/80">
+                    {m.recentInvoices.map((inv) => (
+                      <li key={inv.id} className="flex items-center justify-between py-2 text-[13px]">
+                        <span className="text-gray-600">{formatDate(inv.date)}</span>
+                        <span className="font-medium text-gray-900 tabular-nums">{inv.amountFormatted}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  {m.stripeCustomerId && (
+                    <p className="mt-2 text-[11px] text-gray-500">
+                      Full invoices and receipts are in Stripe via &quot;Update card &amp; invoices&quot; above.
+                    </p>
+                  )}
+                </div>
+              )}
 
               {m.stripeDetailsError && !isPending && (
                 <p className="text-[12px] text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">

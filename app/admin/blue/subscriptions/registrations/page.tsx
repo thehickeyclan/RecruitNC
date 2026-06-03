@@ -1,51 +1,73 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { useAuth } from "@/contexts/auth-context"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Loader2 } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Loader2, Search, ChevronRight } from "lucide-react"
 import type { BlueSignupRow } from "@/app/api/admin/blue/subscriptions/route"
 import { BlueAdminAuthBanner, isBlueAuthError } from "@/components/blue-admin-auth-banner"
 import { HardLink } from "@/components/hard-link"
+import { cn } from "@/lib/utils"
 
 const BLUE_DATA_RETRY_MS = 2000
+
+function athleteName(s: BlueSignupRow) {
+  return [s.athlete_first_name, s.athlete_last_name].filter(Boolean).join(" ").trim() || "—"
+}
+
+function fmtDate(iso: string) {
+  try {
+    return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
+  } catch {
+    return "—"
+  }
+}
+
+type Filter = "all" | "paid" | "pending"
 
 export default function AdminBlueRegistrationsPipelinePage() {
   const [signups, setSignups] = useState<BlueSignupRow[]>([])
   const [loading, setLoading] = useState(true)
-  const [signupFilter, setSignupFilter] = useState<"all" | "paid" | "pending">("all")
+  const [filter, setFilter] = useState<Filter>("all")
+  const [search, setSearch] = useState("")
   const [signupsError, setSignupsError] = useState<string | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [membershipsError, setMembershipsError] = useState<string | null>(null)
   const { isLoading: authLoading } = useAuth()
   const retryCountRef = useRef(0)
 
-  const filteredSignups =
-    signupFilter === "paid"
-      ? signups.filter((s) => s.status === "paid")
-      : signupFilter === "pending"
-        ? signups.filter((s) => s.status !== "paid")
-        : signups
+  const paidCount = signups.filter((s) => s.status === "paid").length
+  const pendingCount = signups.length - paidCount
+
+  const filteredSignups = useMemo(() => {
+    let rows =
+      filter === "paid" ? signups.filter((s) => s.status === "paid") : filter === "pending" ? signups.filter((s) => s.status !== "paid") : signups
+    const q = search.trim().toLowerCase()
+    if (!q) return rows
+    return rows.filter((s) => {
+      const blob = [
+        athleteName(s),
+        s.parent_email,
+        s.athlete_high_school,
+        s.athlete_wrestling_club,
+        String(s.athlete_graduation_year ?? ""),
+      ]
+        .join(" ")
+        .toLowerCase()
+      return blob.includes(q)
+    })
+  }, [signups, filter, search])
 
   useEffect(() => {
     if (authLoading) return
     let cancelled = false
-    setLoadError(null)
 
     const load = () => {
       if (!cancelled) setLoading(true)
       fetch("/api/admin/blue/subscriptions", { credentials: "include" })
         .then((r) => {
           if (!r.ok) {
-            const msg =
-              r.status === 401
-                ? "Not signed in."
-                : r.status === 403
-                  ? "Admin access required."
-                  : `Could not load (${r.status}).`
-            throw new Error(msg)
+            throw new Error(r.status === 401 ? "Not signed in." : r.status === 403 ? "Admin access required." : `Could not load (${r.status}).`)
           }
           return r.json()
         })
@@ -81,144 +103,112 @@ export default function AdminBlueRegistrationsPipelinePage() {
     }
   }, [authLoading])
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold text-[#03154C]">Registration pipeline</h2>
-        <p className="text-sm text-slate-600">
-          Everyone who submitted the Blue registration form. Paid indicates checkout completed.
-        </p>
-      </div>
+  const pills: { key: Filter; label: string; count: number }[] = [
+    { key: "all", label: "All", count: signups.length },
+    { key: "paid", label: "Paid", count: paidCount },
+    { key: "pending", label: "Pending", count: pendingCount },
+  ]
 
+  return (
+    <div className="space-y-4">
       {loadError && isBlueAuthError(loadError) && (
         <BlueAdminAuthBanner returnTo="/admin/blue/subscriptions/registrations" />
       )}
-      {loadError && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
-          <p className="font-medium text-red-800">Could not load data</p>
-          <p className="mt-1 text-sm text-red-700">{loadError}</p>
-          {(loadError === "Not signed in." || loadError?.includes("401") || loadError === "Admin access required.") && (
-            <p className="mt-3">
-              <a href="/auth/signin?returnTo=/admin/blue/subscriptions/registrations" className="font-medium text-[#03154C] underline">
-                Sign in again
-              </a>
-            </p>
-          )}
+
+      {(membershipsError || signupsError) && !loading && (
+        <div className="rounded-lg border border-amber-500/30 bg-amber-950/30 px-4 py-3 text-sm text-amber-100">
+          {membershipsError || signupsError}
         </div>
       )}
 
-      {(membershipsError || (signupsError && signupsError.includes("does not exist"))) && !loading && (
-        <Card className="border-amber-200 bg-amber-50">
-          <CardHeader>
-            <CardTitle className="text-amber-800">Setup required</CardTitle>
-            <CardDescription className="text-amber-700">
-              Create the Blue tables in Supabase if needed. Run the SQL in the docs (Supabase → SQL Editor).
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm text-amber-800">
-            {membershipsError && <p>• {membershipsError}</p>}
-            {signupsError && signupsError.includes("blue_signups") && <p>• {signupsError}</p>}
-          </CardContent>
-        </Card>
-      )}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap gap-2">
+          {pills.map(({ key, label, count }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setFilter(key)}
+              className={cn(
+                "rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
+                filter === key ? "bg-[#D3B574] text-[#03154C]" : "bg-white/10 text-white/80 hover:bg-white/15",
+              )}
+            >
+              {label} <span className="opacity-70">{count}</span>
+            </button>
+          ))}
+        </div>
+        <div className="relative w-full sm:max-w-xs">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+          <Input
+            placeholder="Search name, school, email…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="border-white/15 bg-white/10 pl-9 text-white placeholder:text-white/40 focus-visible:ring-[#D3B574]/50"
+          />
+        </div>
+      </div>
 
-      <Card className="border-[#03154C]/10 shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-[#03154C]">All registrations</CardTitle>
-          <CardDescription>Raw intake from the Blue signup flow</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="flex flex-col items-center justify-center gap-3 py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-[#03154C]" />
-              <p className="text-sm text-slate-600">Loading…</p>
-            </div>
-          ) : loadError ? (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{loadError}</div>
-          ) : signupsError ? (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{signupsError}</div>
-          ) : signups.length === 0 ? (
-            <p className="py-8 text-center text-slate-500">No signups yet.</p>
-          ) : (
-            <>
-              <div className="mb-4 flex flex-wrap gap-2">
-                <Button
-                  variant={signupFilter === "all" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSignupFilter("all")}
-                  className={signupFilter === "all" ? "bg-[#03154C] hover:bg-[#03154C]/90" : ""}
-                >
-                  All ({signups.length})
-                </Button>
-                <Button
-                  variant={signupFilter === "paid" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSignupFilter("paid")}
-                  className={signupFilter === "paid" ? "bg-[#03154C] hover:bg-[#03154C]/90" : ""}
-                >
-                  Paid ({signups.filter((s) => s.status === "paid").length})
-                </Button>
-                <Button
-                  variant={signupFilter === "pending" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSignupFilter("pending")}
-                  className={signupFilter === "pending" ? "bg-[#03154C] hover:bg-[#03154C]/90" : ""}
-                >
-                  Pending ({signups.filter((s) => s.status !== "paid").length})
-                </Button>
-              </div>
-              <div className="overflow-x-auto rounded-lg border border-slate-200">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-slate-50/80">
-                      <TableHead className="sticky left-0 z-10 min-w-[120px] bg-slate-50 font-semibold shadow-[2px_0_4px_-2px_rgba(0,0,0,0.08)]">
-                        Athlete
-                      </TableHead>
-                      <TableHead>Grad year</TableHead>
-                      <TableHead>High school</TableHead>
-                      <TableHead>Club</TableHead>
-                      <TableHead>Weight</TableHead>
-                      <TableHead>T-shirt</TableHead>
-                      <TableHead>Athlete cell</TableHead>
-                      <TableHead>Parent email</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Signed up</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredSignups.map((s) => (
-                      <TableRow key={s.id} className="hover:bg-slate-50/50">
-                        <TableCell className="sticky left-0 z-10 bg-white text-sm font-medium shadow-[2px_0_4px_-2px_rgba(0,0,0,0.08)]">
-                          {[s.athlete_first_name, s.athlete_last_name].filter(Boolean).join(" ") || "—"}
-                        </TableCell>
-                        <TableCell className="text-sm">{s.athlete_graduation_year ?? "—"}</TableCell>
-                        <TableCell className="text-sm">{s.athlete_high_school || "—"}</TableCell>
-                        <TableCell className="text-sm">{s.athlete_wrestling_club || "—"}</TableCell>
-                        <TableCell className="text-sm">{s.athlete_weight_class || "—"}</TableCell>
-                        <TableCell className="text-sm">{s.tshirt_size || "—"}</TableCell>
-                        <TableCell className="text-sm">{s.athlete_cell_phone || "—"}</TableCell>
-                        <TableCell className="text-sm">{s.parent_email || "—"}</TableCell>
-                        <TableCell>
-                          <span className={s.status === "paid" ? "font-medium text-green-700" : "font-medium text-amber-700"}>
-                            {s.status === "paid" ? "Paid" : "Pending"}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-sm text-slate-600">{new Date(s.created_at).toLocaleDateString()}</TableCell>
-                        <TableCell className="text-right">
-                          <HardLink href={`/admin/blue/signups/${s.id}`} className="text-sm font-medium text-[#03154C] hover:underline">
-                            View details
-                          </HardLink>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
+      <div className="overflow-hidden rounded-xl border border-white/10 bg-[#03154C]/40">
+        {loading ? (
+          <div className="flex flex-col items-center justify-center gap-2 py-20 text-white/60">
+            <Loader2 className="h-8 w-8 animate-spin text-[#D3B574]" />
+            <p className="text-sm">Loading signups…</p>
+          </div>
+        ) : loadError ? (
+          <p className="px-4 py-8 text-center text-sm text-red-300">{loadError}</p>
+        ) : filteredSignups.length === 0 ? (
+          <p className="px-4 py-12 text-center text-sm text-white/50">No signups match this filter.</p>
+        ) : (
+          <ul className="divide-y divide-white/10">
+            {filteredSignups.map((s) => {
+              const name = athleteName(s)
+              const school = s.athlete_high_school || "—"
+              const club = s.athlete_wrestling_club?.trim()
+              const paid = s.status === "paid"
+              return (
+                <li key={s.id}>
+                  <HardLink
+                    href={`/admin/blue/signups/${s.id}`}
+                    className="flex items-center gap-3 px-4 py-3.5 transition hover:bg-white/5 sm:px-5"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-medium text-white">{name}</span>
+                        {s.athlete_graduation_year && (
+                          <span className="text-xs text-white/45">&apos;{String(s.athlete_graduation_year).slice(-2)}</span>
+                        )}
+                        <span
+                          className={cn(
+                            "rounded-full px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide",
+                            paid ? "bg-emerald-500/20 text-emerald-300" : "bg-amber-500/20 text-amber-200",
+                          )}
+                        >
+                          {paid ? "Paid" : "Pending"}
+                        </span>
+                      </div>
+                      <p className="mt-0.5 truncate text-sm text-white/55">
+                        {school}
+                        {club ? ` · ${club}` : ""}
+                      </p>
+                      <p className="mt-0.5 truncate text-xs text-white/40">{s.parent_email}</p>
+                    </div>
+                    <div className="hidden shrink-0 text-right text-xs text-white/40 sm:block">
+                      {fmtDate(s.created_at)}
+                    </div>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-white/30" />
+                  </HardLink>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </div>
+
+      {!loading && filteredSignups.length > 0 && (
+        <p className="text-center text-xs text-white/35">
+          {filteredSignups.length} signup{filteredSignups.length === 1 ? "" : "s"} · tap a row for full details
+        </p>
+      )}
     </div>
   )
 }

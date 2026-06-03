@@ -7,6 +7,14 @@ function getStripe(): Stripe {
   return new Stripe(key)
 }
 
+export type BlueStripeInvoiceRow = {
+  id: string
+  date: string
+  amountFormatted: string
+  amountCents: number
+  status: string
+}
+
 export type BlueStripeBillingDetails = {
   nextBillingAt: string | null
   lastPaymentAt: string | null
@@ -15,12 +23,74 @@ export type BlueStripeBillingDetails = {
   cardBrand: string | null
   cardLast4: string | null
   planName: string | null
+  paidInvoiceCount: number
+  lifetimePaidCents: number
+  lifetimePaidFormatted: string
+  recentInvoices: BlueStripeInvoiceRow[]
   source: "live"
 }
 
-/** Live subscription billing: next charge, last paid invoice, card on file, cancel-at-period-end. */
+function formatMoney(cents: number, currency = "usd"): string {
+  const code = currency.toLowerCase() === "usd" ? "USD" : currency.toUpperCase()
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: code }).format(cents / 100)
+}
+
+function invoicePaidAtIso(invoice: Stripe.Invoice): string | null {
+  const paidAt = invoice.status_transitions?.paid_at
+  if (paidAt) return new Date(paidAt * 1000).toISOString()
+  if (invoice.created) return new Date(invoice.created * 1000).toISOString()
+  return null
+}
+
+async function loadPaidInvoices(stripe: Stripe, subscriptionId: string) {
+  let paidInvoiceCount = 0
+  let lifetimePaidCents = 0
+  const recentInvoices: BlueStripeInvoiceRow[] = []
+  let startingAfter: string | undefined
+  let hasMore = true
+  let pages = 0
+  const maxPages = 10
+
+  while (hasMore && pages < maxPages) {
+    const batch = await stripe.invoices.list({
+      subscription: subscriptionId,
+      status: "paid",
+      limit: 100,
+      ...(startingAfter ? { starting_after: startingAfter } : {}),
+    })
+
+    for (const inv of batch.data) {
+      const cents = inv.amount_paid ?? 0
+      if (cents > 0) {
+        paidInvoiceCount += 1
+        lifetimePaidCents += cents
+      }
+      if (recentInvoices.length < 12) {
+        const date = invoicePaidAtIso(inv)
+        if (date && cents > 0) {
+          recentInvoices.push({
+            id: inv.id,
+            date,
+            amountFormatted: formatMoney(cents, inv.currency ?? "usd"),
+            amountCents: cents,
+            status: inv.status ?? "paid",
+          })
+        }
+      }
+    }
+
+    hasMore = batch.has_more
+    if (batch.data.length) startingAfter = batch.data[batch.data.length - 1].id
+    else hasMore = false
+    pages += 1
+  }
+
+  return { paidInvoiceCount, lifetimePaidCents, recentInvoices }
+}
+
+/** Live subscription billing: next/last charge, card, payment totals, recent invoices. */
 export async function getBlueMembershipStripeDetails(
-  subscriptionId: string
+  subscriptionId: string,
 ): Promise<{ ok: true; details: BlueStripeBillingDetails } | { ok: false; error: string }> {
   try {
     const stripe = getStripe()
@@ -41,12 +111,7 @@ export async function getBlueMembershipStripeDetails(
     const unitAmount = item?.price?.unit_amount ?? null
     const currency = (item?.price?.currency ?? "usd").toLowerCase()
     const amountFormatted =
-      unitAmount != null
-        ? new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: currency.toUpperCase() === "USD" ? "USD" : currency,
-          }).format(unitAmount / 100)
-        : null
+      unitAmount != null ? formatMoney(unitAmount, currency) : null
 
     const nextBillingAt = sub.current_period_end
       ? new Date(sub.current_period_end * 1000).toISOString()
@@ -65,21 +130,12 @@ export async function getBlueMembershipStripeDetails(
 
     const cancelAtPeriodEnd = !!sub.cancel_at_period_end
 
-    let lastPaymentAt: string | null = null
-    const invoices = await stripe.invoices.list({
-      subscription: subscriptionId,
-      limit: 10,
-      status: "paid",
-    })
-    const latestPaid = invoices.data[0]
-    if (latestPaid) {
-      const paidAt = latestPaid.status_transitions?.paid_at
-      if (paidAt) {
-        lastPaymentAt = new Date(paidAt * 1000).toISOString()
-      } else if (latestPaid.created) {
-        lastPaymentAt = new Date(latestPaid.created * 1000).toISOString()
-      }
-    }
+    const { paidInvoiceCount, lifetimePaidCents, recentInvoices } = await loadPaidInvoices(
+      stripe,
+      subscriptionId,
+    )
+
+    const lastPaymentAt = recentInvoices[0]?.date ?? null
 
     return {
       ok: true,
@@ -91,6 +147,10 @@ export async function getBlueMembershipStripeDetails(
         cardBrand,
         cardLast4,
         planName,
+        paidInvoiceCount,
+        lifetimePaidCents,
+        lifetimePaidFormatted: formatMoney(lifetimePaidCents, currency),
+        recentInvoices,
         source: "live" as const,
       },
     }
