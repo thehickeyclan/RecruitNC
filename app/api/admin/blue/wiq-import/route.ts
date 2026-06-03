@@ -97,7 +97,7 @@ export async function POST(request: Request) {
   const auth = await requireAdmin()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
-  let body: { csvText?: string; fileLabel?: string; mode?: string }
+  let body: { csvText?: string; pausedCsvText?: string; activeRenewingText?: string; fileLabel?: string; mode?: string }
   try {
     body = await request.json()
   } catch {
@@ -106,6 +106,8 @@ export async function POST(request: Request) {
 
   const csvText = String(body.csvText ?? "").trim()
   if (!csvText) return NextResponse.json({ error: "csvText required" }, { status: 400 })
+  const pausedCsvText = String(body.pausedCsvText ?? "").trim()
+  const activeRenewingText = String(body.activeRenewingText ?? "").trim()
   const mode = body.mode === "apply" ? "apply" : "preview"
   const fileLabel = String(body.fileLabel ?? "WIQ export").slice(0, 200)
   const now = new Date()
@@ -134,14 +136,22 @@ export async function POST(request: Request) {
     ]),
   )
   const previouslyActiveWiqIds = (existingRows ?? [])
-    .filter((r) => isWiqBillableStatus(r.status as "active" | "past_due" | "grace" | "cancelled"))
+    .filter((r) => isWiqBillableStatus(r.status as "active" | "past_due" | "grace" | "cancelled" | "paused"))
     .map((r) => r.wiq_billing_partner_id as string)
 
   const athletes = await loadAthletesForMatch(admin)
 
   let preview
   try {
-    preview = buildWiqImportPreview(csvText, athletes, existingByWiqId, previouslyActiveWiqIds, now)
+    preview = buildWiqImportPreview(
+      csvText,
+      athletes,
+      existingByWiqId,
+      previouslyActiveWiqIds,
+      now,
+      pausedCsvText || undefined,
+      activeRenewingText || undefined,
+    )
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : "CSV parse failed" }, { status: 400 })
   }
@@ -222,6 +232,10 @@ export async function POST(request: Request) {
       activeCount: preview.activeCount,
       pastDueCount: preview.pastDueCount,
       cancelledCount: preview.cancelledCount,
+      pausedCount: preview.pausedCount,
+      pausedApplied: preview.pausedApplied ?? 0,
+      activeRenewingListCount: preview.activeRenewingListCount ?? 0,
+      demotedFromActive: preview.demotedFromActive ?? 0,
       duplicateWrestlerNames: preview.duplicateWrestlerNames.slice(0, 20),
     },
   })
@@ -231,6 +245,8 @@ export async function POST(request: Request) {
     upserted,
     matched,
     flaggedMissing: toFlag.length,
+    pausedApplied: preview.pausedApplied ?? 0,
+    demotedFromActive: preview.demotedFromActive ?? 0,
     preview,
   })
 }

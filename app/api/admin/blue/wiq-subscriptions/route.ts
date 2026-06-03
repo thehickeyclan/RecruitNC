@@ -39,7 +39,7 @@ export type BlueWiqSubscriptionRow = {
   last_seen_at: string | null
 }
 
-/** GET: List WIQ-tracked subscriptions. ?filter=active|billable|cancelled|missing|all */
+/** GET: List WIQ-tracked subscriptions. ?filter=active|billable|paused|cancelled|missing|all */
 export async function GET(request: Request) {
   const auth = await requireAdmin()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
@@ -65,7 +65,8 @@ export async function GET(request: Request) {
   let filtered = rows ?? []
   if (filter === "active") filtered = filtered.filter((r) => r.status === "active")
   else if (filter === "billable")
-    filtered = filtered.filter((r) => isWiqBillableStatus(r.status as "active" | "past_due" | "grace" | "cancelled"))
+    filtered = filtered.filter((r) => isWiqBillableStatus(r.status as "active" | "past_due" | "grace" | "cancelled" | "paused"))
+  else if (filter === "paused") filtered = filtered.filter((r) => r.status === "paused")
   else if (filter === "cancelled") filtered = filtered.filter((r) => r.status === "cancelled")
   else if (filter === "missing") filtered = filtered.filter((r) => r.missing_from_last_import)
 
@@ -109,6 +110,7 @@ export async function GET(request: Request) {
       total: all.length,
       billable: billable.length,
       active: all.filter((r) => r.status === "active").length,
+      paused: all.filter((r) => r.status === "paused").length,
       pastDue: all.filter((r) => r.status === "past_due").length,
       grace: all.filter((r) => r.status === "grace").length,
       cancelled: all.filter((r) => r.status === "cancelled").length,

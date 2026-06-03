@@ -10,7 +10,7 @@ import type { BlueWiqSubscriptionRow } from "@/app/api/admin/blue/wiq-subscripti
 import type { WiqImportPreview } from "@/lib/blue-wiq-import"
 import { BlueAdminAuthBanner, isBlueAuthError } from "@/components/blue-admin-auth-banner"
 
-type Filter = "billable" | "active" | "cancelled" | "missing" | "all"
+type Filter = "billable" | "active" | "paused" | "cancelled" | "missing" | "all"
 
 function fmtDate(iso: string | null | undefined) {
   if (!iso) return "—"
@@ -28,6 +28,8 @@ function statusBadge(status: string) {
     return <Badge className="bg-amber-500/25 text-amber-200 border-0">Overdue</Badge>
   if (status === "grace")
     return <Badge className="bg-sky-500/25 text-sky-200 border-0">Grace</Badge>
+  if (status === "paused")
+    return <Badge className="bg-violet-500/25 text-violet-200 border-0">Paused</Badge>
   return <Badge variant="outline" className="border-white/25 text-white/50">Canceled</Badge>
 }
 
@@ -38,6 +40,7 @@ export default function AdminBlueWiqPage() {
     active: number
     pastDue: number
     cancelled: number
+    paused: number
     unmatched: number
     missingFromReport: number
     estimatedMrr: number
@@ -50,6 +53,10 @@ export default function AdminBlueWiqPage() {
 
   const [csvText, setCsvText] = useState("")
   const [fileName, setFileName] = useState("")
+  const [pausedCsvText, setPausedCsvText] = useState("")
+  const [pausedFileName, setPausedFileName] = useState("")
+  const [activeRenewingText, setActiveRenewingText] = useState("")
+  const [activeRenewingFileName, setActiveRenewingFileName] = useState("")
   const [preview, setPreview] = useState<WiqImportPreview | null>(null)
   const [importLoading, setImportLoading] = useState(false)
   const [importMessage, setImportMessage] = useState<string | null>(null)
@@ -90,6 +97,33 @@ export default function AdminBlueWiqPage() {
     reader.readAsText(file)
   }
 
+  const onPausedFile = (file: File | null) => {
+    if (!file) return
+    setPausedFileName(file.name)
+    setImportMessage(null)
+    setPreview(null)
+    const reader = new FileReader()
+    reader.onload = () => setPausedCsvText(String(reader.result ?? ""))
+    reader.readAsText(file)
+  }
+
+  const onActiveRenewingFile = (file: File | null) => {
+    if (!file) return
+    setActiveRenewingFileName(file.name)
+    setImportMessage(null)
+    setPreview(null)
+    const reader = new FileReader()
+    reader.onload = () => setActiveRenewingText(String(reader.result ?? ""))
+    reader.readAsText(file)
+  }
+
+  const importBody = () => ({
+    csvText,
+    pausedCsvText: pausedCsvText || undefined,
+    activeRenewingText: activeRenewingText || undefined,
+    fileLabel: fileName || "WIQ export",
+  })
+
   const runPreview = async () => {
     if (!csvText.trim()) return
     setImportLoading(true)
@@ -99,7 +133,7 @@ export default function AdminBlueWiqPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ csvText, fileLabel: fileName || "WIQ export", mode: "preview" }),
+        body: JSON.stringify({ ...importBody(), mode: "preview" }),
       })
       const d = await r.json()
       if (!r.ok) throw new Error(d.error || "Preview failed")
@@ -120,15 +154,19 @@ export default function AdminBlueWiqPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ csvText, fileLabel: fileName || "WIQ export", mode: "apply" }),
+        body: JSON.stringify({ ...importBody(), mode: "apply" }),
       })
       const d = await r.json()
       if (!r.ok) throw new Error(d.error || "Import failed")
       setPreview(null)
       setCsvText("")
       setFileName("")
+      setPausedCsvText("")
+      setPausedFileName("")
+      setActiveRenewingText("")
+      setActiveRenewingFileName("")
       setImportMessage(
-        `Imported ${d.upserted} Blue rows (${d.matched} matched to athletes).${d.flaggedMissing ? ` ${d.flaggedMissing} flagged missing from report.` : ""}`,
+        `Imported ${d.upserted} Blue rows (${d.matched} matched to athletes).${d.pausedApplied ? ` ${d.pausedApplied} marked paused.` : ""}${d.demotedFromActive ? ` ${d.demotedFromActive} demoted (not on active renewing list).` : ""}${d.flaggedMissing ? ` ${d.flaggedMissing} flagged missing from report.` : ""}`,
       )
       await reload()
     } catch (e) {
@@ -194,6 +232,9 @@ export default function AdminBlueWiqPage() {
               WIQ billable {stats.billable}
             </span>
             <span className="rounded-full bg-emerald-500/20 px-3 py-1 text-emerald-300">Paid {stats.active}</span>
+            {stats.paused > 0 && (
+              <span className="rounded-full bg-violet-500/25 px-3 py-1 text-violet-200">Paused {stats.paused}</span>
+            )}
             {stats.pastDue > 0 && (
               <span className="rounded-full bg-amber-500/25 px-3 py-1 text-amber-200">Overdue {stats.pastDue}</span>
             )}
@@ -217,22 +258,48 @@ export default function AdminBlueWiqPage() {
         )}
 
         <div className="rounded-xl border border-white/10 bg-[#03154C]/50 p-4 md:p-5">
-          <h2 className="text-sm font-semibold text-white mb-1">Import WIQ Membership Summary CSV</h2>
+          <h2 className="text-sm font-semibold text-white mb-1">Import WIQ reports</h2>
           <p className="text-xs text-white/50 mb-4">
-            Exports include Paid, Canceled, and Overdue. We import all NC United Blue rows; only Paid + Overdue count as
-            billable. Canceled rows are kept as history.
+            Upload the <strong className="text-white/70">Membership Summary</strong> CSV (Paid, Canceled, Overdue).
+            Paused members still show as <strong className="text-white/70">Paid</strong> on that report — also upload
+            WrestlingIQ&apos;s <strong className="text-white/70">Active Renewing Members</strong> list (e.g. Active
+            June-Renewing) so only those wrestlers stay active. Optional: Paused Subscription Report for resume dates.
+            Only Paid + Overdue count as billable; paused does not.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 items-start">
-            <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-white/20 px-4 py-3 text-sm text-white/80 hover:bg-white/5">
-              <Upload className="h-4 w-4 text-[#D3B574]" />
-              {fileName || "Choose CSV file"}
-              <input
-                type="file"
-                accept=".csv,text/csv"
-                className="hidden"
-                onChange={(e) => onFile(e.target.files?.[0] ?? null)}
-              />
-            </label>
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col sm:flex-row gap-3 items-start flex-wrap">
+              <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-white/20 px-4 py-3 text-sm text-white/80 hover:bg-white/5">
+                <Upload className="h-4 w-4 text-[#D3B574]" />
+                {fileName || "Membership Summary CSV"}
+                <input
+                  type="file"
+                  accept=".csv,text/csv"
+                  className="hidden"
+                  onChange={(e) => onFile(e.target.files?.[0] ?? null)}
+                />
+              </label>
+              <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-emerald-400/30 px-4 py-3 text-sm text-white/80 hover:bg-white/5">
+                <Upload className="h-4 w-4 text-emerald-300" />
+                {activeRenewingFileName || "Active Renewing list (CSV/TSV)"}
+                <input
+                  type="file"
+                  accept=".csv,.tsv,.txt,text/csv,text/tab-separated-values"
+                  className="hidden"
+                  onChange={(e) => onActiveRenewingFile(e.target.files?.[0] ?? null)}
+                />
+              </label>
+              <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-violet-400/30 px-4 py-3 text-sm text-white/80 hover:bg-white/5">
+                <Upload className="h-4 w-4 text-violet-300" />
+                {pausedFileName || "Paused report (optional)"}
+                <input
+                  type="file"
+                  accept=".csv,text/csv"
+                  className="hidden"
+                  onChange={(e) => onPausedFile(e.target.files?.[0] ?? null)}
+                />
+              </label>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 items-start">
             <Button
               variant="outline"
               className="border-white/20 text-white hover:bg-white/10"
@@ -270,10 +337,30 @@ export default function AdminBlueWiqPage() {
           {preview && (
             <div className="mt-4 rounded-lg border border-white/10 bg-black/20 p-3 text-sm space-y-2">
               <p className="text-white/80">
-                <strong>{preview.blueRows}</strong> Blue rows ({preview.activeCount} paid, {preview.pastDueCount}{" "}
-                overdue, {preview.cancelledCount} canceled in file)
+                <strong>{preview.blueRows}</strong> Blue rows ({preview.activeCount} paid, {preview.pausedCount} paused,{" "}
+                {preview.pastDueCount} overdue, {preview.cancelledCount} canceled in file)
                 {preview.skippedNonBlue > 0 && ` · ${preview.skippedNonBlue} non-Blue rows skipped`}
               </p>
+              {preview.pausedApplied != null && preview.pausedApplied > 0 && (
+                <p className="text-violet-200">
+                  {preview.pausedApplied} paid row(s) reclassified as paused from the Paused report.
+                </p>
+              )}
+              {preview.activeRenewingListCount != null && preview.activeRenewingListCount > 0 && (
+                <p className="text-emerald-200">
+                  Active renewing allowlist: {preview.activeRenewingListCount} wrestler(s).
+                  {preview.demotedFromActive != null && preview.demotedFromActive > 0
+                    ? ` ${preview.demotedFromActive} paid row(s) demoted — not on that list.`
+                    : preview.activeCount === preview.activeRenewingListCount
+                      ? " Active count matches allowlist."
+                      : ` ${preview.activeCount} will remain active after import.`}
+                </p>
+              )}
+              {pausedCsvText && preview.pausedCount === 0 && !preview.pausedApplied && (
+                <p className="text-amber-200/90 text-xs">
+                  Paused report uploaded but no matches — check wrestler names match the Membership Summary.
+                </p>
+              )}
               {preview.wouldFlagMissing.length > 0 && (
                 <p className="text-amber-200">
                   {preview.wouldFlagMissing.length} previously billable WIQ sub(s) not in this file — will flag as
@@ -293,6 +380,7 @@ export default function AdminBlueWiqPage() {
               </p>
             </div>
           )}
+          </div>
         </div>
 
         <div className="overflow-hidden rounded-xl border border-white/10 bg-[#03154C]/40">
@@ -301,6 +389,7 @@ export default function AdminBlueWiqPage() {
               [
                 ["billable", "Billable"],
                 ["active", "Paid only"],
+                ["paused", "Paused"],
                 ["missing", "Missing"],
                 ["cancelled", "Canceled"],
                 ["all", "All"],

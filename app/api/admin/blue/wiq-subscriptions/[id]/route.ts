@@ -16,36 +16,47 @@ async function requireAdmin() {
   return { ok: true as const }
 }
 
-/** PATCH: Link WIQ row to athlete (manual match). Body: { athleteId: string | null } */
+/** PATCH: Link athlete and/or set status. Body: { athleteId?, status?: "paused" | "active" } */
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAdmin()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   const { id } = await params
-  let body: { athleteId?: string | null }
+  let body: { athleteId?: string | null; status?: string }
   try {
     body = await request.json()
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 })
   }
 
-  const athleteId = body.athleteId === null || body.athleteId === "" ? null : String(body.athleteId)
   const admin = createAdminClient()
+  const update: Record<string, unknown> = { updated_at: new Date().toISOString() }
 
-  if (athleteId) {
-    const { data: athlete } = await admin.from("athletes").select("id").eq("id", athleteId).maybeSingle()
-    if (!athlete) return NextResponse.json({ error: "Athlete not found" }, { status: 404 })
+  if (body.athleteId !== undefined) {
+    const athleteId = body.athleteId === null || body.athleteId === "" ? null : String(body.athleteId)
+    if (athleteId) {
+      const { data: athlete } = await admin.from("athletes").select("id").eq("id", athleteId).maybeSingle()
+      if (!athlete) return NextResponse.json({ error: "Athlete not found" }, { status: 404 })
+    }
+    update.athlete_id = athleteId
+    update.match_confidence = athleteId ? "manual" : "unmatched"
+  }
+
+  if (body.status === "paused" || body.status === "active") {
+    update.status = body.status
+    if (body.status === "paused") update.wiq_status_raw = "Paused"
+    if (body.status === "active") update.wiq_status_raw = "Paid"
+  }
+
+  if (Object.keys(update).length <= 1) {
+    return NextResponse.json({ error: "No updates" }, { status: 400 })
   }
 
   const { data, error } = await admin
     .from("blue_wiq_subscriptions")
-    .update({
-      athlete_id: athleteId,
-      match_confidence: athleteId ? "manual" : "unmatched",
-      updated_at: new Date().toISOString(),
-    })
+    .update(update)
     .eq("id", id)
-    .select("id, athlete_id, wrestler_name")
+    .select("id, athlete_id, wrestler_name, status")
     .single()
 
   if (error) {
