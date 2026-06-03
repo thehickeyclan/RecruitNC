@@ -396,6 +396,7 @@ export default function AdminBlueSubscriptionsBillingPage() {
                           <span className="font-medium text-white">{sub.athlete_name}</span>
                         )}
                         <span className="mt-0.5 block text-xs text-white/45">{sub.amount_display}</span>
+                        <Badge className="mt-1 bg-[#D3B574]/20 text-[#D3B574] border-0 text-[10px]">RecruitNC</Badge>
                         {sub.cancel_at_period_end && sub.status === "active" && (
                           <span className="mt-1 block text-xs text-amber-300/90">Cancels at period end</span>
                         )}

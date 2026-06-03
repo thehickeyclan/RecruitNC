@@ -1,11 +1,12 @@
 "use client"
 
 import { usePathname } from "next/navigation"
-import { ArrowLeft, Users, ClipboardList } from "lucide-react"
+import { ArrowLeft, Users, ClipboardList, CloudUpload } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const LINKS = [
-  { href: "/admin/blue/subscriptions", label: "Members", short: "Members", icon: Users },
+  { href: "/admin/blue/subscriptions", label: "RecruitNC", short: "Stripe", icon: Users },
+  { href: "/admin/blue/wiq", label: "WrestlingIQ", short: "WIQ", icon: CloudUpload },
   { href: "/admin/blue/subscriptions/registrations", label: "All signups", short: "Signups", icon: ClipboardList },
 ] as const
 
@@ -26,8 +27,8 @@ export function BlueSubscriptionsPortalNav() {
         </div>
         <nav className="flex gap-1 rounded-lg bg-black/20 p-1 md:min-w-[280px]">
           {LINKS.map(({ href, label, short, icon: Icon }) => {
-            const isMembers = href === "/admin/blue/subscriptions"
-            const isActive = isMembers
+            const isRecruitNcMembers = href === "/admin/blue/subscriptions"
+            const isActive = isRecruitNcMembers
               ? pathname === "/admin/blue/subscriptions"
               : pathname === href || pathname?.startsWith(`${href}/`)
             return (
