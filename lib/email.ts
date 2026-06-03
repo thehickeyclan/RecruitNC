@@ -58,6 +58,94 @@ export async function sendBlueInviteEmail(to: string, registerUrl: string): Prom
   }
 }
 
+export type BlueWelcomeEmailParams = {
+  to: string
+  parentName: string
+  athleteName: string
+  passwordSetupUrl?: string | null
+}
+
+/** Post-payment welcome: practices, billing management, profile link. */
+export async function sendBlueWelcomeEmail(params: BlueWelcomeEmailParams): Promise<{ success: boolean; error?: string }> {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("RESEND_API_KEY not configured, skipping Blue welcome email")
+    return { success: false, error: "Email service not configured" }
+  }
+
+  const profileUrl = `${SITE_URL}/profile#nc-united-blue`
+  const billingUrl = `${SITE_URL}/blue/billing`
+  const parentName = (params.parentName || "there").trim()
+  const athleteName = (params.athleteName || "your athlete").trim()
+  const passwordBlock = params.passwordSetupUrl
+    ? `<p style="margin: 20px 0;">
+      <a href="${params.passwordSetupUrl}" style="display: inline-block; background: #03154C; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold;">Set your password &amp; sign in</a>
+    </p>
+    <p style="color: #6b7280; font-size: 14px;">Use the same email you registered with. This link expires in 24 hours.</p>`
+    : `<p style="margin: 20px 0;">
+      <a href="${SITE_URL}/auth/signin" style="display: inline-block; background: #03154C; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold;">Sign in to RecruitNC</a>
+    </p>`
+
+  try {
+    const { Resend } = await import("resend")
+    const resend = new Resend(process.env.RESEND_API_KEY)
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: linear-gradient(135deg, #03154C 0%, #0A1628 100%); padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 22px;">Welcome to NC United Blue</h1>
+  </div>
+  <div style="background: #fff; padding: 28px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+    <p>Hi ${parentName},</p>
+    <p>Payment is complete — <strong>${athleteName}</strong> is enrolled in NC United Blue. Here’s what you need to know.</p>
+
+    <h2 style="color: #03154C; font-size: 16px; margin-top: 24px;">Manage your subscription</h2>
+    <p>Sign in to RecruitNC → <strong>Profile → NC United Blue</strong> to:</p>
+    <ul style="padding-left: 20px;">
+      <li>View next bill date and payment history</li>
+      <li>Update your card (Stripe billing portal)</li>
+      <li>Pause or cancel your membership</li>
+      <li>Retry a failed payment</li>
+    </ul>
+    <p style="margin: 16px 0;">
+      <a href="${profileUrl}" style="color: #03154C; font-weight: bold;">Open billing in your profile →</a><br>
+      <a href="${billingUrl}" style="color: #6b7280; font-size: 14px;">Or visit ${billingUrl}</a>
+    </p>
+    ${passwordBlock}
+
+    <h2 style="color: #03154C; font-size: 16px; margin-top: 24px;">Practices</h2>
+    <p>UNC Fetzer Hall, Chapel Hill — <strong>Sundays 1:00–3:00 PM</strong></p>
+
+    <h2 style="color: #03154C; font-size: 16px; margin-top: 24px;">Stay connected</h2>
+    <p><a href="https://groupme.com/join_group/104706096/bU0Ncyo4" style="color: #03154C;">Join NC United Blue on GroupMe</a></p>
+
+    <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
+    <p style="color: #6b7280; font-size: 14px;">Questions? <a href="mailto:info@ncwrestlingunited.com" style="color: #03154C;">info@ncwrestlingunited.com</a></p>
+  </div>
+</body>
+</html>`
+
+    const result = await resend.emails.send({
+      from: FROM_BLUE,
+      to: [params.to.trim()],
+      subject: `Welcome to NC United Blue — manage your subscription`,
+      html,
+    })
+
+    if (result.error) {
+      console.error("Resend Blue welcome error:", result.error)
+      return { success: false, error: result.error.message }
+    }
+    return { success: true }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to send email"
+    console.error("sendBlueWelcomeEmail:", err)
+    return { success: false, error: message }
+  }
+}
+
 interface SendEditRequestNotificationParams {
   to: string
   userName: string

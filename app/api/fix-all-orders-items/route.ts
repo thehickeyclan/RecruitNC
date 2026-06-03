@@ -1,17 +1,10 @@
 import { NextResponse } from "next/server"
-import Stripe from "stripe"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { findProductByIdOrPrefix } from "@/lib/store/product-utils"
 import { syntheticOrderItemSku } from "@/lib/order-item-sku"
+import { getStripe, readStripeSecretKey, stripeKeyMissingPayload } from "@/lib/stripe"
 
 export const dynamic = "force-dynamic"
-
-const stripeSecret = process.env.STRIPE_SECRET_KEY
-
-function getStripe(): Stripe {
-  if (!stripeSecret) throw new Error("STRIPE_SECRET_KEY not set")
-  return new Stripe(stripeSecret)
-}
 
 function parseItemsFromMetadata(meta: Record<string, string>): Array<{
   id: number | string
@@ -43,6 +36,9 @@ function parseItemsFromMetadata(meta: Record<string, string>): Array<{
 
 export async function POST() {
   try {
+    if (!readStripeSecretKey()) {
+      return NextResponse.json(stripeKeyMissingPayload(), { status: 503 })
+    }
     const admin = createAdminClient()
     const stripe = getStripe()
 

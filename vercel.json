@@ -1,6 +1,9 @@
 {
-  "name": "v0-new-college-commits"
+  "name": "v0-new-college-commits",
+  "crons": [
+    {
+      "path": "/api/cron/blue-maintenance",
+      "schedule": "0 12 * * *"
+    }
+  ]
 }
-
-
-

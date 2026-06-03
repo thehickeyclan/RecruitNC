@@ -4,12 +4,14 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { createOrderFromPaymentIntent, createOrderFromSession } from "@/app/actions/stripe"
 import { checkoutSessionIsNonStoreImport } from "@/lib/stripe-sync-guards"
 import { syncPaidSubscriptionInvoicesFromStripe } from "@/lib/orders/ensure-order-from-stripe-invoice"
-import { getStripe, readStripeSecretKey } from "@/lib/stripe"
+import { getStripe, readStripeConfigStatus, readStripeSecretKey, stripeKeyMissingPayload } from "@/lib/stripe"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 120
 
 const DAYS_BACK = 60
+/** Invoice backfill window — renewals only; avoids flooding with every historical signup. */
+const INVOICE_DAYS_BACK = 14
 /** Stop checkout/PI loops before Vercel kills the function; invoices run first. */
 const SYNC_TIME_BUDGET_MS = 45_000
 
@@ -26,6 +28,15 @@ async function requireAdmin(): Promise<{ ok: true } | { ok: false; status: 401 |
 }
 
 /**
+ * GET: Admin diagnostic — is Stripe secret visible to this serverless function?
+ */
+export async function GET() {
+  const auth = await requireAdmin()
+  if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
+  return NextResponse.json(readStripeConfigStatus())
+}
+
+/**
  * POST: Sync orders from Stripe into Supabase. Lists PaymentIntents and Checkout
  * Sessions from the last N days; for each that doesn't already have an order,
  * creates one. Ensures no duplicates (checks by stripe_payment_intent_id / stripe_session_id).
@@ -37,7 +48,7 @@ export async function POST() {
 
     const stripeSecret = readStripeSecretKey()
     if (!stripeSecret) {
-      return NextResponse.json({ error: "STRIPE_SECRET_KEY not set" }, { status: 500 })
+      return NextResponse.json(stripeKeyMissingPayload(), { status: 503 })
     }
 
     const stripe = getStripe()
@@ -54,8 +65,12 @@ export async function POST() {
     let invoicesCreated = 0
     let invoicesSkipped = 0
     const invoiceErrors: string[] = []
+    const invoiceSince = Math.floor((Date.now() - INVOICE_DAYS_BACK * 24 * 60 * 60 * 1000) / 1000)
     try {
-      const invoiceSync = await syncPaidSubscriptionInvoicesFromStripe(admin, stripe, since)
+      const invoiceSync = await syncPaidSubscriptionInvoicesFromStripe(admin, stripe, {
+        sinceUnix: invoiceSince,
+        renewalsOnly: true,
+      })
       invoicesCreated = invoiceSync.created
       invoicesSkipped = invoiceSync.skipped
       invoiceErrors.push(...invoiceSync.errors)

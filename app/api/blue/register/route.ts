@@ -18,6 +18,7 @@ type AthleteInput = { firstName: string; lastName: string; graduationYear: numbe
 /** T-shirt sizes we accept for Blue signup (stored on blue_memberships.tshirt_size). */
 const TSHIRT_SIZES = ["YS", "YM", "YL", "S", "M", "L", "XL", "2XL", "3XL"] as const
 
+/** @deprecated Legacy auth-first flow. Production UI uses POST /api/blue/signup (no-auth → Stripe Checkout). */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()

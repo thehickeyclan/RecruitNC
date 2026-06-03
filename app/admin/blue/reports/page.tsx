@@ -224,8 +224,19 @@ export default function AdminBlueReportsPage() {
                 <DollarSign className="h-4 w-4" />
                 <span className="text-sm">MRR</span>
               </div>
-              <p className="text-2xl font-bold text-[#13294B]">${(data.estimatedMRR ?? 0).toLocaleString()}</p>
-              <p className="text-xs text-gray-500">Blue subs only: active + paused × $55/mo</p>
+              <p className="text-2xl font-bold text-[#13294B]">
+                ${(data.stripeMRR ?? data.estimatedMRR ?? 0).toLocaleString()}
+              </p>
+              <p className="text-xs text-gray-500">
+                {data.stripeMRR != null
+                  ? "Stripe subscription amounts (promo-aware)"
+                  : "Active + paused × $55/mo estimate"}
+              </p>
+              {data.projectedMRRAfterSeniorChurn != null && (
+                <p className="text-xs text-amber-700 mt-1">
+                  After senior churn (12 mo): ${data.projectedMRRAfterSeniorChurn.toLocaleString()}
+                </p>
+              )}
             </CardContent>
           </Card>
           <Card>
@@ -501,6 +512,77 @@ export default function AdminBlueReportsPage() {
                   {(data.upcomingBilling ?? []).reduce((s, d) => s + d.count, 0)} billing events in the next 90 days.
                 </p>
               )}
+            </CardContent>
+          </Card>
+        )}
+
+        {(data.cohortRetention?.length ?? 0) > 0 && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Cohort retention</CardTitle>
+              <CardDescription>Members still active or paused by signup month (Stripe-backed only)</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-left text-gray-500">
+                      <th className="py-2 pr-4">Signup month</th>
+                      <th className="py-2 pr-4">Started</th>
+                      <th className="py-2">Still active</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.cohortRetention!.map((c) => (
+                      <tr key={c.signupMonth} className="border-b border-gray-100">
+                        <td className="py-2 pr-4">{c.signupMonth}</td>
+                        <td className="py-2 pr-4">{c.started}</td>
+                        <td className="py-2">{c.stillActive}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {(data.seniorChurnByMonth?.length ?? 0) > 0 && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Senior graduation impact (MRR)</CardTitle>
+              <CardDescription>Assumes churn in June of graduation year</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[240px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={(data.seniorChurnByMonth ?? []).filter((b) => b.count > 0)}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="month" tick={{ fontSize: 10 }} />
+                    <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `$${v}`} />
+                    <Tooltip formatter={(v: number, name: string) => [name === "mrrImpact" ? `$${v}` : v, name === "mrrImpact" ? "MRR impact" : "Members"]} />
+                    <Bar dataKey="mrrImpact" name="MRR impact" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {(data.failedPaymentMembers?.length ?? 0) > 0 && (
+          <Card className="mb-8 border-red-200">
+            <CardHeader>
+              <CardTitle className="text-red-800">Failed / pending payment</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="text-sm space-y-2">
+                {data.failedPaymentMembers!.map((m) => (
+                  <li key={m.membershipId}>
+                    <strong>{m.athleteName}</strong>
+                    {m.payerEmail ? ` — ${m.payerEmail}` : ""}
+                  </li>
+                ))}
+              </ul>
             </CardContent>
           </Card>
         )}

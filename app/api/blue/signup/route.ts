@@ -192,9 +192,6 @@ export async function POST(request: NextRequest) {
       await admin.from("blue_promo_codes").update({ redemptions_count: next }).eq("id", promoIdToIncrement)
     }
 
-    if (inviteId) {
-      await admin.from("blue_invites").update({ used_at: new Date().toISOString() }).eq("id", inviteId)
-    }
     return NextResponse.json({ success: true, checkoutUrl: session.url })
   } catch (e) {
     console.error("[blue/signup]", e)

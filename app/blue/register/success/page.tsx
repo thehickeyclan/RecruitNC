@@ -1,68 +1,115 @@
 "use client"
 
-import Link from "next/link"
+import { HardLink } from "@/components/hard-link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== "undefined" ? window.location.origin : "https://app.ncwrestlingunited.com")
+import { CreditCard, Calendar, Users, CheckCircle2, ExternalLink } from "lucide-react"
 
 export default function BlueRegisterSuccessPage() {
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-lg mx-auto">
-        <Card className="border-2 border-[#D3B574]">
+    <div className="min-h-screen bg-[#0A1628] py-10 px-4">
+      <div className="max-w-2xl mx-auto space-y-6">
+        <Card className="border-2 border-[#D3B574]/40 bg-white shadow-xl overflow-hidden">
+          <div className="h-2 bg-gradient-to-r from-[#03154C] via-[#13294B] to-[#D3B574]" />
           <CardHeader>
-            <CardTitle className="text-[#03154C]">You’re in — welcome to NC United Blue</CardTitle>
-            <CardDescription>
-              Payment complete. Your athlete is signed up and you’re part of an exclusive group. Here’s what to do next:
-            </CardDescription>
+            <div className="flex items-start gap-3">
+              <CheckCircle2 className="h-8 w-8 text-emerald-600 shrink-0 mt-0.5" />
+              <div>
+                <CardTitle className="text-[#03154C] text-2xl">You&apos;re in — welcome to NC United Blue</CardTitle>
+                <CardDescription className="text-base mt-2">
+                  Payment complete. Save this page — here&apos;s how to manage your membership and get started.
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-5">
-            <div className="space-y-2 text-sm">
-              <p className="font-semibold text-[#03154C]">Practices</p>
+          <CardContent className="space-y-6">
+            <section className="rounded-lg border-2 border-[#03154C]/15 bg-[#03154C]/5 p-4 space-y-3">
+              <div className="flex items-center gap-2 text-[#03154C]">
+                <CreditCard className="h-5 w-5" />
+                <h2 className="font-semibold text-lg">Manage your subscription</h2>
+              </div>
+              <p className="text-sm text-gray-700">
+                All billing is in your RecruitNC profile — same email you used to register.
+              </p>
+              <ul className="text-sm text-gray-700 space-y-1.5 list-disc pl-5">
+                <li>View <strong>next bill date</strong> and payment history</li>
+                <li>Update your card (Stripe secure billing portal)</li>
+                <li><strong>Pause</strong> membership with a resume date</li>
+                <li><strong>Cancel</strong> at end of billing period</li>
+                <li>Retry a failed payment if needed</li>
+              </ul>
+              <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                <HardLink href="/profile#nc-united-blue">
+                  <Button className="w-full sm:w-auto bg-[#03154C] hover:bg-[#0a2571] text-white">
+                    Open billing in Profile
+                  </Button>
+                </HardLink>
+                <HardLink href="/blue/billing">
+                  <Button variant="outline" className="w-full sm:w-auto border-[#03154C] text-[#03154C]">
+                    Billing help page
+                  </Button>
+                </HardLink>
+              </div>
+              <p className="text-xs text-gray-500">
+                Path: Sign in → Profile → scroll to <strong>NC United Blue</strong>. Check your email for a welcome message with the same links.
+              </p>
+            </section>
+
+            <section className="space-y-2 text-sm">
+              <div className="flex items-center gap-2 text-[#03154C] font-semibold">
+                <Calendar className="h-4 w-4" />
+                Practices
+              </div>
               <p className="text-gray-700">
                 UNC Fetzer Hall, 210 South Rd, Chapel Hill — <strong>Sundays 1:00–3:00 PM</strong>
               </p>
-            </div>
-            <div className="space-y-2 text-sm">
-              <p className="font-semibold text-[#03154C]">Stay connected</p>
+            </section>
+
+            <section className="space-y-2 text-sm">
+              <div className="flex items-center gap-2 text-[#03154C] font-semibold">
+                <Users className="h-4 w-4" />
+                Stay connected
+              </div>
               <p className="text-gray-700">
-                Join the <strong>NC United Blue GroupMe</strong> for updates and team chat:{" "}
+                Join the NC United Blue GroupMe for updates and team chat:{" "}
                 <a
                   href="https://groupme.com/join_group/104706096/bU0Ncyo4"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[#03154C] underline hover:no-underline"
+                  className="text-[#03154C] underline hover:no-underline inline-flex items-center gap-1"
                 >
-                  Join NC United Blue on GroupMe
+                  Join GroupMe <ExternalLink className="h-3 w-3" />
                 </a>
               </p>
-            </div>
-            <div className="space-y-2 text-sm">
+            </section>
+
+            <section className="space-y-2 text-sm">
               <p className="font-semibold text-[#03154C]">RecruitNC profile</p>
               <p className="text-gray-700">
-                If your wrestler doesn’t have a full profile on RecruitNC yet, create one so coaches and colleges can find them.
+                Create or complete your wrestler&apos;s profile so coaches and colleges can find them.
               </p>
-            </div>
-            <div className="space-y-2 text-sm">
-              <p className="font-semibold text-[#03154C]">Calendar</p>
-              <p className="text-gray-700">
-                Check the NC United calendar for sessions and events:{" "}
-                <a href="/calendar" className="text-[#03154C] underline hover:no-underline">
-                  NC United calendar
-                </a>
-              </p>
-            </div>
+              <HardLink href="/calendar" className="text-[#03154C] underline hover:no-underline text-sm">
+                NC United calendar →
+              </HardLink>
+            </section>
+
             <div className="border-t pt-4 flex flex-col gap-2">
-              <a href={`${APP_URL}/auth/signin`} target="_top" rel="noopener noreferrer">
+              <HardLink href="/auth/signin">
                 <Button className="w-full bg-[#03154C] hover:bg-[#0a2571] text-white">Sign in to RecruitNC</Button>
-              </a>
-              <a href={`${APP_URL}/blue`} target="_top" rel="noopener noreferrer">
+              </HardLink>
+              <HardLink href="/blue">
                 <Button variant="outline" className="w-full">Back to Blue program</Button>
-              </a>
+              </HardLink>
             </div>
           </CardContent>
         </Card>
+
+        <p className="text-center text-xs text-gray-400">
+          Questions about billing? Email{" "}
+          <a href="mailto:info@ncwrestlingunited.com" className="text-[#D3B574] hover:underline">
+            info@ncwrestlingunited.com
+          </a>
+        </p>
       </div>
     </div>
   )

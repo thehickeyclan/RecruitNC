@@ -8,6 +8,7 @@ import { syntheticOrderItemSku } from "@/lib/order-item-sku"
 import { findExistingAthlete } from "@/lib/athlete-duplicate-check"
 import { getAthletesColumnNames, filterPayloadToSchema } from "@/lib/athletes-schema"
 import { orderShippingFields } from "@/lib/order-shipping"
+import { runBlueSignupPostPaymentSideEffects } from "@/lib/blue-post-signup-notify"
 
 type AdminClient = SupabaseClient
 
@@ -46,6 +47,16 @@ export async function completeBlueSignupAfterStripePayment(
     customerName,
   } = params
 
+  const { data: signupBefore } = await admin
+    .from("blue_signups")
+    .select(
+      "status, invite_id, parent_email, parent_first_name, parent_last_name, athlete_first_name, athlete_last_name, athlete_graduation_year, athlete_high_school, athlete_weight_class, athlete_cell_phone, athlete_email, athlete_gpa, athlete_wrestling_club, highest_achievement, tshirt_size",
+    )
+    .eq("id", signupId)
+    .maybeSingle()
+
+  const isFirstPayment = signupBefore?.status !== "paid"
+
   const { error: signupUpdateErr } = await admin
     .from("blue_signups")
     .update({
@@ -61,26 +72,28 @@ export async function completeBlueSignupAfterStripePayment(
     return { ok: false, error: signupUpdateErr.message }
   }
 
+  let payerUserId: string | null = null
+  let athleteId: string | undefined
+  let athleteName = ""
+
   if (subscriptionId) {
     const { data: existingMembership } = await admin
       .from("blue_memberships")
-      .select("id")
+      .select("id, athlete_id, payer_user_id")
       .eq("stripe_subscription_id", subscriptionId)
       .maybeSingle()
 
-    if (!existingMembership) {
-      const { data: signupRow } = await admin
-        .from("blue_signups")
-        .select(
-          "parent_email, parent_first_name, parent_last_name, athlete_first_name, athlete_last_name, athlete_graduation_year, athlete_high_school, athlete_weight_class, athlete_cell_phone, athlete_email, athlete_gpa, athlete_wrestling_club, highest_achievement, tshirt_size",
-        )
-        .eq("id", signupId)
-        .single()
+    if (existingMembership) {
+      payerUserId = (existingMembership.payer_user_id as string) ?? null
+      athleteId = existingMembership.athlete_id as string | undefined
+    }
 
+    if (!existingMembership) {
+      const signupRow = signupBefore
       if (signupRow) {
         const parentEmail = (signupRow.parent_email as string)?.trim()?.toLowerCase() || ""
         const gradYear = Number(signupRow.athlete_graduation_year)
-        const athleteName = [
+        athleteName = [
           (signupRow.athlete_first_name as string)?.trim(),
           (signupRow.athlete_last_name as string)?.trim(),
         ]
@@ -88,7 +101,6 @@ export async function completeBlueSignupAfterStripePayment(
           .join(" ")
           .trim()
         const highSchool = (signupRow.athlete_high_school as string)?.trim() || ""
-        let payerUserId: string | null = null
         const { data: profileRow } = await admin
           .from("user_profiles")
           .select("user_id")
@@ -134,7 +146,7 @@ export async function completeBlueSignupAfterStripePayment(
             graduationYear: gradYear,
             school: highSchool,
           })
-          let athleteId: string | undefined = existingAthlete?.id
+          athleteId = existingAthlete?.id
           if (!athleteId) {
             const columns = await getAthletesColumnNames(admin)
             const athletePayload = filterPayloadToSchema(
@@ -211,6 +223,16 @@ export async function completeBlueSignupAfterStripePayment(
     }
   }
 
+  if (!athleteName && signupBefore) {
+    athleteName = [
+      (signupBefore.athlete_first_name as string)?.trim(),
+      (signupBefore.athlete_last_name as string)?.trim(),
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .trim()
+  }
+
   let piForOrder = paymentIntentId
   if (!piForOrder && subscriptionId) {
     try {
@@ -223,7 +245,7 @@ export async function completeBlueSignupAfterStripePayment(
     } catch (_) {}
   }
 
-  const email = customerEmail || "blue-signup@placeholder.com"
+  const email = customerEmail || (signupBefore?.parent_email as string) || "blue-signup@placeholder.com"
   const name = customerName.trim() || "Blue member"
 
   let existingOrder = null as { id: string } | null
@@ -247,13 +269,14 @@ export async function completeBlueSignupAfterStripePayment(
       customer_name: name,
       ...orderShippingFields(name, {}),
       shipping_address: {},
-      shipping_method: { name: "Blue membership", price: 0 },
+      shipping_method: { name: "Blue membership", price: 0, admin_category: "Blue Sub" },
       subtotal: amountTotalDollars,
       shipping_cost: 0,
       tax: 0,
       discount: 0,
       total: amountTotalDollars,
       status: "paid",
+      channel: "blue",
       ...(checkoutSessionId ? { stripe_session_id: checkoutSessionId } : {}),
       stripe_payment_intent_id: piForOrder ?? null,
       promo_code: null,
@@ -278,5 +301,21 @@ export async function completeBlueSignupAfterStripePayment(
       console.error("[blue-signup-webhook-complete] order insert:", orderErr.message)
     }
   }
+
+  if (signupBefore) {
+    await runBlueSignupPostPaymentSideEffects(admin, {
+      signupId,
+      payerUserId,
+      athleteId: athleteId ?? null,
+      parentEmail: (signupBefore.parent_email as string) || email,
+      parentFirstName: (signupBefore.parent_first_name as string) || "",
+      parentLastName: (signupBefore.parent_last_name as string) || "",
+      athleteName: athleteName || name,
+      amountDollars: amountTotalDollars,
+      inviteId: (signupBefore.invite_id as string) ?? null,
+      isFirstPayment,
+    })
+  }
+
   return { ok: true }
 }
