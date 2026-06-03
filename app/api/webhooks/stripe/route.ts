@@ -7,6 +7,7 @@ import { findProductByIdOrPrefix } from "@/lib/store/product-utils"
 import { findAndEnrichAthlete, enrichmentFromOrderCustomer, buildEnrichmentPayload } from "@/lib/enrich-athlete-profile"
 import { orderShippingFields } from "@/lib/order-shipping"
 import { completeBlueSignupAfterStripePayment } from "@/lib/blue-signup-webhook-complete"
+import { mapStripeSubscriptionToMembershipStatus } from "@/lib/blue-stripe-subscription-status"
 import {
   processNcUnitedDropInCheckoutFailed,
   processNcUnitedDropInCheckoutSession,
@@ -118,19 +119,14 @@ export async function POST(request: NextRequest) {
   if (event.type === "customer.subscription.updated" || event.type === "customer.subscription.deleted") {
     const subscription = event.data.object as Stripe.Subscription
     const subId = subscription.id
-    const status = subscription.status
-    const periodEnd = subscription.current_period_end
-      ? new Date(subscription.current_period_end * 1000).toISOString()
-      : null
     const isDeleted = event.type === "customer.subscription.deleted"
-    const isCanceled = isDeleted || status === "canceled" || status === "unpaid" || status === "incomplete_expired"
-    const isPaused = status === "paused"
-    const dbStatus = isCanceled ? "cancelled" : isPaused ? "paused" : status === "past_due" ? "active" : status === "active" || status === "trialing" ? "active" : "cancelled"
+    const mapped = mapStripeSubscriptionToMembershipStatus(subscription, { isDeleted })
     const updatePayload: Record<string, unknown> = {
-      status: dbStatus,
+      status: mapped.status,
       updated_at: new Date().toISOString(),
-      ...(periodEnd && !isCanceled && { next_billing_at: periodEnd }),
-      ...(isCanceled && { ended_at: new Date().toISOString() }),
+      next_billing_at: mapped.next_billing_at,
+      resume_at: mapped.resume_at,
+      ...(mapped.ended_at ? { ended_at: mapped.ended_at } : {}),
     }
     const { error } = await admin
       .from("blue_memberships")

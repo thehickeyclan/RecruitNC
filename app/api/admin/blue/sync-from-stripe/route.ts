@@ -7,6 +7,7 @@ import { getAthletesColumnNames, filterPayloadToSchema } from "@/lib/athletes-sc
 import { athleteEnrichmentFromSignup } from "@/lib/blue-signup-enrich-athlete"
 import { orderShippingFields } from "@/lib/order-shipping"
 import { syntheticOrderItemSku } from "@/lib/order-item-sku"
+import { reconcileBlueMembershipsFromStripe } from "@/lib/blue-stripe-subscription-status"
 
 export const dynamic = "force-dynamic"
 
@@ -503,11 +504,14 @@ export async function POST() {
     if (didSync) synced++
   }
 
+  const { updated: statusReconciled, errors: statusErrors } = await reconcileBlueMembershipsFromStripe(stripe, admin)
+
   return NextResponse.json({
-    message: `Sync complete. With signup_id: ${blueSessions.length}. By email fallback: ${sessionsWithoutSignupId.length} sessions considered. Synced: ${synced}, skipped: ${skipped}, failed: ${failed}.`,
+    message: `Sync complete. With signup_id: ${blueSessions.length}. By email fallback: ${sessionsWithoutSignupId.length} sessions considered. Synced: ${synced}, skipped: ${skipped}, failed: ${failed}. Membership status reconciled: ${statusReconciled} updated${statusErrors ? `, ${statusErrors} errors` : ""}.`,
     synced,
     skipped,
     failed,
+    statusReconciled,
     blueSessionsCount: blueSessions.length,
   })
 }
