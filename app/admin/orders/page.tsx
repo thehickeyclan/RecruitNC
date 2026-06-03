@@ -3,6 +3,7 @@ import { AdminOrdersClient } from "@/components/admin/admin-orders-client"
 import type { Order, OrderCategory } from "@/lib/admin-data"
 import { resolveOrderCategory } from "@/lib/admin/resolve-order-display"
 import { amountLooksLikeGuild, amountLooksLikePracticeDropIn } from "@/lib/stripe-checkout-amounts"
+import { orderDisplayDateFromRow } from "@/lib/orders/ensure-order-from-stripe-invoice"
 
 export const dynamic = "force-dynamic"
 
@@ -275,7 +276,7 @@ export default async function OrdersPage() {
         orderNumber: order.order_number || `NC-${String(order.id).slice(0, 8)}`,
         customerName,
         customerEmail,
-        date: order.created_at ? new Date(order.created_at) : new Date(),
+        date: orderDisplayDateFromRow(order),
         status: (order.status || "pending") as Order["status"],
         items: itemsCount,
         total: Number(order.total ?? 0),

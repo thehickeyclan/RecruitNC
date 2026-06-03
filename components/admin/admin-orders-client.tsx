@@ -159,7 +159,8 @@ export function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
       })
       const data = await res.json()
       if (!res.ok) {
-        toast.error(data.error || "Reclassify failed")
+        const hint = typeof data.hint === "string" ? data.hint : null
+        toast.error(data.error || "Reclassify failed", hint ? { description: hint } : undefined)
         return
       }
       const parts = [`Fixed ${data.changed} of ${data.processed} orders`]
@@ -193,7 +194,8 @@ export function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
         return
       }
       if (!res.ok || data.success === false) {
-        toast.error(data.error || `Sync failed (HTTP ${res.status})`)
+        const hint = typeof data.hint === "string" ? data.hint : null
+        toast.error(data.error || `Sync failed (HTTP ${res.status})`, hint ? { description: hint } : undefined)
         return
       }
       const created = data.created ?? 0
@@ -208,7 +210,7 @@ export function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
         toast.success(`No new orders. ${skipped} already in sync.`)
       }
       if (data.partial) {
-        toast.message("Sync partially completed — run again to finish older checkout payments.")
+        toast.message("Checkout sync partially completed — run again if needed. Blue renewals use last 14 days only.")
       }
       if (data.errors?.length) {
         toast.message(`Sync warnings: ${data.errors.slice(0, 2).join("; ")}`)

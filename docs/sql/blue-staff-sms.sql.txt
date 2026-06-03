@@ -1,0 +1,13 @@
+-- Idempotent log for Blue new-subscription staff SMS (run once in Supabase SQL Editor).
+
+create table if not exists public.blue_staff_sms (
+  signup_id uuid primary key,
+  sent_at timestamptz not null default now()
+);
+
+create index if not exists blue_staff_sms_sent_at_idx on public.blue_staff_sms (sent_at desc);
+
+alter table public.blue_staff_sms enable row level security;
+
+create policy "Service role full access blue_staff_sms"
+  on public.blue_staff_sms for all to service_role using (true) with check (true);

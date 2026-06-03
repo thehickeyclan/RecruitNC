@@ -62,6 +62,8 @@ Unset or any other value = normal behavior. See `lib/fundraising/fundraising-pau
 | Env var | Effect |
 |--------|--------|
 | **`RECRUITNC_STORE_NEW_ORDER_SMS_TO`** | Comma-separated US phone numbers to text when a **paid merchandise store order** is placed (not national team, Blue, or drop-ins). Example: `5169673004,6315551234`. Falls back to `RECRUITNC_REIMBURSEMENT_NEW_REQUEST_SMS_TO` if unset. Requires Twilio (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_PHONE_NUMBER` or `TWILIO_MESSAGING_SERVICE_SID`). |
+| **`RECRUITNC_BLUE_NEW_SUB_SMS_TO`** | Comma-separated US numbers for **new Blue subscription** alerts (first payment). Falls back to store/reimbursement SMS env if unset. Set `BLUE_DISABLE_STAFF_SMS=1` to disable. Requires `blue_staff_sms` table (see `docs/sql/blue-staff-sms.sql.txt`). |
+| **`CRON_SECRET`** | Bearer token for `/api/cron/blue-maintenance` (daily resume + signup backfill). Vercel Cron sends `Authorization: Bearer <CRON_SECRET>`. |
 | **`STORE_DISABLE_STAFF_ORDER_SMS`** | Set to `1` / `true` / `yes` to disable staff texts without changing Twilio config. |
 
 Idempotency log table (run once in Supabase SQL Editor):

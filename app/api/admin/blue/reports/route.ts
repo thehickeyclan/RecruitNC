@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { getStripe, readStripeSecretKey } from "@/lib/stripe"
+import {
+  buildCohortRetention,
+  buildSeniorChurnByMonth,
+  dollarsFromCents,
+  fetchStripeMrrCentsBySubscriptionId,
+} from "@/lib/blue-reports-stripe-mrr"
 
 export const dynamic = "force-dynamic"
 
@@ -67,6 +74,15 @@ export type BlueReportsData = {
   dropInRevenueThisMonth?: number
   dropInCountLast12Months?: number
   dropInRevenueLast12Months?: number
+  /** Sum of Stripe subscription monthly amounts (promo-aware). */
+  stripeMRR?: number
+  /** estimatedMRR minus senior churn in next 12 months (June graduations). */
+  projectedMRRAfterSeniorChurn?: number
+  seniorChurnByMonth?: { month: string; count: number; mrrImpact: number }[]
+  cohortRetention?: { signupMonth: string; started: number; stillActive: number }[]
+  pendingPaymentCount?: number
+  failedPaymentMembers?: { membershipId: string; athleteName: string; payerEmail: string | null }[]
+  paidSignupsMissingMembership?: number
 }
 
 /**
@@ -81,11 +97,11 @@ export async function GET() {
 
   const admin = createAdminClient()
 
-  type MembershipRow = { id: string; athlete_id: string; status: string; started_at: string; ended_at: string | null; created_at: string; next_billing_at?: string; stripe_subscription_id?: string | null }
+  type MembershipRow = { id: string; athlete_id: string; payer_user_id?: string; status: string; started_at: string; ended_at: string | null; created_at: string; next_billing_at?: string; stripe_subscription_id?: string | null }
   let rows: MembershipRow[] | null = null
   const { data: rowsWithBilling, error: err1 } = await admin
     .from("blue_memberships")
-    .select("id, athlete_id, status, started_at, ended_at, created_at, next_billing_at, stripe_subscription_id")
+    .select("id, athlete_id, payer_user_id, status, started_at, ended_at, created_at, next_billing_at, stripe_subscription_id")
     .order("created_at", { ascending: true })
   let billingColumnExists = true
   if (err1) {
@@ -181,20 +197,17 @@ export async function GET() {
   // By class (graduation year) for active + paused (same: only with Stripe sub)
   const athleteIds = [...new Set([...activeRows, ...pausedRows].map((r) => r.athlete_id))]
   let byClass: { graduationYear: number; count: number; isAnticipatedChurn: boolean }[] = []
+  const gradMap: Record<string, number> = {}
   if (athleteIds.length > 0) {
     const { data: athletes } = await admin
       .from("athletes")
       .select("id, graduationyear")
       .in("id", athleteIds)
-    const gradMap = (athletes ?? []).reduce(
-      (acc, a) => {
-        const id = String(a.id)
-        const y = Number((a as { graduationyear?: number }).graduationyear)
-        acc[id] = Number.isFinite(y) ? y : 0
-        return acc
-      },
-      {} as Record<string, number>
-    )
+    for (const a of athletes ?? []) {
+      const id = String(a.id)
+      const y = Number((a as { graduationyear?: number }).graduationyear)
+      gradMap[id] = Number.isFinite(y) ? y : 0
+    }
     const classCounts: Record<number, number> = {}
     for (const r of [...activeRows, ...pausedRows]) {
       const y = gradMap[r.athlete_id] || 0
@@ -400,5 +413,100 @@ export async function GET() {
     dropInRevenueLast12Months,
   }
 
-  return NextResponse.json(data)
+  const pendingPaymentCount = dedupedRows.filter((r) => r.status === "pending_payment" && hasStripeSub(r)).length
+
+  let paidSignupsMissingMembership = 0
+  if (!signupsError && signupPaid > 0) {
+    const { data: paidSignups } = await admin.from("blue_signups").select("id").eq("status", "paid")
+    const paidIds = (paidSignups ?? []).map((s) => (s as { id: string }).id)
+    if (paidIds.length > 0) {
+      const { data: linked } = await admin.from("blue_memberships").select("signup_id").in("signup_id", paidIds)
+      const linkedSet = new Set((linked ?? []).map((r) => (r as { signup_id?: string }).signup_id).filter(Boolean))
+      paidSignupsMissingMembership = paidIds.filter((id) => !linkedSet.has(id)).length
+    }
+  }
+
+  const stripeSubIds = dedupedWithStripe
+    .filter((r) => r.status === "active" || r.status === "paused")
+    .map((r) => r.stripe_subscription_id as string)
+    .filter(Boolean)
+
+  let stripeMRR: number | undefined
+  let seniorChurnByMonth: BlueReportsData["seniorChurnByMonth"]
+  let projectedMRRAfterSeniorChurn: number | undefined
+  let cohortRetention: BlueReportsData["cohortRetention"]
+  const failedPaymentMembers: NonNullable<BlueReportsData["failedPaymentMembers"]> = []
+
+  const stripeSecret = readStripeSecretKey()
+  if (stripeSecret && stripeSubIds.length > 0) {
+    try {
+      const stripe = getStripe()
+      const centsMap = await fetchStripeMrrCentsBySubscriptionId(stripe, stripeSubIds)
+      let totalCents = 0
+      const seniorMembers: Array<{ athleteId: string; gradYear: number; monthlyCents: number }> = []
+
+      for (const r of dedupedWithStripe) {
+        if (r.status !== "active" && r.status !== "paused") continue
+        const subId = r.stripe_subscription_id as string
+        const cents = centsMap.get(subId) ?? BLUE_PRICE * 100
+        totalCents += cents
+        const gy = gradMap[r.athlete_id] || 0
+        if (gy >= currentYear) {
+          seniorMembers.push({ athleteId: r.athlete_id, gradYear: gy, monthlyCents: cents })
+        }
+      }
+      stripeMRR = dollarsFromCents(totalCents)
+      seniorChurnByMonth = buildSeniorChurnByMonth(seniorMembers)
+      const next12SeniorLoss = (seniorChurnByMonth ?? [])
+        .filter((b) => b.month >= monthKey(now))
+        .slice(0, 12)
+        .reduce((s, b) => s + b.mrrImpact, 0)
+      projectedMRRAfterSeniorChurn = Math.max(0, Math.round((stripeMRR - next12SeniorLoss) * 100) / 100)
+      cohortRetention = buildCohortRetention(dedupedWithStripe)
+    } catch (e) {
+      console.warn("[blue/reports] Stripe MRR:", e)
+    }
+  }
+
+  if (pendingPaymentCount > 0) {
+    const pendingRows = dedupedRows.filter((r) => r.status === "pending_payment")
+    const pAthleteIds = pendingRows.map((r) => r.athlete_id)
+    const { data: pAthletes } =
+      pAthleteIds.length > 0 ? await admin.from("athletes").select("id, name").in("id", pAthleteIds) : { data: [] }
+    const pNameMap = (pAthletes ?? []).reduce(
+      (acc, a) => {
+        acc[String((a as { id: string }).id)] = String((a as { name?: string }).name ?? "Member")
+        return acc
+      },
+      {} as Record<string, string>,
+    )
+    const payerIds = [...new Set(pendingRows.map((r) => r.payer_user_id).filter(Boolean))]
+    const { data: payers } =
+      payerIds.length > 0 ? await admin.from("user_profiles").select("user_id, email").in("user_id", payerIds) : { data: [] }
+    const payerEmailMap = (payers ?? []).reduce(
+      (acc, p) => {
+        acc[String((p as { user_id: string }).user_id)] = (p as { email?: string }).email ?? null
+        return acc
+      },
+      {} as Record<string, string | null>,
+    )
+    for (const r of pendingRows.slice(0, 20)) {
+      failedPaymentMembers.push({
+        membershipId: r.id,
+        athleteName: pNameMap[r.athlete_id] ?? "Member",
+        payerEmail: payerEmailMap[r.payer_user_id ?? ""] ?? null,
+      })
+    }
+  }
+
+  return NextResponse.json({
+    ...data,
+    pendingPaymentCount,
+    paidSignupsMissingMembership,
+    ...(stripeMRR !== undefined && { stripeMRR }),
+    ...(projectedMRRAfterSeniorChurn !== undefined && { projectedMRRAfterSeniorChurn }),
+    ...(seniorChurnByMonth && { seniorChurnByMonth }),
+    ...(cohortRetention && { cohortRetention }),
+    ...(failedPaymentMembers.length > 0 && { failedPaymentMembers }),
+  })
 }

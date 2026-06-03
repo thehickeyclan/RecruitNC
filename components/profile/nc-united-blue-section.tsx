@@ -228,7 +228,13 @@ export function NcUnitedBlueSection({
   if (memberships.length === 0) return null
 
   return (
-    <div className="space-y-4">
+    <div id="nc-united-blue" className="space-y-4 scroll-mt-24">
+      <p className="text-xs text-gray-600 bg-[#03154C]/5 border border-[#03154C]/10 rounded-lg px-3 py-2">
+        Manage billing here: pause, cancel, update your card, and view invoices (Stripe portal).{" "}
+        <a href="/blue/billing" className="text-[#03154C] font-medium underline hover:no-underline">
+          Billing help
+        </a>
+      </p>
       {billingPortalError && (
         <Alert variant="destructive">
           <AlertDescription>{billingPortalError}</AlertDescription>

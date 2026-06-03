@@ -1,16 +1,10 @@
 import { NextResponse } from "next/server"
-import Stripe from "stripe"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { reconcileMisclassifiedOrdersBatch } from "@/lib/orders/reconcile-shared-stripe-order"
+import { getStripe, readStripeSecretKey, stripeKeyMissingPayload } from "@/lib/stripe"
 
 export const dynamic = "force-dynamic"
-
-function getStripe(): Stripe {
-  const key = process.env.STRIPE_SECRET_KEY?.trim()
-  if (!key) throw new Error("STRIPE_SECRET_KEY not set")
-  return new Stripe(key)
-}
 
 async function requireAdmin() {
   const supabase = await createClient()
@@ -27,13 +21,14 @@ async function requireAdmin() {
 /**
  * POST /api/admin/orders/reclassify-from-stripe
  * Body: { orderId?: string, limit?: number }
- *
- * Re-reads Stripe checkout sessions and fixes ghost/misclassified orders in bulk.
- * Also links orphan national-team registrations (paid but no order_id) by email + amount.
  */
 export async function POST(request: Request) {
   const auth = await requireAdmin()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
+
+  if (!readStripeSecretKey()) {
+    return NextResponse.json(stripeKeyMissingPayload(), { status: 503 })
+  }
 
   let orderId: string | undefined
   let limit = 500

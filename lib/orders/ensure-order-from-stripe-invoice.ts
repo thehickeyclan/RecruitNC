@@ -1,11 +1,18 @@
 /**
  * Create orders rows for paid Stripe subscription invoices (Blue renewals, etc.).
- * Dedupes by stripe_payment_intent_id.
+ * Dedupes by stripe_invoice_id and stripe_payment_intent_id.
  */
 import type Stripe from "stripe"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { syntheticOrderItemSku } from "@/lib/order-item-sku"
 import { orderShippingFields } from "@/lib/order-shipping"
+
+const RENEWAL_BILLING_REASONS = new Set([
+  "subscription_cycle",
+  "subscription_update",
+  "subscription_threshold",
+  "manual",
+])
 
 function generateOrderNumber(): string {
   return "NC-" + Date.now().toString(36).toUpperCase().slice(-6) + "-" + Math.random().toString(36).slice(2, 6).toUpperCase()
@@ -38,6 +45,19 @@ function paymentIntentIdFromInvoice(invoice: Stripe.Invoice): string | null {
   const pi = invoice.payment_intent
   if (typeof pi === "string") return pi
   return pi?.id ?? null
+}
+
+function invoiceChargedAtIso(invoice: Stripe.Invoice): string {
+  const paidAt = invoice.status_transitions?.paid_at
+  if (paidAt) return new Date(paidAt * 1000).toISOString()
+  if (invoice.created) return new Date(invoice.created * 1000).toISOString()
+  return new Date().toISOString()
+}
+
+function billingPeriodLabel(invoice: Stripe.Invoice): string | null {
+  const periodStart = invoice.lines?.data?.[0]?.period?.start
+  if (!periodStart) return null
+  return new Date(periodStart * 1000).toLocaleDateString("en-US", { month: "short", year: "numeric" })
 }
 
 async function resolveCustomerFromInvoice(
@@ -93,6 +113,77 @@ async function isBlueSubscription(
   return false
 }
 
+function parseShippingMethodJson(raw: unknown): Record<string, unknown> {
+  if (!raw) return {}
+  if (typeof raw === "object" && !Array.isArray(raw)) return raw as Record<string, unknown>
+  if (typeof raw === "string") {
+    const trimmed = raw.trim()
+    if (!trimmed) return {}
+    try {
+      const parsed = JSON.parse(trimmed) as unknown
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>
+      }
+    } catch {
+      // legacy plain-text shipping labels
+    }
+  }
+  return {}
+}
+
+/** shipping_method is text in DB — .contains() only works on jsonb. */
+async function findOrderIdByStripeInvoiceId(
+  admin: SupabaseClient,
+  invoiceId: string,
+): Promise<string | null> {
+  const { data } = await admin
+    .from("orders")
+    .select("id")
+    .ilike("shipping_method", `%${invoiceId}%`)
+    .limit(1)
+    .maybeSingle()
+  return data?.id ?? null
+}
+
+async function subscriptionAlreadyHasOrder(
+  admin: SupabaseClient,
+  subscriptionId: string,
+): Promise<boolean> {
+  const { data } = await admin
+    .from("orders")
+    .select("id")
+    .ilike("shipping_method", `%${subscriptionId}%`)
+    .limit(1)
+    .maybeSingle()
+  return Boolean(data?.id)
+}
+
+async function patchInvoiceOrderMetadataIfMissing(
+  admin: SupabaseClient,
+  orderId: string,
+  invoice: Stripe.Invoice,
+): Promise<void> {
+  const { data: row } = await admin.from("orders").select("shipping_method").eq("id", orderId).maybeSingle()
+  const sm = parseShippingMethodJson(row?.shipping_method)
+  if (sm.stripe_charged_at) return
+
+  const periodLabel = billingPeriodLabel(invoice)
+  const updated = {
+    ...sm,
+    stripe_charged_at: invoiceChargedAtIso(invoice),
+    ...(periodLabel && !sm.billing_period_label ? { billing_period_label: periodLabel } : {}),
+  }
+
+  await admin.from("orders").update({ shipping_method: updated }).eq("id", orderId)
+
+  if (periodLabel) {
+    await admin
+      .from("order_items")
+      .update({ variant: { color: "N/A", size: periodLabel } })
+      .eq("order_id", orderId)
+  }
+}
+
 function lineItemFromInvoice(invoice: Stripe.Invoice, isBlue: boolean): { name: string; amountDollars: number } {
   if (isBlue) {
     return { name: "NC United Blue – Monthly", amountDollars: (invoice.amount_paid ?? 0) / 100 }
@@ -100,6 +191,11 @@ function lineItemFromInvoice(invoice: Stripe.Invoice, isBlue: boolean): { name: 
   const firstLine = invoice.lines?.data?.[0]
   const description = firstLine?.description?.trim() || invoice.description?.trim() || "Stripe subscription"
   return { name: description, amountDollars: (invoice.amount_paid ?? 0) / 100 }
+}
+
+export type EnsureOrderFromInvoiceOptions = {
+  /** Admin bulk sync: skip signup invoices; webhook keeps creating all paid invoices with dedupe. */
+  renewalsOnly?: boolean
 }
 
 export type EnsureOrderFromInvoiceResult = {
@@ -114,6 +210,7 @@ export async function ensureOrderFromStripeInvoice(
   admin: SupabaseClient,
   stripe: Stripe,
   invoice: Stripe.Invoice,
+  options?: EnsureOrderFromInvoiceOptions,
 ): Promise<EnsureOrderFromInvoiceResult> {
   const subscriptionId = subscriptionIdFromInvoice(invoice)
   if (!subscriptionId) {
@@ -129,6 +226,22 @@ export async function ensureOrderFromStripeInvoice(
     return { created: false, skipped: true, reason: "zero_amount" }
   }
 
+  const existingByInvoice = await findOrderIdByStripeInvoiceId(admin, invoice.id)
+  if (existingByInvoice) {
+    await patchInvoiceOrderMetadataIfMissing(admin, existingByInvoice, invoice)
+    return { created: false, skipped: true, reason: "invoice_already_exists", orderId: existingByInvoice }
+  }
+
+  const billingReason = invoice.billing_reason ?? "subscription"
+
+  if (options?.renewalsOnly && billingReason === "subscription_create") {
+    return { created: false, skipped: true, reason: "initial_invoice_skipped" }
+  }
+
+  if (options?.renewalsOnly && !RENEWAL_BILLING_REASONS.has(billingReason)) {
+    return { created: false, skipped: true, reason: "billing_reason_skipped" }
+  }
+
   const paymentIntentId = paymentIntentIdFromInvoice(invoice)
   if (paymentIntentId) {
     const { data: existing } = await admin
@@ -137,14 +250,19 @@ export async function ensureOrderFromStripeInvoice(
       .eq("stripe_payment_intent_id", paymentIntentId)
       .maybeSingle()
     if (existing?.id) {
+      await patchInvoiceOrderMetadataIfMissing(admin, existing.id, invoice)
       return { created: false, skipped: true, reason: "already_exists", orderId: existing.id }
     }
+  }
+
+  if (billingReason === "subscription_create" && (await subscriptionAlreadyHasOrder(admin, subscriptionId))) {
+    return { created: false, skipped: true, reason: "subscription_already_has_order" }
   }
 
   const isBlue = await isBlueSubscription(admin, stripe, subscriptionId)
   const { email, name } = await resolveCustomerFromInvoice(stripe, invoice)
   const { name: productName, amountDollars } = lineItemFromInvoice(invoice, isBlue)
-  const billingReason = invoice.billing_reason ?? "subscription"
+  const periodLabel = billingPeriodLabel(invoice)
 
   const orderNumber = generateOrderNumber()
   const orderId = crypto.randomUUID()
@@ -154,6 +272,8 @@ export async function ensureOrderFromStripeInvoice(
     stripe_invoice_id: invoice.id,
     stripe_subscription_id: subscriptionId,
     billing_reason: billingReason,
+    stripe_charged_at: invoiceChargedAtIso(invoice),
+    ...(periodLabel ? { billing_period_label: periodLabel } : {}),
     ...(isBlue ? { admin_category: "Blue Sub" } : {}),
   }
 
@@ -195,7 +315,9 @@ export async function ensureOrderFromStripeInvoice(
       label: productName,
       dedupeKey: `invoice:${dedupeKey}`,
     }),
-    variant: { color: "N/A", size: "N/A" },
+    variant: periodLabel
+      ? { color: "N/A", size: periodLabel }
+      : { color: "N/A", size: "N/A" },
     quantity: 1,
     price: amountDollars,
     subtotal: amountDollars,
@@ -211,12 +333,19 @@ export async function ensureOrderFromStripeInvoice(
   return { created: true, skipped: false, orderId }
 }
 
+export type SyncPaidInvoicesOptions = {
+  sinceUnix: number
+  /** Admin bulk sync: only renewal invoices, not signup duplicates */
+  renewalsOnly?: boolean
+}
+
 /** Backfill paid subscription invoices from Stripe (admin sync). */
 export async function syncPaidSubscriptionInvoicesFromStripe(
   admin: SupabaseClient,
   stripe: Stripe,
-  sinceUnix: number,
+  options: SyncPaidInvoicesOptions,
 ): Promise<{ created: number; skipped: number; errors: string[] }> {
+  const { sinceUnix, renewalsOnly = false } = options
   let created = 0
   let skipped = 0
   const errors: string[] = []
@@ -234,7 +363,7 @@ export async function syncPaidSubscriptionInvoicesFromStripe(
 
     for (const invoice of list.data) {
       try {
-        const result = await ensureOrderFromStripeInvoice(admin, stripe, invoice)
+        const result = await ensureOrderFromStripeInvoice(admin, stripe, invoice, { renewalsOnly })
         if (result.created) created++
         else if (result.skipped) skipped++
         else if (result.reason) errors.push(`${invoice.id}: ${result.reason}`)
@@ -249,4 +378,18 @@ export async function syncPaidSubscriptionInvoicesFromStripe(
   }
 
   return { created, skipped, errors }
+}
+
+/** Prefer Stripe charge date for admin lists (invoice-synced rows used to show sync time). */
+export function orderDisplayDateFromRow(order: {
+  created_at?: string | null
+  shipping_method?: unknown
+}): Date {
+  const sm = parseShippingMethodJson(order.shipping_method)
+  const charged = sm.stripe_charged_at
+  if (typeof charged === "string" && charged.trim()) {
+    const d = new Date(charged)
+    if (!Number.isNaN(d.getTime())) return d
+  }
+  return order.created_at ? new Date(order.created_at) : new Date()
 }
