@@ -86,6 +86,8 @@ export type BlueReportsData = {
   paidSignupsMissingMembership?: number
   /** WrestlingIQ external registry (billing stays in WIQ). */
   wiqBillable?: number
+  wiqActive?: number
+  wiqPaused?: number
   wiqEstimatedMrr?: number
   /** WIQ MRR at $50/mo standard (ignores $51 fee line; keeps promos/comps). */
   wiqStandardMrr?: number
@@ -512,6 +514,8 @@ export async function GET() {
   }
 
   let wiqBillable: number | undefined
+  let wiqActive: number | undefined
+  let wiqPaused: number | undefined
   let wiqEstimatedMrr: number | undefined
   let wiqStandardMrr: number | undefined
   let wiqMissingFromReport: number | undefined
@@ -522,6 +526,8 @@ export async function GET() {
   if (!wiqErr && wiqRows) {
     const billable = wiqRows.filter((r) => r.status === "active" || r.status === "past_due" || r.status === "grace")
     wiqBillable = billable.length
+    wiqActive = wiqRows.filter((r) => r.status === "active").length
+    wiqPaused = wiqRows.filter((r) => r.status === "paused").length
     wiqEstimatedMrr = Math.round(billable.reduce((s, r) => s + (r.amount_cents ?? 0), 0)) / 100
     wiqStandardMrr = Math.round(sumWiqStandardMrrCents(billable)) / 100
     wiqMissingFromReport = wiqRows.filter((r) => r.missing_from_last_import).length
@@ -548,6 +554,8 @@ export async function GET() {
     paidSignupsMissingMembership,
     ...(wiqBillable !== undefined && {
       wiqBillable,
+      wiqActive,
+      wiqPaused,
       wiqEstimatedMrr,
       wiqStandardMrr,
       wiqMissingFromReport,
