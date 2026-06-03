@@ -1,36 +1,33 @@
 "use client"
 
 import { usePathname } from "next/navigation"
-import { ArrowLeft, CreditCard, ClipboardList } from "lucide-react"
+import { ArrowLeft, Users, ClipboardList } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const LINKS = [
-  { href: "/admin/blue/subscriptions", label: "Subscriptions & billing", icon: CreditCard },
-  { href: "/admin/blue/subscriptions/registrations", label: "Registration pipeline", icon: ClipboardList },
+  { href: "/admin/blue/subscriptions", label: "Members", short: "Members", icon: Users },
+  { href: "/admin/blue/subscriptions/registrations", label: "All signups", short: "Signups", icon: ClipboardList },
 ] as const
 
 export function BlueSubscriptionsPortalNav() {
   const pathname = usePathname()
   return (
-    <header className="sticky top-0 z-40 border-b border-[#03154C]/10 bg-white/90 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/85">
-      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-8">
-        <div className="flex min-w-0 flex-1 items-start gap-3">
+    <header className="sticky top-0 z-40 border-b border-white/10 bg-[#03154C]/95 backdrop-blur-md">
+      <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-3 md:flex-row md:items-center md:justify-between md:px-6">
+        <div className="flex items-center gap-3 min-w-0">
           <a
             href="/admin/blue"
-            className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:border-[#03154C]/25 hover:bg-slate-50"
-            aria-label="Back to Blue program"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/15 text-white/80 transition hover:bg-white/10 hover:text-white"
+            aria-label="Back to Blue command center"
           >
             <ArrowLeft className="h-4 w-4" />
           </a>
-          <div className="min-w-0">
-            <h1 className="text-lg font-bold tracking-tight text-[#03154C] md:text-xl">Blue subscription management</h1>
-            <p className="text-sm text-slate-600">Billing status, renewals, and registration intake</p>
-          </div>
+          <h1 className="text-base font-semibold tracking-tight text-white md:text-lg">Blue subscriptions</h1>
         </div>
-        <nav className="flex w-full gap-1 rounded-xl border border-slate-200/80 bg-slate-100/90 p-1 shadow-inner md:w-auto md:min-w-[420px]">
-          {LINKS.map(({ href, label, icon: Icon }) => {
-            const isRootSubscriptions = href === "/admin/blue/subscriptions"
-            const isActive = isRootSubscriptions
+        <nav className="flex gap-1 rounded-lg bg-black/20 p-1 md:min-w-[280px]">
+          {LINKS.map(({ href, label, short, icon: Icon }) => {
+            const isMembers = href === "/admin/blue/subscriptions"
+            const isActive = isMembers
               ? pathname === "/admin/blue/subscriptions"
               : pathname === href || pathname?.startsWith(`${href}/`)
             return (
@@ -38,15 +35,13 @@ export function BlueSubscriptionsPortalNav() {
                 key={href}
                 href={href}
                 className={cn(
-                  "flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors",
-                  isActive
-                    ? "bg-white text-[#03154C] shadow-sm ring-1 ring-[#03154C]/10"
-                    : "text-slate-600 hover:bg-white/70 hover:text-[#03154C]"
+                  "flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  isActive ? "bg-[#D3B574] text-[#03154C]" : "text-white/70 hover:bg-white/10 hover:text-white",
                 )}
               >
-                <Icon className="h-4 w-4 shrink-0 opacity-80" />
+                <Icon className="h-4 w-4 shrink-0" />
                 <span className="hidden sm:inline">{label}</span>
-                <span className="sm:hidden">{isRootSubscriptions ? "Billing" : "Forms"}</span>
+                <span className="sm:hidden">{short}</span>
               </a>
             )
           })}

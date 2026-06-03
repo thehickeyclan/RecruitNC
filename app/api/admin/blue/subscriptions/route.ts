@@ -40,6 +40,8 @@ export type BlueSubscriptionRow = {
   source: "live" | "cached" | "unavailable"
   notes: string | null
   signup_id: string | null
+  paid_invoice_count: number
+  lifetime_paid_display: string | null
 }
 
 export type BlueSignupRow = {
@@ -200,6 +202,8 @@ export async function GET() {
       source: (row.next_billing_at ?? null) ? "cached" : "unavailable",
       notes: ((row as Record<string, unknown>).notes as string | null | undefined) ?? null,
       signup_id: (row as Record<string, unknown>).signup_id as string | null ?? null,
+      paid_invoice_count: 0,
+      lifetime_paid_display: null,
     }
   })
 
@@ -244,6 +248,8 @@ export async function GET() {
         cancel_at_period_end: d.cancelAtPeriodEnd,
         card_display,
         plan_name: d.planName ?? null,
+        paid_invoice_count: d.paidInvoiceCount,
+        lifetime_paid_display: d.lifetimePaidFormatted,
         source: "live" as const,
       }
     })

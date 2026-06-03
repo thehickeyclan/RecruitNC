@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { getBlueMembershipStripeDetails } from "@/lib/blue-membership-stripe-details"
+import { getBlueMembershipStripeDetails, type BlueStripeInvoiceRow } from "@/lib/blue-membership-stripe-details"
 
 export const dynamic = "force-dynamic"
 
@@ -26,7 +26,12 @@ type BlueMembershipForParent = {
   stripeDetailsError: string | null
   planName: string | null
   source: "live" | "cached" | "unavailable"
+  paidInvoiceCount: number
+  lifetimePaidFormatted: string | null
+  recentInvoices: BlueStripeInvoiceRow[]
 }
+
+export type { BlueStripeInvoiceRow } from "@/lib/blue-membership-stripe-details"
 
 /** GET: List Blue memberships where the current user is the payer — with billing details when Stripe is available. */
 export async function GET() {
@@ -92,6 +97,9 @@ export async function GET() {
     let stripeDetailsError: string | null = null
     let planName: string | null = null
     let source: "live" | "cached" | "unavailable" = dbNext ? "cached" : "unavailable"
+    let paidInvoiceCount = 0
+    let lifetimePaidFormatted: string | null = null
+    let recentInvoices: BlueStripeInvoiceRow[] = []
 
     if (stripeSubId && stripeKey) {
       const enriched = await getBlueMembershipStripeDetails(stripeSubId)
@@ -104,6 +112,9 @@ export async function GET() {
         cardLast4 = d.cardLast4
         if (d.nextBillingAt) nextBillingAt = d.nextBillingAt
         planName = d.planName ?? null
+        paidInvoiceCount = d.paidInvoiceCount
+        lifetimePaidFormatted = d.lifetimePaidFormatted
+        recentInvoices = d.recentInvoices
         source = "live"
       } else {
         stripeDetailsError = enriched.error
@@ -129,6 +140,9 @@ export async function GET() {
       stripeDetailsError,
       planName,
       source,
+      paidInvoiceCount,
+      lifetimePaidFormatted,
+      recentInvoices,
     })
   }
 

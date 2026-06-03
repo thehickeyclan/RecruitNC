@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useAuth } from "@/contexts/auth-context"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -19,7 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Loader2, ExternalLink, Pause, Ban, Trash2, Play, RefreshCw, Users, Wallet } from "lucide-react"
+import { Loader2, ExternalLink, Pause, Ban, Trash2, Play, RefreshCw } from "lucide-react"
 import type { BlueSubscriptionRow } from "@/app/api/admin/blue/subscriptions/route"
 import { BlueAdminAuthBanner, isBlueAuthError } from "@/components/blue-admin-auth-banner"
 
@@ -56,10 +55,6 @@ export default function AdminBlueSubscriptionsBillingPage() {
   const [bannerError, setBannerError] = useState<string | null>(null)
   const [retryLoading, setRetryLoading] = useState<string | null>(null)
   const [retryResult, setRetryResult] = useState<Record<string, { ok: boolean; message: string }>>({})
-  const [notesOpen, setNotesOpen] = useState<Record<string, boolean>>({})
-  const [notesDraft, setNotesDraft] = useState<Record<string, string>>({})
-  const [notesSaving, setNotesSaving] = useState<string | null>(null)
-  const [notesError, setNotesError] = useState<Record<string, string>>({})
   const { isLoading: authLoading } = useAuth()
   const retryCountRef = useRef(0)
 
@@ -185,39 +180,6 @@ export default function AdminBlueSubscriptionsBillingPage() {
     }
   }
 
-  const saveNotes = async (sub: BlueSubscriptionRow) => {
-    const draft = notesDraft[sub.id] ?? sub.notes ?? ""
-    setNotesSaving(sub.id)
-    setNotesError((prev) => ({ ...prev, [sub.id]: "" }))
-    try {
-      const r = await fetch(`/api/admin/blue/subscriptions/${encodeURIComponent(sub.id)}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ notes: draft }),
-      })
-      const data = await r.json().catch(() => ({}))
-      if (!r.ok) {
-        setNotesError((prev) => ({
-          ...prev,
-          [sub.id]: data.error ?? "Failed to save",
-        }))
-      } else {
-        setNotesOpen((prev) => ({ ...prev, [sub.id]: false }))
-        setSubscriptions((prev) =>
-          prev.map((s) => (s.id === sub.id ? { ...s, notes: data.notes ?? null } : s))
-        )
-      }
-    } catch {
-      setNotesError((prev) => ({
-        ...prev,
-        [sub.id]: "Something went wrong.",
-      }))
-    } finally {
-      setNotesSaving(null)
-    }
-  }
-
   useEffect(() => {
     if (authLoading) return
     let cancelled = false
@@ -300,51 +262,60 @@ export default function AdminBlueSubscriptionsBillingPage() {
           : subscriptions.filter((s) => s.status === "cancelled" || s.status === "alumni")
 
   const statusBadge = (s: BlueSubscriptionRow) => {
-    if (s.status === "pending_payment") return <Badge className="bg-amber-100 text-amber-900 hover:bg-amber-100">Pending payment</Badge>
-    if (s.status === "active") return <Badge className="bg-emerald-100 text-emerald-900 hover:bg-emerald-100">Active</Badge>
-    if (s.status === "paused") return <Badge className="bg-slate-200 text-slate-900 hover:bg-slate-200">Paused</Badge>
+    if (s.status === "pending_payment")
+      return <Badge className="bg-amber-500/25 text-amber-200 hover:bg-amber-500/25 border-0">Past due</Badge>
+    if (s.status === "active")
+      return <Badge className="bg-emerald-500/25 text-emerald-300 hover:bg-emerald-500/25 border-0">Active</Badge>
+    if (s.status === "paused")
+      return <Badge className="bg-white/15 text-white/80 hover:bg-white/15 border-0">Paused</Badge>
     if (s.status === "cancelled" || s.status === "alumni")
-      return <Badge variant="outline">{s.status === "alumni" ? "Alumni" : "Cancelled"}</Badge>
+      return <Badge variant="outline" className="border-white/25 text-white/60">{s.status === "alumni" ? "Alumni" : "Churned"}</Badge>
     return <Badge variant="secondary">{s.status}</Badge>
   }
 
   return (
-    <div className="space-y-8 pb-12">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="text-lg font-semibold text-[#03154C]">Subscriptions & billing</h2>
-          <p className="text-sm text-slate-600">
-            Live Stripe data when available. Use Sync if a paid member is missing from the list.
-          </p>
+    <div className="space-y-5 pb-12">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <span className="rounded-full bg-emerald-500/20 px-3 py-1 font-medium text-emerald-300">
+            Active {stats.active}
+          </span>
+          <span className="rounded-full bg-white/10 px-3 py-1 text-white/70">Paused {stats.paused}</span>
+          <span className="rounded-full bg-white/10 px-3 py-1 text-white/70">Churned {stats.cancelled}</span>
+          {stats.pending_payment > 0 && (
+            <span className="rounded-full bg-amber-500/25 px-3 py-1 font-medium text-amber-200">
+              Past due {stats.pending_payment}
+            </span>
+          )}
         </div>
         <Button
           variant="outline"
           size="sm"
           disabled={syncFromStripeLoading}
           onClick={runSyncFromStripe}
-          className="shrink-0 gap-2 border-[#03154C]/20"
+          className="shrink-0 gap-2 border-white/20 bg-transparent text-white hover:bg-white/10"
         >
           {syncFromStripeLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-          {syncFromStripeLoading ? "Syncing…" : "Sync from Stripe"}
+          Sync Stripe
         </Button>
       </div>
 
       {syncFromStripeResult && (
-        <div className="rounded-lg border border-[#03154C]/15 bg-[#03154C]/5 px-4 py-3 text-sm text-[#03154C]">{syncFromStripeResult}</div>
+        <div className="rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white/80">{syncFromStripeResult}</div>
       )}
 
       {bannerError && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{bannerError}</div>
+        <div className="rounded-lg border border-red-500/30 bg-red-950/40 px-4 py-3 text-sm text-red-200">{bannerError}</div>
       )}
 
       {loadError && isBlueAuthError(loadError) && <BlueAdminAuthBanner returnTo="/admin/blue/subscriptions" />}
       {loadError && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
-          <p className="font-medium text-red-800">Could not load data</p>
-          <p className="mt-1 text-sm text-red-700">{loadError}</p>
+        <div className="rounded-lg border border-red-500/30 bg-red-950/40 px-4 py-3">
+          <p className="font-medium text-red-200">Could not load data</p>
+          <p className="mt-1 text-sm text-red-300/90">{loadError}</p>
           {(loadError === "Not signed in." || loadError?.includes("401") || loadError === "Admin access required.") && (
             <p className="mt-3">
-              <a href="/auth/signin?returnTo=/admin/blue/subscriptions" className="font-medium text-[#03154C] underline">
+              <a href="/auth/signin?returnTo=/admin/blue/subscriptions" className="font-medium text-[#D3B574] underline">
                 Sign in again
               </a>
             </p>
@@ -353,282 +324,124 @@ export default function AdminBlueSubscriptionsBillingPage() {
       )}
 
       {membershipsError && !loading && (
-        <Card className="border-amber-200 bg-amber-50">
-          <CardHeader>
-            <CardTitle className="text-amber-800">Setup required</CardTitle>
-            <CardDescription className="text-amber-800">{membershipsError}</CardDescription>
-          </CardHeader>
-        </Card>
+        <div className="rounded-lg border border-amber-500/30 bg-amber-950/30 px-4 py-3 text-sm text-amber-100">{membershipsError}</div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-[#03154C]/10 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Active</CardTitle>
-            <Users className="h-4 w-4 text-[#03154C]/70" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-[#03154C]">{stats.active}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-[#03154C]/10 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Paused</CardTitle>
-            <Pause className="h-4 w-4 text-amber-600/80" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-amber-700">{stats.paused}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-[#03154C]/10 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Cancelled / alumni</CardTitle>
-            <Wallet className="h-4 w-4 text-slate-400" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-slate-700">{stats.cancelled}</p>
-          </CardContent>
-        </Card>
-        {stats.pending_payment > 0 && (
-          <Card className="border-amber-200 bg-amber-50/50 shadow-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-amber-900">Pending payment</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold text-amber-800">{stats.pending_payment}</p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      <Card className="border-[#03154C]/10 shadow-md">
-        <CardHeader>
-          <CardTitle className="text-[#03154C]">Memberships</CardTitle>
-          <CardDescription>Per-athlete subscription (deduped). Last / next payment from Stripe when connected.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-4 flex flex-wrap gap-2 border-b border-slate-100 pb-4">
-            <Button
-              variant={tab === "good_standing" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setTab("good_standing")}
-              className={tab === "good_standing" ? "bg-[#03154C] hover:bg-[#03154C]/90" : ""}
+      <div className="overflow-hidden rounded-xl border border-white/10 bg-[#03154C]/40">
+        <div className="flex flex-wrap gap-2 border-b border-white/10 px-4 py-3">
+          {(
+            [
+              ["good_standing", "Active"],
+              ["pending", "Past due"],
+              ["paused", "Paused"],
+              ["canceled", "Churned"],
+            ] as const
+          ).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setTab(key)}
+              className={[
+                "rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
+                tab === key ? "bg-[#D3B574] text-[#03154C]" : "bg-white/10 text-white/75 hover:bg-white/15",
+              ].join(" ")}
             >
-              Good standing
-            </Button>
-            <Button
-              variant={tab === "pending" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setTab("pending")}
-              className={tab === "pending" ? "bg-amber-700 hover:bg-amber-800" : ""}
-            >
-              Pending payment
-              {stats.pending_payment > 0 && (
-                <span className="ml-1.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[11px] font-semibold text-amber-900">
-                  {stats.pending_payment}
-                </span>
+              {label}
+              {key === "pending" && stats.pending_payment > 0 && (
+                <span className="ml-1 opacity-80">({stats.pending_payment})</span>
               )}
-            </Button>
-            <Button variant={tab === "paused" ? "default" : "ghost"} size="sm" onClick={() => setTab("paused")} className={tab === "paused" ? "bg-[#03154C] hover:bg-[#03154C]/90" : ""}>
-              Paused
-            </Button>
-            <Button
-              variant={tab === "canceled" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setTab("canceled")}
-              className={tab === "canceled" ? "bg-[#03154C] hover:bg-[#03154C]/90" : ""}
-            >
-              Cancelled
-            </Button>
-          </div>
+            </button>
+          ))}
+        </div>
 
+        <div className="p-0">
           {loading ? (
-            <div className="flex flex-col items-center justify-center gap-3 py-16">
-              <Loader2 className="h-10 w-10 animate-spin text-[#03154C]" />
-              <p className="text-sm text-slate-600">Loading subscriptions…</p>
+            <div className="flex flex-col items-center justify-center gap-3 py-16 text-white/60">
+              <Loader2 className="h-10 w-10 animate-spin text-[#D3B574]" />
+              <p className="text-sm">Loading members…</p>
             </div>
           ) : filtered.length === 0 ? (
-            <p className="py-12 text-center text-slate-500">
-              {tab === "good_standing" && "No active subscriptions."}
-              {tab === "pending" && "No subscriptions pending payment."}
-              {tab === "paused" && "No paused subscriptions."}
-              {tab === "canceled" && "No cancelled subscriptions."}
+            <p className="py-12 text-center text-sm text-white/50">
+              {tab === "good_standing" && "No active members."}
+              {tab === "pending" && "No past-due subscriptions."}
+              {tab === "paused" && "No paused members."}
+              {tab === "canceled" && "No churned members."}
             </p>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-slate-200">
+            <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-slate-50/90 hover:bg-slate-50/90">
-                    <TableHead className="font-semibold text-slate-700">Wrestler</TableHead>
-                    <TableHead className="font-semibold text-slate-700">Billed to</TableHead>
-                    <TableHead className="font-semibold text-slate-700">Amount</TableHead>
-                    <TableHead className="font-semibold text-slate-700">Last payment</TableHead>
-                    <TableHead className="font-semibold text-slate-700">Next payment</TableHead>
-                    <TableHead className="font-semibold text-slate-700">Card</TableHead>
-                    <TableHead className="font-semibold text-slate-700">Status</TableHead>
-                    <TableHead className="text-right font-semibold text-slate-700">Actions</TableHead>
+                  <TableRow className="border-white/10 hover:bg-transparent">
+                    <TableHead className="font-medium text-white/50">Wrestler</TableHead>
+                    <TableHead className="font-medium text-white/50">Parent</TableHead>
+                    <TableHead className="font-medium text-white/50">Last payment</TableHead>
+                    <TableHead className="font-medium text-white/50">Next bill</TableHead>
+                    <TableHead className="font-medium text-white/50 hidden lg:table-cell">Paid</TableHead>
+                    <TableHead className="font-medium text-white/50">Status</TableHead>
+                    <TableHead className="text-right font-medium text-white/50">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filtered.map((sub) => (
-                    <TableRow key={sub.id} className="hover:bg-slate-50/40">
-                      <TableCell className="align-top font-medium text-[#03154C]">
+                    <TableRow key={sub.id} className="border-white/10 hover:bg-white/5">
+                      <TableCell className="align-top">
                         {sub.athlete_id ? (
                           <a
                             href={`/admin/blue/members/${encodeURIComponent(sub.athlete_id)}`}
-                            className="hover:underline"
+                            className="font-medium text-white hover:text-[#D3B574] hover:underline"
                           >
                             {sub.athlete_name}
                           </a>
                         ) : (
-                          sub.athlete_name
+                          <span className="font-medium text-white">{sub.athlete_name}</span>
                         )}
+                        <span className="mt-0.5 block text-xs text-white/45">{sub.amount_display}</span>
                         {sub.cancel_at_period_end && sub.status === "active" && (
-                          <span className="mt-1 block text-xs font-normal text-amber-800">Cancels at period end</span>
-                        )}
-                        {sub.stripe_enrichment_error && (
-                          <span className="mt-1 block text-xs text-amber-700">{sub.stripe_enrichment_error}</span>
-                        )}
-                        <div className="mt-2">
-                          <button
-                            type="button"
-                            className="text-[11px] text-slate-400 hover:text-slate-600 underline underline-offset-2"
-                            onClick={() => {
-                              setNotesOpen((prev) => ({ ...prev, [sub.id]: !prev[sub.id] }))
-                              if (!notesOpen[sub.id]) {
-                                setNotesDraft((prev) => ({
-                                  ...prev,
-                                  [sub.id]: sub.notes ?? "",
-                                }))
-                              }
-                            }}
-                          >
-                            {notesOpen[sub.id] ? "Hide notes" : sub.notes ? "Edit note" : "Add note"}
-                          </button>
-
-                          {notesOpen[sub.id] && (
-                            <div className="mt-1.5 space-y-1.5">
-                              <textarea
-                                rows={2}
-                                value={notesDraft[sub.id] ?? ""}
-                                onChange={(e) =>
-                                  setNotesDraft((prev) => ({ ...prev, [sub.id]: e.target.value }))
-                                }
-                                placeholder="Internal note (admin only)"
-                                className="w-full rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-[12px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#03154C]/30 resize-none"
-                              />
-                              {notesError[sub.id] && (
-                                <p className="text-[11px] text-red-600">{notesError[sub.id]}</p>
-                              )}
-                              <div className="flex gap-1.5">
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  className="h-6 px-2.5 text-[11px] bg-[#03154C] hover:bg-[#0a2a6e] text-white"
-                                  disabled={notesSaving === sub.id}
-                                  onClick={() => saveNotes(sub)}
-                                >
-                                  {notesSaving === sub.id ? (
-                                    <Loader2 className="h-3 w-3 animate-spin" />
-                                  ) : (
-                                    "Save"
-                                  )}
-                                </Button>
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-6 px-2 text-[11px] text-slate-500"
-                                  disabled={notesSaving === sub.id}
-                                  onClick={() => setNotesOpen((prev) => ({ ...prev, [sub.id]: false }))}
-                                >
-                                  Cancel
-                                </Button>
-                              </div>
-                            </div>
-                          )}
-
-                          {!notesOpen[sub.id] && sub.notes && (
-                            <p className="mt-1 text-[11px] text-slate-500 leading-snug max-w-[180px] truncate">
-                              {sub.notes}
-                            </p>
-                          )}
-                        </div>
-                        {sub.signup_id && (
-                          <div className="mt-1.5">
-                            <a
-                              href={`/admin/blue/signups/${encodeURIComponent(sub.signup_id)}`}
-                              className="inline-flex items-center gap-1 text-[11px] text-[#03154C] hover:underline"
-                            >
-                              View signup record
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 12 12"
-                                width="10"
-                                height="10"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M2 10 10 2M5 2h5v5" />
-                              </svg>
-                            </a>
-                          </div>
+                          <span className="mt-1 block text-xs text-amber-300/90">Cancels at period end</span>
                         )}
                       </TableCell>
                       <TableCell className="align-top text-sm">
-                        <span className="font-medium text-slate-900">{sub.payer_name}</span>
-                        {sub.payer_email && <span className="mt-0.5 block text-xs text-slate-500">{sub.payer_email}</span>}
+                        <span className="text-white/90">{sub.payer_name}</span>
+                        {sub.payer_email && <span className="mt-0.5 block text-xs text-white/45">{sub.payer_email}</span>}
                       </TableCell>
-                      <TableCell className="align-top text-sm tabular-nums">
-                        {sub.plan_name && (
-                          <span className="block text-xs text-slate-500 mb-0.5">{sub.plan_name}</span>
-                        )}
-                        {sub.amount_display}
-                      </TableCell>
-                      <TableCell className="align-top text-sm text-slate-700">{fmtDate(sub.last_payment_at)}</TableCell>
-                      <TableCell className="align-top text-sm text-slate-700">
-                        <span className="inline-flex items-center gap-1.5">
-                          {sub.status !== "paused" && sub.next_billing_at && (
-                            <span
-                              className={[
-                                "inline-block h-1.5 w-1.5 rounded-full shrink-0",
-                                sub.source === "live"
-                                  ? "bg-emerald-400"
-                                  : sub.source === "cached"
-                                    ? "bg-amber-400"
-                                    : "bg-red-400",
-                              ].join(" ")}
-                            />
-                          )}
-                          {sub.status === "paused" ? "—" : fmtDate(sub.next_billing_at)}
-                        </span>
-                        {sub.status === "paused" && sub.resume_at && (
-                          <span className="mt-1 block text-xs text-amber-800">Resume {fmtDate(sub.resume_at)}</span>
-                        )}
-                        {sub.source === "cached" && sub.status !== "paused" && (
-                          <span className="mt-0.5 block text-[11px] text-amber-700">Estimated</span>
-                        )}
-                        {sub.source === "unavailable" && sub.status !== "paused" && (
-                          <span className="mt-0.5 block text-[11px] text-red-600">Unavailable</span>
+                      <TableCell className="align-top text-sm text-white/80">
+                        {fmtDate(sub.last_payment_at)}
+                        {sub.paid_invoice_count > 0 && (
+                          <span className="mt-0.5 block text-xs text-white/40 tabular-nums">
+                            {sub.paid_invoice_count} payment{sub.paid_invoice_count === 1 ? "" : "s"}
+                          </span>
                         )}
                       </TableCell>
-                      <TableCell className="align-top text-sm text-slate-600">{sub.card_display ?? "—"}</TableCell>
+                      <TableCell className="align-top text-sm text-white/80">
+                        {sub.status === "paused" ? (
+                          sub.resume_at ? (
+                            <span className="text-amber-200/90">Resume {fmtDate(sub.resume_at)}</span>
+                          ) : (
+                            "—"
+                          )
+                        ) : (
+                          fmtDate(sub.next_billing_at)
+                        )}
+                        {sub.card_display && (
+                          <span className="mt-0.5 block text-xs text-white/40">{sub.card_display}</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="align-top text-sm text-white/80 hidden lg:table-cell tabular-nums">
+                        {sub.lifetime_paid_display ?? "—"}
+                      </TableCell>
                       <TableCell className="align-top">{statusBadge(sub)}</TableCell>
                       <TableCell className="align-top text-right">
                         <div className="flex flex-wrap justify-end gap-1.5">
                           {sub.stripe_subscription_id && (sub.status === "active" || sub.status === "pending_payment") && (
                             <>
                               {sub.status === "pending_payment" && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-8 border-amber-300 text-amber-900 hover:bg-amber-50"
-                                  disabled={retryLoading === sub.id || actionLoading}
-                                  onClick={() => runRetry(sub)}
-                                >
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 border-white/20 bg-transparent text-white/90 hover:bg-white/10"
+                                disabled={retryLoading === sub.id || actionLoading}
+                                onClick={() => runRetry(sub)}
+                              >
                                   {retryLoading === sub.id ? (
                                     <Loader2 className="mr-1 h-3 w-3 animate-spin" />
                                   ) : null}
@@ -638,7 +451,7 @@ export default function AdminBlueSubscriptionsBillingPage() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="h-8 border-amber-300 text-amber-900 hover:bg-amber-50"
+                                className="h-8 border-white/20 bg-transparent text-white/90 hover:bg-white/10"
                                 disabled={actionLoading}
                                 onClick={() => {
                                   setActionSub(sub)
@@ -652,7 +465,7 @@ export default function AdminBlueSubscriptionsBillingPage() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="h-8"
+                                className="h-8 border-white/20 bg-transparent text-white/90 hover:bg-white/10"
                                 disabled={actionLoading}
                                 onClick={() => {
                                   setActionSub(sub)
@@ -665,7 +478,7 @@ export default function AdminBlueSubscriptionsBillingPage() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="h-8 border-red-200 text-red-800 hover:bg-red-50"
+                                className="h-8 border-red-400/40 bg-transparent text-red-300 hover:bg-red-950/40"
                                 disabled={actionLoading}
                                 onClick={() => {
                                   setActionSub(sub)
@@ -681,7 +494,7 @@ export default function AdminBlueSubscriptionsBillingPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="h-8 border-emerald-300 text-emerald-900 hover:bg-emerald-50"
+                              className="h-8 border-emerald-400/40 text-emerald-300 hover:bg-emerald-950/30"
                               disabled={actionLoading}
                               onClick={() => runResume(sub)}
                             >
@@ -693,7 +506,7 @@ export default function AdminBlueSubscriptionsBillingPage() {
                               href={`${STRIPE_DASHBOARD_SUB}/${sub.stripe_subscription_id}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex h-8 items-center rounded-md border border-slate-200 bg-white px-2 text-xs font-medium text-[#03154C] hover:bg-slate-50"
+                              className="inline-flex h-8 items-center rounded-md border border-white/20 bg-transparent px-2 text-xs font-medium text-white/80 hover:bg-white/10"
                             >
                               Sub <ExternalLink className="ml-1 h-3 w-3" />
                             </a>
@@ -703,7 +516,7 @@ export default function AdminBlueSubscriptionsBillingPage() {
                               href={stripeCustomer(sub.stripe_customer_id)}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex h-8 items-center rounded-md border border-slate-200 bg-white px-2 text-xs font-medium text-[#03154C] hover:bg-slate-50"
+                              className="inline-flex h-8 items-center rounded-md border border-white/20 bg-transparent px-2 text-xs font-medium text-white/80 hover:bg-white/10"
                             >
                               Cust <ExternalLink className="ml-1 h-3 w-3" />
                             </a>
@@ -711,7 +524,7 @@ export default function AdminBlueSubscriptionsBillingPage() {
                           {sub.athlete_id && (
                             <a
                               href={`/admin/athletes/edit?id=${encodeURIComponent(sub.athlete_id)}`}
-                              className="inline-flex h-8 items-center rounded-md px-2 text-xs font-medium text-[#03154C] hover:underline"
+                              className="inline-flex h-8 items-center rounded-md px-2 text-xs font-medium text-[#D3B574] hover:underline"
                             >
                               Athlete
                             </a>
@@ -734,8 +547,8 @@ export default function AdminBlueSubscriptionsBillingPage() {
               </Table>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <Dialog open={actionType === "pause" && !!actionSub} onOpenChange={(open) => { if (!open) { setActionSub(null); setActionType(null); setActionError(null) } }}>
         <DialogContent>
