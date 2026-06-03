@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { isWiqBillableStatus } from "@/lib/blue-wiq-import"
+import { sumWiqStandardMrrCents } from "@/lib/blue-billing-rates"
 
 export const dynamic = "force-dynamic"
 
@@ -116,6 +117,7 @@ export async function GET(request: Request) {
       ).length,
       missingFromReport: all.filter((r) => r.missing_from_last_import).length,
       estimatedMrr: billable.reduce((s, r) => s + (r.amount_cents ?? 0), 0) / 100,
+      standardMrr: sumWiqStandardMrrCents(billable) / 100,
     },
   })
 }
