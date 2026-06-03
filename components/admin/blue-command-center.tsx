@@ -45,6 +45,7 @@ export type DashPanel =
   | "recruitnc-active"
   | "recruitnc-paused"
   | "recruitnc-pending"
+  | "recruitnc-cancelled"
   | "wiq-active"
   | "wiq-billable"
   | "wiq-paused"
@@ -55,6 +56,7 @@ const PANEL_LABELS: Record<Exclude<DashPanel, null>, string> = {
   "recruitnc-active": "RecruitNC — Active",
   "recruitnc-paused": "RecruitNC — Paused",
   "recruitnc-pending": "RecruitNC — Past due",
+  "recruitnc-cancelled": "RecruitNC — Churned / ending",
   "wiq-active": "WrestlingIQ — Paid",
   "wiq-billable": "WrestlingIQ — Billable",
   "wiq-paused": "WrestlingIQ — Paused",
@@ -69,6 +71,7 @@ const QUICK_LINKS: {
   icon: typeof CreditCard
 }[] = [
   { panel: "recruitnc-active", title: "Subscriptions", desc: "RecruitNC Stripe billing", icon: CreditCard },
+  { panel: "recruitnc-cancelled", title: "Churned", desc: "Canceled & ending subscriptions", icon: CreditCard },
   { panel: "wiq-billable", title: "WrestlingIQ (WIQ)", desc: "External billing roster", icon: Users },
   { href: "/admin/blue/subscriptions/registrations", title: "Registrations", desc: "Signup pipeline", icon: Users },
   { href: "/admin/blue/reports", title: "Full reports", desc: "Charts, cohorts, billing calendar", icon: BarChart3 },
@@ -204,6 +207,13 @@ function DashMemberPanel({
         else if (panel === "recruitnc-paused") rows = rows.filter((r) => r.status === "paused")
         else if (panel === "recruitnc-pending")
           rows = rows.filter((r) => r.status === "pending_payment")
+        else if (panel === "recruitnc-cancelled")
+          rows = rows.filter(
+            (r) =>
+              r.status === "cancelled" ||
+              r.status === "alumni" ||
+              (r.status === "active" && r.cancel_at_period_end),
+          )
         else if (panel === "combined") rows = rows.filter((r) => r.status === "active")
         rows.sort((a, b) => a.athlete_name.localeCompare(b.athlete_name))
         setRecruitnc(rows)
@@ -334,7 +344,12 @@ function RecruitncTable({ rows }: { rows: BlueSubscriptionRow[] }) {
                 )}
               </TableCell>
               <TableCell>{recruitncStatusBadge(sub.status)}</TableCell>
-              <TableCell className="text-sm tabular-nums">{sub.amount_display}</TableCell>
+              <TableCell className="text-sm tabular-nums">
+                {sub.amount_display}
+                {sub.cancel_at_period_end && sub.status === "active" && (
+                  <span className="block text-[10px] text-amber-300/90 mt-0.5">Cancels at period end</span>
+                )}
+              </TableCell>
               <TableCell className="text-sm text-white/70">{fmtDate(sub.next_billing_at)}</TableCell>
             </TableRow>
           ))}
@@ -410,7 +425,11 @@ export function BlueCommandCenter() {
   const runSync = async () => {
     setSyncLoading(true)
     try {
-      await fetch("/api/admin/blue/sync-from-stripe", { method: "POST", credentials: "include" })
+      const r = await fetch("/api/admin/blue/sync-from-stripe", { method: "POST", credentials: "include" })
+      const d = await r.json().catch(() => ({}))
+      if (d.statusReconciled > 0) {
+        setPanel(null)
+      }
       load()
     } finally {
       setSyncLoading(false)
@@ -499,6 +518,14 @@ export function BlueCommandCenter() {
                 icon={CreditCard}
                 selected={panel === "recruitnc-paused"}
                 onClick={() => togglePanel("recruitnc-paused")}
+              />
+              <StatTile
+                label="Churned (RecruitNC)"
+                value={data.currentCancelled}
+                sub="Canceled · click for ending too"
+                icon={CreditCard}
+                selected={panel === "recruitnc-cancelled"}
+                onClick={() => togglePanel("recruitnc-cancelled")}
               />
               {hasWiq && (
                 <>

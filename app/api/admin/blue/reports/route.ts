@@ -47,6 +47,7 @@ export type BlueReportsData = {
   membershipTrend: { month: string; newCount: number; endedCount: number; activeAtEnd: number; estimatedMRR: number }[]
   currentActive: number
   currentPaused: number
+  currentCancelled: number
   estimatedMRR: number
   byClass: { graduationYear: number; count: number; isAnticipatedChurn: boolean }[]
   anticipatedChurnCount: number
@@ -204,8 +205,12 @@ export async function GET() {
   // Only count rows with a live Stripe subscription for MRR and active count (excludes orphan/duplicate rows)
   const activeRows = dedupedRows.filter((r) => r.status === "active" && hasStripeSub(r))
   const pausedRows = dedupedRows.filter((r) => r.status === "paused" && hasStripeSub(r))
+  const cancelledRows = dedupedRows.filter(
+    (r) => (r.status === "cancelled" || r.status === "alumni") && hasStripeSub(r),
+  )
   const currentActive = activeRows.length
   const currentPaused = pausedRows.length
+  const currentCancelled = cancelledRows.length
   const estimatedMRR = (currentActive + currentPaused) * BLUE_PRICE
 
   // By class (graduation year) for active + paused (same: only with Stripe sub)
@@ -406,6 +411,7 @@ export async function GET() {
     membershipTrend: trend,
     currentActive,
     currentPaused,
+    currentCancelled,
     estimatedMRR,
     byClass,
     anticipatedChurnCount,
