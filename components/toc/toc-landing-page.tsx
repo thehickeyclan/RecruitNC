@@ -11,13 +11,15 @@ import { TocSponsorForm } from "@/components/toc/toc-sponsor-form"
 import { TocFaq } from "@/components/toc/toc-faq"
 import { TocEmailSignup } from "@/components/toc/toc-email-signup"
 import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass } from "@/components/toc/toc-theme"
+import type { TocConfirmedCollege } from "@/lib/toc/confirmed-colleges"
 import type { TocEventConfig } from "@/lib/toc/event-config"
 
 type Props = {
   config: TocEventConfig
+  confirmedColleges?: TocConfirmedCollege[]
 }
 
-export function TocLandingPage({ config }: Props) {
+export function TocLandingPage({ config, confirmedColleges = [] }: Props) {
   return (
     <div className="min-h-screen bg-white">
       <TocHero config={config} />
@@ -54,7 +56,7 @@ export function TocLandingPage({ config }: Props) {
         </div>
       </section>
 
-      <TocRecruitingSection />
+      <TocRecruitingSection confirmedColleges={confirmedColleges} />
 
       <section id="sponsors" className="py-16 md:py-20 bg-[#f4f5f7]">
         <div className="container mx-auto px-4 max-w-xl">

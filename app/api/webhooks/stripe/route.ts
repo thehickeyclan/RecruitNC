@@ -35,6 +35,7 @@ import {
 import { isGuildCheckoutSession, isGuildStripeMetadata } from "@/lib/stripe-guild-detection"
 import { upsertGuildOrderFromCheckoutSession } from "@/lib/stripe-guild-order"
 import { hasSpartanDonationForPaymentIntent } from "@/lib/spartan-donation-order-lookup"
+import { ensureOrderFromStripeInvoice } from "@/lib/orders/ensure-order-from-stripe-invoice"
 import {
   amountLooksLikeGuild,
   amountLooksLikePracticeDropIn,
@@ -247,6 +248,16 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error("[webhooks/stripe] invoice.paid blue_memberships:", error.message)
     }
+
+    try {
+      const orderResult = await ensureOrderFromStripeInvoice(admin, getStripe(), invoice)
+      if (orderResult.created) {
+        console.log("[webhooks/stripe] invoice.paid created order", orderResult.orderId, invoice.id)
+      }
+    } catch (orderErr) {
+      console.error("[webhooks/stripe] invoice.paid ensure order:", orderErr)
+    }
+
     return NextResponse.json({ received: true })
   }
 

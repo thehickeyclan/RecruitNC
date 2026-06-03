@@ -36,6 +36,14 @@ export const TOC_BRAND = {
   white: "#FFFFFF",
 } as const
 
+/** Confirmed recruiting-fair programs (fallback until `toc_event_config.confirmed_colleges` is set). */
+export const TOC_CONFIRMED_COLLEGES = [
+  "NC State",
+  "UNC",
+  "Roanoke",
+  "Lynchburg",
+] as const
+
 export const TOC_DEFAULT_CONFIG = {
   phase: "phase_1" as const,
   event_dates: "September 4–5, 2026",

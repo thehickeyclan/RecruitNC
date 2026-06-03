@@ -1,9 +1,15 @@
+import { TocCollegeAttendees } from "@/components/toc/toc-college-attendees"
 import { TocPatrioticBar, TocVarsityHeading } from "@/components/toc/toc-theme"
+import type { TocConfirmedCollege } from "@/lib/toc/confirmed-colleges"
 
-export function TocRecruitingSection() {
+type Props = {
+  confirmedColleges?: TocConfirmedCollege[]
+}
+
+export function TocRecruitingSection({ confirmedColleges = [] }: Props) {
   return (
     <section className="py-16 bg-[#0B1D3A] text-white relative">
-      <div className="container mx-auto px-4 max-w-3xl">
+      <div className="container mx-auto px-4 max-w-5xl">
         <TocVarsityHeading as="h2" className="text-4xl text-white mb-4">
           Recruiting experience
         </TocVarsityHeading>
@@ -24,6 +30,8 @@ export function TocRecruitingSection() {
             </li>
           ))}
         </ul>
+        <TocCollegeAttendees colleges={confirmedColleges} />
+
         <p className="mt-8 text-sm text-white/55">
           College programs: email{" "}
           <a href="mailto:recruiting@ncwrestlingunited.com" className="text-white underline hover:text-[#CC0000]">
