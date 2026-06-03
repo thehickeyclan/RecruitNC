@@ -29,10 +29,10 @@ export function TocChampionJacketSection() {
 
             <div className="space-y-4 text-white/90 text-lg leading-relaxed">
               <p>
-                At each of eleven weight classes, the top four wrestlers earn the{" "}
-                <strong className="text-white">NC United Tournament of Champions jacket</strong> — navy blue with
-                arched <strong className="text-white">NORTH CAROLINA</strong> across the chest and{" "}
-                <strong className="text-white">CHAMPION</strong> across the back.
+                At each of eleven weight classes, <strong className="text-white">one wrestler</strong> earns the{" "}
+                <strong className="text-white">NC United Tournament of Champions jacket</strong> — the bracket
+                champion. Navy blue with arched <strong className="text-white">NORTH CAROLINA</strong> across the
+                chest and <strong className="text-white">CHAMPION</strong> across the back.
               </p>
               <p>
                 This is not merchandise. It is a{" "}
@@ -41,17 +41,18 @@ export function TocChampionJacketSection() {
                 <strong className="text-white">2026</strong> marking the year you proved it on the mat.
               </p>
               <p>
-                Eight wrestlers per bracket. True double-elimination. Only those who place earn the jacket. When you
-                wear it, you are telling every coach and every fan in the building:{" "}
+                Eight wrestlers per bracket. True double-elimination. Top four place on the podium — but only the
+                champion wears the jacket. When you wear it, you are telling every coach and every fan in the
+                building:{" "}
                 <em className="text-white not-italic font-semibold">
-                  I was one of the four best in my weight in the state of North Carolina.
+                  I am the best in my weight in the state of North Carolina.
                 </em>
               </p>
             </div>
 
             <ul className="mt-8 space-y-3 border-l-4 border-[#CC0000] pl-5">
               {[
-                "Awarded to top-4 placers at each college weight class",
+                "Awarded to the champion at each college weight class — one per bracket",
                 "Varsity-style NC branding — chest and back",
                 "Red · white · navy sleeve stripes — classic patriotic athletic look",
                 "A keepsake that outlasts any medal on a shelf",
@@ -77,7 +78,7 @@ export function TocChampionJacketSection() {
                 />
               </div>
               <p className={`mt-4 text-center text-white/50 text-xs ${tocDisplayClass()} tracking-widest`}>
-                Top 4 · Each weight · 2026
+                One champion · Each weight · 2026
               </p>
             </div>
           </div>

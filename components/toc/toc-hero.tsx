@@ -36,7 +36,7 @@ export function TocHero({ config }: Props) {
         </p>
         <p className="mt-4 text-white/75 max-w-2xl text-base md:text-lg">
           {config.event_dates} · {config.venue_name ?? "Hope Community Church"}, Apex · 88 wrestlers · 11 college
-          weights · top-4 earn the Champion jacket
+          weights · only one earns the Champion jacket
         </p>
 
         <TocCountdown targetDate={TOC_EVENT_DATE} className="mt-8" />

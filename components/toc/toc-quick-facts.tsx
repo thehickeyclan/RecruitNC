@@ -4,7 +4,7 @@ import { TocPatrioticBar, tocDisplayClass } from "@/components/toc/toc-theme"
 const FACTS = [
   { icon: Users, label: "88 wrestlers", sub: "8 per weight · invite-only field" },
   { icon: Scale, label: "11 weights", sub: "NCAA collegiate classes + 117 lbs" },
-  { icon: Medal, label: "Top 4 = jacket", sub: "Champion jacket at every weight" },
+  { icon: Medal, label: "1 jacket per weight", sub: "Only the bracket champion earns it" },
   { icon: Calendar, label: "2 days", sub: "Single weigh-in · no allowance" },
   { icon: Trophy, label: "1,000+ fans", sub: "Apex, NC · September 2026" },
 ]
