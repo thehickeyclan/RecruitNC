@@ -1,0 +1,140 @@
+-- Find why active count != 48 after blue-wiq-fix-active-june-2026.sql
+-- Run in Supabase SQL Editor.
+
+create or replace function public._wiq_norm_name(t text)
+returns text
+language sql
+immutable
+as $$
+  select lower(regexp_replace(regexp_replace(trim(coalesce(t, '')), '-', ' ', 'g'), '\s+', ' ', 'g'));
+$$;
+
+create or replace function public._wiq_norm_billed(t text)
+returns text
+language sql
+immutable
+as $$
+  select regexp_replace(public._wiq_norm_name(t), '\s+family$', '', 'g');
+$$;
+
+drop table if exists _wiq_active_june_2026;
+create temporary table _wiq_active_june_2026 (
+  wrestler_name text not null,
+  billed_to text not null
+);
+
+insert into _wiq_active_june_2026 (wrestler_name, billed_to) values
+  ('Joseph Shook', 'Mike Shook'),
+  ('Adam Walker', 'Daniel Walker'),
+  ('Aiden Burkholder', 'Adam Burkholder'),
+  ('Cameron Boltes', 'Cameron Boltes Family'),
+  ('Jaxon Thomas', 'Emily Thomas'),
+  ('Gavin Lopez', 'Manny Lopez'),
+  ('Angel Olalde', 'Victor Bacho'),
+  ('Fares Alkurdasi', 'Hala Saleh'),
+  ('Drew Teeter', 'Jae Teeter'),
+  ('Fares Alkurdasi', 'Hala Saleh'),
+  ('Paxton Kearns', 'Brian Kearns'),
+  ('Bryce Perry', 'Carl Perry'),
+  ('Elias Taylor', 'Joe Taylor'),
+  ('Elias Taylor', 'Joe Taylor'),
+  ('Keyshon Morrison', 'Jackie Morrison'),
+  ('Campbell Tufts-Piercy', 'Shannon Tufts Piercy'),
+  ('Bennett Myles', 'Nick Myles'),
+  ('Spencer Moore', 'Scott Moore'),
+  ('Logan Mumy', 'Ryan Mumy'),
+  ('Luke Padgett', 'Adam Padgett'),
+  ('Joshua Stonebraker', 'Jeffrey Stonebraker'),
+  ('Liam Myles', 'Kjirsti Myles'),
+  ('Jacob De La Torre', 'Silviano De La Torre'),
+  ('Josh Brezac', 'Virginia Brezac'),
+  ('Chris Maynor', 'Heather Whitson'),
+  ('Corbin McCartney', 'Ashley Cook'),
+  ('Matthew Carter', 'Holly Carter'),
+  ('Garrison Raper', 'Garrett Raper'),
+  ('Connor Reed', 'Tonia Reed'),
+  ('Aidan Gore', 'Jason Gore'),
+  ('Luke Richards', 'Chad Richards'),
+  ('Connor Reece', 'Matt Reece'),
+  ('Holt Quincy', 'Hunter Quincy'),
+  ('Liam Hickey', 'Matthew Hickey'),
+  ('Naylor Higgins', 'Robin Higgins'),
+  ('Carson Worrick', 'Lindsay Worrick'),
+  ('Gabe Rogers', 'Pete Rogers'),
+  ('Mason Brown', 'Jarrett Brown'),
+  ('Xavier Bernthal', 'Jim Bernthal'),
+  ('Brieon Mayfield', 'Trevor Mayfield'),
+  ('Aidan Szewczyk', 'Ashley Bowden'),
+  ('Dominic Blue', 'Phillip Blue'),
+  ('Michael Cross', 'Stephen Cross'),
+  ('Daniel McDermott', 'Thomas McDermott'),
+  ('Carson Raper', 'Garrett Raper'),
+  ('Trevelian Hall', 'CJ James'),
+  ('Cole Shuster', 'Cheryl Shuster'),
+  ('Shane Shuster', 'Cheryl Shuster');
+
+-- A) Allowlist slots with no DB row (strict match)
+select
+  a.wrestler_name,
+  a.billed_to,
+  'no_db_row_strict' as issue
+from _wiq_active_june_2026 a
+where not exists (
+  select 1
+  from public.blue_wiq_subscriptions s
+  where public._wiq_norm_name(s.wrestler_name) = public._wiq_norm_name(a.wrestler_name)
+    and public._wiq_norm_billed(s.billed_to) = public._wiq_norm_billed(a.billed_to)
+);
+
+-- B) Allowlist match exists but status is paused (wrongly demoted — check spelling)
+select
+  a.wrestler_name as allow_wrestler,
+  a.billed_to as allow_billed,
+  s.wrestler_name as db_wrestler,
+  s.billed_to as db_billed,
+  s.status,
+  s.wiq_billing_partner_id
+from _wiq_active_june_2026 a
+join public.blue_wiq_subscriptions s
+  on public._wiq_norm_name(s.wrestler_name) = public._wiq_norm_name(a.wrestler_name)
+  and public._wiq_norm_billed(s.billed_to) = public._wiq_norm_billed(a.billed_to)
+where s.status = 'paused';
+
+-- C) Wrestler on allowlist, close name in DB but billed_to differs (likely the 4)
+select
+  a.wrestler_name as allow_wrestler,
+  a.billed_to as allow_billed,
+  s.wrestler_name as db_wrestler,
+  s.billed_to as db_billed,
+  s.status,
+  s.wiq_billing_partner_id
+from _wiq_active_june_2026 a
+join public.blue_wiq_subscriptions s
+  on public._wiq_norm_name(s.wrestler_name) = public._wiq_norm_name(a.wrestler_name)
+where public._wiq_norm_billed(s.billed_to) <> public._wiq_norm_billed(a.billed_to)
+order by a.wrestler_name, s.billed_to;
+
+-- D) Paused rows that look like allowlist wrestlers (fuzzy — find the 4)
+select
+  s.wrestler_name,
+  s.billed_to,
+  s.status,
+  s.wiq_status_raw,
+  s.wiq_billing_partner_id
+from public.blue_wiq_subscriptions s
+where s.status = 'paused'
+  and exists (
+    select 1
+    from _wiq_active_june_2026 a
+    where public._wiq_norm_name(a.wrestler_name) = public._wiq_norm_name(s.wrestler_name)
+  )
+order by s.wrestler_name;
+
+-- E) Summary
+select
+  (select count(*) from public.blue_wiq_subscriptions where status = 'active') as active_now,
+  (select count(*) from _wiq_active_june_2026) as allowlist_rows,
+  (
+    select count(distinct (public._wiq_norm_name(wrestler_name), public._wiq_norm_billed(billed_to)))
+    from _wiq_active_june_2026
+  ) as allowlist_unique_pairs;

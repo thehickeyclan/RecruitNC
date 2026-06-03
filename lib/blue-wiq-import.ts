@@ -1,7 +1,7 @@
 import { parseCsvLine } from "@/lib/nhsca-roster-tsv-parse"
 import { scoreAthleteNameMatch } from "@/lib/data-dawg-agent-v2/fuzzy-utils"
 
-export type WiqSubscriptionStatus = "active" | "past_due" | "grace" | "cancelled"
+export type WiqSubscriptionStatus = "active" | "past_due" | "grace" | "cancelled" | "paused"
 
 export type ParsedWiqCsvRow = {
   wiqBillingPartnerId: string
@@ -45,10 +45,17 @@ export type WiqImportPreview = {
   pastDueCount: number
   graceCount: number
   cancelledCount: number
+  pausedCount: number
   duplicateWrestlerNames: string[]
   rows: WiqImportPreviewRow[]
   /** WIQ ids currently active in DB but absent from this CSV (after apply). */
   wouldFlagMissing: string[]
+  /** Rows marked paused via Currently Paused Subscription Report overlay. */
+  pausedApplied?: number
+  /** Parsed row count from Active Renewing Members report (allowlist). */
+  activeRenewingListCount?: number
+  /** Paid rows demoted to paused — not on Active Renewing allowlist. */
+  demotedFromActive?: number
 }
 
 function normalizeHeader(h: string): string {
@@ -90,6 +97,10 @@ export function mapWiqStatus(
   const activeUntilMatch = nextDueTrim.match(/^Active until\s+(.+)$/i)
   const activeUntil = activeUntilMatch ? parseWiqDate(activeUntilMatch[0]) : null
 
+  if (statusNorm === "paused" || statusNorm === "pause") {
+    const resumeAt = parseWiqDate(nextDueTrim)
+    return { status: "paused", nextDueAt: resumeAt, activeUntil: null }
+  }
   if (statusNorm === "paid") {
     const nextDueAt = parseWiqDate(nextDueTrim)
     return { status: "active", nextDueAt, activeUntil: null }
@@ -212,14 +223,236 @@ export function matchAthleteForWiqName(
   return { athleteId: null, athleteName: null, matchConfidence: "unmatched" }
 }
 
+export type ParsedWiqPausedRow = {
+  wrestlerName: string
+  billedTo: string
+  pausedAt: string | null
+  resumeAt: string | null
+  planLabel: string | null
+}
+
+function normalizePersonName(name: string): string {
+  return name.trim().toLowerCase().replace(/-/g, " ").replace(/\s+/g, " ")
+}
+
+function pauseMatchKey(wrestlerName: string, billedTo: string): string {
+  return `${normalizePersonName(wrestlerName)}|${normalizePersonName(billedTo)}`
+}
+
+function findHeaderIndex(header: string[], candidates: string[]): number {
+  for (const c of candidates) {
+    const i = header.indexOf(c)
+    if (i >= 0) return i
+  }
+  for (let i = 0; i < header.length; i++) {
+    const h = header[i]
+    if (candidates.some((c) => h.includes(c))) return i
+  }
+  return -1
+}
+
+function parseNamePairGrid(text: string): string[][] {
+  const lines = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n").filter((l) => l.trim())
+  return lines.map((line) => {
+    if (line.includes("\t") && !line.includes(",")) {
+      return line.split("\t").map((c) => c.trim())
+    }
+    return parseCsvLine(line)
+  })
+}
+
+function buildNamePairIndex(rows: { wrestlerName: string; billedTo: string }[]) {
+  const byKey = new Map<string, { wrestlerName: string; billedTo: string }>()
+  const byWrestler = new Map<string, { wrestlerName: string; billedTo: string }[]>()
+  for (const p of rows) {
+    byKey.set(pauseMatchKey(p.wrestlerName, p.billedTo), p)
+    if (p.billedTo) {
+      byKey.set(pauseMatchKey(p.wrestlerName, ""), p)
+    }
+    const w = normalizePersonName(p.wrestlerName)
+    if (!byWrestler.has(w)) byWrestler.set(w, [])
+    byWrestler.get(w)!.push(p)
+  }
+  return { byKey, byWrestler }
+}
+
+function matchNamePairRow(
+  row: { wrestlerName: string; billedTo: string },
+  index: ReturnType<typeof buildNamePairIndex>,
+): boolean {
+  return lookupNamePairHit(row, index) != null
+}
+
+function lookupNamePairHit<T extends { wrestlerName: string; billedTo: string }>(
+  row: { wrestlerName: string; billedTo: string },
+  index: ReturnType<typeof buildNamePairIndex>,
+): T | undefined {
+  const exact = index.byKey.get(pauseMatchKey(row.wrestlerName, row.billedTo))
+  if (exact) return exact as T
+  if (row.billedTo) {
+    const loose = index.byKey.get(pauseMatchKey(row.wrestlerName, ""))
+    if (loose) return loose as T
+  }
+  const candidates = index.byWrestler.get(normalizePersonName(row.wrestlerName)) ?? []
+  if (candidates.length === 1) return candidates[0] as T
+  return undefined
+}
+
+export type ParsedWiqActiveRenewingRow = {
+  wrestlerName: string
+  billedTo: string
+}
+
+/** WIQ "Active June-Renewing Members" (or similar) — wrestler + parent allowlist for true actives. */
+export function parseWiqActiveRenewingText(text: string): ParsedWiqActiveRenewingRow[] {
+  const grid = parseNamePairGrid(text)
+  if (!grid.length) return []
+
+  let headerRowIdx = -1
+  let header: string[] = []
+  for (let i = 0; i < grid.length; i++) {
+    const h = grid[i].map(normalizeHeader)
+    const iWrestler = findHeaderIndex(h, ["wrestler names", "wrestler name", "wrestler"])
+    if (iWrestler >= 0) {
+      headerRowIdx = i
+      header = h
+      break
+    }
+  }
+  if (headerRowIdx < 0) return []
+
+  const iWrestler = findHeaderIndex(header, ["wrestler names", "wrestler name", "wrestler"])
+  const iBilled = findHeaderIndex(header, [
+    "parent/billed to",
+    "billed to",
+    "parent",
+    "parent/guardian",
+    "guardian",
+  ])
+
+  const out: ParsedWiqActiveRenewingRow[] = []
+  for (let r = headerRowIdx + 1; r < grid.length; r++) {
+    const cells = grid[r]
+    const wrestlerName = (cells[iWrestler] ?? "").trim()
+    if (!wrestlerName) continue
+    out.push({
+      wrestlerName,
+      billedTo: iBilled >= 0 ? (cells[iBilled] ?? "").trim() : "",
+    })
+  }
+  return out
+}
+
+/** Demote Paid rows not on WIQ's Active Renewing allowlist (Membership Summary over-counts actives). */
+export function applyActiveRenewingOverlay(
+  rows: ParsedWiqCsvRow[],
+  activeRows: ParsedWiqActiveRenewingRow[],
+): { rows: ParsedWiqCsvRow[]; demotedFromActive: number } {
+  if (!activeRows.length) return { rows, demotedFromActive: 0 }
+
+  const index = buildNamePairIndex(activeRows)
+  let demotedFromActive = 0
+  const merged = rows.map((row) => {
+    if (row.status !== "active") return row
+    if (matchNamePairRow(row, index)) return row
+    demotedFromActive += 1
+    return {
+      ...row,
+      status: "paused" as const,
+      wiqStatusRaw: "Not on active renewing report",
+    }
+  })
+  return { rows: merged, demotedFromActive }
+}
+
+/** WrestlingIQ "Currently Paused Subscription Report" (paused subs still show as Paid on the full summary). */
+export function parseWiqPausedCsv(csvText: string): ParsedWiqPausedRow[] {
+  const grid = parseCsvRows(csvText)
+  if (grid.length < 2) return []
+
+  const header = grid[0].map(normalizeHeader)
+  const iWrestler = findHeaderIndex(header, ["wrestler names", "wrestler name", "wrestler"])
+  const iBilled = findHeaderIndex(header, ["billed to", "parent", "parent/guardian", "guardian"])
+  const iPaused = findHeaderIndex(header, ["paused", "paused date", "paused on", "when it was paused"])
+  const iResume = findHeaderIndex(header, [
+    "resume",
+    "resume date",
+    "automatically resume",
+    "will automatically resume",
+  ])
+  const iPlan = findHeaderIndex(header, ["subscription", "subscription plan", "plan", "items", "membership"])
+
+  if (iWrestler < 0) return []
+
+  const out: ParsedWiqPausedRow[] = []
+  for (let r = 1; r < grid.length; r++) {
+    const cells = grid[r]
+    const wrestlerName = (cells[iWrestler] ?? "").trim()
+    if (!wrestlerName) continue
+    out.push({
+      wrestlerName,
+      billedTo: iBilled >= 0 ? (cells[iBilled] ?? "").trim() : "",
+      pausedAt: iPaused >= 0 ? parseWiqDate(cells[iPaused] ?? "") : null,
+      resumeAt: iResume >= 0 ? parseWiqDate(cells[iResume] ?? "") : null,
+      planLabel: iPlan >= 0 ? (cells[iPlan] ?? "").trim() || null : null,
+    })
+  }
+  return out
+}
+
+/** Mark Paid rows as paused when they appear on WIQ's paused report (match wrestler + billed to when possible). */
+export function applyPausedOverlay(
+  rows: ParsedWiqCsvRow[],
+  pausedRows: ParsedWiqPausedRow[],
+): { rows: ParsedWiqCsvRow[]; pausedApplied: number } {
+  if (!pausedRows.length) return { rows, pausedApplied: 0 }
+
+  const index = buildNamePairIndex(pausedRows)
+
+  let pausedApplied = 0
+  const merged = rows.map((row) => {
+    if (row.status !== "active" && row.status !== "past_due") return row
+    const hit = lookupNamePairHit<ParsedWiqPausedRow>(row, index)
+    if (!hit) return row
+
+    pausedApplied += 1
+    return {
+      ...row,
+      status: "paused" as const,
+      wiqStatusRaw: "Paused",
+      nextDueAt: hit.resumeAt ?? row.nextDueAt,
+    }
+  })
+
+  return { rows: merged, pausedApplied }
+}
+
 export function buildWiqImportPreview(
   csvText: string,
   athletes: AthleteForWiqMatch[],
   existingByWiqId: Map<string, { athlete_id: string | null }>,
   previouslyActiveWiqIds: string[],
   referenceDate?: Date,
+  pausedCsvText?: string,
+  activeRenewingText?: string,
 ): WiqImportPreview {
-  const parsed = parseWiqMembershipCsv(csvText, referenceDate)
+  let parsed = parseWiqMembershipCsv(csvText, referenceDate)
+  let pausedApplied = 0
+  let demotedFromActive = 0
+  let activeRenewingListCount: number | undefined
+
+  if (pausedCsvText?.trim()) {
+    const overlay = applyPausedOverlay(parsed, parseWiqPausedCsv(pausedCsvText))
+    parsed = overlay.rows
+    pausedApplied = overlay.pausedApplied
+  }
+  if (activeRenewingText?.trim()) {
+    const activeRows = parseWiqActiveRenewingText(activeRenewingText)
+    activeRenewingListCount = activeRows.length
+    const overlay = applyActiveRenewingOverlay(parsed, activeRows)
+    parsed = overlay.rows
+    demotedFromActive = overlay.demotedFromActive
+  }
   const totalRows = parseCsvRows(csvText).length - 1
   const blueIds = new Set(parsed.map((r) => r.wiqBillingPartnerId))
 
@@ -256,12 +489,20 @@ export function buildWiqImportPreview(
     pastDueCount: parsed.filter((r) => r.status === "past_due").length,
     graceCount: parsed.filter((r) => r.status === "grace").length,
     cancelledCount: parsed.filter((r) => r.status === "cancelled").length,
+    pausedCount: parsed.filter((r) => r.status === "paused").length,
     duplicateWrestlerNames,
     rows,
     wouldFlagMissing,
+    ...(pausedApplied > 0 ? { pausedApplied } : {}),
+    ...(activeRenewingListCount != null ? { activeRenewingListCount } : {}),
+    ...(demotedFromActive > 0 ? { demotedFromActive } : {}),
   }
 }
 
 export function isWiqBillableStatus(status: WiqSubscriptionStatus): boolean {
   return status === "active" || status === "past_due" || status === "grace"
+}
+
+export function isWiqPausedStatus(status: string): boolean {
+  return status === "paused"
 }

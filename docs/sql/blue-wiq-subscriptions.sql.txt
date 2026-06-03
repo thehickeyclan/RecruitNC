@@ -7,7 +7,7 @@ create table if not exists public.blue_wiq_subscriptions (
   wrestler_name text not null,
   billed_to text,
   status text not null default 'active'
-    check (status in ('active', 'past_due', 'grace', 'cancelled')),
+    check (status in ('active', 'past_due', 'grace', 'cancelled', 'paused')),
   wiq_status_raw text,
   member_since timestamptz,
   next_due_at timestamptz,
@@ -56,3 +56,8 @@ create policy "Service role full access blue_wiq_subscriptions"
 drop policy if exists "Service role full access blue_wiq_import_runs" on public.blue_wiq_import_runs;
 create policy "Service role full access blue_wiq_import_runs"
   on public.blue_wiq_import_runs for all to service_role using (true) with check (true);
+
+-- If you created blue_wiq_subscriptions before "paused" was added, run:
+-- alter table public.blue_wiq_subscriptions drop constraint if exists blue_wiq_subscriptions_status_check;
+-- alter table public.blue_wiq_subscriptions add constraint blue_wiq_subscriptions_status_check
+--   check (status in ('active', 'past_due', 'grace', 'cancelled', 'paused'));

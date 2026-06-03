@@ -1,0 +1,123 @@
+-- Restore active status for allowlist members wrongly demoted (44 → ~48).
+-- Uses relaxed billed_to match (strips trailing " Family"). Safe to re-run.
+-- Run blue-wiq-diagnose-active-gap.sql first if you want to preview.
+
+create or replace function public._wiq_norm_name(t text)
+returns text
+language sql
+immutable
+as $$
+  select lower(regexp_replace(regexp_replace(trim(coalesce(t, '')), '-', ' ', 'g'), '\s+', ' ', 'g'));
+$$;
+
+create or replace function public._wiq_norm_billed(t text)
+returns text
+language sql
+immutable
+as $$
+  select regexp_replace(public._wiq_norm_name(t), '\s+family$', '', 'g');
+$$;
+
+drop table if exists _wiq_active_june_2026;
+create temporary table _wiq_active_june_2026 (
+  wrestler_name text not null,
+  billed_to text not null
+);
+
+insert into _wiq_active_june_2026 (wrestler_name, billed_to) values
+  ('Joseph Shook', 'Mike Shook'),
+  ('Adam Walker', 'Daniel Walker'),
+  ('Aiden Burkholder', 'Adam Burkholder'),
+  ('Cameron Boltes', 'Cameron Boltes Family'),
+  ('Jaxon Thomas', 'Emily Thomas'),
+  ('Gavin Lopez', 'Manny Lopez'),
+  ('Angel Olalde', 'Victor Bacho'),
+  ('Fares Alkurdasi', 'Hala Saleh'),
+  ('Drew Teeter', 'Jae Teeter'),
+  ('Fares Alkurdasi', 'Hala Saleh'),
+  ('Paxton Kearns', 'Brian Kearns'),
+  ('Bryce Perry', 'Carl Perry'),
+  ('Elias Taylor', 'Joe Taylor'),
+  ('Elias Taylor', 'Joe Taylor'),
+  ('Keyshon Morrison', 'Jackie Morrison'),
+  ('Campbell Tufts-Piercy', 'Shannon Tufts Piercy'),
+  ('Bennett Myles', 'Nick Myles'),
+  ('Spencer Moore', 'Scott Moore'),
+  ('Logan Mumy', 'Ryan Mumy'),
+  ('Luke Padgett', 'Adam Padgett'),
+  ('Joshua Stonebraker', 'Jeffrey Stonebraker'),
+  ('Liam Myles', 'Kjirsti Myles'),
+  ('Jacob De La Torre', 'Silviano De La Torre'),
+  ('Josh Brezac', 'Virginia Brezac'),
+  ('Chris Maynor', 'Heather Whitson'),
+  ('Corbin McCartney', 'Ashley Cook'),
+  ('Matthew Carter', 'Holly Carter'),
+  ('Garrison Raper', 'Garrett Raper'),
+  ('Connor Reed', 'Tonia Reed'),
+  ('Aidan Gore', 'Jason Gore'),
+  ('Luke Richards', 'Chad Richards'),
+  ('Connor Reece', 'Matt Reece'),
+  ('Holt Quincy', 'Hunter Quincy'),
+  ('Liam Hickey', 'Matthew Hickey'),
+  ('Naylor Higgins', 'Robin Higgins'),
+  ('Carson Worrick', 'Lindsay Worrick'),
+  ('Gabe Rogers', 'Pete Rogers'),
+  ('Mason Brown', 'Jarrett Brown'),
+  ('Xavier Bernthal', 'Jim Bernthal'),
+  ('Brieon Mayfield', 'Trevor Mayfield'),
+  ('Aidan Szewczyk', 'Ashley Bowden'),
+  ('Dominic Blue', 'Phillip Blue'),
+  ('Michael Cross', 'Stephen Cross'),
+  ('Daniel McDermott', 'Thomas McDermott'),
+  ('Carson Raper', 'Garrett Raper'),
+  ('Trevelian Hall', 'CJ James'),
+  ('Cole Shuster', 'Cheryl Shuster'),
+  ('Shane Shuster', 'Cheryl Shuster');
+
+-- PREVIEW: will be re-activated
+select
+  s.wrestler_name,
+  s.billed_to,
+  s.status,
+  s.wiq_billing_partner_id
+from public.blue_wiq_subscriptions s
+where s.status in ('paused', 'past_due', 'grace')
+  and exists (
+    select 1
+    from _wiq_active_june_2026 a
+    where public._wiq_norm_name(a.wrestler_name) = public._wiq_norm_name(s.wrestler_name)
+      and public._wiq_norm_billed(a.billed_to) = public._wiq_norm_billed(s.billed_to)
+  )
+order by s.wrestler_name;
+
+-- APPLY: restore allowlist members (fixes Cameron Boltes Family / hyphen billed_to mismatches)
+update public.blue_wiq_subscriptions s
+set
+  status = 'active',
+  wiq_status_raw = 'Paid',
+  updated_at = now()
+where s.status in ('paused', 'past_due', 'grace')
+  and exists (
+    select 1
+    from _wiq_active_june_2026 a
+    where public._wiq_norm_name(a.wrestler_name) = public._wiq_norm_name(s.wrestler_name)
+      and public._wiq_norm_billed(a.billed_to) = public._wiq_norm_billed(s.billed_to)
+  );
+
+-- Re-demote any active row NOT on allowlist (same relaxed match)
+update public.blue_wiq_subscriptions s
+set
+  status = 'paused',
+  wiq_status_raw = 'Not on active renewing report',
+  updated_at = now()
+where s.status = 'active'
+  and not exists (
+    select 1
+    from _wiq_active_june_2026 a
+    where public._wiq_norm_name(a.wrestler_name) = public._wiq_norm_name(s.wrestler_name)
+      and public._wiq_norm_billed(a.billed_to) = public._wiq_norm_billed(s.billed_to)
+  );
+
+select count(*) as active_after_fix
+from public.blue_wiq_subscriptions
+where status = 'active';

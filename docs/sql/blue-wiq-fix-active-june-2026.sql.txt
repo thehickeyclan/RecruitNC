@@ -1,0 +1,164 @@
+-- WIQ: demote false "active" rows using WIQ "Active June-Renewing Members (48)" allowlist.
+-- Run in Supabase SQL Editor. Safe to re-run (only touches status = 'active' not on the list).
+--
+-- Before apply: review the PREVIEW selects at the bottom.
+-- past_due / grace / cancelled rows are not changed.
+
+-- 1) Ensure paused status is allowed (skip if table was created from blue-wiq-subscriptions.sql.txt)
+alter table public.blue_wiq_subscriptions drop constraint if exists blue_wiq_subscriptions_status_check;
+alter table public.blue_wiq_subscriptions add constraint blue_wiq_subscriptions_status_check
+  check (status in ('active', 'past_due', 'grace', 'cancelled', 'paused'));
+
+-- 2) Normalize names like lib/blue-wiq-import.ts (lowercase, hyphens → spaces, collapse whitespace)
+create or replace function public._wiq_norm_name(t text)
+returns text
+language sql
+immutable
+as $$
+  select lower(regexp_replace(regexp_replace(trim(coalesce(t, '')), '-', ' ', 'g'), '\s+', ' ', 'g'));
+$$;
+
+-- 3) June 2026 active renewing allowlist (48 rows from WIQ export)
+drop table if exists _wiq_active_june_2026;
+create temporary table _wiq_active_june_2026 (
+  wrestler_name text not null,
+  billed_to text not null
+);
+
+insert into _wiq_active_june_2026 (wrestler_name, billed_to) values
+  ('Joseph Shook', 'Mike Shook'),
+  ('Adam Walker', 'Daniel Walker'),
+  ('Aiden Burkholder', 'Adam Burkholder'),
+  ('Cameron Boltes', 'Cameron Boltes Family'),
+  ('Jaxon Thomas', 'Emily Thomas'),
+  ('Gavin Lopez', 'Manny Lopez'),
+  ('Angel Olalde', 'Victor Bacho'),
+  ('Fares Alkurdasi', 'Hala Saleh'),
+  ('Drew Teeter', 'Jae Teeter'),
+  ('Fares Alkurdasi', 'Hala Saleh'),
+  ('Paxton Kearns', 'Brian Kearns'),
+  ('Bryce Perry', 'Carl Perry'),
+  ('Elias Taylor', 'Joe Taylor'),
+  ('Elias Taylor', 'Joe Taylor'),
+  ('Keyshon Morrison', 'Jackie Morrison'),
+  ('Campbell Tufts-Piercy', 'Shannon Tufts Piercy'),
+  ('Bennett Myles', 'Nick Myles'),
+  ('Spencer Moore', 'Scott Moore'),
+  ('Logan Mumy', 'Ryan Mumy'),
+  ('Luke Padgett', 'Adam Padgett'),
+  ('Joshua Stonebraker', 'Jeffrey Stonebraker'),
+  ('Liam Myles', 'Kjirsti Myles'),
+  ('Jacob De La Torre', 'Silviano De La Torre'),
+  ('Josh Brezac', 'Virginia Brezac'),
+  ('Chris Maynor', 'Heather Whitson'),
+  ('Corbin McCartney', 'Ashley Cook'),
+  ('Matthew Carter', 'Holly Carter'),
+  ('Garrison Raper', 'Garrett Raper'),
+  ('Connor Reed', 'Tonia Reed'),
+  ('Aidan Gore', 'Jason Gore'),
+  ('Luke Richards', 'Chad Richards'),
+  ('Connor Reece', 'Matt Reece'),
+  ('Holt Quincy', 'Hunter Quincy'),
+  ('Liam Hickey', 'Matthew Hickey'),
+  ('Naylor Higgins', 'Robin Higgins'),
+  ('Carson Worrick', 'Lindsay Worrick'),
+  ('Gabe Rogers', 'Pete Rogers'),
+  ('Mason Brown', 'Jarrett Brown'),
+  ('Xavier Bernthal', 'Jim Bernthal'),
+  ('Brieon Mayfield', 'Trevor Mayfield'),
+  ('Aidan Szewczyk', 'Ashley Bowden'),
+  ('Dominic Blue', 'Phillip Blue'),
+  ('Michael Cross', 'Stephen Cross'),
+  ('Daniel McDermott', 'Thomas McDermott'),
+  ('Carson Raper', 'Garrett Raper'),
+  ('Trevelian Hall', 'CJ James'),
+  ('Cole Shuster', 'Cheryl Shuster'),
+  ('Shane Shuster', 'Cheryl Shuster');
+
+-- Wrestlers with exactly one allowlist row (fallback match by wrestler only)
+drop table if exists _wiq_active_june_wrestler_singleton;
+create temporary table _wiq_active_june_wrestler_singleton as
+select public._wiq_norm_name(wrestler_name) as wrestler_norm
+from _wiq_active_june_2026
+group by public._wiq_norm_name(wrestler_name)
+having count(*) = 1;
+
+-- 4) PREVIEW — rows that will stay active
+select
+  s.wrestler_name,
+  s.billed_to,
+  s.wiq_billing_partner_id,
+  s.status
+from public.blue_wiq_subscriptions s
+where s.status = 'active'
+  and (
+    exists (
+      select 1
+      from _wiq_active_june_2026 a
+      where public._wiq_norm_name(a.wrestler_name) = public._wiq_norm_name(s.wrestler_name)
+        and public._wiq_norm_name(a.billed_to) = public._wiq_norm_name(s.billed_to)
+    )
+    or exists (
+      select 1
+      from _wiq_active_june_wrestler_singleton sg
+      where sg.wrestler_norm = public._wiq_norm_name(s.wrestler_name)
+    )
+  )
+order by s.wrestler_name, s.billed_to;
+
+-- 5) PREVIEW — rows that will be demoted to paused
+select
+  s.wrestler_name,
+  s.billed_to,
+  s.wiq_billing_partner_id,
+  s.status
+from public.blue_wiq_subscriptions s
+where s.status = 'active'
+  and not (
+    exists (
+      select 1
+      from _wiq_active_june_2026 a
+      where public._wiq_norm_name(a.wrestler_name) = public._wiq_norm_name(s.wrestler_name)
+        and public._wiq_norm_name(a.billed_to) = public._wiq_norm_name(s.billed_to)
+    )
+    or exists (
+      select 1
+      from _wiq_active_june_wrestler_singleton sg
+      where sg.wrestler_norm = public._wiq_norm_name(s.wrestler_name)
+    )
+  )
+order by s.wrestler_name, s.billed_to;
+
+-- 6) APPLY — demote false actives
+update public.blue_wiq_subscriptions s
+set
+  status = 'paused',
+  wiq_status_raw = 'Not on active renewing report',
+  updated_at = now()
+where s.status = 'active'
+  and not (
+    exists (
+      select 1
+      from _wiq_active_june_2026 a
+      where public._wiq_norm_name(a.wrestler_name) = public._wiq_norm_name(s.wrestler_name)
+        and public._wiq_norm_name(a.billed_to) = public._wiq_norm_name(s.billed_to)
+    )
+    or exists (
+      select 1
+      from _wiq_active_june_wrestler_singleton sg
+      where sg.wrestler_norm = public._wiq_norm_name(s.wrestler_name)
+    )
+  );
+
+-- 7) VERIFY counts
+select status, count(*) as n
+from public.blue_wiq_subscriptions
+group by status
+order by status;
+
+select count(*) as active_should_be_near_48
+from public.blue_wiq_subscriptions
+where status = 'active';
+
+-- Optional cleanup (helper function stays harmless; drop if you prefer)
+-- drop function if exists public._wiq_norm_name(text);
