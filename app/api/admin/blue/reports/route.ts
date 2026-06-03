@@ -9,6 +9,7 @@ import {
   fetchStripeMrrCentsBySubscriptionId,
 } from "@/lib/blue-reports-stripe-mrr"
 import { sumWiqStandardMrrCents } from "@/lib/blue-billing-rates"
+import { fetchBlueStripeSubscriptionStats } from "@/lib/blue-stripe-subscription-stats"
 
 export const dynamic = "force-dynamic"
 
@@ -48,6 +49,12 @@ export type BlueReportsData = {
   currentActive: number
   currentPaused: number
   currentCancelled: number
+  /** Ending at period end (still active in Stripe until date). */
+  currentCanceling?: number
+  /** Total Blue Program subscriptions in Stripe (all statuses). */
+  stripeRecruitncTotal?: number
+  /** Tile counts pulled live from Stripe, not DB. */
+  recruitncCountsFromStripe?: boolean
   estimatedMRR: number
   byClass: { graduationYear: number; count: number; isAnticipatedChurn: boolean }[]
   anticipatedChurnCount: number
@@ -96,6 +103,8 @@ export type BlueReportsData = {
   wiqLastImportAt?: string | null
   /** RecruitNC active + WIQ billable. */
   combinedBillable?: number
+  /** RecruitNC still billable (active + paused + ending at period end). */
+  recruitncBillable?: number
   /** Stripe MRR + WIQ standard MRR. */
   combinedStandardMrr?: number
 }
@@ -208,10 +217,14 @@ export async function GET() {
   const cancelledRows = dedupedRows.filter(
     (r) => (r.status === "cancelled" || r.status === "alumni") && hasStripeSub(r),
   )
-  const currentActive = activeRows.length
-  const currentPaused = pausedRows.length
-  const currentCancelled = cancelledRows.length
-  const estimatedMRR = (currentActive + currentPaused) * BLUE_PRICE
+  let currentActive = activeRows.length
+  let currentPaused = pausedRows.length
+  let currentCancelled = cancelledRows.length
+  let currentCanceling: number | undefined
+  let stripeRecruitncTotal: number | undefined
+  let recruitncBillable = activeRows.length + pausedRows.length
+  let recruitncCountsFromStripe = false
+  let estimatedMRR = (currentActive + currentPaused) * BLUE_PRICE
 
   // By class (graduation year) for active + paused (same: only with Stripe sub)
   const athleteIds = [...new Set([...activeRows, ...pausedRows].map((r) => r.athlete_id))]
@@ -435,6 +448,8 @@ export async function GET() {
 
   const pendingPaymentCount = dedupedRows.filter((r) => r.status === "pending_payment" && hasStripeSub(r)).length
 
+  let pendingFromStripe = pendingPaymentCount
+
   let paidSignupsMissingMembership = 0
   if (!signupsError && signupPaid > 0) {
     const { data: paidSignups } = await admin.from("blue_signups").select("id").eq("status", "paid")
@@ -458,7 +473,44 @@ export async function GET() {
   const failedPaymentMembers: NonNullable<BlueReportsData["failedPaymentMembers"]> = []
 
   const stripeSecret = readStripeSecretKey()
-  if (stripeSecret && stripeSubIds.length > 0) {
+  if (stripeSecret) {
+    try {
+      const stripe = getStripe()
+      const stripeStats = await fetchBlueStripeSubscriptionStats(stripe, process.env.STRIPE_BLUE_PRICE_ID)
+      currentActive = stripeStats.active
+      currentPaused = stripeStats.paused
+      currentCanceling = stripeStats.cancelingAtPeriodEnd
+      currentCancelled = stripeStats.cancelled + stripeStats.cancelingAtPeriodEnd
+      stripeRecruitncTotal = stripeStats.total
+      recruitncBillable =
+        stripeStats.active + stripeStats.paused + stripeStats.cancelingAtPeriodEnd
+      pendingFromStripe = stripeStats.pastDue
+      recruitncCountsFromStripe = true
+      stripeMRR = dollarsFromCents(stripeStats.mrrCents)
+      estimatedMRR = stripeMRR
+
+      const seniorMembers: Array<{ athleteId: string; gradYear: number; monthlyCents: number }> = []
+      for (const r of dedupedWithStripe) {
+        if (r.status !== "active" && r.status !== "paused") continue
+        const subId = r.stripe_subscription_id as string
+        const gy = gradMap[r.athlete_id] || 0
+        if (gy >= currentYear) {
+          seniorMembers.push({ athleteId: r.athlete_id, gradYear: gy, monthlyCents: BLUE_PRICE * 100 })
+        }
+      }
+      seniorChurnByMonth = buildSeniorChurnByMonth(seniorMembers)
+      const next12SeniorLoss = (seniorChurnByMonth ?? [])
+        .filter((b) => b.month >= monthKey(now))
+        .slice(0, 12)
+        .reduce((s, b) => s + b.mrrImpact, 0)
+      projectedMRRAfterSeniorChurn = Math.max(0, Math.round((stripeMRR - next12SeniorLoss) * 100) / 100)
+      cohortRetention = buildCohortRetention(dedupedWithStripe)
+    } catch (e) {
+      console.warn("[blue/reports] Stripe subscription stats:", e)
+    }
+  }
+
+  if (stripeSecret && stripeSubIds.length > 0 && stripeMRR === undefined) {
     try {
       const stripe = getStripe()
       const centsMap = await fetchStripeMrrCentsBySubscriptionId(stripe, stripeSubIds)
@@ -476,6 +528,7 @@ export async function GET() {
         }
       }
       stripeMRR = dollarsFromCents(totalCents)
+      estimatedMRR = stripeMRR
       seniorChurnByMonth = buildSeniorChurnByMonth(seniorMembers)
       const next12SeniorLoss = (seniorChurnByMonth ?? [])
         .filter((b) => b.month >= monthKey(now))
@@ -488,7 +541,9 @@ export async function GET() {
     }
   }
 
-  if (pendingPaymentCount > 0) {
+  const pendingPaymentCountFinal = recruitncCountsFromStripe ? pendingFromStripe : pendingPaymentCount
+
+  if (pendingPaymentCountFinal > 0) {
     const pendingRows = dedupedRows.filter((r) => r.status === "pending_payment")
     const pAthleteIds = pendingRows.map((r) => r.athlete_id)
     const { data: pAthletes } =
@@ -546,9 +601,9 @@ export async function GET() {
     wiqLastImportAt = lastWiqImport?.imported_at ?? null
   }
 
-  const stripeMrrForCombined = stripeMRR ?? data.estimatedMRR ?? 0
+  const stripeMrrForCombined = stripeMRR ?? estimatedMRR ?? 0
   const combinedBillable =
-    wiqBillable !== undefined ? data.currentActive + wiqBillable : undefined
+    wiqBillable !== undefined ? recruitncBillable + wiqBillable : undefined
   const combinedStandardMrr =
     wiqStandardMrr !== undefined
       ? Math.round((stripeMrrForCombined + wiqStandardMrr) * 100) / 100
@@ -556,7 +611,14 @@ export async function GET() {
 
   return NextResponse.json({
     ...data,
-    pendingPaymentCount,
+    currentActive,
+    currentPaused,
+    currentCancelled,
+    estimatedMRR,
+    ...(currentCanceling != null && { currentCanceling }),
+    ...(stripeRecruitncTotal != null && { stripeRecruitncTotal }),
+    ...(recruitncCountsFromStripe && { recruitncCountsFromStripe }),
+    pendingPaymentCount: pendingPaymentCountFinal,
     paidSignupsMissingMembership,
     ...(wiqBillable !== undefined && {
       wiqBillable,
@@ -567,7 +629,11 @@ export async function GET() {
       wiqMissingFromReport,
       wiqLastImportAt,
     }),
-    ...(combinedBillable !== undefined && { combinedBillable, combinedStandardMrr }),
+    ...(combinedBillable !== undefined && {
+      combinedBillable,
+      combinedStandardMrr,
+      recruitncBillable,
+    }),
     ...(stripeMRR !== undefined && { stripeMRR }),
     ...(projectedMRRAfterSeniorChurn !== undefined && { projectedMRRAfterSeniorChurn }),
     ...(seniorChurnByMonth && { seniorChurnByMonth }),

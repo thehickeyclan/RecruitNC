@@ -503,11 +503,21 @@ export function BlueCommandCenter() {
           </div>
         ) : data ? (
           <>
-            <p className="text-xs text-gray-500 -mb-3">Click a tile to show members below</p>
+            <p className="text-xs text-gray-500 -mb-3">
+              Click a tile to show members below
+              {data.recruitncCountsFromStripe && (
+                <span className="text-emerald-400/80"> · RecruitNC counts live from Stripe</span>
+              )}
+            </p>
             <div className={cn("grid grid-cols-2 gap-3", hasWiq ? "lg:grid-cols-3 xl:grid-cols-6" : "lg:grid-cols-4")}>
               <StatTile
                 label="Active (RecruitNC)"
                 value={data.currentActive}
+                sub={
+                  data.stripeRecruitncTotal != null
+                    ? `${data.stripeRecruitncTotal} Blue subs in Stripe`
+                    : undefined
+                }
                 icon={Users}
                 selected={panel === "recruitnc-active"}
                 onClick={() => togglePanel("recruitnc-active")}
@@ -522,7 +532,11 @@ export function BlueCommandCenter() {
               <StatTile
                 label="Churned (RecruitNC)"
                 value={data.currentCancelled}
-                sub="Canceled · click for ending too"
+                sub={
+                  (data.currentCanceling ?? 0) > 0
+                    ? `${data.currentCanceling} ending at period end`
+                    : "Canceled · click for ending too"
+                }
                 icon={CreditCard}
                 selected={panel === "recruitnc-cancelled"}
                 onClick={() => togglePanel("recruitnc-cancelled")}
@@ -602,7 +616,8 @@ export function BlueCommandCenter() {
                     </p>
                     <p className="text-3xl font-bold mt-1">{data.combinedBillable} billable</p>
                     <p className="text-sm text-gray-400 mt-1">
-                      {data.currentActive} RecruitNC @ $55/mo · {data.wiqBillable} WIQ @ $50/mo standard
+                      {data.recruitncBillable ?? data.currentActive} RecruitNC @ $55/mo · {data.wiqBillable} WIQ @
+                      $50/mo standard
                     </p>
                   </div>
                   <div className="text-right">

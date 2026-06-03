@@ -136,12 +136,29 @@ export async function GET() {
     return emptyPayload()
   }
 
-  const athleteIds = [...new Set(rows.map((r) => r.athlete_id))]
-  const payerIds = [...new Set(rows.map((r) => r.payer_user_id))]
+  const athleteIds = [...new Set(rows.map((r) => r.athlete_id).filter(Boolean))] as string[]
+  const payerIds = [...new Set(rows.map((r) => r.payer_user_id).filter(Boolean))] as string[]
+  const signupIds = [
+    ...new Set(
+      rows
+        .map((r) => (r as { signup_id?: string | null }).signup_id)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  ]
 
-  const [athletesRes, payersRes] = await Promise.all([
-    admin.from("athletes").select("id, name, firstname, lastname, firstName, lastName").in("id", athleteIds),
-    admin.from("user_profiles").select("user_id, full_name, first_name, last_name, email").in("user_id", payerIds),
+  const [athletesRes, payersRes, signupsForNamesRes] = await Promise.all([
+    athleteIds.length
+      ? admin.from("athletes").select("id, name, firstname, lastname, firstName, lastName").in("id", athleteIds)
+      : Promise.resolve({ data: [] as Record<string, unknown>[] }),
+    payerIds.length
+      ? admin.from("user_profiles").select("user_id, full_name, first_name, last_name, email").in("user_id", payerIds)
+      : Promise.resolve({ data: [] as Record<string, unknown>[] }),
+    signupIds.length
+      ? admin
+          .from("blue_signups")
+          .select("id, athlete_first_name, athlete_last_name")
+          .in("id", signupIds)
+      : Promise.resolve({ data: [] as Record<string, unknown>[] }),
   ])
 
   const athletes = (athletesRes.data ?? []).reduce(
@@ -170,8 +187,30 @@ export async function GET() {
     {} as Record<string, { name: string; email: string | null }>
   )
 
+  const signupAthleteNames = (signupsForNamesRes.data ?? []).reduce(
+    (acc, s) => {
+      const row = s as Record<string, unknown>
+      const id = String(row.id ?? "")
+      const name = [row.athlete_first_name, row.athlete_last_name]
+        .map((p) => String(p ?? "").trim())
+        .filter(Boolean)
+        .join(" ")
+      if (id && name) acc[id] = name
+      return acc
+    },
+    {} as Record<string, string>,
+  )
+
+  const resolveAthleteName = (athleteId: string, signupId: string | null | undefined) => {
+    const fromProfile = athletes[String(athleteId)]
+    if (fromProfile && fromProfile !== "—") return fromProfile
+    if (signupId && signupAthleteNames[signupId]) return signupAthleteNames[signupId]
+    return fromProfile ?? "—"
+  }
+
   const allSubscriptions: BlueSubscriptionRow[] = rows.map((r) => {
     const payer = payers[r.payer_user_id]
+    const signupId = (r as { signup_id?: string | null }).signup_id ?? null
     const row = r as {
       resume_at?: string | null
       next_billing_at?: string | null
@@ -181,7 +220,7 @@ export async function GET() {
     return {
       id: r.id,
       athlete_id: r.athlete_id,
-      athlete_name: athletes[r.athlete_id] ?? "—",
+      athlete_name: resolveAthleteName(r.athlete_id, signupId),
       payer_user_id: r.payer_user_id,
       payer_name: payer?.name ?? "—",
       payer_email: payer?.email ?? null,
