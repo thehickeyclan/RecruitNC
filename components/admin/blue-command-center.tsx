@@ -508,6 +508,13 @@ export function BlueCommandCenter() {
               {data.recruitncCountsFromStripe && (
                 <span className="text-emerald-400/80"> · RecruitNC counts live from Stripe</span>
               )}
+              {(data.stripeTestAccountsExcluded ?? 0) > 0 && (
+                <span className="text-gray-500">
+                  {" "}
+                  · {data.stripeTestAccountsExcluded} test account
+                  {data.stripeTestAccountsExcluded === 1 ? "" : "s"} excluded
+                </span>
+              )}
             </p>
             <div className={cn("grid grid-cols-2 gap-3", hasWiq ? "lg:grid-cols-3 xl:grid-cols-6" : "lg:grid-cols-4")}>
               <StatTile

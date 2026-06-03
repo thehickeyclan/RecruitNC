@@ -80,5 +80,6 @@ describe("aggregateBlueStripeSubscriptionStats", () => {
     expect(stats.paused).toBe(1)
     expect(stats.cancelingAtPeriodEnd).toBe(1)
     expect(stats.cancelled).toBe(1)
+    expect(stats.excludedTestAccounts).toBe(0)
   })
 })
