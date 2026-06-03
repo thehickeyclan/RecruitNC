@@ -83,6 +83,11 @@ export type BlueReportsData = {
   pendingPaymentCount?: number
   failedPaymentMembers?: { membershipId: string; athleteName: string; payerEmail: string | null }[]
   paidSignupsMissingMembership?: number
+  /** WrestlingIQ external registry (billing stays in WIQ). */
+  wiqBillable?: number
+  wiqEstimatedMrr?: number
+  wiqMissingFromReport?: number
+  wiqLastImportAt?: string | null
 }
 
 /**
@@ -499,10 +504,32 @@ export async function GET() {
     }
   }
 
+  let wiqBillable: number | undefined
+  let wiqEstimatedMrr: number | undefined
+  let wiqMissingFromReport: number | undefined
+  let wiqLastImportAt: string | null | undefined
+  const { data: wiqRows, error: wiqErr } = await admin
+    .from("blue_wiq_subscriptions")
+    .select("status, amount_cents, missing_from_last_import")
+  if (!wiqErr && wiqRows) {
+    const billable = wiqRows.filter((r) => r.status === "active" || r.status === "past_due" || r.status === "grace")
+    wiqBillable = billable.length
+    wiqEstimatedMrr = Math.round(billable.reduce((s, r) => s + (r.amount_cents ?? 0), 0)) / 100
+    wiqMissingFromReport = wiqRows.filter((r) => r.missing_from_last_import).length
+    const { data: lastWiqImport } = await admin
+      .from("blue_wiq_import_runs")
+      .select("imported_at")
+      .order("imported_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    wiqLastImportAt = lastWiqImport?.imported_at ?? null
+  }
+
   return NextResponse.json({
     ...data,
     pendingPaymentCount,
     paidSignupsMissingMembership,
+    ...(wiqBillable !== undefined && { wiqBillable, wiqEstimatedMrr, wiqMissingFromReport, wiqLastImportAt }),
     ...(stripeMRR !== undefined && { stripeMRR }),
     ...(projectedMRRAfterSeniorChurn !== undefined && { projectedMRRAfterSeniorChurn }),
     ...(seniorChurnByMonth && { seniorChurnByMonth }),

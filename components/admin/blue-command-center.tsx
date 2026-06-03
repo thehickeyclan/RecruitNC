@@ -36,7 +36,8 @@ const NAVY = "#03154C"
 const GOLD = "#D3B574"
 
 const QUICK_LINKS = [
-  { href: "/admin/blue/subscriptions", title: "Subscriptions", desc: "Billing, pause, cancel, Stripe sync", icon: CreditCard },
+  { href: "/admin/blue/subscriptions", title: "Subscriptions", desc: "RecruitNC Stripe billing", icon: CreditCard },
+  { href: "/admin/blue/wiq", title: "WrestlingIQ (WIQ)", desc: "Import monthly reports, external billing", icon: Users },
   { href: "/admin/blue/subscriptions/registrations", title: "Registrations", desc: "Signup pipeline", icon: Users },
   { href: "/admin/blue/reports", title: "Full reports", desc: "Charts, cohorts, billing calendar", icon: BarChart3 },
   { href: "/admin/blue/invites", title: "Invites", desc: "Private registration links", icon: Link2 },
@@ -146,7 +147,7 @@ export function BlueCommandCenter() {
           <>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {[
-                { label: "Active", value: data.currentActive, icon: Users },
+                { label: "Active (RecruitNC)", value: data.currentActive, icon: Users },
                 { label: "Paused", value: data.currentPaused, icon: CreditCard },
                 { label: "MRR (Stripe)", value: fmtMoney(mrrDisplay), icon: TrendingUp, raw: true },
                 {
@@ -167,6 +168,41 @@ export function BlueCommandCenter() {
                 </Card>
               ))}
             </div>
+
+            {data.wiqBillable != null && data.wiqBillable > 0 && (
+              <div className="rounded-lg border border-indigo-500/30 bg-indigo-950/25 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div>
+                  <p className="text-sm font-medium text-indigo-100">
+                    WrestlingIQ: {data.wiqBillable} billable member{data.wiqBillable === 1 ? "" : "s"}
+                    {data.wiqEstimatedMrr != null && ` · ~${fmtMoney(data.wiqEstimatedMrr)}/mo`}
+                  </p>
+                  <p className="text-xs text-indigo-200/70 mt-0.5">
+                    Billing stays in WIQ — not included in Stripe MRR above.
+                    {data.wiqLastImportAt && ` Last import ${new Date(data.wiqLastImportAt).toLocaleDateString()}.`}
+                  </p>
+                </div>
+                <a
+                  href="/admin/blue/wiq"
+                  className="text-sm font-medium text-[#D3B574] hover:underline shrink-0"
+                >
+                  Manage WIQ →
+                </a>
+              </div>
+            )}
+
+            {(data.wiqMissingFromReport ?? 0) > 0 && (
+              <Alert className="border-amber-500/50 bg-amber-950/40 text-amber-100">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>WIQ reconcile</AlertTitle>
+                <AlertDescription>
+                  {data.wiqMissingFromReport} WIQ subscription(s) were billable last time but missing from the latest
+                  import —{" "}
+                  <a href="/admin/blue/wiq" className="underline text-[#D3B574]">
+                    review in WIQ admin
+                  </a>
+                </AlertDescription>
+              </Alert>
+            )}
 
             <div className="grid lg:grid-cols-3 gap-3">
               <Card className="lg:col-span-2 bg-[#03154C]/60 border-white/10 text-white">
