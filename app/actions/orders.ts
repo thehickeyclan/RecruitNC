@@ -22,6 +22,12 @@ import { buildOrderReceiptPreview, buildNationalTeamReceiptPreview, buildGuildRe
 import { fetchMergedStoreMetadata } from "@/lib/store/stripe-legacy-metadata"
 import { isGuildOrderRow } from "@/lib/stripe-guild-detection"
 import { reconcileSharedStripeOrder } from "@/lib/orders/reconcile-shared-stripe-order"
+import { requireAdmin } from "@/lib/admin-auth"
+import {
+  applyManualOrderCategory,
+  type AdminManualOrderCategory,
+} from "@/lib/admin/order-admin-category"
+import type { OrderCategory } from "@/lib/admin-data"
 
 function getStripe(): Stripe {
   const key = process.env.STRIPE_SECRET_KEY
@@ -456,6 +462,36 @@ export async function getOrderDetails(orderId: string): Promise<
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to load order"
     console.error("[orders] getOrderDetails:", err)
+    return { success: false, error: message }
+  }
+}
+
+export async function setOrderCategory(
+  orderId: string,
+  category: OrderCategory | "Donation",
+): Promise<{ success: true } | { success: false; error: string }> {
+  const auth = await requireAdmin()
+  if (!auth.ok) return { success: false, error: auth.error }
+
+  const allowed: AdminManualOrderCategory[] = [
+    "Apparel",
+    "Guild",
+    "Drop-In",
+    "Donation",
+    "Tournament Fee",
+    "Blue Sub",
+    "Other",
+  ]
+  if (!allowed.includes(category as AdminManualOrderCategory)) {
+    return { success: false, error: "Invalid category" }
+  }
+
+  try {
+    const supabase = createAdminClient()
+    return await applyManualOrderCategory(supabase, orderId, category as AdminManualOrderCategory)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to update category"
+    console.error("[orders] setOrderCategory:", err)
     return { success: false, error: message }
   }
 }

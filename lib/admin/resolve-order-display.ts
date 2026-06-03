@@ -22,6 +22,10 @@ import { isGuildOrderRow } from "@/lib/stripe-guild-detection"
 import { isMisclassifiedGuildGhostLineName, isPracticeDropInShippingMethod } from "@/lib/stripe-guild-misclassified-line"
 import { amountLooksLikeGuild, amountLooksLikePracticeDropIn } from "@/lib/stripe-checkout-amounts"
 import { isGenericPlaceholderOrderItemName } from "@/lib/nhsca-hub-checkout-pricing"
+import {
+  adminCategoryFromOrder,
+  buildManualCategoryAdminDisplay,
+} from "@/lib/admin/order-admin-category"
 
 export type AdminOrderKind =
   | "store_apparel"
@@ -287,6 +291,9 @@ export function resolveOrderCategory(
     spartanDonation?: SpartanDonationRow | null
   },
 ): OrderCategory | "Donation" {
+  const manual = adminCategoryFromOrder(order)
+  if (manual) return manual
+
   if (isGuildOrderRow(order)) return "Guild"
   const total = Number(order.total) || 0
   if (
@@ -309,7 +316,6 @@ export function resolveOrderCategory(
   }
   const method = shippingMethodStr(order).toLowerCase()
   if (method.includes("national team")) return "Tournament Fee"
-  const total = Number(order.total) || 0
   if (items.length === 0 && total >= 50 && total <= 60) return "Blue Sub"
   if (items.length === 0 && total >= 200 && total <= 900) return "Tournament Fee"
   if (items.length > 0) return "Apparel"
@@ -333,6 +339,12 @@ export function resolveAdminOrderDisplay(input: {
   const { order } = input
   const items = order.order_items ?? []
   const orderId = order.id
+
+  const manualCategory = adminCategoryFromOrder(order)
+  if (manualCategory) {
+    const manualDisplay = buildManualCategoryAdminDisplay({ order, items, category: manualCategory })
+    if (manualDisplay) return manualDisplay
+  }
 
   if (isGuildOrderRow(order)) {
     const total = Number(order.total ?? 0)

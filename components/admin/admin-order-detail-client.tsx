@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -12,7 +12,8 @@ import { Separator } from "@/components/ui/separator"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { formatCurrency, formatDateTime, getStatusColor, type Order } from "@/lib/admin-data"
 import { MoreVertical, Mail, Phone, Package, CreditCard, CheckCircle2, ArrowLeft, RefreshCw } from "lucide-react"
-import { updateOrderStatus, addTrackingInfo, addOrderNote } from "@/app/actions/orders"
+import { updateOrderStatus, addTrackingInfo, addOrderNote, setOrderCategory } from "@/app/actions/orders"
+import { MANUAL_ORDER_CATEGORIES } from "@/lib/admin/order-admin-category"
 import { updateOrderAddress } from "@/app/actions/update-order-address"
 import { useToast } from "@/hooks/use-toast"
 import { AdminOrderReceiptPreview } from "@/components/admin/admin-order-receipt-preview"
@@ -102,6 +103,12 @@ export function AdminOrderDetailClient({ order }: OrderDetailClientProps) {
   })
   const [isRecoveringItems, setIsRecoveringItems] = useState(false)
   const [isReclassifying, setIsReclassifying] = useState(false)
+  const [isSavingCategory, setIsSavingCategory] = useState(false)
+  const [categoryValue, setCategoryValue] = useState(order.categoryLabel ?? "Other")
+
+  useEffect(() => {
+    setCategoryValue(order.categoryLabel ?? "Other")
+  }, [order.categoryLabel, order.id])
 
   const isTournamentOrder =
     order.typeBanner?.kind === "national_team_nhsca" || order.typeBanner?.kind === "national_team_aau"
@@ -231,6 +238,38 @@ export function AdminOrderDetailClient({ order }: OrderDetailClientProps) {
     }
   }
 
+  const handleCategoryChange = async (next: string) => {
+    const previous = categoryValue
+    setCategoryValue(next)
+    setIsSavingCategory(true)
+    try {
+      const result = await setOrderCategory(order.id, next as Order["category"] | "Donation")
+      if (result.success) {
+        toast({
+          title: "Category updated",
+          description: `Order classified as ${next}.`,
+        })
+        router.refresh()
+      } else {
+        setCategoryValue(previous)
+        toast({
+          title: "Could not update category",
+          description: result.error,
+          variant: "destructive",
+        })
+      }
+    } catch {
+      setCategoryValue(previous)
+      toast({
+        title: "Could not update category",
+        description: "Something went wrong.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSavingCategory(false)
+    }
+  }
+
   const handleReclassifyFromStripe = async () => {
     setIsReclassifying(true)
     try {
@@ -350,13 +389,27 @@ export function AdminOrderDetailClient({ order }: OrderDetailClientProps) {
             <p className="mt-2 text-sm font-semibold text-amber-800 max-w-2xl">{order.orderTotalMismatch}</p>
           ) : null}
         </div>
-        <div className="flex items-center gap-2">
-          {order.categoryLabel ? (
-            <Badge variant="outline" className="capitalize">
-              {order.categoryLabel}
-            </Badge>
-          ) : null}
-          <Badge variant={getStatusColor(currentStatus as Order["status"])} className="capitalize">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[10px] uppercase tracking-wide text-muted-foreground px-1">Type</span>
+            <Select
+              value={MANUAL_ORDER_CATEGORIES.includes(categoryValue as (typeof MANUAL_ORDER_CATEGORIES)[number]) ? categoryValue : "Other"}
+              onValueChange={handleCategoryChange}
+              disabled={isSavingCategory}
+            >
+              <SelectTrigger className="w-[168px] h-9 capitalize">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                {MANUAL_ORDER_CATEGORIES.map((cat) => (
+                  <SelectItem key={cat} value={cat} className="capitalize">
+                    {cat}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Badge variant={getStatusColor(currentStatus as Order["status"])} className="capitalize mt-4">
             {currentStatus}
           </Badge>
           <Button variant="outline" size="sm" onClick={handleReclassifyFromStripe} disabled={isReclassifying}>

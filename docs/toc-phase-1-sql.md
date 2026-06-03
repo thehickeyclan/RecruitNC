@@ -1,0 +1,119 @@
+# Tournament of Champions — Phase 1 SQL
+
+Run in **Supabase SQL Editor** before enabling TOC forms in production.
+
+```sql
+-- Event config (single row)
+create table if not exists public.toc_event_config (
+  id int primary key default 1,
+  phase text check (phase in ('phase_1','phase_2','phase_3','phase_4','post_event')) default 'phase_1',
+  event_dates text default 'September 4-5, 2026',
+  venue_name text,
+  venue_address text,
+  hero_primary_cta_label text default 'Get Notified',
+  hero_primary_cta_href text default '#email-signup',
+  watch_live_url text,
+  brackets_url text,
+  participating_colleges text,
+  updated_at timestamptz default now(),
+  constraint toc_event_config_single_row check (id = 1)
+);
+
+insert into public.toc_event_config (id, venue_name, venue_address, participating_colleges)
+values (
+  1,
+  'Hope Community Church',
+  'Hope Community Church, Apex, NC',
+  E'Participating colleges will be announced as programs confirm.\nEmail recruiting@ncwrestlingunited.com to reserve a table at the college fair.'
+)
+on conflict (id) do nothing;
+
+create table if not exists public.toc_invitations (
+  id uuid primary key default gen_random_uuid(),
+  athlete_id uuid references public.athletes(id) not null,
+  weight_class int not null,
+  seed int,
+  status text check (status in ('nominated','invited','confirmed','declined','withdrew')) default 'nominated',
+  invited_at timestamptz,
+  confirmed_at timestamptz,
+  confirmation_token text unique,
+  confirmation_token_expires_at timestamptz,
+  notes text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+create index if not exists idx_toc_invitations_status on public.toc_invitations(status);
+create index if not exists idx_toc_invitations_weight on public.toc_invitations(weight_class);
+
+create table if not exists public.toc_nominations (
+  id uuid primary key default gen_random_uuid(),
+  athlete_name text not null,
+  school text,
+  weight_class int,
+  graduation_year int,
+  submitted_by_name text,
+  submitted_by_email text not null,
+  submitted_by_relationship text,
+  notes text,
+  reviewed boolean default false,
+  athlete_id uuid references public.athletes(id),
+  created_at timestamptz default now()
+);
+
+create index if not exists idx_toc_nominations_reviewed on public.toc_nominations(reviewed, created_at desc);
+
+create table if not exists public.toc_email_subscribers (
+  id uuid primary key default gen_random_uuid(),
+  email text unique not null,
+  source text,
+  segments text[] default '{}',
+  unsubscribed boolean default false,
+  created_at timestamptz default now()
+);
+
+create table if not exists public.toc_sponsor_inquiries (
+  id uuid primary key default gen_random_uuid(),
+  company text not null,
+  contact_name text not null,
+  contact_email text not null,
+  contact_phone text,
+  tier_interest text,
+  message text,
+  status text check (status in ('new','contacted','negotiating','closed_won','closed_lost')) default 'new',
+  created_at timestamptz default now()
+);
+
+create index if not exists idx_toc_sponsor_status on public.toc_sponsor_inquiries(status, created_at desc);
+
+alter table public.toc_event_config enable row level security;
+alter table public.toc_invitations enable row level security;
+alter table public.toc_nominations enable row level security;
+alter table public.toc_email_subscribers enable row level security;
+alter table public.toc_sponsor_inquiries enable row level security;
+
+drop policy if exists "Public read toc_event_config" on public.toc_event_config;
+create policy "Public read toc_event_config"
+  on public.toc_event_config for select to anon, authenticated using (true);
+
+drop policy if exists "Public read confirmed toc_invitations" on public.toc_invitations;
+create policy "Public read confirmed toc_invitations"
+  on public.toc_invitations for select to anon, authenticated
+  using (status = 'confirmed');
+
+drop policy if exists "Service role full toc_invitations" on public.toc_invitations;
+create policy "Service role full toc_invitations"
+  on public.toc_invitations for all to service_role using (true) with check (true);
+
+drop policy if exists "Service role full toc_nominations" on public.toc_nominations;
+create policy "Service role full toc_nominations"
+  on public.toc_nominations for all to service_role using (true) with check (true);
+
+drop policy if exists "Service role full toc_email_subscribers" on public.toc_email_subscribers;
+create policy "Service role full toc_email_subscribers"
+  on public.toc_email_subscribers for all to service_role using (true) with check (true);
+
+drop policy if exists "Service role full toc_sponsor_inquiries" on public.toc_sponsor_inquiries;
+create policy "Service role full toc_sponsor_inquiries"
+  on public.toc_sponsor_inquiries for all to service_role using (true) with check (true);
+```
