@@ -1,6 +1,7 @@
 import type Stripe from "stripe"
 import { mapStripeSubscriptionToMembershipStatus } from "@/lib/blue-stripe-subscription-status"
 import { monthlyCentsFromStripeSubscription } from "@/lib/blue-reports-stripe-mrr"
+import { isBlueStripeTestSubscription } from "@/lib/blue-stripe-test-accounts"
 
 export type BlueStripeSubscriptionBucket = "active" | "paused" | "canceling" | "cancelled" | "past_due"
 
@@ -12,6 +13,8 @@ export type BlueStripeSubscriptionStats = {
   cancelled: number
   pastDue: number
   mrrCents: number
+  /** Test/internal subscriptions excluded from totals. */
+  excludedTestAccounts: number
 }
 
 export function isBlueStripeSubscription(sub: Stripe.Subscription, bluePriceId?: string): boolean {
@@ -61,6 +64,7 @@ export function aggregateBlueStripeSubscriptionStats(
     cancelled: 0,
     pastDue: 0,
     mrrCents: 0,
+    excludedTestAccounts: 0,
   }
   for (const sub of subs) {
     stats.total += 1
@@ -83,6 +87,7 @@ export async function fetchBlueStripeSubscriptionStats(
   bluePriceId?: string,
 ): Promise<BlueStripeSubscriptionStats> {
   const blueSubs: Stripe.Subscription[] = []
+  let excludedTestAccounts = 0
   let startingAfter: string | undefined
   let hasMore = true
 
@@ -91,17 +96,22 @@ export async function fetchBlueStripeSubscriptionStats(
       status: "all",
       limit: 100,
       ...(startingAfter ? { starting_after: startingAfter } : {}),
-      expand: ["data.items.data.price"],
+      expand: ["data.items.data.price", "data.customer"],
     })
     for (const sub of page.data) {
-      if (isBlueStripeSubscription(sub, bluePriceId)) {
-        blueSubs.push(sub)
+      if (!isBlueStripeSubscription(sub, bluePriceId)) continue
+      if (isBlueStripeTestSubscription(sub)) {
+        excludedTestAccounts += 1
+        continue
       }
+      blueSubs.push(sub)
     }
     hasMore = page.has_more
     startingAfter = page.data.length > 0 ? page.data[page.data.length - 1].id : undefined
     if (!page.data.length) hasMore = false
   }
 
-  return aggregateBlueStripeSubscriptionStats(blueSubs)
+  const stats = aggregateBlueStripeSubscriptionStats(blueSubs)
+  stats.excludedTestAccounts = excludedTestAccounts
+  return stats
 }

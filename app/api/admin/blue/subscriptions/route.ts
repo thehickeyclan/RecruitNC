@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getBlueMembershipStripeDetails } from "@/lib/blue-membership-stripe-details"
+import { isBlueStripeTestMembershipRow } from "@/lib/blue-stripe-test-accounts"
 
 export const dynamic = "force-dynamic"
 
@@ -293,6 +294,8 @@ export async function GET() {
       }
     })
   )
+
+  subscriptions = subscriptions.filter((sub) => !isBlueStripeTestMembershipRow(sub))
 
   const stats = {
     active: subscriptions.filter((s) => s.status === "active").length,

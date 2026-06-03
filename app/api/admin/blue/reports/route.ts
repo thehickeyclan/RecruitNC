@@ -55,6 +55,8 @@ export type BlueReportsData = {
   stripeRecruitncTotal?: number
   /** Tile counts pulled live from Stripe, not DB. */
   recruitncCountsFromStripe?: boolean
+  /** Internal test subscriptions excluded from Stripe totals. */
+  stripeTestAccountsExcluded?: number
   estimatedMRR: number
   byClass: { graduationYear: number; count: number; isAnticipatedChurn: boolean }[]
   anticipatedChurnCount: number
@@ -222,6 +224,7 @@ export async function GET() {
   let currentCancelled = cancelledRows.length
   let currentCanceling: number | undefined
   let stripeRecruitncTotal: number | undefined
+  let stripeTestAccountsExcluded: number | undefined
   let recruitncBillable = activeRows.length + pausedRows.length
   let recruitncCountsFromStripe = false
   let estimatedMRR = (currentActive + currentPaused) * BLUE_PRICE
@@ -482,6 +485,7 @@ export async function GET() {
       currentCanceling = stripeStats.cancelingAtPeriodEnd
       currentCancelled = stripeStats.cancelled + stripeStats.cancelingAtPeriodEnd
       stripeRecruitncTotal = stripeStats.total
+      stripeTestAccountsExcluded = stripeStats.excludedTestAccounts
       recruitncBillable =
         stripeStats.active + stripeStats.paused + stripeStats.cancelingAtPeriodEnd
       pendingFromStripe = stripeStats.pastDue
@@ -617,6 +621,8 @@ export async function GET() {
     estimatedMRR,
     ...(currentCanceling != null && { currentCanceling }),
     ...(stripeRecruitncTotal != null && { stripeRecruitncTotal }),
+    ...(stripeTestAccountsExcluded != null &&
+      stripeTestAccountsExcluded > 0 && { stripeTestAccountsExcluded }),
     ...(recruitncCountsFromStripe && { recruitncCountsFromStripe }),
     pendingPaymentCount: pendingPaymentCountFinal,
     paidSignupsMissingMembership,
