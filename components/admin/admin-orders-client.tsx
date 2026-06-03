@@ -177,18 +177,43 @@ export function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
     setIsSyncingStripe(true)
     try {
       const res = await fetch("/api/admin/orders/sync-stripe", { method: "POST" })
-      const data = await res.json()
-      if (!res.ok) {
-        toast.error(data.error || "Sync failed")
+      let data: {
+        success?: boolean
+        error?: string
+        created?: number
+        skipped?: number
+        createdFromInvoices?: number
+        partial?: boolean
+        errors?: string[]
+      } = {}
+      try {
+        data = await res.json()
+      } catch {
+        toast.error(`Sync failed (HTTP ${res.status}). Check Vercel function logs.`)
         return
       }
-      if (data.created > 0) {
-        toast.success(`Synced ${data.created} new order(s) from Stripe`)
+      if (!res.ok || data.success === false) {
+        toast.error(data.error || `Sync failed (HTTP ${res.status})`)
+        return
+      }
+      const created = data.created ?? 0
+      const skipped = data.skipped ?? 0
+      const fromInvoices = data.createdFromInvoices ?? 0
+      if (created > 0) {
+        const detail =
+          fromInvoices > 0 ? ` (${fromInvoices} from subscription invoices)` : ""
+        toast.success(`Synced ${created} new order(s) from Stripe${detail}`)
         router.refresh()
       } else {
-        toast.success(`No new orders. ${data.skipped} already in sync.`)
+        toast.success(`No new orders. ${skipped} already in sync.`)
       }
-    } catch (e) {
+      if (data.partial) {
+        toast.message("Sync partially completed — run again to finish older checkout payments.")
+      }
+      if (data.errors?.length) {
+        toast.message(`Sync warnings: ${data.errors.slice(0, 2).join("; ")}`)
+      }
+    } catch {
       toast.error("Sync from Stripe failed")
     } finally {
       setIsSyncingStripe(false)
@@ -390,15 +415,15 @@ export function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
                 <SelectTrigger className="w-[180px] bg-white/5 border-white/10 text-white">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#0f1c2e] border-white/10">
-                  <SelectItem value="all" className="text-white hover:bg-white/10">All categories</SelectItem>
-                  <SelectItem value="Apparel" className="text-white hover:bg-white/10">Apparel</SelectItem>
-                  <SelectItem value="Drop-In" className="text-white hover:bg-white/10">Drop-In</SelectItem>
-                  <SelectItem value="Blue Sub" className="text-white hover:bg-white/10">Blue Sub</SelectItem>
-                  <SelectItem value="Tournament Fee" className="text-white hover:bg-white/10">Tournament Fee</SelectItem>
-                  <SelectItem value="Donation" className="text-white hover:bg-white/10">Donation</SelectItem>
-                  <SelectItem value="Guild" className="text-white hover:bg-white/10">Guild</SelectItem>
-                  <SelectItem value="Other" className="text-white hover:bg-white/10">Other</SelectItem>
+                <SelectContent className="bg-[#0f1c2e] border-white/10 text-white">
+                  <SelectItem value="all" className="text-white focus:bg-white/10 focus:text-white">All categories</SelectItem>
+                  <SelectItem value="Apparel" className="text-white focus:bg-white/10 focus:text-white">Apparel</SelectItem>
+                  <SelectItem value="Drop-In" className="text-white focus:bg-white/10 focus:text-white">Drop-In</SelectItem>
+                  <SelectItem value="Blue Sub" className="text-white focus:bg-white/10 focus:text-white">Blue Sub</SelectItem>
+                  <SelectItem value="Tournament Fee" className="text-white focus:bg-white/10 focus:text-white">Tournament Fee</SelectItem>
+                  <SelectItem value="Donation" className="text-white focus:bg-white/10 focus:text-white">Donation</SelectItem>
+                  <SelectItem value="Guild" className="text-white focus:bg-white/10 focus:text-white">Guild</SelectItem>
+                  <SelectItem value="Other" className="text-white focus:bg-white/10 focus:text-white">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>
