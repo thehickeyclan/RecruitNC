@@ -14,7 +14,24 @@ function generateOrderNumber(): string {
 function subscriptionIdFromInvoice(invoice: Stripe.Invoice): string | null {
   const sub = invoice.subscription
   if (typeof sub === "string") return sub
-  return sub?.id ?? null
+  if (sub && typeof sub === "object" && "id" in sub && sub.id) return sub.id
+
+  const parent = (
+    invoice as {
+      parent?: { subscription_details?: { subscription?: string | { id?: string } | null } | null } | null
+    }
+  ).parent
+  const nested = parent?.subscription_details?.subscription
+  if (typeof nested === "string") return nested
+  if (nested && typeof nested === "object" && nested.id) return nested.id
+
+  for (const line of invoice.lines?.data ?? []) {
+    const lineSub = line.subscription
+    if (typeof lineSub === "string") return lineSub
+    if (lineSub && typeof lineSub === "object" && "id" in lineSub && lineSub.id) return lineSub.id
+  }
+
+  return null
 }
 
 function paymentIntentIdFromInvoice(invoice: Stripe.Invoice): string | null {
@@ -157,7 +174,7 @@ export async function ensureOrderFromStripeInvoice(
     status: "paid",
     stripe_payment_intent_id: paymentIntentId,
     promo_code: null,
-    ...(isBlue ? { channel: "blue" } : { channel: "subscription" }),
+    ...(isBlue ? { channel: "blue" } : {}),
   })
 
   if (orderErr) {
