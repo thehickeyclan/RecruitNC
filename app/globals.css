@@ -71,8 +71,8 @@
     contain: layout style;
   }
 
-  .admin-layout .min-h-screen {
-    background-color: rgb(249 250 251); /* bg-gray-50 */
+  .admin-layout .min-h-screen:not(.admin-dark-page) {
+    background-color: rgb(249 250 251); /* bg-gray-50 — dark admin pages opt out via .admin-dark-page */
   }
 }
 

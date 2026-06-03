@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server"
-import Stripe from "stripe"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createOrderFromPaymentIntent, createOrderFromSession } from "@/app/actions/stripe"
 import { checkoutSessionIsNonStoreImport } from "@/lib/stripe-sync-guards"
 import { syncPaidSubscriptionInvoicesFromStripe } from "@/lib/orders/ensure-order-from-stripe-invoice"
+import { getStripe, readStripeSecretKey } from "@/lib/stripe"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 120
@@ -35,12 +35,12 @@ export async function POST() {
     const auth = await requireAdmin()
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
-    const stripeSecret = process.env.STRIPE_SECRET_KEY
-    if (!stripeSecret?.trim()) {
+    const stripeSecret = readStripeSecretKey()
+    if (!stripeSecret) {
       return NextResponse.json({ error: "STRIPE_SECRET_KEY not set" }, { status: 500 })
     }
 
-    const stripe = new Stripe(stripeSecret)
+    const stripe = getStripe()
     const admin = createAdminClient()
     const since = Math.floor((Date.now() - DAYS_BACK * 24 * 60 * 60 * 1000) / 1000)
     const deadline = Date.now() + SYNC_TIME_BUDGET_MS
