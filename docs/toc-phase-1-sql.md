@@ -15,18 +15,32 @@ create table if not exists public.toc_event_config (
   watch_live_url text,
   brackets_url text,
   participating_colleges text,
-  updated_at timestamptz default now(),
+  confirmed_colleges jsonb not null default '[]'::jsonb,
+  updated_at timestamptz default CURRENT_TIMESTAMP,
   constraint toc_event_config_single_row check (id = 1)
 );
 
-insert into public.toc_event_config (id, venue_name, venue_address, participating_colleges)
+insert into public.toc_event_config (id, venue_name, venue_address, confirmed_colleges)
 values (
   1,
   'Hope Community Church',
   'Hope Community Church, Apex, NC',
-  E'Participating colleges will be announced as programs confirm.\nEmail recruiting@ncwrestlingunited.com to reserve a table at the college fair.'
+  '["NC State", "UNC", "Roanoke", "Lynchburg"]'::jsonb
 )
-on conflict (id) do nothing;
+on conflict (id) do update set
+  confirmed_colleges = excluded.confirmed_colleges,
+  venue_name = excluded.venue_name,
+  venue_address = excluded.venue_address,
+  updated_at = CURRENT_TIMESTAMP;
+
+-- If toc_event_config already exists without confirmed_colleges:
+alter table public.toc_event_config
+  add column if not exists confirmed_colleges jsonb not null default '[]'::jsonb;
+
+-- Example: confirmed programs for the recruiting fair logo strip (public page)
+-- update public.toc_event_config
+-- set confirmed_colleges = '["NC State", "UNC", "Roanoke", "Lynchburg"]'::jsonb
+-- where id = 1;
 
 create table if not exists public.toc_invitations (
   id uuid primary key default gen_random_uuid(),
@@ -39,8 +53,8 @@ create table if not exists public.toc_invitations (
   confirmation_token text unique,
   confirmation_token_expires_at timestamptz,
   notes text,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
+  created_at timestamptz default CURRENT_TIMESTAMP,
+  updated_at timestamptz default CURRENT_TIMESTAMP
 );
 
 create index if not exists idx_toc_invitations_status on public.toc_invitations(status);
@@ -58,7 +72,7 @@ create table if not exists public.toc_nominations (
   notes text,
   reviewed boolean default false,
   athlete_id uuid references public.athletes(id),
-  created_at timestamptz default now()
+  created_at timestamptz default CURRENT_TIMESTAMP
 );
 
 create index if not exists idx_toc_nominations_reviewed on public.toc_nominations(reviewed, created_at desc);
@@ -69,7 +83,7 @@ create table if not exists public.toc_email_subscribers (
   source text,
   segments text[] default '{}',
   unsubscribed boolean default false,
-  created_at timestamptz default now()
+  created_at timestamptz default CURRENT_TIMESTAMP
 );
 
 create table if not exists public.toc_sponsor_inquiries (
@@ -81,7 +95,7 @@ create table if not exists public.toc_sponsor_inquiries (
   tier_interest text,
   message text,
   status text check (status in ('new','contacted','negotiating','closed_won','closed_lost')) default 'new',
-  created_at timestamptz default now()
+  created_at timestamptz default CURRENT_TIMESTAMP
 );
 
 create index if not exists idx_toc_sponsor_status on public.toc_sponsor_inquiries(status, created_at desc);

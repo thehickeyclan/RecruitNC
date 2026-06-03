@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createOrderFromPaymentIntent, createOrderFromSession } from "@/app/actions/stripe"
 import { checkoutSessionIsNonStoreImport } from "@/lib/stripe-sync-guards"
+import { syncPaidSubscriptionInvoicesFromStripe } from "@/lib/orders/ensure-order-from-stripe-invoice"
 
 export const dynamic = "force-dynamic"
 
@@ -126,10 +127,25 @@ export async function POST() {
     else hasMoreSession = false
   }
 
+  // 3) Paid subscription invoices (Blue renewals, etc.) — not created by checkout session sync
+  let invoicesCreated = 0
+  let invoicesSkipped = 0
+  const invoiceErrors: string[] = []
+  try {
+    const invoiceSync = await syncPaidSubscriptionInvoicesFromStripe(admin, stripe, since)
+    invoicesCreated = invoiceSync.created
+    invoicesSkipped = invoiceSync.skipped
+    invoiceErrors.push(...invoiceSync.errors)
+  } catch (e) {
+    invoiceErrors.push(e instanceof Error ? e.message : String(e))
+  }
+
   return NextResponse.json({
     success: true,
-    created,
-    skipped,
-    errors: errors.slice(0, 20),
+    created: created + invoicesCreated,
+    skipped: skipped + invoicesSkipped,
+    createdFromCheckout: created,
+    createdFromInvoices: invoicesCreated,
+    errors: [...errors, ...invoiceErrors].slice(0, 20),
   })
 }

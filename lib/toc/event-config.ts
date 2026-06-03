@@ -1,5 +1,11 @@
 import { createAdminClient } from "@/lib/supabase/admin"
-import { TOC_DEFAULT_CONFIG } from "@/lib/toc/constants"
+import { parseConfirmedCollegeNames } from "@/lib/toc/confirmed-colleges"
+import { TOC_CONFIRMED_COLLEGES, TOC_DEFAULT_CONFIG } from "@/lib/toc/constants"
+
+function resolveConfirmedCollegesFromRow(raw: unknown): string[] {
+  const fromDb = parseConfirmedCollegeNames(raw)
+  return fromDb.length > 0 ? fromDb : [...TOC_CONFIRMED_COLLEGES]
+}
 
 export type TocEventConfig = {
   phase: string
@@ -10,6 +16,8 @@ export type TocEventConfig = {
   hero_primary_cta_href: string
   watch_live_url: string | null
   brackets_url: string | null
+  /** Program names with confirmed fair tables (from `confirmed_colleges` jsonb). */
+  confirmed_colleges: string[]
 }
 
 /** Load single-row event config; falls back to defaults if table missing. */
@@ -18,7 +26,12 @@ export async function getTocEventConfig(): Promise<TocEventConfig> {
     const admin = createAdminClient()
     const { data, error } = await admin.from("toc_event_config").select("*").eq("id", 1).maybeSingle()
     if (error || !data) {
-      return { ...TOC_DEFAULT_CONFIG, watch_live_url: null, brackets_url: null }
+      return {
+        ...TOC_DEFAULT_CONFIG,
+        watch_live_url: null,
+        brackets_url: null,
+        confirmed_colleges: [...TOC_CONFIRMED_COLLEGES],
+      }
     }
     return {
       phase: String(data.phase ?? TOC_DEFAULT_CONFIG.phase),
@@ -29,8 +42,14 @@ export async function getTocEventConfig(): Promise<TocEventConfig> {
       hero_primary_cta_href: String(data.hero_primary_cta_href ?? TOC_DEFAULT_CONFIG.hero_primary_cta_href),
       watch_live_url: data.watch_live_url ? String(data.watch_live_url) : null,
       brackets_url: data.brackets_url ? String(data.brackets_url) : null,
+      confirmed_colleges: resolveConfirmedCollegesFromRow(data.confirmed_colleges),
     }
   } catch {
-    return { ...TOC_DEFAULT_CONFIG, watch_live_url: null, brackets_url: null }
+    return {
+      ...TOC_DEFAULT_CONFIG,
+      watch_live_url: null,
+      brackets_url: null,
+      confirmed_colleges: [...TOC_CONFIRMED_COLLEGES],
+    }
   }
 }
