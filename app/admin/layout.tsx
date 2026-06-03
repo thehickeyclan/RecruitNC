@@ -11,9 +11,9 @@ export default function AdminLayout({
 }) {
   return (
     <AuthGuard requireAdmin={true}>
-      <div className="admin-layout">
+      <div className="admin-layout min-h-screen bg-transparent p-0">
         <Toaster position="top-center" />
-        <div className="min-h-screen bg-gray-50 p-4">{children}</div>
+        {children}
       </div>
     </AuthGuard>
   )

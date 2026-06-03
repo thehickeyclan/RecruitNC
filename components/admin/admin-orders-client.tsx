@@ -269,7 +269,7 @@ export function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A1628] p-4 md:p-8">
+    <div className="min-h-screen admin-dark-page bg-[#0A1628] p-4 md:p-8">
       <div className="mx-auto max-w-7xl space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
