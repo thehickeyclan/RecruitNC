@@ -8,6 +8,7 @@ import {
   dollarsFromCents,
   fetchStripeMrrCentsBySubscriptionId,
 } from "@/lib/blue-reports-stripe-mrr"
+import { sumWiqStandardMrrCents } from "@/lib/blue-billing-rates"
 
 export const dynamic = "force-dynamic"
 
@@ -86,8 +87,14 @@ export type BlueReportsData = {
   /** WrestlingIQ external registry (billing stays in WIQ). */
   wiqBillable?: number
   wiqEstimatedMrr?: number
+  /** WIQ MRR at $50/mo standard (ignores $51 fee line; keeps promos/comps). */
+  wiqStandardMrr?: number
   wiqMissingFromReport?: number
   wiqLastImportAt?: string | null
+  /** RecruitNC active + WIQ billable. */
+  combinedBillable?: number
+  /** Stripe MRR + WIQ standard MRR. */
+  combinedStandardMrr?: number
 }
 
 /**
@@ -506,6 +513,7 @@ export async function GET() {
 
   let wiqBillable: number | undefined
   let wiqEstimatedMrr: number | undefined
+  let wiqStandardMrr: number | undefined
   let wiqMissingFromReport: number | undefined
   let wiqLastImportAt: string | null | undefined
   const { data: wiqRows, error: wiqErr } = await admin
@@ -515,6 +523,7 @@ export async function GET() {
     const billable = wiqRows.filter((r) => r.status === "active" || r.status === "past_due" || r.status === "grace")
     wiqBillable = billable.length
     wiqEstimatedMrr = Math.round(billable.reduce((s, r) => s + (r.amount_cents ?? 0), 0)) / 100
+    wiqStandardMrr = Math.round(sumWiqStandardMrrCents(billable)) / 100
     wiqMissingFromReport = wiqRows.filter((r) => r.missing_from_last_import).length
     const { data: lastWiqImport } = await admin
       .from("blue_wiq_import_runs")
@@ -525,11 +534,26 @@ export async function GET() {
     wiqLastImportAt = lastWiqImport?.imported_at ?? null
   }
 
+  const stripeMrrForCombined = stripeMRR ?? data.estimatedMRR ?? 0
+  const combinedBillable =
+    wiqBillable !== undefined ? data.currentActive + wiqBillable : undefined
+  const combinedStandardMrr =
+    wiqStandardMrr !== undefined
+      ? Math.round((stripeMrrForCombined + wiqStandardMrr) * 100) / 100
+      : undefined
+
   return NextResponse.json({
     ...data,
     pendingPaymentCount,
     paidSignupsMissingMembership,
-    ...(wiqBillable !== undefined && { wiqBillable, wiqEstimatedMrr, wiqMissingFromReport, wiqLastImportAt }),
+    ...(wiqBillable !== undefined && {
+      wiqBillable,
+      wiqEstimatedMrr,
+      wiqStandardMrr,
+      wiqMissingFromReport,
+      wiqLastImportAt,
+    }),
+    ...(combinedBillable !== undefined && { combinedBillable, combinedStandardMrr }),
     ...(stripeMRR !== undefined && { stripeMRR }),
     ...(projectedMRRAfterSeniorChurn !== undefined && { projectedMRRAfterSeniorChurn }),
     ...(seniorChurnByMonth && { seniorChurnByMonth }),

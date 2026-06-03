@@ -41,6 +41,7 @@ export default function AdminBlueWiqPage() {
     unmatched: number
     missingFromReport: number
     estimatedMrr: number
+    standardMrr: number
   } | null>(null)
   const [tableReady, setTableReady] = useState(true)
   const [filter, setFilter] = useState<Filter>("billable")
@@ -197,8 +198,13 @@ export default function AdminBlueWiqPage() {
               <span className="rounded-full bg-amber-500/25 px-3 py-1 text-amber-200">Overdue {stats.pastDue}</span>
             )}
             <span className="rounded-full bg-white/10 px-3 py-1 text-white/70">
-              Est. WIQ MRR ${stats.estimatedMrr.toFixed(0)}
+              Est. MRR ${stats.standardMrr.toFixed(0)}/mo @ $50
             </span>
+            {Math.abs(stats.standardMrr - stats.estimatedMrr) > 1 && (
+              <span className="rounded-full bg-white/10 px-3 py-1 text-white/50 text-xs">
+                Export cash ${stats.estimatedMrr.toFixed(0)}/mo
+              </span>
+            )}
             {stats.unmatched > 0 && (
               <span className="rounded-full bg-amber-500/20 px-3 py-1 text-amber-200">Unmatched {stats.unmatched}</span>
             )}

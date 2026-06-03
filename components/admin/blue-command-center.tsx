@@ -169,15 +169,44 @@ export function BlueCommandCenter() {
               ))}
             </div>
 
+            {data.combinedBillable != null && (data.wiqBillable ?? 0) > 0 && (
+              <Card className="bg-[#03154C]/80 border-[#D3B574]/30 text-white">
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-gray-400">Combined Blue (RecruitNC + WIQ)</p>
+                      <p className="text-3xl font-bold mt-1">{data.combinedBillable} billable</p>
+                      <p className="text-sm text-gray-400 mt-1">
+                        {data.currentActive} RecruitNC @ $55/mo · {data.wiqBillable} WIQ @ $50/mo standard
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs uppercase tracking-wide text-gray-400">Combined MRR (standard rates)</p>
+                      <p className="text-2xl font-bold text-[#D3B574]">
+                        {fmtMoney(data.combinedStandardMrr ?? 0)}/mo
+                      </p>
+                      {data.wiqStandardMrr != null &&
+                        data.wiqEstimatedMrr != null &&
+                        data.wiqStandardMrr !== data.wiqEstimatedMrr && (
+                          <p className="text-[11px] text-gray-500 mt-0.5">
+                            WIQ export cash {fmtMoney(data.wiqEstimatedMrr)}/mo (often $51 with fees)
+                          </p>
+                        )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {data.wiqBillable != null && data.wiqBillable > 0 && (
               <div className="rounded-lg border border-indigo-500/30 bg-indigo-950/25 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div>
                   <p className="text-sm font-medium text-indigo-100">
                     WrestlingIQ: {data.wiqBillable} billable member{data.wiqBillable === 1 ? "" : "s"}
-                    {data.wiqEstimatedMrr != null && ` · ~${fmtMoney(data.wiqEstimatedMrr)}/mo`}
+                    {data.wiqStandardMrr != null && ` · ${fmtMoney(data.wiqStandardMrr)}/mo at $50`}
                   </p>
                   <p className="text-xs text-indigo-200/70 mt-0.5">
-                    Billing stays in WIQ — not included in Stripe MRR above.
+                    WIQ standard is $50/mo (RecruitNC new subs are $55). Billing stays in WIQ — not in Stripe MRR above.
                     {data.wiqLastImportAt && ` Last import ${new Date(data.wiqLastImportAt).toLocaleDateString()}.`}
                   </p>
                 </div>
@@ -208,7 +237,7 @@ export function BlueCommandCenter() {
               <Card className="lg:col-span-2 bg-[#03154C]/60 border-white/10 text-white">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg">MRR trend</CardTitle>
-                  <CardDescription className="text-gray-400">Estimated active seats × $55 (last 8 months)</CardDescription>
+                  <CardDescription className="text-gray-400">RecruitNC seats × $55 (last 8 months; WIQ excluded)</CardDescription>
                 </CardHeader>
                 <CardContent className="h-56">
                   {trend.length > 0 ? (
