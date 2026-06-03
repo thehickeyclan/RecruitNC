@@ -9,7 +9,7 @@ export function TocWeightClassesList() {
           College weight classes
         </TocVarsityHeading>
         <p className="text-white/70 mb-8 max-w-xl mx-auto">
-          Eleven brackets · eight wrestlers each · top four earn the Champion jacket
+          Eleven brackets · eight wrestlers each · one champion earns the jacket
         </p>
         <div className="flex flex-wrap justify-center gap-3">
           {TOC_WEIGHT_CLASSES.map((w) => (

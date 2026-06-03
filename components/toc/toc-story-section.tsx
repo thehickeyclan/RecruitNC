@@ -18,8 +18,8 @@ export function TocStorySection() {
             Wrestlers are nominated, reviewed, and invited based on results, ranking, and trajectory.
           </p>
           <p>
-            Placers earn the <strong>Champion jacket</strong> — navy, red, and white NC pride you wear long after the
-            brackets are closed. Alongside the competition, families connect with college programs through a recruiting
+            The <strong>champion</strong> at each weight earns the <strong>Champion jacket</strong> — navy, red, and
+            white NC pride you wear long after the brackets are closed. Alongside the competition, families connect with college programs through a recruiting
             fair and education sessions scheduled around the wrestling.
           </p>
         </div>
@@ -27,8 +27,8 @@ export function TocStorySection() {
         <div className="mt-10 grid sm:grid-cols-3 gap-4">
           {[
             { title: "Fill the field", desc: "Identify and invite the best at each weight." },
-            { title: "Prove it on the mat", desc: "College weights, real brackets, top-4 placement." },
-            { title: "Earn the jacket", desc: "Patriotic NC award — chest and back." },
+            { title: "Prove it on the mat", desc: "College weights, real brackets — win it to earn the jacket." },
+            { title: "Earn the jacket", desc: "One champion per weight. Chest and back." },
           ].map((g) => (
             <div
               key={g.title}
