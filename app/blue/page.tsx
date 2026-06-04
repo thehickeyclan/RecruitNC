@@ -296,7 +296,8 @@ export default function BluePage() {
                     Blue membership represents inclusion in a year-round training and development environment built on shared standards, accountability, and long-term growth. Membership is invite-led, not automatic.
                   </p>
                   <p className="mt-4 leading-relaxed text-[#003366]/90">
-                    A wave of invitations will be extended to select 2026 State Qualifiers, with official registration and Blue shirt pickup at the State Championships. Invited athletes are asked to stop by Suite 109 at States to complete registration and receive their Blue shirt.
+                    After you register and pay online, pick up your Blue shirt at your first practice —{" "}
+                    <strong>Sundays 1–3 PM</strong>, UNC Fetzer Hall.
                   </p>
                 </CardContent>
               </Card>
