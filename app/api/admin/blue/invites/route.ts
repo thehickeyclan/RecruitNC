@@ -92,6 +92,12 @@ export async function POST(request: NextRequest) {
     emailSent = sent.success
   }
 
+  if (body.interestId?.trim()) {
+    const interestPatch: Record<string, string> = { status: "invite_sent" }
+    if (body.email?.trim()) interestPatch.parent_email = body.email.trim().toLowerCase()
+    await admin.from("blue_express_interest").update(interestPatch).eq("id", body.interestId.trim())
+  }
+
   return NextResponse.json({
     invite: row,
     registerUrl,

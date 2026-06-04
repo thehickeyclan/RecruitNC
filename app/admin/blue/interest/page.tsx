@@ -33,6 +33,7 @@ const BLANK_VALUE = "__none__"
 const STATUS_OPTIONS = [
   { value: BLANK_VALUE, label: "—" },
   { value: "text_sent", label: "Text sent" },
+  { value: "approved", label: "Approved" },
   { value: "invite_sent", label: "Invite sent" },
   { value: "registered", label: "Registered" },
   { value: "declined", label: "Declined" },
@@ -85,6 +86,8 @@ type Submission = {
   invite_id: string | null
   invite_sent: boolean
   enrolled: boolean
+  parent_email?: string | null
+  approval_email_sent_at?: string | null
 }
 
 export default function AdminBlueInterestPage() {
@@ -92,10 +95,11 @@ export default function AdminBlueInterestPage() {
   const [error, setError] = useState<string | null>(null)
   const [submissions, setSubmissions] = useState<Submission[]>([])
   const [exporting, setExporting] = useState(false)
-  const [createInviteRow, setCreateInviteRow] = useState<Submission | null>(null)
-  const [createInviteEmail, setCreateInviteEmail] = useState("")
-  const [createInviteNote, setCreateInviteNote] = useState("")
-  const [creatingInvite, setCreatingInvite] = useState(false)
+  const [approvalRow, setApprovalRow] = useState<Submission | null>(null)
+  const [approvalEmail, setApprovalEmail] = useState("")
+  const [approvalParentName, setApprovalParentName] = useState("")
+  const [approvalNote, setApprovalNote] = useState("")
+  const [sendingApproval, setSendingApproval] = useState(false)
   const [updatingFieldId, setUpdatingFieldId] = useState<string | null>(null)
   const [zeroRowsHint, setZeroRowsHint] = useState(false)
   const { toast } = useToast()
@@ -198,10 +202,47 @@ export default function AdminBlueInterestPage() {
     }
   }
 
-  const openCreateInvite = (row: Submission) => {
-    setCreateInviteRow(row)
-    setCreateInviteEmail("")
-    setCreateInviteNote("")
+  const openSendApproval = (row: Submission) => {
+    setApprovalRow(row)
+    setApprovalEmail(row.parent_email?.trim() ?? "")
+    setApprovalParentName("")
+    setApprovalNote("")
+  }
+
+  const handleSendApproval = async () => {
+    if (!approvalRow || !approvalEmail.trim()) {
+      toast({ title: "Email required", variant: "destructive" })
+      return
+    }
+    setSendingApproval(true)
+    try {
+      const res = await fetch("/api/admin/blue-express-interest/send-approval", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          id: approvalRow.id,
+          email: approvalEmail.trim(),
+          parentName: approvalParentName.trim() || undefined,
+          personalNote: approvalNote.trim() || undefined,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.ok) {
+        toast({ title: data.error || "Failed to send approval email", variant: "destructive" })
+        return
+      }
+      toast({
+        title: "Approval email sent",
+        description: data.warning ? `${data.sentTo} — ${data.warning}` : `Sent to ${data.sentTo}`,
+      })
+      setApprovalRow(null)
+      loadSubmissions()
+    } catch {
+      toast({ title: "Failed to send approval email", variant: "destructive" })
+    } finally {
+      setSendingApproval(false)
+    }
   }
 
   const patchField = async (id: string, field: "status" | "regional" | "placement", value: string | null) => {
@@ -230,42 +271,6 @@ export default function AdminBlueInterestPage() {
   const handleRegionalChange = (id: string, value: string) => patchField(id, "regional", value === BLANK_VALUE ? null : value)
   const handlePlacementChange = (id: string, value: string) => patchField(id, "placement", value === BLANK_VALUE ? null : value)
 
-  const handleCreateInvite = async () => {
-    if (!createInviteRow || !createInviteEmail.trim()) {
-      toast({ title: "Email required", variant: "destructive" })
-      return
-    }
-    setCreatingInvite(true)
-    try {
-      const res = await fetch("/api/admin/blue/invites", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          email: createInviteEmail.trim(),
-          notes: createInviteNote.trim() || undefined,
-          interestId: createInviteRow.id,
-        }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        toast({ title: data.error || "Failed to create invite", variant: "destructive" })
-        setCreatingInvite(false)
-        return
-      }
-      toast({
-        title: data.emailSent ? "Invite created and sent" : "Invite created",
-        description: data.emailSent ? `Sent to ${createInviteEmail.trim()}` : "Copy the link from the Invites page.",
-      })
-      setCreateInviteRow(null)
-      loadSubmissions()
-    } catch {
-      toast({ title: "Failed to create invite", variant: "destructive" })
-    } finally {
-      setCreatingInvite(false)
-    }
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="mx-auto max-w-6xl">
@@ -282,7 +287,7 @@ export default function AdminBlueInterestPage() {
                 Blue Interest Forms
               </h1>
               <p className="text-sm text-gray-600">
-                State qualifier interest. Create invites and track who has been invited and who enrolled.
+                State qualifier interest. Send approval email (includes registration link) when ready to enroll.
               </p>
             </div>
           </div>
@@ -506,19 +511,23 @@ alter table public.blue_express_interest
                         <TableCell className="text-right">
                           {row.enrolled ? (
                             <span className="text-sm text-green-600">Enrolled</span>
-                          ) : row.invite_sent ? (
-                            <Link href="/admin/blue/invites" className="text-sm text-[#03154C] hover:underline">
-                              View invite
-                            </Link>
                           ) : (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => openCreateInvite(row)}
-                            >
-                              <Mail className="h-3 w-3 mr-1" />
-                              Create invite
-                            </Button>
+                            <div className="flex flex-col items-end gap-1">
+                              {!row.approval_email_sent_at && row.status !== "approved" && row.status !== "invite_sent" && (
+                                <Button variant="outline" size="sm" onClick={() => openSendApproval(row)}>
+                                  <Check className="h-3 w-3 mr-1" />
+                                  Send approval
+                                </Button>
+                              )}
+                              {(row.approval_email_sent_at || row.invite_sent) && (
+                                <span className="text-xs text-emerald-700">Approval / invite sent</span>
+                              )}
+                              {row.invite_sent && (
+                                <Link href="/admin/blue/invites" className="text-sm text-[#03154C] hover:underline">
+                                  View invite
+                                </Link>
+                              )}
+                            </div>
                           )}
                         </TableCell>
                       </TableRow>
@@ -531,45 +540,53 @@ alter table public.blue_express_interest
         </Card>
       </div>
 
-      <Dialog open={!!createInviteRow} onOpenChange={(open) => !open && setCreateInviteRow(null)}>
+      <Dialog open={!!approvalRow} onOpenChange={(open) => !open && setApprovalRow(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create invite</DialogTitle>
+            <DialogTitle>Send approval email</DialogTitle>
             <DialogDescription>
-              Send an invite for {createInviteRow ? `${createInviteRow.first_name} ${createInviteRow.last_name}` : ""}. Enter the parent/guardian email. The invite will be linked to this interest form so it shows as “Invite sent” and “Enrolled” when they complete registration.
+              {approvalRow
+                ? `Approval + registration link for ${approvalRow.first_name} ${approvalRow.last_name}. Creates a private invite and emails the parent to complete enrollment.`
+                : ""}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="invite-email">Email (required)</Label>
+              <Label htmlFor="approval-email">Parent/guardian email (required)</Label>
               <Input
-                id="invite-email"
+                id="approval-email"
                 type="email"
                 placeholder="parent@example.com"
-                value={createInviteEmail}
-                onChange={(e) => setCreateInviteEmail(e.target.value)}
+                value={approvalEmail}
+                onChange={(e) => setApprovalEmail(e.target.value)}
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="invite-note">Personal note (optional)</Label>
+              <Label htmlFor="approval-parent-name">Parent first name (optional)</Label>
               <Input
-                id="invite-note"
-                placeholder="Add a note for the email"
-                value={createInviteNote}
-                onChange={(e) => setCreateInviteNote(e.target.value)}
+                id="approval-parent-name"
+                placeholder="Jane"
+                value={approvalParentName}
+                onChange={(e) => setApprovalParentName(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="approval-note">Personal note (optional)</Label>
+              <Input
+                id="approval-note"
+                placeholder="We loved watching you at states…"
+                value={approvalNote}
+                onChange={(e) => setApprovalNote(e.target.value)}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateInviteRow(null)}>
+            <Button variant="outline" onClick={() => setApprovalRow(null)}>
               Cancel
             </Button>
-            <Button
-              onClick={handleCreateInvite}
-              disabled={creatingInvite || !createInviteEmail.trim()}
-            >
-              {creatingInvite ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-              <span className="ml-2">Create invite</span>
+            <Button onClick={handleSendApproval} disabled={sendingApproval || !approvalEmail.trim()}>
+              {sendingApproval ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+              <span className="ml-2">Send approval email</span>
             </Button>
           </DialogFooter>
         </DialogContent>

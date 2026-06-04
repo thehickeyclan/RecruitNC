@@ -239,7 +239,7 @@ export async function GET(_request: NextRequest) {
   }
 }
 
-const STATUS_VALUES = ["text_sent", "invite_sent", "registered", "declined"] as const
+const STATUS_VALUES = ["text_sent", "approved", "invite_sent", "registered", "declined"] as const
 const REGIONAL_VALUES = ["1A", "2A", "3A", "4A", "5A", "6A", "7A", "8A"] as const
 const PLACEMENT_VALUES = ["1st", "2nd", "3rd", "4th"] as const
 
@@ -270,7 +270,7 @@ export async function PATCH(request: NextRequest) {
     const updates: Record<string, string | null> = {}
     if (body.hasOwnProperty("status")) {
       if (!isValidStatus(body.status)) {
-        return NextResponse.json({ ok: false, error: "Invalid status. Use: (blank), text_sent, invite_sent, registered, declined" }, { status: 400 })
+        return NextResponse.json({ ok: false, error: "Invalid status. Use: (blank), text_sent, approved, invite_sent, registered, declined" }, { status: 400 })
       }
       updates.status = body.status === "" || body.status == null ? null : body.status
     }

@@ -3,6 +3,16 @@
  * Uses Resend for email delivery (from: info@ncwrestlingunited.com)
  */
 
+import {
+  BLUE_BILLING_HELP_URL,
+  BLUE_GROUPME_URL,
+  BLUE_PROFILE_BILLING_URL,
+  NC_UNITED_CALENDAR_URL,
+  NC_UNITED_STORE_URL,
+  RECRUITNC_PROFILE_URL,
+  RECRUITNC_SIGNIN_URL,
+} from "@/lib/blue-member-links"
+
 const FROM_BLUE = "NC Wrestling United <info@ncwrestlingunited.com>"
 const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://app.ncwrestlingunited.com"
 
@@ -65,15 +75,7 @@ export type BlueWelcomeEmailParams = {
   passwordSetupUrl?: string | null
 }
 
-/** Post-payment welcome: practices, billing management, profile link. */
-export async function sendBlueWelcomeEmail(params: BlueWelcomeEmailParams): Promise<{ success: boolean; error?: string }> {
-  if (!process.env.RESEND_API_KEY) {
-    console.warn("RESEND_API_KEY not configured, skipping Blue welcome email")
-    return { success: false, error: "Email service not configured" }
-  }
-
-  const profileUrl = `${SITE_URL}/profile#nc-united-blue`
-  const billingUrl = `${SITE_URL}/blue/billing`
+export function buildBlueWelcomeEmailHtml(params: BlueWelcomeEmailParams): string {
   const parentName = (params.parentName || "there").trim()
   const athleteName = (params.athleteName || "your athlete").trim()
   const passwordBlock = params.passwordSetupUrl
@@ -82,15 +84,10 @@ export async function sendBlueWelcomeEmail(params: BlueWelcomeEmailParams): Prom
     </p>
     <p style="color: #6b7280; font-size: 14px;">Use the same email you registered with. This link expires in 24 hours.</p>`
     : `<p style="margin: 20px 0;">
-      <a href="${SITE_URL}/auth/signin" style="display: inline-block; background: #03154C; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold;">Sign in to RecruitNC</a>
+      <a href="${RECRUITNC_SIGNIN_URL}" style="display: inline-block; background: #03154C; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold;">Sign in to RecruitNC</a>
     </p>`
 
-  try {
-    const { Resend } = await import("resend")
-    const resend = new Resend(process.env.RESEND_API_KEY)
-
-    const html = `
-<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -99,39 +96,70 @@ export async function sendBlueWelcomeEmail(params: BlueWelcomeEmailParams): Prom
   </div>
   <div style="background: #fff; padding: 28px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
     <p>Hi ${parentName},</p>
-    <p>Payment is complete — <strong>${athleteName}</strong> is enrolled in NC United Blue. Here’s what you need to know.</p>
+    <p>Payment is complete — <strong>${athleteName}</strong> is enrolled in NC United Blue. Here&apos;s everything you need to get started.</p>
+
+    <h2 style="color: #03154C; font-size: 16px; margin-top: 24px;">Practices</h2>
+    <p><strong>Sundays, 1:00–3:00 PM</strong><br>UNC Fetzer Hall · Chapel Hill</p>
+    <p style="color: #6b7280; font-size: 14px;">Plan to arrive ready to train. Check the calendar for any schedule updates.</p>
+
+    <h2 style="color: #03154C; font-size: 16px; margin-top: 24px;">Stay connected</h2>
+    <ul style="padding-left: 20px; margin: 12px 0;">
+      <li style="margin-bottom: 8px;"><a href="${BLUE_GROUPME_URL}" style="color: #03154C; font-weight: bold;">Join NC United Blue on GroupMe</a> — team chat and practice updates</li>
+      <li><a href="${NC_UNITED_CALENDAR_URL}" style="color: #03154C; font-weight: bold;">View the NC United calendar</a> — practices, events, and schedule</li>
+    </ul>
+
+    <h2 style="color: #03154C; font-size: 16px; margin-top: 24px;">Keep your RecruitNC recruiting profile current</h2>
+    <p>College coaches use RecruitNC to find NC wrestlers. Sign in and keep your athlete&apos;s profile accurate and complete:</p>
+    <ul style="padding-left: 20px; margin: 12px 0;">
+      <li>GPA and academic info</li>
+      <li>Cell phone and contact info</li>
+      <li>Weight class, high school, and club</li>
+      <li>Recruiting status, achievements, and highlight links</li>
+    </ul>
+    <p style="margin: 16px 0;">
+      <a href="${RECRUITNC_PROFILE_URL}" style="color: #03154C; font-weight: bold;">Update recruiting profile →</a>
+    </p>
+    ${passwordBlock}
 
     <h2 style="color: #03154C; font-size: 16px; margin-top: 24px;">Manage your subscription</h2>
     <p>Sign in to RecruitNC → <strong>Profile → NC United Blue</strong> to:</p>
-    <ul style="padding-left: 20px;">
+    <ul style="padding-left: 20px; margin: 12px 0;">
       <li>View next bill date and payment history</li>
       <li>Update your card (Stripe billing portal)</li>
       <li>Pause or cancel your membership</li>
       <li>Retry a failed payment</li>
     </ul>
     <p style="margin: 16px 0;">
-      <a href="${profileUrl}" style="color: #03154C; font-weight: bold;">Open billing in your profile →</a><br>
-      <a href="${billingUrl}" style="color: #6b7280; font-size: 14px;">Or visit ${billingUrl}</a>
+      <a href="${BLUE_PROFILE_BILLING_URL}" style="color: #03154C; font-weight: bold;">Open billing in your profile →</a><br>
+      <a href="${BLUE_BILLING_HELP_URL}" style="color: #6b7280; font-size: 14px;">Billing help: ${BLUE_BILLING_HELP_URL}</a>
     </p>
-    ${passwordBlock}
 
-    <h2 style="color: #03154C; font-size: 16px; margin-top: 24px;">Practices</h2>
-    <p>UNC Fetzer Hall, Chapel Hill — <strong>Sundays 1:00–3:00 PM</strong></p>
-
-    <h2 style="color: #03154C; font-size: 16px; margin-top: 24px;">Stay connected</h2>
-    <p><a href="https://groupme.com/join_group/104706096/bU0Ncyo4" style="color: #03154C;">Join NC United Blue on GroupMe</a></p>
+    <h2 style="color: #03154C; font-size: 16px; margin-top: 24px;">NC United Store</h2>
+    <p>Blue members receive <strong>20% off</strong> NC United Store apparel and gear. Shop at <a href="${NC_UNITED_STORE_URL}" style="color: #03154C;">${NC_UNITED_STORE_URL}</a> — your member discount applies at checkout when you&apos;re signed in.</p>
 
     <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
     <p style="color: #6b7280; font-size: 14px;">Questions? <a href="mailto:info@ncwrestlingunited.com" style="color: #03154C;">info@ncwrestlingunited.com</a></p>
   </div>
 </body>
 </html>`
+}
+
+/** Post-payment welcome: practices, GroupMe, calendar, profile, billing management. */
+export async function sendBlueWelcomeEmail(params: BlueWelcomeEmailParams): Promise<{ success: boolean; error?: string }> {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("RESEND_API_KEY not configured, skipping Blue welcome email")
+    return { success: false, error: "Email service not configured" }
+  }
+
+  try {
+    const { Resend } = await import("resend")
+    const resend = new Resend(process.env.RESEND_API_KEY)
 
     const result = await resend.emails.send({
       from: FROM_BLUE,
       to: [params.to.trim()],
-      subject: `Welcome to NC United Blue — manage your subscription`,
-      html,
+      subject: `Welcome to NC United Blue — next steps`,
+      html: buildBlueWelcomeEmailHtml(params),
     })
 
     if (result.error) {

@@ -34,13 +34,21 @@ create policy "Service role can update all"
   on public.blue_express_interest for update to service_role using (true) with check (true);
 ```
 
-**Status (default blank), Regional, Placement (admin dropdowns):** Add columns. Status default is null (blank); optional values: text sent, invite sent, registered, declined. Regional: 1A–8A. Placement: 1st, 2nd, 3rd, 4th.
+**Status (default blank), Regional, Placement (admin dropdowns):** Status values: `text_sent`, `approved`, `invite_sent`, `registered`, `declined`.
 
 ```sql
-alter table public.blue_express_interest
-  add column if not exists status text
-  check (status is null or status in ('text_sent', 'invite_sent', 'registered', 'declined'));
+alter table public.blue_express_interest drop constraint if exists blue_express_interest_status_check;
+alter table public.blue_express_interest add constraint blue_express_interest_status_check
+  check (status is null or status in ('text_sent', 'approved', 'invite_sent', 'registered', 'declined'));
 
+alter table public.blue_express_interest
+  add column if not exists parent_email text,
+  add column if not exists approval_email_sent_at timestamptz;
+```
+
+**Approval email workflow:** Admin → Blue → Interest → **Send approval** (public program info only). Then **Create invite** (private register link). After payment, welcome email includes GroupMe + store discount.
+
+```sql
 alter table public.blue_express_interest
   add column if not exists regional text
   check (regional is null or regional in ('1A','2A','3A','4A','5A','6A','7A','8A'));
