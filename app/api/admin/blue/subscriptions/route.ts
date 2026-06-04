@@ -35,6 +35,8 @@ export type BlueSubscriptionRow = {
   last_payment_at: string | null
   ended_at: string | null
   cancel_at_period_end: boolean
+  /** Collection paused in Stripe (billing voided until resume). */
+  collection_paused?: boolean
   card_display: string | null
   stripe_enrichment_error: string | null
   plan_name: string | null
@@ -157,7 +159,7 @@ export async function GET() {
     signupIds.length
       ? admin
           .from("blue_signups")
-          .select("id, athlete_first_name, athlete_last_name")
+          .select("id, athlete_first_name, athlete_last_name, parent_email")
           .in("id", signupIds)
       : Promise.resolve({ data: [] as Record<string, unknown>[] }),
   ])
@@ -202,10 +204,46 @@ export async function GET() {
     {} as Record<string, string>,
   )
 
-  const resolveAthleteName = (athleteId: string, signupId: string | null | undefined) => {
+  const payerEmails = [
+    ...new Set(
+      Object.values(payers)
+        .map((p) => p.email?.trim().toLowerCase())
+        .filter((e): e is string => Boolean(e)),
+    ),
+  ]
+  const { data: signupsByEmailRows } =
+    payerEmails.length > 0
+      ? await admin
+          .from("blue_signups")
+          .select("parent_email, athlete_first_name, athlete_last_name")
+          .in("parent_email", payerEmails)
+      : { data: [] as Record<string, unknown>[] }
+
+  const signupAthleteNamesByEmail: Record<string, string> = {}
+  for (const s of [...(signupsForNamesRes.data ?? []), ...(signupsByEmailRows ?? [])]) {
+    const row = s as Record<string, unknown>
+    const email = String(row.parent_email ?? "")
+      .trim()
+      .toLowerCase()
+    const name = [row.athlete_first_name, row.athlete_last_name]
+      .map((p) => String(p ?? "").trim())
+      .filter(Boolean)
+      .join(" ")
+    if (email && name && !signupAthleteNamesByEmail[email]) signupAthleteNamesByEmail[email] = name
+  }
+
+  const resolveAthleteName = (
+    athleteId: string,
+    signupId: string | null | undefined,
+    payerEmail: string | null | undefined,
+  ) => {
     const fromProfile = athletes[String(athleteId)]
     if (fromProfile && fromProfile !== "—") return fromProfile
     if (signupId && signupAthleteNames[signupId]) return signupAthleteNames[signupId]
+    if (payerEmail) {
+      const byEmail = signupAthleteNamesByEmail[payerEmail.trim().toLowerCase()]
+      if (byEmail) return byEmail
+    }
     return fromProfile ?? "—"
   }
 
@@ -221,7 +259,7 @@ export async function GET() {
     return {
       id: r.id,
       athlete_id: r.athlete_id,
-      athlete_name: resolveAthleteName(r.athlete_id, signupId),
+      athlete_name: resolveAthleteName(r.athlete_id, signupId, payer?.email ?? null),
       payer_user_id: r.payer_user_id,
       payer_name: payer?.name ?? "—",
       payer_email: payer?.email ?? null,
@@ -282,10 +320,13 @@ export async function GET() {
           : null
       return {
         ...sub,
+        status: d.effectiveStatus,
         next_billing_at: d.nextBillingAt ?? sub.next_billing_at,
+        resume_at: d.resumeAt ?? sub.resume_at,
         last_payment_at: d.lastPaymentAt,
         amount_display: d.amountFormatted ? `${d.amountFormatted}/mo` : sub.amount_display,
         cancel_at_period_end: d.cancelAtPeriodEnd,
+        collection_paused: d.collectionPaused,
         card_display,
         plan_name: d.planName ?? null,
         paid_invoice_count: d.paidInvoiceCount,
@@ -298,7 +339,7 @@ export async function GET() {
   subscriptions = subscriptions.filter((sub) => !isBlueStripeTestMembershipRow(sub))
 
   const stats = {
-    active: subscriptions.filter((s) => s.status === "active").length,
+    active: subscriptions.filter((s) => s.status === "active" && !s.cancel_at_period_end).length,
     paused: subscriptions.filter((s) => s.status === "paused").length,
     cancelled: subscriptions.filter((s) => s.status === "cancelled" || s.status === "alumni").length,
     pending_payment: subscriptions.filter((s) => s.status === "pending_payment").length,

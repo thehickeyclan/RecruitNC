@@ -104,11 +104,10 @@ export async function reconcileBlueMembershipsFromStripe(
       if (mapped.ended_at) patch.ended_at = mapped.ended_at
       else if (mapped.status !== "cancelled") patch.ended_at = null
 
-      if (row.status !== mapped.status) {
-        const { error: upErr } = await admin.from("blue_memberships").update(patch).eq("id", row.id)
-        if (upErr) errors += 1
-        else updated += 1
-      }
+      const statusChanged = row.status !== mapped.status
+      const { error: upErr } = await admin.from("blue_memberships").update(patch).eq("id", row.id)
+      if (upErr) errors += 1
+      else if (statusChanged) updated += 1
     } catch {
       const { error: upErr } = await admin
         .from("blue_memberships")
