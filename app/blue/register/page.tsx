@@ -14,6 +14,7 @@ import { Loader2 } from "lucide-react"
 import { HardLink } from "@/components/hard-link"
 import { useAuth } from "@/contexts/auth-context"
 import {
+  type BlueInviteAthletePrefill,
   type BlueRegisterAthleteOption,
   type BlueRegisterContext,
 } from "@/lib/blue-register-resolve"
@@ -67,6 +68,22 @@ function athleteToForm(a: BlueRegisterAthleteOption | null): AthleteForm {
     email: a.email,
     gpa: a.gpa,
     highestAchievement: a.highestAchievement || "",
+    interestWrestlingCollege: false,
+  }
+}
+
+function invitePrefillToForm(p: BlueInviteAthletePrefill): AthleteForm {
+  return {
+    firstName: p.firstName,
+    lastName: p.lastName,
+    graduationYear: p.graduationYear ? String(p.graduationYear) : "",
+    highSchool: p.highSchool,
+    wrestlingClub: p.wrestlingClub,
+    weightClass: p.weightClass,
+    cellPhone: formatPhoneForDisplay(p.cellPhone),
+    email: p.email,
+    gpa: p.gpa,
+    highestAchievement: p.highestAchievement || "",
     interestWrestlingCollege: false,
   }
 }
@@ -140,7 +157,8 @@ export default function BlueRegisterPage() {
     setContextLoading(true)
     setError(null)
     try {
-      const r = await fetch("/api/blue/register-context", { credentials: "include" })
+      const qs = token ? `?invite=${encodeURIComponent(token)}` : ""
+      const r = await fetch(`/api/blue/register-context${qs}`, { credentials: "include" })
       if (!r.ok) {
         const d = await r.json().catch(() => ({}))
         throw new Error((d as { error?: string }).error ?? "Could not load your profile.")
@@ -157,7 +175,7 @@ export default function BlueRegisterPage() {
         setAthlete(athleteToForm(eligible[0]))
       } else if (eligible.length === 0 && data.athletes.length === 0) {
         setSelectedAthleteId("")
-        setAthlete(emptyAthleteForm())
+        setAthlete(data.invitePrefill ? invitePrefillToForm(data.invitePrefill) : emptyAthleteForm())
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not load your profile.")
@@ -165,7 +183,7 @@ export default function BlueRegisterPage() {
     } finally {
       setContextLoading(false)
     }
-  }, [])
+  }, [token])
 
   useEffect(() => {
     if (isAuthenticated && valid) void loadContext()
@@ -182,8 +200,10 @@ export default function BlueRegisterPage() {
   )
 
   const parentMissing = context?.parentMissingFields ?? []
+  const invitePrefill = context?.invitePrefill ?? null
   const athleteMissing = useMemo(() => {
     if (selectedAthlete) return selectedAthlete.missingFields
+    if (invitePrefill) return invitePrefill.missingFields
     return [
       "firstName",
       "lastName",
@@ -195,7 +215,7 @@ export default function BlueRegisterPage() {
       "email",
       "gpa",
     ]
-  }, [selectedAthlete])
+  }, [selectedAthlete, invitePrefill])
 
   const needsAthletePicker = eligibleAthletes.length > 1
   const noLinkedAthletes = (context?.athletes.length ?? 0) === 0
@@ -331,13 +351,36 @@ export default function BlueRegisterPage() {
     )
   }
 
-  if (contextLoading || !context) {
+  if (contextLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
         <div className="text-center">
           <Loader2 className="h-10 w-10 animate-spin mx-auto text-[#03154C]" />
           <p className="mt-4 text-gray-600">Loading your profile…</p>
         </div>
+      </div>
+    )
+  }
+
+  if (!context) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+        <Card className="max-w-md w-full">
+          <CardHeader>
+            <CardTitle className="text-[#03154C]">Could not load your profile</CardTitle>
+            <CardDescription>{error || "Something went wrong loading registration info."}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Button type="button" className="w-full bg-[#03154C] hover:bg-[#0a2571] text-white" onClick={() => void loadContext()}>
+              Try again
+            </Button>
+            <HardLink href={`/auth/signin?returnTo=${encodeURIComponent(returnTo)}`}>
+              <Button variant="outline" className="w-full">
+                Sign in again
+              </Button>
+            </HardLink>
+          </CardContent>
+        </Card>
       </div>
     )
   }
@@ -423,7 +466,9 @@ export default function BlueRegisterPage() {
                   <CardTitle className="text-lg">Wrestler</CardTitle>
                   <CardDescription>
                     {noLinkedAthletes
-                      ? "Link your athlete on Profile first, or enter their info below."
+                      ? invitePrefill
+                        ? "We pulled your wrestler's info from your Blue application — fill any gaps below."
+                        : "Link your athlete on Profile first, or enter their info below."
                       : "Select your wrestler — we already have their RecruitNC profile."}
                   </CardDescription>
                 </div>
@@ -461,7 +506,16 @@ export default function BlueRegisterPage() {
                   </p>
                 )}
 
-                {noLinkedAthletes && (
+                {invitePrefill && noLinkedAthletes && athleteMissing.length === 0 && (
+                  <p className="text-sm text-green-800 bg-green-50 border border-green-200 rounded-md p-3">
+                    <strong>
+                      {[invitePrefill.firstName, invitePrefill.lastName].filter(Boolean).join(" ")}
+                    </strong>{" "}
+                    — from your Blue application. Choose shirt size and continue.
+                  </p>
+                )}
+
+                {noLinkedAthletes && !invitePrefill && (
                   <p className="text-sm text-muted-foreground">
                     Tip:{" "}
                     <HardLink href="/profile" className="text-[#03154C] underline">
@@ -471,7 +525,8 @@ export default function BlueRegisterPage() {
                   </p>
                 )}
 
-                {(noLinkedAthletes || (selectedAthleteId && athleteMissing.length > 0)) && (
+                {(noLinkedAthletes && (!invitePrefill || athleteMissing.length > 0)) ||
+                (selectedAthleteId && athleteMissing.length > 0) ? (
                   <div className="space-y-4">
                     {(athleteMissing.includes("firstName") || athleteMissing.includes("lastName")) && (
                       <div className="grid gap-4 sm:grid-cols-2">
@@ -540,7 +595,7 @@ export default function BlueRegisterPage() {
                       </div>
                     )}
                   </div>
-                )}
+                ) : null}
               </div>
 
               <div className="space-y-2">

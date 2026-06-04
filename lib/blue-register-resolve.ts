@@ -67,10 +67,26 @@ export type BlueRegisterAthleteOption = {
   missingFields: string[]
 }
 
+export type BlueInviteAthletePrefill = {
+  firstName: string
+  lastName: string
+  graduationYear: number | null
+  highSchool: string
+  weightClass: string
+  wrestlingClub: string
+  cellPhone: string
+  email: string
+  gpa: string
+  highestAchievement: string
+  missingFields: string[]
+}
+
 export type BlueRegisterContext = {
   parent: BlueResolvedParent
   parentMissingFields: string[]
   athletes: BlueRegisterAthleteOption[]
+  /** Wrestler info from the Blue interest application tied to this invite (when not linked on Profile). */
+  invitePrefill: BlueInviteAthletePrefill | null
   canRegisterNewAthlete: boolean
 }
 
@@ -121,6 +137,85 @@ function parseHighestAchievement(raw: string | null | undefined): string | null 
     if (text.includes(opt)) return opt
   }
   return null
+}
+
+const INTEREST_ACHIEVEMENT_MAP: Record<string, (typeof BLUE_SIGNUP_ACHIEVEMENTS)[number]> = {
+  all_american: "All American",
+  state_champion: "State Champion",
+  state_placer: "State Placer",
+  state_qualifier: "State Qualifier",
+  na: "None",
+}
+
+export function mapInterestAchievement(raw: string | null | undefined): string {
+  const key = (raw ?? "").trim().toLowerCase()
+  if (key && INTEREST_ACHIEVEMENT_MAP[key]) return INTEREST_ACHIEVEMENT_MAP[key]
+  return parseHighestAchievement(raw) ?? "None"
+}
+
+type InterestRow = {
+  first_name?: string | null
+  last_name?: string | null
+  cell_phone?: string | null
+  graduation_year?: string | number | null
+  highest_achievement?: string | null
+  high_school?: string | null
+  club?: string | null
+  weight_class?: string | null
+  parent_email?: string | null
+}
+
+export function athletePrefillFromInterestRow(row: InterestRow): Omit<BlueInviteAthletePrefill, "missingFields"> {
+  const gradRaw = row.graduation_year
+  const gradNum = typeof gradRaw === "number" ? gradRaw : parseInt(String(gradRaw ?? ""), 10)
+  return {
+    firstName: trimStr(row.first_name),
+    lastName: trimStr(row.last_name),
+    graduationYear: Number.isFinite(gradNum) ? gradNum : null,
+    highSchool: trimStr(row.high_school),
+    weightClass: trimStr(row.weight_class),
+    wrestlingClub: trimStr(row.club),
+    cellPhone: trimStr(row.cell_phone),
+    email: "",
+    gpa: "",
+    highestAchievement: mapInterestAchievement(row.highest_achievement),
+  }
+}
+
+export async function loadInviteInterestPrefill(
+  admin: SupabaseClient,
+  inviteToken: string | null | undefined,
+): Promise<BlueInviteAthletePrefill | null> {
+  const token = trimStr(inviteToken)
+  if (!token) return null
+
+  const { data: invite, error: inviteErr } = await admin
+    .from("blue_invites")
+    .select("interest_id, expires_at, used_at")
+    .eq("token", token)
+    .maybeSingle()
+
+  if (inviteErr || !invite?.interest_id) return null
+  if (invite.used_at) return null
+  if (new Date(invite.expires_at as string) < new Date()) return null
+
+  const { data: interest, error: interestErr } = await admin
+    .from("blue_express_interest")
+    .select(
+      "first_name, last_name, cell_phone, graduation_year, highest_achievement, high_school, club, weight_class, parent_email",
+    )
+    .eq("id", invite.interest_id)
+    .maybeSingle()
+
+  if (interestErr || !interest) return null
+
+  const parsed = athletePrefillFromInterestRow(interest as InterestRow)
+  if (!parsed.firstName && !parsed.lastName) return null
+
+  return {
+    ...parsed,
+    missingFields: missingAthleteFields(parsed),
+  }
 }
 
 function athleteFromRow(row: AthleteRow): Omit<BlueRegisterAthleteOption, "id" | "name" | "alreadyInBlue" | "missingFields"> {
@@ -190,9 +285,13 @@ export async function loadBlueRegisterContext(
   admin: SupabaseClient,
   userId: string,
   userEmail: string,
+  opts?: { inviteToken?: string | null },
 ): Promise<BlueRegisterContext> {
   const { data: profile } = await admin.from("user_profiles").select("*").eq("user_id", userId).maybeSingle()
   const parent = parentFromProfile((profile ?? null) as ProfileRow | null, userEmail)
+
+  const invitePrefillRaw = await loadInviteInterestPrefill(admin, opts?.inviteToken)
+  let invitePrefill = invitePrefillRaw
 
   const athleteIds = await collectLinkedAthleteIdsForParentUser(admin, userId)
   let athletes: BlueRegisterAthleteOption[] = []
@@ -230,10 +329,15 @@ export async function loadBlueRegisterContext(
     athletes.sort((a, b) => a.name.localeCompare(b.name))
   }
 
+  if (athletes.length > 0) {
+    invitePrefill = null
+  }
+
   return {
     parent,
     parentMissingFields: missingParentFields(parent),
     athletes,
+    invitePrefill,
     canRegisterNewAthlete: true,
   }
 }
@@ -254,7 +358,8 @@ export async function resolveBlueSignupPayload(
   userEmail: string,
   body: BlueSignupRequestBody,
 ): Promise<{ ok: true; parent: BlueResolvedParent; athlete: BlueResolvedAthlete } | { ok: false; error: string }> {
-  const ctx = await loadBlueRegisterContext(admin, userId, userEmail)
+  const ctx = await loadBlueRegisterContext(admin, userId, userEmail, { inviteToken: body.token })
+  const inviteBase = ctx.invitePrefill
   const parent: BlueResolvedParent = {
     email: ctx.parent.email,
     firstName: trimStr(body.parent?.firstName) || ctx.parent.firstName,
@@ -274,7 +379,21 @@ export async function resolveBlueSignupPayload(
     return { ok: false, error: "Parent email must match your signed-in RecruitNC account." }
   }
 
-  let athleteBase: Omit<BlueRegisterAthleteOption, "id" | "name" | "alreadyInBlue" | "missingFields"> | null = null
+  let athleteBase: Omit<BlueRegisterAthleteOption, "id" | "name" | "alreadyInBlue" | "missingFields"> | null =
+    inviteBase
+      ? {
+          firstName: inviteBase.firstName,
+          lastName: inviteBase.lastName,
+          graduationYear: inviteBase.graduationYear,
+          highSchool: inviteBase.highSchool,
+          weightClass: inviteBase.weightClass,
+          wrestlingClub: inviteBase.wrestlingClub,
+          cellPhone: inviteBase.cellPhone,
+          email: inviteBase.email,
+          gpa: inviteBase.gpa,
+          highestAchievement: inviteBase.highestAchievement,
+        }
+      : null
   let athleteId: string | null = trimStr(body.athleteId) || null
 
   if (athleteId) {
