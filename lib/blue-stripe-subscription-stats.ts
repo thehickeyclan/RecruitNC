@@ -115,3 +115,43 @@ export async function fetchBlueStripeSubscriptionStats(
   stats.excludedTestAccounts = excludedTestAccounts
   return stats
 }
+
+export type BlueStripePanelBucket = "active" | "paused" | "past_due" | "churned"
+
+/** Subscription ids per Stripe dashboard bucket (matches tile counts). */
+export async function fetchBlueStripeSubscriptionIdsByPanelBucket(
+  stripe: Stripe,
+  bluePriceId?: string,
+): Promise<Record<BlueStripePanelBucket, Set<string>>> {
+  const buckets: Record<BlueStripePanelBucket, Set<string>> = {
+    active: new Set(),
+    paused: new Set(),
+    past_due: new Set(),
+    churned: new Set(),
+  }
+
+  let startingAfter: string | undefined
+  let hasMore = true
+  while (hasMore) {
+    const page = await stripe.subscriptions.list({
+      status: "all",
+      limit: 100,
+      ...(startingAfter ? { starting_after: startingAfter } : {}),
+      expand: ["data.items.data.price", "data.customer"],
+    })
+    for (const sub of page.data) {
+      if (!isBlueStripeSubscription(sub, bluePriceId)) continue
+      if (isBlueStripeTestSubscription(sub)) continue
+      const { bucket } = classifyBlueStripeSubscription(sub)
+      if (bucket === "active") buckets.active.add(sub.id)
+      else if (bucket === "paused") buckets.paused.add(sub.id)
+      else if (bucket === "past_due") buckets.past_due.add(sub.id)
+      else if (bucket === "canceling" || bucket === "cancelled") buckets.churned.add(sub.id)
+    }
+    hasMore = page.has_more
+    startingAfter = page.data.length > 0 ? page.data[page.data.length - 1].id : undefined
+    if (!page.data.length) hasMore = false
+  }
+
+  return buckets
+}

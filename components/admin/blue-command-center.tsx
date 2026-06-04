@@ -190,9 +190,25 @@ function DashMemberPanel({
             ? "paused"
             : "billable"
 
+      const recruitncStripeBucket =
+        panel === "recruitnc-active" || panel === "combined"
+          ? "active"
+          : panel === "recruitnc-paused"
+            ? "paused"
+            : panel === "recruitnc-pending"
+              ? "past_due"
+              : panel === "recruitnc-cancelled"
+                ? "churned"
+                : null
+
       const [subRes, wiqRes] = await Promise.all([
         needsRecruitnc
-          ? fetch("/api/admin/blue/subscriptions", { credentials: "include" })
+          ? fetch(
+              recruitncStripeBucket
+                ? `/api/admin/blue/subscriptions?stripeBucket=${recruitncStripeBucket}`
+                : "/api/admin/blue/subscriptions",
+              { credentials: "include" },
+            )
           : Promise.resolve(null),
         needsWiq
           ? fetch(`/api/admin/blue/wiq-subscriptions?filter=${wiqFilter}`, { credentials: "include" })
@@ -203,18 +219,6 @@ function DashMemberPanel({
         const d = await subRes.json()
         if (!subRes.ok) throw new Error(d.error || "Failed to load RecruitNC subs")
         let rows: BlueSubscriptionRow[] = d.subscriptions ?? []
-        if (panel === "recruitnc-active") rows = rows.filter((r) => r.status === "active")
-        else if (panel === "recruitnc-paused") rows = rows.filter((r) => r.status === "paused")
-        else if (panel === "recruitnc-pending")
-          rows = rows.filter((r) => r.status === "pending_payment")
-        else if (panel === "recruitnc-cancelled")
-          rows = rows.filter(
-            (r) =>
-              r.status === "cancelled" ||
-              r.status === "alumni" ||
-              (r.status === "active" && r.cancel_at_period_end),
-          )
-        else if (panel === "combined") rows = rows.filter((r) => r.status === "active")
         rows.sort((a, b) => a.athlete_name.localeCompare(b.athlete_name))
         setRecruitnc(rows)
       } else {

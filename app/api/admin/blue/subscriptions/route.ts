@@ -3,6 +3,17 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getBlueMembershipStripeDetails } from "@/lib/blue-membership-stripe-details"
 import { isBlueStripeTestMembershipRow } from "@/lib/blue-stripe-test-accounts"
+import {
+  dedupeBlueSubscriptionRows,
+  isRecruitncActiveRow,
+  isRecruitncChurnedRow,
+  isRecruitncPausedRow,
+} from "@/lib/blue-subscription-row-dedupe"
+import {
+  fetchBlueStripeSubscriptionIdsByPanelBucket,
+  type BlueStripePanelBucket,
+} from "@/lib/blue-stripe-subscription-stats"
+import { getStripe, readStripeSecretKey } from "@/lib/stripe"
 
 export const dynamic = "force-dynamic"
 
@@ -68,9 +79,12 @@ export type BlueSignupRow = {
 }
 
 /** GET: List Blue subscriptions (memberships) with athlete and payer info */
-export async function GET() {
+export async function GET(request: Request) {
   const auth = await requireAdmin()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
+
+  const { searchParams } = new URL(request.url)
+  const stripeBucketParam = searchParams.get("stripeBucket") as BlueStripePanelBucket | null
 
   const admin = createAdminClient()
 
@@ -337,11 +351,31 @@ export async function GET() {
   )
 
   subscriptions = subscriptions.filter((sub) => !isBlueStripeTestMembershipRow(sub))
+  subscriptions = dedupeBlueSubscriptionRows(subscriptions)
+
+  const stripeSecret = readStripeSecretKey()
+  if (stripeBucketParam && stripeSecret) {
+    try {
+      const stripe = getStripe()
+      const buckets = await fetchBlueStripeSubscriptionIdsByPanelBucket(
+        stripe,
+        process.env.STRIPE_BLUE_PRICE_ID,
+      )
+      const allowed = buckets[stripeBucketParam]
+      if (allowed) {
+        subscriptions = subscriptions.filter(
+          (sub) => sub.stripe_subscription_id && allowed.has(sub.stripe_subscription_id),
+        )
+      }
+    } catch (e) {
+      console.warn("[admin/blue/subscriptions] Stripe bucket filter:", e)
+    }
+  }
 
   const stats = {
-    active: subscriptions.filter((s) => s.status === "active" && !s.cancel_at_period_end).length,
-    paused: subscriptions.filter((s) => s.status === "paused").length,
-    cancelled: subscriptions.filter((s) => s.status === "cancelled" || s.status === "alumni").length,
+    active: subscriptions.filter((s) => isRecruitncActiveRow(s)).length,
+    paused: subscriptions.filter((s) => isRecruitncPausedRow(s)).length,
+    cancelled: subscriptions.filter((s) => isRecruitncChurnedRow(s) && s.status !== "active").length,
     pending_payment: subscriptions.filter((s) => s.status === "pending_payment").length,
   }
 
@@ -382,5 +416,11 @@ export async function GET() {
     }))
   }
 
-  return NextResponse.json({ subscriptions, stats, signups, signupsError })
+  return NextResponse.json({
+    subscriptions,
+    stats,
+    signups,
+    signupsError,
+    ...(stripeBucketParam && { stripeBucket: stripeBucketParam }),
+  })
 }
