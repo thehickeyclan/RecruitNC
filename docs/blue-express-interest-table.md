@@ -66,7 +66,7 @@ alter table public.blue_express_interest alter column status drop default;
 alter table public.blue_express_interest add constraint blue_express_interest_status_check check (status is null or status in ('text_sent', 'invite_sent', 'registered', 'declined'));
 ```
 
-Form fields: first name, last name, cell, graduation year, highest level achievement, high school, club, freeform (comments). Optional: high school, club, comments.
+Form fields: first name, last name, cell, **parent/guardian email**, graduation year, highest level achievement, high school, club, freeform (comments). Optional: high school, club, comments, weight class.
 
 If the table already exists, add the new columns:
 

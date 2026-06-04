@@ -18,10 +18,14 @@ export async function POST(request: NextRequest) {
     const highSchool = body.highSchool?.trim() || null
     const club = body.club?.trim() || null
     const comments = body.comments?.trim() || null
+    const parentEmail = body.parentEmail?.trim().toLowerCase() || body.email?.trim().toLowerCase() || null
 
     if (!firstName) return NextResponse.json({ ok: false, error: "First name is required" }, { status: 400 })
     if (!lastName) return NextResponse.json({ ok: false, error: "Last name is required" }, { status: 400 })
     if (!cell) return NextResponse.json({ ok: false, error: "Cell phone is required" }, { status: 400 })
+    if (!parentEmail || !parentEmail.includes("@")) {
+      return NextResponse.json({ ok: false, error: "Valid parent/guardian email is required" }, { status: 400 })
+    }
     if (!graduationYear) return NextResponse.json({ ok: false, error: "Graduation year is required" }, { status: 400 })
     if (!highestAchievement || !ACHIEVEMENT_VALUES.includes(highestAchievement as (typeof ACHIEVEMENT_VALUES)[number])) {
       return NextResponse.json({ ok: false, error: "Highest achievement is required" }, { status: 400 })
@@ -36,6 +40,7 @@ export async function POST(request: NextRequest) {
       high_school: highSchool,
       club: club,
       comments: comments,
+      parent_email: parentEmail,
     }
     if (weightClass) row.weight_class = weightClass
 
@@ -48,6 +53,15 @@ export async function POST(request: NextRequest) {
       if (dbError.code === "42P01") {
         return NextResponse.json(
           { ok: false, error: "Submissions are not available yet. Please try again later." },
+          { status: 503 }
+        )
+      }
+      if (dbError.code === "42703" && String(dbError.message).includes("parent_email")) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: "Email storage is not configured yet. Please try again later or contact NC United.",
+          },
           { status: 503 }
         )
       }

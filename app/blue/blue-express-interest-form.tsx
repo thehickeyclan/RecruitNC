@@ -31,6 +31,7 @@ export function BlueExpressInterestForm() {
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
   const [cell, setCell] = useState("")
+  const [parentEmail, setParentEmail] = useState("")
   const [graduationYear, setGraduationYear] = useState("")
   const [highestAchievement, setHighestAchievement] = useState("")
   const [weightClass, setWeightClass] = useState("none")
@@ -58,6 +59,15 @@ export function BlueExpressInterestForm() {
       setErrorMessage("Cell phone is required")
       return
     }
+    const email = parentEmail.trim().toLowerCase()
+    if (!email) {
+      setErrorMessage("Email is required")
+      return
+    }
+    if (!email.includes("@")) {
+      setErrorMessage("Enter a valid email address")
+      return
+    }
     if (!graduationYear) {
       setErrorMessage("Graduation year is required")
       return
@@ -76,6 +86,7 @@ export function BlueExpressInterestForm() {
           firstName: firstName.trim(),
           lastName: lastName.trim(),
           cell: normalizePhoneForStorage(cell.trim()),
+          parentEmail: email,
           graduationYear,
           highestAchievement,
           weightClass: weightClass && weightClass !== "none" ? weightClass : undefined,
@@ -95,6 +106,7 @@ export function BlueExpressInterestForm() {
       setFirstName("")
       setLastName("")
       setCell("")
+      setParentEmail("")
       setGraduationYear("")
       setHighestAchievement("")
       setWeightClass("none")
@@ -173,6 +185,23 @@ export function BlueExpressInterestForm() {
           disabled={isSubmitting}
           autoComplete="tel"
         />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="blue-parent-email" className="text-[#03154C]">
+          Parent/guardian email
+        </Label>
+        <Input
+          id="blue-parent-email"
+          type="email"
+          value={parentEmail}
+          onChange={(e) => setParentEmail(e.target.value)}
+          className="border-[#03154C]/30 bg-white"
+          placeholder="parent@example.com"
+          disabled={isSubmitting}
+          autoComplete="email"
+          required
+        />
+        <p className="text-xs text-[#03154C]/70">Used for Blue program follow-up and approval messages.</p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">

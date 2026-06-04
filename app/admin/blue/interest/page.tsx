@@ -405,6 +405,7 @@ alter table public.blue_express_interest
                       <TableHead>Club</TableHead>
                       <TableHead>Weight</TableHead>
                       <TableHead>Cell</TableHead>
+                      <TableHead>Email</TableHead>
                       <TableHead>Grad year</TableHead>
                       <TableHead>Highest achievement</TableHead>
                       <TableHead>Comments</TableHead>
@@ -498,6 +499,9 @@ alter table public.blue_express_interest
                         </TableCell>
                         <TableCell>{row.weight_class ? `${row.weight_class} lbs` : "—"}</TableCell>
                         <TableCell>{formatPhoneForDisplay(row.cell_phone)}</TableCell>
+                        <TableCell className="max-w-[180px] truncate text-sm" title={row.parent_email ?? ""}>
+                          {row.parent_email || "—"}
+                        </TableCell>
                         <TableCell>{row.graduation_year}</TableCell>
                         <TableCell>
                           {ACHIEVEMENT_LABELS[row.highest_achievement] ?? row.highest_achievement}
