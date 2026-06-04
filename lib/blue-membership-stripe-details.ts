@@ -1,5 +1,7 @@
 import "server-only"
 import Stripe from "stripe"
+import { mapStripeSubscriptionToMembershipStatus } from "@/lib/blue-stripe-subscription-status"
+import type { BlueMembershipStripeStatus } from "@/lib/blue-stripe-subscription-status"
 
 function getStripe(): Stripe {
   const key = process.env.STRIPE_SECRET_KEY
@@ -20,6 +22,10 @@ export type BlueStripeBillingDetails = {
   lastPaymentAt: string | null
   amountFormatted: string | null
   cancelAtPeriodEnd: boolean
+  /** Stripe-derived status (includes collection paused while sub.status is active). */
+  effectiveStatus: BlueMembershipStripeStatus
+  collectionPaused: boolean
+  resumeAt: string | null
   cardBrand: string | null
   cardLast4: string | null
   planName: string | null
@@ -129,6 +135,8 @@ export async function getBlueMembershipStripeDetails(
     }
 
     const cancelAtPeriodEnd = !!sub.cancel_at_period_end
+    const mapped = mapStripeSubscriptionToMembershipStatus(sub)
+    const collectionPaused = mapped.status === "paused"
 
     const { paidInvoiceCount, lifetimePaidCents, recentInvoices } = await loadPaidInvoices(
       stripe,
@@ -140,10 +148,13 @@ export async function getBlueMembershipStripeDetails(
     return {
       ok: true,
       details: {
-        nextBillingAt,
+        nextBillingAt: mapped.next_billing_at ?? nextBillingAt,
         lastPaymentAt,
         amountFormatted,
         cancelAtPeriodEnd,
+        effectiveStatus: mapped.status,
+        collectionPaused,
+        resumeAt: mapped.resume_at,
         cardBrand,
         cardLast4,
         planName,

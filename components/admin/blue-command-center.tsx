@@ -349,6 +349,9 @@ function RecruitncTable({ rows }: { rows: BlueSubscriptionRow[] }) {
                 {sub.cancel_at_period_end && sub.status === "active" && (
                   <span className="block text-[10px] text-amber-300/90 mt-0.5">Cancels at period end</span>
                 )}
+                {sub.collection_paused && sub.status === "paused" && (
+                  <span className="block text-[10px] text-sky-300/90 mt-0.5">Collection paused</span>
+                )}
               </TableCell>
               <TableCell className="text-sm text-white/70">{fmtDate(sub.next_billing_at)}</TableCell>
             </TableRow>
