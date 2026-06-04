@@ -54,8 +54,10 @@ export type WiqImportPreview = {
   pausedApplied?: number
   /** Parsed row count from Active Renewing Members report (allowlist). */
   activeRenewingListCount?: number
-  /** Paid rows demoted to paused — not on Active Renewing allowlist. */
+  /** Paid rows demoted to paused — not on Active Renewing allowlist (legacy; always 0). */
   demotedFromActive?: number
+  /** Paid rows matched to Active Renewing allowlist (informational). */
+  activeRenewingMatched?: number
 }
 
 function normalizeHeader(h: string): string {
@@ -232,7 +234,15 @@ export type ParsedWiqPausedRow = {
 }
 
 function normalizePersonName(name: string): string {
-  return name.trim().toLowerCase().replace(/-/g, " ").replace(/\s+/g, " ")
+  let s = name
+    .trim()
+    .toLowerCase()
+    .replace(/-/g, " ")
+    .replace(/\s+/g, " ")
+  s = s.replace(/\s+family$/, "")
+  // "Joshua S. Stonebraker" → "joshua stonebraker" for allowlist / paused matching
+  s = s.replace(/\s+[a-z]\.?(?=\s|$)/g, " ").replace(/\s+/g, " ").trim()
+  return s
 }
 
 function pauseMatchKey(wrestlerName: string, billedTo: string): string {
@@ -343,26 +353,22 @@ export function parseWiqActiveRenewingText(text: string): ParsedWiqActiveRenewin
   return out
 }
 
-/** Demote Paid rows not on WIQ's Active Renewing allowlist (Membership Summary over-counts actives). */
+/** Tag June-renewing members from WIQ's Active Renewing report (does not change status). */
 export function applyActiveRenewingOverlay(
   rows: ParsedWiqCsvRow[],
   activeRows: ParsedWiqActiveRenewingRow[],
-): { rows: ParsedWiqCsvRow[]; demotedFromActive: number } {
-  if (!activeRows.length) return { rows, demotedFromActive: 0 }
+): { rows: ParsedWiqCsvRow[]; demotedFromActive: number; activeRenewingMatched: number } {
+  if (!activeRows.length) return { rows, demotedFromActive: 0, activeRenewingMatched: 0 }
 
   const index = buildNamePairIndex(activeRows)
-  let demotedFromActive = 0
+  let activeRenewingMatched = 0
   const merged = rows.map((row) => {
     if (row.status !== "active") return row
-    if (matchNamePairRow(row, index)) return row
-    demotedFromActive += 1
-    return {
-      ...row,
-      status: "paused" as const,
-      wiqStatusRaw: "Not on active renewing report",
-    }
+    if (!matchNamePairRow(row, index)) return row
+    activeRenewingMatched += 1
+    return row
   })
-  return { rows: merged, demotedFromActive }
+  return { rows: merged, demotedFromActive: 0, activeRenewingMatched }
 }
 
 /** WrestlingIQ "Currently Paused Subscription Report" (paused subs still show as Paid on the full summary). */
@@ -439,6 +445,7 @@ export function buildWiqImportPreview(
   let parsed = parseWiqMembershipCsv(csvText, referenceDate)
   let pausedApplied = 0
   let demotedFromActive = 0
+  let activeRenewingMatched = 0
   let activeRenewingListCount: number | undefined
 
   if (pausedCsvText?.trim()) {
@@ -452,6 +459,7 @@ export function buildWiqImportPreview(
     const overlay = applyActiveRenewingOverlay(parsed, activeRows)
     parsed = overlay.rows
     demotedFromActive = overlay.demotedFromActive
+    activeRenewingMatched = overlay.activeRenewingMatched
   }
   const totalRows = parseCsvRows(csvText).length - 1
   const blueIds = new Set(parsed.map((r) => r.wiqBillingPartnerId))
@@ -495,6 +503,7 @@ export function buildWiqImportPreview(
     wouldFlagMissing,
     ...(pausedApplied > 0 ? { pausedApplied } : {}),
     ...(activeRenewingListCount != null ? { activeRenewingListCount } : {}),
+    ...(activeRenewingMatched > 0 ? { activeRenewingMatched } : {}),
     ...(demotedFromActive > 0 ? { demotedFromActive } : {}),
   }
 }
