@@ -234,6 +234,8 @@ export async function POST(request: NextRequest) {
       amountTotalDollars: amountPaid,
       customerEmail,
       customerName,
+      hintPayerUserId: sub.metadata?.payer_user_id ?? null,
+      hintAthleteId: sub.metadata?.athlete_id ?? null,
     })
     if (!result.ok) {
       console.error("[webhooks/stripe] invoice.payment_succeeded Blue signup:", result.error)
@@ -919,6 +921,8 @@ export async function POST(request: NextRequest) {
         amountTotalDollars: amountTotal,
         customerEmail,
         customerName,
+        hintPayerUserId: session.metadata?.payer_user_id ?? null,
+        hintAthleteId: session.metadata?.athlete_id ?? null,
       })
       if (!result.ok) {
         return NextResponse.json({ error: result.error ?? "Update failed" }, { status: 500 })

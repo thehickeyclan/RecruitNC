@@ -182,12 +182,20 @@ export default function AdminBlueNationalTeamPaymentsPage() {
                 <strong>Send receipt</strong> to resend.
               </p>
             </div>
-            <a
-              href="/admin/blue/national-team-orders-report"
-              className="text-sm font-medium text-[#03154C] hover:underline shrink-0"
-            >
-              Full orders report →
-            </a>
+            <div className="flex flex-col items-end gap-1 shrink-0">
+              <a
+                href="/admin/blue/aau-duals-roster-payments"
+                className="text-sm font-medium text-[#03154C] hover:underline"
+              >
+                AAU roster payment matrix →
+              </a>
+              <a
+                href="/admin/blue/national-team-orders-report"
+                className="text-sm font-medium text-[#03154C] hover:underline"
+              >
+                Full orders report →
+              </a>
+            </div>
           </div>
         </div>
 
