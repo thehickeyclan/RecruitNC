@@ -26,6 +26,9 @@ export type BlueSignupCompleteParams = {
   amountTotalDollars: number
   customerEmail: string
   customerName: string
+  /** From Stripe metadata when parent registered while signed in */
+  hintPayerUserId?: string | null
+  hintAthleteId?: string | null
 }
 
 /**
@@ -45,6 +48,8 @@ export async function completeBlueSignupAfterStripePayment(
     amountTotalDollars,
     customerEmail,
     customerName,
+    hintPayerUserId,
+    hintAthleteId,
   } = params
 
   const { data: signupBefore } = await admin
@@ -72,8 +77,8 @@ export async function completeBlueSignupAfterStripePayment(
     return { ok: false, error: signupUpdateErr.message }
   }
 
-  let payerUserId: string | null = null
-  let athleteId: string | undefined
+  let payerUserId: string | null = hintPayerUserId?.trim() || null
+  let athleteId: string | undefined = hintAthleteId?.trim() || undefined
   let athleteName = ""
 
   if (subscriptionId) {
@@ -101,16 +106,20 @@ export async function completeBlueSignupAfterStripePayment(
           .join(" ")
           .trim()
         const highSchool = (signupRow.athlete_high_school as string)?.trim() || ""
-        const { data: profileRow } = await admin
-          .from("user_profiles")
-          .select("user_id")
-          .ilike("email", parentEmail)
-          .limit(1)
-          .maybeSingle()
+        if (!payerUserId) {
+          const { data: profileRow } = await admin
+            .from("user_profiles")
+            .select("user_id")
+            .ilike("email", parentEmail)
+            .limit(1)
+            .maybeSingle()
 
-        if (profileRow?.user_id) {
-          payerUserId = profileRow.user_id as string
-        } else if (parentEmail) {
+          if (profileRow?.user_id) {
+            payerUserId = profileRow.user_id as string
+          }
+        }
+
+        if (!payerUserId && parentEmail) {
           const randomPassword = "blue-" + crypto.randomUUID() + "-" + Math.random().toString(36).slice(2, 14)
           const { data: newUser, error: createUserErr } = await admin.auth.admin.createUser({
             email: parentEmail,
@@ -141,12 +150,14 @@ export async function completeBlueSignupAfterStripePayment(
         if (payerUserId && athleteName && Number.isFinite(gradYear) && gradYear >= 2020 && gradYear <= 2040) {
           const { athleteEnrichmentFromSignup } = await import("@/lib/blue-signup-enrich-athlete")
           const enrichment = athleteEnrichmentFromSignup(signupRow as import("@/lib/blue-signup-enrich-athlete").BlueSignupRow)
-          const existingAthlete = await findExistingAthlete(admin, {
-            name: athleteName,
-            graduationYear: gradYear,
-            school: highSchool,
-          })
-          athleteId = existingAthlete?.id
+          if (!athleteId) {
+            const existingAthlete = await findExistingAthlete(admin, {
+              name: athleteName,
+              graduationYear: gradYear,
+              school: highSchool,
+            })
+            athleteId = existingAthlete?.id
+          }
           if (!athleteId) {
             const columns = await getAthletesColumnNames(admin)
             const athletePayload = filterPayloadToSchema(

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { normalizePhoneForStorage } from "@/lib/phone-format"
 import Stripe from "stripe"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { createClient } from "@/lib/supabase/server"
+import { resolveBlueSignupPayload } from "@/lib/blue-register-resolve"
 
 export const dynamic = "force-dynamic"
 
@@ -10,59 +12,39 @@ const bluePriceId = process.env.STRIPE_BLUE_PRICE_ID
 
 const TSHIRT_SIZES = ["YS", "YM", "YL", "S", "M", "L", "XL", "2XL", "3XL"] as const
 
-/** Simple isolated Blue signup: no auth. Validates invite, writes blue_signups, creates Stripe checkout. */
+/** Blue signup: sign in required. Merges profile + linked athlete data; only missing fields come from the form. */
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user?.email) {
+      return NextResponse.json({ error: "Sign in to register for Blue." }, { status: 401 })
+    }
+
     const body = await request.json()
     const token = body.token?.trim() || null
-    const parent = body.parent
-    const athlete = body.athlete
     const tshirtSizeRaw = typeof body.tshirtSize === "string" ? body.tshirtSize.trim() : undefined
     const promoCodeRaw = body.promoCode?.trim()
     const waiverAccepted = body.waiverAccepted === true
-    if (!parent?.email?.trim() || !parent?.firstName?.trim() || !parent?.lastName?.trim()) {
-      return NextResponse.json({ error: "Missing parent email, first name, or last name." }, { status: 400 })
-    }
-    if (!parent?.phone?.trim()) {
-      return NextResponse.json({ error: "Parent cell phone is required." }, { status: 400 })
-    }
-    if (!parent?.relationship?.trim()) {
-      return NextResponse.json({ error: "Please select your relationship to the athlete." }, { status: 400 })
-    }
-    if (!athlete?.firstName?.trim() || !athlete?.lastName?.trim() || athlete?.graduationYear == null || !athlete?.highSchool?.trim()) {
-      return NextResponse.json({ error: "Missing athlete first name, last name, graduation year, or high school." }, { status: 400 })
-    }
-    if (!athlete?.wrestlingClub?.trim()) {
-      return NextResponse.json({ error: "Athlete club is required." }, { status: 400 })
-    }
-    if (!athlete?.cellPhone?.trim()) {
-      return NextResponse.json({ error: "Athlete cell phone is required." }, { status: 400 })
-    }
-    if (!athlete?.email?.trim()) {
-      return NextResponse.json({ error: "Athlete email is required." }, { status: 400 })
-    }
-    if (!athlete?.gpa?.trim()) {
-      return NextResponse.json({ error: "Athlete GPA is required." }, { status: 400 })
-    }
-    const validAchievements = ["All American", "State Champion", "State Placer", "State Qualifier", "None"]
-    if (!athlete?.highestAchievement?.trim() || !validAchievements.includes(athlete.highestAchievement.trim())) {
-      return NextResponse.json({ error: "Please select highest level achievement." }, { status: 400 })
-    }
-    const wrestlingClub = athlete?.wrestlingClub?.trim() || null
-    const tshirtSize = tshirtSizeRaw && TSHIRT_SIZES.includes(tshirtSizeRaw as (typeof TSHIRT_SIZES)[number])
-      ? tshirtSizeRaw
-      : null
+
+    const tshirtSize =
+      tshirtSizeRaw && TSHIRT_SIZES.includes(tshirtSizeRaw as (typeof TSHIRT_SIZES)[number]) ? tshirtSizeRaw : null
     if (!tshirtSize) return NextResponse.json({ error: "Please select a t-shirt size." }, { status: 400 })
     if (!waiverAccepted) {
       return NextResponse.json({ error: "You must accept the Waiver and Release of Liability to continue." }, { status: 400 })
     }
 
-    const gradYear = Number(athlete.graduationYear)
-    if (!Number.isFinite(gradYear) || gradYear < 2020 || gradYear > 2040) {
-      return NextResponse.json({ error: "Invalid graduation year." }, { status: 400 })
+    const admin = createAdminClient()
+    const resolved = await resolveBlueSignupPayload(admin, user.id, user.email, body)
+    if (!resolved.ok) {
+      return NextResponse.json({ error: resolved.error }, { status: 400 })
     }
 
-    const admin = createAdminClient()
+    const { parent, athlete } = resolved
 
     let inviteId: string | null = null
     if (token) {
@@ -85,18 +67,18 @@ export async function POST(request: NextRequest) {
         parent_first_name: parent.firstName.trim(),
         parent_last_name: parent.lastName.trim(),
         parent_phone: parent.phone ? normalizePhoneForStorage(parent.phone) : null,
-        parent_relationship: parent.relationship?.trim() || null,
+        parent_relationship: parent.relationship?.trim() || "Guardian",
         athlete_first_name: athlete.firstName.trim(),
         athlete_last_name: athlete.lastName.trim(),
-        athlete_graduation_year: gradYear,
+        athlete_graduation_year: athlete.graduationYear,
         athlete_high_school: athlete.highSchool.trim(),
-        athlete_wrestling_club: wrestlingClub,
-        athlete_weight_class: athlete.weightClass?.trim() || null,
+        athlete_wrestling_club: athlete.wrestlingClub.trim() || null,
+        athlete_weight_class: athlete.weightClass.trim() || null,
         athlete_cell_phone: athlete.cellPhone ? normalizePhoneForStorage(athlete.cellPhone) : null,
         athlete_email: athlete.email?.trim().toLowerCase() || null,
         athlete_gpa: athlete.gpa?.trim() || null,
         interest_wrestling_college: athlete.interestWrestlingCollege === true,
-        highest_achievement: athlete.highestAchievement?.trim() || null,
+        highest_achievement: athlete.highestAchievement.trim() || "None",
         tshirt_size: tshirtSize,
         waiver_signed_at: new Date().toISOString(),
         promo_code_used: promoCodeRaw?.trim() || null,
@@ -110,18 +92,19 @@ export async function POST(request: NextRequest) {
       const errCode = signupErr?.code !== undefined ? String(signupErr.code) : ""
       const errMsg = (signupErr?.message ?? "") as string
       console.error("[blue/signup] insert failed:", { code: errCode, message: errMsg, full: signupErr })
-      const isUndefinedColumn = errCode === "42703" || errMsg.includes("42703") || (errMsg.includes("column") && errMsg.includes("does not exist"))
+      const isUndefinedColumn =
+        errCode === "42703" || errMsg.includes("42703") || (errMsg.includes("column") && errMsg.includes("does not exist"))
       if (isUndefinedColumn) {
         return NextResponse.json(
-          { error: "Database is missing new registration columns. Run the migration in docs/blue-signups-table.md (section: Migration: add required parent/athlete fields) in Supabase SQL Editor, then try again. Contact info@ncwrestlingunited.com if this persists." },
-          { status: 503 }
+          {
+            error:
+              "Database is missing new registration columns. Run the migration in docs/blue-signups-table.md in Supabase SQL Editor, then try again.",
+          },
+          { status: 503 },
         )
       }
       if (signupErr?.code === "42P01" || (errMsg.includes("relation") && errMsg.includes("does not exist"))) {
-        return NextResponse.json(
-          { error: "Blue signups are not set up yet. Please run the SQL in docs/blue-signups-table.md in Supabase." },
-          { status: 503 }
-        )
+        return NextResponse.json({ error: "Blue signups are not set up yet. Please contact info@ncwrestlingunited.com." }, { status: 503 })
       }
       return NextResponse.json({ error: "Failed to save registration. Please try again or contact info@ncwrestlingunited.com." }, { status: 500 })
     }
@@ -139,7 +122,7 @@ export async function POST(request: NextRequest) {
         .select("id, stripe_coupon_id, max_redemptions, redemptions_count, valid_until")
         .ilike("code", promoCodeRaw.trim())
       const promo = (promos ?? []).find(
-        (p) => (!p.valid_until || p.valid_until >= now) && (p.max_redemptions == null || (p.redemptions_count ?? 0) < p.max_redemptions)
+        (p) => (!p.valid_until || p.valid_until >= now) && (p.max_redemptions == null || (p.redemptions_count ?? 0) < p.max_redemptions),
       )
       if (promo) {
         if (promo.stripe_coupon_id) {
@@ -148,7 +131,7 @@ export async function POST(request: NextRequest) {
         } else {
           return NextResponse.json(
             { error: "This scholarship code is not set up for checkout yet. Please contact info@ncwrestlingunited.com." },
-            { status: 400 }
+            { status: 400 },
           )
         }
       }
@@ -167,6 +150,8 @@ export async function POST(request: NextRequest) {
         channel: "blue",
         category: "subscription",
         signup_id: signup.id,
+        payer_user_id: user.id,
+        ...(athlete.athleteId ? { athlete_id: athlete.athleteId } : {}),
       },
       subscription_data: {
         metadata: {
@@ -174,6 +159,8 @@ export async function POST(request: NextRequest) {
           channel: "blue",
           category: "subscription",
           signup_id: signup.id,
+          payer_user_id: user.id,
+          ...(athlete.athleteId ? { athlete_id: athlete.athleteId } : {}),
         },
       },
     }
@@ -184,7 +171,9 @@ export async function POST(request: NextRequest) {
     }
 
     const session = await stripe.checkout.sessions.create(sessionParams)
-    if (!session.url) return NextResponse.json({ error: "Could not create checkout session. Please try again or contact info@ncwrestlingunited.com." }, { status: 500 })
+    if (!session.url) {
+      return NextResponse.json({ error: "Could not create checkout session. Please try again." }, { status: 500 })
+    }
 
     if (promoIdToIncrement) {
       const { data: row } = await admin.from("blue_promo_codes").select("redemptions_count").eq("id", promoIdToIncrement).single()
