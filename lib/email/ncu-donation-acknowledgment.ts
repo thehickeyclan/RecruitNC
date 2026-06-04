@@ -1,4 +1,5 @@
 import { isFundraisingReceiptsPaused } from "@/lib/fundraising/fundraising-pause"
+import { sendStaffEmail } from "@/lib/resend-staff-bcc"
 
 export const NCU_WRESTLING_EIN = "99-3757238"
 
@@ -118,7 +119,7 @@ export async function sendNcuDonationAcknowledgmentEmail(input: {
     donationDateIso: input.donationDateIso,
   })
 
-  const result = await resend.emails.send({
+  const result = await sendStaffEmail(resend, {
     from,
     to: [input.to.trim()],
     subject,

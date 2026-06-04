@@ -8,6 +8,8 @@ import { findAndEnrichAthlete, enrichmentFromOrderCustomer, buildEnrichmentPaylo
 import { orderShippingFields } from "@/lib/order-shipping"
 import { completeBlueSignupAfterStripePayment } from "@/lib/blue-signup-webhook-complete"
 import { mapStripeSubscriptionToMembershipStatus } from "@/lib/blue-stripe-subscription-status"
+import { detectBlueMembershipStaffAlert } from "@/lib/blue-membership-staff-alert"
+import { notifyStaffBlueMembershipChange } from "@/lib/blue-membership-staff-email"
 import {
   processNcUnitedDropInCheckoutFailed,
   processNcUnitedDropInCheckoutSession,
@@ -120,6 +122,19 @@ export async function POST(request: NextRequest) {
     const subscription = event.data.object as Stripe.Subscription
     const subId = subscription.id
     const isDeleted = event.type === "customer.subscription.deleted"
+    const previousAttributes =
+      event.type === "customer.subscription.updated"
+        ? ((event.data as { previous_attributes?: Partial<Stripe.Subscription> }).previous_attributes ?? null)
+        : null
+
+    const { data: membershipBefore } = await admin
+      .from("blue_memberships")
+      .select(
+        "id, athlete_id, payer_user_id, signup_id, status, resume_at, next_billing_at, stripe_subscription_id",
+      )
+      .eq("stripe_subscription_id", subId)
+      .maybeSingle()
+
     const mapped = mapStripeSubscriptionToMembershipStatus(subscription, { isDeleted })
     const updatePayload: Record<string, unknown> = {
       status: mapped.status,
@@ -128,6 +143,19 @@ export async function POST(request: NextRequest) {
       resume_at: mapped.resume_at,
       ...(mapped.ended_at ? { ended_at: mapped.ended_at } : {}),
     }
+    if (mapped.status === "paused" && !mapped.resume_at && membershipBefore?.resume_at) {
+      updatePayload.resume_at = membershipBefore.resume_at
+    }
+
+    const alertKind = membershipBefore
+      ? detectBlueMembershipStaffAlert({
+          subscription,
+          isDeleted,
+          previousAttributes,
+          previousMembershipStatus: membershipBefore.status,
+        })
+      : null
+
     const { error } = await admin
       .from("blue_memberships")
       .update(updatePayload)
@@ -135,6 +163,24 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error("[webhooks/stripe] subscription sync blue_memberships:", error.message)
     }
+
+    if (alertKind && membershipBefore) {
+      void notifyStaffBlueMembershipChange(admin, {
+        membership: {
+          ...membershipBefore,
+          resume_at:
+            (updatePayload.resume_at as string | null | undefined) ??
+            membershipBefore.resume_at ??
+            mapped.resume_at,
+          next_billing_at: mapped.next_billing_at ?? membershipBefore.next_billing_at,
+          status: mapped.status,
+        },
+        subscription,
+        kind: alertKind,
+        initiatedBy: "member",
+      })
+    }
+
     return NextResponse.json({ received: true })
   }
 

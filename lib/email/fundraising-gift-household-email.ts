@@ -1,3 +1,5 @@
+import { sendStaffEmail } from "@/lib/resend-staff-bcc"
+
 const FROM = "NC United Wrestling <info@ncwrestlingunited.com>"
 
 export type FundraisingGiftHouseholdEmailInput = {
@@ -63,7 +65,7 @@ ${data.availableAfterGuildDisplay ? `<p style="margin:0 0 8px;"><strong>Availabl
   try {
     const { Resend } = await import("resend")
     const resend = new Resend(process.env.RESEND_API_KEY)
-    const result = await resend.emails.send({
+    const result = await sendStaffEmail(resend, {
       from: FROM,
       to: [to],
       subject,

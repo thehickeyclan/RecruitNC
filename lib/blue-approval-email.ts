@@ -1,6 +1,7 @@
 import { randomBytes } from "crypto"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { BLUE_PUBLIC_PAGE_URL } from "@/lib/blue-member-links"
+import { sendStaffEmail } from "@/lib/resend-staff-bcc"
 
 export type BlueApprovalEmailParams = {
   athleteFirstName: string
@@ -85,7 +86,7 @@ export async function sendBlueApprovalEmail(
   try {
     const { Resend } = await import("resend")
     const resend = new Resend(process.env.RESEND_API_KEY)
-    const result = await resend.emails.send({
+    const result = await sendStaffEmail(resend, {
       from: "NC Wrestling United <info@ncwrestlingunited.com>",
       to: [to.trim()],
       subject,

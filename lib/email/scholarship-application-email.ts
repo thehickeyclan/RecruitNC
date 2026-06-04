@@ -1,3 +1,5 @@
+import { sendStaffEmail } from "@/lib/resend-staff-bcc"
+
 const FROM = "NC Wrestling United <info@ncwrestlingunited.com>"
 
 export async function sendScholarshipApplicationEmails(params: {
@@ -49,7 +51,7 @@ export async function sendScholarshipApplicationEmails(params: {
   <p style="margin-top:28px;color:#64748b;font-size:14px;">NC United Wrestling · Scholarships<br/><a href="${hub}">${hub}</a></p>
 </body></html>`
 
-    const nomResult = await resend.emails.send({
+    const nomResult = await sendStaffEmail(resend, {
       from: FROM,
       to: [params.nominatorEmail.trim()],
       subject: `Your nomination has been received — ${params.scholarshipName}`,
@@ -91,7 +93,7 @@ export async function sendScholarshipApplicationEmails(params: {
   <p style="margin-top:16px;"><a href="${adminScholarshipsUrl}">Open scholarship admin</a></p>
 </body></html>`
 
-    const admResult = await resend.emails.send({
+    const admResult = await sendStaffEmail(resend, {
       from: FROM,
       to: [adminTo.trim()],
       subject: `New ${params.scholarshipName} application`,

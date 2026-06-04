@@ -1,3 +1,5 @@
+import { sendStaffEmail } from "@/lib/resend-staff-bcc"
+
 const FROM = "NC Wrestling United <info@ncwrestlingunited.com>"
 
 function siteUrl() {
@@ -85,7 +87,7 @@ export async function sendReimbursementRequestStatusEmail(
   try {
     const { Resend } = await import("resend")
     const resend = new Resend(process.env.RESEND_API_KEY)
-    const result = await resend.emails.send({
+    const result = await sendStaffEmail(resend, {
       from: FROM,
       to: [to.trim()],
       subject,

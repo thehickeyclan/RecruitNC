@@ -3,10 +3,12 @@
  * Uses Resend for email delivery (from: info@ncwrestlingunited.com)
  */
 
+import { sendStaffEmail } from "@/lib/resend-staff-bcc"
 import {
   BLUE_BILLING_HELP_URL,
   BLUE_GROUPME_URL,
   BLUE_PROFILE_BILLING_URL,
+  BLUE_STORE_PROMO_CODE,
   NC_UNITED_CALENDAR_URL,
   NC_UNITED_STORE_URL,
   RECRUITNC_PROFILE_URL,
@@ -49,7 +51,7 @@ export async function sendBlueInviteEmail(to: string, registerUrl: string): Prom
 </html>
     `
 
-    const result = await resend.emails.send({
+    const result = await sendStaffEmail(resend, {
       from: FROM_BLUE,
       to: [to.trim()],
       subject: "You're invited to join NC United Blue",
@@ -135,7 +137,10 @@ export function buildBlueWelcomeEmailHtml(params: BlueWelcomeEmailParams): strin
     </p>
 
     <h2 style="color: #03154C; font-size: 16px; margin-top: 24px;">NC United Store</h2>
-    <p>Blue members receive <strong>20% off</strong> NC United Store apparel and gear. Shop at <a href="${NC_UNITED_STORE_URL}" style="color: #03154C;">${NC_UNITED_STORE_URL}</a> — your member discount applies at checkout when you&apos;re signed in.</p>
+    <p>Blue members receive <strong>20% off</strong> NC United Store apparel and gear. At checkout, enter promo code <strong>${BLUE_STORE_PROMO_CODE}</strong>.</p>
+    <p style="margin: 12px 0;">
+      <a href="${NC_UNITED_STORE_URL}" style="color: #03154C; font-weight: bold;">Shop the NC United Store →</a>
+    </p>
 
     <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
     <p style="color: #6b7280; font-size: 14px;">Questions? <a href="mailto:info@ncwrestlingunited.com" style="color: #03154C;">info@ncwrestlingunited.com</a></p>
@@ -155,7 +160,7 @@ export async function sendBlueWelcomeEmail(params: BlueWelcomeEmailParams): Prom
     const { Resend } = await import("resend")
     const resend = new Resend(process.env.RESEND_API_KEY)
 
-    const result = await resend.emails.send({
+    const result = await sendStaffEmail(resend, {
       from: FROM_BLUE,
       to: [params.to.trim()],
       subject: `Welcome to NC United Blue — next steps`,
@@ -262,7 +267,7 @@ export async function sendEditRequestNotification({
 </html>
     `
 
-    const result = await resend.emails.send({
+    const result = await sendStaffEmail(resend, {
       from: FROM_BLUE,
       to: [to],
       subject,
@@ -398,7 +403,7 @@ export async function sendOrderConfirmationEmail(
 </html>
     `
 
-    const result = await resend.emails.send({
+    const result = await sendStaffEmail(resend, {
       from: FROM_BLUE,
       to: [customerEmail.trim()],
       subject: `Order ${orderNumber} confirmed – NC United Store`,
@@ -455,7 +460,7 @@ export async function sendNewMessageNotificationEmail(
 </html>
     `
 
-    const result = await resend.emails.send({
+    const result = await sendStaffEmail(resend, {
       from: FROM_BLUE,
       to: [to.trim()],
       subject: `New message in ${threadName} – RecruitNC`,
@@ -508,7 +513,7 @@ export async function sendAddedToHubEmail(
 </body>
 </html>
     `
-    const result = await resend.emails.send({
+    const result = await sendStaffEmail(resend, {
       from: FROM_BLUE,
       to: [to.trim()],
       subject: `You've been added to ${eventName} – RecruitNC`,
@@ -559,7 +564,7 @@ export async function sendAddedToGroupEmail(
 </body>
 </html>
     `
-    const result = await resend.emails.send({
+    const result = await sendStaffEmail(resend, {
       from: FROM_BLUE,
       to: [to.trim()],
       subject: `You've been added to ${threadName} – RecruitNC`,
@@ -597,7 +602,7 @@ export async function sendAdminBlastEmail(
     const { buildAdminBlastEmailHtml } = await import("@/lib/admin-blast-email-html")
     const baseUrl = (SITE_URL || "").replace(/\/$/, "")
     const html = buildAdminBlastEmailHtml(subject, htmlBody, baseUrl, logoVariant)
-    const result = await resend.emails.send({
+    const result = await sendStaffEmail(resend, {
       from: FROM_BLUE,
       to: [to.trim()],
       subject: subject.trim() || "Update from RecruitNC",
@@ -746,7 +751,7 @@ export async function sendOrderStatusEmail(
 </html>
     `
 
-    const result = await resend.emails.send({
+    const result = await sendStaffEmail(resend, {
       from: FROM_BLUE,
       to: [customerEmail.trim()],
       subject: config.subject,

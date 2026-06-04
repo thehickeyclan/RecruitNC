@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { BLUE_GROUPME_URL } from "./blue-member-links"
 import { buildBlueWelcomeEmailHtml } from "./email"
 
 describe("buildBlueWelcomeEmailHtml", () => {
@@ -18,5 +19,7 @@ describe("buildBlueWelcomeEmailHtml", () => {
     expect(html).toContain("NC United Blue")
     expect(html).toContain("Pause or cancel")
     expect(html).toContain("20% off")
+    expect(html).toContain("NCUBLUE")
+    expect(html).toContain(BLUE_GROUPME_URL)
   })
 })

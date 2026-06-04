@@ -13,6 +13,9 @@ export const BLUE_GROUPME_URL =
 
 export const NC_UNITED_STORE_URL = `${SITE_URL}/store`
 
+/** Blue member store discount — apply at cart checkout. */
+export const BLUE_STORE_PROMO_CODE = "NCUBLUE"
+
 /** Profile billing section anchor. */
 export const BLUE_PROFILE_BILLING_URL = `${SITE_URL}/profile#nc-united-blue`
 

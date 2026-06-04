@@ -1,3 +1,5 @@
+import { sendStaffEmail } from "@/lib/resend-staff-bcc"
+
 const FROM = "NC Wrestling United <info@ncwrestlingunited.com>"
 
 async function sendHtml(to: string, subject: string, html: string): Promise<void> {
@@ -8,7 +10,7 @@ async function sendHtml(to: string, subject: string, html: string): Promise<void
   try {
     const { Resend } = await import("resend")
     const resend = new Resend(process.env.RESEND_API_KEY)
-    const result = await resend.emails.send({ from: FROM, to: [to.trim()], subject, html })
+    const result = await sendStaffEmail(resend, { from: FROM, to: [to.trim()], subject, html })
     if (result.error) console.error("[TOC email]", subject, result.error)
   } catch (e) {
     console.error("[TOC email]", subject, e)

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { sendStaffEmail } from "@/lib/resend-staff-bcc"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { sendSms, toE164 } from "@/lib/sms"
@@ -47,7 +48,7 @@ async function sendEmail(to: string, subject: string, body: string): Promise<{ s
 </html>
     `
 
-    const result = await resend.emails.send({
+    const result = await sendStaffEmail(resend, {
       from: FROM_EMAIL,
       to: [to.trim()],
       subject,

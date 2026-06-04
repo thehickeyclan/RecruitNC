@@ -1,4 +1,5 @@
 import { NCU_WRESTLING_EIN, formatDonationDateDisplay } from "@/lib/email/ncu-donation-acknowledgment"
+import { sendStaffEmail } from "@/lib/resend-staff-bcc"
 
 const FROM = "NC United Wrestling <info@ncwrestlingunited.com>"
 
@@ -91,7 +92,7 @@ export async function sendNcuNationalTeamFeeReceiptEmail(input: {
     programLabel: input.programLabel,
   })
 
-  const result = await resend.emails.send({
+  const result = await sendStaffEmail(resend, {
     from,
     to: [input.to.trim()],
     subject,

@@ -1,6 +1,4 @@
-/**
- * Confirmation email after NC United calendar drop-in payment (Stripe webhook).
- */
+import { sendStaffEmail } from "@/lib/resend-staff-bcc"
 
 const FROM = "NC Wrestling United <info@ncwrestlingunited.com>"
 
@@ -56,7 +54,7 @@ ${
 <p style="color:#64748b;font-size:14px;margin-top:24px;">Questions? <a href="mailto:info@ncwrestlingunited.com">info@ncwrestlingunited.com</a></p>
 </div></body></html>`
 
-    const result = await resend.emails.send({
+    const result = await sendStaffEmail(resend, {
       from: FROM,
       to: [data.recipientEmail.trim()],
       subject: `Drop-in confirmed: ${data.eventTitle}`,
