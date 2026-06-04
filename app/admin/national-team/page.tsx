@@ -22,6 +22,12 @@ const sections = [
     icon: DollarSign,
   },
   {
+    href: "/admin/blue/aau-duals-roster-payments",
+    title: "AAU Duals roster payments",
+    description: "Full AAU starter roster with tournament reg, apparel, flight, and hotel columns — dollars paid per wrestler.",
+    icon: BarChart3,
+  },
+  {
     href: "/admin/blue/national-team-orders-report",
     title: "Orders report",
     description: "Filterable report of every NHSCA hub order — registration, van, hotel, gear — with CSV export.",

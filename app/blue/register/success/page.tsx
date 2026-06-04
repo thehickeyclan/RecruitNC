@@ -24,6 +24,19 @@ export default function BlueRegisterSuccessPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             <section className="rounded-lg border-2 border-[#03154C]/15 bg-[#03154C]/5 p-4 space-y-3">
+              <p className="font-semibold text-[#03154C] text-lg">Set up your athlete&apos;s recruiting profile</p>
+              <p className="text-sm text-gray-700">
+                College coaches search RecruitNC for NC wrestlers. Sign in and complete your athlete&apos;s profile — GPA,
+                weight, highlights, and contact info.
+              </p>
+              <HardLink href="/profile">
+                <Button className="w-full sm:w-auto bg-[#03154C] hover:bg-[#0a2571] text-white">
+                  Open Profile — recruiting setup
+                </Button>
+              </HardLink>
+            </section>
+
+            <section className="rounded-lg border-2 border-[#03154C]/15 bg-[#03154C]/5 p-4 space-y-3">
               <div className="flex items-center gap-2 text-[#03154C]">
                 <CreditCard className="h-5 w-5" />
                 <h2 className="font-semibold text-lg">Manage your subscription</h2>
@@ -84,12 +97,12 @@ export default function BlueRegisterSuccessPage() {
             </section>
 
             <section className="space-y-2 text-sm">
-              <p className="font-semibold text-[#03154C]">RecruitNC profile</p>
+              <p className="font-semibold text-[#03154C]">RecruitNC recruiting profile</p>
               <p className="text-gray-700">
-                Create or complete your wrestler&apos;s profile so coaches and colleges can find them.
+                Complete your wrestler&apos;s RecruitNC profile so college coaches can find them.
               </p>
-              <HardLink href="/calendar" className="text-[#03154C] underline hover:no-underline text-sm">
-                NC United calendar →
+              <HardLink href="/profile" className="text-[#03154C] underline hover:no-underline text-sm font-medium">
+                Set up recruiting profile →
               </HardLink>
             </section>
 
