@@ -166,7 +166,7 @@ export default function AdminBlueWiqPage() {
       setActiveRenewingText("")
       setActiveRenewingFileName("")
       setImportMessage(
-        `Imported ${d.upserted} Blue rows (${d.matched} matched to athletes).${d.pausedApplied ? ` ${d.pausedApplied} marked paused.` : ""}${d.demotedFromActive ? ` ${d.demotedFromActive} demoted (not on active renewing list).` : ""}${d.flaggedMissing ? ` ${d.flaggedMissing} flagged missing from report.` : ""}`,
+        `Imported ${d.upserted} Blue rows (${d.matched} matched to athletes).${d.pausedApplied ? ` ${d.pausedApplied} marked paused.` : ""}${d.flaggedMissing ? ` ${d.flaggedMissing} flagged missing from report.` : ""}`,
       )
       await reload()
     } catch (e) {
@@ -261,10 +261,10 @@ export default function AdminBlueWiqPage() {
           <h2 className="text-sm font-semibold text-white mb-1">Import WIQ reports</h2>
           <p className="text-xs text-white/50 mb-4">
             Upload the <strong className="text-white/70">Membership Summary</strong> CSV (Paid, Canceled, Overdue).
-            Paused members still show as <strong className="text-white/70">Paid</strong> on that report — also upload
-            WrestlingIQ&apos;s <strong className="text-white/70">Active Renewing Members</strong> list (e.g. Active
-            June-Renewing) so only those wrestlers stay active. Optional: Paused Subscription Report for resume dates.
-            Only Paid + Overdue count as billable; paused does not.
+            Paused members still show as <strong className="text-white/70">Paid</strong> on that report — upload
+            WrestlingIQ&apos;s <strong className="text-white/70">Paused Subscription Report</strong> to mark those as
+            paused. Optional: Active Renewing list for June cohort reconciliation (does not change status). Only Paid
+            + Overdue count as billable; paused does not.
           </p>
           <div className="flex flex-col gap-3">
             <div className="flex flex-col sm:flex-row gap-3 items-start flex-wrap">
@@ -349,11 +349,10 @@ export default function AdminBlueWiqPage() {
               {preview.activeRenewingListCount != null && preview.activeRenewingListCount > 0 && (
                 <p className="text-emerald-200">
                   Active renewing allowlist: {preview.activeRenewingListCount} wrestler(s).
-                  {preview.demotedFromActive != null && preview.demotedFromActive > 0
-                    ? ` ${preview.demotedFromActive} paid row(s) demoted — not on that list.`
-                    : preview.activeCount === preview.activeRenewingListCount
-                      ? " Active count matches allowlist."
-                      : ` ${preview.activeCount} will remain active after import.`}
+                  {preview.activeRenewingMatched != null && preview.activeRenewingMatched > 0
+                    ? ` ${preview.activeRenewingMatched} paid row(s) matched that list.`
+                    : null}{" "}
+                  {preview.activeCount} paid row(s) will remain active from Membership Summary.
                 </p>
               )}
               {pausedCsvText && preview.pausedCount === 0 && !preview.pausedApplied && (

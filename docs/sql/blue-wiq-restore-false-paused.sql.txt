@@ -1,0 +1,21 @@
+-- Restore WIQ members wrongly marked paused by the old "Active Renewing allowlist" demotion.
+-- Safe to re-run. Run in Supabase SQL Editor.
+
+-- PREVIEW
+select wrestler_name, billed_to, status, wiq_status_raw, wiq_billing_partner_id
+from public.blue_wiq_subscriptions
+where status = 'paused'
+  and wiq_status_raw = 'Not on active renewing report'
+order by wrestler_name;
+
+-- APPLY — restore all false pauses from that demotion rule
+update public.blue_wiq_subscriptions
+set
+  status = 'active',
+  wiq_status_raw = 'Paid',
+  updated_at = now()
+where status = 'paused'
+  and wiq_status_raw = 'Not on active renewing report';
+
+-- Verify counts
+select status, count(*) from public.blue_wiq_subscriptions group by status order by status;

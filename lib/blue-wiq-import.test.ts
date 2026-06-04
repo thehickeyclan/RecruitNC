@@ -106,7 +106,7 @@ Scott Moore,Spencer Moore,5/1/2026 12:00 pm,8/1/2026 12:00 pm`
     expect(spencer.nextDueAt).toMatch(/2026-08-01/)
   })
 
-  it("uses active renewing allowlist to reach expected active count", () => {
+  it("keeps paid rows active when not on active renewing allowlist", () => {
     const summary = `"Billed to","Wrestler names",Status,"Member since","Next due","Expires on",Total,"Billing interval","Membership type",Items,Discount,"Billing partner id"
 Scott Moore,Spencer Moore,Paid,2/15/2026 06:33 pm," 6/15/2026 07:33 pm",,$51.00,/ month,Practice Fee,"NC United Blue ",,sub_w_a
 Jane Doe,Not Active,Paid,2/15/2026 06:33 pm," 6/15/2026 07:33 pm",,$51.00,/ month,Practice Fee,"NC United Blue ",,sub_w_b`
@@ -120,8 +120,9 @@ Jane Doe,Not Active,Paid,2/15/2026 06:33 pm," 6/15/2026 07:33 pm",,$51.00,/ mont
       ACTIVE_RENEWING_SAMPLE,
     )
     expect(preview.activeRenewingListCount).toBe(6)
-    expect(preview.activeCount).toBe(1)
-    expect(preview.demotedFromActive).toBe(1)
+    expect(preview.activeCount).toBe(2)
+    expect(preview.demotedFromActive).toBeUndefined()
+    expect(preview.rows.find((r) => r.wiqBillingPartnerId === "sub_w_b")!.status).toBe("active")
   })
 })
 
@@ -146,16 +147,26 @@ describe("parseWiqActiveRenewingText", () => {
 })
 
 describe("applyActiveRenewingOverlay", () => {
-  it("demotes paid rows not on the active renewing allowlist", () => {
+  it("does not demote paid rows missing from the active renewing allowlist", () => {
     const summary = `"Billed to","Wrestler names",Status,"Member since","Next due","Expires on",Total,"Billing interval","Membership type",Items,Discount,"Billing partner id"
 Scott Moore,Spencer Moore,Paid,2/15/2026 06:33 pm," 6/15/2026 07:33 pm",,$51.00,/ month,Practice Fee,"NC United Blue ",,sub_w_active
-Jane Doe,Not Active Kid,Paid,2/15/2026 06:33 pm," 6/15/2026 07:33 pm",,$51.00,/ month,Practice Fee,"NC United Blue ",,sub_w_paused`
+Jane Doe,Not Active Kid,Paid,2/15/2026 06:33 pm," 6/15/2026 07:33 pm",,$51.00,/ month,Practice Fee,"NC United Blue ",,sub_w_still_active`
     const membership = parseWiqMembershipCsv(summary, new Date("2026-06-03"))
     const activeRows = parseWiqActiveRenewingText(ACTIVE_RENEWING_SAMPLE)
-    const { rows, demotedFromActive } = applyActiveRenewingOverlay(membership, activeRows)
-    expect(demotedFromActive).toBe(1)
+    const { rows, demotedFromActive, activeRenewingMatched } = applyActiveRenewingOverlay(membership, activeRows)
+    expect(demotedFromActive).toBe(0)
+    expect(activeRenewingMatched).toBe(1)
     expect(rows.find((r) => r.wiqBillingPartnerId === "sub_w_active")!.status).toBe("active")
-    expect(rows.find((r) => r.wiqBillingPartnerId === "sub_w_paused")!.status).toBe("paused")
+    expect(rows.find((r) => r.wiqBillingPartnerId === "sub_w_still_active")!.status).toBe("active")
+  })
+
+  it("matches middle initials on wrestler names", () => {
+    const summary = `"Billed to","Wrestler names",Status,"Member since","Next due","Expires on",Total,"Billing interval","Membership type",Items,Discount,"Billing partner id"
+Jeffrey Stonebraker,Joshua S. Stonebraker,Paid,2/15/2026 06:33 pm," 6/15/2026 07:33 pm",,$51.00,/ month,Practice Fee,"NC United Blue ",,sub_w_josh`
+    const membership = parseWiqMembershipCsv(summary, new Date("2026-06-03"))
+    const activeRows = [{ wrestlerName: "Joshua Stonebraker", billedTo: "Jeffrey Stonebraker" }]
+    const { activeRenewingMatched } = applyActiveRenewingOverlay(membership, activeRows)
+    expect(activeRenewingMatched).toBe(1)
   })
 })
 
