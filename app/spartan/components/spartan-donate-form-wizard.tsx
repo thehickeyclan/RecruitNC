@@ -6,7 +6,6 @@ import { useEffect, useMemo, useState } from "react"
 import { HardLink } from "@/components/hard-link"
 import { NC_UNITED_CONTRIBUTIONS_TAX_DISCLAIMER } from "@/lib/fundraising/donor-facing-disclosures"
 import { isSpartanTeamPageAthleteDonationsDisabled } from "@/lib/spartan-team-page-donations"
-import { isSpartanTeamPageAthleteDonationsDisabled } from "@/lib/spartan-team-page-donations"
 import type { SpartanRaceTierId } from "../types"
 import {
   DEFAULT_SPARTAN_RACE_TIER_ID,
