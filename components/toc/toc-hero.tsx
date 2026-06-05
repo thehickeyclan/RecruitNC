@@ -3,6 +3,7 @@
 import { TocCountdown } from "@/components/toc/toc-countdown"
 import { TocPatrioticBar, tocDisplayClass } from "@/components/toc/toc-theme"
 import { TOC_EVENT_DATE } from "@/lib/toc/constants"
+import { TOC_HERO } from "@/lib/toc/marketing-copy"
 import type { TocEventConfig } from "@/lib/toc/event-config"
 
 type Props = {
@@ -25,18 +26,24 @@ export function TocHero({ config }: Props) {
         }}
       />
       <div className="container relative mx-auto px-4 py-16 md:py-24 max-w-5xl">
-        <p className={`text-white/80 text-base md:text-lg mb-2 ${tocDisplayClass()}`}>
-          North Carolina · September 2026
+        <p className="text-[#CC0000] text-sm md:text-base mb-3 tracking-[0.2em] uppercase font-semibold">
+          NC United · By invitation only
         </p>
         <h1 className={`text-5xl md:text-6xl lg:text-7xl leading-[0.95] max-w-4xl text-white ${tocDisplayClass()}`}>
-          Tournament of Champions
+          {TOC_HERO.eventName}
         </h1>
-        <p className="mt-6 text-xl md:text-2xl text-white font-medium max-w-2xl border-l-4 border-[#CC0000] pl-4">
-          Who is the best wrestler in North Carolina at each weight?
+        <p className={`mt-4 text-2xl md:text-3xl lg:text-4xl text-white max-w-3xl leading-tight ${tocDisplayClass()}`}>
+          {TOC_HERO.tagline}
         </p>
-        <p className="mt-4 text-white/75 max-w-2xl text-base md:text-lg">
-          {config.event_dates} · {config.venue_name ?? "Hope Community Church"}, Apex · 88 wrestlers · 11 college
-          weights · only one earns the Champion jacket
+        <p className={`mt-3 text-lg md:text-xl text-white/85 max-w-3xl ${tocDisplayClass()}`}>{TOC_HERO.buckleUp}</p>
+
+        <p className="mt-8 text-lg md:text-xl text-white/90 max-w-3xl leading-relaxed">
+          {TOC_HERO.lead}{" "}
+          <strong className="text-white font-semibold">{TOC_HERO.showLine}</strong>
+        </p>
+
+        <p className="mt-4 text-white/60 text-sm md:text-base">
+          {config.event_dates} · {config.venue_name ?? "Hope Community Church"}, Apex
         </p>
 
         <TocCountdown targetDate={TOC_EVENT_DATE} className="mt-8" />
@@ -53,6 +60,12 @@ export function TocHero({ config }: Props) {
             className={`inline-flex items-center justify-center rounded-sm border-2 border-white px-8 py-3.5 text-lg text-white hover:bg-white/10 transition-colors ${tocDisplayClass()}`}
           >
             The Champion jacket
+          </a>
+          <a
+            href="#schedule"
+            className="inline-flex items-center justify-center rounded-sm border-2 border-white/40 px-6 py-3.5 text-base font-semibold text-white/90 hover:border-white transition-colors"
+          >
+            Event schedule
           </a>
           <a
             href="#nominate"

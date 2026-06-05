@@ -11,6 +11,7 @@ export async function POST(request: NextRequest) {
 
     const firstName = body.firstName?.trim()
     const lastName = body.lastName?.trim()
+    const emailRaw = (body.email ?? body.parentEmail)?.trim().toLowerCase()
     const cell = body.cell?.trim()
     const graduationYear = body.graduationYear?.trim()
     const highestAchievement = body.highestAchievement?.trim()
@@ -21,6 +22,10 @@ export async function POST(request: NextRequest) {
 
     if (!firstName) return NextResponse.json({ ok: false, error: "First name is required" }, { status: 400 })
     if (!lastName) return NextResponse.json({ ok: false, error: "Last name is required" }, { status: 400 })
+    if (!emailRaw) return NextResponse.json({ ok: false, error: "Email is required" }, { status: 400 })
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailRaw)) {
+      return NextResponse.json({ ok: false, error: "Enter a valid email address" }, { status: 400 })
+    }
     if (!cell) return NextResponse.json({ ok: false, error: "Cell phone is required" }, { status: 400 })
     if (!graduationYear) return NextResponse.json({ ok: false, error: "Graduation year is required" }, { status: 400 })
     if (!highestAchievement || !ACHIEVEMENT_VALUES.includes(highestAchievement as (typeof ACHIEVEMENT_VALUES)[number])) {
@@ -30,6 +35,7 @@ export async function POST(request: NextRequest) {
     const row: Record<string, unknown> = {
       first_name: firstName,
       last_name: lastName,
+      parent_email: emailRaw,
       cell_phone: normalizePhoneForStorage(cell),
       graduation_year: graduationYear,
       highest_achievement: highestAchievement,
@@ -48,6 +54,16 @@ export async function POST(request: NextRequest) {
       if (dbError.code === "42P01") {
         return NextResponse.json(
           { ok: false, error: "Submissions are not available yet. Please try again later." },
+          { status: 503 }
+        )
+      }
+      if (dbError.code === "42703" && String(dbError.message).includes("parent_email")) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error:
+              "Email cannot be saved yet — run the parent_email migration in Supabase (see docs/blue-express-interest-table.md).",
+          },
           { status: 503 }
         )
       }

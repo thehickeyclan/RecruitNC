@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge"
 import { Star, ChevronLeft, ChevronRight } from "lucide-react"
 import { getColorHex } from "@/lib/color-utils"
 import { StoreCatalogImage, STORE_CATALOG_FRAME_CLASS } from "@/components/store-catalog-image"
-import { isStoreSingletProduct } from "@/lib/store/product-utils"
 
 interface ProductCardProduct {
   id: string | number
@@ -74,7 +73,6 @@ export function ProductCard({ product }: ProductCardProps) {
   const currentImage = getCurrentImage()
   const stockQty = product.stock_quantity ?? 0
   const rating = product.rating ?? 0
-  const isSinglet = isStoreSingletProduct(product)
 
   return (
     <div className="group relative">
@@ -88,7 +86,7 @@ export function ProductCard({ product }: ProductCardProps) {
               src={currentImage}
               alt={product.name}
               product={product}
-              hoverZoom={!isSinglet}
+              hoverZoom
             />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center text-white/30">
@@ -140,13 +138,11 @@ export function ProductCard({ product }: ProductCardProps) {
             )}
           </div>
 
-          {!isSinglet && (
-            <div className="absolute bottom-3 inset-x-3 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 z-10">
-              <div className="w-full py-2.5 bg-[#D3B574] text-[#0A1628] font-semibold text-sm rounded-lg text-center">
-                View Product
-              </div>
+          <div className="absolute bottom-3 inset-x-3 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 z-10">
+            <div className="w-full py-2.5 bg-[#D3B574] text-[#0A1628] font-semibold text-sm rounded-lg text-center">
+              View Product
             </div>
-          )}
+          </div>
         </div>
 
         {/* Product info */}

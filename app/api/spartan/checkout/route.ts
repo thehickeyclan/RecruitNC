@@ -7,6 +7,11 @@ import {
   isAthleteGiftPageHubCheckout,
   isFundraisingAthletePageDonationsDisabled,
 } from "@/lib/fundraising/fundraising-pause"
+import {
+  isSpartanTeamPageAthleteDonationsDisabled,
+  isSpartanTeamPageCheckout,
+  SPARTAN_TRAINING_FUND_ONLY_MESSAGE,
+} from "@/lib/spartan-team-page-donations"
 
 export const dynamic = "force-dynamic"
 
@@ -171,6 +176,22 @@ export async function POST(request: NextRequest) {
       { status: 503 },
     )
   }
+
+  if (
+    isSpartanTeamPageAthleteDonationsDisabled() &&
+    isSpartanTeamPageCheckout({ fundraisingHub })
+  ) {
+    const hasManualCreditEarly =
+      typeof body.manualAthleteName === "string" && body.manualAthleteName.trim().length >= 2
+    const athleteCodeEarly =
+      typeof body.athleteCode === "string" ? body.athleteCode.trim().slice(0, 64) : ""
+    const tierEarly = typeof body.tierPreference === "string" ? body.tierPreference.trim().slice(0, 32) : ""
+    const raceRequestedEarly = Boolean(tierEarly && isSpartanRaceTierId(tierEarly))
+    if (athleteCodeEarly || hasManualCreditEarly || raceRequestedEarly) {
+      return NextResponse.json({ error: SPARTAN_TRAINING_FUND_ONLY_MESSAGE }, { status: 403 })
+    }
+  }
+
   /** Super 10K tier → donor expects Spartan entry code path; omit for donate-only. */
   const raceEntryRequested = Boolean(tierPreference && tierPreference.length > 0)
   const amountCents = Number(body.amountCents)

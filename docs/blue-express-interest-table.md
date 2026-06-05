@@ -19,6 +19,7 @@ create table if not exists public.blue_express_interest (
   high_school text,
   club text,
   comments text,
+  parent_email text,
   created_at timestamptz not null default now()
 );
 
@@ -58,7 +59,13 @@ alter table public.blue_express_interest alter column status drop default;
 alter table public.blue_express_interest add constraint blue_express_interest_status_check check (status is null or status in ('text_sent', 'invite_sent', 'registered', 'declined'));
 ```
 
-Form fields: first name, last name, cell, graduation year, highest level achievement, high school, club, freeform (comments). Optional: high school, club, comments.
+Form fields: first name, last name, **email**, cell, graduation year, highest level achievement, high school, club, freeform (comments). Optional: high school, club, comments.
+
+**Parent/guardian email:** Required on the public form (stored as `parent_email` — used for invite emails and admin export).
+
+```sql
+alter table public.blue_express_interest add column if not exists parent_email text;
+```
 
 If the table already exists, add the new columns:
 
@@ -68,6 +75,7 @@ alter table public.blue_express_interest
   add column if not exists club text,
   add column if not exists comments text,
   add column if not exists weight_class text,
+  add column if not exists parent_email text,
   add column if not exists status text,
   add column if not exists regional text,
   add column if not exists placement text;

@@ -1,12 +1,12 @@
-import { Trophy, Users, Scale, Medal, Calendar } from "lucide-react"
+import { Lock, MapPin, Medal, Sparkles, Trophy } from "lucide-react"
 import { TocPatrioticBar, tocDisplayClass } from "@/components/toc/toc-theme"
 
 const FACTS = [
-  { icon: Users, label: "88 wrestlers", sub: "8 per weight · invite-only field" },
-  { icon: Scale, label: "11 weights", sub: "NCAA collegiate classes + 117 lbs" },
-  { icon: Medal, label: "1 jacket per weight", sub: "Only the bracket champion earns it" },
-  { icon: Calendar, label: "2 days", sub: "Single weigh-in · no allowance" },
-  { icon: Trophy, label: "1,000+ fans", sub: "Apex, NC · September 2026" },
+  { icon: Lock, label: "By invitation only", sub: "You don't enter. You get the call." },
+  { icon: Trophy, label: "The brackets are stacked", sub: "Eight elite wrestlers · eleven weights" },
+  { icon: Sparkles, label: "Two mats until finals", sub: "One mat under the lights for the titles" },
+  { icon: MapPin, label: "Premier venue", sub: "Hope Community Church · Apex, NC" },
+  { icon: Medal, label: "Earn the jacket", sub: "One champion per weight · NC pride forever" },
 ]
 
 export function TocQuickFacts() {

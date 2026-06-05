@@ -1,4 +1,6 @@
-/** NC United Tournament of Champions — shared constants (Phase 1 marketing). */
+/** NC United Tournament of Champions — shared constants (Phase 1 marketing).
+ * Public copy on `/tournament-of-champions` is fan/athlete marketing only — no P&L, capacity caps,
+ * inventory, or internal ops language on the landing page. See `.cursorrules` TOC section. */
 
 export const TOC_EVENT_DATE = new Date("2026-09-04T09:00:00-04:00")
 

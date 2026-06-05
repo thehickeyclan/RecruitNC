@@ -5,6 +5,7 @@ import { createOrderFromPaymentIntent, createOrderFromSession } from "@/app/acti
 import { checkoutSessionIsNonStoreImport } from "@/lib/stripe-sync-guards"
 import { syncPaidSubscriptionInvoicesFromStripe } from "@/lib/orders/ensure-order-from-stripe-invoice"
 import { getStripe, readStripeConfigStatus, readStripeSecretKey, stripeKeyMissingPayload } from "@/lib/stripe"
+import { backfillSpartanOrdersFromDonations } from "@/lib/stripe-spartan-order"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 120
@@ -183,8 +184,26 @@ export async function POST() {
     }
     if (hasMoreSession && Date.now() >= deadline) partial = true
 
-    const totalCreated = created + invoicesCreated
-    const totalSkipped = skipped + invoicesSkipped
+    // 4) Mirror paid spartan_donations → orders (Training Fund / Spartan gifts skipped by sync guards above)
+    let spartanOrdersCreated = 0
+    let spartanOrdersSkipped = 0
+    const spartanOrderErrors: string[] = []
+    if (Date.now() < deadline) {
+      try {
+        const spartanBackfill = await backfillSpartanOrdersFromDonations(admin, {
+          sinceDays: DAYS_BACK,
+          limit: 500,
+        })
+        spartanOrdersCreated = spartanBackfill.created
+        spartanOrdersSkipped = spartanBackfill.skipped
+        spartanOrderErrors.push(...spartanBackfill.errors)
+      } catch (e) {
+        spartanOrderErrors.push(e instanceof Error ? e.message : String(e))
+      }
+    }
+
+    const totalCreated = created + invoicesCreated + spartanOrdersCreated
+    const totalSkipped = skipped + invoicesSkipped + spartanOrdersSkipped
 
     return NextResponse.json({
       success: true,
@@ -192,8 +211,9 @@ export async function POST() {
       skipped: totalSkipped,
       createdFromCheckout: created,
       createdFromInvoices: invoicesCreated,
+      createdFromSpartanDonations: spartanOrdersCreated,
       partial,
-      errors: [...errors, ...invoiceErrors].slice(0, 20),
+      errors: [...errors, ...invoiceErrors, ...spartanOrderErrors].slice(0, 20),
     })
   } catch (e) {
     console.error("[admin/orders/sync-stripe]", e)

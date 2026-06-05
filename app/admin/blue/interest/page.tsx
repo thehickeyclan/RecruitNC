@@ -70,6 +70,7 @@ type Submission = {
   id: string
   first_name: string
   last_name: string
+  parent_email?: string | null
   cell_phone: string
   graduation_year: string
   highest_achievement: string
@@ -200,7 +201,7 @@ export default function AdminBlueInterestPage() {
 
   const openCreateInvite = (row: Submission) => {
     setCreateInviteRow(row)
-    setCreateInviteEmail("")
+    setCreateInviteEmail((row.parent_email ?? "").trim())
     setCreateInviteNote("")
   }
 
@@ -362,6 +363,7 @@ alter table public.blue_express_interest
   add column if not exists club text,
   add column if not exists comments text,
   add column if not exists weight_class text,
+  add column if not exists parent_email text,
   add column if not exists status text,
   add column if not exists regional text,
   add column if not exists placement text;`}
@@ -396,6 +398,7 @@ alter table public.blue_express_interest
                       <TableHead className="w-10 text-center">Invite sent</TableHead>
                       <TableHead className="w-10 text-center">Enrolled</TableHead>
                       <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
                       <TableHead>High school</TableHead>
                       <TableHead>Club</TableHead>
                       <TableHead>Weight</TableHead>
@@ -484,6 +487,9 @@ alter table public.blue_express_interest
                         </TableCell>
                         <TableCell className="font-medium">
                           {row.first_name} {row.last_name}
+                        </TableCell>
+                        <TableCell className="max-w-[180px] truncate text-sm" title={row.parent_email ?? ""}>
+                          {row.parent_email || "—"}
                         </TableCell>
                         <TableCell className="max-w-[140px] truncate" title={row.high_school ?? ""}>
                           {row.high_school || "—"}

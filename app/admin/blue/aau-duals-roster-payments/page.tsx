@@ -6,8 +6,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ArrowLeft, Download, Loader2, Search } from "lucide-react"
 import { BlueAdminAuthBanner, isBlueAuthError } from "@/components/blue-admin-auth-banner"
+import {
+  AAU_TRAVEL_NEED_OPTIONS,
+  aauTravelFulfillmentStatus,
+  type AauTravelNeed,
+} from "@/lib/aau-duals-travel-commitment"
 import {
   aauRosterPaymentMatrixToCsv,
   formatAauPaymentCell,
@@ -25,12 +31,26 @@ function PaymentCell({ cents }: { cents: number | undefined | null }) {
   return <span className="tabular-nums font-medium text-[#13294B]">{formatAauPaymentCell(cents)}</span>
 }
 
+function TravelFulfillmentBadge({ status }: { status: string }) {
+  if (status === "complete") {
+    return <Badge className="border-0 bg-green-600 text-white hover:bg-green-600 text-[10px]">Verbal + paid</Badge>
+  }
+  if (status === "partial") {
+    return <Badge className="border-0 bg-amber-500 text-white hover:bg-amber-500 text-[10px]">Partially paid</Badge>
+  }
+  if (status === "verbal_only") {
+    return <Badge variant="outline" className="text-[10px] border-blue-300 text-blue-800">Verbal only</Badge>
+  }
+  return null
+}
+
 export default function AdminAauDualsRosterPaymentsPage() {
   const [matrix, setMatrix] = useState<AauRosterPaymentMatrix | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState("")
   const [showUnpaidOnly, setShowUnpaidOnly] = useState(false)
+  const [savingTravel, setSavingTravel] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setError(null)
@@ -97,6 +117,41 @@ export default function AdminAauDualsRosterPaymentsPage() {
     URL.revokeObjectURL(url)
   }
 
+  async function saveTravelNeed(weightLabel: string, travelNeed: AauTravelNeed) {
+    setSavingTravel(weightLabel)
+    setError(null)
+    try {
+      const r = await fetch("/api/admin/blue/aau-duals-roster-payments", {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ weight_label: weightLabel, travel_need: travelNeed }),
+      })
+      const d = await r.json().catch(() => ({}))
+      if (!r.ok) {
+        throw new Error((d as { error?: string }).error ?? "Could not save travel need.")
+      }
+      setMatrix((prev) => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          roster: prev.roster.map((row) => {
+            if (row.weightLabel !== weightLabel) return row
+            return {
+              ...row,
+              travel_need: travelNeed,
+              travel_fulfillment: aauTravelFulfillmentStatus(travelNeed, row.payments),
+            }
+          }),
+        }
+      })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save travel need.")
+    } finally {
+      setSavingTravel(null)
+    }
+  }
+
   const summary = matrix?.summary
 
   return (
@@ -112,7 +167,8 @@ export default function AdminAauDualsRosterPaymentsPage() {
             <div>
               <h1 className="text-2xl font-bold text-[#13294B]">AAU Duals roster payments</h1>
               <p className="text-sm text-muted-foreground mt-0.5">
-                Full starter roster with dollars paid per category — tournament reg, apparel, flight, and hotel.
+                Starter roster with dollars paid per category — plus verbal travel commitments (✈️ / 🏨) vs what&apos;s
+                actually paid.
               </p>
             </div>
           </div>
@@ -204,7 +260,8 @@ export default function AdminAauDualsRosterPaymentsPage() {
               <CardHeader>
                 <CardTitle>Starter roster</CardTitle>
                 <CardDescription>
-                  Dollar amounts reflect paid hub checkouts only. Hotel column includes hotel &amp; team van.
+                  Dollar amounts reflect paid hub checkouts. Use the travel dropdown for family verbals — status compares
+                  verbal vs flight/hotel paid columns.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -214,6 +271,7 @@ export default function AdminAauDualsRosterPaymentsPage() {
                       <TableRow>
                         <TableHead>Weight</TableHead>
                         <TableHead>Wrestler</TableHead>
+                        <TableHead className="min-w-[160px]">Travel (verbal)</TableHead>
                         <TableHead className="text-right">Tournament reg</TableHead>
                         <TableHead className="text-right">Apparel</TableHead>
                         <TableHead className="text-right">Flight</TableHead>
@@ -239,6 +297,31 @@ export default function AdminAauDualsRosterPaymentsPage() {
                                 <span className="text-muted-foreground italic">Open — TBD</span>
                               ) : (
                                 row.wrestler
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {open ? (
+                                <span className="text-muted-foreground">—</span>
+                              ) : (
+                                <div className="space-y-1.5">
+                                  <Select
+                                    value={row.travel_need ?? "none"}
+                                    onValueChange={(v) => void saveTravelNeed(row.weightLabel, v as AauTravelNeed)}
+                                    disabled={savingTravel === row.weightLabel}
+                                  >
+                                    <SelectTrigger className="h-8 text-xs">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {AAU_TRAVEL_NEED_OPTIONS.map((opt) => (
+                                        <SelectItem key={opt.value} value={opt.value}>
+                                          {opt.label}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  <TravelFulfillmentBadge status={row.travel_fulfillment ?? "not_set"} />
+                                </div>
                               )}
                             </TableCell>
                             <TableCell className="text-right">

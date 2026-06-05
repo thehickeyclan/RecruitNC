@@ -7,6 +7,7 @@ import { amountLooksLikeGuild } from "@/lib/stripe-checkout-amounts"
 import { isGuildCheckoutSession, isGuildOrderRow } from "@/lib/stripe-guild-detection"
 import { isMisclassifiedGuildGhostLineName } from "@/lib/stripe-guild-misclassified-line"
 import { repairGuildOrderFromStripeIfNeeded, upsertGuildOrderFromCheckoutSession } from "@/lib/stripe-guild-order"
+import { upsertSpartanOrderFromCheckoutSession } from "@/lib/stripe-spartan-order"
 import { syntheticOrderItemSku } from "@/lib/order-item-sku"
 
 export type SharedStripeReconcileKind =
@@ -194,17 +195,17 @@ export async function reconcileSharedStripeOrder(
     return { changed: false, kind: "skipped", detail: "no_stripe_id" }
   }
 
-  if (piId && (await hasSpartanDonationForPaymentIntent(admin, piId))) {
-    await tagOrderAsSpartan(admin, order.id)
-    return { changed: true, kind: "spartan", detail: "spartan_donations" }
-  }
-
   const stripe = getStripe()
   const session = await fetchCheckoutSessionForOrder(stripe, order)
 
-  if (session?.metadata?.channel === "spartan") {
-    await tagOrderAsSpartan(admin, order.id)
+  if (session?.metadata?.channel === "spartan" && session.payment_status === "paid") {
+    await upsertSpartanOrderFromCheckoutSession(admin, session)
     return { changed: true, kind: "spartan", detail: session.id }
+  }
+
+  if (piId && (await hasSpartanDonationForPaymentIntent(admin, piId))) {
+    await tagOrderAsSpartan(admin, order.id)
+    return { changed: true, kind: "spartan", detail: "spartan_donations" }
   }
 
   if (session?.metadata?.drop_in_request_id) {

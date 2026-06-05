@@ -66,6 +66,7 @@ export async function GET() {
     const headers = [
       "First Name",
       "Last Name",
+      "Email",
       "Cell Phone",
       "Graduation Year",
       "Highest Achievement",
@@ -82,6 +83,7 @@ export async function GET() {
     const rows = submissions.map((row: any) => [
       escapeCsv(row.first_name),
       escapeCsv(row.last_name),
+      escapeCsv(row.parent_email),
       escapeCsv(formatPhoneForDisplay(row.cell_phone)),
       escapeCsv(row.graduation_year),
       escapeCsv(ACHIEVEMENT_LABELS[row.highest_achievement] ?? row.highest_achievement),

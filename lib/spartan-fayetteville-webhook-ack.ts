@@ -11,6 +11,7 @@ import { stripeSpartanCampaignMetadataMatchesRequested } from "@/lib/fundraising
 import { deriveCheckoutAttributionFromStripeSession } from "@/lib/spartan-donation-checkout-attribution"
 import { resolveAthleteCodeForSpartanCheckout } from "@/lib/spartan-donation-athlete-code"
 import { SPARTAN_FAYETTEVILLE_CAMPAIGN } from "@/lib/spartan-fayetteville-stripe"
+import { upsertSpartanOrderFromCheckoutSession } from "@/lib/stripe-spartan-order"
 
 function autoAckEnabled() {
   const v = process.env.SPARTAN_FAYETTEVILLE_DISABLE_AUTO_ACK
@@ -136,6 +137,14 @@ export async function upsertSpartanDonationFromCheckoutSession(
   if (spartanErr) {
     console.error("[spartan-fayetteville-webhook-ack] spartan_donations upsert:", spartanErr.message)
     return
+  }
+
+  if (session.payment_status === "paid") {
+    try {
+      await upsertSpartanOrderFromCheckoutSession(admin, session)
+    } catch (e) {
+      console.error("[spartan-fayetteville-webhook-ack] orders mirror failed", session.id, e)
+    }
   }
 
   await recordFundraisingLedgerSpartanCheckout(admin, session, resolvedAthleteCode ?? null)

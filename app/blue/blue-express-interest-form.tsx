@@ -30,6 +30,7 @@ const WEIGHT_CLASSES = ["106", "113", "120", "126", "132", "138", "145", "152", 
 export function BlueExpressInterestForm() {
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
+  const [email, setEmail] = useState("")
   const [cell, setCell] = useState("")
   const [graduationYear, setGraduationYear] = useState("")
   const [highestAchievement, setHighestAchievement] = useState("")
@@ -54,6 +55,15 @@ export function BlueExpressInterestForm() {
       setErrorMessage("Last name is required")
       return
     }
+    const emailTrim = email.trim().toLowerCase()
+    if (!emailTrim) {
+      setErrorMessage("Email is required")
+      return
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrim)) {
+      setErrorMessage("Enter a valid email address")
+      return
+    }
     if (!cell.trim()) {
       setErrorMessage("Cell phone is required")
       return
@@ -75,6 +85,7 @@ export function BlueExpressInterestForm() {
         body: JSON.stringify({
           firstName: firstName.trim(),
           lastName: lastName.trim(),
+          email: emailTrim,
           cell: normalizePhoneForStorage(cell.trim()),
           graduationYear,
           highestAchievement,
@@ -94,6 +105,7 @@ export function BlueExpressInterestForm() {
       setStatus("success")
       setFirstName("")
       setLastName("")
+      setEmail("")
       setCell("")
       setGraduationYear("")
       setHighestAchievement("")
@@ -160,6 +172,22 @@ export function BlueExpressInterestForm() {
         </div>
       </div>
       <div className="space-y-2">
+        <Label htmlFor="blue-email" className="text-[#03154C]">
+          Email
+        </Label>
+        <Input
+          id="blue-email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="border-[#03154C]/30 bg-white"
+          placeholder="you@example.com"
+          disabled={isSubmitting}
+          autoComplete="email"
+        />
+        <p className="text-xs text-[#03154C]/70">Used for Blue invites and follow-up if you&apos;re selected.</p>
+      </div>
+      <div className="space-y-2">
         <Label htmlFor="blue-cell" className="text-[#03154C]">
           Cell
         </Label>
@@ -169,7 +197,7 @@ export function BlueExpressInterestForm() {
           value={cell}
           onChange={(e) => setCell(formatPhoneInput(e.target.value))}
           className="border-[#03154C]/30 bg-white"
-          placeholder="(555) 123-4567"
+          placeholder="Mobile number"
           disabled={isSubmitting}
           autoComplete="tel"
         />

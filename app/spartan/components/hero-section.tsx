@@ -44,7 +44,7 @@ export function HeroSection() {
             Weekend May 2–3, 2026 · Fayetteville, NC
           </p>
           <p className="mx-auto mt-4 max-w-md text-[14px] leading-relaxed text-neutral-300">
-            Support a wrestler. Race. Or donate. <strong className="text-neutral-200">Every dollar funds training.</strong>
+            Give to NC United. <strong className="text-neutral-200">Every dollar funds training.</strong>
           </p>
         </div>
 

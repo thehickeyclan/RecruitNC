@@ -8,10 +8,11 @@ export const dynamic = "force-dynamic"
 export const metadata: Metadata = {
   title: "Tournament of Champions 2026 | NC United Wrestling",
   description:
-    "NC United Tournament of Champions — September 4-5, 2026 in Apex, NC. 88 wrestlers, 11 college weight classes, true double-elimination. Who is the best in NC at each weight?",
+    "NC United Tournament of Champions — by invitation only. The best in the state. One mat. One question. September 4-5, 2026 in Apex, NC.",
   openGraph: {
-    title: "NC United Tournament of Champions 2026",
-    description: "Invite-only college-weight tournament for NC's top high school wrestlers. September 4-5, Apex, NC.",
+    title: "Tournament of Champions | NC United",
+    description:
+      "Eleven weights. Eight wrestlers each. College weights. Single-mat finals under the lights. North Carolina, buckle up.",
     type: "website",
   },
 }
@@ -38,7 +39,7 @@ export default async function TournamentOfChampionsPage() {
       name: "NC United Wrestling",
     },
     description:
-      "Invite-only high school wrestling tournament at college weight classes with 88-athlete field and recruiting fair.",
+      "NC United Tournament of Champions — invite-only. College weights, stacked brackets, single-mat finals under the lights.",
   }
 
   return (
