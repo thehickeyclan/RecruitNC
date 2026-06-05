@@ -1,4 +1,10 @@
 import {
+  aauTravelFulfillmentLabel,
+  aauTravelFulfillmentStatus,
+  aauTravelNeedLabel,
+  type AauTravelNeed,
+} from "@/lib/aau-duals-travel-commitment"
+import {
   AAU_SCHOLASTIC_DUALS_2026_ROSTER,
   type AauScholasticRosterRow,
 } from "@/lib/aau-scholastic-duals-2026-roster"
@@ -26,6 +32,8 @@ export type AauRosterPaymentAmounts = {
 export type AauRosterPaymentMatrixRow = AauScholasticRosterRow & {
   wrestlerKey: string
   payments: AauRosterPaymentAmounts | null
+  travel_need: AauTravelNeed
+  travel_fulfillment: ReturnType<typeof aauTravelFulfillmentStatus>
 }
 
 export type AauRosterPaymentExtraRow = {
@@ -184,7 +192,7 @@ export function buildAauScholasticRosterPaymentMatrix(
   const roster: AauRosterPaymentMatrixRow[] = AAU_SCHOLASTIC_DUALS_2026_ROSTER.map((row) => {
     const wrestlerKey = row.wrestler.trim() ? normalizePersonName(row.wrestler) : ""
     const payments = wrestlerKey ? byWrestlerKey.get(wrestlerKey) ?? null : null
-    return { ...row, wrestlerKey, payments }
+    return { ...row, wrestlerKey, payments, travel_need: "none" as AauTravelNeed, travel_fulfillment: "not_set" as const }
   })
 
   const extras: AauRosterPaymentExtraRow[] = []
@@ -240,6 +248,23 @@ export function buildAauScholasticRosterPaymentMatrix(
   }
 }
 
+export function applyAauTravelCommitmentsToMatrix(
+  matrix: AauRosterPaymentMatrix,
+  commitmentsByWeight: Map<string, AauTravelNeed>,
+): AauRosterPaymentMatrix {
+  return {
+    ...matrix,
+    roster: matrix.roster.map((row) => {
+      const travel_need = commitmentsByWeight.get(row.weightLabel) ?? "none"
+      return {
+        ...row,
+        travel_need,
+        travel_fulfillment: aauTravelFulfillmentStatus(travel_need, row.payments),
+      }
+    }),
+  }
+}
+
 export function formatAauPaymentCell(cents: number | undefined | null): string {
   if (!cents || cents <= 0) return "—"
   return `$${(cents / 100).toFixed(2)}`
@@ -249,6 +274,8 @@ export function aauRosterPaymentMatrixToCsv(matrix: AauRosterPaymentMatrix): str
   const headers = [
     "Weight",
     "Wrestler",
+    "Travel need (verbal)",
+    "Travel status",
     "Tournament reg",
     "Apparel",
     "Flight",
@@ -269,6 +296,8 @@ export function aauRosterPaymentMatrixToCsv(matrix: AauRosterPaymentMatrix): str
       return [
         r.weightLabel,
         r.wrestler.trim() || "Open — TBD",
+        aauTravelNeedLabel(r.travel_need ?? "none"),
+        aauTravelFulfillmentLabel(r.travel_fulfillment ?? "not_set"),
         p ? (p.tournament_reg_cents / 100).toFixed(2) : "",
         p ? (p.apparel_cents / 100).toFixed(2) : "",
         p ? (p.flight_cents / 100).toFixed(2) : "",
@@ -284,6 +313,8 @@ export function aauRosterPaymentMatrixToCsv(matrix: AauRosterPaymentMatrix): str
     [
       r.primary_weight || "—",
       r.athlete_name,
+      "",
+      "",
       (r.payments.tournament_reg_cents / 100).toFixed(2),
       (r.payments.apparel_cents / 100).toFixed(2),
       (r.payments.flight_cents / 100).toFixed(2),

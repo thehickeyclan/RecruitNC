@@ -5,7 +5,6 @@ import Image from "next/image"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { ChevronLeft, ChevronRight, X, ZoomIn, ShoppingBag } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { STORE_CATALOG_IMAGE_WELL } from "@/components/store-catalog-image"
 
 interface ProductGalleryProps {
   images: string[]
@@ -88,29 +87,18 @@ export function ProductGallery({
         aria-label="Zoom image"
       >
         <div className={cn("absolute inset-4 md:inset-8", portraitFrame && "inset-3 md:inset-6")}>
-          {portraitFrame ? (
-            <div className={STORE_CATALOG_IMAGE_WELL}>
-              <Image
-                src={currentSrc}
-                alt={`${productName} - Image ${activeIndex + 1}`}
-                fill
-                className="object-contain object-center object-top"
-                priority
-                sizes="(max-width: 768px) 100vw, 50vw"
-                unoptimized={isBlob}
-              />
-            </div>
-          ) : (
-            <Image
-              src={currentSrc}
-              alt={`${productName} - Image ${activeIndex + 1}`}
-              fill
-              className="object-contain object-center"
-              priority
-              sizes="(max-width: 768px) 100vw, 50vw"
-              unoptimized={isBlob}
-            />
-          )}
+          <Image
+            src={currentSrc}
+            alt={`${productName} - Image ${activeIndex + 1}`}
+            fill
+            className={cn(
+              "object-contain object-center",
+              portraitFrame && "object-top",
+            )}
+            priority
+            sizes="(max-width: 768px) 100vw, 50vw"
+            unoptimized={isBlob}
+          />
         </div>
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center pointer-events-none">
           <ZoomIn className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />

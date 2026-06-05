@@ -3,7 +3,7 @@
 import Image from "next/image"
 import { useSearchParams } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
-import { HardLink } from "@/components/hard-link"
+import { isSpartanTeamPageAthleteDonationsDisabled } from "@/lib/spartan-team-page-donations"
 import type { SpartanRaceTierId } from "../types"
 import {
   DEFAULT_SPARTAN_RACE_TIER_ID,
@@ -65,6 +65,7 @@ const TEE_THRESHOLD_CENTS = 10_000
 /** Single-page checkout (pre-wizard). Use `?classic=1` on /spartan or `NEXT_PUBLIC_SPARTAN_CLASSIC_CHECKOUT=1` to fall back. */
 export function SpartanDonateFormClassic() {
   const searchParams = useSearchParams()
+  const spartanTrainingFundOnly = isSpartanTeamPageAthleteDonationsDisabled()
 
   const [email, setEmail] = useState("")
   const [donorName, setDonorName] = useState("")
@@ -102,15 +103,15 @@ export function SpartanDonateFormClassic() {
   const [shipPostal, setShipPostal] = useState("")
   const [shipCountry, setShipCountry] = useState("US")
 
-  const needsAthleteCode = flow === "race" || (flow === "donate" && donateMode === "athlete")
+  const needsAthleteCode =
+    !spartanTrainingFundOnly && (flow === "race" || (flow === "donate" && donateMode === "athlete"))
 
   useEffect(() => {
     const mission = searchParams.get("mission") === "1"
     if (mission) {
       setFlow("donate")
-      // Default mission landing to sponsoring a wrestler; ?mode=fund switches to NC United fund only
       const mode = searchParams.get("mode")?.toLowerCase()
-      setDonateMode(mode === "fund" || mode === "ncunited" ? "general" : "athlete")
+      setDonateMode(spartanTrainingFundOnly || mode === "fund" || mode === "ncunited" ? "general" : "athlete")
       setTierPreference("")
       const chip = searchParams.get("chip")
       if (chip) {
@@ -123,17 +124,25 @@ export function SpartanDonateFormClassic() {
     }
 
     const t = tierFromSearchParams(searchParams)
-    if (t) {
+    if (t && !spartanTrainingFundOnly) {
       setFlow("race")
       setDonateMode(null)
       setTierPreference(t)
       setAmountDollars(suggestedDollarsString(t))
     }
-  }, [searchParams])
+  }, [searchParams, spartanTrainingFundOnly])
 
   useEffect(() => {
     const raw = searchParams.get("athlete")?.trim()
     if (!raw) return
+    if (spartanTrainingFundOnly) {
+      setFlow("donate")
+      setDonateMode("general")
+      setFundraisingCode("")
+      setAthleteQuery("")
+      setManualCreditName("")
+      return
+    }
     setFundraisingCode(raw)
     setAthleteQuery("")
     setManualCreditName("")
@@ -145,13 +154,24 @@ export function SpartanDonateFormClassic() {
       setFlow("donate")
       setDonateMode("athlete")
     }
-  }, [searchParams])
+  }, [searchParams, spartanTrainingFundOnly])
 
   /** Hero CTAs: ?flow=race | ?flow=sponsor | ?flow=fund | legacy ?flow=donate */
   useEffect(() => {
     if (searchParams.get("mission") === "1") return
-    if (tierFromSearchParams(searchParams)) return
-    if (searchParams.get("athlete")?.trim()) return
+    if (tierFromSearchParams(searchParams) && !spartanTrainingFundOnly) return
+    if (searchParams.get("athlete")?.trim() && !spartanTrainingFundOnly) return
+
+    if (spartanTrainingFundOnly) {
+      setFlow("donate")
+      setTierPreference("")
+      setDonateMode("general")
+      setFundraisingCode("")
+      setAthleteQuery("")
+      setManualCreditName("")
+      setAmountDollars("50")
+      return
+    }
 
     const flowParam = searchParams.get("flow")?.toLowerCase() ?? ""
     if (flowParam === "race") {
@@ -184,7 +204,7 @@ export function SpartanDonateFormClassic() {
       setDonateMode("athlete")
       setAmountDollars("50")
     }
-  }, [searchParams])
+  }, [searchParams, spartanTrainingFundOnly])
 
   useEffect(() => {
     const q = athleteQuery.trim()
@@ -436,6 +456,15 @@ export function SpartanDonateFormClassic() {
       className="mx-auto mt-6 max-w-lg px-1 pb-[max(1rem,env(safe-area-inset-bottom))] text-left sm:mt-8 sm:px-0"
     >
       <div className="rounded-lg border border-[#333] bg-[#141414] p-3 sm:p-4">
+        {spartanTrainingFundOnly ? (
+          <>
+            <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#888]">NC United Training Fund</p>
+            <p className="mt-3 text-sm leading-snug text-[#ccc]">
+              Wrestler-named gifts and Spartan race checkout are closed. Give to NC United below.
+            </p>
+          </>
+        ) : (
+          <>
         <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#888]">Pick how you want to support:</p>
         <div
           id="spartan-classic-pick-support"
@@ -511,6 +540,8 @@ export function SpartanDonateFormClassic() {
           <strong className="text-[#C8A94A]">Two kids?</strong> Finish checkout once, start again. Same parent name is fine —
           pick a different wrestler each time.
         </p>
+          </>
+        )}
       </div>
 
       <div className="mx-auto mt-6 w-full max-w-[240px] text-center">

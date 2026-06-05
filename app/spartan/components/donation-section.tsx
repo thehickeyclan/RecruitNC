@@ -16,8 +16,7 @@ export function DonationSection() {
           Checkout
         </h2>
         <p className="mx-auto mt-3 max-w-md text-left text-[13px] leading-snug text-[#aaa] sm:text-sm">
-          Pick <strong className="text-[#e5e5e5]">Race</strong> or <strong className="text-[#e5e5e5]">Donate</strong>, then follow
-          the steps. Payer = receipt name; next steps name the wrestler or the NC United Training Fund. Stripe at the end.
+          Give to the <strong className="text-[#e5e5e5]">NC United Training Fund</strong>. Wrestler-named gifts and race checkout are closed on this page.
         </p>
 
         <div id="spartan-checkout" className="scroll-mt-28 mt-8 w-full text-left">

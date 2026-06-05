@@ -5,6 +5,8 @@ import { useSearchParams } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import { HardLink } from "@/components/hard-link"
 import { NC_UNITED_CONTRIBUTIONS_TAX_DISCLAIMER } from "@/lib/fundraising/donor-facing-disclosures"
+import { isSpartanTeamPageAthleteDonationsDisabled } from "@/lib/spartan-team-page-donations"
+import { isSpartanTeamPageAthleteDonationsDisabled } from "@/lib/spartan-team-page-donations"
 import type { SpartanRaceTierId } from "../types"
 import {
   DEFAULT_SPARTAN_RACE_TIER_ID,
@@ -127,6 +129,7 @@ export function SpartanDonateFormWizard({
 }) {
   const searchParams = useSearchParams()
   const fh = Boolean(fundraisingHub)
+  const spartanTrainingFundOnly = !fh && isSpartanTeamPageAthleteDonationsDisabled()
   /** `/fundraising/athletes/[slug]` embed: not the general Make a gift hub */
   const athleteGiftPageEmbed = fh && Boolean((fundraisingHubReturnSlug ?? "").trim())
 
@@ -180,14 +183,15 @@ export function SpartanDonateFormWizard({
     setFieldHighlights([])
   }, [flow, donateStep, raceStep])
 
-  const needsAthleteCode = flow === "race" || (flow === "donate" && donateMode === "athlete")
+  const needsAthleteCode =
+    !spartanTrainingFundOnly && (flow === "race" || (flow === "donate" && donateMode === "athlete"))
 
   useEffect(() => {
     const mission = searchParams.get("mission") === "1"
     if (mission) {
       setFlow("donate")
       const mode = searchParams.get("mode")?.toLowerCase()
-      if (mode === "fund" || mode === "ncunited") {
+      if (spartanTrainingFundOnly || mode === "fund" || mode === "ncunited") {
         setDonateMode("general")
         setDonateStep(3)
       } else {
@@ -206,18 +210,28 @@ export function SpartanDonateFormWizard({
     }
 
     const t = tierFromSearchParams(searchParams)
-    if (t) {
+    if (t && !spartanTrainingFundOnly) {
       setFlow("race")
       setDonateMode(null)
       setRaceStep(1)
       setTierPreference(t)
       setAmountDollars(suggestedDollarsString(t))
     }
-  }, [searchParams])
+  }, [searchParams, spartanTrainingFundOnly])
 
   useEffect(() => {
     const raw = searchParams.get("athlete")?.trim()
     if (!raw) return
+    if (spartanTrainingFundOnly) {
+      setFlow("donate")
+      setDonateMode("general")
+      setDonateStep(3)
+      setFundraisingCode("")
+      setAthleteQuery("")
+      setManualCreditName("")
+      setTierPreference("")
+      return
+    }
     setFundraisingCode(raw)
     setAthleteQuery("")
     setManualCreditName("")
@@ -231,12 +245,24 @@ export function SpartanDonateFormWizard({
       setDonateMode("athlete")
       setDonateStep(2)
     }
-  }, [searchParams])
+  }, [searchParams, spartanTrainingFundOnly])
 
   useEffect(() => {
     if (searchParams.get("mission") === "1") return
-    if (tierFromSearchParams(searchParams)) return
-    if (searchParams.get("athlete")?.trim()) return
+    if (tierFromSearchParams(searchParams) && !spartanTrainingFundOnly) return
+    if (searchParams.get("athlete")?.trim() && !spartanTrainingFundOnly) return
+
+    if (spartanTrainingFundOnly) {
+      setFlow("donate")
+      setTierPreference("")
+      setDonateMode("general")
+      setFundraisingCode("")
+      setAthleteQuery("")
+      setManualCreditName("")
+      setDonateStep(3)
+      setAmountDollars("50")
+      return
+    }
 
     if (fundraisingHubDefaultTrainingFund) {
       setFlow("donate")
@@ -321,7 +347,7 @@ export function SpartanDonateFormWizard({
       setDonateStep(1)
       setAmountDollars("50")
     }
-  }, [searchParams, fundraisingHub, fundraisingHubPrefillCode, fundraisingHubPrefillLabel, fundraisingHubDefaultTrainingFund, fundraisingHubReturnSlug])
+  }, [searchParams, fundraisingHub, fundraisingHubPrefillCode, fundraisingHubPrefillLabel, fundraisingHubDefaultTrainingFund, fundraisingHubReturnSlug, spartanTrainingFundOnly])
 
   useEffect(() => {
     const q = athleteQuery.trim()
@@ -839,6 +865,25 @@ export function SpartanDonateFormWizard({
     >
       {!fundraisingHub && (
         <div className="rounded-lg border border-[#333] bg-[#141414] p-3 sm:p-4">
+          {spartanTrainingFundOnly ? (
+            <>
+              <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#888]">NC United Training Fund</p>
+              <p className="mt-3 text-sm leading-snug text-[#ccc]">
+                Wrestler-named gifts and Spartan race checkout are <strong className="text-white">closed on this page</strong>.
+                You can still make a charitable gift to NC United below.
+              </p>
+              {flow === null ? (
+                <button
+                  type="button"
+                  onClick={goToDonateGeneralFund}
+                  className="mt-4 min-h-[48px] w-full rounded border border-[#C8A94A] bg-[#1a170d] px-3 py-3 text-center text-sm font-bold text-[#C8A94A]"
+                >
+                  Give to NC United Training Fund
+                </button>
+              ) : null}
+            </>
+          ) : (
+            <>
           <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#888]">Start here</p>
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
@@ -879,6 +924,8 @@ export function SpartanDonateFormWizard({
           <p className="mt-3 rounded border border-[#C8A94A]/35 bg-[#1a170d] px-3 py-2.5 text-[11px] leading-snug text-[#bbb] sm:text-xs">
             <strong className="text-[#C8A94A]">Two kids?</strong> Finish checkout once for the first wrestler notation, then start again for the second.
           </p>
+            </>
+          )}
         </div>
       )}
 
@@ -914,7 +961,7 @@ export function SpartanDonateFormWizard({
           </span>
         </div>
       )}
-      {flow === "race" && (
+      {flow === "race" && !spartanTrainingFundOnly && (
         <div className="mt-3 flex justify-center sm:mt-2">
           <span className="inline-flex items-center rounded-full border border-white/[0.08] bg-white/[0.04] px-3 py-1.5 text-[11px] font-medium tabular-nums text-[#8a8a8a] sm:border-transparent sm:bg-transparent sm:px-0 sm:py-0 sm:font-normal sm:text-[#555]">
             Step {raceStep} of {RACE_STEPS} · Race
@@ -923,7 +970,7 @@ export function SpartanDonateFormWizard({
       )}
 
       {/* Donate: step 1 — who benefits */}
-      {flow === "donate" && donateStep === 1 && (
+      {flow === "donate" && donateStep === 1 && !spartanTrainingFundOnly && (
         <div
           className={`mt-5 space-y-3 rounded border border-l-4 border-l-[#C8A94A] p-3 sm:p-4 ${fh ? "border-white/15 bg-[#0B2545]/45" : "border-[#4a3d1a] bg-[#141008]"}`}
         >

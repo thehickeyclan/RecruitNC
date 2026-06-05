@@ -5,6 +5,7 @@ import { TocQuickFacts } from "@/components/toc/toc-quick-facts"
 import { TocChampionJacketSection } from "@/components/toc/toc-champion-jacket-section"
 import { TocStorySection } from "@/components/toc/toc-story-section"
 import { TocWeightClassesList } from "@/components/toc/toc-weight-classes"
+import { TocScheduleTable } from "@/components/toc/toc-schedule-table"
 import { TocRecruitingSection } from "@/components/toc/toc-recruiting-section"
 import { TocNominationForm } from "@/components/toc/toc-nomination-form"
 import { TocSponsorForm } from "@/components/toc/toc-sponsor-form"
@@ -27,6 +28,7 @@ export function TocLandingPage({ config, confirmedColleges = [] }: Props) {
       <TocChampionJacketSection />
       <TocStorySection />
       <TocWeightClassesList />
+      <TocScheduleTable />
 
       <section id="email-signup" className="py-16 bg-[#0B1D3A] relative">
         <TocPatrioticBar className="absolute top-0 left-0 right-0" />
@@ -35,7 +37,7 @@ export function TocLandingPage({ config, confirmedColleges = [] }: Props) {
             Stay in the loop
           </TocVarsityHeading>
           <p className="text-white/70 mb-8">
-            Field announcements, ticket sales, and Champion jacket reveal updates.
+            Field announcements, tickets, and everything leading up to championship weekend.
           </p>
           <div className="flex justify-center">
             <TocEmailSignup source="landing_section" />
