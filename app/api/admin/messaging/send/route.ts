@@ -5,7 +5,6 @@ import { markdownToHtml, toPlainText } from "@/lib/blast-format"
 import { sendAdminBlastEmails } from "@/lib/admin-messaging-blast-email"
 import { getAdminMessagingRecipients } from "@/lib/admin-messaging-recipients"
 import { sendSms, toE164 } from "@/lib/sms"
-import { getRecruitNcEmailReplyDomain } from "@/lib/recruitnc-admin-email"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 300
@@ -122,8 +121,6 @@ export async function POST(request: NextRequest) {
     console.warn("[admin/messaging/send] admin_blast_log early insert skipped:", (e as Error).message)
   }
 
-  const replyDomain = getRecruitNcEmailReplyDomain()
-  const useEmailThreads = Boolean(replyDomain && blastLogId && !testOnly)
 
   if (channels.inApp && group && !testOnly) {
     let threadId: string | null = null
@@ -154,21 +151,17 @@ export async function POST(request: NextRequest) {
   }
 
   let emailSkippedNoAddress = 0
+  let emailSampleError: string | undefined
   if (channels.email) {
     const emailResult = await sendAdminBlastEmails(recipients, {
-      admin,
       subject,
       htmlBody,
-      plainBody,
       logoVariant,
-      useEmailThreads,
-      blastLogId,
-      adminUserId,
-      replyDomain,
     })
     result.email.sent = emailResult.sent
     result.email.failed = emailResult.failed
     emailSkippedNoAddress = emailResult.skippedNoEmail
+    emailSampleError = emailResult.sampleError
   }
 
   if (channels.sms && !testOnly) {
@@ -231,6 +224,7 @@ export async function POST(request: NextRequest) {
         recipientCount: recipients.length,
         result,
         emailSkippedNoAddress,
+        emailSampleError,
       },
       { status: 500 },
     )
@@ -241,6 +235,7 @@ export async function POST(request: NextRequest) {
     recipientCount: recipients.length,
     result,
     emailSkippedNoAddress,
+    emailSampleError,
     testOnly,
   })
 }
