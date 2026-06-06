@@ -38,13 +38,32 @@ export const TOC_BRAND = {
   white: "#FFFFFF",
 } as const
 
-/** Confirmed recruiting-fair programs (fallback until `toc_event_config.confirmed_colleges` is set). */
-export const TOC_CONFIRMED_COLLEGES = [
-  "NC State",
-  "UNC",
-  "Roanoke",
-  "Lynchburg",
+/** Confirmed recruiting-fair programs — explicit logos for the TOC landing page. */
+export const TOC_CONFIRMED_COLLEGES_DEFAULT = [
+  {
+    name: "UNC",
+    logoUrl:
+      "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/Uigu95m8-1745952038636.png",
+  },
+  {
+    name: "NC State",
+    logoUrl:
+      "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/fe5ixmej-1745958547259.png",
+  },
+  {
+    name: "Lynchburg",
+    logoUrl:
+      "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/SmHkZ3IPPB6ayHiOYue4Y-Lynchburg.jpg",
+  },
+  {
+    name: "Roanoke",
+    logoUrl:
+      "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/-i2rnrys-1745958901725.png",
+  },
 ] as const
+
+/** Program names only — used when `toc_event_config.confirmed_colleges` is empty. */
+export const TOC_CONFIRMED_COLLEGES = TOC_CONFIRMED_COLLEGES_DEFAULT.map((c) => c.name)
 
 export const TOC_DEFAULT_CONFIG = {
   phase: "phase_1" as const,
