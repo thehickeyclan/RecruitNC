@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { markdownToHtml, toPlainText } from "@/lib/blast-format"
-import { sendAdminBlastEmail } from "@/lib/email"
+import { sendAdminBlastEmails } from "@/lib/admin-messaging-blast-email"
+import { getAdminMessagingRecipients } from "@/lib/admin-messaging-recipients"
 import { sendSms, toE164 } from "@/lib/sms"
-import { buildReplyToForThread, getRecruitNcEmailReplyDomain } from "@/lib/recruitnc-admin-email"
+import { getRecruitNcEmailReplyDomain } from "@/lib/recruitnc-admin-email"
 
 export const dynamic = "force-dynamic"
-export const maxDuration = 60
+export const maxDuration = 300
 
 type RecipientRow = { user_id: string; email: string | null; display_name: string | null; cell_phone: string | null }
 
@@ -20,71 +21,23 @@ async function requireAdmin() {
   return { ok: true as const, user }
 }
 
-async function getRecipients(admin: ReturnType<typeof createAdminClient>, profileFilter: string | null, groupFilter: string | null, limit: number): Promise<RecipientRow[]> {
-  let userIds = new Set<string>()
-
-  if (groupFilter) {
-    const groupIds = new Set<string>()
-    if (groupFilter === "blue") {
-      const { data: blueRows } = await admin.from("blue_memberships").select("payer_user_id").eq("status", "active")
-      for (const r of blueRows ?? []) {
-        const uid = (r as { payer_user_id: string | null }).payer_user_id
-        if (uid) groupIds.add(uid)
-      }
-    } else if (groupFilter.startsWith("event:")) {
-      const eventSlug = groupFilter.slice("event:".length)
-      const { data: workspaceRows } = await admin.from("event_workspace_members").select("user_id").eq("event_slug", eventSlug)
-      for (const r of workspaceRows ?? []) groupIds.add((r as { user_id: string }).user_id)
-      const { data: regs } = await admin
-        .from("national_team_event_registrations")
-        .select("parent_email, parent_user_id")
-        .eq("event_slug", eventSlug)
-        .eq("status", "paid")
-      for (const r of regs ?? []) {
-        const row = r as { parent_user_id: string | null; parent_email: string | null }
-        if (row.parent_user_id) groupIds.add(row.parent_user_id)
-        else if (row.parent_email?.trim()) {
-          const { data: up } = await admin.from("user_profiles").select("user_id").ilike("email", row.parent_email.trim()).limit(1).maybeSingle()
-          if (up?.user_id) groupIds.add((up as { user_id: string }).user_id)
-        }
-      }
-    } else if (groupFilter.startsWith("forum:")) {
-      const groupId = groupFilter.slice("forum:".length)
-      const { data: memberRows } = await admin.from("forum_members").select("user_id").eq("group_id", groupId)
-      for (const r of memberRows ?? []) groupIds.add((r as { user_id: string }).user_id)
-    }
-    userIds = groupIds
-  }
-
-  const byRole = profileFilter && profileFilter.toLowerCase() !== "all"
-  const { data: profileRows, error: profileError } = byRole
-    ? await admin.from("user_profiles").select("user_id, email, full_name, cell_phone").eq("role", profileFilter)
-    : await admin.from("user_profiles").select("user_id, email, full_name, cell_phone")
-  if (profileError) return []
-
-  const profileUserIds = new Set((profileRows ?? []).map((r: { user_id: string }) => r.user_id))
-  if (userIds.size > 0) userIds = new Set([...userIds].filter((id) => profileUserIds.has(id)))
-  else userIds = profileUserIds
-
-  const idList = [...userIds].slice(0, limit)
-  if (idList.length === 0) return []
-
-  const { data: rows } = await admin.from("user_profiles").select("user_id, email, full_name, cell_phone").in("user_id", idList)
-  const byId = new Map<string, RecipientRow>()
-  for (const r of rows ?? []) {
-    const row = r as { user_id: string; email: string | null; full_name: string | null; cell_phone: string | null }
-    byId.set(row.user_id, { user_id: row.user_id, email: row.email ?? null, display_name: row.full_name ?? null, cell_phone: row.cell_phone ?? null })
-  }
-  return idList.map((id) => byId.get(id) ?? { user_id: id, email: null, display_name: null, cell_phone: null })
-}
-
 /** POST: Send blast. Body: { profile?, group?, subject?, body, channels: { inApp?: boolean, email?: boolean, sms?: boolean } } */
 export async function POST(request: NextRequest) {
   const auth = await requireAdmin()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
   const adminUserId = (auth as { user: { id: string } }).user.id
 
-  let body: { profile?: string; group?: string; subject?: string; body?: string; bodyHtml?: string; testEmail?: string; logoVariant?: string; channels?: { inApp?: boolean; email?: boolean; sms?: boolean } } = {}
+  let body: {
+    profile?: string
+    group?: string
+    subject?: string
+    body?: string
+    bodyHtml?: string
+    testEmail?: string
+    testOnly?: boolean
+    logoVariant?: string
+    channels?: { inApp?: boolean; email?: boolean; sms?: boolean }
+  } = {}
   try {
     body = await request.json()
   } catch {
@@ -97,6 +50,7 @@ export async function POST(request: NextRequest) {
   const rawBody = typeof body.body === "string" ? body.body.trim() : ""
   const rawBodyHtml = typeof body.bodyHtml === "string" ? body.bodyHtml.trim() : ""
   const testEmail = typeof body.testEmail === "string" ? body.testEmail.trim() || null : null
+  const testOnly = body.testOnly === true
   const logoVariant = body.logoVariant === "nc-united" ? "nc-united" : "recruitnc"
   const channels = body.channels && typeof body.channels === "object"
     ? { inApp: !!body.channels.inApp, email: !!body.channels.email, sms: !!body.channels.sms }
@@ -109,12 +63,21 @@ export async function POST(request: NextRequest) {
 
   const admin = createAdminClient()
   let recipients: RecipientRow[]
-  if (testEmail && testEmail.includes("@")) {
+  if (testOnly && testEmail && testEmail.includes("@")) {
     recipients = [{ user_id: "test", email: testEmail, display_name: "Test", cell_phone: null }]
   } else {
-    recipients = await getRecipients(admin, profile, group, 5000)
+    recipients = await getAdminMessagingRecipients(admin, profile, group, 5000)
     if (recipients.length === 0) {
       return NextResponse.json({ error: "No recipients match the selected audience" }, { status: 400 })
+    }
+    if (channels.email) {
+      const withEmail = recipients.filter((r) => r.email?.trim()).length
+      if (withEmail === 0) {
+        return NextResponse.json(
+          { error: "No recipients have an email on file — cannot send email blast." },
+          { status: 400 },
+        )
+      }
     }
   }
 
@@ -160,9 +123,9 @@ export async function POST(request: NextRequest) {
   }
 
   const replyDomain = getRecruitNcEmailReplyDomain()
-  const useEmailThreads = Boolean(replyDomain && blastLogId && !testEmail)
+  const useEmailThreads = Boolean(replyDomain && blastLogId && !testOnly)
 
-  if (channels.inApp && group && !testEmail) {
+  if (channels.inApp && group && !testOnly) {
     let threadId: string | null = null
     if (group === "blue") {
       const { data: t } = await admin.from("messaging_threads").select("id").eq("context_type", "program").in("context_id", ["blue", "blue-2026"]).limit(1).maybeSingle()
@@ -190,57 +153,25 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  let emailSkippedNoAddress = 0
   if (channels.email) {
-    for (const r of recipients) {
-      if (!r.email?.trim()) continue
-      let threaded = false
-      if (useEmailThreads && r.user_id !== "test") {
-        try {
-          const { data: thr, error: thrErr } = await admin
-            .from("admin_email_threads")
-            .insert({
-              recipient_user_id: r.user_id,
-              admin_blast_log_id: blastLogId,
-              subject,
-              created_by_admin_id: adminUserId,
-            })
-            .select("id")
-            .single()
-          if (!thrErr && thr?.id && replyDomain) {
-            threaded = true
-            try {
-              const ok = await sendAdminBlastEmail(r.email.trim(), subject, htmlBody, logoVariant, {
-                replyTo: buildReplyToForThread(thr.id, replyDomain),
-                headers: { "X-RecruitNC-Email-Thread-Id": thr.id },
-              })
-              if (ok.success) {
-                result.email.sent++
-                await admin.from("admin_email_messages").insert({
-                  thread_id: thr.id,
-                  direction: "outbound",
-                  body_text: plainBody.slice(0, 100_000),
-                  resend_sent_message_id: ok.resendMessageId ?? null,
-                })
-              } else {
-                result.email.failed++
-              }
-            } catch (sendErr) {
-              result.email.failed++
-              console.warn("[admin/messaging/send] threaded email send:", (sendErr as Error).message)
-            }
-          }
-        } catch (e) {
-          console.warn("[admin/messaging/send] admin_email_threads:", (e as Error).message)
-        }
-      }
-      if (threaded) continue
-      const ok = await sendAdminBlastEmail(r.email.trim(), subject, htmlBody, logoVariant)
-      if (ok.success) result.email.sent++
-      else result.email.failed++
-    }
+    const emailResult = await sendAdminBlastEmails(recipients, {
+      admin,
+      subject,
+      htmlBody,
+      plainBody,
+      logoVariant,
+      useEmailThreads,
+      blastLogId,
+      adminUserId,
+      replyDomain,
+    })
+    result.email.sent = emailResult.sent
+    result.email.failed = emailResult.failed
+    emailSkippedNoAddress = emailResult.skippedNoEmail
   }
 
-  if (channels.sms && !testEmail) {
+  if (channels.sms && !testOnly) {
     for (const r of recipients) {
       const e164 = toE164(r.cell_phone)
       if (!e164) continue
@@ -292,9 +223,24 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  if (channels.email && result.email.sent === 0 && result.email.failed === 0) {
+    return NextResponse.json(
+      {
+        error:
+          "No emails were sent. Check RESEND_API_KEY on Vercel and that recipients have email addresses.",
+        recipientCount: recipients.length,
+        result,
+        emailSkippedNoAddress,
+      },
+      { status: 500 },
+    )
+  }
+
   return NextResponse.json({
     ok: true,
     recipientCount: recipients.length,
     result,
+    emailSkippedNoAddress,
+    testOnly,
   })
 }

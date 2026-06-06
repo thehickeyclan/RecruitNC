@@ -30,6 +30,7 @@ export default function AdminMessagingPage() {
   const [group, setGroup] = useState<string>("all")
   const [recipients, setRecipients] = useState<RecipientRow[]>([])
   const [count, setCount] = useState<number | null>(null)
+  const [emailCount, setEmailCount] = useState<number | null>(null)
   const [loadingRecipients, setLoadingRecipients] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [subject, setSubject] = useState("")
@@ -38,7 +39,16 @@ export default function AdminMessagingPage() {
   const [logoVariant, setLogoVariant] = useState<"recruitnc" | "nc-united">("recruitnc")
   const [testEmail, setTestEmail] = useState("")
   const [sending, setSending] = useState(false)
-  const [sendResult, setSendResult] = useState<{ recipientCount: number; result: { inApp?: { sent: boolean; threadId?: string; error?: string }; email: { sent: number; failed: number }; sms: { sent: number; failed: number } } } | null>(null)
+  const [sendResult, setSendResult] = useState<{
+    recipientCount: number
+    result: {
+      inApp?: { sent: boolean; threadId?: string; error?: string }
+      email: { sent: number; failed: number }
+      sms: { sent: number; failed: number }
+    }
+    emailSkippedNoAddress?: number
+    testOnly?: boolean
+  } | null>(null)
   const [bodyHtml, setBodyHtml] = useState("")
   const [showRecipients, setShowRecipients] = useState(false)
 
@@ -75,6 +85,7 @@ export default function AdminMessagingPage() {
       .then((data) => {
         setRecipients(data.recipients ?? [])
         setCount(data.totalMatching ?? data.count ?? (data.recipients ?? []).length)
+        setEmailCount(typeof data.emailCount === "number" ? data.emailCount : null)
       })
       .catch(() => {
         setError("Failed to load recipients")
@@ -228,6 +239,8 @@ export default function AdminMessagingPage() {
                         <p className="font-medium text-white truncate">{row.subject || "No subject"}</p>
                         <p className="text-sm text-white/50">
                           {new Date(row.sent_at).toLocaleDateString()} - {row.audience_group || row.audience_profile || "All"} - {row.recipient_count} recipients
+                          {row.channels_email && row.result_email_sent > 0 ? ` · ${row.result_email_sent} emailed` : ""}
+                          {row.result_email_failed > 0 ? ` · ${row.result_email_failed} failed` : ""}
                         </p>
                       </div>
                       <div className="flex items-center gap-2 text-xs text-white/40">
@@ -356,6 +369,9 @@ export default function AdminMessagingPage() {
                     >
                       <Users className="h-4 w-4" />
                       {count} recipient{count !== 1 ? "s" : ""}
+                      {emailCount !== null && channels.email ? (
+                        <span className="text-[#C8A94A]/70"> · {emailCount} with email</span>
+                      ) : null}
                       {showRecipients ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
                     </button>
                   ) : null}
@@ -379,14 +395,59 @@ export default function AdminMessagingPage() {
 
               {/* Test email */}
               <div className="mt-4 pt-4 border-t border-white/10">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Input
                     type="email"
                     value={testEmail}
                     onChange={(e) => setTestEmail(e.target.value)}
-                    placeholder="Test email (optional) - send only to this address"
-                    className="flex-1 bg-white/5 border-white/20 text-white placeholder:text-white/40"
+                    placeholder="Test address — use Send test, not Send"
+                    className="flex-1 min-w-[220px] bg-white/5 border-white/20 text-white placeholder:text-white/40"
                   />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={!body.trim() || !testEmail.trim() || sending || !channels.email}
+                    className="border-white/20 text-white/70 hover:text-white hover:bg-white/10"
+                    onClick={async () => {
+                      setSendResult(null)
+                      setError(null)
+                      setSending(true)
+                      try {
+                        const res = await fetch("/api/admin/messaging/send", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          credentials: "include",
+                          body: JSON.stringify({
+                            profile: profile === "all" ? undefined : profile,
+                            group: group === "all" ? undefined : group,
+                            subject: subject || "Update from RecruitNC",
+                            body: body.trim(),
+                            bodyHtml: bodyHtml.trim() || undefined,
+                            testEmail: testEmail.trim(),
+                            testOnly: true,
+                            logoVariant,
+                            channels: { ...channels, sms: false, inApp: false },
+                          }),
+                        })
+                        const data = await res.json().catch(() => ({}))
+                        if (res.ok && data.ok) {
+                          setSendResult({
+                            recipientCount: 1,
+                            result: data.result,
+                            testOnly: true,
+                          })
+                        } else {
+                          setError(data.error ?? "Test send failed")
+                        }
+                      } catch {
+                        setError("Request failed")
+                      } finally {
+                        setSending(false)
+                      }
+                    }}
+                  >
+                    Send test
+                  </Button>
                 </div>
               </div>
             </div>
@@ -470,11 +531,36 @@ export default function AdminMessagingPage() {
                 {/* Success Result */}
                 {sendResult && (
                   <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-4 text-sm text-emerald-400">
-                    <p className="font-medium">Sent to {sendResult.recipientCount} recipient{sendResult.recipientCount !== 1 ? "s" : ""}</p>
+                    {sendResult.testOnly ? (
+                      <p className="font-medium">Test email sent to {testEmail.trim()}</p>
+                    ) : (
+                      <p className="font-medium">
+                        Blast: {sendResult.recipientCount} in audience
+                        {sendResult.result.email.sent > 0 || sendResult.result.email.failed > 0 ? (
+                          <>
+                            {" "}
+                            · Email {sendResult.result.email.sent} sent
+                            {sendResult.result.email.failed > 0
+                              ? `, ${sendResult.result.email.failed} failed`
+                              : ""}
+                          </>
+                        ) : null}
+                      </p>
+                    )}
                     <div className="mt-1 text-emerald-400/70">
-                      {sendResult.result.email.sent > 0 && <span>Email: {sendResult.result.email.sent} sent. </span>}
+                      {sendResult.result.email.sent > 0 && sendResult.testOnly && (
+                        <span>Email: {sendResult.result.email.sent} sent. </span>
+                      )}
                       {sendResult.result.sms.sent > 0 && <span>SMS: {sendResult.result.sms.sent} sent. </span>}
                       {sendResult.result.inApp?.sent && <span>In-app: Posted. </span>}
+                      {!sendResult.testOnly &&
+                        sendResult.result.email.sent === 0 &&
+                        channels.email && (
+                          <span className="text-red-300">No emails reached Resend — check logs or redeploy fix.</span>
+                        )}
+                      {(sendResult.emailSkippedNoAddress ?? 0) > 0 && (
+                        <span> {sendResult.emailSkippedNoAddress} had no email on file.</span>
+                      )}
                     </div>
                   </div>
                 )}
@@ -513,16 +599,26 @@ export default function AdminMessagingPage() {
                             subject: subject || "Update from RecruitNC",
                             body: body.trim(),
                             bodyHtml: bodyHtml.trim() || undefined,
-                            testEmail: testEmail.trim() || undefined,
                             logoVariant,
                             channels,
                           }),
                         })
                         const data = await res.json().catch(() => ({}))
                         if (res.ok && data.ok) {
-                          setSendResult({ recipientCount: data.recipientCount, result: data.result })
+                          setSendResult({
+                            recipientCount: data.recipientCount,
+                            result: data.result,
+                            emailSkippedNoAddress: data.emailSkippedNoAddress,
+                          })
                         } else {
                           setError(data.error ?? "Send failed")
+                          if (data.result?.email) {
+                            setSendResult({
+                              recipientCount: data.recipientCount ?? count ?? 0,
+                              result: data.result,
+                              emailSkippedNoAddress: data.emailSkippedNoAddress,
+                            })
+                          }
                         }
                       } catch {
                         setError("Request failed")
