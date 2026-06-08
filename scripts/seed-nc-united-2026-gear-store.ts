@@ -17,6 +17,7 @@ import path from "path"
 import { fileURLToPath } from "url"
 import { createClient } from "@supabase/supabase-js"
 import {
+  NC_UNITED_2026_DEPRECATED_STORE_SLUG_PREFIXES,
   NC_UNITED_2026_DEPRECATED_STORE_SLUGS,
   NC_UNITED_2026_STORE_GEAR,
   type NcUnitedStoreGearProduct,
@@ -174,18 +175,39 @@ async function upsertGearProduct(
 }
 
 async function retireDeprecatedProducts(supabase: ReturnType<typeof createClient>) {
+  const retiredIds = new Set<string>()
+
+  async function retireRow(id: string, name: string, label: string) {
+    if (retiredIds.has(id)) return
+    const { error: updateError } = await supabase
+      .from("products")
+      .update({ in_stock: false, show_in_public_store: false, featured: false })
+      .eq("id", id)
+
+    if (updateError) throw new Error(`Retire ${label}: ${updateError.message}`)
+    retiredIds.add(id)
+    console.log(`\n→ Retired deprecated product: ${name} (${label})`)
+  }
+
   for (const slug of NC_UNITED_2026_DEPRECATED_STORE_SLUGS) {
     const { data, error } = await supabase.from("products").select("id, name").eq("slug", slug).maybeSingle()
     if (error) throw new Error(`Retire lookup ${slug}: ${error.message}`)
     if (!data?.id) continue
+    await retireRow(String(data.id), String(data.name ?? slug), slug)
+  }
 
-    const { error: updateError } = await supabase
+  for (const prefix of NC_UNITED_2026_DEPRECATED_STORE_SLUG_PREFIXES) {
+    const { data, error } = await supabase
       .from("products")
-      .update({ in_stock: false, show_in_public_store: false, featured: false })
-      .eq("id", data.id)
+      .select("id, name, slug")
+      .like("slug", `${prefix}%`)
+      .eq("show_in_public_store", true)
 
-    if (updateError) throw new Error(`Retire ${slug}: ${updateError.message}`)
-    console.log(`\n→ Retired deprecated product: ${data.name} (${slug})`)
+    if (error) throw new Error(`Retire prefix lookup ${prefix}: ${error.message}`)
+    for (const row of data ?? []) {
+      if (!row?.id) continue
+      await retireRow(String(row.id), String(row.name ?? prefix), String(row.slug ?? prefix))
+    }
   }
 }
 

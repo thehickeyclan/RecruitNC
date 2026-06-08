@@ -86,14 +86,14 @@ export function ProductGallery({
         tabIndex={0}
         aria-label="Zoom image"
       >
-        <div className={cn("absolute inset-4 md:inset-8", portraitFrame && "inset-3 md:inset-6")}>
+        <div className={cn("absolute inset-3 sm:inset-4 md:inset-5", portraitFrame && "inset-3 md:inset-6")}>
           <Image
             src={currentSrc}
             alt={`${productName} - Image ${activeIndex + 1}`}
             fill
             className={cn(
               "object-contain object-center",
-              portraitFrame && "object-top",
+              (/singlet/i.test(productName) || portraitFrame) && "object-top",
             )}
             priority
             sizes="(max-width: 768px) 100vw, 50vw"

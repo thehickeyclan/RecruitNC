@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { StoreNavLink } from "@/components/store-nav-link"
+import { StoreCatalogImage, STORE_CATALOG_FRAME_CLASS } from "@/components/store-catalog-image"
 import { useCartStore, getMaxQuantityForItem } from "@/lib/store/cart-store"
 import { useToast } from "@/hooks/use-toast"
 import {
@@ -168,11 +169,14 @@ export default function CartPage() {
             {items.map((item) => (
               <div key={`${item.id}-${item.variant.color}-${item.variant.size}`} className="rounded-xl bg-[#0f1c2e] border border-white/5 p-4">
                 <div className="flex gap-4">
-                  <img
-                    src={item.image || "/placeholder.svg"}
-                    alt={item.name}
-                    className="w-24 h-24 object-cover rounded-lg bg-[#0A1628]"
-                  />
+                  <div className={`relative w-24 h-24 shrink-0 ${STORE_CATALOG_FRAME_CLASS}`}>
+                    <StoreCatalogImage
+                      src={item.image || "/placeholder.svg"}
+                      alt={item.name}
+                      product={{ name: item.name }}
+                      sizes="96px"
+                    />
+                  </div>
 
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-white text-base mb-1">{item.name}</h3>

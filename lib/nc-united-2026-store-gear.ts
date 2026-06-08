@@ -28,8 +28,21 @@ export type NcUnitedStoreGearProduct = {
   defaultStockPerVariant: number
 }
 
-/** Combined singlet listing replaced by separate Blue + Pinstripe products. */
-export const NC_UNITED_2026_DEPRECATED_STORE_SLUGS = ["nc-united-2026-singlet"] as const
+/**
+ * Legacy store listings hidden once 2026 gear is live.
+ * Re-run `npm run store:seed-2026-gear` to apply show_in_public_store = false.
+ */
+export const NC_UNITED_2026_DEPRECATED_STORE_SLUGS = [
+  "nc-united-2026-singlet",
+  "first-in-flight-singlet",
+  "ultimate-club-duals-2025-singlet",
+  "nhsca-duals-2025-singlet",
+  "womens-ultimate-club-duals-2025-singlet",
+  "womens-blue-ultimate-club-duals-2025-singlet",
+] as const
+
+/** Admin duplicates may append a timestamp — retire by prefix. */
+export const NC_UNITED_2026_DEPRECATED_STORE_SLUG_PREFIXES = ["nc-united-first-in-flight-singlet"] as const
 
 export const NC_UNITED_2026_STORE_GEAR: NcUnitedStoreGearProduct[] = [
   {

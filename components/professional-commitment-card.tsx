@@ -332,7 +332,7 @@ export function ProfessionalCommitmentCard({ athlete, listMode = false }: Profes
   }, [athlete.id, athlete.graduationyear, athlete.graduationYear, listMode, isFlipped])
 
   useEffect(() => {
-    if (listMode) return
+    if (listMode && !isFlipped) return
     setServerStateHonors([])
     setServerCommitmentHonors(null)
     const id = athlete.id?.trim()
@@ -377,7 +377,7 @@ export function ProfessionalCommitmentCard({ athlete, listMode = false }: Profes
     return () => {
       cancelled = true
     }
-  }, [athlete])
+  }, [athlete, listMode, isFlipped])
 
   const getAthletePhoto = () => {
     if (athlete.name?.toLowerCase().includes("liam hickey")) {
