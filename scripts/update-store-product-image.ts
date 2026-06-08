@@ -42,6 +42,7 @@ loadEnvFile(".env")
 
 const PRODUCT_ID = process.argv[2]
 const IMAGE_PATH = process.argv[3]
+const RAW_UPLOAD = process.argv.includes("--raw")
 
 /** Knock out light gray studio gradients (product mockups) when FAL is unavailable. */
 async function removeLightStudioBackground(input: Buffer): Promise<Buffer> {
@@ -93,6 +94,10 @@ async function main() {
   const absPath = resolve(IMAGE_PATH)
   let buffer = readFileSync(absPath)
 
+  if (RAW_UPLOAD) {
+    console.log("Raw upload — no background processing")
+    buffer = await sharp(buffer).png().toBuffer()
+  } else {
   const meta = await sharp(buffer).metadata()
   const hasAlpha = meta.hasAlpha === true
 
@@ -118,6 +123,7 @@ async function main() {
   } else {
     console.log("Source already has alpha; encoding PNG…")
     buffer = await sharp(buffer).png().toBuffer()
+  }
   }
 
   const blobPath = `store/products/${PRODUCT_ID}-main-${Date.now()}.png`
