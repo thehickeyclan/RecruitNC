@@ -94,6 +94,12 @@ export async function loadAauTravelCommitmentsByWeight(
   return map
 }
 
+/** False when migration in scripts/add-aau-duals-travel-commitments.md has not been run. */
+export async function isAauTravelCommitmentsTableReady(admin: SupabaseClient): Promise<boolean> {
+  const { error } = await admin.from("aau_duals_roster_travel_commitments").select("id").limit(1)
+  return (error as { code?: string } | null)?.code !== "42P01"
+}
+
 export async function upsertAauTravelCommitment(
   admin: SupabaseClient,
   opts: { eventSlug: string; weightLabel: string; travelNeed: AauTravelNeed; userId: string },
@@ -101,25 +107,35 @@ export async function upsertAauTravelCommitment(
   const weightLabel = opts.weightLabel.trim()
   if (!weightLabel) return { ok: false, error: "weight_label required" }
 
-  const { error } = await admin.from("aau_duals_roster_travel_commitments").upsert(
-    {
-      event_slug: opts.eventSlug,
-      weight_label: weightLabel,
-      travel_need: opts.travelNeed,
-      updated_at: new Date().toISOString(),
-      updated_by: opts.userId,
-    },
-    { onConflict: "event_slug,weight_label" },
-  )
+  const row = {
+    event_slug: opts.eventSlug,
+    weight_label: weightLabel,
+    travel_need: opts.travelNeed,
+    updated_at: new Date().toISOString(),
+    updated_by: opts.userId,
+  }
+
+  let { error } = await admin.from("aau_duals_roster_travel_commitments").upsert(row, {
+    onConflict: "event_slug,weight_label",
+  })
+
+  // FK on updated_by should not block saves if auth user id is missing from auth.users
+  if (error && (error as { code?: string }).code === "23503") {
+    ;({ error } = await admin.from("aau_duals_roster_travel_commitments").upsert(
+      { ...row, updated_by: null },
+      { onConflict: "event_slug,weight_label" },
+    ))
+  }
 
   if (error) {
     if ((error as { code?: string }).code === "42P01") {
       return {
         ok: false,
-        error: "Travel commitment table missing. Run scripts/add-aau-duals-travel-commitments.md in Supabase SQL Editor.",
+        error: "Travel commitment table missing. Run npm run store:setup-aau-travel or scripts/add-aau-duals-travel-commitments.md in Supabase.",
         needsMigration: true,
       }
     }
+    console.error("[RecruitNC] upsertAauTravelCommitment:", error)
     return { ok: false, error: error.message }
   }
   return { ok: true }

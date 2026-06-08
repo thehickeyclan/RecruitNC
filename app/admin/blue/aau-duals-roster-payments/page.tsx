@@ -6,12 +6,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ArrowLeft, Download, Loader2, Search } from "lucide-react"
+import { cn } from "@/lib/utils"
 import { BlueAdminAuthBanner, isBlueAuthError } from "@/components/blue-admin-auth-banner"
 import {
   AAU_TRAVEL_NEED_OPTIONS,
-  aauTravelFulfillmentStatus,
   type AauTravelNeed,
 } from "@/lib/aau-duals-travel-commitment"
 import {
@@ -19,6 +18,11 @@ import {
   formatAauPaymentCell,
   type AauRosterPaymentMatrix,
 } from "@/lib/aau-scholastic-roster-payment-matrix"
+import { toast } from "sonner"
+
+type AauRosterPaymentMatrixResponse = AauRosterPaymentMatrix & {
+  travel_commitments_ready?: boolean
+}
 
 function formatDollars(cents: number) {
   return `$${(cents / 100).toFixed(2)}`
@@ -45,7 +49,8 @@ function TravelFulfillmentBadge({ status }: { status: string }) {
 }
 
 export default function AdminAauDualsRosterPaymentsPage() {
-  const [matrix, setMatrix] = useState<AauRosterPaymentMatrix | null>(null)
+  const [matrix, setMatrix] = useState<AauRosterPaymentMatrixResponse | null>(null)
+  const [travelCommitmentsReady, setTravelCommitmentsReady] = useState(true)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState("")
@@ -61,8 +66,9 @@ export default function AdminAauDualsRosterPaymentsPage() {
       const d = await r.json().catch(() => ({}))
       throw new Error((d as { error?: string }).error ?? `Failed to load (${r.status})`)
     }
-    const data = (await r.json()) as AauRosterPaymentMatrix
+    const data = (await r.json()) as AauRosterPaymentMatrixResponse
     setMatrix(data)
+    setTravelCommitmentsReady(data.travel_commitments_ready !== false)
   }, [])
 
   useEffect(() => {
@@ -118,6 +124,10 @@ export default function AdminAauDualsRosterPaymentsPage() {
   }
 
   async function saveTravelNeed(weightLabel: string, travelNeed: AauTravelNeed) {
+    const current =
+      matrix?.roster.find((row) => row.weightLabel === weightLabel)?.travel_need ?? "none"
+    if (current === travelNeed) return
+
     setSavingTravel(weightLabel)
     setError(null)
     try {
@@ -129,24 +139,16 @@ export default function AdminAauDualsRosterPaymentsPage() {
       })
       const d = await r.json().catch(() => ({}))
       if (!r.ok) {
+        const needsMigration = (d as { needsMigration?: boolean }).needsMigration === true
+        if (needsMigration) setTravelCommitmentsReady(false)
         throw new Error((d as { error?: string }).error ?? "Could not save travel need.")
       }
-      setMatrix((prev) => {
-        if (!prev) return prev
-        return {
-          ...prev,
-          roster: prev.roster.map((row) => {
-            if (row.weightLabel !== weightLabel) return row
-            return {
-              ...row,
-              travel_need: travelNeed,
-              travel_fulfillment: aauTravelFulfillmentStatus(travelNeed, row.payments),
-            }
-          }),
-        }
-      })
+      await load()
+      toast.success(`Saved ${AAU_TRAVEL_NEED_OPTIONS.find((o) => o.value === travelNeed)?.label ?? travelNeed} for ${weightLabel}`)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not save travel need.")
+      const message = err instanceof Error ? err.message : "Could not save travel need."
+      setError(message)
+      toast.error(message)
     } finally {
       setSavingTravel(null)
     }
@@ -187,6 +189,19 @@ export default function AdminAauDualsRosterPaymentsPage() {
         </div>
 
         {error && isBlueAuthError(error) && <BlueAdminAuthBanner returnTo="/admin/blue/aau-duals-roster-payments" />}
+        {!travelCommitmentsReady && (
+          <Card className="mb-6 border-amber-400 bg-amber-50">
+            <CardContent className="pt-6 text-sm text-amber-950">
+              <p className="font-semibold">Travel verbal dropdown is not set up yet.</p>
+              <p className="mt-1">
+                Run{" "}
+                <code className="rounded bg-amber-100 px-1">npm run store:setup-aau-travel</code> or the SQL in{" "}
+                <code className="rounded bg-amber-100 px-1">scripts/add-aau-duals-travel-commitments.md</code> in
+                Supabase, then refresh this page.
+              </p>
+            </CardContent>
+          </Card>
+        )}
         {error && (
           <Card className="mb-6 border-destructive">
             <CardContent className="pt-6">
@@ -304,22 +319,35 @@ export default function AdminAauDualsRosterPaymentsPage() {
                                 <span className="text-muted-foreground">—</span>
                               ) : (
                                 <div className="space-y-1.5">
-                                  <Select
-                                    value={row.travel_need ?? "none"}
-                                    onValueChange={(v) => void saveTravelNeed(row.weightLabel, v as AauTravelNeed)}
-                                    disabled={savingTravel === row.weightLabel}
-                                  >
-                                    <SelectTrigger className="h-8 text-xs">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
+                                  <div className="relative flex items-center gap-1.5">
+                                    <select
+                                      value={row.travel_need ?? "none"}
+                                      disabled={!travelCommitmentsReady || savingTravel === row.weightLabel}
+                                      onClick={(e) => e.stopPropagation()}
+                                      onChange={(e) => {
+                                        e.stopPropagation()
+                                        void saveTravelNeed(
+                                          row.weightLabel,
+                                          e.target.value as AauTravelNeed,
+                                        )
+                                      }}
+                                      className={cn(
+                                        "h-8 w-full min-w-[148px] rounded-md border border-input bg-background px-2 text-xs",
+                                        "focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 outline-none",
+                                        savingTravel === row.weightLabel && "opacity-60",
+                                      )}
+                                      aria-label={`Travel verbal for ${row.wrestler}`}
+                                    >
                                       {AAU_TRAVEL_NEED_OPTIONS.map((opt) => (
-                                        <SelectItem key={opt.value} value={opt.value}>
+                                        <option key={opt.value} value={opt.value}>
                                           {opt.label}
-                                        </SelectItem>
+                                        </option>
                                       ))}
-                                    </SelectContent>
-                                  </Select>
+                                    </select>
+                                    {savingTravel === row.weightLabel ? (
+                                      <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-muted-foreground" />
+                                    ) : null}
+                                  </div>
                                   <TravelFulfillmentBadge status={row.travel_fulfillment ?? "not_set"} />
                                 </div>
                               )}

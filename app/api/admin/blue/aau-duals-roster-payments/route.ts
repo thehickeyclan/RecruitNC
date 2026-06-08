@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { createAdminClient } from "@/lib/supabase/admin"
+import { createAdminClient, createAdminClientFresh } from "@/lib/supabase/admin"
 import { AAU_SCHOLASTIC_EVENT_SLUG } from "@/lib/aau-scholastic-duals-2026-content"
 import {
   applyAauTravelCommitmentsToMatrix,
@@ -11,6 +11,7 @@ import {
   loadAauTravelCommitmentsByWeight,
   parseAauTravelNeed,
   upsertAauTravelCommitment,
+  isAauTravelCommitmentsTableReady,
 } from "@/lib/aau-duals-travel-commitment"
 
 async function requireAdmin() {
@@ -37,9 +38,14 @@ export async function GET() {
       eventSlug: AAU_SCHOLASTIC_EVENT_SLUG,
     })
     const matrix = buildAauScholasticRosterPaymentMatrix(registrations)
+    const travelCommitmentsReady = await isAauTravelCommitmentsTableReady(admin)
     const commitments = await loadAauTravelCommitmentsByWeight(admin, AAU_SCHOLASTIC_EVENT_SLUG)
     const withTravel = applyAauTravelCommitmentsToMatrix(matrix, commitments)
-    return NextResponse.json({ ...withTravel, event_slug: AAU_SCHOLASTIC_EVENT_SLUG })
+    return NextResponse.json({
+      ...withTravel,
+      event_slug: AAU_SCHOLASTIC_EVENT_SLUG,
+      travel_commitments_ready: travelCommitmentsReady,
+    })
   } catch (error) {
     if ((error as { code?: string })?.code === "42P01") {
       return NextResponse.json(
@@ -74,7 +80,7 @@ export async function PATCH(request: NextRequest) {
   if (!weightLabel) return NextResponse.json({ error: "weight_label required" }, { status: 400 })
 
   const travelNeed = parseAauTravelNeed(body.travel_need)
-  const admin = createAdminClient()
+  const admin = createAdminClientFresh()
   const result = await upsertAauTravelCommitment(admin, {
     eventSlug: AAU_SCHOLASTIC_EVENT_SLUG,
     weightLabel,
