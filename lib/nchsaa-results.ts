@@ -1,4 +1,15 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
+import {
+  escapeForIlike,
+  filterRowsByAthleteMatchContext,
+  getAthleteNameSearchVariants,
+  getIlikePatternsForNameVariant,
+  namesLikelySamePerson,
+  namesReferToSamePerson,
+  normalizeApostrophes,
+  rowNameMatchesAthleteContext,
+  type AthleteMatchContext,
+} from "@/lib/athlete-name-match"
 import { fetchNchsaaResultsForAthleteProfile } from "@/lib/nchsaa-profile-fetch"
 import { NCHSAA_FOUR_TIME_STATE_CHAMPIONS } from "@/lib/nchsaa-four-time-state-champions-data"
 import { plausibleNchsaaYearsForGradYear } from "@/lib/nchsaa-plausible-years"
@@ -6,119 +17,21 @@ import type { NchsaaRowForProfile } from "@/lib/nchsaa-results-json"
 import { nchsaaJsonToProfileRows } from "@/lib/nchsaa-results-json"
 export { nchsaaJsonToProfileRows, type NchsaaRowForProfile } from "@/lib/nchsaa-results-json"
 export { plausibleNchsaaYearsForGradYear } from "@/lib/nchsaa-plausible-years"
+export {
+  ATHLETE_SAME_PERSON_ALIAS_GROUPS,
+  escapeForIlike,
+  getAthleteNameSearchVariants,
+  namesLikelySamePerson,
+  namesReferToSamePerson,
+  normalizeApostrophes,
+} from "@/lib/athlete-name-match"
 
-/**
- * Normalize name for matching: same person "Aaron Ellison" and "Ellison, Aaron" => same string.
- * Used so NCHSAA rows match athletes regardless of "First Last" vs "Last, First" in DB.
- */
-export function namesReferToSamePerson(nameA: string, nameB: string): boolean {
-  const norm = (s: string) =>
-    (s ?? "")
-      .trim()
-      .toLowerCase()
-      .replace(/,/g, " ")
-      .split(/\s+/)
-      .filter(Boolean)
-      .sort()
-      .join(" ")
-  return norm(nameA) === norm(nameB) && norm(nameA) !== ""
-}
-
-/** Escape single quotes for safe use in Supabase ilike (e.g. "D'Ettore" => "D''Ettore"). */
-export function escapeForIlike(s: string): string {
-  return (s ?? "").replace(/'/g, "''")
-}
-
-/** Curly apostrophe (Unicode) — NCHSAA/source data sometimes stores names with this. */
-const CURLY_APOSTROPHE = "\u2019"
-
-/** Return ilike patterns for a name so we match DB: straight/curly apostrophe and backtick (same as Data Dawg). */
-function getIlikePatternsForVariation(v: string): string[] {
-  const escaped = "%" + escapeForIlike(v) + "%"
-  const patterns = [escaped]
-  if (v.includes("'")) {
-    patterns.push("%" + v.replace(/'/g, CURLY_APOSTROPHE) + "%")
-    patterns.push("%" + v.replace(/'/g, "`") + "%")
-  }
-  return patterns
-}
-
-/**
- * Known same-person name spellings (e.g. NCHSAA or source data typo vs athlete profile).
- * Each group lists all spellings that refer to the same athlete; we query for all so placements pull in.
- */
-/**
- * Add spellings here when NCHSAA/source data uses a different name than the athlete profile
- * (e.g. Quickny vs Quincy, or Furmann vs Furman). Use /api/nchsaa-lookup?name=First+Last&year=2026
- * to see raw wrestler_name values for a given last name and add any missing spellings.
- */
-const SAME_PERSON_NAME_ALIASES: string[][] = [
-  ["Holt Quincy", "Holton Quincy", "Holt Quickny", "Holton Quickny"],
-  ["Colt Cambruzzi", "Colt Cambruzi", "Cole Cambruzzi", "Cole Cambruzi"],
-  ["Carter Furman", "Carter Furmann", "Carter Forman"],
-  ["Miller Menteer", "Miller Mentzer"],
-  ["Nevaeh Williamson", "Nevaeh Willamson"],
-  ["Cam Stinson", "Cameron Stinson"],
-  ["Jackson D'Ettore", "Jackson Dettore", "Jackson D\u2019Ettore"],
-  /** NCHSAA rows sometimes omit the second surname (e.g. "Marquez, Elias"); dual-token pairs also cover this. */
-  ["Elias Marquez Flores", "Elias Marquez"],
-]
-
-function normalizeForAlias(name: string): string {
-  return normalizeApostrophes((name ?? "")
-    .trim()
-    .toLowerCase()
-    .replace(/`/g, "'")
-    .replace(/,/g, " "))
-    .split(/\s+/)
-    .filter(Boolean)
-    .join(" ")
-}
-
-/** Normalize Unicode/smart apostrophes to straight quote so matching works (e.g. "D'Ettore" from forms). */
-function normalizeApostrophes(s: string): string {
-  return (s ?? "")
-    .replace(/\u2019/g, "'") // RIGHT SINGLE QUOTATION MARK
-    .replace(/\u2018/g, "'") // LEFT SINGLE QUOTATION MARK
-}
-
-/** Same name variations as /api/wrestling-achievements (unified profile NCHSAA). Includes apostrophe-free variant (e.g. D'Ettore → Dettore) and known same-person spelling aliases (e.g. Holt Quickny ↔ Holt Quincy) so we match DB spellings either way. Treats backtick as apostrophe so "Jackson D`Ettore" matches. */
+/** Same name variations as /api/wrestling-achievements — delegates to shared athlete-name-match. */
 export function getNameVariations(name: string): string[] {
-  const n = normalizeApostrophes((name ?? "").trim())
-  if (!n) return []
-  const variations = new Set<string>([n])
-  const withApostrophe = n.replace(/`/g, "'")
-  if (withApostrophe !== n) variations.add(withApostrophe)
-
-  const addVariantsFor = (fullName: string) => {
-    variations.add(fullName)
-    const noApostrophe = fullName.replace(/'/g, "").replace(/`/g, "").trim()
-    if (noApostrophe && noApostrophe !== fullName) variations.add(noApostrophe)
-    if (fullName.includes(",")) {
-      const [last, first] = fullName.split(",").map((s) => s.trim())
-      if (first && last) variations.add(`${first} ${last}`)
-    } else {
-      const parts = fullName.split(/\s+/).filter(Boolean)
-      if (parts.length >= 2) {
-        const first = parts[0]!
-        const last = parts.slice(1).join(" ")
-        variations.add(`${last}, ${first}`)
-      }
-    }
-  }
-
-  const key = normalizeForAlias(n)
-  for (const group of SAME_PERSON_NAME_ALIASES) {
-    const inGroup = group.some((s) => normalizeForAlias(s) === key)
-    if (inGroup) {
-      for (const spelling of group) addVariantsFor(spelling.trim())
-      break
-    }
-  }
-
-  addVariantsFor(n)
-  return [...variations]
+  return getAthleteNameSearchVariants(name)
 }
+
+const getIlikePatternsForVariation = getIlikePatternsForNameVariant
 
 /**
  * When profile lists a school, keep only NCHSAA rows whose `school` matches (substring, case-insensitive).
@@ -228,8 +141,17 @@ export async function getNCHSAAResultsForProfile(
     }
   }
 
-  // Fallback: if nothing matched (e.g. "Max Davis" vs "Maxwell Davis" in DB), try last name + first-name substring
-  if (merged.length === 0) {
+  const matchContext: AthleteMatchContext = {
+    displayName: athleteName,
+    graduationYear: graduationYear ?? null,
+    highSchool: highSchoolHint ?? null,
+  }
+  const hasLikelyNameMatch = merged.some((r) =>
+    rowNameMatchesAthleteContext(r.wrestler_name, matchContext),
+  )
+
+  // Fallback: no rows or only wrong namesakes (e.g. "Max Davis" vs "Maxwell Davis" in DB)
+  if (merged.length === 0 || !hasLikelyNameMatch) {
     const parts = normalizeApostrophes(athleteName).trim().split(/\s+/).filter(Boolean)
     const firstName = parts[0] ?? ""
     const lastName = parts.slice(1).join(" ")
@@ -245,11 +167,10 @@ export async function getNCHSAAResultsForProfile(
         }
         const { data: byLast, error: errLast } = await byLastQuery.order("year", { ascending: false }).limit(100)
         if (!errLast && byLast?.length) {
-          const firstLower = firstName.toLowerCase()
           for (const row of byLast) {
-            const rn = (row.wrestler_name ?? "").toString().toLowerCase()
-            if (!rn.includes(firstLower)) continue
-            const key = `${row.year}-${row.classification}-${row.weight_class}-${rn}`
+            const wrestlerName = (row.wrestler_name ?? "").toString()
+            if (!namesLikelySamePerson(wrestlerName, athleteName)) continue
+            const key = `${row.year}-${row.classification}-${row.weight_class}-${wrestlerName.toLowerCase()}`
             if (seen.has(key)) continue
             seen.add(key)
             merged.push({
@@ -258,7 +179,7 @@ export async function getNCHSAAResultsForProfile(
               weight_class: (row.weight_class ?? "").toString(),
               place: row.place != null ? Number(row.place) : null,
               school: (row.school ?? "").toString(),
-              wrestler_name: (row.wrestler_name ?? "").toString(),
+              wrestler_name: wrestlerName,
             })
           }
           break
@@ -276,10 +197,16 @@ export async function getNCHSAAResultsForProfile(
 
   const scoped = filterNchsaaRowsBySchoolOptional(byYear, highSchoolHint)
 
+  const contextual = filterRowsByAthleteMatchContext(scoped, matchContext, (r) => ({
+    name: r.wrestler_name,
+    school: r.school,
+    year: r.year,
+  }))
+
   const placerKeys = new Set(
-    scoped.filter((r) => r.place != null && r.place >= 1).map((r) => `${r.year}-${r.classification}-${r.weight_class}`)
+    contextual.filter((r) => r.place != null && r.place >= 1).map((r) => `${r.year}-${r.classification}-${r.weight_class}`)
   )
-  return scoped.filter((r) => {
+  return contextual.filter((r) => {
     if (r.place != null && r.place === 0) {
       if (placerKeys.has(`${r.year}-${r.classification}-${r.weight_class}`)) return false
     }

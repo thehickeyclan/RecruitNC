@@ -7,6 +7,10 @@ import { getSupabaseAdmin } from "@/lib/server-supabase"
 import { getAthletesColumnNames } from "@/lib/athletes-schema"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { escapeForIlike } from "@/lib/nchsaa-results"
+import {
+  filterRowsByAthleteMatchContext,
+  type AthleteMatchContext,
+} from "@/lib/athlete-name-match"
 import { dualTokenPairsForNchsaa } from "@/lib/nchsaa-profile-fetch"
 import {
   extractSearchablePhrase,
@@ -574,9 +578,21 @@ function dedupeByKey<T>(rows: T[], keyFn: (r: T) => string): T[] {
   return out
 }
 
+function crossStoreRowName(r: Record<string, unknown>): string {
+  const direct = String(r.wrestler_name ?? r.athlete_name ?? "").trim()
+  if (direct) return direct
+  const first = String(r.first_name ?? "").trim()
+  const last = String(r.last_name ?? "").trim()
+  return `${first} ${last}`.trim()
+}
+
+function crossStoreRowSchool(r: Record<string, unknown>): string {
+  return String(r.school ?? r.high_school ?? r.highSchool ?? "").trim()
+}
+
 function filterCrossStoreByDirectoryContext(
   rows: Record<string, unknown>[],
-  opts: { directoryHighSchool?: string; gradYear?: number | null },
+  opts: { directoryHighSchool?: string; gradYear?: number | null; displayName?: string },
 ): Record<string, unknown>[] {
   let out = rows
   const hsFrag = opts.directoryHighSchool?.trim()
@@ -587,7 +603,7 @@ function filterCrossStoreByDirectoryContext(
         .map((x) => String(x ?? "").trim().toLowerCase())
         .filter(Boolean)
       if (parts.length === 0) return true
-      return parts.some((p) => p.includes(h))
+      return parts.some((p) => p.includes(h) || h.includes(p))
     })
   }
   const gy = opts.gradYear
@@ -603,6 +619,21 @@ function filterCrossStoreByDirectoryContext(
       return y >= lo && y <= hi
     })
   }
+
+  const displayName = opts.displayName?.trim()
+  if (displayName && displayName.length >= 2) {
+    const context: AthleteMatchContext = {
+      displayName,
+      graduationYear: gy ?? null,
+      highSchool: hsFrag ?? null,
+    }
+    out = filterRowsByAthleteMatchContext(out, context, (r) => ({
+      name: crossStoreRowName(r),
+      school: crossStoreRowSchool(r),
+      year: r.year != null && String(r.year).trim() !== "" ? Number(r.year) : null,
+    }))
+  }
+
   return out
 }
 
@@ -820,12 +851,17 @@ export async function toolWrestlingCrossStoreSearch(args: {
     gyRaw != null && String(gyRaw).trim() !== "" && Number.isFinite(Number(gyRaw))
       ? Math.floor(Number(gyRaw))
       : null
-  const narrowOpts = { directoryHighSchool: directoryHs || undefined, gradYear: parsedGrad }
-  
-  // Only apply year/school narrowing if we have high confidence (i.e., matched a directory athlete).
-  // If there's no directory athlete, show all tournament results to avoid hiding alumni with old school names.
+  const narrowOpts = {
+    directoryHighSchool: directoryHs || undefined,
+    gradYear: parsedGrad,
+    displayName: q,
+  }
+
+  // School/year narrowing only when directory athlete is known; name match always uses query.
   const hasDirMatch = directoryHs != null || parsedGrad != null
-  const safeNarrowOpts = hasDirMatch ? narrowOpts : { directoryHighSchool: undefined, gradYear: null }
+  const safeNarrowOpts = hasDirMatch
+    ? narrowOpts
+    : { directoryHighSchool: undefined, gradYear: null, displayName: q }
 
   const nchsaa_state_narrowed = filterCrossStoreByDirectoryContext(nchsaa_state, safeNarrowOpts)
   const nhsca_placements_narrowed = filterCrossStoreByDirectoryContext(nhsca_placements, safeNarrowOpts)

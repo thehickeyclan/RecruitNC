@@ -60,8 +60,6 @@ export function ProductDetailClient({ product, details, storeTheme = false }: Pr
 
   const variants = product.variants ?? details.variants ?? []
 
-  const isSinglet = /singlet/i.test(product.name)
-
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-12">
       <ProductGallery
@@ -71,7 +69,7 @@ export function ProductDetailClient({ product, details, storeTheme = false }: Pr
         onImageChange={setCurrentImageIndex}
         frameClassName={storeTheme ? STORE_GALLERY_FRAME : undefined}
         thumbnailFrameClassName={storeTheme ? STORE_THUMB_FRAME : undefined}
-        portraitFrame={isSinglet}
+        portraitFrame={false}
       />
       <ProductInfo
         product={product}
