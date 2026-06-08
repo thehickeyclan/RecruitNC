@@ -16,6 +16,7 @@ import {
   removeBackgroundFromBytes,
   uploadGearBytesToBlob,
 } from "../lib/nhsca-gear-background-removal"
+import { processStoreCatalogImage } from "../lib/store-product-image-process"
 
 const root = resolve(__dirname, "..")
 
@@ -111,8 +112,8 @@ async function main() {
       }
     }
     if (!removed) {
-      console.log("Removing light gray/white background locally (sharp)…")
-      buffer = await removeLightStudioBackground(buffer)
+      console.log("Removing studio background (edge-connected)…")
+      buffer = await processStoreCatalogImage(buffer)
     }
   } else {
     console.log("Source already has alpha; encoding PNG…")
