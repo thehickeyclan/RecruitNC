@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
 import { StoreHeader } from "@/components/store-header"
 import { StoreBanner } from "@/components/store-banner"
+import { FeaturedProductsSection } from "@/components/featured-products-section"
 import { FilterSidebar } from "@/components/filter-sidebar"
 import { ProductGrid, type SortOption, type ProductGridProduct } from "@/components/product-grid"
 import { FeaturesSection } from "@/components/features-section"
@@ -137,6 +138,14 @@ export function StorePageClient({ initialProducts }: StorePageClientProps) {
 
   const activeFiltersCount = selectedSizes.length + selectedPriceRanges.length
 
+  const scrollToProducts = () => {
+    setSelectedCategories([])
+    setTimeout(
+      () => document.getElementById("products")?.scrollIntoView({ behavior: "smooth", block: "start" }),
+      100,
+    )
+  }
+
   return (
     <div className="min-h-screen bg-[#0A1628]">
       <StoreHeader searchQuery={searchQuery} onSearchChange={setSearchQuery} />
@@ -156,6 +165,8 @@ export function StorePageClient({ initialProducts }: StorePageClientProps) {
           )
         }}
       />
+
+      <FeaturedProductsSection products={initialProducts} onViewAll={scrollToProducts} />
 
       <div id="products" className="container mx-auto px-4 py-12">
         <div className="mb-8 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">

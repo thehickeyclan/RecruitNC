@@ -40,6 +40,8 @@ export const NC_UNITED_STORE_SINGLET_SLUGS_PUBLIC = [
 /** Public store product id — First In Flight singlet hero / deep links */
 export const NC_UNITED_FIRST_IN_FLIGHT_PRODUCT_ID = "5beafde6-acbf-4bdd-aa68-9b80722eb7a9"
 
+export const NC_UNITED_FIRST_IN_FLIGHT_STORE_SLUG = "nc-united-first-in-flight-singlet-1773453792672" as const
+
 export const NC_UNITED_2026_DEPRECATED_STORE_SLUGS = [
   "nc-united-2026-singlet",
   "first-in-flight-singlet",

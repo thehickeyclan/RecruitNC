@@ -29,12 +29,6 @@ export function StoreHeader({ searchQuery, onSearchChange }: StoreHeaderProps) {
           <StoreNavLink className="text-sm font-medium text-[#D3B574] cursor-pointer">
             Shop
           </StoreNavLink>
-          <Link href="/fundraising/athletes" className="text-sm font-medium text-white/60 hover:text-white transition-colors">
-            Fundraise
-          </Link>
-          <Link href="/athletes" className="text-sm font-medium text-white/60 hover:text-white transition-colors">
-            Athletes
-          </Link>
         </nav>
 
         <div className="relative flex-1 max-w-md ml-auto">
