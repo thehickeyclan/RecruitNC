@@ -1,3 +1,5 @@
+import { NC_UNITED_FIRST_IN_FLIGHT_PRODUCT_ID, NC_UNITED_FIRST_IN_FLIGHT_STORE_SLUG } from "@/lib/nc-united-2026-store-gear"
+
 /** Postgres uuid columns reject legacy numeric store ids — only persist real UUIDs. */
 export function resolveOrderItemProductId(sourceId: string | number | null | undefined): string | null {
   const idStr = String(sourceId ?? "").trim()
@@ -31,4 +33,30 @@ export function isStoreSingletProduct(product: {
   const slug = (product.slug ?? "").toLowerCase()
   const name = (product.name ?? "").toLowerCase()
   return slug.includes("singlet") || name.includes("singlet")
+}
+
+export function isFirstInFlightSingletProduct(product: {
+  id?: string | number | null
+  slug?: string | null
+  name?: string | null
+}): boolean {
+  const id = String(product.id ?? "")
+  const slug = (product.slug ?? "").toLowerCase()
+  const name = (product.name ?? "").toLowerCase()
+  return (
+    id === NC_UNITED_FIRST_IN_FLIGHT_PRODUCT_ID ||
+    slug === NC_UNITED_FIRST_IN_FLIGHT_STORE_SLUG ||
+    slug.includes("first-in-flight") ||
+    name.includes("first in flight")
+  )
+}
+
+/** Product-page fulfillment copy under the add-to-cart controls. */
+export function getStoreProductShipLabel(product: {
+  id?: string | number | null
+  slug?: string | null
+  name?: string | null
+}): string {
+  if (isFirstInFlightSingletProduct(product)) return "Ships in 3 weeks"
+  return "Ships in 1-2 business days"
 }

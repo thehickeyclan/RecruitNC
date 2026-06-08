@@ -19,6 +19,7 @@ import { useCartStore, getMaxQuantityForItem } from "@/lib/store/cart-store"
 import { useToast } from "@/hooks/use-toast"
 import { trackAddToCart } from "@/lib/meta-pixel"
 import { shouldShowSizeSelector } from "@/lib/size-utils"
+import { getStoreProductShipLabel } from "@/lib/store/product-utils"
 
 function toCartProductId(id: string | number): number {
   if (typeof id === "number" && Number.isInteger(id)) return id
@@ -32,6 +33,7 @@ interface Product {
   id: string | number
   name: string
   price: number
+  slug?: string | null
   category?: string | null
   image_url?: string | null
   rating?: number
@@ -72,6 +74,7 @@ export function ProductInfo({
   storeTheme = false,
 }: ProductInfoProps) {
   const productVariants = variants ?? product.variants ?? []
+  const shipLabel = getStoreProductShipLabel(product)
   const [selectedSize, setSelectedSize] = useState("")
   const [quantity, setQuantity] = useState(1)
   const [isAdded, setIsAdded] = useState(false)
@@ -421,7 +424,7 @@ export function ProductInfo({
             <>
               <div className="w-2 h-2 bg-green-500 rounded-full" />
               <span className="text-sm text-muted-foreground">
-                In Stock - Ships in 1-2 business days
+                In Stock — {shipLabel}
               </span>
             </>
           )}
@@ -429,7 +432,7 @@ export function ProductInfo({
             <>
               <div className="w-2 h-2 bg-orange-500 rounded-full" />
               <span className="text-sm text-muted-foreground">
-                Low Stock - Only 3 left!
+                Low Stock — {shipLabel}
               </span>
             </>
           )}
