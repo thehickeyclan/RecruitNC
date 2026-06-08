@@ -20,6 +20,7 @@ import {
   NC_UNITED_2026_DEPRECATED_STORE_SLUG_PREFIXES,
   NC_UNITED_2026_DEPRECATED_STORE_SLUGS,
   NC_UNITED_2026_STORE_GEAR,
+  NC_UNITED_STORE_SINGLET_SLUGS_PUBLIC,
   type NcUnitedStoreGearProduct,
 } from "../lib/nc-united-2026-store-gear"
 
@@ -211,6 +212,26 @@ async function retireDeprecatedProducts(supabase: ReturnType<typeof createClient
   }
 }
 
+async function restorePublicSingletProducts(supabase: ReturnType<typeof createClient>) {
+  for (const slug of NC_UNITED_STORE_SINGLET_SLUGS_PUBLIC) {
+    const { data, error } = await supabase.from("products").select("id, name").eq("slug", slug).maybeSingle()
+    if (error) throw new Error(`Restore lookup ${slug}: ${error.message}`)
+    if (!data?.id) {
+      console.log(`\n→ Skip restore (not found): ${slug}`)
+      continue
+    }
+
+    const updates: Record<string, unknown> = {
+      show_in_public_store: true,
+      in_stock: true,
+    }
+
+    const { error: updateError } = await supabase.from("products").update(updates).eq("id", data.id)
+    if (updateError) throw new Error(`Restore ${slug}: ${updateError.message}`)
+    console.log(`\n→ Restored public store singlet: ${updates.name ?? data.name} (${slug})`)
+  }
+}
+
 async function main() {
   console.log(dryRun ? "DRY RUN — no database writes\n" : "Seeding NC United 2026 store gear…")
 
@@ -233,9 +254,13 @@ async function main() {
 
   if (!dryRun && supabase) {
     await retireDeprecatedProducts(supabase)
+    await restorePublicSingletProducts(supabase)
   } else if (dryRun) {
     for (const slug of NC_UNITED_2026_DEPRECATED_STORE_SLUGS) {
       console.log(`\n→ [dry-run] would retire deprecated slug: ${slug}`)
+    }
+    for (const slug of NC_UNITED_STORE_SINGLET_SLUGS_PUBLIC) {
+      console.log(`\n→ [dry-run] would restore public singlet: ${slug}`)
     }
   }
 
