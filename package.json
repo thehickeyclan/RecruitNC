@@ -19,6 +19,7 @@
     "nhsca:lookup": "tsx scripts/test-nhsca-lookup.ts",
     "nhsca:all-years": "tsx scripts/show-nhsca-all-years.ts",
     "store:seed-2026-gear": "tsx scripts/seed-nc-united-2026-gear-store.ts",
+    "store:restore-singlets": "tsx scripts/restore-store-singlets.ts",
     "store:seed-uc25-singlet": "tsx scripts/seed-ultimate-club-duals-2025-singlet.ts",
     "store:seed-nh25-singlet": "tsx scripts/seed-nhsca-duals-2025-singlet.ts",
     "store:seed-uc25w-singlet": "tsx scripts/seed-womens-ultimate-club-duals-2025-singlet.ts",

@@ -31,7 +31,12 @@ export type NcUnitedStoreGearProduct = {
 /**
  * Legacy store listings hidden once 2026 gear is live.
  * Re-run `npm run store:seed-2026-gear` to apply show_in_public_store = false.
+ * Do not add slugs in NC_UNITED_STORE_SINGLET_SLUGS_PUBLIC — those stay visible.
  */
+export const NC_UNITED_STORE_SINGLET_SLUGS_PUBLIC = [
+  "nc-united-first-in-flight-singlet-1773453792672",
+] as const
+
 export const NC_UNITED_2026_DEPRECATED_STORE_SLUGS = [
   "nc-united-2026-singlet",
   "first-in-flight-singlet",
@@ -41,8 +46,8 @@ export const NC_UNITED_2026_DEPRECATED_STORE_SLUGS = [
   "womens-blue-ultimate-club-duals-2025-singlet",
 ] as const
 
-/** Admin duplicates may append a timestamp — retire by prefix. */
-export const NC_UNITED_2026_DEPRECATED_STORE_SLUG_PREFIXES = ["nc-united-first-in-flight-singlet"] as const
+/** Admin duplicates may append a timestamp — retire by prefix (except kept public slugs). */
+export const NC_UNITED_2026_DEPRECATED_STORE_SLUG_PREFIXES = [] as const
 
 export const NC_UNITED_2026_STORE_GEAR: NcUnitedStoreGearProduct[] = [
   {
