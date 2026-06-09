@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { TocLandingPage } from "@/components/toc/toc-landing-page"
 import { resolveTocConfirmedColleges } from "@/lib/toc/confirmed-colleges"
 import { getTocEventConfig } from "@/lib/toc/event-config"
+import { TOC_VENUE } from "@/lib/toc/constants"
 
 export const dynamic = "force-dynamic"
 
@@ -32,7 +33,7 @@ export default async function TournamentOfChampionsPage() {
     location: {
       "@type": "Place",
       name: config.venue_name ?? "Hope Community Church",
-      address: config.venue_address ?? "Apex, NC",
+      address: config.venue_address ?? TOC_VENUE.address,
     },
     organizer: {
       "@type": "Organization",

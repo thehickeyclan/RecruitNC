@@ -31,7 +31,11 @@ const FAQ_ITEMS = [
   },
   {
     q: "When and where is the event?",
-    a: "September 4–5, 2026 at Hope Community Church in Apex, North Carolina. Two mats Friday night and Saturday through placement bouts; championship finals Saturday evening on one mat, with an award after every title bout.",
+    a: "September 4–5, 2026 at Hope Community Church (Apex Campus), 2080 East Williams Street, Apex, NC. Two mats for opening rounds and placement bouts; one mat dedicated on stage for championship finals under full lighting and production. Seating for up to 1,000, plus a dedicated section for college coaches.",
+  },
+  {
+    q: "Will the event be streamed?",
+    a: "Yes — the Tournament of Champions will be live streamed. Broadcast details and watch links will be announced soon. Sign up for email updates on this page to get the stream link when it's live.",
   },
   {
     q: "Can I buy tickets now?",
