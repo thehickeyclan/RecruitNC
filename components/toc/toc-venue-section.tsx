@@ -36,8 +36,9 @@ export function TocVenueSection({ config }: Props) {
               Built like a show
             </TocVarsityHeading>
             <p className="text-[#0B1D3A]/90 text-lg leading-relaxed mb-6">
-              {venueName} · {TOC_VENUE.campus} — {TOC_VENUE.seatingLabel}. Two mats all weekend, then one mat on stage
-              for finals with full production, video boards, and a dedicated section for college coaches.
+              {venueName} · {TOC_VENUE.campus} — {TOC_VENUE.seatingLabel}. Two mats all weekend, then one mat
+              dedicated for championship finals with full lighting, video boards, and a dedicated section for college
+              coaches.
             </p>
 
             <ul className="space-y-4 mb-8">

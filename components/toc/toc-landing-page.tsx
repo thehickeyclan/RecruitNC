@@ -5,6 +5,7 @@ import { TocQuickFacts } from "@/components/toc/toc-quick-facts"
 import { TocChampionJacketSection } from "@/components/toc/toc-champion-jacket-section"
 import { TocStorySection } from "@/components/toc/toc-story-section"
 import { TocVenueSection } from "@/components/toc/toc-venue-section"
+import { TocFinalsMatSection } from "@/components/toc/toc-finals-mat-section"
 import { TocWeightClassesList } from "@/components/toc/toc-weight-classes"
 import { TocScheduleTable } from "@/components/toc/toc-schedule-table"
 import { TocStreamingSection } from "@/components/toc/toc-streaming-section"
@@ -30,6 +31,7 @@ export function TocLandingPage({ config, confirmedColleges = [] }: Props) {
       <TocChampionJacketSection />
       <TocStorySection />
       <TocVenueSection config={config} />
+      <TocFinalsMatSection />
       <TocWeightClassesList />
       <TocScheduleTable />
       <TocStreamingSection config={config} />

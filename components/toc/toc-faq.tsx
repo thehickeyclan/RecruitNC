@@ -31,7 +31,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "When and where is the event?",
-    a: "September 4–5, 2026 at Hope Community Church (Apex Campus), 2080 East Williams Street, Apex, NC. Two mats for opening rounds and placement bouts; one mat dedicated on stage for championship finals under full lighting and production. Seating for up to 1,000, plus a dedicated section for college coaches.",
+    a: "September 4–5, 2026 at Hope Community Church (Apex Campus), 2080 East Williams Street, Apex, NC. Two mats for opening rounds and placement bouts; one mat dedicated for championship finals under full lighting and production. Seating for up to 1,000, plus a dedicated section for college coaches.",
   },
   {
     q: "Will the event be streamed?",
