@@ -32,13 +32,64 @@ export async function sendTocWelcomeEmail(to: string): Promise<void> {
   )
 }
 
-export async function sendTocNominationConfirmation(to: string, athleteName: string): Promise<void> {
+export async function sendTocAthleteInterestConfirmation(to: string, athleteName: string): Promise<void> {
   await sendHtml(
     to,
-    "Nomination received — Tournament of Champions",
-    wrap(`<p>We received your nomination for <strong>${athleteName}</strong> for the NC United Tournament of Champions.</p>
-<p>Our team will review nominations and follow up if the athlete is selected for the 88-wrestler field. Thank you for helping us identify NC's best.</p>`),
+    "We received your info — Tournament of Champions",
+    wrap(`<p>Hi ${athleteName},</p>
+<p>We received your athlete interest form for the <strong>NC United Tournament of Champions</strong>.</p>
+<p><strong>Important:</strong> Submitting this form does <strong>not</strong> guarantee an invitation or a spot in the tournament. Our staff may reach out as we evaluate prospects and build the field.</p>
+<p style="margin:20px 0;"><a href="https://app.ncwrestlingunited.com/tournament-of-champions" style="display:inline-block;background:#B31B1B;color:white;padding:12px 24px;text-decoration:none;border-radius:6px;font-weight:bold;">View event page</a></p>`),
   )
+}
+
+/** @deprecated use sendTocAthleteInterestConfirmation */
+export async function sendTocNominationConfirmation(to: string, athleteName: string): Promise<void> {
+  return sendTocAthleteInterestConfirmation(to, athleteName)
+}
+
+export async function sendTocAdminAthleteInterestAlert(payload: {
+  athleteName: string
+  school: string
+  club: string | null
+  weightClass: number
+  graduationYear: number
+  email: string
+}): Promise<void> {
+  const adminTo = process.env.TOC_ADMIN_EMAIL?.trim() || process.env.ADMIN_NOTIFICATION_EMAIL?.trim()
+  if (!adminTo) return
+  await sendHtml(
+    adminTo,
+    `TOC prospect interest: ${payload.athleteName} (${payload.weightClass} lbs)`,
+    wrap(`<p><strong>New athlete interest form</strong></p>
+<ul>
+<li>Name: ${payload.athleteName}</li>
+<li>Email: ${payload.email}</li>
+<li>School: ${payload.school}</li>
+<li>Club: ${payload.club ?? "—"}</li>
+<li>Weight: ${payload.weightClass} lbs</li>
+<li>Grad year: ${payload.graduationYear}</li>
+</ul>
+<p>Review in admin: Tournament of Champions → Prospect interest</p>`),
+  )
+}
+
+/** @deprecated use sendTocAdminAthleteInterestAlert */
+export async function sendTocAdminNominationAlert(payload: {
+  athleteName: string
+  school: string | null
+  weightClass: number | null
+  submitterEmail: string
+}): Promise<void> {
+  if (payload.weightClass == null) return
+  return sendTocAdminAthleteInterestAlert({
+    athleteName: payload.athleteName,
+    school: payload.school ?? "—",
+    club: null,
+    weightClass: payload.weightClass,
+    graduationYear: 0,
+    email: payload.submitterEmail,
+  })
 }
 
 export async function sendTocSponsorAutoReply(to: string, company: string): Promise<void> {
@@ -46,23 +97,6 @@ export async function sendTocSponsorAutoReply(to: string, company: string): Prom
     to,
     "Sponsor inquiry received — Tournament of Champions",
     wrap(`<p>Thanks for reaching out from <strong>${company}</strong>. We've received your sponsor inquiry for the Tournament of Champions and will be in touch shortly.</p>`),
-  )
-}
-
-export async function sendTocAdminNominationAlert(payload: {
-  athleteName: string
-  school: string | null
-  weightClass: number | null
-  submitterEmail: string
-}): Promise<void> {
-  const adminTo = process.env.TOC_ADMIN_EMAIL?.trim() || process.env.ADMIN_NOTIFICATION_EMAIL?.trim()
-  if (!adminTo) return
-  await sendHtml(
-    adminTo,
-    `New TOC nomination: ${payload.athleteName}`,
-    wrap(`<p><strong>New athlete nomination</strong></p>
-<ul><li>Athlete: ${payload.athleteName}</li><li>School: ${payload.school ?? "—"}</li><li>Weight: ${payload.weightClass ?? "—"}</li><li>From: ${payload.submitterEmail}</li></ul>
-<p>Review in admin: Tournament of Champions → Nominations</p>`),
   )
 }
 

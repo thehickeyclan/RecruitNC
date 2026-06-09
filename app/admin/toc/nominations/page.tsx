@@ -12,11 +12,10 @@ type Nomination = {
   id: string
   athlete_name: string
   school: string | null
+  club?: string | null
   weight_class: number | null
   graduation_year: number | null
-  submitted_by_name: string | null
   submitted_by_email: string
-  submitted_by_relationship: string | null
   notes: string | null
   reviewed: boolean
   created_at: string
@@ -65,8 +64,8 @@ export default function TocNominationsAdminPage() {
             </Link>
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">TOC Nominations</h1>
-            <p className="text-sm text-muted-foreground">{rows.length} submissions</p>
+            <h1 className="text-2xl font-bold">TOC prospect interest</h1>
+            <p className="text-sm text-muted-foreground">{rows.length} athlete submissions</p>
           </div>
         </div>
         <Button variant="outline" size="sm" onClick={() => void load()} disabled={loading}>
@@ -79,7 +78,7 @@ export default function TocNominationsAdminPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Public nominations</CardTitle>
+          <CardTitle className="text-base">Athlete interest forms</CardTitle>
         </CardHeader>
         <CardContent className="overflow-x-auto">
           {loading && rows.length === 0 ? (
@@ -91,9 +90,11 @@ export default function TocNominationsAdminPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Athlete</TableHead>
+                  <TableHead>Email</TableHead>
                   <TableHead>School</TableHead>
+                  <TableHead>Club</TableHead>
                   <TableHead>Wt</TableHead>
-                  <TableHead>Submitter</TableHead>
+                  <TableHead>Year</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead />
@@ -103,12 +104,11 @@ export default function TocNominationsAdminPage() {
                 {rows.map((r) => (
                   <TableRow key={r.id}>
                     <TableCell className="font-medium">{r.athlete_name}</TableCell>
+                    <TableCell className="text-sm">{r.submitted_by_email}</TableCell>
                     <TableCell>{r.school ?? "—"}</TableCell>
+                    <TableCell>{r.club ?? "—"}</TableCell>
                     <TableCell>{r.weight_class ?? "—"}</TableCell>
-                    <TableCell>
-                      <div className="text-sm">{r.submitted_by_name ?? "—"}</div>
-                      <div className="text-xs text-muted-foreground">{r.submitted_by_email}</div>
-                    </TableCell>
+                    <TableCell>{r.graduation_year ?? "—"}</TableCell>
                     <TableCell className="text-sm whitespace-nowrap">
                       {new Date(r.created_at).toLocaleDateString()}
                     </TableCell>

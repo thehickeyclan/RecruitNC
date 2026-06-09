@@ -45,14 +45,14 @@ export function TocLandingPage({ config, confirmedColleges = [] }: Props) {
         </div>
       </section>
 
-      <section id="nominate" className="py-16 md:py-20 border-t-4 border-[#CC0000]">
+      <section id="athlete-interest" className="py-16 md:py-20 border-t-4 border-[#CC0000]">
         <div className="container mx-auto px-4 max-w-xl">
           <TocVarsityHeading as="h2" className="text-4xl mb-2">
-            Nominate an athlete
+            Athlete interest form
           </TocVarsityHeading>
           <p className="text-muted-foreground mb-8">
-            Know a wrestler who belongs in the field? Submit a nomination for staff review. Nominations do not guarantee
-            an invitation.
+            Top NC prospects — tell us your name, school, club, and the weight you&apos;d compete at. We use this to plan
+            the field and may reach out. <strong>Submitting does not guarantee an invitation.</strong>
           </p>
           <TocNominationForm />
         </div>
