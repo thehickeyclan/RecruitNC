@@ -24,7 +24,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Will college coaches be there?",
-    a: "Yes. A dedicated section for college coaches gives programs clear sightlines to watch the brackets live all weekend.",
+    a: "Yes. Credentialed college coaches get a dedicated College Coaches Lounge — a separate atrium room with live feeds from both mats, bracket updates, work tables, charging and Wi-Fi, hospitality all weekend, and a print station for profiles and notes. It's built for programs recruiting in the building, not just watching from the stands.",
   },
   {
     q: "What is the Champion jacket?",
@@ -36,7 +36,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "When and where is the event?",
-    a: `September 4–5, 2026 at Hope Community Church (Apex Campus), 2080 East Williams Street, Apex, NC. ${TOC_MATS_LINE} Seating for up to 1,000, plus a dedicated section for college coaches.`,
+    a: `September 4–5, 2026 at Hope Community Church (Apex Campus), 2080 East Williams Street, Apex, NC. ${TOC_MATS_LINE} Seating for up to 1,000, plus separate College Coaches and Officials lounges in dedicated atrium rooms.`,
   },
   {
     q: "Will the event be streamed?",
@@ -48,7 +48,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "How do I sponsor the event?",
-    a: `Use the sponsor inquiry form on this page or email ${TOC_CONTACT_EMAIL}. Our team will send the full tier deck and follow up directly.`,
+    a: `Use the sponsor inquiry form on this page or email ${TOC_CONTACT_EMAIL}. Our team will follow up with tier options and the full sponsorship deck.`,
   },
 ]
 
