@@ -4,32 +4,32 @@ import { TocHero } from "@/components/toc/toc-hero"
 import { TocQuickFacts } from "@/components/toc/toc-quick-facts"
 import { TocChampionJacketSection } from "@/components/toc/toc-champion-jacket-section"
 import { TocStorySection } from "@/components/toc/toc-story-section"
+import { TocAthleteQuotesSection } from "@/components/toc/toc-athlete-quotes-section"
 import { TocVenueSection } from "@/components/toc/toc-venue-section"
 import { TocFinalsMatSection } from "@/components/toc/toc-finals-mat-section"
 import { TocWeightClassesList } from "@/components/toc/toc-weight-classes"
 import { TocScheduleTable } from "@/components/toc/toc-schedule-table"
 import { TocStreamingSection } from "@/components/toc/toc-streaming-section"
-import { TocRecruitingSection } from "@/components/toc/toc-recruiting-section"
 import { TocNominationForm } from "@/components/toc/toc-nomination-form"
-import { TocSponsorForm } from "@/components/toc/toc-sponsor-form"
+import { TocSponsorSection } from "@/components/toc/toc-sponsor-section"
 import { TocFaq } from "@/components/toc/toc-faq"
 import { TocEmailSignup } from "@/components/toc/toc-email-signup"
 import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass } from "@/components/toc/toc-theme"
-import type { TocConfirmedCollege } from "@/lib/toc/confirmed-colleges"
+import { TOC_CONTACT_EMAIL } from "@/lib/toc/constants"
 import type { TocEventConfig } from "@/lib/toc/event-config"
 
 type Props = {
   config: TocEventConfig
-  confirmedColleges?: TocConfirmedCollege[]
 }
 
-export function TocLandingPage({ config, confirmedColleges = [] }: Props) {
+export function TocLandingPage({ config }: Props) {
   return (
     <div className="min-h-screen bg-white">
       <TocHero config={config} />
       <TocQuickFacts />
       <TocChampionJacketSection />
       <TocStorySection />
+      <TocAthleteQuotesSection />
       <TocVenueSection config={config} />
       <TocFinalsMatSection />
       <TocWeightClassesList />
@@ -64,19 +64,7 @@ export function TocLandingPage({ config, confirmedColleges = [] }: Props) {
         </div>
       </section>
 
-      <TocRecruitingSection confirmedColleges={confirmedColleges} />
-
-      <section id="sponsors" className="py-16 md:py-20 bg-[#f4f5f7]">
-        <div className="container mx-auto px-4 max-w-xl">
-          <TocVarsityHeading as="h2" className="text-4xl mb-2">
-            Partner with us
-          </TocVarsityHeading>
-          <p className="text-muted-foreground mb-8">
-            Title, Champion, Partner, and Community sponsorship opportunities for brands aligned with NC wrestling.
-          </p>
-          <TocSponsorForm />
-        </div>
-      </section>
+      <TocSponsorSection />
 
       <TocFaq />
 
@@ -86,6 +74,14 @@ export function TocLandingPage({ config, confirmedColleges = [] }: Props) {
         <p className="mt-2">{config.event_dates}</p>
         <p className="mt-1">{config.venue_name}</p>
         <p className="mt-1 text-white/55">{config.venue_address ?? "Apex, NC"}</p>
+        <p className="mt-4">
+          <a
+            href={`mailto:${TOC_CONTACT_EMAIL}`}
+            className="text-white/70 hover:text-white underline underline-offset-2"
+          >
+            {TOC_CONTACT_EMAIL}
+          </a>
+        </p>
       </footer>
     </div>
   )

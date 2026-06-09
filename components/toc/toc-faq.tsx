@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { ChevronDown } from "lucide-react"
 import { TocVarsityHeading } from "@/components/toc/toc-theme"
+import { TOC_CONTACT_EMAIL } from "@/lib/toc/constants"
 
 const FAQ_ITEMS = [
   {
@@ -43,7 +44,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "How do I sponsor the event?",
-    a: "Use the sponsor inquiry form on this page. Our team will send partnership options and follow up directly.",
+    a: `Use the sponsor inquiry form on this page or email ${TOC_CONTACT_EMAIL}. Our team will send partnership options and follow up directly.`,
   },
 ]
 

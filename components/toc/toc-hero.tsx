@@ -80,6 +80,12 @@ export function TocHero({ config }: Props) {
             Event schedule
           </a>
           <a
+            href="#sponsors"
+            className="inline-flex items-center justify-center rounded-sm border-2 border-white/40 px-6 py-3.5 text-base font-semibold text-white/90 hover:border-white transition-colors"
+          >
+            Sponsorship
+          </a>
+          <a
             href="#athlete-interest"
             className="inline-flex items-center justify-center rounded-sm border-2 border-white/40 px-6 py-3.5 text-base font-semibold text-white/90 hover:border-white transition-colors"
           >
