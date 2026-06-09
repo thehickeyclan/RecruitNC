@@ -73,7 +73,7 @@ export function TocNominationForm() {
         <div>
           <p className="font-semibold text-green-900">Info received</p>
           <p className="text-sm text-green-800 mt-1">
-            Thanks — we have your name, school, club, and weight. Our staff may reach out as we build the field.
+            Thanks — we have your name, school, club, and weight. Our staff may reach out as we review prospects and send invitations.
             Submitting this form does <strong>not</strong> guarantee an invitation or a spot in the tournament.
           </p>
           <Button variant="outline" size="sm" className="mt-4" onClick={() => setStatus("idle")}>

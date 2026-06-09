@@ -7,12 +7,14 @@ import { TocStorySection } from "@/components/toc/toc-story-section"
 import { TocAthleteQuotesSection } from "@/components/toc/toc-athlete-quotes-section"
 import { TocVenueSection } from "@/components/toc/toc-venue-section"
 import { TocFinalsMatSection } from "@/components/toc/toc-finals-mat-section"
+import { TocSpectatorsSection } from "@/components/toc/toc-spectators-section"
 import { TocWeightClassesList } from "@/components/toc/toc-weight-classes"
 import { TocScheduleTable } from "@/components/toc/toc-schedule-table"
 import { TocStreamingSection } from "@/components/toc/toc-streaming-section"
 import { TocNominationForm } from "@/components/toc/toc-nomination-form"
 import { TocSponsorSection } from "@/components/toc/toc-sponsor-section"
 import { TocFaq } from "@/components/toc/toc-faq"
+import { TocAboutNcUnitedSection } from "@/components/toc/toc-about-nc-united-section"
 import { TocEmailSignup } from "@/components/toc/toc-email-signup"
 import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass } from "@/components/toc/toc-theme"
 import { TOC_CONTACT_EMAIL } from "@/lib/toc/constants"
@@ -31,6 +33,7 @@ export function TocLandingPage({ config }: Props) {
       <TocStorySection />
       <TocAthleteQuotesSection />
       <TocVenueSection config={config} />
+      <TocSpectatorsSection />
       <TocFinalsMatSection />
       <TocWeightClassesList />
       <TocScheduleTable />
@@ -43,7 +46,7 @@ export function TocLandingPage({ config }: Props) {
             Stay in the loop
           </TocVarsityHeading>
           <p className="text-white/70 mb-8">
-            Field announcements, streaming link, tickets, and everything leading up to championship weekend.
+            Invite list news, streaming link, tickets, and everything leading up to championship weekend.
           </p>
           <div className="flex justify-center">
             <TocEmailSignup source="landing_section" />
@@ -58,7 +61,7 @@ export function TocLandingPage({ config }: Props) {
           </TocVarsityHeading>
           <p className="text-muted-foreground mb-8">
             Top NC prospects — tell us your name, school, club, and the weight you&apos;d compete at. We use this to plan
-            the field and may reach out. <strong>Submitting does not guarantee an invitation.</strong>
+            invitations and may reach out. <strong>Submitting does not guarantee an invitation.</strong>
           </p>
           <TocNominationForm />
         </div>
@@ -67,6 +70,8 @@ export function TocLandingPage({ config }: Props) {
       <TocSponsorSection />
 
       <TocFaq />
+
+      <TocAboutNcUnitedSection />
 
       <footer className="relative bg-[#060f1f] text-center text-white/70 text-sm py-10">
         <TocPatrioticBar className="absolute top-0 left-0 right-0" />

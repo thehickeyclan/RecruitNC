@@ -1,4 +1,5 @@
 import { TocVarsityHeading } from "@/components/toc/toc-theme"
+import { TOC_MATS_LINE } from "@/lib/toc/constants"
 
 const TAGLINES = [
   "You don't enter. You get the call.",
@@ -24,8 +25,7 @@ export function TocStorySection() {
             that&apos;s where these athletes are headed, and the lightest weights deserve a real stage too.
           </p>
           <p>
-            True double-elimination. Top-four placement. <strong>Two mats</strong> from opening rounds through placement
-            bouts — then the building narrows to <strong>one mat under the lights</strong> for championship finals. College
+            True double-elimination. Top-four placement. <strong>{TOC_MATS_LINE}</strong> College
             coaches in the building. A championship jacket on the line
             and a title that only means something because of who you had to beat to get it.
           </p>
@@ -51,11 +51,11 @@ export function TocStorySection() {
           {[
             {
               title: "By invitation only",
-              desc: "Eight per weight. The field is built by hand — you don't register your way in.",
+              desc: "Eight per weight. Every invite is picked by hand — you don't register your way in.",
             },
             {
-              title: "Built like a show",
-              desc: "Two mats all weekend — then one mat under the lights when the titles are on the line.",
+              title: "Under the lights",
+              desc: TOC_MATS_LINE,
             },
             {
               title: "Earn the jacket",

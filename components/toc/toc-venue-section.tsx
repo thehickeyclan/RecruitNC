@@ -2,7 +2,7 @@ import Image from "next/image"
 import { ExternalLink, GraduationCap, Layers, Lightbulb, MapPin, Trophy, Users } from "lucide-react"
 import { TocAiRenderingCaption } from "@/components/toc/toc-ai-rendering-caption"
 import { TocPatrioticBar, TocVarsityHeading } from "@/components/toc/toc-theme"
-import { TOC_VENUE, TOC_VENUE_FEATURES } from "@/lib/toc/constants"
+import { TOC_VENUE, TOC_VENUE_FEATURES, TOC_MATS_LINE } from "@/lib/toc/constants"
 import type { TocEventConfig } from "@/lib/toc/event-config"
 
 const FEATURE_ICONS = [Layers, GraduationCap, Users, Lightbulb, Trophy] as const
@@ -37,12 +37,11 @@ export function TocVenueSection({ config }: Props) {
           <div>
             <p className="text-[#CC0000] text-xs font-semibold uppercase tracking-[0.22em] mb-2">The venue</p>
             <TocVarsityHeading as="h2" className="text-4xl md:text-5xl mb-4">
-              Built like a show
+              Built for the big stage
             </TocVarsityHeading>
             <p className="text-[#0B1D3A]/90 text-lg leading-relaxed mb-6">
-              {venueName} · {TOC_VENUE.campus} — {TOC_VENUE.seatingLabel}. Two mats all weekend, then one mat
-              dedicated for championship finals with full lighting, video boards, and a dedicated section for college
-              coaches.
+              {venueName} · {TOC_VENUE.campus} — {TOC_VENUE.seatingLabel}. {TOC_MATS_LINE} Full lighting, video boards,
+              and a dedicated section for college coaches.
             </p>
 
             <ul className="space-y-4 mb-8">
