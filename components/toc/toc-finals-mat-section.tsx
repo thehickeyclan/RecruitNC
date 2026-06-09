@@ -1,5 +1,6 @@
 import Image from "next/image"
 import { Mic2, Sparkles, Trophy } from "lucide-react"
+import { TocAiRenderingCaption } from "@/components/toc/toc-ai-rendering-caption"
 import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass } from "@/components/toc/toc-theme"
 import { TOC_FINALS_MAT } from "@/lib/toc/constants"
 
@@ -35,25 +36,31 @@ export function TocFinalsMatSection() {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-            <div className="relative overflow-hidden rounded-sm border-2 border-white/10 shadow-2xl shadow-black/40">
-              <Image
-                src="/images/toc/finals-single-mat.png"
-                alt="Single-mat championship finals — spotlight on the center mat with NC United branding"
-                width={1536}
-                height={1024}
-                className="h-auto w-full"
-                sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 40vw, 100vw"
-              />
+            <div>
+              <div className="relative overflow-hidden rounded-sm border-2 border-white/10 shadow-2xl shadow-black/40">
+                <Image
+                  src="/images/toc/finals-single-mat.png"
+                  alt="Single-mat championship finals — spotlight on the center mat with NC United branding"
+                  width={1536}
+                  height={1024}
+                  className="h-auto w-full"
+                  sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 40vw, 100vw"
+                />
+              </div>
+              <TocAiRenderingCaption variant="dark" />
             </div>
-            <div className="relative overflow-hidden rounded-sm border-2 border-white/10 shadow-2xl shadow-black/40">
-              <Image
-                src="/images/toc/finals-announcements.png"
-                alt="Finalist introductions and single-mat competition under arena lighting"
-                width={1536}
-                height={1024}
-                className="h-auto w-full"
-                sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 40vw, 100vw"
-              />
+            <div>
+              <div className="relative overflow-hidden rounded-sm border-2 border-white/10 shadow-2xl shadow-black/40">
+                <Image
+                  src="/images/toc/finals-announcements.png"
+                  alt="Finalist introductions and single-mat competition under arena lighting"
+                  width={1536}
+                  height={1024}
+                  className="h-auto w-full"
+                  sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 40vw, 100vw"
+                />
+              </div>
+              <TocAiRenderingCaption variant="dark" />
             </div>
           </div>
         </div>

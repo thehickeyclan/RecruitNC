@@ -1,5 +1,6 @@
 import Image from "next/image"
 import { ExternalLink, GraduationCap, Layers, Lightbulb, MapPin, Trophy, Users } from "lucide-react"
+import { TocAiRenderingCaption } from "@/components/toc/toc-ai-rendering-caption"
 import { TocPatrioticBar, TocVarsityHeading } from "@/components/toc/toc-theme"
 import { TOC_VENUE, TOC_VENUE_FEATURES } from "@/lib/toc/constants"
 import type { TocEventConfig } from "@/lib/toc/event-config"
@@ -19,15 +20,18 @@ export function TocVenueSection({ config }: Props) {
       <TocPatrioticBar className="absolute top-0 left-0 right-0" />
       <div className="container mx-auto px-4 max-w-6xl pt-4">
         <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
-          <div className="relative overflow-hidden rounded-sm border-2 border-[#0B1D3A]/10 shadow-xl">
-            <Image
-              src="/images/toc/venue-apex-arena.png"
-              alt="NC United Tournament of Champions venue — two mats, professional lighting, and crowd seating in Apex"
-              width={1536}
-              height={1024}
-              className="h-auto w-full"
-              sizes="(min-width: 1024px) 50vw, 100vw"
-            />
+          <div>
+            <div className="relative overflow-hidden rounded-sm border-2 border-[#0B1D3A]/10 shadow-xl">
+              <Image
+                src="/images/toc/venue-apex-arena.png"
+                alt="NC United Tournament of Champions venue — two mats, professional lighting, and crowd seating in Apex"
+                width={1536}
+                height={1024}
+                className="h-auto w-full"
+                sizes="(min-width: 1024px) 50vw, 100vw"
+              />
+            </div>
+            <TocAiRenderingCaption />
           </div>
 
           <div>

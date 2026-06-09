@@ -8,6 +8,9 @@ export const TOC_WEIGHT_CLASSES = [
   117, 125, 133, 141, 149, 157, 165, 174, 184, 197, 285,
 ] as const
 
+export const TOC_AI_RENDERING_CAPTION =
+  "AI rendering of the existing facility for illustration; actual setup and presentation may vary." as const
+
 export const TOC_VENUE = {
   name: "Hope Community Church",
   campus: "Apex Campus",
