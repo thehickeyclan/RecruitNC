@@ -11,18 +11,17 @@ export function TocStorySection() {
     <section className="py-16 md:py-20 bg-white">
       <div className="container mx-auto px-4 max-w-3xl">
         <TocVarsityHeading as="h2" className="text-4xl md:text-5xl mb-6">
-          We didn&apos;t build an open tournament
+          Who&apos;s actually the best at each weight?
         </TocVarsityHeading>
         <div className="space-y-4 text-[#0B1D3A]/90 text-lg leading-relaxed">
           <p>
-            We built an answer to a question every wrestling fan in this state argues about:{" "}
-            <strong>who&apos;s actually the best at each weight?</strong>
+            The NC United Tournament of Champions is the answer — <strong>by invitation only</strong>, not open
+            registration. Eighty-eight wrestlers, hand-picked at each weight.
           </p>
           <p>
-            Eighty-eight wrestlers. Invitation only. No byes to coast through, no soft early rounds — every match is a
-            fight because every name earned its spot. We wrestle <strong>NCAA collegiate weight classes plus 117 lbs</strong>{" "}
-            — eleven brackets total — because that&apos;s where these athletes are headed, and the lightest weights
-            deserve a real stage too.
+            No byes to coast through, no soft early rounds — every match is a fight because every name earned its spot.
+            We wrestle <strong>NCAA collegiate weight classes plus 117 lbs</strong> — eleven brackets total — because
+            that&apos;s where these athletes are headed, and the lightest weights deserve a real stage too.
           </p>
           <p>
             True double-elimination. Top-four placement. <strong>Two mats</strong> from opening rounds through placement
