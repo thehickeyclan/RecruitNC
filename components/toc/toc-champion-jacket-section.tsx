@@ -1,4 +1,5 @@
 import Image from "next/image"
+import { TocAiRenderingCaption } from "@/components/toc/toc-ai-rendering-caption"
 import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass } from "@/components/toc/toc-theme"
 
 export function TocChampionJacketSection() {
@@ -64,8 +65,23 @@ export function TocChampionJacketSection() {
             </ul>
           </div>
 
-          <div className="order-1 lg:order-2 flex justify-center">
-            <div className="relative w-full max-w-md">
+          <div className="order-1 lg:order-2 space-y-6">
+            <div>
+              <div className="relative overflow-hidden rounded-sm border-2 border-white/15 shadow-2xl">
+                <Image
+                  src="/images/toc/champion-jacket-presentation.png"
+                  alt="Championship jacket presentation on the mat — spotlight, crowd, and NC United Tournament of Champions branding"
+                  width={1536}
+                  height={1024}
+                  className="h-auto w-full"
+                  sizes="(min-width: 1024px) 40vw, 100vw"
+                  priority
+                />
+              </div>
+              <TocAiRenderingCaption variant="dark" />
+            </div>
+
+            <div className="relative w-full max-w-sm mx-auto">
               <div className="absolute -inset-3 bg-gradient-to-br from-[#CC0000]/30 via-transparent to-white/10 rounded-2xl blur-sm" />
               <div className="relative rounded-xl overflow-hidden border-4 border-white/20 shadow-2xl bg-[#060f1f]">
                 <Image
@@ -74,10 +90,10 @@ export function TocChampionJacketSection() {
                   width={800}
                   height={900}
                   className="w-full h-auto object-contain"
-                  priority
                 />
               </div>
-              <p className={`mt-4 text-center text-white/50 text-xs ${tocDisplayClass()} tracking-widest`}>
+              <TocAiRenderingCaption variant="dark" className="text-center" />
+              <p className={`mt-3 text-center text-white/50 text-xs ${tocDisplayClass()} tracking-widest`}>
                 One champion · Each weight · 2026
               </p>
             </div>
