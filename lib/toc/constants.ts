@@ -13,6 +13,71 @@ export const TOC_AI_RENDERING_CAPTION =
 
 export const TOC_CONTACT_EMAIL = "info@ncwrestlingunited.com" as const
 
+/** Canonical mats copy — use site-wide wherever two-mat → finals format is described. */
+export const TOC_MATS_LINE = "Two mats all weekend. One mat under the lights for finals." as const
+
+export const TOC_TICKET_SALE_MONTH = "August 2026" as const
+
+export const TOC_NC_UNITED_ABOUT = {
+  headline: "About NC United",
+  body:
+    "NC United is a 501(c)(3) nonprofit building North Carolina's premier wrestling ecosystem — from the RecruitNC recruiting platform to youth development, college coaching access, and signature events. Co-founded by Matt Hickey, Michael Macchiavello, and Colton Palmer.",
+  href: "https://ncwrestlingunited.com",
+  linkLabel: "Learn more at ncwrestlingunited.com",
+} as const
+
+export const TOC_SPECTATORS = {
+  eyebrow: "For families and fans",
+  headline: "You're welcome in the building",
+  lead:
+    "The Tournament of Champions is built for the big stage — and it's also a family-friendly weekend in a comfortable, modern venue. Everything you'd want for a wrestling weekend, in one building.",
+  expectations: [
+    "Free on-site parking",
+    "Concessions open both days",
+    "Family-friendly atmosphere — no alcohol, kid-appropriate",
+    "Air-conditioned facility, easy accessibility",
+    "Bleacher and floor seating available",
+    "College coaches recruiting in the building (D1 / D2 / D3 / NAIA programs)",
+  ],
+  ticketOptions: [
+    {
+      title: "Single-day ticket",
+      description: "Friday opening round, or Saturday placement bouts + finals",
+    },
+    {
+      title: "Weekend pass",
+      description: "Both days, including championship finals under the lights",
+    },
+  ],
+} as const
+
+export const TOC_FOUNDING_PARTNERS = {
+  eyebrow: "Founding Partners",
+  lead: "Brands helping build the foundation of NC's premier wrestling stage in its inaugural year.",
+  urgency: "Inaugural year — limited founding partner slots remaining.",
+  ctaLabel: "Request sponsorship info",
+  ctaHref: "#sponsor-inquiry",
+  partners: [
+    {
+      name: "The Wrestling Guild",
+      href: "https://www.wrestlingguild.com/",
+      logoUrl: "/images/toc/sponsors/the-guild.png",
+      logoTheme: "dark" as const,
+      ecosystemNote: "Part of the NC United ecosystem.",
+      tagline:
+        "Youth wrestling coaching marketplace connecting NCAA athletes with North Carolina families for private and small-group training.",
+    },
+    {
+      name: "Cama Meal",
+      href: "https://www.camameal.com/",
+      logoUrl: "/images/toc/sponsors/cama-meal.png",
+      logoTheme: "light" as const,
+      tagline:
+        "The world's best protein powder, built for wrestlers and combat athletes. Grass-fed whey, real flavors, recovery you can feel.",
+    },
+  ],
+} as const
+
 export const TOC_VENUE = {
   name: "Hope Community Church",
   campus: "Apex Campus",
@@ -25,8 +90,7 @@ export const TOC_VENUE = {
 export const TOC_VENUE_FEATURES = [
   {
     title: "Two competition mats",
-    description:
-      "Dual mats for opening rounds and placement bouts — then one mat dedicated for championship finals under the lights.",
+    description: TOC_MATS_LINE,
   },
   {
     title: "Dedicated college coaches section",
@@ -38,7 +102,7 @@ export const TOC_VENUE_FEATURES = [
   },
   {
     title: "Pro lighting & production",
-    description: "State-of-the-art lighting, video boards, and show production — built for entertainment, not just brackets.",
+    description: "State-of-the-art lighting, video boards, and arena production — built for the moment, not just brackets.",
   },
   {
     title: "Finals presentation",
@@ -69,17 +133,36 @@ export const TOC_NOMINATION_RELATIONSHIPS = [
 ] as const
 
 export const TOC_SPONSOR_TIERS = [
-  { value: "title", label: "Title", description: "Premier naming and top billing across the event" },
-  { value: "champion", label: "Champion", description: "High-visibility placement tied to championship moments" },
-  { value: "partner", label: "Partner", description: "Strong brand presence on-site and in event materials" },
-  { value: "community", label: "Community", description: "Support NC wrestling and reach families in the building" },
+  {
+    value: "title",
+    label: "Title",
+    startingAt: "$20,000",
+    description: "Naming rights, top billing, mat-side branding, video board prime, sponsor announcement Saturday night, hospitality",
+  },
+  {
+    value: "champion",
+    label: "Champion",
+    startingAt: "$7,500",
+    description: "Co-branding event materials, video board placement, mat branding, social inclusion, hospitality",
+  },
+  {
+    value: "partner",
+    label: "Partner",
+    startingAt: "$2,500",
+    description: "Logo on event materials, on-site signage, social media",
+  },
+  {
+    value: "community",
+    label: "Community",
+    startingAt: "$500",
+    description: "Website logo, program recognition",
+  },
 ] as const
 
 export const TOC_SPONSORSHIP = {
   eyebrow: "Sponsorship",
   headline: "North Carolina's #1 wrestling stage",
-  lead:
-    "The Tournament of Champions is invite-only, college-weight, and built like a show — not another bracket grind. When the best 88 wrestlers in the state converge in Apex, your brand sits on the biggest all-NC tournament of the year by far.",
+  lead: `The Tournament of Champions is invite-only, college-weight, and built for the big stage — not another bracket grind. ${TOC_MATS_LINE} When the best 88 wrestlers in the state converge in Apex, your brand sits on the biggest all-NC tournament of the year by far.`,
   bullets: [
     "Up to 1,000 fans in the building — families, clubs, and programs from every corner of the state",
     "Live stream and video boards — exposure beyond the arena all weekend long",
@@ -88,13 +171,16 @@ export const TOC_SPONSORSHIP = {
     "Patriotic NC United brand — red, white, and navy athletics with statewide reach through RecruitNC",
   ],
   formHeadline: "Request sponsorship info",
-  formLead: "Tell us about your company and we'll send tier options and follow up directly.",
+  formLead: "Tell us about your company and we'll send the full tier deck with benefits and customization options.",
 } as const
+
+/** @deprecated use TOC_FOUNDING_PARTNERS */
+export const TOC_ACTIVE_SPONSORS = TOC_FOUNDING_PARTNERS.partners
 
 export const TOC_ATHLETE_QUOTES = {
   eyebrow: "In their words",
-  headline: "Committed wrestlers on the field",
-  lead: "The best in the state — already committed to college programs — on why this weekend matters.",
+  headline: "What the state's best are saying",
+  lead: "Four of NC's top wrestlers — on the bracket, the atmosphere, and the jacket.",
   quotes: [
     {
       name: "Carson Worrick",
@@ -106,7 +192,7 @@ export const TOC_ATHLETE_QUOTES = {
       name: "Tobin McNair",
       credentials: "Wakefield HS • 2× All-American • #2 Ranked on RecruitNC • Binghamton Commit",
       quote:
-        "What excites me most is the bracket. There aren't any easy rounds when you're wrestling seven other elite guys. Every match matters, and that's what makes winning something like this mean so much.",
+        "What excites me most is the chance to wrestle the actual best NC has at my weight — and finally get clarity on who the best in the state really is. New Jersey and California have that. North Carolina deserves it too. When you're going against seven other elite guys with everything on the line, every match matters.",
     },
     {
       name: "Mac Johnson",
@@ -122,25 +208,6 @@ export const TOC_ATHLETE_QUOTES = {
     },
   ],
 } as const
-
-export const TOC_ACTIVE_SPONSORS = [
-  {
-    name: "The Wrestling Guild",
-    href: "https://www.wrestlingguild.com/",
-    logoUrl: "/images/toc/sponsors/the-guild.png",
-    logoTheme: "dark",
-    tagline:
-      "Youth wrestling coaching for all levels — book elite coaches for private training or join open partner and small-group sessions across North Carolina.",
-  },
-  {
-    name: "Cama Meal",
-    href: "https://www.camameal.com/",
-    logoUrl: "/images/toc/sponsors/cama-meal.png",
-    logoTheme: "light",
-    tagline:
-      "The world's best protein powder — built for wrestlers and MMA athletes. Grass-fed whey, real flavors, and recovery you can feel.",
-  },
-] as const
 
 export const TOC_BRAND = {
   navy: "#0B1D3A",

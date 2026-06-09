@@ -1,13 +1,14 @@
 /** Shared manifesto copy — landing page, invites, social. Fan marketing only. */
 
+import { TOC_MATS_LINE } from "@/lib/toc/constants"
+
 export const TOC_HERO = {
   eventName: "Tournament of Champions",
   /** Locked hero stack — tagline = stakes + single-mat finals; buckleUp = emotional punch; lead = format detail. */
   tagline: "The Best in the State. One Mat. One Question.",
   buckleUp: "North Carolina, buckle up. The brackets are stacked.",
-  lead:
-    "Eleven weight classes. Eight wrestlers each. The best North Carolina has — and nobody else. College weights. Stacked brackets. Two mats all weekend — then single-mat finals under the lights. This isn't another bracket to grind through.",
-  showLine: "This is the show.",
+  lead: `Eleven weight classes. Eight wrestlers each. The best North Carolina has — and nobody else. College weights. Stacked brackets. ${TOC_MATS_LINE} This isn't another bracket to grind through.`,
+  showLine: "Under the lights. Eleven champions.",
 } as const
 
 export const TOC_TAGLINE_BANK = [
@@ -18,7 +19,7 @@ export const TOC_TAGLINE_BANK = [
   "The best in the state. In one building.",
   "You don't enter. You get the call.",
   "College weights. Stacked draws. Single-mat finals.",
-  "This is the show.",
+  "Under the lights. Eleven champions.",
 ] as const
 
 /** Phase 2 athlete invitation — Resend templates can import these. */

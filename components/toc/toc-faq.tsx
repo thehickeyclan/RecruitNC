@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { ChevronDown } from "lucide-react"
 import { TocVarsityHeading } from "@/components/toc/toc-theme"
-import { TOC_CONTACT_EMAIL } from "@/lib/toc/constants"
+import { TOC_CONTACT_EMAIL, TOC_MATS_LINE, TOC_TICKET_SALE_MONTH } from "@/lib/toc/constants"
 
 const FAQ_ITEMS = [
   {
@@ -12,15 +12,19 @@ const FAQ_ITEMS = [
   },
   {
     q: "What makes the Tournament of Champions different?",
-    a: "Invite-only field. College weight classes. Stacked eight-person brackets with true double-elimination and top-four placement. Two mats from opening rounds through placement bouts — then championship finals on one mat under the lights. An elite Apex venue built for great wrestling and a crowd — this is a show, not another grind-through tournament.",
+    a: `Invite-only — eight wrestlers per weight. College weight classes. Stacked eight-person brackets with true double-elimination and top-four placement. ${TOC_MATS_LINE} An elite Apex venue built for great wrestling and a crowd — championship-level production, not another grind-through tournament.`,
   },
   {
     q: "What weight classes are used?",
-    a: "Eleven brackets: the ten standard NCAA collegiate weights (125 through 285) plus 117 lbs — so the state's lightest elite wrestlers have a bracket of their own. That's the full card: 117, 125, 133, 141, 149, 157, 165, 174, 184, 197, and 285. Single weigh-in Friday afternoon.",
+    a: "Eleven brackets: the ten standard NCAA collegiate weights (125 through 285) plus 117 lbs — so the state's lightest elite wrestlers have a bracket of their own. That's the full card: 117, 125, 133, 141, 149, 157, 165, 174, 184, 197, and 285.",
+  },
+  {
+    q: "How does weigh-in work?",
+    a: "Single weigh-in Friday, 3:00–5:00 PM, covering both competition days. No Saturday weight allowance. Skin checks at the scale. USA Wrestling card required.",
   },
   {
     q: "Will college coaches be there?",
-    a: "Yes. The weekend includes a college recruiting fair, coach panel, and RecruitNC on site — so athletes compete in front of programs while the brackets are live.",
+    a: "Yes. A dedicated section for college coaches gives programs clear sightlines to watch the brackets live all weekend.",
   },
   {
     q: "What is the Champion jacket?",
@@ -32,7 +36,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "When and where is the event?",
-    a: "September 4–5, 2026 at Hope Community Church (Apex Campus), 2080 East Williams Street, Apex, NC. Two mats for opening rounds and placement bouts; one mat dedicated for championship finals under full lighting and production. Seating for up to 1,000, plus a dedicated section for college coaches.",
+    a: `September 4–5, 2026 at Hope Community Church (Apex Campus), 2080 East Williams Street, Apex, NC. ${TOC_MATS_LINE} Seating for up to 1,000, plus a dedicated section for college coaches.`,
   },
   {
     q: "Will the event be streamed?",
@@ -40,11 +44,11 @@ const FAQ_ITEMS = [
   },
   {
     q: "Can I buy tickets now?",
-    a: "Ticket sales open later in 2026. Sign up for email updates and we'll notify you when tickets go on sale.",
+    a: `Not yet. Tickets go on sale ${TOC_TICKET_SALE_MONTH}. Sign up for the email list to be notified the moment they're live. Single-day and weekend passes will be available. Pricing to be announced.`,
   },
   {
     q: "How do I sponsor the event?",
-    a: `Use the sponsor inquiry form on this page or email ${TOC_CONTACT_EMAIL}. Our team will send partnership options and follow up directly.`,
+    a: `Use the sponsor inquiry form on this page or email ${TOC_CONTACT_EMAIL}. Our team will send the full tier deck and follow up directly.`,
   },
 ]
 
