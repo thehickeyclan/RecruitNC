@@ -42,17 +42,15 @@ export function TocSponsorSection() {
                 Sponsorship tiers
               </p>
               <div className="grid gap-3 sm:grid-cols-2">
-                {TOC_SPONSOR_TIERS.map(({ label, startingAt, description }) => (
+                {TOC_SPONSOR_TIERS.map(({ label, description }) => (
                   <div key={label} className="rounded-sm bg-[#0B1D3A]/[0.04] px-3 py-2.5">
-                    <p className="font-bold text-[#0B1D3A] text-sm">
-                      {label} — starting at {startingAt}
-                    </p>
+                    <p className="font-bold text-[#0B1D3A] text-sm">{label}</p>
                     <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{description}</p>
                   </div>
                 ))}
               </div>
               <p className="text-xs text-muted-foreground mt-3">
-                Request the full deck for tier benefits and customization.
+                Submit the inquiry form for pricing and the full sponsorship deck.
               </p>
               <p className="text-sm text-muted-foreground mt-4">
                 Questions before you submit?{" "}

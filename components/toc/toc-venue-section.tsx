@@ -1,11 +1,11 @@
 import Image from "next/image"
-import { ExternalLink, GraduationCap, Layers, Lightbulb, MapPin, Trophy, Users } from "lucide-react"
+import { ExternalLink, GraduationCap, Layers, Lightbulb, MapPin, Shield, Trophy, Users } from "lucide-react"
 import { TocAiRenderingCaption } from "@/components/toc/toc-ai-rendering-caption"
-import { TocPatrioticBar, TocVarsityHeading, tocSectionClass } from "@/components/toc/toc-theme"
-import { TOC_VENUE, TOC_VENUE_FEATURES, TOC_MATS_LINE } from "@/lib/toc/constants"
+import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass, tocSectionClass } from "@/components/toc/toc-theme"
+import { TOC_VENUE, TOC_VENUE_FEATURES, TOC_VENUE_LOUNGES, TOC_MATS_LINE } from "@/lib/toc/constants"
 import type { TocEventConfig } from "@/lib/toc/event-config"
 
-const FEATURE_ICONS = [Layers, GraduationCap, Users, Lightbulb, Trophy] as const
+const FEATURE_ICONS = [Layers, Users, Lightbulb, Trophy] as const
 
 type Props = {
   config: TocEventConfig
@@ -41,7 +41,7 @@ export function TocVenueSection({ config }: Props) {
             </TocVarsityHeading>
             <p className="text-[#0B1D3A]/90 text-base sm:text-lg leading-relaxed mb-6">
               {venueName} · {TOC_VENUE.campus} — {TOC_VENUE.seatingLabel}. {TOC_MATS_LINE} Full lighting, video boards,
-              and a dedicated section for college coaches.
+              and two dedicated atrium lounges — a College Coaches Lounge and a separate Officials Lounge.
             </p>
 
             <ul className="space-y-4 mb-8">
@@ -60,6 +60,38 @@ export function TocVenueSection({ config }: Props) {
                 )
               })}
             </ul>
+
+            <div className="rounded-sm border-2 border-[#0B1D3A]/10 bg-white p-5 sm:p-6 mb-8">
+              <p className="text-[#CC0000] text-xs font-semibold uppercase tracking-[0.22em] mb-2">
+                {TOC_VENUE_LOUNGES.eyebrow}
+              </p>
+              <h3 className={`text-[#0B1D3A] text-lg mb-2 ${tocDisplayClass()}`}>{TOC_VENUE_LOUNGES.headline}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-5">{TOC_VENUE_LOUNGES.lead}</p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="rounded-sm border border-[#0B1D3A]/10 bg-[#f8f9fb] p-4 border-l-4 border-l-[#CC0000]">
+                  <div className="flex items-start gap-2 mb-2">
+                    <GraduationCap className="h-5 w-5 text-[#CC0000] shrink-0 mt-0.5" aria-hidden />
+                    <p className="font-bold text-[#0B1D3A] text-sm uppercase tracking-wide">
+                      {TOC_VENUE_LOUNGES.coaches.title}
+                    </p>
+                  </div>
+                  <p className="text-sm text-[#0B1D3A]/85 leading-relaxed pl-7">
+                    {TOC_VENUE_LOUNGES.coaches.description}
+                  </p>
+                </div>
+                <div className="rounded-sm border border-[#0B1D3A]/10 bg-[#f8f9fb] p-4 border-l-4 border-l-[#0B1D3A]">
+                  <div className="flex items-start gap-2 mb-2">
+                    <Shield className="h-5 w-5 text-[#0B1D3A] shrink-0 mt-0.5" aria-hidden />
+                    <p className="font-bold text-[#0B1D3A] text-sm uppercase tracking-wide">
+                      {TOC_VENUE_LOUNGES.officials.title}
+                    </p>
+                  </div>
+                  <p className="text-sm text-[#0B1D3A]/85 leading-relaxed pl-7">
+                    {TOC_VENUE_LOUNGES.officials.description}
+                  </p>
+                </div>
+              </div>
+            </div>
 
             <div className="rounded-sm border-2 border-[#0B1D3A]/10 bg-white p-5">
               <div className="flex items-start gap-3">

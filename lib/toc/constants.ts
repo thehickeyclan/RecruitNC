@@ -8,6 +8,8 @@ export const TOC_WEIGHT_CLASSES = [
   117, 125, 133, 141, 149, 157, 165, 174, 184, 197, 285,
 ] as const
 
+export const TOC_WEIGH_IN_LINE = "Single weigh-in · No weight allowances" as const
+
 export const TOC_AI_RENDERING_CAPTION =
   "AI rendering of the existing facility for illustration; actual setup and presentation may vary." as const
 
@@ -33,12 +35,23 @@ export const TOC_SPECTATORS = {
     "The Tournament of Champions is built for the big stage — and it's also a family-friendly weekend in a comfortable, modern venue. Everything you'd want for a wrestling weekend, in one building.",
   expectations: [
     "Free on-site parking",
-    "Concessions open both days",
-    "Family-friendly atmosphere — no alcohol, kid-appropriate",
+    "Comfortable stadium seating with back rests — plus bleacher and floor options",
     "Air-conditioned facility, easy accessibility",
-    "Bleacher and floor seating available",
-    "College coaches recruiting in the building (D1 / D2 / D3 / NAIA programs)",
+    "Family-friendly atmosphere — no alcohol, kid-appropriate",
+    "College coaches recruiting in the building — credentialed lounge with live mat feeds (D1 / D2 / D3 / NAIA programs)",
   ],
+  concessions: {
+    headline: "Health-first concessions",
+    lead:
+      "We put health first for wrestlers and fans. Concessions are built around good nutrition, real food, and choices that accelerate recovery — while giving families the energy to support our athletes all weekend.",
+    highlights: [
+      "Real food — not typical tournament fare",
+      "Recovery-focused options for elite athletes between matches",
+      "Fan-friendly nutrition that keeps the crowd going for every bout",
+    ],
+    venuePolicy:
+      "Venue-wide policy: no soda, chips, candy, or junk food sold or available anywhere in the building.",
+  },
   ticketOptions: [
     {
       title: "Single-day ticket",
@@ -93,12 +106,9 @@ export const TOC_VENUE_FEATURES = [
     description: TOC_MATS_LINE,
   },
   {
-    title: "Dedicated college coaches section",
-    description: "Reserved seating and sightlines for college staffs watching the brackets live.",
-  },
-  {
     title: "Up to 1,000 fans",
-    description: "Bleacher seating wraps the floor so families and fans are on top of every match.",
+    description:
+      "Comfortable stadium seating with back rests, bleachers, and floor sightlines — families on top of every match.",
   },
   {
     title: "Pro lighting & production",
@@ -110,6 +120,24 @@ export const TOC_VENUE_FEATURES = [
       "Championship finals get full production — intros, awards, and the jacket moment under the lights.",
   },
 ] as const
+
+/** Public marketing copy — two separate Hope atrium rooms; ops detail in docs/toc-venue-ops.md */
+export const TOC_VENUE_LOUNGES = {
+  eyebrow: "Dedicated lounges",
+  headline: "College coaches and officials — separate rooms",
+  lead:
+    "Two of Hope Apex's atrium rooms are reserved for credentialed college coaches and tournament officials — never combined. Coaches recruit; officials adjudicate. Keeping them apart is intentional.",
+  coaches: {
+    title: "College Coaches Lounge",
+    description:
+      "Credentialed college staffs only (lanyard at check-in). Comfortable seating, work tables, charging and Wi-Fi, live feeds from both mats plus bracket updates, hospitality all weekend, print station for brackets and athlete profiles, and a quiet phone-booth area for calls.",
+  },
+  officials: {
+    title: "Officials Lounge",
+    description:
+      "Separate room away from coaches and athletes — locking gear storage, casual seating, and a table for meals. Water, snacks, and light meals for officials and clinic staff to rest and regroup between sessions.",
+  },
+} as const
 
 export const TOC_FINALS_MAT = {
   eyebrow: "Championship finals",
@@ -136,25 +164,21 @@ export const TOC_SPONSOR_TIERS = [
   {
     value: "title",
     label: "Title",
-    startingAt: "$20,000",
     description: "Naming rights, top billing, mat-side branding, video board prime, sponsor announcement Saturday night, hospitality",
   },
   {
     value: "champion",
     label: "Champion",
-    startingAt: "$7,500",
-    description: "Co-branding event materials, video board placement, mat branding, social inclusion, hospitality",
+    description: "Co-branding event materials, video board placement, mat branding, College Coaches Lounge naming rights, social inclusion, hospitality",
   },
   {
     value: "partner",
     label: "Partner",
-    startingAt: "$2,500",
     description: "Logo on event materials, on-site signage, social media",
   },
   {
     value: "community",
     label: "Community",
-    startingAt: "$500",
     description: "Website logo, program recognition",
   },
 ] as const
@@ -166,12 +190,12 @@ export const TOC_SPONSORSHIP = {
   bullets: [
     "Up to 1,000 fans in the building — families, clubs, and programs from every corner of the state",
     "Live stream and video boards — exposure beyond the arena all weekend long",
-    "Dedicated college coaches section — your logo in front of programs watching the brackets",
+    "College Coaches Lounge — Champion-tier naming rights and face time with programs recruiting all weekend",
     "Single-mat finals under the lights — championship presentation, jacket moments, and peak attention",
     "Patriotic NC United brand — red, white, and navy athletics with statewide reach through RecruitNC",
   ],
   formHeadline: "Request sponsorship info",
-  formLead: "Tell us about your company and we'll send the full tier deck with benefits and customization options.",
+  formLead: "Tell us about your company and we'll follow up with tier benefits and customization options.",
 } as const
 
 /** @deprecated use TOC_FOUNDING_PARTNERS */
