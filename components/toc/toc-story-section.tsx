@@ -9,12 +9,12 @@ const TAGLINES = [
 
 export function TocStorySection() {
   return (
-    <section className="py-16 md:py-20 bg-white">
-      <div className="container mx-auto px-4 max-w-3xl">
-        <TocVarsityHeading as="h2" className="text-4xl md:text-5xl mb-6">
+    <section className="py-12 sm:py-16 md:py-20 bg-white">
+      <div className="container mx-auto w-full px-4 sm:px-6 max-w-3xl">
+        <TocVarsityHeading as="h2" className="mb-4 sm:mb-6">
           Who&apos;s actually the best at each weight?
         </TocVarsityHeading>
-        <div className="space-y-4 text-[#0B1D3A]/90 text-lg leading-relaxed">
+        <div className="space-y-4 text-[#0B1D3A]/90 text-base sm:text-lg leading-relaxed">
           <p>
             The NC United Tournament of Champions is the answer — <strong>by invitation only</strong>, not open
             registration. Eighty-eight wrestlers, hand-picked at each weight.
@@ -47,7 +47,7 @@ export function TocStorySection() {
           ))}
         </ul>
 
-        <div className="mt-10 grid sm:grid-cols-3 gap-4">
+        <div className="mt-8 sm:mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
             {
               title: "By invitation only",

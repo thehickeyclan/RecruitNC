@@ -155,7 +155,7 @@ export function TocNominationForm() {
         </div>
       </div>
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
-      <Button type="submit" disabled={status === "loading"} className="bg-[#0B1D3A] hover:bg-[#060f1f] uppercase tracking-wide">
+      <Button type="submit" disabled={status === "loading"} className="w-full min-h-11 bg-[#0B1D3A] hover:bg-[#060f1f] uppercase tracking-wide">
         {status === "loading" ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
         Submit my info
       </Button>

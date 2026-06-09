@@ -111,7 +111,7 @@ export function TocSponsorForm() {
         </div>
       </div>
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
-      <Button type="submit" disabled={status === "loading"} className="bg-[#CC0000] hover:bg-[#a80000] uppercase tracking-wide">
+      <Button type="submit" disabled={status === "loading"} className="w-full sm:w-auto min-h-11 bg-[#CC0000] hover:bg-[#a80000] uppercase tracking-wide">
         {status === "loading" ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
         Send inquiry
       </Button>
