@@ -6,8 +6,8 @@ import { Trophy, Users, Mail, Handshake } from "lucide-react"
 const LINKS = [
   {
     href: "/admin/toc/nominations",
-    title: "Nominations",
-    description: "Review public athlete nominations",
+    title: "Prospect interest",
+    description: "Athlete interest forms — name, weight, school, club",
     icon: Users,
   },
   {
@@ -36,7 +36,7 @@ export default function TocAdminHubPage() {
     <div className="mx-auto max-w-4xl space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Tournament of Champions</h1>
-        <p className="text-muted-foreground mt-1">Phase 1 admin — nominations, sponsors, email list</p>
+        <p className="text-muted-foreground mt-1">Phase 1 admin — prospect interest, sponsors, email list</p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         {LINKS.map(({ href, title, description, icon: Icon, external }) => (
