@@ -36,10 +36,23 @@ export const TOC_VENUE_FEATURES = [
     description: "State-of-the-art lighting, video boards, and show production — built for entertainment, not just brackets.",
   },
   {
-    title: "Stage & presentation",
-    description: "Championship finals hit a raised stage with full presentation — awards, intros, and the jacket moment.",
+    title: "Finals presentation",
+    description:
+      "Championship finals get full production — intros, awards, and the jacket moment under the lights.",
   },
 ] as const
+
+export const TOC_FINALS_MAT = {
+  eyebrow: "Championship finals",
+  headline: "One mat under the lights",
+  lead:
+    "Saturday evening the arena narrows to a single mat — finalist introductions, live announcements, and all eleven championship bouts with spotlight production and video boards.",
+  bullets: [
+    "Parade of finalists before each weight",
+    "Live PA announcements and title-bout presentation",
+    "One mat — every eye in the building on the championship match",
+  ],
+} as const
 
 export const TOC_GRADUATION_YEARS = ["2026", "2027", "2028", "2029", "2030"] as const
 
