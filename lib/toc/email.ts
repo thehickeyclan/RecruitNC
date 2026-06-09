@@ -1,4 +1,6 @@
-const FROM = "NC Wrestling United <info@ncwrestlingunited.com>"
+import { TOC_CONTACT_EMAIL } from "@/lib/toc/constants"
+
+const FROM = `NC Wrestling United <${TOC_CONTACT_EMAIL}>`
 
 async function sendHtml(to: string, subject: string, html: string): Promise<void> {
   if (!process.env.RESEND_API_KEY?.trim()) {
@@ -19,7 +21,7 @@ function wrap(body: string): string {
   return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.6;color:#333;max-width:600px;margin:0 auto;padding:20px;">
 <div style="background:#0B1D3A;padding:20px;text-align:center;border-radius:8px 8px 0 0;"><h1 style="color:white;margin:0;font-size:22px;letter-spacing:0.05em;text-transform:uppercase;">Tournament of Champions</h1></div>
 <div style="background:#fff;padding:24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 8px 8px;">${body}
-<hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;"><p style="color:#6b7280;font-size:14px;">NC United Wrestling · <a href="mailto:info@ncwrestlingunited.com">info@ncwrestlingunited.com</a></p></div></body></html>`
+<hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;"><p style="color:#6b7280;font-size:14px;">NC United Wrestling · <a href="mailto:${TOC_CONTACT_EMAIL}">${TOC_CONTACT_EMAIL}</a></p></div></body></html>`
 }
 
 export async function sendTocWelcomeEmail(to: string): Promise<void> {

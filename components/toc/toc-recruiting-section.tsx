@@ -1,5 +1,6 @@
 import { TocCollegeAttendees } from "@/components/toc/toc-college-attendees"
 import { TocPatrioticBar, TocVarsityHeading } from "@/components/toc/toc-theme"
+import { TOC_CONTACT_EMAIL } from "@/lib/toc/constants"
 import type { TocConfirmedCollege } from "@/lib/toc/confirmed-colleges"
 
 type Props = {
@@ -34,8 +35,8 @@ export function TocRecruitingSection({ confirmedColleges = [] }: Props) {
 
         <p className="mt-8 text-sm text-white/55">
           College programs: email{" "}
-          <a href="mailto:recruiting@ncwrestlingunited.com" className="text-white underline hover:text-[#CC0000]">
-            recruiting@ncwrestlingunited.com
+          <a href={`mailto:${TOC_CONTACT_EMAIL}`} className="text-white underline hover:text-[#CC0000]">
+            {TOC_CONTACT_EMAIL}
           </a>{" "}
           to reserve a fair table.
         </p>
