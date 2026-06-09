@@ -5,7 +5,7 @@ const FACTS = [
   { icon: Lock, label: "By invitation only", sub: "You don't enter. You get the call." },
   { icon: Trophy, label: "The brackets are stacked", sub: "Eight elite wrestlers · eleven weights" },
   { icon: Sparkles, label: "Two mats until finals", sub: "One mat under the lights for the titles" },
-  { icon: MapPin, label: "Premier venue", sub: "Hope Community Church · Apex, NC" },
+  { icon: MapPin, label: "Premier venue", sub: "Hope Community Church · up to 1,000 seats" },
   { icon: Medal, label: "Earn the jacket", sub: "One champion per weight · NC pride forever" },
 ]
 

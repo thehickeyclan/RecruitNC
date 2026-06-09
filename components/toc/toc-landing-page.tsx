@@ -4,8 +4,10 @@ import { TocHero } from "@/components/toc/toc-hero"
 import { TocQuickFacts } from "@/components/toc/toc-quick-facts"
 import { TocChampionJacketSection } from "@/components/toc/toc-champion-jacket-section"
 import { TocStorySection } from "@/components/toc/toc-story-section"
+import { TocVenueSection } from "@/components/toc/toc-venue-section"
 import { TocWeightClassesList } from "@/components/toc/toc-weight-classes"
 import { TocScheduleTable } from "@/components/toc/toc-schedule-table"
+import { TocStreamingSection } from "@/components/toc/toc-streaming-section"
 import { TocRecruitingSection } from "@/components/toc/toc-recruiting-section"
 import { TocNominationForm } from "@/components/toc/toc-nomination-form"
 import { TocSponsorForm } from "@/components/toc/toc-sponsor-form"
@@ -27,8 +29,10 @@ export function TocLandingPage({ config, confirmedColleges = [] }: Props) {
       <TocQuickFacts />
       <TocChampionJacketSection />
       <TocStorySection />
+      <TocVenueSection config={config} />
       <TocWeightClassesList />
       <TocScheduleTable />
+      <TocStreamingSection config={config} />
 
       <section id="email-signup" className="py-16 bg-[#0B1D3A] relative">
         <TocPatrioticBar className="absolute top-0 left-0 right-0" />
@@ -37,7 +41,7 @@ export function TocLandingPage({ config, confirmedColleges = [] }: Props) {
             Stay in the loop
           </TocVarsityHeading>
           <p className="text-white/70 mb-8">
-            Field announcements, tickets, and everything leading up to championship weekend.
+            Field announcements, streaming link, tickets, and everything leading up to championship weekend.
           </p>
           <div className="flex justify-center">
             <TocEmailSignup source="landing_section" />
@@ -78,7 +82,8 @@ export function TocLandingPage({ config, confirmedColleges = [] }: Props) {
         <TocPatrioticBar className="absolute top-0 left-0 right-0" />
         <p className={`text-white text-lg mt-4 ${tocDisplayClass()}`}>NC United Tournament of Champions</p>
         <p className="mt-2">{config.event_dates}</p>
-        <p className="mt-1">{config.venue_name} · Apex, NC</p>
+        <p className="mt-1">{config.venue_name}</p>
+        <p className="mt-1 text-white/55">{config.venue_address ?? "Apex, NC"}</p>
       </footer>
     </div>
   )

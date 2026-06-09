@@ -10,9 +10,36 @@ export const TOC_WEIGHT_CLASSES = [
 
 export const TOC_VENUE = {
   name: "Hope Community Church",
+  campus: "Apex Campus",
   city: "Apex, NC",
-  address: "Hope Community Church, Apex, NC",
+  address: "2080 East Williams Street, Apex, NC 27539",
+  mapsUrl: "https://maps.google.com/?q=2080+East+Williams+Street+Apex+NC+27539",
+  seatingLabel: "Seating for up to 1,000",
 } as const
+
+export const TOC_VENUE_FEATURES = [
+  {
+    title: "Two competition mats",
+    description:
+      "Dual mats for opening rounds and placement bouts — then one mat dedicated for championship finals under the lights.",
+  },
+  {
+    title: "Dedicated college coaches section",
+    description: "Reserved seating and sightlines for college staffs watching the brackets live.",
+  },
+  {
+    title: "Up to 1,000 fans",
+    description: "Bleacher seating wraps the floor so families and fans are on top of every match.",
+  },
+  {
+    title: "Pro lighting & production",
+    description: "State-of-the-art lighting, video boards, and show production — built for entertainment, not just brackets.",
+  },
+  {
+    title: "Stage & presentation",
+    description: "Championship finals hit a raised stage with full presentation — awards, intros, and the jacket moment.",
+  },
+] as const
 
 export const TOC_GRADUATION_YEARS = ["2026", "2027", "2028", "2029", "2030"] as const
 
@@ -72,4 +99,10 @@ export const TOC_DEFAULT_CONFIG = {
   venue_address: TOC_VENUE.address,
   hero_primary_cta_label: "Get Notified",
   hero_primary_cta_href: "#email-signup",
+} as const
+
+export const TOC_STREAMING = {
+  headline: "Live streaming",
+  teaser: "The event will be live streamed. Details coming soon.",
+  notifyHint: "Sign up below and we'll send the watch link when broadcast details are announced.",
 } as const
