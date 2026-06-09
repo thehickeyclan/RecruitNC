@@ -20,15 +20,15 @@ export function TocChampionJacketSection() {
         aria-hidden
       />
 
-      <div className="container relative mx-auto px-4 py-16 md:py-24 max-w-6xl">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+      <div className="container relative mx-auto w-full px-4 sm:px-6 py-12 sm:py-16 md:py-24 max-w-6xl">
+        <div className="grid lg:grid-cols-2 gap-10 sm:gap-12 lg:gap-16 items-center">
           <div className="order-2 lg:order-1">
-            <p className={`text-[#CC0000] text-lg mb-2 ${tocDisplayClass()}`}>Earned, not bought</p>
-            <TocVarsityHeading as="h2" className="text-4xl md:text-5xl lg:text-6xl text-white leading-none mb-6">
+            <p className={`text-[#CC0000] text-base sm:text-lg mb-2 ${tocDisplayClass()}`}>Earned, not bought</p>
+            <TocVarsityHeading as="h2" className="text-white leading-none mb-4 sm:mb-6 lg:text-6xl">
               The Champion Jacket
             </TocVarsityHeading>
 
-            <div className="space-y-4 text-white/90 text-lg leading-relaxed">
+            <div className="space-y-4 text-white/90 text-base sm:text-lg leading-relaxed">
               <p>
                 At each of eleven weight classes, <strong className="text-white">one wrestler</strong> earns the{" "}
                 <strong className="text-white">NC United Tournament of Champions jacket</strong> — the bracket

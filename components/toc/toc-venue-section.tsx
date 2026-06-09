@@ -1,7 +1,7 @@
 import Image from "next/image"
 import { ExternalLink, GraduationCap, Layers, Lightbulb, MapPin, Trophy, Users } from "lucide-react"
 import { TocAiRenderingCaption } from "@/components/toc/toc-ai-rendering-caption"
-import { TocPatrioticBar, TocVarsityHeading } from "@/components/toc/toc-theme"
+import { TocPatrioticBar, TocVarsityHeading, tocSectionClass } from "@/components/toc/toc-theme"
 import { TOC_VENUE, TOC_VENUE_FEATURES, TOC_MATS_LINE } from "@/lib/toc/constants"
 import type { TocEventConfig } from "@/lib/toc/event-config"
 
@@ -16,10 +16,10 @@ export function TocVenueSection({ config }: Props) {
   const venueAddress = config.venue_address ?? TOC_VENUE.address
 
   return (
-    <section id="venue" className="relative py-16 md:py-20 bg-[#f4f5f7] border-y border-[#0B1D3A]/10">
+    <section id="venue" className={`relative bg-[#f4f5f7] border-y border-[#0B1D3A]/10 scroll-mt-20 ${tocSectionClass()}`}>
       <TocPatrioticBar className="absolute top-0 left-0 right-0" />
-      <div className="container mx-auto px-4 max-w-6xl pt-4">
-        <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
+      <div className="container mx-auto w-full px-4 sm:px-6 max-w-6xl pt-4">
+        <div className="grid grid-cols-1 gap-8 sm:gap-10 lg:grid-cols-2 lg:items-center">
           <div>
             <div className="relative overflow-hidden rounded-sm border-2 border-[#0B1D3A]/10 shadow-xl">
               <Image
@@ -36,10 +36,10 @@ export function TocVenueSection({ config }: Props) {
 
           <div>
             <p className="text-[#CC0000] text-xs font-semibold uppercase tracking-[0.22em] mb-2">The venue</p>
-            <TocVarsityHeading as="h2" className="text-4xl md:text-5xl mb-4">
+            <TocVarsityHeading as="h2" className="mb-3 sm:mb-4">
               Built for the big stage
             </TocVarsityHeading>
-            <p className="text-[#0B1D3A]/90 text-lg leading-relaxed mb-6">
+            <p className="text-[#0B1D3A]/90 text-base sm:text-lg leading-relaxed mb-6">
               {venueName} · {TOC_VENUE.campus} — {TOC_VENUE.seatingLabel}. {TOC_MATS_LINE} Full lighting, video boards,
               and a dedicated section for college coaches.
             </p>

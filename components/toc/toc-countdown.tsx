@@ -41,14 +41,16 @@ export function TocCountdown({ targetDate, className = "" }: Props) {
   ]
 
   return (
-    <div className={`flex gap-3 sm:gap-4 ${className}`}>
+    <div className={`flex gap-2 sm:gap-4 w-full sm:w-auto ${className}`}>
       {items.map((item) => (
         <div
           key={item.label}
-          className="min-w-[4.5rem] rounded-sm border-2 border-white/30 bg-[#060f1f]/80 px-3 py-2 text-center relative overflow-hidden"
+          className="flex-1 sm:flex-none min-w-0 sm:min-w-[4.5rem] rounded-sm border-2 border-white/30 bg-[#060f1f]/80 px-2 sm:px-3 py-2 text-center relative overflow-hidden"
         >
           <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#CC0000]" aria-hidden />
-          <div className={`text-3xl sm:text-4xl tabular-nums text-white ${tocDisplayClass()}`}>{pad(item.value)}</div>
+          <div className={`text-2xl sm:text-3xl md:text-4xl tabular-nums text-white ${tocDisplayClass()}`}>
+            {pad(item.value)}
+          </div>
           <div className={`text-[10px] sm:text-xs text-white/70 ${tocDisplayClass()}`}>{item.label}</div>
         </div>
       ))}

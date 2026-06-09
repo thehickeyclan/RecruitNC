@@ -1,6 +1,6 @@
 import Image from "next/image"
 import { ExternalLink } from "lucide-react"
-import { tocDisplayClass } from "@/components/toc/toc-theme"
+import { tocDisplayClass, tocMobileCtaClass } from "@/components/toc/toc-theme"
 import { TOC_FOUNDING_PARTNERS } from "@/lib/toc/constants"
 
 export function TocFoundingPartners() {
@@ -58,10 +58,7 @@ export function TocFoundingPartners() {
       </ul>
 
       <p className="text-sm font-semibold text-[#0B1D3A] mb-4">{urgency}</p>
-      <a
-        href={ctaHref}
-        className={`inline-flex items-center justify-center rounded-sm bg-[#CC0000] px-6 py-3 text-sm text-white hover:bg-[#a80000] transition-colors ${tocDisplayClass()}`}
-      >
+      <a href={ctaHref} className={tocMobileCtaClass("primary")}>
         {ctaLabel}
       </a>
     </div>

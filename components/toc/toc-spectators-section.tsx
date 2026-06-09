@@ -1,20 +1,20 @@
 import { Car, Coffee, Shield, Ticket, Users } from "lucide-react"
-import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass } from "@/components/toc/toc-theme"
+import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass, tocMobileCtaClass, tocSectionClass } from "@/components/toc/toc-theme"
 import { TOC_SPECTATORS, TOC_TICKET_SALE_MONTH } from "@/lib/toc/constants"
 
 const EXPECTATION_ICONS = [Car, Coffee, Shield, Users, Users, Users] as const
 
 export function TocSpectatorsSection() {
   return (
-    <section id="families" className="relative scroll-mt-20 py-16 md:py-20 bg-white border-y border-[#0B1D3A]/10">
-      <div className="container mx-auto px-4 max-w-6xl">
+    <section id="families" className={`relative scroll-mt-20 bg-white border-y border-[#0B1D3A]/10 ${tocSectionClass()}`}>
+      <div className="container mx-auto w-full px-4 sm:px-6 max-w-6xl">
         <p className="text-[#CC0000] text-xs font-semibold uppercase tracking-[0.22em] mb-2">
           {TOC_SPECTATORS.eyebrow}
         </p>
-        <TocVarsityHeading as="h2" className="text-4xl md:text-5xl mb-4">
+        <TocVarsityHeading as="h2" className="mb-3 sm:mb-4">
           {TOC_SPECTATORS.headline}
         </TocVarsityHeading>
-        <p className="text-[#0B1D3A]/90 text-lg leading-relaxed mb-10 max-w-3xl">{TOC_SPECTATORS.lead}</p>
+        <p className="text-[#0B1D3A]/90 text-base sm:text-lg leading-relaxed mb-8 sm:mb-10 max-w-3xl">{TOC_SPECTATORS.lead}</p>
 
         <div className="grid gap-10 lg:grid-cols-2 lg:items-start">
           <div>
@@ -58,10 +58,7 @@ export function TocSpectatorsSection() {
                 Tickets on sale <strong className="text-white">{TOC_TICKET_SALE_MONTH}</strong>. Pricing to be
                 announced. Sign up below for first access.
               </p>
-              <a
-                href="#email-signup"
-                className={`inline-flex mt-4 items-center justify-center rounded-sm bg-[#CC0000] px-5 py-2.5 text-sm text-white hover:bg-[#a80000] transition-colors ${tocDisplayClass()}`}
-              >
+              <a href="#email-signup" className={`${tocMobileCtaClass("primary")} mt-4 text-sm`}>
                 Get ticket updates
               </a>
             </div>

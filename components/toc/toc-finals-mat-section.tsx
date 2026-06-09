@@ -1,25 +1,25 @@
 import Image from "next/image"
 import { Mic2, Sparkles, Trophy } from "lucide-react"
 import { TocAiRenderingCaption } from "@/components/toc/toc-ai-rendering-caption"
-import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass } from "@/components/toc/toc-theme"
+import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass, tocSectionClass } from "@/components/toc/toc-theme"
 import { TOC_FINALS_MAT } from "@/lib/toc/constants"
 
 const BULLET_ICONS = [Mic2, Sparkles, Trophy] as const
 
 export function TocFinalsMatSection() {
   return (
-    <section id="finals" className="relative py-16 md:py-20 bg-[#060f1f] text-white scroll-mt-20">
+    <section id="finals" className={`relative bg-[#060f1f] text-white scroll-mt-20 ${tocSectionClass()}`}>
       <TocPatrioticBar className="absolute top-0 left-0 right-0" />
-      <div className="container mx-auto px-4 max-w-6xl pt-4">
-        <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
+      <div className="container mx-auto w-full px-4 sm:px-6 max-w-6xl pt-4">
+        <div className="grid grid-cols-1 gap-8 sm:gap-10 lg:grid-cols-2 lg:items-center">
           <div>
             <p className="text-[#CC0000] text-xs font-semibold uppercase tracking-[0.22em] mb-2">
               {TOC_FINALS_MAT.eyebrow}
             </p>
-            <TocVarsityHeading as="h2" className="text-4xl md:text-5xl text-white mb-4">
+            <TocVarsityHeading as="h2" className="text-white mb-3 sm:mb-4">
               {TOC_FINALS_MAT.headline}
             </TocVarsityHeading>
-            <p className="text-white/80 text-lg leading-relaxed mb-8">{TOC_FINALS_MAT.lead}</p>
+            <p className="text-white/80 text-base sm:text-lg leading-relaxed mb-6 sm:mb-8">{TOC_FINALS_MAT.lead}</p>
             <ul className="space-y-4">
               {TOC_FINALS_MAT.bullets.map((line, index) => {
                 const Icon = BULLET_ICONS[index] ?? Trophy
@@ -35,7 +35,7 @@ export function TocFinalsMatSection() {
             </ul>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
             <div>
               <div className="relative overflow-hidden rounded-sm border-2 border-white/10 shadow-2xl shadow-black/40">
                 <Image

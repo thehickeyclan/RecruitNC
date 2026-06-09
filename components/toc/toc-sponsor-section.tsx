@@ -1,5 +1,5 @@
 import { Eye, GraduationCap, Radio, Sparkles, Trophy } from "lucide-react"
-import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass } from "@/components/toc/toc-theme"
+import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass, tocSectionClass } from "@/components/toc/toc-theme"
 import { TocFoundingPartners } from "@/components/toc/toc-founding-partners"
 import { TocSponsorForm } from "@/components/toc/toc-sponsor-form"
 import { TOC_CONTACT_EMAIL, TOC_SPONSORSHIP, TOC_SPONSOR_TIERS } from "@/lib/toc/constants"
@@ -8,20 +8,20 @@ const BULLET_ICONS = [Eye, Radio, GraduationCap, Sparkles, Trophy] as const
 
 export function TocSponsorSection() {
   return (
-    <section id="sponsors" className="relative scroll-mt-20 py-16 md:py-20 bg-[#f4f5f7] border-t-4 border-[#CC0000]">
+    <section id="sponsors" className={`relative scroll-mt-20 bg-[#f4f5f7] border-t-4 border-[#CC0000] ${tocSectionClass()}`}>
       <TocPatrioticBar className="absolute top-0 left-0 right-0" />
-      <div className="container mx-auto px-4 max-w-6xl pt-4">
+      <div className="container mx-auto w-full px-4 sm:px-6 max-w-6xl pt-4">
         <TocFoundingPartners />
 
-        <div className="grid gap-10 lg:grid-cols-2 lg:items-start lg:gap-12">
-          <div>
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-start lg:gap-12">
+          <div className="order-2 lg:order-1">
             <p className="text-[#CC0000] text-xs font-semibold uppercase tracking-[0.22em] mb-2">
               {TOC_SPONSORSHIP.eyebrow}
             </p>
-            <TocVarsityHeading as="h2" className="text-4xl md:text-5xl mb-4">
+            <TocVarsityHeading as="h2" className="mb-3 sm:mb-4">
               {TOC_SPONSORSHIP.headline}
             </TocVarsityHeading>
-            <p className="text-[#0B1D3A]/90 text-lg leading-relaxed mb-8">{TOC_SPONSORSHIP.lead}</p>
+            <p className="text-[#0B1D3A]/90 text-base sm:text-lg leading-relaxed mb-6 sm:mb-8">{TOC_SPONSORSHIP.lead}</p>
 
             <ul className="space-y-4 mb-8">
               {TOC_SPONSORSHIP.bullets.map((line, index) => {
@@ -63,8 +63,8 @@ export function TocSponsorSection() {
             </div>
           </div>
 
-          <div id="sponsor-inquiry" className="rounded-sm border-2 border-[#0B1D3A]/10 bg-white p-6 md:p-8 shadow-xl shadow-[#0B1D3A]/5 scroll-mt-24">
-            <TocVarsityHeading as="h3" className="text-2xl md:text-3xl mb-2">
+          <div id="sponsor-inquiry" className="order-1 lg:order-2 rounded-sm border-2 border-[#0B1D3A]/10 bg-white p-5 sm:p-6 md:p-8 shadow-xl shadow-[#0B1D3A]/5 scroll-mt-24">
+            <TocVarsityHeading as="h3" className="text-2xl sm:text-3xl mb-2">
               {TOC_SPONSORSHIP.formHeadline}
             </TocVarsityHeading>
             <p className="text-muted-foreground mb-6">{TOC_SPONSORSHIP.formLead}</p>

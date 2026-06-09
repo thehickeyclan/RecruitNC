@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { ChevronDown } from "lucide-react"
-import { TocVarsityHeading } from "@/components/toc/toc-theme"
+import { TocVarsityHeading, tocSectionClass } from "@/components/toc/toc-theme"
 import { TOC_CONTACT_EMAIL, TOC_MATS_LINE, TOC_TICKET_SALE_MONTH } from "@/lib/toc/constants"
 
 const FAQ_ITEMS = [
@@ -56,9 +56,9 @@ export function TocFaq() {
   const [open, setOpen] = useState<number | null>(0)
 
   return (
-    <section className="py-16 md:py-20 bg-white" id="faq">
-      <div className="container mx-auto px-4 max-w-2xl">
-        <TocVarsityHeading as="h2" className="text-4xl mb-8 text-center">
+    <section className={`bg-white scroll-mt-20 ${tocSectionClass()}`} id="faq">
+      <div className="container mx-auto w-full px-4 sm:px-6 max-w-2xl">
+        <TocVarsityHeading as="h2" className="mb-6 sm:mb-8 text-center">
           FAQ
         </TocVarsityHeading>
         <div className="divide-y divide-[#0B1D3A]/10 rounded-sm border-2 border-[#0B1D3A]/10 overflow-hidden">
@@ -68,7 +68,7 @@ export function TocFaq() {
               <div key={item.q} className={isOpen ? "bg-[#0B1D3A]/[0.03]" : ""}>
                 <button
                   type="button"
-                  className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left font-semibold text-[#0B1D3A] hover:bg-[#0B1D3A]/5"
+                  className="flex w-full items-center justify-between gap-4 px-4 sm:px-5 py-4 min-h-[3.25rem] text-left font-semibold text-[#0B1D3A] hover:bg-[#0B1D3A]/5"
                   onClick={() => setOpen(isOpen ? null : i)}
                   aria-expanded={isOpen}
                 >
@@ -77,7 +77,9 @@ export function TocFaq() {
                   </span>
                   <ChevronDown className={`h-5 w-5 shrink-0 text-[#CC0000] transition-transform ${isOpen ? "rotate-180" : ""}`} />
                 </button>
-                {isOpen ? <p className="px-5 pb-4 pl-8 text-muted-foreground text-sm leading-relaxed">{item.a}</p> : null}
+                {isOpen ? (
+                  <p className="px-4 sm:px-5 pb-4 pl-6 sm:pl-8 text-muted-foreground text-sm leading-relaxed">{item.a}</p>
+                ) : null}
               </div>
             )
           })}

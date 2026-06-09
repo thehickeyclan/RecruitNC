@@ -54,8 +54,8 @@ export function TocEmailSignup({ source = "hero" }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md">
-      <div className="flex-1 space-y-1">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3 w-full max-w-md sm:max-w-lg mx-auto sm:mx-0">
+      <div className="flex-1 space-y-1 w-full">
         <Label htmlFor="toc-email" className="sr-only">
           Email
         </Label>
@@ -73,7 +73,7 @@ export function TocEmailSignup({ source = "hero" }: Props) {
       <Button
         type="submit"
         disabled={status === "loading"}
-        className="bg-[#CC0000] hover:bg-[#a80000] h-11 px-6 shrink-0 font-semibold uppercase tracking-wide"
+        className="bg-[#CC0000] hover:bg-[#a80000] h-11 w-full sm:w-auto px-6 shrink-0 font-semibold uppercase tracking-wide"
       >
         {status === "loading" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Notify me"}
       </Button>
