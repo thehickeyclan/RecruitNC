@@ -52,7 +52,7 @@ export function TocOfficialsSection() {
               href="#venue"
               className="inline-block mt-5 text-sm font-semibold text-[#CC0000] hover:underline"
             >
-              See the Officials Lounge at the venue →
+              See the Coaches & Officials Lounge at the venue →
             </a>
           </div>
         </div>

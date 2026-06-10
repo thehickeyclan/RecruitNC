@@ -22,6 +22,7 @@ export function TocRecruitingSection({ confirmedColleges = [] }: Props) {
           {[
             "College coach panel — programs on stage, Q&A for families",
             "Recruiting workshop — how to build your profile and reach coaches (RecruitNC team)",
+            "Recruiting guides for college coaches — sent in advance and hard copy in the lounge on event day",
             "College fair — programs at tables in the lobby; RSVP by email",
             "RecruitNC booth — athlete profile setup and platform walkthrough",
           ].map((item) => (

@@ -25,7 +25,7 @@ values (
   1,
   'Hope Community Church',
   'Hope Community Church, Apex, NC',
-  '["NC State", "UNC", "Roanoke", "Lynchburg"]'::jsonb
+  '["NC State", "UNC"]'::jsonb
 )
 on conflict (id) do update set
   confirmed_colleges = excluded.confirmed_colleges,
@@ -39,7 +39,7 @@ alter table public.toc_event_config
 
 -- Example: confirmed programs for the recruiting fair logo strip (public page)
 -- update public.toc_event_config
--- set confirmed_colleges = '["NC State", "UNC", "Roanoke", "Lynchburg"]'::jsonb
+-- set confirmed_colleges = '["NC State", "UNC"]'::jsonb
 -- where id = 1;
 
 create table if not exists public.toc_invitations (
