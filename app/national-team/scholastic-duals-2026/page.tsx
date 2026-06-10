@@ -282,7 +282,7 @@ export default async function ScholasticDuals2026Page() {
             </span>
           </p>
           <p className="text-xs text-white/45 px-5 pb-5 md:px-6">
-            175 and HWT are open starter slots (TBD). Alternates and any roster changes will be posted on this page.
+            Alternates and any roster changes will be posted on this page.
           </p>
         </ScholasticDualsSection>
 
