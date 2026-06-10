@@ -24,7 +24,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Will college coaches be there?",
-    a: "Yes. Credentialed college coaches get a dedicated College Coaches Lounge — a separate atrium room with live feeds from both mats, bracket updates, work tables, charging and Wi-Fi, hospitality on Saturday, and a print station for profiles and notes. It's built for programs recruiting in the building, not just watching from the stands.",
+    a: "Yes. Credentialed college coaches, credentialed high school coaches, and tournament officials share one atrium lounge — live feeds from both mats, bracket updates, work tables, charging and Wi-Fi, hospitality on Saturday, recruiting guides for college coaches (delivered in advance and hard copy in the lounge on event day), and a print station for profiles and notes. Credentials required; it's built for coaches and officials working the event, not general spectators.",
   },
   {
     q: "What is the Champion jacket?",
@@ -36,7 +36,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "When and where is the event?",
-    a: `Saturday, September 5, 2026 at Hope Community Church (Apex Campus), 2080 East Williams Street, Apex, NC. Wrestler weigh-in Friday evening; all competition Saturday starting at 8:00 AM. ${TOC_MATS_LINE} Seating for up to 1,000, plus separate College Coaches and Officials lounges in dedicated atrium rooms.`,
+    a: `Saturday, September 5, 2026 at Hope Community Church (Apex Campus), 2080 East Williams Street, Apex, NC. Wrestler weigh-in Friday evening; all competition Saturday starting at 8:00 AM. ${TOC_MATS_LINE} Seating for up to 1,000, plus a credentialed Coaches & Officials Lounge in a dedicated atrium room.`,
   },
   {
     q: "Will the event be streamed?",

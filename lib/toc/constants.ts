@@ -151,22 +151,15 @@ export const TOC_VENUE_FEATURES = [
   },
 ] as const
 
-/** Public marketing copy — two separate Hope atrium rooms; ops detail in docs/toc-venue-ops.md */
+/** Public marketing copy — one Hope atrium lounge; ops detail in docs/toc-venue-ops.md */
 export const TOC_VENUE_LOUNGES = {
-  eyebrow: "Dedicated lounges",
-  headline: "College coaches and officials — separate rooms",
+  eyebrow: "Dedicated lounge",
+  headline: "Credentialed coaches and officials — one room",
   lead:
-    "Two of Hope Apex's atrium rooms are reserved for credentialed college coaches and tournament officials — never combined. Coaches recruit; officials adjudicate. Keeping them apart is intentional.",
-  coaches: {
-    title: "College Coaches Lounge",
-    description:
-      "Credentialed college staffs only (lanyard at check-in). Comfortable seating, work tables, charging and Wi-Fi, live feeds from both mats plus bracket updates, hospitality on Saturday, print station for brackets and athlete profiles, and a quiet phone-booth area for calls.",
-  },
-  officials: {
-    title: "Officials Lounge",
-    description:
-      "Separate room away from coaches and athletes — locking gear storage, casual seating, and a table for meals. Water, snacks, and light meals for officials and clinic staff to rest and regroup between sessions.",
-  },
+    "One atrium room at Hope Apex is reserved for credentialed college coaches, credentialed high school coaches, and tournament officials — credentials required, not open to general spectators.",
+  title: "Coaches & Officials Lounge",
+  description:
+    "Check in at credentials for your lanyard. Comfortable seating and work tables, charging and Wi-Fi, live feeds from both mats with bracket updates, hospitality on Saturday, recruiting guides for college coaches (sent in advance and available as hard copy in the lounge on event day), a print station for profiles and notes, and space for officials to store gear and regroup between sessions.",
 } as const
 
 export const TOC_ELITE_OFFICIALS = {
@@ -179,7 +172,7 @@ export const TOC_ELITE_OFFICIALS = {
     "Chief of officials: Jonathan Sutton",
     "Experienced crew across both competition mats all day",
     "Consistent standards from first bout through championship finals",
-    "Dedicated Officials Lounge — separate from coaches and athletes",
+    "Coaches & Officials Lounge — credentialed college and HS coaches plus tournament staff",
   ],
 } as const
 
@@ -239,7 +232,7 @@ export const TOC_SPONSOR_TIERS = [
   {
     value: "champion",
     label: "Champion",
-    description: "Co-branding event materials, video board placement, mat branding, College Coaches Lounge naming rights, social inclusion, hospitality",
+    description: "Co-branding event materials, video board placement, mat branding, Coaches & Officials Lounge naming rights, social inclusion, hospitality",
   },
   {
     value: "partner",
@@ -260,7 +253,7 @@ export const TOC_SPONSORSHIP = {
   bullets: [
     "Up to 1,000 fans in the building — families, clubs, and programs from every corner of the state",
     "Live stream and video boards — exposure beyond the arena all weekend long",
-    "College Coaches Lounge — Champion-tier naming rights and face time with programs recruiting all weekend",
+    "Coaches & Officials Lounge — Champion-tier naming rights and face time with credentialed coaches all weekend",
     "Single-mat finals under the lights — championship presentation, jacket moments, and peak attention",
     "Patriotic NC United brand — red, white, and navy athletics with statewide reach through RecruitNC",
   ],
@@ -322,16 +315,6 @@ export const TOC_CONFIRMED_COLLEGES_DEFAULT = [
     name: "NC State",
     logoUrl:
       "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/fe5ixmej-1745958547259.png",
-  },
-  {
-    name: "Lynchburg",
-    logoUrl:
-      "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/SmHkZ3IPPB6ayHiOYue4Y-Lynchburg.jpg",
-  },
-  {
-    name: "Roanoke",
-    logoUrl:
-      "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/-i2rnrys-1745958901725.png",
   },
 ] as const
 
