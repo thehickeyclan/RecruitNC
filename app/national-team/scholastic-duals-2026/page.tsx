@@ -36,7 +36,6 @@ import { AauScholasticGearPreview } from "@/components/national-team/aau-scholas
 import { AauScholasticPricingTable } from "@/components/national-team/aau-scholastic-pricing-table"
 import { AauScholasticRosterTable } from "@/components/national-team/aau-scholastic-roster-table"
 import { AauScholasticTeamTable } from "@/components/national-team/aau-scholastic-team-table"
-import { AauScholasticYourPaymentSection } from "@/components/national-team/aau-scholastic-your-payment-section"
 import { NcUnitedCodeCallout } from "@/components/national-team/nc-united-code-callout"
 import { AAU_SCHOLASTIC_DUALS_2026_ROSTER } from "@/lib/aau-scholastic-duals-2026-roster"
 import { loadAauScholasticRosterRegistrationStatusMap } from "@/lib/aau-scholastic-roster-registration-status"
@@ -488,8 +487,6 @@ export default async function ScholasticDuals2026Page() {
         >
           <AauScholasticPricingTable />
         </ScholasticDualsSection>
-
-        <AauScholasticYourPaymentSection />
 
         <ScholasticDualsSection
           id="expectations"
