@@ -6,11 +6,13 @@ import { TocChampionJacketSection } from "@/components/toc/toc-champion-jacket-s
 import { TocStorySection } from "@/components/toc/toc-story-section"
 import { TocAthleteQuotesSection } from "@/components/toc/toc-athlete-quotes-section"
 import { TocVenueSection } from "@/components/toc/toc-venue-section"
+import { TocOfficialsSection } from "@/components/toc/toc-officials-section"
 import { TocFinalsMatSection } from "@/components/toc/toc-finals-mat-section"
 import { TocSpectatorsSection } from "@/components/toc/toc-spectators-section"
 import { TocWeightClassesList } from "@/components/toc/toc-weight-classes"
 import { TocScheduleTable } from "@/components/toc/toc-schedule-table"
 import { TocStreamingSection } from "@/components/toc/toc-streaming-section"
+import { TocMediaSection } from "@/components/toc/toc-media-section"
 import { TocNominationForm } from "@/components/toc/toc-nomination-form"
 import { TocSponsorSection } from "@/components/toc/toc-sponsor-section"
 import { TocFaq } from "@/components/toc/toc-faq"
@@ -33,11 +35,13 @@ export function TocLandingPage({ config }: Props) {
       <TocStorySection />
       <TocAthleteQuotesSection />
       <TocVenueSection config={config} />
+      <TocOfficialsSection />
       <TocSpectatorsSection />
       <TocFinalsMatSection />
       <TocWeightClassesList />
       <TocScheduleTable />
       <TocStreamingSection config={config} />
+      <TocMediaSection />
 
       <section id="email-signup" className="py-12 sm:py-16 bg-[#0B1D3A] relative scroll-mt-20">
         <TocPatrioticBar className="absolute top-0 left-0 right-0" />

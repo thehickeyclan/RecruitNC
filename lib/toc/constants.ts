@@ -10,6 +10,37 @@ export const TOC_WEIGHT_CLASSES = [
 
 export const TOC_WEIGH_IN_LINE = "Single weigh-in · No weight allowances" as const
 
+/** Public schedule — Friday setup/weigh-in only; all competition Saturday. */
+export const TOC_SCHEDULE = {
+  headline: "When to be there",
+  lead: "One day of wrestling. The venue is built Friday so competition starts on time Saturday morning.",
+  athleteNote:
+    "Friday is setup and weigh-in for invited wrestlers only — no public competition. Fans and families: plan for Saturday.",
+  friday: {
+    title: "Friday · September 4",
+    subtitle: "Venue setup & wrestler weigh-in — no competition",
+    rows: [
+      { time: "2:00 PM", activity: "Crew load-in — mats, scoring tables, PA, and production setup" },
+      { time: "4:00 PM", activity: "Venue ready — both competition mats down, systems tested and live" },
+      { time: "6:00–8:00 PM", activity: "Weigh-in & skin check (invited wrestlers only)" },
+    ],
+  },
+  saturday: {
+    title: "Saturday · September 5",
+    subtitle: "Full tournament — two mats, then finals under the lights",
+    rows: [
+      { time: "7:00 AM", activity: "Doors open (athletes, coaches, ticket holders)" },
+      { time: "7:45 AM", activity: "National anthem & invocation" },
+      { time: "8:00 AM", activity: "Competition begins — all brackets on two mats" },
+      { time: "~3:30 PM", activity: "Placement bouts complete (estimate)" },
+      { time: "4:00–5:00 PM", activity: "Break — championship mat setup" },
+      { time: "5:00 PM", activity: "Parade of finalists & introductions" },
+      { time: "5:15 PM", activity: "Championship finals — one mat, all 11 weights" },
+      { time: "~7:30 PM", activity: "Awards & event concludes" },
+    ],
+  },
+} as const
+
 export const TOC_AI_RENDERING_CAPTION =
   "AI rendering of the existing facility for illustration; actual setup and presentation may vary." as const
 
@@ -52,16 +83,15 @@ export const TOC_SPECTATORS = {
     venuePolicy:
       "Venue-wide policy: no soda, chips, candy, or junk food sold or available anywhere in the building.",
   },
+  concessionsHours: "Open Saturday · wrestlers & fans",
   ticketOptions: [
     {
-      title: "Single-day ticket",
-      description: "Friday opening round, or Saturday placement bouts + finals",
-    },
-    {
-      title: "Weekend pass",
-      description: "Both days, including championship finals under the lights",
+      title: "Saturday ticket",
+      description:
+        "Full tournament — all brackets on two mats through placement, plus championship finals under the lights",
     },
   ],
+  ticketSectionTitle: "How to attend",
 } as const
 
 export const TOC_FOUNDING_PARTNERS = {
@@ -130,13 +160,53 @@ export const TOC_VENUE_LOUNGES = {
   coaches: {
     title: "College Coaches Lounge",
     description:
-      "Credentialed college staffs only (lanyard at check-in). Comfortable seating, work tables, charging and Wi-Fi, live feeds from both mats plus bracket updates, hospitality all weekend, print station for brackets and athlete profiles, and a quiet phone-booth area for calls.",
+      "Credentialed college staffs only (lanyard at check-in). Comfortable seating, work tables, charging and Wi-Fi, live feeds from both mats plus bracket updates, hospitality on Saturday, print station for brackets and athlete profiles, and a quiet phone-booth area for calls.",
   },
   officials: {
     title: "Officials Lounge",
     description:
       "Separate room away from coaches and athletes — locking gear storage, casual seating, and a table for meals. Water, snacks, and light meals for officials and clinic staff to rest and regroup between sessions.",
   },
+} as const
+
+export const TOC_ELITE_OFFICIALS = {
+  eyebrow: "Elite officials",
+  headline: "Led by Jonathan Sutton",
+  role: "Chief of officials · NC United Tournament of Champions",
+  lead:
+    "The Tournament of Champions is judged by an elite crew hand-picked for this event — not a random pool assignment. Jonathan Sutton leads the table with experienced officials who understand college weights, high-stakes brackets, and the pace this card demands.",
+  bullets: [
+    "Chief of officials: Jonathan Sutton",
+    "Experienced crew across both competition mats all day",
+    "Consistent standards from first bout through championship finals",
+    "Dedicated Officials Lounge — separate from coaches and athletes",
+  ],
+} as const
+
+export const TOC_MEDIA_REQUEST_TYPES = [
+  { value: "print", label: "Print / newspaper" },
+  { value: "broadcast", label: "TV / broadcast" },
+  { value: "digital", label: "Digital / online" },
+  { value: "podcast", label: "Podcast / radio" },
+  { value: "photo", label: "Photography" },
+  { value: "video", label: "Video / documentary" },
+  { value: "other", label: "Other" },
+] as const
+
+export const TOC_MEDIA = {
+  eyebrow: "Media",
+  headline: "Media requests",
+  lead:
+    "Covering the Tournament of Champions? Submit a media request for credentials, access guidelines, and interview coordination. All requests are reviewed by NC United staff — approval is required before event-day access.",
+  bullets: [
+    "Press credentials for Saturday competition at Hope Apex",
+    "Interview requests with athletes, coaches, and NC United staff",
+    "Photo and video guidelines provided on approval",
+    "Championship finals under the lights — broadcast-quality production environment",
+  ],
+  formHeadline: "Request media access",
+  formLead: "Tell us your outlet and what you need. We'll follow up with credentials details and coverage guidelines.",
+  responseNote: "Typical response within 2–3 business days. For urgent requests, email",
 } as const
 
 export const TOC_FINALS_MAT = {
@@ -270,7 +340,7 @@ export const TOC_CONFIRMED_COLLEGES = TOC_CONFIRMED_COLLEGES_DEFAULT.map((c) => 
 
 export const TOC_DEFAULT_CONFIG = {
   phase: "phase_1" as const,
-  event_dates: "September 4–5, 2026",
+  event_dates: "Saturday, September 5, 2026 · weigh-in Friday evening",
   venue_name: TOC_VENUE.name,
   venue_address: TOC_VENUE.address,
   hero_primary_cta_label: "Get Notified",

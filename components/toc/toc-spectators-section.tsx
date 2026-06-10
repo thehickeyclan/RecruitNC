@@ -45,7 +45,7 @@ export function TocSpectatorsSection() {
                 <div>
                   <h3 className={`text-[#0B1D3A] text-lg ${tocDisplayClass()}`}>{concessions.headline}</h3>
                   <p className="text-xs font-semibold uppercase tracking-wide text-[#CC0000] mt-1">
-                    Open both days · wrestlers & fans
+                    {TOC_SPECTATORS.concessionsHours}
                   </p>
                 </div>
               </div>
@@ -64,8 +64,10 @@ export function TocSpectatorsSection() {
             </div>
 
             <div>
-              <h3 className={`text-[#0B1D3A] text-lg mb-4 ${tocDisplayClass()}`}>Two ways to attend</h3>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+              <h3 className={`text-[#0B1D3A] text-lg mb-4 ${tocDisplayClass()}`}>
+                {TOC_SPECTATORS.ticketSectionTitle}
+              </h3>
+              <div className="grid gap-4">
                 {TOC_SPECTATORS.ticketOptions.map(({ title, description }) => (
                   <div
                     key={title}

@@ -20,11 +20,11 @@ const FAQ_ITEMS = [
   },
   {
     q: "How does weigh-in work?",
-    a: "Single weigh-in Friday, 3:00–5:00 PM, covering both competition days. No Saturday weight allowance. Skin checks at the scale. USA Wrestling card required.",
+    a: "Single weigh-in Friday, 6:00–8:00 PM, after the venue is set up for Saturday. No Saturday weight allowance. Skin checks at the scale. USA Wrestling card required.",
   },
   {
     q: "Will college coaches be there?",
-    a: "Yes. Credentialed college coaches get a dedicated College Coaches Lounge — a separate atrium room with live feeds from both mats, bracket updates, work tables, charging and Wi-Fi, hospitality all weekend, and a print station for profiles and notes. It's built for programs recruiting in the building, not just watching from the stands.",
+    a: "Yes. Credentialed college coaches get a dedicated College Coaches Lounge — a separate atrium room with live feeds from both mats, bracket updates, work tables, charging and Wi-Fi, hospitality on Saturday, and a print station for profiles and notes. It's built for programs recruiting in the building, not just watching from the stands.",
   },
   {
     q: "What is the Champion jacket?",
@@ -36,7 +36,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "When and where is the event?",
-    a: `September 4–5, 2026 at Hope Community Church (Apex Campus), 2080 East Williams Street, Apex, NC. ${TOC_MATS_LINE} Seating for up to 1,000, plus separate College Coaches and Officials lounges in dedicated atrium rooms.`,
+    a: `Saturday, September 5, 2026 at Hope Community Church (Apex Campus), 2080 East Williams Street, Apex, NC. Wrestler weigh-in Friday evening; all competition Saturday starting at 8:00 AM. ${TOC_MATS_LINE} Seating for up to 1,000, plus separate College Coaches and Officials lounges in dedicated atrium rooms.`,
   },
   {
     q: "Will the event be streamed?",
@@ -44,7 +44,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Can I buy tickets now?",
-    a: `Not yet. Tickets go on sale ${TOC_TICKET_SALE_MONTH}. Sign up for the email list to be notified the moment they're live. Single-day and weekend passes will be available. Pricing to be announced.`,
+    a: `Not yet. Tickets go on sale ${TOC_TICKET_SALE_MONTH}. Sign up for the email list to be notified the moment they're live. Saturday admission covers the full tournament including championship finals under the lights. Pricing to be announced.`,
   },
   {
     q: "How do I sponsor the event?",

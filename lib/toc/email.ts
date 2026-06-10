@@ -28,7 +28,7 @@ export async function sendTocWelcomeEmail(to: string): Promise<void> {
   await sendHtml(
     to,
     "You're on the list — Tournament of Champions 2026",
-    wrap(`<p>Thanks for signing up for updates on the <strong>NC United Tournament of Champions</strong> — September 4–5, 2026 in Apex, NC.</p>
+    wrap(`<p>Thanks for signing up for updates on the <strong>NC United Tournament of Champions</strong> — Saturday, September 5, 2026 in Apex, NC (wrestler weigh-in Friday evening).</p>
 <p>We'll share field announcements, ticket info, and event details as we get closer.</p>
 <p style="margin:20px 0;"><a href="https://app.ncwrestlingunited.com/tournament-of-champions" style="display:inline-block;background:#B31B1B;color:white;padding:12px 24px;text-decoration:none;border-radius:6px;font-weight:bold;">View event page</a></p>`),
   )
@@ -114,5 +114,34 @@ export async function sendTocAdminSponsorAlert(payload: {
     `New TOC sponsor inquiry: ${payload.company}`,
     wrap(`<p><strong>New sponsor inquiry</strong></p>
 <ul><li>Company: ${payload.company}</li><li>Contact: ${payload.contactName}</li><li>Email: ${payload.contactEmail}</li></ul>`),
+  )
+}
+
+export async function sendTocMediaAutoReply(to: string, outlet: string): Promise<void> {
+  await sendHtml(
+    to,
+    "Media request received — Tournament of Champions",
+    wrap(`<p>Thanks for reaching out from <strong>${outlet}</strong>. We've received your media request for the Tournament of Champions and will follow up with credentials details and coverage guidelines.</p>`),
+  )
+}
+
+export async function sendTocAdminMediaAlert(payload: {
+  outlet: string
+  contactName: string
+  contactEmail: string
+  mediaType: string | null
+}): Promise<void> {
+  const adminTo = process.env.TOC_ADMIN_EMAIL?.trim() || process.env.ADMIN_NOTIFICATION_EMAIL?.trim()
+  if (!adminTo) return
+  await sendHtml(
+    adminTo,
+    `New TOC media request: ${payload.outlet}`,
+    wrap(`<p><strong>New media request</strong></p>
+<ul>
+<li>Outlet: ${payload.outlet}</li>
+<li>Contact: ${payload.contactName}</li>
+<li>Email: ${payload.contactEmail}</li>
+<li>Media type: ${payload.mediaType ?? "—"}</li>
+</ul>`),
   )
 }

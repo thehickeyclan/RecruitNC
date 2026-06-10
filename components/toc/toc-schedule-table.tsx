@@ -1,24 +1,5 @@
 import { TocPatrioticBar, TocVarsityHeading } from "@/components/toc/toc-theme"
-import { TOC_MATS_LINE } from "@/lib/toc/constants"
-
-const FRIDAY = [
-  { time: "3:00–5:00 PM", activity: "Weigh-in & skin check (all wrestlers)" },
-  { time: "5:45 PM", activity: "Doors open (ticket holders)" },
-  { time: "6:00 PM", activity: "National anthem & invocation" },
-  { time: "6:10 PM", activity: "Opening round — quarterfinals (2 mats)" },
-  { time: "~9:20 PM", activity: "Friday session concludes" },
-] as const
-
-const SATURDAY = [
-  { time: "7:00 AM", activity: "Doors open" },
-  { time: "8:50 AM", activity: "National anthem & invocation" },
-  { time: "9:00 AM", activity: "Semifinals, consolation & placement bouts (2 mats)" },
-  { time: "~4:00 PM", activity: "Preliminary & placement bouts complete" },
-  { time: "4:00–5:00 PM", activity: "Break — championship mat setup" },
-  { time: "5:00 PM", activity: "Parade of finalists & introductions" },
-  { time: "5:15 PM", activity: "Championship finals — one mat, all 11 weights" },
-  { time: "~7:30 PM", activity: "Finals & awards" },
-] as const
+import { TOC_MATS_LINE, TOC_SCHEDULE } from "@/lib/toc/constants"
 
 function DayTable({
   title,
@@ -36,7 +17,6 @@ function DayTable({
         <p className="text-white/65 text-xs mt-0.5 leading-relaxed">{subtitle}</p>
       </div>
 
-      {/* Mobile: stacked rows — easier to read than a cramped table */}
       <ul className="md:hidden divide-y divide-[#0B1D3A]/8 list-none p-0 m-0">
         {rows.map((row) => (
           <li key={row.time + row.activity} className="px-4 py-3.5">
@@ -63,21 +43,23 @@ function DayTable({
 }
 
 export function TocScheduleTable() {
+  const { friday, saturday, lead, athleteNote } = TOC_SCHEDULE
+
   return (
     <section id="schedule" className="py-12 sm:py-16 md:py-20 bg-[#f4f5f7] scroll-mt-20">
       <div className="container mx-auto w-full px-4 sm:px-6 max-w-4xl">
         <TocVarsityHeading as="h2" className="mb-2 text-center">
-          When to be there
+          {TOC_SCHEDULE.headline}
         </TocVarsityHeading>
         <p className="text-center text-muted-foreground text-sm sm:text-base mb-3 max-w-2xl mx-auto leading-relaxed px-1">
-          {TOC_MATS_LINE} Championship-level production — not another all-day grind.
+          {lead} {TOC_MATS_LINE}
         </p>
         <p className="text-center text-muted-foreground text-xs sm:text-sm mb-8 sm:mb-10 max-w-2xl mx-auto leading-relaxed px-1">
-          Wrestler check-in begins 3:00 PM Friday. Public doors open 5:45 PM for ticket holders.
+          {athleteNote}
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
-          <DayTable title="Friday · September 4" subtitle="Opening round — brackets go live" rows={FRIDAY} />
-          <DayTable title="Saturday · September 5" subtitle="Placement bouts & championship finals" rows={SATURDAY} />
+          <DayTable title={friday.title} subtitle={friday.subtitle} rows={friday.rows} />
+          <DayTable title={saturday.title} subtitle={saturday.subtitle} rows={saturday.rows} />
         </div>
       </div>
       <TocPatrioticBar className="mt-10 sm:mt-12" />

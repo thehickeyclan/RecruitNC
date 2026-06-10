@@ -40,7 +40,7 @@ export const TOC_SOCIAL_POSTS = {
   tease:
     "Something's coming for North Carolina wrestling.\nInvitation only. The best at every weight. One mat. One champion.\n09.04.26. Buckle up.",
   reveal:
-    "Introducing the NC United Tournament of Champions.\n11 weight classes, 8 elite wrestlers each · College weights · Invitation only · Two mats until finals\nThe best in the state, in one building. Sept 4–5.",
+    "Introducing the NC United Tournament of Champions.\n11 weight classes, 8 elite wrestlers each · College weights · Invitation only · Two mats until finals\nThe best in the state, in one building. Saturday, Sept 5 — weigh-in Friday evening.",
   showAngle:
     "Other tournaments are something you compete in.\nThis is something you come to watch.\nGreat wrestling. Great entertainment. One mat when it matters.",
   stakes:
