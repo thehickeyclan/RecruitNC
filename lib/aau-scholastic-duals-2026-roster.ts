@@ -21,10 +21,10 @@ export const AAU_SCHOLASTIC_DUALS_2026_ROSTER: AauScholasticRosterRow[] = [
   { weightLabel: "150+5", wrestler: "Jacob Perry", dob: "12/08/2009", cell: "856-638-8831" },
   { weightLabel: "157+5", wrestler: "Aidan Gore", dob: "08/29/2008", cell: "919-448-7598" },
   { weightLabel: "165+5", wrestler: "Tobin McNair", dob: "05/07/2008", cell: "201-213-3341" },
-  { weightLabel: "175+5", wrestler: "Fares Alkurdasi", dob: "", cell: "919-519-2856" },
+  { weightLabel: "175+5", wrestler: "Fares Alkurdasi", dob: "07/25/2008", cell: "919-519-2856" },
   { weightLabel: "190+5", wrestler: "Luke Padgett", dob: "02/26/2008", cell: "252-665-3536" },
   { weightLabel: "215+5", wrestler: "Gavin Lopez", dob: "01/21/2009", cell: "908-566-8816" },
-  { weightLabel: "HWT", wrestler: "Mason Hocker", dob: "", cell: "910-622-9642" },
+  { weightLabel: "HWT", wrestler: "Mason Hocker", dob: "01/20/2009", cell: "910-622-9642" },
 ]
 
 export { phoneDigitsForTel } from "@/lib/nhsca-duals-2026-hub-contact-roster"

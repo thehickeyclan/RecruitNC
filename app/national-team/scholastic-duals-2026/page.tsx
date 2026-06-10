@@ -93,6 +93,24 @@ function OpsRow({ label, value }: { label: string; value: string }) {
   )
 }
 
+function AauMembershipRequiredNotice({ className }: { className?: string }) {
+  return (
+    <p className={cn(scholasticCalloutClass, className)}>
+      <strong className="text-white">AAU membership is required.</strong> Every athlete must have a current AAU card
+      before the event — purchase online (not sold on-site).{" "}
+      <a
+        href={AAU_SCHOLASTIC_OFFICIAL_LINKS.aauMembership}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={scholasticLinkClass}
+      >
+        Get AAU membership
+        <ExternalLink className="h-3.5 w-3.5" />
+      </a>
+    </p>
+  )
+}
+
 export default async function ScholasticDuals2026Page() {
   const admin = createAdminClient()
   const registrationByWrestler = await loadAauScholasticRosterRegistrationStatusMap(admin)
@@ -122,6 +140,7 @@ export default async function ScholasticDuals2026Page() {
                 {AAU_SCHOLASTIC_TEAM_LABEL} operations Q&amp;A for parents and families — everything you need before
                 you register.
               </p>
+              <AauMembershipRequiredNotice className="mt-6 max-w-xl" />
               <div className="mt-8 flex flex-col sm:flex-row flex-wrap gap-3">
                 <a href={AAU_SCHOLASTIC_DUALS_2026.registerPath} className={aauPrimaryBtnClass}>
                   Register &amp; checkout
@@ -505,6 +524,7 @@ export default async function ScholasticDuals2026Page() {
           headerClassName={aauAccentHeaderClass}
           contentClassName="space-y-6"
         >
+          <AauMembershipRequiredNotice />
           <ol className="space-y-4">
             {[
               "Open the registration link below.",

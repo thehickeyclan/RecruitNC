@@ -326,7 +326,7 @@ export const AAU_SCHOLASTIC_TOURNAMENT_CONTACT = {
 
 export const AAU_SCHOLASTIC_OFFICIAL_LINKS = {
   scholasticDuals: "https://aausports.org/wrestling/scholastic-duals",
-  aauMembership: "https://www.aausports.org",
+  aauMembership: "https://www.aausports.org/membership/",
   teamList: "https://www.aauwrestling.net",
   housing: "https://aausports.org/wrestling/scholastic-duals",
 } as const
