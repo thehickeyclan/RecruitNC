@@ -94,11 +94,26 @@ create table if not exists public.toc_sponsor_inquiries (
 
 create index if not exists idx_toc_sponsor_status on public.toc_sponsor_inquiries(status, created_at desc);
 
+create table if not exists public.toc_media_requests (
+  id uuid primary key default gen_random_uuid(),
+  outlet text not null,
+  contact_name text not null,
+  contact_email text not null,
+  contact_phone text,
+  media_type text,
+  message text,
+  status text check (status in ('new','contacted','approved','declined')) default 'new',
+  created_at timestamptz default CURRENT_TIMESTAMP
+);
+
+create index if not exists idx_toc_media_status on public.toc_media_requests(status, created_at desc);
+
 alter table public.toc_event_config enable row level security;
 alter table public.toc_invitations enable row level security;
 alter table public.toc_nominations enable row level security;
 alter table public.toc_email_subscribers enable row level security;
 alter table public.toc_sponsor_inquiries enable row level security;
+alter table public.toc_media_requests enable row level security;
 
 drop policy if exists "Public read toc_event_config" on public.toc_event_config;
 create policy "Public read toc_event_config"
@@ -123,3 +138,7 @@ create policy "Service role full toc_email_subscribers"
 drop policy if exists "Service role full toc_sponsor_inquiries" on public.toc_sponsor_inquiries;
 create policy "Service role full toc_sponsor_inquiries"
   on public.toc_sponsor_inquiries for all to service_role using (true) with check (true);
+
+drop policy if exists "Service role full toc_media_requests" on public.toc_media_requests;
+create policy "Service role full toc_media_requests"
+  on public.toc_media_requests for all to service_role using (true) with check (true);

@@ -16,8 +16,8 @@ export function TocCollegeAttendees({ colleges }: Props) {
         College programs attending
       </h3>
       <p className="mt-2 text-sm text-white/60 max-w-xl">
-        These programs are confirmed for attendance at the Tournament of Champions — coaches and staff on site for
-        the weekend.
+        These programs are confirmed for attendance at the Tournament of Champions — coaches and staff on site
+        Saturday.
       </p>
 
       <ul className="mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5 list-none p-0 m-0">
