@@ -5,7 +5,7 @@ import { GuildCreditAllocationSection } from "@/components/profile/guild-credit-
 import { ProfileFundraiseThankYousSection } from "@/components/profile/profile-fundraise-thank-yous-section"
 import type { ProfileSpartanSupportersAthletePayload } from "@/app/api/profile/spartan-fundraising-supporters/route"
 import { Button } from "@/components/ui/button"
-import { Loader2, Wallet, TrendingUp, TrendingDown, DollarSign, UserMinus } from "lucide-react"
+import { Loader2, Wallet, TrendingUp, TrendingDown, UserMinus } from "lucide-react"
 
 type SpartanRow = {
   athleteId: string
@@ -74,20 +74,13 @@ export function ProfileFundraiseTab({
         {/* Header */}
         <div className="border-b border-white/10 px-5 py-4 sm:px-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#D3B574]/20">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#D3B574]/20">
               <Wallet className="h-5 w-5 text-[#D3B574]" />
             </div>
-            <div>
+            <div className="min-w-0">
               <h2 className="text-lg font-bold text-white">Digital Wallet</h2>
-              <p className="text-xs text-white/50">
-                <strong className="text-white/70">Raised</strong> is lifetime credited paid gifts—it must line up with{" "}
-                <strong className="text-white/70">Spent</strong> + <strong className="text-white/70">Available</strong>.
-                When Stripe hub data loads, {" "}
-                <strong className="text-white/70">Hub leaderboard</strong> shows the rolling total from{" "}
-                <span className="text-white/70">/fundraising</span> (Stripe can diverge briefly from ledger lifetime totals). Wrong
-                card? {" "}
-                <strong className="text-white/70">Remove from my account</strong> on that row (or under{" "}
-                <strong className="text-white/70">Family &amp; athletes</strong>).
+              <p className="text-sm text-white/55">
+                Raised, spent, and available balance for each linked athlete.
               </p>
             </div>
           </div>
@@ -151,113 +144,105 @@ export function ProfileFundraiseTab({
                 return (
                   <div
                     key={row.athleteId}
-                    className="rounded-lg bg-white/5 p-4"
+                    className="rounded-xl border border-white/10 bg-white/[0.04] p-4 sm:p-5"
                   >
-                    {/* Athlete Name */}
-                    <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                      <h3 className="text-base font-semibold text-white">
-                        {row.name?.trim() || "Athlete"}
-                      </h3>
-                      <div className="flex flex-wrap items-center gap-2 justify-end">
-                        {showSetupHint && (
-                          <span className="text-xs text-amber-400">
-                            Add grad year to match gifts
-                          </span>
-                        )}
-                        {showWalletRemove ? (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            disabled={unlinkAthleteId === row.athleteId}
-                            className="h-8 border-red-900/60 text-red-300 hover:bg-red-950/40 hover:text-red-100"
-                            onClick={() => unlinkAthlete!(row.athleteId)}
-                          >
-                            {unlinkAthleteId === row.athleteId ? (
-                              <>
-                                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                                Removing…
-                              </>
-                            ) : (
-                              <>
-                                <UserMinus className="mr-1.5 h-3.5 w-3.5" />
-                                Remove from my account
-                              </>
-                            )}
-                          </Button>
-                        ) : linkMeta?.isProfilePrimaryAthlete ? (
-                          <span className="text-[11px] text-white/40 max-w-[220px] text-right">
-                            Set on <strong className="text-white/60">Account</strong> if this login shouldn&apos;t be their parent.
-                          </span>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h3 className="truncate text-base font-semibold text-white sm:text-lg">
+                          {row.name?.trim() || "Athlete"}
+                        </h3>
+                        <p className="mt-0.5 text-xs text-white/45 sm:text-sm">
+                          {row.fundraisingCode ? (
+                            <>
+                              <span className="font-medium text-white/60">{row.fundraisingCode}</span>
+                              <span className="text-white/30"> · </span>
+                            </>
+                          ) : null}
+                          {lifetimeGifts} gift{lifetimeGifts !== 1 ? "s" : ""}
+                          {showSetupHint ? (
+                            <span className="ml-2 text-amber-400/90">· add grad year to match gifts</span>
+                          ) : null}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 rounded-lg bg-[#D3B574]/10 px-4 py-3">
+                      <p className="text-[11px] font-medium uppercase tracking-wider text-[#D3B574]/80">
+                        Available
+                      </p>
+                      <p
+                        className={`mt-0.5 text-2xl font-bold tabular-nums sm:text-3xl ${
+                          available < 0 ? "text-red-400" : "text-[#D3B574]"
+                        }`}
+                      >
+                        {formatUsd(available)}
+                      </p>
+                    </div>
+
+                    <div className="mt-3 grid grid-cols-2 gap-3">
+                      <div className="rounded-lg bg-[#13294B]/40 px-3 py-2.5">
+                        <div className="flex items-center gap-1.5 text-white/45">
+                          <TrendingUp className="h-3.5 w-3.5 shrink-0" />
+                          <span className="text-[11px] font-medium uppercase tracking-wide">Raised</span>
+                        </div>
+                        <p className="mt-1 text-base font-semibold tabular-nums text-white sm:text-lg">
+                          {formatUsd(lifetimeRaised)}
+                        </p>
+                      </div>
+                      <div className="rounded-lg bg-[#13294B]/40 px-3 py-2.5">
+                        <div className="flex items-center gap-1.5 text-white/45">
+                          <TrendingDown className="h-3.5 w-3.5 shrink-0" />
+                          <span className="text-[11px] font-medium uppercase tracking-wide">Spent</span>
+                        </div>
+                        <p className="mt-1 text-base font-semibold tabular-nums text-red-300 sm:text-lg">
+                          {spent > 0 ? formatUsd(spent) : "$0.00"}
+                        </p>
+                        {spent > 0 ? (
+                          <p className="mt-0.5 text-[10px] text-white/35">
+                            {reimb > 0 && guildAlloc > 0
+                              ? "Reimbursements + Guild"
+                              : reimb > 0
+                                ? "Reimbursements"
+                                : "Guild holds"}
+                          </p>
                         ) : null}
                       </div>
                     </div>
 
-                    {/* Stats Grid */}
-                    <div className="grid grid-cols-3 gap-3">
-                      {/* Raised */}
-                      <div className="rounded-lg bg-[#13294B]/50 p-3">
-                        <div className="flex items-center gap-1.5 text-white/50">
-                          <TrendingUp className="h-3.5 w-3.5" />
-                          <span className="text-[10px] font-medium uppercase tracking-wide">Raised</span>
-                        </div>
-                        <p className="mt-1 text-lg font-bold tabular-nums text-white sm:text-xl">
-                          {formatUsd(lifetimeRaised)}
-                        </p>
-                        <p className="mt-0.5 text-[10px] text-white/40 leading-snug">
-                          {lifetimeGifts} gift{lifetimeGifts !== 1 ? "s" : ""} · lifetime credited
-                          {typeof hubRaised === "number" &&
-                          typeof hubGiftCount === "number" &&
-                          (hubRaised !== lifetimeRaised || hubGiftCount !== lifetimeGifts) ? (
-                            <span className="mt-1 block text-white/35">
-                              Hub leaderboard {formatUsd(hubRaised)}
-                              {hubGiftCount > 0
-                                ? ` · ${hubGiftCount} gift${hubGiftCount !== 1 ? "s" : ""}`
-                                : ""}{" "}
-                              (Stripe window)
-                            </span>
-                          ) : typeof hubRaised === "number" ? (
-                            <span className="mt-1 block text-emerald-500/65">Matches hub leaderboard gross for this athlete</span>
-                          ) : null}
-                        </p>
-                      </div>
+                    {typeof hubRaised === "number" &&
+                    typeof hubGiftCount === "number" &&
+                    (hubRaised !== lifetimeRaised || hubGiftCount !== lifetimeGifts) ? (
+                      <p className="mt-3 text-[11px] leading-snug text-white/40">
+                        Public leaderboard shows {formatUsd(hubRaised)} for the current season window.
+                      </p>
+                    ) : null}
 
-                      {/* Spent */}
-                      <div className="rounded-lg bg-[#13294B]/50 p-3">
-                        <div className="flex items-center gap-1.5 text-white/50">
-                          <TrendingDown className="h-3.5 w-3.5" />
-                          <span className="text-[10px] font-medium uppercase tracking-wide">Spent</span>
-                        </div>
-                        <p className="mt-1 text-lg font-bold tabular-nums text-red-400 sm:text-xl">
-                          {spent > 0 ? formatUsd(spent) : "$0.00"}
-                        </p>
-                        <p className="mt-0.5 text-[10px] text-white/40">
-                          {reimb > 0 && guildAlloc > 0
-                            ? "Reimb + Guild"
-                            : reimb > 0
-                              ? "Reimbursements"
-                              : guildAlloc > 0
-                                ? "Guild holds"
-                                : "None yet"}
-                        </p>
+                    {showWalletRemove ? (
+                      <div className="mt-4 border-t border-white/10 pt-3">
+                        <button
+                          type="button"
+                          disabled={unlinkAthleteId === row.athleteId}
+                          className="inline-flex items-center gap-1.5 text-xs text-white/40 transition-colors hover:text-red-300 disabled:opacity-50"
+                          onClick={() => unlinkAthlete!(row.athleteId)}
+                        >
+                          {unlinkAthleteId === row.athleteId ? (
+                            <>
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              Removing…
+                            </>
+                          ) : (
+                            <>
+                              <UserMinus className="h-3.5 w-3.5" />
+                              Not your athlete? Remove from account
+                            </>
+                          )}
+                        </button>
                       </div>
-
-                      {/* Available */}
-                      <div className="rounded-lg bg-[#D3B574]/10 p-3">
-                        <div className="flex items-center gap-1.5 text-[#D3B574]/70">
-                          <DollarSign className="h-3.5 w-3.5" />
-                          <span className="text-[10px] font-medium uppercase tracking-wide">Available</span>
-                        </div>
-                        <p className={`mt-1 text-lg font-bold tabular-nums sm:text-xl ${
-                          available < 0 ? "text-red-400" : "text-[#D3B574]"
-                        }`}>
-                          {formatUsd(available)}
-                        </p>
-                        <p className="mt-0.5 text-[10px] text-white/40">
-                          After holds
-                        </p>
-                      </div>
-                    </div>
+                    ) : linkMeta?.isProfilePrimaryAthlete ? (
+                      <p className="mt-4 border-t border-white/10 pt-3 text-[11px] text-white/35">
+                        This athlete is tied to your login on Account settings.
+                      </p>
+                    ) : null}
                   </div>
                 )
               })}
