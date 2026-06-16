@@ -2,7 +2,6 @@ import Image from "next/image"
 import { ArrowRight } from "lucide-react"
 import { HardLink } from "@/components/hard-link"
 import {
-  AAU_SCHOLASTIC_DUALS_2026,
   AAU_SCHOLASTIC_DUALS_2026_BANNER,
 } from "@/lib/aau-scholastic-duals-2026-content"
 import { cn } from "@/lib/utils"
@@ -34,19 +33,13 @@ export function AauScholasticDuals2026HomeBanner({ className }: AauScholasticDua
           />
         </HardLink>
 
-        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center">
+        <div className="mt-4 flex justify-center">
           <HardLink
             href="/news/aau-scholastic-duals-2026-florida"
             className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-[#B31B1B] px-5 py-2.5 text-sm sm:text-base font-bold text-white shadow-lg transition hover:bg-[#9a1616]"
           >
             Read the story
             <ArrowRight className="ml-2 h-5 w-5" aria-hidden />
-          </HardLink>
-          <HardLink
-            href={AAU_SCHOLASTIC_DUALS_2026.infoPath}
-            className="inline-flex min-h-[48px] items-center justify-center rounded-xl border-2 border-white/25 bg-white/5 px-5 py-2.5 text-sm sm:text-base font-semibold text-white transition hover:bg-white/10"
-          >
-            AAU Scholastic Duals · info &amp; registration
           </HardLink>
         </div>
       </div>
