@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import Image from "next/image"
+import { WrestlingGuildWeeklyScheduleAd } from "@/components/news/wrestling-guild-weekly-schedule-ad"
 import { HardLink } from "@/components/hard-link"
 import { AAU_SCHOLASTIC_DUALS_2026_BANNER } from "@/lib/aau-scholastic-duals-2026-content"
 import { AAU_SCHOLASTIC_DUALS_2026_ROSTER } from "@/lib/aau-scholastic-duals-2026-roster"
@@ -297,6 +298,8 @@ export function AauScholasticDuals2026FloridaContent({
         After qualifying for his first NCAA Championships this past season, Dailey has quickly established himself as
         one of North Carolina&apos;s top young Division I wrestlers.
       </p>
+
+      <WrestlingGuildWeeklyScheduleAd />
 
       <hr />
 
