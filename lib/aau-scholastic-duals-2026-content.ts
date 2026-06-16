@@ -10,6 +10,10 @@ export const AAU_SCHOLASTIC_EVENT_SLUG = "aau-2026"
 /** NC United sends one squad to AAU Scholastic Duals — the National Team. */
 export const AAU_SCHOLASTIC_TEAM_LABEL = "NC United National Team"
 
+/** Home carousel, /news cards, article hero, and scholastic-duals team page banner. */
+export const AAU_SCHOLASTIC_DUALS_2026_BANNER =
+  "/images/aau-scholastic-2026-news/aau-scholastic-duals-2026-banner.png"
+
 export type AauScholasticPriceLine = {
   id: string
   label: string
