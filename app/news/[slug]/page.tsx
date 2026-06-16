@@ -11,11 +11,16 @@ import { ClassOf2026SeniorSendoffContent } from "../content/class-of-2026-senior
 import { LynchburgBuildingAProgramWithIntentionContent } from "../content/lynchburg-building-a-program-with-intention"
 import { RealCostEliteWrestlingNcSmarterBuildContent } from "../content/real-cost-elite-wrestling-nc-smarter-build"
 import { FindingFlowOnTheMatTheZoneContent } from "../content/finding-flow-on-the-mat-the-zone"
+import { AauScholasticDuals2026FloridaContent } from "../content/aau-scholastic-duals-2026-florida"
 import { NchsaaArticleComments } from "@/components/nchsaa-article-comments"
 import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
 import { getRecruitingAwardsProfileIdMap } from "@/lib/content/recruiting-awards-profile-ids"
 import { getRecruitingAwardsCollegeLogoMap } from "@/lib/content/recruiting-awards-logo-map"
 import { RECRUITING_AWARDS_SLUG } from "@/lib/content/recruiting-awards-2026"
+import {
+  AAU_SCHOLASTIC_DUALS_2026_NEWS_SLUG,
+  getAauScholasticDuals2026ProfileIdMap,
+} from "@/lib/content/aau-scholastic-duals-2026-profile-ids"
 
 const ANNOUNCEMENT_CONTENT: Record<string, () => JSX.Element> = {
   "finding-flow-on-the-mat": () => <FindingFlowOnTheMatTheZoneContent />,
@@ -41,16 +46,27 @@ export default async function NewsAnnouncementPage({
   if (!item) notFound()
 
   const profileIdMap =
-    slug === RECRUITING_AWARDS_SLUG ? await getRecruitingAwardsProfileIdMap() : undefined
+    slug === RECRUITING_AWARDS_SLUG
+      ? await getRecruitingAwardsProfileIdMap()
+      : slug === AAU_SCHOLASTIC_DUALS_2026_NEWS_SLUG
+        ? await getAauScholasticDuals2026ProfileIdMap()
+        : undefined
   const collegeLogoMap =
     slug === RECRUITING_AWARDS_SLUG ? await getRecruitingAwardsCollegeLogoMap() : undefined
   const Content = ANNOUNCEMENT_CONTENT[slug]
-  if (slug !== RECRUITING_AWARDS_SLUG && !Content) notFound()
+  if (
+    slug !== RECRUITING_AWARDS_SLUG &&
+    slug !== AAU_SCHOLASTIC_DUALS_2026_NEWS_SLUG &&
+    !Content
+  ) {
+    notFound()
+  }
 
   const skipHeroImage =
     slug === "class-of-2026-senior-sendoff" ||
     slug === "real-cost-elite-wrestling-nc-smarter-build" ||
-    slug === RECRUITING_AWARDS_SLUG
+    slug === RECRUITING_AWARDS_SLUG ||
+    slug === AAU_SCHOLASTIC_DUALS_2026_NEWS_SLUG
 
   return (
     <div className="min-h-screen bg-[#0A1628]">
@@ -146,6 +162,8 @@ export default async function NewsAnnouncementPage({
                 profileIdMap={profileIdMap ?? {}}
                 collegeLogoMap={collegeLogoMap ?? {}}
               />
+            ) : slug === AAU_SCHOLASTIC_DUALS_2026_NEWS_SLUG ? (
+              <AauScholasticDuals2026FloridaContent profileIdMap={profileIdMap ?? {}} />
             ) : (
               Content?.()
             )}

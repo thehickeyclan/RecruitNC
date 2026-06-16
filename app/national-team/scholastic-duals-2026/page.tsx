@@ -18,6 +18,7 @@ import {
   AAU_SCHOLASTIC_AT_VENUE,
   AAU_SCHOLASTIC_DIVISION_NOTES,
   AAU_SCHOLASTIC_DUALS_2026,
+  AAU_SCHOLASTIC_DUALS_2026_BANNER,
   AAU_SCHOLASTIC_DUALS_SCHEDULE,
   AAU_SCHOLASTIC_ELIGIBILITY,
   AAU_SCHOLASTIC_EXTRA_ALTERNATE_RULES,
@@ -129,6 +130,17 @@ export default async function ScholasticDuals2026Page() {
           >
             ← NC United National Team
           </a>
+          <figure className="mb-8 overflow-hidden rounded-xl border border-white/10 bg-[#0A1628] shadow-lg">
+            <Image
+              src={AAU_SCHOLASTIC_DUALS_2026_BANNER}
+              alt="North Carolina National Team — AAU Wrestling Scholastic Duals, Fort Lauderdale, June 24–26, 2026"
+              width={1200}
+              height={675}
+              className="block h-auto w-full"
+              sizes="(max-width: 1024px) 100vw, 960px"
+              priority
+            />
+          </figure>
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
             <div className="max-w-2xl">
               <Badge className="bg-[#B31B1B] text-white mb-4 border-0">{AAU_SCHOLASTIC_DUALS_2026.datesLabel}</Badge>

@@ -4,6 +4,7 @@
  * Newest first; home carousel uses first N items.
  */
 
+import { AAU_SCHOLASTIC_DUALS_2026_BANNER } from "@/lib/aau-scholastic-duals-2026-content"
 import { RECRUITING_AWARDS_CARD_IMAGE } from "@/lib/content/recruiting-awards-2026"
 
 const NCHSAA_YEAR = "2026"
@@ -42,6 +43,26 @@ export interface NewsItem {
 
 /** All news items, newest first. Add new items here; they appear on /news and in home carousel by order. */
 const ALL_NEWS: NewsItem[] = [
+  {
+    id: "aau-scholastic-duals-2026-florida",
+    slug: "aau-scholastic-duals-2026-florida",
+    title: "NC United National Team Heads to Florida for AAU Scholastic Duals",
+    subtitle: "Fort Lauderdale, June 24–26 — a statewide Blue roster with NHSCA honors, state titles, and three D-I commits.",
+    summary:
+      "Fresh off NHSCA National Duals, NC United travels to the Broward County Convention Center with 15 weight classes, 12 high schools represented, and a coaching staff led by Liam Hickey and Jake Dailey.",
+    href: "/news/aau-scholastic-duals-2026-florida",
+    date: "2026-06-10",
+    image: AAU_SCHOLASTIC_DUALS_2026_BANNER,
+    imagePosition: "center",
+    imageFit: "contain",
+    imageBannerBgClass: "bg-[#0A1628]",
+    newsListBanner: true,
+    category: "RECRUITNC NEWS",
+    categoryBadgeClass: "bg-[#003366]",
+    readTime: "8 min read",
+    author: "NC United",
+    isAnnouncement: true,
+  },
   {
     id: "nc-united-recruiting-awards-2026",
     slug: "nc-united-recruiting-awards-2026",
