@@ -22,18 +22,28 @@ export function WrestlingGuildWeeklyScheduleAd({ className }: { className?: stri
   return (
     <aside
       className={[
-        "not-prose my-8 overflow-hidden rounded-xl border border-slate-800 bg-[#0a0a0a] shadow-sm",
+        "not-prose my-8 overflow-hidden rounded-xl border border-dashed border-slate-400/40 bg-[#0a0a0a] shadow-sm",
         className,
       ]
         .filter(Boolean)
         .join(" ")}
-      aria-label="The Wrestling Guild — small group schedule"
+      aria-label="Sponsored partner — The Wrestling Guild small group schedule"
     >
+      <div className="flex items-center justify-between gap-3 border-b border-white/10 bg-white/[0.03] px-4 py-2 sm:px-5">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-white/50">NC United partner</p>
+        <span className="rounded-full border border-white/15 bg-white/5 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white/45">
+          Sponsored
+        </span>
+      </div>
       <a
         href={GUILD_URL}
         rel="noopener noreferrer"
         className="group block p-4 sm:p-5 transition-colors hover:bg-[#111]"
       >
+        <p className="mb-3 text-xs leading-relaxed text-white/55">
+          Small-group training with Guild coaches — separate from NC United National Team travel, posted here for
+          families who want extra mat time this week.
+        </p>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
           <div className="flex shrink-0 flex-row items-center gap-3 sm:flex-col sm:items-start sm:gap-2">
             <Image
