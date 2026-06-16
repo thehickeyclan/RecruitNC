@@ -19,7 +19,7 @@ import { getRecruitingAwardsCollegeLogoMap } from "@/lib/content/recruiting-awar
 import { RECRUITING_AWARDS_SLUG } from "@/lib/content/recruiting-awards-2026"
 import {
   AAU_SCHOLASTIC_DUALS_2026_NEWS_SLUG,
-  getAauScholasticDuals2026ProfileIdMap,
+  getAauScholasticDuals2026RosterDisplayMaps,
 } from "@/lib/content/aau-scholastic-duals-2026-profile-ids"
 
 const ANNOUNCEMENT_CONTENT: Record<string, () => JSX.Element> = {
@@ -45,12 +45,15 @@ export default async function NewsAnnouncementPage({
   const item = getAnnouncementBySlug(slug)
   if (!item) notFound()
 
+  const aauRosterDisplayMaps =
+    slug === AAU_SCHOLASTIC_DUALS_2026_NEWS_SLUG
+      ? await getAauScholasticDuals2026RosterDisplayMaps()
+      : null
   const profileIdMap =
     slug === RECRUITING_AWARDS_SLUG
       ? await getRecruitingAwardsProfileIdMap()
-      : slug === AAU_SCHOLASTIC_DUALS_2026_NEWS_SLUG
-        ? await getAauScholasticDuals2026ProfileIdMap()
-        : undefined
+      : aauRosterDisplayMaps?.profileIdMap
+  const highSchoolMap = aauRosterDisplayMaps?.highSchoolMap
   const collegeLogoMap =
     slug === RECRUITING_AWARDS_SLUG ? await getRecruitingAwardsCollegeLogoMap() : undefined
   const Content = ANNOUNCEMENT_CONTENT[slug]
@@ -163,7 +166,10 @@ export default async function NewsAnnouncementPage({
                 collegeLogoMap={collegeLogoMap ?? {}}
               />
             ) : slug === AAU_SCHOLASTIC_DUALS_2026_NEWS_SLUG ? (
-              <AauScholasticDuals2026FloridaContent profileIdMap={profileIdMap ?? {}} />
+              <AauScholasticDuals2026FloridaContent
+                profileIdMap={profileIdMap ?? {}}
+                highSchoolMap={highSchoolMap ?? {}}
+              />
             ) : (
               Content?.()
             )}

@@ -29,8 +29,10 @@ function AthleteLink({
 
 export function AauScholasticDuals2026FloridaContent({
   profileIdMap = {},
+  highSchoolMap = {},
 }: {
   profileIdMap?: Record<string, string>
+  highSchoolMap?: Record<string, string>
 }) {
   return (
     <article className="max-w-none text-slate-700 [&_h2]:text-xl [&_h2]:mt-8 [&_h2]:mb-4 [&_h2]:font-bold [&_h2]:text-[#003366] [&_h3]:text-lg [&_h3]:mt-6 [&_h3]:mb-3 [&_h3]:font-bold [&_h4]:text-base [&_h4]:mt-5 [&_h4]:mb-2 [&_h4]:font-bold [&_p]:my-3 [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6 [&_li]:my-1 [&_hr]:my-8 [&_hr]:border-slate-200">
@@ -196,11 +198,12 @@ export function AauScholasticDuals2026FloridaContent({
         .
       </p>
       <div className="my-6 overflow-x-auto rounded-lg border border-slate-200">
-        <table className="w-full min-w-[280px] border-collapse text-sm">
+        <table className="w-full min-w-[420px] border-collapse text-sm">
           <thead>
             <tr className="bg-[#13294B] text-left text-white">
               <th className="px-4 py-3 font-semibold">Weight</th>
               <th className="px-4 py-3 font-semibold">Wrestler</th>
+              <th className="px-4 py-3 font-semibold">High School</th>
             </tr>
           </thead>
           <tbody>
@@ -214,6 +217,13 @@ export function AauScholasticDuals2026FloridaContent({
                     <span className="italic text-slate-400">Open — TBD</span>
                   ) : (
                     <AthleteLink name={row.wrestler} profileIdMap={profileIdMap} />
+                  )}
+                </td>
+                <td className="border-t border-slate-200 px-4 py-2.5 text-slate-700">
+                  {row.openSlot || !row.wrestler.trim() ? (
+                    <span className="text-slate-400">—</span>
+                  ) : (
+                    highSchoolMap[row.wrestler] ?? <span className="text-slate-400">—</span>
                   )}
                 </td>
               </tr>
