@@ -39,6 +39,8 @@ export interface NewsItem {
   newsListBanner?: boolean
   /** If true, this is an announcement (lives under /news/[slug]). If false, href is external (e.g. NCHSAA). */
   isAnnouncement?: boolean
+  /** Omit from home carousel when the story is already promoted in the homepage hero banner. */
+  excludeFromHomeCarousel?: boolean
 }
 
 /** All news items, newest first. Add new items here; they appear on /news and in home carousel by order. */
@@ -62,6 +64,7 @@ const ALL_NEWS: NewsItem[] = [
     readTime: "8 min read",
     author: "NC United",
     isAnnouncement: true,
+    excludeFromHomeCarousel: true,
   },
   {
     id: "nc-united-recruiting-awards-2026",
@@ -286,7 +289,9 @@ export function getAllNews(): NewsItem[] {
 
 /** First N items for home carousel (main story + others). Scalable: add to ALL_NEWS and it appears automatically. */
 export function getFeaturedForHome(limit: number = 4): NewsItem[] {
-  return getAllNews().slice(0, limit)
+  return getAllNews()
+    .filter((item) => !item.excludeFromHomeCarousel)
+    .slice(0, limit)
 }
 
 /** Get a single announcement by slug (for /news/[slug] page). */
