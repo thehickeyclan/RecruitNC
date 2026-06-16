@@ -29,21 +29,52 @@ function gradYearFromDob(dob: string): number | null {
   return y + 18
 }
 
-/** Resolve AAU roster wrestler names to athlete IDs for /view-profile links. */
-export async function getAauScholasticDuals2026ProfileIdMap(): Promise<Record<string, string>> {
-  const map: Record<string, string> = { ...AAU_SCHOLASTIC_DUALS_2026_PROFILE_OVERRIDES }
+type AthleteRow = {
+  id: string
+  highschool?: string | null
+  graduationyear?: number | null
+}
+
+function applyRosterAthleteMatch(
+  displayName: string,
+  match: AthleteRow,
+  profileIdMap: Record<string, string>,
+  highSchoolMap: Record<string, string>
+) {
+  profileIdMap[displayName] = String(match.id)
+  const school = match.highschool?.trim()
+  if (school) highSchoolMap[displayName] = school
+}
+
+/** Profile links + high schools for the AAU news article roster table. */
+export async function getAauScholasticDuals2026RosterDisplayMaps(): Promise<{
+  profileIdMap: Record<string, string>
+  highSchoolMap: Record<string, string>
+}> {
+  const profileIdMap: Record<string, string> = {}
+  const highSchoolMap: Record<string, string> = {}
 
   const admin = createAdminClient()
   const { data: athletes, error } = await admin
     .from("athletes")
     .select("id, name, wrestling_name, graduationyear, highschool")
 
-  if (error || !athletes?.length) return map
+  if (error || !athletes?.length) {
+    return { profileIdMap, highSchoolMap }
+  }
+
+  const athleteById = new Map(
+    athletes.map((a) => [String((a as AthleteRow).id), a as AthleteRow & Record<string, unknown>])
+  )
+
+  for (const [displayName, id] of Object.entries(AAU_SCHOLASTIC_DUALS_2026_PROFILE_OVERRIDES)) {
+    const match = athleteById.get(id)
+    if (match) applyRosterAthleteMatch(displayName, match, profileIdMap, highSchoolMap)
+  }
 
   for (const row of AAU_SCHOLASTIC_DUALS_2026_ROSTER) {
     const displayName = row.wrestler.trim()
-    if (!displayName || row.openSlot) continue
-    if (map[displayName]) continue
+    if (!displayName || row.openSlot || profileIdMap[displayName]) continue
 
     const wantName = normName(displayName)
     const wantGy = gradYearFromDob(row.dob)
@@ -59,11 +90,17 @@ export async function getAauScholasticDuals2026ProfileIdMap(): Promise<Record<st
     if (!match && candidates.length === 1) match = candidates[0]
 
     if (match) {
-      map[displayName] = String((match as { id: string }).id)
+      applyRosterAthleteMatch(displayName, match as AthleteRow, profileIdMap, highSchoolMap)
     }
   }
 
-  return map
+  return { profileIdMap, highSchoolMap }
+}
+
+/** Resolve AAU roster wrestler names to athlete IDs for /view-profile links. */
+export async function getAauScholasticDuals2026ProfileIdMap(): Promise<Record<string, string>> {
+  const { profileIdMap } = await getAauScholasticDuals2026RosterDisplayMaps()
+  return profileIdMap
 }
 
 export function aauScholasticProfileHref(name: string, profileIdMap: Record<string, string>): string {
