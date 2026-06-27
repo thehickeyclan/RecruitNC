@@ -58,10 +58,10 @@ export type AauScholasticMowSpotlight = {
 export const AAU_SCHOLASTIC_DUALS_2026_MOW_SPOTLIGHTS: AauScholasticMowSpotlight[] = [
   {
     wrestler: "Mac Johnson",
-    title: "NC United Team Tournament Most Outstanding Wrestler",
+    title: "All Star Division Most Outstanding Wrestler",
     record: "12-0",
     description:
-      "Mac went a perfect 12-0 with a team-high +65 net points, six falls, and 11 bonus wins — earning NC United’s team MOW honor and the AAU Varsity District Division Most Outstanding Wrestler award.",
+      "Mac went a perfect 12-0 with a team-high +65 net points, six falls, and 11 bonus wins — earning the All Star Division MOW honor and the AAU Varsity District Division Most Outstanding Wrestler award.",
     imageSrc: "/images/aau-scholastic-2026-results/mac-johnson-team-mow-plaque.png",
     imageAlt: "Mac Johnson with AAU Scholastic Duals Most Outstanding Wrestler plaque and medals",
   },
@@ -133,7 +133,7 @@ export const AAU_SCHOLASTIC_DUALS_2026_WIN_TYPES: AauScholasticWinTypes = {
 
 export const AAU_SCHOLASTIC_DUALS_2026_TEAM_TROPHY = {
   placement: "2nd Place",
-  division: "Gold Pool · District / All-Star Division",
+  division: "Gold Pool · All Star Division",
   event: "AAU Scholastic Duals Team Championships",
   location: "Fort Lauderdale, Florida",
   imageSrc: "/images/aau-scholastic-2026-results/gold-pool-second-place-trophy.png",
@@ -172,8 +172,8 @@ export const AAU_SCHOLASTIC_DUALS_2026_HIGHLIGHT_VIDEOS = [
 export const AAU_SCHOLASTIC_DUALS_2026_RECAP_PARAGRAPHS: string[] = [
   "NC United closed its fifth national-team trip with an 11-1 dual record and a 2nd-place Gold Pool finish at the 2026 AAU Scholastic Duals in Fort Lauderdale — a 9-0 sweep through pool play and a 2-1 Gold Pool run capped by a team tournament trophy.",
   "The squad outscored opponents 619–176 (+443) in dual meet team scoring. Assigned wrestlers went 127-36 (77.9% win rate) with 619 gross team points, 148 allowed, and +471 net — open-weight forfeits against NC are not charged to any individual.",
-  "Mac Johnson (12-0, +65 net team points) earned NC United Team Tournament Most Outstanding Wrestler and went a perfect 12-0. Aaron Ellison matched him at 12-0 (+54). Tye Johnson (11-1) was named Referees' Choice Tournament Most Outstanding Wrestler with a team-high six tech falls. Bonus-point wrestling carried the weekend: 40 falls, 32 tech falls, and 18 major decisions among 127 bout wins.",
-  "The lone dual setback came against MAWA Blue (20-38) in Gold Pool competition. Every other opponent fell, including statement wins over Nebraska Magic, Iowa Black, Team Michigan Blue, and a one-point thriller over Spec Ops (27-26).",
+  "Mac Johnson (12-0, +65 net team points) earned All Star Division Most Outstanding Wrestler and AAU Varsity District Division MOW honors. Aaron Ellison matched him at 12-0 (+54). Tye Johnson (11-1) was named Referees' Choice Tournament Most Outstanding Wrestler with a team-high six tech falls. Bonus-point wrestling carried the weekend: 40 falls, 32 tech falls, and 18 major decisions among 127 bout wins.",
+  "The lone dual setback came in the Gold Pool finals against MAWA Blue (20-38). Every other opponent fell, including statement wins over Nebraska Magic, Iowa Black, Team Michigan Blue, and a one-point thriller over Spec Ops (27-26).",
 ]
 
 export const AAU_SCHOLASTIC_DUALS_2026_DUALS: AauScholasticDualResult[] = [
@@ -188,7 +188,7 @@ export const AAU_SCHOLASTIC_DUALS_2026_DUALS: AauScholasticDualResult[] = [
   { matchNumber: 9, opponent: "SD Blue", result: "W", ourScore: 63, opponentScore: 10, notes: "Pool play" },
   { matchNumber: 10, opponent: "Team Diamond Fish All Star", result: "W", ourScore: 43, opponentScore: 24, notes: "Gold Pool" },
   { matchNumber: 11, opponent: "Spec Ops", result: "W", ourScore: 27, opponentScore: 26, notes: "Gold Pool" },
-  { matchNumber: 12, opponent: "MAWA Blue", result: "L", ourScore: 20, opponentScore: 38, notes: "Gold Pool" },
+  { matchNumber: 12, opponent: "MAWA Blue", result: "L", ourScore: 20, opponentScore: 38, notes: "Gold Pool · Finals" },
 ]
 
 /** Sorted by net team points (highest first). */
@@ -202,7 +202,7 @@ export const AAU_SCHOLASTIC_DUALS_2026_INDIVIDUALS: AauScholasticIndividualResul
     allowedPts: 0,
     netPts: 65,
     bonusWins: 11,
-    notes: "Team MOW · 12-0 · 6 falls · +65 net",
+    notes: "All Star Division MOW · AAU Varsity District Division MOW · 12-0 · 6 falls · +65 net",
   },
   {
     wrestler: "Aaron Ellison",
@@ -360,7 +360,7 @@ export const AAU_SCHOLASTIC_DUALS_2026_GALLERY: AauScholasticGalleryImage[] = [
   {
     src: "/images/aau-scholastic-2026-results/mac-johnson-team-mow-plaque.png",
     alt: "Mac Johnson — AAU Scholastic Duals Most Outstanding Wrestler",
-    caption: "Mac Johnson · Team MOW · AAU Varsity District Division",
+    caption: "Mac Johnson · All Star Division MOW · AAU Varsity District Division",
   },
   {
     src: "/images/aau-scholastic-2026-results/mac-johnson-mow-medals.png",

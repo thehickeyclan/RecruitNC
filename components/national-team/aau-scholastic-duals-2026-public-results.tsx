@@ -22,11 +22,12 @@ import {
   AAU_SCHOLASTIC_INDIVIDUAL_STATS_FOOTNOTE,
   AAU_SCHOLASTIC_DUALS_2026_WIN_TYPES,
   aauIndividualWinPct,
-  countUndefeated,
   sortAauDuals,
 } from "@/lib/aau-scholastic-duals-2026-results"
 import { aauScholasticProfileHref } from "@/lib/content/aau-scholastic-duals-2026-profile-ids"
+import { AauScholasticDualMeetRow } from "@/components/national-team/aau-scholastic-dual-meet-row"
 import { AauScholasticDualsWrestlerCards } from "@/components/national-team/aau-scholastic-duals-wrestler-cards"
+import { getAauScholasticDualBouts } from "@/lib/aau-scholastic-duals-2026-dual-bouts"
 import { NhscaDualsTournamentMomentMedia } from "@/components/national-team/nhsca-duals-tournament-moment-media"
 import {
   aauNavPillClass,
@@ -73,7 +74,6 @@ export function AauScholasticDuals2026PublicResults({
   const [search, setSearch] = useState("")
 
   const computedIndividualPct = aauIndividualWinPct(individuals)
-  const undefeated = countUndefeated(individuals)
 
   const filteredIndividuals = individuals.filter((r) => {
     if (!search.trim()) return true
@@ -211,11 +211,6 @@ export function AauScholasticDuals2026PublicResults({
             {AAU_SCHOLASTIC_DUALS_2026_RECAP_PARAGRAPHS.map((p, i) => (
               <p key={i}>{p}</p>
             ))}
-            {undefeated > 0 && (
-              <p className="text-[#FF7070] font-semibold">
-                Mac Johnson and Aaron Ellison finished 12-0. Mac earned NC United Team MOW; Tye Johnson was Referees&apos; Choice MOW.
-              </p>
-            )}
           </div>
         </section>
 
@@ -398,7 +393,9 @@ export function AauScholasticDuals2026PublicResults({
             <div>
               <h2 className={aauPanelTitleClass}>Dual meet results</h2>
               <p className={aauPanelDescClass}>
-                {duals.length > 0 ? `${duals.filter((d) => d.result === "W").length} wins · ${duals.filter((d) => d.result === "L").length} losses` : "Scores will appear here"}
+                {duals.length > 0
+                  ? `${duals.filter((d) => d.result === "W").length} wins · ${duals.filter((d) => d.result === "L").length} losses · tap a dual for bout-by-bout results`
+                  : "Scores will appear here"}
               </p>
             </div>
           </div>
@@ -406,29 +403,13 @@ export function AauScholasticDuals2026PublicResults({
             {duals.length === 0 ? (
               <p className="text-white/60 text-sm">Dual results not posted yet.</p>
             ) : (
-              duals.map((dual, i) => {
-                const win = dual.result === "W"
-                return (
-                  <div
-                    key={`${dual.opponent}-${i}`}
-                    className={cn(
-                      "flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-xl border-l-4 px-4 py-3",
-                      win ? "bg-emerald-500/10 border-emerald-500" : "bg-red-500/10 border-red-500"
-                    )}
-                  >
-                    <div>
-                      <p className="font-bold text-white">vs {dual.opponent}</p>
-                      {dual.notes && <p className="text-sm text-white/65 mt-0.5">{dual.notes}</p>}
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      <span className={cn("font-black text-lg tabular-nums", win ? "text-emerald-300" : "text-red-300")}>
-                        {dual.ourScore}–{dual.opponentScore}
-                      </span>
-                      <Badge className={win ? "bg-emerald-600" : "bg-red-700"}>{win ? "W" : "L"}</Badge>
-                    </div>
-                  </div>
-                )
-              })
+              duals.map((dual) => (
+                <AauScholasticDualMeetRow
+                  key={`${dual.matchNumber ?? dual.opponent}-${dual.opponent}`}
+                  dual={dual}
+                  bouts={getAauScholasticDualBouts(dual.matchNumber)}
+                />
+              ))
             )}
           </div>
         </section>
