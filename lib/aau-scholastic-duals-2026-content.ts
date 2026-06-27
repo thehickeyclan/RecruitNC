@@ -455,6 +455,9 @@ export const AAU_SCHOLASTIC_DUALS_2026 = {
   groupMeLabel: "SCHOLASTIC DUALS 2026",
 } as const
 
+/** When false, hide the family info page from National Team promos; URL still works (e.g. results footer). */
+export const AAU_SCHOLASTIC_DUALS_2026_INFO_PUBLISHED = false
+
 /** NC United staff — parent-facing contacts for AAU Scholastic Duals. */
 export type AauScholasticTeamMember = {
   name: string

@@ -2,7 +2,7 @@ import type { ReactNode } from "react"
 import Image from "next/image"
 import { WrestlingGuildWeeklyScheduleAd } from "@/components/news/wrestling-guild-weekly-schedule-ad"
 import { HardLink } from "@/components/hard-link"
-import { AAU_SCHOLASTIC_DUALS_2026_BANNER } from "@/lib/aau-scholastic-duals-2026-content"
+import { AAU_SCHOLASTIC_DUALS_2026, AAU_SCHOLASTIC_DUALS_2026_BANNER } from "@/lib/aau-scholastic-duals-2026-content"
 import { AAU_SCHOLASTIC_DUALS_2026_ROSTER } from "@/lib/aau-scholastic-duals-2026-roster"
 import { aauScholasticProfileHref } from "@/lib/content/aau-scholastic-duals-2026-profile-ids"
 
@@ -122,9 +122,9 @@ export function AauScholasticDuals2026FloridaContent({
         .
       </p>
       <p>
-        Families can find AAU Scholastic Duals info, roster updates, and checkout on the{" "}
-        <HardLink href="/national-team/scholastic-duals-2026" className={athleteLinkClass}>
-          AAU Scholastic Duals 2026 team page
+        Full tournament results, athlete cards, and highlights are on the{" "}
+        <HardLink href={AAU_SCHOLASTIC_DUALS_2026.resultsPath} className={athleteLinkClass}>
+          AAU Scholastic Duals 2026 results page
         </HardLink>{" "}
         · Fort Lauderdale, June 2026.
       </p>
@@ -189,12 +189,12 @@ export function AauScholasticDuals2026FloridaContent({
       <h2>2026 AAU Scholastic Duals Roster</h2>
       <p>
         NC United&apos;s starter lineup for Fort Lauderdale — full weight classes with the +5 lb bump per AAU rules.
-        Registration, travel, and team operations details live on the{" "}
+        Tournament recap, dual scores, and athlete cards are on the{" "}
         <HardLink
-          href="/national-team/scholastic-duals-2026"
+          href={AAU_SCHOLASTIC_DUALS_2026.resultsPath}
           className="font-semibold text-[#003366] underline underline-offset-2 hover:no-underline"
         >
-          AAU Scholastic Duals team page
+          AAU Scholastic Duals results page
         </HardLink>
         .
       </p>
