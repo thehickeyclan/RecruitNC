@@ -14,56 +14,17 @@ import { getTournaments, type Tournament, getTournamentResults } from "@/lib/nc-
 import { NHSCA_DUALS_2026_NATIONAL_ACHIEVEMENT } from "@/lib/nhsca-duals-public-hero-stats"
 import { NHSCA_DUALS_2026_NATIONAL_JOURNEY_CARD_PHOTO } from "@/lib/nhsca-duals-2026-team-photos"
 import { AAU_SCHOLASTIC_DUALS_2026 } from "@/lib/aau-scholastic-duals-2026-content"
-import type { NhscaDualsResultsSnapshot } from "@/lib/nhsca-duals-live-results/types"
-
-function normalizeAthleteName(name: string): string {
-  return name.trim().toLowerCase().replace(/\s+/g, " ")
-}
-
-function isNhscaDuals2026Tournament(t: Tournament): boolean {
-  return t.year === 2026 && /nhsca/i.test(t.name) && /dual/i.test(t.name)
-}
-
-function mergeNhsca2026NationalIntoAggregate(
-  dualsData: (NhscaDualsResultsSnapshot & { tablesReady?: boolean }) | null,
-  hasNhsca2026InDb: boolean,
-  totals: {
-    tournamentCount: number
-    totalTeamWins: number
-    totalTeamLosses: number
-    totalIndividualWins: number
-    totalIndividualLosses: number
-    uniqueAthletes: Set<string>
-  }
-): { dualRecord: string; individual: string; winPct: number | null; ready: boolean } | null {
-  if (hasNhsca2026InDb || !dualsData?.summaries?.national || !dualsData.tablesReady) return null
-
-  const nationalTeam = dualsData.teams?.find((t) => t.team_type === "national")
-  if (!nationalTeam) return null
-
-  const n = dualsData.summaries.national
-  totals.tournamentCount += 1
-  totals.totalTeamWins += n.dualWins
-  totals.totalTeamLosses += n.dualLosses
-  totals.totalIndividualWins += n.matchWins
-  totals.totalIndividualLosses += n.matchLosses
-
-  for (const wrestler of dualsData.wrestlers ?? []) {
-    if (wrestler.team_id !== nationalTeam.id) continue
-    const normalized = normalizeAthleteName(wrestler.name)
-    if (normalized) totals.uniqueAthletes.add(normalized)
-  }
-
-  const matchW = n.matchWins
-  const matchL = n.matchLosses
-  const total = matchW + matchL
-  return {
-    dualRecord: `${n.dualWins}-${n.dualLosses}`,
-    individual: `${matchW}-${matchL}`,
-    winPct: total > 0 ? Math.round((matchW / total) * 100) : null,
-    ready: true,
-  }
-}
+import { AAU_SCHOLASTIC_DUALS_2026_RESULTS_META } from "@/lib/aau-scholastic-duals-2026-results"
+import {
+  computeNationalTeamAggregatePercentages,
+  isAauScholasticDuals2026Tournament,
+  isNhscaDuals2026Tournament,
+  mergeAauScholastic2026IntoAggregate,
+  mergeNhsca2026NationalIntoAggregate,
+  normalizeNationalTeamAthleteName,
+  resolveTournamentCardStats,
+  type NationalTeamTournamentCardStats,
+} from "@/lib/national-team-tournament-aggregate"
 
 export default function NCUnitedNationalTeam() {
   const [tournaments, setTournaments] = useState<Tournament[]>([])
@@ -78,12 +39,8 @@ export default function NCUnitedNationalTeam() {
     overallWinPercentage: 0,
     teamRecordWinPercentage: 0,
   })
-  const [nhsca2026Stats, setNhsca2026Stats] = useState<{
-    dualRecord: string
-    individual: string
-    winPct: number | null
-    ready: boolean
-  } | null>(null)
+  const [nhsca2026Stats, setNhsca2026Stats] = useState<NationalTeamTournamentCardStats | null>(null)
+  const [aau2026Stats, setAau2026Stats] = useState<NationalTeamTournamentCardStats | null>(null)
 
   useEffect(() => {
     async function loadNationalTeamStats() {
@@ -104,6 +61,7 @@ export default function NCUnitedNationalTeam() {
         let totalIndividualLosses = 0
         const uniqueAthletes = new Set<string>()
         const hasNhsca2026InDb = data.some(isNhscaDuals2026Tournament)
+        const hasAau2026InDb = data.some(isAauScholasticDuals2026Tournament)
 
         for (const tournament of data) {
           if (tournament.team_record) {
@@ -124,7 +82,7 @@ export default function NCUnitedNationalTeam() {
           try {
             const results = await getTournamentResults(tournament.id)
             for (const result of results) {
-              const name = normalizeAthleteName(
+              const name = normalizeNationalTeamAthleteName(
                 `${result.wrestler.first_name} ${result.wrestler.last_name}`
               )
               if (name) uniqueAthletes.add(name)
@@ -142,16 +100,15 @@ export default function NCUnitedNationalTeam() {
           totalIndividualLosses,
           uniqueAthletes,
         }
-        const nhsca2026 = mergeNhsca2026NationalIntoAggregate(dualsRes, hasNhsca2026InDb, totals)
-        if (nhsca2026) setNhsca2026Stats(nhsca2026)
+        const nhsca2026Merged = mergeNhsca2026NationalIntoAggregate(dualsRes, hasNhsca2026InDb, totals)
+        const aau2026Merged = mergeAauScholastic2026IntoAggregate(hasAau2026InDb, totals)
 
-        const totalTeamMatches = totals.totalTeamWins + totals.totalTeamLosses
-        const teamRecordWinPercentage =
-          totalTeamMatches > 0 ? Math.round((totals.totalTeamWins / totalTeamMatches) * 100) : 0
+        setNhsca2026Stats(
+          resolveTournamentCardStats(data.find(isNhscaDuals2026Tournament), nhsca2026Merged)
+        )
+        setAau2026Stats(resolveTournamentCardStats(data.find(isAauScholasticDuals2026Tournament), aau2026Merged))
 
-        const totalMatches = totals.totalIndividualWins + totals.totalIndividualLosses
-        const overallWinPercentage =
-          totalMatches > 0 ? Math.round((totals.totalIndividualWins / totalMatches) * 100) : 0
+        const { overallWinPercentage, teamRecordWinPercentage } = computeNationalTeamAggregatePercentages(totals)
 
         setAggregateStats({
           tournamentCount: totals.tournamentCount,
@@ -233,7 +190,7 @@ export default function NCUnitedNationalTeam() {
               AAU Scholastic Duals tournament recap · Fort Lauderdale, June 2026
             </p>
 
-            {/* National team stats — UCD + NHSCA through 2026 (National squad only; excludes Select) */}
+            {/* National team stats — UCD, NHSCA, and AAU through 2026 (National squad only; excludes Select) */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mt-12 md:mt-16 px-4">
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 md:p-6 border border-white/20">
                 <div className="text-2xl md:text-3xl font-bold text-[#CBAF5D] mb-1 md:mb-2">
@@ -451,6 +408,71 @@ export default function NCUnitedNationalTeam() {
                         className="flex w-full min-h-[48px] items-center justify-center rounded-md bg-[#B31B1B] px-4 py-2 text-sm font-semibold text-white hover:bg-[#9a1616] transition-colors"
                       >
                         NHSCA 2026 Portal — Results &amp; Athlete Cards
+                      </HardLink>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* AAU Scholastic Duals 2026 — National Team */}
+              <Card className="overflow-hidden shadow-lg border-0 lg:col-span-2">
+                <div className="relative w-full h-72 sm:h-80 md:h-[22rem] lg:h-[24rem] overflow-hidden bg-[#001428]">
+                  <Image
+                    src={AAU_SCHOLASTIC_DUALS_2026_RESULTS_META.heroImage}
+                    alt={AAU_SCHOLASTIC_DUALS_2026_RESULTS_META.heroImageAlt}
+                    fill
+                    className="object-cover object-center"
+                    sizes="(max-width: 768px) 100vw, 1280px"
+                  />
+                  <div className="absolute inset-0 bg-black/45" />
+                  <div className="relative z-10 p-6 md:p-8 h-full flex flex-col justify-end text-white">
+                    <Badge className="w-fit mb-3 md:mb-4 bg-[#B31B1B] hover:bg-[#B31B1B] text-white border-0">
+                      2026
+                    </Badge>
+                    <h3 className="text-2xl md:text-3xl font-bold mb-2 md:mb-3">AAU Scholastic Duals</h3>
+                    <p className="text-gray-100 text-base md:text-lg">Fort Lauderdale, FL · National Team</p>
+                  </div>
+                </div>
+                <CardContent className="p-6 md:p-8">
+                  <div className="space-y-4 md:space-y-6">
+                    <div className="grid grid-cols-2 gap-4 md:gap-6">
+                      <div className="text-center p-3 md:p-4 bg-[#002147] rounded-lg">
+                        <div className="text-2xl md:text-3xl font-bold text-white mb-1">
+                          {aau2026Stats?.ready ? aau2026Stats.dualRecord : "—"}
+                        </div>
+                        <div className="text-xs md:text-sm text-blue-200">National Dual Record</div>
+                      </div>
+                      <div className="text-center p-3 md:p-4 bg-gray-100 rounded-lg">
+                        <div className="text-2xl md:text-3xl font-bold text-[#002147] mb-1">
+                          {aau2026Stats?.ready ? aau2026Stats.individual : "—"}
+                        </div>
+                        <div className="text-xs md:text-sm text-gray-600">Individual Matches</div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 md:gap-6">
+                      <div className="text-center p-3 md:p-4 bg-gray-100 rounded-lg">
+                        <div className="text-2xl md:text-3xl font-bold text-[#002147] mb-1">
+                          {aau2026Stats?.ready && aau2026Stats.winPct != null
+                            ? `${aau2026Stats.winPct}%`
+                            : "—"}
+                        </div>
+                        <div className="text-xs md:text-sm text-gray-600">Win Percentage</div>
+                      </div>
+                      <div className="text-center p-3 md:p-4 bg-[#B31B1B]/10 rounded-lg">
+                        <div className="text-lg md:text-2xl font-bold text-[#B31B1B] mb-1">
+                          {aau2026Stats?.placement ?? AAU_SCHOLASTIC_DUALS_2026_RESULTS_META.placement}
+                        </div>
+                        <div className="text-xs md:text-sm text-gray-600">Gold Pool Finish</div>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 md:pt-6 border-t">
+                      <HardLink
+                        href={AAU_SCHOLASTIC_DUALS_2026.resultsPath}
+                        className="flex w-full min-h-[48px] items-center justify-center rounded-md bg-[#B31B1B] px-4 py-2 text-sm font-semibold text-white hover:bg-[#9a1616] transition-colors"
+                      >
+                        AAU 2026 Results — Recap &amp; Athlete Cards
                       </HardLink>
                     </div>
                   </div>
