@@ -208,7 +208,7 @@ export function AauScholasticDualsWrestlerCards({
       {pending > 0 ? (
         <p className="text-xs text-[#FFB3B3]/90 mb-4">
           {pending} card{pending === 1 ? "" : "s"} coming soon — send art and we&apos;ll add them here. Full stats
-          are in the roster table below.
+          are in the individual results table above.
         </p>
       ) : null}
       {cards.length > 0 ? (

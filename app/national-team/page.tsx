@@ -211,10 +211,10 @@ export default function NCUnitedNationalTeam() {
             {/* Hero CTAs */}
             <div className="mb-6 md:mb-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 flex-wrap">
               <HardLink
-                href="/national-team/scholastic-duals-2026"
+                href={AAU_SCHOLASTIC_DUALS_2026.resultsPath}
                 className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-[#B31B1B] px-6 py-3 text-base font-bold text-white shadow-lg hover:bg-[#9a1616] transition-colors border-2 border-white/20"
               >
-                AAU Scholastic Duals · 2026
+                AAU Scholastic Duals · Results
               </HardLink>
               <Link
                 href="#schedule"
@@ -230,7 +230,7 @@ export default function NCUnitedNationalTeam() {
               </HardLink>
             </div>
             <p className="text-sm text-blue-100/90">
-              AAU Scholastic Duals info &amp; registration · Fort Lauderdale, June 2026
+              AAU Scholastic Duals tournament recap · Fort Lauderdale, June 2026
             </p>
 
             {/* National team stats — UCD + NHSCA through 2026 (National squad only; excludes Select) */}
@@ -293,17 +293,9 @@ export default function NCUnitedNationalTeam() {
                   NHSCA 2026 Portal →
                 </HardLink>
               </div>
-              {/* AAU Scholastic Duals — family info & registration */}
-              <HardLink
-                href="/national-team/scholastic-duals-2026"
-                className="flex flex-col rounded-2xl border-2 border-[#B31B1B]/40 bg-[#001428] p-6 text-white hover:border-[#B31B1B]/70 hover:shadow-md transition-all group"
-              >
-                <span className="font-bold text-lg text-white">AAU Scholastic Duals 2026</span>
-                <span className="text-sm text-[#FF7070] mt-1 group-hover:underline">Info, registration &amp; parent FAQ →</span>
-              </HardLink>
               <HardLink
                 href={AAU_SCHOLASTIC_DUALS_2026.resultsPath}
-                className="flex flex-col rounded-2xl border-2 border-[#B31B1B]/40 bg-[#001428] p-6 text-white hover:border-[#B31B1B]/70 hover:shadow-md transition-all group"
+                className="flex flex-col rounded-2xl border-2 border-[#B31B1B]/40 bg-[#001428] p-6 text-white hover:border-[#B31B1B]/70 hover:shadow-md transition-all group sm:col-span-2"
               >
                 <span className="font-bold text-lg text-white">AAU Scholastic Duals 2026</span>
                 <span className="text-sm text-[#FF7070] mt-1 group-hover:underline">Results &amp; tournament recap →</span>
@@ -1037,10 +1029,10 @@ export default function NCUnitedNationalTeam() {
                       The 2026 AAU Scholastic Duals (formerly Disney Duals) brings together approximately 40–50 elite teams from across the country to compete in high-level team duals, providing a premier national competition experience for top youth and scholastic wrestlers.
                     </p>
                     <HardLink
-                      href="/national-team/scholastic-duals-2026"
+                      href={AAU_SCHOLASTIC_DUALS_2026.resultsPath}
                       className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-[#B31B1B] px-4 py-2 text-sm font-semibold text-white hover:bg-[#9a1616] transition-colors"
                     >
-                      Family info &amp; registration →
+                      View tournament results →
                     </HardLink>
                   </div>
                 </div>

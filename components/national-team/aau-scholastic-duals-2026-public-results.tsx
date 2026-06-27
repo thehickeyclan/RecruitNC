@@ -49,7 +49,6 @@ const NAV_LINKS = [
   { href: "#duals", label: "Dual results" },
   { href: "#individual", label: "Individual" },
   { href: "#cards", label: "Athlete cards" },
-  { href: "#roster", label: "Roster" },
 ] as const
 
 type Props = {
@@ -514,56 +513,12 @@ export function AauScholasticDuals2026PublicResults({
           <AauScholasticDualsWrestlerCards profileIdMap={profileIdMap} />
         </section>
 
-        {/* Roster */}
-        <section id="roster" className={aauPanelClass}>
-          <div className={cn(aauPanelHeaderClass, "flex items-center gap-2")}>
-            <Users className="w-5 h-5 text-[#FF7070]" aria-hidden />
-            <div>
-              <h2 className={aauPanelTitleClass}>NC United roster</h2>
-              <p className={aauPanelDescClass}>Athletes who competed · AAU Scholastic Duals 2026</p>
-            </div>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-white/90">
-              <thead>
-                <tr className="border-b border-white/10 text-left text-white/70">
-                  <th className="px-4 py-3 font-semibold">Weight</th>
-                  <th className="px-4 py-3 font-semibold">Wrestler</th>
-                  <th className="px-4 py-3 font-semibold hidden sm:table-cell">School</th>
-                  <th className="px-4 py-3 font-semibold hidden md:table-cell">Record</th>
-                </tr>
-              </thead>
-              <tbody>
-                {individuals.map((row) => (
-                  <tr key={row.weightLabel} className="border-b border-white/5">
-                    <td className="px-4 py-2.5">{row.weightLabel}</td>
-                    <td className="px-4 py-2.5">
-                      <HardLink
-                        href={aauScholasticProfileHref(row.wrestler, profileIdMap)}
-                        className="font-semibold text-[#FF7070] hover:text-[#FFB3B3] hover:underline"
-                      >
-                        {row.wrestler}
-                      </HardLink>
-                    </td>
-                    <td className="px-4 py-2.5 hidden sm:table-cell text-white/65">
-                      {highSchoolMap[row.wrestler] ?? row.highSchool ?? "—"}
-                    </td>
-                    <td className="px-4 py-2.5 hidden md:table-cell text-white/80 tabular-nums">
-                      {row.wins}-{row.losses}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
         {/* Footer CTAs */}
         <div className="flex flex-wrap gap-3 justify-center pt-4">
           <HardLink href={meta.newsArticlePath} className={aauSecondaryBtnClass}>
             Read pre-event story
           </HardLink>
-          <HardLink href={meta.infoPagePath} className={aauPrimaryBtnClass}>
+          <HardLink href={meta.infoPagePath} className={aauSecondaryBtnClass}>
             Team info page
           </HardLink>
         </div>
