@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input"
 import { HardLink } from "@/components/hard-link"
 import {
   AAU_SCHOLASTIC_DUALS_2026_DUALS,
-  AAU_SCHOLASTIC_DUALS_2026_GALLERY,
   AAU_SCHOLASTIC_DUALS_2026_INDIVIDUALS,
   AAU_SCHOLASTIC_DUALS_2026_MOW_SPOTLIGHTS,
   AAU_SCHOLASTIC_DUALS_2026_RECAP_PARAGRAPHS,
@@ -51,7 +50,6 @@ const NAV_LINKS = [
   { href: "#individual", label: "Individual" },
   { href: "#cards", label: "Athlete cards" },
   { href: "#roster", label: "Roster" },
-  { href: "#gallery", label: "Gallery" },
 ] as const
 
 type Props = {
@@ -559,27 +557,6 @@ export function AauScholasticDuals2026PublicResults({
             </table>
           </div>
         </section>
-
-        {/* Gallery */}
-        {AAU_SCHOLASTIC_DUALS_2026_GALLERY.length > 0 && (
-          <section id="gallery" className={aauPanelClass}>
-            <div className={aauPanelHeaderClass}>
-              <h2 className={aauPanelTitleClass}>Tournament gallery</h2>
-            </div>
-            <div className="p-4 sm:p-6 grid sm:grid-cols-2 gap-4">
-              {AAU_SCHOLASTIC_DUALS_2026_GALLERY.map((img) => (
-                <figure key={img.src} className="overflow-hidden rounded-xl border border-white/10">
-                  <div className="relative aspect-video bg-black/40">
-                    <Image src={img.src} alt={img.alt} fill className="object-cover" sizes="(max-width: 640px) 100vw, 480px" />
-                  </div>
-                  {img.caption && (
-                    <figcaption className="px-3 py-2 text-xs text-white/65 border-t border-white/10">{img.caption}</figcaption>
-                  )}
-                </figure>
-              ))}
-            </div>
-          </section>
-        )}
 
         {/* Footer CTAs */}
         <div className="flex flex-wrap gap-3 justify-center pt-4">
