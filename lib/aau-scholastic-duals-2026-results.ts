@@ -164,9 +164,17 @@ export const AAU_SCHOLASTIC_DUALS_2026_DAY2_HIGHLIGHTS_VIDEO = {
   ariaLabel: "NC United Day 2 highlights video — AAU Scholastic Duals 2026",
 } as const
 
+export const AAU_SCHOLASTIC_DUALS_2026_GOLD_POOL_HIGHLIGHTS_VIDEO = {
+  videoSrc: "/national-team/aau-scholastic-duals-2026/videos/gold-pool-highlights.mov",
+  title: "Gold Pool Highlights",
+  caption: "NC United National Team · AAU Scholastic Duals 2026 · Fort Lauderdale",
+  ariaLabel: "NC United Gold Pool highlights video — AAU Scholastic Duals 2026",
+} as const
+
 export const AAU_SCHOLASTIC_DUALS_2026_HIGHLIGHT_VIDEOS = [
   AAU_SCHOLASTIC_DUALS_2026_DAY1_HIGHLIGHTS_VIDEO,
   AAU_SCHOLASTIC_DUALS_2026_DAY2_HIGHLIGHTS_VIDEO,
+  AAU_SCHOLASTIC_DUALS_2026_GOLD_POOL_HIGHLIGHTS_VIDEO,
 ] as const
 
 export const AAU_SCHOLASTIC_DUALS_2026_RECAP_PARAGRAPHS: string[] = [

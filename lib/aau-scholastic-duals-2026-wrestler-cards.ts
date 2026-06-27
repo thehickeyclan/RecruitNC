@@ -21,6 +21,7 @@ export const AAU_SCHOLASTIC_DUALS_2026_WRESTLER_CARDS: AauScholasticWrestlerCard
   { weightClass: "138", wrestler: "Tye Johnson", imageSrc: `${CARD_BASE}/tye-johnson-138.png` },
   { weightClass: "144", wrestler: "Jake Amiott", imageSrc: `${CARD_BASE}/jake-amiott-144.png` },
   { weightClass: "150", wrestler: "Jacob Perry", imageSrc: `${CARD_BASE}/jacob-perry-150.png` },
+  { weightClass: "157", wrestler: "Aaron Ellison", imageSrc: `${CARD_BASE}/aaron-ellison-157.png` },
 ]
 
 export function getAauScholasticWrestlerCardsSorted(): AauScholasticWrestlerCard[] {
