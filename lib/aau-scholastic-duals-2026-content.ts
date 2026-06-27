@@ -446,6 +446,7 @@ export const AAU_SCHOLASTIC_DUALS_2026 = {
   officialUrl: "https://aausports.org/wrestling/scholastic-duals",
   registerPath: "/national-team/register/aau-2026",
   infoPath: "/national-team/scholastic-duals-2026",
+  resultsPath: "/national-team/aau-scholastic-duals-2026-results",
   contactName: "Matt Hickey",
   contactPhone: "(631) 662-5409",
   contactPhoneTel: "+16316625409",

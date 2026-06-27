@@ -3,7 +3,15 @@
 import { useState } from "react"
 import { ChevronDown } from "lucide-react"
 import { TocVarsityHeading, tocSectionClass } from "@/components/toc/toc-theme"
-import { TOC_CONTACT_EMAIL, TOC_MATS_LINE, TOC_TICKET_SALE_MONTH } from "@/lib/toc/constants"
+import {
+  TOC_CONTACT_EMAIL,
+  TOC_EVENT_DATES_RANGE,
+  TOC_FRIDAY_EVENT_DATE,
+  TOC_MATS_LINE,
+  TOC_SATURDAY_COMPETITION_DATE,
+  TOC_TICKET_SALE_MONTH,
+  TOC_VENUE,
+} from "@/lib/toc/constants"
 
 const FAQ_ITEMS = [
   {
@@ -20,7 +28,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "How does weigh-in work?",
-    a: "Single weigh-in Friday, 6:00–8:00 PM, after the venue is set up for Saturday. No Saturday weight allowance. Skin checks at the scale. USA Wrestling card required.",
+    a: "Single weigh-in Friday at 4:00 PM, then first-round bouts that night. No Saturday weight allowance. Skin checks at the scale. USA Wrestling card required.",
   },
   {
     q: "Will college coaches be there?",
@@ -36,7 +44,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "When and where is the event?",
-    a: `Saturday, September 5, 2026 at Hope Community Church (Apex Campus), 2080 East Williams Street, Apex, NC. Wrestler weigh-in Friday evening; all competition Saturday starting at 8:00 AM. ${TOC_MATS_LINE} Seating for up to 1,000, plus a credentialed Coaches & Officials Lounge in a dedicated atrium room.`,
+    a: `${TOC_EVENT_DATES_RANGE} at ${TOC_VENUE.name} (${TOC_VENUE.campus}), ${TOC_VENUE.address}. ${TOC_FRIDAY_EVENT_DATE}: weigh-in at 4:00 PM and first round Friday night. ${TOC_SATURDAY_COMPETITION_DATE}: doors at 7:30 AM, brackets resume at 9:00 AM through championship finals under the lights. ${TOC_MATS_LINE} Seating for up to 1,000, plus a credentialed Coaches & Officials Lounge in a dedicated atrium room.`,
   },
   {
     q: "Will the event be streamed?",

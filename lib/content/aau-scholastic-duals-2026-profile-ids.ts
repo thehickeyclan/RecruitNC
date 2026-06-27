@@ -9,6 +9,8 @@ export const AAU_SCHOLASTIC_DUALS_2026_PROFILE_OVERRIDES: Record<string, string>
   "Xan Moody": "b3534262-2c69-426d-903d-da76433e361f",
   /** Prefer Cardinal Gibbons '28 over orphan duplicate row. */
   "Luke Richards": "1a2d638e-5978-45d4-b6c8-bc95ba754367",
+  /** Wrestled 157+5 at AAU Scholastic Duals 2026 (Lumberton '28). */
+  "Aaron Ellison": "a31bf725-32b8-4550-aff5-c74c59d97311",
 }
 
 function normName(s: string) {

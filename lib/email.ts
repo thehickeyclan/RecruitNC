@@ -554,7 +554,7 @@ export async function sendAdminBlastEmail(
   to: string,
   subject: string,
   htmlBody: string,
-  logoVariant: "recruitnc" | "nc-united" = "recruitnc",
+  logoVariant: "recruitnc" | "nc-united" = "nc-united",
   options?: {
     replyTo?: string
     headers?: Record<string, string>

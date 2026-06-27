@@ -1,14 +1,14 @@
 import type { Metadata } from "next"
 import { TocLandingPage } from "@/components/toc/toc-landing-page"
 import { getTocEventConfig } from "@/lib/toc/event-config"
-import { TOC_VENUE } from "@/lib/toc/constants"
+import { TOC_SATURDAY_COMPETITION_DATE, TOC_VENUE } from "@/lib/toc/constants"
 
 export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
   title: "Tournament of Champions 2026 | NC United Wrestling",
   description:
-    "NC United Tournament of Champions — by invitation only. The best in the state. One day of wrestling — Saturday, September 5, 2026 in Apex, NC.",
+    `NC United Tournament of Champions — by invitation only. Weigh-in and first round Friday night, brackets finish ${TOC_SATURDAY_COMPETITION_DATE} in Apex, NC.`,
   openGraph: {
     title: "Tournament of Champions | NC United",
     description:
@@ -24,8 +24,8 @@ export default async function TournamentOfChampionsPage() {
     "@context": "https://schema.org",
     "@type": "SportsEvent",
     name: "NC United Tournament of Champions",
-    startDate: "2026-09-04",
-    endDate: "2026-09-05",
+    startDate: "2026-09-18",
+    endDate: "2026-09-19",
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
     eventStatus: "https://schema.org/EventScheduled",
     location: {
@@ -38,7 +38,7 @@ export default async function TournamentOfChampionsPage() {
       name: "NC United Wrestling",
     },
     description:
-      "Invite-only. College weights, stacked brackets, single-mat finals under the lights — all competition Saturday, September 5, 2026.",
+      `Invite-only. College weights, stacked brackets — first round Friday night, finals under the lights ${TOC_SATURDAY_COMPETITION_DATE}.`,
   }
 
   return (
