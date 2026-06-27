@@ -36,7 +36,7 @@ export default function AdminMessagingPage() {
   const [subject, setSubject] = useState("")
   const [body, setBody] = useState("")
   const [channels, setChannels] = useState({ inApp: false, email: true, sms: false })
-  const [logoVariant, setLogoVariant] = useState<"recruitnc" | "nc-united">("recruitnc")
+  const [logoVariant, setLogoVariant] = useState<"recruitnc" | "nc-united">("nc-united")
   const [testEmail, setTestEmail] = useState("")
   const [sending, setSending] = useState(false)
   const [sendResult, setSendResult] = useState<{
@@ -516,8 +516,8 @@ export default function AdminMessagingPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="recruitnc">RecruitNC</SelectItem>
                         <SelectItem value="nc-united">NC United</SelectItem>
+                        <SelectItem value="recruitnc">RecruitNC</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

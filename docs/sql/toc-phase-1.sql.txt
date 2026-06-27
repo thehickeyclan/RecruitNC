@@ -5,7 +5,7 @@
 create table if not exists public.toc_event_config (
   id int primary key default 1,
   phase text check (phase in ('phase_1','phase_2','phase_3','phase_4','post_event')) default 'phase_1',
-  event_dates text default 'September 4-5, 2026',
+  event_dates text default 'September 18-19, 2026',
   venue_name text,
   venue_address text,
   hero_primary_cta_label text default 'Get Notified',

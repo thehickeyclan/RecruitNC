@@ -1,7 +1,7 @@
 # NC United Tournament of Champions — Venue Operations
 
 **Version:** 1.12  
-**Event:** September 4–5, 2026  
+**Event:** September 18–19, 2026  
 **Venue:** Hope Community Church — Apex Campus, 2080 East Williams Street, Apex, NC 27539  
 **Status:** Internal ops / partnership planning — not public landing-page copy
 
@@ -66,11 +66,11 @@
 
 ## Appendix A — Partnership pitch to Hope (Lori)
 
-**Subject:** Tournament of Champions — atrium room plan + September 4–5 hold
+**Subject:** Tournament of Champions — atrium room plan + September 18–19 hold
 
 Hi Lori,
 
-We're finalizing operations for the NC United Tournament of Champions (September 4–5, 2026) and wanted to share how we plan to use Hope Apex's atrium spaces — specifically **one dedicated room** for our **Coaches & Officials Lounge**.
+We're finalizing operations for the NC United Tournament of Champions (September 18–19, 2026) and wanted to share how we plan to use Hope Apex's atrium spaces — specifically **one dedicated room** for our **Coaches & Officials Lounge**.
 
 This matches what you highlighted as a strength of the campus: flexible rooms that support a professional tournament, not just mats on the floor. We need **one of the five atrium rooms** reserved for the full weekend:
 
@@ -78,7 +78,7 @@ This matches what you highlighted as a strength of the campus: flexible rooms th
 
 **Competition footprint:** two mats Saturday (single-mat finals Saturday evening); seating up to ~1,000; health-first concessions (no soda, chips, candy, or junk food venue-wide).
 
-**Ask:** Confirm availability of one atrium room for Sept 4–5, 2026, plus any house AV in that room. Happy to walk the layout on a site visit.
+**Ask:** Confirm availability of one atrium room for Sept 18–19, 2026, plus any house AV in that room. Happy to walk the layout on a site visit.
 
 Thank you —  
 Matt Hickey / NC United

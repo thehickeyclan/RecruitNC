@@ -1,4 +1,4 @@
-import { TOC_CONTACT_EMAIL } from "@/lib/toc/constants"
+import { TOC_CONTACT_EMAIL, TOC_EVENT_DATES_DISPLAY, TOC_SATURDAY_COMPETITION_DATE } from "@/lib/toc/constants"
 
 const FROM = `NC Wrestling United <${TOC_CONTACT_EMAIL}>`
 
@@ -28,7 +28,7 @@ export async function sendTocWelcomeEmail(to: string): Promise<void> {
   await sendHtml(
     to,
     "You're on the list — Tournament of Champions 2026",
-    wrap(`<p>Thanks for signing up for updates on the <strong>NC United Tournament of Champions</strong> — Saturday, September 5, 2026 in Apex, NC (wrestler weigh-in Friday evening).</p>
+    wrap(`<p>Thanks for signing up for updates on the <strong>NC United Tournament of Champions</strong> — ${TOC_EVENT_DATES_DISPLAY} in Apex, NC.</p>
 <p>We'll share field announcements, ticket info, and event details as we get closer.</p>
 <p style="margin:20px 0;"><a href="https://app.ncwrestlingunited.com/tournament-of-champions" style="display:inline-block;background:#B31B1B;color:white;padding:12px 24px;text-decoration:none;border-radius:6px;font-weight:bold;">View event page</a></p>`),
   )

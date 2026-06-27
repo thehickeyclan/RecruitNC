@@ -1,6 +1,6 @@
 /** Shared manifesto copy — landing page, invites, social. Fan marketing only. */
 
-import { TOC_MATS_LINE } from "@/lib/toc/constants"
+import { TOC_EVENT_DATES_DISPLAY, TOC_MATS_LINE, TOC_SATURDAY_COMPETITION_DATE } from "@/lib/toc/constants"
 
 export const TOC_HERO = {
   eventName: "Tournament of Champions",
@@ -38,9 +38,9 @@ export const TOC_ATHLETE_INVITE = {
 
 export const TOC_SOCIAL_POSTS = {
   tease:
-    "Something's coming for North Carolina wrestling.\nInvitation only. The best at every weight. One mat. One champion.\n09.04.26. Buckle up.",
+    "Something's coming for North Carolina wrestling.\nInvitation only. The best at every weight. One mat. One champion.\n09.18.26. Buckle up.",
   reveal:
-    "Introducing the NC United Tournament of Champions.\n11 weight classes, 8 elite wrestlers each · College weights · Invitation only · Two mats until finals\nThe best in the state, in one building. Saturday, Sept 5 — weigh-in Friday evening.",
+    `Introducing the NC United Tournament of Champions.\n11 weight classes, 8 elite wrestlers each · College weights · Invitation only · Two mats until finals\nThe best in the state, in one building. ${TOC_EVENT_DATES_DISPLAY}.`,
   showAngle:
     "Other tournaments are something you compete in.\nThis is something you come to watch.\nGreat wrestling. Great entertainment. One mat when it matters.",
   stakes:

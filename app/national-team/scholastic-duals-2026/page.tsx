@@ -58,6 +58,7 @@ import {
   aauStepBadgeClass,
   aauAccentHeaderClass,
 } from "@/components/national-team/aau-scholastic-theme"
+import { HardLink } from "@/components/hard-link"
 import { cn } from "@/lib/utils"
 
 /** Roster Status column reads live paid registrations — never statically cache this page. */
@@ -169,6 +170,9 @@ export default async function ScholasticDuals2026Page() {
                 <a href="#faq" className={aauSecondaryBtnClass}>
                   FAQ
                 </a>
+                <HardLink href={AAU_SCHOLASTIC_DUALS_2026.resultsPath} className={aauSecondaryBtnClass}>
+                  Tournament results
+                </HardLink>
               </div>
             </div>
             <div className="flex items-center gap-4 shrink-0">

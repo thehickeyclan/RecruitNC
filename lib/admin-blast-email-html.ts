@@ -28,16 +28,22 @@ const LOGO_VARIANTS: Record<EmailLogoVariant, { path: string; alt: string }> = {
   "nc-united": { path: "/images/nc-united-stacked-logo-white.png", alt: "NC United" },
 }
 
+/** Default blast header logo is NC United; pass `recruitnc` explicitly for the shield logo. */
+export function parseEmailLogoVariant(raw: string | undefined | null): EmailLogoVariant {
+  return raw === "recruitnc" ? "recruitnc" : "nc-united"
+}
+
 export function buildAdminBlastEmailHtml(
   subject: string,
   htmlBody: string,
   baseUrl: string,
-  logoVariant: EmailLogoVariant = "recruitnc"
+  logoVariant: EmailLogoVariant = "nc-united"
 ): string {
   const base = baseUrl ? baseUrl.replace(/\/$/, "") : ""
-  const variant = LOGO_VARIANTS[logoVariant] ?? LOGO_VARIANTS.recruitnc
+  const variant = LOGO_VARIANTS[logoVariant] ?? LOGO_VARIANTS["nc-united"]
   const logoUrl = base ? `${base}${variant.path}` : ""
-  const safeTitle = escapeHtml((subject || "RecruitNC").slice(0, 100))
+  const headerBg = logoVariant === "nc-united" ? "#000000" : "#003366"
+  const safeTitle = escapeHtml((subject || "NC United").slice(0, 100))
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -52,8 +58,8 @@ export function buildAdminBlastEmailHtml(
       <td align="center" style="padding:24px 16px;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
           <tr>
-            <td style="background:#003366;padding:16px 24px;text-align:center;line-height:0;">
-              ${logoUrl ? `<img src="${logoUrl}" alt="${escapeHtml(variant.alt)}" width="${LOGO_WIDTH}" style="display:block;margin:0 auto;max-width:100%;height:auto;border:0;" />` : `<span style="color:#fff;font-size:20px;font-weight:700;">RecruitNC</span>`}
+            <td style="background:${headerBg};padding:16px 24px;text-align:center;line-height:0;">
+              ${logoUrl ? `<img src="${logoUrl}" alt="${escapeHtml(variant.alt)}" width="${LOGO_WIDTH}" style="display:block;margin:0 auto;max-width:100%;height:auto;border:0;" />` : `<span style="color:#fff;font-size:20px;font-weight:700;">NC United</span>`}
             </td>
           </tr>
           <tr>

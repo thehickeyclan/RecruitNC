@@ -15,7 +15,7 @@ export default function AdminMessagingPreviewPage() {
   const [subject, setSubject] = useState("")
   const [body, setBody] = useState("")
   const [bodyHtml, setBodyHtml] = useState("")
-  const [logoVariant, setLogoVariant] = useState<"recruitnc" | "nc-united">("recruitnc")
+  const [logoVariant, setLogoVariant] = useState<"recruitnc" | "nc-united">("nc-united")
   const [iframeHtml, setIframeHtml] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -73,7 +73,8 @@ export default function AdminMessagingPreviewPage() {
         nextBodyHtml = ""
       }
     }
-    if (logo === "nc-united") setLogoVariant("nc-united")
+    if (logo === "recruitnc") setLogoVariant("recruitnc")
+    else if (logo === "nc-united") setLogoVariant("nc-united")
     setSubject((prev) => (nextSub || prev))
     setBody((prev) => (nextBody || prev))
     setBodyHtml(nextBodyHtml)
@@ -87,7 +88,7 @@ export default function AdminMessagingPreviewPage() {
         subject: nextSub || "Update from RecruitNC",
         body: nextBody || "Your message here.",
         bodyHtml: nextBodyHtml || undefined,
-        logoVariant: logo === "nc-united" ? "nc-united" : "recruitnc",
+        logoVariant: logo === "recruitnc" ? "recruitnc" : "nc-united",
       }),
     })
       .then((r) => r.json())
@@ -120,8 +121,8 @@ export default function AdminMessagingPreviewPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="recruitnc">RecruitNC (shield)</SelectItem>
                   <SelectItem value="nc-united">NC United (stacked)</SelectItem>
+                  <SelectItem value="recruitnc">RecruitNC (shield)</SelectItem>
                 </SelectContent>
               </Select>
             </div>

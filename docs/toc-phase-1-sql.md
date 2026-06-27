@@ -7,7 +7,7 @@ Run in **Supabase SQL Editor** before enabling TOC forms in production.
 create table if not exists public.toc_event_config (
   id int primary key default 1,
   phase text check (phase in ('phase_1','phase_2','phase_3','phase_4','post_event')) default 'phase_1',
-  event_dates text default 'September 4-5, 2026',
+  event_dates text default 'September 18-19, 2026',
   venue_name text,
   venue_address text,
   hero_primary_cta_label text default 'Get Notified',
@@ -40,6 +40,13 @@ alter table public.toc_event_config
 -- Example: confirmed programs for the recruiting fair logo strip (public page)
 -- update public.toc_event_config
 -- set confirmed_colleges = '["NC State", "UNC"]'::jsonb
+-- where id = 1;
+
+-- After date changes in lib/toc/constants.ts, sync the live config row:
+-- update public.toc_event_config
+-- set
+--   event_dates = 'September 18–19, 2026 · weigh-in & first round Friday night',
+--   updated_at = CURRENT_TIMESTAMP
 -- where id = 1;
 
 create table if not exists public.toc_invitations (

@@ -301,6 +301,13 @@ export default function NCUnitedNationalTeam() {
                 <span className="font-bold text-lg text-white">AAU Scholastic Duals 2026</span>
                 <span className="text-sm text-[#FF7070] mt-1 group-hover:underline">Info, registration &amp; parent FAQ →</span>
               </HardLink>
+              <HardLink
+                href={AAU_SCHOLASTIC_DUALS_2026.resultsPath}
+                className="flex flex-col rounded-2xl border-2 border-[#B31B1B]/40 bg-[#001428] p-6 text-white hover:border-[#B31B1B]/70 hover:shadow-md transition-all group"
+              >
+                <span className="font-bold text-lg text-white">AAU Scholastic Duals 2026</span>
+                <span className="text-sm text-[#FF7070] mt-1 group-hover:underline">Results &amp; tournament recap →</span>
+              </HardLink>
             </div>
           </div>
         </div>
@@ -320,6 +327,14 @@ export default function NCUnitedNationalTeam() {
                 <span className="font-bold text-white block">NHSCA Duals 2026</span>
                 <span className="text-sm text-white/60 block mt-1">National team · Results &amp; recap</span>
                 <span className="mt-3 inline-block text-sm font-semibold text-[#CBAF5D] group-hover:underline">View results →</span>
+              </HardLink>
+              <HardLink
+                href={AAU_SCHOLASTIC_DUALS_2026.resultsPath}
+                className="rounded-xl border-2 border-[#B31B1B]/40 bg-[#001428] p-5 text-center hover:border-[#B31B1B]/60 hover:shadow-md transition-all group"
+              >
+                <span className="font-bold text-white block">AAU Scholastic Duals 2026</span>
+                <span className="text-sm text-white/60 block mt-1">National team · Results &amp; recap</span>
+                <span className="mt-3 inline-block text-sm font-semibold text-[#FF7070] group-hover:underline">View results →</span>
               </HardLink>
               <Link
                 href="/national-team/ucd-2024-results"

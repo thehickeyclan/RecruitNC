@@ -2,7 +2,14 @@
  * Public copy on `/tournament-of-champions` is fan/athlete marketing only — no P&L, capacity caps,
  * inventory, or internal ops language on the landing page. See `.cursorrules` TOC section. */
 
-export const TOC_EVENT_DATE = new Date("2026-09-04T09:00:00-04:00")
+export const TOC_EVENT_DATE = new Date("2026-09-18T16:00:00-04:00")
+
+/** Public date lines — single source for landing page, emails, FAQ, and schema. */
+export const TOC_EVENT_DATES_RANGE = "September 18–19, 2026" as const
+export const TOC_FRIDAY_EVENT_DATE = "Friday, September 18, 2026" as const
+export const TOC_SATURDAY_COMPETITION_DATE = "Saturday, September 19, 2026" as const
+export const TOC_EVENT_DATES_DISPLAY =
+  `${TOC_EVENT_DATES_RANGE} · weigh-in & first round Friday night` as const
 
 export const TOC_WEIGHT_CLASSES = [
   117, 125, 133, 141, 149, 157, 165, 174, 184, 197, 285,
@@ -10,28 +17,29 @@ export const TOC_WEIGHT_CLASSES = [
 
 export const TOC_WEIGH_IN_LINE = "Single weigh-in · No weight allowances" as const
 
-/** Public schedule — Friday setup/weigh-in only; all competition Saturday. */
+/** Public schedule — Friday weigh-in + first round; Saturday finishes brackets through finals. */
 export const TOC_SCHEDULE = {
   headline: "When to be there",
-  lead: "One day of wrestling. The venue is built Friday so competition starts on time Saturday morning.",
+  lead:
+    "Two days in Apex. Weigh-in at 4:00 PM Friday, first-round action that night, then brackets play out Saturday with finals under the lights.",
   athleteNote:
-    "Friday is setup and weigh-in for invited wrestlers only — no public competition. Fans and families: plan for Saturday.",
+    "Invited wrestlers: weigh-in Friday at 4:00 PM, first round Friday night. Families and fans can catch opening-round bouts Friday evening or the full card Saturday.",
   friday: {
-    title: "Friday · September 4",
-    subtitle: "Venue setup & wrestler weigh-in — no competition",
+    title: "Friday · September 18",
+    subtitle: "Weigh-in & first round — two mats live Friday night",
     rows: [
       { time: "2:00 PM", activity: "Crew load-in — mats, scoring tables, PA, and production setup" },
-      { time: "4:00 PM", activity: "Venue ready — both competition mats down, systems tested and live" },
-      { time: "6:00–8:00 PM", activity: "Weigh-in & skin check (invited wrestlers only)" },
+      { time: "4:00 PM", activity: "Weigh-in & skin check (invited wrestlers)" },
+      { time: "~6:30 PM", activity: "First round — all brackets on two mats" },
     ],
   },
   saturday: {
-    title: "Saturday · September 5",
-    subtitle: "Full tournament — two mats, then finals under the lights",
+    title: "Saturday · September 19",
+    subtitle: "Brackets resume — placement bouts, then finals under the lights",
     rows: [
-      { time: "7:00 AM", activity: "Doors open (athletes, coaches, ticket holders)" },
-      { time: "7:45 AM", activity: "National anthem & invocation" },
-      { time: "8:00 AM", activity: "Competition begins — all brackets on two mats" },
+      { time: "7:30 AM", activity: "Doors open (athletes, coaches, ticket holders)" },
+      { time: "8:45 AM", activity: "National anthem & invocation" },
+      { time: "9:00 AM", activity: "Brackets resume — two mats through placement bouts" },
       { time: "~3:30 PM", activity: "Placement bouts complete (estimate)" },
       { time: "4:00–5:00 PM", activity: "Break — championship mat setup" },
       { time: "5:00 PM", activity: "Parade of finalists & introductions" },
@@ -323,7 +331,7 @@ export const TOC_CONFIRMED_COLLEGES = TOC_CONFIRMED_COLLEGES_DEFAULT.map((c) => 
 
 export const TOC_DEFAULT_CONFIG = {
   phase: "phase_1" as const,
-  event_dates: "Saturday, September 5, 2026 · weigh-in Friday evening",
+  event_dates: TOC_EVENT_DATES_DISPLAY,
   venue_name: TOC_VENUE.name,
   venue_address: TOC_VENUE.address,
   hero_primary_cta_label: "Get Notified",

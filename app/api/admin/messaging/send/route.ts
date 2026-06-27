@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { markdownToHtml, toPlainText } from "@/lib/blast-format"
 import { sendAdminBlastEmails } from "@/lib/admin-messaging-blast-email"
+import { parseEmailLogoVariant } from "@/lib/admin-blast-email-html"
 import { getAdminMessagingRecipients } from "@/lib/admin-messaging-recipients"
 import { sendSms, toE164 } from "@/lib/sms"
 
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
   const rawBodyHtml = typeof body.bodyHtml === "string" ? body.bodyHtml.trim() : ""
   const testEmail = typeof body.testEmail === "string" ? body.testEmail.trim() || null : null
   const testOnly = body.testOnly === true
-  const logoVariant = body.logoVariant === "nc-united" ? "nc-united" : "recruitnc"
+  const logoVariant = parseEmailLogoVariant(body.logoVariant)
   const channels = body.channels && typeof body.channels === "object"
     ? { inApp: !!body.channels.inApp, email: !!body.channels.email, sms: !!body.channels.sms }
     : { inApp: false, email: false, sms: false }

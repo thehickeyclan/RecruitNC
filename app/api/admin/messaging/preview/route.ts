@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { markdownToHtml } from "@/lib/blast-format"
-import { buildAdminBlastEmailHtml } from "@/lib/admin-blast-email-html"
+import { buildAdminBlastEmailHtml, parseEmailLogoVariant } from "@/lib/admin-blast-email-html"
 
 export const dynamic = "force-dynamic"
 
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
   const subject = typeof body.subject === "string" ? body.subject.trim() || "Update from RecruitNC" : "Update from RecruitNC"
   const rawBody = typeof body.body === "string" ? body.body.trim() : ""
   const rawBodyHtml = typeof body.bodyHtml === "string" ? body.bodyHtml.trim() : ""
-  const logoVariant = body.logoVariant === "nc-united" ? "nc-united" : "recruitnc"
+  const logoVariant = parseEmailLogoVariant(body.logoVariant)
   
   // Use provided HTML if available (from rich text editor), otherwise convert markdown
   const htmlBody = rawBodyHtml || markdownToHtml(rawBody || "Your message here.")
