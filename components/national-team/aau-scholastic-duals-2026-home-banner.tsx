@@ -1,44 +1,97 @@
 import Image from "next/image"
 import { ArrowRight } from "lucide-react"
 import { HardLink } from "@/components/hard-link"
+import { AAU_SCHOLASTIC_DUALS_2026_BANNER } from "@/lib/aau-scholastic-duals-2026-content"
 import {
-  AAU_SCHOLASTIC_DUALS_2026_BANNER,
-} from "@/lib/aau-scholastic-duals-2026-content"
+  AAU_SCHOLASTIC_DUALS_2026_RESULTS_META,
+  AAU_SCHOLASTIC_DUALS_2026_RESULTS_PATH,
+  AAU_SCHOLASTIC_DUALS_2026_RESULTS_PUBLISHED,
+} from "@/lib/aau-scholastic-duals-2026-results"
 import { cn } from "@/lib/utils"
 
 type AauScholasticDuals2026HomeBannerProps = {
   className?: string
 }
 
-/** Homepage promo — AAU Scholastic Duals 2026 National Team banner. */
+/** Homepage promo — AAU Scholastic Duals 2026 results (or pre-event story when unpublished). */
 export function AauScholasticDuals2026HomeBanner({ className }: AauScholasticDuals2026HomeBannerProps) {
+  if (!AAU_SCHOLASTIC_DUALS_2026_RESULTS_PUBLISHED) {
+    return (
+      <section
+        className={cn("relative overflow-hidden border-b border-[#B31B1B]/30 bg-[#0A1628]", className)}
+        aria-label="AAU Scholastic Duals 2026 — NC United National Team"
+      >
+        <div className="container mx-auto px-4 py-6 md:py-8">
+          <HardLink
+            href="/news/aau-scholastic-duals-2026-florida"
+            className="group block overflow-hidden rounded-xl border border-white/10 bg-[#0A1628] shadow-lg transition-shadow hover:shadow-xl"
+          >
+            <Image
+              src={AAU_SCHOLASTIC_DUALS_2026_BANNER}
+              alt="North Carolina National Team — AAU Wrestling Scholastic Duals, Fort Lauderdale, June 24–26, 2026"
+              width={1200}
+              height={675}
+              className="block h-auto w-full"
+              sizes="100vw"
+              priority
+            />
+          </HardLink>
+          <div className="mt-4 flex justify-center">
+            <HardLink
+              href="/news/aau-scholastic-duals-2026-florida"
+              className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-[#B31B1B] px-5 py-2.5 text-sm sm:text-base font-bold text-white shadow-lg transition hover:bg-[#9a1616]"
+            >
+              Read the story
+              <ArrowRight className="ml-2 h-5 w-5" aria-hidden />
+            </HardLink>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  const meta = AAU_SCHOLASTIC_DUALS_2026_RESULTS_META
+
   return (
     <section
       className={cn("relative overflow-hidden border-b border-[#B31B1B]/30 bg-[#0A1628]", className)}
-      aria-label="AAU Scholastic Duals 2026 — NC United National Team"
+      aria-label="AAU Scholastic Duals 2026 results — NC United National Team"
     >
       <div className="container mx-auto px-4 py-6 md:py-8">
+        <div className="mx-auto max-w-4xl text-center mb-5 md:mb-6">
+          <p className="inline-block rounded-full bg-[#B31B1B] px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white mb-3">
+            {meta.badge}
+          </p>
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white leading-tight">{meta.headline}</h2>
+          <p className="mt-2 text-sm sm:text-base text-[#FF7070] font-semibold">{meta.subheadline}</p>
+          <p className="mt-2 text-sm text-white/70 tabular-nums">
+            {meta.teamRecord} dual · {meta.individualRecord} individual · {meta.placement}
+          </p>
+        </div>
+
         <HardLink
-          href="/news/aau-scholastic-duals-2026-florida"
-          className="group block overflow-hidden rounded-xl border border-white/10 bg-[#0A1628] shadow-lg transition-shadow hover:shadow-xl"
+          href={AAU_SCHOLASTIC_DUALS_2026_RESULTS_PATH}
+          className="group mx-auto block max-w-4xl overflow-hidden rounded-xl border border-white/10 bg-black shadow-lg transition-shadow hover:shadow-xl hover:border-[#FF7070]/35"
         >
-          <Image
-            src={AAU_SCHOLASTIC_DUALS_2026_BANNER}
-            alt="North Carolina National Team — AAU Wrestling Scholastic Duals, Fort Lauderdale, June 24–26, 2026"
-            width={1200}
-            height={675}
-            className="block h-auto w-full"
-            sizes="100vw"
-            priority
-          />
+          <div className="relative aspect-[16/9] w-full">
+            <Image
+              src={meta.heroImage}
+              alt={meta.heroImageAlt}
+              fill
+              className="object-cover object-center transition-transform duration-500 group-hover:scale-[1.02]"
+              sizes="(max-width: 768px) 100vw, 896px"
+              priority
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0A1628]/80 via-transparent to-transparent" />
+          </div>
         </HardLink>
 
         <div className="mt-4 flex justify-center">
           <HardLink
-            href="/news/aau-scholastic-duals-2026-florida"
+            href={AAU_SCHOLASTIC_DUALS_2026_RESULTS_PATH}
             className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-[#B31B1B] px-5 py-2.5 text-sm sm:text-base font-bold text-white shadow-lg transition hover:bg-[#9a1616]"
           >
-            Read the story
+            View full results
             <ArrowRight className="ml-2 h-5 w-5" aria-hidden />
           </HardLink>
         </div>
