@@ -17,7 +17,7 @@ const CARD_BASE = "/national-team/aau-scholastic-duals-2026/cards"
 export const AAU_SCHOLASTIC_DUALS_2026_WRESTLER_CARDS: AauScholasticWrestlerCard[] = [
   { weightClass: "106", wrestler: "Xan Moody", imageSrc: `${CARD_BASE}/xan-moody-106.png` },
   { weightClass: "113", wrestler: "Aiden Burkholder", imageSrc: `${CARD_BASE}/aiden-burkholder-113.png` },
-  { weightClass: "120", wrestler: "Luke Richards", imageSrc: `${CARD_BASE}/luke-richards-120.png` },
+  { weightClass: "120", wrestler: "Luke Richards", imageSrc: `${CARD_BASE}/luke-richards-120.png`, highlightVideoSrc: "/national-team/aau-scholastic-duals-2026/videos/luke-richards-highlight.mov" },
   { weightClass: "126", wrestler: "Paxton Kearns", imageSrc: `${CARD_BASE}/paxton-kearns-126.png` },
   { weightClass: "132", wrestler: "Mac Johnson", imageSrc: `${CARD_BASE}/mac-johnson-132.png` },
   { weightClass: "138", wrestler: "Tye Johnson", imageSrc: `${CARD_BASE}/tye-johnson-138.png` },
