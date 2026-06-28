@@ -14,7 +14,7 @@ import { getTournaments, type Tournament, getTournamentResults } from "@/lib/nc-
 import { NHSCA_DUALS_2026_NATIONAL_ACHIEVEMENT } from "@/lib/nhsca-duals-public-hero-stats"
 import { NHSCA_DUALS_2026_NATIONAL_JOURNEY_CARD_PHOTO } from "@/lib/nhsca-duals-2026-team-photos"
 import { AAU_SCHOLASTIC_DUALS_2026 } from "@/lib/aau-scholastic-duals-2026-content"
-import { AAU_SCHOLASTIC_DUALS_2026_RESULTS_META } from "@/lib/aau-scholastic-duals-2026-results"
+import { AAU_SCHOLASTIC_DUALS_2026_RESULTS_META, AAU_SCHOLASTIC_DUALS_2026_RESULTS_PUBLISHED } from "@/lib/aau-scholastic-duals-2026-results"
 import {
   computeNationalTeamAggregatePercentages,
   isAauScholasticDuals2026Tournament,
@@ -165,6 +165,22 @@ export default function NCUnitedNationalTeam() {
               Elite wrestlers representing North Carolina on the national stage
             </p>
 
+            {AAU_SCHOLASTIC_DUALS_2026_RESULTS_PUBLISHED ? (
+              <div className="mb-8 md:mb-10 px-4">
+                <p className="inline-block rounded-full bg-[#B31B1B] px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white mb-3">
+                  {AAU_SCHOLASTIC_DUALS_2026_RESULTS_META.badge}
+                </p>
+                <p className="text-base sm:text-lg font-bold text-white max-w-2xl mx-auto leading-snug">
+                  {AAU_SCHOLASTIC_DUALS_2026_RESULTS_META.headline}
+                </p>
+                <p className="mt-2 text-sm sm:text-base text-[#FF7070] font-semibold tabular-nums">
+                  {AAU_SCHOLASTIC_DUALS_2026_RESULTS_META.teamRecord} dual ·{" "}
+                  {AAU_SCHOLASTIC_DUALS_2026_RESULTS_META.individualRecord} individual ·{" "}
+                  {AAU_SCHOLASTIC_DUALS_2026_RESULTS_META.placement}
+                </p>
+              </div>
+            ) : null}
+
             {/* Hero CTAs */}
             <div className="mb-6 md:mb-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 flex-wrap">
               <HardLink
@@ -187,7 +203,9 @@ export default function NCUnitedNationalTeam() {
               </HardLink>
             </div>
             <p className="text-sm text-blue-100/90">
-              AAU Scholastic Duals tournament recap · Fort Lauderdale, June 2026
+              {AAU_SCHOLASTIC_DUALS_2026_RESULTS_PUBLISHED
+                ? "Full tournament recap — dual scores, bout logs, quality wins & athlete cards"
+                : "AAU Scholastic Duals tournament recap · Fort Lauderdale, June 2026"}
             </p>
 
             {/* National team stats — UCD, NHSCA, and AAU through 2026 (National squad only; excludes Select) */}
