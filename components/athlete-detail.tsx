@@ -1998,7 +1998,7 @@ export function AthleteDetail({
       {/* 10. High School Career Match Results */}
       <div
         className={cn(
-          "min-w-0 max-w-full",
+          "min-w-0 max-w-full w-full",
           isDark && "profile-match-data",
           mobileRecruiterLayout && PROFILE_SECTION_ORDER.inSeason,
         )}
