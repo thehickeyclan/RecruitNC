@@ -166,6 +166,41 @@ export function AthleteDetail({
   const effectiveAct = athleteData?.academic_act ?? athleteData?.act
   const hasAcademicData = Boolean(effectiveGpa || effectiveSat || effectiveAct)
 
+  type NationalTeamHighlightVideo = {
+    event: string
+    year: number
+    title: string
+    videoSrc: string
+    ariaLabel: string
+  }
+
+  const nationalTeamHighlightVideos: NationalTeamHighlightVideo[] = Array.isArray(
+    (athleteData as { national_team_highlight_videos?: NationalTeamHighlightVideo[] })
+      ?.national_team_highlight_videos
+  )
+    ? ((athleteData as { national_team_highlight_videos?: NationalTeamHighlightVideo[] })
+        .national_team_highlight_videos as NationalTeamHighlightVideo[])
+    : []
+
+  const renderDirectHighlightVideo = (url: string, title: string) => (
+    <div className="relative w-full overflow-hidden rounded-lg shadow-lg bg-black">
+      <video
+        src={url}
+        controls
+        playsInline
+        preload="metadata"
+        className="w-full max-h-[min(70vh,720px)]"
+        title={title}
+      >
+        <source src={url} type="video/quicktime" />
+        <source src={url} type="video/mp4" />
+        <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+          Watch highlight video
+        </a>
+      </video>
+    </div>
+  )
+
   // Handler for inline edits
   const handleInlineSave = async (updates: Record<string, any>) => {
     const response = await fetch(`/api/athletes/${athlete.id}/self-edit`, {
@@ -1522,21 +1557,9 @@ export function AthleteDetail({
                 const url = athleteData.highlight_video_url
                 const videoId = getYouTubeVideoId(url)
                 if (isDirectHighlightVideoUrl(url)) {
-                  return (
-                    <div className="relative w-full overflow-hidden rounded-lg shadow-lg bg-black">
-                      <video
-                        src={url}
-                        controls
-                        playsInline
-                        preload="metadata"
-                        className="w-full max-h-[min(70vh,720px)]"
-                        title={`${athleteData.name ?? "Athlete"} highlight reel`}
-                      >
-                        <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                          Watch highlight video
-                        </a>
-                      </video>
-                    </div>
+                  return renderDirectHighlightVideo(
+                    url,
+                    `${athleteData.name ?? "Athlete"} highlight reel`
                   )
                 }
                 if (!videoId) {
@@ -1562,11 +1585,39 @@ export function AthleteDetail({
                   </div>
                 )
               })()
+            ) : nationalTeamHighlightVideos.length > 0 ? (
+              <div className="space-y-6">
+                {nationalTeamHighlightVideos.map((highlight) => (
+                  <div key={`${highlight.event}-${highlight.year}-${highlight.videoSrc}`}>
+                    <p className="text-sm font-semibold text-gray-700 mb-3">
+                      {highlight.event} {highlight.year}
+                    </p>
+                    {renderDirectHighlightVideo(highlight.videoSrc, highlight.ariaLabel)}
+                    <p className="mt-2 text-sm text-gray-600">{highlight.title}</p>
+                  </div>
+                ))}
+              </div>
             ) : (
               <p className="text-gray-600">
                 {canEdit ? "Add a YouTube highlight video or upload a video file via admin. Click the button above to paste your link." : "No highlight video yet."}
               </p>
             )}
+            {athleteData?.highlight_video_url && nationalTeamHighlightVideos.length > 0 ? (
+              <div className="mt-8 space-y-6 border-t border-gray-200 pt-8">
+                <p className="text-sm font-semibold uppercase tracking-wider text-gray-500">
+                  NC United National Team Highlights
+                </p>
+                {nationalTeamHighlightVideos.map((highlight) => (
+                  <div key={`${highlight.event}-${highlight.year}-${highlight.videoSrc}`}>
+                    <p className="text-sm font-semibold text-gray-700 mb-3">
+                      {highlight.event} {highlight.year}
+                    </p>
+                    {renderDirectHighlightVideo(highlight.videoSrc, highlight.ariaLabel)}
+                    <p className="mt-2 text-sm text-gray-600">{highlight.title}</p>
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </div>
         </Card>
 

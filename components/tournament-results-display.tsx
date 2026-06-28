@@ -161,7 +161,7 @@ export function TournamentResultsDisplay({
           </CardHeader>
           <CardContent className={contentClass}>
             <p className={descClass}>
-              National team competition: Ultimate Club Duals and NHSCA National Duals
+              National team competition: Ultimate Club Duals, NHSCA Duals, and AAU Scholastic Duals
             </p>
             <div className={tableWrapClass}>
               <Table className="min-w-[400px]">
