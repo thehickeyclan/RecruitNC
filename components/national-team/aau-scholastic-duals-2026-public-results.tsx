@@ -22,6 +22,7 @@ import {
   AAU_SCHOLASTIC_DUALS_2026_WIN_TYPES,
   aauIndividualWinPct,
   sortAauDuals,
+  sortAauIndividualsByWeight,
 } from "@/lib/aau-scholastic-duals-2026-results"
 import { aauScholasticProfileHref } from "@/lib/content/aau-scholastic-duals-2026-profile-ids"
 import { AauScholasticDualMeetRow } from "@/components/national-team/aau-scholastic-dual-meet-row"
@@ -75,7 +76,10 @@ export function AauScholasticDuals2026PublicResults({
   const highlightVideos = AAU_SCHOLASTIC_DUALS_2026_HIGHLIGHT_VIDEOS
   const winTypes = AAU_SCHOLASTIC_DUALS_2026_WIN_TYPES
   const duals = useMemo(() => sortAauDuals(AAU_SCHOLASTIC_DUALS_2026_DUALS), [])
-  const individuals = AAU_SCHOLASTIC_DUALS_2026_INDIVIDUALS
+  const individuals = useMemo(
+    () => sortAauIndividualsByWeight(AAU_SCHOLASTIC_DUALS_2026_INDIVIDUALS),
+    [],
+  )
   const individualBoutsByWrestler = useMemo(
     () => buildAauIndividualBoutLogsByWrestler(duals, individuals),
     [duals, individuals],
@@ -433,7 +437,7 @@ export function AauScholasticDuals2026PublicResults({
             <div className="flex-1 min-w-0">
               <h2 className={aauPanelTitleClass}>Individual results</h2>
               <p className={aauPanelDescClass}>
-                Match records · tap a wrestler to expand every bout from the weekend
+                Lineup by weight (106 → HWT) · tap a wrestler to expand every bout from the weekend
               </p>
               <p className="text-xs text-white/45 mt-2">{AAU_SCHOLASTIC_INDIVIDUAL_STATS_FOOTNOTE}</p>
               <div className="relative mt-4 max-w-md">
@@ -473,7 +477,7 @@ export function AauScholasticDuals2026PublicResults({
             <div>
               <h2 className={aauPanelTitleClass}>Athlete cards</h2>
               <p className={aauPanelDescClass}>
-                Official card art with weight and record — tap a card for the athlete profile.
+                Card art includes weight &amp; record — tap the card for highlights (where available), Profile for their RecruitNC bio
               </p>
             </div>
           </div>
