@@ -6,6 +6,13 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Edit, GraduationCap, Award, TrendingUp, Trophy, Video, ExternalLink, Shield, Share2, Phone } from "lucide-react"
+import { UnifiedProfileMobileNav } from "./unified-profile-mobile-nav"
+import {
+  PROFILE_CARD_BODY,
+  PROFILE_SECTION_HEADER,
+  PROFILE_SECTION_ORDER,
+  PROFILE_SECTION_TITLE,
+} from "@/lib/unified-profile-section-styles"
 import { cn } from "@/lib/utils"
 import { WatchListButton } from "./watch-list-button"
 import { MessageAthleteButton } from "@/components/messaging/message-athlete-button"
@@ -108,6 +115,8 @@ interface AthleteDetailProps {
   tournamentResultsComponent?: React.ReactNode
   /** Public view-profile uses dark navy panels to match /athletes and /colleges. */
   theme?: "light" | "dark"
+  /** Mobile: national-first section order, jump nav, compact school block, collapsed match log. */
+  mobileRecruiterLayout?: boolean
 }
 
 export function AthleteDetail({
@@ -116,6 +125,7 @@ export function AthleteDetail({
   currentUserId = null,
   tournamentResultsComponent,
   theme = "light",
+  mobileRecruiterLayout = false,
 }: AthleteDetailProps) {
   const isDark = theme === "dark"
   const { isAdmin, isVerifiedCoach } = useAuth()
@@ -748,14 +758,29 @@ export function AthleteDetail({
 
   return (
     <div
-      className={cn("space-y-8 min-w-0 max-w-full", isDark && PROFILE_DARK_THEME)}
+      className={cn(
+        mobileRecruiterLayout
+          ? "flex flex-col gap-6 lg:gap-8 min-w-0 max-w-full"
+          : "space-y-8 min-w-0 max-w-full",
+        isDark && PROFILE_DARK_THEME,
+      )}
     >
       {/* 1. Banner (hero with photo, name, weight, college) */}
-      <Card className="profile-card overflow-hidden">
+      <Card
+        className={cn(
+          "profile-card overflow-hidden",
+          mobileRecruiterLayout && PROFILE_SECTION_ORDER.hero,
+        )}
+      >
         <div className="relative">
           {/* Mobile view */}
           <div className="block lg:hidden">
-            <div className="relative h-80 w-full overflow-hidden">
+            <div
+              className={cn(
+                "relative w-full overflow-hidden",
+                mobileRecruiterLayout ? "h-56" : "h-80",
+              )}
+            >
               <Image
                 src={athletePhoto || "/wrestler-silhouette.png"}
                 alt={athleteName}
@@ -1157,6 +1182,12 @@ export function AthleteDetail({
         </div>
       </Card>
 
+      {mobileRecruiterLayout ? (
+        <div className={PROFILE_SECTION_ORDER.nav}>
+          <UnifiedProfileMobileNav />
+        </div>
+      ) : null}
+
       {/* Weight Section (edit form when canEdit) */}
       {canEdit && editingSection === "weight" && (
         <Card className="profile-card border-t-4 border-t-[#D3B574] shadow-md">
@@ -1178,12 +1209,21 @@ export function AthleteDetail({
       )}
 
       {/* 2. Athlete Profile (Bio) - always show for consistent structure */}
-      <Card className="profile-card border-t-4 border-t-[#D3B574] shadow-md" data-section="bio">
-        <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6">
+      <Card
+        id="bio"
+        className={cn(
+          "profile-card border-t-4 border-t-[#D3B574] shadow-md",
+          mobileRecruiterLayout && PROFILE_SECTION_ORDER.bio,
+        )}
+        data-section="bio"
+      >
+        <div className={cn(mobileRecruiterLayout ? PROFILE_SECTION_HEADER : "bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6")}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <TrendingUp className="h-6 w-6 text-white" />
-                <h2 className="text-2xl font-bold text-white">Athlete Profile</h2>
+                <TrendingUp className={cn("text-white", mobileRecruiterLayout ? "h-5 w-5" : "h-6 w-6")} />
+                <h2 className={cn(mobileRecruiterLayout ? PROFILE_SECTION_TITLE : "text-2xl font-bold text-white")}>
+                  Athlete Profile
+                </h2>
               </div>
               {canEdit && !editingSection && (
                 <Button
@@ -1198,7 +1238,7 @@ export function AthleteDetail({
               )}
             </div>
           </div>
-          <div className="profile-card-body p-8">
+          <div className={cn(mobileRecruiterLayout ? PROFILE_CARD_BODY : "profile-card-body p-8")}>
             {editingSection === "bio" ? (
               <InlineBioEditor
                 athleteId={athlete.id}
@@ -1229,12 +1269,28 @@ export function AthleteDetail({
         </Card>
 
       {/* 3. High School and Programs - always show for consistent structure */}
-      <Card className="profile-card border-t-4 border-t-[#D3B574] shadow-md" data-section="high-school-programs">
-          <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6">
+      <Card
+        id="programs"
+        className={cn(
+          "profile-card border-t-4 border-t-[#D3B574] shadow-md",
+          mobileRecruiterLayout && PROFILE_SECTION_ORDER.programs,
+        )}
+        data-section="programs"
+      >
+          <div className={cn(mobileRecruiterLayout ? PROFILE_SECTION_HEADER : "bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6")}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <GraduationCap className="h-6 w-6 text-white" />
-                <h2 className="text-2xl font-bold text-white">High School and Programs</h2>
+                <GraduationCap className={cn("text-white", mobileRecruiterLayout ? "h-5 w-5" : "h-6 w-6")} />
+                <h2 className={cn(mobileRecruiterLayout ? PROFILE_SECTION_TITLE : "text-2xl font-bold text-white")}>
+                  {mobileRecruiterLayout ? (
+                    <>
+                      <span className="lg:hidden">School & Programs</span>
+                      <span className="hidden lg:inline">High School and Programs</span>
+                    </>
+                  ) : (
+                    "High School and Programs"
+                  )}
+                </h2>
               </div>
               {canEdit && !editingSection && (
                 <Button
@@ -1249,7 +1305,7 @@ export function AthleteDetail({
               )}
             </div>
           </div>
-          <div className="profile-card-body p-8">
+          <div className={cn(mobileRecruiterLayout ? PROFILE_CARD_BODY : "profile-card-body p-8")}>
             {editingSection === "school-club" ? (
               <InlineSchoolClubEditor
                 athleteId={athlete.id}
@@ -1260,10 +1316,15 @@ export function AthleteDetail({
                 onCancel={() => setEditingSection(null)}
               />
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div
+                className={cn(
+                  "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
+                  mobileRecruiterLayout ? "grid-cols-2 gap-3 lg:gap-6" : "gap-6",
+                )}
+              >
                 {highSchool && highSchool !== "Not specified" && (
-                  <div className="profile-panel bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                    <div className="w-16 h-16 rounded-lg bg-gray-50 p-2 flex items-center justify-center mb-3 border border-gray-200 overflow-hidden">
+                  <div className="profile-panel bg-white rounded-xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                    <div className="w-10 h-10 lg:w-16 lg:h-16 rounded-lg bg-gray-50 p-1.5 lg:p-2 flex items-center justify-center mb-2 lg:mb-3 border border-gray-200 overflow-hidden">
                       {highSchoolLogo && !highSchoolLogoLoadError ? (
                         <Image
                           src={highSchoolLogo}
@@ -1278,13 +1339,13 @@ export function AthleteDetail({
                         <WorkingEntityLogo entityName={highSchool} entityType="highschool" size={48} />
                       )}
                     </div>
-                    <p className="profile-label text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2">High School</p>
-                    <p className="profile-text text-xl font-bold text-gray-900 leading-tight">{highSchool}</p>
+                    <p className="profile-label text-[10px] lg:text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1 lg:mb-2">High School</p>
+                    <p className="profile-text text-base lg:text-xl font-bold text-gray-900 leading-tight">{highSchool}</p>
                   </div>
                 )}
                 {wrestlingClub && wrestlingClub !== "Not specified" && (
-                  <div className="profile-panel bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                    <div className="w-16 h-16 rounded-lg bg-gray-50 p-2 flex items-center justify-center mb-3 border border-gray-200 overflow-hidden">
+                  <div className="profile-panel bg-white rounded-xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                    <div className="w-10 h-10 lg:w-16 lg:h-16 rounded-lg bg-gray-50 p-1.5 lg:p-2 flex items-center justify-center mb-2 lg:mb-3 border border-gray-200 overflow-hidden">
                       {clubLogo && !clubLogoLoadError ? (
                         <Image
                           src={clubLogo}
@@ -1299,13 +1360,13 @@ export function AthleteDetail({
                         <WorkingEntityLogo entityName={wrestlingClub} entityType="club" size={48} />
                       )}
                     </div>
-                    <p className="profile-label text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2">Wrestling Club</p>
-                    <p className="profile-text text-xl font-bold text-gray-900 leading-tight">{wrestlingClub}</p>
+                    <p className="profile-label text-[10px] lg:text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1 lg:mb-2">Wrestling Club</p>
+                    <p className="profile-text text-base lg:text-xl font-bold text-gray-900 leading-tight">{wrestlingClub}</p>
                   </div>
                 )}
                 {ncUnitedTeam && ncUnitedTeam !== "none" && (
-                  <div className="profile-panel bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                    <div className="w-16 h-16 rounded-lg bg-gray-50 p-2 flex items-center justify-center mb-3 border border-gray-200">
+                  <div className="profile-panel bg-white rounded-xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow col-span-2 lg:col-span-1">
+                    <div className="w-10 h-10 lg:w-16 lg:h-16 rounded-lg bg-gray-50 p-1.5 lg:p-2 flex items-center justify-center mb-2 lg:mb-3 border border-gray-200">
                       <Image
                         src="/nc-united-blue-logo.png"
                         alt="NC United logo"
@@ -1314,8 +1375,8 @@ export function AthleteDetail({
                         className="object-contain"
                       />
                     </div>
-                    <p className="profile-label text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2">NC United Program</p>
-                    <p className="profile-text text-xl font-bold text-gray-900 leading-tight">
+                    <p className="profile-label text-[10px] lg:text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1 lg:mb-2">NC United Program</p>
+                    <p className="profile-text text-base lg:text-xl font-bold text-gray-900 leading-tight">
                       {ncUnitedTeam === "blue" ? "Blue Team" : ncUnitedTeam === "gold" ? "Gold Team" : ncUnitedTeam === "both" ? "Both Teams" : ncUnitedTeam}
                     </p>
                   </div>
@@ -1329,10 +1390,24 @@ export function AthleteDetail({
         </Card>
 
       {/* 4. Tournament Results - NC United National Team, NCHSAA, NHSCA, Super 32 */}
-      {tournamentResultsComponent}
+      <div
+        className={cn(
+          "min-w-0 max-w-full",
+          mobileRecruiterLayout && PROFILE_SECTION_ORDER.nationalResults,
+        )}
+      >
+        {tournamentResultsComponent}
+      </div>
 
       {/* 5. Contact Information - always show for consistent structure */}
-      <Card className="profile-card border-t-4 border-t-[#D3B574] shadow-md" data-section="contact">
+      <Card
+        id="contact"
+        className={cn(
+          "profile-card border-t-4 border-t-[#D3B574] shadow-md",
+          mobileRecruiterLayout && PROFILE_SECTION_ORDER.contact,
+        )}
+        data-section="contact"
+      >
         <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -1439,7 +1514,13 @@ export function AthleteDetail({
       </Card>
 
       {/* 6. Academics - always show for consistent structure */}
-      <Card className="profile-card border-t-4 border-t-[#D3B574] shadow-md" data-section="academics">
+      <Card
+        className={cn(
+          "profile-card border-t-4 border-t-[#D3B574] shadow-md",
+          mobileRecruiterLayout && PROFILE_SECTION_ORDER.academics,
+        )}
+        data-section="academics"
+      >
         <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -1524,7 +1605,14 @@ export function AthleteDetail({
         </Card>
 
       {/* 7. Highlight Reel - always show for consistent structure */}
-      <Card className="profile-card border-t-4 border-t-[#D3B574] shadow-md" data-section="highlight-reel">
+      <Card
+        id="highlights"
+        className={cn(
+          "profile-card border-t-4 border-t-[#D3B574] shadow-md",
+          mobileRecruiterLayout && PROFILE_SECTION_ORDER.highlights,
+        )}
+        data-section="highlights"
+      >
         <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -1622,7 +1710,13 @@ export function AthleteDetail({
         </Card>
 
       {/* 8. College Opens Experience - always show for consistent structure */}
-      <Card className="profile-card border-t-4 border-t-[#D3B574] shadow-md" data-section="college-opens">
+      <Card
+        className={cn(
+          "profile-card border-t-4 border-t-[#D3B574] shadow-md",
+          mobileRecruiterLayout && PROFILE_SECTION_ORDER.collegeOpens,
+        )}
+        data-section="college-opens"
+      >
         <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -1659,7 +1753,13 @@ export function AthleteDetail({
       </Card>
 
       {/* 9. Achievements - always show for consistent structure */}
-      <Card className="profile-card border-t-4 border-t-[#D3B574] shadow-md" data-section="achievements">
+      <Card
+        className={cn(
+          "profile-card border-t-4 border-t-[#D3B574] shadow-md",
+          mobileRecruiterLayout && PROFILE_SECTION_ORDER.achievements,
+        )}
+        data-section="achievements"
+      >
         <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -1732,12 +1832,19 @@ export function AthleteDetail({
           </Card>
 
       {/* 10. High School Career Match Results */}
-      <div className={cn("min-w-0 max-w-full", isDark && "profile-match-data")}>
+      <div
+        className={cn(
+          "min-w-0 max-w-full",
+          isDark && "profile-match-data",
+          mobileRecruiterLayout && PROFILE_SECTION_ORDER.inSeason,
+        )}
+      >
         <MatchDataSectionImproved
           athleteId={athlete.id}
           athleteName={athleteName}
           graduationYear={graduationYear}
           theme={isDark ? "dark" : "light"}
+          collapseOnMobile={mobileRecruiterLayout}
         />
       </div>
 
