@@ -2,15 +2,8 @@
 
 import { Sparkles } from "lucide-react"
 import { HardLink } from "@/components/hard-link"
-import {
-  aauPanelClass,
-  aauPanelDescClass,
-  aauPanelHeaderClass,
-  aauPanelTitleClass,
-} from "@/components/national-team/aau-scholastic-theme"
 import { aauScholasticProfileHref } from "@/lib/content/aau-scholastic-duals-2026-profile-ids"
 import type { AauScholasticWrestlerQualityWins } from "@/lib/aau-scholastic-duals-2026-quality-wins"
-import { cn } from "@/lib/utils"
 
 function QualityWinBlock({
   entry,
@@ -84,7 +77,8 @@ function QualityWinBlock({
   )
 }
 
-export function AauScholasticQualityWinsSection({
+/** Featured quality-win block — embed inside Individual results panel. */
+export function AauScholasticQualityWinsFeatured({
   entries,
   profileIdMap = {},
 }: {
@@ -94,21 +88,15 @@ export function AauScholasticQualityWinsSection({
   if (entries.length === 0) return null
 
   return (
-    <section id="quality-wins" className={aauPanelClass}>
-      <div className={cn(aauPanelHeaderClass, "flex items-center gap-2")}>
-        <Sparkles className="w-5 h-5 text-[#FF7070]" aria-hidden />
-        <div>
-          <h2 className={aauPanelTitleClass}>Quality wins</h2>
-          <p className={aauPanelDescClass}>
-            Signature wins over state champions, placers, and national-level opponents
-          </p>
-        </div>
+    <div id="quality-wins" className="scroll-mt-28 space-y-8 pb-8 border-b border-white/10">
+      <div className="flex items-center gap-2">
+        <Sparkles className="w-4 h-4 text-[#FF7070] shrink-0" aria-hidden />
+        <h3 className="text-base font-bold text-white">Quality wins</h3>
+        <span className="text-xs text-white/50">Signature wins over state &amp; national-level opponents</span>
       </div>
-      <div className="px-4 sm:px-6 py-5 sm:py-6 space-y-10">
-        {entries.map((entry) => (
-          <QualityWinBlock key={entry.wrestler} entry={entry} profileIdMap={profileIdMap} />
-        ))}
-      </div>
-    </section>
+      {entries.map((entry) => (
+        <QualityWinBlock key={entry.wrestler} entry={entry} profileIdMap={profileIdMap} />
+      ))}
+    </div>
   )
 }
