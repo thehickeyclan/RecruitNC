@@ -25,8 +25,12 @@ import {
 } from "@/lib/aau-scholastic-duals-2026-results"
 import { aauScholasticProfileHref } from "@/lib/content/aau-scholastic-duals-2026-profile-ids"
 import { AauScholasticDualMeetRow } from "@/components/national-team/aau-scholastic-dual-meet-row"
+import { AauScholasticIndividualRow } from "@/components/national-team/aau-scholastic-individual-row"
 import { AauScholasticDualsWrestlerCards } from "@/components/national-team/aau-scholastic-duals-wrestler-cards"
-import { getAauScholasticDualBouts } from "@/lib/aau-scholastic-duals-2026-dual-bouts"
+import {
+  buildAauIndividualBoutLogsByWrestler,
+  getAauScholasticDualBouts,
+} from "@/lib/aau-scholastic-duals-2026-dual-bouts"
 import { NhscaDualsTournamentMomentMedia } from "@/components/national-team/nhsca-duals-tournament-moment-media"
 import {
   aauNavPillClass,
@@ -37,6 +41,7 @@ import {
   aauPanelTitleClass,
   aauPrimaryBtnClass,
   aauSecondaryBtnClass,
+  aauInputClass,
 } from "@/components/national-team/aau-scholastic-theme"
 import { cn } from "@/lib/utils"
 
@@ -68,6 +73,10 @@ export function AauScholasticDuals2026PublicResults({
   const winTypes = AAU_SCHOLASTIC_DUALS_2026_WIN_TYPES
   const duals = useMemo(() => sortAauDuals(AAU_SCHOLASTIC_DUALS_2026_DUALS), [])
   const individuals = AAU_SCHOLASTIC_DUALS_2026_INDIVIDUALS
+  const individualBoutsByWrestler = useMemo(
+    () => buildAauIndividualBoutLogsByWrestler(duals, individuals),
+    [duals, individuals],
+  )
   const [search, setSearch] = useState("")
 
   const computedIndividualPct = aauIndividualWinPct(individuals)
@@ -412,90 +421,42 @@ export function AauScholasticDuals2026PublicResults({
         </section>
 
         {/* Individual results */}
-        <section id="individual" className="bg-white rounded-2xl overflow-hidden shadow-lg">
-          <div className="bg-[#002147] px-4 sm:px-6 py-4 sm:py-5">
-            <h2 className="text-xl font-black text-white">Individual results</h2>
-            <p className="text-sm text-blue-100/80 mt-1">
-              Match records · team point contributions (sorted by net pts)
-            </p>
-            <p className="text-xs text-blue-100/60 mt-2">{AAU_SCHOLASTIC_INDIVIDUAL_STATS_FOOTNOTE}</p>
-            <div className="relative mt-4 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" aria-hidden />
-              <Input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search wrestler, weight, school…"
-                className="pl-9 bg-white/10 border-white/20 text-white placeholder:text-white/40"
-              />
+        <section id="individual" className={aauPanelClass}>
+          <div className={cn(aauPanelHeaderClass, "flex items-center gap-2")}>
+            <Users className="w-5 h-5 text-[#FF7070]" aria-hidden />
+            <div className="flex-1 min-w-0">
+              <h2 className={aauPanelTitleClass}>Individual results</h2>
+              <p className={aauPanelDescClass}>
+                Match records · tap a wrestler to expand every bout from the weekend
+              </p>
+              <p className="text-xs text-white/45 mt-2">{AAU_SCHOLASTIC_INDIVIDUAL_STATS_FOOTNOTE}</p>
+              <div className="relative mt-4 max-w-md">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" aria-hidden />
+                <Input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search wrestler, weight, school…"
+                  className={cn("pl-9", aauInputClass)}
+                />
+              </div>
             </div>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-slate-100 text-left text-[#002147]">
-                  <th className="px-4 py-3 font-bold">Weight</th>
-                  <th className="px-4 py-3 font-bold">Wrestler</th>
-                  <th className="px-4 py-3 font-bold hidden sm:table-cell">School</th>
-                  <th className="px-4 py-3 font-bold text-center">Record</th>
-                  <th className="px-4 py-3 font-bold text-center hidden md:table-cell">Net pts</th>
-                  <th className="px-4 py-3 font-bold text-center hidden lg:table-cell">Bonus</th>
-                  <th className="px-4 py-3 font-bold hidden xl:table-cell">Notes</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredIndividuals.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
-                      {individuals.length === 0 ? "Individual results not posted yet." : "No matches for your search."}
-                    </td>
-                  </tr>
-                ) : (
-                  filteredIndividuals.map((r) => {
-                    const school = r.highSchool ?? highSchoolMap[r.wrestler] ?? "—"
-                    const winPct = r.wins + r.losses > 0 ? Math.round((r.wins / (r.wins + r.losses)) * 100) : null
-                    return (
-                      <tr key={`${r.wrestler}-${r.weightLabel}`} className="border-t border-slate-200 hover:bg-slate-50">
-                        <td className="px-4 py-3 font-medium text-slate-700">{r.weightLabel}</td>
-                        <td className="px-4 py-3">
-                          <HardLink
-                            href={aauScholasticProfileHref(r.wrestler, profileIdMap)}
-                            className="font-semibold text-[#003366] hover:underline"
-                          >
-                            {r.wrestler}
-                          </HardLink>
-                        </td>
-                        <td className="px-4 py-3 text-slate-600 hidden sm:table-cell">{school}</td>
-                        <td className="px-4 py-3 text-center">
-                          <span className="font-bold text-[#002147] tabular-nums">
-                            {r.wins}-{r.losses}
-                          </span>
-                          {winPct != null && (
-                            <span className="block text-xs text-slate-500">{winPct}%</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-center hidden md:table-cell">
-                          <span
-                            className={cn(
-                              "font-bold tabular-nums",
-                              r.netPts > 0 ? "text-emerald-700" : r.netPts < 0 ? "text-red-600" : "text-slate-600"
-                            )}
-                          >
-                            {r.netPts > 0 ? `+${r.netPts}` : r.netPts}
-                          </span>
-                          <span className="block text-[10px] text-slate-500">
-                            {r.grossPts}-{r.allowedPts}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-center hidden lg:table-cell tabular-nums text-slate-700">
-                          {r.bonusWins}
-                        </td>
-                        <td className="px-4 py-3 text-slate-600 hidden xl:table-cell">{r.notes ?? "—"}</td>
-                      </tr>
-                    )
-                  })
-                )}
-              </tbody>
-            </table>
+          <div className="px-4 sm:px-6 py-5 space-y-3">
+            {filteredIndividuals.length === 0 ? (
+              <p className="text-white/60 text-sm">
+                {individuals.length === 0 ? "Individual results not posted yet." : "No matches for your search."}
+              </p>
+            ) : (
+              filteredIndividuals.map((r) => (
+                <AauScholasticIndividualRow
+                  key={`${r.wrestler}-${r.weightLabel}`}
+                  result={r}
+                  bouts={individualBoutsByWrestler[r.wrestler] ?? []}
+                  profileHref={aauScholasticProfileHref(r.wrestler, profileIdMap)}
+                  school={r.highSchool ?? highSchoolMap[r.wrestler] ?? "—"}
+                />
+              ))
+            )}
           </div>
         </section>
 

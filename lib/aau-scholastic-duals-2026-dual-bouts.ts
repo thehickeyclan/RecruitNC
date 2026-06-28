@@ -1,3 +1,8 @@
+import type {
+  AauScholasticDualResult,
+  AauScholasticIndividualResult,
+} from "@/lib/aau-scholastic-duals-2026-results"
+
 /** Individual bout results within a dual meet — keyed by `matchNumber` on the dual row. */
 export type AauScholasticDualBout = {
   weightLbs: number
@@ -6,6 +11,19 @@ export type AauScholasticDualBout = {
   ourWrestler: string
   opponentTeamPts: number
   ourTeamPts: number
+}
+
+/** One NC wrestler bout within a dual — used for expandable individual results. */
+export type AauIndividualBoutLog = {
+  matchNumber: number
+  opponentTeam: string
+  dualNotes?: string
+  weightLbs: number
+  resultLine: string
+  opponentWrestler: string
+  ourTeamPts: number
+  opponentTeamPts: number
+  won: boolean
 }
 
 /** Add bout logs as they are exported from the tournament tracker. */
@@ -106,6 +124,22 @@ export const AAU_SCHOLASTIC_DUALS_2026_DUAL_BOUTS: Record<number, AauScholasticD
     { weightLbs: 215, resultLine: "DEC 7-1", opponentWrestler: "M. Mayer", ourWrestler: "G. Lopez", opponentTeamPts: 0, ourTeamPts: 3 },
     { weightLbs: 285, resultLine: "DEC 9-3", opponentWrestler: "S. Blasczyk", ourWrestler: "M. Hocker", opponentTeamPts: 3, ourTeamPts: 0 },
   ],
+  7: [
+    { weightLbs: 106, resultLine: "DEC 4-2", opponentWrestler: "A. Bishop", ourWrestler: "A. Moody", opponentTeamPts: 3, ourTeamPts: 0 },
+    { weightLbs: 113, resultLine: "MD 17-6", opponentWrestler: "D. Presman", ourWrestler: "A. Burkholder", opponentTeamPts: 0, ourTeamPts: 4 },
+    { weightLbs: 120, resultLine: "MD 16-5", opponentWrestler: "J. Michael", ourWrestler: "L. Richards", opponentTeamPts: 0, ourTeamPts: 4 },
+    { weightLbs: 126, resultLine: "DEC 4-1", opponentWrestler: "S. Peterson", ourWrestler: "P. Kearns", opponentTeamPts: 0, ourTeamPts: 3 },
+    { weightLbs: 132, resultLine: "F 14-3 1:54", opponentWrestler: "D. Brown", ourWrestler: "M. Johnson", opponentTeamPts: 0, ourTeamPts: 6 },
+    { weightLbs: 138, resultLine: "TF 17-2 2:44", opponentWrestler: "M. Rojas", ourWrestler: "T. Johnson", opponentTeamPts: 0, ourTeamPts: 5 },
+    { weightLbs: 144, resultLine: "F 7-0 4:49", opponentWrestler: "M. Gonzalez", ourWrestler: "J. Amiott", opponentTeamPts: 0, ourTeamPts: 6 },
+    { weightLbs: 150, resultLine: "DEC 7-0", opponentWrestler: "J. Rivas", ourWrestler: "J. Perry", opponentTeamPts: 0, ourTeamPts: 3 },
+    { weightLbs: 157, resultLine: "TF 17-0 5:06", opponentWrestler: "C. Riche", ourWrestler: "A. Ellison", opponentTeamPts: 0, ourTeamPts: 5 },
+    { weightLbs: 165, resultLine: "F 12-3 5:05", opponentWrestler: "T. Grey", ourWrestler: "T. McNair", opponentTeamPts: 0, ourTeamPts: 6 },
+    { weightLbs: 175, resultLine: "TF 20-5 1:36", opponentWrestler: "A. Cole", ourWrestler: "F. Alkurdasi", opponentTeamPts: 0, ourTeamPts: 5 },
+    { weightLbs: 190, resultLine: "MD 19-6", opponentWrestler: "A. Buck", ourWrestler: "L. Padgett", opponentTeamPts: 4, ourTeamPts: 0 },
+    { weightLbs: 215, resultLine: "FOR 0-0", opponentWrestler: "Forfeit", ourWrestler: "G. Lopez", opponentTeamPts: 0, ourTeamPts: 6 },
+    { weightLbs: 285, resultLine: "F 2-10 3:04", opponentWrestler: "J. Johnson", ourWrestler: "M. Hocker", opponentTeamPts: 0, ourTeamPts: 6 },
+  ],
   8: [
     { weightLbs: 106, resultLine: "F 8-5 4:44", opponentWrestler: "H. Cox", ourWrestler: "A. Moody", opponentTeamPts: 0, ourTeamPts: 6 },
     { weightLbs: 113, resultLine: "DEC 7-2", opponentWrestler: "I. Maize", ourWrestler: "A. Burkholder", opponentTeamPts: 3, ourTeamPts: 0 },
@@ -201,4 +235,79 @@ export function sumAauDualBoutTeamPoints(bouts: AauScholasticDualBout[]) {
     }),
     { ourScore: 0, opponentScore: 0 }
   )
+}
+
+/** Map tracker abbreviations (e.g. "A. Moody") to roster full names. */
+export function resolveAauBoutWrestlerName(
+  boutAbbrev: string,
+  individuals: readonly AauScholasticIndividualResult[],
+): string | null {
+  const trimmed = boutAbbrev.trim()
+  if (!trimmed || /^forfeit$/i.test(trimmed)) return null
+
+  const parsed = trimmed.match(/^([A-Za-z])\.?\s+(.+)$/)
+  if (!parsed) return null
+
+  const [, initial, lastName] = parsed
+  const lastLower = lastName.toLowerCase()
+  const candidates = individuals.filter((row) => {
+    const parts = row.wrestler.trim().split(/\s+/)
+    return parts[parts.length - 1]?.toLowerCase() === lastLower
+  })
+
+  if (candidates.length === 1) return candidates[0]!.wrestler
+
+  const byInitial = candidates.filter((row) => row.wrestler.trim()[0]?.toUpperCase() === initial.toUpperCase())
+  if (byInitial.length === 1) return byInitial[0]!.wrestler
+
+  return null
+}
+
+/** All bout logs keyed by roster wrestler name (from dual bout exports). */
+export function buildAauIndividualBoutLogsByWrestler(
+  duals: readonly AauScholasticDualResult[],
+  individuals: readonly AauScholasticIndividualResult[],
+): Record<string, AauIndividualBoutLog[]> {
+  const dualByMatch = new Map(duals.map((d) => [d.matchNumber, d] as const))
+  const logs: Record<string, AauIndividualBoutLog[]> = {}
+
+  for (const [matchKey, bouts] of Object.entries(AAU_SCHOLASTIC_DUALS_2026_DUAL_BOUTS)) {
+    const matchNumber = Number(matchKey)
+    const dual = dualByMatch.get(matchNumber)
+    if (!dual) continue
+
+    for (const bout of bouts) {
+      const wrestler = resolveAauBoutWrestlerName(bout.ourWrestler, individuals)
+      if (!wrestler) continue
+
+      const entry: AauIndividualBoutLog = {
+        matchNumber,
+        opponentTeam: dual.opponent,
+        dualNotes: dual.notes,
+        weightLbs: bout.weightLbs,
+        resultLine: bout.resultLine,
+        opponentWrestler: bout.opponentWrestler,
+        ourTeamPts: bout.ourTeamPts,
+        opponentTeamPts: bout.opponentTeamPts,
+        won: bout.ourTeamPts > bout.opponentTeamPts,
+      }
+
+      if (!logs[wrestler]) logs[wrestler] = []
+      logs[wrestler]!.push(entry)
+    }
+  }
+
+  for (const wrestler of Object.keys(logs)) {
+    logs[wrestler]!.sort((a, b) => a.matchNumber - b.matchNumber || a.weightLbs - b.weightLbs)
+  }
+
+  return logs
+}
+
+export function getAauIndividualBoutLogsForWrestler(
+  wrestler: string,
+  duals: readonly AauScholasticDualResult[],
+  individuals: readonly AauScholasticIndividualResult[],
+): AauIndividualBoutLog[] {
+  return buildAauIndividualBoutLogsByWrestler(duals, individuals)[wrestler] ?? []
 }
