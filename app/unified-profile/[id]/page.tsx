@@ -149,7 +149,16 @@ export default function UnifiedProfilePage() {
 
   return (
     <main className="min-h-screen bg-[#0A1628]">
-      <section className="relative overflow-hidden border-b border-white/10">
+      <div className="border-b border-white/10 bg-[#0A1628] px-4 py-3 lg:hidden">
+        <Link
+          href="/prospects/all"
+          className="inline-flex items-center gap-2 text-sm text-white/50 hover:text-[#D3B574] transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Prospects
+        </Link>
+      </div>
+      <section className="relative hidden overflow-hidden border-b border-white/10 lg:block">
         <div className="absolute inset-0">
           <Image
             src="/hero-banner-nchsaa-2026-arena.png"
@@ -168,13 +177,11 @@ export default function UnifiedProfilePage() {
             <ArrowLeft className="h-4 w-4" />
             Back to Prospects
           </Link>
-          <h1 className="mt-4 hidden text-3xl font-black tracking-tight text-white md:text-4xl lg:block">
-            {athleteName}
-          </h1>
+          <h1 className="mt-4 text-3xl font-black tracking-tight text-white md:text-4xl">{athleteName}</h1>
         </div>
       </section>
 
-      <div className="container mx-auto min-w-0 max-w-full px-4 py-8">
+      <div className="container mx-auto min-w-0 max-w-full px-4 py-4 lg:py-8">
         <ProfileViewTracker athleteId={athlete.id as string} athleteName={athleteName} />
         <AthleteDetail
           theme="dark"
