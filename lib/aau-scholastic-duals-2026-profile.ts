@@ -9,6 +9,13 @@ import { namesMatchRoster } from "@/lib/nhsca-duals-wrestler-card-stats"
 
 export const AAU_SCHOLASTIC_DUALS_EVENT_LABEL = "AAU Scholastic Duals"
 export const AAU_SCHOLASTIC_DUALS_2026_YEAR = 2026
+export const AAU_SCHOLASTIC_DUALS_2026_PROFILE_HIGHLIGHT_LABEL =
+  "Highlight Reel from AAU Scholastic Duals 2026"
+
+/** Extra profile-only highlight reels (flip card may still use a single `highlightVideoSrc`). */
+export const AAU_SCHOLASTIC_DUALS_2026_PROFILE_HIGHLIGHT_EXTRAS: Record<string, string[]> = {
+  "Jacob Perry": ["/national-team/aau-scholastic-duals-2026/videos/jacob-perry-highlight-2.mov"],
+}
 
 /** Resolve AAU roster wrestler name for a public profile (override pin or name match). */
 export function resolveAauScholasticRosterNameForProfile(
@@ -54,15 +61,24 @@ export function getAauScholasticDuals2026ProfileResults(
   ]
 }
 
-export function getAauScholasticDuals2026ProfileHighlightVideoSrc(
+export function getAauScholasticDuals2026ProfileHighlightVideoSrcs(
   athleteId: string,
   nameBases: string[]
-): string | null {
-  if (!AAU_SCHOLASTIC_DUALS_2026_RESULTS_PUBLISHED) return null
+): string[] {
+  if (!AAU_SCHOLASTIC_DUALS_2026_RESULTS_PUBLISHED) return []
 
   const rosterName = resolveAauScholasticRosterNameForProfile(athleteId, nameBases)
-  if (!rosterName) return null
+  if (!rosterName) return []
 
+  const srcs: string[] = []
   const card = AAU_SCHOLASTIC_DUALS_2026_WRESTLER_CARDS.find((c) => c.wrestler === rosterName)
-  return card?.highlightVideoSrc?.trim() || null
+  const primary = card?.highlightVideoSrc?.trim()
+  if (primary) srcs.push(primary)
+
+  for (const extra of AAU_SCHOLASTIC_DUALS_2026_PROFILE_HIGHLIGHT_EXTRAS[rosterName] ?? []) {
+    const trimmed = extra.trim()
+    if (trimmed && !srcs.includes(trimmed)) srcs.push(trimmed)
+  }
+
+  return srcs
 }
