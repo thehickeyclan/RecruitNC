@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from "react"
 import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { BarChart3 } from "lucide-react"
+import { BarChart3, ChevronDown } from "lucide-react"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 
 interface IndividualMatch {
   date?: string
@@ -43,6 +44,8 @@ interface MatchDataSectionImprovedProps {
   athleteName: string
   graduationYear?: number
   theme?: "light" | "dark"
+  /** Mobile: collapsed by default with recruiter-first label. */
+  collapseOnMobile?: boolean
 }
 
 const IS_DEV = process.env.NODE_ENV !== "production"
@@ -227,8 +230,10 @@ export function MatchDataSectionImproved({
   athleteName,
   graduationYear,
   theme = "light",
+  collapseOnMobile = false,
 }: MatchDataSectionImprovedProps) {
   const isDark = theme === "dark"
+  const [mobileOpen, setMobileOpen] = useState(false)
   const cardClass = isDark
     ? "profile-card border-t-4 border-t-[#D3B574] border-white/10 bg-[#0f1c2e] shadow-none"
     : "border-t-4 border-t-[#D3B574] shadow-md"
@@ -268,9 +273,13 @@ export function MatchDataSectionImproved({
   const pillGoldClass = isDark
     ? "inline-flex items-center rounded-full bg-[#D3B574] px-4 py-2 text-sm font-semibold text-[#0A1628]"
     : "inline-flex items-center rounded-full bg-[#D3B574] px-4 py-2 text-sm font-semibold text-[#0D1A4D]"
-  const tabBarClass = isDark
-    ? "flex flex-wrap gap-2 mb-4 rounded-lg border border-white/10 bg-white/5 p-2"
-    : "flex flex-wrap gap-2 mb-4 rounded-lg bg-gray-100 p-2"
+  const tabBarClass = cn(
+    "flex gap-2 mb-4 rounded-lg p-2",
+    collapseOnMobile
+      ? "flex-nowrap overflow-x-auto scroll-table-x max-lg:flex-nowrap max-lg:overflow-x-auto"
+      : "flex-wrap",
+    isDark ? "border border-white/10 bg-white/5" : "bg-gray-100",
+  )
   const tabActiveClass = isDark
     ? "bg-[#D3B574] text-[#0A1628] shadow-sm font-semibold"
     : "bg-white text-gray-900 shadow-sm font-semibold"
@@ -552,23 +561,12 @@ export function MatchDataSectionImproved({
 
   const activeSeason = sortedSeasons.find((season) => season.seasonKey === activeTab) ?? sortedSeasons[0]
 
-  return (
-    <Card className={cardClass}>
-      <CardHeader className={headerClass}>
-        <CardTitle className="text-white flex items-center gap-2 text-lg md:text-xl">
-          <BarChart3 className="h-5 w-5 text-[#D3B574]" />
-          High School Career Match Results
-        </CardTitle>
-        {getYearsOfHighSchool() ? (
-          <p className={cn("text-sm mt-1", isDark ? "text-white/65" : "text-blue-100")}>
-            {getYearsOfHighSchool()}
-          </p>
-        ) : null}
-      </CardHeader>
+  const sectionTitle = collapseOnMobile ? "In-season match log" : "High School Career Match Results"
 
-      <CardContent className={cn(contentClass, "min-w-0")}>
-        {/* Career stats — profile-style tiles */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+  const matchDataBody = (
+    <>
+      {/* Career stats — profile-style tiles */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
           <div className={statTileClass}>
             <div className={statValueClass}>
               {careerTotals.wins}-{careerTotals.losses}
@@ -741,7 +739,70 @@ export function MatchDataSectionImproved({
             </Table>
           </div>
         </div>
-      </CardContent>
+    </>
+  )
+
+  const matchDataHeader = (
+    <CardHeader className={headerClass}>
+      <CardTitle className="text-white flex items-center gap-2 text-lg md:text-xl">
+        <BarChart3 className="h-5 w-5 text-[#D3B574]" />
+        {sectionTitle}
+      </CardTitle>
+      {collapseOnMobile ? (
+        <p className={cn("text-xs mt-1", isDark ? "text-white/50" : "text-blue-100/80")}>
+          {careerTotals.wins}-{careerTotals.losses} career · {totalMatches} matches
+        </p>
+      ) : getYearsOfHighSchool() ? (
+        <p className={cn("text-sm mt-1", isDark ? "text-white/65" : "text-blue-100")}>
+          {getYearsOfHighSchool()}
+        </p>
+      ) : null}
+    </CardHeader>
+  )
+
+  if (collapseOnMobile) {
+    return (
+      <>
+        <Collapsible open={mobileOpen} onOpenChange={setMobileOpen} className="lg:hidden">
+          <Card className={cardClass} id="in-season" data-section="in-season">
+            <CollapsibleTrigger asChild>
+              <button type="button" className="w-full text-left">
+                <CardHeader className={headerClass}>
+                  <CardTitle className="text-white flex items-center justify-between gap-2 text-base">
+                    <span className="flex items-center gap-2">
+                      <BarChart3 className="h-4 w-4 text-[#D3B574]" />
+                      {sectionTitle}
+                    </span>
+                    <ChevronDown
+                      className={cn(
+                        "h-5 w-5 shrink-0 text-white/70 transition-transform",
+                        mobileOpen && "rotate-180",
+                      )}
+                    />
+                  </CardTitle>
+                  <p className={cn("text-xs mt-1", isDark ? "text-white/50" : "text-blue-100/80")}>
+                    {careerTotals.wins}-{careerTotals.losses} · {totalMatches} matches — tap to expand
+                  </p>
+                </CardHeader>
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className={cn(contentClass, "min-w-0")}>{matchDataBody}</CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
+        <Card className={cn(cardClass, "hidden lg:block")}>
+          {matchDataHeader}
+          <CardContent className={cn(contentClass, "min-w-0")}>{matchDataBody}</CardContent>
+        </Card>
+      </>
+    )
+  }
+
+  return (
+    <Card className={cardClass}>
+      {matchDataHeader}
+      <CardContent className={cn(contentClass, "min-w-0")}>{matchDataBody}</CardContent>
     </Card>
   )
 }

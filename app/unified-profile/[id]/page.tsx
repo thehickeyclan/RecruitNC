@@ -168,7 +168,9 @@ export default function UnifiedProfilePage() {
             <ArrowLeft className="h-4 w-4" />
             Back to Prospects
           </Link>
-          <h1 className="mt-4 text-3xl font-black tracking-tight text-white md:text-4xl">{athleteName}</h1>
+          <h1 className="mt-4 hidden text-3xl font-black tracking-tight text-white md:text-4xl lg:block">
+            {athleteName}
+          </h1>
         </div>
       </section>
 
@@ -176,6 +178,7 @@ export default function UnifiedProfilePage() {
         <ProfileViewTracker athleteId={athlete.id as string} athleteName={athleteName} />
         <AthleteDetail
           theme="dark"
+          mobileRecruiterLayout
           athlete={athlete as Parameters<typeof AthleteDetail>[0]["athlete"]}
           nchsaaResults={nchsaaResults.map((r) => ({
             ...r,
@@ -190,6 +193,7 @@ export default function UnifiedProfilePage() {
                 super32Results={super32Results as never[]}
                 nationalTeamResults={nationalTeamResults as never[]}
                 alwaysShowStructure={true}
+                mobileTabbedLayout
                 theme="dark"
               />
             </div>
