@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
-import { RotateCw } from "lucide-react"
+import { Play, RotateCw, Video } from "lucide-react"
 import { HardLink } from "@/components/hard-link"
 import {
   getAauScholasticWrestlerCardsPendingCount,
@@ -28,6 +28,33 @@ function AauScholasticCardProfileFooter({
       </HardLink>
       <span className="sr-only">{wrestler}</span>
     </div>
+  )
+}
+
+function HighlightReelBadge({ compact = false, className }: { compact?: boolean; className?: string }) {
+  return (
+    <span
+      className={cn(
+        "pointer-events-none inline-flex items-center gap-1 rounded-full border border-white/25 bg-[#B31B1B]/95 text-white shadow-md",
+        compact ? "px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide" : "px-2 py-1 text-[10px] font-bold uppercase tracking-wide",
+        className,
+      )}
+      aria-hidden
+    >
+      <Video className={cn("shrink-0", compact ? "h-2.5 w-2.5" : "h-3 w-3")} />
+      <span>{compact ? "Tap" : "Tap to play"}</span>
+    </span>
+  )
+}
+
+function HighlightReelPlayHint() {
+  return (
+    <span
+      className="pointer-events-none absolute left-1/2 top-1/2 z-30 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-black/45 text-white shadow-lg backdrop-blur-[2px]"
+      aria-hidden
+    >
+      <Play className="h-5 w-5 fill-white text-white ml-0.5" />
+    </span>
   )
 }
 
@@ -73,11 +100,13 @@ function AauScholasticWrestlerFlipVideoCard({
             type="button"
             onClick={() => setIsFlipped(true)}
             className={cn(
-              "absolute inset-0 h-full w-full text-left [backface-visibility:hidden] [-webkit-backface-visibility:hidden]",
+              "absolute inset-0 h-full w-full cursor-pointer text-left [backface-visibility:hidden] [-webkit-backface-visibility:hidden]",
               !isFlipped ? "z-20" : "z-10",
             )}
-            aria-label={`${wrestler} — tap card for highlight video`}
+            aria-label={`${wrestler} — tap card to play highlight video`}
           >
+            <HighlightReelBadge compact className="absolute top-2 right-2 z-30" />
+            <HighlightReelPlayHint />
             <Image
               src={imageError ? "/wrestler-silhouette.png" : imageSrc}
               alt={`${wrestler}, ${wt} — AAU Scholastic Duals 2026 athlete card`}
@@ -86,8 +115,8 @@ function AauScholasticWrestlerFlipVideoCard({
               sizes="(max-width: 640px) 45vw, 280px"
               onError={() => setImageError(true)}
             />
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#001428]/95 via-[#001428]/35 to-transparent px-3 pb-3 pt-10">
-              <p className="text-[11px] font-semibold text-white/75">Tap card for highlights</p>
+            <div className="absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-[#001428]/95 via-[#001428]/35 to-transparent px-3 pb-3 pt-10">
+              <p className="text-[11px] font-semibold text-white/90">Tap anywhere on card to play</p>
             </div>
           </button>
 
@@ -178,6 +207,7 @@ export function AauScholasticDualsWrestlerCards({
 }) {
   const cards = getAauScholasticWrestlerCardsSorted()
   const pending = getAauScholasticWrestlerCardsPendingCount()
+  const hasHighlightReels = cards.some((c) => Boolean(c.highlightVideoSrc))
 
   if (cards.length === 0 && pending === 0) return null
 
@@ -190,7 +220,14 @@ export function AauScholasticDualsWrestlerCards({
         </p>
       ) : null}
       {cards.length > 0 ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+        <>
+          {hasHighlightReels ? (
+            <p className="text-xs text-white/55 mb-4 flex flex-wrap items-center gap-x-2 gap-y-1">
+              <HighlightReelBadge />
+              <span>= highlight reel · tap the card (center play button) · Profile link below for bio</span>
+            </p>
+          ) : null}
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
           {cards.map((card) => (
             <AauScholasticWrestlerCardTile
               key={`${card.weightClass}-${card.wrestler}`}
@@ -201,7 +238,8 @@ export function AauScholasticDualsWrestlerCards({
               highlightVideoSrc={card.highlightVideoSrc}
             />
           ))}
-        </div>
+          </div>
+        </>
       ) : null}
     </div>
   )
