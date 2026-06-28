@@ -5,36 +5,28 @@ import Image from "next/image"
 import { RotateCw } from "lucide-react"
 import { HardLink } from "@/components/hard-link"
 import {
-  aauScholasticCardRecord,
   getAauScholasticWrestlerCardsPendingCount,
   getAauScholasticWrestlerCardsSorted,
 } from "@/lib/aau-scholastic-duals-2026-wrestler-cards"
 import { aauScholasticProfileHref } from "@/lib/content/aau-scholastic-duals-2026-profile-ids"
 import { cn } from "@/lib/utils"
 
-function AauScholasticCardFooter({
+function AauScholasticCardProfileFooter({
   wrestler,
-  wt,
-  record,
   profileHref,
 }: {
   wrestler: string
-  wt: string
-  record: string | null
   profileHref: string
 }) {
   return (
     <div className="px-2.5 sm:px-3 py-2 border-t border-white/10">
-      <a
+      <HardLink
         href={profileHref}
-        className="text-sm font-bold text-white leading-tight hover:text-[#FFB3B3] block"
+        className="flex min-h-[44px] items-center justify-center text-sm font-bold text-[#FF7070] hover:text-[#FFB3B3] hover:underline"
       >
-        {wrestler}
-      </a>
-      <p className="text-[11px] text-white/55 mt-0.5">
-        {wt}
-        {record ? <span className="tabular-nums"> · {record}</span> : null}
-      </p>
+        Profile
+      </HardLink>
+      <span className="sr-only">{wrestler}</span>
     </div>
   )
 }
@@ -43,14 +35,12 @@ function AauScholasticWrestlerFlipVideoCard({
   wrestler,
   weightClass,
   imageSrc,
-  record,
   profileHref,
   highlightVideoSrc,
 }: {
   wrestler: string
   weightClass: string
   imageSrc: string
-  record: string | null
   profileHref: string
   highlightVideoSrc: string
 }) {
@@ -76,7 +66,7 @@ function AauScholasticWrestlerFlipVideoCard({
         <div
           className={cn(
             "relative h-full w-full transition-transform duration-500 ease-out [transform-style:preserve-3d]",
-            isFlipped && "[transform:rotateY(180deg)]"
+            isFlipped && "[transform:rotateY(180deg)]",
           )}
         >
           <button
@@ -84,13 +74,13 @@ function AauScholasticWrestlerFlipVideoCard({
             onClick={() => setIsFlipped(true)}
             className={cn(
               "absolute inset-0 h-full w-full text-left [backface-visibility:hidden] [-webkit-backface-visibility:hidden]",
-              !isFlipped ? "z-20" : "z-10"
+              !isFlipped ? "z-20" : "z-10",
             )}
-            aria-label={`${wrestler} highlight video — tap to flip and play`}
+            aria-label={`${wrestler} — tap card for highlight video`}
           >
             <Image
               src={imageError ? "/wrestler-silhouette.png" : imageSrc}
-              alt={`${wrestler}, ${wt}${record ? `, ${record}` : ""} — AAU Scholastic Duals 2026`}
+              alt={`${wrestler}, ${wt} — AAU Scholastic Duals 2026 athlete card`}
               fill
               className="object-cover object-center"
               sizes="(max-width: 640px) 45vw, 280px"
@@ -104,7 +94,7 @@ function AauScholasticWrestlerFlipVideoCard({
           <div
             className={cn(
               "absolute inset-0 h-full w-full bg-black [backface-visibility:hidden] [-webkit-backface-visibility:hidden] [transform:rotateY(180deg)]",
-              isFlipped ? "z-20" : "z-10"
+              isFlipped ? "z-20" : "z-10",
             )}
           >
             <video
@@ -129,7 +119,7 @@ function AauScholasticWrestlerFlipVideoCard({
           </div>
         </div>
       </div>
-      <AauScholasticCardFooter wrestler={wrestler} wt={wt} record={record} profileHref={profileHref} />
+      <AauScholasticCardProfileFooter wrestler={wrestler} profileHref={profileHref} />
     </div>
   )
 }
@@ -138,14 +128,12 @@ function AauScholasticWrestlerCardTile({
   wrestler,
   weightClass,
   imageSrc,
-  record,
   profileHref,
   highlightVideoSrc,
 }: {
   wrestler: string
   weightClass: string
   imageSrc: string
-  record: string | null
   profileHref: string
   highlightVideoSrc?: string
 }) {
@@ -158,7 +146,6 @@ function AauScholasticWrestlerCardTile({
         wrestler={wrestler}
         weightClass={weightClass}
         imageSrc={imageSrc}
-        record={record}
         profileHref={profileHref}
         highlightVideoSrc={highlightVideoSrc}
       />
@@ -166,28 +153,19 @@ function AauScholasticWrestlerCardTile({
   }
 
   return (
-    <HardLink
-      href={profileHref}
-      className="group flex flex-col rounded-xl sm:rounded-2xl border border-white/12 bg-[#0a1638] overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.35)] h-full transition hover:border-[#FF7070]/40 hover:shadow-[0_8px_32px_rgba(255,112,112,0.15)]"
-    >
+    <div className="flex flex-col rounded-xl sm:rounded-2xl border border-white/12 bg-[#0a1638] overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.35)] h-full transition hover:border-[#FF7070]/40 hover:shadow-[0_8px_32px_rgba(255,112,112,0.15)]">
       <div className="relative aspect-[3/4] w-full bg-[#001428]">
         <Image
           src={imageError ? "/wrestler-silhouette.png" : imageSrc}
-          alt={`${wrestler}, ${wt}${record ? `, ${record}` : ""} — AAU Scholastic Duals 2026`}
+          alt={`${wrestler}, ${wt} — AAU Scholastic Duals 2026 athlete card`}
           fill
           className="object-cover object-center"
           sizes="(max-width: 640px) 45vw, 280px"
           onError={() => setImageError(true)}
         />
       </div>
-      <div className="px-2.5 sm:px-3 py-2 border-t border-white/10">
-        <p className="text-sm font-bold text-white leading-tight group-hover:text-[#FFB3B3]">{wrestler}</p>
-        <p className="text-[11px] text-white/55 mt-0.5">
-          {wt}
-          {record ? <span className="tabular-nums"> · {record}</span> : null}
-        </p>
-      </div>
-    </HardLink>
+      <AauScholasticCardProfileFooter wrestler={wrestler} profileHref={profileHref} />
+    </div>
   )
 }
 
@@ -208,7 +186,7 @@ export function AauScholasticDualsWrestlerCards({
       {pending > 0 ? (
         <p className="text-xs text-[#FFB3B3]/90 mb-4">
           {pending} card{pending === 1 ? "" : "s"} coming soon — send art and we&apos;ll add them here. Full stats
-          are in the individual results table above.
+          are in the individual results above.
         </p>
       ) : null}
       {cards.length > 0 ? (
@@ -219,7 +197,6 @@ export function AauScholasticDualsWrestlerCards({
               wrestler={card.wrestler}
               weightClass={card.weightClass}
               imageSrc={card.imageSrc}
-              record={aauScholasticCardRecord(card.wrestler)}
               profileHref={aauScholasticProfileHref(card.wrestler, profileIdMap)}
               highlightVideoSrc={card.highlightVideoSrc}
             />

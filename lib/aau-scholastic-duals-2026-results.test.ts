@@ -5,6 +5,7 @@ import {
   AAU_SCHOLASTIC_DUALS_2026_TEAM_SUMMARY,
   AAU_SCHOLASTIC_DUALS_2026_WIN_TYPES,
   aauIndividualWinPct,
+  sortAauIndividualsByWeight,
   sumAauIndividualStats,
 } from "@/lib/aau-scholastic-duals-2026-results"
 
@@ -71,5 +72,27 @@ describe("AAU Scholastic Duals 2026 individual results", () => {
     const wt = AAU_SCHOLASTIC_DUALS_2026_WIN_TYPES
     expect(wt.falls + wt.techFalls + wt.majorDecisions + wt.decisions + wt.forfeits + wt.injuryDefault).toBe(127)
     expect(wt.totalWins).toBe(127)
+  })
+
+  it("sorts individuals by weight class for public lineup display", () => {
+    const sorted = sortAauIndividualsByWeight(AAU_SCHOLASTIC_DUALS_2026_INDIVIDUALS)
+    expect(sorted.map((r) => r.weightLabel)).toEqual([
+      "106+5",
+      "113+5",
+      "120+5",
+      "126+5",
+      "132+5",
+      "138+5",
+      "144+5",
+      "150+5",
+      "157+5",
+      "165+5",
+      "175+5",
+      "190+5",
+      "215+5",
+      "HWT",
+    ])
+    expect(sorted[0]!.wrestler).toBe("Xan Moody")
+    expect(sorted[4]!.wrestler).toBe("Mac Johnson")
   })
 })
