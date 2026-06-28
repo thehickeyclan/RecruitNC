@@ -33,6 +33,12 @@ When the user says "push update" (or similar): stage and commit all relevant cha
 - **Do not** restore naive `seen.has(e.code)` merge for extras: use **`mergeFundraisingAthleteEntries`** in `lib/spartan-fundraising-code.ts` (case-normalized code, **prefer richer `fullName`**).
 - **Before merging** changes to those modules: run `npm run test -- lib/spartan-fundraising-display.test.ts`. If you remove tested behavior, **update tests in the same PR**; dropping tests to green is not OK.
 
+# Profile match data horizontal scroll (REGRESSION GUARD)
+- **Wide tables** on `/view-profile` and `/unified-profile` must use **`ProfileScrollTable`** (`components/profile-scroll-table.tsx`) — never shadcn **`Table`** in `match-data-section-improved.tsx` (double scroll wrapper breaks iOS swipe).
+- **Never** put `overflow-hidden` on the match-data card shell (`profileMatchDataCardClass` in `lib/profile-table-scroll.ts`).
+- **Never** restore `table { display: block }` in `globals.css` or `touch-pan-x`-only on `scrollTableXClass`.
+- **Before merging** changes to match data scroll, globals touch rules, or `ProfileScrollTable`: run `npm run test -- lib/profile-table-scroll.test.ts`.
+
 # Debugging (F12)
 - Errors are logged with the **[RecruitNC]** prefix so they’re easy to find in the browser console. When something breaks, copy the F12 console output (especially lines starting with [RecruitNC]) and paste it; the agent will fix from the actual error instead of guessing.
 

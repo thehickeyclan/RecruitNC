@@ -236,6 +236,20 @@
       max-width: 100vw;
     }
 
+    /* Public profile match data — single horizontal scroll container (see ProfileScrollTable) */
+    .profile-match-data [data-profile-scroll-table] {
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-x pan-y;
+      overscroll-behavior-x: contain;
+    }
+
+    .profile-match-data [data-slot="card"],
+    .profile-match-data [data-slot="card-content"],
+    .profile-match-data [data-profile-scroll-table] {
+      min-width: 0;
+      max-width: 100%;
+    }
+
     /* Make images responsive */
     img {
       max-width: 100%;

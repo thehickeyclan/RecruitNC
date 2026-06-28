@@ -2,8 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { cn } from "@/lib/utils"
+import { profileMatchDataCardClass, PROFILE_TABLE_WIDTH_CONSTRAINT_CLASS } from "@/lib/profile-table-scroll"
+import { ProfileScrollTable } from "@/components/profile-scroll-table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { BarChart3, ChevronDown } from "lucide-react"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 
@@ -234,18 +236,14 @@ export function MatchDataSectionImproved({
 }: MatchDataSectionImprovedProps) {
   const isDark = theme === "dark"
   const [mobileOpen, setMobileOpen] = useState(false)
-  const cardClass = isDark
-    ? "profile-card border-t-4 border-t-[#D3B574] border-white/10 bg-[#0f1c2e] shadow-none"
-    : "border-t-4 border-t-[#D3B574] shadow-md"
+  const cardClass = profileMatchDataCardClass(isDark)
+  const tableBorderClass = isDark ? "border-white/10" : undefined
   const headerClass = "bg-gradient-to-r from-[#13294B] to-[#1e3a5f] py-4"
   const contentClass = isDark ? "p-4 md:p-6 bg-[#0f1c2e] text-white/90" : "p-4 md:p-6"
   const sectionTitleClass = cn(
     "text-lg font-semibold mb-3",
     isDark ? "text-white" : "text-[#0D1A4D]",
   )
-  const tableWrapClass = isDark
-    ? "rounded-lg border border-white/10 min-w-0"
-    : "rounded-lg border min-w-0"
   const tableHeadRowClass = isDark ? "bg-white/5 hover:bg-white/5 border-white/10" : "bg-gray-50"
   const tableHeadCellClass = isDark ? "font-semibold text-white/70 whitespace-nowrap" : "font-semibold whitespace-nowrap"
   const tableRowClass = isDark
@@ -599,8 +597,7 @@ export function MatchDataSectionImproved({
         {/* Season summary */}
         <div className="mb-8">
           <h3 className={sectionTitleClass}>Season Summary</h3>
-          <div className={tableWrapClass}>
-            <Table className="min-w-[720px]">
+          <ProfileScrollTable minWidthPx={720} borderClassName={tableBorderClass}>
               <TableHeader>
                 <TableRow className={tableHeadRowClass}>
                   <TableHead className={tableHeadCellClass}>Year</TableHead>
@@ -644,8 +641,7 @@ export function MatchDataSectionImproved({
                   <TableCell>{careerTotals.forfeits}</TableCell>
                 </TableRow>
               </TableBody>
-            </Table>
-          </div>
+          </ProfileScrollTable>
         </div>
 
         {/* Individual match list */}
@@ -678,8 +674,7 @@ export function MatchDataSectionImproved({
             })}
           </div>
 
-          <div className={tableWrapClass}>
-            <Table className="min-w-[800px]">
+          <ProfileScrollTable minWidthPx={800} borderClassName={tableBorderClass}>
               <TableHeader>
                 <TableRow className={tableHeadRowClass}>
                   <TableHead className={tableHeadCellClass}>Date</TableHead>
@@ -737,8 +732,7 @@ export function MatchDataSectionImproved({
                   </TableRow>
                 )}
               </TableBody>
-            </Table>
-          </div>
+          </ProfileScrollTable>
         </div>
     </>
   )
@@ -763,8 +757,8 @@ export function MatchDataSectionImproved({
 
   if (collapseOnMobile) {
     return (
-      <>
-        <Collapsible open={mobileOpen} onOpenChange={setMobileOpen} className="lg:hidden">
+      <div className={PROFILE_TABLE_WIDTH_CONSTRAINT_CLASS}>
+        <Collapsible open={mobileOpen} onOpenChange={setMobileOpen} className={cn(PROFILE_TABLE_WIDTH_CONSTRAINT_CLASS, "lg:hidden")}>
           <Card className={cardClass} id="in-season" data-section="in-season">
             <CollapsibleTrigger asChild>
               <button type="button" className="w-full text-left">
@@ -787,23 +781,30 @@ export function MatchDataSectionImproved({
                 </CardHeader>
               </button>
             </CollapsibleTrigger>
-            <CollapsibleContent>
-              <CardContent className={cn(contentClass, "min-w-0")}>{matchDataBody}</CardContent>
+            <CollapsibleContent
+              className={cn(
+                PROFILE_TABLE_WIDTH_CONSTRAINT_CLASS,
+                "overflow-visible data-[state=closed]:overflow-hidden",
+              )}
+            >
+              <CardContent className={cn(contentClass, PROFILE_TABLE_WIDTH_CONSTRAINT_CLASS)}>
+                {matchDataBody}
+              </CardContent>
             </CollapsibleContent>
           </Card>
         </Collapsible>
         <Card className={cn(cardClass, "hidden lg:block")}>
           {matchDataHeader}
-          <CardContent className={cn(contentClass, "min-w-0")}>{matchDataBody}</CardContent>
+          <CardContent className={cn(contentClass, PROFILE_TABLE_WIDTH_CONSTRAINT_CLASS)}>{matchDataBody}</CardContent>
         </Card>
-      </>
+      </div>
     )
   }
 
   return (
     <Card className={cardClass}>
       {matchDataHeader}
-      <CardContent className={cn(contentClass, "min-w-0")}>{matchDataBody}</CardContent>
+      <CardContent className={cn(contentClass, PROFILE_TABLE_WIDTH_CONSTRAINT_CLASS)}>{matchDataBody}</CardContent>
     </Card>
   )
 }
