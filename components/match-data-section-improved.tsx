@@ -274,7 +274,7 @@ export function MatchDataSectionImproved({
     ? "inline-flex items-center rounded-full bg-[#D3B574] px-4 py-2 text-sm font-semibold text-[#0A1628]"
     : "inline-flex items-center rounded-full bg-[#D3B574] px-4 py-2 text-sm font-semibold text-[#0D1A4D]"
   const tabBarClass = cn(
-    "flex gap-2 mb-4 rounded-lg p-2",
+    "flex gap-1.5 mb-4 rounded-lg p-1.5",
     collapseOnMobile
       ? "flex-nowrap overflow-x-auto scroll-table-x max-lg:flex-nowrap max-lg:overflow-x-auto"
       : "flex-wrap",
@@ -666,8 +666,9 @@ export function MatchDataSectionImproved({
                   type="button"
                   onClick={() => setActiveTab(season.seasonKey as string)}
                   className={cn(
-                    "whitespace-nowrap min-w-[140px] py-2 px-4 text-center text-sm rounded-md transition-colors capitalize",
+                    "match-season-tab shrink-0 inline-flex items-center justify-center whitespace-nowrap rounded-full border border-transparent px-2.5 py-1 text-[11px] leading-tight sm:px-3 sm:py-1.5 sm:text-xs md:text-sm min-h-0 min-w-0 h-auto transition-colors capitalize",
                     isActive ? tabActiveClass : tabInactiveClass,
+                    isActive && "border-[#D3B574]/40",
                   )}
                   aria-pressed={isActive}
                 >
