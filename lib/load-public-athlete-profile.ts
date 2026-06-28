@@ -2,11 +2,14 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
 import { resolveGraduationYear } from "@/lib/athlete-nhsca"
+import { getAauScholasticDuals2026ProfileResults } from "@/lib/aau-scholastic-duals-2026-profile"
 import {
   getNhscaDuals2026LiveProfileResults,
   getNhscaDuals2026RegistrationPlaceholders,
   mergeNationalTeamResultsForProfile,
 } from "@/lib/national-team-live-profile-results"
+import { getNationalTeamProfileHighlights } from "@/lib/national-team-profile-highlights"
+import type { ProfileNationalTeamHighlight } from "@/lib/national-team-profile-highlights"
 import { getUltimateClubDualsFromTables } from "@/lib/tournament-tables"
 import { getNationalTeamResults } from "@/lib/tournament-utils"
 
@@ -20,6 +23,7 @@ export type PublicAthleteProfile = Record<string, unknown> & {
   }>
   super32_results: unknown[]
   national_team_results: unknown[]
+  national_team_highlight_videos: ProfileNationalTeamHighlight[]
 }
 
 export type LoadPublicAthleteProfileResult =
@@ -84,12 +88,15 @@ export async function loadPublicAthleteProfile(
     weight_class: r.weight_class,
   }))
   const nationalTeamFromRow = getNationalTeamResults(athlete)
+  const aauScholasticResults = getAauScholasticDuals2026ProfileResults(trimmed, nameBases)
   const national_team_results = mergeNationalTeamResultsForProfile({
     fromTable: nationalTeamFromTables,
     fromAthleteRow: nationalTeamFromRow,
     fromLive: nhscaDualsLive,
     fromRegistration: nhscaDualsRegistration,
+    fromAau: aauScholasticResults,
   })
+  const national_team_highlight_videos = getNationalTeamProfileHighlights(trimmed, nameBases)
 
   return {
     ok: true,
@@ -99,6 +106,7 @@ export async function loadPublicAthleteProfile(
       nchsaa_profile,
       super32_results: super32Merged,
       national_team_results,
+      national_team_highlight_videos,
     },
   }
 }

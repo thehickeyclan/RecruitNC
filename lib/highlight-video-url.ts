@@ -23,6 +23,7 @@ export function isDirectHighlightVideoUrl(url: string): boolean {
     lower.includes("blob.vercel-storage.com") ||
     /\.(mp4|webm|mov)(\?|$)/i.test(url) ||
     lower.startsWith("/videos/") ||
-    lower.startsWith("/uploads/")
+    lower.startsWith("/uploads/") ||
+    lower.startsWith("/national-team/")
   )
 }

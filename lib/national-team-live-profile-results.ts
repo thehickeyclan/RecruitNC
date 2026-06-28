@@ -174,6 +174,7 @@ export function mergeNationalTeamResultsForProfile(parts: {
   fromAthleteRow: ProfileNationalTeamResult[]
   fromLive: ProfileNationalTeamResult[]
   fromRegistration: ProfileNationalTeamResult[]
+  fromAau?: ProfileNationalTeamResult[]
 }): ProfileNationalTeamResult[] {
   const byKey = new Map<string, ProfileNationalTeamResult>()
 
@@ -188,6 +189,20 @@ export function mergeNationalTeamResultsForProfile(parts: {
     if (!byKey.has(k)) byKey.set(k, r)
   }
   for (const r of parts.fromLive) {
+    const k = resultKey(r)
+    const prev = byKey.get(k)
+    if (!prev) {
+      byKey.set(k, r)
+      continue
+    }
+    if (isRealRecord(r)) {
+      byKey.set(k, { ...r, isPlaceholder: false })
+      continue
+    }
+    if (!isRealRecord(prev)) byKey.set(k, r)
+  }
+
+  for (const r of parts.fromAau ?? []) {
     const k = resultKey(r)
     const prev = byKey.get(k)
     if (!prev) {
