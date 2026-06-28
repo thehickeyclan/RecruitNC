@@ -26,6 +26,7 @@ import {
 import { aauScholasticProfileHref } from "@/lib/content/aau-scholastic-duals-2026-profile-ids"
 import { AauScholasticDualMeetRow } from "@/components/national-team/aau-scholastic-dual-meet-row"
 import { AauScholasticIndividualRow } from "@/components/national-team/aau-scholastic-individual-row"
+import { AauScholasticQualityWinsSection } from "@/components/national-team/aau-scholastic-quality-wins-section"
 import { AauScholasticDualsWrestlerCards } from "@/components/national-team/aau-scholastic-duals-wrestler-cards"
 import {
   buildAauIndividualBoutLogsByWrestler,
@@ -44,12 +45,14 @@ import {
   aauInputClass,
 } from "@/components/national-team/aau-scholastic-theme"
 import { cn } from "@/lib/utils"
+import { getAauScholasticQualityWinsEnriched } from "@/lib/aau-scholastic-duals-2026-quality-wins"
 
 const NAV_LINKS = [
   { href: "#summary", label: "Recap" },
   { href: "#team-trophy", label: "Team photo" },
   { href: "#team-stats", label: "Team stats" },
   { href: "#mow", label: "MOW" },
+  { href: "#quality-wins", label: "Quality wins" },
   { href: "#media", label: "Videos" },
   { href: "#duals", label: "Dual results" },
   { href: "#individual", label: "Individual" },
@@ -77,6 +80,7 @@ export function AauScholasticDuals2026PublicResults({
     () => buildAauIndividualBoutLogsByWrestler(duals, individuals),
     [duals, individuals],
   )
+  const qualityWinEntries = useMemo(() => getAauScholasticQualityWinsEnriched(), [])
   const [search, setSearch] = useState("")
 
   const computedIndividualPct = aauIndividualWinPct(individuals)
@@ -267,6 +271,8 @@ export function AauScholasticDuals2026PublicResults({
             ))}
           </div>
         </section>
+
+        <AauScholasticQualityWinsSection entries={qualityWinEntries} profileIdMap={profileIdMap} />
 
         {/* Team trophy & victory photo */}
         <section id="team-trophy" className={aauPanelClass}>
