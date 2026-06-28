@@ -1,7 +1,8 @@
 import {
   AAU_SCHOLASTIC_DUALS_2026_YEAR,
   AAU_SCHOLASTIC_DUALS_EVENT_LABEL,
-  getAauScholasticDuals2026ProfileHighlightVideoSrc,
+  AAU_SCHOLASTIC_DUALS_2026_PROFILE_HIGHLIGHT_LABEL,
+  getAauScholasticDuals2026ProfileHighlightVideoSrcs,
   resolveAauScholasticRosterNameForProfile,
 } from "@/lib/aau-scholastic-duals-2026-profile"
 import {
@@ -61,15 +62,17 @@ export function getNationalTeamProfileHighlights(
     items.push(highlight)
   }
 
-  const aauVideoSrc = getAauScholasticDuals2026ProfileHighlightVideoSrc(athleteId, nameBases)
-  if (aauVideoSrc && !seen.has(aauVideoSrc)) {
-    const rosterName = aauRosterName ?? "NC United athlete"
+  const aauVideoSrcs = getAauScholasticDuals2026ProfileHighlightVideoSrcs(athleteId, nameBases)
+  const rosterName = aauRosterName ?? "NC United athlete"
+  for (const videoSrc of aauVideoSrcs) {
+    if (seen.has(videoSrc)) continue
+    seen.add(videoSrc)
     items.push({
       event: AAU_SCHOLASTIC_DUALS_EVENT_LABEL,
       year: AAU_SCHOLASTIC_DUALS_2026_YEAR,
-      title: `${rosterName} — AAU Scholastic Duals 2026 highlight reel`,
-      videoSrc: aauVideoSrc,
-      ariaLabel: `Highlight reel for ${rosterName} at AAU Scholastic Duals 2026`,
+      title: AAU_SCHOLASTIC_DUALS_2026_PROFILE_HIGHLIGHT_LABEL,
+      videoSrc,
+      ariaLabel: `${AAU_SCHOLASTIC_DUALS_2026_PROFILE_HIGHLIGHT_LABEL} — ${rosterName}`,
     })
   }
 

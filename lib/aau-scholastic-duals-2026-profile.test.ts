@@ -64,4 +64,14 @@ describe("getNationalTeamProfileHighlights", () => {
     expect(highlights.some((h) => h.event === "NHSCA Duals")).toBe(true)
     expect(highlights.some((h) => h.videoSrc.includes("xan-moody-highlight"))).toBe(true)
   })
+
+  it("includes both AAU highlight reels for Jacob Perry on profile", () => {
+    const highlights = getNationalTeamProfileHighlights("any-id", ["Jacob Perry"]).filter(
+      (h) => h.event === AAU_SCHOLASTIC_DUALS_EVENT_LABEL
+    )
+    expect(highlights).toHaveLength(2)
+    expect(highlights.every((h) => h.title === "Highlight Reel from AAU Scholastic Duals 2026")).toBe(true)
+    expect(highlights.some((h) => h.videoSrc.includes("jacob-perry-highlight.mov"))).toBe(true)
+    expect(highlights.some((h) => h.videoSrc.includes("jacob-perry-highlight-2.mov"))).toBe(true)
+  })
 })
