@@ -27,7 +27,7 @@ import {
 import { aauScholasticProfileHref } from "@/lib/content/aau-scholastic-duals-2026-profile-ids"
 import { AauScholasticDualMeetRow } from "@/components/national-team/aau-scholastic-dual-meet-row"
 import { AauScholasticIndividualRow } from "@/components/national-team/aau-scholastic-individual-row"
-import { AauScholasticQualityWinsSection } from "@/components/national-team/aau-scholastic-quality-wins-section"
+import { AauScholasticQualityWinsFeatured } from "@/components/national-team/aau-scholastic-quality-wins-section"
 import { AauScholasticDualsWrestlerCards } from "@/components/national-team/aau-scholastic-duals-wrestler-cards"
 import {
   buildAauIndividualBoutLogsByWrestler,
@@ -53,7 +53,6 @@ const NAV_LINKS = [
   { href: "#team-trophy", label: "Team photo" },
   { href: "#team-stats", label: "Team stats" },
   { href: "#mow", label: "MOW" },
-  { href: "#quality-wins", label: "Quality wins" },
   { href: "#media", label: "Videos" },
   { href: "#duals", label: "Dual results" },
   { href: "#individual", label: "Individual" },
@@ -276,8 +275,6 @@ export function AauScholasticDuals2026PublicResults({
           </div>
         </section>
 
-        <AauScholasticQualityWinsSection entries={qualityWinEntries} profileIdMap={profileIdMap} />
-
         {/* Team trophy & victory photo */}
         <section id="team-trophy" className={aauPanelClass}>
           <div className={cn(aauPanelHeaderClass, "flex items-center gap-2")}>
@@ -437,36 +434,46 @@ export function AauScholasticDuals2026PublicResults({
             <div className="flex-1 min-w-0">
               <h2 className={aauPanelTitleClass}>Individual results</h2>
               <p className={aauPanelDescClass}>
-                Lineup by weight (106 → HWT) · tap a wrestler to expand every bout from the weekend
+                Quality wins &amp; full lineup (106 → HWT) — tap a wrestler to expand every bout
               </p>
               <p className="text-xs text-white/45 mt-2">{AAU_SCHOLASTIC_INDIVIDUAL_STATS_FOOTNOTE}</p>
-              <div className="relative mt-4 max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" aria-hidden />
-                <Input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search wrestler, weight, school…"
-                  className={cn("pl-9", aauInputClass)}
-                />
-              </div>
             </div>
           </div>
-          <div className="px-4 sm:px-6 py-5 space-y-3">
-            {filteredIndividuals.length === 0 ? (
-              <p className="text-white/60 text-sm">
-                {individuals.length === 0 ? "Individual results not posted yet." : "No matches for your search."}
-              </p>
-            ) : (
-              filteredIndividuals.map((r) => (
-                <AauScholasticIndividualRow
-                  key={`${r.wrestler}-${r.weightLabel}`}
-                  result={r}
-                  bouts={individualBoutsByWrestler[r.wrestler] ?? []}
-                  profileHref={aauScholasticProfileHref(r.wrestler, profileIdMap)}
-                  school={r.highSchool ?? highSchoolMap[r.wrestler] ?? "—"}
-                />
-              ))
-            )}
+          <div className="px-4 sm:px-6 py-5 space-y-6">
+            <AauScholasticQualityWinsFeatured entries={qualityWinEntries} profileIdMap={profileIdMap} />
+
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-white/80">Full lineup</h3>
+                <div className="relative w-full sm:max-w-md">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" aria-hidden />
+                  <Input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search wrestler, weight, school…"
+                    className={cn("pl-9", aauInputClass)}
+                  />
+                </div>
+              </div>
+
+              {filteredIndividuals.length === 0 ? (
+                <p className="text-white/60 text-sm">
+                  {individuals.length === 0 ? "Individual results not posted yet." : "No matches for your search."}
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {filteredIndividuals.map((r) => (
+                    <AauScholasticIndividualRow
+                      key={`${r.wrestler}-${r.weightLabel}`}
+                      result={r}
+                      bouts={individualBoutsByWrestler[r.wrestler] ?? []}
+                      profileHref={aauScholasticProfileHref(r.wrestler, profileIdMap)}
+                      school={r.highSchool ?? highSchoolMap[r.wrestler] ?? "—"}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </section>
 
