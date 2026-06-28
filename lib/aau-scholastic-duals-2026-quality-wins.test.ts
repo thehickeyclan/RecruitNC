@@ -13,6 +13,20 @@ describe("AAU Scholastic Duals 2026 quality wins", () => {
     expect(mac!.summaryBullets).toHaveLength(5)
   })
 
+  it("includes Aaron Ellison with five curated quality opponents", () => {
+    const aaron = AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS.find((w) => w.wrestler === "Aaron Ellison")
+    expect(aaron).toBeDefined()
+    expect(aaron!.record).toBe("12-0")
+    expect(aaron!.wins).toHaveLength(5)
+    expect(aaron!.wins.map((w) => w.opponentName)).toEqual([
+      "Vincent Lenz",
+      "Gustavo Ferreira",
+      "Grant Leininger",
+      "Landon Burt",
+      "Payton Sampson",
+    ])
+  })
+
   it("enriches Mac quality wins with bout results from dual logs", () => {
     const mac = enrichAauQualityWins(AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS[0]!)
 
@@ -28,9 +42,22 @@ describe("AAU Scholastic Duals 2026 quality wins", () => {
     expect(enrichedCount).toBeGreaterThanOrEqual(7)
   })
 
+  it("enriches Aaron quality wins with bout results from dual logs", () => {
+    const aaron = enrichAauQualityWins(
+      AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS.find((w) => w.wrestler === "Aaron Ellison")!,
+    )
+
+    expect(aaron.wins.find((w) => w.opponentName === "Vincent Lenz")?.resultLine).toBe("DEC 11-6")
+    expect(aaron.wins.find((w) => w.opponentName === "Gustavo Ferreira")?.resultLine).toBe("DEC 8-7")
+    expect(aaron.wins.find((w) => w.opponentName === "Grant Leininger")?.resultLine).toBe("MD 14-4")
+    expect(aaron.wins.find((w) => w.opponentName === "Landon Burt")?.resultLine).toBe("F 3-0 0:46")
+    expect(aaron.wins.find((w) => w.opponentName === "Payton Sampson")?.resultLine).toBe("DEC 4-1 SV")
+    expect(aaron.wins.every((w) => w.resultLine)).toBe(true)
+  })
+
   it("returns enriched entries for public page", () => {
     const entries = getAauScholasticQualityWinsEnriched()
-    expect(entries.length).toBe(1)
-    expect(entries[0]!.wrestler).toBe("Mac Johnson")
+    expect(entries.length).toBe(2)
+    expect(entries.map((e) => e.wrestler)).toEqual(["Mac Johnson", "Aaron Ellison"])
   })
 })
