@@ -91,6 +91,51 @@ export const AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS: AauScholasticWrestlerQualit
       },
     ],
   },
+  {
+    wrestler: "Aaron Ellison",
+    weightLabel: "157+5",
+    record: "12-0",
+    summaryBullets: [
+      "2 State Champions",
+      "2 State placer wins (including South Dakota 3rd-place finisher Vincent Lenz)",
+      "1 Additional state placer",
+      "1 State qualifier",
+    ],
+    summaryNote:
+      "Aaron's undefeated 12-0 run included victories over state champions from Florida and Missouri, multiple state placers, and a Michigan state qualifier — a nationally strong schedule across Florida, Missouri, Nebraska, Michigan, and South Dakota.",
+    wins: [
+      {
+        opponentName: "Vincent Lenz",
+        state: "South Dakota",
+        credentials: "South Dakota State Placer (3rd)",
+        boutOpponentKeys: ["V. Lenz", "Lenz"],
+      },
+      {
+        opponentName: "Gustavo Ferreira",
+        state: "Florida",
+        credentials: "Florida State Champion",
+        boutOpponentKeys: ["G. Ferreira", "Ferreira"],
+      },
+      {
+        opponentName: "Grant Leininger",
+        state: "Missouri",
+        credentials: "Missouri State Champion",
+        boutOpponentKeys: ["G. Leininger", "Leininger"],
+      },
+      {
+        opponentName: "Landon Burt",
+        state: "Nebraska",
+        credentials: "Nebraska State Placer",
+        boutOpponentKeys: ["L. Burt", "Burt"],
+      },
+      {
+        opponentName: "Payton Sampson",
+        state: "Michigan",
+        credentials: "Michigan State Qualifier",
+        boutOpponentKeys: ["P. Sampson", "Sampson"],
+      },
+    ],
+  },
 ]
 
 function boutKeyMatches(boutAbbrev: string, keys: string[]): boolean {
@@ -101,7 +146,7 @@ function boutKeyMatches(boutAbbrev: string, keys: string[]): boolean {
   })
 }
 
-/** Attach match number, dual opponent, and result line from Mac's bout log when credentials align. */
+/** Attach match number, dual opponent, and result line from bout logs when credentials align. */
 export function enrichAauQualityWins(
   entry: AauScholasticWrestlerQualityWins,
   duals: readonly AauScholasticDualResult[] = AAU_SCHOLASTIC_DUALS_2026_DUALS,
@@ -112,10 +157,19 @@ export function enrichAauQualityWins(
     AAU_SCHOLASTIC_DUALS_2026_INDIVIDUALS,
   )
 
+  const usedBoutKeys = new Set<string>()
+
   const wins = entry.wins.map((win) => {
     const keys = win.boutOpponentKeys ?? [win.opponentName]
-    const bout = boutLogs.find((b) => boutKeyMatches(b.opponentWrestler, keys))
+    const bout = boutLogs.find((b) => {
+      if (!boutKeyMatches(b.opponentWrestler, keys)) return false
+      const dedupeKey = `${b.matchNumber}-${b.opponentWrestler}-${b.resultLine}`
+      if (usedBoutKeys.has(dedupeKey)) return false
+      return true
+    })
     if (!bout) return win
+
+    usedBoutKeys.add(`${bout.matchNumber}-${bout.opponentWrestler}-${bout.resultLine}`)
 
     return {
       ...win,
