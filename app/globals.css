@@ -29,6 +29,15 @@
     overscroll-behavior: contain;
   }
 
+  /** Horizontal table scroll — use on wrapper OR rely on [data-slot="table-container"]. */
+  .scroll-table-x {
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x pan-y;
+    -webkit-overflow-scrolling: touch;
+  }
+
   .mobile-optimized {
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
@@ -212,15 +221,16 @@
       overscroll-behavior: contain;
     }
 
-    /* Fix table overflow on mobile */
-    table {
-      display: block;
-      overflow-x: auto;
+    /* Let nested horizontal scroll regions receive touch pans (tables, wide grids) */
+    .overflow-x-auto,
+    .scroll-table-x,
+    [data-slot="table-container"] {
       -webkit-overflow-scrolling: touch;
-      white-space: nowrap;
+      overscroll-behavior-x: contain;
+      touch-action: pan-x pan-y;
     }
 
-    /* Prevent horizontal overflow; scope to root so flex/grid children still work */
+    /* Prevent horizontal overflow at page root only — not on table scroll wrappers */
     html,
     body {
       max-width: 100vw;

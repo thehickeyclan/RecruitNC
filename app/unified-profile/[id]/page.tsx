@@ -172,7 +172,7 @@ export default function UnifiedProfilePage() {
         </div>
       </section>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto min-w-0 max-w-full px-4 py-8">
         <ProfileViewTracker athleteId={athlete.id as string} athleteName={athleteName} />
         <AthleteDetail
           theme="dark"
@@ -182,8 +182,8 @@ export default function UnifiedProfilePage() {
             place: r.place ?? 0,
           }))}
           currentUserId={user?.id ?? null}
-          tournamentResultsComponent={
-            <div className="w-full">
+            tournamentResultsComponent={
+            <div className="w-full min-w-0 max-w-full">
               <TournamentResultsDisplay
                 nchsaaResults={nchsaaResults}
                 nhscaResults={nhscaResults as never[]}

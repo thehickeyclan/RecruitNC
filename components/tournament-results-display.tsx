@@ -56,7 +56,7 @@ export function TournamentResultsDisplay({
   const tableHeadRowClass = isDark ? "bg-white/5 border-white/10" : "bg-gray-50"
   const tableHeadCellClass = isDark ? "font-semibold text-white/60" : "font-semibold"
   const tableRowClass = isDark ? "hover:bg-white/5 border-white/10 text-white/80" : "hover:bg-gray-50 transition-colors"
-  const tableWrapClass = isDark ? "rounded-lg border border-white/10 overflow-x-auto" : "rounded-lg border overflow-x-auto"
+  const tableWrapClass = isDark ? "rounded-lg border border-white/10 min-w-0" : "rounded-lg border min-w-0"
   const descClass = isDark ? "text-sm text-white/50 mb-4" : "text-sm text-gray-600 mb-4"
   const cellPrimaryClass = isDark ? "font-medium text-white" : "font-medium text-[#03154C]"
   const cellYearClass = isDark ? "font-semibold text-white" : "font-semibold text-[#13294B]"
@@ -149,7 +149,7 @@ export function TournamentResultsDisplay({
 
   // Full table version for profiles - fixed order: NC United National Team, NCHSAA, NHSCA, Super 32
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-w-0 max-w-full">
       {/* 1. NC United National Team - Ultimate Club Duals 2025/2024, NHSCA 2025 */}
       {(nationalTeamResults.length > 0 || alwaysShowStructure) && (
         <Card className={cardClass}>
