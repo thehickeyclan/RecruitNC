@@ -748,7 +748,7 @@ export function AthleteDetail({
 
   return (
     <div
-      className={cn("space-y-8", isDark && PROFILE_DARK_THEME)}
+      className={cn("space-y-8 min-w-0 max-w-full", isDark && PROFILE_DARK_THEME)}
     >
       {/* 1. Banner (hero with photo, name, weight, college) */}
       <Card className="profile-card overflow-hidden">
@@ -1732,7 +1732,7 @@ export function AthleteDetail({
           </Card>
 
       {/* 10. High School Career Match Results */}
-      <div className={cn(isDark && "profile-match-data")}>
+      <div className={cn("min-w-0 max-w-full", isDark && "profile-match-data")}>
         <MatchDataSectionImproved
           athleteId={athlete.id}
           athleteName={athleteName}

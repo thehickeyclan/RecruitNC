@@ -230,7 +230,7 @@ export function MatchDataSectionImproved({
 }: MatchDataSectionImprovedProps) {
   const isDark = theme === "dark"
   const cardClass = isDark
-    ? "profile-card overflow-hidden border-t-4 border-t-[#D3B574] border-white/10 bg-[#0f1c2e] shadow-none"
+    ? "profile-card border-t-4 border-t-[#D3B574] border-white/10 bg-[#0f1c2e] shadow-none"
     : "border-t-4 border-t-[#D3B574] shadow-md"
   const headerClass = "bg-gradient-to-r from-[#13294B] to-[#1e3a5f] py-4"
   const contentClass = isDark ? "p-4 md:p-6 bg-[#0f1c2e] text-white/90" : "p-4 md:p-6"
@@ -239,8 +239,8 @@ export function MatchDataSectionImproved({
     isDark ? "text-white" : "text-[#0D1A4D]",
   )
   const tableWrapClass = isDark
-    ? "rounded-lg border border-white/10 overflow-x-auto"
-    : "rounded-lg border overflow-x-auto"
+    ? "rounded-lg border border-white/10 min-w-0"
+    : "rounded-lg border min-w-0"
   const tableHeadRowClass = isDark ? "bg-white/5 hover:bg-white/5 border-white/10" : "bg-gray-50"
   const tableHeadCellClass = isDark ? "font-semibold text-white/70 whitespace-nowrap" : "font-semibold whitespace-nowrap"
   const tableRowClass = isDark
@@ -501,7 +501,7 @@ export function MatchDataSectionImproved({
   if (loading) {
     return (
       <Card className={cardClass}>
-        <CardContent className={contentClass}>
+        <CardContent className={cn(contentClass, "min-w-0")}>
           <div className="animate-pulse space-y-4">
             <div className={cn("h-8 rounded w-2/3 mx-auto", skeletonClass)} />
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -525,7 +525,7 @@ export function MatchDataSectionImproved({
             High School Career Match Results
           </CardTitle>
         </CardHeader>
-        <CardContent className={contentClass}>
+        <CardContent className={cn(contentClass, "min-w-0")}>
           <p className={emptyTextClass}>No match data available for {athleteName}</p>
         </CardContent>
       </Card>
@@ -566,7 +566,7 @@ export function MatchDataSectionImproved({
         ) : null}
       </CardHeader>
 
-      <CardContent className={contentClass}>
+      <CardContent className={cn(contentClass, "min-w-0")}>
         {/* Career stats — profile-style tiles */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
           <div className={statTileClass}>

@@ -72,7 +72,7 @@ export function ViewProfileClient({ id, initialAthlete, initialError }: ViewProf
         </div>
       </section>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto min-w-0 max-w-full px-4 py-8">
         <ProfileViewTracker athleteId={String(athlete.id)} athleteName={athleteName} />
         <AthleteDetail
           theme="dark"
@@ -83,7 +83,7 @@ export function ViewProfileClient({ id, initialAthlete, initialError }: ViewProf
           }))}
           currentUserId={user?.id ?? null}
           tournamentResultsComponent={
-            <div className="w-full">
+            <div className="w-full min-w-0 max-w-full">
               <TournamentResultsDisplay
                 nchsaaResults={nchsaaResults}
                 nhscaResults={nhscaResults as never[]}

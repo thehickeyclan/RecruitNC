@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils"
+import { cn, scrollTableXClass } from "@/lib/utils"
 import {
   type NhscaDualsContactRosterRow,
   phoneDigitsForTel,
@@ -39,7 +39,7 @@ export function TeamContactRoster({
   const dark = variant === "dark"
   return (
     <div
-      className={cn("overflow-x-auto touch-pan-x px-5 pb-5 md:px-6 md:pb-6", className)}
+      className={cn(scrollTableXClass, "px-5 pb-5 md:px-6 md:pb-6", className)}
       style={{ WebkitOverflowScrolling: "touch" }}
     >
       <table className="w-full text-sm min-w-[520px] border-collapse">
