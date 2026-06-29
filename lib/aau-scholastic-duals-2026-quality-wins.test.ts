@@ -55,9 +55,29 @@ describe("AAU Scholastic Duals 2026 quality wins", () => {
     expect(aaron.wins.every((w) => w.resultLine)).toBe(true)
   })
 
+  it("includes Luke Padgett with five curated quality opponents", () => {
+    const luke = AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS.find((w) => w.wrestler === "Luke Padgett")
+    expect(luke).toBeDefined()
+    expect(luke!.record).toBe("9-3")
+    expect(luke!.wins).toHaveLength(5)
+  })
+
+  it("enriches Luke Padgett quality wins with bout results from dual logs", () => {
+    const luke = enrichAauQualityWins(
+      AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS.find((w) => w.wrestler === "Luke Padgett")!,
+    )
+
+    expect(luke.wins.find((w) => w.opponentName === "Aiden Timberman")?.resultLine).toBe("F 3-0 1:09")
+    expect(luke.wins.find((w) => w.opponentName === "Griffin Bergen")?.opponentTeam).toBe("Nebraska Magic")
+    expect(luke.wins.find((w) => w.opponentName === "Landon Dickerson")?.resultLine).toBe("DEC 5-4")
+    expect(luke.wins.find((w) => w.opponentName === "Zachary Miracle")?.resultLine).toBe("DEC 4-2")
+    expect(luke.wins.find((w) => w.opponentName === "Philip Jacobs")?.resultLine).toBe("TF 15-0 2:00")
+    expect(luke.wins.every((w) => w.resultLine)).toBe(true)
+  })
+
   it("returns enriched entries for public page", () => {
     const entries = getAauScholasticQualityWinsEnriched()
-    expect(entries.length).toBe(2)
-    expect(entries.map((e) => e.wrestler)).toEqual(["Mac Johnson", "Aaron Ellison"])
+    expect(entries.length).toBe(3)
+    expect(entries.map((e) => e.wrestler)).toEqual(["Mac Johnson", "Aaron Ellison", "Luke Padgett"])
   })
 })
