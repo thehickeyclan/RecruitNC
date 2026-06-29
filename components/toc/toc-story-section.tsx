@@ -54,7 +54,7 @@ export function TocStorySection() {
               desc: "Eight per weight. Every invite is picked by hand — you don't register your way in.",
             },
             {
-              title: "Under the lights",
+              title: "Single-mat finals",
               desc: TOC_MATS_LINE,
             },
             {

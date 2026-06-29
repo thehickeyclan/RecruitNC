@@ -11,6 +11,12 @@ export const TOC_SATURDAY_COMPETITION_DATE = "Saturday, September 19, 2026" as c
 export const TOC_EVENT_DATES_DISPLAY =
   `${TOC_EVENT_DATES_RANGE} · weigh-in & first round Friday night` as const
 
+/** Hero — large date stack at top of landing page. */
+export const TOC_HERO_DATES = {
+  headline: "Sept 18 & 19, 2026",
+  subline: "Weigh-in & first round Friday · Brackets finish Saturday",
+} as const
+
 export const TOC_WEIGHT_CLASSES = [
   117, 125, 133, 141, 149, 157, 165, 174, 184, 197, 285,
 ] as const
@@ -21,7 +27,7 @@ export const TOC_WEIGH_IN_LINE = "Single weigh-in · No weight allowances" as co
 export const TOC_SCHEDULE = {
   headline: "When to be there",
   lead:
-    "Two days in Apex. Weigh-in at 4:00 PM Friday, first-round action that night, then brackets play out Saturday with finals under the lights.",
+    "Two days in Apex. Weigh-in at 4:00 PM Friday, first-round action that night, then brackets play out Saturday with single-mat championship finals.",
   athleteNote:
     "Invited wrestlers: weigh-in Friday at 4:00 PM, first round Friday night. Families and fans can catch opening-round bouts Friday evening or the full card Saturday.",
   friday: {
@@ -35,7 +41,7 @@ export const TOC_SCHEDULE = {
   },
   saturday: {
     title: "Saturday · September 19",
-    subtitle: "Brackets resume — placement bouts, then finals under the lights",
+    subtitle: "Brackets resume — placement bouts, then championship finals on one mat",
     rows: [
       { time: "7:30 AM", activity: "Doors open (athletes, coaches, ticket holders)" },
       { time: "8:45 AM", activity: "National anthem & invocation" },
@@ -55,7 +61,7 @@ export const TOC_AI_RENDERING_CAPTION =
 export const TOC_CONTACT_EMAIL = "info@ncwrestlingunited.com" as const
 
 /** Canonical mats copy — use site-wide wherever two-mat → finals format is described. */
-export const TOC_MATS_LINE = "Two mats all weekend. One mat under the lights for finals." as const
+export const TOC_MATS_LINE = "Two mats all weekend. One mat for all eleven championship finals." as const
 
 export const TOC_TICKET_SALE_MONTH = "August 2026" as const
 
@@ -96,7 +102,7 @@ export const TOC_SPECTATORS = {
     {
       title: "Saturday ticket",
       description:
-        "Full tournament — all brackets on two mats through placement, plus championship finals under the lights",
+        "Full tournament — all brackets on two mats through placement, plus single-mat championship finals",
     },
   ],
   ticketSectionTitle: "How to attend",
@@ -155,7 +161,7 @@ export const TOC_VENUE_FEATURES = [
   {
     title: "Finals presentation",
     description:
-      "Championship finals get full production — intros, awards, and the jacket moment under the lights.",
+      "Championship finals get full production — intros, awards, and the jacket moment on one mat.",
   },
 ] as const
 
@@ -203,7 +209,7 @@ export const TOC_MEDIA = {
     "Press credentials for Saturday competition at Hope Apex",
     "Interview requests with athletes, coaches, and NC United staff",
     "Photo and video guidelines provided on approval",
-    "Championship finals under the lights — broadcast-quality production environment",
+    "Single-mat championship finals — broadcast-quality production environment",
   ],
   formHeadline: "Request media access",
   formLead: "Tell us your outlet and what you need. We'll follow up with credentials details and coverage guidelines.",
@@ -212,9 +218,9 @@ export const TOC_MEDIA = {
 
 export const TOC_FINALS_MAT = {
   eyebrow: "Championship finals",
-  headline: "One mat under the lights",
+  headline: "One mat for the titles",
   lead:
-    "Saturday evening the arena narrows to a single mat — finalist introductions, live announcements, and all eleven championship bouts with spotlight production and video boards.",
+    "Saturday evening the arena narrows to a single mat — finalist introductions, live announcements, and all eleven championship bouts with professional arena lighting and video boards.",
   bullets: [
     "Parade of finalists before each weight",
     "Live PA announcements and title-bout presentation",
@@ -262,7 +268,7 @@ export const TOC_SPONSORSHIP = {
     "Up to 1,000 fans in the building — families, clubs, and programs from every corner of the state",
     "Live stream and video boards — exposure beyond the arena all weekend long",
     "Coaches & Officials Lounge — Champion-tier naming rights and face time with credentialed coaches all weekend",
-    "Single-mat finals under the lights — championship presentation, jacket moments, and peak attention",
+    "Single-mat championship finals — presentation, jacket moments, and peak attention",
     "Patriotic NC United brand — red, white, and navy athletics with statewide reach through RecruitNC",
   ],
   formHeadline: "Request sponsorship info",
@@ -293,7 +299,7 @@ export const TOC_ATHLETE_QUOTES = {
       name: "Mac Johnson",
       credentials: "Cape Fear HS • 2026 NCHSAA State Champion • App State Commit",
       quote:
-        "The atmosphere is going to be incredible. The introductions, the spotlight finals, the crowd, the energy—it's the kind of stage every wrestler wants to compete on. North Carolina wrestling deserves an event like this.",
+        "The atmosphere is going to be incredible. The introductions, the championship finals, the crowd, the energy—it's the kind of stage every wrestler wants to compete on. North Carolina wrestling deserves an event like this.",
     },
     {
       name: "Tye Johnson",

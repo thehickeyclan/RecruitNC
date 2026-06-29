@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Tournament of Champions | NC United",
     description:
-      "Eleven weights. Eight wrestlers each. College weights. Single-mat finals under the lights. North Carolina, buckle up.",
+      "Eleven weights. Eight wrestlers each. College weights. Single-mat championship finals. North Carolina, buckle up.",
     type: "website",
   },
 }
@@ -38,7 +38,7 @@ export default async function TournamentOfChampionsPage() {
       name: "NC United Wrestling",
     },
     description:
-      `Invite-only. College weights, stacked brackets — first round Friday night, finals under the lights ${TOC_SATURDAY_COMPETITION_DATE}.`,
+      `Invite-only. College weights, stacked brackets — first round Friday night, single-mat championship finals ${TOC_SATURDAY_COMPETITION_DATE}.`,
   }
 
   return (

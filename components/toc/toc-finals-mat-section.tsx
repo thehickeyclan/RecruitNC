@@ -40,7 +40,7 @@ export function TocFinalsMatSection() {
               <div className="relative overflow-hidden rounded-sm border-2 border-white/10 shadow-2xl shadow-black/40">
                 <Image
                   src="/images/toc/finals-single-mat.png"
-                  alt="Single-mat championship finals — spotlight on the center mat with NC United branding"
+                  alt="Single-mat championship finals — center mat with NC United branding and arena lighting"
                   width={1536}
                   height={1024}
                   className="h-auto w-full"

@@ -70,7 +70,7 @@ export function TocChampionJacketSection() {
               <div className="relative overflow-hidden rounded-sm border-2 border-white/15 shadow-2xl">
                 <Image
                   src="/images/toc/champion-jacket-presentation.png"
-                  alt="Championship jacket presentation on the mat — spotlight, crowd, and NC United Tournament of Champions branding"
+                  alt="Championship jacket presentation on the mat — crowd and NC United Tournament of Champions branding"
                   width={1536}
                   height={1024}
                   className="h-auto w-full"
