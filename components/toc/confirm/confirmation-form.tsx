@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Loader2 } from "lucide-react"
-import { TOC_JACKET_SIZES, TOC_WEIGHT_CLASSES, defaultTocWeightForAthlete } from "@/lib/toc/invitations"
+import { TOC_JACKET_SIZES, defaultTocWeightForAthlete } from "@/lib/toc/invitations"
+import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 
 type Props = {
   athleteId: string

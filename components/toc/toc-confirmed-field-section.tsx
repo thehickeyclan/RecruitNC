@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from "react"
 import { HardLink } from "@/components/hard-link"
 import { TocPatrioticBar, TocVarsityHeading, tocSectionClass } from "@/components/toc/toc-theme"
-import { TOC_MAX_CONFIRMED_PER_WEIGHT, TOC_WEIGHT_CLASSES } from "@/lib/toc/invitations"
+import { TOC_MAX_CONFIRMED_PER_WEIGHT } from "@/lib/toc/invitations"
+import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 
 type FieldEntry = {
   weightClass: number
