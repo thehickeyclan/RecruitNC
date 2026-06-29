@@ -3,6 +3,10 @@ import {
   AAU_SCHOLASTIC_DUALS_2026_RESULTS_PUBLISHED,
 } from "@/lib/aau-scholastic-duals-2026-results"
 import { AAU_SCHOLASTIC_DUALS_2026_WRESTLER_CARDS } from "@/lib/aau-scholastic-duals-2026-wrestler-cards"
+import {
+  getAauScholasticQualityWinsForWrestler,
+  type AauScholasticWrestlerQualityWins,
+} from "@/lib/aau-scholastic-duals-2026-quality-wins"
 import { AAU_SCHOLASTIC_DUALS_2026_PROFILE_OVERRIDES } from "@/lib/content/aau-scholastic-duals-2026-profile-ids"
 import type { ProfileNationalTeamResult } from "@/lib/national-team-live-profile-results"
 import { namesMatchRoster } from "@/lib/nhsca-duals-wrestler-card-stats"
@@ -81,4 +85,17 @@ export function getAauScholasticDuals2026ProfileHighlightVideoSrcs(
   }
 
   return srcs
+}
+
+/** Enriched AAU Scholastic Duals 2026 quality wins for unified / view-profile. */
+export function getAauScholasticDuals2026ProfileQualityWins(
+  athleteId: string,
+  nameBases: string[],
+): AauScholasticWrestlerQualityWins | null {
+  if (!AAU_SCHOLASTIC_DUALS_2026_RESULTS_PUBLISHED) return null
+
+  const rosterName = resolveAauScholasticRosterNameForProfile(athleteId, nameBases)
+  if (!rosterName) return null
+
+  return getAauScholasticQualityWinsForWrestler(rosterName)
 }

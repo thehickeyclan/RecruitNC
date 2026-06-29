@@ -261,12 +261,6 @@ export const AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS: AauScholasticWrestlerQualit
         boutOpponentKeys: ["Z. Held", "Held"],
       },
       {
-        opponentName: "Cane Smolarsky",
-        state: "Georgia",
-        credentials: "2× Georgia State Placer",
-        boutOpponentKeys: ["C. Smolarsky", "Smolarsky", "Smolarksy"],
-      },
-      {
         opponentName: "Logan Christopher",
         state: "Michigan",
         credentials: "2× Michigan State Placer",
@@ -764,4 +758,58 @@ export function getAauScholasticQualityWinsForWrestler(wrestler: string): AauSch
 
 export function getAauScholasticQualityWinsEnriched(): AauScholasticWrestlerQualityWins[] {
   return AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS.map((entry) => enrichAauQualityWins(entry))
+}
+
+export type AauScholasticQualityWinTier = "champion" | "placer" | "qualifier" | "other"
+
+/** Highest credential tier for a curated quality win (one bucket per win). */
+export function classifyAauQualityWinCredential(credentials: string): AauScholasticQualityWinTier {
+  const c = credentials.toLowerCase()
+  if (/state champion|state champ\b/.test(c)) return "champion"
+  if (
+    /state placer|state finalist|\bplaced\b|\(\d+(?:st|nd|rd|th)\)|state \d+(?:st|nd|rd|th)|place finisher/.test(c)
+  ) {
+    return "placer"
+  }
+  if (/qualifier|state qual\b/.test(c)) return "qualifier"
+  return "other"
+}
+
+export type AauScholasticQualityWinsSummary = {
+  wrestlerCount: number
+  totalWins: number
+  vsStateChampions: number
+  vsStatePlacers: number
+  vsStateQualifiers: number
+  other: number
+}
+
+export function summarizeAauScholasticQualityWins(
+  entries: AauScholasticWrestlerQualityWins[] = AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS,
+): AauScholasticQualityWinsSummary {
+  let totalWins = 0
+  let vsStateChampions = 0
+  let vsStatePlacers = 0
+  let vsStateQualifiers = 0
+  let other = 0
+
+  for (const entry of entries) {
+    for (const win of entry.wins) {
+      totalWins++
+      const tier = classifyAauQualityWinCredential(win.credentials)
+      if (tier === "champion") vsStateChampions++
+      else if (tier === "placer") vsStatePlacers++
+      else if (tier === "qualifier") vsStateQualifiers++
+      else other++
+    }
+  }
+
+  return {
+    wrestlerCount: entries.length,
+    totalWins,
+    vsStateChampions,
+    vsStatePlacers,
+    vsStateQualifiers,
+    other,
+  }
 }

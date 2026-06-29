@@ -1,15 +1,17 @@
 import { describe, expect, it } from "vitest"
 import {
   AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS,
+  classifyAauQualityWinCredential,
   enrichAauQualityWins,
   getAauScholasticQualityWinsEnriched,
+  summarizeAauScholasticQualityWins,
 } from "@/lib/aau-scholastic-duals-2026-quality-wins"
 
 describe("AAU Scholastic Duals 2026 quality wins", () => {
-  it("includes Mac Johnson with eight curated opponents", () => {
+  it("includes Mac Johnson with seven curated opponents", () => {
     const mac = AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS.find((w) => w.wrestler === "Mac Johnson")
     expect(mac).toBeDefined()
-    expect(mac!.wins).toHaveLength(8)
+    expect(mac!.wins).toHaveLength(7)
     expect(mac!.summaryBullets).toHaveLength(5)
   })
 
@@ -158,7 +160,8 @@ describe("AAU Scholastic Duals 2026 quality wins", () => {
     expect(gomez?.matchNumber).toBe(12)
 
     const enrichedCount = mac.wins.filter((w) => w.resultLine).length
-    expect(enrichedCount).toBeGreaterThanOrEqual(7)
+    expect(enrichedCount).toBe(7)
+    expect(mac.wins.every((w) => w.resultLine)).toBe(true)
   })
 
   it("includes Tye Johnson with seven curated quality opponents", () => {
@@ -408,5 +411,21 @@ describe("AAU Scholastic Duals 2026 quality wins", () => {
       "Gavin Lopez",
       "Mason Hocker",
     ])
+  })
+
+  it("classifies credentials into a single highest tier", () => {
+    expect(classifyAauQualityWinCredential("Georgia State Champion (2026)")).toBe("champion")
+    expect(classifyAauQualityWinCredential("Nebraska 2025 State 4th place · 2026 State Champion")).toBe("champion")
+    expect(classifyAauQualityWinCredential("Georgia State Placer (3rd)")).toBe("placer")
+    expect(classifyAauQualityWinCredential("Florida state qualifier")).toBe("qualifier")
+  })
+
+  it("summarizes team quality wins for hero and team stats", () => {
+    const summary = summarizeAauScholasticQualityWins()
+    expect(summary.wrestlerCount).toBe(14)
+    expect(summary.totalWins).toBe(77)
+    expect(summary.vsStateChampions + summary.vsStatePlacers + summary.vsStateQualifiers + summary.other).toBe(77)
+    expect(summary.vsStateChampions).toBeGreaterThan(0)
+    expect(summary.vsStatePlacers).toBeGreaterThan(0)
   })
 })
