@@ -87,3 +87,9 @@ export function athleteContactEmail(row: Record<string, unknown>): string | null
 export function firstNameFromAthleteName(name: string): string {
   return name.trim().split(/\s+/)[0] || name
 }
+
+/** Display grad year as class year ('27), not full 2027. */
+export function formatTocGradYear(year: number | null | undefined): string | null {
+  if (year == null || !Number.isFinite(year)) return null
+  return `'${String(Math.round(year)).slice(-2)}`
+}
