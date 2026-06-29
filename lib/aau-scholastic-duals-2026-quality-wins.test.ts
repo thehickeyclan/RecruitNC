@@ -27,8 +27,41 @@ describe("AAU Scholastic Duals 2026 quality wins", () => {
     ])
   })
 
+  it("includes Luke Richards with seven curated quality opponents", () => {
+    const luke = AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS.find((w) => w.wrestler === "Luke Richards")
+    expect(luke).toBeDefined()
+    expect(luke!.record).toBe("10-2")
+    expect(luke!.wins).toHaveLength(7)
+    expect(luke!.wins.map((w) => w.opponentName)).toEqual([
+      "Max Rowe",
+      "Anthony Aguayo",
+      "Ajani Flanders",
+      "Jan Michael",
+      "Jaden Morales",
+      "Rylan Robbins",
+      "Brandon Wunder",
+    ])
+  })
+
+  it("enriches Luke Richards quality wins with bout results from dual logs", () => {
+    const luke = enrichAauQualityWins(
+      AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS.find((w) => w.wrestler === "Luke Richards")!,
+    )
+
+    expect(luke.wins.find((w) => w.opponentName === "Max Rowe")?.resultLine).toBe("DEC 8-2")
+    expect(luke.wins.find((w) => w.opponentName === "Anthony Aguayo")?.resultLine).toBe("F 10-0 3:01")
+    expect(luke.wins.find((w) => w.opponentName === "Ajani Flanders")?.resultLine).toBe("TF 15-0 4:09")
+    expect(luke.wins.find((w) => w.opponentName === "Jan Michael")?.resultLine).toBe("MD 16-5")
+    expect(luke.wins.find((w) => w.opponentName === "Jaden Morales")?.resultLine).toBe("MD 14-2")
+    expect(luke.wins.find((w) => w.opponentName === "Rylan Robbins")?.resultLine).toBe("TF 17-0 5:29")
+    expect(luke.wins.find((w) => w.opponentName === "Brandon Wunder")?.resultLine).toBe("F 11-1 2:47")
+    expect(luke.wins.every((w) => w.resultLine)).toBe(true)
+  })
+
   it("enriches Mac quality wins with bout results from dual logs", () => {
-    const mac = enrichAauQualityWins(AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS[0]!)
+    const mac = enrichAauQualityWins(
+      AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS.find((w) => w.wrestler === "Mac Johnson")!,
+    )
 
     const held = mac.wins.find((w) => w.opponentName === "Zach Held")
     expect(held?.resultLine).toBe("TF 17-1 3:10")
@@ -55,6 +88,34 @@ describe("AAU Scholastic Duals 2026 quality wins", () => {
     expect(aaron.wins.every((w) => w.resultLine)).toBe(true)
   })
 
+  it("includes Fares Alkurdasi with three curated quality opponents", () => {
+    const fares = AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS.find((w) => w.wrestler === "Fares Alkurdasi")
+    expect(fares).toBeDefined()
+    expect(fares!.record).toBe("9-3")
+    expect(fares!.wins).toHaveLength(3)
+    expect(fares!.wins.map((w) => w.opponentName)).toEqual([
+      "Zander Ferguson",
+      "D'Marion Erlenbeck",
+      "Briggs Collins",
+    ])
+  })
+
+  it("enriches Fares Alkurdasi quality wins with bout results from dual logs", () => {
+    const fares = enrichAauQualityWins(
+      AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS.find((w) => w.wrestler === "Fares Alkurdasi")!,
+    )
+
+    expect(fares.wins.find((w) => w.opponentName === "Zander Ferguson")?.resultLine).toBe("MD 14-5")
+    expect(fares.wins.find((w) => w.opponentName === "Zander Ferguson")?.opponentTeam).toBe("Nebraska Magic")
+    expect(fares.wins.find((w) => w.opponentName === "D'Marion Erlenbeck")?.resultLine).toBe("DEC 6-4")
+    expect(fares.wins.find((w) => w.opponentName === "D'Marion Erlenbeck")?.opponentTeam).toBe(
+      "Team Michigan Blue 86 AS",
+    )
+    expect(fares.wins.find((w) => w.opponentName === "Briggs Collins")?.resultLine).toBe("MD 19-9")
+    expect(fares.wins.find((w) => w.opponentName === "Briggs Collins")?.opponentTeam).toBe("Iowa Black")
+    expect(fares.wins.every((w) => w.resultLine)).toBe(true)
+  })
+
   it("includes Luke Padgett with five curated quality opponents", () => {
     const luke = AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS.find((w) => w.wrestler === "Luke Padgett")
     expect(luke).toBeDefined()
@@ -77,7 +138,13 @@ describe("AAU Scholastic Duals 2026 quality wins", () => {
 
   it("returns enriched entries for public page", () => {
     const entries = getAauScholasticQualityWinsEnriched()
-    expect(entries.length).toBe(3)
-    expect(entries.map((e) => e.wrestler)).toEqual(["Mac Johnson", "Aaron Ellison", "Luke Padgett"])
+    expect(entries.length).toBe(5)
+    expect(entries.map((e) => e.wrestler)).toEqual([
+      "Luke Richards",
+      "Mac Johnson",
+      "Aaron Ellison",
+      "Fares Alkurdasi",
+      "Luke Padgett",
+    ])
   })
 })

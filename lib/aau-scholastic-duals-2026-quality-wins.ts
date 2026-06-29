@@ -28,6 +28,64 @@ export type AauScholasticWrestlerQualityWins = {
 /** Curated quality-win credentials — result lines enriched from dual bout exports when available. */
 export const AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS: AauScholasticWrestlerQualityWins[] = [
   {
+    wrestler: "Luke Richards",
+    weightLabel: "120+5",
+    record: "10-2",
+    summaryBullets: [
+      "7 Quality wins over state placers",
+      "3 Florida state placers",
+      "4× South Dakota state placer (Rylan Robbins)",
+      "2× Missouri state placer (Max Rowe)",
+      "Georgia & Maryland state placers",
+    ],
+    summaryNote:
+      "Luke's 10-2 run at 120 included wins over placers from Missouri, Georgia, Florida (three), South Dakota, and Maryland — including 4× South Dakota state placer Rylan Robbins and 2× Missouri state placer Max Rowe.",
+    wins: [
+      {
+        opponentName: "Max Rowe",
+        state: "Missouri",
+        credentials: "2× Missouri State Placer (3rd, 5th)",
+        boutOpponentKeys: ["M. Rowe", "Rowe"],
+      },
+      {
+        opponentName: "Anthony Aguayo",
+        state: "Georgia",
+        credentials: "Georgia State Placer (5th)",
+        boutOpponentKeys: ["A. Aguayo", "Aguayo"],
+      },
+      {
+        opponentName: "Ajani Flanders",
+        state: "Florida",
+        credentials: "Florida State Placer (5th)",
+        boutOpponentKeys: ["A. Flanders", "Flanders"],
+      },
+      {
+        opponentName: "Jan Michael",
+        state: "Florida",
+        credentials: "Florida State Placer (6th)",
+        boutOpponentKeys: ["J. Michael", "Michael"],
+      },
+      {
+        opponentName: "Jaden Morales",
+        state: "Florida",
+        credentials: "Florida State Placer (6th)",
+        boutOpponentKeys: ["J. Morales", "Morales"],
+      },
+      {
+        opponentName: "Rylan Robbins",
+        state: "South Dakota",
+        credentials: "4× South Dakota State Placer (2nd 2×, 3rd, 6th)",
+        boutOpponentKeys: ["R. Robbins", "Robbins"],
+      },
+      {
+        opponentName: "Brandon Wunder",
+        state: "Maryland",
+        credentials: "Maryland State Placer (3rd)",
+        boutOpponentKeys: ["B. Wunder", "Wunder"],
+      },
+    ],
+  },
+  {
     wrestler: "Mac Johnson",
     weightLabel: "132+5",
     record: "12-0",
@@ -133,6 +191,39 @@ export const AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS: AauScholasticWrestlerQualit
         state: "Michigan",
         credentials: "Michigan State Qualifier",
         boutOpponentKeys: ["P. Sampson", "Sampson"],
+      },
+    ],
+  },
+  {
+    wrestler: "Fares Alkurdasi",
+    weightLabel: "175+5",
+    record: "9-3",
+    summaryBullets: [
+      "3 Quality wins over state placers",
+      "Nebraska state finalist",
+      "Michigan state finalist",
+      "Iowa state 5th place",
+    ],
+    summaryNote:
+      "Fares's big wins at 175 included a Nebraska state finalist, a Michigan state finalist (4th place the year before), and an Iowa state 5th-place finisher — wins over Nebraska Magic, Team Michigan Blue, and Iowa Black.",
+    wins: [
+      {
+        opponentName: "Zander Ferguson",
+        state: "Nebraska",
+        credentials: "Nebraska State Finalist (2nd)",
+        boutOpponentKeys: ["Z. Ferguson", "Ferguson"],
+      },
+      {
+        opponentName: "D'Marion Erlenbeck",
+        state: "Michigan",
+        credentials: "Michigan State Finalist · 2025 State 4th place",
+        boutOpponentKeys: ["D. Erlenbeck", "Erlenbeck"],
+      },
+      {
+        opponentName: "Briggs Collins",
+        state: "Iowa",
+        credentials: "Iowa State 5th place",
+        boutOpponentKeys: ["B. Collins", "Collins"],
       },
     ],
   },
