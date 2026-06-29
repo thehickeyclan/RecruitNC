@@ -793,8 +793,8 @@ export function AthleteDetail({
                   priority
                   sizes="100vw"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#13294B] via-[#13294B]/55 to-black/20" />
-                <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-b from-[#13294B]/95 via-[#13294B]/35 to-black/15" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#13294B]/80 via-transparent to-transparent" />
 
                 <div className="absolute top-3 left-3 right-3 z-20 flex items-start justify-between gap-2">
                   {currentUserId ? (
@@ -832,7 +832,7 @@ export function AthleteDetail({
                   </div>
                 </div>
 
-                <div className="absolute bottom-0 left-0 right-0 z-10 p-4 pt-16 text-white">
+                <div className="absolute top-14 left-0 right-0 z-10 px-4 pb-4 text-white">
                   <h1 className="text-3xl font-bold leading-tight drop-shadow-lg">{athleteName}</h1>
 
                   {isCommittedStatus && college && college !== "Not specified" && (
@@ -1360,7 +1360,12 @@ export function AthleteDetail({
 
       {/* Weight Section (edit form when canEdit) */}
       {canEdit && editingSection === "weight" && (
-        <Card className="profile-card border-t-4 border-t-[#D3B574] shadow-md">
+        <Card
+          className={cn(
+            "profile-card border-t-4 border-t-[#D3B574] shadow-md",
+            mobileRecruiterLayout && PROFILE_SECTION_ORDER.weightEdit,
+          )}
+        >
           <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6">
             <div className="flex items-center gap-3">
               <h2 className="text-2xl font-bold text-white">Weight Class</h2>
@@ -2036,7 +2041,12 @@ export function AthleteDetail({
 
       {/* Last Edited By - Footer */}
       {(athlete.last_edited_by || athlete.last_edited_at) && (
-        <div className="container mx-auto px-4 py-4">
+        <div
+          className={cn(
+            "container mx-auto px-4 py-4",
+            mobileRecruiterLayout && PROFILE_SECTION_ORDER.footer,
+          )}
+        >
           <p className={cn("text-xs text-center", isDark ? "text-white/40" : "text-gray-500")}>
             {athlete.last_edited_at && (
               <>
@@ -2056,7 +2066,12 @@ export function AthleteDetail({
 
       {/* Request Edit - only for non-owners (owners use inline edit) */}
       {!canEdit && (
-        <div className="container mx-auto px-4 py-8">
+        <div
+          className={cn(
+            "container mx-auto px-4 py-8",
+            mobileRecruiterLayout && PROFILE_SECTION_ORDER.requestEdit,
+          )}
+        >
           <Card className={cn("profile-card border-2", isDark ? "border-white/20 bg-white/5" : "border-blue-200 bg-blue-50")}>
             <CardContent className="p-6">
               <div className="flex flex-col md:flex-row items-center justify-between gap-4">

@@ -4,8 +4,10 @@ import { ChevronDown } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { HardLink } from "@/components/hard-link"
+import { AauScholasticQualityWinsDetail } from "@/components/national-team/aau-scholastic-quality-wins-section"
 import type { AauIndividualBoutLog } from "@/lib/aau-scholastic-duals-2026-dual-bouts"
 import type { AauScholasticIndividualResult } from "@/lib/aau-scholastic-duals-2026-results"
+import type { AauScholasticWrestlerQualityWins } from "@/lib/aau-scholastic-duals-2026-quality-wins"
 import { cn } from "@/lib/utils"
 
 function IndividualBoutRow({ bout }: { bout: AauIndividualBoutLog }) {
@@ -43,14 +45,18 @@ export function AauScholasticIndividualRow({
   bouts,
   profileHref,
   school,
+  qualityWins,
 }: {
   result: AauScholasticIndividualResult
   bouts: AauIndividualBoutLog[]
   profileHref: string
   school: string
+  qualityWins?: AauScholasticWrestlerQualityWins | null
 }) {
   const winPct = result.wins + result.losses > 0 ? Math.round((result.wins / (result.wins + result.losses)) * 100) : null
   const hasBouts = bouts.length > 0
+  const hasQualityWins = Boolean(qualityWins?.wins.length)
+  const isExpandable = hasBouts || hasQualityWins
   const recordWin = result.losses === 0 && result.wins > 0
 
   const header = (
@@ -63,6 +69,11 @@ export function AauScholasticIndividualRow({
               {result.wrestler}
             </HardLink>
           </span>
+          {hasQualityWins ? (
+            <Badge variant="outline" className="border-[#D3B574]/40 text-[#D3B574] text-xs tabular-nums">
+              {qualityWins!.wins.length} quality win{qualityWins!.wins.length === 1 ? "" : "s"}
+            </Badge>
+          ) : null}
         </div>
         <p className="text-sm text-white/65 truncate">{school}</p>
         {result.notes ? <p className="text-xs text-white/45 mt-1 line-clamp-2">{result.notes}</p> : null}
@@ -87,35 +98,47 @@ export function AauScholasticIndividualRow({
             {result.grossPts}-{result.allowedPts} · {result.bonusWins} bonus
           </span>
         </div>
-        {hasBouts ? (
+        {isExpandable ? (
           <ChevronDown className="h-4 w-4 text-white/50 shrink-0 transition-transform group-data-[state=open]:rotate-180" />
         ) : null}
       </div>
     </div>
   )
 
-  if (!hasBouts) {
+  if (!isExpandable) {
     return (
       <div className="rounded-xl border border-white/10 bg-[#0a2040]/40 px-4 py-3">{header}</div>
     )
   }
 
+  const expandHint = hasQualityWins && hasBouts
+    ? `Tap to expand quality wins & ${bouts.length} match${bouts.length === 1 ? "" : "es"}`
+    : hasQualityWins
+      ? `Tap to expand ${qualityWins!.wins.length} quality win${qualityWins!.wins.length === 1 ? "" : "s"}`
+      : `Tap to expand ${bouts.length} match${bouts.length === 1 ? "" : "es"}`
+
   return (
     <Collapsible className="group rounded-xl border border-white/10 overflow-hidden bg-[#0a2040]/40 data-[state=open]:ring-1 data-[state=open]:ring-white/10">
       <CollapsibleTrigger className="w-full px-4 py-3 text-left hover:bg-white/5 transition-colors">
         {header}
-        <p className="text-xs text-white/45 mt-2 sm:mt-1">
-          Tap to expand {bouts.length} match{bouts.length === 1 ? "" : "es"}
-        </p>
+        <p className="text-xs text-white/45 mt-2 sm:mt-1">{expandHint}</p>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className="px-3 pb-3 sm:px-4 sm:pb-4 space-y-2 border-t border-white/10 pt-3">
-          {bouts.map((bout) => (
-            <IndividualBoutRow
-              key={`${bout.matchNumber}-${bout.weightLbs}-${bout.resultLine}-${bout.opponentWrestler}`}
-              bout={bout}
-            />
-          ))}
+        <div className="px-3 pb-3 sm:px-4 sm:pb-4 space-y-5 border-t border-white/10 pt-3">
+          {qualityWins ? <AauScholasticQualityWinsDetail entry={qualityWins} /> : null}
+          {hasBouts ? (
+            <div className="space-y-2">
+              {qualityWins ? (
+                <p className="text-xs font-bold uppercase tracking-wider text-white/55">All matches</p>
+              ) : null}
+              {bouts.map((bout) => (
+                <IndividualBoutRow
+                  key={`${bout.matchNumber}-${bout.weightLbs}-${bout.resultLine}-${bout.opponentWrestler}`}
+                  bout={bout}
+                />
+              ))}
+            </div>
+          ) : null}
         </div>
       </CollapsibleContent>
     </Collapsible>

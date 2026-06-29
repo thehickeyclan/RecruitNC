@@ -8,7 +8,7 @@ export const PROFILE_CARD_BODY = "profile-card-body p-4 md:p-6 lg:p-8"
 
 /** Flex order: mobile recruiter-first, desktop original document order. */
 export const PROFILE_SECTION_ORDER = {
-  hero: "order-1 lg:order-1",
+  hero: "order-first lg:order-first",
   nav: "order-2 lg:order-none",
   nationalResults: "order-3 lg:order-4",
   qualityWins: "order-4 lg:order-5",
@@ -20,4 +20,9 @@ export const PROFILE_SECTION_ORDER = {
   collegeOpens: "order-10 lg:order-9",
   achievements: "order-11 lg:order-10",
   inSeason: "order-12 lg:order-11",
+  /** Inline weight editor — after nav when open. */
+  weightEdit: "order-[2] lg:order-[2]",
+  /** Must stay after all profile sections (default order:0 would float above the hero). */
+  requestEdit: "order-[98] lg:order-[98]",
+  footer: "order-[99] lg:order-[99]",
 } as const

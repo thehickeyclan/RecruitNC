@@ -171,7 +171,7 @@ export const AAU_SCHOLASTIC_DUALS_2026_HIGHLIGHT_VIDEOS = [
 
 export const AAU_SCHOLASTIC_DUALS_2026_RECAP_PARAGRAPHS: string[] = [
   "NC United closed its fifth national-team trip with an 11-1 dual record and a 2nd-place Gold Pool finish at the 2026 AAU Scholastic Duals in Fort Lauderdale — a 9-0 sweep through pool play and a 2-1 Gold Pool run capped by a team tournament trophy.",
-  "The squad outscored opponents 619–176 (+443) in dual meet team scoring. Assigned wrestlers went 127-36 (77.9% win rate) with 619 gross team points, 148 allowed, and +471 net — open-weight forfeits against NC are not charged to any individual.",
+  "The lineup went 127-36 in assigned individual matches and stacked 77 quality wins over state champions, placers, and qualifiers across the roster. Dual meet scoring, win types, and full team totals are in Team stats below — open-weight forfeits against NC are not charged to any individual wrestler.",
   "Mac Johnson (12-0, +65 net team points) earned All Star Division Most Outstanding Wrestler and AAU Varsity District Division MOW honors. Aaron Ellison matched him at 12-0 (+54). Tye Johnson (11-1) was named Referees' Choice Tournament Most Outstanding Wrestler with a team-high six tech falls. Bonus-point wrestling carried the weekend: 40 falls, 32 tech falls, and 18 major decisions among 127 bout wins.",
   "The lone dual setback came in the Gold Pool finals against MAWA Blue (20-38). Every other opponent fell, including statement wins over Nebraska Magic, Iowa Black, Team Michigan Blue, and a one-point thriller over Spec Ops (27-26).",
 ]
