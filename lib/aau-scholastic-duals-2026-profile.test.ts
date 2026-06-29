@@ -65,6 +65,12 @@ describe("getNationalTeamProfileHighlights", () => {
     expect(highlights.some((h) => h.videoSrc.includes("xan-moody-highlight"))).toBe(true)
   })
 
+  it("includes AAU highlight reel for Luke Padgett", () => {
+    const highlights = getNationalTeamProfileHighlights("any-id", ["Luke Padgett"])
+    expect(highlights.some((h) => h.event === AAU_SCHOLASTIC_DUALS_EVENT_LABEL)).toBe(true)
+    expect(highlights.some((h) => h.videoSrc.includes("luke-padgett-highlight"))).toBe(true)
+  })
+
   it("includes both AAU highlight reels for Jacob Perry on profile", () => {
     const highlights = getNationalTeamProfileHighlights("any-id", ["Jacob Perry"]).filter(
       (h) => h.event === AAU_SCHOLASTIC_DUALS_EVENT_LABEL
