@@ -26,7 +26,7 @@ export const AAU_SCHOLASTIC_DUALS_2026_WRESTLER_CARDS: AauScholasticWrestlerCard
   { weightClass: "157", wrestler: "Aaron Ellison", imageSrc: `${CARD_BASE}/aaron-ellison-157.png`, highlightVideoSrc: "/national-team/aau-scholastic-duals-2026/videos/aaron-ellison-highlight.mov" },
   { weightClass: "165", wrestler: "Tobin McNair", imageSrc: `${CARD_BASE}/tobin-mcnair-165.png` },
   { weightClass: "175", wrestler: "Fares Alkurdasi", imageSrc: `${CARD_BASE}/fares-alkurdasi-175.png` },
-  { weightClass: "190", wrestler: "Luke Padgett", imageSrc: `${CARD_BASE}/luke-padgett-190.png` },
+  { weightClass: "190", wrestler: "Luke Padgett", imageSrc: `${CARD_BASE}/luke-padgett-190.png`, highlightVideoSrc: "/national-team/aau-scholastic-duals-2026/videos/luke-padgett-highlight.mov" },
   { weightClass: "215", wrestler: "Gavin Lopez", imageSrc: `${CARD_BASE}/gavin-lopez-215.png` },
   { weightClass: "HWT", wrestler: "Mason Hocker", imageSrc: `${CARD_BASE}/mason-hocker-hwt.png` },
 ]

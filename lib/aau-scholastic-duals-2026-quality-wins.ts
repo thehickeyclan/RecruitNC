@@ -28,6 +28,57 @@ export type AauScholasticWrestlerQualityWins = {
 /** Curated quality-win credentials — result lines enriched from dual bout exports when available. */
 export const AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS: AauScholasticWrestlerQualityWins[] = [
   {
+    wrestler: "Xan Moody",
+    weightLabel: "106+5",
+    record: "7-5",
+    summaryBullets: [
+      "6 BIG wins over state placers",
+      "Georgia state 3rd place",
+      "Nebraska & Iowa state placers (5th)",
+      "Missouri, South Dakota & Maryland placers",
+    ],
+    summaryNote:
+      "Xan's 7-5 run at 106 included BIG wins over state placers from Missouri, Georgia, Nebraska, Iowa, South Dakota, and Maryland — a nationally strong schedule for the lightest weight in the lineup.",
+    wins: [
+      {
+        opponentName: "Zane Homan",
+        state: "Missouri",
+        credentials: "Missouri State Placer (6th)",
+        boutOpponentKeys: ["Z. Homan", "Homan"],
+      },
+      {
+        opponentName: "Kian Green",
+        state: "Georgia",
+        credentials: "Georgia State Placer (3rd)",
+        boutOpponentKeys: ["K. Green", "Green"],
+      },
+      {
+        opponentName: "Wyatt Anderson",
+        state: "Nebraska",
+        credentials: "Nebraska State Placer (5th)",
+        boutOpponentKeys: ["W. Anderson", "Anderson"],
+      },
+      {
+        opponentName: "Hudson Cox",
+        state: "Iowa",
+        credentials: "Iowa State Placer (5th)",
+        boutOpponentKeys: ["H. Cox", "Cox"],
+      },
+      {
+        opponentName: "Macyn Gardner",
+        state: "South Dakota",
+        credentials: "South Dakota State Placer (4th)",
+        boutOpponentKeys: ["M. Gardner", "Gardner"],
+      },
+      {
+        opponentName: "Daniel Stefko",
+        state: "Maryland",
+        credentials: "Maryland State Placer (8th)",
+        boutOpponentKeys: ["D. Stefko", "Stefko"],
+      },
+    ],
+  },
+  {
     wrestler: "Luke Richards",
     weightLabel: "120+5",
     record: "10-2",
@@ -146,6 +197,173 @@ export const AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS: AauScholasticWrestlerQualit
         state: "Pennsylvania",
         credentials: "U17 Pan American Championships Freestyle Bronze Medalist",
         boutOpponentKeys: ["A. Gomez", "Gomez"],
+      },
+    ],
+  },
+  {
+    wrestler: "Tye Johnson",
+    weightLabel: "138+5",
+    record: "11-1",
+    summaryBullets: [
+      "7 BIG wins over state placers",
+      "Referees' Choice Tournament MOW",
+      "South Dakota state runner-up (Sesler)",
+      "Georgia state 3rd place",
+      "2 Florida placers · Michigan, Maryland & Pennsylvania",
+    ],
+    summaryNote:
+      "Tye's 11-1 run at 138 — and Referees' Choice Tournament MOW honors — included BIG wins over placers from Georgia, Florida (two), Michigan, South Dakota, Maryland, and Pennsylvania, including NHSCA All-American and Lehigh commit Reef Dillard.",
+    wins: [
+      {
+        opponentName: "Gavin Austin",
+        state: "Georgia",
+        credentials: "Georgia State Placer (3rd)",
+        boutOpponentKeys: ["G. Austin", "Austin"],
+      },
+      {
+        opponentName: "Nevan Irving",
+        state: "Florida",
+        credentials: "Florida State Placer (6th)",
+        boutOpponentKeys: ["N. Irving", "Irving"],
+      },
+      {
+        opponentName: "Gable Majcher",
+        state: "Michigan",
+        credentials: "Michigan State Placer (4th)",
+        boutOpponentKeys: ["G. Majcher", "Majcher"],
+      },
+      {
+        opponentName: "DeVonne Sesler",
+        state: "South Dakota",
+        credentials: "South Dakota State Placer (2nd)",
+        boutOpponentKeys: ["D. Sesler", "Sesler"],
+      },
+      {
+        opponentName: "Deegan Woomer",
+        state: "Maryland",
+        credentials: "Maryland State Placer (5th)",
+        boutOpponentKeys: ["D. Woomer", "Woomer"],
+      },
+      {
+        opponentName: "Devyn Hicks",
+        state: "Florida",
+        credentials: "Florida State Placer (7th)",
+        boutOpponentKeys: ["D. Hicks", "Hicks"],
+      },
+      {
+        opponentName: "Reef Dillard",
+        state: "Pennsylvania",
+        credentials: "Pennsylvania State Placer (5th) · NHSCA All-American · Lehigh Commit",
+        boutOpponentKeys: ["R. Dillard", "Dillard"],
+      },
+    ],
+  },
+  {
+    wrestler: "Jake Amiott",
+    weightLabel: "144+5",
+    record: "10-2",
+    summaryBullets: [
+      "7 BIG wins over state placers",
+      "Georgia state finalist",
+      "2× Michigan state placer",
+      "Nebraska, Iowa, South Dakota & Maryland placers",
+    ],
+    summaryNote:
+      "Jake's 10-2 run at 144 included BIG wins over a Georgia state finalist, a 2× Michigan state placer, and placers from Nebraska, Iowa (two), South Dakota, and Maryland.",
+    wins: [
+      {
+        opponentName: "Ashton Kuchar",
+        state: "Nebraska",
+        credentials: "Nebraska State Placer (4th)",
+        boutOpponentKeys: ["A. Kuchar", "Kuchar"],
+      },
+      {
+        opponentName: "Caden Greiner",
+        state: "Iowa",
+        credentials: "Iowa State Placer (4th)",
+        boutOpponentKeys: ["C. Greiner", "Greiner"],
+      },
+      {
+        opponentName: "Cane Smolarsky",
+        state: "Georgia",
+        credentials: "Georgia State Finalist",
+        boutOpponentKeys: ["C. Smolarsky", "C. Smolarksy", "Smolarsky", "Smolarksy"],
+      },
+      {
+        opponentName: "Xander Courneya",
+        state: "Michigan",
+        credentials: "2× Michigan State Placer",
+        boutOpponentKeys: ["X. Courneya", "Courneya"],
+      },
+      {
+        opponentName: "Aidyn Roman",
+        state: "Iowa",
+        credentials: "Iowa State Placer (7th)",
+        boutOpponentKeys: ["A. Roman", "Roman"],
+      },
+      {
+        opponentName: "Langdon Klinkhammer",
+        state: "South Dakota",
+        credentials: "South Dakota State Placer (4th)",
+        boutOpponentKeys: ["L. Klinkhammer", "Klinkhammer"],
+      },
+      {
+        opponentName: "William McDonough",
+        state: "Maryland",
+        credentials: "Maryland State Placer (4th)",
+        boutOpponentKeys: ["W. McDonough", "McDonough"],
+      },
+    ],
+  },
+  {
+    wrestler: "Jacob Perry",
+    weightLabel: "150+5",
+    record: "9-3",
+    summaryBullets: [
+      "6 BIG wins over state placers & qualifiers",
+      "3× Nebraska state placer (Gavin Cheek)",
+      "Missouri & Michigan state placers",
+      "Florida state placers (2)",
+      "Maryland state qualifier",
+    ],
+    summaryNote:
+      "Jacob's 9-3 run at 150 included BIG wins over a 3× Nebraska state placer, a 3× Missouri state qualifier who placed 6th, Michigan 3rd-place finisher Gage Turnblom, and Florida placers — plus Maryland state qualifier Carter Knott.",
+    wins: [
+      {
+        opponentName: "Connor McBride",
+        state: "Missouri",
+        credentials: "3× Missouri State Qualifier · State Placer (6th)",
+        boutOpponentKeys: ["C. McBride", "McBride"],
+      },
+      {
+        opponentName: "Gavin Cheek",
+        state: "Nebraska",
+        credentials: "3× Nebraska State Placer (2nd, 3rd, 6th)",
+        boutOpponentKeys: ["G. Cheek", "Cheek"],
+      },
+      {
+        opponentName: "Jayden Rivas",
+        state: "Florida",
+        credentials: "Florida State Placer (8th)",
+        boutOpponentKeys: ["J. Rivas", "Rivas"],
+      },
+      {
+        opponentName: "Dylan Fernandez",
+        state: "Florida",
+        credentials: "2× Florida State Qualifier · State Placer (4th)",
+        boutOpponentKeys: ["D. Fernandez", "Fernandez"],
+      },
+      {
+        opponentName: "Carter Knott",
+        state: "Maryland",
+        credentials: "Maryland State Qualifier",
+        boutOpponentKeys: ["C. Knott", "Knott"],
+      },
+      {
+        opponentName: "Gage Turnblom",
+        state: "Michigan",
+        credentials: "Michigan State Placer (3rd)",
+        boutOpponentKeys: ["G. Turnblom", "Turnblom"],
       },
     ],
   },
