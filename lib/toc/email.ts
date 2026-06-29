@@ -145,3 +145,46 @@ export async function sendTocAdminMediaAlert(payload: {
 </ul>`),
   )
 }
+
+export async function sendTocAthleteInviteEmail(payload: {
+  to: string[]
+  athleteName: string
+  weightClass: number
+  confirmUrl: string
+}): Promise<void> {
+  const firstName = payload.athleteName.trim().split(/\s+/)[0] || payload.athleteName
+  const subject = "You're invited — NC United Tournament of Champions"
+  const body = `<p>${firstName} —</p>
+<p>This isn't a registration link. It's an <strong>invitation</strong>.</p>
+<p>The NC United Tournament of Champions is invite-only — eight wrestlers per weight, the best this state has at <strong>${payload.weightClass} lbs</strong>. We built the field by hand, and your name is on it.</p>
+<p><strong>${TOC_EVENT_DATES_DISPLAY}</strong> · Hope Community Church, Apex · Weigh-in Friday, brackets finish ${TOC_SATURDAY_COMPETITION_DATE}.</p>
+<p style="margin:24px 0;"><a href="${payload.confirmUrl}" style="display:inline-block;background:#CC0000;color:white;padding:14px 28px;text-decoration:none;border-radius:6px;font-weight:bold;letter-spacing:0.04em;">Confirm your spot</a></p>
+<p style="font-size:14px;color:#6b7280;">You'll look up your RecruitNC profile to verify your info — no re-entering school, grad year, or club.</p>`
+
+  for (const to of payload.to) {
+    if (to.trim()) await sendHtml(to, subject, wrap(body))
+  }
+}
+
+export async function sendTocAthleteConfirmedEmail(payload: {
+  to: string[]
+  athleteName: string
+  weightClass: number
+  jacketSize: string
+}): Promise<void> {
+  const firstName = payload.athleteName.trim().split(/\s+/)[0] || payload.athleteName
+  const subject = "You're in — Tournament of Champions 2026"
+  const body = `<p>${firstName} —</p>
+<p><strong>Welcome to the field.</strong> Your spot at the NC United Tournament of Champions is confirmed.</p>
+<ul>
+<li>Weight class: <strong>${payload.weightClass} lbs</strong></li>
+<li>Champion jacket size on file: <strong>${payload.jacketSize}</strong></li>
+<li>Dates: <strong>${TOC_EVENT_DATES_DISPLAY}</strong></li>
+</ul>
+<p>Friday: weigh-in at 4:00 PM and first round. Saturday: full brackets through championship finals.</p>
+<p style="margin:20px 0;"><a href="https://app.ncwrestlingunited.com/tournament-of-champions" style="display:inline-block;background:#CC0000;color:white;padding:12px 24px;text-decoration:none;border-radius:6px;font-weight:bold;">Event page</a></p>`
+
+  for (const to of payload.to) {
+    if (to.trim()) await sendHtml(to, subject, wrap(body))
+  }
+}

@@ -19,8 +19,8 @@ export const TOC_HERO_DATES = {
 
 export const TOC_EVENT_LOGO = {
   src: "/images/toc/tournament-of-champions-logo.jpg",
-  alt: "NC United Tournament of Champions — N. Carolina Wrestling, invite only, 2026",
-  width: 877,
+  alt: "North Carolina Wrestling Tournament of Champions — invite only, 2026",
+  width: 1024,
   height: 1024,
 } as const
 
