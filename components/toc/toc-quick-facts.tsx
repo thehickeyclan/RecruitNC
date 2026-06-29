@@ -5,7 +5,7 @@ import { TOC_MATS_LINE } from "@/lib/toc/constants"
 const FACTS = [
   { icon: Lock, label: "By invitation only", sub: "You don't enter. You get the call." },
   { icon: Trophy, label: "The brackets are stacked", sub: "Eight elite wrestlers · eleven weights" },
-  { icon: Sparkles, label: "Two mats · one spotlight", sub: TOC_MATS_LINE },
+  { icon: Sparkles, label: "Two mats · one finale", sub: TOC_MATS_LINE },
   { icon: MapPin, label: "Premier venue", sub: "Hope Community Church · up to 1,000 seats" },
   { icon: Medal, label: "Earn the jacket", sub: "One champion per weight · NC pride forever" },
 ]

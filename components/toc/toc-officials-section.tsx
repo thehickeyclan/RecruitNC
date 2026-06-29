@@ -1,3 +1,4 @@
+import Image from "next/image"
 import { Scale, Shield, Timer, Users } from "lucide-react"
 import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass, tocSectionClass } from "@/components/toc/toc-theme"
 import { TOC_ELITE_OFFICIALS } from "@/lib/toc/constants"
@@ -37,10 +38,18 @@ export function TocOfficialsSection() {
             </ul>
           </div>
 
-          <div className="rounded-sm border-2 border-[#0B1D3A]/10 bg-[#f8f9fb] p-6 sm:p-8 border-l-4 border-l-[#CC0000]">
-            <div className="flex h-12 w-12 items-center justify-center rounded-sm bg-[#0B1D3A] text-white mb-4">
-              <Shield className="h-6 w-6" aria-hidden />
+          <div className="overflow-hidden rounded-sm border-2 border-[#0B1D3A]/10 bg-[#f8f9fb] border-l-4 border-l-[#CC0000]">
+            <div className="relative aspect-[3/4] w-full bg-[#0B1D3A]/5">
+              <Image
+                src="/images/toc/jonathan-sutton.png"
+                alt="Jonathan Sutton — chief of officials for NC United Tournament of Champions"
+                width={600}
+                height={820}
+                className="h-full w-full object-cover object-top"
+                sizes="(min-width: 1024px) 40vw, 100vw"
+              />
             </div>
+            <div className="p-6 sm:p-8">
             <p className={`text-[#0B1D3A] text-xl sm:text-2xl mb-3 ${tocDisplayClass()}`}>Jonathan Sutton</p>
             <p className="text-[#CC0000] text-xs font-semibold uppercase tracking-wide mb-4">Chief of officials</p>
             <p className="text-[#0B1D3A]/85 text-sm sm:text-base leading-relaxed">
@@ -54,6 +63,7 @@ export function TocOfficialsSection() {
             >
               See the Coaches & Officials Lounge at the venue →
             </a>
+            </div>
           </div>
         </div>
       </div>

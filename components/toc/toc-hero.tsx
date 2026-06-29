@@ -2,7 +2,7 @@
 
 import { TocCountdown } from "@/components/toc/toc-countdown"
 import { TocPatrioticBar, tocDisplayClass, tocMobileCtaClass } from "@/components/toc/toc-theme"
-import { TOC_EVENT_DATE } from "@/lib/toc/constants"
+import { TOC_EVENT_DATE, TOC_HERO_DATES } from "@/lib/toc/constants"
 import { TOC_HERO } from "@/lib/toc/marketing-copy"
 import type { TocEventConfig } from "@/lib/toc/event-config"
 
@@ -38,6 +38,21 @@ export function TocHero({ config }: Props) {
         <p className="text-[#CC0000] text-xs sm:text-sm md:text-base mb-3 tracking-[0.18em] sm:tracking-[0.2em] uppercase font-semibold">
           NC United · By invitation only
         </p>
+
+        <div className="mb-5 sm:mb-7">
+          <p
+            className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-[0.95] ${tocDisplayClass()}`}
+          >
+            {TOC_HERO_DATES.headline}
+          </p>
+          <p className="mt-2 sm:mt-3 text-sm sm:text-base md:text-lg text-white/75 font-semibold uppercase tracking-[0.12em] sm:tracking-[0.16em]">
+            {TOC_HERO_DATES.subline}
+          </p>
+          <p className="mt-2 text-sm sm:text-base text-white/55">
+            {config.venue_name ?? "Hope Community Church"}, Apex
+          </p>
+        </div>
+
         <h1
           className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-[0.95] max-w-4xl text-white ${tocDisplayClass()}`}
         >
@@ -55,10 +70,6 @@ export function TocHero({ config }: Props) {
         <p className="mt-6 sm:mt-8 text-base sm:text-lg md:text-xl text-white/90 max-w-3xl leading-relaxed">
           {TOC_HERO.lead}{" "}
           <strong className="text-white font-semibold block sm:inline mt-1 sm:mt-0">{TOC_HERO.showLine}</strong>
-        </p>
-
-        <p className="mt-3 sm:mt-4 text-white/60 text-sm md:text-base">
-          {config.event_dates} · {config.venue_name ?? "Hope Community Church"}, Apex
         </p>
 
         <TocCountdown targetDate={TOC_EVENT_DATE} className="mt-6 sm:mt-8 justify-center sm:justify-start" />
