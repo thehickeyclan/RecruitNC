@@ -17,6 +17,13 @@ export const TOC_HERO_DATES = {
   subline: "Weigh-in & first round Friday · Brackets finish Saturday",
 } as const
 
+export const TOC_EVENT_LOGO = {
+  src: "/images/toc/tournament-of-champions-logo.jpg",
+  alt: "NC United Tournament of Champions — N. Carolina Wrestling, invite only, 2026",
+  width: 877,
+  height: 1024,
+} as const
+
 export const TOC_WEIGHT_CLASSES = [
   117, 125, 133, 141, 149, 157, 165, 174, 184, 197, 285,
 ] as const
