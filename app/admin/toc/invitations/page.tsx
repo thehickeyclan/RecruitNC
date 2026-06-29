@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Loader2, RefreshCw, Send } from "lucide-react"
+import { formatTocGradYear } from "@/lib/toc/invitations"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 
 type SearchAthlete = {
@@ -161,7 +162,7 @@ export default function TocInvitationsAdminPage() {
                       >
                         <span className="font-medium">{a.name}</span>
                         <span className="text-muted-foreground ml-2">
-                          {[a.highschool, a.graduationyear, a.weightclass].filter(Boolean).join(" · ")}
+                          {[a.highschool, formatTocGradYear(a.graduationyear), a.weightclass].filter(Boolean).join(" · ")}
                         </span>
                       </button>
                     </li>

@@ -4,6 +4,7 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { TocAthleteWithInvitation } from "@/lib/toc/invitation-service"
+import { formatTocGradYear } from "@/lib/toc/invitations"
 
 type Props = {
   data: TocAthleteWithInvitation
@@ -38,7 +39,7 @@ export function AthleteVerificationCard({ data, onConfirm, onReject }: Props) {
             </div>
             <div>
               <dt className="text-muted-foreground">Grad year</dt>
-              <dd className="font-semibold text-[#0B1D3A]">{athlete.graduationYear ?? "—"}</dd>
+              <dd className="font-semibold text-[#0B1D3A]">{formatTocGradYear(athlete.graduationYear) ?? "—"}</dd>
             </div>
             <div>
               <dt className="text-muted-foreground">Club</dt>

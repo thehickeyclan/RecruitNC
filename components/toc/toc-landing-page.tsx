@@ -3,7 +3,6 @@
 import { TocConfirmedFieldSection } from "@/components/toc/toc-confirmed-field-section"
 import { TocHero } from "@/components/toc/toc-hero"
 import { TocQuickFacts } from "@/components/toc/toc-quick-facts"
-import { TocEventLogoSection } from "@/components/toc/toc-event-logo-section"
 import { TocChampionJacketSection } from "@/components/toc/toc-champion-jacket-section"
 import { TocStorySection } from "@/components/toc/toc-story-section"
 import { TocAthleteQuotesSection } from "@/components/toc/toc-athlete-quotes-section"
@@ -33,7 +32,6 @@ export function TocLandingPage({ config }: Props) {
     <div className="min-h-screen bg-white overflow-x-hidden">
       <TocHero config={config} />
       <TocQuickFacts />
-      <TocEventLogoSection />
       <TocConfirmedFieldSection />
       <TocChampionJacketSection />
       <TocStorySection />

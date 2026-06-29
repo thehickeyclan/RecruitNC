@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Input } from "@/components/ui/input"
+import { formatTocGradYear } from "@/lib/toc/invitations"
 import { Loader2 } from "lucide-react"
 
 export type TocAthleteSearchResult = {
@@ -113,7 +114,7 @@ export function AthleteSearchTypeahead({ onSelect, disabled }: Props) {
               >
                 <p className="font-semibold text-[#0B1D3A]">{athlete.name}</p>
                 <p className="text-sm text-muted-foreground mt-0.5">
-                  {[athlete.school, athlete.graduationYear ? `'${String(athlete.graduationYear).slice(-2)}` : null, athlete.weightClass ? `${athlete.weightClass} lbs` : null]
+                  {[athlete.school, formatTocGradYear(athlete.graduationYear), athlete.weightClass ? `${athlete.weightClass} lbs` : null]
                     .filter(Boolean)
                     .join(" · ")}
                 </p>
