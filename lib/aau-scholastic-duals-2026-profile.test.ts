@@ -71,10 +71,40 @@ describe("getNationalTeamProfileHighlights", () => {
     expect(highlights.some((h) => h.videoSrc.includes("xan-moody-highlight"))).toBe(true)
   })
 
+  it("includes AAU highlight reel for Xan Moody", () => {
+    const highlights = getNationalTeamProfileHighlights("any-id", ["Xan Moody"])
+    expect(highlights.some((h) => h.event === AAU_SCHOLASTIC_DUALS_EVENT_LABEL)).toBe(true)
+    expect(highlights.some((h) => h.videoSrc.includes("xan-moody-highlight"))).toBe(true)
+  })
+
   it("includes AAU highlight reel for Luke Padgett", () => {
     const highlights = getNationalTeamProfileHighlights("any-id", ["Luke Padgett"])
     expect(highlights.some((h) => h.event === AAU_SCHOLASTIC_DUALS_EVENT_LABEL)).toBe(true)
     expect(highlights.some((h) => h.videoSrc.includes("luke-padgett-highlight"))).toBe(true)
+  })
+
+  it("includes AAU highlight reel for Paxton Kearns", () => {
+    const highlights = getNationalTeamProfileHighlights("any-id", ["Paxton Kearns"])
+    expect(highlights.some((h) => h.event === AAU_SCHOLASTIC_DUALS_EVENT_LABEL)).toBe(true)
+    expect(highlights.some((h) => h.videoSrc.includes("paxton-kearns-highlight"))).toBe(true)
+  })
+
+  it("includes AAU highlight reel for Aiden Burkholder", () => {
+    const highlights = getNationalTeamProfileHighlights("any-id", ["Aiden Burkholder"])
+    expect(highlights.some((h) => h.event === AAU_SCHOLASTIC_DUALS_EVENT_LABEL)).toBe(true)
+    expect(highlights.some((h) => h.videoSrc.includes("aiden-burkholder-highlight"))).toBe(true)
+  })
+
+  it("includes AAU highlight reel for Mason Hocker", () => {
+    const highlights = getNationalTeamProfileHighlights("any-id", ["Mason Hocker"])
+    expect(highlights.some((h) => h.event === AAU_SCHOLASTIC_DUALS_EVENT_LABEL)).toBe(true)
+    expect(highlights.some((h) => h.videoSrc.includes("mason-hocker-highlight"))).toBe(true)
+  })
+
+  it("includes AAU highlight reel for Gavin Lopez", () => {
+    const highlights = getNationalTeamProfileHighlights("any-id", ["Gavin Lopez"])
+    expect(highlights.some((h) => h.event === AAU_SCHOLASTIC_DUALS_EVENT_LABEL)).toBe(true)
+    expect(highlights.some((h) => h.videoSrc.includes("gavin-lopez-highlight"))).toBe(true)
   })
 
   it("includes both AAU highlight reels for Jacob Perry on profile", () => {
