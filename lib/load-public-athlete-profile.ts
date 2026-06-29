@@ -2,8 +2,8 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
 import { resolveGraduationYear } from "@/lib/athlete-nhsca"
-import { getAauScholasticDuals2026ProfileResults, getAauScholasticDuals2026ProfileQualityWins } from "@/lib/aau-scholastic-duals-2026-profile"
-import type { AauScholasticWrestlerQualityWins } from "@/lib/aau-scholastic-duals-2026-quality-wins"
+import { getAauScholasticDuals2026ProfileResults } from "@/lib/aau-scholastic-duals-2026-profile"
+import { getProfileQualityWins, type ProfileQualityWinsTournamentBlock } from "@/lib/profile-quality-wins"
 import {
   getNhscaDuals2026LiveProfileResults,
   getNhscaDuals2026RegistrationPlaceholders,
@@ -25,7 +25,7 @@ export type PublicAthleteProfile = Record<string, unknown> & {
   super32_results: unknown[]
   national_team_results: unknown[]
   national_team_highlight_videos: ProfileNationalTeamHighlight[]
-  aau_scholastic_quality_wins: AauScholasticWrestlerQualityWins | null
+  profile_quality_wins: ProfileQualityWinsTournamentBlock[]
 }
 
 export type LoadPublicAthleteProfileResult =
@@ -91,7 +91,7 @@ export async function loadPublicAthleteProfile(
   }))
   const nationalTeamFromRow = getNationalTeamResults(athlete)
   const aauScholasticResults = getAauScholasticDuals2026ProfileResults(trimmed, nameBases)
-  const aau_scholastic_quality_wins = getAauScholasticDuals2026ProfileQualityWins(trimmed, nameBases)
+  const profile_quality_wins = getProfileQualityWins(trimmed, nameBases)
   const national_team_results = mergeNationalTeamResultsForProfile({
     fromTable: nationalTeamFromTables,
     fromAthleteRow: nationalTeamFromRow,
@@ -110,7 +110,7 @@ export async function loadPublicAthleteProfile(
       super32_results: super32Merged,
       national_team_results,
       national_team_highlight_videos,
-      aau_scholastic_quality_wins,
+      profile_quality_wins,
     },
   }
 }

@@ -446,7 +446,7 @@ export function AauScholasticDuals2026PublicResults({
             <div className="flex-1 min-w-0">
               <h2 className={aauPanelTitleClass}>Individual results</h2>
               <p className={aauPanelDescClass}>
-                Full lineup (106 → HWT) — tap a wrestler for quality wins and every bout · team totals in Team stats
+                Full lineup (106 → HWT) — tap for all matches; quality wins flagged in gold
               </p>
               <p className="text-xs text-white/45 mt-2">{AAU_SCHOLASTIC_INDIVIDUAL_STATS_FOOTNOTE}</p>
             </div>
