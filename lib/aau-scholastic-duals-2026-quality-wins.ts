@@ -715,6 +715,21 @@ function boutKeyMatches(boutAbbrev: string, keys: string[]): boolean {
   })
 }
 
+/** Match one bout log to a curated quality win (use enriched entry). */
+export function matchQualityWinToBout(
+  bout: { matchNumber: number; opponentWrestler: string; resultLine: string },
+  entry: AauScholasticWrestlerQualityWins,
+): AauScholasticQualityWin | null {
+  for (const win of entry.wins) {
+    const keys = win.boutOpponentKeys ?? [win.opponentName]
+    if (!boutKeyMatches(bout.opponentWrestler, keys)) continue
+    if (win.matchNumber != null && win.matchNumber !== bout.matchNumber) continue
+    if (win.resultLine && win.resultLine !== bout.resultLine) continue
+    return win
+  }
+  return null
+}
+
 /** Attach match number, dual opponent, and result line from bout logs when credentials align. */
 export function enrichAauQualityWins(
   entry: AauScholasticWrestlerQualityWins,

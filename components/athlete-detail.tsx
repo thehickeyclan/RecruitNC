@@ -7,8 +7,8 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Edit, GraduationCap, Award, TrendingUp, Trophy, Video, ExternalLink, Shield, Share2, Phone } from "lucide-react"
 import { UnifiedProfileMobileNav } from "./unified-profile-mobile-nav"
-import { AauScholasticProfileQualityWinsSection } from "@/components/national-team/aau-scholastic-profile-quality-wins"
-import type { AauScholasticWrestlerQualityWins } from "@/lib/aau-scholastic-duals-2026-quality-wins"
+import { ProfileQualityWinsSection } from "@/components/profile-quality-wins-section"
+import type { ProfileQualityWinsTournamentBlock } from "@/lib/profile-quality-wins"
 import {
   PROFILE_CARD_BODY,
   PROFILE_SECTION_HEADER,
@@ -194,9 +194,12 @@ export function AthleteDetail({
         .national_team_highlight_videos as NationalTeamHighlightVideo[])
     : []
 
-  const aauScholasticQualityWins =
-    (athleteData as { aau_scholastic_quality_wins?: AauScholasticWrestlerQualityWins | null })
-      ?.aau_scholastic_quality_wins ?? null
+  const profileQualityWins: ProfileQualityWinsTournamentBlock[] = Array.isArray(
+    (athleteData as { profile_quality_wins?: ProfileQualityWinsTournamentBlock[] })?.profile_quality_wins,
+  )
+    ? ((athleteData as { profile_quality_wins?: ProfileQualityWinsTournamentBlock[] })
+        .profile_quality_wins as ProfileQualityWinsTournamentBlock[])
+    : []
 
   const renderDirectHighlightVideo = (url: string, title: string) => (
     <div className="relative w-full overflow-hidden rounded-lg shadow-lg bg-black">
@@ -1354,7 +1357,7 @@ export function AthleteDetail({
 
       {mobileRecruiterLayout ? (
         <div className={PROFILE_SECTION_ORDER.nav}>
-          <UnifiedProfileMobileNav showQualityWins={Boolean(aauScholasticQualityWins)} />
+          <UnifiedProfileMobileNav showQualityWins={profileQualityWins.length > 0} />
         </div>
       ) : null}
 
@@ -1574,9 +1577,9 @@ export function AthleteDetail({
         {tournamentResultsComponent}
       </div>
 
-      {aauScholasticQualityWins ? (
+      {profileQualityWins.length > 0 ? (
         <div className={cn("min-w-0 max-w-full", mobileRecruiterLayout && PROFILE_SECTION_ORDER.qualityWins)}>
-          <AauScholasticProfileQualityWinsSection entry={aauScholasticQualityWins} theme={theme} />
+          <ProfileQualityWinsSection blocks={profileQualityWins} theme={theme} />
         </div>
       ) : null}
 
