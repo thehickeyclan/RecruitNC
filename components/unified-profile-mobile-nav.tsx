@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils"
 
-const NAV_LINKS = [
+const BASE_NAV_LINKS = [
   { sectionId: "national-results", label: "National" },
   { sectionId: "highlights", label: "Video" },
   { sectionId: "bio", label: "Bio" },
@@ -11,7 +11,21 @@ const NAV_LINKS = [
   { sectionId: "in-season", label: "In-season" },
 ] as const
 
-export function UnifiedProfileMobileNav({ className }: { className?: string }) {
+export function UnifiedProfileMobileNav({
+  className,
+  showQualityWins = false,
+}: {
+  className?: string
+  showQualityWins?: boolean
+}) {
+  const navLinks = showQualityWins
+    ? [
+        BASE_NAV_LINKS[0],
+        { sectionId: "quality-wins", label: "Quality" },
+        ...BASE_NAV_LINKS.slice(1),
+      ]
+    : [...BASE_NAV_LINKS]
+
   return (
     <nav
       aria-label="Profile sections"
@@ -21,7 +35,7 @@ export function UnifiedProfileMobileNav({ className }: { className?: string }) {
       )}
     >
       <div className="flex gap-2 overflow-x-auto scroll-table-x pb-0.5">
-        {NAV_LINKS.map(({ sectionId, label }) => (
+        {navLinks.map(({ sectionId, label }) => (
           <a
             key={sectionId}
             href={`#${sectionId}`}

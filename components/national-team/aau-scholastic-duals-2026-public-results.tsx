@@ -27,7 +27,7 @@ import {
 import { aauScholasticProfileHref } from "@/lib/content/aau-scholastic-duals-2026-profile-ids"
 import { AauScholasticDualMeetRow } from "@/components/national-team/aau-scholastic-dual-meet-row"
 import { AauScholasticIndividualRow } from "@/components/national-team/aau-scholastic-individual-row"
-import { AauScholasticQualityWinsFeatured } from "@/components/national-team/aau-scholastic-quality-wins-section"
+import { AauScholasticQualityWinsFeatured, AauScholasticQualityWinsTeamRollup } from "@/components/national-team/aau-scholastic-quality-wins-section"
 import { AauScholasticDualsWrestlerCards } from "@/components/national-team/aau-scholastic-duals-wrestler-cards"
 import {
   buildAauIndividualBoutLogsByWrestler,
@@ -46,13 +46,13 @@ import {
   aauInputClass,
 } from "@/components/national-team/aau-scholastic-theme"
 import { cn } from "@/lib/utils"
-import { getAauScholasticQualityWinsEnriched } from "@/lib/aau-scholastic-duals-2026-quality-wins"
+import { getAauScholasticQualityWinsEnriched, summarizeAauScholasticQualityWins } from "@/lib/aau-scholastic-duals-2026-quality-wins"
 
 const NAV_LINKS = [
   { href: "#summary", label: "Recap" },
+  { href: "#mow", label: "MOW" },
   { href: "#team-trophy", label: "Team photo" },
   { href: "#team-stats", label: "Team stats" },
-  { href: "#mow", label: "MOW" },
   { href: "#media", label: "Videos" },
   { href: "#duals", label: "Dual results" },
   { href: "#individual", label: "Individual" },
@@ -84,6 +84,7 @@ export function AauScholasticDuals2026PublicResults({
     [duals, individuals],
   )
   const qualityWinEntries = useMemo(() => getAauScholasticQualityWinsEnriched(), [])
+  const qualityWinsSummary = useMemo(() => summarizeAauScholasticQualityWins(), [])
   const [search, setSearch] = useState("")
 
   const computedIndividualPct = aauIndividualWinPct(individuals)
@@ -183,6 +184,13 @@ export function AauScholasticDuals2026PublicResults({
                     </CardContent>
                   </Card>
                 ))}
+              </div>
+
+              <div className="mt-5 pt-5 border-t border-white/10">
+                <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-white/55 mb-3">
+                  Quality of competition
+                </p>
+                <AauScholasticQualityWinsTeamRollup summary={qualityWinsSummary} compact variant="hero" />
               </div>
             </div>
 
@@ -355,6 +363,12 @@ export function AauScholasticDuals2026PublicResults({
               ))}
             </div>
             <p className="text-xs sm:text-sm text-white/60 mb-6">{AAU_SCHOLASTIC_INDIVIDUAL_STATS_FOOTNOTE}</p>
+
+            <div className="mb-8 pb-8 border-b border-white/10">
+              <h3 className="text-sm font-bold text-white mb-1">Quality wins vs state-level opponents</h3>
+              <AauScholasticQualityWinsTeamRollup summary={qualityWinsSummary} />
+            </div>
+
             <h3 className="text-sm font-bold text-white mb-3">Team win types (127 bout wins)</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-sm">
               {[
@@ -440,7 +454,11 @@ export function AauScholasticDuals2026PublicResults({
             </div>
           </div>
           <div className="px-4 sm:px-6 py-5 space-y-6">
-            <AauScholasticQualityWinsFeatured entries={qualityWinEntries} profileIdMap={profileIdMap} />
+            <AauScholasticQualityWinsFeatured
+              entries={qualityWinEntries}
+              summary={qualityWinsSummary}
+              profileIdMap={profileIdMap}
+            />
 
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">

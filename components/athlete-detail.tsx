@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Edit, GraduationCap, Award, TrendingUp, Trophy, Video, ExternalLink, Shield, Share2, Phone } from "lucide-react"
 import { UnifiedProfileMobileNav } from "./unified-profile-mobile-nav"
+import { AauScholasticProfileQualityWinsSection } from "@/components/national-team/aau-scholastic-profile-quality-wins"
+import type { AauScholasticWrestlerQualityWins } from "@/lib/aau-scholastic-duals-2026-quality-wins"
 import {
   PROFILE_CARD_BODY,
   PROFILE_SECTION_HEADER,
@@ -191,6 +193,10 @@ export function AthleteDetail({
     ? ((athleteData as { national_team_highlight_videos?: NationalTeamHighlightVideo[] })
         .national_team_highlight_videos as NationalTeamHighlightVideo[])
     : []
+
+  const aauScholasticQualityWins =
+    (athleteData as { aau_scholastic_quality_wins?: AauScholasticWrestlerQualityWins | null })
+      ?.aau_scholastic_quality_wins ?? null
 
   const renderDirectHighlightVideo = (url: string, title: string) => (
     <div className="relative w-full overflow-hidden rounded-lg shadow-lg bg-black">
@@ -1348,7 +1354,7 @@ export function AthleteDetail({
 
       {mobileRecruiterLayout ? (
         <div className={PROFILE_SECTION_ORDER.nav}>
-          <UnifiedProfileMobileNav />
+          <UnifiedProfileMobileNav showQualityWins={Boolean(aauScholasticQualityWins)} />
         </div>
       ) : null}
 
@@ -1562,6 +1568,12 @@ export function AthleteDetail({
       >
         {tournamentResultsComponent}
       </div>
+
+      {aauScholasticQualityWins ? (
+        <div className={cn("min-w-0 max-w-full", mobileRecruiterLayout && PROFILE_SECTION_ORDER.qualityWins)}>
+          <AauScholasticProfileQualityWinsSection entry={aauScholasticQualityWins} theme={theme} />
+        </div>
+      ) : null}
 
       {/* 5. Contact Information - always show for consistent structure */}
       <Card
@@ -1841,31 +1853,41 @@ export function AthleteDetail({
               <div className="space-y-6">
                 {nationalTeamHighlightVideos.map((highlight) => (
                   <div key={`${highlight.event}-${highlight.year}-${highlight.videoSrc}`}>
-                    <p className="text-sm font-semibold text-gray-700 mb-3">
+                    <p className={cn("text-sm font-semibold mb-3", isDark ? "text-white/80" : "text-gray-700")}>
                       {highlight.event} {highlight.year}
                     </p>
                     {renderDirectHighlightVideo(highlight.videoSrc, highlight.ariaLabel)}
-                    <p className="mt-2 text-sm text-gray-600">{highlight.title}</p>
+                    <p className={cn("mt-2 text-sm", isDark ? "text-white/55" : "text-gray-600")}>{highlight.title}</p>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-gray-600">
+              <p className={isDark ? "text-white/55" : "text-gray-600"}>
                 {canEdit ? "Add a YouTube highlight video or upload a video file via admin. Click the button above to paste your link." : "No highlight video yet."}
               </p>
             )}
             {athleteData?.highlight_video_url && nationalTeamHighlightVideos.length > 0 ? (
-              <div className="mt-8 space-y-6 border-t border-gray-200 pt-8">
-                <p className="text-sm font-semibold uppercase tracking-wider text-gray-500">
+              <div
+                className={cn(
+                  "mt-8 space-y-6 border-t pt-8",
+                  isDark ? "border-white/10" : "border-gray-200",
+                )}
+              >
+                <p
+                  className={cn(
+                    "text-sm font-semibold uppercase tracking-wider",
+                    isDark ? "text-white/45" : "text-gray-500",
+                  )}
+                >
                   NC United National Team Highlights
                 </p>
                 {nationalTeamHighlightVideos.map((highlight) => (
                   <div key={`${highlight.event}-${highlight.year}-${highlight.videoSrc}`}>
-                    <p className="text-sm font-semibold text-gray-700 mb-3">
+                    <p className={cn("text-sm font-semibold mb-3", isDark ? "text-white/80" : "text-gray-700")}>
                       {highlight.event} {highlight.year}
                     </p>
                     {renderDirectHighlightVideo(highlight.videoSrc, highlight.ariaLabel)}
-                    <p className="mt-2 text-sm text-gray-600">{highlight.title}</p>
+                    <p className={cn("mt-2 text-sm", isDark ? "text-white/55" : "text-gray-600")}>{highlight.title}</p>
                   </div>
                 ))}
               </div>
