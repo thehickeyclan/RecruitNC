@@ -79,6 +79,52 @@ export const AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS: AauScholasticWrestlerQualit
     ],
   },
   {
+    wrestler: "Aiden Burkholder",
+    weightLabel: "113+5",
+    record: "8-4",
+    summaryBullets: [
+      "5 BIG wins over state placers",
+      "Georgia state champion (William Hughes)",
+      "Nebraska 2025 4th · 2026 state champion (Robinson)",
+      "2 Florida state placers (4th & 7th)",
+      "South Dakota state 3rd place",
+    ],
+    summaryNote:
+      "Aiden's 8-4 run at 113 included BIG wins over a Georgia state champion, Nebraska 2025 4th-place finisher and 2026 state champion Kamden Robinson, Florida placers, and South Dakota 3rd-place finisher Rhys Truman.",
+    wins: [
+      {
+        opponentName: "William Hughes",
+        state: "Georgia",
+        credentials: "Georgia State Champion (2026)",
+        boutOpponentKeys: ["W. Hughes", "Hughes"],
+      },
+      {
+        opponentName: "Kamden Robinson",
+        state: "Nebraska",
+        credentials: "Nebraska 2025 State 4th place · 2026 State Champion",
+        boutOpponentKeys: ["K. Robinson", "Robinson"],
+      },
+      {
+        opponentName: "Dylan Presman",
+        state: "Florida",
+        credentials: "Florida State Placer (7th)",
+        boutOpponentKeys: ["D. Presman", "Presman"],
+      },
+      {
+        opponentName: "Rhys Truman",
+        state: "South Dakota",
+        credentials: "South Dakota State Placer (3rd)",
+        boutOpponentKeys: ["R. Truman", "Truman"],
+      },
+      {
+        opponentName: "James Sanders",
+        state: "Florida",
+        credentials: "Florida State Placer (4th)",
+        boutOpponentKeys: ["J. Sanders", "Sanders"],
+      },
+    ],
+  },
+  {
     wrestler: "Luke Richards",
     weightLabel: "120+5",
     record: "10-2",
@@ -133,6 +179,58 @@ export const AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS: AauScholasticWrestlerQualit
         state: "Maryland",
         credentials: "Maryland State Placer (3rd)",
         boutOpponentKeys: ["B. Wunder", "Wunder"],
+      },
+    ],
+  },
+  {
+    wrestler: "Paxton Kearns",
+    weightLabel: "126+5",
+    record: "8-4",
+    summaryBullets: [
+      "6 BIG wins over state placers & qualifiers",
+      "Nebraska state champion (Noah Boyer)",
+      "2 Florida state 3rd-place finishes",
+      "Georgia state 3rd place",
+      "Iowa state 4th place",
+    ],
+    summaryNote:
+      "Paxton's 8-4 run at 126 included BIG wins over a Nebraska state champion, Florida placers and a state qualifier, a Georgia 3rd-place finisher, and an Iowa 4th-place finisher.",
+    wins: [
+      {
+        opponentName: "Erik Perez",
+        state: "Florida",
+        credentials: "Florida State Placer (3rd)",
+        boutOpponentKeys: ["E. Perez", "Perez"],
+      },
+      {
+        opponentName: "Noah Boyer",
+        state: "Nebraska",
+        credentials: "Nebraska State Champion",
+        boutOpponentKeys: ["N. Boyer", "Boyer"],
+      },
+      {
+        opponentName: "Jayden Buehler",
+        state: "Georgia",
+        credentials: "Georgia State Placer (3rd)",
+        boutOpponentKeys: ["J. Buehler", "Buehler"],
+      },
+      {
+        opponentName: "Carter Rivera",
+        state: "Florida",
+        credentials: "Florida State Placer (3rd)",
+        boutOpponentKeys: ["C. Rivera", "Rivera"],
+      },
+      {
+        opponentName: "Sieryous Peterson",
+        state: "Florida",
+        credentials: "Florida State Qualifier",
+        boutOpponentKeys: ["S. Peterson", "Peterson"],
+      },
+      {
+        opponentName: "Waylon Logue",
+        state: "Iowa",
+        credentials: "Iowa State Placer (4th)",
+        boutOpponentKeys: ["W. Logue", "Logue"],
       },
     ],
   },
@@ -413,6 +511,58 @@ export const AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS: AauScholasticWrestlerQualit
     ],
   },
   {
+    wrestler: "Tobin McNair",
+    weightLabel: "165+5",
+    record: "10-2",
+    summaryBullets: [
+      "6 BIG wins over state placers & champions",
+      "2× Michigan state champion (Zane Willobee)",
+      "Maryland state champion · 2× state placer",
+      "Florida state finalist & placer",
+      "Missouri & Nebraska state placers",
+    ],
+    summaryNote:
+      "Tobin's 10-2 run at 165 included BIG wins over a 3× Missouri state placer, a Nebraska state placer, 2× Michigan state champion Zane Willobee, Florida placers and a state finalist, and Maryland state champion Leo Foreman.",
+    wins: [
+      {
+        opponentName: "Eli Homan",
+        state: "Missouri",
+        credentials: "3× Missouri State Placer",
+        boutOpponentKeys: ["E. Homan", "Homan"],
+      },
+      {
+        opponentName: "Brenden Ging",
+        state: "Nebraska",
+        credentials: "Nebraska State Placer (4th)",
+        boutOpponentKeys: ["B. Ging", "Ging"],
+      },
+      {
+        opponentName: "Zane Willobee",
+        state: "Michigan",
+        credentials: "2× Michigan State Champion",
+        boutOpponentKeys: ["Z. Willobee", "Willobee", "Willowbee"],
+      },
+      {
+        opponentName: "Tyler Grey",
+        state: "Florida",
+        credentials: "Florida State Placer (7th)",
+        boutOpponentKeys: ["T. Grey", "Grey"],
+      },
+      {
+        opponentName: "Leo Foreman",
+        state: "Maryland",
+        credentials: "Maryland State Champion · 2× State Placer",
+        boutOpponentKeys: ["L. Foreman", "Foreman"],
+      },
+      {
+        opponentName: "Konstantin Khaspekian",
+        state: "Florida",
+        credentials: "Florida State Finalist",
+        boutOpponentKeys: ["K. Khaspekian", "Khaspekian"],
+      },
+    ],
+  },
+  {
     wrestler: "Fares Alkurdasi",
     weightLabel: "175+5",
     record: "9-3",
@@ -488,6 +638,76 @@ export const AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS: AauScholasticWrestlerQualit
         state: "Iowa",
         credentials: "Iowa State 8th place",
         boutOpponentKeys: ["P. Jacobs", "Jacobs"],
+      },
+    ],
+  },
+  {
+    wrestler: "Gavin Lopez",
+    weightLabel: "215+5",
+    record: "10-2",
+    summaryBullets: [
+      "6 BIG wins over state placers",
+      "2 Georgia state placers (5th)",
+      "Nebraska state 4th place",
+      "Missouri, Michigan & Iowa placers",
+    ],
+    summaryNote:
+      "Gavin's 10-2 run at 215 included BIG wins over placers from Missouri, Georgia (two), Nebraska, Michigan, and Iowa — a strong upper-weight schedule across the country.",
+    wins: [
+      {
+        opponentName: "Kaden Updike",
+        state: "Missouri",
+        credentials: "Missouri State Placer (6th)",
+        boutOpponentKeys: ["K. Updike", "Updike"],
+      },
+      {
+        opponentName: "Zachary White",
+        state: "Georgia",
+        credentials: "Georgia State Placer (5th)",
+        boutOpponentKeys: ["Z. White", "White"],
+      },
+      {
+        opponentName: "Brody Brandt",
+        state: "Nebraska",
+        credentials: "Nebraska State Placer (4th)",
+        boutOpponentKeys: ["B. Brandt", "Brandt", "Brandit"],
+      },
+      {
+        opponentName: "Elijah Sanford",
+        state: "Georgia",
+        credentials: "Georgia State Placer (5th)",
+        boutOpponentKeys: ["E. Sanford", "Sanford"],
+      },
+      {
+        opponentName: "Maddox Mayer",
+        state: "Michigan",
+        credentials: "Michigan State Placer (5th)",
+        boutOpponentKeys: ["M. Mayer", "Mayer"],
+      },
+      {
+        opponentName: "Ethan Miller",
+        state: "Iowa",
+        credentials: "Iowa State Placer (5th)",
+        boutOpponentKeys: ["E. Miller", "Miller"],
+      },
+    ],
+  },
+  {
+    wrestler: "Mason Hocker",
+    weightLabel: "HWT",
+    record: "2-5",
+    summaryBullets: [
+      "Quality win over Florida state qualifier",
+      "Fall vs Jakari Johnson",
+    ],
+    summaryNote:
+      "Mason's quality win at heavyweight came via fall over Florida state qualifier Jakari Johnson at the AAU Scholastic Duals.",
+    wins: [
+      {
+        opponentName: "Jakari Johnson",
+        state: "Florida",
+        credentials: "Florida State Qualifier",
+        boutOpponentKeys: ["J. Johnson", "Jakari Johnson"],
       },
     ],
   },

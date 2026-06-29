@@ -27,6 +27,34 @@ describe("AAU Scholastic Duals 2026 quality wins", () => {
     ])
   })
 
+  it("includes Aiden Burkholder with five curated quality opponents", () => {
+    const aiden = AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS.find((w) => w.wrestler === "Aiden Burkholder")
+    expect(aiden).toBeDefined()
+    expect(aiden!.record).toBe("8-4")
+    expect(aiden!.wins).toHaveLength(5)
+    expect(aiden!.wins.map((w) => w.opponentName)).toEqual([
+      "William Hughes",
+      "Kamden Robinson",
+      "Dylan Presman",
+      "Rhys Truman",
+      "James Sanders",
+    ])
+  })
+
+  it("enriches Aiden Burkholder quality wins with bout results from dual logs", () => {
+    const aiden = enrichAauQualityWins(
+      AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS.find((w) => w.wrestler === "Aiden Burkholder")!,
+    )
+
+    expect(aiden.wins.find((w) => w.opponentName === "William Hughes")?.resultLine).toBe("DEC 8-5")
+    expect(aiden.wins.find((w) => w.opponentName === "Kamden Robinson")?.resultLine).toBe("F 3-0 1:08")
+    expect(aiden.wins.find((w) => w.opponentName === "Kamden Robinson")?.opponentTeam).toBe("Nebraska Magic")
+    expect(aiden.wins.find((w) => w.opponentName === "Dylan Presman")?.resultLine).toBe("MD 17-6")
+    expect(aiden.wins.find((w) => w.opponentName === "Rhys Truman")?.resultLine).toBe("MD 11-2")
+    expect(aiden.wins.find((w) => w.opponentName === "James Sanders")?.resultLine).toBe("DEC 6-3 SV")
+    expect(aiden.wins.every((w) => w.resultLine)).toBe(true)
+  })
+
   it("includes Xan Moody with six curated quality opponents", () => {
     const xan = AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS.find((w) => w.wrestler === "Xan Moody")
     expect(xan).toBeDefined()
@@ -85,6 +113,35 @@ describe("AAU Scholastic Duals 2026 quality wins", () => {
     expect(luke.wins.find((w) => w.opponentName === "Rylan Robbins")?.resultLine).toBe("TF 17-0 5:29")
     expect(luke.wins.find((w) => w.opponentName === "Brandon Wunder")?.resultLine).toBe("F 11-1 2:47")
     expect(luke.wins.every((w) => w.resultLine)).toBe(true)
+  })
+
+  it("includes Paxton Kearns with six curated quality opponents", () => {
+    const paxton = AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS.find((w) => w.wrestler === "Paxton Kearns")
+    expect(paxton).toBeDefined()
+    expect(paxton!.record).toBe("8-4")
+    expect(paxton!.wins).toHaveLength(6)
+    expect(paxton!.wins.map((w) => w.opponentName)).toEqual([
+      "Erik Perez",
+      "Noah Boyer",
+      "Jayden Buehler",
+      "Carter Rivera",
+      "Sieryous Peterson",
+      "Waylon Logue",
+    ])
+  })
+
+  it("enriches Paxton Kearns quality wins with bout results from dual logs", () => {
+    const paxton = enrichAauQualityWins(
+      AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS.find((w) => w.wrestler === "Paxton Kearns")!,
+    )
+
+    expect(paxton.wins.find((w) => w.opponentName === "Erik Perez")?.resultLine).toBe("DEC 10-4")
+    expect(paxton.wins.find((w) => w.opponentName === "Noah Boyer")?.resultLine).toBe("F 9-0 3:34")
+    expect(paxton.wins.find((w) => w.opponentName === "Jayden Buehler")?.resultLine).toBe("TF 18-3 4:08")
+    expect(paxton.wins.find((w) => w.opponentName === "Carter Rivera")?.resultLine).toBe("DEC 8-3")
+    expect(paxton.wins.find((w) => w.opponentName === "Sieryous Peterson")?.resultLine).toBe("DEC 4-1")
+    expect(paxton.wins.find((w) => w.opponentName === "Waylon Logue")?.resultLine).toBe("MD 14-0")
+    expect(paxton.wins.every((w) => w.resultLine)).toBe(true)
   })
 
   it("enriches Mac quality wins with bout results from dual logs", () => {
@@ -256,19 +313,100 @@ describe("AAU Scholastic Duals 2026 quality wins", () => {
     expect(luke.wins.every((w) => w.resultLine)).toBe(true)
   })
 
+  it("includes Gavin Lopez with six curated quality opponents", () => {
+    const gavin = AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS.find((w) => w.wrestler === "Gavin Lopez")
+    expect(gavin).toBeDefined()
+    expect(gavin!.record).toBe("10-2")
+    expect(gavin!.wins).toHaveLength(6)
+    expect(gavin!.wins.map((w) => w.opponentName)).toEqual([
+      "Kaden Updike",
+      "Zachary White",
+      "Brody Brandt",
+      "Elijah Sanford",
+      "Maddox Mayer",
+      "Ethan Miller",
+    ])
+  })
+
+  it("enriches Gavin Lopez quality wins with bout results from dual logs", () => {
+    const gavin = enrichAauQualityWins(
+      AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS.find((w) => w.wrestler === "Gavin Lopez")!,
+    )
+
+    expect(gavin.wins.find((w) => w.opponentName === "Kaden Updike")?.resultLine).toBe("F 5-0 2:39")
+    expect(gavin.wins.find((w) => w.opponentName === "Zachary White")?.resultLine).toBe("F 16-3 3:53")
+    expect(gavin.wins.find((w) => w.opponentName === "Brody Brandt")?.resultLine).toBe("MD 15-3")
+    expect(gavin.wins.find((w) => w.opponentName === "Elijah Sanford")?.resultLine).toBe("TF 20-4 1:50")
+    expect(gavin.wins.find((w) => w.opponentName === "Maddox Mayer")?.resultLine).toBe("DEC 7-1")
+    expect(gavin.wins.find((w) => w.opponentName === "Ethan Miller")?.resultLine).toBe("DEC 6-4")
+    expect(gavin.wins.every((w) => w.resultLine)).toBe(true)
+  })
+
+  it("includes Tobin McNair with six curated quality opponents", () => {
+    const tobin = AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS.find((w) => w.wrestler === "Tobin McNair")
+    expect(tobin).toBeDefined()
+    expect(tobin!.record).toBe("10-2")
+    expect(tobin!.wins).toHaveLength(6)
+    expect(tobin!.wins.map((w) => w.opponentName)).toEqual([
+      "Eli Homan",
+      "Brenden Ging",
+      "Zane Willobee",
+      "Tyler Grey",
+      "Leo Foreman",
+      "Konstantin Khaspekian",
+    ])
+  })
+
+  it("enriches Tobin McNair quality wins with bout results from dual logs", () => {
+    const tobin = enrichAauQualityWins(
+      AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS.find((w) => w.wrestler === "Tobin McNair")!,
+    )
+
+    expect(tobin.wins.find((w) => w.opponentName === "Eli Homan")?.resultLine).toBe("MD 19-8")
+    expect(tobin.wins.find((w) => w.opponentName === "Brenden Ging")?.resultLine).toBe("F 4-7 2:51")
+    expect(tobin.wins.find((w) => w.opponentName === "Zane Willobee")?.resultLine).toBe("F 4-0 3:33")
+    expect(tobin.wins.find((w) => w.opponentName === "Tyler Grey")?.resultLine).toBe("F 12-3 5:05")
+    expect(tobin.wins.find((w) => w.opponentName === "Leo Foreman")?.resultLine).toBe("F 5-3 5:44")
+    expect(tobin.wins.find((w) => w.opponentName === "Konstantin Khaspekian")?.resultLine).toBe("DEC 1-0")
+    expect(tobin.wins.every((w) => w.resultLine)).toBe(true)
+  })
+
+  it("includes Mason Hocker with one curated quality opponent", () => {
+    const mason = AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS.find((w) => w.wrestler === "Mason Hocker")
+    expect(mason).toBeDefined()
+    expect(mason!.record).toBe("2-5")
+    expect(mason!.wins).toHaveLength(1)
+    expect(mason!.wins[0]!.opponentName).toBe("Jakari Johnson")
+  })
+
+  it("enriches Mason Hocker quality wins with bout results from dual logs", () => {
+    const mason = enrichAauQualityWins(
+      AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS.find((w) => w.wrestler === "Mason Hocker")!,
+    )
+
+    expect(mason.wins.find((w) => w.opponentName === "Jakari Johnson")?.resultLine).toBe("F 2-10 3:04")
+    expect(mason.wins.find((w) => w.opponentName === "Jakari Johnson")?.opponentTeam).toBe("Lugo Wrestling Club")
+    expect(mason.wins.every((w) => w.resultLine)).toBe(true)
+  })
+
   it("returns enriched entries for public page", () => {
     const entries = getAauScholasticQualityWinsEnriched()
-    expect(entries.length).toBe(9)
+    expect(entries.length).toBe(14)
     expect(entries.map((e) => e.wrestler)).toEqual([
       "Xan Moody",
+      "Aiden Burkholder",
       "Luke Richards",
+      "Paxton Kearns",
       "Mac Johnson",
       "Tye Johnson",
       "Jake Amiott",
       "Jacob Perry",
       "Aaron Ellison",
+      "Tobin McNair",
       "Fares Alkurdasi",
       "Luke Padgett",
+      "Gavin Lopez",
+      "Mason Hocker",
     ])
   })
 })
