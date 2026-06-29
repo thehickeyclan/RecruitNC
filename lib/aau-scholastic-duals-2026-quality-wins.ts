@@ -136,6 +136,52 @@ export const AAU_SCHOLASTIC_DUALS_2026_QUALITY_WINS: AauScholasticWrestlerQualit
       },
     ],
   },
+  {
+    wrestler: "Luke Padgett",
+    weightLabel: "190+5",
+    record: "9-3",
+    summaryBullets: [
+      "5 State placers",
+      "Nebraska state runner-up",
+      "Michigan state runner-up",
+      "Florida state 3rd place",
+      "Missouri & Iowa state placers",
+    ],
+    summaryNote:
+      "Luke's quality wins at 190 included placers from Missouri, Nebraska, Florida, Michigan, and Iowa — including Nebraska and Michigan state runners-up.",
+    wins: [
+      {
+        opponentName: "Aiden Timberman",
+        state: "Missouri",
+        credentials: "Missouri State 4th place",
+        boutOpponentKeys: ["A. Timberman", "Timberman"],
+      },
+      {
+        opponentName: "Griffin Bergen",
+        state: "Nebraska",
+        credentials: "Nebraska State 2nd place",
+        boutOpponentKeys: ["G. Bergen", "Bergen"],
+      },
+      {
+        opponentName: "Landon Dickerson",
+        state: "Florida",
+        credentials: "Florida State 3rd place",
+        boutOpponentKeys: ["L. Dickerson", "Dickerson"],
+      },
+      {
+        opponentName: "Zachary Miracle",
+        state: "Michigan",
+        credentials: "Michigan State 2nd place",
+        boutOpponentKeys: ["Z. Miracle", "Miracle"],
+      },
+      {
+        opponentName: "Philip Jacobs",
+        state: "Iowa",
+        credentials: "Iowa State 8th place",
+        boutOpponentKeys: ["P. Jacobs", "Jacobs"],
+      },
+    ],
+  },
 ]
 
 function boutKeyMatches(boutAbbrev: string, keys: string[]): boolean {
