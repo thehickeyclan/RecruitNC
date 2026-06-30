@@ -23,7 +23,11 @@ export default function TocConfirmPage() {
             Confirm your spot
           </TocVarsityHeading>
           <p className={`text-white/80 text-lg max-w-2xl ${tocDisplayClass()}`}>
-            Look yourself up on RecruitNC. Verify your profile. Lock in your weight and jacket size.
+            For invited athletes only. Look up your RecruitNC profile, verify it, and lock in weight and jacket size.
+          </p>
+          <p className="mt-3 text-white/55 text-sm max-w-2xl">
+            Not on the list yet? Your coach or NC United sends the invite first — then search works, or use the link in
+            your email.
           </p>
         </div>
         <TocPatrioticBar />

@@ -28,8 +28,9 @@ describe("parseAthleteWeightClass", () => {
 })
 
 describe("defaultTocWeightForAthlete", () => {
-  it("falls back to 149 when profile weight is not a TOC class", () => {
-    expect(defaultTocWeightForAthlete("160")).toBe(149)
+  it("uses nearest TOC class when profile weight is not exact", () => {
+    expect(defaultTocWeightForAthlete("160")).toBe(157)
+    expect(defaultTocWeightForAthlete("157")).toBe(157)
   })
 })
 

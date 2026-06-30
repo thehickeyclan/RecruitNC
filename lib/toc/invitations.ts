@@ -67,8 +67,41 @@ export function parseAthleteWeightClass(value: string | number | null | undefine
   return TOC_WEIGHT_CLASSES.includes(n as (typeof TOC_WEIGHT_CLASSES)[number]) ? n : null
 }
 
+/** Nearest TOC bracket when profile weight is missing or not an exact college class. */
+export function suggestTocInviteWeight(weightclass: string | number | null | undefined): number {
+  const exact = parseAthleteWeightClass(weightclass)
+  if (exact != null) return exact
+
+  const n =
+    typeof weightclass === "number"
+      ? weightclass
+      : parseInt(String(weightclass ?? "").replace(/[^\d]/g, ""), 10)
+  if (!Number.isFinite(n)) return TOC_WEIGHT_CLASSES[4]
+
+  return TOC_WEIGHT_CLASSES.reduce((best, w) => (Math.abs(w - n) < Math.abs(best - n) ? w : best))
+}
+
+export function tocWeightProfileHint(
+  weightclass: string | number | null | undefined,
+  invitedWeight: number,
+): string {
+  const profileNum = parseInt(String(weightclass ?? "").replace(/[^\d]/g, ""), 10)
+  if (!Number.isFinite(profileNum)) {
+    return "No weight on their RecruitNC profile — you pick the TOC bracket for this invite."
+  }
+  const exact = parseAthleteWeightClass(weightclass)
+  if (exact != null) {
+    return `RecruitNC profile: ${exact} lbs (exact TOC class).`
+  }
+  const suggested = suggestTocInviteWeight(weightclass)
+  if (invitedWeight === suggested) {
+    return `RecruitNC profile: ${profileNum} lbs — not a TOC class; defaulting to nearest bracket (${suggested} lbs). Change if needed.`
+  }
+  return `RecruitNC profile: ${profileNum} lbs — you chose ${invitedWeight} lbs for this invite.`
+}
+
 export function defaultTocWeightForAthlete(weightclass: string | number | null | undefined): number {
-  return parseAthleteWeightClass(weightclass) ?? TOC_WEIGHT_CLASSES[4]
+  return suggestTocInviteWeight(weightclass)
 }
 
 export function athleteDisplayClub(row: Record<string, unknown>): string | null {

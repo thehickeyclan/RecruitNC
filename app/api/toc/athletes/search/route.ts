@@ -41,7 +41,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Search unavailable" }, { status: 500 })
     }
 
-    const athletes = (rows ?? [])
+    const invitedRows = rows ?? []
+    const athletes = invitedRows
       .map((row) => {
         const inv = row as InvitationJoinRow
         const athleteRaw = Array.isArray(inv.athletes) ? inv.athletes[0] : inv.athletes
@@ -64,7 +65,7 @@ export async function GET(request: Request) {
       .sort((a, b) => a.name.localeCompare(b.name))
       .slice(0, limit)
 
-    return NextResponse.json({ athletes })
+    return NextResponse.json({ athletes, invitedCount: invitedRows.length })
   } catch (e) {
     console.error("[toc/athletes/search]", e)
     return NextResponse.json({ error: "Server error" }, { status: 500 })

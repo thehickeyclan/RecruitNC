@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/admin-auth"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { sendTocAthleteInviteEmail } from "@/lib/toc/email"
+import { buildTocAthleteInviteMessage } from "@/lib/toc/invite-message"
 import { confirmPageUrl, resolveAthleteNotificationEmails } from "@/lib/toc/invitation-service"
 import { tocAdminInviteSchema } from "@/lib/toc/invitations"
 
@@ -108,28 +109,35 @@ export async function POST(request: Request) {
       invitationId = inserted.id
     }
 
+    const athleteName = String(athlete.name ?? "Athlete")
+    const confirmUrl = confirmPageUrl(athleteId)
+    const share = buildTocAthleteInviteMessage({ athleteName, weightClass, confirmUrl })
+
     if (sendEmail) {
       const emails = await resolveAthleteNotificationEmails(admin, athleteId, athlete as Record<string, unknown>)
       if (emails.length === 0) {
         return NextResponse.json({
           ok: true,
           id: invitationId,
-          warning: "Invitation saved but no athlete/parent email on file — share confirm link manually.",
-          confirmUrl: confirmPageUrl(athleteId),
+          warning: "Invitation saved but no athlete/parent email on file — copy the text or link below and send manually.",
+          confirmUrl,
+          share,
         })
       }
       void sendTocAthleteInviteEmail({
         to: emails,
-        athleteName: String(athlete.name ?? "Athlete"),
+        athleteName,
         weightClass,
-        confirmUrl: confirmPageUrl(athleteId),
+        confirmUrl,
       })
     }
 
     return NextResponse.json({
       ok: true,
       id: invitationId,
-      confirmUrl: confirmPageUrl(athleteId),
+      confirmUrl,
+      share,
+      emailed: Boolean(sendEmail),
     })
   } catch (e) {
     console.error("[admin/toc/invitations]", e)

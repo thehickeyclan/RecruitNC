@@ -1,4 +1,6 @@
 import { TOC_CONTACT_EMAIL, TOC_EVENT_DATES_DISPLAY, TOC_SATURDAY_COMPETITION_DATE } from "@/lib/toc/constants"
+import { buildTocAthleteInviteMessage } from "@/lib/toc/invite-message"
+import { firstNameFromAthleteName } from "@/lib/toc/invitations"
 
 const FROM = `NC Wrestling United <${TOC_CONTACT_EMAIL}>`
 
@@ -152,8 +154,8 @@ export async function sendTocAthleteInviteEmail(payload: {
   weightClass: number
   confirmUrl: string
 }): Promise<void> {
-  const firstName = payload.athleteName.trim().split(/\s+/)[0] || payload.athleteName
-  const subject = "You're invited — NC United Tournament of Champions"
+  const firstName = firstNameFromAthleteName(payload.athleteName)
+  const { subject } = buildTocAthleteInviteMessage(payload)
   const body = `<p>${firstName} —</p>
 <p>This isn't a registration link. It's an <strong>invitation</strong>.</p>
 <p>The NC United Tournament of Champions is invite-only — eight wrestlers per weight, the best this state has at <strong>${payload.weightClass} lbs</strong>. We built the field by hand, and your name is on it.</p>

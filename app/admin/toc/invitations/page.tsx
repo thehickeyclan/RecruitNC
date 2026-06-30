@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -9,8 +9,12 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import { Checkbox } from "@/components/ui/checkbox"
+import { TocInviteShareCard } from "@/components/toc/admin/toc-invite-share-card"
 import { ArrowLeft, Loader2, RefreshCw, Send } from "lucide-react"
-import { formatTocGradYear } from "@/lib/toc/invitations"
+import { buildTocAthleteInviteMessage, type TocInviteMessage } from "@/lib/toc/invite-message"
+import { confirmPageUrl } from "@/lib/toc/invitation-service"
+import { formatTocGradYear, suggestTocInviteWeight, tocWeightProfileHint } from "@/lib/toc/invitations"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 
 type SearchAthlete = {
@@ -42,8 +46,20 @@ export default function TocInvitationsAdminPage() {
   const [searchLoading, setSearchLoading] = useState(false)
   const [selectedAthlete, setSelectedAthlete] = useState<SearchAthlete | null>(null)
   const [inviteWeight, setInviteWeight] = useState(String(TOC_WEIGHT_CLASSES[4]))
+  const [sendEmail, setSendEmail] = useState(true)
   const [sending, setSending] = useState(false)
   const [inviteMessage, setInviteMessage] = useState<string | null>(null)
+  const [lastShare, setLastShare] = useState<TocInviteMessage | null>(null)
+  const [expandedShareId, setExpandedShareId] = useState<string | null>(null)
+
+  const previewShare = useMemo(() => {
+    if (!selectedAthlete) return null
+    return buildTocAthleteInviteMessage({
+      athleteName: selectedAthlete.name,
+      weightClass: Number(inviteWeight),
+      athleteId: selectedAthlete.id,
+    })
+  }, [selectedAthlete, inviteWeight])
 
   const loadInvitations = useCallback(async () => {
     setLoading(true)
@@ -86,6 +102,7 @@ export default function TocInvitationsAdminPage() {
     if (!selectedAthlete) return
     setSending(true)
     setInviteMessage(null)
+    setLastShare(null)
     try {
       const res = await fetch("/api/admin/toc/invitations", {
         method: "POST",
@@ -93,12 +110,22 @@ export default function TocInvitationsAdminPage() {
         body: JSON.stringify({
           athleteId: selectedAthlete.id,
           weightClass: Number(inviteWeight),
-          sendEmail: true,
+          sendEmail,
         }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || data.warning || "Failed to invite")
-      setInviteMessage(data.warning ?? `Invitation sent. Confirm link: ${data.confirmUrl}`)
+      if (!res.ok) throw new Error(data.error || "Failed to invite")
+
+      if (data.share) setLastShare(data.share as TocInviteMessage)
+
+      if (data.warning) {
+        setInviteMessage(data.warning)
+      } else if (data.emailed) {
+        setInviteMessage(`Invitation saved and email sent to athlete/parent on file.`)
+      } else {
+        setInviteMessage(`Invitation saved — copy the text or link below and send manually.`)
+      }
+
       setSelectedAthlete(null)
       setSearchQuery("")
       void loadInvitations()
@@ -108,6 +135,13 @@ export default function TocInvitationsAdminPage() {
       setSending(false)
     }
   }
+
+  const shareForRow = (row: InvitationRow): TocInviteMessage =>
+    buildTocAthleteInviteMessage({
+      athleteName: row.athletes?.name ?? "Athlete",
+      weightClass: row.weight_class,
+      confirmUrl: confirmPageUrl(row.athlete_id),
+    })
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -120,7 +154,7 @@ export default function TocInvitationsAdminPage() {
           </Button>
           <div>
             <h1 className="text-2xl font-bold">TOC invitations</h1>
-            <p className="text-sm text-muted-foreground">Issue invites and track confirmed field</p>
+            <p className="text-sm text-muted-foreground">Preview, send, or copy invite text for athletes</p>
           </div>
         </div>
         <Button variant="outline" size="sm" onClick={() => void loadInvitations()} disabled={loading}>
@@ -143,6 +177,7 @@ export default function TocInvitationsAdminPage() {
                 onChange={(e) => {
                   setSearchQuery(e.target.value)
                   setSelectedAthlete(null)
+                  setLastShare(null)
                 }}
                 placeholder="Type name…"
               />
@@ -158,6 +193,8 @@ export default function TocInvitationsAdminPage() {
                           setSelectedAthlete(a)
                           setSearchQuery(a.name)
                           setSearchResults([])
+                          setLastShare(null)
+                          setInviteWeight(String(suggestTocInviteWeight(a.weightclass)))
                         }}
                       >
                         <span className="font-medium">{a.name}</span>
@@ -170,32 +207,54 @@ export default function TocInvitationsAdminPage() {
                 </ul>
               ) : null}
             </div>
-            <div className="space-y-2">
-              <Label>Invited weight class</Label>
-              <Select value={inviteWeight} onValueChange={setInviteWeight}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {TOC_WEIGHT_CLASSES.map((w) => (
-                    <SelectItem key={w} value={String(w)}>
-                      {w} lbs
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <Label>Invited weight class</Label>
+                <Select value={inviteWeight} onValueChange={setInviteWeight}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TOC_WEIGHT_CLASSES.map((w) => (
+                      <SelectItem key={w} value={String(w)}>
+                        {w} lbs
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selectedAthlete ? (
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {tocWeightProfileHint(selectedAthlete.weightclass, Number(inviteWeight))}
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    You choose the bracket — usually their RecruitNC profile weight or the closest college class.
+                  </p>
+                )}
+              </div>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <Checkbox checked={sendEmail} onCheckedChange={(v) => setSendEmail(v === true)} />
+                Send email automatically (athlete/parent email on file)
+              </label>
               <Button
                 type="button"
-                className="mt-2 bg-[#002147]"
+                className="bg-[#002147]"
                 disabled={!selectedAthlete || sending}
                 onClick={() => void sendInvite()}
               >
                 {sending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
-                Send invitation
+                Issue invitation
               </Button>
             </div>
           </div>
-          {inviteMessage ? <p className="text-sm text-muted-foreground break-all">{inviteMessage}</p> : null}
+
+          {previewShare && selectedAthlete ? (
+            <TocInviteShareCard share={previewShare} title={`Preview for ${selectedAthlete.name}`} />
+          ) : null}
+
+          {inviteMessage ? <p className="text-sm font-medium text-[#002147]">{inviteMessage}</p> : null}
+
+          {lastShare ? <TocInviteShareCard share={lastShare} title="Copy and send manually" /> : null}
         </CardContent>
       </Card>
 
@@ -205,7 +264,7 @@ export default function TocInvitationsAdminPage() {
         <CardHeader>
           <CardTitle className="text-lg">All invitations ({invitations.length})</CardTitle>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
+        <CardContent className="overflow-x-auto space-y-4">
           <Table>
             <TableHeader>
               <TableRow>
@@ -216,6 +275,7 @@ export default function TocInvitationsAdminPage() {
                 <TableHead>Jacket</TableHead>
                 <TableHead>Invited</TableHead>
                 <TableHead>Confirmed</TableHead>
+                <TableHead className="text-right">Share</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -234,17 +294,34 @@ export default function TocInvitationsAdminPage() {
                   <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                     {row.confirmed_at ? new Date(row.confirmed_at).toLocaleDateString() : "—"}
                   </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs"
+                      onClick={() => setExpandedShareId(expandedShareId === row.id ? null : row.id)}
+                    >
+                      {expandedShareId === row.id ? "Hide" : "Copy invite"}
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
               {!loading && invitations.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                     No invitations yet
                   </TableCell>
                 </TableRow>
               ) : null}
             </TableBody>
           </Table>
+
+          {expandedShareId ? (() => {
+            const row = invitations.find((r) => r.id === expandedShareId)
+            if (!row) return null
+            return <TocInviteShareCard share={shareForRow(row)} title="Invite copy" compact />
+          })() : null}
         </CardContent>
       </Card>
     </div>
