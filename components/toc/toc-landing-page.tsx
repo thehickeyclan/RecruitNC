@@ -32,7 +32,7 @@ export function TocLandingPage({ config, confirmedColleges }: Props) {
   return (
     <div className="min-h-screen bg-white overflow-x-hidden">
       {/* Hook */}
-      <TocHero config={config} />
+      <TocHero config={config} confirmedColleges={confirmedColleges} />
       <TocQuickFacts />
       <TocStorySection />
 
@@ -49,7 +49,7 @@ export function TocLandingPage({ config, confirmedColleges }: Props) {
       <TocSpectatorsSection />
       <TocOfficialsSection />
       <TocStreamingSection config={config} />
-      <TocRecruitingSection confirmedColleges={confirmedColleges} />
+      <TocRecruitingSection />
 
       {/* Press + signup */}
       <TocMediaSection />

@@ -4,8 +4,8 @@ import type { TocConfirmedCollege } from "@/lib/toc/confirmed-colleges"
 
 type Props = {
   colleges: TocConfirmedCollege[]
-  /** `section` — recruiting block on landing. `hero` — compact strip on confirm page. */
-  variant?: "section" | "hero"
+  /** `banner` — top of landing hero. `section` — recruiting block. `hero` — confirm page. */
+  variant?: "banner" | "section" | "hero"
 }
 
 function TocCollegeLogoGrid({
@@ -57,6 +57,20 @@ function TocCollegeLogoGrid({
 /** Static, confirmed-only college strip — no ticker until the field is large enough to warrant it. */
 export function TocCollegeAttendees({ colleges, variant = "section" }: Props) {
   if (colleges.length === 0) return null
+
+  if (variant === "banner") {
+    return (
+      <div id="colleges" className="scroll-mt-20 pt-8 sm:pt-10 border-t border-white/12">
+        <p className="text-[#CC0000] text-[10px] sm:text-xs tracking-[0.18em] uppercase font-semibold">
+          College programs confirmed on site
+        </p>
+        <p className="mt-1.5 text-sm text-white/60 max-w-2xl">
+          Coaches and staff from these programs will be in the building Saturday — compete where they&apos;re watching.
+        </p>
+        <TocCollegeLogoGrid colleges={colleges} compact />
+      </div>
+    )
+  }
 
   if (variant === "hero") {
     return (

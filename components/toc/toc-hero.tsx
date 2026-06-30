@@ -1,18 +1,22 @@
 "use client"
 
 import Image from "next/image"
+import { TocCollegeAttendees } from "@/components/toc/toc-college-attendees"
 import { TocAiRenderingCaption } from "@/components/toc/toc-ai-rendering-caption"
 import { TocCountdown } from "@/components/toc/toc-countdown"
 import { TocPatrioticBar, tocDisplayClass, tocMobileCtaClass } from "@/components/toc/toc-theme"
 import { TOC_EVENT_DATE, TOC_HERO_DATES } from "@/lib/toc/constants"
 import { TOC_HERO } from "@/lib/toc/marketing-copy"
+import type { TocConfirmedCollege } from "@/lib/toc/confirmed-colleges"
 import type { TocEventConfig } from "@/lib/toc/event-config"
 
 type Props = {
   config: TocEventConfig
+  confirmedColleges?: TocConfirmedCollege[]
 }
 
 const SECONDARY_LINKS = [
+  { href: "#colleges", label: "Colleges" },
   { href: "#weights", label: "Weights" },
   { href: "/tournament-of-champions/brackets", label: "Brackets" },
   { href: "#venue", label: "Venue" },
@@ -21,7 +25,7 @@ const SECONDARY_LINKS = [
   { href: "#sponsors", label: "Sponsorship" },
 ] as const
 
-export function TocHero({ config }: Props) {
+export function TocHero({ config, confirmedColleges = [] }: Props) {
   const ctaHref = config.hero_primary_cta_href.startsWith("#")
     ? config.hero_primary_cta_href
     : config.hero_primary_cta_href
@@ -101,6 +105,8 @@ export function TocHero({ config }: Props) {
               <TocAiRenderingCaption variant="dark" />
             </div>
           </div>
+
+          <TocCollegeAttendees colleges={confirmedColleges} variant="banner" />
         </div>
         <TocPatrioticBar />
       </div>

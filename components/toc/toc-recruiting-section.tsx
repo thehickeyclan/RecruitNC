@@ -1,13 +1,7 @@
-import { TocCollegeAttendees } from "@/components/toc/toc-college-attendees"
 import { TocPatrioticBar, TocVarsityHeading } from "@/components/toc/toc-theme"
 import { TOC_CONTACT_EMAIL } from "@/lib/toc/constants"
-import type { TocConfirmedCollege } from "@/lib/toc/confirmed-colleges"
 
-type Props = {
-  confirmedColleges?: TocConfirmedCollege[]
-}
-
-export function TocRecruitingSection({ confirmedColleges = [] }: Props) {
+export function TocRecruitingSection() {
   return (
     <section className="py-16 bg-[#0B1D3A] text-white relative">
       <div className="container mx-auto px-4 max-w-5xl">
@@ -32,9 +26,15 @@ export function TocRecruitingSection({ confirmedColleges = [] }: Props) {
             </li>
           ))}
         </ul>
-        <TocCollegeAttendees colleges={confirmedColleges} />
+        <p className="mt-8 text-sm text-white/70 border-l-4 border-[#CC0000]/60 pl-4">
+          Confirmed college programs are listed at the{" "}
+          <a href="#colleges" className="text-white underline hover:text-[#CC0000]">
+            top of this page
+          </a>
+          .
+        </p>
 
-        <p className="mt-8 text-sm text-white/55">
+        <p className="mt-6 text-sm text-white/55">
           College programs: email{" "}
           <a href={`mailto:${TOC_CONTACT_EMAIL}`} className="text-white underline hover:text-[#CC0000]">
             {TOC_CONTACT_EMAIL}
