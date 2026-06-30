@@ -27,16 +27,22 @@ export default async function TocConfirmSuccessPage({ searchParams }: Props) {
           You&apos;re in.
         </TocVarsityHeading>
         <p className={`text-2xl sm:text-3xl text-white/90 mb-6 ${tocDisplayClass()}`}>Welcome to the field.</p>
-        <p className="text-white/75 text-base sm:text-lg leading-relaxed max-w-xl mx-auto mb-10">
-          We sent a confirmation email with your weight class and event details. Your spot is reserved — pay{" "}
-          {formatTocRegistrationFee()} registration by {registrationPaymentDueDisplay()} to lock in bracket entry.
+        <p className="text-white/75 text-base sm:text-lg leading-relaxed max-w-xl mx-auto mb-4">
+          Your spot is locked in. We sent a confirmation email with your weight class and event details.
+        </p>
+        <p className="text-white/55 text-sm max-w-xl mx-auto mb-10">
+          Registration fee ({formatTocRegistrationFee()} by {registrationPaymentDueDisplay()}) is not due today —{" "}
+          <a href={payHref} className="text-white underline hover:text-[#CC0000]">
+            pay when you&apos;re ready
+          </a>
+          .
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <HardLink href={payHref} className={tocMobileCtaClass("primary")}>
-            Pay {formatTocRegistrationFee()} now
-          </HardLink>
-          <HardLink href="/tournament-of-champions/brackets" className={tocMobileCtaClass("secondary")}>
+          <HardLink href="/tournament-of-champions/brackets" className={tocMobileCtaClass("primary")}>
             View brackets
+          </HardLink>
+          <HardLink href="/tournament-of-champions" className={tocMobileCtaClass("secondary")}>
+            Event page
           </HardLink>
         </div>
       </div>

@@ -92,7 +92,7 @@ export function TocConfirmFlow() {
           invitedWeightClass={profile.invitation.weightClass}
           onSuccess={() =>
             router.push(
-              `/tournament-of-champions/register/pay?athlete=${encodeURIComponent(profile.athlete.id)}`,
+              `/tournament-of-champions/confirm/success?athlete=${encodeURIComponent(profile.athlete.id)}`,
             )
           }
         />

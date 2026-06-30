@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import { requireAdmin } from "@/lib/admin-auth"
-import { createAdminClient } from "@/lib/supabase/admin"
+import { createAdminClientFresh } from "@/lib/supabase/admin"
 import { TOC_MAX_CONFIRMED_PER_WEIGHT } from "@/lib/toc/invitations"
+import { tocInvitationsRlsHelp } from "@/lib/toc/supabase-rls"
 
 export const dynamic = "force-dynamic"
 
@@ -28,7 +29,7 @@ export async function PATCH(request: Request, { params }: Params) {
       return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, { status: 400 })
     }
 
-    const admin = createAdminClient()
+    const admin = createAdminClientFresh()
     const { data: existing, error: findError } = await admin
       .from("toc_invitations")
       .select("id, weight_class, status, seed")
@@ -37,6 +38,10 @@ export async function PATCH(request: Request, { params }: Params) {
 
     if (findError) {
       console.error("[admin/toc/invitations/[id]]", findError)
+      const rlsHelp = tocInvitationsRlsHelp(findError)
+      if (rlsHelp) {
+        return NextResponse.json({ error: rlsHelp, rlsBlocked: true }, { status: 503 })
+      }
       return NextResponse.json({ error: findError.message }, { status: 500 })
     }
     if (!existing) {
@@ -78,6 +83,10 @@ export async function PATCH(request: Request, { params }: Params) {
 
     if (updateError) {
       console.error("[admin/toc/invitations/[id]]", updateError)
+      const rlsHelp = tocInvitationsRlsHelp(updateError)
+      if (rlsHelp) {
+        return NextResponse.json({ error: rlsHelp, rlsBlocked: true }, { status: 503 })
+      }
       return NextResponse.json({ error: updateError.message }, { status: 500 })
     }
 

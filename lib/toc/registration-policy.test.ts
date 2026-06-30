@@ -6,7 +6,7 @@ import {
   isConfirmPastDeadline,
   isRegistrationPaymentPastDue,
   registrationPaymentDueDisplay,
-  tocInviteRegistrationLines,
+  tocInviteConfirmLines,
 } from "@/lib/toc/registration-policy"
 
 describe("toc registration policy", () => {
@@ -21,10 +21,11 @@ describe("toc registration policy", () => {
     expect(isRegistrationPaymentPastDue(new Date(2026, 7, 2, 12, 0, 0))).toBe(true)
   })
 
-  it("includes fee and deadlines in invite lines", () => {
-    const lines = tocInviteRegistrationLines()
+  it("invite lines ask for verbal confirm only (no payment in email)", () => {
+    const lines = tocInviteConfirmLines()
     expect(lines.join(" ")).toContain(String(TOC_CONFIRM_WITHIN_DAYS))
-    expect(lines.join(" ")).toContain(formatTocRegistrationFee())
-    expect(lines.join(" ")).toContain("August 1, 2026")
+    expect(lines.join(" ")).toContain("verbal yes")
+    expect(lines.join(" ")).not.toContain(formatTocRegistrationFee())
+    expect(lines.join(" ")).not.toContain("August 1, 2026")
   })
 })

@@ -6,7 +6,7 @@ import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass } from "@/component
 import { resolveTocConfirmedColleges } from "@/lib/toc/confirmed-colleges"
 import { getTocEventConfig } from "@/lib/toc/event-config"
 import { TOC_HERO_DATES } from "@/lib/toc/constants"
-import { TOC_CONFIRM_WITHIN_DAYS, formatTocRegistrationFee, registrationPaymentDueDisplay } from "@/lib/toc/registration-policy"
+import { TOC_CONFIRM_WITHIN_DAYS } from "@/lib/toc/registration-policy"
 
 export const dynamic = "force-dynamic"
 
@@ -35,10 +35,8 @@ export default async function TocConfirmPage() {
             For invited athletes only. Look up your RecruitNC profile, verify it, and lock in weight and jacket size.
           </p>
           <p className="mt-3 text-white/55 text-sm max-w-2xl">
-            Confirm within <strong className="text-white/75">{TOC_CONFIRM_WITHIN_DAYS} days</strong> of your invite.
-            {" "}
-            <strong className="text-white/75">{formatTocRegistrationFee()}</strong> registration due by{" "}
-            <strong className="text-white/75">{registrationPaymentDueDisplay()}</strong>.
+            Confirm within <strong className="text-white/75">{TOC_CONFIRM_WITHIN_DAYS} days</strong> of your invite — that&apos;s your verbal yes.{" "}
+            <strong className="text-white/75">No payment required today.</strong> Fee details are on the form below if you want to pay later.
           </p>
           <p className="mt-3 text-white/55 text-sm max-w-2xl">
             Not on the list yet? Your coach or NC United sends the invite first — then search works, or use the link in

@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/admin-auth"
-import { createAdminClient } from "@/lib/supabase/admin"
+import { createAdminClientFresh } from "@/lib/supabase/admin"
 import { sendTocAthleteInviteEmail } from "@/lib/toc/email"
 import { buildTocAthleteInviteMessage } from "@/lib/toc/invite-message"
 import { confirmPageUrl, resolveAthleteNotificationEmails } from "@/lib/toc/invitation-service"
 import { tocAdminInviteSchema } from "@/lib/toc/invitations"
+import { tocInvitationsRlsHelp } from "@/lib/toc/supabase-rls"
 
 export const dynamic = "force-dynamic"
 
@@ -14,7 +15,7 @@ export async function GET() {
     return NextResponse.json({ error: auth.error }, { status: auth.status })
   }
 
-  const admin = createAdminClient()
+  const admin = createAdminClientFresh()
   const { data, error } = await admin
     .from("toc_invitations")
     .select("*, athletes(id, name, highschool, graduationyear)")
@@ -33,6 +34,10 @@ export async function GET() {
         },
         { status: 503 },
       )
+    }
+    const rlsHelp = tocInvitationsRlsHelp(error)
+    if (rlsHelp) {
+      return NextResponse.json({ error: rlsHelp, rlsBlocked: true }, { status: 503 })
     }
     console.error("[admin/toc/invitations]", error)
     return NextResponse.json({ error: error.message }, { status: 500 })
@@ -55,7 +60,7 @@ export async function POST(request: Request) {
     }
 
     const { athleteId, weightClass, notes, sendEmail } = parsed.data
-    const admin = createAdminClient()
+    const admin = createAdminClientFresh()
 
     const { data: athlete, error: athleteError } = await admin.from("athletes").select("*").eq("id", athleteId).maybeSingle()
     if (athleteError || !athlete) {
@@ -91,6 +96,10 @@ export async function POST(request: Request) {
 
       if (updateError) {
         console.error("[admin/toc/invitations]", updateError)
+        const rlsHelp = tocInvitationsRlsHelp(updateError)
+        if (rlsHelp) {
+          return NextResponse.json({ error: rlsHelp, rlsBlocked: true }, { status: 503 })
+        }
         return NextResponse.json({ error: updateError.message }, { status: 500 })
       }
       invitationId = updated.id
@@ -111,6 +120,10 @@ export async function POST(request: Request) {
         console.error("[admin/toc/invitations]", insertError)
         if (insertError.code === "42P01") {
           return NextResponse.json({ error: "Run toc-phase-1 SQL in Supabase first." }, { status: 503 })
+        }
+        const rlsHelp = tocInvitationsRlsHelp(insertError)
+        if (rlsHelp) {
+          return NextResponse.json({ error: rlsHelp, rlsBlocked: true }, { status: 503 })
         }
         return NextResponse.json({ error: insertError.message }, { status: 500 })
       }

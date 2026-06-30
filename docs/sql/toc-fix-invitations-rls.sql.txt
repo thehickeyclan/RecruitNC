@@ -1,0 +1,9 @@
+-- Fix admin TOC invitations: 42501 row-level security on insert/update
+-- Run in Supabase SQL Editor if /api/admin/toc/invitations fails with code 42501.
+--
+-- Also verify Vercel → SUPABASE_SERVICE_ROLE_KEY is the service_role key
+-- (Supabase Dashboard → Settings → API), NOT the anon/public key.
+
+drop policy if exists "Service role full toc_invitations" on public.toc_invitations;
+create policy "Service role full toc_invitations"
+  on public.toc_invitations for all to service_role using (true) with check (true);
