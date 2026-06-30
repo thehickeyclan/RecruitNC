@@ -1,5 +1,5 @@
 import { TocPatrioticBar, TocVarsityHeading } from "@/components/toc/toc-theme"
-import { TOC_MATS_LINE, TOC_SCHEDULE } from "@/lib/toc/constants"
+import { TOC_SCHEDULE } from "@/lib/toc/constants"
 
 function DayTable({
   title,
@@ -43,7 +43,7 @@ function DayTable({
 }
 
 export function TocScheduleTable() {
-  const { friday, saturday, lead, athleteNote } = TOC_SCHEDULE
+  const { friday, saturday, lead } = TOC_SCHEDULE
 
   return (
     <section id="schedule" className="py-12 sm:py-16 md:py-20 bg-[#f4f5f7] scroll-mt-20">
@@ -51,11 +51,8 @@ export function TocScheduleTable() {
         <TocVarsityHeading as="h2" className="mb-2 text-center">
           {TOC_SCHEDULE.headline}
         </TocVarsityHeading>
-        <p className="text-center text-muted-foreground text-sm sm:text-base mb-3 max-w-2xl mx-auto leading-relaxed px-1">
-          {lead} {TOC_MATS_LINE}
-        </p>
-        <p className="text-center text-muted-foreground text-xs sm:text-sm mb-8 sm:mb-10 max-w-2xl mx-auto leading-relaxed px-1">
-          {athleteNote}
+        <p className="text-center text-muted-foreground text-sm sm:text-base mb-8 sm:mb-10 max-w-2xl mx-auto leading-relaxed px-1">
+          {lead}
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
           <DayTable title={friday.title} subtitle={friday.subtitle} rows={friday.rows} />

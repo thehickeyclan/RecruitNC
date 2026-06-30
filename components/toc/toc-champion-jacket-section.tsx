@@ -30,39 +30,16 @@ export function TocChampionJacketSection() {
 
             <div className="space-y-4 text-white/90 text-base sm:text-lg leading-relaxed">
               <p>
-                At each of eleven weight classes, <strong className="text-white">one wrestler</strong> earns the{" "}
-                <strong className="text-white">NC United Tournament of Champions jacket</strong> — the bracket
-                champion. Navy blue with arched <strong className="text-white">NORTH CAROLINA</strong> across the
-                chest and <strong className="text-white">CHAMPION</strong> across the back.
+                One wrestler per weight earns the NC United Tournament of Champions jacket — navy with{" "}
+                <strong className="text-white">NORTH CAROLINA</strong> across the chest and{" "}
+                <strong className="text-white">CHAMPION</strong> across the back. Top four place on the podium; only
+                the bracket winner wears it.
               </p>
               <p>
-                This is not merchandise. It is a{" "}
-                <strong className="text-white">patriotic symbol of North Carolina wrestling</strong> — the same red,
-                white, and navy you see on the sleeves, the NC silhouette on the arm, and{" "}
-                <strong className="text-white">2026</strong> marking the year you proved it on the mat.
-              </p>
-              <p>
-                Eight wrestlers per bracket. True double-elimination. Top four place on the podium — but only the
-                champion wears the jacket. When you wear it, you are telling every coach and every fan in the
-                building:{" "}
-                <em className="text-white not-italic font-semibold">
-                  I am the best in my weight in the state of North Carolina.
-                </em>
+                Not merchandise — a keepsake you cannot buy. Red, white, and navy sleeve stripes, NC silhouette on the
+                arm, and 2026 on the sleeve for the year you proved it.
               </p>
             </div>
-
-            <ul className="mt-8 space-y-3 border-l-4 border-[#CC0000] pl-5">
-              {[
-                "Awarded to the champion at each college weight class — one per bracket",
-                "Varsity-style NC branding — chest and back",
-                "Red · white · navy sleeve stripes — classic patriotic athletic look",
-                "A keepsake that outlasts any medal on a shelf",
-              ].map((line) => (
-                <li key={line} className="text-white/85 text-sm md:text-base">
-                  {line}
-                </li>
-              ))}
-            </ul>
           </div>
 
           <div className="order-1 lg:order-2 space-y-6">

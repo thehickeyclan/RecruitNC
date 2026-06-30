@@ -84,7 +84,7 @@ export const TOC_SPECTATORS = {
   eyebrow: "For families and fans",
   headline: "You're welcome in the building",
   lead:
-    "The Tournament of Champions is built for the big stage — and it's also a family-friendly weekend in a comfortable, modern venue. Everything you'd want for a wrestling weekend, in one building.",
+    "The Tournament of Champions is built for families — comfortable seating, free parking, and a kid-friendly atmosphere in a modern Apex venue.",
   expectations: [
     "Free on-site parking",
     "Comfortable stadium seating with back rests — plus bleacher and floor options",
@@ -193,7 +193,6 @@ export const TOC_ELITE_OFFICIALS = {
     "Chief of officials: Jonathan Sutton",
     "Experienced crew across both competition mats all day",
     "Consistent standards from first bout through championship finals",
-    "Coaches & Officials Lounge — credentialed college and HS coaches plus tournament staff",
   ],
 } as const
 
@@ -288,7 +287,7 @@ export const TOC_ACTIVE_SPONSORS = TOC_FOUNDING_PARTNERS.partners
 export const TOC_ATHLETE_QUOTES = {
   eyebrow: "In their words",
   headline: "What the state's best are saying",
-  lead: "Four of NC's top wrestlers — on the bracket, the atmosphere, and the jacket.",
+  lead: "Four of NC's top recruits on why this event matters.",
   quotes: [
     {
       name: "Carson Worrick",

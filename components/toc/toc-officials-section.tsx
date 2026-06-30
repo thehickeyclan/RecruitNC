@@ -53,15 +53,14 @@ export function TocOfficialsSection() {
             <p className={`text-[#0B1D3A] text-xl sm:text-2xl mb-3 ${tocDisplayClass()}`}>Jonathan Sutton</p>
             <p className="text-[#CC0000] text-xs font-semibold uppercase tracking-wide mb-4">Chief of officials</p>
             <p className="text-[#0B1D3A]/85 text-sm sm:text-base leading-relaxed">
-              When the state&apos;s best wrestlers compete for a title that matters, the officiating has to match the
-              stage. Sutton and his crew are built for elite brackets — fair calls, steady pace, and professional
-              standards from weigh-in through the last championship bout.
+              Sutton leads an elite crew built for high-stakes brackets — fair calls and professional standards from
+              weigh-in through the last championship bout.
             </p>
             <a
               href="#venue"
               className="inline-block mt-5 text-sm font-semibold text-[#CC0000] hover:underline"
             >
-              See the Coaches & Officials Lounge at the venue →
+              Coaches & Officials Lounge →
             </a>
             </div>
           </div>

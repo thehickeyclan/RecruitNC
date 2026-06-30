@@ -8,7 +8,6 @@ import { TocStorySection } from "@/components/toc/toc-story-section"
 import { TocAthleteQuotesSection } from "@/components/toc/toc-athlete-quotes-section"
 import { TocVenueSection } from "@/components/toc/toc-venue-section"
 import { TocOfficialsSection } from "@/components/toc/toc-officials-section"
-import { TocFinalsMatSection } from "@/components/toc/toc-finals-mat-section"
 import { TocSpectatorsSection } from "@/components/toc/toc-spectators-section"
 import { TocWeightClassesList } from "@/components/toc/toc-weight-classes"
 import { TocScheduleTable } from "@/components/toc/toc-schedule-table"
@@ -39,7 +38,6 @@ export function TocLandingPage({ config }: Props) {
       <TocVenueSection config={config} />
       <TocOfficialsSection />
       <TocSpectatorsSection />
-      <TocFinalsMatSection />
       <TocWeightClassesList />
       <TocScheduleTable />
       <TocStreamingSection config={config} />
@@ -52,7 +50,7 @@ export function TocLandingPage({ config }: Props) {
             Stay in the loop
           </TocVarsityHeading>
           <p className="text-white/70 text-sm sm:text-base mb-6 sm:mb-8 leading-relaxed">
-            Invite list news, streaming link, tickets, and everything leading up to championship weekend.
+            Invite list news, streaming link, and tickets — one list for everything before championship weekend.
           </p>
           <div className="flex justify-center w-full">
             <TocEmailSignup source="landing_section" />

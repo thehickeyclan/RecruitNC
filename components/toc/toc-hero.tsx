@@ -14,7 +14,6 @@ type Props = {
 
 const SECONDARY_LINKS = [
   { href: "#venue", label: "Venue" },
-  { href: "#finals", label: "Finals" },
   { href: "#schedule", label: "Schedule" },
   { href: "#families", label: "Tickets & families" },
   { href: "#sponsors", label: "Sponsorship" },
@@ -58,7 +57,6 @@ export function TocHero({ config }: Props) {
               >
                 {TOC_HERO.tagline}
               </p>
-              <p className={`mt-2 text-base sm:text-lg text-[#CC0000] ${tocDisplayClass()}`}>{TOC_HERO.showLine}</p>
 
               <TocCountdown targetDate={TOC_EVENT_DATE} className="mt-8 sm:mt-10 justify-start" />
 
