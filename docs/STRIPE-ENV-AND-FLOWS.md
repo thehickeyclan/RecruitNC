@@ -14,7 +14,7 @@ All of these send events to **one** endpoint: `POST /api/webhooks/stripe`.
 | **Drop-ins** | `checkout.session.completed` with amount ~$20–30 and shipping method (practice/pickup/suite) or no store metadata | `orders`, `order_items` |
 | **Blue subscriptions** | `checkout.session.completed` with `metadata.signup_id`; **`invoice.payment_succeeded`** (fallback when Checkout event is missed—subscription has `metadata.signup_id`); `customer.subscription.updated/deleted`; `payment_intent.succeeded` (subscription, no-op) | `blue_signups`, `blue_memberships`, `orders` (for revenue) |
 | **NHSCA Duals 2026 / national team** | `checkout.session.completed` with `metadata.source === "national_team"` and `registration_id` | `national_team_event_registrations`, `orders`, `order_items` |
-| **TOC athlete registration ($100)** | `checkout.session.completed` with `metadata.source === "toc_reg"` and `registration_type === "TOC Reg"` | `toc_invitations`, `orders` |
+| **TOC athlete registration ($75)** | `checkout.session.completed` with `metadata.source === "toc_reg"` and `registration_type === "TOC Reg"` | `toc_invitations`, `orders` |
 
 **Stripe Dashboard:** For the webhook that hits `/api/webhooks/stripe`, enable **`invoice.payment_succeeded`** (and `checkout.session.completed`) so paid Blue registrations still flip to **Paid** when the Checkout webhook fails or is delayed.
 

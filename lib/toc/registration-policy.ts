@@ -1,6 +1,6 @@
 /** Athlete registration fee and invite/confirm deadlines — single source for copy + API checks. */
 
-export const TOC_REGISTRATION_FEE_USD = 100 as const
+export const TOC_REGISTRATION_FEE_USD = 75 as const
 export const TOC_CONFIRM_WITHIN_DAYS = 7 as const
 /** Fixed payment deadline for all invited athletes (Year 1). */
 export const TOC_REGISTRATION_PAYMENT_DUE_ISO = "2026-08-01" as const
@@ -10,7 +10,7 @@ export const TOC_REGISTRATION_FEE_COVERS =
   "top-four placement awards at each weight and the champion jacket program" as const
 
 export function formatTocRegistrationFee(): string {
-  return `$${TOC_REGISTRATION_FEE_USD}`
+  return `$${TOC_REGISTRATION_FEE_USD.toFixed(2)}`
 }
 
 export function formatTocLongDate(date: Date): string {

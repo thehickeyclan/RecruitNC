@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
+  formatTocRegistrationFee,
   TOC_CONFIRM_WITHIN_DAYS,
   TOC_REGISTRATION_PAYMENT_DUE_DISPLAY,
   isConfirmPastDeadline,
@@ -23,7 +24,7 @@ describe("toc registration policy", () => {
   it("includes fee and deadlines in invite lines", () => {
     const lines = tocInviteRegistrationLines()
     expect(lines.join(" ")).toContain(String(TOC_CONFIRM_WITHIN_DAYS))
-    expect(lines.join(" ")).toContain("$100")
+    expect(lines.join(" ")).toContain(formatTocRegistrationFee())
     expect(lines.join(" ")).toContain("August 1, 2026")
   })
 })
