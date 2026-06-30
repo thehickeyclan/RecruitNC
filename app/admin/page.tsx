@@ -242,6 +242,12 @@ export default function AdminDashboard() {
                 <span className="text-sm font-semibold">National team</span>
               </span>
             </HardLink>
+            <HardLink href="/admin/toc/invitations" className="block">
+              <span className="w-full h-20 bg-gradient-to-br from-[#0B1D3A] to-[#CC0000] hover:from-[#CC0000] hover:to-[#0B1D3A] text-white shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex font-bold">
+                <Trophy className="h-6 w-6" />
+                <span className="text-sm font-semibold">TOC Invites</span>
+              </span>
+            </HardLink>
             <HardLink href="/admin/fundraising" className="block">
               <span className="w-full h-20 bg-gradient-to-br from-[#7c2d12] to-[#991b1b] hover:from-[#991b1b] hover:to-[#7c2d12] text-white shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex font-bold">
                 <Coins className="h-6 w-6" />
@@ -387,6 +393,17 @@ export default function AdminDashboard() {
                   <Trophy className="h-10 w-10 text-[#003366] mb-3" />
                   <h3 className="font-bold text-[#003366] mb-1">National team</h3>
                   <p className="text-xs text-gray-600">Interest forms and event payments</p>
+                </CardContent>
+              </Card>
+            </HardLink>
+
+            {/* Tournament of Champions — athlete invites + confirm links */}
+            <HardLink href="/admin/toc/invitations" className="block h-full">
+              <Card className="border-t-4 border-t-[#CC0000] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+                <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
+                  <Trophy className="h-10 w-10 text-[#0B1D3A] mb-3" />
+                  <h3 className="font-bold text-[#003366] mb-1">TOC Invites</h3>
+                  <p className="text-xs text-gray-600">Send invites · copy text & confirm links</p>
                 </CardContent>
               </Card>
             </HardLink>

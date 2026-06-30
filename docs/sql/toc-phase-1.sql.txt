@@ -142,3 +142,18 @@ create policy "Service role full toc_sponsor_inquiries"
 drop policy if exists "Service role full toc_media_requests" on public.toc_media_requests;
 create policy "Service role full toc_media_requests"
   on public.toc_media_requests for all to service_role using (true) with check (true);
+
+-- Phase 2 — athlete confirmation (jacket size, acknowledgments). Safe to re-run.
+alter table public.toc_invitations
+  add column if not exists jacket_size text,
+  add column if not exists medical_notes text,
+  add column if not exists photo_release_accepted boolean default false,
+  add column if not exists weight_acknowledgment boolean default false,
+  add column if not exists usaw_acknowledgment boolean default false,
+  add column if not exists attendance_acknowledgment boolean default false;
+
+create unique index if not exists idx_toc_invitations_athlete_unique
+  on public.toc_invitations (athlete_id);
+
+create index if not exists idx_toc_invitations_athlete_status
+  on public.toc_invitations (athlete_id, status);

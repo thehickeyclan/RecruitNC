@@ -43,7 +43,16 @@ export function TocInviteShareCard({ share, title = "What they'll receive", comp
           onClick={() => void copyText("link", share.confirmUrl, setCopied)}
         >
           {copied === "link" ? <Check className="h-3.5 w-3.5 mr-1.5 text-green-600" /> : <Copy className="h-3.5 w-3.5 mr-1.5" />}
-          Copy link
+          Copy confirm link
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => void copyText("event", share.eventPageUrl, setCopied)}
+        >
+          {copied === "event" ? <Check className="h-3.5 w-3.5 mr-1.5 text-green-600" /> : <Copy className="h-3.5 w-3.5 mr-1.5" />}
+          Copy event page
         </Button>
         <Button
           type="button"

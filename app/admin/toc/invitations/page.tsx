@@ -67,7 +67,12 @@ export default function TocInvitationsAdminPage() {
     try {
       const res = await fetch("/api/admin/toc/invitations")
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || "Failed to load")
+      if (!res.ok) {
+        if (data.migrationRequired) {
+          throw new Error(data.error)
+        }
+        throw new Error(data.error || "Failed to load")
+      }
       setInvitations(data.invitations ?? [])
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load")

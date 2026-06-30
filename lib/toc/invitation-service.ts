@@ -141,6 +141,12 @@ export async function resolveAthleteNotificationEmails(
   return Array.from(emails)
 }
 
+export const TOC_EVENT_PAGE_URL = "https://app.ncwrestlingunited.com/tournament-of-champions"
+
+export function eventPageUrl(): string {
+  return TOC_EVENT_PAGE_URL
+}
+
 export function confirmPageUrl(athleteId?: string): string {
   const base = "https://app.ncwrestlingunited.com/tournament-of-champions/confirm"
   if (!athleteId?.trim()) return base
