@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { isTocAthleteId, TOC_INVALID_ATHLETE_LINK_MESSAGE } from "@/lib/toc/invitations"
 import { toAthleteWithInvitation } from "@/lib/toc/invitation-service"
 
 export const dynamic = "force-dynamic"
@@ -10,8 +11,8 @@ type Params = { params: Promise<{ id: string }> }
 export async function GET(_request: Request, { params }: Params) {
   try {
     const { id } = await params
-    if (!id) {
-      return NextResponse.json({ error: "Athlete id required" }, { status: 400 })
+    if (!isTocAthleteId(id)) {
+      return NextResponse.json({ error: TOC_INVALID_ATHLETE_LINK_MESSAGE }, { status: 400 })
     }
 
     const admin = createAdminClient()

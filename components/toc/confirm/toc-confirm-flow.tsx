@@ -7,6 +7,7 @@ import { AthleteSearchTypeahead, type TocAthleteSearchResult } from "@/component
 import { AthleteVerificationCard } from "@/components/toc/confirm/athlete-verification-card"
 import { ConfirmationForm } from "@/components/toc/confirm/confirmation-form"
 import type { TocAthleteWithInvitation } from "@/lib/toc/invitation-service"
+import { isTocAthleteId, TOC_INVALID_ATHLETE_LINK_MESSAGE } from "@/lib/toc/invitations"
 
 type Step = "search" | "verify" | "form"
 
@@ -21,6 +22,13 @@ export function TocConfirmFlow() {
   const [error, setError] = useState<string | null>(null)
 
   const loadProfile = useCallback(async (athleteId: string) => {
+    if (!isTocAthleteId(athleteId)) {
+      setError(TOC_INVALID_ATHLETE_LINK_MESSAGE)
+      setProfile(null)
+      setStep("search")
+      return
+    }
+
     setLoadingProfile(true)
     setError(null)
     try {

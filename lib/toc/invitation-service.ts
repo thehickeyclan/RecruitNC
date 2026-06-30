@@ -25,6 +25,16 @@ export type TocAthleteWithInvitation = {
   } | null
 }
 
+/** Match confirm-page name search — full substring or all tokens (first + last). */
+export function matchesAthleteNameSearch(athleteName: string, query: string): boolean {
+  const name = athleteName.trim().toLowerCase()
+  const q = query.trim().toLowerCase()
+  if (q.length < 2 || !name) return false
+  if (name.includes(q)) return true
+  const tokens = q.split(/\s+/).filter(Boolean)
+  return tokens.length > 0 && tokens.every((tok) => name.includes(tok))
+}
+
 export function mapAthleteRow(row: Record<string, unknown>): TocAthleteLookupRow {
   return {
     id: String(row.id),
@@ -133,6 +143,6 @@ export async function resolveAthleteNotificationEmails(
 
 export function confirmPageUrl(athleteId?: string): string {
   const base = "https://app.ncwrestlingunited.com/tournament-of-champions/confirm"
-  if (!athleteId) return base
-  return `${base}?athlete=${encodeURIComponent(athleteId)}`
+  if (!athleteId?.trim()) return base
+  return `${base}?athlete=${encodeURIComponent(athleteId.trim())}`
 }
