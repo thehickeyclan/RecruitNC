@@ -20,7 +20,7 @@ export function TocCollegeAttendees({ colleges }: Props) {
         Saturday.
       </p>
 
-      <ul className="mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5 list-none p-0 m-0">
+      <ul className="mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-5 list-none p-0 m-0">
         {colleges.map((college) => (
           <li key={college.name}>
             <div className="flex h-full flex-col items-center justify-center rounded-sm bg-white px-4 py-6 shadow-[0_8px_24px_rgba(0,0,0,0.18)] ring-1 ring-black/5">

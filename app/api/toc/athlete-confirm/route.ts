@@ -6,6 +6,11 @@ import {
   resolveAthleteNotificationEmails,
 } from "@/lib/toc/invitation-service"
 import { tocAthleteConfirmSchema } from "@/lib/toc/invitations"
+import {
+  confirmDeadlineMessage,
+  isConfirmPastDeadline,
+  TOC_CONFIRM_WITHIN_DAYS,
+} from "@/lib/toc/registration-policy"
 
 export const dynamic = "force-dynamic"
 
@@ -48,6 +53,19 @@ export async function POST(request: Request) {
     if (invitation.status !== "invited") {
       return NextResponse.json(
         { ok: false, error: "This invitation is not open for confirmation." },
+        { status: 400 },
+      )
+    }
+
+    if (isConfirmPastDeadline(invitation.invited_at)) {
+      const deadline = confirmDeadlineMessage(invitation.invited_at)
+      return NextResponse.json(
+        {
+          ok: false,
+          error: deadline
+            ? `The confirmation window closed on ${deadline}. Contact ${process.env.TOC_CONTACT_EMAIL ?? "info@ncwrestlingunited.com"}.`
+            : `Confirmation must be completed within ${TOC_CONFIRM_WITHIN_DAYS} days of your invite. Contact NC United.`,
+        },
         { status: 400 },
       )
     }

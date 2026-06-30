@@ -51,6 +51,10 @@ const FAQ_ITEMS = [
     a: "Yes — the Tournament of Champions will be live streamed. Broadcast details and watch links will be announced soon. Sign up for email updates on this page to get the stream link when it's live.",
   },
   {
+    q: "What does registration cost?",
+    a: "Invited athletes pay a $100 registration fee due by August 1, 2026. That supports tournament entry, top-four placement awards at each weight, and the champion jacket program for bracket winners. Confirm within 7 days of your invite; payment instructions follow by email after you confirm.",
+  },
+  {
     q: "Can I buy tickets now?",
     a: `Not yet. Tickets go on sale ${TOC_TICKET_SALE_MONTH}. Sign up for the email list to be notified the moment they're live. Saturday admission covers the full tournament including single-mat championship finals. Pricing to be announced.`,
   },

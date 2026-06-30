@@ -9,6 +9,10 @@ import { Textarea } from "@/components/ui/textarea"
 import { Loader2 } from "lucide-react"
 import { TOC_JACKET_SIZES, defaultTocWeightForAthlete } from "@/lib/toc/invitations"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
+import {
+  tocConfirmRegistrationCheckboxLabel,
+  tocConfirmRegistrationDisclosure,
+} from "@/lib/toc/registration-policy"
 
 type Props = {
   athleteId: string
@@ -29,6 +33,7 @@ export function ConfirmationForm({ athleteId, athleteWeightClass, invitedWeightC
   const [weightAck, setWeightAck] = useState(false)
   const [usaw, setUsaw] = useState(false)
   const [photoRelease, setPhotoRelease] = useState(false)
+  const [feeAck, setFeeAck] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -40,8 +45,8 @@ export function ConfirmationForm({ athleteId, athleteWeightClass, invitedWeightC
       setError("Select a champion jacket size.")
       return
     }
-    if (!attendance || !weightAck || !usaw || !photoRelease) {
-      setError("All four acknowledgments are required.")
+    if (!attendance || !weightAck || !usaw || !photoRelease || !feeAck) {
+      setError("All acknowledgments are required.")
       return
     }
 
@@ -59,6 +64,7 @@ export function ConfirmationForm({ athleteId, athleteWeightClass, invitedWeightC
           weightAcknowledgment: true,
           usawAcknowledgment: true,
           photoReleaseAccepted: true,
+          registrationFeeAcknowledgment: true,
         }),
       })
       const data = await res.json()
@@ -77,8 +83,15 @@ export function ConfirmationForm({ athleteId, athleteWeightClass, invitedWeightC
     <form onSubmit={submit} className="space-y-6 border-t border-[#0B1D3A]/10 pt-8">
       <div>
         <h2 className="text-xl font-bold text-[#0B1D3A] uppercase tracking-wide">Confirm your spot</h2>
-        <p className="text-sm text-muted-foreground mt-1">Just a few tournament-specific details — we already have your profile.</p>
+        <p className="text-sm text-muted-foreground mt-1">
+          Just a few tournament-specific details — we already have your profile. Confirming reserves your spot;
+          registration payment is due separately (see below).
+        </p>
       </div>
+
+      <p className="text-sm text-[#0B1D3A]/85 leading-relaxed rounded-sm border border-[#0B1D3A]/10 bg-[#f8f9fb] px-4 py-3">
+        {tocConfirmRegistrationDisclosure()}
+      </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
@@ -150,6 +163,12 @@ export function ConfirmationForm({ athleteId, athleteWeightClass, invitedWeightC
           checked={photoRelease}
           onCheckedChange={setPhotoRelease}
           label="I grant NC United photo and video release for tournament coverage and promotion."
+        />
+        <AckCheckbox
+          id="toc-fee"
+          checked={feeAck}
+          onCheckedChange={setFeeAck}
+          label={tocConfirmRegistrationCheckboxLabel()}
         />
       </div>
 

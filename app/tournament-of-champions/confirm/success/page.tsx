@@ -19,8 +19,8 @@ export default function TocConfirmSuccessPage() {
         </TocVarsityHeading>
         <p className={`text-2xl sm:text-3xl text-white/90 mb-6 ${tocDisplayClass()}`}>Welcome to the field.</p>
         <p className="text-white/75 text-base sm:text-lg leading-relaxed max-w-xl mx-auto mb-10">
-          We sent a confirmation email with your weight class and event details. See you in Apex — Friday weigh-in,
-          Saturday brackets through championship finals.
+          We sent a confirmation email with your weight class, payment due date, and event details. Your spot is
+          reserved — complete the $100 registration by August 1, 2026 to lock in your bracket entry.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <HardLink href="/tournament-of-champions/brackets" className={tocMobileCtaClass("primary")}>
