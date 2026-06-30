@@ -26,6 +26,7 @@ export function AthleteSearchTypeahead({ onSelect, disabled }: Props) {
   const [loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [noMatchHint, setNoMatchHint] = useState<string | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const wrapRef = useRef<HTMLDivElement>(null)
 
@@ -36,6 +37,7 @@ export function AthleteSearchTypeahead({ onSelect, disabled }: Props) {
     }
     setLoading(true)
     setError(null)
+    setNoMatchHint(null)
     try {
       const res = await fetch(`/api/toc/athletes/search?q=${encodeURIComponent(q)}&limit=10`)
       const data = await res.json()
@@ -44,6 +46,17 @@ export function AthleteSearchTypeahead({ onSelect, disabled }: Props) {
         throw new Error(data.error || "Confirmations are not live yet. Contact NC United.")
       }
       setResults(data.athletes ?? [])
+      if ((data.athletes ?? []).length === 0 && q.length >= 2) {
+        if (typeof data.invitedCount === "number" && data.invitedCount === 0) {
+          setNoMatchHint(
+            "No one has been invited yet. An admin must send an invite first (Admin → TOC → Invitations), then this search will work.",
+          )
+        } else {
+          setNoMatchHint(
+            "That name isn’t on the invite list. Only athletes who received an invite appear here — use the link in your invite email, or ask NC United to send the invite.",
+          )
+        }
+      }
       setOpen(true)
     } catch (e) {
       setError(e instanceof Error ? e.message : "Search failed")
@@ -127,8 +140,9 @@ export function AthleteSearchTypeahead({ onSelect, disabled }: Props) {
         </ul>
       ) : null}
       {open && !loading && query.trim().length >= 2 && results.length === 0 ? (
-        <p className="absolute z-20 mt-1 w-full rounded-md border border-[#0B1D3A]/10 bg-white px-4 py-3 text-sm text-muted-foreground shadow-lg">
-          No invited athletes matched that name. Check spelling or contact NC United.
+        <p className="absolute z-20 mt-1 w-full rounded-md border border-[#0B1D3A]/10 bg-white px-4 py-3 text-sm text-muted-foreground shadow-lg leading-relaxed">
+          {noMatchHint ??
+            "No invited athletes matched that name. Check spelling or contact NC United."}
         </p>
       ) : null}
     </div>
