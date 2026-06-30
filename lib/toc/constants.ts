@@ -336,6 +336,21 @@ export const TOC_CONFIRMED_COLLEGES_DEFAULT = [
     logoUrl:
       "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/fe5ixmej-1745958547259.png",
   },
+  {
+    name: "Roanoke",
+    logoUrl:
+      "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/-i2rnrys-1745958901725.png",
+  },
+  {
+    name: "Greensboro College",
+    logoUrl:
+      "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/o6LgFYqZjYR2MnZou4ydo-Greensboro%20College.png",
+  },
+  {
+    name: "Montreat",
+    logoUrl:
+      "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/QS-jExE_V4gnRb3SrkmUP-Montreat.png",
+  },
 ] as const
 
 /** Program names only — used when `toc_event_config.confirmed_colleges` is empty. */

@@ -28,7 +28,7 @@ values (
   1,
   'Hope Community Church',
   'Hope Community Church, Apex, NC',
-  '["NC State", "UNC"]'::jsonb
+  '["UNC", "NC State", "Roanoke", "Greensboro College", "Montreat"]'::jsonb
 )
 on conflict (id) do update set
   confirmed_colleges = excluded.confirmed_colleges,

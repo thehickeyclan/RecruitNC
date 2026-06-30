@@ -2,6 +2,11 @@ import { TOC_CONTACT_EMAIL, TOC_EVENT_DATES_DISPLAY, TOC_SATURDAY_COMPETITION_DA
 import { eventPageUrl } from "@/lib/toc/invitation-service"
 import { buildTocAthleteInviteMessage } from "@/lib/toc/invite-message"
 import { firstNameFromAthleteName } from "@/lib/toc/invitations"
+import {
+  formatTocRegistrationFee,
+  registrationPaymentDueDisplay,
+  tocInviteRegistrationLines,
+} from "@/lib/toc/registration-policy"
 
 const FROM = `NC Wrestling United <${TOC_CONTACT_EMAIL}>`
 
@@ -157,9 +162,11 @@ export async function sendTocAthleteInviteEmail(payload: {
 }): Promise<void> {
   const firstName = firstNameFromAthleteName(payload.athleteName)
   const { subject } = buildTocAthleteInviteMessage(payload)
+  const [confirmLine, feeLine] = tocInviteRegistrationLines()
   const body = `<p>${firstName} —</p>
 <p>You've been invited to the <strong>NC United Tournament of Champions</strong> — an invite-only event with eight wrestlers per weight. We built the field by hand, and your name is on it at <strong>${payload.weightClass} lbs</strong>.</p>
 <p><strong>${TOC_EVENT_DATES_DISPLAY}</strong> · Hope Community Church, Apex · Weigh-in Friday, brackets finish ${TOC_SATURDAY_COMPETITION_DATE}.</p>
+<p><strong>${confirmLine}</strong><br/>${feeLine}</p>
 <p style="margin:20px 0;"><a href="${eventPageUrl()}" style="display:inline-block;background:#0B1D3A;color:white;padding:12px 24px;text-decoration:none;border-radius:6px;font-weight:bold;">Learn more about the tournament</a></p>
 <p style="margin:24px 0;"><a href="${payload.confirmUrl}" style="display:inline-block;background:#CC0000;color:white;padding:14px 28px;text-decoration:none;border-radius:6px;font-weight:bold;letter-spacing:0.04em;">Confirm your spot</a></p>
 <p style="font-size:14px;color:#6b7280;">If you're in, confirm above. We'll match you to your RecruitNC profile — school, grad year, and club are already on file.</p>`
@@ -176,6 +183,7 @@ export async function sendTocAthleteConfirmedEmail(payload: {
   jacketSize: string
 }): Promise<void> {
   const firstName = payload.athleteName.trim().split(/\s+/)[0] || payload.athleteName
+  const paymentDue = registrationPaymentDueDisplay()
   const subject = "You're in — Tournament of Champions 2026"
   const body = `<p>${firstName} —</p>
 <p><strong>Welcome to the field.</strong> Your spot at the NC United Tournament of Champions is confirmed.</p>
@@ -183,7 +191,9 @@ export async function sendTocAthleteConfirmedEmail(payload: {
 <li>Weight class: <strong>${payload.weightClass} lbs</strong></li>
 <li>Champion jacket size on file: <strong>${payload.jacketSize}</strong></li>
 <li>Dates: <strong>${TOC_EVENT_DATES_DISPLAY}</strong></li>
+<li>Registration fee: <strong>${formatTocRegistrationFee()}</strong> due by <strong>${paymentDue}</strong></li>
 </ul>
+<p>Confirming reserves your bracket spot. Complete registration payment by the due date above (payment link coming soon). The fee supports tournament entry, top-four placement awards, and the champion jacket program.</p>
 <p>Friday: weigh-in at 4:00 PM and first round. Saturday: full brackets through championship finals.</p>
 <p style="margin:20px 0;"><a href="https://app.ncwrestlingunited.com/tournament-of-champions" style="display:inline-block;background:#CC0000;color:white;padding:12px 24px;text-decoration:none;border-radius:6px;font-weight:bold;">Event page</a></p>`
 

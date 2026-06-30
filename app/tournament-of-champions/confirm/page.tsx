@@ -3,6 +3,7 @@ import { Suspense } from "react"
 import { TocConfirmFlow } from "@/components/toc/confirm/toc-confirm-flow"
 import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass } from "@/components/toc/toc-theme"
 import { TOC_HERO_DATES } from "@/lib/toc/constants"
+import { TOC_CONFIRM_WITHIN_DAYS, formatTocRegistrationFee, registrationPaymentDueDisplay } from "@/lib/toc/registration-policy"
 
 export const metadata: Metadata = {
   title: "Confirm Your Spot | Tournament of Champions 2026",
@@ -24,6 +25,12 @@ export default function TocConfirmPage() {
           </TocVarsityHeading>
           <p className={`text-white/80 text-lg max-w-2xl ${tocDisplayClass()}`}>
             For invited athletes only. Look up your RecruitNC profile, verify it, and lock in weight and jacket size.
+          </p>
+          <p className="mt-3 text-white/55 text-sm max-w-2xl">
+            Confirm within <strong className="text-white/75">{TOC_CONFIRM_WITHIN_DAYS} days</strong> of your invite.
+            {" "}
+            <strong className="text-white/75">{formatTocRegistrationFee()}</strong> registration due by{" "}
+            <strong className="text-white/75">{registrationPaymentDueDisplay()}</strong>.
           </p>
           <p className="mt-3 text-white/55 text-sm max-w-2xl">
             Not on the list yet? Your coach or NC United sends the invite first — then search works, or use the link in

@@ -44,6 +44,7 @@ describe("tocAthleteConfirmSchema", () => {
       weightAcknowledgment: true,
       usawAcknowledgment: true,
       photoReleaseAccepted: true,
+      registrationFeeAcknowledgment: true,
     })
     expect(ok.success).toBe(true)
 

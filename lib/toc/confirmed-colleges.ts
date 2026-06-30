@@ -17,6 +17,15 @@ const TOC_COLLEGE_LOGO_BY_KEY: Record<string, string> = Object.fromEntries(
     if (key === "nc state") {
       entries.push(["north carolina state", logoUrl], ["north carolina state university", logoUrl])
     }
+    if (key === "roanoke") {
+      entries.push(["roanoke college", logoUrl])
+    }
+    if (key.startsWith("greensboro")) {
+      entries.push(["greensboro college", logoUrl], ["greensboro", logoUrl])
+    }
+    if (key === "montreat") {
+      entries.push(["montreat college", logoUrl])
+    }
     return entries
   }),
 )

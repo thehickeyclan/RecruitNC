@@ -47,6 +47,7 @@ export const tocAthleteConfirmSchema = z.object({
   weightAcknowledgment: z.literal(true),
   usawAcknowledgment: z.literal(true),
   photoReleaseAccepted: z.literal(true),
+  registrationFeeAcknowledgment: z.literal(true),
 })
 
 export type TocAthleteConfirmInput = z.infer<typeof tocAthleteConfirmSchema>
