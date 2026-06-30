@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { TocInviteShareCard } from "@/components/toc/admin/toc-invite-share-card"
+import { HardLink } from "@/components/hard-link"
 import { ArrowLeft, Loader2, RefreshCw, Send } from "lucide-react"
 import { buildTocAthleteInviteMessage, type TocInviteMessage } from "@/lib/toc/invite-message"
 import { confirmPageUrl } from "@/lib/toc/invitation-service"
@@ -159,7 +160,7 @@ export default function TocInvitationsAdminPage() {
           </Button>
           <div>
             <h1 className="text-2xl font-bold">TOC invitations</h1>
-            <p className="text-sm text-muted-foreground">Preview, send, or copy invite text for athletes</p>
+            <p className="text-sm text-muted-foreground">Preview, send, or copy invite text · <HardLink href="/admin/toc/field" className="text-[#B31B1B] hover:underline">Field by weight</HardLink></p>
           </div>
         </div>
         <Button variant="outline" size="sm" onClick={() => void loadInvitations()} disabled={loading}>

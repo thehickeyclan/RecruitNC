@@ -157,3 +157,23 @@ create unique index if not exists idx_toc_invitations_athlete_unique
 
 create index if not exists idx_toc_invitations_athlete_status
   on public.toc_invitations (athlete_id, status);
+
+-- Phase 1 bracket draws — official published draws per weight
+create table if not exists public.toc_bracket_draws (
+  weight_class int primary key,
+  locked_at timestamptz not null default CURRENT_TIMESTAMP,
+  draw jsonb not null,
+  updated_at timestamptz default CURRENT_TIMESTAMP
+);
+
+create index if not exists idx_toc_bracket_draws_locked_at on public.toc_bracket_draws (locked_at desc);
+
+alter table public.toc_bracket_draws enable row level security;
+
+drop policy if exists "Public read locked toc_bracket_draws" on public.toc_bracket_draws;
+create policy "Public read locked toc_bracket_draws"
+  on public.toc_bracket_draws for select to anon, authenticated using (true);
+
+drop policy if exists "Service role full toc_bracket_draws" on public.toc_bracket_draws;
+create policy "Service role full toc_bracket_draws"
+  on public.toc_bracket_draws for all to service_role using (true) with check (true);

@@ -23,8 +23,8 @@ export default function TocConfirmSuccessPage() {
           Saturday brackets through championship finals.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <HardLink href="/tournament-of-champions#field" className={tocMobileCtaClass("primary")}>
-            View confirmed field
+          <HardLink href="/tournament-of-champions/brackets" className={tocMobileCtaClass("primary")}>
+            View brackets
           </HardLink>
           <HardLink href="/tournament-of-champions" className={tocMobileCtaClass("secondary")}>
             Event page
