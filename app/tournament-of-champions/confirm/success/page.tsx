@@ -1,6 +1,8 @@
 import type { Metadata } from "next"
 import { HardLink } from "@/components/hard-link"
 import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass, tocMobileCtaClass } from "@/components/toc/toc-theme"
+import { registrationPayPageUrl } from "@/lib/toc/invitation-service"
+import { formatTocRegistrationFee, registrationPaymentDueDisplay } from "@/lib/toc/registration-policy"
 
 export const metadata: Metadata = {
   title: "You're In | Tournament of Champions 2026",
@@ -8,7 +10,14 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
-export default function TocConfirmSuccessPage() {
+type Props = {
+  searchParams: Promise<{ athlete?: string }>
+}
+
+export default async function TocConfirmSuccessPage({ searchParams }: Props) {
+  const { athlete } = await searchParams
+  const payHref = athlete ? registrationPayPageUrl(athlete) : "/tournament-of-champions/register/pay"
+
   return (
     <section className="min-h-[60vh] bg-[#0B1D3A] text-white flex flex-col">
       <TocPatrioticBar />
@@ -19,15 +28,15 @@ export default function TocConfirmSuccessPage() {
         </TocVarsityHeading>
         <p className={`text-2xl sm:text-3xl text-white/90 mb-6 ${tocDisplayClass()}`}>Welcome to the field.</p>
         <p className="text-white/75 text-base sm:text-lg leading-relaxed max-w-xl mx-auto mb-10">
-          We sent a confirmation email with your weight class, payment due date, and event details. Your spot is
-          reserved — complete the $100 registration by August 1, 2026 to lock in your bracket entry.
+          We sent a confirmation email with your weight class and event details. Your spot is reserved — pay{" "}
+          {formatTocRegistrationFee()} registration by {registrationPaymentDueDisplay()} to lock in bracket entry.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <HardLink href="/tournament-of-champions/brackets" className={tocMobileCtaClass("primary")}>
-            View brackets
+          <HardLink href={payHref} className={tocMobileCtaClass("primary")}>
+            Pay {formatTocRegistrationFee()} now
           </HardLink>
-          <HardLink href="/tournament-of-champions" className={tocMobileCtaClass("secondary")}>
-            Event page
+          <HardLink href="/tournament-of-champions/brackets" className={tocMobileCtaClass("secondary")}>
+            View brackets
           </HardLink>
         </div>
       </div>

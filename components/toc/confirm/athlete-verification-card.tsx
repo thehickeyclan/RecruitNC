@@ -4,7 +4,11 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { TocAthleteWithInvitation } from "@/lib/toc/invitation-service"
+import { HardLink } from "@/components/hard-link"
+import { tocMobileCtaClass } from "@/components/toc/toc-theme"
+import { registrationPayPageUrl } from "@/lib/toc/invitation-service"
 import { formatTocGradYear } from "@/lib/toc/invitations"
+import { formatTocRegistrationFee } from "@/lib/toc/registration-policy"
 
 type Props = {
   data: TocAthleteWithInvitation
@@ -61,9 +65,21 @@ export function AthleteVerificationCard({ data, onConfirm, onReject }: Props) {
         </div>
 
         {alreadyConfirmed ? (
-          <p className="text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-sm px-3 py-2">
-            You&apos;re already confirmed for this tournament.
-          </p>
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-sm px-3 py-2">
+              You&apos;re already confirmed for this tournament.
+            </p>
+            {invitation?.paymentStatus === "paid" ? (
+              <p className="text-sm text-green-700">Registration is paid — you&apos;re all set.</p>
+            ) : (
+              <HardLink
+                href={registrationPayPageUrl(athlete.id)}
+                className={`${tocMobileCtaClass("primary")} inline-flex w-full sm:w-auto justify-center`}
+              >
+                Pay {formatTocRegistrationFee()} now
+              </HardLink>
+            )}
+          </div>
         ) : invitation?.status === "invited" ? (
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <Button type="button" className="bg-[#CC0000] hover:bg-[#a80000]" onClick={onConfirm}>

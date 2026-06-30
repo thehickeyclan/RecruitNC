@@ -37,9 +37,6 @@ export function TocConfirmFlow() {
       if (!res.ok) throw new Error(data.error || "Could not load profile")
       setProfile(data as TocAthleteWithInvitation)
       setStep("verify")
-      if (data.invitation?.status === "confirmed") {
-        router.push("/tournament-of-champions/confirm/success")
-      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not load profile")
       setProfile(null)
@@ -93,7 +90,11 @@ export function TocConfirmFlow() {
           athleteId={profile.athlete.id}
           athleteWeightClass={profile.athlete.weightClass}
           invitedWeightClass={profile.invitation.weightClass}
-          onSuccess={() => router.push("/tournament-of-champions/confirm/success")}
+          onSuccess={() =>
+            router.push(
+              `/tournament-of-champions/register/pay?athlete=${encodeURIComponent(profile.athlete.id)}`,
+            )
+          }
         />
       ) : null}
     </div>
