@@ -31,6 +31,7 @@ export function TocLandingPage({ config }: Props) {
     <div className="min-h-screen bg-white overflow-x-hidden">
       <TocHero config={config} />
       <TocQuickFacts />
+      <TocWeightClassesList />
       <TocConfirmedFieldSection />
       <TocChampionJacketSection />
       <TocStorySection />
@@ -38,7 +39,6 @@ export function TocLandingPage({ config }: Props) {
       <TocVenueSection config={config} />
       <TocOfficialsSection />
       <TocSpectatorsSection />
-      <TocWeightClassesList />
       <TocScheduleTable />
       <TocStreamingSection config={config} />
       <TocMediaSection />

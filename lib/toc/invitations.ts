@@ -72,7 +72,7 @@ export function defaultTocWeightForAthlete(weightclass: string | number | null |
 }
 
 export function athleteDisplayClub(row: Record<string, unknown>): string | null {
-  const club = row.wrestling_club ?? row.wrestlingClub
+  const club = row.wrestling_club ?? row.wrestlingClub ?? row.wrestlingclub ?? row.club
   return typeof club === "string" && club.trim() ? club.trim() : null
 }
 
@@ -87,6 +87,17 @@ export function athleteContactEmail(row: Record<string, unknown>): string | null
 export function firstNameFromAthleteName(name: string): string {
   return name.trim().split(/\s+/)[0] || name
 }
+
+const TOC_ATHLETE_UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+/** RecruitNC athlete ids are UUIDs — reject doc placeholders like `{athlete-uuid}`. */
+export function isTocAthleteId(id: string | null | undefined): id is string {
+  return typeof id === "string" && TOC_ATHLETE_UUID_RE.test(id.trim())
+}
+
+export const TOC_INVALID_ATHLETE_LINK_MESSAGE =
+  "That link isn’t valid. Search for your name below, or use the confirm link from your invitation email."
 
 /** Display grad year as class year ('27), not full 2027. */
 export function formatTocGradYear(year: number | null | undefined): string | null {

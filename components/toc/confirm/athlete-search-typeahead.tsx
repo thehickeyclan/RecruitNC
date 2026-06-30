@@ -40,6 +40,9 @@ export function AthleteSearchTypeahead({ onSelect, disabled }: Props) {
       const res = await fetch(`/api/toc/athletes/search?q=${encodeURIComponent(q)}&limit=10`)
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || "Search failed")
+      if (data.unavailable) {
+        throw new Error(data.error || "Confirmations are not live yet. Contact NC United.")
+      }
       setResults(data.athletes ?? [])
       setOpen(true)
     } catch (e) {

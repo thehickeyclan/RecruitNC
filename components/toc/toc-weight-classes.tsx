@@ -3,7 +3,7 @@ import { TocPatrioticBar, TocVarsityHeading } from "@/components/toc/toc-theme"
 
 export function TocWeightClassesList() {
   return (
-    <section className="py-12 sm:py-16 bg-[#0B1D3A] text-white relative">
+    <section id="weights" className="py-12 sm:py-16 bg-[#0B1D3A] text-white relative scroll-mt-20">
       <div className="container mx-auto w-full px-4 sm:px-6 max-w-4xl text-center">
         <TocVarsityHeading as="h2" className="text-white mb-6 sm:mb-8">
           College weight classes

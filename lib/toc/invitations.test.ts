@@ -1,9 +1,18 @@
 import { describe, expect, it } from "vitest"
 import {
   defaultTocWeightForAthlete,
+  isTocAthleteId,
   parseAthleteWeightClass,
   tocAthleteConfirmSchema,
 } from "@/lib/toc/invitations"
+
+describe("isTocAthleteId", () => {
+  it("accepts real UUIDs and rejects doc placeholders", () => {
+    expect(isTocAthleteId("550e8400-e29b-41d4-a716-446655440000")).toBe(true)
+    expect(isTocAthleteId("{athlete-uuid}")).toBe(false)
+    expect(isTocAthleteId("")).toBe(false)
+  })
+})
 
 describe("parseAthleteWeightClass", () => {
   it("parses numeric and string weight classes in TOC list", () => {
