@@ -61,8 +61,8 @@ const adminNavItems: {
     icon: "🏅",
   },
   {
-    title: "TOC Invites",
-    href: "/admin/toc/invitations",
+    title: "TOC",
+    href: "/admin/toc",
     icon: "🎟️",
     activePrefix: "/admin/toc",
   },
