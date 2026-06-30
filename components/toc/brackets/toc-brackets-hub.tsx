@@ -22,11 +22,11 @@ export function TocBracketsHub() {
       <section className="bg-[#0B1D3A]">
         <TocPatrioticBar />
         <div className="container mx-auto max-w-4xl px-4 sm:px-6 py-14 sm:py-20 text-center">
-          <p className="text-[#CC0000] text-xs font-semibold uppercase tracking-[0.22em] mb-3">Official draws</p>
+          <p className="text-[#CC0000] text-xs font-semibold uppercase tracking-[0.22em] mb-3">Brackets</p>
           <h1 className={`text-4xl sm:text-5xl md:text-6xl text-white ${tocDisplayClass()}`}>Brackets</h1>
           <p className="mt-4 text-white/70 max-w-lg mx-auto text-sm sm:text-base">
-            Published weight-class draws for the NC United Tournament of Champions. Round 1 pairings from the official
-            seed draw.
+            Weight-class draws for the NC United Tournament of Champions. Brackets appear as wrestlers confirm and
+            seeds are assigned — open spots show as TBD.
           </p>
           <HardLink href="/tournament-of-champions" className={`${tocMobileCtaClass("ghost")} mt-8 inline-flex`}>
             Event page
@@ -42,7 +42,8 @@ export function TocBracketsHub() {
           </p>
         ) : brackets.length === 0 ? (
           <p className="text-center text-white/55 text-sm">
-            Brackets publish here when each weight is locked in admin. Check back as the field fills.
+            No brackets yet. As wrestlers confirm and get seeds in admin, each weight will appear here with open TBD
+            slots.
           </p>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
@@ -55,7 +56,9 @@ export function TocBracketsHub() {
                 <p className={`text-3xl sm:text-4xl text-white group-hover:text-[#CC0000] transition-colors ${tocDisplayClass()}`}>
                   {b.weightClass}
                 </p>
-                <p className="text-[10px] uppercase tracking-[0.18em] text-white/45 mt-2">lbs · official draw</p>
+                <p className="text-[10px] uppercase tracking-[0.18em] text-white/45 mt-2">
+                  lbs · {b.isComplete ? "official draw" : `${b.confirmedCount ?? 0}/8 · building`}
+                </p>
               </HardLink>
             ))}
           </div>

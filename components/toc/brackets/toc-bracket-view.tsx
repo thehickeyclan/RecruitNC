@@ -5,7 +5,7 @@ import Image from "next/image"
 import { HardLink } from "@/components/hard-link"
 import { TocPatrioticBar, tocDisplayClass, tocMobileCtaClass } from "@/components/toc/toc-theme"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
-import { resolveSlotLabel } from "@/lib/toc/eight-man-de-bracket"
+import { resolveSlotLabel, isPlaceholderParticipant } from "@/lib/toc/eight-man-de-bracket"
 import type { TocBracketDraw, TocBracketParticipant, TocBracketBout } from "@/lib/toc/bracket-types"
 import { cn } from "@/lib/utils"
 import { Share2, Swords, Trophy } from "lucide-react"
@@ -74,22 +74,23 @@ function FightCard({
     align: "top" | "bottom",
   ) => {
     const isAthlete = slot.kind === "athlete"
-    const active = isAthlete && highlightedAthleteId === slot.athleteId
+    const isOpen = side.isOpen || (isAthlete && slot.kind === "athlete" && participantById.get(slot.athleteId) && isPlaceholderParticipant(participantById.get(slot.athleteId)!))
+    const active = isAthlete && !isOpen && highlightedAthleteId === slot.athleteId
 
     return (
       <button
         type="button"
-        disabled={!isAthlete}
-        onClick={() => onSelectAthlete(isAthlete ? slot.athleteId : null)}
+        disabled={!isAthlete || isOpen}
+        onClick={() => onSelectAthlete(isAthlete && !isOpen ? slot.athleteId : null)}
         className={cn(
           "flex w-full items-center gap-3 p-3 sm:p-4 text-left transition-colors",
           align === "bottom" && "border-t border-white/10",
-          isAthlete && "hover:bg-white/5 cursor-pointer",
-          !isAthlete && "opacity-80",
+          isAthlete && !isOpen && "hover:bg-white/5 cursor-pointer",
+          (isOpen || !isAthlete) && "opacity-80",
           active && "bg-[#CC0000]/20 ring-1 ring-inset ring-[#CC0000]/40",
         )}
       >
-        {isAthlete && side.seed != null ? (
+        {isAthlete && !isOpen && side.seed != null ? (
           <AthleteAvatar name={side.primary} photoUrl={side.photoUrl ?? null} seed={side.seed} />
         ) : (
           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-sm border border-dashed border-white/20 text-[10px] uppercase tracking-wide text-white/50">
@@ -165,14 +166,18 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES] }: P
       <section className="relative bg-[#0B1D3A]">
         <TocPatrioticBar />
         <div className="container mx-auto max-w-6xl px-4 sm:px-6 py-10 sm:py-14">
-          <p className="text-[#CC0000] text-xs font-semibold uppercase tracking-[0.22em] mb-3">Official draw</p>
+          <p className="text-[#CC0000] text-xs font-semibold uppercase tracking-[0.22em] mb-3">
+            {draw.isComplete ? "Official draw" : "Live bracket · field building"}
+          </p>
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
             <div>
               <h1 className={cn("text-5xl sm:text-6xl md:text-7xl text-white leading-none", tocDisplayClass())}>
                 {draw.weightClass} lbs
               </h1>
               <p className="mt-3 text-white/70 text-sm sm:text-base max-w-xl">
-                Eight wrestlers. True double elimination. Two mats until the title — then one mat for the champion.
+                {draw.isComplete
+                  ? "Eight wrestlers. True double elimination. Two mats until the title — then one mat for the champion."
+                  : `${draw.confirmedCount ?? 0} of 8 confirmed — open spots show as TBD until the field is set.`}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -226,28 +231,46 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES] }: P
 
       {tab === "draw" ? (
         <section className="container mx-auto max-w-6xl px-4 sm:px-6 py-10 sm:py-14 space-y-10">
+          {!draw.isComplete ? (
+            <div className="rounded-sm border border-[#CC0000]/30 bg-[#CC0000]/10 px-4 py-3 text-sm text-white/85">
+              Field building — {draw.confirmedCount ?? 0}/8 wrestlers confirmed. Round 1 pairings update as seeds are
+              assigned.
+            </div>
+          ) : null}
           <div>
             <h2 className={cn("text-2xl sm:text-3xl text-white mb-4", tocDisplayClass())}>The field</h2>
             <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory">
-              {draw.participants.map((p) => (
+              {draw.participants.map((p) => {
+                const open = isPlaceholderParticipant(p)
+                return (
                 <button
                   key={p.athleteId}
                   type="button"
-                  onClick={() => setHighlightedAthleteId((id) => (id === p.athleteId ? null : p.athleteId))}
+                  disabled={open}
+                  onClick={() => !open && setHighlightedAthleteId((id) => (id === p.athleteId ? null : p.athleteId))}
                   className={cn(
                     "snap-start shrink-0 w-[140px] sm:w-[160px] rounded-sm border p-3 text-center transition-all",
-                    highlightedAthleteId === p.athleteId
+                    open && "border-dashed border-white/15 bg-transparent opacity-70 cursor-default",
+                    !open && highlightedAthleteId === p.athleteId
                       ? "border-[#CC0000] bg-[#CC0000]/15 shadow-lg shadow-[#CC0000]/20"
-                      : "border-white/10 bg-white/5 hover:border-white/25",
+                      : !open && "border-white/10 bg-white/5 hover:border-white/25",
                   )}
                 >
                   <div className="flex justify-center mb-2">
-                    <AthleteAvatar name={p.name} photoUrl={p.photoUrl} seed={p.seed} />
+                    {open ? (
+                      <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-sm border border-dashed border-white/25 text-[10px] uppercase tracking-wide text-white/45">
+                        #{p.seed}
+                      </div>
+                    ) : (
+                      <AthleteAvatar name={p.name} photoUrl={p.photoUrl} seed={p.seed} />
+                    )}
                   </div>
-                  <p className={cn("text-sm text-white leading-tight", tocDisplayClass())}>{p.name}</p>
-                  <p className="text-[11px] text-white/50 mt-1 truncate">{p.school ?? "—"}</p>
+                  <p className={cn("text-sm text-white leading-tight", !open && tocDisplayClass())}>
+                    {open ? "Open spot" : p.name}
+                  </p>
+                  <p className="text-[11px] text-white/50 mt-1 truncate">{open ? "TBD" : p.school ?? "—"}</p>
                 </button>
-              ))}
+              )})}
             </div>
           </div>
 

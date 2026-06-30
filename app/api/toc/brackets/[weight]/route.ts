@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { getLockedDraw } from "@/lib/toc/bracket-service"
+import { getPublicBracketDraw } from "@/lib/toc/bracket-service"
 import { parseAthleteWeightClass } from "@/lib/toc/invitations"
 
 export const dynamic = "force-dynamic"
 
 type Params = { params: Promise<{ weight: string }> }
 
-/** Public — single weight official draw (only when locked/published). */
+/** Public — bracket for one weight (live field or locked draw). */
 export async function GET(_request: Request, { params }: Params) {
   try {
     const weightClass = parseAthleteWeightClass((await params).weight)
@@ -16,12 +16,15 @@ export async function GET(_request: Request, { params }: Params) {
     }
 
     const admin = createAdminClient()
-    const draw = await getLockedDraw(admin, weightClass)
-    if (!draw) {
-      return NextResponse.json({ error: "Bracket not published yet." }, { status: 404 })
+    const result = await getPublicBracketDraw(admin, weightClass)
+    if (!result) {
+      return NextResponse.json(
+        { error: "No bracket yet — confirm a wrestler and assign a seed (1–8) in admin." },
+        { status: 404 },
+      )
     }
 
-    return NextResponse.json({ draw })
+    return NextResponse.json({ draw: result.draw, source: result.source })
   } catch (e) {
     console.error("[toc/brackets/[weight]]", e)
     return NextResponse.json({ error: "Server error" }, { status: 500 })

@@ -1,6 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
-import { buildEightManDeDraw, validateBracketParticipants } from "@/lib/toc/eight-man-de-bracket"
+import {
+  buildEightManDeDraw,
+  validateBracketParticipants,
+  validatePartialBracketPublish,
+} from "@/lib/toc/eight-man-de-bracket"
 import type { TocBracketDraw, TocBracketDrawSummary, TocBracketParticipant } from "@/lib/toc/bracket-types"
+import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 import { TOC_MAX_CONFIRMED_PER_WEIGHT } from "@/lib/toc/invitations"
 
 type InvitationRow = {
@@ -54,6 +59,39 @@ export async function loadParticipantsForWeight(
   return { participants }
 }
 
+export function buildLiveDrawFromField(
+  weightClass: number,
+  participants: TocBracketParticipant[],
+): TocBracketDraw | null {
+  if (validatePartialBracketPublish(participants) != null) return null
+  return buildEightManDeDraw(weightClass, participants, new Date().toISOString())
+}
+
+export async function getPublicBracketDraw(
+  admin: SupabaseClient,
+  weightClass: number,
+): Promise<{ draw: TocBracketDraw; source: "locked" | "live" } | null> {
+  const locked = await getLockedDraw(admin, weightClass)
+  if (locked) {
+    return { draw: normalizeDraw(locked), source: "locked" }
+  }
+
+  const { participants } = await loadParticipantsForWeight(admin, weightClass)
+  const live = buildLiveDrawFromField(weightClass, participants)
+  if (!live) return null
+  return { draw: live, source: "live" }
+}
+
+function normalizeDraw(draw: TocBracketDraw): TocBracketDraw {
+  const realCount = draw.participants.filter((p) => !p.isPlaceholder && !p.athleteId.startsWith("__toc_open_")).length
+  return {
+    ...draw,
+    confirmedCount: draw.confirmedCount ?? realCount,
+    openSpots: draw.openSpots ?? Math.max(0, TOC_MAX_CONFIRMED_PER_WEIGHT - realCount),
+    isComplete: draw.isComplete ?? validateBracketParticipants(draw.participants) == null,
+  }
+}
+
 export async function lockBracketDraw(
   admin: SupabaseClient,
   weightClass: number,
@@ -61,7 +99,7 @@ export async function lockBracketDraw(
   const { participants, error: loadError } = await loadParticipantsForWeight(admin, weightClass)
   if (loadError) return { error: loadError }
 
-  const validationError = validateBracketParticipants(participants)
+  const validationError = validatePartialBracketPublish(participants)
   if (validationError) return { error: validationError }
 
   const lockedAt = new Date().toISOString()
@@ -110,40 +148,70 @@ export async function getLockedDraw(
     .maybeSingle()
 
   if (error || !data?.draw) return null
-  return data.draw as TocBracketDraw
+  return normalizeDraw(data.draw as TocBracketDraw)
 }
 
-export async function listLockedDrawSummaries(admin: SupabaseClient): Promise<TocBracketDrawSummary[]> {
-  const { data, error } = await admin
-    .from("toc_bracket_draws")
-    .select("weight_class, locked_at, draw")
-    .order("weight_class")
+export async function listPublicBracketSummaries(admin: SupabaseClient): Promise<TocBracketDrawSummary[]> {
+  const summaries: TocBracketDrawSummary[] = []
 
-  if (error || !data) return []
-
-  return data.map((row) => {
-    const draw = row.draw as TocBracketDraw
-    return {
-      weightClass: row.weight_class as number,
-      lockedAt: String(row.locked_at ?? draw.lockedAt),
-      participantCount: draw.participants?.length ?? TOC_MAX_CONFIRMED_PER_WEIGHT,
+  for (const weightClass of TOC_WEIGHT_CLASSES) {
+    const locked = await getLockedDraw(admin, weightClass)
+    if (locked) {
+      summaries.push({
+        weightClass,
+        lockedAt: locked.lockedAt,
+        participantCount: TOC_MAX_CONFIRMED_PER_WEIGHT,
+        confirmedCount: locked.confirmedCount,
+        isComplete: locked.isComplete,
+        source: "locked",
+      })
+      continue
     }
-  })
+
+    const { participants } = await loadParticipantsForWeight(admin, weightClass)
+    const live = buildLiveDrawFromField(weightClass, participants)
+    if (!live) continue
+
+    summaries.push({
+      weightClass,
+      lockedAt: live.lockedAt,
+      participantCount: TOC_MAX_CONFIRMED_PER_WEIGHT,
+      confirmedCount: live.confirmedCount,
+      isComplete: live.isComplete,
+      source: "live",
+    })
+  }
+
+  return summaries
 }
 
 export async function getBracketLockStatus(
   admin: SupabaseClient,
   weightClass: number,
-): Promise<{ locked: boolean; lockedAt: string | null; readyToLock: boolean; lockError: string | null }> {
+): Promise<{
+  locked: boolean
+  lockedAt: string | null
+  readyToLock: boolean
+  lockError: string | null
+  canViewLive: boolean
+  confirmedCount: number
+  isComplete: boolean
+}> {
   const [draw, { participants }] = await Promise.all([
     getLockedDraw(admin, weightClass),
     loadParticipantsForWeight(admin, weightClass),
   ])
 
+  const partialError = validatePartialBracketPublish(participants)
+  const liveDraw = buildLiveDrawFromField(weightClass, participants)
+
   return {
     locked: draw != null,
     lockedAt: draw?.lockedAt ?? null,
-    readyToLock: validateBracketParticipants(participants) == null,
-    lockError: participants.length > 0 ? validateBracketParticipants(participants) : null,
+    readyToLock: partialError == null,
+    lockError: partialError,
+    canViewLive: liveDraw != null,
+    confirmedCount: participants.length,
+    isComplete: validateBracketParticipants(participants) == null,
   }
 }

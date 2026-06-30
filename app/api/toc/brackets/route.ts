@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { listLockedDrawSummaries } from "@/lib/toc/bracket-service"
+import { listPublicBracketSummaries } from "@/lib/toc/bracket-service"
 
 export const dynamic = "force-dynamic"
 
-/** Public — list published (locked) bracket draws. */
+/** Public — brackets with live field data or locked official draws. */
 export async function GET() {
   try {
     const admin = createAdminClient()
-    const brackets = await listLockedDrawSummaries(admin)
+    const brackets = await listPublicBracketSummaries(admin)
     return NextResponse.json({ brackets })
   } catch (e) {
     console.error("[toc/brackets]", e)
