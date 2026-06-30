@@ -17,14 +17,22 @@ export async function GET() {
   const admin = createAdminClient()
   const { data, error } = await admin
     .from("toc_invitations")
-    .select(
-      "id, athlete_id, weight_class, seed, status, invited_at, confirmed_at, jacket_size, created_at, athletes(id, name, highschool, graduationyear)",
-    )
+    .select("*, athletes(id, name, highschool, graduationyear)")
     .order("created_at", { ascending: false })
 
   if (error) {
     if (error.code === "42P01") {
       return NextResponse.json({ invitations: [], unavailable: true })
+    }
+    if (error.code === "42703") {
+      return NextResponse.json(
+        {
+          error:
+            "TOC Phase 2 columns missing in Supabase. Run docs/sql/toc-phase-2-invitations.sql.txt in the SQL Editor, then refresh.",
+          migrationRequired: true,
+        },
+        { status: 503 },
+      )
     }
     console.error("[admin/toc/invitations]", error)
     return NextResponse.json({ error: error.message }, { status: 500 })

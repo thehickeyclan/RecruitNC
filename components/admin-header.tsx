@@ -4,7 +4,12 @@ import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 
-const adminNavItems = [
+const adminNavItems: {
+  title: string
+  href: string
+  icon: string
+  activePrefix?: string
+}[] = [
   {
     title: "Dashboard",
     href: "/admin",
@@ -49,6 +54,17 @@ const adminNavItems = [
     title: "Logo Manager",
     href: "/admin/enhanced-logo-manager",
     icon: "🎨",
+  },
+  {
+    title: "National team",
+    href: "/admin/national-team",
+    icon: "🏅",
+  },
+  {
+    title: "TOC Invites",
+    href: "/admin/toc/invitations",
+    icon: "🎟️",
+    activePrefix: "/admin/toc",
   },
   {
     title: "Fundraising",
@@ -113,14 +129,18 @@ export function AdminHeader() {
             </a>
 
             <nav className="hidden md:flex space-x-1">
-              {adminNavItems.map((item) => (
+              {adminNavItems.map((item) => {
+                const isActive =
+                  pathname === item.href ||
+                  (item.activePrefix != null && pathname.startsWith(item.activePrefix))
+                return (
                 <button
                   key={item.href}
                   type="button"
                   onClick={() => { window.location.href = item.href }}
                   className={cn(
                     "flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors bg-transparent border-0 cursor-pointer",
-                    pathname === item.href
+                    isActive
                       ? "bg-white/20 text-white"
                       : "text-white hover:bg-white/10",
                   )}
@@ -128,7 +148,7 @@ export function AdminHeader() {
                   <span>{item.icon}</span>
                   <span>{item.title}</span>
                 </button>
-              ))}
+              )})}
             </nav>
           </div>
 
