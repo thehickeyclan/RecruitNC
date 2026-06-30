@@ -14,7 +14,7 @@ import { TocInviteShareCard } from "@/components/toc/admin/toc-invite-share-card
 import { HardLink } from "@/components/hard-link"
 import { ArrowLeft, Loader2, RefreshCw, Send } from "lucide-react"
 import { buildTocAthleteInviteMessage, type TocInviteMessage } from "@/lib/toc/invite-message"
-import { confirmPageUrl } from "@/lib/toc/invitation-service"
+import { confirmPageUrl, registrationPayPageUrl } from "@/lib/toc/invitation-service"
 import { formatTocGradYear, suggestTocInviteWeight, tocWeightProfileHint } from "@/lib/toc/invitations"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 
@@ -34,6 +34,8 @@ type InvitationRow = {
   invited_at: string | null
   confirmed_at: string | null
   jacket_size: string | null
+  payment_status: string | null
+  paid_at: string | null
   athletes: { id: string; name: string; highschool: string | null; graduationyear: number | null } | null
 }
 
@@ -278,6 +280,7 @@ export default function TocInvitationsAdminPage() {
                 <TableHead>School</TableHead>
                 <TableHead>Weight</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Payment</TableHead>
                 <TableHead>Jacket</TableHead>
                 <TableHead>Invited</TableHead>
                 <TableHead>Confirmed</TableHead>
@@ -292,6 +295,20 @@ export default function TocInvitationsAdminPage() {
                   <TableCell>{row.weight_class} lbs</TableCell>
                   <TableCell>
                     <Badge variant={row.status === "confirmed" ? "default" : "secondary"}>{row.status}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    {row.payment_status === "paid" ? (
+                      <Badge className="bg-green-700 hover:bg-green-700">paid</Badge>
+                    ) : row.status === "confirmed" ? (
+                      <a
+                        href={registrationPayPageUrl(row.athlete_id)}
+                        className="text-xs text-[#002147] underline underline-offset-2"
+                      >
+                        {row.payment_status ?? "unpaid"}
+                      </a>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
                   </TableCell>
                   <TableCell>{row.jacket_size ?? "—"}</TableCell>
                   <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
@@ -315,7 +332,7 @@ export default function TocInvitationsAdminPage() {
               ))}
               {!loading && invitations.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                     No invitations yet
                   </TableCell>
                 </TableRow>

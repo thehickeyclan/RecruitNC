@@ -1,0 +1,16 @@
+-- Tournament of Champions Phase 3 — athlete registration payment (Stripe TOC Reg)
+-- Run in Supabase SQL Editor after toc-phase-2-invitations.sql.txt
+
+alter table public.toc_invitations
+  add column if not exists payment_status text check (payment_status in ('pending', 'paid', 'waived', 'refunded')),
+  add column if not exists paid_at timestamptz,
+  add column if not exists stripe_session_id text,
+  add column if not exists stripe_payment_intent_id text,
+  add column if not exists order_id uuid references public.orders (id);
+
+create index if not exists idx_toc_invitations_payment_status
+  on public.toc_invitations (payment_status, confirmed_at desc);
+
+create index if not exists idx_toc_invitations_stripe_session
+  on public.toc_invitations (stripe_session_id)
+  where stripe_session_id is not null;

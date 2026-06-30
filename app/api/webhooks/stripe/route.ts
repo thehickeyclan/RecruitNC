@@ -12,6 +12,8 @@ import {
   processNcUnitedDropInCheckoutFailed,
   processNcUnitedDropInCheckoutSession,
 } from "@/lib/nc-united-calendar/process-drop-in-checkout"
+import { processTocRegistrationCheckoutSession } from "@/lib/toc/process-toc-registration-checkout"
+import { isTocRegistrationStripeMetadata } from "@/lib/toc/stripe-metadata"
 import {
   sendFayettevilleDonationAutoAckIfEligible,
   upsertSpartanDonationFromCheckoutSession,
@@ -383,6 +385,11 @@ export async function POST(request: NextRequest) {
           await upsertGuildOrderFromCheckoutSession(admin, session, { getStripe })
           return NextResponse.json({ received: true })
         }
+        if (session && isTocRegistrationStripeMetadata(session.metadata as Record<string, string>)) {
+          const admin = createAdminClient()
+          await processTocRegistrationCheckoutSession(admin, session)
+          return NextResponse.json({ received: true })
+        }
         const regId = session?.metadata?.registration_id
         if (session?.metadata?.source === "national_team" && regId) {
           const admin = createAdminClient()
@@ -523,6 +530,9 @@ export async function POST(request: NextRequest) {
         const sessions = await stripe.checkout.sessions.list({ payment_intent: paymentIntent.id, limit: 1 })
         const session = sessions.data[0]
         if (session?.metadata?.source === "national_team") {
+          return NextResponse.json({ received: true })
+        }
+        if (session && isTocRegistrationStripeMetadata(session.metadata as Record<string, string>)) {
           return NextResponse.json({ received: true })
         }
       } catch (e) {
@@ -1078,6 +1088,11 @@ export async function POST(request: NextRequest) {
           }
         }
       }
+      return NextResponse.json({ received: true })
+    }
+
+    if (isTocRegistrationStripeMetadata(session.metadata as Record<string, string>)) {
+      await processTocRegistrationCheckoutSession(admin, session)
       return NextResponse.json({ received: true })
     }
 

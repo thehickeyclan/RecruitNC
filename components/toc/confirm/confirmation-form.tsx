@@ -9,7 +9,11 @@ import { Textarea } from "@/components/ui/textarea"
 import { Loader2 } from "lucide-react"
 import { TOC_JACKET_SIZES, defaultTocWeightForAthlete } from "@/lib/toc/invitations"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
+import { HardLink } from "@/components/hard-link"
+import { tocMobileCtaClass } from "@/components/toc/toc-theme"
+import { registrationPayPageUrl } from "@/lib/toc/invitation-service"
 import {
+  formatTocRegistrationFee,
   tocConfirmRegistrationCheckboxLabel,
   tocConfirmRegistrationDisclosure,
 } from "@/lib/toc/registration-policy"
@@ -84,8 +88,8 @@ export function ConfirmationForm({ athleteId, athleteWeightClass, invitedWeightC
       <div>
         <h2 className="text-xl font-bold text-[#0B1D3A] uppercase tracking-wide">Confirm your spot</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Just a few tournament-specific details — we already have your profile. Confirming reserves your spot;
-          registration payment is due separately (see below).
+          Just a few tournament-specific details — we already have your profile. Confirm below, then pay right away if
+          you&apos;re ready.
         </p>
       </div>
 
@@ -174,20 +178,31 @@ export function ConfirmationForm({ athleteId, athleteWeightClass, invitedWeightC
 
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
-      <Button
-        type="submit"
-        disabled={submitting}
-        className="w-full sm:w-auto min-h-11 bg-[#CC0000] hover:bg-[#a80000] px-8 text-base font-semibold uppercase tracking-wide"
-      >
-        {submitting ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Confirming…
-          </>
-        ) : (
-          "Confirm my spot"
-        )}
-      </Button>
+      <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3">
+        <Button
+          type="submit"
+          disabled={submitting}
+          className="w-full sm:w-auto min-h-11 bg-[#CC0000] hover:bg-[#a80000] px-8 text-base font-semibold uppercase tracking-wide"
+        >
+          {submitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Confirming…
+            </>
+          ) : (
+            "Confirm my spot"
+          )}
+        </Button>
+        <HardLink
+          href={registrationPayPageUrl(athleteId)}
+          className={`${tocMobileCtaClass("secondary")} w-full sm:w-auto text-center`}
+        >
+          Pay {formatTocRegistrationFee()} now
+        </HardLink>
+      </div>
+      <p className="text-xs text-muted-foreground leading-relaxed">
+        Use <strong>Pay now</strong> right after you confirm above, or anytime once your spot is locked in.
+      </p>
     </form>
   )
 }

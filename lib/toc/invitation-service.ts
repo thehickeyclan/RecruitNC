@@ -22,6 +22,8 @@ export type TocAthleteWithInvitation = {
     weightClass: number
     invitedAt: string | null
     confirmedAt: string | null
+    paymentStatus: string | null
+    paidAt: string | null
   } | null
 }
 
@@ -70,6 +72,9 @@ export function toAthleteWithInvitation(
           weightClass: Number(invitation.weight_class),
           invitedAt: typeof invitation.invited_at === "string" ? invitation.invited_at : null,
           confirmedAt: typeof invitation.confirmed_at === "string" ? invitation.confirmed_at : null,
+          paymentStatus:
+            typeof invitation.payment_status === "string" ? invitation.payment_status : null,
+          paidAt: typeof invitation.paid_at === "string" ? invitation.paid_at : null,
         }
       : null,
   }
@@ -149,6 +154,12 @@ export function eventPageUrl(): string {
 
 export function confirmPageUrl(athleteId?: string): string {
   const base = "https://app.ncwrestlingunited.com/tournament-of-champions/confirm"
+  if (!athleteId?.trim()) return base
+  return `${base}?athlete=${encodeURIComponent(athleteId.trim())}`
+}
+
+export function registrationPayPageUrl(athleteId?: string): string {
+  const base = "https://app.ncwrestlingunited.com/tournament-of-champions/register/pay"
   if (!athleteId?.trim()) return base
   return `${base}?athlete=${encodeURIComponent(athleteId.trim())}`
 }

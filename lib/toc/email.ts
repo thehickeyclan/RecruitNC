@@ -1,5 +1,5 @@
 import { TOC_CONTACT_EMAIL, TOC_EVENT_DATES_DISPLAY, TOC_SATURDAY_COMPETITION_DATE } from "@/lib/toc/constants"
-import { eventPageUrl } from "@/lib/toc/invitation-service"
+import { eventPageUrl, registrationPayPageUrl } from "@/lib/toc/invitation-service"
 import { buildTocAthleteInviteMessage } from "@/lib/toc/invite-message"
 import { firstNameFromAthleteName } from "@/lib/toc/invitations"
 import {
@@ -181,9 +181,11 @@ export async function sendTocAthleteConfirmedEmail(payload: {
   athleteName: string
   weightClass: number
   jacketSize: string
+  athleteId: string
 }): Promise<void> {
   const firstName = payload.athleteName.trim().split(/\s+/)[0] || payload.athleteName
   const paymentDue = registrationPaymentDueDisplay()
+  const payUrl = registrationPayPageUrl(payload.athleteId)
   const subject = "You're in — Tournament of Champions 2026"
   const body = `<p>${firstName} —</p>
 <p><strong>Welcome to the field.</strong> Your spot at the NC United Tournament of Champions is confirmed.</p>
@@ -193,9 +195,11 @@ export async function sendTocAthleteConfirmedEmail(payload: {
 <li>Dates: <strong>${TOC_EVENT_DATES_DISPLAY}</strong></li>
 <li>Registration fee: <strong>${formatTocRegistrationFee()}</strong> due by <strong>${paymentDue}</strong></li>
 </ul>
-<p>Confirming reserves your bracket spot. Complete registration payment by the due date above (payment link coming soon). The fee supports tournament entry, top-four placement awards, and the champion jacket program.</p>
+<p>Confirming reserves your bracket spot. Complete registration payment by the due date above.</p>
+<p style="margin:24px 0;"><a href="${payUrl}" style="display:inline-block;background:#CC0000;color:white;padding:14px 28px;text-decoration:none;border-radius:6px;font-weight:bold;letter-spacing:0.04em;">Pay ${formatTocRegistrationFee()} — secure checkout</a></p>
+<p style="font-size:14px;color:#6b7280;">Checkout is tagged <strong>TOC Reg</strong> in Stripe for NC United accounting.</p>
 <p>Friday: weigh-in at 4:00 PM and first round. Saturday: full brackets through championship finals.</p>
-<p style="margin:20px 0;"><a href="https://app.ncwrestlingunited.com/tournament-of-champions" style="display:inline-block;background:#CC0000;color:white;padding:12px 24px;text-decoration:none;border-radius:6px;font-weight:bold;">Event page</a></p>`
+<p style="margin:20px 0;"><a href="${eventPageUrl()}" style="display:inline-block;background:#0B1D3A;color:white;padding:12px 24px;text-decoration:none;border-radius:6px;font-weight:bold;">Event page</a></p>`
 
   for (const to of payload.to) {
     if (to.trim()) await sendHtml(to, subject, wrap(body))
