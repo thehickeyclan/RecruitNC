@@ -51,19 +51,23 @@ export function confirmDeadlineMessage(invitedAt: string | null | undefined): st
   return formatTocLongDate(deadline)
 }
 
-/** Invite email / SMS — before athlete confirms. */
-export function tocInviteRegistrationLines(): string[] {
+/** Invite email / SMS / admin copy — confirm only; no payment mention. */
+export function tocInviteConfirmLines(): string[] {
   return [
-    `Please confirm within ${TOC_CONFIRM_WITHIN_DAYS} days of this invite.`,
-    `${formatTocRegistrationFee()} registration is due by ${registrationPaymentDueDisplay()} (payment link follows confirmation). Fee supports tournament entry, ${TOC_REGISTRATION_FEE_COVERS}.`,
+    `Please confirm within ${TOC_CONFIRM_WITHIN_DAYS} days of this invite — that's your verbal yes.`,
   ]
 }
 
-/** Confirm page + checkbox. */
+/** @deprecated use tocInviteConfirmLines */
+export function tocInviteRegistrationLines(): string[] {
+  return tocInviteConfirmLines()
+}
+
+/** Confirm page disclosure — payment details live here only, not in email. */
 export function tocConfirmRegistrationDisclosure(): string {
-  return `${formatTocRegistrationFee()} registration is due by ${registrationPaymentDueDisplay()}. That supports tournament entry, ${TOC_REGISTRATION_FEE_COVERS}. Payment instructions follow by email.`
+  return `You're not paying today. Confirm below to lock in your spot. A ${formatTocRegistrationFee()} registration fee is due by ${registrationPaymentDueDisplay()} (${TOC_REGISTRATION_FEE_COVERS}). You can pay anytime before then — after you confirm — using the optional link on this page.`
 }
 
 export function tocConfirmRegistrationCheckboxLabel(): string {
-  return `I understand a ${formatTocRegistrationFee()} registration fee is due by ${registrationPaymentDueDisplay()}.`
+  return `I understand a ${formatTocRegistrationFee()} registration fee is due by ${registrationPaymentDueDisplay()} (not required to confirm today).`
 }

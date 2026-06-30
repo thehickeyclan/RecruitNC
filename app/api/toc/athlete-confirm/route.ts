@@ -128,7 +128,6 @@ export async function POST(request: Request) {
         athleteName,
         weightClass: input.weightClass,
         jacketSize: input.jacketSize,
-        athleteId: input.athleteId,
       })
     }
 
