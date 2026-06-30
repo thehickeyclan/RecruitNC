@@ -3,20 +3,18 @@
 import { useMemo, useState } from "react"
 import Image from "next/image"
 import { HardLink } from "@/components/hard-link"
+import { BracketTree } from "@/components/bracket/bracket-tree"
 import { TocPatrioticBar, tocDisplayClass, tocMobileCtaClass } from "@/components/toc/toc-theme"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
-import { resolveSlotLabel, isPlaceholderParticipant } from "@/lib/toc/eight-man-de-bracket"
-import type { TocBracketDraw, TocBracketParticipant, TocBracketBout } from "@/lib/toc/bracket-types"
+import { isPlaceholderParticipant } from "@/lib/toc/eight-man-de-bracket"
+import type { TocBracketDraw } from "@/lib/toc/bracket-types"
+import { tocDrawToConsolationBracketTree, tocDrawToWinnersBracketTree } from "@/lib/toc/to-bracket-display"
 import { cn } from "@/lib/utils"
-import { Share2, Swords, Trophy } from "lucide-react"
+import { Share2 } from "lucide-react"
 
 type Props = {
   draw: TocBracketDraw
   allWeights?: number[]
-}
-
-function participantMap(draw: TocBracketDraw): Map<string, TocBracketParticipant> {
-  return new Map(draw.participants.map((p) => [p.athleteId, p]))
 }
 
 function AthleteAvatar({ name, photoUrl, seed }: { name: string; photoUrl: string | null; seed: number }) {
@@ -54,103 +52,10 @@ function AthleteAvatar({ name, photoUrl, seed }: { name: string; photoUrl: strin
   )
 }
 
-function FightCard({
-  bout,
-  participantById,
-  highlightedAthleteId,
-  onSelectAthlete,
-}: {
-  bout: TocBracketBout
-  participantById: Map<string, TocBracketParticipant>
-  highlightedAthleteId: string | null
-  onSelectAthlete: (id: string | null) => void
-}) {
-  const top = resolveSlotLabel(bout.top, participantById)
-  const bottom = resolveSlotLabel(bout.bottom, participantById)
-
-  const renderCorner = (
-    side: typeof top,
-    slot: TocBracketBout["top"],
-    align: "top" | "bottom",
-  ) => {
-    const isAthlete = slot.kind === "athlete"
-    const isOpen = side.isOpen || (isAthlete && slot.kind === "athlete" && participantById.get(slot.athleteId) && isPlaceholderParticipant(participantById.get(slot.athleteId)!))
-    const active = isAthlete && !isOpen && highlightedAthleteId === slot.athleteId
-
-    return (
-      <button
-        type="button"
-        disabled={!isAthlete || isOpen}
-        onClick={() => onSelectAthlete(isAthlete && !isOpen ? slot.athleteId : null)}
-        className={cn(
-          "flex w-full items-center gap-3 p-3 sm:p-4 text-left transition-colors",
-          align === "bottom" && "border-t border-white/10",
-          isAthlete && !isOpen && "hover:bg-white/5 cursor-pointer",
-          (isOpen || !isAthlete) && "opacity-80",
-          active && "bg-[#CC0000]/20 ring-1 ring-inset ring-[#CC0000]/40",
-        )}
-      >
-        {isAthlete && !isOpen && side.seed != null ? (
-          <AthleteAvatar name={side.primary} photoUrl={side.photoUrl ?? null} seed={side.seed} />
-        ) : (
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-sm border border-dashed border-white/20 text-[10px] uppercase tracking-wide text-white/50">
-            TBD
-          </div>
-        )}
-        <div className="min-w-0 flex-1">
-          <p className={cn("text-base sm:text-lg text-white truncate", isAthlete && tocDisplayClass())}>{side.primary}</p>
-          {side.secondary ? <p className="text-xs text-white/55 truncate">{side.secondary}</p> : null}
-        </div>
-      </button>
-    )
-  }
-
-  return (
-    <article className="overflow-hidden rounded-sm border border-white/10 bg-[#060f1f]/80 shadow-xl shadow-black/30">
-      <div className="flex items-center justify-between bg-[#CC0000] px-3 py-2">
-        <span className={cn("text-sm text-white", tocDisplayClass())}>Bout {bout.boutNumber}</span>
-        <span className="text-[10px] uppercase tracking-[0.18em] text-white/85">{bout.roundLabel}</span>
-      </div>
-      {renderCorner(top, bout.top, "top")}
-      <div className="flex items-center justify-center gap-2 bg-[#0B1D3A] py-1.5 text-[10px] uppercase tracking-[0.2em] text-white/45">
-        <Swords className="h-3 w-3" /> vs
-      </div>
-      {renderCorner(bottom, bout.bottom, "bottom")}
-    </article>
-  )
-}
-
-function BoutPill({
-  bout,
-  participantById,
-}: {
-  bout: TocBracketBout
-  participantById: Map<string, TocBracketParticipant>
-}) {
-  const top = resolveSlotLabel(bout.top, participantById)
-  const bottom = resolveSlotLabel(bout.bottom, participantById)
-
-  return (
-    <div className="min-w-[200px] rounded-sm border border-[#0B1D3A]/15 bg-white p-3 shadow-sm">
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-[#CC0000] mb-2">
-        Bout {bout.boutNumber} · {bout.roundLabel}
-      </p>
-      <p className="text-sm font-medium text-[#0B1D3A] truncate">{top.primary}</p>
-      <p className="text-xs text-muted-foreground my-1">vs</p>
-      <p className="text-sm font-medium text-[#0B1D3A] truncate">{bottom.primary}</p>
-    </div>
-  )
-}
-
 export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES] }: Props) {
-  const [tab, setTab] = useState<"draw" | "bracket">("draw")
   const [highlightedAthleteId, setHighlightedAthleteId] = useState<string | null>(null)
-
-  const participantById = useMemo(() => participantMap(draw), [draw])
-  const roundOne = useMemo(() => draw.bouts.filter((b) => b.roundLabel === "Round 1"), [draw.bouts])
-  const winners = useMemo(() => draw.bouts.filter((b) => b.side === "winners" && b.roundLabel !== "Round 1"), [draw.bouts])
-  const losers = useMemo(() => draw.bouts.filter((b) => b.side === "losers"), [draw.bouts])
-  const placement = useMemo(() => draw.bouts.filter((b) => b.side === "placement"), [draw.bouts])
+  const winnersTree = useMemo(() => tocDrawToWinnersBracketTree(draw), [draw])
+  const consolationTree = useMemo(() => tocDrawToConsolationBracketTree(draw), [draw])
 
   const copyLink = async () => {
     const url = `${window.location.origin}/tournament-of-champions/brackets/${draw.weightClass}`
@@ -211,38 +116,19 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES] }: P
         <TocPatrioticBar />
       </section>
 
-      <div className="sticky top-0 z-20 border-b border-white/10 bg-[#060f1f]/95 backdrop-blur">
-        <div className="container mx-auto max-w-6xl px-4 sm:px-6 flex gap-1 py-2">
-          {(["draw", "bracket"] as const).map((key) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setTab(key)}
-              className={cn(
-                "rounded-sm px-4 py-2 text-sm font-semibold uppercase tracking-wide transition-colors",
-                tab === key ? "bg-[#CC0000] text-white" : "text-white/60 hover:text-white hover:bg-white/10",
-              )}
-            >
-              {key === "draw" ? "The draw" : "Full bracket"}
-            </button>
-          ))}
-        </div>
-      </div>
+      <section className="container mx-auto max-w-6xl px-4 sm:px-6 py-10 sm:py-14 space-y-10">
+        {!draw.isComplete ? (
+          <div className="rounded-sm border border-[#CC0000]/30 bg-[#CC0000]/10 px-4 py-3 text-sm text-white/85">
+            Field building — {draw.confirmedCount ?? 0}/8 wrestlers confirmed. Empty seeds show as TBD in the bracket.
+          </div>
+        ) : null}
 
-      {tab === "draw" ? (
-        <section className="container mx-auto max-w-6xl px-4 sm:px-6 py-10 sm:py-14 space-y-10">
-          {!draw.isComplete ? (
-            <div className="rounded-sm border border-[#CC0000]/30 bg-[#CC0000]/10 px-4 py-3 text-sm text-white/85">
-              Field building — {draw.confirmedCount ?? 0}/8 wrestlers confirmed. Round 1 pairings update as seeds are
-              assigned.
-            </div>
-          ) : null}
-          <div>
-            <h2 className={cn("text-2xl sm:text-3xl text-white mb-4", tocDisplayClass())}>The field</h2>
-            <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory">
-              {draw.participants.map((p) => {
-                const open = isPlaceholderParticipant(p)
-                return (
+        <div>
+          <h2 className={cn("text-2xl sm:text-3xl text-white mb-4", tocDisplayClass())}>Seeds</h2>
+          <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory">
+            {draw.participants.map((p) => {
+              const open = isPlaceholderParticipant(p)
+              return (
                 <button
                   key={p.athleteId}
                   type="button"
@@ -266,63 +152,33 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES] }: P
                     )}
                   </div>
                   <p className={cn("text-sm text-white leading-tight", !open && tocDisplayClass())}>
-                    {open ? "Open spot" : p.name}
+                    {open ? "TBD" : p.name}
                   </p>
-                  <p className="text-[11px] text-white/50 mt-1 truncate">{open ? "TBD" : p.school ?? "—"}</p>
+                  <p className="text-[11px] text-white/50 mt-1 truncate">{open ? "Open" : p.school ?? "—"}</p>
                 </button>
-              )})}
-            </div>
+              )
+            })}
           </div>
+        </div>
 
-          <div>
-            <div className="flex items-center gap-2 mb-5">
-              <Trophy className="h-5 w-5 text-[#CC0000]" />
-              <h2 className={cn("text-2xl sm:text-3xl text-white", tocDisplayClass())}>Round 1</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-              {roundOne.map((bout) => (
-                <FightCard
-                  key={bout.id}
-                  bout={bout}
-                  participantById={participantById}
-                  highlightedAthleteId={highlightedAthleteId}
-                  onSelectAthlete={setHighlightedAthleteId}
-                />
-              ))}
-            </div>
+        <div>
+          <h2 className={cn("text-2xl sm:text-3xl text-white mb-2", tocDisplayClass())}>Bracket</h2>
+          <p className="text-sm text-white/45 mb-4">Winners bracket — scroll horizontally on mobile.</p>
+          <BracketTree
+            tree={winnersTree}
+            highlightedCompetitorId={highlightedAthleteId}
+            onHighlightCompetitor={setHighlightedAthleteId}
+          />
+        </div>
+
+        {consolationTree ? (
+          <div className="border-t border-white/10 pt-10">
+            <h2 className={cn("text-xl sm:text-2xl text-white mb-2", tocDisplayClass())}>Consolation bracket</h2>
+            <p className="text-sm text-white/45 mb-4">Back-side bracket — names fill in as results are recorded.</p>
+            <BracketTree tree={consolationTree} showChampion={false} />
           </div>
-        </section>
-      ) : (
-        <section className="container mx-auto max-w-6xl px-4 sm:px-6 py-10 sm:py-14 space-y-10">
-          <div>
-            <h2 className={cn("text-xl text-white mb-4", tocDisplayClass())}>Winners bracket</h2>
-            <div className="flex gap-3 overflow-x-auto pb-4">
-              {winners.map((b) => (
-                <BoutPill key={b.id} bout={b} participantById={participantById} />
-              ))}
-            </div>
-          </div>
-          <div>
-            <h2 className={cn("text-xl text-white mb-4", tocDisplayClass())}>Consolation</h2>
-            <div className="flex gap-3 overflow-x-auto pb-4">
-              {losers.map((b) => (
-                <BoutPill key={b.id} bout={b} participantById={participantById} />
-              ))}
-            </div>
-          </div>
-          <div>
-            <h2 className={cn("text-xl text-white mb-4", tocDisplayClass())}>Placement</h2>
-            <div className="flex gap-3 overflow-x-auto pb-4">
-              {placement.map((b) => (
-                <BoutPill key={b.id} bout={b} participantById={participantById} />
-              ))}
-            </div>
-          </div>
-          <p className="text-sm text-white/45 max-w-2xl">
-            Bout results update here during championship weekend. Round 1 names are set from the official seed draw.
-          </p>
-        </section>
-      )}
+        ) : null}
+      </section>
 
       <footer className="border-t border-white/10 py-8 text-center text-white/45 text-xs">
         NC United Tournament of Champions · {draw.weightClass} lbs official draw
