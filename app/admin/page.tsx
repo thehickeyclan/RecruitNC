@@ -11,6 +11,7 @@ import {
   School, Pencil, BarChart3, Settings, FileText,
   TrendingUp, Zap, Plus, Eye, UserPlus, RefreshCw, ClipboardList, Database, BookOpen, CreditCard,
   ShoppingBag, Smile, Coins, LayoutDashboard, CircleDollarSign, Link2, Receipt, GraduationCap,
+  LayoutGrid, Handshake, Mail,
 } from "lucide-react"
 
 interface AdminStats {
@@ -21,6 +22,17 @@ interface AdminStats {
   totalCoaches: number
   pendingSubmissions: number
 }
+
+const TOC_ADMIN_LINKS = [
+  { href: "/admin/toc", title: "TOC hub", description: "Overview of all TOC admin tools", icon: Trophy },
+  { href: "/admin/toc/invitations", title: "Invitations", description: "Send invites · copy confirm links", icon: UserCheck },
+  { href: "/admin/toc/field", title: "Field & brackets", description: "Seed wrestlers · publish official draws", icon: LayoutGrid },
+  { href: "/admin/toc/nominations", title: "Prospect interest", description: "Athlete interest form submissions", icon: Users },
+  { href: "/admin/toc/sponsors", title: "Sponsors", description: "Sponsor inquiry pipeline", icon: Handshake },
+  { href: "/admin/toc/email", title: "Email list", description: "Subscribers · CSV export", icon: Mail },
+  { href: "/tournament-of-champions/brackets", title: "Public brackets", description: "Published weight-class draws", icon: LayoutGrid },
+  { href: "/tournament-of-champions", title: "Public landing", description: "Marketing event page", icon: Eye },
+] as const
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<AdminStats>({
@@ -242,12 +254,6 @@ export default function AdminDashboard() {
                 <span className="text-sm font-semibold">National team</span>
               </span>
             </HardLink>
-            <HardLink href="/admin/toc/invitations" className="block">
-              <span className="w-full h-20 bg-gradient-to-br from-[#0B1D3A] to-[#CC0000] hover:from-[#CC0000] hover:to-[#0B1D3A] text-white shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex font-bold">
-                <Trophy className="h-6 w-6" />
-                <span className="text-sm font-semibold">TOC Invites</span>
-              </span>
-            </HardLink>
             <HardLink href="/admin/fundraising" className="block">
               <span className="w-full h-20 bg-gradient-to-br from-[#7c2d12] to-[#991b1b] hover:from-[#991b1b] hover:to-[#7c2d12] text-white shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex font-bold">
                 <Coins className="h-6 w-6" />
@@ -324,6 +330,27 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* Tournament of Champions */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-[#003366] mb-4 flex items-center gap-2">
+            <Trophy className="h-6 w-6 text-[#CC0000]" />
+            Tournament of Champions
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {TOC_ADMIN_LINKS.map(({ href, title, description, icon: Icon }) => (
+              <HardLink key={href} href={href} className="block h-full">
+                <Card className="border-t-4 border-t-[#CC0000] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+                  <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
+                    <Icon className="h-10 w-10 text-[#0B1D3A] mb-3" />
+                    <h3 className="font-bold text-[#003366] mb-1">{title}</h3>
+                    <p className="text-xs text-gray-600">{description}</p>
+                  </CardContent>
+                </Card>
+              </HardLink>
+            ))}
+          </div>
+        </div>
+
         {/* Management Tools - Individual Tiles */}
         <div>
           <h2 className="text-2xl font-bold text-[#003366] mb-4 flex items-center gap-2">
@@ -393,17 +420,6 @@ export default function AdminDashboard() {
                   <Trophy className="h-10 w-10 text-[#003366] mb-3" />
                   <h3 className="font-bold text-[#003366] mb-1">National team</h3>
                   <p className="text-xs text-gray-600">Interest forms and event payments</p>
-                </CardContent>
-              </Card>
-            </HardLink>
-
-            {/* Tournament of Champions — athlete invites + confirm links */}
-            <HardLink href="/admin/toc/invitations" className="block h-full">
-              <Card className="border-t-4 border-t-[#CC0000] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
-                <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
-                  <Trophy className="h-10 w-10 text-[#0B1D3A] mb-3" />
-                  <h3 className="font-bold text-[#003366] mb-1">TOC Invites</h3>
-                  <p className="text-xs text-gray-600">Send invites · copy text & confirm links</p>
                 </CardContent>
               </Card>
             </HardLink>

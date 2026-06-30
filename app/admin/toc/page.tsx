@@ -1,4 +1,3 @@
-import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { HardLink } from "@/components/hard-link"
 import { Trophy, Users, Mail, Handshake, UserCheck, LayoutGrid } from "lucide-react"
@@ -35,6 +34,13 @@ const LINKS = [
     icon: Mail,
   },
   {
+    href: "/tournament-of-champions/brackets",
+    title: "Public brackets",
+    description: "Published weight-class draws",
+    icon: LayoutGrid,
+    external: true,
+  },
+  {
     href: "/tournament-of-champions",
     title: "Public page",
     description: "View marketing landing page",
@@ -62,9 +68,9 @@ export default function TocAdminHubPage() {
                       {title}
                     </HardLink>
                   ) : (
-                    <Link href={href} className="hover:underline">
+                    <HardLink href={href} className="hover:underline">
                       {title}
-                    </Link>
+                    </HardLink>
                   )}
                 </CardTitle>
               </div>
@@ -76,9 +82,9 @@ export default function TocAdminHubPage() {
                   Open →
                 </HardLink>
               ) : (
-                <Link href={href} className="text-sm text-[#B31B1B] font-medium">
+                <HardLink href={href} className="text-sm text-[#B31B1B] font-medium">
                   Manage →
-                </Link>
+                </HardLink>
               )}
             </CardContent>
           </Card>
