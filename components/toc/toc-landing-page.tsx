@@ -29,18 +29,27 @@ type Props = {
 export function TocLandingPage({ config }: Props) {
   return (
     <div className="min-h-screen bg-white overflow-x-hidden">
+      {/* Hook */}
       <TocHero config={config} />
       <TocQuickFacts />
+      <TocStorySection />
+
+      {/* Format + field */}
       <TocWeightClassesList />
       <TocConfirmedFieldSection />
-      <TocChampionJacketSection />
-      <TocStorySection />
       <TocAthleteQuotesSection />
+
+      {/* Prize */}
+      <TocChampionJacketSection />
+
+      {/* Plan your weekend */}
       <TocVenueSection config={config} />
-      <TocOfficialsSection />
-      <TocSpectatorsSection />
       <TocScheduleTable />
+      <TocSpectatorsSection />
+      <TocOfficialsSection />
       <TocStreamingSection config={config} />
+
+      {/* Press + signup */}
       <TocMediaSection />
 
       <section id="email-signup" className="py-12 sm:py-16 bg-[#0B1D3A] relative scroll-mt-20">
