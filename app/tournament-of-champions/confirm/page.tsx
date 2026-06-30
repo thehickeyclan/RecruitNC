@@ -1,9 +1,14 @@
 import type { Metadata } from "next"
 import { Suspense } from "react"
 import { TocConfirmFlow } from "@/components/toc/confirm/toc-confirm-flow"
+import { TocCollegeAttendees } from "@/components/toc/toc-college-attendees"
 import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass } from "@/components/toc/toc-theme"
+import { resolveTocConfirmedColleges } from "@/lib/toc/confirmed-colleges"
+import { getTocEventConfig } from "@/lib/toc/event-config"
 import { TOC_HERO_DATES } from "@/lib/toc/constants"
 import { TOC_CONFIRM_WITHIN_DAYS, formatTocRegistrationFee, registrationPaymentDueDisplay } from "@/lib/toc/registration-policy"
+
+export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
   title: "Confirm Your Spot | Tournament of Champions 2026",
@@ -11,7 +16,10 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
-export default function TocConfirmPage() {
+export default async function TocConfirmPage() {
+  const config = await getTocEventConfig()
+  const confirmedColleges = await resolveTocConfirmedColleges(config.confirmed_colleges)
+
   return (
     <>
       <section className="bg-[#0B1D3A] text-white">
@@ -36,6 +44,7 @@ export default function TocConfirmPage() {
             Not on the list yet? Your coach or NC United sends the invite first — then search works, or use the link in
             your email.
           </p>
+          <TocCollegeAttendees colleges={confirmedColleges} variant="hero" />
         </div>
         <TocPatrioticBar />
       </section>
