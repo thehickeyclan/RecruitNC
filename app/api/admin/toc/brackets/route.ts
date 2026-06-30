@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/admin-auth"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { getBracketLockStatus, listLockedDrawSummaries } from "@/lib/toc/bracket-service"
+import { getBracketLockStatus, listPublicBracketSummaries } from "@/lib/toc/bracket-service"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 
 export const dynamic = "force-dynamic"
@@ -14,7 +14,7 @@ export async function GET() {
   }
 
   const admin = createAdminClient()
-  const locked = await listLockedDrawSummaries(admin)
+  const locked = await listPublicBracketSummaries(admin)
 
   const statuses = await Promise.all(
     TOC_WEIGHT_CLASSES.map(async (weightClass) => {

@@ -48,6 +48,9 @@ function WeightBoardCard({
     locked: boolean
     readyToLock: boolean
     lockError: string | null
+    canViewLive?: boolean
+    confirmedCount?: number
+    isComplete?: boolean
   }
   onLockDraw: (weightClass: number) => Promise<void>
   onUnlockDraw: (weightClass: number) => Promise<void>
@@ -137,7 +140,7 @@ function WeightBoardCard({
               <div className="flex flex-wrap gap-2">
                 <Button type="button" variant="outline" size="sm" asChild>
                   <HardLink href={`/tournament-of-champions/brackets/${board.weightClass}`}>
-                    Preview bracket
+                    View bracket
                   </HardLink>
                 </Button>
                 <Button
@@ -154,6 +157,20 @@ function WeightBoardCard({
             </>
           ) : (
             <>
+              {bracketStatus?.canViewLive ? (
+                <div className="flex flex-wrap gap-2">
+                  <Button type="button" variant="outline" size="sm" asChild>
+                    <HardLink href={`/tournament-of-champions/brackets/${board.weightClass}`}>
+                      View live bracket
+                    </HardLink>
+                  </Button>
+                  {bracketStatus.confirmedCount != null && bracketStatus.isComplete === false ? (
+                    <Badge variant="secondary" className="text-[10px]">
+                      {bracketStatus.confirmedCount}/{TOC_MAX_CONFIRMED_PER_WEIGHT} · building
+                    </Badge>
+                  ) : null}
+                </div>
+              ) : null}
               {bracketStatus?.lockError ? (
                 <p className="text-[11px] text-muted-foreground leading-relaxed">{bracketStatus.lockError}</p>
               ) : null}
@@ -165,8 +182,11 @@ function WeightBoardCard({
                 onClick={() => void onLockDraw(board.weightClass)}
               >
                 <Lock className="h-3.5 w-3.5 mr-1" />
-                Publish official draw
+                Lock official draw
               </Button>
+              <p className="text-[10px] text-muted-foreground leading-relaxed">
+                Bracket shows live as soon as one wrestler is confirmed with a seed. Lock when the field is final.
+              </p>
             </>
           )}
         </div>
@@ -183,7 +203,17 @@ export default function TocFieldAdminPage() {
   const [seedSavingId, setSeedSavingId] = useState<string | null>(null)
   const [filter, setFilter] = useState<"all" | "active">("active")
   const [bracketStatuses, setBracketStatuses] = useState<
-    Record<number, { locked: boolean; readyToLock: boolean; lockError: string | null }>
+    Record<
+      number,
+      {
+        locked: boolean
+        readyToLock: boolean
+        lockError: string | null
+        canViewLive?: boolean
+        confirmedCount?: number
+        isComplete?: boolean
+      }
+    >
   >({})
   const [bracketBusyWeight, setBracketBusyWeight] = useState<number | null>(null)
 
@@ -191,12 +221,25 @@ export default function TocFieldAdminPage() {
     const res = await fetch("/api/admin/toc/brackets")
     const data = await res.json()
     if (!res.ok) return
-    const map: Record<number, { locked: boolean; readyToLock: boolean; lockError: string | null }> = {}
+    const map: Record<
+      number,
+      {
+        locked: boolean
+        readyToLock: boolean
+        lockError: string | null
+        canViewLive?: boolean
+        confirmedCount?: number
+        isComplete?: boolean
+      }
+    > = {}
     for (const s of data.statuses ?? []) {
       map[s.weightClass as number] = {
         locked: Boolean(s.locked),
         readyToLock: Boolean(s.readyToLock),
         lockError: s.lockError ?? null,
+        canViewLive: Boolean(s.canViewLive),
+        confirmedCount: typeof s.confirmedCount === "number" ? s.confirmedCount : undefined,
+        isComplete: typeof s.isComplete === "boolean" ? s.isComplete : undefined,
       }
     }
     setBracketStatuses(map)

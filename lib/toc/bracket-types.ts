@@ -8,6 +8,7 @@ export type TocBracketParticipant = {
   school: string | null
   photoUrl: string | null
   graduationYear: number | null
+  isPlaceholder?: boolean
 }
 
 export type TocBracketSlot =
@@ -32,6 +33,9 @@ export type TocBracketDraw = {
   weightClass: number
   format: "8-man-de"
   lockedAt: string
+  confirmedCount: number
+  openSpots: number
+  isComplete: boolean
   participants: TocBracketParticipant[]
   bouts: TocBracketBout[]
 }
@@ -40,4 +44,7 @@ export type TocBracketDrawSummary = {
   weightClass: number
   lockedAt: string
   participantCount: number
+  confirmedCount: number
+  isComplete: boolean
+  source: "locked" | "live"
 }
