@@ -11,6 +11,7 @@ import { TocSpectatorsSection } from "@/components/toc/toc-spectators-section"
 import { TocWeightClassesList } from "@/components/toc/toc-weight-classes"
 import { TocScheduleTable } from "@/components/toc/toc-schedule-table"
 import { TocStreamingSection } from "@/components/toc/toc-streaming-section"
+import { TocRecruitingSection } from "@/components/toc/toc-recruiting-section"
 import { TocMediaSection } from "@/components/toc/toc-media-section"
 import { TocNominationForm } from "@/components/toc/toc-nomination-form"
 import { TocSponsorSection } from "@/components/toc/toc-sponsor-section"
@@ -19,13 +20,15 @@ import { TocAboutNcUnitedSection } from "@/components/toc/toc-about-nc-united-se
 import { TocEmailSignup } from "@/components/toc/toc-email-signup"
 import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass } from "@/components/toc/toc-theme"
 import { TOC_CONTACT_EMAIL } from "@/lib/toc/constants"
+import type { TocConfirmedCollege } from "@/lib/toc/confirmed-colleges"
 import type { TocEventConfig } from "@/lib/toc/event-config"
 
 type Props = {
   config: TocEventConfig
+  confirmedColleges: TocConfirmedCollege[]
 }
 
-export function TocLandingPage({ config }: Props) {
+export function TocLandingPage({ config, confirmedColleges }: Props) {
   return (
     <div className="min-h-screen bg-white overflow-x-hidden">
       {/* Hook */}
@@ -46,6 +49,7 @@ export function TocLandingPage({ config }: Props) {
       <TocSpectatorsSection />
       <TocOfficialsSection />
       <TocStreamingSection config={config} />
+      <TocRecruitingSection confirmedColleges={confirmedColleges} />
 
       {/* Press + signup */}
       <TocMediaSection />

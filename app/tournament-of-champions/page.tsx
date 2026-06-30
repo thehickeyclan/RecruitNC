@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { TocLandingPage } from "@/components/toc/toc-landing-page"
+import { resolveTocConfirmedColleges } from "@/lib/toc/confirmed-colleges"
 import { getTocEventConfig } from "@/lib/toc/event-config"
 import { TOC_SATURDAY_COMPETITION_DATE, TOC_VENUE } from "@/lib/toc/constants"
 
@@ -19,6 +20,7 @@ export const metadata: Metadata = {
 
 export default async function TournamentOfChampionsPage() {
   const config = await getTocEventConfig()
+  const confirmedColleges = await resolveTocConfirmedColleges(config.confirmed_colleges)
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -44,7 +46,7 @@ export default async function TournamentOfChampionsPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <TocLandingPage config={config} />
+      <TocLandingPage config={config} confirmedColleges={confirmedColleges} />
     </>
   )
 }
