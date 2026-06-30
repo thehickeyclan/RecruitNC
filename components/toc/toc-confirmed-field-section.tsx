@@ -44,8 +44,7 @@ export function TocConfirmedFieldSection() {
           Who&apos;s in
         </TocVarsityHeading>
         <p className="text-[#0B1D3A]/80 text-base sm:text-lg leading-relaxed mb-8 max-w-3xl">
-          Invite-only — up to {TOC_MAX_CONFIRMED_PER_WEIGHT} confirmed wrestlers per weight. Updated as athletes lock
-          in their spots.
+          Up to {TOC_MAX_CONFIRMED_PER_WEIGHT} per weight — updated as athletes confirm.
         </p>
 
         {loading ? (

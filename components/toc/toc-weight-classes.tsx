@@ -5,12 +5,9 @@ export function TocWeightClassesList() {
   return (
     <section className="py-12 sm:py-16 bg-[#0B1D3A] text-white relative">
       <div className="container mx-auto w-full px-4 sm:px-6 max-w-4xl text-center">
-        <TocVarsityHeading as="h2" className="text-white mb-2">
+        <TocVarsityHeading as="h2" className="text-white mb-6 sm:mb-8">
           College weight classes
         </TocVarsityHeading>
-        <p className="text-white/70 text-sm sm:text-base mb-6 sm:mb-8 max-w-xl mx-auto leading-relaxed">
-          Eleven brackets · eight wrestlers each · one champion earns the jacket
-        </p>
         <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
           {TOC_WEIGHT_CLASSES.map((w) => (
             <span

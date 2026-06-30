@@ -1,8 +1,6 @@
-import Image from "next/image"
 import { ExternalLink, Layers, Lightbulb, MapPin, Trophy, Users } from "lucide-react"
-import { TocAiRenderingCaption } from "@/components/toc/toc-ai-rendering-caption"
 import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass, tocSectionClass } from "@/components/toc/toc-theme"
-import { TOC_VENUE, TOC_VENUE_FEATURES, TOC_VENUE_LOUNGES, TOC_MATS_LINE } from "@/lib/toc/constants"
+import { TOC_VENUE, TOC_VENUE_FEATURES, TOC_VENUE_LOUNGES } from "@/lib/toc/constants"
 import type { TocEventConfig } from "@/lib/toc/event-config"
 
 const FEATURE_ICONS = [Layers, Users, Lightbulb, Trophy] as const
@@ -18,84 +16,64 @@ export function TocVenueSection({ config }: Props) {
   return (
     <section id="venue" className={`relative bg-[#f4f5f7] border-y border-[#0B1D3A]/10 scroll-mt-20 ${tocSectionClass()}`}>
       <TocPatrioticBar className="absolute top-0 left-0 right-0" />
-      <div className="container mx-auto w-full px-4 sm:px-6 max-w-6xl pt-4">
-        <div className="grid grid-cols-1 gap-8 sm:gap-10 lg:grid-cols-2 lg:items-center">
-          <div>
-            <div className="relative overflow-hidden rounded-sm border-2 border-[#0B1D3A]/10 shadow-xl">
-              <Image
-                src="/images/toc/venue-apex-arena.png"
-                alt="NC United Tournament of Champions venue — two mats, professional lighting, and crowd seating in Apex"
-                width={1536}
-                height={1024}
-                className="h-auto w-full"
-                sizes="(min-width: 1024px) 50vw, 100vw"
-              />
-            </div>
-            <TocAiRenderingCaption />
-          </div>
+      <div className="container mx-auto w-full px-4 sm:px-6 max-w-4xl pt-4">
+        <p className="text-[#CC0000] text-xs font-semibold uppercase tracking-[0.22em] mb-2">The venue</p>
+        <TocVarsityHeading as="h2" className="mb-3 sm:mb-4">
+          Built for the big stage
+        </TocVarsityHeading>
+        <p className="text-[#0B1D3A]/90 text-base sm:text-lg leading-relaxed mb-8 max-w-3xl">
+          {venueName} · {TOC_VENUE.campus} — {TOC_VENUE.seatingLabel}. Pro lighting, video boards, and a dedicated
+          atrium lounge for credentialed coaches and officials.
+        </p>
 
-          <div>
-            <p className="text-[#CC0000] text-xs font-semibold uppercase tracking-[0.22em] mb-2">The venue</p>
-            <TocVarsityHeading as="h2" className="mb-3 sm:mb-4">
-              Built for the big stage
-            </TocVarsityHeading>
-            <p className="text-[#0B1D3A]/90 text-base sm:text-lg leading-relaxed mb-6">
-              {venueName} · {TOC_VENUE.campus} — {TOC_VENUE.seatingLabel}. {TOC_MATS_LINE} Full lighting, video boards,
-              and a dedicated atrium lounge for credentialed college coaches, high school coaches, and tournament officials.
-            </p>
-
-            <ul className="space-y-4 mb-8">
-              {TOC_VENUE_FEATURES.map(({ title, description }, index) => {
-                const Icon = FEATURE_ICONS[index] ?? Layers
-                return (
-                  <li key={title} className="flex gap-3">
-                    <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-sm bg-[#0B1D3A] text-white">
-                      <Icon className="h-4 w-4" aria-hidden />
-                    </div>
-                    <div>
-                      <p className="font-bold text-[#0B1D3A] text-sm uppercase tracking-wide">{title}</p>
-                      <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{description}</p>
-                    </div>
-                  </li>
-                )
-              })}
-            </ul>
-
-            <div className="rounded-sm border-2 border-[#0B1D3A]/10 bg-white p-5 sm:p-6 mb-8">
-              <p className="text-[#CC0000] text-xs font-semibold uppercase tracking-[0.22em] mb-2">
-                {TOC_VENUE_LOUNGES.eyebrow}
-              </p>
-              <h3 className={`text-[#0B1D3A] text-lg mb-2 ${tocDisplayClass()}`}>{TOC_VENUE_LOUNGES.headline}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-5">{TOC_VENUE_LOUNGES.lead}</p>
-              <div className="rounded-sm border border-[#0B1D3A]/10 bg-[#f8f9fb] p-4 border-l-4 border-l-[#CC0000]">
-                <div className="flex items-start gap-2 mb-2">
-                  <Users className="h-5 w-5 text-[#CC0000] shrink-0 mt-0.5" aria-hidden />
-                  <p className="font-bold text-[#0B1D3A] text-sm uppercase tracking-wide">
-                    {TOC_VENUE_LOUNGES.title}
-                  </p>
+        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+          {TOC_VENUE_FEATURES.map(({ title, description }, index) => {
+            const Icon = FEATURE_ICONS[index] ?? Layers
+            return (
+              <li key={title} className="flex gap-3 rounded-sm border-2 border-[#0B1D3A]/10 bg-white p-4">
+                <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-sm bg-[#0B1D3A] text-white">
+                  <Icon className="h-4 w-4" aria-hidden />
                 </div>
-                <p className="text-sm text-[#0B1D3A]/85 leading-relaxed pl-7">{TOC_VENUE_LOUNGES.description}</p>
-              </div>
-            </div>
-
-            <div className="rounded-sm border-2 border-[#0B1D3A]/10 bg-white p-5">
-              <div className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 text-[#CC0000] shrink-0 mt-0.5" aria-hidden />
                 <div>
-                  <p className="font-semibold text-[#0B1D3A]">{venueName}</p>
-                  <p className="text-sm text-muted-foreground mt-1">{venueAddress}</p>
-                  <p className="text-sm text-muted-foreground">{config.event_dates}</p>
-                  <a
-                    href={TOC_VENUE.mapsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 mt-3 text-sm font-semibold text-[#CC0000] hover:underline"
-                  >
-                    Open in Google Maps
-                    <ExternalLink className="h-3.5 w-3.5" aria-hidden />
-                  </a>
+                  <p className="font-bold text-[#0B1D3A] text-sm uppercase tracking-wide">{title}</p>
+                  <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{description}</p>
                 </div>
-              </div>
+              </li>
+            )
+          })}
+        </ul>
+
+        <div className="rounded-sm border-2 border-[#0B1D3A]/10 bg-white p-5 sm:p-6 mb-8">
+          <p className="text-[#CC0000] text-xs font-semibold uppercase tracking-[0.22em] mb-2">
+            {TOC_VENUE_LOUNGES.eyebrow}
+          </p>
+          <h3 className={`text-[#0B1D3A] text-lg mb-2 ${tocDisplayClass()}`}>{TOC_VENUE_LOUNGES.headline}</h3>
+          <p className="text-sm text-muted-foreground leading-relaxed mb-5">{TOC_VENUE_LOUNGES.lead}</p>
+          <div className="rounded-sm border border-[#0B1D3A]/10 bg-[#f8f9fb] p-4 border-l-4 border-l-[#CC0000]">
+            <div className="flex items-start gap-2 mb-2">
+              <Users className="h-5 w-5 text-[#CC0000] shrink-0 mt-0.5" aria-hidden />
+              <p className="font-bold text-[#0B1D3A] text-sm uppercase tracking-wide">{TOC_VENUE_LOUNGES.title}</p>
+            </div>
+            <p className="text-sm text-[#0B1D3A]/85 leading-relaxed pl-7">{TOC_VENUE_LOUNGES.description}</p>
+          </div>
+        </div>
+
+        <div className="rounded-sm border-2 border-[#0B1D3A]/10 bg-white p-5">
+          <div className="flex items-start gap-3">
+            <MapPin className="h-5 w-5 text-[#CC0000] shrink-0 mt-0.5" aria-hidden />
+            <div>
+              <p className="font-semibold text-[#0B1D3A]">{venueName}</p>
+              <p className="text-sm text-muted-foreground mt-1">{venueAddress}</p>
+              <p className="text-sm text-muted-foreground">{config.event_dates}</p>
+              <a
+                href={TOC_VENUE.mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 mt-3 text-sm font-semibold text-[#CC0000] hover:underline"
+              >
+                Open in Google Maps
+                <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+              </a>
             </div>
           </div>
         </div>
