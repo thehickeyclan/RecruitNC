@@ -1,6 +1,5 @@
 "use client"
 
-import { TocConfirmedFieldSection } from "@/components/toc/toc-confirmed-field-section"
 import { TocHero } from "@/components/toc/toc-hero"
 import { TocQuickFacts } from "@/components/toc/toc-quick-facts"
 import { TocChampionJacketSection } from "@/components/toc/toc-champion-jacket-section"
@@ -34,9 +33,8 @@ export function TocLandingPage({ config }: Props) {
       <TocQuickFacts />
       <TocStorySection />
 
-      {/* Format + field */}
+      {/* Format */}
       <TocWeightClassesList />
-      <TocConfirmedFieldSection />
       <TocAthleteQuotesSection />
 
       {/* Prize */}
