@@ -12,6 +12,12 @@ import {
   TOC_TICKET_SALE_MONTH,
   TOC_VENUE,
 } from "@/lib/toc/constants"
+import {
+  formatTocRegistrationFee,
+  registrationPaymentDueDisplay,
+  TOC_CONFIRM_WITHIN_DAYS,
+  TOC_REGISTRATION_FEE_COVERS,
+} from "@/lib/toc/registration-policy"
 
 const FAQ_ITEMS = [
   {
@@ -52,7 +58,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "What does registration cost?",
-    a: "Invited athletes pay a $100 registration fee due by August 1, 2026. That supports tournament entry, top-four placement awards at each weight, and the champion jacket program for bracket winners. Confirm within 7 days of your invite; payment instructions follow by email after you confirm.",
+    a: `Invited athletes pay a ${formatTocRegistrationFee()} registration fee due by ${registrationPaymentDueDisplay()}. That supports tournament entry, ${TOC_REGISTRATION_FEE_COVERS}. Confirm within ${TOC_CONFIRM_WITHIN_DAYS} days of your invite; payment instructions follow by email after you confirm.`,
   },
   {
     q: "Can I buy tickets now?",

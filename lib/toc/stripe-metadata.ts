@@ -1,4 +1,4 @@
-/** Stripe Checkout metadata for Tournament of Champions athlete registration ($100). */
+/** Stripe Checkout metadata for Tournament of Champions athlete registration ($75). */
 
 export const TOC_STRIPE_REGISTRATION_TYPE = "TOC Reg" as const
 export const TOC_STRIPE_SOURCE = "toc_reg" as const

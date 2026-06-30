@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { buildTocAthleteInviteMessage } from "@/lib/toc/invite-message"
+import { formatTocRegistrationFee } from "@/lib/toc/registration-policy"
 
 describe("buildTocAthleteInviteMessage", () => {
   it("includes confirm URL in email and SMS copy", () => {
@@ -14,7 +15,7 @@ describe("buildTocAthleteInviteMessage", () => {
     expect(msg.emailBody).toContain("157 lbs")
     expect(msg.emailBody).toContain(url)
     expect(msg.emailBody).toContain("Please confirm within 7 days")
-    expect(msg.emailBody).toContain("$100")
+    expect(msg.emailBody).toContain(formatTocRegistrationFee())
     expect(msg.emailBody).toContain("August 1, 2026")
     expect(msg.emailBody).toContain(msg.eventPageUrl)
     expect(msg.smsBody).toContain(url)
