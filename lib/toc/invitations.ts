@@ -61,6 +61,15 @@ export const tocAdminInviteSchema = z.object({
   sendEmail: z.boolean().optional().default(true),
 })
 
+export const tocAdminInvitationPatchSchema = z.object({
+  weightClass: z.coerce
+    .number()
+    .refine((n) => TOC_WEIGHT_CLASSES.includes(n as (typeof TOC_WEIGHT_CLASSES)[number]), "Invalid weight class")
+    .optional(),
+  seed: z.number().int().min(1).max(TOC_MAX_CONFIRMED_PER_WEIGHT).nullable().optional(),
+  notes: z.string().max(2000).nullable().optional(),
+})
+
 export function parseAthleteWeightClass(value: string | number | null | undefined): number | null {
   if (value == null || value === "") return null
   const n = typeof value === "number" ? value : parseInt(String(value).replace(/[^\d]/g, ""), 10)

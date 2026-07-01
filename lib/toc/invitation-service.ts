@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { toE164 } from "@/lib/sms"
 import {
   TOC_MAX_CONFIRMED_PER_WEIGHT,
   athleteContactEmail,
@@ -144,6 +145,63 @@ export async function resolveAthleteNotificationEmails(
   }
 
   return Array.from(emails)
+}
+
+export type TocAthleteNotificationPhone = {
+  label: string
+  e164: string
+  display: string
+}
+
+/** Athlete cell/phone first, then linked parent cell phones on user_profiles. */
+export async function resolveAthleteNotificationPhones(
+  admin: SupabaseClient,
+  athleteId: string,
+  athleteRow?: Record<string, unknown>,
+): Promise<TocAthleteNotificationPhone[]> {
+  const phones: TocAthleteNotificationPhone[] = []
+  const seen = new Set<string>()
+
+  let row = athleteRow
+  if (!row) {
+    const { data } = await admin.from("athletes").select("*").eq("id", athleteId).maybeSingle()
+    row = (data as Record<string, unknown> | null) ?? undefined
+  }
+
+  const addPhone = (label: string, raw: string | null | undefined) => {
+    const e164 = toE164(raw)
+    if (!e164 || seen.has(e164)) return
+    seen.add(e164)
+    phones.push({ label, e164, display: raw?.trim() ?? e164 })
+  }
+
+  if (row) {
+    for (const key of ["cell", "cell_number", "phone"]) {
+      const value = row[key]
+      if (typeof value === "string" && value.trim()) {
+        addPhone("Athlete", value)
+        break
+      }
+    }
+  }
+
+  const { data: links } = await admin.from("parent_athlete_links").select("user_id").eq("athlete_id", athleteId)
+  const userIds = (links ?? []).map((l) => l.user_id).filter(Boolean)
+  if (userIds.length > 0) {
+    const { data: profiles } = await admin
+      .from("user_profiles")
+      .select("full_name, first_name, cell_phone")
+      .in("user_id", userIds)
+    for (const profile of profiles ?? []) {
+      const name =
+        (typeof profile.full_name === "string" && profile.full_name.trim()) ||
+        (typeof profile.first_name === "string" && profile.first_name.trim()) ||
+        "Parent"
+      addPhone(name, typeof profile.cell_phone === "string" ? profile.cell_phone : null)
+    }
+  }
+
+  return phones
 }
 
 export const TOC_EVENT_PAGE_URL = "https://app.ncwrestlingunited.com/tournament-of-champions"
