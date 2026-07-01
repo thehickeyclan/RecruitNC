@@ -57,3 +57,8 @@ When the user says "push update" (or similar): stage and commit all relevant cha
 - **Never on the public landing page:** Internal P&L, spectator counts/capacity (~350/~450/~500), inventory caps, ticket tier pricing tables (until product explicitly wants prices live), mat-throughput math, ops runbooks, or build-spec “success metrics.” Those belong in admin, Stripe, or internal docs — not `/tournament-of-champions`.
 - **Schedule on page:** Fan-facing “when to be there” times are fine; omit buffer notes and operational contingency copy.
 - **Build spec vs marketing:** Internal build spec may reference attendance targets and Stripe caps — do not mirror that language on the public page.
+
+# Tournament of Champions — confirmed college logos
+- **Single source of truth:** `TOC_CONFIRMED_COLLEGES_DEFAULT` in `lib/toc/constants.ts` (name + logoUrl). Display uses `resolveTocConfirmedColleges` — code defaults **always** render; Supabase `toc_event_config.confirmed_colleges` may only **add** extras, never replace or hide code entries.
+- **Adding a school:** Edit `constants.ts` + alias keys in `lib/toc/confirmed-colleges.ts` if needed. Do **not** rely on Supabase SQL alone for logos to appear. No required DB update after deploy.
+- **Do not** reintroduce “DB list replaces defaults when non-empty” logic — that caused stale 5-school JSON to hide new colleges twice.
