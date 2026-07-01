@@ -245,17 +245,17 @@ export function buildEmptySingleElimTree(size: BracketSize, title?: string): Bra
   return { size, title, rounds }
 }
 
-/** Standard seed line for first round: 1v8, 4v5, 2v7, 3v6 scaled to size. */
+/** Standard seed line for first round: 1v8, 4v5, 3v6, 7v2 (#1 top / #2 bottom bookends). */
 export function standardSeedPairs(size: BracketSize): Array<[number, number]> {
   if (size === 4) return [[1, 4], [2, 3]]
-  if (size === 8) return [[1, 8], [4, 5], [2, 7], [3, 6]]
+  if (size === 8) return [[1, 8], [4, 5], [3, 6], [7, 2]]
   // Recursive bracket seeding for larger sizes
   const pairs: Array<[number, number]> = []
   const half = size / 2
   for (let i = 1; i <= half; i++) {
     pairs.push([i, size + 1 - i])
   }
-  // Reorder for standard bracket layout (1-8, 4-5, 2-7, 3-6 pattern extended)
+  // Reorder for standard bracket layout (1-8, 4-5, 3-6, 7-2 pattern extended)
   if (size === 16) {
     return [
       [1, 16], [8, 9], [4, 13], [5, 12],

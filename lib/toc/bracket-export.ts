@@ -1,11 +1,11 @@
 import type { TocFieldAthlete, TocWeightBoard } from "@/lib/toc/field-board"
 
-/** Standard 8-person double-elimination first-round pairings by seed. */
+/** Standard 8-person double-elimination first-round pairings by seed (#1 top bookend, #2 bottom). */
 export const TOC_EIGHT_MAN_DE_ROUND1 = [
   { match: 1, top: 1, bottom: 8 },
   { match: 2, top: 4, bottom: 5 },
-  { match: 3, top: 2, bottom: 7 },
-  { match: 4, top: 3, bottom: 6 },
+  { match: 3, top: 3, bottom: 6 },
+  { match: 4, top: 7, bottom: 2 },
 ] as const
 
 function splitName(fullName: string): { firstName: string; lastName: string } {
