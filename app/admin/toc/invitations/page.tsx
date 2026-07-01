@@ -13,7 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { TocInviteShareCard } from "@/components/toc/admin/toc-invite-share-card"
 import { TocInviteReminderCard } from "@/components/toc/admin/toc-invite-reminder-card"
 import { HardLink } from "@/components/hard-link"
-import { ArrowLeft, Loader2, RefreshCw, Send } from "lucide-react"
+import { ArrowLeft, CreditCard, Loader2, RefreshCw, Send, UserCheck, Users } from "lucide-react"
 import { buildTocAthleteInviteMessage, type TocInviteMessage } from "@/lib/toc/invite-message"
 import { confirmPageUrl, registrationPayPageUrl } from "@/lib/toc/invitation-service"
 import { formatTocGradYear, suggestTocInviteWeight, tocWeightProfileHint } from "@/lib/toc/invitations"
@@ -68,6 +68,15 @@ export default function TocInvitationsAdminPage() {
       athleteId: selectedAthlete.id,
     })
   }, [selectedAthlete, inviteWeight])
+
+  const inviteStats = useMemo(() => {
+    const invited = invitations.length
+    const accepted = invitations.filter((row) => row.status === "confirmed").length
+    const paid = invitations.filter((row) => row.payment_status === "paid").length
+    const pendingConfirm = invitations.filter((row) => row.status === "invited").length
+    const pendingPayment = Math.max(0, accepted - paid)
+    return { invited, accepted, paid, pendingConfirm, pendingPayment }
+  }, [invitations])
 
   const loadInvitations = useCallback(async () => {
     setLoading(true)
@@ -198,6 +207,61 @@ export default function TocInvitationsAdminPage() {
           <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
           Refresh
         </Button>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Card className="border-t-4 border-t-[#002147]">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Invited</CardTitle>
+            <Users className="h-4 w-4 text-[#002147]" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold tabular-nums">{loading ? "—" : inviteStats.invited}</div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {loading
+                ? "Loading…"
+                : inviteStats.pendingConfirm > 0
+                  ? `${inviteStats.pendingConfirm} awaiting confirm`
+                  : "Invitations issued"}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-t-4 border-t-[#CC0000]">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Accepted</CardTitle>
+            <UserCheck className="h-4 w-4 text-[#CC0000]" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold tabular-nums">{loading ? "—" : inviteStats.accepted}</div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {loading
+                ? "Loading…"
+                : inviteStats.invited > 0
+                  ? `${Math.round((inviteStats.accepted / inviteStats.invited) * 100)}% of invited`
+                  : "Verbal confirms"}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-t-4 border-t-green-700">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Paid</CardTitle>
+            <CreditCard className="h-4 w-4 text-green-700" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold tabular-nums">{loading ? "—" : inviteStats.paid}</div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {loading
+                ? "Loading…"
+                : inviteStats.pendingPayment > 0
+                  ? `${inviteStats.pendingPayment} confirmed, unpaid`
+                  : inviteStats.accepted > 0
+                    ? "All confirmed athletes paid"
+                    : "Registration fees received"}
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
