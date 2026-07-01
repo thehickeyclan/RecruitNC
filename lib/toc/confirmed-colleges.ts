@@ -26,6 +26,12 @@ const TOC_COLLEGE_LOGO_BY_KEY: Record<string, string> = Object.fromEntries(
     if (key === "montreat") {
       entries.push(["montreat college", logoUrl])
     }
+    if (key === "umo") {
+      entries.push(["university of mount olive", logoUrl], ["mount olive", logoUrl])
+    }
+    if (key === "lynchburg") {
+      entries.push(["university of lynchburg", logoUrl], ["lynchburg college", logoUrl])
+    }
     return entries
   }),
 )
