@@ -324,7 +324,8 @@ export const TOC_BRAND = {
   white: "#FFFFFF",
 } as const
 
-/** Confirmed recruiting-fair programs — explicit logos for the TOC landing page. */
+/** Confirmed recruiting-fair programs — SINGLE SOURCE OF TRUTH for landing + confirm logos.
+ * Add new schools here only; Supabase `toc_event_config.confirmed_colleges` cannot remove these. */
 export const TOC_CONFIRMED_COLLEGES_DEFAULT = [
   {
     name: "UNC",
@@ -363,7 +364,7 @@ export const TOC_CONFIRMED_COLLEGES_DEFAULT = [
   },
 ] as const
 
-/** Program names only — used when `toc_event_config.confirmed_colleges` is empty. */
+/** Program names from code defaults — not a Supabase-only list. */
 export const TOC_CONFIRMED_COLLEGES = TOC_CONFIRMED_COLLEGES_DEFAULT.map((c) => c.name)
 
 export const TOC_DEFAULT_CONFIG = {

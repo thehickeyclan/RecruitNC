@@ -1,10 +1,9 @@
 import { createAdminClient } from "@/lib/supabase/admin"
-import { parseConfirmedCollegeNames } from "@/lib/toc/confirmed-colleges"
+import { mergeTocConfirmedCollegeNames, parseConfirmedCollegeNames } from "@/lib/toc/confirmed-colleges"
 import { TOC_CONFIRMED_COLLEGES, TOC_DEFAULT_CONFIG } from "@/lib/toc/constants"
 
 function resolveConfirmedCollegesFromRow(raw: unknown): string[] {
-  const fromDb = parseConfirmedCollegeNames(raw)
-  return fromDb.length > 0 ? fromDb : [...TOC_CONFIRMED_COLLEGES]
+  return mergeTocConfirmedCollegeNames(parseConfirmedCollegeNames(raw))
 }
 
 export type TocEventConfig = {
@@ -16,7 +15,7 @@ export type TocEventConfig = {
   hero_primary_cta_href: string
   watch_live_url: string | null
   brackets_url: string | null
-  /** Program names with confirmed fair tables (from `confirmed_colleges` jsonb). */
+  /** Merged code defaults + optional DB extras — see mergeTocConfirmedCollegeNames. */
   confirmed_colleges: string[]
 }
 

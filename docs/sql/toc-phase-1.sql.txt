@@ -13,6 +13,7 @@ create table if not exists public.toc_event_config (
   watch_live_url text,
   brackets_url text,
   participating_colleges text,
+  -- Optional extras only. Landing page logos come from lib/toc/constants.ts TOC_CONFIRMED_COLLEGES_DEFAULT (code wins).
   confirmed_colleges jsonb not null default '[]'::jsonb,
   updated_at timestamptz default CURRENT_TIMESTAMP,
   constraint toc_event_config_single_row check (id = 1)
@@ -28,10 +29,9 @@ values (
   1,
   'Hope Community Church',
   'Hope Community Church, Apex, NC',
-  '["UNC", "NC State", "Roanoke", "Greensboro College", "Montreat"]'::jsonb
+  '[]'::jsonb
 )
 on conflict (id) do update set
-  confirmed_colleges = excluded.confirmed_colleges,
   venue_name = excluded.venue_name,
   venue_address = excluded.venue_address,
   updated_at = CURRENT_TIMESTAMP;

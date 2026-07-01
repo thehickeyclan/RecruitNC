@@ -63,19 +63,50 @@ export function parseConfirmedCollegeNames(raw: unknown): string[] {
   return []
 }
 
-/** Resolve logos for admin-confirmed programs; uses TOC blob URLs first, then entity logos. */
-export async function resolveTocConfirmedColleges(names: string[]): Promise<TocConfirmedCollege[]> {
-  const list =
-    names.length > 0 ? names : TOC_CONFIRMED_COLLEGES_DEFAULT.map((c) => c.name)
+/**
+ * Code defaults always display (name + logo from constants.ts).
+ * Supabase `confirmed_colleges` may only ADD programs not yet in code — never hide or replace defaults.
+ */
+export function mergeTocConfirmedCollegeNames(dbNames: string[]): string[] {
+  const defaultNames = TOC_CONFIRMED_COLLEGES_DEFAULT.map((c) => c.name)
+  if (dbNames.length === 0) return defaultNames
 
-  const resolved = await Promise.all(
-    list.map(async (name) => {
-      const logoUrl = tocCollegeLogoUrl(name) ?? (await resolveEntityLogoUrl("college", name))
-      return logoUrl ? { name, logoUrl } : null
-    }),
+  const seen = new Set<string>()
+  const merged: string[] = []
+  for (const name of defaultNames) {
+    const key = name.toLowerCase()
+    seen.add(key)
+    merged.push(name)
+  }
+  for (const name of dbNames) {
+    const trimmed = name.trim()
+    const key = trimmed.toLowerCase()
+    if (!key || seen.has(key)) continue
+    seen.add(key)
+    merged.push(trimmed)
+  }
+  return merged
+}
+
+/** Landing + confirm pages — code defaults first; DB extras appended. */
+export async function resolveTocConfirmedColleges(dbNames: string[]): Promise<TocConfirmedCollege[]> {
+  const defaults = getDefaultTocConfirmedColleges()
+  const defaultKeys = new Set(defaults.map((c) => c.name.toLowerCase()))
+
+  const extraNames = mergeTocConfirmedCollegeNames(dbNames).filter(
+    (name) => !defaultKeys.has(name.toLowerCase()),
   )
 
-  return resolved.filter((entry): entry is TocConfirmedCollege => entry !== null)
+  const extras = (
+    await Promise.all(
+      extraNames.map(async (name) => {
+        const logoUrl = tocCollegeLogoUrl(name) ?? (await resolveEntityLogoUrl("college", name))
+        return logoUrl ? { name, logoUrl } : null
+      }),
+    )
+  ).filter((entry): entry is TocConfirmedCollege => entry !== null)
+
+  return [...defaults, ...extras]
 }
 
 /** Default confirmed colleges with logos (no DB). */
