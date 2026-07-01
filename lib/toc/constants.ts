@@ -351,6 +351,16 @@ export const TOC_CONFIRMED_COLLEGES_DEFAULT = [
     logoUrl:
       "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/QS-jExE_V4gnRb3SrkmUP-Montreat.png",
   },
+  {
+    name: "UMO",
+    logoUrl:
+      "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/cwjgktar-1745958885613.png",
+  },
+  {
+    name: "Lynchburg",
+    logoUrl:
+      "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/SmHkZ3IPPB6ayHiOYue4Y-Lynchburg.jpg",
+  },
 ] as const
 
 /** Program names only — used when `toc_event_config.confirmed_colleges` is empty. */
