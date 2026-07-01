@@ -362,6 +362,21 @@ export const TOC_CONFIRMED_COLLEGES_DEFAULT = [
     logoUrl:
       "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/SmHkZ3IPPB6ayHiOYue4Y-Lynchburg.jpg",
   },
+  {
+    name: "Army West Point",
+    logoUrl:
+      "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/rTLFBwYxfKzHEmiET86Sk-Army%20West%20Point.jpg",
+  },
+  {
+    name: "Averett",
+    logoUrl:
+      "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/XpGp9iaWUS2oENhX2XALE-Averett.png",
+  },
+  {
+    name: "Campbell",
+    logoUrl:
+      "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/hQ12r1UqPiFiiEG_7lrvU-Campbell.png",
+  },
 ] as const
 
 /** Program names from code defaults — not a Supabase-only list. */
