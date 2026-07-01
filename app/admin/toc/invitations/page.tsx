@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { TocInviteShareCard } from "@/components/toc/admin/toc-invite-share-card"
+import { TocInviteReminderCard } from "@/components/toc/admin/toc-invite-reminder-card"
 import { HardLink } from "@/components/hard-link"
 import { ArrowLeft, Loader2, RefreshCw, Send } from "lucide-react"
 import { buildTocAthleteInviteMessage, type TocInviteMessage } from "@/lib/toc/invite-message"
@@ -36,6 +37,8 @@ type InvitationRow = {
   jacket_size: string | null
   payment_status: string | null
   paid_at: string | null
+  last_reminder_at: string | null
+  last_reminder_body: string | null
   athletes: { id: string; name: string; highschool: string | null; graduationyear: number | null } | null
 }
 
@@ -54,6 +57,8 @@ export default function TocInvitationsAdminPage() {
   const [inviteMessage, setInviteMessage] = useState<string | null>(null)
   const [lastShare, setLastShare] = useState<TocInviteMessage | null>(null)
   const [expandedShareId, setExpandedShareId] = useState<string | null>(null)
+  const [expandedReminderId, setExpandedReminderId] = useState<string | null>(null)
+  const [weightSavingId, setWeightSavingId] = useState<string | null>(null)
 
   const previewShare = useMemo(() => {
     if (!selectedAthlete) return null
@@ -150,6 +155,30 @@ export default function TocInvitationsAdminPage() {
       weightClass: row.weight_class,
       confirmUrl: confirmPageUrl(row.athlete_id),
     })
+
+  const updateWeight = async (row: InvitationRow, weightClass: number) => {
+    if (weightClass === row.weight_class) return
+    setWeightSavingId(row.id)
+    try {
+      const res = await fetch(`/api/admin/toc/invitations/${row.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ weightClass }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "Failed to update weight")
+      setInvitations((prev) =>
+        prev.map((inv) => (inv.id === row.id ? { ...inv, weight_class: weightClass } : inv)),
+      )
+      if (expandedShareId === row.id) {
+        setExpandedShareId(null)
+      }
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to update weight")
+    } finally {
+      setWeightSavingId(null)
+    }
+  }
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -284,7 +313,8 @@ export default function TocInvitationsAdminPage() {
                 <TableHead>Jacket</TableHead>
                 <TableHead>Invited</TableHead>
                 <TableHead>Confirmed</TableHead>
-                <TableHead className="text-right">Share</TableHead>
+                <TableHead>Last text</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -292,7 +322,33 @@ export default function TocInvitationsAdminPage() {
                 <TableRow key={row.id}>
                   <TableCell className="font-medium">{row.athletes?.name ?? row.athlete_id.slice(0, 8)}</TableCell>
                   <TableCell>{row.athletes?.highschool ?? "—"}</TableCell>
-                  <TableCell>{row.weight_class} lbs</TableCell>
+                  <TableCell className="min-w-[120px]">
+                    {row.status === "declined" || row.status === "withdrew" ? (
+                      <span>{row.weight_class} lbs</span>
+                    ) : (
+                      <div className="flex items-center gap-1.5">
+                        <Select
+                          value={String(row.weight_class)}
+                          disabled={weightSavingId === row.id}
+                          onValueChange={(value) => void updateWeight(row, Number(value))}
+                        >
+                          <SelectTrigger className="h-8 w-[100px] text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {TOC_WEIGHT_CLASSES.map((w) => (
+                              <SelectItem key={w} value={String(w)}>
+                                {w} lbs
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {weightSavingId === row.id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground shrink-0" />
+                        ) : null}
+                      </div>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <Badge variant={row.status === "confirmed" ? "default" : "secondary"}>{row.status}</Badge>
                   </TableCell>
@@ -317,22 +373,42 @@ export default function TocInvitationsAdminPage() {
                   <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                     {row.confirmed_at ? new Date(row.confirmed_at).toLocaleDateString() : "—"}
                   </TableCell>
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                    {row.last_reminder_at ? new Date(row.last_reminder_at).toLocaleString() : "—"}
+                  </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="text-xs"
-                      onClick={() => setExpandedShareId(expandedShareId === row.id ? null : row.id)}
-                    >
-                      {expandedShareId === row.id ? "Hide" : "Copy invite"}
-                    </Button>
+                    <div className="flex flex-col items-end gap-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs h-8"
+                        onClick={() => {
+                          setExpandedReminderId(expandedReminderId === row.id ? null : row.id)
+                          setExpandedShareId(null)
+                        }}
+                      >
+                        {expandedReminderId === row.id ? "Hide text" : "Text reminder"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs h-8"
+                        onClick={() => {
+                          setExpandedShareId(expandedShareId === row.id ? null : row.id)
+                          setExpandedReminderId(null)
+                        }}
+                      >
+                        {expandedShareId === row.id ? "Hide invite" : "Copy invite"}
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
               {!loading && invitations.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
                     No invitations yet
                   </TableCell>
                 </TableRow>
@@ -344,6 +420,27 @@ export default function TocInvitationsAdminPage() {
             const row = invitations.find((r) => r.id === expandedShareId)
             if (!row) return null
             return <TocInviteShareCard share={shareForRow(row)} title="Invite copy" compact />
+          })() : null}
+
+          {expandedReminderId ? (() => {
+            const row = invitations.find((r) => r.id === expandedReminderId)
+            if (!row) return null
+            return (
+              <TocInviteReminderCard
+                invitationId={row.id}
+                athleteName={row.athletes?.name ?? "Athlete"}
+                lastReminderAt={row.last_reminder_at}
+                onSent={(lastReminderAt, lastReminderBody) => {
+                  setInvitations((prev) =>
+                    prev.map((inv) =>
+                      inv.id === row.id
+                        ? { ...inv, last_reminder_at: lastReminderAt, last_reminder_body: lastReminderBody }
+                        : inv,
+                    ),
+                  )
+                }}
+              />
+            )
           })() : null}
         </CardContent>
       </Card>

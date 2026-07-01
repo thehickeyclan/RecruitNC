@@ -1,20 +1,14 @@
 import { NextResponse } from "next/server"
-import { z } from "zod"
 import { requireAdmin } from "@/lib/admin-auth"
 import { createAdminClientFresh } from "@/lib/supabase/admin"
-import { TOC_MAX_CONFIRMED_PER_WEIGHT } from "@/lib/toc/invitations"
+import { tocAdminInvitationPatchSchema } from "@/lib/toc/invitations"
 import { tocInvitationsRlsHelp } from "@/lib/toc/supabase-rls"
 
 export const dynamic = "force-dynamic"
 
 type Params = { params: Promise<{ id: string }> }
 
-const patchSchema = z.object({
-  seed: z.number().int().min(1).max(TOC_MAX_CONFIRMED_PER_WEIGHT).nullable().optional(),
-  notes: z.string().max(2000).nullable().optional(),
-})
-
-/** Update seed or admin notes on an invitation (e.g. for bracket build). */
+/** Update invited weight, seed, or admin notes on an invitation. */
 export async function PATCH(request: Request, { params }: Params) {
   const auth = await requireAdmin()
   if (!auth.ok) {
@@ -24,7 +18,7 @@ export async function PATCH(request: Request, { params }: Params) {
   try {
     const { id } = await params
     const body = await request.json()
-    const parsed = patchSchema.safeParse(body)
+    const parsed = tocAdminInvitationPatchSchema.safeParse(body)
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, { status: 400 })
     }
@@ -48,15 +42,22 @@ export async function PATCH(request: Request, { params }: Params) {
       return NextResponse.json({ error: "Invitation not found" }, { status: 404 })
     }
 
+    if (existing.status === "declined" || existing.status === "withdrew") {
+      return NextResponse.json({ error: "Cannot edit a declined or withdrawn invitation." }, { status: 400 })
+    }
+
     if (parsed.data.seed !== undefined && parsed.data.seed != null && existing.status !== "confirmed") {
       return NextResponse.json({ error: "Only confirmed wrestlers can be seeded." }, { status: 400 })
     }
+
+    const nextWeight =
+      parsed.data.weightClass !== undefined ? parsed.data.weightClass : existing.weight_class
 
     if (parsed.data.seed != null) {
       const { data: conflict } = await admin
         .from("toc_invitations")
         .select("id")
-        .eq("weight_class", existing.weight_class)
+        .eq("weight_class", nextWeight)
         .eq("status", "confirmed")
         .eq("seed", parsed.data.seed)
         .neq("id", id)
@@ -64,21 +65,40 @@ export async function PATCH(request: Request, { params }: Params) {
 
       if (conflict) {
         return NextResponse.json(
-          { error: `Seed ${parsed.data.seed} is already assigned at ${existing.weight_class} lbs.` },
+          { error: `Seed ${parsed.data.seed} is already assigned at ${nextWeight} lbs.` },
           { status: 400 },
         )
       }
     }
 
     const update: Record<string, unknown> = { updated_at: new Date().toISOString() }
+
+    if (parsed.data.weightClass !== undefined && parsed.data.weightClass !== existing.weight_class) {
+      update.weight_class = parsed.data.weightClass
+      if (existing.seed != null) {
+        update.seed = null
+      }
+    }
+
     if (parsed.data.seed !== undefined) update.seed = parsed.data.seed
     if (parsed.data.notes !== undefined) update.notes = parsed.data.notes
+
+    if (Object.keys(update).length === 1) {
+      return NextResponse.json({
+        ok: true,
+        invitation: {
+          id: existing.id,
+          weight_class: existing.weight_class,
+          seed: existing.seed,
+        },
+      })
+    }
 
     const { data: updated, error: updateError } = await admin
       .from("toc_invitations")
       .update(update)
       .eq("id", id)
-      .select("id, seed, notes")
+      .select("id, weight_class, seed, notes, status")
       .single()
 
     if (updateError) {
