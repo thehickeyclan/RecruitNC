@@ -20,12 +20,19 @@ describe("eight-man DE bracket", () => {
     expect(validateBracketParticipants(partial)).toContain("exactly 8")
   })
 
-  it("builds round 1 with standard seed pairings", () => {
+  it("builds round 1 with standard seed pairings (#1 top, #2 bottom bookends)", () => {
     const draw = buildEightManDeDraw(174, mockParticipants(), new Date().toISOString())
     const r1 = roundOneBouts(draw)
     expect(r1).toHaveLength(4)
-    expect(r1[0].boutNumber).toBe(1)
     expect(r1.map((b) => b.boutNumber)).toEqual([1, 2, 3, 4])
+    expect(r1[0].top).toEqual({ kind: "athlete", athleteId: "athlete-1" })
+    expect(r1[0].bottom).toEqual({ kind: "athlete", athleteId: "athlete-8" })
+    expect(r1[1].top).toEqual({ kind: "athlete", athleteId: "athlete-4" })
+    expect(r1[1].bottom).toEqual({ kind: "athlete", athleteId: "athlete-5" })
+    expect(r1[2].top).toEqual({ kind: "athlete", athleteId: "athlete-3" })
+    expect(r1[2].bottom).toEqual({ kind: "athlete", athleteId: "athlete-6" })
+    expect(r1[3].top).toEqual({ kind: "athlete", athleteId: "athlete-7" })
+    expect(r1[3].bottom).toEqual({ kind: "athlete", athleteId: "athlete-2" })
     expect(draw.bouts.length).toBeGreaterThanOrEqual(14)
     expect(draw.isComplete).toBe(true)
   })

@@ -78,5 +78,8 @@ describe("bracket export", () => {
     const chart = buildTocSeedChartText(board)
     expect(chart).toContain("Match 1")
     expect(chart).toContain("(#1) Wrestler 1 vs (#8) Wrestler 8")
+    expect(chart).toContain("(#4) Wrestler 4 vs (#5) Wrestler 5")
+    expect(chart).toContain("(#3) Wrestler 3 vs (#6) Wrestler 6")
+    expect(chart).toContain("(#7) Wrestler 7 vs (#2) Wrestler 2")
   })
 })
