@@ -139,7 +139,8 @@ export async function mapAthleteToDb(athlete: any): Promise<any> {
       lastName: athlete.lastName || "",
       highschool: athlete.highSchool || athlete.highschool || "",
       college: normalizeCollegeToCanonical(athlete.college) || athlete.college || "",
-      college_id: athlete.college_id ?? null,
+      college_id:
+        athlete.college_id && String(athlete.college_id).trim() ? String(athlete.college_id).trim() : null,
       weightclass: athlete.weightClass || athlete.weightclass || "",
       college_weight_class: athlete.collegeWeightClass || athlete.college_weight_class || "", // Added college_weight_class field mapping to database
       graduationyear: athlete.graduationYear || athlete.graduationyear || new Date().getFullYear(),
