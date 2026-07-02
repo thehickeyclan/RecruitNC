@@ -23,6 +23,16 @@ const KNOWN_ATHLETE_COLUMNS = new Set([
   "ncUnitedTeam", "ncunitedteam", "nc_united_team", "team",
 ])
 
+/** Postgres uuid columns — empty string must become null, not "". */
+const ATHLETE_UUID_COLUMNS = new Set(["college_id", "claimed_by_user_id"])
+
+function normalizeAthleteUuidValue(key: string, value: unknown): unknown {
+  if (!ATHLETE_UUID_COLUMNS.has(key)) return value
+  if (value === null || value === undefined) return null
+  const s = String(value).trim()
+  return s === "" ? null : s
+}
+
 /**
  * Get the set of column names that exist on the athletes table.
  * Merges keys from several rows so we don’t miss `firstName` / `lastName` when one sample row omitted null keys
@@ -72,7 +82,7 @@ export function filterPayloadToSchema(
     const keyToUse = columns.has(key)
       ? key
       : COLUMN_ALIASES[key]?.find((alt) => columns.has(alt))
-    if (keyToUse) out[keyToUse] = value
+    if (keyToUse) out[keyToUse] = normalizeAthleteUuidValue(keyToUse, value)
   }
   return out
 }

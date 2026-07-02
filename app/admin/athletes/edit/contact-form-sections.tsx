@@ -85,7 +85,7 @@ export function ContactFormSections({ initialData, onSubmit, editableBio, editab
     location: data.location || "",
     // College
     college: data.college || "",
-    college_id: data.college_id ?? "",
+    college_id: data.college_id || null,
     commitmentDate: data.commitmentdate ? new Date(data.commitmentdate).toISOString().split("T")[0] : "",
     recruiting_status: data.recruiting_status || "Uncommitted",
     prospect_ranking: data.prospect_ranking || "",
@@ -278,11 +278,11 @@ export function ContactFormSections({ initialData, onSubmit, editableBio, editab
               <FormSelect
                 label="College"
                 name="college_id"
-                value={formData.college_id}
+                value={formData.college_id ?? ""}
                 onChange={(e) => {
-                  const id = e.target.value
+                  const id = e.target.value.trim()
                   const name = id ? collegeList.find((c) => c.id === id)?.name ?? "" : ""
-                  setFormData((prev) => ({ ...prev, college_id: id, college: name }))
+                  setFormData((prev) => ({ ...prev, college_id: id || null, college: name }))
                 }}
                 options={[{ value: "", label: "Select college" }, ...collegeList.map((c) => ({ value: c.id, label: c.name }))]}
               />

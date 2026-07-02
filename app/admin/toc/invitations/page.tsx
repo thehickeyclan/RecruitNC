@@ -10,6 +10,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { TocInviteShareCard } from "@/components/toc/admin/toc-invite-share-card"
 import { TocInviteReminderCard } from "@/components/toc/admin/toc-invite-reminder-card"
 import { HardLink } from "@/components/hard-link"
@@ -68,6 +75,11 @@ export default function TocInvitationsAdminPage() {
       athleteId: selectedAthlete.id,
     })
   }, [selectedAthlete, inviteWeight])
+
+  const reminderRow = useMemo(
+    () => (expandedReminderId ? invitations.find((r) => r.id === expandedReminderId) ?? null : null),
+    [expandedReminderId, invitations],
+  )
 
   const inviteStats = useMemo(() => {
     const invited = invitations.length
@@ -448,11 +460,11 @@ export default function TocInvitationsAdminPage() {
                         size="sm"
                         className="text-xs h-8"
                         onClick={() => {
-                          setExpandedReminderId(expandedReminderId === row.id ? null : row.id)
+                          setExpandedReminderId(row.id)
                           setExpandedShareId(null)
                         }}
                       >
-                        {expandedReminderId === row.id ? "Hide text" : "Text reminder"}
+                        Text reminder
                       </Button>
                       <Button
                         type="button"
@@ -486,28 +498,36 @@ export default function TocInvitationsAdminPage() {
             return <TocInviteShareCard share={shareForRow(row)} title="Invite copy" compact />
           })() : null}
 
-          {expandedReminderId ? (() => {
-            const row = invitations.find((r) => r.id === expandedReminderId)
-            if (!row) return null
-            return (
-              <TocInviteReminderCard
-                invitationId={row.id}
-                athleteName={row.athletes?.name ?? "Athlete"}
-                lastReminderAt={row.last_reminder_at}
-                onSent={(lastReminderAt, lastReminderBody) => {
-                  setInvitations((prev) =>
-                    prev.map((inv) =>
-                      inv.id === row.id
-                        ? { ...inv, last_reminder_at: lastReminderAt, last_reminder_body: lastReminderBody }
-                        : inv,
-                    ),
-                  )
-                }}
-              />
-            )
-          })() : null}
         </CardContent>
       </Card>
+
+      <Dialog open={!!reminderRow} onOpenChange={(open) => !open && setExpandedReminderId(null)}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Text reminder</DialogTitle>
+            <DialogDescription>
+              {reminderRow?.athletes?.name ?? "Athlete"} — edit the message, then send via RecruitNC (Twilio).
+            </DialogDescription>
+          </DialogHeader>
+          {reminderRow ? (
+            <TocInviteReminderCard
+              key={reminderRow.id}
+              invitationId={reminderRow.id}
+              athleteName={reminderRow.athletes?.name ?? "Athlete"}
+              lastReminderAt={reminderRow.last_reminder_at}
+              onSent={(lastReminderAt, lastReminderBody) => {
+                setInvitations((prev) =>
+                  prev.map((inv) =>
+                    inv.id === reminderRow.id
+                      ? { ...inv, last_reminder_at: lastReminderAt, last_reminder_body: lastReminderBody }
+                      : inv,
+                  ),
+                )
+              }}
+            />
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
