@@ -5,7 +5,11 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js"
-import { getAthleteNameSearchVariants, normalizeApostrophes } from "@/lib/athlete-name-match"
+import {
+  getAthleteNameSearchVariants,
+  namesLikelySamePerson,
+  normalizeApostrophes,
+} from "@/lib/athlete-name-match"
 import { recruitNcDebugLogNhsca } from "@/lib/recruitnc-debug"
 
 export interface TournamentResultRow {
@@ -767,12 +771,16 @@ export async function getUltimateClubDualsFromTables(
   highSchool?: string
 ): Promise<NationalTeamResultRow[]> {
   if (!athleteName?.trim()) return []
-  const nameTrim = athleteName.trim().toLowerCase()
-  const parts = athleteName.trim().split(/\s+/).filter(Boolean)
-  if (parts.length < 2) return []
+  const displayName = athleteName.trim()
+  const nameVariants = getAthleteNameSearchVariants(displayName)
+  const parts = displayName.split(/\s+/).filter(Boolean)
+  if (parts.length < 2 && nameVariants.length === 0) return []
 
-  const last = parts.slice(1).join(" ")
-  const first = parts[0] ?? ""
+  const last =
+    parts.length >= 2
+      ? parts.slice(1).join(" ")
+      : (nameVariants[0]?.split(/\s+/).slice(1).join(" ") ?? "")
+  if (!last || last.length < 2) return []
 
   try {
     /** Resolve wrestlers by last name first, then match full name in memory — avoids loading 2000 arbitrary tournament rows per profile. */
@@ -786,12 +794,12 @@ export async function getUltimateClubDualsFromTables(
 
     const matchedIds = (wrestlers ?? [])
       .filter((w: any) => {
-        const f = (w.first_name ?? "").toString().trim().toLowerCase()
-        const l = (w.last_name ?? "").toString().trim().toLowerCase()
+        const f = (w.first_name ?? "").toString().trim()
+        const l = (w.last_name ?? "").toString().trim()
         const full = `${f} ${l}`.trim()
         if (!full) return false
-        if (full.includes(nameTrim) || nameTrim.includes(full)) return true
-        return f === first.toLowerCase() && l === last.toLowerCase()
+        if (namesLikelySamePerson(displayName, full)) return true
+        return nameVariants.some((v) => namesLikelySamePerson(v, full))
       })
       .map((w: any) => w.id)
 
@@ -813,7 +821,7 @@ export async function getUltimateClubDualsFromTables(
       if (!q2.error && q2.data) data = q2.data as any[]
     }
     if (!data?.length) return []
-    return buildNationalTeamRows(data, nameTrim, highSchool ?? "")
+    return buildNationalTeamRows(data, displayName, highSchool ?? "", nameVariants)
   } catch {
     return []
   }
@@ -821,11 +829,13 @@ export async function getUltimateClubDualsFromTables(
 
 function buildNationalTeamRows(
   results: any[],
-  nameTrim: string,
-  highSchool: string
+  displayName: string,
+  highSchool: string,
+  nameVariants: string[],
 ): NationalTeamResultRow[] {
   const rows: NationalTeamResultRow[] = []
   const seenKeys = new Set<string>()
+  const namesToTry = [displayName, ...nameVariants]
   for (const r of results) {
     const wrestler = r.nc_united_wrestlers ?? r.wrestler
     const tournament = r.nc_united_tournaments ?? r.tournament
@@ -834,12 +844,12 @@ function buildNationalTeamRows(
     const eventInfo = isNationalTeamEvent(tName)
     if (!eventInfo) continue
     const year = typeof tournament.year === "number" ? tournament.year : parseInt(String(tournament.year), 10)
-    if (year < 2023 || year > 2026) continue
+    if (!Number.isFinite(year) || year < 2015 || year > 2035) continue
     const f = (wrestler.first_name ?? wrestler.firstname ?? "").toString().trim()
     const l = (wrestler.last_name ?? wrestler.lastname ?? "").toString().trim()
-    const fullName = `${f} ${l}`.trim().toLowerCase()
+    const fullName = `${f} ${l}`.trim()
     if (!fullName) continue
-    if (!fullName.includes(nameTrim) && !nameTrim.includes(fullName) && !namesMatch(nameTrim, fullName)) continue
+    if (!namesToTry.some((n) => namesLikelySamePerson(n, fullName))) continue
     const rowSchool = (wrestler.high_school ?? wrestler.highschool ?? "").toString().trim().toLowerCase()
     const athleteSchool = highSchool.trim().toLowerCase()
     if (rowSchool && athleteSchool && !rowSchool.includes(athleteSchool) && !athleteSchool.includes(rowSchool)) continue
@@ -852,15 +862,4 @@ function buildNationalTeamRows(
     rows.push({ event: eventInfo.event, year, record: derivedRecord })
   }
   return rows.sort((a, b) => b.year - a.year)
-}
-
-function namesMatch(a: string, b: string): boolean {
-  const aParts = a.split(/\s+/).filter(Boolean)
-  const bParts = b.split(/\s+/).filter(Boolean)
-  if (!aParts.length || !bParts.length) return false
-  const aFirst = aParts[0] ?? ""
-  const aLast = aParts.slice(1).join(" ") || ""
-  const bFirst = bParts[0] ?? ""
-  const bLast = bParts.slice(1).join(" ") || ""
-  return aFirst.toLowerCase() === bFirst.toLowerCase() && aLast.toLowerCase() === bLast.toLowerCase()
 }

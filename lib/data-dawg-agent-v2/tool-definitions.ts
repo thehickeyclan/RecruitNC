@@ -36,7 +36,7 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
     function: {
       name: "wrestling_cross_store_search",
       description:
-        "**MUST be called for every wrestler name query — even when `search_athletes` returned zero rows.** One round trip across all major historical tables (1990s–present): NCHSAA individual state `wrestling_nchsaa_results`, NHSCA nationals `nhsca_placements` + legacy `wrestling_nhsca_results`, Super32 `super32_results`, and NC United national-team roster `nc_united_wrestlers` (NHSCA Duals / UCD roster context — not NCHSAA **state** dual team champions). Returns separate arrays per source so alumni appear even without an `athletes` directory row. Many wrestlers (especially pre-2024 alumni) only exist in these historical tables. For NCHSAA **state dual team** school winners by year use `nchsaa_dual_team_champions`. **After `search_athletes` returns the row you are answering about, call this again with the same `query` and pass `directory_high_school` and `grad_year` from that row** so namesakes at other schools do not pollute the arrays. For a full merged markdown profile when you have a UUID, still call `get_athlete_full_dossier`.",
+        "**MUST be called for every wrestler name query — even when `search_athletes` returned zero rows.** One round trip across all major historical tables (1990s–present): NCHSAA individual state, NHSCA nationals, Super32, and **NC United National Team results** (`nc_united_results`: event, year, record for Ultimate Club Duals + NHSCA Duals National/Select — all team appearances). Not NCHSAA **state** dual team champions (use `nchsaa_dual_team_champions`). Returns separate arrays per source so alumni appear even without an `athletes` directory row. **Always include every non-empty `nc_united_results` row in the answer** (e.g. Mac Johnson's records on each NC United team). **After `search_athletes` returns the row you are answering about, call this again with the same `query` and pass `directory_high_school` and `grad_year` from that row**. For a full merged athlete report when you have a UUID, still call `get_athlete_full_dossier`.",
       parameters: {
         type: "object",
         additionalProperties: false,
@@ -105,7 +105,7 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
     function: {
       name: "get_school_wrestling_dossier",
       description:
-        "FULL school wrestling report: NCHSAA individual (champions + other placers), dual team state titles, NHSCA nationals (wrestling_nhsca_results + nhsca_placements), Super32 All-Americans (top 8), Dave Schultz award winners, NCHSAA tournament MOW — plus classification when available. Use when the message is mainly a school name or asks about that school's wrestling history, champs, duals, nationals, or All-Americans. Pass the school name only.",
+        "FULL school wrestling report: NCHSAA individual (champions + other placers), dual team state titles, NHSCA nationals (wrestling_nhsca_results + nhsca_placements), Super32 All-Americans (top 8), Dave Schultz and Tricia Saunders award winners, NCHSAA tournament MOW — plus classification when available. Use when the message is mainly a school name or asks about that school's wrestling history, champs, duals, nationals, or All-Americans. Pass the school name only.",
       parameters: {
         type: "object",
         additionalProperties: false,
@@ -217,6 +217,83 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
           },
           grad_year: { type: "integer", description: "Optional class year filter." },
           limit: { type: "integer" },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "record_books_search",
+      description:
+        "NC high school wrestling record books: all-time career winningest (career_winningest_wrestlers — e.g. Colton Palmer) and/or single-season winningest (winningest_wrestlers). Use for 'who is the winningest wrestler of all time?', 'most career wins', 'best single season record', 'top 10 winningest', or a named wrestler's career/single-season record-book entry.",
+      parameters: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          mode: {
+            type: "string",
+            enum: ["career", "single_season", "both"],
+            description:
+              "career = all-time career wins; single_season = best one-season records; both = return both lists (default both when query is empty).",
+          },
+          query: {
+            type: "string",
+            description: "Optional wrestler or school name fragment (e.g. 'Colton Palmer', 'Cardinal Gibbons').",
+          },
+          limit: {
+            type: "integer",
+            description: "Max rows per list (default 10 for leaderboard, 25 when searching by name).",
+          },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "dave_schultz_award_search",
+      description:
+        "Dave Schultz High School Excellence Award winners (NC). Use for 'Dave Schultz winners', 'who won Dave Schultz in [year]', or a wrestler/school name. Boys excellence award — not Tricia Saunders (girls).",
+      parameters: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          query: {
+            type: "string",
+            description: "Optional athlete or high school name fragment.",
+          },
+          year: { type: "integer", description: "Optional award year." },
+          limit: {
+            type: "integer",
+            description: "Max rows (default 50; use up to 500 for full list).",
+          },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "tricia_saunders_award_search",
+      description:
+        "Tricia Saunders High School Excellence Award winners (NC girls). Use for 'Tricia Saunders winners', 'who won Tricia Saunders in [year]', or a wrestler/school name. Girls excellence award — not Dave Schultz (boys).",
+      parameters: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          query: {
+            type: "string",
+            description: "Optional athlete or high school name fragment.",
+          },
+          year: { type: "integer", description: "Optional award year." },
+          limit: {
+            type: "integer",
+            description: "Max rows (default 50; use up to 500 for full list).",
+          },
         },
         required: [],
       },

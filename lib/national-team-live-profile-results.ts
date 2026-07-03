@@ -1,10 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { getAthleteNameSearchVariants } from "@/lib/athlete-name-match"
 import { getWrestlerRecords } from "@/lib/nhsca-duals-command-center"
 import { fetchNhscaDualsSnapshot } from "@/lib/nhsca-duals-live-results/db"
 import type { NhscaDualsResultsSnapshot, NhscaDualsWrestlerRecord } from "@/lib/nhsca-duals-live-results/types"
 import { namesMatchRoster } from "@/lib/nhsca-duals-wrestler-card-stats"
-import { getNameVariants } from "@/lib/tournament-tables"
-import type { NationalTeamResultRow } from "@/lib/tournament-utils"
+import { getUltimateClubDualsFromTables, getNameVariants } from "@/lib/tournament-tables"
+import { getNationalTeamResults, type NationalTeamResultRow } from "@/lib/tournament-utils"
 
 export type ProfileNationalTeamResult = NationalTeamResultRow & { isPlaceholder?: boolean }
 
@@ -226,4 +227,68 @@ export function mergeNationalTeamResultsForProfile(parts: {
   }
 
   return [...byKey.values()].sort((a, b) => b.year - a.year)
+}
+
+/**
+ * Full NC United National Team history for a wrestler name (all teams/events we have):
+ * historical nc_united tables (UCD, NHSCA National Duals) + live NHSCA Duals 2026 (National + Select)
+ * + optional athlete-row columns / registration placeholders.
+ */
+export async function loadNcUnitedResultsForNameSearch(
+  supabase: SupabaseClient,
+  athleteName: string,
+  options?: {
+    highSchool?: string | null
+    athleteId?: string | null
+    athleteRow?: Record<string, unknown> | null
+    gradYear?: number | null
+  },
+): Promise<ProfileNationalTeamResult[]> {
+  const displayName = athleteName.trim()
+  if (!displayName) return []
+
+  const variants = getAthleteNameSearchVariants(displayName)
+  const nameBases = [...new Set([displayName, ...variants].map((n) => n.trim()).filter(Boolean))]
+  const highSchool = (options?.highSchool ?? "").trim()
+
+  const tableTries = await Promise.all(
+    nameBases.map((n) => getUltimateClubDualsFromTables(supabase, n, highSchool || undefined)),
+  )
+  const fromTable: ProfileNationalTeamResult[] = []
+  const seenTable = new Set<string>()
+  for (const rows of tableTries) {
+    for (const r of rows) {
+      const k = `${r.event}|${r.year}|${r.record}`
+      if (seenTable.has(k)) continue
+      seenTable.add(k)
+      fromTable.push(r)
+    }
+  }
+
+  const fromLive = await getNhscaDuals2026LiveProfileResults(supabase, nameBases)
+
+  let fromRegistration: ProfileNationalTeamResult[] = []
+  const athleteId = options?.athleteId?.trim()
+  if (athleteId) {
+    const gradYear =
+      options?.gradYear != null && Number.isFinite(Number(options.gradYear))
+        ? Math.floor(Number(options.gradYear))
+        : new Date().getFullYear()
+    fromRegistration = await getNhscaDuals2026RegistrationPlaceholders(supabase, athleteId, {
+      name: displayName,
+      highSchool,
+      gradYear,
+    })
+  }
+
+  const fromAthleteRow = options?.athleteRow
+    ? getNationalTeamResults(options.athleteRow)
+    : []
+
+  return mergeNationalTeamResultsForProfile({
+    fromTable,
+    fromAthleteRow,
+    fromLive,
+    fromRegistration,
+  })
 }
