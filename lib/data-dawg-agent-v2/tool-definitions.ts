@@ -225,6 +225,38 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
   {
     type: "function",
     function: {
+      name: "public_rankings_search",
+      description:
+        "RecruitNC official prospect rankings by graduation class (same lists as /public-rankings). Use for 'show me all Class of 2027 rankings', 'class of 2028 rankings', 'top 10 ranked prospects class of 2026', 'who is ranked #1 in 2027'. Years currently published: 2026 (top 30), 2027 (top 30), 2028 (top 25). Default gender Male; pass Female for girls rankings. Always call this for class-of rankings questions — do not use tournament tables alone.",
+      parameters: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          graduation_year: {
+            type: "integer",
+            description: "Class year, e.g. 2026, 2027, or 2028.",
+          },
+          gender: {
+            type: "string",
+            enum: ["Male", "Female"],
+            description: "Default Male.",
+          },
+          limit: {
+            type: "integer",
+            description: "Optional max rows (e.g. 10 for top 10). Omit for full public list for that class.",
+          },
+          list_available_years: {
+            type: "boolean",
+            description: "If true, return which class years have rankings (ignore graduation_year).",
+          },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "record_books_search",
       description:
         "NC high school wrestling record books: all-time career winningest (career_winningest_wrestlers — e.g. Colton Palmer) and/or single-season winningest (winningest_wrestlers). Use for 'who is the winningest wrestler of all time?', 'most career wins', 'best single season record', 'top 10 winningest', or a named wrestler's career/single-season record-book entry.",

@@ -27,6 +27,114 @@ import { buildAthleteDossierMarkdown } from "@/lib/data-dawg-athlete-dossier"
 import { buildSchoolWrestlingDossierMarkdown } from "@/lib/data-dawg-school-dossier"
 import { getNchsaaStateChampionsByExactTitleCount } from "@/lib/nchsaa-multi-time-state-champions"
 import { loadNcUnitedResultsForNameSearch } from "@/lib/national-team-live-profile-results"
+import { getAthleteProfileUrl, RECRUITNC_APP_URL } from "@/lib/athlete-profile-links"
+
+/** Public rankings caps — same as /api/public-rankings and /public-rankings pages. */
+const PUBLIC_RANKINGS_MAX_BY_YEAR: Record<number, number> = {
+  2026: 30,
+  2027: 30,
+  2028: 25,
+}
+
+export async function toolPublicRankingsSearch(args: {
+  graduation_year?: number | null
+  gender?: string | null
+  limit?: number | null
+  list_available_years?: boolean | null
+}) {
+  const admin = getSupabaseAdmin()
+
+  if (args.list_available_years) {
+    const years = Object.keys(PUBLIC_RANKINGS_MAX_BY_YEAR)
+      .map((y) => Number(y))
+      .sort((a, b) => a - b)
+    const counts: Record<string, number> = {}
+    for (const y of years) {
+      const maxRank = PUBLIC_RANKINGS_MAX_BY_YEAR[y]!
+      const { count } = await admin
+        .from("athletes")
+        .select("id", { count: "exact", head: true })
+        .eq("graduationyear", y)
+        .eq("gender", "Male")
+        .not("prospect_ranking", "is", null)
+        .lte("prospect_ranking", maxRank)
+      counts[String(y)] = count ?? 0
+    }
+    return {
+      available_years: years,
+      public_caps: PUBLIC_RANKINGS_MAX_BY_YEAR,
+      male_ranked_counts: counts,
+      pages: years.map((y) => `${RECRUITNC_APP_URL}/public-rankings/${y}`),
+      note: "RecruitNC official prospect rankings by class year.",
+    }
+  }
+
+  const yearRaw = args.graduation_year
+  const year =
+    yearRaw != null && Number.isFinite(Number(yearRaw)) ? Math.floor(Number(yearRaw)) : null
+  if (year == null) {
+    return {
+      error: "graduation_year is required (e.g. 2026, 2027, 2028), or set list_available_years: true.",
+      rankings: [] as unknown[],
+      available_years: Object.keys(PUBLIC_RANKINGS_MAX_BY_YEAR).map(Number),
+    }
+  }
+
+  const genderRaw = String(args.gender ?? "Male").trim()
+  const gender = /^female$/i.test(genderRaw) ? "Female" : "Male"
+  const maxPublicRank = PUBLIC_RANKINGS_MAX_BY_YEAR[year] ?? null
+  const limitCap = maxPublicRank ?? 50
+  const limit =
+    args.limit != null && Number.isFinite(Number(args.limit))
+      ? Math.min(Math.max(Math.floor(Number(args.limit)), 1), limitCap)
+      : limitCap
+
+  let q = admin
+    .from("athletes")
+    .select(
+      "id, name, highschool, graduationyear, gender, weightclass, prospect_ranking, recruiting_status, college",
+    )
+    .eq("graduationyear", year)
+    .eq("gender", gender)
+    .not("prospect_ranking", "is", null)
+    .order("prospect_ranking", { ascending: true })
+    .limit(limit)
+
+  if (maxPublicRank != null) {
+    q = q.lte("prospect_ranking", maxPublicRank)
+  }
+
+  const { data, error } = await q
+  if (error) {
+    return { error: error.message, rankings: [] as unknown[], graduation_year: year, gender }
+  }
+
+  const rankings = (data ?? []).map((a: Record<string, unknown>) => ({
+    rank: a.prospect_ranking,
+    name: a.name,
+    highschool: a.highschool,
+    weightclass: a.weightclass,
+    graduationyear: a.graduationyear,
+    gender: a.gender,
+    recruiting_status: a.recruiting_status,
+    college: a.college,
+    profile_url: a.id ? getAthleteProfileUrl(String(a.id)) : null,
+    athlete_id: a.id,
+  }))
+
+  return {
+    graduation_year: year,
+    gender,
+    public_cap: maxPublicRank,
+    count: rankings.length,
+    rankings,
+    page_url: `${RECRUITNC_APP_URL}/public-rankings/${year}`,
+    note:
+      rankings.length === 0
+        ? `No public prospect rankings found for class of ${year} (${gender}). Available years: ${Object.keys(PUBLIC_RANKINGS_MAX_BY_YEAR).join(", ")}.`
+        : `RecruitNC official Class of ${year} ${gender} rankings (top ${maxPublicRank ?? "all"}). List every row returned in rank order.`,
+  }
+}
 
 const MAX_ROWS = 40
 const MAX_Q_LEN = 120
@@ -1388,6 +1496,7 @@ export type DataToolName =
   | "nchsaa_multi_time_state_champions"
   | "college_commits_search"
   | "get_athlete_full_dossier"
+  | "public_rankings_search"
   | "record_books_search"
   | "dave_schultz_award_search"
   | "tricia_saunders_award_search"
@@ -1460,6 +1569,17 @@ export async function executeDataTool(name: string, rawArgs: unknown): Promise<s
         )
       case "get_athlete_full_dossier":
         return JSON.stringify(await toolGetAthleteFullDossier(args as { athlete_id: string }))
+      case "public_rankings_search":
+        return JSON.stringify(
+          await toolPublicRankingsSearch(
+            args as {
+              graduation_year?: number | null
+              gender?: string | null
+              limit?: number | null
+              list_available_years?: boolean | null
+            },
+          ),
+        )
       case "record_books_search":
         return JSON.stringify(
           await toolRecordBooksSearch(
