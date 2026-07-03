@@ -11,7 +11,7 @@ import { type NchsaaRowForProfile } from "@/lib/profile-tournament-data"
 import { type TournamentResultForDisplay } from "@/lib/public-profile-data"
 import { countDistinctStateTitleYears } from "@/lib/nchsaa-state-display"
 import { namesMatch } from "@/lib/nhsca-live/names-match"
-import { getUltimateClubDualsFromTables } from "@/lib/tournament-tables"
+import { loadNcUnitedResultsForNameSearch } from "@/lib/national-team-live-profile-results"
 
 function athleteDisplayName(row: Record<string, unknown>): string {
   const n = String(row.name ?? "").trim()
@@ -118,9 +118,14 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
   const yearMin = hasValidGrad ? gradYear - 4 : 1990
   const yearMax = hasValidGrad ? gradYear + 1 : 2035
 
-  const [{ nchsaa: nchsaaMerged, nhsca: nhscaDisplay }, ncUnited] = await Promise.all([
+  const [{ nchsaa: nchsaaMerged, nhsca: nhscaDisplay, super32 }, ncUnited] = await Promise.all([
     loadAthleteTournamentBundle(supabase, athlete, { nhscaAllTime: true }),
-    getUltimateClubDualsFromTables(supabase, nameForQueries, highSchool || undefined),
+    loadNcUnitedResultsForNameSearch(supabase, nameForQueries, {
+      highSchool: highSchool || undefined,
+      athleteId: id,
+      athleteRow: athlete,
+      gradYear: hasValidGrad ? gradYear : undefined,
+    }),
   ])
 
   const nchsaaSorted = [...nchsaaMerged].sort((a, b) => b.year - a.year)
@@ -204,7 +209,7 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
     }
   }
 
-  const super32Rows = [...tournament.super32].sort((a: any, b: any) => (b.year || 0) - (a.year || 0))
+  const super32Rows = [...super32].sort((a: any, b: any) => (b.year || 0) - (a.year || 0))
   lines.push("")
   lines.push("🏆 Super32:")
   if (super32Rows.length === 0) {
@@ -235,26 +240,55 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
     lines.push("None")
   } else {
     for (const r of ncUnited) {
-      const label =
-        r.event?.includes("NHSCA") || r.event?.includes("National Duals")
-          ? "NHSCA Duals"
-          : "UCD (Ultimate Club Duals)"
-      lines.push(`- **${r.year}** — ${label} — ${r.record}`)
+      const event = String(r.event ?? "NC United").trim()
+      const rec = String(r.record ?? "").trim()
+      const wt = r.weight ? ` · ${r.weight} lbs` : ""
+      const ph = r.isPlaceholder ? " (registered)" : ""
+      lines.push(`- **${r.year}** — ${event} — ${rec}${wt}${ph}`)
     }
   }
 
   const daveLast = nameForQueries.toLowerCase().split(/\s+/).filter(Boolean).pop() ?? ""
-  const { data: daveRows } = await supabase
-    .from("dave_schultz_award")
-    .select("year, name, high_school")
-    .ilike("name", `%${escapeForIlike(daveLast)}%`)
-    .gte("year", yearMin)
-    .lte("year", yearMax)
-    .order("year", { ascending: false })
-    .limit(40)
+  const namePat = `%${escapeForIlike(daveLast)}%`
+  const [{ data: daveRows }, { data: triciaRows }, { data: careerWinRows }, { data: seasonWinRows }] =
+    await Promise.all([
+      supabase
+        .from("dave_schultz_award")
+        .select("year, name, high_school")
+        .ilike("name", namePat)
+        .order("year", { ascending: false })
+        .limit(40),
+      supabase
+        .from("tricia_saunders_award")
+        .select("year, name, high_school")
+        .ilike("name", namePat)
+        .order("year", { ascending: false })
+        .limit(40),
+      supabase
+        .from("career_winningest_wrestlers")
+        .select("rank, name, school, record, wins, losses, years")
+        .ilike("name", namePat)
+        .order("rank", { ascending: true })
+        .limit(10),
+      supabase
+        .from("winningest_wrestlers")
+        .select("rank_numeric, wrestler_name, school, record, wins, losses, year")
+        .ilike("wrestler_name", namePat)
+        .order("wins", { ascending: false })
+        .limit(10),
+    ])
 
   const daveFiltered = (daveRows ?? []).filter((d: Record<string, unknown>) =>
     dossierNamesMatch(nameForQueries, String(d.name ?? "").trim()),
+  )
+  const triciaFiltered = (triciaRows ?? []).filter((d: Record<string, unknown>) =>
+    dossierNamesMatch(nameForQueries, String(d.name ?? "").trim()),
+  )
+  const careerFiltered = (careerWinRows ?? []).filter((d: Record<string, unknown>) =>
+    dossierNamesMatch(nameForQueries, String(d.name ?? "").trim()),
+  )
+  const seasonFiltered = (seasonWinRows ?? []).filter((d: Record<string, unknown>) =>
+    dossierNamesMatch(nameForQueries, String(d.wrestler_name ?? "").trim()),
   )
 
   if (daveFiltered.length > 0) {
@@ -262,6 +296,35 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
     lines.push("🏅 Dave Schultz High School Excellence Award:")
     for (const d of daveFiltered) {
       lines.push(`- ${d.year}: Winner (${d.high_school})`)
+    }
+  }
+
+  if (triciaFiltered.length > 0) {
+    lines.push("")
+    lines.push("🏅 Tricia Saunders High School Excellence Award:")
+    for (const d of triciaFiltered) {
+      lines.push(`- ${d.year}: Winner (${d.high_school})`)
+    }
+  }
+
+  if (careerFiltered.length > 0) {
+    lines.push("")
+    lines.push("📈 All-Time Career Record Book:")
+    for (const d of careerFiltered) {
+      const rank = d.rank != null ? `#${d.rank} ` : ""
+      lines.push(
+        `- ${rank}All-time: ${d.record}${d.years ? ` (${d.years})` : ""}${d.school ? ` — ${d.school}` : ""}`,
+      )
+    }
+  }
+
+  if (seasonFiltered.length > 0) {
+    lines.push("")
+    lines.push("📈 Single-Season Record Book:")
+    for (const d of seasonFiltered) {
+      lines.push(
+        `- ${d.year ?? "?"}: ${d.record}${d.school ? ` — ${d.school}` : ""}`,
+      )
     }
   }
 

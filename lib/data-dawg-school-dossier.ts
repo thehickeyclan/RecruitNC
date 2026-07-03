@@ -343,7 +343,7 @@ export async function buildSchoolWrestlingDossierMarkdown(rawQuery: string): Pro
     n2 = n2.neq("classification", "NCISA")
   }
 
-  const [nr1, nr2, athletesRes, s321, s322, dualRes, daveRes, mowRes] = await Promise.all([
+  const [nr1, nr2, athletesRes, s321, s322, dualRes, daveRes, triciaRes, mowRes] = await Promise.all([
     n1,
     n2,
     admin.from("athletes").select("*").ilike("highschool", schoolPat).limit(300),
@@ -364,6 +364,11 @@ export async function buildSchoolWrestlingDossierMarkdown(rawQuery: string): Pro
       .limit(200),
     admin
       .from("dave_schultz_award")
+      .select("year,name,high_school")
+      .ilike("high_school", schoolPat)
+      .limit(MAX_DAVE),
+    admin
+      .from("tricia_saunders_award")
       .select("year,name,high_school")
       .ilike("high_school", schoolPat)
       .limit(MAX_DAVE),
@@ -450,6 +455,10 @@ export async function buildSchoolWrestlingDossierMarkdown(rawQuery: string): Pro
   )
 
   const daveFiltered = (daveRes.data ?? []).filter((d: Record<string, unknown>) =>
+    schoolCellMatchesCanonical(String(d.high_school ?? ""), canonical),
+  )
+
+  const triciaFiltered = ((triciaRes.data ?? []) as Record<string, unknown>[]).filter((d) =>
     schoolCellMatchesCanonical(String(d.high_school ?? ""), canonical),
   )
 
@@ -577,6 +586,21 @@ export async function buildSchoolWrestlingDossierMarkdown(rawQuery: string): Pro
         (Number(b.year) || 0) - (Number(a.year) || 0),
     )
     for (const d of sortedD) {
+      lines.push(`- ${d.year}: ${String(d.name ?? "").trim()} (${String(d.high_school ?? "").trim()})`)
+    }
+  }
+
+  lines.push("")
+  lines.push("### 🎖️ Tricia Saunders High School Excellence Award")
+  lines.push("")
+  if (triciaFiltered.length === 0) {
+    lines.push("*No Tricia Saunders award winners matched this school.*")
+  } else {
+    const sortedT = [...triciaFiltered].sort(
+      (a: Record<string, unknown>, b: Record<string, unknown>) =>
+        (Number(b.year) || 0) - (Number(a.year) || 0),
+    )
+    for (const d of sortedT) {
       lines.push(`- ${d.year}: ${String(d.name ?? "").trim()} (${String(d.high_school ?? "").trim()})`)
     }
   }

@@ -26,6 +26,7 @@ import {
 import { buildAthleteDossierMarkdown } from "@/lib/data-dawg-athlete-dossier"
 import { buildSchoolWrestlingDossierMarkdown } from "@/lib/data-dawg-school-dossier"
 import { getNchsaaStateChampionsByExactTitleCount } from "@/lib/nchsaa-multi-time-state-champions"
+import { loadNcUnitedResultsForNameSearch } from "@/lib/national-team-live-profile-results"
 
 const MAX_ROWS = 40
 const MAX_Q_LEN = 120
@@ -713,7 +714,6 @@ export async function toolWrestlingCrossStoreSearch(args: {
     }
   }
   const pattern = `%${escapeForIlike(q)}%`
-  const tokens = tokenizeMeaningfulWords(raw)
   const admin = getSupabaseAdmin()
 
   const nchsaaSel = "wrestler_name,place,year,classification,weight_class,school"
@@ -816,37 +816,6 @@ export async function toolWrestlingCrossStoreSearch(args: {
     Promise.all(s32PairPromises),
   ])
 
-  const ncPromises: Promise<typeof nchsaaByWrestler>[] = []
-  if (tokens.length >= 2) {
-    const lastT = tokens[tokens.length - 1] ?? ""
-    const firstT = tokens[0] ?? ""
-    if (lastT.length >= 2) {
-      ncPromises.push(
-        admin
-          .from("nc_united_wrestlers")
-          .select("first_name,last_name,high_school")
-          .ilike("last_name", `%${escapeForIlike(lastT)}%`)
-          .limit(100),
-      )
-    }
-    if (firstT.length >= 2 && lastT.length >= 2) {
-      ncPromises.push(
-        admin
-          .from("nc_united_wrestlers")
-          .select("first_name,last_name,high_school")
-          .ilike("first_name", `%${escapeForIlike(firstT)}%`)
-          .ilike("last_name", `%${escapeForIlike(lastT)}%`)
-          .limit(40),
-      )
-    }
-  } else {
-    ncPromises.push(
-      admin.from("nc_united_wrestlers").select("first_name,last_name,high_school").ilike("last_name", pattern).limit(40),
-    )
-  }
-
-  const ncRes = ncPromises.length ? await Promise.all(ncPromises) : []
-
   const errors: string[] = []
   const noteErr = (res: { error?: { message?: string } | null }, label: string) => {
     if (!res.error) return
@@ -872,7 +841,6 @@ export async function toolWrestlingCrossStoreSearch(args: {
     ...nhscaPlcPairRes.map((r, i) => [r, `nhsca_plc_pair_${i}`] as const),
     ...nhscaLegPairRes.map((r, i) => [r, `nhsca_leg_pair_${i}`] as const),
     ...s32PairRes.map((r, i) => [r, `super32_pair_${i}`] as const),
-    ...ncRes.map((r, i) => [r, `nc_united_${i}`] as const),
   ] as Array<[{ error?: { message?: string } | null }, string]>) {
     noteErr(res, label)
   }
@@ -898,7 +866,48 @@ export async function toolWrestlingCrossStoreSearch(args: {
     ...rowsOf(s32BySchoolCol),
     ...s32PairRes.flatMap(rowsOf),
   ]
-  const ncBuckets: Record<string, unknown>[] = ncRes.flatMap(rowsOf)
+
+  const dirHsRaw = args.directory_high_school
+  const directoryHs =
+    typeof dirHsRaw === "string" && dirHsRaw.trim().length >= 3 ? dirHsRaw.trim() : ""
+  const gyRaw = args.grad_year
+  const parsedGrad =
+    gyRaw != null && String(gyRaw).trim() !== "" && Number.isFinite(Number(gyRaw))
+      ? Math.floor(Number(gyRaw))
+      : null
+
+  // Full NC United National Team results (UCD + NHSCA Duals National/Select, all years we have).
+  let nc_united_results: Record<string, unknown>[] = []
+  try {
+    const ncRows = await loadNcUnitedResultsForNameSearch(admin, q, {
+      highSchool: directoryHs || undefined,
+      gradYear: parsedGrad,
+    })
+    nc_united_results = ncRows.map((r) => ({
+      event: r.event,
+      year: r.year,
+      record: r.record,
+      ...(r.weight ? { weight: r.weight } : {}),
+      ...(r.isPlaceholder ? { isPlaceholder: true } : {}),
+    }))
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e)
+    if (!msg.includes("does not exist") && !msg.includes("42P01")) {
+      errors.push(`nc_united_results: ${msg}`)
+    }
+  }
+
+  const narrowOpts = {
+    directoryHighSchool: directoryHs || undefined,
+    gradYear: parsedGrad,
+    displayName: q,
+  }
+
+  // School/year narrowing only when directory athlete is known; name match always uses query.
+  const hasDirMatch = directoryHs != null || parsedGrad != null
+  const safeNarrowOpts = hasDirMatch
+    ? narrowOpts
+    : { directoryHighSchool: undefined, gradYear: null, displayName: q }
 
   const nchsaa_state = dedupeByKey(nchsaaBuckets, (r) => {
     const x = r as Record<string, unknown>
@@ -920,49 +929,10 @@ export async function toolWrestlingCrossStoreSearch(args: {
     return `${x.athlete_name}|${x.year}|${x.placement ?? x.place}|${x.high_school ?? x.school}`
   })
 
-  let nc_united_roster = dedupeByKey(ncBuckets, (r) => {
-    const x = r as Record<string, unknown>
-    return `${x.first_name}|${x.last_name}|${x.high_school}`
-  })
-
-  if (tokens.length >= 2) {
-    const wf = (tokens[0] ?? "").toLowerCase()
-    const wl = (tokens[tokens.length - 1] ?? "").toLowerCase()
-    nc_united_roster = nc_united_roster.filter((r) => {
-      const x = r as Record<string, unknown>
-      const f = String(x.first_name ?? "").toLowerCase()
-      const l = String(x.last_name ?? "").toLowerCase()
-      const distF = wf.length >= 2 ? levenshteinDistance(wf, f) <= 2 : true
-      const distL = wl.length >= 2 ? levenshteinDistance(wl, l) <= 2 : true
-      return distF && distL
-    })
-  }
-
-  const dirHsRaw = args.directory_high_school
-  const directoryHs =
-    typeof dirHsRaw === "string" && dirHsRaw.trim().length >= 3 ? dirHsRaw.trim() : ""
-  const gyRaw = args.grad_year
-  const parsedGrad =
-    gyRaw != null && String(gyRaw).trim() !== "" && Number.isFinite(Number(gyRaw))
-      ? Math.floor(Number(gyRaw))
-      : null
-  const narrowOpts = {
-    directoryHighSchool: directoryHs || undefined,
-    gradYear: parsedGrad,
-    displayName: q,
-  }
-
-  // School/year narrowing only when directory athlete is known; name match always uses query.
-  const hasDirMatch = directoryHs != null || parsedGrad != null
-  const safeNarrowOpts = hasDirMatch
-    ? narrowOpts
-    : { directoryHighSchool: undefined, gradYear: null, displayName: q }
-
   const nchsaa_state_narrowed = filterCrossStoreByDirectoryContext(nchsaa_state, safeNarrowOpts)
   const nhsca_placements_narrowed = filterCrossStoreByDirectoryContext(nhsca_placements, safeNarrowOpts)
   const nhsca_legacy_narrowed = filterCrossStoreByDirectoryContext(nhsca_legacy_table, safeNarrowOpts)
   const super32_narrowed = filterCrossStoreByDirectoryContext(super32, safeNarrowOpts)
-  const nc_united_narrowed = filterCrossStoreByDirectoryContext(nc_united_roster, safeNarrowOpts)
 
   const narrowedNote =
     directoryHs || parsedGrad != null
@@ -974,7 +944,7 @@ export async function toolWrestlingCrossStoreSearch(args: {
     nhsca_placements_narrowed.length +
     nhsca_legacy_narrowed.length +
     super32_narrowed.length +
-    nc_united_narrowed.length
+    nc_united_results.length
 
   return {
     searched_for: q,
@@ -982,14 +952,16 @@ export async function toolWrestlingCrossStoreSearch(args: {
     nhsca_placements: nhsca_placements_narrowed,
     nhsca_legacy_table: nhsca_legacy_narrowed,
     super32: super32_narrowed,
-    nc_united_roster: nc_united_narrowed,
+    nc_united_results,
+    /** @deprecated use nc_united_results (includes event/year/record for all NC United teams) */
+    nc_united_roster: nc_united_results,
     total_hits: totalHits,
     ...(directoryHs || parsedGrad != null
       ? { narrow_filters: { directory_high_school: directoryHs || null, grad_year: parsedGrad } }
       : {}),
     ...(errors.length ? { partial_errors: errors.slice(0, 3) } : {}),
     note:
-      "NCHSAA state = `wrestling_nchsaa_results`. NHSCA nationals = `nhsca_placements` + legacy `wrestling_nhsca_results`. Super32 = `super32_results`. NC United roster = national-team / dual-meet program context (not NCHSAA **state** dual champions — use `nchsaa_dual_team_champions` for those). For a full merged athlete report when an id exists, call `get_athlete_full_dossier`." +
+      "NCHSAA state = `wrestling_nchsaa_results`. NHSCA nationals = `nhsca_placements` + legacy `wrestling_nhsca_results`. Super32 = `super32_results`. NC United National Team = `nc_united_results` (Ultimate Club Duals + NHSCA Duals National/Select — event, year, record for every team appearance). Not NCHSAA **state** dual champions — use `nchsaa_dual_team_champions` for those. For a full merged athlete report when an id exists, call `get_athlete_full_dossier`." +
       narrowedNote,
   }
 }
@@ -1204,6 +1176,207 @@ export async function toolGetSchoolWrestlingDossier(args: { query: string }) {
   return buildSchoolWrestlingDossierMarkdown(q)
 }
 
+function dedupeRecordBookRows(
+  rows: Record<string, unknown>[],
+  keyFn: (r: Record<string, unknown>) => string,
+): Record<string, unknown>[] {
+  const seen = new Set<string>()
+  const out: Record<string, unknown>[] = []
+  for (const r of rows) {
+    const k = keyFn(r)
+    if (seen.has(k)) continue
+    seen.add(k)
+    out.push(r)
+  }
+  return out
+}
+
+export async function toolRecordBooksSearch(args: {
+  mode?: string | null
+  query?: string | null
+  limit?: number | null
+}) {
+  const modeRaw = String(args.mode ?? "both").toLowerCase().trim()
+  const mode =
+    modeRaw === "career" || modeRaw === "single_season" || modeRaw === "both" ? modeRaw : "both"
+  const rawQ = sanitizeFragment(String(args.query ?? ""))
+  const q = (extractSearchablePhrase(rawQ) || stripConversationalNoise(rawQ)).trim()
+  const hasQuery = q.length >= 2
+  const limit = Math.min(
+    Math.max(Number(args.limit) || (hasQuery ? 25 : 10), 1),
+    hasQuery ? 50 : 100,
+  )
+  const fetchCap = Math.min(limit * 3, 200)
+  const admin = getSupabaseAdmin()
+  const out: {
+    mode: string
+    searched_for: string | null
+    career_winningest: unknown[]
+    single_season_winningest: unknown[]
+    partial_errors?: string[]
+    note: string
+  } = {
+    mode,
+    searched_for: hasQuery ? q : null,
+    career_winningest: [],
+    single_season_winningest: [],
+    note: "career_winningest_wrestlers = all-time career wins; winningest_wrestlers = best single season.",
+  }
+  const errors: string[] = []
+  const ilikeFrag = hasQuery ? escapeForIlike(q) : ""
+
+  if (mode === "career" || mode === "both") {
+    let cq = admin
+      .from("career_winningest_wrestlers")
+      .select("rank, name, school, record, wins, losses, years")
+      .order("rank", { ascending: true })
+      .limit(fetchCap)
+    if (hasQuery) {
+      cq = cq.or(`name.ilike.%${ilikeFrag}%,school.ilike.%${ilikeFrag}%`)
+    }
+    const { data, error } = await cq
+    if (error) {
+      if (!error.message.includes("does not exist") && !error.message.includes("42P01")) {
+        errors.push(`career: ${error.message}`)
+      }
+    } else {
+      out.career_winningest = dedupeRecordBookRows(data ?? [], (r) =>
+        `${r.rank}|${r.name}|${r.record}|${r.school}|${r.years}`,
+      ).slice(0, limit)
+    }
+  }
+
+  if (mode === "single_season" || mode === "both") {
+    let sq = admin
+      .from("winningest_wrestlers")
+      .select("rank_numeric, wrestler_name, school, record, wins, losses, year")
+      .order("wins", { ascending: false })
+      .limit(fetchCap)
+    if (hasQuery) {
+      sq = sq.or(`wrestler_name.ilike.%${ilikeFrag}%,school.ilike.%${ilikeFrag}%`)
+    }
+    const { data, error } = await sq
+    if (error) {
+      if (!error.message.includes("does not exist") && !error.message.includes("42P01")) {
+        errors.push(`single_season: ${error.message}`)
+      }
+    } else {
+      out.single_season_winningest = dedupeRecordBookRows(data ?? [], (r) =>
+        `${r.rank_numeric}|${r.wrestler_name}|${r.record}|${r.school}|${r.year}`,
+      ).slice(0, limit)
+    }
+  }
+
+  if (errors.length) out.partial_errors = errors
+  return out
+}
+
+async function toolExcellenceAwardSearch(
+  table: "dave_schultz_award" | "tricia_saunders_award",
+  awardLabel: string,
+  args: { query?: string | null; year?: number | null; limit?: number | null },
+) {
+  const rawQ = sanitizeFragment(String(args.query ?? ""))
+  const q = (extractSearchablePhrase(rawQ) || stripConversationalNoise(rawQ)).trim()
+  const hasQuery = q.length >= 2
+  const year =
+    args.year != null && Number.isFinite(Number(args.year)) ? Math.floor(Number(args.year)) : null
+  const limit = Math.min(Math.max(Number(args.limit) || (hasQuery || year != null ? 50 : 100), 1), 500)
+  const admin = getSupabaseAdmin()
+
+  let query = admin
+    .from(table)
+    .select("year, name, high_school, college, city")
+    .order("year", { ascending: false })
+    .limit(limit)
+
+  if (year != null) query = query.eq("year", year)
+  if (hasQuery) {
+    const frag = escapeForIlike(q)
+    query = query.or(`name.ilike.%${frag}%,high_school.ilike.%${frag}%`)
+  }
+
+  const { data, error } = await query
+  if (error) {
+    if (error.message.includes("does not exist") || error.message.includes("42P01")) {
+      return {
+        award: awardLabel,
+        rows: [] as unknown[],
+        searched_for: hasQuery ? q : null,
+        year_filter: year,
+        error: `${awardLabel} table not available in this database.`,
+      }
+    }
+    // city column may be missing on some envs
+    if (error.message.includes("city") || error.code === "42703") {
+      let q2 = admin
+        .from(table)
+        .select("year, name, high_school, college")
+        .order("year", { ascending: false })
+        .limit(limit)
+      if (year != null) q2 = q2.eq("year", year)
+      if (hasQuery) {
+        const frag = escapeForIlike(q)
+        q2 = q2.or(`name.ilike.%${frag}%,high_school.ilike.%${frag}%`)
+      }
+      const retry = await q2
+      if (retry.error) {
+        return {
+          award: awardLabel,
+          rows: [] as unknown[],
+          searched_for: hasQuery ? q : null,
+          year_filter: year,
+          error: retry.error.message,
+        }
+      }
+      return {
+        award: awardLabel,
+        rows: retry.data ?? [],
+        count: (retry.data ?? []).length,
+        searched_for: hasQuery ? q : null,
+        year_filter: year,
+        note: `${awardLabel} winners (NC).`,
+      }
+    }
+    return {
+      award: awardLabel,
+      rows: [] as unknown[],
+      searched_for: hasQuery ? q : null,
+      year_filter: year,
+      error: error.message,
+    }
+  }
+
+  return {
+    award: awardLabel,
+    rows: data ?? [],
+    count: (data ?? []).length,
+    searched_for: hasQuery ? q : null,
+    year_filter: year,
+    note: `${awardLabel} winners (NC).`,
+  }
+}
+
+export async function toolDaveSchultzAwardSearch(args: {
+  query?: string | null
+  year?: number | null
+  limit?: number | null
+}) {
+  return toolExcellenceAwardSearch("dave_schultz_award", "Dave Schultz High School Excellence Award", args)
+}
+
+export async function toolTriciaSaundersAwardSearch(args: {
+  query?: string | null
+  year?: number | null
+  limit?: number | null
+}) {
+  return toolExcellenceAwardSearch(
+    "tricia_saunders_award",
+    "Tricia Saunders High School Excellence Award",
+    args,
+  )
+}
+
 export type DataToolName =
   | "search_athletes"
   | "wrestling_cross_store_search"
@@ -1215,6 +1388,9 @@ export type DataToolName =
   | "nchsaa_multi_time_state_champions"
   | "college_commits_search"
   | "get_athlete_full_dossier"
+  | "record_books_search"
+  | "dave_schultz_award_search"
+  | "tricia_saunders_award_search"
 
 export async function executeDataTool(name: string, rawArgs: unknown): Promise<string> {
   let args: Record<string, unknown> = {}
@@ -1284,6 +1460,24 @@ export async function executeDataTool(name: string, rawArgs: unknown): Promise<s
         )
       case "get_athlete_full_dossier":
         return JSON.stringify(await toolGetAthleteFullDossier(args as { athlete_id: string }))
+      case "record_books_search":
+        return JSON.stringify(
+          await toolRecordBooksSearch(
+            args as { mode?: string | null; query?: string | null; limit?: number | null },
+          ),
+        )
+      case "dave_schultz_award_search":
+        return JSON.stringify(
+          await toolDaveSchultzAwardSearch(
+            args as { query?: string | null; year?: number | null; limit?: number | null },
+          ),
+        )
+      case "tricia_saunders_award_search":
+        return JSON.stringify(
+          await toolTriciaSaundersAwardSearch(
+            args as { query?: string | null; year?: number | null; limit?: number | null },
+          ),
+        )
       default:
         return JSON.stringify({ error: `Unknown tool: ${name}` })
     }
