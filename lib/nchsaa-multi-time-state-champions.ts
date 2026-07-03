@@ -1,11 +1,15 @@
 import { getSupabaseAdmin } from "@/lib/server-supabase"
 import {
   NCHSAA_FOUR_TIME_STATE_CHAMPIONS,
+  sortMultiTimeChampionsChronological,
   type NchsaaMultiTimeStateChampion,
 } from "@/lib/nchsaa-four-time-state-champions-data"
 
 export type { NchsaaMultiTimeStateChampion } from "@/lib/nchsaa-four-time-state-champions-data"
-export { NCHSAA_FOUR_TIME_STATE_CHAMPIONS } from "@/lib/nchsaa-four-time-state-champions-data"
+export {
+  NCHSAA_FOUR_TIME_STATE_CHAMPIONS,
+  sortMultiTimeChampionsChronological,
+} from "@/lib/nchsaa-four-time-state-champions-data"
 
 function normalizeWrestlerKey(s: string): string {
   return s?.trim().replace(/\s+/g, " ").toUpperCase() || ""
@@ -19,13 +23,7 @@ export async function getNchsaaStateChampionsByExactTitleCount(
   exactCount: 2 | 3 | 4,
 ): Promise<NchsaaMultiTimeStateChampion[]> {
   if (exactCount === 4) {
-    return NCHSAA_FOUR_TIME_STATE_CHAMPIONS.map((r) => ({
-      ...r,
-      championships: r.championships.map((c) => ({ ...c })),
-      schools: [...r.schools],
-      classifications: [...r.classifications],
-      weight_classes: [...r.weight_classes],
-    }))
+    return sortMultiTimeChampionsChronological(NCHSAA_FOUR_TIME_STATE_CHAMPIONS)
   }
 
   const adminClient = getSupabaseAdmin()
@@ -74,6 +72,5 @@ export async function getNchsaaStateChampionsByExactTitleCount(
     })
   }
 
-  filtered.sort((a, b) => a.wrestler_name.localeCompare(b.wrestler_name, undefined, { sensitivity: "base" }))
-  return filtered
+  return sortMultiTimeChampionsChronological(filtered)
 }

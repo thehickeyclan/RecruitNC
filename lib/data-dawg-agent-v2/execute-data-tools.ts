@@ -720,9 +720,11 @@ export async function toolWrestlingCrossStoreSearch(args: {
 
   const nhscaSelPlc = "athlete_name,placement,year,division,weight_class,high_school"
   const nhscaSelLeg = "athlete_name,placement,year,division,weight,high_school"
-  const s32Sel = "athlete_name,placement,place,year,weight,weight_class,high_school,school,record,wins,losses"
+  // super32_results has weight_class + placement only (no `weight` or `place` columns)
+  const s32Sel = "athlete_name,placement,year,weight_class,high_school,school,record,wins,losses"
 
-  const pairPromises = dualTokenPairsForNchsaa(q).slice(0, 4).map(({ first, last }) => {
+  const namePairs = dualTokenPairsForNchsaa(q).slice(0, 4)
+  const pairPromises = namePairs.map(({ first, last }) => {
     const pf = `%${escapeForIlike(first)}%`
     const pl = `%${escapeForIlike(last)}%`
     return admin
@@ -730,6 +732,41 @@ export async function toolWrestlingCrossStoreSearch(args: {
       .select(nchsaaSel)
       .ilike("wrestler_name", pf)
       .ilike("wrestler_name", pl)
+      .order("year", { ascending: false })
+      .limit(perTable)
+  })
+
+  // First+last token pairs so "Cam Stinson" matches DB "Cameron Stinson" (same as NCHSAA).
+  const nhscaPlcPairPromises = namePairs.map(({ first, last }) => {
+    const pf = `%${escapeForIlike(first)}%`
+    const pl = `%${escapeForIlike(last)}%`
+    return admin
+      .from("nhsca_placements")
+      .select(nhscaSelPlc)
+      .ilike("athlete_name", pf)
+      .ilike("athlete_name", pl)
+      .order("year", { ascending: false })
+      .limit(perTable)
+  })
+  const nhscaLegPairPromises = namePairs.map(({ first, last }) => {
+    const pf = `%${escapeForIlike(first)}%`
+    const pl = `%${escapeForIlike(last)}%`
+    return admin
+      .from("wrestling_nhsca_results")
+      .select(nhscaSelLeg)
+      .ilike("athlete_name", pf)
+      .ilike("athlete_name", pl)
+      .order("year", { ascending: false })
+      .limit(perTable)
+  })
+  const s32PairPromises = namePairs.map(({ first, last }) => {
+    const pf = `%${escapeForIlike(first)}%`
+    const pl = `%${escapeForIlike(last)}%`
+    return admin
+      .from("super32_results")
+      .select(s32Sel)
+      .ilike("athlete_name", pf)
+      .ilike("athlete_name", pl)
       .order("year", { ascending: false })
       .limit(perTable)
   })
@@ -762,6 +799,7 @@ export async function toolWrestlingCrossStoreSearch(args: {
     s32ByAthlete,
     s32ByHighSchool,
     s32BySchoolCol,
+    ...nhscaPlcPairRes
   ] = await Promise.all([
     admin.from("nhsca_placements").select(nhscaSelPlc).ilike("athlete_name", pattern).order("year", { ascending: false }).limit(perTable),
     admin.from("nhsca_placements").select(nhscaSelPlc).ilike("high_school", pattern).order("year", { ascending: false }).limit(perTable),
@@ -770,6 +808,12 @@ export async function toolWrestlingCrossStoreSearch(args: {
     admin.from("super32_results").select(s32Sel).ilike("athlete_name", pattern).order("year", { ascending: false }).limit(perTable),
     admin.from("super32_results").select(s32Sel).ilike("high_school", pattern).order("year", { ascending: false }).limit(perTable),
     admin.from("super32_results").select(s32Sel).ilike("school", pattern).order("year", { ascending: false }).limit(perTable),
+    ...nhscaPlcPairPromises,
+  ])
+
+  const [nhscaLegPairRes, s32PairRes] = await Promise.all([
+    Promise.all(nhscaLegPairPromises),
+    Promise.all(s32PairPromises),
   ])
 
   const ncPromises: Promise<typeof nchsaaByWrestler>[] = []
@@ -814,43 +858,45 @@ export async function toolWrestlingCrossStoreSearch(args: {
   const rowsOf = (res: { data?: unknown; error?: { message?: string } | null }): Record<string, unknown>[] =>
     res.error ? [] : ((res.data as Record<string, unknown>[]) ?? [])
 
-  ;[
-    nchsaaByWrestler,
-    nchsaaBySchool,
-    plcByAthlete,
-    plcBySchool,
-    legByAthlete,
-    legBySchool,
-    s32ByAthlete,
-    s32ByHighSchool,
-    s32BySchoolCol,
-    ...nchsaaPairRes,
-    ...ncRes,
-  ].forEach((res, i) => {
-    if (i === 0) noteErr(res, "nchsaa_by_wrestler")
-    else if (i === 1) noteErr(res, "nchsaa_by_school")
-    else if (i === 2) noteErr(res, "nhsca_placements_name")
-    else if (i === 3) noteErr(res, "nhsca_placements_school")
-    else if (i === 4) noteErr(res, "nhsca_legacy_name")
-    else if (i === 5) noteErr(res, "nhsca_legacy_school")
-    else if (i === 6) noteErr(res, "super32_name")
-    else if (i === 7) noteErr(res, "super32_high_school")
-    else if (i === 8) noteErr(res, "super32_school_col")
-    else if (i < 9 + nchsaaPairRes.length) noteErr(res, `nchsaa_pair_${i - 9}`)
-    else noteErr(res, "nc_united")
-  })
+  for (const [res, label] of [
+    [nchsaaByWrestler, "nchsaa_by_wrestler"],
+    [nchsaaBySchool, "nchsaa_by_school"],
+    [plcByAthlete, "nhsca_placements_name"],
+    [plcBySchool, "nhsca_placements_school"],
+    [legByAthlete, "nhsca_legacy_name"],
+    [legBySchool, "nhsca_legacy_school"],
+    [s32ByAthlete, "super32_name"],
+    [s32ByHighSchool, "super32_high_school"],
+    [s32BySchoolCol, "super32_school_col"],
+    ...nchsaaPairRes.map((r, i) => [r, `nchsaa_pair_${i}`] as const),
+    ...nhscaPlcPairRes.map((r, i) => [r, `nhsca_plc_pair_${i}`] as const),
+    ...nhscaLegPairRes.map((r, i) => [r, `nhsca_leg_pair_${i}`] as const),
+    ...s32PairRes.map((r, i) => [r, `super32_pair_${i}`] as const),
+    ...ncRes.map((r, i) => [r, `nc_united_${i}`] as const),
+  ] as Array<[{ error?: { message?: string } | null }, string]>) {
+    noteErr(res, label)
+  }
 
   const nchsaaBuckets: Record<string, unknown>[] = [
     ...rowsOf(nchsaaByWrestler),
     ...rowsOf(nchsaaBySchool),
     ...nchsaaPairRes.flatMap(rowsOf),
   ]
-  const plcBuckets: Record<string, unknown>[] = [...rowsOf(plcByAthlete), ...rowsOf(plcBySchool)]
-  const legBuckets: Record<string, unknown>[] = [...rowsOf(legByAthlete), ...rowsOf(legBySchool)]
+  const plcBuckets: Record<string, unknown>[] = [
+    ...rowsOf(plcByAthlete),
+    ...rowsOf(plcBySchool),
+    ...nhscaPlcPairRes.flatMap(rowsOf),
+  ]
+  const legBuckets: Record<string, unknown>[] = [
+    ...rowsOf(legByAthlete),
+    ...rowsOf(legBySchool),
+    ...nhscaLegPairRes.flatMap(rowsOf),
+  ]
   const s32Buckets: Record<string, unknown>[] = [
     ...rowsOf(s32ByAthlete),
     ...rowsOf(s32ByHighSchool),
     ...rowsOf(s32BySchoolCol),
+    ...s32PairRes.flatMap(rowsOf),
   ]
   const ncBuckets: Record<string, unknown>[] = ncRes.flatMap(rowsOf)
 
@@ -1015,8 +1061,8 @@ export async function toolNchsaaMultiTimeStateChampions(args: { times: number })
     champions,
     note:
       t === 4
-        ? "Four-time individual state champions: curated list of 17 through 2026 (Cael Dunn, Lorenzo Alston, and Bentley Sly joined the list in Feb 2026)."
-        : null,
+        ? "Four-time individual state champions: curated list of 17 through 2026, ordered earliest first title year first (Mike Kendall first, Cael Dunn last). List every wrestler in this order; do not reverse or alphabetize."
+        : "Ordered by earliest title year first; titles within each wrestler are chronological.",
   }
 }
 
