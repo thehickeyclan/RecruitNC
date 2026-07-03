@@ -485,7 +485,8 @@ function pickNhscaRowWhenUnscored(list: TournamentResultRow[], want: string): To
   return list[0]
 }
 
-const ALL_TIME_YEAR_MIN = 2000
+/** Align with NCHSAA historical floor (1990s state data); do not cut off early NHSCA imports. */
+const ALL_TIME_YEAR_MIN = 1990
 const ALL_TIME_YEAR_MAX = 2035
 
 /** Full year range — same name-matching chain as grad-window `getNhscaPlacementsFromTablesForAthlete`. */
@@ -588,9 +589,12 @@ export async function getNHSCAFromTablesAllTime(
 ): Promise<TournamentResultRow[]> {
   if (!athleteName?.trim()) return []
 
+  const exactName = normalizeApostrophes(athleteName.trim())
+
+  // Always merge placements + legacy (all years). Never return only one table — older history often
+  // lives only in wrestling_nhsca_results while recent years are in nhsca_placements.
   if (isFiniteGradYearForNhsca(graduationYearForRoster)) {
     const grad = Math.floor(Number(graduationYearForRoster))
-    const exactName = normalizeApostrophes(athleteName.trim())
     const [rosterRows, placementRows, legacyRows] = await Promise.all([
       getNHSCAFromNhscaRosterTable(supabase, athleteName, grad),
       getNhscaPlacementsFromTablesAllYears(supabase, athleteName, exactName),
@@ -599,49 +603,11 @@ export async function getNHSCAFromTablesAllTime(
     return mergeNhscaByYearPreferRoster(rosterRows, placementRows, legacyRows)
   }
 
-  const namesToTry = getNameVariants(athleteName)
-
-  for (const searchName of namesToTry) {
-    for (const pattern of getIlikePatternsForVariation(searchName)) {
-      const { data: placements } = await supabase
-        .from("nhsca_placements")
-        .select("*")
-        .ilike("athlete_name", pattern)
-        .gte("year", ALL_TIME_YEAR_MIN)
-        .lte("year", ALL_TIME_YEAR_MAX)
-        .order("year", { ascending: false })
-
-      if (placements?.length) {
-        return placements.map((p: any) => ({
-          year: typeof p.year === "number" ? p.year : parseInt(String(p.year), 10) || new Date().getFullYear(),
-          placement: formatPlacement(p.placement),
-          record: (p.record ?? "").toString().trim(),
-          weight: (p.weight_class ?? p.weight ?? "").toString().trim(),
-          division: (p.division ?? "").toString().trim(),
-        }))
-      }
-
-      const { data: results } = await supabase
-        .from("wrestling_nhsca_results")
-        .select("*")
-        .ilike("athlete_name", pattern)
-        .gte("year", ALL_TIME_YEAR_MIN)
-        .lte("year", ALL_TIME_YEAR_MAX)
-        .order("year", { ascending: false })
-
-      if (results?.length) {
-        return results.map((r: any) => ({
-          year: typeof r.year === "number" ? r.year : parseInt(String(r.year), 10) || new Date().getFullYear(),
-          placement: formatPlacement(r.placement ?? r.place),
-          record: (r.record ?? r.record_text ?? "").toString().trim(),
-          weight: (r.weight ?? "").toString().trim(),
-          division: (r.division ?? "").toString().trim(),
-        }))
-      }
-    }
-  }
-
-  return []
+  const [placementRows, legacyRows] = await Promise.all([
+    getNhscaPlacementsFromTablesAllYears(supabase, athleteName, exactName),
+    getNhscaLegacyFromTablesAllYears(supabase, athleteName, exactName),
+  ])
+  return mergeNhscaByYearPreferRoster([], placementRows, legacyRows)
 }
 
 /**
@@ -773,6 +739,8 @@ export interface NationalTeamResultRow {
   event: string
   year: number
   record: string
+  /** Weight class when known (e.g. NHSCA Duals roster slot). */
+  weight?: string
 }
 
 /**

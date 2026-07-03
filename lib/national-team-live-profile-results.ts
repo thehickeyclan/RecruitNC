@@ -64,11 +64,13 @@ export function buildNhscaDuals2026LiveProfileResults(
     if (!matched) continue
 
     const bouts = matched.wins + matched.losses
+    const weight = String(matched.displayWeight ?? "").trim()
     rows.push({
       event: teamType === "select" ? NHSCA_DUALS_SELECT_EVENT_LABEL : NHSCA_DUALS_NATIONAL_EVENT_LABEL,
       year: NHSCA_DUALS_2026_YEAR,
       record: `${matched.wins}-${matched.losses}`,
       isPlaceholder: bouts === 0,
+      ...(weight ? { weight } : {}),
     })
   }
 

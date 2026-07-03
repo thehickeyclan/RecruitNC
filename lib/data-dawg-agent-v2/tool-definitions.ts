@@ -151,7 +151,7 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
     function: {
       name: "nhsca_placements_search",
       description:
-        "NHSCA national tournament placements (athlete or school). Use for All-Americans, national placers, NHSCA history.",
+        "NHSCA national tournament placements (athlete or school) across **all years in DB** — merges `nhsca_placements` and legacy `wrestling_nhsca_results`. Use for All-Americans, national placers, NHSCA history. Prefer `get_athlete_full_dossier` or `wrestling_cross_store_search` for a specific wrestler when you have a name.",
       parameters: {
         type: "object",
         additionalProperties: false,
@@ -169,7 +169,7 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
     function: {
       name: "nchsaa_state_results_search",
       description:
-        "NCHSAA individual state tournament results (placers/champions) by wrestler or school name fragment. Do NOT use for 'who are the 2x/3x/4x state champs' — use nchsaa_multi_time_state_champions instead.",
+        "NCHSAA individual state tournament results (placers/champions) by wrestler or school name fragment — **all years** in `wrestling_nchsaa_results` (1990s–present). Do NOT use for 'who are the 2x/3x/4x state champs' — use nchsaa_multi_time_state_champions instead. For a full athlete report use get_athlete_full_dossier.",
       parameters: {
         type: "object",
         additionalProperties: false,

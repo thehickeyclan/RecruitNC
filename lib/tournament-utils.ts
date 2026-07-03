@@ -226,6 +226,8 @@ export interface NationalTeamResultRow {
   event: string
   year: number
   record: string
+  /** Weight class when known (e.g. NHSCA Duals roster slot). */
+  weight?: string
 }
 
 /**

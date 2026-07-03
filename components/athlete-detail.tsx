@@ -271,7 +271,27 @@ export function AthleteDetail({
   const athleteName = athlete?.name || "Unknown Athlete"
   const college = athlete?.college || "Not specified"
   const graduationYear = athlete?.graduationyear || athlete?.graduation_year || 0
-  const weightClass = athlete?.weightclass || athlete?.weight_class || "Not specified"
+  const profileWeightDisplay = (athlete as { profile_weight_display?: {
+    displayWeight: string | null
+    listedWeight: string | null
+    lastCompeted: { weight: string; year: number; event: string } | null
+    differsFromListed: boolean
+  } })?.profile_weight_display
+  const weightClass =
+    profileWeightDisplay?.displayWeight ??
+    athlete?.weightclass ??
+    athlete?.weight_class ??
+    "Not specified"
+  const weightClassLabel =
+    weightClass === "Not specified" || weightClass === ""
+      ? "Not specified"
+      : String(weightClass).replace(/\s*lbs?$/i, "")
+  const weightSubline =
+    profileWeightDisplay?.lastCompeted && profileWeightDisplay.differsFromListed
+      ? `Last: ${profileWeightDisplay.lastCompeted.event} ${profileWeightDisplay.lastCompeted.year} · Profile lists ${profileWeightDisplay.listedWeight}`
+      : profileWeightDisplay?.lastCompeted
+        ? `Last competed · ${profileWeightDisplay.lastCompeted.event} ${profileWeightDisplay.lastCompeted.year}`
+        : null
   const highSchool = athlete?.highschool || athlete?.high_school || "Not specified"
   const wrestlingClub = athlete?.wrestlingClub || "Not specified"
   const ncUnitedTeam = athlete?.ncUnitedTeam || ""
@@ -893,7 +913,12 @@ export function AthleteDetail({
                           </Button>
                         ) : null}
                       </div>
-                      <p className="text-lg font-bold">{weightClass}</p>
+                      <p className="text-lg font-bold">
+                        {weightClassLabel === "Not specified" ? weightClassLabel : `${weightClassLabel} lbs`}
+                      </p>
+                      {weightSubline ? (
+                        <p className="mt-0.5 text-[10px] leading-snug text-white/65">{weightSubline}</p>
+                      ) : null}
                     </div>
                   </div>
 
@@ -1059,7 +1084,12 @@ export function AthleteDetail({
                       </Button>
                     )}
                   </div>
-                  <p className="text-xl font-bold">{weightClass}</p>
+                  <p className="text-xl font-bold">
+                    {weightClassLabel === "Not specified" ? weightClassLabel : `${weightClassLabel} lbs`}
+                  </p>
+                  {weightSubline ? (
+                    <p className="mt-0.5 text-[11px] leading-snug text-white/65">{weightSubline}</p>
+                  ) : null}
                 </div>
               </div>
 
@@ -1262,7 +1292,12 @@ export function AthleteDetail({
                           </Button>
                         )}
                       </div>
-                      <p className="text-2xl font-bold text-white">{weightClass}</p>
+                      <p className="text-2xl font-bold text-white">
+                        {weightClassLabel === "Not specified" ? weightClassLabel : `${weightClassLabel} lbs`}
+                      </p>
+                      {weightSubline ? (
+                        <p className="mt-0.5 text-xs leading-snug text-white/65">{weightSubline}</p>
+                      ) : null}
                     </div>
                   </div>
 

@@ -506,31 +506,65 @@ export async function toolNhscaPlacementsSearch(args: {
   }
   const pattern = `%${escapeForIlike(q.trim())}%`
   const admin = getSupabaseAdmin()
-  const sel = "athlete_name,placement,year,division,weight_class,high_school"
+  const plcSel = "athlete_name,placement,year,division,weight_class,high_school"
+  const legSel = "athlete_name,placement,year,division,weight,high_school"
   const y = args.year != null && Number.isFinite(args.year) ? Math.floor(Number(args.year)) : null
-  const q1 = admin.from("nhsca_placements").select(sel).ilike("athlete_name", pattern).limit(limit)
-  const q2 = admin.from("nhsca_placements").select(sel).ilike("high_school", pattern).limit(limit)
-  const [r1, r2] = await Promise.all([
-    y != null ? q1.eq("year", y) : q1,
-    y != null ? q2.eq("year", y) : q2,
+
+  // Historical NHSCA lives in both tables — never query placements alone.
+  const plcName = admin.from("nhsca_placements").select(plcSel).ilike("athlete_name", pattern).order("year", { ascending: false }).limit(limit)
+  const plcSchool = admin.from("nhsca_placements").select(plcSel).ilike("high_school", pattern).order("year", { ascending: false }).limit(limit)
+  const legName = admin.from("wrestling_nhsca_results").select(legSel).ilike("athlete_name", pattern).order("year", { ascending: false }).limit(limit)
+  const legSchool = admin.from("wrestling_nhsca_results").select(legSel).ilike("high_school", pattern).order("year", { ascending: false }).limit(limit)
+
+  const [r1, r2, r3, r4] = await Promise.all([
+    y != null ? plcName.eq("year", y) : plcName,
+    y != null ? plcSchool.eq("year", y) : plcSchool,
+    y != null ? legName.eq("year", y) : legName,
+    y != null ? legSchool.eq("year", y) : legSchool,
   ])
-  const err = r1.error || r2.error
-  if (err) {
-    return { error: err.message, rows: [] as unknown[] }
+
+  const hardErr = [r1, r2, r3, r4].find((r) => r.error && !String(r.error.message).includes("does not exist"))
+  if (hardErr?.error && !(r1.data?.length || r2.data?.length || r3.data?.length || r4.data?.length)) {
+    return { error: hardErr.error.message, rows: [] as unknown[] }
   }
+
+  const normalize = (row: Record<string, unknown>, source: "nhsca_placements" | "wrestling_nhsca_results") => ({
+    athlete_name: row.athlete_name,
+    placement: row.placement,
+    year: row.year,
+    division: row.division,
+    weight_class: row.weight_class ?? row.weight ?? null,
+    high_school: row.high_school,
+    source,
+  })
+
   const key = (row: Record<string, unknown>) =>
-    `${row.athlete_name}|${row.year}|${row.placement}|${row.high_school}|${row.weight_class}`
+    `${row.athlete_name}|${row.year}|${row.placement}|${row.high_school}|${row.weight_class ?? row.weight ?? ""}`
   const seen = new Set<string>()
   const merged: unknown[] = []
+  // Prefer placements table when both have the same year/athlete (newer import).
   for (const row of [...(r1.data ?? []), ...(r2.data ?? [])]) {
     const r = row as Record<string, unknown>
     const k = key(r)
     if (seen.has(k)) continue
     seen.add(k)
-    merged.push(row)
+    merged.push(normalize(r, "nhsca_placements"))
     if (merged.length >= limit) break
   }
-  return { rows: merged }
+  if (merged.length < limit) {
+    for (const row of [...(r3.data ?? []), ...(r4.data ?? [])]) {
+      const r = row as Record<string, unknown>
+      const k = key(r)
+      if (seen.has(k)) continue
+      seen.add(k)
+      merged.push(normalize(r, "wrestling_nhsca_results"))
+      if (merged.length >= limit) break
+    }
+  }
+  return {
+    rows: merged,
+    note: "Merged nhsca_placements + wrestling_nhsca_results (all years unless year filter set).",
+  }
 }
 
 export async function toolNchsaaStateResultsSearch(args: { query: string; limit?: number }) {
@@ -543,9 +577,21 @@ export async function toolNchsaaStateResultsSearch(args: { query: string; limit?
   const pattern = `%${escapeForIlike(q.trim())}%`
   const admin = getSupabaseAdmin()
   const sel = "wrestler_name,place,year,classification,weight_class,school"
+  // No year filter — full historical NCHSAA table. Order newest-first for display; raise limit for school queries.
+  const fetchCap = Math.min(Math.max(limit * 3, limit), 120)
   const [r1, r2] = await Promise.all([
-    admin.from("wrestling_nchsaa_results").select(sel).ilike("wrestler_name", pattern).limit(limit),
-    admin.from("wrestling_nchsaa_results").select(sel).ilike("school", pattern).limit(limit),
+    admin
+      .from("wrestling_nchsaa_results")
+      .select(sel)
+      .ilike("wrestler_name", pattern)
+      .order("year", { ascending: false })
+      .limit(fetchCap),
+    admin
+      .from("wrestling_nchsaa_results")
+      .select(sel)
+      .ilike("school", pattern)
+      .order("year", { ascending: false })
+      .limit(fetchCap),
   ])
   const err = r1.error || r2.error
   if (err) {
@@ -561,7 +607,10 @@ export async function toolNchsaaStateResultsSearch(args: { query: string; limit?
     merged.push(row)
     if (merged.length >= limit) break
   }
-  return { rows: merged }
+  return {
+    rows: merged,
+    note: "All years in wrestling_nchsaa_results (no year cutoff). For a full career report use get_athlete_full_dossier.",
+  }
 }
 
 const CROSS_STORE_CAP = 50
