@@ -5,8 +5,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { getSupabaseAdmin } from "@/lib/server-supabase"
 import { escapeForIlike } from "@/lib/nchsaa-results"
-import { normalizeApostrophes } from "@/lib/standardize-tournament-names"
-import { getNameVariants } from "@/lib/tournament-tables"
+import {
+  ilikeOrClause,
+  nameSearchKeysForSchoolDossier,
+  schoolDossierAthleteMatchesKnown,
+  schoolIlikePatterns,
+} from "@/lib/data-dawg-school-nhsca-match"
 import { extractSearchablePhrase, stripConversationalNoise } from "@/lib/data-dawg-agent-v2/search-normalize"
 import { levenshteinDistance, scoreSchoolMatch } from "@/lib/data-dawg-agent-v2/fuzzy-utils"
 
@@ -67,32 +71,6 @@ function athleteDirectoryDisplayName(r: Record<string, unknown>): string {
   return `${f} ${l}`.trim()
 }
 
-/**
- * True when an NHSCA/Super32-style `athlete_name` is the same person as one of our school's known wrestlers
- * (NCHSAA placers + roster). Matches profile-style name variants so imports like "Hickey, Liam" still hit.
- */
-function schoolDossierAthleteMatchesKnown(athleteName: string, knownWrestlers: string[]): boolean {
-  const rn = normalizeApostrophes(String(athleteName ?? "").trim()).toLowerCase()
-  if (!rn) return false
-  for (const w of knownWrestlers) {
-    if (!String(w).trim()) continue
-    const variants = getNameVariants(w).map((v) => normalizeApostrophes(v.trim()).toLowerCase())
-    if (variants.includes(rn)) return true
-  }
-  const rowVariants = getNameVariants(athleteName).map((v) => normalizeApostrophes(v.trim()).toLowerCase())
-  for (const rv of rowVariants) {
-    if (!rv) continue
-    for (const w of knownWrestlers) {
-      if (!String(w).trim()) continue
-      for (const v of getNameVariants(w).map((x) => normalizeApostrophes(x.trim()).toLowerCase())) {
-        if (rv === v) return true
-        if (v.length >= 8 && rv.length >= 8 && (rv.includes(v) || v.includes(rv))) return true
-      }
-    }
-  }
-  return false
-}
-
 function nhscaRowIncludeForSchool(
   row: Record<string, unknown>,
   canonical: string,
@@ -110,24 +88,15 @@ async function fetchNhscaByKnownWrestlerNames(
   admin: SupabaseClient,
   knownWrestlers: string[],
 ): Promise<{ leg: Record<string, unknown>[]; plc: Record<string, unknown>[] }> {
-  const variants = new Set<string>()
-  for (const w of knownWrestlers) {
-    const t = w.trim()
-    if (t.length < 2) continue
-    for (const v of getNameVariants(t)) {
-      const s = v.trim()
-      if (s.length >= 5) variants.add(s)
-    }
-  }
-  const list = [...variants].slice(0, 96)
+  const list = nameSearchKeysForSchoolDossier(knownWrestlers)
   if (list.length === 0) return { leg: [], plc: [] }
 
   const leg: Record<string, unknown>[] = []
   const plc: Record<string, unknown>[] = []
-  const CHUNK = 8
+  const CHUNK = 6
   for (let i = 0; i < list.length; i += CHUNK) {
     const chunk = list.slice(i, i + CHUNK)
-    const orClause = chunk.map((v) => `athlete_name.ilike.%${escapeForIlike(v)}%`).join(",")
+    const orClause = ilikeOrClause("athlete_name", chunk)
     const [r1, r2] = await Promise.all([
       admin
         .from("wrestling_nhsca_results")
@@ -397,37 +366,54 @@ export async function buildSchoolWrestlingDossierMarkdown(rawQuery: string): Pro
 
   const knownWrestlers = [...new Set([...nchsaaWrestlerNames, ...athleteAtSchoolNames])]
 
-  const [nh1, nh2, np, nhByName] = await Promise.all([
+  const schoolPats = schoolIlikePatterns(canonical)
+  const nhscaSchoolQueries = schoolPats.flatMap((pat) => [
+    admin
+      .from("wrestling_nhsca_results")
+      .select("athlete_name,placement,year,division,weight,high_school,record")
+      .ilike("high_school", pat)
+      .limit(MAX_NATIONAL),
+    admin
+      .from("nhsca_placements")
+      .select("athlete_name,placement,year,division,weight_class,high_school")
+      .ilike("high_school", pat)
+      .limit(MAX_NATIONAL),
+  ])
+
+  const [nhEq, schoolOnlyRes, nhByName] = await Promise.all([
     admin
       .from("wrestling_nhsca_results")
       .select("athlete_name,placement,year,division,weight,high_school,record")
       .eq("high_school", canonical)
       .limit(MAX_NATIONAL),
-    admin
-      .from("wrestling_nhsca_results")
-      .select("athlete_name,placement,year,division,weight,high_school,record")
-      .ilike("high_school", schoolPat)
-      .limit(MAX_NATIONAL),
-    admin
-      .from("nhsca_placements")
-      .select("athlete_name,placement,year,division,weight_class,high_school")
-      .ilike("high_school", schoolPat)
-      .limit(MAX_NATIONAL),
+    Promise.all(nhscaSchoolQueries),
     fetchNhscaByKnownWrestlerNames(admin, knownWrestlers),
   ])
 
+  const legFromSchool: Record<string, unknown>[] = [
+    ...((nhEq.data ?? []) as Record<string, unknown>[]),
+  ]
+  const plcFromSchool: Record<string, unknown>[] = []
+  for (let i = 0; i < schoolOnlyRes.length; i++) {
+    const res = schoolOnlyRes[i]!
+    if (res.error) {
+      console.warn("[RecruitNC] school dossier NHSCA school query:", res.error.message)
+      continue
+    }
+    const rows = (res.data ?? []) as Record<string, unknown>[]
+    // Even indices = legacy table, odd = placements (see schoolPats.flatMap order)
+    if (i % 2 === 0) legFromSchool.push(...rows)
+    else plcFromSchool.push(...rows)
+  }
+
   const nhMerged = mergeUniqueRows(
-    [
-      ...((nh1.data ?? []) as Record<string, unknown>[]),
-      ...((nh2.data ?? []) as Record<string, unknown>[]),
-      ...nhByName.leg,
-    ],
+    [...legFromSchool, ...nhByName.leg],
     (r) =>
       `${String(r.athlete_name)}|${String(r.year)}|${String(placementNum(r.placement))}|${String(r.division ?? "")}|${String(r.weight ?? "")}`,
   ).filter((r) => nhscaRowIncludeForSchool(r, canonical, knownWrestlers))
 
   const npRows = mergeUniqueRows(
-    [...((np.data ?? []) as Record<string, unknown>[]), ...nhByName.plc],
+    [...plcFromSchool, ...nhByName.plc],
     (r) =>
       `${String(r.athlete_name)}|${String(r.year)}|${String(placementNum(r.placement))}|${String(r.division ?? "")}|${String(r.weight_class ?? "")}`,
   ).filter((r) => nhscaRowIncludeForSchool(r, canonical, knownWrestlers))
@@ -537,12 +523,22 @@ export async function buildSchoolWrestlingDossierMarkdown(rawQuery: string): Pro
   }
 
   lines.push("")
-  lines.push("### 🌟 NHSCA Nationals")
+  lines.push("### 🌟 NHSCA Nationals (All-Americans & results)")
   lines.push("")
   if (nhscaCombined.length === 0) {
     lines.push("*No NHSCA rows matched this high school.*")
   } else {
-    const sortedN = [...nhscaCombined].sort((a, b) => (Number(b.year) || 0) - (Number(a.year) || 0))
+    const sortedN = [...nhscaCombined].sort((a, b) => {
+      const ya = Number(a.year) || 0
+      const yb = Number(b.year) || 0
+      if (yb !== ya) return yb - ya
+      const pa = placementNum(a.placement)
+      const pb = placementNum(b.placement)
+      const aaA = pa >= 1 && pa <= 8 ? 0 : 1
+      const aaB = pb >= 1 && pb <= 8 ? 0 : 1
+      if (aaA !== aaB) return aaA - aaB
+      return (pa || 99) - (pb || 99)
+    })
     for (const r of sortedN) {
       const p = placementNum(r.placement)
       const nm = String(r.athlete_name ?? "").trim()
@@ -551,7 +547,13 @@ export async function buildSchoolWrestlingDossierMarkdown(rawQuery: string): Pro
       const rec = String((r as { record?: string }).record ?? "").trim()
       const aa = p >= 1 && p <= 8 ? " (All-American)" : ""
       const placeStr =
-        p === 1 ? "Champion" : p > 0 ? `${p}${p === 2 ? "nd" : p === 3 ? "rd" : "th"}` : "Placer"
+        p === 1
+          ? "Champion"
+          : p >= 2 && p <= 8
+            ? `${p}${p === 2 ? "nd" : p === 3 ? "rd" : "th"}`
+            : rec
+              ? "Record"
+              : "Competed"
       const extras = [div, wt, rec].filter(Boolean).join(", ")
       lines.push(`- ${r.year}: ${nm} — ${placeStr}${aa}${extras ? ` (${extras})` : ""}`)
     }
