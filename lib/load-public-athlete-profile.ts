@@ -11,6 +11,12 @@ import {
 } from "@/lib/national-team-live-profile-results"
 import { getNationalTeamProfileHighlights } from "@/lib/national-team-profile-highlights"
 import type { ProfileNationalTeamHighlight } from "@/lib/national-team-profile-highlights"
+import {
+  buildProfileWeightDisplay,
+  candidatesFromPublicProfilePayload,
+  resolveLastCompetedWeight,
+  type ProfileWeightDisplay,
+} from "@/lib/last-competed-weight"
 import { getUltimateClubDualsFromTables } from "@/lib/tournament-tables"
 import { getNationalTeamResults } from "@/lib/tournament-utils"
 
@@ -26,6 +32,8 @@ export type PublicAthleteProfile = Record<string, unknown> & {
   national_team_results: unknown[]
   national_team_highlight_videos: ProfileNationalTeamHighlight[]
   profile_quality_wins: ProfileQualityWinsTournamentBlock[]
+  /** Display-only: last tournament weight vs profile-listed weight. */
+  profile_weight_display: ProfileWeightDisplay
 }
 
 export type LoadPublicAthleteProfileResult =
@@ -101,6 +109,16 @@ export async function loadPublicAthleteProfile(
   })
   const national_team_highlight_videos = getNationalTeamProfileHighlights(trimmed, nameBases)
 
+  const profilePayload = {
+    nchsaa_profile,
+    nhsca_results: nhscaMerged,
+    super32_results: super32Merged,
+    national_team_results,
+  }
+  const lastCompeted = resolveLastCompetedWeight(candidatesFromPublicProfilePayload(profilePayload))
+  const listedWeight = (athlete as Record<string, unknown>).weightclass ?? (athlete as Record<string, unknown>).weight_class
+  const profile_weight_display = buildProfileWeightDisplay(listedWeight as string | number | null, lastCompeted)
+
   return {
     ok: true,
     athlete: {
@@ -111,6 +129,7 @@ export async function loadPublicAthleteProfile(
       national_team_results,
       national_team_highlight_videos,
       profile_quality_wins,
+      profile_weight_display,
     },
   }
 }
