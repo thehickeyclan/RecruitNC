@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getSupabaseAdmin } from "@/lib/server-supabase"
 import {
   getNchsaaStateChampionsByExactTitleCount,
+  sortMultiTimeChampionsChronological,
   NCHSAA_FOUR_TIME_STATE_CHAMPIONS,
 } from "@/lib/nchsaa-multi-time-state-champions"
 
@@ -22,12 +23,12 @@ export async function handleStateChampionRecords(
 
     if (numCount === 4) {
       console.log("[AI] Using curated 4x state champions list - count:", NCHSAA_FOUR_TIME_STATE_CHAMPIONS.length)
-      return { results: [...NCHSAA_FOUR_TIME_STATE_CHAMPIONS] }
+      return { results: sortMultiTimeChampionsChronological(NCHSAA_FOUR_TIME_STATE_CHAMPIONS) }
     }
 
     if (!numCount && (!params.wrestlerName || params.wrestlerName === "")) {
       console.log("[Handler] No championshipCount specified, defaulting to 4x for state champion records query")
-      return { results: [...NCHSAA_FOUR_TIME_STATE_CHAMPIONS] }
+      return { results: sortMultiTimeChampionsChronological(NCHSAA_FOUR_TIME_STATE_CHAMPIONS) }
     }
 
     if (numCount === 2 || numCount === 3) {

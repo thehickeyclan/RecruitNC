@@ -236,3 +236,45 @@ export const NCHSAA_FOUR_TIME_STATE_CHAMPIONS: NchsaaMultiTimeStateChampion[] = 
     weight_classes: ["105lbs", "112lbs", "119lbs", "130lbs"],
   },
 ]
+
+function championshipYears(c: NchsaaMultiTimeStateChampion): number[] {
+  return c.championships.map((x) => Number(x.year)).filter((y) => Number.isFinite(y))
+}
+
+function lastTitleWeightLbs(c: NchsaaMultiTimeStateChampion): number {
+  const years = championshipYears(c)
+  if (!years.length) return 0
+  const lastYear = Math.max(...years)
+  const row = c.championships.find((x) => x.year === lastYear)
+  const m = String(row?.weight_class ?? "").match(/(\d{2,3})/)
+  return m ? parseInt(m[1]!, 10) : 0
+}
+
+/** Earliest title year first (Mike Kendall → … → Cael Dunn); titles within each wrestler chronological. */
+export function sortMultiTimeChampionsChronological(
+  rows: NchsaaMultiTimeStateChampion[],
+): NchsaaMultiTimeStateChampion[] {
+  return rows
+    .map((r) => ({
+      ...r,
+      championships: [...r.championships].sort((a, b) => a.year - b.year),
+      schools: [...r.schools],
+      classifications: [...r.classifications],
+      weight_classes: [...r.weight_classes],
+    }))
+    .sort((a, b) => {
+      const aYears = championshipYears(a)
+      const bYears = championshipYears(b)
+      const aFirst = Math.min(...aYears)
+      const bFirst = Math.min(...bYears)
+      if (aFirst !== bFirst) return aFirst - bFirst
+      const aLast = Math.max(...aYears)
+      const bLast = Math.max(...bYears)
+      if (aLast !== bLast) return aLast - bLast
+      // Same era (e.g. 2023–2026 class): lighter final weight first so Cael (215) is last
+      const aWt = lastTitleWeightLbs(a)
+      const bWt = lastTitleWeightLbs(b)
+      if (aWt !== bWt) return aWt - bWt
+      return a.wrestler_name.localeCompare(b.wrestler_name, undefined, { sensitivity: "base" })
+    })
+}
