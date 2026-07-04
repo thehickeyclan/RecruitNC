@@ -1162,14 +1162,26 @@ function coerceDualYear(raw: unknown): number | null {
   return null
 }
 
-function dualTeamChampionsBase(admin: ReturnType<typeof getSupabaseAdmin>) {
-  return admin
-    .from("dual_team_champions")
+/** Filters for held, non-vacated dual team titles (apply after `.select(...)`). */
+function applyDualTeamChampionFilters<T extends { eq: Function; neq: Function; or: Function; not: Function }>(
+  q: T,
+): T {
+  return q
     .eq("is_vacated", false)
     .neq("champion_school", "No Dual Tournament")
     .or("held.is.null,held.eq.true")
     .not("champion_school", "is", null)
-    .not("champion_school", "eq", "")
+    .not("champion_school", "eq", "") as T
+}
+
+/** Collapse "Cardinal Gibbons High School" / "Cardinal Gibbons HS" into one leaderboard key. */
+function normalizeDualChampionSchoolKey(raw: string): string {
+  return raw
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/\s+(high\s+school|hs|school)\s*$/i, "")
+    .replace(/^the\s+/i, "")
+    .trim()
 }
 
 /**
@@ -1188,7 +1200,9 @@ export async function toolNchsaaDualTeamChampions(args: {
 
   if (wantLeaderboard) {
     const listCap = Math.min(Math.max(Number(args.limit) || MAX_DUAL_LEADERBOARD, 1), 200)
-    const { data, error } = await dualTeamChampionsBase(admin).select("champion_school, year, division")
+    const { data, error } = await applyDualTeamChampionFilters(
+      admin.from("dual_team_champions").select("champion_school, year, division"),
+    )
 
     if (error) {
       return { error: error.message, leaderboard: true, schools: [] as unknown[] }
@@ -1207,36 +1221,64 @@ export async function toolNchsaaDualTeamChampions(args: {
       rows = rows.filter((r) => String(r.champion_school ?? "").toLowerCase().includes(frag))
     }
 
-    const counts = new Map<string, { count: number; years: number[] }>()
+    const counts = new Map<
+      string,
+      { count: number; years: number[]; display_name: string; name_variants: Set<string> }
+    >()
     for (const r of rows) {
-      const s = String(r.champion_school ?? "").trim()
-      if (!s) continue
-      if (!counts.has(s)) counts.set(s, { count: 0, years: [] })
-      const c = counts.get(s)!
+      const display = String(r.champion_school ?? "").trim()
+      if (!display) continue
+      const key = normalizeDualChampionSchoolKey(display).toLowerCase()
+      if (!key) continue
+      if (!counts.has(key)) {
+        counts.set(key, {
+          count: 0,
+          years: [],
+          display_name: normalizeDualChampionSchoolKey(display) || display,
+          name_variants: new Set(),
+        })
+      }
+      const c = counts.get(key)!
       c.count++
+      c.name_variants.add(display)
+      // Prefer shorter display name (without "High School") when variants exist
+      const normDisplay = normalizeDualChampionSchoolKey(display)
+      if (normDisplay && normDisplay.length < c.display_name.length) c.display_name = normDisplay
       if (r.year != null && !c.years.includes(r.year)) c.years.push(r.year)
     }
 
-    const schools = [...counts.entries()]
-      .map(([school, v]) => ({
-        school,
+    const schools = [...counts.values()]
+      .map((v) => ({
+        school: v.display_name,
         title_count: v.count,
         years: v.years.sort((a, b) => b - a),
       }))
       .sort((a, b) => b.title_count - a.title_count || a.school.localeCompare(b.school))
       .slice(0, listCap)
 
+    const top = schools[0] ?? null
+
     return {
       leaderboard: true,
+      most_titles: top
+        ? {
+            school: top.school,
+            title_count: top.title_count,
+            years: top.years,
+          }
+        : null,
       schools,
       total_schools_in_scope: counts.size,
-      note: "NCHSAA state dual team titles (held tournaments only; non-vacated; no placeholder rows). This is not the NHSCA national dual meet.",
+      note:
+        "NCHSAA state dual team titles (held tournaments only; non-vacated; no placeholder rows). Schools ranked by total titles. Answer 'who has the most state dual titles?' with `most_titles` (and list top schools from `schools`). This is not the NHSCA national dual meet.",
     }
   }
 
   const rowCap = Math.min(Math.max(Number(args.limit) || MAX_DUAL_LIST, 1), 500)
 
-  let q = dualTeamChampionsBase(admin).select("year, division, champion_school")
+  let q = applyDualTeamChampionFilters(
+    admin.from("dual_team_champions").select("year, division, champion_school"),
+  )
 
   if (yearFilter != null) {
     q = q.eq("year", yearFilter)
