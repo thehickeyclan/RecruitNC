@@ -25,6 +25,14 @@ const FAQ_ITEMS = [
     a: "By invitation only. You don't enter — you get the call. Athletes are nominated, reviewed by NC United staff, and invited if selected for one of 88 spots (eight per weight class).",
   },
   {
+    q: "How is NC United selecting athletes?",
+    a: "We use the same philosophy as our RecruitNC rankings. We prioritize performance at college opens, national competition, quality of wins, NC United practice performance, and overall body of work. Our goal is to assemble the most elite eight-man bracket possible at every weight — delivering the best value to college coaches and our community.",
+  },
+  {
+    q: "Will NC United coaches be cornering the athletes?",
+    a: "No. We encourage each athlete's club and/or high school coach to corner them throughout the tournament. If you need a coach, we're happy to help coordinate.",
+  },
+  {
     q: "What makes the Tournament of Champions different?",
     a: `Invite-only — eight wrestlers per weight. College weight classes. Stacked eight-person brackets with true double-elimination and top-four placement. ${TOC_MATS_LINE} An elite Apex venue built for great wrestling and a crowd — championship-level production, not another grind-through tournament.`,
   },
@@ -33,8 +41,8 @@ const FAQ_ITEMS = [
     a: "Eleven brackets: the ten standard NCAA collegiate weights (125 through 285) plus 117 lbs — so the state's lightest elite wrestlers have a bracket of their own. That's the full card: 117, 125, 133, 141, 149, 157, 165, 174, 184, 197, and 285.",
   },
   {
-    q: "How does weigh-in work?",
-    a: "Single weigh-in Friday at 4:00 PM, then first-round bouts that night. No Saturday weight allowance. Skin checks at the scale. USA Wrestling card required.",
+    q: "Will there be one weigh-in or two? Is there any allowance?",
+    a: "One official weigh-in Friday at 4:00 PM using college weight classes — flat weight with no allowance. A singlet is required for weigh-ins. Skin checks at the scale. USA Wrestling card required. First-round bouts follow Friday night.",
   },
   {
     q: "Will college coaches be there?",

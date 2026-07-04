@@ -124,7 +124,7 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
     function: {
       name: "nchsaa_dual_team_champions",
       description:
-        "NCHSAA **state** dual team championships (state duals / dual team state champions): winners by year and division from table dual_team_champions. Use for 'show dual team state champions', 'NCHSAA dual team', 'who won state duals', **'who won dual team states in 2026'** (always pass year: 2026 as integer), 'dual team winners in [year]', or 'which school has the most dual team titles' (set leaderboard: true). Always call this tool for a specific year—never claim 'no records' without it. Optional filters: year (integer), division (e.g. '4A', '1A/2A'), school (champion school name fragment). Excludes vacated titles, placeholder rows, and tournaments marked not held. NOT the same as NHSCA national duals — if the user asks only for NHSCA duals, clarify; for NC state duals use this tool.",
+        "NCHSAA **state** dual team championships (state duals / dual team state champions) from `dual_team_champions`. Use for 'show dual team state champions', 'who won state duals', **'who won dual team states in 2026'** (pass year: 2026), 'dual team winners in [year]', **'what team has won the most state dual titles?'**, 'which school has the most dual team championships', 'state dual leaderboard' — for most-titles / leaderboard questions set **leaderboard: true** (do not pass year unless they ask for a single season). Optional filters: year, division (e.g. '4A'), school name fragment. Excludes vacated titles and tournaments not held. NOT NHSCA national duals.",
       parameters: {
         type: "object",
         additionalProperties: false,
@@ -135,7 +135,7 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
           leaderboard: {
             type: "boolean",
             description:
-              "If true, return schools ranked by total state dual titles (with years). Use for 'most dual team championships', 'dual team leaderboard'.",
+              "REQUIRED true for 'most state dual titles', 'which team has won the most duals', 'dual team leaderboard'. Returns schools ranked by title_count plus most_titles.",
           },
           limit: {
             type: "integer",
