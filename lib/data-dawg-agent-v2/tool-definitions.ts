@@ -232,12 +232,21 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
     function: {
       name: "nchsaa_state_tournament_by_year",
       description:
-        "All NCHSAA state championship placers for one year from `wrestling_nchsaa_results`. Use for 'show me the results of the 2017 state tournament', '2017 NCHSAA state results', etc. Not for multi-time champs (use nchsaa_multi_time_state_champions) or name search (use nchsaa_state_results_search).",
+        "NCHSAA state championship placers for one year from `wrestling_nchsaa_results`. Use for 'show me the results of the 2017 state tournament', 'show all 4A state placers from 2025', '2024 3A state results', etc. Pass `classification` (1A–8A, 1A/2A, 1-4A) when the user names a division. Not for multi-time champs (use nchsaa_multi_time_state_champions) or name search (use nchsaa_state_results_search).",
       parameters: {
         type: "object",
         additionalProperties: false,
         properties: {
           year: { type: "integer", description: "NCHSAA state tournament year (e.g. 2017)." },
+          classification: {
+            type: "string",
+            description: "Optional NCHSAA division: 1A, 2A, 3A, 4A, 5A, 6A, 7A, 8A, 1A/2A, or 1-4A (women).",
+          },
+          gender: {
+            type: "string",
+            enum: ["men", "women"],
+            description: "Default men unless user asks for girls/women.",
+          },
         },
         required: ["year"],
       },

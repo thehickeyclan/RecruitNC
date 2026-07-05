@@ -8,9 +8,24 @@ export type ParsedTournamentResultsQuery = {
   kind: TournamentResultsKind
   year: number
   gender: "men" | "women"
+  /** NCHSAA classification when user asks for a specific division (e.g. 4A, 1A/2A, 1-4A). */
+  classification: string | null
 }
 
 const YEAR_RE = /\b(19\d{2}|20\d{2})\b/
+
+export const NCHSAA_CLASSIFICATIONS = [
+  "1-4A",
+  "1A/2A",
+  "1A",
+  "2A",
+  "3A",
+  "4A",
+  "5A",
+  "6A",
+  "7A",
+  "8A",
+] as const
 
 function extractYear(text: string): number | null {
   const m = text.match(YEAR_RE)
@@ -18,6 +33,75 @@ function extractYear(text: string): number | null {
   const y = parseInt(m[1], 10)
   if (y < 1990 || y > 2035) return null
   return y
+}
+
+/** Parse NCHSAA division from natural language (4A, 4a, 1A/2A, 1-4A, etc.). */
+export function extractNchsaaClassification(text: string): string | null {
+  if (/\b1\s*[-–]\s*4\s*a\b/i.test(text)) return "1-4A"
+  if (/\b1\s*a\s*\/\s*2\s*a\b/i.test(text)) return "1A/2A"
+
+  const patterns = [
+    /(?:show|list|get|all)\s+(?:me\s+)?(?:all\s+)?(?:the\s+)?(\d+)\s*[aA]\s+state\s+placers?/i,
+    /(?:show|list|get|all)\s+(?:me\s+)?(?:all\s+)?(?:the\s+)?(\d+)\s*[aA]\s+state\s+(?:results?|championships?)/i,
+    /(\d+)\s*[aA]\s+state\s+(?:placers?|results?|championships?)/i,
+    /state\s+placers?\s+(?:from|in|at|for)?\s*(?:the\s+)?(?:year\s+)?(?:\d{4}\s+)?(\d+)\s*[aA]\b/i,
+    /(?:at|in)\s+(\d+)\s*[aA]\s+(?:states|state)\b/i,
+    /(\d+)\s*[aA]\s+\d{4}\s+state/i,
+    /(\d+)\s*[aA]\s+states\b/i,
+    /(?:placers?|placer)\s+(\d+)\s*[aA]\b/i,
+    /(?:show|list|get|all)\s+(?:me\s+)?(?:all\s+)?(\d+)\s*[aA]\s+placers?\b/i,
+    /(\d+)\s*[aA]\s+placers?\s+(?:from|in|at|for)\s+\d{4}/i,
+  ]
+
+  for (const re of patterns) {
+    const m = text.match(re)
+    if (m?.[1]) {
+      const div = `${m[1]}A`
+      if (NCHSAA_CLASSIFICATIONS.includes(div as (typeof NCHSAA_CLASSIFICATIONS)[number])) return div
+    }
+  }
+
+  const lower = text.toLowerCase()
+  const tokens = lower.match(/\b(\d+)\s*[aA]\b/g)
+  if (tokens) {
+    for (const token of tokens) {
+      const num = parseInt(token, 10)
+      if (num < 1 || num > 8) continue
+      const idx = lower.indexOf(token)
+      const after = lower.slice(idx + token.length, idx + token.length + 10)
+      if (/^\s*(?:lbs|lb|pounds)\b/.test(after)) continue
+      if (/^\s*\d{3}\b/.test(after)) continue
+      return `${num}A`
+    }
+  }
+
+  return null
+}
+
+/** Match a DB classification value to a user-requested division. */
+export function matchesNchsaaClassificationFilter(
+  rowClassification: string,
+  filter: string,
+  year: number,
+): boolean {
+  const row = rowClassification.trim()
+  const f = filter.trim().toUpperCase()
+
+  if (f === "1-4A") return row === "1-4A"
+  if (f === "1A/2A") {
+    if (row === "1A/2A") return true
+    if (year < 2026 && (row === "1A" || row === "2A")) return true
+    return false
+  }
+  if (f === "1A" || f === "2A") {
+    if (year >= 2026) return row === "1A/2A" || row === f
+    return row === f || row === "1A/2A"
+  }
+
+  const rowUpper = row.replace(/\s/g, "").toUpperCase()
+  if (rowUpper === f) return true
+  const num = f.replace(/A$/, "")
+  return rowUpper === num || rowUpper === `${num}A` || rowUpper.startsWith(`${num}A`)
 }
 
 function detectGender(lower: string): "men" | "women" {
@@ -29,7 +113,7 @@ function detectGender(lower: string): "men" | "women" {
   return "men"
 }
 
-function detectKind(lower: string): TournamentResultsKind | null {
+function detectKind(lower: string, classification: string | null): TournamentResultsKind | null {
   const hasAllAmerican = /\ball[\s-]?americans?\b/.test(lower)
   const hasNhsca =
     /\bnhsca\b/.test(lower) ||
@@ -42,11 +126,14 @@ function detectKind(lower: string): TournamentResultsKind | null {
     /\bstate wrestling\b/.test(lower) ||
     /\bstate results\b/.test(lower) ||
     /\bstate placers?\b/.test(lower) ||
+    (classification != null && /\bplacers?\b/.test(lower)) ||
+    (classification != null && /\bstate\b/.test(lower)) ||
     (/\bstate\b/.test(lower) && /\btournament\b/.test(lower))
 
   if (hasNhsca || (hasAllAmerican && !hasState)) return "nhsca_all_americans"
   if (hasState && !hasAllAmerican) return "nchsaa_state"
   if (hasState && hasAllAmerican) return "nhsca_all_americans"
+  if (classification && !hasNhsca && !hasAllAmerican) return "nchsaa_state"
   return null
 }
 
@@ -56,12 +143,16 @@ function isTournamentResultsListingQuery(lower: string): boolean {
     /(?:give|get)\s+(?:me\s+)?(?:the\s+)?results\s+of/.test(lower) ||
     /\bresults\s+of\s+(?:the\s+)?/.test(lower) ||
     /\bresults\s+from\s+(?:the\s+)?/.test(lower) ||
-    /\bwhat\s+(?:were|was)\s+(?:the\s+)?(?:\d{4}\s+)?(?:nchsaa\s+)?state/.test(lower) ||
+    /\bwhat\s+(?:were|was)\s+(?:the\s+)?(?:\d{4}\s+)?(?:\d+[aA]\s+)?(?:nchsaa\s+)?state/.test(lower) ||
     /who\s+(?:was|were)\s+(?:an?\s+)?(?:the\s+)?(?:nhsca\s+)?all[\s-]?americans?\b/.test(lower) ||
     /(?:list|show)\s+(?:all\s+)?(?:the\s+)?(?:nhsca\s+)?all[\s-]?americans?\b/.test(lower) ||
     /(?:nhsca\s+)?all[\s-]?americans?\s+(?:from|in|at|for)\s+(?:the\s+)?(?:year\s+)?\d{4}/.test(lower) ||
     /(?:nchsaa\s+)?state\s+(?:tournament|championships?|results|placers?)\b/.test(lower) ||
     /\d{4}\s+(?:nchsaa\s+)?state\s+(?:tournament|championships?|results)\b/.test(lower) ||
+    /\b\d+[aA]\s+state\s+(?:placers?|results?|championships?)\b/.test(lower) ||
+    /(?:show|list|get|all)\s+(?:me\s+)?(?:all\s+)?(?:the\s+)?\d+[aA]\s+state\s+placers?\b/.test(lower) ||
+    /(?:show|list|get|all)\s+(?:me\s+)?(?:all\s+)?\d+[aA]\s+placers?\b/.test(lower) ||
+    /\b\d+[aA]\s+placers?\s+(?:from|in|at|for)\s+\d{4}\b/.test(lower) ||
     (/\bnhsca\s+(?:nationals?|results?|placements?)\b/.test(lower) && YEAR_RE.test(lower)) ||
     (/\bnhsca\b/.test(lower) && /\bresults\b/.test(lower) && YEAR_RE.test(lower)) ||
     /\d{4}\s+nhsca\b/.test(lower)
@@ -78,10 +169,12 @@ export function parseTournamentResultsQuery(message: string): ParsedTournamentRe
   const year = extractYear(trimmed)
   if (year == null) return null
 
-  const kind = detectKind(lower)
+  const classification = extractNchsaaClassification(trimmed)
+
+  const kind = detectKind(lower, classification)
   if (!kind) return null
 
-  return { kind, year, gender: detectGender(lower) }
+  return { kind, year, gender: detectGender(lower), classification }
 }
 
 export type NhscaAllAmericanRow = {
@@ -331,14 +424,19 @@ export function formatNchsaaStateTournamentAnswer(
   parsed: ParsedTournamentResultsQuery,
   rows: NchsaaStateResultRow[],
 ): string {
+  const classLabel = parsed.classification ? ` **${parsed.classification}**` : ""
   if (rows.length === 0) {
+    if (parsed.classification) {
+      return `I don't see **${parsed.classification}** NCHSAA state placers for **${parsed.year}** in our database. Try [/nchsaa/${parsed.year}](/nchsaa/${parsed.year}) for the full bracket.`
+    }
     return `I don't see NCHSAA state **placers** for **${parsed.year}** in our database.`
   }
 
   const maxPlace = parsed.year >= 2026 ? 4 : 8
   const placers = rows.filter((r) => r.place >= 1 && r.place <= maxPlace)
   if (placers.length === 0) {
-    return `I found ${rows.length} ${parsed.year} NCHSAA rows but no placers (1–${maxPlace}). Qualifier-only data may not be listed here — try /nchsaa/${parsed.year} on the site.`
+    const classNote = parsed.classification ? ` ${parsed.classification}` : ""
+    return `I found ${rows.length} ${parsed.year}${classNote} NCHSAA rows but no placers (1–${maxPlace}). Qualifier-only data may not be listed here — try /nchsaa/${parsed.year} on the site.`
   }
 
   const byClass: Record<string, Record<string, NchsaaStateResultRow[]>> = {}
@@ -360,8 +458,10 @@ export function formatNchsaaStateTournamentAnswer(
     return a.localeCompare(b)
   })
 
+  const genderNote =
+    parsed.gender === "women" ? "Women's " : parsed.gender === "men" ? "Men's " : ""
   const lines: string[] = [
-    `**${parsed.year} NCHSAA State Championship placers** (${placers.length} total, top ${maxPlace} per weight):`,
+    `**${parsed.year}${classLabel} ${genderNote}NCHSAA State Championship placers** (${placers.length} total, top ${maxPlace} per weight):`,
     "",
   ]
 

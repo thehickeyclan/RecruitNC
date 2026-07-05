@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest"
 import {
   dedupeNhscaAllAmericanRows,
+  extractNchsaaClassification,
   formatNhscaAllAmericansAnswer,
   formatNchsaaStateTournamentAnswer,
+  matchesNchsaaClassificationFilter,
   parseTournamentResultsQuery,
   pickBetterNhscaAthleteName,
 } from "@/lib/data-dawg-tournament-results-query"
@@ -13,6 +15,34 @@ describe("parseTournamentResultsQuery", () => {
       kind: "nchsaa_state",
       year: 2017,
       gender: "men",
+      classification: null,
+    })
+  })
+
+  it("parses show all 4A state placers from a year", () => {
+    expect(parseTournamentResultsQuery("Show me all 4A state placers from 2025")).toEqual({
+      kind: "nchsaa_state",
+      year: 2025,
+      gender: "men",
+      classification: "4A",
+    })
+  })
+
+  it("parses 4a placers in 2024", () => {
+    expect(parseTournamentResultsQuery("Show all 4a placers in 2024")).toEqual({
+      kind: "nchsaa_state",
+      year: 2024,
+      gender: "men",
+      classification: "4A",
+    })
+  })
+
+  it("parses 1A/2A state results", () => {
+    expect(parseTournamentResultsQuery("Show 1A/2A state placers from 2026")).toEqual({
+      kind: "nchsaa_state",
+      year: 2026,
+      gender: "men",
+      classification: "1A/2A",
     })
   })
 
@@ -23,6 +53,7 @@ describe("parseTournamentResultsQuery", () => {
       kind: "nhsca_all_americans",
       year: 2022,
       gender: "men",
+      classification: null,
     })
   })
 
@@ -31,6 +62,7 @@ describe("parseTournamentResultsQuery", () => {
       kind: "nhsca_all_americans",
       year: 2017,
       gender: "men",
+      classification: null,
     })
   })
 
@@ -39,6 +71,7 @@ describe("parseTournamentResultsQuery", () => {
       kind: "nhsca_all_americans",
       year: 2019,
       gender: "men",
+      classification: null,
     })
   })
 
@@ -47,6 +80,7 @@ describe("parseTournamentResultsQuery", () => {
       kind: "nchsaa_state",
       year: 2017,
       gender: "men",
+      classification: null,
     })
   })
 
@@ -55,6 +89,7 @@ describe("parseTournamentResultsQuery", () => {
       kind: "nhsca_all_americans",
       year: 2020,
       gender: "men",
+      classification: null,
     })
   })
 
@@ -63,6 +98,7 @@ describe("parseTournamentResultsQuery", () => {
       kind: "nhsca_all_americans",
       year: 2023,
       gender: "women",
+      classification: null,
     })
   })
 
@@ -78,7 +114,7 @@ describe("parseTournamentResultsQuery", () => {
 describe("formatNhscaAllAmericansAnswer", () => {
   it("groups by division and formats placers", () => {
     const answer = formatNhscaAllAmericansAnswer(
-      { kind: "nhsca_all_americans", year: 2017, gender: "men" },
+      { kind: "nhsca_all_americans", year: 2017, gender: "men", classification: null },
       [
         {
           athlete_name: "Test Wrestler",
@@ -97,7 +133,7 @@ describe("formatNhscaAllAmericansAnswer", () => {
 
   it("does not double-append lbs when weight already includes lbs", () => {
     const answer = formatNhscaAllAmericansAnswer(
-      { kind: "nhsca_all_americans", year: 2023, gender: "men" },
+      { kind: "nhsca_all_americans", year: 2023, gender: "men", classification: null },
       [
         {
           athlete_name: "Lorenzo Alston",
@@ -241,10 +277,49 @@ describe("pickBetterNhscaAthleteName", () => {
   })
 })
 
+describe("extractNchsaaClassification", () => {
+  it("extracts standard divisions", () => {
+    expect(extractNchsaaClassification("Show me all 4A state placers from 2025")).toBe("4A")
+    expect(extractNchsaaClassification("7a state results 2026")).toBe("7A")
+    expect(extractNchsaaClassification("Show 1A/2A state placers from 2026")).toBe("1A/2A")
+    expect(extractNchsaaClassification("1-4A state placers 2026")).toBe("1-4A")
+  })
+})
+
+describe("matchesNchsaaClassificationFilter", () => {
+  it("maps 1A queries to 1A/2A in 2026", () => {
+    expect(matchesNchsaaClassificationFilter("1A/2A", "1A", 2026)).toBe(true)
+    expect(matchesNchsaaClassificationFilter("3A", "1A", 2026)).toBe(false)
+  })
+
+  it("matches exact division", () => {
+    expect(matchesNchsaaClassificationFilter("4A", "4A", 2025)).toBe(true)
+    expect(matchesNchsaaClassificationFilter("5A", "4A", 2025)).toBe(false)
+  })
+})
+
 describe("formatNchsaaStateTournamentAnswer", () => {
+  it("includes classification in header when filtered", () => {
+    const answer = formatNchsaaStateTournamentAnswer(
+      { kind: "nchsaa_state", year: 2025, gender: "men", classification: "4A" },
+      [
+        {
+          wrestler_name: "State Champ",
+          place: 1,
+          year: 2025,
+          classification: "4A",
+          weight_class: "145",
+          school: "Example HS",
+        },
+      ],
+    )
+    expect(answer).toContain("4A")
+    expect(answer).toContain("State Champ")
+  })
+
   it("links to the year page and lists placers", () => {
     const answer = formatNchsaaStateTournamentAnswer(
-      { kind: "nchsaa_state", year: 2017, gender: "men" },
+      { kind: "nchsaa_state", year: 2017, gender: "men", classification: null },
       [
         {
           wrestler_name: "State Champ",

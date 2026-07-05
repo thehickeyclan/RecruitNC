@@ -1576,6 +1576,7 @@ export async function toolNhscaAllAmericansByYear(args: {
     kind: "nhsca_all_americans",
     year: Number(args.year),
     gender: args.gender === "women" ? "women" : "men",
+    classification: null,
   }
   const rows = await fetchNhscaAllAmericansByYear(parsed)
   return {
@@ -1587,15 +1588,22 @@ export async function toolNhscaAllAmericansByYear(args: {
   }
 }
 
-export async function toolNchsaaStateTournamentByYear(args: { year: number | string }) {
+export async function toolNchsaaStateTournamentByYear(args: {
+  year: number | string
+  classification?: string | null
+  gender?: string | null
+}) {
   const parsed: ParsedTournamentResultsQuery = {
     kind: "nchsaa_state",
     year: Number(args.year),
-    gender: "men",
+    gender: args.gender === "women" ? "women" : "men",
+    classification: args.classification?.trim() || null,
   }
   const rows = await fetchNchsaaStateTournamentByYear(parsed)
   return {
     year: parsed.year,
+    classification: parsed.classification,
+    gender: parsed.gender,
     total: rows.length,
     answer: formatNchsaaStateTournamentAnswer(parsed, rows),
     rows: rows.slice(0, 80),
@@ -1689,7 +1697,13 @@ export async function executeDataTool(name: string, rawArgs: unknown): Promise<s
         )
       case "nchsaa_state_tournament_by_year":
         return JSON.stringify(
-          await toolNchsaaStateTournamentByYear(args as { year: number | string }),
+          await toolNchsaaStateTournamentByYear(
+            args as {
+              year: number | string
+              classification?: string | null
+              gender?: string | null
+            },
+          ),
         )
       case "college_commits_search":
         return JSON.stringify(
