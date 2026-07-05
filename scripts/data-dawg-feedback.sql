@@ -24,3 +24,23 @@ CREATE INDEX IF NOT EXISTS idx_data_dawg_feedback_created_at ON data_dawg_feedba
 CREATE INDEX IF NOT EXISTS idx_data_dawg_feedback_message_id ON data_dawg_feedback(message_id);
 
 ALTER TABLE data_dawg_feedback ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS data_dawg_feedback_public_insert ON public.data_dawg_feedback;
+DROP POLICY IF EXISTS data_dawg_feedback_service_role_all ON public.data_dawg_feedback;
+
+CREATE POLICY data_dawg_feedback_public_insert
+  ON public.data_dawg_feedback
+  FOR INSERT
+  TO anon, authenticated
+  WITH CHECK (
+    status = 'pending'
+    AND char_length(correction_notes) >= 5
+    AND char_length(correction_notes) <= 4000
+  );
+
+CREATE POLICY data_dawg_feedback_service_role_all
+  ON public.data_dawg_feedback
+  FOR ALL
+  TO service_role
+  USING (true)
+  WITH CHECK (true);

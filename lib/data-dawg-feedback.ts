@@ -39,8 +39,18 @@ export function isDataDawgFeedbackTableMissingError(error: { code?: string; mess
   )
 }
 
+export function isDataDawgFeedbackRlsError(error: { code?: string; message?: string } | null): boolean {
+  if (!error) return false
+  const msg = (error.message ?? "").toLowerCase()
+  const code = error.code ?? ""
+  return code === "42501" || msg.includes("row-level security") || msg.includes("row level security")
+}
+
 export const DATA_DAWG_FEEDBACK_TABLE_SETUP_HINT =
   "Feedback storage is not set up yet. Admin: run scripts/data-dawg-feedback.sql in Supabase SQL Editor, then retry."
+
+export const DATA_DAWG_FEEDBACK_RLS_SETUP_HINT =
+  "Feedback table RLS is blocking saves. Admin: run scripts/data-dawg-feedback-rls-fix.sql in Supabase SQL Editor, then retry."
 
 export function isDataDawgFeedbackStatus(value: string): value is DataDawgFeedbackStatus {
   return (DATA_DAWG_FEEDBACK_STATUSES as readonly string[]).includes(value)
