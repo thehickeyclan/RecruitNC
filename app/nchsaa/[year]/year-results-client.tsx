@@ -80,6 +80,29 @@ function sortClassifications(classes: string[]): string[] {
   return sorted
 }
 
+/** PostgREST returns at most 1000 rows per request; 2026 has 1100+ rows so 8A was dropped. */
+async function fetchAllNchsaaResultsForYear(year: number): Promise<TournamentResult[]> {
+  const batchSize = 1000
+  let offset = 0
+  const all: TournamentResult[] = []
+  for (;;) {
+    const { data, error } = await supabase
+      .from("wrestling_nchsaa_results")
+      .select("*")
+      .eq("year", year)
+      .order("classification")
+      .order("weight_class")
+      .order("place")
+      .range(offset, offset + batchSize - 1)
+    if (error) throw error
+    const batch = (data ?? []) as TournamentResult[]
+    all.push(...batch)
+    if (batch.length < batchSize) break
+    offset += batchSize
+  }
+  return all
+}
+
 /** Carousel: 1 hero + 2 smaller cards; prev/next flips which story is featured. Matches home News layout. */
 function NCHSAA2026ArticleCarousel({ articles, displayYear }: { articles: NCHSAAArticle[]; displayYear: number }) {
   const [heroIndex, setHeroIndex] = useState(0)
@@ -240,15 +263,10 @@ export function NCHSAAYearResultsClient({
       try {
         await Promise.race([
           (async () => {
-            const { data: results, error } = await supabase
-              .from("wrestling_nchsaa_results")
-              .select("*")
-              .eq("year", displayYear)
-              .order("classification")
-              .order("weight_class")
-              .order("place")
-
-            if (error) {
+            let results: TournamentResult[]
+            try {
+              results = await fetchAllNchsaaResultsForYear(displayYear)
+            } catch (error) {
               console.error("[RecruitNC] NCHSAA fetch error:", error instanceof Error ? error.message : String(error), error)
               return
             }

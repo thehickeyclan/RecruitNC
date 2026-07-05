@@ -26,6 +26,22 @@ export const DATA_DAWG_FEEDBACK_STATUS_LABELS: Record<DataDawgFeedbackStatus, st
   dismissed: "Dismissed",
 }
 
+export function isDataDawgFeedbackTableMissingError(error: { code?: string; message?: string } | null): boolean {
+  if (!error) return false
+  const msg = (error.message ?? "").toLowerCase()
+  const code = error.code ?? ""
+  return (
+    code === "42P01" ||
+    code === "PGRST205" ||
+    msg.includes("does not exist") ||
+    msg.includes("schema cache") ||
+    msg.includes("could not find the table")
+  )
+}
+
+export const DATA_DAWG_FEEDBACK_TABLE_SETUP_HINT =
+  "Feedback storage is not set up yet. Admin: run scripts/data-dawg-feedback.sql in Supabase SQL Editor, then retry."
+
 export function isDataDawgFeedbackStatus(value: string): value is DataDawgFeedbackStatus {
   return (DATA_DAWG_FEEDBACK_STATUSES as readonly string[]).includes(value)
 }

@@ -1,5 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import {
+  DATA_DAWG_FEEDBACK_TABLE_SETUP_HINT,
+  isDataDawgFeedbackTableMissingError,
+} from "@/lib/data-dawg-feedback"
 
 export const dynamic = "force-dynamic"
 
@@ -39,7 +43,6 @@ export async function POST(request: NextRequest) {
     const source = typeof body.source === "string" ? body.source.trim().slice(0, 80) || "data_dawg_widget" : "data_dawg_widget"
 
     const admin = createAdminClient()
-    const now = new Date().toISOString()
     const { data, error } = await admin
       .from("data_dawg_feedback")
       .insert({
@@ -52,21 +55,20 @@ export async function POST(request: NextRequest) {
         submitter_email: submitterEmail,
         page_url: pageUrl,
         source,
-        created_at: now,
-        updated_at: now,
       })
       .select("id, status, created_at")
       .single()
 
     if (error) {
-      if (error.code === "42P01" || error.message?.includes("does not exist")) {
-        return NextResponse.json(
-          { error: "Feedback storage is not set up yet. Ask admin to run scripts/data-dawg-feedback.sql in Supabase." },
-          { status: 503 },
-        )
+      if (isDataDawgFeedbackTableMissingError(error)) {
+        console.warn("[RecruitNC] data-dawg feedback POST — table missing:", error.message)
+        return NextResponse.json({ error: DATA_DAWG_FEEDBACK_TABLE_SETUP_HINT }, { status: 503 })
       }
       console.error("[RecruitNC] data-dawg feedback POST", error)
-      return NextResponse.json({ error: "Failed to submit feedback." }, { status: 500 })
+      return NextResponse.json(
+        { error: error.message || "Failed to submit feedback." },
+        { status: 500 },
+      )
     }
 
     return NextResponse.json({

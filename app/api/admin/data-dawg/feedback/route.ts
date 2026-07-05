@@ -1,7 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/admin-auth"
 import { createAdminClient } from "@/lib/supabase/admin"
-import type { DataDawgFeedbackRow } from "@/lib/data-dawg-feedback"
+import {
+  type DataDawgFeedbackRow,
+  DATA_DAWG_FEEDBACK_TABLE_SETUP_HINT,
+  isDataDawgFeedbackTableMissingError,
+} from "@/lib/data-dawg-feedback"
 
 export const dynamic = "force-dynamic"
 
@@ -28,14 +32,15 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await query
 
-  if (error) {
-    if (error.code === "42P01" || error.message?.includes("does not exist")) {
-      return NextResponse.json({
-        items: [] as DataDawgFeedbackRow[],
-        pendingCount: 0,
-        tableMissing: true,
-      })
-    }
+    if (error) {
+      if (isDataDawgFeedbackTableMissingError(error)) {
+        return NextResponse.json({
+          items: [] as DataDawgFeedbackRow[],
+          pendingCount: 0,
+          tableMissing: true,
+          setupHint: DATA_DAWG_FEEDBACK_TABLE_SETUP_HINT,
+        })
+      }
     console.error("[RecruitNC] admin data-dawg feedback GET", error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
