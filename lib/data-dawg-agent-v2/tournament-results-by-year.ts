@@ -1,8 +1,9 @@
 import { getSupabaseAdmin } from "@/lib/server-supabase"
-import type {
-  NchsaaStateResultRow,
-  NhscaAllAmericanRow,
-  ParsedTournamentResultsQuery,
+import {
+  dedupeNhscaAllAmericanRows,
+  type NchsaaStateResultRow,
+  type NhscaAllAmericanRow,
+  type ParsedTournamentResultsQuery,
 } from "@/lib/data-dawg-tournament-results-query"
 
 const MAX_NCHSAA_ROWS = 5000
@@ -83,24 +84,19 @@ export async function fetchNhscaAllAmericansByYear(
     athlete_name: String(row.athlete_name ?? "").trim(),
     placement: Number(row.placement) || 0,
     year: Number(row.year) || year,
-    division: row.division != null ? String(row.division) : null,
+    division: row.division != null ? String(row.division).trim() : null,
     weight_class: String(row.weight_class ?? row.weight ?? "").trim() || null,
-    high_school: row.high_school != null ? String(row.high_school) : null,
+    high_school: row.high_school != null ? String(row.high_school).trim() : null,
   })
 
-  const key = (r: NhscaAllAmericanRow) =>
-    `${r.athlete_name}|${r.placement}|${r.weight_class}|${r.high_school}|${r.division}`
-  const seen = new Set<string>()
-  const merged: NhscaAllAmericanRow[] = []
-
+  const raw: NhscaAllAmericanRow[] = []
   for (const row of [...(plc.data ?? []), ...(leg.data ?? [])]) {
     const r = normalize(row as Record<string, unknown>)
     if (!r.athlete_name || r.placement < 1) continue
-    const k = key(r)
-    if (seen.has(k)) continue
-    seen.add(k)
-    merged.push(r)
+    raw.push(r)
   }
+
+  const merged = dedupeNhscaAllAmericanRows(raw)
 
   return applyNhscaGenderFilter(merged, parsed.gender).sort((a, b) => {
     const da = (a.division ?? "").localeCompare(b.division ?? "")
