@@ -12,6 +12,7 @@ import { type TournamentResultForDisplay } from "@/lib/public-profile-data"
 import { countDistinctStateTitleYears } from "@/lib/nchsaa-state-display"
 import { namesMatch } from "@/lib/nhsca-live/names-match"
 import { loadNcUnitedResultsForNameSearch } from "@/lib/national-team-live-profile-results"
+import { formatNhscaLineForDataDawg, formatSuper32LineForDataDawg } from "@/lib/data-dawg-tournament-summary"
 
 function athleteDisplayName(row: Record<string, unknown>): string {
   const n = String(row.name ?? "").trim()
@@ -39,11 +40,7 @@ function formatNchsaaStateLine(r: NchsaaRowForProfile): string {
 }
 
 function formatNhscaDisplayLine(r: TournamentResultForDisplay): string {
-  const rec = r.record?.trim() ? ` (${r.record})` : ""
-  const div = (r.division ?? "").trim()
-  const w = (r.weight ?? "").toString().replace(/lbs?$/i, "").trim()
-  const divW = [div && `${div}, `, w ? `${w}lbs` : ""].filter(Boolean).join("")
-  return `- ${r.year}: ${r.placement}${rec}${divW ? ` (${divW.replace(/, $/, "")})` : ""}`
+  return formatNhscaLineForDataDawg(r)
 }
 
 function formatSuper32Row(r: Record<string, unknown>): string {
@@ -61,7 +58,15 @@ function formatSuper32Row(r: Record<string, unknown>): string {
         : `${placement}${placement === 2 ? "nd" : placement === 3 ? "rd" : "th"} place (All-American)`
     return `- ${year}: ${pt}${record ? ` ${record}` : ""}${weight ? ` (${weight})` : ""}`
   }
-  return `- ${year}:${record ? ` ${record}` : ""}${weight ? ` (${weight})` : ""}`
+  if (record) {
+    return formatSuper32LineForDataDawg({
+      year: Number(year) || 0,
+      placement: String(r.placement ?? r.place ?? ""),
+      record,
+      weight,
+    })
+  }
+  return `- ${year}:${weight ? ` (${weight})` : ""}`
 }
 
 /** Directory name vs tournament row (handles "Last, First" in DB). */
