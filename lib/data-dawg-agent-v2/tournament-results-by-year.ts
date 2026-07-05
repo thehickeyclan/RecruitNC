@@ -2,6 +2,7 @@ import { getSupabaseAdmin } from "@/lib/server-supabase"
 import {
   dedupeNhscaAllAmericanRows,
   type NchsaaStateResultRow,
+  type NhscaAllAmericanMergeRow,
   type NhscaAllAmericanRow,
   type ParsedTournamentResultsQuery,
 } from "@/lib/data-dawg-tournament-results-query"
@@ -89,11 +90,16 @@ export async function fetchNhscaAllAmericansByYear(
     high_school: row.high_school != null ? String(row.high_school).trim() : null,
   })
 
-  const raw: NhscaAllAmericanRow[] = []
-  for (const row of [...(plc.data ?? []), ...(leg.data ?? [])]) {
+  const raw: NhscaAllAmericanMergeRow[] = []
+  for (const row of plc.data ?? []) {
     const r = normalize(row as Record<string, unknown>)
     if (!r.athlete_name || r.placement < 1) continue
-    raw.push(r)
+    raw.push({ ...r, source: "placements" })
+  }
+  for (const row of leg.data ?? []) {
+    const r = normalize(row as Record<string, unknown>)
+    if (!r.athlete_name || r.placement < 1) continue
+    raw.push({ ...r, source: "legacy" })
   }
 
   const merged = dedupeNhscaAllAmericanRows(raw)
