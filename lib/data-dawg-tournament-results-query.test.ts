@@ -4,6 +4,7 @@ import {
   formatNhscaAllAmericansAnswer,
   formatNchsaaStateTournamentAnswer,
   parseTournamentResultsQuery,
+  pickBetterNhscaAthleteName,
 } from "@/lib/data-dawg-tournament-results-query"
 
 describe("parseTournamentResultsQuery", () => {
@@ -123,6 +124,7 @@ describe("dedupeNhscaAllAmericanRows", () => {
         division: "Freshman",
         weight_class: "145",
         high_school: "Uwharrie Charter",
+        source: "placements",
       },
       {
         athlete_name: "Lorenzo Alston",
@@ -131,6 +133,7 @@ describe("dedupeNhscaAllAmericanRows", () => {
         division: "Freshman",
         weight_class: "145lbs",
         high_school: "Uwharrie Charter",
+        source: "legacy",
       },
       {
         athlete_name: "Dominic Hittepole",
@@ -139,6 +142,7 @@ describe("dedupeNhscaAllAmericanRows", () => {
         division: "Freshman",
         weight_class: "170",
         high_school: "Trinity",
+        source: "placements",
       },
       {
         athlete_name: "Dominic Hittepole",
@@ -147,12 +151,93 @@ describe("dedupeNhscaAllAmericanRows", () => {
         division: "Freshman",
         weight_class: "170lbs",
         high_school: "Wheatmore",
+        source: "legacy",
       },
     ])
 
     expect(merged).toHaveLength(2)
     expect(merged.find((r) => r.athlete_name === "Lorenzo Alston")?.weight_class).toBe("145")
     expect(merged.find((r) => r.athlete_name === "Dominic Hittepole")?.high_school).toBe("Wheatmore")
+  })
+
+  it("merges same bracket slot when athlete names differ (school bleed / import variants)", () => {
+    const merged = dedupeNhscaAllAmericanRows([
+      {
+        athlete_name: "Jacob Perry New",
+        placement: 8,
+        year: 2025,
+        division: "Freshman",
+        weight_class: "152",
+        high_school: "Bern",
+        source: "legacy",
+      },
+      {
+        athlete_name: "Jacob Perry",
+        placement: 8,
+        year: 2025,
+        division: "Freshman",
+        weight_class: "152",
+        high_school: "New Bern",
+        source: "placements",
+      },
+      {
+        athlete_name: "Everest Ouellette Kitty",
+        placement: 3,
+        year: 2025,
+        division: "Senior",
+        weight_class: "285",
+        high_school: "Hawk",
+        source: "legacy",
+      },
+      {
+        athlete_name: "Everest Ouellette",
+        placement: 3,
+        year: 2025,
+        division: "Senior",
+        weight_class: "285",
+        high_school: "First Flight",
+        source: "placements",
+      },
+    ])
+
+    expect(merged).toHaveLength(2)
+    expect(merged.find((r) => r.weight_class === "152")?.athlete_name).toBe("Jacob Perry")
+    expect(merged.find((r) => r.weight_class === "152")?.high_school).toBe("New Bern")
+    expect(merged.find((r) => r.weight_class === "285")?.athlete_name).toBe("Everest Ouellette")
+    expect(merged.find((r) => r.weight_class === "285")?.high_school).toBe("First Flight")
+  })
+
+  it("keeps separate placers at the same weight when placement differs", () => {
+    const merged = dedupeNhscaAllAmericanRows([
+      {
+        athlete_name: "Wrestler A",
+        placement: 7,
+        year: 2025,
+        division: "Freshman",
+        weight_class: "132",
+        high_school: "School A",
+      },
+      {
+        athlete_name: "Wrestler B",
+        placement: 8,
+        year: 2025,
+        division: "Freshman",
+        weight_class: "132",
+        high_school: "School B",
+      },
+    ])
+    expect(merged).toHaveLength(2)
+  })
+})
+
+describe("pickBetterNhscaAthleteName", () => {
+  it("strips school words accidentally appended to a name", () => {
+    expect(
+      pickBetterNhscaAthleteName("Jacob Perry New", "Jacob Perry", "Bern", "New Bern"),
+    ).toBe("Jacob Perry")
+    expect(
+      pickBetterNhscaAthleteName("Aaron Ruiz-angel Pilot", "Aaron Ruiz-Angel", "Mountain", "Mount Airy"),
+    ).toBe("Aaron Ruiz-Angel")
   })
 })
 

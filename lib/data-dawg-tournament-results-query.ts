@@ -105,6 +105,19 @@ export function normalizeNhscaAthleteNameForDedup(name: string): string {
   return name.trim().toLowerCase().replace(/\s+/g, " ")
 }
 
+/** One placer per year/division/weight/placement — names may differ across duplicate imports. */
+export function nhscaAllAmericanSlotKey(
+  row: Pick<NhscaAllAmericanRow, "year" | "placement" | "division" | "weight_class">,
+): string {
+  return [
+    row.year,
+    row.placement,
+    (row.division ?? "").trim().toLowerCase(),
+    normalizeNhscaWeightDigits(row.weight_class),
+  ].join("|")
+}
+
+/** @deprecated Prefer nhscaAllAmericanSlotKey — athlete names vary across duplicate rows. */
 export function nhscaAllAmericanDedupKey(
   row: Pick<NhscaAllAmericanRow, "athlete_name" | "year" | "placement" | "division" | "weight_class">,
 ): string {
@@ -117,10 +130,63 @@ export function nhscaAllAmericanDedupKey(
   ].join("|")
 }
 
+function schoolNameTokens(school: string | null | undefined): string[] {
+  if (!school) return []
+  return school
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter((t) => t.length > 2)
+}
+
+function trailingNameTokensLookLikeSchool(
+  longerName: string,
+  shorterName: string,
+  schools: string[],
+): boolean {
+  const extra = longerName.slice(shorterName.length).trim().toLowerCase()
+  if (!extra) return false
+  const schoolText = schools.join(" ")
+  return extra.split(/\s+/).some((t) => t.length > 2 && schoolText.includes(t))
+}
+
+export function pickBetterNhscaAthleteName(
+  a: string,
+  b: string,
+  schoolA: string | null,
+  schoolB: string | null,
+): string {
+  const trimA = a.trim()
+  const trimB = b.trim()
+  if (!trimB) return trimA
+  if (!trimA) return trimB
+
+  const lowerA = trimA.toLowerCase()
+  const lowerB = trimB.toLowerCase()
+  if (lowerA === lowerB) return trimA.length >= trimB.length ? trimA : trimB
+
+  const schools = [...schoolNameTokens(schoolA), ...schoolNameTokens(schoolB)]
+
+  if (lowerB.startsWith(`${lowerA} `)) {
+    if (trailingNameTokensLookLikeSchool(trimB, trimA, schools)) return trimA
+    return trimA
+  }
+  if (lowerA.startsWith(`${lowerB} `)) {
+    if (trailingNameTokensLookLikeSchool(trimA, trimB, schools)) return trimB
+    return trimB
+  }
+
+  return trimA.length >= trimB.length ? trimA : trimB
+}
+
+export type NhscaAllAmericanMergeRow = NhscaAllAmericanRow & {
+  source?: "placements" | "legacy"
+}
+
 export function mergeNhscaAllAmericanRows(
-  existing: NhscaAllAmericanRow,
-  incoming: NhscaAllAmericanRow,
-): NhscaAllAmericanRow {
+  existing: NhscaAllAmericanMergeRow,
+  incoming: NhscaAllAmericanMergeRow,
+): NhscaAllAmericanMergeRow {
   const existingSchool = (existing.high_school ?? "").trim()
   const incomingSchool = (incoming.high_school ?? "").trim()
   const high_school =
@@ -129,26 +195,52 @@ export function mergeNhscaAllAmericanRows(
     normalizeNhscaWeightDigits(existing.weight_class) ||
     normalizeNhscaWeightDigits(incoming.weight_class) ||
     null
-  return { ...existing, high_school, weight_class: weight }
+
+  const preferPlacementsName =
+    existing.source === "placements" && incoming.source === "legacy"
+      ? existing.athlete_name
+      : incoming.source === "placements" && existing.source === "legacy"
+        ? incoming.athlete_name
+        : null
+
+  const athlete_name =
+    preferPlacementsName ??
+    pickBetterNhscaAthleteName(
+      existing.athlete_name,
+      incoming.athlete_name,
+      existing.high_school,
+      incoming.high_school,
+    )
+
+  return {
+    athlete_name,
+    placement: existing.placement,
+    year: existing.year,
+    division: existing.division,
+    high_school,
+    weight_class: weight,
+    source: existing.source === "placements" || incoming.source === "placements" ? "placements" : existing.source ?? incoming.source,
+  }
 }
 
-/** Collapse nhsca_placements + legacy rows for the same athlete/year/division/weight/placement. */
-export function dedupeNhscaAllAmericanRows(rows: NhscaAllAmericanRow[]): NhscaAllAmericanRow[] {
-  const map = new Map<string, NhscaAllAmericanRow>()
+/** Collapse duplicate imports for the same bracket slot (year/division/weight/placement). */
+export function dedupeNhscaAllAmericanRows(rows: NhscaAllAmericanMergeRow[]): NhscaAllAmericanRow[] {
+  const map = new Map<string, NhscaAllAmericanMergeRow>()
   for (const row of rows) {
-    const normalized: NhscaAllAmericanRow = {
+    const normalized: NhscaAllAmericanMergeRow = {
       athlete_name: row.athlete_name.trim(),
       placement: row.placement,
       year: row.year,
       division: row.division?.trim() ?? null,
       weight_class: normalizeNhscaWeightDigits(row.weight_class) || row.weight_class,
       high_school: row.high_school?.trim() ?? null,
+      source: row.source,
     }
-    const key = nhscaAllAmericanDedupKey(normalized)
+    const key = nhscaAllAmericanSlotKey(normalized)
     const prev = map.get(key)
     map.set(key, prev ? mergeNhscaAllAmericanRows(prev, normalized) : normalized)
   }
-  return [...map.values()]
+  return [...map.values()].map(({ source: _source, ...row }) => row)
 }
 
 export function formatNhscaWeightLabel(weight: string | number | null | undefined): string {
