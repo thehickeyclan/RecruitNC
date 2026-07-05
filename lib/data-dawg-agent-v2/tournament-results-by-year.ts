@@ -1,11 +1,13 @@
 import { getSupabaseAdmin } from "@/lib/server-supabase"
 import {
   dedupeNhscaAllAmericanRows,
+  matchesNchsaaClassificationFilter,
   type NchsaaStateResultRow,
   type NhscaAllAmericanMergeRow,
   type NhscaAllAmericanRow,
   type ParsedTournamentResultsQuery,
 } from "@/lib/data-dawg-tournament-results-query"
+import { matchesNchsaaGenderFilter } from "@/lib/nchsaa-year-results-gender"
 
 const MAX_NCHSAA_ROWS = 5000
 
@@ -117,7 +119,21 @@ export async function fetchNhscaAllAmericansByYear(
 export async function fetchNchsaaStateTournamentByYear(
   parsed: ParsedTournamentResultsQuery,
 ): Promise<NchsaaStateResultRow[]> {
-  const rows = await fetchAllNchsaaForYear(parsed.year)
+  let rows = await fetchAllNchsaaForYear(parsed.year)
+
+  rows = rows.filter((r) =>
+    matchesNchsaaGenderFilter(
+      { classification: r.classification, weight_class: r.weight_class },
+      parsed.gender,
+      parsed.year,
+    ),
+  )
+
+  if (parsed.classification) {
+    rows = rows.filter((r) =>
+      matchesNchsaaClassificationFilter(r.classification, parsed.classification!, parsed.year),
+    )
+  }
 
   return rows
     .filter((r) => r.place >= 1)
