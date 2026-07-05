@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select"
 import { HardLink } from "@/components/hard-link"
 import { eventCategories } from "@/lib/nc-united-calendar/calendar-config"
+import { parseCivilDateFromDatabase } from "@/lib/nc-united-calendar/calendar-date"
 import type { EventCategory } from "@/lib/nc-united-calendar/types"
 import { Calendar, Pencil, Plus, Trash2, Users, X, Loader2, ExternalLink, ChevronDown, ChevronUp } from "lucide-react"
 import type { EventDropInStats } from "@/lib/nc-united-calendar/aggregate-drop-in-stats"
@@ -348,16 +349,17 @@ export default function AdminCalendarPage() {
                 const st = dropInStatsByEventId[String(ev.id)]
                 const max = ev.max_drop_ins ?? null
                 const toward = st?.towardCapacity ?? 0
+                const startDay = parseCivilDateFromDatabase(ev.start_date)
                 return (
                   <div key={String(ev.id)} className="p-4 hover:bg-[#1e3a5f]/30 transition-colors">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                       {/* Date */}
                       <div className="flex-shrink-0 w-16 text-center hidden sm:block">
                         <div className="text-xl font-bold text-white">
-                          {new Date(ev.start_date).getDate()}
+                          {startDay.getDate()}
                         </div>
                         <div className="text-xs text-gray-500 uppercase">
-                          {new Date(ev.start_date).toLocaleDateString("en-US", { month: "short" })}
+                          {startDay.toLocaleDateString("en-US", { month: "short" })}
                         </div>
                       </div>
 
