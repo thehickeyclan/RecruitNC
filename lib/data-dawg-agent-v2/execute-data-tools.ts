@@ -27,6 +27,8 @@ import { buildAthleteDossierMarkdown } from "@/lib/data-dawg-athlete-dossier"
 import { buildSchoolWrestlingDossierMarkdown } from "@/lib/data-dawg-school-dossier"
 import { getNchsaaStateChampionsByExactTitleCount } from "@/lib/nchsaa-multi-time-state-champions"
 import { loadNcUnitedResultsForNameSearch } from "@/lib/national-team-live-profile-results"
+import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
+import { buildDataDawgTournamentSummary } from "@/lib/data-dawg-tournament-summary"
 import { getAthleteProfileUrl, RECRUITNC_APP_URL } from "@/lib/athlete-profile-links"
 
 /** Public rankings caps — same as /api/public-rankings and /public-rankings pages. */
@@ -459,9 +461,26 @@ export async function toolSearchAthletes(args: { query: string; limit?: number }
       })),
     }))
 
+  const admin = getSupabaseAdmin()
+  const enrichCap = Math.min(out.length, 5)
+  const enrichedSlice = await Promise.all(
+    out.slice(0, enrichCap).map(async (row) => {
+      const r = row as Record<string, unknown>
+      try {
+        const bundle = await loadAthleteTournamentBundle(admin, r, { nhscaAllTime: true })
+        return { ...r, tournament_summary: buildDataDawgTournamentSummary(bundle) }
+      } catch {
+        return row
+      }
+    }),
+  )
+  const enrichedRows = [...enrichedSlice, ...out.slice(enrichCap)]
+
   return {
-    rows: out,
+    rows: enrichedRows,
     searched_for: q,
+    tournament_summary_note:
+      "Each row includes `tournament_summary` (merged NHSCA + Super32 from placement tables). Prefer those lines over `nhsca_results` / `super32_results` JSON when they differ — profile JSON may say Participated while tables have full records.",
     ...(disambiguation.length
       ? {
           disambiguation,
@@ -750,13 +769,20 @@ function crossStoreRowSchool(r: Record<string, unknown>): string {
 
 function filterCrossStoreByDirectoryContext(
   rows: Record<string, unknown>[],
-  opts: { directoryHighSchool?: string; gradYear?: number | null; displayName?: string },
+  opts: {
+    directoryHighSchool?: string
+    gradYear?: number | null
+    displayName?: string
+    directoryAthleteId?: string
+  },
 ): Record<string, unknown>[] {
   let out = rows
+  const linkedId = opts.directoryAthleteId?.trim()
   const hsFrag = opts.directoryHighSchool?.trim()
   if (hsFrag && hsFrag.length >= 3) {
     const h = hsFrag.toLowerCase()
     out = out.filter((r) => {
+      if (linkedId && String(r.athlete_id ?? "").trim() === linkedId) return true
       const parts = [r.school, r.high_school, r.highSchool]
         .map((x) => String(x ?? "").trim().toLowerCase())
         .filter(Boolean)
@@ -806,6 +832,8 @@ export async function toolWrestlingCrossStoreSearch(args: {
   directory_high_school?: string
   /** Grad year from directory row; keeps rows whose `year` is roughly in high-school range (grad−6 … grad+1). */
   grad_year?: number | string | null
+  /** UUID from search_athletes — keeps nhsca_placements rows already linked to this athlete even if school text differs. */
+  directory_athlete_id?: string
 }) {
   const raw = sanitizeFragment(String(args.query ?? ""))
   const phrase = extractSearchablePhrase(raw) || stripConversationalNoise(raw)
@@ -826,8 +854,8 @@ export async function toolWrestlingCrossStoreSearch(args: {
 
   const nchsaaSel = "wrestler_name,place,year,classification,weight_class,school"
 
-  const nhscaSelPlc = "athlete_name,placement,year,division,weight_class,high_school"
-  const nhscaSelLeg = "athlete_name,placement,year,division,weight,high_school"
+  const nhscaSelPlc = "athlete_name,placement,year,division,weight_class,high_school,record,wins,losses,athlete_id"
+  const nhscaSelLeg = "athlete_name,placement,year,division,weight,high_school,record"
   // super32_results has weight_class + placement only (no `weight` or `place` columns)
   const s32Sel = "athlete_name,placement,year,weight_class,high_school,school,record,wins,losses"
 
@@ -1005,17 +1033,22 @@ export async function toolWrestlingCrossStoreSearch(args: {
     }
   }
 
+  const dirIdRaw = args.directory_athlete_id
+  const directoryAthleteId =
+    typeof dirIdRaw === "string" && dirIdRaw.trim().length >= 8 ? dirIdRaw.trim() : ""
+
   const narrowOpts = {
     directoryHighSchool: directoryHs || undefined,
     gradYear: parsedGrad,
     displayName: q,
+    directoryAthleteId: directoryAthleteId || undefined,
   }
 
-  // School/year narrowing only when directory athlete is known; name match always uses query.
-  const hasDirMatch = directoryHs != null || parsedGrad != null
+  // School/year/id narrowing only when directory athlete is known; name match always uses query.
+  const hasDirMatch = directoryHs !== "" || parsedGrad != null || directoryAthleteId !== ""
   const safeNarrowOpts = hasDirMatch
     ? narrowOpts
-    : { directoryHighSchool: undefined, gradYear: null, displayName: q }
+    : { directoryHighSchool: undefined, gradYear: null, displayName: q, directoryAthleteId: undefined }
 
   const nchsaa_state = dedupeByKey(nchsaaBuckets, (r) => {
     const x = r as Record<string, unknown>
@@ -1566,6 +1599,7 @@ export async function executeDataTool(name: string, rawArgs: unknown): Promise<s
               limit?: number
               directory_high_school?: string
               grad_year?: number | string | null
+              directory_athlete_id?: string
             },
           ),
         )

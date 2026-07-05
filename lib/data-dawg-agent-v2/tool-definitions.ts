@@ -15,7 +15,7 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
     function: {
       name: "search_athletes",
       description:
-        "Find athletes in RecruitNC by name or high school (includes alumni / any graduation year — not limited to recent classes). Handles natural phrasing ('tell me about…', 'who is…') and minor misspellings server-side. Pass the person's name (or best guess); do not repeat filler words. If no row matches, the person may not be in the directory (e.g. some coaches or pre-digital-era alumni); do not assume a grad-year cutoff.",
+        "Find athletes in RecruitNC by name or high school (includes alumni / any graduation year — not limited to recent classes). Handles natural phrasing ('tell me about…', 'who is…') and minor misspellings server-side. Each returned row includes `tournament_summary` (merged NHSCA + Super32 from placement tables) — prefer that over `nhsca_results` / `super32_results` JSON on the row when they differ.",
       parameters: {
         type: "object",
         additionalProperties: false,
@@ -36,7 +36,7 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
     function: {
       name: "wrestling_cross_store_search",
       description:
-        "**MUST be called for every wrestler name query — even when `search_athletes` returned zero rows.** One round trip across all major historical tables (1990s–present): NCHSAA individual state, NHSCA nationals, Super32, and **NC United National Team results** (`nc_united_results`: event, year, record for Ultimate Club Duals + NHSCA Duals National/Select — all team appearances). Not NCHSAA **state** dual team champions (use `nchsaa_dual_team_champions`). Returns separate arrays per source so alumni appear even without an `athletes` directory row. **Always include every non-empty `nc_united_results` row in the answer** (e.g. Mac Johnson's records on each NC United team). **After `search_athletes` returns the row you are answering about, call this again with the same `query` and pass `directory_high_school` and `grad_year` from that row**. For a full merged athlete report when you have a UUID, still call `get_athlete_full_dossier`.",
+        "**MUST be called for every wrestler name query — even when `search_athletes` returned zero rows.** One round trip across all major historical tables (1990s–present): NCHSAA individual state, NHSCA nationals, Super32, and **NC United National Team results** (`nc_united_results`: event, year, record for Ultimate Club Duals + NHSCA Duals National/Select — all team appearances). Not NCHSAA **state** dual team champions (use `nchsaa_dual_team_champions`). Returns separate arrays per source so alumni appear even without an `athletes` directory row. **Always include every non-empty `nc_united_results` row in the answer** (e.g. Mac Johnson's records on each NC United team). **After `search_athletes` returns the row you are answering about, call this again with the same `query` and pass `directory_high_school`, `grad_year`, and `directory_athlete_id` from that row**. For a full merged athlete report when you have a UUID, still call `get_athlete_full_dossier`.",
       parameters: {
         type: "object",
         additionalProperties: false,
@@ -55,6 +55,11 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
             type: "integer",
             description:
               "From the chosen `search_athletes` row: graduation year. When set, drops tournament rows outside an approximate high-school window (grad−6 through grad+1).",
+          },
+          directory_athlete_id: {
+            type: "string",
+            description:
+              "UUID from the chosen `search_athletes` row. Keeps nhsca_placements rows already linked to this athlete even when school text on an old import differs.",
           },
         },
         required: ["query"],
