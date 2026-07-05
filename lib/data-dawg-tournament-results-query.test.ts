@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
+  dedupeNhscaAllAmericanRows,
   formatNhscaAllAmericansAnswer,
   formatNchsaaStateTournamentAnswer,
   parseTournamentResultsQuery,
@@ -91,6 +92,67 @@ describe("formatNhscaAllAmericansAnswer", () => {
     expect(answer).toContain("2017")
     expect(answer).toContain("Test Wrestler")
     expect(answer).toContain("132 lbs")
+  })
+
+  it("does not double-append lbs when weight already includes lbs", () => {
+    const answer = formatNhscaAllAmericansAnswer(
+      { kind: "nhsca_all_americans", year: 2023, gender: "men" },
+      [
+        {
+          athlete_name: "Lorenzo Alston",
+          placement: 2,
+          year: 2023,
+          division: "Freshman",
+          weight_class: "145lbs",
+          high_school: "Uwharrie Charter",
+        },
+      ],
+    )
+    expect(answer).toContain("145 lbs")
+    expect(answer).not.toContain("145lbs lbs")
+  })
+})
+
+describe("dedupeNhscaAllAmericanRows", () => {
+  it("merges placements + legacy rows with different weight/school formatting", () => {
+    const merged = dedupeNhscaAllAmericanRows([
+      {
+        athlete_name: "Lorenzo Alston",
+        placement: 2,
+        year: 2023,
+        division: "Freshman",
+        weight_class: "145",
+        high_school: "Uwharrie Charter",
+      },
+      {
+        athlete_name: "Lorenzo Alston",
+        placement: 2,
+        year: 2023,
+        division: "Freshman",
+        weight_class: "145lbs",
+        high_school: "Uwharrie Charter",
+      },
+      {
+        athlete_name: "Dominic Hittepole",
+        placement: 5,
+        year: 2023,
+        division: "Freshman",
+        weight_class: "170",
+        high_school: "Trinity",
+      },
+      {
+        athlete_name: "Dominic Hittepole",
+        placement: 5,
+        year: 2023,
+        division: "Freshman",
+        weight_class: "170lbs",
+        high_school: "Wheatmore",
+      },
+    ])
+
+    expect(merged).toHaveLength(2)
+    expect(merged.find((r) => r.athlete_name === "Lorenzo Alston")?.weight_class).toBe("145")
+    expect(merged.find((r) => r.athlete_name === "Dominic Hittepole")?.high_school).toBe("Wheatmore")
   })
 })
 

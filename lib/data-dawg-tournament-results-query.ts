@@ -93,6 +93,69 @@ export type NhscaAllAmericanRow = {
   high_school: string | null
 }
 
+/** Numeric weight only — merges "145", "145lbs", and "145 lbs" for dedupe. */
+export function normalizeNhscaWeightDigits(weight: string | number | null | undefined): string {
+  const w = weight == null ? "" : String(weight).trim()
+  if (!w) return ""
+  const num = w.replace(/\D/g, "")
+  return num || w.toLowerCase()
+}
+
+export function normalizeNhscaAthleteNameForDedup(name: string): string {
+  return name.trim().toLowerCase().replace(/\s+/g, " ")
+}
+
+export function nhscaAllAmericanDedupKey(
+  row: Pick<NhscaAllAmericanRow, "athlete_name" | "year" | "placement" | "division" | "weight_class">,
+): string {
+  return [
+    normalizeNhscaAthleteNameForDedup(row.athlete_name),
+    row.year,
+    row.placement,
+    (row.division ?? "").trim().toLowerCase(),
+    normalizeNhscaWeightDigits(row.weight_class),
+  ].join("|")
+}
+
+export function mergeNhscaAllAmericanRows(
+  existing: NhscaAllAmericanRow,
+  incoming: NhscaAllAmericanRow,
+): NhscaAllAmericanRow {
+  const existingSchool = (existing.high_school ?? "").trim()
+  const incomingSchool = (incoming.high_school ?? "").trim()
+  const high_school =
+    incomingSchool.length > existingSchool.length ? incoming.high_school : existing.high_school
+  const weight =
+    normalizeNhscaWeightDigits(existing.weight_class) ||
+    normalizeNhscaWeightDigits(incoming.weight_class) ||
+    null
+  return { ...existing, high_school, weight_class: weight }
+}
+
+/** Collapse nhsca_placements + legacy rows for the same athlete/year/division/weight/placement. */
+export function dedupeNhscaAllAmericanRows(rows: NhscaAllAmericanRow[]): NhscaAllAmericanRow[] {
+  const map = new Map<string, NhscaAllAmericanRow>()
+  for (const row of rows) {
+    const normalized: NhscaAllAmericanRow = {
+      athlete_name: row.athlete_name.trim(),
+      placement: row.placement,
+      year: row.year,
+      division: row.division?.trim() ?? null,
+      weight_class: normalizeNhscaWeightDigits(row.weight_class) || row.weight_class,
+      high_school: row.high_school?.trim() ?? null,
+    }
+    const key = nhscaAllAmericanDedupKey(normalized)
+    const prev = map.get(key)
+    map.set(key, prev ? mergeNhscaAllAmericanRows(prev, normalized) : normalized)
+  }
+  return [...map.values()]
+}
+
+export function formatNhscaWeightLabel(weight: string | number | null | undefined): string {
+  const digits = normalizeNhscaWeightDigits(weight)
+  return digits ? ` ${digits} lbs` : ""
+}
+
 export type NchsaaStateResultRow = {
   wrestler_name: string
   place: number
@@ -154,7 +217,7 @@ export function formatNhscaAllAmericansAnswer(
     lines.push(`**${div}**`)
     for (const r of group) {
       if (shown >= displayCap) break
-      const wt = r.weight_class ? ` ${r.weight_class} lbs` : ""
+      const wt = formatNhscaWeightLabel(r.weight_class)
       const school = r.high_school ? ` (${r.high_school})` : ""
       lines.push(
         `- ${placeSuffix(r.placement)} — ${r.athlete_name}${wt}${school}`,
