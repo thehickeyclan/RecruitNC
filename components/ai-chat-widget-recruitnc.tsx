@@ -11,9 +11,15 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { X, Send, Loader2, Mic, MicOff, Home, Sparkles } from "lucide-react"
+import { X, Send, Loader2, Mic, MicOff, Home, Sparkles, MessageSquareWarning } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { formatDataDawgMessage } from "@/lib/data-dawg-render-links"
+import { DataDawgFeedbackDialog, type DataDawgFeedbackContext } from "@/components/data-dawg-feedback-dialog"
+import {
+  findDataDawgFeedbackContextFromMessages,
+  parseHeyDataDawgChatFeedback,
+  submitDataDawgFeedbackClient,
+} from "@/lib/data-dawg-feedback"
 
 interface Message {
   role: "user" | "assistant"
@@ -68,6 +74,8 @@ export function AIChatWidget() {
   const [avatarState, setAvatarState] = useState<"idle" | "greeting" | "thinking" | "success">("idle")
   const [isRecording, setIsRecording] = useState(false)
   const [isSpeechSupported, setIsSpeechSupported] = useState(false)
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
+  const [feedbackContext, setFeedbackContext] = useState<DataDawgFeedbackContext | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const recognitionRef = useRef<any>(null)
@@ -172,15 +180,58 @@ export function AIChatWidget() {
   const sendMessage = async (content: string) => {
     if (!content.trim() || isLoading) return
 
+    const trimmed = content.trim()
+    const chatFeedback = parseHeyDataDawgChatFeedback(trimmed)
+
     const userMessage: Message = {
       role: "user",
-      content: content.trim(),
+      content: trimmed,
       timestamp: new Date(),
     }
 
     setMessages((prev) => [...prev, userMessage])
     setInput("")
     setIsLoading(true)
+
+    if (chatFeedback) {
+      try {
+        if ("needsDetail" in chatFeedback) {
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content:
+                "Got it — what looks incorrect? Try something like: Hey Data Dawg, Cam Stinson placed 3rd at NHSCA 2025, not 5th.",
+              timestamp: new Date(),
+            },
+          ])
+          return
+        }
+
+        const ctx = findDataDawgFeedbackContextFromMessages(messages)
+        const result = await submitDataDawgFeedbackClient({
+          correctionNotes: chatFeedback.correctionNotes,
+          userQuery: ctx?.userQuery ?? null,
+          assistantResponse: ctx?.assistantResponse ?? null,
+          messageId: ctx?.messageId ?? null,
+          source: "data_dawg_chat_phrase",
+        })
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: result.ok
+              ? `${result.message} Our team will review your note and fix the data when needed.`
+              : `Sorry, I couldn't save that report: ${result.error}. You can also use the link under my previous answer.`,
+            timestamp: new Date(),
+          },
+        ])
+      } finally {
+        setIsLoading(false)
+      }
+      return
+    }
 
     try {
       const project = detectProject()
@@ -271,6 +322,24 @@ export function AIChatWidget() {
 
   const handleSuggestionClick = (prompt: string) => {
     void sendMessage(prompt)
+  }
+
+  const openFeedbackForMessage = (assistantIndex: number) => {
+    const assistantMessage = messages[assistantIndex]
+    if (!assistantMessage || assistantMessage.role !== "assistant") return
+    let userQuery: string | null = null
+    for (let i = assistantIndex - 1; i >= 0; i--) {
+      if (messages[i]?.role === "user") {
+        userQuery = messages[i].content
+        break
+      }
+    }
+    setFeedbackContext({
+      userQuery,
+      assistantResponse: assistantMessage.content,
+      messageId: assistantMessage.messageId,
+    })
+    setFeedbackOpen(true)
   }
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -538,7 +607,8 @@ export function AIChatWidget() {
                       </div>
                       <div className="bg-[#0F1E32] border border-[#1e3a5f] rounded-2xl rounded-tl-sm px-4 py-3">
                         <p className="text-sm text-gray-300">
-                          Hey, I&apos;m Data Dawg. Ask me anything about North Carolina wrestling recruiting — college commitments, career records, or prospect rankings.
+                          Hey, I&apos;m Data Dawg. Ask me anything about North Carolina wrestling recruiting — college commitments, career records, or prospect rankings. See something wrong? Say{" "}
+                          <span className="text-[#D3B574]">Hey Data Dawg, …</span> with your correction.
                         </p>
                       </div>
                     </div>
@@ -599,15 +669,27 @@ export function AIChatWidget() {
                                 dangerouslySetInnerHTML={{ __html: formatDataDawgMessage(message.content) }}
                               />
                             )}
-                            <p className={cn(
-                              "text-[10px] mt-2",
+                            <div className={cn(
+                              "mt-2 flex flex-wrap items-center gap-x-3 gap-y-1",
                               isUser ? "text-[#0A1628]/60" : "text-gray-500"
                             )}>
-                              {message.timestamp.toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
-                            </p>
+                              <p className="text-[10px]">
+                                {message.timestamp.toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </p>
+                              {!isUser ? (
+                                <button
+                                  type="button"
+                                  className="text-[10px] inline-flex items-center gap-1 text-[#D3B574]/90 hover:text-[#D3B574] underline-offset-2 hover:underline"
+                                  onClick={() => openFeedbackForMessage(index)}
+                                >
+                                  <MessageSquareWarning className="h-3 w-3" />
+                                  Hey Data Dawg — something off?
+                                </button>
+                              ) : null}
+                            </div>
                           </div>
                         </div>
                       )
@@ -690,6 +772,12 @@ export function AIChatWidget() {
           </Card>
         </div>
       )}
+
+      <DataDawgFeedbackDialog
+        open={feedbackOpen}
+        onOpenChange={setFeedbackOpen}
+        context={feedbackContext}
+      />
     </>
   )
 }
