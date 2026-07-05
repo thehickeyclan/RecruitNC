@@ -461,7 +461,6 @@ export async function toolSearchAthletes(args: { query: string; limit?: number }
       })),
     }))
 
-  const admin = getSupabaseAdmin()
   const enrichCap = Math.min(out.length, 5)
   const enrichedSlice = await Promise.all(
     out.slice(0, enrichCap).map(async (row) => {
