@@ -85,10 +85,10 @@ export function getSuggestedPrompts(pathname: string): string[] {
   }
   if (pathname.includes("/nhsca")) {
     return [
-      "What was our best year for NHSCA All-Americans?",
       "When are NHSCA's?",
       "Which schools had the most NHSCA All-Americans?",
       "What year did we have the most NHSCA All-Americans?",
+      "Show all women NHSCA All Americans",
     ]
   }
   if (pathname.includes("/schools")) {
@@ -103,7 +103,7 @@ export function getSuggestedPrompts(pathname: string): string[] {
     return [
       "Who is the all time winningest wrestler?",
       "Who are our 4x state champions?",
-      "What was our best year for NHSCA All-Americans?",
+      "Which school has the most NHSCA All-Americans?",
       "Who won the Dave Schultz Award in 2025?",
       "Who won the Tricia Saunders Award in 2025?",
     ]
@@ -112,7 +112,7 @@ export function getSuggestedPrompts(pathname: string): string[] {
     return [
       "Who is the all time winningest wrestler?",
       "Who are our 4x state champions?",
-      "What was our best year for NHSCA All-Americans?",
+      "Which school has the most NHSCA All-Americans?",
       "Who won the Dave Schultz Award in 2025?",
       "Who won the Tricia Saunders Award in 2025?",
     ]
@@ -129,7 +129,6 @@ export function getSuggestedPrompts(pathname: string): string[] {
   }
   return [
     "Who is Lorenzo Alston?",
-    "What was our best year for NHSCA All-Americans?",
     "When is the next Rivalry Match?",
     "Who is the all time winningest wrestler?",
     "Which school has the most state dual championships?",
@@ -141,7 +140,7 @@ export function getOnboardingExamples(): { category: string; examples: string[] 
   return [
     { category: "🏆 Athletes", examples: ["Who is Lorenzo Alston?", "How many state titles does Faith Bane have?", "Did Bentley Sly place at NHSCA?", "Who are our 4x state champions?"] },
     { category: "🏫 Schools", examples: ["Which school has the most state dual championships?", "What region is Davie in?", "Show me all schools in 4A West", "Which school has the most NHSCA All-Americans?"] },
-    { category: "📊 Results & Records", examples: ["Who won the 4A state championship at 132lbs in 2025?", "What was our best year for NHSCA All-Americans?", "Show all women NHSCA All Americans", "Who is the all time winningest wrestler?"] },
+    { category: "📊 Results & Records", examples: ["Who won the 4A state championship at 132lbs in 2025?", "Which school has the most NHSCA All-Americans?", "Show all women NHSCA All Americans", "Who is the all time winningest wrestler?"] },
     { category: "📅 Calendar & Events", examples: ["When is the next Rivalry Match?", "When are NHSCA's?", "When is Super32?", "When are state championships?"] },
     { category: "⚔️ Rivalry Match", examples: ["What is the Rivalry Match?", "Who won last year's rivalry match?", "Who has the longest winning streak in the rivalry?", "What is NC State's record against UNC?"] },
   ]

@@ -44,8 +44,8 @@ const getSuggestedPrompts = (pathname: string): string[] => {
   return [
     "Show me all Class of 2026 rankings",
     "Show me all Class of 2027 rankings",
-    "What was our best year for NHSCA All-Americans?",
     "Who are our 4x state champions?",
+    "Which school has the most NHSCA All-Americans?",
   ]
 }
 

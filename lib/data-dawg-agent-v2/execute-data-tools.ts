@@ -23,6 +23,15 @@ import {
   scoreAthleteNameMatch,
   scoreSchoolMatch,
 } from "./fuzzy-utils"
+import {
+  formatNhscaAllAmericansAnswer,
+  formatNchsaaStateTournamentAnswer,
+  type ParsedTournamentResultsQuery,
+} from "@/lib/data-dawg-tournament-results-query"
+import {
+  fetchNhscaAllAmericansByYear,
+  fetchNchsaaStateTournamentByYear,
+} from "./tournament-results-by-year"
 import { buildAthleteDossierMarkdown } from "@/lib/data-dawg-athlete-dossier"
 import { buildSchoolWrestlingDossierMarkdown } from "@/lib/data-dawg-school-dossier"
 import { getNchsaaStateChampionsByExactTitleCount } from "@/lib/nchsaa-multi-time-state-champions"
@@ -1559,6 +1568,40 @@ export async function toolTriciaSaundersAwardSearch(args: {
   )
 }
 
+export async function toolNhscaAllAmericansByYear(args: {
+  year: number | string
+  gender?: string | null
+}) {
+  const parsed: ParsedTournamentResultsQuery = {
+    kind: "nhsca_all_americans",
+    year: Number(args.year),
+    gender: args.gender === "women" ? "women" : "men",
+  }
+  const rows = await fetchNhscaAllAmericansByYear(parsed)
+  return {
+    year: parsed.year,
+    gender: parsed.gender,
+    total: rows.length,
+    answer: formatNhscaAllAmericansAnswer(parsed, rows),
+    rows: rows.slice(0, 80),
+  }
+}
+
+export async function toolNchsaaStateTournamentByYear(args: { year: number | string }) {
+  const parsed: ParsedTournamentResultsQuery = {
+    kind: "nchsaa_state",
+    year: Number(args.year),
+    gender: "men",
+  }
+  const rows = await fetchNchsaaStateTournamentByYear(parsed)
+  return {
+    year: parsed.year,
+    total: rows.length,
+    answer: formatNchsaaStateTournamentAnswer(parsed, rows),
+    rows: rows.slice(0, 80),
+  }
+}
+
 export type DataToolName =
   | "search_athletes"
   | "wrestling_cross_store_search"
@@ -1568,6 +1611,8 @@ export type DataToolName =
   | "nhsca_placements_search"
   | "nchsaa_state_results_search"
   | "nchsaa_multi_time_state_champions"
+  | "nhsca_all_americans_by_year"
+  | "nchsaa_state_tournament_by_year"
   | "college_commits_search"
   | "get_athlete_full_dossier"
   | "public_rankings_search"
@@ -1635,6 +1680,16 @@ export async function executeDataTool(name: string, rawArgs: unknown): Promise<s
       case "nchsaa_multi_time_state_champions":
         return JSON.stringify(
           await toolNchsaaMultiTimeStateChampions(args as { times: number }),
+        )
+      case "nhsca_all_americans_by_year":
+        return JSON.stringify(
+          await toolNhscaAllAmericansByYear(
+            args as { year: number | string; gender?: string | null },
+          ),
+        )
+      case "nchsaa_state_tournament_by_year":
+        return JSON.stringify(
+          await toolNchsaaStateTournamentByYear(args as { year: number | string }),
         )
       case "college_commits_search":
         return JSON.stringify(
