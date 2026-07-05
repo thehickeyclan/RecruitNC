@@ -11,7 +11,7 @@ import {
   School, Pencil, BarChart3, Settings, FileText,
   TrendingUp, Zap, Plus, Eye, UserPlus, RefreshCw, ClipboardList, Database, BookOpen, CreditCard,
   ShoppingBag, Smile, Coins, LayoutDashboard, CircleDollarSign, Link2, Receipt, GraduationCap,
-  LayoutGrid, Handshake, Mail,
+  LayoutGrid, Handshake, Mail, Bot,
 } from "lucide-react"
 
 interface AdminStats {
@@ -21,6 +21,7 @@ interface AdminStats {
   totalUsers: number
   totalCoaches: number
   pendingSubmissions: number
+  pendingDataDawgFeedback: number
 }
 
 const TOC_ADMIN_LINKS = [
@@ -42,6 +43,7 @@ export default function AdminDashboard() {
     totalUsers: 0,
     totalCoaches: 0,
     pendingSubmissions: 0,
+    pendingDataDawgFeedback: 0,
   })
   const [loading, setLoading] = useState(true)
 
@@ -204,6 +206,17 @@ export default function AdminDashboard() {
               <span className="w-full h-20 bg-gradient-to-br from-emerald-800 to-emerald-950 hover:from-emerald-900 hover:to-emerald-800 text-white shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex font-bold">
                 <CircleDollarSign className="h-6 w-6" />
                 <span className="text-sm font-semibold">Revenue</span>
+              </span>
+            </HardLink>
+            <HardLink href="/admin/data-dawg/feedback" className="block">
+              <span className="relative w-full h-20 bg-gradient-to-br from-[#13294B] to-[#0A1628] hover:from-[#1e3a5f] hover:to-[#13294B] text-[#D3B574] shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex font-bold border border-[#D3B574]/30">
+                {!loading && stats.pendingDataDawgFeedback > 0 ? (
+                  <span className="absolute top-2 right-2 min-w-[1.25rem] h-5 px-1 rounded-full bg-[#C8102E] text-white text-[10px] font-bold flex items-center justify-center">
+                    {stats.pendingDataDawgFeedback}
+                  </span>
+                ) : null}
+                <Bot className="h-6 w-6" />
+                <span className="text-sm font-semibold">Data Dawg</span>
               </span>
             </HardLink>
             <Link href="/admin/athletes">
@@ -401,6 +414,22 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
             </Link>
+
+            {/* Data Dawg feedback */}
+            <HardLink href="/admin/data-dawg/feedback" className="block h-full">
+              <Card className="border-t-4 border-t-[#D3B574] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full relative">
+                {!loading && stats.pendingDataDawgFeedback > 0 ? (
+                  <span className="absolute top-3 right-3 min-w-[1.5rem] h-6 px-1.5 rounded-full bg-[#C8102E] text-white text-xs font-bold flex items-center justify-center">
+                    {stats.pendingDataDawgFeedback}
+                  </span>
+                ) : null}
+                <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
+                  <Bot className="h-10 w-10 text-[#003366] mb-3" />
+                  <h3 className="font-bold text-[#003366] mb-1">Data Dawg feedback</h3>
+                  <p className="text-xs text-gray-600">Review incorrect-answer reports</p>
+                </CardContent>
+              </Card>
+            </HardLink>
 
             {/* Submissions Manager */}
             <Link href="/admin/submissions-manager">

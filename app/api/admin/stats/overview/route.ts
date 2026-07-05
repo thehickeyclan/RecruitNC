@@ -87,6 +87,18 @@ export async function GET() {
       console.log("Edit requests table check skipped")
     }
 
+    // Data Dawg feedback queue
+    let pendingDataDawgFeedback = 0
+    try {
+      const { count } = await admin
+        .from("data_dawg_feedback")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending")
+      pendingDataDawgFeedback = count || 0
+    } catch {
+      console.log("Data Dawg feedback table check skipped")
+    }
+
     return NextResponse.json({
       totalAthletes: totalAthletes || 0,
       totalProspects: totalProspects || 0,
@@ -94,6 +106,7 @@ export async function GET() {
       totalUsers: totalUsers || 0,
       totalCoaches: totalCoaches || 0,
       pendingSubmissions,
+      pendingDataDawgFeedback,
     })
   } catch (error) {
     console.error("Error fetching admin stats:", error)
