@@ -14,9 +14,16 @@ import {
 } from "./news/articles"
 import Link from "next/link"
 import { HardLink } from "@/components/hard-link"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { supabase } from "@/lib/supabase"
 import { TournamentBracketModal } from "@/components/tournament-bracket-modal"
+import {
+  type NchsaaGenderFilter,
+  matchesNchsaaDivisionFilter,
+  matchesNchsaaGenderFilter,
+  normalizeNchsaaWeightClass,
+  weightClassesForGender,
+} from "@/lib/nchsaa-year-results-gender"
 
 const CLASSIFICATION_ORDER = ["1-4A", "1A/2A", "1A", "2A", "3A", "4A", "5A", "6A", "7A", "8A"]
 
@@ -30,6 +37,7 @@ interface TournamentResult {
   school: string
   result: string
   is_forfeit: boolean
+  gender?: string | null
 }
 
 interface MostOutstandingWrestler {
@@ -101,6 +109,42 @@ async function fetchAllNchsaaResultsForYear(year: number): Promise<TournamentRes
     offset += batchSize
   }
   return all
+}
+
+function groupResultsByClassification(results: TournamentResult[]): Record<string, ClassificationData> {
+  const grouped: Record<string, ClassificationData> = {}
+  for (const result of results) {
+    const classification = result.classification
+    const weightClass = normalizeNchsaaWeightClass(result.weight_class)
+    if (!grouped[classification]) grouped[classification] = {}
+    if (!grouped[classification][weightClass]) grouped[classification][weightClass] = []
+    grouped[classification][weightClass].push(result)
+  }
+  return grouped
+}
+
+function computeResultStats(results: TournamentResult[], maxPlacerPlace: number) {
+  let totalMedalists = 0
+  let ncUnitedMedalists = 0
+  let qualifiers = 0
+  const bracketKeys = new Set<string>()
+
+  for (const result of results) {
+    const weightClass = normalizeNchsaaWeightClass(result.weight_class)
+    bracketKeys.add(`${result.classification}::${weightClass}`)
+    if (result.place >= 1 && result.place <= maxPlacerPlace) totalMedalists++
+    if (result.place === 0) qualifiers++
+    if (result.school?.toLowerCase().includes("nc united") || result.school?.toLowerCase().includes("ncunited")) {
+      ncUnitedMedalists++
+    }
+  }
+
+  return {
+    totalMedalists,
+    ncUnitedMedalists,
+    qualifiers,
+    bracketCount: bracketKeys.size,
+  }
 }
 
 /** Carousel: 1 hero + 2 smaller cards; prev/next flips which story is featured. Matches home News layout. */
@@ -237,12 +281,11 @@ export function NCHSAAYearResultsClient({
   displayYear: number
   yearParam: string
 }) {
-  const [tournamentData, setTournamentData] = useState<Record<string, ClassificationData>>({})
-  const [classifications, setClassifications] = useState<string[]>([])
+  const [allResults, setAllResults] = useState<TournamentResult[]>([])
+  const [allMostOutstandingWrestlers, setAllMostOutstandingWrestlers] = useState<MostOutstandingWrestler[]>([])
+  const [allTeamPointsWinners, setAllTeamPointsWinners] = useState<TeamPointsWinner[]>([])
+  const [genderFilter, setGenderFilter] = useState<NchsaaGenderFilter>("men")
   const [loading, setLoading] = useState(true)
-  const [stats, setStats] = useState({ totalMedalists: 0, ncUnitedMedalists: 0 })
-  const [mostOutstandingWrestlers, setMostOutstandingWrestlers] = useState<MostOutstandingWrestler[]>([])
-  const [teamPointsWinners, setTeamPointsWinners] = useState<TeamPointsWinner[]>([])
   const [bracketModal, setBracketModal] = useState({ isOpen: false, weightClass: "", classification: "" })
   const [selectedDivision, setSelectedDivision] = useState("")
   const [selectedWeight, setSelectedWeight] = useState("")
@@ -252,6 +295,51 @@ export function NCHSAAYearResultsClient({
   const closeBracketModal = () => {
     setBracketModal({ isOpen: false, weightClass: "", classification: "" })
   }
+
+  const maxPlacerPlace = displayYear >= 2026 ? 4 : 6
+
+  const filteredResults = useMemo(
+    () => allResults.filter((row) => matchesNchsaaGenderFilter(row, genderFilter, displayYear)),
+    [allResults, genderFilter, displayYear],
+  )
+
+  const tournamentData = useMemo(() => groupResultsByClassification(filteredResults), [filteredResults])
+
+  const classifications = useMemo(
+    () => sortClassifications(Object.keys(tournamentData)),
+    [tournamentData],
+  )
+
+  const stats = useMemo(
+    () => computeResultStats(filteredResults, maxPlacerPlace),
+    [filteredResults, maxPlacerPlace],
+  )
+
+  const mostOutstandingWrestlers = useMemo(
+    () =>
+      allMostOutstandingWrestlers.filter((mow) => matchesNchsaaDivisionFilter(mow.division, genderFilter, displayYear)),
+    [allMostOutstandingWrestlers, genderFilter, displayYear],
+  )
+
+  const teamPointsWinners = useMemo(
+    () =>
+      allTeamPointsWinners.filter((w) => matchesNchsaaDivisionFilter(w.division, genderFilter, displayYear)),
+    [allTeamPointsWinners, genderFilter, displayYear],
+  )
+
+  const weightClasses = useMemo(() => [...weightClassesForGender(genderFilter)], [genderFilter])
+
+  const weightClassesInData = useMemo(() => {
+    if (!selectedDivision) return weightClasses
+    const divisionWeights = Object.keys(tournamentData[selectedDivision] ?? {})
+    if (divisionWeights.length === 0) return weightClasses
+    return weightClasses.filter((w) => divisionWeights.includes(w))
+  }, [selectedDivision, tournamentData, weightClasses])
+
+  useEffect(() => {
+    setSelectedDivision("")
+    setSelectedWeight("")
+  }, [genderFilter])
 
   useEffect(() => {
     const FETCH_TIMEOUT_MS = 15000
@@ -277,15 +365,13 @@ export function NCHSAAYearResultsClient({
               .eq("year", displayYear)
               .order("division")
 
-            let mowCount = 0
             if (!mowError && mowResults?.length) {
               const uniqueMOW =
                 mowResults?.reduce((acc: MostOutstandingWrestler[], current) => {
                   if (!acc.find((item) => item.division === current.division)) acc.push(current)
                   return acc
                 }, []) || []
-              mowCount = uniqueMOW.length
-              setMostOutstandingWrestlers(uniqueMOW)
+              setAllMostOutstandingWrestlers(uniqueMOW)
             }
 
             const { data: teamPointsResults, error: teamPointsError } = await supabase
@@ -295,29 +381,10 @@ export function NCHSAAYearResultsClient({
               .order("division")
 
             if (!teamPointsError && teamPointsResults?.length) {
-              setTeamPointsWinners(teamPointsResults || [])
+              setAllTeamPointsWinners(teamPointsResults || [])
             }
 
-            const groupedData: Record<string, ClassificationData> = {}
-            let totalMedalists = 0
-            let ncUnitedCount = 0
-            const maxPlacerPlace = displayYear >= 2026 ? 4 : 6
-            results?.forEach((result: TournamentResult) => {
-              const classification = result.classification
-              const weightClass = result.weight_class
-              if (!groupedData[classification]) groupedData[classification] = {}
-              if (!groupedData[classification][weightClass]) groupedData[classification][weightClass] = []
-              groupedData[classification][weightClass].push(result)
-              if (result.place >= 1 && result.place <= maxPlacerPlace) totalMedalists++
-              if (result.school?.toLowerCase().includes("nc united") || result.school?.toLowerCase().includes("ncunited")) {
-                ncUnitedCount++
-              }
-            })
-
-            setTournamentData(groupedData)
-            const sortedClasses = sortClassifications(Object.keys(groupedData))
-            setClassifications(sortedClasses)
-            setStats({ totalMedalists, ncUnitedMedalists: ncUnitedCount })
+            setAllResults(results ?? [])
           })(),
           timeoutPromise,
         ])
@@ -343,8 +410,6 @@ export function NCHSAAYearResultsClient({
       default: return "bg-gray-200 text-gray-800"
     }
   }
-
-  const maxPlacerPlace = displayYear >= 2026 ? 4 : 6
 
   const renderClassificationResults = (classification: string, data: ClassificationData) => {
     const weightClasses = Object.keys(data).sort((a, b) => parseInt(a, 10) - parseInt(b, 10))
@@ -390,6 +455,8 @@ export function NCHSAAYearResultsClient({
     )
   }
 
+  const genderLabel = genderFilter === "men" ? "Men's" : "Women's"
+
   if (loading) {
     return (
       <div className="min-h-[50vh] flex items-center justify-center">
@@ -400,8 +467,6 @@ export function NCHSAAYearResultsClient({
       </div>
     )
   }
-
-  const weightClasses = ["106", "113", "120", "126", "132", "138", "144", "150", "157", "165", "175", "190", "215", "285"]
 
   return (
     <>
@@ -441,26 +506,50 @@ export function NCHSAAYearResultsClient({
 
       <section className="mb-8 sm:mb-12 rounded-lg overflow-hidden border-2 border-[#C20017]" aria-labelledby="tournament-summary">
         <div className="bg-[#C20017] px-4 sm:px-6 py-6 sm:py-8 md:py-10">
-          <div className="flex items-center gap-2 sm:gap-3 mb-2">
-            <Crown className="w-6 h-6 sm:w-8 sm:h-8 text-white shrink-0" aria-hidden />
-            <h2 id="tournament-summary" className="text-xl sm:text-2xl font-bold text-white">{displayYear} Tournament Summary</h2>
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-2">
+            <div>
+              <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                <Crown className="w-6 h-6 sm:w-8 sm:h-8 text-white shrink-0" aria-hidden />
+                <h2 id="tournament-summary" className="text-xl sm:text-2xl font-bold text-white">{displayYear} Tournament Summary</h2>
+              </div>
+              <p className="text-white/90 text-sm">{genderLabel} state championship results and highlights</p>
+            </div>
+            <div className="flex rounded-lg border border-white/30 p-1 bg-white/10 shrink-0" role="group" aria-label="Gender filter">
+              <Button
+                type="button"
+                size="sm"
+                variant={genderFilter === "men" ? "secondary" : "ghost"}
+                className={genderFilter === "men" ? "bg-white text-[#C20017] hover:bg-white" : "text-white hover:bg-white/20 hover:text-white"}
+                onClick={() => setGenderFilter("men")}
+              >
+                Men&apos;s
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={genderFilter === "women" ? "secondary" : "ghost"}
+                className={genderFilter === "women" ? "bg-white text-[#C20017] hover:bg-white" : "text-white hover:bg-white/20 hover:text-white"}
+                onClick={() => setGenderFilter("women")}
+              >
+                Women&apos;s
+              </Button>
+            </div>
           </div>
-          <p className="text-white/90 text-sm mb-6 sm:mb-8">State championship results and highlights</p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8 mt-6 sm:mt-8">
             <div className="text-center">
-              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-1 sm:mb-2">{displayYear === 2026 ? 7 : classifications.length}</div>
+              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-1 sm:mb-2">{classifications.length}</div>
               <div className="text-xs sm:text-sm font-medium text-white/90">Divisions</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#D3B574] mb-1 sm:mb-2">{displayYear === 2026 ? 98 : classifications.length * 14}</div>
+              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#D3B574] mb-1 sm:mb-2">{stats.bracketCount}</div>
               <div className="text-xs sm:text-sm font-medium text-white/90">Brackets</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-1 sm:mb-2">{displayYear === 2026 ? 392 : stats.totalMedalists}</div>
+              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-1 sm:mb-2">{stats.totalMedalists}</div>
               <div className="text-xs sm:text-sm font-medium text-white/90">Placers</div>
             </div>
             <div className="text-center col-span-2 md:col-span-1">
-              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-1 sm:mb-2">{displayYear === 2026 ? 784 : classifications.length * 14 * 8}</div>
+              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-1 sm:mb-2">{stats.qualifiers}</div>
               <div className="text-xs sm:text-sm font-medium text-white/90">Qualifiers</div>
             </div>
           </div>
@@ -473,7 +562,7 @@ export function NCHSAAYearResultsClient({
             <Trophy className="w-6 h-6" />
             Tournament Brackets
           </CardTitle>
-          <CardDescription>Select a division and weight class to view the bracket</CardDescription>
+          <CardDescription>{genderLabel} — select a division and weight class to view the bracket</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -497,7 +586,7 @@ export function NCHSAAYearResultsClient({
                   <SelectValue placeholder="Choose weight..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {weightClasses.map((w) => (
+                  {weightClassesInData.map((w) => (
                     <SelectItem key={w} value={w}>{w} lbs</SelectItem>
                   ))}
                 </SelectContent>
@@ -527,7 +616,7 @@ export function NCHSAAYearResultsClient({
               <Crown className="w-6 h-6" />
               Most Outstanding Wrestlers
             </CardTitle>
-            <CardDescription className="text-slate-300">{displayYear} MOW by division</CardDescription>
+            <CardDescription className="text-slate-300">{displayYear} {genderLabel.toLowerCase()} MOW by division</CardDescription>
           </CardHeader>
           <CardContent className="p-4 sm:p-6 bg-[#003366]">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -568,7 +657,7 @@ export function NCHSAAYearResultsClient({
               <Trophy className="w-6 h-6" />
               Team Points Champions
             </CardTitle>
-            <CardDescription className="text-red-100">{displayYear} team points by division</CardDescription>
+            <CardDescription className="text-red-100">{displayYear} {genderLabel.toLowerCase()} team points by division</CardDescription>
           </CardHeader>
           <CardContent className="p-4 sm:p-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -593,15 +682,15 @@ export function NCHSAAYearResultsClient({
             <Trophy className="w-6 h-6" />
             Results by Classification
           </CardTitle>
-          <CardDescription>{displayYear} NCHSAA State Championship results</CardDescription>
+          <CardDescription>{displayYear} {genderLabel.toLowerCase()} NCHSAA state championship results</CardDescription>
         </CardHeader>
         <CardContent>
           {classifications.length === 0 ? (
             <div className="text-center py-12 text-slate-600">
-              No results for {displayYear} yet. Upload data via Admin → NCHSAA State Results Upload.
+              No {genderLabel.toLowerCase()} results for {displayYear} yet.
             </div>
           ) : (
-            <Tabs defaultValue={classifications[0]?.toLowerCase().replace("/", "") ?? "4a"} className="w-full">
+            <Tabs key={genderFilter} defaultValue={classifications[0]?.toLowerCase().replace("/", "") ?? "4a"} className="w-full">
               <TabsList className="flex flex-wrap gap-1.5 w-full h-auto p-1.5 sm:p-1 bg-slate-100">
                 {classifications.map((c) => (
                   <TabsTrigger key={c} value={c.toLowerCase().replace("/", "")} className="text-xs sm:text-sm px-2.5 py-2 sm:px-3 sm:py-1.5 data-[state=active]:bg-white">

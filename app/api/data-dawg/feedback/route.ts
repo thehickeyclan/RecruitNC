@@ -1,7 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createAdminClient } from "@/lib/supabase/admin"
+import { createClient } from "@supabase/supabase-js"
+import { createClient as createServerClient } from "@/lib/supabase/server"
 import {
+  DATA_DAWG_FEEDBACK_RLS_SETUP_HINT,
   DATA_DAWG_FEEDBACK_TABLE_SETUP_HINT,
+  isDataDawgFeedbackRlsError,
   isDataDawgFeedbackTableMissingError,
 } from "@/lib/data-dawg-feedback"
 
@@ -42,27 +45,45 @@ export async function POST(request: NextRequest) {
     const pageUrl = typeof body.pageUrl === "string" ? body.pageUrl.trim().slice(0, 500) || null : null
     const source = typeof body.source === "string" ? body.source.trim().slice(0, 80) || "data_dawg_widget" : "data_dawg_widget"
 
-    const admin = createAdminClient()
-    const { data, error } = await admin
-      .from("data_dawg_feedback")
-      .insert({
-        status: "pending",
-        user_query: userQuery,
-        assistant_response: assistantResponse,
-        message_id: messageId,
-        correction_notes: correctionNotes,
-        submitter_name: submitterName,
-        submitter_email: submitterEmail,
-        page_url: pageUrl,
-        source,
-      })
-      .select("id, status, created_at")
-      .single()
+    const row = {
+      status: "pending" as const,
+      user_query: userQuery,
+      assistant_response: assistantResponse,
+      message_id: messageId,
+      correction_notes: correctionNotes,
+      submitter_name: submitterName,
+      submitter_email: submitterEmail,
+      page_url: pageUrl,
+      source,
+    }
+
+    const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    let data: { id: string; status: string; created_at: string } | null = null
+    let error: { code?: string; message?: string } | null = null
+
+    if (url && serviceKey) {
+      const admin = createClient(url, serviceKey, { auth: { persistSession: false } })
+      const result = await admin.from("data_dawg_feedback").insert(row).select("id, status, created_at").single()
+      data = result.data
+      error = result.error
+    } else {
+      console.warn("[RecruitNC] data-dawg feedback POST — SUPABASE_SERVICE_ROLE_KEY missing; using server client")
+      const supabase = await createServerClient()
+      const result = await supabase.from("data_dawg_feedback").insert(row).select("id, status, created_at").single()
+      data = result.data
+      error = result.error
+    }
 
     if (error) {
       if (isDataDawgFeedbackTableMissingError(error)) {
         console.warn("[RecruitNC] data-dawg feedback POST — table missing:", error.message)
         return NextResponse.json({ error: DATA_DAWG_FEEDBACK_TABLE_SETUP_HINT }, { status: 503 })
+      }
+      if (isDataDawgFeedbackRlsError(error)) {
+        console.warn("[RecruitNC] data-dawg feedback POST — RLS blocked:", error.message)
+        return NextResponse.json({ error: DATA_DAWG_FEEDBACK_RLS_SETUP_HINT }, { status: 503 })
       }
       console.error("[RecruitNC] data-dawg feedback POST", error)
       return NextResponse.json(
