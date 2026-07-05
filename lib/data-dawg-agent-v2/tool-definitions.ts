@@ -209,6 +209,43 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
   {
     type: "function",
     function: {
+      name: "nhsca_all_americans_by_year",
+      description:
+        "Full list of NHSCA All-Americans (placements 1–8) for a single tournament year — merges `nhsca_placements` and legacy `wrestling_nhsca_results`. Use for 'show me NHSCA All-Americans in 2022', 'who was an NHSCA All-American in 2017', etc. Not for school-specific history (use get_school_wrestling_dossier).",
+      parameters: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          year: { type: "integer", description: "NHSCA tournament year (e.g. 2022)." },
+          gender: {
+            type: "string",
+            enum: ["men", "women"],
+            description: "Default men unless user asks for girls/women.",
+          },
+        },
+        required: ["year"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "nchsaa_state_tournament_by_year",
+      description:
+        "All NCHSAA state championship placers for one year from `wrestling_nchsaa_results`. Use for 'show me the results of the 2017 state tournament', '2017 NCHSAA state results', etc. Not for multi-time champs (use nchsaa_multi_time_state_champions) or name search (use nchsaa_state_results_search).",
+      parameters: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          year: { type: "integer", description: "NCHSAA state tournament year (e.g. 2017)." },
+        },
+        required: ["year"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "college_commits_search",
       description:
         "Athletes with a college commitment. Optional text search (name, college, school) and/or grad year.",

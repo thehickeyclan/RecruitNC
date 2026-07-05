@@ -1,0 +1,240 @@
+/**
+ * Parse "show me the results of…" / "who was an NHSCA All-American in…" style questions.
+ */
+
+export type TournamentResultsKind = "nhsca_all_americans" | "nchsaa_state"
+
+export type ParsedTournamentResultsQuery = {
+  kind: TournamentResultsKind
+  year: number
+  gender: "men" | "women"
+}
+
+const YEAR_RE = /\b(19\d{2}|20\d{2})\b/
+
+function extractYear(text: string): number | null {
+  const m = text.match(YEAR_RE)
+  if (!m) return null
+  const y = parseInt(m[1], 10)
+  if (y < 1990 || y > 2035) return null
+  return y
+}
+
+function detectGender(lower: string): "men" | "women" {
+  const isWomen =
+    (/\b(women|woman|girls?|female)\b/.test(lower) &&
+      !/\b(men|man|boys?|male)\b/.test(lower)) ||
+    /\bgirls?\s+division/.test(lower)
+  if (isWomen) return "women"
+  return "men"
+}
+
+function detectKind(lower: string): TournamentResultsKind | null {
+  const hasAllAmerican = /\ball[\s-]?americans?\b/.test(lower)
+  const hasNhsca =
+    /\bnhsca\b/.test(lower) ||
+    /\bnhsca\s+nationals?\b/.test(lower) ||
+    (hasAllAmerican && /\bnationals?\b/.test(lower))
+  const hasState =
+    /\bnchsaa\b/.test(lower) ||
+    /\bstate tournament\b/.test(lower) ||
+    /\bstate championships?\b/.test(lower) ||
+    /\bstate wrestling\b/.test(lower) ||
+    /\bstate results\b/.test(lower) ||
+    /\bstate placers?\b/.test(lower) ||
+    (/\bstate\b/.test(lower) && /\btournament\b/.test(lower))
+
+  if (hasNhsca || (hasAllAmerican && !hasState)) return "nhsca_all_americans"
+  if (hasState && !hasAllAmerican) return "nchsaa_state"
+  if (hasState && hasAllAmerican) return "nhsca_all_americans"
+  return null
+}
+
+function isTournamentResultsListingQuery(lower: string): boolean {
+  return (
+    /show\s+(?:me\s+)?(?:the\s+)?results\s+of/.test(lower) ||
+    /(?:give|get)\s+(?:me\s+)?(?:the\s+)?results\s+of/.test(lower) ||
+    /\bresults\s+of\s+(?:the\s+)?/.test(lower) ||
+    /\bresults\s+from\s+(?:the\s+)?/.test(lower) ||
+    /\bwhat\s+(?:were|was)\s+(?:the\s+)?(?:\d{4}\s+)?(?:nchsaa\s+)?state/.test(lower) ||
+    /who\s+(?:was|were)\s+(?:an?\s+)?(?:the\s+)?(?:nhsca\s+)?all[\s-]?americans?\b/.test(lower) ||
+    /(?:list|show)\s+(?:all\s+)?(?:the\s+)?(?:nhsca\s+)?all[\s-]?americans?\b/.test(lower) ||
+    /(?:nhsca\s+)?all[\s-]?americans?\s+(?:from|in|at|for)\s+(?:the\s+)?(?:year\s+)?\d{4}/.test(lower) ||
+    /(?:nchsaa\s+)?state\s+(?:tournament|championships?|results|placers?)\b/.test(lower) ||
+    /\d{4}\s+(?:nchsaa\s+)?state\s+(?:tournament|championships?|results)\b/.test(lower) ||
+    (/\bnhsca\s+(?:nationals?|results?|placements?)\b/.test(lower) && YEAR_RE.test(lower)) ||
+    (/\bnhsca\b/.test(lower) && /\bresults\b/.test(lower) && YEAR_RE.test(lower)) ||
+    /\d{4}\s+nhsca\b/.test(lower)
+  )
+}
+
+export function parseTournamentResultsQuery(message: string): ParsedTournamentResultsQuery | null {
+  const trimmed = message.trim()
+  if (trimmed.length < 8) return null
+  const lower = trimmed.toLowerCase()
+
+  if (!isTournamentResultsListingQuery(lower)) return null
+
+  const year = extractYear(trimmed)
+  if (year == null) return null
+
+  const kind = detectKind(lower)
+  if (!kind) return null
+
+  return { kind, year, gender: detectGender(lower) }
+}
+
+export type NhscaAllAmericanRow = {
+  athlete_name: string
+  placement: number
+  year: number
+  division: string | null
+  weight_class: string | null
+  high_school: string | null
+}
+
+export type NchsaaStateResultRow = {
+  wrestler_name: string
+  place: number
+  year: number
+  classification: string
+  weight_class: string
+  school: string | null
+}
+
+function placeSuffix(place: number): string {
+  if (place === 1) return "1st"
+  if (place === 2) return "2nd"
+  if (place === 3) return "3rd"
+  return `${place}th`
+}
+
+function sortDivision(a: string, b: string): number {
+  const order = ["Freshman", "Sophomore", "Junior", "Senior"]
+  const ai = order.indexOf(a)
+  const bi = order.indexOf(b)
+  if (ai !== -1 && bi !== -1) return ai - bi
+  if (ai !== -1) return -1
+  if (bi !== -1) return 1
+  return a.localeCompare(b)
+}
+
+export function formatNhscaAllAmericansAnswer(
+  parsed: ParsedTournamentResultsQuery,
+  rows: NhscaAllAmericanRow[],
+): string {
+  const genderLabel = parsed.gender === "women" ? "Women's" : "Men's"
+  if (rows.length === 0) {
+    return `I don't see any ${genderLabel.toLowerCase()} NHSCA All-Americans (placements 1–8) for **${parsed.year}** in our database.`
+  }
+
+  const byDivision: Record<string, NhscaAllAmericanRow[]> = {}
+  for (const row of rows) {
+    const div = (row.division || "Unknown").trim()
+    if (!byDivision[div]) byDivision[div] = []
+    byDivision[div].push(row)
+  }
+
+  const lines: string[] = [
+    `Here are **${rows.length}** ${genderLabel} NHSCA All-Americans from **${parsed.year}** (placements 1–8):`,
+    "",
+  ]
+
+  const divisions = Object.keys(byDivision).sort(sortDivision)
+  const displayCap = 150
+  let shown = 0
+
+  for (const div of divisions) {
+    const group = byDivision[div].sort((a, b) => {
+      const wa = parseInt(String(a.weight_class ?? "999"), 10)
+      const wb = parseInt(String(b.weight_class ?? "999"), 10)
+      if (wa !== wb) return wa - wb
+      return (a.placement ?? 99) - (b.placement ?? 99)
+    })
+    lines.push(`**${div}**`)
+    for (const r of group) {
+      if (shown >= displayCap) break
+      const wt = r.weight_class ? ` ${r.weight_class} lbs` : ""
+      const school = r.high_school ? ` (${r.high_school})` : ""
+      lines.push(
+        `- ${placeSuffix(r.placement)} — ${r.athlete_name}${wt}${school}`,
+      )
+      shown++
+    }
+    lines.push("")
+    if (shown >= displayCap) break
+  }
+
+  if (rows.length > displayCap) {
+    lines.push(`*Showing first ${displayCap} of ${rows.length} All-Americans.*`)
+  }
+
+  return lines.join("\n").trim()
+}
+
+export function formatNchsaaStateTournamentAnswer(
+  parsed: ParsedTournamentResultsQuery,
+  rows: NchsaaStateResultRow[],
+): string {
+  if (rows.length === 0) {
+    return `I don't see NCHSAA state **placers** for **${parsed.year}** in our database.`
+  }
+
+  const maxPlace = parsed.year >= 2026 ? 4 : 8
+  const placers = rows.filter((r) => r.place >= 1 && r.place <= maxPlace)
+  if (placers.length === 0) {
+    return `I found ${rows.length} ${parsed.year} NCHSAA rows but no placers (1–${maxPlace}). Qualifier-only data may not be listed here — try /nchsaa/${parsed.year} on the site.`
+  }
+
+  const byClass: Record<string, Record<string, NchsaaStateResultRow[]>> = {}
+  for (const r of placers) {
+    const cls = r.classification || "Unknown"
+    const wt = String(r.weight_class ?? "").replace(/\s*lbs?\s*$/i, "").trim()
+    if (!byClass[cls]) byClass[cls] = {}
+    if (!byClass[cls][wt]) byClass[cls][wt] = []
+    byClass[cls][wt].push(r)
+  }
+
+  const classOrder = ["1-4A", "1A/2A", "1A", "2A", "3A", "4A", "5A", "6A", "7A", "8A"]
+  const sortedClasses = Object.keys(byClass).sort((a, b) => {
+    const ia = classOrder.indexOf(a)
+    const ib = classOrder.indexOf(b)
+    if (ia !== -1 && ib !== -1) return ia - ib
+    if (ia !== -1) return -1
+    if (ib !== -1) return 1
+    return a.localeCompare(b)
+  })
+
+  const lines: string[] = [
+    `**${parsed.year} NCHSAA State Championship placers** (${placers.length} total, top ${maxPlace} per weight):`,
+    "",
+  ]
+
+  const displayCap = 120
+  let shown = 0
+
+  for (const cls of sortedClasses) {
+    lines.push(`### ${cls}`)
+    const weights = Object.keys(byClass[cls]).sort((a, b) => parseInt(a, 10) - parseInt(b, 10))
+    for (const wt of weights) {
+      const group = byClass[cls][wt].sort((a, b) => a.place - b.place)
+      lines.push(`**${wt} lbs**`)
+      for (const r of group) {
+        if (shown >= displayCap) break
+        lines.push(`- ${placeSuffix(r.place)} — ${r.wrestler_name} (${r.school ?? "—"})`)
+        shown++
+      }
+      if (shown >= displayCap) break
+    }
+    lines.push("")
+    if (shown >= displayCap) break
+  }
+
+  lines.push(`Browse brackets and full results: [/nchsaa/${parsed.year}](/nchsaa/${parsed.year})`)
+  if (placers.length > displayCap) {
+    lines.push("")
+    lines.push(`*Showing first ${displayCap} of ${placers.length} placers.*`)
+  }
+
+  return lines.join("\n").trim()
+}
