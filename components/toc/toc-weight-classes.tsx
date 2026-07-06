@@ -1,4 +1,4 @@
-import { TOC_WEIGH_IN_LINE, TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
+import { TOC_WEIGH_IN, TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 import { TocPatrioticBar, TocVarsityHeading } from "@/components/toc/toc-theme"
 
 export function TocWeightClassesList() {
@@ -19,8 +19,11 @@ export function TocWeightClassesList() {
             </span>
           ))}
         </div>
-        <p className="mt-6 sm:mt-8 text-sm sm:text-base text-white/80 font-medium tracking-wide">
-          {TOC_WEIGH_IN_LINE}
+        <p className="mt-6 sm:mt-8 text-base sm:text-lg text-[#CC0000] font-semibold tracking-wide">
+          {TOC_WEIGH_IN.headline}
+        </p>
+        <p className="mt-2 text-sm sm:text-base text-white/80 font-medium tracking-wide">
+          {TOC_WEIGH_IN.time} · Flat scale · No Saturday weigh-in
         </p>
         <p className="mt-4 text-sm text-white/55">
           Boys division in Year 1 · girls divisions planned for Year 2

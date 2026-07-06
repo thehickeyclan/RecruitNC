@@ -11,6 +11,7 @@ import {
   TOC_SATURDAY_COMPETITION_DATE,
   TOC_TICKET_SALE_MONTH,
   TOC_VENUE,
+  TOC_WEIGH_IN,
 } from "@/lib/toc/constants"
 import {
   formatTocRegistrationFee,
@@ -42,7 +43,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Will there be one weigh-in or two? Is there any allowance?",
-    a: "One official weigh-in Friday at 4:00 PM using college weight classes — flat weight with no allowance. A singlet is required for weigh-ins. Skin checks at the scale. USA Wrestling card required. First-round bouts follow Friday night.",
+    a: `${TOC_WEIGH_IN.headline}. ${TOC_WEIGH_IN.detail} First-round bouts follow Friday night.`,
   },
   {
     q: "Will college coaches be there?",
@@ -58,7 +59,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "When and where is the event?",
-    a: `${TOC_EVENT_DATES_RANGE} at ${TOC_VENUE.name} (${TOC_VENUE.campus}), ${TOC_VENUE.address}. ${TOC_FRIDAY_EVENT_DATE}: weigh-in at 4:00 PM and first round Friday night. ${TOC_SATURDAY_COMPETITION_DATE}: doors at 7:30 AM, brackets resume at 9:00 AM through single-mat championship finals. ${TOC_MATS_LINE} Seating for up to 1,000, plus a credentialed Coaches & Officials Lounge in a dedicated atrium room.`,
+    a: `${TOC_EVENT_DATES_RANGE} at ${TOC_VENUE.name} (${TOC_VENUE.campus}), ${TOC_VENUE.address}. ${TOC_FRIDAY_EVENT_DATE}: one official weigh-in at 4:00 PM (no Saturday weigh-in) and first round Friday night. ${TOC_SATURDAY_COMPETITION_DATE}: doors at 7:30 AM, brackets resume at 9:00 AM through single-mat championship finals. ${TOC_MATS_LINE} Seating for up to 1,000, plus a credentialed Coaches & Officials Lounge in a dedicated atrium room.`,
   },
   {
     q: "Will the event be streamed?",

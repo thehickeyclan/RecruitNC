@@ -1,10 +1,11 @@
-import { Lock, Scale, Trophy } from "lucide-react"
+import { CalendarClock, Lock, Scale } from "lucide-react"
 import { TocPatrioticBar, tocDisplayClass } from "@/components/toc/toc-theme"
+import { TOC_WEIGH_IN } from "@/lib/toc/constants"
 
 const FACTS = [
   { icon: Lock, label: "Invite only", sub: "88 wrestlers · hand-picked at each weight" },
-  { icon: Scale, label: "College weights", sub: "Eleven brackets · true double-elimination" },
-  { icon: Trophy, label: "One weekend", sub: "Friday night openers · Saturday finishes on one mat" },
+  { icon: CalendarClock, label: "One weigh-in", sub: `${TOC_WEIGH_IN.time} · no Saturday weigh-in` },
+  { icon: Scale, label: "College weights", sub: "Eleven brackets · flat scale · no allowance" },
 ]
 
 export function TocQuickFacts() {

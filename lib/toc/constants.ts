@@ -9,12 +9,20 @@ export const TOC_EVENT_DATES_RANGE = "September 18–19, 2026" as const
 export const TOC_FRIDAY_EVENT_DATE = "Friday, September 18, 2026" as const
 export const TOC_SATURDAY_COMPETITION_DATE = "Saturday, September 19, 2026" as const
 export const TOC_EVENT_DATES_DISPLAY =
-  `${TOC_EVENT_DATES_RANGE} · weigh-in & first round Friday night` as const
+  `${TOC_EVENT_DATES_RANGE} · one weigh-in Friday night · first round after` as const
+
+/** Single official weigh-in — fan-facing copy for landing, schedule, and athlete comms. */
+export const TOC_WEIGH_IN = {
+  headline: "One weigh-in — Friday night only",
+  time: "4:00 PM Friday, September 18",
+  detail:
+    "There is no second weigh-in on Saturday. College weights on a flat scale — no allowance. Singlet required; skin check at the scale; USA Wrestling card required.",
+} as const
 
 /** Hero — large date stack at top of landing page. */
 export const TOC_HERO_DATES = {
   headline: "Sept 18 & 19, 2026",
-  subline: "Weigh-in & first round Friday · Brackets finish Saturday",
+  subline: "One weigh-in Friday night · First round after · Brackets finish Saturday",
 } as const
 
 export const TOC_EVENT_LOGO = {
@@ -28,21 +36,25 @@ export const TOC_WEIGHT_CLASSES = [
   117, 125, 133, 141, 149, 157, 165, 174, 184, 197, 285,
 ] as const
 
-export const TOC_WEIGH_IN_LINE = "Single weigh-in · No weight allowances" as const
+export const TOC_WEIGH_IN_LINE =
+  `${TOC_WEIGH_IN.headline} · ${TOC_WEIGH_IN.time} · No allowance` as const
 
 /** Public schedule — Friday weigh-in + first round; Saturday finishes brackets through finals. */
 export const TOC_SCHEDULE = {
   headline: "When to be there",
   lead:
-    "Two days in Apex. Weigh-in at 4:00 PM Friday, first-round action that night, then brackets play out Saturday with single-mat championship finals.",
+    "One official weigh-in only — 4:00 PM Friday night. No Saturday weigh-in. First-round bouts follow that evening; brackets play out Saturday with single-mat championship finals.",
   athleteNote:
-    "Invited wrestlers: weigh-in Friday at 4:00 PM, first round Friday night. Families and fans can catch opening-round bouts Friday evening or the full card Saturday.",
+    "Invited wrestlers: one weigh-in Friday at 4:00 PM only — then first round Friday night. There is no second weigh-in Saturday.",
   friday: {
     title: "Friday · September 18",
-    subtitle: "Weigh-in & first round — two mats live Friday night",
+    subtitle: "One weigh-in at 4:00 PM · first round Friday night — two mats live",
     rows: [
       { time: "2:00 PM", activity: "Crew load-in — mats, scoring tables, PA, and production setup" },
-      { time: "4:00 PM", activity: "Weigh-in & skin check (invited wrestlers)" },
+      {
+        time: "4:00 PM",
+        activity: "One official weigh-in & skin check (invited wrestlers only — no Saturday weigh-in)",
+      },
       { time: "~6:30 PM", activity: "First round — all brackets on two mats" },
     ],
   },
