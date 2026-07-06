@@ -1,4 +1,5 @@
 import { TocPatrioticBar, TocVarsityHeading } from "@/components/toc/toc-theme"
+import { TocWeighInCallout } from "@/components/toc/toc-weigh-in-callout"
 import { TOC_SCHEDULE } from "@/lib/toc/constants"
 
 function DayTable({
@@ -51,9 +52,10 @@ export function TocScheduleTable() {
         <TocVarsityHeading as="h2" className="mb-2 text-center">
           {TOC_SCHEDULE.headline}
         </TocVarsityHeading>
-        <p className="text-center text-muted-foreground text-sm sm:text-base mb-8 sm:mb-10 max-w-2xl mx-auto leading-relaxed px-1">
+        <p className="text-center text-muted-foreground text-sm sm:text-base mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed px-1">
           {lead}
         </p>
+        <TocWeighInCallout className="mb-8 sm:mb-10 max-w-2xl mx-auto" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
           <DayTable title={friday.title} subtitle={friday.subtitle} rows={friday.rows} />
           <DayTable title={saturday.title} subtitle={saturday.subtitle} rows={saturday.rows} />

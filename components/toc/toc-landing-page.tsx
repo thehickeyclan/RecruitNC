@@ -2,6 +2,7 @@
 
 import { TocHero } from "@/components/toc/toc-hero"
 import { TocQuickFacts } from "@/components/toc/toc-quick-facts"
+import { TocWeighInCallout } from "@/components/toc/toc-weigh-in-callout"
 import { TocChampionJacketSection } from "@/components/toc/toc-champion-jacket-section"
 import { TocStorySection } from "@/components/toc/toc-story-section"
 import { TocAthleteQuotesSection } from "@/components/toc/toc-athlete-quotes-section"
@@ -34,6 +35,11 @@ export function TocLandingPage({ config, confirmedColleges }: Props) {
       {/* Hook */}
       <TocHero config={config} confirmedColleges={confirmedColleges} />
       <TocQuickFacts />
+      <section className="bg-[#060f1f] pb-8 sm:pb-10">
+        <div className="container mx-auto w-full px-4 sm:px-6 max-w-3xl">
+          <TocWeighInCallout variant="dark" />
+        </div>
+      </section>
       <TocStorySection />
 
       {/* Format */}

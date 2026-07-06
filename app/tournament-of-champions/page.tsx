@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic"
 export const metadata: Metadata = {
   title: "Tournament of Champions 2026 | NC United Wrestling",
   description:
-    `NC United Tournament of Champions — by invitation only. Weigh-in and first round Friday night, brackets finish ${TOC_SATURDAY_COMPETITION_DATE} in Apex, NC.`,
+    `NC United Tournament of Champions — by invitation only. One weigh-in Friday night (no Saturday weigh-in), first round after, brackets finish ${TOC_SATURDAY_COMPETITION_DATE} in Apex, NC.`,
   openGraph: {
     title: "Tournament of Champions | NC United",
     description:
@@ -40,7 +40,7 @@ export default async function TournamentOfChampionsPage() {
       name: "NC United Wrestling",
     },
     description:
-      `Invite-only. College weights, stacked brackets — first round Friday night, single-mat championship finals ${TOC_SATURDAY_COMPETITION_DATE}.`,
+      `Invite-only. One weigh-in Friday night — no Saturday weigh-in. College weights, stacked brackets, single-mat championship finals ${TOC_SATURDAY_COMPETITION_DATE}.`,
   }
 
   return (
