@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { TocLandingPage } from "@/components/toc/toc-landing-page"
 import { resolveTocConfirmedColleges } from "@/lib/toc/confirmed-colleges"
 import { getTocEventConfig } from "@/lib/toc/event-config"
-import { TOC_SATURDAY_COMPETITION_DATE, TOC_VENUE } from "@/lib/toc/constants"
+import { TOC_EVENT_LOGO, TOC_SATURDAY_COMPETITION_DATE, TOC_VENUE } from "@/lib/toc/constants"
 
 export const dynamic = "force-dynamic"
 
@@ -15,6 +15,22 @@ export const metadata: Metadata = {
     description:
       "Eleven weights. Eight wrestlers each. College weights. Single-mat championship finals. North Carolina, buckle up.",
     type: "website",
+    url: "/tournament-of-champions",
+    images: [
+      {
+        url: TOC_EVENT_LOGO.src,
+        width: TOC_EVENT_LOGO.width,
+        height: TOC_EVENT_LOGO.height,
+        alt: TOC_EVENT_LOGO.alt,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Tournament of Champions | NC United",
+    description:
+      "Eleven weights. Eight wrestlers each. College weights. Single-mat championship finals. North Carolina, buckle up.",
+    images: [TOC_EVENT_LOGO.src],
   },
 }
 
