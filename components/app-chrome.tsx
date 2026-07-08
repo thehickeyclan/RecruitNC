@@ -13,6 +13,8 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const path = pathname && pathname.length > 0 ? pathname : "/"
   const isSpartanCampaign = path === "/spartan" || path.startsWith("/spartan/")
+  const isTocCampaign =
+    path === "/tournament-of-champions" || path.startsWith("/tournament-of-champions/")
 
   if (isSpartanCampaign) {
     return (
@@ -31,7 +33,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
         <ConditionalAuthGuard>{children}</ConditionalAuthGuard>
       </main>
       <Footer />
-      <AIChatWidget />
+      {!isTocCampaign ? <AIChatWidget /> : null}
     </div>
   )
 }
