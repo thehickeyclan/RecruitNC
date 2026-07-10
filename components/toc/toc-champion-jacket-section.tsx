@@ -1,6 +1,38 @@
 import Image from "next/image"
-import { TocAiRenderingCaption } from "@/components/toc/toc-ai-rendering-caption"
 import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass } from "@/components/toc/toc-theme"
+import { TOC_BRAND, TOC_CHAMPION_JACKET } from "@/lib/toc/constants"
+
+function JacketProductShot({
+  side,
+  label,
+}: {
+  side: keyof typeof TOC_CHAMPION_JACKET
+  label: string
+}) {
+  const img = TOC_CHAMPION_JACKET[side]
+
+  return (
+    <div className="flex flex-col">
+      <div
+        className="relative overflow-hidden rounded-sm border-2 border-white/15 shadow-2xl"
+        style={{ backgroundColor: TOC_BRAND.navyDeep }}
+      >
+        <Image
+          src={img.src}
+          alt={img.alt}
+          width={img.width}
+          height={img.height}
+          className="h-auto w-full object-contain"
+          sizes="(min-width: 1024px) 20vw, 45vw"
+          priority={side === "front"}
+        />
+      </div>
+      <p className={`mt-3 text-center text-white/50 text-xs ${tocDisplayClass()} tracking-widest uppercase`}>
+        {label}
+      </p>
+    </div>
+  )
+}
 
 export function TocChampionJacketSection() {
   return (
@@ -36,44 +68,27 @@ export function TocChampionJacketSection() {
                 the bracket winner wears it.
               </p>
               <p>
-                Not merchandise — a keepsake you cannot buy. Red, white, and navy sleeve stripes, NC silhouette on the
-                arm, and 2026 on the sleeve for the year you proved it.
+                Not merchandise — a keepsake you cannot buy. Red, white, and navy sleeve stripes with{" "}
+                <strong className="text-white">2026</strong> and <strong className="text-white">CHAMPION</strong> on
+                the back for the year you proved it.
               </p>
             </div>
           </div>
 
-          <div className="order-1 lg:order-2 space-y-6">
-            <div>
-              <div className="relative overflow-hidden rounded-sm border-2 border-white/15 shadow-2xl">
-                <Image
-                  src="/images/toc/champion-jacket-presentation.png"
-                  alt="Championship jacket presentation on the mat — crowd and NC United Tournament of Champions branding"
-                  width={1536}
-                  height={1024}
-                  className="h-auto w-full"
-                  sizes="(min-width: 1024px) 40vw, 100vw"
-                  priority
-                />
-              </div>
-              <TocAiRenderingCaption variant="dark" />
-            </div>
-
-            <div className="relative w-full max-w-sm mx-auto">
+          <div className="order-1 lg:order-2">
+            <div className="relative">
               <div className="absolute -inset-3 bg-gradient-to-br from-[#CC0000]/30 via-transparent to-white/10 rounded-2xl blur-sm" />
-              <div className="relative rounded-xl overflow-hidden border-4 border-white/20 shadow-2xl bg-[#060f1f]">
-                <Image
-                  src="/images/toc/champion-jacket.png"
-                  alt="NC United Tournament of Champions jacket — navy with NORTH CAROLINA on front and CHAMPION on back, red and white sleeve stripes, 2026 and NC state silhouette"
-                  width={800}
-                  height={900}
-                  className="w-full h-auto object-contain"
-                />
+              <div
+                className="relative grid grid-cols-2 gap-3 sm:gap-4 rounded-xl border-4 border-white/20 p-3 sm:p-4 shadow-2xl"
+                style={{ backgroundColor: TOC_BRAND.navy }}
+              >
+                <JacketProductShot side="front" label="Front" />
+                <JacketProductShot side="back" label="Back" />
               </div>
-              <TocAiRenderingCaption variant="dark" className="text-center" />
-              <p className={`mt-3 text-center text-white/50 text-xs ${tocDisplayClass()} tracking-widest`}>
-                One champion · Each weight · 2026
-              </p>
             </div>
+            <p className={`mt-4 text-center text-white/50 text-xs ${tocDisplayClass()} tracking-widest`}>
+              One champion · Each weight · 2026
+            </p>
           </div>
         </div>
       </div>

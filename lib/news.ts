@@ -46,6 +46,26 @@ export interface NewsItem {
 /** All news items, newest first. Add new items here; they appear on /news and in home carousel by order. */
 const ALL_NEWS: NewsItem[] = [
   {
+    id: "jumping-levels-what-drives-rapid-improvement",
+    slug: "jumping-levels-what-drives-rapid-improvement",
+    title: "Jumping Levels",
+    subtitle: "What Drives Rapid Improvement in Wrestling?",
+    summary:
+      "The JUMPS Assessment asked athletes, parents, and coaches what accelerates development — consistency, training partners, individualized coaching, and why breakthroughs look sudden when they aren't.",
+    href: "/news/jumping-levels-what-drives-rapid-improvement",
+    date: "2026-07-09",
+    image: "/images/jumping-levels-hero.png",
+    imagePosition: "center",
+    imageFit: "contain",
+    imageBannerBgClass: "bg-black",
+    newsListBanner: true,
+    category: "MINDSET",
+    categoryBadgeClass: "bg-[#003366]",
+    readTime: "12 min read",
+    author: "Jim Bernthal, Ph.D.",
+    isAnnouncement: true,
+  },
+  {
     id: "aau-scholastic-duals-2026-florida",
     slug: "aau-scholastic-duals-2026-florida",
     title: "NC United National Team Heads to Florida for AAU Scholastic Duals",

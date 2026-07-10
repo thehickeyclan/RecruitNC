@@ -51,7 +51,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "What is the Champion jacket?",
-    a: "Only the champion at each weight earns the NC United Tournament of Champions jacket — navy with arched NORTH CAROLINA on the chest, CHAMPION on the back, red-and-white sleeve stripes, NC silhouette, and 2026 on the sleeve. Top-four placement is recognized on the podium; the jacket is for the winner alone. It is earned on the mat, not sold.",
+    a: "Only the champion at each weight earns the NC United Tournament of Champions jacket — navy with arched NORTH CAROLINA on the chest, 2026 and CHAMPION on the back, and red-and-white sleeve stripes. Top-four placement is recognized on the podium; the jacket is for the winner alone. It is earned on the mat, not sold.",
   },
   {
     q: "Is there a girls division?",
