@@ -84,7 +84,6 @@ const ALL_NEWS: NewsItem[] = [
     readTime: "8 min read",
     author: "NC United",
     isAnnouncement: true,
-    excludeFromHomeCarousel: true,
   },
   {
     id: "nc-united-recruiting-awards-2026",
