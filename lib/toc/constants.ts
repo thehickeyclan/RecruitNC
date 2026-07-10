@@ -32,6 +32,22 @@ export const TOC_EVENT_LOGO = {
   height: 1024,
 } as const
 
+/** Champion jacket product shots — front/back on TOC navy in the section shell. */
+export const TOC_CHAMPION_JACKET = {
+  front: {
+    src: "/images/toc/champion-jacket-front.png",
+    alt: "NC United Tournament of Champions jacket — front with NORTH CAROLINA across the chest and red-white sleeve stripes",
+    width: 891,
+    height: 1024,
+  },
+  back: {
+    src: "/images/toc/champion-jacket-back.png",
+    alt: "NC United Tournament of Champions jacket — back with 2026 and CHAMPION",
+    width: 891,
+    height: 1024,
+  },
+} as const
+
 export const TOC_WEIGHT_CLASSES = [
   117, 125, 133, 141, 149, 157, 165, 174, 184, 197, 285,
 ] as const

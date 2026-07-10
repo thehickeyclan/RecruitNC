@@ -11,6 +11,7 @@ import { ClassOf2026SeniorSendoffContent } from "../content/class-of-2026-senior
 import { LynchburgBuildingAProgramWithIntentionContent } from "../content/lynchburg-building-a-program-with-intention"
 import { RealCostEliteWrestlingNcSmarterBuildContent } from "../content/real-cost-elite-wrestling-nc-smarter-build"
 import { FindingFlowOnTheMatTheZoneContent } from "../content/finding-flow-on-the-mat-the-zone"
+import { JumpingLevelsWhatDrivesRapidImprovementContent } from "../content/jumping-levels-what-drives-rapid-improvement"
 import { AauScholasticDuals2026FloridaContent } from "../content/aau-scholastic-duals-2026-florida"
 import { NchsaaArticleComments } from "@/components/nchsaa-article-comments"
 import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
@@ -23,6 +24,7 @@ import {
 } from "@/lib/content/aau-scholastic-duals-2026-profile-ids"
 
 const ANNOUNCEMENT_CONTENT: Record<string, () => JSX.Element> = {
+  "jumping-levels-what-drives-rapid-improvement": () => <JumpingLevelsWhatDrivesRapidImprovementContent />,
   "finding-flow-on-the-mat": () => <FindingFlowOnTheMatTheZoneContent />,
   "real-cost-elite-wrestling-nc-smarter-build": () => <RealCostEliteWrestlingNcSmarterBuildContent />,
   "lynchburg-building-a-program-with-intention": () => <LynchburgBuildingAProgramWithIntentionContent />,

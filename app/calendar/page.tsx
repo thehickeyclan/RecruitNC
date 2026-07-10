@@ -37,7 +37,7 @@ function isDropInPractice(category: string): boolean {
 export default function CalendarPage() {
   const { events, loading, error } = useNcUnitedCalendarEvents()
   const [currentDate, setCurrentDate] = useState(new Date())
-  const [view, setView] = useState<"month" | "list">("list")
+  const [view, setView] = useState<"month" | "list">("month")
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
   const [visibleCategories, setVisibleCategories] = useState<Set<EventCategory>>(
     new Set(Object.keys(eventCategories) as EventCategory[])
