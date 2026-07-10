@@ -71,7 +71,11 @@ export default async function NewsAnnouncementPage({
     slug === "class-of-2026-senior-sendoff" ||
     slug === "real-cost-elite-wrestling-nc-smarter-build" ||
     slug === RECRUITING_AWARDS_SLUG ||
-    slug === AAU_SCHOLASTIC_DUALS_2026_NEWS_SLUG
+    slug === AAU_SCHOLASTIC_DUALS_2026_NEWS_SLUG ||
+    slug === "jumping-levels-what-drives-rapid-improvement"
+
+  /** Designed banners already include title art — show full image, don't fade behind HTML title. */
+  const designedBannerHero = slug === "jumping-levels-what-drives-rapid-improvement"
 
   return (
     <div className="min-h-screen bg-[#0A1628]">
@@ -104,44 +108,96 @@ export default async function NewsAnnouncementPage({
             All News
           </Link>
 
-          {/* Article Header */}
-          <div className="max-w-3xl">
-            {item.category && (
-              <span className="inline-block rounded-full bg-[#D3B574] px-3 py-1 text-xs font-semibold text-[#13294B] uppercase tracking-wide mb-4">
-                {item.category}
-              </span>
-            )}
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight">
-              {item.title}
-            </h1>
-            {item.subtitle && (
-              <p className="mt-4 text-xl text-white/70 leading-relaxed">
-                {item.subtitle}
-              </p>
-            )}
-            <div className="mt-6 flex flex-wrap items-center gap-4 text-sm text-white/50">
-              <span className="inline-flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                {new Date(item.date).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </span>
-              {item.author && (
+          {designedBannerHero && item.image ? (
+            <div className="space-y-6">
+              <div
+                className={`relative w-full overflow-hidden rounded-xl border border-white/10 shadow-2xl ${
+                  item.imageBannerBgClass ?? "bg-black"
+                }`}
+              >
+                <Image
+                  src={item.image}
+                  alt={`${item.title}${item.subtitle ? ` — ${item.subtitle}` : ""}`}
+                  width={1024}
+                  height={546}
+                  className="h-auto w-full object-contain"
+                  sizes="(max-width: 896px) 100vw, 896px"
+                  priority
+                />
+              </div>
+              <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-sm text-white/55">
+                {item.category && (
+                  <span className="inline-block rounded-full bg-[#D3B574] px-3 py-1 text-xs font-semibold text-[#13294B] uppercase tracking-wide">
+                    {item.category}
+                  </span>
+                )}
                 <span className="inline-flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  {item.author}
+                  <Calendar className="h-4 w-4" />
+                  {new Date(item.date).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
                 </span>
-              )}
-              {item.readTime && (
-                <span className="inline-flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  {item.readTime}
-                </span>
-              )}
+                {item.author && (
+                  <span className="inline-flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    {item.author}
+                  </span>
+                )}
+                {item.readTime && (
+                  <span className="inline-flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    {item.readTime}
+                  </span>
+                )}
+              </div>
+              {/* Keep an accessible page title; visual title lives in the banner art. */}
+              <h1 className="sr-only">
+                {item.title}
+                {item.subtitle ? ` — ${item.subtitle}` : ""}
+              </h1>
             </div>
-          </div>
+          ) : (
+            /* Article Header */
+            <div className="max-w-3xl">
+              {item.category && (
+                <span className="inline-block rounded-full bg-[#D3B574] px-3 py-1 text-xs font-semibold text-[#13294B] uppercase tracking-wide mb-4">
+                  {item.category}
+                </span>
+              )}
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight">
+                {item.title}
+              </h1>
+              {item.subtitle && (
+                <p className="mt-4 text-xl text-white/70 leading-relaxed">
+                  {item.subtitle}
+                </p>
+              )}
+              <div className="mt-6 flex flex-wrap items-center gap-4 text-sm text-white/50">
+                <span className="inline-flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  {new Date(item.date).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </span>
+                {item.author && (
+                  <span className="inline-flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    {item.author}
+                  </span>
+                )}
+                {item.readTime && (
+                  <span className="inline-flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    {item.readTime}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
