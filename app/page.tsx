@@ -13,7 +13,6 @@ import { ProfessionalCommitmentCard } from "@/components/professional-commitment
 import { normalizeAthleteList } from "@/lib/professional-athlete"
 import { StoreProductPromotion } from "@/components/store-product-promotion"
 import { HomeNewsHighlightsCarousel } from "@/components/home-news-highlights-carousel"
-import { AauScholasticDuals2026HomeBanner } from "@/components/national-team/aau-scholastic-duals-2026-home-banner"
 import { Users, GraduationCap, Trophy, ArrowRight, TrendingUp } from "lucide-react"
 
 type YearFilter = "All" | "2025" | "2026"
@@ -189,8 +188,6 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-[#0A1628]">
-      <AauScholasticDuals2026HomeBanner />
-
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
