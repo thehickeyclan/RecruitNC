@@ -44,8 +44,25 @@ export interface NewsItem {
   /**
    * Share-image API: crop hero art only (no title overlay).
    * Use when the banner already includes headline typography.
+   * Also inferred when newsListBanner + imageFit contain.
    */
   shareHeroCropOnly?: boolean
+}
+
+/** Article slugs whose hero art already includes headline typography (any imageFit). */
+const DESIGNED_SHARE_BANNER_SLUGS = new Set([
+  "jumping-levels-what-drives-rapid-improvement",
+  "aau-scholastic-duals-2026-florida",
+  "nc-united-recruiting-awards-2026",
+  "real-cost-elite-wrestling-nc-smarter-build",
+  "class-of-2026-senior-sendoff",
+])
+
+/** Designed list banners already include headline art — don't overlay title on share images. */
+export function newsShareUsesHeroCropOnly(item: NewsItem): boolean {
+  if (item.shareHeroCropOnly === true) return true
+  if (DESIGNED_SHARE_BANNER_SLUGS.has(item.slug)) return true
+  return Boolean(item.newsListBanner && item.imageFit === "contain")
 }
 
 /** All news items, newest first. Add new items here; they appear on /news and in home carousel by order. */
