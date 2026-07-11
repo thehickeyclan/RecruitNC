@@ -2,13 +2,22 @@ import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getPublicBracketDraw } from "@/lib/toc/bracket-service"
 import { parseAthleteWeightClass } from "@/lib/toc/invitations"
+import { requireTocBracketViewer } from "@/lib/toc/require-toc-bracket-viewer"
 
 export const dynamic = "force-dynamic"
 
 type Params = { params: Promise<{ weight: string }> }
 
-/** Public — bracket for one weight (live field or locked draw). */
+/** Admin-only until TOC_BRACKETS_PUBLIC_ENABLED=true. */
 export async function GET(_request: Request, { params }: Params) {
+  const gate = await requireTocBracketViewer()
+  if (!gate.ok) {
+    return NextResponse.json(
+      { error: gate.status === 401 ? "Unauthorized" : "Forbidden" },
+      { status: gate.status },
+    )
+  }
+
   try {
     const weightClass = parseAthleteWeightClass((await params).weight)
     if (weightClass == null) {

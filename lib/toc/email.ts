@@ -1,4 +1,5 @@
 import { TOC_CONTACT_EMAIL, TOC_EVENT_DATES_DISPLAY, TOC_SATURDAY_COMPETITION_DATE } from "@/lib/toc/constants"
+import { assertTocAthleteEmailHasNoPrivateBracketsLink } from "@/lib/toc/bracket-public-access"
 import { eventPageUrl } from "@/lib/toc/invitation-service"
 import { buildTocAthleteInviteMessage } from "@/lib/toc/invite-message"
 import { firstNameFromAthleteName } from "@/lib/toc/invitations"
@@ -167,6 +168,8 @@ export async function sendTocAthleteInviteEmail(payload: {
 <p style="margin:24px 0;"><a href="${payload.confirmUrl}" style="display:inline-block;background:#CC0000;color:white;padding:14px 28px;text-decoration:none;border-radius:6px;font-weight:bold;letter-spacing:0.04em;">Confirm your spot</a></p>
 <p style="font-size:14px;color:#6b7280;">If you're in, confirm above. We'll match you to your RecruitNC profile — school, grad year, and club are already on file.</p>`
 
+  assertTocAthleteEmailHasNoPrivateBracketsLink(body)
+
   for (const to of payload.to) {
     if (to.trim()) await sendHtml(to, subject, wrap(body))
   }
@@ -189,6 +192,8 @@ export async function sendTocAthleteConfirmedEmail(payload: {
 </ul>
 <p>Friday: weigh-in at 4:00 PM and first round. Saturday: full brackets through championship finals.</p>
 <p style="margin:20px 0;"><a href="${eventPageUrl()}" style="display:inline-block;background:#CC0000;color:white;padding:12px 24px;text-decoration:none;border-radius:6px;font-weight:bold;">Event page</a></p>`
+
+  assertTocAthleteEmailHasNoPrivateBracketsLink(body)
 
   for (const to of payload.to) {
     if (to.trim()) await sendHtml(to, subject, wrap(body))
