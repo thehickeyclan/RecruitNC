@@ -1,11 +1,20 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { listPublicBracketSummaries } from "@/lib/toc/bracket-service"
+import { requireTocBracketViewer } from "@/lib/toc/require-toc-bracket-viewer"
 
 export const dynamic = "force-dynamic"
 
-/** Public — brackets with live field data or locked official draws. */
+/** Admin-only until TOC_BRACKETS_PUBLIC_ENABLED=true. */
 export async function GET() {
+  const gate = await requireTocBracketViewer()
+  if (!gate.ok) {
+    return NextResponse.json(
+      { error: gate.status === 401 ? "Unauthorized" : "Forbidden", brackets: [] },
+      { status: gate.status },
+    )
+  }
+
   try {
     const admin = createAdminClient()
     const brackets = await listPublicBracketSummaries(admin)

@@ -38,10 +38,7 @@ export default async function TocConfirmSuccessPage({ searchParams }: Props) {
           .
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <HardLink href="/tournament-of-champions/brackets" className={tocMobileCtaClass("primary")}>
-            View brackets
-          </HardLink>
-          <HardLink href="/tournament-of-champions" className={tocMobileCtaClass("secondary")}>
+          <HardLink href="/tournament-of-champions" className={tocMobileCtaClass("primary")}>
             Event page
           </HardLink>
         </div>

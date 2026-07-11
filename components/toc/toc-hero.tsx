@@ -18,7 +18,6 @@ type Props = {
 const SECONDARY_LINKS = [
   { href: "#colleges", label: "Colleges" },
   { href: "#weights", label: "Weights" },
-  { href: "/tournament-of-champions/brackets", label: "Brackets" },
   { href: "#venue", label: "Venue" },
   { href: "#schedule", label: "Schedule" },
   { href: "#families", label: "Tickets & families" },

@@ -32,7 +32,7 @@ const TOC_ADMIN_LINKS = [
   { href: "/admin/toc/nominations", title: "Prospect interest", description: "Athlete interest form submissions", icon: Users },
   { href: "/admin/toc/sponsors", title: "Sponsors", description: "Sponsor inquiry pipeline", icon: Handshake },
   { href: "/admin/toc/email", title: "Email list", description: "Subscribers · CSV export", icon: Mail },
-  { href: "/tournament-of-champions/brackets", title: "Public brackets", description: "Published weight-class draws", icon: LayoutGrid },
+  { href: "/tournament-of-champions/brackets", title: "Brackets preview", description: "Admin-only draws until published", icon: LayoutGrid },
   { href: "/tournament-of-champions", title: "Public landing", description: "Marketing event page", icon: Eye },
 ] as const
 
