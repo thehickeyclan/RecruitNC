@@ -41,6 +41,11 @@ export interface NewsItem {
   isAnnouncement?: boolean
   /** Omit from home carousel when the story is already promoted in the homepage hero banner. */
   excludeFromHomeCarousel?: boolean
+  /**
+   * Share-image API: crop hero art only (no title overlay).
+   * Use when the banner already includes headline typography.
+   */
+  shareHeroCropOnly?: boolean
 }
 
 /** All news items, newest first. Add new items here; they appear on /news and in home carousel by order. */
@@ -63,6 +68,7 @@ const ALL_NEWS: NewsItem[] = [
     categoryBadgeClass: "bg-[#003366]",
     readTime: "12 min read",
     author: "Jim Bernthal, Ph.D.",
+    shareHeroCropOnly: true,
     isAnnouncement: true,
   },
   {

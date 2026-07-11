@@ -15,6 +15,7 @@ import { JumpingLevelsWhatDrivesRapidImprovementContent } from "../content/jumpi
 import { AauScholasticDuals2026FloridaContent } from "../content/aau-scholastic-duals-2026-florida"
 import { NchsaaArticleComments } from "@/components/nchsaa-article-comments"
 import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
+import { NewsSharePanel } from "@/components/news/news-share-panel"
 import { getRecruitingAwardsProfileIdMap } from "@/lib/content/recruiting-awards-profile-ids"
 import { getRecruitingAwardsCollegeLogoMap } from "@/lib/content/recruiting-awards-logo-map"
 import { RECRUITING_AWARDS_SLUG } from "@/lib/content/recruiting-awards-2026"
@@ -214,6 +215,13 @@ export default async function NewsAnnouncementPage({
               <MessageCircle className="h-4 w-4" />
               Leave Feedback
             </a>
+          </div>
+
+          <div className="border-b border-slate-200 p-4 sm:p-6">
+            <NewsSharePanel
+              slug={slug}
+              title={item.subtitle ? `${item.title} — ${item.subtitle}` : item.title}
+            />
           </div>
 
           {/* Article Body */}
