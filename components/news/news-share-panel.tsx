@@ -1,17 +1,17 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, type ReactNode } from "react"
 import { Button } from "@/components/ui/button"
-import { Download, ExternalLink, Link2, Share2 } from "lucide-react"
+import { ArrowLeft, Link2, Loader2, Share2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import {
-  NEWS_SHARE_FORMATS,
-  NEWS_SHARE_PRIMARY_FORMATS,
-  facebookShareUrl,
+  SHARE_PLATFORM_FORMATS,
+  SHARE_PLATFORM_LABELS,
   newsArticleShareUrl,
-  newsShareImageApiPath,
   type NewsShareFormatId,
+  type SharePlatform,
 } from "@/lib/news-share-formats"
+import { shareNewsImageFile, shareResultMessage } from "@/lib/news-share-client"
 
 type NewsSharePanelProps = {
   slug: string
@@ -19,9 +19,13 @@ type NewsSharePanelProps = {
   className?: string
 }
 
+type ShareStep = "closed" | "platform" | "format"
+
 export function NewsSharePanel({ slug, title, className = "" }: NewsSharePanelProps) {
   const [copied, setCopied] = useState(false)
-  const [showMoreSizes, setShowMoreSizes] = useState(false)
+  const [step, setStep] = useState<ShareStep>("closed")
+  const [platform, setPlatform] = useState<SharePlatform | null>(null)
+  const [sharingFormat, setSharingFormat] = useState<NewsShareFormatId | null>(null)
   const { toast } = useToast()
 
   const shareUrl = useMemo(() => {
@@ -35,11 +39,17 @@ export function NewsSharePanel({ slug, title, className = "" }: NewsSharePanelPr
     return newsArticleShareUrl(slug)
   }, [slug])
 
+  const resetFlow = () => {
+    setStep("closed")
+    setPlatform(null)
+    setSharingFormat(null)
+  }
+
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl)
       setCopied(true)
-      toast({ title: "Link copied", description: "Article link copied to clipboard." })
+      toast({ title: "Link copied", description: "Paste into your caption or link sticker." })
       setTimeout(() => setCopied(false), 2000)
     } catch {
       toast({
@@ -50,28 +60,48 @@ export function NewsSharePanel({ slug, title, className = "" }: NewsSharePanelPr
     }
   }
 
-  const handleNativeShare = async () => {
-    if (typeof navigator !== "undefined" && navigator.share) {
-      try {
-        await navigator.share({ title, url: shareUrl, text: title })
-        toast({ title: "Shared", description: "Thanks for sharing!" })
-      } catch (err) {
-        if ((err as Error).name !== "AbortError") {
-          toast({
-            title: "Share failed",
-            description: "Copy the link or download an image instead.",
-            variant: "destructive",
-          })
+  const handleShareImage = async (format: NewsShareFormatId) => {
+    setSharingFormat(format)
+    try {
+      const result = await shareNewsImageFile({
+        slug,
+        format,
+        title,
+        shareUrl,
+        origin: typeof window !== "undefined" ? window.location.origin : undefined,
+      })
+
+      let linkCopied = false
+      if (result.mode === "download") {
+        try {
+          await navigator.clipboard.writeText(shareUrl)
+          linkCopied = true
+        } catch {
+          linkCopied = false
         }
       }
-    } else {
-      handleCopyLink()
+
+      toast(shareResultMessage(result, linkCopied))
+      resetFlow()
+    } catch (err) {
+      if ((err as Error).name !== "AbortError") {
+        toast({
+          title: "Could not share image",
+          description: "Try again in a moment.",
+          variant: "destructive",
+        })
+      }
+    } finally {
+      setSharingFormat(null)
     }
   }
 
-  const canNativeShare = typeof navigator !== "undefined" && !!navigator.share
+  const handlePlatformPick = (next: SharePlatform) => {
+    setPlatform(next)
+    setStep("format")
+  }
 
-  const downloadFormats = showMoreSizes ? NEWS_SHARE_FORMATS : NEWS_SHARE_PRIMARY_FORMATS
+  const formatChoices = platform ? SHARE_PLATFORM_FORMATS[platform] : []
 
   return (
     <section
@@ -79,112 +109,131 @@ export function NewsSharePanel({ slug, title, className = "" }: NewsSharePanelPr
       aria-label="Share this article"
     >
       <div className="flex flex-col gap-4">
-        <div>
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-[#13294B]">
-            Share this story
-          </h2>
-          <p className="mt-1 text-sm text-slate-600">
-            Copy the link or download a sized image for Instagram or Facebook.
-          </p>
-        </div>
+        {step === "closed" ? (
+          <>
+            <div>
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-[#13294B]">
+                Share this story
+              </h2>
+              <p className="mt-1 text-sm text-slate-600">
+                Create a branded image sized for Instagram or Facebook.
+              </p>
+            </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="border-[#13294B]/20 text-[#13294B] hover:bg-white"
-            onClick={handleCopyLink}
-          >
-            <Link2 className="mr-1.5 h-4 w-4" />
-            {copied ? "Copied!" : "Copy link"}
-          </Button>
-
-          <a
-            href={facebookShareUrl(shareUrl)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex"
-          >
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="border-[#13294B]/20 text-[#13294B] hover:bg-white"
-            >
-              <ExternalLink className="mr-1.5 h-4 w-4" />
-              Facebook
-            </Button>
-          </a>
-
-          {canNativeShare ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="border-[#13294B]/20 text-[#13294B] hover:bg-white"
-              onClick={handleNativeShare}
-            >
-              <Share2 className="mr-1.5 h-4 w-4" />
-              Share
-            </Button>
-          ) : null}
-        </div>
-
-        <div>
-          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">
-            Download images
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {downloadFormats.map((format) => (
-              <DownloadFormatButton key={format.id} slug={slug} formatId={format.id} label={format.shortLabel} />
-            ))}
-            {!showMoreSizes ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                className="bg-[#13294B] text-white hover:bg-[#1a3a5c]"
+                onClick={() => setStep("platform")}
+              >
+                <Share2 className="mr-1.5 h-4 w-4" />
+                Share to social
+              </Button>
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
                 className="text-slate-600"
-                onClick={() => setShowMoreSizes(true)}
+                onClick={handleCopyLink}
               >
-                More sizes
+                <Link2 className="mr-1.5 h-4 w-4" />
+                {copied ? "Link copied" : "Copy link"}
               </Button>
-            ) : null}
-          </div>
-        </div>
+            </div>
+          </>
+        ) : null}
 
-        <p className="text-xs leading-relaxed text-slate-500">
-          Instagram: download an image, create a post or story, then paste the article link in your
-          caption or link sticker. Images are generated for each platform size.
-        </p>
+        {step === "platform" ? (
+          <ShareStepCard
+            title="Where are you posting?"
+            onBack={resetFlow}
+          >
+            <div className="grid gap-2 sm:grid-cols-2">
+              {(Object.keys(SHARE_PLATFORM_LABELS) as SharePlatform[]).map((key) => (
+                <Button
+                  key={key}
+                  type="button"
+                  variant="outline"
+                  className="h-auto min-h-11 justify-start border-[#13294B]/20 py-3 text-left text-[#13294B] hover:bg-white"
+                  disabled={sharingFormat !== null}
+                  onClick={() => handlePlatformPick(key)}
+                >
+                  <span className="text-sm font-semibold">{SHARE_PLATFORM_LABELS[key]}</span>
+                </Button>
+              ))}
+            </div>
+          </ShareStepCard>
+        ) : null}
+
+        {step === "format" && platform ? (
+          <ShareStepCard
+            title={`${SHARE_PLATFORM_LABELS[platform]} — choose format`}
+            onBack={() => {
+              setPlatform(null)
+              setStep("platform")
+            }}
+          >
+            <div className="grid gap-2">
+              {formatChoices.map((choice) => (
+                <Button
+                  key={choice.format}
+                  type="button"
+                  variant="outline"
+                  className="h-auto min-h-11 flex-col items-start gap-0.5 border-[#13294B]/20 py-3 text-left text-[#13294B] hover:bg-white"
+                  disabled={sharingFormat !== null}
+                  onClick={() => handleShareImage(choice.format)}
+                >
+                  <span className="inline-flex items-center gap-1.5 text-sm font-semibold">
+                    {sharingFormat === choice.format ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Share2 className="h-4 w-4" />
+                    )}
+                    {choice.label}
+                  </span>
+                  <span className="text-xs font-normal text-slate-500">{choice.description}</span>
+                </Button>
+              ))}
+            </div>
+          </ShareStepCard>
+        ) : null}
+
+        {step !== "closed" ? (
+          <p className="text-xs leading-relaxed text-slate-500">
+            We&apos;ll generate the image and open your phone&apos;s share menu. Pick{" "}
+            {platform === "facebook" ? "Facebook" : "Instagram"} to finish posting.
+          </p>
+        ) : null}
       </div>
     </section>
   )
 }
 
-function DownloadFormatButton({
-  slug,
-  formatId,
-  label,
+function ShareStepCard({
+  title,
+  onBack,
+  children,
 }: {
-  slug: string
-  formatId: NewsShareFormatId
-  label: string
+  title: string
+  onBack: () => void
+  children: ReactNode
 }) {
   return (
-    <a
-      href={newsShareImageApiPath(slug, formatId)}
-      download
-      className="inline-flex"
-    >
-      <Button
-        type="button"
-        size="sm"
-        className="bg-[#13294B] text-white hover:bg-[#1a3a5c]"
-      >
-        <Download className="mr-1.5 h-4 w-4" />
-        {label}
-      </Button>
-    </a>
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-8 px-2 text-slate-600"
+          onClick={onBack}
+        >
+          <ArrowLeft className="mr-1 h-4 w-4" />
+          Back
+        </Button>
+        <h2 className="text-sm font-semibold text-[#13294B]">{title}</h2>
+      </div>
+      {children}
+    </div>
   )
 }
