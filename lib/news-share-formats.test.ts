@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
   NEWS_SHARE_FORMATS,
+  SHARE_PLATFORM_FORMATS,
   facebookShareUrl,
   newsArticleShareUrl,
   newsShareImageApiPath,
@@ -45,5 +46,15 @@ describe("news share formats", () => {
     const fb = facebookShareUrl("https://app.ncwrestlingunited.com/news/test?utm_source=share")
     expect(fb).toContain("facebook.com/sharer/sharer.php")
     expect(fb).toContain(encodeURIComponent("https://app.ncwrestlingunited.com/news/test?utm_source=share"))
+  })
+
+  it("maps platforms to format choices", () => {
+    expect(SHARE_PLATFORM_FORMATS.instagram.map((f) => f.format)).toEqual([
+      "ig-story",
+      "ig-square",
+      "ig-portrait",
+    ])
+    expect(SHARE_PLATFORM_FORMATS.facebook).toHaveLength(1)
+    expect(SHARE_PLATFORM_FORMATS.facebook[0]?.format).toBe("facebook")
   })
 })

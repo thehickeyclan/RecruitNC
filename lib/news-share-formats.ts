@@ -88,3 +88,43 @@ export function newsShareImageFilename(slug: string, format: NewsShareFormatId):
 export function facebookShareUrl(articleUrl: string): string {
   return `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(articleUrl)}`
 }
+
+export type SharePlatform = "instagram" | "facebook"
+
+export type ShareFormatChoice = {
+  format: NewsShareFormatId
+  label: string
+  description: string
+}
+
+export const SHARE_PLATFORM_LABELS: Record<SharePlatform, string> = {
+  instagram: "Instagram",
+  facebook: "Facebook",
+}
+
+export const SHARE_PLATFORM_FORMATS: Record<SharePlatform, ShareFormatChoice[]> = {
+  instagram: [
+    {
+      format: "ig-story",
+      label: "Story",
+      description: "1080×1920 vertical",
+    },
+    {
+      format: "ig-square",
+      label: "Square post",
+      description: "1080×1080",
+    },
+    {
+      format: "ig-portrait",
+      label: "Portrait post",
+      description: "1080×1350",
+    },
+  ],
+  facebook: [
+    {
+      format: "facebook",
+      label: "Post",
+      description: "1200×630",
+    },
+  ],
+}
