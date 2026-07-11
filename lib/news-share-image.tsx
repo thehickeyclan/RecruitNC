@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og"
 import type { NewsItem } from "@/lib/news"
+import { newsShareUsesHeroCropOnly } from "@/lib/news"
 import {
   NEWS_SHARE_FORMAT_MAP,
   getAppBaseUrl,
@@ -50,6 +51,13 @@ function titleFontSize(formatId: NewsShareFormatId): number {
   return 52
 }
 
+function heroCropBackground(item: NewsItem): string {
+  if (item.imageBannerBgClass?.includes("0A1628")) return "#0A1628"
+  if (item.imageBannerBgClass?.includes("black")) return "#000000"
+  if (item.imageBannerBgClass?.includes("stone")) return "#f5f5f4"
+  return "#0A1628"
+}
+
 function HeroCropCard({
   item,
   formatId,
@@ -67,7 +75,7 @@ function HeroCropCard({
         flexDirection: "column",
         width: "100%",
         height: "100%",
-        backgroundColor: "#0A1628",
+        backgroundColor: heroCropBackground(item),
         fontFamily: "Inter",
       }}
     >
@@ -77,6 +85,7 @@ function HeroCropCard({
           flex: 1,
           position: "relative",
           overflow: "hidden",
+          backgroundColor: heroCropBackground(item),
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -88,7 +97,7 @@ function HeroCropCard({
             height: "100%",
             objectFit: "contain",
             objectPosition: item.imagePosition === "top" ? "top" : "center",
-            backgroundColor: "#000000",
+            backgroundColor: heroCropBackground(item),
           }}
         />
       </div>
@@ -373,7 +382,7 @@ export async function createNewsShareImage(
   const filename = newsShareImageFilename(item.slug, formatId)
 
   const useHero = Boolean(item.image)
-  const heroCropOnly = item.shareHeroCropOnly === true
+  const heroCropOnly = newsShareUsesHeroCropOnly(item)
 
   const element = useHero ? (
     heroCropOnly ? (
