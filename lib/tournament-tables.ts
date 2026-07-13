@@ -11,6 +11,12 @@ import {
   normalizeApostrophes,
 } from "@/lib/athlete-name-match"
 import { recruitNcDebugLogNhsca } from "@/lib/recruitnc-debug"
+import {
+  formatFargoDivisionLabel,
+  formatFargoPlacementForDisplay,
+  formatFargoRecord,
+  parseFargoPlacement,
+} from "@/lib/fargo-results"
 
 export interface TournamentResultRow {
   year: number
@@ -736,6 +742,129 @@ function mapSuper32Rows(rows: any[]): TournamentResultRow[] {
       weight: (r.weight ?? r.weight_class ?? "").toString().trim(),
     }
   })
+}
+
+function dedupeFargoRows(rows: TournamentResultRow[]): TournamentResultRow[] {
+  const byKey = new Map<string, TournamentResultRow>()
+  for (const row of rows) {
+    const key = `${row.year}|${row.division ?? ""}|${row.weight ?? ""}`
+    if (!byKey.has(key)) byKey.set(key, row)
+  }
+  return Array.from(byKey.values()).sort((a, b) => (b.year as number) - (a.year as number))
+}
+
+function mapFargoRows(rows: any[]): TournamentResultRow[] {
+  return rows.map((r: any) => {
+    const placementNum = parseFargoPlacement(r.placement)
+    const isAA = r.is_all_american === true || String(r.is_all_american).toLowerCase() === "true"
+    const placement =
+      formatFargoPlacementForDisplay(placementNum, isAA) ||
+      (isAA ? "All-American" : "")
+    return {
+      year: typeof r.year === "number" ? r.year : parseInt(String(r.year), 10) || new Date().getFullYear(),
+      placement,
+      record: formatFargoRecord(r.wins, r.losses, r.record),
+      weight: (r.weight_class ?? r.weight ?? "").toString().trim(),
+      division: formatFargoDivisionLabel((r.division ?? "").toString()),
+    }
+  })
+}
+
+/**
+ * Fetch Fargo Nationals from fargo_results table.
+ */
+export async function getFargoFromTable(
+  supabase: SupabaseClient,
+  athleteName: string,
+  graduationYear: number,
+  options?: { highSchool?: string },
+): Promise<TournamentResultRow[]> {
+  if ((!athleteName?.trim() && !options?.highSchool?.trim()) || !graduationYear || isNaN(graduationYear)) {
+    return []
+  }
+  const startYear = graduationYear - 4
+  const exactName = normalizeApostrophes(athleteName.trim())
+
+  const filterBySchool = (rows: any[]) => {
+    if (!options?.highSchool?.trim() || rows.length === 0) return rows
+    const school = options.highSchool.trim().toLowerCase()
+    const filtered = rows.filter((r: any) => {
+      const rowSchool = (r.high_school ?? r.school ?? "").toString().toLowerCase()
+      return !rowSchool || rowSchool.includes(school) || school.includes(rowSchool)
+    })
+    return filtered.length > 0 ? filtered : rows
+  }
+
+  const { data: exactRows } = await supabase
+    .from("fargo_results")
+    .select("*")
+    .eq("athlete_name", exactName)
+    .gte("year", startYear)
+    .lte("year", graduationYear)
+    .order("year", { ascending: false })
+  if (exactRows?.length) return dedupeFargoRows(mapFargoRows(filterBySchool(exactRows)))
+
+  const lastFirst = getNameVariants(athleteName).find((n) => n.includes(","))
+  if (lastFirst) {
+    const { data: lfRows } = await supabase
+      .from("fargo_results")
+      .select("*")
+      .eq("athlete_name", lastFirst)
+      .gte("year", startYear)
+      .lte("year", graduationYear)
+      .order("year", { ascending: false })
+    if (lfRows?.length) return dedupeFargoRows(mapFargoRows(filterBySchool(lfRows)))
+  }
+
+  for (const searchName of getNameVariants(athleteName)) {
+    for (const namePattern of getIlikePatternsForVariation(searchName)) {
+      const { data: byName } = await supabase
+        .from("fargo_results")
+        .select("*")
+        .ilike("athlete_name", namePattern)
+        .gte("year", startYear)
+        .lte("year", graduationYear)
+        .order("year", { ascending: false })
+
+      const rows = filterBySchool(byName ?? [])
+      if (rows.length) return dedupeFargoRows(mapFargoRows(rows))
+    }
+  }
+
+  return []
+}
+
+export async function getFargoFromTableAllTime(
+  supabase: SupabaseClient,
+  athleteName: string,
+  options?: { highSchool?: string },
+): Promise<TournamentResultRow[]> {
+  if (!athleteName?.trim() && !options?.highSchool?.trim()) return []
+
+  for (const searchName of getNameVariants(athleteName)) {
+    for (const namePattern of getIlikePatternsForVariation(searchName)) {
+      const { data: byName } = await supabase
+        .from("fargo_results")
+        .select("*")
+        .ilike("athlete_name", namePattern)
+        .gte("year", ALL_TIME_YEAR_MIN)
+        .lte("year", ALL_TIME_YEAR_MAX)
+        .order("year", { ascending: false })
+
+      let rows = byName ?? []
+      if (options?.highSchool?.trim() && rows.length > 0) {
+        const school = options.highSchool.trim().toLowerCase()
+        const filtered = rows.filter((r: any) => {
+          const rowSchool = (r.high_school ?? r.school ?? "").toString().toLowerCase()
+          return !rowSchool || rowSchool.includes(school) || school.includes(rowSchool)
+        })
+        rows = filtered.length > 0 ? filtered : rows
+      }
+      if (rows.length) return dedupeFargoRows(mapFargoRows(rows))
+    }
+  }
+
+  return []
 }
 
 /** NC United National Team result row (Ultimate Club Duals, NHSCA National Duals) */

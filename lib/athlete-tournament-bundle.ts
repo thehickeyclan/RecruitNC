@@ -12,6 +12,7 @@ import type { NchsaaRowForProfile } from "@/lib/nchsaa-results-json"
 import {
   getNHSCAForAthlete,
   getSuper32ForAthlete,
+  getFargoForAthlete,
   type TournamentResultForDisplay,
 } from "@/lib/public-profile-data"
 
@@ -19,6 +20,7 @@ export type AthleteTournamentBundle = {
   nchsaa: NchsaaRowForProfile[]
   nhsca: TournamentResultForDisplay[]
   super32: TournamentResultForDisplay[]
+  fargo: TournamentResultForDisplay[]
 }
 
 export type LoadAthleteTournamentBundleOptions = {
@@ -36,10 +38,11 @@ export async function loadAthleteTournamentBundle(
   athlete: Record<string, unknown>,
   options?: LoadAthleteTournamentBundleOptions,
 ): Promise<AthleteTournamentBundle> {
-  const [nchsaa, nhsca, super32] = await Promise.all([
+  const [nchsaa, nhsca, super32, fargo] = await Promise.all([
     getMergedNchsaaForAthlete(supabase, athlete),
     getNHSCAForAthlete(supabase, athlete, { tablesAllTime: options?.nhscaAllTime === true }),
     getSuper32ForAthlete(supabase, athlete),
+    getFargoForAthlete(supabase, athlete),
   ])
-  return { nchsaa, nhsca, super32 }
+  return { nchsaa, nhsca, super32, fargo }
 }

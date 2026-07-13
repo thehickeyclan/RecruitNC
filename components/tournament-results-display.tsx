@@ -35,6 +35,7 @@ export interface NationalTeamResult {
 interface TournamentResultsDisplayProps {
   nhscaResults?: TournamentResult[]
   super32Results?: TournamentResult[]
+  fargoResults?: TournamentResult[]
   nchsaaResults?: NCHSAAResult[]
   nationalTeamResults?: NationalTeamResult[]
   compact?: boolean
@@ -47,6 +48,7 @@ interface TournamentResultsDisplayProps {
 export function TournamentResultsDisplay({
   nhscaResults = [],
   super32Results = [],
+  fargoResults = [],
   nchsaaResults = [],
   nationalTeamResults = [],
   compact = false,
@@ -80,6 +82,7 @@ export function TournamentResultsDisplay({
   const hasAnyResults =
     nhscaResults.length > 0 ||
     super32Results.length > 0 ||
+    fargoResults.length > 0 ||
     nchsaaResults.length > 0 ||
     nationalTeamResults.length > 0
 
@@ -236,6 +239,41 @@ export function TournamentResultsDisplay({
     </div>
   )
 
+  const fargoTable = (
+    <div className={tableWrapClass}>
+      <Table className="min-w-[560px]">
+        <TableHeader>
+          <TableRow className={tableHeadRowClass}>
+            <TableHead className={tableHeadCellClass}>Year</TableHead>
+            <TableHead className={tableHeadCellClass}>Division</TableHead>
+            <TableHead className={tableHeadCellClass}>Placement</TableHead>
+            <TableHead className={tableHeadCellClass}>Record</TableHead>
+            <TableHead className={tableHeadCellClass}>Weight</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {fargoResults.length > 0 ? (
+            fargoResults.map((result, index) => (
+              <TableRow key={index} className={tableRowClass}>
+                <TableCell className={cellYearClass}>{result.year}</TableCell>
+                <TableCell>{result.division || "—"}</TableCell>
+                <TableCell>{getPlacementBadge(result.placement, "default", result.record ? "—" : "DNP")}</TableCell>
+                <TableCell className={cellMonoClass}>{result.record || "—"}</TableCell>
+                <TableCell>{result.weight || "—"}</TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={5} className={emptyRowClass}>
+                No Fargo Nationals results recorded
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </div>
+  )
+
   const nchsaaTable = (
     <div className={tableWrapClass}>
       <Table className="min-w-[480px]">
@@ -339,6 +377,7 @@ export function TournamentResultsDisplay({
         hasData: nationalTeamResults.length > 0,
       },
       { id: "nhsca", label: "NHSCA", hasData: nhscaResults.length > 0 },
+      { id: "fargo", label: "Fargo", hasData: fargoResults.length > 0 },
       { id: "super32", label: "Super 32", hasData: super32Results.length > 0 },
       { id: "nchsaa", label: "NCHSAA", hasData: nchsaaResults.length > 0 },
     ]
@@ -350,6 +389,7 @@ export function TournamentResultsDisplay({
     alwaysShowStructure,
     nationalTeamResults.length,
     nhscaResults.length,
+    fargoResults.length,
     super32Results.length,
     nchsaaResults.length,
   ])
@@ -392,6 +432,7 @@ export function TournamentResultsDisplay({
           </div>
           <TabsContent value="national">{nationalTeamTable}</TabsContent>
           <TabsContent value="nhsca">{nhscaTable}</TabsContent>
+          <TabsContent value="fargo">{fargoTable}</TabsContent>
           <TabsContent value="super32">{super32Table}</TabsContent>
           <TabsContent value="nchsaa">{nchsaaTable}</TabsContent>
         </Tabs>
@@ -434,6 +475,18 @@ export function TournamentResultsDisplay({
             </CardTitle>
           </CardHeader>
           <CardContent className={contentClass}>{nhscaTable}</CardContent>
+        </Card>
+      )}
+
+      {(fargoResults.length > 0 || alwaysShowStructure) && (
+        <Card className={cardClass}>
+          <CardHeader className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] py-4">
+            <CardTitle className="text-white flex items-center gap-2 text-lg">
+              <Trophy className="h-5 w-5 text-[#D3B574]" />
+              Fargo Nationals
+            </CardTitle>
+          </CardHeader>
+          <CardContent className={contentClass}>{fargoTable}</CardContent>
         </Card>
       )}
 

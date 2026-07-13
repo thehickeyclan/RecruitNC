@@ -29,6 +29,7 @@ export type PublicAthleteProfile = Record<string, unknown> & {
     weight_class: string
   }>
   super32_results: unknown[]
+  fargo_results: unknown[]
   national_team_results: unknown[]
   national_team_highlight_videos: ProfileNationalTeamHighlight[]
   profile_quality_wins: ProfileQualityWinsTournamentBlock[]
@@ -90,7 +91,7 @@ export async function loadPublicAthleteProfile(
     }),
   ])
 
-  const { nchsaa: nchsaaMergedRows, nhsca: nhscaMerged, super32: super32Merged } = bundle
+  const { nchsaa: nchsaaMergedRows, nhsca: nhscaMerged, super32: super32Merged, fargo: fargoMerged } = bundle
   const nchsaa_profile = nchsaaMergedRows.map((r) => ({
     year: r.year,
     place: r.place,
@@ -113,6 +114,7 @@ export async function loadPublicAthleteProfile(
     nchsaa_profile,
     nhsca_results: nhscaMerged,
     super32_results: super32Merged,
+    fargo_results: fargoMerged,
     national_team_results,
   }
   const lastCompeted = resolveLastCompetedWeight(candidatesFromPublicProfilePayload(profilePayload))
@@ -126,6 +128,7 @@ export async function loadPublicAthleteProfile(
       nhsca_results: nhscaMerged,
       nchsaa_profile,
       super32_results: super32Merged,
+      fargo_results: fargoMerged,
       national_team_results,
       national_team_highlight_videos,
       profile_quality_wins,

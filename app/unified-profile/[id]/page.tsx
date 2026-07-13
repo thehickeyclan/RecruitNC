@@ -144,6 +144,7 @@ export default function UnifiedProfilePage() {
     : []
   const nhscaResults = Array.isArray(athlete.nhsca_results) ? athlete.nhsca_results : []
   const super32Results = Array.isArray(athlete.super32_results) ? athlete.super32_results : []
+  const fargoResults = Array.isArray(athlete.fargo_results) ? athlete.fargo_results : []
   const nationalTeamResults = Array.isArray(athlete.national_team_results) ? athlete.national_team_results : []
   const athleteName = String(athlete.name ?? "Athlete")
 
@@ -198,6 +199,7 @@ export default function UnifiedProfilePage() {
                 nchsaaResults={nchsaaResults}
                 nhscaResults={nhscaResults as never[]}
                 super32Results={super32Results as never[]}
+                fargoResults={fargoResults as never[]}
                 nationalTeamResults={nationalTeamResults as never[]}
                 alwaysShowStructure={true}
                 mobileTabbedLayout
