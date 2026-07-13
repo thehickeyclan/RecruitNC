@@ -465,6 +465,7 @@ export const TOC_VOLUNTEER_ROLES = [
   { value: "registration", label: "Registration & credentials" },
   { value: "concessions", label: "Concessions & hospitality" },
   { value: "scoring", label: "Scoring table / mat support" },
+  { value: "trophies_awards", label: "Trophies & awards" },
   { value: "setup", label: "Load-in & setup (Friday)" },
   { value: "general", label: "General event support" },
   { value: "other", label: "Other — tell us below" },
