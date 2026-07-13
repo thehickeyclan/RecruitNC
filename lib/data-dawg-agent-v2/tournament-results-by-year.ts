@@ -1,7 +1,9 @@
 import { getSupabaseAdmin } from "@/lib/server-supabase"
 import {
   dedupeNhscaAllAmericanRows,
+  formatFargoNationalsAnswer,
   matchesNchsaaClassificationFilter,
+  type FargoResultRow,
   type NchsaaStateResultRow,
   type NhscaAllAmericanMergeRow,
   type NhscaAllAmericanRow,
@@ -146,6 +148,35 @@ export async function fetchNchsaaStateTournamentByYear(
     })
 }
 
+export async function fetchFargoResultsByYear(year: number): Promise<FargoResultRow[]> {
+  const admin = getSupabaseAdmin()
+  const { data, error } = await admin
+    .from("fargo_results")
+    .select(
+      "athlete_name,year,division,weight_class,wins,losses,record,placement,is_all_american,high_school",
+    )
+    .eq("year", year)
+    .order("division")
+    .order("weight_class")
+    .limit(500)
+
+  if (error) throw new Error(error.message)
+
+  return (data ?? []).map((row) => ({
+    athlete_name: String(row.athlete_name ?? "").trim(),
+    year: Number(row.year) || year,
+    division: row.division != null ? String(row.division).trim() : null,
+    weight_class: String(row.weight_class ?? "").trim() || null,
+    wins: row.wins != null ? Number(row.wins) : null,
+    losses: row.losses != null ? Number(row.losses) : null,
+    record: row.record != null ? String(row.record).trim() : null,
+    placement: row.placement != null ? String(row.placement).trim() : null,
+    is_all_american:
+      row.is_all_american === true || String(row.is_all_american).toLowerCase() === "true",
+    high_school: row.high_school != null ? String(row.high_school).trim() : null,
+  }))
+}
+
 export async function answerTournamentResultsQuery(
   parsed: ParsedTournamentResultsQuery,
 ): Promise<{ answer: string; rowCount: number }> {
@@ -153,6 +184,14 @@ export async function answerTournamentResultsQuery(
     formatNhscaAllAmericansAnswer,
     formatNchsaaStateTournamentAnswer,
   } = await import("@/lib/data-dawg-tournament-results-query")
+
+  if (parsed.kind === "fargo_nationals") {
+    const rows = await fetchFargoResultsByYear(parsed.year)
+    return {
+      answer: formatFargoNationalsAnswer(parsed, rows),
+      rowCount: rows.length,
+    }
+  }
 
   if (parsed.kind === "nhsca_all_americans") {
     const rows = await fetchNhscaAllAmericansByYear(parsed)

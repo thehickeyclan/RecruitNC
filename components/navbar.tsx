@@ -166,6 +166,7 @@ export function Navbar() {
   const programsItems = [
     { href: "/blue", label: "NC United Blue", description: "Training, apparel, and member benefits" },
     { href: "/national-team", label: "National Team", description: "NC United national competition teams" },
+    { href: "/fargo", label: "Fargo Nationals", description: "NC results from USA Wrestling nationals in Fargo, ND" },
   ]
 
   type EventsMegaLink = {

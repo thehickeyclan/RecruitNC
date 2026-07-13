@@ -15,7 +15,7 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
     function: {
       name: "search_athletes",
       description:
-        "Find athletes in RecruitNC by name or high school (includes alumni / any graduation year — not limited to recent classes). Handles natural phrasing ('tell me about…', 'who is…') and minor misspellings server-side. Each returned row includes `tournament_summary` (merged NHSCA + Super32 from placement tables) — prefer that over `nhsca_results` / `super32_results` JSON on the row when they differ.",
+        "Find athletes in RecruitNC by name or high school (includes alumni / any graduation year — not limited to recent classes). Handles natural phrasing ('tell me about…', 'who is…') and minor misspellings server-side. Each returned row includes `tournament_summary` (merged NHSCA + Super32 + Fargo from placement tables) — prefer that over `nhsca_results` / `super32_results` JSON on the row when they differ.",
       parameters: {
         type: "object",
         additionalProperties: false,
@@ -36,7 +36,7 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
     function: {
       name: "wrestling_cross_store_search",
       description:
-        "**MUST be called for every wrestler name query — even when `search_athletes` returned zero rows.** One round trip across all major historical tables (1990s–present): NCHSAA individual state, NHSCA nationals, Super32, and **NC United National Team results** (`nc_united_results`: event, year, record for Ultimate Club Duals + NHSCA Duals National/Select — all team appearances). Not NCHSAA **state** dual team champions (use `nchsaa_dual_team_champions`). Returns separate arrays per source so alumni appear even without an `athletes` directory row. **Always include every non-empty `nc_united_results` row in the answer** (e.g. Mac Johnson's records on each NC United team). **After `search_athletes` returns the row you are answering about, call this again with the same `query` and pass `directory_high_school`, `grad_year`, and `directory_athlete_id` from that row**. For a full merged athlete report when you have a UUID, still call `get_athlete_full_dossier`.",
+        "**MUST be called for every wrestler name query — even when `search_athletes` returned zero rows.** One round trip across all major historical tables (1990s–present): NCHSAA individual state, NHSCA nationals, Super32, **Fargo Nationals** (`fargo_results`), and **NC United National Team results** (`nc_united_results`: event, year, record for Ultimate Club Duals + NHSCA Duals National/Select — all team appearances). Not NCHSAA **state** dual team champions (use `nchsaa_dual_team_champions`). Returns separate arrays per source so alumni appear even without an `athletes` directory row. **Always include every non-empty array** (`fargo`, `super32`, `nc_united_results`, etc.) in the answer. **After `search_athletes` returns the row you are answering about, call this again with the same `query` and pass `directory_high_school`, `grad_year`, and `directory_athlete_id` from that row**. For a full merged athlete report when you have a UUID, still call `get_athlete_full_dossier`.",
       parameters: {
         type: "object",
         additionalProperties: false,
@@ -71,7 +71,7 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
     function: {
       name: "get_athlete_full_dossier",
       description:
-        "FULL athlete report (legacy Data Dawg format): NCHSAA, duals, Super32, NHSCA, NC United, Dave Schultz, career record — same data path as unified profile. Call AFTER search_athletes (and use wrestling_cross_store_search for extra historical rows) whenever answering about a specific athlete by name. Required for 'tell me about [name]' when you have their UUID; do not substitute narrative bio text from other fields.",
+        "FULL athlete report (legacy Data Dawg format): NCHSAA, duals, Super32, NHSCA, **Fargo Nationals**, NC United, Dave Schultz, career record — same data path as unified profile. Call AFTER search_athletes (and use wrestling_cross_store_search for extra historical rows) whenever answering about a specific athlete by name. Required for 'tell me about [name]' when you have their UUID; do not substitute narrative bio text from other fields.",
       parameters: {
         type: "object",
         additionalProperties: false,
@@ -247,6 +247,22 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
             enum: ["men", "women"],
             description: "Default men unless user asks for girls/women.",
           },
+        },
+        required: ["year"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "fargo_results_by_year",
+      description:
+        "All NC wrestlers at Fargo Nationals (US Marine Corps Nationals, freestyle) for one year from `fargo_results`. Use for 'show Fargo results 2026', 'who wrestled at Fargo in 2024', 'NC Fargo nationals 2023', etc. Returns athlete name, school, division (16U/Junior), weight, and record. Not for a single wrestler (use wrestling_cross_store_search or get_athlete_full_dossier).",
+      parameters: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          year: { type: "integer", description: "Fargo tournament year (e.g. 2026)." },
         },
         required: ["year"],
       },
