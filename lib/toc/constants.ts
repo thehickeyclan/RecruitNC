@@ -420,6 +420,78 @@ export const TOC_CONFIRMED_COLLEGES_DEFAULT = [
 /** Program names from code defaults — not a Supabase-only list. */
 export const TOC_CONFIRMED_COLLEGES = TOC_CONFIRMED_COLLEGES_DEFAULT.map((c) => c.name)
 
+/** Sticky section nav — grouped for mobile sheet; flat list for desktop scroll. */
+export const TOC_SECTION_NAV_GROUPS = [
+  {
+    label: "The event",
+    links: [
+      { href: "#weights", label: "Weight classes" },
+      { href: "#champion-jacket", label: "Champion jacket" },
+      { href: "#venue", label: "Venue" },
+      { href: "#schedule", label: "Schedule" },
+      { href: "#families", label: "Tickets & families" },
+      { href: "#streaming", label: "Watch live" },
+    ],
+  },
+  {
+    label: "Get involved",
+    links: [
+      { href: "#volunteer", label: "Volunteer" },
+      { href: "#email-signup", label: "Event updates" },
+      { href: "#athlete-interest", label: "Athlete interest" },
+      { href: "#sponsors", label: "Sponsorship" },
+      { href: "#media", label: "Media" },
+    ],
+  },
+  {
+    label: "More",
+    links: [
+      { href: "#faq", label: "FAQ" },
+      { href: "#about-nc-united", label: "About NC United" },
+    ],
+  },
+] as const
+
+/** Quick jumps shown as pills on mobile sticky bar. */
+export const TOC_SECTION_NAV_QUICK = [
+  { href: "#schedule", label: "Schedule" },
+  { href: "#families", label: "Tickets" },
+  { href: "#volunteer", label: "Volunteer" },
+  { href: "#athlete-interest", label: "Athletes" },
+] as const
+
+export const TOC_VOLUNTEER_ROLES = [
+  { value: "lounge", label: "Coaches & Officials Lounge" },
+  { value: "registration", label: "Registration & credentials" },
+  { value: "concessions", label: "Concessions & hospitality" },
+  { value: "scoring", label: "Scoring table / mat support" },
+  { value: "setup", label: "Load-in & setup (Friday)" },
+  { value: "general", label: "General event support" },
+  { value: "other", label: "Other — tell us below" },
+] as const
+
+export const TOC_VOLUNTEER_AVAILABILITY = [
+  { value: "fri_pm", label: "Friday evening" },
+  { value: "sat_am", label: "Saturday morning" },
+  { value: "sat_pm", label: "Saturday afternoon / finals" },
+  { value: "either", label: "Flexible either day" },
+] as const
+
+export const TOC_VOLUNTEER = {
+  eyebrow: "Volunteer",
+  headline: "Help us run championship weekend",
+  lead:
+    "The Tournament of Champions takes a crew — lounge hospitality, registration, concessions, and mat-side support. If you love NC wrestling and want to be part of the biggest all-state stage of the year, sign up below.",
+  bullets: [
+    "Friday load-in through Saturday finals — shifts for every schedule",
+    "Coaches & Officials Lounge check-in and hospitality",
+    "Family-friendly venue — no experience required for many roles",
+    "NC United staff will match you to a role and send shift details",
+  ],
+  formHeadline: "Volunteer interest form",
+  formLead: "Tell us how you'd like to help. We'll follow up with roles and shift options — signing up does not guarantee a specific assignment.",
+} as const
+
 export const TOC_DEFAULT_CONFIG = {
   phase: "phase_1" as const,
   event_dates: TOC_EVENT_DATES_DISPLAY,

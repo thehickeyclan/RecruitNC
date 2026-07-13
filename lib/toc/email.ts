@@ -151,6 +151,39 @@ export async function sendTocAdminMediaAlert(payload: {
   )
 }
 
+export async function sendTocVolunteerAutoReply(to: string, contactName: string): Promise<void> {
+  const firstName = contactName.trim().split(/\s+/)[0] || contactName
+  await sendHtml(
+    to,
+    "Volunteer interest received — Tournament of Champions",
+    wrap(`<p>Hi ${firstName},</p>
+<p>Thanks for raising your hand to help at the <strong>NC United Tournament of Champions</strong>. We've received your volunteer interest and will follow up with shift options as we build the crew.</p>
+<p style="margin:20px 0;"><a href="https://app.ncwrestlingunited.com/tournament-of-champions#volunteer" style="display:inline-block;background:#B31B1B;color:white;padding:12px 24px;text-decoration:none;border-radius:6px;font-weight:bold;">View event page</a></p>`),
+  )
+}
+
+export async function sendTocAdminVolunteerAlert(payload: {
+  contactName: string
+  contactEmail: string
+  roleInterest: string | null
+  availability: string[]
+}): Promise<void> {
+  const adminTo = process.env.TOC_ADMIN_EMAIL?.trim() || process.env.ADMIN_NOTIFICATION_EMAIL?.trim()
+  if (!adminTo) return
+  await sendHtml(
+    adminTo,
+    `New TOC volunteer: ${payload.contactName}`,
+    wrap(`<p><strong>New volunteer interest</strong></p>
+<ul>
+<li>Name: ${payload.contactName}</li>
+<li>Email: ${payload.contactEmail}</li>
+<li>Role: ${payload.roleInterest ?? "—"}</li>
+<li>Availability: ${payload.availability.join(", ") || "—"}</li>
+</ul>
+<p>Review in admin: Tournament of Champions → Volunteers</p>`),
+  )
+}
+
 export async function sendTocAthleteInviteEmail(payload: {
   to: string[]
   athleteName: string

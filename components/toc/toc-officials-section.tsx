@@ -56,12 +56,14 @@ export function TocOfficialsSection() {
               Sutton leads an elite crew built for high-stakes brackets — fair calls and professional standards from
               weigh-in through the last championship bout.
             </p>
-            <a
-              href="#venue"
-              className="inline-block mt-5 text-sm font-semibold text-[#CC0000] hover:underline"
-            >
-              Coaches & Officials Lounge →
-            </a>
+            <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:gap-4">
+              <a href="#venue" className="text-sm font-semibold text-[#CC0000] hover:underline">
+                Coaches & Officials Lounge →
+              </a>
+              <a href="#volunteer" className="text-sm font-semibold text-[#CC0000] hover:underline">
+                Volunteer at the event →
+              </a>
+            </div>
             </div>
           </div>
         </div>
