@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { HardLink } from "@/components/hard-link"
-import { Trophy, Users, Mail, Handshake, UserCheck, LayoutGrid, Scale } from "lucide-react"
+import { Trophy, Users, Mail, Handshake, UserCheck, LayoutGrid, Scale, HandHeart } from "lucide-react"
 
 const LINKS = [
   {
@@ -34,6 +34,12 @@ const LINKS = [
     icon: Handshake,
   },
   {
+    href: "/admin/toc/volunteers",
+    title: "Volunteers",
+    description: "Volunteer interest signups",
+    icon: HandHeart,
+  },
+  {
     href: "/admin/toc/email",
     title: "Email list",
     description: "Subscribers + CSV export",
@@ -60,7 +66,7 @@ export default function TocAdminHubPage() {
     <div className="mx-auto max-w-4xl space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Tournament of Champions</h1>
-        <p className="text-muted-foreground mt-1">Invitations, field, athlete compare, prospect interest, sponsors, email list</p>
+        <p className="text-muted-foreground mt-1">Invitations, field, athlete compare, prospect interest, sponsors, volunteers, email list</p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         {LINKS.map(({ href, title, description, icon: Icon, external }) => (

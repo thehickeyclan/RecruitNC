@@ -12,12 +12,15 @@ import { TocSpectatorsSection } from "@/components/toc/toc-spectators-section"
 import { TocWeightClassesList } from "@/components/toc/toc-weight-classes"
 import { TocScheduleTable } from "@/components/toc/toc-schedule-table"
 import { TocStreamingSection } from "@/components/toc/toc-streaming-section"
-import { TocRecruitingSection } from "@/components/toc/toc-recruiting-section"
+// Temporarily removed; likely to return later.
+// import { TocRecruitingSection } from "@/components/toc/toc-recruiting-section"
 import { TocMediaSection } from "@/components/toc/toc-media-section"
 import { TocNominationForm } from "@/components/toc/toc-nomination-form"
 import { TocSponsorSection } from "@/components/toc/toc-sponsor-section"
 import { TocFaq } from "@/components/toc/toc-faq"
 import { TocAboutNcUnitedSection } from "@/components/toc/toc-about-nc-united-section"
+import { TocVolunteerSection } from "@/components/toc/toc-volunteer-section"
+import { TocSectionNavSentinel } from "@/components/toc/toc-section-nav"
 import { TocEmailSignup } from "@/components/toc/toc-email-signup"
 import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass } from "@/components/toc/toc-theme"
 import { TOC_CONTACT_EMAIL } from "@/lib/toc/constants"
@@ -34,6 +37,7 @@ export function TocLandingPage({ config, confirmedColleges }: Props) {
     <div className="min-h-screen bg-white overflow-x-hidden">
       {/* Hook */}
       <TocHero config={config} confirmedColleges={confirmedColleges} />
+      <TocSectionNavSentinel />
       <TocQuickFacts />
       <section className="bg-[#060f1f] pb-8 sm:pb-10">
         <div className="container mx-auto w-full px-4 sm:px-6 max-w-3xl">
@@ -54,8 +58,10 @@ export function TocLandingPage({ config, confirmedColleges }: Props) {
       <TocScheduleTable />
       <TocSpectatorsSection />
       <TocOfficialsSection />
+      <TocVolunteerSection />
       <TocStreamingSection config={config} />
-      <TocRecruitingSection />
+      {/* Recruiting experience — temporarily removed; likely to return later. */}
+      {/* <TocRecruitingSection /> */}
 
       {/* Press + signup */}
       <TocMediaSection />

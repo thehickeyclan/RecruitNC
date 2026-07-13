@@ -5,7 +5,7 @@ import { TocCollegeAttendees } from "@/components/toc/toc-college-attendees"
 import { TocAiRenderingCaption } from "@/components/toc/toc-ai-rendering-caption"
 import { TocCountdown } from "@/components/toc/toc-countdown"
 import { TocPatrioticBar, tocDisplayClass, tocMobileCtaClass } from "@/components/toc/toc-theme"
-import { TOC_EVENT_DATE, TOC_HERO_DATES } from "@/lib/toc/constants"
+import { TOC_EVENT_DATE, TOC_HERO_DATES, TOC_SECTION_NAV_QUICK } from "@/lib/toc/constants"
 import { TOC_HERO } from "@/lib/toc/marketing-copy"
 import type { TocConfirmedCollege } from "@/lib/toc/confirmed-colleges"
 import type { TocEventConfig } from "@/lib/toc/event-config"
@@ -14,15 +14,6 @@ type Props = {
   config: TocEventConfig
   confirmedColleges?: TocConfirmedCollege[]
 }
-
-const SECONDARY_LINKS = [
-  { href: "#colleges", label: "Colleges" },
-  { href: "#weights", label: "Weights" },
-  { href: "#venue", label: "Venue" },
-  { href: "#schedule", label: "Schedule" },
-  { href: "#families", label: "Tickets & families" },
-  { href: "#sponsors", label: "Sponsorship" },
-] as const
 
 export function TocHero({ config, confirmedColleges = [] }: Props) {
   const ctaHref = config.hero_primary_cta_href.startsWith("#")
@@ -78,15 +69,18 @@ export function TocHero({ config, confirmedColleges = [] }: Props) {
                 className="mt-6 flex flex-wrap gap-x-4 gap-y-2 text-sm text-white/60"
                 aria-label="Jump to event sections"
               >
-                {SECONDARY_LINKS.map(({ href, label }) => (
+                {TOC_SECTION_NAV_QUICK.map(({ href, label }) => (
                   <a key={href} href={href} className="hover:text-white hover:underline">
                     {label}
                   </a>
                 ))}
-                <a href="#athlete-interest" className="hover:text-white hover:underline">
-                  Athlete interest
+                <a href="#email-signup" className="hover:text-white hover:underline">
+                  Event updates
                 </a>
               </nav>
+              <p className="mt-3 text-xs text-white/45 max-w-md">
+                More sections — schedule, venue, sponsorship, media, and FAQ — in the sticky menu as you scroll.
+              </p>
             </div>
 
             <div className="w-full max-w-xl lg:max-w-none lg:justify-self-end">

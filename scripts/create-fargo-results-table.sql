@@ -1,35 +1,34 @@
--- Fargo Nationals (US Marine Corps National Championships) — NC freestyle results.
--- Run in Supabase SQL Editor before importing scripts/data/fargo_results_seed.csv
+-- Fargo Nationals results — run once in Supabase SQL Editor (safe to re-run).
 
-CREATE TABLE IF NOT EXISTS public.fargo_results (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  year integer NOT NULL,
-  athlete_name text NOT NULL,
+create table if not exists public.fargo_results (
+  id uuid primary key default gen_random_uuid(),
+  year integer not null,
+  athlete_name text not null,
   first_name text,
   last_name text,
-  division text NOT NULL,
-  weight_class text NOT NULL,
-  wins integer NOT NULL DEFAULT 0,
-  losses integer NOT NULL DEFAULT 0,
+  division text not null,
+  weight_class text not null,
+  wins integer not null default 0,
+  losses integer not null default 0,
   record text,
   placement integer,
-  is_all_american boolean NOT NULL DEFAULT false,
+  is_all_american boolean not null default false,
   high_school text,
   notes text,
-  event_name text NOT NULL DEFAULT 'US Marine Corps National Championships (Fargo)',
-  created_at timestamptz NOT NULL DEFAULT now()
+  event_name text not null default 'US Marine Corps National Championships (Fargo)',
+  created_at timestamptz not null default now()
 );
 
-CREATE INDEX IF NOT EXISTS idx_fargo_results_athlete_name ON public.fargo_results (athlete_name);
-CREATE INDEX IF NOT EXISTS idx_fargo_results_year ON public.fargo_results (year);
-CREATE INDEX IF NOT EXISTS idx_fargo_results_high_school ON public.fargo_results (high_school);
-CREATE INDEX IF NOT EXISTS idx_fargo_results_year_division ON public.fargo_results (year, division);
+create index if not exists idx_fargo_results_athlete_name on public.fargo_results (athlete_name);
+create index if not exists idx_fargo_results_year on public.fargo_results (year);
+create index if not exists idx_fargo_results_high_school on public.fargo_results (high_school);
+create index if not exists idx_fargo_results_year_division on public.fargo_results (year, division);
 
-ALTER TABLE public.fargo_results ENABLE ROW LEVEL SECURITY;
+alter table public.fargo_results enable row level security;
 
-DROP POLICY IF EXISTS "fargo_results_public_read" ON public.fargo_results;
-CREATE POLICY "fargo_results_public_read"
-  ON public.fargo_results
-  FOR SELECT
-  TO anon, authenticated
-  USING (true);
+drop policy if exists "fargo_results_public_read" on public.fargo_results;
+create policy "fargo_results_public_read"
+  on public.fargo_results
+  for select
+  to anon, authenticated
+  using (true);
