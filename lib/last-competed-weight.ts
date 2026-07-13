@@ -100,6 +100,7 @@ export function candidatesFromPublicProfilePayload(athlete: {
   nchsaa_profile?: Array<{ year?: number; weight_class?: string | null }>
   nhsca_results?: Array<{ year?: number; weight?: string | null }>
   super32_results?: Array<{ year?: number; weight?: string | null }>
+  fargo_results?: Array<{ year?: number; weight?: string | null }>
   national_team_results?: Array<{
     year?: number
     event?: string
@@ -114,6 +115,14 @@ export function candidatesFromPublicProfilePayload(athlete: {
       weight: r.weight,
       event: String(r.event ?? "National Team"),
       priority: 40,
+    })
+  }
+  for (const r of athlete.fargo_results ?? []) {
+    out.push({
+      year: Number(r.year),
+      weight: r.weight,
+      event: "Fargo Nationals",
+      priority: 35,
     })
   }
   for (const r of athlete.nhsca_results ?? []) {

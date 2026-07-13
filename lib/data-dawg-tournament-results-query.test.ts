@@ -109,6 +109,24 @@ describe("parseTournamentResultsQuery", () => {
   it("returns null for unrelated questions", () => {
     expect(parseTournamentResultsQuery("Who is Liam Hickey?")).toBeNull()
   })
+
+  it("parses Fargo nationals results by year", () => {
+    expect(parseTournamentResultsQuery("Show Fargo results 2026")).toEqual({
+      kind: "fargo_nationals",
+      year: 2026,
+      gender: "men",
+      classification: null,
+    })
+  })
+
+  it("parses who wrestled at fargo in a year", () => {
+    expect(parseTournamentResultsQuery("Who wrestled at Fargo in 2024?")).toEqual({
+      kind: "fargo_nationals",
+      year: 2024,
+      gender: "men",
+      classification: null,
+    })
+  })
 })
 
 describe("formatNhscaAllAmericansAnswer", () => {

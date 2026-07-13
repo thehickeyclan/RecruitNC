@@ -24,11 +24,13 @@ import {
   scoreSchoolMatch,
 } from "./fuzzy-utils"
 import {
+  formatFargoNationalsAnswer,
   formatNhscaAllAmericansAnswer,
   formatNchsaaStateTournamentAnswer,
   type ParsedTournamentResultsQuery,
 } from "@/lib/data-dawg-tournament-results-query"
 import {
+  fetchFargoResultsByYear,
   fetchNhscaAllAmericansByYear,
   fetchNchsaaStateTournamentByYear,
 } from "./tournament-results-by-year"
@@ -488,7 +490,7 @@ export async function toolSearchAthletes(args: { query: string; limit?: number }
     rows: enrichedRows,
     searched_for: q,
     tournament_summary_note:
-      "Each row includes `tournament_summary` (merged NHSCA + Super32 + Fargo from placement tables). Prefer those lines over `nhsca_results` / `super32_results` JSON when they differ — profile JSON may say Participated while tables have full records.",
+      "Each row includes `tournament_summary` (merged NHSCA + Super32 + Fargo from placement tables). Prefer those lines over `nhsca_results` / `super32_results` JSON when they differ — profile JSON may say Participated while tables have full records. Include Fargo lines when present.",
     ...(disambiguation.length
       ? {
           disambiguation,
@@ -1645,6 +1647,22 @@ export async function toolNchsaaStateTournamentByYear(args: {
   }
 }
 
+export async function toolFargoResultsByYear(args: { year: number | string }) {
+  const parsed: ParsedTournamentResultsQuery = {
+    kind: "fargo_nationals",
+    year: Number(args.year),
+    gender: "men",
+    classification: null,
+  }
+  const rows = await fetchFargoResultsByYear(parsed.year)
+  return {
+    year: parsed.year,
+    total: rows.length,
+    answer: formatFargoNationalsAnswer(parsed, rows),
+    rows: rows.slice(0, 80),
+  }
+}
+
 export type DataToolName =
   | "search_athletes"
   | "wrestling_cross_store_search"
@@ -1656,6 +1674,7 @@ export type DataToolName =
   | "nchsaa_multi_time_state_champions"
   | "nhsca_all_americans_by_year"
   | "nchsaa_state_tournament_by_year"
+  | "fargo_results_by_year"
   | "college_commits_search"
   | "get_athlete_full_dossier"
   | "public_rankings_search"
@@ -1740,6 +1759,8 @@ export async function executeDataTool(name: string, rawArgs: unknown): Promise<s
             },
           ),
         )
+      case "fargo_results_by_year":
+        return JSON.stringify(await toolFargoResultsByYear(args as { year: number | string }))
       case "college_commits_search":
         return JSON.stringify(
           await toolCollegeCommitsSearch(

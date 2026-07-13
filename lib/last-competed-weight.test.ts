@@ -69,4 +69,26 @@ describe("candidatesFromPublicProfilePayload", () => {
     expect(last?.weight).toBe("116")
     expect(last?.event).toBe("NHSCA Duals")
   })
+
+  it("prefers Fargo over NHSCA in the same year (July after spring nationals)", () => {
+    const candidates = candidatesFromPublicProfilePayload({
+      nhsca_results: [{ year: 2026, weight: "150" }],
+      fargo_results: [{ year: 2026, weight: "157" }],
+    })
+    const last = resolveLastCompetedWeight(candidates)
+    expect(last).toEqual({ weight: "157", year: 2026, event: "Fargo Nationals" })
+  })
+
+  it("uses Fargo display weight when it differs from profile-listed weight", () => {
+    const candidates = candidatesFromPublicProfilePayload({
+      nhsca_results: [{ year: 2026, weight: "138" }],
+      fargo_results: [{ year: 2026, weight: "144" }],
+    })
+    const last = resolveLastCompetedWeight(candidates)
+    const display = buildProfileWeightDisplay("150", last)
+    expect(display.displayWeight).toBe("144")
+    expect(display.listedWeight).toBe("150")
+    expect(display.lastCompeted?.event).toBe("Fargo Nationals")
+    expect(display.differsFromListed).toBe(true)
+  })
 })

@@ -2,7 +2,7 @@
  * Parse "show me the results of…" / "who was an NHSCA All-American in…" style questions.
  */
 
-export type TournamentResultsKind = "nhsca_all_americans" | "nchsaa_state"
+export type TournamentResultsKind = "nhsca_all_americans" | "nchsaa_state" | "fargo_nationals"
 
 export type ParsedTournamentResultsQuery = {
   kind: TournamentResultsKind
@@ -115,10 +115,14 @@ function detectGender(lower: string): "men" | "women" {
 
 function detectKind(lower: string, classification: string | null): TournamentResultsKind | null {
   const hasAllAmerican = /\ball[\s-]?americans?\b/.test(lower)
+  const hasFargo =
+    /\bfargo\b/.test(lower) ||
+    /\bus\s+marine\s+corps\s+nationals?\b/.test(lower) ||
+    /\bnationals?\s+in\s+fargo\b/.test(lower)
   const hasNhsca =
     /\bnhsca\b/.test(lower) ||
     /\bnhsca\s+nationals?\b/.test(lower) ||
-    (hasAllAmerican && /\bnationals?\b/.test(lower))
+    (hasAllAmerican && /\bnationals?\b/.test(lower) && !hasFargo)
   const hasState =
     /\bnchsaa\b/.test(lower) ||
     /\bstate tournament\b/.test(lower) ||
@@ -130,10 +134,11 @@ function detectKind(lower: string, classification: string | null): TournamentRes
     (classification != null && /\bstate\b/.test(lower)) ||
     (/\bstate\b/.test(lower) && /\btournament\b/.test(lower))
 
+  if (hasFargo) return "fargo_nationals"
   if (hasNhsca || (hasAllAmerican && !hasState)) return "nhsca_all_americans"
   if (hasState && !hasAllAmerican) return "nchsaa_state"
   if (hasState && hasAllAmerican) return "nhsca_all_americans"
-  if (classification && !hasNhsca && !hasAllAmerican) return "nchsaa_state"
+  if (classification && !hasNhsca && !hasAllAmerican && !hasFargo) return "nchsaa_state"
   return null
 }
 
@@ -155,7 +160,11 @@ function isTournamentResultsListingQuery(lower: string): boolean {
     /\b\d+[aA]\s+placers?\s+(?:from|in|at|for)\s+\d{4}\b/.test(lower) ||
     (/\bnhsca\s+(?:nationals?|results?|placements?)\b/.test(lower) && YEAR_RE.test(lower)) ||
     (/\bnhsca\b/.test(lower) && /\bresults\b/.test(lower) && YEAR_RE.test(lower)) ||
-    /\d{4}\s+nhsca\b/.test(lower)
+    /\d{4}\s+nhsca\b/.test(lower) ||
+    /\bfargo\b/.test(lower) ||
+    /\bfargo\s+(?:nationals?|results?)\b/.test(lower) ||
+    /\b(?:show|list|get)\s+(?:me\s+)?(?:nc\s+)?fargo\b/.test(lower) ||
+    /\bwho\s+wrestled\s+(?:at\s+)?fargo\b/.test(lower)
   )
 }
 
@@ -489,6 +498,87 @@ export function formatNchsaaStateTournamentAnswer(
   if (placers.length > displayCap) {
     lines.push("")
     lines.push(`*Showing first ${displayCap} of ${placers.length} placers.*`)
+  }
+
+  return lines.join("\n").trim()
+}
+
+export type FargoResultRow = {
+  athlete_name: string
+  year: number
+  division: string | null
+  weight_class: string | null
+  wins: number | null
+  losses: number | null
+  record: string | null
+  placement: string | null
+  is_all_american: boolean
+  high_school: string | null
+}
+
+function fargoRecordLabel(row: FargoResultRow): string {
+  const rec = (row.record ?? "").trim()
+  if (rec) return rec
+  const w = row.wins
+  const l = row.losses
+  if (w != null && l != null && Number.isFinite(w) && Number.isFinite(l)) return `${w}-${l}`
+  return "—"
+}
+
+export function formatFargoNationalsAnswer(
+  parsed: ParsedTournamentResultsQuery,
+  rows: FargoResultRow[],
+): string {
+  if (rows.length === 0) {
+    return `I don't see any NC **Fargo Nationals** (US Marine Corps Nationals) results for **${parsed.year}** in our database. Browse [/fargo](/fargo) for recent seasons we have loaded.`
+  }
+
+  const byDivision: Record<string, FargoResultRow[]> = {}
+  for (const row of rows) {
+    const div = (row.division ?? "Unknown").replace(/\s+Freestyle$/i, "").trim()
+    if (!byDivision[div]) byDivision[div] = []
+    byDivision[div].push(row)
+  }
+
+  const lines: string[] = [
+    `Here are **${rows.length}** NC wrestlers from **Fargo Nationals ${parsed.year}** (freestyle):`,
+    "",
+  ]
+
+  const divisions = Object.keys(byDivision).sort((a, b) => a.localeCompare(b))
+  const displayCap = 150
+  let shown = 0
+
+  for (const div of divisions) {
+    const group = byDivision[div].sort((a, b) => {
+      if (a.is_all_american !== b.is_all_american) return a.is_all_american ? -1 : 1
+      const wa = parseInt(String(a.weight_class ?? "999"), 10)
+      const wb = parseInt(String(b.weight_class ?? "999"), 10)
+      if (wa !== wb) return wa - wb
+      return a.athlete_name.localeCompare(b.athlete_name)
+    })
+    lines.push(`**${div}**`)
+    for (const r of group) {
+      if (shown >= displayCap) break
+      const wt = formatNhscaWeightLabel(r.weight_class)
+      const school = r.high_school ? ` (${r.high_school})` : ""
+      const rec = fargoRecordLabel(r)
+      const place =
+        r.placement?.trim() ||
+        (r.is_all_american ? "All-American" : "")
+      const placePart = place ? ` — ${place}` : ""
+      lines.push(`- ${r.athlete_name}${wt}${school}: **${rec}**${placePart}`)
+      shown++
+    }
+    lines.push("")
+    if (shown >= displayCap) break
+  }
+
+  const fargoHref = parsed.year === 2026 ? "/fargo" : `/fargo/${parsed.year}`
+  lines.push(`Browse the archive: [${fargoHref}](${fargoHref})`)
+  if (rows.length > displayCap) {
+    lines.push("")
+    lines.push(`*Showing first ${displayCap} of ${rows.length} wrestlers.*`)
   }
 
   return lines.join("\n").trim()

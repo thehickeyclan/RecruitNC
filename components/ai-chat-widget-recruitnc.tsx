@@ -412,20 +412,20 @@ export function AIChatWidget() {
             </CardHeader>
             <CardContent className="p-6 space-y-4">
               <p className="text-sm text-gray-400 text-center">
-                I can help you find information about:
+                Search any athlete in NC history, any high school, and any state or national tournament — results, records, and rankings.
               </p>
               <ul className="space-y-2 text-sm text-gray-300">
                 <li className="flex items-start gap-2">
                   <span className="text-[#D3B574]">•</span>
-                  <span>College commitments and recruiting status</span>
+                  <span>Athletes &amp; schools — NCHSAA, NHSCA, Super32, Fargo, NC United</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-[#D3B574]">•</span>
-                  <span>High school career records and match history</span>
+                  <span>Tournament results by year (e.g. Fargo 2026, 4A state 2025)</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-[#D3B574]">•</span>
-                  <span>Prospect rankings and achievements</span>
+                  <span>Prospect rankings, career records, and college commitments</span>
                 </li>
               </ul>
               <div className="flex gap-3 pt-2">
@@ -607,7 +607,7 @@ export function AIChatWidget() {
                       </div>
                       <div className="bg-[#0F1E32] border border-[#1e3a5f] rounded-2xl rounded-tl-sm px-4 py-3">
                         <p className="text-sm text-gray-300">
-                          Hey, I&apos;m Data Dawg. Ask me anything about North Carolina wrestling recruiting — college commitments, career records, or prospect rankings. See something wrong? Say{" "}
+                          Hey, I&apos;m Data Dawg. Search any athlete in NC history, any high school, and any state or national tournament for results, records, and rankings — NCHSAA, NHSCA, Super32, Fargo, and more. See something wrong? Say{" "}
                           <span className="text-[#D3B574]">Hey Data Dawg, …</span> with your correction.
                         </p>
                       </div>
