@@ -19,6 +19,12 @@ describe("athlete-name-match", () => {
     expect(variants.some((v) => v.toLowerCase().includes("maxwell"))).toBe(true)
   })
 
+  it("treats Elijah Horton and Eli Horton as same person and expands search", () => {
+    expect(namesLikelySamePerson("Elijah Horton", "Eli Horton")).toBe(true)
+    const variants = getAthleteNameSearchVariants("Elijah Horton")
+    expect(variants.some((v) => /^eli horton$/i.test(v))).toBe(true)
+  })
+
   it("matches Last, First token order", () => {
     expect(namesReferToSamePerson("Ryan Thompson", "Thompson, Ryan")).toBe(true)
   })

@@ -60,6 +60,10 @@ export const ATHLETE_FIRST_NAME_EQUIVALENT_GROUPS: string[][] = [
   ["Lawrence", "Larry"],
   ["Raymond", "Ray"],
   ["Francis", "Frank"],
+  // "Eli" alone is a 3-letter prefix of "Elijah" — without this pair, NCHSAA rows
+  // under "Eli …" are never queried when the profile is "Elijah …" (and vice versa)
+  // once older years already matched under the formal name.
+  ["Elijah", "Eli"],
 ]
 
 export type AthleteMatchContext = {
