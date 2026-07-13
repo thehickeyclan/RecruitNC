@@ -12,7 +12,7 @@ import { type TournamentResultForDisplay } from "@/lib/public-profile-data"
 import { countDistinctStateTitleYears } from "@/lib/nchsaa-state-display"
 import { namesMatch } from "@/lib/nhsca-live/names-match"
 import { loadNcUnitedResultsForNameSearch } from "@/lib/national-team-live-profile-results"
-import { formatNhscaLineForDataDawg, formatSuper32LineForDataDawg } from "@/lib/data-dawg-tournament-summary"
+import { formatNhscaLineForDataDawg, formatSuper32LineForDataDawg, formatFargoLineForDataDawg } from "@/lib/data-dawg-tournament-summary"
 
 function athleteDisplayName(row: Record<string, unknown>): string {
   const n = String(row.name ?? "").trim()
@@ -123,7 +123,7 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
   const yearMin = hasValidGrad ? gradYear - 4 : 1990
   const yearMax = hasValidGrad ? gradYear + 1 : 2035
 
-  const [{ nchsaa: nchsaaMerged, nhsca: nhscaDisplay, super32 }, ncUnited] = await Promise.all([
+  const [{ nchsaa: nchsaaMerged, nhsca: nhscaDisplay, super32, fargo }, ncUnited] = await Promise.all([
     loadAthleteTournamentBundle(supabase, athlete, { nhscaAllTime: true }),
     loadNcUnitedResultsForNameSearch(supabase, nameForQueries, {
       highSchool: highSchool || undefined,
@@ -222,6 +222,17 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
   } else {
     for (const r of super32Rows) {
       lines.push(formatSuper32Row(r as Record<string, unknown>))
+    }
+  }
+
+  const fargoRows = [...fargo].sort((a: any, b: any) => (b.year || 0) - (a.year || 0))
+  lines.push("")
+  lines.push("🏆 Fargo Nationals:")
+  if (fargoRows.length === 0) {
+    lines.push("None")
+  } else {
+    for (const r of fargoRows) {
+      lines.push(formatFargoLineForDataDawg(r as TournamentResultForDisplay))
     }
   }
 

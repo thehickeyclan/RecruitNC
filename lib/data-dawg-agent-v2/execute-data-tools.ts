@@ -488,7 +488,7 @@ export async function toolSearchAthletes(args: { query: string; limit?: number }
     rows: enrichedRows,
     searched_for: q,
     tournament_summary_note:
-      "Each row includes `tournament_summary` (merged NHSCA + Super32 from placement tables). Prefer those lines over `nhsca_results` / `super32_results` JSON when they differ — profile JSON may say Participated while tables have full records.",
+      "Each row includes `tournament_summary` (merged NHSCA + Super32 + Fargo from placement tables). Prefer those lines over `nhsca_results` / `super32_results` JSON when they differ — profile JSON may say Participated while tables have full records.",
     ...(disambiguation.length
       ? {
           disambiguation,
@@ -854,6 +854,7 @@ export async function toolWrestlingCrossStoreSearch(args: {
       nhsca_placements: [] as unknown[],
       nhsca_legacy_table: [] as unknown[],
       super32: [] as unknown[],
+      fargo: [] as unknown[],
       nc_united_roster: [] as unknown[],
     }
   }
@@ -866,6 +867,8 @@ export async function toolWrestlingCrossStoreSearch(args: {
   const nhscaSelLeg = "athlete_name,placement,year,division,weight,high_school,record"
   // super32_results has weight_class + placement only (no `weight` or `place` columns)
   const s32Sel = "athlete_name,placement,year,weight_class,high_school,school,record,wins,losses"
+  const fargoSel =
+    "athlete_name,year,division,weight_class,wins,losses,record,placement,is_all_american,high_school"
 
   const namePairs = dualTokenPairsForNchsaa(q).slice(0, 4)
   const pairPromises = namePairs.map(({ first, last }) => {
@@ -914,6 +917,17 @@ export async function toolWrestlingCrossStoreSearch(args: {
       .order("year", { ascending: false })
       .limit(perTable)
   })
+  const fargoPairPromises = namePairs.map(({ first, last }) => {
+    const pf = `%${escapeForIlike(first)}%`
+    const pl = `%${escapeForIlike(last)}%`
+    return admin
+      .from("fargo_results")
+      .select(fargoSel)
+      .ilike("athlete_name", pf)
+      .ilike("athlete_name", pl)
+      .order("year", { ascending: false })
+      .limit(perTable)
+  })
 
   const [
     nchsaaByWrestler,
@@ -943,6 +957,8 @@ export async function toolWrestlingCrossStoreSearch(args: {
     s32ByAthlete,
     s32ByHighSchool,
     s32BySchoolCol,
+    fargoByAthlete,
+    fargoByHighSchool,
     ...nhscaPlcPairRes
   ] = await Promise.all([
     admin.from("nhsca_placements").select(nhscaSelPlc).ilike("athlete_name", pattern).order("year", { ascending: false }).limit(perTable),
@@ -952,12 +968,15 @@ export async function toolWrestlingCrossStoreSearch(args: {
     admin.from("super32_results").select(s32Sel).ilike("athlete_name", pattern).order("year", { ascending: false }).limit(perTable),
     admin.from("super32_results").select(s32Sel).ilike("high_school", pattern).order("year", { ascending: false }).limit(perTable),
     admin.from("super32_results").select(s32Sel).ilike("school", pattern).order("year", { ascending: false }).limit(perTable),
+    admin.from("fargo_results").select(fargoSel).ilike("athlete_name", pattern).order("year", { ascending: false }).limit(perTable),
+    admin.from("fargo_results").select(fargoSel).ilike("high_school", pattern).order("year", { ascending: false }).limit(perTable),
     ...nhscaPlcPairPromises,
   ])
 
-  const [nhscaLegPairRes, s32PairRes] = await Promise.all([
+  const [nhscaLegPairRes, s32PairRes, fargoPairRes] = await Promise.all([
     Promise.all(nhscaLegPairPromises),
     Promise.all(s32PairPromises),
+    Promise.all(fargoPairPromises),
   ])
 
   const errors: string[] = []
@@ -981,10 +1000,13 @@ export async function toolWrestlingCrossStoreSearch(args: {
     [s32ByAthlete, "super32_name"],
     [s32ByHighSchool, "super32_high_school"],
     [s32BySchoolCol, "super32_school_col"],
+    [fargoByAthlete, "fargo_name"],
+    [fargoByHighSchool, "fargo_high_school"],
     ...nchsaaPairRes.map((r, i) => [r, `nchsaa_pair_${i}`] as const),
     ...nhscaPlcPairRes.map((r, i) => [r, `nhsca_plc_pair_${i}`] as const),
     ...nhscaLegPairRes.map((r, i) => [r, `nhsca_leg_pair_${i}`] as const),
     ...s32PairRes.map((r, i) => [r, `super32_pair_${i}`] as const),
+    ...fargoPairRes.map((r, i) => [r, `fargo_pair_${i}`] as const),
   ] as Array<[{ error?: { message?: string } | null }, string]>) {
     noteErr(res, label)
   }
@@ -1009,6 +1031,11 @@ export async function toolWrestlingCrossStoreSearch(args: {
     ...rowsOf(s32ByHighSchool),
     ...rowsOf(s32BySchoolCol),
     ...s32PairRes.flatMap(rowsOf),
+  ]
+  const fargoBuckets: Record<string, unknown>[] = [
+    ...rowsOf(fargoByAthlete),
+    ...rowsOf(fargoByHighSchool),
+    ...fargoPairRes.flatMap(rowsOf),
   ]
 
   const dirHsRaw = args.directory_high_school
@@ -1078,10 +1105,16 @@ export async function toolWrestlingCrossStoreSearch(args: {
     return `${x.athlete_name}|${x.year}|${x.placement ?? x.place}|${x.high_school ?? x.school}`
   })
 
+  const fargo = dedupeByKey(fargoBuckets, (r) => {
+    const x = r as Record<string, unknown>
+    return `${x.athlete_name}|${x.year}|${x.division}|${x.weight_class}|${x.placement}`
+  })
+
   const nchsaa_state_narrowed = filterCrossStoreByDirectoryContext(nchsaa_state, safeNarrowOpts)
   const nhsca_placements_narrowed = filterCrossStoreByDirectoryContext(nhsca_placements, safeNarrowOpts)
   const nhsca_legacy_narrowed = filterCrossStoreByDirectoryContext(nhsca_legacy_table, safeNarrowOpts)
   const super32_narrowed = filterCrossStoreByDirectoryContext(super32, safeNarrowOpts)
+  const fargo_narrowed = filterCrossStoreByDirectoryContext(fargo, safeNarrowOpts)
 
   const narrowedNote =
     directoryHs || parsedGrad != null
@@ -1093,6 +1126,7 @@ export async function toolWrestlingCrossStoreSearch(args: {
     nhsca_placements_narrowed.length +
     nhsca_legacy_narrowed.length +
     super32_narrowed.length +
+    fargo_narrowed.length +
     nc_united_results.length
 
   return {
@@ -1101,6 +1135,7 @@ export async function toolWrestlingCrossStoreSearch(args: {
     nhsca_placements: nhsca_placements_narrowed,
     nhsca_legacy_table: nhsca_legacy_narrowed,
     super32: super32_narrowed,
+    fargo: fargo_narrowed,
     nc_united_results,
     /** @deprecated use nc_united_results (includes event/year/record for all NC United teams) */
     nc_united_roster: nc_united_results,
@@ -1110,7 +1145,7 @@ export async function toolWrestlingCrossStoreSearch(args: {
       : {}),
     ...(errors.length ? { partial_errors: errors.slice(0, 3) } : {}),
     note:
-      "NCHSAA state = `wrestling_nchsaa_results`. NHSCA nationals = `nhsca_placements` + legacy `wrestling_nhsca_results`. Super32 = `super32_results`. NC United National Team = `nc_united_results` (Ultimate Club Duals + NHSCA Duals National/Select — event, year, record for every team appearance). Not NCHSAA **state** dual champions — use `nchsaa_dual_team_champions` for those. For a full merged athlete report when an id exists, call `get_athlete_full_dossier`." +
+      "NCHSAA state = `wrestling_nchsaa_results`. NHSCA nationals = `nhsca_placements` + legacy `wrestling_nhsca_results`. Super32 = `super32_results`. Fargo Nationals = `fargo_results`. NC United National Team = `nc_united_results` (Ultimate Club Duals + NHSCA Duals National/Select — event, year, record for every team appearance). Not NCHSAA **state** dual champions — use `nchsaa_dual_team_champions` for those. For a full merged athlete report when an id exists, call `get_athlete_full_dossier`." +
       narrowedNote,
   }
 }

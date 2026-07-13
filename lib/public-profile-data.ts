@@ -11,6 +11,7 @@ import {
   getNHSCAFromTables,
   getNHSCAFromTablesAllTime,
   getSuper32FromTable,
+  getFargoFromTable,
   type TournamentResultRow,
 } from "@/lib/tournament-tables"
 import {
@@ -324,6 +325,43 @@ export async function getSuper32ForAthlete(
   const uniq = uniqNhscaTableRows(merged)
   const fromRow = buildPublicProfileTournamentData(athlete).super32Results
   return mergeSuper32ForPublicRankings(uniq, fromRow)
+}
+
+function fargoTableRowsToDisplay(rows: TournamentResultRow[]): TournamentResultForDisplay[] {
+  const byKey = new Map<string, TournamentResultForDisplay>()
+  for (const r of rows) {
+    const row: TournamentResultForDisplay = {
+      year: r.year,
+      placement: (r.placement ?? "").trim(),
+      record: (r.record ?? "").trim(),
+      weight: r.weight,
+      division: r.division,
+    }
+    if (!row.placement && !row.record) continue
+    const key = `${row.year}|${row.division ?? ""}|${row.weight ?? ""}`
+    if (!byKey.has(key)) byKey.set(key, row)
+  }
+  return [...byKey.values()].sort((a, b) => b.year - a.year)
+}
+
+/** Fargo Nationals from `fargo_results` table (name variants + high school disambiguation). */
+export async function getFargoForAthlete(
+  supabase: SupabaseClient,
+  athlete: Record<string, unknown>,
+): Promise<TournamentResultForDisplay[]> {
+  const gradYear = resolveGraduationYear(athlete)
+  const highSchool = String(athlete.highschool ?? athlete.high_school ?? "").trim()
+  const name = String(athlete.name ?? "").trim()
+  const wrestlingName = String(athlete.wrestling_name ?? "").trim()
+  const bases = new Set<string>()
+  if (name) bases.add(name)
+  if (wrestlingName && wrestlingName.toLowerCase() !== name.toLowerCase()) bases.add(wrestlingName)
+  const merged: TournamentResultRow[] = []
+  for (const n of bases) {
+    const rows = await getFargoFromTable(supabase, n, gradYear, { highSchool: highSchool || undefined })
+    merged.push(...rows)
+  }
+  return fargoTableRowsToDisplay(merged)
 }
 
 /**
