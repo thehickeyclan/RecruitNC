@@ -26,6 +26,25 @@ describe("single-elim bracket layout", () => {
     expect(layout.width).toBeGreaterThan(600)
   })
 
+  it("aims connectors at the vertical midlines of match cards", () => {
+    const tree = buildEmptySingleElimTree(8)
+    const layout = layoutSingleElimBracket(tree)
+    const byId = new Map(layout.matches.map((m) => [m.id, m]))
+
+    const q0 = byId.get("r0-m0")!
+    const q1 = byId.get("r0-m1")!
+    const sf0 = byId.get("r1-m0")!
+
+    // Bout label sits above the two slot rows; centerY is slot midline.
+    expect(sf0.centerY).toBe((q0.centerY + q1.centerY) / 2)
+    expect(sf0.centerY).toBe(sf0.y + (sf0.height - layout.slotHeight * 2) + layout.slotHeight)
+
+    const toSemi = layout.connectors.find((c) => c.id === "c-r0-m0")!
+    expect(toSemi.path).toBe(
+      `M ${q0.x + q0.width} ${q0.centerY} H ${q0.x + q0.width + layout.roundGap / 2} V ${sf0.centerY} H ${sf0.x}`,
+    )
+  })
+
   it("builds partial seeded 8-man with TBD slots", () => {
     const tree = buildSingleElimTreeFromSeeds(8, [
       { id: "a1", seed: 1, name: "Tobin McNair", subtitle: "Test HS" },

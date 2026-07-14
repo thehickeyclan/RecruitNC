@@ -135,18 +135,18 @@ export function BracketTree({
   return (
     <div className={cn("overflow-x-auto", className)} style={{ background: theme.bg }}>
       <div className="relative" style={{ width: layout.width, height: layout.height, minWidth: "100%" }}>
-        {/* Round labels */}
+        {/* Round labels — sit in the reserved band above match geometry */}
         {layout.roundLabels.map((rl) => (
           <p
             key={rl.roundIndex}
             className="absolute text-[10px] font-semibold uppercase tracking-[0.18em] text-center -translate-x-1/2"
-            style={{ left: rl.x, top: 0, color: theme.roundLabel, width: layout.matchWidth }}
+            style={{ left: rl.x, top: 8, color: theme.roundLabel, width: layout.matchWidth }}
           >
             {rl.label}
           </p>
         ))}
 
-        {/* Connectors */}
+        {/* Connectors — same coordinate space as match.centerY */}
         <svg
           className="absolute inset-0 pointer-events-none"
           width={layout.width}
@@ -169,14 +169,19 @@ export function BracketTree({
         {layout.matches.map((match) => (
           <div
             key={match.id}
-            className="absolute"
-            style={{ left: match.x, top: match.y + 16, width: match.width, height: match.height }}
+            className="absolute flex flex-col"
+            style={{ left: match.x, top: match.y, width: match.width, height: match.height }}
           >
-            {match.boutNumber != null ? (
-              <p className="text-[9px] mb-0.5 uppercase tracking-wider" style={{ color: theme.roundLabel }}>
-                Bout {match.boutNumber}
-              </p>
-            ) : null}
+            <p
+              className="shrink-0 text-[9px] uppercase tracking-wider leading-none flex items-end pb-1"
+              style={{
+                height: match.height - layout.slotHeight * 2,
+                color: theme.roundLabel,
+                opacity: match.boutNumber != null ? 1 : 0,
+              }}
+            >
+              {match.boutNumber != null ? `Bout ${match.boutNumber}` : "\u00a0"}
+            </p>
             <SlotRow
               slot={match.top}
               position="top"
@@ -196,23 +201,26 @@ export function BracketTree({
           </div>
         ))}
 
-        {showChampion && layout.matches.length > 0 ? (
-          <div
-            className="absolute flex flex-col items-center justify-center rounded-sm border px-3 py-4 text-center"
-            style={{
-              left: layout.width - 72,
-              top: layout.height / 2 - 28,
-              borderColor: "rgba(204,0,0,0.35)",
-              background: "rgba(204,0,0,0.08)",
-              minWidth: 72,
-            }}
-          >
-            <span className="text-xs font-semibold uppercase tracking-wide text-[#CC0000]">Champ</span>
-            <span className="text-[10px] mt-1" style={{ color: theme.slotOpenText }}>
-              TBD
-            </span>
-          </div>
-        ) : null}
+        {showChampion && layout.matches.length > 0 ? (() => {
+          const finalMatch = layout.matches[layout.matches.length - 1]
+          return (
+            <div
+              className="absolute flex flex-col items-center justify-center rounded-sm border px-3 py-4 text-center -translate-y-1/2"
+              style={{
+                left: finalMatch.x + finalMatch.width + 16,
+                top: finalMatch.centerY,
+                borderColor: "rgba(204,0,0,0.35)",
+                background: "rgba(204,0,0,0.08)",
+                minWidth: 72,
+              }}
+            >
+              <span className="text-xs font-semibold uppercase tracking-wide text-[#CC0000]">Champ</span>
+              <span className="text-[10px] mt-1" style={{ color: theme.slotOpenText }}>
+                TBD
+              </span>
+            </div>
+          )
+        })() : null}
       </div>
     </div>
   )
