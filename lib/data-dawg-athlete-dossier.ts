@@ -5,6 +5,7 @@
 
 import { getSupabaseAdmin } from "@/lib/server-supabase"
 import { formatAthleteAnswerOpening } from "@/lib/athlete-profile-links"
+import { resolveAthleteCollegeCommit } from "@/lib/data-dawg-college-commit"
 import { escapeForIlike } from "@/lib/nchsaa-results"
 import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
 import { type NchsaaRowForProfile } from "@/lib/profile-tournament-data"
@@ -135,18 +136,21 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
 
   const nchsaaSorted = [...nchsaaMerged].sort((a, b) => b.year - a.year)
 
-  const college = String(athlete.college ?? "").trim()
-  const division = String(athlete.division ?? "").trim()
   const weightClass = String(athlete.weightclass ?? athlete.weight_class ?? "").trim()
   const recruitingStatus = String(athlete.recruiting_status ?? "").trim()
+  const commit = await resolveAthleteCollegeCommit(supabase, {
+    displayName,
+    college: String(athlete.college ?? "").trim() || null,
+    division: String(athlete.division ?? "").trim() || null,
+  })
 
   const lines: string[] = []
   lines.push(
     ...formatAthleteAnswerOpening(displayName, id, null, {
       highSchool: highSchool || null,
       graduationYear: hasValidGrad ? gradYear : null,
-      college: college || null,
-      division: division || null,
+      college: commit?.college ?? null,
+      division: commit?.division ?? null,
       weightClass: weightClass || null,
       recruitingStatus: recruitingStatus || null,
     }),

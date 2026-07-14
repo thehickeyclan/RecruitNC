@@ -44,6 +44,8 @@ export async function runOpenAiDataDawgToolLoop(options: {
 
   let toolRounds = 0
   let lastFinishReason = "unknown"
+  /** When dossier tool succeeds, use its markdown as the answer — models often rewrite and drop college/profile link. */
+  let forcedDossierMarkdown: string | null = null
 
   for (let round = 0; round < MAX_ROUNDS; round++) {
     const controller = new AbortController()
@@ -114,6 +116,17 @@ export async function runOpenAiDataDawgToolLoop(options: {
         const name = tc.function.name
         let argsStr = tc.function.arguments || "{}"
         const result = await executeDataTool(name, argsStr)
+        if (name === "get_athlete_full_dossier") {
+          try {
+            const parsed = JSON.parse(result) as { markdown?: string; error?: string }
+            const md = typeof parsed.markdown === "string" ? parsed.markdown.trim() : ""
+            if (!parsed.error && md.length > 40) {
+              forcedDossierMarkdown = md
+            }
+          } catch {
+            /* ignore */
+          }
+        }
         messages.push({
           role: "tool",
           tool_call_id: tc.id,
@@ -124,6 +137,9 @@ export async function runOpenAiDataDawgToolLoop(options: {
     }
 
     const text = (msg.content || "").trim()
+    if (forcedDossierMarkdown) {
+      return { answer: forcedDossierMarkdown, toolRounds, finishReason: finish }
+    }
     if (text.length > 0) {
       return { answer: text, toolRounds, finishReason: finish }
     }

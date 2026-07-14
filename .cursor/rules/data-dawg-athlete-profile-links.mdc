@@ -9,7 +9,7 @@ alwaysApply: true
 For **any Data Dawg answer about a specific athlete** (search, “who is…”, “tell me about…”, dossier):
 
 1. **Top of answer** = short identity summary via `formatAthleteAnswerOpening(name, id, url?, summary?)` in `lib/athlete-profile-links.ts`.
-2. **Name is the profile hyperlink** — `Here's what I found about [Name](profile_url):` (not a separate `Profile:` line).
+2. **Name is the profile hyperlink** — `Here's what I found about [Name](profile_url):` (not a separate `Profile:` line). Use `getAthleteProfileUrl(id)` → `https://app.ncwrestlingunited.com/view-profile?id=…` (not `/unified-profile/[id]` and not `/athletes/[id]`). In chat HTML, open those links **same-tab** (never `target="_blank"` on app profile routes).
 3. Include **High School**, **Class of**, and **College commit** (with division when known) in that top block before tournament sections.
 4. **No markdown headings** (`###` / `##` / `#`). Plain section labels only (e.g. `NCHSAA State Results:`). Postprocess strips leading `#` markers.
 5. Do not invent a profile URL without a directory id; tournament-only alumni can use a plain name.

@@ -472,16 +472,34 @@ export async function toolSearchAthletes(args: { query: string; limit?: number }
       })),
     }))
 
-  const withProfile = (row: unknown) => {
+  const { resolveAthleteCollegeCommit } = await import("@/lib/data-dawg-college-commit")
+
+  const withProfile = async (row: unknown) => {
     const r = row as Record<string, unknown>
     const id = String(r.id ?? "").trim()
-    return id ? { ...r, profile_url: getAthleteProfileUrl(id) } : r
+    const disp = athleteDisplayName(r, cols)
+    let next: Record<string, unknown> = id ? { ...r, profile_url: getAthleteProfileUrl(id) } : { ...r }
+    if (!String(next.college ?? "").trim()) {
+      try {
+        const commit = await resolveAthleteCollegeCommit(admin, {
+          displayName: disp,
+          college: null,
+          division: String(next.division ?? "").trim() || null,
+        })
+        if (commit) {
+          next = { ...next, college: commit.college, division: commit.division ?? next.division }
+        }
+      } catch {
+        /* keep row */
+      }
+    }
+    return next
   }
 
   const enrichCap = Math.min(out.length, 5)
   const enrichedSlice = await Promise.all(
     out.slice(0, enrichCap).map(async (row) => {
-      const r = withProfile(row) as Record<string, unknown>
+      const r = await withProfile(row)
       try {
         const bundle = await loadAthleteTournamentBundle(admin, r, { nhscaAllTime: true })
         return { ...r, tournament_summary: buildDataDawgTournamentSummary(bundle) }
@@ -490,7 +508,8 @@ export async function toolSearchAthletes(args: { query: string; limit?: number }
       }
     }),
   )
-  const enrichedRows = [...enrichedSlice, ...out.slice(enrichCap).map(withProfile)]
+  const rest = await Promise.all(out.slice(enrichCap).map((row) => withProfile(row)))
+  const enrichedRows = [...enrichedSlice, ...rest]
 
   return {
     rows: enrichedRows,
