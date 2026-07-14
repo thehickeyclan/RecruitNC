@@ -167,7 +167,6 @@ export function Navbar() {
   const programsItems = [
     { href: "/blue", label: "NC United Blue", description: "Training, apparel, and member benefits" },
     { href: "/national-team", label: "National Team", description: "NC United national competition teams" },
-    { href: "/fargo", label: "Fargo Nationals", description: "NC results from USA Wrestling nationals in Fargo, ND" },
   ]
 
   type EventsMegaLink = {
@@ -272,7 +271,8 @@ export function Navbar() {
     },
   ]
 
-  const eventsLegacyColumn: EventsMegaLink[] = [
+  /** Top-level LegacyNC menu (history / awards — not an event tournament). */
+  const legacyNcItems: EventsMegaLink[] = [
     { href: "/athletes?tab=legacy", label: "Wrestlers", icon: Users },
     { href: "/schools", label: "Schools", icon: Medal },
     { href: "/dave-schultz-award", label: "Dave Schultz Award", icon: Trophy },
@@ -284,7 +284,6 @@ export function Navbar() {
     ...eventsNationalsColumn,
     ...eventsSuper32Column,
     ...eventsFargoColumn,
-    ...eventsLegacyColumn,
   ].map((i) => ({ href: i.href }))
 
   /** Giving hub + athlete directory + playbook + scholarships (desktop dropdown + mobile section). */
@@ -388,7 +387,7 @@ export function Navbar() {
               <DropdownMenu>
                 <DropdownMenuTrigger className={navTriggerClass(eventsNavItemsForActive)}>
                   <Trophy className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
-                  Events
+                  Elite Tournaments
                   <ChevronDown className="h-4 w-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
@@ -396,7 +395,7 @@ export function Navbar() {
                   sideOffset={8}
                   className="w-[min(72rem,calc(100vw-1.5rem))] max-h-[min(90vh,720px)] overflow-y-auto p-0"
                 >
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 divide-y md:divide-y-0 md:divide-x bg-popover text-popover-foreground rounded-md">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 divide-y md:divide-y-0 md:divide-x bg-popover text-popover-foreground rounded-md">
                     {/* Column: States */}
                     <div className="p-4 min-w-0">
                       <div className="flex items-center gap-2 font-semibold text-foreground">
@@ -528,32 +527,35 @@ export function Navbar() {
                         })}
                       </div>
                     </div>
-                    {/* Column: LegacyNC */}
-                    <div className="p-4 min-w-0">
-                      <div className="flex items-center gap-2 font-semibold text-foreground">
-                        <Archive className="h-4 w-4 shrink-0 text-amber-600" aria-hidden />
-                        LegacyNC
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1 mb-3">NC Wrestling history</p>
-                      <div className="flex flex-col gap-0.5">
-                        {eventsLegacyColumn.map((sub) => {
-                          const Icon = sub.icon
-                          return (
-                            <a
-                              key={sub.href}
-                              href={sub.href}
-                              className="flex gap-3 rounded-md px-2 py-2.5 hover:bg-muted/80 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                            >
-                              <Icon className="h-5 w-5 shrink-0 text-muted-foreground mt-0.5" aria-hidden />
-                              <div className="min-w-0 flex-1">
-                                <span className="font-semibold text-sm text-foreground">{sub.label}</span>
-                              </div>
-                            </a>
-                          )
-                        })}
-                      </div>
-                    </div>
                   </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <DropdownMenu>
+                <DropdownMenuTrigger className={navTriggerClass(legacyNcItems)}>
+                  <Archive className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
+                  LegacyNC
+                  <ChevronDown className="h-4 w-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-64">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex items-center gap-2 font-semibold">
+                      <Archive className="h-4 w-4 text-amber-600" aria-hidden />
+                      LegacyNC
+                    </div>
+                    <p className="text-xs text-muted-foreground font-normal mt-1">NC Wrestling history</p>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {legacyNcItems.map((sub) => {
+                    const Icon = sub.icon
+                    return (
+                      <DropdownMenuItem key={sub.href} asChild>
+                        <a href={sub.href} className="flex items-center gap-2 cursor-pointer">
+                          <Icon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+                          <span>{sub.label}</span>
+                        </a>
+                      </DropdownMenuItem>
+                    )
+                  })}
                 </DropdownMenuContent>
               </DropdownMenu>
               <DropdownMenu>
@@ -945,7 +947,7 @@ export function Navbar() {
                     </div>
                   </div>
                   <div className="px-3">
-                    <div className={mobileMenuParentClass(isDropdownActive(eventsNavItemsForActive))}>Events</div>
+                    <div className={mobileMenuParentClass(isDropdownActive(eventsNavItemsForActive))}>Elite Tournaments</div>
                     <div className="space-y-4">
                       <div>
                         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 pl-1">NCHSAA "States"</p>
@@ -1005,16 +1007,21 @@ export function Navbar() {
                           ))}
                         </div>
                       </div>
-                      <div>
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 pl-1">LegacyNC</p>
-                        <div className="space-y-1">
-                          {eventsLegacyColumn.map((sub) => (
-                            <a key={sub.href} href={sub.href} className={mobileSubLinkClass(sub.href.split("?")[0])} onClick={() => setIsOpen(false)}>
-                              {sub.label}
-                            </a>
-                          ))}
-                        </div>
-                      </div>
+                    </div>
+                  </div>
+                  <div className="px-3">
+                    <div className={mobileMenuParentClass(isDropdownActive(legacyNcItems))}>LegacyNC</div>
+                    <div className="space-y-2">
+                      {legacyNcItems.map((sub) => (
+                        <a
+                          key={sub.href}
+                          href={sub.href}
+                          className={mobileSubLinkClass(sub.href.split("?")[0])}
+                          onClick={() => setIsOpen(false)}
+                        >
+                          {sub.label}
+                        </a>
+                      ))}
                     </div>
                   </div>
                   <div className="px-3">
