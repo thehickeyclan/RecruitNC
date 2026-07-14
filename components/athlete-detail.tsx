@@ -5,7 +5,7 @@ import Image from "next/image"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Edit, GraduationCap, Award, TrendingUp, Trophy, Video, ExternalLink, Shield, Share2, Phone } from "lucide-react"
+import { Edit, GraduationCap, Award, TrendingUp, Trophy, Video, ExternalLink, Share2, Phone, Mail } from "lucide-react"
 import { UnifiedProfileMobileNav } from "./unified-profile-mobile-nav"
 import { ProfileQualityWinsSection } from "@/components/profile-quality-wins-section"
 import type { ProfileQualityWinsTournamentBlock } from "@/lib/profile-quality-wins"
@@ -774,15 +774,126 @@ export function AthleteDetail({
 
   const instagramUrl = getInstagramUrl()
   const cellPhone = (athleteData.cell || athleteData.cell_number || athleteData.phone)?.trim() || null
+  const contactEmail =
+    (athleteData.email || athleteData.contact_email || athleteData.email_address)?.trim() || null
   const showHeroContactRow =
     !!instagramUrl ||
     !!athlete?.flo_profile_url ||
     !!athlete?.track_wrestling_profile_url ||
     (canSeePrivateInfo && !!cellPhone) ||
-    (canEdit && !cellPhone)
-  const scrollToContactAndEdit = () => {
-    setEditingSection("contact")
-    document.querySelector("[data-section=\"contact\"]")?.scrollIntoView({ behavior: "smooth" })
+    (canSeePrivateInfo && !!contactEmail) ||
+    canEdit
+  const openContactEditor = () => setEditingSection("contact")
+
+  const renderHeroContactRow = (variant: "pills" | "buttons") => {
+    if (!showHeroContactRow) return null
+    const linkClass =
+      variant === "pills"
+        ? "inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-white"
+        : "inline-flex items-center gap-2 rounded-lg bg-white/15 hover:bg-white/25 px-3 py-2 text-white text-sm font-medium transition-colors"
+    const imgSize = variant === "pills" ? 16 : 20
+    const phoneIconClass = variant === "pills" ? "h-4 w-4" : "h-5 w-5 flex-shrink-0"
+    const mailIconClass = variant === "pills" ? "h-4 w-4" : "h-5 w-5 flex-shrink-0"
+
+    return (
+      <div
+        className={
+          variant === "pills"
+            ? "mt-3.5 flex gap-2 overflow-x-auto scroll-table-x pb-0.5"
+            : "flex flex-wrap items-center gap-2 mt-4"
+        }
+      >
+        {instagramUrl && instagramLogo && (
+          <a
+            href={instagramUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={linkClass}
+            aria-label="Instagram"
+          >
+            <Image
+              src={instagramLogo}
+              alt={variant === "pills" ? "" : "Instagram"}
+              width={imgSize}
+              height={imgSize}
+              className={variant === "pills" ? "h-4 w-4 object-contain" : "w-5 h-5 object-contain"}
+            />
+            <span>{variant === "pills" ? "IG" : "Instagram"}</span>
+          </a>
+        )}
+        {canSeePrivateInfo && cellPhone && (
+          <a
+            href={`tel:${cellPhone.replace(/\D/g, "")}`}
+            className={linkClass}
+            aria-label="Call"
+          >
+            <Phone className={phoneIconClass} />
+            <span>{cellPhone}</span>
+          </a>
+        )}
+        {canSeePrivateInfo && contactEmail && (
+          <a href={`mailto:${contactEmail}`} className={linkClass} aria-label="Email">
+            <Mail className={mailIconClass} />
+            <span>{variant === "pills" ? "Email" : contactEmail}</span>
+          </a>
+        )}
+        {athlete?.flo_profile_url && floLogo && (
+          <a
+            href={athlete.flo_profile_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={linkClass}
+            aria-label="Flo Wrestling"
+          >
+            <Image
+              src={floLogo}
+              alt={variant === "pills" ? "" : "Flo"}
+              width={variant === "pills" ? 16 : 18}
+              height={variant === "pills" ? 16 : 18}
+              className={
+                variant === "pills" ? "h-4 w-4 object-contain" : "w-[18px] h-[18px] object-contain"
+              }
+            />
+            <span>Flo</span>
+          </a>
+        )}
+        {athlete?.track_wrestling_profile_url && trackWrestlingLogo && (
+          <a
+            href={athlete.track_wrestling_profile_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={linkClass}
+            aria-label="Track Wrestling"
+          >
+            <Image
+              src={trackWrestlingLogo}
+              alt={variant === "pills" ? "" : "Track"}
+              width={variant === "pills" ? 16 : 18}
+              height={variant === "pills" ? 16 : 18}
+              className={
+                variant === "pills" ? "h-4 w-4 object-contain" : "w-[18px] h-[18px] object-contain"
+              }
+            />
+            <span>Track</span>
+          </a>
+        )}
+        {canEdit && (
+          <Button
+            size="sm"
+            variant="secondary"
+            className={
+              variant === "pills"
+                ? "h-8 shrink-0 bg-white text-[#13294B] hover:bg-white/90 text-xs"
+                : "bg-white text-[#13294B] hover:bg-white/90 shrink-0"
+            }
+            onClick={openContactEditor}
+          >
+            <Edit className="h-3.5 w-3.5 mr-1.5" />
+            {cellPhone || contactEmail || instagramUrl ? "Edit contact" : "Add contact"}
+          </Button>
+        )}
+      </div>
+    )
   }
 
   return (
@@ -916,56 +1027,7 @@ export function AthleteDetail({
                     ) : null}
                   </div>
 
-                  {showHeroContactRow ? (
-                    <div className="mt-3.5 flex gap-2 overflow-x-auto scroll-table-x pb-0.5">
-                      {instagramUrl && instagramLogo && (
-                        <a
-                          href={instagramUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-white"
-                          aria-label="Instagram"
-                        >
-                          <Image src={instagramLogo} alt="" width={16} height={16} className="h-4 w-4 object-contain" />
-                          IG
-                        </a>
-                      )}
-                      {canSeePrivateInfo && cellPhone && (
-                        <a
-                          href={`tel:${cellPhone.replace(/\D/g, "")}`}
-                          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-white"
-                          aria-label="Call"
-                        >
-                          <Phone className="h-4 w-4" />
-                          Call
-                        </a>
-                      )}
-                      {athlete?.flo_profile_url && floLogo && (
-                        <a
-                          href={athlete.flo_profile_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-white"
-                          aria-label="Flo Wrestling"
-                        >
-                          <Image src={floLogo} alt="" width={16} height={16} className="h-4 w-4 object-contain" />
-                          Flo
-                        </a>
-                      )}
-                      {athlete?.track_wrestling_profile_url && trackWrestlingLogo && (
-                        <a
-                          href={athlete.track_wrestling_profile_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-white"
-                          aria-label="Track Wrestling"
-                        >
-                          <Image src={trackWrestlingLogo} alt="" width={16} height={16} className="h-4 w-4 object-contain" />
-                          Track
-                        </a>
-                      )}
-                    </div>
-                  ) : null}
+                  {renderHeroContactRow("pills")}
                 </div>
               </div>
             ) : (
@@ -1082,88 +1144,7 @@ export function AthleteDetail({
                 </div>
               </div>
 
-              {/* Social / contact - Instagram, cell (coaches), Flo, Track; or prompt to add cell */}
-              {showHeroContactRow && (
-                <div className="flex flex-wrap items-center gap-2 mt-4">
-                  {instagramUrl && instagramLogo && (
-                    <a
-                      href={instagramUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 rounded-lg bg-white/15 hover:bg-white/25 px-3 py-2 text-white text-sm font-medium transition-colors"
-                      aria-label="Instagram"
-                    >
-                      <Image
-                        src={instagramLogo}
-                        alt="Instagram"
-                        width={20}
-                        height={20}
-                        className="w-5 h-5 object-contain"
-                      />
-                      <span>Instagram</span>
-                    </a>
-                  )}
-                  {canSeePrivateInfo && cellPhone && (
-                    <a
-                      href={`tel:${cellPhone.replace(/\D/g, "")}`}
-                      className="inline-flex items-center gap-2 rounded-lg bg-white/15 hover:bg-white/25 px-3 py-2 text-white text-sm font-medium transition-colors"
-                      aria-label="Call"
-                    >
-                      <Phone className="h-5 w-5 flex-shrink-0" />
-                      <span>{cellPhone}</span>
-                    </a>
-                  )}
-                  {athlete?.flo_profile_url && floLogo && (
-                    <a
-                      href={athlete.flo_profile_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 rounded-lg bg-white/15 hover:bg-white/25 px-3 py-2 text-white text-sm font-medium transition-colors"
-                      aria-label="Flo Wrestling"
-                    >
-                      <Image
-                        src={floLogo}
-                        alt="Flo"
-                        width={18}
-                        height={18}
-                        className="w-[18px] h-[18px] object-contain"
-                      />
-                      <span>Flo</span>
-                    </a>
-                  )}
-                  {athlete?.track_wrestling_profile_url && trackWrestlingLogo && (
-                    <a
-                      href={athlete.track_wrestling_profile_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 rounded-lg bg-white/15 hover:bg-white/25 px-3 py-2 text-white text-sm font-medium transition-colors"
-                      aria-label="Track Wrestling"
-                    >
-                      <Image
-                        src={trackWrestlingLogo}
-                        alt="Track"
-                        width={18}
-                        height={18}
-                        className="w-[18px] h-[18px] object-contain"
-                      />
-                      <span>Track</span>
-                    </a>
-                  )}
-                  {canEdit && !cellPhone && (
-                    <div className="flex items-center gap-2 rounded-lg bg-white/15 px-3 py-2">
-                      <p className="text-white/90 text-sm">Add your cell in Contact so coaches can reach you.</p>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        className="bg-white text-[#13294B] hover:bg-white/90 shrink-0"
-                        onClick={scrollToContactAndEdit}
-                      >
-                        Add cell
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              )}
+              {renderHeroContactRow("buttons")}
             </div>
               </>
             )}
@@ -1290,88 +1271,7 @@ export function AthleteDetail({
                     </div>
                   </div>
 
-                  {/* Social / contact - Instagram, cell (coaches), Flo, Track; or prompt to add cell */}
-                  {showHeroContactRow && (
-                    <div className="flex flex-wrap items-center gap-2 mt-4">
-                      {instagramUrl && instagramLogo && (
-                        <a
-                          href={instagramUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 rounded-lg bg-white/15 hover:bg-white/25 px-3 py-2 text-white text-sm font-medium transition-colors"
-                          aria-label="Instagram"
-                        >
-                          <Image
-                            src={instagramLogo}
-                            alt="Instagram"
-                            width={20}
-                            height={20}
-                            className="w-5 h-5 object-contain"
-                          />
-                          <span>Instagram</span>
-                        </a>
-                      )}
-                      {canSeePrivateInfo && cellPhone && (
-                        <a
-                          href={`tel:${cellPhone.replace(/\D/g, "")}`}
-                          className="inline-flex items-center gap-2 rounded-lg bg-white/15 hover:bg-white/25 px-3 py-2 text-white text-sm font-medium transition-colors"
-                          aria-label="Call"
-                        >
-                          <Phone className="h-5 w-5 flex-shrink-0" />
-                          <span>{cellPhone}</span>
-                        </a>
-                      )}
-                      {athlete?.flo_profile_url && floLogo && (
-                        <a
-                          href={athlete.flo_profile_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 rounded-lg bg-white/15 hover:bg-white/25 px-3 py-2 text-white text-sm font-medium transition-colors"
-                          aria-label="Flo Wrestling"
-                        >
-                          <Image
-                            src={floLogo}
-                            alt="Flo"
-                            width={18}
-                            height={18}
-                            className="w-[18px] h-[18px] object-contain"
-                          />
-                          <span>Flo</span>
-                        </a>
-                      )}
-                      {athlete?.track_wrestling_profile_url && trackWrestlingLogo && (
-                        <a
-                          href={athlete.track_wrestling_profile_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 rounded-lg bg-white/15 hover:bg-white/25 px-3 py-2 text-white text-sm font-medium transition-colors"
-                          aria-label="Track Wrestling"
-                        >
-                          <Image
-                            src={trackWrestlingLogo}
-                            alt="Track"
-                            width={18}
-                            height={18}
-                            className="w-[18px] h-[18px] object-contain"
-                          />
-                          <span>Track</span>
-                        </a>
-                      )}
-                      {canEdit && !cellPhone && (
-                        <div className="flex items-center gap-2 rounded-lg bg-white/15 px-3 py-2">
-                          <p className="text-white/90 text-sm">Add your cell in Contact so coaches can reach you.</p>
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            className="bg-white text-[#13294B] hover:bg-white/90 shrink-0"
-                            onClick={scrollToContactAndEdit}
-                          >
-                            Add cell
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  {renderHeroContactRow("buttons")}
                 </div>
               </div>
             </div>
@@ -1385,7 +1285,7 @@ export function AthleteDetail({
         </div>
       ) : null}
 
-      {/* Weight Section (edit form when canEdit) */}
+      {/* Weight / contact edit forms (opened from hero) */}
       {canEdit && editingSection === "weight" && (
         <Card
           className={cn(
@@ -1403,6 +1303,34 @@ export function AthleteDetail({
               athleteId={athlete.id}
               weightClass={athleteData.weightclass || athleteData.weight_class}
               gender={athleteData.gender}
+              onSave={handleInlineSave}
+              onCancel={() => setEditingSection(null)}
+            />
+          </div>
+        </Card>
+      )}
+
+      {canEdit && editingSection === "contact" && (
+        <Card
+          className={cn(
+            "profile-card border-t-4 border-t-[#D3B574] shadow-md",
+            mobileRecruiterLayout && PROFILE_SECTION_ORDER.weightEdit,
+          )}
+          data-section="contact"
+        >
+          <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6">
+            <div className="flex items-center gap-3">
+              <Phone className="h-6 w-6 text-white" />
+              <h2 className="text-2xl font-bold text-white">Edit Contact</h2>
+            </div>
+          </div>
+          <div className="profile-card-body p-8">
+            <InlineContactEditor
+              athleteId={athlete.id}
+              cell={athleteData.cell || athleteData.cell_number || athleteData.phone}
+              email={athleteData.email || athleteData.contact_email || athleteData.email_address}
+              instagram={athleteData.instagram || athleteData.instagram_handle || athleteData.instagram_username}
+              highlightVideoUrl={athleteData.highlight_video_url}
               onSave={handleInlineSave}
               onCancel={() => setEditingSection(null)}
             />
@@ -1607,121 +1535,7 @@ export function AthleteDetail({
         </div>
       ) : null}
 
-      {/* 5. Contact Information - always show for consistent structure */}
-      <Card
-        id="contact"
-        className={cn(
-          "profile-card border-t-4 border-t-[#D3B574] shadow-md",
-          mobileRecruiterLayout && PROFILE_SECTION_ORDER.contact,
-        )}
-        data-section="contact"
-      >
-        <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Shield className="h-6 w-6 text-white" />
-              <h2 className="text-2xl font-bold text-white">Contact Information</h2>
-            </div>
-            {canEdit && !editingSection && (
-              <Button
-                size="sm"
-                variant="ghost"
-                className="text-white hover:bg-white/20"
-                onClick={() => setEditingSection("contact")}
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Edit
-              </Button>
-            )}
-          </div>
-        </div>
-        <div className="p-8">
-          {canEdit ? (
-            editingSection === "contact" ? (
-              <InlineContactEditor
-                athleteId={athlete.id}
-                cell={athleteData.cell || athleteData.cell_number || athleteData.phone}
-                email={athleteData.email || athleteData.contact_email || athleteData.email_address}
-                instagram={athleteData.instagram || athleteData.instagram_handle || athleteData.instagram_username}
-                highlightVideoUrl={athleteData.highlight_video_url}
-                onSave={handleInlineSave}
-                onCancel={() => setEditingSection(null)}
-              />
-            ) : (
-              <div className="space-y-4">
-                {(athleteData.cell || athleteData.cell_number || athleteData.phone) && (
-                  <div className="profile-panel bg-white rounded-lg p-4 border border-gray-200">
-                    <p className="text-sm text-gray-600 mb-1">Cell Phone</p>
-                    <p className="font-semibold text-gray-900">
-                      {athleteData.cell || athleteData.cell_number || athleteData.phone}
-                    </p>
-                  </div>
-                )}
-                {(athleteData.email || athleteData.contact_email || athleteData.email_address) && (
-                  <div className="profile-panel bg-white rounded-lg p-4 border border-gray-200">
-                    <p className="text-sm text-gray-600 mb-1">Email</p>
-                    <p className="font-semibold text-gray-900">
-                      {athleteData.email || athleteData.contact_email || athleteData.email_address}
-                    </p>
-                  </div>
-                )}
-                {(athleteData.instagram || athleteData.instagram_handle || athleteData.instagram_username) && (
-                  <div className="profile-panel bg-white rounded-lg p-4 border border-gray-200">
-                    <p className="text-sm text-gray-600 mb-1">Instagram</p>
-                    <p className="font-semibold text-gray-900">
-                      {athleteData.instagram || athleteData.instagram_handle || athleteData.instagram_username}
-                    </p>
-                  </div>
-                )}
-                {athleteData.highlight_video_url && (
-                  <div className="profile-panel bg-white rounded-lg p-4 border border-gray-200">
-                    <p className="text-sm text-gray-600 mb-1">Highlight Video</p>
-                    <a 
-                      href={athleteData.highlight_video_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="font-semibold text-blue-600 hover:underline"
-                    >
-                      Watch Video
-                    </a>
-                  </div>
-                )}
-                {!(athleteData.cell || athleteData.cell_number || athleteData.phone) && !(athleteData.email || athleteData.contact_email || athleteData.email_address) && !(athleteData.instagram || athleteData.instagram_handle || athleteData.instagram_username) && !athleteData.highlight_video_url && (
-                  <p className="profile-text-muted text-gray-500 italic">No contact information yet. Click Edit to add.</p>
-                )}
-              </div>
-            )
-          ) : (
-            (isAdmin || isVerifiedCoach) && (athleteData.cell || athleteData.cell_number || athleteData.phone || athleteData.email || athleteData.contact_email || athleteData.email_address || athleteData.instagram || athleteData.instagram_handle || athleteData.instagram_username) ? (
-              <div className="space-y-4">
-                {(athleteData.cell || athleteData.cell_number || athleteData.phone) && (
-                  <div className="profile-panel bg-white rounded-lg p-4 border border-gray-200">
-                    <p className="text-sm text-gray-600 mb-1">Cell Phone</p>
-                    <p className="font-semibold text-gray-900">{athleteData.cell || athleteData.cell_number || athleteData.phone}</p>
-                  </div>
-                )}
-                {(athleteData.email || athleteData.contact_email || athleteData.email_address) && (
-                  <div className="profile-panel bg-white rounded-lg p-4 border border-gray-200">
-                    <p className="text-sm text-gray-600 mb-1">Email</p>
-                    <p className="font-semibold text-gray-900">{athleteData.email || athleteData.contact_email || athleteData.email_address}</p>
-                  </div>
-                )}
-                {(athleteData.instagram || athleteData.instagram_handle || athleteData.instagram_username) && (
-                  <div className="profile-panel bg-white rounded-lg p-4 border border-gray-200">
-                    <p className="text-sm text-gray-600 mb-1">Instagram</p>
-                    <p className="font-semibold text-gray-900">{athleteData.instagram || athleteData.instagram_handle || athleteData.instagram_username}</p>
-                  </div>
-                )}
-                <p className="text-xs text-amber-700 flex items-center gap-1"><Shield className="h-3.5 w-3.5" /> Visible to verified coaches and administrators only.</p>
-              </div>
-            ) : (
-              <p className="profile-text-muted text-gray-500 italic">Contact information is available to verified college coaches and administrators.</p>
-            )
-          )}
-        </div>
-      </Card>
-
-      {/* 6. Academics - always show for consistent structure */}
+      {/* 5. Academics - always show for consistent structure */}
       <Card
         className={cn(
           "profile-card border-t-4 border-t-[#D3B574] shadow-md",

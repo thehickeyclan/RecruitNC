@@ -4,10 +4,10 @@ import { cn } from "@/lib/utils"
 
 const BASE_NAV_LINKS = [
   { sectionId: "national-results", label: "National" },
+  { sectionId: "nchsaa-states", label: "States" },
   { sectionId: "highlights", label: "Video" },
   { sectionId: "bio", label: "Bio" },
   { sectionId: "programs", label: "School" },
-  { sectionId: "contact", label: "Contact" },
   { sectionId: "in-season", label: "In-season" },
 ] as const
 
