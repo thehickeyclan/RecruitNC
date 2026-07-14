@@ -356,8 +356,10 @@ export const handleProspectRankings: QueryHandler = async (
   
   // Default to list query (top prospects or all ranked)
   // Check if query asks for "all ranked" prospects
-  const wantsAllRanked = query.includes("all ranked") || query.includes("all ranking") || 
-                         (query.includes("show") && query.includes("all") && query.includes("ranked"))
+  const wantsAllRanked =
+    query.includes("all ranked") ||
+    query.includes("all ranking") ||
+    (query.includes("show") && query.includes("all") && (query.includes("ranked") || query.includes("ranking")))
   
   // Check if query asks "who is ranked #X" - return just that person
   const whoIsRankedMatch = query.match(/who\s+is\s+ranked\s+#?(\d+)/i)
