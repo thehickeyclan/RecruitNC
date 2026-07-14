@@ -72,8 +72,11 @@ export type AthleteAnswerSummary = {
   graduationYear?: string | number | null
   college?: string | null
   division?: string | null
+  /** @deprecated Weight changes often — not shown in the header opener. */
   weightClass?: string | null
   recruitingStatus?: string | null
+  /** Brief career line under identity (e.g. "3× State Champion with a 193-9 high school career."). */
+  careerSummary?: string | null
 }
 
 function formatCollegeCommitLine(college: string, division?: string | null): string {
@@ -84,9 +87,38 @@ function formatCollegeCommitLine(college: string, division?: string | null): str
 }
 
 /**
+ * One-line career highlight for the athlete opener (no weight — that fluctuates).
+ */
+export function buildBriefAthleteCareerSummary(opts: {
+  stateTitleYears?: number
+  careerWins?: number | null
+  careerLosses?: number | null
+}): string | null {
+  const titles = opts.stateTitleYears ?? 0
+  const parts: string[] = []
+  if (titles === 1) parts.push("State Champion")
+  else if (titles >= 2 && titles <= 4) parts.push(`${titles}× State Champion`)
+  else if (titles > 4) parts.push(`${titles}× State Champion`)
+
+  const w = opts.careerWins
+  const l = opts.careerLosses
+  const hasRecord =
+    w != null && l != null && Number.isFinite(w) && Number.isFinite(l) && (w > 0 || l > 0)
+  const record = hasRecord ? `${Math.floor(w!)}-${Math.floor(l!)}` : null
+
+  if (parts.length === 0 && !record) return null
+  if (parts.length > 0 && record) {
+    return `${parts[0]} with a ${record} high school career.`
+  }
+  if (parts.length > 0) return `${parts[0]}.`
+  return `${record} high school career.`
+}
+
+/**
  * Opening block for Data Dawg athlete answers:
  * 1) summary on top with the athlete name as the profile hyperlink
  * 2) college commit (when known)
+ * 3) brief career summary (when known) — not weight
  * Prefer this helper anywhere we build a one-athlete dossier / "here's what I found" block.
  */
 export function formatAthleteAnswerOpening(
@@ -114,17 +146,20 @@ export function formatAthleteAnswerOpening(
     lines.push(formatCollegeCommitLine(college, summary?.division))
   }
 
-  const wt = summary?.weightClass
-  if (wt != null && String(wt).trim() !== "") {
-    lines.push(`Weight: ${String(wt).trim()}`)
-  }
+  // Intentionally omit weight — it changes often and is already in tournament lines.
 
   const status = summary?.recruitingStatus?.toString().trim()
   if (status && !college) {
     lines.push(`Recruiting status: ${status}`)
   }
 
-  if (hs || college || (gy != null && String(gy).trim() !== "") || status) {
+  const career = summary?.careerSummary?.toString().trim()
+  if (career) {
+    lines.push("")
+    lines.push(career)
+  }
+
+  if (hs || college || (gy != null && String(gy).trim() !== "") || status || career) {
     lines.push("")
   }
 
