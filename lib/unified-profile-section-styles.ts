@@ -11,15 +11,16 @@ export const PROFILE_SECTION_ORDER = {
   hero: "order-first lg:order-first",
   nav: "order-2 lg:order-none",
   nationalResults: "order-3 lg:order-4",
+  /** NCHSAA/States sits with tournament block; desktop order after national. */
+  nchsaaStates: "order-3 lg:order-4",
   qualityWins: "order-4 lg:order-5",
   highlights: "order-5 lg:order-8",
   bio: "order-6 lg:order-2",
   programs: "order-7 lg:order-3",
-  contact: "order-8 lg:order-6",
-  academics: "order-9 lg:order-7",
-  collegeOpens: "order-10 lg:order-9",
-  achievements: "order-11 lg:order-10",
-  inSeason: "order-12 lg:order-11",
+  academics: "order-8 lg:order-6",
+  collegeOpens: "order-9 lg:order-9",
+  achievements: "order-10 lg:order-10",
+  inSeason: "order-11 lg:order-11",
   /** Inline weight editor — after nav when open. */
   weightEdit: "order-[2] lg:order-[2]",
   /** Must stay after all profile sections (default order:0 would float above the hero). */
