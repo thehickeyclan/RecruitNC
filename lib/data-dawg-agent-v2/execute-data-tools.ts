@@ -152,6 +152,8 @@ export async function toolPublicRankingsSearch(args: {
 }
 
 const MAX_ROWS = 40
+/** Default rows returned to the model — keep small; strategy/merge caps below preserve alumni recall. */
+const SEARCH_ATHLETES_DEFAULT_LIMIT = 8
 const MAX_Q_LEN = 120
 const FUZZY_POOL = 260
 /**
@@ -159,6 +161,8 @@ const FUZZY_POOL = 260
  * (often "recent" rows), so alumni never enter the merge pool — we spread by grad year (see below).
  */
 const STRATEGY_CAP = 420
+/** Tournament bundle hydration for tool JSON — dossier reloads the same data for the chosen athlete. */
+const SEARCH_TOURNAMENT_ENRICH_CAP = 1
 
 type AthleteSearchCols = { fn: string; ln: string; gy: string; hs: string }
 
@@ -188,6 +192,32 @@ async function getAthleteSearchCols(admin: SupabaseClient): Promise<AthleteSearc
 
 function athletesBase(admin: SupabaseClient) {
   return admin.from("athletes").select("*")
+}
+
+/** Slim payload for the model — scoring/merge still use full `select("*")` rows above. */
+function slimAthleteSearchRow(
+  row: Record<string, unknown>,
+  cols: AthleteSearchCols,
+): Record<string, unknown> {
+  const gyRaw = row[cols.gy]
+  const slim: Record<string, unknown> = {
+    id: row.id ?? null,
+    name: athleteDisplayName(row, cols),
+    [cols.fn]: row[cols.fn] ?? null,
+    [cols.ln]: row[cols.ln] ?? null,
+    [cols.hs]: row[cols.hs] ?? null,
+    [cols.gy]:
+      gyRaw != null && String(gyRaw).trim() !== "" && Number.isFinite(Number(gyRaw))
+        ? Number(gyRaw)
+        : gyRaw ?? null,
+    college: String(row.college ?? "").trim() || null,
+    division: String(row.division ?? "").trim() || null,
+    profile_url: row.profile_url ?? null,
+  }
+  if (row.tournament_summary != null) {
+    slim.tournament_summary = row.tournament_summary
+  }
+  return slim
 }
 
 function sanitizeFragment(q: string): string {
@@ -259,7 +289,7 @@ async function mergeIlikeWithGradYearSpread(
 
 export async function toolSearchAthletes(args: { query: string; limit?: number }) {
   const raw = sanitizeFragment(args.query || "")
-  const limit = Math.min(Math.max(Number(args.limit) || 20, 1), MAX_ROWS)
+  const limit = Math.min(Math.max(Number(args.limit) || SEARCH_ATHLETES_DEFAULT_LIMIT, 1), MAX_ROWS)
   const phrase = extractSearchablePhrase(raw) || stripConversationalNoise(raw)
   const q = phrase.trim()
   if (q.length < 2) {
@@ -522,7 +552,7 @@ export async function toolSearchAthletes(args: { query: string; limit?: number }
     return next
   }
 
-  const enrichCap = Math.min(out.length, 5)
+  const enrichCap = Math.min(out.length, SEARCH_TOURNAMENT_ENRICH_CAP)
   const enrichedSlice = await Promise.all(
     out.slice(0, enrichCap).map(async (row) => {
       const r = await withProfile(row)
@@ -535,13 +565,15 @@ export async function toolSearchAthletes(args: { query: string; limit?: number }
     }),
   )
   const rest = await Promise.all(out.slice(enrichCap).map((row) => withProfile(row)))
-  const enrichedRows = [...enrichedSlice, ...rest]
+  const enrichedRows = [...enrichedSlice, ...rest].map((row) =>
+    slimAthleteSearchRow(row as Record<string, unknown>, cols),
+  )
 
   return {
     rows: enrichedRows,
     searched_for: q,
     tournament_summary_note:
-      "Each row includes `profile_url` (RecruitNC athlete page) and `tournament_summary` (merged NHSCA + Super32 + Fargo). Athlete answers: name is the profile hyperlink at the top, then High School / College commit, then results. No ### headings. Prefer tournament_summary lines over `nhsca_results` / `super32_results` JSON when they differ. Include Fargo lines when present.",
+      "Rows are slim identity fields plus `profile_url`. The top match may include `tournament_summary` (merged NHSCA + Super32 + Fargo). Prefer that over inventing results. For the full report call `get_athlete_full_dossier` on the chosen `id`. Athlete answers: name is the profile hyperlink at the top, then High School / College commit, then results. No ### headings.",
     ...(disambiguation.length
       ? {
           disambiguation,
@@ -899,7 +931,13 @@ export async function toolWrestlingCrossStoreSearch(args: {
   const raw = sanitizeFragment(String(args.query ?? ""))
   const phrase = extractSearchablePhrase(raw) || stripConversationalNoise(raw)
   const q = phrase.trim()
-  const perTable = Math.min(CROSS_STORE_CAP, Math.max(8, Number(args.limit) || 32))
+  const hasDirectoryNarrow =
+    Boolean(String(args.directory_athlete_id ?? "").trim()) ||
+    Boolean(String(args.directory_high_school ?? "").trim()) ||
+    (args.grad_year != null && String(args.grad_year).trim() !== "")
+  /** Narrow directory context → smaller fan-out; alumni-only (no directory row) keeps wider default. */
+  const defaultPerTable = hasDirectoryNarrow ? 16 : 32
+  const perTable = Math.min(CROSS_STORE_CAP, Math.max(8, Number(args.limit) || defaultPerTable))
   if (q.length < 2) {
     return {
       error: "Query must be at least 2 characters.",
