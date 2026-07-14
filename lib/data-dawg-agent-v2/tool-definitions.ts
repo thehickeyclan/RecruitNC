@@ -25,7 +25,7 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
             description:
               "Athlete name and/or school fragment (e.g. 'Jane Smith', 'Jacob Perry Cardinal Gibbons'). Include school when the user named it — disambiguates duplicate names. Min 2 meaningful characters after stripping chat phrases.",
           },
-          limit: { type: "integer", description: "Max rows (default 20, max 40)." },
+          limit: { type: "integer", description: "Max rows (default 8, max 40)." },
         },
         required: ["query"],
       },
@@ -36,7 +36,7 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
     function: {
       name: "wrestling_cross_store_search",
       description:
-        "**MUST be called for every wrestler name query — even when `search_athletes` returned zero rows.** One round trip across all major historical tables (1990s–present): NCHSAA individual state, NHSCA nationals, Super32, **Fargo Nationals** (`fargo_results`), and **NC United National Team results** (`nc_united_results`: event, year, record for Ultimate Club Duals + NHSCA Duals National/Select — all team appearances). Not NCHSAA **state** dual team champions (use `nchsaa_dual_team_champions`). Returns separate arrays per source so alumni appear even without an `athletes` directory row. **Always include every non-empty array** (`fargo`, `super32`, `nc_united_results`, etc.) in the answer. **After `search_athletes` returns the row you are answering about, call this again with the same `query` and pass `directory_high_school`, `grad_year`, and `directory_athlete_id` from that row**. For a full merged athlete report when you have a UUID, still call `get_athlete_full_dossier`.",
+        "**MUST be called once for every wrestler name query — even when `search_athletes` returned zero rows.** One round trip across all major historical tables (1990s–present): NCHSAA individual state, NHSCA nationals, Super32, **Fargo Nationals** (`fargo_results`), and **NC United National Team results** (`nc_united_results`: event, year, record for Ultimate Club Duals + NHSCA Duals National/Select — all team appearances). Not NCHSAA **state** dual team champions (use `nchsaa_dual_team_champions`). Returns separate arrays per source so alumni appear even without an `athletes` directory row. **Always include every non-empty array** (`fargo`, `super32`, `nc_united_results`, etc.) in the answer. **Do not call this tool twice for the same wrestler.** When `search_athletes` already returned the row you will answer about, pass `directory_high_school`, `grad_year`, and `directory_athlete_id` on this single call. When there is no directory row, omit those filters. For a full merged athlete report when you have a UUID, still call `get_athlete_full_dossier`.",
       parameters: {
         type: "object",
         additionalProperties: false,
@@ -45,7 +45,11 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
             type: "string",
             description: "Wrestler name and/or school fragment (same style as search_athletes).",
           },
-          limit: { type: "integer", description: "Max rows per underlying table (default ~32, max 50)." },
+          limit: {
+            type: "integer",
+            description:
+              "Max rows per underlying table (default ~16 with directory filters, ~32 without; max 50).",
+          },
           directory_high_school: {
             type: "string",
             description:
