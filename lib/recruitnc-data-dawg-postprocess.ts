@@ -16,6 +16,8 @@ export function applyRecruitNcDataDawgAnswerPostProcess(answer: string): string 
   let out = stripImpossibleNchsaaYears(answer)
   out = out.replace(/lbslbs/gi, "lbs")
   out = out.replace(/(\d+)lbs(?!\s)/gi, "$1 lbs")
+  // No markdown headings (### / ## / #) — keep section labels as plain text
+  out = out.replace(/^#{1,6}\s+/gm, "")
   out = out.replace(/https?:\/\/[^\s]+\/athletes\/([a-f0-9-]+)/gi, (_match: string, athleteId: string) => {
     return `/view-profile?id=${encodeURIComponent(athleteId)}`
   })

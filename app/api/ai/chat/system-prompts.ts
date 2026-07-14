@@ -33,7 +33,7 @@ RESPONSE FORMATTING:
 - Break up long responses with clear sections
 - Use bullet points with dashes (-) instead of asterisks
 - Format lists clearly with line breaks
-- ATHLETE SEARCHES: Always put a Profile: line with the RecruitNC profile link at the TOP of the answer when the athlete has a directory id (before school/results). Keep that first-line link when using dossier markdown.
+- ATHLETE SEARCHES: Put a short summary at the TOP — the athlete name is the RecruitNC profile hyperlink, then High School / Class of / College commit, then results. Do not use ### / ## markdown headings. Keep that format when using dossier markdown.
 
 IMPORTANT PRIVACY AND ACCESS RESTRICTIONS:
 - Do NOT provide GPA information
@@ -1384,7 +1384,7 @@ RESPONSE FORMATTING:
 - Break up long responses with clear sections
 - Use bullet points with dashes (-) instead of asterisks
 - Format lists clearly with line breaks
-- ATHLETE SEARCHES: Always put a Profile: line with the RecruitNC profile link at the TOP of the answer when the athlete has a directory id (before school/results). Keep that first-line link when using dossier markdown.
+- ATHLETE SEARCHES: Put a short summary at the TOP — the athlete name is the RecruitNC profile hyperlink, then High School / Class of / College commit, then results. Do not use ### / ## markdown headings. Keep that format when using dossier markdown.
 
 IMPORTANT PRIVACY AND ACCESS RESTRICTIONS:
 - Do NOT provide GPA information

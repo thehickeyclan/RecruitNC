@@ -453,7 +453,7 @@ export async function buildSchoolWrestlingDossierMarkdown(rawQuery: string): Pro
   )
 
   const lines: string[] = []
-  lines.push(`## 🏫 ${canonical}`)
+  lines.push(`${canonical}`)
   lines.push("")
 
   if (clsMeta?.classification || clsMeta?.region) {
@@ -468,12 +468,12 @@ export async function buildSchoolWrestlingDossierMarkdown(rawQuery: string): Pro
         : ""
     const summary = [clsPart + regionPart].filter(Boolean).join("")
     if (summary) {
-      lines.push(`📊 Classification: ${summary}${eff}`)
+      lines.push(`Classification: ${summary}${eff}`)
       lines.push("")
     }
   }
 
-  lines.push("### 🏆 NCHSAA Individual Tournament")
+  lines.push("NCHSAA Individual Tournament")
   lines.push("")
   if (nchsaaRows.length === 0) {
     lines.push("*No individual tournament results on file for this school in the matched data.*")
@@ -506,7 +506,7 @@ export async function buildSchoolWrestlingDossierMarkdown(rawQuery: string): Pro
   }
 
   lines.push("")
-  lines.push("### 🤼 Dual Team — NCHSAA State Champions")
+  lines.push("Dual Team — NCHSAA State Champions")
   lines.push("")
   if (dualFiltered.length === 0) {
     lines.push("*No dual-team state titles matched this school name.*")
@@ -523,7 +523,7 @@ export async function buildSchoolWrestlingDossierMarkdown(rawQuery: string): Pro
   }
 
   lines.push("")
-  lines.push("### 🌟 NHSCA Nationals (All-Americans & results)")
+  lines.push("NHSCA Nationals (All-Americans & results)")
   lines.push("")
   if (nhscaCombined.length === 0) {
     lines.push("*No NHSCA rows matched this high school.*")
@@ -560,7 +560,7 @@ export async function buildSchoolWrestlingDossierMarkdown(rawQuery: string): Pro
   }
 
   lines.push("")
-  lines.push("### ⚡ Super32 (All-Americans)")
+  lines.push("Super32 (All-Americans)")
   lines.push("")
   const aaOnly = super32Rows.filter((r) => {
     const p = placementNum(r.placement ?? r.place)
@@ -578,7 +578,7 @@ export async function buildSchoolWrestlingDossierMarkdown(rawQuery: string): Pro
   }
 
   lines.push("")
-  lines.push("### 🎖️ Dave Schultz High School Excellence Award")
+  lines.push("Dave Schultz High School Excellence Award")
   lines.push("")
   if (daveFiltered.length === 0) {
     lines.push("*No Dave Schultz award winners matched this school.*")
@@ -593,7 +593,7 @@ export async function buildSchoolWrestlingDossierMarkdown(rawQuery: string): Pro
   }
 
   lines.push("")
-  lines.push("### 🎖️ Tricia Saunders High School Excellence Award")
+  lines.push("Tricia Saunders High School Excellence Award")
   lines.push("")
   if (triciaFiltered.length === 0) {
     lines.push("*No Tricia Saunders award winners matched this school.*")
@@ -608,7 +608,7 @@ export async function buildSchoolWrestlingDossierMarkdown(rawQuery: string): Pro
   }
 
   lines.push("")
-  lines.push("### ⭐ NCHSAA State Tournament — Most Outstanding Wrestler")
+  lines.push("NCHSAA State Tournament — Most Outstanding Wrestler")
   lines.push("")
   if (mowFiltered.length === 0) {
     lines.push("*No tournament MOW rows matched this school.*")

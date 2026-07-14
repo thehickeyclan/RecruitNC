@@ -62,19 +62,67 @@ export function formatNameWithProfileLink(
   return name
 }
 
+/** Identity fields shown at the top of a Data Dawg athlete answer (before tournament detail). */
+export type AthleteAnswerSummary = {
+  highSchool?: string | null
+  graduationYear?: string | number | null
+  college?: string | null
+  division?: string | null
+  weightClass?: string | null
+  recruitingStatus?: string | null
+}
+
+function formatCollegeCommitLine(college: string, division?: string | null): string {
+  const c = college.trim()
+  const div = (division ?? "").trim()
+  const divPart = div && !c.toLowerCase().includes(div.toLowerCase()) ? ` (${div})` : ""
+  return `College commit: ${c}${divPart}`
+}
+
 /**
- * Opening lines for Data Dawg athlete answers — profile link must be the first content.
+ * Opening block for Data Dawg athlete answers:
+ * 1) summary on top with the athlete name as the profile hyperlink
+ * 2) college commit (when known)
  * Prefer this helper anywhere we build a one-athlete dossier / "here's what I found" block.
  */
 export function formatAthleteAnswerOpening(
   displayName: string,
   athleteId: string | null | undefined,
   profileUrl?: string | null,
+  summary?: AthleteAnswerSummary | null,
 ): string[] {
   const name = displayName?.trim() || "this athlete"
   const url = (athleteId ? getAthleteProfileUrl(athleteId) : null) || profileUrl?.trim() || null
-  if (url) {
-    return [`Profile: [${name}](${url})`, "", `Here's what I found about ${name}:`, ""]
+  const nameLink = url ? `[${name}](${url})` : name
+
+  const lines: string[] = [`Here's what I found about ${nameLink}:`, ""]
+
+  const hs = summary?.highSchool?.toString().trim()
+  if (hs) lines.push(`High School: ${hs}`)
+
+  const gy = summary?.graduationYear
+  if (gy != null && String(gy).trim() !== "" && Number.isFinite(Number(gy))) {
+    lines.push(`Class of: ${Math.floor(Number(gy))}`)
   }
-  return [`Here's what I found about ${name}:`, ""]
+
+  const college = summary?.college?.toString().trim()
+  if (college) {
+    lines.push(formatCollegeCommitLine(college, summary?.division))
+  }
+
+  const wt = summary?.weightClass
+  if (wt != null && String(wt).trim() !== "") {
+    lines.push(`Weight: ${String(wt).trim()}`)
+  }
+
+  const status = summary?.recruitingStatus?.toString().trim()
+  if (status && !college) {
+    lines.push(`Recruiting status: ${status}`)
+  }
+
+  if (hs || college || (gy != null && String(gy).trim() !== "") || status) {
+    lines.push("")
+  }
+
+  return lines
 }
