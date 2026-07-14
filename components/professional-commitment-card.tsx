@@ -117,6 +117,7 @@ export function ProfessionalCommitmentCard({ athlete, listMode = false }: Profes
   const [clubLogoUrl, setClubLogoUrl] = useState<string | null>(null)
   const [clubLogoError, setClubLogoError] = useState(false)
   const [collegeLogoUrl, setCollegeLogoUrl] = useState<string | null>(null)
+  const [collegeLogoError, setCollegeLogoError] = useState(false)
   const [displayClubName, setDisplayClubName] = useState<string>("")
   const [careerStats, setCareerStats] = useState<{
     seasons: SeasonRecord[]
@@ -130,8 +131,15 @@ export function ProfessionalCommitmentCard({ athlete, listMode = false }: Profes
   const [serverCommitmentHonors, setServerCommitmentHonors] = useState<string[] | null>(null)
 
   useEffect(() => {
+    // Reset face + logos when the card athlete changes so prior college marks don't stick / mislabel.
     setIsFlipped(false)
     setImageError(false)
+    setCollegeLogoUrl(null)
+    setCollegeLogoError(false)
+    setHighSchoolLogoUrl(null)
+    setHighSchoolLogoError(false)
+    setClubLogoUrl(null)
+    setClubLogoError(false)
   }, [athlete.name, athlete.id])
 
   const getClubName = () => {
@@ -217,11 +225,19 @@ export function ProfessionalCommitmentCard({ athlete, listMode = false }: Profes
               const data = await response.json()
               if (data.success && data.logo_url) {
                 setCollegeLogoUrl(data.logo_url)
+                setCollegeLogoError(false)
+              } else {
+                setCollegeLogoUrl(null)
               }
+            } else {
+              setCollegeLogoUrl(null)
             }
           } catch (error) {
             console.error(`❌ College logo: Network error loading logo for "${athlete.college}":`, error)
+            setCollegeLogoUrl(null)
           }
+        } else {
+          setCollegeLogoUrl(null)
         }
       } catch (error) {
         console.error("Error loading logos:", error)
@@ -705,16 +721,23 @@ export function ProfessionalCommitmentCard({ athlete, listMode = false }: Profes
               <h4 className="font-bold text-gray-900 mb-2 text-center text-xs relative z-10">COLLEGE COMMITMENT</h4>
               <div className="flex items-center gap-2 relative z-10">
                 <div className="h-12 w-12 rounded-full bg-white p-1.5 flex items-center justify-center border border-gray-200 flex-shrink-0">
-                  {collegeLogoUrl ? (
+                  {collegeLogoUrl && !collegeLogoError ? (
                     <Image
-                      src={collegeLogoUrl || "/placeholder.svg"}
+                      src={collegeLogoUrl}
                       alt={athlete.college || "College"}
                       width={32}
                       height={32}
                       className="object-contain"
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none"
-                      }}
+                      unoptimized={collegeLogoUrl.startsWith("http")}
+                      onError={() => setCollegeLogoError(true)}
+                    />
+                  ) : athlete.college ? (
+                    <Image
+                      src="/generic-college-logo.png"
+                      alt=""
+                      width={32}
+                      height={32}
+                      className="object-contain opacity-70"
                     />
                   ) : (
                     <div className="w-8 h-8 rounded-full bg-gray-300"></div>
@@ -904,15 +927,9 @@ export function ProfessionalCommitmentCard({ athlete, listMode = false }: Profes
         }
         
         @media (max-width: 640px) {
-          /* iOS/Safari fix: prevent 3D backface scaling */
+          /* Do not override .rotate-y-180 / apply translateZ to every child — that blanked or
+             mangled college logos (and other back-face images) on iOS Safari. */
           .card-back {
-            transform: translateZ(0);
-            -webkit-transform: translateZ(0);
-            will-change: transform;
-          }
-          .card-back * {
-            transform: translateZ(0);
-            -webkit-transform: translateZ(0);
             -webkit-font-smoothing: antialiased;
           }
           /* HS Stats container - ensure full width on mobile by breaking out of parent padding */

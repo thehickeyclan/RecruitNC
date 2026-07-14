@@ -41,6 +41,19 @@ export const COLLEGE_DIRECT_LOGO_URLS: Record<string, string> = {
   "university of lynchburg": "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/SmHkZ3IPPB6ayHiOYue4Y-Lynchburg.jpg",
   citadel: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/0fQVgxh_ayKYg7ClSb4Oo-Citadel.webp",
   "the citadel": "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/0fQVgxh_ayKYg7ClSb4Oo-Citadel.webp",
+  averett: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/XpGp9iaWUS2oENhX2XALE-Averett.png",
+  "averett university": "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/XpGp9iaWUS2oENhX2XALE-Averett.png",
+  "mount olive": "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/cwjgktar-1745958885613.png",
+  "university of mount olive":
+    "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/cwjgktar-1745958885613.png",
+  umo: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/cwjgktar-1745958885613.png",
+  "emory & henry": "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/fylhrwhg-1745968815387.png",
+  "emory and henry": "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/fylhrwhg-1745968815387.png",
+  "emory & henry college":
+    "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/fylhrwhg-1745968815387.png",
+  "ohio state": "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/kcgqvisv-1745968898953.png",
+  "ohio state university":
+    "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/kcgqvisv-1745968898953.png",
 }
 
 const HIGH_SCHOOL_DIRECT_LOGO_URLS: Record<string, string> = {
@@ -61,8 +74,10 @@ export function getDirectCollegeLogoUrl(entityName: string): string | null {
   if (!key) return null
   if (COLLEGE_DIRECT_LOGO_URLS[key]) return COLLEGE_DIRECT_LOGO_URLS[key]
 
+  // Fuzzy only for longer keys — short tokens like "nc" / "state" used to steal wrong crests.
   for (const [mappedKey, url] of Object.entries(COLLEGE_DIRECT_LOGO_URLS)) {
-    if (key.includes(mappedKey) || mappedKey.includes(key)) return url
+    if (mappedKey.length < 5 || key.length < 4) continue
+    if (key.includes(mappedKey) || (key.length >= 6 && mappedKey.includes(key))) return url
   }
   return null
 }
