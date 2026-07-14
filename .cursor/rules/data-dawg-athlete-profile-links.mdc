@@ -1,0 +1,16 @@
+---
+description: Data Dawg athlete answers must lead with a RecruitNC profile link
+globs: lib/data-dawg*/**;lib/athlete-profile-links.ts;app/api/ai/**;lib/recruitnc-data-dawg-postprocess.ts
+alwaysApply: true
+---
+
+# Data Dawg — athlete profile link at top
+
+For **any Data Dawg answer about a specific athlete** (search, “who is…”, “tell me about…”, dossier, cross-store summary when a directory id exists):
+
+1. **First content line** must be a profile link when an `athletes.id` is known:
+   - `Profile: [Display Name](https://app.ncwrestlingunited.com/unified-profile/{id})`
+   - Prefer `formatAthleteAnswerOpening(name, id)` from `lib/athlete-profile-links.ts`.
+2. Put that line **above** school/college/results — not buried mid-answer and not omitted when summarizing.
+3. Do not invent a profile URL for names with no directory row; plain-text opener is OK for tournament-only alumni.
+4. When changing search tools or answer formatting, keep `profile_url` on `search_athletes` rows and keep the dossier / legacy chat openers using the helper above.

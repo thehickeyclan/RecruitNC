@@ -61,3 +61,20 @@ export function formatNameWithProfileLink(
   if (url) return `[${name}](${url})`
   return name
 }
+
+/**
+ * Opening lines for Data Dawg athlete answers — profile link must be the first content.
+ * Prefer this helper anywhere we build a one-athlete dossier / "here's what I found" block.
+ */
+export function formatAthleteAnswerOpening(
+  displayName: string,
+  athleteId: string | null | undefined,
+  profileUrl?: string | null,
+): string[] {
+  const name = displayName?.trim() || "this athlete"
+  const url = (athleteId ? getAthleteProfileUrl(athleteId) : null) || profileUrl?.trim() || null
+  if (url) {
+    return [`Profile: [${name}](${url})`, "", `Here's what I found about ${name}:`, ""]
+  }
+  return [`Here's what I found about ${name}:`, ""]
+}

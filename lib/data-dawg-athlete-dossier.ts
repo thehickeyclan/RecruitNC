@@ -4,7 +4,7 @@
  */
 
 import { getSupabaseAdmin } from "@/lib/server-supabase"
-import { getAthleteProfileUrl } from "@/lib/athlete-profile-links"
+import { formatAthleteAnswerOpening } from "@/lib/athlete-profile-links"
 import { escapeForIlike } from "@/lib/nchsaa-results"
 import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
 import { type NchsaaRowForProfile } from "@/lib/profile-tournament-data"
@@ -136,8 +136,7 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
   const nchsaaSorted = [...nchsaaMerged].sort((a, b) => b.year - a.year)
 
   const lines: string[] = []
-  const linkedName = `[${displayName}](${getAthleteProfileUrl(id)})`
-  lines.push(`Here's what I found about ${linkedName}:`, "")
+  lines.push(...formatAthleteAnswerOpening(displayName, id))
 
   if (highSchool) {
     lines.push(`🏛️ High School: ${highSchool}`)
