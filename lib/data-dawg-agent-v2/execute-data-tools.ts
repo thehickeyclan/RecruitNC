@@ -496,7 +496,7 @@ export async function toolSearchAthletes(args: { query: string; limit?: number }
     rows: enrichedRows,
     searched_for: q,
     tournament_summary_note:
-      "Each row includes `profile_url` (RecruitNC athlete page) and `tournament_summary` (merged NHSCA + Super32 + Fargo). Put Profile: [Name](profile_url) at the top of athlete answers. Prefer tournament_summary lines over `nhsca_results` / `super32_results` JSON when they differ — profile JSON may say Participated while tables have full records. Include Fargo lines when present.",
+      "Each row includes `profile_url` (RecruitNC athlete page) and `tournament_summary` (merged NHSCA + Super32 + Fargo). Athlete answers: name is the profile hyperlink at the top, then High School / College commit, then results. No ### headings. Prefer tournament_summary lines over `nhsca_results` / `super32_results` JSON when they differ. Include Fargo lines when present.",
     ...(disambiguation.length
       ? {
           disambiguation,
@@ -1405,7 +1405,7 @@ export async function toolGetAthleteFullDossier(args: { athlete_id: string }) {
   return {
     markdown: result.markdown,
     profile_url: getAthleteProfileUrl(id),
-    note: "markdown already begins with Profile: — keep that as the first line of your reply.",
+    note: "markdown already begins with a top summary (name linked to profile + college commit). Keep that block first; do not add ### headings.",
   }
 }
 

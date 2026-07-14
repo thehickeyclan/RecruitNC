@@ -478,7 +478,7 @@ export function formatNchsaaStateTournamentAnswer(
   let shown = 0
 
   for (const cls of sortedClasses) {
-    lines.push(`### ${cls}`)
+    lines.push(`${cls}`)
     const weights = Object.keys(byClass[cls]).sort((a, b) => parseInt(a, 10) - parseInt(b, 10))
     for (const wt of weights) {
       const group = byClass[cls][wt].sort((a, b) => a.place - b.place)

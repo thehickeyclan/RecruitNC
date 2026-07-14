@@ -135,22 +135,24 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
 
   const nchsaaSorted = [...nchsaaMerged].sort((a, b) => b.year - a.year)
 
-  const lines: string[] = []
-  lines.push(...formatAthleteAnswerOpening(displayName, id))
-
-  if (highSchool) {
-    lines.push(`🏛️ High School: ${highSchool}`)
-  }
-
   const college = String(athlete.college ?? "").trim()
   const division = String(athlete.division ?? "").trim()
-  if (college) {
-    const divPart = division && !college.toLowerCase().includes(division.toLowerCase()) ? ` (${division})` : ""
-    lines.push(`🎓 College: ${college}${divPart}`)
-  }
+  const weightClass = String(athlete.weightclass ?? athlete.weight_class ?? "").trim()
+  const recruitingStatus = String(athlete.recruiting_status ?? "").trim()
 
-  lines.push("")
-  lines.push("🏆 NCHSAA State Results:")
+  const lines: string[] = []
+  lines.push(
+    ...formatAthleteAnswerOpening(displayName, id, null, {
+      highSchool: highSchool || null,
+      graduationYear: hasValidGrad ? gradYear : null,
+      college: college || null,
+      division: division || null,
+      weightClass: weightClass || null,
+      recruitingStatus: recruitingStatus || null,
+    }),
+  )
+
+  lines.push("NCHSAA State Results:")
   if (nchsaaSorted.length === 0) {
     lines.push("None")
   } else {
@@ -182,9 +184,9 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
 
   if (stateDualLines.length > 0) {
     lines.push("")
-    lines.push("🏆 State Dual Team Championships:")
+    lines.push("State Dual Team Championships:")
     lines.push(
-      `_(School team championships — everyone on the ${highSchool} varsity in this class window shares this list. Individual MOW below matches the **named** wrestler only.)_`,
+      `(School team championships — everyone on the ${highSchool} varsity in this class window shares this list. Individual MOW below matches the named wrestler only.)`,
     )
     stateDualLines.forEach((l) => lines.push(l))
   }
@@ -205,17 +207,17 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
 
   if (mowFiltered.length > 0) {
     lines.push("")
-    lines.push("🏆 State Duals Most Outstanding Wrestler (MOW):")
+    lines.push("State Duals Most Outstanding Wrestler (MOW):")
     for (const m of mowFiltered) {
       const w = m.mow_weight_lb ? ` (${m.mow_weight_lb}lbs)` : ""
       const who = String(m.mow_name ?? "").trim()
-      lines.push(`- ${m.year}: ${m.division} Dual Meet MOW — **${who}**${w} (${m.mow_school})`)
+      lines.push(`- ${m.year}: ${m.division} Dual Meet MOW — ${who}${w} (${m.mow_school})`)
     }
   }
 
   const super32Rows = [...super32].sort((a: any, b: any) => (b.year || 0) - (a.year || 0))
   lines.push("")
-  lines.push("🏆 Super32:")
+  lines.push("Super32:")
   if (super32Rows.length === 0) {
     lines.push("None")
   } else {
@@ -226,7 +228,7 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
 
   const fargoRows = [...fargo].sort((a: any, b: any) => (b.year || 0) - (a.year || 0))
   lines.push("")
-  lines.push("🏆 Fargo Nationals:")
+  lines.push("Fargo Nationals:")
   if (fargoRows.length === 0) {
     lines.push("None")
   } else {
@@ -236,7 +238,7 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
   }
 
   lines.push("")
-  lines.push("🌟 NHSCA Nationals:")
+  lines.push("NHSCA Nationals:")
   if (nhscaDisplay.length === 0) {
     lines.push("None")
   } else {
@@ -250,7 +252,7 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
   }
 
   lines.push("")
-  lines.push("🇺🇸 NC United National Team:")
+  lines.push("NC United National Team:")
   if (ncUnited.length === 0) {
     lines.push("None")
   } else {
@@ -259,7 +261,7 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
       const rec = String(r.record ?? "").trim()
       const wt = r.weight ? ` · ${r.weight} lbs` : ""
       const ph = r.isPlaceholder ? " (registered)" : ""
-      lines.push(`- **${r.year}** — ${event} — ${rec}${wt}${ph}`)
+      lines.push(`- ${r.year} — ${event} — ${rec}${wt}${ph}`)
     }
   }
 
@@ -308,7 +310,7 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
 
   if (daveFiltered.length > 0) {
     lines.push("")
-    lines.push("🏅 Dave Schultz High School Excellence Award:")
+    lines.push("Dave Schultz High School Excellence Award:")
     for (const d of daveFiltered) {
       lines.push(`- ${d.year}: Winner (${d.high_school})`)
     }
@@ -316,7 +318,7 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
 
   if (triciaFiltered.length > 0) {
     lines.push("")
-    lines.push("🏅 Tricia Saunders High School Excellence Award:")
+    lines.push("Tricia Saunders High School Excellence Award:")
     for (const d of triciaFiltered) {
       lines.push(`- ${d.year}: Winner (${d.high_school})`)
     }
@@ -324,7 +326,7 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
 
   if (careerFiltered.length > 0) {
     lines.push("")
-    lines.push("📈 All-Time Career Record Book:")
+    lines.push("All-Time Career Record Book:")
     for (const d of careerFiltered) {
       const rank = d.rank != null ? `#${d.rank} ` : ""
       lines.push(
@@ -335,7 +337,7 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
 
   if (seasonFiltered.length > 0) {
     lines.push("")
-    lines.push("📈 Single-Season Record Book:")
+    lines.push("Single-Season Record Book:")
     for (const d of seasonFiltered) {
       lines.push(
         `- ${d.year ?? "?"}: ${d.record}${d.school ? ` — ${d.school}` : ""}`,
@@ -358,7 +360,7 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
 
   if (seasons.size > 0) {
     lines.push("")
-    lines.push("📊 High School Career Record:")
+    lines.push("High School Career Record:")
     let totalW = 0
     let totalL = 0
     const sortedSeasons = Array.from(seasons.entries()).sort((a, b) => {
@@ -380,7 +382,7 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
   const champCount = countDistinctStateTitleYears(nchsaaSorted)
   if (champCount >= 2) {
     lines.push("")
-    lines.push(`🏆 ${champCount}× State Champion${champCount === 4 ? " — one of NC's elite four-time state champions" : ""}`)
+    lines.push(`${champCount}× State Champion${champCount === 4 ? " — one of NC's elite four-time state champions" : ""}`)
   }
 
   return { markdown: lines.join("\n") }

@@ -8199,7 +8199,7 @@ CRITICAL: Data Dawg can answer questions about ANY of these data sources, regard
           console.log(`[AI] Search term: "${searchTerm}"`)
         }
         
-        // Build comprehensive summary (same format as "tell me about") — Profile: link first
+        // Build comprehensive summary — name is profile link; HS + college commit on top
         const { batchLookupAthleteProfileLinks, formatAthleteAnswerOpening } = await import("@/lib/athlete-profile-links")
         const athleteName = filteredAthletes[0]?.name || filteredNchsaaFinal[0]?.wrestler_name || filteredNhscaFinal[0]?.athlete_name || personName
         const athleteId = filteredAthletes[0]?.id
@@ -8210,9 +8210,7 @@ CRITICAL: Data Dawg can answer questions about ANY of these data sources, regard
             profileUrl = pl.get(athleteName) ?? pl.get(athleteName.toLowerCase()) ?? null
           } catch (_) {}
         }
-        const summaryLines = formatAthleteAnswerOpening(athleteName, athleteId, profileUrl)
-        
-        // High school
+
         const highSchools = new Set<string>()
         filteredAthletes.forEach((a: any) => {
           if (a.highschool && a.highschool.trim()) highSchools.add(a.highschool.trim())
@@ -8223,16 +8221,9 @@ CRITICAL: Data Dawg can answer questions about ANY of these data sources, regard
         filteredNhscaFinal.forEach((r: any) => {
           if (r.high_school && r.high_school.trim()) highSchools.add(r.high_school.trim())
         })
-        
-        if (highSchools.size > 0) {
-          const deduplicatedSchools = deduplicateSchoolNames(highSchools)
-          summaryLines.push(`🏛️ High School: ${deduplicatedSchools.join(", ")}`)
-        }
-        
-        // College
+
         const colleges = new Set<string>()
         const divisions = new Set<string>()
-        
         filteredAthletes.forEach((a: any) => {
           if (a.college && a.college.trim()) {
             colleges.add(a.college.trim())
@@ -8241,7 +8232,6 @@ CRITICAL: Data Dawg can answer questions about ANY of these data sources, regard
             }
           }
         })
-        
         if (commitsData && commitsData.length > 0) {
           commitsData.forEach((commit: any) => {
             if (commit.college && commit.college.trim() && isNameMatch(commit.athlete_name || "", searchTerm)) {
@@ -8252,16 +8242,19 @@ CRITICAL: Data Dawg can answer questions about ANY of these data sources, regard
             }
           })
         }
-        
-        if (colleges.size > 0) {
-          const collegeText = Array.from(colleges).join(", ")
-          const divisionText = divisions.size > 0 ? ` (${Array.from(divisions).join(", ")})` : ""
-          summaryLines.push(`🎓 College: ${collegeText}${divisionText}`)
-        }
-        
+
+        const primaryAthlete = filteredAthletes[0]
+        const summaryLines = formatAthleteAnswerOpening(athleteName, athleteId, profileUrl, {
+          highSchool: highSchools.size > 0 ? deduplicateSchoolNames(highSchools).join(", ") : null,
+          graduationYear: primaryAthlete?.graduationyear ?? null,
+          college: colleges.size > 0 ? Array.from(colleges).join(", ") : null,
+          division: divisions.size > 0 ? Array.from(divisions).join(", ") : primaryAthlete?.division ?? null,
+          weightClass: primaryAthlete?.weightclass ?? null,
+          recruitingStatus: primaryAthlete?.recruiting_status ?? null,
+        })
+
         // NCHSAA State Results - combine champions and placers, sort by year descending
-        summaryLines.push("")
-        summaryLines.push("🏆 NCHSAA State Results:")
+        summaryLines.push("NCHSAA State Results:")
         if (filteredNchsaaFinal.length > 0) {
           // Combine all results and sort by year descending (most recent first)
           const allResults = [...filteredNchsaaFinal].sort((a: any, b: any) => b.year - a.year)
@@ -9249,9 +9242,6 @@ CRITICAL: Data Dawg can answer questions about ANY of these data sources, regard
               profileUrl = pl.get(athleteName) ?? pl.get(athleteName.toLowerCase()) ?? null
             } catch (_) {}
           }
-          const summaryLines = formatAthleteAnswerOpening(athleteName, athleteId, profileUrl)
-          
-          // High school
           const highSchools = new Set<string>()
           filteredAthletes.forEach((a: any) => {
             if (a.highschool && a.highschool.trim()) highSchools.add(a.highschool.trim())
@@ -9262,16 +9252,9 @@ CRITICAL: Data Dawg can answer questions about ANY of these data sources, regard
           filteredNhscaFinal.forEach((r: any) => {
             if (r.high_school && r.high_school.trim()) highSchools.add(r.high_school.trim())
           })
-          
-          if (highSchools.size > 0) {
-            const deduplicatedSchools = deduplicateSchoolNames(highSchools)
-            summaryLines.push(`🏛️ High School: ${deduplicatedSchools.join(", ")}`)
-          }
-          
-          // College
+
           const colleges = new Set<string>()
           const divisions = new Set<string>()
-          
           filteredAthletes.forEach((a: any) => {
             if (a.college && a.college.trim()) {
               colleges.add(a.college.trim())
@@ -9280,7 +9263,6 @@ CRITICAL: Data Dawg can answer questions about ANY of these data sources, regard
               }
             }
           })
-          
           if (commitsData && commitsData.length > 0) {
             commitsData.forEach((commit: any) => {
               if (commit.college && commit.college.trim() && isNameMatch(commit.athlete_name || "", searchTerm)) {
@@ -9291,16 +9273,19 @@ CRITICAL: Data Dawg can answer questions about ANY of these data sources, regard
               }
             })
           }
-          
-          if (colleges.size > 0) {
-            const collegeText = Array.from(colleges).join(", ")
-            const divisionText = divisions.size > 0 ? ` (${Array.from(divisions).join(", ")})` : ""
-            summaryLines.push(`🎓 College: ${collegeText}${divisionText}`)
-          }
-          
+
+          const primaryAthlete = filteredAthletes[0]
+          const summaryLines = formatAthleteAnswerOpening(athleteName, athleteId, profileUrl, {
+            highSchool: highSchools.size > 0 ? deduplicateSchoolNames(highSchools).join(", ") : null,
+            graduationYear: primaryAthlete?.graduationyear ?? null,
+            college: colleges.size > 0 ? Array.from(colleges).join(", ") : null,
+            division: divisions.size > 0 ? Array.from(divisions).join(", ") : primaryAthlete?.division ?? null,
+            weightClass: primaryAthlete?.weightclass ?? null,
+            recruitingStatus: primaryAthlete?.recruiting_status ?? null,
+          })
+
           // NCHSAA State Results (include state qualifiers place=0; 2026+ placers 1-4, earlier 1-8)
-          summaryLines.push("")
-          summaryLines.push("🏆 NCHSAA State Results:")
+          summaryLines.push("NCHSAA State Results:")
           if (filteredNchsaaFinal.length > 0) {
             const champions = filteredNchsaaFinal.filter((r: any) => r.place === 1)
             const stateQualifiers = filteredNchsaaFinal.filter((r: any) => r.place === 0)
@@ -13064,9 +13049,7 @@ CRITICAL: Data Dawg can answer questions about ANY of these data sources, regard
               profileUrl = pl.get(athleteName) ?? pl.get(athleteName.toLowerCase()) ?? null
             } catch (_) {}
           }
-          const summaryLines = formatAthleteAnswerOpening(athleteName, athleteId, profileUrl)
-          
-          // High school
+
           const highSchools = new Set<string>()
           filteredAthletes.forEach((a: any) => {
             if (a.highschool && a.highschool.trim()) highSchools.add(a.highschool.trim())
@@ -13077,23 +13060,13 @@ CRITICAL: Data Dawg can answer questions about ANY of these data sources, regard
           filteredNhsca.forEach((r: any) => {
             if (r.high_school && r.high_school.trim()) highSchools.add(r.high_school.trim())
           })
-          
-          if (highSchools.size > 0) {
-            // Deduplicate school name variations (e.g., "Uwharrie Charter", "Uwharrie Charter Academy" -> "Uwharrie Charter")
-            const deduplicatedSchools = deduplicateSchoolNames(highSchools)
-            summaryLines.push(`🏛️ High School: ${deduplicatedSchools.join(", ")}`)
-          }
-          
-          // College commitment - check both athletes table and wrestling_commits
+
           const colleges = new Set<string>()
           const divisions = new Set<string>()
-          
-          // From athletes table
           filteredAthletes.forEach((a: any) => {
             if (a.college && a.college.trim()) {
               const college = a.college.trim()
               colleges.add(college)
-              // Only add division if it's not already in the college name
               if (a.division && a.division.trim()) {
                 const division = a.division.trim()
                 if (!college.toLowerCase().includes(division.toLowerCase())) {
@@ -13102,16 +13075,12 @@ CRITICAL: Data Dawg can answer questions about ANY of these data sources, regard
               }
             }
           })
-          
-          // From wrestling_commits table (for historical athletes not in athletes table)
-          // ALWAYS check commits - use all results found (query already filtered)
           if (uniqueCommits && uniqueCommits.length > 0) {
             console.log(`[AI] Found ${uniqueCommits.length} college commitments:`, uniqueCommits.map((c: any) => `${c.athlete_name} -> ${c.college}`).join(", "))
             uniqueCommits.forEach((commit: any) => {
               if (commit.college && commit.college.trim()) {
                 const college = commit.college.trim()
                 colleges.add(college)
-                // Only add level if it's not already in the college name
                 if (commit.level && commit.level.trim()) {
                   const level = commit.level.trim()
                   if (!college.toLowerCase().includes(level.toLowerCase())) {
@@ -13121,7 +13090,7 @@ CRITICAL: Data Dawg can answer questions about ANY of these data sources, regard
               }
             })
           }
-          
+
           // PRIMARY METHOD: Always do direct lookup in wrestling_commits using exact search term
           // This works for ALL athletes, whether they have a profile or not
           console.log(`[AI] 🔍🔍🔍 COMMIT LOOKUP START - searchTerm="${searchTerm}", type=${typeof searchTerm}, length=${searchTerm.length}`)
@@ -13190,16 +13159,19 @@ CRITICAL: Data Dawg can answer questions about ANY of these data sources, regard
           }
           
           console.log(`[AI] 📊 Final colleges set size: ${colleges.size}, colleges:`, Array.from(colleges))
-          
-          if (colleges.size > 0) {
-            const collegeText = Array.from(colleges).join(", ")
-            const divisionText = divisions.size > 0 ? ` (${Array.from(divisions).join(", ")})` : ""
-            summaryLines.push(`🎓 College: ${collegeText}${divisionText}`)
-          }
+
+          const primaryAthlete = filteredAthletes[0]
+          const summaryLines = formatAthleteAnswerOpening(athleteName, athleteId, profileUrl, {
+            highSchool: highSchools.size > 0 ? deduplicateSchoolNames(highSchools).join(", ") : null,
+            graduationYear: primaryAthlete?.graduationyear ?? null,
+            college: colleges.size > 0 ? Array.from(colleges).join(", ") : null,
+            division: divisions.size > 0 ? Array.from(divisions).join(", ") : primaryAthlete?.division ?? null,
+            weightClass: primaryAthlete?.weightclass ?? null,
+            recruitingStatus: primaryAthlete?.recruiting_status ?? null,
+          })
           
           // NCHSAA State Results - ALWAYS show section (include state qualifiers place=0; 2026+ placers 1-4, earlier 1-8)
-          summaryLines.push("")
-          summaryLines.push("🏆 NCHSAA State Results:")
+          summaryLines.push("NCHSAA State Results:")
           if (filteredNchsaa.length > 0) {
             const champions = filteredNchsaa.filter((r: any) => r.place === 1)
             const stateQualifiers = filteredNchsaa.filter((r: any) => r.place === 0)
@@ -13816,7 +13788,7 @@ CRITICAL: Data Dawg can answer questions about ANY of these data sources, regard
           // FINAL CHECK: Query for college with multiple patterns to ensure we find it
           try {
             const summaryText = summaryLines.join("\n")
-            if (!summaryText.includes("🎓 College:") && !summaryText.includes("College:")) {
+            if (!summaryText.includes("College commit:") && !summaryText.includes("College:")) {
               // Try exact match first
               let commit = null
               const { data: exact } = await adminClient
@@ -13867,11 +13839,11 @@ CRITICAL: Data Dawg can answer questions about ANY of these data sources, regard
                 const collegeHasLevel = level && college.toLowerCase().includes(level.toLowerCase())
                 const displayCollege = collegeHasLevel ? college : `${college}${level ? ` (${level})` : ""}`
                 
-                const highSchoolIndex = summaryLines.findIndex((line: string) => line.includes("🏛️ High School:") || line.includes("High School:"))
-                if (highSchoolIndex >= 0) {
-                  summaryLines.splice(highSchoolIndex + 1, 0, "", `🎓 College: ${displayCollege}`)
+                const insertAt = summaryLines.findIndex((line: string) => line.startsWith("Class of:") || line.startsWith("High School:"))
+                if (insertAt >= 0) {
+                  summaryLines.splice(insertAt + 1, 0, `College commit: ${displayCollege}`)
                 } else {
-                  summaryLines.splice(1, 0, "", `🎓 College: ${displayCollege}`)
+                  summaryLines.splice(2, 0, `College commit: ${displayCollege}`, "")
                 }
               }
             }
@@ -17202,9 +17174,6 @@ CRITICAL: Data Dawg can answer questions about ANY of these data sources, regard
               profileUrl = pl.get(athleteName) ?? pl.get(athleteName.toLowerCase()) ?? null
             } catch (_) {}
           }
-          const summaryLines = formatAthleteAnswerOpening(athleteName, athleteId, profileUrl)
-          
-          // High school
           const highSchools = new Set<string>()
           filteredAthletes.forEach((a: any) => {
             if (a.highschool && a.highschool.trim()) highSchools.add(a.highschool.trim())
@@ -17215,14 +17184,7 @@ CRITICAL: Data Dawg can answer questions about ANY of these data sources, regard
           filteredNhsca.forEach((r: any) => {
             if (r.high_school && r.high_school.trim()) highSchools.add(r.high_school.trim())
           })
-          
-          if (highSchools.size > 0) {
-            // Deduplicate school name variations (e.g., "Uwharrie Charter", "Uwharrie Charter Academy" -> "Uwharrie Charter")
-            const deduplicatedSchools = deduplicateSchoolNames(highSchools)
-            summaryLines.push(`🏛️ High School: ${deduplicatedSchools.join(", ")}`)
-          }
-          
-          // College commitment - check both athletes table and wrestling_commits
+
           const colleges = new Set<string>()
           const divisions = new Set<string>()
           
@@ -17313,16 +17275,19 @@ CRITICAL: Data Dawg can answer questions about ANY of these data sources, regard
           }
           
           console.log(`[AI] 📊 Final colleges set size: ${colleges.size}, colleges:`, Array.from(colleges))
-          
-          if (colleges.size > 0) {
-            const collegeText = Array.from(colleges).join(", ")
-            const divisionText = divisions.size > 0 ? ` (${Array.from(divisions).join(", ")})` : ""
-            summaryLines.push(`🎓 College: ${collegeText}${divisionText}`)
-          }
+
+          const primaryAthlete = filteredAthletes[0]
+          const summaryLines = formatAthleteAnswerOpening(athleteName, athleteId, profileUrl, {
+            highSchool: highSchools.size > 0 ? deduplicateSchoolNames(highSchools).join(", ") : null,
+            graduationYear: primaryAthlete?.graduationyear ?? null,
+            college: colleges.size > 0 ? Array.from(colleges).join(", ") : null,
+            division: divisions.size > 0 ? Array.from(divisions).join(", ") : primaryAthlete?.division ?? null,
+            weightClass: primaryAthlete?.weightclass ?? null,
+            recruitingStatus: primaryAthlete?.recruiting_status ?? null,
+          })
           
           // NCHSAA State Results - ALWAYS show section (include state qualifiers place=0; 2026+ placers 1-4, earlier 1-8)
-          summaryLines.push("")
-          summaryLines.push("🏆 NCHSAA State Results:")
+          summaryLines.push("NCHSAA State Results:")
           if (filteredNchsaa.length > 0) {
             const champions = filteredNchsaa.filter((r: any) => r.place === 1)
             const stateQualifiers = filteredNchsaa.filter((r: any) => r.place === 0)
