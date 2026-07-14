@@ -9,6 +9,8 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { escapeForIlike } from "@/lib/nchsaa-results"
 import {
   filterRowsByAthleteMatchContext,
+  firstNamesLikelySame,
+  getAthleteNameSearchVariants,
   type AthleteMatchContext,
 } from "@/lib/athlete-name-match"
 import { dualTokenPairsForNchsaa } from "@/lib/nchsaa-profile-fetch"
@@ -224,6 +226,13 @@ function directoryFirstLastLow(
   return { firstLow: f, lastLow: l }
 }
 
+/** First-name token OK: nickname aliases (Eli/Elijah) or small Levenshtein typo. */
+function firstNameTokenMatches(queryFirst: string, rowFirst: string): boolean {
+  if (!queryFirst || !rowFirst) return false
+  if (firstNamesLikelySame(queryFirst, rowFirst)) return true
+  return levenshteinDistance(queryFirst, rowFirst) <= maxTypoDistForToken(queryFirst)
+}
+
 function maxTypoDistForToken(tok: string): number {
   return tok.length <= 4 ? 1 : 2
 }
@@ -347,6 +356,22 @@ export async function toolSearchAthletes(args: { query: string; limit?: number }
     merge(d2b, "first+last_swap_gy_desc")
     merge(dNa, "name_tokens_gy_asc")
     merge(dNb, "name_tokens_gy_desc")
+
+    // Eli Horton ↔ Elijah Horton: full-name ILIKE variants (contiguous "%Eli Horton%" misses "Elijah Horton")
+    const nameVariants = getAthleteNameSearchVariants(q)
+      .map((v) => v.trim())
+      .filter((v) => v.length >= 3 && v.toLowerCase() !== q.toLowerCase())
+      .slice(0, 6)
+    if (nameVariants.length > 0) {
+      const variantOr = nameVariants.map((v) => `name.ilike.%${escapeForIlike(v)}%`).join(",")
+      const vHalf = Math.max(1, Math.floor(strategyCap / 2))
+      const [vAsc, vDesc] = await Promise.all([
+        athletesBase(admin).or(variantOr).order(cols.gy, { ascending: true, nullsFirst: false }).limit(vHalf),
+        athletesBase(admin).or(variantOr).order(cols.gy, { ascending: false, nullsFirst: false }).limit(vHalf),
+      ])
+      merge(vAsc, "name_alias_variants_gy_asc")
+      merge(vDesc, "name_alias_variants_gy_desc")
+    }
   }
 
   const qLower = q.toLowerCase()
@@ -393,7 +418,8 @@ export async function toolSearchAthletes(args: { query: string; limit?: number }
         wantLast.length >= 2
       ) {
         if (!firstLow || !lastCompare) return false
-        if (levenshteinDistance(tokens[0], firstLow) > maxTypoDistForToken(tokens[0])) return false
+        // Eli↔Elijah etc. must not die on Levenshtein (distance 3 > typo budget of 1).
+        if (!firstNameTokenMatches(tokens[0], firstLow)) return false
         if (levenshteinDistance(tokens[1], lastCompare) > maxTypoDistForToken(tokens[1])) return false
         return true
       }
@@ -408,7 +434,7 @@ export async function toolSearchAthletes(args: { query: string; limit?: number }
           Boolean(firstLow && lastCompare)
         if (
           !needsNameStem ||
-          (levenshteinDistance(tokens[0], firstLow) <= maxTypoDistForToken(tokens[0]) &&
+          (firstNameTokenMatches(tokens[0], firstLow) &&
             levenshteinDistance(tokens[1], lastCompare) <= maxTypoDistForToken(tokens[1]))
         ) {
           return true
@@ -418,7 +444,7 @@ export async function toolSearchAthletes(args: { query: string; limit?: number }
       if (tokens.length >= 2 && lastCompare && wantLast.length >= 2) {
         const maxLastDist = wantLast.length <= 4 ? 1 : 2
         if (levenshteinDistance(wantLast, lastCompare) <= maxLastDist) {
-          if (!firstLow || wantFirst.length < 2 || levenshteinDistance(wantFirst, firstLow) <= 2) {
+          if (!firstLow || wantFirst.length < 2 || firstNameTokenMatches(wantFirst, firstLow)) {
             return true
           }
         }
