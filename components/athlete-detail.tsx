@@ -807,18 +807,15 @@ export function AthleteDetail({
           <div className="block lg:hidden">
             {mobileRecruiterLayout ? (
               <div className="w-full">
-                {/* Photo only — keep text/controls out of the image so watermarks don't collide. */}
-                <div className="relative h-[min(58vw,280px)] w-full overflow-hidden bg-[#0A1628]">
-                  <Image
+                {/* Full graphic, never cropped — shrink to width (and max height) via object-contain. */}
+                <div className="relative w-full bg-[#0A1628]">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- intrinsic size so commit graphics are never cropped */}
+                  <img
                     src={athletePhoto || "/wrestler-silhouette.png"}
                     alt={athleteName}
-                    fill
-                    className="object-cover object-top"
+                    className="mx-auto block h-auto w-auto max-h-[min(85vh,720px)] max-w-full"
                     onError={() => setImageError(true)}
-                    priority
-                    sizes="100vw"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0A1628]/70 via-transparent to-black/25" />
 
                   <div className="absolute top-3 left-3 right-3 z-20 flex items-center justify-between gap-2">
                     {currentUserId ? (
@@ -973,16 +970,14 @@ export function AthleteDetail({
               </div>
             ) : (
               <>
-            <div className="relative h-80 w-full overflow-hidden">
-              <Image
+            <div className="relative w-full bg-[#13294B]">
+              {/* eslint-disable-next-line @next/next/no-img-element -- never crop mobile hero graphics */}
+              <img
                 src={athletePhoto || "/wrestler-silhouette.png"}
                 alt={athleteName}
-                fill
-                className="object-cover object-top"
+                className="mx-auto block h-auto w-auto max-h-[min(85vh,720px)] max-w-full"
                 onError={() => setImageError(true)}
-                priority
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
 
               {/* Edit Button - Bottom Right of Photo */}
               {currentUserId && (
