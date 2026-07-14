@@ -37,6 +37,9 @@ import { useToast } from "@/components/ui/use-toast"
 import { getYouTubeVideoId, isDirectHighlightVideoUrl } from "@/lib/highlight-video-url"
 import { PROFILE_DARK_THEME } from "@/lib/profile-dark-theme"
 
+/** Bio/summary paragraph section — kept in code but hidden while copy stays stale. */
+const SHOW_ATHLETE_BIO_SECTION = false
+
 interface AthleteDetailProps {
   athlete: {
     id: string
@@ -1338,7 +1341,8 @@ export function AthleteDetail({
         </Card>
       )}
 
-      {/* 2. Athlete Profile (Bio) - always show for consistent structure */}
+      {/* 2. Athlete Profile (Bio) — hidden for now (stale paragraph); set SHOW_ATHLETE_BIO_SECTION to re-enable */}
+      {SHOW_ATHLETE_BIO_SECTION ? (
       <Card
         id="bio"
         className={cn(
@@ -1397,6 +1401,7 @@ export function AthleteDetail({
             )}
           </div>
         </Card>
+      ) : null}
 
       {/* 3. High School and Programs - always show for consistent structure */}
       <Card
