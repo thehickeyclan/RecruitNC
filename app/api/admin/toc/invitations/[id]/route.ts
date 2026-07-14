@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic"
 
 type Params = { params: Promise<{ id: string }> }
 
-/** Update invited weight, seed, or admin notes on an invitation. */
+/** Update invited weight, seed, notes, not-accepted status, or refresh confirm window. */
 export async function PATCH(request: Request, { params }: Params) {
   const auth = await requireAdmin()
   if (!auth.ok) {
@@ -26,7 +26,7 @@ export async function PATCH(request: Request, { params }: Params) {
     const admin = createAdminClientFresh()
     const { data: existing, error: findError } = await admin
       .from("toc_invitations")
-      .select("id, weight_class, status, seed")
+      .select("id, weight_class, status, seed, invited_at")
       .eq("id", id)
       .maybeSingle()
 
@@ -42,8 +42,24 @@ export async function PATCH(request: Request, { params }: Params) {
       return NextResponse.json({ error: "Invitation not found" }, { status: 404 })
     }
 
-    if (existing.status === "declined" || existing.status === "withdrew") {
-      return NextResponse.json({ error: "Cannot edit a declined or withdrawn invitation." }, { status: 400 })
+    const nextStatus = parsed.data.status
+    const refreshInviteWindow = parsed.data.refreshInviteWindow === true
+    const reactivating =
+      (existing.status === "declined" || existing.status === "withdrew") &&
+      (nextStatus === "invited" || refreshInviteWindow)
+
+    if ((existing.status === "declined" || existing.status === "withdrew") && !reactivating) {
+      return NextResponse.json(
+        { error: "This invitation is declined/withdrawn. Reactivate it to invited first." },
+        { status: 400 },
+      )
+    }
+
+    if (existing.status === "confirmed" && (nextStatus || refreshInviteWindow)) {
+      return NextResponse.json(
+        { error: "Athlete is already confirmed — change status from Field if you need to reverse that." },
+        { status: 400 },
+      )
     }
 
     if (parsed.data.seed !== undefined && parsed.data.seed != null && existing.status !== "confirmed") {
@@ -71,7 +87,8 @@ export async function PATCH(request: Request, { params }: Params) {
       }
     }
 
-    const update: Record<string, unknown> = { updated_at: new Date().toISOString() }
+    const now = new Date().toISOString()
+    const update: Record<string, unknown> = { updated_at: now }
 
     if (parsed.data.weightClass !== undefined && parsed.data.weightClass !== existing.weight_class) {
       update.weight_class = parsed.data.weightClass
@@ -83,6 +100,21 @@ export async function PATCH(request: Request, { params }: Params) {
     if (parsed.data.seed !== undefined) update.seed = parsed.data.seed
     if (parsed.data.notes !== undefined) update.notes = parsed.data.notes
 
+    if (nextStatus === "declined" || nextStatus === "withdrew") {
+      if (existing.status !== "invited" && existing.status !== "nominated") {
+        return NextResponse.json(
+          { error: "Only invited (not-accepted) athletes can be marked declined or withdrew." },
+          { status: 400 },
+        )
+      }
+      update.status = nextStatus
+    }
+
+    if (nextStatus === "invited" || refreshInviteWindow) {
+      update.status = "invited"
+      update.invited_at = now
+    }
+
     if (Object.keys(update).length === 1) {
       return NextResponse.json({
         ok: true,
@@ -90,6 +122,8 @@ export async function PATCH(request: Request, { params }: Params) {
           id: existing.id,
           weight_class: existing.weight_class,
           seed: existing.seed,
+          status: existing.status,
+          invited_at: existing.invited_at,
         },
       })
     }
@@ -98,7 +132,7 @@ export async function PATCH(request: Request, { params }: Params) {
       .from("toc_invitations")
       .update(update)
       .eq("id", id)
-      .select("id, weight_class, seed, notes, status")
+      .select("id, weight_class, seed, notes, status, invited_at")
       .single()
 
     if (updateError) {

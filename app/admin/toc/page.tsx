@@ -6,7 +6,7 @@ const LINKS = [
   {
     href: "/admin/toc/invitations",
     title: "Invitations",
-    description: "Invite athletes, copy confirm links, resend email/SMS text",
+    description: "Invite athletes, track who hasn’t accepted, mark declined, refresh confirm windows",
     icon: UserCheck,
   },
   {

@@ -20,11 +20,18 @@ import {
 import { TocInviteShareCard } from "@/components/toc/admin/toc-invite-share-card"
 import { TocInviteReminderCard } from "@/components/toc/admin/toc-invite-reminder-card"
 import { HardLink } from "@/components/hard-link"
-import { ArrowLeft, CreditCard, Loader2, RefreshCw, Send, UserCheck, Users } from "lucide-react"
+import { ArrowLeft, CreditCard, Clock, Loader2, RefreshCw, Send, UserCheck, Users } from "lucide-react"
 import { buildTocAthleteInviteMessage, type TocInviteMessage } from "@/lib/toc/invite-message"
 import { confirmPageUrl, registrationPayPageUrl } from "@/lib/toc/invitation-service"
 import { formatTocGradYear, suggestTocInviteWeight, tocWeightProfileHint } from "@/lib/toc/invitations"
+import {
+  confirmDeadlineFromInvitedAt,
+  isConfirmPastDeadline,
+  TOC_CONFIRM_WITHIN_DAYS,
+} from "@/lib/toc/registration-policy"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
+
+type ListFilter = "not_accepted" | "overdue" | "declined" | "confirmed" | "all"
 
 type SearchAthlete = {
   id: string
@@ -66,6 +73,8 @@ export default function TocInvitationsAdminPage() {
   const [expandedShareId, setExpandedShareId] = useState<string | null>(null)
   const [expandedReminderId, setExpandedReminderId] = useState<string | null>(null)
   const [weightSavingId, setWeightSavingId] = useState<string | null>(null)
+  const [actionSavingId, setActionSavingId] = useState<string | null>(null)
+  const [listFilter, setListFilter] = useState<ListFilter>("not_accepted")
 
   const previewShare = useMemo(() => {
     if (!selectedAthlete) return null
@@ -86,9 +95,55 @@ export default function TocInvitationsAdminPage() {
     const accepted = invitations.filter((row) => row.status === "confirmed").length
     const paid = invitations.filter((row) => row.payment_status === "paid").length
     const pendingConfirm = invitations.filter((row) => row.status === "invited").length
+    const declined = invitations.filter((row) => row.status === "declined" || row.status === "withdrew").length
+    const overdue = invitations.filter(
+      (row) => row.status === "invited" && isConfirmPastDeadline(row.invited_at),
+    ).length
     const pendingPayment = Math.max(0, accepted - paid)
-    return { invited, accepted, paid, pendingConfirm, pendingPayment }
+    return { invited, accepted, paid, pendingConfirm, pendingPayment, declined, overdue }
   }, [invitations])
+
+  const filteredInvitations = useMemo(() => {
+    let rows = invitations
+    if (listFilter === "not_accepted") {
+      rows = invitations.filter((row) => row.status === "invited")
+    } else if (listFilter === "overdue") {
+      rows = invitations.filter((row) => row.status === "invited" && isConfirmPastDeadline(row.invited_at))
+    } else if (listFilter === "declined") {
+      rows = invitations.filter((row) => row.status === "declined" || row.status === "withdrew")
+    } else if (listFilter === "confirmed") {
+      rows = invitations.filter((row) => row.status === "confirmed")
+    }
+
+    return [...rows].sort((a, b) => {
+      if (listFilter === "not_accepted" || listFilter === "overdue") {
+        const aOver = isConfirmPastDeadline(a.invited_at) ? 0 : 1
+        const bOver = isConfirmPastDeadline(b.invited_at) ? 0 : 1
+        if (aOver !== bOver) return aOver - bOver
+        const aT = a.invited_at ? new Date(a.invited_at).getTime() : 0
+        const bT = b.invited_at ? new Date(b.invited_at).getTime() : 0
+        return aT - bT
+      }
+      const aT = a.invited_at ? new Date(a.invited_at).getTime() : 0
+      const bT = b.invited_at ? new Date(b.invited_at).getTime() : 0
+      return bT - aT
+    })
+  }, [invitations, listFilter])
+
+  const listTitle = useMemo(() => {
+    switch (listFilter) {
+      case "not_accepted":
+        return `Not accepted (${filteredInvitations.length})`
+      case "overdue":
+        return `Past confirm window (${filteredInvitations.length})`
+      case "declined":
+        return `Declined / withdrew (${filteredInvitations.length})`
+      case "confirmed":
+        return `Accepted (${filteredInvitations.length})`
+      default:
+        return `All invitations (${filteredInvitations.length})`
+    }
+  }, [listFilter, filteredInvitations.length])
 
   const loadInvitations = useCallback(async () => {
     setLoading(true)
@@ -201,6 +256,78 @@ export default function TocInvitationsAdminPage() {
     }
   }
 
+  const patchInvitation = async (
+    row: InvitationRow,
+    body: { status?: "invited" | "declined" | "withdrew"; refreshInviteWindow?: boolean },
+  ) => {
+    setActionSavingId(row.id)
+    try {
+      const res = await fetch(`/api/admin/toc/invitations/${row.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "Failed to update invitation")
+      const next = data.invitation as {
+        id: string
+        status?: string
+        invited_at?: string | null
+        weight_class?: number
+        seed?: number | null
+        notes?: string | null
+      }
+      setInvitations((prev) =>
+        prev.map((inv) =>
+          inv.id === row.id
+            ? {
+                ...inv,
+                status: next.status ?? inv.status,
+                invited_at: next.invited_at !== undefined ? next.invited_at : inv.invited_at,
+                weight_class: next.weight_class ?? inv.weight_class,
+              }
+            : inv,
+        ),
+      )
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to update invitation")
+    } finally {
+      setActionSavingId(null)
+    }
+  }
+
+  const markDeclined = (row: InvitationRow) => {
+    const name = row.athletes?.name ?? "this athlete"
+    if (!confirm(`Flag ${name} as declined (did not accept invite)?`)) return
+    void patchInvitation(row, { status: "declined" })
+  }
+
+  const refreshWindow = (row: InvitationRow) => {
+    const name = row.athletes?.name ?? "this athlete"
+    if (
+      !confirm(
+        `Refresh ${name}'s confirm window? Their ${TOC_CONFIRM_WITHIN_DAYS}-day deadline restarts from today.`,
+      )
+    ) {
+      return
+    }
+    void patchInvitation(row, { refreshInviteWindow: true })
+  }
+
+  const reactivateInvite = (row: InvitationRow) => {
+    const name = row.athletes?.name ?? "this athlete"
+    if (!confirm(`Put ${name} back on the not-accepted invite list and restart their confirm window?`)) return
+    void patchInvitation(row, { status: "invited", refreshInviteWindow: true })
+  }
+
+  const filterButtons: { id: ListFilter; label: string; count: number }[] = [
+    { id: "not_accepted", label: "Not accepted", count: inviteStats.pendingConfirm },
+    { id: "overdue", label: "Past deadline", count: inviteStats.overdue },
+    { id: "declined", label: "Declined", count: inviteStats.declined },
+    { id: "confirmed", label: "Accepted", count: inviteStats.accepted },
+    { id: "all", label: "All", count: inviteStats.invited },
+  ]
+
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -212,7 +339,12 @@ export default function TocInvitationsAdminPage() {
           </Button>
           <div>
             <h1 className="text-2xl font-bold">TOC invitations</h1>
-            <p className="text-sm text-muted-foreground">Preview, send, or copy invite text · <HardLink href="/admin/toc/field" className="text-[#B31B1B] hover:underline">Field by weight</HardLink></p>
+            <p className="text-sm text-muted-foreground">
+              Track who hasn&apos;t accepted · flag declined · refresh confirm windows ·{" "}
+              <HardLink href="/admin/toc/field" className="text-[#B31B1B] hover:underline">
+                Field by weight
+              </HardLink>
+            </p>
           </div>
         </div>
         <Button variant="outline" size="sm" onClick={() => void loadInvitations()} disabled={loading}>
@@ -221,10 +353,33 @@ export default function TocInvitationsAdminPage() {
         </Button>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <button
+          type="button"
+          className="text-left"
+          onClick={() => setListFilter("not_accepted")}
+        >
+          <Card className={`border-t-4 border-t-amber-600 h-full ${listFilter === "not_accepted" ? "ring-2 ring-amber-600/40" : ""}`}>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Not accepted</CardTitle>
+              <Clock className="h-4 w-4 text-amber-700" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold tabular-nums">{loading ? "—" : inviteStats.pendingConfirm}</div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {loading
+                  ? "Loading…"
+                  : inviteStats.overdue > 0
+                    ? `${inviteStats.overdue} past ${TOC_CONFIRM_WITHIN_DAYS}-day window`
+                    : `Awaiting confirm (${TOC_CONFIRM_WITHIN_DAYS}-day window)`}
+              </p>
+            </CardContent>
+          </Card>
+        </button>
+
         <Card className="border-t-4 border-t-[#002147]">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Invited</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Invited (all)</CardTitle>
             <Users className="h-4 w-4 text-[#002147]" />
           </CardHeader>
           <CardContent>
@@ -232,29 +387,31 @@ export default function TocInvitationsAdminPage() {
             <p className="mt-1 text-xs text-muted-foreground">
               {loading
                 ? "Loading…"
-                : inviteStats.pendingConfirm > 0
-                  ? `${inviteStats.pendingConfirm} awaiting confirm`
+                : inviteStats.declined > 0
+                  ? `${inviteStats.declined} declined / withdrew`
                   : "Invitations issued"}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-t-4 border-t-[#CC0000]">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Accepted</CardTitle>
-            <UserCheck className="h-4 w-4 text-[#CC0000]" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold tabular-nums">{loading ? "—" : inviteStats.accepted}</div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {loading
-                ? "Loading…"
-                : inviteStats.invited > 0
-                  ? `${Math.round((inviteStats.accepted / inviteStats.invited) * 100)}% of invited`
-                  : "Verbal confirms"}
-            </p>
-          </CardContent>
-        </Card>
+        <button type="button" className="text-left" onClick={() => setListFilter("confirmed")}>
+          <Card className={`border-t-4 border-t-[#CC0000] h-full ${listFilter === "confirmed" ? "ring-2 ring-[#CC0000]/30" : ""}`}>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Accepted</CardTitle>
+              <UserCheck className="h-4 w-4 text-[#CC0000]" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold tabular-nums">{loading ? "—" : inviteStats.accepted}</div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {loading
+                  ? "Loading…"
+                  : inviteStats.invited > 0
+                    ? `${Math.round((inviteStats.accepted / inviteStats.invited) * 100)}% of invited`
+                    : "Verbal confirms"}
+              </p>
+            </CardContent>
+          </Card>
+        </button>
 
         <Card className="border-t-4 border-t-green-700">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -374,8 +531,28 @@ export default function TocInvitationsAdminPage() {
       {error ? <p className="text-red-600 text-sm">{error}</p> : null}
 
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">All invitations ({invitations.length})</CardTitle>
+        <CardHeader className="space-y-3">
+          <CardTitle className="text-lg">{listTitle}</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Kids with status <span className="font-medium text-foreground">invited</span> have not accepted yet.
+            Mark <span className="font-medium text-foreground">declined</span> when you&apos;re moving on, or refresh
+            their confirm window to give them another {TOC_CONFIRM_WITHIN_DAYS} days.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {filterButtons.map((btn) => (
+              <Button
+                key={btn.id}
+                type="button"
+                size="sm"
+                variant={listFilter === btn.id ? "default" : "outline"}
+                className={listFilter === btn.id ? "bg-[#002147] hover:bg-[#002147]/90" : ""}
+                onClick={() => setListFilter(btn.id)}
+              >
+                {btn.label}
+                <span className="ml-1.5 tabular-nums opacity-80">{btn.count}</span>
+              </Button>
+            ))}
+          </div>
         </CardHeader>
         <CardContent className="overflow-x-auto space-y-4">
           <Table>
@@ -385,107 +562,179 @@ export default function TocInvitationsAdminPage() {
                 <TableHead>School</TableHead>
                 <TableHead>Weight</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Confirm by</TableHead>
                 <TableHead>Payment</TableHead>
                 <TableHead>Jacket</TableHead>
                 <TableHead>Invited</TableHead>
-                <TableHead>Confirmed</TableHead>
                 <TableHead>Last text</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {invitations.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell className="font-medium">{row.athletes?.name ?? row.athlete_id.slice(0, 8)}</TableCell>
-                  <TableCell>{row.athletes?.highschool ?? "—"}</TableCell>
-                  <TableCell className="min-w-[120px]">
-                    {row.status === "declined" || row.status === "withdrew" ? (
-                      <span>{row.weight_class} lbs</span>
-                    ) : (
-                      <div className="flex items-center gap-1.5">
-                        <Select
-                          value={String(row.weight_class)}
-                          disabled={weightSavingId === row.id}
-                          onValueChange={(value) => void updateWeight(row, Number(value))}
+              {filteredInvitations.map((row) => {
+                const overdue = row.status === "invited" && isConfirmPastDeadline(row.invited_at)
+                const confirmBy =
+                  row.status === "invited" && row.invited_at
+                    ? confirmDeadlineFromInvitedAt(row.invited_at).toLocaleDateString()
+                    : "—"
+                const busy = actionSavingId === row.id || weightSavingId === row.id
+                return (
+                  <TableRow key={row.id} className={overdue ? "bg-amber-50/80" : undefined}>
+                    <TableCell className="font-medium">{row.athletes?.name ?? row.athlete_id.slice(0, 8)}</TableCell>
+                    <TableCell>{row.athletes?.highschool ?? "—"}</TableCell>
+                    <TableCell className="min-w-[120px]">
+                      {row.status === "declined" || row.status === "withdrew" ? (
+                        <span>{row.weight_class} lbs</span>
+                      ) : (
+                        <div className="flex items-center gap-1.5">
+                          <Select
+                            value={String(row.weight_class)}
+                            disabled={weightSavingId === row.id}
+                            onValueChange={(value) => void updateWeight(row, Number(value))}
+                          >
+                            <SelectTrigger className="h-8 w-[100px] text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {TOC_WEIGHT_CLASSES.map((w) => (
+                                <SelectItem key={w} value={String(w)}>
+                                  {w} lbs
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {weightSavingId === row.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground shrink-0" />
+                          ) : null}
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1 items-start">
+                        <Badge
+                          variant={row.status === "confirmed" ? "default" : "secondary"}
+                          className={
+                            row.status === "invited"
+                              ? "bg-amber-100 text-amber-950 hover:bg-amber-100"
+                              : row.status === "declined" || row.status === "withdrew"
+                                ? "bg-slate-200 text-slate-800 hover:bg-slate-200"
+                                : undefined
+                          }
                         >
-                          <SelectTrigger className="h-8 w-[100px] text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {TOC_WEIGHT_CLASSES.map((w) => (
-                              <SelectItem key={w} value={String(w)}>
-                                {w} lbs
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        {weightSavingId === row.id ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground shrink-0" />
+                          {row.status === "invited" ? "not accepted" : row.status}
+                        </Badge>
+                        {overdue ? (
+                          <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
+                            overdue
+                          </Badge>
                         ) : null}
                       </div>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={row.status === "confirmed" ? "default" : "secondary"}>{row.status}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    {row.payment_status === "paid" ? (
-                      <Badge className="bg-green-700 hover:bg-green-700">paid</Badge>
-                    ) : row.status === "confirmed" ? (
-                      <a
-                        href={registrationPayPageUrl(row.athlete_id)}
-                        className="text-xs text-[#002147] underline underline-offset-2"
-                      >
-                        {row.payment_status ?? "unpaid"}
-                      </a>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
-                    )}
-                  </TableCell>
-                  <TableCell>{row.jacket_size ?? "—"}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                    {row.invited_at ? new Date(row.invited_at).toLocaleDateString() : "—"}
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                    {row.confirmed_at ? new Date(row.confirmed_at).toLocaleDateString() : "—"}
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                    {row.last_reminder_at ? new Date(row.last_reminder_at).toLocaleString() : "—"}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex flex-col items-end gap-1">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="text-xs h-8"
-                        onClick={() => {
-                          setExpandedReminderId(row.id)
-                          setExpandedShareId(null)
-                        }}
-                      >
-                        Text reminder
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="text-xs h-8"
-                        onClick={() => {
-                          setExpandedShareId(expandedShareId === row.id ? null : row.id)
-                          setExpandedReminderId(null)
-                        }}
-                      >
-                        {expandedShareId === row.id ? "Hide invite" : "Copy invite"}
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {!loading && invitations.length === 0 ? (
+                    </TableCell>
+                    <TableCell className={`text-xs whitespace-nowrap ${overdue ? "text-amber-800 font-medium" : "text-muted-foreground"}`}>
+                      {confirmBy}
+                    </TableCell>
+                    <TableCell>
+                      {row.payment_status === "paid" ? (
+                        <Badge className="bg-green-700 hover:bg-green-700">paid</Badge>
+                      ) : row.status === "confirmed" ? (
+                        <a
+                          href={registrationPayPageUrl(row.athlete_id)}
+                          className="text-xs text-[#002147] underline underline-offset-2"
+                        >
+                          {row.payment_status ?? "unpaid"}
+                        </a>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell>{row.jacket_size ?? "—"}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                      {row.invited_at ? new Date(row.invited_at).toLocaleDateString() : "—"}
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                      {row.last_reminder_at ? new Date(row.last_reminder_at).toLocaleString() : "—"}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex flex-col items-end gap-1">
+                        {row.status === "invited" ? (
+                          <>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="text-xs h-8 text-amber-900"
+                              disabled={busy}
+                              onClick={() => markDeclined(row)}
+                            >
+                              Mark declined
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="text-xs h-8"
+                              disabled={busy}
+                              onClick={() => refreshWindow(row)}
+                            >
+                              Refresh window
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="text-xs h-8"
+                              disabled={busy}
+                              onClick={() => {
+                                setExpandedReminderId(row.id)
+                                setExpandedShareId(null)
+                              }}
+                            >
+                              Text reminder
+                            </Button>
+                          </>
+                        ) : null}
+                        {row.status === "declined" || row.status === "withdrew" ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="text-xs h-8"
+                            disabled={busy}
+                            onClick={() => reactivateInvite(row)}
+                          >
+                            Reactivate invite
+                          </Button>
+                        ) : null}
+                        {row.status !== "declined" && row.status !== "withdrew" ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="text-xs h-8"
+                            onClick={() => {
+                              setExpandedShareId(expandedShareId === row.id ? null : row.id)
+                              setExpandedReminderId(null)
+                            }}
+                          >
+                            {expandedShareId === row.id ? "Hide invite" : "Copy invite"}
+                          </Button>
+                        ) : null}
+                        {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" /> : null}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
+              {!loading && filteredInvitations.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
-                    No invitations yet
+                    {listFilter === "not_accepted"
+                      ? "Everyone invited has accepted, declined, or withdrawn — no open invites."
+                      : listFilter === "overdue"
+                        ? "No athletes past their confirm deadline."
+                        : listFilter === "declined"
+                          ? "No declined or withdrawn invites yet."
+                          : "No invitations in this view."}
                   </TableCell>
                 </TableRow>
               ) : null}
