@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Loader2 } from "lucide-react"
-import { TOC_JACKET_SIZES, defaultTocWeightForAthlete } from "@/lib/toc/invitations"
+import { TOC_JACKET_SIZES, defaultTocWeightForAthlete, firstNameFromAthleteName } from "@/lib/toc/invitations"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 import {
   formatTocRegistrationFee,
@@ -18,12 +18,20 @@ import {
 
 type Props = {
   athleteId: string
+  athleteName: string
   athleteWeightClass: string | number | null
   invitedWeightClass: number | null
   onSuccess: (weightClass: number) => void
 }
 
-export function ConfirmationForm({ athleteId, athleteWeightClass, invitedWeightClass, onSuccess }: Props) {
+export function ConfirmationForm({
+  athleteId,
+  athleteName,
+  athleteWeightClass,
+  invitedWeightClass,
+  onSuccess,
+}: Props) {
+  const firstName = firstNameFromAthleteName(athleteName)
   const defaultWeight =
     invitedWeightClass ??
     defaultTocWeightForAthlete(athleteWeightClass)
@@ -84,7 +92,9 @@ export function ConfirmationForm({ athleteId, athleteWeightClass, invitedWeightC
   return (
     <form onSubmit={submit} className="space-y-6 border-t border-[#0B1D3A]/10 pt-8">
       <div>
-        <h2 className="text-xl font-bold text-[#0B1D3A] uppercase tracking-wide">Confirm your spot</h2>
+        <h2 className="text-xl font-bold text-[#0B1D3A] uppercase tracking-wide">
+          {firstName}, Confirm your spot
+        </h2>
         <p className="text-sm text-muted-foreground mt-1">
           Just a few tournament-specific details — we already have your profile. Confirm below to lock in your spot; payment can wait.
         </p>
@@ -145,7 +155,7 @@ export function ConfirmationForm({ athleteId, athleteWeightClass, invitedWeightC
           id="toc-attendance"
           checked={attendance}
           onCheckedChange={setAttendance}
-          label="I commit to Friday weigh-in (4:00 PM) and Saturday competition."
+          label="I commit to Friday weigh-in (4:00 PM), first-round competition Friday night, and Saturday through finals."
         />
         <AckCheckbox
           id="toc-weight"
@@ -187,7 +197,7 @@ export function ConfirmationForm({ athleteId, athleteWeightClass, invitedWeightC
               Confirming…
             </>
           ) : (
-            "Confirm my spot"
+            `${firstName}, Confirm your spot`
           )}
         </Button>
       </div>
