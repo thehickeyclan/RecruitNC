@@ -47,6 +47,8 @@ export type BracketLayout = {
   width: number
   height: number
   slotHeight: number
+  /** In-card “Bout N” header strip height (0 when unused). */
+  boutHeaderHeight: number
   matchWidth: number
   roundGap: number
   matches: BracketLayoutMatch[]

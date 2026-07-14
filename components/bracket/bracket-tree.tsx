@@ -87,13 +87,13 @@ function SlotRow({
 
   const style = {
     height: slotHeight,
-    background: active ? theme.highlight : theme.slotBg,
-    borderColor: active ? "rgba(204,0,0,0.45)" : theme.slotBorder,
+    background: active ? theme.highlight : "transparent",
+    borderBottomColor: active ? "rgba(204,0,0,0.45)" : theme.slotBorder,
   }
 
   const className = cn(
-    "flex w-full items-center gap-2 px-2.5 border",
-    position === "top" ? "rounded-t-sm border-b-0" : "rounded-b-sm",
+    "flex w-full items-center gap-2 px-2.5 border-0 border-b",
+    position === "top" ? "" : "border-b-0",
     !isOpen && onHighlightCompetitor && slot.competitorId && "cursor-pointer hover:brightness-110",
   )
 
@@ -165,23 +165,31 @@ export function BracketTree({
           ))}
         </svg>
 
-        {/* Matches */}
+        {/* Matches — bout label is an in-card header, never floating above the box */}
         {layout.matches.map((match) => (
           <div
             key={match.id}
-            className="absolute flex flex-col"
-            style={{ left: match.x, top: match.y, width: match.width, height: match.height }}
+            className="absolute flex flex-col overflow-hidden rounded-sm border"
+            style={{
+              left: match.x,
+              top: match.y,
+              width: match.width,
+              height: match.height,
+              borderColor: theme.slotBorder,
+              background: theme.slotBg,
+            }}
           >
-            <p
-              className="shrink-0 text-[9px] uppercase tracking-wider leading-none flex items-end pb-1"
+            <div
+              className="flex shrink-0 items-center px-2.5 text-[9px] font-semibold uppercase tracking-wider"
               style={{
-                height: match.height - layout.slotHeight * 2,
+                height: layout.boutHeaderHeight,
                 color: theme.roundLabel,
-                opacity: match.boutNumber != null ? 1 : 0,
+                borderBottom: `1px solid ${theme.slotBorder}`,
+                background: "rgba(255,255,255,0.04)",
               }}
             >
               {match.boutNumber != null ? `Bout ${match.boutNumber}` : "\u00a0"}
-            </p>
+            </div>
             <SlotRow
               slot={match.top}
               position="top"

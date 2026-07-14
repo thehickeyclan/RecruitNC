@@ -12,29 +12,46 @@ export const BRACKET_SIZES: BracketSize[] = [4, 8, 16, 32, 64]
 
 /** Space reserved above the bracket for round titles (ROUND 1, etc.). */
 export const BRACKET_ROUND_LABEL_OFFSET = 22
-/** Space reserved above each match card for “Bout N” labels. */
-export const BRACKET_BOUT_LABEL_HEIGHT = 14
+/**
+ * In-card “Bout N” header strip. Part of the match unit — not a floating label above the box.
+ */
+export const BRACKET_BOUT_HEADER_HEIGHT = 18
+/** @deprecated use BRACKET_BOUT_HEADER_HEIGHT */
+export const BRACKET_BOUT_LABEL_HEIGHT = BRACKET_BOUT_HEADER_HEIGHT
 
 export function isBracketSize(n: number): n is BracketSize {
   return BRACKET_SIZES.includes(n as BracketSize)
 }
 
-/** Vertical center Y for match `matchIndex` in round `roundIndex` (0 = first round). */
+export function matchUnitHeight(
+  slotHeight: number,
+  boutHeaderHeight: number = BRACKET_BOUT_HEADER_HEIGHT,
+): number {
+  return boutHeaderHeight + slotHeight * 2
+}
+
+/** Vertical center Y of the match *unit* (header + slots) for match in round. */
 export function matchCenterY(
   roundIndex: number,
   matchIndex: number,
   slotHeight: number,
   matchGap: number,
+  boutHeaderHeight: number = BRACKET_BOUT_HEADER_HEIGHT,
 ): number {
-  const matchBlock = slotHeight * 2
-  const stride = (matchBlock + matchGap) * 2 ** roundIndex
+  const unit = matchUnitHeight(slotHeight, boutHeaderHeight)
+  const stride = (unit + matchGap) * 2 ** roundIndex
   return matchIndex * stride + stride / 2
 }
 
-export function totalBracketHeight(size: BracketSize, slotHeight: number, matchGap: number): number {
-  const matchBlock = slotHeight * 2
+export function totalBracketHeight(
+  size: BracketSize,
+  slotHeight: number,
+  matchGap: number,
+  boutHeaderHeight: number = BRACKET_BOUT_HEADER_HEIGHT,
+): number {
+  const unit = matchUnitHeight(slotHeight, boutHeaderHeight)
   const firstRoundMatches = size / 2
-  return firstRoundMatches * (matchBlock + matchGap) - matchGap
+  return firstRoundMatches * (unit + matchGap) - matchGap
 }
 
 export function roundLabelsForSize(size: BracketSize): string[] {
@@ -77,12 +94,13 @@ export function layoutColumnBracket(
   const matchWidth = options?.matchWidth ?? 220
   const roundGap = options?.roundGap ?? 44
   const padding = options?.padding ?? 20
-  const matchBlock = slotHeight * 2
-  const matchGap = 8
+  const boutHeaderHeight = BRACKET_BOUT_HEADER_HEIGHT
+  const unitHeight = matchUnitHeight(slotHeight, boutHeaderHeight)
+  const slotBlock = slotHeight * 2
+  const matchGap = 12
   const maxMatches = Math.max(...tree.rounds.map((r) => r.length))
-  const totalHeight = maxMatches * (matchBlock + matchGap) - matchGap
+  const totalHeight = maxMatches * (unitHeight + matchGap) - matchGap
   const yOrigin = padding + BRACKET_ROUND_LABEL_OFFSET
-  const unitHeight = BRACKET_BOUT_LABEL_HEIGHT + matchBlock
 
   const matches: BracketLayoutMatch[] = []
   const connectors: BracketConnector[] = []
@@ -94,14 +112,13 @@ export function layoutColumnBracket(
     const label = round[0]?.roundLabel ?? `Round ${roundIndex + 1}`
     roundLabels.push({ roundIndex, label, x: x + matchWidth / 2 })
 
-    const colHeight = round.length * (matchBlock + matchGap) - matchGap
+    const colHeight = round.length * (unitHeight + matchGap) - matchGap
     const colOffset = (totalHeight - colHeight) / 2
 
     for (let matchIndex = 0; matchIndex < round.length; matchIndex++) {
       const match = round[matchIndex]
-      const slotTop = yOrigin + colOffset + matchIndex * (matchBlock + matchGap)
-      const centerY = slotTop + matchBlock / 2
-      const y = slotTop - BRACKET_BOUT_LABEL_HEIGHT
+      const y = yOrigin + colOffset + matchIndex * (unitHeight + matchGap)
+      const centerY = y + boutHeaderHeight + slotBlock / 2
 
       matches.push({
         ...match,
@@ -116,10 +133,10 @@ export function layoutColumnBracket(
         const nextRound = tree.rounds[roundIndex + 1]
         const nextMatchIndex = Math.min(matchIndex, nextRound.length - 1)
         const nextX = padding + (roundIndex + 1) * (matchWidth + roundGap)
-        const nextColHeight = nextRound.length * (matchBlock + matchGap) - matchGap
+        const nextColHeight = nextRound.length * (unitHeight + matchGap) - matchGap
         const nextColOffset = (totalHeight - nextColHeight) / 2
-        const nextSlotTop = yOrigin + nextColOffset + nextMatchIndex * (matchBlock + matchGap)
-        const nextCenterY = nextSlotTop + matchBlock / 2
+        const nextY = yOrigin + nextColOffset + nextMatchIndex * (unitHeight + matchGap)
+        const nextCenterY = nextY + boutHeaderHeight + slotBlock / 2
         const exitX = x + matchWidth
         const enterX = nextX
         const midX = exitX + roundGap / 2
@@ -139,6 +156,7 @@ export function layoutColumnBracket(
     width,
     height: yOrigin + totalHeight + padding,
     slotHeight,
+    boutHeaderHeight,
     matchWidth,
     roundGap,
     matches,
@@ -167,11 +185,12 @@ export function layoutSingleElimBracket(
   const matchWidth = options?.matchWidth ?? 220
   const roundGap = options?.roundGap ?? 44
   const padding = options?.padding ?? 20
-  const matchBlock = slotHeight * 2
-  const matchGap = 8
-  const totalHeight = totalBracketHeight(tree.size, slotHeight, matchGap)
+  const boutHeaderHeight = BRACKET_BOUT_HEADER_HEIGHT
+  const unitHeight = matchUnitHeight(slotHeight, boutHeaderHeight)
+  const slotBlock = slotHeight * 2
+  const matchGap = 12
+  const totalHeight = totalBracketHeight(tree.size, slotHeight, matchGap, boutHeaderHeight)
   const yOrigin = padding + BRACKET_ROUND_LABEL_OFFSET
-  const unitHeight = BRACKET_BOUT_LABEL_HEIGHT + matchBlock
 
   const matches: BracketLayoutMatch[] = []
   const connectors: BracketConnector[] = []
@@ -185,12 +204,10 @@ export function layoutSingleElimBracket(
 
     for (let matchIndex = 0; matchIndex < round.length; matchIndex++) {
       const match = round[matchIndex]
-      const geometricCenter = matchCenterY(roundIndex, matchIndex, slotHeight, matchGap)
-      const slotTop = yOrigin + geometricCenter - matchBlock / 2
-      /** Midline of the two wrestler rows — connectors must hit this. */
-      const centerY = slotTop + matchBlock / 2
-      /** Top of bout label + match card unit. */
-      const y = slotTop - BRACKET_BOUT_LABEL_HEIGHT
+      const unitCenter = matchCenterY(roundIndex, matchIndex, slotHeight, matchGap, boutHeaderHeight)
+      const y = yOrigin + unitCenter - unitHeight / 2
+      /** Midline of the two wrestler rows (below the bout header). */
+      const centerY = y + boutHeaderHeight + slotBlock / 2
 
       const layoutMatch: BracketLayoutMatch = {
         ...match,
@@ -206,8 +223,15 @@ export function layoutSingleElimBracket(
         const nextRoundIndex = roundIndex + 1
         const nextMatchIndex = Math.floor(matchIndex / 2)
         const nextX = padding + nextRoundIndex * (matchWidth + roundGap)
-        const nextGeometricCenter = matchCenterY(nextRoundIndex, nextMatchIndex, slotHeight, matchGap)
-        const nextCenterY = yOrigin + nextGeometricCenter
+        const nextUnitCenter = matchCenterY(
+          nextRoundIndex,
+          nextMatchIndex,
+          slotHeight,
+          matchGap,
+          boutHeaderHeight,
+        )
+        const nextY = yOrigin + nextUnitCenter - unitHeight / 2
+        const nextCenterY = nextY + boutHeaderHeight + slotBlock / 2
         const exitX = x + matchWidth
         const enterX = nextX
         const midX = exitX + roundGap / 2
@@ -227,6 +251,7 @@ export function layoutSingleElimBracket(
     width,
     height: yOrigin + totalHeight + padding,
     slotHeight,
+    boutHeaderHeight,
     matchWidth,
     roundGap,
     matches,
