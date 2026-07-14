@@ -1,4 +1,6 @@
 import { applyRecruitNcDataDawgAnswerPostProcess } from "@/lib/recruitnc-data-dawg-postprocess"
+import { getRouteForSuggestedPrompt } from "@/lib/data-dawg-suggested-prompts"
+import { formatSuggestedHandlerAnswer } from "@/lib/data-dawg-suggested-handler-answer"
 import { parseTournamentResultsQuery } from "@/lib/data-dawg-tournament-results-query"
 import { answerTournamentResultsQuery } from "./tournament-results-by-year"
 import { runOpenAiDataDawgToolLoop } from "./openai-tool-loop"
@@ -40,6 +42,53 @@ export async function runDataDawgAgentV2(params: {
   toolRounds: number
 }> {
   const priorMessages = historyToPriorMessages(params.conversationHistory)
+  const messageId = params.messageId || `msg-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
+
+  // Chip / FAQ examples must hit deterministic handlers — agent v2 was treating
+  // "which school has the most NHSCA All-Americans?" as a school named "North Carolina".
+  const suggestedRoute = getRouteForSuggestedPrompt(params.message)
+  if (suggestedRoute) {
+    try {
+      const { getHandler, hasHandler } = await import("@/app/api/ai/chat/handlers/index")
+      if (hasHandler(suggestedRoute.handler)) {
+        const handler = getHandler(suggestedRoute.handler)
+        if (handler) {
+          const handlerResult = await handler(
+            { query: params.message, search: params.message, ...suggestedRoute.params },
+            // Handlers that ignore request still type as NextRequest
+            undefined as never,
+            params.messageId || null,
+          )
+          if (handlerResult?.directResponse) {
+            const data = (await handlerResult.directResponse.clone().json().catch(() => null)) as {
+              answer?: string
+            } | null
+            if (data?.answer) {
+              return {
+                answer: applyRecruitNcDataDawgAnswerPostProcess(String(data.answer)),
+                messageId,
+                queryType: suggestedRoute.handler,
+                source: "data_dawg_agent_v2_suggested",
+                toolRounds: 0,
+              }
+            }
+          }
+          const formatted = formatSuggestedHandlerAnswer(handlerResult ?? {})
+          if (formatted?.trim()) {
+            return {
+              answer: applyRecruitNcDataDawgAnswerPostProcess(formatted),
+              messageId,
+              queryType: suggestedRoute.handler,
+              source: "data_dawg_agent_v2_suggested",
+              toolRounds: 0,
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("[RecruitNC] suggested-prompt pre-route failed:", e instanceof Error ? e.message : e)
+    }
+  }
 
   const tournamentParsed = parseTournamentResultsQuery(params.message)
   if (tournamentParsed) {
@@ -48,7 +97,7 @@ export async function runDataDawgAgentV2(params: {
       const answer = applyRecruitNcDataDawgAnswerPostProcess(directAnswer)
       return {
         answer,
-        messageId: params.messageId || `msg-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
+        messageId,
         queryType: `tournament_results_${tournamentParsed.kind}`,
         source: "data_dawg_agent_v2",
         toolRounds: 0,
@@ -68,7 +117,7 @@ export async function runDataDawgAgentV2(params: {
 
   return {
     answer,
-    messageId: params.messageId || `msg-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
+    messageId,
     queryType: "data_dawg_agent_v2",
     source: "data_dawg_agent_v2",
     toolRounds,
