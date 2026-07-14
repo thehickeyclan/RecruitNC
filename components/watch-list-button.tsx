@@ -8,9 +8,11 @@ import { useAuth } from "@/contexts/auth-context"
 interface WatchListButtonProps {
   athleteId: string
   className?: string
+  /** Icon-only control for tight mobile hero toolbars. */
+  compact?: boolean
 }
 
-export function WatchListButton({ athleteId, className }: WatchListButtonProps) {
+export function WatchListButton({ athleteId, className, compact = false }: WatchListButtonProps) {
   const { user, profile } = useAuth()
   const [isStarred, setIsStarred] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -99,14 +101,17 @@ export function WatchListButton({ athleteId, className }: WatchListButtonProps) 
       disabled={loading}
       variant="outline"
       size="sm"
-      className={`${className} ${
+      data-starred={isStarred ? "true" : "false"}
+      aria-label={isStarred ? "On Watch List" : "Add to Watch List"}
+      title={isStarred ? "On Watch List" : "Add to Watch List"}
+      className={`${compact ? "h-9 w-9 p-0 justify-center" : ""} ${
         isStarred
           ? "bg-yellow-500 text-white border-yellow-600 hover:bg-yellow-600"
           : "bg-white/90 text-gray-900 border-white hover:bg-white"
-      }`}
+      } ${className ?? ""}`}
     >
-      <Star className={`w-4 h-4 mr-2 ${isStarred ? "fill-white" : ""}`} />
-      {isStarred ? "On Watch List" : "Add to Watch List"}
+      <Star className={`w-4 h-4 ${compact ? "" : "mr-2"} ${isStarred ? "fill-white" : ""}`} />
+      {compact ? null : isStarred ? "On Watch List" : "Add to Watch List"}
     </Button>
   )
 }

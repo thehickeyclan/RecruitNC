@@ -806,71 +806,79 @@ export function AthleteDetail({
           {/* Mobile view */}
           <div className="block lg:hidden">
             {mobileRecruiterLayout ? (
-              <div className="relative min-h-[360px] h-[min(92vw,440px)] w-full overflow-hidden">
-                <Image
-                  src={athletePhoto || "/wrestler-silhouette.png"}
-                  alt={athleteName}
-                  fill
-                  className="object-cover object-top"
-                  onError={() => setImageError(true)}
-                  priority
-                  sizes="100vw"
-                />
-                <div className="absolute inset-0 bg-gradient-to-b from-[#13294B]/95 via-[#13294B]/35 to-black/15" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#13294B]/80 via-transparent to-transparent" />
+              <div className="w-full">
+                {/* Photo only — keep text/controls out of the image so watermarks don't collide. */}
+                <div className="relative h-[min(58vw,280px)] w-full overflow-hidden bg-[#0A1628]">
+                  <Image
+                    src={athletePhoto || "/wrestler-silhouette.png"}
+                    alt={athleteName}
+                    fill
+                    className="object-cover object-top"
+                    onError={() => setImageError(true)}
+                    priority
+                    sizes="100vw"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0A1628]/70 via-transparent to-black/25" />
 
-                <div className="absolute top-3 left-3 right-3 z-20 flex items-start justify-between gap-2">
-                  {currentUserId ? (
-                    <Button
-                      size="sm"
-                      className="bg-white/90 hover:bg-white text-[#13294B] shadow-lg p-2 h-auto"
-                      onClick={() => setShowEditModal(true)}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                  ) : (
-                    <span />
-                  )}
-                  <div className="flex items-center gap-1">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="text-white/90 hover:text-white hover:bg-white/20 h-9 px-2"
-                      onClick={handleShareProfile}
-                      aria-label="Share profile"
-                    >
-                      <Share2 className="w-4 h-4" />
-                    </Button>
-                    {athlete.id && !isViewingOwnProfile && (
-                      <MessageAthleteButton
-                        athleteId={athlete.id}
-                        claimedByUserId={athlete.claimed_by_user_id}
-                        athleteName={athleteName}
-                        className="h-9 px-2 text-white/90 hover:text-white hover:bg-white/20 border-0"
-                        size="md"
-                        iconClassName="w-4 h-4"
-                      />
+                  <div className="absolute top-3 left-3 right-3 z-20 flex items-center justify-between gap-2">
+                    {currentUserId ? (
+                      <Button
+                        size="sm"
+                        className="h-9 w-9 bg-black/45 hover:bg-black/60 text-white border border-white/25 shadow-md p-0"
+                        onClick={() => setShowEditModal(true)}
+                        aria-label="Request edit"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    ) : (
+                      <span className="w-9" />
                     )}
-                    <WatchListButton athleteId={athlete.id} />
+                    <div className="flex items-center gap-1.5 rounded-full bg-black/45 border border-white/20 p-1 backdrop-blur-sm">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-white hover:text-white hover:bg-white/15 h-8 w-8 p-0"
+                        onClick={handleShareProfile}
+                        aria-label="Share profile"
+                      >
+                        <Share2 className="w-4 h-4" />
+                      </Button>
+                      {athlete.id && !isViewingOwnProfile && (
+                        <MessageAthleteButton
+                          athleteId={athlete.id}
+                          claimedByUserId={athlete.claimed_by_user_id}
+                          athleteName={athleteName}
+                          className="h-8 w-8 px-0 text-white hover:text-white hover:bg-white/15 border-0"
+                          size="md"
+                          iconClassName="w-4 h-4"
+                        />
+                      )}
+                      <WatchListButton
+                        athleteId={athlete.id}
+                        compact
+                        className="border-0 shadow-none data-[starred=false]:bg-transparent data-[starred=false]:text-white data-[starred=false]:hover:bg-white/15"
+                      />
+                    </div>
                   </div>
                 </div>
 
-                <div className="absolute top-14 left-0 right-0 z-10 px-4 pb-4 text-white">
-                  <h1 className="text-3xl font-bold leading-tight drop-shadow-lg">{athleteName}</h1>
+                {/* Identity panel below the photo — readable, no overlay fight */}
+                <div className="bg-[#0A1628] text-white px-4 pt-4 pb-5">
+                  <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight">{athleteName}</h1>
 
                   {isCommittedStatus && college && college !== "Not specified" && (
-                    <div className="mt-3 flex items-center gap-3">
+                    <div className="mt-3 flex items-center gap-2.5">
                       {collegeLogo ? (
-                        <div className="relative h-12 w-12 shrink-0 rounded-full overflow-hidden border border-white/40 bg-white/90 shadow-lg">
+                        <div className="relative h-10 w-10 shrink-0 rounded-full overflow-hidden border border-white/30 bg-white shadow-sm">
                           <Image
                             src={collegeLogo}
                             alt={`${college} logo`}
                             fill
-                            className="object-contain p-1.5"
+                            className="object-contain p-1"
                           />
                         </div>
                       ) : (
-                        <div className="h-12 w-12 shrink-0 rounded-full border border-white/40 bg-white/20 flex items-center justify-center text-white text-base font-semibold shadow-lg">
+                        <div className="h-10 w-10 shrink-0 rounded-full border border-white/30 bg-white/15 flex items-center justify-center text-white text-sm font-semibold">
                           {college
                             .split(" ")
                             .slice(0, 2)
@@ -879,57 +887,46 @@ export function AthleteDetail({
                         </div>
                       )}
                       <div className="min-w-0">
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-white/70">Committed To</p>
-                        <p className="text-base font-bold truncate">{college}</p>
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-white/60">Committed to</p>
+                        <p className="text-base font-semibold truncate text-white">{college}</p>
                       </div>
                     </div>
                   )}
 
-                  {prospectRanking ? (
-                    <div className="mt-3">
-                      <Badge className="bg-[#D3B574] text-[#13294B] px-3 py-1 text-sm font-bold">
-                        #{prospectRanking} - Class of {graduationYear}
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    {prospectRanking ? (
+                      <Badge className="bg-[#D3B574] text-[#13294B] px-2.5 py-1 text-xs font-bold">
+                        #{prospectRanking} · Class of {graduationYear || "—"}
                       </Badge>
-                    </div>
-                  ) : null}
-
-                  <div className="mt-3 grid grid-cols-2 gap-2 max-w-xs">
-                    <div className="rounded-lg border border-white/20 bg-black/25 p-2.5 backdrop-blur-sm">
-                      <p className="text-[10px] font-medium uppercase tracking-wide text-white/70">Year</p>
-                      <p className="text-lg font-bold">{graduationYear || "N/A"}</p>
-                    </div>
-                    <div className="rounded-lg border border-white/20 bg-black/25 p-2.5 backdrop-blur-sm">
-                      <div className="flex items-center justify-between gap-1">
-                        <p className="text-[10px] font-medium uppercase tracking-wide text-white/70">Weight</p>
-                        {canEdit ? (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-5 w-5 p-0 text-white/80 hover:text-white hover:bg-white/20"
-                            onClick={() => setEditingSection("weight")}
-                            aria-label="Edit weight"
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                        ) : null}
-                      </div>
-                      <p className="text-lg font-bold">
-                        {weightClassLabel === "Not specified" ? weightClassLabel : `${weightClassLabel} lbs`}
-                      </p>
-                      {weightSubline ? (
-                        <p className="mt-0.5 text-[10px] leading-snug text-white/65">{weightSubline}</p>
-                      ) : null}
-                    </div>
+                    ) : graduationYear ? (
+                      <Badge className="bg-white/15 text-white border border-white/20 px-2.5 py-1 text-xs font-semibold">
+                        Class of {graduationYear}
+                      </Badge>
+                    ) : null}
+                    {weightClassLabel !== "Not specified" ? (
+                      <button
+                        type="button"
+                        className={cn(
+                          "inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-xs font-semibold text-white",
+                          canEdit && "hover:bg-white/15",
+                        )}
+                        onClick={canEdit ? () => setEditingSection("weight") : undefined}
+                        disabled={!canEdit}
+                      >
+                        {weightClassLabel} lbs
+                        {canEdit ? <Edit className="h-3 w-3 opacity-80" aria-hidden /> : null}
+                      </button>
+                    ) : null}
                   </div>
 
                   {showHeroContactRow ? (
-                    <div className="mt-3 flex gap-2 overflow-x-auto scroll-table-x pb-0.5">
+                    <div className="mt-3.5 flex gap-2 overflow-x-auto scroll-table-x pb-0.5">
                       {instagramUrl && instagramLogo && (
                         <a
                           href={instagramUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-white/15 px-2.5 py-1.5 text-xs font-medium text-white"
+                          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-white"
                           aria-label="Instagram"
                         >
                           <Image src={instagramLogo} alt="" width={16} height={16} className="h-4 w-4 object-contain" />
@@ -939,7 +936,7 @@ export function AthleteDetail({
                       {canSeePrivateInfo && cellPhone && (
                         <a
                           href={`tel:${cellPhone.replace(/\D/g, "")}`}
-                          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-white/15 px-2.5 py-1.5 text-xs font-medium text-white"
+                          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-white"
                           aria-label="Call"
                         >
                           <Phone className="h-4 w-4" />
@@ -951,7 +948,7 @@ export function AthleteDetail({
                           href={athlete.flo_profile_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-white/15 px-2.5 py-1.5 text-xs font-medium text-white"
+                          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-white"
                           aria-label="Flo Wrestling"
                         >
                           <Image src={floLogo} alt="" width={16} height={16} className="h-4 w-4 object-contain" />
@@ -963,7 +960,7 @@ export function AthleteDetail({
                           href={athlete.track_wrestling_profile_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-white/15 px-2.5 py-1.5 text-xs font-medium text-white"
+                          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-white"
                           aria-label="Track Wrestling"
                         >
                           <Image src={trackWrestlingLogo} alt="" width={16} height={16} className="h-4 w-4 object-contain" />
@@ -1087,9 +1084,6 @@ export function AthleteDetail({
                   <p className="text-xl font-bold">
                     {weightClassLabel === "Not specified" ? weightClassLabel : `${weightClassLabel} lbs`}
                   </p>
-                  {weightSubline ? (
-                    <p className="mt-0.5 text-[11px] leading-snug text-white/65">{weightSubline}</p>
-                  ) : null}
                 </div>
               </div>
 

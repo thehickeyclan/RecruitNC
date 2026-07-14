@@ -4,7 +4,10 @@
  */
 
 import { getSupabaseAdmin } from "@/lib/server-supabase"
-import { formatAthleteAnswerOpening } from "@/lib/athlete-profile-links"
+import {
+  buildBriefAthleteCareerSummary,
+  formatAthleteAnswerOpening,
+} from "@/lib/athlete-profile-links"
 import { resolveAthleteCollegeCommit } from "@/lib/data-dawg-college-commit"
 import { escapeForIlike } from "@/lib/nchsaa-results"
 import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
@@ -136,12 +139,36 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
 
   const nchsaaSorted = [...nchsaaMerged].sort((a, b) => b.year - a.year)
 
-  const weightClass = String(athlete.weightclass ?? athlete.weight_class ?? "").trim()
   const recruitingStatus = String(athlete.recruiting_status ?? "").trim()
   const commit = await resolveAthleteCollegeCommit(supabase, {
     displayName,
     college: String(athlete.college ?? "").trim() || null,
     division: String(athlete.division ?? "").trim() || null,
+  })
+
+  // Career W-L early so the opener can include a brief summary (weight stays out — it fluctuates).
+  const { data: matchRows } = await supabase.from("matches").select("*").eq("athlete_id", id)
+  const seasons = new Map<string, { wins: number; losses: number }>()
+  for (const m of matchRows ?? []) {
+    const mr = m as Record<string, unknown>
+    const season = String(mr.season ?? mr.grade ?? "").toLowerCase()
+    if (!season || season.includes("career")) continue
+    if (!seasons.has(season)) seasons.set(season, { wins: 0, losses: 0 })
+    const rec = seasons.get(season)!
+    rec.wins += Number(mr.wins ?? 0) || 0
+    rec.losses += Number(mr.losses ?? 0) || 0
+  }
+  let careerWins = 0
+  let careerLosses = 0
+  for (const rec of seasons.values()) {
+    careerWins += rec.wins
+    careerLosses += rec.losses
+  }
+  const champCount = countDistinctStateTitleYears(nchsaaSorted)
+  const careerSummary = buildBriefAthleteCareerSummary({
+    stateTitleYears: champCount,
+    careerWins: seasons.size > 0 ? careerWins : null,
+    careerLosses: seasons.size > 0 ? careerLosses : null,
   })
 
   const lines: string[] = []
@@ -151,8 +178,8 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
       graduationYear: hasValidGrad ? gradYear : null,
       college: commit?.college ?? null,
       division: commit?.division ?? null,
-      weightClass: weightClass || null,
       recruitingStatus: recruitingStatus || null,
+      careerSummary,
     }),
   )
 
@@ -349,42 +376,24 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
     }
   }
 
-  const { data: matchRows } = await supabase.from("matches").select("*").eq("athlete_id", id)
-
-  const seasons = new Map<string, { wins: number; losses: number }>()
-  for (const m of matchRows ?? []) {
-    const mr = m as Record<string, unknown>
-    const season = String(mr.season ?? mr.grade ?? "").toLowerCase()
-    if (!season || season.includes("career")) continue
-    if (!seasons.has(season)) seasons.set(season, { wins: 0, losses: 0 })
-    const rec = seasons.get(season)!
-    rec.wins += Number(mr.wins ?? 0) || 0
-    rec.losses += Number(mr.losses ?? 0) || 0
-  }
-
   if (seasons.size > 0) {
     lines.push("")
     lines.push("High School Career Record:")
-    let totalW = 0
-    let totalL = 0
     const sortedSeasons = Array.from(seasons.entries()).sort((a, b) => {
       const ya = parseInt(a[0].match(/(\d{4})/)?.[1] ?? "0", 10)
       const yb = parseInt(b[0].match(/(\d{4})/)?.[1] ?? "0", 10)
       return yb - ya
     })
     for (const [season, rec] of sortedSeasons) {
-      totalW += rec.wins
-      totalL += rec.losses
       const sd = season.charAt(0).toUpperCase() + season.slice(1)
       lines.push(`- ${sd}: ${rec.wins}-${rec.losses}`)
     }
     if (sortedSeasons.length > 1) {
-      lines.push(`- Career Total: ${totalW}-${totalL}`)
+      lines.push(`- Career Total: ${careerWins}-${careerLosses}`)
     }
   }
 
-  const champCount = countDistinctStateTitleYears(nchsaaSorted)
-  if (champCount >= 2) {
+  if (champCount >= 2 && !careerSummary) {
     lines.push("")
     lines.push(`${champCount}× State Champion${champCount === 4 ? " — one of NC's elite four-time state champions" : ""}`)
   }

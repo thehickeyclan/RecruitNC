@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest"
-import { formatAthleteAnswerOpening, getAthleteProfileUrl } from "@/lib/athlete-profile-links"
+import {
+  buildBriefAthleteCareerSummary,
+  formatAthleteAnswerOpening,
+  getAthleteProfileUrl,
+} from "@/lib/athlete-profile-links"
 
 describe("getAthleteProfileUrl", () => {
   it("uses the public /view-profile?id= route", () => {
@@ -11,6 +15,14 @@ describe("getAthleteProfileUrl", () => {
   })
 })
 
+describe("buildBriefAthleteCareerSummary", () => {
+  it("combines state titles and career record", () => {
+    expect(
+      buildBriefAthleteCareerSummary({ stateTitleYears: 3, careerWins: 193, careerLosses: 9 }),
+    ).toBe("3× State Champion with a 193-9 high school career.")
+  })
+})
+
 describe("formatAthleteAnswerOpening", () => {
   it("makes the athlete name the profile hyperlink and puts summary fields on top", () => {
     const id = "11111111-1111-1111-1111-111111111111"
@@ -19,12 +31,16 @@ describe("formatAthleteAnswerOpening", () => {
       graduationYear: 2026,
       college: "Roanoke",
       division: "NCAA Division III",
+      weightClass: "138",
+      careerSummary: "3× State Champion with a 193-9 high school career.",
     })
     expect(lines[0]).toBe(`Here's what I found about [Anna Ockerman](${getAthleteProfileUrl(id)}):`)
     expect(lines[0]).toContain("/view-profile?id=")
     expect(lines).toContain("High School: Green Level")
     expect(lines).toContain("Class of: 2026")
     expect(lines).toContain("College commit: Roanoke (NCAA Division III)")
+    expect(lines).toContain("3× State Champion with a 193-9 high school career.")
+    expect(lines.some((l) => l.startsWith("Weight:"))).toBe(false)
     expect(lines.some((l) => l.startsWith("Profile:"))).toBe(false)
   })
 

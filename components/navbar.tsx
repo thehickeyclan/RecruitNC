@@ -25,6 +25,7 @@ import {
   Gift,
   BookOpen,
   GraduationCap,
+  MapPin,
 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { useCartStore } from "@/lib/store/cart-store"
@@ -246,6 +247,31 @@ export function Navbar() {
     },
   ]
 
+  const eventsFargoColumn: EventsMegaLink[] = [
+    {
+      href: "/fargo",
+      label: "2026 Results",
+      icon: Trophy,
+      badge: "current",
+      badgeLabel: "Current",
+    },
+    {
+      href: "/fargo/2025",
+      label: "2025 Results",
+      icon: Trophy,
+    },
+    {
+      href: "/fargo/2024",
+      label: "2024 Results",
+      icon: Trophy,
+    },
+    {
+      href: "/fargo/2023",
+      label: "2023 Results",
+      icon: Trophy,
+    },
+  ]
+
   const eventsLegacyColumn: EventsMegaLink[] = [
     { href: "/athletes?tab=legacy", label: "Wrestlers", icon: Users },
     { href: "/schools", label: "Schools", icon: Medal },
@@ -257,6 +283,7 @@ export function Navbar() {
     ...eventsStatesColumn,
     ...eventsNationalsColumn,
     ...eventsSuper32Column,
+    ...eventsFargoColumn,
     ...eventsLegacyColumn,
   ].map((i) => ({ href: i.href }))
 
@@ -369,7 +396,7 @@ export function Navbar() {
                   sideOffset={8}
                   className="w-[min(72rem,calc(100vw-1.5rem))] max-h-[min(90vh,720px)] overflow-y-auto p-0"
                 >
-                  <div className="grid grid-cols-1 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x bg-popover text-popover-foreground rounded-md">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 divide-y md:divide-y-0 md:divide-x bg-popover text-popover-foreground rounded-md">
                     {/* Column: States */}
                     <div className="p-4 min-w-0">
                       <div className="flex items-center gap-2 font-semibold text-foreground">
@@ -463,6 +490,38 @@ export function Navbar() {
                               <Icon className="h-5 w-5 shrink-0 text-muted-foreground mt-0.5" aria-hidden />
                               <div className="min-w-0 flex-1">
                                 <span className="font-semibold text-sm text-foreground">{sub.label}</span>
+                              </div>
+                            </a>
+                          )
+                        })}
+                      </div>
+                    </div>
+                    {/* Column: Fargo */}
+                    <div className="p-4 min-w-0">
+                      <div className="flex items-center gap-2 font-semibold text-foreground">
+                        <MapPin className="h-4 w-4 shrink-0 text-amber-600" aria-hidden />
+                        Fargo
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1 mb-3">USA Wrestling nationals (NC results)</p>
+                      <div className="flex flex-col gap-0.5">
+                        {eventsFargoColumn.map((sub) => {
+                          const Icon = sub.icon
+                          return (
+                            <a
+                              key={sub.href}
+                              href={sub.href}
+                              className="flex gap-3 rounded-md px-2 py-2.5 hover:bg-muted/80 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            >
+                              <Icon className="h-5 w-5 shrink-0 text-muted-foreground mt-0.5" aria-hidden />
+                              <div className="min-w-0 flex-1">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="font-semibold text-sm text-foreground">{sub.label}</span>
+                                  {sub.badge === "current" && sub.badgeLabel && (
+                                    <span className="inline-flex items-center rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                                      {sub.badgeLabel}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             </a>
                           )
@@ -930,6 +989,21 @@ export function Navbar() {
                         <a href="/super32" className={mobileSubLinkClass("/super32")} onClick={() => setIsOpen(false)}>
                           Champions
                         </a>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 pl-1">Fargo</p>
+                        <div className="space-y-1">
+                          {eventsFargoColumn.map((sub) => (
+                            <a
+                              key={sub.href}
+                              href={sub.href}
+                              className={mobileSubLinkClass(sub.href)}
+                              onClick={() => setIsOpen(false)}
+                            >
+                              {sub.label}
+                            </a>
+                          ))}
+                        </div>
                       </div>
                       <div>
                         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 pl-1">LegacyNC</p>
