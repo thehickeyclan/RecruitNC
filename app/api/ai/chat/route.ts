@@ -8199,20 +8199,18 @@ CRITICAL: Data Dawg can answer questions about ANY of these data sources, regard
           console.log(`[AI] Search term: "${searchTerm}"`)
         }
         
-        // Build comprehensive summary (same format as "tell me about")
-        const { getAthleteProfileUrl, batchLookupAthleteProfileLinks, formatNameWithProfileLink } = await import("@/lib/athlete-profile-links")
+        // Build comprehensive summary (same format as "tell me about") — Profile: link first
+        const { batchLookupAthleteProfileLinks, formatAthleteAnswerOpening } = await import("@/lib/athlete-profile-links")
         const athleteName = filteredAthletes[0]?.name || filteredNchsaaFinal[0]?.wrestler_name || filteredNhscaFinal[0]?.athlete_name || personName
-        let nameDisplay = athleteName
         const athleteId = filteredAthletes[0]?.id
-        if (athleteId) {
-          nameDisplay = `[${athleteName}](${getAthleteProfileUrl(athleteId)})`
-        } else if (athleteName) {
+        let profileUrl: string | null = null
+        if (!athleteId && athleteName) {
           try {
             const pl = await batchLookupAthleteProfileLinks([athleteName], adminClient)
-            nameDisplay = formatNameWithProfileLink(athleteName, pl)
+            profileUrl = pl.get(athleteName) ?? pl.get(athleteName.toLowerCase()) ?? null
           } catch (_) {}
         }
-        const summaryLines = [`Here's what I found about ${nameDisplay}:`, ""]
+        const summaryLines = formatAthleteAnswerOpening(athleteName, athleteId, profileUrl)
         
         // High school
         const highSchools = new Set<string>()
@@ -9240,20 +9238,18 @@ CRITICAL: Data Dawg can answer questions about ANY of these data sources, regard
             return isNameMatch(fullName, searchTerm)
           })
           
-          // Build comprehensive summary (with profile link when athlete has one)
-          const { getAthleteProfileUrl, batchLookupAthleteProfileLinks, formatNameWithProfileLink } = await import("@/lib/athlete-profile-links")
+          // Build comprehensive summary — Profile: link first when known
+          const { batchLookupAthleteProfileLinks, formatAthleteAnswerOpening } = await import("@/lib/athlete-profile-links")
           const athleteName = filteredAthletes[0]?.name || filteredNchsaaFinal[0]?.wrestler_name || filteredNhscaFinal[0]?.athlete_name || personName
-          let nameDisplay = athleteName
           const athleteId = filteredAthletes[0]?.id
-          if (athleteId) {
-            nameDisplay = `[${athleteName}](${getAthleteProfileUrl(athleteId)})`
-          } else if (athleteName) {
+          let profileUrl: string | null = null
+          if (!athleteId && athleteName) {
             try {
               const pl = await batchLookupAthleteProfileLinks([athleteName], adminClient)
-              nameDisplay = formatNameWithProfileLink(athleteName, pl)
+              profileUrl = pl.get(athleteName) ?? pl.get(athleteName.toLowerCase()) ?? null
             } catch (_) {}
           }
-          const summaryLines = [`Here's what I found about ${nameDisplay}:`, ""]
+          const summaryLines = formatAthleteAnswerOpening(athleteName, athleteId, profileUrl)
           
           // High school
           const highSchools = new Set<string>()
@@ -13058,19 +13054,17 @@ CRITICAL: Data Dawg can answer questions about ANY of these data sources, regard
         if (hasData) {
           // Found data - automatically provide summary (assume "tell me about")
           console.log(`[AI] ✅✅✅ HAS DATA - Building summary for "${searchTerm}"`)
-          const { getAthleteProfileUrl, batchLookupAthleteProfileLinks, formatNameWithProfileLink } = await import("@/lib/athlete-profile-links")
+          const { batchLookupAthleteProfileLinks, formatAthleteAnswerOpening } = await import("@/lib/athlete-profile-links")
           const athleteName = filteredAthletes[0]?.name || filteredNchsaa[0]?.wrestler_name || filteredNhsca[0]?.athlete_name || wrestlerName
-          let nameDisplay = athleteName
           const athleteId = filteredAthletes[0]?.id
-          if (athleteId) {
-            nameDisplay = `[${athleteName}](${getAthleteProfileUrl(athleteId)})`
-          } else if (athleteName) {
+          let profileUrl: string | null = null
+          if (!athleteId && athleteName) {
             try {
               const pl = await batchLookupAthleteProfileLinks([athleteName], adminClient)
-              nameDisplay = formatNameWithProfileLink(athleteName, pl)
+              profileUrl = pl.get(athleteName) ?? pl.get(athleteName.toLowerCase()) ?? null
             } catch (_) {}
           }
-          const summaryLines = [`Here's what I found about ${nameDisplay}:`, ""]
+          const summaryLines = formatAthleteAnswerOpening(athleteName, athleteId, profileUrl)
           
           // High school
           const highSchools = new Set<string>()
@@ -17197,20 +17191,18 @@ CRITICAL: Data Dawg can answer questions about ANY of these data sources, regard
             })
           }
           
-          // Build comprehensive summary (with profile link when athlete has one)
-          const { getAthleteProfileUrl, batchLookupAthleteProfileLinks, formatNameWithProfileLink } = await import("@/lib/athlete-profile-links")
+          // Build comprehensive summary — Profile: link first when known
+          const { batchLookupAthleteProfileLinks, formatAthleteAnswerOpening } = await import("@/lib/athlete-profile-links")
           const athleteName = filteredAthletes[0]?.name || filteredNchsaa[0]?.wrestler_name || filteredNhsca[0]?.athlete_name || wrestlerName
-          let nameDisplay = athleteName
           const athleteId = filteredAthletes[0]?.id
-          if (athleteId) {
-            nameDisplay = `[${athleteName}](${getAthleteProfileUrl(athleteId)})`
-          } else if (athleteName) {
+          let profileUrl: string | null = null
+          if (!athleteId && athleteName) {
             try {
               const pl = await batchLookupAthleteProfileLinks([athleteName], adminClient)
-              nameDisplay = formatNameWithProfileLink(athleteName, pl)
+              profileUrl = pl.get(athleteName) ?? pl.get(athleteName.toLowerCase()) ?? null
             } catch (_) {}
           }
-          const summaryLines = [`Here's what I found about ${nameDisplay}:`, ""]
+          const summaryLines = formatAthleteAnswerOpening(athleteName, athleteId, profileUrl)
           
           // High school
           const highSchools = new Set<string>()

@@ -472,25 +472,31 @@ export async function toolSearchAthletes(args: { query: string; limit?: number }
       })),
     }))
 
+  const withProfile = (row: unknown) => {
+    const r = row as Record<string, unknown>
+    const id = String(r.id ?? "").trim()
+    return id ? { ...r, profile_url: getAthleteProfileUrl(id) } : r
+  }
+
   const enrichCap = Math.min(out.length, 5)
   const enrichedSlice = await Promise.all(
     out.slice(0, enrichCap).map(async (row) => {
-      const r = row as Record<string, unknown>
+      const r = withProfile(row) as Record<string, unknown>
       try {
         const bundle = await loadAthleteTournamentBundle(admin, r, { nhscaAllTime: true })
         return { ...r, tournament_summary: buildDataDawgTournamentSummary(bundle) }
       } catch {
-        return row
+        return r
       }
     }),
   )
-  const enrichedRows = [...enrichedSlice, ...out.slice(enrichCap)]
+  const enrichedRows = [...enrichedSlice, ...out.slice(enrichCap).map(withProfile)]
 
   return {
     rows: enrichedRows,
     searched_for: q,
     tournament_summary_note:
-      "Each row includes `tournament_summary` (merged NHSCA + Super32 + Fargo from placement tables). Prefer those lines over `nhsca_results` / `super32_results` JSON when they differ — profile JSON may say Participated while tables have full records. Include Fargo lines when present.",
+      "Each row includes `profile_url` (RecruitNC athlete page) and `tournament_summary` (merged NHSCA + Super32 + Fargo). Put Profile: [Name](profile_url) at the top of athlete answers. Prefer tournament_summary lines over `nhsca_results` / `super32_results` JSON when they differ — profile JSON may say Participated while tables have full records. Include Fargo lines when present.",
     ...(disambiguation.length
       ? {
           disambiguation,
@@ -1394,9 +1400,13 @@ export async function toolGetAthleteFullDossier(args: { athlete_id: string }) {
   const id = String(args.athlete_id ?? "").trim()
   const result = await buildAthleteDossierMarkdown(id)
   if (result.error) {
-    return { error: result.error, markdown: "" }
+    return { error: result.error, markdown: "", profile_url: id ? getAthleteProfileUrl(id) : null }
   }
-  return { markdown: result.markdown }
+  return {
+    markdown: result.markdown,
+    profile_url: getAthleteProfileUrl(id),
+    note: "markdown already begins with Profile: — keep that as the first line of your reply.",
+  }
 }
 
 export async function toolGetSchoolWrestlingDossier(args: { query: string }) {
