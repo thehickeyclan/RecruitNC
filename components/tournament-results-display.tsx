@@ -370,6 +370,7 @@ export function TournamentResultsDisplay({
   }
 
   const mobileTabs = useMemo(() => {
+    // National tournaments only — NCHSAA/States is its own section below.
     const tabs: { id: string; label: string; hasData: boolean }[] = [
       {
         id: "national",
@@ -379,7 +380,6 @@ export function TournamentResultsDisplay({
       { id: "nhsca", label: "NHSCA", hasData: nhscaResults.length > 0 },
       { id: "fargo", label: "Fargo", hasData: fargoResults.length > 0 },
       { id: "super32", label: "Super 32", hasData: super32Results.length > 0 },
-      { id: "nchsaa", label: "NCHSAA", hasData: nchsaaResults.length > 0 },
     ]
     if (!alwaysShowStructure) {
       return tabs.filter((t) => t.hasData)
@@ -391,10 +391,11 @@ export function TournamentResultsDisplay({
     nhscaResults.length,
     fargoResults.length,
     super32Results.length,
-    nchsaaResults.length,
   ])
 
   const defaultMobileTab = mobileTabs[0]?.id ?? "national"
+  const showMobileNchsaa =
+    mobileTabbedLayout && (nchsaaResults.length > 0 || alwaysShowStructure)
 
   const mobileTabbedCard = mobileTabbedLayout && mobileTabs.length > 0 && (
     <Card className={cn(cardClass, "lg:hidden")} id="national-results">
@@ -434,9 +435,23 @@ export function TournamentResultsDisplay({
           <TabsContent value="nhsca">{nhscaTable}</TabsContent>
           <TabsContent value="fargo">{fargoTable}</TabsContent>
           <TabsContent value="super32">{super32Table}</TabsContent>
-          <TabsContent value="nchsaa">{nchsaaTable}</TabsContent>
         </Tabs>
       </CardContent>
+    </Card>
+  )
+
+  const mobileNchsaaStatesCard = showMobileNchsaa && (
+    <Card className={cn(cardClass, "lg:hidden")} id="nchsaa-states">
+      <CardHeader className={cn(PROFILE_SECTION_HEADER, "from-[#13294B] to-[#1e3a5f]")}>
+        <CardTitle className={cn(PROFILE_SECTION_TITLE, "flex items-center gap-2")}>
+          <Trophy className="h-5 w-5 text-[#D3B574]" />
+          NCHSAA / States
+        </CardTitle>
+        <p className={cn("text-xs mt-1", isDark ? "text-white/50" : "text-gray-500")}>
+          North Carolina high school state tournament results
+        </p>
+      </CardHeader>
+      <CardContent className={contentClass}>{nchsaaTable}</CardContent>
     </Card>
   )
 
@@ -455,11 +470,11 @@ export function TournamentResultsDisplay({
       )}
 
       {(nchsaaResults.length > 0 || alwaysShowStructure) && (
-        <Card className={cardClass}>
+        <Card className={cardClass} id="nchsaa-states">
           <CardHeader className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] py-4">
             <CardTitle className="text-white flex items-center gap-2 text-lg">
               <Trophy className="h-5 w-5 text-[#D3B574]" />
-              NCHSAA State Championships
+              NCHSAA / States
             </CardTitle>
           </CardHeader>
           <CardContent className={contentClass}>{nchsaaTable}</CardContent>
@@ -507,6 +522,7 @@ export function TournamentResultsDisplay({
   return (
     <>
       {mobileTabbedCard}
+      {mobileNchsaaStatesCard}
       {desktopCards}
     </>
   )
