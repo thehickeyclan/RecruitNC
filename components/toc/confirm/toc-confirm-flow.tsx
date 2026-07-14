@@ -88,6 +88,7 @@ export function TocConfirmFlow() {
       {profile && step === "form" && profile.invitation?.status === "invited" ? (
         <ConfirmationForm
           athleteId={profile.athlete.id}
+          athleteName={profile.athlete.name}
           athleteWeightClass={profile.athlete.weightClass}
           invitedWeightClass={profile.invitation.weightClass}
           onSuccess={() =>
