@@ -31,8 +31,11 @@ export const COLLEGE_DIRECT_LOGO_URLS: Record<string, string> = {
     "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/vaddsdmo-1745958227949.png",
   uncp: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/vaddsdmo-1745958227949.png",
   "greensboro college": "/Greensboro-College-Seal.png",
-  "roanoke college": "/roanoke-college-logo.png",
-  roanoke: "/roanoke-college-logo.png",
+  // Public file was never shipped; use the same blob mark as TOC confirmed colleges.
+  "roanoke college":
+    "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/-i2rnrys-1745958901725.png",
+  roanoke:
+    "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/-i2rnrys-1745958901725.png",
   lynchburg: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/SmHkZ3IPPB6ayHiOYue4Y-Lynchburg.jpg",
   "lynchburg university": "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/SmHkZ3IPPB6ayHiOYue4Y-Lynchburg.jpg",
   "university of lynchburg": "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/SmHkZ3IPPB6ayHiOYue4Y-Lynchburg.jpg",
