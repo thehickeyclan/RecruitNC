@@ -4,12 +4,16 @@
 
 export const RECRUITNC_APP_URL = "https://app.ncwrestlingunited.com"
 
-/** RecruitNC athlete profile path (used on both legacy NC and RecruitNC). Always use this for clickable profile links. */
-export const RECRUITNC_PROFILE_PATH = "/unified-profile"
+/**
+ * Public athlete profile path. Prefer `/view-profile?id=` (working public route).
+ * Do not use `/unified-profile/[id]` in new links — client bundles / new-tab opens have routinely 404'd or stuck.
+ */
+export const RECRUITNC_PROFILE_PATH = "/view-profile"
 
-/** Build absolute profile URL for an athlete id (works on legacy NC and RecruitNC). */
+/** Build absolute profile URL for an athlete id (RecruitNC public profile). */
 export function getAthleteProfileUrl(id: string): string {
-  return `${RECRUITNC_APP_URL}${RECRUITNC_PROFILE_PATH}/${id}`
+  const trimmed = String(id ?? "").trim()
+  return `${RECRUITNC_APP_URL}${RECRUITNC_PROFILE_PATH}?id=${encodeURIComponent(trimmed)}`
 }
 
 /**
