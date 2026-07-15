@@ -4,9 +4,11 @@
 -- Datasets (dataset_key):
 --   nchsaa_dual_team_champions
 --   nchsaa_individual_placers
+--   nchsaa_school_classifications  (also run scripts/school-classification-years-setup.sql)
 --
 -- Flow: connector stages rows → admin approves on /admin/imports → promote into
--- dual_team_champions / wrestling_nchsaa_results. Never auto-publish scrapes.
+-- dual_team_champions / wrestling_nchsaa_results / school_classifications (+ year history).
+-- Never auto-publish scrapes.
 
 CREATE TABLE IF NOT EXISTS public.public_import_batches (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

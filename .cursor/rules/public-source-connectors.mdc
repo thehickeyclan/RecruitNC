@@ -13,8 +13,9 @@ RecruitNC syncs **official public** wrestling sources via **connectors**: fetch 
 2. **Priority 1 — NCHSAA Individual States:** Connector at `lib/public-imports/connectors/nchsaa-individual-states.ts`. **Every February** after NCHSAA posts results: add that year’s page URL(s) to the registry, then admin runs **Fetch & stage Individual States** → approve. Do not invent rows.
 3. **NHSCA All-Americans by school:** Register each year in `lib/nhsca-canonical-aa.ts` (`NHSCA_CANONICAL_AA_LOADERS`) with schools on the roster (page JSON or `lib/data/nhsca-aa/`). Places 1–8 bulk imports **require** `high_school`. Sync: Admin → NHSCA Placements → **Sync AA schools from yearly files**. Docs: `docs/NHSCA-YEARLY-AA-AUTOMATION.md`.
 4. **Duals:** Canonical year×division in `dual_team_champions`; school leaderboards are **derived**. Connector: `lib/public-imports/connectors/nchsaa-dual-team.ts` → **Fetch & stage Dual Team** on `/admin/imports`. JSON paste still works — do not replace yearly rows with aggregates alone.
-5. **Still not fully automated (do not claim done):** team-tournament points champs connector, summer school classifications sync, MOW/coach awards connectors — roadmap in chat; build as separate connectors when asked.
-6. Docs: `docs/PUBLIC-SOURCE-IMPORTS.md`.
+5. **School classifications:** Connector `lib/public-imports/connectors/nchsaa-classifications.ts` → **Fetch & stage Classifications**. Setup year history: `scripts/school-classification-years-setup.sql`. Lookups: current `school_classifications`; optional as-of year via `school_classification_years`.
+6. **Still not fully automated (do not claim done):** team-tournament points champs connector, MOW/coach awards connectors — roadmap in chat; build as separate connectors when asked.
+7. Docs: `docs/PUBLIC-SOURCE-IMPORTS.md`.
 
 ## Anti-patterns
 

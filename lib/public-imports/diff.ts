@@ -1,17 +1,19 @@
 import {
   canonicalizeWrestlerName,
+  classificationNaturalKey,
   dualNaturalKey,
   namesLooselyEqual,
   placerNaturalKey,
   schoolsLooselyEqual,
 } from "./normalize"
 import type {
+  ClassificationProposed,
   DiffStatus,
   DualTeamProposed,
   PlacerProposed,
   StagedDiffRow,
 } from "./types"
-import { DATASET_DUAL_TEAM, DATASET_PLACERS } from "./types"
+import { DATASET_CLASSIFICATIONS, DATASET_DUAL_TEAM, DATASET_PLACERS } from "./types"
 
 function dualEqual(a: DualTeamProposed, b: Record<string, unknown>): boolean {
   return (
@@ -124,6 +126,65 @@ export function diffPlacerRows(
       diff_status,
       proposed: p,
       existing: existingRow,
+    })
+  }
+  return out
+}
+
+function classificationEqual(a: ClassificationProposed, b: Record<string, unknown>): boolean {
+  const existingClass = String(b.classification ?? "")
+    .replace(/\s+/g, "")
+    .toUpperCase()
+  const proposedClass = a.classification.replace(/\s+/g, "").toUpperCase()
+  if (proposedClass !== existingClass) return false
+  // Region / conference optional — only compare when both sides have values
+  if (a.region != null && b.region != null && String(a.region).trim() !== String(b.region).trim()) {
+    return false
+  }
+  if (
+    a.conference != null &&
+    b.conference != null &&
+    String(a.conference).trim() !== String(b.conference).trim()
+  ) {
+    return false
+  }
+  return true
+}
+
+export function diffClassificationRows(
+  proposed: ClassificationProposed[],
+  existingRows: Array<Record<string, unknown>>,
+): StagedDiffRow[] {
+  const bySchool = new Map<string, Record<string, unknown>>()
+  for (const r of existingRows) {
+    const name = String(r.school_name ?? "")
+    if (!name) continue
+    // Prefer exact school_name keys; also index normalized for lookup
+    bySchool.set(name.toLowerCase(), r)
+  }
+
+  const findExisting = (school: string): Record<string, unknown> | null => {
+    const direct = bySchool.get(school.toLowerCase())
+    if (direct) return direct
+    for (const r of existingRows) {
+      if (schoolsLooselyEqual(school, r.school_name)) return r
+    }
+    return null
+  }
+
+  const out: StagedDiffRow[] = []
+  for (const p of proposed) {
+    const existing = findExisting(p.school_name)
+    let diff_status: DiffStatus
+    if (!existing) diff_status = "new"
+    else if (classificationEqual(p, existing)) diff_status = "match"
+    else diff_status = "changed"
+    out.push({
+      dataset_key: DATASET_CLASSIFICATIONS,
+      natural_key: classificationNaturalKey(p.effective_year, p.school_name),
+      diff_status,
+      proposed: p,
+      existing,
     })
   }
   return out

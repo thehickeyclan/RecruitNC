@@ -27,10 +27,27 @@ export function getSchoolsByClassification(classification: string): string[] {
 export async function findSchoolClassification(
   supabase: { from: (t: string) => any },
   schoolName: string,
+  asOfYear?: number | null,
 ): Promise<string | null> {
   if (!schoolName?.trim()) return null
   try {
     const norm = schoolName.trim()
+
+    if (asOfYear != null && Number.isFinite(asOfYear)) {
+      const { data: yearRows } = await supabase
+        .from("school_classification_years")
+        .select("school_name, classification")
+        .eq("effective_year", asOfYear)
+        .ilike("school_name", `%${norm.replace(/\s+(high\s+school|hs)$/i, "").trim()}%`)
+        .limit(20)
+      const hit = (yearRows ?? []).find((r: { school_name?: string }) => {
+        const rn = (r.school_name || "").toLowerCase()
+        const lower = norm.toLowerCase()
+        return rn === lower || rn.includes(lower) || lower.includes(rn)
+      })
+      if (hit?.classification) return hit.classification
+    }
+
     const { data, error } = await supabase
       .from("school_classifications")
       .select("classification")

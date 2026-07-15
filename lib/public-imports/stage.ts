@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
-import { diffDualTeamRows, diffPlacerRows, summarizeDiffs } from "./diff"
+import { diffClassificationRows, diffDualTeamRows, diffPlacerRows, summarizeDiffs } from "./diff"
 import {
   inferYearFromText,
   parseDualTeamPayload,
@@ -7,8 +7,19 @@ import {
   parseNchsaaIndividualStatesText,
   parsePlacerJsonPayload,
 } from "./parse"
-import type { DatasetKey, DualTeamProposed, PlacerProposed, StagedDiffRow } from "./types"
-import { DATASET_DUAL_TEAM, DATASET_PLACERS } from "./types"
+import {
+  parseClassificationPayload,
+  parseNchsaaSchoolsClassificationHtml,
+  parseNchsaaSchoolsClassificationText,
+} from "./parse-classifications"
+import type {
+  ClassificationProposed,
+  DatasetKey,
+  DualTeamProposed,
+  PlacerProposed,
+  StagedDiffRow,
+} from "./types"
+import { DATASET_CLASSIFICATIONS, DATASET_DUAL_TEAM, DATASET_PLACERS } from "./types"
 
 export function isMissingImportsTable(err: { message?: string; code?: string } | null): boolean {
   if (!err) return false
@@ -54,15 +65,45 @@ async function loadExistingPlacers(
   return (data ?? []) as Record<string, unknown>[]
 }
 
+async function loadExistingClassifications(
+  admin: SupabaseClient,
+  proposed: ClassificationProposed[],
+): Promise<Record<string, unknown>[]> {
+  const years = [...new Set(proposed.map((p) => p.effective_year))]
+  if (!years.length) return []
+
+  // Prefer year history when present
+  const { data: yearRows, error: yearErr } = await admin
+    .from("school_classification_years")
+    .select("id, school_name, classification, region, conference, enrollment, effective_year")
+    .in("effective_year", years)
+
+  if (!yearErr && yearRows?.length) {
+    return yearRows as Record<string, unknown>[]
+  }
+
+  // Fallback: compare against current snapshot (first import of a cycle)
+  const { data, error } = await admin
+    .from("school_classifications")
+    .select("id, school_name, classification, region, conference, enrollment, effective_year")
+  if (error) throw new Error(error.message)
+  return (data ?? []) as Record<string, unknown>[]
+}
+
 export async function buildDiffsForDataset(
   admin: SupabaseClient,
   dataset: DatasetKey,
-  proposed: DualTeamProposed[] | PlacerProposed[],
+  proposed: DualTeamProposed[] | PlacerProposed[] | ClassificationProposed[],
 ): Promise<StagedDiffRow[]> {
   if (dataset === DATASET_DUAL_TEAM) {
     const rows = proposed as DualTeamProposed[]
     const existing = await loadExistingDuals(admin, rows)
     return diffDualTeamRows(rows, existing)
+  }
+  if (dataset === DATASET_CLASSIFICATIONS) {
+    const rows = proposed as ClassificationProposed[]
+    const existing = await loadExistingClassifications(admin, rows)
+    return diffClassificationRows(rows, existing)
   }
   const rows = proposed as PlacerProposed[]
   const existing = await loadExistingPlacers(admin, rows)
@@ -74,15 +115,17 @@ export type StageInput = {
   source_label?: string | null
   source_url?: string | null
   year?: number | null
-  /** Structured JSON (dual records / placer classifications) */
+  /** Structured JSON (dual records / placer classifications / school membership) */
   json?: unknown
-  /** Raw NCHSAA page text for Guaranteed Places parser */
+  /** Raw NCHSAA page text/HTML for parsers */
   text?: string | null
+  /** Optional cycle label for classifications (e.g. 2025-2029) */
+  cycle_label?: string | null
   created_by?: string | null
 }
 
 export async function stageImportBatch(admin: SupabaseClient, input: StageInput) {
-  let proposed: DualTeamProposed[] | PlacerProposed[] = []
+  let proposed: DualTeamProposed[] | PlacerProposed[] | ClassificationProposed[] = []
   let year = input.year ?? null
 
   if (input.dataset === DATASET_DUAL_TEAM) {
@@ -99,6 +142,31 @@ export async function stageImportBatch(admin: SupabaseClient, input: StageInput)
     }
     if (!year && proposed.length) {
       year = Math.max(...(proposed as DualTeamProposed[]).map((p) => p.year))
+    }
+  } else if (input.dataset === DATASET_CLASSIFICATIONS) {
+    const effective =
+      year ??
+      inferYearFromText(input.source_url, input.source_label, input.text?.slice(0, 500))
+    if (input.json != null) {
+      proposed = parseClassificationPayload(input.json)
+    } else if (input.text?.trim()) {
+      if (effective == null) throw new Error("Could not infer year — pass year explicitly")
+      proposed = /<table/i.test(input.text)
+        ? parseNchsaaSchoolsClassificationHtml(input.text, {
+            effective_year: effective,
+            cycle_label: input.cycle_label,
+          })
+        : parseNchsaaSchoolsClassificationText(input.text, {
+            effective_year: effective,
+            cycle_label: input.cycle_label,
+          })
+    } else {
+      throw new Error("Classification staging requires JSON or NCHSAA schools page HTML/text")
+    }
+    if (!year && proposed.length) {
+      year = Math.max(
+        ...(proposed as ClassificationProposed[]).map((p) => p.effective_year),
+      )
     }
   } else {
     if (input.json != null) {
@@ -149,7 +217,6 @@ export async function stageImportBatch(admin: SupabaseClient, input: StageInput)
     status: d.diff_status === "match" ? "skipped" : "pending",
   }))
 
-  // chunk inserts
   for (let i = 0; i < rowInserts.length; i += 200) {
     const chunk = rowInserts.slice(i, i + 200)
     const { error } = await admin.from("public_import_rows").insert(chunk)
@@ -159,24 +226,30 @@ export async function stageImportBatch(admin: SupabaseClient, input: StageInput)
   return { batch, summary, rowCount: diffs.length }
 }
 
-export async function fetchUrlAsText(url: string): Promise<string> {
+function assertNchsaaHost(url: string): URL {
   const u = new URL(url)
   if (u.protocol !== "https:" && u.protocol !== "http:") {
     throw new Error("Only http(s) URLs allowed")
   }
-  if (!/\.nchsaa\.org$/i.test(u.hostname) && u.hostname.toLowerCase() !== "nchsaa.org") {
-    // allow nchsaa.org and subdomains only for v1 safety
-    const host = u.hostname.toLowerCase()
-    if (!host.endsWith("nchsaa.org")) {
-      throw new Error("Fetch limited to nchsaa.org hosts")
-    }
+  const host = u.hostname.toLowerCase()
+  if (host !== "nchsaa.org" && !host.endsWith(".nchsaa.org")) {
+    throw new Error("Fetch limited to nchsaa.org hosts")
   }
+  return u
+}
+
+export async function fetchUrlAsHtml(url: string): Promise<string> {
+  assertNchsaaHost(url)
   const res = await fetch(url, {
     headers: { "user-agent": "RecruitNC-PublicImports/1.0" },
     next: { revalidate: 0 },
   })
   if (!res.ok) throw new Error(`Fetch failed: ${res.status}`)
-  const html = await res.text()
+  return res.text()
+}
+
+export async function fetchUrlAsText(url: string): Promise<string> {
+  const html = await fetchUrlAsHtml(url)
   return htmlToRoughText(html)
 }
 

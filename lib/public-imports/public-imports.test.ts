@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest"
-import { diffDualTeamRows, diffPlacerRows, summarizeDiffs } from "./diff"
 import { namesLooselyEqual, schoolsLooselyEqual } from "./normalize"
 import {
   parseDualTeamPayload,
@@ -9,6 +8,12 @@ import {
   parseNchsaaIndividualStatesText,
   parsePlacerJsonPayload,
 } from "./parse"
+import {
+  parseClassificationPayload,
+  parseNchsaaSchoolsClassificationHtml,
+  parseNchsaaSchoolsClassificationText,
+} from "./parse-classifications"
+import { diffClassificationRows, diffDualTeamRows, diffPlacerRows, summarizeDiffs } from "./diff"
 
 describe("public-imports normalize", () => {
   it("matches Last, First ↔ First Last", () => {
@@ -217,9 +222,75 @@ Lorenzo Alston (Uwharrie Charter Academy) 47-0 won by decision over Jacob Reigel
     const merged = parseNchsaaIndividualStatesText(text, { year: 2026 })
     expect(merged.filter((r) => r.place === 1)).toHaveLength(2)
   })
+
+  it("parses NCHSAA schools classification HTML table", () => {
+    const html = `
+<table id="table_1">
+<tr><th>Name</th><th>Region</th><th>Classification</th><th>Conference</th></tr>
+<tr><td>Cardinal Gibbons High School</td><td>3</td><td>7A</td><td>Triangle Six 6A/7A</td></tr>
+<tr><td>Robbinsville High School</td><td>8</td><td>1A</td><td>Smoky Mountain 1A/2A</td></tr>
+</table>`
+    const rows = parseNchsaaSchoolsClassificationHtml(html, {
+      effective_year: 2026,
+      cycle_label: "2025-2029",
+    })
+    expect(rows).toHaveLength(2)
+    expect(rows.find((r) => r.classification === "7A")).toMatchObject({
+      school_name: "Cardinal Gibbons High School",
+      region: "3",
+      conference: "Triangle Six 6A/7A",
+      effective_year: 2026,
+    })
+  })
+
+  it("parses classification JSON records", () => {
+    const rows = parseClassificationPayload({
+      records: [
+        { effective_year: 2026, school_name: "Apex", classification: "8A", region: "3" },
+      ],
+    })
+    expect(rows[0]).toMatchObject({ school_name: "Apex", classification: "8A", effective_year: 2026 })
+  })
+
+  it("parses classification markdown pipe rows", () => {
+    const text = `
+| School Name | Region | Class | Conference |
+| --- | --- | --- | --- |
+| Davie County High School | 7 | 7A | Northwestern 6A/7A |
+`
+    const rows = parseNchsaaSchoolsClassificationText(text, { effective_year: 2026 })
+    expect(rows[0]).toMatchObject({
+      school_name: "Davie County High School",
+      classification: "7A",
+      conference: "Northwestern 6A/7A",
+    })
+  })
 })
 
 describe("public-imports diff", () => {
+  it("marks classification new / match / changed", () => {
+    const diffs = diffClassificationRows(
+      [
+        {
+          effective_year: 2026,
+          school_name: "Cardinal Gibbons High School",
+          classification: "7A",
+        },
+        { effective_year: 2026, school_name: "Apex", classification: "8A" },
+        { effective_year: 2026, school_name: "Brand New HS", classification: "1A" },
+      ],
+      [
+        { school_name: "Cardinal Gibbons", classification: "7A" },
+        { school_name: "Apex", classification: "7A" },
+      ],
+    )
+    const bySchool = Object.fromEntries(
+      diffs.map((d) => [String((d.proposed as { school_name: string }).school_name), d.diff_status]),
+    )
+    expect(bySchool["Cardinal Gibbons High School"]).toBe("match")
+    expect(bySchool["Apex"]).toBe("changed")
+    expect(bySchool["Brand New HS"]).toBe("new")
+  })
   it("marks new / match / changed duals", () => {
     const diffs = diffDualTeamRows(
       [

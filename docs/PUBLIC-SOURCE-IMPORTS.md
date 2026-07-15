@@ -19,7 +19,7 @@ Keep the checklist visible on **`/admin/imports`** (“Annual reminders (connect
 | February | Add NCHSAA Individual States URLs → connector → approve |
 | After Duals | Add dual-team URL → **Fetch & stage Dual Team** → approve |
 | After NHSCA nationals | Register AA year + schools → sync/import |
-| Summer | Classifications (not automated yet) |
+| Summer / realignment | Add season year for `/schools/` → **Fetch & stage Classifications** → approve |
 
 ## Datasets (v1)
 
@@ -28,6 +28,7 @@ Keep the checklist visible on **`/admin/imports`** (“Annual reminders (connect
 |---|---|---|
 | `nchsaa_individual_placers` | **Priority 1 connector**, page URL fetch, Guaranteed Places / Championship Finals paste, or placer JSON | `wrestling_nchsaa_results` |
 | `nchsaa_dual_team_champions` | **Dual Team connector**, year×division JSON, DB export, dual page text, or verified school leaderboard (expanded to year rows) | `dual_team_champions` |
+| `nchsaa_school_classifications` | **Classifications connector** (`nchsaa.org/schools/`), JSON, or schools HTML/table paste | `school_classifications` + `school_classification_years` |
 
 ## Priority 1 — NCHSAA Individual States connector
 
@@ -64,6 +65,25 @@ Parses:
 Canonical rows are **year × division**. School “most titles” leaderboards are derived — do not promote aggregates alone.
 
 API: `POST /api/admin/imports/connectors/nchsaa-dual-team` `{ "year": 2026 }`
+
+
+## School Classifications connector
+
+On `/admin/imports`:
+
+1. Run `scripts/school-classification-years-setup.sql` once in Supabase (year history table)
+2. Set year (e.g. `2026` for 2025-26 membership)
+3. Click **Fetch & stage Classifications**
+4. Review new/changed → **Approve selected**
+
+Sources: `lib/public-imports/connectors/nchsaa-classifications.ts` (official `/schools/` directory).
+
+Promotes:
+
+- `school_classification_years` — year-scoped membership (reclass history)
+- `school_classifications` — current snapshot used by rankings / Data Dawg / forms
+
+API: `POST /api/admin/imports/connectors/nchsaa-classifications` `{ "year": 2026 }`
 
 ## Annual workflow (manual review still required)
 

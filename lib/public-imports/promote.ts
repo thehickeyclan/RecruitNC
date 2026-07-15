@@ -1,11 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
-import type { DualTeamProposed, PlacerProposed } from "./types"
-import { DATASET_DUAL_TEAM, DATASET_PLACERS } from "./types"
+import type { ClassificationProposed, DualTeamProposed, PlacerProposed } from "./types"
+import { DATASET_CLASSIFICATIONS, DATASET_DUAL_TEAM, DATASET_PLACERS } from "./types"
 import {
   canonicalizeWrestlerName,
   dualNaturalKey,
   namesLooselyEqual,
   placerNaturalKey,
+  schoolsLooselyEqual,
 } from "./normalize"
 
 export async function promoteDualRow(
@@ -120,10 +121,95 @@ export async function promotePlacerRow(
   if (error) throw new Error(error.message)
 }
 
+export async function promoteClassificationRow(
+  admin: SupabaseClient,
+  proposed: ClassificationProposed,
+): Promise<void> {
+  const yearPayload = {
+    school_name: proposed.school_name,
+    classification: proposed.classification,
+    region: proposed.region ?? null,
+    conference: proposed.conference ?? null,
+    enrollment: proposed.enrollment ?? null,
+    effective_year: proposed.effective_year,
+    cycle_label: proposed.cycle_label ?? null,
+    updated_at: new Date().toISOString(),
+  }
+
+  const { data: yearHits, error: yearSelErr } = await admin
+    .from("school_classification_years")
+    .select("id, school_name")
+    .eq("effective_year", proposed.effective_year)
+    .ilike("school_name", `%${proposed.school_name.replace(/\s+(high\s+school|hs)$/i, "").trim()}%`)
+    .limit(20)
+
+  if (yearSelErr) {
+    if (/does not exist|schema cache|42P01/i.test(yearSelErr.message)) {
+      throw new Error(
+        "Run scripts/school-classification-years-setup.sql in Supabase SQL Editor, then retry.",
+      )
+    }
+    throw new Error(yearSelErr.message)
+  }
+
+  const yearTarget =
+    (yearHits ?? []).find((r) => schoolsLooselyEqual(r.school_name, proposed.school_name)) ?? null
+
+  if (yearTarget?.id) {
+    const { error } = await admin
+      .from("school_classification_years")
+      .update(yearPayload)
+      .eq("id", yearTarget.id)
+    if (error) throw new Error(error.message)
+  } else {
+    const { error } = await admin.from("school_classification_years").insert(yearPayload)
+    if (error) throw new Error(error.message)
+  }
+
+  const currentPayload = {
+    school_name: proposed.school_name,
+    classification: proposed.classification,
+    region: proposed.region ?? null,
+    conference: proposed.conference ?? null,
+    enrollment: proposed.enrollment ?? null,
+    effective_year: proposed.effective_year,
+  }
+
+  const clean = proposed.school_name.replace(/\s+(high\s+school|hs)$/i, "").trim()
+  const { data: currentHits, error: curSelErr } = await admin
+    .from("school_classifications")
+    .select("id, school_name")
+    .ilike("school_name", `%${clean}%`)
+    .limit(20)
+
+  if (curSelErr) throw new Error(curSelErr.message)
+
+  const currentTarget =
+    (currentHits ?? []).find((r) => schoolsLooselyEqual(r.school_name, proposed.school_name)) ??
+    null
+
+  if (currentTarget?.id) {
+    const { error } = await admin
+      .from("school_classifications")
+      .update({
+        ...currentPayload,
+        school_name: String(currentTarget.school_name || proposed.school_name),
+      })
+      .eq("id", currentTarget.id)
+    if (error) throw new Error(error.message)
+    return
+  }
+
+  const { error } = await admin.from("school_classifications").upsert(currentPayload, {
+    onConflict: "school_name",
+  })
+  if (error) throw new Error(error.message)
+}
+
 export async function promoteStagedRow(
   admin: SupabaseClient,
   datasetKey: string,
-  proposed: DualTeamProposed | PlacerProposed,
+  proposed: DualTeamProposed | PlacerProposed | ClassificationProposed,
 ): Promise<void> {
   if (datasetKey === DATASET_DUAL_TEAM) {
     await promoteDualRow(admin, proposed as DualTeamProposed)
@@ -131,6 +217,10 @@ export async function promoteStagedRow(
   }
   if (datasetKey === DATASET_PLACERS) {
     await promotePlacerRow(admin, proposed as PlacerProposed)
+    return
+  }
+  if (datasetKey === DATASET_CLASSIFICATIONS) {
+    await promoteClassificationRow(admin, proposed as ClassificationProposed)
     return
   }
   throw new Error(`Unknown dataset_key: ${datasetKey}`)
