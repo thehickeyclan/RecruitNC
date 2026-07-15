@@ -80,6 +80,14 @@ describe("buildAthleteTimelineEvents progression", () => {
     })
     expect(events).toHaveLength(0)
   })
+
+  it("does not infer Blood Round from wins alone", () => {
+    const events = buildAthleteTimelineEvents({
+      fargo: [{ year: 2024, placement: "", record: "6-2", weight: "144", division: "16U" }],
+    })
+    expect(events.some((e) => /6–2/.test(e.label))).toBe(true)
+    expect(events.some((e) => /Blood Round/i.test(e.label))).toBe(false)
+  })
 })
 
 describe("formatAthleteTimelineMarkdown", () => {
