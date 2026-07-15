@@ -342,3 +342,370 @@ export function inferYearFromText(...parts: Array<string | null | undefined>): n
   }
   return null
 }
+
+const MASCOT_SUFFIX_RE =
+  /\s+(Hawks|Bears|Eagles|War Eagles|Crusaders|Vikings|Bulldogs|Wildcats|Hilltoppers|Buccaneers|Rams|Tigers|Panthers|Cavaliers|Spartans|Warriors|Raiders|Knights|Cardinals|Trojans|Mustangs|Indians|Pirates|Falcons|Hornets|Cougars|Jaguars|Gators|Wolves|Owls)\s*$/i
+
+function normalizeDualSchool(name: string): string {
+  return name
+    .replace(/\u00a0/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\s+Middle and High School$/i, "")
+    .replace(/\s+High School$/i, "")
+    .replace(/\s+Academy$/i, "")
+    .replace(MASCOT_SUFFIX_RE, "")
+    .replace(/^the\s+/i, "")
+    .trim()
+}
+
+function schoolMentions(a: string, b: string): boolean {
+  const na = normalizeDualSchool(a).toLowerCase()
+  const nb = normalizeDualSchool(b).toLowerCase()
+  if (!na || !nb) return false
+  return na === nb || na.startsWith(nb) || nb.startsWith(na) || na.includes(nb) || nb.includes(na)
+}
+
+function parseScorePair(
+  leftSchool: string,
+  leftScore: number,
+  rightSchool: string,
+  rightScore: number,
+  championSchool: string,
+): { runner_up_school: string; champion_score: number; runner_up_score: number } {
+  if (schoolMentions(leftSchool, championSchool)) {
+    return {
+      runner_up_school: normalizeDualSchool(rightSchool),
+      champion_score: leftScore,
+      runner_up_score: rightScore,
+    }
+  }
+  if (schoolMentions(rightSchool, championSchool)) {
+    return {
+      runner_up_school: normalizeDualSchool(leftSchool),
+      champion_score: rightScore,
+      runner_up_score: leftScore,
+    }
+  }
+  // Default: first school listed is champion (NCHSAA State Championship Match lines)
+  return {
+    runner_up_school: normalizeDualSchool(rightSchool),
+    champion_score: leftScore,
+    runner_up_score: rightScore,
+  }
+}
+
+type DualDraft = {
+  division: string
+  champion_school: string
+  runner_up_school?: string | null
+  champion_score?: number | null
+  runner_up_score?: number | null
+}
+
+/**
+ * Parse NCHSAA Dual Team Championship result pages (2026 structured + 2024/2025 article styles).
+ * Returns year×division champion rows for staging — never publishes.
+ */
+export function parseNchsaaDualTeamChampionshipsText(
+  text: string,
+  opts: { year: number },
+): DualTeamProposed[] {
+  const year = opts.year
+  const structured = parseDualTeamStructuredBlocks(text)
+  const narrative = parseDualTeamNarrativeBlocks(text)
+  const byDiv = new Map<string, DualDraft>()
+
+  // Prefer structured (explicit State Champion lines); fill gaps from narrative
+  for (const r of structured) byDiv.set(r.division.toUpperCase().replace(/\s+/g, ""), r)
+  for (const r of narrative) {
+    const key = r.division.toUpperCase().replace(/\s+/g, "")
+    const existing = byDiv.get(key)
+    if (!existing) {
+      byDiv.set(key, r)
+      continue
+    }
+    if (!existing.runner_up_school && r.runner_up_school) existing.runner_up_school = r.runner_up_school
+    if (existing.champion_score == null && r.champion_score != null) {
+      existing.champion_score = r.champion_score
+      existing.runner_up_score = r.runner_up_score ?? null
+    }
+  }
+
+  return [...byDiv.values()]
+    .filter((r) => r.division && r.champion_school)
+    .map((r) => ({
+      year,
+      division: r.division.replace(/\s+/g, ""),
+      champion_school: normalizeDualSchool(r.champion_school),
+      runner_up_school: r.runner_up_school ? normalizeDualSchool(r.runner_up_school) : null,
+      champion_score: r.champion_score ?? null,
+      runner_up_score: r.runner_up_score ?? null,
+      held: true,
+      is_vacated: false,
+    }))
+    .sort((a, b) => a.division.localeCompare(b.division, undefined, { numeric: true }))
+}
+
+/** 2026-style: "State Champion: School" + "SchoolA 58, SchoolB 24" */
+function parseDualTeamStructuredBlocks(text: string): DualDraft[] {
+  const lines = text
+    .split(/\n/)
+    .map((l) => l.replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim())
+    .filter(Boolean)
+
+  const classQueue: string[] = []
+  const out: DualDraft[] = []
+  let current: DualDraft | null = null
+  let expectScore = false
+
+  const flush = () => {
+    if (current?.champion_school && current.division) out.push(current)
+    current = null
+    expectScore = false
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+
+    // Bare classification nav links (1A … 8A) before champion blocks
+    if (/^[1-8]A(?:\s*\/\s*[1-8]A)?$/i.test(line)) {
+      classQueue.push(line.replace(/\s+/g, "").toUpperCase())
+      continue
+    }
+
+    const withClass = line.match(
+      /^([1-8]A(?:\s*\/\s*[1-8]A)?)\s+Classification\s*[–\-—:]?\s*State Champion:\s*(.+)$/i,
+    )
+    if (withClass) {
+      flush()
+      const division = withClass[1].replace(/\s+/g, "").toUpperCase()
+      // Drop matching queued class if present
+      const qi = classQueue.findIndex((c) => c === division)
+      if (qi >= 0) classQueue.splice(qi, 1)
+      current = {
+        division,
+        champion_school: normalizeDualSchool(withClass[2]),
+      }
+      continue
+    }
+
+    const champOnly = line.match(/^State Champion:\s*(.+)$/i)
+    if (champOnly) {
+      flush()
+      const division = classQueue.shift() || ""
+      current = {
+        division,
+        champion_school: normalizeDualSchool(champOnly[1]),
+      }
+      continue
+    }
+
+    if (/^State Championship Match:?$/i.test(line)) {
+      expectScore = true
+      continue
+    }
+
+    const inlineMatch = line.match(
+      /^State Championship Match:\s*(.+?)\s+(\d+)\s*,\s*(.+?)\s+(\d+)\s*$/i,
+    )
+    if (inlineMatch && current) {
+      const scored = parseScorePair(
+        inlineMatch[1],
+        Number(inlineMatch[2]),
+        inlineMatch[3],
+        Number(inlineMatch[4]),
+        current.champion_school,
+      )
+      Object.assign(current, scored)
+      expectScore = false
+      continue
+    }
+
+    if (expectScore && current) {
+      const scoreLine = line.match(/^(.+?)\s+(\d+)\s*,\s*(.+?)\s+(\d+)\s*$/)
+      if (scoreLine) {
+        const scored = parseScorePair(
+          scoreLine[1],
+          Number(scoreLine[2]),
+          scoreLine[3],
+          Number(scoreLine[4]),
+          current.champion_school,
+        )
+        Object.assign(current, scored)
+        expectScore = false
+      }
+    }
+  }
+  flush()
+
+  // Drop incomplete drafts without division (could not assign from queue)
+  return out.filter((r) => Boolean(r.division))
+}
+
+/**
+ * 2024/2025 article style: headlines + "defeated X 48-15" / "win against Y".
+ */
+function parseDualTeamNarrativeBlocks(text: string): DualDraft[] {
+  const cleaned = text.replace(/\u00a0/g, " ").replace(/[ \t]+/g, " ")
+  const pending: DualDraft[] = []
+  const seenChamp = new Set<string>()
+
+  const pushPending = (draft: DualDraft) => {
+    const champKey = normalizeDualSchool(draft.champion_school).toLowerCase()
+    if (!champKey || seenChamp.has(champKey)) return
+    seenChamp.add(champKey)
+    pending.push({
+      ...draft,
+      division: draft.division ? draft.division.replace(/\s+/g, "").toUpperCase() : "",
+      champion_school: normalizeDualSchool(draft.champion_school),
+      runner_up_school: draft.runner_up_school
+        ? normalizeDualSchool(draft.runner_up_school)
+        : null,
+    })
+  }
+
+  // Explicit: "earned the NCHSAA 3A Dual Team Championship with a 36-21 win against Union Pines"
+  const explicitWin = [
+    ...cleaned.matchAll(
+      /(?:they\s+)?earned(?:\s+the)?\s+NCHSAA\s+([1-8]A(?:\s*\/\s*[1-8]A)?)\s+Dual Team(?:\s+Wrestling)?\s+Championship[^.]{0,120}?with a\s+(\d+)\s*[-–]\s*(\d+)\s+win against(?: the)?\s+([^.]+?)(?:\.|,|\s+on\s+)/gi,
+    ),
+  ]
+  for (const m of explicitWin) {
+    const before = cleaned.slice(Math.max(0, m.index! - 160), m.index!)
+    const schoolMatch =
+      before.match(
+        /(?:The\s+)?([A-Z][A-Za-z0-9.'’\- ]+?(?:Charter|County|Guilford|Pines|Gibbons|Central|Rowan|Hough|Academy)?)\s+(?:Eagles|Wildcats|Crusaders|Vikings|Bulldogs|Hilltoppers|Hawks)?\s+(?:picked|dropped|earned|won)/i,
+      ) || before.match(/([A-Z][A-Za-z0-9.'’\- ]{2,40})\s+(?:picked|dropped|earned|won)/i)
+    if (!schoolMatch) continue
+    pushPending({
+      division: m[1],
+      champion_school: schoolMatch[1],
+      runner_up_school: m[4],
+      champion_score: Number(m[2]),
+      runner_up_score: Number(m[3]),
+    })
+  }
+
+  const headlineRes = [
+    /^(.{3,60}?)\s+(?:three-peats|wins(?:\s+\w+)?|claims|earns|takes)\s+.*?\bas\s+([1-8]A(?:\s*\/\s*[1-8]A)?)\s+Champion/i,
+    /^(.{3,60}?)\s+wins\s+.*?\bin\s+([1-8]A(?:\s*\/\s*[1-8]A)?)\s+Championship/i,
+    /^(.{3,60}?)\s+Claims\s+First\s+Dual Team(?:\s+Wrestling)?\s+Championship/i,
+    /^(.{3,60}?)\s+Wins\s+(?:First|Back-to-back)\s+Dual Team(?:\s+(?:Wrestling\s+)?(?:Titles?|Crown|Wrestling Title))?/i,
+    /^(.{3,60}?)\s+Wins\s+First\s+Dual Team\s+Crown/i,
+    /^(.{3,60}?)\s+Earns\s+First\s+Title(?:\s+Since\s+\d+)?/i,
+    /^(.{3,60}?)\s+breaks through(?:\s+for\s+first\s+title)?/i,
+    /^(.{3,60}?)\s+wins first Dual Team Wrestling Title/i,
+  ]
+
+  const lines = cleaned.split(/\n/).map((l) => l.trim()).filter(Boolean)
+  const classQueue: string[] = []
+  for (const line of lines) {
+    if (/^[1-8]A(?:\s*\/\s*[1-8]A)?$/i.test(line)) {
+      classQueue.push(line.replace(/\s+/g, "").toUpperCase())
+    }
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    let champion: string | null = null
+    let division: string | null = null
+
+    for (const re of headlineRes) {
+      const m = line.match(re)
+      if (!m) continue
+      champion = m[1]
+        .replace(/\s+wins\s+thriller.*/i, "")
+        .replace(/\s+three-peats.*/i, "")
+        .replace(/\s+breaks\s+through.*/i, "")
+        .trim()
+      division = m[2] ? m[2].replace(/\s+/g, "").toUpperCase() : null
+      break
+    }
+
+    if (!champion) continue
+
+    const window = lines.slice(i, i + 12).join(" ")
+    if (!division) {
+      const d =
+        window.match(/\bNCHSAA\s+([1-8]A(?:\s*\/\s*[1-8]A)?)\b/i) ||
+        window.match(/\bin\s+the\s+([1-8]A(?:\s*\/\s*[1-8]A)?)\s+Championship\b/i) ||
+        window.match(/\bwinners of the\s+([1-8]A(?:\s*\/\s*[1-8]A)?)\s+Wrestling\b/i)
+      if (d) division = d[1].replace(/\s+/g, "").toUpperCase()
+    }
+
+    let runner: string | null = null
+    let cScore: number | null = null
+    let rScore: number | null = null
+
+    const defeated = window.match(/defeated(?: the)?\s+(.+?)\s+(\d+)\s*[-–]\s*(\d+)\b/i)
+    const edged = window.match(/edged past(?: the)?\s+(.+?)\s+(\d+)\s*[-–]\s*(\d+)\b/i)
+    const beat = window.match(/beat(?: the)?\s+(.+?)\s+(\d+)\s*[-–]\s*(\d+)\b/i)
+    const winAgainst = window.match(
+      /with a\s+(\d+)\s*[-–]\s*(\d+)\s+win against(?: the)?\s+([^.]+?)(?:\.|,|\s+on\s+)/i,
+    )
+    const simpleWin = window.match(
+      /with a\s+(\d+)\s*[-–]\s*(\d+)\s+win(?:\s+against(?: the)?\s+([^.]+?))?(?:\.|,|\s+on\s+|$)/i,
+    )
+
+    if (defeated) {
+      runner = defeated[1]
+      cScore = Number(defeated[2])
+      rScore = Number(defeated[3])
+    } else if (edged) {
+      runner = edged[1]
+      cScore = Number(edged[2])
+      rScore = Number(edged[3])
+    } else if (beat) {
+      runner = beat[1]
+      cScore = Number(beat[2])
+      rScore = Number(beat[3])
+    } else if (winAgainst) {
+      cScore = Number(winAgainst[1])
+      rScore = Number(winAgainst[2])
+      runner = winAgainst[3]
+    } else if (simpleWin) {
+      cScore = Number(simpleWin[1])
+      rScore = Number(simpleWin[2])
+      runner = simpleWin[3] || null
+      if (!runner) {
+        const both = window.match(
+          /\bboth\s+([A-Z][A-Za-z.'’\- ]+?)\s+and\s+([A-Z][A-Za-z.'’\- ]+?)\s+were\b/i,
+        )
+        if (both) {
+          const a = normalizeDualSchool(both[1])
+          const b = normalizeDualSchool(both[2])
+          const champ = normalizeDualSchool(champion)
+          runner = schoolMentions(a, champ) ? b : a
+        }
+      }
+    }
+
+    pushPending({
+      division: division || "",
+      champion_school: champion,
+      runner_up_school: runner,
+      champion_score: cScore,
+      runner_up_score: rScore,
+    })
+  }
+
+  // Assign missing divisions from nav class queue in appearance order (1A→4A / 1A→8A)
+  const used = new Set(pending.filter((p) => p.division).map((p) => p.division))
+  const unusedQueue = classQueue.filter((c) => !used.has(c))
+  for (const p of pending) {
+    if (!p.division && unusedQueue.length) {
+      p.division = unusedQueue.shift()!
+      used.add(p.division)
+    }
+  }
+
+  const out: DualDraft[] = []
+  const seenDiv = new Set<string>()
+  for (const p of pending) {
+    if (!p.division || seenDiv.has(p.division)) continue
+    seenDiv.add(p.division)
+    out.push(p)
+  }
+  return out
+}

@@ -4,6 +4,7 @@ import { namesLooselyEqual, schoolsLooselyEqual } from "./normalize"
 import {
   parseDualTeamPayload,
   parseNchsaaChampionshipFinalsText,
+  parseNchsaaDualTeamChampionshipsText,
   parseNchsaaGuaranteedPlacesText,
   parseNchsaaIndividualStatesText,
   parsePlacerJsonPayload,
@@ -84,6 +85,95 @@ Guaranteed Places
       place: 1,
       wrestler_name: "Skyler Anderson",
       school: "Robbinsville",
+    })
+  })
+
+  it("parses 2026-style dual State Champion blocks with class queue", () => {
+    const text = `
+1A
+2A
+3A
+4A
+5A
+6A
+7A
+8A
+State Champion: Robbinsville High School
+State Championship Match:
+Robbinsville 58, South Davidson 24
+State Champion: Rosewood High School
+State Championship Match:
+Rosewood 56, East Wilkes 15
+3A Classification – State Champion: Trinity High School
+State Championship Match:
+Trinity 42, West Lincoln 33
+State Champion: Uwharrie Charter Academy
+State Championship Match:
+Uwharrie Charter 44, Pisgah 28
+State Champion: West Rowan High School
+State Championship Match:
+West Rowan 38, Croatan 30
+State Champion: Union Pines High School
+State Championship Match:
+Union Pines 37, St. Stephens 21
+State Champion: Davie County High School
+State Championship Match:
+Davie 40, New Bern 30
+State Champion: William Amos Hough High School
+State Championship Match:
+Hough 45, Millbrook 20
+`
+    const rows = parseNchsaaDualTeamChampionshipsText(text, { year: 2026 })
+    expect(rows).toHaveLength(8)
+    expect(rows.find((r) => r.division === "1A")).toMatchObject({
+      champion_school: "Robbinsville",
+      runner_up_school: "South Davidson",
+      champion_score: 58,
+      runner_up_score: 24,
+    })
+    expect(rows.find((r) => r.division === "5A")).toMatchObject({
+      champion_school: "West Rowan",
+      runner_up_school: "Croatan",
+      champion_score: 38,
+    })
+    expect(rows.find((r) => r.division === "8A")?.champion_school).toBe("William Amos Hough")
+  })
+
+  it("parses 2025-style dual article headlines + scores", () => {
+    const text = `
+Uwharrie Charter three-peats as 1A Champion
+The Uwharrie Charter Eagles defeated Mount Airy 48-15 on Saturday.
+R-S Central wins thriller in 2A Championship
+The Rutherfordton – Spindale Central Hilltoppers edged past the Seaforth Hawks 34-32 on Saturday.
+Union Pines breaks through for first title
+Union Pines earned its first championship with a 47-17 win against the Pisgah Bears.
+The winners of the 3A Wrestling NC Farm Bureau Sportsmanship Awards were Dantrell Williams from Union Pines and Kane Bryson from Pisgah.
+Cardinal Gibbons wins first Dual Team Wrestling Title
+The Cardinal Gibbons Crusaders earned the program’s first NCHSAA Dual Team Wrestling Championship with a 41-22 win against Hickory Ridge on Saturday.
+The winners of the 4A Wrestling NC Farm Bureau Sportsmanship Awards were Spencer Sterling from Cardinal Gibbons and Colt Campbell from Hickory Ridge.
+`
+    const rows = parseNchsaaDualTeamChampionshipsText(text, { year: 2025 })
+    expect(rows.find((r) => r.division === "1A")).toMatchObject({
+      champion_school: "Uwharrie Charter",
+      runner_up_school: "Mount Airy",
+      champion_score: 48,
+      runner_up_score: 15,
+    })
+    expect(rows.find((r) => r.division === "2A")).toMatchObject({
+      champion_school: "R-S Central",
+      runner_up_school: "Seaforth",
+      champion_score: 34,
+      runner_up_score: 32,
+    })
+    expect(rows.find((r) => r.division === "3A")).toMatchObject({
+      champion_school: "Union Pines",
+      runner_up_school: "Pisgah",
+      champion_score: 47,
+    })
+    expect(rows.find((r) => r.division === "4A")).toMatchObject({
+      champion_school: "Cardinal Gibbons",
+      runner_up_school: "Hickory Ridge",
+      champion_score: 41,
     })
   })
 

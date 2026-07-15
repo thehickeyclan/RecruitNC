@@ -58,7 +58,9 @@ export default function AdminImportsPage() {
   const [selected, setSelected] = useState<Record<string, boolean>>({})
   const [acting, setActing] = useState(false)
   const [connectorYears, setConnectorYears] = useState<number[]>([])
+  const [dualConnectorYears, setDualConnectorYears] = useState<number[]>([])
   const [runningConnector, setRunningConnector] = useState(false)
+  const [runningDualConnector, setRunningDualConnector] = useState(false)
 
   const loadBatches = useCallback(async () => {
     setLoading(true)
@@ -130,6 +132,14 @@ export default function AdminImportsPage() {
         if (Array.isArray(d.years)) setConnectorYears(d.years)
       })
       .catch(() => {})
+    void fetch("/api/admin/imports/connectors/nchsaa-dual-team", {
+      credentials: "include",
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (Array.isArray(d.years)) setDualConnectorYears(d.years)
+      })
+      .catch(() => {})
   }, [user, isAdmin, authLoading, loadBatches])
 
   const selectedIds = useMemo(
@@ -165,6 +175,34 @@ export default function AdminImportsPage() {
     }
   }
 
+  async function runDualTeamConnector() {
+    setRunningDualConnector(true)
+    try {
+      const res = await fetch("/api/admin/imports/connectors/nchsaa-dual-team", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ year: Number(year) }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || "Connector failed")
+      toast({
+        title: `Dual Team ${data.year} staged`,
+        description: `${data.champions ?? 0} divisions · ${data.rowCount ?? 0} rows · New ${data.summary?.new ?? 0} · Changed ${data.summary?.changed ?? 0}`,
+      })
+      await loadBatches()
+      if (data.batch?.id) await loadBatch(data.batch.id)
+    } catch (e) {
+      toast({
+        title: "Duals connector failed",
+        description: e instanceof Error ? e.message : "Error",
+        variant: "destructive",
+      })
+    } finally {
+      setRunningDualConnector(false)
+    }
+  }
+
   async function stagePaste() {
     setStaging(true)
     try {
@@ -176,9 +214,6 @@ export default function AdminImportsPage() {
         json = JSON.parse(trimmed)
       } else {
         text = trimmed
-        if (dataset === DATASET_DUAL_TEAM) {
-          throw new Error("Dual team staging needs JSON (year×division records or verified schools export)")
-        }
       }
       const res = await fetch("/api/admin/imports/stage", {
         method: "POST",
@@ -333,9 +368,10 @@ export default function AdminImportsPage() {
                 , deploy, then run <strong>Fetch &amp; stage Individual States</strong> below → approve.
               </li>
               <li>
-                <span className="font-medium">After Duals:</span> Stage dual-team JSON on this page
-                (year × division) → approve. School “most titles” is derived — don’t paste aggregates
-                as the only source of truth.
+                <span className="font-medium">After Duals:</span> Add that year’s URL to{" "}
+                <code className="text-xs">lib/public-imports/connectors/nchsaa-dual-team.ts</code>
+                , deploy, then run <strong>Fetch &amp; stage Dual Team</strong> below → approve.
+                School “most titles” is derived — don’t paste aggregates as the only source of truth.
               </li>
               <li>
                 <span className="font-medium">After NHSCA nationals:</span> Ship AA roster with{" "}
@@ -391,7 +427,7 @@ export default function AdminImportsPage() {
             <Button
               type="button"
               onClick={() => void runIndividualStatesConnector()}
-              disabled={runningConnector || setupRequired}
+              disabled={runningConnector || runningDualConnector || setupRequired}
             >
               {runningConnector ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -403,13 +439,49 @@ export default function AdminImportsPage() {
           </CardContent>
         </Card>
 
+        <Card className="border-[#003366]/30 bg-white">
+          <CardHeader>
+            <CardTitle className="text-lg text-[#13294B]">
+              NCHSAA Dual Team Championships connector
+            </CardTitle>
+            <CardDescription>
+              Fetches the registered dual-team results page for the year, parses year×division
+              champions (and runner-up/scores when published), stages a review batch. Registered
+              years: {dualConnectorYears.length ? dualConnectorYears.join(", ") : "—"}.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap items-end gap-3">
+            <div className="space-y-1">
+              <Label htmlFor="dual-connector-year">Year</Label>
+              <Input
+                id="dual-connector-year"
+                value={year}
+                onChange={(e) => setYear(e.target.value)}
+                className="w-28"
+              />
+            </div>
+            <Button
+              type="button"
+              onClick={() => void runDualTeamConnector()}
+              disabled={runningDualConnector || runningConnector || setupRequired}
+            >
+              {runningDualConnector ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Upload className="h-4 w-4" />
+              )}
+              <span className="ml-2">Fetch &amp; stage Dual Team</span>
+            </Button>
+          </CardContent>
+        </Card>
+
         <div className="grid gap-4 md:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Stage a batch</CardTitle>
               <CardDescription>
                 Placers: paste Guaranteed Places text / JSON, or fetch an nchsaa.org page. Duals:
-                paste year×division JSON (or verified school leaderboard).
+                connector above, year×division JSON, or dual championship page text.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
