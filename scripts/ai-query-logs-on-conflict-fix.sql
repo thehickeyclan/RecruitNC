@@ -1,23 +1,37 @@
--- ============================================================================ ai_query_logs 42P10 (ON CONFLICT) for Data Dawg analytics writes.
--- Root causes we have seen:
---   1) Stale insert_ai_query_log() overload that still uses ON CONFLICT
---   2) Prefer: resolution=* + PARTIAL unique index on message_id (no matching target)
+-- FIX 42P10 on ai_query_logs (Data Dawg analytics Test write)
 --
--- Run ALL of this in Supabase SQL Editor.
+-- Prefer: resolution=* (often injected by PostgREST/Supabase) generates
+--   INSERT ... ON CONFLICT ...
+-- That fails with 42P10 when:
+--   • there is NO primary key on id, and/or
+--   • the only unique on message_id is PARTIAL (WHERE message_id IS NOT NULL)
+--
+-- Run this entire script in Supabase SQL Editor, then Test write again.
+-- Works even before the next Vercel deploy (REST path needs the constraints).
 
--- 0) Inspect (optional — paste results if still failing)
--- select pg_get_functiondef(p.oid)
--- from pg_proc p join pg_namespace n on n.oid = p.pronamespace
--- where n.nspname = 'public' and p.proname in ('insert_ai_query_log','write_ai_query_log');
+-- ---------------------------------------------------------------------------
+-- A) Diagnostics (optional — copy results if still broken)
+-- ---------------------------------------------------------------------------
+-- select conname, contype, pg_get_constraintdef(oid)
+-- from pg_constraint where conrelid = 'public.ai_query_logs'::regclass order by 1;
 -- select indexname, indexdef from pg_indexes
--- where schemaname='public' and tablename='ai_query_logs' and indexdef ilike '%message_id%';
+-- where schemaname='public' and tablename='ai_query_logs';
+-- select tgname, pg_get_triggerdef(oid) from pg_trigger
+-- where tgrelid = 'public.ai_query_logs'::regclass and not tgisinternal;
 
--- 1) Normalize empty message_ids; collapse duplicate non-null message_ids (keep newest)
-update public.ai_query_logs set message_id = null where message_id is not null and trim(message_id) = '';
+-- ---------------------------------------------------------------------------
+-- B) Clean message_id so a FULL unique is possible
+-- ---------------------------------------------------------------------------
+update public.ai_query_logs
+set message_id = null
+where message_id is not null and btrim(message_id) = '';
 
 with dups as (
   select id,
-         row_number() over (partition by message_id order by timestamp desc nulls last, id desc) as rn
+         row_number() over (
+           partition by message_id
+           order by coalesce(timestamp, created_at) desc nulls last, id desc
+         ) as rn
   from public.ai_query_logs
   where message_id is not null
 )
@@ -26,58 +40,83 @@ set message_id = null
 from dups d
 where a.id = d.id and d.rn > 1;
 
--- 2) Drop EVERY unique index/constraint on message_id (partial or full)
+-- ---------------------------------------------------------------------------
+-- C) Ensure PRIMARY KEY on id (Prefer resolution often upserts on PK)
+-- ---------------------------------------------------------------------------
+-- Deduplicate id if needed (should be rare)
+with id_dups as (
+  select id, row_number() over (partition by id order by coalesce(timestamp, created_at) desc) as rn
+  from public.ai_query_logs
+)
+delete from public.ai_query_logs a
+using id_dups d
+where a.id = d.id and d.rn > 1;
+
 do $$
-declare
-  r record;
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.ai_query_logs'::regclass and contype = 'p'
+  ) then
+    alter table public.ai_query_logs
+      add constraint ai_query_logs_pkey primary key (id);
+  end if;
+end $$;
+
+-- ---------------------------------------------------------------------------
+-- D) Drop EVERY unique/index on message_id (partial AND full), then full UNIQUE
+-- ---------------------------------------------------------------------------
+do $$
+declare r record;
 begin
   for r in
     select c.conname
     from pg_constraint c
     join pg_class t on t.oid = c.conrelid
     join pg_namespace n on n.oid = t.relnamespace
-    where n.nspname = 'public'
-      and t.relname = 'ai_query_logs'
-      and c.contype = 'u'
+    where n.nspname = 'public' and t.relname = 'ai_query_logs'
+      and c.contype in ('u','x')
       and pg_get_constraintdef(c.oid) ilike '%message_id%'
   loop
-    execute format('alter table public.ai_query_logs drop constraint if exists %I', r.conname);
+    execute format('alter table public.ai_query_logs drop constraint %I', r.conname);
   end loop;
 
   for r in
-    select indexname
-    from pg_indexes
-    where schemaname = 'public'
-      and tablename = 'ai_query_logs'
-      and indexdef ilike '%unique%'
-      and indexdef ilike '%message_id%'
+    select i.indexname
+    from pg_indexes i
+    where i.schemaname = 'public' and i.tablename = 'ai_query_logs'
+      and i.indexdef ilike '%message_id%'
+      and i.indexdef ilike '%unique%'
   loop
     execute format('drop index if exists public.%I', r.indexname);
   end loop;
 end $$;
 
-drop index if exists idx_ai_query_logs_message_id_uq;
+drop index if exists public.idx_ai_query_logs_message_id_uq;
 
--- 3) Full UNIQUE so Prefer: resolution=* (if injected by gateway) has a target
+alter table public.ai_query_logs
+  drop constraint if exists ai_query_logs_message_id_key;
+
 alter table public.ai_query_logs
   add constraint ai_query_logs_message_id_key unique (message_id);
 
--- 4) Drop ALL overloads of the old RPC name (may still contain ON CONFLICT)
+-- ---------------------------------------------------------------------------
+-- E) Recreate plain-INSERT RPCs (no ON CONFLICT in function body)
+-- ---------------------------------------------------------------------------
 do $$
-declare
-  r record;
+declare r record;
 begin
   for r in
     select p.oid::regprocedure as sig
     from pg_proc p
     join pg_namespace n on n.oid = p.pronamespace
-    where n.nspname = 'public' and p.proname = 'insert_ai_query_log'
+    where n.nspname = 'public'
+      and p.proname in ('insert_ai_query_log', 'write_ai_query_log')
   loop
     execute format('drop function if exists %s', r.sig);
   end loop;
 end $$;
 
--- 5) New single-arg RPC used by lib/ai-query-log-write.ts (plain INSERT only)
 create or replace function public.write_ai_query_log(payload jsonb)
 returns uuid
 language plpgsql
@@ -85,8 +124,11 @@ security definer
 set search_path = public
 as $$
 declare
-  new_id uuid := gen_random_uuid();
-  mid text := nullif(trim(coalesce(payload->>'message_id', '')), '');
+  new_id uuid := coalesce(
+    nullif(payload->>'id', '')::uuid,
+    gen_random_uuid()
+  );
+  mid text := nullif(btrim(coalesce(payload->>'message_id', '')), '');
 begin
   insert into public.ai_query_logs (
     id, query, project, url, response, query_type, response_time_ms,
@@ -104,9 +146,11 @@ begin
     payload->>'error_message',
     payload->>'handler_name',
     case
-      when payload ? 'success' and payload->>'success' is not null
+      when payload ? 'success' and json_typeof(payload->'success') = 'boolean'
         then (payload->>'success')::boolean
-      else null
+      when payload->>'success' in ('true','false')
+        then (payload->>'success')::boolean
+      else true
     end,
     now()
   );
@@ -114,24 +158,38 @@ begin
 end;
 $$;
 
-grant execute on function public.write_ai_query_log(jsonb) to anon, authenticated, service_role;
+grant execute on function public.write_ai_query_log(jsonb)
+  to anon, authenticated, service_role;
 
--- Keep a simple plain-INSERT alias for manual SQL pings
 create or replace function public.insert_ai_query_log(p_query text)
 returns uuid
 language sql
 security definer
 set search_path = public
 as $$
-  select public.write_ai_query_log(jsonb_build_object('query', p_query, 'project', 'recruit-nc', 'success', true));
+  select public.write_ai_query_log(
+    jsonb_build_object('query', p_query, 'project', 'recruit-nc', 'success', true)
+  );
 $$;
 
-grant execute on function public.insert_ai_query_log(text) to anon, authenticated, service_role;
+grant execute on function public.insert_ai_query_log(text)
+  to anon, authenticated, service_role;
 
 notify pgrst, 'reload schema';
 
--- Verify (must return a UUID):
--- select public.write_ai_query_log('{"query":"sql write_ai_query_log ping","project":"recruit-nc","success":true}'::jsonb);
--- select conname, pg_get_constraintdef(oid)
--- from pg_constraint
--- where conrelid = 'public.ai_query_logs'::regclass and contype = 'u';
+-- ---------------------------------------------------------------------------
+-- F) Must return UUID + show constraints
+-- ---------------------------------------------------------------------------
+select public.write_ai_query_log(
+  jsonb_build_object(
+    'query', 'constraint-fix ping ' || now()::text,
+    'project', 'recruit-nc',
+    'success', true,
+    'handler_name', 'sql_constraint_fix'
+  )
+) as write_id;
+
+select conname, contype, pg_get_constraintdef(oid) as def
+from pg_constraint
+where conrelid = 'public.ai_query_logs'::regclass
+order by contype, conname;

@@ -41,10 +41,23 @@ alter table public.ai_query_logs add column if not exists success boolean;
 alter table public.ai_query_logs add column if not exists message_id text;
 alter table public.ai_query_logs add column if not exists timestamp timestamptz default now();
 
--- Unique message_id when present (supports upserts / Prefer conflicts)
-create unique index if not exists idx_ai_query_logs_message_id_uq
-  on public.ai_query_logs (message_id)
-  where message_id is not null and message_id <> '';
+-- FULL UNIQUE(message_id) only — NEVER a PARTIAL unique index (causes PostgREST 42P10).
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.ai_query_logs'::regclass
+      and conname = 'ai_query_logs_message_id_key'
+  ) then
+    alter table public.ai_query_logs
+      add constraint ai_query_logs_message_id_key unique (message_id);
+  end if;
+exception
+  when others then
+    raise notice 'Could not add UNIQUE(message_id): %', SQLERRM;
+end $$;
+
+drop index if exists public.idx_ai_query_logs_message_id_uq;
 
 create index if not exists idx_ai_query_logs_project on public.ai_query_logs (project);
 create index if not exists idx_ai_query_logs_timestamp on public.ai_query_logs (timestamp desc);
