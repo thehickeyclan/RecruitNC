@@ -9,10 +9,23 @@ import {
 } from "./search-normalize"
 import { scoreAthleteNameMatch } from "./fuzzy-utils"
 import { isLikelySchoolWrestlingLookup } from "./school-name-fast-path-detect"
+import { normalizeApostrophes, namesReferToSamePerson } from "@/lib/athlete-name-match"
 
 /** Topics that must keep the full agent path (not a bare athlete lookup). */
 const LOOKUP_TOPIC_BLOCK =
   /\b(ranking|rankings|champ(?:ion|s)?|nhsca|fargo|super\s*32|super32|dual(?:s)?|all[- ]?american|record book|winningest|leaderboard|how many|most titles|state tournament|class of|committed to|college commits?|school wrestling|high school wrestling)\b/i
+
+/** Fold curly quotes / spacing so "Kevin O'Brien" matches "Kevin O’Brien" / "Kevin OBrien". */
+export function foldAthleteLookupName(s: string): string {
+  return normalizeApostrophes((s ?? "").trim().toLowerCase())
+    .replace(/`/g, "'")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
+export function foldAthleteLookupNameLoose(s: string): string {
+  return foldAthleteLookupName(s).replace(/'/g, "")
+}
 
 export function isLikelyAthleteNameLookup(message: string): boolean {
   const raw = (message ?? "").trim()
@@ -52,16 +65,26 @@ export function pickClearAthleteId(
   if (Array.isArray(disambiguation) && disambiguation.length > 0) return null
   if (!rows.length) return null
 
-  const phraseLow = phrase.toLowerCase().replace(/\s+/g, " ").trim()
+  const phraseFold = foldAthleteLookupName(phrase)
+  const phraseLoose = foldAthleteLookupNameLoose(phrase)
+
   const scored = rows
     .map((row) => {
       const { first, last, display } = rowNameParts(row)
-      const score = scoreAthleteNameMatch(phraseLow, first, last, display)
+      const score = scoreAthleteNameMatch(phraseFold, first, last, display)
       return { row, score, display }
     })
     .sort((a, b) => b.score - a.score)
 
-  const exact = scored.filter((s) => s.display.toLowerCase().replace(/\s+/g, " ").trim() === phraseLow)
+  const exact = scored.filter((s) => {
+    const d = foldAthleteLookupName(s.display)
+    const dLoose = foldAthleteLookupNameLoose(s.display)
+    return (
+      d === phraseFold ||
+      dLoose === phraseLoose ||
+      namesReferToSamePerson(phrase, s.display)
+    )
+  })
   if (exact.length === 1) {
     const id = String(exact[0].row.id ?? "").trim()
     return id || null
