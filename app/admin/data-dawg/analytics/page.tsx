@@ -283,11 +283,20 @@ export default function DataDawgAnalyticsPage() {
           <div className="rounded-lg border border-amber-200 bg-amber-50 px-5 py-6">
             <h2 className="text-sm font-semibold text-amber-950">Setup required</h2>
             <p className="mt-2 text-sm text-amber-900/80">
-              {data.setupHint || "Create the ai_query_logs table, then ask Data Dawg a few questions."}
+              The <code className="text-xs">ai_query_logs</code> table is missing. Run this in the Supabase SQL
+              Editor, then ask Data Dawg anything and refresh:
             </p>
-            <pre className="mt-4 overflow-x-auto rounded-md border border-amber-200/80 bg-white p-3 text-xs text-zinc-700">
-              {`scripts/ai-query-logs-table.sql`}
+            <pre className="mt-4 overflow-x-auto rounded-md border border-amber-200/80 bg-white p-3 text-xs text-zinc-700 whitespace-pre-wrap">
+              {data.setupHint || "scripts/ai-query-logs-table.sql"}
             </pre>
+          </div>
+        ) : null}
+
+        {!data?.tableMissing && summary && summary.total === 0 ? (
+          <div className="mb-6 rounded-lg border border-zinc-200 bg-white px-5 py-4 text-sm text-zinc-600">
+            Table is ready, but no queries are logged in this range yet. Ask Data Dawg a question (on production
+            after deploy), then hit refresh. Logging must finish before the response returns — older builds could
+            drop inserts on Vercel.
           </div>
         ) : null}
 

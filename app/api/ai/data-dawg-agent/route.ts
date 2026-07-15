@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     if (!process.env.OPENAI_API_KEY) {
       const answer =
         "Data Dawg Agent v2 requires OpenAI (OPENAI_API_KEY). Use the standard Data Dawg endpoint or add OPENAI_API_KEY for this mode."
-      void writeAiQueryLog({
+      await writeAiQueryLog({
         query: message,
         project,
         url: req.url,
@@ -71,7 +71,8 @@ export async function POST(req: NextRequest) {
     const responseTimeMs = Date.now() - started
     const success = computeAiQuerySuccess({ answer: result.answer })
 
-    void writeAiQueryLog({
+    // Must await — Vercel freezes the isolate after the response and drops void promises.
+    await writeAiQueryLog({
       query: message,
       project,
       url: req.url,
@@ -102,7 +103,7 @@ export async function POST(req: NextRequest) {
         : `Data Dawg hit an error: ${msg}`
 
     if (message) {
-      void writeAiQueryLog({
+      await writeAiQueryLog({
         query: message,
         project,
         url: req.url,
