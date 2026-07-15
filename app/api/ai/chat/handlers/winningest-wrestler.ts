@@ -32,9 +32,9 @@ export async function handleWinningestWrestler(
   // Single-season winningest (most wins in one season) for context
   const { data: singleSeasonTop, error: singleError } = await adminClient
     .from("winningest_wrestlers")
-    .select("rank_numeric, wrestler_name, school, record, wins, losses, year")
+    .select("rank_position, rank_numeric, is_tied, wrestler_name, school, record, wins, losses, year")
     .order("wins", { ascending: false })
-    .limit(3)
+    .limit(5)
 
   if (singleError) {
     // Table might not exist in all envs; log and continue with career only

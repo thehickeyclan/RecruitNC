@@ -56,6 +56,8 @@ export const SUGGESTED_PROMPT_ROUTES: Array<{ prompt: string; handler: string; p
   // Winningest wrestler (record books / athletes)
   { prompt: "who is the all time winningest wrestler?", handler: "winningest_wrestler" },
   { prompt: "who is the all-time winningest wrestler?", handler: "winningest_wrestler" },
+  { prompt: "who has the most wins in a single season?", handler: "winningest_wrestler" },
+  { prompt: "show wrestlers with 60 or more wins in a season", handler: "winningest_wrestler" },
   // Top / best wrestlers → prospect rankings (top 5 per class)
   { prompt: "who are some of the top wrestlers?", handler: "prospect_rankings", params: { years: [2026, 2027, 2028], topN: 5 } },
   { prompt: "who are the top wrestlers?", handler: "prospect_rankings", params: { years: [2026, 2027, 2028], topN: 5 } },

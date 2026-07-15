@@ -82,6 +82,14 @@ export default function NCHSAAOverview() {
                   </Button>
                 </a>
               </div>
+              <p className="mt-3 text-center md:text-right">
+                <a
+                  href="/history/records/single-season-wins"
+                  className="text-sm text-white/90 underline underline-offset-2 hover:text-white"
+                >
+                  Single-season most victories leaderboard
+                </a>
+              </p>
             </CardContent>
           </Card>
         </div>
