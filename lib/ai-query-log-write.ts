@@ -1,12 +1,11 @@
 /**
- * Write helpers for `ai_query_logs`. Always await from API routes —
- * Vercel drops fire-and-forget work after the response returns.
+ * Write helpers for `ai_query_logs`.
  *
- * Strategy:
- * 1) RPC `insert_ai_query_log` (plain SQL INSERT) — preferred.
- * 2) If RPC missing/fails, REST POST to the table with **no Prefer header**
- *    (supabase-js `.insert()` often sends Prefer: resolution=* which breaks when
- *    only a PARTIAL unique index exists → Postgres 42P10 ON CONFLICT error).
+ * Prefer RPC `write_ai_query_log(jsonb)` — plain INSERT, no ON CONFLICT.
+ * Fallback: REST POST with ZERO Prefer headers (Supabase/PostgREST
+ * Prefer: resolution=* + a PARTIAL unique on message_id → Postgres 42P10).
+ *
+ * Never use supabase-js `.insert()` / `.upsert()` for this table.
  */
 
 import { randomUUID } from "crypto"
@@ -22,7 +21,7 @@ export type WriteAiQueryLogResult =
   | { ok: false; tableMissing?: boolean; rpcMissing?: boolean; error: string; pathTried?: string }
 
 export const INSERT_AI_QUERY_LOG_RPC_HINT =
-  "Run scripts/ai-query-logs-on-conflict-fix.sql in Supabase (creates insert_ai_query_log + UNIQUE(message_id)), then: NOTIFY pgrst, 'reload schema';"
+  "Run the FULL scripts/ai-query-logs-on-conflict-fix.sql in Supabase (drops old insert_ai_query_log overloads, creates write_ai_query_log(jsonb), adds UNIQUE(message_id)), then NOTIFY pgrst, 'reload schema'."
 
 function getServiceConfig(): { url: string; key: string } | { error: string } {
   const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -80,13 +79,66 @@ async function parseError(res: Response): Promise<string> {
 function isRpcMissingError(status: number, error: string): boolean {
   return (
     status === 404 ||
-    /PGRST202|PGRST203|Could not find the function|insert_ai_query_log|does not exist|schema cache/i.test(
+    /PGRST202|PGRST203|Could not find the function|write_ai_query_log|insert_ai_query_log|does not exist|schema cache/i.test(
       error,
     )
   )
 }
 
-async function rpcInsert(fields: ReturnType<typeof buildFields>): Promise<
+/** Service-role headers — never Prefer: resolution=* */
+function serviceHeaders(key: string, extra?: Record<string, string>): Record<string, string> {
+  return {
+    apikey: key,
+    Authorization: `Bearer ${key}`,
+    "Content-Type": "application/json",
+    Accept: "application/json",
+    ...extra,
+  }
+}
+
+function parseUuidBody(body: string): string | null {
+  let id = body.trim()
+  try {
+    const parsed = JSON.parse(body) as unknown
+    if (typeof parsed === "string") id = parsed
+  } catch {
+    id = id.replace(/^"|"$/g, "")
+  }
+  return id && id.length >= 8 ? id : null
+}
+
+async function rpcWriteJson(fields: ReturnType<typeof buildFields>): Promise<
+  { ok: true; id: string } | { ok: false; status: number; error: string; rpcMissing?: boolean }
+> {
+  const cfg = getServiceConfig()
+  if ("error" in cfg) return { ok: false, status: 0, error: cfg.error }
+
+  // New unambiguous RPC — avoids stale insert_ai_query_log overloads that may contain ON CONFLICT
+  const res = await fetch(`${cfg.url}/rest/v1/rpc/write_ai_query_log`, {
+    method: "POST",
+    headers: serviceHeaders(cfg.key),
+    body: JSON.stringify({ payload: fields }),
+  })
+
+  if (!res.ok) {
+    const error = await parseError(res)
+    return {
+      ok: false,
+      status: res.status,
+      error,
+      rpcMissing: isRpcMissingError(res.status, error),
+    }
+  }
+
+  const id = parseUuidBody(await res.text().catch(() => ""))
+  if (!id) {
+    return { ok: false, status: res.status, error: "write_ai_query_log returned empty id" }
+  }
+  return { ok: true, id }
+}
+
+/** Legacy multi-arg RPC (in case only the old function exists). */
+async function rpcInsertLegacy(fields: ReturnType<typeof buildFields>): Promise<
   { ok: true; id: string } | { ok: false; status: number; error: string; rpcMissing?: boolean }
 > {
   const cfg = getServiceConfig()
@@ -94,14 +146,7 @@ async function rpcInsert(fields: ReturnType<typeof buildFields>): Promise<
 
   const res = await fetch(`${cfg.url}/rest/v1/rpc/insert_ai_query_log`, {
     method: "POST",
-    headers: {
-      apikey: cfg.key,
-      Authorization: `Bearer ${cfg.key}`,
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      // Never Prefer: resolution=* on RPC
-      Prefer: "return=representation",
-    },
+    headers: serviceHeaders(cfg.key),
     body: JSON.stringify({
       p_query: fields.query,
       p_project: fields.project,
@@ -127,22 +172,16 @@ async function rpcInsert(fields: ReturnType<typeof buildFields>): Promise<
     }
   }
 
-  const body = await res.text().catch(() => "")
-  let id = body.trim()
-  try {
-    const parsed = JSON.parse(body) as unknown
-    if (typeof parsed === "string") id = parsed
-  } catch {
-    id = id.replace(/^"|"$/g, "")
-  }
-  if (!id || id.length < 8) {
-    return { ok: false, status: res.status, error: `RPC returned unexpected body: ${body.slice(0, 200)}` }
+  const id = parseUuidBody(await res.text().catch(() => ""))
+  if (!id) {
+    return { ok: false, status: res.status, error: "insert_ai_query_log returned empty id" }
   }
   return { ok: true, id }
 }
 
 /**
- * Table POST with no Prefer: resolution. supabase-js `.insert()` is avoided on purpose.
+ * Table POST with no Prefer header at all.
+ * If the API gateway still injects Prefer: resolution=*, UNIQUE(message_id) must exist.
  */
 async function restInsert(fields: ReturnType<typeof buildFields>): Promise<
   { ok: true; id: string } | { ok: false; status: number; error: string }
@@ -159,14 +198,7 @@ async function restInsert(fields: ReturnType<typeof buildFields>): Promise<
 
   const res = await fetch(`${cfg.url}/rest/v1/ai_query_logs`, {
     method: "POST",
-    headers: {
-      apikey: cfg.key,
-      Authorization: `Bearer ${cfg.key}`,
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      // Explicit: return only — NEVER resolution=* (causes 42P10 with partial unique indexes)
-      Prefer: "return=minimal",
-    },
+    headers: serviceHeaders(cfg.key),
     body: JSON.stringify(row),
   })
 
@@ -177,19 +209,25 @@ async function restInsert(fields: ReturnType<typeof buildFields>): Promise<
 export async function writeAiQueryLog(entry: AiQueryLogInsert): Promise<WriteAiQueryLogResult> {
   try {
     const fields = buildFields(entry)
-    const rpc = await rpcInsert(fields)
 
+    let rpc = await rpcWriteJson(fields)
     if (rpc.ok) return { ok: true, id: rpc.id, path: "rpc" }
 
-    // Fallback when RPC missing from schema cache OR any RPC failure — Prefer-free REST
-    console.warn(
-      "[RecruitNC] insert_ai_query_log RPC failed, trying Prefer-free REST:",
-      rpc.error,
-    )
-    let rest = await restInsert(fields)
+    // Try legacy multi-arg name if jsonb RPC not deployed yet
+    if (rpc.rpcMissing) {
+      const legacy = await rpcInsertLegacy(fields)
+      if (legacy.ok) return { ok: true, id: legacy.id, path: "rpc" }
+      rpc = legacy
+    }
 
-    // Unique message_id collision → retry without it
-    if (!rest.ok && /duplicate|unique|23505/i.test(rest.error) && fields.message_id) {
+    console.warn("[RecruitNC] ai_query_logs RPC failed, trying Prefer-free REST:", rpc.error)
+
+    // Prefer null message_id first when 42P10 — reduces unique-target pressure if gateway upserts
+    let rest = await restInsert({ ...fields, message_id: null })
+    if (!rest.ok && fields.message_id && !/42P10|ON CONFLICT/i.test(rest.error)) {
+      rest = await restInsert(fields)
+    }
+    if (!rest.ok && /duplicate|unique|23505/i.test(rest.error)) {
       rest = await restInsert({ ...fields, message_id: null })
     }
 
@@ -203,6 +241,13 @@ export async function writeAiQueryLog(entry: AiQueryLogInsert): Promise<WriteAiQ
     }
 
     const combined = `rpc: ${rpc.error} | rest: ${rest.error}`
+    if (/42P10|ON CONFLICT/i.test(combined)) {
+      return {
+        ok: false,
+        error: `${combined} — ${INSERT_AI_QUERY_LOG_RPC_HINT}`,
+        pathTried: "rpc+rest",
+      }
+    }
     if (rpc.rpcMissing) {
       return {
         ok: false,
@@ -228,12 +273,7 @@ export async function updateAiQueryLogFeedback(messageId: string, feedback: stri
       `${cfg.url}/rest/v1/ai_query_logs?message_id=eq.${encodeURIComponent(messageId)}`,
       {
         method: "PATCH",
-        headers: {
-          apikey: cfg.key,
-          Authorization: `Bearer ${cfg.key}`,
-          "Content-Type": "application/json",
-          Prefer: "return=minimal",
-        },
+        headers: serviceHeaders(cfg.key),
         body: JSON.stringify({ feedback }),
       },
     )
