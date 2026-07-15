@@ -205,12 +205,19 @@ describe("official fetch allowlist", () => {
 })
 
 describe("bundled Fargo fixtures", () => {
-  it("ships Junior Boys FS + GR 2026 JSON for serverless runtime", async () => {
+  it("blocks demo fixtures by default and never uses real athlete names", async () => {
     const { getBundledFargoExport } = await import("@/lib/public-imports/fixtures/fargo")
-    const fs = getBundledFargoExport("scripts/data/fargo/exports/2026-junior-boys-fs.json")
-    const gr = getBundledFargoExport("scripts/data/fargo/exports/2026-junior-boys-gr.json")
-    expect(fs).toContain("Junior")
-    expect(fs).toContain("Liam Hickey")
+    expect(
+      getBundledFargoExport("scripts/data/fargo/exports/2026-junior-boys-fs.json"),
+    ).toBeNull()
+    const fs = getBundledFargoExport("scripts/data/fargo/exports/2026-junior-boys-fs.json", {
+      allowDemo: true,
+    })
+    const gr = getBundledFargoExport("scripts/data/fargo/exports/2026-junior-boys-gr.json", {
+      allowDemo: true,
+    })
+    expect(fs).toContain("Demo Fixture Athlete")
+    expect(fs).not.toContain("Liam Hickey")
     expect(gr).toContain('"style":"GR"')
     expect(getBundledFargoExport("scripts/data/fargo/exports/missing.json")).toBeNull()
   })
