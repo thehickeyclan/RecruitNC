@@ -217,10 +217,12 @@ export default function DataDawgAnalyticsPage() {
       if (!res.ok) throw new Error((json as { error?: string }).error || "Ping failed")
       setPingMsg(
         json.ok
-          ? `Write OK · last24h=${json.last24h ?? "?"} — refresh 24h filter`
+          ? `Write OK via ${json.write?.path ?? "?"} · last24h=${json.last24h ?? "?"}${
+              json.deploySha ? ` · sha ${String(json.deploySha).slice(0, 7)}` : ""
+            } — refresh 24h`
           : `Write FAILED: ${json.write?.error || json.hint || "unknown"}${
               json.hint && json.write?.error ? ` — ${json.hint}` : ""
-            }`,
+            }${json.deploySha ? ` · sha ${String(json.deploySha).slice(0, 7)}` : ""}`,
       )
       if (json.ok) {
         setTimeRange("24h")
