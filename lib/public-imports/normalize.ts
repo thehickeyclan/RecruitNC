@@ -47,7 +47,14 @@ export function placerNaturalKey(
 }
 
 export function schoolsLooselyEqual(a: unknown, b: unknown): boolean {
-  const na = normText(a).replace(/\bhigh school\b/g, "").replace(/\s+/g, " ").trim()
-  const nb = normText(b).replace(/\bhigh school\b/g, "").replace(/\s+/g, " ").trim()
-  return na === nb
+  const strip = (s: string) =>
+    s
+      .replace(/\bhigh school\b/g, "")
+      .replace(/\bacademy\b/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+  const na = strip(normText(a))
+  const nb = strip(normText(b))
+  if (!na || !nb) return na === nb
+  return na === nb || na.startsWith(nb) || nb.startsWith(na)
 }

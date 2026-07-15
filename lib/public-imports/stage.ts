@@ -3,6 +3,7 @@ import { diffDualTeamRows, diffPlacerRows, summarizeDiffs } from "./diff"
 import {
   inferYearFromText,
   parseDualTeamPayload,
+  parseNchsaaDualTeamChampionshipsText,
   parseNchsaaIndividualStatesText,
   parsePlacerJsonPayload,
 } from "./parse"
@@ -85,8 +86,17 @@ export async function stageImportBatch(admin: SupabaseClient, input: StageInput)
   let year = input.year ?? null
 
   if (input.dataset === DATASET_DUAL_TEAM) {
-    if (input.json == null) throw new Error("Dual team staging requires JSON payload")
-    proposed = parseDualTeamPayload(input.json)
+    if (input.json != null) {
+      proposed = parseDualTeamPayload(input.json)
+    } else if (input.text?.trim()) {
+      year =
+        year ??
+        inferYearFromText(input.source_url, input.source_label, input.text.slice(0, 500))
+      if (year == null) throw new Error("Could not infer year — pass year explicitly")
+      proposed = parseNchsaaDualTeamChampionshipsText(input.text, { year })
+    } else {
+      throw new Error("Dual team staging requires JSON or dual championship page text")
+    }
     if (!year && proposed.length) {
       year = Math.max(...(proposed as DualTeamProposed[]).map((p) => p.year))
     }

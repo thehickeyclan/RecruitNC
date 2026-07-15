@@ -17,7 +17,7 @@ Keep the checklist visible on **`/admin/imports`** (“Annual reminders (connect
 | When | What |
 |------|------|
 | February | Add NCHSAA Individual States URLs → connector → approve |
-| After Duals | Stage year×division duals → approve |
+| After Duals | Add dual-team URL → **Fetch & stage Dual Team** → approve |
 | After NHSCA nationals | Register AA year + schools → sync/import |
 | Summer | Classifications (not automated yet) |
 
@@ -27,7 +27,7 @@ Keep the checklist visible on **`/admin/imports`** (“Annual reminders (connect
 | `dataset_key` | Stage from | Promotes to |
 |---|---|---|
 | `nchsaa_individual_placers` | **Priority 1 connector**, page URL fetch, Guaranteed Places / Championship Finals paste, or placer JSON | `wrestling_nchsaa_results` |
-| `nchsaa_dual_team_champions` | Year×division JSON, DB export, or verified school leaderboard (expanded to year rows) | `dual_team_champions` |
+| `nchsaa_dual_team_champions` | **Dual Team connector**, year×division JSON, DB export, dual page text, or verified school leaderboard (expanded to year rows) | `dual_team_champions` |
 
 ## Priority 1 — NCHSAA Individual States connector
 
@@ -46,11 +46,30 @@ Parses:
 
 API: `POST /api/admin/imports/connectors/nchsaa-individual-states` `{ "year": 2026 }`
 
+## Dual Team Championships connector
+
+On `/admin/imports`:
+
+1. Set year (e.g. `2026`)
+2. Click **Fetch & stage Dual Team**
+3. Review new/changed → **Approve selected**
+
+Sources registered in `lib/public-imports/connectors/nchsaa-dual-team.ts`.
+
+Parses:
+
+- **2026-style** structured pages (`State Champion:` + championship match scores; 1A–8A)
+- **2024/2025-style** article pages (headlines + defeated/win-against prose)
+
+Canonical rows are **year × division**. School “most titles” leaderboards are derived — do not promote aggregates alone.
+
+API: `POST /api/admin/imports/connectors/nchsaa-dual-team` `{ "year": 2026 }`
+
 ## Annual workflow (manual review still required)
 
 1. After States / Duals, open `/admin/imports`.
-2. Placers: **Fetch & stage** an `nchsaa.org` championship URL (or paste JSON/text).
-3. Duals: paste `{ "records": [ ... ] }` (from export) or verified schools JSON.
+2. Placers: **Fetch & stage Individual States** (or paste JSON/text).
+3. Duals: **Fetch & stage Dual Team** (or paste `{ "records": [ ... ] }` / dual page text).
 4. Review **new** / **changed** rows; **Approve selected** only after spot-check.
 5. Matches are auto-`skipped` (already identical in RecruitNC).
 
