@@ -57,6 +57,8 @@ export default function AdminImportsPage() {
   const [activeBatch, setActiveBatch] = useState<Batch | null>(null)
   const [selected, setSelected] = useState<Record<string, boolean>>({})
   const [acting, setActing] = useState(false)
+  const [connectorYears, setConnectorYears] = useState<number[]>([])
+  const [runningConnector, setRunningConnector] = useState(false)
 
   const loadBatches = useCallback(async () => {
     setLoading(true)
@@ -120,12 +122,48 @@ export default function AdminImportsPage() {
       return
     }
     void loadBatches()
+    void fetch("/api/admin/imports/connectors/nchsaa-individual-states", {
+      credentials: "include",
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (Array.isArray(d.years)) setConnectorYears(d.years)
+      })
+      .catch(() => {})
   }, [user, isAdmin, authLoading, loadBatches])
 
   const selectedIds = useMemo(
     () => Object.entries(selected).filter(([, v]) => v).map(([id]) => id),
     [selected],
   )
+
+  async function runIndividualStatesConnector() {
+    setRunningConnector(true)
+    try {
+      const res = await fetch("/api/admin/imports/connectors/nchsaa-individual-states", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ year: Number(year) }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || "Connector failed")
+      toast({
+        title: `Individual States ${data.year} staged`,
+        description: `${data.champions ?? 0} champions · ${data.rowCount ?? 0} rows · New ${data.summary?.new ?? 0} · Changed ${data.summary?.changed ?? 0}`,
+      })
+      await loadBatches()
+      if (data.batch?.id) await loadBatch(data.batch.id)
+    } catch (e) {
+      toast({
+        title: "Connector failed",
+        description: e instanceof Error ? e.message : "Error",
+        variant: "destructive",
+      })
+    } finally {
+      setRunningConnector(false)
+    }
+  }
 
   async function stagePaste() {
     setStaging(true)
@@ -284,6 +322,42 @@ export default function AdminImportsPage() {
             </CardHeader>
           </Card>
         ) : null}
+
+        <Card className="border-[#003366]/30 bg-white">
+          <CardHeader>
+            <CardTitle className="text-lg text-[#13294B]">
+              Priority 1 · NCHSAA Individual States connector
+            </CardTitle>
+            <CardDescription>
+              Fetches registered NCHSAA championship pages for the year, parses champions (and placers
+              when published), stages a review batch. Nothing publishes until you approve. Registered
+              years: {connectorYears.length ? connectorYears.join(", ") : "—"}.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap items-end gap-3">
+            <div className="space-y-1">
+              <Label htmlFor="connector-year">Year</Label>
+              <Input
+                id="connector-year"
+                value={year}
+                onChange={(e) => setYear(e.target.value)}
+                className="w-28"
+              />
+            </div>
+            <Button
+              type="button"
+              onClick={() => void runIndividualStatesConnector()}
+              disabled={runningConnector || setupRequired}
+            >
+              {runningConnector ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Upload className="h-4 w-4" />
+              )}
+              <span className="ml-2">Fetch &amp; stage Individual States</span>
+            </Button>
+          </CardContent>
+        </Card>
 
         <div className="grid gap-4 md:grid-cols-2">
           <Card>

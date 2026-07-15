@@ -14,10 +14,27 @@ Creates `public_import_batches` + `public_import_rows` (service-role only via ad
 
 | `dataset_key` | Stage from | Promotes to |
 |---|---|---|
-| `nchsaa_individual_placers` | NCHSAA page URL fetch, Guaranteed Places paste, or placer JSON | `wrestling_nchsaa_results` |
+| `nchsaa_individual_placers` | **Priority 1 connector**, page URL fetch, Guaranteed Places / Championship Finals paste, or placer JSON | `wrestling_nchsaa_results` |
 | `nchsaa_dual_team_champions` | Year×division JSON, DB export, or verified school leaderboard (expanded to year rows) | `dual_team_champions` |
 
-## Annual workflow
+## Priority 1 — NCHSAA Individual States connector
+
+On `/admin/imports`:
+
+1. Set year (e.g. `2026`)
+2. Click **Fetch & stage Individual States**
+3. Review new/changed → **Approve selected**
+
+Sources registered in `lib/public-imports/connectors/nchsaa-individual-states.ts` (add URLs each February).
+
+Parses:
+
+- **Guaranteed Places** (1st–6th) when NCHSAA publishes them
+- **Championship Finals** (champ + runner-up) on newer classification pages (e.g. 2026 men/women)
+
+API: `POST /api/admin/imports/connectors/nchsaa-individual-states` `{ "year": 2026 }`
+
+## Annual workflow (manual review still required)
 
 1. After States / Duals, open `/admin/imports`.
 2. Placers: **Fetch & stage** an `nchsaa.org` championship URL (or paste JSON/text).
