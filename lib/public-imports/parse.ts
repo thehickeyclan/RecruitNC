@@ -93,7 +93,7 @@ export function parsePlacerJsonPayload(input: unknown): PlacerProposed[] {
     for (const wc of weightClasses) {
       if (!wc || typeof wc !== "object") continue
       const w = wc as Record<string, unknown>
-      const weight_class = asStr(w.weight ?? w.weight_class ?? w.class)
+      const weight_class = normalizePlacerWeightClass(asStr(w.weight ?? w.weight_class ?? w.class))
       if (!weight_class) continue
       const places = (w.places as unknown[]) || (w.results as unknown[]) || []
       for (const p of places) {
@@ -123,12 +123,25 @@ const PLACE_ORDINAL: Record<string, number> = {
 
 const CLASS_WEIGHT_RE =
   /\b((?:1A\/2A)|(?:1-4A)|(?:[1-8]A))\s+(\d{2,3})\b/i
+/** "## Women’s 100-Pound" / "Women's 107" (2024 combined pages). */
+const WOMENS_WEIGHT_HEADER_RE =
+  /^(?:#{1,6}\s*)?women[’']?s\s+(\d{2,3})(?:\s*-?\s*pounds?)?\s*$/i
 const WEIGHT_ONLY_RE = /^\s*(\d{2,3})\s*$/
 const PLACE_LINE_RE =
   /(\d+)(?:st|nd|rd|th)\s+Place\s*[–—-]\s*(.+?)\s+of\s+(.+?)\s*$/i
 
+/** Canonical weight token for SoR: "106lbs" / "106-Pound" → "106". */
+export function normalizePlacerWeightClass(weight: string | null | undefined): string {
+  const digits = String(weight ?? "")
+    .trim()
+    .match(/(\d{2,3})/)
+  return digits?.[1] ?? String(weight ?? "").trim()
+}
+
 /**
  * Parse NCHSAA championship page text (markdown/HTML→text) with Guaranteed Places blocks.
+ * Also supports 2024-style lists: class/weight header then "1st Place – Name of School"
+ * without a Guaranteed Places label.
  * Best-effort: annual page layouts change; always review diffs before approve.
  */
 export function parseNchsaaGuaranteedPlacesText(
@@ -138,6 +151,7 @@ export function parseNchsaaGuaranteedPlacesText(
   const lines = text.replace(/\r/g, "").split("\n")
   let classification = (opts.defaultClassification || "").trim()
   let weight = ""
+  let rowGender: "M" | "F" | null = opts.gender ?? null
   const out: PlacerProposed[] = []
   let inPlaces = false
 
@@ -146,13 +160,25 @@ export function parseNchsaaGuaranteedPlacesText(
     const line = raw.trim()
     if (!line) continue
 
-    // "## 1A 106" or "1A 113"
+    const womenHdr = line.match(WOMENS_WEIGHT_HEADER_RE)
+    if (womenHdr) {
+      classification = opts.defaultClassification || "WOMEN"
+      weight = normalizePlacerWeightClass(womenHdr[1])
+      rowGender = opts.gender ?? "F"
+      inPlaces = true
+      continue
+    }
+
+    // "## 1A 106" / "## 1A 106-Pound" / "1A 113"
     const cw = line.match(CLASS_WEIGHT_RE)
     if (cw) {
       classification = cw[1].toUpperCase().replace("1A/2A", "1A/2A")
       if (/^1-4A$/i.test(cw[1])) classification = "1-4A"
-      weight = cw[2]
-      inPlaces = false
+      weight = normalizePlacerWeightClass(cw[2])
+      // Keep source gender when set; do not invent "M" (would double-key vs finals with null).
+      rowGender = opts.gender ?? null
+      // 2024 lists placers immediately under the weight header (no Guaranteed Places label).
+      inPlaces = true
       continue
     }
 
@@ -161,9 +187,10 @@ export function parseNchsaaGuaranteedPlacesText(
       const next = (lines[i + 1] || "").trim()
       const next2 = (lines[i + 2] || "").trim()
       if (/^guaranteed places$/i.test(next) || /^guaranteed places$/i.test(next2)) {
-        weight = line
+        weight = normalizePlacerWeightClass(line)
         inPlaces = false
         if (!classification) classification = opts.defaultClassification || "WOMEN"
+        rowGender = opts.gender ?? "F"
         continue
       }
     }
@@ -198,7 +225,7 @@ export function parseNchsaaGuaranteedPlacesText(
       place,
       wrestler_name,
       school,
-      gender: opts.gender ?? null,
+      gender: rowGender,
     })
   }
 
@@ -218,6 +245,9 @@ const FINALS_HEADER_RE =
 /** Winner (School) 41-1 won … over Loser (School) … */
 const FINALS_MATCH_RE =
   /^(.+?)\s+\(([^)]+)\)\s+\d[\d\-]*\s+won\b[\s\S]*?\bover\s+(.+?)\s+\(([^)]+)\)/i
+/** 2024 place-match lines: Winner (School) 52-1, Fr. over Loser (School) … (no "won"). */
+const FINALS_MATCH_OVER_ONLY_RE =
+  /^(.+?)\s+\(([^)]+)\)\s+\d[\d\-]*(?:,\s*[^)]+?)?\s+over\s+(.+?)\s+\(([^)]+)\)/i
 
 function cleanSchool(s: string): string {
   return s
@@ -238,6 +268,8 @@ function normalizeClassificationLabel(raw: string): string {
 /**
  * Parse NCHSAA "Championship Finals" blocks (common on 2026 classification pages).
  * Yields place 1 (winner) and place 2 (finalist) per weight.
+ * 2024 "1st Place Match" lines (no "won") are accepted only under that header so 3rd-place
+ * matches never overwrite champions.
  */
 export function parseNchsaaChampionshipFinalsText(
   text: string,
@@ -247,27 +279,52 @@ export function parseNchsaaChampionshipFinalsText(
   let classification = (opts.defaultClassification || "").trim()
   let weight = ""
   const out: PlacerProposed[] = []
+  let inFirstPlaceMatch = false
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim()
     if (!line) continue
     if (/^team champions/i.test(line) || /^most outstanding/i.test(line)) {
       weight = ""
+      inFirstPlaceMatch = false
       continue
     }
-    if (/^championship finals$/i.test(line)) continue
+    if (/^championship finals$/i.test(line)) {
+      inFirstPlaceMatch = true
+      continue
+    }
+
+    const placeMatchHdr = line.match(/^(\d+)(?:st|nd|rd|th)\s+place\s+match/i)
+    if (placeMatchHdr) {
+      inFirstPlaceMatch = placeMatchHdr[1] === "1"
+      continue
+    }
+
+    const womenHdr = line.match(WOMENS_WEIGHT_HEADER_RE)
+    if (womenHdr) {
+      classification = opts.defaultClassification || "WOMEN"
+      weight = normalizePlacerWeightClass(womenHdr[1])
+      inFirstPlaceMatch = false
+      continue
+    }
 
     const hdr = line.match(FINALS_HEADER_RE) || line.match(CLASS_WEIGHT_RE)
     if (hdr) {
       classification = normalizeClassificationLabel(hdr[1])
-      weight = hdr[2]
+      weight = normalizePlacerWeightClass(hdr[2])
+      inFirstPlaceMatch = false
       continue
     }
 
     if (!weight || !classification) continue
-    if (!/\bwon\b/i.test(line) || !/\bover\b/i.test(line)) continue
+    if (!/\bover\b/i.test(line)) continue
 
-    const m = line.match(FINALS_MATCH_RE)
+    const cleaned = line.replace(/^[-•*]\s*/, "")
+    const hasWon = /\bwon\b/i.test(cleaned)
+    // Require "won" for free-floating finals; allow 2024 "… over …" only in 1st Place Match.
+    if (!hasWon && !inFirstPlaceMatch) continue
+
+    const m = cleaned.match(FINALS_MATCH_RE) || (inFirstPlaceMatch ? cleaned.match(FINALS_MATCH_OVER_ONLY_RE) : null)
     if (!m) continue
     const champ = m[1].trim()
     const champSchool = cleanSchool(m[2])
