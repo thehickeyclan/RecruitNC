@@ -1,5 +1,9 @@
 import nhsca2026 from "@/lib/data/nhsca-2026-replica-page.json"
-import { mergeCanonicalNhscaAaIntoLeaderboardRows } from "@/lib/nhsca-canonical-aa"
+import {
+  getCanonicalNhscaArchiveAthletesForYear,
+  listCanonicalNhscaAaYears,
+  mergeCanonicalNhscaAaIntoLeaderboardRows,
+} from "@/lib/nhsca-canonical-aa"
 
 /** Row shape used by NHSCA archive chart / table / trends. */
 export type NhscaArchiveChartYearRow = {
@@ -82,39 +86,71 @@ function wrestlerRosterMergeKey(w: { athlete_name: string; division: string; wei
 }
 
 /**
- * 2026 rows: use replica JSON as the roster (names, placements, divisions, weights). Merge in DB `id`,
- * `high_school`, and `club` when the same athlete/weight/division exists in Supabase so search and lists stay
- * complete even if the table is missing rows, while enriched school/club data is kept.
+ * For every year registered in NHSCA_CANONICAL_AA_LOADERS, prefer the canonical AA roster
+ * (names/placements/divisions/weights), merging DB id/school/club when present.
+ * Other DB years (1990… and future rows not yet in the registry) pass through unchanged.
  */
-export function mergeNhsca2026WrestlersIntoRows(dbRows: NhscaArchiveWrestlerRow[]): NhscaArchiveWrestlerRow[] {
-  const db2026 = dbRows.filter((w) => Number(w.year) === 2026)
-  const non2026 = dbRows.filter((w) => Number(w.year) !== 2026)
-  const dbByKey = new Map(db2026.map((w) => [wrestlerRosterMergeKey(w), w]))
-  const canon = getNhsca2026CanonicalWrestlers().map((c) => {
-    const db = dbByKey.get(wrestlerRosterMergeKey(c))
-    if (!db) return c
-    const dbHs = strField((db as Record<string, unknown>).high_school)
-    const dbClub = strField((db as Record<string, unknown>).club)
-    const dbId = strField((db as Record<string, unknown>).id)
-    return {
-      ...c,
-      id: dbId || c.id,
-      high_school: dbHs || c.high_school,
-      club: dbClub || c.club,
+export function mergeCanonicalNhscaArchiveWrestlersIntoRows(
+  dbRows: NhscaArchiveWrestlerRow[],
+): NhscaArchiveWrestlerRow[] {
+  const registeredYears = listCanonicalNhscaAaYears()
+  const yearSet = new Set(registeredYears)
+  const fromDbOnly = dbRows.filter((w) => !yearSet.has(Number(w.year)))
+
+  const canonMerged: NhscaArchiveWrestlerRow[] = []
+  for (const year of registeredYears) {
+    const dbYear = dbRows.filter((w) => Number(w.year) === year)
+    const dbByKey = new Map(dbYear.map((w) => [wrestlerRosterMergeKey(w), w]))
+    const archiveRows = getCanonicalNhscaArchiveAthletesForYear(year)
+    for (let i = 0; i < archiveRows.length; i++) {
+      const r = archiveRows[i]!
+      const w = normalizeNhscaWeightForDisplay(r.weight)
+      const slug = `${r.athlete_name}-${r.division}-${w}`.replace(/\s+/g, "-")
+      const base: NhscaArchiveWrestlerRow = {
+        id: `nhsca-${year}-canonical-${i}-${slug}`,
+        athlete_name: r.athlete_name,
+        year: r.year,
+        weight: w,
+        placement: r.placement,
+        division: r.division,
+        state: r.state || "NC",
+        high_school: r.high_school ?? "",
+        club: r.club ?? "",
+      }
+      const db = dbByKey.get(wrestlerRosterMergeKey(base))
+      if (!db) {
+        canonMerged.push(base)
+        continue
+      }
+      const dbHs = strField((db as Record<string, unknown>).high_school)
+      const dbClub = strField((db as Record<string, unknown>).club)
+      const dbId = strField((db as Record<string, unknown>).id)
+      canonMerged.push({
+        ...base,
+        id: dbId || base.id,
+        high_school: dbHs || base.high_school,
+        club: dbClub || base.club,
+      })
     }
-  })
-  const merged = [...non2026, ...canon]
+  }
+
+  const merged = [...fromDbOnly, ...canonMerged]
   const divOrder = ["Freshman", "Sophomore", "Junior", "Senior"]
   return merged.sort((a, b) => {
     if (b.year !== a.year) return b.year - a.year
     const da = divOrder.indexOf(a.division)
     const dbi = divOrder.indexOf(b.division)
     if (da !== dbi) return da - dbi
-    const wa = Number.parseInt(a.weight.replace(/lbs/gi, ""), 10) || 0
-    const wb = Number.parseInt(b.weight.replace(/lbs/gi, ""), 10) || 0
+    const wa = Number.parseInt(String(a.weight).replace(/lbs/gi, ""), 10) || 0
+    const wb = Number.parseInt(String(b.weight).replace(/lbs/gi, ""), 10) || 0
     if (wa !== wb) return wa - wb
     return a.placement - b.placement
   })
+}
+
+/** @deprecated Prefer mergeCanonicalNhscaArchiveWrestlersIntoRows (all registered years). */
+export function mergeNhsca2026WrestlersIntoRows(dbRows: NhscaArchiveWrestlerRow[]): NhscaArchiveWrestlerRow[] {
+  return mergeCanonicalNhscaArchiveWrestlersIntoRows(dbRows)
 }
 
 export function getNhsca2026ChartRow(): NhscaArchiveChartYearRow {

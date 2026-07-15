@@ -21,7 +21,8 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import Image from "next/image"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
-import { mergeNhsca2026WrestlersIntoRows } from "@/lib/nhsca-2026-archive"
+import { mergeCanonicalNhscaArchiveWrestlersIntoRows } from "@/lib/nhsca-2026-archive"
+import { latestCanonicalNhscaAaYear } from "@/lib/nhsca-canonical-aa"
 
 const NC_NAVY = "#003366"
 const NC_RED = "#B31B1B"
@@ -106,13 +107,16 @@ export default function NHSCAArchive() {
 
   // Male divisions only (align with 2025 page: 24 All-Americans)
   const MALE_DIVISIONS = ["Freshman", "Sophomore", "Junior", "Senior"]
+  const latestResultsYear = latestCanonicalNhscaAaYear()
 
-  // Load data via RecruitNC Supabase client
+  // Load data via RecruitNC Supabase client (paginate — default 1000 would drop older years)
   useEffect(() => {
     const load = async () => {
       try {
-        const [nhscaResponse, mowResponse] = await Promise.all([
-          supabase
+        const pageSize = 1000
+        const rows: Wrestler[] = []
+        for (let from = 0; ; from += pageSize) {
+          const { data, error } = await supabase
             .from("wrestling_nhsca_results")
             .select("*")
             .in("division", MALE_DIVISIONS)
@@ -121,15 +125,22 @@ export default function NHSCAArchive() {
             .order("year", { ascending: false })
             .order("division")
             .order("weight")
-            .order("placement"),
-          supabase.from("most_outstanding_wrestlers").select("*").order("year", { ascending: false }),
-        ])
+            .order("placement")
+            .range(from, from + pageSize - 1)
+          if (error) throw error
+          const batch = (data || []) as Wrestler[]
+          rows.push(...batch)
+          if (batch.length < pageSize) break
+          if (rows.length >= 100000) break
+        }
 
-        if (nhscaResponse.error) throw nhscaResponse.error
+        const mowResponse = await supabase
+          .from("most_outstanding_wrestlers")
+          .select("*")
+          .order("year", { ascending: false })
         if (mowResponse.error) throw mowResponse.error
 
-        const rows = (nhscaResponse.data || []) as Wrestler[]
-        const mergedRows = mergeNhsca2026WrestlersIntoRows(rows)
+        const mergedRows = mergeCanonicalNhscaArchiveWrestlersIntoRows(rows)
         const mowData = (mowResponse.data || []) as MostOutstandingWrestler[]
 
         setWrestlers(mergedRows)
@@ -290,14 +301,14 @@ export default function NHSCAArchive() {
               Explore historical NHSCA National Championship results for North Carolina wrestlers
             </p>
             <div className="flex flex-wrap gap-4 mt-4 justify-center">
-              <Link href="/nhsca/2026">
+              <Link href={`/nhsca/${latestResultsYear}`}>
                 <Button className="bg-[#CBAF5D] hover:bg-[#CBAF5D]/90 text-[#003366] font-semibold">
-                  2026 Results
+                  {latestResultsYear} Results
                 </Button>
               </Link>
-              <Link href="/nhsca/2025">
+              <Link href={`/nhsca/${latestResultsYear - 1}`}>
                 <Button variant="outline" className="border-white text-white hover:bg-white hover:text-[#003366] bg-transparent font-semibold">
-                  2025 Results
+                  {latestResultsYear - 1} Results
                 </Button>
               </Link>
               <Link href="/nhsca">
@@ -353,10 +364,14 @@ export default function NHSCAArchive() {
         <Card className="mb-8">
           <CardHeader className="pb-4">
             <CardTitle className="text-xl" style={{ color: NC_NAVY }}>
-              North Carolina Wrestling Historical Analysis (1990-2026)
+              North Carolina Wrestling Historical Analysis
+              {chartData.length > 0
+                ? ` (${chartData[0]!.year}-${chartData[chartData.length - 1]!.year})`
+                : ""}
             </CardTitle>
             <CardDescription className="mt-1">
-              Boys divisions only (Freshman, Sophomore, Junior, Senior). 2026 totals match the replica JSON; other years from the database.
+              Boys divisions only (Freshman, Sophomore, Junior, Senior). Includes every year in the database plus
+              registered annual AA rosters (currently through {latestResultsYear}).
             </CardDescription>
           </CardHeader>
           <CardContent>
