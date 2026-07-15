@@ -1,12 +1,13 @@
 /**
- * Write helpers for `ai_query_logs`. Always await these from API routes —
- * fire-and-forget (`void write…`) is dropped by Vercel when the response returns.
+ * Write helpers for `ai_query_logs`. Always await from API routes —
+ * Vercel drops fire-and-forget work after the response returns.
  *
- * Prefer RPC `insert_ai_query_log` (plain SQL INSERT). PostgREST table POST can still
- * emit Prefer: resolution=* → ON CONFLICT against a PARTIAL unique index and fail with 42P10.
+ * Inserts ONLY via RPC `public.insert_ai_query_log` (plain SQL INSERT).
+ * Table POST via PostgREST is avoided — Prefer: resolution=* + a PARTIAL unique
+ * index on message_id produces: "no unique or exclusion constraint matching
+ * the ON CONFLICT specification".
  */
 
-import { randomUUID } from "crypto"
 import {
   computeAiQuerySuccess,
   isAiQueryLogsTableMissingError,
@@ -16,7 +17,10 @@ import {
 
 export type WriteAiQueryLogResult =
   | { ok: true; id: string }
-  | { ok: false; tableMissing?: boolean; error: string }
+  | { ok: false; tableMissing?: boolean; rpcMissing?: boolean; error: string }
+
+export const INSERT_AI_QUERY_LOG_RPC_HINT =
+  "Run scripts/ai-query-logs-on-conflict-fix.sql in Supabase (creates insert_ai_query_log), then: NOTIFY pgrst, 'reload schema';"
 
 function getServiceConfig(): { url: string; key: string } | { error: string } {
   const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -35,8 +39,6 @@ function buildFields(entry: AiQueryLogInsert) {
           errorMessage: entry.error_message,
         })
 
-  const messageId = entry.message_id?.trim() || null
-
   return {
     query: entry.query,
     project: entry.project ?? "recruit-nc",
@@ -45,7 +47,7 @@ function buildFields(entry: AiQueryLogInsert) {
     query_type: entry.query_type ?? null,
     response_time_ms: entry.response_time_ms ?? null,
     feedback: entry.feedback ?? null,
-    message_id: messageId,
+    message_id: entry.message_id?.trim() || null,
     error_message: entry.error_message?.trim() || null,
     handler_name: entry.handler_name ?? null,
     success,
@@ -56,8 +58,9 @@ async function parseError(res: Response): Promise<string> {
   const text = await res.text().catch(() => "")
   let message = text || `HTTP ${res.status}`
   try {
-    const j = JSON.parse(text) as { message?: string; error?: string; hint?: string; details?: string }
+    const j = JSON.parse(text) as { message?: string; error?: string; hint?: string; details?: string; code?: string }
     message = j.message || j.error || message
+    if (j.code) message = `${j.code}: ${message}`
     if (j.hint) message = `${message} (${j.hint})`
     if (j.details) message = `${message} [${j.details}]`
   } catch {
@@ -66,9 +69,15 @@ async function parseError(res: Response): Promise<string> {
   return message
 }
 
-/** Plain SQL INSERT via security definer RPC — no PostgREST ON CONFLICT. */
+function isRpcMissingError(status: number, error: string): boolean {
+  return (
+    status === 404 ||
+    /PGRST202|PGRST203|Could not find the function|insert_ai_query_log|does not exist|schema cache/i.test(error)
+  )
+}
+
 async function rpcInsert(fields: ReturnType<typeof buildFields>): Promise<
-  { ok: true; id: string } | { ok: false; status: number; error: string }
+  { ok: true; id: string } | { ok: false; status: number; error: string; rpcMissing?: boolean }
 > {
   const cfg = getServiceConfig()
   if ("error" in cfg) return { ok: false, status: 0, error: cfg.error }
@@ -79,6 +88,7 @@ async function rpcInsert(fields: ReturnType<typeof buildFields>): Promise<
       apikey: cfg.key,
       Authorization: `Bearer ${cfg.key}`,
       "Content-Type": "application/json",
+      Accept: "application/json",
     },
     body: JSON.stringify({
       p_query: fields.query,
@@ -96,11 +106,16 @@ async function rpcInsert(fields: ReturnType<typeof buildFields>): Promise<
   })
 
   if (!res.ok) {
-    return { ok: false, status: res.status, error: await parseError(res) }
+    const error = await parseError(res)
+    return {
+      ok: false,
+      status: res.status,
+      error,
+      rpcMissing: isRpcMissingError(res.status, error),
+    }
   }
 
   const body = await res.text().catch(() => "")
-  // PostgREST returns a JSON string UUID (quoted) or bare uuid
   let id = body.trim()
   try {
     const parsed = JSON.parse(body) as unknown
@@ -108,71 +123,33 @@ async function rpcInsert(fields: ReturnType<typeof buildFields>): Promise<
   } catch {
     id = id.replace(/^"|"$/g, "")
   }
-  if (!id || id.length < 8) id = randomUUID()
-  return { ok: true, id }
-}
-
-/** Fallback table POST — no Prefer header at all (avoids resolution=* / ON CONFLICT). */
-async function restInsert(fields: ReturnType<typeof buildFields>): Promise<
-  { ok: true; id: string } | { ok: false; status: number; error: string }
-> {
-  const cfg = getServiceConfig()
-  if ("error" in cfg) return { ok: false, status: 0, error: cfg.error }
-
-  const id = randomUUID()
-  const now = new Date().toISOString()
-  const row = {
-    id,
-    ...fields,
-    timestamp: now,
+  if (!id || id.length < 8) {
+    return { ok: false, status: res.status, error: `RPC returned unexpected body: ${body.slice(0, 200)}` }
   }
-
-  const res = await fetch(`${cfg.url}/rest/v1/ai_query_logs`, {
-    method: "POST",
-    headers: {
-      apikey: cfg.key,
-      Authorization: `Bearer ${cfg.key}`,
-      "Content-Type": "application/json",
-      // Intentionally omit Prefer entirely
-    },
-    body: JSON.stringify(row),
-  })
-
-  if (res.ok || res.status === 201) return { ok: true, id }
-  return { ok: false, status: res.status, error: await parseError(res) }
+  return { ok: true, id }
 }
 
 export async function writeAiQueryLog(entry: AiQueryLogInsert): Promise<WriteAiQueryLogResult> {
   try {
     const fields = buildFields(entry)
-
-    // 1) RPC first
-    let result = await rpcInsert(fields)
-
-    // 2) If RPC missing, fall back to plain REST insert
-    if (
-      !result.ok &&
-      (/insert_ai_query_log|PGRST202|Could not find the function|404/i.test(result.error) ||
-        result.status === 404)
-    ) {
-      console.warn("[RecruitNC] insert_ai_query_log RPC missing — falling back to REST insert")
-      result = await restInsert(fields)
-
-      // Duplicate message_id → retry without it
-      if (!result.ok && /duplicate|unique|23505/i.test(result.error) && fields.message_id) {
-        result = await restInsert({ ...fields, message_id: null })
-      }
-    }
+    const result = await rpcInsert(fields)
 
     if (!result.ok) {
+      if (result.rpcMissing) {
+        console.warn("[RecruitNC] insert_ai_query_log RPC missing —", INSERT_AI_QUERY_LOG_RPC_HINT)
+        return {
+          ok: false,
+          rpcMissing: true,
+          error: `${result.error} — ${INSERT_AI_QUERY_LOG_RPC_HINT}`,
+        }
+      }
       if (
         isAiQueryLogsTableMissingError({ message: result.error }) ||
         /does not exist|PGRST205|42P01/i.test(result.error)
       ) {
-        console.warn("[RecruitNC] ai_query_logs missing — run scripts/ai-query-logs-table.sql")
         return { ok: false, tableMissing: true, error: result.error }
       }
-      console.warn("[RecruitNC] ai_query_logs insert failed:", result.error)
+      console.warn("[RecruitNC] ai_query_logs RPC insert failed:", result.error)
       return { ok: false, error: result.error }
     }
     return { ok: true, id: result.id }

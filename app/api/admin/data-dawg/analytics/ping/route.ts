@@ -1,13 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/admin-auth"
-import { writeAiQueryLog } from "@/lib/ai-query-log-write"
+import { INSERT_AI_QUERY_LOG_RPC_HINT, writeAiQueryLog } from "@/lib/ai-query-log-write"
 import { createAdminClient } from "@/lib/supabase/admin"
 
 export const dynamic = "force-dynamic"
 
 /**
- * Admin-only: insert one test row into ai_query_logs and report write result + newest timestamp.
- * Use when analytics 24h/7d stay at 0 to see the real insert error.
+ * Admin-only: insert one test row into ai_query_logs via insert_ai_query_log RPC.
  */
 export async function POST(_request: NextRequest) {
   const auth = await requireAdmin()
@@ -38,16 +37,24 @@ export async function POST(_request: NextRequest) {
     .select("id", { count: "exact", head: true })
     .gte("timestamp", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
 
+  let hint: string
+  if (write.ok) {
+    hint = "Insert succeeded — refresh analytics with 24h."
+  } else if (write.rpcMissing) {
+    hint = INSERT_AI_QUERY_LOG_RPC_HINT
+  } else if (/ON CONFLICT/i.test(write.error)) {
+    hint =
+      "Still hitting table-POST ON CONFLICT. Deploy latest commit (RPC-only writer), run the insert_ai_query_log SQL + NOTIFY pgrst reload schema, then Test write again."
+  } else {
+    hint = write.error
+  }
+
   return NextResponse.json({
     ok: write.ok,
     write,
     last24h: last24h ?? 0,
     newest: newest ?? [],
     newestError: newestErr?.message ?? null,
-    hint: write.ok
-      ? "Insert succeeded — refresh /admin/data-dawg/analytics with 24h."
-      : /ON CONFLICT|insert_ai_query_log|PGRST202|function/i.test(write.error || "")
-        ? "Run the NEW bottom section of scripts/ai-query-logs-table.sql (replace partial message_id unique index + create insert_ai_query_log RPC), then retry Test write."
-        : "Insert failed — see write.error. Run scripts/ai-query-logs-table.sql then retry.",
+    hint,
   })
 }

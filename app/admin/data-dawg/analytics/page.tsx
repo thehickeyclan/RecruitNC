@@ -218,7 +218,9 @@ export default function DataDawgAnalyticsPage() {
       setPingMsg(
         json.ok
           ? `Write OK · last24h=${json.last24h ?? "?"} — refresh 24h filter`
-          : `Write FAILED: ${json.write?.error || json.hint || "unknown"}`,
+          : `Write FAILED: ${json.write?.error || json.hint || "unknown"}${
+              json.hint && json.write?.error ? ` — ${json.hint}` : ""
+            }`,
       )
       if (json.ok) {
         setTimeRange("24h")
