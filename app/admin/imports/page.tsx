@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { ArrowLeft, Check, Loader2, RefreshCw, Upload, X } from "lucide-react"
 import {
+  DATASET_CLASSIFICATIONS,
   DATASET_DUAL_TEAM,
   DATASET_PLACERS,
   type DatasetKey,
@@ -59,8 +60,10 @@ export default function AdminImportsPage() {
   const [acting, setActing] = useState(false)
   const [connectorYears, setConnectorYears] = useState<number[]>([])
   const [dualConnectorYears, setDualConnectorYears] = useState<number[]>([])
+  const [classConnectorYears, setClassConnectorYears] = useState<number[]>([])
   const [runningConnector, setRunningConnector] = useState(false)
   const [runningDualConnector, setRunningDualConnector] = useState(false)
+  const [runningClassConnector, setRunningClassConnector] = useState(false)
 
   const loadBatches = useCallback(async () => {
     setLoading(true)
@@ -140,6 +143,14 @@ export default function AdminImportsPage() {
         if (Array.isArray(d.years)) setDualConnectorYears(d.years)
       })
       .catch(() => {})
+    void fetch("/api/admin/imports/connectors/nchsaa-classifications", {
+      credentials: "include",
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (Array.isArray(d.years)) setClassConnectorYears(d.years)
+      })
+      .catch(() => {})
   }, [user, isAdmin, authLoading, loadBatches])
 
   const selectedIds = useMemo(
@@ -200,6 +211,34 @@ export default function AdminImportsPage() {
       })
     } finally {
       setRunningDualConnector(false)
+    }
+  }
+
+  async function runClassificationsConnector() {
+    setRunningClassConnector(true)
+    try {
+      const res = await fetch("/api/admin/imports/connectors/nchsaa-classifications", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ year: Number(year) }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || "Connector failed")
+      toast({
+        title: `Classifications ${data.year} staged`,
+        description: `${data.schools ?? 0} schools · New ${data.summary?.new ?? 0} · Changed ${data.summary?.changed ?? 0} · Match ${data.summary?.match ?? 0}`,
+      })
+      await loadBatches()
+      if (data.batch?.id) await loadBatch(data.batch.id)
+    } catch (e) {
+      toast({
+        title: "Classifications connector failed",
+        description: e instanceof Error ? e.message : "Error",
+        variant: "destructive",
+      })
+    } finally {
+      setRunningClassConnector(false)
     }
   }
 
@@ -319,6 +358,11 @@ export default function AdminImportsPage() {
     if (p.wrestler_name) {
       return `${p.year} ${p.classification} ${p.weight_class} #${p.place} — ${p.wrestler_name} (${p.school})`
     }
+    if (p.school_name) {
+      return `${p.effective_year ?? p.year} ${p.classification} — ${p.school_name}${
+        p.conference ? ` (${p.conference})` : ""
+      }`
+    }
     return `${p.year} ${p.division} — ${p.champion_school}`
   }
 
@@ -380,8 +424,13 @@ export default function AdminImportsPage() {
                 → <strong>Sync AA schools from yearly files</strong> (or import with schools required).
               </li>
               <li>
-                <span className="font-medium">Summer — classifications:</span> Not an automated
-                connector yet — still a planned import (school / class / ADM / conference).
+                <span className="font-medium">Summer — classifications:</span> When NCHSAA posts
+                realignment / refreshes{" "}
+                <code className="text-xs">nchsaa.org/schools/</code>, register the season year in{" "}
+                <code className="text-xs">lib/public-imports/connectors/nchsaa-classifications.ts</code>
+                , deploy, run <strong>Fetch &amp; stage Classifications</strong> → approve. First-time
+                DB: also run{" "}
+                <code className="text-xs">scripts/school-classification-years-setup.sql</code>.
               </li>
               <li>
                 <span className="font-medium">Never:</span> auto-publish scrapes, or scrape NCHSAA on
@@ -427,7 +476,12 @@ export default function AdminImportsPage() {
             <Button
               type="button"
               onClick={() => void runIndividualStatesConnector()}
-              disabled={runningConnector || runningDualConnector || setupRequired}
+              disabled={
+                runningConnector ||
+                runningDualConnector ||
+                runningClassConnector ||
+                setupRequired
+              }
             >
               {runningConnector ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -463,7 +517,12 @@ export default function AdminImportsPage() {
             <Button
               type="button"
               onClick={() => void runDualTeamConnector()}
-              disabled={runningDualConnector || runningConnector || setupRequired}
+              disabled={
+                runningDualConnector ||
+                runningConnector ||
+                runningClassConnector ||
+                setupRequired
+              }
             >
               {runningDualConnector ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -475,13 +534,54 @@ export default function AdminImportsPage() {
           </CardContent>
         </Card>
 
+        <Card className="border-[#003366]/30 bg-white">
+          <CardHeader>
+            <CardTitle className="text-lg text-[#13294B]">
+              NCHSAA School Classifications connector
+            </CardTitle>
+            <CardDescription>
+              Fetches the registered NCHSAA schools directory, parses school → classification
+              (and region/conference), stages ~450 membership rows for review. Promotes into
+              year history + current snapshot. Registered years:{" "}
+              {classConnectorYears.length ? classConnectorYears.join(", ") : "—"}.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap items-end gap-3">
+            <div className="space-y-1">
+              <Label htmlFor="class-connector-year">Year</Label>
+              <Input
+                id="class-connector-year"
+                value={year}
+                onChange={(e) => setYear(e.target.value)}
+                className="w-28"
+              />
+            </div>
+            <Button
+              type="button"
+              onClick={() => void runClassificationsConnector()}
+              disabled={
+                runningClassConnector ||
+                runningConnector ||
+                runningDualConnector ||
+                setupRequired
+              }
+            >
+              {runningClassConnector ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Upload className="h-4 w-4" />
+              )}
+              <span className="ml-2">Fetch &amp; stage Classifications</span>
+            </Button>
+          </CardContent>
+        </Card>
+
         <div className="grid gap-4 md:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Stage a batch</CardTitle>
               <CardDescription>
-                Placers: paste Guaranteed Places text / JSON, or fetch an nchsaa.org page. Duals:
-                connector above, year×division JSON, or dual championship page text.
+                Placers / duals / classifications: connectors above, or paste JSON / page HTML.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -501,6 +601,14 @@ export default function AdminImportsPage() {
                   onClick={() => setDataset(DATASET_DUAL_TEAM)}
                 >
                   Dual team champs
+                </Button>
+                <Button
+                  type="button"
+                  variant={dataset === DATASET_CLASSIFICATIONS ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setDataset(DATASET_CLASSIFICATIONS)}
+                >
+                  School classifications
                 </Button>
               </div>
               <div className="space-y-1">
@@ -527,7 +635,9 @@ export default function AdminImportsPage() {
                   placeholder={
                     dataset === DATASET_DUAL_TEAM
                       ? `{ "records": [ { "year": 2025, "division": "4A", "champion_school": "..." } ] }`
-                      : `{ "year": 2025, "classifications": [ ... ] }  — or Guaranteed Places text`
+                      : dataset === DATASET_CLASSIFICATIONS
+                        ? `{ "records": [ { "effective_year": 2026, "school_name": "...", "classification": "7A" } ] }`
+                        : `{ "year": 2025, "classifications": [ ... ] }  — or Guaranteed Places text`
                   }
                   className="font-mono text-xs"
                 />

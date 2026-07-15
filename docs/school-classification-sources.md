@@ -4,7 +4,9 @@ High school divisions use the **new 8-division structure** (1A–8A, plus 1A/2A 
 
 ## Sources
 
-1. **`school_classifications`** (DB) – Authoritative source used by College Recruiting Guide, school-division-lookup, and AI tools.
+0. **`school_classification_years`** (DB) – Year-scoped membership (reclassification history). Filled by `/admin/imports` classifications connector.
+
+1. **`school_classifications`** (DB) – Current snapshot – Authoritative source used by College Recruiting Guide, school-division-lookup, and AI tools.
    - Columns: `school_name`, `classification`, `region`, `enrollment`, `effective_year`, etc.
    - Allowed values: `1A`, `2A`, `3A`, `4A`, `5A`, `6A`, `7A`, `8A`, `1A/2A`
 
@@ -24,3 +26,10 @@ Run `scripts/add-school-classifications.sql` in Supabase SQL Editor to add or up
 
 - **`nc_school_divisions`** – Old 4-division (1A–4A) table. No longer used.
 - **`highSchoolLogoUrl`** – Previously stored division; now prefer `high_school_division`.
+
+
+## Annual import (connector)
+
+1. Run `scripts/school-classification-years-setup.sql` once.
+2. Register season year in `lib/public-imports/connectors/nchsaa-classifications.ts` if needed.
+3. `/admin/imports` → **Fetch & stage Classifications** → approve.

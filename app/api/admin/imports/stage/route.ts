@@ -7,12 +7,12 @@ import {
   stageImportBatch,
   type StageInput,
 } from "@/lib/public-imports/stage"
-import { DATASET_DUAL_TEAM, DATASET_PLACERS, type DatasetKey } from "@/lib/public-imports/types"
+import { DATASET_CLASSIFICATIONS, DATASET_DUAL_TEAM, DATASET_PLACERS, type DatasetKey } from "@/lib/public-imports/types"
 
 export const dynamic = "force-dynamic"
 
 function isDataset(v: unknown): v is DatasetKey {
-  return v === DATASET_DUAL_TEAM || v === DATASET_PLACERS
+  return v === DATASET_DUAL_TEAM || v === DATASET_PLACERS || v === DATASET_CLASSIFICATIONS
 }
 
 export async function POST(request: NextRequest) {
@@ -30,7 +30,9 @@ export async function POST(request: NextRequest) {
 
   if (!isDataset(body.dataset)) {
     return NextResponse.json(
-      { error: `dataset must be ${DATASET_DUAL_TEAM} or ${DATASET_PLACERS}` },
+      {
+        error: `dataset must be ${DATASET_DUAL_TEAM}, ${DATASET_PLACERS}, or ${DATASET_CLASSIFICATIONS}`,
+      },
       { status: 400 },
     )
   }
@@ -47,6 +49,7 @@ export async function POST(request: NextRequest) {
     year: body.year != null ? Number(body.year) : null,
     json: body.json,
     text: body.text != null ? String(body.text) : null,
+    cycle_label: body.cycle_label != null ? String(body.cycle_label) : null,
     created_by: user?.id ?? null,
   }
 

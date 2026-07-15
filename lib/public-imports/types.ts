@@ -2,8 +2,12 @@
 
 export const DATASET_DUAL_TEAM = "nchsaa_dual_team_champions" as const
 export const DATASET_PLACERS = "nchsaa_individual_placers" as const
+export const DATASET_CLASSIFICATIONS = "nchsaa_school_classifications" as const
 
-export type DatasetKey = typeof DATASET_DUAL_TEAM | typeof DATASET_PLACERS
+export type DatasetKey =
+  | typeof DATASET_DUAL_TEAM
+  | typeof DATASET_PLACERS
+  | typeof DATASET_CLASSIFICATIONS
 
 export type DiffStatus = "new" | "match" | "changed" | "conflict"
 export type RowReviewStatus = "pending" | "approved" | "rejected" | "skipped"
@@ -32,10 +36,22 @@ export type PlacerProposed = {
   gender?: "M" | "F" | null
 }
 
+/** Official NCHSAA school membership for a season / realignment cycle. */
+export type ClassificationProposed = {
+  /** Season year these classes apply (e.g. 2026 for 2025-26). */
+  effective_year: number
+  school_name: string
+  classification: string
+  region?: string | null
+  conference?: string | null
+  enrollment?: number | null
+  cycle_label?: string | null
+}
+
 export type StagedDiffRow = {
   dataset_key: DatasetKey
   natural_key: string
   diff_status: DiffStatus
-  proposed: DualTeamProposed | PlacerProposed
+  proposed: DualTeamProposed | PlacerProposed | ClassificationProposed
   existing: Record<string, unknown> | null
 }

@@ -35,6 +35,16 @@ export function dualNaturalKey(year: number, division: string): string {
   return `${year}|${normText(division)}`
 }
 
+/** Stable key for school membership rows (year + school, HS suffix ignored). */
+export function classificationNaturalKey(effectiveYear: number, schoolName: string): string {
+  const school = normText(schoolName)
+    .replace(/\bhigh school\b/g, "")
+    .replace(/\bacademy\b/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+  return `${effectiveYear}|${school}`
+}
+
 export function placerNaturalKey(
   year: number,
   classification: string,
