@@ -153,7 +153,7 @@ export async function fetchFargoResultsByYear(year: number): Promise<FargoResult
   const { data, error } = await admin
     .from("fargo_results")
     .select(
-      "athlete_name,year,division,weight_class,wins,losses,record,placement,is_all_american,high_school",
+      "athlete_name,year,division,style,gender,age_division,weight_class,wins,losses,record,placement,is_all_american,high_school,state",
     )
     .eq("year", year)
     .order("division")

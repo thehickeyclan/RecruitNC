@@ -281,7 +281,7 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
     function: {
       name: "fargo_results_by_year",
       description:
-        "All NC wrestlers at Fargo Nationals (US Marine Corps Nationals, freestyle) for one year from `fargo_results`. Use for 'show Fargo results 2026', 'who wrestled at Fargo in 2024', 'NC Fargo nationals 2023', etc. Returns athlete name, school, division (16U/Junior), weight, and record. Not for a single wrestler (use wrestling_cross_store_search or get_athlete_full_dossier).",
+        "All NC wrestlers at Fargo Nationals (US Marine Corps Nationals) for one year from `fargo_results`. Freestyle and Greco-Roman are separate rows/careers — do not merge styles. Use for 'show Fargo results 2026', 'who wrestled at Fargo in 2024', 'NC Fargo nationals 2023', etc. Returns athlete name, school, division (16U/Junior), style when present, weight, and record. Not for a single wrestler (use wrestling_cross_store_search or get_athlete_full_dossier).",
       parameters: {
         type: "object",
         additionalProperties: false,

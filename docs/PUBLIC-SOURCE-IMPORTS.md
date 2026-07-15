@@ -20,6 +20,7 @@ Keep the checklist visible on **`/admin/imports`** (“Annual reminders (connect
 | After Duals | Add dual-team URL → **Fetch & stage Dual Team** → approve |
 | After NHSCA nationals | Register AA year + schools → sync/import |
 | Summer / realignment | Add season year for `/schools/` → **Fetch & stage Classifications** → approve |
+| After Fargo (July) | Update `scripts/data/fargo/` CSVs → register year → **Stage Fargo Nationals** → approve (`docs/FARGO-NATIONALS-CONNECTOR.md`) |
 
 ## Datasets (v1)
 
@@ -29,6 +30,8 @@ Keep the checklist visible on **`/admin/imports`** (“Annual reminders (connect
 | `nchsaa_individual_placers` | **Priority 1 connector**, page URL fetch, Guaranteed Places / Championship Finals paste, or placer JSON | `wrestling_nchsaa_results` |
 | `nchsaa_dual_team_champions` | **Dual Team connector**, year×division JSON, DB export, dual page text, or verified school leaderboard (expanded to year rows) | `dual_team_champions` |
 | `nchsaa_school_classifications` | **Classifications connector** (`nchsaa.org/schools/`), JSON, or schools HTML/table paste | `school_classifications` + `school_classification_years` |
+| `fargo_nationals_results` | **Full Fargo connector** + CSV connector / season JSON | `fargo_results` (FS/GR separate careers) |
+| `fargo_nationals_bouts` | **Full Fargo connector** (USA Bracketing / Track exports) | `fargo_bouts` |
 
 ## Priority 1 — NCHSAA Individual States connector
 
@@ -85,6 +88,29 @@ Promotes:
 
 API: `POST /api/admin/imports/connectors/nchsaa-classifications` `{ "year": 2026 }`
 
+## Fargo Nationals connector (canonical SoR)
+
+Full roadmap: [`docs/FARGO-NATIONALS-CONNECTOR.md`](./FARGO-NATIONALS-CONNECTOR.md).
+
+### Full connector (preferred)
+
+On `/admin/imports`:
+
+1. Run in Supabase: `scripts/fargo-results-harden-setup.sql` then `scripts/fargo-bouts-full-setup.sql`
+2. Drop USA Bracketing / Trackwrestling exports into `scripts/data/fargo/exports/` (paths registered in `lib/public-imports/connectors/fargo-events.ts`)
+3. Set year → **Run full Fargo connector**
+4. Review season + bout batches → **Approve selected**
+
+Adapters: USA Bracketing (current) + Trackwrestling (historical). Validation report includes NC AA/champs, FS vs GR, conflicts. Flo never SoR.
+
+API: `POST /api/admin/imports/connectors/fargo-full` `{ "year": 2026 }`
+
+### CSV season fallback
+
+**Stage Fargo CSV seasons** still loads `scripts/data/fargo/*.csv` via `fargo-nationals` connector.
+
+API: `POST /api/admin/imports/connectors/fargo-nationals` `{ "year": 2026 }`
+
 ## Annual workflow (manual review still required)
 
 1. After States / Duals, open `/admin/imports`.
@@ -95,7 +121,7 @@ API: `POST /api/admin/imports/connectors/nchsaa-classifications` `{ "year": 2026
 
 ## Notes
 
-- Fetch is limited to `nchsaa.org` hosts.
+- NCHSAA fetch is limited to `nchsaa.org`. Fargo full connector also allowlists `usawrestlingevents.com`, `usabracketing.com`, `trackwrestling.com`, `themat.com` (never Flo).
 - HTML layouts change — treat parsers as best-effort; admin review is required.
 - Athlete identity linking is separate (profiles match by name later); this pipeline writes result rows only.
 - Verified duals school rollup (GPT lock): `scripts/data/nchsaa_dual_team_champions_school_leaderboard_verified_v1.json`.

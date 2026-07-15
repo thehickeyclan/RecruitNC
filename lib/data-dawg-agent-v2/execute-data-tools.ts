@@ -963,7 +963,7 @@ export async function toolWrestlingCrossStoreSearch(args: {
   // super32_results has weight_class + placement only (no `weight` or `place` columns)
   const s32Sel = "athlete_name,placement,year,weight_class,high_school,school,record,wins,losses"
   const fargoSel =
-    "athlete_name,year,division,weight_class,wins,losses,record,placement,is_all_american,high_school"
+    "athlete_name,year,division,style,gender,age_division,weight_class,wins,losses,record,placement,is_all_american,high_school,state"
 
   const namePairs = dualTokenPairsForNchsaa(q).slice(0, 4)
   const pairPromises = namePairs.map(({ first, last }) => {

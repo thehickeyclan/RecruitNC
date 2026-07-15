@@ -1,0 +1,42 @@
+{
+  "source": "usa_bracketing",
+  "source_event_id": "2600005902",
+  "year": 2026,
+  "style": "GR",
+  "gender": "M",
+  "age_division": "Junior",
+  "source_label": "2026 Junior Boys Greco-Roman",
+  "brackets": [
+    {
+      "source_bracket_id": "2026-junior-boys-gr-150",
+      "weight_class": "150",
+      "athletes": [
+        { "name": "Liam Hickey", "state": "NC", "placement": 5, "club": "NC United" }
+      ],
+      "matches": [
+        {
+          "source_match_id": "usab-2026-jb-gr-150-r32-1",
+          "round": "Round of 32",
+          "match_order": 1,
+          "winner_name": "Liam Hickey",
+          "winner_state": "NC",
+          "loser_name": "GR Opp",
+          "loser_state": "MN",
+          "result_type": "MAJ",
+          "score": "11-2"
+        },
+        {
+          "source_match_id": "usab-2026-jb-gr-150-r16-1",
+          "round": "Round of 16",
+          "match_order": 2,
+          "winner_name": "Greco Champ",
+          "winner_state": "CA",
+          "loser_name": "Liam Hickey",
+          "loser_state": "NC",
+          "result_type": "TF",
+          "score": "10-0"
+        }
+      ]
+    }
+  ]
+}

@@ -535,13 +535,13 @@ export function formatFargoNationalsAnswer(
 
   const byDivision: Record<string, FargoResultRow[]> = {}
   for (const row of rows) {
-    const div = (row.division ?? "Unknown").replace(/\s+Freestyle$/i, "").trim()
+    const div = (row.division ?? "Unknown").trim() || "Unknown"
     if (!byDivision[div]) byDivision[div] = []
     byDivision[div].push(row)
   }
 
   const lines: string[] = [
-    `Here are **${rows.length}** NC wrestlers from **Fargo Nationals ${parsed.year}** (freestyle):`,
+    `Here are **${rows.length}** NC wrestlers from **Fargo Nationals ${parsed.year}** (Freestyle and Greco listed separately when both exist):`,
     "",
   ]
 

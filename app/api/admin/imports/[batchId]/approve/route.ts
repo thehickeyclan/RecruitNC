@@ -4,7 +4,13 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { isMissingImportsTable } from "@/lib/public-imports/stage"
 import { promoteStagedRow } from "@/lib/public-imports/promote"
-import type { ClassificationProposed, DualTeamProposed, PlacerProposed } from "@/lib/public-imports/types"
+import type {
+  ClassificationProposed,
+  DualTeamProposed,
+  FargoBoutProposed,
+  FargoProposed,
+  PlacerProposed,
+} from "@/lib/public-imports/types"
 
 export const dynamic = "force-dynamic"
 
@@ -84,7 +90,12 @@ export async function POST(
       await promoteStagedRow(
         admin,
         String(row.dataset_key),
-        row.proposed as DualTeamProposed | PlacerProposed | ClassificationProposed,
+        row.proposed as
+          | DualTeamProposed
+          | PlacerProposed
+          | ClassificationProposed
+          | FargoProposed
+          | FargoBoutProposed,
       )
       const { error } = await admin
         .from("public_import_rows")

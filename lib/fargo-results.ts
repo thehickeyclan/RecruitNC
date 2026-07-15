@@ -40,5 +40,8 @@ export function formatFargoRecord(wins: unknown, losses: unknown, record?: unkno
 export function formatFargoDivisionLabel(division: string | null | undefined): string {
   const d = (division ?? "").trim()
   if (!d) return ""
-  return d.replace(/\s+Freestyle$/i, "").trim()
+  return d
+    .replace(/\s+Freestyle$/i, "")
+    .replace(/\s+Greco(?:-Roman)?$/i, "")
+    .trim()
 }

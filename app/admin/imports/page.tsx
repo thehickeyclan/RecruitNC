@@ -15,6 +15,8 @@ import { ArrowLeft, Check, Loader2, RefreshCw, Upload, X } from "lucide-react"
 import {
   DATASET_CLASSIFICATIONS,
   DATASET_DUAL_TEAM,
+  DATASET_FARGO,
+  DATASET_FARGO_BOUTS,
   DATASET_PLACERS,
   type DatasetKey,
 } from "@/lib/public-imports/types"
@@ -61,9 +63,13 @@ export default function AdminImportsPage() {
   const [connectorYears, setConnectorYears] = useState<number[]>([])
   const [dualConnectorYears, setDualConnectorYears] = useState<number[]>([])
   const [classConnectorYears, setClassConnectorYears] = useState<number[]>([])
+  const [fargoConnectorYears, setFargoConnectorYears] = useState<number[]>([])
+  const [fargoFullYears, setFargoFullYears] = useState<number[]>([])
   const [runningConnector, setRunningConnector] = useState(false)
   const [runningDualConnector, setRunningDualConnector] = useState(false)
   const [runningClassConnector, setRunningClassConnector] = useState(false)
+  const [runningFargoConnector, setRunningFargoConnector] = useState(false)
+  const [runningFargoFull, setRunningFargoFull] = useState(false)
 
   const loadBatches = useCallback(async () => {
     setLoading(true)
@@ -149,6 +155,22 @@ export default function AdminImportsPage() {
       .then((r) => r.json())
       .then((d) => {
         if (Array.isArray(d.years)) setClassConnectorYears(d.years)
+      })
+      .catch(() => {})
+    void fetch("/api/admin/imports/connectors/fargo-nationals", {
+      credentials: "include",
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (Array.isArray(d.years)) setFargoConnectorYears(d.years)
+      })
+      .catch(() => {})
+    void fetch("/api/admin/imports/connectors/fargo-full", {
+      credentials: "include",
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (Array.isArray(d.years)) setFargoFullYears(d.years)
       })
       .catch(() => {})
   }, [user, isAdmin, authLoading, loadBatches])
@@ -239,6 +261,63 @@ export default function AdminImportsPage() {
       })
     } finally {
       setRunningClassConnector(false)
+    }
+  }
+
+  async function runFargoNationalsConnector() {
+    setRunningFargoConnector(true)
+    try {
+      const res = await fetch("/api/admin/imports/connectors/fargo-nationals", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ year: Number(year) }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || "Connector failed")
+      toast({
+        title: `Fargo ${data.year} staged`,
+        description: `${data.athletes ?? 0} athletes · FS ${data.freestyle ?? 0} · GR ${data.greco ?? 0} · AA ${data.allAmericans ?? 0} · New ${data.summary?.new ?? 0} · Changed ${data.summary?.changed ?? 0}`,
+      })
+      await loadBatches()
+      if (data.batch?.id) await loadBatch(data.batch.id)
+    } catch (e) {
+      toast({
+        title: "Fargo connector failed",
+        description: e instanceof Error ? e.message : "Error",
+        variant: "destructive",
+      })
+    } finally {
+      setRunningFargoConnector(false)
+    }
+  }
+
+  async function runFargoFullConnector() {
+    setRunningFargoFull(true)
+    try {
+      const res = await fetch("/api/admin/imports/connectors/fargo-full", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ year: Number(year) }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || "Full Fargo connector failed")
+      toast({
+        title: `Fargo full ${data.year} staged`,
+        description: data.report_summary || `${data.slots_loaded ?? 0} slots loaded`,
+      })
+      await loadBatches()
+      const id = data.seasons_batch?.id || data.bouts_batch?.id
+      if (id) await loadBatch(id)
+    } catch (e) {
+      toast({
+        title: "Full Fargo connector failed",
+        description: e instanceof Error ? e.message : "Error",
+        variant: "destructive",
+      })
+    } finally {
+      setRunningFargoFull(false)
     }
   }
 
@@ -355,6 +434,12 @@ export default function AdminImportsPage() {
 
   function rowLabel(r: ImportRow) {
     const p = r.proposed
+    if (p.opponent_name != null || p.win != null) {
+      return `${p.year} ${p.style ?? ""} ${p.age_division ?? ""} ${p.weight_class} — ${p.athlete_name} ${p.win ? "W" : "L"} vs ${p.opponent_name ?? "—"} (${p.result_type ?? ""})`
+    }
+    if (p.athlete_name) {
+      return `${p.year} ${p.style ?? ""} ${p.age_division ?? p.division} ${p.weight_class} — ${p.athlete_name} (${p.wins ?? 0}-${p.losses ?? 0}${p.is_all_american ? ", AA" : ""})`
+    }
     if (p.wrestler_name) {
       return `${p.year} ${p.classification} ${p.weight_class} #${p.place} — ${p.wrestler_name} (${p.school})`
     }
@@ -380,8 +465,8 @@ export default function AdminImportsPage() {
             </HardLink>
             <h1 className="mt-2 text-2xl font-bold text-[#13294B]">Public source imports</h1>
             <p className="text-sm text-slate-600 mt-1 max-w-2xl">
-              Stage official NCHSAA results, review diffs, then approve into RecruitNC. Nothing
-              publishes until you verify.
+              Stage official wrestling results (NCHSAA + Fargo), review diffs, then approve into
+              RecruitNC. Nothing publishes until you verify.
             </p>
           </div>
           <Button variant="outline" size="sm" onClick={() => void loadBatches()} disabled={loading}>
@@ -433,6 +518,15 @@ export default function AdminImportsPage() {
                 <code className="text-xs">scripts/school-classification-years-setup.sql</code>.
               </li>
               <li>
+                <span className="font-medium">After Fargo (July):</span> Update / add CSVs under{" "}
+                <code className="text-xs">scripts/data/fargo/</code>, register the year in{" "}
+                <code className="text-xs">lib/public-imports/connectors/fargo-nationals.ts</code>
+                , run <strong>Stage Fargo Nationals</strong> → approve. First-time DB:{" "}
+                <code className="text-xs">scripts/fargo-results-harden-setup.sql</code>. FS and GR are
+                separate careers — never merge. Flo is never SoR. Roadmap:{" "}
+                <code className="text-xs">docs/FARGO-NATIONALS-CONNECTOR.md</code>.
+              </li>
+              <li>
                 <span className="font-medium">Never:</span> auto-publish scrapes, or scrape NCHSAA on
                 every profile/state page load — always stage → review → promote.
               </li>
@@ -480,6 +574,7 @@ export default function AdminImportsPage() {
                 runningConnector ||
                 runningDualConnector ||
                 runningClassConnector ||
+                runningFargoConnector ||
                 setupRequired
               }
             >
@@ -521,6 +616,7 @@ export default function AdminImportsPage() {
                 runningDualConnector ||
                 runningConnector ||
                 runningClassConnector ||
+                runningFargoConnector ||
                 setupRequired
               }
             >
@@ -563,6 +659,7 @@ export default function AdminImportsPage() {
                 runningClassConnector ||
                 runningConnector ||
                 runningDualConnector ||
+                runningFargoConnector ||
                 setupRequired
               }
             >
@@ -576,12 +673,103 @@ export default function AdminImportsPage() {
           </CardContent>
         </Card>
 
+        <Card className="border-amber-400/50 bg-amber-50/40">
+          <CardHeader>
+            <CardTitle className="text-lg text-[#13294B]">
+              Fargo Nationals — full connector (USA Bracketing + Track)
+            </CardTitle>
+            <CardDescription>
+              Canonical bout + season SoR. Loads registered exports from{" "}
+              <code className="text-xs">scripts/data/fargo/exports/</code> via USA Bracketing and
+              Trackwrestling adapters, materializes FS/GR careers separately, stages seasons +
+              bouts with a validation report. Flo never SoR. Setup SQL:{" "}
+              <code className="text-xs">fargo-results-harden-setup.sql</code> +{" "}
+              <code className="text-xs">fargo-bouts-full-setup.sql</code>. Event years:{" "}
+              {fargoFullYears.length ? fargoFullYears.join(", ") : "—"}.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap items-end gap-3">
+            <div className="space-y-1">
+              <Label htmlFor="fargo-full-year">Year</Label>
+              <Input
+                id="fargo-full-year"
+                value={year}
+                onChange={(e) => setYear(e.target.value)}
+                className="w-28"
+              />
+            </div>
+            <Button
+              type="button"
+              onClick={() => void runFargoFullConnector()}
+              disabled={
+                runningFargoFull ||
+                runningFargoConnector ||
+                runningConnector ||
+                runningDualConnector ||
+                runningClassConnector ||
+                setupRequired
+              }
+            >
+              {runningFargoFull ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Upload className="h-4 w-4" />
+              )}
+              <span className="ml-2">Run full Fargo connector</span>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="border-[#003366]/30 bg-white">
+          <CardHeader>
+            <CardTitle className="text-lg text-[#13294B]">
+              Fargo Nationals — CSV season connector
+            </CardTitle>
+            <CardDescription>
+              Legacy/NC season CSV snapshots (Freestyle &amp; Greco as separate careers). Prefer the
+              full connector when bout exports exist. CSV years:{" "}
+              {fargoConnectorYears.length ? fargoConnectorYears.join(", ") : "—"}.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap items-end gap-3">
+            <div className="space-y-1">
+              <Label htmlFor="fargo-connector-year">Year</Label>
+              <Input
+                id="fargo-connector-year"
+                value={year}
+                onChange={(e) => setYear(e.target.value)}
+                className="w-28"
+              />
+            </div>
+            <Button
+              type="button"
+              onClick={() => void runFargoNationalsConnector()}
+              disabled={
+                runningFargoConnector ||
+                runningFargoFull ||
+                runningConnector ||
+                runningDualConnector ||
+                runningClassConnector ||
+                setupRequired
+              }
+            >
+              {runningFargoConnector ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Upload className="h-4 w-4" />
+              )}
+              <span className="ml-2">Stage Fargo CSV seasons</span>
+            </Button>
+          </CardContent>
+        </Card>
+
         <div className="grid gap-4 md:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Stage a batch</CardTitle>
               <CardDescription>
-                Placers / duals / classifications: connectors above, or paste JSON / page HTML.
+                Placers / duals / classifications / Fargo: connectors above, or paste JSON / CSV /
+                page HTML.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -610,6 +798,22 @@ export default function AdminImportsPage() {
                 >
                   School classifications
                 </Button>
+                <Button
+                  type="button"
+                  variant={dataset === DATASET_FARGO ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setDataset(DATASET_FARGO)}
+                >
+                  Fargo seasons
+                </Button>
+                <Button
+                  type="button"
+                  variant={dataset === DATASET_FARGO_BOUTS ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setDataset(DATASET_FARGO_BOUTS)}
+                >
+                  Fargo bouts
+                </Button>
               </div>
               <div className="space-y-1">
                 <Label htmlFor="year">Year</Label>
@@ -637,7 +841,9 @@ export default function AdminImportsPage() {
                       ? `{ "records": [ { "year": 2025, "division": "4A", "champion_school": "..." } ] }`
                       : dataset === DATASET_CLASSIFICATIONS
                         ? `{ "records": [ { "effective_year": 2026, "school_name": "...", "classification": "7A" } ] }`
-                        : `{ "year": 2025, "classifications": [ ... ] }  — or Guaranteed Places text`
+                        : dataset === DATASET_FARGO
+                          ? `{ "records": [ { "year": 2026, "athlete_name": "...", "division": "Junior Boys Freestyle", "weight_class": "150", "wins": 5, "losses": 1 } ] }  — or Fargo CSV`
+                          : `{ "year": 2025, "classifications": [ ... ] }  — or Guaranteed Places text`
                   }
                   className="font-mono text-xs"
                 />

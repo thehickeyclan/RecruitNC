@@ -1,6 +1,20 @@
 # Fargo data import
 
-Files in this folder feed `fargo_results` in Supabase (profiles, Data Dawg, future `/fargo` page).
+Files in this folder feed `fargo_results` in Supabase (profiles, Data Dawg, `/fargo` pages).
+
+**Canonical annual path:** Admin **`/admin/imports`** → **Stage Fargo Nationals** → review → approve.  
+See `docs/FARGO-NATIONALS-CONNECTOR.md`.
+
+Freestyle and Greco-Roman are **separate careers**. FloWrestling is **never** the SoR.
+
+## Prerequisite
+
+1. `scripts/create-fargo-results-table.sql` (once, if table missing)
+2. **`scripts/fargo-results-harden-setup.sql`** (style / gender / age_division / unique key)
+
+## Register years
+
+`lib/public-imports/connectors/fargo-nationals.ts` — add CSV paths per tournament year after Fargo.
 
 ## Canonical files
 
@@ -16,14 +30,9 @@ Files in this folder feed `fargo_results` in Supabase (profiles, Data Dawg, futu
 | `fargo_2024_16u.csv` | 2024 16U individuals (bracket export) |
 | `fargo_2023_junior.csv` | 2023 Junior individuals |
 | `fargo_2024_junior.csv` | 2024 Junior individuals |
-| `fargo_junior_2025_2026.csv` | Legacy extract from old seed — use `fargo_juniors_details.csv` instead |
-| `../fargo_results_seed.csv` | Legacy combined seed — do not import alongside details files |
+| `fargo_junior_2025_2026.csv` | Legacy extract — prefer `fargo_juniors_details.csv` |
 
-## Prerequisite
-
-Run `scripts/create-fargo-results-table.sql` in Supabase SQL Editor once.
-
-## Full import (recommended)
+## Legacy CLI (prefer admin connector)
 
 ```bash
 node scripts/import-fargo-results.mjs \
@@ -35,10 +44,8 @@ node scripts/import-fargo-results.mjs \
   scripts/data/fargo/fargo_juniors_details.csv
 ```
 
-Imports are **division-scoped** per year — 16U and Junior for the same year do not wipe each other.
+Dry run: add `--dry-run`.
 
-Dry run: add `--dry-run` to any command.
-
-## Env
+## Env (CLI only)
 
 `NEXT_PUBLIC_SUPABASE_URL` (or `SUPABASE_URL`) and `SUPABASE_SERVICE_ROLE_KEY` in `.env.local`.

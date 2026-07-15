@@ -7,12 +7,25 @@ import {
   stageImportBatch,
   type StageInput,
 } from "@/lib/public-imports/stage"
-import { DATASET_CLASSIFICATIONS, DATASET_DUAL_TEAM, DATASET_PLACERS, type DatasetKey } from "@/lib/public-imports/types"
+import {
+  DATASET_CLASSIFICATIONS,
+  DATASET_DUAL_TEAM,
+  DATASET_FARGO,
+  DATASET_FARGO_BOUTS,
+  DATASET_PLACERS,
+  type DatasetKey,
+} from "@/lib/public-imports/types"
 
 export const dynamic = "force-dynamic"
 
 function isDataset(v: unknown): v is DatasetKey {
-  return v === DATASET_DUAL_TEAM || v === DATASET_PLACERS || v === DATASET_CLASSIFICATIONS
+  return (
+    v === DATASET_DUAL_TEAM ||
+    v === DATASET_PLACERS ||
+    v === DATASET_CLASSIFICATIONS ||
+    v === DATASET_FARGO ||
+    v === DATASET_FARGO_BOUTS
+  )
 }
 
 export async function POST(request: NextRequest) {
@@ -31,7 +44,7 @@ export async function POST(request: NextRequest) {
   if (!isDataset(body.dataset)) {
     return NextResponse.json(
       {
-        error: `dataset must be ${DATASET_DUAL_TEAM}, ${DATASET_PLACERS}, or ${DATASET_CLASSIFICATIONS}`,
+        error: `dataset must be ${DATASET_DUAL_TEAM}, ${DATASET_PLACERS}, ${DATASET_CLASSIFICATIONS}, ${DATASET_FARGO}, or ${DATASET_FARGO_BOUTS}`,
       },
       { status: 400 },
     )
