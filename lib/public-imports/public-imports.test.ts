@@ -20,6 +20,23 @@ describe("public-imports normalize", () => {
     expect(namesLooselyEqual("Ockerman, Anna", "Anna Ockerman")).toBe(true)
     expect(schoolsLooselyEqual("Seaforth High School", "Seaforth")).toBe(true)
   })
+
+  it("matches formal NCHSAA names to short school labels", () => {
+    expect(schoolsLooselyEqual("Emsley A. Laney High School", "Laney")).toBe(true)
+    expect(schoolsLooselyEqual("William Amos Hough High School", "Hough")).toBe(true)
+    expect(schoolsLooselyEqual("Needham B. Broughton High School", "Broughton")).toBe(true)
+    expect(schoolsLooselyEqual("Charles E. Jordan High School", "Jordan")).toBe(true)
+    expect(schoolsLooselyEqual("David W. Butler High School", "Butler")).toBe(true)
+  })
+
+  it("does not conflate differently parenthesized Northside schools", () => {
+    expect(
+      schoolsLooselyEqual(
+        "Northside High School (Jacksonville)",
+        "Northside High School (Pinetown)",
+      ),
+    ).toBe(false)
+  })
 })
 
 describe("public-imports parse", () => {

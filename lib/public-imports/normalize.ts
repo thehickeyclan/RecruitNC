@@ -59,12 +59,76 @@ export function placerNaturalKey(
 export function schoolsLooselyEqual(a: unknown, b: unknown): boolean {
   const strip = (s: string) =>
     s
+      .replace(/\([^)]*\)/g, " ") // location qualifiers compared separately
       .replace(/\bhigh school\b/g, "")
+      .replace(/\bsenior high school\b/g, "")
       .replace(/\bacademy\b/g, "")
+      .replace(/\bschool\b/g, "")
+      .replace(/\./g, " ")
+      .replace(/[-–—]/g, " ")
       .replace(/\s+/g, " ")
       .trim()
-  const na = strip(normText(a))
-  const nb = strip(normText(b))
+
+  const paren = (raw: string) => {
+    const m = String(raw ?? "").match(/\(([^)]+)\)/)
+    return m ? normText(m[1]) : ""
+  }
+
+  const rawA = String(a ?? "")
+  const rawB = String(b ?? "")
+  const pa = paren(rawA)
+  const pb = paren(rawB)
+  // Both named with locations must agree (Northside Jacksonville ≠ Pinetown)
+  if (pa && pb && pa !== pb) return false
+
+  const na = strip(normText(rawA))
+  const nb = strip(normText(rawB))
   if (!na || !nb) return na === nb
-  return na === nb || na.startsWith(nb) || nb.startsWith(na)
+  if (na === nb || na.startsWith(nb) || nb.startsWith(na)) return true
+
+  const tokens = (s: string) => s.split(" ").filter(Boolean)
+  const ta = tokens(na)
+  const tb = tokens(nb)
+  const lastA = ta[ta.length - 1] || ""
+  const lastB = tb[tb.length - 1] || ""
+
+  // Ambiguous last tokens — require stronger overlap
+  const AMBIGUOUS = new Set([
+    "central",
+    "north",
+    "south",
+    "east",
+    "west",
+    "union",
+    "county",
+    "charter",
+    "prep",
+    "preparatory",
+    "community",
+    "early",
+    "college",
+    "tech",
+    "technology",
+    "leadership",
+    "classical",
+    "independent",
+  ])
+
+  // "William Amos Hough" ↔ "Hough", "Emsley A Laney" ↔ "Laney"
+  if (
+    lastA.length >= 5 &&
+    lastA === lastB &&
+    !AMBIGUOUS.has(lastA)
+  ) {
+    return true
+  }
+
+  // Shorter name is a whole-word suffix/prefix of the longer (min length 5)
+  const [shorter, longer] = na.length <= nb.length ? [na, nb] : [nb, na]
+  if (shorter.length >= 5) {
+    const re = new RegExp(`(?:^|\\s)${shorter.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?:\\s|$)`)
+    if (re.test(longer)) return true
+  }
+
+  return false
 }

@@ -772,7 +772,13 @@ export default function AdminImportsPage() {
                           Was:{" "}
                           {r.existing.wrestler_name
                             ? `${r.existing.wrestler_name} (${r.existing.school})`
-                            : String(r.existing.champion_school ?? "")}
+                            : r.existing.school_name
+                              ? `${r.existing.classification ?? "?"} — ${r.existing.school_name}${
+                                  r.existing.conference
+                                    ? ` (${r.existing.conference})`
+                                    : ""
+                                }`
+                              : String(r.existing.champion_school ?? "")}
                         </span>
                       ) : null}
                       {r.promote_error ? (
