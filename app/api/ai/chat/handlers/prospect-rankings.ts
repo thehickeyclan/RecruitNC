@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server"
 import { getSupabaseAdmin } from "@/lib/server-supabase"
 import { QueryHandler } from "./index"
 import { RECRUITNC_APP_URL, getAthleteProfileUrl } from "@/lib/athlete-profile-links"
+import {
+  clampProspectRankingsLimit,
+  getPublicRankingsMax,
+} from "@/lib/public-rankings-cap"
 
 const RECRUITNC_RANKINGS_CTA = `\n\n---\n**To see all rankings**, sign up for a free RecruitNC account or sign in: [RecruitNC →](${RECRUITNC_APP_URL})`
 
@@ -79,14 +83,16 @@ export const handleProspectRankings: QueryHandler = async (
     
     console.log(`[Handler] prospect_rankings: Super32 performance query for class of ${year}`)
     
-    // Get all prospect rankings for the class
+    // Official published ranks only (top 30 for 2026/2027)
+    const maxRank = getPublicRankingsMax(year)
     const { data: rankings, error: rankingsError } = await adminClient
       .from("athletes")
       .select("id, name, highschool, prospect_ranking, graduationyear, gender")
       .eq("graduationyear", year)
       .not("prospect_ranking", "is", null)
+      .lte("prospect_ranking", maxRank)
       .order("prospect_ranking", { ascending: true })
-      .limit(1000)
+      .limit(maxRank)
     
     if (rankingsError) {
       console.error("[Handler] prospect_rankings error:", rankingsError)
@@ -286,9 +292,13 @@ export const handleProspectRankings: QueryHandler = async (
       console.log(`[Handler] prospect_rankings: Individual query for "${nameQuery}"`)
       
       if (nameQuery && nameQuery.length >= 3) {
-        // Search for athlete by name
+        // Search for athlete by name — only within published top-N
         const normalizedName = nameQuery.toLowerCase().trim()
-        const nameParts = normalizedName.split(/\s+/)
+        const classYearGuess = (() => {
+          const m = originalQuery.match(/\b(20\d{2})\b/)
+          return m ? parseInt(m[1], 10) : null
+        })()
+        const maxForLookup = getPublicRankingsMax(classYearGuess ?? 2026)
         
         // Try exact match first
         let { data: exactMatches } = await adminClient
@@ -296,9 +306,15 @@ export const handleProspectRankings: QueryHandler = async (
           .select("id, name, highschool, prospect_ranking, graduationyear, gender")
           .ilike("name", `%${normalizedName}%`)
           .not("prospect_ranking", "is", null)
+          .lte("prospect_ranking", maxForLookup)
           .limit(10)
         
         if (exactMatches && exactMatches.length > 0) {
+          // Prefer match in the queried class year when present
+          if (classYearGuess) {
+            const yearHits = exactMatches.filter((a: any) => Number(a.graduationyear) === classYearGuess)
+            if (yearHits.length) exactMatches = yearHits
+          }
           // If multiple matches, try to find best match
           let bestMatch = exactMatches[0]
           
@@ -321,6 +337,9 @@ export const handleProspectRankings: QueryHandler = async (
           const school = bestMatch.highschool || "Unknown"
           const year = bestMatch.graduationyear || "Unknown"
           const gender = bestMatch.gender || ""
+          const publishedMax = getPublicRankingsMax(
+            typeof year === "number" ? year : Number(year) || 2026,
+          )
           
           let nameText = name
           if (bestMatch.id) {
@@ -329,7 +348,7 @@ export const handleProspectRankings: QueryHandler = async (
           }
           
           const genderText = gender ? ` (${gender})` : ""
-          const answer = `🏆 **${nameText}** is ranked **#${rank}** in the prospect rankings for the class of ${year}${genderText}.\n\n${school && school !== "Unknown" ? `**School:** ${school}` : ""}\n\n_View their full profile by clicking on their name above._`
+          const answer = `🏆 **${nameText}** is ranked **#${rank}** in the prospect rankings for the class of ${year}${genderText} (published top ${publishedMax}).\n\n${school && school !== "Unknown" ? `**School:** ${school}` : ""}\n\n_View their full profile by clicking on their name above._`
           
           return {
             directResponse: NextResponse.json({
@@ -344,7 +363,7 @@ export const handleProspectRankings: QueryHandler = async (
           // No exact match found
           return {
             directResponse: NextResponse.json({
-              answer: `I couldn't find a prospect ranking for "${nameQuery}". They may not have a ranking yet, or the name might be spelled differently. Try searching with their full name as it appears in the database.`,
+              answer: `I couldn't find "${nameQuery}" in RecruitNC's published prospect rankings (top ${maxForLookup} per class). They may be unranked, or the name might be spelled differently.`,
               messageId: messageId || `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
               queryType: "prospect_rankings",
             })
@@ -354,8 +373,8 @@ export const handleProspectRankings: QueryHandler = async (
     }
   }
   
-  // Default to list query (top prospects or all ranked)
-  // Check if query asks for "all ranked" prospects
+  // Default to list query (top prospects or all published ranked)
+  // Check if query asks for "all ranked" prospects — still capped at official top N
   const wantsAllRanked =
     query.includes("all ranked") ||
     query.includes("all ranking") ||
@@ -372,7 +391,7 @@ export const handleProspectRankings: QueryHandler = async (
   let topN: number | null = params.topN != null ? params.topN : null
   if (topN === null) {
     if (wantsAllRanked) {
-      topN = null
+      topN = null // clamped to official cap after year is known
     } else if (specificRank !== null) {
       topN = specificRank
     } else {
@@ -421,6 +440,10 @@ export const handleProspectRankings: QueryHandler = async (
   if (!year) {
     year = 2026
   }
+
+  // RecruitNC only publishes top N per class — never list beyond that
+  const publicCap = getPublicRankingsMax(year)
+  topN = clampProspectRankingsLimit(year, topN)
   
   // Extract gender filter
   let genderFilter: string | null = null
@@ -432,9 +455,22 @@ export const handleProspectRankings: QueryHandler = async (
   
   // Multi-year: "show class of 2026, 2027, 2028 rankings" or "top wrestlers" → top 5 per graduation class
   const yearsToFetch = (yearsParam && yearsParam.length > 1) ? yearsParam : [year!]
-  const effectiveTopN = (yearsToFetch.length > 1 && !isAuthenticated) ? 5 : topN
+  const effectiveTopN =
+    yearsToFetch.length > 1 && !isAuthenticated
+      ? Math.min(5, publicCap)
+      : topN
   const showRankingsCTA = !isAuthenticated && effectiveTopN !== null && effectiveTopN <= 10
   const askedByClassificationOrWeight = /\b(1a|2a|3a|4a|1a-2a|2a-3a)\b|at\s+\d{3}/i.test(query)
+
+  if (specificRank !== null && specificRank > publicCap) {
+    return {
+      directResponse: NextResponse.json({
+        answer: `RecruitNC publishes the **top ${publicCap}** prospects for the class of ${year}. We don't publish rankings beyond #${publicCap}.`,
+        messageId: messageId || `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        queryType: "prospect_rankings",
+      }),
+    }
+  }
 
   if (yearsToFetch.length > 1) {
     const sections: string[] = []
@@ -442,18 +478,20 @@ export const handleProspectRankings: QueryHandler = async (
       ? "Here are our **prospect rankings** — top 5 per graduation class. (Rankings aren’t filtered by NCHSAA classification or weight.)\n\n"
       : ""
     for (const y of yearsToFetch) {
+      const yCap = getPublicRankingsMax(y)
+      const yLimit = clampProspectRankingsLimit(y, effectiveTopN)
       let q = adminClient
         .from("athletes")
         .select("id, name, highschool, prospect_ranking, graduationyear, gender")
         .eq("graduationyear", y)
         .not("prospect_ranking", "is", null)
+        .lte("prospect_ranking", yCap)
         .order("prospect_ranking", { ascending: true })
-      if (effectiveTopN != null) q = q.limit(effectiveTopN)
-      else q = q.limit(1000)
+        .limit(yLimit)
       if (genderFilter) q = q.eq("gender", genderFilter)
       const { data: yrRankings } = await q
       if (yrRankings && yrRankings.length > 0) {
-        sections.push(`**Class of ${y}** (Top ${effectiveTopN ?? yrRankings.length}):`)
+        sections.push(`**Class of ${y}** (Top ${yLimit}):`)
         yrRankings.forEach((a: any, i: number) => {
           const r = a.prospect_ranking ?? i + 1
           const nameText = a.id ? `[${a.name}](${getAthleteProfileUrl(a.id)})` : a.name
@@ -477,21 +515,15 @@ export const handleProspectRankings: QueryHandler = async (
   
   console.log(`[Handler] prospect_rankings: year=${year}, topN=${topN}, gender=${genderFilter || "all"}, isAuthenticated=${isAuthenticated}`)
   
-  // Build query
+  // Build query — always capped at official published top N
   let dbQuery = adminClient
     .from("athletes")
     .select("id, name, highschool, prospect_ranking, graduationyear, gender")
     .eq("graduationyear", year)
     .not("prospect_ranking", "is", null)
+    .lte("prospect_ranking", publicCap)
     .order("prospect_ranking", { ascending: true })
-  
-  // Only apply limit if topN is specified (not for "all ranked" queries)
-  if (topN !== null) {
-    dbQuery = dbQuery.limit(topN)
-  } else {
-    // Set a reasonable max limit for "all ranked" queries (e.g., 1000)
-    dbQuery = dbQuery.limit(1000)
-  }
+    .limit(topN!)
   
   // Apply gender filter if specified
   if (genderFilter) {
@@ -736,13 +768,14 @@ export const handleProspectRankings: QueryHandler = async (
   }
   
   // Otherwise, return list format
-  const titleText = wantsAllRanked 
-    ? `🏆 **All Ranked Prospects - Class of ${year}${genderText}**`
+  const titleText = wantsAllRanked || topN === publicCap
+    ? `🏆 **Class of ${year}${genderText} Rankings (Top ${publicCap})**`
     : `🏆 **Top ${topN} Prospects - Class of ${year}${genderText}**`
   let answer = `${titleText}\n\n`
   
   rankings.forEach((athlete: any, index: number) => {
     const rank = athlete.prospect_ranking || index + 1
+    if (rank > publicCap) return
     const name = athlete.name || "Unknown"
     const school = athlete.highschool || "Unknown"
     
@@ -756,7 +789,7 @@ export const handleProspectRankings: QueryHandler = async (
     answer += `${rank}. **${nameText}** - ${school}\n`
   })
   
-  answer += `\n_Note: Rankings are based on prospect evaluations and may be updated periodically. Click on any name to view their full profile._`
+  answer += `\n_RecruitNC publishes the top ${publicCap} for this class. Rankings may be updated periodically._`
   
   if (!isAuthenticated && topN !== null && topN <= 10) {
     answer += RECRUITNC_RANKINGS_CTA

@@ -29,8 +29,8 @@ export const SUGGESTED_PROMPT_ROUTES: Array<{ prompt: string; handler: string; p
   { prompt: "who are our 4x state placers?", handler: "state_placer_records", params: { championshipCount: 4 } },
   { prompt: "how many 4x state placers have there been?", handler: "state_placer_count", params: { championshipCount: 4 } },
   // Prospect rankings (default Data Dawg chips)
-  { prompt: "show me all class of 2026 rankings", handler: "prospect_rankings", params: { year: 2026 } },
-  { prompt: "show me all class of 2027 rankings", handler: "prospect_rankings", params: { year: 2027 } },
+  { prompt: "show me all class of 2026 rankings", handler: "prospect_rankings", params: { year: 2026, topN: 30 } },
+  { prompt: "show me all class of 2027 rankings", handler: "prospect_rankings", params: { year: 2027, topN: 30 } },
   { prompt: "who are the top 10 ranked prospects?", handler: "prospect_rankings", params: { year: 2026, topN: 10 } },
   { prompt: "what athletes are ranked in the top 30?", handler: "prospect_rankings", params: { year: 2026, topN: 30 } },
   // NHSCA (nhsca_all_american_count, nhsca_school_leaderboard, nhsca_all_american)
