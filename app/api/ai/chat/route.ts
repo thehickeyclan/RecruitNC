@@ -1759,10 +1759,15 @@ export async function POST(request: NextRequest) {
     // FALLBACK ROUTING: Pattern Matching (for critical handlers and when semantic routing is off)
     // ============================================================================
     // Only run if semantic routing didn't find a match
-    // Helper function to log query with handler name (non-blocking)
+    // Helper function to log query with handler name (must await — Vercel drops void work)
     const logQuery = async (handler: string | null, responseData?: any, responseTime?: number, errorMsg?: string) => {
     try {
-      const logClient = getSupabaseAdmin()
+      // Skip placeholder "start of request" inserts — only persist when we have an answer or error
+      if (handler == null && responseData == null && !errorMsg) {
+        return
+      }
+
+      const { writeAiQueryLog } = await import("@/lib/ai-query-log-write")
       
       // Determine success status:
       // - true: Has answer/response and no error
@@ -1775,42 +1780,25 @@ export async function POST(request: NextRequest) {
       // Success if we have an answer (even if it says "couldn't find") and no explicit error
       const success = hasAnswer && !hasError
       
-      const logData: any = {
-        handler_name: handler || null,
-        response_time_ms: responseTime || null,
-        error_message: errorMsg || null,
-        success: success,
-      }
-      if (responseData?.answer) {
-        logData.response = typeof responseData.answer === 'string'
-          ? responseData.answer.substring(0, 1000)
-          : JSON.stringify(responseData.answer).substring(0, 1000)
-      }
-      if (responseData?.queryType) {
-        logData.query_type = responseData.queryType
-      }
-
-      // When we have handler + response, UPDATE the row we inserted at request start (by message_id) so analytics show success/handler
-      if (queryMessageId && handler != null && (responseData?.answer != null || errorMsg != null)) {
-        const updateResult = await logClient.from("ai_query_logs").update(logData).eq("message_id", queryMessageId).select("id")
-        if (updateResult.data && updateResult.data.length > 0) {
-          return // row updated
-        }
-      }
-
-      // Insert: initial log (no handler) or when no row had message_id
-      const insertData: any = {
+      const result = await writeAiQueryLog({
         query: message,
         project: detectedProject,
         url: requestUrl,
-        timestamp: new Date().toISOString(),
+        response: responseData?.answer
+          ? typeof responseData.answer === "string"
+            ? responseData.answer
+            : JSON.stringify(responseData.answer)
+          : null,
+        query_type: responseData?.queryType ?? null,
+        handler_name: handler || null,
+        response_time_ms: responseTime || null,
+        error_message: errorMsg || null,
+        success,
+        message_id: queryMessageId || null,
         feedback: feedback || null,
-        ...logData,
-      }
-      if (queryMessageId) insertData.message_id = queryMessageId
-      const logResult = await logClient.from("ai_query_logs").insert(insertData)
-      if (logResult.error) {
-        console.warn("[AI] Query logging failed:", logResult.error.message)
+      })
+      if (!result.ok) {
+        console.warn("[AI] Query logging failed:", result.error)
       }
     } catch (e) {
       console.warn("[AI] Query logging failed:", e)
@@ -1826,11 +1814,11 @@ export async function POST(request: NextRequest) {
       } catch (e) {
         responseData = { answer: "Response sent" }
       }
-      logQuery(handlerName, responseData, undefined)
+      await logQuery(handlerName, responseData, undefined)
       return directResponse
     }
     
-    // Log initial query (row will be updated when we return with handler/response so analytics show success/handler)
+    // Legacy hook retained (no-op until a handler/answer exists)
     await logQuery(null)
 
     // Check for chat API key (Claude or OpenAI)
