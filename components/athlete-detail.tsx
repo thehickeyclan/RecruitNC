@@ -318,9 +318,11 @@ export function AthleteDetail({
     }
     return null
   })()
-  // Only show rank on profile when athlete is on our official rankings: top 30 in 2026/2027, top 25 in 2028
+  // Only show rank on profile when athlete is on our official rankings (top 30)
   const maxRankForClass =
-    graduationYear === 2028 ? 25 : graduationYear === 2026 || graduationYear === 2027 ? 30 : 0
+    graduationYear === 2026 || graduationYear === 2027 || graduationYear === 2028 || graduationYear === 2029
+      ? 30
+      : 0
   const prospectRanking =
     rawRank != null &&
     Number.isFinite(rawRank) &&

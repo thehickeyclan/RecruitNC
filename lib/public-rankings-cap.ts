@@ -1,24 +1,25 @@
 /**
- * Official published RecruitNC prospect ranking caps by graduation class.
- * Data Dawg, /public-rankings, and related APIs must never list beyond these.
+ * Official published RecruitNC prospect ranking cap.
+ * Data Dawg, /public-rankings, and related surfaces never list beyond top 30.
  */
+export const DEFAULT_PUBLIC_RANKINGS_CAP = 30
+
+/** Per-class overrides (all currently 30). Keep the map for published years. */
 export const PUBLIC_RANKINGS_MAX_BY_YEAR: Record<number, number> = {
   2026: 30,
   2027: 30,
-  2028: 25,
+  2028: 30,
+  2029: 30,
 }
 
-/** Default when year is unknown / unpublished — still never dump unbounded ranked lists. */
-export const DEFAULT_PUBLIC_RANKINGS_CAP = 30
-
-export function getPublicRankingsMax(year: number | null | undefined): number {
-  if (year != null && Number.isFinite(year) && PUBLIC_RANKINGS_MAX_BY_YEAR[year] != null) {
-    return PUBLIC_RANKINGS_MAX_BY_YEAR[year]!
+export function getPublicRankingsMax(_year?: number | null): number {
+  if (_year != null && Number.isFinite(_year) && PUBLIC_RANKINGS_MAX_BY_YEAR[_year] != null) {
+    return PUBLIC_RANKINGS_MAX_BY_YEAR[_year]!
   }
   return DEFAULT_PUBLIC_RANKINGS_CAP
 }
 
-/** Clamp a requested top-N (or "all") to the official published cap for that class. */
+/** Clamp a requested top-N (or "all") to the official published top 30. */
 export function clampProspectRankingsLimit(
   year: number | null | undefined,
   requested: number | null | undefined,

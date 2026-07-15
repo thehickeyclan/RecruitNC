@@ -318,7 +318,7 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
     function: {
       name: "public_rankings_search",
       description:
-        "RecruitNC official prospect rankings by graduation class (same lists as /public-rankings). Use for 'show me all Class of 2027 rankings', 'class of 2028 rankings', 'top 10 ranked prospects class of 2026', 'who is ranked #1 in 2027'. Years currently published: 2026 (top 30), 2027 (top 30), 2028 (top 25). Default gender Male; pass Female for girls rankings. Always call this for class-of rankings questions — do not use tournament tables alone.",
+        "RecruitNC official prospect rankings by graduation class (same lists as /public-rankings). Use for 'show me all Class of 2027 rankings', 'class of 2028 rankings', 'top 10 ranked prospects class of 2026', 'who is ranked #1 in 2027'. Years currently published: 2026, 2027, 2028 — **top 30 only** for every class. Default gender Male; pass Female for girls rankings. Always call this for class-of rankings questions — do not use tournament tables alone.",
       parameters: {
         type: "object",
         additionalProperties: false,

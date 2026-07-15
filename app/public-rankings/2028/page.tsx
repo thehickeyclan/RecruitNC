@@ -150,7 +150,7 @@ export default function Class2028RankingsPage() {
     }
   }
 
-  // Filter by search term and limit to top 25
+  // Filter by search term and limit to top 30
   const filteredRankings = rankings
     .filter((ranking) => {
       if (!searchTerm) return true
@@ -162,7 +162,7 @@ export default function Class2028RankingsPage() {
         (ranking.weight_display?.toLowerCase() || "").includes(term)
       )
     })
-    .filter((ranking) => ranking.prospect_ranking && ranking.prospect_ranking <= 25)
+    .filter((ranking) => ranking.prospect_ranking && ranking.prospect_ranking <= 30)
 
   const hasActiveFilters = searchTerm !== ""
 

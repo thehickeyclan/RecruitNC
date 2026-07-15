@@ -6,6 +6,7 @@ import {
   nchsaaRowsToStateResults,
   stateChampionshipSummaryFromRows,
 } from "@/lib/nchsaa-state-display"
+import { getPublicRankingsMax } from "@/lib/public-rankings-cap"
 
 export async function GET(request: Request) {
   try {
@@ -16,9 +17,8 @@ export async function GET(request: Request) {
     const requestedLimit = limitParam ? parseInt(limitParam, 10) : null
 
     const yearNum = parseInt(String(year), 10)
-    // Public /public-rankings pages: cap how many ranked athletes we return (reduces payload + enrichment work).
-    const maxPublicRank =
-      yearNum === 2026 || yearNum === 2027 ? 30 : yearNum === 2028 ? 25 : null
+    // Public /public-rankings pages: always top 30 only
+    const maxPublicRank = getPublicRankingsMax(yearNum)
 
     const supabase = createAdminClient()
 
@@ -60,10 +60,7 @@ export async function GET(request: Request) {
       .eq("graduationyear", year)
       .eq("gender", gender)
       .not("prospect_ranking", "is", null)
-
-    if (maxPublicRank != null) {
-      rankingsQuery = rankingsQuery.lte("prospect_ranking", maxPublicRank)
-    }
+      .lte("prospect_ranking", maxPublicRank)
 
     const { data: athletes, error } = await rankingsQuery.order("prospect_ranking", { ascending: true })
 

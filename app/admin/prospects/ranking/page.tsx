@@ -62,11 +62,9 @@ export default function ProspectRankingPage() {
   const availableYears = ["2025", "2026", "2027", "2028", "2029"]
   const genderOptions = ["Male", "Female"]
 
-  /** When not showing all athletes, limit list to the same caps as public-facing ranked lists (see prospects/all). */
+  /** When not showing all athletes, limit list to the same top-30 caps as public-facing ranked lists. */
   const publicRankCap = (year: string): number | null => {
-    if (year === "2029") return 20
-    if (year === "2028") return 25
-    if (year === "2026" || year === "2027") return 25
+    if (year === "2026" || year === "2027" || year === "2028" || year === "2029") return 30
     return null
   }
 
