@@ -15,6 +15,8 @@
     "prebuild": "npm run validate-auth",
     "generate-icons": "node scripts/generate-pwa-icons.js",
     "nhsca:import": "node scripts/import-nhsca-placements.mjs",
+    "import:historical-wins": "tsx scripts/import-historical-single-season-wins.ts",
+    "rollback:historical-wins": "tsx scripts/rollback-historical-single-season-wins.ts",
     "nhsca:gear-bg": "tsx scripts/process-nhsca-gear-images.ts",
     "nhsca:lookup": "tsx scripts/test-nhsca-lookup.ts",
     "nhsca:all-years": "tsx scripts/show-nhsca-all-years.ts",

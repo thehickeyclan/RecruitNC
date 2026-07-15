@@ -322,7 +322,7 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
         .limit(10),
       supabase
         .from("winningest_wrestlers")
-        .select("rank_numeric, wrestler_name, school, record, wins, losses, year")
+        .select("rank_position, rank_numeric, is_tied, wrestler_name, school, record, wins, losses, year")
         .ilike("wrestler_name", namePat)
         .order("wins", { ascending: false })
         .limit(10),

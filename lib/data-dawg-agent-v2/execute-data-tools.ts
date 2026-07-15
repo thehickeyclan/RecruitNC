@@ -8,6 +8,11 @@ import { getAthletesColumnNames } from "@/lib/athletes-schema"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { escapeForIlike } from "@/lib/nchsaa-results"
 import {
+  enrichSingleSeasonWinningestRows,
+  parseMinWinsFromQuery,
+  parseSeasonFromQuery,
+} from "@/lib/historical-wins/data-dawg"
+import {
   filterRowsByAthleteMatchContext,
   firstNamesLikelySame,
   getAthleteNameSearchVariants,
@@ -1535,6 +1540,9 @@ export async function toolRecordBooksSearch(args: {
   mode?: string | null
   query?: string | null
   limit?: number | null
+  min_wins?: number | null
+  season?: string | null
+  school?: string | null
 }) {
   const modeRaw = String(args.mode ?? "both").toLowerCase().trim()
   const mode =
@@ -1542,15 +1550,31 @@ export async function toolRecordBooksSearch(args: {
   const rawQ = sanitizeFragment(String(args.query ?? ""))
   const q = (extractSearchablePhrase(rawQ) || stripConversationalNoise(rawQ)).trim()
   const hasQuery = q.length >= 2
+  const minWinsArg =
+    args.min_wins != null && Number.isFinite(Number(args.min_wins))
+      ? Math.floor(Number(args.min_wins))
+      : parseMinWinsFromQuery(rawQ || q)
+  const seasonArg =
+    typeof args.season === "string" && args.season.trim()
+      ? args.season.trim()
+      : parseSeasonFromQuery(rawQ || q)
+  const schoolArg =
+    typeof args.school === "string" && args.school.trim().length >= 2
+      ? args.school.trim()
+      : null
   const limit = Math.min(
-    Math.max(Number(args.limit) || (hasQuery ? 25 : 10), 1),
-    hasQuery ? 50 : 100,
+    Math.max(
+      Number(args.limit) || (hasQuery || minWinsArg != null || seasonArg || schoolArg ? 50 : 10),
+      1,
+    ),
+    hasQuery || minWinsArg != null ? 100 : 100,
   )
-  const fetchCap = Math.min(limit * 3, 200)
+  const fetchCap = Math.min(Math.max(limit * 3, 100), 521)
   const admin = getSupabaseAdmin()
   const out: {
     mode: string
     searched_for: string | null
+    filters: { min_wins: number | null; season: string | null; school: string | null }
     career_winningest: unknown[]
     single_season_winningest: unknown[]
     partial_errors?: string[]
@@ -1558,9 +1582,11 @@ export async function toolRecordBooksSearch(args: {
   } = {
     mode,
     searched_for: hasQuery ? q : null,
+    filters: { min_wins: minWinsArg, season: seasonArg, school: schoolArg },
     career_winningest: [],
     single_season_winningest: [],
-    note: "career_winningest_wrestlers = all-time career wins; winningest_wrestlers = best single season.",
+    note:
+      "career_winningest_wrestlers = all-time career wins; winningest_wrestlers = NCHSAA single-season most victories. Use context blurb on single-season rows. Leaderboard: /history/records/single-season-wins",
   }
   const errors: string[] = []
   const ilikeFrag = hasQuery ? escapeForIlike(q) : ""
@@ -1589,11 +1615,18 @@ export async function toolRecordBooksSearch(args: {
   if (mode === "single_season" || mode === "both") {
     let sq = admin
       .from("winningest_wrestlers")
-      .select("rank_numeric, wrestler_name, school, record, wins, losses, year")
+      .select(
+        "rank_position, rank_numeric, is_tied, wrestler_name, school, record, wins, losses, year, athlete_id, match_status",
+      )
       .order("wins", { ascending: false })
       .limit(fetchCap)
-    if (hasQuery) {
+    if (minWinsArg != null) sq = sq.gte("wins", minWinsArg)
+    if (seasonArg) sq = sq.eq("year", seasonArg)
+    if (schoolArg) sq = sq.ilike("school", `%${escapeForIlike(schoolArg)}%`)
+    if (hasQuery && !schoolArg) {
       sq = sq.or(`wrestler_name.ilike.%${ilikeFrag}%,school.ilike.%${ilikeFrag}%`)
+    } else if (hasQuery && schoolArg) {
+      sq = sq.ilike("wrestler_name", `%${ilikeFrag}%`)
     }
     const { data, error } = await sq
     if (error) {
@@ -1601,9 +1634,10 @@ export async function toolRecordBooksSearch(args: {
         errors.push(`single_season: ${error.message}`)
       }
     } else {
-      out.single_season_winningest = dedupeRecordBookRows(data ?? [], (r) =>
+      const deduped = dedupeRecordBookRows(data ?? [], (r) =>
         `${r.rank_numeric}|${r.wrestler_name}|${r.record}|${r.school}|${r.year}`,
       ).slice(0, limit)
+      out.single_season_winningest = enrichSingleSeasonWinningestRows(deduped)
     }
   }
 
@@ -1900,7 +1934,14 @@ export async function executeDataTool(name: string, rawArgs: unknown): Promise<s
       case "record_books_search":
         return JSON.stringify(
           await toolRecordBooksSearch(
-            args as { mode?: string | null; query?: string | null; limit?: number | null },
+            args as {
+              mode?: string | null
+              query?: string | null
+              limit?: number | null
+              min_wins?: number | null
+              season?: string | null
+              school?: string | null
+            },
           ),
         )
       case "dave_schultz_award_search":

@@ -350,7 +350,7 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
     function: {
       name: "record_books_search",
       description:
-        "NC high school wrestling record books: all-time career winningest (career_winningest_wrestlers — e.g. Colton Palmer) and/or single-season winningest (winningest_wrestlers). Use for 'who is the winningest wrestler of all time?', 'most career wins', 'best single season record', 'top 10 winningest', or a named wrestler's career/single-season record-book entry.",
+        "NC high school wrestling record books: all-time career winningest (career_winningest_wrestlers) and/or NCHSAA single-season most victories (winningest_wrestlers — e.g. Colton Palmer 91-0). Use for 'most wins in a single season', '60 or more wins', school/season filters, 'who is the winningest wrestler of all time?', or a named wrestler's record-book entry.",
       parameters: {
         type: "object",
         additionalProperties: false,
@@ -359,15 +359,27 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
             type: "string",
             enum: ["career", "single_season", "both"],
             description:
-              "career = all-time career wins; single_season = best one-season records; both = return both lists (default both when query is empty).",
+              "career = all-time career wins; single_season = NCHSAA single-season most victories; both = return both lists (default both when query is empty).",
           },
           query: {
             type: "string",
-            description: "Optional wrestler or school name fragment (e.g. 'Colton Palmer', 'Cardinal Gibbons').",
+            description: "Optional wrestler or school name fragment (e.g. 'Colton Palmer', 'Riverside-Durham').",
+          },
+          min_wins: {
+            type: "integer",
+            description: "Optional minimum wins filter for single-season list (e.g. 60).",
+          },
+          season: {
+            type: "string",
+            description: "Optional season filter YYYY-YYYY (e.g. '2019-2020').",
+          },
+          school: {
+            type: "string",
+            description: "Optional school name filter for single-season list.",
           },
           limit: {
             type: "integer",
-            description: "Max rows per list (default 10 for leaderboard, 25 when searching by name).",
+            description: "Max rows per list (default 10 for leaderboard, up to 100 when filtering).",
           },
         },
         required: [],

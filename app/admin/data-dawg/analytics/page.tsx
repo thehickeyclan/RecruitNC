@@ -279,6 +279,12 @@ export default function DataDawgAnalyticsPage() {
               >
                 Feedback queue
               </HardLink>
+              <HardLink
+                href="/admin/data-dawg/historical-matches"
+                className="rounded-md border border-zinc-200 bg-white px-2.5 py-1 font-medium text-zinc-700 hover:bg-zinc-50"
+              >
+                Historical matches
+              </HardLink>
             </div>
           </div>
 
