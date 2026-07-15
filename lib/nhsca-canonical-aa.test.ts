@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest"
 import {
   getAllCanonicalNhscaAllAmericans,
+  getAllCanonicalNhscaArchiveAthletes,
+  latestCanonicalNhscaAaYear,
   listCanonicalNhscaAaYears,
   mergeCanonicalNhscaAaIntoLeaderboardRows,
 } from "./nhsca-canonical-aa"
@@ -9,6 +11,8 @@ describe("nhsca-canonical-aa registry", () => {
   it("includes registered years (at least 2026)", () => {
     expect(listCanonicalNhscaAaYears()).toContain(2026)
     expect(getAllCanonicalNhscaAllAmericans().length).toBeGreaterThanOrEqual(18)
+    expect(getAllCanonicalNhscaArchiveAthletes().length).toBeGreaterThanOrEqual(18)
+    expect(latestCanonicalNhscaAaYear()).toBeGreaterThanOrEqual(2026)
   })
 
   it("merges schools for registered years and drops null-school shells", () => {
