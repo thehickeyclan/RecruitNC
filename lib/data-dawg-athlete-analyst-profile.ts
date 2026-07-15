@@ -5,13 +5,15 @@
 
 import { getAthleteProfileUrl } from "@/lib/athlete-profile-links"
 import {
-  formatCommitChronologyLine,
   formatCommitNarrativeClause,
 } from "@/lib/data-dawg-college-commit"
+import { athleteHasCompletedHighSchoolCareer } from "@/lib/data-dawg-athlete-career-status"
 import { FOUR_TIME_STATE_CHAMPIONS, FOUR_TIME_STATE_CHAMPIONS_COUNT } from "@/lib/four-time-state-champions"
 import { namesMatch } from "@/lib/nhsca-live/names-match"
 import type { NchsaaRowForProfile } from "@/lib/nchsaa-results-json"
 import type { TournamentResultForDisplay } from "@/lib/public-profile-data"
+
+export { athleteHasCompletedHighSchoolCareer } from "@/lib/data-dawg-athlete-career-status"
 
 export type SchoolDualTitle = {
   year: number
@@ -159,11 +161,16 @@ export function countNationalAllAmericans(opts: {
 /**
  * Fact-driven opening — every phrase maps to verified stats (no generic hype).
  * Compact: honors + record/commit in two sentences max.
+ * Alumni (“finished…”) vs current prospects (present tense) use graduation year.
  */
-export function buildAnalystLeadParagraph(stats: AnalystProfileStats): string {
+export function buildAnalystLeadParagraph(
+  stats: AnalystProfileStats,
+  asOf: Date = new Date(),
+): string {
   const name = stats.displayName.trim() || "This wrestler"
   const hs = (stats.highSchool ?? "").trim()
   const gy = stats.graduationYear
+  const done = athleteHasCompletedHighSchoolCareer(gy, asOf)
   const titles = stats.stateTitleYears
   const hasRec = hasCareerRecord(stats.careerWins, stats.careerLosses)
   const rec = hasRec ? recordStr(stats.careerWins!, stats.careerLosses!) : null
@@ -211,14 +218,20 @@ export function buildAnalystLeadParagraph(stats: AnalystProfileStats): string {
 
   const careerWhere = hs ? ` his ${hs} career` : " his high school career"
   let open: string
-  if (honorBits.length >= 2) {
+  if (honorBits.length >= 1) {
     const joined =
-      honorBits.length === 2
-        ? `${honorBits[0]} and ${honorBits[1]}`
-        : `${honorBits.slice(0, -1).join(", ")}, and ${honorBits[honorBits.length - 1]}`
-    open = `${name} finished${careerWhere} as ${joined}.`
-  } else if (honorBits.length === 1) {
-    open = `${name} finished${careerWhere} as ${honorBits[0]}.`
+      honorBits.length === 1
+        ? honorBits[0]
+        : honorBits.length === 2
+          ? `${honorBits[0]} and ${honorBits[1]}`
+          : `${honorBits.slice(0, -1).join(", ")}, and ${honorBits[honorBits.length - 1]}`
+    if (done) {
+      open = `${name} finished${careerWhere} as ${joined}.`
+    } else if (hs) {
+      open = `${name} is a ${hs} wrestler who is ${joined}.`
+    } else {
+      open = `${name} is ${joined}.`
+    }
   } else if (hs || gy) {
     open = `${name} is a North Carolina high school wrestler${hs ? ` from ${hs}` : ""}${
       gy != null ? ` (Class of ${Math.floor(gy)})` : ""
@@ -229,13 +242,21 @@ export function buildAnalystLeadParagraph(stats: AnalystProfileStats): string {
 
   let second = ""
   if (rec && college && prev && prev.toLowerCase() !== college.toLowerCase()) {
-    second = `He compiled a ${rec} record${hs ? ` at ${hs}` : ""} before continuing his collegiate career at ${prev} and ${college}.`
+    second = done
+      ? `He compiled a ${rec} record${hs ? ` at ${hs}` : ""} before continuing his collegiate career at ${prev} and ${college}.`
+      : `He is ${rec}${hs ? ` at ${hs}` : ""} and has competed collegiately at ${prev} and ${college}.`
   } else if (rec && college) {
-    second = `He went ${rec} and committed to ${college}.`
+    second = done
+      ? `He went ${rec} and committed to ${college}.`
+      : `He is ${rec}${hs ? ` at ${hs}` : ""} and committed to ${college}.`
   } else if (rec) {
-    second = `He went ${rec}${hs ? ` at ${hs}` : ""}.`
+    second = done
+      ? `He went ${rec}${hs ? ` at ${hs}` : ""}.`
+      : `He is ${rec}${hs ? ` at ${hs}` : ""} so far.`
   } else if (college && prev && prev.toLowerCase() !== college.toLowerCase()) {
-    second = `He continued his collegiate career at ${prev} and then ${college}.`
+    second = done
+      ? `He continued his collegiate career at ${prev} and then ${college}.`
+      : `He has competed at ${prev} and ${college}.`
   } else if (college) {
     second = `He committed to ${college}.`
   }
@@ -738,10 +759,9 @@ export function buildAnalystClosingSentence(stats: AnalystProfileStats): string 
   else if (parts.length === 2) body = `${parts[0]} and ${parts[1]}`
   else body = `${parts.slice(0, -1).join(", ")}, and ${parts[parts.length - 1]}`
 
-  const tense =
-    stats.graduationYear != null && stats.graduationYear <= new Date().getFullYear()
-      ? "completed his career as"
-      : "has built a résumé as"
+  const tense = athleteHasCompletedHighSchoolCareer(stats.graduationYear)
+    ? "completed his career as"
+    : "has built a résumé as"
 
   return `${first} ${tense} ${body}.`
 }

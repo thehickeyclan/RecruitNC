@@ -6,6 +6,7 @@
 import type { NchsaaRowForProfile } from "@/lib/nchsaa-results-json"
 import type { TournamentResultForDisplay } from "@/lib/public-profile-data"
 import { formatCommitTimelineLabel } from "@/lib/data-dawg-college-commit"
+import { athleteHasCompletedHighSchoolCareer } from "@/lib/data-dawg-athlete-career-status"
 
 export type AthleteTimelineEvent = {
   year: number
@@ -372,9 +373,18 @@ export function buildAthleteTimelineEvents(input: AthleteTimelineInput): Athlete
   }
 
   if (input.commit?.college?.trim()) {
-    const y =
+    let y =
       asYear(input.commit.year) ??
       (input.graduationYear != null ? Math.floor(Number(input.graduationYear)) : null)
+    // Don't invent an empty future Senior year — park the commit on the latest real season.
+    if (
+      y != null &&
+      !athleteHasCompletedHighSchoolCareer(input.graduationYear) &&
+      events.length > 0
+    ) {
+      const maxEventYear = Math.max(...events.map((e) => e.year))
+      if (y > maxEventYear) y = maxEventYear
+    }
     if (y != null) {
       push(
         y,

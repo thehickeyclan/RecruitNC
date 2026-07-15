@@ -8,6 +8,7 @@ import {
   buildHistoricalRankingsMarkdown,
   buildNationalResumeMarkdown,
   buildNotableAchievementsMarkdown,
+  athleteHasCompletedHighSchoolCareer,
   explicitlyMentionsBloodRound,
   buildVerifiedSourcesFooter,
 } from "./data-dawg-athlete-analyst-profile"
@@ -68,8 +69,10 @@ const liam = {
 }
 
 describe("buildAnalystLeadParagraph", () => {
-  it("opens with compact fact stack for a four-timer", () => {
-    const lead = buildAnalystLeadParagraph(sly)
+  const asOf = new Date(2026, 6, 15) // Jul 15, 2026 — Class of 2026 done; 2027 still in HS
+
+  it("opens with compact fact stack for a four-timer (alumni tense)", () => {
+    const lead = buildAnalystLeadParagraph(sly, asOf)
     expect(lead).toContain("finished his Stuart Cramer career as")
     expect(lead).toContain("four-time NCHSAA champion")
     expect(lead).toContain("three-time NHSCA All-American")
@@ -79,6 +82,35 @@ describe("buildAnalystLeadParagraph", () => {
     expect(lead).toContain("committed to Appalachian State")
     expect(lead).not.toMatch(/back-to-back/i)
     expect(lead).not.toMatch(/established himself as one of the top/i)
+  })
+
+  it("uses present tense for Class of 2027 (not yet graduated)", () => {
+    const lead = buildAnalystLeadParagraph(
+      {
+        displayName: "Tobin McNair",
+        highSchool: "Wakefield",
+        graduationYear: 2027,
+        careerWins: 138,
+        careerLosses: 2,
+        stateTitleYears: 2,
+        college: "Binghamton",
+        nhscaAllAmericanCount: 2,
+        prospectRanking: 2,
+        nchsaaPlacesChronological: [
+          { year: 2024, place: 3 },
+          { year: 2025, place: 1 },
+          { year: 2026, place: 1 },
+        ],
+      },
+      asOf,
+    )
+    expect(lead).toContain("is a Wakefield wrestler who is")
+    expect(lead).toContain("two-time NCHSAA champion")
+    expect(lead).toContain("two-time NHSCA All-American")
+    expect(lead).toContain("RecruitNC's No. 2 prospect in the Class of 2027")
+    expect(lead).toMatch(/He is 138.2 at Wakefield and committed to Binghamton/)
+    expect(lead).not.toMatch(/finished his/i)
+    expect(lead).not.toMatch(/He went /)
   })
 })
 
@@ -204,6 +236,19 @@ describe("explicitlyMentionsBloodRound", () => {
   })
 })
 
+describe("athleteHasCompletedHighSchoolCareer", () => {
+  it("treats Class of 2027 as still in HS in July 2026", () => {
+    const asOf = new Date(2026, 6, 15)
+    expect(athleteHasCompletedHighSchoolCareer(2027, asOf)).toBe(false)
+    expect(athleteHasCompletedHighSchoolCareer(2026, asOf)).toBe(true)
+    expect(athleteHasCompletedHighSchoolCareer(2025, asOf)).toBe(true)
+  })
+
+  it("treats Class of 2026 as still active before June 2026", () => {
+    expect(athleteHasCompletedHighSchoolCareer(2026, new Date(2026, 2, 1))).toBe(false)
+  })
+})
+
 describe("buildVerifiedSourcesFooter", () => {
   it("lists verified sources and high confidence", () => {
     const f = buildVerifiedSourcesFooter(liam)
@@ -226,7 +271,7 @@ describe("buildAnalystClosingSentence", () => {
 
 describe("buildAnalystLeadParagraph transfer", () => {
   it("narrates collegiate path UNC then NC State with fact stack", () => {
-    const lead = buildAnalystLeadParagraph(liam)
+    const lead = buildAnalystLeadParagraph(liam, new Date(2026, 6, 15))
     expect(lead).toContain("finished his Cardinal Gibbons career as")
     expect(lead).toContain("two-time NCHSAA champion")
     expect(lead).toContain("Dave Schultz")

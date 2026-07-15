@@ -129,4 +129,27 @@ describe("formatAthleteTimelineMarkdown", () => {
     const afterHeader = md.split("**2025 · Senior**\n")[1] ?? ""
     expect(afterHeader.startsWith("36–0\n")).toBe(true)
   })
+
+  it("does not invent an empty future Senior year for a Class of 2027 commit", () => {
+    const md = formatAthleteTimelineMarkdown(
+      buildAthleteTimelineEvents({
+        graduationYear: 2027,
+        nchsaa: [
+          {
+            year: 2026,
+            classification: "8A",
+            weight_class: "165lbs",
+            place: 1,
+            school: "Wakefield",
+            wrestler_name: "Tobin McNair",
+          },
+        ],
+        commit: { college: "Binghamton", year: 2027 },
+      }),
+      2027,
+    )
+    expect(md).toContain("Binghamton")
+    expect(md).toContain("**2026 · Junior**")
+    expect(md).not.toContain("**2027 · Senior**")
+  })
 })
