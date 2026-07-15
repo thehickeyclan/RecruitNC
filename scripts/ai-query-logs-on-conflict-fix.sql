@@ -146,7 +146,7 @@ begin
     payload->>'error_message',
     payload->>'handler_name',
     case
-      when payload ? 'success' and json_typeof(payload->'success') = 'boolean'
+      when payload ? 'success' and jsonb_typeof(payload->'success') = 'boolean'
         then (payload->>'success')::boolean
       when payload->>'success' in ('true','false')
         then (payload->>'success')::boolean
