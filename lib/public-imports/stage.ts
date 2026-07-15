@@ -3,7 +3,7 @@ import { diffDualTeamRows, diffPlacerRows, summarizeDiffs } from "./diff"
 import {
   inferYearFromText,
   parseDualTeamPayload,
-  parseNchsaaGuaranteedPlacesText,
+  parseNchsaaIndividualStatesText,
   parsePlacerJsonPayload,
 } from "./parse"
 import type { DatasetKey, DualTeamProposed, PlacerProposed, StagedDiffRow } from "./types"
@@ -98,7 +98,7 @@ export async function stageImportBatch(admin: SupabaseClient, input: StageInput)
         year ??
         inferYearFromText(input.source_url, input.source_label, input.text.slice(0, 500))
       if (year == null) throw new Error("Could not infer year — pass year explicitly")
-      proposed = parseNchsaaGuaranteedPlacesText(input.text, { year })
+      proposed = parseNchsaaIndividualStatesText(input.text, { year })
     } else {
       throw new Error("Placer staging requires JSON or page text")
     }

@@ -208,6 +208,115 @@ export function parseNchsaaGuaranteedPlacesText(
   return [...map.values()]
 }
 
+const FINALS_HEADER_RE =
+  /^((?:1A\/2A)|(?:1-4A)|(?:[1-8]A))\s+(\d{2,3})\s*$/i
+/** Winner (School) 41-1 won … over Loser (School) … */
+const FINALS_MATCH_RE =
+  /^(.+?)\s+\(([^)]+)\)\s+\d[\d\-]*\s+won\b[\s\S]*?\bover\s+(.+?)\s+\(([^)]+)\)/i
+
+function cleanSchool(s: string): string {
+  return s
+    .replace(/\s+High School$/i, "")
+    .replace(/\s+Middle and High School$/i, "")
+    .replace(/\s+Academy$/i, "")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
+function normalizeClassificationLabel(raw: string): string {
+  const t = raw.trim()
+  if (/^1-4A$/i.test(t)) return "1-4A"
+  if (/^1A\/2A$/i.test(t)) return "1A/2A"
+  return t.toUpperCase()
+}
+
+/**
+ * Parse NCHSAA "Championship Finals" blocks (common on 2026 classification pages).
+ * Yields place 1 (winner) and place 2 (finalist) per weight.
+ */
+export function parseNchsaaChampionshipFinalsText(
+  text: string,
+  opts: { year: number; defaultClassification?: string },
+): PlacerProposed[] {
+  const lines = text.replace(/\r/g, "").split("\n")
+  let classification = (opts.defaultClassification || "").trim()
+  let weight = ""
+  const out: PlacerProposed[] = []
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim()
+    if (!line) continue
+    if (/^team champions/i.test(line) || /^most outstanding/i.test(line)) {
+      weight = ""
+      continue
+    }
+    if (/^championship finals$/i.test(line)) continue
+
+    const hdr = line.match(FINALS_HEADER_RE) || line.match(CLASS_WEIGHT_RE)
+    if (hdr) {
+      classification = normalizeClassificationLabel(hdr[1])
+      weight = hdr[2]
+      continue
+    }
+
+    if (!weight || !classification) continue
+    if (!/\bwon\b/i.test(line) || !/\bover\b/i.test(line)) continue
+
+    const m = line.match(FINALS_MATCH_RE)
+    if (!m) continue
+    const champ = m[1].trim()
+    const champSchool = cleanSchool(m[2])
+    const runner = m[3].trim()
+    const runnerSchool = cleanSchool(m[4])
+    if (!champ || !champSchool) continue
+
+    out.push({
+      year: opts.year,
+      classification,
+      weight_class: weight,
+      place: 1,
+      wrestler_name: champ,
+      school: champSchool,
+    })
+    if (runner && runnerSchool) {
+      out.push({
+        year: opts.year,
+        classification,
+        weight_class: weight,
+        place: 2,
+        wrestler_name: runner,
+        school: runnerSchool,
+      })
+    }
+  }
+
+  const map = new Map<string, PlacerProposed>()
+  for (const r of out) {
+    map.set(`${r.year}|${r.classification}|${r.weight_class}|${r.place}`, r)
+  }
+  return [...map.values()]
+}
+
+/**
+ * Prefer Guaranteed Places (1–6) when present; fill missing slots from Championship Finals (1–2).
+ */
+export function parseNchsaaIndividualStatesText(
+  text: string,
+  opts: { year: number; defaultClassification?: string },
+): PlacerProposed[] {
+  const fromPlaces = parseNchsaaGuaranteedPlacesText(text, opts)
+  const fromFinals = parseNchsaaChampionshipFinalsText(text, opts)
+  const map = new Map<string, PlacerProposed>()
+  for (const r of fromFinals) {
+    map.set(`${r.year}|${r.classification}|${r.weight_class}|${r.place}`, r)
+  }
+  // Guaranteed Places overwrite finals for the same slot (more complete when available)
+  for (const r of fromPlaces) {
+    map.set(`${r.year}|${r.classification}|${r.weight_class}|${r.place}`, r)
+  }
+  return [...map.values()]
+}
+
 /** Loose year extraction from URL or label. */
 export function inferYearFromText(...parts: Array<string | null | undefined>): number | null {
   for (const p of parts) {

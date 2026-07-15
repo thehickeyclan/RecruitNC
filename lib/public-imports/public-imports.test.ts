@@ -3,7 +3,9 @@ import { diffDualTeamRows, diffPlacerRows, summarizeDiffs } from "./diff"
 import { namesLooselyEqual, schoolsLooselyEqual } from "./normalize"
 import {
   parseDualTeamPayload,
+  parseNchsaaChampionshipFinalsText,
   parseNchsaaGuaranteedPlacesText,
+  parseNchsaaIndividualStatesText,
   parsePlacerJsonPayload,
 } from "./parse"
 
@@ -83,6 +85,47 @@ Guaranteed Places
       wrestler_name: "Skyler Anderson",
       school: "Robbinsville",
     })
+  })
+
+  it("parses Championship Finals (place 1–2) from 2026-style pages", () => {
+    const text = `
+Championship Finals
+
+7A 138
+
+Tye Johnson (Cape Fear) 38-0 won by major decision over Aidan Szewczyk (Davie) 47-6 (MD 18-5)
+
+4A 175
+
+Lorenzo Alston (Uwharrie Charter Academy) 47-0 won by decision over Jacob Reigel (Mount Pleasant High School) 49-1 (Dec 8-1)
+`
+    const rows = parseNchsaaChampionshipFinalsText(text, { year: 2026 })
+    expect(rows).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          classification: "7A",
+          weight_class: "138",
+          place: 1,
+          wrestler_name: "Tye Johnson",
+          school: "Cape Fear",
+        }),
+        expect.objectContaining({
+          classification: "7A",
+          weight_class: "138",
+          place: 2,
+          wrestler_name: "Aidan Szewczyk",
+          school: "Davie",
+        }),
+        expect.objectContaining({
+          classification: "4A",
+          place: 1,
+          wrestler_name: "Lorenzo Alston",
+          school: "Uwharrie Charter",
+        }),
+      ]),
+    )
+    const merged = parseNchsaaIndividualStatesText(text, { year: 2026 })
+    expect(merged.filter((r) => r.place === 1)).toHaveLength(2)
   })
 })
 
