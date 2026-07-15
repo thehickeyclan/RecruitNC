@@ -98,4 +98,27 @@ describe("formatAthleteTimelineMarkdown", () => {
     expect(md).toContain("↓")
     expect(md).toContain("Fourth State Title")
   })
+
+  it("puts season record at the top of each year block", () => {
+    const md = formatAthleteTimelineMarkdown(
+      buildAthleteTimelineEvents({
+        graduationYear: 2025,
+        nchsaa: [
+          {
+            year: 2025,
+            classification: "4A",
+            weight_class: "138lbs",
+            place: 1,
+            school: "Cardinal Gibbons",
+            wrestler_name: "Liam Hickey",
+          },
+        ],
+        awards: [{ year: 2025, label: "Dave Schultz High School Excellence Award" }],
+        seasonRecords: [{ year: 2025, wins: 36, losses: 0, classLabel: "Senior" }],
+      }),
+      2025,
+    )
+    const afterHeader = md.split("**2025 · Senior**\n")[1] ?? ""
+    expect(afterHeader.startsWith("36–0\n")).toBe(true)
+  })
 })

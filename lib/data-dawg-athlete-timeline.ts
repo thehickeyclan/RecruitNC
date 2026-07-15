@@ -62,6 +62,7 @@ export type AthleteTimelineInput = {
 }
 
 const KIND_PRIORITY: Record<AthleteTimelineEvent["kind"], number> = {
+  record_book: 5,
   nchsaa: 10,
   mow: 20,
   nhsca: 30,
@@ -69,7 +70,6 @@ const KIND_PRIORITY: Record<AthleteTimelineEvent["kind"], number> = {
   fargo: 50,
   nc_united: 60,
   award: 70,
-  record_book: 80,
   commit: 90,
 }
 
@@ -367,14 +367,10 @@ export function buildAthleteTimelineEvents(input: AthleteTimelineInput): Athlete
   for (const s of input.seasonRecords ?? []) {
     const y = asYear(s.year)
     const wins = s.wins != null ? Number(s.wins) : null
-    const losses = s.losses != null ? Number(s.losses) : null
-    const rec = String(s.record ?? "").trim()
-    if (wins != null && losses === 0 && wins > 0) {
-      const classBit = s.classLabel ? `${s.classLabel} ` : ""
-      push(y, "record_book", `🏆 Undefeated ${classBit}(${wins}–0)`.replace("  ", " "))
-    } else if (rec || wins != null) {
-      push(y, "record_book", `Single-season: ${rec || `${wins}-${losses ?? "?"}`}`)
-    }
+    const losses = s.losses != null ? Number(s.losses) : 0
+    if (wins == null || !Number.isFinite(wins) || y == null) continue
+    // Season W-L sits at the top of each year block (media-guide style).
+    push(y, "record_book", `${Math.floor(wins)}–${Math.floor(losses)}`)
   }
 
   if (input.commit?.college?.trim()) {

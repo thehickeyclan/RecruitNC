@@ -63,27 +63,35 @@ const liam = {
 }
 
 describe("buildAnalystLeadParagraph", () => {
-  it("leads with significance and packs record + commit", () => {
+  it("stacks verified honors for a four-timer", () => {
     const lead = buildAnalystLeadParagraph(sly)
-    expect(lead).toContain("most accomplished")
-    expect(lead).toContain("Class of 2026")
-    expect(lead).toContain("four-time NCHSAA State Champion at Stuart Cramer")
+    expect(lead).toContain("finished his high school career as")
+    expect(lead).toContain("4× NCHSAA State Champion")
+    expect(lead).toContain("3× NHSCA All-American")
     expect(lead).toMatch(/207.6/)
     expect(lead).toContain("Appalachian State")
+    expect(lead).not.toMatch(/established himself as one of the top/i)
   })
 })
 
 describe("buildCareerSnapshotMarkdown", () => {
-  it("puts career record near the top", () => {
+  it("renders a visual snapshot with labeled blocks", () => {
     const snap = buildCareerSnapshotMarkdown(sly)
-    expect(snap.split("\n")[1]).toMatch(/207.6/)
-    expect(snap).toContain("4× NCHSAA State Champion")
-    expect(snap).toContain("College: Appalachian State")
+    expect(snap).toContain("Career snapshot:")
+    expect(snap).toContain("🏆 4× NCHSAA State Champion")
+    expect(snap).toContain("📈 Career record")
+    expect(snap).toMatch(/207.6/)
+    expect(snap).toContain("🎓 College")
+    expect(snap).toContain("Appalachian State")
   })
 
   it("lists college career path for transfers", () => {
     const snap = buildCareerSnapshotMarkdown(liam)
-    expect(snap).toContain("College career: UNC Chapel Hill → NC State")
+    expect(snap).toContain("🎓 College")
+    expect(snap).toContain("UNC Chapel Hill → NC State")
+    expect(snap).toContain("🏅 Dave Schultz Award Winner")
+    expect(snap).toContain("🇺🇸 NHSCA")
+    expect(snap).toContain("2× All-American")
   })
 })
 
@@ -91,11 +99,11 @@ describe("buildHistoricalContextNarrative", () => {
   it("connects podium → titles → senior undefeated → duals → college for Liam", () => {
     const ctx = buildHistoricalContextNarrative(liam)
     expect(ctx).toContain("Historical context:")
-    expect(ctx).toMatch(/freshman and sophomore/i)
-    expect(ctx).toMatch(/back-to-back/i)
+    expect(ctx).toMatch(/After two third-place finishes/i)
+    expect(ctx).toMatch(/consecutive state championships/i)
     expect(ctx).toMatch(/36.0/)
     expect(ctx).toContain("Dave Schultz")
-    expect(ctx).toContain("Helped Cardinal Gibbons capture the 2025")
+    expect(ctx).toContain("key role in Cardinal Gibbons' 2025")
     expect(ctx).toContain("UNC Chapel Hill")
     expect(ctx).toContain("NC State")
   })
@@ -113,23 +121,31 @@ describe("buildNotableAchievementsMarkdown", () => {
 })
 
 describe("buildDevelopmentPathMarkdown", () => {
-  it("shows high school, club, blue, national team, college path", () => {
+  it("groups NC United Blue + National Team under one section", () => {
     const d = buildDevelopmentPathMarkdown(liam)
     expect(d).toContain("Development path:")
     expect(d).toContain("Cardinal Gibbons")
     expect(d).toContain("Team Excel")
-    expect(d).toContain("Blue Team")
-    expect(d).toContain("National Team")
+    expect(d).toContain("NC United")
+    expect(d).toContain("🔵 Blue Team")
+    expect(d).toContain("🇺🇸 National Team")
+    expect(d).toContain("• Ultimate Club Duals")
+    expect(d).toContain("• NHSCA Duals")
     expect(d).toContain("UNC Chapel Hill → NC State")
   })
 })
 
 describe("buildHistoricalRankingsMarkdown", () => {
-  it("includes win percentage", () => {
+  it("includes win percentage and class rank labels", () => {
     const r = buildHistoricalRankingsMarkdown(liam)
-    expect(r).toContain("Career win %")
+    expect(r).toContain("Career Wins")
+    expect(r).toContain("179")
+    expect(r).toContain("Top 50 in NC history")
+    expect(r).toContain("Career Win %")
     expect(r).toContain("96.8%")
-    expect(r).toContain("#2 RecruitNC")
+    expect(r).toContain("Class of 2025")
+    expect(r).toContain("RecruitNC #2")
+    expect(r).toContain("State Titles")
   })
 })
 
@@ -144,6 +160,18 @@ describe("buildNationalResumeMarkdown", () => {
     })
     expect(md).toContain("2× NHSCA All-American")
     expect(md).toContain("Best finish: 4th (2025)")
+  })
+
+  it("picks best Super32 record, not the first chronological row", () => {
+    const md = buildNationalResumeMarkdown({
+      super32: [
+        { year: 2023, placement: "", record: "0-2", weight: "126" },
+        { year: 2024, placement: "", record: "3-2", weight: "132" },
+      ],
+      graduationYear: 2025,
+    })
+    expect(md).toContain("Best listed result: 3–2")
+    expect(md).not.toContain("Best listed result: 0–2")
   })
 })
 
@@ -169,8 +197,13 @@ describe("buildAnalystClosingSentence", () => {
 })
 
 describe("buildAnalystLeadParagraph transfer", () => {
-  it("narrates collegiate path UNC then NC State", () => {
+  it("narrates collegiate path UNC then NC State with fact stack", () => {
     const lead = buildAnalystLeadParagraph(liam)
-    expect(lead).toContain("continued his career collegiately at UNC Chapel Hill and then NC State")
+    expect(lead).toContain("finished his high school career as")
+    expect(lead).toContain("2× NCHSAA State Champion")
+    expect(lead).toContain("Dave Schultz")
+    expect(lead).toContain("2× NHSCA All-American")
+    expect(lead).toMatch(/179.6/)
+    expect(lead).toContain("UNC Chapel Hill and NC State")
   })
 })
