@@ -2,9 +2,8 @@
  * Write helpers for `ai_query_logs`. Always await these from API routes —
  * fire-and-forget (`void write…`) is dropped by Vercel when the response returns.
  *
- * Avoid supabase-js `.upsert()` Prefer: resolution=* when the table lacks a matching
- * unique constraint — that surfaces as 42P10 ON CONFLICT errors and stops analytics.
- * New rows always carry an explicit `id` and are inserted via REST with Prefer: return=minimal.
+ * Prefer RPC `insert_ai_query_log` (plain SQL INSERT). PostgREST table POST can still
+ * emit Prefer: resolution=* → ON CONFLICT against a PARTIAL unique index and fail with 42P10.
  */
 
 import { randomUUID } from "crypto"
@@ -27,7 +26,7 @@ function getServiceConfig(): { url: string; key: string } | { error: string } {
   return { url: url.replace(/\/$/, ""), key }
 }
 
-function buildRow(entry: AiQueryLogInsert) {
+function buildFields(entry: AiQueryLogInsert) {
   const success =
     entry.success != null
       ? entry.success
@@ -36,9 +35,9 @@ function buildRow(entry: AiQueryLogInsert) {
           errorMessage: entry.error_message,
         })
 
-  const now = new Date().toISOString()
+  const messageId = entry.message_id?.trim() || null
+
   return {
-    id: randomUUID(),
     query: entry.query,
     project: entry.project ?? "recruit-nc",
     url: entry.url ?? null,
@@ -46,18 +45,87 @@ function buildRow(entry: AiQueryLogInsert) {
     query_type: entry.query_type ?? null,
     response_time_ms: entry.response_time_ms ?? null,
     feedback: entry.feedback ?? null,
-    message_id: entry.message_id ?? null,
+    message_id: messageId,
     error_message: entry.error_message?.trim() || null,
     handler_name: entry.handler_name ?? null,
     success,
-    timestamp: entry.timestamp ?? now,
-    created_at: now,
   }
 }
 
-async function restInsert(row: Record<string, unknown>): Promise<{ ok: true } | { ok: false; status: number; error: string }> {
+async function parseError(res: Response): Promise<string> {
+  const text = await res.text().catch(() => "")
+  let message = text || `HTTP ${res.status}`
+  try {
+    const j = JSON.parse(text) as { message?: string; error?: string; hint?: string; details?: string }
+    message = j.message || j.error || message
+    if (j.hint) message = `${message} (${j.hint})`
+    if (j.details) message = `${message} [${j.details}]`
+  } catch {
+    /* keep text */
+  }
+  return message
+}
+
+/** Plain SQL INSERT via security definer RPC — no PostgREST ON CONFLICT. */
+async function rpcInsert(fields: ReturnType<typeof buildFields>): Promise<
+  { ok: true; id: string } | { ok: false; status: number; error: string }
+> {
   const cfg = getServiceConfig()
   if ("error" in cfg) return { ok: false, status: 0, error: cfg.error }
+
+  const res = await fetch(`${cfg.url}/rest/v1/rpc/insert_ai_query_log`, {
+    method: "POST",
+    headers: {
+      apikey: cfg.key,
+      Authorization: `Bearer ${cfg.key}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      p_query: fields.query,
+      p_project: fields.project,
+      p_url: fields.url,
+      p_response: fields.response,
+      p_query_type: fields.query_type,
+      p_response_time_ms: fields.response_time_ms,
+      p_feedback: fields.feedback,
+      p_message_id: fields.message_id,
+      p_error_message: fields.error_message,
+      p_handler_name: fields.handler_name,
+      p_success: fields.success,
+    }),
+  })
+
+  if (!res.ok) {
+    return { ok: false, status: res.status, error: await parseError(res) }
+  }
+
+  const body = await res.text().catch(() => "")
+  // PostgREST returns a JSON string UUID (quoted) or bare uuid
+  let id = body.trim()
+  try {
+    const parsed = JSON.parse(body) as unknown
+    if (typeof parsed === "string") id = parsed
+  } catch {
+    id = id.replace(/^"|"$/g, "")
+  }
+  if (!id || id.length < 8) id = randomUUID()
+  return { ok: true, id }
+}
+
+/** Fallback table POST — no Prefer header at all (avoids resolution=* / ON CONFLICT). */
+async function restInsert(fields: ReturnType<typeof buildFields>): Promise<
+  { ok: true; id: string } | { ok: false; status: number; error: string }
+> {
+  const cfg = getServiceConfig()
+  if ("error" in cfg) return { ok: false, status: 0, error: cfg.error }
+
+  const id = randomUUID()
+  const now = new Date().toISOString()
+  const row = {
+    id,
+    ...fields,
+    timestamp: now,
+  }
 
   const res = await fetch(`${cfg.url}/rest/v1/ai_query_logs`, {
     method: "POST",
@@ -65,42 +133,35 @@ async function restInsert(row: Record<string, unknown>): Promise<{ ok: true } | 
       apikey: cfg.key,
       Authorization: `Bearer ${cfg.key}`,
       "Content-Type": "application/json",
-      // Critical: do NOT send Prefer: resolution=ignore-duplicates (needs ON CONFLICT target)
-      Prefer: "return=minimal",
+      // Intentionally omit Prefer entirely
     },
     body: JSON.stringify(row),
   })
 
-  if (res.ok || res.status === 201) return { ok: true }
-
-  const text = await res.text().catch(() => "")
-  let message = text || `HTTP ${res.status}`
-  try {
-    const j = JSON.parse(text) as { message?: string; error?: string; hint?: string }
-    message = j.message || j.error || message
-    if (j.hint) message = `${message} (${j.hint})`
-  } catch {
-    /* keep text */
-  }
-  return { ok: false, status: res.status, error: message }
+  if (res.ok || res.status === 201) return { ok: true, id }
+  return { ok: false, status: res.status, error: await parseError(res) }
 }
 
 export async function writeAiQueryLog(entry: AiQueryLogInsert): Promise<WriteAiQueryLogResult> {
   try {
-    const row = buildRow(entry)
+    const fields = buildFields(entry)
 
-    let result = await restInsert(row)
+    // 1) RPC first
+    let result = await rpcInsert(fields)
 
-    // Unique message_id collision or Prefer ghosts → retry without message_id
-    if (!result.ok && /ON CONFLICT|duplicate|unique/i.test(result.error) && row.message_id) {
-      const { message_id: _m, created_at: _c, ...withoutMessageId } = row
-      result = await restInsert({ ...withoutMessageId, id: randomUUID(), timestamp: new Date().toISOString() })
-    }
+    // 2) If RPC missing, fall back to plain REST insert
+    if (
+      !result.ok &&
+      (/insert_ai_query_log|PGRST202|Could not find the function|404/i.test(result.error) ||
+        result.status === 404)
+    ) {
+      console.warn("[RecruitNC] insert_ai_query_log RPC missing — falling back to REST insert")
+      result = await restInsert(fields)
 
-    // Table may lack created_at — retry without it
-    if (!result.ok && /created_at/i.test(result.error)) {
-      const { created_at: _c, ...withoutCreated } = row
-      result = await restInsert({ ...withoutCreated, id: randomUUID(), timestamp: new Date().toISOString() })
+      // Duplicate message_id → retry without it
+      if (!result.ok && /duplicate|unique|23505/i.test(result.error) && fields.message_id) {
+        result = await restInsert({ ...fields, message_id: null })
+      }
     }
 
     if (!result.ok) {
@@ -114,7 +175,7 @@ export async function writeAiQueryLog(entry: AiQueryLogInsert): Promise<WriteAiQ
       console.warn("[RecruitNC] ai_query_logs insert failed:", result.error)
       return { ok: false, error: result.error }
     }
-    return { ok: true, id: String(row.id) }
+    return { ok: true, id: result.id }
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e)
     console.warn("[RecruitNC] ai_query_logs write failed:", msg)
@@ -135,14 +196,12 @@ export async function updateAiQueryLogFeedback(messageId: string, feedback: stri
           apikey: cfg.key,
           Authorization: `Bearer ${cfg.key}`,
           "Content-Type": "application/json",
-          Prefer: "return=minimal",
         },
         body: JSON.stringify({ feedback }),
       },
     )
     if (!res.ok) {
-      const text = await res.text().catch(() => "")
-      console.warn("[RecruitNC] ai_query_logs feedback update failed:", text || res.status)
+      console.warn("[RecruitNC] ai_query_logs feedback update failed:", await parseError(res))
       return false
     }
     return true
