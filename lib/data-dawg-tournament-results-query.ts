@@ -154,6 +154,14 @@ function isTournamentResultsListingQuery(lower: string): boolean {
     /(?:nhsca\s+)?all[\s-]?americans?\s+(?:from|in|at|for)\s+(?:the\s+)?(?:year\s+)?\d{4}/.test(lower) ||
     /(?:nchsaa\s+)?state\s+(?:tournament|championships?|results|placers?)\b/.test(lower) ||
     /\d{4}\s+(?:nchsaa\s+)?state\s+(?:tournament|championships?|results)\b/.test(lower) ||
+    // "Show me 2024 NCHSAA Results" / "2024 NCHSAA results" (no "state" required)
+    /\d{4}\s+nchsaa\b/.test(lower) ||
+    (/\bnchsaa\b/.test(lower) && /\bresults?\b/.test(lower) && YEAR_RE.test(lower)) ||
+    /(?:show|list|get)\s+(?:me\s+)?(?:the\s+)?(?:\d{4}\s+)?nchsaa\b/.test(lower) ||
+    // "show me 2024 1A results" / "NCHSAA 2024 2A" (division without "state"/"placers")
+    /(?:show|list|get)\s+(?:me\s+)?(?:the\s+)?\d{4}\s+\d+[aA]\s+results?\b/.test(lower) ||
+    /\d{4}\s+\d+[aA]\s+results?\b/.test(lower) ||
+    (/\bnchsaa\b/.test(lower) && YEAR_RE.test(lower) && /\b\d+[aA]\b/.test(lower)) ||
     /\b\d+[aA]\s+state\s+(?:placers?|results?|championships?)\b/.test(lower) ||
     /(?:show|list|get|all)\s+(?:me\s+)?(?:all\s+)?(?:the\s+)?\d+[aA]\s+state\s+placers?\b/.test(lower) ||
     /(?:show|list|get|all)\s+(?:me\s+)?(?:all\s+)?\d+[aA]\s+placers?\b/.test(lower) ||

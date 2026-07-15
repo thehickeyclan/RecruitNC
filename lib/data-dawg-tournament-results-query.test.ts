@@ -75,6 +75,42 @@ describe("parseTournamentResultsQuery", () => {
     })
   })
 
+  it("parses Show me 2024 NCHSAA Results without requiring 'state'", () => {
+    expect(parseTournamentResultsQuery("Show me 2024 NCHSAA Results")).toEqual({
+      kind: "nchsaa_state",
+      year: 2024,
+      gender: "men",
+      classification: null,
+    })
+  })
+
+  it("parses show NCHSAA 2024 results (nchsaa before year)", () => {
+    expect(parseTournamentResultsQuery("show NCHSAA 2024 results")).toEqual({
+      kind: "nchsaa_state",
+      year: 2024,
+      gender: "men",
+      classification: null,
+    })
+  })
+
+  it("parses division-only year results without state/nchsaa words", () => {
+    expect(parseTournamentResultsQuery("show me 2024 1A results")).toEqual({
+      kind: "nchsaa_state",
+      year: 2024,
+      gender: "men",
+      classification: "1A",
+    })
+  })
+
+  it("parses NCHSAA year + division without results keyword", () => {
+    expect(parseTournamentResultsQuery("NCHSAA 2024 2A")).toEqual({
+      kind: "nchsaa_state",
+      year: 2024,
+      gender: "men",
+      classification: "2A",
+    })
+  })
+
   it("parses 2017 NCHSAA state results phrasing", () => {
     expect(parseTournamentResultsQuery("What were the 2017 NCHSAA state results?")).toEqual({
       kind: "nchsaa_state",
