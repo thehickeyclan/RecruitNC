@@ -14,6 +14,58 @@ export type AthleteCollegeCommit = {
   source: "athletes" | "wrestling_commits"
 }
 
+function collegeWithDivision(college: string, division?: string | null): string {
+  const c = college.trim()
+  const div = (division ?? "").trim()
+  if (!div || c.toLowerCase().includes(div.toLowerCase())) return c
+  return `${c} (${div})`
+}
+
+/**
+ * Chronological college path: original school first when there was a transfer.
+ * `college` = current school; `previousCollege` = where they first committed.
+ */
+export function formatCommitChronologyLine(
+  college: string,
+  previousCollege?: string | null,
+  division?: string | null,
+): string {
+  const current = collegeWithDivision(college, division)
+  const prev = String(previousCollege ?? "").trim()
+  if (prev && prev.toLowerCase() !== college.trim().toLowerCase()) {
+    return `College career: ${prev} → ${current}`
+  }
+  return `College: ${current}`
+}
+
+/** Clause for analyst lead / closer (no leading capital required). */
+export function formatCommitNarrativeClause(
+  college: string,
+  previousCollege?: string | null,
+  division?: string | null,
+): string {
+  const current = collegeWithDivision(college, division)
+  const prev = String(previousCollege ?? "").trim()
+  if (prev && prev.toLowerCase() !== college.trim().toLowerCase()) {
+    return `continued his career collegiately at ${prev} and then ${current}`
+  }
+  return `committed to ${current}`
+}
+
+/** Timeline label — progression first when a transfer exists. */
+export function formatCommitTimelineLabel(
+  college: string,
+  previousCollege?: string | null,
+  division?: string | null,
+): string {
+  const current = collegeWithDivision(college, division)
+  const prev = String(previousCollege ?? "").trim()
+  if (prev && prev.toLowerCase() !== college.trim().toLowerCase()) {
+    return `🎓 ${prev} → ${current}`
+  }
+  return `🎓 ${current}`
+}
+
 export async function resolveAthleteCollegeCommit(
   admin: SupabaseClient,
   opts: {

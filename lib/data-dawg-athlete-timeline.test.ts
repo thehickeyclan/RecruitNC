@@ -66,12 +66,12 @@ describe("buildAthleteTimelineEvents progression", () => {
 
     const labels = events.map((e) => e.label)
     expect(labels.some((l) => l.includes("First State Championship"))).toBe(true)
-    expect(labels.some((l) => l.includes("Repeat State Champion"))).toBe(true)
+    expect(labels.some((l) => l.includes("Repeated as State Champion") || l.includes("Repeat State Champion"))).toBe(true)
     expect(labels.some((l) => l.includes("Third State Title"))).toBe(true)
     expect(labels.some((l) => l.includes("Fourth State Title"))).toBe(true)
     expect(labels.some((l) => l.includes("First NHSCA All-American"))).toBe(true)
     expect(labels.some((l) => l.includes("Runner-up"))).toBe(true)
-    expect(labels.some((l) => l.includes("🤼 Appalachian State"))).toBe(true)
+    expect(labels.some((l) => l.includes("🎓 Appalachian State") || l.includes("🤼 Appalachian State"))).toBe(true)
   })
 
   it("skips thin Participated rows", () => {
@@ -93,7 +93,7 @@ describe("formatAthleteTimelineMarkdown", () => {
       ],
       2026,
     )
-    expect(md).toContain("Career timeline:")
+    expect(md).toContain("Career progression:")
     expect(md).toContain("**2023 · Freshman**")
     expect(md).toContain("↓")
     expect(md).toContain("Fourth State Title")

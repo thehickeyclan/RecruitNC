@@ -5,6 +5,7 @@
 
 import type { NchsaaRowForProfile } from "@/lib/nchsaa-results-json"
 import type { TournamentResultForDisplay } from "@/lib/public-profile-data"
+import { formatCommitTimelineLabel } from "@/lib/data-dawg-college-commit"
 
 export type AthleteTimelineEvent = {
   year: number
@@ -47,14 +48,16 @@ export type AthleteTimelineInput = {
   commit?: {
     college: string
     division?: string | null
+    previousCollege?: string | null
     /** Year to place the commit on the timeline (usually grad year). */
     year?: number | null
   } | null
-  /** Single-season record-book highlights (verified table rows). */
   seasonRecords?: Array<{
     year?: string | number | null
     record?: string | null
     wins?: number | null
+    losses?: number | null
+    classLabel?: string | null
   }>
 }
 
@@ -123,29 +126,37 @@ function detailBits(cls: string, weight: string): string {
   return bits ? ` (${bits})` : ""
 }
 
-/** Progression-aware state title labels (First / Repeat / Third / Fourth). */
 function nchsaaTitleProgressionLabel(
   titleIndex: number,
   r: NchsaaRowForProfile,
+  hadPriorPodium: boolean,
 ): string {
   const cls = (r.classification || "").toString().trim()
   const w = weightBit(r.weight_class)
   const detail = detailBits(cls, w)
+  if (titleIndex === 0 && hadPriorPodium) {
+    return `🏆 Broke through for first title${detail}`
+  }
   if (titleIndex === 0) return `🏆 First State Championship${detail}`
-  if (titleIndex === 1) return `🏆 Repeat State Champion${detail}`
+  if (titleIndex === 1) return `🏆 Repeated as State Champion${detail}`
   if (titleIndex === 2) return `🏆 Third State Title${detail}`
   if (titleIndex === 3) return `🏆 Fourth State Title${detail}`
   return `🏆 ${titleIndex + 1}th State Title${detail}`
 }
 
-function nchsaaPlacerLabel(r: NchsaaRowForProfile): string | null {
+function nchsaaPlacerProgressionLabel(
+  r: NchsaaRowForProfile,
+  podiumIndex: number,
+): string | null {
   if (r.place == null || r.place < 2 || r.place > 6) return null
   const cls = (r.classification || "").toString().trim()
   const w = weightBit(r.weight_class)
   const detail = detailBits(cls, w)
   const medal = r.place === 2 ? "🥈" : r.place === 3 ? "🥉" : "🏅"
   const placeText = r.place === 2 ? "2nd" : r.place === 3 ? "3rd" : `${r.place}th`
-  return `${medal} State ${placeText} place${detail}`
+  if (podiumIndex === 0) return `${medal} State ${placeText}${detail}`
+  if (podiumIndex === 1) return `${medal} Returned to podium (${placeText})${detail}`
+  return `${medal} State ${placeText}${detail}`
 }
 
 function parsePlaceNum(placement: unknown): number | null {
@@ -277,15 +288,26 @@ export function buildAthleteTimelineEvents(input: AthleteTimelineInput): Athlete
     })
   }
 
-  const stateTitles = [...(input.nchsaa ?? [])]
-    .filter((r) => r.place === 1)
+  const nchsaaChrono = [...(input.nchsaa ?? [])]
+    .filter((r) => r.place != null && r.place >= 1 && r.place <= 6)
     .sort((a, b) => a.year - b.year)
-  stateTitles.forEach((r, i) => {
-    push(asYear(r.year), "nchsaa", nchsaaTitleProgressionLabel(i, r))
-  })
-  for (const r of input.nchsaa ?? []) {
-    if (r.place === 1) continue
-    push(asYear(r.year), "nchsaa", nchsaaPlacerLabel(r))
+
+  const hadPriorPodiumBeforeFirstTitle = (() => {
+    const firstTitleIdx = nchsaaChrono.findIndex((r) => r.place === 1)
+    if (firstTitleIdx <= 0) return false
+    return nchsaaChrono.slice(0, firstTitleIdx).some((r) => (r.place ?? 0) >= 2)
+  })()
+
+  let titleIndex = 0
+  let podiumIndex = 0
+  for (const r of nchsaaChrono) {
+    if (r.place === 1) {
+      push(asYear(r.year), "nchsaa", nchsaaTitleProgressionLabel(titleIndex, r, hadPriorPodiumBeforeFirstTitle))
+      titleIndex += 1
+    } else {
+      push(asYear(r.year), "nchsaa", nchsaaPlacerProgressionLabel(r, podiumIndex))
+      podiumIndex += 1
+    }
   }
 
   const nhscaSorted = [...(input.nhsca ?? [])].sort((a, b) => a.year - b.year)
@@ -344,20 +366,31 @@ export function buildAthleteTimelineEvents(input: AthleteTimelineInput): Athlete
 
   for (const s of input.seasonRecords ?? []) {
     const y = asYear(s.year)
+    const wins = s.wins != null ? Number(s.wins) : null
+    const losses = s.losses != null ? Number(s.losses) : null
     const rec = String(s.record ?? "").trim()
-    if (!rec && s.wins == null) continue
-    push(y, "record_book", `Single-season record book: ${rec || `${s.wins} wins`}`)
+    if (wins != null && losses === 0 && wins > 0) {
+      const classBit = s.classLabel ? `${s.classLabel} ` : ""
+      push(y, "record_book", `🏆 Undefeated ${classBit}(${wins}–0)`.replace("  ", " "))
+    } else if (rec || wins != null) {
+      push(y, "record_book", `Single-season: ${rec || `${wins}-${losses ?? "?"}`}`)
+    }
   }
 
   if (input.commit?.college?.trim()) {
-    const college = input.commit.college.trim()
-    const div = (input.commit.division ?? "").trim()
-    const divBit = div && !college.toLowerCase().includes(div.toLowerCase()) ? ` (${div})` : ""
     const y =
       asYear(input.commit.year) ??
       (input.graduationYear != null ? Math.floor(Number(input.graduationYear)) : null)
     if (y != null) {
-      push(y, "commit", `🤼 ${college}${divBit}`)
+      push(
+        y,
+        "commit",
+        formatCommitTimelineLabel(
+          input.commit.college,
+          input.commit.previousCollege,
+          input.commit.division,
+        ),
+      )
     }
   }
 
@@ -397,7 +430,7 @@ export function formatAthleteTimelineMarkdown(
     blocks.push([header, ...items].join("\n"))
   }
 
-  return ["Career timeline:", "", blocks.join("\n\n↓\n\n")].join("\n")
+  return ["Career progression:", "", blocks.join("\n\n↓\n\n")].join("\n")
 }
 
 /** Build + format in one call. */
