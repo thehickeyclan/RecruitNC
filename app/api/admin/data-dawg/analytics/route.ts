@@ -79,6 +79,7 @@ export async function GET(request: NextRequest) {
         logs: [] as AiQueryLogRow[],
         total: 0,
         allTimeTotal: 0,
+        newestTimestamp: null,
         hasMore: false,
       })
     }
@@ -107,6 +108,7 @@ export async function GET(request: NextRequest) {
   let positiveFeedback = 0
   let negativeFeedback = 0
   let withFeedback = 0
+  let newestTimestamp: string | null = null
   try {
     ;[total, allTimeTotal, successful, failed, positiveFeedback, negativeFeedback, withFeedback] =
       await Promise.all([
@@ -118,6 +120,16 @@ export async function GET(request: NextRequest) {
         countExact({ eq: ["feedback", "negative"] }),
         countExact({ notNull: "feedback" }),
       ])
+
+    const newestQ = await admin
+      .from("ai_query_logs")
+      .select("timestamp")
+      .order("timestamp", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (!newestQ.error && newestQ.data?.timestamp) {
+      newestTimestamp = String(newestQ.data.timestamp)
+    }
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e)
     console.error("[RecruitNC] data-dawg analytics counts", msg)
@@ -225,6 +237,7 @@ export async function GET(request: NextRequest) {
     logs,
     total: filtered,
     allTimeTotal,
+    newestTimestamp,
     hasMore: offset + logs.length < filtered,
     offset,
     limit,

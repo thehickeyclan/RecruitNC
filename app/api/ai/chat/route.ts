@@ -4429,14 +4429,84 @@ CRITICAL: Data Dawg can answer questions about ANY of these data sources, regard
       }
     }
     
-    // CRITICAL PRE-FILTER: Handle multiple-time state champion queries
-    // Match patterns like: "4x state champs", "3x champions", "2x state champions", etc.
-    // Check if query has specific filters (division and/or weight) - these should NOT go to multiple-time handler
+    // Division/weight filters share the multi-time placer + champ pre-filters below
     const hasSpecificFilters = lowerQuestion.match(/\d+[aA]\s+\d+lbs/i) || // "4a 126lbs"
                                lowerQuestion.match(/\d+lbs.*\d+[aA]/i) || // "126lbs 4a"
                                lowerQuestion.match(/\d+[aA].*at\s+\d+lbs/i) || // "4a at 126lbs"
                                lowerQuestion.match(/at\s+\d+lbs.*\d+[aA]/i) || // "at 126lbs 4a"
                                (lowerQuestion.match(/\d+[aA]/i) && lowerQuestion.match(/\d+lbs/i)) // Has both division and weight
+
+    // CRITICAL PRE-FILTER: Handle multiple-time state placer queries (before champs —
+    // "4x state place winners" must not fall into champion logic).
+    const isMultipleTimeStatePlacerQuery =
+      !hasSpecificFilters &&
+      !lowerQuestion.includes("nhsca") &&
+      !lowerQuestion.includes("all american") &&
+      !lowerQuestion.includes("all-american") &&
+      !/\bchamp(ion|s|ions)?\b/i.test(lowerQuestion) &&
+      (/\d+x\s+(state\s+)?(placers?|place\s+winners?)/i.test(lowerQuestion) ||
+        /(how many|who|list|show).*\d+.*state\s+(placers?|place\s+winners?)/i.test(lowerQuestion) ||
+        /(\d+)\s+time.*state\s+(placers?|place\s+winners?)/i.test(lowerQuestion) ||
+        /four[\s-]?time\s+state\s+(placers?|place\s+winners?)/i.test(lowerQuestion))
+
+    if (isMultipleTimeStatePlacerQuery) {
+      const wantsCount = /\b(how many|count|number of)\b/i.test(lowerQuestion)
+      handlerName = wantsCount ? "state_placer_count" : "state_placer_records"
+      console.log("[AI] ✅ Pre-filter detected multiple-time state placer query")
+      try {
+        const numberMatch = lowerQuestion.match(/(\d+)x|(\d+)\s+time|four[\s-]?time/i)
+        let targetCount = 4
+        if (numberMatch) {
+          if (/four/i.test(numberMatch[0])) targetCount = 4
+          else targetCount = parseInt(numberMatch[1] || numberMatch[2] || "4", 10)
+        }
+        if (wantsCount) {
+          const { handleStatePlacerCount } = await import("./handlers/state-placer-count")
+          const countResult = await handleStatePlacerCount(
+            { championshipCount: targetCount },
+            request,
+            messageId,
+          )
+          const summary =
+            (countResult.results?.[0] as { summary?: string } | undefined)?.summary ||
+            `There are ${countResult.aggregateResult?.count ?? 0} ${targetCount}x state placers.`
+          return NextResponse.json({
+            answer: summary,
+            messageId: messageId || `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            queryType: "state_placer_count",
+            ...countResult,
+          })
+        }
+        const { handleStatePlacerRecords } = await import("./handlers/state-placer-records")
+        const placerResult = await handleStatePlacerRecords(
+          { championshipCount: targetCount },
+          request,
+          messageId,
+        )
+        if (placerResult.results?.length) {
+          const { formatSuggestedHandlerAnswer } = await import(
+            "@/lib/data-dawg-suggested-handler-answer"
+          )
+          const answer =
+            formatSuggestedHandlerAnswer({
+              results: placerResult.results,
+              queryType: "state_placer_records",
+            }) ||
+            `Found ${placerResult.results.length} ${targetCount}x state placers.`
+          return NextResponse.json({
+            answer,
+            messageId: messageId || `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            queryType: "state_placer_records",
+            results: placerResult.results,
+          })
+        }
+      } catch (e) {
+        console.error("[AI] state placer pre-filter error:", e)
+      }
+    }
+
+    // CRITICAL PRE-FILTER: Handle multiple-time state champion queries
+    // Match patterns like: "4x state champs", "3x champions", "2x state champions", etc.
     
     // But exclude NHSCA/All-American queries (handled separately)
     const isMultipleTimeStateChampQuery = 
@@ -4444,6 +4514,8 @@ CRITICAL: Data Dawg can answer questions about ANY of these data sources, regard
       !lowerQuestion.includes("nhsca") &&
       !lowerQuestion.includes("all american") &&
       !lowerQuestion.includes("all-american") &&
+      !/\bplacers?\b/i.test(lowerQuestion) &&
+      !/place\s+winners?/i.test(lowerQuestion) &&
       (/\d+x\s+(state\s+)?(champ|champions?)/i.test(lowerQuestion) ||
        /(how many|who|list|show).*(\d+).*state\s+(champ|champions?)/i.test(lowerQuestion) ||
        /multiple.*time.*state\s+(champ|champions?)/i.test(lowerQuestion) ||

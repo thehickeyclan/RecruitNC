@@ -195,7 +195,7 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
     function: {
       name: "nchsaa_multi_time_state_champions",
       description:
-        "List ALL North Carolina wrestlers who won exactly N individual NCHSAA state championships (place=1), for N = 2, 3, or 4. Use for questions like 'who are the four-time state champions?', '4x state champs', 'three-time state champs', 'how many 4x champs' (call with times=4 then cite total_wrestlers). Does not require a wrestler name.",
+        "List ALL North Carolina wrestlers who won exactly N individual NCHSAA state championships (place=1), for N = 2, 3, or 4. Use for questions like 'who are the four-time state champions?', '4x state champs', 'three-time state champs', 'how many 4x champs' (call with times=4 then cite total_wrestlers). Does not require a wrestler name. Do NOT use for '4x state placers' / 'place winners' — use nchsaa_multi_time_state_placers.",
       parameters: {
         type: "object",
         additionalProperties: false,
@@ -203,6 +203,26 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
           times: {
             type: "integer",
             description: "Exact title count: 2, 3, or 4 (e.g. 4 for four-time state champions).",
+            enum: [2, 3, 4],
+          },
+        },
+        required: ["times"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "nchsaa_multi_time_state_placers",
+      description:
+        "List ALL North Carolina wrestlers with exactly N individual NCHSAA state places (place 1–6), for N = 2, 3, or 4. Use for 'who are the 4x state placers?', 'four-time state place winners', '3x state placers', 'how many 4x state placers'. Not for title-only champs (use nchsaa_multi_time_state_champions).",
+      parameters: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          times: {
+            type: "integer",
+            description: "Exact placement count: 2, 3, or 4 (e.g. 4 for four-time state placers).",
             enum: [2, 3, 4],
           },
         },

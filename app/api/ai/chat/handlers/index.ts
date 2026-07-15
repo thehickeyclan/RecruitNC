@@ -57,6 +57,8 @@ import { handleNhscaNationalChampion } from "./nhsca-national-champion"
 import { handleNhscaChampionCount } from "./nhsca-champion-count"
 import { handleStateChampionRecords } from "./state-champion-records"
 import { handleStateChampionCount } from "./state-champion-count"
+import { handleStatePlacerRecords } from "./state-placer-records"
+import { handleStatePlacerCount } from "./state-placer-count"
 import { handleStateSchoolStats } from "./state-school-stats"
 import { handleNhscaSchoolYears } from "./nhsca-school-years"
 import { handleCalendar } from "./calendar"
@@ -82,6 +84,8 @@ registerHandler("nhsca_national_champion", handleNhscaNationalChampion)
 registerHandler("nhsca_champion_count", handleNhscaChampionCount)
 registerHandler("state_champion_records", handleStateChampionRecords)
 registerHandler("state_champion_count", handleStateChampionCount)
+registerHandler("state_placer_records", handleStatePlacerRecords)
+registerHandler("state_placer_count", handleStatePlacerCount)
 registerHandler("state_school_stats", handleStateSchoolStats)
 registerHandler("nhsca_school_years", handleNhscaSchoolYears)
 registerHandler("calendar", handleCalendar)

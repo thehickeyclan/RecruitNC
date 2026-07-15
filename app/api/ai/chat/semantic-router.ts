@@ -103,6 +103,16 @@ const HANDLER_EXAMPLES: Record<string, string[]> = {
     "did [name] win state?",
     "how many state titles has [name] won?",
   ],
+  "state_placer_records": [
+    "who are the 4x state placers?",
+    "who are the 4x state place winners?",
+    "who are our 4x state placers?",
+    "four time state placers nc",
+    "list all three time state placers",
+    "who are the 3x state placers?",
+    "who are the 2x state placers?",
+    "how many 4x state placers have there been?",
+  ],
   "state_school_stats": [
     "which school produced the most state champs?",
     "which school has the most mow winners?",

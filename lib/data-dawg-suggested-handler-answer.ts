@@ -57,6 +57,45 @@ export function formatSuggestedHandlerAnswer(handlerResult: {
     const first = results[0] as {
       wrestler_name?: string
       championships?: Array<{ year?: number; classification?: string; weight_class?: string }>
+      placement_count?: number
+      placements?: Array<{ year?: number; place?: number; classification?: string; weight_class?: string }>
+      schools?: string[]
+      years_label?: string
+    }
+    if (first?.wrestler_name && Array.isArray(first.placements) && first.placement_count != null) {
+      const n = results.length
+      const times = first.placement_count
+      const label = times === 4 ? "4x State Placers" : `${times}x State Placers`
+      const ordinal = (p: number) => {
+        const v = Math.floor(p)
+        if (v === 1) return "1st"
+        if (v === 2) return "2nd"
+        if (v === 3) return "3rd"
+        return `${v}th`
+      }
+      const lines = results.map((r, idx) => {
+        const row = r as typeof first
+        const school = (row.schools ?? []).filter(Boolean).join("/") || ""
+        const placeTrail = (row.placements ?? [])
+          .slice()
+          .sort((a, b) => (a.year ?? 0) - (b.year ?? 0))
+          .map((p) => ordinal(Number(p.place ?? 0)))
+          .join("-")
+        const years =
+          row.years_label ||
+          (() => {
+            const ys = (row.placements ?? []).map((p) => p.year).filter(Boolean) as number[]
+            if (!ys.length) return ""
+            return `${Math.min(...ys)}-${Math.max(...ys)}`
+          })()
+        const schoolBit = school ? ` (${school})` : ""
+        const yearsBit = years ? ` ${years}` : ""
+        return `${idx + 1}. ${row.wrestler_name}${schoolBit}${yearsBit} — ${placeTrail}`
+      })
+      return (
+        `There are **${n}** wrestlers who are ${label} in North Carolina. Here is the list:\n\n` +
+        `${lines.join("\n")}\n\nTotal: ${n} wrestlers.`
+      )
     }
     if (first?.wrestler_name && Array.isArray(first.championships)) {
       const n = results.length
