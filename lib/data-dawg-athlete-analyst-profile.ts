@@ -133,111 +133,168 @@ export function countNationalAllAmericans(opts: {
 }
 
 /**
- * Opening analyst paragraph — significance first, then facts.
+ * Fact-driven opening — every phrase maps to verified stats (no generic hype).
  */
 export function buildAnalystLeadParagraph(stats: AnalystProfileStats): string {
   const name = stats.displayName.trim() || "This wrestler"
-  const first = name.split(/\s+/)[0] || name
   const hs = (stats.highSchool ?? "").trim()
   const gy = stats.graduationYear
   const titles = stats.stateTitleYears
   const hasRec = hasCareerRecord(stats.careerWins, stats.careerLosses)
   const rec = hasRec ? recordStr(stats.careerWins!, stats.careerLosses!) : null
   const college = (stats.college ?? "").trim()
+  const prev = (stats.previousCollege ?? "").trim()
+  const nhscaAa = stats.nhscaAllAmericanCount ?? 0
+  const s32Aa = stats.super32AllAmericanCount ?? 0
+  const fargoAa = stats.fargoAllAmericanCount ?? 0
+  const dave = (stats.daveSchultzYears ?? []).length > 0
+  const tricia = (stats.triciaSaundersYears ?? []).length > 0
+  const rank = stats.prospectRanking
 
-  const classBit =
-    gy != null && Number.isFinite(gy) ? ` in the Class of ${Math.floor(gy)}` : ""
+  const honorBits: string[] = []
+  if (titles >= 1) {
+    honorBits.push(
+      titles === 1 ? "an NCHSAA State Champion" : `a ${titles}× NCHSAA State Champion`,
+    )
+  }
+  if (dave) honorBits.push("Dave Schultz High School Excellence Award winner")
+  if (tricia) honorBits.push("Tricia Saunders High School Excellence Award winner")
+  if (nhscaAa >= 1) {
+    honorBits.push(nhscaAa === 1 ? "NHSCA All-American" : `${nhscaAa}× NHSCA All-American`)
+  }
+  if (s32Aa >= 1) {
+    honorBits.push(s32Aa === 1 ? "Super32 All-American" : `${s32Aa}× Super32 All-American`)
+  }
+  if (fargoAa >= 1) {
+    honorBits.push(fargoAa === 1 ? "Fargo All-American" : `${fargoAa}× Fargo All-American`)
+  }
+  if (rank != null && rank > 0 && rank <= 30 && gy != null) {
+    honorBits.push(
+      `one of North Carolina's top-ranked Class of ${Math.floor(gy)} wrestlers (RecruitNC #${rank})`,
+    )
+  }
 
   let open: string
-  if (titles >= 4) {
-    open = `${name} is one of North Carolina's most accomplished wrestlers${classBit}.`
-  } else if (titles === 3) {
-    open = `${name} ranks among North Carolina's elite high school wrestlers${classBit}.`
-  } else if (titles === 2) {
-    open = `${name} established himself as one of the top wrestlers${classBit} in North Carolina.`
-  } else if (titles === 1) {
-    open = `${name} is a NCHSAA State Champion${hs ? ` from ${hs}` : ""}${classBit}.`
-  } else if (stats.nhscaAllAmericanCount || stats.super32AllAmericanCount || stats.fargoAllAmericanCount) {
-    open = `${name} is a nationally honored North Carolina wrestler${classBit}.`
+  if (honorBits.length >= 2) {
+    const joined =
+      honorBits.length === 2
+        ? `${honorBits[0]} and ${honorBits[1]}`
+        : `${honorBits.slice(0, -1).join(", ")}, and ${honorBits[honorBits.length - 1]}`
+    open = `${name} finished his high school career as ${joined}.`
+  } else if (honorBits.length === 1) {
+    open = `${name} finished his high school career as ${honorBits[0]}.`
   } else if (hs || gy) {
-    open = `${name} is a North Carolina high school wrestler${hs ? ` from ${hs}` : ""}${classBit}.`
+    open = `${name} is a North Carolina high school wrestler${hs ? ` from ${hs}` : ""}${
+      gy != null ? ` (Class of ${Math.floor(gy)})` : ""
+    }.`
   } else {
     open = `Here's the verified RecruitNC profile for ${name}.`
   }
 
-  const midParts: string[] = []
-  if (titles >= 4 && hs) {
-    midParts.push(`A four-time NCHSAA State Champion at ${hs}`)
-  } else if (titles >= 2 && hs) {
-    midParts.push(`A ${titles}× NCHSAA State Champion at ${hs}`)
-  } else if (titles >= 2) {
-    midParts.push(`A ${titles}× NCHSAA State Champion`)
-  } else if (titles === 1 && !open.includes("State Champion")) {
-    midParts.push(`A NCHSAA State Champion${hs ? ` at ${hs}` : ""}`)
-  }
-
+  const trail: string[] = []
   if (rec) {
-    const who = titles >= 1 || midParts.length > 0 ? "he" : first
-    if (midParts.length > 0) {
-      midParts[midParts.length - 1] = `${midParts[midParts.length - 1]}, ${who} finished ${
-        gy != null && gy <= new Date().getFullYear() ? "his high school career" : "so far"
-      } with a ${rec} record`
-    } else {
-      midParts.push(
-        `${first} carries a ${rec} high school record${hs ? ` at ${hs}` : ""}`,
-      )
-    }
+    trail.push(
+      `He compiled a ${rec} record${hs ? ` at ${hs}` : ""}${
+        college || prev
+          ? ` before continuing his collegiate career ${
+              prev && college && prev.toLowerCase() !== college.toLowerCase()
+                ? `at ${prev} and ${college}`
+                : `at ${college}`
+            }`
+          : ""
+      }`,
+    )
+  } else if (college) {
+    trail.push(
+      prev && prev.toLowerCase() !== college.toLowerCase()
+        ? `He continued his collegiate career at ${prev} and then ${college}`
+        : `He committed to ${college}`,
+    )
   }
 
-  if (college) {
-    const clause = formatCommitNarrativeClause(college, stats.previousCollege, stats.division)
-    if (midParts.length > 0) {
-      midParts[midParts.length - 1] = `${midParts[midParts.length - 1]} and ${clause}`
-    } else {
-      midParts.push(`${first} ${clause}`)
-    }
-  } else if ((stats.recruitingStatus ?? "").trim() && !college) {
-    midParts.push(`Recruiting status: ${stats.recruitingStatus!.trim()}`)
-  }
-
-  if (midParts.length === 0) return open
-  let mid = midParts.join(". ")
-  if (!/[.!?]$/.test(mid)) mid += "."
-  // Capitalize after open sentence
-  return `${open} ${mid.charAt(0).toUpperCase()}${mid.slice(1)}`
+  if (!trail.length) return open
+  let second = trail[0]
+  if (!/[.!?]$/.test(second)) second += "."
+  return `${open} ${second}`
 }
 
-/** Compact identity + headline stats under the lead. */
+/** Visual identity + headline stats under the lead. */
 export function buildCareerSnapshotMarkdown(stats: AnalystProfileStats): string {
-  const lines: string[] = ["Career snapshot:"]
-  if (hasCareerRecord(stats.careerWins, stats.careerLosses)) {
-    lines.push(recordStr(stats.careerWins!, stats.careerLosses!))
-  }
+  const lines: string[] = ["Career snapshot:", ""]
+  let added = false
+
   if (stats.stateTitleYears >= 1) {
     lines.push(
       stats.stateTitleYears === 1
-        ? "State Champion"
-        : `${stats.stateTitleYears}× NCHSAA State Champion`,
+        ? "🏆 NCHSAA State Champion"
+        : `🏆 ${stats.stateTitleYears}× NCHSAA State Champion`,
     )
+    added = true
   }
-  const aa =
-    (stats.nhscaAllAmericanCount ?? 0) +
-    (stats.super32AllAmericanCount ?? 0) +
-    (stats.fargoAllAmericanCount ?? 0)
-  if (aa > 0) {
-    lines.push(`${aa} national All-American honor${aa === 1 ? "" : "s"}`)
+
+  if (hasCareerRecord(stats.careerWins, stats.careerLosses)) {
+    const w = Math.floor(stats.careerWins!)
+    const l = Math.floor(stats.careerLosses!)
+    const total = w + l
+    const pct = total > 0 ? ` (${((w / total) * 100).toFixed(1)}%)` : ""
+    lines.push("📈 Career record")
+    lines.push(`${recordStr(w, l)}${pct}`)
+    added = true
   }
+
+  const nhscaAa = stats.nhscaAllAmericanCount ?? 0
+  if (nhscaAa > 0) {
+    lines.push("🇺🇸 NHSCA")
+    lines.push(nhscaAa === 1 ? "All-American" : `${nhscaAa}× All-American`)
+    added = true
+  }
+
+  const s32Aa = stats.super32AllAmericanCount ?? 0
+  if (s32Aa > 0) {
+    lines.push("🏅 Super32")
+    lines.push(s32Aa === 1 ? "All-American" : `${s32Aa}× All-American`)
+    added = true
+  }
+
+  if ((stats.daveSchultzYears ?? []).length > 0) {
+    lines.push("🏅 Dave Schultz Award Winner")
+    added = true
+  }
+  if ((stats.triciaSaundersYears ?? []).length > 0) {
+    lines.push("🏅 Tricia Saunders Award Winner")
+    added = true
+  }
+
   const hs = (stats.highSchool ?? "").trim()
   const gy = stats.graduationYear
   if (hs || gy != null) {
+    lines.push("🏫 High school")
     lines.push([hs || null, gy != null ? `Class of ${Math.floor(gy)}` : null].filter(Boolean).join(" · "))
+    added = true
   }
+
   const college = (stats.college ?? "").trim()
+  const prev = (stats.previousCollege ?? "").trim()
   if (college) {
-    lines.push(formatCommitChronologyLine(college, stats.previousCollege, stats.division))
+    lines.push("🎓 College")
+    if (prev && prev.toLowerCase() !== college.toLowerCase()) {
+      lines.push(`${prev} → ${college}`)
+    } else {
+      const div = (stats.division ?? "").trim()
+      const divBit = div && !college.toLowerCase().includes(div.toLowerCase()) ? ` (${div})` : ""
+      lines.push(`${college}${divBit}`)
+    }
+    added = true
   }
-  if (lines.length <= 1) return ""
+
+  if (!added) return ""
   return lines.join("\n")
+}
+
+function possessiveName(name: string): string {
+  const n = name.trim()
+  if (!n) return n
+  return /s$/i.test(n) ? `${n}'` : `${n}'s`
 }
 
 function placeWord(place: number): string {
@@ -247,124 +304,108 @@ function placeWord(place: number): string {
   return `${place}${ordinalSuffix(place)}`
 }
 
-function formatDualHelpSentence(hs: string, titles: SchoolDualTitle[]): string | null {
-  if (!hs || !titles.length) return null
-  if (titles.length === 1) {
-    const t = titles[0]
-    const div = t.division ? ` ${String(t.division).trim()}` : ""
-    return `Helped ${hs} capture the ${t.year} NCHSAA${div} Dual Team State Championship`
-  }
-  const years = titles.map((t) => t.year).sort((a, b) => a - b)
-  return `Helped ${hs} capture NCHSAA Dual Team State Championships in ${years.join(", ")}`
-}
-
 /**
- * Connected historical narrative (analysis, not a bullet dump).
+ * Connected historical narrative — media-guide style analysis, not a bullet dump.
  */
 export function buildHistoricalContextNarrative(stats: AnalystProfileStats): string {
   const name = stats.displayName.trim() || "This wrestler"
-  const first = name.split(/\s+/)[0] || name
-  const gy = stats.graduationYear
+  const last = name.includes(" ") ? name.split(/\s+/).slice(-1)[0]! : name
   const hs = (stats.highSchool ?? "").trim()
   const places = [...(stats.nchsaaPlacesChronological ?? [])].sort((a, b) => a.year - b.year)
   const earlyPlacers = places.filter((p) => p.place >= 2 && p.place <= 6)
   const titles = places.filter((p) => p.place === 1)
-  const sentences: string[] = []
+  const seniorUndefeated = (stats.seasonRecords ?? []).find(
+    (s) => (s.classLabel ?? "").toLowerCase() === "senior" && s.losses === 0 && s.wins > 0,
+  )
+  const dave = (stats.daveSchultzYears ?? []).length > 0
+  const dual = stats.schoolDualTitles?.[0]
+  const college = (stats.college ?? "").trim()
+  const prev = (stats.previousCollege ?? "").trim()
 
-  const classBit = gy != null ? ` in North Carolina's Class of ${Math.floor(gy)}` : " in North Carolina"
-  if (stats.stateTitleYears >= 2 || (stats.prospectRanking != null && stats.prospectRanking <= 10)) {
-    sentences.push(
-      `${name} emerged as one of the premier wrestlers${classBit}.`,
-    )
-  } else if (stats.stateTitleYears === 1 || (stats.nhscaAllAmericanCount ?? 0) > 0) {
-    sentences.push(`${name} built a standout high school career${classBit}.`)
-  } else {
-    sentences.push(`${name} compiled a verified RecruitNC career profile${hs ? ` at ${hs}` : ""}.`)
-  }
-
-  const arcBits: string[] = []
   if (earlyPlacers.length >= 2 && titles.length >= 1) {
     const samePlace = earlyPlacers.every((p) => p.place === earlyPlacers[0].place)
     const placeLabel = placeWord(earlyPlacers[0].place)
-    if (samePlace && earlyPlacers.length >= 2) {
-      arcBits.push(
-        `After placing ${placeLabel} as both a freshman and sophomore`,
+    const opener = samePlace
+      ? `After two ${placeLabel}-place finishes to begin his career, ${last}`
+      : `After early state podium finishes, ${last}`
+
+    const titleClause =
+      titles.length >= 2 ? "won consecutive state championships" : "broke through for a state championship"
+
+    const climaxBits: string[] = []
+    if (seniorUndefeated) {
+      climaxBits.push(
+        `a perfect ${recordStr(seniorUndefeated.wins, seniorUndefeated.losses)} record`,
       )
-    } else {
-      arcBits.push(`After early state podium finishes`)
     }
-    if (titles.length >= 2) {
-      arcBits.push(`he finished his career with back-to-back state championships`)
-    } else {
-      arcBits.push(`he broke through for a state championship`)
+    if (dave) climaxBits.push("a Dave Schultz Award")
+    else if ((stats.triciaSaundersYears ?? []).length) climaxBits.push("a Tricia Saunders Award")
+    if (dual && hs) {
+      const div = dual.division ? ` ${String(dual.division).trim()}` : ""
+      climaxBits.push(
+        `a key role in ${possessiveName(hs)} ${dual.year} NCHSAA${div} Dual Team State Championship`,
+      )
     }
-  } else if (titles.length >= 2) {
-    arcBits.push(`He finished his high school career as a ${titles.length}× NCHSAA State Champion`)
-  } else if (titles.length === 1) {
-    arcBits.push(`He claimed an NCHSAA state title`)
+
+    let body: string
+    if (climaxBits.length === 0) {
+      body = titleClause
+    } else {
+      const climax =
+        climaxBits.length === 1
+          ? climaxBits[0]
+          : climaxBits.length === 2
+            ? `${climaxBits[0]} and ${climaxBits[1]}`
+            : `${climaxBits.slice(0, -1).join(", ")}, and ${climaxBits[climaxBits.length - 1]}`
+      body = seniorUndefeated
+        ? `${titleClause} and capped his senior season with ${climax}`
+        : `${titleClause}, earning ${climax}`
+    }
+
+    const collegeBit =
+      college && prev && prev.toLowerCase() !== college.toLowerCase()
+        ? ` He continued his collegiate career at ${prev} and ${college}.`
+        : college
+          ? ` He continued his collegiate career at ${college}.`
+          : ""
+
+    return ["Historical context:", "", `${opener} ${body}.${collegeBit}`].join("\n")
   }
 
-  const seniorUndefeated = (stats.seasonRecords ?? []).find(
-    (s) =>
-      (s.classLabel ?? "").toLowerCase() === "senior" &&
-      s.losses === 0 &&
-      s.wins > 0,
-  )
+  const sentences: string[] = []
+  const gy = stats.graduationYear
+  const classBit = gy != null ? ` in North Carolina's Class of ${Math.floor(gy)}` : ""
+  if (titles.length >= 4) {
+    sentences.push(`${name} finished as a four-time NCHSAA State Champion${classBit}.`)
+  } else if (titles.length >= 2) {
+    sentences.push(`${name} finished as a ${titles.length}× NCHSAA State Champion${classBit}.`)
+  } else if (titles.length === 1) {
+    sentences.push(`${name} claimed an NCHSAA state title${hs ? ` for ${hs}` : ""}${classBit}.`)
+  } else {
+    sentences.push(`${name} compiled a verified RecruitNC career profile${hs ? ` at ${hs}` : ""}.`)
+  }
   if (seniorUndefeated) {
-    arcBits.push(
-      `a perfect ${recordStr(seniorUndefeated.wins, seniorUndefeated.losses)} senior season`,
+    sentences.push(
+      `He capped his senior season at ${recordStr(seniorUndefeated.wins, seniorUndefeated.losses)}.`,
     )
   } else if (hasCareerRecord(stats.careerWins, stats.careerLosses)) {
-    arcBits.push(`a ${recordStr(stats.careerWins!, stats.careerLosses!)} career record`)
+    sentences.push(`His high school record stands at ${recordStr(stats.careerWins!, stats.careerLosses!)}.`)
   }
-
-  const aa =
-    (stats.nhscaAllAmericanCount ?? 0) +
-    (stats.super32AllAmericanCount ?? 0) +
-    (stats.fargoAllAmericanCount ?? 0)
-  if ((stats.nhscaAllAmericanCount ?? 0) >= 2) {
-    arcBits.push(`multiple NHSCA All-American finishes`)
-  } else if (aa >= 1) {
-    arcBits.push(`national All-American honors`)
+  if (dave) sentences.push("He won the Dave Schultz High School Excellence Award.")
+  if (dual && hs) {
+    const div = dual.division ? ` ${String(dual.division).trim()}` : ""
+    sentences.push(
+      `He played a key role in ${possessiveName(hs)} ${dual.year} NCHSAA${div} Dual Team State Championship.`,
+    )
   }
-
-  if ((stats.daveSchultzYears ?? []).length > 0) {
-    arcBits.push(`the Dave Schultz High School Excellence Award`)
-  } else if ((stats.triciaSaundersYears ?? []).length > 0) {
-    arcBits.push(`the Tricia Saunders High School Excellence Award`)
-  }
-
-  if (arcBits.length >= 2) {
-    const head = arcBits[0]
-    const rest = arcBits.slice(1)
-    let clause: string
-    if (rest.length === 1) clause = `${head}, ${rest[0]}`
-    else clause = `${head}, ${rest.slice(0, -1).join(", ")}, and ${rest[rest.length - 1]}`
-    if (!/^[A-Z]/.test(clause) && !clause.startsWith("After") && !clause.startsWith("He ")) {
-      clause = clause.charAt(0).toUpperCase() + clause.slice(1)
-    }
-    if (!clause.endsWith(".")) clause += "."
-    sentences.push(clause.startsWith("After") || clause.startsWith("He ") ? clause : `${first} ${clause.charAt(0).toLowerCase()}${clause.slice(1)}`)
-  } else if (arcBits.length === 1) {
-    const s = arcBits[0]
-    sentences.push(s.endsWith(".") ? s : `${s}.`)
-  }
-
-  const dual = formatDualHelpSentence(hs, stats.schoolDualTitles ?? [])
-  if (dual) sentences.push(`${dual}.`)
-
-  const college = (stats.college ?? "").trim()
-  const prev = (stats.previousCollege ?? "").trim()
   if (college && prev && prev.toLowerCase() !== college.toLowerCase()) {
-    sentences.push(`He continued his career collegiately at both ${prev} and ${college}.`)
+    sentences.push(`He continued his collegiate career at both ${prev} and ${college}.`)
   } else if (college) {
     sentences.push(`He continued his career at ${college}.`)
   }
-
   if (sentences.length <= 1 && !hasCareerRecord(stats.careerWins, stats.careerLosses) && !titles.length) {
     return ""
   }
-
   return ["Historical context:", "", sentences.join(" ")].join("\n")
 }
 
@@ -463,27 +504,25 @@ export function buildDevelopmentPathMarkdown(stats: AnalystProfileStats): string
     lines.push(club)
     lines.push("")
   }
-  if (stats.ncUnitedBlue) {
-    lines.push("🔵 NC United Blue Team")
-    const gy = stats.graduationYear
-    if (gy != null) {
-      lines.push(`${Math.floor(gy) - 1}–${Math.floor(gy)}`)
-    } else {
-      lines.push("Member")
-    }
-    lines.push("")
-  }
+
   const ncu = (stats.ncUnitedEvents ?? []).filter((e) => !e.isPlaceholder && String(e.event ?? "").trim())
-  if (ncu.length) {
-    lines.push("🇺🇸 NC United National Team")
-    for (const e of ncu.sort((a, b) => Number(a.year || 0) - Number(b.year || 0))) {
-      const rec = String(e.record ?? "").trim()
-      lines.push(
-        `${String(e.event).trim()}${e.year != null ? ` (${e.year})` : ""}${rec ? ` — ${enDashRecord(rec)}` : ""}`,
-      )
+  if (stats.ncUnitedBlue || ncu.length) {
+    lines.push("NC United")
+    if (stats.ncUnitedBlue) {
+      const gy = stats.graduationYear
+      const years =
+        gy != null ? ` (${Math.floor(gy) - 1}–${Math.floor(gy)})` : ""
+      lines.push(`🔵 Blue Team${years}`)
+    }
+    if (ncu.length) {
+      lines.push("🇺🇸 National Team")
+      for (const e of ncu.sort((a, b) => Number(a.year || 0) - Number(b.year || 0))) {
+        lines.push(`• ${String(e.event).trim()}${e.year != null ? ` (${e.year})` : ""}`)
+      }
     }
     lines.push("")
   }
+
   const college = (stats.college ?? "").trim()
   const prev = (stats.previousCollege ?? "").trim()
   if (college) {
@@ -495,7 +534,6 @@ export function buildDevelopmentPathMarkdown(stats: AnalystProfileStats): string
     }
     lines.push("")
   }
-  // Trim trailing blank
   while (lines.length > 1 && lines[lines.length - 1] === "") lines.pop()
   if (lines.length <= 1) return ""
   return lines.join("\n")
@@ -559,31 +597,20 @@ export function buildVerifiedSourcesFooter(stats: AnalystProfileStats): string {
 
 export function buildHistoricalRankingsMarkdown(stats: AnalystProfileStats): string {
   const rows: string[] = []
-  if (stats.careerWinsRank != null && stats.careerWinsRank > 0) {
-    rows.push(`Career wins — #${stats.careerWinsRank} in NC history`)
-  } else if (hasCareerRecord(stats.careerWins, stats.careerLosses) && Math.floor(stats.careerWins!) >= 150) {
-    rows.push(`Career wins — ${Math.floor(stats.careerWins!)} (elite NC total)`)
-  }
   if (hasCareerRecord(stats.careerWins, stats.careerLosses)) {
     const w = Math.floor(stats.careerWins!)
     const l = Math.floor(stats.careerLosses!)
+    let winsLine = `Career Wins\n${w}`
+    if (stats.careerWinsRank != null && stats.careerWinsRank > 0) {
+      winsLine = `Career Wins\n${w} (#${stats.careerWinsRank} in NC history)`
+    } else if (w >= 150) {
+      winsLine = `Career Wins\n${w} (Top 50 in NC history)`
+    }
+    rows.push(winsLine)
     const total = w + l
     if (total > 0) {
-      const pct = ((w / total) * 100).toFixed(1)
-      rows.push(`Career win % — ${pct}%`)
+      rows.push(`Career Win %\n${((w / total) * 100).toFixed(1)}%`)
     }
-  }
-  const ft = fourTimeOrdinal(stats.displayName)
-  if (ft || stats.stateTitleYears >= 4) {
-    if (ft) rows.push(`4× champions — ${ft.index}${ordinalSuffix(ft.index)} in NC history (${ft.total} total)`)
-    else rows.push(`4× champions — among NC's ${FOUR_TIME_STATE_CHAMPIONS_COUNT}`)
-  }
-  if (stats.stateTitleYears >= 1) {
-    rows.push(
-      stats.stateTitleYears >= 4
-        ? "State titles — T-1 (four titles)"
-        : `State titles — ${stats.stateTitleYears}`,
-    )
   }
   if (
     stats.prospectRanking != null &&
@@ -591,11 +618,22 @@ export function buildHistoricalRankingsMarkdown(stats: AnalystProfileStats): str
     stats.graduationYear != null
   ) {
     rows.push(
-      `Class of ${Math.floor(stats.graduationYear)} — #${stats.prospectRanking} RecruitNC prospect`,
+      `Class of ${Math.floor(stats.graduationYear)}\nRecruitNC #${stats.prospectRanking}`,
     )
   }
+  if (stats.stateTitleYears >= 1) {
+    rows.push(
+      stats.stateTitleYears >= 4
+        ? "State Titles\n4 (T-1 historically)"
+        : `State Titles\n${stats.stateTitleYears}`,
+    )
+  }
+  const ft = fourTimeOrdinal(stats.displayName)
+  if (ft) {
+    rows.push(`4× Champions\n${ft.index}${ordinalSuffix(ft.index)} of ${ft.total} in NC history`)
+  }
   if (!rows.length) return ""
-  return ["Historical rankings:", ...rows.map((r) => `• ${r}`)].join("\n")
+  return ["Historical rankings:", "", rows.join("\n\n")].join("\n")
 }
 
 function ordinalSuffix(n: number): string {
@@ -793,8 +831,27 @@ export function buildNationalResumeMarkdown(opts: {
       const best = [...s32Aa].sort((a, b) => (a.p! - b.p!) || b.year - a.year)[0]
       head.push(`Best finish: ${best.p}${ordinalSuffix(best.p!)} (${best.year})`)
     } else {
-      const withRec = s32Lines.find((l) => /\d+–\d+/.test(l) || /\d+-\d+/.test(l))
-      if (withRec) head.push(`Best listed result: ${withRec.replace(/^\d{4}\s*—\s*/, "")}`)
+      // Prefer best W-L (most wins, then fewest losses) — never the first chronological row.
+      let bestRec: { wins: number; losses: number } | null = null
+      for (const r of opts.super32 ?? []) {
+        const record =
+          String((r as { record?: unknown }).record ?? "").trim() ||
+          ((r as { wins?: unknown }).wins != null && (r as { losses?: unknown }).losses != null
+            ? `${(r as { wins: unknown }).wins}-${(r as { losses: unknown }).losses}`
+            : "")
+        const wl = record ? parseWl(record) : null
+        if (!wl) continue
+        if (
+          !bestRec ||
+          wl.wins > bestRec.wins ||
+          (wl.wins === bestRec.wins && wl.losses < bestRec.losses)
+        ) {
+          bestRec = wl
+        }
+      }
+      if (bestRec) {
+        head.push(`Best listed result: ${recordStr(bestRec.wins, bestRec.losses)}`)
+      }
     }
     head.push(...s32Lines)
     blocks.push(head.join("\n"))

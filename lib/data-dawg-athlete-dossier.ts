@@ -355,7 +355,6 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
     lines.push("")
   }
 
-  const undefeatedForTimeline = seasonRecordRows.filter((s) => s.losses === 0 && s.wins > 0)
   const timelineMd = buildAthleteTimelineMarkdown({
     graduationYear: hasValidGrad ? gradYear : null,
     nchsaa: nchsaaSorted,
@@ -386,7 +385,7 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
           year: hasValidGrad ? gradYear : null,
         }
       : null,
-    seasonRecords: undefeatedForTimeline.map((s) => ({
+    seasonRecords: seasonRecordRows.map((s) => ({
       year: s.year,
       wins: s.wins,
       losses: s.losses,
