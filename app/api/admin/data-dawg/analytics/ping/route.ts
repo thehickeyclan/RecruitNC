@@ -44,7 +44,7 @@ export async function POST(_request: NextRequest) {
     hint = INSERT_AI_QUERY_LOG_RPC_HINT
   } else if (/42P10|ON CONFLICT/i.test(write.error)) {
     hint =
-      "ON CONFLICT still present — PostgREST is upserting against a missing/partial unique. Re-run scripts/ai-query-logs-on-conflict-fix.sql (full UNIQUE on message_id + NOTIFY pgrst), wait for this deploy, then Test write again."
+      "DB still rejecting inserts (42P10). In Supabase run the ENTIRE scripts/ai-query-logs-on-conflict-fix.sql (creates write_ai_query_log(jsonb) + UNIQUE message_id), confirm select write_ai_query_log(...), then redeploy/Test write."
   } else {
     hint = write.error
   }
