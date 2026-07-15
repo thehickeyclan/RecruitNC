@@ -6,7 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 export const dynamic = "force-dynamic"
 
 /**
- * Admin-only: insert one test row into ai_query_logs via RPC (then Prefer-free REST fallback).
+ * Admin-only: insert one test row via write_data_dawg_query_log (clean table).
  */
 export async function POST(_request: NextRequest) {
   const auth = await requireAdmin()
@@ -26,25 +26,33 @@ export async function POST(_request: NextRequest) {
   })
 
   const admin = createAdminClient()
-  const { data: newest, error: newestErr } = await admin
-    .from("ai_query_logs")
-    .select("id, query, project, timestamp, handler_name, success")
-    .order("timestamp", { ascending: false })
-    .limit(3)
+  let newest: unknown[] = []
+  let newestError: string | null = null
+  let last24h = 0
 
-  const { count: last24h } = await admin
-    .from("ai_query_logs")
-    .select("id", { count: "exact", head: true })
-    .gte("timestamp", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+  for (const table of ["data_dawg_query_logs", "ai_query_logs"] as const) {
+    const { data, error } = await admin
+      .from(table)
+      .select("id, query, project, timestamp, handler_name, success")
+      .order("timestamp", { ascending: false })
+      .limit(3)
+    if (!error) {
+      newest = data ?? []
+      const { count } = await admin
+        .from(table)
+        .select("id", { count: "exact", head: true })
+        .gte("timestamp", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+      last24h = count ?? 0
+      break
+    }
+    newestError = error.message
+  }
 
   let hint: string
   if (write.ok) {
     hint = `Insert succeeded via ${write.path} — refresh analytics with 24h.`
-  } else if (write.rpcMissing) {
+  } else if (write.tableMissing || write.rpcMissing) {
     hint = INSERT_AI_QUERY_LOG_RPC_HINT
-  } else if (/42P10|ON CONFLICT/i.test(write.error)) {
-    hint =
-      "DB still rejecting inserts (42P10). In Supabase run the ENTIRE scripts/ai-query-logs-on-conflict-fix.sql (creates write_ai_query_log(jsonb) + UNIQUE message_id), confirm select write_ai_query_log(...), then redeploy/Test write."
   } else {
     hint = write.error
   }
@@ -53,9 +61,9 @@ export async function POST(_request: NextRequest) {
     ok: write.ok,
     write,
     deploySha: process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA ?? null,
-    last24h: last24h ?? 0,
-    newest: newest ?? [],
-    newestError: newestErr?.message ?? null,
+    last24h,
+    newest,
+    newestError,
     hint,
   })
 }

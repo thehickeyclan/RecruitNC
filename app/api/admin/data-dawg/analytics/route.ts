@@ -12,10 +12,14 @@ export const dynamic = "force-dynamic"
 
 type TimeRange = "24h" | "7d" | "30d" | "all"
 
-/** Legacy + current writers both use `timestamp` (ISO). Do not filter via raw `.or()` —
- * unquoted ISO values contain `.` and break PostgREST filter parsing (returns 0 rows). */
+/** Prefer clean table; fall back to legacy ai_query_logs for historical rows. */
+const LOG_TABLES = ["data_dawg_query_logs", "ai_query_logs"] as const
+
 const LOG_SELECT =
   "id, query, project, url, response, query_type, response_time_ms, feedback, message_id, error_message, handler_name, success, timestamp"
+
+const SETUP_HINT =
+  "Run scripts/data-dawg-query-logs-setup.sql in Supabase, then: NOTIFY pgrst, 'reload schema'."
 
 function cutoffFor(timeRange: TimeRange): string | null {
   if (timeRange === "all") return null
@@ -44,6 +48,20 @@ function applyTimeFilter<T extends { gte: (col: string, val: string) => T }>(
   return q.gte("timestamp", cutoff)
 }
 
+async function resolveLogTable(
+  admin: ReturnType<typeof createAdminClient>,
+): Promise<{ table: (typeof LOG_TABLES)[number] } | { missing: true }> {
+  for (const table of LOG_TABLES) {
+    const probe = await admin.from(table).select("id").limit(1)
+    if (!probe.error) return { table }
+    if (!isAiQueryLogsTableMissingError(probe.error) && !/42P01|does not exist/i.test(probe.error.message)) {
+      // unexpected error — treat as hard fail later by probing again
+      return { table }
+    }
+  }
+  return { missing: true }
+}
+
 export async function GET(request: NextRequest) {
   const auth = await requireAdmin()
   if (!auth.ok) {
@@ -62,37 +80,35 @@ export async function GET(request: NextRequest) {
   const admin = createAdminClient()
   const cutoff = cutoffFor(timeRange)
 
-  const probe = await admin.from("ai_query_logs").select("id").limit(1)
-  if (probe.error) {
-    if (isAiQueryLogsTableMissingError(probe.error)) {
-      return NextResponse.json({
-        ok: true,
-        tableMissing: true,
-        setupHint: AI_QUERY_LOGS_TABLE_SETUP_HINT,
-        timeRange,
-        summary: null,
-        byHandler: [],
-        byQueryType: [],
-        byProject: [],
-        topQueries: [],
-        learningOpportunities: [],
-        logs: [] as AiQueryLogRow[],
-        total: 0,
-        allTimeTotal: 0,
-        newestTimestamp: null,
-        hasMore: false,
-      })
-    }
-    console.error("[RecruitNC] data-dawg analytics probe", probe.error)
-    return NextResponse.json({ error: probe.error.message }, { status: 500 })
+  const resolved = await resolveLogTable(admin)
+  if ("missing" in resolved) {
+    return NextResponse.json({
+      ok: true,
+      tableMissing: true,
+      setupHint: SETUP_HINT || AI_QUERY_LOGS_TABLE_SETUP_HINT,
+      timeRange,
+      summary: null,
+      byHandler: [],
+      byQueryType: [],
+      byProject: [],
+      topQueries: [],
+      learningOpportunities: [],
+      logs: [] as AiQueryLogRow[],
+      total: 0,
+      allTimeTotal: 0,
+      newestTimestamp: null,
+      hasMore: false,
+    })
   }
+
+  const logTable = resolved.table
 
   async function countExact(extra?: {
     eq?: [string, string | boolean]
     notNull?: string
     withCutoff?: boolean
   }): Promise<number> {
-    let q = admin.from("ai_query_logs").select("id", { count: "exact", head: true })
+    let q = admin.from(logTable).select("id", { count: "exact", head: true })
     if (extra?.withCutoff !== false) q = applyTimeFilter(q, cutoff)
     if (extra?.eq) q = q.eq(extra.eq[0], extra.eq[1])
     if (extra?.notNull) q = q.not(extra.notNull, "is", null)
@@ -122,7 +138,7 @@ export async function GET(request: NextRequest) {
       ])
 
     const newestQ = await admin
-      .from("ai_query_logs")
+      .from(logTable)
       .select("timestamp")
       .order("timestamp", { ascending: false })
       .limit(1)
@@ -137,7 +153,7 @@ export async function GET(request: NextRequest) {
   }
 
   let sampleQ = admin
-    .from("ai_query_logs")
+    .from(logTable)
     .select(LOG_SELECT)
     .order("timestamp", { ascending: false })
     .limit(sampleLimit)
@@ -188,7 +204,7 @@ export async function GET(request: NextRequest) {
   }
 
   let logsQ = admin
-    .from("ai_query_logs")
+    .from(logTable)
     .select(LOG_SELECT, { count: "exact" })
     .order("timestamp", { ascending: false })
   logsQ = applyTimeFilter(logsQ, cutoff)
@@ -216,6 +232,7 @@ export async function GET(request: NextRequest) {
     ok: true,
     tableMissing: false,
     setupHint: null,
+    logTable,
     timeRange,
     sampleSize: sample.length,
     sampleCapped: total > sample.length,
