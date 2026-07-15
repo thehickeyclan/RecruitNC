@@ -3,10 +3,11 @@ import type { ClassificationProposed, DualTeamProposed, PlacerProposed } from ".
 import { DATASET_CLASSIFICATIONS, DATASET_DUAL_TEAM, DATASET_PLACERS } from "./types"
 import {
   canonicalizeWrestlerName,
+  classificationSchoolsEqual,
   dualNaturalKey,
   namesLooselyEqual,
   placerNaturalKey,
-  schoolsLooselyEqual,
+  uniqueClassificationLastTokens,
 } from "./normalize"
 
 export async function promoteDualRow(
@@ -136,12 +137,10 @@ export async function promoteClassificationRow(
     updated_at: new Date().toISOString(),
   }
 
-  const { data: yearHits, error: yearSelErr } = await admin
+  const { data: yearAll, error: yearSelErr } = await admin
     .from("school_classification_years")
     .select("id, school_name")
     .eq("effective_year", proposed.effective_year)
-    .ilike("school_name", `%${proposed.school_name.replace(/\s+(high\s+school|hs)$/i, "").trim()}%`)
-    .limit(20)
 
   if (yearSelErr) {
     if (/does not exist|schema cache|42P01/i.test(yearSelErr.message)) {
@@ -152,8 +151,14 @@ export async function promoteClassificationRow(
     throw new Error(yearSelErr.message)
   }
 
+  const yearUnique = uniqueClassificationLastTokens([
+    proposed.school_name,
+    ...(yearAll ?? []).map((r) => String(r.school_name ?? "")),
+  ])
   const yearTarget =
-    (yearHits ?? []).find((r) => schoolsLooselyEqual(r.school_name, proposed.school_name)) ?? null
+    (yearAll ?? []).find((r) =>
+      classificationSchoolsEqual(r.school_name, proposed.school_name, yearUnique),
+    ) ?? null
 
   if (yearTarget?.id) {
     const { error } = await admin
@@ -175,18 +180,20 @@ export async function promoteClassificationRow(
     effective_year: proposed.effective_year,
   }
 
-  const clean = proposed.school_name.replace(/\s+(high\s+school|hs)$/i, "").trim()
-  const { data: currentHits, error: curSelErr } = await admin
+  const { data: currentAll, error: curSelErr } = await admin
     .from("school_classifications")
     .select("id, school_name")
-    .ilike("school_name", `%${clean}%`)
-    .limit(20)
 
   if (curSelErr) throw new Error(curSelErr.message)
 
+  const currentUnique = uniqueClassificationLastTokens([
+    proposed.school_name,
+    ...(currentAll ?? []).map((r) => String(r.school_name ?? "")),
+  ])
   const currentTarget =
-    (currentHits ?? []).find((r) => schoolsLooselyEqual(r.school_name, proposed.school_name)) ??
-    null
+    (currentAll ?? []).find((r) =>
+      classificationSchoolsEqual(r.school_name, proposed.school_name, currentUnique),
+    ) ?? null
 
   if (currentTarget?.id) {
     const { error } = await admin
