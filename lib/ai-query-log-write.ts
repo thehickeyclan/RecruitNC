@@ -1,8 +1,13 @@
 /**
  * Write helpers for `ai_query_logs`. Always await these from API routes —
  * fire-and-forget (`void write…`) is dropped by Vercel when the response returns.
+ *
+ * Note: Some Supabase/PostgREST configs send Prefer: resolution=ignore-duplicates,
+ * which becomes ON CONFLICT DO NOTHING and fails if the table has no usable unique
+ * target. We always supply `id` (PK) and fall back if that still errors.
  */
 
+import { randomUUID } from "crypto"
 import { createAdminClient } from "@/lib/supabase/admin"
 import {
   computeAiQuerySuccess,
@@ -15,31 +20,52 @@ export type WriteAiQueryLogResult =
   | { ok: true }
   | { ok: false; tableMissing?: boolean; error: string }
 
+function buildRow(entry: AiQueryLogInsert) {
+  const success =
+    entry.success != null
+      ? entry.success
+      : computeAiQuerySuccess({
+          answer: entry.response,
+          errorMessage: entry.error_message,
+        })
+
+  return {
+    id: randomUUID(),
+    query: entry.query,
+    project: entry.project ?? "recruit-nc",
+    url: entry.url ?? null,
+    response: truncateAiResponse(entry.response),
+    query_type: entry.query_type ?? null,
+    response_time_ms: entry.response_time_ms ?? null,
+    feedback: entry.feedback ?? null,
+    message_id: entry.message_id ?? null,
+    error_message: entry.error_message?.trim() || null,
+    handler_name: entry.handler_name ?? null,
+    success,
+    timestamp: entry.timestamp ?? new Date().toISOString(),
+  }
+}
+
 export async function writeAiQueryLog(entry: AiQueryLogInsert): Promise<WriteAiQueryLogResult> {
   try {
     const admin = createAdminClient()
-    const success =
-      entry.success != null
-        ? entry.success
-        : computeAiQuerySuccess({
-            answer: entry.response,
-            errorMessage: entry.error_message,
-          })
+    const row = buildRow(entry)
 
-    const { error } = await admin.from("ai_query_logs").insert({
-      query: entry.query,
-      project: entry.project ?? "recruit-nc",
-      url: entry.url ?? null,
-      response: truncateAiResponse(entry.response),
-      query_type: entry.query_type ?? null,
-      response_time_ms: entry.response_time_ms ?? null,
-      feedback: entry.feedback ?? null,
-      message_id: entry.message_id ?? null,
-      error_message: entry.error_message?.trim() || null,
-      handler_name: entry.handler_name ?? null,
-      success,
-      timestamp: entry.timestamp ?? new Date().toISOString(),
-    })
+    let { error } = await admin.from("ai_query_logs").insert(row)
+
+    // Prefer: ignore-duplicates / merge-duplicates with a broken target → 42P10-style message.
+    // Retry once without message_id (avoids ON CONFLICT (message_id) when that unique index is missing).
+    if (error && /ON CONFLICT/i.test(error.message) && row.message_id) {
+      const { message_id: _mid, ...withoutMessageId } = row
+      const retry = await admin.from("ai_query_logs").insert(withoutMessageId)
+      error = retry.error
+    }
+
+    // Last resort: upsert on primary key `id` (always present on a healthy table).
+    if (error && /ON CONFLICT/i.test(error.message)) {
+      const upsert = await admin.from("ai_query_logs").upsert(row, { onConflict: "id" })
+      error = upsert.error
+    }
 
     if (error) {
       if (isAiQueryLogsTableMissingError(error)) {

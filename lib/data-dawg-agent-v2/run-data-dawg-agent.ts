@@ -110,36 +110,36 @@ export async function runDataDawgAgentV2(params: {
   }
 
   // Deterministic dossiers: school + athlete name — no OpenAI when match is clear.
-  if (priorMessages.length === 0) {
-    try {
-      const schoolFast = await trySchoolNameFastPath(params.message)
-      if (schoolFast?.markdown) {
-        return {
-          answer: applyRecruitNcDataDawgAnswerPostProcess(schoolFast.markdown),
-          messageId,
-          queryType: "school_name_fast_path",
-          source: "data_dawg_agent_v2_fast",
-          toolRounds: 0,
-        }
+  // Run even mid-conversation: "Cardinal Gibbons" then "Kevin O'Brien" must still fast-path;
+  // follow-ups like "tell me more" fail the lookalike heuristics and fall through.
+  try {
+    const schoolFast = await trySchoolNameFastPath(params.message)
+    if (schoolFast?.markdown) {
+      return {
+        answer: applyRecruitNcDataDawgAnswerPostProcess(schoolFast.markdown),
+        messageId,
+        queryType: "school_name_fast_path",
+        source: "data_dawg_agent_v2_fast",
+        toolRounds: 0,
       }
-    } catch (e) {
-      console.warn("[RecruitNC] school name fast-path failed:", e instanceof Error ? e.message : e)
     }
+  } catch (e) {
+    console.warn("[RecruitNC] school name fast-path failed:", e instanceof Error ? e.message : e)
+  }
 
-    try {
-      const athleteFast = await tryAthleteNameFastPath(params.message)
-      if (athleteFast?.markdown) {
-        return {
-          answer: applyRecruitNcDataDawgAnswerPostProcess(athleteFast.markdown),
-          messageId,
-          queryType: "athlete_name_fast_path",
-          source: "data_dawg_agent_v2_fast",
-          toolRounds: 0,
-        }
+  try {
+    const athleteFast = await tryAthleteNameFastPath(params.message)
+    if (athleteFast?.markdown) {
+      return {
+        answer: applyRecruitNcDataDawgAnswerPostProcess(athleteFast.markdown),
+        messageId,
+        queryType: "athlete_name_fast_path",
+        source: "data_dawg_agent_v2_fast",
+        toolRounds: 0,
       }
-    } catch (e) {
-      console.warn("[RecruitNC] athlete name fast-path failed:", e instanceof Error ? e.message : e)
     }
+  } catch (e) {
+    console.warn("[RecruitNC] athlete name fast-path failed:", e instanceof Error ? e.message : e)
   }
 
   const { answer: raw, toolRounds } = await runOpenAiDataDawgToolLoop({

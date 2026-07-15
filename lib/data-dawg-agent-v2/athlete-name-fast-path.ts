@@ -1,5 +1,6 @@
 /**
- * Skip the OpenAI tool loop for clear "who is / name" lookups when directory has one match.
+ * Skip the OpenAI tool loop for clear wrestler-name lookups.
+ * Directory hit → full dossier. Alumni / no id → cross-store markdown.
  */
 
 import {
@@ -7,13 +8,21 @@ import {
   isLikelyAthleteNameLookup,
   pickClearAthleteId,
 } from "./athlete-name-fast-path-detect"
-import { toolGetAthleteFullDossier, toolSearchAthletes } from "./execute-data-tools"
+import {
+  toolGetAthleteFullDossier,
+  toolSearchAthletes,
+  toolWrestlingCrossStoreSearch,
+} from "./execute-data-tools"
+import {
+  crossStoreHasUsefulHits,
+  formatCrossStoreAthleteMarkdown,
+} from "./format-cross-store-athlete-markdown"
 
 export { isLikelyAthleteNameLookup } from "./athlete-name-fast-path-detect"
 
 export async function tryAthleteNameFastPath(
   message: string,
-): Promise<{ markdown: string; athleteId: string } | null> {
+): Promise<{ markdown: string; athleteId: string | null } | null> {
   if (!isLikelyAthleteNameLookup(message)) return null
 
   const phrase = extractAthleteLookupPhrase(message)
@@ -25,14 +34,22 @@ export async function tryAthleteNameFastPath(
     skipTournamentEnrich: true,
   })
 
-  if ("error" in search && search.error && !search.rows?.length) return null
   const rows = (search.rows ?? []) as Record<string, unknown>[]
   const id = pickClearAthleteId(phrase, rows, (search as { disambiguation?: unknown }).disambiguation)
-  if (!id) return null
 
-  const dossier = await toolGetAthleteFullDossier({ athlete_id: id })
-  const md = typeof dossier.markdown === "string" ? dossier.markdown.trim() : ""
-  if (("error" in dossier && dossier.error) || md.length < 40) return null
+  if (id) {
+    const dossier = await toolGetAthleteFullDossier({ athlete_id: id })
+    const md = typeof dossier.markdown === "string" ? dossier.markdown.trim() : ""
+    if (!(("error" in dossier && dossier.error) || md.length < 40)) {
+      return { markdown: md, athleteId: id }
+    }
+  }
 
-  return { markdown: md, athleteId: id }
+  // Alumni / no clear directory id — build from historical stores (Brandon Palmer path).
+  const cross = await toolWrestlingCrossStoreSearch({ query: phrase, limit: 40 })
+  if (!crossStoreHasUsefulHits(cross as never)) return null
+
+  const markdown = formatCrossStoreAthleteMarkdown(phrase, cross as never)
+  if (markdown.length < 40) return null
+  return { markdown, athleteId: null }
 }
