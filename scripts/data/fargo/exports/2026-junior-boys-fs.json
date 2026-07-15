@@ -1,0 +1,61 @@
+{
+  "source": "usa_bracketing",
+  "source_event_id": "2600005902",
+  "year": 2026,
+  "style": "FS",
+  "gender": "M",
+  "age_division": "Junior",
+  "source_label": "2026 Junior Boys Freestyle",
+  "brackets": [
+    {
+      "source_bracket_id": "2026-junior-boys-fs-150",
+      "weight_class": "150",
+      "athletes": [
+        { "name": "Liam Hickey", "state": "NC", "placement": 3, "club": "NC United" },
+        { "name": "Opponent One", "state": "OH", "placement": 1 },
+        { "name": "Opponent Two", "state": "PA", "placement": 2 }
+      ],
+      "matches": [
+        {
+          "source_match_id": "usab-2026-jb-fs-150-r32-1",
+          "round": "Round of 32",
+          "match_order": 1,
+          "winner_name": "Liam Hickey",
+          "winner_state": "NC",
+          "loser_name": "Sample Loser",
+          "loser_state": "TX",
+          "result_type": "TF",
+          "score": "14-4"
+        },
+        {
+          "source_match_id": "usab-2026-jb-fs-150-qf-1",
+          "round": "Quarterfinal",
+          "match_order": 2,
+          "summary": "Liam Hickey (NC) over Seeded Wrestler (IA) (Dec 8-5)"
+        },
+        {
+          "source_match_id": "usab-2026-jb-fs-150-sf-1",
+          "round": "Semifinal",
+          "match_order": 3,
+          "winner_name": "Opponent Two",
+          "winner_state": "PA",
+          "loser_name": "Liam Hickey",
+          "loser_state": "NC",
+          "result_type": "DEC",
+          "score": "6-4"
+        },
+        {
+          "source_match_id": "usab-2026-jb-fs-150-3rd-1",
+          "round": "3rd Place",
+          "match_order": 4,
+          "winner_name": "Liam Hickey",
+          "winner_state": "NC",
+          "loser_name": "Consolation Opp",
+          "loser_state": "IL",
+          "result_type": "FALL",
+          "score": "1:45"
+        }
+      ]
+    }
+  ]
+}

@@ -51,6 +51,50 @@ export function placerNaturalKey(
   return `${year}|${normText(classification)}|${normText(weightClass)}|${place}|${g}`
 }
 
+/** Season grain — FS and GR never share a key. */
+export function fargoNaturalKey(
+  year: number,
+  style: string,
+  ageDivision: string,
+  gender: string,
+  weightClass: string,
+  athleteName: string,
+): string {
+  return [
+    year,
+    normText(style),
+    normText(ageDivision),
+    normText(gender),
+    normText(weightClass),
+    normText(athleteName),
+  ].join("|")
+}
+
+/** Bout grain — athlete perspective of a dual. */
+export function fargoBoutNaturalKey(
+  year: number,
+  style: string,
+  ageDivision: string,
+  gender: string,
+  weightClass: string,
+  athleteName: string,
+  sourceMatchId: string | null | undefined,
+  matchOrder: number | null | undefined,
+  opponentName: string | null | undefined,
+): string {
+  return [
+    year,
+    normText(style),
+    normText(ageDivision),
+    normText(gender),
+    normText(weightClass),
+    normText(athleteName),
+    normText(sourceMatchId ?? ""),
+    matchOrder ?? "",
+    normText(opponentName ?? ""),
+  ].join("|")
+}
+
 /** Core school string for classification matching (no HS / academy / punctuation). */
 export function schoolCoreName(raw: unknown): string {
   return normText(raw)

@@ -6,6 +6,7 @@ import {
   buildAthleteTimelineMarkdown,
   timelineInputFromCrossStore,
 } from "@/lib/data-dawg-athlete-timeline"
+import { formatFargoCareerAnswerLines, summarizeFargoCareer } from "@/lib/fargo-career"
 
 type CrossStorePayload = {
   searched_for?: string
@@ -120,12 +121,27 @@ export function formatCrossStoreAthleteMarkdown(displayName: string, data: Cross
   if (fargo.length) {
     lines.push("")
     lines.push("Fargo Nationals Results:")
+    const career = summarizeFargoCareer(
+      fargo.map((r) => ({
+        year: Number(r.year) || null,
+        style: r.style != null ? String(r.style) : null,
+        division: r.division != null ? String(r.division) : null,
+        is_all_american: Boolean(r.is_all_american),
+        placement: r.placement != null ? Number(r.placement) : null,
+        wins: r.wins != null ? Number(r.wins) : null,
+        losses: r.losses != null ? Number(r.losses) : null,
+      })),
+    )
+    for (const line of formatFargoCareerAnswerLines(name, career)) {
+      lines.push(line)
+    }
     for (const r of fargo.slice(0, 30)) {
       const yr = r.year ?? "—"
+      const style = String(r.style ?? "").trim()
       const div = String(r.division ?? "").trim()
       const wt = String(r.weight_class ?? "").trim()
       const rec = String(r.record ?? "").trim()
-      const bits = [div, wt, rec].filter(Boolean).join(", ")
+      const bits = [style || null, div, wt, rec].filter(Boolean).join(", ")
       lines.push(`- ${yr}: ${bits || "Competed"}`)
     }
   }

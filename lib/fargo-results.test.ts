@@ -26,5 +26,6 @@ describe("fargo results formatting", () => {
   it("shortens division labels", () => {
     expect(formatFargoDivisionLabel("Junior Boys Freestyle")).toBe("Junior Boys")
     expect(formatFargoDivisionLabel("16U Boys Freestyle")).toBe("16U Boys")
+    expect(formatFargoDivisionLabel("Junior Girls Greco-Roman")).toBe("Junior Girls")
   })
 })

@@ -14,8 +14,9 @@ RecruitNC syncs **official public** wrestling sources via **connectors**: fetch 
 3. **NHSCA All-Americans by school:** Register each year in `lib/nhsca-canonical-aa.ts` (`NHSCA_CANONICAL_AA_LOADERS`) with schools on the roster (page JSON or `lib/data/nhsca-aa/`). Places 1–8 bulk imports **require** `high_school`. Sync: Admin → NHSCA Placements → **Sync AA schools from yearly files**. Docs: `docs/NHSCA-YEARLY-AA-AUTOMATION.md`.
 4. **Duals:** Canonical year×division in `dual_team_champions`; school leaderboards are **derived**. Connector: `lib/public-imports/connectors/nchsaa-dual-team.ts` → **Fetch & stage Dual Team** on `/admin/imports`. JSON paste still works — do not replace yearly rows with aggregates alone.
 5. **School classifications:** Connector `lib/public-imports/connectors/nchsaa-classifications.ts` → **Fetch & stage Classifications**. Setup year history: `scripts/school-classification-years-setup.sql`. Lookups: current `school_classifications`; optional as-of year via `school_classification_years`.
-6. **Still not fully automated (do not claim done):** team-tournament points champs connector, MOW/coach awards connectors — roadmap in chat; build as separate connectors when asked.
-7. Docs: `docs/PUBLIC-SOURCE-IMPORTS.md`.
+6. **Fargo Nationals (canonical SoR):** Full connector `lib/public-imports/run-fargo-full.ts` + event registry `connectors/fargo-events.ts` → **Run full Fargo connector** on `/admin/imports` (USA Bracketing + Trackwrestling adapters → `fargo_bouts` + `fargo_results`). Exports: `scripts/data/fargo/exports/`. SQL: `fargo-results-harden-setup.sql` + `fargo-bouts-full-setup.sql`. CSV season path still available. FS/GR are **separate careers** (plus combined). **Never** Flo as SoR. Docs: `docs/FARGO-NATIONALS-CONNECTOR.md`.
+7. **Still not fully automated (do not claim done):** team-tournament points champs connector, MOW/coach awards connectors, richer `/fargo` bout pages + live USAB JSON without login — fill `source_event_id` / exports each July.
+8. Docs: `docs/PUBLIC-SOURCE-IMPORTS.md`, `docs/FARGO-NATIONALS-CONNECTOR.md`.
 
 ## Anti-patterns
 

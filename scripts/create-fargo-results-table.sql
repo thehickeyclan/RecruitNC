@@ -1,4 +1,5 @@
 -- Fargo Nationals results — run once in Supabase SQL Editor (safe to re-run).
+-- After create, also run scripts/fargo-results-harden-setup.sql for style/gender/age_division SoR.
 
 create table if not exists public.fargo_results (
   id uuid primary key default gen_random_uuid(),
