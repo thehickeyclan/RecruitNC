@@ -92,8 +92,8 @@ export async function toolPublicRankingsSearch(args: {
 
   const genderRaw = String(args.gender ?? "Male").trim()
   const gender = /^female$/i.test(genderRaw) ? "Female" : "Male"
-  const maxPublicRank = PUBLIC_RANKINGS_MAX_BY_YEAR[year] ?? null
-  const limitCap = maxPublicRank ?? 50
+  const maxPublicRank = PUBLIC_RANKINGS_MAX_BY_YEAR[year] ?? 30
+  const limitCap = maxPublicRank
   const limit =
     args.limit != null && Number.isFinite(Number(args.limit))
       ? Math.min(Math.max(Math.floor(Number(args.limit)), 1), limitCap)
@@ -107,12 +107,9 @@ export async function toolPublicRankingsSearch(args: {
     .eq("graduationyear", year)
     .eq("gender", gender)
     .not("prospect_ranking", "is", null)
+    .lte("prospect_ranking", maxPublicRank)
     .order("prospect_ranking", { ascending: true })
     .limit(limit)
-
-  if (maxPublicRank != null) {
-    q = q.lte("prospect_ranking", maxPublicRank)
-  }
 
   const { data, error } = await q
   if (error) {

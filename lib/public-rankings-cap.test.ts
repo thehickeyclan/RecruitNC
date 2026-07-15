@@ -6,17 +6,18 @@ import {
 } from "@/lib/public-rankings-cap"
 
 describe("public rankings cap", () => {
-  it("publishes top 30 for 2026/2027 and top 25 for 2028", () => {
+  it("publishes top 30 for every class year", () => {
     expect(PUBLIC_RANKINGS_MAX_BY_YEAR[2026]).toBe(30)
     expect(PUBLIC_RANKINGS_MAX_BY_YEAR[2027]).toBe(30)
-    expect(PUBLIC_RANKINGS_MAX_BY_YEAR[2028]).toBe(25)
+    expect(PUBLIC_RANKINGS_MAX_BY_YEAR[2028]).toBe(30)
+    expect(PUBLIC_RANKINGS_MAX_BY_YEAR[2029]).toBe(30)
   })
 
-  it("clamps 'all' and oversized topN to the class cap", () => {
+  it("clamps 'all' and oversized topN to top 30", () => {
     expect(clampProspectRankingsLimit(2026, null)).toBe(30)
     expect(clampProspectRankingsLimit(2026, 1000)).toBe(30)
     expect(clampProspectRankingsLimit(2026, 10)).toBe(10)
-    expect(clampProspectRankingsLimit(2028, 30)).toBe(25)
+    expect(clampProspectRankingsLimit(2028, 50)).toBe(30)
   })
 
   it("defaults unknown years to 30", () => {

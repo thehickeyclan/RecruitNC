@@ -41,8 +41,7 @@ export async function GET(request: NextRequest) {
     const yearNum = parseInt(year, 10)
     if (isNaN(yearNum)) return NextResponse.json({ ok: false, error: "Invalid year" }, { status: 400 })
 
-    const maxProspectRankForGuide =
-      yearNum === 2029 ? 20 : yearNum === 2028 ? 25 : 30
+    const maxProspectRankForGuide = 30
 
     const admin = createAdminClient()
     const supabase = await createClient()
