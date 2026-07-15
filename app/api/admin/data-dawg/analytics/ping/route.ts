@@ -46,6 +46,8 @@ export async function POST(_request: NextRequest) {
     newestError: newestErr?.message ?? null,
     hint: write.ok
       ? "Insert succeeded — refresh /admin/data-dawg/analytics with 24h."
-      : "Insert failed — run scripts/ai-query-logs-table.sql in Supabase (PK + unique message_id), then retry this ping.",
+      : /ON CONFLICT|insert_ai_query_log|PGRST202|function/i.test(write.error || "")
+        ? "Run the NEW bottom section of scripts/ai-query-logs-table.sql (replace partial message_id unique index + create insert_ai_query_log RPC), then retry Test write."
+        : "Insert failed — see write.error. Run scripts/ai-query-logs-table.sql then retry.",
   })
 }
