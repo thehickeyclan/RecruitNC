@@ -144,6 +144,7 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
     displayName,
     college: String(athlete.college ?? "").trim() || null,
     division: String(athlete.division ?? "").trim() || null,
+    previousCollege: String(athlete.previous_college ?? "").trim() || null,
   })
 
   // Career W-L early so the opener can include a brief summary (weight stays out — it fluctuates).
@@ -177,6 +178,7 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
       highSchool: highSchool || null,
       graduationYear: hasValidGrad ? gradYear : null,
       college: commit?.college ?? null,
+      previousCollege: commit?.previousCollege ?? null,
       division: commit?.division ?? null,
       recruitingStatus: recruitingStatus || null,
       careerSummary,

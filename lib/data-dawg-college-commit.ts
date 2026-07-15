@@ -10,6 +10,7 @@ import { escapeForIlike } from "@/lib/nchsaa-results"
 export type AthleteCollegeCommit = {
   college: string
   division: string | null
+  previousCollege: string | null
   source: "athletes" | "wrestling_commits"
 }
 
@@ -19,13 +20,16 @@ export async function resolveAthleteCollegeCommit(
     displayName: string
     college?: string | null
     division?: string | null
+    previousCollege?: string | null
   },
 ): Promise<AthleteCollegeCommit | null> {
   const fromRow = String(opts.college ?? "").trim()
+  const previousCollege = String(opts.previousCollege ?? "").trim() || null
   if (fromRow) {
     return {
       college: fromRow,
       division: String(opts.division ?? "").trim() || null,
+      previousCollege,
       source: "athletes",
     }
   }
@@ -39,7 +43,7 @@ export async function resolveAthleteCollegeCommit(
   const orParts = variants.map((v) => `athlete_name.ilike.%${escapeForIlike(v)}%`).join(",")
   const { data, error } = await admin
     .from("wrestling_commits")
-    .select("athlete_name, college, level")
+    .select("athlete_name, college, level, notes")
     .or(orParts)
     .limit(20)
 
@@ -63,9 +67,19 @@ export async function resolveAthleteCollegeCommit(
   if (!best) return null
   const college = String(best.college ?? "").trim()
   if (!college) return null
+
+  // Parse "Transferred from X" from notes when athletes.previous_college is unset.
+  let fromNotes: string | null = previousCollege
+  if (!fromNotes) {
+    const notes = String(best.notes ?? "")
+    const m = notes.match(/transferred from\s+(.+?)(?:\s+to\s+|\.|$)/i)
+    if (m?.[1]) fromNotes = m[1].trim() || null
+  }
+
   return {
     college,
     division: String(best.level ?? "").trim() || null,
+    previousCollege: fromNotes,
     source: "wrestling_commits",
   }
 }

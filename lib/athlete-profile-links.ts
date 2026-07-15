@@ -71,6 +71,8 @@ export type AthleteAnswerSummary = {
   highSchool?: string | null
   graduationYear?: string | number | null
   college?: string | null
+  /** Prior college when the athlete transferred; current is `college`. */
+  previousCollege?: string | null
   division?: string | null
   /** @deprecated Weight changes often — not shown in the header opener. */
   weightClass?: string | null
@@ -79,11 +81,18 @@ export type AthleteAnswerSummary = {
   careerSummary?: string | null
 }
 
-function formatCollegeCommitLine(college: string, division?: string | null): string {
+function formatCollegeCommitLine(
+  college: string,
+  division?: string | null,
+  previousCollege?: string | null,
+): string {
   const c = college.trim()
   const div = (division ?? "").trim()
   const divPart = div && !c.toLowerCase().includes(div.toLowerCase()) ? ` (${div})` : ""
-  return `College commit: ${c}${divPart}`
+  const prev = (previousCollege ?? "").trim()
+  const transferPart =
+    prev && prev.toLowerCase() !== c.toLowerCase() ? ` — transferred from ${prev}` : ""
+  return `College commit: ${c}${divPart}${transferPart}`
 }
 
 /**
@@ -143,7 +152,7 @@ export function formatAthleteAnswerOpening(
 
   const college = summary?.college?.toString().trim()
   if (college) {
-    lines.push(formatCollegeCommitLine(college, summary?.division))
+    lines.push(formatCollegeCommitLine(college, summary?.division, summary?.previousCollege))
   }
 
   // Intentionally omit weight — it changes often and is already in tournament lines.

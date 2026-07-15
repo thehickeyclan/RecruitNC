@@ -41,6 +41,12 @@ const adminNavItems: {
     icon: "📊",
   },
   {
+    title: "Data Dawg",
+    href: "/admin/data-dawg/analytics",
+    icon: "🐶",
+    activePrefix: "/admin/data-dawg",
+  },
+  {
     title: "NHSCA Analytics",
     href: "/admin/nhsca-analytics",
     icon: "🏆",

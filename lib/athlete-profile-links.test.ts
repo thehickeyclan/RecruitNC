@@ -44,6 +44,14 @@ describe("formatAthleteAnswerOpening", () => {
     expect(lines.some((l) => l.startsWith("Profile:"))).toBe(false)
   })
 
+  it("includes transfer history on the college commit line", () => {
+    const lines = formatAthleteAnswerOpening("Liam Hickey", "ed26dd22-9533-4acf-ade7-577b41b03337", null, {
+      college: "NC State",
+      previousCollege: "UNC Chapel Hill",
+    })
+    expect(lines).toContain("College commit: NC State — transferred from UNC Chapel Hill")
+  })
+
   it("omits Profile-style opener when there is no id or url", () => {
     const lines = formatAthleteAnswerOpening("Historical Alumni", null)
     expect(lines[0]).toBe("Here's what I found about Historical Alumni:")

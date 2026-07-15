@@ -45,6 +45,7 @@ interface AthleteDetailProps {
     id: string
     name?: string
     college?: string
+    previous_college?: string
     division?: string
     graduationyear?: number
     graduation_year?: number
@@ -273,6 +274,13 @@ export function AthleteDetail({
 
   const athleteName = athlete?.name || "Unknown Athlete"
   const college = athlete?.college || "Not specified"
+  const previousCollege = String(athlete?.previous_college ?? "").trim() || null
+  const collegeTransferLabel =
+    previousCollege &&
+    college !== "Not specified" &&
+    previousCollege.toLowerCase() !== college.toLowerCase()
+      ? `Transferred from ${previousCollege}`
+      : null
   const graduationYear = athlete?.graduationyear || athlete?.graduation_year || 0
   const profileWeightDisplay = (athlete as { profile_weight_display?: {
     displayWeight: string | null
@@ -1000,6 +1008,9 @@ export function AthleteDetail({
                       <div className="min-w-0">
                         <p className="text-[10px] font-semibold uppercase tracking-wider text-white/60">Committed to</p>
                         <p className="text-base font-semibold truncate text-white">{college}</p>
+                        {collegeTransferLabel ? (
+                          <p className="text-[10px] text-white/55 truncate">{collegeTransferLabel}</p>
+                        ) : null}
                       </div>
                     </div>
                   )}
@@ -1109,6 +1120,9 @@ export function AthleteDetail({
                     <p className="text-lg font-bold text-white drop-shadow">
                       {college}
                     </p>
+                    {collegeTransferLabel ? (
+                      <p className="text-xs text-white/60 mt-0.5">{collegeTransferLabel}</p>
+                    ) : null}
                   </div>
                 </div>
               )}
@@ -1234,6 +1248,9 @@ export function AthleteDetail({
                       <div>
                         <p className="text-sm font-semibold uppercase tracking-widest text-white/70">Committed To</p>
                         <p className="text-3xl font-bold text-white drop-shadow-lg leading-tight">{college}</p>
+                        {collegeTransferLabel ? (
+                          <p className="text-sm text-white/60 mt-1">{collegeTransferLabel}</p>
+                        ) : null}
                       </div>
                     </div>
                   )}
