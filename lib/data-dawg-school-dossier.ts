@@ -11,6 +11,7 @@ import {
   schoolDossierAthleteMatchesKnown,
   schoolIlikePatterns,
 } from "@/lib/data-dawg-school-nhsca-match"
+import { getAllCanonicalNhscaAllAmericans } from "@/lib/nhsca-canonical-aa"
 import { extractSearchablePhrase, stripConversationalNoise } from "@/lib/data-dawg-agent-v2/search-normalize"
 import { levenshteinDistance, scoreSchoolMatch } from "@/lib/data-dawg-agent-v2/fuzzy-utils"
 
@@ -418,11 +419,31 @@ export async function buildSchoolWrestlingDossierMarkdown(rawQuery: string): Pro
       `${String(r.athlete_name)}|${String(r.year)}|${String(placementNum(r.placement))}|${String(r.division ?? "")}|${String(r.weight_class ?? "")}`,
   ).filter((r) => nhscaRowIncludeForSchool(r, canonical, knownWrestlers))
 
-  const nhscaCombined = mergeUniqueRows(
+  let nhscaCombined = mergeUniqueRows(
     [...nhMerged, ...npRows],
     (r) =>
       `${String(r.athlete_name)}|${String(r.year)}|${String(placementNum(r.placement))}|${String(r.division ?? "")}|${String(r.weight ?? r.weight_class ?? "")}`,
   )
+
+  // Registered yearly AA rosters (with schools) for every year in the registry.
+  const canonAaForSchool = getAllCanonicalNhscaAllAmericans()
+    .filter((w) => schoolCellMatchesCanonical(w.high_school, canonical))
+    .map((w) => ({
+      athlete_name: w.athlete_name,
+      year: w.year,
+      placement: w.placement,
+      division: w.division,
+      weight: w.weight,
+      weight_class: w.weight,
+      high_school: w.high_school,
+    }))
+  if (canonAaForSchool.length) {
+    nhscaCombined = mergeUniqueRows(
+      [...nhscaCombined, ...canonAaForSchool],
+      (r) =>
+        `${String(r.athlete_name)}|${String(r.year)}|${String(placementNum(r.placement))}|${String(r.division ?? "")}|${String(r.weight ?? r.weight_class ?? "")}`,
+    )
+  }
 
   const super32Rows = mergeUniqueRows(
     [...(s321.data ?? []), ...(s322.data ?? [])] as Record<string, unknown>[],

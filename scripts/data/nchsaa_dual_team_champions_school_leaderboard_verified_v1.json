@@ -1,0 +1,704 @@
+{
+  "dataset": "nchsaa_dual_team_champions_all_time",
+  "schema_version": "1.0",
+  "coverage": {
+    "start_year": 1990,
+    "end_year": 2025
+  },
+  "verification": {
+    "status": "verified",
+    "verified_date": "2026-07-15",
+    "verified_against": {
+      "organization": "North Carolina High School Athletic Association",
+      "source_title": "NCHSAA Dual Team Wrestling Record Book",
+      "source_type": "official_public_record_book"
+    },
+    "notes": [
+      "Championship years, divisions, and aggregate title counts were validated against the official NCHSAA dual team wrestling record book.",
+      "School-name differences should be handled as aliases and should not overwrite original source values.",
+      "This school-level leaderboard is derived from year-by-year championship records in dual_team_champions.",
+      "Derived here from RecruitNC dual_team_champions export after GPT verification (title counts matched)."
+    ]
+  },
+  "record_count": 53,
+  "schools": [
+    {
+      "champion_school": "Parkland",
+      "title_count": 10,
+      "years": [
+        1995,
+        1996,
+        2007,
+        2008,
+        2009,
+        2010,
+        2011,
+        2012,
+        2013,
+        2014
+      ],
+      "divisions": [
+        "3A",
+        "3A",
+        "3A",
+        "3A",
+        "3A",
+        "4A",
+        "4A",
+        "4A",
+        "4A",
+        "4A"
+      ]
+    },
+    {
+      "champion_school": "Cary",
+      "title_count": 9,
+      "years": [
+        1993,
+        1996,
+        1997,
+        1998,
+        2005,
+        2007,
+        2008,
+        2009,
+        2018
+      ],
+      "divisions": [
+        "4A",
+        "4A",
+        "4A",
+        "4A",
+        "4A",
+        "4A",
+        "4A",
+        "4A",
+        "4A"
+      ]
+    },
+    {
+      "champion_school": "Morehead",
+      "title_count": 7,
+      "years": [
+        1998,
+        1999,
+        2002,
+        2003,
+        2006,
+        2014,
+        2016
+      ],
+      "divisions": [
+        "3A",
+        "3A",
+        "3A",
+        "3A",
+        "3A",
+        "3A",
+        "3A"
+      ]
+    },
+    {
+      "champion_school": "Alleghany",
+      "title_count": 6,
+      "years": [
+        1997,
+        1999,
+        2002,
+        2006,
+        2007,
+        2008
+      ],
+      "divisions": [
+        "1A/2A",
+        "1A/2A",
+        "1A",
+        "1A",
+        "1A",
+        "1A"
+      ]
+    },
+    {
+      "champion_school": "Fred T. Foard",
+      "title_count": 5,
+      "years": [
+        2013,
+        2015,
+        2020,
+        2022,
+        2023
+      ],
+      "divisions": [
+        "3A",
+        "3A",
+        "2A",
+        "3A",
+        "3A"
+      ]
+    },
+    {
+      "champion_school": "Orange",
+      "title_count": 5,
+      "years": [
+        2005,
+        2008,
+        2009,
+        2011,
+        2012
+      ],
+      "divisions": [
+        "3A",
+        "2A",
+        "2A",
+        "3A",
+        "3A"
+      ]
+    },
+    {
+      "champion_school": "Newton-Conover",
+      "title_count": 4,
+      "years": [
+        2013,
+        2014,
+        2016,
+        2023
+      ],
+      "divisions": [
+        "2A",
+        "2A",
+        "2A",
+        "2A"
+      ]
+    },
+    {
+      "champion_school": "Riverside-Durham",
+      "title_count": 4,
+      "years": [
+        1995,
+        2002,
+        2003,
+        2004
+      ],
+      "divisions": [
+        "4A",
+        "4A",
+        "4A",
+        "4A"
+      ]
+    },
+    {
+      "champion_school": "Uwharrie Charter",
+      "title_count": 4,
+      "years": [
+        2019,
+        2023,
+        2024,
+        2025
+      ],
+      "divisions": [
+        "1A",
+        "1A",
+        "1A",
+        "1A"
+      ]
+    },
+    {
+      "champion_school": "West Lincoln",
+      "title_count": 4,
+      "years": [
+        2000,
+        2015,
+        2018,
+        2019
+      ],
+      "divisions": [
+        "1A/2A",
+        "2A",
+        "2A",
+        "2A"
+      ]
+    },
+    {
+      "champion_school": "West Wilkes",
+      "title_count": 4,
+      "years": [
+        2010,
+        2011,
+        2012,
+        2013
+      ],
+      "divisions": [
+        "1A",
+        "1A",
+        "1A",
+        "1A"
+      ]
+    },
+    {
+      "champion_school": "Bandys",
+      "title_count": 3,
+      "years": [
+        2005,
+        2006,
+        2022
+      ],
+      "divisions": [
+        "2A",
+        "2A",
+        "2A"
+      ]
+    },
+    {
+      "champion_school": "Davie County",
+      "title_count": 3,
+      "years": [
+        1994,
+        2006,
+        2024
+      ],
+      "divisions": [
+        "4A",
+        "4A",
+        "4A"
+      ]
+    },
+    {
+      "champion_school": "Dixon",
+      "title_count": 3,
+      "years": [
+        1990,
+        1992,
+        1994
+      ],
+      "divisions": [
+        "1A/2A",
+        "1A/2A",
+        "1A/2A"
+      ]
+    },
+    {
+      "champion_school": "East Gaston",
+      "title_count": 3,
+      "years": [
+        1990,
+        1991,
+        1992
+      ],
+      "divisions": [
+        "4A",
+        "4A",
+        "4A"
+      ]
+    },
+    {
+      "champion_school": "Piedmont",
+      "title_count": 3,
+      "years": [
+        2012,
+        2017,
+        2018
+      ],
+      "divisions": [
+        "2A",
+        "3A",
+        "3A"
+      ]
+    },
+    {
+      "champion_school": "T.W. Andrews",
+      "title_count": 3,
+      "years": [
+        1990,
+        1991,
+        1992
+      ],
+      "divisions": [
+        "3A",
+        "3A",
+        "3A"
+      ]
+    },
+    {
+      "champion_school": "Avery County",
+      "title_count": 2,
+      "years": [
+        2020,
+        2022
+      ],
+      "divisions": [
+        "1A",
+        "1A"
+      ]
+    },
+    {
+      "champion_school": "Croatan",
+      "title_count": 2,
+      "years": [
+        2010,
+        2011
+      ],
+      "divisions": [
+        "2A",
+        "2A"
+      ]
+    },
+    {
+      "champion_school": "East Davidson",
+      "title_count": 2,
+      "years": [
+        1993,
+        1995
+      ],
+      "divisions": [
+        "1A/2A",
+        "1A/2A"
+      ]
+    },
+    {
+      "champion_school": "Fuquay-Varina",
+      "title_count": 2,
+      "years": [
+        2000,
+        2001
+      ],
+      "divisions": [
+        "3A",
+        "3A"
+      ]
+    },
+    {
+      "champion_school": "McMichael",
+      "title_count": 2,
+      "years": [
+        2004,
+        2007
+      ],
+      "divisions": [
+        "2A",
+        "2A"
+      ]
+    },
+    {
+      "champion_school": "Mitchell",
+      "title_count": 2,
+      "years": [
+        2014,
+        2015
+      ],
+      "divisions": [
+        "1A",
+        "1A"
+      ]
+    },
+    {
+      "champion_school": "Northwest Guilford",
+      "title_count": 2,
+      "years": [
+        2019,
+        2023
+      ],
+      "divisions": [
+        "4A",
+        "4A"
+      ]
+    },
+    {
+      "champion_school": "Rosewood",
+      "title_count": 2,
+      "years": [
+        2016,
+        2018
+      ],
+      "divisions": [
+        "1A",
+        "1A"
+      ]
+    },
+    {
+      "champion_school": "Seventy-First",
+      "title_count": 2,
+      "years": [
+        1999,
+        2000
+      ],
+      "divisions": [
+        "4A",
+        "4A"
+      ]
+    },
+    {
+      "champion_school": "Southern Vance",
+      "title_count": 2,
+      "years": [
+        2002,
+        2003
+      ],
+      "divisions": [
+        "2A",
+        "2A"
+      ]
+    },
+    {
+      "champion_school": "West Forsyth",
+      "title_count": 2,
+      "years": [
+        2016,
+        2017
+      ],
+      "divisions": [
+        "4A",
+        "4A"
+      ]
+    },
+    {
+      "champion_school": "Albemarle",
+      "title_count": 1,
+      "years": [
+        1991
+      ],
+      "divisions": [
+        "1A/2A"
+      ]
+    },
+    {
+      "champion_school": "Cardinal Gibbons",
+      "title_count": 1,
+      "years": [
+        2025
+      ],
+      "divisions": [
+        "4A"
+      ]
+    },
+    {
+      "champion_school": "Chatham Central",
+      "title_count": 1,
+      "years": [
+        2005
+      ],
+      "divisions": [
+        "1A"
+      ]
+    },
+    {
+      "champion_school": "Eastern Guilford",
+      "title_count": 1,
+      "years": [
+        2024
+      ],
+      "divisions": [
+        "3A"
+      ]
+    },
+    {
+      "champion_school": "Elkin",
+      "title_count": 1,
+      "years": [
+        2004
+      ],
+      "divisions": [
+        "1A"
+      ]
+    },
+    {
+      "champion_school": "Havelock",
+      "title_count": 1,
+      "years": [
+        1997
+      ],
+      "divisions": [
+        "3A"
+      ]
+    },
+    {
+      "champion_school": "High Point Central",
+      "title_count": 1,
+      "years": [
+        1994
+      ],
+      "divisions": [
+        "3A"
+      ]
+    },
+    {
+      "champion_school": "Hough",
+      "title_count": 1,
+      "years": [
+        2020
+      ],
+      "divisions": [
+        "4A"
+      ]
+    },
+    {
+      "champion_school": "J.M. Robinson",
+      "title_count": 1,
+      "years": [
+        2010
+      ],
+      "divisions": [
+        "3A"
+      ]
+    },
+    {
+      "champion_school": "Jack Britt",
+      "title_count": 1,
+      "years": [
+        2015
+      ],
+      "divisions": [
+        "4A"
+      ]
+    },
+    {
+      "champion_school": "Laney",
+      "title_count": 1,
+      "years": [
+        2022
+      ],
+      "divisions": [
+        "4A"
+      ]
+    },
+    {
+      "champion_school": "Mount Tabor",
+      "title_count": 1,
+      "years": [
+        2001
+      ],
+      "divisions": [
+        "4A"
+      ]
+    },
+    {
+      "champion_school": "North Wilkes",
+      "title_count": 1,
+      "years": [
+        1998
+      ],
+      "divisions": [
+        "1A/2A"
+      ]
+    },
+    {
+      "champion_school": "Northern Guilford",
+      "title_count": 1,
+      "years": [
+        2020
+      ],
+      "divisions": [
+        "3A"
+      ]
+    },
+    {
+      "champion_school": "Pisgah",
+      "title_count": 1,
+      "years": [
+        2001
+      ],
+      "divisions": [
+        "1A/2A"
+      ]
+    },
+    {
+      "champion_school": "R-S Central",
+      "title_count": 1,
+      "years": [
+        2025
+      ],
+      "divisions": [
+        "2A"
+      ]
+    },
+    {
+      "champion_school": "Ragsdale",
+      "title_count": 1,
+      "years": [
+        2004
+      ],
+      "divisions": [
+        "3A"
+      ]
+    },
+    {
+      "champion_school": "Robbinsville",
+      "title_count": 1,
+      "years": [
+        2017
+      ],
+      "divisions": [
+        "1A"
+      ]
+    },
+    {
+      "champion_school": "South Davidson",
+      "title_count": 1,
+      "years": [
+        2003
+      ],
+      "divisions": [
+        "1A"
+      ]
+    },
+    {
+      "champion_school": "St. Stephens",
+      "title_count": 1,
+      "years": [
+        2019
+      ],
+      "divisions": [
+        "3A"
+      ]
+    },
+    {
+      "champion_school": "Sun Valley",
+      "title_count": 1,
+      "years": [
+        1993
+      ],
+      "divisions": [
+        "3A"
+      ]
+    },
+    {
+      "champion_school": "Topsail",
+      "title_count": 1,
+      "years": [
+        2009
+      ],
+      "divisions": [
+        "1A"
+      ]
+    },
+    {
+      "champion_school": "Trinity",
+      "title_count": 1,
+      "years": [
+        2024
+      ],
+      "divisions": [
+        "2A"
+      ]
+    },
+    {
+      "champion_school": "Union Pines",
+      "title_count": 1,
+      "years": [
+        2025
+      ],
+      "divisions": [
+        "3A"
+      ]
+    },
+    {
+      "champion_school": "West Henderson",
+      "title_count": 1,
+      "years": [
+        1996
+      ],
+      "divisions": [
+        "1A/2A"
+      ]
+    }
+  ]
+}

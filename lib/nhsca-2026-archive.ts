@@ -1,4 +1,5 @@
 import nhsca2026 from "@/lib/data/nhsca-2026-replica-page.json"
+import { mergeCanonicalNhscaAaIntoLeaderboardRows } from "@/lib/nhsca-canonical-aa"
 
 /** Row shape used by NHSCA archive chart / table / trends. */
 export type NhscaArchiveChartYearRow = {
@@ -150,6 +151,23 @@ export function getNhsca2026LegacySearchRows(): Nhsca2026LegacySearchRow[] {
     division: r.division,
     high_school: r.high_school,
   }))
+}
+
+/**
+ * @deprecated Prefer mergeCanonicalNhscaAaIntoLeaderboardRows from @/lib/nhsca-canonical-aa
+ */
+export function mergeNhsca2026CanonicalAaIntoLeaderboardRows<
+  T extends {
+    athlete_name?: string | null
+    year?: number | null
+    placement?: number | null
+    high_school?: string | null
+    weight_class?: string | null
+    weight?: string | null
+    division?: string | null
+  },
+>(rows: T[]): T[] {
+  return mergeCanonicalNhscaAaIntoLeaderboardRows(rows)
 }
 
 export type MultiTimeAAEntry = { name: string; times: number; years: string }
