@@ -210,7 +210,7 @@ export default function AdminDashboard() {
                 <span className="text-sm font-semibold">Revenue</span>
               </span>
             </HardLink>
-            <HardLink href="/admin/data-dawg/feedback" className="block">
+            <HardLink href="/admin/data-dawg/analytics" className="block">
               <span className="relative w-full h-20 bg-gradient-to-br from-[#13294B] to-[#0A1628] hover:from-[#1e3a5f] hover:to-[#13294B] text-[#D3B574] shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex font-bold border border-[#D3B574]/30">
                 {!loading && stats.pendingDataDawgFeedback > 0 ? (
                   <span className="absolute top-2 right-2 min-w-[1.25rem] h-5 px-1 rounded-full bg-[#C8102E] text-white text-[10px] font-bold flex items-center justify-center">
@@ -417,8 +417,8 @@ export default function AdminDashboard() {
               </Card>
             </Link>
 
-            {/* Data Dawg feedback */}
-            <HardLink href="/admin/data-dawg/feedback" className="block h-full">
+            {/* Data Dawg analytics + feedback */}
+            <HardLink href="/admin/data-dawg/analytics" className="block h-full">
               <Card className="border-t-4 border-t-[#D3B574] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full relative">
                 {!loading && stats.pendingDataDawgFeedback > 0 ? (
                   <span className="absolute top-3 right-3 min-w-[1.5rem] h-6 px-1.5 rounded-full bg-[#C8102E] text-white text-xs font-bold flex items-center justify-center">
@@ -427,8 +427,8 @@ export default function AdminDashboard() {
                 ) : null}
                 <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
                   <Bot className="h-10 w-10 text-[#003366] mb-3" />
-                  <h3 className="font-bold text-[#003366] mb-1">Data Dawg feedback</h3>
-                  <p className="text-xs text-gray-600">Review incorrect-answer reports</p>
+                  <h3 className="font-bold text-[#003366] mb-1">Data Dawg Analytics</h3>
+                  <p className="text-xs text-gray-600">Query log, success rates & feedback</p>
                 </CardContent>
               </Card>
             </HardLink>

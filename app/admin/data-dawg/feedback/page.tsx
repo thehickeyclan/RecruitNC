@@ -38,7 +38,7 @@ function formatWhen(iso: string | null) {
 }
 
 export default function AdminDataDawgFeedbackPage() {
-  const { user, isAdmin, loading: authLoading } = useAuth()
+  const { user, isAdmin, isLoading: authLoading } = useAuth()
   const { toast } = useToast()
   const [items, setItems] = useState<DataDawgFeedbackRow[]>([])
   const [pendingCount, setPendingCount] = useState(0)
@@ -145,7 +145,10 @@ export default function AdminDataDawgFeedbackPage() {
                 Data Dawg feedback
               </h1>
               <p className="text-blue-200 mt-1">
-                Review &quot;Hey Data Dawg&quot; reports when users flag incorrect answers.
+                Review &quot;Hey Data Dawg&quot; reports when users flag incorrect answers.{" "}
+                <HardLink href="/admin/data-dawg/analytics" className="underline underline-offset-2 text-white">
+                  Query analytics
+                </HardLink>
               </p>
             </div>
             <Button variant="secondary" onClick={() => void load()} disabled={loading}>
