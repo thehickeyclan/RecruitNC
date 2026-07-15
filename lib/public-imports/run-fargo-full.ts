@@ -25,6 +25,7 @@ import {
   listFargoEventYears,
   type FargoEventSlot,
 } from "./connectors/fargo-events"
+import { getBundledFargoExport } from "./fixtures/fargo"
 import { fargoBoutNaturalKey, fargoNaturalKey } from "./normalize"
 import { fetchOfficialUrl, isUsaBracketingLoginWall } from "./fetch-official"
 import { stageImportBatch } from "./stage"
@@ -61,6 +62,17 @@ async function loadSlotPayload(slot: FargoEventSlot): Promise<{
   source_url: string | null
   status: string
 }> {
+  // 1) Bundled fixture (works on Vercel — scripts/ is not in the serverless filesystem)
+  const bundled = getBundledFargoExport(slot.local_path)
+  if (bundled?.trim()) {
+    return {
+      text: bundled,
+      source_url: slot.local_path ? `bundle://${slot.local_path}` : null,
+      status: "bundled_export",
+    }
+  }
+
+  // 2) Repo filesystem (local dev / Node scripts)
   if (slot.local_path) {
     const text = readLocal(slot.local_path)
     if (text?.trim()) {
@@ -68,29 +80,25 @@ async function loadSlotPayload(slot: FargoEventSlot): Promise<{
     }
   }
 
+  // 3) Live JSON URL only (never HTML hub pages)
   if (slot.fetch_url) {
-    try {
-      const fetched = await fetchOfficialUrl(slot.fetch_url)
-      if (isUsaBracketingLoginWall(fetched.text)) {
-        throw new Error(
-          `USA Bracketing requires login for ${slot.label}. Save official JSON export to ${slot.local_path || "scripts/data/fargo/exports/"} and re-run.`,
-        )
-      }
-      // Event hub pages are not match JSON — only accept if content looks structured
-      const trimmed = fetched.text.trim()
-      if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
-        return { text: trimmed, source_url: fetched.finalUrl, status: "fetched_json" }
-      }
+    const fetched = await fetchOfficialUrl(slot.fetch_url)
+    if (isUsaBracketingLoginWall(fetched.text)) {
       throw new Error(
-        `Fetched ${slot.fetch_url} but payload is not JSON export. Place USA Bracketing/Track export at ${slot.local_path || "scripts/data/fargo/exports/"}.`,
+        `USA Bracketing login wall at ${slot.fetch_url}. Bundle a JSON export in lib/public-imports/fixtures/fargo/ (and scripts/data/fargo/exports/).`,
       )
-    } catch (e) {
-      throw e instanceof Error ? e : new Error(String(e))
     }
+    const trimmed = fetched.text.trim()
+    if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
+      return { text: trimmed, source_url: fetched.finalUrl, status: "fetched_json" }
+    }
+    throw new Error(
+      `fetch_url did not return JSON (${slot.fetch_url}). Event hub HTML is not an export — use bundled USA Bracketing JSON.`,
+    )
   }
 
   throw new Error(
-    `No payload for ${slot.label}. Add local_path export or fetch_url JSON in lib/public-imports/connectors/fargo-events.ts`,
+    `Export not available for ${slot.label}. Add JSON under lib/public-imports/fixtures/fargo/ and scripts/data/fargo/exports/, register in fargo-events.ts (hub pages are not fetched).`,
   )
 }
 
@@ -236,7 +244,16 @@ export async function runFargoFullConnector(
 
     if (!loaded) {
       throw new Error(
-        `No Fargo exports loaded for ${year}. Add JSON/Track files under scripts/data/fargo/exports/ (see fargo-events.ts). Warnings: ${warnings.join(" | ")}`,
+        `No Fargo exports loaded for ${year}. Ship USA Bracketing JSON in lib/public-imports/fixtures/fargo/ (bundled for production) and scripts/data/fargo/exports/. Event hub HTML pages cannot be scraped. Skipped: ${sources
+          .filter((s) => s.status.startsWith("skipped"))
+          .map((s) => s.label)
+          .join(", ") || "none"}.`,
+      )
+    }
+
+    if (loaded < slots.length) {
+      warnings.push(
+        `Loaded ${loaded}/${slots.length} ${year} brackets; missing exports were skipped (expected until each style/age dump is added).`,
       )
     }
   }

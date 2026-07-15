@@ -17,9 +17,14 @@ export type FargoEventSlot = {
   adapter: FargoAdapterId
   /** USA Wrestling / USAB / Track event id when known */
   source_event_id?: string | null
-  /** Live fetch URL when publicly reachable */
+  /**
+   * Live JSON export URL when publicly reachable (must return JSON, not an HTML hub page).
+   * Do not point this at usawrestlingevents.com event marketing pages.
+   */
   fetch_url?: string | null
-  /** Local official export under repo (preferred for CI + review) */
+  /** Marketing / registration hub (documentation only — not fetched as export) */
+  hub_url?: string | null
+  /** Local official export under repo + bundled fixture key */
   local_path?: string | null
   notes?: string | null
 }
@@ -51,7 +56,7 @@ export const FARGO_EVENT_REGISTRY: FargoEventSlot[] = [
     age_division: "Junior",
     adapter: "usa_bracketing",
     source_event_id: "2600005902",
-    fetch_url: "https://usawrestlingevents.com/event/2600005902",
+    hub_url: "https://usawrestlingevents.com/event/2600005902",
     local_path: "scripts/data/fargo/exports/2026-junior-boys-fs.json",
   }),
   slot({
@@ -61,7 +66,9 @@ export const FARGO_EVENT_REGISTRY: FargoEventSlot[] = [
     age_division: "16U",
     adapter: "usa_bracketing",
     source_event_id: "2600005902",
+    hub_url: "https://usawrestlingevents.com/event/2600005902",
     local_path: "scripts/data/fargo/exports/2026-16u-boys-fs.json",
+    notes: "Add USA Bracketing JSON export when available (bundled fixture not yet shipped).",
   }),
   slot({
     year: 2026,
@@ -70,6 +77,7 @@ export const FARGO_EVENT_REGISTRY: FargoEventSlot[] = [
     age_division: "Junior",
     adapter: "usa_bracketing",
     source_event_id: "2600005902",
+    hub_url: "https://usawrestlingevents.com/event/2600005902",
     local_path: "scripts/data/fargo/exports/2026-junior-boys-gr.json",
   }),
   slot({
@@ -79,7 +87,9 @@ export const FARGO_EVENT_REGISTRY: FargoEventSlot[] = [
     age_division: "16U",
     adapter: "usa_bracketing",
     source_event_id: "2600005902",
+    hub_url: "https://usawrestlingevents.com/event/2600005902",
     local_path: "scripts/data/fargo/exports/2026-16u-boys-gr.json",
+    notes: "Add USA Bracketing JSON export when available (bundled fixture not yet shipped).",
   }),
   slot({
     year: 2026,
@@ -88,7 +98,9 @@ export const FARGO_EVENT_REGISTRY: FargoEventSlot[] = [
     age_division: "Junior",
     adapter: "usa_bracketing",
     source_event_id: "2600005902",
+    hub_url: "https://usawrestlingevents.com/event/2600005902",
     local_path: "scripts/data/fargo/exports/2026-junior-girls-fs.json",
+    notes: "Add USA Bracketing JSON export when available (bundled fixture not yet shipped).",
   }),
   slot({
     year: 2026,
@@ -97,7 +109,9 @@ export const FARGO_EVENT_REGISTRY: FargoEventSlot[] = [
     age_division: "16U",
     adapter: "usa_bracketing",
     source_event_id: "2600005902",
+    hub_url: "https://usawrestlingevents.com/event/2600005902",
     local_path: "scripts/data/fargo/exports/2026-16u-girls-fs.json",
+    notes: "Add USA Bracketing JSON export when available (bundled fixture not yet shipped).",
   }),
 
   // —— 2025 USA Bracketing ——
