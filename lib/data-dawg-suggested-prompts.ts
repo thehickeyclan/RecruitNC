@@ -24,6 +24,10 @@ export const SUGGESTED_PROMPT_ROUTES: Array<{ prompt: string; handler: string; p
   // State champs (state_champion_count, state_champion_records)
   { prompt: "how many state titles does faith bane have?", handler: "state_champion_count", params: { wrestlerName: "Faith Bane" } },
   { prompt: "who are our 4x state champions?", handler: "state_champion_records", params: { championshipCount: 4 } },
+  { prompt: "who are the 4x state placers?", handler: "state_placer_records", params: { championshipCount: 4 } },
+  { prompt: "who are the 4x state place winners?", handler: "state_placer_records", params: { championshipCount: 4 } },
+  { prompt: "who are our 4x state placers?", handler: "state_placer_records", params: { championshipCount: 4 } },
+  { prompt: "how many 4x state placers have there been?", handler: "state_placer_count", params: { championshipCount: 4 } },
   // Prospect rankings (default Data Dawg chips)
   { prompt: "show me all class of 2026 rankings", handler: "prospect_rankings", params: { year: 2026 } },
   { prompt: "show me all class of 2027 rankings", handler: "prospect_rankings", params: { year: 2027 } },
@@ -84,6 +88,7 @@ export function getSuggestedPrompts(pathname: string): string[] {
     return [
       "Who won the 4A state championship at 132lbs in 2025?",
       "Who are our 4x state champions?",
+      "Who are the 4x state placers?",
       "Which schools are in 7A East?",
       "What are the NCHSAA weight classes?",
     ]

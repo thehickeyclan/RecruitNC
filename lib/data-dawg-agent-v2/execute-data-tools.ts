@@ -39,6 +39,7 @@ import {
 import { buildAthleteDossierMarkdown } from "@/lib/data-dawg-athlete-dossier"
 import { buildSchoolWrestlingDossierMarkdown } from "@/lib/data-dawg-school-dossier"
 import { getNchsaaStateChampionsByExactTitleCount } from "@/lib/nchsaa-multi-time-state-champions"
+import { getNchsaaStatePlacersByExactPlacementCount } from "@/lib/nchsaa-multi-time-state-placers"
 import { loadNcUnitedResultsForNameSearch } from "@/lib/national-team-live-profile-results"
 import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
 import { buildDataDawgTournamentSummary } from "@/lib/data-dawg-tournament-summary"
@@ -1320,6 +1321,26 @@ export async function toolNchsaaMultiTimeStateChampions(args: { times: number })
   }
 }
 
+export async function toolNchsaaMultiTimeStatePlacers(args: { times: number }) {
+  const t = Math.floor(Number(args.times))
+  if (t !== 2 && t !== 3 && t !== 4) {
+    return {
+      error: "times must be 2, 3, or 4 (NCHSAA state places, place 1–6).",
+      placers: [] as unknown[],
+    }
+  }
+  const placers = await getNchsaaStatePlacersByExactPlacementCount(t as 2 | 3 | 4)
+  return {
+    exact_placement_count: t,
+    total_wrestlers: placers.length,
+    placers,
+    note:
+      t === 4
+        ? "Four-time state placers (exactly four NCHSAA places of 1st–6th): curated archive list plus any 4× champions not already on it. Ordered earliest first placement year first. List every wrestler; do not reverse or alphabetize. Format each line as: Name (School) — places oldest→newest e.g. 3rd-2nd-1st-1st."
+        : "Ordered by earliest placement year first; places within each wrestler are chronological.",
+  }
+}
+
 const MAX_DUAL_LIST = 400
 const MAX_DUAL_LEADERBOARD = 80
 
@@ -1772,6 +1793,7 @@ export type DataToolName =
   | "nhsca_placements_search"
   | "nchsaa_state_results_search"
   | "nchsaa_multi_time_state_champions"
+  | "nchsaa_multi_time_state_placers"
   | "nhsca_all_americans_by_year"
   | "nchsaa_state_tournament_by_year"
   | "fargo_results_by_year"
@@ -1842,6 +1864,10 @@ export async function executeDataTool(name: string, rawArgs: unknown): Promise<s
       case "nchsaa_multi_time_state_champions":
         return JSON.stringify(
           await toolNchsaaMultiTimeStateChampions(args as { times: number }),
+        )
+      case "nchsaa_multi_time_state_placers":
+        return JSON.stringify(
+          await toolNchsaaMultiTimeStatePlacers(args as { times: number }),
         )
       case "nhsca_all_americans_by_year":
         return JSON.stringify(

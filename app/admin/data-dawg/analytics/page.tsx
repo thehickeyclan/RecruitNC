@@ -38,6 +38,7 @@ type AnalyticsPayload = {
   logs: AiQueryLogRow[]
   total: number
   allTimeTotal?: number
+  newestTimestamp?: string | null
   hasMore: boolean
   error?: string
 }
@@ -298,17 +299,30 @@ export default function DataDawgAnalyticsPage() {
           <div className="mb-6 rounded-lg border border-amber-300 bg-amber-50 px-5 py-5 text-sm text-amber-950">
             <p className="font-semibold">No queries in this time range ({timeRange}).</p>
             {(data.allTimeTotal ?? 0) > 0 ? (
-              <p className="mt-2 text-amber-900/90">
-                There are <strong>{data.allTimeTotal}</strong> all-time log rows — switch the filter to{" "}
-                <button
-                  type="button"
-                  className="underline font-semibold"
-                  onClick={() => setTimeRange("all")}
-                >
-                  All
-                </button>
-                .
-              </p>
+              <div className="mt-2 space-y-2 text-amber-900/90">
+                <p>
+                  There are <strong>{data.allTimeTotal}</strong> all-time log rows — switch to{" "}
+                  <button
+                    type="button"
+                    className="underline font-semibold"
+                    onClick={() => setTimeRange("all")}
+                  >
+                    All
+                  </button>
+                  {timeRange === "24h" || timeRange === "7d" ? " (or 30d)" : ""}.
+                </p>
+                {data.newestTimestamp ? (
+                  <p className="text-xs text-amber-800/90">
+                    Newest log: <strong>{formatWhen(data.newestTimestamp)}</strong>. Logging was broken for a
+                    stretch (ON CONFLICT inserts). Ask Data Dawg one question on production, then refresh —{" "}
+                    {timeRange} should populate once new rows land.
+                  </p>
+                ) : (
+                  <p className="text-xs text-amber-800/90">
+                    Ask Data Dawg on production after the schema fix, then refresh this page.
+                  </p>
+                )}
+              </div>
             ) : (
               <div className="mt-2 space-y-2 text-amber-900/90">
                 <p>

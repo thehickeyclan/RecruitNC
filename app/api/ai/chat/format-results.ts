@@ -752,10 +752,21 @@ export function formatResults(
             return `${an1} - ${r.championship_count}x NHSCA National Champion: ${champYears}`
           } else if (r.wrestler_name && r.placement_count !== undefined) {
             // State placer records
-            const placerYears = r.placements
-              .map((p: any) => `${p.year} (${p.classification} ${p.weight_class}lbs, ${p.place === 1 ? "Champion" : `${p.place}${getOrdinalSuffix(p.place)} place`})`)
+            const placerYears = (r.placements ?? [])
+              .map((p: any) => {
+                const placeBit =
+                  p.place === 1 ? "Champion" : `${p.place}${getOrdinalSuffix(p.place)} place`
+                const classBit = [p.classification, p.weight_class]
+                  .filter((x: unknown) => x != null && String(x).trim() !== "")
+                  .join(" ")
+                if (classBit) return `${p.year} (${classBit}, ${placeBit})`
+                return `${p.year} (${placeBit})`
+              })
               .join(", ")
-            const champText = r.championships > 0 ? ` (${r.championships} championship${r.championships !== 1 ? "s" : ""})` : ""
+            const champText =
+              typeof r.championships === "number" && r.championships > 0
+                ? ` (${r.championships} championship${r.championships !== 1 ? "s" : ""})`
+                : ""
             const wn2 = formatNameWithProfileLink(r.wrestler_name, profileLinks)
             return `${wn2} - ${r.placement_count}x State Placer: ${placerYears}${champText}`
           } else if (r.athlete_name && r.placement_count !== undefined) {
