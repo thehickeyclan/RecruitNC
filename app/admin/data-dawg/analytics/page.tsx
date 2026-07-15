@@ -37,6 +37,7 @@ type AnalyticsPayload = {
   learningOpportunities: NamedCount[]
   logs: AiQueryLogRow[]
   total: number
+  allTimeTotal?: number
   hasMore: boolean
   error?: string
 }
@@ -140,7 +141,7 @@ function RankList({
 
 export default function DataDawgAnalyticsPage() {
   const { user, isAdmin, isLoading: authLoading } = useAuth()
-  const [timeRange, setTimeRange] = useState<TimeRange>("7d")
+  const [timeRange, setTimeRange] = useState<TimeRange>("all")
   const [feedback, setFeedback] = useState<FeedbackFilter>("all")
   const [data, setData] = useState<AnalyticsPayload | null>(null)
   const [loading, setLoading] = useState(true)
@@ -283,8 +284,9 @@ export default function DataDawgAnalyticsPage() {
           <div className="rounded-lg border border-amber-200 bg-amber-50 px-5 py-6">
             <h2 className="text-sm font-semibold text-amber-950">Setup required</h2>
             <p className="mt-2 text-sm text-amber-900/80">
-              The <code className="text-xs">ai_query_logs</code> table is missing. Run this in the Supabase SQL
-              Editor, then ask Data Dawg anything and refresh:
+              The <code className="text-xs">ai_query_logs</code> table is missing. Run{" "}
+              <code className="text-xs">scripts/ai-query-logs-table.sql</code> in the Supabase SQL Editor,
+              then ask Data Dawg anything and refresh.
             </p>
             <pre className="mt-4 overflow-x-auto rounded-md border border-amber-200/80 bg-white p-3 text-xs text-zinc-700 whitespace-pre-wrap">
               {data.setupHint || "scripts/ai-query-logs-table.sql"}
@@ -293,10 +295,39 @@ export default function DataDawgAnalyticsPage() {
         ) : null}
 
         {!data?.tableMissing && summary && summary.total === 0 ? (
-          <div className="mb-6 rounded-lg border border-zinc-200 bg-white px-5 py-4 text-sm text-zinc-600">
-            Table is ready, but no queries are logged in this range yet. Ask Data Dawg a question (on production
-            after deploy), then hit refresh. Logging must finish before the response returns — older builds could
-            drop inserts on Vercel.
+          <div className="mb-6 rounded-lg border border-amber-300 bg-amber-50 px-5 py-5 text-sm text-amber-950">
+            <p className="font-semibold">No queries in this time range ({timeRange}).</p>
+            {(data.allTimeTotal ?? 0) > 0 ? (
+              <p className="mt-2 text-amber-900/90">
+                There are <strong>{data.allTimeTotal}</strong> all-time log rows — switch the filter to{" "}
+                <button
+                  type="button"
+                  className="underline font-semibold"
+                  onClick={() => setTimeRange("all")}
+                >
+                  All
+                </button>
+                .
+              </p>
+            ) : (
+              <div className="mt-2 space-y-2 text-amber-900/90">
+                <p>
+                  The table exists but has <strong>0</strong> rows. Inserts were failing with an ON CONFLICT
+                  error until the schema fix. Do this:
+                </p>
+                <ol className="list-decimal pl-5 space-y-1">
+                  <li>
+                    Run <code className="text-xs bg-white px-1 rounded">scripts/ai-query-logs-table.sql</code>{" "}
+                    in Supabase (adds PK + unique message_id).
+                  </li>
+                  <li>Ask Data Dawg any question on the live site.</li>
+                  <li>Click refresh on this page.</li>
+                </ol>
+                <p className="text-xs text-amber-800/80">
+                  API status: ok · allTimeTotal={data.allTimeTotal ?? 0} · rangeTotal={summary.total}
+                </p>
+              </div>
+            )}
           </div>
         ) : null}
 
