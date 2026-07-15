@@ -679,10 +679,8 @@ export default function AdminImportsPage() {
               Fargo Nationals — full connector (USA Bracketing + Track)
             </CardTitle>
             <CardDescription>
-              Canonical bout + season SoR. Loads registered exports from{" "}
-              <code className="text-xs">scripts/data/fargo/exports/</code> via USA Bracketing and
-              Trackwrestling adapters, materializes FS/GR careers separately, stages seasons +
-              bouts with a validation report. Flo never SoR. Setup SQL:{" "}
+              Canonical bout + season SoR from official USA Bracketing / Trackwrestling exports only.
+              Demo fixtures are blocked (never invent real athlete rows). Flo never SoR. Setup:{" "}
               <code className="text-xs">fargo-results-harden-setup.sql</code> +{" "}
               <code className="text-xs">fargo-bouts-full-setup.sql</code>. Event years:{" "}
               {fargoFullYears.length ? fargoFullYears.join(", ") : "—"}.

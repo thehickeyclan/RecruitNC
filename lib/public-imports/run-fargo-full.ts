@@ -57,18 +57,40 @@ function readLocal(rel: string): string | null {
   return fs.readFileSync(abs, "utf8")
 }
 
-async function loadSlotPayload(slot: FargoEventSlot): Promise<{
+function isDemoJsonText(text: string): boolean {
+  try {
+    const j = JSON.parse(text) as { recruitnc_demo?: unknown }
+    return Boolean(j?.recruitnc_demo)
+  } catch {
+    return false
+  }
+}
+
+async function loadSlotPayload(
+  slot: FargoEventSlot,
+  opts?: { allowDemo?: boolean },
+): Promise<{
   text: string
   source_url: string | null
   status: string
 }> {
   // 1) Bundled fixture (works on Vercel — scripts/ is not in the serverless filesystem)
-  const bundled = getBundledFargoExport(slot.local_path)
+  const bundled = getBundledFargoExport(slot.local_path, { allowDemo: opts?.allowDemo })
   if (bundled?.trim()) {
     return {
       text: bundled,
       source_url: slot.local_path ? `bundle://${slot.local_path}` : null,
-      status: "bundled_export",
+      status: opts?.allowDemo && isDemoJsonText(bundled) ? "bundled_demo" : "bundled_export",
+    }
+  }
+
+  // Demo fixtures exist but are blocked without allowDemo
+  if (slot.local_path && !opts?.allowDemo) {
+    const demoOnly = getBundledFargoExport(slot.local_path, { allowDemo: true })
+    if (demoOnly && isDemoJsonText(demoOnly)) {
+      throw new Error(
+        `Demo fixture only for ${slot.label} (skipped — not official SoR). Add a real USA Bracketing export, or pass allow_demo only for connector plumbing tests.`,
+      )
     }
   }
 
@@ -76,6 +98,11 @@ async function loadSlotPayload(slot: FargoEventSlot): Promise<{
   if (slot.local_path) {
     const text = readLocal(slot.local_path)
     if (text?.trim()) {
+      if (isDemoJsonText(text) && !opts?.allowDemo) {
+        throw new Error(
+          `Demo fixture only for ${slot.label} (skipped — not official SoR). Add a real USA Bracketing export.`,
+        )
+      }
       return { text, source_url: `file://${slot.local_path}`, status: "local_export" }
     }
   }
@@ -180,12 +207,15 @@ export async function runFargoFullConnector(
     }
     stageBouts?: boolean
     stageSeasons?: boolean
+    /** Only for connector plumbing tests — never for production SoR */
+    allowDemo?: boolean
   },
 ): Promise<RunFargoFullResult> {
   const year = opts.year
   const stateFilter = opts.nationwide ? null : (opts.stateFilter ?? "NC")
   const stageBouts = opts.stageBouts !== false
   const stageSeasons = opts.stageSeasons !== false
+  const allowDemo = Boolean(opts.allowDemo)
   const warnings: string[] = []
   const sources: RunFargoFullResult["sources"] = []
 
@@ -219,7 +249,7 @@ export async function runFargoFullConnector(
     let loaded = 0
     for (const slot of slots) {
       try {
-        const payload = await loadSlotPayload(slot)
+        const payload = await loadSlotPayload(slot, { allowDemo })
         const parsed = parseSlot(slot, payload.text, payload.source_url)
         parsedAll.push(parsed)
         warnings.push(...parsed.warnings)
@@ -244,10 +274,7 @@ export async function runFargoFullConnector(
 
     if (!loaded) {
       throw new Error(
-        `No Fargo exports loaded for ${year}. Ship USA Bracketing JSON in lib/public-imports/fixtures/fargo/ (bundled for production) and scripts/data/fargo/exports/. Event hub HTML pages cannot be scraped. Skipped: ${sources
-          .filter((s) => s.status.startsWith("skipped"))
-          .map((s) => s.label)
-          .join(", ") || "none"}.`,
+        `No official Fargo exports loaded for ${year}. Demo fixtures are blocked by default (they must never invent real athlete results). Add USA Bracketing JSON to lib/public-imports/fixtures/fargo/ without recruitnc_demo, and scripts/data/fargo/exports/.`,
       )
     }
 
