@@ -1,5 +1,9 @@
 import { getSupabaseAdmin } from "@/lib/server-supabase"
 import { QueryHandler } from "./index"
+import {
+  buildKnownSchoolEntries,
+  resolveNhscaLeaderboardSchool,
+} from "@/lib/nhsca-school-label"
 
 type NhscaAaRow = {
   athlete_name?: string | null
@@ -66,6 +70,17 @@ async function loadMergedNhscaAaRows(
   return out
 }
 
+async function loadKnownSchools(
+  adminClient: ReturnType<typeof getSupabaseAdmin>,
+): Promise<ReturnType<typeof buildKnownSchoolEntries>> {
+  const { data, error } = await adminClient.from("school_classifications").select("school_name").limit(5000)
+  if (error) {
+    console.warn("[Handler] nhsca_school_leaderboard: school_classifications lookup failed:", error.message)
+    return []
+  }
+  return buildKnownSchoolEntries((data ?? []).map((r) => String(r.school_name ?? "")))
+}
+
 export const handleNhscaSchoolLeaderboard: QueryHandler = async (
   params,
   _request,
@@ -85,12 +100,20 @@ export const handleNhscaSchoolLeaderboard: QueryHandler = async (
     }
   }
 
-  const rows = await loadMergedNhscaAaRows(adminClient)
+  const [rows, known] = await Promise.all([
+    loadMergedNhscaAaRows(adminClient),
+    loadKnownSchools(adminClient),
+  ])
+
   const bySchool: Record<string, number> = {}
+  let dropped = 0
   for (const r of rows) {
-    const hs = String(r.high_school ?? "").trim()
-    if (!hs) continue
-    bySchool[hs] = (bySchool[hs] ?? 0) + 1
+    const canonical = resolveNhscaLeaderboardSchool(r.high_school, known)
+    if (!canonical) {
+      dropped += 1
+      continue
+    }
+    bySchool[canonical] = (bySchool[canonical] ?? 0) + 1
   }
 
   const schoolCounts = Object.entries(bySchool)
@@ -100,6 +123,10 @@ export const handleNhscaSchoolLeaderboard: QueryHandler = async (
     }))
     .sort((a, b) => b.count - a.count)
 
+  console.log(
+    `[Handler] nhsca_school_leaderboard: ${schoolCounts.length} schools, dropped ${dropped} non-school labels`,
+  )
+
   return {
     aggregateResult: {
       schoolCounts,
@@ -107,4 +134,3 @@ export const handleNhscaSchoolLeaderboard: QueryHandler = async (
     },
   }
 }
-
