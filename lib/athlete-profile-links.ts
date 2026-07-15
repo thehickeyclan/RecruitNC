@@ -2,6 +2,8 @@
  * Athlete profile links - link names to RecruitNC profiles when athlete exists in athletes table.
  */
 
+import { formatCommitChronologyLine } from "@/lib/data-dawg-college-commit"
+
 export const RECRUITNC_APP_URL = "https://app.ncwrestlingunited.com"
 
 /**
@@ -86,13 +88,7 @@ function formatCollegeCommitLine(
   division?: string | null,
   previousCollege?: string | null,
 ): string {
-  const c = college.trim()
-  const div = (division ?? "").trim()
-  const divPart = div && !c.toLowerCase().includes(div.toLowerCase()) ? ` (${div})` : ""
-  const prev = (previousCollege ?? "").trim()
-  const transferPart =
-    prev && prev.toLowerCase() !== c.toLowerCase() ? ` — transferred from ${prev}` : ""
-  return `College commit: ${c}${divPart}${transferPart}`
+  return formatCommitChronologyLine(college, previousCollege, division)
 }
 
 /**

@@ -12,17 +12,24 @@ import { type TournamentResultForDisplay } from "@/lib/public-profile-data"
 import { countDistinctStateTitleYears } from "@/lib/nchsaa-state-display"
 import { namesMatch } from "@/lib/nhsca-live/names-match"
 import { loadNcUnitedResultsForNameSearch } from "@/lib/national-team-live-profile-results"
+import { isBlueTeam } from "@/lib/blue-team"
 import { buildAthleteTimelineMarkdown } from "@/lib/data-dawg-athlete-timeline"
 import {
   buildAnalystClosingSentence,
   buildCareerSnapshotMarkdown,
-  buildHistoricalContextBullets,
+  buildDevelopmentPathMarkdown,
+  buildHistoricalContextNarrative,
   buildHistoricalRankingsMarkdown,
   buildNationalResumeMarkdown,
+  buildNotableAchievementsMarkdown,
+  buildRepresentedNorthCarolinaMarkdown,
+  buildVerifiedSourcesFooter,
   countNationalAllAmericans,
   formatAnalystAthleteOpening,
   formatStateResultsSection,
   type AnalystProfileStats,
+  type SeasonRecordBag,
+  type SchoolDualTitle,
 } from "@/lib/data-dawg-athlete-analyst-profile"
 
 function athleteDisplayName(row: Record<string, unknown>): string {
@@ -31,6 +38,55 @@ function athleteDisplayName(row: Record<string, unknown>): string {
   const f = String(row.first_name ?? row.firstName ?? "").trim()
   const l = String(row.last_name ?? row.lastName ?? "").trim()
   return `${f} ${l}`.trim() || "Unknown"
+}
+
+function extractWrestlingClub(row: Record<string, unknown>): string | null {
+  for (const key of [
+    "wrestlingClub",
+    "wrestling_club",
+    "wrestlingclub",
+    "club",
+    "team_affiliation",
+    "team",
+  ]) {
+    const v = String(row[key] ?? "").trim()
+    if (v && !/^(none|n\/a|na|-)$/i.test(v)) return v
+  }
+  return null
+}
+
+function classLabelFromMatchRow(
+  mr: Record<string, unknown>,
+  graduationYear: number | null,
+): { classLabel: string | null; year: number | null } {
+  const grade = String(mr.grade ?? mr.season ?? "").toLowerCase()
+  for (const label of ["freshman", "sophomore", "junior", "senior"] as const) {
+    if (grade.includes(label)) {
+      const capitalized = label.charAt(0).toUpperCase() + label.slice(1)
+      const year =
+        graduationYear != null
+          ? graduationYear -
+            (label === "senior" ? 0 : label === "junior" ? 1 : label === "sophomore" ? 2 : 3)
+          : null
+      return { classLabel: capitalized, year }
+    }
+  }
+  const season = String(mr.season ?? "")
+  const endYear = season.match(/(20\d{2})\s*[-–]\s*(20\d{2})/)
+  const y = endYear
+    ? parseInt(endYear[2], 10)
+    : (() => {
+        const m = season.match(/\b(20\d{2})\b/)
+        return m ? parseInt(m[1], 10) : null
+      })()
+  if (y != null && graduationYear != null) {
+    const offset = graduationYear - y
+    if (offset === 0) return { classLabel: "Senior", year: y }
+    if (offset === 1) return { classLabel: "Junior", year: y }
+    if (offset === 2) return { classLabel: "Sophomore", year: y }
+    if (offset === 3) return { classLabel: "Freshman", year: y }
+  }
+  return { classLabel: null, year: y }
 }
 
 /** Directory name vs tournament row (handles "Last, First" in DB). */
@@ -114,15 +170,25 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
   })
 
   const { data: matchRows } = await supabase.from("matches").select("*").eq("athlete_id", id)
-  const seasons = new Map<string, { wins: number; losses: number }>()
+  const seasons = new Map<string, { wins: number; losses: number; classLabel: string | null; year: number | null }>()
   for (const m of matchRows ?? []) {
     const mr = m as Record<string, unknown>
-    const season = String(mr.season ?? mr.grade ?? "").toLowerCase()
-    if (!season || season.includes("career")) continue
-    if (!seasons.has(season)) seasons.set(season, { wins: 0, losses: 0 })
-    const rec = seasons.get(season)!
+    const seasonKey = String(mr.season ?? mr.grade ?? "").toLowerCase()
+    if (!seasonKey || seasonKey.includes("career")) continue
+    const meta = classLabelFromMatchRow(mr, hasValidGrad ? gradYear : null)
+    if (!seasons.has(seasonKey)) {
+      seasons.set(seasonKey, {
+        wins: 0,
+        losses: 0,
+        classLabel: meta.classLabel,
+        year: meta.year,
+      })
+    }
+    const rec = seasons.get(seasonKey)!
     rec.wins += Number(mr.wins ?? 0) || 0
     rec.losses += Number(mr.losses ?? 0) || 0
+    if (!rec.classLabel && meta.classLabel) rec.classLabel = meta.classLabel
+    if (rec.year == null && meta.year != null) rec.year = meta.year
   }
   let careerWins = 0
   let careerLosses = 0
@@ -131,6 +197,12 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
     careerLosses += rec.losses
   }
   const hasCareerRecord = seasons.size > 0
+  const seasonRecordRows: SeasonRecordBag[] = Array.from(seasons.values()).map((s) => ({
+    classLabel: s.classLabel,
+    year: s.year,
+    wins: s.wins,
+    losses: s.losses,
+  }))
   const champCount = countDistinctStateTitleYears(nchsaaSorted)
   const aaCounts = countNationalAllAmericans({
     nhsca: nhscaDisplay,
@@ -138,7 +210,7 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
     fargo: fargoRows as TournamentResultForDisplay[],
   })
 
-  let schoolDualTitlesInWindow = 0
+  const schoolDualTitles: SchoolDualTitle[] = []
   let stateDualLines: string[] = []
   if (highSchool) {
     const { data: dualRows } = await supabase
@@ -154,7 +226,12 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
       const ch = String(d.champion_school ?? "").toLowerCase().trim()
       return ch === hsLower || ch.includes(hsLower) || hsLower.includes(ch)
     })
-    schoolDualTitlesInWindow = filtered.length
+    for (const d of filtered) {
+      const y = Number(d.year)
+      if (Number.isFinite(y)) {
+        schoolDualTitles.push({ year: y, division: d.division != null ? String(d.division) : null })
+      }
+    }
     stateDualLines = filtered.map(
       (d: Record<string, unknown>) => `- ${d.year}: State Dual Team Champion (${d.division})`,
     )
@@ -222,6 +299,13 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
       ? Math.floor(Number(careerFiltered[0].rank))
       : null
 
+  const wrestlingClub = extractWrestlingClub(athlete)
+  const ncUnitedBlue = isBlueTeam(athlete)
+  const nchsaaPlacesChronological = nchsaaSorted
+    .filter((r) => r.place != null && r.place >= 1 && r.place <= 6)
+    .map((r) => ({ year: r.year, place: r.place as number }))
+    .sort((a, b) => a.year - b.year)
+
   const stats: AnalystProfileStats = {
     displayName,
     athleteId: id,
@@ -230,14 +314,19 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
     careerWins: hasCareerRecord ? careerWins : null,
     careerLosses: hasCareerRecord ? careerLosses : null,
     stateTitleYears: champCount,
+    nchsaaPlacesChronological,
     college: commit?.college ?? null,
     previousCollege: commit?.previousCollege ?? null,
     division: commit?.division ?? null,
     recruitingStatus: recruitingStatus || null,
+    wrestlingClub,
+    ncUnitedBlue,
+    ncUnitedEvents: ncUnited,
     prospectRanking,
     careerWinsRank,
     dualsMowCount: mowFiltered.length,
-    schoolDualTitlesInWindow,
+    schoolDualTitles,
+    schoolDualTitlesInWindow: schoolDualTitles.length,
     nhscaAllAmericanCount: aaCounts.nhsca,
     super32AllAmericanCount: aaCounts.super32,
     fargoAllAmericanCount: aaCounts.fargo,
@@ -247,6 +336,8 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
     triciaSaundersYears: triciaFiltered
       .map((d) => Number(d.year))
       .filter((y) => Number.isFinite(y)),
+    seasonRecords: seasonRecordRows,
+    verifiedSources: ["RecruitNC"],
   }
 
   const lines: string[] = []
@@ -258,6 +349,13 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
     lines.push("")
   }
 
+  const development = buildDevelopmentPathMarkdown(stats)
+  if (development) {
+    lines.push(development)
+    lines.push("")
+  }
+
+  const undefeatedForTimeline = seasonRecordRows.filter((s) => s.losses === 0 && s.wins > 0)
   const timelineMd = buildAthleteTimelineMarkdown({
     graduationYear: hasValidGrad ? gradYear : null,
     nchsaa: nchsaaSorted,
@@ -284,20 +382,32 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
       ? {
           college: commit.college,
           division: commit.division,
+          previousCollege: commit.previousCollege,
           year: hasValidGrad ? gradYear : null,
         }
       : null,
-    // Keep season record-book noise out of the story timeline — listed later.
-    seasonRecords: [],
+    seasonRecords: undefeatedForTimeline.map((s) => ({
+      year: s.year,
+      wins: s.wins,
+      losses: s.losses,
+      classLabel: s.classLabel,
+      record: `${s.wins}-${s.losses}`,
+    })),
   })
   if (timelineMd) {
     lines.push(timelineMd)
     lines.push("")
   }
 
-  const context = buildHistoricalContextBullets(stats)
+  const context = buildHistoricalContextNarrative(stats)
   if (context) {
     lines.push(context)
+    lines.push("")
+  }
+
+  const notable = buildNotableAchievementsMarkdown(stats)
+  if (notable) {
+    lines.push(notable)
     lines.push("")
   }
 
@@ -307,14 +417,17 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
     lines.push("")
   }
 
+  const represented = buildRepresentedNorthCarolinaMarkdown(stats)
+  if (represented) {
+    lines.push(represented)
+    lines.push("")
+  }
+
   lines.push(formatStateResultsSection(nchsaaSorted as NchsaaRowForProfile[]))
 
   if (stateDualLines.length > 0) {
     lines.push("")
     lines.push("State dual team championships:")
-    lines.push(
-      `(School team titles — everyone on the ${highSchool} varsity in this class window shares this list.)`,
-    )
     stateDualLines.forEach((l) => lines.push(l))
   }
 
@@ -374,13 +487,13 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
     }
     if (hasCareerRecord) {
       const sortedSeasons = Array.from(seasons.entries()).sort((a, b) => {
-        const ya = parseInt(a[0].match(/(\d{4})/)?.[1] ?? "0", 10)
-        const yb = parseInt(b[0].match(/(\d{4})/)?.[1] ?? "0", 10)
+        const ya = a[1].year ?? parseInt(a[0].match(/(\d{4})/)?.[1] ?? "0", 10)
+        const yb = b[1].year ?? parseInt(b[0].match(/(\d{4})/)?.[1] ?? "0", 10)
         return yb - ya
       })
-      for (const [season, rec] of sortedSeasons) {
-        const sd = season.charAt(0).toUpperCase() + season.slice(1)
-        lines.push(`- ${sd}: ${rec.wins}-${rec.losses}`)
+      for (const [, rec] of sortedSeasons) {
+        const label = rec.classLabel || "Season"
+        lines.push(`- ${label}: ${rec.wins}-${rec.losses}`)
       }
     }
   }
@@ -390,6 +503,9 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
     lines.push("")
     lines.push(closer)
   }
+
+  lines.push("")
+  lines.push(buildVerifiedSourcesFooter(stats))
 
   return { markdown: lines.join("\n") }
 }
