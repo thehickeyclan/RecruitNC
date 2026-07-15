@@ -149,6 +149,9 @@ export default function DataDawgAnalyticsPage() {
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const [pinging, setPinging] = useState(false)
+  const [pingMsg, setPingMsg] = useState<string | null>(null)
+
   const load = useCallback(
     async (opts?: { append?: boolean; currentLen?: number }) => {
       const append = Boolean(opts?.append)
@@ -195,6 +198,38 @@ export default function DataDawgAnalyticsPage() {
     },
     [timeRange, feedback],
   )
+
+  async function pingWrite() {
+    setPinging(true)
+    setPingMsg(null)
+    try {
+      const res = await fetch("/api/admin/data-dawg/analytics/ping", {
+        method: "POST",
+        credentials: "include",
+        cache: "no-store",
+      })
+      const json = (await res.json().catch(() => ({}))) as {
+        ok?: boolean
+        write?: { ok?: boolean; error?: string }
+        last24h?: number
+        hint?: string
+      }
+      if (!res.ok) throw new Error((json as { error?: string }).error || "Ping failed")
+      setPingMsg(
+        json.ok
+          ? `Write OK · last24h=${json.last24h ?? "?"} — refresh 24h filter`
+          : `Write FAILED: ${json.write?.error || json.hint || "unknown"}`,
+      )
+      if (json.ok) {
+        setTimeRange("24h")
+        void load()
+      }
+    } catch (e) {
+      setPingMsg(e instanceof Error ? e.message : "Ping failed")
+    } finally {
+      setPinging(false)
+    }
+  }
 
   useEffect(() => {
     if (authLoading) return
@@ -272,8 +307,31 @@ export default function DataDawgAnalyticsPage() {
             >
               {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
             </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 border-amber-300 bg-amber-50 text-amber-950"
+              onClick={() => void pingWrite()}
+              disabled={pinging}
+              title="Insert a test log row to verify writes"
+            >
+              {pinging ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Test write"}
+            </Button>
           </div>
         </div>
+
+        {pingMsg ? (
+          <div
+            className={`mb-4 rounded-lg border px-4 py-3 text-sm ${
+              pingMsg.startsWith("Write OK")
+                ? "border-emerald-200 bg-emerald-50 text-emerald-900"
+                : "border-red-200 bg-red-50 text-red-800"
+            }`}
+          >
+            {pingMsg}
+          </div>
+        ) : null}
 
         {error ? (
           <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
