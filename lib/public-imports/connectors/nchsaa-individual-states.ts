@@ -8,6 +8,8 @@ export type NchsaaIndividualSource = {
   label: string
   /** Hint when page lacks classification on every weight header */
   defaultClassification?: string
+  /** Tag rows from this page so men/women don’t overwrite each other in review. */
+  gender?: "M" | "F"
 }
 
 /**
@@ -19,10 +21,12 @@ export const NCHSAA_INDIVIDUAL_STATES_SOURCES: Record<number, NchsaaIndividualSo
     {
       url: "https://www.nchsaa.org/2026-mens-individual-wrestling-state-championship/",
       label: "2026 Men's Individual",
+      gender: "M",
     },
     {
       url: "https://www.nchsaa.org/2026-womens-individual-wrestling-state-championship/",
       label: "2026 Women's Individual",
+      gender: "F",
     },
   ],
   2025: [

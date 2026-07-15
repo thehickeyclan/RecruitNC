@@ -1,4 +1,5 @@
 import type { DualTeamProposed, PlacerProposed } from "./types"
+import { canonicalizeWrestlerName } from "./normalize"
 
 function asNum(v: unknown): number | null {
   if (typeof v === "number" && Number.isFinite(v)) return v
@@ -132,7 +133,7 @@ const PLACE_LINE_RE =
  */
 export function parseNchsaaGuaranteedPlacesText(
   text: string,
-  opts: { year: number; defaultClassification?: string },
+  opts: { year: number; defaultClassification?: string; gender?: "M" | "F" | null },
 ): PlacerProposed[] {
   const lines = text.replace(/\r/g, "").split("\n")
   let classification = (opts.defaultClassification || "").trim()
@@ -187,7 +188,7 @@ export function parseNchsaaGuaranteedPlacesText(
       ? `${ordMatch[1]}${ordMatch[2].toLowerCase()}`
       : ""
     const place = PLACE_ORDINAL[placeKey] ?? Number(m[1])
-    const wrestler_name = m[2].trim()
+    const wrestler_name = canonicalizeWrestlerName(m[2].trim())
     const school = m[3].replace(/\s+High School$/i, "").trim()
     if (!wrestler_name || !Number.isFinite(place)) continue
     out.push({
@@ -197,13 +198,17 @@ export function parseNchsaaGuaranteedPlacesText(
       place,
       wrestler_name,
       school,
+      gender: opts.gender ?? null,
     })
   }
 
   // Deduplicate by natural identity (last wins)
   const map = new Map<string, PlacerProposed>()
   for (const r of out) {
-    map.set(`${r.year}|${r.classification}|${r.weight_class}|${r.place}`, r)
+    map.set(
+      `${r.year}|${r.classification}|${r.weight_class}|${r.place}|${r.gender ?? ""}|${r.wrestler_name.toLowerCase()}`,
+      r,
+    )
   }
   return [...map.values()]
 }
@@ -236,7 +241,7 @@ function normalizeClassificationLabel(raw: string): string {
  */
 export function parseNchsaaChampionshipFinalsText(
   text: string,
-  opts: { year: number; defaultClassification?: string },
+  opts: { year: number; defaultClassification?: string; gender?: "M" | "F" | null },
 ): PlacerProposed[] {
   const lines = text.replace(/\r/g, "").split("\n")
   let classification = (opts.defaultClassification || "").trim()
@@ -275,8 +280,9 @@ export function parseNchsaaChampionshipFinalsText(
       classification,
       weight_class: weight,
       place: 1,
-      wrestler_name: champ,
+      wrestler_name: canonicalizeWrestlerName(champ),
       school: champSchool,
+      gender: opts.gender ?? null,
     })
     if (runner && runnerSchool) {
       out.push({
@@ -284,15 +290,19 @@ export function parseNchsaaChampionshipFinalsText(
         classification,
         weight_class: weight,
         place: 2,
-        wrestler_name: runner,
+        wrestler_name: canonicalizeWrestlerName(runner),
         school: runnerSchool,
+        gender: opts.gender ?? null,
       })
     }
   }
 
   const map = new Map<string, PlacerProposed>()
   for (const r of out) {
-    map.set(`${r.year}|${r.classification}|${r.weight_class}|${r.place}`, r)
+    map.set(
+      `${r.year}|${r.classification}|${r.weight_class}|${r.place}|${r.gender ?? ""}`,
+      r,
+    )
   }
   return [...map.values()]
 }
@@ -302,17 +312,23 @@ export function parseNchsaaChampionshipFinalsText(
  */
 export function parseNchsaaIndividualStatesText(
   text: string,
-  opts: { year: number; defaultClassification?: string },
+  opts: { year: number; defaultClassification?: string; gender?: "M" | "F" | null },
 ): PlacerProposed[] {
   const fromPlaces = parseNchsaaGuaranteedPlacesText(text, opts)
   const fromFinals = parseNchsaaChampionshipFinalsText(text, opts)
   const map = new Map<string, PlacerProposed>()
   for (const r of fromFinals) {
-    map.set(`${r.year}|${r.classification}|${r.weight_class}|${r.place}`, r)
+    map.set(
+      `${r.year}|${r.classification}|${r.weight_class}|${r.place}|${r.gender ?? ""}`,
+      r,
+    )
   }
   // Guaranteed Places overwrite finals for the same slot (more complete when available)
   for (const r of fromPlaces) {
-    map.set(`${r.year}|${r.classification}|${r.weight_class}|${r.place}`, r)
+    map.set(
+      `${r.year}|${r.classification}|${r.weight_class}|${r.place}|${r.gender ?? ""}`,
+      r,
+    )
   }
   return [...map.values()]
 }

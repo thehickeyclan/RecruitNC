@@ -39,6 +39,13 @@ When the user says "push update" (or similar): stage and commit all relevant cha
 - **Never** restore `table { display: block }` in `globals.css` or `touch-pan-x`-only on `scrollTableXClass`.
 - **Before merging** changes to match data scroll, globals touch rules, or `ProfileScrollTable`: run `npm run test -- lib/profile-table-scroll.test.ts`.
 
+# Public-source connectors (annual)
+- **Reminders live in:** `.cursor/rules/public-source-connectors.mdc` (always on for the agent) and the checklist on `/admin/imports`.
+- **Hub:** `/admin/imports` — stage → review → approve. Setup: `scripts/public-source-imports-setup.sql`.
+- **February States:** Register NCHSAA URLs in `lib/public-imports/connectors/nchsaa-individual-states.ts`, run Individual States connector, approve.
+- **NHSCA AA years:** Register in `lib/nhsca-canonical-aa.ts` with schools; sync via NHSCA Placements admin. Docs: `docs/PUBLIC-SOURCE-IMPORTS.md`, `docs/NHSCA-YEARLY-AA-AUTOMATION.md`.
+- Do not claim team champs / classifications / MOW connectors are fully automated until built.
+
 # Debugging (F12)
 - Errors are logged with the **[RecruitNC]** prefix so they’re easy to find in the browser console. When something breaks, copy the F12 console output (especially lines starting with [RecruitNC]) and paste it; the agent will fix from the actual error instead of guessing.
 

@@ -10,7 +10,19 @@ Run in Supabase SQL Editor:
 
 Creates `public_import_batches` + `public_import_rows` (service-role only via admin APIs).
 
+## Annual reminders (do not remove from product)
+
+Keep the checklist visible on **`/admin/imports`** (“Annual reminders (connectors)”). Agent rule: `.cursor/rules/public-source-connectors.mdc`.
+
+| When | What |
+|------|------|
+| February | Add NCHSAA Individual States URLs → connector → approve |
+| After Duals | Stage year×division duals → approve |
+| After NHSCA nationals | Register AA year + schools → sync/import |
+| Summer | Classifications (not automated yet) |
+
 ## Datasets (v1)
+
 
 | `dataset_key` | Stage from | Promotes to |
 |---|---|---|

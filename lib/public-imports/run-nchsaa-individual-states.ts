@@ -52,15 +52,19 @@ export async function runNchsaaIndividualStatesConnector(
     const rows = parseNchsaaIndividualStatesText(text, {
       year,
       defaultClassification: src.defaultClassification,
+      gender: src.gender ?? null,
     })
     sourceStats.push({ url: src.url, label: src.label, parsed: rows.length })
     all.push(...rows)
   }
 
-  // Dedupe across men/women pages
+  // Dedupe across pages (men/women keep separate gender in key)
   const map = new Map<string, PlacerProposed>()
   for (const r of all) {
-    map.set(`${r.year}|${r.classification}|${r.weight_class}|${r.place}`, r)
+    map.set(
+      `${r.year}|${r.classification}|${r.weight_class}|${r.place}|${r.gender ?? ""}`,
+      r,
+    )
   }
   const proposed = [...map.values()]
   if (!proposed.length) {

@@ -311,6 +311,50 @@ export default function AdminImportsPage() {
           </Button>
         </div>
 
+        <Card className="border-slate-200 bg-slate-100/80">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base text-[#13294B]">Annual reminders (connectors)</CardTitle>
+            <CardDescription>
+              Checklist so each season isn’t a scramble. Full notes:{" "}
+              <HardLink href="/admin/data-dawg/analytics" className="underline">
+                Data Dawg
+              </HardLink>{" "}
+              · see docs{" "}
+              <code className="text-xs">PUBLIC-SOURCE-IMPORTS.md</code> /{" "}
+              <code className="text-xs">NHSCA-YEARLY-AA-AUTOMATION.md</code>.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ol className="list-decimal space-y-2 pl-5 text-sm text-slate-700">
+              <li>
+                <span className="font-medium">February — Individual States:</span> When NCHSAA posts
+                results, add that year’s URL(s) to{" "}
+                <code className="text-xs">lib/public-imports/connectors/nchsaa-individual-states.ts</code>
+                , deploy, then run <strong>Fetch &amp; stage Individual States</strong> below → approve.
+              </li>
+              <li>
+                <span className="font-medium">After Duals:</span> Stage dual-team JSON on this page
+                (year × division) → approve. School “most titles” is derived — don’t paste aggregates
+                as the only source of truth.
+              </li>
+              <li>
+                <span className="font-medium">After NHSCA nationals:</span> Ship AA roster with{" "}
+                <code className="text-xs">high_school</code>, register the year in{" "}
+                <code className="text-xs">lib/nhsca-canonical-aa.ts</code>, then Admin → NHSCA Placements
+                → <strong>Sync AA schools from yearly files</strong> (or import with schools required).
+              </li>
+              <li>
+                <span className="font-medium">Summer — classifications:</span> Not an automated
+                connector yet — still a planned import (school / class / ADM / conference).
+              </li>
+              <li>
+                <span className="font-medium">Never:</span> auto-publish scrapes, or scrape NCHSAA on
+                every profile/state page load — always stage → review → promote.
+              </li>
+            </ol>
+          </CardContent>
+        </Card>
+
         {setupRequired ? (
           <Card className="border-amber-300 bg-amber-50">
             <CardHeader>
@@ -528,7 +572,13 @@ export default function AdminImportsPage() {
                     <span className="min-w-0 flex-1">
                       <span className="flex flex-wrap items-center gap-2">
                         <Badge
-                          variant={r.diff_status === "new" ? "default" : "secondary"}
+                          variant={
+                            r.diff_status === "new"
+                              ? "default"
+                              : r.diff_status === "conflict"
+                                ? "destructive"
+                                : "secondary"
+                          }
                           className="capitalize"
                         >
                           {r.diff_status}
