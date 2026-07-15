@@ -6,6 +6,7 @@
 import { formatOpenAiHttpError } from "@/lib/openai-user-facing-error"
 import { DATA_DAWG_AGENT_TOOLS } from "./tool-definitions"
 import { executeDataTool } from "./execute-data-tools"
+import { extractVerbatimToolMarkdown } from "./verbatim-tool-markdown"
 
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions"
 const LOOP_TIMEOUT_MS = 90_000
@@ -44,7 +45,7 @@ export async function runOpenAiDataDawgToolLoop(options: {
 
   let toolRounds = 0
   let lastFinishReason = "unknown"
-  /** When dossier tool succeeds, use its markdown as the answer — models often rewrite and drop college/profile link. */
+  /** Verbatim tool markdown (athlete/school dossier) — skip rewrite rounds. */
   let forcedDossierMarkdown: string | null = null
 
   for (let round = 0; round < MAX_ROUNDS; round++) {
@@ -111,27 +112,37 @@ export async function runOpenAiDataDawgToolLoop(options: {
         tool_calls: msg.tool_calls,
       })
 
-      for (const tc of msg.tool_calls) {
-        if (tc.type !== "function" || !tc.function?.name) continue
-        const name = tc.function.name
-        let argsStr = tc.function.arguments || "{}"
-        const result = await executeDataTool(name, argsStr)
-        if (name === "get_athlete_full_dossier") {
-          try {
-            const parsed = JSON.parse(result) as { markdown?: string; error?: string }
-            const md = typeof parsed.markdown === "string" ? parsed.markdown.trim() : ""
-            if (!parsed.error && md.length > 40) {
-              forcedDossierMarkdown = md
-            }
-          } catch {
-            /* ignore */
+      const toolResults = await Promise.all(
+        msg.tool_calls.map(async (tc) => {
+          if (tc.type !== "function" || !tc.function?.name) {
+            return { tc, name: "", result: JSON.stringify({ error: "invalid tool call" }) }
           }
+          const name = tc.function.name
+          const argsStr = tc.function.arguments || "{}"
+          const result = await executeDataTool(name, argsStr)
+          return { tc, name, result }
+        }),
+      )
+
+      for (const { tc, name, result } of toolResults) {
+        const verbatim = extractVerbatimToolMarkdown(name, result)
+        if (verbatim) {
+          forcedDossierMarkdown = verbatim
         }
         messages.push({
           role: "tool",
           tool_call_id: tc.id,
           content: result,
         })
+      }
+
+      // Authoritative dossier markdown is the user answer — no more OpenAI rounds.
+      if (forcedDossierMarkdown) {
+        return {
+          answer: forcedDossierMarkdown,
+          toolRounds,
+          finishReason: "dossier_ready",
+        }
       }
       continue
     }

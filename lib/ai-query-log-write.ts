@@ -1,8 +1,9 @@
 /**
- * Fire-and-forget write helpers for `ai_query_logs` (never throw to callers).
+ * Write helpers for `ai_query_logs`. Always await these from API routes —
+ * fire-and-forget (`void write…`) is dropped by Vercel when the response returns.
  */
 
-import { getSupabaseAdmin } from "@/lib/server-supabase"
+import { createAdminClient } from "@/lib/supabase/admin"
 import {
   computeAiQuerySuccess,
   isAiQueryLogsTableMissingError,
@@ -10,9 +11,13 @@ import {
   type AiQueryLogInsert,
 } from "@/lib/ai-query-logs"
 
-export async function writeAiQueryLog(entry: AiQueryLogInsert): Promise<void> {
+export type WriteAiQueryLogResult =
+  | { ok: true }
+  | { ok: false; tableMissing?: boolean; error: string }
+
+export async function writeAiQueryLog(entry: AiQueryLogInsert): Promise<WriteAiQueryLogResult> {
   try {
-    const admin = getSupabaseAdmin()
+    const admin = createAdminClient()
     const success =
       entry.success != null
         ? entry.success
@@ -39,18 +44,22 @@ export async function writeAiQueryLog(entry: AiQueryLogInsert): Promise<void> {
     if (error) {
       if (isAiQueryLogsTableMissingError(error)) {
         console.warn("[RecruitNC] ai_query_logs missing — run scripts/ai-query-logs-table.sql")
-        return
+        return { ok: false, tableMissing: true, error: error.message }
       }
       console.warn("[RecruitNC] ai_query_logs insert failed:", error.message)
+      return { ok: false, error: error.message }
     }
+    return { ok: true }
   } catch (e) {
-    console.warn("[RecruitNC] ai_query_logs write failed:", e instanceof Error ? e.message : e)
+    const msg = e instanceof Error ? e.message : String(e)
+    console.warn("[RecruitNC] ai_query_logs write failed:", msg)
+    return { ok: false, error: msg }
   }
 }
 
 export async function updateAiQueryLogFeedback(messageId: string, feedback: string): Promise<boolean> {
   try {
-    const admin = getSupabaseAdmin()
+    const admin = createAdminClient()
     const { data, error } = await admin
       .from("ai_query_logs")
       .update({ feedback })

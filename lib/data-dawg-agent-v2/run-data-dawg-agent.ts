@@ -3,6 +3,8 @@ import { getRouteForSuggestedPrompt } from "@/lib/data-dawg-suggested-prompts"
 import { formatSuggestedHandlerAnswer } from "@/lib/data-dawg-suggested-handler-answer"
 import { parseTournamentResultsQuery } from "@/lib/data-dawg-tournament-results-query"
 import { answerTournamentResultsQuery } from "./tournament-results-by-year"
+import { tryAthleteNameFastPath } from "./athlete-name-fast-path"
+import { trySchoolNameFastPath } from "./school-name-fast-path"
 import { runOpenAiDataDawgToolLoop } from "./openai-tool-loop"
 import { DATA_DAWG_AGENT_V2_SYSTEM } from "./system-prompt"
 
@@ -104,6 +106,39 @@ export async function runDataDawgAgentV2(params: {
       }
     } catch (e) {
       console.warn("[RecruitNC] tournament results pre-route failed:", e instanceof Error ? e.message : e)
+    }
+  }
+
+  // Deterministic dossiers: school + athlete name — no OpenAI when match is clear.
+  if (priorMessages.length === 0) {
+    try {
+      const schoolFast = await trySchoolNameFastPath(params.message)
+      if (schoolFast?.markdown) {
+        return {
+          answer: applyRecruitNcDataDawgAnswerPostProcess(schoolFast.markdown),
+          messageId,
+          queryType: "school_name_fast_path",
+          source: "data_dawg_agent_v2_fast",
+          toolRounds: 0,
+        }
+      }
+    } catch (e) {
+      console.warn("[RecruitNC] school name fast-path failed:", e instanceof Error ? e.message : e)
+    }
+
+    try {
+      const athleteFast = await tryAthleteNameFastPath(params.message)
+      if (athleteFast?.markdown) {
+        return {
+          answer: applyRecruitNcDataDawgAnswerPostProcess(athleteFast.markdown),
+          messageId,
+          queryType: "athlete_name_fast_path",
+          source: "data_dawg_agent_v2_fast",
+          toolRounds: 0,
+        }
+      }
+    } catch (e) {
+      console.warn("[RecruitNC] athlete name fast-path failed:", e instanceof Error ? e.message : e)
     }
   }
 

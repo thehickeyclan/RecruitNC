@@ -287,7 +287,12 @@ async function mergeIlikeWithGradYearSpread(
   merge(desc, labelDesc)
 }
 
-export async function toolSearchAthletes(args: { query: string; limit?: number }) {
+export async function toolSearchAthletes(args: {
+  query: string
+  limit?: number
+  /** Skip tournament bundle on top hit — use when caller will load a full dossier next. */
+  skipTournamentEnrich?: boolean
+}) {
   const raw = sanitizeFragment(args.query || "")
   const limit = Math.min(Math.max(Number(args.limit) || SEARCH_ATHLETES_DEFAULT_LIMIT, 1), MAX_ROWS)
   const phrase = extractSearchablePhrase(raw) || stripConversationalNoise(raw)
@@ -552,7 +557,9 @@ export async function toolSearchAthletes(args: { query: string; limit?: number }
     return next
   }
 
-  const enrichCap = Math.min(out.length, SEARCH_TOURNAMENT_ENRICH_CAP)
+  const enrichCap = args.skipTournamentEnrich
+    ? 0
+    : Math.min(out.length, SEARCH_TOURNAMENT_ENRICH_CAP)
   const enrichedSlice = await Promise.all(
     out.slice(0, enrichCap).map(async (row) => {
       const r = await withProfile(row)
