@@ -104,14 +104,16 @@ export function schoolsLooselyEqual(a: unknown, b: unknown): boolean {
 }
 
 /**
- * Last tokens that appear exactly once across the given school name list.
- * Used so "Hough" ↔ "William Amos Hough" can match only when no other school
- * shares that last token (blocks Guilford / Wilkes / Creek collisions).
+ * Last tokens that appear on exactly one multi-word school name.
+ * Bare surnames (e.g. "Laney") are ignored in the frequency count so they can
+ * still link to a unique formal name ("Emsley A. Laney"). Sibling campuses that
+ * share a token (East/North Wilkes) stay non-unique and will not match.
  */
 export function uniqueClassificationLastTokens(schoolNames: string[]): Set<string> {
   const freq = new Map<string, number>()
   for (const name of schoolNames) {
     const tokens = schoolCoreName(name).split(" ").filter(Boolean)
+    if (tokens.length < 2) continue
     const last = tokens[tokens.length - 1] || ""
     if (last.length < 5) continue
     freq.set(last, (freq.get(last) || 0) + 1)
