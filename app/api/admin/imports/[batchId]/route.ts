@@ -48,7 +48,7 @@ export async function GET(
   } else if (status === "changed") {
     q = q.eq("diff_status", "changed").eq("status", "pending")
   } else if (status === "actionable") {
-    q = q.eq("status", "pending").in("diff_status", ["new", "changed", "conflict"])
+    q = q.eq("status", "pending").in("diff_status", ["new", "changed"])
   }
   // status === "all" → no extra filter
 

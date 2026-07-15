@@ -28,6 +28,8 @@ export type PlacerProposed = {
   place: number
   wrestler_name: string
   school: string
+  /** From men/women championship pages — used for staging identity when M/F share class+weight. */
+  gender?: "M" | "F" | null
 }
 
 export type StagedDiffRow = {

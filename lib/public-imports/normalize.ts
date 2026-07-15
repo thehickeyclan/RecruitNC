@@ -1,10 +1,17 @@
 /** Shared normalization for public-source import diffs. */
 
-export function normText(s: unknown): string {
+/** Straight apostrophe for storage / unique keys (NCHSAA pages often use ` or ’). */
+export function canonicalizeWrestlerName(s: unknown): string {
   return String(s ?? "")
+    .replace(/[`´′’]/g, "'")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
+export function normText(s: unknown): string {
+  return canonicalizeWrestlerName(s)
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/['’]/g, "'")
     .replace(/\s+/g, " ")
     .trim()
     .toLowerCase()
@@ -33,8 +40,10 @@ export function placerNaturalKey(
   classification: string,
   weightClass: string,
   place: number,
+  gender?: string | null,
 ): string {
-  return `${year}|${normText(classification)}|${normText(weightClass)}|${place}`
+  const g = gender === "M" || gender === "F" ? gender : ""
+  return `${year}|${normText(classification)}|${normText(weightClass)}|${place}|${g}`
 }
 
 export function schoolsLooselyEqual(a: unknown, b: unknown): boolean {

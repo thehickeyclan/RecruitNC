@@ -149,20 +149,59 @@ describe("public-imports diff", () => {
     expect(summarizeDiffs(diffs)).toMatchObject({ match: 1, changed: 1, new: 1 })
   })
 
-  it("diffs placers by year|class|weight|place", () => {
+  it("treats apostrophe variants as the same placers match", () => {
     const diffs = diffPlacerRows(
-      [{ year: 2025, classification: "1A", weight_class: "106", place: 1, wrestler_name: "A", school: "S" }],
       [
         {
-          year: 2025,
-          classification: "1A",
-          weight_class: "106",
+          year: 2026,
+          classification: "6A",
+          weight_class: "120",
           place: 1,
-          wrestler_name: "A",
-          school: "S High School",
+          wrestler_name: "Jackson D`Ettore",
+          school: "Charlotte Catholic",
+          gender: "M",
+        },
+      ],
+      [
+        {
+          year: 2026,
+          classification: "6A",
+          weight_class: "120",
+          place: 1,
+          wrestler_name: "Jackson D'Ettore",
+          school: "Charlotte Catholic",
         },
       ],
     )
     expect(diffs[0].diff_status).toBe("match")
+    expect(diffs[0].proposed.wrestler_name).toBe("Jackson D'Ettore")
+  })
+
+  it("does not overwrite a different athlete in the same class/weight/place slot", () => {
+    const diffs = diffPlacerRows(
+      [
+        {
+          year: 2026,
+          classification: "5A",
+          weight_class: "138",
+          place: 1,
+          wrestler_name: "Cameron Massey",
+          school: "North Gaston",
+          gender: "M",
+        },
+      ],
+      [
+        {
+          year: 2026,
+          classification: "5A",
+          weight_class: "138",
+          place: 1,
+          wrestler_name: "madelyn korvink",
+          school: "Parkwood",
+        },
+      ],
+    )
+    expect(diffs[0].diff_status).toBe("new")
+    expect(diffs[0].existing).toBeNull()
   })
 })
