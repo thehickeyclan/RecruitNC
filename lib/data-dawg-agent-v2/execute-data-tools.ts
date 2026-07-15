@@ -44,13 +44,7 @@ import { loadNcUnitedResultsForNameSearch } from "@/lib/national-team-live-profi
 import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
 import { buildDataDawgTournamentSummary } from "@/lib/data-dawg-tournament-summary"
 import { getAthleteProfileUrl, RECRUITNC_APP_URL } from "@/lib/athlete-profile-links"
-
-/** Public rankings caps — same as /api/public-rankings and /public-rankings pages. */
-const PUBLIC_RANKINGS_MAX_BY_YEAR: Record<number, number> = {
-  2026: 30,
-  2027: 30,
-  2028: 25,
-}
+import { PUBLIC_RANKINGS_MAX_BY_YEAR } from "@/lib/public-rankings-cap"
 
 export async function toolPublicRankingsSearch(args: {
   graduation_year?: number | null
