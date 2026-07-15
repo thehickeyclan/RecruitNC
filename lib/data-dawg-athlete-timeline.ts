@@ -118,17 +118,34 @@ function weightBit(raw: unknown): string {
   return w ? `${w}lbs` : ""
 }
 
-function nchsaaLabel(r: NchsaaRowForProfile): string | null {
-  if (r.place == null) return null
-  // Keep timeline memorable: placers + champs only (skip bare qualifiers).
-  if (r.place < 1 || r.place > 6) return null
+function detailBits(cls: string, weight: string): string {
+  const bits = [cls, weight].filter(Boolean).join(", ")
+  return bits ? ` (${bits})` : ""
+}
+
+/** Progression-aware state title labels (First / Repeat / Third / Fourth). */
+function nchsaaTitleProgressionLabel(
+  titleIndex: number,
+  r: NchsaaRowForProfile,
+): string {
   const cls = (r.classification || "").toString().trim()
   const w = weightBit(r.weight_class)
-  const bits = [cls, w].filter(Boolean).join(", ")
-  const detail = bits ? ` (${bits})` : ""
-  if (r.place === 1) return `NCHSAA State Champion${detail}`
+  const detail = detailBits(cls, w)
+  if (titleIndex === 0) return `🏆 First State Championship${detail}`
+  if (titleIndex === 1) return `🏆 Repeat State Champion${detail}`
+  if (titleIndex === 2) return `🏆 Third State Title${detail}`
+  if (titleIndex === 3) return `🏆 Fourth State Title${detail}`
+  return `🏆 ${titleIndex + 1}th State Title${detail}`
+}
+
+function nchsaaPlacerLabel(r: NchsaaRowForProfile): string | null {
+  if (r.place == null || r.place < 2 || r.place > 6) return null
+  const cls = (r.classification || "").toString().trim()
+  const w = weightBit(r.weight_class)
+  const detail = detailBits(cls, w)
+  const medal = r.place === 2 ? "🥈" : r.place === 3 ? "🥉" : "🏅"
   const placeText = r.place === 2 ? "2nd" : r.place === 3 ? "3rd" : `${r.place}th`
-  return `NCHSAA State ${placeText} place${detail}`
+  return `${medal} State ${placeText} place${detail}`
 }
 
 function parsePlaceNum(placement: unknown): number | null {
@@ -153,7 +170,7 @@ function isThinNationalResult(placement: string, record: string): boolean {
   return false
 }
 
-function nhscaLabel(r: TournamentResultForDisplay): string | null {
+function nhscaLabel(r: TournamentResultForDisplay, aaIndex: number): string | null {
   const placement = (r.placement ?? "").trim()
   const record = (r.record ?? "").trim()
   if (isThinNationalResult(placement, record)) return null
@@ -162,19 +179,26 @@ function nhscaLabel(r: TournamentResultForDisplay): string | null {
   const w = weightBit(r.weight)
   const bits = [div, w].filter(Boolean).join(", ")
   const detail = bits ? ` (${bits})` : ""
-  const recBit = record && !(placement && placement.toLowerCase().includes(record.toLowerCase()))
-    ? ` ${record}`
-    : ""
 
   if (placeNum != null && placeNum >= 1 && placeNum <= 8) {
-    if (placeNum === 1) return `NHSCA National Champion (All-American)${detail}${recBit}`
-    const ord = placeNum === 2 ? "2nd" : placeNum === 3 ? "3rd" : `${placeNum}th`
-    return `NHSCA ${ord} All-American${detail}${recBit}`
+    if (placeNum === 1) return `🥇 NHSCA National Champion${detail}`
+    if (placeNum === 2) {
+      return aaIndex === 0
+        ? `🥈 First NHSCA All-American — Runner-up${detail}`
+        : `🥈 NHSCA National Runner-up${detail}`
+    }
+    if (placeNum === 3) {
+      return aaIndex === 0 ? `🥉 First NHSCA All-American${detail}` : `🥉 NHSCA 3rd${detail}`
+    }
+    const ord = `${placeNum}th`
+    return aaIndex === 0
+      ? `🏅 First NHSCA All-American (${ord})${detail}`
+      : `🏅 NHSCA ${ord} All-American${detail}`
   }
   if (placement && !/^participated$/i.test(placement)) {
-    return `NHSCA ${placement}${detail}${recBit}`
+    return `NHSCA ${placement}${detail}`
   }
-  if (record) return `NHSCA Nationals — ${record}${detail}`
+  if (record) return `NHSCA Nationals — ${record.replace(/(\d+)\s*-\s*(\d+)/, "$1–$2")}${detail}`
   return null
 }
 
@@ -196,14 +220,15 @@ function super32Label(r: TournamentResultForDisplay | Record<string, unknown>): 
   const recBit = record && !placement.toLowerCase().includes(record.toLowerCase()) ? ` ${record}` : ""
 
   if (placeNum != null && placeNum >= 1 && placeNum <= 8) {
-    if (placeNum === 1) return `Super32 Champion (All-American)${detail}${recBit}`
+    const medal = placeNum === 1 ? "🥇" : placeNum === 2 ? "🥈" : placeNum === 3 ? "🥉" : "🏅"
+    if (placeNum === 1) return `${medal} Super32 Champion${detail}`
     const ord = placeNum === 2 ? "2nd" : placeNum === 3 ? "3rd" : `${placeNum}th`
-    return `Super32 ${ord} All-American${detail}${recBit}`
+    return `${medal} Super32 All-American (${ord})${detail}`
   }
   if (placement && !/^participated$/i.test(placement)) {
     return `Super32 ${placement}${detail}${recBit}`
   }
-  if (record) return `Super32 — ${record}${detail}`
+  if (record) return `Super32 — ${record.replace(/(\d+)\s*-\s*(\d+)/, "$1–$2")}${detail}`
   return null
 }
 
@@ -211,12 +236,27 @@ function fargoLabel(r: TournamentResultForDisplay): string | null {
   const placement = (r.placement ?? "").trim()
   const record = (r.record ?? "").trim()
   if (isThinNationalResult(placement, record)) return null
+  const placeNum = parsePlaceNum(placement)
   const div = (r.division ?? "").trim()
   const w = weightBit(r.weight)
   const bits = [div, w].filter(Boolean).join(", ")
   const detail = bits ? ` (${bits})` : ""
-  if (placement) return `Fargo Nationals — ${placement}${detail}${record ? ` ${record}` : ""}`
-  if (record) return `Fargo Nationals — ${record}${detail}`
+  if (placeNum != null && placeNum >= 1 && placeNum <= 8) {
+    const medal = placeNum === 1 ? "🥇" : placeNum === 2 ? "🥈" : placeNum === 3 ? "🥉" : "🏅"
+    const ord =
+      placeNum === 1 ? "Champion" : placeNum === 2 ? "Runner-up" : placeNum === 3 ? "3rd" : `${placeNum}th`
+    return `${medal} Fargo All-American (${ord})${detail}${record ? ` ${record.replace(/(\d+)\s*-\s*(\d+)/, "$1–$2")}` : ""}`
+  }
+  if (record) {
+    const m = record.match(/(\d+)\s*[-–]\s*(\d+)/)
+    const wins = m ? parseInt(m[1], 10) : 0
+    const nice = record.replace(/(\d+)\s*-\s*(\d+)/, "$1–$2")
+    if (wins >= 5) {
+      return `🇺🇸 Fargo Nationals — ${nice}${detail} · Reached Blood Round`
+    }
+    return `🇺🇸 Fargo Nationals — ${nice}${detail}`
+  }
+  if (placement) return `🇺🇸 Fargo Nationals — ${placement}${detail}`
   return null
 }
 
@@ -237,17 +277,29 @@ export function buildAthleteTimelineEvents(input: AthleteTimelineInput): Athlete
     })
   }
 
+  const stateTitles = [...(input.nchsaa ?? [])]
+    .filter((r) => r.place === 1)
+    .sort((a, b) => a.year - b.year)
+  stateTitles.forEach((r, i) => {
+    push(asYear(r.year), "nchsaa", nchsaaTitleProgressionLabel(i, r))
+  })
   for (const r of input.nchsaa ?? []) {
-    push(asYear(r.year), "nchsaa", nchsaaLabel(r))
+    if (r.place === 1) continue
+    push(asYear(r.year), "nchsaa", nchsaaPlacerLabel(r))
   }
 
+  const nhscaSorted = [...(input.nhsca ?? [])].sort((a, b) => a.year - b.year)
   const seenNhsca = new Set<string>()
-  for (const r of input.nhsca ?? []) {
-    const label = nhscaLabel(r)
+  let nhscaAaIndex = 0
+  for (const r of nhscaSorted) {
+    const placeNum = parsePlaceNum(r.placement)
+    const isAa = placeNum != null && placeNum >= 1 && placeNum <= 8
+    const label = nhscaLabel(r, isAa ? nhscaAaIndex : 0)
     if (!label) continue
     const key = `${r.year}-${label}`
     if (seenNhsca.has(key)) continue
     seenNhsca.add(key)
+    if (isAa) nhscaAaIndex += 1
     push(asYear(r.year), "nhsca", label)
   }
 
@@ -283,11 +335,11 @@ export function buildAthleteTimelineEvents(input: AthleteTimelineInput): Athlete
     const y = asYear(m.year)
     const div = String(m.division ?? "").trim()
     const w = m.mow_weight_lb != null ? ` (${m.mow_weight_lb}lbs)` : ""
-    push(y, "mow", `State Duals Most Outstanding Wrestler${div ? ` — ${div}` : ""}${w}`)
+    push(y, "mow", `🏅 State Duals MOW${div ? ` — ${div}` : ""}${w}`)
   }
 
   for (const a of input.awards ?? []) {
-    push(asYear(a.year), "award", a.label)
+    push(asYear(a.year), "award", `🏅 ${a.label}`)
   }
 
   for (const s of input.seasonRecords ?? []) {
@@ -305,7 +357,7 @@ export function buildAthleteTimelineEvents(input: AthleteTimelineInput): Athlete
       asYear(input.commit.year) ??
       (input.graduationYear != null ? Math.floor(Number(input.graduationYear)) : null)
     if (y != null) {
-      push(y, "commit", `Committed to ${college}${divBit}`)
+      push(y, "commit", `🤼 ${college}${divBit}`)
     }
   }
 
