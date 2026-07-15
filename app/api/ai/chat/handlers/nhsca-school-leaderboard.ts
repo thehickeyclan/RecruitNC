@@ -4,6 +4,7 @@ import {
   buildKnownSchoolEntries,
   resolveNhscaLeaderboardSchool,
 } from "@/lib/nhsca-school-label"
+import { mergeCanonicalNhscaAaIntoLeaderboardRows } from "@/lib/nhsca-canonical-aa"
 
 type NhscaAaRow = {
   athlete_name?: string | null
@@ -67,7 +68,8 @@ async function loadMergedNhscaAaRows(
     seen.add(k)
     out.push(r)
   }
-  return out
+  // Yearly page/roster JSONs are SoR for AA schools; registered years merge here.
+  return mergeCanonicalNhscaAaIntoLeaderboardRows(out)
 }
 
 async function loadKnownSchools(

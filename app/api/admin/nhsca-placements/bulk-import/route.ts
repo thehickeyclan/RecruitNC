@@ -58,6 +58,29 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // All-Americans (places 1–8) must carry a school — school leaderboards depend on it.
+    const aaMissingSchool = formattedPlacements.filter(
+      (p) =>
+        p.placement != null &&
+        Number(p.placement) >= 1 &&
+        Number(p.placement) <= 8 &&
+        !p.high_school,
+    )
+    if (aaMissingSchool.length > 0) {
+      return NextResponse.json(
+        {
+          error: "high_school required for All-Americans (placement 1–8)",
+          details: `${aaMissingSchool.length} placer row(s) missing high_school. School leaderboards will ignore them otherwise.`,
+          invalidRows: aaMissingSchool.slice(0, 8).map((p) => ({
+            athlete_name: p.athlete_name,
+            placement: p.placement,
+            year: p.year,
+          })),
+        },
+        { status: 400 },
+      )
+    }
+
     const total = formattedPlacements.length
     const placementNoRecord = formattedPlacements.filter((p) => p.placement != null && !p.record?.trim()).length
     const warnings: string[] = []

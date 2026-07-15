@@ -64,13 +64,44 @@ interface AthleteSearchHit {
   highschool: string | null
 }
 
-/** Accepts either a raw array or `{ year, placements }` (e.g. scripts/data/seniors-2026-nhsca-import.json). */
+/** Accepts either a raw array or `{ year, placements }` (e.g. scripts/data/seniors-2026-nhsca-import.json).
+ * Also accepts page replica shape `{ year|meta.year, section1_all_americans: [...] }`.
+ */
 function parseNhscaImportPayload(parsed: unknown): { placements: unknown[]; yearFromFile?: number } {
   if (Array.isArray(parsed)) {
     return { placements: parsed }
   }
-  if (parsed !== null && typeof parsed === "object" && "placements" in parsed) {
-    const rec = parsed as { placements?: unknown; year?: unknown }
+  if (parsed !== null && typeof parsed === "object") {
+    const rec = parsed as {
+      placements?: unknown
+      year?: unknown
+      meta?: { year?: unknown }
+      section1_all_americans?: unknown
+    }
+    if (Array.isArray(rec.section1_all_americans)) {
+      const y =
+        typeof rec.year === "number" && Number.isFinite(rec.year)
+          ? rec.year
+          : typeof rec.meta?.year === "number" && Number.isFinite(rec.meta.year)
+            ? rec.meta.year
+            : undefined
+      const placements = rec.section1_all_americans.map((row) => {
+        const r = row as Record<string, unknown>
+        return {
+          athlete_name: r.athlete_name,
+          high_school: r.high_school,
+          placement: r.placement,
+          weight_class: r.weight_class ?? r.weight,
+          division: r.division,
+          record:
+            r.record ??
+            (r.wins != null && r.losses != null ? `${r.wins}-${r.losses}` : undefined),
+          state: r.state ?? "NC",
+          year: r.year ?? y,
+        }
+      })
+      return { placements, yearFromFile: y }
+    }
     if (Array.isArray(rec.placements)) {
       const y = rec.year
       const yearFromFile = typeof y === "number" && Number.isFinite(y) ? y : undefined
@@ -78,7 +109,7 @@ function parseNhscaImportPayload(parsed: unknown): { placements: unknown[]; year
     }
   }
   throw new Error(
-    'Invalid JSON: use a participant array, or { "year": 2026, "placements": [ ... ] }',
+    'Invalid JSON: use a participant array, { "year", "placements" }, or page replica { section1_all_americans }',
   )
 }
 
@@ -119,9 +150,37 @@ export default function NHSCAPlacementsPage() {
   /** Delete-by-year: optional Senior/Junior so one division can be cleared without removing the other (same idea as bulk-import). */
   const [deleteDivisionScope, setDeleteDivisionScope] = useState<"all" | "Senior" | "Junior">("all")
   const [jsonImportOpen, setJsonImportOpen] = useState(false)
+  const [syncingSchools, setSyncingSchools] = useState(false)
 
   /** Match/Merge year: explicit filter, else same as import year (avoid defaulting to wrong year when filter empty). */
   const matchMergeYear = yearFilter ?? importYear
+
+  const syncCanonicalSchools = async () => {
+    setSyncingSchools(true)
+    setImportMessage(null)
+    try {
+      const res = await fetch("/api/admin/nhsca-placements/sync-canonical-schools", {
+        method: "POST",
+        credentials: "include",
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || "Sync failed")
+      setImportMessage({
+        type: "success",
+        text: `Synced AA schools from yearly files (years ${
+          Array.isArray(data.years) ? data.years.join(", ") : ""
+        }): placements ${data.updated_placements ?? 0}, legacy ${data.updated_legacy ?? 0}`,
+      })
+      await fetchPlacements()
+    } catch (e) {
+      setImportMessage({
+        type: "error",
+        text: e instanceof Error ? e.message : "Sync failed",
+      })
+    } finally {
+      setSyncingSchools(false)
+    }
+  }
 
   useEffect(() => {
     fetchPlacements()
@@ -808,6 +867,25 @@ export default function NHSCAPlacementsPage() {
               <>
                 <School className="h-4 w-4 mr-2" />
                 Expand names from NCHSAA
+              </>
+            )}
+          </Button>
+          <Button
+            onClick={() => void syncCanonicalSchools()}
+            disabled={syncingSchools || pipelineRunning}
+            variant="outline"
+            className="border-teal-700 text-teal-900 hover:bg-teal-50"
+            title="Fill high_school on AA rows from registered yearly page/roster JSON"
+          >
+            {syncingSchools ? (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                Syncing schools…
+              </>
+            ) : (
+              <>
+                <School className="h-4 w-4 mr-2" />
+                Sync AA schools from yearly files
               </>
             )}
           </Button>

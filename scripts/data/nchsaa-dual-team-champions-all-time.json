@@ -1,0 +1,3135 @@
+{
+  "schema_version": "1.0",
+  "dataset": "nchsaa_dual_team_champions_all_time",
+  "title": "NCHSAA dual team state champions — all time, by division",
+  "source_table": "dual_team_champions",
+  "exported_at": "2026-07-15T16:57:37.369Z",
+  "record_count": 132,
+  "divisions": [
+    "1A",
+    "1A/2A",
+    "2A",
+    "3A",
+    "4A"
+  ],
+  "most_titles": [
+    {
+      "school": "Parkland",
+      "title_count": 10
+    },
+    {
+      "school": "Cary",
+      "title_count": 9
+    },
+    {
+      "school": "Morehead",
+      "title_count": 7
+    },
+    {
+      "school": "Alleghany",
+      "title_count": 6
+    },
+    {
+      "school": "Fred T. Foard",
+      "title_count": 5
+    },
+    {
+      "school": "Orange",
+      "title_count": 5
+    },
+    {
+      "school": "Newton-Conover",
+      "title_count": 4
+    },
+    {
+      "school": "Riverside-Durham",
+      "title_count": 4
+    },
+    {
+      "school": "Uwharrie Charter",
+      "title_count": 4
+    },
+    {
+      "school": "West Lincoln",
+      "title_count": 4
+    },
+    {
+      "school": "West Wilkes",
+      "title_count": 4
+    },
+    {
+      "school": "Bandys",
+      "title_count": 3
+    },
+    {
+      "school": "Davie County",
+      "title_count": 3
+    },
+    {
+      "school": "Dixon",
+      "title_count": 3
+    },
+    {
+      "school": "East Gaston",
+      "title_count": 3
+    },
+    {
+      "school": "Piedmont",
+      "title_count": 3
+    },
+    {
+      "school": "T.W. Andrews",
+      "title_count": 3
+    },
+    {
+      "school": "Avery County",
+      "title_count": 2
+    },
+    {
+      "school": "Croatan",
+      "title_count": 2
+    },
+    {
+      "school": "East Davidson",
+      "title_count": 2
+    },
+    {
+      "school": "Fuquay-Varina",
+      "title_count": 2
+    },
+    {
+      "school": "McMichael",
+      "title_count": 2
+    },
+    {
+      "school": "Mitchell",
+      "title_count": 2
+    },
+    {
+      "school": "Northwest Guilford",
+      "title_count": 2
+    },
+    {
+      "school": "Rosewood",
+      "title_count": 2
+    },
+    {
+      "school": "Seventy-First",
+      "title_count": 2
+    },
+    {
+      "school": "Southern Vance",
+      "title_count": 2
+    },
+    {
+      "school": "West Forsyth",
+      "title_count": 2
+    },
+    {
+      "school": "Albemarle",
+      "title_count": 1
+    },
+    {
+      "school": "Cardinal Gibbons",
+      "title_count": 1
+    },
+    {
+      "school": "Chatham Central",
+      "title_count": 1
+    },
+    {
+      "school": "Eastern Guilford",
+      "title_count": 1
+    },
+    {
+      "school": "Elkin",
+      "title_count": 1
+    },
+    {
+      "school": "Havelock",
+      "title_count": 1
+    },
+    {
+      "school": "High Point Central",
+      "title_count": 1
+    },
+    {
+      "school": "Hough",
+      "title_count": 1
+    },
+    {
+      "school": "J.M. Robinson",
+      "title_count": 1
+    },
+    {
+      "school": "Jack Britt",
+      "title_count": 1
+    },
+    {
+      "school": "Laney",
+      "title_count": 1
+    },
+    {
+      "school": "Mount Tabor",
+      "title_count": 1
+    },
+    {
+      "school": "North Wilkes",
+      "title_count": 1
+    },
+    {
+      "school": "Northern Guilford",
+      "title_count": 1
+    },
+    {
+      "school": "Pisgah",
+      "title_count": 1
+    },
+    {
+      "school": "R-S Central",
+      "title_count": 1
+    },
+    {
+      "school": "Ragsdale",
+      "title_count": 1
+    },
+    {
+      "school": "Robbinsville",
+      "title_count": 1
+    },
+    {
+      "school": "South Davidson",
+      "title_count": 1
+    },
+    {
+      "school": "St. Stephens",
+      "title_count": 1
+    },
+    {
+      "school": "Sun Valley",
+      "title_count": 1
+    },
+    {
+      "school": "Topsail",
+      "title_count": 1
+    }
+  ],
+  "by_division": {
+    "1A/2A": [
+      {
+        "year": 1990,
+        "division": "1A/2A",
+        "champion_school": "Dixon",
+        "runner_up_school": null,
+        "champion_score": null,
+        "runner_up_score": null,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 1991,
+        "division": "1A/2A",
+        "champion_school": "Albemarle",
+        "runner_up_school": null,
+        "champion_score": null,
+        "runner_up_score": null,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 1992,
+        "division": "1A/2A",
+        "champion_school": "Dixon",
+        "runner_up_school": null,
+        "champion_score": null,
+        "runner_up_score": null,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 1993,
+        "division": "1A/2A",
+        "champion_school": "East Davidson",
+        "runner_up_school": null,
+        "champion_score": null,
+        "runner_up_score": null,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 1994,
+        "division": "1A/2A",
+        "champion_school": "Dixon",
+        "runner_up_school": null,
+        "champion_score": null,
+        "runner_up_score": null,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 1995,
+        "division": "1A/2A",
+        "champion_school": "East Davidson",
+        "runner_up_school": null,
+        "champion_score": null,
+        "runner_up_score": null,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 1996,
+        "division": "1A/2A",
+        "champion_school": "West Henderson",
+        "runner_up_school": null,
+        "champion_score": null,
+        "runner_up_score": null,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 1997,
+        "division": "1A/2A",
+        "champion_school": "Alleghany",
+        "runner_up_school": null,
+        "champion_score": null,
+        "runner_up_score": null,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 1998,
+        "division": "1A/2A",
+        "champion_school": "North Wilkes",
+        "runner_up_school": null,
+        "champion_score": null,
+        "runner_up_score": null,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 1999,
+        "division": "1A/2A",
+        "champion_school": "Alleghany",
+        "runner_up_school": null,
+        "champion_score": null,
+        "runner_up_score": null,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2000,
+        "division": "1A/2A",
+        "champion_school": "West Lincoln",
+        "runner_up_school": null,
+        "champion_score": null,
+        "runner_up_score": null,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2001,
+        "division": "1A/2A",
+        "champion_school": "Pisgah",
+        "runner_up_school": null,
+        "champion_score": null,
+        "runner_up_score": null,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      }
+    ],
+    "3A": [
+      {
+        "year": 1990,
+        "division": "3A",
+        "champion_school": "T.W. Andrews",
+        "runner_up_school": "Kings Mountain",
+        "champion_score": 51,
+        "runner_up_score": 10,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 1991,
+        "division": "3A",
+        "champion_school": "T.W. Andrews",
+        "runner_up_school": "Central Davidson",
+        "champion_score": 38,
+        "runner_up_score": 13,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 1992,
+        "division": "3A",
+        "champion_school": "T.W. Andrews",
+        "runner_up_school": "Statesville",
+        "champion_score": 34,
+        "runner_up_score": 27,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 1993,
+        "division": "3A",
+        "champion_school": "Sun Valley",
+        "runner_up_school": "Northwest Guilford",
+        "champion_score": 50,
+        "runner_up_score": 16,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 1994,
+        "division": "3A",
+        "champion_school": "High Point Central",
+        "runner_up_school": "West Carteret",
+        "champion_score": 34,
+        "runner_up_score": 29,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 1995,
+        "division": "3A",
+        "champion_school": "Parkland",
+        "runner_up_school": "Ragsdale",
+        "champion_score": 27,
+        "runner_up_score": 25,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 1996,
+        "division": "3A",
+        "champion_school": "Parkland",
+        "runner_up_school": "Havelock",
+        "champion_score": 40,
+        "runner_up_score": 25,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 1997,
+        "division": "3A",
+        "champion_school": "Havelock",
+        "runner_up_school": "Parkland",
+        "champion_score": 48,
+        "runner_up_score": 28,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 1998,
+        "division": "3A",
+        "champion_school": "Morehead",
+        "runner_up_school": null,
+        "champion_score": null,
+        "runner_up_score": null,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 1999,
+        "division": "3A",
+        "champion_school": "Morehead",
+        "runner_up_school": null,
+        "champion_score": null,
+        "runner_up_score": null,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2000,
+        "division": "3A",
+        "champion_school": "Fuquay-Varina",
+        "runner_up_school": "Tuscola",
+        "champion_score": 36,
+        "runner_up_score": 28,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2001,
+        "division": "3A",
+        "champion_school": "Fuquay-Varina",
+        "runner_up_school": "St. Stephens",
+        "champion_score": 46,
+        "runner_up_score": 26,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2002,
+        "division": "3A",
+        "champion_school": "Morehead",
+        "runner_up_school": null,
+        "champion_score": null,
+        "runner_up_score": null,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2003,
+        "division": "3A",
+        "champion_school": "Morehead",
+        "runner_up_school": null,
+        "champion_score": null,
+        "runner_up_score": null,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2004,
+        "division": "3A",
+        "champion_school": "Ragsdale",
+        "runner_up_school": "John M. Morehead High School",
+        "champion_score": 40,
+        "runner_up_score": 25,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2005,
+        "division": "3A",
+        "champion_school": "Orange",
+        "runner_up_school": "East Gaston",
+        "champion_score": 30,
+        "runner_up_score": 28,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2006,
+        "division": "3A",
+        "champion_school": "Morehead",
+        "runner_up_school": null,
+        "champion_score": null,
+        "runner_up_score": null,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2007,
+        "division": "3A",
+        "champion_school": "Parkland",
+        "runner_up_school": "John M. Morehead High School",
+        "champion_score": 34,
+        "runner_up_score": 24,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2008,
+        "division": "3A",
+        "champion_school": "Parkland",
+        "runner_up_school": "John M. Morehead High School",
+        "champion_score": 59,
+        "runner_up_score": 6,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2009,
+        "division": "3A",
+        "champion_school": "Parkland",
+        "runner_up_school": "Dudley",
+        "champion_score": 46,
+        "runner_up_score": 18,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2010,
+        "division": "3A",
+        "champion_school": "J.M. Robinson",
+        "runner_up_school": "Orange",
+        "champion_score": 35,
+        "runner_up_score": 32,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2011,
+        "division": "3A",
+        "champion_school": "Orange",
+        "runner_up_school": "J.M. Robinson",
+        "champion_score": 34,
+        "runner_up_score": 27,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2012,
+        "division": "3A",
+        "champion_school": "Orange",
+        "runner_up_school": "Southwestern Randolph",
+        "champion_score": 34,
+        "runner_up_score": 30,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2013,
+        "division": "3A",
+        "champion_school": "Fred T. Foard",
+        "runner_up_school": "John M. Morehead High School",
+        "champion_score": 41,
+        "runner_up_score": 27,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2014,
+        "division": "3A",
+        "champion_school": "Morehead",
+        "runner_up_school": null,
+        "champion_score": null,
+        "runner_up_score": null,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2015,
+        "division": "3A",
+        "champion_school": "Fred T. Foard",
+        "runner_up_school": "John M. Morehead High School",
+        "champion_score": 30,
+        "runner_up_score": 23,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2016,
+        "division": "3A",
+        "champion_school": "Morehead",
+        "runner_up_school": null,
+        "champion_score": null,
+        "runner_up_score": null,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2017,
+        "division": "3A",
+        "champion_school": "Piedmont",
+        "runner_up_school": "Orange",
+        "champion_score": 29,
+        "runner_up_score": 27,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2018,
+        "division": "3A",
+        "champion_school": "Piedmont",
+        "runner_up_school": "Orange",
+        "champion_score": 33,
+        "runner_up_score": 31,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2019,
+        "division": "3A",
+        "champion_school": "St. Stephens",
+        "runner_up_school": "Cape Fear",
+        "champion_score": 41,
+        "runner_up_score": 25,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2020,
+        "division": "3A",
+        "champion_school": "Northern Guilford",
+        "runner_up_school": "Enka",
+        "champion_score": 42,
+        "runner_up_score": 31,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2021,
+        "division": "3A",
+        "champion_school": "No Dual Tournament",
+        "runner_up_school": null,
+        "champion_score": null,
+        "runner_up_score": null,
+        "is_vacated": false,
+        "held": false,
+        "notes": "COVID-19 Season"
+      },
+      {
+        "year": 2022,
+        "division": "3A",
+        "champion_school": "Fred T. Foard",
+        "runner_up_school": "Union Pines",
+        "champion_score": 58,
+        "runner_up_score": 12,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2023,
+        "division": "3A",
+        "champion_school": "Fred T. Foard",
+        "runner_up_school": "Union Pines",
+        "champion_score": 54,
+        "runner_up_score": 24,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2024,
+        "division": "3A",
+        "champion_school": "Eastern Guilford",
+        "runner_up_school": "Union Pines",
+        "champion_score": 36,
+        "runner_up_score": 21,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2025,
+        "division": "3A",
+        "champion_school": "Union Pines",
+        "runner_up_school": "Pisgah",
+        "champion_score": 47,
+        "runner_up_score": 17,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      }
+    ],
+    "4A": [
+      {
+        "year": 1990,
+        "division": "4A",
+        "champion_school": "East Gaston",
+        "runner_up_school": "Durham Jordan",
+        "champion_score": 35,
+        "runner_up_score": 24,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 1991,
+        "division": "4A",
+        "champion_school": "East Gaston",
+        "runner_up_school": "Cary",
+        "champion_score": 40,
+        "runner_up_score": 15,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 1992,
+        "division": "4A",
+        "champion_school": "East Gaston",
+        "runner_up_school": "Orange",
+        "champion_score": 30,
+        "runner_up_score": 25,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 1993,
+        "division": "4A",
+        "champion_school": "Cary",
+        "runner_up_school": "Davie County",
+        "champion_score": 26,
+        "runner_up_score": 22,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 1994,
+        "division": "4A",
+        "champion_school": "Davie County",
+        "runner_up_school": "Riverside-Durham",
+        "champion_score": 31,
+        "runner_up_score": 28,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 1995,
+        "division": "4A",
+        "champion_school": "Riverside-Durham",
+        "runner_up_school": "Davie County",
+        "champion_score": 33,
+        "runner_up_score": 31,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 1996,
+        "division": "4A",
+        "champion_school": "Cary",
+        "runner_up_school": "Riverside-Durham",
+        "champion_score": 28,
+        "runner_up_score": 26,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 1997,
+        "division": "4A",
+        "champion_school": "Cary",
+        "runner_up_school": "Orange",
+        "champion_score": 33,
+        "runner_up_score": 29,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 1998,
+        "division": "4A",
+        "champion_school": "Cary",
+        "runner_up_school": "Independence",
+        "champion_score": 35,
+        "runner_up_score": 34,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 1999,
+        "division": "4A",
+        "champion_school": "Seventy-First",
+        "runner_up_school": "Davie County",
+        "champion_score": 50,
+        "runner_up_score": 13,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2000,
+        "division": "4A",
+        "champion_school": "Seventy-First",
+        "runner_up_school": "Davie County",
+        "champion_score": 40,
+        "runner_up_score": 25,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2001,
+        "division": "4A",
+        "champion_school": "Mount Tabor",
+        "runner_up_school": "Cary",
+        "champion_score": 37,
+        "runner_up_score": 18,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2002,
+        "division": "4A",
+        "champion_school": "Riverside-Durham",
+        "runner_up_school": "Cary",
+        "champion_score": 40,
+        "runner_up_score": 26,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2003,
+        "division": "4A",
+        "champion_school": "Riverside-Durham",
+        "runner_up_school": "Cary",
+        "champion_score": 38,
+        "runner_up_score": 30,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2004,
+        "division": "4A",
+        "champion_school": "Riverside-Durham",
+        "runner_up_school": "Cary",
+        "champion_score": 35,
+        "runner_up_score": 28,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2005,
+        "division": "4A",
+        "champion_school": "Cary",
+        "runner_up_school": "Davie County",
+        "champion_score": 34,
+        "runner_up_score": 32,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2006,
+        "division": "4A",
+        "champion_school": "Davie County",
+        "runner_up_school": "Cary",
+        "champion_score": 41,
+        "runner_up_score": 23,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2007,
+        "division": "4A",
+        "champion_school": "Cary",
+        "runner_up_school": "West Forsyth",
+        "champion_score": 53,
+        "runner_up_score": 9,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2008,
+        "division": "4A",
+        "champion_school": "Cary",
+        "runner_up_school": "Davie County",
+        "champion_score": 40,
+        "runner_up_score": 27,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2009,
+        "division": "4A",
+        "champion_school": "Cary",
+        "runner_up_school": "Butler",
+        "champion_score": 43,
+        "runner_up_score": 18,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2010,
+        "division": "4A",
+        "champion_school": "Parkland",
+        "runner_up_school": "Cary",
+        "champion_score": 38,
+        "runner_up_score": 14,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2011,
+        "division": "4A",
+        "champion_school": "Parkland",
+        "runner_up_school": "New Bern",
+        "champion_score": 52,
+        "runner_up_score": 12,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2012,
+        "division": "4A",
+        "champion_school": "Parkland",
+        "runner_up_school": "Pinecrest",
+        "champion_score": 36,
+        "runner_up_score": 25,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2013,
+        "division": "4A",
+        "champion_school": "Parkland",
+        "runner_up_school": "Jack Britt",
+        "champion_score": 28,
+        "runner_up_score": 20,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2014,
+        "division": "4A",
+        "champion_school": "Parkland",
+        "runner_up_school": "Jack Britt",
+        "champion_score": 30,
+        "runner_up_score": 24,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2015,
+        "division": "4A",
+        "champion_school": "Jack Britt",
+        "runner_up_school": "Southeast Guilford",
+        "champion_score": 42,
+        "runner_up_score": 22,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2016,
+        "division": "4A",
+        "champion_school": "West Forsyth",
+        "runner_up_school": "Holly Springs",
+        "champion_score": 57,
+        "runner_up_score": 10,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2017,
+        "division": "4A",
+        "champion_school": "West Forsyth",
+        "runner_up_school": "Laney",
+        "champion_score": 31,
+        "runner_up_score": 28,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2018,
+        "division": "4A",
+        "champion_school": "Cary",
+        "runner_up_school": "West Forsyth",
+        "champion_score": 38,
+        "runner_up_score": 32,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2019,
+        "division": "4A",
+        "champion_school": "Northwest Guilford",
+        "runner_up_school": "Laney",
+        "champion_score": 33,
+        "runner_up_score": 27,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2020,
+        "division": "4A",
+        "champion_school": "Hough",
+        "runner_up_school": "Cardinal Gibbons",
+        "champion_score": 33,
+        "runner_up_score": 31,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2021,
+        "division": "4A",
+        "champion_school": "No Dual Tournament",
+        "runner_up_school": null,
+        "champion_score": null,
+        "runner_up_score": null,
+        "is_vacated": false,
+        "held": false,
+        "notes": "COVID-19 Season"
+      },
+      {
+        "year": 2022,
+        "division": "4A",
+        "champion_school": "Laney",
+        "runner_up_school": "Northwest Guilford",
+        "champion_score": 32,
+        "runner_up_score": 31,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2023,
+        "division": "4A",
+        "champion_school": "Northwest Guilford",
+        "runner_up_school": "Laney",
+        "champion_score": 52,
+        "runner_up_score": 24,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2024,
+        "division": "4A",
+        "champion_school": "Davie County",
+        "runner_up_school": "Laney",
+        "champion_score": 31,
+        "runner_up_score": 25,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2025,
+        "division": "4A",
+        "champion_school": "Cardinal Gibbons",
+        "runner_up_school": "Hickory Ridge",
+        "champion_score": 41,
+        "runner_up_score": 22,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      }
+    ],
+    "1A": [
+      {
+        "year": 2002,
+        "division": "1A",
+        "champion_school": "Alleghany",
+        "runner_up_school": "South Davidson",
+        "champion_score": 48,
+        "runner_up_score": 18,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2003,
+        "division": "1A",
+        "champion_school": "South Davidson",
+        "runner_up_school": "Alleghany",
+        "champion_score": 37,
+        "runner_up_score": 27,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2004,
+        "division": "1A",
+        "champion_school": "Elkin",
+        "runner_up_school": "West Davidson",
+        "champion_score": 34,
+        "runner_up_score": 32,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2005,
+        "division": "1A",
+        "champion_school": "Chatham Central",
+        "runner_up_school": "East Surry",
+        "champion_score": 43,
+        "runner_up_score": 36,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2006,
+        "division": "1A",
+        "champion_school": "Alleghany",
+        "runner_up_school": "Topsail",
+        "champion_score": 42,
+        "runner_up_score": 27,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2007,
+        "division": "1A",
+        "champion_school": "Alleghany",
+        "runner_up_school": "Topsail",
+        "champion_score": 43,
+        "runner_up_score": 22,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2008,
+        "division": "1A",
+        "champion_school": "Alleghany",
+        "runner_up_school": "Topsail",
+        "champion_score": 37,
+        "runner_up_score": 28,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2009,
+        "division": "1A",
+        "champion_school": "Topsail",
+        "runner_up_school": "West Wilkes",
+        "champion_score": 44,
+        "runner_up_score": 28,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2010,
+        "division": "1A",
+        "champion_school": "West Wilkes",
+        "runner_up_school": "Rosewood",
+        "champion_score": 60,
+        "runner_up_score": 10,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2011,
+        "division": "1A",
+        "champion_school": "West Wilkes",
+        "runner_up_school": "North Rowan",
+        "champion_score": 36,
+        "runner_up_score": 32,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2012,
+        "division": "1A",
+        "champion_school": "West Wilkes",
+        "runner_up_school": "Ayden-Grifton",
+        "champion_score": 50,
+        "runner_up_score": 13,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2013,
+        "division": "1A",
+        "champion_school": "West Wilkes",
+        "runner_up_school": "North Rowan",
+        "champion_score": 41,
+        "runner_up_score": 25,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2014,
+        "division": "1A",
+        "champion_school": "Mitchell",
+        "runner_up_school": "Chatham Central",
+        "champion_score": 36,
+        "runner_up_score": 30,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2015,
+        "division": "1A",
+        "champion_school": "Mitchell",
+        "runner_up_school": "Chatham Central",
+        "champion_score": 42,
+        "runner_up_score": 30,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2016,
+        "division": "1A",
+        "champion_school": "Rosewood",
+        "runner_up_school": "Mitchell",
+        "champion_score": 36,
+        "runner_up_score": 24,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2017,
+        "division": "1A",
+        "champion_school": "Robbinsville",
+        "runner_up_school": "Rosewood",
+        "champion_score": 36,
+        "runner_up_score": 31,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2018,
+        "division": "1A",
+        "champion_school": "Rosewood",
+        "runner_up_school": "Robbinsville",
+        "champion_score": 41,
+        "runner_up_score": 27,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2019,
+        "division": "1A",
+        "champion_school": "Uwharrie Charter",
+        "runner_up_school": "Robbinsville",
+        "champion_score": 36,
+        "runner_up_score": 32,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2020,
+        "division": "1A",
+        "champion_school": "Avery County",
+        "runner_up_school": "Uwharrie Charter",
+        "champion_score": 35,
+        "runner_up_score": 30,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2021,
+        "division": "1A",
+        "champion_school": "No Dual Tournament",
+        "runner_up_school": null,
+        "champion_score": null,
+        "runner_up_score": null,
+        "is_vacated": false,
+        "held": false,
+        "notes": "COVID-19 Season"
+      },
+      {
+        "year": 2022,
+        "division": "1A",
+        "champion_school": "Avery County",
+        "runner_up_school": "Uwharrie Charter",
+        "champion_score": 39,
+        "runner_up_score": 30,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2023,
+        "division": "1A",
+        "champion_school": "Uwharrie Charter",
+        "runner_up_school": "Avery County",
+        "champion_score": 39,
+        "runner_up_score": 36,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2024,
+        "division": "1A",
+        "champion_school": "Uwharrie Charter",
+        "runner_up_school": "Avery County",
+        "champion_score": 36,
+        "runner_up_score": 33,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2025,
+        "division": "1A",
+        "champion_school": "Uwharrie Charter",
+        "runner_up_school": "Mount Airy",
+        "champion_score": 48,
+        "runner_up_score": 14,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      }
+    ],
+    "2A": [
+      {
+        "year": 2002,
+        "division": "2A",
+        "champion_school": "Southern Vance",
+        "runner_up_school": "Pisgah",
+        "champion_score": 36,
+        "runner_up_score": 34,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2003,
+        "division": "2A",
+        "champion_school": "Southern Vance",
+        "runner_up_school": "Brevard",
+        "champion_score": 34,
+        "runner_up_score": 30,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2004,
+        "division": "2A",
+        "champion_school": "McMichael",
+        "runner_up_school": "West Stokes",
+        "champion_score": 45,
+        "runner_up_score": 16,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2005,
+        "division": "2A",
+        "champion_school": "Bandys",
+        "runner_up_school": "Croatan",
+        "champion_score": 41,
+        "runner_up_score": 15,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2006,
+        "division": "2A",
+        "champion_school": "Bandys",
+        "runner_up_school": "Croatan",
+        "champion_score": 35,
+        "runner_up_score": 26,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2007,
+        "division": "2A",
+        "champion_school": "McMichael",
+        "runner_up_school": "Newton-Conover",
+        "champion_score": 36,
+        "runner_up_score": 32,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2008,
+        "division": "2A",
+        "champion_school": "Orange",
+        "runner_up_school": "Newton-Conover",
+        "champion_score": 29,
+        "runner_up_score": 25,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2009,
+        "division": "2A",
+        "champion_school": "Orange",
+        "runner_up_school": "Newton-Conover",
+        "champion_score": 33,
+        "runner_up_score": 27,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2010,
+        "division": "2A",
+        "champion_school": "Croatan",
+        "runner_up_school": "Piedmont",
+        "champion_score": 36,
+        "runner_up_score": 18,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2011,
+        "division": "2A",
+        "champion_school": "Croatan",
+        "runner_up_school": "Piedmont",
+        "champion_score": 41,
+        "runner_up_score": 30,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2012,
+        "division": "2A",
+        "champion_school": "Piedmont",
+        "runner_up_school": "Croatan",
+        "champion_score": 41,
+        "runner_up_score": 22,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2013,
+        "division": "2A",
+        "champion_school": "Newton-Conover",
+        "runner_up_school": "Croatan",
+        "champion_score": 31,
+        "runner_up_score": 30,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2014,
+        "division": "2A",
+        "champion_school": "Newton-Conover",
+        "runner_up_school": "Dixon",
+        "champion_score": 44,
+        "runner_up_score": 15,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2015,
+        "division": "2A",
+        "champion_school": "West Lincoln",
+        "runner_up_school": "Croatan",
+        "champion_score": 49,
+        "runner_up_score": 19,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2016,
+        "division": "2A",
+        "champion_school": "Newton-Conover",
+        "runner_up_school": "Dixon",
+        "champion_score": 36,
+        "runner_up_score": 24,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2017,
+        "division": "2A",
+        "champion_school": "Vacated",
+        "runner_up_school": "Carrboro",
+        "champion_score": 32,
+        "runner_up_score": 28,
+        "is_vacated": true,
+        "held": true,
+        "notes": "Championship was vacated"
+      },
+      {
+        "year": 2018,
+        "division": "2A",
+        "champion_school": "West Lincoln",
+        "runner_up_school": "Croatan",
+        "champion_score": 54,
+        "runner_up_score": 16,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2019,
+        "division": "2A",
+        "champion_school": "West Lincoln",
+        "runner_up_school": "Croatan",
+        "champion_score": 60,
+        "runner_up_score": 14,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2020,
+        "division": "2A",
+        "champion_school": "Fred T. Foard",
+        "runner_up_school": "Croatan",
+        "champion_score": 59,
+        "runner_up_score": 9,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2021,
+        "division": "2A",
+        "champion_school": "No Dual Tournament",
+        "runner_up_school": null,
+        "champion_score": null,
+        "runner_up_score": null,
+        "is_vacated": false,
+        "held": false,
+        "notes": "COVID-19 Season"
+      },
+      {
+        "year": 2022,
+        "division": "2A",
+        "champion_school": "Bandys",
+        "runner_up_school": "Bunn",
+        "champion_score": 60,
+        "runner_up_score": 18,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2023,
+        "division": "2A",
+        "champion_school": "Newton-Conover",
+        "runner_up_school": "Bunn",
+        "champion_score": 51,
+        "runner_up_score": 18,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2024,
+        "division": "2A",
+        "champion_school": "Trinity",
+        "runner_up_school": "Seaforth",
+        "champion_score": 36,
+        "runner_up_score": 31,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      },
+      {
+        "year": 2025,
+        "division": "2A",
+        "champion_school": "R-S Central",
+        "runner_up_school": "Seaforth",
+        "champion_score": 34,
+        "runner_up_score": 32,
+        "is_vacated": false,
+        "held": true,
+        "notes": null
+      }
+    ]
+  },
+  "records": [
+    {
+      "year": 1990,
+      "division": "1A/2A",
+      "champion_school": "Dixon",
+      "runner_up_school": null,
+      "champion_score": null,
+      "runner_up_score": null,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 1990,
+      "division": "3A",
+      "champion_school": "T.W. Andrews",
+      "runner_up_school": "Kings Mountain",
+      "champion_score": 51,
+      "runner_up_score": 10,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 1990,
+      "division": "4A",
+      "champion_school": "East Gaston",
+      "runner_up_school": "Durham Jordan",
+      "champion_score": 35,
+      "runner_up_score": 24,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 1991,
+      "division": "1A/2A",
+      "champion_school": "Albemarle",
+      "runner_up_school": null,
+      "champion_score": null,
+      "runner_up_score": null,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 1991,
+      "division": "3A",
+      "champion_school": "T.W. Andrews",
+      "runner_up_school": "Central Davidson",
+      "champion_score": 38,
+      "runner_up_score": 13,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 1991,
+      "division": "4A",
+      "champion_school": "East Gaston",
+      "runner_up_school": "Cary",
+      "champion_score": 40,
+      "runner_up_score": 15,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 1992,
+      "division": "1A/2A",
+      "champion_school": "Dixon",
+      "runner_up_school": null,
+      "champion_score": null,
+      "runner_up_score": null,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 1992,
+      "division": "3A",
+      "champion_school": "T.W. Andrews",
+      "runner_up_school": "Statesville",
+      "champion_score": 34,
+      "runner_up_score": 27,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 1992,
+      "division": "4A",
+      "champion_school": "East Gaston",
+      "runner_up_school": "Orange",
+      "champion_score": 30,
+      "runner_up_score": 25,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 1993,
+      "division": "1A/2A",
+      "champion_school": "East Davidson",
+      "runner_up_school": null,
+      "champion_score": null,
+      "runner_up_score": null,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 1993,
+      "division": "3A",
+      "champion_school": "Sun Valley",
+      "runner_up_school": "Northwest Guilford",
+      "champion_score": 50,
+      "runner_up_score": 16,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 1993,
+      "division": "4A",
+      "champion_school": "Cary",
+      "runner_up_school": "Davie County",
+      "champion_score": 26,
+      "runner_up_score": 22,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 1994,
+      "division": "1A/2A",
+      "champion_school": "Dixon",
+      "runner_up_school": null,
+      "champion_score": null,
+      "runner_up_score": null,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 1994,
+      "division": "3A",
+      "champion_school": "High Point Central",
+      "runner_up_school": "West Carteret",
+      "champion_score": 34,
+      "runner_up_score": 29,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 1994,
+      "division": "4A",
+      "champion_school": "Davie County",
+      "runner_up_school": "Riverside-Durham",
+      "champion_score": 31,
+      "runner_up_score": 28,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 1995,
+      "division": "1A/2A",
+      "champion_school": "East Davidson",
+      "runner_up_school": null,
+      "champion_score": null,
+      "runner_up_score": null,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 1995,
+      "division": "3A",
+      "champion_school": "Parkland",
+      "runner_up_school": "Ragsdale",
+      "champion_score": 27,
+      "runner_up_score": 25,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 1995,
+      "division": "4A",
+      "champion_school": "Riverside-Durham",
+      "runner_up_school": "Davie County",
+      "champion_score": 33,
+      "runner_up_score": 31,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 1996,
+      "division": "1A/2A",
+      "champion_school": "West Henderson",
+      "runner_up_school": null,
+      "champion_score": null,
+      "runner_up_score": null,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 1996,
+      "division": "3A",
+      "champion_school": "Parkland",
+      "runner_up_school": "Havelock",
+      "champion_score": 40,
+      "runner_up_score": 25,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 1996,
+      "division": "4A",
+      "champion_school": "Cary",
+      "runner_up_school": "Riverside-Durham",
+      "champion_score": 28,
+      "runner_up_score": 26,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 1997,
+      "division": "1A/2A",
+      "champion_school": "Alleghany",
+      "runner_up_school": null,
+      "champion_score": null,
+      "runner_up_score": null,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 1997,
+      "division": "3A",
+      "champion_school": "Havelock",
+      "runner_up_school": "Parkland",
+      "champion_score": 48,
+      "runner_up_score": 28,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 1997,
+      "division": "4A",
+      "champion_school": "Cary",
+      "runner_up_school": "Orange",
+      "champion_score": 33,
+      "runner_up_score": 29,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 1998,
+      "division": "1A/2A",
+      "champion_school": "North Wilkes",
+      "runner_up_school": null,
+      "champion_score": null,
+      "runner_up_score": null,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 1998,
+      "division": "3A",
+      "champion_school": "Morehead",
+      "runner_up_school": null,
+      "champion_score": null,
+      "runner_up_score": null,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 1998,
+      "division": "4A",
+      "champion_school": "Cary",
+      "runner_up_school": "Independence",
+      "champion_score": 35,
+      "runner_up_score": 34,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 1999,
+      "division": "1A/2A",
+      "champion_school": "Alleghany",
+      "runner_up_school": null,
+      "champion_score": null,
+      "runner_up_score": null,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 1999,
+      "division": "3A",
+      "champion_school": "Morehead",
+      "runner_up_school": null,
+      "champion_score": null,
+      "runner_up_score": null,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 1999,
+      "division": "4A",
+      "champion_school": "Seventy-First",
+      "runner_up_school": "Davie County",
+      "champion_score": 50,
+      "runner_up_score": 13,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2000,
+      "division": "1A/2A",
+      "champion_school": "West Lincoln",
+      "runner_up_school": null,
+      "champion_score": null,
+      "runner_up_score": null,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2000,
+      "division": "3A",
+      "champion_school": "Fuquay-Varina",
+      "runner_up_school": "Tuscola",
+      "champion_score": 36,
+      "runner_up_score": 28,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2000,
+      "division": "4A",
+      "champion_school": "Seventy-First",
+      "runner_up_school": "Davie County",
+      "champion_score": 40,
+      "runner_up_score": 25,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2001,
+      "division": "1A/2A",
+      "champion_school": "Pisgah",
+      "runner_up_school": null,
+      "champion_score": null,
+      "runner_up_score": null,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2001,
+      "division": "3A",
+      "champion_school": "Fuquay-Varina",
+      "runner_up_school": "St. Stephens",
+      "champion_score": 46,
+      "runner_up_score": 26,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2001,
+      "division": "4A",
+      "champion_school": "Mount Tabor",
+      "runner_up_school": "Cary",
+      "champion_score": 37,
+      "runner_up_score": 18,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2002,
+      "division": "1A",
+      "champion_school": "Alleghany",
+      "runner_up_school": "South Davidson",
+      "champion_score": 48,
+      "runner_up_score": 18,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2002,
+      "division": "2A",
+      "champion_school": "Southern Vance",
+      "runner_up_school": "Pisgah",
+      "champion_score": 36,
+      "runner_up_score": 34,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2002,
+      "division": "3A",
+      "champion_school": "Morehead",
+      "runner_up_school": null,
+      "champion_score": null,
+      "runner_up_score": null,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2002,
+      "division": "4A",
+      "champion_school": "Riverside-Durham",
+      "runner_up_school": "Cary",
+      "champion_score": 40,
+      "runner_up_score": 26,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2003,
+      "division": "1A",
+      "champion_school": "South Davidson",
+      "runner_up_school": "Alleghany",
+      "champion_score": 37,
+      "runner_up_score": 27,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2003,
+      "division": "2A",
+      "champion_school": "Southern Vance",
+      "runner_up_school": "Brevard",
+      "champion_score": 34,
+      "runner_up_score": 30,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2003,
+      "division": "3A",
+      "champion_school": "Morehead",
+      "runner_up_school": null,
+      "champion_score": null,
+      "runner_up_score": null,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2003,
+      "division": "4A",
+      "champion_school": "Riverside-Durham",
+      "runner_up_school": "Cary",
+      "champion_score": 38,
+      "runner_up_score": 30,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2004,
+      "division": "1A",
+      "champion_school": "Elkin",
+      "runner_up_school": "West Davidson",
+      "champion_score": 34,
+      "runner_up_score": 32,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2004,
+      "division": "2A",
+      "champion_school": "McMichael",
+      "runner_up_school": "West Stokes",
+      "champion_score": 45,
+      "runner_up_score": 16,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2004,
+      "division": "3A",
+      "champion_school": "Ragsdale",
+      "runner_up_school": "John M. Morehead High School",
+      "champion_score": 40,
+      "runner_up_score": 25,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2004,
+      "division": "4A",
+      "champion_school": "Riverside-Durham",
+      "runner_up_school": "Cary",
+      "champion_score": 35,
+      "runner_up_score": 28,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2005,
+      "division": "1A",
+      "champion_school": "Chatham Central",
+      "runner_up_school": "East Surry",
+      "champion_score": 43,
+      "runner_up_score": 36,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2005,
+      "division": "2A",
+      "champion_school": "Bandys",
+      "runner_up_school": "Croatan",
+      "champion_score": 41,
+      "runner_up_score": 15,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2005,
+      "division": "3A",
+      "champion_school": "Orange",
+      "runner_up_school": "East Gaston",
+      "champion_score": 30,
+      "runner_up_score": 28,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2005,
+      "division": "4A",
+      "champion_school": "Cary",
+      "runner_up_school": "Davie County",
+      "champion_score": 34,
+      "runner_up_score": 32,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2006,
+      "division": "1A",
+      "champion_school": "Alleghany",
+      "runner_up_school": "Topsail",
+      "champion_score": 42,
+      "runner_up_score": 27,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2006,
+      "division": "2A",
+      "champion_school": "Bandys",
+      "runner_up_school": "Croatan",
+      "champion_score": 35,
+      "runner_up_score": 26,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2006,
+      "division": "3A",
+      "champion_school": "Morehead",
+      "runner_up_school": null,
+      "champion_score": null,
+      "runner_up_score": null,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2006,
+      "division": "4A",
+      "champion_school": "Davie County",
+      "runner_up_school": "Cary",
+      "champion_score": 41,
+      "runner_up_score": 23,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2007,
+      "division": "1A",
+      "champion_school": "Alleghany",
+      "runner_up_school": "Topsail",
+      "champion_score": 43,
+      "runner_up_score": 22,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2007,
+      "division": "2A",
+      "champion_school": "McMichael",
+      "runner_up_school": "Newton-Conover",
+      "champion_score": 36,
+      "runner_up_score": 32,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2007,
+      "division": "3A",
+      "champion_school": "Parkland",
+      "runner_up_school": "John M. Morehead High School",
+      "champion_score": 34,
+      "runner_up_score": 24,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2007,
+      "division": "4A",
+      "champion_school": "Cary",
+      "runner_up_school": "West Forsyth",
+      "champion_score": 53,
+      "runner_up_score": 9,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2008,
+      "division": "1A",
+      "champion_school": "Alleghany",
+      "runner_up_school": "Topsail",
+      "champion_score": 37,
+      "runner_up_score": 28,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2008,
+      "division": "2A",
+      "champion_school": "Orange",
+      "runner_up_school": "Newton-Conover",
+      "champion_score": 29,
+      "runner_up_score": 25,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2008,
+      "division": "3A",
+      "champion_school": "Parkland",
+      "runner_up_school": "John M. Morehead High School",
+      "champion_score": 59,
+      "runner_up_score": 6,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2008,
+      "division": "4A",
+      "champion_school": "Cary",
+      "runner_up_school": "Davie County",
+      "champion_score": 40,
+      "runner_up_score": 27,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2009,
+      "division": "1A",
+      "champion_school": "Topsail",
+      "runner_up_school": "West Wilkes",
+      "champion_score": 44,
+      "runner_up_score": 28,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2009,
+      "division": "2A",
+      "champion_school": "Orange",
+      "runner_up_school": "Newton-Conover",
+      "champion_score": 33,
+      "runner_up_score": 27,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2009,
+      "division": "3A",
+      "champion_school": "Parkland",
+      "runner_up_school": "Dudley",
+      "champion_score": 46,
+      "runner_up_score": 18,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2009,
+      "division": "4A",
+      "champion_school": "Cary",
+      "runner_up_school": "Butler",
+      "champion_score": 43,
+      "runner_up_score": 18,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2010,
+      "division": "1A",
+      "champion_school": "West Wilkes",
+      "runner_up_school": "Rosewood",
+      "champion_score": 60,
+      "runner_up_score": 10,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2010,
+      "division": "2A",
+      "champion_school": "Croatan",
+      "runner_up_school": "Piedmont",
+      "champion_score": 36,
+      "runner_up_score": 18,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2010,
+      "division": "3A",
+      "champion_school": "J.M. Robinson",
+      "runner_up_school": "Orange",
+      "champion_score": 35,
+      "runner_up_score": 32,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2010,
+      "division": "4A",
+      "champion_school": "Parkland",
+      "runner_up_school": "Cary",
+      "champion_score": 38,
+      "runner_up_score": 14,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2011,
+      "division": "1A",
+      "champion_school": "West Wilkes",
+      "runner_up_school": "North Rowan",
+      "champion_score": 36,
+      "runner_up_score": 32,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2011,
+      "division": "2A",
+      "champion_school": "Croatan",
+      "runner_up_school": "Piedmont",
+      "champion_score": 41,
+      "runner_up_score": 30,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2011,
+      "division": "3A",
+      "champion_school": "Orange",
+      "runner_up_school": "J.M. Robinson",
+      "champion_score": 34,
+      "runner_up_score": 27,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2011,
+      "division": "4A",
+      "champion_school": "Parkland",
+      "runner_up_school": "New Bern",
+      "champion_score": 52,
+      "runner_up_score": 12,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2012,
+      "division": "1A",
+      "champion_school": "West Wilkes",
+      "runner_up_school": "Ayden-Grifton",
+      "champion_score": 50,
+      "runner_up_score": 13,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2012,
+      "division": "2A",
+      "champion_school": "Piedmont",
+      "runner_up_school": "Croatan",
+      "champion_score": 41,
+      "runner_up_score": 22,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2012,
+      "division": "3A",
+      "champion_school": "Orange",
+      "runner_up_school": "Southwestern Randolph",
+      "champion_score": 34,
+      "runner_up_score": 30,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2012,
+      "division": "4A",
+      "champion_school": "Parkland",
+      "runner_up_school": "Pinecrest",
+      "champion_score": 36,
+      "runner_up_score": 25,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2013,
+      "division": "1A",
+      "champion_school": "West Wilkes",
+      "runner_up_school": "North Rowan",
+      "champion_score": 41,
+      "runner_up_score": 25,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2013,
+      "division": "2A",
+      "champion_school": "Newton-Conover",
+      "runner_up_school": "Croatan",
+      "champion_score": 31,
+      "runner_up_score": 30,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2013,
+      "division": "3A",
+      "champion_school": "Fred T. Foard",
+      "runner_up_school": "John M. Morehead High School",
+      "champion_score": 41,
+      "runner_up_score": 27,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2013,
+      "division": "4A",
+      "champion_school": "Parkland",
+      "runner_up_school": "Jack Britt",
+      "champion_score": 28,
+      "runner_up_score": 20,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2014,
+      "division": "1A",
+      "champion_school": "Mitchell",
+      "runner_up_school": "Chatham Central",
+      "champion_score": 36,
+      "runner_up_score": 30,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2014,
+      "division": "2A",
+      "champion_school": "Newton-Conover",
+      "runner_up_school": "Dixon",
+      "champion_score": 44,
+      "runner_up_score": 15,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2014,
+      "division": "3A",
+      "champion_school": "Morehead",
+      "runner_up_school": null,
+      "champion_score": null,
+      "runner_up_score": null,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2014,
+      "division": "4A",
+      "champion_school": "Parkland",
+      "runner_up_school": "Jack Britt",
+      "champion_score": 30,
+      "runner_up_score": 24,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2015,
+      "division": "1A",
+      "champion_school": "Mitchell",
+      "runner_up_school": "Chatham Central",
+      "champion_score": 42,
+      "runner_up_score": 30,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2015,
+      "division": "2A",
+      "champion_school": "West Lincoln",
+      "runner_up_school": "Croatan",
+      "champion_score": 49,
+      "runner_up_score": 19,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2015,
+      "division": "3A",
+      "champion_school": "Fred T. Foard",
+      "runner_up_school": "John M. Morehead High School",
+      "champion_score": 30,
+      "runner_up_score": 23,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2015,
+      "division": "4A",
+      "champion_school": "Jack Britt",
+      "runner_up_school": "Southeast Guilford",
+      "champion_score": 42,
+      "runner_up_score": 22,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2016,
+      "division": "1A",
+      "champion_school": "Rosewood",
+      "runner_up_school": "Mitchell",
+      "champion_score": 36,
+      "runner_up_score": 24,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2016,
+      "division": "2A",
+      "champion_school": "Newton-Conover",
+      "runner_up_school": "Dixon",
+      "champion_score": 36,
+      "runner_up_score": 24,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2016,
+      "division": "3A",
+      "champion_school": "Morehead",
+      "runner_up_school": null,
+      "champion_score": null,
+      "runner_up_score": null,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2016,
+      "division": "4A",
+      "champion_school": "West Forsyth",
+      "runner_up_school": "Holly Springs",
+      "champion_score": 57,
+      "runner_up_score": 10,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2017,
+      "division": "1A",
+      "champion_school": "Robbinsville",
+      "runner_up_school": "Rosewood",
+      "champion_score": 36,
+      "runner_up_score": 31,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2017,
+      "division": "2A",
+      "champion_school": "Vacated",
+      "runner_up_school": "Carrboro",
+      "champion_score": 32,
+      "runner_up_score": 28,
+      "is_vacated": true,
+      "held": true,
+      "notes": "Championship was vacated"
+    },
+    {
+      "year": 2017,
+      "division": "3A",
+      "champion_school": "Piedmont",
+      "runner_up_school": "Orange",
+      "champion_score": 29,
+      "runner_up_score": 27,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2017,
+      "division": "4A",
+      "champion_school": "West Forsyth",
+      "runner_up_school": "Laney",
+      "champion_score": 31,
+      "runner_up_score": 28,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2018,
+      "division": "1A",
+      "champion_school": "Rosewood",
+      "runner_up_school": "Robbinsville",
+      "champion_score": 41,
+      "runner_up_score": 27,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2018,
+      "division": "2A",
+      "champion_school": "West Lincoln",
+      "runner_up_school": "Croatan",
+      "champion_score": 54,
+      "runner_up_score": 16,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2018,
+      "division": "3A",
+      "champion_school": "Piedmont",
+      "runner_up_school": "Orange",
+      "champion_score": 33,
+      "runner_up_score": 31,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2018,
+      "division": "4A",
+      "champion_school": "Cary",
+      "runner_up_school": "West Forsyth",
+      "champion_score": 38,
+      "runner_up_score": 32,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2019,
+      "division": "1A",
+      "champion_school": "Uwharrie Charter",
+      "runner_up_school": "Robbinsville",
+      "champion_score": 36,
+      "runner_up_score": 32,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2019,
+      "division": "2A",
+      "champion_school": "West Lincoln",
+      "runner_up_school": "Croatan",
+      "champion_score": 60,
+      "runner_up_score": 14,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2019,
+      "division": "3A",
+      "champion_school": "St. Stephens",
+      "runner_up_school": "Cape Fear",
+      "champion_score": 41,
+      "runner_up_score": 25,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2019,
+      "division": "4A",
+      "champion_school": "Northwest Guilford",
+      "runner_up_school": "Laney",
+      "champion_score": 33,
+      "runner_up_score": 27,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2020,
+      "division": "1A",
+      "champion_school": "Avery County",
+      "runner_up_school": "Uwharrie Charter",
+      "champion_score": 35,
+      "runner_up_score": 30,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2020,
+      "division": "2A",
+      "champion_school": "Fred T. Foard",
+      "runner_up_school": "Croatan",
+      "champion_score": 59,
+      "runner_up_score": 9,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2020,
+      "division": "3A",
+      "champion_school": "Northern Guilford",
+      "runner_up_school": "Enka",
+      "champion_score": 42,
+      "runner_up_score": 31,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2020,
+      "division": "4A",
+      "champion_school": "Hough",
+      "runner_up_school": "Cardinal Gibbons",
+      "champion_score": 33,
+      "runner_up_score": 31,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2021,
+      "division": "1A",
+      "champion_school": "No Dual Tournament",
+      "runner_up_school": null,
+      "champion_score": null,
+      "runner_up_score": null,
+      "is_vacated": false,
+      "held": false,
+      "notes": "COVID-19 Season"
+    },
+    {
+      "year": 2021,
+      "division": "2A",
+      "champion_school": "No Dual Tournament",
+      "runner_up_school": null,
+      "champion_score": null,
+      "runner_up_score": null,
+      "is_vacated": false,
+      "held": false,
+      "notes": "COVID-19 Season"
+    },
+    {
+      "year": 2021,
+      "division": "3A",
+      "champion_school": "No Dual Tournament",
+      "runner_up_school": null,
+      "champion_score": null,
+      "runner_up_score": null,
+      "is_vacated": false,
+      "held": false,
+      "notes": "COVID-19 Season"
+    },
+    {
+      "year": 2021,
+      "division": "4A",
+      "champion_school": "No Dual Tournament",
+      "runner_up_school": null,
+      "champion_score": null,
+      "runner_up_score": null,
+      "is_vacated": false,
+      "held": false,
+      "notes": "COVID-19 Season"
+    },
+    {
+      "year": 2022,
+      "division": "1A",
+      "champion_school": "Avery County",
+      "runner_up_school": "Uwharrie Charter",
+      "champion_score": 39,
+      "runner_up_score": 30,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2022,
+      "division": "2A",
+      "champion_school": "Bandys",
+      "runner_up_school": "Bunn",
+      "champion_score": 60,
+      "runner_up_score": 18,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2022,
+      "division": "3A",
+      "champion_school": "Fred T. Foard",
+      "runner_up_school": "Union Pines",
+      "champion_score": 58,
+      "runner_up_score": 12,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2022,
+      "division": "4A",
+      "champion_school": "Laney",
+      "runner_up_school": "Northwest Guilford",
+      "champion_score": 32,
+      "runner_up_score": 31,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2023,
+      "division": "1A",
+      "champion_school": "Uwharrie Charter",
+      "runner_up_school": "Avery County",
+      "champion_score": 39,
+      "runner_up_score": 36,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2023,
+      "division": "2A",
+      "champion_school": "Newton-Conover",
+      "runner_up_school": "Bunn",
+      "champion_score": 51,
+      "runner_up_score": 18,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2023,
+      "division": "3A",
+      "champion_school": "Fred T. Foard",
+      "runner_up_school": "Union Pines",
+      "champion_score": 54,
+      "runner_up_score": 24,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2023,
+      "division": "4A",
+      "champion_school": "Northwest Guilford",
+      "runner_up_school": "Laney",
+      "champion_score": 52,
+      "runner_up_score": 24,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2024,
+      "division": "1A",
+      "champion_school": "Uwharrie Charter",
+      "runner_up_school": "Avery County",
+      "champion_score": 36,
+      "runner_up_score": 33,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2024,
+      "division": "2A",
+      "champion_school": "Trinity",
+      "runner_up_school": "Seaforth",
+      "champion_score": 36,
+      "runner_up_score": 31,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2024,
+      "division": "3A",
+      "champion_school": "Eastern Guilford",
+      "runner_up_school": "Union Pines",
+      "champion_score": 36,
+      "runner_up_score": 21,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2024,
+      "division": "4A",
+      "champion_school": "Davie County",
+      "runner_up_school": "Laney",
+      "champion_score": 31,
+      "runner_up_score": 25,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2025,
+      "division": "1A",
+      "champion_school": "Uwharrie Charter",
+      "runner_up_school": "Mount Airy",
+      "champion_score": 48,
+      "runner_up_score": 14,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2025,
+      "division": "2A",
+      "champion_school": "R-S Central",
+      "runner_up_school": "Seaforth",
+      "champion_score": 34,
+      "runner_up_score": 32,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2025,
+      "division": "3A",
+      "champion_school": "Union Pines",
+      "runner_up_school": "Pisgah",
+      "champion_score": 47,
+      "runner_up_score": 17,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    },
+    {
+      "year": 2025,
+      "division": "4A",
+      "champion_school": "Cardinal Gibbons",
+      "runner_up_school": "Hickory Ridge",
+      "champion_score": 41,
+      "runner_up_score": 22,
+      "is_vacated": false,
+      "held": true,
+      "notes": null
+    }
+  ]
+}

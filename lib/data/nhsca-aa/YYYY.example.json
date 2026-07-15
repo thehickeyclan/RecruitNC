@@ -1,0 +1,14 @@
+{
+  "year": 2027,
+  "note": "Copy to lib/data/nhsca-aa/2027.json (optional) and register in lib/nhsca-canonical-aa.ts NHSCA_CANONICAL_AA_LOADERS. Or use a /nhsca/2027 page replica with section1_all_americans.",
+  "all_americans": [
+    {
+      "athlete_name": "Example Wrestler",
+      "division": "Senior",
+      "weight": "157",
+      "placement": 3,
+      "high_school": "Example High",
+      "state": "NC"
+    }
+  ]
+}

@@ -287,6 +287,12 @@ export default function DataDawgAnalyticsPage() {
               >
                 Historical matches
               </HardLink>
+              <HardLink
+                href="/admin/imports"
+                className="rounded-md border border-zinc-200 bg-white px-2.5 py-1 font-medium text-zinc-700 hover:bg-zinc-50"
+              >
+                Public imports
+              </HardLink>
             </div>
           </div>
 

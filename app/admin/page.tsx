@@ -11,7 +11,7 @@ import {
   School, Pencil, BarChart3, Settings, FileText,
   TrendingUp, Zap, Plus, Eye, UserPlus, RefreshCw, ClipboardList, Database, BookOpen, CreditCard,
   ShoppingBag, Smile, Coins, LayoutDashboard, CircleDollarSign, Link2, Receipt, GraduationCap,
-  LayoutGrid, Handshake, Mail, Bot, Scale, Newspaper,
+  LayoutGrid, Handshake, Mail, Bot, Scale, Newspaper, Import,
 } from "lucide-react"
 
 interface AdminStats {
@@ -219,6 +219,12 @@ export default function AdminDashboard() {
                 ) : null}
                 <Bot className="h-6 w-6" />
                 <span className="text-sm font-semibold">Data Dawg</span>
+              </span>
+            </HardLink>
+            <HardLink href="/admin/imports" className="block">
+              <span className="w-full h-20 bg-gradient-to-br from-[#0f766e] to-[#115e59] hover:from-[#115e59] hover:to-[#0f766e] text-white shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex font-bold">
+                <Import className="h-6 w-6" />
+                <span className="text-sm font-semibold">Public Imports</span>
               </span>
             </HardLink>
             <Link href="/admin/athletes">
