@@ -5,6 +5,8 @@ import { parseTournamentResultsQuery } from "@/lib/data-dawg-tournament-results-
 import { answerTournamentResultsQuery } from "./tournament-results-by-year"
 import { tryAthleteNameFastPath } from "./athlete-name-fast-path"
 import { trySchoolNameFastPath } from "./school-name-fast-path"
+import { planDataDawgQuery } from "./query-planner"
+import { executePlannedDataDawgQuery } from "./execute-planned-query"
 import { runOpenAiDataDawgToolLoop } from "./openai-tool-loop"
 import { DATA_DAWG_AGENT_V2_SYSTEM } from "./system-prompt"
 
@@ -140,6 +142,26 @@ export async function runDataDawgAgentV2(params: {
     }
   } catch (e) {
     console.warn("[RecruitNC] athlete name fast-path failed:", e instanceof Error ? e.message : e)
+  }
+
+  // Data Dawg 2.0 planner: deterministic intents → SQL tools (no LLM tool pick).
+  // Runs after name/school fast paths so "Mac Johnson" stays a dossier, not a false positive.
+  try {
+    const plan = planDataDawgQuery(params.message)
+    if (plan) {
+      const planned = await executePlannedDataDawgQuery(plan)
+      if (planned?.answer) {
+        return {
+          answer: applyRecruitNcDataDawgAnswerPostProcess(planned.answer),
+          messageId,
+          queryType: planned.queryType,
+          source: "data_dawg_agent_v2_planner",
+          toolRounds: 0,
+        }
+      }
+    }
+  } catch (e) {
+    console.warn("[RecruitNC] query planner failed:", e instanceof Error ? e.message : e)
   }
 
   const { answer: raw, toolRounds } = await runOpenAiDataDawgToolLoop({

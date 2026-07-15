@@ -2,6 +2,11 @@
  * Format cross-store historical hits into Data Dawg markdown (alumni without directory id).
  */
 
+import {
+  buildAthleteTimelineMarkdown,
+  timelineInputFromCrossStore,
+} from "@/lib/data-dawg-athlete-timeline"
+
 type CrossStorePayload = {
   searched_for?: string
   nchsaa_state?: Record<string, unknown>[]
@@ -61,6 +66,12 @@ export function formatCrossStoreAthleteMarkdown(displayName: string, data: Cross
     lines.push(`- High School: ${schools[0]}`)
   } else if (schools.length > 1) {
     lines.push(`- High schools seen in results: ${schools.slice(0, 4).join(", ")}`)
+  }
+
+  const timelineMd = buildAthleteTimelineMarkdown(timelineInputFromCrossStore(data))
+  if (timelineMd) {
+    lines.push("")
+    lines.push(timelineMd)
   }
 
   const nchsaa = [...(data.nchsaa_state ?? [])].sort(yearSortDesc)

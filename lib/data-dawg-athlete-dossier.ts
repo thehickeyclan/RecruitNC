@@ -17,6 +17,7 @@ import { countDistinctStateTitleYears } from "@/lib/nchsaa-state-display"
 import { namesMatch } from "@/lib/nhsca-live/names-match"
 import { loadNcUnitedResultsForNameSearch } from "@/lib/national-team-live-profile-results"
 import { formatNhscaLineForDataDawg, formatSuper32LineForDataDawg, formatFargoLineForDataDawg } from "@/lib/data-dawg-tournament-summary"
+import { buildAthleteTimelineMarkdown } from "@/lib/data-dawg-athlete-timeline"
 
 function athleteDisplayName(row: Record<string, unknown>): string {
   const n = String(row.name ?? "").trim()
@@ -184,6 +185,9 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
       careerSummary,
     }),
   )
+
+  // Timeline is spliced here after awards/MOW are loaded (see end of function).
+  const timelineInsertAt = lines.length
 
   lines.push("NCHSAA State Results:")
   if (nchsaaSorted.length === 0) {
@@ -398,6 +402,45 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
   if (champCount >= 2 && !careerSummary) {
     lines.push("")
     lines.push(`${champCount}× State Champion${champCount === 4 ? " — one of NC's elite four-time state champions" : ""}`)
+  }
+
+  const timelineMd = buildAthleteTimelineMarkdown({
+    graduationYear: hasValidGrad ? gradYear : null,
+    nchsaa: nchsaaSorted,
+    nhsca: nhscaDisplay,
+    super32: super32Rows as TournamentResultForDisplay[],
+    fargo: fargoRows as TournamentResultForDisplay[],
+    ncUnited,
+    dualsMow: mowFiltered.map((m: Record<string, unknown>) => ({
+      year: m.year as number | string | null,
+      division: m.division != null ? String(m.division) : null,
+      mow_weight_lb: m.mow_weight_lb as string | number | null,
+    })),
+    awards: [
+      ...daveFiltered.map((d: Record<string, unknown>) => ({
+        year: d.year as number | string | null,
+        label: "Dave Schultz High School Excellence Award",
+      })),
+      ...triciaFiltered.map((d: Record<string, unknown>) => ({
+        year: d.year as number | string | null,
+        label: "Tricia Saunders High School Excellence Award",
+      })),
+    ],
+    commit: commit?.college
+      ? {
+          college: commit.college,
+          division: commit.division,
+          year: hasValidGrad ? gradYear : null,
+        }
+      : null,
+    seasonRecords: seasonFiltered.map((d: Record<string, unknown>) => ({
+      year: d.year as string | number | null,
+      record: d.record != null ? String(d.record) : null,
+      wins: d.wins != null ? Number(d.wins) : null,
+    })),
+  })
+  if (timelineMd) {
+    lines.splice(timelineInsertAt, 0, timelineMd, "")
   }
 
   return { markdown: lines.join("\n") }
