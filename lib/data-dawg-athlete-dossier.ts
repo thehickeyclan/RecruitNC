@@ -15,20 +15,16 @@ import { loadNcUnitedResultsForNameSearch } from "@/lib/national-team-live-profi
 import { isBlueTeam } from "@/lib/blue-team"
 import { buildAthleteTimelineMarkdown } from "@/lib/data-dawg-athlete-timeline"
 import {
-  buildAnalystClosingSentence,
   buildCareerSnapshotMarkdown,
   buildDevelopmentPathMarkdown,
   buildHistoricalContextNarrative,
-  buildHistoricalRankingsMarkdown,
   buildNationalResumeMarkdown,
-  buildNotableAchievementsMarkdown,
-  buildRepresentedNorthCarolinaMarkdown,
   buildVerifiedSourcesFooter,
   countNationalAllAmericans,
   formatAnalystAthleteOpening,
   formatStateResultsSection,
   type AnalystProfileStats,
-  type SeasonRecordBag,
+  type SeasonRecordRow,
   type SchoolDualTitle,
 } from "@/lib/data-dawg-athlete-analyst-profile"
 
@@ -404,24 +400,8 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
     lines.push("")
   }
 
-  const notable = buildNotableAchievementsMarkdown(stats)
-  if (notable) {
-    lines.push(notable)
-    lines.push("")
-  }
-
-  const rankings = buildHistoricalRankingsMarkdown(stats)
-  if (rankings) {
-    lines.push(rankings)
-    lines.push("")
-  }
-
-  const represented = buildRepresentedNorthCarolinaMarkdown(stats)
-  if (represented) {
-    lines.push(represented)
-    lines.push("")
-  }
-
+  lines.push("Detailed results:")
+  lines.push("")
   lines.push(formatStateResultsSection(nchsaaSorted as NchsaaRowForProfile[]))
 
   if (stateDualLines.length > 0) {
@@ -468,7 +448,8 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
     }
   }
 
-  if (careerFiltered.length > 0 || seasonFiltered.length > 0 || hasCareerRecord) {
+  // Record-book rows only (verified ranks) — season W–L already lives in Career progression.
+  if (careerFiltered.length > 0 || seasonFiltered.length > 0) {
     lines.push("")
     lines.push("Season records:")
     if (careerFiltered.length > 0) {
@@ -484,23 +465,6 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
         lines.push(`- ${d.year ?? "?"}: ${d.record}${d.school ? ` — ${d.school}` : ""}`)
       }
     }
-    if (hasCareerRecord) {
-      const sortedSeasons = Array.from(seasons.entries()).sort((a, b) => {
-        const ya = a[1].year ?? parseInt(a[0].match(/(\d{4})/)?.[1] ?? "0", 10)
-        const yb = b[1].year ?? parseInt(b[0].match(/(\d{4})/)?.[1] ?? "0", 10)
-        return yb - ya
-      })
-      for (const [, rec] of sortedSeasons) {
-        const label = rec.classLabel || "Season"
-        lines.push(`- ${label}: ${rec.wins}-${rec.losses}`)
-      }
-    }
-  }
-
-  const closer = buildAnalystClosingSentence(stats)
-  if (closer) {
-    lines.push("")
-    lines.push(closer)
   }
 
   lines.push("")

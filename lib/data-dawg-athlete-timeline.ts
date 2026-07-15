@@ -259,13 +259,11 @@ function fargoLabel(r: TournamentResultForDisplay): string | null {
     return `${medal} Fargo All-American (${ord})${detail}${record ? ` ${record.replace(/(\d+)\s*-\s*(\d+)/, "$1–$2")}` : ""}`
   }
   if (record) {
-    const m = record.match(/(\d+)\s*[-–]\s*(\d+)/)
-    const wins = m ? parseInt(m[1], 10) : 0
     const nice = record.replace(/(\d+)\s*-\s*(\d+)/, "$1–$2")
-    if (wins >= 5) {
-      return `🇺🇸 Fargo Nationals — ${nice}${detail} · Reached Blood Round`
-    }
-    return `🇺🇸 Fargo Nationals — ${nice}${detail}`
+    const blood = /blood\s*round/i.test(placement)
+      ? " · Reached Blood Round"
+      : ""
+    return `🇺🇸 Fargo Nationals — ${nice}${detail}${blood}`
   }
   if (placement) return `🇺🇸 Fargo Nationals — ${placement}${detail}`
   return null
