@@ -104,16 +104,17 @@ export function schoolsLooselyEqual(a: unknown, b: unknown): boolean {
 }
 
 /**
- * Last tokens that appear on exactly one multi-word school name.
- * Bare surnames (e.g. "Laney") are ignored in the frequency count so they can
- * still link to a unique formal name ("Emsley A. Laney"). Sibling campuses that
- * share a token (East/North Wilkes) stay non-unique and will not match.
+ * Last tokens that appear on exactly one multi-word school name (or a one-word
+ * "* High School" campus root like "Andrews High School"). Bare labels (e.g.
+ * DB "Laney") are ignored so they can still link to a unique formal name.
  */
 export function uniqueClassificationLastTokens(schoolNames: string[]): Set<string> {
   const freq = new Map<string, number>()
   for (const name of schoolNames) {
-    const tokens = schoolCoreName(name).split(" ").filter(Boolean)
-    if (tokens.length < 2) continue
+    const raw = String(name ?? "")
+    const tokens = schoolCoreName(raw).split(" ").filter(Boolean)
+    const campusRoot = tokens.length === 1 && /\bhigh\s+school\b/i.test(raw)
+    if (tokens.length < 2 && !campusRoot) continue
     const last = tokens[tokens.length - 1] || ""
     if (last.length < 5) continue
     freq.set(last, (freq.get(last) || 0) + 1)
