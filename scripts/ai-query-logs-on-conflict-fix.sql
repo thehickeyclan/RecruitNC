@@ -1,10 +1,28 @@
 -- Fix ai_query_logs inserts blocked by PostgREST Prefer: resolution=*
 -- against a PARTIAL unique index on message_id.
 --
--- Creates insert_ai_query_log (plain INSERT) used by lib/ai-query-log-write.ts.
+-- Creates insert_ai_query_log (plain SQL INSERT) used by lib/ai-query-log-write.ts.
 -- Run in Supabase SQL Editor, then verify with the SELECT at the bottom.
 
 update public.ai_query_logs set message_id = null where message_id = '';
+
+-- Drop ANY partial unique indexes on message_id (name may vary)
+do $$
+declare
+  r record;
+begin
+  for r in
+    select indexname
+    from pg_indexes
+    where schemaname = 'public'
+      and tablename = 'ai_query_logs'
+      and indexdef ilike '%unique%'
+      and indexdef ilike '%message_id%'
+      and indexdef ilike '%where%'
+  loop
+    execute format('drop index if exists public.%I', r.indexname);
+  end loop;
+end $$;
 
 drop index if exists idx_ai_query_logs_message_id_uq;
 
@@ -60,6 +78,8 @@ grant execute on function public.insert_ai_query_log(
 
 notify pgrst, 'reload schema';
 
--- Expect a UUID + newest timestamp near now():
--- select public.insert_ai_query_log('sql ping ' || now()::text);
+-- Verify:
+-- select conname, pg_get_constraintdef(oid) from pg_constraint
+-- where conrelid = 'public.ai_query_logs'::regclass and contype = 'u';
+-- select public.insert_ai_query_log('sql ping ' || now()::text, 'recruit-nc');
 -- select max(timestamp) as newest from public.ai_query_logs;
