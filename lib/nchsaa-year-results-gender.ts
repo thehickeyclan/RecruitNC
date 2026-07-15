@@ -68,9 +68,17 @@ export function matchesNchsaaGenderFilter(
   }
 
   if (filter === "women") {
-    return clsLower.includes("girl") || cls === "1-4A"
+    return (
+      clsLower.includes("girl") ||
+      clsLower.includes("women") ||
+      cls === "1-4A"
+    )
   }
-  return !clsLower.includes("girl") && cls !== "1-4A"
+  return (
+    !clsLower.includes("girl") &&
+    !clsLower.includes("women") &&
+    cls !== "1-4A"
+  )
 }
 
 export function matchesNchsaaDivisionFilter(division: string, filter: NchsaaGenderFilter, year: number): boolean {

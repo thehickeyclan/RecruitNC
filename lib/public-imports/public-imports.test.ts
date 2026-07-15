@@ -155,6 +155,57 @@ Guaranteed Places
     })
   })
 
+  it("parses 2024-style Pound headers without Guaranteed Places label", () => {
+    const text = `
+## Women’s 100-Pound
+
+- 1st Place – Lillian Prendergast of South Brunswick
+- 2nd Place – Anna Ockerman of Corinth Holders
+
+## 1A 106-Pound
+
+- 1st Place – Holton Quincy of North East Carolina Prep School
+- 2nd Place – Ethan Hines of Uwharrie Charter Academy
+- 3rd Place – Skylar Anderson of Robbinsville
+- 4th Place – Angel Olade of Mt Airy
+
+1st Place Match
+
+- Holton Quincy (North East Carolina Prep School) 52-1, Fr. over Ethan Hines (Uwharrie Charter Academy) 47-2, Sr. (Dec 4-1)
+
+3rd Place Match
+
+- Skylar Anderson (Robbinsville) 50-4, Jr. over Angel Olade (Mt Airy) 38-5, Fr. (Fall 4:38)
+
+## 1A 113-Pound
+
+- 1st Place – Cooper Foster of Avery County
+- 2nd Place – Adair Panama of Robbinsville
+- 3rd Place – Colton Lewis of North East Carolina Prep School
+- 4th Place – Kolton Hunter of Rosewood
+`
+    const rows = parseNchsaaIndividualStatesText(text, { year: 2024 })
+    const a106 = rows
+      .filter((r) => r.classification === "1A" && r.weight_class === "106")
+      .sort((a, b) => a.place - b.place)
+    expect(a106.map((r) => `${r.place}:${r.wrestler_name}`)).toEqual([
+      "1:Holton Quincy",
+      "2:Ethan Hines",
+      "3:Skylar Anderson",
+      "4:Angel Olade",
+    ])
+    expect(rows.find((r) => r.classification === "1A" && r.weight_class === "113" && r.place === 1)).toMatchObject({
+      wrestler_name: "Cooper Foster",
+      school: "Avery County",
+    })
+    expect(rows.find((r) => r.classification === "WOMEN" && r.weight_class === "100" && r.place === 1)).toMatchObject({
+      wrestler_name: "Lillian Prendergast",
+      gender: "F",
+    })
+    // 3rd-place match must not steal champ/runner-up slots
+    expect(a106.find((r) => r.place === 1)?.wrestler_name).toBe("Holton Quincy")
+  })
+
   it("parses 2026-style dual State Champion blocks with class queue", () => {
     const text = `
 1A

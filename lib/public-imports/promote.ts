@@ -62,18 +62,26 @@ export async function promoteDualRow(
   if (error) throw new Error(error.message)
 }
 
+function normalizePromoteWeight(weight: string): string {
+  const digits = String(weight ?? "")
+    .trim()
+    .match(/(\d{2,3})/)
+  return digits?.[1] ?? String(weight ?? "").trim()
+}
+
 export async function promotePlacerRow(
   admin: SupabaseClient,
   proposed: PlacerProposed,
 ): Promise<void> {
   const canonicalName = canonicalizeWrestlerName(proposed.wrestler_name)
+  const weightClass = normalizePromoteWeight(proposed.weight_class)
 
   const { data: byPlace, error: selErr } = await admin
     .from("wrestling_nchsaa_results")
     .select("id, wrestler_name, school, place")
     .eq("year", proposed.year)
     .eq("classification", proposed.classification)
-    .eq("weight_class", proposed.weight_class)
+    .eq("weight_class", weightClass)
     .eq("place", proposed.place)
     .limit(20)
 
@@ -104,7 +112,7 @@ export async function promotePlacerRow(
     .select("id, wrestler_name, school, place")
     .eq("year", proposed.year)
     .eq("classification", proposed.classification)
-    .eq("weight_class", proposed.weight_class)
+    .eq("weight_class", weightClass)
     .limit(120)
 
   if (swErr) throw new Error(swErr.message)
@@ -125,10 +133,25 @@ export async function promotePlacerRow(
     return
   }
 
+  // Wrong athlete already occupies this place slot (legacy lbs / bad import) — replace.
+  const soleOccupant = (byPlace ?? []).length === 1 ? byPlace![0] : null
+  if (soleOccupant?.id) {
+    const { error } = await admin
+      .from("wrestling_nchsaa_results")
+      .update({
+        place: proposed.place,
+        wrestler_name: canonicalName,
+        school: proposed.school,
+      })
+      .eq("id", soleOccupant.id)
+    if (error) throw new Error(error.message)
+    return
+  }
+
   const { error } = await admin.from("wrestling_nchsaa_results").insert({
     year: proposed.year,
     classification: proposed.classification,
-    weight_class: proposed.weight_class,
+    weight_class: weightClass,
     place: proposed.place,
     wrestler_name: canonicalName,
     school: proposed.school,
