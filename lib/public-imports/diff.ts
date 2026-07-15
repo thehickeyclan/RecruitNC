@@ -1,10 +1,12 @@
 import {
   canonicalizeWrestlerName,
   classificationNaturalKey,
+  classificationSchoolsEqual,
   dualNaturalKey,
   namesLooselyEqual,
   placerNaturalKey,
   schoolsLooselyEqual,
+  uniqueClassificationLastTokens,
 } from "./normalize"
 import type {
   ClassificationProposed,
@@ -155,19 +157,14 @@ export function diffClassificationRows(
   proposed: ClassificationProposed[],
   existingRows: Array<Record<string, unknown>>,
 ): StagedDiffRow[] {
-  const bySchool = new Map<string, Record<string, unknown>>()
-  for (const r of existingRows) {
-    const name = String(r.school_name ?? "")
-    if (!name) continue
-    // Prefer exact school_name keys; also index normalized for lookup
-    bySchool.set(name.toLowerCase(), r)
-  }
+  const uniqueLast = uniqueClassificationLastTokens([
+    ...proposed.map((p) => p.school_name),
+    ...existingRows.map((r) => String(r.school_name ?? "")),
+  ])
 
   const findExisting = (school: string): Record<string, unknown> | null => {
-    const direct = bySchool.get(school.toLowerCase())
-    if (direct) return direct
     for (const r of existingRows) {
-      if (schoolsLooselyEqual(school, r.school_name)) return r
+      if (classificationSchoolsEqual(school, r.school_name, uniqueLast)) return r
     }
     return null
   }

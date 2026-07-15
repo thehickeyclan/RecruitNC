@@ -37,12 +37,7 @@ export function dualNaturalKey(year: number, division: string): string {
 
 /** Stable key for school membership rows (year + school, HS suffix ignored). */
 export function classificationNaturalKey(effectiveYear: number, schoolName: string): string {
-  const school = normText(schoolName)
-    .replace(/\bhigh school\b/g, "")
-    .replace(/\bacademy\b/g, "")
-    .replace(/\s+/g, " ")
-    .trim()
-  return `${effectiveYear}|${school}`
+  return `${effectiveYear}|${schoolCoreName(schoolName)}`
 }
 
 export function placerNaturalKey(
@@ -56,79 +51,110 @@ export function placerNaturalKey(
   return `${year}|${normText(classification)}|${normText(weightClass)}|${place}|${g}`
 }
 
+/** Core school string for classification matching (no HS / academy / punctuation). */
+export function schoolCoreName(raw: unknown): string {
+  return normText(raw)
+    .replace(/\([^)]*\)/g, " ")
+    .replace(/\bjunior-senior\b/g, " ")
+    .replace(/\bsenior high school\b/g, " ")
+    .replace(/\bhigh school\b/g, " ")
+    .replace(/\bacademy\b/g, " ")
+    .replace(/\bschool\b/g, " ")
+    .replace(/\./g, " ")
+    .replace(/[-–—]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
+function schoolParenLocation(raw: unknown): string {
+  const m = String(raw ?? "").match(/\(([^)]+)\)/)
+  return m ? normText(m[1]) : ""
+}
+
+const DIRECTION_PREFIX = new Set([
+  "north",
+  "south",
+  "east",
+  "west",
+  "northern",
+  "southern",
+  "eastern",
+  "western",
+  "northeast",
+  "northwest",
+  "southeast",
+  "southwest",
+  "central",
+  "mid",
+])
+
+/**
+ * Loose school match for placers / duals (existing behavior).
+ * Exact after stripping High School / Academy — no shared-token false positives.
+ */
 export function schoolsLooselyEqual(a: unknown, b: unknown): boolean {
-  const strip = (s: string) =>
-    s
-      .replace(/\([^)]*\)/g, " ") // location qualifiers compared separately
-      .replace(/\bhigh school\b/g, "")
-      .replace(/\bsenior high school\b/g, "")
-      .replace(/\bacademy\b/g, "")
-      .replace(/\bschool\b/g, "")
-      .replace(/\./g, " ")
-      .replace(/[-–—]/g, " ")
-      .replace(/\s+/g, " ")
-      .trim()
-
-  const paren = (raw: string) => {
-    const m = String(raw ?? "").match(/\(([^)]+)\)/)
-    return m ? normText(m[1]) : ""
-  }
-
-  const rawA = String(a ?? "")
-  const rawB = String(b ?? "")
-  const pa = paren(rawA)
-  const pb = paren(rawB)
-  // Both named with locations must agree (Northside Jacksonville ≠ Pinetown)
+  const pa = schoolParenLocation(a)
+  const pb = schoolParenLocation(b)
   if (pa && pb && pa !== pb) return false
 
-  const na = strip(normText(rawA))
-  const nb = strip(normText(rawB))
+  const na = schoolCoreName(a)
+  const nb = schoolCoreName(b)
   if (!na || !nb) return na === nb
-  if (na === nb || na.startsWith(nb) || nb.startsWith(na)) return true
+  return na === nb
+}
 
-  const tokens = (s: string) => s.split(" ").filter(Boolean)
-  const ta = tokens(na)
-  const tb = tokens(nb)
+/**
+ * Last tokens that appear exactly once across the given school name list.
+ * Used so "Hough" ↔ "William Amos Hough" can match only when no other school
+ * shares that last token (blocks Guilford / Wilkes / Creek collisions).
+ */
+export function uniqueClassificationLastTokens(schoolNames: string[]): Set<string> {
+  const freq = new Map<string, number>()
+  for (const name of schoolNames) {
+    const tokens = schoolCoreName(name).split(" ").filter(Boolean)
+    const last = tokens[tokens.length - 1] || ""
+    if (last.length < 5) continue
+    freq.set(last, (freq.get(last) || 0) + 1)
+  }
+  const unique = new Set<string>()
+  for (const [tok, n] of freq) {
+    if (n === 1) unique.add(tok)
+  }
+  return unique
+}
+
+/**
+ * Classification membership match: exact core, or unique last-token formal↔short.
+ * Do not use for placers/duals.
+ */
+export function classificationSchoolsEqual(
+  a: unknown,
+  b: unknown,
+  uniqueLastTokens: Set<string>,
+): boolean {
+  const pa = schoolParenLocation(a)
+  const pb = schoolParenLocation(b)
+  if (pa && pb && pa !== pb) return false
+
+  const na = schoolCoreName(a)
+  const nb = schoolCoreName(b)
+  if (!na || !nb) return na === nb
+  if (na === nb) return true
+
+  const ta = na.split(" ").filter(Boolean)
+  const tb = nb.split(" ").filter(Boolean)
   const lastA = ta[ta.length - 1] || ""
   const lastB = tb[tb.length - 1] || ""
+  if (lastA.length < 5 || lastA !== lastB) return false
+  if (!uniqueLastTokens.has(lastA)) return false
 
-  // Ambiguous last tokens — require stronger overlap
-  const AMBIGUOUS = new Set([
-    "central",
-    "north",
-    "south",
-    "east",
-    "west",
-    "union",
-    "county",
-    "charter",
-    "prep",
-    "preparatory",
-    "community",
-    "early",
-    "college",
-    "tech",
-    "technology",
-    "leadership",
-    "classical",
-    "independent",
-  ])
+  // One side must be the bare surname; the other a longer formal or campus name
+  if (!(ta.length === 1 || tb.length === 1)) return false
+  if (!(ta.length >= 2 || tb.length >= 2)) return false
 
-  // "William Amos Hough" ↔ "Hough", "Emsley A Laney" ↔ "Laney"
-  if (
-    lastA.length >= 5 &&
-    lastA === lastB &&
-    !AMBIGUOUS.has(lastA)
-  ) {
-    return true
-  }
+  const multi = ta.length > 1 ? ta : tb
+  // Block East/West/North… compounds even if token somehow unique
+  if (DIRECTION_PREFIX.has(multi[0])) return false
 
-  // Shorter name is a whole-word suffix/prefix of the longer (min length 5)
-  const [shorter, longer] = na.length <= nb.length ? [na, nb] : [nb, na]
-  if (shorter.length >= 5) {
-    const re = new RegExp(`(?:^|\\s)${shorter.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?:\\s|$)`)
-    if (re.test(longer)) return true
-  }
-
-  return false
+  return true
 }

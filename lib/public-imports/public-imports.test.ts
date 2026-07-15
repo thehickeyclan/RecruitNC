@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest"
-import { namesLooselyEqual, schoolsLooselyEqual } from "./normalize"
+import {
+  classificationSchoolsEqual,
+  namesLooselyEqual,
+  schoolsLooselyEqual,
+  uniqueClassificationLastTokens,
+} from "./normalize"
 import {
   parseDualTeamPayload,
   parseNchsaaChampionshipFinalsText,
@@ -21,12 +26,52 @@ describe("public-imports normalize", () => {
     expect(schoolsLooselyEqual("Seaforth High School", "Seaforth")).toBe(true)
   })
 
-  it("matches formal NCHSAA names to short school labels", () => {
-    expect(schoolsLooselyEqual("Emsley A. Laney High School", "Laney")).toBe(true)
-    expect(schoolsLooselyEqual("William Amos Hough High School", "Hough")).toBe(true)
-    expect(schoolsLooselyEqual("Needham B. Broughton High School", "Broughton")).toBe(true)
-    expect(schoolsLooselyEqual("Charles E. Jordan High School", "Jordan")).toBe(true)
-    expect(schoolsLooselyEqual("David W. Butler High School", "Butler")).toBe(true)
+  it("does not match sibling geographic schools via shared tokens", () => {
+    const unique = uniqueClassificationLastTokens([
+      "East Wilkes High School",
+      "North Wilkes High School",
+      "Southeast Guilford High School",
+      "Northwest Guilford High School",
+      "Spring Creek High School",
+      "Mallard Creek High School",
+      "Bishop McGuinness Catholic High School",
+      "Charlotte Catholic High School",
+      "Andrews High School",
+      "T.W. Andrews High School",
+      "Emsley A. Laney High School",
+      "William Amos Hough High School",
+      "Laney",
+      "Hough",
+    ])
+    expect(
+      classificationSchoolsEqual("East Wilkes High School", "North Wilkes", unique),
+    ).toBe(false)
+    expect(
+      classificationSchoolsEqual(
+        "Southeast Guilford High School",
+        "Northwest Guilford High School",
+        unique,
+      ),
+    ).toBe(false)
+    expect(
+      classificationSchoolsEqual("Spring Creek High School", "Mallard Creek", unique),
+    ).toBe(false)
+    expect(
+      classificationSchoolsEqual(
+        "Bishop McGuinness Catholic High School",
+        "Charlotte Catholic",
+        unique,
+      ),
+    ).toBe(false)
+    expect(classificationSchoolsEqual("Andrews High School", "T.W. Andrews", unique)).toBe(
+      false,
+    )
+    expect(
+      classificationSchoolsEqual("Emsley A. Laney High School", "Laney", unique),
+    ).toBe(true)
+    expect(
+      classificationSchoolsEqual("William Amos Hough High School", "Hough", unique),
+    ).toBe(true)
   })
 
   it("does not conflate differently parenthesized Northside schools", () => {
