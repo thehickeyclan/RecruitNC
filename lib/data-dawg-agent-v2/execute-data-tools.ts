@@ -7,6 +7,7 @@ import { getSupabaseAdmin } from "@/lib/server-supabase"
 import { getAthletesColumnNames } from "@/lib/athletes-schema"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { escapeForIlike } from "@/lib/nchsaa-results"
+import { postgrestIlikeAtom } from "@/lib/athlete-name-match"
 import {
   enrichSingleSeasonWinningestRows,
   parseMinWinsFromQuery,
@@ -333,10 +334,10 @@ export async function toolSearchAthletes(args: {
 
   /** Single OR filter hits name + first + last + school in one round trip (PostgREST). */
   const orClause = [
-    `name.ilike.${pattern}`,
-    `${cols.fn}.ilike.${pattern}`,
-    `${cols.ln}.ilike.${pattern}`,
-    `${cols.hs}.ilike.${pattern}`,
+    postgrestIlikeAtom("name", pattern),
+    postgrestIlikeAtom(cols.fn, pattern),
+    postgrestIlikeAtom(cols.ln, pattern),
+    postgrestIlikeAtom(cols.hs, pattern),
   ].join(",")
   const halfCap = Math.max(1, Math.floor(strategyCap / 2))
   const [broadAsc, broadDesc] = await Promise.all([
@@ -346,7 +347,11 @@ export async function toolSearchAthletes(args: {
   merge(broadAsc, "or(name,first,last,school)_gy_asc")
   merge(broadDesc, "or(name,first,last,school)_gy_desc")
   if (byId.size === 0 && broadAsc.error && broadDesc.error) {
-    const narrowOr = [`name.ilike.${pattern}`, `${cols.fn}.ilike.${pattern}`, `${cols.ln}.ilike.${pattern}`].join(",")
+    const narrowOr = [
+      postgrestIlikeAtom("name", pattern),
+      postgrestIlikeAtom(cols.fn, pattern),
+      postgrestIlikeAtom(cols.ln, pattern),
+    ].join(",")
     const [nAsc, nDesc] = await Promise.all([
       athletesBase(admin).or(narrowOr).order(cols.gy, { ascending: true, nullsFirst: false }).limit(halfCap),
       athletesBase(admin).or(narrowOr).order(cols.gy, { ascending: false, nullsFirst: false }).limit(halfCap),
@@ -395,7 +400,9 @@ export async function toolSearchAthletes(args: {
       .filter((v) => v.length >= 3 && v.toLowerCase() !== q.toLowerCase())
       .slice(0, 6)
     if (nameVariants.length > 0) {
-      const variantOr = nameVariants.map((v) => `name.ilike.%${escapeForIlike(v)}%`).join(",")
+      const variantOr = nameVariants
+        .map((v) => postgrestIlikeAtom("name", `%${escapeForIlike(v)}%`))
+        .join(",")
       const vHalf = Math.max(1, Math.floor(strategyCap / 2))
       const [vAsc, vDesc] = await Promise.all([
         athletesBase(admin).or(variantOr).order(cols.gy, { ascending: true, nullsFirst: false }).limit(vHalf),

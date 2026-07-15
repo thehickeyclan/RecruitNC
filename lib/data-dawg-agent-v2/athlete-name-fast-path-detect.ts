@@ -13,7 +13,7 @@ import { normalizeApostrophes, namesReferToSamePerson } from "@/lib/athlete-name
 
 /** Topics that must keep the full agent path (not a bare athlete lookup). */
 const LOOKUP_TOPIC_BLOCK =
-  /\b(ranking|rankings|champ(?:ion|s)?|nhsca|fargo|super\s*32|super32|dual(?:s)?|all[- ]?american|record book|winningest|leaderboard|how many|most titles|state tournament|class of|committed to|college commits?|school wrestling|high school wrestling)\b/i
+  /\b(ranking|rankings|champ(?:ion|s)?|nchsaa|nhsca|fargo|super\s*32|super32|dual(?:s)?|all[- ]?american|record book|winningest|leaderboard|how many|most titles|state tournament|state results|class of|committed to|college commits?|school wrestling|high school wrestling)\b/i
 
 /** Fold curly quotes / spacing so "Kevin O'Brien" matches "Kevin O’Brien" / "Kevin OBrien". */
 export function foldAthleteLookupName(s: string): string {

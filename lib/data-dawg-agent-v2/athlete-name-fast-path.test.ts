@@ -16,6 +16,7 @@ describe("isLikelyAthleteNameLookup", () => {
     expect(isLikelyAthleteNameLookup("class of 2027 rankings")).toBe(false)
     expect(isLikelyAthleteNameLookup("how many NHSCA All-Americans")).toBe(false)
     expect(isLikelyAthleteNameLookup("Fargo results 2026")).toBe(false)
+    expect(isLikelyAthleteNameLookup("Show me 2024 NCHSAA Results")).toBe(false)
     expect(isLikelyAthleteNameLookup("4x state champs")).toBe(false)
   })
 

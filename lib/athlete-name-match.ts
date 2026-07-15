@@ -386,6 +386,19 @@ export function escapeForIlike(s: string): string {
   return (s ?? "").replace(/'/g, "''")
 }
 
+/**
+ * PostgREST `.or()` atom for ilike. Commas / parens inside the pattern must be quoted
+ * or they split the logic tree (`name.ilike.%foo, bar%` → parse error).
+ */
+export function postgrestIlikeAtom(column: string, patternWithPercents: string): string {
+  const p = String(patternWithPercents ?? "")
+  if (/[,()"]/.test(p)) {
+    const quoted = p.replace(/\\/g, "\\\\").replace(/"/g, '\\"')
+    return `${column}.ilike."${quoted}"`
+  }
+  return `${column}.ilike.${p}`
+}
+
 export function getIlikePatternsForNameVariant(v: string): string[] {
   const escaped = `%${escapeForIlike(v)}%`
   const patterns = [escaped]
