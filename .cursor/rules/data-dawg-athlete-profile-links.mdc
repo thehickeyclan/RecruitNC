@@ -8,8 +8,9 @@ alwaysApply: true
 
 For **any Data Dawg answer about a specific athlete** (search, “who is…”, “tell me about…”, dossier):
 
-1. **Top of answer** = short identity summary via `formatAthleteAnswerOpening(name, id, url?, summary?)` in `lib/athlete-profile-links.ts`.
-2. **Name is the profile hyperlink** — `Here's what I found about [Name](profile_url):` (not a separate `Profile:` line). Use `getAthleteProfileUrl(id)` → `https://app.ncwrestlingunited.com/view-profile?id=…` (not `/unified-profile/[id]` and not `/athletes/[id]`). In chat HTML, open those links **same-tab** (never `target="_blank"` on app profile routes).
-3. Include **High School**, **Class of**, and **College commit** (with division when known) in that top block before tournament sections. Add a brief **career summary** line when known (e.g. `3× State Champion with a 193-9 high school career.`). **Do not** put **Weight** in the header — it changes often; weight belongs on tournament result lines only.
-4. **No markdown headings** (`###` / `##` / `#`). Plain section labels only (e.g. `NCHSAA State Results:`). Postprocess strips leading `#` markers.
-5. Do not invent a profile URL without a directory id; tournament-only alumni can use a plain name.
+1. **Top of answer** = linked name via `Here's what I found about [Name](profile_url):` then an **analyst lead paragraph** (dossier uses `formatAnalystAthleteOpening` / `buildAnalystLeadParagraph` in `lib/data-dawg-athlete-analyst-profile.ts`; lighter surfaces may still use `formatAthleteAnswerOpening` in `lib/athlete-profile-links.ts`).
+2. **Name is the profile hyperlink** — Use `getAthleteProfileUrl(id)` → `https://app.ncwrestlingunited.com/view-profile?id=…` (not `/unified-profile/[id]` and not `/athletes/[id]`). In chat HTML, open those links **same-tab** (never `target="_blank"` on app profile routes).
+3. Include **career record**, **High School**, **Class of**, and **College commit** (with division when known) early — dossier: Career snapshot under the lead. **Do not** put **Weight** in the header — it changes often; weight belongs on tournament result lines only.
+4. Prefer **Hall-of-Fame storytelling**: significance lead → snapshot → progression timeline → historical context → state results → national résumé → closer. Timeline labels should show progression (First / Repeat / Third / Fourth titles), not four identical “State Champion” lines.
+5. **No markdown headings** (`###` / `##` / `#`). Plain section labels only (e.g. `Career timeline:`, `Historical context:`). Postprocess strips leading `#` markers.
+6. Do not invent a profile URL without a directory id; tournament-only alumni can use a plain name. Historical context bullets must be **derived from verified data** (title counts, record books, rankings, awards) — never invent school prestige without dual-title or equivalent evidence.

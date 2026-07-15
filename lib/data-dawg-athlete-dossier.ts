@@ -1,13 +1,9 @@
 /**
- * Full athlete dossier for Data Dawg v2 — same sources as unified profile / legacy chat format.
- * One module so chat does not depend on route.ts.
+ * Full athlete dossier for Data Dawg v2 — sports-analyst / Hall-of-Fame style.
+ * Facts stay SQL-grounded; presentation emphasizes significance and progression.
  */
 
 import { getSupabaseAdmin } from "@/lib/server-supabase"
-import {
-  buildBriefAthleteCareerSummary,
-  formatAthleteAnswerOpening,
-} from "@/lib/athlete-profile-links"
 import { resolveAthleteCollegeCommit } from "@/lib/data-dawg-college-commit"
 import { escapeForIlike } from "@/lib/nchsaa-results"
 import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
@@ -16,8 +12,18 @@ import { type TournamentResultForDisplay } from "@/lib/public-profile-data"
 import { countDistinctStateTitleYears } from "@/lib/nchsaa-state-display"
 import { namesMatch } from "@/lib/nhsca-live/names-match"
 import { loadNcUnitedResultsForNameSearch } from "@/lib/national-team-live-profile-results"
-import { formatNhscaLineForDataDawg, formatSuper32LineForDataDawg, formatFargoLineForDataDawg } from "@/lib/data-dawg-tournament-summary"
 import { buildAthleteTimelineMarkdown } from "@/lib/data-dawg-athlete-timeline"
+import {
+  buildAnalystClosingSentence,
+  buildCareerSnapshotMarkdown,
+  buildHistoricalContextBullets,
+  buildHistoricalRankingsMarkdown,
+  buildNationalResumeMarkdown,
+  countNationalAllAmericans,
+  formatAnalystAthleteOpening,
+  formatStateResultsSection,
+  type AnalystProfileStats,
+} from "@/lib/data-dawg-athlete-analyst-profile"
 
 function athleteDisplayName(row: Record<string, unknown>): string {
   const n = String(row.name ?? "").trim()
@@ -25,53 +31,6 @@ function athleteDisplayName(row: Record<string, unknown>): string {
   const f = String(row.first_name ?? row.firstName ?? "").trim()
   const l = String(row.last_name ?? row.lastName ?? "").trim()
   return `${f} ${l}`.trim() || "Unknown"
-}
-
-function formatNchsaaStateLine(r: NchsaaRowForProfile): string {
-  const weight = (r.weight_class || "").toString().replace(/lbs?$/i, "").trim()
-  const w = weight ? `${weight}lbs` : ""
-  const cls = (r.classification || "").toString()
-  if (r.place === 1) {
-    return `- ${r.year}: State Champion (${cls}${w ? `, ${w}` : ""})`
-  }
-  if (r.place != null && r.place > 1 && r.place <= 6) {
-    const placeText = r.place === 2 ? "2nd" : r.place === 3 ? "3rd" : `${r.place}th`
-    return `- ${r.year}: ${placeText} place (${cls}${w ? `, ${w}` : ""})`
-  }
-  if (r.place === 0) {
-    return `- ${r.year}: State qualifier (${cls}${w ? `, ${w}` : ""})`
-  }
-  return `- ${r.year}: (${cls}${w ? `, ${w}` : ""})`
-}
-
-function formatNhscaDisplayLine(r: TournamentResultForDisplay): string {
-  return formatNhscaLineForDataDawg(r)
-}
-
-function formatSuper32Row(r: Record<string, unknown>): string {
-  const year = r.year ?? "?"
-  const placement = parseInt(String(r.placement ?? r.place ?? 0), 10) || 0
-  const record =
-    r.record?.toString().trim() ||
-    (r.wins != null && r.losses != null ? `(${r.wins}-${r.losses})` : "")
-  const weight = (r.weight_class ?? r.weight ?? "").toString()
-  const isAA = placement >= 1 && placement <= 8
-  if (isAA && placement >= 1) {
-    const pt =
-      placement === 1
-        ? "Champion (All-American)"
-        : `${placement}${placement === 2 ? "nd" : placement === 3 ? "rd" : "th"} place (All-American)`
-    return `- ${year}: ${pt}${record ? ` ${record}` : ""}${weight ? ` (${weight})` : ""}`
-  }
-  if (record) {
-    return formatSuper32LineForDataDawg({
-      year: Number(year) || 0,
-      placement: String(r.placement ?? r.place ?? ""),
-      record,
-      weight,
-    })
-  }
-  return `- ${year}:${weight ? ` (${weight})` : ""}`
 }
 
 /** Directory name vs tournament row (handles "Last, First" in DB). */
@@ -93,7 +52,7 @@ function dossierNamesMatch(directoryFullName: string, rowName: string): boolean 
 }
 
 /**
- * Build legacy-style Markdown dossier for one athlete id (RecruitNC DB).
+ * Build analyst-style Markdown dossier for one athlete id (RecruitNC DB).
  */
 export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ markdown: string; error?: string }> {
   const id = (athleteId ?? "").trim()
@@ -124,7 +83,6 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
     Number(rawGrad) <= 2050
   const gradYear = hasValidGrad ? Math.floor(Number(rawGrad)) : new Date().getFullYear()
 
-  /** Earliest NCHSAA season year we query (≈ freshman spring through grad year + 1). Same for school dual / MOW. */
   const yearMin = hasValidGrad ? gradYear - 4 : 1990
   const yearMax = hasValidGrad ? gradYear + 1 : 2035
 
@@ -139,8 +97,15 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
   ])
 
   const nchsaaSorted = [...nchsaaMerged].sort((a, b) => b.year - a.year)
+  const super32Rows = [...super32].sort((a: { year?: number }, b: { year?: number }) => (b.year || 0) - (a.year || 0))
+  const fargoRows = [...fargo].sort((a: { year?: number }, b: { year?: number }) => (b.year || 0) - (a.year || 0))
 
   const recruitingStatus = String(athlete.recruiting_status ?? "").trim()
+  const prospectRanking =
+    athlete.prospect_ranking != null && Number.isFinite(Number(athlete.prospect_ranking))
+      ? Math.floor(Number(athlete.prospect_ranking))
+      : null
+
   const commit = await resolveAthleteCollegeCommit(supabase, {
     displayName,
     college: String(athlete.college ?? "").trim() || null,
@@ -148,7 +113,6 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
     previousCollege: String(athlete.previous_college ?? "").trim() || null,
   })
 
-  // Career W-L early so the opener can include a brief summary (weight stays out — it fluctuates).
   const { data: matchRows } = await supabase.from("matches").select("*").eq("athlete_id", id)
   const seasons = new Map<string, { wins: number; losses: number }>()
   for (const m of matchRows ?? []) {
@@ -166,38 +130,15 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
     careerWins += rec.wins
     careerLosses += rec.losses
   }
+  const hasCareerRecord = seasons.size > 0
   const champCount = countDistinctStateTitleYears(nchsaaSorted)
-  const careerSummary = buildBriefAthleteCareerSummary({
-    stateTitleYears: champCount,
-    careerWins: seasons.size > 0 ? careerWins : null,
-    careerLosses: seasons.size > 0 ? careerLosses : null,
+  const aaCounts = countNationalAllAmericans({
+    nhsca: nhscaDisplay,
+    super32: super32Rows as TournamentResultForDisplay[],
+    fargo: fargoRows as TournamentResultForDisplay[],
   })
 
-  const lines: string[] = []
-  lines.push(
-    ...formatAthleteAnswerOpening(displayName, id, null, {
-      highSchool: highSchool || null,
-      graduationYear: hasValidGrad ? gradYear : null,
-      college: commit?.college ?? null,
-      previousCollege: commit?.previousCollege ?? null,
-      division: commit?.division ?? null,
-      recruitingStatus: recruitingStatus || null,
-      careerSummary,
-    }),
-  )
-
-  // Timeline is spliced here after awards/MOW are loaded (see end of function).
-  const timelineInsertAt = lines.length
-
-  lines.push("NCHSAA State Results:")
-  if (nchsaaSorted.length === 0) {
-    lines.push("None")
-  } else {
-    for (const r of nchsaaSorted) {
-      lines.push(formatNchsaaStateLine(r))
-    }
-  }
-
+  let schoolDualTitlesInWindow = 0
   let stateDualLines: string[] = []
   if (highSchool) {
     const { data: dualRows } = await supabase
@@ -213,19 +154,10 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
       const ch = String(d.champion_school ?? "").toLowerCase().trim()
       return ch === hsLower || ch.includes(hsLower) || hsLower.includes(ch)
     })
+    schoolDualTitlesInWindow = filtered.length
     stateDualLines = filtered.map(
-      (d: Record<string, unknown>) =>
-        `- ${d.year}: State Dual Team Champion (${d.division})`,
+      (d: Record<string, unknown>) => `- ${d.year}: State Dual Team Champion (${d.division})`,
     )
-  }
-
-  if (stateDualLines.length > 0) {
-    lines.push("")
-    lines.push("State Dual Team Championships:")
-    lines.push(
-      `(School team championships — everyone on the ${highSchool} varsity in this class window shares this list. Individual MOW below matches the named wrestler only.)`,
-    )
-    stateDualLines.forEach((l) => lines.push(l))
   }
 
   const { data: mowRows } = await supabase
@@ -241,66 +173,6 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
     const mn = String(m.mow_name ?? "").trim()
     return mn.length > 0 && dossierNamesMatch(nameForQueries, mn)
   })
-
-  if (mowFiltered.length > 0) {
-    lines.push("")
-    lines.push("State Duals Most Outstanding Wrestler (MOW):")
-    for (const m of mowFiltered) {
-      const w = m.mow_weight_lb ? ` (${m.mow_weight_lb}lbs)` : ""
-      const who = String(m.mow_name ?? "").trim()
-      lines.push(`- ${m.year}: ${m.division} Dual Meet MOW — ${who}${w} (${m.mow_school})`)
-    }
-  }
-
-  const super32Rows = [...super32].sort((a: any, b: any) => (b.year || 0) - (a.year || 0))
-  lines.push("")
-  lines.push("Super32:")
-  if (super32Rows.length === 0) {
-    lines.push("None")
-  } else {
-    for (const r of super32Rows) {
-      lines.push(formatSuper32Row(r as Record<string, unknown>))
-    }
-  }
-
-  const fargoRows = [...fargo].sort((a: any, b: any) => (b.year || 0) - (a.year || 0))
-  lines.push("")
-  lines.push("Fargo Nationals:")
-  if (fargoRows.length === 0) {
-    lines.push("None")
-  } else {
-    for (const r of fargoRows) {
-      lines.push(formatFargoLineForDataDawg(r as TournamentResultForDisplay))
-    }
-  }
-
-  lines.push("")
-  lines.push("NHSCA Nationals:")
-  if (nhscaDisplay.length === 0) {
-    lines.push("None")
-  } else {
-    const seen = new Set<string>()
-    for (const r of nhscaDisplay) {
-      const key = `${r.year}-${r.placement}-${r.weight}`
-      if (seen.has(key)) continue
-      seen.add(key)
-      lines.push(formatNhscaDisplayLine(r))
-    }
-  }
-
-  lines.push("")
-  lines.push("NC United National Team:")
-  if (ncUnited.length === 0) {
-    lines.push("None")
-  } else {
-    for (const r of ncUnited) {
-      const event = String(r.event ?? "NC United").trim()
-      const rec = String(r.record ?? "").trim()
-      const wt = r.weight ? ` · ${r.weight} lbs` : ""
-      const ph = r.isPlaceholder ? " (registered)" : ""
-      lines.push(`- ${r.year} — ${event} — ${rec}${wt}${ph}`)
-    }
-  }
 
   const daveLast = nameForQueries.toLowerCase().split(/\s+/).filter(Boolean).pop() ?? ""
   const namePat = `%${escapeForIlike(daveLast)}%`
@@ -345,63 +217,45 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
     dossierNamesMatch(nameForQueries, String(d.wrestler_name ?? "").trim()),
   )
 
-  if (daveFiltered.length > 0) {
-    lines.push("")
-    lines.push("Dave Schultz High School Excellence Award:")
-    for (const d of daveFiltered) {
-      lines.push(`- ${d.year}: Winner (${d.high_school})`)
-    }
+  const careerWinsRank =
+    careerFiltered[0]?.rank != null && Number.isFinite(Number(careerFiltered[0].rank))
+      ? Math.floor(Number(careerFiltered[0].rank))
+      : null
+
+  const stats: AnalystProfileStats = {
+    displayName,
+    athleteId: id,
+    highSchool: highSchool || null,
+    graduationYear: hasValidGrad ? gradYear : null,
+    careerWins: hasCareerRecord ? careerWins : null,
+    careerLosses: hasCareerRecord ? careerLosses : null,
+    stateTitleYears: champCount,
+    college: commit?.college ?? null,
+    previousCollege: commit?.previousCollege ?? null,
+    division: commit?.division ?? null,
+    recruitingStatus: recruitingStatus || null,
+    prospectRanking,
+    careerWinsRank,
+    dualsMowCount: mowFiltered.length,
+    schoolDualTitlesInWindow,
+    nhscaAllAmericanCount: aaCounts.nhsca,
+    super32AllAmericanCount: aaCounts.super32,
+    fargoAllAmericanCount: aaCounts.fargo,
+    daveSchultzYears: daveFiltered
+      .map((d) => Number(d.year))
+      .filter((y) => Number.isFinite(y)),
+    triciaSaundersYears: triciaFiltered
+      .map((d) => Number(d.year))
+      .filter((y) => Number.isFinite(y)),
   }
 
-  if (triciaFiltered.length > 0) {
-    lines.push("")
-    lines.push("Tricia Saunders High School Excellence Award:")
-    for (const d of triciaFiltered) {
-      lines.push(`- ${d.year}: Winner (${d.high_school})`)
-    }
-  }
+  const lines: string[] = []
+  lines.push(...formatAnalystAthleteOpening(displayName, id, stats))
 
-  if (careerFiltered.length > 0) {
+  const snapshot = buildCareerSnapshotMarkdown(stats)
+  if (snapshot) {
+    lines.push(snapshot)
     lines.push("")
-    lines.push("All-Time Career Record Book:")
-    for (const d of careerFiltered) {
-      const rank = d.rank != null ? `#${d.rank} ` : ""
-      lines.push(
-        `- ${rank}All-time: ${d.record}${d.years ? ` (${d.years})` : ""}${d.school ? ` — ${d.school}` : ""}`,
-      )
-    }
-  }
-
-  if (seasonFiltered.length > 0) {
-    lines.push("")
-    lines.push("Single-Season Record Book:")
-    for (const d of seasonFiltered) {
-      lines.push(
-        `- ${d.year ?? "?"}: ${d.record}${d.school ? ` — ${d.school}` : ""}`,
-      )
-    }
-  }
-
-  if (seasons.size > 0) {
-    lines.push("")
-    lines.push("High School Career Record:")
-    const sortedSeasons = Array.from(seasons.entries()).sort((a, b) => {
-      const ya = parseInt(a[0].match(/(\d{4})/)?.[1] ?? "0", 10)
-      const yb = parseInt(b[0].match(/(\d{4})/)?.[1] ?? "0", 10)
-      return yb - ya
-    })
-    for (const [season, rec] of sortedSeasons) {
-      const sd = season.charAt(0).toUpperCase() + season.slice(1)
-      lines.push(`- ${sd}: ${rec.wins}-${rec.losses}`)
-    }
-    if (sortedSeasons.length > 1) {
-      lines.push(`- Career Total: ${careerWins}-${careerLosses}`)
-    }
-  }
-
-  if (champCount >= 2 && !careerSummary) {
-    lines.push("")
-    lines.push(`${champCount}× State Champion${champCount === 4 ? " — one of NC's elite four-time state champions" : ""}`)
   }
 
   const timelineMd = buildAthleteTimelineMarkdown({
@@ -433,14 +287,108 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
           year: hasValidGrad ? gradYear : null,
         }
       : null,
-    seasonRecords: seasonFiltered.map((d: Record<string, unknown>) => ({
-      year: d.year as string | number | null,
-      record: d.record != null ? String(d.record) : null,
-      wins: d.wins != null ? Number(d.wins) : null,
-    })),
+    // Keep season record-book noise out of the story timeline — listed later.
+    seasonRecords: [],
   })
   if (timelineMd) {
-    lines.splice(timelineInsertAt, 0, timelineMd, "")
+    lines.push(timelineMd)
+    lines.push("")
+  }
+
+  const context = buildHistoricalContextBullets(stats)
+  if (context) {
+    lines.push(context)
+    lines.push("")
+  }
+
+  const rankings = buildHistoricalRankingsMarkdown(stats)
+  if (rankings) {
+    lines.push(rankings)
+    lines.push("")
+  }
+
+  lines.push(formatStateResultsSection(nchsaaSorted as NchsaaRowForProfile[]))
+
+  if (stateDualLines.length > 0) {
+    lines.push("")
+    lines.push("State dual team championships:")
+    lines.push(
+      `(School team titles — everyone on the ${highSchool} varsity in this class window shares this list.)`,
+    )
+    stateDualLines.forEach((l) => lines.push(l))
+  }
+
+  if (mowFiltered.length > 0) {
+    lines.push("")
+    lines.push("State Duals Most Outstanding Wrestler (MOW):")
+    for (const m of mowFiltered) {
+      const w = m.mow_weight_lb ? ` (${m.mow_weight_lb}lbs)` : ""
+      const who = String(m.mow_name ?? "").trim()
+      lines.push(`- ${m.year}: ${m.division} Dual Meet MOW — ${who}${w} (${m.mow_school})`)
+    }
+  }
+
+  const national = buildNationalResumeMarkdown({
+    nhsca: nhscaDisplay,
+    super32: super32Rows as TournamentResultForDisplay[],
+    fargo: fargoRows as TournamentResultForDisplay[],
+    ncUnited,
+    graduationYear: hasValidGrad ? gradYear : null,
+  })
+  if (national) {
+    lines.push("")
+    lines.push(national)
+  }
+
+  if (daveFiltered.length > 0) {
+    lines.push("")
+    lines.push("Dave Schultz High School Excellence Award:")
+    for (const d of daveFiltered) {
+      lines.push(`- ${d.year}: Winner (${d.high_school})`)
+    }
+  }
+
+  if (triciaFiltered.length > 0) {
+    lines.push("")
+    lines.push("Tricia Saunders High School Excellence Award:")
+    for (const d of triciaFiltered) {
+      lines.push(`- ${d.year}: Winner (${d.high_school})`)
+    }
+  }
+
+  if (careerFiltered.length > 0 || seasonFiltered.length > 0 || hasCareerRecord) {
+    lines.push("")
+    lines.push("Season records:")
+    if (careerFiltered.length > 0) {
+      for (const d of careerFiltered) {
+        const rank = d.rank != null ? `#${d.rank} ` : ""
+        lines.push(
+          `- ${rank}All-time career: ${d.record}${d.years ? ` (${d.years})` : ""}${d.school ? ` — ${d.school}` : ""}`,
+        )
+      }
+    }
+    if (seasonFiltered.length > 0) {
+      for (const d of seasonFiltered) {
+        lines.push(`- ${d.year ?? "?"}: ${d.record}${d.school ? ` — ${d.school}` : ""}`)
+      }
+    }
+    if (hasCareerRecord) {
+      const sortedSeasons = Array.from(seasons.entries()).sort((a, b) => {
+        const ya = parseInt(a[0].match(/(\d{4})/)?.[1] ?? "0", 10)
+        const yb = parseInt(b[0].match(/(\d{4})/)?.[1] ?? "0", 10)
+        return yb - ya
+      })
+      for (const [season, rec] of sortedSeasons) {
+        const sd = season.charAt(0).toUpperCase() + season.slice(1)
+        lines.push(`- ${sd}: ${rec.wins}-${rec.losses}`)
+      }
+    }
+  }
+
+  const closer = buildAnalystClosingSentence(stats)
+  if (closer) {
+    lines.push("")
+    lines.push(closer)
   }
 
   return { markdown: lines.join("\n") }
