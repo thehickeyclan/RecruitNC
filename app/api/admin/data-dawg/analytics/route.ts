@@ -12,6 +12,8 @@ export const dynamic = "force-dynamic"
 
 type TimeRange = "24h" | "7d" | "30d" | "all"
 
+/** Legacy + current writers both use `timestamp` (ISO). Do not filter via raw `.or()` —
+ * unquoted ISO values contain `.` and break PostgREST filter parsing (returns 0 rows). */
 const LOG_SELECT =
   "id, query, project, url, response, query_type, response_time_ms, feedback, message_id, error_message, handler_name, success, timestamp"
 
@@ -34,6 +36,14 @@ function topCounts(map: Record<string, number>, limit: number) {
     .map(([name, count]) => ({ name, count }))
 }
 
+function applyTimeFilter<T extends { gte: (col: string, val: string) => T }>(
+  q: T,
+  cutoff: string | null,
+): T {
+  if (!cutoff) return q
+  return q.gte("timestamp", cutoff)
+}
+
 export async function GET(request: NextRequest) {
   const auth = await requireAdmin()
   if (!auth.ok) {
@@ -41,7 +51,7 @@ export async function GET(request: NextRequest) {
   }
 
   const sp = request.nextUrl.searchParams
-  const timeRange = (sp.get("timeRange") as TimeRange) || "7d"
+  const timeRange = (sp.get("timeRange") as TimeRange) || "all"
   const feedbackFilter = sp.get("feedback") || "all"
   const limitRaw = Number(sp.get("limit") ?? "50")
   const offsetRaw = Number(sp.get("offset") ?? "0")
@@ -68,6 +78,7 @@ export async function GET(request: NextRequest) {
         learningOpportunities: [],
         logs: [] as AiQueryLogRow[],
         total: 0,
+        allTimeTotal: 0,
         hasMore: false,
       })
     }
@@ -78,9 +89,10 @@ export async function GET(request: NextRequest) {
   async function countExact(extra?: {
     eq?: [string, string | boolean]
     notNull?: string
+    withCutoff?: boolean
   }): Promise<number> {
     let q = admin.from("ai_query_logs").select("id", { count: "exact", head: true })
-    if (cutoff) q = q.gte("timestamp", cutoff)
+    if (extra?.withCutoff !== false) q = applyTimeFilter(q, cutoff)
     if (extra?.eq) q = q.eq(extra.eq[0], extra.eq[1])
     if (extra?.notNull) q = q.not(extra.notNull, "is", null)
     const { count, error } = await q
@@ -89,20 +101,23 @@ export async function GET(request: NextRequest) {
   }
 
   let total = 0
+  let allTimeTotal = 0
   let successful = 0
   let failed = 0
   let positiveFeedback = 0
   let negativeFeedback = 0
   let withFeedback = 0
   try {
-    ;[total, successful, failed, positiveFeedback, negativeFeedback, withFeedback] = await Promise.all([
-      countExact(),
-      countExact({ eq: ["success", true] }),
-      countExact({ eq: ["success", false] }),
-      countExact({ eq: ["feedback", "positive"] }),
-      countExact({ eq: ["feedback", "negative"] }),
-      countExact({ notNull: "feedback" }),
-    ])
+    ;[total, allTimeTotal, successful, failed, positiveFeedback, negativeFeedback, withFeedback] =
+      await Promise.all([
+        countExact(),
+        countExact({ withCutoff: false }),
+        countExact({ eq: ["success", true] }),
+        countExact({ eq: ["success", false] }),
+        countExact({ eq: ["feedback", "positive"] }),
+        countExact({ eq: ["feedback", "negative"] }),
+        countExact({ notNull: "feedback" }),
+      ])
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e)
     console.error("[RecruitNC] data-dawg analytics counts", msg)
@@ -114,8 +129,9 @@ export async function GET(request: NextRequest) {
     .select(LOG_SELECT)
     .order("timestamp", { ascending: false })
     .limit(sampleLimit)
-  if (cutoff) sampleQ = sampleQ.gte("timestamp", cutoff)
+  sampleQ = applyTimeFilter(sampleQ, cutoff)
   const { data: sampleRaw, error: sampleErr } = await sampleQ
+
   if (sampleErr) {
     console.error("[RecruitNC] data-dawg analytics sample", sampleErr)
     return NextResponse.json({ error: sampleErr.message }, { status: 500 })
@@ -163,7 +179,8 @@ export async function GET(request: NextRequest) {
     .from("ai_query_logs")
     .select(LOG_SELECT, { count: "exact" })
     .order("timestamp", { ascending: false })
-  if (cutoff) logsQ = logsQ.gte("timestamp", cutoff)
+  logsQ = applyTimeFilter(logsQ, cutoff)
+
   if (feedbackFilter === "positive") logsQ = logsQ.eq("feedback", "positive")
   else if (feedbackFilter === "negative") logsQ = logsQ.eq("feedback", "negative")
   else if (feedbackFilter === "with_feedback") logsQ = logsQ.not("feedback", "is", null)
@@ -173,6 +190,7 @@ export async function GET(request: NextRequest) {
     offset,
     offset + limit - 1,
   )
+
   if (logsErr) {
     console.error("[RecruitNC] data-dawg analytics logs", logsErr)
     return NextResponse.json({ error: logsErr.message }, { status: 500 })
@@ -206,6 +224,7 @@ export async function GET(request: NextRequest) {
     learningOpportunities: topCounts(learningCounts, 20),
     logs,
     total: filtered,
+    allTimeTotal,
     hasMore: offset + logs.length < filtered,
     offset,
     limit,
