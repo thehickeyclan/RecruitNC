@@ -20,6 +20,29 @@ const config: Config = {
     },
     extend: {
       colors: {
+        /**
+         * RecruitNC palette — the dark navy actually shipped on the public pages.
+         *
+         * Use these instead of hardcoding hexes. Prior to this the home page inlined
+         * #0A1628/#13294B/#D3B574/#BC0B03 while the nc-* tokens below declared a different,
+         * lighter brand, so three near-miss navies and two golds coexisted on one screen.
+         * The nc-* tokens are kept for the pages still on them.
+         */
+        rnc: {
+          // Surfaces, darkest → lightest
+          ink: "#0A1628", // page background
+          surface: "#0f1c2e", // stats bar, inset panels
+          raised: "#13294B", // cards, buttons
+          line: "#1a3a5f", // borders, hairlines
+          gold: {
+            DEFAULT: "#D3B574",
+            hover: "#c4a665",
+          },
+          red: {
+            DEFAULT: "#BC0B03",
+            hover: "#a00a03",
+          },
+        },
         // Fox News–style / NC United branding (primary blue = Fox blue)
         "nc-blue": "#003366", // Fox blue (footer, nav, primary surfaces)
         "nc-navy": {

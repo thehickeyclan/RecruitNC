@@ -18,10 +18,12 @@ interface Athlete {
   name: string
   graduationyear?: number
   graduationYear?: number
-  weightclass?: string
+  // Widened to match the canonical ProfessionalAthlete contract in lib/professional-athlete.ts,
+  // which normalizeAthleteList() emits — the DB stores weights as both text and numbers.
+  weightclass?: string | number
   weightClass?: string
   weight_class?: string
-  college_weight_class?: string
+  college_weight_class?: string | number
   hs_weight_class?: string
   highschool?: string
   highSchool?: string
@@ -47,8 +49,10 @@ interface Athlete {
   nchsaa_results?: unknown
   location?: string
   ncUnitedTeam?: string
-  rankings?: { nc_rank: string }
-  prospect_ranking?: string
+  // nc_rank is optional per the canonical contract, and the read at ~:510 already null-checks it.
+  rankings?: { nc_rank?: string }
+  // Canonical contract allows number/null; the read at ~:509 already null-checks and coerces.
+  prospect_ranking?: string | number | null
   gpa?: number
   GPA?: number
 }

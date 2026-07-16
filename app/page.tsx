@@ -1,401 +1,261 @@
-"use client"
-
 // NOTE: This homepage is intentionally PUBLIC and accessible without authentication.
 // Do NOT wrap this page with AuthGuard - it must be accessible to all users, including mobile.
+//
+// Server component on purpose. It used to be "use client" with six no-store fetches on mount,
+// which meant a blank shell, "Loading..." text, and layout shift on every visit. Data now loads
+// on the server via lib/home-data (admin client, no cookies) so `revalidate` below is real.
 
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { useState, useEffect } from "react"
-import "./athletes/flip-card.css"
+import { ArrowRight, TrendingUp } from "lucide-react"
 import { ProfessionalCommitmentCard } from "@/components/professional-commitment-card"
 import { normalizeAthleteList } from "@/lib/professional-athlete"
 import { StoreProductPromotion } from "@/components/store-product-promotion"
 import { HomeNewsHighlightsCarousel } from "@/components/home-news-highlights-carousel"
-import { Users, GraduationCap, Trophy, ArrowRight, TrendingUp } from "lucide-react"
+import {
+  loadFeaturedRankings,
+  loadFeaturedStoreProducts,
+  loadHomeStats,
+  loadLatestCommits,
+  type HomeRankedProspect,
+} from "@/lib/home-data"
 
-type YearFilter = "All" | "2025" | "2026"
+export const revalidate = 120
 
-// Homepage hero background
 const HERO_BACKGROUND_IMAGE = "/hero-banner-nchsaa-2026-arena.png"
 
-interface Athlete {
-  id: string
-  name: string
-  highschool: string
-  college: string
-  graduationyear: number
-  photourl: string
-  commitmentPhotoUrl?: string
-  weightclass: string
-  college_weight_class?: string
-  wrestlingclub: string
-  achievements: string[]
-  team?: string
-  wrestlingClub?: string
-  club?: string
-  gender?: string
-  prospect_ranking?: number | string | null
+/** Stats bar reflects the current signing class. */
+const STATS_GRAD_YEAR = 2026
+const RANKING_CLASSES = [2027, 2028] as const
+
+function StatCard({ value, label, tone }: { value: number; label: string; tone: "white" | "gold" | "red" }) {
+  const toneClass = tone === "gold" ? "text-rnc-gold" : tone === "red" ? "text-rnc-red" : "text-white"
+  return (
+    <div className="px-3 py-6 text-center sm:py-8">
+      <div className={`text-2xl font-black tabular-nums sm:text-3xl md:text-4xl ${toneClass}`}>{value}</div>
+      <div className="mt-1 text-[11px] uppercase tracking-wider text-white/50 sm:text-sm">{label}</div>
+    </div>
+  )
 }
 
-export default function HomePage() {
-  const [yearFilter, setYearFilter] = useState<YearFilter>("2026")
-  const [featuredAthletes, setFeaturedAthletes] = useState<Athlete[]>([])
-  const [stats, setStats] = useState({
-    total: 0,
-    male: 0,
-    female: 0,
-  })
-  const [loading, setLoading] = useState(true)
-  const [athletesLoading, setAthletesLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [featuredRankings, setFeaturedRankings] = useState<Athlete[]>([])
-  const [rankingsLoading, setRankingsLoading] = useState(true)
-  const [latestCommits, setLatestCommits] = useState<Athlete[]>([])
-  const [commitsLoading, setCommitsLoading] = useState(true)
-
-  useEffect(() => {
-    const fetchFeaturedAthletes = async () => {
-      try {
-        setError(null)
-        setAthletesLoading(true)
-        const url = yearFilter === "All" ? "/api/featured-athletes" : `/api/featured-athletes?year=${yearFilter}`
-        const response = await fetch(url, { method: "GET", headers: { "Content-Type": "application/json" }, cache: "no-store" })
-        if (!response.ok) throw new Error(`API error: ${response.status}`)
-        const data = await response.json()
-        if (!data.success) throw new Error(data.error || "API returned unsuccessful response")
-        setFeaturedAthletes(normalizeAthleteList(Array.isArray(data.athletes) ? data.athletes : []))
-      } catch (err) {
-        console.error("Error fetching featured athletes:", err)
-        setFeaturedAthletes([])
-      } finally {
-        setAthletesLoading(false)
-      }
-    }
-    fetchFeaturedAthletes()
-  }, [yearFilter])
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        setLoading(true)
-        const url = yearFilter === "All" ? "/api/stats" : `/api/stats?year=${yearFilter}`
-        const response = await fetch(url, { method: "GET", headers: { "Content-Type": "application/json" }, cache: "no-store" })
-        if (!response.ok) throw new Error(`API error: ${response.status}`)
-        const data = await response.json()
-        if (!data.success) throw new Error(data.error || "API returned unsuccessful response")
-        setStats({
-          total: data.stats.totalAthletes || 0,
-          male: data.stats.genderBreakdown?.male || 0,
-          female: data.stats.genderBreakdown?.female || 0,
-        })
-      } catch (err) {
-        console.error("Error fetching stats:", err)
-        setStats({ total: 0, male: 0, female: 0 })
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchStats()
-  }, [yearFilter])
-
-  useEffect(() => {
-    const fetchFeaturedRankings = async () => {
-      try {
-        setRankingsLoading(true)
-        const [response2027, response2028] = await Promise.all([
-          fetch(`/api/public-rankings?year=2027&gender=Male&limit=3`, { method: "GET", headers: { "Content-Type": "application/json" }, cache: "no-store" }),
-          fetch(`/api/public-rankings?year=2028&gender=Male&limit=3`, { method: "GET", headers: { "Content-Type": "application/json" }, cache: "no-store" }),
-        ])
-        const data2027 = response2027.ok ? await response2027.json() : { rankings: [] }
-        const data2028 = response2028.ok ? await response2028.json() : { rankings: [] }
-        const mapRankingToAthlete = (r: any) => ({
-          id: r.id,
-          name: r.name || "Unknown",
-          highschool: r.highschool || "",
-          graduationyear: r.graduationyear,
-          photourl: r.photourl || "",
-          prospect_ranking: r.prospect_ranking,
-          weightclass: r.weight_display ? String(r.weight_display).replace(/\s*lbs$/i, "").trim() : "",
-          achievements: [r.state_championship_summary, r.nhsca_record_display, r.super_32_record_display].filter(Boolean),
-        })
-        const top2027 = (data2027.rankings || []).slice(0, 3).map(mapRankingToAthlete)
-        const top2028 = (data2028.rankings || []).slice(0, 3).map(mapRankingToAthlete)
-        setFeaturedRankings([...top2027, ...top2028])
-      } catch (err) {
-        console.error("Error fetching featured rankings:", err)
-        setFeaturedRankings([])
-      } finally {
-        setRankingsLoading(false)
-      }
-    }
-    fetchFeaturedRankings()
-  }, [])
-
-  useEffect(() => {
-    const fetchLatestCommits = async () => {
-      try {
-        setCommitsLoading(true)
-        const response = await fetch(`/api/featured-athletes?limit=10`, { method: "GET", headers: { "Content-Type": "application/json" }, cache: "no-store" })
-        if (!response.ok) throw new Error(`API error: ${response.status}`)
-        const data = await response.json()
-        if (!data.success) throw new Error(data.error || "API returned unsuccessful response")
-        setLatestCommits(normalizeAthleteList((data.athletes || []).slice(0, 3)))
-      } catch (err) {
-        console.error("Error fetching latest commits:", err)
-        setLatestCommits([])
-      } finally {
-        setCommitsLoading(false)
-      }
-    }
-    fetchLatestCommits()
-  }, [])
-
-  // Ranking card component for DRY code
-  const RankingCard = ({ athlete }: { athlete: Athlete }) => (
+function RankingCard({ athlete }: { athlete: HomeRankedProspect }) {
+  return (
     <Link href={`/view-profile?id=${encodeURIComponent(athlete.id)}`} className="group block">
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#0f1c2e] to-[#1a2d47] p-1 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-[#D3B574]/10">
-        <div className="rounded-lg bg-[#0A1628] p-4">
-          <div className="flex items-center gap-4">
-            {athlete.photourl ? (
-              <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg ring-2 ring-[#D3B574]/30">
-                <Image src={athlete.photourl} alt={athlete.name} fill className="object-cover object-top" />
-              </div>
-            ) : (
-              <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-lg bg-[#13294B] ring-2 ring-[#D3B574]/30">
-                <span className="text-xl font-bold text-white/50">{athlete.name?.charAt(0)}</span>
-              </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <h3 className="font-bold text-white truncate">{athlete.name}</h3>
-                {athlete.prospect_ranking && (
-                  <span className="flex-shrink-0 rounded bg-[#D3B574] px-2 py-0.5 text-xs font-bold text-[#0A1628]">
-                    #{athlete.prospect_ranking}
-                  </span>
-                )}
-              </div>
-              <p className="text-sm text-white/60 truncate">{athlete.highschool}</p>
-              <p className="text-xs text-[#D3B574]">{athlete.weightclass} lbs</p>
-            </div>
-            <ArrowRight className="h-5 w-5 text-white/30 transition-transform group-hover:translate-x-1 group-hover:text-[#D3B574]" />
+      <div className="flex items-center gap-4 rounded-xl border border-rnc-line bg-rnc-surface p-4 transition-colors hover:border-rnc-gold/40">
+        {athlete.photourl ? (
+          <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg ring-1 ring-rnc-gold/30">
+            <Image
+              src={athlete.photourl}
+              alt=""
+              fill
+              sizes="56px"
+              className="object-cover object-top"
+            />
           </div>
+        ) : (
+          <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-lg bg-rnc-raised ring-1 ring-rnc-gold/30">
+            <span className="text-lg font-bold text-white/50">{athlete.name?.charAt(0)}</span>
+          </div>
+        )}
+
+        <div className="min-w-0 flex-1">
+          <div className="mb-0.5 flex items-center gap-2">
+            {athlete.prospect_ranking != null && (
+              <span className="flex-shrink-0 rounded bg-rnc-gold px-1.5 py-0.5 text-xs font-bold tabular-nums text-rnc-ink">
+                #{athlete.prospect_ranking}
+              </span>
+            )}
+            <h3 className="truncate font-semibold text-white">{athlete.name}</h3>
+          </div>
+          <p className="truncate text-sm text-white/60">{athlete.highschool}</p>
+          {athlete.weightclass && <p className="text-xs text-rnc-gold">{athlete.weightclass} lbs</p>}
         </div>
+
+        <ArrowRight className="h-5 w-5 flex-shrink-0 text-white/25 transition-transform group-hover:translate-x-0.5 group-hover:text-rnc-gold" />
       </div>
     </Link>
   )
+}
+
+function SectionHeader({
+  title,
+  href,
+  linkLabel,
+  icon,
+}: {
+  title: string
+  href: string
+  linkLabel: string
+  icon?: React.ReactNode
+}) {
+  return (
+    <div className="mb-6 flex items-center justify-between gap-4">
+      <div className="flex items-center gap-3">
+        {icon}
+        <h2 className="text-xl font-bold text-white sm:text-2xl">{title}</h2>
+      </div>
+      <Link
+        href={href}
+        className="flex-shrink-0 text-sm font-medium text-white/60 transition-colors hover:text-rnc-gold"
+      >
+        {linkLabel} <ArrowRight className="ml-1 inline h-4 w-4" />
+      </Link>
+    </div>
+  )
+}
+
+export default async function HomePage() {
+  // One parallel server-side load instead of six client round-trips. Each loader degrades to
+  // an empty result rather than throwing, so a slow table can't take down the front door.
+  const [stats, rankings, latestCommitsRaw, storeProducts] = await Promise.all([
+    loadHomeStats(STATS_GRAD_YEAR),
+    loadFeaturedRankings([...RANKING_CLASSES], 3),
+    loadLatestCommits(3),
+    loadFeaturedStoreProducts(6),
+  ])
+
+  const latestCommits = normalizeAthleteList(latestCommitsRaw)
 
   return (
-    <main className="min-h-screen bg-[#0A1628]">
-      {/* Hero Section */}
+    <main className="min-h-screen bg-rnc-ink">
+      {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
           <Image
             src={HERO_BACKGROUND_IMAGE}
-            alt="NCHSAA Wrestling Championship arena"
+            alt=""
             fill
+            sizes="100vw"
             className="object-cover"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0A1628]/95 via-[#0A1628]/80 to-[#0A1628]/60" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0A1628] via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-rnc-ink via-rnc-ink/85 to-rnc-ink/50" />
+          <div className="absolute inset-0 bg-gradient-to-t from-rnc-ink via-transparent to-transparent" />
         </div>
 
-        <div className="container relative mx-auto px-4 py-20 md:py-32">
-          <div className="max-w-3xl">
-            <h1 className="mb-6 text-5xl font-black tracking-tight text-white md:text-6xl lg:text-7xl">
-              Recruit<span className="text-[#D3B574]">NC</span>
+        <div className="container relative mx-auto px-4 py-16 md:py-28">
+          <div className="max-w-2xl">
+            <h1 className="mb-5 text-5xl font-black tracking-tight text-white md:text-6xl lg:text-7xl">
+              Recruit<span className="text-rnc-gold">NC</span>
             </h1>
-            <p className="mb-8 text-lg text-white/80 md:text-xl max-w-xl leading-relaxed">
-              The premier destination for tracking North Carolina&apos;s top wrestling prospects, college commitments, and prospect rankings.
+            <p className="mb-8 max-w-xl text-lg leading-relaxed text-white/80">
+              Every North Carolina wrestling commitment, prospect ranking, and result — in one place.
             </p>
-            <div className="flex flex-wrap gap-4">
+            {/* Two doors, not three. /prospects/all and /colleges live in the navbar. */}
+            <div className="flex flex-wrap gap-3">
               <Link href="/athletes">
-                <Button className="h-12 px-6 text-base font-semibold bg-[#BC0B03] text-white hover:bg-[#a00a03] transition-all hover:scale-105">
+                <Button className="h-12 bg-rnc-red px-6 text-base font-semibold text-white hover:bg-rnc-red-hover">
                   View Commitments
                 </Button>
               </Link>
               <Link href="/public-rankings">
-                <Button variant="outline" className="h-12 px-6 text-base font-semibold border-2 border-[#D3B574] text-[#D3B574] bg-transparent hover:bg-[#D3B574]/10">
+                <Button
+                  variant="outline"
+                  className="h-12 border-2 border-rnc-gold bg-transparent px-6 text-base font-semibold text-rnc-gold hover:bg-rnc-gold/10 hover:text-rnc-gold"
+                >
                   Prospect Rankings
                 </Button>
               </Link>
-              <Link href="/prospects/all">
-                <Button className="h-12 px-6 text-base font-semibold bg-[#13294B] text-white hover:bg-[#1a3a5f] transition-all">
-                  Browse Prospects
-                </Button>
-              </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Stats Bar */}
-      <section className="border-y border-white/10 bg-[#0f1c2e]">
+      {/* Stats — 2-up on phones (three text-3xl numbers don't fit at 375px), 3-up from sm.
+          Borders are per-cell rather than divide-x, which would draw a stray edge on the
+          full-width third cell. */}
+      <section className="border-y border-rnc-line bg-rnc-surface">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-3 divide-x divide-white/10">
-            <div className="py-8 text-center">
-              <div className="text-3xl font-black text-white md:text-4xl">{loading ? "..." : stats.total}</div>
-              <div className="mt-1 text-sm text-white/50 uppercase tracking-wider">Total Commits</div>
+          <div className="grid grid-cols-2 sm:grid-cols-3">
+            <div className="border-r border-rnc-line">
+              <StatCard value={stats.total} label={`Class of ${STATS_GRAD_YEAR} Commits`} tone="white" />
             </div>
-            <div className="py-8 text-center">
-              <div className="text-3xl font-black text-[#D3B574] md:text-4xl">{loading ? "..." : stats.male}</div>
-              <div className="mt-1 text-sm text-white/50 uppercase tracking-wider">Male Athletes</div>
+            <div className="sm:border-r sm:border-rnc-line">
+              <StatCard value={stats.male} label="Male Athletes" tone="gold" />
             </div>
-            <div className="py-8 text-center">
-              <div className="text-3xl font-black text-[#BC0B03] md:text-4xl">{loading ? "..." : stats.female}</div>
-              <div className="mt-1 text-sm text-white/50 uppercase tracking-wider">Female Athletes</div>
+            <div className="col-span-2 border-t border-rnc-line sm:col-span-1 sm:border-t-0">
+              <StatCard value={stats.female} label="Female Athletes" tone="red" />
             </div>
           </div>
         </div>
       </section>
 
-      <div className="container mx-auto px-4 py-12">
-        {/* News Carousel */}
-        <HomeNewsHighlightsCarousel />
-
-        {/* Store Promotion */}
-        <StoreProductPromotion />
-
-        {/* Features Section */}
-        <section className="mb-16">
-          <h2 className="mb-8 text-2xl font-bold text-white">Explore</h2>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            <Link href="/prospects/all" className="group block">
-              <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#BC0B03]/20 to-[#BC0B03]/5 p-6 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl border border-[#BC0B03]/20 hover:border-[#BC0B03]/40">
-                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[#BC0B03]/20">
-                  <Users className="h-6 w-6 text-[#BC0B03]" />
-                </div>
-                <h3 className="mb-2 text-xl font-bold text-white">Athlete Profiles</h3>
-                <p className="text-white/60 text-sm leading-relaxed">
-                  Detailed profiles including high school, graduation year, college commitment, and achievements.
-                </p>
-                <ArrowRight className="absolute bottom-6 right-6 h-5 w-5 text-white/30 transition-transform group-hover:translate-x-1 group-hover:text-[#BC0B03]" />
-              </div>
-            </Link>
-
-            <Link href="/colleges" className="group block">
-              <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#13294B]/40 to-[#13294B]/10 p-6 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl border border-[#13294B]/30 hover:border-[#13294B]/50">
-                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[#13294B]/40">
-                  <GraduationCap className="h-6 w-6 text-white" />
-                </div>
-                <h3 className="mb-2 text-xl font-bold text-white">College Insights</h3>
-                <p className="text-white/60 text-sm leading-relaxed">
-                  Explore which colleges are recruiting NC wrestlers with breakdown by division and conference.
-                </p>
-                <ArrowRight className="absolute bottom-6 right-6 h-5 w-5 text-white/30 transition-transform group-hover:translate-x-1 group-hover:text-white" />
-              </div>
-            </Link>
-
-            <Link href="/public-rankings" className="group block">
-              <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#D3B574]/20 to-[#D3B574]/5 p-6 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl border border-[#D3B574]/20 hover:border-[#D3B574]/40">
-                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[#D3B574]/20">
-                  <Trophy className="h-6 w-6 text-[#D3B574]" />
-                </div>
-                <h3 className="mb-2 text-xl font-bold text-white">Prospect Rankings</h3>
-                <p className="text-white/60 text-sm leading-relaxed">
-                  Comprehensive rankings by graduation year, weight class, and wrestling style.
-                </p>
-                <ArrowRight className="absolute bottom-6 right-6 h-5 w-5 text-white/30 transition-transform group-hover:translate-x-1 group-hover:text-[#D3B574]" />
-              </div>
-            </Link>
-          </div>
-        </section>
-
-        {/* Featured Rankings Section */}
-        <section className="mb-16">
-          <div className="mb-8 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <TrendingUp className="h-6 w-6 text-[#D3B574]" />
-              <h2 className="text-2xl font-bold text-white">Featured Rankings</h2>
-            </div>
-            <Link href="/public-rankings">
-              <Button variant="outline" size="sm" className="border-white/20 text-white/70 hover:bg-white/10 hover:text-white">
-                View All
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-
-          {rankingsLoading ? (
-            <div className="py-12 text-center text-white/50">Loading rankings...</div>
-          ) : featuredRankings.length > 0 ? (
-            <div className="space-y-8">
-              {/* Class of 2027 */}
-              {featuredRankings.filter((a) => a.graduationyear === 2027).length > 0 && (
-                <div>
-                  <h3 className="mb-4 text-lg font-semibold text-white/80">Class of 2027</h3>
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                    {featuredRankings.filter((a) => a.graduationyear === 2027).map((athlete) => (
-                      <RankingCard key={athlete.id} athlete={athlete} />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Class of 2028 */}
-              {featuredRankings.filter((a) => a.graduationyear === 2028).length > 0 && (
-                <div>
-                  <h3 className="mb-4 text-lg font-semibold text-white/80">Class of 2028</h3>
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                    {featuredRankings.filter((a) => a.graduationyear === 2028).map((athlete) => (
-                      <RankingCard key={athlete.id} athlete={athlete} />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="py-12 text-center text-white/50">No ranked prospects available.</div>
-          )}
-        </section>
-
-        {/* Latest Commits Section */}
-        <section className="mb-16">
-          <div className="mb-8 flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-white">Latest Commits</h2>
-            <Link href="/athletes">
-              <Button variant="outline" size="sm" className="border-white/20 text-white/70 hover:bg-white/10 hover:text-white">
-                View All
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-
-          {commitsLoading ? (
-            <div className="py-12 text-center text-white/50">Loading commits...</div>
-          ) : latestCommits.length > 0 ? (
+      <div className="container mx-auto space-y-16 px-4 py-12">
+        {/* Latest Commits — the reason people come, so it leads */}
+        <section>
+          <SectionHeader title="Latest Commits" href="/athletes" linkLabel="All commits" />
+          {latestCommits.length > 0 ? (
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+              {/* listMode defers each card's logo/record/honor fetches until it's flipped —
+                  the same thing /athletes does. Three cards were firing ~15 requests on load
+                  for data only the card back shows. */}
               {latestCommits.map((athlete) => (
-                <ProfessionalCommitmentCard key={athlete.id} athlete={athlete} />
+                <ProfessionalCommitmentCard key={athlete.id} athlete={athlete} listMode />
               ))}
             </div>
           ) : (
-            <div className="py-12 text-center text-white/50">No recent commits available.</div>
+            <p className="py-8 text-center text-white/50">No recent commits available.</p>
           )}
         </section>
 
-        {/* CTA Banner */}
-        <section className="mb-8">
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#13294B] to-[#1a3a5f] p-8 md:p-12">
+        {/* Featured Rankings */}
+        <section>
+          <SectionHeader
+            title="Featured Rankings"
+            href="/public-rankings"
+            linkLabel="All rankings"
+            icon={<TrendingUp className="h-5 w-5 text-rnc-gold" />}
+          />
+          {rankings.length > 0 ? (
+            <div className="space-y-8">
+              {RANKING_CLASSES.map((year) => {
+                const forYear = rankings.filter((a) => a.graduationyear === year)
+                if (!forYear.length) return null
+                return (
+                  <div key={year}>
+                    <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-white/50">
+                      Class of {year}
+                    </h3>
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                      {forYear.map((athlete) => (
+                        <RankingCard key={athlete.id} athlete={athlete} />
+                      ))}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <p className="py-8 text-center text-white/50">No ranked prospects available.</p>
+          )}
+        </section>
+
+        {/* News */}
+        <HomeNewsHighlightsCarousel />
+
+        {/* Store */}
+        <StoreProductPromotion initialProducts={storeProducts} />
+
+        {/* Submit / edit — the only entry point to these routes; they aren't in the navbar */}
+        <section>
+          <div className="relative overflow-hidden rounded-2xl border border-rnc-line bg-rnc-raised p-8 md:p-10">
             <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
             <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
               <div>
-                <h2 className="mb-2 text-2xl font-bold text-white">Submit or Update Information</h2>
-                <p className="text-white/70 max-w-lg">
-                  Help us keep our database current by submitting new commitments or requesting updates to existing profiles.
+                <h2 className="mb-1.5 text-xl font-bold text-white sm:text-2xl">Submit or update information</h2>
+                <p className="max-w-lg text-white/70">
+                  Help keep the database current by submitting a new commitment or requesting an update to an
+                  existing profile.
                 </p>
               </div>
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-shrink-0 flex-wrap gap-3">
                 <Link href="/submit-commitment">
-                  <Button className="bg-[#BC0B03] text-white hover:bg-[#a00a03]">
-                    Submit Commitment
-                  </Button>
+                  <Button className="bg-rnc-red text-white hover:bg-rnc-red-hover">Submit commitment</Button>
                 </Link>
                 <Link href="/request-edit">
-                  <Button variant="outline" className="border-white/30 text-white hover:bg-white/10">
-                    Request Edit
+                  <Button variant="outline" className="border-white/30 text-white hover:bg-white/10 hover:text-white">
+                    Request edit
                   </Button>
                 </Link>
               </div>
