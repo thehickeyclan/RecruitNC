@@ -11,46 +11,35 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { X, Send, Loader2, Mic, MicOff, Home, Sparkles, MessageSquareWarning } from "lucide-react"
+import { X, Send, Loader2, Mic, MicOff, Home, Sparkles, MessageSquareWarning, ThumbsUp, ThumbsDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { formatDataDawgMessage } from "@/lib/data-dawg-render-links"
 import { DataDawgFeedbackDialog, type DataDawgFeedbackContext } from "@/components/data-dawg-feedback-dialog"
 import {
   findDataDawgFeedbackContextFromMessages,
   parseHeyDataDawgChatFeedback,
+  stripHeyDataDawgGreeting,
   submitDataDawgFeedbackClient,
 } from "@/lib/data-dawg-feedback"
+import { getSuggestedPrompts } from "@/lib/data-dawg-suggested-prompts"
 
 interface Message {
   role: "user" | "assistant"
   content: string
   timestamp: Date
   messageId?: string
+  /** True only when the server returned the id, i.e. a query log row exists to vote on. */
+  canVote?: boolean
   queryResults?: any[]
   queryType?: string
 }
 
-// RecruitNC-specific suggested prompts based on current page
-const getSuggestedPrompts = (pathname: string): string[] => {
-  if (pathname?.includes("/rankings") || pathname?.includes("/public-rankings")) {
-    return [
-      "Show me all Class of 2026 rankings",
-      "Show me all Class of 2027 rankings",
-      "Who are the top 10 ranked prospects?",
-      "What athletes are ranked in the top 30?",
-    ]
-  }
-  
-  return [
-    "Show me all Class of 2026 rankings",
-    "Show me all Class of 2027 rankings",
-    "Who are our 4x state champions?",
-    "Which school has the most NHSCA All-Americans?",
-  ]
-}
+type MessageVote = "positive" | "negative"
 
 const DATA_DAWG_IMAGE_URL =
   "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/mrF_BS_MLNADT9HWhny2B-Data%20Dawg%203.png"
+
+const DATA_DAWG_INTRO_SEEN_KEY = "data-dawg-intro-seen"
 
 const DATA_DAWG_LEGACY_CHAT_API = "/api/ai/chat"
 const DATA_DAWG_AGENT_V2_API = "/api/ai/data-dawg-agent"
@@ -68,6 +57,7 @@ export function AIChatWidget() {
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const [showSplash, setShowSplash] = useState(false)
+  const [introSeen, setIntroSeen] = useState(true)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -76,6 +66,7 @@ export function AIChatWidget() {
   const [isSpeechSupported, setIsSpeechSupported] = useState(false)
   const [feedbackOpen, setFeedbackOpen] = useState(false)
   const [feedbackContext, setFeedbackContext] = useState<DataDawgFeedbackContext | null>(null)
+  const [votes, setVotes] = useState<Record<string, MessageVote>>({})
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const recognitionRef = useRef<any>(null)
@@ -132,9 +123,33 @@ export function AIChatWidget() {
     }
   }, [isOpen, messages.length])
 
+  // Default to "seen" so the intro can't flash before we've read localStorage.
+  useEffect(() => {
+    try {
+      setIntroSeen(localStorage.getItem(DATA_DAWG_INTRO_SEEN_KEY) === "true")
+    } catch {
+      // Private mode / storage disabled — skip the intro rather than repeat it every open.
+      setIntroSeen(true)
+    }
+  }, [])
+
   const handleSplashDismiss = () => {
     setShowSplash(false)
-    localStorage.setItem("data-dawg-intro-seen", "true")
+    setIntroSeen(true)
+    try {
+      localStorage.setItem(DATA_DAWG_INTRO_SEEN_KEY, "true")
+    } catch {
+      // Non-fatal: they just see the intro again next session.
+    }
+  }
+
+  /** First click on the launcher shows the intro; the intro's own button opens the panel. */
+  const openChat = () => {
+    if (!introSeen) {
+      setShowSplash(true)
+      return
+    }
+    setIsOpen(true)
   }
 
   useEffect(() => {
@@ -243,7 +258,9 @@ export function AIChatWidget() {
       }))
 
       const chatPayload = {
-        message: userMessage.content,
+        // Bubble keeps what the user typed; the agent gets it without the greeting so
+        // fast-path routing isn't thrown off by a leading "Hey Data Dawg,".
+        message: stripHeyDataDawgGreeting(userMessage.content),
         project: project,
         conversationHistory: conversationHistory,
       }
@@ -295,6 +312,8 @@ export function AIChatWidget() {
         content: data.answer || "I couldn't find an answer to that question.",
         timestamp: new Date(),
         messageId: data.messageId || `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        // A locally-invented id matches no log row, so a vote on it would go nowhere.
+        canVote: Boolean(data.messageId),
       }
 
       setMessages((prev) => [...prev, assistantMessage])
@@ -322,6 +341,32 @@ export function AIChatWidget() {
 
   const handleSuggestionClick = (prompt: string) => {
     void sendMessage(prompt)
+  }
+
+  /**
+   * Rate an answer. The API PATCHes the query log row by message_id, so this only works
+   * for server-issued ids — see `canVote`. Shows the vote immediately and takes it back
+   * if it didn't save, rather than claiming a vote we lost.
+   */
+  const voteOnMessage = async (message: Message, vote: MessageVote) => {
+    const id = message.messageId
+    if (!id || !message.canVote || votes[id]) return
+
+    setVotes((prev) => ({ ...prev, [id]: vote }))
+    try {
+      const res = await fetch(DATA_DAWG_MESSAGE_API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: "", feedback: vote, messageId: id }),
+      })
+      if (!res.ok) throw new Error(`vote rejected (${res.status})`)
+    } catch {
+      setVotes((prev) => {
+        const next = { ...prev }
+        delete next[id]
+        return next
+      })
+    }
   }
 
   const openFeedbackForMessage = (assistantIndex: number) => {
@@ -459,7 +504,7 @@ export function AIChatWidget() {
         )}
       >
         <Button
-          onClick={() => setIsOpen(true)}
+          onClick={openChat}
           className={cn(
             "h-16 w-16 rounded-full shadow-lg shadow-[#D3B574]/20",
             "bg-gradient-to-br from-[#13294B] to-[#0A1628] hover:from-[#1e3a5f] hover:to-[#13294B]",
@@ -486,7 +531,7 @@ export function AIChatWidget() {
         <div className="hidden md:block">
           <button
             type="button"
-            onClick={() => setIsOpen(true)}
+            onClick={openChat}
             className="rounded-full bg-[#0F1E32] text-[#D3B574] shadow-lg px-4 py-2 text-sm font-semibold border border-[#1e3a5f] hover:bg-[#1e3a5f] hover:text-white transition-all duration-200"
           >
             <span className="flex items-center gap-2">
@@ -665,7 +710,20 @@ export function AIChatWidget() {
                               <p className="whitespace-pre-wrap">{message.content}</p>
                             ) : (
                               <div
-                                className="whitespace-pre-wrap [&_a]:text-[#D3B574] [&_a]:hover:text-[#c4a665] [&_a]:underline"
+                                className={cn(
+                                  // Answers are real markdown now (lists, headings, bold) — no
+                                  // pre-wrap, or the block elements inherit blank-line gaps.
+                                  "space-y-2 break-words",
+                                  "[&_p]:leading-relaxed",
+                                  "[&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-5",
+                                  "[&_ol]:list-decimal [&_ol]:space-y-1 [&_ol]:pl-5",
+                                  "[&_li]:leading-relaxed [&_li]:marker:text-[#D3B574]/70",
+                                  "[&_strong]:font-semibold [&_strong]:text-white",
+                                  "[&_h4]:mt-3 [&_h4]:font-semibold [&_h4]:text-white [&_h5]:mt-3 [&_h5]:font-semibold [&_h5]:text-white",
+                                  "[&_h6]:mt-3 [&_h6]:font-semibold [&_h6]:text-white",
+                                  "[&_hr]:my-3 [&_hr]:border-[#1e3a5f]",
+                                  "[&_a]:text-[#D3B574] [&_a]:hover:text-[#c4a665] [&_a]:underline",
+                                )}
                                 dangerouslySetInnerHTML={{ __html: formatDataDawgMessage(message.content) }}
                               />
                             )}
@@ -680,14 +738,47 @@ export function AIChatWidget() {
                                 })}
                               </p>
                               {!isUser ? (
-                                <button
-                                  type="button"
-                                  className="text-[10px] inline-flex items-center gap-1 text-[#D3B574]/90 hover:text-[#D3B574] underline-offset-2 hover:underline"
-                                  onClick={() => openFeedbackForMessage(index)}
-                                >
-                                  <MessageSquareWarning className="h-3 w-3" />
-                                  Hey Data Dawg — something off?
-                                </button>
+                                <>
+                                  {message.canVote && message.messageId ? (
+                                    <span className="inline-flex items-center gap-1">
+                                      {(
+                                        [
+                                          { vote: "positive" as const, Icon: ThumbsUp, label: "Helpful answer" },
+                                          { vote: "negative" as const, Icon: ThumbsDown, label: "Not a helpful answer" },
+                                        ]
+                                      ).map(({ vote, Icon, label }) => {
+                                        const current = votes[message.messageId as string]
+                                        const chosen = current === vote
+                                        return (
+                                          <button
+                                            key={vote}
+                                            type="button"
+                                            aria-label={label}
+                                            aria-pressed={chosen}
+                                            disabled={Boolean(current)}
+                                            className={cn(
+                                              "rounded p-0.5 transition-colors",
+                                              chosen ? "text-[#D3B574]" : "text-gray-500 hover:text-[#D3B574]",
+                                              current && !chosen && "opacity-30",
+                                              !current && "cursor-pointer",
+                                            )}
+                                            onClick={() => void voteOnMessage(message, vote)}
+                                          >
+                                            <Icon className="h-3 w-3" />
+                                          </button>
+                                        )
+                                      })}
+                                    </span>
+                                  ) : null}
+                                  <button
+                                    type="button"
+                                    className="text-[10px] inline-flex items-center gap-1 text-[#D3B574]/90 hover:text-[#D3B574] underline-offset-2 hover:underline"
+                                    onClick={() => openFeedbackForMessage(index)}
+                                  >
+                                    <MessageSquareWarning className="h-3 w-3" />
+                                    Hey Data Dawg — something off?
+                                  </button>
+                                </>
                               ) : null}
                             </div>
                           </div>

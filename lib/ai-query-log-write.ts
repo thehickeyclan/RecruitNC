@@ -197,35 +197,57 @@ export async function writeAiQueryLog(entry: AiQueryLogInsert): Promise<WriteAiQ
   }
 }
 
+/**
+ * PATCH one table's row by message_id, returning how many rows actually changed.
+ *
+ * `Prefer: return=representation` matters: without it PostgREST answers 204 on a zero-row
+ * match, so `res.ok` alone reports success for a vote that landed nowhere. (This is the
+ * response-shape Prefer, not the `resolution=` upsert one the table comment warns about.)
+ */
+async function patchFeedbackRows(
+  url: string,
+  key: string,
+  table: string,
+  messageId: string,
+  feedback: string,
+): Promise<{ ok: boolean; rows: number; error?: string }> {
+  const res = await fetch(`${url}/rest/v1/${table}?message_id=eq.${encodeURIComponent(messageId)}`, {
+    method: "PATCH",
+    headers: { ...serviceHeaders(key), Prefer: "return=representation" },
+    body: JSON.stringify({ feedback }),
+  })
+  if (!res.ok) return { ok: false, rows: 0, error: await parseError(res) }
+
+  const text = await res.text().catch(() => "")
+  try {
+    const parsed = JSON.parse(text) as unknown
+    return { ok: true, rows: Array.isArray(parsed) ? parsed.length : 0 }
+  } catch {
+    return { ok: true, rows: 0 }
+  }
+}
+
+/** Returns false when no log row matched — the caller must not tell the user it saved. */
 export async function updateAiQueryLogFeedback(messageId: string, feedback: string): Promise<boolean> {
   try {
     const cfg = getServiceConfig()
     if ("error" in cfg) return false
 
-    // Prefer new table
-    const resNew = await fetch(
-      `${cfg.url}/rest/v1/data_dawg_query_logs?message_id=eq.${encodeURIComponent(messageId)}`,
-      {
-        method: "PATCH",
-        headers: serviceHeaders(cfg.key),
-        body: JSON.stringify({ feedback }),
-      },
-    )
-    if (resNew.ok) return true
-
-    const resOld = await fetch(
-      `${cfg.url}/rest/v1/ai_query_logs?message_id=eq.${encodeURIComponent(messageId)}`,
-      {
-        method: "PATCH",
-        headers: serviceHeaders(cfg.key),
-        body: JSON.stringify({ feedback }),
-      },
-    )
-    if (!resOld.ok) {
-      console.warn("[RecruitNC] query log feedback update failed:", await parseError(resOld))
-      return false
+    const fresh = await patchFeedbackRows(cfg.url, cfg.key, "data_dawg_query_logs", messageId, feedback)
+    if (fresh.rows > 0) return true
+    if (!fresh.ok) {
+      console.warn("[RecruitNC] query log feedback update failed (new table):", fresh.error)
     }
-    return true
+
+    // Fall back to the legacy mirror — older rows may only exist there.
+    const legacy = await patchFeedbackRows(cfg.url, cfg.key, "ai_query_logs", messageId, feedback)
+    if (legacy.rows > 0) return true
+    if (!legacy.ok) {
+      console.warn("[RecruitNC] query log feedback update failed (legacy table):", legacy.error)
+    }
+
+    console.warn("[RecruitNC] query log feedback: no row matched message_id", messageId)
+    return false
   } catch (e) {
     console.warn(
       "[RecruitNC] query log feedback update failed:",

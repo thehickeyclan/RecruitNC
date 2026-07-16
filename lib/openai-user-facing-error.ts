@@ -1,5 +1,8 @@
 /**
  * Turn OpenAI HTTP error bodies into short, operator-actionable messages (no huge JSON in UI).
+ *
+ * These name env vars and billing URLs — they are for logs and operators only. Never put the
+ * return value in a chat bubble; run it through `toDataDawgUserFacingError` first.
  */
 export function formatOpenAiHttpError(status: number, rawBody: string): string {
   let code = ""
@@ -35,4 +38,23 @@ export function formatOpenAiHttpError(status: number, rawBody: string): string {
 
   const brief = message.trim() || rawBody.trim().slice(0, 280)
   return `OpenAI request failed (HTTP ${status}). ${brief}`
+}
+
+const DATA_DAWG_GENERIC_ERROR =
+  "Data Dawg hit a snag on that one. Try again in a moment — if it keeps happening, use the \"something off?\" link to let us know."
+
+const DATA_DAWG_BUSY_ERROR =
+  "Data Dawg is getting a lot of questions right now. Give it a minute and ask again."
+
+/**
+ * Translate any internal error into something safe for a chat bubble.
+ *
+ * Operator detail (API keys, env var names, billing URLs, raw exception text) belongs in the
+ * query log, not in front of a wrestling parent. Rate limits get their own message because
+ * "wait and retry" is genuinely actionable for the user; everything else is our problem.
+ */
+export function toDataDawgUserFacingError(operatorMessage: string): string {
+  const msg = operatorMessage.toLowerCase()
+  if (msg.includes("rate limit") || msg.includes("rate_limit")) return DATA_DAWG_BUSY_ERROR
+  return DATA_DAWG_GENERIC_ERROR
 }

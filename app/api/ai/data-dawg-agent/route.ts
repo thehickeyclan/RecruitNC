@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { runDataDawgAgentV2 } from "@/lib/data-dawg-agent-v2/run-data-dawg-agent"
 import { writeAiQueryLog } from "@/lib/ai-query-log-write"
 import { computeAiQuerySuccess } from "@/lib/ai-query-logs"
+import { toDataDawgUserFacingError } from "@/lib/openai-user-facing-error"
 
 export const maxDuration = 120
 
@@ -40,8 +41,9 @@ export async function POST(req: NextRequest) {
     }
 
     if (!process.env.OPENAI_API_KEY) {
-      const answer =
-        "Data Dawg Agent v2 requires OpenAI (OPENAI_API_KEY). Use the standard Data Dawg endpoint or add OPENAI_API_KEY for this mode."
+      // The widget keys the legacy fallback off queryType, not this text — keep it fan-safe.
+      // The operator detail lives in error_message below.
+      const answer = toDataDawgUserFacingError("OPENAI_API_KEY missing")
       await writeAiQueryLog({
         query: message,
         project,
@@ -94,13 +96,8 @@ export async function POST(req: NextRequest) {
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e)
     console.error("[data-dawg-agent]", msg)
-    const answer =
-      msg.startsWith("The OpenAI API key") ||
-      msg.startsWith("OpenAI rate limit") ||
-      msg.startsWith("OpenAI rejected") ||
-      msg.startsWith("OpenAI request failed")
-        ? msg
-        : `Data Dawg hit an error: ${msg}`
+    // `msg` can name OPENAI_API_KEY / billing URLs — log it, never show it.
+    const answer = toDataDawgUserFacingError(msg)
 
     if (message) {
       await writeAiQueryLog({
@@ -122,7 +119,7 @@ export async function POST(req: NextRequest) {
         answer,
         queryType: "data_dawg_agent_v2_error",
         source: "data_dawg_agent_v2",
-        error: msg,
+        error: answer,
         messageId: messageId ?? undefined,
       },
       { status: 200 },
