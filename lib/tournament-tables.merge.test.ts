@@ -18,12 +18,22 @@ describe("mergeNhscaByYearPreferRoster", () => {
     expect(merged.find((x) => x.year === 2026)?.division).toBe("Sophomore")
   })
 
-  it("for same year, roster replaces placement", () => {
+  it("for same year, roster replaces placement when roster has a finish", () => {
     const roster = [r(2026, "3rd", "6-1", "Sophomore")]
     const placement = [r(2026, "8th", "2-2", "Sophomore")]
     const merged = mergeNhscaByYearPreferRoster(roster, placement, [])
     expect(merged).toHaveLength(1)
     expect(merged[0].placement).toBe("3rd")
+    expect(merged[0].record).toBe("6-1")
+  })
+
+  it("keeps imported AA place when same-year roster has record only", () => {
+    const roster = [r(2023, "", "5-3", "Sophomore")]
+    const placement = [r(2023, "6th All-American", "", "Sophomore")]
+    const merged = mergeNhscaByYearPreferRoster(roster, placement, [])
+    expect(merged).toHaveLength(1)
+    expect(merged[0].placement).toBe("6th All-American")
+    expect(merged[0].record).toBe("5-3")
   })
 
   it("legacy fills years missing from roster and placement", () => {

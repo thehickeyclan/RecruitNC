@@ -1,6 +1,10 @@
 import { applyRecruitNcDataDawgAnswerPostProcess } from "@/lib/recruitnc-data-dawg-postprocess"
 import { getRouteForSuggestedPrompt } from "@/lib/data-dawg-suggested-prompts"
 import { formatSuggestedHandlerAnswer } from "@/lib/data-dawg-suggested-handler-answer"
+import {
+  parseNhscaBestYearScopeFollowUp,
+  tryNhscaBestYearScopeClarify,
+} from "@/lib/data-dawg-scope-clarify"
 import { parseTournamentResultsQuery } from "@/lib/data-dawg-tournament-results-query"
 import { answerTournamentResultsQuery } from "./tournament-results-by-year"
 import { tryAthleteNameFastPath } from "./athlete-name-fast-path"
@@ -47,6 +51,75 @@ export async function runDataDawgAgentV2(params: {
 }> {
   const priorMessages = historyToPriorMessages(params.conversationHistory)
   const messageId = params.messageId || `msg-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
+
+  // Follow-up to a prior scope clarify (1 = statewide, 2 = school from chat)
+  const scopeFollowUp = parseNhscaBestYearScopeFollowUp(params.message, priorMessages)
+  if (scopeFollowUp === "statewide") {
+    const suggestedRoute = getRouteForSuggestedPrompt("what was our best year for nhsca all-americans?")
+    if (suggestedRoute) {
+      try {
+        const { getHandler, hasHandler } = await import("@/app/api/ai/chat/handlers/index")
+        if (hasHandler(suggestedRoute.handler)) {
+          const handler = getHandler(suggestedRoute.handler)
+          if (handler) {
+            const handlerResult = await handler(
+              { query: params.message, search: params.message, ...suggestedRoute.params },
+              undefined as never,
+              params.messageId || null,
+            )
+            const formatted = formatSuggestedHandlerAnswer(handlerResult ?? {})
+            if (formatted?.trim()) {
+              return {
+                answer: applyRecruitNcDataDawgAnswerPostProcess(formatted),
+                messageId,
+                queryType: suggestedRoute.handler,
+                source: "data_dawg_agent_v2_scope_followup",
+                toolRounds: 0,
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("[RecruitNC] scope follow-up statewide failed:", e instanceof Error ? e.message : e)
+      }
+    }
+  }
+  if (scopeFollowUp === "school") {
+    const schoolHint =
+      priorMessages
+        .slice()
+        .reverse()
+        .map((h) => h.content.match(/\*\*([^*]+)\*\* — that school/i)?.[1])
+        .find(Boolean) || null
+    if (schoolHint) {
+      try {
+        const schoolFast = await trySchoolNameFastPath(schoolHint)
+        if (schoolFast?.markdown) {
+          return {
+            answer: applyRecruitNcDataDawgAnswerPostProcess(schoolFast.markdown),
+            messageId,
+            queryType: "school_name_fast_path",
+            source: "data_dawg_agent_v2_scope_followup",
+            toolRounds: 0,
+          }
+        }
+      } catch (e) {
+        console.warn("[RecruitNC] scope follow-up school failed:", e instanceof Error ? e.message : e)
+      }
+    }
+  }
+
+  // Mid-chat "our best year" with a school in context → ask statewide vs school (don't assume).
+  const scopeClarify = tryNhscaBestYearScopeClarify(params.message, priorMessages)
+  if (scopeClarify) {
+    return {
+      answer: applyRecruitNcDataDawgAnswerPostProcess(scopeClarify.answer),
+      messageId,
+      queryType: "scope_clarify_nhsca_best_year",
+      source: "data_dawg_agent_v2_clarify",
+      toolRounds: 0,
+    }
+  }
 
   // Chip / FAQ examples must hit deterministic handlers — agent v2 was treating
   // "which school has the most NHSCA All-Americans?" as a school named "North Carolina".
