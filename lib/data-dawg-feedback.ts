@@ -58,7 +58,41 @@ export function isDataDawgFeedbackStatus(value: string): value is DataDawgFeedba
 
 const HEY_DATA_DAWG_LEAD = /^hey\s*,?\s*data\s*dawg\b/i
 
-/** User typed "Hey Data Dawg, …" in chat — extract the correction text after the greeting. */
+/** Openers that never start a correction — "who won 4A at 132?", "show me Cam Stinson". */
+const QUESTION_LEAD =
+  /^(who|what|whats|what's|when|where|why|how|hows|how's|which|whose|whom|is|are|was|were|do|does|did|can|could|will|would|show|list|find|tell|give|get|search|look|compare|rank|pull|display)\b/i
+
+/** Phrases that mark a report about wrong/missing data rather than a lookup. */
+const CORRECTION_MARKER =
+  /\b(not|isn'?t|wasn'?t|aren'?t|weren'?t|didn'?t|doesn'?t|don'?t|should be|should say|should have|shouldn'?t|wrong|incorrect|inaccurate|actually|missing|outdated|out of date|typo|mistake|error|fix|needs? to be|you have|you listed|you said|it says|shows him|shows her|shows them)\b/i
+
+/**
+ * Classify the text after a "Hey Data Dawg" greeting. Precedence matters: a leading
+ * interrogative wins outright (a correction never opens with "who"/"show"), then any
+ * correction marker, then a trailing "?" as a weaker question signal.
+ *
+ * Returning null means "this is a question" — the caller should send it to the agent.
+ */
+function isHeyDataDawgQuestion(rest: string): boolean {
+  if (QUESTION_LEAD.test(rest)) return true
+  if (CORRECTION_MARKER.test(rest)) return false
+  return rest.endsWith("?")
+}
+
+/** Strip a leading "Hey Data Dawg, …" so fast-path routing sees the bare question. */
+export function stripHeyDataDawgGreeting(content: string): string {
+  const trimmed = content.trim()
+  const match = trimmed.match(HEY_DATA_DAWG_LEAD)
+  if (!match) return trimmed
+  const rest = trimmed.slice(match[0].length).replace(/^[,:\-–—]\s*/, "").trim()
+  return rest || trimmed
+}
+
+/**
+ * User typed "Hey Data Dawg, …" in chat — extract the correction text after the greeting.
+ * Returns null when the text reads as a question, so the caller answers it instead of
+ * silently filing it as a data correction.
+ */
 export function parseHeyDataDawgChatFeedback(content: string): { correctionNotes: string } | { needsDetail: true } | null {
   const trimmed = content.trim()
   const match = trimmed.match(HEY_DATA_DAWG_LEAD)
@@ -66,6 +100,7 @@ export function parseHeyDataDawgChatFeedback(content: string): { correctionNotes
 
   const rest = trimmed.slice(match[0].length).replace(/^[,:\-–—]\s*/, "").trim()
   if (rest.length < 5) return { needsDetail: true }
+  if (isHeyDataDawgQuestion(rest)) return null
   return { correctionNotes: rest }
 }
 

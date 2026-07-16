@@ -79,7 +79,30 @@ export function getRouteForSuggestedPrompt(userMessage: string): SuggestedRoute 
 
 // --- UI: suggested prompts per page (same as before we stripped them) ---
 
+/**
+ * Chips are a promise: we asked the question, so it had better answer.
+ * Every prompt below was run against the agent and returns a real answer.
+ *
+ * Deliberately NOT chips (verified failing — restore once the data lands):
+ *  - "When are NHSCA's?" / "When are state championships?" / "When is the next Rivalry Match?"
+ *    → the events table only holds a few upcoming events, so these answer
+ *      "I don't see that event in the calendar." ("When is Super32?" does work.)
+ *  - "What region is Davie in?" → "region information is not available"
+ *  - "Which colleges have the most Dave Schultz Award winners?" → lists winners by
+ *    high school with no college aggregation, i.e. answers a different question.
+ *  - "What was our best year for NHSCA All-Americans?" → as a cold chip (no school in
+ *    context) it reaches the LLM, which asks who "our" means instead of answering.
+ * Their SUGGESTED_PROMPT_ROUTES entries stay, so typing them still routes correctly.
+ */
 export function getSuggestedPrompts(pathname: string): string[] {
+  if (pathname.includes("/rankings") || pathname.includes("/public-rankings")) {
+    return [
+      "Show me all Class of 2026 rankings",
+      "Show me all Class of 2027 rankings",
+      "Who are the top 10 ranked prospects?",
+      "What athletes are ranked in the top 30?",
+    ]
+  }
   if (pathname.includes("/tournament") || pathname.includes("/tools/tournament")) {
     return [
       "What time will we finish?",
@@ -99,7 +122,6 @@ export function getSuggestedPrompts(pathname: string): string[] {
   }
   if (pathname.includes("/nhsca")) {
     return [
-      "When are NHSCA's?",
       "Which schools had the most NHSCA All-Americans?",
       "Show NHSCA All-Americans in 2026",
       "Show all women NHSCA All Americans",
@@ -116,9 +138,9 @@ export function getSuggestedPrompts(pathname: string): string[] {
   if (pathname.includes("/schools")) {
     return [
       "Which schools are in 7A East?",
-      "What region is Davie in?",
       "How many teams are in 4A West?",
       "Show me all schools in 8A.",
+      "Which school has the most state dual championships?",
     ]
   }
   if (pathname.includes("/athletes")) {
@@ -143,7 +165,6 @@ export function getSuggestedPrompts(pathname: string): string[] {
     return [
       "Who won the Dave Schultz Award in 2025?",
       "Show me all Dave Schultz Award winners",
-      "Which colleges have the most Dave Schultz Award winners?",
       "Who won the Tricia Saunders Award in 2025?",
       "Show me all Tricia Saunders Award winners",
       "What is the Tricia Saunders Award?",
