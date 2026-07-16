@@ -21,6 +21,35 @@ export function formatSuggestedHandlerAnswer(handlerResult: {
   if (summary?.trim()) return summary
 
   const agg = handlerResult.aggregateResult
+  if (agg?.type === "nhsca_all_american_count") {
+    const bestYear = agg.bestYear as number | null | undefined
+    const count = Number(agg.count ?? 0)
+    const bestMenYear = agg.bestMenYear as number | null | undefined
+    const menCount = Number(agg.menCount ?? 0)
+    const bestWomenYear = agg.bestWomenYear as number | null | undefined
+    const womenCount = Number(agg.womenCount ?? 0)
+    if (bestYear == null && bestMenYear == null) {
+      return "I couldn’t find yearly NHSCA All-American counts in the database right now."
+    }
+    const lines: string[] = ["**NHSCA All-Americans by year (North Carolina)**", ""]
+    if (bestMenYear != null) {
+      lines.push(
+        `Best men’s year: **${bestMenYear}** with **${menCount}** All-American${menCount !== 1 ? "s" : ""}.`,
+      )
+    }
+    if (bestWomenYear != null && womenCount > 0) {
+      lines.push(
+        `Best women’s year: **${bestWomenYear}** with **${womenCount}** All-American${womenCount !== 1 ? "s" : ""}.`,
+      )
+    }
+    if (bestYear != null && (bestMenYear == null || bestYear !== bestMenYear || womenCount > 0)) {
+      lines.push(
+        `Best combined year: **${bestYear}** with **${count}** All-American${count !== 1 ? "s" : ""}.`,
+      )
+    }
+    lines.push("", "Ask for a specific year (e.g. “Show NHSCA All-Americans in 2024”) for the full list.")
+    return lines.join("\n")
+  }
   if (agg?.type === "nhsca_school_leaderboard") {
     if (agg.school) {
       return (

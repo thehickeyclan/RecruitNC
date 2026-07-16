@@ -211,29 +211,46 @@ const mapLegacyNhscaRow = (r: any): TournamentResultRow => ({
   division: (r.division ?? "").toString().trim(),
 })
 
+function nhscaRowHasPlacement(row: TournamentResultRow | undefined): boolean {
+  return Boolean(row?.placement && String(row.placement).trim())
+}
+
 /**
  * Combine roster + placements + legacy without dropping prior years.
- * For the same tournament `year`, **roster wins** over placement/legacy for that year only; all other placement rows (other years) are kept.
+ * Same year: roster preferred for record/weight/division; if roster has no championship
+ * placement (common for live `nhsca_roster` rows), keep AA place from placements/legacy
+ * so an imported 6th is not wiped by a record-only roster row.
  */
 export function mergeNhscaByYearPreferRoster(
   rosterRows: TournamentResultRow[],
   placementRows: TournamentResultRow[],
   legacyRows: TournamentResultRow[],
 ): TournamentResultRow[] {
-  const rosterYears = new Set(rosterRows.map((r) => r.year))
-  const out: TournamentResultRow[] = [...rosterRows]
-  for (const p of placementRows) {
-    if (!rosterYears.has(p.year)) out.push(p)
-  }
-  const covered = new Set<number>([...rosterYears])
-  for (const p of placementRows) {
-    if (!rosterYears.has(p.year)) covered.add(p.year)
-  }
+  const byYear = new Map<number, TournamentResultRow>()
+
   for (const l of legacyRows) {
-    if (!covered.has(l.year)) out.push(l)
+    byYear.set(l.year, { ...l })
   }
-  out.sort((a, b) => b.year - a.year)
-  return out
+  for (const p of placementRows) {
+    byYear.set(p.year, { ...p })
+  }
+  for (const r of rosterRows) {
+    const existing = byYear.get(r.year)
+    if (!existing) {
+      byYear.set(r.year, { ...r })
+      continue
+    }
+    byYear.set(r.year, {
+      ...existing,
+      ...r,
+      placement: nhscaRowHasPlacement(r) ? r.placement : existing.placement,
+      record: (r.record && String(r.record).trim()) || existing.record,
+      weight: (r.weight && String(r.weight).trim()) || existing.weight,
+      division: (r.division && String(r.division).trim()) || existing.division,
+    })
+  }
+
+  return [...byYear.values()].sort((a, b) => b.year - a.year)
 }
 
 async function getNhscaPlacementsFromTablesForAthlete(

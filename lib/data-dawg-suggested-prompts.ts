@@ -8,6 +8,8 @@ export function normalizeForMatch(s: string): string {
     .toLowerCase()
     .trim()
     .replace(/\?+$/, "")
+    // "All-Americans" ↔ "All Americans" so chip routes still match typed variants
+    .replace(/[-–—]/g, " ")
     .replace(/\s+/g, " ")
 }
 
