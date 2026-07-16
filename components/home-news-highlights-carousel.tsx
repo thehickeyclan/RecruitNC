@@ -40,14 +40,14 @@ export function HomeNewsHighlightsCarousel() {
   if (featured.length === 0) return null
 
   return (
-    <section className="mb-12" aria-label="News highlights">
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-2xl font-bold" style={{ color: "#003366" }}>
-          News &amp; Highlights
-        </h2>
+    <section aria-label="News highlights">
+      {/* Heading and link sit on the dark page background, not on a card — #003366 was
+          near-invisible there. The #003366 inside the white story cards below is fine. */}
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <h2 className="text-xl font-bold text-white sm:text-2xl">News &amp; Highlights</h2>
         <Link
           href="/news"
-          className="text-sm font-medium text-[#003366] hover:underline"
+          className="flex-shrink-0 text-sm font-medium text-white/60 transition-colors hover:text-rnc-gold"
         >
           All news →
         </Link>

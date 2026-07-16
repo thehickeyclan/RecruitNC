@@ -17,12 +17,18 @@ interface Product {
   in_stock?: boolean
 }
 
-export function StoreProductPromotion() {
-  const [products, setProducts] = useState<Product[]>([])
+/**
+ * `initialProducts` lets a server component hand products straight in — no fetch, no loading
+ * flash. Without it the component still self-fetches, so existing callers keep working.
+ */
+export function StoreProductPromotion({ initialProducts }: { initialProducts?: Product[] } = {}) {
+  const [products, setProducts] = useState<Product[]>(initialProducts ?? [])
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(!initialProducts)
 
   useEffect(() => {
+    if (initialProducts) return
+
     const fetchProducts = async () => {
       try {
         const response = await fetch("/api/store/featured-products")
@@ -38,7 +44,7 @@ export function StoreProductPromotion() {
     }
 
     fetchProducts()
-  }, [])
+  }, [initialProducts])
 
   // Rotate products every 5 seconds
   useEffect(() => {
