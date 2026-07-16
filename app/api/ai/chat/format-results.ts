@@ -1,5 +1,7 @@
 // Result formatting utilities for AI chat responses
 
+import { formatMultiTimeStateChampionsList } from "@/lib/data-dawg-suggested-handler-answer"
+
 function formatNameWithProfileLink(name: string, profileLinks?: Map<string, string>): string {
   if (!name?.trim() || !profileLinks) return name
   const url = profileLinks.get(name) ?? profileLinks.get(name.toLowerCase())
@@ -456,18 +458,7 @@ export function formatResults(
       
       resultsText = summaryLines.join("\n") + yearSections.join("\n\n")
     } else if (is4xStateChamps && results.length > 0) {
-      const n = results.length
-      resultsText = `There are exactly ${n} wrestlers who are 4x State Champions in North Carolina. Here is the complete list:\n\n${results
-        .map((r: any, idx: number) => {
-          const champYears = r.championships
-            .map((c: any) => {
-              const w = String(c.weight_class ?? "").replace(/lbs?$/i, "").trim()
-              return `${c.year} (${c.classification} ${w}lbs)`
-            })
-            .join(", ")
-          return `${idx + 1}. ${r.wrestler_name} - ${champYears}`
-        })
-        .join("\n")}\n\nTotal: ${results.length} wrestlers.`
+      resultsText = formatMultiTimeStateChampionsList(results)
     } else {
           // Special handling for nhsca_placer_records - format with all placements by year
           if (extractedParams?.queryType === "nhsca_placer_records" && results.length > 0 && results[0].all_americans) {
