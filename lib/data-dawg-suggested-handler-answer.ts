@@ -2,6 +2,40 @@
  * Format known suggested-prompt handler payloads for Agent v2 (no LLM rewrite).
  */
 
+export type MultiTimeChampRow = {
+  wrestler_name?: string
+  championships?: Array<{ year?: number; classification?: string; weight_class?: string }>
+}
+
+/** Readable multi-time state champ list (shared by Agent v2 + legacy format-results). */
+export function formatMultiTimeStateChampionsList(results: MultiTimeChampRow[]): string {
+  const n = results.length
+  if (n === 0) return "I couldn’t find multi-time state champions in the database right now."
+  const times = results[0]?.championships?.length ?? 0
+  const label = times === 4 ? "4x State Champions" : times > 0 ? `${times}x State Champions` : "State Champions"
+
+  const blocks = results.map((row, idx) => {
+    const name = String(row.wrestler_name ?? "Unknown").trim() || "Unknown"
+    const champs = [...(row.championships ?? [])].sort((a, b) => (a.year ?? 0) - (b.year ?? 0))
+    const titles = champs
+      .map((c) => {
+        const w = String(c.weight_class ?? "")
+          .replace(/lbs?$/i, "")
+          .trim()
+        const cls = String(c.classification ?? "").trim()
+        const year = c.year ?? "?"
+        const bits = [cls, w ? `${w} lbs` : ""].filter(Boolean).join(" · ")
+        return bits ? `   - ${year} · ${bits}` : `   - ${year}`
+      })
+      .join("\n")
+    return `${idx + 1}. **${name}**\n${titles}`
+  })
+
+  return (
+    `There are **${n}** wrestlers who are ${label} in North Carolina:\n\n` + blocks.join("\n\n")
+  )
+}
+
 export function formatSuggestedHandlerAnswer(handlerResult: {
   answer?: unknown
   results?: unknown[]
@@ -127,28 +161,7 @@ export function formatSuggestedHandlerAnswer(handlerResult: {
       )
     }
     if (first?.wrestler_name && Array.isArray(first.championships)) {
-      const n = results.length
-      const times = first.championships.length
-      const label = times === 4 ? "4x State Champions" : `${times}x State Champions`
-      const lines = results.map((r, idx) => {
-        const row = r as {
-          wrestler_name?: string
-          championships?: Array<{ year?: number; classification?: string; weight_class?: string }>
-        }
-        const champYears = (row.championships ?? [])
-          .map((c) => {
-            const w = String(c.weight_class ?? "")
-              .replace(/lbs?$/i, "")
-              .trim()
-            return `${c.year} (${c.classification} ${w}lbs)`
-          })
-          .join(", ")
-        return `${idx + 1}. ${row.wrestler_name} - ${champYears}`
-      })
-      return (
-        `There are exactly ${n} wrestlers who are ${label} in North Carolina. Here is the complete list:\n\n` +
-        `${lines.join("\n")}\n\nTotal: ${n} wrestlers.`
-      )
+      return formatMultiTimeStateChampionsList(results as MultiTimeChampRow[])
     }
   }
 

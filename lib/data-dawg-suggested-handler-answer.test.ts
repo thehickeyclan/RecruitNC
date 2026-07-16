@@ -29,7 +29,7 @@ describe("NHSCA school leaderboard suggested prompt", () => {
     expect(getRouteForSuggestedPrompt("Who are our 4x state champions?")?.handler).toBe("state_champion_records")
   })
 
-  it("formats 4x state champion results", () => {
+  it("formats 4x state champion results with one title per line", () => {
     const text = formatSuggestedHandlerAnswer({
       results: [
         {
@@ -44,6 +44,9 @@ describe("NHSCA school leaderboard suggested prompt", () => {
       ],
     })
     expect(text).toContain("4x State Champions")
-    expect(text).toContain("Test Champ")
+    expect(text).toContain("**Test Champ**")
+    expect(text).toContain("   - 2020 · 4A · 132 lbs")
+    expect(text).toContain("   - 2023 · 4A · 152 lbs")
+    expect(text).not.toContain("2020 (4A 132lbs), 2021")
   })
 })
