@@ -456,6 +456,30 @@ export function BlueCommandCenter() {
   const mrrDisplay = data?.stripeMRR ?? data?.estimatedMRR ?? 0
   const hasWiq = (data?.wiqBillable ?? 0) > 0
 
+  // Combined headline: the whole program in one set of numbers. Falls back to Stripe-only
+  // once the WIQ pool has fully drained.
+  const combinedMembers = data?.combinedBillable ?? data?.recruitncBillable ?? data?.currentActive ?? 0
+  const combinedMrr = hasWiq ? (data?.combinedStandardMrr ?? 0) : mrrDisplay
+  const netThisMonth = (data?.newSubsThisMonth ?? 0) - (data?.churnThisMonth ?? 0)
+  const renewals7 = (() => {
+    const today = new Date()
+    const end = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
+    const lo = today.toISOString().slice(0, 10)
+    const hi = end.toISOString().slice(0, 10)
+    let count = 0
+    let amount = 0
+    for (const b of data?.upcomingBilling ?? []) {
+      if (b.date >= lo && b.date <= hi) {
+        count += b.count
+        amount += b.amountCents
+      }
+    }
+    return { count, amount }
+  })()
+  // WIQ numbers only change on CSV import; older than ~5 weeks means the mirror is lying.
+  const wiqStale =
+    !data?.wiqLastImportAt || Date.now() - new Date(data.wiqLastImportAt).getTime() > 35 * 24 * 60 * 60 * 1000
+
   return (
     <div className="min-h-screen admin-dark-page bg-[#0A1628] text-white p-4 md:p-8">
       <div className="mx-auto max-w-6xl space-y-6">
@@ -510,138 +534,177 @@ export function BlueCommandCenter() {
           </div>
         ) : data ? (
           <>
-            <p className="text-xs text-gray-500 -mb-3">
-              Click a tile to show members below
-              {data.recruitncCountsFromStripe && (
-                <span className="text-emerald-400/80"> · RecruitNC counts live from Stripe</span>
+            {/* ── The program in one row. Per-system detail lives BELOW this, not beside it —
+                the old layout led with six competing per-system tiles and buried the combined
+                number underneath, which is backwards for a program billed in two systems. ── */}
+            <button
+              type="button"
+              onClick={() => (hasWiq ? togglePanel("combined") : togglePanel("recruitnc-active"))}
+              className={cn(
+                "w-full rounded-lg border bg-[#03154C]/80 text-white text-left transition-colors",
+                panel === "combined"
+                  ? "ring-2 ring-[#D3B574] border-[#D3B574]/40"
+                  : "border-[#D3B574]/30 hover:bg-[#03154C] hover:border-[#D3B574]/50",
               )}
-              {(data.stripeTestAccountsExcluded ?? 0) > 0 && (
-                <span className="text-gray-500">
-                  {" "}
-                  · {data.stripeTestAccountsExcluded} test account
-                  {data.stripeTestAccountsExcluded === 1 ? "" : "s"} excluded
-                </span>
-              )}
-            </p>
-            <div className={cn("grid grid-cols-2 gap-3", hasWiq ? "lg:grid-cols-3 xl:grid-cols-6" : "lg:grid-cols-4")}>
-              <StatTile
-                label="Active (RecruitNC)"
-                value={data.currentActive}
-                sub={
-                  data.stripeRecruitncTotal != null
-                    ? `${data.stripeRecruitncTotal} Blue subs in Stripe`
-                    : undefined
-                }
-                icon={Users}
-                selected={panel === "recruitnc-active"}
-                onClick={() => togglePanel("recruitnc-active")}
-              />
-              <StatTile
-                label="Paused (RecruitNC)"
-                value={data.currentPaused}
-                icon={CreditCard}
-                selected={panel === "recruitnc-paused"}
-                onClick={() => togglePanel("recruitnc-paused")}
-              />
-              <StatTile
-                label="Churned (RecruitNC)"
-                value={data.currentCancelled}
-                sub={
-                  (data.currentCanceling ?? 0) > 0
-                    ? `${data.currentCanceling} ending at period end`
-                    : "Canceled · click for ending too"
-                }
-                icon={CreditCard}
-                selected={panel === "recruitnc-cancelled"}
-                onClick={() => togglePanel("recruitnc-cancelled")}
-              />
-              {hasWiq && (
-                <>
+            >
+              <div className="px-4 py-4 grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-gray-400 flex items-center gap-2">
+                    Blue members
+                    <ChevronDown
+                      className={cn("h-3.5 w-3.5 transition-transform", panel === "combined" && "rotate-180")}
+                    />
+                  </p>
+                  <p className="text-3xl font-bold mt-1">{combinedMembers}</p>
+                  <p className="text-[11px] text-gray-500 mt-0.5">
+                    {hasWiq
+                      ? `${data.recruitncBillable ?? data.currentActive} Stripe · ${data.wiqBillable} WIQ`
+                      : "all on Stripe"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-gray-400">MRR</p>
+                  <p className="text-3xl font-bold mt-1 text-[#D3B574]">{fmtMoney(combinedMrr)}</p>
+                  <p className="text-[11px] text-gray-500 mt-0.5">
+                    {hasWiq
+                      ? `${fmtMoney(mrrDisplay)} Stripe · ${fmtMoney(data.wiqStandardMrr ?? 0)} WIQ std`
+                      : "live from Stripe"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-gray-400">This month</p>
+                  <p className={cn("text-3xl font-bold mt-1", netThisMonth >= 0 ? "text-emerald-300" : "text-red-300")}>
+                    {netThisMonth >= 0 ? `+${netThisMonth}` : netThisMonth}
+                  </p>
+                  <p className="text-[11px] text-gray-500 mt-0.5">
+                    {data.newSubsThisMonth} new · {data.churnThisMonth} churned
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-gray-400">Renewals · next 7 days</p>
+                  <p className="text-3xl font-bold mt-1">{renewals7.count}</p>
+                  <p className="text-[11px] text-gray-500 mt-0.5">{fmtMoney(renewals7.amount / 100)} expected</p>
+                </div>
+              </div>
+            </button>
+
+            {/* ── Per-system split ── */}
+            <div className="space-y-1.5">
+              <p className="text-xs text-gray-500 flex flex-wrap items-center gap-x-2">
+                <span className="text-white/70 font-medium">RecruitNC · Stripe</span>
+                {data.recruitncCountsFromStripe && <span className="text-emerald-400/80">live from Stripe</span>}
+                {(data.stripeTestAccountsExcluded ?? 0) > 0 && (
+                  <span>
+                    · {data.stripeTestAccountsExcluded} test account
+                    {data.stripeTestAccountsExcluded === 1 ? "" : "s"} excluded
+                  </span>
+                )}
+                <span className="text-gray-600">· click a tile for members</span>
+              </p>
+              <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+                <StatTile
+                  label="Active"
+                  value={data.currentActive}
+                  sub={
+                    data.stripeRecruitncTotal != null ? `${data.stripeRecruitncTotal} Blue subs in Stripe` : undefined
+                  }
+                  icon={Users}
+                  selected={panel === "recruitnc-active"}
+                  onClick={() => togglePanel("recruitnc-active")}
+                />
+                <StatTile
+                  label="Paused"
+                  value={data.currentPaused}
+                  icon={CreditCard}
+                  selected={panel === "recruitnc-paused"}
+                  onClick={() => togglePanel("recruitnc-paused")}
+                />
+                <StatTile
+                  label="Churned"
+                  value={data.currentCancelled}
+                  sub={
+                    (data.currentCanceling ?? 0) > 0
+                      ? `${data.currentCanceling} ending at period end`
+                      : "Canceled · click for ending too"
+                  }
+                  icon={CreditCard}
+                  selected={panel === "recruitnc-cancelled"}
+                  onClick={() => togglePanel("recruitnc-cancelled")}
+                />
+                <StatTile label="MRR (Stripe)" value={fmtMoney(mrrDisplay)} icon={TrendingUp} clickable={false} />
+                <StatTile
+                  label="Proj. MRR (post-seniors)"
+                  value={fmtMoney(data.projectedMRRAfterSeniorChurn ?? mrrDisplay)}
+                  icon={BarChart3}
+                  clickable={false}
+                />
+              </div>
+            </div>
+
+            {hasWiq && (
+              <div className="space-y-1.5">
+                <p className="text-xs text-gray-500 flex flex-wrap items-center gap-x-2">
+                  <span className="text-white/70 font-medium">WrestlingIQ · legacy pool</span>
+                  <span>drains by graduation/cancellation — no new members</span>
+                  {/* Freshness is load-bearing: these numbers only change on CSV import, so a
+                      stale mirror lies silently. Make its age announce itself. */}
+                  {data.wiqLastImportAt ? (
+                    <span className={cn(wiqStale ? "text-amber-300" : "text-gray-500")}>
+                      · data as of {new Date(data.wiqLastImportAt).toLocaleDateString()}
+                      {wiqStale && (
+                        <>
+                          {" — stale, "}
+                          <a href="/admin/blue/wiq" className="underline text-[#D3B574]">
+                            re-import
+                          </a>
+                        </>
+                      )}
+                    </span>
+                  ) : (
+                    <span className="text-amber-300">
+                      · import date unknown —{" "}
+                      <a href="/admin/blue/wiq" className="underline text-[#D3B574]">
+                        re-import
+                      </a>
+                    </span>
+                  )}
+                </p>
+                <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
                   <StatTile
-                    label="WIQ Paid"
+                    label="Paid"
                     value={data.wiqActive ?? 0}
-                    sub={
-                      data.wiqPaused
-                        ? `${data.wiqPaused} paused · $50/mo standard`
-                        : "$50/mo standard"
-                    }
+                    sub="$50/mo standard"
                     icon={Users}
                     accent="indigo"
                     selected={panel === "wiq-active"}
                     onClick={() => togglePanel("wiq-active")}
                   />
                   <StatTile
-                    label="WIQ Billable"
+                    label="Billable"
                     value={data.wiqBillable ?? 0}
-                    sub={
-                      data.wiqStandardMrr != null
-                        ? `${fmtMoney(data.wiqStandardMrr)}/mo · incl. overdue/grace`
-                        : undefined
-                    }
+                    sub="incl. overdue/grace"
                     icon={CreditCard}
                     accent="indigo"
                     selected={panel === "wiq-billable"}
                     onClick={() => togglePanel("wiq-billable")}
                   />
-                  {(data.wiqPaused ?? 0) > 0 && (
-                    <StatTile
-                      label="WIQ Paused"
-                      value={data.wiqPaused ?? 0}
-                      icon={CreditCard}
-                      accent="indigo"
-                      selected={panel === "wiq-paused"}
-                      onClick={() => togglePanel("wiq-paused")}
-                    />
-                  )}
-                </>
-              )}
-              <StatTile
-                label="MRR (Stripe)"
-                value={fmtMoney(mrrDisplay)}
-                icon={TrendingUp}
-                clickable={false}
-              />
-              <StatTile
-                label="Proj. MRR (post-seniors)"
-                value={fmtMoney(data.projectedMRRAfterSeniorChurn ?? mrrDisplay)}
-                icon={BarChart3}
-                clickable={false}
-              />
-            </div>
-
-            {data.combinedBillable != null && hasWiq && (
-              <button
-                type="button"
-                onClick={() => togglePanel("combined")}
-                className={cn(
-                  "w-full rounded-lg border bg-[#03154C]/80 text-white text-left transition-colors",
-                  panel === "combined"
-                    ? "ring-2 ring-[#D3B574] border-[#D3B574]/40"
-                    : "border-[#D3B574]/30 hover:bg-[#03154C] hover:border-[#D3B574]/50",
-                )}
-              >
-                <div className="px-4 py-4 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-                  <div>
-                    <p className="text-xs uppercase tracking-wide text-gray-400 flex items-center gap-2">
-                      Combined Blue (RecruitNC + WIQ)
-                      <ChevronDown
-                        className={cn("h-3.5 w-3.5 transition-transform", panel === "combined" && "rotate-180")}
-                      />
-                    </p>
-                    <p className="text-3xl font-bold mt-1">{data.combinedBillable} billable</p>
-                    <p className="text-sm text-gray-400 mt-1">
-                      {data.recruitncBillable ?? data.currentActive} RecruitNC @ $55/mo · {data.wiqBillable} WIQ @
-                      $50/mo standard
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs uppercase tracking-wide text-gray-400">Combined MRR (standard rates)</p>
-                    <p className="text-2xl font-bold text-[#D3B574]">
-                      {fmtMoney(data.combinedStandardMrr ?? 0)}/mo
-                    </p>
-                  </div>
+                  <StatTile
+                    label="Paused"
+                    value={data.wiqPaused ?? 0}
+                    icon={CreditCard}
+                    accent="indigo"
+                    selected={panel === "wiq-paused"}
+                    onClick={() => togglePanel("wiq-paused")}
+                  />
+                  <StatTile
+                    label="MRR (standard)"
+                    value={fmtMoney(data.wiqStandardMrr ?? 0)}
+                    icon={TrendingUp}
+                    accent="indigo"
+                    clickable={false}
+                  />
                 </div>
-              </button>
+              </div>
             )}
 
             {panel && (
