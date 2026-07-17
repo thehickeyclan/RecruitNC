@@ -256,12 +256,16 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
     function: {
       name: "nchsaa_state_tournament_by_year",
       description:
-        "NCHSAA state championship placers for one year from `wrestling_nchsaa_results`. Use for 'show me the results of the 2017 state tournament', 'show all 4A state placers from 2025', '2024 3A state results', etc. Pass `classification` (1A–8A, 1A/2A, 1-4A) when the user names a division. Not for multi-time champs (use nchsaa_multi_time_state_champions) or name search (use nchsaa_state_results_search).",
+        "NCHSAA state championship placers from `wrestling_nchsaa_results`. Use for 'show me the results of the 2017 state tournament', 'show all 4A state placers from 2025', '2024 3A state results', and **also for questions with no year at all** ('who won 4A state at 132?', 'who is the 3A state champ at 145?') — in that case **omit `year`** and the tool resolves the most recent season on file and returns `year_inferred: true`. **Never invent a year.** Pass `classification` (1A–8A, 1A/2A, 1-4A) when the user names a division. Not for multi-time champs (use nchsaa_multi_time_state_champions) or name search (use nchsaa_state_results_search).",
       parameters: {
         type: "object",
         additionalProperties: false,
         properties: {
-          year: { type: "integer", description: "NCHSAA state tournament year (e.g. 2017)." },
+          year: {
+            type: "integer",
+            description:
+              "NCHSAA state tournament year (e.g. 2017). OMIT when the user gave no year — never guess one; the tool resolves the latest season from the database.",
+          },
           classification: {
             type: "string",
             description: "Optional NCHSAA division: 1A, 2A, 3A, 4A, 5A, 6A, 7A, 8A, 1A/2A, or 1-4A (women).",
@@ -272,7 +276,7 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
             description: "Default men unless user asks for girls/women.",
           },
         },
-        required: ["year"],
+        required: [],
       },
     },
   },
@@ -281,14 +285,17 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
     function: {
       name: "fargo_results_by_year",
       description:
-        "All NC wrestlers at Fargo Nationals (US Marine Corps Nationals) for one year from `fargo_results`. Freestyle and Greco-Roman are separate rows/careers — do not merge styles. Use for 'show Fargo results 2026', 'who wrestled at Fargo in 2024', 'NC Fargo nationals 2023', etc. Returns athlete name, school, division (16U/Junior), style when present, weight, and record. Not for a single wrestler (use wrestling_cross_store_search or get_athlete_full_dossier).",
+        "All NC wrestlers at Fargo Nationals (US Marine Corps Nationals) from `fargo_results`. Freestyle and Greco-Roman are separate rows/careers — do not merge styles. Use for 'show Fargo results 2026', 'who wrestled at Fargo in 2024', 'NC Fargo nationals 2023', and **also when no year is given** ('who wrestled at Fargo?') — **omit `year`** and the tool returns the most recent Fargo on file with `year_inferred: true`. **Never invent a year.** Returns athlete name, school, division (16U/Junior), style when present, weight, and record. Not for a single wrestler (use wrestling_cross_store_search or get_athlete_full_dossier).",
       parameters: {
         type: "object",
         additionalProperties: false,
         properties: {
-          year: { type: "integer", description: "Fargo tournament year (e.g. 2026)." },
+          year: {
+            type: "integer",
+            description: "Fargo tournament year (e.g. 2026). OMIT when the user gave no year — never guess one.",
+          },
         },
-        required: ["year"],
+        required: [],
       },
     },
   },

@@ -42,6 +42,11 @@ import {
   fetchNhscaAllAmericansByYear,
   fetchNchsaaStateTournamentByYear,
 } from "./tournament-results-by-year"
+import {
+  getLatestFargoYear,
+  getLatestNchsaaStateYear,
+  nchsaaRealignmentNote,
+} from "./latest-tournament-year"
 import { buildAthleteDossierMarkdown } from "@/lib/data-dawg-athlete-dossier"
 import { buildSchoolWrestlingDossierMarkdown } from "@/lib/data-dawg-school-dossier"
 import { getNchsaaStateChampionsByExactTitleCount } from "@/lib/nchsaa-multi-time-state-champions"
@@ -1778,32 +1783,89 @@ export async function toolNhscaAllAmericansByYear(args: {
   }
 }
 
+/**
+ * `year` is optional on purpose. When the user doesn't name a season we resolve the newest one
+ * that has results for the requested division — previously the year was required, so a yearless
+ * question made the model invent one (it picked 2023 from 14 available years and said nothing).
+ * `year_inferred` tells the model to name the year it's reporting.
+ */
 export async function toolNchsaaStateTournamentByYear(args: {
-  year: number | string
+  year?: number | string | null
   classification?: string | null
   gender?: string | null
 }) {
+  const classification = args.classification?.trim() || null
+  const requested = args.year == null || args.year === "" ? Number.NaN : Number(args.year)
+  const yearInferred = !Number.isFinite(requested)
+
+  let year = requested
+  let availableYears: number[] = []
+  if (yearInferred) {
+    const latest = await getLatestNchsaaStateYear(classification)
+    if (latest.year == null) {
+      return {
+        year: null,
+        classification,
+        gender: args.gender === "women" ? "women" : "men",
+        total: 0,
+        year_inferred: true,
+        available_years: latest.availableYears,
+        answer: classification
+          ? `I don't have any NCHSAA state results for ${classification.toUpperCase()}.`
+          : "I don't have any NCHSAA state results yet.",
+        rows: [],
+      }
+    }
+    year = latest.year
+    availableYears = latest.availableYears
+  }
+
   const parsed: ParsedTournamentResultsQuery = {
     kind: "nchsaa_state",
-    year: Number(args.year),
+    year,
     gender: args.gender === "women" ? "women" : "men",
-    classification: args.classification?.trim() || null,
+    classification,
   }
   const rows = await fetchNchsaaStateTournamentByYear(parsed)
+  const realignment = nchsaaRealignmentNote(classification, year)
+
   return {
     year: parsed.year,
     classification: parsed.classification,
     gender: parsed.gender,
     total: rows.length,
+    // Only set when we chose the year: the model must say which season it's reporting,
+    // and offer that other years exist.
+    ...(yearInferred
+      ? {
+          year_inferred: true,
+          available_years: availableYears,
+          note: `The user did not give a year, so this is the most recent season on file (${year}). Say the year in your answer and mention other years are available.`,
+        }
+      : {}),
+    ...(realignment ? { realignment_note: realignment } : {}),
     answer: formatNchsaaStateTournamentAnswer(parsed, rows),
     rows: rows.slice(0, 80),
   }
 }
 
-export async function toolFargoResultsByYear(args: { year: number | string }) {
+/** Same rule as NCHSAA: a missing year resolves to the newest Fargo on file, not a guess. */
+export async function toolFargoResultsByYear(args: { year?: number | string | null }) {
+  const requested = args.year == null || args.year === "" ? Number.NaN : Number(args.year)
+  const yearInferred = !Number.isFinite(requested)
+
+  let year = requested
+  if (yearInferred) {
+    const latest = await getLatestFargoYear()
+    if (latest == null) {
+      return { year: null, total: 0, year_inferred: true, answer: "I don't have any Fargo results yet.", rows: [] }
+    }
+    year = latest
+  }
+
   const parsed: ParsedTournamentResultsQuery = {
     kind: "fargo_nationals",
-    year: Number(args.year),
+    year,
     gender: "men",
     classification: null,
   }
@@ -1811,6 +1873,12 @@ export async function toolFargoResultsByYear(args: { year: number | string }) {
   return {
     year: parsed.year,
     total: rows.length,
+    ...(yearInferred
+      ? {
+          year_inferred: true,
+          note: `The user did not give a year, so this is the most recent Fargo on file (${year}). Say the year in your answer.`,
+        }
+      : {}),
     answer: formatFargoNationalsAnswer(parsed, rows),
     rows: rows.slice(0, 80),
   }
