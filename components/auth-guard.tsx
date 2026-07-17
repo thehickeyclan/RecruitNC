@@ -99,7 +99,12 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
         } catch (_) {}
         if (!redirecting) {
           setRedirecting(true)
-          const signinPath = `/auth/signin?returnTo=${encodeURIComponent(pathname)}`
+          // Must carry the query string: usePathname() drops it, so a bounced visitor to
+          // /view-profile?id=<uuid> came back to a bare /view-profile and got
+          // "Missing id. Use ?id= athlete-uuid" — i.e. sign-up dead-ended on an error page.
+          const search = typeof window !== "undefined" ? window.location.search : ""
+          const returnTo = `${pathname}${search}`
+          const signinPath = `/auth/signin?returnTo=${encodeURIComponent(returnTo)}`
           // Use full navigation when in iframe (app.ncwrestlingunited.com embed) so Chrome allows cookies.
           // Must use absolute URL—relative would resolve against parent (ncwrestlingunited.com) and 404.
           if (typeof window !== "undefined" && window.self !== window.top) {
