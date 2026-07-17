@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Link from "next/link"
 import { Loader2, Eye, Users, TrendingUp, User, RefreshCw, Calendar } from "lucide-react"
+import { ProfileViewersDialog } from "@/components/admin/profile-viewers-dialog"
 
 const RANGE_OPTIONS = [
   { value: "today", label: "Today" },
@@ -41,7 +42,10 @@ interface AthleteStats {
   athlete_id: string
   athlete_name: string
   total_views: number
+  /** Legacy grouping by the unmaintained profile_type column — kept for reference only. */
   profile_types: Record<string, number>
+  /** Grouped by real role via lib/viewer-role.ts. Use this. */
+  viewer_kinds: Record<string, number>
 }
 
 interface ProfileClickRank {
@@ -49,6 +53,16 @@ interface ProfileClickRank {
   athlete_name: string
   clicks: number
   lastViewed?: string
+  /** Coach rows only: distinct people, which matters more than raw clicks. */
+  distinctCoaches?: number
+  collegeCoachViews?: number
+}
+
+interface CoachSummary {
+  coachViews: number
+  distinctCoaches: number
+  collegeCoachViews: number
+  distinctCollegeCoaches: number
 }
 
 export default function CardAnalyticsPage() {
@@ -59,8 +73,10 @@ export default function CardAnalyticsPage() {
   const [topAthletes, setTopAthletes] = useState<AthleteStats[]>([])
   const [profileClickRanking, setProfileClickRanking] = useState<ProfileClickRank[]>([])
   const [profileViewRankingCoaches, setProfileViewRankingCoaches] = useState<ProfileClickRank[]>([])
-  const [profileTypeStats, setProfileTypeStats] = useState<Record<string, number>>({})
+  const [viewerKindStats, setViewerKindStats] = useState<Record<string, number>>({})
   const [totalViews, setTotalViews] = useState(0)
+  const [coachSummary, setCoachSummary] = useState<CoachSummary | null>(null)
+  const [viewersFor, setViewersFor] = useState<{ id: string; name: string } | null>(null)
 
   useEffect(() => {
     fetchAnalytics()
@@ -85,8 +101,9 @@ export default function CardAnalyticsPage() {
       setTopAthletes(data.topAthletes || [])
       setProfileClickRanking(data.profileClickRanking || [])
       setProfileViewRankingCoaches(data.profileViewRankingCoaches || [])
-      setProfileTypeStats(data.profileTypeStats || {})
+      setViewerKindStats(data.viewerKindStats || {})
       setTotalViews(data.totalViews || 0)
+      setCoachSummary(data.coachSummary || null)
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -94,16 +111,23 @@ export default function CardAnalyticsPage() {
     }
   }
 
+  // Handles both the viewer_kind values from lib/viewer-role.ts (underscored: college_coach,
+  // hs_coach) and the legacy profile_type spellings (hyphenated), since the Recent Views list
+  // below still reports the raw profile_type it recorded.
   const formatProfileType = (type: string) => {
     const typeMap: Record<string, string> = {
       parent: "Parent",
+      college_coach: "College Coach",
       "college-coach": "College Coach",
+      hs_coach: "HS/Club Coach",
       "hs-club-coach": "HS/Club Coach",
+      coach: "Coach",
       athlete: "Athlete",
       fan: "Fan",
       referee: "Referee",
       media: "Media",
       admin: "Admin",
+      other: "Other",
       anonymous: "Anonymous",
     }
     return typeMap[type] || type
@@ -112,13 +136,17 @@ export default function CardAnalyticsPage() {
   const getProfileTypeColor = (type: string) => {
     const colorMap: Record<string, string> = {
       parent: "bg-blue-100 text-blue-800",
+      college_coach: "bg-green-100 text-green-800",
       "college-coach": "bg-green-100 text-green-800",
+      hs_coach: "bg-yellow-100 text-yellow-800",
       "hs-club-coach": "bg-yellow-100 text-yellow-800",
+      coach: "bg-yellow-100 text-yellow-800",
       athlete: "bg-purple-100 text-purple-800",
       fan: "bg-gray-100 text-gray-800",
       referee: "bg-orange-100 text-orange-800",
       media: "bg-indigo-100 text-indigo-800",
       admin: "bg-pink-100 text-pink-800",
+      other: "bg-slate-100 text-slate-700",
       anonymous: "bg-slate-100 text-slate-800",
     }
     return colorMap[type] || "bg-gray-100 text-gray-800"
@@ -199,13 +227,19 @@ export default function CardAnalyticsPage() {
           </CardContent>
         </Card>
 
+        {/* Was "Profile Types: N" — a count of distinct labels, which answers nothing.
+            College-coach interest is the number this page exists to surface. */}
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
-              <Users className="h-8 w-8 text-purple-600" />
+              <Users className="h-8 w-8 text-green-600" />
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Profile Types</p>
-                <p className="text-2xl font-bold">{Object.keys(profileTypeStats).length}</p>
+                <p className="text-sm font-medium text-gray-600">College Coach Views</p>
+                <p className="text-2xl font-bold">{(coachSummary?.collegeCoachViews ?? 0).toLocaleString()}</p>
+                <p className="text-xs text-gray-500">
+                  {coachSummary?.distinctCollegeCoaches ?? 0} distinct{" "}
+                  {coachSummary?.distinctCollegeCoaches === 1 ? "coach" : "coaches"}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -268,9 +302,18 @@ export default function CardAnalyticsPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex-shrink-0 text-right">
-                    <span className="font-semibold text-gray-900">{row.clicks}</span>
-                    <span className="text-sm text-gray-500 ml-1">views</span>
+                  <div className="flex flex-shrink-0 items-center gap-3">
+                    <div className="text-right">
+                      <span className="font-semibold text-gray-900">{row.clicks}</span>
+                      <span className="text-sm text-gray-500 ml-1">views</span>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setViewersFor({ id: row.athlete_id, name: row.athlete_name })}
+                    >
+                      Who viewed
+                    </Button>
                   </div>
                 </div>
               ))
@@ -287,8 +330,25 @@ export default function CardAnalyticsPage() {
             Most Viewed by Coaches
           </CardTitle>
           <CardDescription>
-            Same metric, but only when the viewer is logged in as a coach (college coach, HS/club coach, or admin).
+            Viewers whose <strong>role</strong> is a college or HS/club coach. Admins are excluded — they
+            account for ~1,000 views and aren&apos;t recruiting interest. Click any athlete to see exactly
+            who viewed them.
           </CardDescription>
+          {coachSummary && (
+            <div className="grid grid-cols-2 gap-3 pt-3 sm:grid-cols-4">
+              {[
+                { label: "Coach views", value: coachSummary.coachViews },
+                { label: "Distinct coaches", value: coachSummary.distinctCoaches },
+                { label: "College coach views", value: coachSummary.collegeCoachViews },
+                { label: "College coaches", value: coachSummary.distinctCollegeCoaches },
+              ].map((t) => (
+                <div key={t.label} className="rounded-lg border bg-gray-50 p-3">
+                  <p className="text-2xl font-bold text-gray-900">{t.value.toLocaleString()}</p>
+                  <p className="text-xs text-gray-600">{t.label}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           <div className="space-y-3 max-h-[480px] overflow-y-auto">
@@ -320,9 +380,24 @@ export default function CardAnalyticsPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex-shrink-0 text-right">
-                    <span className="font-semibold text-gray-900">{row.clicks}</span>
-                    <span className="text-sm text-gray-500 ml-1">coach views</span>
+                  <div className="flex flex-shrink-0 items-center gap-3">
+                    <div className="text-right">
+                      <span className="font-semibold text-gray-900">{row.clicks}</span>
+                      <span className="text-sm text-gray-500 ml-1">coach views</span>
+                      {row.distinctCoaches != null && (
+                        <p className="text-xs text-gray-500">
+                          {row.distinctCoaches} {row.distinctCoaches === 1 ? "coach" : "coaches"}
+                          {row.collegeCoachViews ? ` · ${row.collegeCoachViews} college` : ""}
+                        </p>
+                      )}
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setViewersFor({ id: row.athlete_id, name: row.athlete_name })}
+                    >
+                      Who viewed
+                    </Button>
                   </div>
                 </div>
               ))
@@ -336,27 +411,44 @@ export default function CardAnalyticsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Most Popular Athletes</CardTitle>
-            <CardDescription>Athletes with the most profile page views</CardDescription>
+            <CardDescription>
+              Athletes with the most profile page views, broken down by who the viewer actually is.
+              Popular isn&apos;t the same as recruited — check the coach counts above.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {topAthletes.slice(0, 10).map((athlete, index) => (
-                <div key={athlete.athlete_id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <div className="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-800 rounded-full text-sm font-bold">
+                <div
+                  key={athlete.athlete_id}
+                  className="flex items-center justify-between gap-3 p-3 border rounded-lg"
+                >
+                  <div className="flex min-w-0 items-center space-x-3">
+                    <div className="flex flex-shrink-0 items-center justify-center w-8 h-8 bg-blue-100 text-blue-800 rounded-full text-sm font-bold">
                       {index + 1}
                     </div>
-                    <div>
-                      <p className="font-medium">{athlete.athlete_name}</p>
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{athlete.athlete_name}</p>
                       <p className="text-sm text-gray-500">{athlete.total_views} views</p>
                     </div>
                   </div>
-                  <div className="flex flex-wrap gap-1">
-                    {Object.entries(athlete.profile_types).map(([type, count]) => (
-                      <Badge key={type} variant="secondary" className={`text-xs ${getProfileTypeColor(type)}`}>
-                        {formatProfileType(type)}: {count}
-                      </Badge>
-                    ))}
+                  <div className="flex flex-shrink-0 items-center gap-2">
+                    <div className="flex flex-wrap justify-end gap-1">
+                      {Object.entries(athlete.viewer_kinds ?? {})
+                        .sort((a, b) => b[1] - a[1])
+                        .map(([kind, count]) => (
+                          <Badge key={kind} variant="secondary" className={`text-xs ${getProfileTypeColor(kind)}`}>
+                            {formatProfileType(kind)}: {count}
+                          </Badge>
+                        ))}
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setViewersFor({ id: athlete.athlete_id, name: athlete.athlete_name })}
+                    >
+                      Who
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -364,15 +456,17 @@ export default function CardAnalyticsPage() {
           </CardContent>
         </Card>
 
-        {/* Profile Type Breakdown */}
+        {/* Viewer breakdown — by real role, not the stale profile_type column */}
         <Card>
           <CardHeader>
-            <CardTitle>User Profile Types</CardTitle>
-            <CardDescription>Who's viewing athlete profiles</CardDescription>
+            <CardTitle>Who&apos;s Viewing</CardTitle>
+            <CardDescription>
+              Every profile view grouped by the viewer&apos;s actual role.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {Object.entries(profileTypeStats)
+              {Object.entries(viewerKindStats)
                 .sort(([, a], [, b]) => b - a)
                 .map(([type, count]) => (
                   <div key={type} className="flex items-center justify-between p-3 border rounded-lg">
@@ -423,6 +517,13 @@ export default function CardAnalyticsPage() {
           </div>
         </CardContent>
       </Card>
+
+      <ProfileViewersDialog
+        athleteId={viewersFor?.id ?? null}
+        athleteName={viewersFor?.name}
+        open={viewersFor !== null}
+        onOpenChange={(open) => !open && setViewersFor(null)}
+      />
     </div>
   )
 }
