@@ -7,7 +7,11 @@ import { getAthletesColumnNames, filterPayloadToSchema } from "@/lib/athletes-sc
 import { athleteEnrichmentFromSignup } from "@/lib/blue-signup-enrich-athlete"
 import { orderShippingFields } from "@/lib/order-shipping"
 import { syntheticOrderItemSku } from "@/lib/order-item-sku"
-import { reconcileBlueMembershipsFromStripe } from "@/lib/blue-stripe-subscription-status"
+import {
+  linkBlueMembershipsByCustomer,
+  reconcileBlueMembershipsFromStripe,
+} from "@/lib/blue-stripe-subscription-status"
+import { isBlueStripeSubscription } from "@/lib/blue-stripe-subscription-stats"
 
 export const dynamic = "force-dynamic"
 
@@ -504,14 +508,46 @@ export async function POST() {
     if (didSync) synced++
   }
 
+  // Link rows that have a customer but no subscription id BEFORE reconciling, so the
+  // reconcile pass (which only sees linked rows) covers them in the same click. This is
+  // what heals memberships whose Checkout Session aged past the 90-day scan above.
+  const bluePriceId = process.env.STRIPE_BLUE_PRICE_ID
+  const customerLink = await linkBlueMembershipsByCustomer(stripe, admin, (sub) =>
+    isBlueStripeSubscription(sub, bluePriceId),
+  )
+
+  // Names for the "customer has no Blue subscription at all" list — these members are
+  // marked active locally but genuinely aren't paying; surface them, don't auto-cancel.
+  let notPaying: Array<{ membership_id: string; athlete_name: string; stripe_customer_id: string }> = []
+  if (customerLink.noSubscription.length) {
+    const athleteIds = customerLink.noSubscription.map((r) => r.athlete_id).filter(Boolean) as string[]
+    const { data: athleteRows } = athleteIds.length
+      ? await admin.from("athletes").select("id, name").in("id", athleteIds)
+      : { data: [] as Array<{ id: string; name: string | null }> }
+    const nameById = new Map((athleteRows ?? []).map((a) => [a.id, a.name ?? ""]))
+    notPaying = customerLink.noSubscription.map((r) => ({
+      membership_id: r.membership_id,
+      athlete_name: (r.athlete_id ? nameById.get(r.athlete_id) : "") || "(unknown athlete)",
+      stripe_customer_id: r.stripe_customer_id,
+    }))
+  }
+
   const { updated: statusReconciled, errors: statusErrors } = await reconcileBlueMembershipsFromStripe(stripe, admin)
 
+  const linkNote = customerLink.scanned
+    ? ` Linked by customer: ${customerLink.linked}/${customerLink.scanned}${
+        notPaying.length ? `; ${notPaying.length} active member(s) have NO Stripe subscription: ${notPaying.map((n) => n.athlete_name).join(", ")}` : ""
+      }.`
+    : ""
+
   return NextResponse.json({
-    message: `Sync complete. With signup_id: ${blueSessions.length}. By email fallback: ${sessionsWithoutSignupId.length} sessions considered. Synced: ${synced}, skipped: ${skipped}, failed: ${failed}. Membership status reconciled: ${statusReconciled} updated${statusErrors ? `, ${statusErrors} errors` : ""}.`,
+    message: `Sync complete. With signup_id: ${blueSessions.length}. By email fallback: ${sessionsWithoutSignupId.length} sessions considered. Synced: ${synced}, skipped: ${skipped}, failed: ${failed}. Membership status reconciled: ${statusReconciled} updated${statusErrors ? `, ${statusErrors} errors` : ""}.${linkNote}`,
     synced,
     skipped,
     failed,
     statusReconciled,
     blueSessionsCount: blueSessions.length,
+    customerLink: { scanned: customerLink.scanned, linked: customerLink.linked, errors: customerLink.errors },
+    notPaying,
   })
 }

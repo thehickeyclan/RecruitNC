@@ -3,6 +3,8 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { runResumeDueSubscriptions } from "@/lib/blue-subscription-actions"
 import { completeBlueSignupAfterStripePayment } from "@/lib/blue-signup-webhook-complete"
 import { nudgeAbandonedBlueSignups } from "@/lib/blue-abandoned-signup-nudge"
+import { linkBlueMembershipsByCustomer } from "@/lib/blue-stripe-subscription-status"
+import { isBlueStripeSubscription } from "@/lib/blue-stripe-subscription-stats"
 import { getStripe, readStripeSecretKey } from "@/lib/stripe"
 
 export const dynamic = "force-dynamic"
@@ -82,6 +84,18 @@ export async function GET(request: NextRequest) {
     console.error("[cron/blue-maintenance] sync:", e)
   }
 
+  // Self-heal memberships that have a Stripe customer but no subscription id — the session
+  // backfill above only sees the last 7 days, and the admin sync only 90, so anything that
+  // slips both windows would otherwise stay frozen forever.
+  let customerLink = { scanned: 0, linked: 0, noSubscription: [] as unknown[], errors: 0 }
+  try {
+    customerLink = await linkBlueMembershipsByCustomer(stripe, admin, (sub) =>
+      isBlueStripeSubscription(sub, process.env.STRIPE_BLUE_PRICE_ID),
+    )
+  } catch (e) {
+    console.error("[cron/blue-maintenance] link-by-customer:", e)
+  }
+
   // Nudge signups that abandoned Stripe Checkout in the last 4h–7d (send-once per signup).
   // Runs AFTER the backfill so a checkout that actually completed but missed its webhook
   // gets marked paid first rather than nudged.
@@ -91,6 +105,12 @@ export async function GET(request: NextRequest) {
     ok: true,
     resume,
     stripeBackfill: { synced, skipped, failed },
+    customerLink: {
+      scanned: customerLink.scanned,
+      linked: customerLink.linked,
+      notPaying: customerLink.noSubscription.length,
+      errors: customerLink.errors,
+    },
     abandonedNudge: nudge,
     ranAt: new Date().toISOString(),
   })
