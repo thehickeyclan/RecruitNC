@@ -113,6 +113,17 @@ interface SeasonRecord {
   winPercentage: number
 }
 
+type CardAchievementRow = {
+  year?: unknown
+  classification?: unknown
+  division?: unknown
+  weight?: unknown
+  weight_class?: unknown
+  place?: unknown
+  placement?: unknown
+  record?: unknown
+}
+
 export function ProfessionalCommitmentCard({ athlete, listMode = false }: ProfessionalCommitmentCardProps) {
   const [isFlipped, setIsFlipped] = useState(false)
   const [imageError, setImageError] = useState(false)
@@ -133,6 +144,11 @@ export function ProfessionalCommitmentCard({ athlete, listMode = false }: Profes
   const [serverStateHonors, setServerStateHonors] = useState<string[]>([])
   /** When present, honors were resolved on the server from the full `athletes` row + NCHSAA merge (authoritative for list pages). */
   const [serverCommitmentHonors, setServerCommitmentHonors] = useState<string[] | null>(null)
+  const [achievementResults, setAchievementResults] = useState<{
+    nchsaa: CardAchievementRow[]
+    nhsca: CardAchievementRow[]
+    super32: CardAchievementRow[]
+  }>({ nchsaa: [], nhsca: [], super32: [] })
 
   useEffect(() => {
     // Reset face + logos when the card athlete changes so prior college marks don't stick / mislabel.
@@ -144,6 +160,7 @@ export function ProfessionalCommitmentCard({ athlete, listMode = false }: Profes
     setHighSchoolLogoError(false)
     setClubLogoUrl(null)
     setClubLogoError(false)
+    setAchievementResults({ nchsaa: [], nhsca: [], super32: [] })
   }, [athlete.name, athlete.id])
 
   const getClubName = () => {
@@ -370,11 +387,17 @@ export function ProfessionalCommitmentCard({ athlete, listMode = false }: Profes
         const ach = data.achievements as {
           state_championships?: unknown[]
           all_results?: {
-            nchsaa?: Array<{ year?: unknown; classification?: unknown; weight_class?: unknown; place?: unknown }>
-            nhsca?: Array<{ placement?: unknown; record?: unknown }>
-            super32?: Array<{ placement?: unknown; record?: unknown }>
+            nchsaa?: CardAchievementRow[]
+            nhsca?: CardAchievementRow[]
+            super32?: CardAchievementRow[]
           }
         }
+
+        setAchievementResults({
+          nchsaa: ach.all_results?.nchsaa ?? [],
+          nhsca: ach.all_results?.nhsca ?? [],
+          super32: ach.all_results?.super32 ?? [],
+        })
 
         if (Array.isArray(data.commitment_card_honor_badges)) {
           setServerCommitmentHonors(data.commitment_card_honor_badges)
@@ -527,6 +550,64 @@ export function ProfessionalCommitmentCard({ athlete, listMode = false }: Profes
 
   const legacyAwardBadges = useMemo(() => getNcLegacyAwardBadges(athlete.name), [athlete.name])
 
+  const cardResume = useMemo(() => {
+    const numericPlace = (value: unknown): number | null => {
+      const match = String(value ?? "").trim().match(/^(\d{1,2})/)
+      if (!match) return null
+      const place = Number(match[1])
+      return Number.isFinite(place) ? place : null
+    }
+    const yearOf = (row: CardAchievementRow) => {
+      const year = Number(row.year)
+      return Number.isFinite(year) ? year : 0
+    }
+    const weightOf = (row: CardAchievementRow) =>
+      String(row.weight_class ?? row.weight ?? "").trim()
+    const ordinal = (place: number) => {
+      const mod100 = place % 100
+      if (mod100 >= 11 && mod100 <= 13) return `${place}th`
+      if (place % 10 === 1) return `${place}st`
+      if (place % 10 === 2) return `${place}nd`
+      if (place % 10 === 3) return `${place}rd`
+      return `${place}th`
+    }
+
+    const stateRows = achievementResults.nchsaa
+      .map((row) => ({ row, place: numericPlace(row.place) }))
+      .filter((item): item is { row: CardAchievementRow; place: number } => item.place != null && item.place >= 1)
+    const nationalRows = [
+      ...achievementResults.nhsca.map((row) => ({ tournament: "NHSCA Nationals", row })),
+      ...achievementResults.super32.map((row) => ({ tournament: "Super 32", row })),
+    ]
+      .map((item) => ({ ...item, place: numericPlace(item.row.placement) }))
+      .filter((item): item is { tournament: string; row: CardAchievementRow; place: number } =>
+        item.place != null && item.place >= 1 && item.place <= 8,
+      )
+
+    const lines = [
+      ...nationalRows.map(({ tournament, row, place }) => ({
+        year: yearOf(row),
+        priority: 0,
+        label: `${yearOf(row) || ""} ${tournament} · ${ordinal(place)}${weightOf(row) ? ` · ${weightOf(row)} lbs` : ""}`.trim(),
+      })),
+      ...stateRows.map(({ row, place }) => ({
+        year: yearOf(row),
+        priority: place === 1 ? 1 : 2,
+        label: `${yearOf(row) || ""} NCHSAA${row.classification ? ` ${String(row.classification)}` : ""} · ${place === 1 ? "Champion" : ordinal(place)}${weightOf(row) ? ` · ${weightOf(row)} lbs` : ""}`.trim(),
+      })),
+    ]
+      .sort((a, b) => b.year - a.year || a.priority - b.priority)
+      .filter((item, index, all) => all.findIndex((candidate) => candidate.label === item.label) === index)
+      .slice(0, 3)
+
+    return {
+      lines,
+      stateTitles: stateRows.filter((item) => item.place === 1).length,
+      statePlacements: stateRows.length,
+      nationalPlacements: Math.max(nationalRows.length, honorBadgesMerged.includes("All-American") ? 1 : 0),
+    }
+  }, [achievementResults, honorBadgesMerged])
+
   /** Bias above center so foreheads/headgear stay in frame; ~18% is a good default for full-body and mat shots. */
   const getImagePositionClass = () => {
     const athleteName = athlete.name?.toLowerCase() || ""
@@ -614,7 +695,7 @@ export function ProfessionalCommitmentCard({ athlete, listMode = false }: Profes
         </Card>
 
         <Card
-          className={`absolute h-full w-full overflow-auto rounded-xl border-0 shadow-lg backface-hidden card-back ${
+          className={`absolute h-full w-full overflow-hidden rounded-xl border-0 shadow-lg backface-hidden card-back ${
             isFlipped ? "z-20" : "z-10"
           }`}
           style={{
@@ -623,10 +704,9 @@ export function ProfessionalCommitmentCard({ athlete, listMode = false }: Profes
             backgroundColor: "#0D1A4D",
           }}
         >
-          <div className="p-4">
+          <div className="flex h-full flex-col p-4">
             <div
-              className="flex items-center justify-between mb-3 sticky top-0 py-2 -mt-2 -mx-4 px-4 z-10 backdrop-blur-sm"
-              style={{ backgroundColor: "rgba(13, 26, 77, 0.95)" }}
+              className="flex items-start justify-between border-b border-white/15 pb-3"
             >
               <div className="flex items-center gap-2">
                 <Image
@@ -638,7 +718,7 @@ export function ProfessionalCommitmentCard({ athlete, listMode = false }: Profes
                 />
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-bold text-white">{athlete.name}</h3>
+                    <h3 className="text-lg font-black leading-tight text-white">{athlete.name}</h3>
                     {instagramHandle && (
                       <a
                         href={`https://instagram.com/${instagramHandle}`}
@@ -651,10 +731,16 @@ export function ProfessionalCommitmentCard({ athlete, listMode = false }: Profes
                       </a>
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="mt-1 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.12em]">
                     <p className="text-xs" style={{ color: "#D3B574" }}>
                       Class of {athlete.graduationyear || "2025"}
                     </p>
+                    {backCardNcRank != null && (
+                      <>
+                        <span className="text-white/30">•</span>
+                        <span style={{ color: "#D3B574" }}>RecruitNC #{backCardNcRank}</span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -671,22 +757,8 @@ export function ProfessionalCommitmentCard({ athlete, listMode = false }: Profes
               </button>
             </div>
 
-            {backCardNcRank != null && (
-              <div className="text-center mb-3 px-1">
-                <p
-                  className="text-[10px] font-semibold uppercase tracking-[0.14em]"
-                  style={{ color: "#D3B574" }}
-                >
-                  RecruitNC Ranking
-                </p>
-                <p className="text-xl font-black tabular-nums leading-tight mt-1" style={{ color: "#D3B574" }}>
-                  #{backCardNcRank}
-                </p>
-              </div>
-            )}
-
             {legacyAwardBadges.length > 0 && (
-              <div className="flex flex-wrap justify-center gap-1.5 mb-2.5 px-0.5">
+              <div className="mt-2 flex flex-wrap justify-center gap-1 px-0.5">
                 {legacyAwardBadges.map((b) => (
                   <span
                     key={b.key}
@@ -704,8 +776,8 @@ export function ProfessionalCommitmentCard({ athlete, listMode = false }: Profes
             )}
 
             {honorBadgesMerged.length > 0 && (
-              <div className="flex flex-wrap justify-center gap-1 mb-3 px-0.5">
-                {honorBadgesMerged.map((label) => (
+              <div className="mt-2 flex flex-wrap justify-center gap-1 px-0.5">
+                {honorBadgesMerged.slice(0, 3).map((label) => (
                   <span
                     key={label}
                     className="inline-flex items-center rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide leading-none"
@@ -721,8 +793,8 @@ export function ProfessionalCommitmentCard({ athlete, listMode = false }: Profes
               </div>
             )}
 
-            <div className="bg-white rounded-lg p-3 mb-3 shadow-sm border relative overflow-hidden">
-              <h4 className="font-bold text-gray-900 mb-2 text-center text-xs relative z-10">COLLEGE COMMITMENT</h4>
+            <div className="relative mt-3 overflow-hidden rounded-lg border bg-white p-3 shadow-sm">
+              <p className="mb-2 text-[9px] font-black uppercase tracking-[0.16em] text-[#B31B1B]">College destination</p>
               <div className="flex items-center gap-2 relative z-10">
                 <div className="h-12 w-12 rounded-full bg-white p-1.5 flex items-center justify-center border border-gray-200 flex-shrink-0">
                   {collegeLogoUrl && !collegeLogoError ? (
@@ -768,41 +840,58 @@ export function ProfessionalCommitmentCard({ athlete, listMode = false }: Profes
               </div>
             </div>
 
-            {careerStats && careerStats.seasons.length > 0 && (
-              <div className="hs-stats-container rounded-lg p-2.5 mb-3 shadow-sm text-white" style={{ backgroundColor: "#B31B1B" }}>
-                <h4 className="font-bold text-center mb-1.5 text-xs">HS CAREER STATS</h4>
-                <div className="bg-white/10 rounded overflow-hidden w-full">
-                  <table className="stats-table w-full table-fixed text-[10px]">
-                    <thead>
-                      <tr className="border-b border-white/20">
-                        <th className="text-left py-0.5 px-1.5 font-semibold w-2/5">Year</th>
-                        <th className="text-center py-0.5 px-1 font-semibold w-1/5">W</th>
-                        <th className="text-center py-0.5 px-1 font-semibold w-1/5">L</th>
-                        <th className="text-center py-0.5 px-1 font-semibold w-1/5">Win%</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {careerStats.seasons.map((season, index) => (
-                        <tr key={index} className="border-b border-white/10">
-                          <td className="py-0.5 px-1.5 text-[9px]">{season.displayYear}</td>
-                          <td className="text-center py-0.5 px-1">{season.wins}</td>
-                          <td className="text-center py-0.5 px-1">{season.losses}</td>
-                          <td className="text-center py-0.5 px-1">{season.winPercentage.toFixed(1)}%</td>
-                        </tr>
-                      ))}
-                      <tr className="font-bold border-t-2 border-white/30" style={{ backgroundColor: "#0D1A4D" }}>
-                        <td className="py-0.5 px-1.5">Total</td>
-                        <td className="text-center py-0.5 px-1">{careerStats.totalWins}</td>
-                        <td className="text-center py-0.5 px-1">{careerStats.totalLosses}</td>
-                        <td className="text-center py-0.5 px-1">{careerStats.totalWinPercentage.toFixed(1)}%</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+            <div className="mt-3 grid grid-cols-4 overflow-hidden rounded-lg border border-white/15 bg-white/[0.06] text-center text-white">
+              <div className="border-r border-white/10 px-1 py-2">
+                <p className="text-[8px] font-semibold uppercase tracking-wide text-white/50">Record</p>
+                <p className="mt-0.5 text-sm font-black tabular-nums">
+                  {careerStats ? `${careerStats.totalWins}-${careerStats.totalLosses}` : "—"}
+                </p>
               </div>
-            )}
+              <div className="border-r border-white/10 px-1 py-2">
+                <p className="text-[8px] font-semibold uppercase tracking-wide text-white/50">Win %</p>
+                <p className="mt-0.5 text-sm font-black tabular-nums">
+                  {careerStats ? `${careerStats.totalWinPercentage.toFixed(0)}%` : "—"}
+                </p>
+              </div>
+              <div className="border-r border-white/10 px-1 py-2">
+                <p className="text-[8px] font-semibold uppercase tracking-wide text-white/50">State titles</p>
+                <p className="mt-0.5 text-sm font-black tabular-nums">{cardResume.stateTitles}</p>
+              </div>
+              <div className="px-1 py-2">
+                <p className="text-[8px] font-semibold uppercase tracking-wide text-white/50">National AA</p>
+                <p className="mt-0.5 text-sm font-black tabular-nums">{cardResume.nationalPlacements}</p>
+              </div>
+            </div>
 
-            <div className="bg-white rounded-lg p-2 mb-2 shadow-sm border">
+            <div className="mt-3 rounded-lg border border-white/15 bg-white/[0.06] px-3 py-2.5 text-white">
+              <div className="flex items-center justify-between">
+                <h4 className="text-[9px] font-black uppercase tracking-[0.16em]" style={{ color: "#D3B574" }}>
+                  Championship résumé
+                </h4>
+                <span className="text-[8px] font-semibold uppercase tracking-wide text-white/40">Verified results</span>
+              </div>
+              {cardResume.lines.length > 0 ? (
+                <div className="mt-1.5 space-y-1">
+                  {cardResume.lines.map((item) => (
+                    <div key={item.label} className="flex items-center gap-2 text-[10px] leading-tight">
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: "#D3B574" }} />
+                      <span className="font-semibold text-white/90">{item.label}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-2 text-[10px] leading-relaxed text-white/55">
+                  Full verified tournament results are available on the athlete profile.
+                </p>
+              )}
+              <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 border-t border-white/10 pt-2 text-[9px] text-white/55">
+                <span>{athlete.highschool || athlete.highSchool || athlete.high_school || "High school"}</span>
+                {hasValidClub() && <span>• {displayClubName}</span>}
+                {athlete.hs_weight_class && <span>• {athlete.hs_weight_class} lbs</span>}
+              </div>
+            </div>
+
+            <div className="hidden">
               <h4 className="font-bold text-gray-900 mb-1.5 text-center text-[10px]">HS BACKGROUND</h4>
 
               <div
@@ -900,7 +989,7 @@ export function ProfessionalCommitmentCard({ athlete, listMode = false }: Profes
 
             <a
               href={athlete.id ? `/view-profile?id=${encodeURIComponent(athlete.id)}` : `/athletes/${athlete.name?.toLowerCase().replace(/\s+/g, "-")}`}
-              className="block w-full font-bold py-2 flex items-center justify-center gap-2 shadow-md text-sm transition-colors rounded-md hover:opacity-95"
+              className="mt-auto flex w-full items-center justify-center gap-2 rounded-md py-2 text-sm font-bold shadow-md transition-colors hover:opacity-95"
               style={{
                 backgroundColor: "#D3B574",
                 color: "#0D1A4D",
