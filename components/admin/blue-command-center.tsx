@@ -411,18 +411,61 @@ export function BlueCommandCenter() {
   const [panel, setPanel] = useState<DashPanel>(null)
   const { isLoading: authLoading } = useAuth()
 
-  const load = () => {
+  const load = async () => {
     setLoading(true)
-    fetch("/api/admin/blue/reports", { credentials: "include" })
-      .then((r) => {
-        if (r.status === 401 || r.status === 403) {
-          setAuthError(true)
-          return null
+    try {
+      // Load WIQ independently from the reports aggregate. The roster endpoint is the
+      // authoritative WIQ source and already returns complete stats. Keeping it in this
+      // request prevents the headline from saying "all on Stripe" while a 49-member WIQ
+      // panel is visible if the optional WIQ portion of the reports query is ever omitted.
+      const [reportsRes, wiqRes] = await Promise.all([
+        fetch("/api/admin/blue/reports", { credentials: "include", cache: "no-store" }),
+        fetch("/api/admin/blue/wiq-subscriptions?filter=billable", {
+          credentials: "include",
+          cache: "no-store",
+        }),
+      ])
+
+      if (reportsRes.status === 401 || reportsRes.status === 403) {
+        setAuthError(true)
+        return
+      }
+
+      const reports = await reportsRes.json()
+      if (!reportsRes.ok || reports.error) return
+
+      if (wiqRes.ok) {
+        const wiqData = await wiqRes.json()
+        const stats = wiqData?.stats
+        if (stats) {
+          const recruitncBillable =
+            reports.recruitncBillable ?? reports.currentActive ?? 0
+          const stripeMrr = reports.stripeMRR ?? reports.estimatedMRR ?? 0
+          const lastImportAt = (wiqData.subscriptions ?? [])
+            .map((row: BlueWiqSubscriptionRow) => row.last_import_at)
+            .filter(Boolean)
+            .sort()
+            .at(-1) ?? reports.wiqLastImportAt ?? null
+
+          reports.wiqBillable = stats.billable
+          reports.wiqActive = stats.active
+          reports.wiqPaused = stats.paused
+          reports.wiqEstimatedMrr = stats.estimatedMrr
+          reports.wiqStandardMrr = stats.standardMrr
+          reports.wiqMissingFromReport = stats.missingFromReport
+          reports.wiqLastImportAt = lastImportAt
+          reports.recruitncBillable = recruitncBillable
+          reports.combinedBillable = recruitncBillable + stats.billable
+          reports.combinedStandardMrr =
+            Math.round((stripeMrr + stats.standardMrr) * 100) / 100
         }
-        return r.json()
-      })
-      .then((d) => d && !d.error && setData(d))
-      .finally(() => setLoading(false))
+      }
+
+      setAuthError(false)
+      setData(reports)
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
