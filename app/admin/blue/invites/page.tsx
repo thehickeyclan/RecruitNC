@@ -37,8 +37,6 @@ export default function AdminBlueInvitesPage() {
   const [copiedDraftPart, setCopiedDraftPart] = useState<"subject" | "body" | "all" | null>(null)
   const { toast } = useToast()
 
-  const mainRegisterUrl = typeof window !== "undefined" ? `${window.location.origin}/blue/register` : ""
-
   function buildDraftEmail(registerUrl: string, inviteeName: string, personalNote: string): { subject: string; body: string } {
     const name = inviteeName.trim() || "there"
     const greeting = `Hi ${name},`
@@ -113,7 +111,10 @@ ${registerUrl}
       } else {
         toast({ title: "Invite created", description: "Copy the email draft below or use the link." })
       }
-      const linkToShare = mainRegisterUrl || data.registerUrl || ""
+      // The API creates a one-time tokenized URL for this recipient. Never fall back to the
+      // generic registration page here: doing so bypasses invite tracking and made a newly
+      // created invite appear to be the same link for everyone.
+      const linkToShare = data.registerUrl || ""
       if (linkToShare) {
         setEmailDraft(buildDraftEmail(linkToShare, newInviteeName, newPersonalNote))
         setCopiedUrl(linkToShare)
@@ -192,7 +193,7 @@ ${registerUrl}
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-[#13294B]">Blue program invites</h1>
-            <p className="text-sm text-gray-600">One registration link for everyone. Optionally create invites to track or pre-fill email.</p>
+            <p className="text-sm text-gray-600">Create a unique, one-time registration link for each invited family.</p>
           </div>
         </div>
 
@@ -200,38 +201,25 @@ ${registerUrl}
           <BlueAdminAuthBanner returnTo="/admin/blue/invites" />
         )}
 
-        <Card className="mb-6 border-[#13294B]/30">
+        <Card className="mb-6 border-[#13294B]/30 bg-[#13294B]/[0.03]">
           <CardHeader>
-            <CardTitle className="text-lg">Registration link (share this)</CardTitle>
-            <CardDescription>Same link for all parents. Send by text, email, or post — no per-person link needed.</CardDescription>
+            <CardTitle className="text-lg">Invite-led registration</CardTitle>
+            <CardDescription>
+              Families do not need to complete the interest form first. Create an invite below, then send its
+              recipient-specific link by email or copy it into a text message. Each link expires and can only be used once.
+            </CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-wrap items-center gap-3">
-            <code className="flex-1 min-w-0 text-sm bg-gray-100 px-3 py-2 rounded break-all">{mainRegisterUrl || "…"}</code>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={async () => {
-                if (!mainRegisterUrl) return
-                try {
-                  await navigator.clipboard.writeText(mainRegisterUrl)
-                  setCopiedUrl(mainRegisterUrl)
-                  setTimeout(() => setCopiedUrl(null), 2000)
-                  toast({ title: "Link copied" })
-                } catch {
-                  toast({ title: "Copy failed", variant: "destructive" })
-                }
-              }}
-            >
-              {copiedUrl === mainRegisterUrl ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
-              <span className="ml-1">Copy</span>
-            </Button>
+          <CardContent className="text-sm text-gray-700">
+            This is the Blue equivalent of a ToC invitation: create, send, and track a private registration link for the selected family.
           </CardContent>
         </Card>
 
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>Create invite</CardTitle>
-            <CardDescription>Generate a link to send to a parent. They’ll use it to register their athlete for Blue.</CardDescription>
+            <CardDescription>
+              Generate a private registration link for one family. Email is optional if you plan to copy the link and text it yourself.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {createError && (
@@ -289,7 +277,7 @@ ${registerUrl}
               </div>
               <Button type="submit" disabled={creating}>
                 {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                <span className="ml-2">Create invite & get email draft</span>
+                <span className="ml-2">Create unique invite</span>
               </Button>
             </form>
           </CardContent>
