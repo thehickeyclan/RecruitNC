@@ -4,6 +4,7 @@ import Stripe from "stripe"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { resolveBlueSignupPayload } from "@/lib/blue-register-resolve"
+import { findActiveWiqSubscriptionForAthlete, resolveWiqTrialEnd } from "@/lib/blue-wiq-migration"
 
 export const dynamic = "force-dynamic"
 
@@ -113,14 +114,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Payment is not configured yet. Please contact support." }, { status: 503 })
     }
 
+    // WIQ → Stripe migration: if this athlete has a live WrestlingIQ subscription, collect
+    // the card now but anchor Stripe's first charge to their existing WIQ renewal date, and
+    // carry their WIQ discount code into the promo lookup below (owner creates matching
+    // blue_promo_codes rows per the migration runbook). Their card can't be moved for them —
+    // it lives in WIQ's processor — so this checkout IS the migration.
+    const wiqSub = await findActiveWiqSubscriptionForAthlete(admin, athlete.athleteId)
+    const wiqTrialEnd = wiqSub ? resolveWiqTrialEnd(wiqSub.next_due_at, Date.now()) : null
+    const effectivePromoCode = promoCodeRaw?.trim() || wiqSub?.discount_code?.trim() || null
+
     let stripeCouponId: string | null = null
     let promoIdToIncrement: string | null = null
-    if (promoCodeRaw) {
+    if (effectivePromoCode) {
       const now = new Date().toISOString()
       const { data: promos } = await admin
         .from("blue_promo_codes")
         .select("id, stripe_coupon_id, max_redemptions, redemptions_count, valid_until")
-        .ilike("code", promoCodeRaw.trim())
+        .ilike("code", effectivePromoCode)
       const promo = (promos ?? []).find(
         (p) => (!p.valid_until || p.valid_until >= now) && (p.max_redemptions == null || (p.redemptions_count ?? 0) < p.max_redemptions),
       )
@@ -128,18 +138,25 @@ export async function POST(request: NextRequest) {
         if (promo.stripe_coupon_id) {
           stripeCouponId = promo.stripe_coupon_id
           promoIdToIncrement = promo.id
-        } else {
+        } else if (promoCodeRaw) {
+          // Only hard-block on a code the parent actually typed. A discount carried over
+          // from their WIQ subscription that isn't configured yet must not stop the
+          // registration — checkout shows the undiscounted price, and they can back out.
           return NextResponse.json(
             { error: "This scholarship code is not set up for checkout yet. Please contact info@ncwrestlingunited.com." },
             { status: 400 },
           )
+        } else {
+          console.warn("[blue/signup] WIQ discount code has no Stripe coupon; continuing without:", effectivePromoCode)
         }
+      } else if (!promoCodeRaw && effectivePromoCode) {
+        console.warn("[blue/signup] WIQ discount code not found in blue_promo_codes; continuing without:", effectivePromoCode)
       }
     }
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin
     const stripe = new Stripe(stripeSecret)
-    const sessionParams: Parameters<Stripe["checkout"]["sessions"]["create"]>[0] = {
+    const sessionParams: Stripe.Checkout.SessionCreateParams = {
       mode: "subscription",
       line_items: [{ price: bluePriceId, quantity: 1 }],
       customer_email: parent.email.trim(),
@@ -152,6 +169,7 @@ export async function POST(request: NextRequest) {
         signup_id: signup.id,
         payer_user_id: user.id,
         ...(athlete.athleteId ? { athlete_id: athlete.athleteId } : {}),
+        ...(wiqSub?.wiq_billing_partner_id ? { migrated_from_wiq: wiqSub.wiq_billing_partner_id } : {}),
       },
       subscription_data: {
         metadata: {
@@ -161,7 +179,12 @@ export async function POST(request: NextRequest) {
           signup_id: signup.id,
           payer_user_id: user.id,
           ...(athlete.athleteId ? { athlete_id: athlete.athleteId } : {}),
+          // Which WIQ sub to cancel once this one is live — shows in the Stripe dashboard.
+          ...(wiqSub?.wiq_billing_partner_id ? { migrated_from_wiq: wiqSub.wiq_billing_partner_id } : {}),
         },
+        // Migrating WIQ family: card collected now, first charge on their existing WIQ
+        // renewal date. Absent (bill today) when the next-due is <50h out or looks stale.
+        ...(wiqTrialEnd ? { trial_end: wiqTrialEnd } : {}),
       },
     }
     if (stripeCouponId) {
