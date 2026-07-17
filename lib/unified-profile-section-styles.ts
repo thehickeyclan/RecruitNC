@@ -10,6 +10,12 @@ export const PROFILE_CARD_BODY = "profile-card-body p-4 md:p-6 lg:p-8"
 export const PROFILE_SECTION_ORDER = {
   hero: "order-first lg:order-first",
   nav: "order-2 lg:order-none",
+  /**
+   * Own-profile only. Sits directly under the hero on both layouts: it's the reason an
+   * athlete opens their own page, and it's invisible to everyone else, so it costs a
+   * recruiter nothing to have it high.
+   */
+  profileViews: "order-[3] lg:order-[1]",
   nationalResults: "order-3 lg:order-4",
   /** NCHSAA/States sits with tournament block; desktop order after national. */
   nchsaaStates: "order-3 lg:order-4",

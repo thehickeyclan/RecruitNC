@@ -36,6 +36,7 @@ import { WorkingEntityLogo } from "./working-entity-logo"
 import { useToast } from "@/components/ui/use-toast"
 import { getYouTubeVideoId, isDirectHighlightVideoUrl } from "@/lib/highlight-video-url"
 import { PROFILE_DARK_THEME } from "@/lib/profile-dark-theme"
+import { ProfileViewStatsPanel } from "./profile-view-stats-panel"
 
 /** Bio/summary paragraph section — kept in code but hidden while copy stays stale. */
 const SHOW_ATHLETE_BIO_SECTION = false
@@ -1361,6 +1362,12 @@ export function AthleteDetail({
       )}
 
       {/* 2. Athlete Profile (Bio) — hidden for now (stale paragraph); set SHOW_ATHLETE_BIO_SECTION to re-enable */}
+      {/* Own profile only — the API returns 403 to anyone else, and the panel renders
+          nothing until there are views worth reporting. */}
+      {isViewingOwnProfile && athlete.id && (
+        <ProfileViewStatsPanel athleteId={athlete.id} className={PROFILE_SECTION_ORDER.profileViews} />
+      )}
+
       {SHOW_ATHLETE_BIO_SECTION ? (
       <Card
         id="bio"
