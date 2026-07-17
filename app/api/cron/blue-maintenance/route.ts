@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { runResumeDueSubscriptions } from "@/lib/blue-subscription-actions"
 import { completeBlueSignupAfterStripePayment } from "@/lib/blue-signup-webhook-complete"
+import { nudgeAbandonedBlueSignups } from "@/lib/blue-abandoned-signup-nudge"
 import { getStripe, readStripeSecretKey } from "@/lib/stripe"
 
 export const dynamic = "force-dynamic"
@@ -15,7 +16,7 @@ function authorizeCron(request: NextRequest): boolean {
   return request.headers.get("x-cron-secret") === secret
 }
 
-/** Daily: resume paused subs due today + backfill missed Blue checkout sessions (last 7 days). */
+/** Daily: resume paused subs due today + backfill missed Blue checkout sessions (last 7 days) + nudge abandoned checkouts. */
 export async function GET(request: NextRequest) {
   if (!authorizeCron(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -81,10 +82,16 @@ export async function GET(request: NextRequest) {
     console.error("[cron/blue-maintenance] sync:", e)
   }
 
+  // Nudge signups that abandoned Stripe Checkout in the last 4h–7d (send-once per signup).
+  // Runs AFTER the backfill so a checkout that actually completed but missed its webhook
+  // gets marked paid first rather than nudged.
+  const nudge = await nudgeAbandonedBlueSignups(admin)
+
   return NextResponse.json({
     ok: true,
     resume,
     stripeBackfill: { synced, skipped, failed },
+    abandonedNudge: nudge,
     ranAt: new Date().toISOString(),
   })
 }

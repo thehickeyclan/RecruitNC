@@ -146,6 +146,143 @@ export async function sendBlueWelcomeEmail(params: BlueWelcomeEmailParams): Prom
   }
 }
 
+export type BluePaymentFailedEmailParams = {
+  to: string
+  parentName: string
+  athleteName: string
+  /** e.g. "$55.00" — from the Stripe invoice, not a hardcoded rate. */
+  amountDisplay: string | null
+}
+
+/**
+ * Dunning: the parent's card was declined on a Blue renewal. Before this existed, a failed
+ * payment silently flipped the membership to pending_payment and nobody was told.
+ */
+export async function sendBluePaymentFailedEmail(
+  params: BluePaymentFailedEmailParams,
+): Promise<{ success: boolean; error?: string }> {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("RESEND_API_KEY not configured, skipping Blue payment-failed email")
+    return { success: false, error: "Email service not configured" }
+  }
+
+  const manageUrl = `${SITE_URL}/profile#nc-united-blue`
+  const parentName = (params.parentName || "there").trim()
+  const athleteName = (params.athleteName || "your athlete").trim()
+  const amountLine = params.amountDisplay ? ` of <strong>${params.amountDisplay}</strong>` : ""
+
+  try {
+    const { Resend } = await import("resend")
+    const resend = new Resend(process.env.RESEND_API_KEY)
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: linear-gradient(135deg, #03154C 0%, #0A1628 100%); padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 22px;">NC United Blue</h1>
+  </div>
+  <div style="background: #fff; padding: 28px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+    <p>Hi ${parentName},</p>
+    <p>The monthly payment${amountLine} for <strong>${athleteName}</strong>&rsquo;s NC United Blue membership didn&rsquo;t go through — usually an expired or replaced card.</p>
+    <p><strong>${athleteName} is still on the team.</strong> Updating your card takes about a minute:</p>
+    <p style="margin: 24px 0;">
+      <a href="${manageUrl}" style="display: inline-block; background: #03154C; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold;">Update card &amp; retry payment</a>
+    </p>
+    <p style="color: #6b7280; font-size: 14px;">Sign in &rarr; Profile &rarr; NC United Blue &rarr; &ldquo;Update card &amp; invoices&rdquo;, then &ldquo;Retry payment&rdquo;. We&rsquo;ll also retry automatically over the next few days.</p>
+    <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
+    <p style="color: #6b7280; font-size: 14px;">Card already updated? You can ignore this. Questions? <a href="mailto:info@ncwrestlingunited.com" style="color: #03154C;">info@ncwrestlingunited.com</a></p>
+  </div>
+</body>
+</html>`
+
+    const result = await resend.emails.send({
+      from: FROM_BLUE,
+      to: [params.to.trim()],
+      subject: `Action needed: ${athleteName}'s NC United Blue payment didn't go through`,
+      html,
+    })
+
+    if (result.error) {
+      console.error("Resend Blue payment-failed error:", result.error)
+      return { success: false, error: result.error.message }
+    }
+    return { success: true }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to send email"
+    console.error("sendBluePaymentFailedEmail:", err)
+    return { success: false, error: message }
+  }
+}
+
+export type BlueFinishRegistrationEmailParams = {
+  to: string
+  parentName: string
+  athleteName: string
+  /** Direct link back to the prefilled register page when the invite is still valid. */
+  resumeUrl: string | null
+}
+
+/** Abandoned-checkout recovery: the parent filled the Blue form but never completed Stripe. */
+export async function sendBlueFinishRegistrationEmail(
+  params: BlueFinishRegistrationEmailParams,
+): Promise<{ success: boolean; error?: string }> {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("RESEND_API_KEY not configured, skipping Blue finish-registration email")
+    return { success: false, error: "Email service not configured" }
+  }
+
+  const parentName = (params.parentName || "there").trim()
+  const athleteName = (params.athleteName || "your athlete").trim()
+  const cta = params.resumeUrl
+    ? `<p style="margin: 24px 0;">
+      <a href="${params.resumeUrl}" style="display: inline-block; background: #03154C; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold;">Finish registration</a>
+    </p>
+    <p style="color: #6b7280; font-size: 14px;">Your details are saved — this picks up right where you left off.</p>`
+    : `<p style="margin: 24px 0;">Reply to this email and we&rsquo;ll send you a fresh registration link.</p>`
+
+  try {
+    const { Resend } = await import("resend")
+    const resend = new Resend(process.env.RESEND_API_KEY)
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: linear-gradient(135deg, #03154C 0%, #0A1628 100%); padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 22px;">NC United Blue</h1>
+  </div>
+  <div style="background: #fff; padding: 28px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+    <p>Hi ${parentName},</p>
+    <p>You started registering <strong>${athleteName}</strong> for NC United Blue but the payment step didn&rsquo;t finish, so the spot isn&rsquo;t locked in yet.</p>
+    ${cta}
+    <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
+    <p style="color: #6b7280; font-size: 14px;">Changed your mind or have questions? Just reply — or reach us at <a href="mailto:info@ncwrestlingunited.com" style="color: #03154C;">info@ncwrestlingunited.com</a>.</p>
+  </div>
+</body>
+</html>`
+
+    const result = await resend.emails.send({
+      from: FROM_BLUE,
+      to: [params.to.trim()],
+      subject: `Finish ${athleteName}'s NC United Blue registration`,
+      html,
+    })
+
+    if (result.error) {
+      console.error("Resend Blue finish-registration error:", result.error)
+      return { success: false, error: result.error.message }
+    }
+    return { success: true }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to send email"
+    console.error("sendBlueFinishRegistrationEmail:", err)
+    return { success: false, error: message }
+  }
+}
+
 interface SendEditRequestNotificationParams {
   to: string
   userName: string
@@ -549,13 +686,15 @@ export async function sendAddedToGroupEmail(
   }
 }
 
-/** Admin blast: subject + HTML body (e.g. from markdownToHtml). Uses shared template; logoVariant = "recruitnc" | "nc-united". */
+/** Admin blast: subject + HTML body (e.g. from markdownToHtml). Uses shared template. */
 export async function sendAdminBlastEmail(
   to: string,
   subject: string,
   htmlBody: string,
-  logoVariant: "recruitnc" | "nc-united" = "nc-united",
+  logoVariant: "recruitnc" | "nc-united" | "wrestling-guild" = "nc-united",
   options?: {
+    from?: string
+    footer?: string
     replyTo?: string
     headers?: Record<string, string>
   }
@@ -568,9 +707,15 @@ export async function sendAdminBlastEmail(
     const resend = new Resend(process.env.RESEND_API_KEY)
     const { buildAdminBlastEmailHtml } = await import("@/lib/admin-blast-email-html")
     const baseUrl = (SITE_URL || "").replace(/\/$/, "")
-    const html = buildAdminBlastEmailHtml(subject, htmlBody, baseUrl, logoVariant)
+    const html = buildAdminBlastEmailHtml(
+      subject,
+      htmlBody,
+      baseUrl,
+      logoVariant,
+      options?.footer ?? "From NC Wrestling United / RecruitNC",
+    )
     const result = await resend.emails.send({
-      from: FROM_BLUE,
+      from: options?.from?.trim() || FROM_BLUE,
       to: [to.trim()],
       subject: subject.trim() || "Update from RecruitNC",
       html,

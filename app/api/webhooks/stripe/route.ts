@@ -8,6 +8,7 @@ import { findAndEnrichAthlete, enrichmentFromOrderCustomer, buildEnrichmentPaylo
 import { orderShippingFields } from "@/lib/order-shipping"
 import { completeBlueSignupAfterStripePayment } from "@/lib/blue-signup-webhook-complete"
 import { mapStripeSubscriptionToMembershipStatus } from "@/lib/blue-stripe-subscription-status"
+import { notifyParentBluePaymentFailed } from "@/lib/blue-dunning"
 import {
   processNcUnitedDropInCheckoutFailed,
   processNcUnitedDropInCheckoutSession,
@@ -219,6 +220,22 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error("[webhooks/stripe] invoice.payment_failed blue_memberships:", error.message)
     }
+
+    // Tell the parent. Send-once per invoice (Stripe retries fire this event repeatedly);
+    // best-effort — dunning must never fail the webhook.
+    try {
+      const dunning = await notifyParentBluePaymentFailed(admin, {
+        subscriptionId,
+        invoiceId: typeof invoice.id === "string" ? invoice.id : null,
+        amountDueCents: typeof invoice.amount_due === "number" ? invoice.amount_due : null,
+      })
+      if (dunning.notified) {
+        console.log("[webhooks/stripe] payment_failed dunning sent:", dunning.emailTo, "sms:", dunning.smsSent)
+      }
+    } catch (dunningErr) {
+      console.error("[webhooks/stripe] payment_failed dunning:", dunningErr)
+    }
+
     return NextResponse.json({ received: true })
   }
 
