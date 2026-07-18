@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
   formatFargoDivisionLabel,
+  formatFargoDivisionLabelWithStyle,
   formatFargoPlacementForDisplay,
   formatFargoRecord,
   parseFargoPlacement,
@@ -27,5 +28,10 @@ describe("fargo results formatting", () => {
     expect(formatFargoDivisionLabel("Junior Boys Freestyle")).toBe("Junior Boys")
     expect(formatFargoDivisionLabel("16U Boys Freestyle")).toBe("16U Boys")
     expect(formatFargoDivisionLabel("Junior Girls Greco-Roman")).toBe("Junior Girls")
+  })
+
+  it("preserves style for profile rows that share year, age division, and weight", () => {
+    expect(formatFargoDivisionLabelWithStyle("16U Boys Freestyle", "FS")).toBe("16U Boys Freestyle")
+    expect(formatFargoDivisionLabelWithStyle("16U Boys Greco-Roman", "GR")).toBe("16U Boys Greco-Roman")
   })
 })

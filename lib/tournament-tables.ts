@@ -12,7 +12,7 @@ import {
 } from "@/lib/athlete-name-match"
 import { recruitNcDebugLogNhsca } from "@/lib/recruitnc-debug"
 import {
-  formatFargoDivisionLabel,
+  formatFargoDivisionLabelWithStyle,
   formatFargoPlacementForDisplay,
   formatFargoRecord,
   parseFargoPlacement,
@@ -767,7 +767,33 @@ function dedupeFargoRows(rows: TournamentResultRow[]): TournamentResultRow[] {
     const key = `${row.year}|${row.division ?? ""}|${row.weight ?? ""}`
     if (!byKey.has(key)) byKey.set(key, row)
   }
-  return Array.from(byKey.values()).sort((a, b) => (b.year as number) - (a.year as number))
+  return Array.from(byKey.values()).sort(sortFargoDisplayRows)
+}
+
+function fargoStyleRank(row: TournamentResultRow): number {
+  const division = (row.division ?? "").toString()
+  if (/\bFreestyle\b/i.test(division)) return 0
+  if (/\bGreco(?:-Roman)?\b/i.test(division)) return 1
+  return 2
+}
+
+function fargoRecordWins(row: TournamentResultRow): number {
+  const match = (row.record ?? "").toString().match(/^(\d+)/)
+  return match ? Number(match[1]) : 0
+}
+
+function sortFargoDisplayRows(a: TournamentResultRow, b: TournamentResultRow): number {
+  const yearDiff = (b.year as number) - (a.year as number)
+  if (yearDiff) return yearDiff
+
+  const aPlaced = Boolean((a.placement ?? "").trim())
+  const bPlaced = Boolean((b.placement ?? "").trim())
+  if (aPlaced !== bPlaced) return aPlaced ? -1 : 1
+
+  const styleDiff = fargoStyleRank(a) - fargoStyleRank(b)
+  if (styleDiff) return styleDiff
+
+  return fargoRecordWins(b) - fargoRecordWins(a)
 }
 
 function mapFargoRows(rows: any[]): TournamentResultRow[] {
@@ -782,7 +808,7 @@ function mapFargoRows(rows: any[]): TournamentResultRow[] {
       placement,
       record: formatFargoRecord(r.wins, r.losses, r.record),
       weight: (r.weight_class ?? r.weight ?? "").toString().trim(),
-      division: formatFargoDivisionLabel((r.division ?? "").toString()),
+      division: formatFargoDivisionLabelWithStyle(r.division, r.style),
     }
   })
 }

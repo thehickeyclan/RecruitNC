@@ -341,7 +341,33 @@ function fargoTableRowsToDisplay(rows: TournamentResultRow[]): TournamentResultF
     const key = `${row.year}|${row.division ?? ""}|${row.weight ?? ""}`
     if (!byKey.has(key)) byKey.set(key, row)
   }
-  return [...byKey.values()].sort((a, b) => b.year - a.year)
+  return [...byKey.values()].sort(sortFargoProfileRows)
+}
+
+function fargoProfileStyleRank(row: TournamentResultForDisplay): number {
+  const division = row.division ?? ""
+  if (/\bFreestyle\b/i.test(division)) return 0
+  if (/\bGreco(?:-Roman)?\b/i.test(division)) return 1
+  return 2
+}
+
+function fargoProfileRecordWins(row: TournamentResultForDisplay): number {
+  const match = (row.record ?? "").match(/^(\d+)/)
+  return match ? Number(match[1]) : 0
+}
+
+function sortFargoProfileRows(a: TournamentResultForDisplay, b: TournamentResultForDisplay): number {
+  const yearDiff = b.year - a.year
+  if (yearDiff) return yearDiff
+
+  const aPlaced = Boolean((a.placement ?? "").trim())
+  const bPlaced = Boolean((b.placement ?? "").trim())
+  if (aPlaced !== bPlaced) return aPlaced ? -1 : 1
+
+  const styleDiff = fargoProfileStyleRank(a) - fargoProfileStyleRank(b)
+  if (styleDiff) return styleDiff
+
+  return fargoProfileRecordWins(b) - fargoProfileRecordWins(a)
 }
 
 /** Fargo Nationals from `fargo_results` table (name variants + high school disambiguation). */
