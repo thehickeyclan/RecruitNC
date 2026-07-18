@@ -4,6 +4,7 @@
  */
 
 import { getSupabaseAdmin } from "@/lib/server-supabase"
+import { fetchCollegeCommits } from "@/lib/college-commit-query"
 import { getAthletesColumnNames } from "@/lib/athletes-schema"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { escapeForIlike } from "@/lib/nchsaa-results"
@@ -1260,53 +1261,22 @@ export async function toolWrestlingCrossStoreSearch(args: {
 export async function toolCollegeCommitsSearch(args: {
   query?: string
   grad_year?: number | null
+  gender?: "Male" | "Female" | null
+  division?: string | null
   limit?: number
 }) {
-  const limit = Math.min(Math.max(Number(args.limit) || 25, 1), MAX_ROWS)
+  const limit = Math.min(Math.max(Number(args.limit) || 40, 1), 200)
   const admin = getSupabaseAdmin()
-  const cols = await getAthleteSearchCols(admin)
-  const rawFrag = args.query ? sanitizeFragment(args.query) : ""
-  const frag = rawFrag ? extractSearchablePhrase(rawFrag) || stripConversationalNoise(rawFrag) : ""
-  const gy =
-    args.grad_year != null && Number.isFinite(args.grad_year)
-      ? Math.floor(Number(args.grad_year))
-      : null
-
-  if (frag.trim().length >= 2) {
-    const pattern = `%${escapeForIlike(frag.trim())}%`
-    const base = () => admin.from("athletes").select("*").not("college", "is", null)
-    const [a, b, c, d] = await Promise.all([
-      gy != null ? base().eq(cols.gy, gy).ilike(cols.fn, pattern).limit(limit) : base().ilike(cols.fn, pattern).limit(limit),
-      gy != null ? base().eq(cols.gy, gy).ilike(cols.ln, pattern).limit(limit) : base().ilike(cols.ln, pattern).limit(limit),
-      gy != null ? base().eq(cols.gy, gy).ilike("college", pattern).limit(limit) : base().ilike("college", pattern).limit(limit),
-      gy != null ? base().eq(cols.gy, gy).ilike(cols.hs, pattern).limit(limit) : base().ilike(cols.hs, pattern).limit(limit),
-    ])
-    const rows: Record<string, unknown>[] = []
-    for (const res of [a, b, c, d]) {
-      if (!res.error && res.data?.length) rows.push(...(res.data as Record<string, unknown>[]))
-    }
-    if (rows.length === 0 && (a.error || b.error || c.error || d.error)) {
-      const msg = a.error?.message || b.error?.message || c.error?.message || d.error?.message
-      return { error: msg || "Query failed", rows: [] as unknown[] }
-    }
-    const byKey = new Map<string, Record<string, unknown>>()
-    for (const row of rows) {
-      const r = row as Record<string, unknown>
-      const k = `${r[cols.fn] ?? r.first_name}|${r[cols.ln] ?? r.last_name}|${r[cols.gy] ?? r.graduation_year}|${r.college}`
-      if (!byKey.has(k)) byKey.set(k, r)
-    }
-    return { rows: [...byKey.values()].slice(0, limit) }
+  const structuredRows = await fetchCollegeCommits(admin, {
+    year: args.grad_year != null ? String(args.grad_year) : "all",
+    gender: args.gender === "Male" ? "male" : args.gender === "Female" ? "female" : "all",
+    division: args.division || "all",
+    search: args.query,
+  })
+  return {
+    rows: structuredRows.slice(0, limit),
+    total_count: structuredRows.length,
   }
-
-  let q = admin.from("athletes").select("*").not("college", "is", null).limit(limit)
-  if (gy != null) {
-    q = q.eq(cols.gy, gy)
-  }
-  const { data, error } = await q
-  if (error) {
-    return { error: error.message, rows: [] as unknown[] }
-  }
-  return { rows: data ?? [] }
 }
 
 export async function toolNchsaaMultiTimeStateChampions(args: { times: number }) {
@@ -1990,7 +1960,13 @@ export async function executeDataTool(name: string, rawArgs: unknown): Promise<s
       case "college_commits_search":
         return JSON.stringify(
           await toolCollegeCommitsSearch(
-            args as { query?: string; grad_year?: number | null; limit?: number },
+            args as {
+              query?: string
+              grad_year?: number | null
+              gender?: "Male" | "Female" | null
+              division?: string | null
+              limit?: number
+            },
           ),
         )
       case "get_athlete_full_dossier":

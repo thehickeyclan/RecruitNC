@@ -61,6 +61,17 @@ describe("planDataDawgQuery", () => {
     }
   })
 
+  it("preserves gender, division, and all-results filters for college commits", () => {
+    const p = planDataDawgQuery("show all mens college commits Division 1 from 2025")
+    expect(p?.intent).toBe("college_commits_search")
+    if (p?.intent === "college_commits_search") {
+      expect(p.grad_year).toBe(2025)
+      expect(p.gender).toBe("Male")
+      expect(p.division).toBe("NCAA Division I")
+      expect(p.limit).toBe(200)
+    }
+  })
+
   it("does not steal athlete or school name lookups", () => {
     expect(planDataDawgQuery("Mac Johnson")).toBeNull()
     expect(planDataDawgQuery("tell me about Cardinal Gibbons")).toBeNull()

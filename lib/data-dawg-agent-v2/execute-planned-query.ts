@@ -175,7 +175,7 @@ function formatCommits(payload: Record<string, unknown>): string {
   if (!rows.length) {
     return "No college commits matched that filter in the athletes directory."
   }
-  const lines = rows.slice(0, 40).map((r) => {
+  const lines = rows.slice(0, 200).map((r) => {
     const fromParts = [r.firstname ?? r.first_name, r.lastname ?? r.last_name]
       .filter(Boolean)
       .join(" ")
@@ -185,9 +185,12 @@ function formatCommits(payload: Record<string, unknown>): string {
     const college = r.college ? ` → **${r.college}**` : ""
     const gy = r.graduationyear ?? r.graduation_year
     const gyBit = gy != null ? ` (Class of ${gy})` : ""
-    return `- **${name}**${schoolBit}${college}${gyBit}`
+    const divisionBit = r.division ? ` [${r.division}]` : ""
+    return `- **${name}**${schoolBit}${college}${divisionBit}${gyBit}`
   })
-  return `**College Commits** (${Math.min(rows.length, 40)} shown)\n\n${lines.join("\n")}`
+  const total = Number(payload.total_count) || rows.length
+  const countLabel = total > rows.length ? `${rows.length} shown of ${total}` : `${rows.length}`
+  return `**College Commits** (${countLabel})\n\n${lines.join("\n")}`
 }
 
 function formatAward(
@@ -264,6 +267,9 @@ export async function executePlannedDataDawgQuery(
         const payload = await toolCollegeCommitsSearch({
           query: plan.query ?? undefined,
           grad_year: plan.grad_year ?? undefined,
+          gender: plan.gender ?? undefined,
+          division: plan.division ?? undefined,
+          limit: plan.limit,
         })
         body = formatCommits(payload as Record<string, unknown>)
         break
