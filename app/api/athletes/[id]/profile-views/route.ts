@@ -2,11 +2,12 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { loadProfileViewStats } from "@/lib/profile-view-stats"
+import { getWalletAthleteIdsForParentUser } from "@/lib/parent-spartan-fundraising-totals"
 
 /**
  * View counts for one athlete's profile.
  *
- * Owner (the account that claimed the profile) or admin only. This is deliberately not
+ * Owner (the account that claimed the profile), linked parent, or admin only. This is deliberately not
  * public: it would expose which recruits are getting college attention, which is competitive
  * information about someone else's kid. Counts only — no viewer identities are returned at
  * any level, so there's nothing here to leak even to the owner.
@@ -37,7 +38,12 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
 
     const isOwner = Boolean(athlete.claimed_by_user_id) && athlete.claimed_by_user_id === user.id
     const isAdmin = profile?.is_admin === true || profile?.role === "admin"
+    let isLinkedParent = false
     if (!isOwner && !isAdmin) {
+      const linkedAthleteIds = await getWalletAthleteIdsForParentUser(admin, user.id)
+      isLinkedParent = linkedAthleteIds.includes(id)
+    }
+    if (!isOwner && !isAdmin && !isLinkedParent) {
       return NextResponse.json({ error: "forbidden" }, { status: 403 })
     }
 
