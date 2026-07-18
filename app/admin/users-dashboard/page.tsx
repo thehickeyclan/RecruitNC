@@ -64,6 +64,13 @@ type UserProfile = {
   created_at: string
   is_admin: boolean
   last_sign_in_at: string | null
+  last_activity_at: string | null
+  last_activity_path: string | null
+  last_activity_type: string | null
+  activity_count_24h: number
+  activity_count_7d: number
+  activity_count_30d: number
+  high_intent_count_30d: number
   verified_coach: boolean | null
   verification_status: string | null
   school_id: string | null
@@ -107,6 +114,17 @@ function uniqueMarketingEmails(rows: { email: string }[]): string[] {
     out.push(raw)
   }
   return out
+}
+
+function effectiveLastActiveAt(user: Pick<UserProfile, "last_activity_at" | "last_sign_in_at">): string | null {
+  if (!user.last_activity_at) return user.last_sign_in_at
+  if (!user.last_sign_in_at) return user.last_activity_at
+
+  const activityTime = new Date(user.last_activity_at).getTime()
+  const signInTime = new Date(user.last_sign_in_at).getTime()
+  if (Number.isNaN(activityTime)) return user.last_sign_in_at
+  if (Number.isNaN(signInTime)) return user.last_activity_at
+  return activityTime >= signInTime ? user.last_activity_at : user.last_sign_in_at
 }
 
 export default function UsersDashboardPage() {
@@ -462,7 +480,10 @@ export default function UsersDashboardPage() {
       if (bVal === null) bVal = ""
 
       // Convert to comparable types
-      if (sortField === "created_at" || sortField === "last_sign_in_at") {
+      if (sortField === "last_activity_at") {
+        aVal = new Date(effectiveLastActiveAt(a) || 0).getTime()
+        bVal = new Date(effectiveLastActiveAt(b) || 0).getTime()
+      } else if (sortField === "created_at" || sortField === "last_sign_in_at") {
         aVal = new Date(aVal || 0).getTime()
         bVal = new Date(bVal || 0).getTime()
       } else if (typeof aVal === "string") {
@@ -499,10 +520,13 @@ export default function UsersDashboardPage() {
     approvedCoaches: profiles.filter(p => p.role === "college_coach" && p.verified_coach).length,
     athletes: profiles.filter(p => p.role === "athlete").length,
     activeToday: profiles.filter(p => {
-      if (!p.last_sign_in_at) return false
+      const lastActive = effectiveLastActiveAt(p)
+      if (!lastActive) return false
       const today = new Date().toDateString()
-      return new Date(p.last_sign_in_at).toDateString() === today
-    }).length
+      return new Date(lastActive).toDateString() === today
+    }).length,
+    active7d: profiles.filter(p => p.activity_count_7d > 0).length,
+    highIntent30d: profiles.reduce((sum, p) => sum + (p.high_intent_count_30d || 0), 0),
   }), [profiles])
 
   // Cumulative user growth over time
@@ -563,6 +587,7 @@ export default function UsersDashboardPage() {
     // Group signups by day
     const signupsByDay: { [key: string]: number } = {}
     const loginsByDay: { [key: string]: number } = {}
+    const activeByDay: { [key: string]: number } = {}
     
     profiles.forEach(p => {
       const signupDate = new Date(p.created_at)
@@ -578,6 +603,15 @@ export default function UsersDashboardPage() {
           loginsByDay[dateKey] = (loginsByDay[dateKey] || 0) + 1
         }
       }
+
+      const lastActive = effectiveLastActiveAt(p)
+      if (lastActive) {
+        const activeDate = new Date(lastActive)
+        if (activeDate >= thirtyDaysAgo) {
+          const dateKey = activeDate.toISOString().split('T')[0]
+          activeByDay[dateKey] = (activeByDay[dateKey] || 0) + 1
+        }
+      }
     })
     
     // Create array of last 30 days
@@ -588,7 +622,8 @@ export default function UsersDashboardPage() {
       chartData.push({
         date: new Date(dateKey).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         signups: signupsByDay[dateKey] || 0,
-        logins: loginsByDay[dateKey] || 0
+        logins: loginsByDay[dateKey] || 0,
+        active: activeByDay[dateKey] || 0
       })
     }
     
@@ -604,25 +639,35 @@ export default function UsersDashboardPage() {
     return [
       { 
         period: "Last 24 hours", 
-        users: profiles.filter(p => p.last_sign_in_at && new Date(p.last_sign_in_at) >= oneDayAgo).length 
+        users: profiles.filter(p => {
+          const lastActive = effectiveLastActiveAt(p)
+          return lastActive && new Date(lastActive) >= oneDayAgo
+        }).length 
       },
       { 
         period: "Last 7 days", 
-        users: profiles.filter(p => p.last_sign_in_at && new Date(p.last_sign_in_at) >= oneWeekAgo).length 
+        users: profiles.filter(p => {
+          const lastActive = effectiveLastActiveAt(p)
+          return lastActive && new Date(lastActive) >= oneWeekAgo
+        }).length 
       },
       { 
         period: "Last 30 days", 
-        users: profiles.filter(p => p.last_sign_in_at && new Date(p.last_sign_in_at) >= oneMonthAgo).length 
+        users: profiles.filter(p => {
+          const lastActive = effectiveLastActiveAt(p)
+          return lastActive && new Date(lastActive) >= oneMonthAgo
+        }).length 
       },
       { 
         period: "Never", 
-        users: profiles.filter(p => !p.last_sign_in_at).length 
+        users: profiles.filter(p => !effectiveLastActiveAt(p)).length 
       }
     ]
   }, [profiles])
 
   const UserRow = ({ user }: { user: UserProfile }) => {
     const isCoach = user.role === "college_coach"
+    const lastActiveAt = effectiveLastActiveAt(user)
     
     return (
       <tr key={user.user_id} className="hover:bg-gray-50">
@@ -676,7 +721,12 @@ export default function UsersDashboardPage() {
           </>
         )}
         <td className="px-4 py-3 text-sm text-gray-500">
-          {getRelativeTime(user.last_sign_in_at)}
+          <div>{getRelativeTime(lastActiveAt)}</div>
+          {user.last_activity_path && (
+            <div className="max-w-[220px] truncate text-xs text-gray-400">
+              {user.last_activity_path} · {user.activity_count_7d || 0} in 7d
+            </div>
+          )}
         </td>
         <td className="px-4 py-3 text-sm text-gray-500">
           {new Date(user.created_at).toLocaleDateString()}
@@ -815,6 +865,9 @@ export default function UsersDashboardPage() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Active Today</p>
                 <p className="text-2xl font-bold text-purple-600">{stats.activeToday}</p>
+                <p className="text-xs text-gray-500">
+                  {stats.active7d} active in 7d · {stats.highIntent30d} high-intent actions
+                </p>
               </div>
               <Clock className="h-8 w-8 text-purple-600" />
             </div>
@@ -828,7 +881,7 @@ export default function UsersDashboardPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-blue-600" />
-              Signups & Logins (Last 30 Days)
+              Signups, Logins & Activity (Last 30 Days)
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -858,6 +911,13 @@ export default function UsersDashboardPage() {
                   stroke="#10B981" 
                   strokeWidth={2}
                   name="Logins"
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="active" 
+                  stroke="#8B5CF6" 
+                  strokeWidth={2}
+                  name="Last active"
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -1008,9 +1068,9 @@ export default function UsersDashboardPage() {
                         </th>
                         <th 
                           className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
-                          onClick={() => handleSort("last_sign_in_at")}
+                          onClick={() => handleSort("last_activity_at")}
                         >
-                          Last Active <SortIcon field="last_sign_in_at" />
+                          Last Seen <SortIcon field="last_activity_at" />
                         </th>
                         <th 
                           className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
@@ -1077,9 +1137,9 @@ export default function UsersDashboardPage() {
                         </th>
                         <th 
                           className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
-                          onClick={() => handleSort("last_sign_in_at")}
+                          onClick={() => handleSort("last_activity_at")}
                         >
-                          Last Active <SortIcon field="last_sign_in_at" />
+                          Last Seen <SortIcon field="last_activity_at" />
                         </th>
                         <th 
                           className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
@@ -1131,9 +1191,9 @@ export default function UsersDashboardPage() {
                       </th>
                       <th 
                         className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
-                        onClick={() => handleSort("last_sign_in_at")}
+                        onClick={() => handleSort("last_activity_at")}
                       >
-                        Last Active <SortIcon field="last_sign_in_at" />
+                        Last Seen <SortIcon field="last_activity_at" />
                       </th>
                       <th 
                         className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
@@ -1162,7 +1222,12 @@ export default function UsersDashboardPage() {
                           {formatPhoneForDisplay(user.cell_phone) || "N/A"}
                         </td>
                         <td className="px-4 py-3 text-sm text-gray-500">
-                          {getRelativeTime(user.last_sign_in_at)}
+                          <div>{getRelativeTime(effectiveLastActiveAt(user))}</div>
+                          {user.last_activity_path && (
+                            <div className="max-w-[220px] truncate text-xs text-gray-400">
+                              {user.last_activity_path} · {user.activity_count_7d || 0} in 7d
+                            </div>
+                          )}
                         </td>
                         <td className="px-4 py-3 text-sm text-gray-500">
                           {new Date(user.created_at).toLocaleDateString()}

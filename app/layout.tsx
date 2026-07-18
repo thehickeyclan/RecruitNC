@@ -10,6 +10,7 @@ import { AppChrome } from "@/components/app-chrome"
 import { LayoutOptionalClients } from "@/components/layout-optional-clients"
 import { BulletproofInternalLinks } from "@/components/bulletproof-internal-links"
 import { Analytics } from "@vercel/analytics/next"
+import { UserActivityTracker } from "@/components/user-activity-tracker"
 
 export const metadata = {
   title: "NC Wrestling Commits | Prospect Rankings",
@@ -108,6 +109,7 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <AuthProvider>
             <BulletproofInternalLinks />
+            <UserActivityTracker />
             <LayoutOptionalClients />
             <AppChrome>{children}</AppChrome>
             <Toaster />
