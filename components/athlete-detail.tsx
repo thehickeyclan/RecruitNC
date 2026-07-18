@@ -158,6 +158,7 @@ export function AthleteDetail({
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null)
   const [athleteData, setAthleteData] = useState(athlete)
   const [editingSection, setEditingSection] = useState<string | null>(null)
+  const [linkedProfileViewAthleteIds, setLinkedProfileViewAthleteIds] = useState<Set<string>>(new Set())
   const { toast } = useToast()
 
   const handleShareProfile = async () => {
@@ -172,7 +173,8 @@ export function AthleteDetail({
 
   // Profile owner can see their own private info (cell, GPA, ACT, SAT)
   const isViewingOwnProfile = Boolean(currentUserId && athlete.claimed_by_user_id === currentUserId)
-  const canViewProfileStats = isViewingOwnProfile || isAdmin
+  const isLinkedParentProfile = Boolean(currentUserId && linkedProfileViewAthleteIds.has(athlete.id))
+  const canViewProfileStats = isViewingOwnProfile || isLinkedParentProfile || isAdmin
   // Owner, or admin, can edit (admins can edit any profile on public or when viewing)
   const canEdit = Boolean(currentUserId) || isAdmin
   // Private info (contact, GPA, ACT, SAT) visible only to self, coaches, and admins
@@ -697,6 +699,32 @@ export function AthleteDetail({
   }
 
   const consolidatedTournaments = getConsolidatedTournamentData() || []
+
+  useEffect(() => {
+    async function fetchLinkedProfileViewAthletes() {
+      if (!currentUserId || isViewingOwnProfile || isAdmin) {
+        setLinkedProfileViewAthleteIds(new Set())
+        return
+      }
+
+      try {
+        const response = await fetch("/api/profile/linked-athletes", { credentials: "include" })
+        if (!response.ok) {
+          setLinkedProfileViewAthleteIds(new Set())
+          return
+        }
+        const data = (await response.json()) as { athletes?: Array<{ id?: string }> }
+        setLinkedProfileViewAthleteIds(
+          new Set((data.athletes ?? []).map((row) => String(row.id ?? "").trim()).filter(Boolean)),
+        )
+      } catch (error) {
+        console.error("[v0] Error fetching linked profile-view athletes:", error)
+        setLinkedProfileViewAthleteIds(new Set())
+      }
+    }
+
+    fetchLinkedProfileViewAthletes()
+  }, [athlete.id, currentUserId, isAdmin, isViewingOwnProfile])
 
   useEffect(() => {
     async function fetchNchsaaData() {
