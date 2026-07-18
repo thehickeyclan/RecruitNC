@@ -13,6 +13,10 @@ import { planDataDawgQuery } from "./query-planner"
 import { executePlannedDataDawgQuery } from "./execute-planned-query"
 import { runOpenAiDataDawgToolLoop } from "./openai-tool-loop"
 import { DATA_DAWG_AGENT_V2_SYSTEM } from "./system-prompt"
+import {
+  answerNextBluePractice,
+  isBluePracticeScheduleQuery,
+} from "@/lib/data-dawg-next-blue-practice"
 
 type HistoryItem = {
   role?: string
@@ -51,6 +55,29 @@ export async function runDataDawgAgentV2(params: {
 }> {
   const priorMessages = historyToPriorMessages(params.conversationHistory)
   const messageId = params.messageId || `msg-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
+
+  // Calendar facts should never rely on the model choosing the right data tool.
+  if (isBluePracticeScheduleQuery(params.message)) {
+    try {
+      return {
+        answer: await answerNextBluePractice(),
+        messageId,
+        queryType: "nc_united_blue_practice_calendar",
+        source: "data_dawg_agent_v2_calendar",
+        toolRounds: 0,
+      }
+    } catch (e) {
+      console.warn("[RecruitNC] Blue practice calendar lookup failed:", e instanceof Error ? e.message : e)
+      return {
+        answer:
+          "I couldn’t load the Blue practice calendar right now. Please check the [NC United calendar](/calendar) for the latest time and location.",
+        messageId,
+        queryType: "nc_united_blue_practice_calendar_error",
+        source: "data_dawg_agent_v2_calendar_error",
+        toolRounds: 0,
+      }
+    }
+  }
 
   // Follow-up to a prior scope clarify (1 = statewide, 2 = school from chat)
   const scopeFollowUp = parseNhscaBestYearScopeFollowUp(params.message, priorMessages)
