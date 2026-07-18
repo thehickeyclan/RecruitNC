@@ -1,0 +1,20 @@
+-- Narrow access to /admin/toc/invitations without granting full admin rights.
+-- Safe to rerun.
+
+create table if not exists public.toc_invitation_managers (
+  email text primary key check (email = lower(btrim(email))),
+  created_at timestamptz not null default now(),
+  created_by_user_id uuid null
+);
+
+alter table public.toc_invitation_managers enable row level security;
+
+-- Access is API-only through a server-side service-role client.
+revoke all on public.toc_invitation_managers from anon, authenticated;
+grant all on public.toc_invitation_managers to service_role;
+
+insert into public.toc_invitation_managers (email)
+values ('justin.usmc@yahoo.com')
+on conflict (email) do nothing;
+
+notify pgrst, 'reload schema';

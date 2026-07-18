@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
-import { requireAdmin } from "@/lib/admin-auth"
+import { requireTocInvitationManager } from "@/lib/toc/require-toc-invitation-manager"
 import { sendSms } from "@/lib/sms"
 import { createAdminClientFresh } from "@/lib/supabase/admin"
 import {
@@ -25,7 +25,7 @@ function reminderColumnsMissing(error: { code?: string; message?: string } | nul
 
 /** Load editable reminder draft, phone options, and last-sent metadata. */
 export async function GET(_request: Request, { params }: Params) {
-  const auth = await requireAdmin()
+  const auth = await requireTocInvitationManager()
   if (!auth.ok) {
     return NextResponse.json({ error: auth.error }, { status: auth.status })
   }
@@ -98,7 +98,7 @@ export async function GET(_request: Request, { params }: Params) {
 
 /** Send SMS reminder from RecruitNC and record last_reminder_at / last_reminder_body. */
 export async function POST(request: Request, { params }: Params) {
-  const auth = await requireAdmin()
+  const auth = await requireTocInvitationManager()
   if (!auth.ok) {
     return NextResponse.json({ error: auth.error }, { status: auth.status })
   }
