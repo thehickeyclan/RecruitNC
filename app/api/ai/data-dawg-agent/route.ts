@@ -3,6 +3,7 @@ import { runDataDawgAgentV2 } from "@/lib/data-dawg-agent-v2/run-data-dawg-agent
 import { writeAiQueryLog } from "@/lib/ai-query-log-write"
 import { computeAiQuerySuccess } from "@/lib/ai-query-logs"
 import { toDataDawgUserFacingError } from "@/lib/openai-user-facing-error"
+import { createClient } from "@/lib/supabase/server"
 
 export const maxDuration = 120
 
@@ -11,6 +12,7 @@ export async function POST(req: NextRequest) {
   let message = ""
   let project = "recruit-nc"
   let messageId: string | undefined
+  let userId: string | null = null
 
   try {
     const body = await req.json().catch(() => ({}))
@@ -22,6 +24,10 @@ export async function POST(req: NextRequest) {
         ? body.project.trim()
         : "recruit-nc"
     const feedback = typeof body.feedback === "string" ? body.feedback.trim() : ""
+
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    userId = user?.id ?? null
 
     // Thumbs feedback only (same pattern as /api/ai/chat)
     if (!message && feedback && messageId) {
@@ -55,6 +61,7 @@ export async function POST(req: NextRequest) {
         response_time_ms: Date.now() - started,
         success: false,
         error_message: "OPENAI_API_KEY missing",
+        user_id: userId,
       })
       return NextResponse.json({
         answer,
@@ -84,6 +91,7 @@ export async function POST(req: NextRequest) {
       message_id: result.messageId,
       response_time_ms: responseTimeMs,
       success,
+      user_id: userId,
     })
 
     return NextResponse.json({
@@ -111,6 +119,7 @@ export async function POST(req: NextRequest) {
         response_time_ms: Date.now() - started,
         success: false,
         error_message: msg,
+        user_id: userId,
       })
     }
 

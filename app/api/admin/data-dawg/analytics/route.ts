@@ -16,7 +16,7 @@ type TimeRange = "24h" | "7d" | "30d" | "all"
 const LOG_TABLES = ["data_dawg_query_logs", "ai_query_logs"] as const
 
 const LOG_SELECT =
-  "id, query, project, url, response, query_type, response_time_ms, feedback, message_id, error_message, handler_name, success, timestamp"
+  "id, query, project, url, response, query_type, response_time_ms, feedback, message_id, error_message, handler_name, success, timestamp, user_id"
 
 const SETUP_HINT =
   "Run scripts/data-dawg-query-logs-setup.sql in Supabase, then: NOTIFY pgrst, 'reload schema'."
@@ -225,6 +225,25 @@ export async function GET(request: NextRequest) {
   }
 
   const logs = (logsRaw ?? []) as AiQueryLogRow[]
+  const userIds = [...new Set(logs.map((row) => row.user_id).filter((id): id is string => Boolean(id)))]
+  const userMap = new Map<string, { full_name: string | null; email: string | null }>()
+  for (let i = 0; i < userIds.length; i += 200) {
+    const { data: profiles, error: profilesError } = await admin
+      .from("user_profiles")
+      .select("user_id, full_name, email")
+      .in("user_id", userIds.slice(i, i + 200))
+    if (profilesError) {
+      console.warn("[RecruitNC] data-dawg analytics user lookup", profilesError.message)
+      break
+    }
+    for (const profile of profiles ?? []) {
+      userMap.set(profile.user_id, { full_name: profile.full_name, email: profile.email })
+    }
+  }
+  const attributedLogs = logs.map((row) => ({
+    ...row,
+    queried_by: row.user_id ? (userMap.get(row.user_id) ?? null) : null,
+  }))
   const filtered = filteredTotal ?? logs.length
   const successRate = total > 0 ? (successful / total) * 100 : 0
 
@@ -251,7 +270,7 @@ export async function GET(request: NextRequest) {
     byProject: topCounts(byProject, 10),
     topQueries: topCounts(queryCounts, 12),
     learningOpportunities: topCounts(learningCounts, 20),
-    logs,
+    logs: attributedLogs,
     total: filtered,
     allTimeTotal,
     newestTimestamp,

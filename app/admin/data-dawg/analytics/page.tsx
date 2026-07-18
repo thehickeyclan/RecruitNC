@@ -500,6 +500,13 @@ export default function DataDawgAnalyticsPage() {
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-medium text-zinc-900">{log.query}</p>
+                          <p className="mt-1 text-xs text-zinc-500">
+                            Asked by{" "}
+                            <span className="font-medium text-zinc-700">
+                              {log.queried_by?.full_name || log.queried_by?.email || (log.user_id ? "Unknown user" : "Anonymous")}
+                            </span>
+                            {log.queried_by?.full_name && log.queried_by.email ? ` · ${log.queried_by.email}` : ""}
+                          </p>
                           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                             <span
                               className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${

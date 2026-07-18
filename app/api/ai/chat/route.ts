@@ -1048,6 +1048,7 @@ export async function POST(request: NextRequest) {
   let feedback = null
   let requestUrl = ""
   let messageId = null
+  let queryUserId: string | null = null
   let conversationHistory: Array<{ role: string; content: string; queryResults?: any[]; queryType?: string }> = []
   let detectedSchool: string | null = null // Declare early to prevent TDZ error
   console.log("[AI] ✅ Variables initialized")
@@ -1067,6 +1068,9 @@ export async function POST(request: NextRequest) {
       ;(body as { recruitNcContext?: string }).recruitNcContext = getFourTimeStateChampionsContextForAI()
     }
     const isAuthenticated = body.isAuthenticated === true
+    const authClient = await createClient()
+    const { data: { user: queryUser } } = await authClient.auth.getUser()
+    queryUserId = queryUser?.id ?? null
     requestUrl = request.headers.get("referer") || ""
     let disambiguationFollowUp = false
     
@@ -1796,6 +1800,7 @@ export async function POST(request: NextRequest) {
         success,
         message_id: queryMessageId || null,
         feedback: feedback || null,
+        user_id: queryUserId,
       })
       if (!result.ok) {
         console.warn("[AI] Query logging failed:", result.error)
@@ -27849,4 +27854,3 @@ function getOrdinalSuffix(num: number): string {
   if (j === 3 && k !== 13) return "rd"
   return "th"
 }
-
