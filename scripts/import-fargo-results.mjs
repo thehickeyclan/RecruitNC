@@ -198,6 +198,7 @@ function parseCsvRecords(raw, meta) {
       placement: parsePlacement(row.placement),
       is_all_american:
         String(row.is_all_american ?? "").toLowerCase() === "true" || row.is_all_american === true,
+      high_school: (row.high_school ?? row.school ?? "").trim() || null,
       notes,
       event_name: (row.event_name ?? "US Marine Corps National Championships (Fargo)").trim(),
       _divisionScoped: divisionScoped,
@@ -320,7 +321,7 @@ for (const scope of deleteScopes) {
 
 const insertRows = deduped.map(({ _divisionScoped, ...r }) => ({
   ...r,
-  high_school: resolveHighSchool(r.athlete_name),
+  high_school: r.high_school || resolveHighSchool(r.athlete_name),
 }))
 
 const BATCH = 50

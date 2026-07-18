@@ -321,7 +321,11 @@ export async function promoteFargoRow(
         )}). Clear verification_status first if correction is intended.`,
       )
     }
-    const { error } = await admin.from("fargo_results").update(payload).eq("id", target.id)
+    const updatePayload = {
+      ...payload,
+      high_school: payload.high_school ?? target.high_school ?? null,
+    }
+    const { error } = await admin.from("fargo_results").update(updatePayload).eq("id", target.id)
     if (error) throw new Error(error.message)
     return
   }
