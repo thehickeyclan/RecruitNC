@@ -103,7 +103,7 @@ const ALL_NEWS: NewsItem[] = [
       "Seven NC wrestlers reach the Fargo podium, Eli Horton commits to Roanoke, Data Dawg 2.0 makes wrestling history searchable, and athletes gain private profile-view analytics.",
     href: "/news/united-ascent-2026-07-18",
     date: "2026-07-18",
-    image: "/images/united-ascent/2026-07-18-cover.webp",
+    image: "/images/united-ascent/2026-07-18-wide.png",
     imagePosition: "top",
     imageFit: "contain",
     imageBannerBgClass: "bg-[#e8ddc8]",
@@ -113,6 +113,7 @@ const ALL_NEWS: NewsItem[] = [
     readTime: "9 min read",
     author: "United Ascent Staff",
     shareHeroCropOnly: true,
+    shareStoryImage: "/images/united-ascent/2026-07-18-cover.webp",
     isAnnouncement: true,
   },
   {
