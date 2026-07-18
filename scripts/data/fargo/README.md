@@ -23,9 +23,11 @@ Freestyle and Greco-Roman are **separate careers**. FloWrestling is **never** th
 | `fargo_16U_brief.md` | NC 16U story + caveats (2023–2026) |
 | `fargo_16U_summary.csv` | 16U team stats by year (for archive page) |
 | `fargo_16U_details.csv` | **Official** per-wrestler 16U rows (2025 & 2026) |
+| `fargo_2026_16u_greco.csv` | 2026 16U Boys Greco-Roman rows (user-confirmed records excluding byes) |
 | `fargo_juniors_brief.md` | NC Junior story + caveats (2023–2026) |
 | `fargo_juniors_summary.csv` | Junior team stats by year (for archive page) |
 | `fargo_juniors_details.csv` | **Official** per-wrestler Junior rows (2025 & 2026) |
+| `fargo_2026_junior_greco.csv` | 2026 Junior Boys Greco-Roman rows (user-confirmed records excluding byes) |
 | `fargo_2023_16u.csv` | 2023 16U individuals (bracket export) |
 | `fargo_2024_16u.csv` | 2024 16U individuals (bracket export) |
 | `fargo_2023_junior.csv` | 2023 Junior individuals |
@@ -41,7 +43,9 @@ node scripts/import-fargo-results.mjs \
   scripts/data/fargo/fargo_2023_junior.csv \
   scripts/data/fargo/fargo_2024_junior.csv \
   scripts/data/fargo/fargo_16U_details.csv \
-  scripts/data/fargo/fargo_juniors_details.csv
+  scripts/data/fargo/fargo_2026_16u_greco.csv \
+  scripts/data/fargo/fargo_juniors_details.csv \
+  scripts/data/fargo/fargo_2026_junior_greco.csv
 ```
 
 Dry run: add `--dry-run`.
