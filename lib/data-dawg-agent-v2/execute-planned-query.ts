@@ -8,6 +8,7 @@ import {
   toolNchsaaMultiTimeStateChampions,
   toolNchsaaMultiTimeStatePlacers,
   toolNchsaaDualTeamChampions,
+  toolNhscaMultiTimeAllAmericansByClass,
   toolPublicRankingsSearch,
   toolRecordBooksSearch,
   toolCollegeCommitsSearch,
@@ -102,6 +103,65 @@ function formatDualTeam(payload: Record<string, unknown>, leaderboard: boolean):
     return `- **${r.year}**${div}: ${r.champion_school ?? "—"}`
   })
   return `**NCHSAA Dual Team State Champions**\n\n${lines.join("\n")}`
+}
+
+function ordinal(value: unknown): string {
+  const n = Number(value)
+  if (!Number.isFinite(n)) return String(value ?? "—")
+  const mod100 = n % 100
+  if (mod100 >= 11 && mod100 <= 13) return `${n}th`
+  switch (n % 10) {
+    case 1:
+      return `${n}st`
+    case 2:
+      return `${n}nd`
+    case 3:
+      return `${n}rd`
+    default:
+      return `${n}th`
+  }
+}
+
+function formatNhscaMultiTimeByClass(payload: Record<string, unknown>): string {
+  const rows =
+    (payload.rows as Array<{
+      name?: string
+      highschool?: string | null
+      nhsca_all_american_count?: number
+      results?: Array<{
+        year?: number
+        division?: string
+        weight?: string | number | null
+        placement?: number
+      }>
+    }> | undefined) ?? []
+  const graduationYear = payload.graduation_year
+  const times = Number(payload.times) || 0
+  const exact = payload.exact !== false
+  const total = Number(payload.total) || rows.length
+  const countLabel = exact ? `${times}-time` : `at least ${times}-time`
+
+  if (!rows.length) {
+    return `I found **0** ${countLabel} NHSCA All-Americans in the North Carolina Class of ${graduationYear}.`
+  }
+
+  const lines = rows.map((row) => {
+    const school = row.highschool ? ` — ${row.highschool}` : ""
+    const details = (row.results ?? [])
+      .map((r) => {
+        const wt = r.weight != null && String(r.weight).trim() ? `, ${r.weight}` : ""
+        const div = r.division ? ` ${r.division}` : ""
+        return `${r.year}${div}${wt}: ${ordinal(r.placement)}`
+      })
+      .join("; ")
+    const detailBit = details ? ` (${details})` : ""
+    return `- **${row.name ?? "Unknown"}**${school} — ${row.nhsca_all_american_count ?? times} NHSCA AA${detailBit}`
+  })
+
+  return (
+    `I found **${total}** ${countLabel} NHSCA All-American${total === 1 ? "" : "s"} ` +
+    `in the North Carolina Class of ${graduationYear}.\n\n${lines.join("\n")}`
+  )
 }
 
 function formatRankings(payload: Record<string, unknown>): string {
@@ -240,6 +300,15 @@ export async function executePlannedDataDawgQuery(
           leaderboard: plan.leaderboard,
         })
         body = formatDualTeam(payload as Record<string, unknown>, plan.leaderboard)
+        break
+      }
+      case "nhsca_multi_time_all_americans_by_class": {
+        const payload = await toolNhscaMultiTimeAllAmericansByClass({
+          graduation_year: plan.graduation_year,
+          times: plan.times,
+          exact: plan.exact,
+        })
+        body = formatNhscaMultiTimeByClass(payload as Record<string, unknown>)
         break
       }
       case "public_rankings_search": {

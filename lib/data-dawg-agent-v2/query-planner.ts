@@ -30,6 +30,13 @@ export type PlannedDataDawgQuery =
       source: DataDawgSourceMeta
     }
   | {
+      intent: "nhsca_multi_time_all_americans_by_class"
+      times: 2 | 3 | 4
+      graduation_year: number
+      exact: boolean
+      source: DataDawgSourceMeta
+    }
+  | {
       intent: "nchsaa_dual_team_champions"
       year: number | null
       division: string | null
@@ -95,6 +102,13 @@ function extractTimes(lower: string): 2 | 3 | 4 | null {
   return null
 }
 
+function extractClassYear(lower: string): number | null {
+  const m = lower.match(/\bclass\s+of\s+(20\d{2})\b/)
+  if (!m) return null
+  const y = parseInt(m[1], 10)
+  return y >= 2000 && y <= 2035 ? y : null
+}
+
 function looksLikePersonComparison(lower: string): boolean {
   return (
     /\bcompare\b/.test(lower) ||
@@ -121,6 +135,26 @@ export function planDataDawgQuery(message: string): PlannedDataDawgQuery | null 
 
   // --- Multi-time NCHSAA champions / placers ---
   const times = extractTimes(lower)
+  if (
+    times != null &&
+    /\bnhsca\b/.test(lower) &&
+    (/\ball[-\s]?americans?\b/.test(lower) || /\baa\b/.test(lower))
+  ) {
+    const graduationYear = extractClassYear(lower)
+    if (graduationYear != null) {
+      return {
+        intent: "nhsca_multi_time_all_americans_by_class",
+        times,
+        graduation_year: graduationYear,
+        exact: !/\b(?:at\s+least|or\s+more|\+)\b/.test(lower),
+        source: {
+          datasets: ["athletes", "nhsca_placements", "wrestling_nhsca_results"],
+          verification: "computed_aggregate",
+          confidence: "high",
+        },
+      }
+    }
+  }
   if (times != null) {
     const wantsPlacer =
       /\bplacers?\b/.test(lower) ||
@@ -247,8 +281,8 @@ export function planDataDawgQuery(message: string): PlannedDataDawgQuery | null 
     }
     const gy =
       (() => {
-        const m = lower.match(/\bclass\s+of\s+(20\d{2})\b/)
-        if (m) return parseInt(m[1], 10)
+        const gy = extractClassYear(lower)
+        if (gy != null) return gy
         return extractYear(text)
       })() ?? null
     const gender: "Male" | "Female" =
@@ -318,8 +352,8 @@ export function planDataDawgQuery(message: string): PlannedDataDawgQuery | null 
     /\bcommitment\s+(?:list|class)\b/.test(lower)
   if (commitsish) {
     const gy = (() => {
-      const m = lower.match(/\bclass\s+of\s+(20\d{2})\b/)
-      if (m) return parseInt(m[1], 10)
+      const y = extractClassYear(lower)
+      if (y != null) return y
       return extractYear(text)
     })()
     const gender = /\b(women|woman|girls?|female)\b/.test(lower)

@@ -43,6 +43,24 @@ describe("planDataDawgQuery", () => {
     }
   })
 
+  it("routes multi-time NHSCA All-Americans by class", () => {
+    const p = planDataDawgQuery(
+      "How many 3 time NHSCA all-americans are in the North Carolina class of 2027",
+    )
+    expect(p?.intent).toBe("nhsca_multi_time_all_americans_by_class")
+    if (p?.intent === "nhsca_multi_time_all_americans_by_class") {
+      expect(p.times).toBe(3)
+      expect(p.graduation_year).toBe(2027)
+      expect(p.exact).toBe(true)
+    }
+
+    const atLeast = planDataDawgQuery("class of 2027 NHSCA 3x AA or more")
+    expect(atLeast?.intent).toBe("nhsca_multi_time_all_americans_by_class")
+    if (atLeast?.intent === "nhsca_multi_time_all_americans_by_class") {
+      expect(atLeast.exact).toBe(false)
+    }
+  })
+
   it("routes record books and awards", () => {
     expect(planDataDawgQuery("who is the winningest wrestler of all time?")?.intent).toBe(
       "record_books_search",
