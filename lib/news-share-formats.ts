@@ -107,7 +107,7 @@ export const SHARE_PLATFORM_FORMATS: Record<SharePlatform, ShareFormatChoice[]> 
     {
       format: "ig-story",
       label: "Story",
-      description: "1080×1920 vertical",
+      description: "1080×1920 — recommended",
     },
     {
       format: "ig-square",

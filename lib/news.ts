@@ -24,6 +24,10 @@ export interface NewsItem {
   subtitle?: string
   /** Optional byline, e.g. "Jim Bernthal" */
   author?: string
+  /**
+   * Article hero / list banner image.
+   * For social-first publishing, also plan 1080×1920 Story art (shareStoryImage).
+   */
   image?: string
   imagePosition?: "top" | "center"
   /** Use "contain" to show full image (e.g. product shots); default "cover" fills the card. */
@@ -47,7 +51,14 @@ export interface NewsItem {
    * Also inferred when newsListBanner + imageFit contain.
    */
   shareHeroCropOnly?: boolean
+  /**
+   * Optional dedicated IG Story / portrait share art (1080×1920 or 1080×1350).
+   * Use when the list banner is landscape but Story should be full-screen vertical.
+   */
+  shareStoryImage?: string
 }
+
+import type { NewsShareFormatId } from "@/lib/news-share-formats"
 
 /** Article slugs whose hero art already includes headline typography (any imageFit). */
 const DESIGNED_SHARE_BANNER_SLUGS = new Set([
@@ -59,14 +70,51 @@ const DESIGNED_SHARE_BANNER_SLUGS = new Set([
 ])
 
 /** Designed list banners already include headline art — don't overlay title on share images. */
-export function newsShareUsesHeroCropOnly(item: NewsItem): boolean {
+export function newsShareUsesHeroCropOnly(
+  item: NewsItem,
+  format?: NewsShareFormatId,
+): boolean {
+  if (
+    format &&
+    (format === "ig-story" || format === "ig-portrait") &&
+    item.shareStoryImage
+  ) {
+    return true
+  }
   if (item.shareHeroCropOnly === true) return true
   if (DESIGNED_SHARE_BANNER_SLUGS.has(item.slug)) return true
   return Boolean(item.newsListBanner && item.imageFit === "contain")
 }
 
 /** All news items, newest first. Add new items here; they appear on /news and in home carousel by order. */
+/**
+ * Image checklist for new articles:
+ * 1. shareStoryImage — 1080×1920 vertical (IG Story; most common share)
+ * 2. image — list/article banner (landscape OK for /news cards)
+ * 3. Square/portrait/Facebook assets are auto-generated from the above when missing
+ */
 const ALL_NEWS: NewsItem[] = [
+  {
+    id: "united-ascent-2026-07-18",
+    slug: "united-ascent-2026-07-18",
+    title: "United Ascent: Fargo All-Americans, Eli Horton Commits & RecruitNC Upgrades",
+    subtitle: "The first edition of RecruitNC’s weekly North Carolina wrestling news report.",
+    summary:
+      "Seven NC wrestlers reach the Fargo podium, Eli Horton commits to Roanoke, Data Dawg 2.0 makes wrestling history searchable, and athletes gain private profile-view analytics.",
+    href: "/news/united-ascent-2026-07-18",
+    date: "2026-07-18",
+    image: "/images/united-ascent/2026-07-18-cover.webp",
+    imagePosition: "top",
+    imageFit: "contain",
+    imageBannerBgClass: "bg-[#e8ddc8]",
+    newsListBanner: true,
+    category: "UNITED ASCENT",
+    categoryBadgeClass: "bg-[#1a1a1a]",
+    readTime: "9 min read",
+    author: "United Ascent Staff",
+    shareHeroCropOnly: true,
+    isAnnouncement: true,
+  },
   {
     id: "jumping-levels-what-drives-rapid-improvement",
     slug: "jumping-levels-what-drives-rapid-improvement",
@@ -344,4 +392,9 @@ export function getAnnouncementBySlug(slug: string): NewsItem | undefined {
 /** Slugs that are announcement pages (for generateStaticParams). */
 export function getAnnouncementSlugs(): string[] {
   return ALL_NEWS.filter((item) => item.isAnnouncement).map((item) => item.slug)
+}
+
+/** Permanent weekly archive, newest first. */
+export function getUnitedAscentIssues(): NewsItem[] {
+  return getAllNews().filter((item) => item.category === "UNITED ASCENT")
 }

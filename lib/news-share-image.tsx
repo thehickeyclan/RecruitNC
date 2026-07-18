@@ -2,6 +2,10 @@ import { ImageResponse } from "next/og"
 import type { NewsItem } from "@/lib/news"
 import { newsShareUsesHeroCropOnly } from "@/lib/news"
 import {
+  newsShareImageObjectFit,
+  resolveNewsShareImageSource,
+} from "@/lib/news-image-guidelines"
+import {
   NEWS_SHARE_FORMAT_MAP,
   getAppBaseUrl,
   newsShareImageFilename,
@@ -61,12 +65,15 @@ function heroCropBackground(item: NewsItem): string {
 function HeroCropCard({
   item,
   formatId,
+  imageSrc,
 }: {
   item: NewsItem
   formatId: NewsShareFormatId
+  imageSrc: string
 }) {
   const barH = footerHeight(formatId)
   const logoUrl = absoluteAssetUrl("/images/recruitnc-logo.png")
+  const objectFit = newsShareImageObjectFit(item, formatId)
 
   return (
     <div
@@ -90,12 +97,12 @@ function HeroCropCard({
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={absoluteAssetUrl(item.image!)}
+          src={absoluteAssetUrl(imageSrc)}
           alt=""
           style={{
             width: "100%",
             height: "100%",
-            objectFit: "contain",
+            objectFit,
             objectPosition: item.imagePosition === "top" ? "top" : "center",
             backgroundColor: heroCropBackground(item),
           }}
@@ -133,10 +140,12 @@ function HeroOverlayCard({
   item,
   formatId,
   height,
+  imageSrc,
 }: {
   item: NewsItem
   formatId: NewsShareFormatId
   height: number
+  imageSrc: string
 }) {
   const logoUrl = absoluteAssetUrl("/images/recruitnc-logo.png")
   const overlayMin = formatId === "facebook" ? 0.42 : 0.48
@@ -154,7 +163,7 @@ function HeroOverlayCard({
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={absoluteAssetUrl(item.image!)}
+        src={absoluteAssetUrl(imageSrc)}
         alt=""
         style={{
           position: "absolute",
@@ -381,14 +390,20 @@ export async function createNewsShareImage(
   const fonts = await loadShareFonts()
   const filename = newsShareImageFilename(item.slug, formatId)
 
-  const useHero = Boolean(item.image)
-  const heroCropOnly = newsShareUsesHeroCropOnly(item)
+  const imageSrc = resolveNewsShareImageSource(item, formatId)
+  const useHero = Boolean(imageSrc)
+  const heroCropOnly = newsShareUsesHeroCropOnly(item, formatId)
 
   const element = useHero ? (
     heroCropOnly ? (
-      <HeroCropCard item={item} formatId={formatId} />
+      <HeroCropCard item={item} formatId={formatId} imageSrc={imageSrc!} />
     ) : (
-      <HeroOverlayCard item={item} formatId={formatId} height={format.height} />
+      <HeroOverlayCard
+        item={item}
+        formatId={formatId}
+        height={format.height}
+        imageSrc={imageSrc!}
+      />
     )
   ) : (
     <TemplateCard item={item} formatId={formatId} />

@@ -3,6 +3,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { ArrowLeft, MessageCircle, Calendar, User, Clock } from "lucide-react"
 import { getAnnouncementBySlug, getAnnouncementSlugs } from "@/lib/news"
+import { newsArticleNeedsStoryArt } from "@/lib/news-image-guidelines"
 import { NcUnitedRecruitingAwards2026Content } from "../content/nc-united-recruiting-awards-2026"
 import { FirstFlight2026Content } from "../content/first-flight-2026-nc-united-shoe"
 import { NhscaMostOutstandingWrestlerAward2026Content } from "../content/nhsca-most-outstanding-wrestler-award-2026"
@@ -13,6 +14,7 @@ import { RealCostEliteWrestlingNcSmarterBuildContent } from "../content/real-cos
 import { FindingFlowOnTheMatTheZoneContent } from "../content/finding-flow-on-the-mat-the-zone"
 import { JumpingLevelsWhatDrivesRapidImprovementContent } from "../content/jumping-levels-what-drives-rapid-improvement"
 import { AauScholasticDuals2026FloridaContent } from "../content/aau-scholastic-duals-2026-florida"
+import { UnitedAscent20260718Content } from "../content/united-ascent-2026-07-18"
 import { NchsaaArticleComments } from "@/components/nchsaa-article-comments"
 import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
 import { NewsSharePanel } from "@/components/news/news-share-panel"
@@ -25,6 +27,7 @@ import {
 } from "@/lib/content/aau-scholastic-duals-2026-profile-ids"
 
 const ANNOUNCEMENT_CONTENT: Record<string, () => JSX.Element> = {
+  "united-ascent-2026-07-18": () => <UnitedAscent20260718Content />,
   "jumping-levels-what-drives-rapid-improvement": () => <JumpingLevelsWhatDrivesRapidImprovementContent />,
   "finding-flow-on-the-mat": () => <FindingFlowOnTheMatTheZoneContent />,
   "real-cost-elite-wrestling-nc-smarter-build": () => <RealCostEliteWrestlingNcSmarterBuildContent />,
@@ -221,6 +224,7 @@ export default async function NewsAnnouncementPage({
             <NewsSharePanel
               slug={slug}
               title={item.subtitle ? `${item.title} — ${item.subtitle}` : item.title}
+              needsStoryArt={newsArticleNeedsStoryArt(item)}
             />
           </div>
 

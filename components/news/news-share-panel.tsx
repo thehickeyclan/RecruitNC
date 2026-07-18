@@ -16,12 +16,19 @@ import { shareNewsImageFile, shareResultMessage } from "@/lib/news-share-client"
 type NewsSharePanelProps = {
   slug: string
   title: string
+  /** Landscape banner without dedicated Story art — Story shares letterbox. */
+  needsStoryArt?: boolean
   className?: string
 }
 
 type ShareStep = "closed" | "platform" | "format"
 
-export function NewsSharePanel({ slug, title, className = "" }: NewsSharePanelProps) {
+export function NewsSharePanel({
+  slug,
+  title,
+  needsStoryArt = false,
+  className = "",
+}: NewsSharePanelProps) {
   const [copied, setCopied] = useState(false)
   const [step, setStep] = useState<ShareStep>("closed")
   const [platform, setPlatform] = useState<SharePlatform | null>(null)
@@ -116,9 +123,17 @@ export function NewsSharePanel({ slug, title, className = "" }: NewsSharePanelPr
                 Share this story
               </h2>
               <p className="mt-1 text-sm text-slate-600">
-                Create a branded image sized for Instagram or Facebook.
+                IG Story is the most common format. We&apos;ll generate a branded image sized for
+                your pick.
               </p>
             </div>
+
+            {needsStoryArt ? (
+              <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900">
+                This story uses a landscape banner, so IG Story may show small borders above and below
+                the image.
+              </p>
+            ) : null}
 
             <div className="flex flex-wrap items-center gap-2">
               <Button
