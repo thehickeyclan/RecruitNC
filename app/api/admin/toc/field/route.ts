@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { requireAdmin } from "@/lib/admin-auth"
+import { requireTocInvitationManager } from "@/lib/toc/require-toc-invitation-manager"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getTocEventConfig } from "@/lib/toc/event-config"
 import { buildTocFieldBoard } from "@/lib/toc/field-board"
@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic"
 
 /** Admin field board — all invitations grouped by weight (not public). */
 export async function GET() {
-  const auth = await requireAdmin()
+  const auth = await requireTocInvitationManager()
   if (!auth.ok) {
     return NextResponse.json({ error: auth.error }, { status: auth.status })
   }
