@@ -18,6 +18,9 @@ create table if not exists public.data_dawg_query_logs (
   created_at timestamptz not null default now()
 );
 
+alter table public.data_dawg_query_logs
+  add column if not exists user_id uuid;
+
 create index if not exists idx_data_dawg_query_logs_timestamp
   on public.data_dawg_query_logs (timestamp desc);
 create index if not exists idx_data_dawg_query_logs_project
@@ -28,6 +31,8 @@ create index if not exists idx_data_dawg_query_logs_success
   on public.data_dawg_query_logs (success);
 create index if not exists idx_data_dawg_query_logs_message_id
   on public.data_dawg_query_logs (message_id);
+create index if not exists idx_data_dawg_query_logs_user_id
+  on public.data_dawg_query_logs (user_id);
 
 -- No UNIQUE on message_id — intentional (avoids Prefer: resolution=* 42P10).
 
@@ -54,7 +59,7 @@ declare
 begin
   insert into public.data_dawg_query_logs (
     id, query, project, url, response, query_type, response_time_ms,
-    feedback, message_id, error_message, handler_name, success, timestamp
+    feedback, message_id, error_message, handler_name, success, timestamp, user_id
   ) values (
     new_id,
     coalesce(payload->>'query', ''),
@@ -74,7 +79,8 @@ begin
         then (payload->>'success')::boolean
       else true
     end,
-    now()
+    now(),
+    nullif(payload->>'user_id', '')::uuid
   );
   return new_id;
 end;

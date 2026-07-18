@@ -51,6 +51,7 @@ function buildFields(entry: AiQueryLogInsert) {
     message_id: entry.message_id?.trim() || null,
     error_message: entry.error_message?.trim() || null,
     handler_name: entry.handler_name ?? null,
+    user_id: entry.user_id ?? null,
     success,
   }
 }

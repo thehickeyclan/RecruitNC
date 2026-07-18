@@ -20,6 +20,11 @@ export type AiQueryLogRow = {
   success: boolean | null
   timestamp: string
   created_at?: string | null
+  user_id?: string | null
+  queried_by?: {
+    full_name: string | null
+    email: string | null
+  } | null
 }
 
 export type AiQueryLogInsert = {
@@ -35,6 +40,7 @@ export type AiQueryLogInsert = {
   handler_name?: string | null
   success?: boolean | null
   timestamp?: string
+  user_id?: string | null
 }
 
 export function isAiQueryLogsTableMissingError(error: { code?: string; message?: string } | null | undefined): boolean {
