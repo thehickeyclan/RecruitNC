@@ -38,7 +38,7 @@ interface Message {
 type MessageVote = "positive" | "negative"
 
 const DATA_DAWG_IMAGE_URL =
-  "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/mrF_BS_MLNADT9HWhny2B-Data%20Dawg%203.png"
+  "/images/data-dawg.svg"
 
 const DATA_DAWG_INTRO_SEEN_KEY = "data-dawg-intro-seen"
 
