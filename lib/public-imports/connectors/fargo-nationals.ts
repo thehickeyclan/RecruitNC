@@ -58,9 +58,17 @@ export const FARGO_YEAR_SOURCES: Record<number, FargoSourceFile[]> = {
       yearFilter: 2026,
     },
     {
+      path: "scripts/data/fargo/fargo_2026_16u_greco.csv",
+      label: "2026 16U Boys Greco-Roman (user-confirmed records excluding byes)",
+    },
+    {
       path: "scripts/data/fargo/fargo_juniors_details.csv",
       label: "Junior details CSV (includes 2026)",
       yearFilter: 2026,
+    },
+    {
+      path: "scripts/data/fargo/fargo_2026_junior_greco.csv",
+      label: "2026 Junior Boys Greco-Roman (user-confirmed records excluding byes)",
     },
   ],
 }
