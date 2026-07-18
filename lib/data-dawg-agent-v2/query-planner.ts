@@ -58,6 +58,9 @@ export type PlannedDataDawgQuery =
       intent: "college_commits_search"
       query: string | null
       grad_year: number | null
+      gender: "Male" | "Female" | null
+      division: "NCAA Division I" | "NCAA Division II" | "NCAA Division III" | "NAIA" | "NJCAA" | null
+      limit: number
       source: DataDawgSourceMeta
     }
   | {
@@ -319,10 +322,29 @@ export function planDataDawgQuery(message: string): PlannedDataDawgQuery | null 
       if (m) return parseInt(m[1], 10)
       return extractYear(text)
     })()
+    const gender = /\b(women|woman|girls?|female)\b/.test(lower)
+      ? "Female"
+      : /\b(men|mens|men's|boys?|male)\b/.test(lower)
+        ? "Male"
+        : null
+    const division = /\b(?:d1|di|division\s+(?:1|i))\b/.test(lower)
+      ? "NCAA Division I"
+      : /\b(?:d2|dii|division\s+(?:2|ii))\b/.test(lower)
+        ? "NCAA Division II"
+        : /\b(?:d3|diii|division\s+(?:3|iii))\b/.test(lower)
+          ? "NCAA Division III"
+          : /\bnaia\b/.test(lower)
+            ? "NAIA"
+            : /\b(?:njcaa|juco)\b/.test(lower)
+              ? "NJCAA"
+              : null
     return {
       intent: "college_commits_search",
       query: null,
       grad_year: gy,
+      gender,
+      division,
+      limit: /\ball\b/.test(lower) ? 200 : 40,
       source: {
         datasets: ["athletes (college)"],
         verification: "directory_row",
