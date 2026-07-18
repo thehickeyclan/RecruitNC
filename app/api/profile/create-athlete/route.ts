@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
     // Link athlete to user's profile (admin client avoids RLS blocking)
     await adminSupabase
       .from("user_profiles")
-      .update({ athlete_id: athlete.id, athlete_name: athlete.name })
+      .update({ athlete_id: athlete.id })
       .eq("user_id", user.id)
 
     return NextResponse.json({
