@@ -562,7 +562,9 @@ export function ProfessionalCommitmentCard({ athlete, listMode = false }: Profes
       return Number.isFinite(year) ? year : 0
     }
     const weightOf = (row: CardAchievementRow) =>
-      String(row.weight_class ?? row.weight ?? "").trim()
+      String(row.weight_class ?? row.weight ?? "")
+        .trim()
+        .replace(/\s*lbs?\.?$/i, "")
     const ordinal = (place: number) => {
       const mod100 = place % 100
       if (mod100 >= 11 && mod100 <= 13) return `${place}th`
@@ -840,7 +842,7 @@ export function ProfessionalCommitmentCard({ athlete, listMode = false }: Profes
               </div>
             </div>
 
-            <div className="mt-3 grid grid-cols-4 overflow-hidden rounded-lg border border-white/15 bg-white/[0.06] text-center text-white">
+            <div className="mt-3 grid shrink-0 grid-cols-4 overflow-hidden rounded-lg border border-white/15 bg-white/[0.06] text-center text-white">
               <div className="border-r border-white/10 px-1 py-2">
                 <p className="text-[8px] font-semibold uppercase tracking-wide text-white/50">Record</p>
                 <p className="mt-0.5 text-sm font-black tabular-nums">
