@@ -22,6 +22,7 @@ import {
   submitDataDawgFeedbackClient,
 } from "@/lib/data-dawg-feedback"
 import { getSuggestedPrompts } from "@/lib/data-dawg-suggested-prompts"
+import { useAuth } from "@/contexts/auth-context"
 
 interface Message {
   role: "user" | "assistant"
@@ -53,6 +54,7 @@ const DATA_DAWG_MESSAGE_API = DATA_DAWG_USE_LEGACY
   : DATA_DAWG_AGENT_V2_API
 
 export function AIChatWidget() {
+  const { session } = useAuth()
   const pathname = usePathname()
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
@@ -264,10 +266,13 @@ export function AIChatWidget() {
         project: project,
         conversationHistory: conversationHistory,
       }
+      const requestHeaders: Record<string, string> = { "Content-Type": "application/json" }
+      if (session?.access_token) requestHeaders.Authorization = `Bearer ${session.access_token}`
 
       let response = await fetch(DATA_DAWG_MESSAGE_API, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: requestHeaders,
+        credentials: "include",
         body: JSON.stringify(chatPayload),
       })
 
@@ -292,7 +297,8 @@ export function AIChatWidget() {
       ) {
         response = await fetch(DATA_DAWG_LEGACY_CHAT_API, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: requestHeaders,
+          credentials: "include",
           body: JSON.stringify(chatPayload),
         })
         rawText = await response.text()
@@ -356,7 +362,11 @@ export function AIChatWidget() {
     try {
       const res = await fetch(DATA_DAWG_MESSAGE_API, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+        credentials: "include",
         body: JSON.stringify({ message: "", feedback: vote, messageId: id }),
       })
       if (!res.ok) throw new Error(`vote rejected (${res.status})`)
