@@ -175,14 +175,6 @@ export function UnitedAscent20260718Content() {
         </p>
         <p><strong>Stay tuned. The ascent continues.</strong></p>
       </section>
-
-      <div className="not-prose rounded-xl bg-slate-100 p-6 text-center">
-        <h2 className="text-xl font-bold text-[#13294B]">Get United Ascent every week</h2>
-        <p className="mt-2 text-sm text-slate-600">Create a free RecruitNC account to join the community and receive future issues.</p>
-        <Link href="/auth/signup" className="mt-4 inline-flex rounded-lg bg-[#13294B] px-5 py-2.5 text-sm font-semibold text-white no-underline">
-          Create a free RecruitNC account
-        </Link>
-      </div>
     </div>
   )
 }
