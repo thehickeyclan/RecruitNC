@@ -16,6 +16,7 @@ type CrossStorePayload = {
   super32?: Record<string, unknown>[]
   fargo?: Record<string, unknown>[]
   nc_united_results?: Record<string, unknown>[]
+  college_commits?: Record<string, unknown>[]
   total_hits?: number
 }
 
@@ -50,8 +51,95 @@ function uniqueSchools(rows: Record<string, unknown>[]): string[] {
   return out
 }
 
+function countWord(value: number): string {
+  if (value === 1) return "one-time"
+  if (value === 2) return "two-time"
+  if (value === 3) return "three-time"
+  if (value === 4) return "four-time"
+  return `${value}-time`
+}
+
+function bestHistoricalName(fallback: string, data: CrossStorePayload): string {
+  const rows = [
+    ...(data.nchsaa_state ?? []),
+    ...(data.nhsca_placements ?? []),
+    ...(data.nhsca_legacy_table ?? []),
+    ...(data.super32 ?? []),
+    ...(data.fargo ?? []),
+    ...(data.college_commits ?? []),
+  ]
+  for (const row of rows) {
+    const candidate = String(row.wrestler_name ?? row.athlete_name ?? "").trim()
+    if (candidate) return candidate
+  }
+  return fallback.replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+export function buildCrossStoreAthleteSummary(
+  displayName: string,
+  data: CrossStorePayload,
+  schools = uniqueSchools([
+    ...(data.nchsaa_state ?? []),
+    ...(data.nhsca_placements ?? []),
+    ...(data.nhsca_legacy_table ?? []),
+    ...(data.super32 ?? []),
+    ...(data.fargo ?? []),
+  ]),
+): string {
+  const name = bestHistoricalName(displayName, data)
+  const stateRows = data.nchsaa_state ?? []
+  const titleYears = new Set(
+    stateRows.filter((r) => Number(r.place) === 1 && r.year != null).map((r) => String(r.year)),
+  )
+  const statePlaceYears = new Set(
+    stateRows
+      .filter((r) => Number(r.place) >= 1 && Number(r.place) <= 6 && r.year != null)
+      .map((r) => String(r.year)),
+  )
+  const nhsca = [...(data.nhsca_placements ?? []), ...(data.nhsca_legacy_table ?? [])]
+  const nhscaChampYears = [...new Set(
+    nhsca.filter((r) => Number(r.placement) === 1 && r.year != null).map((r) => Number(r.year)),
+  )].sort((a, b) => a - b)
+  const nhscaAaYears = new Set(
+    nhsca
+      .filter((r) => Number(r.placement) >= 1 && Number(r.placement) <= 8 && r.year != null)
+      .map((r) => String(r.year)),
+  )
+  const super32Aa = (data.super32 ?? []).filter(
+    (r) => Number(r.placement) >= 1 && Number(r.placement) <= 8,
+  ).length
+  const fargoAa = (data.fargo ?? []).filter(
+    (r) => r.is_all_american === true || (Number(r.placement) >= 1 && Number(r.placement) <= 8),
+  ).length
+
+  const achievements: string[] = []
+  if (titleYears.size > 0) achievements.push(`a ${countWord(titleYears.size)} NCHSAA state champion`)
+  else if (statePlaceYears.size > 0) achievements.push(`a ${countWord(statePlaceYears.size)} NCHSAA state placer`)
+  if (nhscaChampYears.length > 0) {
+    achievements.push(`a ${nhscaChampYears.join(" and ")} NHSCA national champion`)
+  } else if (nhscaAaYears.size > 0) {
+    achievements.push(`a ${countWord(nhscaAaYears.size)} NHSCA All-American`)
+  }
+  if (super32Aa > 0) achievements.push(`a ${countWord(super32Aa)} Super 32 All-American`)
+  if (fargoAa > 0) achievements.push(`a ${countWord(fargoAa)} Fargo All-American`)
+
+  const schoolBit = schools.length === 1 ? ` from ${schools[0]}` : ""
+  const first = achievements.length
+    ? `${name} is ${achievements.join(", ").replace(/, ([^,]*)$/, " and $1")}${schoolBit}.`
+    : `${name}'s RecruitNC history includes verified state and national tournament results${schoolBit}.`
+
+  const commit = data.college_commits?.[0]
+  if (!commit?.college) return first
+  const college = String(commit.college).trim()
+  const level = String(commit.level ?? "").trim()
+  const grad = commit.graduation_year != null ? `Class of ${commit.graduation_year}` : "After high school"
+  const levelBit = level && !college.toLowerCase().includes(level.toLowerCase()) ? ` (${level})` : ""
+  return `${first} ${grad}, ${name} continued to ${college}${levelBit}.`
+}
+
 export function formatCrossStoreAthleteMarkdown(displayName: string, data: CrossStorePayload): string {
-  const name = displayName.trim() || String(data.searched_for ?? "this athlete").trim()
+  const requestedName = displayName.trim() || String(data.searched_for ?? "this athlete").trim()
+  const name = bestHistoricalName(requestedName, data)
   const lines: string[] = [`Here's what I found about ${name}:`, ""]
 
   const allRows = [
@@ -63,10 +151,22 @@ export function formatCrossStoreAthleteMarkdown(displayName: string, data: Cross
     ...(data.nc_united_results ?? []),
   ]
   const schools = uniqueSchools(allRows)
+  lines.push(buildCrossStoreAthleteSummary(requestedName, data, schools))
+  lines.push("")
   if (schools.length === 1) {
     lines.push(`- High School: ${schools[0]}`)
   } else if (schools.length > 1) {
     lines.push(`- High schools seen in results: ${schools.slice(0, 4).join(", ")}`)
+  }
+
+  const commit = data.college_commits?.[0]
+  if (commit) {
+    const college = String(commit.college ?? "").trim()
+    const level = String(commit.level ?? "").trim()
+    const gradYear = commit.graduation_year
+    const levelBit = level && !college.toLowerCase().includes(level.toLowerCase()) ? ` (${level})` : ""
+    if (college) lines.push(`- College: ${college}${levelBit}`)
+    if (gradYear != null && String(gradYear).trim()) lines.push(`- Class of: ${gradYear}`)
   }
 
   const timelineMd = buildAthleteTimelineMarkdown(timelineInputFromCrossStore(data))
@@ -84,7 +184,9 @@ export function formatCrossStoreAthleteMarkdown(displayName: string, data: Cross
       const cl = String(r.classification ?? "").trim()
       const wt = String(r.weight_class ?? "").trim()
       const bits = [cl, wt].filter(Boolean).join(", ")
-      lines.push(`- ${yr}: ${placeLabel(r.place)}${bits ? ` (${bits})` : ""}`)
+      const rawPlace = r.place
+      const stateResult = rawPlace == null || Number(rawPlace) === 0 ? "State qualifier" : placeLabel(rawPlace)
+      lines.push(`- ${yr}: ${stateResult}${bits ? ` (${bits})` : ""}`)
     }
   }
 
@@ -176,7 +278,8 @@ export function crossStoreHasUsefulHits(data: CrossStorePayload): boolean {
       (data.nhsca_legacy_table?.length ?? 0) +
       (data.super32?.length ?? 0) +
       (data.fargo?.length ?? 0) +
-      (data.nc_united_results?.length ?? 0) >
+      (data.nc_united_results?.length ?? 0) +
+      (data.college_commits?.length ?? 0) >
     0
   )
 }

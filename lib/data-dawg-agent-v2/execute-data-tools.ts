@@ -1036,6 +1036,16 @@ export async function toolWrestlingCrossStoreSearch(args: {
       .order("year", { ascending: false })
       .limit(perTable)
   })
+  const commitPairPromises = namePairs.map(({ first, last }) => {
+    const pf = `%${escapeForIlike(first)}%`
+    const pl = `%${escapeForIlike(last)}%`
+    return admin
+      .from("wrestling_commits")
+      .select("athlete_name,graduation_year,college,level,weight_class,notes")
+      .ilike("athlete_name", pf)
+      .ilike("athlete_name", pl)
+      .limit(perTable)
+  })
 
   const [
     nchsaaByWrestler,
@@ -1081,10 +1091,16 @@ export async function toolWrestlingCrossStoreSearch(args: {
     ...nhscaPlcPairPromises,
   ])
 
-  const [nhscaLegPairRes, s32PairRes, fargoPairRes] = await Promise.all([
+  const [nhscaLegPairRes, s32PairRes, fargoPairRes, commitsDirect, commitPairRes] = await Promise.all([
     Promise.all(nhscaLegPairPromises),
     Promise.all(s32PairPromises),
     Promise.all(fargoPairPromises),
+    admin
+      .from("wrestling_commits")
+      .select("athlete_name,graduation_year,college,level,weight_class,notes")
+      .ilike("athlete_name", pattern)
+      .limit(perTable),
+    Promise.all(commitPairPromises),
   ])
 
   const errors: string[] = []
@@ -1115,6 +1131,8 @@ export async function toolWrestlingCrossStoreSearch(args: {
     ...nhscaLegPairRes.map((r, i) => [r, `nhsca_leg_pair_${i}`] as const),
     ...s32PairRes.map((r, i) => [r, `super32_pair_${i}`] as const),
     ...fargoPairRes.map((r, i) => [r, `fargo_pair_${i}`] as const),
+    [commitsDirect, "commits_name"],
+    ...commitPairRes.map((r, i) => [r, `commits_pair_${i}`] as const),
   ] as Array<[{ error?: { message?: string } | null }, string]>) {
     noteErr(res, label)
   }
@@ -1144,6 +1162,10 @@ export async function toolWrestlingCrossStoreSearch(args: {
     ...rowsOf(fargoByAthlete),
     ...rowsOf(fargoByHighSchool),
     ...fargoPairRes.flatMap(rowsOf),
+  ]
+  const commitBuckets: Record<string, unknown>[] = [
+    ...rowsOf(commitsDirect),
+    ...commitPairRes.flatMap(rowsOf),
   ]
 
   const dirHsRaw = args.directory_high_school
@@ -1217,12 +1239,20 @@ export async function toolWrestlingCrossStoreSearch(args: {
     const x = r as Record<string, unknown>
     return `${x.athlete_name}|${x.year}|${x.division}|${x.weight_class}|${x.placement}`
   })
+  const collegeCommits = dedupeByKey(commitBuckets, (r) => {
+    const x = r as Record<string, unknown>
+    return `${x.athlete_name}|${x.graduation_year}|${x.college}`
+  })
 
   const nchsaa_state_narrowed = filterCrossStoreByDirectoryContext(nchsaa_state, safeNarrowOpts)
   const nhsca_placements_narrowed = filterCrossStoreByDirectoryContext(nhsca_placements, safeNarrowOpts)
   const nhsca_legacy_narrowed = filterCrossStoreByDirectoryContext(nhsca_legacy_table, safeNarrowOpts)
   const super32_narrowed = filterCrossStoreByDirectoryContext(super32, safeNarrowOpts)
   const fargo_narrowed = filterCrossStoreByDirectoryContext(fargo, safeNarrowOpts)
+  const college_commits = filterCrossStoreByDirectoryContext(
+    collegeCommits.map((r) => ({ ...r, year: r.graduation_year })),
+    safeNarrowOpts,
+  ).map(({ year: _year, ...r }) => r)
 
   const narrowedNote =
     directoryHs || parsedGrad != null
@@ -1235,7 +1265,8 @@ export async function toolWrestlingCrossStoreSearch(args: {
     nhsca_legacy_narrowed.length +
     super32_narrowed.length +
     fargo_narrowed.length +
-    nc_united_results.length
+    nc_united_results.length +
+    college_commits.length
 
   return {
     searched_for: q,
@@ -1244,6 +1275,7 @@ export async function toolWrestlingCrossStoreSearch(args: {
     nhsca_legacy_table: nhsca_legacy_narrowed,
     super32: super32_narrowed,
     fargo: fargo_narrowed,
+    college_commits,
     nc_united_results,
     /** @deprecated use nc_united_results (includes event/year/record for all NC United teams) */
     nc_united_roster: nc_united_results,
