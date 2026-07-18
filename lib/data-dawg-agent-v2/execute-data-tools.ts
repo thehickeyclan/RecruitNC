@@ -805,6 +805,163 @@ export async function toolNhscaPlacementsSearch(args: {
   }
 }
 
+function normalizeNhscaAggregateName(value: unknown): string {
+  return String(value ?? "")
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
+function parseNhscaPlacementNumber(value: unknown): number | null {
+  const m = String(value ?? "").match(/\d+/)
+  if (!m) return null
+  const n = Number(m[0])
+  return Number.isFinite(n) ? n : null
+}
+
+function isNhscaAllAmericanRow(row: Record<string, unknown>): boolean {
+  const p = parseNhscaPlacementNumber(row.placement)
+  return p != null && p >= 1 && p <= 8
+}
+
+export async function toolNhscaMultiTimeAllAmericansByClass(args: {
+  graduation_year: number | string
+  times: number | string
+  exact?: boolean | null
+}) {
+  const graduationYear = Math.floor(Number(args.graduation_year))
+  const times = Math.floor(Number(args.times))
+  const exact = args.exact !== false
+  if (!Number.isFinite(graduationYear) || graduationYear < 2000 || graduationYear > 2035) {
+    return { error: "graduation_year must be a class year.", rows: [] as unknown[] }
+  }
+  if (![2, 3, 4].includes(times)) {
+    return { error: "times must be 2, 3, or 4.", rows: [] as unknown[] }
+  }
+
+  const admin = getSupabaseAdmin()
+  const { data: athletes, error: athleteError } = await admin
+    .from("athletes")
+    .select("id,name,highschool,graduationyear")
+    .eq("graduationyear", graduationYear)
+    .limit(3000)
+  if (athleteError) return { error: athleteError.message, rows: [] as unknown[] }
+
+  const athleteRows = (athletes ?? []) as Array<{
+    id: string
+    name: string
+    highschool?: string | null
+    graduationyear?: number | null
+  }>
+  const byName = new Map<string, typeof athleteRows>()
+  for (const athlete of athleteRows) {
+    const key = normalizeNhscaAggregateName(athlete.name)
+    if (!key) continue
+    const bucket = byName.get(key) ?? []
+    bucket.push(athlete)
+    byName.set(key, bucket)
+  }
+
+  const [placements, legacy] = await Promise.all([
+    admin
+      .from("nhsca_placements")
+      .select("athlete_name,placement,year,division,weight_class,high_school,athlete_id")
+      .limit(10000),
+    admin
+      .from("wrestling_nhsca_results")
+      .select("athlete_name,placement,year,division,weight,high_school")
+      .limit(10000),
+  ])
+  const hardErr = [placements.error, legacy.error].find(Boolean)
+  if (hardErr) return { error: hardErr.message, rows: [] as unknown[] }
+
+  type Bucket = {
+    athlete: (typeof athleteRows)[number]
+    rows: Array<Record<string, unknown> & { source: string }>
+    seen: Set<string>
+  }
+  const byAthlete = new Map<string, Bucket>()
+  const resultKey = (row: Record<string, unknown>) =>
+    [
+      Number(row.year) || "",
+      normalizeNhscaAggregateName(row.division),
+      parseNhscaPlacementNumber(row.placement) ?? "",
+    ].join("|")
+
+  const addRow = (
+    athlete: (typeof athleteRows)[number],
+    row: Record<string, unknown>,
+    source: "nhsca_placements" | "wrestling_nhsca_results",
+  ) => {
+    if (!isNhscaAllAmericanRow(row)) return
+    const bucket = byAthlete.get(athlete.id) ?? { athlete, rows: [], seen: new Set<string>() }
+    const key = resultKey(row)
+    if (bucket.seen.has(key)) {
+      byAthlete.set(athlete.id, bucket)
+      return
+    }
+    bucket.seen.add(key)
+    bucket.rows.push({
+      ...row,
+      placement: parseNhscaPlacementNumber(row.placement),
+      source,
+    })
+    byAthlete.set(athlete.id, bucket)
+  }
+
+  for (const row of (placements.data ?? []) as Record<string, unknown>[]) {
+    let matches: typeof athleteRows = []
+    if (row.athlete_id) {
+      matches = athleteRows.filter((a) => a.id === row.athlete_id)
+    }
+    if (!matches.length) {
+      matches = byName.get(normalizeNhscaAggregateName(row.athlete_name)) ?? []
+    }
+    for (const athlete of matches) addRow(athlete, row, "nhsca_placements")
+  }
+  for (const row of (legacy.data ?? []) as Record<string, unknown>[]) {
+    const matches = byName.get(normalizeNhscaAggregateName(row.athlete_name)) ?? []
+    for (const athlete of matches) addRow(athlete, row, "wrestling_nhsca_results")
+  }
+
+  const rows = [...byAthlete.values()]
+    .map((bucket) => ({
+      name: bucket.athlete.name,
+      highschool: bucket.athlete.highschool ?? null,
+      graduationyear: bucket.athlete.graduationyear ?? graduationYear,
+      nhsca_all_american_count: bucket.rows.length,
+      results: bucket.rows
+        .sort((a, b) => Number(a.year) - Number(b.year))
+        .map((row) => ({
+          year: row.year,
+          division: row.division,
+          weight: row.weight_class ?? row.weight ?? null,
+          placement: row.placement,
+          source: row.source,
+        })),
+    }))
+    .filter((row) =>
+      exact
+        ? row.nhsca_all_american_count === times
+        : row.nhsca_all_american_count >= times,
+    )
+    .sort((a, b) => {
+      const countDiff = b.nhsca_all_american_count - a.nhsca_all_american_count
+      return countDiff || a.name.localeCompare(b.name)
+    })
+
+  return {
+    graduation_year: graduationYear,
+    times,
+    exact,
+    total: rows.length,
+    rows,
+    note:
+      "Merged nhsca_placements + wrestling_nhsca_results and deduped duplicate rows by tournament year/division/placement.",
+  }
+}
+
 export async function toolNchsaaStateResultsSearch(args: { query: string; limit?: number }) {
   const raw = sanitizeFragment(args.query || "")
   const q = extractSearchablePhrase(raw) || stripConversationalNoise(raw)
@@ -1896,6 +2053,7 @@ export type DataToolName =
   | "nchsaa_state_results_search"
   | "nchsaa_multi_time_state_champions"
   | "nchsaa_multi_time_state_placers"
+  | "nhsca_multi_time_all_americans_by_class"
   | "nhsca_all_americans_by_year"
   | "nchsaa_state_tournament_by_year"
   | "fargo_results_by_year"
@@ -1970,6 +2128,16 @@ export async function executeDataTool(name: string, rawArgs: unknown): Promise<s
       case "nchsaa_multi_time_state_placers":
         return JSON.stringify(
           await toolNchsaaMultiTimeStatePlacers(args as { times: number }),
+        )
+      case "nhsca_multi_time_all_americans_by_class":
+        return JSON.stringify(
+          await toolNhscaMultiTimeAllAmericansByClass(
+            args as {
+              graduation_year: number | string
+              times: number | string
+              exact?: boolean | null
+            },
+          ),
         )
       case "nhsca_all_americans_by_year":
         return JSON.stringify(

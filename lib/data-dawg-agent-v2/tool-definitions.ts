@@ -233,6 +233,34 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
   {
     type: "function",
     function: {
+      name: "nhsca_multi_time_all_americans_by_class",
+      description:
+        "Count/list North Carolina athletes in a graduation class who are 2x, 3x, or 4x NHSCA All-Americans. Use for questions like 'How many 3-time NHSCA All-Americans are in the Class of 2027?' Merges `nhsca_placements` and legacy `wrestling_nhsca_results`, deduping the same tournament result across both tables. Default exact=true for '3-time'; set exact=false for 'at least 3' or '3+'.",
+      parameters: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          graduation_year: {
+            type: "integer",
+            description: "RecruitNC class year, e.g. 2027.",
+          },
+          times: {
+            type: "integer",
+            enum: [2, 3, 4],
+            description: "NHSCA All-American count: 2, 3, or 4.",
+          },
+          exact: {
+            type: "boolean",
+            description: "Default true. Use false only for 'at least N', 'N+', or 'N or more'.",
+          },
+        },
+        required: ["graduation_year", "times"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "nhsca_all_americans_by_year",
       description:
         "Full list of NHSCA All-Americans (placements 1–8) for a single tournament year — merges `nhsca_placements` and legacy `wrestling_nhsca_results`. Use for 'show me NHSCA All-Americans in 2022', 'who was an NHSCA All-American in 2017', etc. Not for school-specific history (use get_school_wrestling_dossier).",
