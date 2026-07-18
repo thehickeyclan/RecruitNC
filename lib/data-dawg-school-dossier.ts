@@ -101,7 +101,7 @@ async function fetchNhscaByKnownWrestlerNames(
     const [r1, r2] = await Promise.all([
       admin
         .from("wrestling_nhsca_results")
-        .select("athlete_name,placement,year,division,weight,high_school,record")
+        .select("athlete_name,placement,year,division,weight,high_school")
         .or(orClause)
         .limit(500),
       admin
@@ -371,7 +371,7 @@ export async function buildSchoolWrestlingDossierMarkdown(rawQuery: string): Pro
   const nhscaSchoolQueries = schoolPats.flatMap((pat) => [
     admin
       .from("wrestling_nhsca_results")
-      .select("athlete_name,placement,year,division,weight,high_school,record")
+      .select("athlete_name,placement,year,division,weight,high_school")
       .ilike("high_school", pat)
       .limit(MAX_NATIONAL),
     admin
@@ -384,7 +384,7 @@ export async function buildSchoolWrestlingDossierMarkdown(rawQuery: string): Pro
   const [nhEq, schoolOnlyRes, nhByName] = await Promise.all([
     admin
       .from("wrestling_nhsca_results")
-      .select("athlete_name,placement,year,division,weight,high_school,record")
+      .select("athlete_name,placement,year,division,weight,high_school")
       .eq("high_school", canonical)
       .limit(MAX_NATIONAL),
     Promise.all(nhscaSchoolQueries),
