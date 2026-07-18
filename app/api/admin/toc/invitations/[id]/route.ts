@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { requireAdmin } from "@/lib/admin-auth"
+import { requireTocInvitationManager } from "@/lib/toc/require-toc-invitation-manager"
 import { createAdminClientFresh } from "@/lib/supabase/admin"
 import { tocAdminInvitationPatchSchema } from "@/lib/toc/invitations"
 import { tocInvitationsRlsHelp } from "@/lib/toc/supabase-rls"
@@ -10,7 +10,7 @@ type Params = { params: Promise<{ id: string }> }
 
 /** Update invited weight, seed, notes, not-accepted status, or refresh confirm window. */
 export async function PATCH(request: Request, { params }: Params) {
-  const auth = await requireAdmin()
+  const auth = await requireTocInvitationManager()
   if (!auth.ok) {
     return NextResponse.json({ error: auth.error }, { status: auth.status })
   }
