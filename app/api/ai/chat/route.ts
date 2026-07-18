@@ -11,6 +11,7 @@ import { neon } from "@neondatabase/serverless"
 import { callChat, hasChatKey, getChatProvider } from "@/lib/ai-chat"
 import { normalizeNhscaPlacementFromRow } from "@/lib/recruitnc-wrestling-achievements"
 import { applyRecruitNcDataDawgAnswerPostProcess } from "@/lib/recruitnc-data-dawg-postprocess"
+import { resolveDataDawgRequestUserId } from "@/lib/data-dawg-request-user"
 
 export const maxDuration = 120
 
@@ -1068,9 +1069,7 @@ export async function POST(request: NextRequest) {
       ;(body as { recruitNcContext?: string }).recruitNcContext = getFourTimeStateChampionsContextForAI()
     }
     const isAuthenticated = body.isAuthenticated === true
-    const authClient = await createClient()
-    const { data: { user: queryUser } } = await authClient.auth.getUser()
-    queryUserId = queryUser?.id ?? null
+    queryUserId = await resolveDataDawgRequestUserId(request)
     requestUrl = request.headers.get("referer") || ""
     let disambiguationFollowUp = false
     

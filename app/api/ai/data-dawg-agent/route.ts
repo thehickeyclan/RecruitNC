@@ -3,7 +3,7 @@ import { runDataDawgAgentV2 } from "@/lib/data-dawg-agent-v2/run-data-dawg-agent
 import { writeAiQueryLog } from "@/lib/ai-query-log-write"
 import { computeAiQuerySuccess } from "@/lib/ai-query-logs"
 import { toDataDawgUserFacingError } from "@/lib/openai-user-facing-error"
-import { createClient } from "@/lib/supabase/server"
+import { resolveDataDawgRequestUserId } from "@/lib/data-dawg-request-user"
 
 export const maxDuration = 120
 
@@ -25,9 +25,7 @@ export async function POST(req: NextRequest) {
         : "recruit-nc"
     const feedback = typeof body.feedback === "string" ? body.feedback.trim() : ""
 
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    userId = user?.id ?? null
+    userId = await resolveDataDawgRequestUserId(req)
 
     // Thumbs feedback only (same pattern as /api/ai/chat)
     if (!message && feedback && messageId) {
