@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     // Use admin client so RLS on user_profiles cannot block linking; user identity already verified above
     const { data: updated, error: profileUpdateError } = await adminSupabase
       .from("user_profiles")
-      .update({ athlete_id: athleteId, athlete_name: athlete.name })
+      .update({ athlete_id: athleteId })
       .eq("user_id", user.id)
       .select("user_id")
       .maybeSingle()
