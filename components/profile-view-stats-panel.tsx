@@ -103,11 +103,13 @@ export function ProfileViewStatsPanel({
   if (!stats || stats.totalViews === 0) return null
 
   const { last30 } = stats
+  const hsClubCoachViews = Math.max(0, stats.coachViews - stats.collegeCoachViews)
+  const distinctHsClubCoaches = Math.max(0, stats.distinctCoaches - stats.distinctCollegeCoaches)
   const coachLine =
     stats.distinctCollegeCoaches > 0
       ? `${stats.collegeCoachViews.toLocaleString()} ${stats.collegeCoachViews === 1 ? "view" : "views"} from ${stats.distinctCollegeCoaches} college ${stats.distinctCollegeCoaches === 1 ? "coach" : "coaches"}`
-      : stats.distinctCoaches > 0
-        ? `${stats.coachViews.toLocaleString()} ${stats.coachViews === 1 ? "view" : "views"} from ${stats.distinctCoaches} ${stats.distinctCoaches === 1 ? "coach" : "coaches"}`
+      : distinctHsClubCoaches > 0
+        ? `${hsClubCoachViews.toLocaleString()} ${hsClubCoachViews === 1 ? "view" : "views"} from ${distinctHsClubCoaches} HS/club ${distinctHsClubCoaches === 1 ? "coach" : "coaches"}`
         : "No coach views yet — coaches look most during signing periods."
 
   const sinceLabel = stats.since
@@ -134,7 +136,16 @@ export function ProfileViewStatsPanel({
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <Stat value={stats.totalViews} label="Total views" sub={sinceLabel ? `Since ${sinceLabel}` : undefined} />
           <Stat value={stats.uniqueViewers} label="Unique viewers" sub="Signed-in" />
-          <Stat value={stats.coachViews} label="Coach views" sub={`${stats.distinctCoaches} ${stats.distinctCoaches === 1 ? "coach" : "coaches"}`} tone="gold" />
+          <Stat
+            value={stats.coachViews}
+            label={stats.distinctCollegeCoaches > 0 ? "All coach views" : "HS/club coach views"}
+            sub={
+              stats.distinctCollegeCoaches > 0
+                ? `${stats.distinctCoaches} total ${stats.distinctCoaches === 1 ? "coach" : "coaches"}`
+                : `${distinctHsClubCoaches} HS/club ${distinctHsClubCoaches === 1 ? "coach" : "coaches"}`
+            }
+            tone="gold"
+          />
           <Stat
             value={stats.distinctCollegeCoaches}
             label="College coaches"
