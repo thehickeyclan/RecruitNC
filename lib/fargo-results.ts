@@ -45,3 +45,20 @@ export function formatFargoDivisionLabel(division: string | null | undefined): s
     .replace(/\s+Greco(?:-Roman)?$/i, "")
     .trim()
 }
+
+export function formatFargoDivisionLabelWithStyle(
+  division: string | null | undefined,
+  style?: string | null,
+): string {
+  const rawDivision = (division ?? "").trim()
+  const baseDivision = formatFargoDivisionLabel(rawDivision)
+  const rawStyle = (style ?? "").trim().toUpperCase()
+  const styleLabel =
+    rawStyle === "FS" || /\bFreestyle\b/i.test(rawDivision)
+      ? "Freestyle"
+      : rawStyle === "GR" || /\bGreco(?:-Roman)?\b/i.test(rawDivision)
+        ? "Greco-Roman"
+        : ""
+
+  return [baseDivision, styleLabel].filter(Boolean).join(" ")
+}
