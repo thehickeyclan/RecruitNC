@@ -37,8 +37,8 @@ interface Message {
 
 type MessageVote = "positive" | "negative"
 
-const DATA_DAWG_IMAGE_URL =
-  "/images/data-dawg.svg"
+const DATA_DAWG_FULL_IMAGE_URL = "/images/data-dawg-full.webp"
+const DATA_DAWG_AVATAR_IMAGE_URL = "/images/data-dawg-avatar.webp"
 
 const DATA_DAWG_INTRO_SEEN_KEY = "data-dawg-intro-seen"
 
@@ -453,7 +453,7 @@ export function AIChatWidget() {
                   avatarState === "success" && "avatar-success"
                 )}>
                   <Image
-                    src={DATA_DAWG_IMAGE_URL}
+                    src={DATA_DAWG_FULL_IMAGE_URL}
                     alt="Data Dawg"
                     fill
                     className="object-contain"
@@ -531,7 +531,7 @@ export function AIChatWidget() {
             avatarState === "success" && "avatar-success"
           )}>
             <Image
-              src={DATA_DAWG_IMAGE_URL}
+              src={DATA_DAWG_AVATAR_IMAGE_URL}
               alt="Data Dawg"
               fill
               className="object-contain"
@@ -596,7 +596,7 @@ export function AIChatWidget() {
                     avatarState === "success" && "avatar-success"
                   )}>
                     <Image
-                      src={DATA_DAWG_IMAGE_URL}
+                      src={DATA_DAWG_AVATAR_IMAGE_URL}
                       alt="Data Dawg"
                       width={40}
                       height={40}
@@ -653,7 +653,7 @@ export function AIChatWidget() {
                         avatarState === "greeting" && "avatar-greeting"
                       )}>
                         <Image
-                          src={DATA_DAWG_IMAGE_URL}
+                          src={DATA_DAWG_AVATAR_IMAGE_URL}
                           alt="Data Dawg"
                           width={36}
                           height={36}
@@ -700,7 +700,7 @@ export function AIChatWidget() {
                               isLoading && index === messages.length - 1 && "avatar-thinking"
                             )}>
                               <Image
-                                src={DATA_DAWG_IMAGE_URL}
+                                src={DATA_DAWG_AVATAR_IMAGE_URL}
                                 alt="Data Dawg"
                                 width={32}
                                 height={32}
@@ -799,7 +799,7 @@ export function AIChatWidget() {
                       <div className="flex items-center gap-2 text-sm text-gray-400">
                         <div className="h-6 w-6 flex items-center justify-center avatar-thinking">
                           <Image
-                            src={DATA_DAWG_IMAGE_URL}
+                            src={DATA_DAWG_AVATAR_IMAGE_URL}
                             alt="Data Dawg thinking"
                             width={24}
                             height={24}
