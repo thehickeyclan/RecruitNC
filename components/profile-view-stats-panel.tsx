@@ -6,7 +6,7 @@ import { Eye, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 /**
- * "Who's looking at your profile" — shown only on your own profile.
+ * "Who's looking at your profile" — shown to profile owners and admins.
  *
  * Counts, never identities: naming the coaches would make them browse less, which costs the
  * athlete the signal. The API enforces the same rule server-side; this component only ever
@@ -49,7 +49,15 @@ function Stat({
   )
 }
 
-export function ProfileViewStatsPanel({ athleteId, className }: { athleteId: string; className?: string }) {
+export function ProfileViewStatsPanel({
+  athleteId,
+  className,
+  adminView = false,
+}: {
+  athleteId: string
+  className?: string
+  adminView?: boolean
+}) {
   const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -80,18 +88,18 @@ export function ProfileViewStatsPanel({ athleteId, className }: { athleteId: str
         <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6">
           <div className="flex items-center gap-3">
             <Eye className="h-6 w-6 text-white" />
-            <h2 className="text-2xl font-bold text-white">Who&apos;s Viewing You</h2>
+            <h2 className="text-2xl font-bold text-white">{adminView ? "Profile Views" : "Who's Viewing You"}</h2>
           </div>
         </div>
         <div className="profile-card-body flex items-center gap-2 p-8 text-white/50">
           <Loader2 className="h-4 w-4 animate-spin" />
-          <span className="text-sm">Loading your views…</span>
+          <span className="text-sm">Loading profile views…</span>
         </div>
       </Card>
     )
   }
 
-  // Nothing to show, or not your profile.
+  // Nothing to show, or not authorized.
   if (!stats || stats.totalViews === 0) return null
 
   const { last30 } = stats
@@ -112,9 +120,11 @@ export function ProfileViewStatsPanel({ athleteId, className }: { athleteId: str
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <Eye className="h-6 w-6 text-white" />
-            <h2 className="text-2xl font-bold text-white">Who&apos;s Viewing You</h2>
+            <h2 className="text-2xl font-bold text-white">{adminView ? "Profile Views" : "Who's Viewing You"}</h2>
           </div>
-          <span className="hidden flex-shrink-0 text-xs text-white/50 sm:block">Only you can see this</span>
+          <span className="hidden flex-shrink-0 text-xs text-white/50 sm:block">
+            {adminView ? "Admin view" : "Only you can see this"}
+          </span>
         </div>
       </div>
 
@@ -144,7 +154,9 @@ export function ProfileViewStatsPanel({ athleteId, className }: { athleteId: str
         )}
 
         <p className="text-xs text-white/35">
-          Coaches are shown as counts, not names — so they keep browsing freely.
+          {adminView
+            ? "Athletes see counts, not names — so coaches keep browsing freely."
+            : "Coaches are shown as counts, not names — so they keep browsing freely."}
         </p>
       </div>
     </Card>

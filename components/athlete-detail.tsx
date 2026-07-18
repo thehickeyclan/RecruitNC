@@ -172,6 +172,7 @@ export function AthleteDetail({
 
   // Profile owner can see their own private info (cell, GPA, ACT, SAT)
   const isViewingOwnProfile = Boolean(currentUserId && athlete.claimed_by_user_id === currentUserId)
+  const canViewProfileStats = isViewingOwnProfile || isAdmin
   // Owner, or admin, can edit (admins can edit any profile on public or when viewing)
   const canEdit = Boolean(currentUserId) || isAdmin
   // Private info (contact, GPA, ACT, SAT) visible only to self, coaches, and admins
@@ -1362,10 +1363,14 @@ export function AthleteDetail({
       )}
 
       {/* 2. Athlete Profile (Bio) — hidden for now (stale paragraph); set SHOW_ATHLETE_BIO_SECTION to re-enable */}
-      {/* Own profile only — the API returns 403 to anyone else, and the panel renders
-          nothing until there are views worth reporting. */}
-      {isViewingOwnProfile && athlete.id && (
-        <ProfileViewStatsPanel athleteId={athlete.id} className={PROFILE_SECTION_ORDER.profileViews} />
+      {/* Profile owner or admin — the API enforces the same rule server-side, and the
+          panel renders nothing until there are views worth reporting. */}
+      {canViewProfileStats && athlete.id && (
+        <ProfileViewStatsPanel
+          athleteId={athlete.id}
+          adminView={isAdmin && !isViewingOwnProfile}
+          className={PROFILE_SECTION_ORDER.profileViews}
+        />
       )}
 
       {SHOW_ATHLETE_BIO_SECTION ? (
