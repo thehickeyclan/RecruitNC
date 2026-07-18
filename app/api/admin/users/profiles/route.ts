@@ -5,6 +5,33 @@ import { getCachedAdminCheck } from "@/lib/cached-auth-check"
 
 export const dynamic = "force-dynamic"
 
+type ActivityRollup = {
+  last_activity_at: string | null
+  last_activity_path: string | null
+  last_activity_type: string | null
+  activity_count_24h: number
+  activity_count_7d: number
+  activity_count_30d: number
+  high_intent_count_30d: number
+}
+
+const emptyActivity = (): ActivityRollup => ({
+  last_activity_at: null,
+  last_activity_path: null,
+  last_activity_type: null,
+  activity_count_24h: 0,
+  activity_count_7d: 0,
+  activity_count_30d: 0,
+  high_intent_count_30d: 0,
+})
+
+function isHighIntentActivity(eventType: string | null, pageUrl: string | null): boolean {
+  const event = String(eventType ?? "")
+  const path = String(pageUrl ?? "").toLowerCase()
+  if (["profile_view", "card_click", "data_dawg_query", "ai_query"].includes(event)) return true
+  return /\/(view-profile|admin\/data-dawg|data-dawg|blue|wallet|messaging|toc|fundraising|store)/.test(path)
+}
+
 export async function GET() {
   try {
     // Use cached auth check to reduce Supabase API calls
@@ -121,10 +148,69 @@ export async function GET() {
 
     // Create a map of user profiles for quick lookup
     const profileMap = new Map(userProfiles?.map((p) => [p.user_id, p]) || [])
+    const activityByUser = new Map<string, ActivityRollup>()
+
+    try {
+      const now = new Date()
+      const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+      const pageSize = 1000
+
+      for (let pageStart = 0; pageStart < 10000; pageStart += pageSize) {
+        const { data: activityRows, error: activityError } = await supabaseAdmin
+          .from("user_analytics")
+          .select("user_id, event_type, page_url, created_at")
+          .not("user_id", "is", null)
+          .gte("created_at", thirtyDaysAgo.toISOString())
+          .order("created_at", { ascending: false })
+          .range(pageStart, pageStart + pageSize - 1)
+
+        if (activityError) {
+          console.warn("[v0] User activity rollup unavailable:", activityError.message)
+          break
+        }
+
+        for (const row of activityRows ?? []) {
+          const userId = String((row as { user_id?: string | null }).user_id ?? "")
+          if (!userId) continue
+
+          const createdAt = String((row as { created_at?: string | null }).created_at ?? "")
+          const createdDate = new Date(createdAt)
+          if (Number.isNaN(createdDate.getTime())) continue
+
+          const rollup = activityByUser.get(userId) ?? emptyActivity()
+          if (!rollup.last_activity_at) {
+            rollup.last_activity_at = createdAt
+            rollup.last_activity_path = (row as { page_url?: string | null }).page_url ?? null
+            rollup.last_activity_type = (row as { event_type?: string | null }).event_type ?? null
+          }
+
+          rollup.activity_count_30d += 1
+          if (createdDate >= sevenDaysAgo) rollup.activity_count_7d += 1
+          if (createdDate >= oneDayAgo) rollup.activity_count_24h += 1
+          if (
+            isHighIntentActivity(
+              (row as { event_type?: string | null }).event_type ?? null,
+              (row as { page_url?: string | null }).page_url ?? null,
+            )
+          ) {
+            rollup.high_intent_count_30d += 1
+          }
+
+          activityByUser.set(userId, rollup)
+        }
+
+        if (!activityRows || activityRows.length < pageSize) break
+      }
+    } catch (activityError) {
+      console.warn("[v0] User activity rollup failed:", activityError)
+    }
 
     // Combine auth users with profile data
     const combinedProfiles = allAuthUsers.map((user) => {
       const profile = profileMap.get(user.id)
+      const activity = activityByUser.get(user.id) ?? emptyActivity()
       return {
         user_id: user.id,
         email: user.email || "",
@@ -140,6 +226,7 @@ export async function GET() {
         athlete_id: (profile as { athlete_id?: string | null } | undefined)?.athlete_id ?? null,
         created_at: user.created_at,
         last_sign_in_at: user.last_sign_in_at || null,
+        ...activity,
       }
     })
 
