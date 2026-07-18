@@ -31,7 +31,7 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const { name, cell_phone, role, verified_coach, school_id } = body
+    const { name, cell_phone, role, verified_coach, school_id, college_id } = body
 
     const supabaseAdmin = createServiceClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -53,6 +53,67 @@ export async function PATCH(
     if (role !== undefined) updateData.role = role
     if (verified_coach !== undefined) updateData.verified_coach = verified_coach
     if (school_id !== undefined) updateData.school_id = school_id || null
+
+    // College coaches select from the canonical `colleges` table. Existing coach portals
+    // still key off user_profiles.school_id, so resolve (or lazily create) the compatible
+    // institution row here instead of ever writing a colleges.id into the school FK.
+    let resolvedSchoolName: string | null | undefined
+    if (college_id !== undefined) {
+      if (!college_id) {
+        updateData.school_id = null
+        resolvedSchoolName = null
+      } else {
+        const { data: college, error: collegeError } = await supabaseAdmin
+          .from("colleges")
+          .select("id, name, logo_url")
+          .eq("id", college_id)
+          .maybeSingle()
+
+        if (collegeError || !college) {
+          return NextResponse.json({ error: "College not found" }, { status: 400 })
+        }
+
+        let { data: institution, error: institutionError } = await supabaseAdmin
+          .from("schools")
+          .select("id, name")
+          .ilike("name", college.name)
+          .limit(1)
+          .maybeSingle()
+
+        if (institutionError) {
+          return NextResponse.json(
+            { error: "Failed to resolve college assignment", details: institutionError.message },
+            { status: 500 },
+          )
+        }
+
+        if (!institution) {
+          const inserted = await supabaseAdmin
+            .from("schools")
+            .insert({
+              name: college.name,
+              canonical_name: college.name,
+              logo_url: college.logo_url || null,
+              is_test: false,
+              is_active: true,
+              notes: "College institution created from canonical colleges table",
+            })
+            .select("id, name")
+            .single()
+
+          if (inserted.error || !inserted.data) {
+            return NextResponse.json(
+              { error: "Failed to create college portal assignment", details: inserted.error?.message },
+              { status: 500 },
+            )
+          }
+          institution = inserted.data
+        }
+
+        updateData.school_id = institution.id
+        resolvedSchoolName = institution.name
+      }
+    }
 
     // Check if profile exists, if not create it
     let existingProfile = await supabaseAdmin
@@ -142,7 +203,13 @@ export async function PATCH(
       )
     }
 
-    return NextResponse.json({ success: true, profile: data })
+    return NextResponse.json({
+      success: true,
+      profile: {
+        ...data,
+        ...(resolvedSchoolName !== undefined ? { school_name: resolvedSchoolName } : {}),
+      },
+    })
   } catch (error: any) {
     console.error("Exception in user update API:", error)
     return NextResponse.json(
