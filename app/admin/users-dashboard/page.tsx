@@ -70,6 +70,12 @@ type UserProfile = {
   school_name: string | null
 }
 
+type CollegeOption = {
+  id: string
+  name: string
+  division?: string | null
+}
+
 
 // Relative time formatting
 function getRelativeTime(date: string | null): string {
@@ -105,7 +111,7 @@ function uniqueMarketingEmails(rows: { email: string }[]): string[] {
 
 export default function UsersDashboardPage() {
   const [profiles, setProfiles] = useState<UserProfile[]>([])
-  const [schools, setSchools] = useState<{ id: string; name: string }[]>([])
+  const [colleges, setColleges] = useState<CollegeOption[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
@@ -119,7 +125,8 @@ export default function UsersDashboardPage() {
     cell_phone: "",
     role: "",
     verified_coach: false,
-    school_id: ""
+    school_id: "",
+    college_id: "",
   })
   const { toast } = useToast()
 
@@ -150,19 +157,19 @@ export default function UsersDashboardPage() {
       }
 
       setLoading(true)
-      const [profilesRes, schoolsRes] = await Promise.all([
+      const [profilesRes, collegesRes] = await Promise.all([
         fetch("/api/admin/users/profiles", { cache: "no-store", credentials: "include" }),
-        fetch("/api/admin/schools", { cache: "no-store", credentials: "include" })
+        fetch("/api/admin/colleges", { cache: "no-store", credentials: "include" })
       ])
 
       if (!profilesRes.ok) throw new Error("Failed to load profiles")
-      if (!schoolsRes.ok) throw new Error("Failed to load schools")
+      if (!collegesRes.ok) throw new Error("Failed to load colleges")
 
       const profilesData = await profilesRes.json()
-      const schoolsData = await schoolsRes.json()
+      const collegesData = await collegesRes.json()
 
       setProfiles(profilesData.profiles || [])
-      setSchools(schoolsData.schools || [])
+      setColleges(collegesData.colleges || [])
     } catch (e: any) {
       console.error("Error loading dashboard:", e)
       setError(e?.message || "Failed to load dashboard data")
@@ -172,13 +179,17 @@ export default function UsersDashboardPage() {
   }
 
   const openEditDialog = (user: UserProfile) => {
+    const matchingCollege = colleges.find(
+      (college) => college.name.trim().toLowerCase() === (user.school_name || "").trim().toLowerCase(),
+    )
     setEditingUser(user)
     setEditForm({
       name: user.name || "",
       cell_phone: user.cell_phone || "",
       role: user.role || "other",
       verified_coach: user.verified_coach || false,
-      school_id: user.school_id || ""
+      school_id: user.school_id || "",
+      college_id: matchingCollege?.id || "",
     })
   }
 
@@ -202,7 +213,10 @@ export default function UsersDashboardPage() {
         cell_phone: editForm.cell_phone,
         role: editForm.role,
         verified_coach: editForm.verified_coach,
-        school_id: editForm.school_id === "unassigned" ? null : editForm.school_id
+        school_id: editForm.role === "college_coach" ? undefined : editForm.school_id === "unassigned" ? null : editForm.school_id,
+        college_id: editForm.role === "college_coach"
+          ? editForm.college_id === "unassigned" ? null : editForm.college_id
+          : undefined,
       }
 
       console.log("[Users Dashboard] Saving user:", {
@@ -258,8 +272,12 @@ export default function UsersDashboardPage() {
               cell_phone: editForm.cell_phone,
               role: editForm.role,
               verified_coach: editForm.verified_coach,
-              school_id: payload.school_id,
-              school_name: payload.school_id ? schools.find(s => s.id === payload.school_id)?.name || null : null
+              school_id: responseData.profile?.school_id ?? payload.school_id ?? null,
+              school_name:
+                responseData.profile?.school_name ??
+                (editForm.college_id && editForm.college_id !== "unassigned"
+                  ? colleges.find((college) => college.id === editForm.college_id)?.name || null
+                  : null),
             } 
           : p
       ))
@@ -719,7 +737,7 @@ export default function UsersDashboardPage() {
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
-          <p className="text-gray-600 mt-1">Manage user profiles, approve coaches, and assign schools</p>
+          <p className="text-gray-600 mt-1">Manage user profiles, approve coaches, and assign college institutions</p>
           <p className="text-muted-foreground mt-2 max-w-xl text-xs">
             Marketing: copy or download emails (deduped). Use Emails (.txt) if CSV triggers a browser plugin error — same account list as CSV. Use only where you have consent or legitimate interest.
           </p>
@@ -1241,19 +1259,19 @@ export default function UsersDashboardPage() {
                     <Label htmlFor="verified_coach">Coach Approved (can access athlete contact info)</Label>
                   </div>
                   <div>
-                    <Label>Assign to School</Label>
+                    <Label>Assign to College</Label>
                     <Select
-                      value={editForm.school_id}
-                      onValueChange={(value) => setEditForm({ ...editForm, school_id: value })}
+                      value={editForm.college_id || "unassigned"}
+                      onValueChange={(value) => setEditForm({ ...editForm, college_id: value })}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a school..." />
+                        <SelectValue placeholder="Select a college..." />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="unassigned">None</SelectItem>
-                        {schools.map(school => (
-                          <SelectItem key={school.id} value={school.id}>
-                            {school.name}
+                        {colleges.map(college => (
+                          <SelectItem key={college.id} value={college.id}>
+                            {college.name}{college.division ? ` — ${college.division}` : ""}
                           </SelectItem>
                         ))}
                       </SelectContent>
