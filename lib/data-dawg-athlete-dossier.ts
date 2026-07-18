@@ -14,6 +14,7 @@ import { namesMatch } from "@/lib/nhsca-live/names-match"
 import { loadNcUnitedResultsForNameSearch } from "@/lib/national-team-live-profile-results"
 import { isBlueTeam } from "@/lib/blue-team"
 import { buildAthleteTimelineMarkdown } from "@/lib/data-dawg-athlete-timeline"
+import { formatAthleteProfileDetailsMarkdown } from "@/lib/data-dawg-athlete-profile-details"
 import {
   buildCareerSnapshotMarkdown,
   buildDevelopmentPathMarkdown,
@@ -348,6 +349,12 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
   const development = buildDevelopmentPathMarkdown(stats)
   if (development) {
     lines.push(development)
+    lines.push("")
+  }
+
+  const profileDetails = formatAthleteProfileDetailsMarkdown(athlete)
+  if (profileDetails) {
+    lines.push(profileDetails)
     lines.push("")
   }
 
