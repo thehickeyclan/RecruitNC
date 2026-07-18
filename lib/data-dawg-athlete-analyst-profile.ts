@@ -829,6 +829,8 @@ function fargoResumeLine(r: TournamentResultForDisplay, graduationYear?: number 
   const p = placeNum(r.placement)
   const rec = (r.record ?? "").trim()
   const year = r.year
+  const division = String(r.division ?? "").trim()
+  const divisionPart = division ? ` ${division}` : ""
   const classLabel =
     graduationYear != null
       ? (() => {
@@ -843,13 +845,13 @@ function fargoResumeLine(r: TournamentResultForDisplay, graduationYear?: number 
   if (isAllAmericanPlace(p)) {
     const label =
       p === 1 ? "Champion" : p === 2 ? "Runner-up" : `${p}${ordinalSuffix(p!)}`
-    return `${medalForPlace(p!)} ${year}${classLabel ? ` ${classLabel}` : ""} ${label} All-American${rec ? ` (${enDashRecord(rec)})` : ""}`
+    return `${medalForPlace(p!)} ${year}${classLabel ? ` ${classLabel}` : ""}${divisionPart} ${label} All-American${rec ? ` (${enDashRecord(rec)})` : ""}`
   }
   if (rec) {
     const blood = explicitlyMentionsBloodRound(r.placement, rec)
       ? " — reached Blood Round"
       : ""
-    return `${year}${classLabel ? ` ${classLabel}` : ""} — ${enDashRecord(rec)}${blood}`
+    return `${year}${classLabel ? ` ${classLabel}` : ""}${divisionPart} — ${enDashRecord(rec)}${blood}`
   }
   return null
 }
