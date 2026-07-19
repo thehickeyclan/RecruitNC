@@ -29,16 +29,16 @@ type DocumentsPayload = {
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  todo: "To do",
-  in_progress: "In progress",
-  blocked: "Blocked",
-  done: "Done",
+  todo: "Not started",
+  in_progress: "On target",
+  blocked: "At risk",
+  done: "Completed",
 }
 
 const STATUS_CLASS: Record<string, string> = {
-  todo: "bg-gray-100 text-gray-700",
+  todo: "bg-gray-100 text-gray-800",
   in_progress: "bg-blue-100 text-blue-800",
-  blocked: "bg-red-100 text-red-800",
+  blocked: "bg-amber-100 text-amber-900",
   done: "bg-green-100 text-green-800",
 }
 
@@ -371,6 +371,11 @@ export default function TocProjectPlanPage() {
             </div>
             <h2 className="text-2xl font-bold">Tournament of Champions · {TOC_EVENT_DATES_RANGE}</h2>
             <p className="mt-1 text-sm text-white/75">Keep the team focused on contracts, field, sponsors, venue, and fan experience before event weekend.</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {Object.entries(STATUS_LABEL).map(([value, label]) => (
+                <Badge key={value} className={STATUS_CLASS[value]}>{label}</Badge>
+              ))}
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3 text-center">
             <div className="rounded-2xl border border-white/15 bg-white/10 px-5 py-4">
