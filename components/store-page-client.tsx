@@ -170,7 +170,7 @@ export function StorePageClient({ initialProducts }: StorePageClientProps) {
 
       <div id="products" className="container mx-auto px-4 py-12">
         <div className="mb-8 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <div className="flex flex-wrap gap-2">
+          <div className="flex min-w-0 flex-wrap gap-2">
             <Button
               variant={selectedCategories.length === 0 ? "default" : "outline"}
               onClick={() => setSelectedCategories([])}
@@ -209,7 +209,7 @@ export function StorePageClient({ initialProducts }: StorePageClientProps) {
         </div>
 
         <div className="mb-8">
-          <div className="relative max-w-md">
+          <div className="relative w-full max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
             <Input
               type="search"

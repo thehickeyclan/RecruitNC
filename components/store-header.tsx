@@ -17,7 +17,7 @@ export function StoreHeader({ searchQuery, onSearchChange }: StoreHeaderProps) {
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0A1628]/95 backdrop-blur-xl">
-      <div className="container mx-auto flex h-16 items-center gap-6 px-4">
+      <div className="container mx-auto flex h-16 min-w-0 items-center gap-3 px-4 sm:gap-6">
         <Link href="/" className="flex items-center gap-2 shrink-0">
           <div className="h-8 w-8 rounded-lg bg-[#D3B574] flex items-center justify-center">
             <span className="text-[#0A1628] font-black text-sm">NC</span>
@@ -31,7 +31,7 @@ export function StoreHeader({ searchQuery, onSearchChange }: StoreHeaderProps) {
           </StoreNavLink>
         </nav>
 
-        <div className="relative flex-1 max-w-md ml-auto">
+        <div className="relative ml-auto min-w-0 flex-1 sm:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />
           <Input
             type="search"

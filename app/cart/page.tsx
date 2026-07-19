@@ -167,13 +167,13 @@ export default function CartPage() {
           </StoreNavLink>
         </div>
 
-        <div className="grid lg:grid-cols-[1fr_400px] gap-8">
+        <div className="grid min-w-0 gap-8 lg:grid-cols-[minmax(0,1fr)_400px]">
           {/* Cart items */}
           <div className="space-y-3">
             {items.map((item) => (
               <div key={`${item.id}-${item.variant.color}-${item.variant.size}`} className="rounded-xl bg-[#0f1c2e] border border-white/5 p-4">
-                <div className="flex gap-4">
-                  <div className={`relative w-24 h-24 shrink-0 ${STORE_CATALOG_FRAME_CLASS}`}>
+                <div className="flex min-w-0 flex-col gap-4 sm:flex-row">
+                  <div className={`relative h-24 w-24 shrink-0 ${STORE_CATALOG_FRAME_CLASS}`}>
                     <StoreCatalogImage
                       src={item.image || "/placeholder.svg"}
                       alt={item.name}
@@ -183,7 +183,7 @@ export default function CartPage() {
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-white text-base mb-1">{item.name}</h3>
+                    <h3 className="mb-1 break-words text-base font-semibold text-white">{item.name}</h3>
                     <p className="text-sm text-white/50 mb-1">
                       {item.variant.color} / Size: {item.variant.size}
                     </p>
@@ -198,8 +198,8 @@ export default function CartPage() {
                     </Badge>
                   </div>
 
-                  <div className="flex flex-col items-end justify-between">
-                    <div className="text-right">
+                  <div className="flex flex-col items-start justify-between gap-3 sm:items-end">
+                    <div className="text-left sm:text-right">
                       {item.originalPrice && item.discount ? (
                         <div>
                           <p className="text-sm text-white/30 line-through">
@@ -264,7 +264,7 @@ export default function CartPage() {
           </div>
 
           {/* Order summary */}
-          <div className="lg:sticky lg:top-4 h-fit">
+          <div className="min-w-0 lg:sticky lg:top-4 h-fit">
             <div className="rounded-xl bg-[#0f1c2e] border border-white/10 p-6">
               <h2 className="text-lg font-bold text-white mb-4">Order Summary</h2>
 
@@ -317,7 +317,7 @@ export default function CartPage() {
                   </div>
                 ) : (
                   <>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-2 sm:flex-row">
                       <Input
                         placeholder="Promo code"
                         value={promoInput}
@@ -325,12 +325,12 @@ export default function CartPage() {
                           setPromoInput(e.target.value)
                           setPromoError("")
                         }}
-                        className="bg-white/5 border-white/10 text-white placeholder:text-white/30"
+                        className="min-w-0 bg-white/5 border-white/10 text-white placeholder:text-white/30"
                       />
                       <Button
                         onClick={handleApplyPromo}
                         variant="outline"
-                        className="bg-white/5 border-white/10 text-white hover:bg-white/10 shrink-0"
+                        className="bg-white/5 border-white/10 text-white hover:bg-white/10 sm:shrink-0"
                       >
                         Apply
                       </Button>
