@@ -85,6 +85,13 @@ function categoryMeta(category: string) {
   return TOC_PROJECT_CATEGORIES.find((c) => c.name === category) ?? TOC_PROJECT_CATEGORIES[0]
 }
 
+function ownerInitials(value: string): string {
+  const clean = value.replace(/<.*?>/g, "").trim()
+  const parts = clean.split(/\s+/).filter(Boolean)
+  if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
+  return clean.slice(0, 2).toUpperCase() || "?"
+}
+
 function formatDateTime(value: string): string {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return value
@@ -484,185 +491,220 @@ export default function TocProjectPlanPage() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <Card className="overflow-hidden border-gray-200 shadow-sm">
+        <CardHeader className="border-b bg-white">
+          <CardTitle className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <span>TOC Master Board</span>
+            <span className="text-sm font-normal text-gray-500">Grouped by workstream · status-driven like an ops board</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-8 bg-[#f6f7fb] p-4">
         {TOC_PROJECT_CATEGORIES.map((category) => {
           const meta = categoryMeta(category.name)
           const categoryTasks = tasks.filter((task) => task.category === category.name).sort((a, b) => a.sort_order - b.sort_order)
           const categoryBudget = categoryTasks.reduce((sum, task) => sum + Number(task.budget_amount ?? 0), 0)
           return (
-            <Card key={category.name} className={`border-2 ${meta.color}`}>
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center justify-between gap-3">
-                  <span className="flex items-center gap-2">
-                    <span className={`h-3 w-3 rounded-full ${meta.accent}`} />
-                    {category.name}
-                  </span>
-                  <Badge variant="outline">{categoryTasks.length} · {money(categoryBudget)}</Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex gap-2 rounded-lg border bg-white/70 p-2">
+            <section key={category.name} className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-white px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <span className={`h-8 w-1.5 rounded-full ${meta.accent}`} />
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900">{category.name}</h3>
+                    <p className="text-xs text-gray-500">{categoryTasks.length} tasks · {money(categoryBudget)} budget</p>
+                  </div>
+                </div>
+                <div className="flex min-w-72 flex-1 gap-2 sm:flex-initial">
                   <Input
                     value={newTaskTitle[category.name] ?? ""}
                     onChange={(e) => setNewTaskTitle((prev) => ({ ...prev, [category.name]: e.target.value }))}
-                    placeholder={`Add ${category.name} task…`}
+                    placeholder={`+ Add ${category.name} task`}
                     disabled={!!unavailable}
+                    className="h-9"
                   />
-                  <Button onClick={() => void addTask(category.name)} disabled={!!unavailable || savingId === `new-${category.name}`}>
+                  <Button size="sm" onClick={() => void addTask(category.name)} disabled={!!unavailable || savingId === `new-${category.name}`}>
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
+              </div>
 
-                {categoryTasks.map((task) => {
-                  const draft = drafts[task.id] ?? task
-                  const disabled = !!unavailable || task.id.startsWith("seed-")
-                  return (
-                    <div key={task.id} className="rounded-xl border bg-white p-4 shadow-sm">
-                      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                        <Input
-                          value={draft.title}
-                          onChange={(e) => updateDraft(task.id, { title: e.target.value })}
-                          className="font-semibold"
-                          disabled={disabled}
-                        />
-                        <div className="flex gap-2">
-                          <Select value={draft.status} onValueChange={(value) => updateDraft(task.id, { status: value as TocProjectTask["status"] })} disabled={disabled}>
-                            <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              {Object.entries(STATUS_LABEL).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                          <Badge className={STATUS_CLASS[draft.status]}>{STATUS_LABEL[draft.status]}</Badge>
-                        </div>
-                      </div>
+              <div className="overflow-x-auto">
+                <div className="min-w-[1180px]">
+                  <div className="grid grid-cols-[minmax(280px,1.7fr)_210px_150px_140px_120px_120px_120px_120px] border-b bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    <div className="border-r px-3 py-2">Item</div>
+                    <div className="border-r px-3 py-2">Owner</div>
+                    <div className="border-r px-3 py-2">Status</div>
+                    <div className="border-r px-3 py-2">Due</div>
+                    <div className="border-r px-3 py-2">Priority</div>
+                    <div className="border-r px-3 py-2">Budget</div>
+                    <div className="border-r px-3 py-2">Actual</div>
+                    <div className="px-3 py-2">Updates</div>
+                  </div>
 
-                      <div className="grid gap-3 sm:grid-cols-4">
-                        <div>
-                          <Label>Budget $</Label>
-                          <Input type="number" value={draft.budget_amount ?? ""} onChange={(e) => updateDraft(task.id, { budget_amount: e.target.value === "" ? null : Number(e.target.value) })} disabled={disabled} />
-                        </div>
-                        <div>
-                          <Label>Actual $</Label>
-                          <Input type="number" value={draft.actual_amount ?? ""} onChange={(e) => updateDraft(task.id, { actual_amount: e.target.value === "" ? null : Number(e.target.value) })} disabled={disabled} />
-                        </div>
-                        <div>
-                          <Label>Due date</Label>
-                          <Input type="date" value={draft.due_date ?? ""} onChange={(e) => updateDraft(task.id, { due_date: e.target.value || null })} disabled={disabled} />
-                        </div>
-                        <div>
-                          <Label>Priority</Label>
-                          <Select value={draft.priority} onValueChange={(value) => updateDraft(task.id, { priority: value as TocProjectTask["priority"] })} disabled={disabled}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              {["low", "normal", "high", "urgent"].map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-
-                      <div className="mt-3">
-                        <div className="mb-1 flex items-center justify-between">
-                          <Label>Assignees</Label>
-                          <Button type="button" size="sm" variant="ghost" onClick={() => selfAssign(draft)} disabled={disabled || !currentUser}>
-                            <UserPlus className="mr-1 h-3 w-3" /> Self assign
-                          </Button>
-                        </div>
-                        <Input
-                          placeholder="Name, Name <email>, email@domain.com"
-                          value={assigneesText(draft.assignees ?? [])}
-                          onChange={(e) => updateDraft(task.id, { assignees: parseAssignees(e.target.value) })}
-                          disabled={disabled}
-                        />
-                      </div>
-
-                      <div className="mt-3">
-                        <Label>Notes</Label>
-                        <Textarea value={draft.notes ?? ""} onChange={(e) => updateDraft(task.id, { notes: e.target.value })} placeholder="Notes, decisions, next steps…" disabled={disabled} />
-                      </div>
-
-                      <div className="mt-3">
-                        <Label>Links <span className="text-xs text-gray-400">(one per line: Label|https://...)</span></Label>
-                        <Textarea value={linksText(draft.links ?? [])} onChange={(e) => updateDraft(task.id, { links: parseLinks(e.target.value) })} placeholder="Venue quote|https://..." disabled={disabled} />
-                        {draft.links?.length > 0 && (
-                          <div className="mt-2 flex flex-wrap gap-2">
-                            {draft.links.map((link) => (
-                              <a key={`${link.label}-${link.url}`} href={link.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700 hover:bg-gray-200">
-                                <LinkIcon className="h-3 w-3" /> {link.label || link.url}
-                              </a>
-                            ))}
+                  {categoryTasks.map((task) => {
+                    const draft = drafts[task.id] ?? task
+                    const disabled = !!unavailable || task.id.startsWith("seed-")
+                    return (
+                      <div key={task.id} className="border-b last:border-b-0">
+                        <div className="grid grid-cols-[minmax(280px,1.7fr)_210px_150px_140px_120px_120px_120px_120px] items-center bg-white text-sm transition-colors hover:bg-[#f7f8fb]">
+                          <div className="border-r p-2">
+                            <Input
+                              value={draft.title}
+                              onChange={(e) => updateDraft(task.id, { title: e.target.value })}
+                              className="h-9 border-transparent bg-transparent font-semibold shadow-none hover:border-gray-200 focus:border-gray-300"
+                              disabled={disabled}
+                            />
                           </div>
-                        )}
-                      </div>
-
-                      <div className="mt-3 rounded-lg border bg-gray-50 p-3">
-                        <div className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
-                          <Paperclip className="h-4 w-4" /> Attachments
-                        </div>
-                        <Input type="file" disabled={disabled} onChange={(e) => void uploadAttachment(task.id, e.target.files?.[0] ?? null)} />
-                        {draft.attachments?.length > 0 && (
-                          <div className="mt-2 space-y-1">
-                            {draft.attachments.map((file) => (
-                              <a key={`${file.url}-${file.name}`} href={file.url} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-xs text-blue-700 hover:underline">
-                                <Upload className="h-3 w-3" /> {file.name}
-                              </a>
-                            ))}
+                          <div className="border-r p-2">
+                            <div className="mb-2 flex flex-wrap gap-1">
+                              {(draft.assignees ?? []).slice(0, 3).map((assignee) => {
+                                const label = assignee.name || assignee.email || "Owner"
+                                return (
+                                  <span key={`${task.id}-${label}`} title={label} className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#002147] text-[10px] font-bold text-white ring-2 ring-white">
+                                    {ownerInitials(label)}
+                                  </span>
+                                )
+                              })}
+                              {(draft.assignees ?? []).length === 0 && <span className="text-xs text-gray-400">No owner</span>}
+                            </div>
+                            <Input
+                              placeholder="Name, email"
+                              value={assigneesText(draft.assignees ?? [])}
+                              onChange={(e) => updateDraft(task.id, { assignees: parseAssignees(e.target.value) })}
+                              disabled={disabled}
+                              className="h-8 text-xs"
+                            />
+                            <Button type="button" size="sm" variant="ghost" onClick={() => selfAssign(draft)} disabled={disabled || !currentUser} className="mt-1 h-7 px-1 text-xs">
+                              <UserPlus className="mr-1 h-3 w-3" /> Self assign
+                            </Button>
                           </div>
-                        )}
-                      </div>
-
-                      <div className="mt-3 rounded-lg border bg-slate-50 p-3">
-                        <div className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
-                          <MessageSquare className="h-4 w-4" /> Comments
-                          {draft.comments?.length > 0 && <Badge variant="outline">{draft.comments.length}</Badge>}
+                          <div className="border-r p-2">
+                            <Select value={draft.status} onValueChange={(value) => updateDraft(task.id, { status: value as TocProjectTask["status"] })} disabled={disabled}>
+                              <SelectTrigger className={`h-9 border-0 font-semibold shadow-none ${STATUS_CLASS[draft.status]}`}>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {Object.entries(STATUS_LABEL).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="border-r p-2">
+                            <Input type="date" value={draft.due_date ?? ""} onChange={(e) => updateDraft(task.id, { due_date: e.target.value || null })} disabled={disabled} className="h-9 text-xs" />
+                          </div>
+                          <div className="border-r p-2">
+                            <Select value={draft.priority} onValueChange={(value) => updateDraft(task.id, { priority: value as TocProjectTask["priority"] })} disabled={disabled}>
+                              <SelectTrigger className="h-9 text-xs capitalize"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                {["low", "normal", "high", "urgent"].map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="border-r p-2">
+                            <Input type="number" value={draft.budget_amount ?? ""} onChange={(e) => updateDraft(task.id, { budget_amount: e.target.value === "" ? null : Number(e.target.value) })} disabled={disabled} className="h-9" />
+                          </div>
+                          <div className="border-r p-2">
+                            <Input type="number" value={draft.actual_amount ?? ""} onChange={(e) => updateDraft(task.id, { actual_amount: e.target.value === "" ? null : Number(e.target.value) })} disabled={disabled} className="h-9" />
+                          </div>
+                          <div className="p-2">
+                            <div className="flex flex-wrap gap-1">
+                              <Badge variant="outline" className="gap-1"><MessageSquare className="h-3 w-3" />{draft.comments?.length ?? 0}</Badge>
+                              <Badge variant="outline" className="gap-1"><Paperclip className="h-3 w-3" />{draft.attachments?.length ?? 0}</Badge>
+                              <Badge variant="outline" className="gap-1"><LinkIcon className="h-3 w-3" />{draft.links?.length ?? 0}</Badge>
+                            </div>
+                          </div>
                         </div>
-                        {draft.comments?.length > 0 && (
-                          <div className="mb-3 max-h-48 space-y-2 overflow-y-auto pr-1">
-                            {[...(draft.comments ?? [])].reverse().map((comment) => (
-                              <div key={comment.id} className="rounded-lg border bg-white p-2 text-sm">
-                                <div className="mb-1 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500">
-                                  <span className="font-medium text-gray-700">{comment.createdBy?.name || comment.createdBy?.email || "Unknown user"}</span>
-                                  <span>{formatDateTime(comment.createdAt)}</span>
+
+                        <div className="grid gap-3 bg-[#fbfbfd] p-3 lg:grid-cols-[1fr_1fr]">
+                          <div className="rounded-lg border bg-white p-3">
+                            <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Notes & links</div>
+                            <Textarea value={draft.notes ?? ""} onChange={(e) => updateDraft(task.id, { notes: e.target.value })} placeholder="Notes, decisions, next steps…" disabled={disabled} className="min-h-20" />
+                            <div className="mt-2">
+                              <Label className="text-xs text-gray-500">Links — one per line: Label|https://...</Label>
+                              <Textarea value={linksText(draft.links ?? [])} onChange={(e) => updateDraft(task.id, { links: parseLinks(e.target.value) })} placeholder="Venue quote|https://..." disabled={disabled} className="mt-1 min-h-16" />
+                              {draft.links?.length > 0 && (
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                  {draft.links.map((link) => (
+                                    <a key={`${link.label}-${link.url}`} href={link.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-1 text-xs text-blue-700 hover:bg-blue-100">
+                                      <LinkIcon className="h-3 w-3" /> {link.label || link.url}
+                                    </a>
+                                  ))}
                                 </div>
-                                <p className="whitespace-pre-wrap text-gray-700">{comment.body}</p>
-                              </div>
-                            ))}
+                              )}
+                            </div>
                           </div>
-                        )}
-                        <div className="flex flex-col gap-2 sm:flex-row">
-                          <Textarea
-                            value={commentDrafts[task.id] ?? ""}
-                            onChange={(e) => setCommentDrafts((prev) => ({ ...prev, [task.id]: e.target.value }))}
-                            placeholder="Add a quick update, decision, blocker, or follow-up…"
-                            className="min-h-16"
-                            disabled={disabled}
-                          />
-                          <Button
-                            type="button"
-                            onClick={() => void addComment(task.id)}
-                            disabled={disabled || savingId === task.id || !(commentDrafts[task.id] || "").trim()}
-                            className="sm:self-end"
-                          >
-                            Comment
+
+                          <div className="space-y-3">
+                            <div className="rounded-lg border bg-white p-3">
+                              <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                <Paperclip className="h-3.5 w-3.5" /> Files
+                              </div>
+                              <Input type="file" disabled={disabled} onChange={(e) => void uploadAttachment(task.id, e.target.files?.[0] ?? null)} />
+                              {draft.attachments?.length > 0 && (
+                                <div className="mt-2 space-y-1">
+                                  {draft.attachments.map((file) => (
+                                    <a key={`${file.url}-${file.name}`} href={file.url} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-xs text-blue-700 hover:underline">
+                                      <Upload className="h-3 w-3" /> {file.name}
+                                    </a>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="rounded-lg border bg-white p-3">
+                              <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                <MessageSquare className="h-3.5 w-3.5" /> Updates
+                              </div>
+                              {draft.comments?.length > 0 && (
+                                <div className="mb-3 max-h-40 space-y-2 overflow-y-auto pr-1">
+                                  {[...(draft.comments ?? [])].reverse().map((comment) => (
+                                    <div key={comment.id} className="rounded-lg border bg-gray-50 p-2 text-sm">
+                                      <div className="mb-1 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500">
+                                        <span className="font-medium text-gray-700">{comment.createdBy?.name || comment.createdBy?.email || "Unknown user"}</span>
+                                        <span>{formatDateTime(comment.createdAt)}</span>
+                                      </div>
+                                      <p className="whitespace-pre-wrap text-gray-700">{comment.body}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              <div className="flex flex-col gap-2 sm:flex-row">
+                                <Textarea
+                                  value={commentDrafts[task.id] ?? ""}
+                                  onChange={(e) => setCommentDrafts((prev) => ({ ...prev, [task.id]: e.target.value }))}
+                                  placeholder="Add an update…"
+                                  className="min-h-14"
+                                  disabled={disabled}
+                                />
+                                <Button
+                                  type="button"
+                                  onClick={() => void addComment(task.id)}
+                                  disabled={disabled || savingId === task.id || !(commentDrafts[task.id] || "").trim()}
+                                  className="sm:self-end"
+                                >
+                                  Update
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-end gap-2 bg-[#fbfbfd] px-3 pb-3">
+                          <Button variant="outline" size="sm" onClick={() => void deleteTask(task.id)} disabled={disabled || savingId === task.id}>
+                            <Trash2 className="mr-1 h-4 w-4" /> Delete
+                          </Button>
+                          <Button size="sm" onClick={() => void saveTask(task.id)} disabled={disabled || savingId === task.id}>
+                            <Save className="mr-1 h-4 w-4" /> {savingId === task.id ? "Saving…" : "Save row"}
                           </Button>
                         </div>
                       </div>
-
-                      <div className="mt-3 flex justify-end gap-2">
-                        <Button variant="outline" size="sm" onClick={() => void deleteTask(task.id)} disabled={disabled || savingId === task.id}>
-                          <Trash2 className="mr-1 h-4 w-4" /> Delete
-                        </Button>
-                        <Button size="sm" onClick={() => void saveTask(task.id)} disabled={disabled || savingId === task.id}>
-                          <Save className="mr-1 h-4 w-4" /> {savingId === task.id ? "Saving…" : "Save"}
-                        </Button>
-                      </div>
-                    </div>
-                  )
-                })}
-              </CardContent>
-            </Card>
+                    )
+                  })}
+                </div>
+              </div>
+            </section>
           )
         })}
-      </div>
+        </CardContent>
+      </Card>
 
       <div className="rounded-xl border bg-white p-4 text-sm text-gray-600">
         <div className="mb-1 flex items-center gap-2 font-semibold text-gray-900">

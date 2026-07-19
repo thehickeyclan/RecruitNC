@@ -68,14 +68,14 @@ export type TocProjectTask = {
 }
 
 export const TOC_PROJECT_CATEGORIES = [
-  { name: "Venue & Operations", color: "bg-white border-gray-200 text-gray-900", accent: "bg-slate-500" },
-  { name: "Competition", color: "bg-white border-gray-200 text-gray-900", accent: "bg-slate-500" },
-  { name: "Awards & Apparel", color: "bg-white border-gray-200 text-gray-900", accent: "bg-slate-500" },
-  { name: "Branding & Signage", color: "bg-white border-gray-200 text-gray-900", accent: "bg-slate-500" },
-  { name: "Fan Experience", color: "bg-white border-gray-200 text-gray-900", accent: "bg-slate-500" },
-  { name: "Recruiting", color: "bg-white border-gray-200 text-gray-900", accent: "bg-slate-500" },
-  { name: "Marketing", color: "bg-white border-gray-200 text-gray-900", accent: "bg-slate-500" },
-  { name: "Special Events", color: "bg-white border-gray-200 text-gray-900", accent: "bg-slate-500" },
+  { name: "Venue & Operations", color: "bg-white border-gray-200 text-gray-900", accent: "bg-sky-500" },
+  { name: "Competition", color: "bg-white border-gray-200 text-gray-900", accent: "bg-rose-500" },
+  { name: "Awards & Apparel", color: "bg-white border-gray-200 text-gray-900", accent: "bg-yellow-500" },
+  { name: "Branding & Signage", color: "bg-white border-gray-200 text-gray-900", accent: "bg-violet-500" },
+  { name: "Fan Experience", color: "bg-white border-gray-200 text-gray-900", accent: "bg-emerald-500" },
+  { name: "Recruiting", color: "bg-white border-gray-200 text-gray-900", accent: "bg-indigo-500" },
+  { name: "Marketing", color: "bg-white border-gray-200 text-gray-900", accent: "bg-pink-500" },
+  { name: "Special Events", color: "bg-white border-gray-200 text-gray-900", accent: "bg-orange-500" },
 ] as const
 
 const seedTitlesByCategory: Record<string, string[]> = {
