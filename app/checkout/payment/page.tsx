@@ -30,6 +30,10 @@ export default function PaymentPage() {
   const total = getTotal()
 
   const [urlPromoCode, setUrlPromoCode] = useState<string | null | undefined>(undefined)
+  const isPickupMethod =
+    shippingMethod?.id === "pickup" ||
+    shippingMethod?.name?.toLowerCase().includes("pickup") ||
+    shippingMethod?.name?.toLowerCase().includes("practice")
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search)
@@ -75,7 +79,7 @@ export default function PaymentPage() {
       window.location.href = "/checkout/shipping"
       return
     }
-    if (!shippingAddress.address1?.trim()) {
+    if (!isPickupMethod && !shippingAddress.address1?.trim()) {
       toast({
         title: "Address Required",
         description: "Shipping address is missing. Please complete your shipping information.",
@@ -258,7 +262,7 @@ export default function PaymentPage() {
         variant: "destructive",
       })
     })
-  }, [isHydrated, items, shippingAddress, shippingMethod, router, getTotal, toast, promoCode, promoDiscount, applyPromoCode, urlPromoCode, user?.id])
+  }, [isHydrated, items, shippingAddress, shippingMethod, isPickupMethod, router, getTotal, toast, promoCode, promoDiscount, applyPromoCode, urlPromoCode, user?.id])
 
   if (!shippingAddress || !shippingMethod) return null
 
