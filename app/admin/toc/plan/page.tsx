@@ -70,6 +70,10 @@ const STATUS_CLASS: Record<string, string> = {
   done: "bg-emerald-400/20 text-emerald-100 border border-emerald-300/35",
 }
 
+const DARK_FIELD_CLASS = "border-slate-400/40 bg-slate-950/35 text-white placeholder:text-slate-300 shadow-inner shadow-black/20 focus-visible:border-[#D6B65A] focus-visible:ring-[#D6B65A]/35"
+const DARK_FIELD_SMALL_CLASS = `h-9 ${DARK_FIELD_CLASS}`
+const DARK_SELECT_CLASS = `h-9 ${DARK_FIELD_CLASS}`
+
 function money(value: number | null | undefined): string {
   if (value == null || Number.isNaN(Number(value))) return "$0"
   return Number(value).toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 })
@@ -763,7 +767,7 @@ export default function TocProjectPlanPage() {
                   value={chatDraft}
                   onChange={(e) => setChatDraft(e.target.value)}
                   placeholder="Drop a quick TOC update…"
-                  className="min-h-28 border-white/10 bg-[#061426] text-white placeholder:text-slate-500"
+                className={`min-h-28 ${DARK_FIELD_CLASS}`}
                   disabled={!!chatUnavailable || sendingChat}
                 />
                 <div className="mt-3 flex items-center justify-between gap-3">
@@ -835,13 +839,13 @@ export default function TocProjectPlanPage() {
             <div className="space-y-3">
               <div>
                 <Label className="text-slate-300">Title</Label>
-                <Input value={docTitle} onChange={(e) => setDocTitle(e.target.value)} placeholder="Venue deposit receipt" disabled={!!documentsUnavailable} className="border-white/10 bg-[#07182e] text-white placeholder:text-slate-500" />
+                <Input value={docTitle} onChange={(e) => setDocTitle(e.target.value)} placeholder="Venue deposit receipt" disabled={!!documentsUnavailable} className={DARK_FIELD_CLASS} />
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <Label className="text-slate-300">Category</Label>
                   <Select value={docCategory} onValueChange={setDocCategory} disabled={!!documentsUnavailable}>
-                    <SelectTrigger className="border-white/10 bg-[#07182e] text-white"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className={DARK_FIELD_CLASS}><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {["Receipts", "Contracts", "Invoices", "Artwork", "Venue", "Sponsors", "Photos", "Other"].map((value) => (
                         <SelectItem key={value} value={value}>{value}</SelectItem>
@@ -851,7 +855,7 @@ export default function TocProjectPlanPage() {
                 </div>
                 <div>
                   <Label className="text-slate-300">Vendor</Label>
-                  <Input value={docVendor} onChange={(e) => setDocVendor(e.target.value)} placeholder="Vendor or payee" disabled={!!documentsUnavailable} className="border-white/10 bg-[#07182e] text-white placeholder:text-slate-500" />
+                  <Input value={docVendor} onChange={(e) => setDocVendor(e.target.value)} placeholder="Vendor or payee" disabled={!!documentsUnavailable} className={DARK_FIELD_CLASS} />
                 </div>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -864,21 +868,21 @@ export default function TocProjectPlanPage() {
                     onBlur={(e) => setDocAmount(normalizeCurrencyInput(e.target.value))}
                     placeholder="$0.00"
                     disabled={!!documentsUnavailable}
-                    className="border-white/10 bg-[#07182e] text-white placeholder:text-slate-500"
+                    className={DARK_FIELD_CLASS}
                   />
                 </div>
                 <div>
                   <Label className="text-slate-300">Uploaded by</Label>
-                  <Input value={currentUser?.email ?? "Signed-in TOC user"} disabled className="border-white/10 bg-[#07182e]/60 text-slate-400" />
+                  <Input value={currentUser?.email ?? "Signed-in TOC user"} disabled className="border-slate-500/30 bg-slate-950/20 text-slate-300" />
                 </div>
               </div>
               <div>
                 <Label className="text-slate-300">Notes</Label>
-                <Textarea value={docDescription} onChange={(e) => setDocDescription(e.target.value)} placeholder="What this is, vendor, payment method, next step…" disabled={!!documentsUnavailable} className="border-white/10 bg-[#07182e] text-white placeholder:text-slate-500" />
+                <Textarea value={docDescription} onChange={(e) => setDocDescription(e.target.value)} placeholder="What this is, vendor, payment method, next step…" disabled={!!documentsUnavailable} className={DARK_FIELD_CLASS} />
               </div>
               <div>
                 <Label className="text-slate-300">File</Label>
-                <Input type="file" onChange={(e) => setDocFile(e.target.files?.[0] ?? null)} disabled={!!documentsUnavailable} className="border-white/10 bg-[#07182e] text-slate-200 file:text-slate-200" />
+                <Input type="file" onChange={(e) => setDocFile(e.target.files?.[0] ?? null)} disabled={!!documentsUnavailable} className={`${DARK_FIELD_CLASS} file:text-slate-100`} />
               </div>
               <Button onClick={() => void uploadSharedDocument()} disabled={!!documentsUnavailable || uploadingDocument || !docFile} className="w-full bg-[#D6B65A] text-[#061426] hover:bg-[#c8a94f]">
                 <Upload className="mr-2 h-4 w-4" /> {uploadingDocument ? "Uploading…" : "Upload to doc share"}
@@ -977,13 +981,13 @@ export default function TocProjectPlanPage() {
                 value={taskSearch}
                 onChange={(e) => setTaskSearch(e.target.value)}
                 placeholder="Search task, notes, owner…"
-                className="mt-1 border-white/10 bg-[#061426] text-white placeholder:text-slate-500"
+                className={`mt-1 ${DARK_FIELD_CLASS}`}
               />
             </div>
             <div>
               <Label className="text-xs text-slate-400">Owner</Label>
               <Select value={taskOwnerFilter} onValueChange={setTaskOwnerFilter}>
-                <SelectTrigger className="mt-1 border-white/10 bg-[#061426] text-white">
+                <SelectTrigger className={`mt-1 ${DARK_FIELD_CLASS}`}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -998,7 +1002,7 @@ export default function TocProjectPlanPage() {
             <div>
               <Label className="text-xs text-slate-400">Category</Label>
               <Select value={taskCategoryFilter} onValueChange={setTaskCategoryFilter}>
-                <SelectTrigger className="mt-1 border-white/10 bg-[#061426] text-white">
+                <SelectTrigger className={`mt-1 ${DARK_FIELD_CLASS}`}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1012,7 +1016,7 @@ export default function TocProjectPlanPage() {
             <div>
               <Label className="text-xs text-slate-400">Status</Label>
               <Select value={taskStatusFilter} onValueChange={setTaskStatusFilter}>
-                <SelectTrigger className="mt-1 border-white/10 bg-[#061426] text-white">
+                <SelectTrigger className={`mt-1 ${DARK_FIELD_CLASS}`}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1026,7 +1030,7 @@ export default function TocProjectPlanPage() {
             <div>
               <Label className="text-xs text-slate-400">Priority</Label>
               <Select value={taskPriorityFilter} onValueChange={setTaskPriorityFilter}>
-                <SelectTrigger className="mt-1 border-white/10 bg-[#061426] text-white">
+                <SelectTrigger className={`mt-1 ${DARK_FIELD_CLASS}`}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1078,7 +1082,7 @@ export default function TocProjectPlanPage() {
                     onChange={(e) => setNewTaskTitle((prev) => ({ ...prev, [category.name]: e.target.value }))}
                     placeholder={`+ Add ${category.name} task`}
                     disabled={!!unavailable}
-                    className="h-9 border-white/10 bg-[#061426] text-white placeholder:text-slate-500"
+                    className={DARK_FIELD_SMALL_CLASS}
                   />
                   <Button size="sm" onClick={() => void addTask(category.name)} disabled={!!unavailable || savingId === `new-${category.name}`} className="bg-[#D6B65A] text-[#061426] hover:bg-[#c8a94f]">
                     <Plus className="h-4 w-4" />
@@ -1137,7 +1141,7 @@ export default function TocProjectPlanPage() {
                               value={assigneesText(draft.assignees ?? [])}
                               onChange={(e) => updateDraft(task.id, { assignees: parseAssignees(e.target.value) })}
                               disabled={disabled}
-                              className="h-8 border-white/10 bg-[#061426] text-xs text-white placeholder:text-slate-500"
+                              className={`h-8 text-xs ${DARK_FIELD_CLASS}`}
                             />
                             <div className="mt-1 space-y-1">
                               <Input
@@ -1145,7 +1149,7 @@ export default function TocProjectPlanPage() {
                                 value={ownerSearch[task.id] ?? ""}
                                 onChange={(e) => void searchOwner(task.id, e.target.value)}
                                 disabled={disabled}
-                                className="h-8 border-blue-300/20 bg-blue-400/10 text-xs text-white placeholder:text-slate-500"
+                                className="h-8 border-blue-200/40 bg-blue-400/15 text-xs text-white placeholder:text-blue-100/70 focus-visible:border-[#D6B65A] focus-visible:ring-[#D6B65A]/35"
                               />
                               {(ownerSuggestions[task.id] ?? []).length > 0 && (
                                 <div className="max-h-28 overflow-y-auto rounded-md border border-white/10 bg-[#061426] shadow-lg">
@@ -1179,14 +1183,14 @@ export default function TocProjectPlanPage() {
                             </Select>
                           </div>
                           <div className="border-r border-white/10 p-2">
-                            <Input type="date" value={draft.due_date ?? ""} onChange={(e) => updateDraft(task.id, { due_date: e.target.value || null })} disabled={disabled} className="h-9 border-white/10 bg-[#061426] text-xs text-white" />
+                            <Input type="date" value={draft.due_date ?? ""} onChange={(e) => updateDraft(task.id, { due_date: e.target.value || null })} disabled={disabled} className={`${DARK_FIELD_SMALL_CLASS} text-xs [color-scheme:dark]`} />
                           </div>
                           <div className="border-r border-white/10 p-2">
-                            <Input type="date" value={draft.delivery_date ?? ""} onChange={(e) => updateDraft(task.id, { delivery_date: e.target.value || null })} disabled={disabled} className="h-9 border-white/10 bg-[#061426] text-xs text-white" />
+                            <Input type="date" value={draft.delivery_date ?? ""} onChange={(e) => updateDraft(task.id, { delivery_date: e.target.value || null })} disabled={disabled} className={`${DARK_FIELD_SMALL_CLASS} text-xs [color-scheme:dark]`} />
                           </div>
                           <div className="border-r border-white/10 p-2">
                             <Select value={draft.priority} onValueChange={(value) => updateDraft(task.id, { priority: value as TocProjectTask["priority"] })} disabled={disabled}>
-                              <SelectTrigger className="h-9 border-white/10 bg-[#061426] text-xs capitalize text-white"><SelectValue /></SelectTrigger>
+                              <SelectTrigger className={`${DARK_SELECT_CLASS} text-xs capitalize`}><SelectValue /></SelectTrigger>
                               <SelectContent>
                                 {["low", "normal", "high", "urgent"].map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
                               </SelectContent>
@@ -1200,7 +1204,7 @@ export default function TocProjectPlanPage() {
                               onBlur={(e) => updateDraft(task.id, { budget_amount: parseCurrencyInput(e.target.value) })}
                               placeholder="$0.00"
                               disabled={disabled}
-                              className="h-9 border-white/10 bg-[#061426] text-white"
+                              className={DARK_FIELD_SMALL_CLASS}
                             />
                           </div>
                           <div className="border-r border-white/10 p-2">
@@ -1211,7 +1215,7 @@ export default function TocProjectPlanPage() {
                               onBlur={(e) => updateDraft(task.id, { actual_amount: parseCurrencyInput(e.target.value) })}
                               placeholder="$0.00"
                               disabled={disabled}
-                              className="h-9 border-white/10 bg-[#061426] text-white"
+                              className={DARK_FIELD_SMALL_CLASS}
                             />
                           </div>
                           <div className="p-2">
@@ -1226,10 +1230,10 @@ export default function TocProjectPlanPage() {
                         <div className="grid gap-3 bg-[#061426] p-3 lg:grid-cols-[1fr_1fr]">
                           <div className="rounded-lg border border-white/10 bg-white/5 p-3">
                             <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Notes & links</div>
-                            <Textarea value={draft.notes ?? ""} onChange={(e) => updateDraft(task.id, { notes: e.target.value })} placeholder="Notes, decisions, next steps…" disabled={disabled} className="min-h-20 border-white/10 bg-[#07182e] text-white placeholder:text-slate-500" />
+                            <Textarea value={draft.notes ?? ""} onChange={(e) => updateDraft(task.id, { notes: e.target.value })} placeholder="Notes, decisions, next steps…" disabled={disabled} className={`min-h-20 ${DARK_FIELD_CLASS}`} />
                             <div className="mt-2">
                               <Label className="text-xs text-slate-400">Links — one per line: Label|https://...</Label>
-                              <Textarea value={linksText(draft.links ?? [])} onChange={(e) => updateDraft(task.id, { links: parseLinks(e.target.value) })} placeholder="Venue quote|https://..." disabled={disabled} className="mt-1 min-h-16 border-white/10 bg-[#07182e] text-white placeholder:text-slate-500" />
+                              <Textarea value={linksText(draft.links ?? [])} onChange={(e) => updateDraft(task.id, { links: parseLinks(e.target.value) })} placeholder="Venue quote|https://..." disabled={disabled} className={`mt-1 min-h-16 ${DARK_FIELD_CLASS}`} />
                               {draft.links?.length > 0 && (
                                 <div className="mt-2 flex flex-wrap gap-2">
                                   {draft.links.map((link) => (
@@ -1247,7 +1251,7 @@ export default function TocProjectPlanPage() {
                               <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
                                 <Paperclip className="h-3.5 w-3.5" /> Files
                               </div>
-                              <Input type="file" disabled={disabled} onChange={(e) => void uploadAttachment(task.id, e.target.files?.[0] ?? null)} className="border-white/10 bg-[#07182e] text-slate-200 file:text-slate-200" />
+                              <Input type="file" disabled={disabled} onChange={(e) => void uploadAttachment(task.id, e.target.files?.[0] ?? null)} className={`${DARK_FIELD_CLASS} file:text-slate-100`} />
                               {draft.attachments?.length > 0 && (
                                 <div className="mt-2 space-y-1">
                                   {draft.attachments.map((file) => (
@@ -1281,7 +1285,7 @@ export default function TocProjectPlanPage() {
                                   value={commentDrafts[task.id] ?? ""}
                                   onChange={(e) => setCommentDrafts((prev) => ({ ...prev, [task.id]: e.target.value }))}
                                   placeholder="Add an update…"
-                                  className="min-h-14 border-white/10 bg-[#07182e] text-white placeholder:text-slate-500"
+                                  className={`min-h-14 ${DARK_FIELD_CLASS}`}
                                   disabled={disabled}
                                 />
                                 <Button
