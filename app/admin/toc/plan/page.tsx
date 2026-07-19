@@ -1510,10 +1510,10 @@ export default function TocProjectPlanPage() {
                           <div className="p-3 md:p-2">
                             <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400 md:hidden">Updates</div>
                             <div className="flex flex-wrap gap-1">
-                              <Badge variant="outline" className="gap-1"><MessageSquare className="h-3 w-3" />{draft.comments?.length ?? 0}</Badge>
-                              <Badge variant="outline" className="gap-1"><Paperclip className="h-3 w-3" />{draft.attachments?.length ?? 0}</Badge>
-                              <Badge variant="outline" className="gap-1"><LinkIcon className="h-3 w-3" />{draft.links?.length ?? 0}</Badge>
-                              <Badge variant="outline" className={`gap-1 ${pendingTaskApprovals ? "border-amber-300/40 text-amber-100" : ""}`}><ShieldCheck className="h-3 w-3" />{pendingTaskApprovals}</Badge>
+                              <Badge className="gap-1 border border-blue-300/30 bg-blue-400/15 text-blue-100 hover:bg-blue-400/20"><MessageSquare className="h-3 w-3" />{draft.comments?.length ?? 0}</Badge>
+                              <Badge className="gap-1 border border-slate-300/25 bg-slate-400/15 text-slate-100 hover:bg-slate-400/20"><Paperclip className="h-3 w-3" />{draft.attachments?.length ?? 0}</Badge>
+                              <Badge className="gap-1 border border-indigo-300/30 bg-indigo-400/15 text-indigo-100 hover:bg-indigo-400/20"><LinkIcon className="h-3 w-3" />{draft.links?.length ?? 0}</Badge>
+                              <Badge className={`gap-1 border ${pendingTaskApprovals ? "border-amber-300/40 bg-amber-400/20 text-amber-100" : "border-slate-300/25 bg-slate-400/15 text-slate-100"} hover:bg-white/15`}><ShieldCheck className="h-3 w-3" />{pendingTaskApprovals}</Badge>
                             </div>
                           </div>
                         </div>
