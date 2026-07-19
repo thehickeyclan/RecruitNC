@@ -44,8 +44,13 @@ export type TocProjectDocument = {
   title: string
   category: string | null
   vendor: string | null
+  document_date?: string | null
   description: string | null
   amount: number | null
+  ai_summary?: string | null
+  ai_metadata?: Record<string, unknown> | null
+  ai_review_status?: string | null
+  ai_reviewed_at?: string | null
   url: string
   path?: string | null
   file_name: string

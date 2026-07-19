@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { recordTocProjectActivity } from "@/lib/toc/project-activity"
+import { reviewTocProjectDocumentWithAi } from "@/lib/toc/project-document-ai"
 import { requireTocInvitationManager } from "@/lib/toc/require-toc-invitation-manager"
 
 export const dynamic = "force-dynamic"
@@ -61,6 +62,23 @@ export async function POST(request: Request) {
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]+/g, "-").slice(0, 120)
   const path = `${new Date().toISOString().slice(0, 10)}/${Date.now()}-${safeName}`
   const buffer = Buffer.from(await file.arrayBuffer())
+  const aiReview = await reviewTocProjectDocumentWithAi({
+    fileName: file.name,
+    mimeType: file.type || "application/octet-stream",
+    buffer,
+    title,
+    category,
+    vendor,
+    amount,
+  }).catch((error) => ({ ok: false as const, error: error instanceof Error ? error.message : "AI review failed" }))
+
+  const aiMetadata = aiReview.ok ? aiReview.metadata : null
+  const finalVendor = vendor || aiMetadata?.vendor || null
+  const finalAmount = amount ?? aiMetadata?.totalAmount ?? null
+  const finalCategory = category || aiMetadata?.suggestedCategory || null
+  const finalDescription = description
+  const documentDate = aiMetadata?.documentDate ?? null
+
   const { error: uploadError } = await admin.storage.from(BUCKET).upload(path, buffer, {
     contentType: file.type || "application/octet-stream",
     upsert: false,
@@ -70,10 +88,15 @@ export async function POST(request: Request) {
   const { data: publicData } = admin.storage.from(BUCKET).getPublicUrl(path)
   const payload = {
     title,
-    category,
-    vendor,
-    description,
-    amount,
+    category: finalCategory,
+    vendor: finalVendor,
+    document_date: documentDate,
+    description: finalDescription,
+    amount: finalAmount,
+    ai_summary: aiMetadata?.summary || null,
+    ai_metadata: aiMetadata,
+    ai_review_status: aiReview.ok ? "reviewed" : "skipped",
+    ai_reviewed_at: aiReview.ok ? new Date().toISOString() : null,
     url: publicData.publicUrl,
     path,
     file_name: file.name,
@@ -89,11 +112,19 @@ export async function POST(request: Request) {
 
   await recordTocProjectActivity(admin, {
     actionType: "document.uploaded",
-    category,
+    category: finalCategory,
     actorEmail: auth.email,
     actorUserId: auth.userId,
-    summary: `uploaded shared document “${title}”${vendor ? ` for ${vendor}` : ""}`,
-    details: { fileName: file.name, fileSize: file.size, fileType: file.type || null, amount, vendor },
+    summary: `uploaded shared document “${title}”${finalVendor ? ` for ${finalVendor}` : ""}`,
+    details: {
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type || null,
+      amount: finalAmount,
+      vendor: finalVendor,
+      aiReviewStatus: aiReview.ok ? "reviewed" : "skipped",
+      aiReviewError: aiReview.ok ? null : aiReview.error,
+    },
   })
 
   return NextResponse.json({ document: data })
