@@ -222,6 +222,11 @@ export default function TocProjectPlanPage() {
   const [chatDraft, setChatDraft] = useState("")
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({})
   const [taskFilter, setTaskFilter] = useState<"all" | "mine">("all")
+  const [taskCategoryFilter, setTaskCategoryFilter] = useState("all")
+  const [taskStatusFilter, setTaskStatusFilter] = useState("all")
+  const [taskOwnerFilter, setTaskOwnerFilter] = useState("all")
+  const [taskPriorityFilter, setTaskPriorityFilter] = useState("all")
+  const [taskSearch, setTaskSearch] = useState("")
   const [ownerSearch, setOwnerSearch] = useState<Record<string, string>>({})
   const [ownerSuggestions, setOwnerSuggestions] = useState<Record<string, TocProjectUser[]>>({})
   const [ownerSearchLoading, setOwnerSearchLoading] = useState<Record<string, boolean>>({})
@@ -326,6 +331,57 @@ export default function TocProjectPlanPage() {
 
   const countdown = useMemo(() => tournamentCountdown(), [])
   const documentTotal = useMemo(() => documents.reduce((sum, doc) => sum + Number(doc.amount ?? 0), 0), [documents])
+  const ownerOptions = useMemo(() => {
+    const rows = new Map<string, { value: string; label: string }>()
+    tasks.forEach((task) => {
+      ;(task.assignees ?? []).forEach((assignee) => {
+        const value = (assignee.email || assignee.name || "").trim().toLowerCase()
+        const label = assignee.name && assignee.email && assignee.name !== assignee.email ? `${assignee.name} · ${assignee.email}` : assignee.name || assignee.email || ""
+        if (value && label) rows.set(value, { value, label })
+      })
+    })
+    return [...rows.values()].sort((a, b) => a.label.localeCompare(b.label))
+  }, [tasks])
+
+  const filteredTasks = useMemo(() => {
+    const search = taskSearch.trim().toLowerCase()
+    return tasks.filter((task) => {
+      if (taskFilter === "mine" && !isMyTask(task)) return false
+      if (taskCategoryFilter !== "all" && task.category !== taskCategoryFilter) return false
+      if (taskStatusFilter !== "all" && task.status !== taskStatusFilter) return false
+      if (taskPriorityFilter !== "all" && task.priority !== taskPriorityFilter) return false
+      if (taskOwnerFilter !== "all") {
+        if (taskOwnerFilter === "__unassigned__") return (task.assignees ?? []).length === 0
+        const ownerMatch = (task.assignees ?? []).some((assignee) => {
+          const email = assignee.email?.trim().toLowerCase()
+          const name = assignee.name?.trim().toLowerCase()
+          return email === taskOwnerFilter || name === taskOwnerFilter
+        })
+        if (!ownerMatch) return false
+      }
+      if (search) {
+        const haystack = [
+          task.title,
+          task.category,
+          task.notes,
+          task.priority,
+          STATUS_LABEL[task.status],
+          ...(task.assignees ?? []).flatMap((assignee) => [assignee.name, assignee.email]),
+        ].filter(Boolean).join(" ").toLowerCase()
+        if (!haystack.includes(search)) return false
+      }
+      return true
+    })
+  }, [tasks, taskFilter, taskCategoryFilter, taskStatusFilter, taskPriorityFilter, taskOwnerFilter, taskSearch, currentUser])
+
+  const activeFilterCount = [
+    taskFilter === "mine",
+    taskCategoryFilter !== "all",
+    taskStatusFilter !== "all",
+    taskOwnerFilter !== "all",
+    taskPriorityFilter !== "all",
+    !!taskSearch.trim(),
+  ].filter(Boolean).length
 
   function updateDraft(id: string, patch: Partial<TocProjectTask>) {
     setDrafts((prev) => ({ ...prev, [id]: { ...(prev[id] ?? tasks.find((t) => t.id === id)!), ...patch } }))
@@ -338,6 +394,15 @@ export default function TocProjectPlanPage() {
       const userMatch = assignee.userId === currentUser.userId
       return emailMatch || userMatch
     })
+  }
+
+  function resetTaskFilters() {
+    setTaskFilter("all")
+    setTaskCategoryFilter("all")
+    setTaskStatusFilter("all")
+    setTaskOwnerFilter("all")
+    setTaskPriorityFilter("all")
+    setTaskSearch("")
   }
 
   async function searchOwner(taskId: string, query: string) {
@@ -867,7 +932,7 @@ export default function TocProjectPlanPage() {
           <CardTitle className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <span>TOC Master Board</span>
             <span className="flex flex-wrap items-center gap-2 text-sm font-normal text-white/80">
-              <span>Grouped by workstream · status-driven like an ops board</span>
+              <span>{filteredTasks.length} of {tasks.length} tasks shown</span>
               <span className="inline-flex rounded-full border border-white/20 bg-white/10 p-1">
                 <button
                   type="button"
@@ -888,6 +953,92 @@ export default function TocProjectPlanPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-8 bg-[#061426] p-4">
+        <div className="rounded-2xl border border-white/10 bg-[#07182e] p-4 shadow-lg shadow-black/10">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div className="text-sm font-bold text-white">Task filters</div>
+              <div className="text-xs text-slate-400">Filter by owner, workstream, status, priority, or keyword.</div>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={resetTaskFilters}
+              disabled={activeFilterCount === 0}
+              className="border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white"
+            >
+              Clear filters{activeFilterCount ? ` (${activeFilterCount})` : ""}
+            </Button>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]">
+            <div>
+              <Label className="text-xs text-slate-400">Search</Label>
+              <Input
+                value={taskSearch}
+                onChange={(e) => setTaskSearch(e.target.value)}
+                placeholder="Search task, notes, owner…"
+                className="mt-1 border-white/10 bg-[#061426] text-white placeholder:text-slate-500"
+              />
+            </div>
+            <div>
+              <Label className="text-xs text-slate-400">Owner</Label>
+              <Select value={taskOwnerFilter} onValueChange={setTaskOwnerFilter}>
+                <SelectTrigger className="mt-1 border-white/10 bg-[#061426] text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All owners</SelectItem>
+                  <SelectItem value="__unassigned__">Unassigned</SelectItem>
+                  {ownerOptions.map((owner) => (
+                    <SelectItem key={owner.value} value={owner.value}>{owner.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs text-slate-400">Category</Label>
+              <Select value={taskCategoryFilter} onValueChange={setTaskCategoryFilter}>
+                <SelectTrigger className="mt-1 border-white/10 bg-[#061426] text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All categories</SelectItem>
+                  {TOC_PROJECT_CATEGORIES.map((category) => (
+                    <SelectItem key={category.name} value={category.name}>{category.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs text-slate-400">Status</Label>
+              <Select value={taskStatusFilter} onValueChange={setTaskStatusFilter}>
+                <SelectTrigger className="mt-1 border-white/10 bg-[#061426] text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All statuses</SelectItem>
+                  {Object.entries(STATUS_LABEL).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs text-slate-400">Priority</Label>
+              <Select value={taskPriorityFilter} onValueChange={setTaskPriorityFilter}>
+                <SelectTrigger className="mt-1 border-white/10 bg-[#061426] text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All priorities</SelectItem>
+                  {["low", "normal", "high", "urgent"].map((priority) => (
+                    <SelectItem key={priority} value={priority}>{priority}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
         {tasks.length === 0 && !unavailable && (
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -901,11 +1052,16 @@ export default function TocProjectPlanPage() {
             </div>
           </div>
         )}
-        {TOC_PROJECT_CATEGORIES.map((category) => {
+        {tasks.length > 0 && filteredTasks.length === 0 && (
+          <div className="rounded-xl border border-dashed border-white/15 bg-white/5 p-8 text-center text-sm text-slate-400">
+            No tasks match the current filters.
+          </div>
+        )}
+        {TOC_PROJECT_CATEGORIES.filter((category) => taskCategoryFilter === "all" || category.name === taskCategoryFilter).map((category) => {
           const meta = categoryMeta(category.name)
-          const allCategoryTasks = tasks.filter((task) => task.category === category.name).sort((a, b) => a.sort_order - b.sort_order)
-          const categoryTasks = taskFilter === "mine" ? allCategoryTasks.filter(isMyTask) : allCategoryTasks
-          const categoryBudget = allCategoryTasks.reduce((sum, task) => sum + Number(task.budget_amount ?? 0), 0)
+          const categoryTasks = filteredTasks.filter((task) => task.category === category.name).sort((a, b) => a.sort_order - b.sort_order)
+          const categoryBudget = categoryTasks.reduce((sum, task) => sum + Number(task.budget_amount ?? 0), 0)
+          if (categoryTasks.length === 0 && taskCategoryFilter === "all" && activeFilterCount > 0) return null
           return (
             <section key={category.name} className="overflow-hidden rounded-xl border border-white/10 bg-[#07182e] shadow-lg shadow-black/10">
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 bg-gradient-to-r from-[#0a1d37] via-[#07182e] to-[#061426] px-4 py-3">
@@ -944,9 +1100,9 @@ export default function TocProjectPlanPage() {
                     <div className="px-3 py-2">Updates</div>
                   </div>
 
-                  {categoryTasks.length === 0 && taskFilter === "mine" && (
+                  {categoryTasks.length === 0 && activeFilterCount > 0 && (
                     <div className="border-b border-white/10 bg-[#07182e] px-4 py-6 text-center text-sm text-slate-400">
-                      No tasks assigned to you in this workstream.
+                      No tasks in this workstream match the current filters.
                     </div>
                   )}
 
