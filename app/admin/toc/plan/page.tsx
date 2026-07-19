@@ -113,6 +113,8 @@ const APPROVAL_CLASS: Record<string, string> = {
   rejected: "border-red-300/35 bg-red-500/15 text-red-100",
 }
 
+const CHAT_REACTION_EMOJIS = ["👍", "❤️", "✅", "👀", "🔥", "😂"]
+
 const DARK_FIELD_CLASS = "border-slate-400/40 bg-slate-950/35 text-white placeholder:text-slate-300 shadow-inner shadow-black/20 focus-visible:border-[#D6B65A] focus-visible:ring-[#D6B65A]/35"
 const DARK_FIELD_SMALL_CLASS = `h-9 ${DARK_FIELD_CLASS}`
 const DARK_SELECT_CLASS = `h-9 ${DARK_FIELD_CLASS}`
@@ -345,6 +347,8 @@ export default function TocProjectPlanPage() {
   const [error, setError] = useState<string | null>(null)
   const [newTaskTitle, setNewTaskTitle] = useState<Record<string, string>>({})
   const [chatDraft, setChatDraft] = useState("")
+  const [editingChatId, setEditingChatId] = useState<string | null>(null)
+  const [editingChatDraft, setEditingChatDraft] = useState("")
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({})
   const [taskFilter, setTaskFilter] = useState<"all" | "mine">("all")
   const [taskCategoryFilter, setTaskCategoryFilter] = useState("all")
@@ -919,6 +923,62 @@ export default function TocProjectPlanPage() {
     }
   }
 
+  async function reactToChatMessage(messageId: string, emoji: string) {
+    try {
+      const res = await fetch(`/api/admin/toc/project-chat/${messageId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ action: "react", emoji }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "Reaction failed")
+      setChatMessages((prev) => prev.map((message) => (message.id === messageId ? { ...message, ...data.message } : message)))
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Reaction failed")
+    }
+  }
+
+  async function saveChatEdit(messageId: string) {
+    const body = editingChatDraft.trim()
+    if (!body) return
+    setSavingId(`chat-edit-${messageId}`)
+    try {
+      const res = await fetch(`/api/admin/toc/project-chat/${messageId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ action: "edit", body }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "Edit failed")
+      setChatMessages((prev) => prev.map((message) => (message.id === messageId ? { ...message, ...data.message } : message)))
+      setEditingChatId(null)
+      setEditingChatDraft("")
+      void refreshActivity()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Edit failed")
+    } finally {
+      setSavingId(null)
+    }
+  }
+
+  async function deleteChatMessage(messageId: string) {
+    if (!confirm("Delete this chat message?")) return
+    setSavingId(`chat-delete-${messageId}`)
+    try {
+      const res = await fetch(`/api/admin/toc/project-chat/${messageId}`, { method: "DELETE", credentials: "include" })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "Delete failed")
+      setChatMessages((prev) => prev.map((message) => (message.id === messageId ? { ...message, ...data.message } : message)))
+      void refreshActivity()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Delete failed")
+    } finally {
+      setSavingId(null)
+    }
+  }
+
   async function addComment(taskId: string) {
     const body = (commentDrafts[taskId] || "").trim()
     if (!body || taskId.startsWith("seed-")) return
@@ -1058,6 +1118,11 @@ export default function TocProjectPlanPage() {
                   chatMessages.map((message) => {
                     const isMine = currentUser?.email?.toLowerCase() === message.author_email?.toLowerCase()
                     const authorName = displayPersonName(message.author_name, message.author_email)
+                    const isDeleted = !!message.deleted_at
+                    const reactionCounts = (message.reactions ?? []).reduce<Record<string, number>>((acc, reaction) => {
+                      acc[reaction.emoji] = (acc[reaction.emoji] ?? 0) + 1
+                      return acc
+                    }, {})
                     return (
                       <div key={message.id} className={`flex gap-2 ${isMine ? "justify-end" : "justify-start"}`}>
                         {!isMine && (
@@ -1068,8 +1133,65 @@ export default function TocProjectPlanPage() {
                         <div className={`max-w-[82%] rounded-2xl px-3 py-2 text-sm shadow-sm ${isMine ? "bg-[#D6B65A] text-[#061426]" : "bg-white/10 text-slate-100"}`}>
                           <div className={`mb-1 text-[11px] ${isMine ? "text-[#061426]/70" : "text-slate-400"}`}>
                             {isMine ? "You" : authorName} · {formatDateTime(message.created_at)}
+                            {message.edited_at && !isDeleted ? " · edited" : ""}
                           </div>
-                          <p className="whitespace-pre-wrap">{message.body}</p>
+                          {editingChatId === message.id ? (
+                            <div className="space-y-2">
+                              <Textarea
+                                value={editingChatDraft}
+                                onChange={(e) => setEditingChatDraft(e.target.value)}
+                                className={`min-h-16 ${isMine ? "border-[#061426]/20 bg-white/70 text-[#061426] placeholder:text-[#061426]/50" : DARK_FIELD_CLASS}`}
+                              />
+                              <div className="flex justify-end gap-2">
+                                <Button type="button" size="sm" variant="ghost" onClick={() => setEditingChatId(null)} className={isMine ? "text-[#061426]/75 hover:bg-[#061426]/10" : "text-slate-300 hover:bg-white/10 hover:text-white"}>
+                                  Cancel
+                                </Button>
+                                <Button type="button" size="sm" onClick={() => void saveChatEdit(message.id)} disabled={savingId === `chat-edit-${message.id}` || !editingChatDraft.trim()} className={isMine ? "bg-[#061426] text-white hover:bg-[#0a1d37]" : "bg-[#D6B65A] text-[#061426] hover:bg-[#c8a94f]"}>
+                                  Save
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <p className={`whitespace-pre-wrap ${isDeleted ? "italic opacity-60" : ""}`}>{isDeleted ? "Message deleted" : message.body}</p>
+                          )}
+                          {!isDeleted && (
+                            <div className={`mt-2 flex flex-wrap items-center gap-1 ${isMine ? "justify-end" : "justify-start"}`}>
+                              {CHAT_REACTION_EMOJIS.map((emoji) => {
+                                const reacted = (message.reactions ?? []).some((reaction) => reaction.emoji === emoji && reaction.email?.toLowerCase() === currentUser?.email?.toLowerCase())
+                                const count = reactionCounts[emoji] ?? 0
+                                return (
+                                  <button
+                                    key={`${message.id}-${emoji}`}
+                                    type="button"
+                                    onClick={() => void reactToChatMessage(message.id, emoji)}
+                                    className={`rounded-full px-1.5 py-0.5 text-xs transition ${reacted ? "bg-white/70 text-[#061426]" : isMine ? "bg-[#061426]/10 text-[#061426]/75 hover:bg-[#061426]/20" : "bg-white/10 text-slate-200 hover:bg-white/20"}`}
+                                    title={`React ${emoji}`}
+                                  >
+                                    {emoji}{count > 0 ? ` ${count}` : ""}
+                                  </button>
+                                )
+                              })}
+                              <span className="mx-1 h-4 w-px bg-current opacity-20" />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingChatId(message.id)
+                                  setEditingChatDraft(message.body)
+                                }}
+                                className={`rounded-full px-2 py-0.5 text-[11px] ${isMine ? "text-[#061426]/75 hover:bg-[#061426]/10" : "text-slate-300 hover:bg-white/10 hover:text-white"}`}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => void deleteChatMessage(message.id)}
+                                disabled={savingId === `chat-delete-${message.id}`}
+                                className={`rounded-full px-2 py-0.5 text-[11px] ${isMine ? "text-red-900/80 hover:bg-red-500/10" : "text-red-200 hover:bg-red-500/10 hover:text-red-100"}`}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     )

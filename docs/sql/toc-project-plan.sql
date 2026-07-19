@@ -84,8 +84,20 @@ create table if not exists public.toc_project_chat_messages (
   body text not null check (char_length(btrim(body)) > 0),
   author_email text not null,
   author_user_id uuid,
+  reactions jsonb not null default '[]'::jsonb,
+  edited_at timestamptz,
+  deleted_at timestamptz,
   created_at timestamptz not null default now()
 );
+
+alter table public.toc_project_chat_messages
+  add column if not exists reactions jsonb not null default '[]'::jsonb;
+
+alter table public.toc_project_chat_messages
+  add column if not exists edited_at timestamptz;
+
+alter table public.toc_project_chat_messages
+  add column if not exists deleted_at timestamptz;
 
 create table if not exists public.toc_project_typing_status (
   email text primary key,
