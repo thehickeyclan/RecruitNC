@@ -374,7 +374,14 @@ export const useCartStore = create<CartStore>()(
       },
 
       clearCart: () => {
-        set({ items: [], promoCode: null, promoDiscount: 0, promoDiscountType: null })
+        set({
+          items: [],
+          promoCode: null,
+          promoDiscount: 0,
+          promoDiscountType: null,
+          shippingAddress: null,
+          shippingMethod: null,
+        })
       },
 
       getSubtotal: () => {

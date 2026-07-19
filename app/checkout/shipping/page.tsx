@@ -2,7 +2,6 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
 import { trackInitiateCheckout } from "@/lib/meta-pixel"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
@@ -13,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { StoreNavLink } from "@/components/store-nav-link"
-import { useCartStore, type ShippingAddress } from "@/lib/store/cart-store"
+import { useCartStore, type ShippingAddress, type ShippingMethod } from "@/lib/store/cart-store"
 import { CheckoutProgress } from "@/components/checkout-progress"
 import { OrderSummary } from "@/components/order-summary"
 
@@ -21,9 +20,35 @@ const US_STATES = [
   "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
 ]
 
+const PICKUP_METHOD: ShippingMethod = {
+  id: "pickup",
+  name: "Free pickup at NC United Blue practices",
+  price: 0,
+  days: "Sundays at UNC",
+  description: "Pick up your order at NC United Blue practices every Sunday at UNC — FREE",
+}
+
+const STANDARD_METHOD: ShippingMethod = {
+  id: "standard",
+  name: "Ship anywhere",
+  price: 5.0,
+  days: "5-7 business days",
+  description: "Standard shipping via USPS or UPS — $5.00",
+}
+
+const PICKUP_ADDRESS: Pick<ShippingAddress, "address1" | "address2" | "city" | "state" | "zipCode"> = {
+  address1: "NC United Blue Practice Pickup",
+  address2: "Customer will pick up at practice",
+  city: "Chapel Hill",
+  state: "NC",
+  zipCode: "27514",
+}
+
 export default function ShippingPage() {
-  const router = useRouter()
-  const { items, setShippingAddress, shippingAddress, getTotal } = useCartStore()
+  const { items, setShippingAddress, setShippingMethod, shippingAddress, shippingMethod, getTotal } = useCartStore()
+  const [fulfillmentType, setFulfillmentType] = useState<"pickup" | "ship">(
+    shippingMethod && shippingMethod.id !== "pickup" ? "ship" : "pickup"
+  )
 
   useEffect(() => {
     if (items.length === 0) return
@@ -32,8 +57,12 @@ export default function ShippingPage() {
     trackInitiateCheckout(total.total, "USD", numItems)
   }, [items.length, getTotal])
 
-  const [formData, setFormData] = useState<ShippingAddress>(
-    shippingAddress ?? {
+  useEffect(() => {
+    if (!shippingMethod) setShippingMethod(PICKUP_METHOD)
+  }, [shippingMethod, setShippingMethod])
+
+  const [formData, setFormData] = useState<ShippingAddress>(() => {
+    const blankAddress = {
       firstName: "",
       lastName: "",
       email: "",
@@ -44,13 +73,25 @@ export default function ShippingPage() {
       zipCode: "",
       phone: "",
     }
-  )
+    if (!shippingAddress) return blankAddress
+    if (shippingMethod?.id !== "pickup" && shippingAddress.address1 === PICKUP_ADDRESS.address1) {
+      return {
+        ...shippingAddress,
+        address1: "",
+        address2: "",
+        city: "",
+        state: "",
+        zipCode: "",
+      }
+    }
+    return shippingAddress
+  })
 
   const [errors, setErrors] = useState<Partial<Record<keyof ShippingAddress, string>>>({})
   const [emailOffers, setEmailOffers] = useState(false)
   const [saveInfo, setSaveInfo] = useState(false)
 
-  const validateField = (name: keyof ShippingAddress, value: string) => {
+  const validateField = (name: keyof ShippingAddress, value: string, mode: "pickup" | "ship" = fulfillmentType) => {
     switch (name) {
       case "email":
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? "" : "Invalid email address"
@@ -63,9 +104,11 @@ export default function ShippingPage() {
       }
       case "firstName":
       case "lastName":
+        return value.trim() ? "" : "This field is required"
       case "address1":
       case "city":
       case "state":
+        if (mode === "pickup") return ""
         return value.trim() ? "" : "This field is required"
       default:
         return ""
@@ -96,16 +139,30 @@ export default function ShippingPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     const newErrors: Partial<Record<keyof ShippingAddress, string>> = {}
-    ;(Object.keys(formData) as (keyof ShippingAddress)[]).forEach((key) => {
-      if (key !== "address2") {
-        const error = validateField(key, formData[key] ?? "")
-        if (error) newErrors[key] = error
-      }
+    const requiredFields: (keyof ShippingAddress)[] =
+      fulfillmentType === "pickup"
+        ? ["firstName", "lastName", "email", "phone"]
+        : ["firstName", "lastName", "email", "address1", "city", "state", "zipCode", "phone"]
+
+    requiredFields.forEach((key) => {
+      const error = validateField(key, formData[key] ?? "", fulfillmentType)
+      if (error) newErrors[key] = error
     })
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
       return
     }
+
+    if (fulfillmentType === "pickup") {
+      setShippingAddress({
+        ...formData,
+        ...PICKUP_ADDRESS,
+      })
+      setShippingMethod(PICKUP_METHOD)
+      window.location.href = "/checkout/payment"
+      return
+    }
+
     setShippingAddress(formData)
     window.location.href = "/checkout/shipping-method"
   }
@@ -138,6 +195,68 @@ export default function ShippingPage() {
                   <CardTitle>Contact Information</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  <div className="rounded-lg border border-[#003366]/15 bg-[#003366]/5 p-4">
+                    <Label className="mb-3 block text-base font-semibold">How do you want to get your order?</Label>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFulfillmentType("pickup")
+                          setShippingMethod(PICKUP_METHOD)
+                          setErrors({})
+                        }}
+                        className={`rounded-lg border p-4 text-left transition-colors ${
+                          fulfillmentType === "pickup"
+                            ? "border-green-500 bg-green-50 text-green-950"
+                            : "border-border bg-background hover:bg-secondary/50"
+                        }`}
+                      >
+                        <div className="font-semibold">Pickup at practice</div>
+                        <div className="mt-1 text-sm text-muted-foreground">Fastest checkout. No shipping address required.</div>
+                        <div className="mt-2 text-sm font-semibold text-green-700">FREE</div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFulfillmentType("ship")
+                          setShippingMethod(STANDARD_METHOD)
+                          if (formData.address1 === PICKUP_ADDRESS.address1) {
+                            setFormData((prev) => ({
+                              ...prev,
+                              address1: "",
+                              address2: "",
+                              city: "",
+                              state: "",
+                              zipCode: "",
+                            }))
+                          }
+                          setErrors({})
+                        }}
+                        className={`rounded-lg border p-4 text-left transition-colors ${
+                          fulfillmentType === "ship"
+                            ? "border-[#003366] bg-[#003366]/5"
+                            : "border-border bg-background hover:bg-secondary/50"
+                        }`}
+                      >
+                        <div className="font-semibold">Ship it to me</div>
+                        <div className="mt-1 text-sm text-muted-foreground">Enter a shipping address and choose shipping next.</div>
+                        <div className="mt-2 text-sm font-semibold">$5 standard</div>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <Label htmlFor="firstName">First Name *</Label>
+                      <Input id="firstName" value={formData.firstName} onChange={(e) => handleChange("firstName", e.target.value)} onBlur={() => handleBlur("firstName")} className={errors.firstName ? "border-destructive" : ""} />
+                      {errors.firstName && <p className="text-sm text-destructive mt-1">{errors.firstName}</p>}
+                    </div>
+                    <div>
+                      <Label htmlFor="lastName">Last Name *</Label>
+                      <Input id="lastName" value={formData.lastName} onChange={(e) => handleChange("lastName", e.target.value)} onBlur={() => handleBlur("lastName")} className={errors.lastName ? "border-destructive" : ""} />
+                      {errors.lastName && <p className="text-sm text-destructive mt-1">{errors.lastName}</p>}
+                    </div>
+                  </div>
                   <div>
                     <Label htmlFor="email">Email *</Label>
                     <Input
@@ -159,62 +278,57 @@ export default function ShippingPage() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Shipping Address</CardTitle>
+                  <CardTitle>{fulfillmentType === "pickup" ? "Pickup Contact" : "Shipping Address"}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div>
-                      <Label htmlFor="firstName">First Name *</Label>
-                      <Input id="firstName" value={formData.firstName} onChange={(e) => handleChange("firstName", e.target.value)} onBlur={() => handleBlur("firstName")} className={errors.firstName ? "border-destructive" : ""} />
-                      {errors.firstName && <p className="text-sm text-destructive mt-1">{errors.firstName}</p>}
+                  {fulfillmentType === "pickup" && (
+                    <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-800">
+                      We only need your contact info for pickup orders. Your receipt will say pickup at NC United Blue practice.
                     </div>
-                    <div>
-                      <Label htmlFor="lastName">Last Name *</Label>
-                      <Input id="lastName" value={formData.lastName} onChange={(e) => handleChange("lastName", e.target.value)} onBlur={() => handleBlur("lastName")} className={errors.lastName ? "border-destructive" : ""} />
-                      {errors.lastName && <p className="text-sm text-destructive mt-1">{errors.lastName}</p>}
-                    </div>
-                  </div>
+                  )}
+                  {fulfillmentType === "ship" && (
+                    <>
+                      <div>
+                        <Label htmlFor="address1">Address Line 1 *</Label>
+                        <Input id="address1" value={formData.address1} onChange={(e) => handleChange("address1", e.target.value)} onBlur={() => handleBlur("address1")} className={errors.address1 ? "border-destructive" : ""} />
+                        {errors.address1 && <p className="text-sm text-destructive mt-1">{errors.address1}</p>}
+                      </div>
+                      <div>
+                        <Label htmlFor="address2">Address Line 2 (Optional)</Label>
+                        <Input id="address2" value={formData.address2 ?? ""} onChange={(e) => handleChange("address2", e.target.value)} />
+                      </div>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div>
+                          <Label htmlFor="city">City *</Label>
+                          <Input id="city" value={formData.city} onChange={(e) => handleChange("city", e.target.value)} onBlur={() => handleBlur("city")} className={errors.city ? "border-destructive" : ""} />
+                          {errors.city && <p className="text-sm text-destructive mt-1">{errors.city}</p>}
+                        </div>
+                        <div>
+                          <Label htmlFor="state">State *</Label>
+                          <Select value={formData.state} onValueChange={(v) => handleChange("state", v)}>
+                            <SelectTrigger className={errors.state ? "border-destructive" : ""}>
+                              <SelectValue placeholder="Select state" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {US_STATES.map((state) => (
+                                <SelectItem key={state} value={state}>{state}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {errors.state && <p className="text-sm text-destructive mt-1">{errors.state}</p>}
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="zipCode">ZIP Code *</Label>
+                        <Input id="zipCode" value={formData.zipCode} onChange={(e) => handleChange("zipCode", e.target.value)} onBlur={() => handleBlur("zipCode")} maxLength={5} className={errors.zipCode ? "border-destructive" : ""} />
+                        {errors.zipCode && <p className="text-sm text-destructive mt-1">{errors.zipCode}</p>}
+                      </div>
+                    </>
+                  )}
                   <div>
-                    <Label htmlFor="address1">Address Line 1 *</Label>
-                    <Input id="address1" value={formData.address1} onChange={(e) => handleChange("address1", e.target.value)} onBlur={() => handleBlur("address1")} className={errors.address1 ? "border-destructive" : ""} />
-                    {errors.address1 && <p className="text-sm text-destructive mt-1">{errors.address1}</p>}
-                  </div>
-                  <div>
-                    <Label htmlFor="address2">Address Line 2 (Optional)</Label>
-                    <Input id="address2" value={formData.address2 ?? ""} onChange={(e) => handleChange("address2", e.target.value)} />
-                  </div>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div>
-                      <Label htmlFor="city">City *</Label>
-                      <Input id="city" value={formData.city} onChange={(e) => handleChange("city", e.target.value)} onBlur={() => handleBlur("city")} className={errors.city ? "border-destructive" : ""} />
-                      {errors.city && <p className="text-sm text-destructive mt-1">{errors.city}</p>}
-                    </div>
-                    <div>
-                      <Label htmlFor="state">State *</Label>
-                      <Select value={formData.state} onValueChange={(v) => handleChange("state", v)}>
-                        <SelectTrigger className={errors.state ? "border-destructive" : ""}>
-                          <SelectValue placeholder="Select state" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {US_STATES.map((state) => (
-                            <SelectItem key={state} value={state}>{state}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {errors.state && <p className="text-sm text-destructive mt-1">{errors.state}</p>}
-                    </div>
-                  </div>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div>
-                      <Label htmlFor="zipCode">ZIP Code *</Label>
-                      <Input id="zipCode" value={formData.zipCode} onChange={(e) => handleChange("zipCode", e.target.value)} onBlur={() => handleBlur("zipCode")} maxLength={5} className={errors.zipCode ? "border-destructive" : ""} />
-                      {errors.zipCode && <p className="text-sm text-destructive mt-1">{errors.zipCode}</p>}
-                    </div>
-                    <div>
-                      <Label htmlFor="phone">Phone *</Label>
-                      <Input id="phone" value={formData.phone} onChange={(e) => handlePhoneChange(e.target.value)} onBlur={() => handleBlur("phone")} placeholder="(555) 555-5555" className={errors.phone ? "border-destructive" : ""} />
-                      {errors.phone && <p className="text-sm text-destructive mt-1">{errors.phone}</p>}
-                    </div>
+                    <Label htmlFor="phone">Phone *</Label>
+                    <Input id="phone" value={formData.phone} onChange={(e) => handlePhoneChange(e.target.value)} onBlur={() => handleBlur("phone")} placeholder="(555) 555-5555" className={errors.phone ? "border-destructive" : ""} />
+                    {errors.phone && <p className="text-sm text-destructive mt-1">{errors.phone}</p>}
                   </div>
                   <div className="flex items-center space-x-2">
                     <Checkbox id="saveInfo" checked={saveInfo} onCheckedChange={(c) => setSaveInfo(c === true)} />
@@ -229,7 +343,7 @@ export default function ShippingPage() {
                   Back to Cart
                 </Button>
                 <Button type="submit" className="hidden bg-[#003366] text-white hover:bg-[#003366]/90 sm:inline-flex">
-                  Continue to Shipping Method
+                  {fulfillmentType === "pickup" ? "Continue to Payment" : "Continue to Shipping Method"}
                 </Button>
               </div>
             </form>
@@ -250,7 +364,7 @@ export default function ShippingPage() {
           className="w-full bg-[#003366] text-white hover:bg-[#003366]/90"
           size="lg"
         >
-          Continue to Shipping Method
+          {fulfillmentType === "pickup" ? "Continue to Payment" : "Continue to Shipping Method"}
         </Button>
       </div>
     </div>
