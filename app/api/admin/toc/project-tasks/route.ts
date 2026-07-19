@@ -65,6 +65,7 @@ export async function POST(request: Request) {
     assignees: asArray(body.assignees),
     links: asArray(body.links),
     attachments: [],
+    comments: [],
     created_by: auth.userId,
     updated_by: auth.userId,
   }

@@ -22,6 +22,17 @@ export type TocTaskAttachment = {
   uploadedBy?: string | null
 }
 
+export type TocTaskComment = {
+  id: string
+  body: string
+  createdAt: string
+  createdBy: {
+    userId?: string | null
+    email: string
+    name?: string | null
+  }
+}
+
 export type TocProjectTask = {
   id: string
   category: string
@@ -36,6 +47,7 @@ export type TocProjectTask = {
   assignees: TocTaskAssignee[]
   links: TocTaskLink[]
   attachments: TocTaskAttachment[]
+  comments: TocTaskComment[]
   created_at?: string
   updated_at?: string
 }
@@ -122,6 +134,7 @@ export function tocProjectSeedTasks(): TocProjectTask[] {
         assignees: [],
         links: [],
         attachments: [],
+        comments: [],
       }
       order += 10
       return task

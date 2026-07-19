@@ -15,11 +15,15 @@ create table if not exists public.toc_project_tasks (
   assignees jsonb not null default '[]'::jsonb,
   links jsonb not null default '[]'::jsonb,
   attachments jsonb not null default '[]'::jsonb,
+  comments jsonb not null default '[]'::jsonb,
   created_by uuid,
   updated_by uuid,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.toc_project_tasks
+  add column if not exists comments jsonb not null default '[]'::jsonb;
 
 create index if not exists toc_project_tasks_category_idx on public.toc_project_tasks (category, sort_order);
 create index if not exists toc_project_tasks_status_idx on public.toc_project_tasks (status);
