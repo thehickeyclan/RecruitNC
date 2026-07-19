@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { TOC_EVENT_DATE, TOC_EVENT_DATES_RANGE } from "@/lib/toc/constants"
-import { TOC_PROJECT_CATEGORIES, type TocProjectChatMessage, type TocProjectDocument, type TocProjectTask, type TocTaskAssignee, type TocTaskLink } from "@/lib/toc/project-plan"
+import { TOC_PROJECT_CATEGORIES, type TocProjectChatMessage, type TocProjectDocument, type TocProjectTask, type TocProjectUser, type TocTaskAssignee, type TocTaskLink } from "@/lib/toc/project-plan"
 
 type Payload = {
   unavailable?: boolean
@@ -157,6 +157,10 @@ export default function TocProjectPlanPage() {
   const [newTaskTitle, setNewTaskTitle] = useState<Record<string, string>>({})
   const [chatDraft, setChatDraft] = useState("")
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({})
+  const [taskFilter, setTaskFilter] = useState<"all" | "mine">("all")
+  const [ownerSearch, setOwnerSearch] = useState<Record<string, string>>({})
+  const [ownerSuggestions, setOwnerSuggestions] = useState<Record<string, TocProjectUser[]>>({})
+  const [ownerSearchLoading, setOwnerSearchLoading] = useState<Record<string, boolean>>({})
   const [drafts, setDrafts] = useState<Record<string, TocProjectTask>>({})
   const [docTitle, setDocTitle] = useState("")
   const [docCategory, setDocCategory] = useState("Receipts")
@@ -246,6 +250,41 @@ export default function TocProjectPlanPage() {
 
   function updateDraft(id: string, patch: Partial<TocProjectTask>) {
     setDrafts((prev) => ({ ...prev, [id]: { ...(prev[id] ?? tasks.find((t) => t.id === id)!), ...patch } }))
+  }
+
+  function isMyTask(task: TocProjectTask): boolean {
+    if (!currentUser) return false
+    return (task.assignees ?? []).some((assignee) => {
+      const emailMatch = assignee.email?.trim().toLowerCase() === currentUser.email.toLowerCase()
+      const userMatch = assignee.userId === currentUser.userId
+      return emailMatch || userMatch
+    })
+  }
+
+  async function searchOwner(taskId: string, query: string) {
+    setOwnerSearch((prev) => ({ ...prev, [taskId]: query }))
+    if (query.trim().length < 2) {
+      setOwnerSuggestions((prev) => ({ ...prev, [taskId]: [] }))
+      return
+    }
+    setOwnerSearchLoading((prev) => ({ ...prev, [taskId]: true }))
+    try {
+      const res = await fetch(`/api/admin/toc/project-users?q=${encodeURIComponent(query)}`, { credentials: "include" })
+      const data = await res.json()
+      if (res.ok) setOwnerSuggestions((prev) => ({ ...prev, [taskId]: data.users ?? [] }))
+    } finally {
+      setOwnerSearchLoading((prev) => ({ ...prev, [taskId]: false }))
+    }
+  }
+
+  function addOwnerFromUser(task: TocProjectTask, user: TocProjectUser) {
+    const existing = task.assignees ?? []
+    if (existing.some((assignee) => assignee.userId === user.userId || assignee.email?.toLowerCase() === user.email.toLowerCase())) return
+    updateDraft(task.id, {
+      assignees: [...existing, { name: user.name, email: user.email, userId: user.userId }],
+    })
+    setOwnerSearch((prev) => ({ ...prev, [task.id]: "" }))
+    setOwnerSuggestions((prev) => ({ ...prev, [task.id]: [] }))
   }
 
   async function seedMasterTasks() {
@@ -657,7 +696,25 @@ export default function TocProjectPlanPage() {
         <CardHeader className="border-b bg-gradient-to-r from-[#002147] to-[#0b3a6d] text-white">
           <CardTitle className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <span>TOC Master Board</span>
-            <span className="text-sm font-normal text-white/70">Grouped by workstream · status-driven like an ops board</span>
+            <span className="flex flex-wrap items-center gap-2 text-sm font-normal text-white/80">
+              <span>Grouped by workstream · status-driven like an ops board</span>
+              <span className="inline-flex rounded-full border border-white/20 bg-white/10 p-1">
+                <button
+                  type="button"
+                  onClick={() => setTaskFilter("all")}
+                  className={`rounded-full px-3 py-1 text-xs font-semibold transition ${taskFilter === "all" ? "bg-white text-[#002147]" : "text-white/75 hover:text-white"}`}
+                >
+                  All tasks
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTaskFilter("mine")}
+                  className={`rounded-full px-3 py-1 text-xs font-semibold transition ${taskFilter === "mine" ? "bg-white text-[#002147]" : "text-white/75 hover:text-white"}`}
+                >
+                  My tasks
+                </button>
+              </span>
+            </span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-8 bg-[#f6f7fb] p-4">
@@ -676,8 +733,9 @@ export default function TocProjectPlanPage() {
         )}
         {TOC_PROJECT_CATEGORIES.map((category) => {
           const meta = categoryMeta(category.name)
-          const categoryTasks = tasks.filter((task) => task.category === category.name).sort((a, b) => a.sort_order - b.sort_order)
-          const categoryBudget = categoryTasks.reduce((sum, task) => sum + Number(task.budget_amount ?? 0), 0)
+          const allCategoryTasks = tasks.filter((task) => task.category === category.name).sort((a, b) => a.sort_order - b.sort_order)
+          const categoryTasks = taskFilter === "mine" ? allCategoryTasks.filter(isMyTask) : allCategoryTasks
+          const categoryBudget = allCategoryTasks.reduce((sum, task) => sum + Number(task.budget_amount ?? 0), 0)
           return (
             <section key={category.name} className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-gradient-to-r from-white via-slate-50 to-blue-50 px-4 py-3">
@@ -716,6 +774,12 @@ export default function TocProjectPlanPage() {
                     <div className="px-3 py-2">Updates</div>
                   </div>
 
+                  {categoryTasks.length === 0 && taskFilter === "mine" && (
+                    <div className="border-b bg-white px-4 py-6 text-center text-sm text-gray-500">
+                      No tasks assigned to you in this workstream.
+                    </div>
+                  )}
+
                   {categoryTasks.map((task) => {
                     const draft = drafts[task.id] ?? task
                     const disabled = !!unavailable || task.id.startsWith("seed-")
@@ -743,12 +807,37 @@ export default function TocProjectPlanPage() {
                               {(draft.assignees ?? []).length === 0 && <span className="text-xs text-gray-400">No owner</span>}
                             </div>
                             <Input
-                              placeholder="Name, email"
+                              placeholder="Manual owner fallback"
                               value={assigneesText(draft.assignees ?? [])}
                               onChange={(e) => updateDraft(task.id, { assignees: parseAssignees(e.target.value) })}
                               disabled={disabled}
                               className="h-8 text-xs"
                             />
+                            <div className="mt-1 space-y-1">
+                              <Input
+                                placeholder="Lookup RecruitNC user"
+                                value={ownerSearch[task.id] ?? ""}
+                                onChange={(e) => void searchOwner(task.id, e.target.value)}
+                                disabled={disabled}
+                                className="h-8 border-blue-100 bg-blue-50/40 text-xs"
+                              />
+                              {(ownerSuggestions[task.id] ?? []).length > 0 && (
+                                <div className="max-h-28 overflow-y-auto rounded-md border bg-white shadow-sm">
+                                  {(ownerSuggestions[task.id] ?? []).map((user) => (
+                                    <button
+                                      key={user.userId}
+                                      type="button"
+                                      onClick={() => addOwnerFromUser(draft, user)}
+                                      className="block w-full px-2 py-1.5 text-left text-xs hover:bg-blue-50"
+                                    >
+                                      <span className="font-semibold text-gray-800">{user.name}</span>
+                                      <span className="block text-gray-500">{user.email}</span>
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                              {ownerSearchLoading[task.id] && <div className="text-[11px] text-gray-400">Searching RecruitNC…</div>}
+                            </div>
                             <Button type="button" size="sm" variant="ghost" onClick={() => selfAssign(draft)} disabled={disabled || !currentUser} className="mt-1 h-7 px-1 text-xs">
                               <UserPlus className="mr-1 h-3 w-3" /> Self assign
                             </Button>
