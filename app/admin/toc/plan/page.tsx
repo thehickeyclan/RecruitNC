@@ -152,26 +152,46 @@ export default function TocProjectPlanPage() {
   async function load() {
     setLoading(true)
     setError(null)
+    setUnavailable(null)
+    setDocumentsUnavailable(null)
+    setChatUnavailable(null)
     try {
-      const [tasksRes, documentsRes, chatRes] = await Promise.all([
-        fetch("/api/admin/toc/project-tasks", { cache: "no-store", credentials: "include" }),
+      const tasksRes = await fetch("/api/admin/toc/project-tasks", { cache: "no-store", credentials: "include" })
+      const data = (await tasksRes.json()) as Payload
+      if (!tasksRes.ok) throw new Error(data.error || "Could not load TOC project plan")
+      setTasks(data.tasks ?? [])
+      setCurrentUser(data.currentUser ?? null)
+      setUnavailable(data.unavailable ? `Database table missing. Run ${data.setupSql ?? "docs/sql/toc-project-plan.sql"} in Supabase to enable shared editing.` : null)
+      setDrafts(Object.fromEntries((data.tasks ?? []).map((task) => [task.id, task])))
+
+      const [documentsRes, chatRes] = await Promise.allSettled([
         fetch("/api/admin/toc/project-documents", { cache: "no-store", credentials: "include" }),
         fetch("/api/admin/toc/project-chat", { cache: "no-store", credentials: "include" }),
       ])
-      const data = (await tasksRes.json()) as Payload
-      const documentsData = (await documentsRes.json()) as DocumentsPayload
-      const chatData = (await chatRes.json()) as ChatPayload
-      if (!tasksRes.ok) throw new Error(data.error || "Could not load TOC project plan")
-      if (!documentsRes.ok) throw new Error(documentsData.error || "Could not load TOC documents")
-      if (!chatRes.ok) throw new Error(chatData.error || "Could not load TOC chat")
-      setTasks(data.tasks ?? [])
-      setDocuments(documentsData.documents ?? [])
-      setChatMessages(chatData.messages ?? [])
-      setCurrentUser(data.currentUser ?? null)
-      setUnavailable(data.unavailable ? `Database table missing. Run ${data.setupSql ?? "docs/sql/toc-project-plan.sql"} in Supabase to enable shared editing.` : null)
-      setDocumentsUnavailable(documentsData.unavailable ? `Document share missing. Run ${documentsData.setupSql ?? "docs/sql/toc-project-plan.sql"} in Supabase to enable uploads.` : null)
-      setChatUnavailable(chatData.unavailable ? `Team chat missing. Run ${chatData.setupSql ?? "docs/sql/toc-project-plan.sql"} in Supabase to enable messages.` : null)
-      setDrafts(Object.fromEntries((data.tasks ?? []).map((task) => [task.id, task])))
+
+      if (documentsRes.status === "fulfilled") {
+        const documentsData = (await documentsRes.value.json()) as DocumentsPayload
+        if (documentsRes.value.ok) {
+          setDocuments(documentsData.documents ?? [])
+          setDocumentsUnavailable(documentsData.unavailable ? `Document share missing. Run ${documentsData.setupSql ?? "docs/sql/toc-project-plan.sql"} in Supabase to enable uploads.` : null)
+        } else {
+          setDocumentsUnavailable(documentsData.error || "Document share could not load.")
+        }
+      } else {
+        setDocumentsUnavailable("Document share could not load. The task board is still available.")
+      }
+
+      if (chatRes.status === "fulfilled") {
+        const chatData = (await chatRes.value.json()) as ChatPayload
+        if (chatRes.value.ok) {
+          setChatMessages(chatData.messages ?? [])
+          setChatUnavailable(chatData.unavailable ? `Team chat missing. Run ${chatData.setupSql ?? "docs/sql/toc-project-plan.sql"} in Supabase to enable messages.` : null)
+        } else {
+          setChatUnavailable(chatData.error || "Team chat could not load.")
+        }
+      } else {
+        setChatUnavailable("Team chat could not load. The task board is still available.")
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not load TOC project plan")
     } finally {
