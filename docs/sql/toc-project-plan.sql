@@ -31,6 +31,37 @@ create index if not exists toc_project_tasks_updated_at_idx on public.toc_projec
 create unique index if not exists toc_project_tasks_category_title_key
   on public.toc_project_tasks (category, title);
 
+create table if not exists public.toc_project_documents (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  category text,
+  description text,
+  amount numeric(12,2),
+  url text not null,
+  path text,
+  file_name text not null,
+  file_type text,
+  file_size bigint,
+  uploaded_by text,
+  created_by uuid,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists toc_project_documents_created_at_idx
+  on public.toc_project_documents (created_at desc);
+create index if not exists toc_project_documents_category_idx
+  on public.toc_project_documents (category);
+
+alter table public.toc_project_documents enable row level security;
+
+drop policy if exists "Service role manages TOC project documents" on public.toc_project_documents;
+create policy "Service role manages TOC project documents"
+  on public.toc_project_documents
+  for all
+  to service_role
+  using (true)
+  with check (true);
+
 alter table public.toc_project_tasks enable row level security;
 
 drop policy if exists "Service role manages TOC project tasks" on public.toc_project_tasks;
@@ -47,11 +78,21 @@ insert into storage.buckets (id, name, public)
 values ('toc-project-attachments', 'toc-project-attachments', true)
 on conflict (id) do update set public = excluded.public;
 
+insert into storage.buckets (id, name, public)
+values ('toc-project-documents', 'toc-project-documents', true)
+on conflict (id) do update set public = excluded.public;
+
 drop policy if exists "Public read TOC project attachments" on storage.objects;
 create policy "Public read TOC project attachments"
   on storage.objects
   for select
   using (bucket_id = 'toc-project-attachments');
+
+drop policy if exists "Public read TOC project documents" on storage.objects;
+create policy "Public read TOC project documents"
+  on storage.objects
+  for select
+  using (bucket_id = 'toc-project-documents');
 
 drop policy if exists "Service role manages TOC project attachments" on storage.objects;
 create policy "Service role manages TOC project attachments"
@@ -60,6 +101,14 @@ create policy "Service role manages TOC project attachments"
   to service_role
   using (bucket_id = 'toc-project-attachments')
   with check (bucket_id = 'toc-project-attachments');
+
+drop policy if exists "Service role manages TOC project documents" on storage.objects;
+create policy "Service role manages TOC project documents"
+  on storage.objects
+  for all
+  to service_role
+  using (bucket_id = 'toc-project-documents')
+  with check (bucket_id = 'toc-project-documents');
 
 insert into public.toc_project_tasks (category, title, priority, sort_order)
 values
