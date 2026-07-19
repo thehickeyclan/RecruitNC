@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import { Activity, ArrowLeft, CalendarDays, CheckCircle2, Clock, DollarSign, FileText, LayoutGrid, LinkIcon, MessageSquare, Paperclip, Plus, Save, Send, ShieldCheck, Trash2, Upload, UserPlus, XCircle } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { TOC_EVENT_DATE, TOC_EVENT_DATES_RANGE } from "@/lib/toc/constants"
-import { TOC_PROJECT_CATEGORIES, type TocProjectActivity, type TocProjectApproval, type TocProjectChatMessage, type TocProjectDocument, type TocProjectTask, type TocProjectUser, type TocTaskAssignee, type TocTaskLink } from "@/lib/toc/project-plan"
+import { TOC_PROJECT_CATEGORIES, type TocProjectActivity, type TocProjectApproval, type TocProjectChatMessage, type TocProjectDocument, type TocProjectTask, type TocProjectTypingUser, type TocProjectUser, type TocTaskAssignee, type TocTaskLink } from "@/lib/toc/project-plan"
 
 type Payload = {
   unavailable?: boolean
@@ -33,6 +33,13 @@ type ChatPayload = {
   unavailable?: boolean
   setupSql?: string
   messages: TocProjectChatMessage[]
+  error?: string
+}
+
+type TypingPayload = {
+  unavailable?: boolean
+  setupSql?: string
+  users: TocProjectTypingUser[]
   error?: string
 }
 
@@ -173,6 +180,18 @@ function ownerInitials(value: string): string {
   return clean.slice(0, 2).toUpperCase() || "?"
 }
 
+function displayPersonName(name: string | null | undefined, email: string): string {
+  const cleanName = String(name ?? "").trim()
+  if (cleanName && cleanName.toLowerCase() !== email.toLowerCase()) return cleanName
+  return email
+    .split("@")[0]
+    .replace(/[._-]+/g, " ")
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ")
+}
+
 function formatDateTime(value: string): string {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return value
@@ -262,6 +281,7 @@ export default function TocProjectPlanPage() {
   const [documents, setDocuments] = useState<TocProjectDocument[]>([])
   const [approvals, setApprovals] = useState<TocProjectApproval[]>([])
   const [chatMessages, setChatMessages] = useState<TocProjectChatMessage[]>([])
+  const [typingUsers, setTypingUsers] = useState<TocProjectTypingUser[]>([])
   const [activityFeed, setActivityFeed] = useState<TocProjectActivity[]>([])
   const [bracketFill, setBracketFill] = useState({ confirmed: 0, capacity: 88, pct: 0, fullBrackets: 0 })
   const [currentUser, setCurrentUser] = useState<{ userId: string; email: string } | null>(null)
@@ -297,6 +317,7 @@ export default function TocProjectPlanPage() {
   const [docFile, setDocFile] = useState<File | null>(null)
   const [approvalDrafts, setApprovalDrafts] = useState<Record<string, ApprovalDraft>>({})
   const [approvalDecisionNotes, setApprovalDecisionNotes] = useState<Record<string, string>>({})
+  const lastTypingPostRef = useRef(0)
 
   async function load() {
     setLoading(true)
@@ -393,6 +414,32 @@ export default function TocProjectPlanPage() {
   useEffect(() => {
     void load()
   }, [])
+
+  useEffect(() => {
+    if (loading || chatUnavailable) return
+    const interval = window.setInterval(() => {
+      void refreshChat()
+      void refreshTypingUsers()
+    }, 3500)
+    return () => window.clearInterval(interval)
+  }, [loading, chatUnavailable])
+
+  useEffect(() => {
+    if (loading || chatUnavailable || !currentUser) return
+    const hasDraft = chatDraft.trim().length > 0
+    const now = Date.now()
+    const shouldPostTyping = hasDraft && now - lastTypingPostRef.current > 1500
+    if (shouldPostTyping) {
+      lastTypingPostRef.current = now
+      void postTypingStatus(true)
+    }
+
+    const timeout = window.setTimeout(() => {
+      void postTypingStatus(false)
+    }, hasDraft ? 2500 : 300)
+
+    return () => window.clearTimeout(timeout)
+  }, [chatDraft, loading, chatUnavailable, currentUser])
 
   const summary = useMemo(() => {
     const total = tasks.length
@@ -750,6 +797,42 @@ export default function TocProjectPlanPage() {
     }
   }
 
+  async function refreshChat() {
+    try {
+      const res = await fetch("/api/admin/toc/project-chat", { cache: "no-store", credentials: "include" })
+      const data = (await res.json()) as ChatPayload
+      if (res.ok) {
+        setChatMessages(data.messages ?? [])
+        setChatUnavailable(data.unavailable ? `Team chat missing. Run ${data.setupSql ?? "docs/sql/toc-project-plan.sql"} in Supabase to enable messages.` : null)
+      }
+    } catch {
+      // Non-blocking: chat should recover on the next poll.
+    }
+  }
+
+  async function refreshTypingUsers() {
+    try {
+      const res = await fetch("/api/admin/toc/project-chat/typing", { cache: "no-store", credentials: "include" })
+      const data = (await res.json()) as TypingPayload
+      if (res.ok) setTypingUsers(data.users ?? [])
+    } catch {
+      // Non-blocking: typing presence is a nice-to-have.
+    }
+  }
+
+  async function postTypingStatus(isTyping: boolean) {
+    try {
+      await fetch("/api/admin/toc/project-chat/typing", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ isTyping }),
+      })
+    } catch {
+      // Non-blocking.
+    }
+  }
+
   async function sendChatMessage() {
     const body = chatDraft.trim()
     if (!body) return
@@ -766,6 +849,7 @@ export default function TocProjectPlanPage() {
       if (!res.ok) throw new Error(data.error || "Message failed")
       setChatMessages((prev) => [...prev, data.message])
       setChatDraft("")
+      void postTypingStatus(false)
       void refreshActivity()
     } catch (e) {
       setError(e instanceof Error ? e.message : "Message failed")
@@ -912,22 +996,45 @@ export default function TocProjectPlanPage() {
                 ) : (
                   chatMessages.map((message) => {
                     const isMine = currentUser?.email?.toLowerCase() === message.author_email?.toLowerCase()
+                    const authorName = displayPersonName(message.author_name, message.author_email)
                     return (
                       <div key={message.id} className={`flex gap-2 ${isMine ? "justify-end" : "justify-start"}`}>
                         {!isMine && (
                           <span className="mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#D6B65A] text-xs font-bold text-[#061426]">
-                            {ownerInitials(message.author_email)}
+                            {ownerInitials(authorName)}
                           </span>
                         )}
                         <div className={`max-w-[82%] rounded-2xl px-3 py-2 text-sm shadow-sm ${isMine ? "bg-[#D6B65A] text-[#061426]" : "bg-white/10 text-slate-100"}`}>
                           <div className={`mb-1 text-[11px] ${isMine ? "text-[#061426]/70" : "text-slate-400"}`}>
-                            {isMine ? "You" : message.author_email} · {formatDateTime(message.created_at)}
+                            {isMine ? "You" : authorName} · {formatDateTime(message.created_at)}
                           </div>
                           <p className="whitespace-pre-wrap">{message.body}</p>
                         </div>
                       </div>
                     )
                   })
+                )}
+                {typingUsers.length > 0 && (
+                  <div className="flex items-center gap-2 text-xs text-slate-400">
+                    <div className="flex -space-x-1">
+                      {typingUsers.slice(0, 3).map((user) => {
+                        const name = displayPersonName(user.name, user.email)
+                        return (
+                          <span key={user.email} className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-[#061426] bg-white/15 text-[10px] font-bold text-white">
+                            {ownerInitials(name)}
+                          </span>
+                        )
+                      })}
+                    </div>
+                    <span>
+                      {typingUsers.map((user) => displayPersonName(user.name, user.email)).join(", ")} {typingUsers.length === 1 ? "is" : "are"} typing
+                      <span className="ml-1 inline-flex gap-0.5 align-middle">
+                        <span className="h-1 w-1 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.2s]" />
+                        <span className="h-1 w-1 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.1s]" />
+                        <span className="h-1 w-1 animate-bounce rounded-full bg-slate-400" />
+                      </span>
+                    </span>
+                  </div>
                 )}
               </div>
               <div className="rounded-xl border border-white/10 bg-white/5 p-3">
