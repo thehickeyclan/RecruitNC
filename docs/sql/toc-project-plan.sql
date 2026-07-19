@@ -100,6 +100,29 @@ create table if not exists public.toc_project_activity (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.toc_project_approvals (
+  id uuid primary key default gen_random_uuid(),
+  task_id uuid references public.toc_project_tasks(id) on delete set null,
+  task_title text,
+  category text,
+  title text not null,
+  body text,
+  vendor text,
+  amount numeric(12,2),
+  needed_by date,
+  status text not null default 'pending' check (status in ('pending', 'approved', 'changes_requested', 'rejected')),
+  response_note text,
+  attachments jsonb not null default '[]'::jsonb,
+  links jsonb not null default '[]'::jsonb,
+  requested_by_email text not null,
+  requested_by_user_id uuid,
+  decided_by_email text,
+  decided_by_user_id uuid,
+  decided_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create index if not exists toc_project_documents_created_at_idx
   on public.toc_project_documents (created_at desc);
 create index if not exists toc_project_documents_category_idx
@@ -116,10 +139,17 @@ create index if not exists toc_project_activity_created_at_idx
   on public.toc_project_activity (created_at desc);
 create index if not exists toc_project_activity_task_id_idx
   on public.toc_project_activity (task_id);
+create index if not exists toc_project_approvals_created_at_idx
+  on public.toc_project_approvals (created_at desc);
+create index if not exists toc_project_approvals_status_idx
+  on public.toc_project_approvals (status);
+create index if not exists toc_project_approvals_task_id_idx
+  on public.toc_project_approvals (task_id);
 
 alter table public.toc_project_documents enable row level security;
 alter table public.toc_project_chat_messages enable row level security;
 alter table public.toc_project_activity enable row level security;
+alter table public.toc_project_approvals enable row level security;
 
 drop policy if exists "Service role manages TOC project documents" on public.toc_project_documents;
 create policy "Service role manages TOC project documents"
@@ -140,6 +170,14 @@ create policy "Service role manages TOC project chat messages"
 drop policy if exists "Service role manages TOC project activity" on public.toc_project_activity;
 create policy "Service role manages TOC project activity"
   on public.toc_project_activity
+  for all
+  to service_role
+  using (true)
+  with check (true);
+
+drop policy if exists "Service role manages TOC project approvals" on public.toc_project_approvals;
+create policy "Service role manages TOC project approvals"
+  on public.toc_project_approvals
   for all
   to service_role
   using (true)
