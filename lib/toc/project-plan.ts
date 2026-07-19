@@ -43,6 +43,7 @@ export type TocProjectDocument = {
   id: string
   title: string
   category: string | null
+  vendor: string | null
   description: string | null
   amount: number | null
   url: string
@@ -52,6 +53,7 @@ export type TocProjectDocument = {
   file_size: number | null
   uploaded_by: string | null
   created_at: string
+  updated_at?: string | null
 }
 
 export type TocProjectChatMessage = {

@@ -43,6 +43,7 @@ export async function POST(request: Request) {
 
   const title = String(form.get("title") || file.name).trim()
   const category = String(form.get("category") || "").trim() || null
+  const vendor = String(form.get("vendor") || "").trim() || null
   const description = String(form.get("description") || "").trim() || null
   const amountRaw = String(form.get("amount") || "").trim()
   const amount = amountRaw ? Number(amountRaw) : null
@@ -63,6 +64,7 @@ export async function POST(request: Request) {
   const payload = {
     title,
     category,
+    vendor,
     description,
     amount,
     url: publicData.publicUrl,
@@ -72,6 +74,7 @@ export async function POST(request: Request) {
     file_size: file.size,
     uploaded_by: auth.email,
     created_by: auth.userId,
+    updated_at: new Date().toISOString(),
   }
 
   const { data, error } = await admin.from(TABLE).insert(payload).select("*").single()
@@ -82,8 +85,8 @@ export async function POST(request: Request) {
     category,
     actorEmail: auth.email,
     actorUserId: auth.userId,
-    summary: `uploaded shared document “${title}”`,
-    details: { fileName: file.name, fileSize: file.size, fileType: file.type || null, amount },
+    summary: `uploaded shared document “${title}”${vendor ? ` for ${vendor}` : ""}`,
+    details: { fileName: file.name, fileSize: file.size, fileType: file.type || null, amount, vendor },
   })
 
   return NextResponse.json({ document: data })
