@@ -63,11 +63,19 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient()
     const { data: athlete, error: athleteError } = await supabase
       .from("athletes")
-      .select("id, name, graduationyear, high_school")
+      .select("id, name, graduationyear, highschool")
       .eq("id", athleteId)
       .single()
 
-    if (athleteError || !athlete) {
+    if (athleteError) {
+      console.error("[rankwrestler-sync] athlete lookup failed", athleteError)
+      return NextResponse.json(
+        { success: false, error: `Athlete lookup failed: ${athleteError.message}` },
+        { status: 500 },
+      )
+    }
+
+    if (!athlete) {
       return NextResponse.json({ success: false, error: "Athlete not found." }, { status: 404 })
     }
 
@@ -79,7 +87,7 @@ export async function POST(request: NextRequest) {
     const parsed = buildRankWrestlerSeasonPayload({
       athleteName: athlete.name,
       graduationYear: athlete.graduationyear,
-      highSchool: athlete.high_school,
+      highSchool: athlete.highschool,
       rawText: fetched.text,
       format: "rank",
       deduplicate,
