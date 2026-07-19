@@ -40,8 +40,13 @@ create table if not exists public.toc_project_documents (
   title text not null,
   category text,
   vendor text,
+  document_date date,
   description text,
   amount numeric(12,2),
+  ai_summary text,
+  ai_metadata jsonb,
+  ai_review_status text,
+  ai_reviewed_at timestamptz,
   url text not null,
   path text,
   file_name text not null,
@@ -55,6 +60,21 @@ create table if not exists public.toc_project_documents (
 
 alter table public.toc_project_documents
   add column if not exists vendor text;
+
+alter table public.toc_project_documents
+  add column if not exists document_date date;
+
+alter table public.toc_project_documents
+  add column if not exists ai_summary text;
+
+alter table public.toc_project_documents
+  add column if not exists ai_metadata jsonb;
+
+alter table public.toc_project_documents
+  add column if not exists ai_review_status text;
+
+alter table public.toc_project_documents
+  add column if not exists ai_reviewed_at timestamptz;
 
 alter table public.toc_project_documents
   add column if not exists updated_at timestamptz not null default now();
@@ -86,6 +106,10 @@ create index if not exists toc_project_documents_category_idx
   on public.toc_project_documents (category);
 create index if not exists toc_project_documents_vendor_idx
   on public.toc_project_documents (vendor);
+create index if not exists toc_project_documents_document_date_idx
+  on public.toc_project_documents (document_date desc);
+create index if not exists toc_project_documents_ai_review_status_idx
+  on public.toc_project_documents (ai_review_status);
 create index if not exists toc_project_chat_messages_created_at_idx
   on public.toc_project_chat_messages (created_at desc);
 create index if not exists toc_project_activity_created_at_idx

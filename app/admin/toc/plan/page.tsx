@@ -196,6 +196,14 @@ function activityDetails(details: Record<string, unknown> | null | undefined): s
   return null
 }
 
+function aiMetaText(doc: TocProjectDocument, key: string): string | null {
+  const value = doc.ai_metadata?.[key]
+  if (value == null || value === "") return null
+  if (typeof value === "number") return key.toLowerCase().includes("amount") ? money(value) : String(value)
+  if (Array.isArray(value)) return value.filter(Boolean).map(String).slice(0, 4).join(" · ") || null
+  return String(value)
+}
+
 function tournamentCountdown() {
   const target = TOC_EVENT_DATE.getTime()
   const now = Date.now()
@@ -906,6 +914,8 @@ export default function TocProjectPlanPage() {
                       {doc.category && <Badge variant="secondary">{doc.category}</Badge>}
                       {doc.vendor && <Badge variant="outline" className="border-[#D6B65A]/40 text-[#D6B65A]">{doc.vendor}</Badge>}
                       {doc.amount != null && <Badge className="bg-green-100 text-green-800">{money(doc.amount)}</Badge>}
+                      {doc.ai_review_status === "reviewed" && <Badge className="bg-blue-400/15 text-blue-100">AI reviewed</Badge>}
+                      {doc.ai_review_status === "skipped" && <Badge variant="outline" className="border-amber-300/30 text-amber-100">AI skipped</Badge>}
                     </div>
                     <div className="mt-1 text-xs text-slate-400">
                       {doc.file_name} · {formatFileSize(doc.file_size)}
@@ -913,6 +923,21 @@ export default function TocProjectPlanPage() {
                     <div className="mt-1 text-xs text-slate-400">
                       Uploaded by {doc.uploaded_by || "unknown"} · {formatDateTime(doc.created_at)} · Updated {formatDateTime(doc.updated_at || doc.created_at)}
                     </div>
+                    {(doc.document_date || doc.ai_summary || doc.ai_metadata) && (
+                      <div className="mt-3 rounded-lg border border-blue-300/20 bg-blue-400/10 p-3 text-sm text-slate-200">
+                        <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-blue-100">AI document review</div>
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-300">
+                          {doc.document_date && <span>Date: {doc.document_date}</span>}
+                          {aiMetaText(doc, "documentType") && <span>Type: {aiMetaText(doc, "documentType")}</span>}
+                          {aiMetaText(doc, "paymentStatus") && <span>Payment: {aiMetaText(doc, "paymentStatus")}</span>}
+                          {aiMetaText(doc, "orderNumber") && <span>Order #: {aiMetaText(doc, "orderNumber")}</span>}
+                          {aiMetaText(doc, "dueDate") && <span>Due: {aiMetaText(doc, "dueDate")}</span>}
+                          {aiMetaText(doc, "confidence") && <span>Confidence: {aiMetaText(doc, "confidence")}</span>}
+                        </div>
+                        {doc.ai_summary && <p className="mt-2 whitespace-pre-wrap text-sm text-slate-200">{doc.ai_summary}</p>}
+                        {aiMetaText(doc, "keyDates") && <p className="mt-2 text-xs text-slate-300">Key dates: {aiMetaText(doc, "keyDates")}</p>}
+                      </div>
+                    )}
                     {doc.description && <p className="mt-2 whitespace-pre-wrap text-sm text-slate-300">{doc.description}</p>}
                   </div>
                   <Button

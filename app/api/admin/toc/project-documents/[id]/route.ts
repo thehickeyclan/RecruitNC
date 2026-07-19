@@ -14,7 +14,7 @@ export async function DELETE(_request: Request, ctx: { params: Promise<{ id: str
 
   const { id } = await ctx.params
   const admin = createAdminClient()
-  const { data: document, error: loadError } = await admin.from(TABLE).select("title,category,vendor,path,file_name").eq("id", id).single()
+  const { data: document, error: loadError } = await admin.from(TABLE).select("title,category,vendor,path,file_name,ai_review_status").eq("id", id).single()
   if (loadError) return NextResponse.json({ error: loadError.message }, { status: 500 })
 
   const { error } = await admin.from(TABLE).delete().eq("id", id)
@@ -30,7 +30,7 @@ export async function DELETE(_request: Request, ctx: { params: Promise<{ id: str
     actorEmail: auth.email,
     actorUserId: auth.userId,
     summary: `deleted shared document “${document.title}”`,
-    details: { fileName: document.file_name, vendor: document.vendor },
+    details: { fileName: document.file_name, vendor: document.vendor, aiReviewStatus: document.ai_review_status },
   })
 
   return NextResponse.json({ ok: true })
