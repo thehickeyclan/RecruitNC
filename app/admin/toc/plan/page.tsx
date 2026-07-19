@@ -2,16 +2,17 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, CalendarDays, DollarSign, FileText, LayoutGrid, LinkIcon, MessageSquare, Paperclip, Plus, Save, Send, Trash2, Upload, UserPlus } from "lucide-react"
+import { Activity, ArrowLeft, CalendarDays, DollarSign, FileText, LayoutGrid, LinkIcon, MessageSquare, Paperclip, Plus, Save, Send, Trash2, Upload, UserPlus } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { TOC_EVENT_DATE, TOC_EVENT_DATES_RANGE } from "@/lib/toc/constants"
-import { TOC_PROJECT_CATEGORIES, type TocProjectChatMessage, type TocProjectDocument, type TocProjectTask, type TocProjectUser, type TocTaskAssignee, type TocTaskLink } from "@/lib/toc/project-plan"
+import { TOC_PROJECT_CATEGORIES, type TocProjectActivity, type TocProjectChatMessage, type TocProjectDocument, type TocProjectTask, type TocProjectUser, type TocTaskAssignee, type TocTaskLink } from "@/lib/toc/project-plan"
 
 type Payload = {
   unavailable?: boolean
@@ -32,6 +33,13 @@ type ChatPayload = {
   unavailable?: boolean
   setupSql?: string
   messages: TocProjectChatMessage[]
+  error?: string
+}
+
+type ActivityPayload = {
+  unavailable?: boolean
+  setupSql?: string
+  activity: TocProjectActivity[]
   error?: string
 }
 
@@ -56,10 +64,10 @@ const STATUS_LABEL: Record<string, string> = {
 }
 
 const STATUS_CLASS: Record<string, string> = {
-  todo: "bg-gray-100 text-gray-800",
-  in_progress: "bg-blue-100 text-blue-800",
-  blocked: "bg-amber-100 text-amber-900",
-  done: "bg-green-100 text-green-800",
+  todo: "bg-slate-700/80 text-slate-100 border border-white/10",
+  in_progress: "bg-blue-500/20 text-blue-100 border border-blue-300/30",
+  blocked: "bg-amber-400/20 text-amber-100 border border-amber-300/35",
+  done: "bg-emerald-400/20 text-emerald-100 border border-emerald-300/35",
 }
 
 function money(value: number | null | undefined): string {
@@ -130,6 +138,36 @@ function formatFileSize(value: number | null | undefined): string {
   return `${(value / (1024 * 1024)).toFixed(1)} MB`
 }
 
+function activityIconClass(actionType: string): string {
+  if (actionType.includes("deleted") || actionType.includes("blocked")) return "bg-red-500/15 text-red-200 ring-red-300/20"
+  if (actionType.includes("comment") || actionType.includes("chat")) return "bg-blue-500/15 text-blue-200 ring-blue-300/20"
+  if (actionType.includes("document") || actionType.includes("attachment")) return "bg-amber-400/15 text-amber-100 ring-amber-300/20"
+  if (actionType.includes("created")) return "bg-emerald-400/15 text-emerald-100 ring-emerald-300/20"
+  return "bg-white/10 text-white ring-white/15"
+}
+
+function activityDetails(details: Record<string, unknown> | null | undefined): string | null {
+  if (!details) return null
+  const changes = details.changes
+  if (Array.isArray(changes)) {
+    return changes
+      .map((change) => {
+        if (!change || typeof change !== "object") return null
+        const row = change as { label?: string; from?: string; to?: string }
+        return `${row.label ?? "field"}: ${row.from || "blank"} → ${row.to || "blank"}`
+      })
+      .filter(Boolean)
+      .join(" · ")
+  }
+  const comment = typeof details.comment === "string" ? details.comment : null
+  if (comment) return comment.length > 180 ? `${comment.slice(0, 180)}…` : comment
+  const message = typeof details.message === "string" ? details.message : null
+  if (message) return message.length > 180 ? `${message.slice(0, 180)}…` : message
+  const fileName = typeof details.fileName === "string" ? details.fileName : null
+  if (fileName) return fileName
+  return null
+}
+
 function tournamentCountdown() {
   const target = TOC_EVENT_DATE.getTime()
   const now = Date.now()
@@ -143,11 +181,13 @@ export default function TocProjectPlanPage() {
   const [tasks, setTasks] = useState<TocProjectTask[]>([])
   const [documents, setDocuments] = useState<TocProjectDocument[]>([])
   const [chatMessages, setChatMessages] = useState<TocProjectChatMessage[]>([])
+  const [activityFeed, setActivityFeed] = useState<TocProjectActivity[]>([])
   const [bracketFill, setBracketFill] = useState({ confirmed: 0, capacity: 88, pct: 0, fullBrackets: 0 })
   const [currentUser, setCurrentUser] = useState<{ userId: string; email: string } | null>(null)
   const [unavailable, setUnavailable] = useState<string | null>(null)
   const [documentsUnavailable, setDocumentsUnavailable] = useState<string | null>(null)
   const [chatUnavailable, setChatUnavailable] = useState<string | null>(null)
+  const [activityUnavailable, setActivityUnavailable] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [savingId, setSavingId] = useState<string | null>(null)
   const [uploadingDocument, setUploadingDocument] = useState(false)
@@ -174,6 +214,7 @@ export default function TocProjectPlanPage() {
     setUnavailable(null)
     setDocumentsUnavailable(null)
     setChatUnavailable(null)
+    setActivityUnavailable(null)
     try {
       const tasksRes = await fetch("/api/admin/toc/project-tasks", { cache: "no-store", credentials: "include" })
       const data = (await tasksRes.json()) as Payload
@@ -183,9 +224,10 @@ export default function TocProjectPlanPage() {
       setUnavailable(data.unavailable ? `Database table missing. Run ${data.setupSql ?? "docs/sql/toc-project-plan.sql"} in Supabase to enable shared editing.` : null)
       setDrafts(Object.fromEntries((data.tasks ?? []).map((task) => [task.id, task])))
 
-      const [documentsRes, chatRes, fieldRes] = await Promise.allSettled([
+      const [documentsRes, chatRes, activityRes, fieldRes] = await Promise.allSettled([
         fetch("/api/admin/toc/project-documents", { cache: "no-store", credentials: "include" }),
         fetch("/api/admin/toc/project-chat", { cache: "no-store", credentials: "include" }),
+        fetch("/api/admin/toc/project-activity", { cache: "no-store", credentials: "include" }),
         fetch("/api/admin/toc/field", { cache: "no-store", credentials: "include" }),
       ])
 
@@ -211,6 +253,18 @@ export default function TocProjectPlanPage() {
         }
       } else {
         setChatUnavailable("Team chat could not load. The task board is still available.")
+      }
+
+      if (activityRes.status === "fulfilled") {
+        const activityData = (await activityRes.value.json()) as ActivityPayload
+        if (activityRes.value.ok) {
+          setActivityFeed(activityData.activity ?? [])
+          setActivityUnavailable(activityData.unavailable ? `Activity feed missing. Run ${activityData.setupSql ?? "docs/sql/toc-project-plan.sql"} in Supabase to enable audit history.` : null)
+        } else {
+          setActivityUnavailable(activityData.error || "Activity feed could not load.")
+        }
+      } else {
+        setActivityUnavailable("Activity feed could not load. The task board is still available.")
       }
 
       if (fieldRes.status === "fulfilled" && fieldRes.value.ok) {
@@ -296,6 +350,7 @@ export default function TocProjectPlanPage() {
       if (!res.ok) throw new Error(data.error || "Seed failed")
       setTasks(data.tasks ?? [])
       setDrafts(Object.fromEntries((data.tasks ?? []).map((task: TocProjectTask) => [task.id, task])))
+      void refreshActivity()
     } catch (e) {
       setError(e instanceof Error ? e.message : "Seed failed")
     } finally {
@@ -319,6 +374,7 @@ export default function TocProjectPlanPage() {
       if (!res.ok) throw new Error(data.error || "Save failed")
       setTasks((prev) => prev.map((t) => (t.id === id ? data.task : t)))
       setDrafts((prev) => ({ ...prev, [id]: data.task }))
+      void refreshActivity()
     } catch (e) {
       setError(e instanceof Error ? e.message : "Save failed")
     } finally {
@@ -343,6 +399,7 @@ export default function TocProjectPlanPage() {
       setTasks((prev) => [...prev, data.task].sort((a, b) => a.sort_order - b.sort_order))
       setDrafts((prev) => ({ ...prev, [data.task.id]: data.task }))
       setNewTaskTitle((prev) => ({ ...prev, [category]: "" }))
+      void refreshActivity()
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not add task")
     } finally {
@@ -364,6 +421,7 @@ export default function TocProjectPlanPage() {
         delete next[id]
         return next
       })
+      void refreshActivity()
     } catch (e) {
       setError(e instanceof Error ? e.message : "Delete failed")
     } finally {
@@ -386,6 +444,7 @@ export default function TocProjectPlanPage() {
       if (!res.ok) throw new Error(data.error || "Upload failed")
       setTasks((prev) => prev.map((t) => (t.id === taskId ? data.task : t)))
       setDrafts((prev) => ({ ...prev, [taskId]: data.task }))
+      void refreshActivity()
     } catch (e) {
       setError(e instanceof Error ? e.message : "Upload failed")
     } finally {
@@ -416,6 +475,7 @@ export default function TocProjectPlanPage() {
       setDocAmount("")
       setDocDescription("")
       setDocFile(null)
+      void refreshActivity()
     } catch (e) {
       setError(e instanceof Error ? e.message : "Upload failed")
     } finally {
@@ -432,6 +492,7 @@ export default function TocProjectPlanPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || "Delete failed")
       setDocuments((prev) => prev.filter((doc) => doc.id !== id))
+      void refreshActivity()
     } catch (e) {
       setError(e instanceof Error ? e.message : "Delete failed")
     } finally {
@@ -455,6 +516,7 @@ export default function TocProjectPlanPage() {
       if (!res.ok) throw new Error(data.error || "Message failed")
       setChatMessages((prev) => [...prev, data.message])
       setChatDraft("")
+      void refreshActivity()
     } catch (e) {
       setError(e instanceof Error ? e.message : "Message failed")
     } finally {
@@ -479,6 +541,7 @@ export default function TocProjectPlanPage() {
       setTasks((prev) => prev.map((t) => (t.id === taskId ? data.task : t)))
       setDrafts((prev) => ({ ...prev, [taskId]: data.task }))
       setCommentDrafts((prev) => ({ ...prev, [taskId]: "" }))
+      void refreshActivity()
     } catch (e) {
       setError(e instanceof Error ? e.message : "Comment failed")
     } finally {
@@ -493,28 +556,42 @@ export default function TocProjectPlanPage() {
     updateDraft(task.id, { assignees: [...existing, { name: currentUser.email, email: currentUser.email, userId: currentUser.userId }] })
   }
 
+  async function refreshActivity() {
+    try {
+      const res = await fetch("/api/admin/toc/project-activity", { cache: "no-store", credentials: "include" })
+      const data = (await res.json()) as ActivityPayload
+      if (res.ok) {
+        setActivityFeed(data.activity ?? [])
+        setActivityUnavailable(data.unavailable ? `Activity feed missing. Run ${data.setupSql ?? "docs/sql/toc-project-plan.sql"} in Supabase to enable audit history.` : null)
+      }
+    } catch {
+      // Non-blocking: activity should never break the board.
+    }
+  }
+
   if (loading) return <div className="p-8 text-gray-500">Loading TOC project plan…</div>
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 rounded-[2rem] bg-gradient-to-br from-slate-50 via-white to-blue-50 p-4 shadow-inner md:p-6">
-      <div className="flex flex-col gap-3 rounded-3xl border border-[#002147]/10 bg-white/85 p-5 shadow-sm backdrop-blur md:flex-row md:items-start md:justify-between">
+    <div className="mx-auto max-w-7xl space-y-6 rounded-[2rem] bg-[#061426] p-4 text-slate-100 shadow-2xl shadow-slate-950/20 md:p-6">
+      <div className="flex flex-col gap-3 rounded-3xl border border-white/10 bg-gradient-to-r from-[#07182e] via-[#092143] to-[#061426] p-5 shadow-lg shadow-black/20 backdrop-blur md:flex-row md:items-start md:justify-between">
         <div>
-          <Link href="/admin/toc" className="mb-2 inline-flex items-center gap-2 text-sm text-[#B31B1B] hover:underline">
+          <Link href="/admin/toc" className="mb-2 inline-flex items-center gap-2 text-sm text-[#D6B65A] hover:underline">
             <ArrowLeft className="h-4 w-4" />
             TOC dashboard
           </Link>
-          <h1 className="text-3xl font-black tracking-tight text-[#002147]">Tournament of Champions Project Plan</h1>
-          <p className="mt-1 text-gray-600">Shared task board for operations, competition, marketing, sponsors, fan experience, and special events.</p>
+          <h1 className="text-3xl font-black tracking-tight text-white">Tournament of Champions Project Plan</h1>
+          <p className="mt-1 text-slate-300">Shared task board for operations, competition, marketing, sponsors, fan experience, and special events.</p>
         </div>
-        <Button onClick={() => void load()} variant="outline" className="border-[#D6B65A]/60 bg-[#D6B65A]/10 text-[#002147] hover:bg-[#D6B65A]/20">Refresh</Button>
+        <Button onClick={() => void load()} variant="outline" className="border-[#D6B65A]/60 bg-[#D6B65A]/10 text-[#D6B65A] hover:bg-[#D6B65A]/20 hover:text-white">Refresh</Button>
       </div>
 
       {error && <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
       {unavailable && <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">{unavailable}</div>}
       {documentsUnavailable && <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">{documentsUnavailable}</div>}
       {chatUnavailable && <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">{chatUnavailable}</div>}
+      {activityUnavailable && <div className="rounded-lg border border-amber-300/30 bg-amber-400/10 p-3 text-sm text-amber-100">{activityUnavailable}</div>}
 
-      <Card className="overflow-hidden border-[#002147]/20 bg-gradient-to-r from-[#002147] to-[#0b3a6d] text-white">
+      <Card className="overflow-hidden border-white/10 bg-gradient-to-r from-[#002147] to-[#0b3a6d] text-white shadow-lg shadow-black/20">
         <CardContent className="grid gap-4 p-5 md:grid-cols-[1fr_auto] md:items-center">
           <div>
             <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#D6B65A]">
@@ -524,7 +601,7 @@ export default function TocProjectPlanPage() {
             <p className="mt-1 text-sm text-white/75">Keep the team focused on contracts, field, sponsors, venue, and fan experience before event weekend.</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {Object.entries(STATUS_LABEL).map(([value, label]) => (
-                <Badge key={value} className={STATUS_CLASS[value]}>{label}</Badge>
+                <Badge key={value} className={`${STATUS_CLASS[value]} hover:bg-inherit`}>{label}</Badge>
               ))}
             </div>
           </div>
@@ -541,94 +618,138 @@ export default function TocProjectPlanPage() {
         </CardContent>
       </Card>
 
-      <Card className="overflow-hidden border-blue-100 bg-white shadow-sm">
-        <CardHeader className="border-b bg-gradient-to-r from-blue-50 via-white to-[#D6B65A]/10 pb-3">
+      <Card className="overflow-hidden border-white/10 bg-[#07182e] shadow-lg shadow-black/20">
+        <CardHeader className="border-b border-white/10 bg-gradient-to-r from-[#0b2344] via-[#092143] to-[#061426] pb-3 text-white">
           <CardTitle className="flex flex-wrap items-center justify-between gap-3">
             <span className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-[#002147]" />
-              TOC Team Chat
+              <MessageSquare className="h-5 w-5 text-[#D6B65A]" />
+              TOC Command Thread
             </span>
-            <Badge variant="outline">{chatMessages.length} messages</Badge>
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="outline" className="border-white/20 text-slate-200">{chatMessages.length} messages</Badge>
+              <Badge variant="outline" className="border-white/20 text-slate-200">{activityFeed.length} activity items</Badge>
+            </div>
           </CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-4 bg-gradient-to-br from-[#f6f7fb] to-blue-50/50 p-4 lg:grid-cols-[1fr_360px]">
-          <div className="max-h-80 space-y-3 overflow-y-auto rounded-xl border bg-white p-3">
-            {chatMessages.length === 0 ? (
-              <div className="rounded-xl border border-dashed p-6 text-center text-sm text-gray-500">
-                No team chat yet. Use this like the TOC GroupMe thread for quick updates, blockers, reminders, and decisions.
-              </div>
-            ) : (
-              chatMessages.map((message) => {
-                const isMine = currentUser?.email?.toLowerCase() === message.author_email?.toLowerCase()
-                return (
-                  <div key={message.id} className={`flex gap-2 ${isMine ? "justify-end" : "justify-start"}`}>
-                    {!isMine && (
-                      <span className="mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#002147] text-xs font-bold text-white">
-                        {ownerInitials(message.author_email)}
-                      </span>
-                    )}
-                    <div className={`max-w-[82%] rounded-2xl px-3 py-2 text-sm shadow-sm ${isMine ? "bg-[#002147] text-white" : "bg-gray-100 text-gray-800"}`}>
-                      <div className={`mb-1 text-[11px] ${isMine ? "text-white/70" : "text-gray-500"}`}>
-                        {isMine ? "You" : message.author_email} · {formatDateTime(message.created_at)}
-                      </div>
-                      <p className="whitespace-pre-wrap">{message.body}</p>
-                    </div>
+        <CardContent className="bg-gradient-to-br from-[#061426] to-[#0a1d37] p-4">
+          <Tabs defaultValue="chat" className="w-full">
+            <TabsList className="mb-4 grid w-full max-w-md grid-cols-2 border border-white/10 bg-white/5">
+              <TabsTrigger value="chat" className="data-[state=active]:bg-[#D6B65A] data-[state=active]:text-[#061426]">Chat</TabsTrigger>
+              <TabsTrigger value="activity" className="data-[state=active]:bg-[#D6B65A] data-[state=active]:text-[#061426]">Activity</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="chat" className="mt-0 grid gap-4 lg:grid-cols-[1fr_360px]">
+              <div className="max-h-80 space-y-3 overflow-y-auto rounded-xl border border-white/10 bg-black/15 p-3">
+                {chatMessages.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-white/15 p-6 text-center text-sm text-slate-400">
+                    No team chat yet. Use this like the TOC GroupMe thread for quick updates, blockers, reminders, and decisions.
                   </div>
-                )
-              })
-            )}
-          </div>
-          <div className="rounded-xl border bg-white p-3">
-            <div className="mb-2 text-sm font-semibold text-gray-900">Post to the team</div>
-            <Textarea
-              value={chatDraft}
-              onChange={(e) => setChatDraft(e.target.value)}
-              placeholder="Drop a quick TOC update…"
-              className="min-h-28"
-              disabled={!!chatUnavailable || sendingChat}
-            />
-            <div className="mt-3 flex items-center justify-between gap-3">
-              <p className="text-xs text-gray-500">Visible to TOC scoped users on this page.</p>
-              <Button onClick={() => void sendChatMessage()} disabled={!!chatUnavailable || sendingChat || !chatDraft.trim()}>
-                <Send className="mr-2 h-4 w-4" /> {sendingChat ? "Sending…" : "Send"}
-              </Button>
-            </div>
-          </div>
+                ) : (
+                  chatMessages.map((message) => {
+                    const isMine = currentUser?.email?.toLowerCase() === message.author_email?.toLowerCase()
+                    return (
+                      <div key={message.id} className={`flex gap-2 ${isMine ? "justify-end" : "justify-start"}`}>
+                        {!isMine && (
+                          <span className="mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#D6B65A] text-xs font-bold text-[#061426]">
+                            {ownerInitials(message.author_email)}
+                          </span>
+                        )}
+                        <div className={`max-w-[82%] rounded-2xl px-3 py-2 text-sm shadow-sm ${isMine ? "bg-[#D6B65A] text-[#061426]" : "bg-white/10 text-slate-100"}`}>
+                          <div className={`mb-1 text-[11px] ${isMine ? "text-[#061426]/70" : "text-slate-400"}`}>
+                            {isMine ? "You" : message.author_email} · {formatDateTime(message.created_at)}
+                          </div>
+                          <p className="whitespace-pre-wrap">{message.body}</p>
+                        </div>
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                <div className="mb-2 text-sm font-semibold text-white">Post to the team</div>
+                <Textarea
+                  value={chatDraft}
+                  onChange={(e) => setChatDraft(e.target.value)}
+                  placeholder="Drop a quick TOC update…"
+                  className="min-h-28 border-white/10 bg-[#061426] text-white placeholder:text-slate-500"
+                  disabled={!!chatUnavailable || sendingChat}
+                />
+                <div className="mt-3 flex items-center justify-between gap-3">
+                  <p className="text-xs text-slate-400">Visible to TOC scoped users on this page.</p>
+                  <Button onClick={() => void sendChatMessage()} disabled={!!chatUnavailable || sendingChat || !chatDraft.trim()} className="bg-[#D6B65A] text-[#061426] hover:bg-[#c8a94f]">
+                    <Send className="mr-2 h-4 w-4" /> {sendingChat ? "Sending…" : "Send"}
+                  </Button>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="activity" className="mt-0">
+              <div className="max-h-96 overflow-y-auto rounded-xl border border-white/10 bg-black/15 p-3">
+                {activityFeed.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-white/15 p-6 text-center text-sm text-slate-400">
+                    No activity yet. Once the team changes statuses, adds notes, uploads docs, comments, or assigns owners, the audit trail will appear here.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {activityFeed.map((item) => {
+                      const details = activityDetails(item.details)
+                      return (
+                        <div key={item.id} className="flex gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
+                          <span className={`mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full ring-1 ${activityIconClass(item.action_type)}`}>
+                            <Activity className="h-4 w-4" />
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="font-semibold text-white">{item.actor_email}</span>
+                              {item.category && <Badge variant="outline" className="border-white/15 text-slate-300">{item.category}</Badge>}
+                              <span className="text-xs text-slate-500">{formatDateTime(item.created_at)}</span>
+                            </div>
+                            <p className="mt-1 text-sm text-slate-200">{item.summary}</p>
+                            {details && <p className="mt-1 whitespace-pre-wrap text-xs text-slate-400">{details}</p>}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
       <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
-        <Card className="border-blue-100 bg-gradient-to-br from-white to-blue-50 shadow-sm"><CardContent className="p-4"><p className="text-xs font-semibold uppercase tracking-wide text-blue-500">Tasks</p><p className="text-3xl font-black text-[#002147]">{summary.total}</p></CardContent></Card>
-        <Card className="border-green-100 bg-gradient-to-br from-white to-green-50 shadow-sm"><CardContent className="p-4"><p className="text-xs font-semibold uppercase tracking-wide text-green-600">Complete</p><p className="text-3xl font-black text-green-700">{summary.done}</p></CardContent></Card>
-        <Card className="border-sky-100 bg-gradient-to-br from-white to-sky-50 shadow-sm"><CardContent className="p-4"><p className="text-xs font-semibold uppercase tracking-wide text-sky-600">Task progress</p><p className="text-3xl font-black text-sky-700">{summary.pct}%</p></CardContent></Card>
-        <Card className="border-amber-100 bg-gradient-to-br from-white to-amber-50 shadow-sm"><CardContent className="p-4"><p className="text-xs font-semibold uppercase tracking-wide text-amber-600">At risk</p><p className="text-3xl font-black text-amber-700">{summary.blocked}</p></CardContent></Card>
-        <Card className="border-indigo-100 bg-gradient-to-br from-white to-indigo-50 shadow-sm"><CardContent className="p-4"><p className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-indigo-600"><LayoutGrid className="h-3.5 w-3.5" /> Bracket fill</p><p className="text-3xl font-black text-indigo-700">{bracketFill.pct}%</p><p className="text-xs text-gray-500">{bracketFill.confirmed}/{bracketFill.capacity} confirmed · {bracketFill.fullBrackets} full</p></CardContent></Card>
-        <Card className="border-[#D6B65A]/30 bg-gradient-to-br from-white to-[#D6B65A]/20 shadow-sm"><CardContent className="p-4"><p className="text-xs font-semibold uppercase tracking-wide text-[#9b7b1d]">Budget / Actual</p><p className="text-xl font-black text-[#002147]">{money(summary.budget)} / {money(summary.actual)}</p></CardContent></Card>
+        <Card className="border-white/10 bg-[#0a1d37] shadow-lg shadow-black/10"><CardContent className="p-4"><p className="text-xs font-semibold uppercase tracking-wide text-blue-200">Tasks</p><p className="text-3xl font-black text-white">{summary.total}</p></CardContent></Card>
+        <Card className="border-emerald-300/20 bg-[#0a1d37] shadow-lg shadow-black/10"><CardContent className="p-4"><p className="text-xs font-semibold uppercase tracking-wide text-emerald-200">Complete</p><p className="text-3xl font-black text-emerald-200">{summary.done}</p></CardContent></Card>
+        <Card className="border-sky-300/20 bg-[#0a1d37] shadow-lg shadow-black/10"><CardContent className="p-4"><p className="text-xs font-semibold uppercase tracking-wide text-sky-200">Task progress</p><p className="text-3xl font-black text-sky-200">{summary.pct}%</p></CardContent></Card>
+        <Card className="border-amber-300/20 bg-[#0a1d37] shadow-lg shadow-black/10"><CardContent className="p-4"><p className="text-xs font-semibold uppercase tracking-wide text-amber-200">At risk</p><p className="text-3xl font-black text-amber-200">{summary.blocked}</p></CardContent></Card>
+        <Card className="border-indigo-300/20 bg-[#0a1d37] shadow-lg shadow-black/10"><CardContent className="p-4"><p className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-indigo-200"><LayoutGrid className="h-3.5 w-3.5" /> Bracket fill</p><p className="text-3xl font-black text-indigo-100">{bracketFill.pct}%</p><p className="text-xs text-slate-400">{bracketFill.confirmed}/{bracketFill.capacity} confirmed · {bracketFill.fullBrackets} full</p></CardContent></Card>
+        <Card className="border-[#D6B65A]/30 bg-[#0a1d37] shadow-lg shadow-black/10"><CardContent className="p-4"><p className="text-xs font-semibold uppercase tracking-wide text-[#D6B65A]">Budget / Actual</p><p className="text-xl font-black text-white">{money(summary.budget)} / {money(summary.actual)}</p></CardContent></Card>
       </div>
 
-      <Card className="overflow-hidden border-[#D6B65A]/30 bg-white shadow-sm">
-        <CardHeader className="border-b bg-gradient-to-r from-[#D6B65A]/20 via-white to-blue-50">
+      <Card className="overflow-hidden border-white/10 bg-[#07182e] text-slate-100 shadow-lg shadow-black/20">
+        <CardHeader className="border-b border-white/10 bg-gradient-to-r from-[#0b2344] via-[#092143] to-[#061426]">
           <CardTitle className="flex flex-wrap items-center justify-between gap-3">
             <span className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-[#002147]" />
+              <FileText className="h-5 w-5 text-[#D6B65A]" />
               TOC Document Share
             </span>
-            <Badge variant="outline">{documents.length} files · {money(documentTotal)} logged</Badge>
+            <Badge variant="outline" className="border-white/20 text-slate-200">{documents.length} files · {money(documentTotal)} logged</Badge>
           </CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-5 lg:grid-cols-[380px_1fr]">
-          <div className="rounded-xl border bg-gray-50 p-4">
-            <div className="mb-3 text-sm font-semibold text-gray-900">Upload receipt, contract, proof, photo, or file</div>
+        <CardContent className="grid gap-5 bg-[#061426] p-4 lg:grid-cols-[380px_1fr]">
+          <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+            <div className="mb-3 text-sm font-semibold text-white">Upload receipt, contract, proof, photo, or file</div>
             <div className="space-y-3">
               <div>
-                <Label>Title</Label>
-                <Input value={docTitle} onChange={(e) => setDocTitle(e.target.value)} placeholder="Venue deposit receipt" disabled={!!documentsUnavailable} />
+                <Label className="text-slate-300">Title</Label>
+                <Input value={docTitle} onChange={(e) => setDocTitle(e.target.value)} placeholder="Venue deposit receipt" disabled={!!documentsUnavailable} className="border-white/10 bg-[#07182e] text-white placeholder:text-slate-500" />
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <Label>Category</Label>
+                  <Label className="text-slate-300">Category</Label>
                   <Select value={docCategory} onValueChange={setDocCategory} disabled={!!documentsUnavailable}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="border-white/10 bg-[#07182e] text-white"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {["Receipts", "Contracts", "Invoices", "Artwork", "Venue", "Sponsors", "Photos", "Other"].map((value) => (
                         <SelectItem key={value} value={value}>{value}</SelectItem>
@@ -637,19 +758,19 @@ export default function TocProjectPlanPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label>Amount $</Label>
-                  <Input type="number" value={docAmount} onChange={(e) => setDocAmount(e.target.value)} placeholder="Optional" disabled={!!documentsUnavailable} />
+                  <Label className="text-slate-300">Amount $</Label>
+                  <Input type="number" value={docAmount} onChange={(e) => setDocAmount(e.target.value)} placeholder="Optional" disabled={!!documentsUnavailable} className="border-white/10 bg-[#07182e] text-white placeholder:text-slate-500" />
                 </div>
               </div>
               <div>
-                <Label>Notes</Label>
-                <Textarea value={docDescription} onChange={(e) => setDocDescription(e.target.value)} placeholder="What this is, vendor, payment method, next step…" disabled={!!documentsUnavailable} />
+                <Label className="text-slate-300">Notes</Label>
+                <Textarea value={docDescription} onChange={(e) => setDocDescription(e.target.value)} placeholder="What this is, vendor, payment method, next step…" disabled={!!documentsUnavailable} className="border-white/10 bg-[#07182e] text-white placeholder:text-slate-500" />
               </div>
               <div>
-                <Label>File</Label>
-                <Input type="file" onChange={(e) => setDocFile(e.target.files?.[0] ?? null)} disabled={!!documentsUnavailable} />
+                <Label className="text-slate-300">File</Label>
+                <Input type="file" onChange={(e) => setDocFile(e.target.files?.[0] ?? null)} disabled={!!documentsUnavailable} className="border-white/10 bg-[#07182e] text-slate-200 file:text-slate-200" />
               </div>
-              <Button onClick={() => void uploadSharedDocument()} disabled={!!documentsUnavailable || uploadingDocument || !docFile} className="w-full">
+              <Button onClick={() => void uploadSharedDocument()} disabled={!!documentsUnavailable || uploadingDocument || !docFile} className="w-full bg-[#D6B65A] text-[#061426] hover:bg-[#c8a94f]">
                 <Upload className="mr-2 h-4 w-4" /> {uploadingDocument ? "Uploading…" : "Upload to doc share"}
               </Button>
             </div>
@@ -657,31 +778,31 @@ export default function TocProjectPlanPage() {
 
           <div className="space-y-2">
             {documents.length === 0 ? (
-              <div className="rounded-xl border border-dashed p-6 text-center text-sm text-gray-500">
+              <div className="rounded-xl border border-dashed border-white/15 p-6 text-center text-sm text-slate-400">
                 No shared TOC documents yet. Upload receipts, contracts, quotes, sponsor files, artwork, floorplans, or photos here.
               </div>
             ) : (
               documents.map((doc) => (
-                <div key={doc.id} className="flex flex-col gap-3 rounded-xl border bg-white p-3 sm:flex-row sm:items-start sm:justify-between">
+                <div key={doc.id} className="flex flex-col gap-3 rounded-xl border border-white/10 bg-white/5 p-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <a href={doc.url} target="_blank" rel="noreferrer" className="font-semibold text-[#002147] hover:underline">
+                      <a href={doc.url} target="_blank" rel="noreferrer" className="font-semibold text-[#D6B65A] hover:underline">
                         {doc.title}
                       </a>
                       {doc.category && <Badge variant="secondary">{doc.category}</Badge>}
                       {doc.amount != null && <Badge className="bg-green-100 text-green-800">{money(doc.amount)}</Badge>}
                     </div>
-                    <div className="mt-1 text-xs text-gray-500">
+                    <div className="mt-1 text-xs text-slate-400">
                       {doc.file_name} · {formatFileSize(doc.file_size)} · uploaded by {doc.uploaded_by || "unknown"} · {formatDateTime(doc.created_at)}
                     </div>
-                    {doc.description && <p className="mt-2 whitespace-pre-wrap text-sm text-gray-700">{doc.description}</p>}
+                    {doc.description && <p className="mt-2 whitespace-pre-wrap text-sm text-slate-300">{doc.description}</p>}
                   </div>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => void deleteSharedDocument(doc.id)}
                     disabled={savingId === `document-${doc.id}`}
-                    className="text-red-700 hover:bg-red-50 hover:text-red-800"
+                    className="text-red-200 hover:bg-red-500/10 hover:text-red-100"
                   >
                     <Trash2 className="mr-1 h-4 w-4" /> Delete
                   </Button>
@@ -692,8 +813,8 @@ export default function TocProjectPlanPage() {
         </CardContent>
       </Card>
 
-      <Card className="overflow-hidden border-[#002147]/10 bg-white shadow-sm">
-        <CardHeader className="border-b bg-gradient-to-r from-[#002147] to-[#0b3a6d] text-white">
+      <Card className="overflow-hidden border-white/10 bg-[#07182e] shadow-lg shadow-black/20">
+        <CardHeader className="border-b border-white/10 bg-gradient-to-r from-[#002147] to-[#0b3a6d] text-white">
           <CardTitle className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <span>TOC Master Board</span>
             <span className="flex flex-wrap items-center gap-2 text-sm font-normal text-white/80">
@@ -717,7 +838,7 @@ export default function TocProjectPlanPage() {
             </span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-8 bg-[#f6f7fb] p-4">
+        <CardContent className="space-y-8 bg-[#061426] p-4">
         {tasks.length === 0 && !unavailable && (
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -737,13 +858,13 @@ export default function TocProjectPlanPage() {
           const categoryTasks = taskFilter === "mine" ? allCategoryTasks.filter(isMyTask) : allCategoryTasks
           const categoryBudget = allCategoryTasks.reduce((sum, task) => sum + Number(task.budget_amount ?? 0), 0)
           return (
-            <section key={category.name} className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-gradient-to-r from-white via-slate-50 to-blue-50 px-4 py-3">
+            <section key={category.name} className="overflow-hidden rounded-xl border border-white/10 bg-[#07182e] shadow-lg shadow-black/10">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 bg-gradient-to-r from-[#0a1d37] via-[#07182e] to-[#061426] px-4 py-3">
                 <div className="flex items-center gap-3">
                   <span className={`h-8 w-1.5 rounded-full ${meta.accent}`} />
                   <div>
-                    <h3 className="text-lg font-bold text-gray-900">{category.name}</h3>
-                    <p className="text-xs text-gray-500">{categoryTasks.length} tasks · {money(categoryBudget)} budget</p>
+                    <h3 className="text-lg font-bold text-white">{category.name}</h3>
+                    <p className="text-xs text-slate-400">{categoryTasks.length} tasks · {money(categoryBudget)} budget</p>
                   </div>
                 </div>
                 <div className="flex min-w-72 flex-1 gap-2 sm:flex-initial">
@@ -752,9 +873,9 @@ export default function TocProjectPlanPage() {
                     onChange={(e) => setNewTaskTitle((prev) => ({ ...prev, [category.name]: e.target.value }))}
                     placeholder={`+ Add ${category.name} task`}
                     disabled={!!unavailable}
-                    className="h-9"
+                    className="h-9 border-white/10 bg-[#061426] text-white placeholder:text-slate-500"
                   />
-                  <Button size="sm" onClick={() => void addTask(category.name)} disabled={!!unavailable || savingId === `new-${category.name}`}>
+                  <Button size="sm" onClick={() => void addTask(category.name)} disabled={!!unavailable || savingId === `new-${category.name}`} className="bg-[#D6B65A] text-[#061426] hover:bg-[#c8a94f]">
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
@@ -762,20 +883,20 @@ export default function TocProjectPlanPage() {
 
               <div className="overflow-x-auto">
                 <div className="min-w-[1320px]">
-                  <div className="grid grid-cols-[minmax(280px,1.7fr)_210px_150px_140px_140px_120px_120px_120px_120px] border-b bg-gradient-to-r from-slate-50 to-blue-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    <div className="border-r px-3 py-2">Item</div>
-                    <div className="border-r px-3 py-2">Owner</div>
-                    <div className="border-r px-3 py-2">Status</div>
-                    <div className="border-r px-3 py-2">Due</div>
-                    <div className="border-r px-3 py-2">Delivery</div>
-                    <div className="border-r px-3 py-2">Priority</div>
-                    <div className="border-r px-3 py-2">Budget</div>
-                    <div className="border-r px-3 py-2">Actual</div>
+                  <div className="grid grid-cols-[minmax(280px,1.7fr)_210px_150px_140px_140px_120px_120px_120px_120px] border-b border-white/10 bg-[#0a1d37] text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    <div className="border-r border-white/10 px-3 py-2">Item</div>
+                    <div className="border-r border-white/10 px-3 py-2">Owner</div>
+                    <div className="border-r border-white/10 px-3 py-2">Status</div>
+                    <div className="border-r border-white/10 px-3 py-2">Due</div>
+                    <div className="border-r border-white/10 px-3 py-2">Delivery</div>
+                    <div className="border-r border-white/10 px-3 py-2">Priority</div>
+                    <div className="border-r border-white/10 px-3 py-2">Budget</div>
+                    <div className="border-r border-white/10 px-3 py-2">Actual</div>
                     <div className="px-3 py-2">Updates</div>
                   </div>
 
                   {categoryTasks.length === 0 && taskFilter === "mine" && (
-                    <div className="border-b bg-white px-4 py-6 text-center text-sm text-gray-500">
+                    <div className="border-b border-white/10 bg-[#07182e] px-4 py-6 text-center text-sm text-slate-400">
                       No tasks assigned to you in this workstream.
                     </div>
                   )}
@@ -784,17 +905,17 @@ export default function TocProjectPlanPage() {
                     const draft = drafts[task.id] ?? task
                     const disabled = !!unavailable || task.id.startsWith("seed-")
                     return (
-                      <div key={task.id} className="border-b last:border-b-0">
-                        <div className="grid grid-cols-[minmax(280px,1.7fr)_210px_150px_140px_140px_120px_120px_120px_120px] items-center bg-white text-sm transition-colors hover:bg-[#f7f8fb]">
-                          <div className="border-r p-2">
+                      <div key={task.id} className="border-b border-white/10 last:border-b-0">
+                        <div className="grid grid-cols-[minmax(280px,1.7fr)_210px_150px_140px_140px_120px_120px_120px_120px] items-center bg-[#07182e] text-sm text-slate-100 transition-colors hover:bg-[#0a1d37]">
+                          <div className="border-r border-white/10 p-2">
                             <Input
                               value={draft.title}
                               onChange={(e) => updateDraft(task.id, { title: e.target.value })}
-                              className="h-9 border-transparent bg-transparent font-semibold shadow-none hover:border-gray-200 focus:border-gray-300"
+                              className="h-9 border-transparent bg-transparent font-semibold text-white shadow-none hover:border-white/10 focus:border-white/20"
                               disabled={disabled}
                             />
                           </div>
-                          <div className="border-r p-2">
+                          <div className="border-r border-white/10 p-2">
                             <div className="mb-2 flex flex-wrap gap-1">
                               {(draft.assignees ?? []).slice(0, 3).map((assignee) => {
                                 const label = assignee.name || assignee.email || "Owner"
@@ -804,14 +925,14 @@ export default function TocProjectPlanPage() {
                                   </span>
                                 )
                               })}
-                              {(draft.assignees ?? []).length === 0 && <span className="text-xs text-gray-400">No owner</span>}
+                              {(draft.assignees ?? []).length === 0 && <span className="text-xs text-slate-500">No owner</span>}
                             </div>
                             <Input
                               placeholder="Manual owner fallback"
                               value={assigneesText(draft.assignees ?? [])}
                               onChange={(e) => updateDraft(task.id, { assignees: parseAssignees(e.target.value) })}
                               disabled={disabled}
-                              className="h-8 text-xs"
+                              className="h-8 border-white/10 bg-[#061426] text-xs text-white placeholder:text-slate-500"
                             />
                             <div className="mt-1 space-y-1">
                               <Input
@@ -819,30 +940,30 @@ export default function TocProjectPlanPage() {
                                 value={ownerSearch[task.id] ?? ""}
                                 onChange={(e) => void searchOwner(task.id, e.target.value)}
                                 disabled={disabled}
-                                className="h-8 border-blue-100 bg-blue-50/40 text-xs"
+                                className="h-8 border-blue-300/20 bg-blue-400/10 text-xs text-white placeholder:text-slate-500"
                               />
                               {(ownerSuggestions[task.id] ?? []).length > 0 && (
-                                <div className="max-h-28 overflow-y-auto rounded-md border bg-white shadow-sm">
+                                <div className="max-h-28 overflow-y-auto rounded-md border border-white/10 bg-[#061426] shadow-lg">
                                   {(ownerSuggestions[task.id] ?? []).map((user) => (
                                     <button
                                       key={user.userId}
                                       type="button"
                                       onClick={() => addOwnerFromUser(draft, user)}
-                                      className="block w-full px-2 py-1.5 text-left text-xs hover:bg-blue-50"
+                                      className="block w-full px-2 py-1.5 text-left text-xs hover:bg-white/10"
                                     >
-                                      <span className="font-semibold text-gray-800">{user.name}</span>
-                                      <span className="block text-gray-500">{user.email}</span>
+                                      <span className="font-semibold text-white">{user.name}</span>
+                                      <span className="block text-slate-400">{user.email}</span>
                                     </button>
                                   ))}
                                 </div>
                               )}
-                              {ownerSearchLoading[task.id] && <div className="text-[11px] text-gray-400">Searching RecruitNC…</div>}
+                              {ownerSearchLoading[task.id] && <div className="text-[11px] text-slate-400">Searching RecruitNC…</div>}
                             </div>
-                            <Button type="button" size="sm" variant="ghost" onClick={() => selfAssign(draft)} disabled={disabled || !currentUser} className="mt-1 h-7 px-1 text-xs">
+                            <Button type="button" size="sm" variant="ghost" onClick={() => selfAssign(draft)} disabled={disabled || !currentUser} className="mt-1 h-7 px-1 text-xs text-[#D6B65A] hover:bg-white/10 hover:text-white">
                               <UserPlus className="mr-1 h-3 w-3" /> Self assign
                             </Button>
                           </div>
-                          <div className="border-r p-2">
+                          <div className="border-r border-white/10 p-2">
                             <Select value={draft.status} onValueChange={(value) => updateDraft(task.id, { status: value as TocProjectTask["status"] })} disabled={disabled}>
                               <SelectTrigger className={`h-9 border-0 font-semibold shadow-none ${STATUS_CLASS[draft.status]}`}>
                                 <SelectValue />
@@ -852,25 +973,25 @@ export default function TocProjectPlanPage() {
                               </SelectContent>
                             </Select>
                           </div>
-                          <div className="border-r p-2">
-                            <Input type="date" value={draft.due_date ?? ""} onChange={(e) => updateDraft(task.id, { due_date: e.target.value || null })} disabled={disabled} className="h-9 text-xs" />
+                          <div className="border-r border-white/10 p-2">
+                            <Input type="date" value={draft.due_date ?? ""} onChange={(e) => updateDraft(task.id, { due_date: e.target.value || null })} disabled={disabled} className="h-9 border-white/10 bg-[#061426] text-xs text-white" />
                           </div>
-                          <div className="border-r p-2">
-                            <Input type="date" value={draft.delivery_date ?? ""} onChange={(e) => updateDraft(task.id, { delivery_date: e.target.value || null })} disabled={disabled} className="h-9 text-xs" />
+                          <div className="border-r border-white/10 p-2">
+                            <Input type="date" value={draft.delivery_date ?? ""} onChange={(e) => updateDraft(task.id, { delivery_date: e.target.value || null })} disabled={disabled} className="h-9 border-white/10 bg-[#061426] text-xs text-white" />
                           </div>
-                          <div className="border-r p-2">
+                          <div className="border-r border-white/10 p-2">
                             <Select value={draft.priority} onValueChange={(value) => updateDraft(task.id, { priority: value as TocProjectTask["priority"] })} disabled={disabled}>
-                              <SelectTrigger className="h-9 text-xs capitalize"><SelectValue /></SelectTrigger>
+                              <SelectTrigger className="h-9 border-white/10 bg-[#061426] text-xs capitalize text-white"><SelectValue /></SelectTrigger>
                               <SelectContent>
                                 {["low", "normal", "high", "urgent"].map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
                               </SelectContent>
                             </Select>
                           </div>
-                          <div className="border-r p-2">
-                            <Input type="number" value={draft.budget_amount ?? ""} onChange={(e) => updateDraft(task.id, { budget_amount: e.target.value === "" ? null : Number(e.target.value) })} disabled={disabled} className="h-9" />
+                          <div className="border-r border-white/10 p-2">
+                            <Input type="number" value={draft.budget_amount ?? ""} onChange={(e) => updateDraft(task.id, { budget_amount: e.target.value === "" ? null : Number(e.target.value) })} disabled={disabled} className="h-9 border-white/10 bg-[#061426] text-white" />
                           </div>
-                          <div className="border-r p-2">
-                            <Input type="number" value={draft.actual_amount ?? ""} onChange={(e) => updateDraft(task.id, { actual_amount: e.target.value === "" ? null : Number(e.target.value) })} disabled={disabled} className="h-9" />
+                          <div className="border-r border-white/10 p-2">
+                            <Input type="number" value={draft.actual_amount ?? ""} onChange={(e) => updateDraft(task.id, { actual_amount: e.target.value === "" ? null : Number(e.target.value) })} disabled={disabled} className="h-9 border-white/10 bg-[#061426] text-white" />
                           </div>
                           <div className="p-2">
                             <div className="flex flex-wrap gap-1">
@@ -881,17 +1002,17 @@ export default function TocProjectPlanPage() {
                           </div>
                         </div>
 
-                        <div className="grid gap-3 bg-[#fbfbfd] p-3 lg:grid-cols-[1fr_1fr]">
-                          <div className="rounded-lg border bg-white p-3">
-                            <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Notes & links</div>
-                            <Textarea value={draft.notes ?? ""} onChange={(e) => updateDraft(task.id, { notes: e.target.value })} placeholder="Notes, decisions, next steps…" disabled={disabled} className="min-h-20" />
+                        <div className="grid gap-3 bg-[#061426] p-3 lg:grid-cols-[1fr_1fr]">
+                          <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+                            <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Notes & links</div>
+                            <Textarea value={draft.notes ?? ""} onChange={(e) => updateDraft(task.id, { notes: e.target.value })} placeholder="Notes, decisions, next steps…" disabled={disabled} className="min-h-20 border-white/10 bg-[#07182e] text-white placeholder:text-slate-500" />
                             <div className="mt-2">
-                              <Label className="text-xs text-gray-500">Links — one per line: Label|https://...</Label>
-                              <Textarea value={linksText(draft.links ?? [])} onChange={(e) => updateDraft(task.id, { links: parseLinks(e.target.value) })} placeholder="Venue quote|https://..." disabled={disabled} className="mt-1 min-h-16" />
+                              <Label className="text-xs text-slate-400">Links — one per line: Label|https://...</Label>
+                              <Textarea value={linksText(draft.links ?? [])} onChange={(e) => updateDraft(task.id, { links: parseLinks(e.target.value) })} placeholder="Venue quote|https://..." disabled={disabled} className="mt-1 min-h-16 border-white/10 bg-[#07182e] text-white placeholder:text-slate-500" />
                               {draft.links?.length > 0 && (
                                 <div className="mt-2 flex flex-wrap gap-2">
                                   {draft.links.map((link) => (
-                                    <a key={`${link.label}-${link.url}`} href={link.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-1 text-xs text-blue-700 hover:bg-blue-100">
+                                    <a key={`${link.label}-${link.url}`} href={link.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-full bg-blue-400/10 px-2 py-1 text-xs text-blue-100 hover:bg-blue-400/20">
                                       <LinkIcon className="h-3 w-3" /> {link.label || link.url}
                                     </a>
                                   ))}
@@ -901,15 +1022,15 @@ export default function TocProjectPlanPage() {
                           </div>
 
                           <div className="space-y-3">
-                            <div className="rounded-lg border bg-white p-3">
-                              <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                            <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+                              <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
                                 <Paperclip className="h-3.5 w-3.5" /> Files
                               </div>
-                              <Input type="file" disabled={disabled} onChange={(e) => void uploadAttachment(task.id, e.target.files?.[0] ?? null)} />
+                              <Input type="file" disabled={disabled} onChange={(e) => void uploadAttachment(task.id, e.target.files?.[0] ?? null)} className="border-white/10 bg-[#07182e] text-slate-200 file:text-slate-200" />
                               {draft.attachments?.length > 0 && (
                                 <div className="mt-2 space-y-1">
                                   {draft.attachments.map((file) => (
-                                    <a key={`${file.url}-${file.name}`} href={file.url} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-xs text-blue-700 hover:underline">
+                                    <a key={`${file.url}-${file.name}`} href={file.url} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-xs text-blue-200 hover:underline">
                                       <Upload className="h-3 w-3" /> {file.name}
                                     </a>
                                   ))}
@@ -917,19 +1038,19 @@ export default function TocProjectPlanPage() {
                               )}
                             </div>
 
-                            <div className="rounded-lg border bg-white p-3">
-                              <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                            <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+                              <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
                                 <MessageSquare className="h-3.5 w-3.5" /> Updates
                               </div>
                               {draft.comments?.length > 0 && (
                                 <div className="mb-3 max-h-40 space-y-2 overflow-y-auto pr-1">
                                   {[...(draft.comments ?? [])].reverse().map((comment) => (
-                                    <div key={comment.id} className="rounded-lg border bg-gray-50 p-2 text-sm">
-                                      <div className="mb-1 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500">
-                                        <span className="font-medium text-gray-700">{comment.createdBy?.name || comment.createdBy?.email || "Unknown user"}</span>
+                                    <div key={comment.id} className="rounded-lg border border-white/10 bg-[#07182e] p-2 text-sm">
+                                      <div className="mb-1 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
+                                        <span className="font-medium text-slate-200">{comment.createdBy?.name || comment.createdBy?.email || "Unknown user"}</span>
                                         <span>{formatDateTime(comment.createdAt)}</span>
                                       </div>
-                                      <p className="whitespace-pre-wrap text-gray-700">{comment.body}</p>
+                                      <p className="whitespace-pre-wrap text-slate-300">{comment.body}</p>
                                     </div>
                                   ))}
                                 </div>
@@ -939,7 +1060,7 @@ export default function TocProjectPlanPage() {
                                   value={commentDrafts[task.id] ?? ""}
                                   onChange={(e) => setCommentDrafts((prev) => ({ ...prev, [task.id]: e.target.value }))}
                                   placeholder="Add an update…"
-                                  className="min-h-14"
+                                  className="min-h-14 border-white/10 bg-[#07182e] text-white placeholder:text-slate-500"
                                   disabled={disabled}
                                 />
                                 <Button
@@ -955,11 +1076,11 @@ export default function TocProjectPlanPage() {
                           </div>
                         </div>
 
-                        <div className="flex justify-end gap-2 bg-[#fbfbfd] px-3 pb-3">
-                          <Button variant="outline" size="sm" onClick={() => void deleteTask(task.id)} disabled={disabled || savingId === task.id}>
+                        <div className="flex justify-end gap-2 bg-[#061426] px-3 pb-3">
+                          <Button variant="outline" size="sm" onClick={() => void deleteTask(task.id)} disabled={disabled || savingId === task.id} className="border-white/10 bg-white/5 text-slate-200 hover:bg-red-500/10 hover:text-red-100">
                             <Trash2 className="mr-1 h-4 w-4" /> Delete
                           </Button>
-                          <Button size="sm" onClick={() => void saveTask(task.id)} disabled={disabled || savingId === task.id}>
+                          <Button size="sm" onClick={() => void saveTask(task.id)} disabled={disabled || savingId === task.id} className="bg-[#D6B65A] text-[#061426] hover:bg-[#c8a94f]">
                             <Save className="mr-1 h-4 w-4" /> {savingId === task.id ? "Saving…" : "Save row"}
                           </Button>
                         </div>
@@ -974,8 +1095,8 @@ export default function TocProjectPlanPage() {
         </CardContent>
       </Card>
 
-      <div className="rounded-xl border bg-white p-4 text-sm text-gray-600">
-        <div className="mb-1 flex items-center gap-2 font-semibold text-gray-900">
+      <div className="rounded-xl border border-white/10 bg-[#07182e] p-4 text-sm text-slate-300">
+        <div className="mb-1 flex items-center gap-2 font-semibold text-white">
           <DollarSign className="h-4 w-4" /> Suggested operating rhythm
         </div>
         Use status for weekly ops calls, assignees for ownership, budget/actual for vendor spend, links for quotes/forms, and attachments for contracts, artwork, floorplans, invoices, or venue photos.

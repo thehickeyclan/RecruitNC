@@ -62,6 +62,19 @@ export type TocProjectChatMessage = {
   created_at: string
 }
 
+export type TocProjectActivity = {
+  id: string
+  action_type: string
+  task_id: string | null
+  task_title: string | null
+  category: string | null
+  actor_email: string
+  actor_user_id: string | null
+  summary: string
+  details: Record<string, unknown> | null
+  created_at: string
+}
+
 export type TocProjectTask = {
   id: string
   category: string
