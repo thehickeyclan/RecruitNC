@@ -103,21 +103,15 @@ function normalizeCurrencyInput(value: string): string {
   return numeric == null ? "" : formatCurrencyInput(numeric)
 }
 
-function parseAssignees(value: string): TocTaskAssignee[] {
-  return value
-    .split(",")
-    .map((part) => part.trim())
-    .filter(Boolean)
-    .map((part) => {
-      const emailMatch = part.match(/<?([^\s<>@]+@[^\s<>@]+\.[^\s<>@]+)>?/)
-      const email = emailMatch?.[1] ?? null
-      const name = email ? part.replace(emailMatch?.[0] ?? "", "").replace(/[<>]/g, "").trim() || email : part
-      return { name, email }
-    })
+function assigneeDisplayName(assignee: TocTaskAssignee): string {
+  if (assignee.name && assignee.name !== assignee.email) return assignee.name
+  if (assignee.email) return assignee.email.split("@")[0].replace(/[._-]+/g, " ")
+  return "Owner"
 }
 
-function assigneesText(rows: TocTaskAssignee[]): string {
-  return rows.map((a) => (a.email && a.name !== a.email ? `${a.name} <${a.email}>` : a.name || a.email || "")).filter(Boolean).join(", ")
+function assigneeTooltip(assignee: TocTaskAssignee): string {
+  const name = assigneeDisplayName(assignee)
+  return assignee.email ? `${name} · ${assignee.email}` : name
 }
 
 function parseLinks(value: string): TocTaskLink[] {
@@ -348,7 +342,7 @@ export default function TocProjectPlanPage() {
     tasks.forEach((task) => {
       ;(task.assignees ?? []).forEach((assignee) => {
         const value = (assignee.email || assignee.name || "").trim().toLowerCase()
-        const label = assignee.name && assignee.email && assignee.name !== assignee.email ? `${assignee.name} · ${assignee.email}` : assignee.name || assignee.email || ""
+        const label = assigneeDisplayName(assignee)
         if (value && label) rows.set(value, { value, label })
       })
     })
@@ -441,6 +435,16 @@ export default function TocProjectPlanPage() {
     })
     setOwnerSearch((prev) => ({ ...prev, [task.id]: "" }))
     setOwnerSuggestions((prev) => ({ ...prev, [task.id]: [] }))
+  }
+
+  function removeOwner(task: TocProjectTask, assigneeToRemove: TocTaskAssignee) {
+    updateDraft(task.id, {
+      assignees: (task.assignees ?? []).filter((assignee) => {
+        if (assigneeToRemove.userId) return assignee.userId !== assigneeToRemove.userId
+        if (assigneeToRemove.email) return assignee.email?.toLowerCase() !== assigneeToRemove.email.toLowerCase()
+        return assignee.name !== assigneeToRemove.name
+      }),
+    })
   }
 
   async function seedMasterTasks() {
@@ -657,7 +661,8 @@ export default function TocProjectPlanPage() {
     if (!currentUser) return
     const existing = task.assignees ?? []
     if (existing.some((a) => a.email?.toLowerCase() === currentUser.email.toLowerCase() || a.userId === currentUser.userId)) return
-    updateDraft(task.id, { assignees: [...existing, { name: currentUser.email, email: currentUser.email, userId: currentUser.userId }] })
+    const fallbackName = currentUser.email.split("@")[0].replace(/[._-]+/g, " ")
+    updateDraft(task.id, { assignees: [...existing, { name: fallbackName, email: currentUser.email, userId: currentUser.userId }] })
   }
 
   async function refreshActivity() {
@@ -1152,27 +1157,32 @@ export default function TocProjectPlanPage() {
                           </div>
                           <div className="border-b border-white/10 p-3 md:border-b-0 md:border-r md:p-2">
                             <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400 md:hidden">Owner</div>
-                            <div className="mb-2 flex flex-wrap gap-1">
+                            <div className="mb-2 flex flex-wrap gap-1.5">
                               {(draft.assignees ?? []).slice(0, 3).map((assignee) => {
-                                const label = assignee.name || assignee.email || "Owner"
+                                const label = assigneeDisplayName(assignee)
                                 return (
-                                  <span key={`${task.id}-${label}`} title={label} className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#002147] text-[10px] font-bold text-white ring-2 ring-white">
-                                    {ownerInitials(label)}
+                                  <span key={`${task.id}-${label}`} title={assigneeTooltip(assignee)} className="inline-flex items-center gap-1 rounded-full border border-[#D6B65A]/30 bg-[#D6B65A]/10 py-1 pl-1 pr-2 text-xs font-semibold text-[#D6B65A]">
+                                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#D6B65A] text-[10px] font-black text-[#061426]">
+                                      {ownerInitials(label)}
+                                    </span>
+                                    <span className="max-w-[110px] truncate">{label}</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => removeOwner(draft, assignee)}
+                                      disabled={disabled}
+                                      className="ml-0.5 rounded-full px-1 text-[#D6B65A]/70 hover:bg-white/10 hover:text-white disabled:opacity-40"
+                                      aria-label={`Remove ${label}`}
+                                    >
+                                      ×
+                                    </button>
                                   </span>
                                 )
                               })}
                               {(draft.assignees ?? []).length === 0 && <span className="text-xs text-slate-500">No owner</span>}
                             </div>
-                            <Input
-                              placeholder="Manual owner fallback"
-                              value={assigneesText(draft.assignees ?? [])}
-                              onChange={(e) => updateDraft(task.id, { assignees: parseAssignees(e.target.value) })}
-                              disabled={disabled}
-                              className={`h-8 text-xs ${DARK_FIELD_CLASS}`}
-                            />
                             <div className="mt-1 space-y-1">
                               <Input
-                                placeholder="Lookup RecruitNC user"
+                                placeholder="Search by email, first name, or last name"
                                 value={ownerSearch[task.id] ?? ""}
                                 onChange={(e) => void searchOwner(task.id, e.target.value)}
                                 disabled={disabled}
