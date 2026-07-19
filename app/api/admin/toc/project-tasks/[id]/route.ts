@@ -19,7 +19,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
   const body = await request.json()
   const updates: Record<string, unknown> = { updated_by: auth.userId, updated_at: new Date().toISOString() }
 
-  for (const key of ["category", "title", "priority", "notes", "due_date"]) {
+  for (const key of ["category", "title", "priority", "notes", "due_date", "delivery_date"]) {
     if (key in body) updates[key] = body[key] === "" ? null : body[key]
   }
   if ("status" in body) updates.status = sanitizeProjectStatus(body.status)

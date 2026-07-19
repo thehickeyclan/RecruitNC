@@ -11,6 +11,7 @@ create table if not exists public.toc_project_tasks (
   budget_amount numeric(12,2),
   actual_amount numeric(12,2),
   due_date date,
+  delivery_date date,
   notes text,
   assignees jsonb not null default '[]'::jsonb,
   links jsonb not null default '[]'::jsonb,
@@ -24,6 +25,9 @@ create table if not exists public.toc_project_tasks (
 
 alter table public.toc_project_tasks
   add column if not exists comments jsonb not null default '[]'::jsonb;
+
+alter table public.toc_project_tasks
+  add column if not exists delivery_date date;
 
 create index if not exists toc_project_tasks_category_idx on public.toc_project_tasks (category, sort_order);
 create index if not exists toc_project_tasks_status_idx on public.toc_project_tasks (status);

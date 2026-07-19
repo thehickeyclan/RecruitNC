@@ -66,6 +66,7 @@ export type TocProjectTask = {
   budget_amount: number | null
   actual_amount: number | null
   due_date: string | null
+  delivery_date: string | null
   notes: string | null
   assignees: TocTaskAssignee[]
   links: TocTaskLink[]
@@ -153,6 +154,7 @@ export function tocProjectSeedTasks(): TocProjectTask[] {
         budget_amount: null,
         actual_amount: null,
         due_date: null,
+        delivery_date: null,
         notes: null,
         assignees: [],
         links: [],
