@@ -863,10 +863,10 @@ export default function UsersDashboardPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Active Today</p>
+                <p className="text-sm font-medium text-gray-600">Known Active Today</p>
                 <p className="text-2xl font-bold text-purple-600">{stats.activeToday}</p>
                 <p className="text-xs text-gray-500">
-                  {stats.active7d} active in 7d · {stats.highIntent30d} high-intent actions
+                  Signed-in accounts · {stats.active7d} active in 7d · {stats.highIntent30d} high-intent actions
                 </p>
               </div>
               <Clock className="h-8 w-8 text-purple-600" />
@@ -881,7 +881,7 @@ export default function UsersDashboardPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-blue-600" />
-              Signups, Logins & Activity (Last 30 Days)
+              Known Account Activity (Last 30 Days)
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -917,7 +917,7 @@ export default function UsersDashboardPage() {
                   dataKey="active" 
                   stroke="#8B5CF6" 
                   strokeWidth={2}
-                  name="Last active"
+                  name="Known active"
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -928,7 +928,7 @@ export default function UsersDashboardPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Activity className="h-5 w-5 text-purple-600" />
-              User Activity Distribution
+              Known User Activity Distribution
             </CardTitle>
           </CardHeader>
           <CardContent>
