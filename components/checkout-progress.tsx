@@ -14,12 +14,13 @@ export function CheckoutProgress({ currentStep }: CheckoutProgressProps) {
   ]
 
   return (
-    <div className="flex items-center justify-center">
+    <div className="w-full overflow-x-auto pb-1">
+      <div className="mx-auto flex min-w-max items-start justify-center px-1 sm:min-w-0">
       {steps.map((step, index) => (
-        <div key={step.number} className="flex items-center">
-          <div className="flex flex-col items-center">
+        <div key={step.number} className="flex items-start">
+          <div className="flex w-20 flex-col items-center sm:w-28">
             <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors ${
+              className={`flex h-9 w-9 items-center justify-center rounded-full border-2 transition-colors sm:h-10 sm:w-10 ${
                 step.number < currentStep
                   ? "bg-primary border-primary text-white"
                   : step.number === currentStep
@@ -34,7 +35,7 @@ export function CheckoutProgress({ currentStep }: CheckoutProgressProps) {
               )}
             </div>
             <span
-              className={`text-sm mt-2 ${
+              className={`mt-2 text-center text-xs leading-tight sm:text-sm ${
                 step.number <= currentStep ? "text-foreground font-medium" : "text-muted-foreground"
               }`}
             >
@@ -43,13 +44,14 @@ export function CheckoutProgress({ currentStep }: CheckoutProgressProps) {
           </div>
           {index < steps.length - 1 && (
             <div
-              className={`w-24 h-0.5 mx-4 mb-6 transition-colors ${
+              className={`mx-1 mt-4 h-0.5 w-8 transition-colors sm:mx-2 sm:w-16 md:w-24 ${
                 step.number < currentStep ? "bg-primary" : "bg-border"
               }`}
             />
           )}
         </div>
       ))}
+      </div>
     </div>
   )
 }

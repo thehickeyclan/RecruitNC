@@ -153,7 +153,7 @@ export function ProductGallery({
 
       <Dialog open={isZoomOpen} onOpenChange={setIsZoomOpen}>
         <DialogContent
-          className="max-w-5xl w-full p-0 bg-black/95 border-0 [&>button]:hidden"
+          className="w-[calc(100vw-1rem)] max-w-5xl p-0 bg-black/95 border-0 sm:w-full [&>button]:hidden"
           aria-describedby={undefined}
         >
           <button
@@ -180,7 +180,7 @@ export function ProductGallery({
                 e.stopPropagation()
                 handlePrevious()
               }}
-              className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors z-10"
+              className="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-2 transition-colors hover:bg-white/20 sm:left-4"
               aria-label="Previous image"
             >
               <ChevronLeft className="w-6 h-6 text-white" />
@@ -192,7 +192,7 @@ export function ProductGallery({
                 e.stopPropagation()
                 handleNext()
               }}
-              className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors z-10"
+              className="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-2 transition-colors hover:bg-white/20 sm:right-4"
               aria-label="Next image"
             >
               <ChevronRight className="w-6 h-6 text-white" />

@@ -201,11 +201,11 @@ export function ProductInfo({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6">
       <div>
         <h1
           className={cn(
-            "text-3xl lg:text-4xl font-bold mb-2",
+            "mb-2 break-words text-3xl font-bold lg:text-4xl",
             storeTheme ? "text-white" : "text-foreground",
           )}
         >
@@ -263,15 +263,15 @@ export function ProductInfo({
         </div>
       </div>
 
-      <div className="border-t pt-6 space-y-6">
+      <div className={cn("space-y-6 border-t pt-6", storeTheme && "border-white/10")}>
         {showSizeSelector && (
           <div>
-            <div className="flex items-center justify-between mb-3">
-              <label className="font-semibold text-sm">Select Size</label>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <label className={cn("text-sm font-semibold", storeTheme ? "text-white" : "text-foreground")}>Select Size</label>
               <button
                 type="button"
                 onClick={() => setShowSizeGuide(true)}
-                className="text-sm text-[#003366] hover:underline"
+                className={cn("text-sm hover:underline", storeTheme ? "text-[#D3B574]" : "text-[#003366]")}
               >
                 Size Guide
               </button>
@@ -323,8 +323,8 @@ export function ProductInfo({
         )}
 
         <div>
-          <label className="font-semibold text-sm mb-3 block">Select Color</label>
-          <div className="flex gap-3">
+          <label className={cn("mb-3 block text-sm font-semibold", storeTheme ? "text-white" : "text-foreground")}>Select Color</label>
+          <div className="flex flex-wrap gap-3">
             {details.colors.map((color) => (
               <button
                 key={color.name}
@@ -419,11 +419,11 @@ export function ProductInfo({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           {details.stockStatus === "in-stock" && (
             <>
               <div className="w-2 h-2 bg-green-500 rounded-full" />
-              <span className="text-sm text-muted-foreground">
+              <span className={cn("min-w-0 text-sm", storeTheme ? "text-white/70" : "text-muted-foreground")}>
                 In Stock — {shipLabel}
               </span>
             </>
@@ -431,7 +431,7 @@ export function ProductInfo({
           {details.stockStatus === "low-stock" && (
             <>
               <div className="w-2 h-2 bg-orange-500 rounded-full" />
-              <span className="text-sm text-muted-foreground">
+              <span className={cn("min-w-0 text-sm", storeTheme ? "text-white/70" : "text-muted-foreground")}>
                 Low Stock — {shipLabel}
               </span>
             </>
@@ -439,7 +439,7 @@ export function ProductInfo({
           {details.stockStatus === "out-of-stock" && (
             <>
               <div className="w-2 h-2 bg-red-500 rounded-full" />
-              <span className="text-sm text-muted-foreground">Out of Stock</span>
+              <span className={cn("text-sm", storeTheme ? "text-white/70" : "text-muted-foreground")}>Out of Stock</span>
             </>
           )}
         </div>
@@ -478,9 +478,9 @@ export function ProductInfo({
         </div>
       </div>
 
-      <div className="border-t pt-6">
-        <p className="font-semibold text-sm mb-3">Share this product</p>
-        <div className="flex gap-3">
+      <div className={cn("border-t pt-6", storeTheme && "border-white/10")}>
+        <p className={cn("mb-3 text-sm font-semibold", storeTheme ? "text-white" : "text-foreground")}>Share this product</p>
+        <div className="flex flex-wrap gap-3">
           <Button
             variant="outline"
             size="icon"

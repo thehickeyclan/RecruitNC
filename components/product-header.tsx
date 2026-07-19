@@ -56,7 +56,7 @@ export function ProductHeader({ productName, category, variant = "default" }: Pr
           </StoreNavLink>
         </div>
 
-        <nav className={`text-sm ${isStore ? "text-white/60" : "text-muted-foreground"}`}>
+        <nav className={`flex min-w-0 flex-wrap items-center gap-y-1 text-sm ${isStore ? "text-white/60" : "text-muted-foreground"}`}>
           <Link href="/" className={isStore ? "hover:text-white" : "hover:text-foreground"}>
             Home
           </Link>
@@ -68,7 +68,8 @@ export function ProductHeader({ productName, category, variant = "default" }: Pr
           <span className={isStore ? "hover:text-white" : "hover:text-foreground"}>{categoryDisplayName}</span>
           <span className="mx-2">&gt;</span>
           <span
-            className={`font-medium truncate max-w-[200px] ${isStore ? "text-white" : "text-foreground"}`}
+            className={`inline-block max-w-[min(18rem,100%)] truncate font-medium ${isStore ? "text-white" : "text-foreground"}`}
+            title={productName}
           >
             {productName}
           </span>

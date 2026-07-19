@@ -179,7 +179,7 @@ export default function ConfirmationPage() {
 
   return (
     <div className="min-h-screen bg-secondary/30">
-      <div className="container mx-auto px-4 py-12">
+      <div className="container mx-auto px-4 py-8 sm:py-12">
         <div className="text-center mb-8">
           <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle2 className="w-12 h-12 text-green-600" />
@@ -206,7 +206,7 @@ export default function ConfirmationPage() {
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Order Number</p>
-                    <p className="text-2xl font-bold">{orderNumber}</p>
+                    <p className="break-all text-2xl font-bold">{orderNumber}</p>
                   </div>
                   <div className="flex gap-2">
                     <Button variant="outline" onClick={() => window.print()}>
@@ -249,21 +249,21 @@ export default function ConfirmationPage() {
                 {displayItems.map((item: Record<string, unknown>, idx: number) => (
                   <div
                     key={`${item.id ?? idx}-${(item.variant as { color?: string })?.color ?? item.color}-${(item.variant as { size?: string })?.size ?? item.size}`}
-                    className="flex gap-4 pb-4 border-b last:border-0 last:pb-0"
+                    className="flex min-w-0 flex-col gap-4 border-b pb-4 last:border-0 last:pb-0 sm:flex-row"
                   >
                     <img
                       src={(item.image as string) ?? (item.product_image_url as string) ?? "/placeholder.svg"}
                       alt={(item.name as string) ?? (item.product_name as string) ?? ""}
-                      className="w-20 h-20 object-cover rounded"
+                      className="h-20 w-20 shrink-0 rounded object-cover"
                     />
-                    <div className="flex-1">
-                      <p className="font-semibold">{(item.name as string) ?? (item.product_name as string)}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="break-words font-semibold">{(item.name as string) ?? (item.product_name as string)}</p>
                       <p className="text-sm text-muted-foreground">
                         {(item.variant as { color?: string })?.color ?? (item.color as string)} / {(item.variant as { size?: string })?.size ?? (item.size as string)}
                       </p>
                       <p className="text-sm text-muted-foreground">Quantity: {Number(item.quantity) || 1}</p>
                     </div>
-                    <p className="font-semibold">${(((item.price as number) ?? 0) * (Number(item.quantity) || 1)).toFixed(2)}</p>
+                    <p className="shrink-0 font-semibold sm:text-right">${(((item.price as number) ?? 0) * (Number(item.quantity) || 1)).toFixed(2)}</p>
                   </div>
                 ))}
                 <div className="space-y-2 pt-4 border-t">
@@ -271,8 +271,8 @@ export default function ConfirmationPage() {
                     <span>Subtotal</span>
                     <span>${Number(totals.subtotal).toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Shipping ({displayShippingMethod?.name ?? shippingMethod?.name ?? "Standard Shipping"})</span>
+                  <div className="flex justify-between gap-3 text-sm">
+                    <span className="min-w-0">Shipping ({displayShippingMethod?.name ?? shippingMethod?.name ?? "Standard Shipping"})</span>
                     <span className={Number(totals.shipping) === 0 ? "text-green-600 font-semibold" : ""}>
                       {Number(totals.shipping) === 0 ? "FREE" : `$${Number(totals.shipping).toFixed(2)}`}
                     </span>
@@ -344,15 +344,15 @@ export default function ConfirmationPage() {
                   <CardTitle>Payment Information</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm">
-                  <div className="flex justify-between">
+                  <div className="flex justify-between gap-3">
                     <span>Payment Method</span>
                     <span className="font-semibold">Card Payment</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between gap-3">
                     <span>Amount Charged</span>
                     <span className="font-semibold">${Number(totals.total).toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between gap-3">
                     <span>Status</span>
                     <span className="font-semibold text-green-600">Paid</span>
                   </div>

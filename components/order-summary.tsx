@@ -44,13 +44,13 @@ export function OrderSummary() {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span>Subtotal ({items.length} items)</span>
-            <span>${subtotal.toFixed(2)}</span>
+          <div className="flex min-w-0 justify-between gap-3 text-sm">
+            <span className="min-w-0">Subtotal ({items.length} items)</span>
+            <span className="shrink-0">${subtotal.toFixed(2)}</span>
           </div>
-          <div className="flex justify-between text-sm">
-            <span>Shipping</span>
-            <span>
+          <div className="flex min-w-0 justify-between gap-3 text-sm">
+            <span className="min-w-0">Shipping</span>
+            <span className="shrink-0 text-right">
               {shipping === null ? (
                 <span className="text-muted-foreground text-xs">
                   Calculated at checkout
@@ -62,19 +62,19 @@ export function OrderSummary() {
               )}
             </span>
           </div>
-          <div className="flex justify-between text-sm">
-            <span>Estimated Tax</span>
-            <span>${tax.toFixed(2)}</span>
+          <div className="flex min-w-0 justify-between gap-3 text-sm">
+            <span className="min-w-0">Estimated Tax</span>
+            <span className="shrink-0">${tax.toFixed(2)}</span>
           </div>
           {shouldShowDiscount && (
-            <div className="flex justify-between text-sm text-green-600 font-medium">
-              <span>Discount ({promoCode})</span>
-              <span>-${discount.toFixed(2)}</span>
+            <div className="flex min-w-0 justify-between gap-3 text-sm font-medium text-green-600">
+              <span className="min-w-0 truncate">Discount ({promoCode})</span>
+              <span className="shrink-0">-${discount.toFixed(2)}</span>
             </div>
           )}
-          <div className="border-t pt-2 flex justify-between text-lg font-bold">
-            <span>Total</span>
-            <span className={shouldShowDiscount ? "text-green-600" : ""}>
+          <div className="flex min-w-0 justify-between gap-3 border-t pt-2 text-lg font-bold">
+            <span className="min-w-0">Total</span>
+            <span className={`shrink-0 text-right ${shouldShowDiscount ? "text-green-600" : ""}`}>
               {shipping === null ? (
                 <span className="text-muted-foreground text-xs">
                   Calculated at checkout
@@ -90,12 +90,12 @@ export function OrderSummary() {
           {items.slice(0, 3).map((item) => (
             <div
               key={`${item.id}-${item.variant.color}-${item.variant.size}`}
-              className="flex gap-2 text-sm"
+              className="flex min-w-0 gap-2 text-sm"
             >
               <img
                 src={item.image || "/placeholder.svg"}
                 alt={item.name}
-                className="w-12 h-12 object-cover rounded"
+                className="h-12 w-12 shrink-0 rounded object-cover"
               />
               <div className="flex-1 min-w-0">
                 <p className="font-medium truncate">{item.name}</p>
@@ -103,7 +103,7 @@ export function OrderSummary() {
                   {item.variant.size} × {item.quantity}
                 </p>
               </div>
-              <p className="font-semibold">
+              <p className="shrink-0 font-semibold">
                 ${(item.price * item.quantity).toFixed(2)}
               </p>
             </div>
