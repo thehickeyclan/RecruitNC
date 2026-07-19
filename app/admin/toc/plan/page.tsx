@@ -956,8 +956,8 @@ export default function TocProjectPlanPage() {
             </span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-8 bg-[#061426] p-4">
-        <div className="rounded-2xl border border-white/10 bg-[#07182e] p-4 shadow-lg shadow-black/10">
+        <CardContent className="space-y-8 bg-[#061426] p-3 sm:p-4">
+        <div className="rounded-2xl border border-white/10 bg-[#07182e] p-3 shadow-lg shadow-black/10 sm:p-4">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <div>
               <div className="text-sm font-bold text-white">Task filters</div>
@@ -974,7 +974,7 @@ export default function TocProjectPlanPage() {
               Clear filters{activeFilterCount ? ` (${activeFilterCount})` : ""}
             </Button>
           </div>
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]">
             <div>
               <Label className="text-xs text-slate-400">Search</Label>
               <Input
@@ -1076,7 +1076,7 @@ export default function TocProjectPlanPage() {
                     <p className="text-xs text-slate-400">{categoryTasks.length} tasks · {money(categoryBudget)} budget</p>
                   </div>
                 </div>
-                <div className="flex min-w-72 flex-1 gap-2 sm:flex-initial">
+              <div className="flex w-full min-w-0 flex-1 gap-2 sm:min-w-72 sm:flex-initial">
                   <Input
                     value={newTaskTitle[category.name] ?? ""}
                     onChange={(e) => setNewTaskTitle((prev) => ({ ...prev, [category.name]: e.target.value }))}
@@ -1090,9 +1090,9 @@ export default function TocProjectPlanPage() {
                 </div>
               </div>
 
-              <div className="overflow-x-auto">
-                <div className="min-w-[1320px]">
-                  <div className="grid grid-cols-[minmax(280px,1.7fr)_210px_150px_140px_140px_120px_120px_120px_120px] border-b border-white/10 bg-[#0a1d37] text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <div className="overflow-x-visible md:overflow-x-auto">
+                <div className="md:min-w-[1320px]">
+                  <div className="hidden grid-cols-[minmax(280px,1.7fr)_210px_150px_140px_140px_120px_120px_120px_120px] border-b border-white/10 bg-[#0a1d37] text-xs font-semibold uppercase tracking-wide text-slate-400 md:grid">
                     <div className="border-r border-white/10 px-3 py-2">Item</div>
                     <div className="border-r border-white/10 px-3 py-2">Owner</div>
                     <div className="border-r border-white/10 px-3 py-2">Status</div>
@@ -1115,8 +1115,9 @@ export default function TocProjectPlanPage() {
                     const disabled = !!unavailable || task.id.startsWith("seed-")
                     return (
                       <div key={task.id} className="border-b border-white/10 last:border-b-0">
-                        <div className="grid grid-cols-[minmax(280px,1.7fr)_210px_150px_140px_140px_120px_120px_120px_120px] items-center bg-[#07182e] text-sm text-slate-100 transition-colors hover:bg-[#0a1d37]">
-                          <div className="border-r border-white/10 p-2">
+                        <div className="grid grid-cols-1 items-stretch bg-[#07182e] text-sm text-slate-100 transition-colors hover:bg-[#0a1d37] md:grid-cols-[minmax(280px,1.7fr)_210px_150px_140px_140px_120px_120px_120px_120px] md:items-center">
+                          <div className="border-b border-white/10 p-3 md:border-b-0 md:border-r md:p-2">
+                            <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400 md:hidden">Item</div>
                             <Input
                               value={draft.title}
                               onChange={(e) => updateDraft(task.id, { title: e.target.value })}
@@ -1124,7 +1125,8 @@ export default function TocProjectPlanPage() {
                               disabled={disabled}
                             />
                           </div>
-                          <div className="border-r border-white/10 p-2">
+                          <div className="border-b border-white/10 p-3 md:border-b-0 md:border-r md:p-2">
+                            <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400 md:hidden">Owner</div>
                             <div className="mb-2 flex flex-wrap gap-1">
                               {(draft.assignees ?? []).slice(0, 3).map((assignee) => {
                                 const label = assignee.name || assignee.email || "Owner"
@@ -1172,7 +1174,8 @@ export default function TocProjectPlanPage() {
                               <UserPlus className="mr-1 h-3 w-3" /> Self assign
                             </Button>
                           </div>
-                          <div className="border-r border-white/10 p-2">
+                          <div className="border-b border-white/10 p-3 md:border-b-0 md:border-r md:p-2">
+                            <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400 md:hidden">Status</div>
                             <Select value={draft.status} onValueChange={(value) => updateDraft(task.id, { status: value as TocProjectTask["status"] })} disabled={disabled}>
                               <SelectTrigger className={`h-9 border-0 font-semibold shadow-none ${STATUS_CLASS[draft.status]}`}>
                                 <SelectValue />
@@ -1182,13 +1185,16 @@ export default function TocProjectPlanPage() {
                               </SelectContent>
                             </Select>
                           </div>
-                          <div className="border-r border-white/10 p-2">
+                          <div className="border-b border-white/10 p-3 md:border-b-0 md:border-r md:p-2">
+                            <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400 md:hidden">Due date</div>
                             <Input type="date" value={draft.due_date ?? ""} onChange={(e) => updateDraft(task.id, { due_date: e.target.value || null })} disabled={disabled} className={`${DARK_FIELD_SMALL_CLASS} text-xs [color-scheme:dark]`} />
                           </div>
-                          <div className="border-r border-white/10 p-2">
+                          <div className="border-b border-white/10 p-3 md:border-b-0 md:border-r md:p-2">
+                            <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400 md:hidden">Delivery date</div>
                             <Input type="date" value={draft.delivery_date ?? ""} onChange={(e) => updateDraft(task.id, { delivery_date: e.target.value || null })} disabled={disabled} className={`${DARK_FIELD_SMALL_CLASS} text-xs [color-scheme:dark]`} />
                           </div>
-                          <div className="border-r border-white/10 p-2">
+                          <div className="border-b border-white/10 p-3 md:border-b-0 md:border-r md:p-2">
+                            <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400 md:hidden">Priority</div>
                             <Select value={draft.priority} onValueChange={(value) => updateDraft(task.id, { priority: value as TocProjectTask["priority"] })} disabled={disabled}>
                               <SelectTrigger className={`${DARK_SELECT_CLASS} text-xs capitalize`}><SelectValue /></SelectTrigger>
                               <SelectContent>
@@ -1196,7 +1202,8 @@ export default function TocProjectPlanPage() {
                               </SelectContent>
                             </Select>
                           </div>
-                          <div className="border-r border-white/10 p-2">
+                          <div className="border-b border-white/10 p-3 md:border-b-0 md:border-r md:p-2">
+                            <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400 md:hidden">Budget</div>
                             <Input
                               inputMode="decimal"
                               value={formatCurrencyInput(draft.budget_amount)}
@@ -1207,7 +1214,8 @@ export default function TocProjectPlanPage() {
                               className={DARK_FIELD_SMALL_CLASS}
                             />
                           </div>
-                          <div className="border-r border-white/10 p-2">
+                          <div className="border-b border-white/10 p-3 md:border-b-0 md:border-r md:p-2">
+                            <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400 md:hidden">Actual</div>
                             <Input
                               inputMode="decimal"
                               value={formatCurrencyInput(draft.actual_amount)}
@@ -1218,7 +1226,8 @@ export default function TocProjectPlanPage() {
                               className={DARK_FIELD_SMALL_CLASS}
                             />
                           </div>
-                          <div className="p-2">
+                          <div className="p-3 md:p-2">
+                            <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400 md:hidden">Updates</div>
                             <div className="flex flex-wrap gap-1">
                               <Badge variant="outline" className="gap-1"><MessageSquare className="h-3 w-3" />{draft.comments?.length ?? 0}</Badge>
                               <Badge variant="outline" className="gap-1"><Paperclip className="h-3 w-3" />{draft.attachments?.length ?? 0}</Badge>
@@ -1301,11 +1310,11 @@ export default function TocProjectPlanPage() {
                           </div>
                         </div>
 
-                        <div className="flex justify-end gap-2 bg-[#061426] px-3 pb-3">
-                          <Button variant="outline" size="sm" onClick={() => void deleteTask(task.id)} disabled={disabled || savingId === task.id} className="border-white/10 bg-white/5 text-slate-200 hover:bg-red-500/10 hover:text-red-100">
+                        <div className="flex flex-col justify-end gap-2 bg-[#061426] px-3 pb-3 sm:flex-row">
+                          <Button variant="outline" size="sm" onClick={() => void deleteTask(task.id)} disabled={disabled || savingId === task.id} className="w-full border-white/10 bg-white/5 text-slate-200 hover:bg-red-500/10 hover:text-red-100 sm:w-auto">
                             <Trash2 className="mr-1 h-4 w-4" /> Delete
                           </Button>
-                          <Button size="sm" onClick={() => void saveTask(task.id)} disabled={disabled || savingId === task.id} className="bg-[#D6B65A] text-[#061426] hover:bg-[#c8a94f]">
+                          <Button size="sm" onClick={() => void saveTask(task.id)} disabled={disabled || savingId === task.id} className="w-full bg-[#D6B65A] text-[#061426] hover:bg-[#c8a94f] sm:w-auto">
                             <Save className="mr-1 h-4 w-4" /> {savingId === task.id ? "Saving…" : "Save row"}
                           </Button>
                         </div>
