@@ -83,22 +83,26 @@ export function CheckoutForm({ clientSecret, total }: CheckoutFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <PaymentElement
-        options={{
-          wallets: {
-            applePay: "auto",
-            googlePay: "auto",
-          },
-        }}
-      />
-      <Button
-        type="submit"
-        disabled={!stripe || isProcessing}
-        className="w-full bg-[#003366] hover:bg-[#003366]/90 text-white"
-      >
-        {isProcessing ? "Processing..." : `Pay $${total.toFixed(2)}`}
-      </Button>
+    <form onSubmit={handleSubmit} className="space-y-6 pb-[calc(5rem+env(safe-area-inset-bottom))] sm:pb-0">
+      <div className="min-w-0 overflow-visible rounded-lg">
+        <PaymentElement
+          options={{
+            wallets: {
+              applePay: "auto",
+              googlePay: "auto",
+            },
+          }}
+        />
+      </div>
+      <div className="sticky bottom-3 z-30 rounded-2xl bg-white/95 p-2 shadow-2xl shadow-black/20 backdrop-blur supports-[padding:max(0px)]:bottom-[max(0.75rem,env(safe-area-inset-bottom))] sm:static sm:bg-transparent sm:p-0 sm:shadow-none sm:backdrop-blur-0">
+        <Button
+          type="submit"
+          disabled={!stripe || isProcessing}
+          className="w-full bg-[#003366] hover:bg-[#003366]/90 text-white"
+        >
+          {isProcessing ? "Processing..." : `Pay $${total.toFixed(2)}`}
+        </Button>
+      </div>
     </form>
   )
 }

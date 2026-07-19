@@ -103,8 +103,12 @@ export default function CartPage() {
     )
   }
 
+  const checkoutUrl = promoCode
+    ? `/checkout/shipping?promoCode=${encodeURIComponent(promoCode)}`
+    : "/checkout/shipping"
+
   return (
-    <div className="min-h-screen bg-[#0A1628]">
+    <div className="min-h-screen bg-[#0A1628] pb-[calc(5.5rem+env(safe-area-inset-bottom))] lg:pb-0">
       {/* Header */}
       <header className="border-b border-white/10 bg-[#0A1628]/95 backdrop-blur-xl">
         <div className="container mx-auto px-4 py-4">
@@ -340,9 +344,6 @@ export default function CartPage() {
                 className="w-full mt-6 bg-[#D3B574] hover:bg-[#c4a665] text-[#0A1628] font-bold"
                 size="lg"
                 onClick={() => {
-                  const checkoutUrl = promoCode
-                    ? `/checkout/shipping?promoCode=${encodeURIComponent(promoCode)}`
-                    : "/checkout/shipping"
                   window.location.href = checkoutUrl
                 }}
               >
@@ -386,6 +387,24 @@ export default function CartPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[#0A1628]/95 p-3 shadow-2xl shadow-black/40 backdrop-blur-xl supports-[padding:max(0px)]:pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
+        <div className="mx-auto flex max-w-xl items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs uppercase tracking-wide text-white/40">Cart total</p>
+            <p className="text-lg font-black text-white">${total.toFixed(2)}</p>
+          </div>
+          <Button
+            className="shrink-0 bg-[#D3B574] px-5 font-bold text-[#0A1628] hover:bg-[#c4a665]"
+            onClick={() => {
+              window.location.href = checkoutUrl
+            }}
+          >
+            <Lock className="mr-2 h-4 w-4" />
+            Checkout
+          </Button>
+        </div>
+      </div>
     </div>
   )
 }

@@ -251,7 +251,7 @@ export default function PaymentPage() {
   if (!shippingAddress || !shippingMethod) return null
 
   return (
-    <div className="min-h-screen bg-secondary/30">
+    <div className="min-h-[100dvh] bg-secondary/30">
       <div className="container mx-auto px-4 pb-4 pt-4">
         <nav className="text-sm text-muted-foreground">
           <Link href="/" className="hover:text-foreground">Home</Link>
@@ -262,13 +262,13 @@ export default function PaymentPage() {
         </nav>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-8 sm:pb-8">
         <CheckoutProgress currentStep={3} />
 
-        <div className="grid lg:grid-cols-[1fr_400px] gap-8 mt-8">
-          <div className="space-y-6">
-            <Card>
-              <CardContent className="pt-6">
+        <div className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_400px]">
+          <div className="min-w-0 space-y-6">
+            <Card className="overflow-visible">
+              <CardContent className="overflow-visible pt-6">
                 {isLoading ? (
                   <div className="flex items-center justify-center py-12">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#003366]" />
@@ -286,7 +286,7 @@ export default function PaymentPage() {
                       appearance: { theme: "stripe" },
                     }}
                   >
-                    <div className="bg-[#003366]/5 p-4 rounded-lg border border-[#003366]/10 mb-6 text-center">
+                    <div className="mb-6 rounded-lg border border-[#003366]/10 bg-[#003366]/5 p-4 text-center">
                       <p className="text-sm text-muted-foreground mb-1">Total to Pay</p>
                       <p className="text-3xl font-bold text-[#003366]">${total.total.toFixed(2)}</p>
                     </div>
