@@ -83,7 +83,7 @@ export function CheckoutForm({ clientSecret, total }: CheckoutFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 pb-[calc(5rem+env(safe-area-inset-bottom))] sm:pb-0">
+    <form onSubmit={handleSubmit} className="space-y-6 pb-[calc(6.5rem+env(safe-area-inset-bottom))] sm:pb-0">
       <div className="min-w-0 overflow-visible rounded-lg">
         <PaymentElement
           options={{
@@ -94,7 +94,8 @@ export function CheckoutForm({ clientSecret, total }: CheckoutFormProps) {
           }}
         />
       </div>
-      <div className="sticky bottom-3 z-30 rounded-2xl bg-white/95 p-2 shadow-2xl shadow-black/20 backdrop-blur supports-[padding:max(0px)]:bottom-[max(0.75rem,env(safe-area-inset-bottom))] sm:static sm:bg-transparent sm:p-0 sm:shadow-none sm:backdrop-blur-0">
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t bg-white/95 p-3 shadow-2xl shadow-black/20 backdrop-blur supports-[padding:max(0px)]:pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:static sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none sm:backdrop-blur-0">
+        <div className="mx-auto max-w-xl sm:max-w-none">
         <Button
           type="submit"
           disabled={!stripe || isProcessing}
@@ -102,6 +103,7 @@ export function CheckoutForm({ clientSecret, total }: CheckoutFormProps) {
         >
           {isProcessing ? "Processing..." : `Pay $${total.toFixed(2)}`}
         </Button>
+        </div>
       </div>
     </form>
   )
