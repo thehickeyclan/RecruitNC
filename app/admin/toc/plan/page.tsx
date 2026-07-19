@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, DollarSign, LinkIcon, Paperclip, Plus, Save, Trash2, Upload, UserPlus } from "lucide-react"
+import { ArrowLeft, DollarSign, LinkIcon, MessageSquare, Paperclip, Plus, Save, Trash2, Upload, UserPlus } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -77,6 +77,18 @@ function categoryMeta(category: string) {
   return TOC_PROJECT_CATEGORIES.find((c) => c.name === category) ?? TOC_PROJECT_CATEGORIES[0]
 }
 
+function formatDateTime(value: string): string {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  return date.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  })
+}
+
 export default function TocProjectPlanPage() {
   const [tasks, setTasks] = useState<TocProjectTask[]>([])
   const [currentUser, setCurrentUser] = useState<{ userId: string; email: string } | null>(null)
@@ -85,6 +97,7 @@ export default function TocProjectPlanPage() {
   const [savingId, setSavingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [newTaskTitle, setNewTaskTitle] = useState<Record<string, string>>({})
+  const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({})
   const [drafts, setDrafts] = useState<Record<string, TocProjectTask>>({})
 
   async function load() {
@@ -207,6 +220,30 @@ export default function TocProjectPlanPage() {
       setDrafts((prev) => ({ ...prev, [taskId]: data.task }))
     } catch (e) {
       setError(e instanceof Error ? e.message : "Upload failed")
+    } finally {
+      setSavingId(null)
+    }
+  }
+
+  async function addComment(taskId: string) {
+    const body = (commentDrafts[taskId] || "").trim()
+    if (!body || taskId.startsWith("seed-")) return
+    setSavingId(taskId)
+    setError(null)
+    try {
+      const res = await fetch(`/api/admin/toc/project-tasks/${taskId}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ body }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "Comment failed")
+      setTasks((prev) => prev.map((t) => (t.id === taskId ? data.task : t)))
+      setDrafts((prev) => ({ ...prev, [taskId]: data.task }))
+      setCommentDrafts((prev) => ({ ...prev, [taskId]: "" }))
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Comment failed")
     } finally {
       setSavingId(null)
     }
@@ -370,6 +407,43 @@ export default function TocProjectPlanPage() {
                             ))}
                           </div>
                         )}
+                      </div>
+
+                      <div className="mt-3 rounded-lg border bg-slate-50 p-3">
+                        <div className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
+                          <MessageSquare className="h-4 w-4" /> Comments
+                          {draft.comments?.length > 0 && <Badge variant="outline">{draft.comments.length}</Badge>}
+                        </div>
+                        {draft.comments?.length > 0 && (
+                          <div className="mb-3 max-h-48 space-y-2 overflow-y-auto pr-1">
+                            {[...(draft.comments ?? [])].reverse().map((comment) => (
+                              <div key={comment.id} className="rounded-lg border bg-white p-2 text-sm">
+                                <div className="mb-1 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500">
+                                  <span className="font-medium text-gray-700">{comment.createdBy?.name || comment.createdBy?.email || "Unknown user"}</span>
+                                  <span>{formatDateTime(comment.createdAt)}</span>
+                                </div>
+                                <p className="whitespace-pre-wrap text-gray-700">{comment.body}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        <div className="flex flex-col gap-2 sm:flex-row">
+                          <Textarea
+                            value={commentDrafts[task.id] ?? ""}
+                            onChange={(e) => setCommentDrafts((prev) => ({ ...prev, [task.id]: e.target.value }))}
+                            placeholder="Add a quick update, decision, blocker, or follow-up…"
+                            className="min-h-16"
+                            disabled={disabled}
+                          />
+                          <Button
+                            type="button"
+                            onClick={() => void addComment(task.id)}
+                            disabled={disabled || savingId === task.id || !(commentDrafts[task.id] || "").trim()}
+                            className="sm:self-end"
+                          >
+                            Comment
+                          </Button>
+                        </div>
                       </div>
 
                       <div className="mt-3 flex justify-end gap-2">
