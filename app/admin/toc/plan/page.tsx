@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { TOC_EVENT_DATE, TOC_EVENT_DATES_RANGE } from "@/lib/toc/constants"
-import { TOC_PROJECT_CATEGORIES, type TocProjectActivity, type TocProjectApproval, type TocProjectChatMessage, type TocProjectDocument, type TocProjectTask, type TocProjectTypingUser, type TocProjectUser, type TocTaskAssignee, type TocTaskLink } from "@/lib/toc/project-plan"
+import { TOC_PROJECT_CATEGORIES, type TocProjectActivity, type TocProjectApproval, type TocProjectChatMention, type TocProjectChatMessage, type TocProjectDocument, type TocProjectTask, type TocProjectTypingUser, type TocProjectUser, type TocTaskAssignee, type TocTaskLink } from "@/lib/toc/project-plan"
 
 type Payload = {
   unavailable?: boolean
@@ -40,6 +40,11 @@ type TypingPayload = {
   unavailable?: boolean
   setupSql?: string
   users: TocProjectTypingUser[]
+  error?: string
+}
+
+type MentionUsersPayload = {
+  users: TocProjectChatMention[]
   error?: string
 }
 
@@ -199,6 +204,49 @@ function displayPersonName(name: string | null | undefined, email: string): stri
     .join(" ")
 }
 
+function mentionSlug(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "")
+}
+
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+function mentionAliases(mention: TocProjectChatMention): string[] {
+  const parts = mention.name.split(/\s+/).filter(Boolean)
+  const local = mention.email.split("@")[0].replace(/[._-]+/g, " ")
+  return [
+    mention.name,
+    parts[0] ?? "",
+    parts.length >= 2 ? `${parts[0]} ${parts[parts.length - 1]}` : "",
+    local,
+    mention.email,
+  ].filter(Boolean)
+}
+
+function renderChatBodyWithMentions(body: string, mentions: TocProjectChatMention[], isMine: boolean) {
+  const aliases = [...new Set(mentions.flatMap(mentionAliases).map((alias) => `@${alias.trim()}`).filter((alias) => alias.length > 1))]
+    .sort((a, b) => b.length - a.length)
+  if (aliases.length === 0) return body
+
+  const regex = new RegExp(`(${aliases.map(escapeRegex).join("|")})(?=\\s|[.,!?;:]|$)`, "gi")
+  const rows = []
+  let lastIndex = 0
+  let match: RegExpExecArray | null
+  while ((match = regex.exec(body)) !== null) {
+    if (match.index > lastIndex) rows.push(body.slice(lastIndex, match.index))
+    const value = match[0]
+    rows.push(
+      <span key={`${value}-${match.index}`} className={`inline-flex rounded-full px-1.5 py-0.5 font-bold ${isMine ? "bg-[#061426]/15 text-[#061426]" : "bg-[#D6B65A]/20 text-[#FFE39A]"}`}>
+        {value}
+      </span>,
+    )
+    lastIndex = match.index + value.length
+  }
+  if (lastIndex < body.length) rows.push(body.slice(lastIndex))
+  return rows
+}
+
 function formatDateTime(value: string): string {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return value
@@ -285,6 +333,24 @@ function activityDetails(details: Record<string, unknown> | null | undefined): s
   return null
 }
 
+function activityHasChange(item: TocProjectActivity, field: string, toValue?: string): boolean {
+  const changes = item.details?.changes
+  if (!Array.isArray(changes)) return false
+  return changes.some((change) => {
+    if (!change || typeof change !== "object") return false
+    const row = change as { field?: string; to?: string }
+    if (row.field !== field) return false
+    return toValue ? String(row.to ?? "").toLowerCase() === toValue.toLowerCase() : true
+  })
+}
+
+function taskMovementLabel(item: TocProjectActivity): string {
+  if (item.action_type === "task.created") return "Created"
+  if (activityHasChange(item, "status", "Completed")) return "Closed"
+  if (activityHasChange(item, "assignees")) return "Assigned"
+  return "Updated"
+}
+
 function aiMetaText(doc: TocProjectDocument, key: string): string | null {
   const value = doc.ai_metadata?.[key]
   if (value == null || value === "") return null
@@ -316,6 +382,33 @@ function approvalIcon(status: string) {
   return <Clock className="h-4 w-4" />
 }
 
+function TaskMovementList({ title, items }: { title: string; items: TocProjectActivity[] }) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/5">
+      <div className="border-b border-white/10 px-3 py-2 text-sm font-bold text-white">{title}</div>
+      <div className="divide-y divide-white/10">
+        {items.length === 0 ? (
+          <div className="px-3 py-4 text-sm text-slate-400">No recent task movement.</div>
+        ) : (
+          items.map((item) => (
+            <div key={item.id} className="grid gap-1 px-3 py-2 text-sm sm:grid-cols-[90px_1fr_160px] sm:items-center">
+              <Badge className="w-fit border border-[#D6B65A]/30 bg-[#D6B65A]/10 text-[#D6B65A]">{taskMovementLabel(item)}</Badge>
+              <div className="min-w-0">
+                <div className="truncate font-semibold text-white">{item.task_title || item.summary}</div>
+                <div className="truncate text-xs text-slate-400">{activityDetails(item.details) || item.summary}</div>
+              </div>
+              <div className="text-xs text-slate-400 sm:text-right">
+                <div>{item.actor_email}</div>
+                <div>{formatDateTime(item.created_at)}</div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  )
+}
+
 function tournamentCountdown() {
   const target = TOC_EVENT_DATE.getTime()
   const now = Date.now()
@@ -331,6 +424,7 @@ export default function TocProjectPlanPage() {
   const [approvals, setApprovals] = useState<TocProjectApproval[]>([])
   const [chatMessages, setChatMessages] = useState<TocProjectChatMessage[]>([])
   const [typingUsers, setTypingUsers] = useState<TocProjectTypingUser[]>([])
+  const [mentionUsers, setMentionUsers] = useState<TocProjectChatMention[]>([])
   const [activityFeed, setActivityFeed] = useState<TocProjectActivity[]>([])
   const [bracketFill, setBracketFill] = useState({ confirmed: 0, capacity: 88, pct: 0, fullBrackets: 0 })
   const [currentUser, setCurrentUser] = useState<{ userId: string; email: string } | null>(null)
@@ -388,10 +482,11 @@ export default function TocProjectPlanPage() {
       setUnavailable(data.unavailable ? `Database table missing. Run ${data.setupSql ?? "docs/sql/toc-project-plan.sql"} in Supabase to enable shared editing.` : null)
       setDrafts(Object.fromEntries((data.tasks ?? []).map((task) => [task.id, task])))
 
-      const [documentsRes, approvalsRes, chatRes, activityRes, fieldRes] = await Promise.allSettled([
+      const [documentsRes, approvalsRes, chatRes, mentionUsersRes, activityRes, fieldRes] = await Promise.allSettled([
         fetch("/api/admin/toc/project-documents", { cache: "no-store", credentials: "include" }),
         fetch("/api/admin/toc/project-approvals", { cache: "no-store", credentials: "include" }),
         fetch("/api/admin/toc/project-chat", { cache: "no-store", credentials: "include" }),
+        fetch("/api/admin/toc/project-chat?mentions=1", { cache: "no-store", credentials: "include" }),
         fetch("/api/admin/toc/project-activity", { cache: "no-store", credentials: "include" }),
         fetch("/api/admin/toc/field", { cache: "no-store", credentials: "include" }),
       ])
@@ -430,6 +525,11 @@ export default function TocProjectPlanPage() {
         }
       } else {
         setChatUnavailable("Team chat could not load. The task board is still available.")
+      }
+
+      if (mentionUsersRes.status === "fulfilled" && mentionUsersRes.value.ok) {
+        const mentionData = (await mentionUsersRes.value.json()) as MentionUsersPayload
+        setMentionUsers(mentionData.users ?? [])
       }
 
       if (activityRes.status === "fulfilled") {
@@ -510,6 +610,12 @@ export default function TocProjectPlanPage() {
     const needsWork = approvals.filter((approval) => approval.status === "changes_requested").length
     return { pending, approved, needsWork, total: approvals.length }
   }, [approvals])
+  const taskMovement = useMemo(() => {
+    const created = activityFeed.filter((item) => item.action_type === "task.created").slice(0, 8)
+    const assigned = activityFeed.filter((item) => item.action_type === "task.updated" && activityHasChange(item, "assignees")).slice(0, 8)
+    const closed = activityFeed.filter((item) => item.action_type === "task.updated" && activityHasChange(item, "status", "Completed")).slice(0, 8)
+    return { created, assigned, closed }
+  }, [activityFeed])
   const ownerOptions = useMemo(() => {
     const rows = new Map<string, { value: string; label: string }>()
     tasks.forEach((task) => {
@@ -898,6 +1004,14 @@ export default function TocProjectPlanPage() {
     }
   }
 
+  function insertChatMention(user: TocProjectChatMention) {
+    const mention = `@${user.name}`
+    setChatDraft((prev) => {
+      const separator = prev.trim().length === 0 || prev.endsWith(" ") || prev.endsWith("\n") ? "" : " "
+      return `${prev}${separator}${mention} `
+    })
+  }
+
   async function sendChatMessage() {
     const body = chatDraft.trim()
     if (!body) return
@@ -1103,8 +1217,9 @@ export default function TocProjectPlanPage() {
         </CardHeader>
         <CardContent className="bg-gradient-to-br from-[#061426] to-[#0a1d37] p-4">
           <Tabs defaultValue="chat" className="w-full">
-            <TabsList className="mb-4 grid w-full max-w-md grid-cols-2 border border-white/10 bg-white/5">
+            <TabsList className="mb-4 grid w-full max-w-2xl grid-cols-3 border border-white/10 bg-white/5">
               <TabsTrigger value="chat" className="data-[state=active]:bg-[#D6B65A] data-[state=active]:text-[#061426]">Chat</TabsTrigger>
+              <TabsTrigger value="movement" className="data-[state=active]:bg-[#D6B65A] data-[state=active]:text-[#061426]">Task movement</TabsTrigger>
               <TabsTrigger value="activity" className="data-[state=active]:bg-[#D6B65A] data-[state=active]:text-[#061426]">Activity</TabsTrigger>
             </TabsList>
 
@@ -1152,7 +1267,7 @@ export default function TocProjectPlanPage() {
                               </div>
                             </div>
                           ) : (
-                            <p className={`whitespace-pre-wrap ${isDeleted ? "italic opacity-60" : ""}`}>{isDeleted ? "Message deleted" : message.body}</p>
+                            <p className={`whitespace-pre-wrap ${isDeleted ? "italic opacity-60" : ""}`}>{isDeleted ? "Message deleted" : renderChatBodyWithMentions(message.body, message.mentions ?? [], isMine)}</p>
                           )}
                           {!isDeleted && (
                             <div className={`mt-2 flex flex-wrap items-center gap-1 ${isMine ? "justify-end" : "justify-start"}`}>
@@ -1225,16 +1340,41 @@ export default function TocProjectPlanPage() {
                 <Textarea
                   value={chatDraft}
                   onChange={(e) => setChatDraft(e.target.value)}
-                  placeholder="Drop a quick TOC update…"
+                  placeholder="Drop a quick TOC update… use @Name to call someone out"
                 className={`min-h-28 ${DARK_FIELD_CLASS}`}
                   disabled={!!chatUnavailable || sendingChat}
                 />
+                {mentionUsers.length > 0 && (
+                  <div className="mt-2">
+                    <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">Mention teammate</div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {mentionUsers.map((user) => (
+                        <button
+                          key={user.email}
+                          type="button"
+                          onClick={() => insertChatMention(user)}
+                          className="inline-flex items-center gap-1 rounded-full border border-[#D6B65A]/30 bg-[#D6B65A]/10 px-2 py-1 text-xs font-semibold text-[#D6B65A] hover:bg-[#D6B65A]/20 hover:text-white"
+                        >
+                          @{user.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div className="mt-3 flex items-center justify-between gap-3">
                   <p className="text-xs text-slate-400">Visible to TOC scoped users on this page.</p>
                   <Button onClick={() => void sendChatMessage()} disabled={!!chatUnavailable || sendingChat || !chatDraft.trim()} className="bg-[#D6B65A] text-[#061426] hover:bg-[#c8a94f]">
                     <Send className="mr-2 h-4 w-4" /> {sendingChat ? "Sending…" : "Send"}
                   </Button>
                 </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="movement" className="mt-0">
+              <div className="grid gap-3 xl:grid-cols-3">
+                <TaskMovementList title="New tasks created" items={taskMovement.created} />
+                <TaskMovementList title="Tasks assigned" items={taskMovement.assigned} />
+                <TaskMovementList title="Tasks closed" items={taskMovement.closed} />
               </div>
             </TabsContent>
 

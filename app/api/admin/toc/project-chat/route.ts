@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { recordTocProjectActivity } from "@/lib/toc/project-activity"
 import { requireTocInvitationManager } from "@/lib/toc/require-toc-invitation-manager"
+import type { TocProjectChatMention } from "@/lib/toc/project-plan"
 
 export const dynamic = "force-dynamic"
 
@@ -12,6 +13,7 @@ type ChatRow = {
   body: string
   author_email: string
   author_user_id: string | null
+  mentions?: TocProjectChatMention[]
   created_at: string
 }
 
@@ -75,11 +77,73 @@ async function enrichMessages(admin: ReturnType<typeof createAdminClient>, messa
   }))
 }
 
-export async function GET() {
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+function mentionAliases(user: TocProjectChatMention): string[] {
+  const name = user.name.trim()
+  const parts = name.split(/\s+/).filter(Boolean)
+  const local = user.email.split("@")[0].replace(/[._-]+/g, " ")
+  return [
+    name,
+    parts[0] ?? "",
+    parts.length >= 2 ? `${parts[0]} ${parts[parts.length - 1]}` : "",
+    local,
+    user.email,
+  ].filter(Boolean)
+}
+
+async function tocMentionUsers(admin: ReturnType<typeof createAdminClient>): Promise<TocProjectChatMention[]> {
+  const { data: managerRows } = await admin.from("toc_invitation_managers").select("email").limit(100)
+  const emails = [...new Set((managerRows ?? []).map((row) => String(row.email ?? "").trim().toLowerCase()).filter(Boolean))]
+  if (emails.length === 0) return []
+
+  const { data: profiles } = await admin.from("user_profiles").select("user_id,email,full_name,first_name,last_name").in("email", emails)
+  const byEmail = new Map<string, Record<string, unknown>>()
+  ;(profiles ?? []).forEach((row) => {
+    const record = row as Record<string, unknown>
+    const email = String(record.email ?? "").trim().toLowerCase()
+    if (email) byEmail.set(email, record)
+  })
+
+  return emails.map((email) => {
+    const profile = byEmail.get(email)
+    const name = profile ? profileName(profile) || emailFallbackName(email) : emailFallbackName(email)
+    return {
+      name,
+      email,
+      userId: profile ? String(profile.user_id ?? "") || null : null,
+    }
+  })
+}
+
+async function resolveMentions(admin: ReturnType<typeof createAdminClient>, message: string): Promise<TocProjectChatMention[]> {
+  const users = await tocMentionUsers(admin)
+  const found = new Map<string, TocProjectChatMention>()
+  for (const user of users) {
+    const aliases = mentionAliases(user).filter(Boolean)
+    for (const alias of aliases) {
+      const pattern = new RegExp(`(^|\\s)@${escapeRegex(alias)}(?=\\s|[.,!?;:]|$)`, "i")
+      if (pattern.test(message)) {
+        found.set(user.email, user)
+        break
+      }
+    }
+  }
+  return [...found.values()]
+}
+
+export async function GET(request: Request) {
   const auth = await requireTocInvitationManager()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   const admin = createAdminClient()
+  const { searchParams } = new URL(request.url)
+  if (searchParams.get("mentions") === "1") {
+    return NextResponse.json({ users: await tocMentionUsers(admin) })
+  }
+
   const { data, error } = await admin.from(TABLE).select("*").order("created_at", { ascending: false }).limit(75)
   if (error) {
     if (tableMissing(error)) {
@@ -105,12 +169,14 @@ export async function POST(request: Request) {
   if (!message) return NextResponse.json({ error: "message required" }, { status: 400 })
 
   const admin = createAdminClient()
+  const mentions = await resolveMentions(admin, message)
   const { data, error } = await admin
     .from(TABLE)
     .insert({
       body: message,
       author_email: auth.email,
       author_user_id: auth.userId,
+      mentions,
     })
     .select("*")
     .single()
@@ -122,7 +188,7 @@ export async function POST(request: Request) {
     actorEmail: auth.email,
     actorUserId: auth.userId,
     summary: "posted a team chat message",
-    details: { message: message.slice(0, 500) },
+    details: { message: message.slice(0, 500), mentions },
   })
 
   const [enrichedMessage] = await enrichMessages(admin, [data as ChatRow])

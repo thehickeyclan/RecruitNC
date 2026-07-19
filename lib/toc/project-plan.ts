@@ -72,12 +72,19 @@ export type TocProjectChatReaction = {
   createdAt: string
 }
 
+export type TocProjectChatMention = {
+  name: string
+  email: string
+  userId?: string | null
+}
+
 export type TocProjectChatMessage = {
   id: string
   body: string
   author_email: string
   author_name?: string | null
   author_user_id: string | null
+  mentions?: TocProjectChatMention[]
   reactions?: TocProjectChatReaction[]
   edited_at?: string | null
   deleted_at?: string | null
