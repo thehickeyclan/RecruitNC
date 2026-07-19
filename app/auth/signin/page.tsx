@@ -13,6 +13,18 @@ import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Trophy, Users, Edit, ArrowRight } from "lucide-react"
 
+function isTocScopedAdminTarget(path: string | null): boolean {
+  if (!path) return false
+  return (
+    path === "/admin/toc/invitations" ||
+    path.startsWith("/admin/toc/invitations/") ||
+    path === "/admin/toc/field" ||
+    path.startsWith("/admin/toc/field/") ||
+    path === "/admin/toc/plan" ||
+    path.startsWith("/admin/toc/plan/")
+  )
+}
+
 export default function SignInPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -95,7 +107,7 @@ export default function SignInPage() {
       }),
     }).catch(() => {})
 
-    const isAdminTarget = returnTo?.startsWith("/admin") || returnTo?.startsWith("/users-dashboard")
+    const isAdminTarget = (returnTo?.startsWith("/admin") || returnTo?.startsWith("/users-dashboard")) && !isTocScopedAdminTarget(returnTo)
 
     // Always use server-side sign-in so we avoid Supabase anon-key rate limits in production.
     if (isAdminTarget) {
