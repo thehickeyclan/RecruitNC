@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { recordTocProjectActivity } from "@/lib/toc/project-activity"
 import { requireTocInvitationManager } from "@/lib/toc/require-toc-invitation-manager"
 import { sanitizeProjectStatus, tocProjectSeedTasks } from "@/lib/toc/project-plan"
 
@@ -97,5 +98,17 @@ export async function POST(request: Request) {
 
   const { data, error } = await admin.from(TABLE).insert(payload).select("*").single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  await recordTocProjectActivity(admin, {
+    actionType: "task.created",
+    taskId: data.id,
+    taskTitle: data.title,
+    category: data.category,
+    actorEmail: auth.email,
+    actorUserId: auth.userId,
+    summary: `created task “${data.title}”`,
+    details: { category: data.category, priority: data.priority },
+  })
+
   return NextResponse.json({ task: data })
 }

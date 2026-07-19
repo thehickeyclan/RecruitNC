@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { recordTocProjectActivity } from "@/lib/toc/project-activity"
 import { requireTocInvitationManager } from "@/lib/toc/require-toc-invitation-manager"
 
 export const dynamic = "force-dynamic"
@@ -75,6 +76,15 @@ export async function POST(request: Request) {
 
   const { data, error } = await admin.from(TABLE).insert(payload).select("*").single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  await recordTocProjectActivity(admin, {
+    actionType: "document.uploaded",
+    category,
+    actorEmail: auth.email,
+    actorUserId: auth.userId,
+    summary: `uploaded shared document “${title}”`,
+    details: { fileName: file.name, fileSize: file.size, fileType: file.type || null, amount },
+  })
 
   return NextResponse.json({ document: data })
 }

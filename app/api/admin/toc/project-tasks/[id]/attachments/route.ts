@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { recordTocProjectActivity } from "@/lib/toc/project-activity"
 import { requireTocInvitationManager } from "@/lib/toc/require-toc-invitation-manager"
 import type { TocTaskAttachment } from "@/lib/toc/project-plan"
 
@@ -41,7 +42,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
     uploadedBy: auth.email,
   }
 
-  const { data: task, error: loadError } = await admin.from(TABLE).select("attachments").eq("id", id).single()
+  const { data: task, error: loadError } = await admin.from(TABLE).select("title,category,attachments").eq("id", id).single()
   if (loadError) return NextResponse.json({ error: loadError.message }, { status: 500 })
 
   const attachments = Array.isArray(task?.attachments) ? task.attachments : []
@@ -52,6 +53,17 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
     .select("*")
     .single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  await recordTocProjectActivity(admin, {
+    actionType: "task.attachment",
+    taskId: data.id,
+    taskTitle: data.title,
+    category: data.category,
+    actorEmail: auth.email,
+    actorUserId: auth.userId,
+    summary: `uploaded ${file.name} to “${data.title}”`,
+    details: { fileName: file.name, fileSize: file.size, fileType: file.type || null },
+  })
 
   return NextResponse.json({ task: data, attachment })
 }

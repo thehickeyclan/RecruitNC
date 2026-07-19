@@ -59,15 +59,33 @@ create table if not exists public.toc_project_chat_messages (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.toc_project_activity (
+  id uuid primary key default gen_random_uuid(),
+  action_type text not null,
+  task_id uuid,
+  task_title text,
+  category text,
+  actor_email text not null,
+  actor_user_id uuid,
+  summary text not null,
+  details jsonb,
+  created_at timestamptz not null default now()
+);
+
 create index if not exists toc_project_documents_created_at_idx
   on public.toc_project_documents (created_at desc);
 create index if not exists toc_project_documents_category_idx
   on public.toc_project_documents (category);
 create index if not exists toc_project_chat_messages_created_at_idx
   on public.toc_project_chat_messages (created_at desc);
+create index if not exists toc_project_activity_created_at_idx
+  on public.toc_project_activity (created_at desc);
+create index if not exists toc_project_activity_task_id_idx
+  on public.toc_project_activity (task_id);
 
 alter table public.toc_project_documents enable row level security;
 alter table public.toc_project_chat_messages enable row level security;
+alter table public.toc_project_activity enable row level security;
 
 drop policy if exists "Service role manages TOC project documents" on public.toc_project_documents;
 create policy "Service role manages TOC project documents"
@@ -80,6 +98,14 @@ create policy "Service role manages TOC project documents"
 drop policy if exists "Service role manages TOC project chat messages" on public.toc_project_chat_messages;
 create policy "Service role manages TOC project chat messages"
   on public.toc_project_chat_messages
+  for all
+  to service_role
+  using (true)
+  with check (true);
+
+drop policy if exists "Service role manages TOC project activity" on public.toc_project_activity;
+create policy "Service role manages TOC project activity"
+  on public.toc_project_activity
   for all
   to service_role
   using (true)

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { recordTocProjectActivity } from "@/lib/toc/project-activity"
 import { requireTocInvitationManager } from "@/lib/toc/require-toc-invitation-manager"
 
 export const dynamic = "force-dynamic"
@@ -50,5 +51,14 @@ export async function POST(request: Request) {
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  await recordTocProjectActivity(admin, {
+    actionType: "chat.message",
+    actorEmail: auth.email,
+    actorUserId: auth.userId,
+    summary: "posted a team chat message",
+    details: { message: message.slice(0, 500) },
+  })
+
   return NextResponse.json({ message: data })
 }
