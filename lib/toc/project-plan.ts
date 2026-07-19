@@ -33,6 +33,21 @@ export type TocTaskComment = {
   }
 }
 
+export type TocProjectDocument = {
+  id: string
+  title: string
+  category: string | null
+  description: string | null
+  amount: number | null
+  url: string
+  path?: string | null
+  file_name: string
+  file_type: string | null
+  file_size: number | null
+  uploaded_by: string | null
+  created_at: string
+}
+
 export type TocProjectTask = {
   id: string
   category: string

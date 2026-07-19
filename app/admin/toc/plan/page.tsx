@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, DollarSign, LinkIcon, MessageSquare, Paperclip, Plus, Save, Trash2, Upload, UserPlus } from "lucide-react"
+import { ArrowLeft, CalendarDays, DollarSign, FileText, LinkIcon, MessageSquare, Paperclip, Plus, Save, Trash2, Upload, UserPlus } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,13 +10,21 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { TOC_PROJECT_CATEGORIES, type TocProjectTask, type TocTaskAssignee, type TocTaskLink } from "@/lib/toc/project-plan"
+import { TOC_EVENT_DATE, TOC_EVENT_DATES_RANGE } from "@/lib/toc/constants"
+import { TOC_PROJECT_CATEGORIES, type TocProjectDocument, type TocProjectTask, type TocTaskAssignee, type TocTaskLink } from "@/lib/toc/project-plan"
 
 type Payload = {
   unavailable?: boolean
   setupSql?: string
   currentUser?: { userId: string; email: string }
   tasks: TocProjectTask[]
+  error?: string
+}
+
+type DocumentsPayload = {
+  unavailable?: boolean
+  setupSql?: string
+  documents: TocProjectDocument[]
   error?: string
 }
 
@@ -89,27 +97,57 @@ function formatDateTime(value: string): string {
   })
 }
 
+function formatFileSize(value: number | null | undefined): string {
+  if (!value) return "Unknown size"
+  if (value < 1024 * 1024) return `${Math.round(value / 1024)} KB`
+  return `${(value / (1024 * 1024)).toFixed(1)} MB`
+}
+
+function tournamentCountdown() {
+  const target = TOC_EVENT_DATE.getTime()
+  const now = Date.now()
+  const diff = Math.max(0, target - now)
+  const days = Math.floor(diff / 86_400_000)
+  const hours = Math.floor((diff % 86_400_000) / 3_600_000)
+  return { days, hours }
+}
+
 export default function TocProjectPlanPage() {
   const [tasks, setTasks] = useState<TocProjectTask[]>([])
+  const [documents, setDocuments] = useState<TocProjectDocument[]>([])
   const [currentUser, setCurrentUser] = useState<{ userId: string; email: string } | null>(null)
   const [unavailable, setUnavailable] = useState<string | null>(null)
+  const [documentsUnavailable, setDocumentsUnavailable] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [savingId, setSavingId] = useState<string | null>(null)
+  const [uploadingDocument, setUploadingDocument] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [newTaskTitle, setNewTaskTitle] = useState<Record<string, string>>({})
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({})
   const [drafts, setDrafts] = useState<Record<string, TocProjectTask>>({})
+  const [docTitle, setDocTitle] = useState("")
+  const [docCategory, setDocCategory] = useState("Receipts")
+  const [docAmount, setDocAmount] = useState("")
+  const [docDescription, setDocDescription] = useState("")
+  const [docFile, setDocFile] = useState<File | null>(null)
 
   async function load() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch("/api/admin/toc/project-tasks", { cache: "no-store", credentials: "include" })
-      const data = (await res.json()) as Payload
-      if (!res.ok) throw new Error(data.error || "Could not load TOC project plan")
+      const [tasksRes, documentsRes] = await Promise.all([
+        fetch("/api/admin/toc/project-tasks", { cache: "no-store", credentials: "include" }),
+        fetch("/api/admin/toc/project-documents", { cache: "no-store", credentials: "include" }),
+      ])
+      const data = (await tasksRes.json()) as Payload
+      const documentsData = (await documentsRes.json()) as DocumentsPayload
+      if (!tasksRes.ok) throw new Error(data.error || "Could not load TOC project plan")
+      if (!documentsRes.ok) throw new Error(documentsData.error || "Could not load TOC documents")
       setTasks(data.tasks ?? [])
+      setDocuments(documentsData.documents ?? [])
       setCurrentUser(data.currentUser ?? null)
       setUnavailable(data.unavailable ? `Database table missing. Run ${data.setupSql ?? "docs/sql/toc-project-plan.sql"} in Supabase to enable shared editing.` : null)
+      setDocumentsUnavailable(documentsData.unavailable ? `Document share missing. Run ${documentsData.setupSql ?? "docs/sql/toc-project-plan.sql"} in Supabase to enable uploads.` : null)
       setDrafts(Object.fromEntries((data.tasks ?? []).map((task) => [task.id, task])))
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not load TOC project plan")
@@ -130,6 +168,9 @@ export default function TocProjectPlanPage() {
     const actual = tasks.reduce((sum, t) => sum + Number(t.actual_amount ?? 0), 0)
     return { total, done, blocked, budget, actual, pct: total ? Math.round((done / total) * 100) : 0 }
   }, [tasks])
+
+  const countdown = useMemo(() => tournamentCountdown(), [])
+  const documentTotal = useMemo(() => documents.reduce((sum, doc) => sum + Number(doc.amount ?? 0), 0), [documents])
 
   function updateDraft(id: string, patch: Partial<TocProjectTask>) {
     setDrafts((prev) => ({ ...prev, [id]: { ...(prev[id] ?? tasks.find((t) => t.id === id)!), ...patch } }))
@@ -225,6 +266,52 @@ export default function TocProjectPlanPage() {
     }
   }
 
+  async function uploadSharedDocument() {
+    if (!docFile) return
+    setUploadingDocument(true)
+    setError(null)
+    try {
+      const form = new FormData()
+      form.set("file", docFile)
+      form.set("title", docTitle.trim() || docFile.name)
+      form.set("category", docCategory)
+      form.set("description", docDescription)
+      form.set("amount", docAmount)
+      const res = await fetch("/api/admin/toc/project-documents", {
+        method: "POST",
+        credentials: "include",
+        body: form,
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "Upload failed")
+      setDocuments((prev) => [data.document, ...prev])
+      setDocTitle("")
+      setDocAmount("")
+      setDocDescription("")
+      setDocFile(null)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Upload failed")
+    } finally {
+      setUploadingDocument(false)
+    }
+  }
+
+  async function deleteSharedDocument(id: string) {
+    if (!confirm("Delete this shared TOC document?")) return
+    setSavingId(`document-${id}`)
+    setError(null)
+    try {
+      const res = await fetch(`/api/admin/toc/project-documents/${id}`, { method: "DELETE", credentials: "include" })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "Delete failed")
+      setDocuments((prev) => prev.filter((doc) => doc.id !== id))
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Delete failed")
+    } finally {
+      setSavingId(null)
+    }
+  }
+
   async function addComment(taskId: string) {
     const body = (commentDrafts[taskId] || "").trim()
     if (!body || taskId.startsWith("seed-")) return
@@ -274,6 +361,29 @@ export default function TocProjectPlanPage() {
 
       {error && <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
       {unavailable && <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">{unavailable}</div>}
+      {documentsUnavailable && <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">{documentsUnavailable}</div>}
+
+      <Card className="overflow-hidden border-[#002147]/20 bg-gradient-to-r from-[#002147] to-[#0b3a6d] text-white">
+        <CardContent className="grid gap-4 p-5 md:grid-cols-[1fr_auto] md:items-center">
+          <div>
+            <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#D6B65A]">
+              <CalendarDays className="h-3.5 w-3.5" /> Tournament countdown
+            </div>
+            <h2 className="text-2xl font-bold">Tournament of Champions · {TOC_EVENT_DATES_RANGE}</h2>
+            <p className="mt-1 text-sm text-white/75">Keep the team focused on contracts, field, sponsors, venue, and fan experience before event weekend.</p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 text-center">
+            <div className="rounded-2xl border border-white/15 bg-white/10 px-5 py-4">
+              <div className="text-4xl font-black leading-none">{countdown.days}</div>
+              <div className="mt-1 text-xs uppercase tracking-wide text-white/70">days</div>
+            </div>
+            <div className="rounded-2xl border border-white/15 bg-white/10 px-5 py-4">
+              <div className="text-4xl font-black leading-none">{countdown.hours}</div>
+              <div className="mt-1 text-xs uppercase tracking-wide text-white/70">hours</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-4 md:grid-cols-5">
         <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Tasks</p><p className="text-2xl font-bold">{summary.total}</p></CardContent></Card>
@@ -282,6 +392,92 @@ export default function TocProjectPlanPage() {
         <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Blocked</p><p className="text-2xl font-bold text-red-700">{summary.blocked}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Budget / Actual</p><p className="text-xl font-bold">{money(summary.budget)} / {money(summary.actual)}</p></CardContent></Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex flex-wrap items-center justify-between gap-3">
+            <span className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-[#002147]" />
+              TOC Document Share
+            </span>
+            <Badge variant="outline">{documents.length} files · {money(documentTotal)} logged</Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-5 lg:grid-cols-[380px_1fr]">
+          <div className="rounded-xl border bg-gray-50 p-4">
+            <div className="mb-3 text-sm font-semibold text-gray-900">Upload receipt, contract, proof, photo, or file</div>
+            <div className="space-y-3">
+              <div>
+                <Label>Title</Label>
+                <Input value={docTitle} onChange={(e) => setDocTitle(e.target.value)} placeholder="Venue deposit receipt" disabled={!!documentsUnavailable} />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <Label>Category</Label>
+                  <Select value={docCategory} onValueChange={setDocCategory} disabled={!!documentsUnavailable}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {["Receipts", "Contracts", "Invoices", "Artwork", "Venue", "Sponsors", "Photos", "Other"].map((value) => (
+                        <SelectItem key={value} value={value}>{value}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Amount $</Label>
+                  <Input type="number" value={docAmount} onChange={(e) => setDocAmount(e.target.value)} placeholder="Optional" disabled={!!documentsUnavailable} />
+                </div>
+              </div>
+              <div>
+                <Label>Notes</Label>
+                <Textarea value={docDescription} onChange={(e) => setDocDescription(e.target.value)} placeholder="What this is, vendor, payment method, next step…" disabled={!!documentsUnavailable} />
+              </div>
+              <div>
+                <Label>File</Label>
+                <Input type="file" onChange={(e) => setDocFile(e.target.files?.[0] ?? null)} disabled={!!documentsUnavailable} />
+              </div>
+              <Button onClick={() => void uploadSharedDocument()} disabled={!!documentsUnavailable || uploadingDocument || !docFile} className="w-full">
+                <Upload className="mr-2 h-4 w-4" /> {uploadingDocument ? "Uploading…" : "Upload to doc share"}
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            {documents.length === 0 ? (
+              <div className="rounded-xl border border-dashed p-6 text-center text-sm text-gray-500">
+                No shared TOC documents yet. Upload receipts, contracts, quotes, sponsor files, artwork, floorplans, or photos here.
+              </div>
+            ) : (
+              documents.map((doc) => (
+                <div key={doc.id} className="flex flex-col gap-3 rounded-xl border bg-white p-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <a href={doc.url} target="_blank" rel="noreferrer" className="font-semibold text-[#002147] hover:underline">
+                        {doc.title}
+                      </a>
+                      {doc.category && <Badge variant="secondary">{doc.category}</Badge>}
+                      {doc.amount != null && <Badge className="bg-green-100 text-green-800">{money(doc.amount)}</Badge>}
+                    </div>
+                    <div className="mt-1 text-xs text-gray-500">
+                      {doc.file_name} · {formatFileSize(doc.file_size)} · uploaded by {doc.uploaded_by || "unknown"} · {formatDateTime(doc.created_at)}
+                    </div>
+                    {doc.description && <p className="mt-2 whitespace-pre-wrap text-sm text-gray-700">{doc.description}</p>}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => void deleteSharedDocument(doc.id)}
+                    disabled={savingId === `document-${doc.id}`}
+                    className="text-red-700 hover:bg-red-50 hover:text-red-800"
+                  >
+                    <Trash2 className="mr-1 h-4 w-4" /> Delete
+                  </Button>
+                </div>
+              ))
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-5 lg:grid-cols-2">
         {TOC_PROJECT_CATEGORIES.map((category) => {
