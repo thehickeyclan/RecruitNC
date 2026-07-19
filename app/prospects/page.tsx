@@ -5,12 +5,10 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Award, Users, TrendingUp, CheckCircle, FileText, Search } from "lucide-react"
-import { AuthGuard } from "@/components/auth-guard"
 
 export default function ProspectsPage() {
   return (
-    <AuthGuard>
-      <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-[#002147] to-[#003366] text-white">
         <div className="container mx-auto px-4 py-16">
@@ -223,6 +221,5 @@ export default function ProspectsPage() {
         </div>
       </div>
     </div>
-    </AuthGuard>
   )
 }

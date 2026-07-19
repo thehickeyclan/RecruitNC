@@ -12,7 +12,6 @@ import { ViewToggle } from "@/components/view-toggle"
 import { RankingsTableView } from "@/components/rankings-table-view"
 import { RankingsCardView } from "@/components/rankings-card-view"
 import { Search, Filter, ArrowLeft, Trophy, Users, Clock } from "lucide-react"
-import { AuthGuard } from "@/components/auth-guard"
 import {
   RANKINGS_BODY,
   RANKINGS_FILTER_BAR,
@@ -229,8 +228,7 @@ export default function Class2028RankingsPage() {
   })
 
   return (
-    <AuthGuard>
-      <div className={RANKINGS_PAGE}>
+    <div className={RANKINGS_PAGE}>
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#003366] via-[#0a2571] to-[#1e3a8a] p-6 sm:p-12 mb-12 shadow-2xl">
             <div className="absolute inset-0 bg-gradient-to-br from-[#003366]/90 via-[#003366]/65 to-[#1e3a8a]/80"></div>
@@ -596,6 +594,5 @@ export default function Class2028RankingsPage() {
           </div>
         </div>
       </div>
-    </AuthGuard>
   )
 }

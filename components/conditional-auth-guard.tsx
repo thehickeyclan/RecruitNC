@@ -4,13 +4,12 @@ import { usePathname } from "next/navigation"
 import { AuthGuard } from "@/components/auth-guard"
 
 /**
- * Public routes (no sign-in): `/`, `/news` (index only), `/view-profile`, `/spartan` and `/spartan/*`,
- * `/fundraising` and `/fundraising/*` (giving hub, athlete pages, leaderboard — playbook/members
- * enforces sign-in in its page), and `/auth/*`.
- * Individual `/news/[slug]` articles require login; other app routes require login.
+ * Public routes (no sign-in): public record / discovery pages that should be shareable
+ * and crawlable: athletes, profiles, rankings, schools, colleges, news, public results,
+ * national-team info/results, fundraising, store, and auth routes.
  *
- * The rule: an athlete profile is a business card the athlete hands to a coach, so it has to
- * work in a stranger's hands. The rankings/prospect database is the product and stays gated.
+ * The rule: public wrestling history is distribution. Actions, personalization, admin,
+ * payments, wallet, messaging, and private recruiting data stay gated elsewhere.
  *
  * Making /view-profile public gives up nothing that was protected: private fields are gated
  * separately by canSeePrivateInfo (owner/admin/verified coach), so a signed-in fan already saw
@@ -31,17 +30,34 @@ export function ConditionalAuthGuard({
   const path = pathname && pathname.length > 0 ? pathname : "/"
 
   const isHomepage = path === "/"
-  /** News listing only — not `/news/some-article` */
-  const isNewsIndex = path === "/news" || path === "/news/"
-  /** Athlete profile — the one page whose job is to be shared outward to a coach. */
-  const isViewProfile = path === "/view-profile" || path.startsWith("/view-profile/")
-  /** Spartan fundraising campaign — must stay public (links from article, email, social). */
-  const isSpartan = path === "/spartan" || path.startsWith("/spartan/")
-  /** NC United giving hub and athlete flows — public for donors; gated playbook routes redirect server-side. */
-  const isFundraisingHub = path === "/fundraising" || path.startsWith("/fundraising/")
+  const publicRoutePrefixes = [
+    "/athletes",
+    "/athletes-public",
+    "/view-profile",
+    "/prospects",
+    "/public-rankings",
+    "/schools",
+    "/colleges",
+    "/news",
+    "/nchsaa",
+    "/nhsca",
+    "/fargo",
+    "/national-team",
+    "/stats",
+    "/stats-simple",
+    "/about",
+    "/store",
+    "/store-app",
+    "/cart",
+    "/spartan",
+    "/fundraising",
+  ]
+  const publicExactRoutes = new Set(["/blue"])
   const isAuthRoute = path.startsWith("/auth/")
+  const isPublicPrefix = publicRoutePrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))
+  const isPublicExact = publicExactRoutes.has(path)
 
-  const isPublic = isHomepage || isNewsIndex || isViewProfile || isSpartan || isFundraisingHub || isAuthRoute
+  const isPublic = isHomepage || isPublicPrefix || isPublicExact || isAuthRoute
 
   if (isPublic) {
     return <>{children}</>
