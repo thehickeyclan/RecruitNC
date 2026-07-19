@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, CalendarDays, DollarSign, FileText, LinkIcon, MessageSquare, Paperclip, Plus, Save, Trash2, Upload, UserPlus } from "lucide-react"
+import { ArrowLeft, CalendarDays, DollarSign, FileText, LinkIcon, MessageSquare, Paperclip, Plus, Save, Send, Trash2, Upload, UserPlus } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { TOC_EVENT_DATE, TOC_EVENT_DATES_RANGE } from "@/lib/toc/constants"
-import { TOC_PROJECT_CATEGORIES, type TocProjectDocument, type TocProjectTask, type TocTaskAssignee, type TocTaskLink } from "@/lib/toc/project-plan"
+import { TOC_PROJECT_CATEGORIES, type TocProjectChatMessage, type TocProjectDocument, type TocProjectTask, type TocTaskAssignee, type TocTaskLink } from "@/lib/toc/project-plan"
 
 type Payload = {
   unavailable?: boolean
@@ -25,6 +25,13 @@ type DocumentsPayload = {
   unavailable?: boolean
   setupSql?: string
   documents: TocProjectDocument[]
+  error?: string
+}
+
+type ChatPayload = {
+  unavailable?: boolean
+  setupSql?: string
+  messages: TocProjectChatMessage[]
   error?: string
 }
 
@@ -122,14 +129,18 @@ function tournamentCountdown() {
 export default function TocProjectPlanPage() {
   const [tasks, setTasks] = useState<TocProjectTask[]>([])
   const [documents, setDocuments] = useState<TocProjectDocument[]>([])
+  const [chatMessages, setChatMessages] = useState<TocProjectChatMessage[]>([])
   const [currentUser, setCurrentUser] = useState<{ userId: string; email: string } | null>(null)
   const [unavailable, setUnavailable] = useState<string | null>(null)
   const [documentsUnavailable, setDocumentsUnavailable] = useState<string | null>(null)
+  const [chatUnavailable, setChatUnavailable] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [savingId, setSavingId] = useState<string | null>(null)
   const [uploadingDocument, setUploadingDocument] = useState(false)
+  const [sendingChat, setSendingChat] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [newTaskTitle, setNewTaskTitle] = useState<Record<string, string>>({})
+  const [chatDraft, setChatDraft] = useState("")
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({})
   const [drafts, setDrafts] = useState<Record<string, TocProjectTask>>({})
   const [docTitle, setDocTitle] = useState("")
@@ -142,19 +153,24 @@ export default function TocProjectPlanPage() {
     setLoading(true)
     setError(null)
     try {
-      const [tasksRes, documentsRes] = await Promise.all([
+      const [tasksRes, documentsRes, chatRes] = await Promise.all([
         fetch("/api/admin/toc/project-tasks", { cache: "no-store", credentials: "include" }),
         fetch("/api/admin/toc/project-documents", { cache: "no-store", credentials: "include" }),
+        fetch("/api/admin/toc/project-chat", { cache: "no-store", credentials: "include" }),
       ])
       const data = (await tasksRes.json()) as Payload
       const documentsData = (await documentsRes.json()) as DocumentsPayload
+      const chatData = (await chatRes.json()) as ChatPayload
       if (!tasksRes.ok) throw new Error(data.error || "Could not load TOC project plan")
       if (!documentsRes.ok) throw new Error(documentsData.error || "Could not load TOC documents")
+      if (!chatRes.ok) throw new Error(chatData.error || "Could not load TOC chat")
       setTasks(data.tasks ?? [])
       setDocuments(documentsData.documents ?? [])
+      setChatMessages(chatData.messages ?? [])
       setCurrentUser(data.currentUser ?? null)
       setUnavailable(data.unavailable ? `Database table missing. Run ${data.setupSql ?? "docs/sql/toc-project-plan.sql"} in Supabase to enable shared editing.` : null)
       setDocumentsUnavailable(documentsData.unavailable ? `Document share missing. Run ${documentsData.setupSql ?? "docs/sql/toc-project-plan.sql"} in Supabase to enable uploads.` : null)
+      setChatUnavailable(chatData.unavailable ? `Team chat missing. Run ${chatData.setupSql ?? "docs/sql/toc-project-plan.sql"} in Supabase to enable messages.` : null)
       setDrafts(Object.fromEntries((data.tasks ?? []).map((task) => [task.id, task])))
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not load TOC project plan")
@@ -319,6 +335,29 @@ export default function TocProjectPlanPage() {
     }
   }
 
+  async function sendChatMessage() {
+    const body = chatDraft.trim()
+    if (!body) return
+    setSendingChat(true)
+    setError(null)
+    try {
+      const res = await fetch("/api/admin/toc/project-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ body }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "Message failed")
+      setChatMessages((prev) => [...prev, data.message])
+      setChatDraft("")
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Message failed")
+    } finally {
+      setSendingChat(false)
+    }
+  }
+
   async function addComment(taskId: string) {
     const body = (commentDrafts[taskId] || "").trim()
     if (!body || taskId.startsWith("seed-")) return
@@ -369,6 +408,7 @@ export default function TocProjectPlanPage() {
       {error && <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
       {unavailable && <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">{unavailable}</div>}
       {documentsUnavailable && <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">{documentsUnavailable}</div>}
+      {chatUnavailable && <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">{chatUnavailable}</div>}
 
       <Card className="overflow-hidden border-[#002147]/20 bg-gradient-to-r from-[#002147] to-[#0b3a6d] text-white">
         <CardContent className="grid gap-4 p-5 md:grid-cols-[1fr_auto] md:items-center">
@@ -392,6 +432,62 @@ export default function TocProjectPlanPage() {
             <div className="rounded-2xl border border-white/15 bg-white/10 px-5 py-4">
               <div className="text-4xl font-black leading-none">{countdown.hours}</div>
               <div className="mt-1 text-xs uppercase tracking-wide text-white/70">hours</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="overflow-hidden border-gray-200 shadow-sm">
+        <CardHeader className="border-b bg-white pb-3">
+          <CardTitle className="flex flex-wrap items-center justify-between gap-3">
+            <span className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-[#002147]" />
+              TOC Team Chat
+            </span>
+            <Badge variant="outline">{chatMessages.length} messages</Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4 bg-[#f6f7fb] p-4 lg:grid-cols-[1fr_360px]">
+          <div className="max-h-80 space-y-3 overflow-y-auto rounded-xl border bg-white p-3">
+            {chatMessages.length === 0 ? (
+              <div className="rounded-xl border border-dashed p-6 text-center text-sm text-gray-500">
+                No team chat yet. Use this like the TOC GroupMe thread for quick updates, blockers, reminders, and decisions.
+              </div>
+            ) : (
+              chatMessages.map((message) => {
+                const isMine = currentUser?.email?.toLowerCase() === message.author_email?.toLowerCase()
+                return (
+                  <div key={message.id} className={`flex gap-2 ${isMine ? "justify-end" : "justify-start"}`}>
+                    {!isMine && (
+                      <span className="mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#002147] text-xs font-bold text-white">
+                        {ownerInitials(message.author_email)}
+                      </span>
+                    )}
+                    <div className={`max-w-[82%] rounded-2xl px-3 py-2 text-sm shadow-sm ${isMine ? "bg-[#002147] text-white" : "bg-gray-100 text-gray-800"}`}>
+                      <div className={`mb-1 text-[11px] ${isMine ? "text-white/70" : "text-gray-500"}`}>
+                        {isMine ? "You" : message.author_email} · {formatDateTime(message.created_at)}
+                      </div>
+                      <p className="whitespace-pre-wrap">{message.body}</p>
+                    </div>
+                  </div>
+                )
+              })
+            )}
+          </div>
+          <div className="rounded-xl border bg-white p-3">
+            <div className="mb-2 text-sm font-semibold text-gray-900">Post to the team</div>
+            <Textarea
+              value={chatDraft}
+              onChange={(e) => setChatDraft(e.target.value)}
+              placeholder="Drop a quick TOC update…"
+              className="min-h-28"
+              disabled={!!chatUnavailable || sendingChat}
+            />
+            <div className="mt-3 flex items-center justify-between gap-3">
+              <p className="text-xs text-gray-500">Visible to TOC scoped users on this page.</p>
+              <Button onClick={() => void sendChatMessage()} disabled={!!chatUnavailable || sendingChat || !chatDraft.trim()}>
+                <Send className="mr-2 h-4 w-4" /> {sendingChat ? "Sending…" : "Send"}
+              </Button>
             </div>
           </div>
         </CardContent>

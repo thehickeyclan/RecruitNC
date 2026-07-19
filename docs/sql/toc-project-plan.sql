@@ -47,16 +47,35 @@ create table if not exists public.toc_project_documents (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.toc_project_chat_messages (
+  id uuid primary key default gen_random_uuid(),
+  body text not null check (char_length(btrim(body)) > 0),
+  author_email text not null,
+  author_user_id uuid,
+  created_at timestamptz not null default now()
+);
+
 create index if not exists toc_project_documents_created_at_idx
   on public.toc_project_documents (created_at desc);
 create index if not exists toc_project_documents_category_idx
   on public.toc_project_documents (category);
+create index if not exists toc_project_chat_messages_created_at_idx
+  on public.toc_project_chat_messages (created_at desc);
 
 alter table public.toc_project_documents enable row level security;
+alter table public.toc_project_chat_messages enable row level security;
 
 drop policy if exists "Service role manages TOC project documents" on public.toc_project_documents;
 create policy "Service role manages TOC project documents"
   on public.toc_project_documents
+  for all
+  to service_role
+  using (true)
+  with check (true);
+
+drop policy if exists "Service role manages TOC project chat messages" on public.toc_project_chat_messages;
+create policy "Service role manages TOC project chat messages"
+  on public.toc_project_chat_messages
   for all
   to service_role
   using (true)

@@ -48,6 +48,14 @@ export type TocProjectDocument = {
   created_at: string
 }
 
+export type TocProjectChatMessage = {
+  id: string
+  body: string
+  author_email: string
+  author_user_id: string | null
+  created_at: string
+}
+
 export type TocProjectTask = {
   id: string
   category: string
