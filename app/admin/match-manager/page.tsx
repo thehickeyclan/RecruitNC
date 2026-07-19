@@ -1483,6 +1483,25 @@ export default function MatchManagerPage() {
                       <div>
                         <p className="font-semibold text-red-700">❌ RankWrestler Sync Not Complete</p>
                         <p>{rankSyncResult.error}</p>
+                        {rankSyncResult.hint && <p className="mt-2 text-sm text-red-700">{rankSyncResult.hint}</p>}
+                        {rankSyncResult.diagnostics && (
+                          <details className="mt-3 rounded-md bg-gray-50 p-3 text-xs text-gray-700">
+                            <summary className="cursor-pointer font-semibold">Fetched page diagnostics</summary>
+                            <div className="mt-2 space-y-1">
+                              <p>Title: {rankSyncResult.diagnostics.title || "None detected"}</p>
+                              <p>Visible text length: {rankSyncResult.diagnostics.textLength}</p>
+                              <p>HTML length: {rankSyncResult.diagnostics.htmlLength}</p>
+                              <p>Looks like login: {rankSyncResult.diagnostics.looksLikeLogin ? "Yes" : "No"}</p>
+                              <p>Looks like app shell: {rankSyncResult.diagnostics.looksLikeClientAppShell ? "Yes" : "No"}</p>
+                              <p>Has match words: {rankSyncResult.diagnostics.hasMatchWords ? "Yes" : "No"}</p>
+                              {rankSyncResult.diagnostics.preview && (
+                                <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap rounded bg-white p-2">
+                                  {rankSyncResult.diagnostics.preview}
+                                </pre>
+                              )}
+                            </div>
+                          </details>
+                        )}
                       </div>
                     )}
                   </AlertDescription>

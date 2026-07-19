@@ -14,7 +14,43 @@ function isAllowedRankWrestlerUrl(value: string): boolean {
   }
 }
 
-async function fetchRankWrestlerText(url: string): Promise<{ ok: true; text: string } | { ok: false; status: number; error: string }> {
+type RankWrestlerFetchDiagnostics = {
+  url: string
+  textLength: number
+  htmlLength: number
+  title?: string
+  looksLikeLogin: boolean
+  looksLikeClientAppShell: boolean
+  hasMatchWords: boolean
+  preview: string
+}
+
+function buildFetchDiagnostics(url: string, html: string, text: string): RankWrestlerFetchDiagnostics {
+  const title = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.replace(/\s+/g, " ").trim()
+  const lowerText = text.toLowerCase()
+  const lowerHtml = html.toLowerCase()
+  return {
+    url,
+    textLength: text.length,
+    htmlLength: html.length,
+    title,
+    looksLikeLogin: /sign in|log in|login|password|auth/i.test(text),
+    looksLikeClientAppShell:
+      lowerHtml.includes("__next_data__") ||
+      lowerHtml.includes("id=\"root\"") ||
+      lowerHtml.includes("id=\"__next\"") ||
+      (text.length < 500 && lowerHtml.includes("<script")),
+    hasMatchWords: /win|loss|opponent|weight|matches|season|fall|decision|tech/i.test(lowerText),
+    preview: text.replace(/\s+/g, " ").trim().slice(0, 1200),
+  }
+}
+
+async function fetchRankWrestlerText(
+  url: string,
+): Promise<
+  | { ok: true; text: string; diagnostics: RankWrestlerFetchDiagnostics }
+  | { ok: false; status: number; error: string; diagnostics?: RankWrestlerFetchDiagnostics }
+> {
   const cookie = process.env.RANKWRESTLER_COOKIE?.trim()
   if (!cookie) {
     return {
@@ -36,11 +72,13 @@ async function fetchRankWrestlerText(url: string): Promise<{ ok: true; text: str
   })
 
   const body = await response.text()
+  const text = visibleTextFromRankWrestlerHtml(body)
+  const diagnostics = buildFetchDiagnostics(url, body, text)
   if (!response.ok) {
-    return { ok: false, status: response.status, error: `RankWrestler returned HTTP ${response.status}.` }
+    return { ok: false, status: response.status, error: `RankWrestler returned HTTP ${response.status}.`, diagnostics }
   }
 
-  return { ok: true, text: visibleTextFromRankWrestlerHtml(body) }
+  return { ok: true, text, diagnostics }
 }
 
 export async function POST(request: NextRequest) {
@@ -81,7 +119,7 @@ export async function POST(request: NextRequest) {
 
     const fetched = await fetchRankWrestlerText(rankwrestlerUrl)
     if (!fetched.ok) {
-      return NextResponse.json({ success: false, error: fetched.error }, { status: fetched.status })
+      return NextResponse.json({ success: false, error: fetched.error, diagnostics: fetched.diagnostics }, { status: fetched.status })
     }
 
     const parsed = buildRankWrestlerSeasonPayload({
@@ -94,7 +132,15 @@ export async function POST(request: NextRequest) {
     })
 
     if (!parsed.success) {
-      return NextResponse.json({ success: false, error: parsed.error }, { status: 422 })
+      const hint = fetched.diagnostics.looksLikeLogin
+        ? "RankWrestler appears to be returning a login page. The auth token may be expired or the cookie value is incomplete."
+        : fetched.diagnostics.looksLikeClientAppShell
+          ? "RankWrestler appears to be returning a client-side app shell. The match rows may load from a separate API request."
+          : "The fetched page did not match the current Rank/Track parser format."
+      return NextResponse.json(
+        { success: false, error: parsed.error, hint, diagnostics: fetched.diagnostics },
+        { status: 422 },
+      )
     }
 
     const payload = parsed.payload
