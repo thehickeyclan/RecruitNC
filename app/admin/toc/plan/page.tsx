@@ -204,6 +204,7 @@ export default function TocProjectPlanPage() {
   const [drafts, setDrafts] = useState<Record<string, TocProjectTask>>({})
   const [docTitle, setDocTitle] = useState("")
   const [docCategory, setDocCategory] = useState("Receipts")
+  const [docVendor, setDocVendor] = useState("")
   const [docAmount, setDocAmount] = useState("")
   const [docDescription, setDocDescription] = useState("")
   const [docFile, setDocFile] = useState<File | null>(null)
@@ -461,6 +462,7 @@ export default function TocProjectPlanPage() {
       form.set("file", docFile)
       form.set("title", docTitle.trim() || docFile.name)
       form.set("category", docCategory)
+      form.set("vendor", docVendor)
       form.set("description", docDescription)
       form.set("amount", docAmount)
       const res = await fetch("/api/admin/toc/project-documents", {
@@ -472,6 +474,7 @@ export default function TocProjectPlanPage() {
       if (!res.ok) throw new Error(data.error || "Upload failed")
       setDocuments((prev) => [data.document, ...prev])
       setDocTitle("")
+      setDocVendor("")
       setDocAmount("")
       setDocDescription("")
       setDocFile(null)
@@ -758,8 +761,18 @@ export default function TocProjectPlanPage() {
                   </Select>
                 </div>
                 <div>
+                  <Label className="text-slate-300">Vendor</Label>
+                  <Input value={docVendor} onChange={(e) => setDocVendor(e.target.value)} placeholder="Vendor or payee" disabled={!!documentsUnavailable} className="border-white/10 bg-[#07182e] text-white placeholder:text-slate-500" />
+                </div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
                   <Label className="text-slate-300">Amount $</Label>
                   <Input type="number" value={docAmount} onChange={(e) => setDocAmount(e.target.value)} placeholder="Optional" disabled={!!documentsUnavailable} className="border-white/10 bg-[#07182e] text-white placeholder:text-slate-500" />
+                </div>
+                <div>
+                  <Label className="text-slate-300">Uploaded by</Label>
+                  <Input value={currentUser?.email ?? "Signed-in TOC user"} disabled className="border-white/10 bg-[#07182e]/60 text-slate-400" />
                 </div>
               </div>
               <div>
@@ -790,10 +803,14 @@ export default function TocProjectPlanPage() {
                         {doc.title}
                       </a>
                       {doc.category && <Badge variant="secondary">{doc.category}</Badge>}
+                      {doc.vendor && <Badge variant="outline" className="border-[#D6B65A]/40 text-[#D6B65A]">{doc.vendor}</Badge>}
                       {doc.amount != null && <Badge className="bg-green-100 text-green-800">{money(doc.amount)}</Badge>}
                     </div>
                     <div className="mt-1 text-xs text-slate-400">
-                      {doc.file_name} · {formatFileSize(doc.file_size)} · uploaded by {doc.uploaded_by || "unknown"} · {formatDateTime(doc.created_at)}
+                      {doc.file_name} · {formatFileSize(doc.file_size)}
+                    </div>
+                    <div className="mt-1 text-xs text-slate-400">
+                      Uploaded by {doc.uploaded_by || "unknown"} · {formatDateTime(doc.created_at)} · Updated {formatDateTime(doc.updated_at || doc.created_at)}
                     </div>
                     {doc.description && <p className="mt-2 whitespace-pre-wrap text-sm text-slate-300">{doc.description}</p>}
                   </div>

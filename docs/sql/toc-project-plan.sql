@@ -39,6 +39,7 @@ create table if not exists public.toc_project_documents (
   id uuid primary key default gen_random_uuid(),
   title text not null,
   category text,
+  vendor text,
   description text,
   amount numeric(12,2),
   url text not null,
@@ -48,8 +49,15 @@ create table if not exists public.toc_project_documents (
   file_size bigint,
   uploaded_by text,
   created_by uuid,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
+
+alter table public.toc_project_documents
+  add column if not exists vendor text;
+
+alter table public.toc_project_documents
+  add column if not exists updated_at timestamptz not null default now();
 
 create table if not exists public.toc_project_chat_messages (
   id uuid primary key default gen_random_uuid(),
@@ -76,6 +84,8 @@ create index if not exists toc_project_documents_created_at_idx
   on public.toc_project_documents (created_at desc);
 create index if not exists toc_project_documents_category_idx
   on public.toc_project_documents (category);
+create index if not exists toc_project_documents_vendor_idx
+  on public.toc_project_documents (vendor);
 create index if not exists toc_project_chat_messages_created_at_idx
   on public.toc_project_chat_messages (created_at desc);
 create index if not exists toc_project_activity_created_at_idx
