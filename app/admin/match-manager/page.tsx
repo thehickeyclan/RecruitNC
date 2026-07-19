@@ -1429,7 +1429,7 @@ export default function MatchManagerPage() {
                   type="url"
                   value={rankwrestlerUrl}
                   onChange={(e) => setRankwrestlerUrl(e.target.value)}
-                  placeholder="https://www.rankwrestler.com/..."
+                  placeholder="https://www.rankwrestlers.com/wrestler/..."
                   className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 />
                 <p className="mt-1 text-xs text-gray-500">

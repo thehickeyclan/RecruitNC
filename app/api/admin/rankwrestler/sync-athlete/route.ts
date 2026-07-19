@@ -8,7 +8,7 @@ import {
 function isAllowedRankWrestlerUrl(value: string): boolean {
   try {
     const url = new URL(value)
-    return /^https?:$/.test(url.protocol) && /(^|\.)rankwrestler\.com$/i.test(url.hostname)
+    return /^https?:$/.test(url.protocol) && /(^|\.)rankwrestlers?\.com$/i.test(url.hostname)
   } catch {
     return false
   }
