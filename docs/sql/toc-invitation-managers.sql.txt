@@ -14,7 +14,12 @@ revoke all on public.toc_invitation_managers from anon, authenticated;
 grant all on public.toc_invitation_managers to service_role;
 
 insert into public.toc_invitation_managers (email)
-values ('justin.usmc@yahoo.com')
+values
+  ('lisa.hickey@yahoo.com'),
+  ('justin.usmc@yahoo.com'),
+  ('jeannineaponte@gmail.com'),
+  ('ericnaponte@gmail.com'),
+  ('cpalmer@goldgroupinc.com')
 on conflict (email) do nothing;
 
 notify pgrst, 'reload schema';
