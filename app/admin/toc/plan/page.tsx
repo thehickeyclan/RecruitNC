@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { Activity, ArrowLeft, CalendarDays, DollarSign, FileText, LayoutGrid, LinkIcon, MessageSquare, Paperclip, Plus, Save, Send, Trash2, Upload, UserPlus } from "lucide-react"
+import { Activity, ArrowLeft, CalendarDays, CheckCircle2, Clock, DollarSign, FileText, LayoutGrid, LinkIcon, MessageSquare, Paperclip, Plus, Save, Send, ShieldCheck, Trash2, Upload, UserPlus, XCircle } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { TOC_EVENT_DATE, TOC_EVENT_DATES_RANGE } from "@/lib/toc/constants"
-import { TOC_PROJECT_CATEGORIES, type TocProjectActivity, type TocProjectChatMessage, type TocProjectDocument, type TocProjectTask, type TocProjectUser, type TocTaskAssignee, type TocTaskLink } from "@/lib/toc/project-plan"
+import { TOC_PROJECT_CATEGORIES, type TocProjectActivity, type TocProjectApproval, type TocProjectChatMessage, type TocProjectDocument, type TocProjectTask, type TocProjectUser, type TocTaskAssignee, type TocTaskLink } from "@/lib/toc/project-plan"
 
 type Payload = {
   unavailable?: boolean
@@ -43,6 +43,23 @@ type ActivityPayload = {
   error?: string
 }
 
+type ApprovalsPayload = {
+  unavailable?: boolean
+  setupSql?: string
+  approvals: TocProjectApproval[]
+  error?: string
+}
+
+type ApprovalDraft = {
+  title: string
+  body: string
+  vendor: string
+  amount: string
+  neededBy: string
+  links: string
+  file: File | null
+}
+
 type FieldPayload = {
   board?: {
     summary?: {
@@ -68,6 +85,20 @@ const STATUS_CLASS: Record<string, string> = {
   in_progress: "bg-blue-500/20 text-blue-100 border border-blue-300/30",
   blocked: "bg-amber-400/20 text-amber-100 border border-amber-300/35",
   done: "bg-emerald-400/20 text-emerald-100 border border-emerald-300/35",
+}
+
+const APPROVAL_LABEL: Record<string, string> = {
+  pending: "Pending",
+  approved: "Approved",
+  changes_requested: "Changes requested",
+  rejected: "Rejected",
+}
+
+const APPROVAL_CLASS: Record<string, string> = {
+  pending: "border-amber-300/35 bg-amber-400/15 text-amber-100",
+  approved: "border-emerald-300/35 bg-emerald-400/15 text-emerald-100",
+  changes_requested: "border-blue-300/35 bg-blue-400/15 text-blue-100",
+  rejected: "border-red-300/35 bg-red-500/15 text-red-100",
 }
 
 const DARK_FIELD_CLASS = "border-slate-400/40 bg-slate-950/35 text-white placeholder:text-slate-300 shadow-inner shadow-black/20 focus-visible:border-[#D6B65A] focus-visible:ring-[#D6B65A]/35"
@@ -198,6 +229,25 @@ function aiMetaText(doc: TocProjectDocument, key: string): string | null {
   return String(value)
 }
 
+function emptyApprovalDraft(taskTitle?: string): ApprovalDraft {
+  return {
+    title: taskTitle ? `Approval needed: ${taskTitle}` : "",
+    body: "",
+    vendor: "",
+    amount: "",
+    neededBy: "",
+    links: "",
+    file: null,
+  }
+}
+
+function approvalIcon(status: string) {
+  if (status === "approved") return <CheckCircle2 className="h-4 w-4" />
+  if (status === "rejected") return <XCircle className="h-4 w-4" />
+  if (status === "changes_requested") return <MessageSquare className="h-4 w-4" />
+  return <Clock className="h-4 w-4" />
+}
+
 function tournamentCountdown() {
   const target = TOC_EVENT_DATE.getTime()
   const now = Date.now()
@@ -210,12 +260,14 @@ function tournamentCountdown() {
 export default function TocProjectPlanPage() {
   const [tasks, setTasks] = useState<TocProjectTask[]>([])
   const [documents, setDocuments] = useState<TocProjectDocument[]>([])
+  const [approvals, setApprovals] = useState<TocProjectApproval[]>([])
   const [chatMessages, setChatMessages] = useState<TocProjectChatMessage[]>([])
   const [activityFeed, setActivityFeed] = useState<TocProjectActivity[]>([])
   const [bracketFill, setBracketFill] = useState({ confirmed: 0, capacity: 88, pct: 0, fullBrackets: 0 })
   const [currentUser, setCurrentUser] = useState<{ userId: string; email: string } | null>(null)
   const [unavailable, setUnavailable] = useState<string | null>(null)
   const [documentsUnavailable, setDocumentsUnavailable] = useState<string | null>(null)
+  const [approvalsUnavailable, setApprovalsUnavailable] = useState<string | null>(null)
   const [chatUnavailable, setChatUnavailable] = useState<string | null>(null)
   const [activityUnavailable, setActivityUnavailable] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -243,12 +295,15 @@ export default function TocProjectPlanPage() {
   const [docAmount, setDocAmount] = useState("")
   const [docDescription, setDocDescription] = useState("")
   const [docFile, setDocFile] = useState<File | null>(null)
+  const [approvalDrafts, setApprovalDrafts] = useState<Record<string, ApprovalDraft>>({})
+  const [approvalDecisionNotes, setApprovalDecisionNotes] = useState<Record<string, string>>({})
 
   async function load() {
     setLoading(true)
     setError(null)
     setUnavailable(null)
     setDocumentsUnavailable(null)
+    setApprovalsUnavailable(null)
     setChatUnavailable(null)
     setActivityUnavailable(null)
     try {
@@ -260,8 +315,9 @@ export default function TocProjectPlanPage() {
       setUnavailable(data.unavailable ? `Database table missing. Run ${data.setupSql ?? "docs/sql/toc-project-plan.sql"} in Supabase to enable shared editing.` : null)
       setDrafts(Object.fromEntries((data.tasks ?? []).map((task) => [task.id, task])))
 
-      const [documentsRes, chatRes, activityRes, fieldRes] = await Promise.allSettled([
+      const [documentsRes, approvalsRes, chatRes, activityRes, fieldRes] = await Promise.allSettled([
         fetch("/api/admin/toc/project-documents", { cache: "no-store", credentials: "include" }),
+        fetch("/api/admin/toc/project-approvals", { cache: "no-store", credentials: "include" }),
         fetch("/api/admin/toc/project-chat", { cache: "no-store", credentials: "include" }),
         fetch("/api/admin/toc/project-activity", { cache: "no-store", credentials: "include" }),
         fetch("/api/admin/toc/field", { cache: "no-store", credentials: "include" }),
@@ -277,6 +333,18 @@ export default function TocProjectPlanPage() {
         }
       } else {
         setDocumentsUnavailable("Document share could not load. The task board is still available.")
+      }
+
+      if (approvalsRes.status === "fulfilled") {
+        const approvalsData = (await approvalsRes.value.json()) as ApprovalsPayload
+        if (approvalsRes.value.ok) {
+          setApprovals(approvalsData.approvals ?? [])
+          setApprovalsUnavailable(approvalsData.unavailable ? `Approval center missing. Run ${approvalsData.setupSql ?? "docs/sql/toc-project-plan-live-patch.sql.txt"} in Supabase to enable approvals.` : null)
+        } else {
+          setApprovalsUnavailable(approvalsData.error || "Approval center could not load.")
+        }
+      } else {
+        setApprovalsUnavailable("Approval center could not load. The task board is still available.")
       }
 
       if (chatRes.status === "fulfilled") {
@@ -337,6 +405,12 @@ export default function TocProjectPlanPage() {
 
   const countdown = useMemo(() => tournamentCountdown(), [])
   const documentTotal = useMemo(() => documents.reduce((sum, doc) => sum + Number(doc.amount ?? 0), 0), [documents])
+  const approvalSummary = useMemo(() => {
+    const pending = approvals.filter((approval) => approval.status === "pending").length
+    const approved = approvals.filter((approval) => approval.status === "approved").length
+    const needsWork = approvals.filter((approval) => approval.status === "changes_requested").length
+    return { pending, approved, needsWork, total: approvals.length }
+  }, [approvals])
   const ownerOptions = useMemo(() => {
     const rows = new Map<string, { value: string; label: string }>()
     tasks.forEach((task) => {
@@ -391,6 +465,17 @@ export default function TocProjectPlanPage() {
 
   function updateDraft(id: string, patch: Partial<TocProjectTask>) {
     setDrafts((prev) => ({ ...prev, [id]: { ...(prev[id] ?? tasks.find((t) => t.id === id)!), ...patch } }))
+  }
+
+  function approvalDraftFor(task: TocProjectTask): ApprovalDraft {
+    return approvalDrafts[task.id] ?? emptyApprovalDraft(task.title)
+  }
+
+  function updateApprovalDraft(task: TocProjectTask, patch: Partial<ApprovalDraft>) {
+    setApprovalDrafts((prev) => ({
+      ...prev,
+      [task.id]: { ...(prev[task.id] ?? emptyApprovalDraft(task.title)), ...patch },
+    }))
   }
 
   function isMyTask(task: TocProjectTask): boolean {
@@ -558,6 +643,63 @@ export default function TocProjectPlanPage() {
     }
   }
 
+  async function requestApproval(task: TocProjectTask) {
+    const draft = approvalDraftFor(task)
+    const title = draft.title.trim()
+    if (!title || task.id.startsWith("seed-")) return
+    setSavingId(`approval-${task.id}`)
+    setError(null)
+    try {
+      const form = new FormData()
+      form.set("taskId", task.id)
+      form.set("category", task.category)
+      form.set("title", title)
+      form.set("body", draft.body)
+      form.set("vendor", draft.vendor)
+      form.set("amount", draft.amount)
+      form.set("neededBy", draft.neededBy)
+      form.set("links", draft.links)
+      if (draft.file) form.append("files", draft.file)
+      const res = await fetch("/api/admin/toc/project-approvals", {
+        method: "POST",
+        credentials: "include",
+        body: form,
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "Approval request failed")
+      setApprovals((prev) => [data.approval, ...prev])
+      setApprovalDrafts((prev) => ({ ...prev, [task.id]: emptyApprovalDraft(task.title) }))
+      void refreshActivity()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Approval request failed")
+    } finally {
+      setSavingId(null)
+    }
+  }
+
+  async function decideApproval(approval: TocProjectApproval, status: TocProjectApproval["status"]) {
+    setSavingId(`approval-decision-${approval.id}`)
+    setError(null)
+    try {
+      const response_note = approvalDecisionNotes[approval.id] ?? ""
+      const res = await fetch(`/api/admin/toc/project-approvals/${approval.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ status, response_note }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "Approval update failed")
+      setApprovals((prev) => prev.map((item) => (item.id === approval.id ? data.approval : item)))
+      setApprovalDecisionNotes((prev) => ({ ...prev, [approval.id]: "" }))
+      void refreshActivity()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Approval update failed")
+    } finally {
+      setSavingId(null)
+    }
+  }
+
   async function uploadSharedDocument() {
     if (!docFile) return
     setUploadingDocument(true)
@@ -678,6 +820,19 @@ export default function TocProjectPlanPage() {
     }
   }
 
+  async function refreshApprovals() {
+    try {
+      const res = await fetch("/api/admin/toc/project-approvals", { cache: "no-store", credentials: "include" })
+      const data = (await res.json()) as ApprovalsPayload
+      if (res.ok) {
+        setApprovals(data.approvals ?? [])
+        setApprovalsUnavailable(data.unavailable ? `Approval center missing. Run ${data.setupSql ?? "docs/sql/toc-project-plan-live-patch.sql.txt"} in Supabase to enable approvals.` : null)
+      }
+    } catch {
+      // Non-blocking.
+    }
+  }
+
   if (loading) return <div className="p-8 text-gray-500">Loading TOC project plan…</div>
 
   return (
@@ -697,6 +852,7 @@ export default function TocProjectPlanPage() {
       {error && <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
       {unavailable && <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">{unavailable}</div>}
       {documentsUnavailable && <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">{documentsUnavailable}</div>}
+      {approvalsUnavailable && <div className="rounded-lg border border-amber-300/30 bg-amber-400/10 p-3 text-sm text-amber-100">{approvalsUnavailable}</div>}
       {chatUnavailable && <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">{chatUnavailable}</div>}
       {activityUnavailable && <div className="rounded-lg border border-amber-300/30 bg-amber-400/10 p-3 text-sm text-amber-100">{activityUnavailable}</div>}
 
@@ -827,14 +983,101 @@ export default function TocProjectPlanPage() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
+      <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-7">
         <Card className="border-white/10 bg-[#0a1d37] shadow-lg shadow-black/10"><CardContent className="p-4"><p className="text-xs font-semibold uppercase tracking-wide text-blue-200">Tasks</p><p className="text-3xl font-black text-white">{summary.total}</p></CardContent></Card>
         <Card className="border-emerald-300/20 bg-[#0a1d37] shadow-lg shadow-black/10"><CardContent className="p-4"><p className="text-xs font-semibold uppercase tracking-wide text-emerald-200">Complete</p><p className="text-3xl font-black text-emerald-200">{summary.done}</p></CardContent></Card>
         <Card className="border-sky-300/20 bg-[#0a1d37] shadow-lg shadow-black/10"><CardContent className="p-4"><p className="text-xs font-semibold uppercase tracking-wide text-sky-200">Task progress</p><p className="text-3xl font-black text-sky-200">{summary.pct}%</p></CardContent></Card>
         <Card className="border-amber-300/20 bg-[#0a1d37] shadow-lg shadow-black/10"><CardContent className="p-4"><p className="text-xs font-semibold uppercase tracking-wide text-amber-200">At risk</p><p className="text-3xl font-black text-amber-200">{summary.blocked}</p></CardContent></Card>
         <Card className="border-indigo-300/20 bg-[#0a1d37] shadow-lg shadow-black/10"><CardContent className="p-4"><p className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-indigo-200"><LayoutGrid className="h-3.5 w-3.5" /> Bracket fill</p><p className="text-3xl font-black text-indigo-100">{bracketFill.pct}%</p><p className="text-xs text-slate-400">{bracketFill.confirmed}/{bracketFill.capacity} confirmed · {bracketFill.fullBrackets} full</p></CardContent></Card>
         <Card className="border-[#D6B65A]/30 bg-[#0a1d37] shadow-lg shadow-black/10"><CardContent className="p-4"><p className="text-xs font-semibold uppercase tracking-wide text-[#D6B65A]">Budget / Actual</p><p className="text-xl font-black text-white">{money(summary.budget)} / {money(summary.actual)}</p></CardContent></Card>
+        <Card className="border-amber-300/20 bg-[#0a1d37] shadow-lg shadow-black/10"><CardContent className="p-4"><p className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-amber-200"><ShieldCheck className="h-3.5 w-3.5" /> Approvals</p><p className="text-3xl font-black text-amber-100">{approvalSummary.pending}</p><p className="text-xs text-slate-400">{approvalSummary.approved} approved · {approvalSummary.needsWork} need edits</p></CardContent></Card>
       </div>
+
+      <Card className="overflow-hidden border-white/10 bg-[#07182e] text-slate-100 shadow-lg shadow-black/20">
+        <CardHeader className="border-b border-white/10 bg-gradient-to-r from-[#0b2344] via-[#092143] to-[#061426]">
+          <CardTitle className="flex flex-wrap items-center justify-between gap-3">
+            <span className="flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-[#D6B65A]" />
+              TOC Approval Center
+            </span>
+            <Badge variant="outline" className="border-white/20 text-slate-200">
+              {approvalSummary.pending} pending · {approvalSummary.total} total
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 bg-[#061426] p-4">
+          {approvals.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-white/15 p-6 text-center text-sm text-slate-400">
+              No approval requests yet. Use the approval box on any task for spend, artwork, contracts, final wording, or photo proof that needs sign-off.
+            </div>
+          ) : (
+            approvals.slice(0, 12).map((approval) => (
+              <div key={approval.id} className="rounded-xl border border-white/10 bg-white/5 p-3">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge className={`gap-1 ${APPROVAL_CLASS[approval.status]}`}>
+                        {approvalIcon(approval.status)}
+                        {APPROVAL_LABEL[approval.status]}
+                      </Badge>
+                      {approval.category && <Badge variant="outline" className="border-white/15 text-slate-300">{approval.category}</Badge>}
+                      {approval.task_title && <Badge variant="outline" className="border-[#D6B65A]/40 text-[#D6B65A]">{approval.task_title}</Badge>}
+                      {approval.amount != null && <Badge className="bg-emerald-400/15 text-emerald-100">{money(approval.amount)}</Badge>}
+                    </div>
+                    <h3 className="mt-2 text-base font-bold text-white">{approval.title}</h3>
+                    <p className="mt-1 text-xs text-slate-400">
+                      Requested by {approval.requested_by_email} · {formatDateTime(approval.created_at)}
+                      {approval.needed_by ? ` · Needed by ${approval.needed_by}` : ""}
+                      {approval.vendor ? ` · Vendor: ${approval.vendor}` : ""}
+                    </p>
+                    {approval.body && <p className="mt-2 whitespace-pre-wrap text-sm text-slate-300">{approval.body}</p>}
+                    {(approval.attachments?.length > 0 || approval.links?.length > 0) && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {(approval.attachments ?? []).map((file) => (
+                          <a key={`${approval.id}-${file.url}`} href={file.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-full bg-blue-400/10 px-2 py-1 text-xs text-blue-100 hover:bg-blue-400/20">
+                            <Paperclip className="h-3 w-3" /> {file.name}
+                          </a>
+                        ))}
+                        {(approval.links ?? []).map((link) => (
+                          <a key={`${approval.id}-${link.url}`} href={link.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-full bg-blue-400/10 px-2 py-1 text-xs text-blue-100 hover:bg-blue-400/20">
+                            <LinkIcon className="h-3 w-3" /> {link.label || link.url}
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                    {approval.response_note && (
+                      <div className="mt-3 rounded-lg border border-white/10 bg-[#07182e] p-2 text-sm text-slate-300">
+                        <span className="font-semibold text-slate-100">Decision note:</span> {approval.response_note}
+                        {approval.decided_by_email && <span className="block text-xs text-slate-500">By {approval.decided_by_email} · {approval.decided_at ? formatDateTime(approval.decided_at) : ""}</span>}
+                      </div>
+                    )}
+                  </div>
+                  <div className="w-full space-y-2 lg:w-80">
+                    <Textarea
+                      value={approvalDecisionNotes[approval.id] ?? ""}
+                      onChange={(e) => setApprovalDecisionNotes((prev) => ({ ...prev, [approval.id]: e.target.value }))}
+                      placeholder="Optional decision note…"
+                      className={`min-h-16 ${DARK_FIELD_CLASS}`}
+                      disabled={!!approvalsUnavailable || savingId === `approval-decision-${approval.id}`}
+                    />
+                    <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
+                      <Button size="sm" onClick={() => void decideApproval(approval, "approved")} disabled={!!approvalsUnavailable || savingId === `approval-decision-${approval.id}`} className="bg-emerald-500 text-white hover:bg-emerald-600">
+                        <CheckCircle2 className="mr-1 h-4 w-4" /> Approve
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => void decideApproval(approval, "changes_requested")} disabled={!!approvalsUnavailable || savingId === `approval-decision-${approval.id}`} className="border-blue-300/30 bg-blue-400/10 text-blue-100 hover:bg-blue-400/20 hover:text-white">
+                        Changes
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => void decideApproval(approval, "rejected")} disabled={!!approvalsUnavailable || savingId === `approval-decision-${approval.id}`} className="border-red-300/30 bg-red-500/10 text-red-100 hover:bg-red-500/20 hover:text-white">
+                        Reject
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </CardContent>
+      </Card>
 
       <Card className="overflow-hidden border-white/10 bg-[#07182e] text-slate-100 shadow-lg shadow-black/20">
         <CardHeader className="border-b border-white/10 bg-gradient-to-r from-[#0b2344] via-[#092143] to-[#061426]">
@@ -1143,6 +1386,9 @@ export default function TocProjectPlanPage() {
                   {categoryTasks.map((task) => {
                     const draft = drafts[task.id] ?? task
                     const disabled = !!unavailable || task.id.startsWith("seed-")
+                    const taskApprovals = approvals.filter((approval) => approval.task_id === task.id)
+                    const pendingTaskApprovals = taskApprovals.filter((approval) => approval.status === "pending").length
+                    const approvalDraft = approvalDraftFor(task)
                     return (
                       <div key={task.id} className="border-b border-white/10 last:border-b-0">
                         <div className="grid grid-cols-1 items-stretch bg-[#07182e] text-sm text-slate-100 transition-colors hover:bg-[#0a1d37] md:grid-cols-[minmax(280px,1.7fr)_210px_150px_140px_140px_120px_120px_120px_120px] md:items-center">
@@ -1267,6 +1513,7 @@ export default function TocProjectPlanPage() {
                               <Badge variant="outline" className="gap-1"><MessageSquare className="h-3 w-3" />{draft.comments?.length ?? 0}</Badge>
                               <Badge variant="outline" className="gap-1"><Paperclip className="h-3 w-3" />{draft.attachments?.length ?? 0}</Badge>
                               <Badge variant="outline" className="gap-1"><LinkIcon className="h-3 w-3" />{draft.links?.length ?? 0}</Badge>
+                              <Badge variant="outline" className={`gap-1 ${pendingTaskApprovals ? "border-amber-300/40 text-amber-100" : ""}`}><ShieldCheck className="h-3 w-3" />{pendingTaskApprovals}</Badge>
                             </div>
                           </div>
                         </div>
@@ -1339,6 +1586,94 @@ export default function TocProjectPlanPage() {
                                   className="sm:self-end"
                                 >
                                   Update
+                                </Button>
+                              </div>
+                            </div>
+
+                            <div className="rounded-lg border border-amber-300/20 bg-amber-400/5 p-3">
+                              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-amber-100">
+                                  <ShieldCheck className="h-3.5 w-3.5" /> Approval requests
+                                </div>
+                                {pendingTaskApprovals > 0 && <Badge className="bg-amber-400/20 text-amber-100">{pendingTaskApprovals} pending</Badge>}
+                              </div>
+                              {taskApprovals.length > 0 && (
+                                <div className="mb-3 space-y-2">
+                                  {taskApprovals.slice(0, 3).map((approval) => (
+                                    <div key={approval.id} className="rounded-lg border border-white/10 bg-[#07182e] p-2 text-xs">
+                                      <div className="flex flex-wrap items-center gap-2">
+                                        <Badge className={`gap-1 ${APPROVAL_CLASS[approval.status]}`}>
+                                          {approvalIcon(approval.status)}
+                                          {APPROVAL_LABEL[approval.status]}
+                                        </Badge>
+                                        {approval.amount != null && <span className="text-emerald-100">{money(approval.amount)}</span>}
+                                      </div>
+                                      <div className="mt-1 font-semibold text-white">{approval.title}</div>
+                                      <div className="text-slate-400">By {approval.requested_by_email} · {formatDateTime(approval.created_at)}</div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              <div className="space-y-2">
+                                <Input
+                                  value={approvalDraft.title}
+                                  onChange={(e) => updateApprovalDraft(task, { title: e.target.value })}
+                                  placeholder="What needs approval?"
+                                  disabled={disabled || !!approvalsUnavailable}
+                                  className={DARK_FIELD_SMALL_CLASS}
+                                />
+                                <div className="grid gap-2 sm:grid-cols-3">
+                                  <Input
+                                    value={approvalDraft.vendor}
+                                    onChange={(e) => updateApprovalDraft(task, { vendor: e.target.value })}
+                                    placeholder="Vendor"
+                                    disabled={disabled || !!approvalsUnavailable}
+                                    className={DARK_FIELD_SMALL_CLASS}
+                                  />
+                                  <Input
+                                    inputMode="decimal"
+                                    value={approvalDraft.amount}
+                                    onChange={(e) => updateApprovalDraft(task, { amount: normalizeCurrencyInput(e.target.value) })}
+                                    onBlur={(e) => updateApprovalDraft(task, { amount: normalizeCurrencyInput(e.target.value) })}
+                                    placeholder="$0.00"
+                                    disabled={disabled || !!approvalsUnavailable}
+                                    className={DARK_FIELD_SMALL_CLASS}
+                                  />
+                                  <Input
+                                    type="date"
+                                    value={approvalDraft.neededBy}
+                                    onChange={(e) => updateApprovalDraft(task, { neededBy: e.target.value })}
+                                    disabled={disabled || !!approvalsUnavailable}
+                                    className={`${DARK_FIELD_SMALL_CLASS} text-xs [color-scheme:dark]`}
+                                  />
+                                </div>
+                                <Textarea
+                                  value={approvalDraft.body}
+                                  onChange={(e) => updateApprovalDraft(task, { body: e.target.value })}
+                                  placeholder="Context, decision needed, options, or what changed…"
+                                  disabled={disabled || !!approvalsUnavailable}
+                                  className={`min-h-14 ${DARK_FIELD_CLASS}`}
+                                />
+                                <Textarea
+                                  value={approvalDraft.links}
+                                  onChange={(e) => updateApprovalDraft(task, { links: e.target.value })}
+                                  placeholder="Optional links — one per line: Label|https://..."
+                                  disabled={disabled || !!approvalsUnavailable}
+                                  className={`min-h-12 ${DARK_FIELD_CLASS}`}
+                                />
+                                <Input
+                                  type="file"
+                                  disabled={disabled || !!approvalsUnavailable}
+                                  onChange={(e) => updateApprovalDraft(task, { file: e.target.files?.[0] ?? null })}
+                                  className={`${DARK_FIELD_CLASS} file:text-slate-100`}
+                                />
+                                <Button
+                                  type="button"
+                                  onClick={() => void requestApproval(task)}
+                                  disabled={disabled || !!approvalsUnavailable || savingId === `approval-${task.id}` || !approvalDraft.title.trim()}
+                                  className="w-full bg-[#D6B65A] text-[#061426] hover:bg-[#c8a94f]"
+                                >
+                                  <ShieldCheck className="mr-2 h-4 w-4" /> {savingId === `approval-${task.id}` ? "Requesting…" : "Request approval"}
                                 </Button>
                               </div>
                             </div>

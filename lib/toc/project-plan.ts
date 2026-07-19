@@ -1,6 +1,9 @@
 export const TOC_PROJECT_STATUSES = ["todo", "in_progress", "blocked", "done"] as const
 export type TocProjectStatus = (typeof TOC_PROJECT_STATUSES)[number]
 
+export const TOC_APPROVAL_STATUSES = ["pending", "approved", "changes_requested", "rejected"] as const
+export type TocApprovalStatus = (typeof TOC_APPROVAL_STATUSES)[number]
+
 export type TocTaskAssignee = {
   name: string
   email?: string | null
@@ -80,6 +83,29 @@ export type TocProjectActivity = {
   summary: string
   details: Record<string, unknown> | null
   created_at: string
+}
+
+export type TocProjectApproval = {
+  id: string
+  task_id: string | null
+  task_title: string | null
+  category: string | null
+  title: string
+  body: string | null
+  vendor: string | null
+  amount: number | null
+  needed_by: string | null
+  status: TocApprovalStatus
+  response_note: string | null
+  attachments: TocTaskAttachment[]
+  links: TocTaskLink[]
+  requested_by_email: string
+  requested_by_user_id: string | null
+  decided_by_email: string | null
+  decided_by_user_id: string | null
+  decided_at: string | null
+  created_at: string
+  updated_at: string
 }
 
 export type TocProjectTask = {
@@ -195,4 +221,8 @@ export function tocProjectSeedTasks(): TocProjectTask[] {
 
 export function sanitizeProjectStatus(value: unknown): TocProjectStatus {
   return TOC_PROJECT_STATUSES.includes(value as TocProjectStatus) ? (value as TocProjectStatus) : "todo"
+}
+
+export function sanitizeApprovalStatus(value: unknown): TocApprovalStatus {
+  return TOC_APPROVAL_STATUSES.includes(value as TocApprovalStatus) ? (value as TocApprovalStatus) : "pending"
 }
