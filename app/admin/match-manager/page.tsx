@@ -51,6 +51,9 @@ export default function MatchManagerPage() {
   const [bulkJsonData, setBulkJsonData] = useState("")
   const [rawTextData, setRawTextData] = useState("")
   const [rawTextFormat, setRawTextFormat] = useState<"rank" | "track">("rank")
+  const [rankwrestlerUrl, setRankwrestlerUrl] = useState("")
+  const [isRankSyncing, setIsRankSyncing] = useState(false)
+  const [rankSyncResult, setRankSyncResult] = useState<any>(null)
   const [deduplicateMatches, setDeduplicateMatches] = useState(true)
   const [parseResult, setParseResult] = useState<any>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -383,6 +386,45 @@ export default function MatchManagerPage() {
       })
     } finally {
       setIsClearing(false)
+    }
+  }
+
+  const handleRankWrestlerSync = async () => {
+    if (!selectedAthlete) {
+      setRankSyncResult({ success: false, error: "Please select an athlete first." })
+      return
+    }
+    if (!rankwrestlerUrl.trim()) {
+      setRankSyncResult({ success: false, error: "Please enter the RankWrestler athlete/season URL." })
+      return
+    }
+
+    try {
+      setIsRankSyncing(true)
+      setRankSyncResult(null)
+
+      const response = await fetch("/api/admin/rankwrestler/sync-athlete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          athleteId: selectedAthlete,
+          rankwrestlerUrl: rankwrestlerUrl.trim(),
+          deduplicate: deduplicateMatches,
+        }),
+      })
+      const data = await response.json()
+      setRankSyncResult(data)
+
+      if (data.success) {
+        await loadUploadProgress()
+      }
+    } catch (error) {
+      setRankSyncResult({
+        success: false,
+        error: error instanceof Error ? error.message : "RankWrestler sync failed.",
+      })
+    } finally {
+      setIsRankSyncing(false)
     }
   }
 
@@ -1141,8 +1183,9 @@ export default function MatchManagerPage() {
       </div>
 
       <Tabs defaultValue="single" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2 gap-1 sm:grid-cols-4">
           <TabsTrigger value="single">Single Athlete Upload</TabsTrigger>
+          <TabsTrigger value="sync">RankWrestler Sync</TabsTrigger>
           <TabsTrigger value="raw">Raw Text Parser</TabsTrigger>
           <TabsTrigger value="bulk">Bulk Upload (All 4 Years)</TabsTrigger>
         </TabsList>
@@ -1327,6 +1370,119 @@ export default function MatchManagerPage() {
                         )}
                         {result.code && <p className="text-xs text-red-600 mt-1">Error Code: {result.code}</p>}
                         {result.hint && <p className="text-xs text-red-600 mt-1">Hint: {result.hint}</p>}
+                      </div>
+                    )}
+                  </AlertDescription>
+                </Alert>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="sync">
+          <Card>
+            <CardHeader>
+              <CardTitle>Sync RankWrestler Matches</CardTitle>
+              <p className="text-sm text-gray-600">
+                Select an athlete, paste the RankWrestler athlete/season URL, and sync that season directly into the
+                profile match format. This replaces the existing record for the same athlete and season.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Alert className="border-blue-500 bg-blue-50">
+                <AlertDescription>
+                  <div className="font-semibold text-blue-800">How this works</div>
+                  <p className="mt-1 text-sm text-blue-700">
+                    The server fetches the RankWrestler page using the configured <code>RANKWRESTLER_COOKIE</code>,
+                    parses the bouts, deduplicates if enabled, and writes the season to the same <code>matches</code>{" "}
+                    table used by athlete profiles.
+                  </p>
+                </AlertDescription>
+              </Alert>
+
+              <div>
+                <Label htmlFor="athlete-sync">Select Athlete</Label>
+                <Select value={selectedAthlete} onValueChange={setSelectedAthlete}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={athletes.length > 0 ? "Choose an athlete..." : "Loading athletes..."} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {athletes.length > 0 ? (
+                      athletes.map((athlete) => (
+                        <SelectItem key={athlete.id} value={athlete.id}>
+                          {athlete.name} (Class of {athlete.graduationyear})
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="none" disabled>
+                        No athletes found
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="rankwrestlerUrl">RankWrestler URL</Label>
+                <input
+                  id="rankwrestlerUrl"
+                  type="url"
+                  value={rankwrestlerUrl}
+                  onChange={(e) => setRankwrestlerUrl(e.target.value)}
+                  placeholder="https://www.rankwrestler.com/..."
+                  className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Use the athlete/season page that shows the match list you would normally copy.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="rankSyncDeduplicate"
+                  checked={deduplicateMatches}
+                  onChange={(e) => setDeduplicateMatches(e.target.checked)}
+                  className="h-4 w-4 rounded"
+                />
+                <Label htmlFor="rankSyncDeduplicate" className="cursor-pointer font-normal">
+                  Deduplicate matches to match RankWrestler season record
+                </Label>
+              </div>
+
+              <Button
+                onClick={handleRankWrestlerSync}
+                disabled={isRankSyncing || !selectedAthlete || !rankwrestlerUrl.trim()}
+                className="w-full"
+              >
+                {isRankSyncing ? "Syncing RankWrestler..." : "Sync Selected Athlete from RankWrestler"}
+              </Button>
+
+              {rankSyncResult && (
+                <Alert className={rankSyncResult.success ? "border-green-500" : "border-red-500"}>
+                  <AlertDescription>
+                    {rankSyncResult.success ? (
+                      <div>
+                        <p className="font-semibold text-green-700">✅ RankWrestler Sync Complete</p>
+                        <p>{rankSyncResult.message}</p>
+                        <div className="mt-2 text-sm text-gray-600">
+                          <p>Season: {rankSyncResult.season}</p>
+                          <p>Grade: {rankSyncResult.grade}</p>
+                          {rankSyncResult.diagnostics && (
+                            <p>
+                              Parsed {rankSyncResult.diagnostics.parsedMatches} bouts; saved{" "}
+                              {rankSyncResult.diagnostics.dedupedMatches}
+                              {rankSyncResult.diagnostics.duplicatesRemoved > 0
+                                ? ` (${rankSyncResult.diagnostics.duplicatesRemoved} duplicates removed)`
+                                : ""}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <p className="font-semibold text-red-700">❌ RankWrestler Sync Not Complete</p>
+                        <p>{rankSyncResult.error}</p>
                       </div>
                     )}
                   </AlertDescription>
