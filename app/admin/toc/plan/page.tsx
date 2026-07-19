@@ -138,6 +138,7 @@ export default function TocProjectPlanPage() {
   const [savingId, setSavingId] = useState<string | null>(null)
   const [uploadingDocument, setUploadingDocument] = useState(false)
   const [sendingChat, setSendingChat] = useState(false)
+  const [seedingTasks, setSeedingTasks] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [newTaskTitle, setNewTaskTitle] = useState<Record<string, string>>({})
   const [chatDraft, setChatDraft] = useState("")
@@ -217,6 +218,22 @@ export default function TocProjectPlanPage() {
 
   function updateDraft(id: string, patch: Partial<TocProjectTask>) {
     setDrafts((prev) => ({ ...prev, [id]: { ...(prev[id] ?? tasks.find((t) => t.id === id)!), ...patch } }))
+  }
+
+  async function seedMasterTasks() {
+    setSeedingTasks(true)
+    setError(null)
+    try {
+      const res = await fetch("/api/admin/toc/project-tasks/seed", { method: "POST", credentials: "include" })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "Seed failed")
+      setTasks(data.tasks ?? [])
+      setDrafts(Object.fromEntries((data.tasks ?? []).map((task: TocProjectTask) => [task.id, task])))
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Seed failed")
+    } finally {
+      setSeedingTasks(false)
+    }
   }
 
   async function saveTask(id: string) {
@@ -615,6 +632,19 @@ export default function TocProjectPlanPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-8 bg-[#f6f7fb] p-4">
+        {tasks.length === 0 && !unavailable && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="font-semibold">No TOC tasks are saved in this environment yet.</p>
+                <p className="mt-1">Use the master list you gave me to populate the board.</p>
+              </div>
+              <Button onClick={() => void seedMasterTasks()} disabled={seedingTasks}>
+                <Plus className="mr-2 h-4 w-4" /> {seedingTasks ? "Seeding…" : "Seed master task list"}
+              </Button>
+            </div>
+          </div>
+        )}
         {TOC_PROJECT_CATEGORIES.map((category) => {
           const meta = categoryMeta(category.name)
           const categoryTasks = tasks.filter((task) => task.category === category.name).sort((a, b) => a.sort_order - b.sort_order)

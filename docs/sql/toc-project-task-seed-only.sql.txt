@@ -1,0 +1,48 @@
+-- TOC project plan — seed master task list only
+-- Safe to rerun after toc_project_tasks exists and the unique index on (category, title) exists.
+
+insert into public.toc_project_tasks (category, title, priority, sort_order)
+values
+  ('Venue & Operations', 'Negotiate & sign venue contract', 'high', 10),
+  ('Venue & Operations', 'Hire Tournament Operations Director', 'normal', 20),
+  ('Venue & Operations', 'Order wrestling mats', 'normal', 30),
+  ('Venue & Operations', 'Secure scales', 'normal', 40),
+  ('Venue & Operations', 'Hire officials', 'normal', 50),
+  ('Venue & Operations', 'Hire athletic trainer / medical staff', 'normal', 60),
+  ('Venue & Operations', 'Recruit setup & teardown volunteers (mats, taping, venue setup)', 'normal', 70),
+  ('Venue & Operations', 'Recruit table workers', 'normal', 80),
+  ('Venue & Operations', 'Recruit general event volunteers', 'normal', 90),
+  ('Venue & Operations', 'Plan VIP Lounge', 'normal', 100),
+  ('Competition', 'Select & invite Top 88 wrestlers', 'high', 110),
+  ('Competition', 'Finalize 11 brackets', 'normal', 120),
+  ('Competition', 'Select bracketing platform (Trackwrestling or FloArena)', 'normal', 130),
+  ('Awards & Apparel', 'Design & order Tournament of Champions jackets', 'normal', 140),
+  ('Awards & Apparel', 'Order medals', 'normal', 150),
+  ('Awards & Apparel', 'Order championship hammers', 'normal', 160),
+  ('Awards & Apparel', 'Finalize event apparel', 'normal', 170),
+  ('Branding & Signage', 'Design & print event posters', 'normal', 180),
+  ('Branding & Signage', 'Design venue signage & directional signs', 'normal', 190),
+  ('Branding & Signage', 'Produce sponsor signage', 'normal', 200),
+  ('Branding & Signage', 'Order NC United tablecloths', 'normal', 210),
+  ('Branding & Signage', 'Order Wrestling Guild tablecloths', 'normal', 220),
+  ('Branding & Signage', 'Design recruiting/vendor booth displays', 'normal', 230),
+  ('Fan Experience', 'Secure ticketing vendor', 'normal', 240),
+  ('Fan Experience', 'Order access wristbands (by attendee type)', 'normal', 250),
+  ('Fan Experience', 'Finalize concessions & food vendors', 'normal', 260),
+  ('Fan Experience', 'Secure FloWrestling streaming', 'normal', 270),
+  ('Fan Experience', 'Confirm commentators', 'normal', 280),
+  ('Fan Experience', 'Identify Master of Ceremonies (MC)', 'normal', 290),
+  ('Fan Experience', 'National Anthem', 'normal', 300),
+  ('Fan Experience', 'Opening Prayer', 'normal', 310),
+  ('Fan Experience', 'Plan Parade of Champions', 'normal', 320),
+  ('Recruiting', 'Recruit college coaches', 'normal', 330),
+  ('Recruiting', 'Organize Coaches Lounge / VIP area', 'normal', 340),
+  ('Marketing', 'Launch Tournament website & registration portal', 'normal', 350),
+  ('Marketing', 'Build all online forms', 'normal', 360),
+  ('Marketing', 'Launch social media campaign', 'normal', 370),
+  ('Marketing', 'Secure sponsors', 'high', 380),
+  ('Special Events', 'Plan Wrestlers in Business Network event', 'normal', 390),
+  ('Special Events', 'Organize Caden Perry Scholarship presentation', 'normal', 400)
+on conflict (category, title) do nothing;
+
+notify pgrst, 'reload schema';
