@@ -18,6 +18,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
   const form = await request.formData()
   const file = form.get("file")
   if (!(file instanceof File)) return NextResponse.json({ error: "file required" }, { status: 400 })
+  const displayName = String(form.get("name") || "").trim() || file.name
 
   const admin = createAdminClient()
   await admin.storage.createBucket(BUCKET, { public: true }).catch(() => null)
@@ -33,7 +34,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
 
   const { data: publicData } = admin.storage.from(BUCKET).getPublicUrl(path)
   const attachment: TocTaskAttachment = {
-    name: file.name,
+    name: displayName,
     url: publicData.publicUrl,
     path,
     type: file.type || null,
@@ -61,8 +62,8 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
     category: data.category,
     actorEmail: auth.email,
     actorUserId: auth.userId,
-    summary: `uploaded ${file.name} to “${data.title}”`,
-    details: { fileName: file.name, fileSize: file.size, fileType: file.type || null },
+    summary: `uploaded ${displayName} to “${data.title}”`,
+    details: { fileName: file.name, displayName, fileSize: file.size, fileType: file.type || null },
   })
 
   return NextResponse.json({ task: data, attachment })

@@ -67,6 +67,11 @@ type ApprovalDraft = {
   file: File | null
 }
 
+type AttachmentDraft = {
+  name: string
+  file: File | null
+}
+
 type FieldPayload = {
   board?: {
     summary?: {
@@ -298,6 +303,10 @@ function emptyApprovalDraft(taskTitle?: string): ApprovalDraft {
   }
 }
 
+function emptyAttachmentDraft(): AttachmentDraft {
+  return { name: "", file: null }
+}
+
 function approvalIcon(status: string) {
   if (status === "approved") return <CheckCircle2 className="h-4 w-4" />
   if (status === "rejected") return <XCircle className="h-4 w-4" />
@@ -355,6 +364,7 @@ export default function TocProjectPlanPage() {
   const [docFile, setDocFile] = useState<File | null>(null)
   const [approvalDrafts, setApprovalDrafts] = useState<Record<string, ApprovalDraft>>({})
   const [approvalDecisionNotes, setApprovalDecisionNotes] = useState<Record<string, string>>({})
+  const [attachmentDrafts, setAttachmentDrafts] = useState<Record<string, AttachmentDraft>>({})
   const lastTypingPostRef = useRef(0)
 
   async function load() {
@@ -563,6 +573,17 @@ export default function TocProjectPlanPage() {
     }))
   }
 
+  function attachmentDraftFor(taskId: string): AttachmentDraft {
+    return attachmentDrafts[taskId] ?? emptyAttachmentDraft()
+  }
+
+  function updateAttachmentDraft(taskId: string, patch: Partial<AttachmentDraft>) {
+    setAttachmentDrafts((prev) => ({
+      ...prev,
+      [taskId]: { ...(prev[taskId] ?? emptyAttachmentDraft()), ...patch },
+    }))
+  }
+
   function isMyTask(task: TocProjectTask): boolean {
     if (!currentUser) return false
     return (task.assignees ?? []).some((assignee) => {
@@ -705,10 +726,11 @@ export default function TocProjectPlanPage() {
     }
   }
 
-  async function uploadAttachment(taskId: string, file: File | null) {
+  async function uploadAttachment(taskId: string, file: File | null, name?: string) {
     if (!file || taskId.startsWith("seed-")) return
     const form = new FormData()
     form.set("file", file)
+    form.set("name", name?.trim() || file.name)
     setSavingId(taskId)
     try {
       const res = await fetch(`/api/admin/toc/project-tasks/${taskId}/attachments`, {
@@ -720,6 +742,7 @@ export default function TocProjectPlanPage() {
       if (!res.ok) throw new Error(data.error || "Upload failed")
       setTasks((prev) => prev.map((t) => (t.id === taskId ? data.task : t)))
       setDrafts((prev) => ({ ...prev, [taskId]: data.task }))
+      setAttachmentDrafts((prev) => ({ ...prev, [taskId]: emptyAttachmentDraft() }))
       void refreshActivity()
     } catch (e) {
       setError(e instanceof Error ? e.message : "Upload failed")
@@ -1535,6 +1558,7 @@ export default function TocProjectPlanPage() {
                     const taskApprovals = approvals.filter((approval) => approval.task_id === task.id)
                     const pendingTaskApprovals = taskApprovals.filter((approval) => approval.status === "pending").length
                     const approvalDraft = approvalDraftFor(task)
+                    const attachmentDraft = attachmentDraftFor(task.id)
                     return (
                       <div key={task.id} className="border-b border-white/10 last:border-b-0">
                         <div className="grid grid-cols-1 items-stretch bg-[#07182e] text-sm text-slate-100 transition-colors hover:bg-[#0a1d37] md:grid-cols-[minmax(280px,1.7fr)_210px_150px_140px_140px_120px_120px_120px_120px] md:items-center">
@@ -1688,7 +1712,33 @@ export default function TocProjectPlanPage() {
                               <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
                                 <Paperclip className="h-3.5 w-3.5" /> Files
                               </div>
-                              <Input type="file" disabled={disabled} onChange={(e) => void uploadAttachment(task.id, e.target.files?.[0] ?? null)} className={`${DARK_FIELD_CLASS} file:text-slate-100`} />
+                              <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+                                <Input
+                                  value={attachmentDraft.name}
+                                  onChange={(e) => updateAttachmentDraft(task.id, { name: e.target.value })}
+                                  placeholder="File name shown on this task"
+                                  disabled={disabled}
+                                  className={DARK_FIELD_SMALL_CLASS}
+                                />
+                                <Button
+                                  type="button"
+                                  onClick={() => void uploadAttachment(task.id, attachmentDraft.file, attachmentDraft.name)}
+                                  disabled={disabled || savingId === task.id || !attachmentDraft.file}
+                                  className="bg-[#D6B65A] text-[#061426] hover:bg-[#c8a94f]"
+                                >
+                                  <Upload className="mr-1 h-4 w-4" /> Upload
+                                </Button>
+                              </div>
+                              <Input
+                                type="file"
+                                disabled={disabled}
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0] ?? null
+                                  updateAttachmentDraft(task.id, { file, name: attachmentDraft.name || file?.name || "" })
+                                }}
+                                className={`mt-2 ${DARK_FIELD_CLASS} file:text-slate-100`}
+                              />
+                              <SelectedFilePreview file={attachmentDraft.file} onClear={() => updateAttachmentDraft(task.id, { file: null })} />
                               {draft.attachments?.length > 0 && (
                                 <div className="mt-2 space-y-1">
                                   {draft.attachments.map((file) => (
