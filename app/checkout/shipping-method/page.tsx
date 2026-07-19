@@ -56,7 +56,7 @@ export default function ShippingMethodPage() {
   }
 
   return (
-    <div className="min-h-screen bg-secondary/30">
+    <div className="min-h-[100dvh] bg-secondary/30">
       <div className="container mx-auto px-4 pb-4 pt-4">
         <nav className="text-sm text-muted-foreground">
           <Link href="/" className="hover:text-foreground">Home</Link>
@@ -67,12 +67,12 @@ export default function ShippingMethodPage() {
         </nav>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-8 lg:pb-8">
         <CheckoutProgress currentStep={2} />
 
-        <div className="grid lg:grid-cols-[1fr_400px] gap-8 mt-8">
-          <div>
-            <Card>
+        <div className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_400px]">
+          <div className="min-w-0">
+            <Card className="overflow-hidden">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Truck className="w-5 h-5" />
@@ -88,19 +88,19 @@ export default function ShippingMethodPage() {
                     return (
                       <div
                         key={option.id}
-                        className={`flex items-start space-x-3 border rounded-lg p-4 cursor-pointer hover:bg-secondary/50 transition-colors ${borderClass}`}
+                        className={`flex min-w-0 cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors hover:bg-secondary/50 ${borderClass}`}
                       >
-                        <RadioGroupItem value={option.id} id={option.id} className="mt-1" />
-                        <Label htmlFor={option.id} className="flex-1 cursor-pointer">
-                          <div className="flex justify-between items-start mb-1">
-                            <div className="flex items-center gap-2">
+                        <RadioGroupItem value={option.id} id={option.id} className="mt-1 shrink-0" />
+                        <Label htmlFor={option.id} className="min-w-0 flex-1 cursor-pointer">
+                          <div className="mb-1 flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="flex min-w-0 items-start gap-2">
                               {isPickup && <MapPin className="w-4 h-4 text-green-600" />}
-                              <div>
+                              <div className="min-w-0">
                                 <p className="font-semibold">{option.name}</p>
                                 <p className="text-sm text-muted-foreground">{option.days}</p>
                               </div>
                             </div>
-                            <p className="font-semibold">
+                            <p className="shrink-0 font-semibold sm:text-right">
                               {isPickup ? <span className="text-green-600">FREE</span> : `$${option.price.toFixed(2)}`}
                             </p>
                           </div>
@@ -121,12 +121,12 @@ export default function ShippingMethodPage() {
               </CardContent>
             </Card>
 
-            <div className="flex justify-between mt-6">
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-between">
               <Button variant="outline" onClick={() => window.location.href = "/checkout/shipping"}>
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Shipping
               </Button>
-              <Button onClick={handleContinue} className="bg-[#003366] hover:bg-[#003366]/90 text-white">
+              <Button onClick={handleContinue} className="hidden bg-[#003366] text-white hover:bg-[#003366]/90 sm:inline-flex">
                 Continue to Payment
               </Button>
             </div>
@@ -136,6 +136,12 @@ export default function ShippingMethodPage() {
             <OrderSummary />
           </div>
         </div>
+      </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 p-3 shadow-2xl shadow-black/20 backdrop-blur supports-[padding:max(0px)]:pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:hidden">
+        <Button onClick={handleContinue} className="w-full bg-[#003366] text-white hover:bg-[#003366]/90" size="lg">
+          Continue to Payment
+        </Button>
       </div>
     </div>
   )

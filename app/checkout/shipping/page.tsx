@@ -116,7 +116,7 @@ export default function ShippingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-secondary/30">
+    <div className="min-h-[100dvh] bg-secondary/30">
       <div className="container mx-auto px-4 pb-4 pt-4">
         <nav className="text-sm text-muted-foreground">
           <Link href="/" className="hover:text-foreground">Home</Link>
@@ -127,11 +127,11 @@ export default function ShippingPage() {
         </nav>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-8 lg:pb-8">
         <CheckoutProgress currentStep={1} />
 
-        <div className="grid lg:grid-cols-[1fr_400px] gap-8 mt-8">
-          <div>
+        <div className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_400px]">
+          <div className="min-w-0">
             <form onSubmit={handleSubmit} className="space-y-6">
               <Card>
                 <CardHeader>
@@ -162,7 +162,7 @@ export default function ShippingPage() {
                   <CardTitle>Shipping Address</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
                     <div>
                       <Label htmlFor="firstName">First Name *</Label>
                       <Input id="firstName" value={formData.firstName} onChange={(e) => handleChange("firstName", e.target.value)} onBlur={() => handleBlur("firstName")} className={errors.firstName ? "border-destructive" : ""} />
@@ -183,7 +183,7 @@ export default function ShippingPage() {
                     <Label htmlFor="address2">Address Line 2 (Optional)</Label>
                     <Input id="address2" value={formData.address2 ?? ""} onChange={(e) => handleChange("address2", e.target.value)} />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
                     <div>
                       <Label htmlFor="city">City *</Label>
                       <Input id="city" value={formData.city} onChange={(e) => handleChange("city", e.target.value)} onBlur={() => handleBlur("city")} className={errors.city ? "border-destructive" : ""} />
@@ -204,7 +204,7 @@ export default function ShippingPage() {
                       {errors.state && <p className="text-sm text-destructive mt-1">{errors.state}</p>}
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
                     <div>
                       <Label htmlFor="zipCode">ZIP Code *</Label>
                       <Input id="zipCode" value={formData.zipCode} onChange={(e) => handleChange("zipCode", e.target.value)} onBlur={() => handleBlur("zipCode")} maxLength={5} className={errors.zipCode ? "border-destructive" : ""} />
@@ -223,12 +223,12 @@ export default function ShippingPage() {
                 </CardContent>
               </Card>
 
-              <div className="flex justify-between">
+              <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
                 <Button type="button" variant="outline" onClick={() => window.location.href = "/cart"}>
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Back to Cart
                 </Button>
-                <Button type="submit" className="bg-[#003366] hover:bg-[#003366]/90 text-white">
+                <Button type="submit" className="hidden bg-[#003366] text-white hover:bg-[#003366]/90 sm:inline-flex">
                   Continue to Shipping Method
                 </Button>
               </div>
@@ -238,6 +238,20 @@ export default function ShippingPage() {
             <OrderSummary />
           </div>
         </div>
+      </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 p-3 shadow-2xl shadow-black/20 backdrop-blur supports-[padding:max(0px)]:pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:hidden">
+        <Button
+          type="button"
+          onClick={() => {
+            const form = document.querySelector("form")
+            form?.requestSubmit()
+          }}
+          className="w-full bg-[#003366] text-white hover:bg-[#003366]/90"
+          size="lg"
+        >
+          Continue to Shipping Method
+        </Button>
       </div>
     </div>
   )
