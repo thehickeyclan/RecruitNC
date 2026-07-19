@@ -15,6 +15,14 @@ function asArray(value: unknown): unknown[] {
   return Array.isArray(value) ? value : []
 }
 
+function seedInsertPayload(userId: string) {
+  return tocProjectSeedTasks().map(({ id: _id, created_at: _createdAt, updated_at: _updatedAt, ...task }) => ({
+    ...task,
+    created_by: userId,
+    updated_by: userId,
+  }))
+}
+
 export async function GET() {
   const auth = await requireTocInvitationManager()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
@@ -31,6 +39,22 @@ export async function GET() {
       })
     }
     return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  if ((data ?? []).length === 0) {
+    const { data: seeded, error: seedError } = await admin
+      .from(TABLE)
+      .insert(seedInsertPayload(auth.userId))
+      .select("*")
+      .order("sort_order", { ascending: true })
+
+    if (!seedError) {
+      return NextResponse.json({
+        currentUser: { userId: auth.userId, email: auth.email },
+        tasks: seeded ?? [],
+        seeded: true,
+      })
+    }
   }
 
   return NextResponse.json({
