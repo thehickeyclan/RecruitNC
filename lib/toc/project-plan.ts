@@ -7,6 +7,12 @@ export type TocTaskAssignee = {
   userId?: string | null
 }
 
+export type TocProjectUser = {
+  userId: string
+  email: string
+  name: string
+}
+
 export type TocTaskLink = {
   label: string
   url: string
