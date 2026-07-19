@@ -210,6 +210,44 @@ function formatFileSize(value: number | null | undefined): string {
   return `${(value / (1024 * 1024)).toFixed(1)} MB`
 }
 
+function SelectedFilePreview({ file, onClear }: { file: File | null; onClear?: () => void }) {
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!file || !file.type.startsWith("image/")) {
+      setPreviewUrl(null)
+      return
+    }
+    const url = URL.createObjectURL(file)
+    setPreviewUrl(url)
+    return () => URL.revokeObjectURL(url)
+  }, [file])
+
+  if (!file) return null
+
+  return (
+    <div className="mt-2 flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-2">
+      <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-[#07182e]">
+        {previewUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={previewUrl} alt={file.name} className="h-full w-full object-cover" />
+        ) : (
+          <FileText className="h-6 w-6 text-[#D6B65A]" />
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-sm font-semibold text-white">{file.name}</div>
+        <div className="text-xs text-slate-400">{file.type || "Document"} · {formatFileSize(file.size)}</div>
+      </div>
+      {onClear && (
+        <Button type="button" variant="ghost" size="sm" onClick={onClear} className="text-slate-300 hover:bg-white/10 hover:text-white">
+          <XCircle className="h-4 w-4" />
+        </Button>
+      )}
+    </div>
+  )
+}
+
 function activityIconClass(actionType: string): string {
   if (actionType.includes("deleted") || actionType.includes("blocked")) return "bg-red-500/15 text-red-200 ring-red-300/20"
   if (actionType.includes("comment") || actionType.includes("chat")) return "bg-blue-500/15 text-blue-200 ring-blue-300/20"
@@ -1246,6 +1284,7 @@ export default function TocProjectPlanPage() {
               <div>
                 <Label className="text-slate-300">File</Label>
                 <Input type="file" onChange={(e) => setDocFile(e.target.files?.[0] ?? null)} disabled={!!documentsUnavailable} className={`${DARK_FIELD_CLASS} file:text-slate-100`} />
+                <SelectedFilePreview file={docFile} onClear={() => setDocFile(null)} />
               </div>
               <Button onClick={() => void uploadSharedDocument()} disabled={!!documentsUnavailable || uploadingDocument || !docFile} className="w-full bg-[#D6B65A] text-[#061426] hover:bg-[#c8a94f]">
                 <Upload className="mr-2 h-4 w-4" /> {uploadingDocument ? "Uploading…" : "Upload to doc share"}
@@ -1774,6 +1813,7 @@ export default function TocProjectPlanPage() {
                                   onChange={(e) => updateApprovalDraft(task, { file: e.target.files?.[0] ?? null })}
                                   className={`${DARK_FIELD_CLASS} file:text-slate-100`}
                                 />
+                                <SelectedFilePreview file={approvalDraft.file} onClear={() => updateApprovalDraft(task, { file: null })} />
                                 <Button
                                   type="button"
                                   onClick={() => void requestApproval(task)}
