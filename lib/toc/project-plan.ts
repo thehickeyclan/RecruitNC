@@ -64,12 +64,23 @@ export type TocProjectDocument = {
   updated_at?: string | null
 }
 
+export type TocProjectChatReaction = {
+  emoji: string
+  email: string
+  name?: string | null
+  userId?: string | null
+  createdAt: string
+}
+
 export type TocProjectChatMessage = {
   id: string
   body: string
   author_email: string
   author_name?: string | null
   author_user_id: string | null
+  reactions?: TocProjectChatReaction[]
+  edited_at?: string | null
+  deleted_at?: string | null
   created_at: string
 }
 
