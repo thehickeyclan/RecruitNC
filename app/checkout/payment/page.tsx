@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, Lock, Shield } from "lucide-react"
@@ -26,9 +26,10 @@ export default function PaymentPage() {
   const { items, shippingAddress, shippingMethod, getTotal, promoCode, promoDiscount, applyPromoCode } = useCartStore()
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const checkoutInitializedRef = useRef(false)
   const total = getTotal()
 
-  const [urlPromoCode, setUrlPromoCode] = useState<string | null>(null)
+  const [urlPromoCode, setUrlPromoCode] = useState<string | null | undefined>(undefined)
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search)
@@ -63,7 +64,8 @@ export default function PaymentPage() {
   }, [promoCode, items.length, getTotal])
 
   useEffect(() => {
-    if (!isHydrated) return
+    if (!isHydrated || urlPromoCode === undefined || checkoutInitializedRef.current) return
+    checkoutInitializedRef.current = true
 
     if (items.length === 0) {
       window.location.href = "/cart"
@@ -118,6 +120,7 @@ export default function PaymentPage() {
           variant: "destructive",
         })
         setIsLoading(false)
+        checkoutInitializedRef.current = false
         window.location.href = "/cart"
         return
       }
@@ -236,6 +239,7 @@ export default function PaymentPage() {
         }
         setClientSecret(result.clientSecret)
       } else {
+        checkoutInitializedRef.current = false
         toast({
           title: "Checkout Error",
           description: "error" in result ? result.error : "Failed to initialize checkout. Please try again.",
@@ -245,7 +249,15 @@ export default function PaymentPage() {
       setIsLoading(false)
     }
 
-    initializeCheckout()
+    initializeCheckout().catch((error) => {
+      checkoutInitializedRef.current = false
+      setIsLoading(false)
+      toast({
+        title: "Checkout Error",
+        description: error instanceof Error ? error.message : "Failed to initialize checkout. Please try again.",
+        variant: "destructive",
+      })
+    })
   }, [isHydrated, items, shippingAddress, shippingMethod, router, getTotal, toast, promoCode, promoDiscount, applyPromoCode, urlPromoCode, user?.id])
 
   if (!shippingAddress || !shippingMethod) return null
