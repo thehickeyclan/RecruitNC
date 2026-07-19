@@ -68,8 +68,16 @@ export type TocProjectChatMessage = {
   id: string
   body: string
   author_email: string
+  author_name?: string | null
   author_user_id: string | null
   created_at: string
+}
+
+export type TocProjectTypingUser = {
+  user_id: string | null
+  email: string
+  name: string | null
+  updated_at: string
 }
 
 export type TocProjectActivity = {

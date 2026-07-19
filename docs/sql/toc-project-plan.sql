@@ -87,6 +87,14 @@ create table if not exists public.toc_project_chat_messages (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.toc_project_typing_status (
+  email text primary key,
+  user_id uuid,
+  name text,
+  is_typing boolean not null default false,
+  updated_at timestamptz not null default now()
+);
+
 create table if not exists public.toc_project_activity (
   id uuid primary key default gen_random_uuid(),
   action_type text not null,
@@ -135,6 +143,8 @@ create index if not exists toc_project_documents_ai_review_status_idx
   on public.toc_project_documents (ai_review_status);
 create index if not exists toc_project_chat_messages_created_at_idx
   on public.toc_project_chat_messages (created_at desc);
+create index if not exists toc_project_typing_status_updated_at_idx
+  on public.toc_project_typing_status (updated_at desc);
 create index if not exists toc_project_activity_created_at_idx
   on public.toc_project_activity (created_at desc);
 create index if not exists toc_project_activity_task_id_idx
@@ -148,6 +158,7 @@ create index if not exists toc_project_approvals_task_id_idx
 
 alter table public.toc_project_documents enable row level security;
 alter table public.toc_project_chat_messages enable row level security;
+alter table public.toc_project_typing_status enable row level security;
 alter table public.toc_project_activity enable row level security;
 alter table public.toc_project_approvals enable row level security;
 
@@ -162,6 +173,14 @@ create policy "Service role manages TOC project documents"
 drop policy if exists "Service role manages TOC project chat messages" on public.toc_project_chat_messages;
 create policy "Service role manages TOC project chat messages"
   on public.toc_project_chat_messages
+  for all
+  to service_role
+  using (true)
+  with check (true);
+
+drop policy if exists "Service role manages TOC project typing status" on public.toc_project_typing_status;
+create policy "Service role manages TOC project typing status"
+  on public.toc_project_typing_status
   for all
   to service_role
   using (true)
