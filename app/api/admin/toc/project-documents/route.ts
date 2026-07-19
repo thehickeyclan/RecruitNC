@@ -13,6 +13,13 @@ function tableMissing(error: { code?: string; message?: string } | null | undefi
   return error?.code === "42P01" || error?.code === "PGRST205" || String(error?.message ?? "").includes(TABLE)
 }
 
+function parseCurrency(value: string): number | null {
+  const cleaned = value.replace(/[^0-9.-]/g, "")
+  if (!cleaned || cleaned === "-" || cleaned === "." || cleaned === "-.") return null
+  const numeric = Number(cleaned)
+  return Number.isFinite(numeric) ? numeric : null
+}
+
 export async function GET() {
   const auth = await requireTocInvitationManager()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
@@ -46,7 +53,7 @@ export async function POST(request: Request) {
   const vendor = String(form.get("vendor") || "").trim() || null
   const description = String(form.get("description") || "").trim() || null
   const amountRaw = String(form.get("amount") || "").trim()
-  const amount = amountRaw ? Number(amountRaw) : null
+  const amount = amountRaw ? parseCurrency(amountRaw) : null
 
   const admin = createAdminClient()
   await admin.storage.createBucket(BUCKET, { public: true }).catch(() => null)

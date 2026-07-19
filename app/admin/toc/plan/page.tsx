@@ -75,6 +75,30 @@ function money(value: number | null | undefined): string {
   return Number(value).toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 })
 }
 
+function formatCurrencyInput(value: number | string | null | undefined): string {
+  if (value == null || value === "") return ""
+  const numeric = typeof value === "number" ? value : parseCurrencyInput(value)
+  if (numeric == null) return ""
+  return numeric.toLocaleString(undefined, {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+}
+
+function parseCurrencyInput(value: string): number | null {
+  const cleaned = value.replace(/[^0-9.-]/g, "")
+  if (!cleaned || cleaned === "-" || cleaned === "." || cleaned === "-.") return null
+  const numeric = Number(cleaned)
+  return Number.isFinite(numeric) ? numeric : null
+}
+
+function normalizeCurrencyInput(value: string): string {
+  const numeric = parseCurrencyInput(value)
+  return numeric == null ? "" : formatCurrencyInput(numeric)
+}
+
 function parseAssignees(value: string): TocTaskAssignee[] {
   return value
     .split(",")
@@ -768,7 +792,15 @@ export default function TocProjectPlanPage() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <Label className="text-slate-300">Amount $</Label>
-                  <Input type="number" value={docAmount} onChange={(e) => setDocAmount(e.target.value)} placeholder="Optional" disabled={!!documentsUnavailable} className="border-white/10 bg-[#07182e] text-white placeholder:text-slate-500" />
+                  <Input
+                    inputMode="decimal"
+                    value={docAmount}
+                    onChange={(e) => setDocAmount(normalizeCurrencyInput(e.target.value))}
+                    onBlur={(e) => setDocAmount(normalizeCurrencyInput(e.target.value))}
+                    placeholder="$0.00"
+                    disabled={!!documentsUnavailable}
+                    className="border-white/10 bg-[#07182e] text-white placeholder:text-slate-500"
+                  />
                 </div>
                 <div>
                   <Label className="text-slate-300">Uploaded by</Label>
@@ -1005,10 +1037,26 @@ export default function TocProjectPlanPage() {
                             </Select>
                           </div>
                           <div className="border-r border-white/10 p-2">
-                            <Input type="number" value={draft.budget_amount ?? ""} onChange={(e) => updateDraft(task.id, { budget_amount: e.target.value === "" ? null : Number(e.target.value) })} disabled={disabled} className="h-9 border-white/10 bg-[#061426] text-white" />
+                            <Input
+                              inputMode="decimal"
+                              value={formatCurrencyInput(draft.budget_amount)}
+                              onChange={(e) => updateDraft(task.id, { budget_amount: parseCurrencyInput(e.target.value) })}
+                              onBlur={(e) => updateDraft(task.id, { budget_amount: parseCurrencyInput(e.target.value) })}
+                              placeholder="$0.00"
+                              disabled={disabled}
+                              className="h-9 border-white/10 bg-[#061426] text-white"
+                            />
                           </div>
                           <div className="border-r border-white/10 p-2">
-                            <Input type="number" value={draft.actual_amount ?? ""} onChange={(e) => updateDraft(task.id, { actual_amount: e.target.value === "" ? null : Number(e.target.value) })} disabled={disabled} className="h-9 border-white/10 bg-[#061426] text-white" />
+                            <Input
+                              inputMode="decimal"
+                              value={formatCurrencyInput(draft.actual_amount)}
+                              onChange={(e) => updateDraft(task.id, { actual_amount: parseCurrencyInput(e.target.value) })}
+                              onBlur={(e) => updateDraft(task.id, { actual_amount: parseCurrencyInput(e.target.value) })}
+                              placeholder="$0.00"
+                              disabled={disabled}
+                              className="h-9 border-white/10 bg-[#061426] text-white"
+                            />
                           </div>
                           <div className="p-2">
                             <div className="flex flex-wrap gap-1">
