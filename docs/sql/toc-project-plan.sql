@@ -153,3 +153,5 @@ values
 ('Special Events', 'Plan Wrestlers in Business Network event', 'normal', 390),
 ('Special Events', 'Organize Caden Perry Scholarship presentation', 'normal', 400)
 on conflict (category, title) do nothing;
+
+notify pgrst, 'reload schema';
