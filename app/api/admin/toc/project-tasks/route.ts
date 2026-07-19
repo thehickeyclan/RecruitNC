@@ -42,19 +42,19 @@ export async function GET() {
   }
 
   if ((data ?? []).length === 0) {
-    const { data: seeded, error: seedError } = await admin
-      .from(TABLE)
-      .insert(seedInsertPayload(auth.userId))
-      .select("*")
-      .order("sort_order", { ascending: true })
+    const { error: seedError } = await admin.from(TABLE).upsert(seedInsertPayload(auth.userId), { onConflict: "category,title" })
 
-    if (!seedError) {
-      return NextResponse.json({
-        currentUser: { userId: auth.userId, email: auth.email },
-        tasks: seeded ?? [],
-        seeded: true,
-      })
+    if (seedError) {
+      return NextResponse.json({ error: `TOC task table is empty and auto-seed failed: ${seedError.message}` }, { status: 500 })
     }
+
+    const { data: seeded, error: reloadError } = await admin.from(TABLE).select("*").order("sort_order", { ascending: true })
+    if (reloadError) return NextResponse.json({ error: reloadError.message }, { status: 500 })
+    return NextResponse.json({
+      currentUser: { userId: auth.userId, email: auth.email },
+      tasks: seeded ?? [],
+      seeded: true,
+    })
   }
 
   return NextResponse.json({
