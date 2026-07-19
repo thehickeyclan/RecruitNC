@@ -15,7 +15,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { AuthGuard } from "@/components/auth-guard"
 import { normalizeSchoolNameForSearch, createSchoolSearchPatterns } from "@/lib/school-normalization"
 
 interface AthleteResult {
@@ -880,8 +879,7 @@ export default function SchoolsPage() {
   }, [])
 
   return (
-    <AuthGuard>
-      <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white">
         <div className="bg-[#003366] text-white">
         <div className="container mx-auto px-4 py-16">
           <div className="text-center max-w-4xl mx-auto">
@@ -1827,6 +1825,5 @@ export default function SchoolsPage() {
         )}
       </div>
     </div>
-    </AuthGuard>
   )
 }

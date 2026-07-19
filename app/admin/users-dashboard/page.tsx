@@ -83,6 +83,21 @@ type CollegeOption = {
   division?: string | null
 }
 
+type FunnelCounts = {
+  login_wall_view: number
+  signup_started: number
+  signup_completed: number
+  signin_started: number
+  signin_completed: number
+}
+
+type AcquisitionFunnel = {
+  last7: FunnelCounts
+  last30: FunnelCounts
+  signupCompletionRate7d: number | null
+  topLoginWallTargets: Array<{ path: string; count: number }>
+}
+
 
 // Relative time formatting
 function getRelativeTime(date: string | null): string {
@@ -130,6 +145,7 @@ function effectiveLastActiveAt(user: Pick<UserProfile, "last_activity_at" | "las
 export default function UsersDashboardPage() {
   const [profiles, setProfiles] = useState<UserProfile[]>([])
   const [colleges, setColleges] = useState<CollegeOption[]>([])
+  const [funnel, setFunnel] = useState<AcquisitionFunnel | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
@@ -175,9 +191,10 @@ export default function UsersDashboardPage() {
       }
 
       setLoading(true)
-      const [profilesRes, collegesRes] = await Promise.all([
+      const [profilesRes, collegesRes, funnelRes] = await Promise.all([
         fetch("/api/admin/users/profiles", { cache: "no-store", credentials: "include" }),
-        fetch("/api/admin/colleges", { cache: "no-store", credentials: "include" })
+        fetch("/api/admin/colleges", { cache: "no-store", credentials: "include" }),
+        fetch("/api/admin/analytics/acquisition-funnel", { cache: "no-store", credentials: "include" }),
       ])
 
       if (!profilesRes.ok) throw new Error("Failed to load profiles")
@@ -185,9 +202,11 @@ export default function UsersDashboardPage() {
 
       const profilesData = await profilesRes.json()
       const collegesData = await collegesRes.json()
+      const funnelData = funnelRes.ok ? await funnelRes.json() : null
 
       setProfiles(profilesData.profiles || [])
       setColleges(collegesData.colleges || [])
+      setFunnel(funnelData?.success ? funnelData : null)
     } catch (e: any) {
       console.error("Error loading dashboard:", e)
       setError(e?.message || "Failed to load dashboard data")
@@ -944,6 +963,56 @@ export default function UsersDashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {funnel && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-[#B31B1B]" />
+              Acquisition Funnel — Last 7 Days
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-5">
+              <div className="rounded-lg border p-4">
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Login wall hits</p>
+                <p className="mt-1 text-2xl font-bold text-gray-900">{funnel.last7.login_wall_view}</p>
+              </div>
+              <div className="rounded-lg border p-4">
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Signup started</p>
+                <p className="mt-1 text-2xl font-bold text-blue-600">{funnel.last7.signup_started}</p>
+              </div>
+              <div className="rounded-lg border p-4">
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Signup completed</p>
+                <p className="mt-1 text-2xl font-bold text-green-600">{funnel.last7.signup_completed}</p>
+              </div>
+              <div className="rounded-lg border p-4">
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Completion</p>
+                <p className="mt-1 text-2xl font-bold text-purple-600">
+                  {funnel.signupCompletionRate7d == null ? "—" : `${funnel.signupCompletionRate7d}%`}
+                </p>
+              </div>
+              <div className="rounded-lg border p-4">
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Signin completed</p>
+                <p className="mt-1 text-2xl font-bold text-gray-900">{funnel.last7.signin_completed}</p>
+              </div>
+            </div>
+            {funnel.topLoginWallTargets.length > 0 && (
+              <div className="mt-4 rounded-lg border bg-gray-50 p-4">
+                <p className="mb-2 text-sm font-semibold text-gray-700">Top login-wall targets</p>
+                <div className="space-y-1">
+                  {funnel.topLoginWallTargets.map((item) => (
+                    <div key={item.path} className="flex items-center justify-between gap-3 text-sm">
+                      <span className="truncate text-gray-600">{item.path}</span>
+                      <Badge variant="outline">{item.count}</Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Cumulative User Growth */}
       <div className="mb-6">

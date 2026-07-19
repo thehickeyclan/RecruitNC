@@ -14,6 +14,28 @@ interface AuthGuardProps {
   requireAdmin?: boolean
 }
 
+function trackFunnelEvent(event: string, path: string | null | undefined, target?: string) {
+  if (typeof window === "undefined") return
+  const body = JSON.stringify({
+    event,
+    path: path || window.location.pathname,
+    target: target || null,
+    source: "auth_guard",
+  })
+  try {
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon("/api/track-funnel-event", new Blob([body], { type: "application/json" }))
+      return
+    }
+  } catch {}
+  void fetch("/api/track-funnel-event", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body,
+    keepalive: true,
+  }).catch(() => {})
+}
+
 export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
   const { user, isLoading, isAdmin, profile } = useAuth()
   const pathname = usePathname()
@@ -105,6 +127,7 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
           const search = typeof window !== "undefined" ? window.location.search : ""
           const returnTo = `${pathname}${search}`
           const signinPath = `/auth/signin?returnTo=${encodeURIComponent(returnTo)}`
+          trackFunnelEvent("login_wall_view", pathname, returnTo)
           // Use full navigation when in iframe (app.ncwrestlingunited.com embed) so Chrome allows cookies.
           // Must use absolute URL—relative would resolve against parent (ncwrestlingunited.com) and 404.
           if (typeof window !== "undefined" && window.self !== window.top) {

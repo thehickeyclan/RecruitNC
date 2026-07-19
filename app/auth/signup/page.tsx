@@ -2,11 +2,11 @@
 
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertCircle, Trophy, Users, GraduationCap, Edit, CheckCircle } from "lucide-react"
+import { AlertCircle, Trophy, Users, Edit } from "lucide-react"
 
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -35,6 +35,20 @@ export default function SignUpPage() {
   const [success, setSuccess] = useState(false)
 
   const roleNeedsPhone = profileType === "athlete" || profileType === "parent"
+
+  useEffect(() => {
+    void fetch("/api/track-funnel-event", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      keepalive: true,
+      body: JSON.stringify({
+        event: "signup_started",
+        path: "/auth/signup",
+        target: returnTo || null,
+        source: "signup_page",
+      }),
+    }).catch(() => {})
+  }, [returnTo])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -74,6 +88,17 @@ export default function SignUpPage() {
       }
 
       console.log("[Signup] Success:", data)
+      void fetch("/api/track-funnel-event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        keepalive: true,
+        body: JSON.stringify({
+          event: "signup_completed",
+          path: "/auth/signup",
+          target: returnTo || null,
+          source: "signup_page",
+        }),
+      }).catch(() => {})
       setSuccess(true)
     } catch (err: any) {
       console.error("[Signup] Exception:", err)
@@ -135,28 +160,28 @@ export default function SignUpPage() {
                 100% FREE • NO CREDIT CARD REQUIRED
               </Badge>
               <h2 className="text-2xl md:text-3xl font-bold mb-3">
-                Get Free Access to All North Carolina Wrestling Data
+                Create Your Free RecruitNC Account
               </h2>
               <p className="text-lg md:text-xl text-blue-100 mb-6">
-                Register now and instantly access rankings, commitments, and athlete profiles
+                Public wrestling history is open to browse. Your account unlocks the tools that make RecruitNC personal.
               </p>
             </div>
             
             <div className="grid md:grid-cols-3 gap-4 mb-6">
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                <Trophy className="h-8 w-8 text-[#D3B574] mb-2 mx-auto" />
-                <h3 className="font-semibold mb-1 text-center text-sm md:text-base">Prospect Rankings</h3>
-                <p className="text-xs md:text-sm text-blue-100 text-center">All NC college prospect rankings</p>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                <GraduationCap className="h-8 w-8 text-[#D3B574] mb-2 mx-auto" />
-                <h3 className="font-semibold mb-1 text-center text-sm md:text-base">College Commitments</h3>
-                <p className="text-xs md:text-sm text-blue-100 text-center">Track all commitments</p>
+                <Edit className="h-8 w-8 text-[#D3B574] mb-2 mx-auto" />
+                <h3 className="font-semibold mb-1 text-center text-sm md:text-base">Claim & Edit</h3>
+                <p className="text-xs md:text-sm text-blue-100 text-center">Create, claim, and update athlete profiles</p>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
                 <Users className="h-8 w-8 text-[#D3B574] mb-2 mx-auto" />
-                <h3 className="font-semibold mb-1 text-center text-sm md:text-base">Athlete Profiles</h3>
-                <p className="text-xs md:text-sm text-blue-100 text-center">Complete athlete profiles</p>
+                <h3 className="font-semibold mb-1 text-center text-sm md:text-base">Profile Interest</h3>
+                <p className="text-xs md:text-sm text-blue-100 text-center">See profile-view analytics and account activity</p>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                <Trophy className="h-8 w-8 text-[#D3B574] mb-2 mx-auto" />
+                <h3 className="font-semibold mb-1 text-center text-sm md:text-base">RecruitNC Tools</h3>
+                <p className="text-xs md:text-sm text-blue-100 text-center">Data Dawg, wallet, Blue, messaging, and alerts</p>
               </div>
             </div>
 
@@ -164,9 +189,9 @@ export default function SignUpPage() {
               <div className="flex items-start gap-3">
                 <Edit className="h-5 w-5 text-[#D3B574] mt-0.5 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold mb-1 text-sm md:text-base">Real-Time Profile Updates</h3>
+                  <h3 className="font-semibold mb-1 text-sm md:text-base">Why account-only?</h3>
                   <p className="text-xs md:text-sm text-blue-100">
-                    Athletes can update and edit their profiles in real time. Keep your information current and showcase your latest achievements.
+                    Actions and private details stay protected: contact info, GPA/recruiting data, profile edits, messaging, payments, wallet, and analytics.
                   </p>
                 </div>
               </div>

@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import { Trophy, Users, GraduationCap, Edit, CheckCircle, ArrowRight } from "lucide-react"
+import { Trophy, Users, Edit, ArrowRight } from "lucide-react"
 
 export default function SignInPage() {
   const [email, setEmail] = useState("")
@@ -83,6 +83,18 @@ export default function SignInPage() {
     setLoading(true)
     setError("")
 
+    void fetch("/api/track-funnel-event", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      keepalive: true,
+      body: JSON.stringify({
+        event: "signin_started",
+        path: "/auth/signin",
+        target: returnTo || null,
+        source: "signin_page",
+      }),
+    }).catch(() => {})
+
     const isAdminTarget = returnTo?.startsWith("/admin") || returnTo?.startsWith("/users-dashboard")
 
     // Always use server-side sign-in so we avoid Supabase anon-key rate limits in production.
@@ -100,6 +112,17 @@ export default function SignInPage() {
         err = {}
       }
       if (res.ok) {
+        void fetch("/api/track-funnel-event", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          keepalive: true,
+          body: JSON.stringify({
+            event: "signin_completed",
+            path: "/auth/signin",
+            target: returnTo || null,
+            source: "signin_page",
+          }),
+        }).catch(() => {})
         setRedirectingAfterSignIn(true)
         const next = returnTo && returnTo !== "/auth/signin" ? encodeURIComponent(returnTo) : ""
         setTimeout(() => { window.location.replace(next ? `/auth/callback-admin?next=${next}` : "/auth/callback-admin") }, 1200)
@@ -126,6 +149,17 @@ export default function SignInPage() {
       data = {}
     }
     if (res.ok) {
+      void fetch("/api/track-funnel-event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        keepalive: true,
+        body: JSON.stringify({
+          event: "signin_completed",
+          path: "/auth/signin",
+          target: returnTo || null,
+          source: "signin_page",
+        }),
+      }).catch(() => {})
       setRedirectingAfterSignIn(true)
       const target = returnTo && returnTo !== "/auth/signin" ? returnTo : "/"
       // Redirect immediately so login isn't blocked by a flaky profile check
@@ -178,28 +212,28 @@ export default function SignInPage() {
                   100% FREE
                 </Badge>
                 <h2 className="text-2xl md:text-3xl font-bold mb-3">
-                  Register for Free Access
+                  Create a Free RecruitNC Account
                 </h2>
                 <p className="text-lg md:text-xl text-blue-100 mb-6">
-                  Get instant access to all of North Carolina's College Prospect Rankings, College Commitments, and Athlete Profiles
+                  Browse North Carolina wrestling history publicly. Sign up when you want to claim a profile, use tools, or manage your account.
                 </p>
               </div>
               
               <div className="grid grid-cols-3 gap-3 mb-6">
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
-                  <Trophy className="h-6 w-6 md:h-8 md:w-8 text-[#D3B574] mb-2 mx-auto" />
-                  <h3 className="font-semibold mb-1 text-center text-xs md:text-sm">Prospect Rankings</h3>
-                  <p className="text-xs text-blue-100 text-center hidden md:block">Access all NC rankings</p>
-                </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
-                  <GraduationCap className="h-6 w-6 md:h-8 md:w-8 text-[#D3B574] mb-2 mx-auto" />
-                  <h3 className="font-semibold mb-1 text-center text-xs md:text-sm">College Commitments</h3>
-                  <p className="text-xs text-blue-100 text-center hidden md:block">Track commitments</p>
+                  <Edit className="h-6 w-6 md:h-8 md:w-8 text-[#D3B574] mb-2 mx-auto" />
+                  <h3 className="font-semibold mb-1 text-center text-xs md:text-sm">Claim Profiles</h3>
+                  <p className="text-xs text-blue-100 text-center hidden md:block">Create, claim, and update athlete profiles</p>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
                   <Users className="h-6 w-6 md:h-8 md:w-8 text-[#D3B574] mb-2 mx-auto" />
-                  <h3 className="font-semibold mb-1 text-center text-xs md:text-sm">Athlete Profiles</h3>
-                  <p className="text-xs text-blue-100 text-center hidden md:block">Browse profiles</p>
+                  <h3 className="font-semibold mb-1 text-center text-xs md:text-sm">View Interest</h3>
+                  <p className="text-xs text-blue-100 text-center hidden md:block">See profile-view analytics and activity</p>
+                </div>
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+                  <Trophy className="h-6 w-6 md:h-8 md:w-8 text-[#D3B574] mb-2 mx-auto" />
+                  <h3 className="font-semibold mb-1 text-center text-xs md:text-sm">Use Tools</h3>
+                  <p className="text-xs text-blue-100 text-center hidden md:block">Data Dawg, wallet, Blue, messages, alerts</p>
                 </div>
               </div>
 
@@ -207,9 +241,9 @@ export default function SignInPage() {
                 <div className="flex items-start gap-2 md:gap-3">
                   <Edit className="h-4 w-4 md:h-5 md:w-5 text-[#D3B574] mt-0.5 flex-shrink-0" />
                   <div>
-                    <h3 className="font-semibold mb-1 text-sm md:text-base">Real-Time Profile Updates</h3>
+                    <h3 className="font-semibold mb-1 text-sm md:text-base">What stays account-only?</h3>
                     <p className="text-xs md:text-sm text-blue-100">
-                      Athletes can update and edit their profiles in real time.
+                      Editing, contact info, GPA/recruiting data, messaging, payments, wallet, profile analytics, and unlimited personalized tools.
                     </p>
                   </div>
                 </div>

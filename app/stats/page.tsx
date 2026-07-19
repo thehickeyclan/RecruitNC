@@ -1,40 +1,12 @@
-"use client"
-
-import { useAuth } from "@/contexts/auth-context"
-import { useRouter } from "next/navigation"
-import { useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { AuthGuard } from "@/components/auth-guard"
 import { BarChart3, PieChart, TrendingUp, Calendar, Bell, Activity } from "lucide-react"
 import Image from "next/image"
 
 export default function StatsComingSoonPage() {
-  const { user, loading } = useAuth()
-  const router = useRouter()
-
-  useEffect(() => {
-    if (!loading && !user) {
-      window.location.href = "/auth/signin?redirect=/stats"
-    }
-  }, [user, loading, router])
-
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
-      </div>
-    )
-  }
-
-  if (!user) {
-    return null
-  }
-
   return (
-    <AuthGuard>
-      <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-blue-50">
         <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
           {/* Hero Section */}
           <div className="text-center mb-12">
@@ -184,6 +156,5 @@ export default function StatsComingSoonPage() {
           </Card>
         </div>
       </div>
-    </AuthGuard>
   )
 }

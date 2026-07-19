@@ -1,10 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { AuthGuard } from "@/components/auth-guard"
 
 export default function AboutPage() {
   return (
-    <AuthGuard>
-      <div className="container mx-auto py-10">
+    <div className="container mx-auto py-10">
       <h1 className="mb-6 text-3xl font-bold">About NC United Wrestling Portal</h1>
 
       <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
@@ -161,6 +159,5 @@ export default function AboutPage() {
         </div>
       </div>
     </div>
-    </AuthGuard>
   )
 }
