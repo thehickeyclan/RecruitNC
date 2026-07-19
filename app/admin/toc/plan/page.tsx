@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, CalendarDays, DollarSign, FileText, LinkIcon, MessageSquare, Paperclip, Plus, Save, Send, Trash2, Upload, UserPlus } from "lucide-react"
+import { ArrowLeft, CalendarDays, DollarSign, FileText, LayoutGrid, LinkIcon, MessageSquare, Paperclip, Plus, Save, Send, Trash2, Upload, UserPlus } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -32,6 +32,19 @@ type ChatPayload = {
   unavailable?: boolean
   setupSql?: string
   messages: TocProjectChatMessage[]
+  error?: string
+}
+
+type FieldPayload = {
+  board?: {
+    summary?: {
+      totalConfirmed?: number
+      totalInvited?: number
+      fullBrackets?: number
+      partialBrackets?: number
+    }
+    weights?: Array<{ maxSlots?: number; confirmedCount?: number }>
+  }
   error?: string
 }
 
@@ -130,6 +143,7 @@ export default function TocProjectPlanPage() {
   const [tasks, setTasks] = useState<TocProjectTask[]>([])
   const [documents, setDocuments] = useState<TocProjectDocument[]>([])
   const [chatMessages, setChatMessages] = useState<TocProjectChatMessage[]>([])
+  const [bracketFill, setBracketFill] = useState({ confirmed: 0, capacity: 88, pct: 0, fullBrackets: 0 })
   const [currentUser, setCurrentUser] = useState<{ userId: string; email: string } | null>(null)
   const [unavailable, setUnavailable] = useState<string | null>(null)
   const [documentsUnavailable, setDocumentsUnavailable] = useState<string | null>(null)
@@ -165,9 +179,10 @@ export default function TocProjectPlanPage() {
       setUnavailable(data.unavailable ? `Database table missing. Run ${data.setupSql ?? "docs/sql/toc-project-plan.sql"} in Supabase to enable shared editing.` : null)
       setDrafts(Object.fromEntries((data.tasks ?? []).map((task) => [task.id, task])))
 
-      const [documentsRes, chatRes] = await Promise.allSettled([
+      const [documentsRes, chatRes, fieldRes] = await Promise.allSettled([
         fetch("/api/admin/toc/project-documents", { cache: "no-store", credentials: "include" }),
         fetch("/api/admin/toc/project-chat", { cache: "no-store", credentials: "include" }),
+        fetch("/api/admin/toc/field", { cache: "no-store", credentials: "include" }),
       ])
 
       if (documentsRes.status === "fulfilled") {
@@ -192,6 +207,19 @@ export default function TocProjectPlanPage() {
         }
       } else {
         setChatUnavailable("Team chat could not load. The task board is still available.")
+      }
+
+      if (fieldRes.status === "fulfilled" && fieldRes.value.ok) {
+        const fieldData = (await fieldRes.value.json()) as FieldPayload
+        const weights = fieldData.board?.weights ?? []
+        const capacity = weights.reduce((sum, weight) => sum + Number(weight.maxSlots ?? 0), 0) || 88
+        const confirmed = Number(fieldData.board?.summary?.totalConfirmed ?? weights.reduce((sum, weight) => sum + Number(weight.confirmedCount ?? 0), 0))
+        setBracketFill({
+          confirmed,
+          capacity,
+          pct: capacity ? Math.round((confirmed / capacity) * 100) : 0,
+          fullBrackets: Number(fieldData.board?.summary?.fullBrackets ?? 0),
+        })
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not load TOC project plan")
@@ -429,17 +457,17 @@ export default function TocProjectPlanPage() {
   if (loading) return <div className="p-8 text-gray-500">Loading TOC project plan…</div>
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 p-4 md:p-6">
-      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+    <div className="mx-auto max-w-7xl space-y-6 rounded-[2rem] bg-gradient-to-br from-slate-50 via-white to-blue-50 p-4 shadow-inner md:p-6">
+      <div className="flex flex-col gap-3 rounded-3xl border border-[#002147]/10 bg-white/85 p-5 shadow-sm backdrop-blur md:flex-row md:items-start md:justify-between">
         <div>
           <Link href="/admin/toc" className="mb-2 inline-flex items-center gap-2 text-sm text-[#B31B1B] hover:underline">
             <ArrowLeft className="h-4 w-4" />
             TOC dashboard
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">Tournament of Champions Project Plan</h1>
+          <h1 className="text-3xl font-black tracking-tight text-[#002147]">Tournament of Champions Project Plan</h1>
           <p className="mt-1 text-gray-600">Shared task board for operations, competition, marketing, sponsors, fan experience, and special events.</p>
         </div>
-        <Button onClick={() => void load()} variant="outline">Refresh</Button>
+        <Button onClick={() => void load()} variant="outline" className="border-[#D6B65A]/60 bg-[#D6B65A]/10 text-[#002147] hover:bg-[#D6B65A]/20">Refresh</Button>
       </div>
 
       {error && <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
@@ -474,8 +502,8 @@ export default function TocProjectPlanPage() {
         </CardContent>
       </Card>
 
-      <Card className="overflow-hidden border-gray-200 shadow-sm">
-        <CardHeader className="border-b bg-white pb-3">
+      <Card className="overflow-hidden border-blue-100 bg-white shadow-sm">
+        <CardHeader className="border-b bg-gradient-to-r from-blue-50 via-white to-[#D6B65A]/10 pb-3">
           <CardTitle className="flex flex-wrap items-center justify-between gap-3">
             <span className="flex items-center gap-2">
               <MessageSquare className="h-5 w-5 text-[#002147]" />
@@ -484,7 +512,7 @@ export default function TocProjectPlanPage() {
             <Badge variant="outline">{chatMessages.length} messages</Badge>
           </CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-4 bg-[#f6f7fb] p-4 lg:grid-cols-[1fr_360px]">
+        <CardContent className="grid gap-4 bg-gradient-to-br from-[#f6f7fb] to-blue-50/50 p-4 lg:grid-cols-[1fr_360px]">
           <div className="max-h-80 space-y-3 overflow-y-auto rounded-xl border bg-white p-3">
             {chatMessages.length === 0 ? (
               <div className="rounded-xl border border-dashed p-6 text-center text-sm text-gray-500">
@@ -530,16 +558,17 @@ export default function TocProjectPlanPage() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-5">
-        <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Tasks</p><p className="text-2xl font-bold">{summary.total}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Complete</p><p className="text-2xl font-bold text-green-700">{summary.done}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Progress</p><p className="text-2xl font-bold text-blue-700">{summary.pct}%</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Blocked</p><p className="text-2xl font-bold text-red-700">{summary.blocked}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-gray-500">Budget / Actual</p><p className="text-xl font-bold">{money(summary.budget)} / {money(summary.actual)}</p></CardContent></Card>
+      <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
+        <Card className="border-blue-100 bg-gradient-to-br from-white to-blue-50 shadow-sm"><CardContent className="p-4"><p className="text-xs font-semibold uppercase tracking-wide text-blue-500">Tasks</p><p className="text-3xl font-black text-[#002147]">{summary.total}</p></CardContent></Card>
+        <Card className="border-green-100 bg-gradient-to-br from-white to-green-50 shadow-sm"><CardContent className="p-4"><p className="text-xs font-semibold uppercase tracking-wide text-green-600">Complete</p><p className="text-3xl font-black text-green-700">{summary.done}</p></CardContent></Card>
+        <Card className="border-sky-100 bg-gradient-to-br from-white to-sky-50 shadow-sm"><CardContent className="p-4"><p className="text-xs font-semibold uppercase tracking-wide text-sky-600">Task progress</p><p className="text-3xl font-black text-sky-700">{summary.pct}%</p></CardContent></Card>
+        <Card className="border-amber-100 bg-gradient-to-br from-white to-amber-50 shadow-sm"><CardContent className="p-4"><p className="text-xs font-semibold uppercase tracking-wide text-amber-600">At risk</p><p className="text-3xl font-black text-amber-700">{summary.blocked}</p></CardContent></Card>
+        <Card className="border-indigo-100 bg-gradient-to-br from-white to-indigo-50 shadow-sm"><CardContent className="p-4"><p className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-indigo-600"><LayoutGrid className="h-3.5 w-3.5" /> Bracket fill</p><p className="text-3xl font-black text-indigo-700">{bracketFill.pct}%</p><p className="text-xs text-gray-500">{bracketFill.confirmed}/{bracketFill.capacity} confirmed · {bracketFill.fullBrackets} full</p></CardContent></Card>
+        <Card className="border-[#D6B65A]/30 bg-gradient-to-br from-white to-[#D6B65A]/20 shadow-sm"><CardContent className="p-4"><p className="text-xs font-semibold uppercase tracking-wide text-[#9b7b1d]">Budget / Actual</p><p className="text-xl font-black text-[#002147]">{money(summary.budget)} / {money(summary.actual)}</p></CardContent></Card>
       </div>
 
-      <Card>
-        <CardHeader>
+      <Card className="overflow-hidden border-[#D6B65A]/30 bg-white shadow-sm">
+        <CardHeader className="border-b bg-gradient-to-r from-[#D6B65A]/20 via-white to-blue-50">
           <CardTitle className="flex flex-wrap items-center justify-between gap-3">
             <span className="flex items-center gap-2">
               <FileText className="h-5 w-5 text-[#002147]" />
@@ -624,11 +653,11 @@ export default function TocProjectPlanPage() {
         </CardContent>
       </Card>
 
-      <Card className="overflow-hidden border-gray-200 shadow-sm">
-        <CardHeader className="border-b bg-white">
+      <Card className="overflow-hidden border-[#002147]/10 bg-white shadow-sm">
+        <CardHeader className="border-b bg-gradient-to-r from-[#002147] to-[#0b3a6d] text-white">
           <CardTitle className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <span>TOC Master Board</span>
-            <span className="text-sm font-normal text-gray-500">Grouped by workstream · status-driven like an ops board</span>
+            <span className="text-sm font-normal text-white/70">Grouped by workstream · status-driven like an ops board</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-8 bg-[#f6f7fb] p-4">
@@ -651,7 +680,7 @@ export default function TocProjectPlanPage() {
           const categoryBudget = categoryTasks.reduce((sum, task) => sum + Number(task.budget_amount ?? 0), 0)
           return (
             <section key={category.name} className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-white px-4 py-3">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-gradient-to-r from-white via-slate-50 to-blue-50 px-4 py-3">
                 <div className="flex items-center gap-3">
                   <span className={`h-8 w-1.5 rounded-full ${meta.accent}`} />
                   <div>
@@ -674,12 +703,13 @@ export default function TocProjectPlanPage() {
               </div>
 
               <div className="overflow-x-auto">
-                <div className="min-w-[1180px]">
-                  <div className="grid grid-cols-[minmax(280px,1.7fr)_210px_150px_140px_120px_120px_120px_120px] border-b bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                <div className="min-w-[1320px]">
+                  <div className="grid grid-cols-[minmax(280px,1.7fr)_210px_150px_140px_140px_120px_120px_120px_120px] border-b bg-gradient-to-r from-slate-50 to-blue-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
                     <div className="border-r px-3 py-2">Item</div>
                     <div className="border-r px-3 py-2">Owner</div>
                     <div className="border-r px-3 py-2">Status</div>
                     <div className="border-r px-3 py-2">Due</div>
+                    <div className="border-r px-3 py-2">Delivery</div>
                     <div className="border-r px-3 py-2">Priority</div>
                     <div className="border-r px-3 py-2">Budget</div>
                     <div className="border-r px-3 py-2">Actual</div>
@@ -691,7 +721,7 @@ export default function TocProjectPlanPage() {
                     const disabled = !!unavailable || task.id.startsWith("seed-")
                     return (
                       <div key={task.id} className="border-b last:border-b-0">
-                        <div className="grid grid-cols-[minmax(280px,1.7fr)_210px_150px_140px_120px_120px_120px_120px] items-center bg-white text-sm transition-colors hover:bg-[#f7f8fb]">
+                        <div className="grid grid-cols-[minmax(280px,1.7fr)_210px_150px_140px_140px_120px_120px_120px_120px] items-center bg-white text-sm transition-colors hover:bg-[#f7f8fb]">
                           <div className="border-r p-2">
                             <Input
                               value={draft.title}
@@ -735,6 +765,9 @@ export default function TocProjectPlanPage() {
                           </div>
                           <div className="border-r p-2">
                             <Input type="date" value={draft.due_date ?? ""} onChange={(e) => updateDraft(task.id, { due_date: e.target.value || null })} disabled={disabled} className="h-9 text-xs" />
+                          </div>
+                          <div className="border-r p-2">
+                            <Input type="date" value={draft.delivery_date ?? ""} onChange={(e) => updateDraft(task.id, { delivery_date: e.target.value || null })} disabled={disabled} className="h-9 text-xs" />
                           </div>
                           <div className="border-r p-2">
                             <Select value={draft.priority} onValueChange={(value) => updateDraft(task.id, { priority: value as TocProjectTask["priority"] })} disabled={disabled}>

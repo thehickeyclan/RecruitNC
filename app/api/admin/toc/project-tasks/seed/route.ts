@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic"
 const TABLE = "toc_project_tasks"
 
 function seedPayload(userId: string) {
-  return tocProjectSeedTasks().map(({ id: _id, created_at: _createdAt, updated_at: _updatedAt, ...task }) => ({
+  return tocProjectSeedTasks().map(({ id: _id, created_at: _createdAt, updated_at: _updatedAt, delivery_date: _deliveryDate, ...task }) => ({
     ...task,
     created_by: userId,
     updated_by: userId,

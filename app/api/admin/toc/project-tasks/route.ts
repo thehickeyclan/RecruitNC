@@ -16,7 +16,7 @@ function asArray(value: unknown): unknown[] {
 }
 
 function seedInsertPayload(userId: string) {
-  return tocProjectSeedTasks().map(({ id: _id, created_at: _createdAt, updated_at: _updatedAt, ...task }) => ({
+  return tocProjectSeedTasks().map(({ id: _id, created_at: _createdAt, updated_at: _updatedAt, delivery_date: _deliveryDate, ...task }) => ({
     ...task,
     created_by: userId,
     updated_by: userId,
@@ -76,7 +76,7 @@ export async function POST(request: Request) {
   const { data: maxRows } = await admin.from(TABLE).select("sort_order").order("sort_order", { ascending: false }).limit(1)
   const nextOrder = Number(maxRows?.[0]?.sort_order ?? 0) + 10
 
-  const payload = {
+  const payload: Record<string, unknown> = {
     category,
     title,
     status: sanitizeProjectStatus(body.status),
@@ -93,6 +93,7 @@ export async function POST(request: Request) {
     created_by: auth.userId,
     updated_by: auth.userId,
   }
+  if (body.delivery_date) payload.delivery_date = body.delivery_date
 
   const { data, error } = await admin.from(TABLE).insert(payload).select("*").single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
