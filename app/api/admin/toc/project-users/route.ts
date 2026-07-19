@@ -16,6 +16,17 @@ function normalizeUser(row: Record<string, unknown>): TocProjectUser | null {
   return { userId, email, name }
 }
 
+function orFilterForQuery(q: string): string {
+  const parts = q.split(" ").map((part) => part.trim()).filter(Boolean)
+  const filters = [`email.ilike.%${q}%`, `full_name.ilike.%${q}%`, `first_name.ilike.%${q}%`, `last_name.ilike.%${q}%`]
+  if (parts.length >= 2) {
+    const first = parts[0]
+    const last = parts.slice(1).join(" ")
+    filters.push(`and(first_name.ilike.%${first}%,last_name.ilike.%${last}%)`)
+  }
+  return filters.join(",")
+}
+
 export async function GET(request: Request) {
   const auth = await requireTocInvitationManager()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
@@ -27,15 +38,15 @@ export async function GET(request: Request) {
 
   const admin = createAdminClient()
   const select = "user_id,email,full_name,first_name,last_name"
-  const pattern = `%${q}%`
   const { data, error } = await admin
     .from("user_profiles")
     .select(select)
-    .or(`email.ilike.${pattern},full_name.ilike.${pattern},first_name.ilike.${pattern},last_name.ilike.${pattern}`)
+    .or(orFilterForQuery(q))
     .not("email", "is", null)
     .limit(8)
 
   if (error) {
+    const pattern = `%${q}%`
     const fallback = await admin.from("user_profiles").select("user_id,email").ilike("email", pattern).not("email", "is", null).limit(8)
     if (fallback.error) return NextResponse.json({ error: fallback.error.message }, { status: 500 })
     return NextResponse.json({ users: (fallback.data ?? []).map((row) => normalizeUser(row as Record<string, unknown>)).filter(Boolean) })
