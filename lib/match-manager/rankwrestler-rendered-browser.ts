@@ -4,6 +4,7 @@ import { chromium as playwrightChromium, type Browser, type BrowserContext, type
 export type RankWrestlerRenderedBrowserResult =
   | {
       ok: true
+      seasonLabel?: string
       text: string
       htmlLength: number
       title: string
@@ -25,6 +26,33 @@ export type RankWrestlerRenderedBrowserResult =
         preview?: string
         usedLogin?: boolean
         usedCookie?: boolean
+      }
+    }
+
+export type RankWrestlerRenderedSeason = Extract<RankWrestlerRenderedBrowserResult, { ok: true }>
+
+export type RankWrestlerRenderedAllSeasonsResult =
+  | {
+      ok: true
+      seasons: RankWrestlerRenderedSeason[]
+      usedLogin: boolean
+      usedCookie: boolean
+      discoveredSeasonLabels: string[]
+    }
+  | {
+      ok: false
+      status: number
+      error: string
+      hint?: string
+      diagnostics?: {
+        title?: string
+        finalUrl?: string
+        textLength?: number
+        htmlLength?: number
+        preview?: string
+        usedLogin?: boolean
+        usedCookie?: boolean
+        discoveredSeasonLabels?: string[]
       }
     }
 
@@ -184,6 +212,88 @@ function looksLikeRankWrestlerMatchRows(text: string): boolean {
   )
 }
 
+function seasonLabelsFromText(text: string): string[] {
+  const seen = new Set<string>()
+  for (const match of text.matchAll(/\b20\d{2}-\d{2}\b(?:\s+(?:Early Preseason|Last Season|Current Season))?/gi)) {
+    const label = (match[0] ?? "").replace(/\s+/g, " ").trim()
+    if (label) seen.add(label)
+  }
+  return [...seen]
+}
+
+function normalizeSeasonKey(value: string): string {
+  return value.match(/\b20\d{2}-\d{2}\b/)?.[0] ?? value.replace(/\s+/g, " ").trim()
+}
+
+function currentSeasonLabelFromText(text: string): string | undefined {
+  const recordSeason = text.match(/\b(20\d{2}-\d{2})\s+Record\b/i)?.[1]
+  if (recordSeason) return recordSeason
+  const labels = seasonLabelsFromText(text)
+  return labels.find((label) => /last season/i.test(label)) ?? labels[0]
+}
+
+async function clickSeasonLabel(page: Page, label: string): Promise<boolean> {
+  const exact = page.getByText(label, { exact: true }).first()
+  if ((await exact.count().catch(() => 0)) > 0) {
+    await exact.click({ timeout: 5_000 }).catch(() => undefined)
+    return true
+  }
+
+  const seasonKey = normalizeSeasonKey(label)
+  const control = page
+    .locator("button, a, [role='button'], [tabindex='0']")
+    .filter({ hasText: seasonKey })
+    .first()
+  if ((await control.count().catch(() => 0)) > 0) {
+    await control.click({ timeout: 5_000 }).catch(() => undefined)
+    return true
+  }
+
+  return false
+}
+
+async function renderedSuccessFromPage(
+  page: Page,
+  usedLogin: boolean,
+  usedCookie: boolean,
+  seasonLabel?: string,
+): Promise<RankWrestlerRenderedBrowserResult> {
+  const matchHistoryFound = await waitForRankWrestlerMatchHistory(page)
+  const text = await page.locator("body").innerText({ timeout: 10_000 })
+  const htmlLength = await page.locator("html").evaluate((html) => html.outerHTML.length)
+  const title = await page.title()
+  const finalUrl = page.url()
+  if (!matchHistoryFound) {
+    return {
+      ok: false,
+      status: 422,
+      error: "RankWrestler rendered, but the Match History rows did not appear.",
+      hint:
+        "The browser reached RankWrestler, but the visible page did not include Match History rows. Check whether the RankWrestler cookie/account can view this wrestler, or try opening the exact URL in a private browser while logged in.",
+      diagnostics: {
+        title,
+        finalUrl,
+        textLength: text.length,
+        htmlLength,
+        preview: text.replace(/\s+/g, " ").trim().slice(0, 1200),
+        usedLogin,
+        usedCookie,
+      },
+    }
+  }
+  return {
+    ok: true,
+    seasonLabel,
+    text,
+    htmlLength,
+    title,
+    finalUrl,
+    usedLogin,
+    usedCookie,
+    matchHistoryFound: true,
+  }
+}
+
 function rankWrestlerRenderedUserAgent(): string {
   return "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36 RecruitNC-RankWrestler-Sync/1.0"
 }
@@ -211,40 +321,9 @@ export async function renderRankWrestlerProfileText(url: string): Promise<RankWr
       await page.waitForLoadState("networkidle", { timeout: 20_000 }).catch(() => null)
     }
 
-    const matchHistoryFound = await waitForRankWrestlerMatchHistory(page)
-    const text = await page.locator("body").innerText({ timeout: 10_000 })
-    const htmlLength = await page.locator("html").evaluate((html) => html.outerHTML.length)
-    const title = await page.title()
-    const finalUrl = page.url()
+    const result = await renderedSuccessFromPage(page, usedLogin, usedCookie)
     await context.close()
-    if (!matchHistoryFound) {
-      return {
-        ok: false,
-        status: 422,
-        error: "RankWrestler rendered, but the Match History rows did not appear.",
-        hint:
-          "The browser reached RankWrestler, but the visible page did not include Match History rows. Check whether the RankWrestler cookie/account can view this wrestler, or try opening the exact URL in a private browser while logged in.",
-        diagnostics: {
-          title,
-          finalUrl,
-          textLength: text.length,
-          htmlLength,
-          preview: text.replace(/\s+/g, " ").trim().slice(0, 1200),
-          usedLogin,
-          usedCookie,
-        },
-      }
-    }
-    return {
-      ok: true,
-      text,
-      htmlLength,
-      title,
-      finalUrl,
-      usedLogin,
-      usedCookie,
-      matchHistoryFound: true,
-    }
+    return result
   } catch (error) {
     const message = error instanceof Error ? error.message : "RankWrestler rendered-browser sync failed."
     const diagnostics = page ? await renderedPageDiagnostics(page, usedLogin, usedCookie).catch(() => undefined) : undefined
@@ -257,6 +336,95 @@ export async function renderRankWrestlerProfileText(url: string): Promise<RankWr
           ? "RankWrestler loaded in the browser, but the expected match list did not become available. Review the diagnostics preview to see whether it rendered login, member home, an access screen, or an unexpected layout."
           : "Rendered browser sync needs either a valid RANKWRESTLER_COOKIE or RANKWRESTLER_EMAIL/RANKWRESTLER_PASSWORD. If Vercel cannot launch Chromium, configure RANKWRESTLER_BROWSER_WS_URL with a Browserless/remote Chrome endpoint.",
       diagnostics,
+    }
+  } finally {
+    await managed?.close().catch(() => undefined)
+  }
+}
+
+export async function renderRankWrestlerAllSeasonTexts(url: string): Promise<RankWrestlerRenderedAllSeasonsResult> {
+  let managed: ManagedBrowser | null = null
+  let page: Page | null = null
+  let usedLogin = false
+  let usedCookie = false
+  const discoveredSeasonLabels: string[] = []
+  try {
+    managed = await launchRankWrestlerBrowser()
+    const context = await managed.browser.newContext({
+      userAgent: rankWrestlerRenderedUserAgent(),
+      viewport: { width: 1440, height: 1600 },
+    })
+    usedCookie = await addRankWrestlerCookie(context, url)
+    page = await context.newPage()
+
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 45_000 })
+    await page.waitForLoadState("networkidle", { timeout: 20_000 }).catch(() => null)
+
+    usedLogin = await loginIfNeeded(page)
+    if (usedLogin) {
+      await page.goto(url, { waitUntil: "domcontentloaded", timeout: 45_000 })
+      await page.waitForLoadState("networkidle", { timeout: 20_000 }).catch(() => null)
+    }
+
+    await waitForRankWrestlerMatchHistory(page)
+    const initialText = await page.locator("body").innerText({ timeout: 10_000 })
+    discoveredSeasonLabels.push(...seasonLabelsFromText(initialText))
+
+    const seasonLabels = discoveredSeasonLabels.length
+      ? discoveredSeasonLabels
+      : [currentSeasonLabelFromText(initialText) ?? "Current season"]
+    const seasons: RankWrestlerRenderedSeason[] = []
+    const seenSeasonKeys = new Set<string>()
+    const initialSeasonKey = normalizeSeasonKey(currentSeasonLabelFromText(initialText) ?? "")
+
+    for (const label of seasonLabels) {
+      const key = normalizeSeasonKey(label)
+      if (seenSeasonKeys.has(key)) continue
+      seenSeasonKeys.add(key)
+
+      if (key !== initialSeasonKey) {
+        await clickSeasonLabel(page, label)
+        await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => null)
+        await page.waitForTimeout(1_000)
+      }
+
+      const rendered = await renderedSuccessFromPage(page, usedLogin, usedCookie, label)
+      if (rendered.ok) {
+        seasons.push(rendered)
+      }
+    }
+
+    await context.close()
+    if (!seasons.length) {
+      const diagnostics = page ? await renderedPageDiagnostics(page, usedLogin, usedCookie).catch(() => undefined) : undefined
+      return {
+        ok: false,
+        status: 422,
+        error: "RankWrestler rendered, but no season match rows could be parsed.",
+        hint: "The profile loaded, but RecruitNC could not capture any visible season match lists.",
+        diagnostics: { ...diagnostics, discoveredSeasonLabels },
+      }
+    }
+
+    return {
+      ok: true,
+      seasons,
+      usedLogin,
+      usedCookie,
+      discoveredSeasonLabels,
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "RankWrestler all-season browser sync failed."
+    const diagnostics = page ? await renderedPageDiagnostics(page, usedLogin, usedCookie).catch(() => undefined) : undefined
+    return {
+      ok: false,
+      status: /not configured|add RANKWRESTLER|login page/i.test(message) ? 412 : 500,
+      error: message,
+      hint:
+        diagnostics?.textLength
+          ? "RankWrestler loaded in the browser, but RecruitNC could not walk the visible season controls. Review the diagnostics preview."
+          : "All-season browser sync needs either a valid RANKWRESTLER_COOKIE or RANKWRESTLER_EMAIL/RANKWRESTLER_PASSWORD.",
+      diagnostics: { ...diagnostics, discoveredSeasonLabels },
     }
   } finally {
     await managed?.close().catch(() => undefined)

@@ -2,10 +2,11 @@ import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import {
   buildRankWrestlerSeasonPayload,
+  type RankWrestlerSeasonPayload,
   rankWrestlerTextCandidatesFromHtml,
   visibleTextFromRankWrestlerHtml,
 } from "@/lib/match-manager/rankwrestler-parser"
-import { renderRankWrestlerProfileText } from "@/lib/match-manager/rankwrestler-rendered-browser"
+import { renderRankWrestlerAllSeasonTexts, renderRankWrestlerProfileText } from "@/lib/match-manager/rankwrestler-rendered-browser"
 
 export const runtime = "nodejs"
 export const maxDuration = 90
@@ -78,6 +79,94 @@ function buildRenderedDiagnostics(
   }
 }
 
+function matchRecordForPayload({
+  athleteId,
+  athleteName,
+  payload,
+  source,
+  sourceUrl,
+}: {
+  athleteId: string
+  athleteName: string
+  payload: RankWrestlerSeasonPayload
+  source: string
+  sourceUrl: string
+}) {
+  const wrestlerId = `${athleteName.toLowerCase().replace(/\s+/g, "_")}_${payload.wrestler_info.season}`
+  return {
+    wrestlerId,
+    record: {
+      athlete_id: athleteId,
+      wrestler_id: wrestlerId,
+      first_name: payload.wrestler_info.first_name,
+      last_name: payload.wrestler_info.last_name,
+      season: payload.wrestler_info.season,
+      grade: payload.wrestler_info.grade,
+      high_school: payload.wrestler_info.high_school,
+      total_matches: payload.season_summary.total_matches,
+      wins: payload.season_summary.wins,
+      losses: payload.season_summary.losses,
+      pins: payload.season_summary.pins,
+      tech_falls: payload.season_summary.tech_falls,
+      decisions: payload.season_summary.decisions,
+      major_decisions: payload.season_summary.major_decisions,
+      forfeits_won: payload.season_summary.forfeits_won,
+      pin_percentage: payload.season_summary.pin_percentage,
+      tf_percentage: payload.season_summary.tf_percentage,
+      finishing_percentage: payload.season_summary.finishing_percentage,
+      matches: payload.matches,
+      source,
+      source_url: sourceUrl,
+      updated_at: new Date().toISOString(),
+    },
+  }
+}
+
+async function replaceAthleteSeasonMatches({
+  supabase,
+  athleteId,
+  athleteName,
+  payload,
+  source,
+  sourceUrl,
+}: {
+  supabase: Awaited<ReturnType<typeof createClient>>
+  athleteId: string
+  athleteName: string
+  payload: RankWrestlerSeasonPayload
+  source: string
+  sourceUrl: string
+}) {
+  const { wrestlerId, record } = matchRecordForPayload({ athleteId, athleteName, payload, source, sourceUrl })
+
+  const { error: deleteError } = await supabase
+    .from("matches")
+    .delete()
+    .eq("athlete_id", athleteId)
+    .eq("season", payload.wrestler_info.season)
+
+  if (deleteError) {
+    return { ok: false as const, error: deleteError.message }
+  }
+
+  let insertPayload: Record<string, unknown> = record
+  let { data: insertedMatch, error: insertError } = await supabase.from("matches").insert(insertPayload).select().single()
+
+  if (insertError && /source|source_url|updated_at/i.test(insertError.message ?? "")) {
+    const fallbackPayload = { ...insertPayload }
+    delete fallbackPayload.source
+    delete fallbackPayload.source_url
+    delete fallbackPayload.updated_at
+    ;({ data: insertedMatch, error: insertError } = await supabase.from("matches").insert(fallbackPayload).select().single())
+  }
+
+  if (insertError) {
+    return { ok: false as const, error: insertError.message }
+  }
+
+  return { ok: true as const, insertedMatch, wrestlerId }
+}
+
 async function fetchRankWrestlerText(
   url: string,
 ): Promise<
@@ -122,6 +211,7 @@ export async function POST(request: NextRequest) {
     const rankwrestlerUrl = String(body.rankwrestlerUrl ?? "").trim()
     const deduplicate = body.deduplicate !== false
     const renderedBrowser = body.renderedBrowser === true
+    const syncAllSeasons = body.syncAllSeasons === true
 
     if (!athleteId) {
       return NextResponse.json({ success: false, error: "Missing athleteId." }, { status: 400 })
@@ -156,6 +246,112 @@ export async function POST(request: NextRequest) {
     let fetchDiagnostics: RankWrestlerFetchDiagnostics | null = null
     let renderedDiagnostics: Record<string, unknown> | null = null
     let usedRenderedBrowser = renderedBrowser
+
+    if (syncAllSeasons) {
+      const renderedAll = await renderRankWrestlerAllSeasonTexts(rankwrestlerUrl)
+      if (!renderedAll.ok) {
+        return NextResponse.json(
+          { success: false, error: renderedAll.error, hint: renderedAll.hint, diagnostics: renderedAll.diagnostics },
+          { status: renderedAll.status },
+        )
+      }
+
+      const syncedSeasons = []
+      const failedSeasons = []
+      const seenSeasons = new Set<string>()
+      for (const seasonText of renderedAll.seasons) {
+        const parsedSeason = buildRankWrestlerSeasonPayload({
+          athleteName: athlete.name,
+          graduationYear: athlete.graduationyear,
+          highSchool: athlete.highschool,
+          rawText: seasonText.text,
+          format: "rank",
+          deduplicate,
+        })
+
+        if (!parsedSeason.success) {
+          failedSeasons.push({
+            seasonLabel: seasonText.seasonLabel,
+            error: parsedSeason.error,
+          })
+          continue
+        }
+
+        const payload = parsedSeason.payload
+        if (seenSeasons.has(payload.wrestler_info.season)) {
+          continue
+        }
+        seenSeasons.add(payload.wrestler_info.season)
+
+        const saved = await replaceAthleteSeasonMatches({
+          supabase,
+          athleteId,
+          athleteName: athlete.name,
+          payload,
+          source: "rankwrestler_rendered_browser_all_seasons_sync",
+          sourceUrl: seasonText.finalUrl || rankwrestlerUrl,
+        })
+        if (!saved.ok) {
+          failedSeasons.push({
+            seasonLabel: seasonText.seasonLabel,
+            season: payload.wrestler_info.season,
+            error: saved.error,
+          })
+          continue
+        }
+
+        syncedSeasons.push({
+          seasonLabel: seasonText.seasonLabel,
+          season: payload.wrestler_info.season,
+          grade: payload.wrestler_info.grade,
+          matchId: saved.insertedMatch?.id,
+          wrestlerId: saved.wrestlerId,
+          totalMatches: payload.season_summary.total_matches,
+          wins: payload.season_summary.wins,
+          losses: payload.season_summary.losses,
+          parsedMatches: parsedSeason.diagnostics.parsedMatches,
+          dedupedMatches: parsedSeason.diagnostics.dedupedMatches,
+          duplicatesRemoved: parsedSeason.diagnostics.duplicatesRemoved,
+          parsedSource: "rendered_browser",
+        })
+      }
+
+      if (!syncedSeasons.length) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "RankWrestler rendered season pages, but no seasons could be saved.",
+            hint: "Review the failed season details and diagnostics.",
+            failedSeasons,
+            diagnostics: {
+              discoveredSeasonLabels: renderedAll.discoveredSeasonLabels,
+              renderedSeasonCount: renderedAll.seasons.length,
+              usedCookie: renderedAll.usedCookie,
+              usedLogin: renderedAll.usedLogin,
+            },
+          },
+          { status: 422 },
+        )
+      }
+
+      const totalMatches = syncedSeasons.reduce((sum, season) => sum + season.totalMatches, 0)
+      return NextResponse.json({
+        success: true,
+        message: `Synced ${syncedSeasons.length} season${syncedSeasons.length === 1 ? "" : "s"} and ${totalMatches} matches for ${athlete.name}.`,
+        athleteName: athlete.name,
+        syncedSeasons,
+        failedSeasons,
+        allSeasons: true,
+        renderedBrowser: true,
+        parsedSource: "rendered_browser",
+        diagnostics: {
+          discoveredSeasonLabels: renderedAll.discoveredSeasonLabels,
+          renderedSeasonCount: renderedAll.seasons.length,
+          usedCookie: renderedAll.usedCookie,
+          usedLogin: renderedAll.usedLogin,
+        },
+      })
+    }
 
     if (renderedBrowser) {
       const rendered = await renderRankWrestlerProfileText(rankwrestlerUrl)
@@ -242,64 +438,25 @@ export async function POST(request: NextRequest) {
     }
 
     const payload = parsed.payload
-    const wrestlerId = `${athlete.name.toLowerCase().replace(/\s+/g, "_")}_${payload.wrestler_info.season}`
-
-    const { error: deleteError } = await supabase
-      .from("matches")
-      .delete()
-      .eq("athlete_id", athleteId)
-      .eq("season", payload.wrestler_info.season)
-
-    if (deleteError) {
-      return NextResponse.json({ success: false, error: deleteError.message }, { status: 500 })
-    }
-
-    const matchRecord = {
-      athlete_id: athleteId,
-      wrestler_id: wrestlerId,
-      first_name: payload.wrestler_info.first_name,
-      last_name: payload.wrestler_info.last_name,
-      season: payload.wrestler_info.season,
-      grade: payload.wrestler_info.grade,
-      high_school: payload.wrestler_info.high_school,
-      total_matches: payload.season_summary.total_matches,
-      wins: payload.season_summary.wins,
-      losses: payload.season_summary.losses,
-      pins: payload.season_summary.pins,
-      tech_falls: payload.season_summary.tech_falls,
-      decisions: payload.season_summary.decisions,
-      major_decisions: payload.season_summary.major_decisions,
-      forfeits_won: payload.season_summary.forfeits_won,
-      pin_percentage: payload.season_summary.pin_percentage,
-      tf_percentage: payload.season_summary.tf_percentage,
-      finishing_percentage: payload.season_summary.finishing_percentage,
-      matches: payload.matches,
+    const saved = await replaceAthleteSeasonMatches({
+      supabase,
+      athleteId,
+      athleteName: athlete.name,
+      payload,
       source: usedRenderedBrowser ? "rankwrestler_rendered_browser_sync" : "rankwrestler_sync",
-      source_url: rankwrestlerUrl,
-      updated_at: new Date().toISOString(),
-    }
+      sourceUrl: rankwrestlerUrl,
+    })
 
-    let insertPayload: Record<string, unknown> = matchRecord
-    let { data: insertedMatch, error: insertError } = await supabase.from("matches").insert(insertPayload).select().single()
-
-    if (insertError && /source|source_url|updated_at/i.test(insertError.message ?? "")) {
-      const fallbackPayload = { ...insertPayload }
-      delete fallbackPayload.source
-      delete fallbackPayload.source_url
-      delete fallbackPayload.updated_at
-      ;({ data: insertedMatch, error: insertError } = await supabase.from("matches").insert(fallbackPayload).select().single())
-    }
-
-    if (insertError) {
-      return NextResponse.json({ success: false, error: insertError.message }, { status: 500 })
+    if (!saved.ok) {
+      return NextResponse.json({ success: false, error: saved.error }, { status: 500 })
     }
 
     return NextResponse.json({
       success: true,
       message: `Synced ${payload.season_summary.total_matches} matches for ${athlete.name}.`,
       athleteName: athlete.name,
-      matchId: insertedMatch?.id,
-      wrestlerId,
+      matchId: saved.insertedMatch?.id,
+      wrestlerId: saved.wrestlerId,
       season: payload.wrestler_info.season,
       grade: payload.wrestler_info.grade,
       diagnostics: {
