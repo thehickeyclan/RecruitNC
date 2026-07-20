@@ -1555,6 +1555,12 @@ export default function MatchManagerPage() {
                               {rankSyncResult.failedSeasons.length === 1 ? "" : "s"} could not be saved.
                             </p>
                           )}
+                          {rankSyncResult.skippedSeasons?.length > 0 && (
+                            <p className="text-amber-700">
+                              {rankSyncResult.skippedSeasons.length} visible season label
+                              {rankSyncResult.skippedSeasons.length === 1 ? "" : "s"} skipped as duplicate/no match season.
+                            </p>
+                          )}
                           {rankSyncResult.diagnostics && (
                             <p>
                               {Array.isArray(rankSyncResult.syncedSeasons)
@@ -1567,6 +1573,37 @@ export default function MatchManagerPage() {
                                       : ""
                                   }`}
                             </p>
+                          )}
+                          {Array.isArray(rankSyncResult.diagnostics?.discoveredSeasonTargets) &&
+                            rankSyncResult.diagnostics.discoveredSeasonTargets.length > 0 && (
+                              <details className="mt-2 rounded-md bg-green-50 p-2 text-xs text-green-900">
+                                <summary className="cursor-pointer font-semibold">Discovered RankWrestler season controls</summary>
+                                <ul className="mt-1 list-disc space-y-1 pl-5">
+                                  {rankSyncResult.diagnostics.discoveredSeasonTargets.map((target: any, index: number) => (
+                                    <li key={`${target.label}-${index}`}>
+                                      {target.label}
+                                      {target.href ? ` → ${target.href}` : ""}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </details>
+                            )}
+                          {(rankSyncResult.failedSeasons?.length > 0 || rankSyncResult.skippedSeasons?.length > 0) && (
+                            <details className="mt-2 rounded-md bg-amber-50 p-2 text-xs text-amber-900">
+                              <summary className="cursor-pointer font-semibold">Skipped / failed season details</summary>
+                              <ul className="mt-1 list-disc space-y-1 pl-5">
+                                {rankSyncResult.skippedSeasons?.map((season: any, index: number) => (
+                                  <li key={`skipped-${index}`}>
+                                    Skipped {season.seasonLabel || season.season}: {season.reason}
+                                  </li>
+                                ))}
+                                {rankSyncResult.failedSeasons?.map((season: any, index: number) => (
+                                  <li key={`failed-${index}`}>
+                                    Failed {season.seasonLabel || season.season}: {season.error}
+                                  </li>
+                                ))}
+                              </ul>
+                            </details>
                           )}
                         </div>
                       </div>
