@@ -1468,6 +1468,7 @@ export default function MatchManagerPage() {
                         <div className="mt-2 text-sm text-gray-600">
                           <p>Season: {rankSyncResult.season}</p>
                           <p>Grade: {rankSyncResult.grade}</p>
+                          {rankSyncResult.parsedSource && <p>Source parsed: {rankSyncResult.parsedSource}</p>}
                           {rankSyncResult.diagnostics && (
                             <p>
                               Parsed {rankSyncResult.diagnostics.parsedMatches} bouts; saved{" "}
@@ -1491,6 +1492,14 @@ export default function MatchManagerPage() {
                               <p>Title: {rankSyncResult.diagnostics.title || "None detected"}</p>
                               <p>Visible text length: {rankSyncResult.diagnostics.textLength}</p>
                               <p>HTML length: {rankSyncResult.diagnostics.htmlLength}</p>
+                              {typeof rankSyncResult.diagnostics.textCandidateCount === "number" && (
+                                <p>
+                                  Text candidates: {rankSyncResult.diagnostics.textCandidateCount}
+                                  {Array.isArray(rankSyncResult.diagnostics.textCandidateSources)
+                                    ? ` (${rankSyncResult.diagnostics.textCandidateSources.join(", ")})`
+                                    : ""}
+                                </p>
+                              )}
                               <p>Looks like login: {rankSyncResult.diagnostics.looksLikeLogin ? "Yes" : "No"}</p>
                               <p>Looks like app shell: {rankSyncResult.diagnostics.looksLikeClientAppShell ? "Yes" : "No"}</p>
                               <p>Has match words: {rankSyncResult.diagnostics.hasMatchWords ? "Yes" : "No"}</p>

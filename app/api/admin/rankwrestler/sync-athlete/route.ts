@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import {
   buildRankWrestlerSeasonPayload,
+  rankWrestlerTextCandidatesFromHtml,
   visibleTextFromRankWrestlerHtml,
 } from "@/lib/match-manager/rankwrestler-parser"
 
@@ -22,10 +23,17 @@ type RankWrestlerFetchDiagnostics = {
   looksLikeLogin: boolean
   looksLikeClientAppShell: boolean
   hasMatchWords: boolean
+  textCandidateCount: number
+  textCandidateSources: string[]
   preview: string
 }
 
-function buildFetchDiagnostics(url: string, html: string, text: string): RankWrestlerFetchDiagnostics {
+function buildFetchDiagnostics(
+  url: string,
+  html: string,
+  text: string,
+  candidates: Array<{ source: string; text: string }>,
+): RankWrestlerFetchDiagnostics {
   const title = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.replace(/\s+/g, " ").trim()
   const lowerText = text.toLowerCase()
   const lowerHtml = html.toLowerCase()
@@ -41,6 +49,8 @@ function buildFetchDiagnostics(url: string, html: string, text: string): RankWre
       lowerHtml.includes("id=\"__next\"") ||
       (text.length < 500 && lowerHtml.includes("<script")),
     hasMatchWords: /win|loss|opponent|weight|matches|season|fall|decision|tech/i.test(lowerText),
+    textCandidateCount: candidates.length,
+    textCandidateSources: candidates.map((candidate) => candidate.source),
     preview: text.replace(/\s+/g, " ").trim().slice(0, 1200),
   }
 }
@@ -48,7 +58,7 @@ function buildFetchDiagnostics(url: string, html: string, text: string): RankWre
 async function fetchRankWrestlerText(
   url: string,
 ): Promise<
-  | { ok: true; text: string; diagnostics: RankWrestlerFetchDiagnostics }
+  | { ok: true; textCandidates: Array<{ source: string; text: string }>; diagnostics: RankWrestlerFetchDiagnostics }
   | { ok: false; status: number; error: string; diagnostics?: RankWrestlerFetchDiagnostics }
 > {
   const cookie = process.env.RANKWRESTLER_COOKIE?.trim()
@@ -73,12 +83,13 @@ async function fetchRankWrestlerText(
 
   const body = await response.text()
   const text = visibleTextFromRankWrestlerHtml(body)
-  const diagnostics = buildFetchDiagnostics(url, body, text)
+  const textCandidates = rankWrestlerTextCandidatesFromHtml(body)
+  const diagnostics = buildFetchDiagnostics(url, body, text, textCandidates)
   if (!response.ok) {
     return { ok: false, status: response.status, error: `RankWrestler returned HTTP ${response.status}.`, diagnostics }
   }
 
-  return { ok: true, text, diagnostics }
+  return { ok: true, textCandidates, diagnostics }
 }
 
 export async function POST(request: NextRequest) {
@@ -122,23 +133,37 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: fetched.error, diagnostics: fetched.diagnostics }, { status: fetched.status })
     }
 
-    const parsed = buildRankWrestlerSeasonPayload({
-      athleteName: athlete.name,
-      graduationYear: athlete.graduationyear,
-      highSchool: athlete.highschool,
-      rawText: fetched.text,
-      format: "rank",
-      deduplicate,
-    })
+    let parsed = null as ReturnType<typeof buildRankWrestlerSeasonPayload> | null
+    let parsedSource = ""
+    for (const candidate of fetched.textCandidates) {
+      const candidateParse = buildRankWrestlerSeasonPayload({
+        athleteName: athlete.name,
+        graduationYear: athlete.graduationyear,
+        highSchool: athlete.highschool,
+        rawText: candidate.text,
+        format: "rank",
+        deduplicate,
+      })
+      if (candidateParse.success) {
+        parsed = candidateParse
+        parsedSource = candidate.source
+        break
+      }
+      parsed = candidateParse
+    }
 
-    if (!parsed.success) {
+    if (!parsed?.success) {
+      const parseError =
+        parsed && !parsed.success ? parsed.error : "No usable text was found in the RankWrestler source."
       const hint = fetched.diagnostics.looksLikeLogin
         ? "RankWrestler appears to be returning a login page. The auth token may be expired or the cookie value is incomplete."
         : fetched.diagnostics.looksLikeClientAppShell
-          ? "RankWrestler appears to be returning a client-side app shell. The match rows may load from a separate API request."
+          ? fetched.diagnostics.textCandidateCount > 1
+            ? "RankWrestler returned a client-side app shell. I decoded the embedded app payload too, but still could not find match rows. Open DevTools → Network while viewing the RankWrestler profile and look for the API/request that returns bouts or matches."
+            : "RankWrestler appears to be returning a client-side app shell. The match rows may load from a separate API request."
           : "The fetched page did not match the current Rank/Track parser format."
       return NextResponse.json(
-        { success: false, error: parsed.error, hint, diagnostics: fetched.diagnostics },
+        { success: false, error: parseError, hint, diagnostics: fetched.diagnostics },
         { status: 422 },
       )
     }
@@ -205,6 +230,7 @@ export async function POST(request: NextRequest) {
       season: payload.wrestler_info.season,
       grade: payload.wrestler_info.grade,
       diagnostics: parsed.diagnostics,
+      parsedSource,
     })
   } catch (error) {
     console.error("[rankwrestler-sync] unexpected error", error)
