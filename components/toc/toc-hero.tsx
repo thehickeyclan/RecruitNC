@@ -5,7 +5,7 @@ import { TocCollegeAttendees } from "@/components/toc/toc-college-attendees"
 import { TocAiRenderingCaption } from "@/components/toc/toc-ai-rendering-caption"
 import { TocCountdown } from "@/components/toc/toc-countdown"
 import { TocPatrioticBar, tocDisplayClass, tocMobileCtaClass } from "@/components/toc/toc-theme"
-import { TOC_EVENT_DATE, TOC_HERO_DATES, TOC_SECTION_NAV_QUICK } from "@/lib/toc/constants"
+import { TOC_EVENT_DATE, TOC_GOFAN_TICKETS_URL, TOC_HERO_DATES, TOC_SECTION_NAV_QUICK } from "@/lib/toc/constants"
 import { TOC_HERO } from "@/lib/toc/marketing-copy"
 import type { TocConfirmedCollege } from "@/lib/toc/confirmed-colleges"
 import type { TocEventConfig } from "@/lib/toc/event-config"
@@ -57,10 +57,13 @@ export function TocHero({ config, confirmedColleges = [] }: Props) {
               <TocCountdown targetDate={TOC_EVENT_DATE} className="mt-8 sm:mt-10 justify-start" />
 
               <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4">
-                <a href={ctaHref} className={tocMobileCtaClass("primary")}>
+                <a href={TOC_GOFAN_TICKETS_URL} target="_blank" rel="noopener noreferrer" className={tocMobileCtaClass("primary")}>
+                  Buy Tickets
+                </a>
+                <a href={ctaHref} className={tocMobileCtaClass("secondary")}>
                   {config.hero_primary_cta_label}
                 </a>
-                <a href="#champion-jacket" className={tocMobileCtaClass("secondary")}>
+                <a href="#champion-jacket" className={tocMobileCtaClass("ghost")}>
                   The Champion jacket
                 </a>
               </div>
