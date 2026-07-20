@@ -485,10 +485,21 @@ async function findArchiveProfileViaSearch(
       await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => null)
       await page.waitForTimeout(1_000)
       if (/\/wrestler\/\d+/i.test(page.url())) return { ok: true }
+
+      const previewText = await page.locator("body").innerText({ timeout: 10_000 }).catch(() => "")
+      const normalizedPreviewText = normalizedSearchText(previewText)
+      if (
+        normalizedPreviewText.includes(expectedName) &&
+        (!expectedSchool || normalizedPreviewText.includes(expectedSchool)) &&
+        looksLikeRankWrestlerMatchRows(previewText)
+      ) {
+        return { ok: true }
+      }
+
       return {
         ok: false,
-        error: "RankWrestler archive search result was clicked, but it did not open a wrestler profile.",
-        preview: latestPreview,
+        error: "RankWrestler archive search result was clicked, but it did not open a wrestler profile or match preview.",
+        preview: previewText.replace(/\s+/g, " ").trim().slice(0, 500) || latestPreview,
       }
     }
   }
