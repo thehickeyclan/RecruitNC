@@ -55,6 +55,7 @@ export default function MatchManagerPage() {
   const [isRankSyncing, setIsRankSyncing] = useState(false)
   const [rankSyncResult, setRankSyncResult] = useState<any>(null)
   const [deduplicateMatches, setDeduplicateMatches] = useState(true)
+  const [useRenderedBrowserSync, setUseRenderedBrowserSync] = useState(true)
   const [parseResult, setParseResult] = useState<any>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isBulkSubmitting, setIsBulkSubmitting] = useState(false)
@@ -410,6 +411,7 @@ export default function MatchManagerPage() {
           athleteId: selectedAthlete,
           rankwrestlerUrl: rankwrestlerUrl.trim(),
           deduplicate: deduplicateMatches,
+          renderedBrowser: useRenderedBrowserSync,
         }),
       })
       const data = await response.json()
@@ -1393,9 +1395,10 @@ export default function MatchManagerPage() {
                 <AlertDescription>
                   <div className="font-semibold text-blue-800">How this works</div>
                   <p className="mt-1 text-sm text-blue-700">
-                    The server fetches the RankWrestler page using the configured <code>RANKWRESTLER_COOKIE</code>,
-                    parses the bouts, deduplicates if enabled, and writes the season to the same <code>matches</code>{" "}
-                    table used by athlete profiles.
+                    Browser automation opens RankWrestler, uses the private <code>RANKWRESTLER_COOKIE</code> or{" "}
+                    <code>RANKWRESTLER_EMAIL</code>/<code>RANKWRESTLER_PASSWORD</code>, waits for Match History to
+                    render, parses the bouts, deduplicates if enabled, and writes the season to the same{" "}
+                    <code>matches</code> table used by athlete profiles.
                   </p>
                 </AlertDescription>
               </Alert>
@@ -1440,6 +1443,19 @@ export default function MatchManagerPage() {
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
+                  id="rankRenderedBrowserSync"
+                  checked={useRenderedBrowserSync}
+                  onChange={(e) => setUseRenderedBrowserSync(e.target.checked)}
+                  className="h-4 w-4 rounded"
+                />
+                <Label htmlFor="rankRenderedBrowserSync" className="cursor-pointer font-normal">
+                  Use browser login automation (recommended)
+                </Label>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
                   id="rankSyncDeduplicate"
                   checked={deduplicateMatches}
                   onChange={(e) => setDeduplicateMatches(e.target.checked)}
@@ -1468,6 +1484,9 @@ export default function MatchManagerPage() {
                         <div className="mt-2 text-sm text-gray-600">
                           <p>Season: {rankSyncResult.season}</p>
                           <p>Grade: {rankSyncResult.grade}</p>
+                          {typeof rankSyncResult.renderedBrowser === "boolean" && (
+                            <p>Mode: {rankSyncResult.renderedBrowser ? "Browser automation" : "Server fetch"}</p>
+                          )}
                           {rankSyncResult.parsedSource && <p>Source parsed: {rankSyncResult.parsedSource}</p>}
                           {rankSyncResult.diagnostics && (
                             <p>
@@ -1490,8 +1509,18 @@ export default function MatchManagerPage() {
                             <summary className="cursor-pointer font-semibold">Fetched page diagnostics</summary>
                             <div className="mt-2 space-y-1">
                               <p>Title: {rankSyncResult.diagnostics.title || "None detected"}</p>
+                              {rankSyncResult.diagnostics.finalUrl && <p>Final URL: {rankSyncResult.diagnostics.finalUrl}</p>}
                               <p>Visible text length: {rankSyncResult.diagnostics.textLength}</p>
                               <p>HTML length: {rankSyncResult.diagnostics.htmlLength}</p>
+                              {typeof rankSyncResult.diagnostics.usedCookie === "boolean" && (
+                                <p>Used cookie: {rankSyncResult.diagnostics.usedCookie ? "Yes" : "No"}</p>
+                              )}
+                              {typeof rankSyncResult.diagnostics.usedLogin === "boolean" && (
+                                <p>Used login: {rankSyncResult.diagnostics.usedLogin ? "Yes" : "No"}</p>
+                              )}
+                              {typeof rankSyncResult.diagnostics.matchHistoryFound === "boolean" && (
+                                <p>Match History found: {rankSyncResult.diagnostics.matchHistoryFound ? "Yes" : "No"}</p>
+                              )}
                               {typeof rankSyncResult.diagnostics.textCandidateCount === "number" && (
                                 <p>
                                   Text candidates: {rankSyncResult.diagnostics.textCandidateCount}
