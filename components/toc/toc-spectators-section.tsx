@@ -1,6 +1,6 @@
 import { Armchair, Car, GraduationCap, Heart, Shield, Ticket, UtensilsCrossed } from "lucide-react"
 import { TocVarsityHeading, tocDisplayClass, tocMobileCtaClass, tocSectionClass } from "@/components/toc/toc-theme"
-import { TOC_SPECTATORS, TOC_TICKET_SALE_MONTH } from "@/lib/toc/constants"
+import { TOC_GOFAN_TICKETS_URL, TOC_SPECTATORS } from "@/lib/toc/constants"
 
 const EXPECTATION_ICONS = [Car, Armchair, Shield, Shield, GraduationCap] as const
 
@@ -84,13 +84,31 @@ export function TocSpectatorsSection() {
             </div>
 
             <div className="rounded-sm border-2 border-[#0B1D3A]/10 bg-[#0B1D3A] p-5 text-white">
-              <p className="text-white/90 text-sm leading-relaxed">
-                Tickets on sale <strong className="text-white">{TOC_TICKET_SALE_MONTH}</strong>. Pricing to be
-                announced. Sign up below for first access.
-              </p>
-              <a href="#email-signup" className={`${tocMobileCtaClass("primary")} mt-4 text-sm`}>
-                Get ticket updates
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-sm bg-[#CC0000] text-white">
+                  <Ticket className="h-5 w-5" aria-hidden />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-wide text-white/70">
+                    {TOC_SPECTATORS.ticketProviderLabel}
+                  </p>
+                  <p className="mt-1 text-white/90 text-sm leading-relaxed">
+                    Purchase spectator tickets securely through NC United's GoFan ticketing page. GoFan will handle
+                    checkout, confirmation, and mobile ticket access.
+                  </p>
+                </div>
+              </div>
+              <a
+                href={TOC_GOFAN_TICKETS_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`${tocMobileCtaClass("primary")} mt-4 text-sm`}
+              >
+                {TOC_SPECTATORS.ticketCtaLabel}
               </a>
+              <p className="mt-3 text-xs leading-relaxed text-white/60">
+                Opens GoFan in a new tab. Keep your mobile ticket available for entry on event day.
+              </p>
             </div>
           </div>
         </div>
