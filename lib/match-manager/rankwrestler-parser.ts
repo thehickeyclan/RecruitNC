@@ -211,9 +211,57 @@ function parseTrackFormat(lines: string[]): RankParsedMatch[] {
   return matches
 }
 
+function parseInlineRenderedRankWrestlerText(rawText: string): RankParsedMatch[] {
+  if (/(?:^|\n)\s*(?:Win|Loss)\s*\n\s*\d{1,2}\/\d{1,2}\/\d{2,4}\b/i.test(rawText)) return []
+
+  const normalized = rawText.replace(/\s+/g, " ").trim()
+  if (!/\b(?:Win|Loss)\s+\d{1,2}\/\d{1,2}\/\d{2,4}\b/i.test(normalized)) return []
+
+  const chunks = normalized
+    .split(/(?=\b(?:Win|Loss)\s+\d{1,2}\/\d{1,2}\/\d{2,4}\b)/i)
+    .map((chunk) => chunk.trim())
+    .filter(Boolean)
+
+  const matches: RankParsedMatch[] = []
+  for (const chunk of chunks) {
+    const header = chunk.match(/^(Win|Loss)\s+(\d{1,2}\/\d{1,2}\/\d{2,4})\s+(?:(\d+(?:\.\d+)?)\s+)?([\s\S]+)$/i)
+    if (!header) continue
+    const [, resultLine = "", date = "", pctRaw, restRaw = ""] = header
+    const weightMatch = restRaw.match(/\s(\d+)\s*lbs\b/i)
+    if (!weightMatch?.index) continue
+
+    const isWin = resultLine.toLowerCase() === "win"
+    const preWeight = restRaw.slice(0, weightMatch.index).trim()
+    const weight = weightMatch[1] ?? ""
+    const postWeight = restRaw.slice(weightMatch.index + weightMatch[0].length).trim()
+    const preParts = preWeight.split(/\s*[•·]\s*/).map((part) => part.trim()).filter(Boolean)
+    const opponent = preParts[0] ?? ""
+    const opponentSchool = preParts.slice(1).join(" • ")
+    const postParts = postWeight.replace(/^[•·]\s*/, "").split(/\s*[•·]\s*/).map((part) => part.trim()).filter(Boolean)
+    if (!opponent || !weight || postParts.length < 2) continue
+    const venue = postParts[0] ?? ""
+    const method = postParts.slice(1).join(" • ")
+    matches.push({
+      date,
+      winner: isWin ? "" : opponent,
+      winner_school: isWin ? "" : opponentSchool,
+      loser: isWin ? opponent : "",
+      loser_school: isWin ? opponentSchool : "",
+      result: method,
+      venue,
+      weight,
+      opp_percent: pctRaw ? parseFloat(pctRaw) : null,
+    })
+  }
+  return matches
+}
+
 export function parseRankWrestlerText(rawText: string, format: "rank" | "track" = "rank"): RankParsedMatch[] {
   const allLines = rawText.replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim().split("\n")
   if (format === "track") return parseTrackFormat(allLines)
+
+  const inlineMatches = parseInlineRenderedRankWrestlerText(rawText)
+  if (inlineMatches.length > 0) return inlineMatches
 
   const matches: RankParsedMatch[] = []
   const denseLines = allLines.map((l) => l.trim()).filter(Boolean)
