@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
-import { Activity, ArrowLeft, CalendarDays, CheckCircle2, ChevronDown, ChevronRight, Clock, DollarSign, FileText, LayoutGrid, LinkIcon, MessageSquare, Paperclip, Plus, Save, Send, ShieldCheck, Trash2, Upload, UserPlus, XCircle } from "lucide-react"
+import { Activity, ArrowLeft, CalendarDays, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, Clock, DollarSign, FileText, LayoutGrid, LinkIcon, MessageSquare, Paperclip, Plus, Save, Send, ShieldCheck, Trash2, Upload, UserPlus, XCircle } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -98,10 +98,24 @@ const STATUS_LABEL: Record<string, string> = {
 }
 
 const STATUS_CLASS: Record<string, string> = {
-  todo: "bg-slate-700/80 text-slate-100 border border-white/10",
-  in_progress: "bg-blue-500/20 text-blue-100 border border-blue-300/30",
-  blocked: "bg-amber-400/20 text-amber-100 border border-amber-300/35",
-  done: "bg-emerald-400/20 text-emerald-100 border border-emerald-300/35",
+  todo: "bg-slate-500/20 text-slate-100 border border-slate-300/25",
+  in_progress: "bg-blue-500/25 text-blue-50 border border-blue-300/40",
+  blocked: "bg-amber-400/25 text-amber-50 border border-amber-300/45",
+  done: "bg-emerald-400/25 text-emerald-50 border border-emerald-300/45",
+}
+
+const STATUS_ROW_CLASS: Record<string, string> = {
+  todo: "border-l-slate-500",
+  in_progress: "border-l-blue-400",
+  blocked: "border-l-amber-400",
+  done: "border-l-emerald-400",
+}
+
+const STATUS_DOT_CLASS: Record<string, string> = {
+  todo: "bg-slate-400",
+  in_progress: "bg-blue-400",
+  blocked: "bg-amber-400",
+  done: "bg-emerald-400",
 }
 
 const STATUS_SORT_ORDER: Record<string, number> = {
@@ -204,6 +218,12 @@ function compareTasksForOpsBoard(a: TocProjectTask, b: TocProjectTask): number {
   )
 }
 
+function taskDateLabel(task: TocProjectTask): string {
+  const value = task.due_date || task.delivery_date
+  if (!value) return "No date"
+  return new Date(value).toLocaleDateString(undefined, { month: "short", day: "numeric" })
+}
+
 function parseLinks(value: string): TocTaskLink[] {
   return value
     .split("\n")
@@ -246,6 +266,10 @@ function displayPersonName(name: string | null | undefined, email: string): stri
 
 function mentionSlug(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "")
+}
+
+function sectionSlug(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
 }
 
 function escapeRegex(value: string): string {
@@ -463,6 +487,65 @@ function TaskMovementList({ title, items }: { title: string; items: TocProjectAc
   )
 }
 
+function TocProjectSideRail({ open, onToggle }: { open: boolean; onToggle: () => void }) {
+  const primaryItems = [
+    { href: "#toc-countdown", label: "Countdown", icon: CalendarDays },
+    { href: "#toc-command-thread", label: "Command Thread", icon: MessageSquare },
+    { href: "#toc-approvals", label: "Approvals", icon: ShieldCheck },
+    { href: "#toc-doc-share", label: "Doc Share", icon: FileText },
+    { href: "#toc-master-board", label: "Tasks", icon: LayoutGrid },
+  ]
+
+  return (
+    <aside className={`sticky top-4 hidden self-start rounded-2xl border border-white/10 bg-[#07182e]/95 p-2 shadow-xl shadow-black/20 backdrop-blur lg:block ${open ? "w-64" : "w-14"}`}>
+      <button
+        type="button"
+        onClick={onToggle}
+        className="mb-2 flex h-10 w-full items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-2 text-sm font-bold text-slate-100 transition hover:bg-white/10"
+        aria-label={open ? "Collapse TOC project menu" : "Expand TOC project menu"}
+      >
+        {open ? <ChevronLeft className="h-4 w-4 text-[#D6B65A]" /> : <ChevronRight className="h-4 w-4 text-[#D6B65A]" />}
+        {open && <span>TOC menu</span>}
+      </button>
+
+      <nav className="space-y-1">
+        {primaryItems.map((item) => {
+          const Icon = item.icon
+          return (
+            <a
+              key={item.href}
+              href={item.href}
+              title={item.label}
+              className="flex h-10 items-center gap-2 rounded-xl px-2 text-sm font-semibold text-slate-300 transition hover:bg-white/10 hover:text-white"
+            >
+              <Icon className="h-4 w-4 shrink-0 text-[#D6B65A]" />
+              {open && <span className="truncate">{item.label}</span>}
+            </a>
+          )
+        })}
+      </nav>
+
+      {open && (
+        <div className="mt-3 border-t border-white/10 pt-3">
+          <div className="mb-2 px-2 text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">Workstreams</div>
+          <div className="max-h-[42vh] space-y-1 overflow-y-auto pr-1">
+            {TOC_PROJECT_CATEGORIES.map((category) => (
+              <a
+                key={category.name}
+                href={`#toc-task-${sectionSlug(category.name)}`}
+                className="flex items-center gap-2 rounded-xl px-2 py-2 text-xs font-semibold text-slate-300 transition hover:bg-white/10 hover:text-white"
+              >
+                <span className={`h-5 w-1 rounded-full ${category.accent}`} />
+                <span className="truncate">{category.name}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+    </aside>
+  )
+}
+
 function tournamentCountdown() {
   const target = TOC_EVENT_DATE.getTime()
   const now = Date.now()
@@ -504,6 +587,8 @@ export default function TocProjectPlanPage() {
   const [taskOwnerFilter, setTaskOwnerFilter] = useState("all")
   const [taskPriorityFilter, setTaskPriorityFilter] = useState("all")
   const [taskSearch, setTaskSearch] = useState("")
+  const [tocRailOpen, setTocRailOpen] = useState(false)
+  const [expandedCategoryIds, setExpandedCategoryIds] = useState<Record<string, boolean>>({})
   const [expandedTaskIds, setExpandedTaskIds] = useState<Record<string, boolean>>({})
   const [ownerSearch, setOwnerSearch] = useState<Record<string, string>>({})
   const [ownerSuggestions, setOwnerSuggestions] = useState<Record<string, TocProjectUser[]>>({})
@@ -671,6 +756,24 @@ export default function TocProjectPlanPage() {
     const closed = activityFeed.filter((item) => item.action_type === "task.updated" && activityHasChange(item, "status", "Completed")).slice(0, 8)
     return { created, assigned, closed }
   }, [activityFeed])
+  const myFocus = useMemo(() => {
+    const openTasks = tasks.filter((task) => task.status !== "done")
+    const myOpenTasks = openTasks.filter(isMyTask).sort(compareTasksForOpsBoard).slice(0, 5)
+    const now = Date.now()
+    const soon = now + 14 * 86_400_000
+    const dueSoonTasks = openTasks
+      .filter((task) => {
+        const value = task.due_date || task.delivery_date
+        if (!value) return false
+        const time = new Date(value).getTime()
+        return Number.isFinite(time) && time >= now - 86_400_000 && time <= soon
+      })
+      .sort((a, b) => taskDueSortValue(a) - taskDueSortValue(b))
+      .slice(0, 5)
+    const atRiskTasks = openTasks.filter((task) => task.status === "blocked").sort(compareTasksForOpsBoard).slice(0, 5)
+    const pendingApprovals = approvals.filter((approval) => approval.status === "pending").slice(0, 5)
+    return { myOpenTasks, dueSoonTasks, atRiskTasks, pendingApprovals }
+  }, [tasks, approvals, currentUser])
   const ownerOptions = useMemo(() => {
     const rows = new Map<string, { value: string; label: string }>()
     tasks.forEach((task) => {
@@ -729,6 +832,10 @@ export default function TocProjectPlanPage() {
 
   function toggleTaskExpanded(taskId: string) {
     setExpandedTaskIds((prev) => ({ ...prev, [taskId]: !prev[taskId] }))
+  }
+
+  function toggleCategoryExpanded(category: string) {
+    setExpandedCategoryIds((prev) => ({ ...prev, [category]: !prev[category] }))
   }
 
   function approvalDraftFor(task: TocProjectTask): ApprovalDraft {
@@ -1218,7 +1325,10 @@ export default function TocProjectPlanPage() {
   if (loading) return <div className="p-8 text-gray-500">Loading TOC project plan…</div>
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 rounded-[2rem] bg-[#061426] p-4 text-slate-100 shadow-2xl shadow-slate-950/20 md:p-6">
+    <div className="mx-auto max-w-7xl rounded-[2rem] bg-[#061426] p-4 text-slate-100 shadow-2xl shadow-slate-950/20 md:p-6">
+      <div className="grid gap-4 lg:grid-cols-[auto_minmax(0,1fr)]">
+        <TocProjectSideRail open={tocRailOpen} onToggle={() => setTocRailOpen((value) => !value)} />
+        <div className="min-w-0 space-y-6">
       <div className="flex flex-col gap-3 rounded-3xl border border-white/10 bg-gradient-to-r from-[#07182e] via-[#092143] to-[#061426] p-5 shadow-lg shadow-black/20 backdrop-blur md:flex-row md:items-start md:justify-between">
         <div>
           <Link href="/admin/toc" className="mb-2 inline-flex items-center gap-2 text-sm text-[#D6B65A] hover:underline">
@@ -1238,7 +1348,7 @@ export default function TocProjectPlanPage() {
       {chatUnavailable && <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">{chatUnavailable}</div>}
       {activityUnavailable && <div className="rounded-lg border border-amber-300/30 bg-amber-400/10 p-3 text-sm text-amber-100">{activityUnavailable}</div>}
 
-      <Card className="overflow-hidden border-white/10 bg-gradient-to-r from-[#002147] to-[#0b3a6d] text-white shadow-lg shadow-black/20">
+      <Card id="toc-countdown" className="scroll-mt-24 overflow-hidden border-white/10 bg-gradient-to-r from-[#002147] to-[#0b3a6d] text-white shadow-lg shadow-black/20">
         <CardContent className="grid gap-4 p-5 md:grid-cols-[1fr_auto] md:items-center">
           <div>
             <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#D6B65A]">
@@ -1248,7 +1358,10 @@ export default function TocProjectPlanPage() {
             <p className="mt-1 text-sm text-white/75">Keep the team focused on contracts, field, sponsors, venue, and fan experience before event weekend.</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {Object.entries(STATUS_LABEL).map(([value, label]) => (
-                <Badge key={value} className={`${STATUS_CLASS[value]} hover:bg-inherit`}>{label}</Badge>
+                <Badge key={value} className={`${STATUS_CLASS[value]} gap-1.5 hover:bg-inherit`}>
+                  <span className={`h-2 w-2 rounded-full ${STATUS_DOT_CLASS[value]}`} />
+                  {label}
+                </Badge>
               ))}
             </div>
           </div>
@@ -1265,7 +1378,7 @@ export default function TocProjectPlanPage() {
         </CardContent>
       </Card>
 
-      <Card className="overflow-hidden border-white/10 bg-[#07182e] shadow-lg shadow-black/20">
+      <Card id="toc-command-thread" className="scroll-mt-24 overflow-hidden border-white/10 bg-[#07182e] shadow-lg shadow-black/20">
         <CardHeader className="border-b border-white/10 bg-gradient-to-r from-[#0b2344] via-[#092143] to-[#061426] pb-3 text-white">
           <CardTitle className="flex flex-wrap items-center justify-between gap-3">
             <span className="flex items-center gap-2">
@@ -1348,20 +1461,27 @@ export default function TocProjectPlanPage() {
                                   </button>
                                 )
                               })}
-                              <select
-                                value=""
-                                onChange={(event) => {
-                                  const emoji = event.target.value
-                                  if (emoji) void reactToChatMessage(message.id, emoji)
-                                }}
-                                className={`h-7 rounded-full border border-white/10 px-2 text-xs outline-none ${isMine ? "bg-[#061426]/10 text-[#061426]" : "bg-white/10 text-slate-200"}`}
-                                aria-label="React to message"
-                              >
-                                <option value="">React…</option>
-                                {CHAT_REACTION_EMOJIS.map((emoji) => (
-                                  <option key={emoji} value={emoji}>{emoji}</option>
-                                ))}
-                              </select>
+                              <details className="relative">
+                                <summary className={`flex h-7 cursor-pointer list-none items-center rounded-full border border-white/10 px-2 text-xs transition marker:hidden ${isMine ? "bg-[#061426]/10 text-[#061426] hover:bg-[#061426]/20" : "bg-white/10 text-slate-200 hover:bg-white/20"}`}>
+                                  React ▾
+                                </summary>
+                                <div className={`absolute bottom-full z-30 mb-1 grid grid-cols-3 gap-1 rounded-xl border border-white/10 p-2 shadow-xl ${isMine ? "right-0 bg-[#061426] text-white" : "left-0 bg-[#07182e] text-white"}`}>
+                                  {CHAT_REACTION_EMOJIS.map((emoji) => (
+                                    <button
+                                      key={`${message.id}-picker-${emoji}`}
+                                      type="button"
+                                      onClick={(event) => {
+                                        event.currentTarget.closest("details")?.removeAttribute("open")
+                                        void reactToChatMessage(message.id, emoji)
+                                      }}
+                                      className="h-8 w-8 rounded-lg text-base hover:bg-white/15"
+                                      title={`React ${emoji}`}
+                                    >
+                                      {emoji}
+                                    </button>
+                                  ))}
+                                </div>
+                              </details>
                               <span className="mx-1 h-4 w-px bg-current opacity-20" />
                               <button
                                 type="button"
@@ -1500,6 +1620,67 @@ export default function TocProjectPlanPage() {
       </div>
 
       <Card className="overflow-hidden border-white/10 bg-[#07182e] text-slate-100 shadow-lg shadow-black/20">
+        <CardHeader className="border-b border-white/10 bg-gradient-to-r from-[#0b2344] via-[#092143] to-[#061426] pb-3">
+          <CardTitle className="flex flex-wrap items-center justify-between gap-3">
+            <span className="flex items-center gap-2">
+              <Activity className="h-5 w-5 text-[#D6B65A]" />
+              My Focus
+            </span>
+            <span className="text-sm font-normal text-slate-400">The stuff most likely to need attention first.</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-3 bg-[#061426] p-4 lg:grid-cols-4">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <div className="text-sm font-bold text-white">My open tasks</div>
+              <Button type="button" size="sm" variant="ghost" onClick={() => setTaskFilter("mine")} className="h-7 px-2 text-xs text-[#D6B65A] hover:bg-white/10 hover:text-white">Show mine</Button>
+            </div>
+            <div className="space-y-2">
+              {myFocus.myOpenTasks.length === 0 ? <p className="text-sm text-slate-500">Nothing assigned to you.</p> : myFocus.myOpenTasks.map((task) => (
+                <a key={`focus-mine-${task.id}`} href={`#toc-task-${sectionSlug(task.category)}`} className="block rounded-xl border border-white/10 bg-[#07182e] p-2 hover:bg-white/10">
+                  <div className="truncate text-sm font-semibold text-white">{task.title}</div>
+                  <div className="mt-1 flex items-center gap-2 text-xs text-slate-400"><span className={`h-2 w-2 rounded-full ${STATUS_DOT_CLASS[task.status]}`} />{STATUS_LABEL[task.status]} · {taskDateLabel(task)}</div>
+                </a>
+              ))}
+            </div>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+            <div className="mb-2 text-sm font-bold text-white">Due soon</div>
+            <div className="space-y-2">
+              {myFocus.dueSoonTasks.length === 0 ? <p className="text-sm text-slate-500">No due dates in the next 14 days.</p> : myFocus.dueSoonTasks.map((task) => (
+                <a key={`focus-due-${task.id}`} href={`#toc-task-${sectionSlug(task.category)}`} className="block rounded-xl border border-white/10 bg-[#07182e] p-2 hover:bg-white/10">
+                  <div className="truncate text-sm font-semibold text-white">{task.title}</div>
+                  <div className="mt-1 text-xs text-slate-400">{task.category} · {taskDateLabel(task)}</div>
+                </a>
+              ))}
+            </div>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+            <div className="mb-2 text-sm font-bold text-white">At risk</div>
+            <div className="space-y-2">
+              {myFocus.atRiskTasks.length === 0 ? <p className="text-sm text-slate-500">No tasks marked at risk.</p> : myFocus.atRiskTasks.map((task) => (
+                <a key={`focus-risk-${task.id}`} href={`#toc-task-${sectionSlug(task.category)}`} className="block rounded-xl border border-amber-300/20 bg-amber-400/10 p-2 hover:bg-amber-400/15">
+                  <div className="truncate text-sm font-semibold text-amber-50">{task.title}</div>
+                  <div className="mt-1 text-xs text-amber-100/70">{task.category} · {taskPrimaryOwner(task)}</div>
+                </a>
+              ))}
+            </div>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+            <div className="mb-2 text-sm font-bold text-white">Pending approvals</div>
+            <div className="space-y-2">
+              {myFocus.pendingApprovals.length === 0 ? <p className="text-sm text-slate-500">No approvals waiting.</p> : myFocus.pendingApprovals.map((approval) => (
+                <a key={`focus-approval-${approval.id}`} href="#toc-approvals" className="block rounded-xl border border-[#D6B65A]/20 bg-[#D6B65A]/10 p-2 hover:bg-[#D6B65A]/15">
+                  <div className="truncate text-sm font-semibold text-[#FFE39A]">{approval.title}</div>
+                  <div className="mt-1 text-xs text-[#FFE39A]/70">{approval.vendor || approval.category || "Approval"}{approval.amount != null ? ` · ${money(approval.amount)}` : ""}</div>
+                </a>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card id="toc-approvals" className="scroll-mt-24 overflow-hidden border-white/10 bg-[#07182e] text-slate-100 shadow-lg shadow-black/20">
         <CardHeader className="border-b border-white/10 bg-gradient-to-r from-[#0b2344] via-[#092143] to-[#061426]">
           <CardTitle className="flex flex-wrap items-center justify-between gap-3">
             <span className="flex items-center gap-2">
@@ -1585,7 +1766,7 @@ export default function TocProjectPlanPage() {
         </CardContent>
       </Card>
 
-      <Card className="overflow-hidden border-white/10 bg-[#07182e] text-slate-100 shadow-lg shadow-black/20">
+      <Card id="toc-doc-share" className="scroll-mt-24 overflow-hidden border-white/10 bg-[#07182e] text-slate-100 shadow-lg shadow-black/20">
         <CardHeader className="border-b border-white/10 bg-gradient-to-r from-[#0b2344] via-[#092143] to-[#061426]">
           <CardTitle className="flex flex-wrap items-center justify-between gap-3">
             <span className="flex items-center gap-2">
@@ -1711,7 +1892,7 @@ export default function TocProjectPlanPage() {
         </CardContent>
       </Card>
 
-      <Card className="overflow-hidden border-white/10 bg-[#07182e] shadow-lg shadow-black/20">
+      <Card id="toc-master-board" className="scroll-mt-24 overflow-hidden border-white/10 bg-[#07182e] shadow-lg shadow-black/20">
         <CardHeader className="border-b border-white/10 bg-gradient-to-r from-[#002147] to-[#0b3a6d] text-white">
           <CardTitle className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <span>TOC Master Board</span>
@@ -1845,17 +2026,28 @@ export default function TocProjectPlanPage() {
           const meta = categoryMeta(category.name)
           const categoryTasks = filteredTasks.filter((task) => task.category === category.name).sort(compareTasksForOpsBoard)
           const categoryBudget = categoryTasks.reduce((sum, task) => sum + Number(task.budget_amount ?? 0), 0)
+          const categoryDone = categoryTasks.filter((task) => task.status === "done").length
+          const categoryAtRisk = categoryTasks.filter((task) => task.status === "blocked").length
+          const categoryOpen = expandedCategoryIds[category.name] ?? activeFilterCount > 0
           if (categoryTasks.length === 0 && taskCategoryFilter === "all" && activeFilterCount > 0) return null
           return (
-            <section key={category.name} className="overflow-hidden rounded-xl border border-white/10 bg-[#07182e] shadow-lg shadow-black/10">
+            <section id={`toc-task-${sectionSlug(category.name)}`} key={category.name} className="scroll-mt-24 overflow-hidden rounded-xl border border-white/10 bg-[#07182e] shadow-lg shadow-black/10">
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 bg-gradient-to-r from-[#0a1d37] via-[#07182e] to-[#061426] px-4 py-3">
-                <div className="flex items-center gap-3">
-                  <span className={`h-8 w-1.5 rounded-full ${meta.accent}`} />
-                  <div>
-                    <h3 className="text-lg font-bold text-white">{category.name}</h3>
-                    <p className="text-xs text-slate-400">{categoryTasks.length} tasks · {money(categoryBudget)} budget</p>
-                  </div>
-                </div>
+                <button type="button" onClick={() => toggleCategoryExpanded(category.name)} className="flex min-w-0 flex-1 items-center gap-3 rounded-xl text-left transition hover:bg-white/5">
+                  <span className={`h-8 w-1.5 shrink-0 rounded-full ${meta.accent}`} />
+                  <span className="min-w-0">
+                    <span className="flex flex-wrap items-center gap-2">
+                      <span className="text-lg font-bold text-white">{category.name}</span>
+                      {categoryOpen ? <ChevronDown className="h-4 w-4 text-[#D6B65A]" /> : <ChevronRight className="h-4 w-4 text-[#D6B65A]" />}
+                    </span>
+                    <span className="mt-1 flex flex-wrap gap-2 text-xs text-slate-400">
+                      <span>{categoryTasks.length} tasks</span>
+                      <span>{categoryDone} complete</span>
+                      {categoryAtRisk > 0 && <span className="text-amber-200">{categoryAtRisk} at risk</span>}
+                      <span>{money(categoryBudget)} budget</span>
+                    </span>
+                  </span>
+                </button>
               <div className="flex w-full min-w-0 flex-1 gap-2 sm:min-w-72 sm:flex-initial">
                   <Input
                     value={newTaskTitle[category.name] ?? ""}
@@ -1870,7 +2062,7 @@ export default function TocProjectPlanPage() {
                 </div>
               </div>
 
-              <div className="overflow-x-visible md:overflow-x-auto">
+              {categoryOpen && <div className="overflow-x-visible md:overflow-x-auto">
                 <div className="md:min-w-[1320px]">
                   <div className="hidden grid-cols-[minmax(280px,1.7fr)_210px_150px_140px_140px_120px_120px_120px_120px] border-b border-white/10 bg-[#0a1d37] text-xs font-semibold uppercase tracking-wide text-slate-400 md:grid">
                     <div className="border-r border-white/10 px-3 py-2">Item</div>
@@ -1898,7 +2090,7 @@ export default function TocProjectPlanPage() {
                     const approvalDraft = approvalDraftFor(task)
                     const attachmentDraft = attachmentDraftFor(task.id)
                     return (
-                      <div key={task.id} className="border-b border-white/10 last:border-b-0">
+                      <div key={task.id} className={`border-b border-l-4 border-white/10 ${STATUS_ROW_CLASS[draft.status]} last:border-b-0`}>
                         <div className="grid grid-cols-1 items-stretch bg-[#07182e] text-sm text-slate-100 transition-colors hover:bg-[#0a1d37] md:grid-cols-[minmax(280px,1.7fr)_210px_150px_140px_140px_120px_120px_120px_120px] md:items-center">
                           <div className="border-b border-white/10 p-3 md:border-b-0 md:border-r md:p-2">
                             <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400 md:hidden">Item</div>
@@ -1966,8 +2158,11 @@ export default function TocProjectPlanPage() {
                           <div className="border-b border-white/10 p-3 md:border-b-0 md:border-r md:p-2">
                             <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400 md:hidden">Status</div>
                             <Select value={draft.status} onValueChange={(value) => updateDraft(task.id, { status: value as TocProjectTask["status"] })} disabled={disabled}>
-                              <SelectTrigger className={`h-9 border-0 font-semibold shadow-none ${STATUS_CLASS[draft.status]}`}>
-                                <SelectValue />
+                              <SelectTrigger className={`h-9 font-semibold shadow-none ${STATUS_CLASS[draft.status]}`}>
+                                <span className="flex items-center gap-2">
+                                  <span className={`h-2.5 w-2.5 rounded-full ${STATUS_DOT_CLASS[draft.status]}`} />
+                                  <SelectValue />
+                                </span>
                               </SelectTrigger>
                               <SelectContent>
                                 {Object.entries(STATUS_LABEL).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
@@ -2250,7 +2445,7 @@ export default function TocProjectPlanPage() {
                     )
                   })}
                 </div>
-              </div>
+              </div>}
             </section>
           )
         })}
@@ -2262,6 +2457,8 @@ export default function TocProjectPlanPage() {
           <DollarSign className="h-4 w-4" /> Suggested operating rhythm
         </div>
         Use status for weekly ops calls, assignees for ownership, budget/actual for vendor spend, links for quotes/forms, and attachments for contracts, artwork, floorplans, invoices, or venue photos.
+      </div>
+        </div>
       </div>
     </div>
   )

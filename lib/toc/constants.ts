@@ -99,6 +99,7 @@ export const TOC_CONTACT_EMAIL = "info@ncwrestlingunited.com" as const
 export const TOC_MATS_LINE = "Two mats all weekend. One mat for all eleven championship finals." as const
 
 export const TOC_TICKET_SALE_MONTH = "August 2026" as const
+export const TOC_GOFAN_TICKETS_URL = "https://gofan.co/app/school/NC101846" as const
 
 export const TOC_NC_UNITED_ABOUT = {
   headline: "About NC United",
@@ -141,6 +142,8 @@ export const TOC_SPECTATORS = {
     },
   ],
   ticketSectionTitle: "How to attend",
+  ticketCtaLabel: "Buy tickets on GoFan",
+  ticketProviderLabel: "Secure ticketing powered by GoFan",
 } as const
 
 export const TOC_FOUNDING_PARTNERS = {
