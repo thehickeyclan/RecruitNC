@@ -65,7 +65,19 @@ type ManagedBrowser = {
   close: () => Promise<void>
 }
 
+type RankWrestlerAllSeasonOptions = {
+  athleteName?: string | null
+  highSchool?: string | null
+}
+type RankWrestlerSeasonNavigationResult = { ok: true } | { ok: false; error: string; preview?: string }
+
 function isRankWrestlerRenderedFailure(result: RankWrestlerRenderedBrowserResult): result is RankWrestlerRenderedFailure {
+  return result.ok === false
+}
+
+function isRankWrestlerSeasonNavigationFailure(
+  result: RankWrestlerSeasonNavigationResult,
+): result is Extract<RankWrestlerSeasonNavigationResult, { ok: false }> {
   return result.ok === false
 }
 
@@ -233,12 +245,37 @@ function normalizeSeasonKey(value: string): string {
   return value.match(/\b20\d{2}-\d{2}\b/)?.[0] ?? value.replace(/\s+/g, " ").trim()
 }
 
+function normalizedSearchText(value: string | null | undefined): string {
+  return (value ?? "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
+function seasonStartYearFromLabel(label: string): string | null {
+  return normalizeSeasonKey(label).match(/^20\d{2}/)?.[0] ?? null
+}
+
 export function rankWrestlerSeasonUrl(currentUrl: string, seasonLabel: string): string | null {
-  const seasonStartYear = normalizeSeasonKey(seasonLabel).match(/^20\d{2}/)?.[0]
+  const seasonStartYear = seasonStartYearFromLabel(seasonLabel)
   if (!seasonStartYear) return null
 
   try {
     const targetUrl = new URL(currentUrl)
+    targetUrl.searchParams.set("season", seasonStartYear)
+    return targetUrl.toString()
+  } catch {
+    return null
+  }
+}
+
+function rankWrestlerArchiveSearchUrl(currentUrl: string, seasonLabel: string): string | null {
+  const seasonStartYear = seasonStartYearFromLabel(seasonLabel)
+  if (!seasonStartYear) return null
+
+  try {
+    const targetUrl = new URL("/search", currentUrl)
     targetUrl.searchParams.set("season", seasonStartYear)
     return targetUrl.toString()
   } catch {
@@ -278,6 +315,12 @@ async function seasonTargetsFromPage(page: Page): Promise<Array<{ label: string;
     .catch(() => []) as Promise<Array<{ label: string; href?: string }>>
 }
 
+async function pageCurrentSeasonKey(page: Page): Promise<string | null> {
+  const text = await page.locator("body").innerText({ timeout: 10_000 }).catch(() => "")
+  const seasonLabel = currentSeasonLabelFromText(text)
+  return seasonLabel ? normalizeSeasonKey(seasonLabel) : null
+}
+
 function mergedSeasonTargets(
   currentUrl: string,
   discoveredSeasonLabels: string[],
@@ -304,6 +347,98 @@ function mergedSeasonTargets(
   for (const target of discoveredSeasonTargets) addTarget(target)
 
   return [...targets.values()]
+}
+
+function rankWrestlerSearchTerms(athleteName: string): string[] {
+  const normalized = normalizedSearchText(athleteName)
+  const parts = normalized.split(" ").filter(Boolean)
+  const terms = new Set<string>()
+  if (normalized) terms.add(normalized)
+  if (parts.length >= 2) terms.add(`${parts[0]} ${parts[parts.length - 1]}`)
+  if (parts.length) terms.add(parts[parts.length - 1])
+  return [...terms]
+}
+
+async function findArchiveProfileViaSearch(
+  page: Page,
+  currentUrl: string,
+  target: { label: string; href?: string; seasonUrl?: string },
+  options: RankWrestlerAllSeasonOptions,
+): Promise<RankWrestlerSeasonNavigationResult> {
+  const athleteName = options.athleteName?.trim()
+  if (!athleteName) return { ok: false, error: "No athlete name available for RankWrestler archive search." }
+
+  const searchUrl = rankWrestlerArchiveSearchUrl(currentUrl, target.label)
+  if (!searchUrl) return { ok: false, error: "Could not build RankWrestler archive search URL for this season." }
+
+  await page.goto(searchUrl, { waitUntil: "domcontentloaded", timeout: 45_000 })
+  await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => null)
+
+  const searchInput = page.locator('input[placeholder*="Search wrestlers" i], input[type="search"], input[type="text"]').first()
+  if ((await searchInput.count().catch(() => 0)) === 0) {
+    const preview = await page.locator("body").innerText({ timeout: 10_000 }).catch(() => "")
+    return {
+      ok: false,
+      error: "RankWrestler archive search opened, but no wrestler search box was found.",
+      preview: preview.replace(/\s+/g, " ").trim().slice(0, 500),
+    }
+  }
+
+  const expectedName = normalizedSearchText(athleteName)
+  const expectedSchool = normalizedSearchText(options.highSchool)
+  let latestPreview = ""
+
+  for (const term of rankWrestlerSearchTerms(athleteName)) {
+    await searchInput.fill(term, { timeout: 5_000 })
+    await page.waitForTimeout(2_000)
+
+    const resultIndex = await page
+      .evaluate(
+        ({ expectedName, expectedSchool }) => {
+          const normalize = (value: string) =>
+            value
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, " ")
+              .replace(/\s+/g, " ")
+              .trim()
+          const results = [...document.querySelectorAll('[data-search-result="true"]')]
+          return results.findIndex((element) => {
+            const text = normalize(element.textContent ?? "")
+            if (!text.includes(expectedName)) return false
+            if (expectedSchool && !text.includes(expectedSchool)) return false
+            return true
+          })
+        },
+        { expectedName, expectedSchool },
+      )
+      .catch(() => -1)
+
+    latestPreview = await page
+      .locator("body")
+      .innerText({ timeout: 10_000 })
+      .then((text) => text.replace(/\s+/g, " ").trim().slice(0, 500))
+      .catch(() => "")
+
+    if (resultIndex >= 0) {
+      const result = page.locator('[data-search-result="true"]').nth(resultIndex)
+      await result.click({ timeout: 5_000 })
+      await page.waitForLoadState("domcontentloaded", { timeout: 15_000 }).catch(() => null)
+      await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => null)
+      await page.waitForTimeout(1_000)
+      if (/\/wrestler\/\d+/i.test(page.url())) return { ok: true }
+      return {
+        ok: false,
+        error: "RankWrestler archive search result was clicked, but it did not open a wrestler profile.",
+        preview: latestPreview,
+      }
+    }
+  }
+
+  return {
+    ok: false,
+    error: `RankWrestler archive search did not find ${athleteName} for ${normalizeSeasonKey(target.label)}.`,
+    preview: latestPreview,
+  }
 }
 
 async function clickSeasonLabel(page: Page, label: string): Promise<boolean> {
@@ -337,16 +472,30 @@ async function navigateOrClickSeasonTarget(
   page: Page,
   target: { label: string; href?: string; seasonUrl?: string },
   currentUrl: string,
-): Promise<boolean> {
+  options: RankWrestlerAllSeasonOptions,
+): Promise<RankWrestlerSeasonNavigationResult> {
+  const targetSeasonKey = normalizeSeasonKey(target.label)
   const seasonUrl = target.seasonUrl || rankWrestlerSeasonUrl(currentUrl, target.label)
   if (seasonUrl && seasonUrl !== page.url()) {
     await page.goto(seasonUrl, { waitUntil: "domcontentloaded", timeout: 45_000 })
-    return true
+    await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => null)
+    await page.waitForTimeout(1_000)
+    if ((await pageCurrentSeasonKey(page)) === targetSeasonKey) return { ok: true }
+
+    const archiveResult = await findArchiveProfileViaSearch(page, currentUrl, target, options)
+    if (archiveResult.ok) return archiveResult
+    if (!isRankWrestlerSeasonNavigationFailure(archiveResult)) return archiveResult
+
+    return {
+      ok: false,
+      error: `RankWrestler opened ${seasonUrl}, but rendered ${await pageCurrentSeasonKey(page)} instead of ${targetSeasonKey}. ${archiveResult.error}`,
+      preview: archiveResult.preview,
+    }
   }
 
   if (target.href && target.href !== currentUrl) {
     await page.goto(target.href, { waitUntil: "domcontentloaded", timeout: 45_000 })
-    return true
+    return { ok: true }
   }
 
   const beforeText = await page.locator("body").innerText({ timeout: 10_000 }).catch(() => "")
@@ -359,15 +508,21 @@ async function navigateOrClickSeasonTarget(
           window.location.href !== previousUrl || (document.body.innerText || "") !== previousText,
         { previousText: beforeText, previousUrl: beforeUrl },
         { timeout: 8_000 },
-      )
+    )
       .then(() => true)
       .catch(() => false)
-    if (changed) return true
+    if (changed && (await pageCurrentSeasonKey(page)) === targetSeasonKey) return { ok: true }
   }
 
-  if (!seasonUrl || seasonUrl === page.url()) return false
-  await page.goto(seasonUrl, { waitUntil: "domcontentloaded", timeout: 45_000 })
-  return true
+  const archiveResult = await findArchiveProfileViaSearch(page, currentUrl, target, options)
+  if (archiveResult.ok) return archiveResult
+  if (!isRankWrestlerSeasonNavigationFailure(archiveResult)) return archiveResult
+
+  return {
+    ok: false,
+    error: `Could not activate the RankWrestler season control for ${targetSeasonKey}. ${archiveResult.error}`,
+    preview: archiveResult.preview,
+  }
 }
 
 async function renderedSuccessFromPage(
@@ -460,7 +615,10 @@ export async function renderRankWrestlerProfileText(url: string): Promise<RankWr
   }
 }
 
-export async function renderRankWrestlerAllSeasonTexts(url: string): Promise<RankWrestlerRenderedAllSeasonsResult> {
+export async function renderRankWrestlerAllSeasonTexts(
+  url: string,
+  options: RankWrestlerAllSeasonOptions = {},
+): Promise<RankWrestlerRenderedAllSeasonsResult> {
   let managed: ManagedBrowser | null = null
   let page: Page | null = null
   let usedLogin = false
@@ -502,12 +660,13 @@ export async function renderRankWrestlerAllSeasonTexts(url: string): Promise<Ran
       seenTargetKeys.add(key)
 
       if (key !== page.url()) {
-        const changedSeason = await navigateOrClickSeasonTarget(page, target, url)
-        if (!changedSeason) {
+        const changedSeason = await navigateOrClickSeasonTarget(page, target, url, options)
+        if (isRankWrestlerSeasonNavigationFailure(changedSeason)) {
           failedSeasonTargets.push({
             label: target.label,
             href: target.href,
-            error: "Could not activate the RankWrestler season control.",
+            error: changedSeason.error,
+            preview: changedSeason.preview,
           })
           continue
         }
