@@ -1526,7 +1526,8 @@ export default function MatchManagerPage() {
               <CardTitle>Raw Text Parser</CardTitle>
               <p className="text-sm text-gray-600">
                 Paste your raw match data (tab-separated format) and it will be automatically converted to JSON.
-                Matches in a single calendar year (e.g. all Dec 2022) are supported — season is inferred from the dates.
+                You can also paste the visible text from a rendered RankWrestler profile Match History page. Matches in a
+                single calendar year (e.g. all Dec 2022) are supported — season is inferred from the dates.
               </p>
             </CardHeader>
             <CardContent className="space-y-4">

@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
         ? "RankWrestler appears to be returning a login page. The auth token may be expired or the cookie value is incomplete."
         : fetched.diagnostics.looksLikeClientAppShell
           ? fetched.diagnostics.textCandidateCount > 1
-            ? "RankWrestler returned a client-side app shell. I decoded the embedded app payload too, but still could not find match rows. Open DevTools → Network while viewing the RankWrestler profile and look for the API/request that returns bouts or matches."
+            ? "RankWrestler returned a client-side app shell. I decoded the embedded app payload too, but still could not find match rows. If the matches are visible in your browser, copy the rendered RankWrestler profile text into the Raw Text Parser tab; RecruitNC can now parse that format."
             : "RankWrestler appears to be returning a client-side app shell. The match rows may load from a separate API request."
           : "The fetched page did not match the current Rank/Track parser format."
       return NextResponse.json(

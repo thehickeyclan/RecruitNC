@@ -217,6 +217,14 @@ export function parseRankWrestlerText(rawText: string, format: "rank" | "track" 
 
   const matches: RankParsedMatch[] = []
   const denseLines = allLines.map((l) => l.trim()).filter(Boolean)
+  const embeddedRankStart = denseLines.findIndex((line, index) => {
+    const lower = line.toLowerCase()
+    return (lower === "win" || lower === "loss") && /^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(denseLines[index + 1] ?? "")
+  })
+  if (embeddedRankStart > 0) {
+    return parseRankWrestlerText(denseLines.slice(embeddedRankStart).join("\n"), format)
+  }
+
   const firstLine = (denseLines[0] ?? "").toLowerCase()
   const looksLikeDate = /^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(denseLines[0] ?? "")
   const isWinLossFirst = firstLine === "win" || firstLine === "loss"
@@ -295,10 +303,18 @@ export function parseRankWrestlerText(rawText: string, format: "rank" | "track" 
 
       if (isForfeit) {
         opponent = "Forfeit"
-        weight = (denseLines[i + 3] ?? "").replace(/\s*lbs\s*$/i, "").trim()
-        venue = denseLines[i + 5] ?? ""
-        method = denseLines[i + 7] ?? "For."
-        advance = 8
+        const renderedWeight = denseLines[i + 3] ?? ""
+        if (/\d+\s*lbs/i.test(renderedWeight) && (denseLines[i + 4] ?? "") === "•") {
+          weight = renderedWeight.replace(/\s*lbs\s*$/i, "").trim()
+          method = denseLines[i + 5] ?? "For."
+          venue = denseLines[i + 6] ?? ""
+          advance = 7
+        } else {
+          weight = (denseLines[i + 3] ?? "").replace(/\s*lbs\s*$/i, "").trim()
+          venue = denseLines[i + 5] ?? ""
+          method = denseLines[i + 7] ?? "For."
+          advance = 8
+        }
       } else if (/^[\d.]+$/.test(percentageOrForfeit)) {
         opponent = opponentOrForfeit
         opponentSchool = (denseLines[i + 4] ?? "").replace(/^[•·\-]\s*/, "").trim()
@@ -308,11 +324,26 @@ export function parseRankWrestlerText(rawText: string, format: "rank" | "track" 
         oppPercent = parseFloat(percentageOrForfeit)
         advance = 10
       } else {
-        opponent = percentageOrForfeit
-        opponentSchool = opponentOrForfeit.replace(/^[•·\-]\s*/, "").trim()
-        weight = (denseLines[i + 4] ?? "").replace(/\s*lbs\s*$/i, "").trim()
-        venue = denseLines[i + 6] ?? ""
-        method = denseLines[i + 8] ?? ""
+        const maybeWeightWithoutSchool = opponentOrForfeit
+        const maybeWeightWithSchool = denseLines[i + 4] ?? ""
+        const hasSchool = !/\d+\s*lbs/i.test(maybeWeightWithoutSchool) && /\d+\s*lbs/i.test(maybeWeightWithSchool)
+        const renderedBulletIndex = hasSchool ? i + 5 : i + 4
+        if ((denseLines[renderedBulletIndex] ?? "") === "•") {
+          opponent = percentageOrForfeit
+          opponentSchool = hasSchool ? opponentOrForfeit.replace(/^[•·\-]\s*/, "").trim() : ""
+          weight = (hasSchool ? maybeWeightWithSchool : maybeWeightWithoutSchool).replace(/\s*lbs\s*$/i, "").trim()
+          method = denseLines[renderedBulletIndex + 1] ?? ""
+          venue = denseLines[renderedBulletIndex + 2] ?? ""
+          const maybePct = denseLines[renderedBulletIndex + 3] ?? ""
+          oppPercent = /^[\d.]+$/.test(maybePct) ? parseFloat(maybePct) : null
+          advance = /^[\d.]+$/.test(maybePct) ? renderedBulletIndex + 4 - i : renderedBulletIndex + 3 - i
+        } else {
+          opponent = percentageOrForfeit
+          opponentSchool = opponentOrForfeit.replace(/^[•·\-]\s*/, "").trim()
+          weight = (denseLines[i + 4] ?? "").replace(/\s*lbs\s*$/i, "").trim()
+          venue = denseLines[i + 6] ?? ""
+          method = denseLines[i + 8] ?? ""
+        }
       }
 
       if (!venue || venue === "•" || venue === "·" || /^[\d.]+$/.test(venue)) {
