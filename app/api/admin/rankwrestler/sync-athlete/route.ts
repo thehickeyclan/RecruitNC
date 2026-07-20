@@ -351,6 +351,7 @@ export async function POST(request: NextRequest) {
             diagnostics: {
               discoveredSeasonLabels: renderedAll.discoveredSeasonLabels,
               discoveredSeasonTargets: renderedAll.discoveredSeasonTargets,
+              seasonDebugSteps: renderedAll.seasonDebugSteps,
               renderedSeasonCount: renderedAll.seasons.length,
               usedCookie: renderedAll.usedCookie,
               usedLogin: renderedAll.usedLogin,
@@ -374,6 +375,7 @@ export async function POST(request: NextRequest) {
         diagnostics: {
           discoveredSeasonLabels: renderedAll.discoveredSeasonLabels,
           discoveredSeasonTargets: renderedAll.discoveredSeasonTargets,
+          seasonDebugSteps: renderedAll.seasonDebugSteps,
           renderedSeasonCount: renderedAll.seasons.length,
           usedCookie: renderedAll.usedCookie,
           usedLogin: renderedAll.usedLogin,
