@@ -38,6 +38,8 @@ export type RankWrestlerRenderedAllSeasonsResult =
       usedLogin: boolean
       usedCookie: boolean
       discoveredSeasonLabels: string[]
+      discoveredSeasonTargets: Array<{ label: string; href?: string }>
+      failedSeasonTargets: Array<{ label: string; href?: string; error: string; preview?: string }>
     }
   | {
       ok: false
@@ -53,6 +55,7 @@ export type RankWrestlerRenderedAllSeasonsResult =
         usedLogin?: boolean
         usedCookie?: boolean
         discoveredSeasonLabels?: string[]
+        discoveredSeasonTargets?: Array<{ label: string; href?: string }>
       }
     }
 
@@ -232,6 +235,31 @@ function currentSeasonLabelFromText(text: string): string | undefined {
   return labels.find((label) => /last season/i.test(label)) ?? labels[0]
 }
 
+async function seasonTargetsFromPage(page: Page): Promise<Array<{ label: string; href?: string }>> {
+  return page
+    .evaluate(() => {
+      const seasonPattern = /\b20\d{2}-\d{2}\b/
+      const elements = [...document.querySelectorAll("button, a, [role='button'], [tabindex='0']")]
+      return elements
+        .map((element) => {
+          const text = (element.textContent ?? "").replace(/\s+/g, " ").trim()
+          const aria = element.getAttribute("aria-label")?.replace(/\s+/g, " ").trim() ?? ""
+          const labelSource = text || aria
+          const season = labelSource.match(seasonPattern)?.[0]
+          const href = element instanceof HTMLAnchorElement ? element.href : undefined
+          const previousSeasonLink =
+            href && /\/wrestler\/\d+/i.test(href) && /\b(previous|last)\s+season\b/i.test(labelSource)
+          if (!season && !previousSeasonLink) return null
+          return {
+            label: season ? labelSource : labelSource || "Previous season",
+            href,
+          }
+        })
+        .filter(Boolean)
+    })
+    .catch(() => []) as Promise<Array<{ label: string; href?: string }>>
+}
+
 async function clickSeasonLabel(page: Page, label: string): Promise<boolean> {
   const exact = page.getByText(label, { exact: true }).first()
   if ((await exact.count().catch(() => 0)) > 0) {
@@ -250,6 +278,14 @@ async function clickSeasonLabel(page: Page, label: string): Promise<boolean> {
   }
 
   return false
+}
+
+async function navigateOrClickSeasonTarget(page: Page, target: { label: string; href?: string }, currentUrl: string): Promise<boolean> {
+  if (target.href && target.href !== currentUrl) {
+    await page.goto(target.href, { waitUntil: "domcontentloaded", timeout: 45_000 })
+    return true
+  }
+  return clickSeasonLabel(page, target.label)
 }
 
 async function renderedSuccessFromPage(
@@ -348,6 +384,8 @@ export async function renderRankWrestlerAllSeasonTexts(url: string): Promise<Ran
   let usedLogin = false
   let usedCookie = false
   const discoveredSeasonLabels: string[] = []
+  const discoveredSeasonTargets: Array<{ label: string; href?: string }> = []
+  const failedSeasonTargets: Array<{ label: string; href?: string; error: string; preview?: string }> = []
   try {
     managed = await launchRankWrestlerBrowser()
     const context = await managed.browser.newContext({
@@ -369,28 +407,37 @@ export async function renderRankWrestlerAllSeasonTexts(url: string): Promise<Ran
     await waitForRankWrestlerMatchHistory(page)
     const initialText = await page.locator("body").innerText({ timeout: 10_000 })
     discoveredSeasonLabels.push(...seasonLabelsFromText(initialText))
+    discoveredSeasonTargets.push(...(await seasonTargetsFromPage(page)))
 
-    const seasonLabels = discoveredSeasonLabels.length
-      ? discoveredSeasonLabels
-      : [currentSeasonLabelFromText(initialText) ?? "Current season"]
+    const initialSeasonLabel = currentSeasonLabelFromText(initialText) ?? "Current season"
+    const seasonTargets = discoveredSeasonTargets.length
+      ? discoveredSeasonTargets
+      : (discoveredSeasonLabels.length ? discoveredSeasonLabels : [initialSeasonLabel]).map((label) => ({ label }))
     const seasons: RankWrestlerRenderedSeason[] = []
-    const seenSeasonKeys = new Set<string>()
-    const initialSeasonKey = normalizeSeasonKey(currentSeasonLabelFromText(initialText) ?? "")
+    const seenTargetKeys = new Set<string>()
+    const initialSeasonKey = normalizeSeasonKey(initialSeasonLabel)
 
-    for (const label of seasonLabels) {
-      const key = normalizeSeasonKey(label)
-      if (seenSeasonKeys.has(key)) continue
-      seenSeasonKeys.add(key)
+    for (const target of seasonTargets) {
+      const key = target.href || normalizeSeasonKey(target.label)
+      if (seenTargetKeys.has(key)) continue
+      seenTargetKeys.add(key)
 
-      if (key !== initialSeasonKey) {
-        await clickSeasonLabel(page, label)
+      if (normalizeSeasonKey(target.label) !== initialSeasonKey || target.href) {
+        await navigateOrClickSeasonTarget(page, target, page.url())
         await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => null)
         await page.waitForTimeout(1_000)
       }
 
-      const rendered = await renderedSuccessFromPage(page, usedLogin, usedCookie, label)
+      const rendered = await renderedSuccessFromPage(page, usedLogin, usedCookie, target.label)
       if (rendered.ok) {
         seasons.push(rendered)
+      } else {
+        failedSeasonTargets.push({
+          label: target.label,
+          href: target.href,
+          error: rendered.error,
+          preview: rendered.diagnostics?.preview,
+        })
       }
     }
 
@@ -402,7 +449,7 @@ export async function renderRankWrestlerAllSeasonTexts(url: string): Promise<Ran
         status: 422,
         error: "RankWrestler rendered, but no season match rows could be parsed.",
         hint: "The profile loaded, but RecruitNC could not capture any visible season match lists.",
-        diagnostics: { ...diagnostics, discoveredSeasonLabels },
+        diagnostics: { ...diagnostics, discoveredSeasonLabels, discoveredSeasonTargets },
       }
     }
 
@@ -412,6 +459,8 @@ export async function renderRankWrestlerAllSeasonTexts(url: string): Promise<Ran
       usedLogin,
       usedCookie,
       discoveredSeasonLabels,
+      discoveredSeasonTargets,
+      failedSeasonTargets,
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : "RankWrestler all-season browser sync failed."
@@ -424,7 +473,7 @@ export async function renderRankWrestlerAllSeasonTexts(url: string): Promise<Ran
         diagnostics?.textLength
           ? "RankWrestler loaded in the browser, but RecruitNC could not walk the visible season controls. Review the diagnostics preview."
           : "All-season browser sync needs either a valid RANKWRESTLER_COOKIE or RANKWRESTLER_EMAIL/RANKWRESTLER_PASSWORD.",
-      diagnostics: { ...diagnostics, discoveredSeasonLabels },
+      diagnostics: { ...diagnostics, discoveredSeasonLabels, discoveredSeasonTargets },
     }
   } finally {
     await managed?.close().catch(() => undefined)

@@ -257,7 +257,13 @@ export async function POST(request: NextRequest) {
       }
 
       const syncedSeasons = []
-      const failedSeasons = []
+      const failedSeasons = renderedAll.failedSeasonTargets.map((target) => ({
+        seasonLabel: target.label,
+        href: target.href,
+        error: target.error,
+        preview: target.preview,
+      }))
+      const skippedSeasons = []
       const seenSeasons = new Set<string>()
       for (const seasonText of renderedAll.seasons) {
         const parsedSeason = buildRankWrestlerSeasonPayload({
@@ -279,6 +285,11 @@ export async function POST(request: NextRequest) {
 
         const payload = parsedSeason.payload
         if (seenSeasons.has(payload.wrestler_info.season)) {
+          skippedSeasons.push({
+            seasonLabel: seasonText.seasonLabel,
+            season: payload.wrestler_info.season,
+            reason: "Duplicate parsed season",
+          })
           continue
         }
         seenSeasons.add(payload.wrestler_info.season)
@@ -323,8 +334,10 @@ export async function POST(request: NextRequest) {
             error: "RankWrestler rendered season pages, but no seasons could be saved.",
             hint: "Review the failed season details and diagnostics.",
             failedSeasons,
+            skippedSeasons,
             diagnostics: {
               discoveredSeasonLabels: renderedAll.discoveredSeasonLabels,
+              discoveredSeasonTargets: renderedAll.discoveredSeasonTargets,
               renderedSeasonCount: renderedAll.seasons.length,
               usedCookie: renderedAll.usedCookie,
               usedLogin: renderedAll.usedLogin,
@@ -341,11 +354,13 @@ export async function POST(request: NextRequest) {
         athleteName: athlete.name,
         syncedSeasons,
         failedSeasons,
+        skippedSeasons,
         allSeasons: true,
         renderedBrowser: true,
         parsedSource: "rendered_browser",
         diagnostics: {
           discoveredSeasonLabels: renderedAll.discoveredSeasonLabels,
+          discoveredSeasonTargets: renderedAll.discoveredSeasonTargets,
           renderedSeasonCount: renderedAll.seasons.length,
           usedCookie: renderedAll.usedCookie,
           usedLogin: renderedAll.usedLogin,
