@@ -86,6 +86,84 @@ export function visibleTextFromRankWrestlerHtml(html: string): string {
   )
 }
 
+function decodeJavaScriptStringLiteral(value: string): string {
+  try {
+    return JSON.parse(`"${value.replace(/\n/g, "\\n").replace(/\r/g, "\\r")}"`)
+  } catch {
+    return value
+      .replace(/\\n/g, "\n")
+      .replace(/\\r/g, "\n")
+      .replace(/\\t/g, "\t")
+      .replace(/\\"/g, "\"")
+      .replace(/\\'/g, "'")
+      .replace(/\\\\/g, "\\")
+  }
+}
+
+function normalizeRankWrestlerPayloadText(value: string): string {
+  return decodeHtmlEntities(value)
+    .replace(/\\u([0-9a-f]{4})/gi, (_, hex: string) => String.fromCharCode(Number.parseInt(hex, 16)))
+    .replace(/\\n/g, "\n")
+    .replace(/\\r/g, "\n")
+    .replace(/\\t/g, "\t")
+    .replace(/\\"/g, "\"")
+    .replace(/\\'/g, "'")
+    .replace(/<style[\s\S]*?<\/style>/gi, "\n")
+    .replace(/<script[\s\S]*?<\/script>/gi, "\n")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/[{}\[\]",:]+/g, "\n")
+    .replace(/\$[LS@]react\.[A-Za-z.]+/g, "\n")
+    .replace(/\$[A-Za-z0-9_@.-]+/g, "\n")
+    .replace(/\b(?:children|className|style|href|src|alt|title|id|key|props|data|rows?|columns?|value|label)\b/g, "\n")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n[ \t]+/g, "\n")
+    .replace(/\n{2,}/g, "\n")
+    .trim()
+}
+
+/**
+ * RankWrestler is a Next/React app. Authenticated pages can return the match data inside
+ * streamed `self.__next_f.push(...)` script payloads even when the rendered HTML body only
+ * says "RankWrestlers". Return multiple text candidates so callers can try the normal parser
+ * against each source before giving up.
+ */
+export function rankWrestlerTextCandidatesFromHtml(html: string): Array<{ source: string; text: string }> {
+  const candidates: Array<{ source: string; text: string }> = []
+  const seen = new Set<string>()
+
+  const addCandidate = (source: string, text: string) => {
+    const normalized = normalizeRankWrestlerPayloadText(text)
+    if (!normalized || seen.has(normalized)) return
+    seen.add(normalized)
+    candidates.push({ source, text: normalized })
+  }
+
+  addCandidate("visible_html", visibleTextFromRankWrestlerHtml(html))
+
+  const scriptBodies = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)].map((match) => match[1] ?? "")
+  const flightScriptBodies = scriptBodies.filter((script) => /__next_f\.push|self\.__next_f/i.test(script))
+  if (flightScriptBodies.length) {
+    addCandidate("next_flight_raw", flightScriptBodies.join("\n"))
+  }
+
+  const decodedFlightChunks: string[] = []
+  for (const script of flightScriptBodies) {
+    for (const match of script.matchAll(/"((?:\\.|[^"\\])*)"/g)) {
+      const raw = match[1] ?? ""
+      if (raw.length < 2) continue
+      const decoded = decodeJavaScriptStringLiteral(raw)
+      if (/win|loss|opponent|weight|matches|season|fall|decision|\d{1,2}\/\d{1,2}\/\d{2,4}/i.test(decoded)) {
+        decodedFlightChunks.push(decoded)
+      }
+    }
+  }
+  if (decodedFlightChunks.length) {
+    addCandidate("next_flight_decoded", decodedFlightChunks.join("\n"))
+  }
+
+  return candidates
+}
+
 function parseTrackFormat(lines: string[]): RankParsedMatch[] {
   const matches: RankParsedMatch[] = []
   const nonEmpty = lines.map((l) => l.trim()).filter(Boolean)
