@@ -14,7 +14,7 @@ export function TocStorySection() {
           </p>
           <p>
             Other tournaments are something you compete in.{" "}
-            <strong>This is something you come to watch.</strong> College coaches in the building, top-four placement,
+            <strong>This is something you come to watch.</strong> College coaches in the building, top-three placement,
             and a championship jacket that only goes to the bracket winner.
           </p>
         </div>

@@ -7,7 +7,7 @@ export const TOC_REGISTRATION_PAYMENT_DUE_ISO = "2026-08-01" as const
 export const TOC_REGISTRATION_PAYMENT_DUE_DISPLAY = "August 1, 2026" as const
 
 export const TOC_REGISTRATION_FEE_COVERS =
-  "top-four placement awards at each weight and the champion jacket program" as const
+  "top-three placement awards at each weight and the champion jacket program" as const
 
 export function formatTocRegistrationFee(): string {
   return `$${TOC_REGISTRATION_FEE_USD.toFixed(2)}`
