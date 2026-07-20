@@ -322,6 +322,22 @@ async function pageCurrentSeasonKey(page: Page): Promise<string | null> {
   return seasonLabel ? normalizeSeasonKey(seasonLabel) : null
 }
 
+async function activateLastSeasonArchiveIfNeeded(page: Page): Promise<boolean> {
+  const text = await page.locator("body").innerText({ timeout: 10_000 }).catch(() => "")
+  if (!/early preseason/i.test(text)) return false
+
+  const lastSeasonLabel = seasonLabelsFromText(text).find((label) => /last season/i.test(label))
+  if (!lastSeasonLabel) return false
+
+  const clicked = await clickSeasonLabel(page, lastSeasonLabel)
+  if (!clicked) return false
+
+  await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => null)
+  await page.waitForTimeout(1_000)
+  await waitForRankWrestlerMatchHistory(page)
+  return true
+}
+
 function mergedSeasonTargets(
   currentUrl: string,
   discoveredSeasonLabels: string[],
@@ -489,6 +505,22 @@ async function navigateOrClickSeasonTarget(
   options: RankWrestlerAllSeasonOptions,
 ): Promise<RankWrestlerSeasonNavigationResult> {
   const targetSeasonKey = normalizeSeasonKey(target.label)
+  const beforeText = await page.locator("body").innerText({ timeout: 10_000 }).catch(() => "")
+  const beforeUrl = page.url()
+  const clicked = await clickSeasonLabel(page, target.label)
+  if (clicked) {
+    const changed = await page
+      .waitForFunction(
+        ({ previousText, previousUrl }) =>
+          window.location.href !== previousUrl || (document.body.innerText || "") !== previousText,
+        { previousText: beforeText, previousUrl: beforeUrl },
+        { timeout: 8_000 },
+      )
+      .then(() => true)
+      .catch(() => false)
+    if (changed && (await pageCurrentSeasonKey(page)) === targetSeasonKey) return { ok: true }
+  }
+
   const seasonUrl = target.seasonUrl || rankWrestlerSeasonUrl(currentUrl, target.label)
   if (seasonUrl && seasonUrl !== page.url()) {
     await page.goto(seasonUrl, { waitUntil: "domcontentloaded", timeout: 45_000 })
@@ -510,22 +542,6 @@ async function navigateOrClickSeasonTarget(
   if (target.href && target.href !== currentUrl) {
     await page.goto(target.href, { waitUntil: "domcontentloaded", timeout: 45_000 })
     return { ok: true }
-  }
-
-  const beforeText = await page.locator("body").innerText({ timeout: 10_000 }).catch(() => "")
-  const beforeUrl = page.url()
-  const clicked = await clickSeasonLabel(page, target.label)
-  if (clicked) {
-    const changed = await page
-      .waitForFunction(
-        ({ previousText, previousUrl }) =>
-          window.location.href !== previousUrl || (document.body.innerText || "") !== previousText,
-        { previousText: beforeText, previousUrl: beforeUrl },
-        { timeout: 8_000 },
-    )
-      .then(() => true)
-      .catch(() => false)
-    if (changed && (await pageCurrentSeasonKey(page)) === targetSeasonKey) return { ok: true }
   }
 
   const archiveResult = await findArchiveProfileViaSearch(page, currentUrl, target, options)
@@ -659,6 +675,7 @@ export async function renderRankWrestlerAllSeasonTexts(
     }
 
     await waitForRankWrestlerMatchHistory(page)
+    await activateLastSeasonArchiveIfNeeded(page)
     const initialText = await page.locator("body").innerText({ timeout: 10_000 })
     discoveredSeasonLabels.push(...seasonLabelsFromText(initialText))
     discoveredSeasonTargets.push(...(await seasonTargetsFromPage(page)))
