@@ -59,6 +59,25 @@ function buildFetchDiagnostics(
   }
 }
 
+function buildRenderedDiagnostics(
+  rankwrestlerUrl: string,
+  rendered: Extract<Awaited<ReturnType<typeof renderRankWrestlerProfileText>>, { ok: true }>,
+): Record<string, unknown> {
+  return {
+    url: rankwrestlerUrl,
+    finalUrl: rendered.finalUrl,
+    title: rendered.title,
+    textLength: rendered.text.length,
+    htmlLength: rendered.htmlLength,
+    usedCookie: rendered.usedCookie,
+    usedLogin: rendered.usedLogin,
+    matchHistoryFound: rendered.matchHistoryFound,
+    preview: rendered.text.replace(/\s+/g, " ").trim().slice(0, 1200),
+    textCandidateCount: 1,
+    textCandidateSources: ["rendered_browser"],
+  }
+}
+
 async function fetchRankWrestlerText(
   url: string,
 ): Promise<
@@ -136,6 +155,7 @@ export async function POST(request: NextRequest) {
     let textCandidates: Array<{ source: string; text: string }> = []
     let fetchDiagnostics: RankWrestlerFetchDiagnostics | null = null
     let renderedDiagnostics: Record<string, unknown> | null = null
+    let usedRenderedBrowser = renderedBrowser
 
     if (renderedBrowser) {
       const rendered = await renderRankWrestlerProfileText(rankwrestlerUrl)
@@ -146,19 +166,7 @@ export async function POST(request: NextRequest) {
         )
       }
       textCandidates = [{ source: "rendered_browser", text: rendered.text }]
-      renderedDiagnostics = {
-        url: rankwrestlerUrl,
-        finalUrl: rendered.finalUrl,
-        title: rendered.title,
-        textLength: rendered.text.length,
-        htmlLength: rendered.htmlLength,
-        usedCookie: rendered.usedCookie,
-        usedLogin: rendered.usedLogin,
-        matchHistoryFound: rendered.matchHistoryFound,
-        preview: rendered.text.replace(/\s+/g, " ").trim().slice(0, 1200),
-        textCandidateCount: 1,
-        textCandidateSources: ["rendered_browser"],
-      }
+      renderedDiagnostics = buildRenderedDiagnostics(rankwrestlerUrl, rendered)
     } else {
       const fetched = await fetchRankWrestlerText(rankwrestlerUrl)
       if (!fetched.ok) {
@@ -187,16 +195,44 @@ export async function POST(request: NextRequest) {
       parsed = candidateParse
     }
 
+    if (!parsed?.success && !renderedBrowser && fetchDiagnostics?.looksLikeClientAppShell) {
+      const rendered = await renderRankWrestlerProfileText(rankwrestlerUrl)
+      if (rendered.ok) {
+        const renderedParse = buildRankWrestlerSeasonPayload({
+          athleteName: athlete.name,
+          graduationYear: athlete.graduationyear,
+          highSchool: athlete.highschool,
+          rawText: rendered.text,
+          format: "rank",
+          deduplicate,
+        })
+        parsed = renderedParse
+        if (renderedParse.success) {
+          parsedSource = "rendered_browser"
+          usedRenderedBrowser = true
+          renderedDiagnostics = buildRenderedDiagnostics(rankwrestlerUrl, rendered)
+        }
+      } else {
+        renderedDiagnostics = {
+          ...(fetchDiagnostics ?? {}),
+          renderedBrowserError: rendered.error,
+          renderedBrowserHint: rendered.hint,
+        }
+      }
+    }
+
     if (!parsed?.success) {
       const parseError =
         parsed && !parsed.success ? parsed.error : "No usable text was found in the RankWrestler source."
-      const hint = renderedBrowser
+      const hint = usedRenderedBrowser
         ? "RankWrestler rendered in the browser, but RecruitNC could not parse the Match History text. Copy the visible Match History into Raw Text Parser and send me the failed snippet so I can teach the parser that layout."
+        : renderedDiagnostics?.renderedBrowserError
+        ? `RankWrestler returned the app shell, then browser automation also failed: ${renderedDiagnostics.renderedBrowserError}`
         : fetchDiagnostics?.looksLikeLogin
         ? "RankWrestler appears to be returning a login page. The auth token may be expired or the cookie value is incomplete."
         : fetchDiagnostics?.looksLikeClientAppShell
           ? fetchDiagnostics.textCandidateCount > 1
-            ? "RankWrestler returned a client-side app shell. I decoded the embedded app payload too, but still could not find match rows. If the matches are visible in your browser, copy the rendered RankWrestler profile text into the Raw Text Parser tab; RecruitNC can now parse that format."
+            ? "RankWrestler returned a client-side app shell. Browser automation fallback should run automatically; if it did not, confirm the deployed build includes the latest commit and send the diagnostics."
             : "RankWrestler appears to be returning a client-side app shell. The match rows may load from a separate API request."
           : "The fetched page did not match the current Rank/Track parser format."
       return NextResponse.json(
@@ -238,7 +274,7 @@ export async function POST(request: NextRequest) {
       tf_percentage: payload.season_summary.tf_percentage,
       finishing_percentage: payload.season_summary.finishing_percentage,
       matches: payload.matches,
-      source: renderedBrowser ? "rankwrestler_rendered_browser_sync" : "rankwrestler_sync",
+      source: usedRenderedBrowser ? "rankwrestler_rendered_browser_sync" : "rankwrestler_sync",
       source_url: rankwrestlerUrl,
       updated_at: new Date().toISOString(),
     }
@@ -271,7 +307,7 @@ export async function POST(request: NextRequest) {
         ...(renderedDiagnostics ?? {}),
       },
       parsedSource,
-      renderedBrowser,
+      renderedBrowser: usedRenderedBrowser,
     })
   } catch (error) {
     console.error("[rankwrestler-sync] unexpected error", error)
