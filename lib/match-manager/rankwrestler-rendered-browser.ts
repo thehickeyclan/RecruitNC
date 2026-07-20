@@ -167,14 +167,21 @@ async function waitForRankWrestlerMatchHistory(page: Page): Promise<boolean> {
   while (Date.now() < deadline) {
     const text = await page.locator("body").innerText({ timeout: 5_000 }).catch(() => "")
     lastText = text
-    if (text.includes("Match History") && /\b(?:Win|Loss)\b/.test(text)) return true
+    if (looksLikeRankWrestlerMatchRows(text)) return true
 
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight)).catch(() => undefined)
     await page.waitForTimeout(1_250)
     await page.evaluate(() => window.scrollTo(0, 0)).catch(() => undefined)
     await page.waitForTimeout(1_250)
   }
-  return lastText.includes("Match History") && /\b(?:Win|Loss)\b/.test(lastText)
+  return looksLikeRankWrestlerMatchRows(lastText)
+}
+
+function looksLikeRankWrestlerMatchRows(text: string): boolean {
+  return (
+    (text.includes("Match History") && /\b(?:Win|Loss)\b/.test(text)) ||
+    /\b(?:Win|Loss)\s+\d{1,2}\/\d{1,2}\/\d{2,4}\b/i.test(text)
+  )
 }
 
 function rankWrestlerRenderedUserAgent(): string {

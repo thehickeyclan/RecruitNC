@@ -120,4 +120,35 @@ describe("parseRankWrestlerText", () => {
       weight: "126",
     })
   })
+
+  it("parses compact rendered RankWrestler rows without a Match History heading", () => {
+    const renderedProfileText =
+      "#5 What If? Mattex Adams Leesville Road • 126 • Sr Career Record: 49-12 " +
+      "*Top 3 Wins highlighted in gold* " +
+      "Loss 2/21/2026 99.91 Ethan Finn • Pinecrest High School 126 lbs • NCHSAA State Championships • Dec " +
+      "Win 2/21/2026 99.11 Christopher Maynor • Charles E. Jordan 126 lbs • NCHSAA State Championships • Dec " +
+      "Win 2/21/2026 99.86 Wyatt Watkins • Millbrook 126 lbs • NCHSAA State Championships • N"
+
+    const matches = parseRankWrestlerText(renderedProfileText)
+
+    expect(matches).toHaveLength(3)
+    expect(matches[0]).toMatchObject({
+      date: "2/21/2026",
+      winner: "Ethan Finn",
+      winner_school: "Pinecrest High School",
+      result: "Dec",
+      venue: "NCHSAA State Championships",
+      weight: "126",
+      opp_percent: 99.91,
+    })
+    expect(matches[1]).toMatchObject({
+      date: "2/21/2026",
+      loser: "Christopher Maynor",
+      loser_school: "Charles E. Jordan",
+      result: "Dec",
+      venue: "NCHSAA State Championships",
+      weight: "126",
+      opp_percent: 99.11,
+    })
+  })
 })
