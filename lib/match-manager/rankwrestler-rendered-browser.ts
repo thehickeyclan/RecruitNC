@@ -258,6 +258,7 @@ function seasonStartYearFromLabel(label: string): string | null {
 }
 
 export function rankWrestlerSeasonUrl(currentUrl: string, seasonLabel: string): string | null {
+  if (/early preseason/i.test(seasonLabel)) return null
   const seasonStartYear = seasonStartYearFromLabel(seasonLabel)
   if (!seasonStartYear) return null
 
@@ -287,7 +288,7 @@ function currentSeasonLabelFromText(text: string): string | undefined {
   const recordSeason = text.match(/\b(20\d{2}-\d{2})\s+Record\b/i)?.[1]
   if (recordSeason) return recordSeason
   const labels = seasonLabelsFromText(text)
-  return labels.find((label) => /last season/i.test(label)) ?? labels[0]
+  return labels.find((label) => /last season/i.test(label)) ?? labels.find((label) => !/early preseason/i.test(label)) ?? labels[0]
 }
 
 async function seasonTargetsFromPage(page: Page): Promise<Array<{ label: string; href?: string }>> {
@@ -330,6 +331,7 @@ function mergedSeasonTargets(
   const targets = new Map<string, { label: string; href?: string; seasonUrl?: string }>()
 
   const addTarget = (target: { label: string; href?: string }) => {
+    if (/early preseason/i.test(target.label)) return
     const seasonUrl = rankWrestlerSeasonUrl(currentUrl, target.label) ?? undefined
     const key = seasonUrl || target.href || normalizeSeasonKey(target.label)
     if (!key) return
@@ -343,10 +345,22 @@ function mergedSeasonTargets(
   }
 
   addTarget({ label: initialSeasonLabel })
+  for (const label of historicalSeasonLabelsFromCurrent(initialSeasonLabel)) addTarget({ label })
   for (const label of discoveredSeasonLabels) addTarget({ label })
   for (const target of discoveredSeasonTargets) addTarget(target)
 
   return [...targets.values()]
+}
+
+export function historicalSeasonLabelsFromCurrent(currentSeasonLabel: string, seasonCount = 4): string[] {
+  const currentStart = seasonStartYearFromLabel(currentSeasonLabel)
+  if (!currentStart) return []
+
+  const start = Number(currentStart)
+  return Array.from({ length: seasonCount }, (_, index) => {
+    const year = start - index
+    return `${year}-${String(year + 1).slice(-2)}`
+  })
 }
 
 function rankWrestlerSearchTerms(athleteName: string): string[] {
