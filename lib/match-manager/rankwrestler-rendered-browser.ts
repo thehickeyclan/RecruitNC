@@ -33,34 +33,42 @@ type ManagedBrowser = {
   close: () => Promise<void>
 }
 
-function rankWrestlerBaseUrl(): string {
-  return "https://www.rankwrestlers.com"
-}
-
 function normalizedRankWrestlerCookieHeader(): string | null {
   const raw = process.env.RANKWRESTLER_COOKIE?.trim()
   if (!raw) return null
   return raw.includes("=") ? raw : `authToken=${raw}`
 }
 
-function cookiesFromHeader(cookieHeader: string, url: string): Array<{ name: string; value: string; domain: string; path: string; secure: boolean; httpOnly: boolean }> {
+function cookieDomainsForUrl(url: string): string[] {
   const { hostname } = new URL(url)
+  if (/(^|\.)rankwrestlers\.com$/i.test(hostname)) {
+    return [hostname, ".rankwrestlers.com"]
+  }
+  if (/(^|\.)rankwrestler\.com$/i.test(hostname)) {
+    return [hostname, ".rankwrestler.com"]
+  }
+  return [hostname]
+}
+
+function cookiesFromHeader(cookieHeader: string, url: string): Array<{ name: string; value: string; domain: string; path: string; secure: boolean; httpOnly: boolean }> {
+  const domains = cookieDomainsForUrl(url)
   return cookieHeader
     .split(";")
     .map((part) => part.trim())
     .filter(Boolean)
-    .map((part) => {
+    .flatMap((part) => {
       const eq = part.indexOf("=")
       const name = eq >= 0 ? part.slice(0, eq).trim() : "authToken"
       const value = eq >= 0 ? part.slice(eq + 1).trim() : part
-      return {
+      if (!name || !value) return []
+      return domains.map((domain) => ({
         name,
         value,
-        domain: hostname,
+        domain,
         path: "/",
         secure: true,
         httpOnly: false,
-      }
+      }))
     })
     .filter((cookie) => cookie.name && cookie.value)
 }
@@ -137,12 +145,45 @@ async function loginIfNeeded(page: Page): Promise<boolean> {
   return true
 }
 
+async function renderedPageDiagnostics(page: Page, usedLogin: boolean, usedCookie: boolean) {
+  const text = await page.locator("body").innerText({ timeout: 10_000 }).catch(() => "")
+  const htmlLength = await page.locator("html").evaluate((html) => html.outerHTML.length).catch(() => 0)
+  const title = await page.title().catch(() => "")
+  const finalUrl = page.url()
+  return {
+    title,
+    finalUrl,
+    textLength: text.length,
+    htmlLength,
+    preview: text.replace(/\s+/g, " ").trim().slice(0, 1200),
+    usedLogin,
+    usedCookie,
+  }
+}
+
+async function waitForRankWrestlerMatchHistory(page: Page): Promise<boolean> {
+  const deadline = Date.now() + 55_000
+  let lastText = ""
+  while (Date.now() < deadline) {
+    const text = await page.locator("body").innerText({ timeout: 5_000 }).catch(() => "")
+    lastText = text
+    if (text.includes("Match History") && /\b(?:Win|Loss)\b/.test(text)) return true
+
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight)).catch(() => undefined)
+    await page.waitForTimeout(1_250)
+    await page.evaluate(() => window.scrollTo(0, 0)).catch(() => undefined)
+    await page.waitForTimeout(1_250)
+  }
+  return lastText.includes("Match History") && /\b(?:Win|Loss)\b/.test(lastText)
+}
+
 function rankWrestlerRenderedUserAgent(): string {
   return "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36 RecruitNC-RankWrestler-Sync/1.0"
 }
 
 export async function renderRankWrestlerProfileText(url: string): Promise<RankWrestlerRenderedBrowserResult> {
   let managed: ManagedBrowser | null = null
+  let page: Page | null = null
   let usedLogin = false
   let usedCookie = false
   try {
@@ -151,8 +192,8 @@ export async function renderRankWrestlerProfileText(url: string): Promise<RankWr
       userAgent: rankWrestlerRenderedUserAgent(),
       viewport: { width: 1440, height: 1600 },
     })
-    usedCookie = await addRankWrestlerCookie(context, rankWrestlerBaseUrl())
-    const page = await context.newPage()
+    usedCookie = await addRankWrestlerCookie(context, url)
+    page = await context.newPage()
 
     await page.goto(url, { waitUntil: "domcontentloaded", timeout: 45_000 })
     await page.waitForLoadState("networkidle", { timeout: 20_000 }).catch(() => null)
@@ -163,19 +204,30 @@ export async function renderRankWrestlerProfileText(url: string): Promise<RankWr
       await page.waitForLoadState("networkidle", { timeout: 20_000 }).catch(() => null)
     }
 
-    await page.waitForFunction(
-      () => {
-        const body = document.body?.innerText ?? ""
-        return body.includes("Match History") && /\b(?:Win|Loss)\b/.test(body)
-      },
-      { timeout: 45_000 },
-    )
-
+    const matchHistoryFound = await waitForRankWrestlerMatchHistory(page)
     const text = await page.locator("body").innerText({ timeout: 10_000 })
     const htmlLength = await page.locator("html").evaluate((html) => html.outerHTML.length)
     const title = await page.title()
     const finalUrl = page.url()
     await context.close()
+    if (!matchHistoryFound) {
+      return {
+        ok: false,
+        status: 422,
+        error: "RankWrestler rendered, but the Match History rows did not appear.",
+        hint:
+          "The browser reached RankWrestler, but the visible page did not include Match History rows. Check whether the RankWrestler cookie/account can view this wrestler, or try opening the exact URL in a private browser while logged in.",
+        diagnostics: {
+          title,
+          finalUrl,
+          textLength: text.length,
+          htmlLength,
+          preview: text.replace(/\s+/g, " ").trim().slice(0, 1200),
+          usedLogin,
+          usedCookie,
+        },
+      }
+    }
     return {
       ok: true,
       text,
@@ -188,12 +240,16 @@ export async function renderRankWrestlerProfileText(url: string): Promise<RankWr
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : "RankWrestler rendered-browser sync failed."
+    const diagnostics = page ? await renderedPageDiagnostics(page, usedLogin, usedCookie).catch(() => undefined) : undefined
     return {
       ok: false,
       status: /not configured|add RANKWRESTLER|login page/i.test(message) ? 412 : 500,
       error: message,
       hint:
-        "Rendered browser sync needs either a valid RANKWRESTLER_COOKIE or RANKWRESTLER_EMAIL/RANKWRESTLER_PASSWORD. If Vercel cannot launch Chromium, configure RANKWRESTLER_BROWSER_WS_URL with a Browserless/remote Chrome endpoint.",
+        diagnostics?.textLength
+          ? "RankWrestler loaded in the browser, but the expected match list did not become available. Review the diagnostics preview to see whether it rendered login, member home, an access screen, or an unexpected layout."
+          : "Rendered browser sync needs either a valid RANKWRESTLER_COOKIE or RANKWRESTLER_EMAIL/RANKWRESTLER_PASSWORD. If Vercel cannot launch Chromium, configure RANKWRESTLER_BROWSER_WS_URL with a Browserless/remote Chrome endpoint.",
+      diagnostics,
     }
   } finally {
     await managed?.close().catch(() => undefined)
