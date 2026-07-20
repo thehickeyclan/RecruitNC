@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
-import { Activity, ArrowLeft, CalendarDays, CheckCircle2, Clock, DollarSign, FileText, LayoutGrid, LinkIcon, MessageSquare, Paperclip, Plus, Save, Send, ShieldCheck, Trash2, Upload, UserPlus, XCircle } from "lucide-react"
+import { Activity, ArrowLeft, CalendarDays, CheckCircle2, ChevronDown, ChevronRight, Clock, DollarSign, FileText, LayoutGrid, LinkIcon, MessageSquare, Paperclip, Plus, Save, Send, ShieldCheck, Trash2, Upload, UserPlus, XCircle } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -104,6 +104,20 @@ const STATUS_CLASS: Record<string, string> = {
   done: "bg-emerald-400/20 text-emerald-100 border border-emerald-300/35",
 }
 
+const STATUS_SORT_ORDER: Record<string, number> = {
+  blocked: 0,
+  in_progress: 1,
+  todo: 2,
+  done: 3,
+}
+
+const PRIORITY_SORT_ORDER: Record<string, number> = {
+  urgent: 0,
+  high: 1,
+  normal: 2,
+  low: 3,
+}
+
 const APPROVAL_LABEL: Record<string, string> = {
   pending: "Pending",
   approved: "Approved",
@@ -162,6 +176,32 @@ function assigneeDisplayName(assignee: TocTaskAssignee): string {
 function assigneeTooltip(assignee: TocTaskAssignee): string {
   const name = assigneeDisplayName(assignee)
   return assignee.email ? `${name} · ${assignee.email}` : name
+}
+
+function taskPrimaryOwner(task: TocProjectTask): string {
+  const assignee = task.assignees?.[0]
+  if (!assignee) return "Unassigned"
+  const label = assigneeDisplayName(assignee)
+  const extra = Math.max(0, (task.assignees?.length ?? 0) - 1)
+  return extra ? `${label} +${extra}` : label
+}
+
+function taskDueSortValue(task: TocProjectTask): number {
+  const value = task.due_date || task.delivery_date
+  if (!value) return Number.MAX_SAFE_INTEGER
+  const time = new Date(value).getTime()
+  return Number.isFinite(time) ? time : Number.MAX_SAFE_INTEGER
+}
+
+function compareTasksForOpsBoard(a: TocProjectTask, b: TocProjectTask): number {
+  return (
+    taskPrimaryOwner(a).localeCompare(taskPrimaryOwner(b)) ||
+    (STATUS_SORT_ORDER[a.status] ?? 99) - (STATUS_SORT_ORDER[b.status] ?? 99) ||
+    (PRIORITY_SORT_ORDER[a.priority] ?? 99) - (PRIORITY_SORT_ORDER[b.priority] ?? 99) ||
+    taskDueSortValue(a) - taskDueSortValue(b) ||
+    a.sort_order - b.sort_order ||
+    a.title.localeCompare(b.title)
+  )
 }
 
 function parseLinks(value: string): TocTaskLink[] {
@@ -450,6 +490,7 @@ export default function TocProjectPlanPage() {
   const [taskOwnerFilter, setTaskOwnerFilter] = useState("all")
   const [taskPriorityFilter, setTaskPriorityFilter] = useState("all")
   const [taskSearch, setTaskSearch] = useState("")
+  const [expandedTaskIds, setExpandedTaskIds] = useState<Record<string, boolean>>({})
   const [ownerSearch, setOwnerSearch] = useState<Record<string, string>>({})
   const [ownerSuggestions, setOwnerSuggestions] = useState<Record<string, TocProjectUser[]>>({})
   const [ownerSearchLoading, setOwnerSearchLoading] = useState<Record<string, boolean>>({})
@@ -670,6 +711,10 @@ export default function TocProjectPlanPage() {
 
   function updateDraft(id: string, patch: Partial<TocProjectTask>) {
     setDrafts((prev) => ({ ...prev, [id]: { ...(prev[id] ?? tasks.find((t) => t.id === id)!), ...patch } }))
+  }
+
+  function toggleTaskExpanded(taskId: string) {
+    setExpandedTaskIds((prev) => ({ ...prev, [taskId]: !prev[taskId] }))
   }
 
   function approvalDraftFor(task: TocProjectTask): ApprovalDraft {
@@ -1767,7 +1812,7 @@ export default function TocProjectPlanPage() {
         )}
         {TOC_PROJECT_CATEGORIES.filter((category) => taskCategoryFilter === "all" || category.name === taskCategoryFilter).map((category) => {
           const meta = categoryMeta(category.name)
-          const categoryTasks = filteredTasks.filter((task) => task.category === category.name).sort((a, b) => a.sort_order - b.sort_order)
+          const categoryTasks = filteredTasks.filter((task) => task.category === category.name).sort(compareTasksForOpsBoard)
           const categoryBudget = categoryTasks.reduce((sum, task) => sum + Number(task.budget_amount ?? 0), 0)
           if (categoryTasks.length === 0 && taskCategoryFilter === "all" && activeFilterCount > 0) return null
           return (
@@ -1941,15 +1986,36 @@ export default function TocProjectPlanPage() {
                           </div>
                           <div className="p-3 md:p-2">
                             <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400 md:hidden">Updates</div>
-                            <div className="flex flex-wrap gap-1">
+                            <div className="flex flex-wrap items-center gap-1">
                               <Badge className="gap-1 border border-blue-300/30 bg-blue-400/15 text-blue-100 hover:bg-blue-400/20"><MessageSquare className="h-3 w-3" />{draft.comments?.length ?? 0}</Badge>
                               <Badge className="gap-1 border border-slate-300/25 bg-slate-400/15 text-slate-100 hover:bg-slate-400/20"><Paperclip className="h-3 w-3" />{draft.attachments?.length ?? 0}</Badge>
                               <Badge className="gap-1 border border-indigo-300/30 bg-indigo-400/15 text-indigo-100 hover:bg-indigo-400/20"><LinkIcon className="h-3 w-3" />{draft.links?.length ?? 0}</Badge>
                               <Badge className={`gap-1 border ${pendingTaskApprovals ? "border-amber-300/40 bg-amber-400/20 text-amber-100" : "border-slate-300/25 bg-slate-400/15 text-slate-100"} hover:bg-white/15`}><ShieldCheck className="h-3 w-3" />{pendingTaskApprovals}</Badge>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => toggleTaskExpanded(task.id)}
+                                className="ml-0 h-7 px-2 text-xs text-[#D6B65A] hover:bg-white/10 hover:text-white md:ml-auto"
+                              >
+                                {expandedTaskIds[task.id] ? <ChevronDown className="mr-1 h-3.5 w-3.5" /> : <ChevronRight className="mr-1 h-3.5 w-3.5" />}
+                                {expandedTaskIds[task.id] ? "Hide" : "Details"}
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => void saveTask(task.id)}
+                                disabled={disabled || savingId === task.id}
+                                className="h-7 bg-[#D6B65A] px-2 text-xs text-[#061426] hover:bg-[#c8a94f]"
+                              >
+                                <Save className="mr-1 h-3.5 w-3.5" /> {savingId === task.id ? "Saving…" : "Save"}
+                              </Button>
                             </div>
                           </div>
                         </div>
 
+                        {expandedTaskIds[task.id] && (
+                        <>
                         <div className="grid gap-3 bg-[#061426] p-3 lg:grid-cols-[1fr_1fr]">
                           <div className="rounded-lg border border-white/10 bg-white/5 p-3">
                             <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Notes & links</div>
@@ -2147,6 +2213,8 @@ export default function TocProjectPlanPage() {
                             <Save className="mr-1 h-4 w-4" /> {savingId === task.id ? "Saving…" : "Save row"}
                           </Button>
                         </div>
+                        </>
+                        )}
                       </div>
                     )
                   })}
