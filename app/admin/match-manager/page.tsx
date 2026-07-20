@@ -56,6 +56,7 @@ export default function MatchManagerPage() {
   const [rankSyncResult, setRankSyncResult] = useState<any>(null)
   const [deduplicateMatches, setDeduplicateMatches] = useState(true)
   const [useRenderedBrowserSync, setUseRenderedBrowserSync] = useState(true)
+  const [syncAllRankSeasons, setSyncAllRankSeasons] = useState(false)
   const [parseResult, setParseResult] = useState<any>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isBulkSubmitting, setIsBulkSubmitting] = useState(false)
@@ -412,6 +413,7 @@ export default function MatchManagerPage() {
           rankwrestlerUrl: rankwrestlerUrl.trim(),
           deduplicate: deduplicateMatches,
           renderedBrowser: useRenderedBrowserSync,
+          syncAllSeasons: syncAllRankSeasons,
         }),
       })
       const data = await response.json()
@@ -1445,12 +1447,36 @@ export default function MatchManagerPage() {
                   type="checkbox"
                   id="rankRenderedBrowserSync"
                   checked={useRenderedBrowserSync}
-                  onChange={(e) => setUseRenderedBrowserSync(e.target.checked)}
+                  onChange={(e) => {
+                    setUseRenderedBrowserSync(e.target.checked)
+                    if (!e.target.checked) setSyncAllRankSeasons(false)
+                  }}
                   className="h-4 w-4 rounded"
                 />
                 <Label htmlFor="rankRenderedBrowserSync" className="cursor-pointer font-normal">
                   Use browser login automation (recommended)
                 </Label>
+              </div>
+
+              <div className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  id="rankSyncAllSeasons"
+                  checked={syncAllRankSeasons}
+                  onChange={(e) => {
+                    setSyncAllRankSeasons(e.target.checked)
+                    if (e.target.checked) setUseRenderedBrowserSync(true)
+                  }}
+                  className="mt-1 h-4 w-4 rounded"
+                />
+                <div>
+                  <Label htmlFor="rankSyncAllSeasons" className="cursor-pointer font-normal">
+                    Sync all visible RankWrestler seasons
+                  </Label>
+                  <p className="text-xs text-gray-500">
+                    Browser automation will click visible season tabs like 2025-26, 2024-25, etc. and save each season separately.
+                  </p>
+                </div>
               </div>
 
               <div className="flex items-center gap-2">
@@ -1471,7 +1497,13 @@ export default function MatchManagerPage() {
                 disabled={isRankSyncing || !selectedAthlete || !rankwrestlerUrl.trim()}
                 className="w-full"
               >
-                {isRankSyncing ? "Syncing RankWrestler..." : "Sync Selected Athlete from RankWrestler"}
+                {isRankSyncing
+                  ? syncAllRankSeasons
+                    ? "Syncing all RankWrestler seasons..."
+                    : "Syncing RankWrestler..."
+                  : syncAllRankSeasons
+                    ? "Sync All Visible Seasons from RankWrestler"
+                    : "Sync Selected Athlete from RankWrestler"}
               </Button>
 
               {rankSyncResult && (
@@ -1482,19 +1514,58 @@ export default function MatchManagerPage() {
                         <p className="font-semibold text-green-700">✅ RankWrestler Sync Complete</p>
                         <p>{rankSyncResult.message}</p>
                         <div className="mt-2 text-sm text-gray-600">
-                          <p>Season: {rankSyncResult.season}</p>
-                          <p>Grade: {rankSyncResult.grade}</p>
+                          {Array.isArray(rankSyncResult.syncedSeasons) ? (
+                            <div className="mt-2 overflow-hidden rounded-md border border-green-200">
+                              <table className="w-full text-left text-xs">
+                                <thead className="bg-green-50 text-green-900">
+                                  <tr>
+                                    <th className="px-2 py-1">Season</th>
+                                    <th className="px-2 py-1">Grade</th>
+                                    <th className="px-2 py-1">Record</th>
+                                    <th className="px-2 py-1">Saved</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {rankSyncResult.syncedSeasons.map((season: any) => (
+                                    <tr key={season.season} className="border-t border-green-100">
+                                      <td className="px-2 py-1 font-medium">{season.season}</td>
+                                      <td className="px-2 py-1">{season.grade}</td>
+                                      <td className="px-2 py-1">
+                                        {season.wins}-{season.losses}
+                                      </td>
+                                      <td className="px-2 py-1">{season.dedupedMatches ?? season.totalMatches} bouts</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          ) : (
+                            <>
+                              <p>Season: {rankSyncResult.season}</p>
+                              <p>Grade: {rankSyncResult.grade}</p>
+                            </>
+                          )}
                           {typeof rankSyncResult.renderedBrowser === "boolean" && (
                             <p>Mode: {rankSyncResult.renderedBrowser ? "Browser automation" : "Server fetch"}</p>
                           )}
                           {rankSyncResult.parsedSource && <p>Source parsed: {rankSyncResult.parsedSource}</p>}
+                          {rankSyncResult.failedSeasons?.length > 0 && (
+                            <p className="text-amber-700">
+                              {rankSyncResult.failedSeasons.length} visible season
+                              {rankSyncResult.failedSeasons.length === 1 ? "" : "s"} could not be saved.
+                            </p>
+                          )}
                           {rankSyncResult.diagnostics && (
                             <p>
-                              Parsed {rankSyncResult.diagnostics.parsedMatches} bouts; saved{" "}
-                              {rankSyncResult.diagnostics.dedupedMatches}
-                              {rankSyncResult.diagnostics.duplicatesRemoved > 0
-                                ? ` (${rankSyncResult.diagnostics.duplicatesRemoved} duplicates removed)`
-                                : ""}
+                              {Array.isArray(rankSyncResult.syncedSeasons)
+                                ? `Detected ${rankSyncResult.diagnostics.renderedSeasonCount ?? rankSyncResult.syncedSeasons.length} rendered season page${(rankSyncResult.diagnostics.renderedSeasonCount ?? rankSyncResult.syncedSeasons.length) === 1 ? "" : "s"}.`
+                                : `Parsed ${rankSyncResult.diagnostics.parsedMatches} bouts; saved ${
+                                    rankSyncResult.diagnostics.dedupedMatches
+                                  }${
+                                    rankSyncResult.diagnostics.duplicatesRemoved > 0
+                                      ? ` (${rankSyncResult.diagnostics.duplicatesRemoved} duplicates removed)`
+                                      : ""
+                                  }`}
                             </p>
                           )}
                         </div>
