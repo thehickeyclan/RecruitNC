@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { buildRankWrestlerSeasonPayload, rankWrestlerTextCandidatesFromHtml } from "./rankwrestler-parser"
+import { buildRankWrestlerSeasonPayload, parseRankWrestlerText, rankWrestlerTextCandidatesFromHtml } from "./rankwrestler-parser"
 
 describe("rankWrestlerTextCandidatesFromHtml", () => {
   it("extracts parsable match text from streamed Next flight payloads", () => {
@@ -54,5 +54,70 @@ describe("rankWrestlerTextCandidatesFromHtml", () => {
       expect(parsed.payload.season_summary.losses).toBe(1)
       expect(parsed.payload.matches[0]?.opponent).toBe("John Opponent")
     }
+  })
+})
+
+describe("parseRankWrestlerText", () => {
+  it("parses rendered RankWrestler profile text copied from Match History", () => {
+    const renderedProfileText = [
+      "#5",
+      "What If?",
+      "Mattex Adams",
+      "Match History",
+      "*Top 3 Wins highlighted in gold*",
+      "Loss",
+      "2/21/2026",
+      "Ethan Finn",
+      "• Pinecrest High School",
+      "126 lbs",
+      "•",
+      "Dec",
+      "NCHSAA State Championships",
+      "99.91",
+      "Win",
+      "2/14/2026",
+      "jesse farnsworth",
+      "126 lbs",
+      "•",
+      "MD",
+      "NCHSAA 8A East Regional",
+      "99.31",
+      "Win",
+      "1/29/2026",
+      "Forfeit",
+      "126 lbs",
+      "•",
+      "For.",
+      "Rolesville/Leesville/Apex Friendship",
+    ].join("\n")
+
+    const matches = parseRankWrestlerText(renderedProfileText)
+
+    expect(matches).toHaveLength(3)
+    expect(matches[0]).toMatchObject({
+      date: "2/21/2026",
+      winner: "Ethan Finn",
+      winner_school: "Pinecrest High School",
+      result: "Dec",
+      venue: "NCHSAA State Championships",
+      weight: "126",
+      opp_percent: 99.91,
+    })
+    expect(matches[1]).toMatchObject({
+      date: "2/14/2026",
+      loser: "jesse farnsworth",
+      loser_school: "",
+      result: "MD",
+      venue: "NCHSAA 8A East Regional",
+      weight: "126",
+      opp_percent: 99.31,
+    })
+    expect(matches[2]).toMatchObject({
+      date: "1/29/2026",
+      loser: "Forfeit",
+      result: "For.",
+      venue: "Rolesville/Leesville/Apex Friendship",
+      weight: "126",
+    })
   })
 })
