@@ -1589,6 +1589,30 @@ export default function MatchManagerPage() {
                                 </ul>
                               </details>
                             )}
+                          {Array.isArray(rankSyncResult.diagnostics?.seasonDebugSteps) &&
+                            rankSyncResult.diagnostics.seasonDebugSteps.length > 0 && (
+                              <details className="mt-2 rounded-md bg-blue-50 p-2 text-xs text-blue-950">
+                                <summary className="cursor-pointer font-semibold">RankWrestler sync trace</summary>
+                                <ol className="mt-1 list-decimal space-y-2 pl-5">
+                                  {rankSyncResult.diagnostics.seasonDebugSteps.map((step: any, index: number) => (
+                                    <li key={`rank-trace-${index}`}>
+                                      <div>
+                                        <span className="font-semibold">{step.step}</span>
+                                        {step.label ? ` · ${step.label}` : ""}
+                                        {typeof step.ok === "boolean" ? ` · ${step.ok ? "ok" : "not ok"}` : ""}
+                                      </div>
+                                      <div>Rendered: {step.renderedSeason || "unknown"}</div>
+                                      {step.url && <div className="break-all">URL: {step.url}</div>}
+                                      {Array.isArray(step.visibleSeasonLabels) && step.visibleSeasonLabels.length > 0 && (
+                                        <div>Visible labels: {step.visibleSeasonLabels.join(", ")}</div>
+                                      )}
+                                      {step.error && <div className="text-red-700">Error: {step.error}</div>}
+                                      {step.preview && <div className="mt-1 line-clamp-3 text-blue-800">{step.preview}</div>}
+                                    </li>
+                                  ))}
+                                </ol>
+                              </details>
+                            )}
                           {(rankSyncResult.failedSeasons?.length > 0 || rankSyncResult.skippedSeasons?.length > 0) && (
                             <details className="mt-2 rounded-md bg-amber-50 p-2 text-xs text-amber-900">
                               <summary className="cursor-pointer font-semibold">Skipped / failed season details</summary>
