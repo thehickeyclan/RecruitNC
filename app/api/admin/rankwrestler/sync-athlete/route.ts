@@ -20,6 +20,16 @@ function isAllowedRankWrestlerUrl(value: string): boolean {
   }
 }
 
+function expectedSeasonFromRankWrestlerUrl(value: string): string | null {
+  try {
+    const season = new URL(value).searchParams.get("season")
+    if (!season || !/^20\d{2}$/.test(season)) return null
+    return `${season}-${String(Number(season) + 1).slice(-2)}`
+  } catch {
+    return null
+  }
+}
+
 type RankWrestlerFetchDiagnostics = {
   url: string
   textLength: number
@@ -248,7 +258,10 @@ export async function POST(request: NextRequest) {
     let usedRenderedBrowser = renderedBrowser
 
     if (syncAllSeasons) {
-      const renderedAll = await renderRankWrestlerAllSeasonTexts(rankwrestlerUrl)
+      const renderedAll = await renderRankWrestlerAllSeasonTexts(rankwrestlerUrl, {
+        athleteName: athlete.name,
+        highSchool: athlete.highschool,
+      })
       if (!renderedAll.ok) {
         return NextResponse.json(
           { success: false, error: renderedAll.error, hint: renderedAll.hint, diagnostics: renderedAll.diagnostics },
@@ -453,6 +466,20 @@ export async function POST(request: NextRequest) {
     }
 
     const payload = parsed.payload
+    const expectedSeason = expectedSeasonFromRankWrestlerUrl(rankwrestlerUrl)
+    if (expectedSeason && payload.wrestler_info.season !== expectedSeason) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `RankWrestler rendered ${payload.wrestler_info.season}, not the requested ${expectedSeason}.`,
+          hint:
+            "This RankWrestler wrestler profile is probably not linked to that archive season. Open RankWrestler's archive search for that season and use the actual prior-season wrestler profile URL, if one exists.",
+          diagnostics: renderedDiagnostics ?? fetchDiagnostics,
+        },
+        { status: 422 },
+      )
+    }
+
     const saved = await replaceAthleteSeasonMatches({
       supabase,
       athleteId,

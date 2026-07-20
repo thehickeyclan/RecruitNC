@@ -1474,7 +1474,8 @@ export default function MatchManagerPage() {
                     Sync all visible RankWrestler seasons
                   </Label>
                   <p className="text-xs text-gray-500">
-                    Browser automation will click visible season tabs like 2025-26, 2024-25, etc. and save each season separately.
+                    Browser automation will try direct season URLs, linked prior-season profiles, and RankWrestler
+                    archive search when a current profile is not linked backward.
                   </p>
                 </div>
               </div>
