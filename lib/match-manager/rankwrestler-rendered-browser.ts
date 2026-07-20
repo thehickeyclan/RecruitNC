@@ -30,6 +30,7 @@ export type RankWrestlerRenderedBrowserResult =
     }
 
 export type RankWrestlerRenderedSeason = Extract<RankWrestlerRenderedBrowserResult, { ok: true }>
+type RankWrestlerRenderedFailure = Extract<RankWrestlerRenderedBrowserResult, { ok: false }>
 
 export type RankWrestlerRenderedAllSeasonsResult =
   | {
@@ -62,6 +63,10 @@ export type RankWrestlerRenderedAllSeasonsResult =
 type ManagedBrowser = {
   browser: Browser
   close: () => Promise<void>
+}
+
+function isRankWrestlerRenderedFailure(result: RankWrestlerRenderedBrowserResult): result is RankWrestlerRenderedFailure {
+  return result.ok === false
 }
 
 function normalizedRankWrestlerCookieHeader(): string | null {
@@ -228,6 +233,19 @@ function normalizeSeasonKey(value: string): string {
   return value.match(/\b20\d{2}-\d{2}\b/)?.[0] ?? value.replace(/\s+/g, " ").trim()
 }
 
+export function rankWrestlerSeasonUrl(currentUrl: string, seasonLabel: string): string | null {
+  const seasonStartYear = normalizeSeasonKey(seasonLabel).match(/^20\d{2}/)?.[0]
+  if (!seasonStartYear) return null
+
+  try {
+    const targetUrl = new URL(currentUrl)
+    targetUrl.searchParams.set("season", seasonStartYear)
+    return targetUrl.toString()
+  } catch {
+    return null
+  }
+}
+
 function currentSeasonLabelFromText(text: string): string | undefined {
   const recordSeason = text.match(/\b(20\d{2}-\d{2})\s+Record\b/i)?.[1]
   if (recordSeason) return recordSeason
@@ -260,11 +278,44 @@ async function seasonTargetsFromPage(page: Page): Promise<Array<{ label: string;
     .catch(() => []) as Promise<Array<{ label: string; href?: string }>>
 }
 
+function mergedSeasonTargets(
+  currentUrl: string,
+  discoveredSeasonLabels: string[],
+  discoveredSeasonTargets: Array<{ label: string; href?: string }>,
+  initialSeasonLabel: string,
+): Array<{ label: string; href?: string; seasonUrl?: string }> {
+  const targets = new Map<string, { label: string; href?: string; seasonUrl?: string }>()
+
+  const addTarget = (target: { label: string; href?: string }) => {
+    const seasonUrl = rankWrestlerSeasonUrl(currentUrl, target.label) ?? undefined
+    const key = seasonUrl || target.href || normalizeSeasonKey(target.label)
+    if (!key) return
+
+    const existing = targets.get(key)
+    targets.set(key, {
+      label: existing?.label || target.label,
+      href: target.href || existing?.href,
+      seasonUrl: seasonUrl || existing?.seasonUrl,
+    })
+  }
+
+  addTarget({ label: initialSeasonLabel })
+  for (const label of discoveredSeasonLabels) addTarget({ label })
+  for (const target of discoveredSeasonTargets) addTarget(target)
+
+  return [...targets.values()]
+}
+
 async function clickSeasonLabel(page: Page, label: string): Promise<boolean> {
-  const exact = page.getByText(label, { exact: true }).first()
+  const exact = page
+    .locator("button, a, [role='button'], [tabindex='0']")
+    .filter({ hasText: label })
+    .first()
   if ((await exact.count().catch(() => 0)) > 0) {
-    await exact.click({ timeout: 5_000 }).catch(() => undefined)
-    return true
+    return exact
+      .click({ timeout: 5_000 })
+      .then(() => true)
+      .catch(() => false)
   }
 
   const seasonKey = normalizeSeasonKey(label)
@@ -273,19 +324,50 @@ async function clickSeasonLabel(page: Page, label: string): Promise<boolean> {
     .filter({ hasText: seasonKey })
     .first()
   if ((await control.count().catch(() => 0)) > 0) {
-    await control.click({ timeout: 5_000 }).catch(() => undefined)
-    return true
+    return control
+      .click({ timeout: 5_000 })
+      .then(() => true)
+      .catch(() => false)
   }
 
   return false
 }
 
-async function navigateOrClickSeasonTarget(page: Page, target: { label: string; href?: string }, currentUrl: string): Promise<boolean> {
+async function navigateOrClickSeasonTarget(
+  page: Page,
+  target: { label: string; href?: string; seasonUrl?: string },
+  currentUrl: string,
+): Promise<boolean> {
+  const seasonUrl = target.seasonUrl || rankWrestlerSeasonUrl(currentUrl, target.label)
+  if (seasonUrl && seasonUrl !== page.url()) {
+    await page.goto(seasonUrl, { waitUntil: "domcontentloaded", timeout: 45_000 })
+    return true
+  }
+
   if (target.href && target.href !== currentUrl) {
     await page.goto(target.href, { waitUntil: "domcontentloaded", timeout: 45_000 })
     return true
   }
-  return clickSeasonLabel(page, target.label)
+
+  const beforeText = await page.locator("body").innerText({ timeout: 10_000 }).catch(() => "")
+  const beforeUrl = page.url()
+  const clicked = await clickSeasonLabel(page, target.label)
+  if (clicked) {
+    const changed = await page
+      .waitForFunction(
+        ({ previousText, previousUrl }) =>
+          window.location.href !== previousUrl || (document.body.innerText || "") !== previousText,
+        { previousText: beforeText, previousUrl: beforeUrl },
+        { timeout: 8_000 },
+      )
+      .then(() => true)
+      .catch(() => false)
+    if (changed) return true
+  }
+
+  if (!seasonUrl || seasonUrl === page.url()) return false
+  await page.goto(seasonUrl, { waitUntil: "domcontentloaded", timeout: 45_000 })
+  return true
 }
 
 async function renderedSuccessFromPage(
@@ -410,34 +492,39 @@ export async function renderRankWrestlerAllSeasonTexts(url: string): Promise<Ran
     discoveredSeasonTargets.push(...(await seasonTargetsFromPage(page)))
 
     const initialSeasonLabel = currentSeasonLabelFromText(initialText) ?? "Current season"
-    const seasonTargets = discoveredSeasonTargets.length
-      ? discoveredSeasonTargets
-      : (discoveredSeasonLabels.length ? discoveredSeasonLabels : [initialSeasonLabel]).map((label) => ({ label }))
+    const seasonTargets = mergedSeasonTargets(url, discoveredSeasonLabels, discoveredSeasonTargets, initialSeasonLabel)
     const seasons: RankWrestlerRenderedSeason[] = []
     const seenTargetKeys = new Set<string>()
-    const initialSeasonKey = normalizeSeasonKey(initialSeasonLabel)
 
     for (const target of seasonTargets) {
-      const key = target.href || normalizeSeasonKey(target.label)
+      const key = target.seasonUrl || target.href || normalizeSeasonKey(target.label)
       if (seenTargetKeys.has(key)) continue
       seenTargetKeys.add(key)
 
-      if (normalizeSeasonKey(target.label) !== initialSeasonKey || target.href) {
-        await navigateOrClickSeasonTarget(page, target, page.url())
+      if (key !== page.url()) {
+        const changedSeason = await navigateOrClickSeasonTarget(page, target, url)
+        if (!changedSeason) {
+          failedSeasonTargets.push({
+            label: target.label,
+            href: target.href,
+            error: "Could not activate the RankWrestler season control.",
+          })
+          continue
+        }
         await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => null)
         await page.waitForTimeout(1_000)
       }
 
       const rendered = await renderedSuccessFromPage(page, usedLogin, usedCookie, target.label)
-      if (rendered.ok) {
-        seasons.push(rendered)
-      } else {
+      if (isRankWrestlerRenderedFailure(rendered)) {
         failedSeasonTargets.push({
           label: target.label,
           href: target.href,
           error: rendered.error,
           preview: rendered.diagnostics?.preview,
         })
+      } else {
+        seasons.push(rendered)
       }
     }
 
