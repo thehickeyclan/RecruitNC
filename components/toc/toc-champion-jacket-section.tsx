@@ -64,7 +64,7 @@ export function TocChampionJacketSection() {
               <p>
                 One wrestler per weight earns the NC United Tournament of Champions jacket — navy with{" "}
                 <strong className="text-white">NORTH CAROLINA</strong> across the chest and{" "}
-                <strong className="text-white">CHAMPION</strong> across the back. Top four place on the podium; only
+                <strong className="text-white">CHAMPION</strong> across the back. Top three place on the podium; only
                 the bracket winner wears it.
               </p>
               <p>

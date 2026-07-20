@@ -35,7 +35,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "What makes the Tournament of Champions different?",
-    a: `Invite-only — eight wrestlers per weight. College weight classes. Stacked eight-person brackets with true double-elimination and top-four placement. ${TOC_MATS_LINE} An elite Apex venue built for great wrestling and a crowd — championship-level production, not another grind-through tournament.`,
+    a: `Invite-only — eight wrestlers per weight. College weight classes. Stacked eight-person brackets with true double-elimination and top-three placement. ${TOC_MATS_LINE} An elite Apex venue built for great wrestling and a crowd — championship-level production, not another grind-through tournament.`,
   },
   {
     q: "What weight classes are used?",
@@ -51,7 +51,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "What is the Champion jacket?",
-    a: "Only the champion at each weight earns the NC United Tournament of Champions jacket — navy with arched NORTH CAROLINA on the chest, 2026 and CHAMPION on the back, and red-and-white sleeve stripes. Top-four placement is recognized on the podium; the jacket is for the winner alone. It is earned on the mat, not sold.",
+    a: "Only the champion at each weight earns the NC United Tournament of Champions jacket — navy with arched NORTH CAROLINA on the chest, 2026 and CHAMPION on the back, and red-and-white sleeve stripes. Top-three placement is recognized on the podium; the jacket is for the winner alone. It is earned on the mat, not sold.",
   },
   {
     q: "Is there a girls division?",
