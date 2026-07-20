@@ -287,6 +287,20 @@ function renderChatBodyWithMentions(body: string, mentions: TocProjectChatMentio
   return rows
 }
 
+function chatSnapshotKey(messages: TocProjectChatMessage[]): string {
+  return messages
+    .map((message) =>
+      [
+        message.id,
+        message.body,
+        message.edited_at ?? "",
+        message.deleted_at ?? "",
+        (message.reactions ?? []).map((reaction) => `${reaction.emoji}:${reaction.email}`).join(","),
+      ].join("|"),
+    )
+    .join("||")
+}
+
 function formatDateTime(value: string): string {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return value
@@ -1018,7 +1032,11 @@ export default function TocProjectPlanPage() {
       const res = await fetch("/api/admin/toc/project-chat", { cache: "no-store", credentials: "include" })
       const data = (await res.json()) as ChatPayload
       if (res.ok) {
-        setChatMessages(data.messages ?? [])
+        const nextMessages = data.messages ?? []
+        setChatMessages((prev) => {
+          if (nextMessages.length === 0 && prev.length > 0 && !data.unavailable) return prev
+          return chatSnapshotKey(prev) === chatSnapshotKey(nextMessages) ? prev : nextMessages
+        })
         setChatUnavailable(data.unavailable ? `Team chat missing. Run ${data.setupSql ?? "docs/sql/toc-project-plan.sql"} in Supabase to enable messages.` : null)
       }
     } catch {
@@ -1316,9 +1334,8 @@ export default function TocProjectPlanPage() {
                           )}
                           {!isDeleted && (
                             <div className={`mt-2 flex flex-wrap items-center gap-1 ${isMine ? "justify-end" : "justify-start"}`}>
-                              {CHAT_REACTION_EMOJIS.map((emoji) => {
+                              {Object.entries(reactionCounts).filter(([, count]) => count > 0).map(([emoji, count]) => {
                                 const reacted = (message.reactions ?? []).some((reaction) => reaction.emoji === emoji && reaction.email?.toLowerCase() === currentUser?.email?.toLowerCase())
-                                const count = reactionCounts[emoji] ?? 0
                                 return (
                                   <button
                                     key={`${message.id}-${emoji}`}
@@ -1331,6 +1348,20 @@ export default function TocProjectPlanPage() {
                                   </button>
                                 )
                               })}
+                              <select
+                                value=""
+                                onChange={(event) => {
+                                  const emoji = event.target.value
+                                  if (emoji) void reactToChatMessage(message.id, emoji)
+                                }}
+                                className={`h-7 rounded-full border border-white/10 px-2 text-xs outline-none ${isMine ? "bg-[#061426]/10 text-[#061426]" : "bg-white/10 text-slate-200"}`}
+                                aria-label="React to message"
+                              >
+                                <option value="">React…</option>
+                                {CHAT_REACTION_EMOJIS.map((emoji) => (
+                                  <option key={emoji} value={emoji}>{emoji}</option>
+                                ))}
+                              </select>
                               <span className="mx-1 h-4 w-px bg-current opacity-20" />
                               <button
                                 type="button"
