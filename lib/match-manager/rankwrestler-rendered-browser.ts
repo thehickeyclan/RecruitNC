@@ -472,6 +472,25 @@ async function findArchiveProfileViaSearch(
 }
 
 async function clickSeasonLabel(page: Page, label: string): Promise<boolean> {
+  const clickedInDom = await page
+    .evaluate((label) => {
+      const normalize = (value: string | null | undefined) => (value ?? "").replace(/\s+/g, " ").trim()
+      const seasonKey = label.match(/\b20\d{2}-\d{2}\b/)?.[0]
+      const controls = [...document.querySelectorAll("button, a, [role='button'], [tabindex='0']")]
+      const exact = controls.find((element) => normalize(element.textContent) === label)
+      const season = seasonKey ? controls.find((element) => normalize(element.textContent).includes(seasonKey)) : null
+      const target = exact ?? season
+      if (!target) return false
+      if (target instanceof HTMLElement) {
+        target.scrollIntoView({ block: "center", inline: "center" })
+        target.click()
+        return true
+      }
+      return false
+    }, label)
+    .catch(() => false)
+  if (clickedInDom) return true
+
   const exact = page
     .locator("button, a, [role='button'], [tabindex='0']")
     .filter({ hasText: label })
@@ -505,20 +524,22 @@ async function navigateOrClickSeasonTarget(
   options: RankWrestlerAllSeasonOptions,
 ): Promise<RankWrestlerSeasonNavigationResult> {
   const targetSeasonKey = normalizeSeasonKey(target.label)
-  const beforeText = await page.locator("body").innerText({ timeout: 10_000 }).catch(() => "")
-  const beforeUrl = page.url()
   const clicked = await clickSeasonLabel(page, target.label)
   if (clicked) {
-    const changed = await page
+    const changedToTarget = await page
       .waitForFunction(
-        ({ previousText, previousUrl }) =>
-          window.location.href !== previousUrl || (document.body.innerText || "") !== previousText,
-        { previousText: beforeText, previousUrl: beforeUrl },
-        { timeout: 8_000 },
+        (targetSeasonKey) => {
+          const text = document.body.innerText || ""
+          const recordSeason = text.match(/\b(20\d{2}-\d{2})\s+Record\b/i)?.[1]
+          if (recordSeason === targetSeasonKey) return true
+          return new RegExp(`Viewing the ${targetSeasonKey.replace("-", "\\\\-")} .*profile archive`, "i").test(text)
+        },
+        targetSeasonKey,
+        { timeout: 10_000 },
       )
       .then(() => true)
       .catch(() => false)
-    if (changed && (await pageCurrentSeasonKey(page)) === targetSeasonKey) return { ok: true }
+    if (changedToTarget || (await pageCurrentSeasonKey(page)) === targetSeasonKey) return { ok: true }
   }
 
   const seasonUrl = target.seasonUrl || rankWrestlerSeasonUrl(currentUrl, target.label)
