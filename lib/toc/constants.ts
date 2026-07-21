@@ -48,6 +48,21 @@ export const TOC_CHAMPION_JACKET = {
   },
 } as const
 
+/** Champion and placer awards — shown with the champion jacket section. */
+export const TOC_TROPHIES_AND_AWARDS = {
+  bracket: {
+    src: "/images/toc/tournament-of-champions-bracket-award.png",
+    alt: "Tournament of Champions 24 by 36 hard-copy champion bracket award",
+    width: 1536,
+    height: 1024,
+  },
+  items: [
+    "Every champion receives a 24×36 hard-copy bracket.",
+    "All three placers receive custom Tournament of Champions medals — gold, silver, and bronze.",
+    "The champion jacket remains winner-only: one wrestler per weight earns it.",
+  ],
+} as const
+
 export const TOC_WEIGHT_CLASSES = [
   117, 125, 133, 141, 149, 157, 165, 174, 184, 197, 285,
 ] as const
@@ -459,6 +474,7 @@ export const TOC_SECTION_NAV_GROUPS = [
 export const TOC_SECTION_NAV_QUICK = [
   { href: "#schedule", label: "Schedule" },
   { href: "#families", label: "Tickets" },
+  { href: "#trophies-awards", label: "Awards" },
   { href: "#volunteer", label: "Volunteer" },
   { href: "#athlete-interest", label: "Athletes" },
 ] as const

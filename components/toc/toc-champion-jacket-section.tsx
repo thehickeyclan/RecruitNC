@@ -1,6 +1,6 @@
 import Image from "next/image"
 import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass } from "@/components/toc/toc-theme"
-import { TOC_BRAND, TOC_CHAMPION_JACKET } from "@/lib/toc/constants"
+import { TOC_BRAND, TOC_CHAMPION_JACKET, TOC_TROPHIES_AND_AWARDS } from "@/lib/toc/constants"
 
 function JacketProductShot({
   side,
@@ -65,7 +65,7 @@ export function TocChampionJacketSection() {
                 One wrestler per weight earns the NC United Tournament of Champions jacket — navy with{" "}
                 <strong className="text-white">NORTH CAROLINA</strong> across the chest and{" "}
                 <strong className="text-white">CHAMPION</strong> across the back. Top three place on the podium; only
-                the bracket winner wears it.
+                the bracket winner wears the jacket.
               </p>
               <p>
                 Not merchandise — a keepsake you cannot buy. Red, white, and navy sleeve stripes with{" "}
@@ -89,6 +89,39 @@ export function TocChampionJacketSection() {
             <p className={`mt-4 text-center text-white/50 text-xs ${tocDisplayClass()} tracking-widest`}>
               One champion · Each weight · 2026
             </p>
+          </div>
+        </div>
+
+        <div
+          id="trophies-awards"
+          className="mt-10 sm:mt-14 grid gap-6 rounded-2xl border border-white/15 bg-white/[0.06] p-4 sm:p-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-center"
+        >
+          <div>
+            <p className={`text-[#D7B95A] text-sm sm:text-base mb-2 ${tocDisplayClass()} tracking-[0.18em] uppercase`}>
+              Trophies & awards
+            </p>
+            <h3 className={`text-3xl sm:text-4xl text-white leading-none ${tocDisplayClass()}`}>
+              A keepsake for every podium finish.
+            </h3>
+            <ul className="mt-5 space-y-3 text-white/85 text-base sm:text-lg leading-relaxed">
+              {TOC_TROPHIES_AND_AWARDS.items.map((item) => (
+                <li key={item} className="flex gap-3">
+                  <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-[#D7B95A]" aria-hidden />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="relative overflow-hidden rounded-xl border border-white/15 bg-white shadow-2xl">
+            <Image
+              src={TOC_TROPHIES_AND_AWARDS.bracket.src}
+              alt={TOC_TROPHIES_AND_AWARDS.bracket.alt}
+              width={TOC_TROPHIES_AND_AWARDS.bracket.width}
+              height={TOC_TROPHIES_AND_AWARDS.bracket.height}
+              className="h-auto w-full object-cover"
+              sizes="(min-width: 1024px) 42vw, 100vw"
+            />
           </div>
         </div>
       </div>
