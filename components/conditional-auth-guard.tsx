@@ -50,6 +50,7 @@ export function ConditionalAuthGuard({
     "/store-app",
     "/cart",
     "/spartan",
+    "/tournament-of-champions",
     "/fundraising",
   ]
   const publicExactRoutes = new Set(["/blue"])
