@@ -35,7 +35,7 @@ export async function GET() {
       return NextResponse.json({
         unavailable: true,
         setupSql: "docs/sql/toc-project-plan.sql",
-        currentUser: { userId: auth.userId, email: auth.email },
+        currentUser: { userId: auth.userId, email: auth.email, isAdmin: auth.isAdmin },
         tasks: tocProjectSeedTasks(),
       })
     }
@@ -52,14 +52,14 @@ export async function GET() {
     const { data: seeded, error: reloadError } = await admin.from(TABLE).select("*").order("sort_order", { ascending: true })
     if (reloadError) return NextResponse.json({ error: reloadError.message }, { status: 500 })
     return NextResponse.json({
-      currentUser: { userId: auth.userId, email: auth.email },
+      currentUser: { userId: auth.userId, email: auth.email, isAdmin: auth.isAdmin },
       tasks: seeded ?? [],
       seeded: true,
     })
   }
 
   return NextResponse.json({
-    currentUser: { userId: auth.userId, email: auth.email },
+    currentUser: { userId: auth.userId, email: auth.email, isAdmin: auth.isAdmin },
     tasks: data ?? [],
   })
 }

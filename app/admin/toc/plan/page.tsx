@@ -17,7 +17,7 @@ import { TOC_PROJECT_CATEGORIES, type TocProjectActivity, type TocProjectApprova
 type Payload = {
   unavailable?: boolean
   setupSql?: string
-  currentUser?: { userId: string; email: string }
+  currentUser?: { userId: string; email: string; isAdmin?: boolean }
   tasks: TocProjectTask[]
   error?: string
 }
@@ -564,7 +564,7 @@ export default function TocProjectPlanPage() {
   const [mentionUsers, setMentionUsers] = useState<TocProjectChatMention[]>([])
   const [activityFeed, setActivityFeed] = useState<TocProjectActivity[]>([])
   const [bracketFill, setBracketFill] = useState({ confirmed: 0, capacity: 88, pct: 0, fullBrackets: 0 })
-  const [currentUser, setCurrentUser] = useState<{ userId: string; email: string } | null>(null)
+  const [currentUser, setCurrentUser] = useState<{ userId: string; email: string; isAdmin?: boolean } | null>(null)
   const [unavailable, setUnavailable] = useState<string | null>(null)
   const [documentsUnavailable, setDocumentsUnavailable] = useState<string | null>(null)
   const [approvalsUnavailable, setApprovalsUnavailable] = useState<string | null>(null)
@@ -617,9 +617,10 @@ export default function TocProjectPlanPage() {
       const tasksRes = await fetch("/api/admin/toc/project-tasks", { cache: "no-store", credentials: "include" })
       const data = (await tasksRes.json()) as Payload
       if (!tasksRes.ok) throw new Error(data.error || "Could not load TOC project plan")
+      const isAdminUser = Boolean(data.currentUser?.isAdmin)
       setTasks(data.tasks ?? [])
       setCurrentUser(data.currentUser ?? null)
-      setUnavailable(data.unavailable ? `Database table missing. Run ${data.setupSql ?? "docs/sql/toc-project-plan.sql"} in Supabase to enable shared editing.` : null)
+      setUnavailable(data.unavailable ? (isAdminUser ? `Database table missing. Run ${data.setupSql ?? "docs/sql/toc-project-plan.sql"} in Supabase to enable shared editing.` : "Project plan setup is still being finalized. The shared board may be limited right now.") : null)
       setDrafts(Object.fromEntries((data.tasks ?? []).map((task) => [task.id, task])))
 
       const [documentsRes, approvalsRes, chatRes, mentionUsersRes, activityRes, fieldRes] = await Promise.allSettled([
@@ -635,7 +636,7 @@ export default function TocProjectPlanPage() {
         const documentsData = (await documentsRes.value.json()) as DocumentsPayload
         if (documentsRes.value.ok) {
           setDocuments(documentsData.documents ?? [])
-          setDocumentsUnavailable(documentsData.unavailable ? `Document share missing. Run ${documentsData.setupSql ?? "docs/sql/toc-project-plan.sql"} in Supabase to enable uploads.` : null)
+          setDocumentsUnavailable(documentsData.unavailable ? (isAdminUser ? `Document share missing. Run ${documentsData.setupSql ?? "docs/sql/toc-project-plan.sql"} in Supabase to enable uploads.` : "Document uploads are still being configured.") : null)
         } else {
           setDocumentsUnavailable(documentsData.error || "Document share could not load.")
         }
@@ -647,7 +648,7 @@ export default function TocProjectPlanPage() {
         const approvalsData = (await approvalsRes.value.json()) as ApprovalsPayload
         if (approvalsRes.value.ok) {
           setApprovals(approvalsData.approvals ?? [])
-          setApprovalsUnavailable(approvalsData.unavailable ? `Approval center missing. Run ${approvalsData.setupSql ?? "docs/sql/toc-project-plan-live-patch.sql.txt"} in Supabase to enable approvals.` : null)
+          setApprovalsUnavailable(approvalsData.unavailable ? (isAdminUser ? `Approval center missing. Run ${approvalsData.setupSql ?? "docs/sql/toc-project-plan-live-patch.sql.txt"} in Supabase to enable approvals.` : "Approval requests are still being configured.") : null)
         } else {
           setApprovalsUnavailable(approvalsData.error || "Approval center could not load.")
         }
@@ -659,7 +660,7 @@ export default function TocProjectPlanPage() {
         const chatData = (await chatRes.value.json()) as ChatPayload
         if (chatRes.value.ok) {
           setChatMessages(chatData.messages ?? [])
-          setChatUnavailable(chatData.unavailable ? `Team chat missing. Run ${chatData.setupSql ?? "docs/sql/toc-project-plan.sql"} in Supabase to enable messages.` : null)
+          setChatUnavailable(chatData.unavailable ? (isAdminUser ? `Team chat missing. Run ${chatData.setupSql ?? "docs/sql/toc-project-plan.sql"} in Supabase to enable messages.` : "Team chat is still being configured.") : null)
         } else {
           setChatUnavailable(chatData.error || "Team chat could not load.")
         }
@@ -1315,7 +1316,7 @@ export default function TocProjectPlanPage() {
       const data = (await res.json()) as ApprovalsPayload
       if (res.ok) {
         setApprovals(data.approvals ?? [])
-        setApprovalsUnavailable(data.unavailable ? `Approval center missing. Run ${data.setupSql ?? "docs/sql/toc-project-plan-live-patch.sql.txt"} in Supabase to enable approvals.` : null)
+        setApprovalsUnavailable(data.unavailable ? (currentUser?.isAdmin ? `Approval center missing. Run ${data.setupSql ?? "docs/sql/toc-project-plan-live-patch.sql.txt"} in Supabase to enable approvals.` : "Approval requests are still being configured.") : null)
       }
     } catch {
       // Non-blocking.
