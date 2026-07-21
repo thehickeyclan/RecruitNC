@@ -33,6 +33,21 @@ export default function RankingsIndexPage() {
         </div>
 
         {/* Quick Access Card */}
+        <Card className="mb-6 border-[#D3B574]">
+          <CardHeader>
+            <CardTitle className="text-xl">RecruitNC AI Ranking Board</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="mb-4 text-sm text-gray-600">
+              Review AI-style ranking recommendations, evidence, confidence, and final manual ordering before publishing.
+            </p>
+            <Button asChild className="bg-[#13294B] hover:bg-[#0b1b33]">
+              <Link href="/admin/rankings/board">Open Ranking Board</Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Quick Access Card */}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="text-xl">Select Graduation Year</CardTitle>
