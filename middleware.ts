@@ -66,6 +66,7 @@ export async function middleware(request: NextRequest) {
     '/store',
     '/store-app',
     '/cart',
+    '/tournament-of-champions',
     '/nchsaa',
     '/nhsca',
     '/fargo',
