@@ -25,6 +25,15 @@ export function TocHero({ config, confirmedColleges = [] }: Props) {
       <div className="relative z-10">
         <TocPatrioticBar />
         <div className="container relative mx-auto w-full px-4 sm:px-6 py-14 sm:py-16 md:py-20 max-w-6xl">
+          <Image
+            src="/images/toc/tournament-of-champions-invitational-logo.png"
+            alt="Tournament of Champions Invitational 2026 logo"
+            width={1024}
+            height={1024}
+            className="absolute right-4 top-4 z-20 h-20 w-20 rounded-full object-contain drop-shadow-2xl sm:right-6 sm:top-6 sm:h-28 sm:w-28 lg:h-36 lg:w-36"
+            sizes="(min-width: 1024px) 9rem, (min-width: 640px) 7rem, 5rem"
+            priority
+          />
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-center lg:gap-12">
             <div className="max-w-xl">
               <p className="text-[#CC0000] text-xs sm:text-sm tracking-[0.2em] uppercase font-semibold mb-5 sm:mb-6">
