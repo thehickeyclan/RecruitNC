@@ -63,6 +63,31 @@ export const TOC_TROPHIES_AND_AWARDS = {
   ],
 } as const
 
+export const TOC_COMPETITION_MATS = {
+  eyebrow: "Competition surface",
+  headline: "Purpose-built Resilite mats ordered for Tournament of Champions.",
+  partnerLabel: "Mats by Resilite",
+  rendering: {
+    src: "/images/toc/resilite-nc-united-mat-rendering.png",
+    alt: "Rendering of the NC United navy blue 42 by 42 Resilite wrestling mat with white NC United logo at center",
+    width: 642,
+    height: 602,
+  },
+  resiliteLogo: {
+    src: "/images/toc/resilite-logo.png",
+    alt: "Resilite — The Mat Company",
+    width: 2992,
+    height: 751,
+  },
+  items: [
+    "Two 42×42 Resilite Flex 3 mats have been purpose-built and ordered specifically for the NC United Tournament of Champions.",
+    "Navy Blue mat surface with a prominent white NC United logo at center.",
+    "Flex 3 delivers lightweight, portable performance with custom UltraPrint graphics and a durable top-coat.",
+    "Manufactured in North America using reinforced vinyl scrim heat-laminated to the foam core.",
+    "Smooth, scuff-resistant, easy-to-clean surface built for competition and practice.",
+  ],
+} as const
+
 export const TOC_WEIGHT_CLASSES = [
   117, 125, 133, 141, 149, 157, 165, 174, 184, 197, 285,
 ] as const

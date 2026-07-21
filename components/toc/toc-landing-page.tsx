@@ -4,6 +4,7 @@ import { TocHero } from "@/components/toc/toc-hero"
 import { TocQuickFacts } from "@/components/toc/toc-quick-facts"
 import { TocWeighInCallout } from "@/components/toc/toc-weigh-in-callout"
 import { TocChampionJacketSection } from "@/components/toc/toc-champion-jacket-section"
+import { TocCompetitionMatsSection } from "@/components/toc/toc-competition-mats-section"
 import { TocStorySection } from "@/components/toc/toc-story-section"
 import { TocAthleteQuotesSection } from "@/components/toc/toc-athlete-quotes-section"
 import { TocVenueSection } from "@/components/toc/toc-venue-section"
@@ -49,6 +50,7 @@ export function TocLandingPage({ config, confirmedColleges }: Props) {
       {/* Format */}
       <TocWeightClassesList />
       <TocAthleteQuotesSection />
+      <TocCompetitionMatsSection />
 
       {/* Prize */}
       <TocChampionJacketSection />
