@@ -30,7 +30,7 @@ export function TocHero({ config, confirmedColleges = [] }: Props) {
             alt="Tournament of Champions Invitational 2026 logo"
             width={1024}
             height={1024}
-            className="pointer-events-none absolute right-4 top-4 z-20 h-20 w-20 object-contain drop-shadow-2xl sm:right-6 sm:top-6 sm:h-28 sm:w-28 lg:h-36 lg:w-36"
+            className="pointer-events-none mb-6 h-24 w-24 object-contain drop-shadow-2xl sm:absolute sm:right-6 sm:top-6 sm:z-20 sm:mb-0 sm:h-28 sm:w-28 lg:h-36 lg:w-36"
             sizes="(min-width: 1024px) 9rem, (min-width: 640px) 7rem, 5rem"
             priority
           />
