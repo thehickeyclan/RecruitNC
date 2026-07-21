@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin"
+import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { buildSchoolClassificationMap } from "@/lib/classification-data"
 import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
@@ -10,6 +11,14 @@ import { getPublicRankingsMax } from "@/lib/public-rankings-cap"
 
 export async function GET(request: Request) {
   try {
+    const authClient = await createClient()
+    const {
+      data: { user },
+    } = await authClient.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const { searchParams } = new URL(request.url)
     const year = searchParams.get("year") || "2027"
     const gender = searchParams.get("gender") || "Male"

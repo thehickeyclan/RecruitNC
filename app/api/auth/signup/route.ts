@@ -61,9 +61,11 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient()
     console.log("[v0] Supabase client created")
 
+    const safeReturnTo =
+      typeof returnTo === "string" && returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : undefined
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
-    const emailRedirectTo = returnTo
-      ? `${baseUrl}/auth/callback?next=${encodeURIComponent(returnTo)}`
+    const emailRedirectTo = safeReturnTo
+      ? `${baseUrl}/auth/callback?next=${encodeURIComponent(safeReturnTo)}`
       : `${baseUrl}/auth/callback`
 
     console.log("[v0] Calling Supabase signUp with emailRedirectTo:", emailRedirectTo)

@@ -25,6 +25,13 @@ function isTocScopedAdminTarget(path: string | null): boolean {
   )
 }
 
+function getSafeReturnTo(value: string | null): string | null {
+  if (!value) return null
+  if (!value.startsWith("/") || value.startsWith("//")) return null
+  if (value.startsWith("/auth/signin") || value.startsWith("/auth/signup")) return null
+  return value
+}
+
 export default function SignInPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -49,7 +56,7 @@ export default function SignInPage() {
   const { user, isLoading } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const returnTo = searchParams.get("returnTo") || searchParams.get("redirect")
+  const returnTo = getSafeReturnTo(searchParams.get("returnTo") || searchParams.get("redirect"))
 
   // Show friendly message when redirected here after a failed reset-link exchange
   useEffect(() => {
@@ -78,7 +85,7 @@ export default function SignInPage() {
   useEffect(() => {
     if (isLoading || !user) return
     let cancelled = false
-    const target = returnTo && returnTo !== "/auth/signin" ? returnTo : "/"
+    const target = returnTo || "/"
     fetch("/api/profile", { credentials: "include" })
       .then((r) => {
         if (cancelled) return
@@ -136,7 +143,7 @@ export default function SignInPage() {
           }),
         }).catch(() => {})
         setRedirectingAfterSignIn(true)
-        const next = returnTo && returnTo !== "/auth/signin" ? encodeURIComponent(returnTo) : ""
+        const next = returnTo ? encodeURIComponent(returnTo) : ""
         setTimeout(() => { window.location.replace(next ? `/auth/callback-admin?next=${next}` : "/auth/callback-admin") }, 1200)
         return
       }
@@ -173,7 +180,7 @@ export default function SignInPage() {
         }),
       }).catch(() => {})
       setRedirectingAfterSignIn(true)
-      const target = returnTo && returnTo !== "/auth/signin" ? returnTo : "/"
+      const target = returnTo || "/"
       // Redirect immediately so login isn't blocked by a flaky profile check
       window.location.replace(target)
       return

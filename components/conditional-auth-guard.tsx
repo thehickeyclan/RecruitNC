@@ -5,7 +5,7 @@ import { AuthGuard } from "@/components/auth-guard"
 
 /**
  * Public routes (no sign-in): public record / discovery pages that should be shareable
- * and crawlable: athletes, profiles, rankings, schools, colleges, news, public results,
+ * and crawlable: athletes, profiles, schools, colleges, news, public results,
  * national-team info/results, fundraising, store, and auth routes.
  *
  * The rule: public wrestling history is distribution. Actions, personalization, admin,
@@ -35,7 +35,6 @@ export function ConditionalAuthGuard({
     "/athletes-public",
     "/view-profile",
     "/prospects",
-    "/public-rankings",
     "/schools",
     "/colleges",
     "/news",
@@ -57,8 +56,14 @@ export function ConditionalAuthGuard({
   const isAuthRoute = path.startsWith("/auth/")
   const isPublicPrefix = publicRoutePrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))
   const isPublicExact = publicExactRoutes.has(path)
+  const isProfileManagementRoute =
+    path === "/create-profile" ||
+    path === "/submit-profile" ||
+    path.startsWith("/edit-profile/") ||
+    /^\/athletes\/[^/]+\/edit(?:\/|$)/.test(path) ||
+    /^\/athletes\/[^/]+\/edit-request(?:\/|$)/.test(path)
 
-  const isPublic = isHomepage || isPublicPrefix || isPublicExact || isAuthRoute
+  const isPublic = !isProfileManagementRoute && (isHomepage || isPublicPrefix || isPublicExact || isAuthRoute)
 
   if (isPublic) {
     return <>{children}</>

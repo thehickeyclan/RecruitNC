@@ -57,7 +57,6 @@ export async function middleware(request: NextRequest) {
     '/athletes',
     '/athletes-public',
     '/prospects',
-    '/public-rankings',
     '/schools',
     '/colleges',
     '/news',
