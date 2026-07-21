@@ -6,13 +6,17 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Input } from "@/components/ui/input"
 import { Mail, CheckCircle, XCircle } from "lucide-react"
 
 export default function VerificationPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const emailParam = searchParams.get("email") || ""
+  const returnTo = searchParams.get("returnTo")
   const [status, setStatus] = useState<"pending" | "success" | "error">("pending")
   const [message, setMessage] = useState("")
+  const [email, setEmail] = useState(emailParam)
   const [isResending, setIsResending] = useState(false)
 
   useEffect(() => {
@@ -25,21 +29,49 @@ export default function VerificationPage() {
     } else if (success) {
       setStatus("success")
       setMessage("Your email has been verified! You can now sign in.")
+      void fetch("/api/track-funnel-event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        keepalive: true,
+        body: JSON.stringify({
+          event: "verification_completed",
+          path: "/auth/verification",
+          target: returnTo || null,
+          source: "verification_page",
+        }),
+      }).catch(() => {})
       // Redirect to sign in after 3 seconds
       setTimeout(() => {
-        window.location.href = "/auth/signin"
+        window.location.href = `/auth/signin${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`
       }, 3000)
     }
-  }, [searchParams, router])
+  }, [searchParams, router, returnTo])
 
   const handleResendVerification = async () => {
+    const trimmedEmail = email.trim()
+    if (!trimmedEmail) {
+      setMessage("Enter your email address so we can resend the verification link.")
+      return
+    }
     setIsResending(true)
     try {
+      void fetch("/api/track-funnel-event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        keepalive: true,
+        body: JSON.stringify({
+          event: "verification_resend_requested",
+          path: "/auth/verification",
+          target: returnTo || null,
+          source: "verification_page",
+        }),
+      }).catch(() => {})
       const response = await fetch("/api/auth/resend-verification", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        body: JSON.stringify({ email: trimmedEmail, returnTo: returnTo || undefined }),
       })
 
       const data = await response.json()
@@ -69,13 +101,21 @@ export default function VerificationPage() {
                 <div className="space-y-2">
                   <h1 className="text-2xl font-semibold tracking-tight">Check your email</h1>
                   <p className="text-sm text-muted-foreground">
-                    We've sent a verification link to your email address. Please click the link to verify your account.
+                    We&apos;ve sent a verification link to your email address. Click that link to activate your RecruitNC account.
                   </p>
                 </div>
                 <div className="space-y-4">
                   <p className="text-sm text-muted-foreground">
-                    Didn't receive the email? Check your spam folder or click below to resend.
+                    Didn&apos;t receive it? Check spam, junk, promotions, or school/work email filters. Then resend below.
                   </p>
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="Email address"
+                    autoComplete="email"
+                  />
+                  {message ? <p className="text-sm text-blue-700">{message}</p> : null}
                   <Button
                     onClick={handleResendVerification}
                     variant="outline"

@@ -31,7 +31,9 @@ export default function SignUpPage() {
   const [profileType, setProfileType] = useState<string>("")
 
   const [loading, setLoading] = useState(false)
+  const [resending, setResending] = useState(false)
   const [error, setError] = useState("")
+  const [resendMessage, setResendMessage] = useState("")
   const [success, setSuccess] = useState(false)
 
   const roleNeedsPhone = profileType === "athlete" || profileType === "parent"
@@ -62,6 +64,18 @@ export default function SignUpPage() {
     }
 
     try {
+      void fetch("/api/track-funnel-event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        keepalive: true,
+        body: JSON.stringify({
+          event: "signup_submitted",
+          path: "/auth/signup",
+          target: returnTo || null,
+          source: "signup_page",
+        }),
+      }).catch(() => {})
+
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -99,6 +113,17 @@ export default function SignUpPage() {
           source: "signup_page",
         }),
       }).catch(() => {})
+      void fetch("/api/track-funnel-event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        keepalive: true,
+        body: JSON.stringify({
+          event: "verification_email_sent",
+          path: "/auth/signup",
+          target: returnTo || null,
+          source: "signup_page",
+        }),
+      }).catch(() => {})
       setSuccess(true)
     } catch (err: any) {
       console.error("[Signup] Exception:", err)
@@ -107,13 +132,44 @@ export default function SignUpPage() {
     }
   }
 
+  const handleResendVerification = async () => {
+    setResending(true)
+    setResendMessage("")
+    try {
+      void fetch("/api/track-funnel-event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        keepalive: true,
+        body: JSON.stringify({
+          event: "verification_resend_requested",
+          path: "/auth/signup",
+          target: returnTo || null,
+          source: "signup_success",
+        }),
+      }).catch(() => {})
+      const res = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), returnTo: returnTo || undefined }),
+      })
+      const data = await res.json().catch(() => ({}))
+      setResendMessage(res.ok ? "Verification email resent. Check inbox, spam, or promotions." : data.error || "Could not resend verification email.")
+    } catch {
+      setResendMessage("Could not resend verification email. Please try again.")
+    } finally {
+      setResending(false)
+    }
+  }
+
   if (success) {
     return (
       <div className="min-h-screen flex items-start pt-20 md:items-center md:pt-0 justify-center bg-gray-50 px-4">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle>Check Your Email</CardTitle>
-            <CardDescription>We&apos;ve sent you a confirmation link to complete your registration.</CardDescription>
+            <CardTitle>Almost done — check your email</CardTitle>
+            <CardDescription>
+              We sent a verification link to <span className="font-semibold">{email}</span>. Tap that link to activate your free RecruitNC account.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {profileType === "college-coach" && (
@@ -132,14 +188,22 @@ export default function SignUpPage() {
             )}
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                <strong>Important:</strong> Click the confirmation link in your email to verify your account.
-                You&apos;ll be automatically signed in - no need to log in manually!
+                <strong>Important:</strong> Your account is not active until you click the confirmation link.
+                After verification, we&apos;ll send you back to the page you were trying to reach when possible.
               </p>
               <p className="text-sm text-muted-foreground">
-                Check your inbox (and spam folder) for an email from RecruitNC. The link expires in 24 hours.
+                If you don&apos;t see it within a minute, check spam, junk, promotions, or school/work email filters.
               </p>
-              <Button className="w-full bg-transparent" variant="outline" onClick={() => window.location.href = "/"}>
-                Return to Home
+              {resendMessage ? <p className="text-sm text-blue-700">{resendMessage}</p> : null}
+              <Button className="w-full" onClick={handleResendVerification} disabled={resending}>
+                {resending ? "Sending..." : "Resend verification email"}
+              </Button>
+              <Button
+                className="w-full bg-transparent"
+                variant="outline"
+                onClick={() => window.location.href = `/auth/signin${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`}
+              >
+                I verified — go to sign in
               </Button>
             </div>
           </CardContent>
@@ -159,11 +223,11 @@ export default function SignUpPage() {
               <Badge className="mb-4 bg-[#D3B574] text-[#03154C] text-sm font-bold px-4 py-1">
                 100% FREE • NO CREDIT CARD REQUIRED
               </Badge>
-              <h2 className="text-2xl md:text-3xl font-bold mb-3">
-                Create Your Free RecruitNC Account
-              </h2>
-              <p className="text-lg md:text-xl text-blue-100 mb-6">
-                Public wrestling history is open to browse. Your account unlocks the tools that make RecruitNC personal.
+                <h2 className="text-2xl md:text-3xl font-bold mb-3">
+                  Create Your Free RecruitNC Account
+                </h2>
+                <p className="text-lg md:text-xl text-blue-100 mb-6">
+                Rankings, profile management, recruiting tools, and account-specific activity live behind a free account.
               </p>
             </div>
             
@@ -175,8 +239,8 @@ export default function SignUpPage() {
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
                 <Users className="h-8 w-8 text-[#D3B574] mb-2 mx-auto" />
-                <h3 className="font-semibold mb-1 text-center text-sm md:text-base">Profile Interest</h3>
-                <p className="text-xs md:text-sm text-blue-100 text-center">See profile-view analytics and account activity</p>
+                <h3 className="font-semibold mb-1 text-center text-sm md:text-base">Rankings & Interest</h3>
+                <p className="text-xs md:text-sm text-blue-100 text-center">View rankings plus profile analytics and activity</p>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
                 <Trophy className="h-8 w-8 text-[#D3B574] mb-2 mx-auto" />
@@ -191,7 +255,7 @@ export default function SignUpPage() {
                 <div>
                   <h3 className="font-semibold mb-1 text-sm md:text-base">Why account-only?</h3>
                   <p className="text-xs md:text-sm text-blue-100">
-                    Actions and private details stay protected: contact info, GPA/recruiting data, profile edits, messaging, payments, wallet, and analytics.
+                    Rankings, profile creation/claims, edits, contact info, GPA/recruiting data, messaging, payments, wallet, and analytics stay protected.
                   </p>
                 </div>
               </div>

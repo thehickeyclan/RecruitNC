@@ -5,7 +5,11 @@ import { createClient } from "@/lib/supabase/server"
 const ALLOWED_EVENTS = new Set([
   "login_wall_view",
   "signup_started",
+  "signup_submitted",
   "signup_completed",
+  "verification_email_sent",
+  "verification_resend_requested",
+  "verification_completed",
   "signin_started",
   "signin_completed",
 ])

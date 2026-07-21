@@ -3,6 +3,7 @@ import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import type { User } from "@supabase/supabase-js"
 import { buildUserProfileUpsertPayload } from "@/lib/user-profile-from-auth"
+import { createAdminClient } from "@/lib/supabase/admin"
 
 export async function GET(req: NextRequest) {
   console.log("[v0] ===== AUTH CALLBACK ROUTE CALLED =====")
@@ -11,7 +12,11 @@ export async function GET(req: NextRequest) {
   const code = requestUrl.searchParams.get("code")
   const tokenHash = requestUrl.searchParams.get("token_hash")
   const type = requestUrl.searchParams.get("type")
-  const next = requestUrl.searchParams.get("next") || "/"
+  const requestedNext = requestUrl.searchParams.get("next") || "/"
+  const next =
+    requestedNext.startsWith("/") && !requestedNext.startsWith("//") && !requestedNext.startsWith("/auth/callback")
+      ? requestedNext
+      : "/"
 
   console.log("[v0] Callback params:", {
     hasCode: !!code,
@@ -128,17 +133,42 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    let redirectPath = next && next !== "/" ? next : "/"
+    const isEmailVerificationCallback = type === "signup" || (!type && next !== "/auth/reset-password")
+    if (isEmailVerificationCallback) {
+      try {
+        const admin = createAdminClient()
+        await admin.from("user_analytics").insert({
+          user_id: session.user.id,
+          event_type: "verification_completed",
+          page_url: "/auth/callback",
+          referrer: next || null,
+          user_agent: req.headers.get("user-agent") || null,
+          ip_address: req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || null,
+          event_data: {
+            source: "auth_callback",
+            target: next,
+            auth_type: type || "code",
+            timestamp: new Date().toISOString(),
+          },
+          created_at: new Date().toISOString(),
+        })
+      } catch (analyticsError) {
+        console.warn("[v0] verification_completed tracking failed:", analyticsError)
+      }
+    }
+
+    const hasExplicitNext = next !== "/" && !next.startsWith("/auth/signin") && !next.startsWith("/auth/signup")
+    let redirectPath = hasExplicitNext ? next : "/"
 
     // Password reset flow: send to reset-password page. Check both type=recovery (token_hash)
     // and next=/auth/reset-password (PKCE may send code without type).
     if (type === "recovery" || next === "/auth/reset-password") {
       redirectPath = "/auth/reset-password"
-    } else if (profile?.role === "coach" || session.user.user_metadata?.profile_type === "college-coach") {
+    } else if (!hasExplicitNext && (profile?.role === "coach" || session.user.user_metadata?.profile_type === "college-coach")) {
       redirectPath = "/coaches/dashboard"
-    } else if (profile?.role === "admin" || profile?.is_admin) {
+    } else if (!hasExplicitNext && (profile?.role === "admin" || profile?.is_admin)) {
       redirectPath = "/admin"
-    } else if (session.user.user_metadata?.profile_type === "athlete") {
+    } else if (!hasExplicitNext && session.user.user_metadata?.profile_type === "athlete") {
       redirectPath = "/athletes"
     }
 

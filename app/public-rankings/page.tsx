@@ -1,5 +1,3 @@
-"use client"
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowRight, Users, Target, Award, TrendingUp } from "lucide-react"
 import Image from "next/image"
@@ -8,8 +6,13 @@ import {
   RANKINGS_BODY,
   RANKINGS_PANEL,
 } from "@/lib/public-rankings-theme"
+import { redirectIfSignedOut } from "@/lib/server-auth-redirect"
 
-export default function PublicRankingsHomepage() {
+export const dynamic = "force-dynamic"
+
+export default async function PublicRankingsHomepage() {
+  await redirectIfSignedOut("/public-rankings")
+
   return (
     <main className="min-h-screen bg-[#0A1628] text-white">
       {/* Hero */}
