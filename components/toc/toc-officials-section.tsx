@@ -23,6 +23,19 @@ export function TocOfficialsSection() {
             <p className="text-[#0B1D3A]/90 text-base sm:text-lg leading-relaxed mb-6 sm:mb-8">
               {TOC_ELITE_OFFICIALS.lead}
             </p>
+            <div className="mb-6 rounded-sm border border-[#0B1D3A]/10 bg-[#0B1D3A] p-4 text-white shadow-sm sm:mb-8 sm:p-5">
+              <p className={`mb-4 text-[#D7B95A] text-base sm:text-lg ${tocDisplayClass()}`}>
+                {TOC_ELITE_OFFICIALS.confirmedCrewHeadline}
+              </p>
+              <ul className="space-y-3">
+                {TOC_ELITE_OFFICIALS.confirmedCrew.map((official) => (
+                  <li key={official.name} className="border-l-2 border-[#CC0000] pl-3">
+                    <p className="font-bold leading-tight">{official.name}</p>
+                    <p className="mt-1 text-sm leading-relaxed text-white/75">{official.credential}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
             <ul className="space-y-4">
               {TOC_ELITE_OFFICIALS.bullets.map((line, index) => {
                 const Icon = BULLET_ICONS[index] ?? Shield
