@@ -259,7 +259,7 @@ export const TOC_ELITE_OFFICIALS = {
   headline: "Led by Jonathan Sutton",
   role: "Chief of officials · NC United Tournament of Champions",
   lead:
-    "The Tournament of Champions is judged by an elite crew hand-picked for this event — not a random pool assignment. Jonathan Sutton and NWOA Officials lead the table with experienced officials who understand college weights, high-stakes brackets, and the pace this card demands.",
+    "The Tournament of Champions is judged by an elite crew hand-picked for this event. Jonathan Sutton and NWOA Officials lead the table with experienced officials who understand college weights, high-stakes brackets, and the pace this card demands.",
   confirmedCrewHeadline: "Elite Officiating Crew Confirmed",
   confirmedCrew: [
     {
