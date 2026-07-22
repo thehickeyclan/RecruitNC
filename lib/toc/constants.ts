@@ -259,16 +259,16 @@ export const TOC_ELITE_OFFICIALS = {
   headline: "Led by Jonathan Sutton",
   role: "Chief of officials · NC United Tournament of Champions",
   lead:
-    "The Tournament of Champions is judged by an elite crew hand-picked for this event — not a random pool assignment. Jonathan Sutton leads the table with experienced officials who understand college weights, high-stakes brackets, and the pace this card demands.",
+    "The Tournament of Champions is judged by an elite crew hand-picked for this event — not a random pool assignment. Jonathan Sutton and NWOA Officials lead the table with experienced officials who understand college weights, high-stakes brackets, and the pace this card demands.",
   confirmedCrewHeadline: "Elite Officiating Crew Confirmed",
   confirmedCrew: [
     {
       name: "Jonathan Sutton",
-      credential: "NCAA Division I official with extensive Big Ten and national championship experience.",
+      credential: "NCAA Division I / Big 12 official with extensive national championship experience.",
     },
     {
       name: "Titus Godbolt",
-      credential: "NCAA Division I official who has worked numerous Big Ten and premier collegiate events.",
+      credential: "NCAA Division I / Big 12 official who has worked numerous premier collegiate events.",
     },
     {
       name: "Paul Crouse",
@@ -281,6 +281,7 @@ export const TOC_ELITE_OFFICIALS = {
   ],
   bullets: [
     "Chief of officials: Jonathan Sutton",
+    "Event officiating supported by NWOA Officials",
     "Experienced crew across both competition mats all day",
     "Consistent standards from first bout through championship finals",
   ],
