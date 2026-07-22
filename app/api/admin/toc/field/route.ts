@@ -3,6 +3,7 @@ import { requireTocInvitationManager } from "@/lib/toc/require-toc-invitation-ma
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getTocEventConfig } from "@/lib/toc/event-config"
 import { buildTocFieldBoard } from "@/lib/toc/field-board"
+import { applyTocAiSeedRecommendations, buildTocAiSeedRecommendations } from "@/lib/toc/ai-seeding"
 
 export const dynamic = "force-dynamic"
 
@@ -38,8 +39,30 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
+  const board = buildTocFieldBoard(data ?? [])
+  const athleteIds = [...new Set(board.weights.flatMap((w) => w.athletes.map((a) => a.athleteId)).filter(Boolean))]
+  const athleteRowsById = new Map<string, Record<string, unknown>>()
+
+  if (athleteIds.length) {
+    const { data: athleteRows, error: athleteError } = await admin.from("athletes").select("*").in("id", athleteIds)
+    if (athleteError) {
+      console.warn("[admin/toc/field] AI seeding athlete lookup failed", athleteError.message)
+    } else {
+      for (const row of athleteRows ?? []) athleteRowsById.set(String(row.id), row as Record<string, unknown>)
+    }
+  }
+
+  const recommendations = await buildTocAiSeedRecommendations({
+    supabase: admin,
+    board,
+    athleteRowsById,
+  }).catch((e) => {
+    console.warn("[admin/toc/field] AI seeding failed", e instanceof Error ? e.message : e)
+    return new Map()
+  })
+
   return NextResponse.json({
-    board: buildTocFieldBoard(data ?? []),
+    board: applyTocAiSeedRecommendations(board, recommendations),
     bracketsUrl: config.brackets_url,
   })
 }

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { HardLink } from "@/components/hard-link"
-import { ArrowLeft, Download, ExternalLink, Loader2, Lock, RefreshCw, Unlock } from "lucide-react"
+import { ArrowLeft, Download, ExternalLink, Loader2, Lock, RefreshCw, Sparkles, Unlock } from "lucide-react"
 import { TOC_MAX_CONFIRMED_PER_WEIGHT } from "@/lib/toc/invitations"
 import type { TocFieldBoard, TocFieldAthlete, TocWeightBoard } from "@/lib/toc/field-board"
 import {
@@ -20,6 +20,13 @@ function statusVariant(status: TocFieldAthlete["status"]) {
   if (status === "confirmed") return "default" as const
   if (status === "invited") return "secondary" as const
   return "outline" as const
+}
+
+function aiSeedConfidenceClass(confidence: TocFieldAthlete["aiSeedConfidence"]) {
+  if (confidence === "High") return "bg-emerald-700 text-white"
+  if (confidence === "Medium") return "bg-amber-500 text-slate-950"
+  if (confidence === "Low") return "bg-red-700 text-white"
+  return "bg-slate-600 text-white"
 }
 
 function downloadText(filename: string, content: string, mime = "text/plain;charset=utf-8") {
@@ -97,23 +104,63 @@ function WeightBoardCard({
                   {a.status}
                 </Badge>
                 {a.status === "confirmed" ? (
-                  <Select
-                    value={a.seed != null ? String(a.seed) : "none"}
-                    onValueChange={(v) => void onSeedChange(a.invitationId, v === "none" ? null : Number(v))}
-                    disabled={seedSavingId === a.invitationId}
-                  >
-                    <SelectTrigger className="h-8 w-[72px] text-xs">
-                      <SelectValue placeholder="Seed" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">—</SelectItem>
-                      {Array.from({ length: TOC_MAX_CONFIRMED_PER_WEIGHT }, (_, i) => i + 1).map((n) => (
-                        <SelectItem key={n} value={String(n)}>
-                          #{n}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex shrink-0 items-center gap-1">
+                    {a.aiSeed ? (
+                      <div className="group relative">
+                        <Badge className={`${aiSeedConfidenceClass(a.aiSeedConfidence)} gap-1`}>
+                          <Sparkles className="h-3 w-3" />
+                          AI #{a.aiSeed}
+                        </Badge>
+                        <div className="pointer-events-none absolute right-0 top-7 z-20 hidden w-72 rounded-lg border bg-popover p-3 text-xs shadow-xl group-hover:block">
+                          <p className="font-semibold text-popover-foreground">
+                            AI seed #{a.aiSeed} · score {a.aiSeedScore ?? "—"} · {a.aiSeedConfidence ?? "Unknown"} confidence
+                          </p>
+                          {a.aiSeedReasons?.length ? (
+                            <ul className="mt-2 list-disc space-y-1 pl-4 text-muted-foreground">
+                              {a.aiSeedReasons.map((reason) => (
+                                <li key={reason}>{reason}</li>
+                              ))}
+                            </ul>
+                          ) : null}
+                          {a.aiSeedWarnings?.length ? (
+                            <div className="mt-2 rounded-md bg-amber-50 p-2 text-amber-900">
+                              {a.aiSeedWarnings.join(" · ")}
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+                    ) : null}
+                    {a.aiSeed && a.seed !== a.aiSeed ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 px-2 text-xs text-[#B31B1B]"
+                        disabled={seedSavingId === a.invitationId}
+                        onClick={() => void onSeedChange(a.invitationId, a.aiSeed ?? null)}
+                        title="Use AI recommended seed"
+                      >
+                        Use AI
+                      </Button>
+                    ) : null}
+                    <Select
+                      value={a.seed != null ? String(a.seed) : "none"}
+                      onValueChange={(v) => void onSeedChange(a.invitationId, v === "none" ? null : Number(v))}
+                      disabled={seedSavingId === a.invitationId}
+                    >
+                      <SelectTrigger className="h-8 w-[72px] text-xs">
+                        <SelectValue placeholder="Seed" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">—</SelectItem>
+                        {Array.from({ length: TOC_MAX_CONFIRMED_PER_WEIGHT }, (_, i) => i + 1).map((n) => (
+                          <SelectItem key={n} value={String(n)}>
+                            #{n}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 ) : null}
               </li>
             ))}
@@ -400,7 +447,18 @@ export default function TocFieldAdminPage() {
             you also run live scoring there.
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-wrap gap-3">
+        <CardContent className="space-y-3">
+          <div className="rounded-lg border border-[#D7B95A]/50 bg-[#D7B95A]/10 p-3 text-sm text-[#3b2b00]">
+            <div className="flex items-start gap-2">
+              <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[#B31B1B]" />
+              <p>
+                <strong>AI seed</strong> is a recommendation based on RecruitNC ranking, match history, head-to-head
+                inside the field, NCHSAA results, national tournament data, NC United/NHSCA Duals records, and profile
+                accolades. The manual seed selector remains the official seed.
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-3">
           <HardLink
             href="/tournament-of-champions/brackets"
             className="inline-flex items-center gap-2 text-sm font-medium text-[#B31B1B] hover:underline"
@@ -425,6 +483,7 @@ export default function TocFieldAdminPage() {
               External live URL <ExternalLink className="h-3.5 w-3.5" />
             </a>
           ) : null}
+          </div>
         </CardContent>
       </Card>
 
