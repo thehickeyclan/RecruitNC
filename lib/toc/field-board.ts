@@ -9,6 +9,11 @@ export type TocFieldAthlete = {
   graduationYear: number | null
   status: TocInvitationStatus
   seed: number | null
+  aiSeed?: number | null
+  aiSeedScore?: number | null
+  aiSeedConfidence?: "High" | "Medium" | "Low" | null
+  aiSeedReasons?: string[]
+  aiSeedWarnings?: string[]
   jacketSize: string | null
   invitedAt: string | null
   confirmedAt: string | null
