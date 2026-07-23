@@ -138,7 +138,9 @@ export const TOC_CONTACT_EMAIL = "info@ncwrestlingunited.com" as const
 /** Canonical mats copy — use site-wide wherever two-mat → finals format is described. */
 export const TOC_MATS_LINE = "Two mats all weekend. One mat for all eleven championship finals." as const
 
-export const TOC_TICKET_SALE_MONTH = "August 2026" as const
+/** When sales open — shown wherever we used to show a buy link, until tickets are live. */
+export const TOC_TICKET_SALE_TIMING = "Sunday morning, Aug 2nd at 9:00 AM EST" as const
+/** Kept for the Aug 2nd flip back to live buy links. */
 export const TOC_GOFAN_TICKETS_URL = "https://gofan.co/app/school/NC101846" as const
 
 export const TOC_NC_UNITED_ABOUT = {

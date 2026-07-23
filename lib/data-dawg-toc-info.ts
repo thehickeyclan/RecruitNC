@@ -1,4 +1,5 @@
 import {
+  TOC_GOFAN_TICKETS_URL,
   TOC_CONFIRMED_COLLEGES,
   TOC_CONTACT_EMAIL,
   TOC_COMPETITION_MATS,
@@ -6,13 +7,12 @@ import {
   TOC_EVENT_DATES_RANGE,
   TOC_FINALS_MAT,
   TOC_FOUNDING_PARTNERS,
-  TOC_GOFAN_TICKETS_URL,
   TOC_MATS_LINE,
   TOC_SCHEDULE,
   TOC_SPECTATORS,
   TOC_SPONSORSHIP,
   TOC_STREAMING,
-  TOC_TICKET_SALE_MONTH,
+  TOC_TICKET_SALE_TIMING,
   TOC_TROPHIES_AND_AWARDS,
   TOC_VENUE,
   TOC_VENUE_FEATURES,
@@ -23,6 +23,7 @@ import {
   TOC_WEIGH_IN,
   TOC_WEIGHT_CLASSES,
 } from "@/lib/toc/constants"
+import { tocTicketsOnSale } from "@/lib/toc/ticket-sale"
 import { TOC_HERO } from "@/lib/toc/marketing-copy"
 import {
   formatTocRegistrationFee,
@@ -102,7 +103,7 @@ export async function answerTournamentOfChampionsQuestion(message: string): Prom
     sections.push(
       section(
         "Tournament of Champions",
-        `${TOC_HERO.tagline}\n\n${TOC_HERO.lead}\n\n- Dates: ${TOC_EVENT_DATES_RANGE}\n- Venue: ${config.venue_name ?? TOC_VENUE.name}, ${config.venue_address ?? TOC_VENUE.address}\n- Format: invite-only, eight wrestlers per weight, true double-elimination, top-three placement\n- Weights: ${TOC_WEIGHT_CLASSES.join(", ")} lbs\n- Tickets: [GoFan](${TOC_GOFAN_TICKETS_URL})\n- Full page: [Tournament of Champions](${TOC_PAGE_URL})`,
+        `${TOC_HERO.tagline}\n\n${TOC_HERO.lead}\n\n- Dates: ${TOC_EVENT_DATES_RANGE}\n- Venue: ${config.venue_name ?? TOC_VENUE.name}, ${config.venue_address ?? TOC_VENUE.address}\n- Format: invite-only, eight wrestlers per weight, true double-elimination, top-three placement\n- Weights: ${TOC_WEIGHT_CLASSES.join(", ")} lbs\n- Tickets: ${tocTicketsOnSale() ? `on sale now — [GoFan](${TOC_GOFAN_TICKETS_URL})` : `on sale ${TOC_TICKET_SALE_TIMING} (sold via GoFan)`}\n- Full page: [Tournament of Champions](${TOC_PAGE_URL})`,
       ),
     )
   }
@@ -167,8 +168,10 @@ export async function answerTournamentOfChampionsQuestion(message: string): Prom
         "Tickets",
         [
           `${TOC_SPECTATORS.ticketProviderLabel}.`,
-          `Buy tickets on GoFan: [${TOC_GOFAN_TICKETS_URL}](${TOC_GOFAN_TICKETS_URL})`,
-          `Ticket sale timing on the page: ${TOC_TICKET_SALE_MONTH}. Saturday admission covers the full tournament including single-mat championship finals.`,
+          tocTicketsOnSale()
+            ? `Tickets are on sale now: [Buy on GoFan](${TOC_GOFAN_TICKETS_URL})`
+            : `Tickets are not on sale yet — they go on sale ${TOC_TICKET_SALE_TIMING}, sold via GoFan. Do not share a purchase link until then.`,
+          `Saturday admission covers the full tournament including single-mat championship finals.`,
         ].join("\n"),
       ),
     )

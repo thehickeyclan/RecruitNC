@@ -1,6 +1,7 @@
 import { Armchair, Car, GraduationCap, Heart, Shield, Ticket, UtensilsCrossed } from "lucide-react"
 import { TocVarsityHeading, tocDisplayClass, tocMobileCtaClass, tocSectionClass } from "@/components/toc/toc-theme"
-import { TOC_GOFAN_TICKETS_URL, TOC_SPECTATORS } from "@/lib/toc/constants"
+import { TOC_SPECTATORS } from "@/lib/toc/constants"
+import { TocTicketCta } from "@/components/toc/toc-ticket-cta"
 
 const EXPECTATION_ICONS = [Car, Armchair, Shield, Shield, GraduationCap] as const
 
@@ -93,21 +94,15 @@ export function TocSpectatorsSection() {
                     {TOC_SPECTATORS.ticketProviderLabel}
                   </p>
                   <p className="mt-1 text-white/90 text-sm leading-relaxed">
-                    Purchase spectator tickets securely through NC United's GoFan ticketing page. GoFan will handle
-                    checkout, confirmation, and mobile ticket access.
+                    Spectator tickets will be sold securely through NC United's GoFan ticketing page. GoFan will
+                    handle checkout, confirmation, and mobile ticket access.
                   </p>
                 </div>
               </div>
-              <a
-                href={TOC_GOFAN_TICKETS_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`${tocMobileCtaClass("primary")} mt-4 text-sm`}
-              >
-                {TOC_SPECTATORS.ticketCtaLabel}
-              </a>
+              {/* Announcement until Sunday Aug 2 9:00 AM ET, then the GoFan buy button — flips automatically. */}
+              <TocTicketCta variant="card" />
               <p className="mt-3 text-xs leading-relaxed text-white/60">
-                Opens GoFan in a new tab. Keep your mobile ticket available for entry on event day.
+                Sales open via GoFan in a new tab — keep your mobile ticket available for entry on event day.
               </p>
             </div>
           </div>
