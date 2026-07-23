@@ -121,6 +121,128 @@ describe("parseRankWrestlerText", () => {
     })
   })
 
+  it("keeps forfeits, school-less opponents, and rating-less opponents (Gavin Hickey 2025-26 regression)", () => {
+    // Real paste from RankWrestler, 7/17/2026. The old fixed-offset parser dropped 15 of
+    // these 63 matches: all 5 forfeits (venue/method offsets swapped), all 8 rows whose
+    // opponent has no school line, and Will Guinane (school but no rating). Rows here are
+    // rendered in "variant B" order: rating after date, venue before method, two bullets.
+    type E = { wl: "Win" | "Loss"; d: string; pct?: string; name?: string; school?: string; w: string; venue: string; m: string }
+    const entries: E[] = [
+      { wl: "Loss", d: "2/21/2026", pct: "99.90", name: "Chris Braxton", school: "New Hanover", w: "126", venue: "NCHSAA State Championships", m: "MD" },
+      { wl: "Win", d: "2/21/2026", pct: "99.62", name: "Max Fleckinger", school: "North Brunswick", w: "126", venue: "NCHSAA State Championships", m: "TF" },
+      { wl: "Loss", d: "2/21/2026", pct: "99.87", name: "Brennan Ferguson", school: "Cuthbertson", w: "126", venue: "NCHSAA State Championships", m: "MD" },
+      { wl: "Win", d: "2/17/2026", pct: "90.91", name: "Bryan Jones", school: "Lumberton", w: "126", venue: "NCHSAA 7A State Dual Championships", m: "TF" },
+      { wl: "Loss", d: "2/14/2026", pct: "99.90", name: "Chris Braxton", school: "New Hanover", w: "126", venue: "NCHSAA 7A East Regional", m: "TF" },
+      { wl: "Win", d: "2/14/2026", pct: "99.68", name: "Zyon Rogers", w: "126", venue: "NCHSAA 7A East Regional", m: "Dec" },
+      { wl: "Win", d: "2/14/2026", pct: "99.41", name: "Landen Fox", school: "New Bern", w: "126", venue: "NCHSAA 7A East Regional", m: "Fall" },
+      { wl: "Win", d: "2/14/2026", pct: "18.51", name: "Tyler Stanton", school: "Garner Magnet", w: "126", venue: "NCHSAA 7A East Regional", m: "Fall" },
+      { wl: "Win", d: "2/11/2026", pct: "97.51", name: "Kaleb Daniels", school: "Grimsley", w: "126", venue: "NCHSAA Dual Team Series 7A @ Cardinal Gibbons", m: "MD" },
+      { wl: "Win", d: "2/10/2026", w: "126", venue: "NCHSAA Dual Team Series 7A @ Cardinal Gibbons", m: "For." },
+      { wl: "Win", d: "1/28/2026", w: "120", venue: "Tri @ Cardinal Gibbons w/ Green Hope", m: "For." },
+      { wl: "Win", d: "1/28/2026", pct: "95.95", name: "Tyler Hackett", school: "Cary", w: "126", venue: "Tri @ Cardinal Gibbons w/ Green Hope", m: "Fall" },
+      { wl: "Win", d: "1/22/2026", pct: "77.35", name: "Hunter Pelligrino", school: "Felton Grove", w: "126", venue: "Dual", m: "Fall" },
+      { wl: "Win", d: "1/17/2026", pct: "2.10", name: "Timothy Flannagan", school: "Southern Nash", w: "126", venue: "Coach T Memorial", m: "Fall" },
+      { wl: "Loss", d: "1/17/2026", pct: "99.11", name: "Christopher Maynor", school: "Charles E. Jordan", w: "126", venue: "Coach T Memorial", m: "Dec" },
+      { wl: "Win", d: "1/17/2026", pct: "99.35", name: "The`On Baker Ii", school: "Hillside", w: "126", venue: "Coach T Memorial", m: "Fall" },
+      { wl: "Win", d: "1/17/2026", pct: "90.91", name: "Bryan Jones", school: "Lumberton", w: "126", venue: "Coach T Memorial", m: "MD" },
+      { wl: "Win", d: "1/15/2026", pct: "2.34", name: "Beau Loughridge", school: "Holly Springs", w: "126", venue: "Dual", m: "Fall" },
+      { wl: "Loss", d: "1/10/2026", w: "120", venue: "2026 East Coast Catholic Classic", m: "For." },
+      { wl: "Win", d: "1/10/2026", name: "Will Guinane", school: "Benedictine College Preparatory (VA)", w: "120", venue: "2026 East Coast Catholic Classic", m: "Fall" },
+      { wl: "Loss", d: "1/10/2026", pct: "99.86", name: "Rocco Lombardo", school: "Malvern Preparatory School (PA)", w: "120", venue: "2026 East Coast Catholic Classic", m: "TF" },
+      { wl: "Win", d: "1/10/2026", pct: "92.59", name: "Jayden Leneus", school: "St. Benedicts (NJ)", w: "120", venue: "2026 East Coast Catholic Classic", m: "SV-1" },
+      { wl: "Win", d: "1/8/2026", w: "126", venue: "MCHS Tri", m: "For." },
+      { wl: "Loss", d: "1/8/2026", pct: "99.91", name: "Naylor Higgins", school: "Middle Creek", w: "126", venue: "MCHS Tri", m: "Fall" },
+      { wl: "Win", d: "1/2/2026", w: "126", venue: "Husky Duals", m: "For." },
+      { wl: "Win", d: "1/2/2026", pct: "99.56", name: "Cole Mitchell", w: "126", venue: "Husky Duals", m: "Fall" },
+      { wl: "Win", d: "1/2/2026", pct: "96.77", name: "Conner Anderson", school: "William Amos Hough", w: "126", venue: "Husky Duals", m: "Dec" },
+      { wl: "Win", d: "1/2/2026", pct: "90.44", name: "Justice Hendley", school: "Watauga", w: "126", venue: "Husky Duals", m: "MD" },
+      { wl: "Win", d: "1/2/2026", pct: "15.81", name: "Mikhil Sokolov", school: "Ardrey Kell", w: "126", venue: "Husky Duals", m: "Fall" },
+      { wl: "Win", d: "1/2/2026", pct: "98.85", name: "Barric Heraty", school: "Providence", w: "126", venue: "Husky Duals", m: "Dec" },
+      { wl: "Loss", d: "1/2/2026", pct: "99.33", name: "Garrett Whitaker", school: "Davie", w: "126", venue: "Husky Duals", m: "Fall" },
+      { wl: "Win", d: "1/2/2026", pct: "99.40", name: "Marcus Soukup", school: "Union Pines", w: "126", venue: "Husky Duals", m: "MD" },
+      { wl: "Win", d: "1/2/2026", pct: "72.70", name: "Russell Morales", school: "Oakton (VA)", w: "126", venue: "Husky Duals", m: "Dec" },
+      { wl: "Win", d: "12/23/2025", pct: "99.77", name: "Noah Reid", w: "126", venue: "Tiger Holiday Classic 2025", m: "Dec" },
+      { wl: "Loss", d: "12/23/2025", pct: "99.94", name: "Jace Barrier", school: "Mooresville High School", w: "126", venue: "Tiger Holiday Classic 2025", m: "MD" },
+      { wl: "Loss", d: "12/23/2025", pct: "99.75", name: "Lucas Angell", school: "Currituck County", w: "126", venue: "Tiger Holiday Classic 2025", m: "Fall" },
+      { wl: "Win", d: "12/23/2025", pct: "99.41", name: "Landen Fox", school: "New Bern", w: "126", venue: "Tiger Holiday Classic 2025", m: "Dec" },
+      { wl: "Win", d: "12/23/2025", pct: "24.19", name: "Dawson `Jake` English", school: "North Pitt", w: "126", venue: "Tiger Holiday Classic 2025", m: "Fall" },
+      { wl: "Win", d: "12/23/2025", pct: "72.83", name: "Jackson Brown", school: "Parkersburg High (WV)", w: "126", venue: "Tiger Holiday Classic 2025", m: "Dec" },
+      { wl: "Loss", d: "12/13/2025", pct: "99.84", name: "Rory Gallagher", school: "John T. Hoggard High School", w: "126", venue: "2025 Crusader Duals", m: "Fall" },
+      { wl: "Win", d: "12/13/2025", pct: "98.90", name: "Christopher Geiger", w: "126", venue: "2025 Crusader Duals", m: "Fall" },
+      { wl: "Loss", d: "12/13/2025", pct: "99.91", name: "Paxton Kearns", school: "Uwharrie Charter Academy", w: "126", venue: "2025 Crusader Duals", m: "Dec" },
+      { wl: "Win", d: "12/13/2025", pct: "28.53", name: "Tobias Valentine", school: "Overhills", w: "126", venue: "2025 Crusader Duals", m: "Fall" },
+      { wl: "Win", d: "12/6/2025", pct: "99.11", name: "Christopher Maynor", school: "Charles E. Jordan", w: "126", venue: "Jim King Orange Invitational", m: "Fall" },
+      { wl: "Win", d: "12/6/2025", pct: "99.11", name: "Christopher Maynor", school: "Charles E. Jordan", w: "126", venue: "Jim King Orange Invitational", m: "Dec" },
+      { wl: "Win", d: "12/6/2025", pct: "55.87", name: "Dawson Pittard", school: "Southern Alamance", w: "126", venue: "Jim King Orange Invitational", m: "Fall" },
+      { wl: "Win", d: "12/6/2025", pct: "93.38", name: "Jaxton Couch", school: "Pine Forest", w: "126", venue: "Jim King Orange Invitational", m: "Fall" },
+      { wl: "Loss", d: "12/6/2025", pct: "99.97", name: "Ayden Sumners", school: "Wheatmore", w: "126", venue: "Jim King Orange Invitational", m: "Fall" },
+      { wl: "Win", d: "11/29/2025", pct: "68.56", name: "Justin Masserdotti", w: "126", venue: "Cribb Memorial", m: "Fall" },
+      { wl: "Loss", d: "11/29/2025", pct: "98.44", name: "Landon Doody", school: "Bunn", w: "126", venue: "Cribb Memorial", m: "Fall" },
+      { wl: "Win", d: "11/29/2025", pct: "58.22", name: "Demarlo Garner", school: "Southern School Of Energy And Sustainability", w: "126", venue: "Cribb Memorial", m: "Fall" },
+      { wl: "Win", d: "11/22/2025", pct: "98.49", name: "Diego Colon-Perez", w: "126", venue: "Red Wolf Invitational", m: "Fall" },
+      { wl: "Win", d: "11/22/2025", pct: "99.56", name: "Cole Mitchell", w: "126", venue: "Red Wolf Invitational", m: "Fall" },
+      { wl: "Loss", d: "11/22/2025", pct: "99.32", name: "Ian Speight", school: "Person", w: "126", venue: "Red Wolf Invitational", m: "Fall" },
+      { wl: "Win", d: "11/22/2025", pct: "99.27", name: "Lloy Bosan", school: "Randleman", w: "126", venue: "Red Wolf Invitational", m: "Dec" },
+      { wl: "Loss", d: "11/22/2025", pct: "99.32", name: "Ian Speight", school: "Person", w: "126", venue: "Red Wolf Invitational", m: "Fall" },
+      { wl: "Win", d: "11/22/2025", pct: "2.34", name: "Beau Loughridge", school: "Holly Springs", w: "126", venue: "Red Wolf Invitational", m: "Fall" },
+      { wl: "Win", d: "11/22/2025", pct: "55.87", name: "Dawson Pittard", school: "Southern Alamance", w: "126", venue: "Red Wolf Invitational", m: "Fall" },
+      { wl: "Win", d: "11/15/2025", pct: "99.87", name: "Edgar Vasquez", w: "126", venue: "Wolverine Challenge", m: "Dec" },
+      { wl: "Loss", d: "11/15/2025", pct: "99.93", name: "Elgia Helmstetter", school: "Chapel Hill", w: "126", venue: "Wolverine Challenge", m: "Dec" },
+      { wl: "Win", d: "11/15/2025", pct: "99.22", name: "Luke Ayers", school: "Seaforth", w: "126", venue: "Wolverine Challenge", m: "Fall" },
+      { wl: "Win", d: "11/15/2025", pct: "12.61", name: "Kason Old", school: "Fuquay-Varina", w: "126", venue: "Wolverine Challenge", m: "Fall" },
+      { wl: "Win", d: "11/15/2025", pct: "93.38", name: "Jaxton Couch", school: "Pine Forest", w: "126", venue: "Wolverine Challenge", m: "Fall" },
+    ]
+    const lines: string[] = []
+    for (const e of entries) {
+      lines.push(e.wl, e.d)
+      if (e.pct) lines.push(e.pct)
+      if (e.name) lines.push(e.name)
+      else lines.push("Forfeit")
+      if (e.school) lines.push(`• ${e.school}`)
+      lines.push(`${e.w} lbs`, "•", e.venue, "•", e.m)
+    }
+
+    const matches = parseRankWrestlerText(lines.join("\n"))
+    expect(matches).toHaveLength(63)
+
+    // The three structural drop classes, by their exemplars:
+    const forfeits = matches.filter((m) => (m.winner || m.loser) === "Forfeit")
+    expect(forfeits).toHaveLength(5)
+    const forfeitLoss = matches.find((m) => m.winner === "Forfeit" && m.date === "1/10/2026")
+    expect(forfeitLoss).toMatchObject({ weight: "120", venue: "2026 East Coast Catholic Classic", result: "For." })
+
+    expect(matches.find((m) => m.loser === "Zyon Rogers")).toMatchObject({
+      loser_school: "",
+      venue: "NCHSAA 7A East Regional",
+      result: "Dec",
+      opp_percent: 99.68,
+    })
+    expect(matches.find((m) => m.loser === "Will Guinane")).toMatchObject({
+      loser_school: "Benedictine College Preparatory (VA)",
+      weight: "120",
+      result: "Fall",
+      opp_percent: null,
+    })
+    expect(matches.filter((m) => m.loser === "Cole Mitchell")).toHaveLength(2)
+
+    const payload = buildRankWrestlerSeasonPayload({
+      athleteName: "Gavin Hickey",
+      graduationYear: 2029,
+      highSchool: "Cardinal Gibbons",
+      rawText: lines.join("\n"),
+    })
+    expect(payload.success).toBe(true)
+    if (payload.success) {
+      // 63 parsed; dedupe collapses only the source's own duplicated Ian Speight row.
+      expect(payload.diagnostics.parsedMatches).toBe(63)
+      expect(payload.diagnostics.duplicatesRemoved).toBe(1)
+      expect(payload.payload.season_summary.wins).toBe(46)
+      expect(payload.payload.season_summary.losses).toBe(16)
+      expect(payload.payload.season_summary.forfeits_won).toBe(4)
+      expect(payload.payload.wrestler_info.season).toBe("2025-26")
+    }
+  })
+
   it("parses compact rendered RankWrestler rows without a Match History heading", () => {
     const renderedProfileText =
       "#5 What If? Mattex Adams Leesville Road • 126 • Sr Career Record: 49-12 " +

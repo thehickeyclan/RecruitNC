@@ -322,82 +322,97 @@ export function parseRankWrestlerText(rawText: string, format: "rank" | "track" 
   }
 
   if (isWinLossFirst) {
-    let i = 0
-    while (i < denseLines.length) {
-      const resultLine = denseLines[i] ?? ""
-      if (resultLine.toLowerCase() !== "win" && resultLine.toLowerCase() !== "loss") {
-        i++
-        continue
-      }
+    // RankWrestler renders two line orderings for the same match list, and blocks vary in
+    // which lines exist at all (rating, school, opponent):
+    //   A: W/L, date, opponent, [• school], weight, •, METHOD, VENUE, [rating]
+    //   B: W/L, date, [rating], opponent|Forfeit, [• school], weight, •, VENUE, •, METHOD
+    // The old parser walked fixed offsets, so any block missing a school (unattached
+    // opponents), missing a rating (e.g. out-of-state wrestlers), or a forfeit shifted the
+    // offsets, landed "•" in the venue slot, and the row was silently dropped — a real
+    // profile lost 15 of 63 matches that way. Classify lines by TYPE within each block
+    // instead: school lines start "• text", separators are exactly "•", weights are
+    // "N lbs", ratings are pure numerics. The two orderings are told apart by whether a
+    // standalone bullet sits between the two remaining text lines (B) or not (A).
+    const isWinLoss = (line: string) => /^(?:win|loss)$/i.test(line)
+    const isDate = (line: string) => /^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(line)
+    const isSeparator = (line: string) => /^[•·]$/.test(line)
+    const isSchool = (line: string) => /^[•·]\s+\S/.test(line)
+    const isWeight = (line: string) => /^\d+\s*lbs$/i.test(line)
+    const isNumeric = (line: string) => /^[\d.]+$/.test(line)
 
-      const isWin = resultLine.toLowerCase() === "win"
-      const date = denseLines[i + 1] ?? ""
-      if (!/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(date)) {
-        i++
-        continue
-      }
+    const blockStarts: number[] = []
+    for (let i = 0; i < denseLines.length - 1; i++) {
+      if (isWinLoss(denseLines[i] ?? "") && isDate(denseLines[i + 1] ?? "")) blockStarts.push(i)
+    }
 
-      const percentageOrForfeit = denseLines[i + 2] ?? ""
-      const opponentOrForfeit = denseLines[i + 3] ?? ""
-      const isForfeit = opponentOrForfeit.toLowerCase() === "forfeit" || percentageOrForfeit.toLowerCase() === "forfeit"
+    for (let b = 0; b < blockStarts.length; b++) {
+      const start = blockStarts[b]!
+      const end = b + 1 < blockStarts.length ? blockStarts[b + 1]! : denseLines.length
+      const isWin = (denseLines[start] ?? "").toLowerCase() === "win"
+      const date = denseLines[start + 1] ?? ""
 
       let opponent = ""
       let opponentSchool = ""
       let weight = ""
+      let oppPercent: number | null = null
+      let isForfeit = false
+      // Text lines that aren't opponent/school/weight/rating — venue and method, in render
+      // order, with a marker for whether a standalone bullet preceded the second one.
+      const tail: string[] = []
+      let bulletBeforeTail2 = false
+
+      for (let i = start + 2; i < end; i++) {
+        const line = denseLines[i] ?? ""
+        if (isSeparator(line)) {
+          if (tail.length === 1) bulletBeforeTail2 = true
+          continue
+        }
+        if (isWeight(line)) {
+          if (!weight) weight = line.replace(/\s*lbs\s*$/i, "").trim()
+          continue
+        }
+        if (/^forfeit$/i.test(line)) {
+          isForfeit = true
+          continue
+        }
+        if (isNumeric(line)) {
+          // Rating: right after the date (B) or trailing the block (A). Either way, the
+          // first numeric wins and never lands in venue/method.
+          if (oppPercent === null) oppPercent = parseFloat(line)
+          continue
+        }
+        if (isSchool(line)) {
+          if (!opponentSchool) opponentSchool = line.replace(/^[•·]\s*/, "").trim()
+          continue
+        }
+        if (!opponent && !isForfeit && !weight) {
+          // First plain text before the weight is the opponent name (may never come — a
+          // forfeit block has none).
+          opponent = line
+          continue
+        }
+        tail.push(line)
+      }
+
+      if (isForfeit) opponent = "Forfeit"
+      // venue/method from the tail: bullet between them → B (venue first); else A (method
+      // first). Single-entry tails are a venue with an implied method only for forfeits.
       let venue = ""
       let method = ""
-      let oppPercent: number | null = null
-      let advance = 9
-
-      if (isForfeit) {
-        opponent = "Forfeit"
-        const renderedWeight = denseLines[i + 3] ?? ""
-        if (/\d+\s*lbs/i.test(renderedWeight) && (denseLines[i + 4] ?? "") === "•") {
-          weight = renderedWeight.replace(/\s*lbs\s*$/i, "").trim()
-          method = denseLines[i + 5] ?? "For."
-          venue = denseLines[i + 6] ?? ""
-          advance = 7
+      if (tail.length >= 2) {
+        if (bulletBeforeTail2) {
+          venue = tail[0] ?? ""
+          method = tail.slice(1).join(" • ")
         } else {
-          weight = (denseLines[i + 3] ?? "").replace(/\s*lbs\s*$/i, "").trim()
-          venue = denseLines[i + 5] ?? ""
-          method = denseLines[i + 7] ?? "For."
-          advance = 8
+          method = tail[0] ?? ""
+          venue = tail.slice(1).join(" • ")
         }
-      } else if (/^[\d.]+$/.test(percentageOrForfeit)) {
-        opponent = opponentOrForfeit
-        opponentSchool = (denseLines[i + 4] ?? "").replace(/^[•·\-]\s*/, "").trim()
-        weight = (denseLines[i + 5] ?? "").replace(/\s*lbs\s*$/i, "").trim()
-        venue = denseLines[i + 7] ?? ""
-        method = denseLines[i + 9] ?? ""
-        oppPercent = parseFloat(percentageOrForfeit)
-        advance = 10
-      } else {
-        const maybeWeightWithoutSchool = opponentOrForfeit
-        const maybeWeightWithSchool = denseLines[i + 4] ?? ""
-        const hasSchool = !/\d+\s*lbs/i.test(maybeWeightWithoutSchool) && /\d+\s*lbs/i.test(maybeWeightWithSchool)
-        const renderedBulletIndex = hasSchool ? i + 5 : i + 4
-        if ((denseLines[renderedBulletIndex] ?? "") === "•") {
-          opponent = percentageOrForfeit
-          opponentSchool = hasSchool ? opponentOrForfeit.replace(/^[•·\-]\s*/, "").trim() : ""
-          weight = (hasSchool ? maybeWeightWithSchool : maybeWeightWithoutSchool).replace(/\s*lbs\s*$/i, "").trim()
-          method = denseLines[renderedBulletIndex + 1] ?? ""
-          venue = denseLines[renderedBulletIndex + 2] ?? ""
-          const maybePct = denseLines[renderedBulletIndex + 3] ?? ""
-          oppPercent = /^[\d.]+$/.test(maybePct) ? parseFloat(maybePct) : null
-          advance = /^[\d.]+$/.test(maybePct) ? renderedBulletIndex + 4 - i : renderedBulletIndex + 3 - i
-        } else {
-          opponent = percentageOrForfeit
-          opponentSchool = opponentOrForfeit.replace(/^[•·\-]\s*/, "").trim()
-          weight = (denseLines[i + 4] ?? "").replace(/\s*lbs\s*$/i, "").trim()
-          venue = denseLines[i + 6] ?? ""
-          method = denseLines[i + 8] ?? ""
-        }
+      } else if (tail.length === 1 && isForfeit) {
+        venue = tail[0] ?? ""
+        method = "For."
       }
 
-      if (!venue || venue === "•" || venue === "·" || /^[\d.]+$/.test(venue)) {
-        i++
-        continue
-      }
+      if (!opponent || !weight || !venue || isNumeric(venue)) continue
 
       matches.push({
         date,
@@ -410,7 +425,6 @@ export function parseRankWrestlerText(rawText: string, format: "rank" | "track" 
         weight,
         opp_percent: oppPercent,
       })
-      i += advance
     }
     return matches
   }
