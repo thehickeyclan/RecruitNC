@@ -5,7 +5,8 @@ import { TocCollegeAttendees } from "@/components/toc/toc-college-attendees"
 import { TocAiRenderingCaption } from "@/components/toc/toc-ai-rendering-caption"
 import { TocCountdown } from "@/components/toc/toc-countdown"
 import { TocPatrioticBar, tocDisplayClass, tocMobileCtaClass } from "@/components/toc/toc-theme"
-import { TOC_EVENT_DATE, TOC_GOFAN_TICKETS_URL, TOC_HERO_DATES, TOC_SECTION_NAV_QUICK } from "@/lib/toc/constants"
+import { TOC_EVENT_DATE, TOC_HERO_DATES, TOC_SECTION_NAV_QUICK } from "@/lib/toc/constants"
+import { TocTicketCta } from "@/components/toc/toc-ticket-cta"
 import { TOC_HERO } from "@/lib/toc/marketing-copy"
 import type { TocConfirmedCollege } from "@/lib/toc/confirmed-colleges"
 import type { TocEventConfig } from "@/lib/toc/event-config"
@@ -65,10 +66,9 @@ export function TocHero({ config, confirmedColleges = [] }: Props) {
 
               <TocCountdown targetDate={TOC_EVENT_DATE} className="mt-8 sm:mt-10 justify-start" />
 
-              <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4">
-                <a href={TOC_GOFAN_TICKETS_URL} target="_blank" rel="noopener noreferrer" className={tocMobileCtaClass("primary")}>
-                  Buy Tickets
-                </a>
+              <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+                {/* Announcement until Sunday Aug 2 9:00 AM ET, then the GoFan buy button — flips automatically. */}
+                <TocTicketCta variant="hero" />
                 <a href={ctaHref} className={tocMobileCtaClass("secondary")}>
                   {config.hero_primary_cta_label}
                 </a>

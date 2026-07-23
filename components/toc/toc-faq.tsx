@@ -9,10 +9,11 @@ import {
   TOC_FRIDAY_EVENT_DATE,
   TOC_MATS_LINE,
   TOC_SATURDAY_COMPETITION_DATE,
-  TOC_TICKET_SALE_MONTH,
+  TOC_TICKET_SALE_TIMING,
   TOC_VENUE,
   TOC_WEIGH_IN,
 } from "@/lib/toc/constants"
+import { tocTicketsOnSale } from "@/lib/toc/ticket-sale"
 import {
   formatTocRegistrationFee,
   registrationPaymentDueDisplay,
@@ -71,7 +72,9 @@ const FAQ_ITEMS = [
   },
   {
     q: "Can I buy tickets now?",
-    a: `Not yet. Tickets go on sale ${TOC_TICKET_SALE_MONTH}. Sign up for the email list to be notified the moment they're live. Saturday admission covers the full tournament including single-mat championship finals. Pricing to be announced.`,
+    a: tocTicketsOnSale()
+      ? `Yes — tickets are on sale now through NC United's GoFan page (see the Spectators section above). Saturday admission covers the full tournament including single-mat championship finals.`
+      : `Not yet. Tickets go on sale ${TOC_TICKET_SALE_TIMING}. Sign up for the email list to be notified the moment they're live. Saturday admission covers the full tournament including single-mat championship finals. Pricing to be announced.`,
   },
   {
     q: "How do I sponsor the event?",
