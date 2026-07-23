@@ -238,6 +238,44 @@ async function waitForRankWrestlerMatchHistory(page: Page): Promise<boolean> {
   return looksLikeRankWrestlerMatchRows(lastText)
 }
 
+async function collectRankWrestlerRenderedText(page: Page): Promise<string> {
+  const snapshots: string[] = []
+  const seen = new Set<string>()
+
+  const collect = async () => {
+    const text = await page.locator("body").innerText({ timeout: 10_000 }).catch(() => "")
+    const normalized = text.replace(/\s+/g, " ").trim()
+    if (normalized && !seen.has(normalized)) {
+      seen.add(normalized)
+      snapshots.push(text)
+    }
+  }
+
+  await collect()
+
+  const documentHeight = await page
+    .evaluate(() => Math.max(document.body.scrollHeight, document.documentElement.scrollHeight))
+    .catch(() => 0)
+  const viewportHeight = await page.evaluate(() => window.innerHeight).catch(() => 900)
+  const step = Math.max(450, Math.floor(viewportHeight * 0.75))
+  const maxScrollTop = Math.max(0, documentHeight - viewportHeight)
+
+  for (let scrollTop = 0; scrollTop <= maxScrollTop; scrollTop += step) {
+    await page.evaluate((top) => window.scrollTo(0, top), scrollTop).catch(() => undefined)
+    await page.waitForTimeout(500)
+    await collect()
+  }
+
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight)).catch(() => undefined)
+  await page.waitForTimeout(750)
+  await collect()
+
+  await page.evaluate(() => window.scrollTo(0, 0)).catch(() => undefined)
+  await page.waitForTimeout(250)
+
+  return snapshots.join("\n\n")
+}
+
 function looksLikeRankWrestlerMatchRows(text: string): boolean {
   return (
     (text.includes("Match History") && /\b(?:Win|Loss)\b/.test(text)) ||
@@ -451,7 +489,7 @@ async function findArchiveProfileViaSearch(
     await searchInput.fill(term, { timeout: 5_000 })
     await page.waitForTimeout(2_000)
 
-    const resultIndex = await page
+    const clickedResult = await page
       .evaluate(
         ({ expectedName, expectedSchool }) => {
           const normalize = (value: string) =>
@@ -460,17 +498,44 @@ async function findArchiveProfileViaSearch(
               .replace(/[^a-z0-9]+/g, " ")
               .replace(/\s+/g, " ")
               .trim()
-          const results = [...document.querySelectorAll('[data-search-result="true"]')]
-          return results.findIndex((element) => {
+          const nameParts = expectedName.split(" ").filter(Boolean)
+          const exactNameScore = (text: string) => {
+            if (expectedName && text.includes(expectedName)) return 100
+            if (nameParts.length >= 2 && nameParts.every((part) => text.includes(part))) return 75
+            return 0
+          }
+          const clickableFor = (element: Element): HTMLElement | null => {
+            const direct = element.closest('a[href], button, [role="button"], [tabindex]') as HTMLElement | null
+            if (direct) return direct
+            return element.querySelector('a[href], button, [role="button"], [tabindex]') as HTMLElement | null
+          }
+          const elements = [
+            ...document.querySelectorAll('[data-search-result="true"], a[href*="/wrestler/"], button, [role="button"], li, article, div'),
+          ]
+          const candidates = elements.flatMap((element) => {
             const text = normalize(element.textContent ?? "")
-            if (!text.includes(expectedName)) return false
-            if (expectedSchool && !text.includes(expectedSchool)) return false
-            return true
+            if (!text || text.length > 500) return []
+            const nameScore = exactNameScore(text)
+            if (!nameScore) return []
+            const clickable = clickableFor(element)
+            if (!clickable) return []
+            let score = nameScore
+            if (expectedSchool && text.includes(expectedSchool)) score += 20
+            if (/\b(?:school|high|lbs|lb|class|grade|record)\b/.test(text)) score += 8
+            if (element.matches('[data-search-result="true"], a[href*="/wrestler/"]')) score += 10
+            if (clickable instanceof HTMLAnchorElement && /\/wrestler\/\d+/i.test(clickable.href)) score += 15
+            return [{ element, clickable, score, text }]
           })
+          candidates.sort((a, b) => b.score - a.score || a.text.length - b.text.length)
+          const best = candidates[0]
+          if (!best) return { clicked: false, matchedText: "" }
+          best.clickable.scrollIntoView({ block: "center", inline: "center" })
+          best.clickable.click()
+          return { clicked: true, matchedText: best.text.slice(0, 300) }
         },
         { expectedName, expectedSchool },
       )
-      .catch(() => -1)
+      .catch(() => ({ clicked: false, matchedText: "" }))
 
     latestPreview = await page
       .locator("body")
@@ -478,9 +543,7 @@ async function findArchiveProfileViaSearch(
       .then((text) => text.replace(/\s+/g, " ").trim().slice(0, 500))
       .catch(() => "")
 
-    if (resultIndex >= 0) {
-      const result = page.locator('[data-search-result="true"]').nth(resultIndex)
-      await result.click({ timeout: 5_000 })
+    if (clickedResult.clicked) {
       await page.waitForLoadState("domcontentloaded", { timeout: 15_000 }).catch(() => null)
       await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => null)
       await page.waitForTimeout(1_000)
@@ -498,7 +561,7 @@ async function findArchiveProfileViaSearch(
 
       return {
         ok: false,
-        error: "RankWrestler archive search result was clicked, but it did not open a wrestler profile or match preview.",
+        error: `RankWrestler archive search result was clicked, but it did not open a wrestler profile or match preview. Matched result: ${clickedResult.matchedText || "unknown"}`,
         preview: previewText.replace(/\s+/g, " ").trim().slice(0, 500) || latestPreview,
       }
     }
@@ -623,7 +686,7 @@ async function renderedSuccessFromPage(
   seasonLabel?: string,
 ): Promise<RankWrestlerRenderedBrowserResult> {
   const matchHistoryFound = await waitForRankWrestlerMatchHistory(page)
-  const text = await page.locator("body").innerText({ timeout: 10_000 })
+  const text = await collectRankWrestlerRenderedText(page)
   const htmlLength = await page.locator("html").evaluate((html) => html.outerHTML.length)
   const title = await page.title()
   const finalUrl = page.url()

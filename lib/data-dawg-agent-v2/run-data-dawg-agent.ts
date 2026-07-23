@@ -17,6 +17,10 @@ import {
   answerNextBluePractice,
   isBluePracticeScheduleQuery,
 } from "@/lib/data-dawg-next-blue-practice"
+import {
+  answerTournamentOfChampionsQuestion,
+  isTournamentOfChampionsQuery,
+} from "@/lib/data-dawg-toc-info"
 
 type HistoryItem = {
   role?: string
@@ -55,6 +59,31 @@ export async function runDataDawgAgentV2(params: {
 }> {
   const priorMessages = historyToPriorMessages(params.conversationHistory)
   const messageId = params.messageId || `msg-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
+
+  // Tournament of Champions page facts should come from the same constants that render
+  // the public landing page: weights, venue/location, schedule, awards, officials, mats,
+  // GoFan tickets, registration, streaming, coaches lounge, volunteers, and sponsors.
+  if (isTournamentOfChampionsQuery(params.message)) {
+    try {
+      return {
+        answer: applyRecruitNcDataDawgAnswerPostProcess(await answerTournamentOfChampionsQuestion(params.message)),
+        messageId,
+        queryType: "tournament_of_champions_page_facts",
+        source: "data_dawg_agent_v2_toc_page",
+        toolRounds: 0,
+      }
+    } catch (e) {
+      console.warn("[RecruitNC] Tournament of Champions page facts lookup failed:", e instanceof Error ? e.message : e)
+      return {
+        answer:
+          "I couldn’t load the Tournament of Champions facts right now. Please check the [Tournament of Champions page](/tournament-of-champions) for the latest details.",
+        messageId,
+        queryType: "tournament_of_champions_page_facts_error",
+        source: "data_dawg_agent_v2_toc_page_error",
+        toolRounds: 0,
+      }
+    }
+  }
 
   // Calendar facts should never rely on the model choosing the right data tool.
   if (isBluePracticeScheduleQuery(params.message)) {

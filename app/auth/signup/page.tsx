@@ -15,10 +15,73 @@ import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
+function authIntentForPath(path: string | null) {
+  const target = path || ""
+
+  if (target.startsWith("/public-rankings") || target.startsWith("/rankings") || target.startsWith("/admin/rankings")) {
+    return {
+      badge: "RANKINGS ACCESS",
+      title: "Create your free account for RecruitNC rankings",
+      description:
+        "Rankings are an account feature so RecruitNC can protect the work, personalize your view, and keep future premium access tied to your profile.",
+      bullets: ["View RecruitNC prospect rankings", "Track ranked athletes and updates", "Use ranking tools tied to your account"],
+    }
+  }
+
+  if (target.includes("submit-profile") || target.includes("/edit") || target.includes("claim") || target.startsWith("/athletes/")) {
+    return {
+      badge: "PROFILE ACCESS",
+      title: "Create your free account to manage profiles",
+      description:
+        "Create, claim, or edit an athlete profile with protected recruiting details and profile activity tied to the right account.",
+      bullets: ["Claim or create an athlete profile", "Update results, school, bio, and recruiting info", "See profile-view analytics when connected"],
+    }
+  }
+
+  if (target.startsWith("/calendar")) {
+    return {
+      badge: "EVENT ACCESS",
+      title: "Create your free account for RecruitNC events",
+      description:
+        "Public schedules are easy to browse, but account access lets you manage registrations, reminders, and event-specific tools.",
+      bullets: ["Access event registrations", "Manage reminders and account-specific actions", "Use NC United calendar tools"],
+    }
+  }
+
+  if (target.startsWith("/tournament-of-champions")) {
+    return {
+      badge: "TOC ACCESS",
+      title: "Create your free account for TOC actions",
+      description:
+        "The Tournament of Champions page is public, but protected actions like confirmations, payments, nominations, and personalized tools require an account.",
+      bullets: ["Confirm or manage invite-related actions", "Access protected TOC forms and tools", "Keep Tournament of Champions updates tied to your account"],
+    }
+  }
+
+  if (target.startsWith("/admin")) {
+    return {
+      badge: "ADMIN ACCESS",
+      title: "Create your free account",
+      description:
+        "Admin areas are limited to approved RecruitNC operators and event staff. Create an account only if you’ve been asked to help with a protected workflow.",
+      bullets: ["Request access through an approved account", "Keep changes tied to the signed-in user", "Use protected RecruitNC workflows after approval"],
+    }
+  }
+
+  return {
+    badge: "100% FREE • NO CREDIT CARD REQUIRED",
+    title: "Create Your Free RecruitNC Account",
+    description:
+      "Rankings, profile management, recruiting tools, and account-specific activity live behind a free account.",
+    bullets: ["Create, claim, and update athlete profiles", "View rankings plus profile analytics and activity", "Data Dawg, wallet, Blue, messaging, and alerts"],
+  }
+}
+
 export default function SignUpPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const returnTo = searchParams.get("returnTo")
+  const authIntent = authIntentForPath(returnTo)
 
   // Required fields
   const [firstName, setFirstName] = useState("")
@@ -221,13 +284,13 @@ export default function SignUpPage() {
           <CardContent className="relative p-6 md:p-8">
             <div className="text-center mb-6">
               <Badge className="mb-4 bg-[#D3B574] text-[#03154C] text-sm font-bold px-4 py-1">
-                100% FREE • NO CREDIT CARD REQUIRED
+                {authIntent.badge}
               </Badge>
                 <h2 className="text-2xl md:text-3xl font-bold mb-3">
-                  Create Your Free RecruitNC Account
+                  {authIntent.title}
                 </h2>
                 <p className="text-lg md:text-xl text-blue-100 mb-6">
-                Rankings, profile management, recruiting tools, and account-specific activity live behind a free account.
+                {authIntent.description}
               </p>
             </div>
             
@@ -235,17 +298,17 @@ export default function SignUpPage() {
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
                 <Edit className="h-8 w-8 text-[#D3B574] mb-2 mx-auto" />
                 <h3 className="font-semibold mb-1 text-center text-sm md:text-base">Claim & Edit</h3>
-                <p className="text-xs md:text-sm text-blue-100 text-center">Create, claim, and update athlete profiles</p>
+                <p className="text-xs md:text-sm text-blue-100 text-center">{authIntent.bullets[0]}</p>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
                 <Users className="h-8 w-8 text-[#D3B574] mb-2 mx-auto" />
                 <h3 className="font-semibold mb-1 text-center text-sm md:text-base">Rankings & Interest</h3>
-                <p className="text-xs md:text-sm text-blue-100 text-center">View rankings plus profile analytics and activity</p>
+                <p className="text-xs md:text-sm text-blue-100 text-center">{authIntent.bullets[1]}</p>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
                 <Trophy className="h-8 w-8 text-[#D3B574] mb-2 mx-auto" />
                 <h3 className="font-semibold mb-1 text-center text-sm md:text-base">RecruitNC Tools</h3>
-                <p className="text-xs md:text-sm text-blue-100 text-center">Data Dawg, wallet, Blue, messaging, and alerts</p>
+                <p className="text-xs md:text-sm text-blue-100 text-center">{authIntent.bullets[2]}</p>
               </div>
             </div>
 
@@ -267,7 +330,9 @@ export default function SignUpPage() {
         <Card className="w-full shadow-lg relative z-10">
           <CardHeader>
             <CardTitle>Create Your Free Account</CardTitle>
-            <CardDescription>Sign up takes less than 2 minutes</CardDescription>
+            <CardDescription>
+              {returnTo ? `Sign up, verify your email, and we’ll send you back to ${returnTo}.` : "Sign up takes less than 2 minutes."}
+            </CardDescription>
           </CardHeader>
         <CardContent className="relative z-10">
           {error && <div className="mb-4 text-sm text-red-600">{error}</div>}
