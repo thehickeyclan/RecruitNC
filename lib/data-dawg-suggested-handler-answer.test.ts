@@ -25,7 +25,9 @@ describe("NHSCA school leaderboard suggested prompt", () => {
   })
 
   it("routes default ranking and 4x chips", () => {
-    expect(getRouteForSuggestedPrompt("Show me all Class of 2026 rankings")?.handler).toBe("prospect_rankings")
+    expect(getRouteForSuggestedPrompt("Show me all Class of 2027 rankings")?.handler).toBe("prospect_rankings")
+    expect(getRouteForSuggestedPrompt("Show me all Class of 2028 rankings")?.handler).toBe("prospect_rankings")
+    expect(getRouteForSuggestedPrompt("Show me all Class of 2029 rankings")).toBeNull()
     expect(getRouteForSuggestedPrompt("Who are our 4x state champions?")?.handler).toBe("state_champion_records")
   })
 

@@ -14,7 +14,7 @@ interface RankingsFiltersProps {
 }
 
 export function RankingsFilters({ onFiltersChange }: RankingsFiltersProps) {
-  const [graduationYear, setGraduationYear] = useState("2026")
+  const [graduationYear, setGraduationYear] = useState("2027")
   const [gender, setGender] = useState("Male")
   const [search, setSearch] = useState("")
 
@@ -43,11 +43,8 @@ export function RankingsFilters({ onFiltersChange }: RankingsFiltersProps) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="2025">Class of 2025</SelectItem>
-                <SelectItem value="2026">Class of 2026</SelectItem>
                 <SelectItem value="2027">Class of 2027</SelectItem>
                 <SelectItem value="2028">Class of 2028</SelectItem>
-                <SelectItem value="2029">Class of 2029</SelectItem>
               </SelectContent>
             </Select>
           </div>
