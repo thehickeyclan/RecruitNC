@@ -63,6 +63,20 @@ export const TOC_TROPHIES_AND_AWARDS = {
   ],
 } as const
 
+export const TOC_OFFICIAL_TEE = {
+  eyebrow: "Official event tee",
+  headline: "The inaugural 2026 Tournament of Champions tee.",
+  src: "/images/toc/toc-2026-official-tee.png",
+  alt: "Official navy Tournament of Champions 2026 tee showing the front and back design",
+  width: 1530,
+  height: 708,
+  items: [
+    "Created as the official tee of the inaugural NC United Tournament of Champions.",
+    "Front: Tournament of Champions mark with NC United branding.",
+    "Back: North Carolina’s Elite Invitational bracket design with the 2026 event year.",
+  ],
+} as const
+
 export const TOC_COMPETITION_MATS = {
   eyebrow: "Competition surface",
   headline: "Purpose-built Resilite mats ordered for Tournament of Champions.",
@@ -492,6 +506,7 @@ export const TOC_SECTION_NAV_GROUPS = [
     links: [
       { href: "#weights", label: "Weight classes" },
       { href: "#champion-jacket", label: "Champion jacket" },
+      { href: "#official-tee", label: "Official tee" },
       { href: "#venue", label: "Venue" },
       { href: "#schedule", label: "Schedule" },
       { href: "#families", label: "Tickets & families" },
@@ -522,6 +537,7 @@ export const TOC_SECTION_NAV_QUICK = [
   { href: "#schedule", label: "Schedule" },
   { href: "#families", label: "Tickets" },
   { href: "#trophies-awards", label: "Awards" },
+  { href: "#official-tee", label: "Tee" },
   { href: "#volunteer", label: "Volunteer" },
   { href: "#athlete-interest", label: "Athletes" },
 ] as const

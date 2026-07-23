@@ -1,6 +1,6 @@
 import Image from "next/image"
 import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass } from "@/components/toc/toc-theme"
-import { TOC_BRAND, TOC_CHAMPION_JACKET, TOC_TROPHIES_AND_AWARDS } from "@/lib/toc/constants"
+import { TOC_BRAND, TOC_CHAMPION_JACKET, TOC_OFFICIAL_TEE, TOC_TROPHIES_AND_AWARDS } from "@/lib/toc/constants"
 
 function JacketProductShot({
   side,
@@ -122,6 +122,45 @@ export function TocChampionJacketSection() {
               className="h-auto w-full object-cover"
               sizes="(min-width: 1024px) 42vw, 100vw"
             />
+          </div>
+        </div>
+
+        <div
+          id="official-tee"
+          className="mt-6 sm:mt-8 rounded-2xl border border-white/15 bg-[#06152c] p-4 shadow-2xl sm:p-6 lg:p-7 scroll-mt-24"
+        >
+          <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+            <div className="relative overflow-hidden rounded-xl border border-white/15 bg-black/40">
+              <Image
+                src={TOC_OFFICIAL_TEE.src}
+                alt={TOC_OFFICIAL_TEE.alt}
+                width={TOC_OFFICIAL_TEE.width}
+                height={TOC_OFFICIAL_TEE.height}
+                className="h-auto w-full object-contain"
+                sizes="(min-width: 1024px) 54vw, 100vw"
+              />
+            </div>
+
+            <div>
+              <p className={`text-[#D7B95A] text-sm sm:text-base mb-2 ${tocDisplayClass()} tracking-[0.18em] uppercase`}>
+                {TOC_OFFICIAL_TEE.eyebrow}
+              </p>
+              <h3 className={`text-3xl sm:text-4xl text-white leading-none ${tocDisplayClass()}`}>
+                {TOC_OFFICIAL_TEE.headline}
+              </h3>
+              <p className="mt-4 text-base leading-relaxed text-white/80 sm:text-lg">
+                Navy, gold, and white — built to match the stage. This is the official event tee for the first-ever
+                NC United Tournament of Champions.
+              </p>
+              <ul className="mt-5 space-y-3 text-sm leading-relaxed text-white/80 sm:text-base">
+                {TOC_OFFICIAL_TEE.items.map((item) => (
+                  <li key={item} className="flex gap-3">
+                    <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-[#CC0000]" aria-hidden />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
       </div>

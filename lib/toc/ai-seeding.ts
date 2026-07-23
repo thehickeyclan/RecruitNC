@@ -6,6 +6,8 @@ import { placementPoints, recordWinPctPoints } from "@/lib/toc/athlete-compare"
 import type { TocFieldBoard, TocFieldAthlete } from "@/lib/toc/field-board"
 
 type MatchBout = {
+  date?: string
+  weight?: string | number
   opponent?: string
   opponent_name?: string
   result?: string
@@ -64,6 +66,44 @@ function parseBouts(value: unknown): MatchBout[] {
     }
   }
   return []
+}
+
+function didWinBout(bout: MatchBout): boolean {
+  const result = String(bout.win_loss ?? bout.result ?? "").trim().toUpperCase()
+  return result === "W" || result.startsWith("W ") || result.includes("WIN")
+}
+
+function didLoseBout(bout: MatchBout): boolean {
+  const result = String(bout.win_loss ?? bout.result ?? "").trim().toUpperCase()
+  return result === "L" || result.startsWith("L ") || result.includes("LOSS")
+}
+
+function isNchsaaStateBout(bout: MatchBout): boolean {
+  return /nchsaa|state championship|state championships|state tournament|states/i.test(String(bout.tournament ?? ""))
+}
+
+function headToHeadRecordAgainst(bouts: MatchBout[], opponentName: string) {
+  let wins = 0
+  let losses = 0
+  let nchsaaWins = 0
+  let nchsaaLosses = 0
+
+  for (const bout of bouts) {
+    const opponent = String(bout.opponent_name ?? bout.opponent ?? "").trim()
+    if (!opponent || !namesLikelySamePerson(opponent, opponentName)) continue
+    const won = didWinBout(bout)
+    const lost = didLoseBout(bout)
+    if (!won && !lost) continue
+
+    if (won) wins += 1
+    if (lost) losses += 1
+    if (isNchsaaStateBout(bout)) {
+      if (won) nchsaaWins += 1
+      if (lost) nchsaaLosses += 1
+    }
+  }
+
+  return { wins, losses, nchsaaWins, nchsaaLosses }
 }
 
 function achievementText(row: Record<string, unknown>): string {
@@ -148,11 +188,33 @@ function findFieldHeadToHeadBonus(
     if (!opponent) continue
     const fieldOpponent = field.find((other) => other.athleteId !== athlete.athleteId && namesLikelySamePerson(opponent, other.name))
     if (!fieldOpponent) continue
-    const result = String(bout.win_loss ?? bout.result ?? "").trim().toUpperCase()
-    if (result === "W" || result.startsWith("W ") || result.includes("WIN")) wins += 1
-    else if (result === "L" || result.startsWith("L ") || result.includes("LOSS")) losses += 1
+    if (didWinBout(bout)) wins += 1
+    else if (didLoseBout(bout)) losses += 1
   }
   return { points: wins * 18 - losses * 12, wins, losses }
+}
+
+function pairwiseHeadToHeadSort({
+  a,
+  b,
+  aBouts,
+  bBouts,
+}: {
+  a: TocFieldAthlete
+  b: TocFieldAthlete
+  aBouts: MatchBout[]
+  bBouts: MatchBout[]
+}): number {
+  const aVsB = headToHeadRecordAgainst(aBouts, b.name)
+  const bVsA = headToHeadRecordAgainst(bBouts, a.name)
+
+  const aNchsaaNet = aVsB.nchsaaWins + bVsA.nchsaaLosses - aVsB.nchsaaLosses - bVsA.nchsaaWins
+  if (aNchsaaNet !== 0) return aNchsaaNet > 0 ? -1 : 1
+
+  const aOverallNet = aVsB.wins + bVsA.losses - aVsB.losses - bVsA.wins
+  if (aOverallNet !== 0) return aOverallNet > 0 ? -1 : 1
+
+  return 0
 }
 
 async function scoreAthleteForTocSeed({
@@ -303,7 +365,16 @@ export async function buildTocAiSeedRecommendations({
     )
 
     scored
-      .sort((a, b) => b.score - a.score || a.athlete.name.localeCompare(b.athlete.name))
+      .sort((a, b) => {
+        const h2hSort = pairwiseHeadToHeadSort({
+          a: a.athlete,
+          b: b.athlete,
+          aBouts: scoreMatchRows(matchRowsByAthlete.get(a.athlete.athleteId) || []).bouts,
+          bBouts: scoreMatchRows(matchRowsByAthlete.get(b.athlete.athleteId) || []).bouts,
+        })
+        if (h2hSort !== 0) return h2hSort
+        return b.score - a.score || a.athlete.name.localeCompare(b.athlete.name)
+      })
       .forEach((row, index) => {
         out.set(row.athleteId, {
           athleteId: row.athleteId,
