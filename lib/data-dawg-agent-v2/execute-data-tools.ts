@@ -56,7 +56,11 @@ import { loadNcUnitedResultsForNameSearch } from "@/lib/national-team-live-profi
 import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
 import { buildDataDawgTournamentSummary } from "@/lib/data-dawg-tournament-summary"
 import { getAthleteProfileUrl, RECRUITNC_APP_URL } from "@/lib/athlete-profile-links"
-import { PUBLIC_RANKINGS_MAX_BY_YEAR } from "@/lib/public-rankings-cap"
+import {
+  isPublicRankingsYearPublished,
+  PUBLIC_RANKINGS_MAX_BY_YEAR,
+  PUBLISHED_PUBLIC_RANKINGS_YEARS,
+} from "@/lib/public-rankings-cap"
 
 export async function toolPublicRankingsSearch(args: {
   graduation_year?: number | null
@@ -67,9 +71,7 @@ export async function toolPublicRankingsSearch(args: {
   const admin = getSupabaseAdmin()
 
   if (args.list_available_years) {
-    const years = Object.keys(PUBLIC_RANKINGS_MAX_BY_YEAR)
-      .map((y) => Number(y))
-      .sort((a, b) => a - b)
+    const years = PUBLISHED_PUBLIC_RANKINGS_YEARS
     const counts: Record<string, number> = {}
     for (const y of years) {
       const maxRank = PUBLIC_RANKINGS_MAX_BY_YEAR[y]!
@@ -96,9 +98,17 @@ export async function toolPublicRankingsSearch(args: {
     yearRaw != null && Number.isFinite(Number(yearRaw)) ? Math.floor(Number(yearRaw)) : null
   if (year == null) {
     return {
-      error: "graduation_year is required (e.g. 2026, 2027, 2028), or set list_available_years: true.",
+      error: `graduation_year is required (currently public: ${PUBLISHED_PUBLIC_RANKINGS_YEARS.join(", ")}), or set list_available_years: true.`,
       rankings: [] as unknown[],
-      available_years: Object.keys(PUBLIC_RANKINGS_MAX_BY_YEAR).map(Number),
+      available_years: PUBLISHED_PUBLIC_RANKINGS_YEARS,
+    }
+  }
+  if (!isPublicRankingsYearPublished(year)) {
+    return {
+      error: `Class of ${year} rankings are not public yet. Public RecruitNC rankings are currently available for Class of ${PUBLISHED_PUBLIC_RANKINGS_YEARS.join(" and ")}.`,
+      rankings: [] as unknown[],
+      graduation_year: year,
+      available_years: PUBLISHED_PUBLIC_RANKINGS_YEARS,
     }
   }
 
@@ -150,7 +160,7 @@ export async function toolPublicRankingsSearch(args: {
     page_url: `${RECRUITNC_APP_URL}/public-rankings/${year}`,
     note:
       rankings.length === 0
-        ? `No public prospect rankings found for class of ${year} (${gender}). Available years: ${Object.keys(PUBLIC_RANKINGS_MAX_BY_YEAR).join(", ")}.`
+        ? `No public prospect rankings found for class of ${year} (${gender}). Available years: ${PUBLISHED_PUBLIC_RANKINGS_YEARS.join(", ")}.`
         : `RecruitNC official Class of ${year} ${gender} rankings (top ${maxPublicRank ?? "all"}). List every row returned in rank order.`,
   }
 }

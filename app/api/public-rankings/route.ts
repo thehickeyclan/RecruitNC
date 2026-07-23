@@ -7,7 +7,11 @@ import {
   nchsaaRowsToStateResults,
   stateChampionshipSummaryFromRows,
 } from "@/lib/nchsaa-state-display"
-import { getPublicRankingsMax } from "@/lib/public-rankings-cap"
+import {
+  isPublicRankingsYearPublished,
+  PUBLISHED_PUBLIC_RANKINGS_YEARS,
+  getPublicRankingsMax,
+} from "@/lib/public-rankings-cap"
 
 export async function GET(request: Request) {
   try {
@@ -26,6 +30,16 @@ export async function GET(request: Request) {
     const requestedLimit = limitParam ? parseInt(limitParam, 10) : null
 
     const yearNum = parseInt(String(year), 10)
+    if (!isPublicRankingsYearPublished(yearNum)) {
+      return NextResponse.json(
+        {
+          error: `Class of ${yearNum} rankings are not public yet.`,
+          available_years: PUBLISHED_PUBLIC_RANKINGS_YEARS,
+        },
+        { status: 404 },
+      )
+    }
+
     // Public /public-rankings pages: always top 30 only
     const maxPublicRank = getPublicRankingsMax(yearNum)
 

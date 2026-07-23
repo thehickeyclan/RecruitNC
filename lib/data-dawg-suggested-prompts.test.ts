@@ -54,7 +54,9 @@ describe("getSuggestedPrompts", () => {
 
   it("keeps rankings chips on rankings pages (both path spellings)", () => {
     for (const page of ["/rankings", "/public-rankings"]) {
-      expect(getSuggestedPrompts(page)).toContain("Show me all Class of 2026 rankings")
+      expect(getSuggestedPrompts(page)).toContain("Show me all Class of 2027 rankings")
+      expect(getSuggestedPrompts(page)).toContain("Show me all Class of 2028 rankings")
+      expect(getSuggestedPrompts(page)).not.toContain("Show me all Class of 2026 rankings")
     }
   })
 

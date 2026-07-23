@@ -98,15 +98,6 @@ export default async function PublicRankingsHomepage() {
             </Card>
           </HardLink>
         </div>
-
-        <div className="mt-8 text-center">
-          <HardLink
-            href="/public-rankings/2026"
-            className="text-sm text-white/50 hover:text-[#D3B574] transition-colors underline underline-offset-4"
-          >
-            Archived: Class of 2026 rankings
-          </HardLink>
-        </div>
       </section>
 
       {/* Our approach */}

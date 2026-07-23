@@ -37,6 +37,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { getYouTubeVideoId, isDirectHighlightVideoUrl } from "@/lib/highlight-video-url"
 import { PROFILE_DARK_THEME } from "@/lib/profile-dark-theme"
 import { ProfileViewStatsPanel } from "./profile-view-stats-panel"
+import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 
 /** Bio/summary paragraph section — kept in code but hidden while copy stays stale. */
 const SHOW_ATHLETE_BIO_SECTION = false
@@ -323,10 +324,10 @@ export function AthleteDetail({
     return null
   })()
   // Only show rank on profile when athlete is on our official rankings (top 30)
-  const maxRankForClass =
-    graduationYear === 2026 || graduationYear === 2027 || graduationYear === 2028 || graduationYear === 2029
-      ? 30
-      : 0
+  const graduationYearNumber = Number(graduationYear)
+  const maxRankForClass = isPublicRankingsYearPublished(graduationYearNumber)
+    ? getPublicRankingsMax(graduationYearNumber)
+    : 0
   const prospectRanking =
     rawRank != null &&
     Number.isFinite(rawRank) &&

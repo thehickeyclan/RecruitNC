@@ -12,6 +12,7 @@ import { callChat, hasChatKey, getChatProvider } from "@/lib/ai-chat"
 import { normalizeNhscaPlacementFromRow } from "@/lib/recruitnc-wrestling-achievements"
 import { applyRecruitNcDataDawgAnswerPostProcess } from "@/lib/recruitnc-data-dawg-postprocess"
 import { resolveDataDawgRequestUserId } from "@/lib/data-dawg-request-user"
+import { PUBLISHED_PUBLIC_RANKINGS_YEARS } from "@/lib/public-rankings-cap"
 
 export const maxDuration = 120
 
@@ -1376,7 +1377,7 @@ export async function POST(request: NextRequest) {
       (lowerQuestion.includes("who") || lowerQuestion.includes("what") || lowerQuestion.includes("which") || lowerQuestion.includes("school"))
     
     // Catch prospect rankings queries (both list and individual)
-    // "class of 2027", "class of 2026 rankings", "top wrestlers", "best wrestlers" -> prospect rankings (direct DB, no LLM)
+    // "class of 2027", "class of 2028 rankings", "top wrestlers", "best wrestlers" -> prospect rankings (direct DB, no LLM)
     const isProspectRankingsQuery = 
       (lowerQuestion.includes("top") && (lowerQuestion.includes("prospect") || lowerQuestion.includes("kids") || lowerQuestion.includes("ranked") || lowerQuestion.includes("wrestler"))) ||
       (lowerQuestion.includes("best") && (lowerQuestion.includes("wrestler") || lowerQuestion.includes("prospect"))) ||
@@ -1401,7 +1402,7 @@ export async function POST(request: NextRequest) {
         if (hasHandler(handlerName)) {
           const handler = getHandler(handlerName)
           if (handler) {
-            // Extract year(s) and top N from query - support multi-year: "2026, 2027, 2028" or "2026 2027 2028"
+            // Extract year(s) and top N from query - support multi-year: "2027, 2028" or "2027 2028"
             const yearMatches = lowerQuestion.match(/\b(20\d{2})\b/g)
             let years: number[] = []
             if (yearMatches) {
@@ -1422,7 +1423,7 @@ export async function POST(request: NextRequest) {
             // "Top wrestlers" / "best wrestlers" (with or without "in 2a" / "at 113") → show our rankings top 5 per graduation class
             const isTopWrestlersQuery = (lowerQuestion.includes("top") || lowerQuestion.includes("best")) && lowerQuestion.includes("wrestler") && !lowerQuestion.match(/\b(20\d{2})\b/)
             if (isTopWrestlersQuery && years.length === 0) {
-              years = [2026, 2027, 2028]
+              years = PUBLISHED_PUBLIC_RANKINGS_YEARS
             }
             const year = years.length > 0 ? years[0] : null
             

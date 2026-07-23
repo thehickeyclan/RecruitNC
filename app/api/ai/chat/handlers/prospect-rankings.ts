@@ -5,6 +5,8 @@ import { RECRUITNC_APP_URL, getAthleteProfileUrl } from "@/lib/athlete-profile-l
 import {
   clampProspectRankingsLimit,
   getPublicRankingsMax,
+  isPublicRankingsYearPublished,
+  PUBLISHED_PUBLIC_RANKINGS_YEARS,
 } from "@/lib/public-rankings-cap"
 
 const RECRUITNC_RANKINGS_CTA = `\n\n---\n**To see all rankings**, sign up for a free RecruitNC account or sign in: [RecruitNC →](${RECRUITNC_APP_URL})`
@@ -79,11 +81,20 @@ export const handleProspectRankings: QueryHandler = async (
         }
       }
     }
-    if (!year) year = 2026
+    if (!year) year = PUBLISHED_PUBLIC_RANKINGS_YEARS[0] ?? 2027
+    if (!isPublicRankingsYearPublished(year)) {
+      return {
+        directResponse: NextResponse.json({
+          answer: `Class of ${year} rankings are not public yet. Public RecruitNC rankings are currently available for Class of ${PUBLISHED_PUBLIC_RANKINGS_YEARS.join(" and ")}.`,
+          messageId: messageId || `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          queryType: "prospect_rankings",
+        }),
+      }
+    }
     
     console.log(`[Handler] prospect_rankings: Super32 performance query for class of ${year}`)
     
-    // Official published ranks only (top 30 for 2026/2027)
+    // Official published ranks only.
     const maxRank = getPublicRankingsMax(year)
     const { data: rankings, error: rankingsError } = await adminClient
       .from("athletes")
@@ -298,13 +309,24 @@ export const handleProspectRankings: QueryHandler = async (
           const m = originalQuery.match(/\b(20\d{2})\b/)
           return m ? parseInt(m[1], 10) : null
         })()
-        const maxForLookup = getPublicRankingsMax(classYearGuess ?? 2026)
+        const lookupYears = classYearGuess ? [classYearGuess] : PUBLISHED_PUBLIC_RANKINGS_YEARS
+        const maxForLookup = getPublicRankingsMax(lookupYears[0])
+        if (classYearGuess && !isPublicRankingsYearPublished(classYearGuess)) {
+          return {
+            directResponse: NextResponse.json({
+              answer: `Class of ${classYearGuess} rankings are not public yet. Public RecruitNC rankings are currently available for Class of ${PUBLISHED_PUBLIC_RANKINGS_YEARS.join(" and ")}.`,
+              messageId: messageId || `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              queryType: "prospect_rankings",
+            }),
+          }
+        }
         
         // Try exact match first
         let { data: exactMatches } = await adminClient
           .from("athletes")
           .select("id, name, highschool, prospect_ranking, graduationyear, gender")
           .ilike("name", `%${normalizedName}%`)
+          .in("graduationyear", lookupYears)
           .not("prospect_ranking", "is", null)
           .lte("prospect_ranking", maxForLookup)
           .limit(10)
@@ -338,7 +360,7 @@ export const handleProspectRankings: QueryHandler = async (
           const year = bestMatch.graduationyear || "Unknown"
           const gender = bestMatch.gender || ""
           const publishedMax = getPublicRankingsMax(
-            typeof year === "number" ? year : Number(year) || 2026,
+            typeof year === "number" ? year : Number(year) || PUBLISHED_PUBLIC_RANKINGS_YEARS[0] || 2027,
           )
           
           let nameText = name
@@ -436,9 +458,19 @@ export const handleProspectRankings: QueryHandler = async (
     }
   }
   
-  // Default to 2026 if no year specified
+  // Default to the first public class if no year specified.
   if (!year) {
-    year = 2026
+    year = PUBLISHED_PUBLIC_RANKINGS_YEARS[0] ?? 2027
+  }
+
+  if (!isPublicRankingsYearPublished(year)) {
+    return {
+      directResponse: NextResponse.json({
+        answer: `Class of ${year} rankings are not public yet. Public RecruitNC rankings are currently available for Class of ${PUBLISHED_PUBLIC_RANKINGS_YEARS.join(" and ")}.`,
+        messageId: messageId || `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        queryType: "prospect_rankings",
+      }),
+    }
   }
 
   // RecruitNC only publishes top N per class — never list beyond that
@@ -453,8 +485,10 @@ export const handleProspectRankings: QueryHandler = async (
     genderFilter = "Male"
   }
   
-  // Multi-year: "show class of 2026, 2027, 2028 rankings" or "top wrestlers" → top 5 per graduation class
-  const yearsToFetch = (yearsParam && yearsParam.length > 1) ? yearsParam : [year!]
+  // Multi-year: "show class of 2027, 2028 rankings" or "top wrestlers" → top 5 per public graduation class
+  const yearsToFetch = (yearsParam && yearsParam.length > 1)
+    ? yearsParam.filter(isPublicRankingsYearPublished)
+    : [year!]
   const effectiveTopN =
     yearsToFetch.length > 1 && !isAuthenticated
       ? Math.min(5, publicCap)
@@ -546,11 +580,12 @@ export const handleProspectRankings: QueryHandler = async (
         .not("prospect_ranking", "is", null)
         .not("graduationyear", "is", null)
       const years = [...new Set((yearsData || []).map((r: any) => Number(r.graduationyear)).filter((y: number) => y >= 2000 && y <= 2100))].sort()
-      if (years.length > 0) {
-        const list = years.map((y) => `**${y}**`).join(", ")
-        const ex = years.length === 1
-          ? `Try "class of ${years[0]} rankings".`
-          : `Try "class of ${years[0]} rankings" or "show class of ${years[years.length - 1]} rankings".`
+      const publicYears = years.filter(isPublicRankingsYearPublished)
+      if (publicYears.length > 0) {
+        const list = publicYears.map((y) => `**${y}**`).join(", ")
+        const ex = publicYears.length === 1
+          ? `Try "class of ${publicYears[0]} rankings".`
+          : `Try "class of ${publicYears[0]} rankings" or "show class of ${publicYears[publicYears.length - 1]} rankings".`
         suggestion = `\n\nProspect rankings are available for ${list}. ${ex}`
       }
     } catch (_) { /* ignore */ }

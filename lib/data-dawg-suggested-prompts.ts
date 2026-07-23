@@ -31,10 +31,10 @@ export const SUGGESTED_PROMPT_ROUTES: Array<{ prompt: string; handler: string; p
   { prompt: "who are our 4x state placers?", handler: "state_placer_records", params: { championshipCount: 4 } },
   { prompt: "how many 4x state placers have there been?", handler: "state_placer_count", params: { championshipCount: 4 } },
   // Prospect rankings (default Data Dawg chips)
-  { prompt: "show me all class of 2026 rankings", handler: "prospect_rankings", params: { year: 2026, topN: 30 } },
   { prompt: "show me all class of 2027 rankings", handler: "prospect_rankings", params: { year: 2027, topN: 30 } },
-  { prompt: "who are the top 10 ranked prospects?", handler: "prospect_rankings", params: { year: 2026, topN: 10 } },
-  { prompt: "what athletes are ranked in the top 30?", handler: "prospect_rankings", params: { year: 2026, topN: 30 } },
+  { prompt: "show me all class of 2028 rankings", handler: "prospect_rankings", params: { year: 2028, topN: 30 } },
+  { prompt: "who are the top 10 ranked prospects?", handler: "prospect_rankings", params: { year: 2027, topN: 10 } },
+  { prompt: "what athletes are ranked in the top 30?", handler: "prospect_rankings", params: { year: 2027, topN: 30 } },
   // NHSCA (nhsca_all_american_count, nhsca_school_leaderboard, nhsca_all_american)
   // NOTE: "Did [name] place at NHSCA?" is NOT here — routed by "did X place at NHSCA?" pre-filter for proper yes/no answers
   { prompt: "what was our best year for nhsca all-americans?", handler: "nhsca_all_american_count" },
@@ -61,10 +61,10 @@ export const SUGGESTED_PROMPT_ROUTES: Array<{ prompt: string; handler: string; p
   { prompt: "who has the most wins in a single season?", handler: "winningest_wrestler" },
   { prompt: "show wrestlers with 60 or more wins in a season", handler: "winningest_wrestler" },
   // Top / best wrestlers → prospect rankings (top 5 per class)
-  { prompt: "who are some of the top wrestlers?", handler: "prospect_rankings", params: { years: [2026, 2027, 2028], topN: 5 } },
-  { prompt: "who are the top wrestlers?", handler: "prospect_rankings", params: { years: [2026, 2027, 2028], topN: 5 } },
-  { prompt: "who are the top wrestlers in 2a?", handler: "prospect_rankings", params: { years: [2026, 2027, 2028], topN: 5 } },
-  { prompt: "who are the top wrestlers at 113 1a-2a?", handler: "prospect_rankings", params: { years: [2026, 2027, 2028], topN: 5 } },
+  { prompt: "who are some of the top wrestlers?", handler: "prospect_rankings", params: { years: [2027, 2028], topN: 5 } },
+  { prompt: "who are the top wrestlers?", handler: "prospect_rankings", params: { years: [2027, 2028], topN: 5 } },
+  { prompt: "who are the top wrestlers in 2a?", handler: "prospect_rankings", params: { years: [2027, 2028], topN: 5 } },
+  { prompt: "who are the top wrestlers at 113 1a-2a?", handler: "prospect_rankings", params: { years: [2027, 2028], topN: 5 } },
 ]
 
 const ROUTE_MAP = new Map<string, SuggestedRoute>()
@@ -97,8 +97,8 @@ export function getRouteForSuggestedPrompt(userMessage: string): SuggestedRoute 
 export function getSuggestedPrompts(pathname: string): string[] {
   if (pathname.includes("/rankings") || pathname.includes("/public-rankings")) {
     return [
-      "Show me all Class of 2026 rankings",
       "Show me all Class of 2027 rankings",
+      "Show me all Class of 2028 rankings",
       "Who are the top 10 ranked prospects?",
       "What athletes are ranked in the top 30?",
     ]
