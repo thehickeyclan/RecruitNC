@@ -1,3 +1,10 @@
+/**
+ * Marks the boundary between overlapping page snapshots in browser-captured text, so
+ * duplicate rows across snapshots (capture artifacts) can be told apart from duplicate rows
+ * within one snapshot (real rematches — kids wrestle the same opponent twice in a tournament).
+ */
+export const RANKWRESTLER_SNAPSHOT_SEPARATOR = "\n[[rw-snapshot-boundary]]\n"
+
 export type RankParsedMatch = {
   date: string
   winner: string
@@ -484,65 +491,101 @@ export function buildRankWrestlerSeasonPayload(options: {
   format?: "rank" | "track"
   deduplicate?: boolean
 }): RankWrestlerParseResult {
-  const parsedMatches = parseRankWrestlerText(options.rawText, options.format ?? "rank")
-  if (parsedMatches.length === 0) return { success: false, error: "No valid matches were found in the RankWrestler source." }
-
   const athleteNameLower = options.athleteName.trim().toLowerCase()
   const athleteParts = athleteNameLower.split(/\s+/)
   const athleteFirstInitial = athleteParts[0]?.[0] || ""
   const athleteLastName = athleteParts[athleteParts.length - 1] || ""
-  const converted: ProfileMatch[] = []
   let athleteSchool = ""
 
-  for (const match of parsedMatches) {
-    const isNewFormat = match.winner === "" || match.loser === ""
-    let isWin = false
-    let opponent = ""
-    let opponentSchool = ""
+  const convertText = (rawText: string): ProfileMatch[] => {
+    const parsedMatches = parseRankWrestlerText(rawText, options.format ?? "rank")
+    const converted: ProfileMatch[] = []
 
-    if (isNewFormat) {
-      isWin = match.winner === ""
-      opponent = isWin ? match.loser : match.winner
-      opponentSchool = isWin ? match.loser_school : match.winner_school
-    } else {
-      const winnerLower = match.winner.toLowerCase()
-      const loserLower = match.loser.toLowerCase()
-      const winnerParts = winnerLower.split(/\s+/)
-      const loserParts = loserLower.split(/\s+/)
-      const isWinnerMatch =
-        winnerLower === athleteNameLower ||
-        (winnerParts[0]?.[0] === athleteFirstInitial && winnerParts[winnerParts.length - 1] === athleteLastName)
-      const isLoserMatch =
-        loserLower === athleteNameLower ||
-        (loserParts[0]?.[0] === athleteFirstInitial && loserParts[loserParts.length - 1] === athleteLastName)
-      if (!isWinnerMatch && !isLoserMatch) continue
-      isWin = isWinnerMatch && !isLoserMatch
-      opponent = isWin ? match.loser : match.winner
-      opponentSchool = isWin ? match.loser_school : match.winner_school
-      if (!athleteSchool) athleteSchool = isWin ? match.winner_school : match.loser_school
+    for (const match of parsedMatches) {
+      const isNewFormat = match.winner === "" || match.loser === ""
+      let isWin = false
+      let opponent = ""
+      let opponentSchool = ""
+
+      if (isNewFormat) {
+        isWin = match.winner === ""
+        opponent = isWin ? match.loser : match.winner
+        opponentSchool = isWin ? match.loser_school : match.winner_school
+      } else {
+        const winnerLower = match.winner.toLowerCase()
+        const loserLower = match.loser.toLowerCase()
+        const winnerParts = winnerLower.split(/\s+/)
+        const loserParts = loserLower.split(/\s+/)
+        const isWinnerMatch =
+          winnerLower === athleteNameLower ||
+          (winnerParts[0]?.[0] === athleteFirstInitial && winnerParts[winnerParts.length - 1] === athleteLastName)
+        const isLoserMatch =
+          loserLower === athleteNameLower ||
+          (loserParts[0]?.[0] === athleteFirstInitial && loserParts[loserParts.length - 1] === athleteLastName)
+        if (!isWinnerMatch && !isLoserMatch) continue
+        isWin = isWinnerMatch && !isLoserMatch
+        opponent = isWin ? match.loser : match.winner
+        opponentSchool = isWin ? match.loser_school : match.winner_school
+        if (!athleteSchool) athleteSchool = isWin ? match.winner_school : match.loser_school
+      }
+
+      converted.push({
+        date: match.date.trim(),
+        weight: Number.parseInt(match.weight, 10) || 0,
+        opponent: opponent.trim(),
+        opponent_school: opponentSchool.trim(),
+        result: match.result.trim(),
+        venue: match.venue.trim(),
+        win_loss: isWin ? "W" : "L",
+        opponent_percentage: match.opp_percent !== null ? String(match.opp_percent) : null,
+      })
     }
 
-    converted.push({
-      date: match.date.trim(),
-      weight: Number.parseInt(match.weight, 10) || 0,
-      opponent: opponent.trim(),
-      opponent_school: opponentSchool.trim(),
-      result: match.result.trim(),
-      venue: match.venue.trim(),
-      win_loss: isWin ? "W" : "L",
-      opponent_percentage: match.opp_percent !== null ? String(match.opp_percent) : null,
-    })
+    return converted
   }
 
-  if (converted.length === 0) return { success: false, error: "Parsed matches, but none could be matched to the selected athlete." }
+  const matchKey = (m: ProfileMatch) =>
+    `${m.date}|${m.opponent.toLowerCase()}|${m.win_loss}|${m.result.toLowerCase()}|${m.venue.toLowerCase()}`
 
-  const seen = new Set<string>()
-  const finalMatches = options.deduplicate === false ? converted : converted.filter((m) => {
-    const key = `${m.date}|${m.opponent.toLowerCase()}|${m.win_loss}|${m.result.toLowerCase()}|${m.venue.toLowerCase()}`
-    if (seen.has(key)) return false
-    seen.add(key)
-    return true
-  })
+  // The browser sync captures the page in overlapping scroll snapshots (joined with the
+  // separator), so the SAME rendered row legitimately repeats across segments. But wrestlers
+  // really do meet the same opponent twice in one tournament — pool play then bracket, even
+  // by the same method — so a repeat WITHIN one segment is a real rematch, not an artifact.
+  // Keep, per match key, the maximum count seen in any single segment: artifacts collapse,
+  // rematches survive. A manual paste is one segment, so nothing real is ever dropped there.
+  const segments = options.rawText
+    .split(RANKWRESTLER_SNAPSHOT_SEPARATOR)
+    .map((segment) => segment.trim())
+    .filter(Boolean)
+  const converted = segments.length > 1 ? segments.flatMap(convertText) : convertText(options.rawText)
+  if (converted.length === 0) {
+    const parsedAny = parseRankWrestlerText(options.rawText.split(RANKWRESTLER_SNAPSHOT_SEPARATOR).join("\n"), options.format ?? "rank")
+    return parsedAny.length === 0
+      ? { success: false, error: "No valid matches were found in the RankWrestler source." }
+      : { success: false, error: "Parsed matches, but none could be matched to the selected athlete." }
+  }
+
+  let finalMatches = converted
+  if (options.deduplicate !== false) {
+    const allowed = new Map<string, number>()
+    for (const segment of segments.length > 1 ? segments : [options.rawText]) {
+      const counts = new Map<string, number>()
+      for (const m of convertText(segment)) {
+        const key = matchKey(m)
+        counts.set(key, (counts.get(key) ?? 0) + 1)
+      }
+      for (const [key, count] of counts) {
+        allowed.set(key, Math.max(allowed.get(key) ?? 0, count))
+      }
+    }
+    const used = new Map<string, number>()
+    finalMatches = converted.filter((m) => {
+      const key = matchKey(m)
+      const next = (used.get(key) ?? 0) + 1
+      used.set(key, next)
+      return next <= (allowed.get(key) ?? 1)
+    })
+  }
 
   const dates = finalMatches.map((m) => dateParts(m.date)).filter(Boolean) as Array<{ month: number; day: number; year: number }>
   const years = dates.map((d) => d.year)

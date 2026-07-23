@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest"
-import { buildRankWrestlerSeasonPayload, parseRankWrestlerText, rankWrestlerTextCandidatesFromHtml } from "./rankwrestler-parser"
+import {
+  buildRankWrestlerSeasonPayload,
+  parseRankWrestlerText,
+  rankWrestlerTextCandidatesFromHtml,
+  RANKWRESTLER_SNAPSHOT_SEPARATOR,
+} from "./rankwrestler-parser"
 
 describe("rankWrestlerTextCandidatesFromHtml", () => {
   it("extracts parsable match text from streamed Next flight payloads", () => {
@@ -233,13 +238,40 @@ describe("parseRankWrestlerText", () => {
     })
     expect(payload.success).toBe(true)
     if (payload.success) {
-      // 63 parsed; dedupe collapses only the source's own duplicated Ian Speight row.
+      // A manual paste is one snapshot, so nothing is deduped: the second Ian Speight loss
+      // is a real tournament rematch (pool play + bracket), not a capture artifact.
       expect(payload.diagnostics.parsedMatches).toBe(63)
-      expect(payload.diagnostics.duplicatesRemoved).toBe(1)
+      expect(payload.diagnostics.duplicatesRemoved).toBe(0)
       expect(payload.payload.season_summary.wins).toBe(46)
-      expect(payload.payload.season_summary.losses).toBe(16)
+      expect(payload.payload.season_summary.losses).toBe(17)
       expect(payload.payload.season_summary.forfeits_won).toBe(4)
       expect(payload.payload.wrestler_info.season).toBe("2025-26")
+      expect(payload.payload.matches.filter((m) => m.opponent === "Ian Speight")).toHaveLength(2)
+    }
+  })
+
+  it("collapses rows repeated across browser snapshots but keeps real rematches within one", () => {
+    // Two overlapping scroll snapshots: Lloy Bosan appears in both (capture artifact), and
+    // the Ian Speight loss appears twice INSIDE each snapshot (real rematch).
+    const snapshot = [
+      "Loss", "11/22/2025", "99.32", "Ian Speight", "• Person", "126 lbs", "•", "Red Wolf Invitational", "•", "Fall",
+      "Win", "11/22/2025", "99.27", "Lloy Bosan", "• Randleman", "126 lbs", "•", "Red Wolf Invitational", "•", "Dec",
+      "Loss", "11/22/2025", "99.32", "Ian Speight", "• Person", "126 lbs", "•", "Red Wolf Invitational", "•", "Fall",
+    ].join("\n")
+
+    const payload = buildRankWrestlerSeasonPayload({
+      athleteName: "Gavin Hickey",
+      graduationYear: 2029,
+      rawText: `${snapshot}${RANKWRESTLER_SNAPSHOT_SEPARATOR}${snapshot}`,
+    })
+
+    expect(payload.success).toBe(true)
+    if (payload.success) {
+      // 6 rows parsed across the two snapshots; per-snapshot truth is 2 Speight + 1 Bosan.
+      expect(payload.diagnostics.parsedMatches).toBe(6)
+      expect(payload.payload.matches.filter((m) => m.opponent === "Ian Speight")).toHaveLength(2)
+      expect(payload.payload.matches.filter((m) => m.opponent === "Lloy Bosan")).toHaveLength(1)
+      expect(payload.payload.season_summary.total_matches).toBe(3)
     }
   })
 
