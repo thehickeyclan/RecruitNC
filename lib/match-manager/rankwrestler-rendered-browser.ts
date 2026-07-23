@@ -1,5 +1,6 @@
 import chromium from "@sparticuz/chromium"
 import { chromium as playwrightChromium, type Browser, type BrowserContext, type Page } from "playwright-core"
+import { RANKWRESTLER_SNAPSHOT_SEPARATOR } from "./rankwrestler-parser"
 
 export type RankWrestlerRenderedBrowserResult =
   | {
@@ -273,7 +274,10 @@ async function collectRankWrestlerRenderedText(page: Page): Promise<string> {
   await page.evaluate(() => window.scrollTo(0, 0)).catch(() => undefined)
   await page.waitForTimeout(250)
 
-  return snapshots.join("\n\n")
+  // Sentinel-joined so the parser can distinguish a row repeated across overlapping
+  // snapshots (capture artifact — collapse) from a row repeated within one snapshot
+  // (real tournament rematch — keep).
+  return snapshots.join(RANKWRESTLER_SNAPSHOT_SEPARATOR)
 }
 
 function looksLikeRankWrestlerMatchRows(text: string): boolean {
