@@ -14,7 +14,12 @@ const reorderSchema = z.object({
   invitationIds: z
     .array(z.string().uuid())
     .min(1, "At least one invitation is required")
-    .max(TOC_MAX_CONFIRMED_PER_WEIGHT, `Only ${TOC_MAX_CONFIRMED_PER_WEIGHT} confirmed wrestlers can be seeded`),
+    .max(TOC_MAX_CONFIRMED_PER_WEIGHT, `Only ${TOC_MAX_CONFIRMED_PER_WEIGHT} confirmed wrestlers can be seeded`)
+    .optional(),
+  seedSlots: z
+    .array(z.string().uuid().nullable())
+    .length(TOC_MAX_CONFIRMED_PER_WEIGHT, `Seed slots must include all ${TOC_MAX_CONFIRMED_PER_WEIGHT} seeds`)
+    .optional(),
 })
 
 /** Reorder confirmed TOC wrestlers in one pass so drag/drop swaps do not hit duplicate seed conflicts. */
@@ -30,7 +35,14 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid reorder request" }, { status: 400 })
     }
 
-    const { weightClass, invitationIds } = parsed.data
+    const { weightClass } = parsed.data
+    const invitationIds = parsed.data.seedSlots
+      ? parsed.data.seedSlots.filter((id): id is string => Boolean(id))
+      : parsed.data.invitationIds
+
+    if (!invitationIds?.length) {
+      return NextResponse.json({ error: "At least one invitation is required" }, { status: 400 })
+    }
     if (new Set(invitationIds).size !== invitationIds.length) {
       return NextResponse.json({ error: "Each wrestler can only appear once in the seed order." }, { status: 400 })
     }
@@ -71,11 +83,17 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: clearError.message }, { status: 500 })
     }
 
-    for (const [index, id] of invitationIds.entries()) {
+    const assignments = parsed.data.seedSlots
+      ? parsed.data.seedSlots
+          .map((id, index) => (id ? { id, seed: index + 1 } : null))
+          .filter((row): row is { id: string; seed: number } => row != null)
+      : invitationIds.map((id, index) => ({ id, seed: index + 1 }))
+
+    for (const assignment of assignments) {
       const { error: updateError } = await admin
         .from("toc_invitations")
-        .update({ seed: index + 1, updated_at: now })
-        .eq("id", id)
+        .update({ seed: assignment.seed, updated_at: now })
+        .eq("id", assignment.id)
 
       if (updateError) {
         console.error("[admin/toc/field/reorder] update", updateError)
@@ -86,7 +104,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({
       ok: true,
       weightClass,
-      seeds: invitationIds.map((id, index) => ({ invitationId: id, seed: index + 1 })),
+      seeds: assignments.map((assignment) => ({ invitationId: assignment.id, seed: assignment.seed })),
     })
   } catch (e) {
     console.error("[admin/toc/field/reorder]", e)

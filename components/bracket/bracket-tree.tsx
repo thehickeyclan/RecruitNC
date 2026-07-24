@@ -1,5 +1,6 @@
 "use client"
 
+import type { DragEvent } from "react"
 import Image from "next/image"
 import { layoutBracketTree } from "@/lib/bracket/single-elim-layout"
 import type { BracketSlotDisplay, BracketTheme, BracketTreeDisplay } from "@/lib/bracket/types"
@@ -24,6 +25,8 @@ type Props = {
   theme?: BracketTheme
   highlightedCompetitorId?: string | null
   onHighlightCompetitor?: (id: string | null) => void
+  onReorderSlotDrop?: (draggedReorderId: string, targetSeed: number) => void
+  reordering?: boolean
   showChampion?: boolean
   className?: string
 }
@@ -35,6 +38,8 @@ function SlotRow({
   theme,
   highlightedCompetitorId,
   onHighlightCompetitor,
+  onReorderSlotDrop,
+  reordering,
 }: {
   slot: BracketSlotDisplay
   position: "top" | "bottom"
@@ -42,9 +47,13 @@ function SlotRow({
   theme: Required<BracketTheme>
   highlightedCompetitorId?: string | null
   onHighlightCompetitor?: (id: string | null) => void
+  onReorderSlotDrop?: (draggedReorderId: string, targetSeed: number) => void
+  reordering?: boolean
 }) {
   const isOpen = slot.isOpen === true
   const active = !isOpen && slot.competitorId != null && highlightedCompetitorId === slot.competitorId
+  const canDrag = !isOpen && Boolean(slot.reorderId) && !reordering
+  const canDrop = Boolean(slot.seed) && Boolean(onReorderSlotDrop) && !reordering
 
   const inner = (
     <>
@@ -95,7 +104,37 @@ function SlotRow({
     "flex w-full items-center gap-2 px-2.5 border-0 border-b",
     position === "top" ? "" : "border-b-0",
     !isOpen && onHighlightCompetitor && slot.competitorId && "cursor-pointer hover:brightness-110",
+    canDrag && "cursor-move",
+    canDrop && "data-[drag-over=true]:bg-[#CC0000]/15 data-[drag-over=true]:brightness-110",
   )
+
+  const dragProps = canDrop
+    ? {
+        draggable: canDrag,
+        onDragStart: (event: DragEvent<HTMLElement>) => {
+          if (!slot.reorderId) return
+          event.dataTransfer.effectAllowed = "move"
+          event.dataTransfer.setData("text/plain", slot.reorderId)
+        },
+        onDragOver: (event: DragEvent<HTMLElement>) => {
+          event.preventDefault()
+          event.currentTarget.dataset.dragOver = "true"
+          event.dataTransfer.dropEffect = "move"
+        },
+        onDragLeave: (event: DragEvent<HTMLElement>) => {
+          delete event.currentTarget.dataset.dragOver
+        },
+        onDrop: (event: DragEvent<HTMLElement>) => {
+          event.preventDefault()
+          delete event.currentTarget.dataset.dragOver
+          const draggedReorderId = event.dataTransfer.getData("text/plain")
+          if (draggedReorderId && slot.seed) onReorderSlotDrop?.(draggedReorderId, slot.seed)
+        },
+        onDragEnd: (event: DragEvent<HTMLElement>) => {
+          delete event.currentTarget.dataset.dragOver
+        },
+      }
+    : {}
 
   if (!isOpen && onHighlightCompetitor && slot.competitorId) {
     return (
@@ -104,6 +143,7 @@ function SlotRow({
         className={className}
         style={style}
         onClick={() => onHighlightCompetitor(active ? null : slot.competitorId!)}
+        {...dragProps}
       >
         {inner}
       </button>
@@ -111,7 +151,7 @@ function SlotRow({
   }
 
   return (
-    <div className={className} style={style}>
+    <div className={className} style={style} {...dragProps}>
       {inner}
     </div>
   )
@@ -126,6 +166,8 @@ export function BracketTree({
   theme: themeProp,
   highlightedCompetitorId,
   onHighlightCompetitor,
+  onReorderSlotDrop,
+  reordering = false,
   showChampion = true,
   className,
 }: Props) {
@@ -197,6 +239,8 @@ export function BracketTree({
               theme={theme}
               highlightedCompetitorId={highlightedCompetitorId}
               onHighlightCompetitor={onHighlightCompetitor}
+              onReorderSlotDrop={match.roundIndex === 0 ? onReorderSlotDrop : undefined}
+              reordering={reordering}
             />
             <SlotRow
               slot={match.bottom}
@@ -205,6 +249,8 @@ export function BracketTree({
               theme={theme}
               highlightedCompetitorId={highlightedCompetitorId}
               onHighlightCompetitor={onHighlightCompetitor}
+              onReorderSlotDrop={match.roundIndex === 0 ? onReorderSlotDrop : undefined}
+              reordering={reordering}
             />
           </div>
         ))}
