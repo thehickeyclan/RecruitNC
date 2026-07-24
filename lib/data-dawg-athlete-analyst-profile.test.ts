@@ -11,6 +11,7 @@ import {
   athleteHasCompletedHighSchoolCareer,
   explicitlyMentionsBloodRound,
   buildVerifiedSourcesFooter,
+  formatStateResultsSection,
 } from "./data-dawg-athlete-analyst-profile"
 
 const sly = {
@@ -112,6 +113,26 @@ describe("buildAnalystLeadParagraph", () => {
     expect(lead).not.toMatch(/finished his/i)
     expect(lead).not.toMatch(/He went /)
   })
+
+  it("does not publish RecruitNC prospect rank outside the official top 30", () => {
+    const lead = buildAnalystLeadParagraph(
+      {
+        displayName: "Abdul-Jamil Zaggout",
+        highSchool: "West Forsyth",
+        graduationYear: 2027,
+        careerWins: 30,
+        careerLosses: 6,
+        stateTitleYears: 1,
+        prospectRanking: 58,
+      },
+      asOf,
+    )
+
+    expect(lead).toContain("West Forsyth wrestler")
+    expect(lead).toContain("NCHSAA State Champion")
+    expect(lead).not.toContain("No. 58")
+    expect(lead).not.toMatch(/RecruitNC.*58/)
+  })
 })
 
 describe("buildCareerSnapshotMarkdown", () => {
@@ -192,6 +213,21 @@ describe("buildHistoricalRankingsMarkdown", () => {
     expect(r).not.toContain("Top 50 in NC history")
     expect(r).not.toContain("Career Win %")
   })
+
+  it("does not list RecruitNC rankings past the published top 30", () => {
+    const r = buildHistoricalRankingsMarkdown({
+      displayName: "Abdul-Jamil Zaggout",
+      highSchool: "West Forsyth",
+      graduationYear: 2027,
+      careerWins: 30,
+      careerLosses: 6,
+      stateTitleYears: 1,
+      prospectRanking: 58,
+    })
+
+    expect(r).not.toContain("RecruitNC #58")
+    expect(r).not.toContain("Class of 2027")
+  })
 })
 
 describe("buildNationalResumeMarkdown", () => {
@@ -257,6 +293,17 @@ describe("buildVerifiedSourcesFooter", () => {
     expect(f).toContain("✓ NHSCA")
     expect(f).toContain("✓ NC United")
     expect(f).toContain("Confidence: high")
+  })
+})
+
+describe("formatStateResultsSection", () => {
+  it("labels canonical non-podium rows as state qualifiers", () => {
+    const md = formatStateResultsSection([
+      { year: 2025, classification: "2A", weight_class: "144", place: null, school: "Wheatmore", wrestler_name: "Spencer Moore" },
+      { year: 2026, classification: "3A", weight_class: "150", place: 0, school: "Wheatmore", wrestler_name: "Spencer Moore" },
+    ])
+    expect(md).toContain("2025: State qualifier (2A, 144lbs)")
+    expect(md).toContain("2026: State qualifier (3A, 150lbs)")
   })
 })
 
