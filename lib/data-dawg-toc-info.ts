@@ -170,7 +170,7 @@ export async function answerTournamentOfChampionsQuestion(message: string): Prom
           `${TOC_SPECTATORS.ticketProviderLabel}.`,
           tocTicketsOnSale()
             ? `Tickets are on sale now: [Buy on GoFan](${TOC_GOFAN_TICKETS_URL})`
-            : `Tickets are not on sale yet — they go on sale ${TOC_TICKET_SALE_TIMING}, sold via GoFan. Do not share a purchase link until then.`,
+            : `Tickets are not on sale yet — public sale opens ${TOC_TICKET_SALE_TIMING}, sold via GoFan. Seating is limited and families of competing athletes get first access before the public sale. Do not share a purchase link until sales open.`,
           `Saturday admission covers the full tournament including single-mat championship finals.`,
         ].join("\n"),
       ),
