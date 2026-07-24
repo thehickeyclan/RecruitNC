@@ -97,7 +97,7 @@ const ALL_NEWS: NewsItem[] = [
   {
     id: "tournament-of-champions-announced",
     slug: "tournament-of-champions-announced",
-    title: "North Carolina’s Best Wrestlers to Meet at Inaugural NC United Tournament of Champions",
+    title: "North Carolina’s Elite Set to Meet at Inaugural NC United Tournament of Champions",
     subtitle: "Invite-only event will unite elite wrestlers and college coaches September 18\u201319 in Apex.",
     summary:
       "The inaugural NC United Tournament of Champions will bring 88 invited wrestlers, college-weight brackets and a College Recruiting Expo to Apex on September 18–19.",

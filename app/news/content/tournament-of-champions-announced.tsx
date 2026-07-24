@@ -1,24 +1,36 @@
+import Image from "next/image"
 import Link from "next/link"
 
 export function TournamentOfChampionsAnnouncedContent() {
   return (
     <div className="space-y-10">
-      <div className="not-prose rounded-2xl border border-[#D3B574]/50 bg-[#0A1628] p-5 text-white shadow-lg sm:p-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#D3B574]">
-          For Immediate Release
-        </p>
-        <h2 className="mt-3 text-2xl font-black leading-tight text-white sm:text-3xl">
-          North Carolina’s Best Wrestlers to Meet at Inaugural NC United Tournament of Champions
-        </h2>
-        <p className="mt-3 text-sm leading-relaxed text-white/75 sm:text-base">
-          Invite-only event will unite elite wrestlers and college coaches September 18–19 in Apex.
-        </p>
-        <Link
-          href="/tournament-of-champions"
-          className="mt-5 inline-flex rounded-xl bg-[#D3B574] px-5 py-3 text-sm font-bold text-[#071529] no-underline transition hover:bg-white"
-        >
-          Visit the Tournament of Champions site
-        </Link>
+      <div className="not-prose relative overflow-hidden rounded-2xl border border-[#D3B574]/50 bg-[#0A1628] p-5 text-white shadow-lg sm:p-6 lg:p-8">
+        <div className="pointer-events-none absolute bottom-3 right-3 h-28 w-28 opacity-20 sm:h-36 sm:w-36 sm:opacity-25 md:h-44 md:w-44 lg:h-52 lg:w-52">
+          <Image
+            src="/images/toc/tournament-of-champions-invitational-logo.png"
+            alt=""
+            fill
+            sizes="(max-width: 640px) 112px, (max-width: 768px) 144px, (max-width: 1024px) 176px, 208px"
+            className="object-contain"
+          />
+        </div>
+        <div className="relative z-10 max-w-5xl pr-0 md:pr-28 lg:pr-44">
+          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#D3B574]">
+            For Immediate Release
+          </p>
+          <h2 className="mt-3 text-2xl font-black leading-tight text-white sm:text-3xl">
+            North Carolina’s Elite Set to Meet at Inaugural NC United Tournament of Champions
+          </h2>
+          <p className="mt-3 text-sm leading-relaxed text-white/75 sm:text-base">
+            Invite-only event will unite elite wrestlers and college coaches September 18–19 in Apex.
+          </p>
+          <Link
+            href="/tournament-of-champions"
+            className="mt-5 inline-flex rounded-xl bg-[#D3B574] px-5 py-3 text-sm font-bold text-[#071529] no-underline transition hover:bg-white"
+          >
+            Visit the Tournament of Champions site
+          </Link>
+        </div>
       </div>
 
       <section>
