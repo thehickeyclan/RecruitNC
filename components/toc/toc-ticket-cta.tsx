@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react"
 import { tocMobileCtaClass } from "@/components/toc/toc-theme"
-import { TOC_GOFAN_TICKETS_URL, TOC_TICKET_SALE_TIMING } from "@/lib/toc/constants"
+import { TOC_GOFAN_TICKETS_URL, TOC_TICKET_LIMITED_LINE, TOC_TICKET_SALE_TIMING } from "@/lib/toc/constants"
 import { msUntilTocTicketSale, tocTicketsOnSale } from "@/lib/toc/ticket-sale"
 
 /**
- * Shows the on-sale announcement until Sunday Aug 2, 2026 9:00 AM ET, then becomes the
+ * Shows the on-sale announcement until Friday Aug 28, 2026 9:00 AM ET (public sale; athlete families get a private presale link first), then becomes the
  * GoFan "Buy Tickets" button — no launch-morning deploy. The TOC page is force-dynamic,
  * so fresh loads flip server-side at the exact moment; the timer below flips the page for
  * anyone already sitting on it when the clock strikes.
@@ -50,13 +50,17 @@ export function TocTicketCta({ variant }: { variant: "hero" | "card" }) {
   }
 
   return variant === "hero" ? (
-    <p className="inline-flex items-center gap-2 rounded-sm border border-white/25 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white">
-      <span aria-hidden>🎟</span>
-      Tickets go on sale {TOC_TICKET_SALE_TIMING}
-    </p>
+    <div className="inline-block rounded-sm border border-white/25 bg-white/10 px-4 py-2.5">
+      <p className="flex items-center gap-2 text-sm font-semibold text-white">
+        <span aria-hidden>🎟</span>
+        Tickets go on sale {TOC_TICKET_SALE_TIMING}
+      </p>
+      <p className="mt-0.5 text-xs text-white/70">{TOC_TICKET_LIMITED_LINE}</p>
+    </div>
   ) : (
-    <p className="mt-4 rounded-sm border border-white/25 bg-white/10 px-4 py-3 text-sm font-semibold text-white">
-      🎟 Tickets go on sale {TOC_TICKET_SALE_TIMING}
-    </p>
+    <div className="mt-4 rounded-sm border border-white/25 bg-white/10 px-4 py-3">
+      <p className="text-sm font-semibold text-white">🎟 Tickets go on sale {TOC_TICKET_SALE_TIMING}</p>
+      <p className="mt-0.5 text-xs text-white/70">{TOC_TICKET_LIMITED_LINE}</p>
+    </div>
   )
 }

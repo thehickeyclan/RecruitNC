@@ -153,8 +153,10 @@ export const TOC_CONTACT_EMAIL = "info@ncwrestlingunited.com" as const
 export const TOC_MATS_LINE = "Two mats all weekend. One mat for all eleven championship finals." as const
 
 /** When sales open — shown wherever we used to show a buy link, until tickets are live. */
-export const TOC_TICKET_SALE_TIMING = "Sunday morning, Aug 2nd at 9:00 AM EST" as const
-/** Kept for the Aug 2nd flip back to live buy links. */
+export const TOC_TICKET_SALE_TIMING = "Friday, Aug 28th at 9:00 AM EST" as const
+/** ~500 spectator seats (athletes not counted): families of competing athletes get first access. Per .cursorrules, never put the seat NUMBER in public copy. */
+export const TOC_TICKET_LIMITED_LINE = "Limited seating — athletes' families get first access" as const
+/** Kept for the Aug 28th flip to live buy links. */
 export const TOC_GOFAN_TICKETS_URL = "https://gofan.co/app/school/NC101846" as const
 
 export const TOC_NC_UNITED_ABOUT = {
