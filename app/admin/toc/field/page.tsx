@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { HardLink } from "@/components/hard-link"
-import { ArrowLeft, Download, ExternalLink, Loader2, Lock, RefreshCw, Sparkles, Unlock } from "lucide-react"
+import { ArrowLeft, Download, ExternalLink, GripVertical, Loader2, Lock, RefreshCw, Sparkles, Unlock } from "lucide-react"
 import { TOC_MAX_CONFIRMED_PER_WEIGHT } from "@/lib/toc/invitations"
 import type { TocFieldBoard, TocFieldAthlete, TocWeightBoard } from "@/lib/toc/field-board"
 import {
@@ -42,7 +42,9 @@ function downloadText(filename: string, content: string, mime = "text/plain;char
 function WeightBoardCard({
   board,
   onSeedChange,
+  onSeedReorder,
   seedSavingId,
+  seedSavingWeight,
   bracketStatus,
   onLockDraw,
   onUnlockDraw,
@@ -50,7 +52,9 @@ function WeightBoardCard({
 }: {
   board: TocWeightBoard
   onSeedChange: (invitationId: string, seed: number | null) => Promise<void>
+  onSeedReorder: (weightClass: number, invitationIds: string[]) => Promise<void>
   seedSavingId: string | null
+  seedSavingWeight: number | null
   bracketStatus?: {
     locked: boolean
     readyToLock: boolean
@@ -64,10 +68,30 @@ function WeightBoardCard({
   bracketBusy: boolean
 }) {
   const [showChart, setShowChart] = useState(false)
+  const [draggingId, setDraggingId] = useState<string | null>(null)
+  const [dragOverId, setDragOverId] = useState<string | null>(null)
   const seedChart = useMemo(() => buildTocSeedChartText(board), [board])
+  const confirmedAthletes = useMemo(() => board.athletes.filter((a) => a.status === "confirmed"), [board.athletes])
+  const isReordering = seedSavingWeight === board.weightClass
 
   const exportCsv = () => {
     downloadText(`toc-${board.weightClass}-roster.csv`, buildTocWeightRosterCsv(board), "text/csv;charset=utf-8")
+  }
+
+  const reorderConfirmed = (draggedInvitationId: string, targetInvitationId: string) => {
+    if (draggedInvitationId === targetInvitationId || isReordering) return
+    const fromIndex = confirmedAthletes.findIndex((a) => a.invitationId === draggedInvitationId)
+    const toIndex = confirmedAthletes.findIndex((a) => a.invitationId === targetInvitationId)
+    if (fromIndex < 0 || toIndex < 0) return
+
+    const next = [...confirmedAthletes]
+    const [moved] = next.splice(fromIndex, 1)
+    if (!moved) return
+    next.splice(toIndex, 0, moved)
+    void onSeedReorder(
+      board.weightClass,
+      next.map((a) => a.invitationId),
+    )
   }
 
   return (
@@ -95,7 +119,47 @@ function WeightBoardCard({
         ) : (
           <ul className="space-y-2">
             {board.athletes.map((a) => (
-              <li key={a.invitationId} className="flex items-center gap-2 text-sm border rounded-md px-2 py-1.5">
+              <li
+                key={a.invitationId}
+                draggable={a.status === "confirmed" && !isReordering}
+                onDragStart={(event) => {
+                  if (a.status !== "confirmed") return
+                  setDraggingId(a.invitationId)
+                  event.dataTransfer.effectAllowed = "move"
+                  event.dataTransfer.setData("text/plain", a.invitationId)
+                }}
+                onDragOver={(event) => {
+                  if (a.status !== "confirmed" || !draggingId || draggingId === a.invitationId) return
+                  event.preventDefault()
+                  event.dataTransfer.dropEffect = "move"
+                  setDragOverId(a.invitationId)
+                }}
+                onDragLeave={() => setDragOverId((id) => (id === a.invitationId ? null : id))}
+                onDrop={(event) => {
+                  event.preventDefault()
+                  const draggedInvitationId = event.dataTransfer.getData("text/plain") || draggingId
+                  setDraggingId(null)
+                  setDragOverId(null)
+                  if (draggedInvitationId) reorderConfirmed(draggedInvitationId, a.invitationId)
+                }}
+                onDragEnd={() => {
+                  setDraggingId(null)
+                  setDragOverId(null)
+                }}
+                className={`flex items-center gap-2 text-sm border rounded-md px-2 py-1.5 transition-colors ${
+                  a.status === "confirmed" ? "cursor-move" : ""
+                } ${
+                  dragOverId === a.invitationId
+                    ? "border-[#CC0000] bg-[#CC0000]/10"
+                    : draggingId === a.invitationId
+                      ? "border-[#002147]/50 bg-[#002147]/5 opacity-70"
+                      : ""
+                }`}
+                title={a.status === "confirmed" ? "Drag to change official seed order" : undefined}
+              >
+                {a.status === "confirmed" ? (
+                  <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                ) : null}
                 <div className="min-w-0 flex-1">
                   <p className="font-medium truncate">{a.name}</p>
                   <p className="text-xs text-muted-foreground truncate">{a.school ?? "—"}</p>
@@ -146,7 +210,7 @@ function WeightBoardCard({
                     <Select
                       value={a.seed != null ? String(a.seed) : "none"}
                       onValueChange={(v) => void onSeedChange(a.invitationId, v === "none" ? null : Number(v))}
-                      disabled={seedSavingId === a.invitationId}
+                      disabled={seedSavingId === a.invitationId || isReordering}
                     >
                       <SelectTrigger className="h-8 w-[72px] text-xs">
                         <SelectValue placeholder="Seed" />
@@ -166,6 +230,12 @@ function WeightBoardCard({
             ))}
           </ul>
         )}
+
+        {confirmedAthletes.length > 1 ? (
+          <p className="text-[11px] text-muted-foreground">
+            Drag confirmed wrestlers to reorder seeds. Top confirmed row becomes #1; the bracket updates after save.
+          </p>
+        ) : null}
 
         {seedChart ? (
           <div className="pt-2">
@@ -248,6 +318,7 @@ export default function TocFieldAdminPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [seedSavingId, setSeedSavingId] = useState<string | null>(null)
+  const [seedSavingWeight, setSeedSavingWeight] = useState<number | null>(null)
   const [filter, setFilter] = useState<"all" | "active">("active")
   const [bracketStatuses, setBracketStatuses] = useState<
     Record<
@@ -328,6 +399,24 @@ export default function TocFieldAdminPage() {
       alert(e instanceof Error ? e.message : "Failed to update seed")
     } finally {
       setSeedSavingId(null)
+    }
+  }
+
+  const reorderSeeds = async (weightClass: number, invitationIds: string[]) => {
+    setSeedSavingWeight(weightClass)
+    try {
+      const res = await fetch("/api/admin/toc/field/reorder", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ weightClass, invitationIds }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "Failed to reorder seeds")
+      void load()
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to reorder seeds")
+    } finally {
+      setSeedSavingWeight(null)
     }
   }
 
@@ -521,7 +610,9 @@ export default function TocFieldAdminPage() {
             key={w.weightClass}
             board={w}
             onSeedChange={updateSeed}
+            onSeedReorder={reorderSeeds}
             seedSavingId={seedSavingId}
+            seedSavingWeight={seedSavingWeight}
             bracketStatus={bracketStatuses[w.weightClass]}
             onLockDraw={lockDraw}
             onUnlockDraw={unlockDraw}
