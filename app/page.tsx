@@ -181,6 +181,29 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* Tournament of Champions — launch banner (deliberately TOC-branded navy/red, not rnc tokens) */}
+      <section className="border-b border-rnc-line bg-[#0B1D3A]">
+        <div className="container mx-auto px-4">
+          <Link
+            href="/tournament-of-champions"
+            className="group flex flex-col gap-2 py-5 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <span className="inline-flex shrink-0 items-center rounded-full bg-[#CC0000] px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-white">
+                New
+              </span>
+              <p className="min-w-0 text-white">
+                <span className="font-bold">Tournament of Champions</span>
+                <span className="text-white/70"> — Sept 18–19 · Apex · Invite-only · 11 weights, 88 wrestlers</span>
+              </p>
+            </div>
+            <span className="flex shrink-0 items-center gap-1 text-sm font-semibold text-[#CC0000] group-hover:text-white transition-colors">
+              See the event <ArrowRight className="h-4 w-4" />
+            </span>
+          </Link>
+        </div>
+      </section>
+
       <div className="container mx-auto space-y-16 px-4 py-12">
         {/* Latest Commits — the reason people come, so it leads */}
         <section>

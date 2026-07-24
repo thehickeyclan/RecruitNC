@@ -280,6 +280,7 @@ export function Navbar() {
   ]
 
   const eventsNavItemsForActive = [
+    { href: "/tournament-of-champions" },
     ...eventsStatesColumn,
     ...eventsNationalsColumn,
     ...eventsSuper32Column,
@@ -395,7 +396,21 @@ export function Navbar() {
                   sideOffset={8}
                   className="w-[min(72rem,calc(100vw-1.5rem))] max-h-[min(90vh,720px)] overflow-y-auto p-0"
                 >
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 divide-y md:divide-y-0 md:divide-x bg-popover text-popover-foreground rounded-md">
+                  {/* Tournament of Champions — the headline event gets a banner row, not a cramped 5th column. */}
+                  <a
+                    href="/tournament-of-champions"
+                    className="flex items-center justify-between gap-3 rounded-t-md bg-[#0B1D3A] px-4 py-3 text-white transition-colors hover:bg-[#132a52]"
+                  >
+                    <span className="flex items-center gap-2 min-w-0">
+                      <Trophy className="h-4 w-4 shrink-0 text-[#CC0000]" aria-hidden />
+                      <span className="font-bold text-sm truncate">Tournament of Champions</span>
+                      <span className="hidden sm:inline text-xs text-white/70 truncate">Sept 18–19 · Apex · Invite-only</span>
+                    </span>
+                    <span className="inline-flex shrink-0 items-center rounded-full bg-[#CC0000] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                      New
+                    </span>
+                  </a>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 divide-y md:divide-y-0 md:divide-x bg-popover text-popover-foreground rounded-b-md">
                     {/* Column: States */}
                     <div className="p-4 min-w-0">
                       <div className="flex items-center gap-2 font-semibold text-foreground">
@@ -949,6 +964,14 @@ export function Navbar() {
                   <div className="px-3">
                     <div className={mobileMenuParentClass(isDropdownActive(eventsNavItemsForActive))}>Elite Tournaments</div>
                     <div className="space-y-4">
+                      <a
+                        href="/tournament-of-champions"
+                        className="flex items-center justify-between gap-2 rounded-md bg-[#0B1D3A] px-3 py-2.5 text-white"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        <span className="font-bold text-sm">Tournament of Champions</span>
+                        <span className="inline-flex items-center rounded-full bg-[#CC0000] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">New</span>
+                      </a>
                       <div>
                         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 pl-1">NCHSAA "States"</p>
                         <div className="space-y-1">

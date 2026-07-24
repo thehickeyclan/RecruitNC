@@ -536,6 +536,7 @@ export const TOC_SECTION_NAV_GROUPS = [
 
 /** Quick jumps shown as pills on mobile sticky bar. */
 export const TOC_SECTION_NAV_QUICK = [
+  { href: "#road", label: "What's next" },
   { href: "#schedule", label: "Schedule" },
   { href: "#families", label: "Tickets" },
   { href: "#trophies-awards", label: "Awards" },
