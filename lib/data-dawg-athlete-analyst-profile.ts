@@ -11,6 +11,7 @@ import { athleteHasCompletedHighSchoolCareer } from "@/lib/data-dawg-athlete-car
 import { FOUR_TIME_STATE_CHAMPIONS, FOUR_TIME_STATE_CHAMPIONS_COUNT } from "@/lib/four-time-state-champions"
 import { namesMatch } from "@/lib/nhsca-live/names-match"
 import type { NchsaaRowForProfile } from "@/lib/nchsaa-results-json"
+import { getPublicRankingsMax } from "@/lib/public-rankings-cap"
 import type { TournamentResultForDisplay } from "@/lib/public-profile-data"
 
 export { athleteHasCompletedHighSchoolCareer } from "@/lib/data-dawg-athlete-career-status"
@@ -77,6 +78,15 @@ export type AnalystProfileStats = {
 
 function hasCareerRecord(w?: number | null, l?: number | null): boolean {
   return w != null && l != null && Number.isFinite(w) && Number.isFinite(l) && (w > 0 || l > 0)
+}
+
+function isOfficialPublishedProspectRank(rank?: number | null, graduationYear?: number | null): rank is number {
+  return (
+    rank != null &&
+    Number.isFinite(rank) &&
+    rank > 0 &&
+    rank <= getPublicRankingsMax(graduationYear)
+  )
 }
 
 function recordStr(w: number, l: number): string {
@@ -212,7 +222,7 @@ export function buildAnalystLeadParagraph(
   if (fargoAa >= 1) {
     honorBits.push(fargoAa === 1 ? "Fargo All-American" : `${fargoAa}× Fargo All-American`)
   }
-  if (rank != null && rank > 0 && gy != null) {
+  if (isOfficialPublishedProspectRank(rank, gy) && gy != null) {
     honorBits.push(`RecruitNC's No. ${rank} prospect in the Class of ${Math.floor(gy)}`)
   }
 
@@ -690,8 +700,7 @@ export function buildHistoricalRankingsMarkdown(stats: AnalystProfileStats): str
     )
   }
   if (
-    stats.prospectRanking != null &&
-    stats.prospectRanking > 0 &&
+    isOfficialPublishedProspectRank(stats.prospectRanking, stats.graduationYear) &&
     stats.graduationYear != null
   ) {
     rows.push(
@@ -982,8 +991,10 @@ export function formatStateResultsSection(nchsaa: NchsaaRowForProfile[]): string
       const placeText = r.place === 2 ? "2nd" : r.place === 3 ? "3rd" : `${r.place}th`
       return `- ${r.year}: ${placeText} place${bits ? ` (${bits})` : ""}`
     }
-    if (r.place === 0) return `- ${r.year}: State qualifier${bits ? ` (${bits})` : ""}`
-    return `- ${r.year}:${bits ? ` (${bits})` : ""}`
+    // A row in the canonical state-results table without a podium place still
+    // represents a verified state-tournament appearance (SQ), not a blank result.
+    if (r.place === 0 || r.place == null) return `- ${r.year}: State qualifier${bits ? ` (${bits})` : ""}`
+    return `- ${r.year}: State appearance${bits ? ` (${bits})` : ""}`
   })
   return ["State results:", ...lines].join("\n")
 }
