@@ -95,6 +95,22 @@ export function newsShareUsesHeroCropOnly(
  */
 const ALL_NEWS: NewsItem[] = [
   {
+    id: "tournament-of-champions-announced",
+    slug: "tournament-of-champions-announced",
+    title: "Announcing the NC United Tournament of Champions",
+    subtitle: "Invite-only. Eleven weights. Eight wrestlers each. September 18\u201319 in Apex.",
+    summary:
+      "North Carolina's elite invitational is here: 88 hand-picked wrestlers, college weights, one Friday-night weigh-in, and single-mat championship finals. Field reveals begin August 3.",
+    // Straight to the event page — it's public; /news articles require sign-in.
+    href: "/tournament-of-champions",
+    date: "2026-07-24",
+    image: "/images/toc/tournament-of-champions-share-card.png",
+    imagePosition: "center",
+    category: "EVENTS",
+    categoryBadgeClass: "bg-[#0B1D3A]",
+    isAnnouncement: true,
+  },
+  {
     id: "united-ascent-2026-07-18",
     slug: "united-ascent-2026-07-18",
     title: "United Ascent: Fargo All-Americans, Eli Horton Commits & RecruitNC Upgrades",
