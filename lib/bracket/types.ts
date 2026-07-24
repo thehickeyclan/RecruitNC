@@ -11,6 +11,7 @@ export type BracketSlotDisplay = {
   isOpen?: boolean
   photoUrl?: string | null
   competitorId?: string | null
+  reorderId?: string | null
 }
 
 export type BracketMatchDisplay = {

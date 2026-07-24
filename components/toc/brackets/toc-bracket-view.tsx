@@ -15,6 +15,8 @@ import { Share2 } from "lucide-react"
 type Props = {
   draw: TocBracketDraw
   allWeights?: number[]
+  source?: "locked" | "live"
+  onDrawUpdated?: () => Promise<void> | void
 }
 
 function AthleteAvatar({ name, photoUrl, seed }: { name: string; photoUrl: string | null; seed: number }) {
@@ -52,8 +54,9 @@ function AthleteAvatar({ name, photoUrl, seed }: { name: string; photoUrl: strin
   )
 }
 
-export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES] }: Props) {
+export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], source = "live", onDrawUpdated }: Props) {
   const [highlightedAthleteId, setHighlightedAthleteId] = useState<string | null>(null)
+  const [reordering, setReordering] = useState(false)
   const winnersTree = useMemo(() => tocDrawToWinnersBracketTree(draw), [draw])
   const consolationTree = useMemo(() => tocDrawToConsolationBracketTree(draw), [draw])
 
@@ -63,6 +66,45 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES] }: P
       await navigator.clipboard.writeText(url)
     } catch {
       window.prompt("Copy bracket link:", url)
+    }
+  }
+
+  const reorderBracketSlot = async (draggedInvitationId: string, targetSeed: number) => {
+    if (reordering) return
+    const seedSlots = Array.from({ length: 8 }, (_, index) => {
+      const participant = draw.participants.find((p) => p.seed === index + 1 && !isPlaceholderParticipant(p))
+      return participant?.invitationId ?? null
+    })
+    const fromIndex = seedSlots.findIndex((id) => id === draggedInvitationId)
+    const toIndex = targetSeed - 1
+    if (fromIndex < 0 || toIndex < 0 || toIndex >= seedSlots.length || fromIndex === toIndex) return
+
+    const nextSlots = [...seedSlots]
+    const targetInvitationId = nextSlots[toIndex]
+    nextSlots[toIndex] = draggedInvitationId
+    nextSlots[fromIndex] = targetInvitationId
+
+    setReordering(true)
+    try {
+      const res = await fetch("/api/admin/toc/field/reorder", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ weightClass: draw.weightClass, seedSlots: nextSlots }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "Failed to reorder bracket")
+
+      if (source === "locked") {
+        const lockRes = await fetch(`/api/admin/toc/brackets/${draw.weightClass}`, { method: "POST" })
+        const lockData = await lockRes.json()
+        if (!lockRes.ok) throw new Error(lockData.error || "Seeds saved, but failed to republish locked draw")
+      }
+
+      await onDrawUpdated?.()
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to reorder bracket")
+    } finally {
+      setReordering(false)
     }
   }
 
@@ -166,10 +208,13 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES] }: P
             Bracket · {draw.weightClass} lbs
           </h2>
           <p className="text-sm text-white/45 mb-4">Winners bracket — scroll horizontally on mobile.</p>
+          {reordering ? <p className="text-xs text-[#D7B95A] mb-3">Saving bracket seed order…</p> : null}
           <BracketTree
             tree={winnersTree}
             highlightedCompetitorId={highlightedAthleteId}
             onHighlightCompetitor={setHighlightedAthleteId}
+            onReorderSlotDrop={reorderBracketSlot}
+            reordering={reordering}
           />
         </div>
 

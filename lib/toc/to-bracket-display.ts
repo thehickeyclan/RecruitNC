@@ -24,6 +24,7 @@ function slotToDisplay(
     isOpen,
     photoUrl: isOpen ? null : label.photoUrl ?? participant?.photoUrl ?? null,
     competitorId: isOpen ? null : athleteId,
+    reorderId: participant?.invitationId ?? null,
   }
 }
 

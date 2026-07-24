@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { HardLink } from "@/components/hard-link"
 import { TocBracketView } from "@/components/toc/brackets/toc-bracket-view"
 import { TocPatrioticBar, tocDisplayClass, tocMobileCtaClass } from "@/components/toc/toc-theme"
@@ -14,45 +14,43 @@ type Props = {
 
 export function TocBracketWeightPage({ weightClass }: Props) {
   const [draw, setDraw] = useState<TocBracketDraw | null>(null)
+  const [source, setSource] = useState<"locked" | "live" | null>(null)
   const [allWeights, setAllWeights] = useState<number[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    let cancelled = false
-    async function load() {
-      setLoading(true)
-      setError(null)
-      try {
-        const [drawRes, listRes] = await Promise.all([
-          fetch(`/api/toc/brackets/${weightClass}`),
-          fetch("/api/toc/brackets"),
-        ])
-        const drawData = await drawRes.json()
-        const listData = await listRes.json()
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const [drawRes, listRes] = await Promise.all([
+        fetch(`/api/toc/brackets/${weightClass}`),
+        fetch("/api/toc/brackets"),
+      ])
+      const drawData = await drawRes.json()
+      const listData = await listRes.json()
 
-        if (cancelled) return
-
-        if (!drawRes.ok) {
-          setDraw(null)
-          setError(drawData.error ?? "Bracket not available")
-        } else {
-          setDraw(drawData.draw as TocBracketDraw)
-        }
-
-        const weights = ((listData.brackets ?? []) as TocBracketDrawSummary[]).map((b) => b.weightClass)
-        setAllWeights(weights.length > 0 ? weights : drawRes.ok ? [weightClass] : [])
-      } catch {
-        if (!cancelled) setError("Failed to load bracket")
-      } finally {
-        if (!cancelled) setLoading(false)
+      if (!drawRes.ok) {
+        setDraw(null)
+        setSource(null)
+        setError(drawData.error ?? "Bracket not available")
+      } else {
+        setDraw(drawData.draw as TocBracketDraw)
+        setSource(drawData.source === "locked" ? "locked" : "live")
       }
-    }
-    void load()
-    return () => {
-      cancelled = true
+
+      const weights = ((listData.brackets ?? []) as TocBracketDrawSummary[]).map((b) => b.weightClass)
+      setAllWeights(weights.length > 0 ? weights : drawRes.ok ? [weightClass] : [])
+    } catch {
+      setError("Failed to load bracket")
+    } finally {
+      setLoading(false)
     }
   }, [weightClass])
+
+  useEffect(() => {
+    void load()
+  }, [load])
 
   if (loading) {
     return (
@@ -79,5 +77,5 @@ export function TocBracketWeightPage({ weightClass }: Props) {
     )
   }
 
-  return <TocBracketView draw={draw} allWeights={allWeights} />
+  return <TocBracketView draw={draw} allWeights={allWeights} source={source ?? "live"} onDrawUpdated={load} />
 }
