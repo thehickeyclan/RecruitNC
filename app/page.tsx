@@ -119,6 +119,34 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-screen bg-rnc-ink">
+      {/* Tournament of Champions — launch announcement bar, first thing on the page.
+          Deliberately TOC-branded navy/red (not rnc gold); originally placed below the
+          stats bar, where the owner couldn't find it. */}
+      <section className="border-b border-[#CC0000]/60 bg-[#0B1D3A]">
+        <div className="container mx-auto px-4">
+          <Link
+            href="/tournament-of-champions"
+            className="group flex items-center justify-between gap-3 py-3"
+          >
+            <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+              <span className="inline-flex shrink-0 items-center rounded-full bg-[#CC0000] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white sm:px-2.5 sm:py-1 sm:text-[11px]">
+                New
+              </span>
+              {/* The event name must never truncate — only the trailing detail may be dropped. */}
+              <p className="min-w-0 text-sm text-white sm:text-base">
+                <span className="font-bold">Tournament of Champions</span>
+                <span className="hidden text-white/70 md:inline"> — Sept 18–19 · Apex · Invite-only · 11 weights, 88 wrestlers</span>
+                <span className="hidden text-white/70 sm:inline md:hidden"> — Sept 18–19 · Apex</span>
+              </p>
+            </div>
+            <span className="flex shrink-0 items-center gap-1 text-sm font-semibold text-[#CC0000] transition-colors group-hover:text-white">
+              <span className="hidden sm:inline">See the event</span>
+              <ArrowRight className="h-4 w-4" />
+            </span>
+          </Link>
+        </div>
+      </section>
+
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
@@ -178,29 +206,6 @@ export default async function HomePage() {
               <StatCard value={stats.female} label="Female Athletes" tone="red" />
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Tournament of Champions — launch banner (deliberately TOC-branded navy/red, not rnc tokens) */}
-      <section className="border-b border-rnc-line bg-[#0B1D3A]">
-        <div className="container mx-auto px-4">
-          <Link
-            href="/tournament-of-champions"
-            className="group flex flex-col gap-2 py-5 sm:flex-row sm:items-center sm:justify-between"
-          >
-            <div className="flex items-center gap-3 min-w-0">
-              <span className="inline-flex shrink-0 items-center rounded-full bg-[#CC0000] px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-white">
-                New
-              </span>
-              <p className="min-w-0 text-white">
-                <span className="font-bold">Tournament of Champions</span>
-                <span className="text-white/70"> — Sept 18–19 · Apex · Invite-only · 11 weights, 88 wrestlers</span>
-              </p>
-            </div>
-            <span className="flex shrink-0 items-center gap-1 text-sm font-semibold text-[#CC0000] group-hover:text-white transition-colors">
-              See the event <ArrowRight className="h-4 w-4" />
-            </span>
-          </Link>
         </div>
       </section>
 
