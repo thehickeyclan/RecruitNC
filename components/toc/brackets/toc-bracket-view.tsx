@@ -162,7 +162,9 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES] }: P
         </div>
 
         <div>
-          <h2 className={cn("text-2xl sm:text-3xl text-white mb-2", tocDisplayClass())}>Bracket</h2>
+          <h2 className={cn("text-2xl sm:text-3xl text-white font-bold mb-2", tocDisplayClass())}>
+            Bracket · {draw.weightClass} lbs
+          </h2>
           <p className="text-sm text-white/45 mb-4">Winners bracket — scroll horizontally on mobile.</p>
           <BracketTree
             tree={winnersTree}
