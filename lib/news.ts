@@ -56,6 +56,8 @@ export interface NewsItem {
    * Use when the list banner is landscape but Story should be full-screen vertical.
    */
   shareStoryImage?: string
+  /** Force important launch news above newer items on /news and the homepage carousel. */
+  pinToTop?: boolean
 }
 
 import type { NewsShareFormatId } from "@/lib/news-share-formats"
@@ -113,6 +115,29 @@ const ALL_NEWS: NewsItem[] = [
     readTime: "7 min read",
     author: "NC United",
     shareHeroCropOnly: true,
+    pinToTop: true,
+    isAnnouncement: true,
+  },
+  {
+    id: "united-ascent-2026-07-25",
+    slug: "united-ascent-2026-07-25",
+    title: "United Ascent: Tournament of Champions, Pan-Am Gold & Guild Growth",
+    subtitle: "Vol. 1, No. 2 of North Carolina wrestling news.",
+    summary:
+      "Tournament of Champions launches, Lauren Samuel wins Pan-American gold, Journeymen applications open, The Wrestling Guild passes 350 bookings, and WIN Magazine prepares to feature Jerry Winterton.",
+    href: "/news/united-ascent-2026-07-25",
+    date: "2026-07-25",
+    image: "/images/united-ascent/2026-07-25-wide.png",
+    imagePosition: "top",
+    imageFit: "contain",
+    imageBannerBgClass: "bg-[#e8ddc8]",
+    newsListBanner: true,
+    category: "UNITED ASCENT",
+    categoryBadgeClass: "bg-[#1a1a1a]",
+    readTime: "8 min read",
+    author: "United Ascent Staff",
+    shareHeroCropOnly: true,
+    shareStoryImage: "/images/united-ascent/2026-07-25-cover.png",
     isAnnouncement: true,
   },
   {
@@ -396,7 +421,10 @@ const ALL_NEWS: NewsItem[] = [
 
 /** All news, newest first. Use for /news index page. */
 export function getAllNews(): NewsItem[] {
-  return [...ALL_NEWS].sort((a, b) => (b.date > a.date ? 1 : -1))
+  return [...ALL_NEWS].sort((a, b) => {
+    if (a.pinToTop !== b.pinToTop) return a.pinToTop ? -1 : 1
+    return b.date > a.date ? 1 : -1
+  })
 }
 
 /** First N items for home carousel (main story + others). Scalable: add to ALL_NEWS and it appears automatically. */

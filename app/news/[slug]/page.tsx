@@ -15,6 +15,7 @@ import { FindingFlowOnTheMatTheZoneContent } from "../content/finding-flow-on-th
 import { JumpingLevelsWhatDrivesRapidImprovementContent } from "../content/jumping-levels-what-drives-rapid-improvement"
 import { AauScholasticDuals2026FloridaContent } from "../content/aau-scholastic-duals-2026-florida"
 import { UnitedAscent20260718Content } from "../content/united-ascent-2026-07-18"
+import { UnitedAscent20260725Content } from "../content/united-ascent-2026-07-25"
 import { TournamentOfChampionsAnnouncedContent } from "../content/tournament-of-champions-announced"
 import { NchsaaArticleComments } from "@/components/nchsaa-article-comments"
 import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
@@ -29,6 +30,7 @@ import {
 
 const ANNOUNCEMENT_CONTENT: Record<string, () => JSX.Element> = {
   "tournament-of-champions-announced": () => <TournamentOfChampionsAnnouncedContent />,
+  "united-ascent-2026-07-25": () => <UnitedAscent20260725Content />,
   "united-ascent-2026-07-18": () => <UnitedAscent20260718Content />,
   "jumping-levels-what-drives-rapid-improvement": () => <JumpingLevelsWhatDrivesRapidImprovementContent />,
   "finding-flow-on-the-mat": () => <FindingFlowOnTheMatTheZoneContent />,
