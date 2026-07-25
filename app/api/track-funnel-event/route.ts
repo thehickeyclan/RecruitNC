@@ -6,6 +6,7 @@ const ALLOWED_EVENTS = new Set([
   "login_wall_view",
   "signup_started",
   "signup_submitted",
+  "signup_error",
   "signup_completed",
   "verification_email_sent",
   "verification_resend_requested",
@@ -35,6 +36,7 @@ export async function POST(request: NextRequest) {
     const path = cleanPath(body.path)
     const target = cleanPath(body.target)
     const source = typeof body.source === "string" ? body.source.slice(0, 80) : null
+    const message = typeof body.message === "string" ? body.message.slice(0, 300) : null
 
     let userId: string | null = null
     try {
@@ -59,6 +61,7 @@ export async function POST(request: NextRequest) {
         source,
         path,
         target,
+        message,
         timestamp: new Date().toISOString(),
       },
       created_at: new Date().toISOString(),

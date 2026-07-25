@@ -86,7 +86,12 @@ type CollegeOption = {
 type FunnelCounts = {
   login_wall_view: number
   signup_started: number
+  signup_submitted: number
+  signup_error: number
   signup_completed: number
+  verification_email_sent: number
+  verification_resend_requested: number
+  verification_completed: number
   signin_started: number
   signin_completed: number
 }
@@ -95,6 +100,9 @@ type AcquisitionFunnel = {
   last7: FunnelCounts
   last30: FunnelCounts
   signupCompletionRate7d: number | null
+  signupStartToCreateRate7d?: number | null
+  signupSubmitSuccessRate7d?: number | null
+  verificationRate7d?: number | null
   topLoginWallTargets: Array<{ path: string; count: number }>
 }
 
@@ -979,17 +987,48 @@ export default function UsersDashboardPage() {
                 <p className="mt-1 text-2xl font-bold text-gray-900">{funnel.last7.login_wall_view}</p>
               </div>
               <div className="rounded-lg border p-4">
-                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Signup started</p>
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Signup opened</p>
                 <p className="mt-1 text-2xl font-bold text-blue-600">{funnel.last7.signup_started}</p>
               </div>
               <div className="rounded-lg border p-4">
-                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Signup completed</p>
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Form submitted</p>
+                <p className="mt-1 text-2xl font-bold text-indigo-600">{funnel.last7.signup_submitted || 0}</p>
+              </div>
+              <div className="rounded-lg border p-4">
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Account created</p>
                 <p className="mt-1 text-2xl font-bold text-green-600">{funnel.last7.signup_completed}</p>
               </div>
               <div className="rounded-lg border p-4">
-                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Completion</p>
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Opened → created</p>
                 <p className="mt-1 text-2xl font-bold text-purple-600">
                   {funnel.signupCompletionRate7d == null ? "—" : `${funnel.signupCompletionRate7d}%`}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 grid gap-4 md:grid-cols-5">
+              <div className="rounded-lg border p-4">
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Signup errors</p>
+                <p className="mt-1 text-2xl font-bold text-red-600">{funnel.last7.signup_error || 0}</p>
+              </div>
+              <div className="rounded-lg border p-4">
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Submit → created</p>
+                <p className="mt-1 text-2xl font-bold text-gray-900">
+                  {funnel.signupSubmitSuccessRate7d == null ? "—" : `${funnel.signupSubmitSuccessRate7d}%`}
+                </p>
+              </div>
+              <div className="rounded-lg border p-4">
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Verification emails</p>
+                <p className="mt-1 text-2xl font-bold text-blue-600">{funnel.last7.verification_email_sent || 0}</p>
+              </div>
+              <div className="rounded-lg border p-4">
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Email verified</p>
+                <p className="mt-1 text-2xl font-bold text-green-600">{funnel.last7.verification_completed || 0}</p>
+              </div>
+              <div className="rounded-lg border p-4">
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Created → verified</p>
+                <p className="mt-1 text-2xl font-bold text-purple-600">
+                  {funnel.verificationRate7d == null ? "—" : `${funnel.verificationRate7d}%`}
                 </p>
               </div>
               <div className="rounded-lg border p-4">
@@ -997,6 +1036,9 @@ export default function UsersDashboardPage() {
                 <p className="mt-1 text-2xl font-bold text-gray-900">{funnel.last7.signin_completed}</p>
               </div>
             </div>
+            <p className="mt-3 text-xs text-gray-500">
+              Signup opened means someone loaded the signup page. Form submitted, account created, and email verified show the true drop-off points.
+            </p>
             {funnel.topLoginWallTargets.length > 0 && (
               <div className="mt-4 rounded-lg border bg-gray-50 p-4">
                 <p className="mb-2 text-sm font-semibold text-gray-700">Top login-wall targets</p>

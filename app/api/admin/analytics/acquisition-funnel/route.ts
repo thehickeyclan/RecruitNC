@@ -7,7 +7,12 @@ export const dynamic = "force-dynamic"
 const FUNNEL_EVENTS = [
   "login_wall_view",
   "signup_started",
+  "signup_submitted",
+  "signup_error",
   "signup_completed",
+  "verification_email_sent",
+  "verification_resend_requested",
+  "verification_completed",
   "signin_started",
   "signin_completed",
 ] as const
@@ -18,7 +23,12 @@ function emptyCounts(): Record<FunnelEvent, number> {
   return {
     login_wall_view: 0,
     signup_started: 0,
+    signup_submitted: 0,
+    signup_error: 0,
     signup_completed: 0,
+    verification_email_sent: 0,
+    verification_resend_requested: 0,
+    verification_completed: 0,
     signin_started: 0,
     signin_completed: 0,
   }
@@ -67,14 +77,21 @@ export async function GET() {
     }
   }
 
-  const signupCompletionRate7d =
+  const signupStartToCreateRate7d =
     last7.signup_started > 0 ? Math.round((last7.signup_completed / last7.signup_started) * 100) : null
+  const signupSubmitSuccessRate7d =
+    last7.signup_submitted > 0 ? Math.round((last7.signup_completed / last7.signup_submitted) * 100) : null
+  const verificationRate7d =
+    last7.signup_completed > 0 ? Math.round((last7.verification_completed / last7.signup_completed) * 100) : null
 
   return NextResponse.json({
     success: true,
     last7,
     last30,
-    signupCompletionRate7d,
+    signupCompletionRate7d: signupStartToCreateRate7d,
+    signupStartToCreateRate7d,
+    signupSubmitSuccessRate7d,
+    verificationRate7d,
     topLoginWallTargets: [...topLoginWallTargets.entries()]
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)

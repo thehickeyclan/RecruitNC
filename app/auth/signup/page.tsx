@@ -159,6 +159,18 @@ export default function SignUpPage() {
       if (!res.ok) {
         const errorMessage = (data as any)?.error || data?.message || `An error occurred during sign up (${res.status})`
         console.error("[Signup] API error:", res.status, errorMessage, data)
+        void fetch("/api/track-funnel-event", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          keepalive: true,
+          body: JSON.stringify({
+            event: "signup_error",
+            path: "/auth/signup",
+            target: returnTo || null,
+            source: "signup_page",
+            message: errorMessage,
+          }),
+        }).catch(() => {})
         setError(errorMessage)
         setLoading(false)
         return
@@ -190,6 +202,18 @@ export default function SignUpPage() {
       setSuccess(true)
     } catch (err: any) {
       console.error("[Signup] Exception:", err)
+      void fetch("/api/track-funnel-event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        keepalive: true,
+        body: JSON.stringify({
+          event: "signup_error",
+          path: "/auth/signup",
+          target: returnTo || null,
+          source: "signup_page_exception",
+          message: err?.message || "Unexpected signup exception",
+        }),
+      }).catch(() => {})
       setError(err?.message || "An unexpected error occurred during sign up. Please try again.")
       setLoading(false)
     }
@@ -229,7 +253,7 @@ export default function SignUpPage() {
       <div className="min-h-screen flex items-start pt-20 md:items-center md:pt-0 justify-center bg-gray-50 px-4">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle>Almost done — check your email</CardTitle>
+            <CardTitle>Account created — one last step</CardTitle>
             <CardDescription>
               We sent a verification link to <span className="font-semibold">{email}</span>. Tap that link to activate your free RecruitNC account.
             </CardDescription>
@@ -251,11 +275,11 @@ export default function SignUpPage() {
             )}
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                <strong>Important:</strong> Your account is not active until you click the confirmation link.
-                After verification, we&apos;ll send you back to the page you were trying to reach when possible.
+                <strong>Important:</strong> protected actions like rankings, profile claiming/editing, TOC confirmations, wallet, and recruiting tools
+                require email verification. Public RecruitNC pages are still available while you check your inbox.
               </p>
               <p className="text-sm text-muted-foreground">
-                If you don&apos;t see it within a minute, check spam, junk, promotions, or school/work email filters.
+                If you don&apos;t see the email within a minute, check spam, junk, promotions, or school/work email filters.
               </p>
               {resendMessage ? <p className="text-sm text-blue-700">{resendMessage}</p> : null}
               <Button className="w-full" onClick={handleResendVerification} disabled={resending}>
@@ -268,6 +292,14 @@ export default function SignUpPage() {
               >
                 I verified — go to sign in
               </Button>
+              <div className="grid grid-cols-1 gap-2 pt-2 sm:grid-cols-2">
+                <Button asChild variant="ghost" className="w-full">
+                  <Link href="/" target="_top" rel="noopener">Browse RecruitNC</Link>
+                </Button>
+                <Button asChild variant="ghost" className="w-full">
+                  <Link href="/news/united-ascent" target="_top" rel="noopener">United Ascent News</Link>
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -331,7 +363,7 @@ export default function SignUpPage() {
           <CardHeader>
             <CardTitle>Create Your Free Account</CardTitle>
             <CardDescription>
-              {returnTo ? `Sign up, verify your email, and we’ll send you back to ${returnTo}.` : "Sign up takes less than 2 minutes."}
+              {returnTo ? `Sign up, verify your email, and we’ll send you back to ${returnTo}.` : "Sign up takes less than 2 minutes. Email verification protects profiles, rankings, and recruiting tools."}
             </CardDescription>
           </CardHeader>
         <CardContent className="relative z-10">
