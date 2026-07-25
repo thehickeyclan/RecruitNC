@@ -2,6 +2,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { ArrowLeft, ArrowRight, Calendar } from "lucide-react"
 import { getUnitedAscentIssues } from "@/lib/news"
+import { UnitedAscentSubscribeCta } from "@/components/news/united-ascent-subscribe-cta"
 
 export const metadata = {
   title: "United Ascent | North Carolina Wrestling News",
@@ -28,6 +29,9 @@ export default function UnitedAscentArchivePage() {
       </header>
 
       <main className="container mx-auto max-w-5xl px-4 py-12">
+        <div className="mb-10">
+          <UnitedAscentSubscribeCta />
+        </div>
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {issues.map((issue) => (
             <Link

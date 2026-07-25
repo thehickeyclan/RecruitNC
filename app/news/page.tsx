@@ -31,6 +31,20 @@ export default function NewsPage() {
           <p className="mt-4 text-lg text-white/60 max-w-2xl">
             The latest announcements, stories, and highlights from NC United Wrestling.
           </p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link
+              href="/news/united-ascent"
+              className="inline-flex rounded-xl bg-[#D3B574] px-5 py-3 text-sm font-bold text-[#071529] transition hover:bg-white"
+            >
+              United Ascent Weekly Archive
+            </Link>
+            <Link
+              href="/auth/signup"
+              className="inline-flex rounded-xl border border-white/20 px-5 py-3 text-sm font-bold text-white transition hover:border-[#D3B574] hover:text-[#D3B574]"
+            >
+              Subscribe Free
+            </Link>
+          </div>
         </div>
       </header>
 
