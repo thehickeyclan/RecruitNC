@@ -1,5 +1,6 @@
 import Image from "next/image"
 import Link from "next/link"
+import { UnitedAscentSubscribeCta } from "@/components/news/united-ascent-subscribe-cta"
 
 export function UnitedAscent20260725Content() {
   return (
@@ -191,6 +192,8 @@ export function UnitedAscent20260725Content() {
           <strong>North Carolina wrestling is ascending—and we are just getting started.</strong>
         </p>
       </section>
+
+      <UnitedAscentSubscribeCta />
     </div>
   )
 }

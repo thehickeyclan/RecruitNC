@@ -1,5 +1,6 @@
 import Image from "next/image"
 import Link from "next/link"
+import { UnitedAscentSubscribeCta } from "@/components/news/united-ascent-subscribe-cta"
 
 const profileHref = (id: string) => `/view-profile?id=${encodeURIComponent(id)}`
 
@@ -175,6 +176,8 @@ export function UnitedAscent20260718Content() {
         </p>
         <p><strong>Stay tuned. The ascent continues.</strong></p>
       </section>
+
+      <UnitedAscentSubscribeCta />
     </div>
   )
 }
