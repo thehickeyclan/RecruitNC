@@ -16,12 +16,6 @@ import {
   buildTocWeightRosterCsv,
 } from "@/lib/toc/bracket-export"
 
-function statusVariant(status: TocFieldAthlete["status"]) {
-  if (status === "confirmed") return "default" as const
-  if (status === "invited") return "secondary" as const
-  return "outline" as const
-}
-
 function aiSeedConfidenceClass(confidence: TocFieldAthlete["aiSeedConfidence"]) {
   if (confidence === "High") return "bg-emerald-700 text-white"
   if (confidence === "Medium") return "bg-amber-500 text-slate-950"
@@ -95,7 +89,7 @@ function WeightBoardCard({
   }
 
   return (
-    <Card className="border-t-4 border-t-[#CC0000]">
+    <Card className="border-t-4 border-t-[#CC0000] shadow-sm">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
           <div>
@@ -117,7 +111,7 @@ function WeightBoardCard({
         {board.athletes.length === 0 ? (
           <p className="text-sm text-muted-foreground py-4 text-center">No invites yet</p>
         ) : (
-          <ul className="space-y-2">
+          <ul className="space-y-2.5">
             {board.athletes.map((a) => (
               <li
                 key={a.invitationId}
@@ -146,7 +140,7 @@ function WeightBoardCard({
                   setDraggingId(null)
                   setDragOverId(null)
                 }}
-                className={`flex items-center gap-2 text-sm border rounded-md px-2 py-1.5 transition-colors ${
+                className={`rounded-xl border bg-white px-3 py-3 text-sm transition-colors ${
                   a.status === "confirmed" ? "cursor-move" : ""
                 } ${
                   dragOverId === a.invitationId
@@ -157,75 +151,90 @@ function WeightBoardCard({
                 }`}
                 title={a.status === "confirmed" ? "Drag to change official seed order" : undefined}
               >
-                {a.status === "confirmed" ? (
-                  <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                ) : null}
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium truncate">{a.name}</p>
-                  <p className="text-xs text-muted-foreground truncate">{a.school ?? "—"}</p>
-                </div>
-                <Badge variant={statusVariant(a.status)} className="shrink-0 text-[10px] uppercase">
-                  {a.status}
-                </Badge>
-                {a.status === "confirmed" ? (
-                  <div className="flex shrink-0 items-center gap-1">
-                    {a.aiSeed ? (
-                      <div className="group relative">
-                        <Badge className={`${aiSeedConfidenceClass(a.aiSeedConfidence)} gap-1`}>
-                          <Sparkles className="h-3 w-3" />
-                          AI #{a.aiSeed}
-                        </Badge>
-                        <div className="pointer-events-none absolute right-0 top-7 z-20 hidden w-72 rounded-lg border bg-popover p-3 text-xs shadow-xl group-hover:block">
-                          <p className="font-semibold text-popover-foreground">
-                            AI seed #{a.aiSeed} · score {a.aiSeedScore ?? "—"} · {a.aiSeedConfidence ?? "Unknown"} confidence
-                          </p>
-                          {a.aiSeedReasons?.length ? (
-                            <ul className="mt-2 list-disc space-y-1 pl-4 text-muted-foreground">
-                              {a.aiSeedReasons.map((reason) => (
-                                <li key={reason}>{reason}</li>
-                              ))}
-                            </ul>
-                          ) : null}
-                          {a.aiSeedWarnings?.length ? (
-                            <div className="mt-2 rounded-md bg-amber-50 p-2 text-amber-900">
-                              {a.aiSeedWarnings.join(" · ")}
-                            </div>
-                          ) : null}
-                        </div>
-                      </div>
-                    ) : null}
-                    {a.aiSeed && a.seed !== a.aiSeed ? (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 px-2 text-xs text-[#B31B1B]"
-                        disabled={seedSavingId === a.invitationId}
-                        onClick={() => void onSeedChange(a.invitationId, a.aiSeed ?? null)}
-                        title="Use AI recommended seed"
+                <div className="flex items-start gap-3">
+                  {a.status === "confirmed" ? (
+                    <GripVertical className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                  ) : null}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className={`inline-flex h-7 min-w-7 items-center justify-center rounded-md px-2 text-xs font-black tabular-nums ${
+                          a.seed ? "bg-[#002147] text-white" : "bg-slate-100 text-slate-500"
+                        }`}
                       >
-                        Use AI
-                      </Button>
-                    ) : null}
-                    <Select
-                      value={a.seed != null ? String(a.seed) : "none"}
-                      onValueChange={(v) => void onSeedChange(a.invitationId, v === "none" ? null : Number(v))}
-                      disabled={seedSavingId === a.invitationId || isReordering}
-                    >
-                      <SelectTrigger className="h-8 w-[72px] text-xs">
-                        <SelectValue placeholder="Seed" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">—</SelectItem>
-                        {Array.from({ length: TOC_MAX_CONFIRMED_PER_WEIGHT }, (_, i) => i + 1).map((n) => (
-                          <SelectItem key={n} value={String(n)}>
-                            #{n}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                        {a.seed ? `#${a.seed}` : "—"}
+                      </span>
+                      <div className="min-w-[11rem] flex-1">
+                        <p className="break-words font-semibold leading-tight text-slate-950">{a.name}</p>
+                        <p className="mt-0.5 break-words text-xs leading-tight text-muted-foreground">{a.school ?? "—"}</p>
+                      </div>
+                    </div>
+
+                    {a.status === "confirmed" ? (
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        {a.aiSeed ? (
+                          <div className="group relative">
+                            <Badge className={`${aiSeedConfidenceClass(a.aiSeedConfidence)} gap-1 text-xs`}>
+                              <Sparkles className="h-3 w-3" />
+                              AI recommends #{a.aiSeed}
+                            </Badge>
+                            <div className="pointer-events-none absolute left-0 top-8 z-20 hidden w-80 max-w-[calc(100vw-3rem)] rounded-lg border bg-popover p-3 text-xs shadow-xl group-hover:block">
+                              <p className="font-semibold text-popover-foreground">
+                                AI seed #{a.aiSeed} · score {a.aiSeedScore ?? "—"} · {a.aiSeedConfidence ?? "Unknown"} confidence
+                              </p>
+                              {a.aiSeedReasons?.length ? (
+                                <ul className="mt-2 list-disc space-y-1 pl-4 text-muted-foreground">
+                                  {a.aiSeedReasons.map((reason) => (
+                                    <li key={reason}>{reason}</li>
+                                  ))}
+                                </ul>
+                              ) : null}
+                              {a.aiSeedWarnings?.length ? (
+                                <div className="mt-2 rounded-md bg-amber-50 p-2 text-amber-900">
+                                  {a.aiSeedWarnings.join(" · ")}
+                                </div>
+                              ) : null}
+                            </div>
+                          </div>
+                        ) : null}
+                        {a.aiSeed && a.seed !== a.aiSeed ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-7 border-[#B31B1B]/30 px-2 text-xs font-semibold text-[#B31B1B]"
+                            disabled={seedSavingId === a.invitationId}
+                            onClick={() => void onSeedChange(a.invitationId, a.aiSeed ?? null)}
+                            title="Use AI recommended seed"
+                          >
+                            Use AI
+                          </Button>
+                        ) : null}
+                        <Select
+                          value={a.seed != null ? String(a.seed) : "none"}
+                          onValueChange={(v) => void onSeedChange(a.invitationId, v === "none" ? null : Number(v))}
+                          disabled={seedSavingId === a.invitationId || isReordering}
+                        >
+                          <SelectTrigger className="h-8 w-[8.5rem] text-xs font-semibold">
+                            <SelectValue placeholder="Official seed" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">No official seed</SelectItem>
+                            {Array.from({ length: TOC_MAX_CONFIRMED_PER_WEIGHT }, (_, i) => i + 1).map((n) => (
+                              <SelectItem key={n} value={String(n)}>
+                                Official #{n}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    ) : (
+                      <Badge variant="secondary" className="mt-2 text-[10px] uppercase">
+                        {a.status}
+                      </Badge>
+                    )}
                   </div>
-                ) : null}
+                </div>
               </li>
             ))}
           </ul>
@@ -465,7 +474,7 @@ export default function TocFieldAdminPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="mx-auto max-w-[96rem] space-y-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" asChild>
@@ -604,7 +613,7 @@ export default function TocFieldAdminPage() {
         </p>
       ) : null}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3">
         {visibleWeights.map((w) => (
           <WeightBoardCard
             key={w.weightClass}
