@@ -112,17 +112,17 @@ export default async function NewsAnnouncementPage({
     notFound()
   }
 
-  const skipHeroImage =
-    slug === "class-of-2026-senior-sendoff" ||
-    slug === "real-cost-elite-wrestling-nc-smarter-build" ||
-    slug === RECRUITING_AWARDS_SLUG ||
-    slug === AAU_SCHOLASTIC_DUALS_2026_NEWS_SLUG ||
-    slug === "jumping-levels-what-drives-rapid-improvement"
-
   /** Designed banners already include title art — show full image, don't fade behind HTML title. */
   const designedBannerHero =
     slug === "jumping-levels-what-drives-rapid-improvement" ||
     (item.shareHeroCropOnly === true && item.imageFit === "contain")
+
+  const skipHeroImage =
+    designedBannerHero ||
+    slug === "class-of-2026-senior-sendoff" ||
+    slug === "real-cost-elite-wrestling-nc-smarter-build" ||
+    slug === RECRUITING_AWARDS_SLUG ||
+    slug === AAU_SCHOLASTIC_DUALS_2026_NEWS_SLUG
 
   return (
     <div className="min-h-screen bg-[#0A1628]">
