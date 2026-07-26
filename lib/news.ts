@@ -141,6 +141,21 @@ const ALL_NEWS: NewsItem[] = [
     isAnnouncement: true,
   },
   {
+    id: "the-weight-of-the-scale",
+    slug: "the-weight-of-the-scale",
+    title: "The Weight of the Scale",
+    subtitle: "Exploring the costs, benefits, and risks of weight cutting in wrestling.",
+    summary:
+      "James Bernthal, PhD, examines when cutting weight creates a competitive edge, when it begins to steal that edge away, and why growth, health, performance, and joy in the sport must remain part of the conversation.",
+    href: "/news/the-weight-of-the-scale",
+    date: "2026-07-25",
+    category: "ATHLETE DEVELOPMENT",
+    categoryBadgeClass: "bg-[#003366]",
+    readTime: "16 min read",
+    author: "James Bernthal, PhD",
+    isAnnouncement: true,
+  },
+  {
     id: "united-ascent-2026-07-18",
     slug: "united-ascent-2026-07-18",
     title: "United Ascent: Fargo All-Americans, Eli Horton Commits & RecruitNC Upgrades",

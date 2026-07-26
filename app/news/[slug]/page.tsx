@@ -17,6 +17,7 @@ import { AauScholasticDuals2026FloridaContent } from "../content/aau-scholastic-
 import { UnitedAscent20260718Content } from "../content/united-ascent-2026-07-18"
 import { UnitedAscent20260725Content } from "../content/united-ascent-2026-07-25"
 import { TournamentOfChampionsAnnouncedContent } from "../content/tournament-of-champions-announced"
+import { TheWeightOfTheScaleContent } from "../content/the-weight-of-the-scale"
 import { NchsaaArticleComments } from "@/components/nchsaa-article-comments"
 import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
 import { NewsSharePanel } from "@/components/news/news-share-panel"
@@ -30,6 +31,7 @@ import {
 
 const ANNOUNCEMENT_CONTENT: Record<string, () => JSX.Element> = {
   "tournament-of-champions-announced": () => <TournamentOfChampionsAnnouncedContent />,
+  "the-weight-of-the-scale": () => <TheWeightOfTheScaleContent />,
   "united-ascent-2026-07-25": () => <UnitedAscent20260725Content />,
   "united-ascent-2026-07-18": () => <UnitedAscent20260718Content />,
   "jumping-levels-what-drives-rapid-improvement": () => <JumpingLevelsWhatDrivesRapidImprovementContent />,
