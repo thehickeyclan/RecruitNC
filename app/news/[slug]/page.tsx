@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
+import type { Metadata } from "next"
 import { ArrowLeft, MessageCircle, Calendar, User, Clock } from "lucide-react"
 import { getAnnouncementBySlug, getAnnouncementSlugs } from "@/lib/news"
 import { newsArticleNeedsStoryArt } from "@/lib/news-image-guidelines"
@@ -48,6 +49,40 @@ export async function generateStaticParams() {
   return getAnnouncementSlugs().map((slug) => ({ slug }))
 }
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const { slug } = await params
+  const item = getAnnouncementBySlug(slug)
+  if (!item) return {}
+
+  const title =
+    slug === "the-weight-of-the-scale"
+      ? "Weight Cutting in Wrestling: Risks, Benefits, and When to Move Up | RecruitNC"
+      : `${item.title} | NC United`
+
+  return {
+    title,
+    description: item.summary,
+    openGraph: {
+      title,
+      description: item.summary,
+      type: "article",
+      publishedTime: item.date,
+      authors: item.author ? [item.author] : undefined,
+      images: item.image ? [{ url: item.image }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: item.summary,
+      images: item.image ? [item.image] : undefined,
+    },
+  }
+}
+
 export default async function NewsAnnouncementPage({
   params,
 }: {
@@ -85,7 +120,9 @@ export default async function NewsAnnouncementPage({
     slug === "jumping-levels-what-drives-rapid-improvement"
 
   /** Designed banners already include title art — show full image, don't fade behind HTML title. */
-  const designedBannerHero = slug === "jumping-levels-what-drives-rapid-improvement"
+  const designedBannerHero =
+    slug === "jumping-levels-what-drives-rapid-improvement" ||
+    (item.shareHeroCropOnly === true && item.imageFit === "contain")
 
   return (
     <div className="min-h-screen bg-[#0A1628]">
