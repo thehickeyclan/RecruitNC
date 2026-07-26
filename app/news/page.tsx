@@ -2,6 +2,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { getAllNews } from "@/lib/news"
 import { ArrowLeft, ArrowRight, Calendar } from "lucide-react"
+import { UnitedAscentEmailSubscribeForm } from "@/components/news/united-ascent-email-subscribe-form"
 
 export const metadata = {
   title: "News & Updates | NC United Wrestling",
@@ -31,6 +32,12 @@ export default function NewsPage() {
           <p className="mt-4 text-lg text-white/60 max-w-2xl">
             The latest announcements, stories, and highlights from NC United Wrestling.
           </p>
+          <div className="mt-6 max-w-2xl rounded-2xl border border-white/10 bg-white/5 p-4">
+            <p className="mb-3 text-sm font-semibold text-white">
+              Get United Ascent weekly by email — no account required.
+            </p>
+            <UnitedAscentEmailSubscribeForm source="news_page_hero" />
+          </div>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
               href="/news/united-ascent"
@@ -42,7 +49,7 @@ export default function NewsPage() {
               href="/auth/signup"
               className="inline-flex rounded-xl border border-white/20 px-5 py-3 text-sm font-bold text-white transition hover:border-[#D3B574] hover:text-[#D3B574]"
             >
-              Subscribe Free
+              Create RecruitNC Account
             </Link>
           </div>
         </div>

@@ -11,13 +11,16 @@ type Subscriber = {
   id: string
   email: string
   source: string | null
+  segments?: string[] | null
   created_at: string
 }
 
 function toCsv(rows: Subscriber[]): string {
-  const header = "email,source,created_at"
+  const header = "email,segments,source,created_at"
   const lines = rows.map((r) =>
-    [r.email, r.source ?? "", r.created_at].map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","),
+    [r.email, (r.segments ?? []).join("|"), r.source ?? "", r.created_at]
+      .map((c) => `"${String(c).replace(/"/g, '""')}"`)
+      .join(","),
   )
   return [header, ...lines].join("\n")
 }
@@ -51,7 +54,7 @@ export default function TocEmailAdminPage() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = `toc-email-subscribers-${new Date().toISOString().slice(0, 10)}.csv`
+    a.download = `recruitnc-email-subscribers-${new Date().toISOString().slice(0, 10)}.csv`
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -66,7 +69,7 @@ export default function TocEmailAdminPage() {
             </Link>
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">TOC Email List</h1>
+            <h1 className="text-2xl font-bold">Email Subscribers</h1>
             <p className="text-sm text-muted-foreground">{rows.length} active subscribers</p>
           </div>
         </div>
@@ -98,6 +101,7 @@ export default function TocEmailAdminPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Email</TableHead>
+                  <TableHead>Segments</TableHead>
                   <TableHead>Source</TableHead>
                   <TableHead>Signed up</TableHead>
                 </TableRow>
@@ -106,6 +110,9 @@ export default function TocEmailAdminPage() {
                 {rows.map((r) => (
                   <TableRow key={r.id}>
                     <TableCell>{r.email}</TableCell>
+                    <TableCell className="text-sm">
+                      {(r.segments ?? []).length ? (r.segments ?? []).join(", ") : "—"}
+                    </TableCell>
                     <TableCell>{r.source ?? "—"}</TableCell>
                     <TableCell className="text-sm whitespace-nowrap">
                       {new Date(r.created_at).toLocaleString()}
