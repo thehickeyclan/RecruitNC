@@ -15,10 +15,34 @@ export async function POST(request: Request) {
     }
 
     const admin = createAdminClient()
-    const { error } = await admin.from("toc_email_subscribers").upsert(
-      { email, source, unsubscribed: false },
-      { onConflict: "email", ignoreDuplicates: false },
-    )
+    const { data: existing, error: existingError } = await admin
+      .from("toc_email_subscribers")
+      .select("id, segments")
+      .eq("email", email)
+      .maybeSingle()
+
+    if (existingError && existingError.code !== "PGRST116") {
+      console.error("[toc/email-signup] existing", existingError)
+      if (existingError.code === "42P01") {
+        return NextResponse.json(
+          { ok: false, error: "Signups are not available yet. Please try again later." },
+          { status: 503 },
+        )
+      }
+      return NextResponse.json({ ok: false, error: "Failed to save" }, { status: 500 })
+    }
+
+    const existingSegments = Array.isArray(existing?.segments)
+      ? existing.segments.map((x) => String(x).trim()).filter(Boolean)
+      : []
+    const segments = [...new Set([...existingSegments, "toc"])]
+
+    const { error } = existing?.id
+      ? await admin
+          .from("toc_email_subscribers")
+          .update({ source, segments, unsubscribed: false })
+          .eq("id", existing.id)
+      : await admin.from("toc_email_subscribers").insert({ email, source, segments, unsubscribed: false })
 
     if (error) {
       console.error("[toc/email-signup]", error)
