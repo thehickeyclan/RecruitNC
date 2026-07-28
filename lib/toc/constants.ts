@@ -63,6 +63,32 @@ export const TOC_TROPHIES_AND_AWARDS = {
   ],
 } as const
 
+export const TOC_CADEN_PERRY_WARRIOR_SCHOLARSHIP = {
+  eyebrow: "Presented at Tournament of Champions",
+  headline: "The Caden Perry Warrior Scholarship",
+  tagline: "The future is bright for those who refuse to quit.",
+  lead:
+    "Caden Perry embodied what wrestling is supposed to build: courage, resilience, discipline, heart, and an unwavering refusal to quit.",
+  award:
+    "The inaugural award provides $1,000 in wrestling support for one North Carolina wrestler whose response to genuine adversity reflects that same warrior spirit.",
+  notAbout:
+    "This is not an award for rankings, records, championships, recruiting status, or academic achievement — and the recipient does not have to compete in the Tournament of Champions.",
+  eligibility:
+    "Any active North Carolina wrestler in grades 6–12 may be nominated by a coach, parent, teacher, teammate, counselor, or community member. Athletes may not nominate themselves.",
+  dates: "Nominations open August 1 and close August 30. The recipient will be honored September 19 at the Tournament of Champions in Apex.",
+  fundUseIntro:
+    "Funds may be paid directly or reimbursed with receipts toward documented wrestling-related expenses, including:",
+  fundUses: [
+    "Club dues, school wrestling fees, and training fees",
+    "Private lessons and small-group training",
+    "Camps, clinics, and tournament entry fees",
+    "Wrestling travel, lodging, gear, shoes, and equipment",
+    "Other wrestling-related needs approved by NC United and the Perry family",
+  ],
+  href: "/fundraising/scholarships/caden-perry",
+  donateHref: "/fundraising/scholarships/caden-perry/donate",
+} as const
+
 export const TOC_OFFICIAL_TEE = {
   eyebrow: "Official event apparel",
   headline: "The inaugural 2026 Tournament of Champions collection.",
@@ -538,6 +564,7 @@ export const TOC_SECTION_NAV_GROUPS = [
       { href: "#weights", label: "Weight classes" },
       { href: "#champion-jacket", label: "Champion jacket" },
       { href: "#official-tee", label: "Official apparel" },
+      { href: "#caden-perry-scholarship", label: "Caden scholarship" },
       { href: "#venue", label: "Venue" },
       { href: "#schedule", label: "Schedule" },
       { href: "#families", label: "Tickets & families" },
@@ -569,6 +596,7 @@ export const TOC_SECTION_NAV_QUICK = [
   { href: "#schedule", label: "Schedule" },
   { href: "#families", label: "Tickets" },
   { href: "#trophies-awards", label: "Awards" },
+  { href: "#caden-perry-scholarship", label: "Scholarship" },
   { href: "#official-tee", label: "Apparel" },
   { href: "#volunteer", label: "Volunteer" },
   { href: "#athlete-interest", label: "Athletes" },

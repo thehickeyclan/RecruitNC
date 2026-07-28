@@ -158,13 +158,22 @@ INSERT INTO public.scholarships (
 )
 VALUES (
   'caden-perry',
-  'The Caden Perry Scholarship',
+  'The Caden Perry Warrior Scholarship',
   'The future is bright for those who refuse to quit.',
-  'This scholarship was established in memory of Caden Perry — a North Carolina wrestler who began competing at age six, faced a terminal diagnosis at thirteen, and spent three more years proving that the mat builds something medicine cannot measure. Full memorial narrative pending approval from the Perry family.',
-  'Selection emphasizes resilience in the face of adversity — on or off the mat; character that reflects what wrestling builds; perseverance through hardship, setbacks, and challenging circumstances; and a mindset that carries beyond the sport. Academic record and win-loss record are not selection criteria.',
+  'This wrestling-support award was established in memory of Caden Perry and is presented annually at the NC United Tournament of Champions. It recognizes a North Carolina wrestler whose response to genuine adversity reflects courage, resilience, character, and the refusal to quit. The recipient does not have to compete in the Tournament of Champions.',
+  'Selection emphasizes documented response to adversity, character and integrity, impact on others, and a wrestling-forged mindset. Rankings, records, championships, recruiting status, academic record, and school or club affiliation are not selection criteria.',
   2026,
   'applications_open',
-  NULL, NULL, NULL, NULL,
+  100000, '2026-08-01', '2026-08-30', '2026-09-19',
   'Perry family'
 )
-ON CONFLICT (slug) DO NOTHING;
+ON CONFLICT (slug) DO UPDATE SET
+  name = EXCLUDED.name,
+  tagline = EXCLUDED.tagline,
+  description = EXCLUDED.description,
+  criteria = EXCLUDED.criteria,
+  award_amount_cents = EXCLUDED.award_amount_cents,
+  applications_open_date = EXCLUDED.applications_open_date,
+  applications_close_date = EXCLUDED.applications_close_date,
+  award_announcement_date = EXCLUDED.award_announcement_date,
+  family_name = EXCLUDED.family_name;
