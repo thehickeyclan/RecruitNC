@@ -43,9 +43,9 @@ import { CADEN_PERRY_GALLERY_ITEMS } from "@/lib/scholarships/caden-perry-galler
 
 const base = process.env.NEXT_PUBLIC_APP_URL || "https://app.ncwrestlingunited.com"
 const CADEN_PERRY_SHARE_IMAGE = {
-  url: `${base}/scholarships/caden-perry/warrior-scholarship-share-card.png`,
-  width: 1122,
-  height: 1402,
+  url: `${base}/scholarships/caden-perry/warrior-scholarship-share-card-wide.png`,
+  width: 1448,
+  height: 1086,
   alt: "The Caden Perry Warrior Scholarship — $1,000 wrestling-support award",
 }
 
