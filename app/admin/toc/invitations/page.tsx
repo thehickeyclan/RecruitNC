@@ -20,7 +20,7 @@ import {
 import { TocInviteShareCard } from "@/components/toc/admin/toc-invite-share-card"
 import { TocInviteReminderCard } from "@/components/toc/admin/toc-invite-reminder-card"
 import { HardLink } from "@/components/hard-link"
-import { ArrowLeft, CreditCard, Clock, Loader2, RefreshCw, Send, UserCheck, Users } from "lucide-react"
+import { ArrowLeft, Check, Copy, CreditCard, Clock, Loader2, RefreshCw, Send, UserCheck, Users } from "lucide-react"
 import { buildTocAthleteInviteMessage, type TocInviteMessage } from "@/lib/toc/invite-message"
 import { confirmPageUrl, registrationPayPageUrl } from "@/lib/toc/invitation-service"
 import { formatTocGradYear, suggestTocInviteWeight, tocWeightProfileHint } from "@/lib/toc/invitations"
@@ -74,6 +74,7 @@ export default function TocInvitationsAdminPage() {
   const [expandedReminderId, setExpandedReminderId] = useState<string | null>(null)
   const [weightSavingId, setWeightSavingId] = useState<string | null>(null)
   const [actionSavingId, setActionSavingId] = useState<string | null>(null)
+  const [copiedRowId, setCopiedRowId] = useState<string | null>(null)
   const [listFilter, setListFilter] = useState<ListFilter>("not_accepted")
 
   const previewShare = useMemo(() => {
@@ -225,12 +226,55 @@ export default function TocInvitationsAdminPage() {
     }
   }
 
-  const shareForRow = (row: InvitationRow): TocInviteMessage =>
-    buildTocAthleteInviteMessage({
-      athleteName: row.athletes?.name ?? "Athlete",
+  const actionUrlForRow = (row: InvitationRow): string =>
+    row.status === "confirmed" && row.payment_status !== "paid"
+      ? registrationPayPageUrl(row.athlete_id)
+      : confirmPageUrl(row.athlete_id)
+
+  const actionLabelForRow = (row: InvitationRow): string =>
+    row.status === "confirmed" && row.payment_status !== "paid" ? "pay link" : "confirm link"
+
+  const shareForRow = (row: InvitationRow): TocInviteMessage => {
+    const athleteName = row.athletes?.name ?? "Athlete"
+
+    if (row.status === "confirmed" && row.payment_status !== "paid") {
+      const firstName = athleteName.split(/\s+/)[0] || "Athlete"
+      const payUrl = registrationPayPageUrl(row.athlete_id)
+      const subject = "Tournament of Champions payment needed"
+      const emailBody = [
+        `${firstName} —`,
+        "",
+        `You're confirmed for the NC United Tournament of Champions at ${row.weight_class} lbs, but registration payment is still needed to keep the spot locked.`,
+        "",
+        "Complete secure checkout here:",
+        payUrl,
+        "",
+        "Reminder: this is a flat Friday weigh-in weight with no allowance.",
+        "",
+        "— NC United Wrestling",
+      ].join("\n")
+      const smsBody = `${firstName} — you're confirmed for Tournament of Champions (${row.weight_class} lbs), but payment is still needed to keep the spot locked. Complete checkout here: ${payUrl}`
+
+      return { subject, confirmUrl: payUrl, eventPageUrl: "https://app.ncwrestlingunited.com/tournament-of-champions", emailBody, smsBody }
+    }
+
+    return buildTocAthleteInviteMessage({
+      athleteName,
       weightClass: row.weight_class,
       confirmUrl: confirmPageUrl(row.athlete_id),
     })
+  }
+
+  const copyActionLink = async (row: InvitationRow) => {
+    const url = actionUrlForRow(row)
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopiedRowId(row.id)
+      setTimeout(() => setCopiedRowId(null), 2000)
+    } catch {
+      window.prompt(`Copy ${actionLabelForRow(row)}:`, url)
+    }
+  }
 
   const updateWeight = async (row: InvitationRow, weightClass: number) => {
     if (weightClass === row.weight_class) return
@@ -637,12 +681,15 @@ export default function TocInvitationsAdminPage() {
                       {row.payment_status === "paid" ? (
                         <Badge className="bg-green-700 hover:bg-green-700">paid</Badge>
                       ) : row.status === "confirmed" ? (
-                        <a
-                          href={registrationPayPageUrl(row.athlete_id)}
-                          className="text-xs text-[#002147] underline underline-offset-2"
-                        >
-                          {row.payment_status ?? "unpaid"}
-                        </a>
+                        <div className="flex flex-col gap-1 items-start">
+                          <a
+                            href={registrationPayPageUrl(row.athlete_id)}
+                            className="text-xs text-[#002147] underline underline-offset-2"
+                          >
+                            {row.payment_status ?? "unpaid"}
+                          </a>
+                          <span className="text-[10px] text-muted-foreground">payment link is athlete-specific</span>
+                        </div>
                       ) : (
                         <span className="text-xs text-muted-foreground">—</span>
                       )}
@@ -706,18 +753,38 @@ export default function TocInvitationsAdminPage() {
                           </Button>
                         ) : null}
                         {row.status !== "declined" && row.status !== "withdrew" ? (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="text-xs h-8"
-                            onClick={() => {
-                              setExpandedShareId(expandedShareId === row.id ? null : row.id)
-                              setExpandedReminderId(null)
-                            }}
-                          >
-                            {expandedShareId === row.id ? "Hide invite" : "Copy invite"}
-                          </Button>
+                          <>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="text-xs h-8"
+                              onClick={() => void copyActionLink(row)}
+                            >
+                              {copiedRowId === row.id ? (
+                                <Check className="h-3.5 w-3.5 mr-1 text-green-700" />
+                              ) : (
+                                <Copy className="h-3.5 w-3.5 mr-1" />
+                              )}
+                              {copiedRowId === row.id ? "Copied" : `Copy ${actionLabelForRow(row)}`}
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="text-xs h-8"
+                              onClick={() => {
+                                setExpandedShareId(expandedShareId === row.id ? null : row.id)
+                                setExpandedReminderId(null)
+                              }}
+                            >
+                              {expandedShareId === row.id
+                                ? "Hide message"
+                                : row.status === "confirmed" && row.payment_status !== "paid"
+                                  ? "Payment message"
+                                  : "Invite message"}
+                            </Button>
+                          </>
                         ) : null}
                         {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" /> : null}
                       </div>

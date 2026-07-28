@@ -23,6 +23,7 @@ async function copyText(label: string, text: string, setCopied: (v: string | nul
 
 export function TocInviteShareCard({ share, title = "What they'll receive", compact = false }: Props) {
   const [copied, setCopied] = useState<string | null>(null)
+  const primaryLinkLabel = share.confirmUrl.includes("/register/pay") ? "payment link" : "confirm link"
 
   return (
     <div className="rounded-md border border-[#002147]/15 bg-[#f8f9fb] p-4 space-y-4">
@@ -43,7 +44,7 @@ export function TocInviteShareCard({ share, title = "What they'll receive", comp
           onClick={() => void copyText("link", share.confirmUrl, setCopied)}
         >
           {copied === "link" ? <Check className="h-3.5 w-3.5 mr-1.5 text-green-600" /> : <Copy className="h-3.5 w-3.5 mr-1.5" />}
-          Copy confirm link
+          Copy {primaryLinkLabel}
         </Button>
         <Button
           type="button"
