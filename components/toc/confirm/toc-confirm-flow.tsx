@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import { Loader2 } from "lucide-react"
 import { AthleteSearchTypeahead, type TocAthleteSearchResult } from "@/components/toc/confirm/athlete-search-typeahead"
 import { AthleteVerificationCard } from "@/components/toc/confirm/athlete-verification-card"
@@ -12,7 +12,6 @@ import { isTocAthleteId, TOC_INVALID_ATHLETE_LINK_MESSAGE } from "@/lib/toc/invi
 type Step = "search" | "verify" | "form"
 
 export function TocConfirmFlow() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const prefillAthleteId = searchParams.get("athlete")
 
@@ -21,7 +20,7 @@ export function TocConfirmFlow() {
   const [profile, setProfile] = useState<TocAthleteWithInvitation | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const loadProfile = useCallback(async (athleteId: string) => {
+  const loadProfile = useCallback(async (athleteId: string, skipVerification = false) => {
     if (!isTocAthleteId(athleteId)) {
       setError(TOC_INVALID_ATHLETE_LINK_MESSAGE)
       setProfile(null)
@@ -35,8 +34,9 @@ export function TocConfirmFlow() {
       const res = await fetch(`/api/toc/athletes/${encodeURIComponent(athleteId)}`)
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || "Could not load profile")
-      setProfile(data as TocAthleteWithInvitation)
-      setStep("verify")
+      const loadedProfile = data as TocAthleteWithInvitation
+      setProfile(loadedProfile)
+      setStep(skipVerification && loadedProfile.invitation?.status === "invited" ? "form" : "verify")
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not load profile")
       setProfile(null)
@@ -44,11 +44,11 @@ export function TocConfirmFlow() {
     } finally {
       setLoadingProfile(false)
     }
-  }, [router])
+  }, [])
 
   useEffect(() => {
     if (prefillAthleteId) {
-      void loadProfile(prefillAthleteId)
+      void loadProfile(prefillAthleteId, true)
     }
   }, [prefillAthleteId, loadProfile])
 
@@ -89,13 +89,13 @@ export function TocConfirmFlow() {
         <ConfirmationForm
           athleteId={profile.athlete.id}
           athleteName={profile.athlete.name}
+          athleteSchool={profile.athlete.school}
+          athleteClub={profile.athlete.club}
           athleteWeightClass={profile.athlete.weightClass}
           invitedWeightClass={profile.invitation.weightClass}
-          onSuccess={() =>
-            router.push(
-              `/tournament-of-champions/confirm/success?athlete=${encodeURIComponent(profile.athlete.id)}`,
-            )
-          }
+          onCheckout={(checkoutUrl) => {
+            window.location.href = checkoutUrl
+          }}
         />
       ) : null}
     </div>

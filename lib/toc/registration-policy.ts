@@ -51,10 +51,10 @@ export function confirmDeadlineMessage(invitedAt: string | null | undefined): st
   return formatTocLongDate(deadline)
 }
 
-/** Invite email / SMS / admin copy — confirm only; no payment mention. */
+/** Invite email / SMS / admin copy. */
 export function tocInviteConfirmLines(): string[] {
   return [
-    `Please confirm within ${TOC_CONFIRM_WITHIN_DAYS} days of this invite — that's your verbal yes.`,
+    `Please confirm within ${TOC_CONFIRM_WITHIN_DAYS} days of this invite. Registration is completed with secure card payment at checkout.`,
   ]
 }
 
@@ -63,11 +63,11 @@ export function tocInviteRegistrationLines(): string[] {
   return tocInviteConfirmLines()
 }
 
-/** Confirm page disclosure — payment details live here only, not in email. */
+/** Confirm page disclosure. */
 export function tocConfirmRegistrationDisclosure(): string {
-  return `You're not paying today. Confirm below to lock in your spot. A ${formatTocRegistrationFee()} registration fee is due by ${registrationPaymentDueDisplay()} (${TOC_REGISTRATION_FEE_COVERS}). You can pay anytime before then — after you confirm — using the optional link on this page.`
+  return `Payment is required today to lock your spot. After you submit these details, you'll go to secure Stripe checkout for the ${formatTocRegistrationFee()} registration fee (${TOC_REGISTRATION_FEE_COVERS}).`
 }
 
 export function tocConfirmRegistrationCheckboxLabel(): string {
-  return `I understand a ${formatTocRegistrationFee()} registration fee is due by ${registrationPaymentDueDisplay()} (not required to confirm today).`
+  return `I understand my spot is not locked until the ${formatTocRegistrationFee()} card payment is completed.`
 }

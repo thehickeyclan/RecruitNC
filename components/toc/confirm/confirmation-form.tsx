@@ -10,8 +10,6 @@ import { Loader2 } from "lucide-react"
 import { TOC_JACKET_SIZES, defaultTocWeightForAthlete, firstNameFromAthleteName } from "@/lib/toc/invitations"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 import {
-  formatTocRegistrationFee,
-  registrationPaymentDueDisplay,
   tocConfirmRegistrationCheckboxLabel,
   tocConfirmRegistrationDisclosure,
 } from "@/lib/toc/registration-policy"
@@ -19,17 +17,21 @@ import {
 type Props = {
   athleteId: string
   athleteName: string
+  athleteSchool: string | null
+  athleteClub: string | null
   athleteWeightClass: string | number | null
   invitedWeightClass: number | null
-  onSuccess: (weightClass: number) => void
+  onCheckout: (checkoutUrl: string) => void
 }
 
 export function ConfirmationForm({
   athleteId,
   athleteName,
+  athleteSchool,
+  athleteClub,
   athleteWeightClass,
   invitedWeightClass,
-  onSuccess,
+  onCheckout,
 }: Props) {
   const firstName = firstNameFromAthleteName(athleteName)
   const defaultWeight =
@@ -81,7 +83,10 @@ export function ConfirmationForm({
       if (!res.ok || !data.ok) {
         throw new Error(data.error || "Confirmation failed")
       }
-      onSuccess(Number(weightClass))
+      if (!data.checkoutUrl || typeof data.checkoutUrl !== "string") {
+        throw new Error("Secure checkout could not be started. Please try again.")
+      }
+      onCheckout(data.checkoutUrl)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Confirmation failed")
     } finally {
@@ -93,20 +98,38 @@ export function ConfirmationForm({
     <form onSubmit={submit} className="space-y-6 border-t border-[#0B1D3A]/10 pt-8">
       <div>
         <h2 className="text-xl font-bold text-[#0B1D3A] uppercase tracking-wide">
-          {firstName}, Confirm your spot
+          {firstName}, Complete TOC registration
         </h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Just a few tournament-specific details — we already have your profile. Confirm below to lock in your spot; payment can wait.
+          Add the final tournament details, then you&apos;ll go straight to secure card checkout. Your spot is locked only after payment succeeds.
         </p>
+      </div>
+
+      <div className="rounded-sm border border-[#0B1D3A]/10 bg-white shadow-sm overflow-hidden">
+        <div className="bg-[#0B1D3A] px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#D9BC6A]">Personal invite registration</p>
+        </div>
+        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-0 divide-y sm:divide-y-0 sm:divide-x divide-[#0B1D3A]/10">
+          <RegistrationFact label="Athlete" value={athleteName} />
+          <RegistrationFact label="Invited weight" value={invitedWeightClass ? `${invitedWeightClass} lbs` : `${defaultWeight} lbs`} accent />
+          <RegistrationFact label="High school" value={athleteSchool ?? "On file"} />
+          <RegistrationFact label="Club" value={athleteClub ?? "On file"} />
+        </dl>
       </div>
 
       <p className="text-sm text-[#0B1D3A]/85 leading-relaxed rounded-sm border border-[#0B1D3A]/10 bg-[#f8f9fb] px-4 py-3">
         {tocConfirmRegistrationDisclosure()}
       </p>
 
+      <div className="rounded-sm border-l-4 border-l-[#CC0000] border border-[#0B1D3A]/10 bg-[#fff8f8] px-4 py-3 text-sm text-[#0B1D3A]/85 leading-relaxed">
+        <strong>Competition format reminder:</strong> one official weigh-in Friday at 4:00 PM. Weights are flat with
+        no allowance — wrestlers must make their listed tournament weight at that Friday weigh-in. First-round bouts
+        are Friday night; brackets finish Saturday.
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="toc-weight">Weight class for this tournament</Label>
+          <Label htmlFor="toc-weight">Tournament weight class</Label>
           <Select value={weightClass} onValueChange={setWeightClass}>
             <SelectTrigger id="toc-weight" className="h-11">
               <SelectValue placeholder="Select weight" />
@@ -119,6 +142,9 @@ export function ConfirmationForm({
               ))}
             </SelectContent>
           </Select>
+          <p className="text-xs text-muted-foreground">
+            Pre-filled from your invite. If this is wrong, contact NC United before paying.
+          </p>
         </div>
 
         <div className="space-y-2">
@@ -161,7 +187,7 @@ export function ConfirmationForm({
           id="toc-weight"
           checked={weightAck}
           onCheckedChange={setWeightAck}
-          label="I understand there is no Saturday weight allowance — single weigh-in, college weights."
+          label="I understand this is a single Friday weigh-in at college weights, and the listed tournament weight is flat with no allowance."
         />
         <AckCheckbox
           id="toc-usaw"
@@ -194,16 +220,15 @@ export function ConfirmationForm({
           {submitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Confirming…
+              Starting checkout…
             </>
           ) : (
-            `${firstName}, Confirm your spot`
+            `${firstName}, Continue to secure payment`
           )}
         </Button>
       </div>
       <p className="text-xs text-muted-foreground leading-relaxed">
-        After you confirm, you can pay the {formatTocRegistrationFee()} registration fee anytime before{" "}
-        {registrationPaymentDueDisplay()} — optional link on the next screen.
+        You&apos;ll complete registration through Stripe. NC United does not store your credit card number.
       </p>
     </form>
   )
@@ -226,6 +251,23 @@ function AckCheckbox({
       <Label htmlFor={id} className="text-sm leading-relaxed font-normal cursor-pointer">
         {label}
       </Label>
+    </div>
+  )
+}
+
+function RegistrationFact({
+  label,
+  value,
+  accent = false,
+}: {
+  label: string
+  value: string
+  accent?: boolean
+}) {
+  return (
+    <div className="px-4 py-3">
+      <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#0B1D3A]/50">{label}</dt>
+      <dd className={`mt-1 text-base font-semibold ${accent ? "text-[#CC0000]" : "text-[#0B1D3A]"}`}>{value}</dd>
     </div>
   )
 }

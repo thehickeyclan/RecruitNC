@@ -90,7 +90,7 @@ export async function countConfirmedAtWeight(
     .from("toc_invitations")
     .select("id", { count: "exact", head: true })
     .eq("weight_class", weightClass)
-    .eq("status", "confirmed")
+    .or("status.eq.confirmed,payment_status.eq.pending,payment_status.eq.paid")
 
   if (excludeInvitationId) {
     query = query.neq("id", excludeInvitationId)
@@ -110,7 +110,7 @@ export async function assertWeightClassHasCapacity(
   if (count >= TOC_MAX_CONFIRMED_PER_WEIGHT) {
     return {
       ok: false,
-      message: `The ${weightClass} lb bracket is full (${TOC_MAX_CONFIRMED_PER_WEIGHT} confirmed). Contact ${process.env.TOC_CONTACT_EMAIL ?? "info@ncwrestlingunited.com"}.`,
+      message: `The ${weightClass} lb bracket is full (${TOC_MAX_CONFIRMED_PER_WEIGHT} confirmed or in checkout). Contact ${process.env.TOC_CONTACT_EMAIL ?? "info@ncwrestlingunited.com"}.`,
     }
   }
   return { ok: true }

@@ -73,7 +73,7 @@ export function AthleteVerificationCard({ data, onConfirm, onReject }: Props) {
               <p className="text-sm text-[#0B1D3A]/75">
                 Already confirmed?{" "}
                 <a href={registrationPayPageUrl(athlete.id)} className="text-[#0B1D3A] underline hover:text-[#CC0000]">
-                  Pay registration when ready
+                  Complete required registration payment
                 </a>{" "}
                 ({formatTocRegistrationFee()} by {registrationPaymentDueDisplay()}).
               </p>

@@ -5,7 +5,7 @@ import { TOC_WEIGH_IN } from "@/lib/toc/constants"
 const FACTS = [
   { icon: Lock, label: "Invite only", sub: "88 wrestlers · hand-picked at each weight" },
   { icon: CalendarClock, label: "One weigh-in", sub: `${TOC_WEIGH_IN.time} · no Saturday weigh-in` },
-  { icon: Scale, label: "College weights", sub: "Eleven brackets · flat scale · no allowance" },
+  { icon: Scale, label: "College weights", sub: "Friday weigh-in · flat/no allowance" },
 ]
 
 export function TocQuickFacts() {

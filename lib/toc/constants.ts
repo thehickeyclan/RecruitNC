@@ -16,7 +16,7 @@ export const TOC_WEIGH_IN = {
   headline: "One weigh-in — Friday night only",
   time: "4:00 PM Friday, September 18",
   detail:
-    "There is no second weigh-in on Saturday. College weights on a flat scale — no allowance. Singlet required; skin check at the scale; USA Wrestling card required.",
+    "Friday weigh-in is flat — wrestlers must make their tournament weight with no allowance. There is no second weigh-in on Saturday. Singlet required; skin check at the scale; USA Wrestling card required.",
 } as const
 
 /** Hero — large date stack at top of landing page. */
@@ -64,18 +64,47 @@ export const TOC_TROPHIES_AND_AWARDS = {
 } as const
 
 export const TOC_OFFICIAL_TEE = {
-  eyebrow: "Official event tee",
-  headline: "The inaugural 2026 Tournament of Champions tee.",
+  eyebrow: "Official event apparel",
+  headline: "The inaugural 2026 Tournament of Champions collection.",
   src: "/images/toc/toc-2026-official-tee.png",
   alt: "Official navy Tournament of Champions 2026 tee showing the front and back design",
-  width: 1530,
-  height: 708,
+  width: 1537,
+  height: 1023,
   items: [
-    "Created as the official tee of the inaugural NC United Tournament of Champions.",
+    "Created as the official apparel of the inaugural NC United Tournament of Champions.",
     "Front: Tournament of Champions mark with NC United branding.",
-    "Back: North Carolina’s Elite Invitational bracket design with the 2026 event year.",
+    "Tee back: North Carolina’s Premier Invitational bracket design with the 2026 event year.",
+    "Crewneck: same front mark, clean back — built to wear all season, not just event weekend.",
   ],
 } as const
+
+/**
+ * Apparel carousel slides. Dimensions must match the real files — a wrong aspect ratio
+ * makes Next reserve the wrong space and the image jumps on load.
+ *
+ * A slide whose image fails to load is dropped at runtime by the carousel, so a piece can
+ * be listed here before its artwork lands without shipping a broken image.
+ */
+export const TOC_OFFICIAL_APPAREL = [
+  {
+    id: "tee",
+    label: "Event tee",
+    caption: "Front & back",
+    src: "/images/toc/toc-2026-official-tee.png",
+    alt: "Official navy Tournament of Champions 2026 tee — front mark and back bracket design",
+    width: 1537,
+    height: 1023,
+  },
+  {
+    id: "crewneck",
+    label: "Crewneck",
+    caption: "Front & back",
+    src: "/images/toc/toc-2026-official-crewneck.png",
+    alt: "Official navy Tournament of Champions 2026 crewneck — front mark with a clean back",
+    width: 1537,
+    height: 1023,
+  },
+] as const
 
 export const TOC_COMPETITION_MATS = {
   eyebrow: "Competition surface",
@@ -107,7 +136,7 @@ export const TOC_WEIGHT_CLASSES = [
 ] as const
 
 export const TOC_WEIGH_IN_LINE =
-  `${TOC_WEIGH_IN.headline} · ${TOC_WEIGH_IN.time} · No allowance` as const
+  `${TOC_WEIGH_IN.headline} · ${TOC_WEIGH_IN.time} · Flat weight, no allowance` as const
 
 /** Public schedule — Friday weigh-in + first round; Saturday finishes brackets through finals. */
 export const TOC_SCHEDULE = {
@@ -508,7 +537,7 @@ export const TOC_SECTION_NAV_GROUPS = [
     links: [
       { href: "#weights", label: "Weight classes" },
       { href: "#champion-jacket", label: "Champion jacket" },
-      { href: "#official-tee", label: "Official tee" },
+      { href: "#official-tee", label: "Official apparel" },
       { href: "#venue", label: "Venue" },
       { href: "#schedule", label: "Schedule" },
       { href: "#families", label: "Tickets & families" },
@@ -540,7 +569,7 @@ export const TOC_SECTION_NAV_QUICK = [
   { href: "#schedule", label: "Schedule" },
   { href: "#families", label: "Tickets" },
   { href: "#trophies-awards", label: "Awards" },
-  { href: "#official-tee", label: "Tee" },
+  { href: "#official-tee", label: "Apparel" },
   { href: "#volunteer", label: "Volunteer" },
   { href: "#athlete-interest", label: "Athletes" },
 ] as const

@@ -27,7 +27,6 @@ import { tocTicketsOnSale } from "@/lib/toc/ticket-sale"
 import { TOC_HERO } from "@/lib/toc/marketing-copy"
 import {
   formatTocRegistrationFee,
-  registrationPaymentDueDisplay,
   TOC_CONFIRM_WITHIN_DAYS,
   TOC_REGISTRATION_FEE_COVERS,
 } from "@/lib/toc/registration-policy"
@@ -232,7 +231,7 @@ export async function answerTournamentOfChampionsQuestion(message: string): Prom
     sections.push(
       section(
         "Athlete registration",
-        `Invited athletes pay a ${formatTocRegistrationFee()} registration fee due by ${registrationPaymentDueDisplay()}. It supports ${TOC_REGISTRATION_FEE_COVERS}. Athletes should confirm within ${TOC_CONFIRM_WITHIN_DAYS} days of the invite; payment instructions follow after confirmation.`,
+        `Invited athletes pay a ${formatTocRegistrationFee()} registration fee during confirmation checkout. It supports ${TOC_REGISTRATION_FEE_COVERS}. Athletes should confirm within ${TOC_CONFIRM_WITHIN_DAYS} days of the invite; the spot is locked only after secure card payment is completed.`,
       ),
     )
   }
