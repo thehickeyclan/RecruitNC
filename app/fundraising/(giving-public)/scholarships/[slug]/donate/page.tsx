@@ -5,6 +5,14 @@ import { ScholarshipFundCheckout } from "@/components/scholarships/scholarship-f
 import { getScholarshipBySlug } from "@/lib/scholarships/public-queries"
 import { HardLink } from "@/components/hard-link"
 
+const base = process.env.NEXT_PUBLIC_APP_URL || "https://app.ncwrestlingunited.com"
+const CADEN_PERRY_SHARE_IMAGE = {
+  url: `${base}/scholarships/caden-perry/warrior-scholarship-share-card.png`,
+  width: 1122,
+  height: 1402,
+  alt: "The Caden Perry Warrior Scholarship — $1,000 wrestling-support award",
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -13,7 +21,39 @@ export async function generateMetadata({
   const { slug } = await params
   const row = await getScholarshipBySlug(slug)
   if (!row) return { title: "Donate | Scholarships" }
-  return { title: `Donate · ${row.name}` }
+  const title = `Donate · ${row.name}`
+  const description =
+    row.slug === "caden-perry"
+      ? "Support The Caden Perry Warrior Scholarship — one North Carolina wrestler will receive $1,000 in wrestling support."
+      : `Support ${row.name} through NC United Wrestling.`
+  const isCaden = row.slug === "caden-perry"
+  return {
+    metadataBase: new URL(base),
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `${base}/fundraising/scholarships/${row.slug}/donate`,
+      siteName: "NC United / RecruitNC",
+      locale: "en_US",
+      type: "website",
+      images: isCaden
+        ? [CADEN_PERRY_SHARE_IMAGE]
+        : row.hero_image_url
+          ? [{ url: row.hero_image_url, alt: row.name }]
+          : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: isCaden ? [CADEN_PERRY_SHARE_IMAGE.url] : row.hero_image_url ? [row.hero_image_url] : undefined,
+    },
+    alternates: {
+      canonical: `${base}/fundraising/scholarships/${row.slug}/donate`,
+    },
+  }
 }
 
 export default async function ScholarshipDonatePage({ params }: { params: Promise<{ slug: string }> }) {
