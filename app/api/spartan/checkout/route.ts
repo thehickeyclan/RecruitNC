@@ -285,6 +285,24 @@ export async function POST(request: NextRequest) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin
   const scholarshipSlugFromReturn =
     fundraisingHubReturnSlug.startsWith("scholarships/") ? fundraisingHubReturnSlug.slice("scholarships/".length) : ""
+  let scholarshipNameFromReturn = ""
+  if (scholarshipSlugFromReturn) {
+    const admin = createAdminClient()
+    const { data: scholarshipRow, error: scholarshipErr } = await admin
+      .from("scholarships")
+      .select("name")
+      .eq("slug", scholarshipSlugFromReturn)
+      .maybeSingle()
+    if (scholarshipErr) {
+      console.error("[spartan/checkout] scholarship lookup:", scholarshipErr.message)
+      return NextResponse.json({ error: "Could not verify scholarship fund." }, { status: 500 })
+    }
+    const row = scholarshipRow as { name?: string | null } | null
+    scholarshipNameFromReturn = row?.name?.trim() || ""
+    if (!scholarshipNameFromReturn) {
+      return NextResponse.json({ error: "Scholarship fund not found." }, { status: 404 })
+    }
+  }
 
   const hubThanksPath =
     fundraisingHubReturnSlug === "training-fund"
@@ -308,13 +326,15 @@ export async function POST(request: NextRequest) {
 
   const productName = raceEntryRequested && raceTier
     ? `NC United × Spartan Fayetteville — ${raceTier.name} (${raceTier.priceLabel} suggested)`
+    : scholarshipNameFromReturn
+      ? `NC United — ${scholarshipNameFromReturn}`
     : "NC United — Gift to support our athletes (no race entry)"
 
   let productDescription =
     raceEntryRequested && raceTier
       ? `Charitable contribution to NC United Wrestling (501(c)(3)) for program costs—including Spartan coordination. Race intent: ${raceTier.name} — ${raceTier.detail}. ${raceTier.dates}. Register and choose Open vs Age Group on Spartan.com. After your gift, NC United coordinates entry logistics per Spartan's process (not a Spartan retail purchase). Receipt follows IRC acknowledgement standards—ask your tax advisor about deductions.`
       : scholarshipSlugFromReturn
-        ? `Charitable gift to NC United Wrestling (501(c)(3)) for the scholarship fund on file (${scholarshipSlugFromReturn}). Receipt follows IRC standards—consult your advisor on deductibility.`
+        ? `Charitable gift to NC United Wrestling (501(c)(3)) for ${scholarshipNameFromReturn || `the scholarship fund on file (${scholarshipSlugFromReturn})`}. Receipt follows IRC standards—consult your advisor on deductibility.`
         : "Charitable gift to NC United Wrestling (501(c)(3)) for the NC United Training Fund—not a Spartan race purchase. Naming a wrestler at checkout aligns your contribution under nonprofit policy toward eligible wrestling training/competition expenses (not a personal payment). IRC-aligned acknowledgement emailed after payment."
   if (raceEntryRequested && raceTier?.id === "super") {
     productDescription += " Team NC's crew race is the Super 10K (May 3)."
@@ -390,6 +410,7 @@ export async function POST(request: NextRequest) {
           ? {
               fundraising_attribution: "scholarship_fund",
               scholarship_slug: scholarshipSlugFromReturn,
+              scholarship_name: scholarshipNameFromReturn,
             }
           : athleteCode
             ? {

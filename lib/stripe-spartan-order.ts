@@ -22,7 +22,8 @@ export function resolveSpartanLineItemName(meta: Record<string, string>): string
     return "NC United Training Fund donation"
   }
   if (surface === "scholarship_fund") {
-    return "NC United scholarship fund donation"
+    const scholarshipName = meta.scholarship_name?.trim() || meta.scholarship_slug?.trim()
+    return scholarshipName ? `Scholarship donation · ${scholarshipName}` : "NC United scholarship fund donation"
   }
 
   const athleteLabel =

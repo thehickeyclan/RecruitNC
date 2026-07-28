@@ -51,6 +51,7 @@ export function TocCadenPerryScholarshipSection() {
             </p>
             <p className="mt-5 max-w-2xl text-base leading-relaxed text-white/82 sm:text-lg">{s.lead}</p>
             <p className="mt-4 max-w-2xl text-base leading-relaxed text-white/72 sm:text-lg">{s.award}</p>
+            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/68 sm:text-base">{s.seedCommitment}</p>
             <p className="mt-4 max-w-2xl border-l-4 border-[#CC0000] pl-4 text-sm leading-relaxed text-white/68 sm:text-base">
               {s.notAbout}
             </p>
