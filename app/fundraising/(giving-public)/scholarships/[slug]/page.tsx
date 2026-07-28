@@ -41,6 +41,14 @@ import {
 import { CadenPerryHeroCarousel } from "@/components/scholarships/caden-perry-hero-carousel"
 import { CADEN_PERRY_GALLERY_ITEMS } from "@/lib/scholarships/caden-perry-gallery-images"
 
+const base = process.env.NEXT_PUBLIC_APP_URL || "https://app.ncwrestlingunited.com"
+const CADEN_PERRY_SHARE_IMAGE = {
+  url: `${base}/scholarships/caden-perry/warrior-scholarship-share-card.png`,
+  width: 1122,
+  height: 1402,
+  alt: "The Caden Perry Warrior Scholarship — $1,000 wrestling-support award",
+}
+
 function df(c: string) {
   return `font-[family-name:var(--font-fundraising-display)] ${c}`
 }
@@ -60,9 +68,34 @@ export async function generateMetadata({
   const { slug } = await params
   const row = await getScholarshipBySlug(slug)
   if (!row) return { title: "Scholarship | NC United" }
+  const description = row.tagline ?? `${row.name} — NC United Wrestling scholarships.`
+  const isCaden = row.slug === "caden-perry"
   return {
+    metadataBase: new URL(base),
     title: `${row.name} | NC United Scholarships`,
-    description: row.tagline ?? `${row.name} — NC United Wrestling scholarships.`,
+    description,
+    openGraph: {
+      title: `${row.name} | NC United Scholarships`,
+      description,
+      url: `${base}/fundraising/scholarships/${row.slug}`,
+      siteName: "NC United / RecruitNC",
+      locale: "en_US",
+      type: "website",
+      images: isCaden
+        ? [CADEN_PERRY_SHARE_IMAGE]
+        : row.hero_image_url
+          ? [{ url: row.hero_image_url, alt: row.name }]
+          : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${row.name} | NC United Scholarships`,
+      description,
+      images: isCaden ? [CADEN_PERRY_SHARE_IMAGE.url] : row.hero_image_url ? [row.hero_image_url] : undefined,
+    },
+    alternates: {
+      canonical: `${base}/fundraising/scholarships/${row.slug}`,
+    },
   }
 }
 
