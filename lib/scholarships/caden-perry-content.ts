@@ -45,25 +45,25 @@ export const CADEN_WHO_CAN_NOMINATE = `Coaches, parents, guardians, teachers, co
 If a parent is nominating their own child, a supporting reference from outside the immediate family is required — a coach, teacher, or community member who can independently validate the nomination.`
 
 export const CADEN_APPLICATION_INTRO =
-  "One submission. One prompt. Written or video — whichever best captures this athlete's story."
+  "One submission. One question. Video is encouraged, but written nominations are welcome."
 
 export const CADEN_APPLICATION_WRITTEN =
-  "Written: 250–500 words responding to the prompt below."
+  "Written: 250–500 words responding to the question below."
 
 export const CADEN_APPLICATION_VIDEO =
-  "Video: 2–4 minutes. Film yourself speaking directly to the committee. No production required — a phone video is fine. What matters is authenticity, not quality."
+  "Video: 2–4 minutes. A simple phone video is perfect. What matters is authenticity, not production quality."
 
-export const CADEN_APPLICATION_PROMPT_LABEL = "The prompt:"
+export const CADEN_APPLICATION_PROMPT_LABEL = "The question:"
 
 export const CADEN_APPLICATION_PROMPT_QUOTE =
   "Describe a specific moment or period when this athlete faced genuine adversity — on or off the mat — and what their response revealed about their character. Use concrete examples. Tell us what you saw."
 
-export const CADEN_APPLICATION_DETAILS = `The application also includes athlete and nominator contact details and one supporting reference. References are contacted only if the nomination reaches the finalist stage.
+export const CADEN_APPLICATION_DETAILS = `The nomination also includes athlete and nominator contact details and one supporting reference. References are contacted only if the nomination reaches the finalist stage.
 
 An optional 200-word field allows nominators to share any additional context the committee should know.`
 
 export const CADEN_APPLICATION_AI_NOTE =
-  "Authenticity and specific examples matter more than writing polish or video production quality. The strongest nominations will sound like real people describing real moments they witnessed."
+  "Authenticity matters more than polish. Generic nominations are less helpful than real details: what happened, who saw it, how the athlete responded, and why it mattered."
 
 export const CADEN_REVIEW_PROCESS_STAGES: { title: string; body: string }[] = [
   {

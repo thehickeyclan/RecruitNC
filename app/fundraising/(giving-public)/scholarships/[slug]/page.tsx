@@ -338,7 +338,7 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
             </section>
 
             <section className="mt-16 border-t border-white/[0.06] pt-14">
-              <h2 className={df("text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]")}>The application</h2>
+              <h2 className={df("text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]")}>The nomination</h2>
               <p className="mt-6 text-sm leading-relaxed text-white/72">{CADEN_APPLICATION_INTRO}</p>
               <p className="mt-5 text-sm font-semibold text-white/85">{CADEN_APPLICATION_WRITTEN}</p>
               <p className="mt-4 text-sm leading-relaxed text-white/72">{CADEN_APPLICATION_VIDEO}</p>
@@ -416,7 +416,7 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
               href="/fundraising/scholarships#selection-committee"
               className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline"
             >
-              Selection committee & how we review applications →
+              Selection committee & how we review nominations →
             </HardLink>
           </p>
         ) : null}
