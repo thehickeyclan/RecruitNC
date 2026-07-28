@@ -2,6 +2,9 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 
 const FALLBACK_TOC_MANAGER_EMAILS = new Set([
+  "matthickey@gmail.com",
+  "matt@ncwrestlingunited.com",
+  "info@ncwrestlingunited.com",
   "lisa.hickey@yahoo.com",
   "justin.usmc@yahoo.com",
   "jeannineaponte@gmail.com",
@@ -23,13 +26,48 @@ export async function requireTocInvitationManager(): Promise<TocInvitationManage
   }
 
   const admin = createAdminClient()
-  const { data: profile, error: profileError } = await admin
+  let profile: { is_admin?: boolean; role?: string } | null = null
+  let profileErrorMessage: string | null = null
+
+  const byUserId = await admin
     .from("user_profiles")
     .select("is_admin, role")
     .eq("user_id", user.id)
     .maybeSingle()
-  if (profileError) {
-    console.warn("[toc invitation manager auth] profile lookup failed", profileError.message)
+  if (byUserId.error) {
+    profileErrorMessage = byUserId.error.message
+  } else {
+    profile = byUserId.data as { is_admin?: boolean; role?: string } | null
+  }
+
+  if (!profile) {
+    const byId = await admin
+      .from("user_profiles")
+      .select("is_admin, role")
+      .eq("id", user.id)
+      .maybeSingle()
+    if (byId.error) {
+      profileErrorMessage = profileErrorMessage ?? byId.error.message
+    } else {
+      profile = byId.data as { is_admin?: boolean; role?: string } | null
+    }
+  }
+
+  if (!profile) {
+    const byEmail = await admin
+      .from("user_profiles")
+      .select("is_admin, role")
+      .ilike("email", email)
+      .maybeSingle()
+    if (byEmail.error) {
+      profileErrorMessage = profileErrorMessage ?? byEmail.error.message
+    } else {
+      profile = byEmail.data as { is_admin?: boolean; role?: string } | null
+    }
+  }
+
+  if (!profile && profileErrorMessage) {
+    console.warn("[toc invitation manager auth] profile lookup failed", profileErrorMessage)
   }
   if (profile?.is_admin || profile?.role === "admin") {
     return { ok: true, userId: user.id, email, isAdmin: true }
