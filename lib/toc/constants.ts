@@ -159,6 +159,24 @@ export const TOC_COMPETITION_MATS = {
   ],
 } as const
 
+export const TOC_SUPPORT_DONATIONS = {
+  eyebrow: "Help resource the stage",
+  headline: "Support Tournament of Champions",
+  lead:
+    "Families and supporters can help NC United resource the Tournament of Champions experience — mats, officials, awards, production, hospitality, and the details that make this more than another weekend tournament.",
+  qrSrc: "/images/toc/toc-donation-qr.svg",
+  qrAlt: "QR code to support Tournament of Champions through the NC United Training Fund",
+  href: "/fundraising/training-fund?source=toc#spartan-checkout",
+  ctaLabel: "Donate to support TOC",
+  note:
+    "Gifts are charitable contributions to NC United Wrestling’s governed Training Fund. NC United applies support toward wrestling development, event resources, and exempt-purpose program needs.",
+  bullets: [
+    "Scan the QR code at the event or share the link with family and supporters.",
+    "Every gift helps raise the standard for athlete experience, awards, operations, and production.",
+    "This is separate from ticket sales and separate from The Caden Perry Warrior Scholarship fund.",
+  ],
+} as const
+
 export const TOC_WEIGHT_CLASSES = [
   117, 125, 133, 141, 149, 157, 165, 174, 184, 197, 285,
 ] as const
