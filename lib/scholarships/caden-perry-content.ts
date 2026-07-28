@@ -22,9 +22,9 @@ At just 16 years old, Caden gained his eternal peace, but the impact he left beh
  */
 export const CADEN_PUBLIC_PAGE_FALLBACKS = {
   award_amount_cents: 100_000,
-  applications_open_date: "2026-05-15",
-  applications_close_date: "2026-05-31",
-  award_announcement_date: "2026-06-15",
+  applications_open_date: "2026-08-01",
+  applications_close_date: "2026-08-30",
+  award_announcement_date: "2026-09-19",
 } as const
 
 /** Intent of the award — written to match the “About Caden” story on this page. Edit with family approval when copy changes. */
@@ -48,10 +48,10 @@ export const CADEN_APPLICATION_INTRO =
   "One submission. One prompt. Written or video — whichever best captures this athlete's story."
 
 export const CADEN_APPLICATION_WRITTEN =
-  "Written: 400–600 words responding to the prompt below."
+  "Written: 250–500 words responding to the prompt below."
 
 export const CADEN_APPLICATION_VIDEO =
-  "Video: 3–5 minutes. Film yourself speaking directly to the committee. No production required — a phone video is fine. What matters is authenticity, not quality."
+  "Video: 2–4 minutes. Film yourself speaking directly to the committee. No production required — a phone video is fine. What matters is authenticity, not quality."
 
 export const CADEN_APPLICATION_PROMPT_LABEL = "The prompt:"
 
@@ -62,25 +62,25 @@ export const CADEN_APPLICATION_DETAILS = `The application also includes athlete 
 
 An optional 200-word field allows nominators to share any additional context the committee should know.`
 
-export const CADEN_APPLICATION_AI_NOTE = `A note on AI:
-We strongly encourage nominators to write or record in their own voice. AI-generated essays are easy to identify and difficult to feel. The committee is looking for real moments told by real people who witnessed them. The most powerful nominations will be imperfect, specific, and true. Please write your own words.`
+export const CADEN_APPLICATION_AI_NOTE =
+  "Authenticity and specific examples matter more than writing polish or video production quality. The strongest nominations will sound like real people describing real moments they witnessed."
 
 export const CADEN_REVIEW_PROCESS_STAGES: { title: string; body: string }[] = [
   {
     title: "Intake",
-    body: "After applications close on May 31, NC United reviews each submission for completeness. Every eligible nomination receives a blind-review ID. Athlete names and school affiliations are removed before voting members see any application.",
+    body: "After nominations close on August 30, NC United reviews each submission for completeness. Eligible nominations move into review.",
   },
   {
-    title: "Blind scoring",
-    body: "Each voting member scores independently on the five weighted criteria (1–5 per criterion). Scores remain private until every voting member has submitted — then all scores are revealed simultaneously for deliberation.",
+    title: "Review",
+    body: "The committee looks for a documented response to genuine adversity, character, impact on others, and a wrestling-forged mindset.",
   },
   {
     title: "Finalists",
-    body: "The top applications by combined score advance to the finalist stage. At this point names are revealed to the full panel. The Perry family representative reviews finalists and provides written commentary before the final vote.",
+    body: "Finalists are reviewed with the Perry family so the award stays true to Caden's legacy.",
   },
   {
-    title: "Recipient selection",
-    body: "Voting members select one recipient by majority vote. All applicants are notified with respect and care. Raw scores are never shared.",
+    title: "Recipient",
+    body: "The inaugural recipient is honored September 19 during the NC United Tournament of Champions in Apex.",
   },
 ]
 
@@ -110,29 +110,25 @@ export type SelectionCriterionCard = {
 
 export const CADEN_SELECTION_CRITERIA_CARDS: SelectionCriterionCard[] = [
   {
-    title: "Resilience",
+    title: "Response to adversity",
     body: "Evidence of facing real adversity — on or off the mat — and continuing forward.",
   },
   {
-    title: "Character",
+    title: "Character and integrity",
     body: "How coaches, teammates, and community members describe this athlete when no one is watching.",
   },
   {
-    title: "Perseverance",
-    body: "A consistent pattern of showing up when circumstances were difficult.",
-  },
-  {
-    title: "Heart",
+    title: "Impact on others",
     body: "Competing for something bigger than themselves. Lifting others. Representing their program and community with integrity.",
   },
   {
-    title: "Mindset",
+    title: "Wrestling-forged mindset",
     body: "Evidence that wrestling is building something lasting — in the classroom, the community, and life beyond the sport.",
   },
 ]
 
 export const CADEN_SELECTION_INTRO =
-  "Applications are scored on five criteria. Athletic record and win-loss are not factors."
+  "The award is not based on rankings, records, championships, recruiting status, or academic achievement. We are looking for the way a wrestler responds when life gets hard."
 
 export const CADEN_SELECTION_FOOTNOTE =
   "Academic record, win-loss record, ranking, and school or club affiliation are not selection criteria."

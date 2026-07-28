@@ -16,10 +16,6 @@ import {
   CADEN_APPLICATION_WRITTEN,
   CADEN_AWARD_SPIRIT,
   CADEN_CLOSING_TAGLINE_FULLWIDTH,
-  CADEN_COMMITTEE_NOTE_BLIND,
-  CADEN_COMMITTEE_NOTE_JUSTIN,
-  CADEN_PAGE_FAMILY_REPRESENTATIVE,
-  CADEN_PAGE_STANDING_COMMITTEE,
   CADEN_PUBLIC_PAGE_FALLBACKS,
   CADEN_REVIEW_PROCESS_STAGES,
   CADEN_SELECTION_CRITERIA_CARDS,
@@ -370,57 +366,14 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
             </section>
 
             <section className="mt-16 border-t border-white/[0.06] pt-14">
-              <h2 className={df("text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]")}>Selection committee</h2>
-              <p className={df("mt-6 text-[11px] font-bold uppercase tracking-[0.14em] text-white/75")}>
-                Standing committee — all NC United scholarships
+              <h2 className={df("text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]")}>Family voice</h2>
+              <p className="mt-5 max-w-3xl text-sm leading-relaxed text-white/72">
+                NC United reviews nominations with the Perry family so the award stays connected to Caden&apos;s story and
+                the warrior spirit it is meant to recognize.
               </p>
-              <div className="mt-4 overflow-x-auto rounded-xl border border-white/[0.08]">
-                <table className="w-full min-w-[420px] border-collapse text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-white/15 bg-black/20 text-[10px] font-bold uppercase tracking-wide text-[#C8A94A]/95">
-                      <th className="px-4 py-3 pr-3">Name</th>
-                      <th className="px-3 py-3">Role</th>
-                      <th className="px-3 py-3">Seat</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-white/78">
-                    {CADEN_PAGE_STANDING_COMMITTEE.map((row) => (
-                      <tr key={row.name} className="border-b border-white/[0.06]">
-                        <td className="px-4 py-3 font-medium text-white">{row.name}</td>
-                        <td className="px-3 py-3">{row.role}</td>
-                        <td className="px-3 py-3 text-white/65">{row.seat}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              <p className={df("mt-10 text-[11px] font-bold uppercase tracking-[0.14em] text-white/75")}>
-                This scholarship — family representative
-              </p>
-              <div className="mt-4 overflow-x-auto rounded-xl border border-white/[0.08]">
-                <table className="w-full min-w-[420px] border-collapse text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-white/15 bg-black/20 text-[10px] font-bold uppercase tracking-wide text-[#C8A94A]/95">
-                      <th className="px-4 py-3 pr-3">Name</th>
-                      <th className="px-3 py-3">Role</th>
-                      <th className="px-3 py-3">Seat</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-white/78">
-                    <tr className="border-b border-white/[0.06]">
-                      <td className="px-4 py-3 font-medium text-white">{CADEN_PAGE_FAMILY_REPRESENTATIVE.name}</td>
-                      <td className="px-3 py-3">{CADEN_PAGE_FAMILY_REPRESENTATIVE.role}</td>
-                      <td className="px-3 py-3 text-white/65">{CADEN_PAGE_FAMILY_REPRESENTATIVE.seat}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <p className="mt-8 text-xs italic leading-relaxed text-white/50">{CADEN_COMMITTEE_NOTE_JUSTIN}</p>
-              <p className="mt-4 text-xs italic leading-relaxed text-white/50">{CADEN_COMMITTEE_NOTE_BLIND}</p>
-              <p className="mt-6 text-xs leading-relaxed text-white/45">
-                Committee details for all funds also appear on the{" "}
+              <p className="mt-4 text-xs leading-relaxed text-white/45">
+                NC United keeps scholarship review records, conflict checks, and fund documentation internally. Committee
+                governance for all named funds also appears on the{" "}
                 <HardLink href="/fundraising/scholarships#selection-committee" className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
                   Scholarships hub
                 </HardLink>
@@ -526,7 +479,7 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
           {awards.length === 0 ? (
             <p className="mt-5 text-sm leading-relaxed text-white/55">
               {isCaden ? (
-                <>Inaugural award to be announced{announcePretty ? ` ${announcePretty}` : " June 15, 2026"}.</>
+                <>Inaugural award to be announced{announcePretty ? ` ${announcePretty}` : " September 19, 2026"}.</>
               ) : (
                 <>
                   Inaugural award to be announced{s.award_announcement_date ? ` (${s.award_announcement_date})` : ""}.

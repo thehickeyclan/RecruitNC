@@ -1,5 +1,6 @@
 import {
   TOC_GOFAN_TICKETS_URL,
+  TOC_CADEN_PERRY_WARRIOR_SCHOLARSHIP,
   TOC_CONFIRMED_COLLEGES,
   TOC_CONTACT_EMAIL,
   TOC_COMPETITION_MATS,
@@ -84,6 +85,7 @@ export async function answerTournamentOfChampionsQuestion(message: string): Prom
   const wantsVolunteer = hasAny(text, ["volunteer", "help", "worker", "workers"])
   const wantsSponsor = hasAny(text, ["sponsor", "sponsorship", "partner", "partners"])
   const wantsRegistration = hasAny(text, ["register", "registration", "fee", "cost", "pay", "payment", "confirm"])
+  const wantsScholarship = hasAny(text, ["scholarship", "caden", "perry", "warrior", "award", "nomination", "nominations"])
   const general =
     !wantsTickets &&
     !wantsSchedule &&
@@ -96,7 +98,8 @@ export async function answerTournamentOfChampionsQuestion(message: string): Prom
     !wantsCoaches &&
     !wantsVolunteer &&
     !wantsSponsor &&
-    !wantsRegistration
+    !wantsRegistration &&
+    !wantsScholarship
 
   if (general) {
     sections.push(
@@ -156,6 +159,24 @@ export async function answerTournamentOfChampionsQuestion(message: string): Prom
         [
           bulletList(TOC_TROPHIES_AND_AWARDS.items),
           "Only the champion at each weight earns the NC United Tournament of Champions jacket. Top three place on the podium; the jacket is earned on the mat, not sold.",
+        ].join("\n\n"),
+      ),
+    )
+  }
+
+  if (wantsScholarship || general) {
+    const s = TOC_CADEN_PERRY_WARRIOR_SCHOLARSHIP
+    sections.push(
+      section(
+        "Caden Perry Warrior Scholarship",
+        [
+          `${s.tagline}`,
+          s.award,
+          s.notAbout,
+          s.eligibility,
+          s.dates,
+          `${s.fundUseIntro}\n${bulletList(s.fundUses)}`,
+          `[Scholarship details](${s.href})`,
         ].join("\n\n"),
       ),
     )
