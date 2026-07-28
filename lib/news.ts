@@ -69,6 +69,7 @@ const DESIGNED_SHARE_BANNER_SLUGS = new Set([
   "nc-united-recruiting-awards-2026",
   "real-cost-elite-wrestling-nc-smarter-build",
   "class-of-2026-senior-sendoff",
+  "caden-perry-warrior-scholarship-announced",
 ])
 
 /** Designed list banners already include headline art — don't overlay title on share images. */
@@ -116,6 +117,28 @@ const ALL_NEWS: NewsItem[] = [
     author: "NC United",
     shareHeroCropOnly: true,
     pinToTop: true,
+    isAnnouncement: true,
+  },
+  {
+    id: "caden-perry-warrior-scholarship-announced",
+    slug: "caden-perry-warrior-scholarship-announced",
+    title: "NC United Announces The Caden Perry Warrior Scholarship",
+    subtitle: "A $1,000 wrestling-support award honoring courage, resilience and the refusal to quit.",
+    summary:
+      "Presented annually at the Tournament of Champions, The Caden Perry Warrior Scholarship will recognize a North Carolina wrestler whose response to genuine adversity reflects Caden’s warrior spirit.",
+    href: "/news/caden-perry-warrior-scholarship-announced",
+    date: "2026-07-28",
+    image: "/scholarships/caden-perry/warrior-scholarship-share-card-wide.png",
+    imagePosition: "center",
+    imageFit: "contain",
+    imageBannerBgClass: "bg-[#061224]",
+    newsListBanner: true,
+    category: "SCHOLARSHIP",
+    categoryBadgeClass: "bg-[#C8A94A]",
+    readTime: "4 min read",
+    author: "NC United",
+    shareHeroCropOnly: true,
+    shareStoryImage: "/scholarships/caden-perry/warrior-scholarship-share-card.png",
     isAnnouncement: true,
   },
   {
