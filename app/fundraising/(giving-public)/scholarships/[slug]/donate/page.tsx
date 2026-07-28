@@ -20,6 +20,7 @@ export default async function ScholarshipDonatePage({ params }: { params: Promis
   const { slug } = await params
   const s = await getScholarshipBySlug(slug)
   if (!s) notFound()
+  const isCaden = s.slug === "caden-perry"
 
   return (
     <div
@@ -33,6 +34,12 @@ export default async function ScholarshipDonatePage({ params }: { params: Promis
         <h1 className="font-[family-name:var(--font-fundraising-display)] mt-10 text-2xl font-black uppercase text-white">
           Donate
         </h1>
+        {isCaden ? (
+          <p className="mt-4 rounded-xl border border-[#C8A94A]/30 bg-[#C8A94A]/10 p-4 text-base font-semibold leading-relaxed text-[#f5e6b8]">
+            One North Carolina wrestler will receive $1,000 in wrestling support, applied directly to documented training
+            and competition expenses.
+          </p>
+        ) : null}
         <p className="mt-4 text-sm leading-relaxed text-white/65">
           Your gift supports <strong className="text-white/85">{s.name}</strong> as a charitable contribution to NC United
           Wrestling — North Carolina 501(c)(3) — administered under NC United policy. Checkout is secure; acknowledgement email follows
