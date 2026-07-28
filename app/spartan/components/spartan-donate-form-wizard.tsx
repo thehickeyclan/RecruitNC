@@ -115,6 +115,7 @@ export function SpartanDonateFormWizard({
   fundraisingHubPrefillCode = null,
   fundraisingHubPrefillLabel = null,
   fundraisingHubReturnSlug = null,
+  fundraisingHubFundLabel = null,
   fundraisingHubDefaultTrainingFund = false,
 }: {
   fundraisingHub?: boolean
@@ -123,14 +124,21 @@ export function SpartanDonateFormWizard({
   fundraisingHubPrefillLabel?: string | null
   /** Slug for Stripe return URLs (thanks/cancel on this athlete page) */
   fundraisingHubReturnSlug?: string | null
+  /** Visible destination label for fund-specific hub checkout, e.g. a named scholarship. */
+  fundraisingHubFundLabel?: string | null
   /** Open donate flow on NC United Training Fund (`/fundraising/training-fund`). */
   fundraisingHubDefaultTrainingFund?: boolean
 }) {
   const searchParams = useSearchParams()
   const fh = Boolean(fundraisingHub)
+  const fundraisingHubReturnSlugLower = (fundraisingHubReturnSlug ?? "").trim().toLowerCase()
+  const scholarshipFundCheckout = fh && fundraisingHubReturnSlugLower.startsWith("scholarships/")
+  const destinationFundLabel = scholarshipFundCheckout
+    ? (fundraisingHubFundLabel?.trim() || "this scholarship fund")
+    : "NC United Training Fund"
   const spartanTrainingFundOnly = !fh && isSpartanTeamPageAthleteDonationsDisabled()
   /** `/fundraising/athletes/[slug]` embed: not the general Make a gift hub */
-  const athleteGiftPageEmbed = fh && Boolean((fundraisingHubReturnSlug ?? "").trim())
+  const athleteGiftPageEmbed = fh && Boolean(fundraisingHubReturnSlugLower) && !scholarshipFundCheckout
 
   const publicSupporterListHelp = athleteGiftPageEmbed
     ? "On this athlete's gift page and in team fundraiser activity, show your name or hide it."
@@ -275,8 +283,7 @@ export function SpartanDonateFormWizard({
       return
     }
 
-    const fhRet = (fundraisingHubReturnSlug ?? "").trim().toLowerCase()
-    if (fh && fhRet.startsWith("scholarships/")) {
+    if (scholarshipFundCheckout) {
       setFlow("donate")
       setTierPreference("")
       setDonateMode("general")
@@ -346,7 +353,7 @@ export function SpartanDonateFormWizard({
       setDonateStep(1)
       setAmountDollars("50")
     }
-  }, [searchParams, fundraisingHub, fundraisingHubPrefillCode, fundraisingHubPrefillLabel, fundraisingHubDefaultTrainingFund, fundraisingHubReturnSlug, spartanTrainingFundOnly])
+  }, [searchParams, fundraisingHub, fundraisingHubPrefillCode, fundraisingHubPrefillLabel, fundraisingHubDefaultTrainingFund, fundraisingHubReturnSlug, scholarshipFundCheckout, spartanTrainingFundOnly])
 
   useEffect(() => {
     const q = athleteQuery.trim()
@@ -486,7 +493,7 @@ export function SpartanDonateFormWizard({
         })
       }
       if (donateMode === "general" && donateStep >= 3) {
-        items.push({ id: "fund", kicker: "Where it goes", text: "NC United Training Fund" })
+        items.push({ id: "fund", kicker: "Where it goes", text: destinationFundLabel })
       }
       if (donateStep >= 4 && amountCents >= 500) {
         items.push({ id: "amount", kicker: "Your gift", text: formatUsd(amountCents) })
@@ -511,6 +518,7 @@ export function SpartanDonateFormWizard({
     amountCents,
     teeEligible,
     shirtSize,
+    destinationFundLabel,
   ])
 
   function goToDonate() {
@@ -915,7 +923,7 @@ export function SpartanDonateFormWizard({
                 Donate
               </button>
               <p className="text-[10px] leading-snug text-[#777]">
-                <strong className="text-[#999]">Named wrestler</strong> or <strong className="text-[#8ab4d8]">NC United Training Fund</strong> —{" "}
+                <strong className="text-[#999]">Named wrestler</strong> or <strong className="text-[#8ab4d8]">{destinationFundLabel}</strong> —{" "}
                 <strong className="text-[#C8A94A]">$5 min</strong>
               </p>
             </div>
@@ -1021,7 +1029,7 @@ export function SpartanDonateFormWizard({
                   }}
                   className={`min-h-[48px] rounded border px-3 py-3 text-left text-[13px] font-bold leading-snug text-[#ccc] hover:border-[#666] sm:text-sm ${dField}`}
                 >
-                  <span className="block text-white/90">NC United Training Fund</span>
+                  <span className="block text-white/90">{destinationFundLabel}</span>
                   <span className="mt-2 block text-[11px] font-normal leading-snug text-[#9ca3af]">
                     Gift to NC United supporting wrestler development across North Carolina.
                   </span>
@@ -1062,7 +1070,7 @@ export function SpartanDonateFormWizard({
                   }}
                   className={`min-h-[48px] rounded border px-2 py-2.5 text-[13px] font-bold leading-snug text-[#ccc] hover:border-[#666] sm:px-3 sm:text-sm ${dField}`}
                 >
-                  {fh ? "Donate to the NC United Training Fund" : "NC United Training Fund"}
+                  {fh ? `Donate to ${destinationFundLabel}` : destinationFundLabel}
                 </button>
               </div>
             </>
@@ -1154,7 +1162,7 @@ export function SpartanDonateFormWizard({
                 className="font-medium text-[#C8A94A] underline underline-offset-2"
                 onClick={goToDonateGeneralFund}
               >
-                NC United Training Fund
+                {destinationFundLabel}
               </button>
             </p>
           </div>
@@ -1168,7 +1176,7 @@ export function SpartanDonateFormWizard({
             <p
               className={`mb-3 rounded border px-3 py-2 text-center text-sm font-semibold text-[#C8A94A] ${fh ? "border-white/15 bg-[#061224]/90" : "border-[#333] bg-[#0A0A0A]"}`}
             >
-              NC United Training Fund
+              {destinationFundLabel}
             </p>
           )}
           <div className="mb-3 flex flex-wrap gap-1.5">
@@ -1357,7 +1365,7 @@ export function SpartanDonateFormWizard({
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#888]">Review</p>
           <ul className="mt-2 space-y-1.5 text-sm text-[#ccc]">
             <li>
-              <span className="text-[#666]">Type:</span> {donateMode === "general" ? "NC United Training Fund" : "Training Fund — wrestler noted"}
+              <span className="text-[#666]">Type:</span> {donateMode === "general" ? destinationFundLabel : "Training Fund — wrestler noted"}
             </li>
             {donateMode === "athlete" && (
               <li>

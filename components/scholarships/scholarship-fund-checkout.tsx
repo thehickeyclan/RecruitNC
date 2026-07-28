@@ -56,7 +56,11 @@ export function ScholarshipFundCheckout({
           </p>
           <div className="mt-6 w-full text-left">
             <Suspense fallback={<FormFallback />}>
-              <SpartanDonateForm fundraisingHub fundraisingHubReturnSlug={ret} />
+              <SpartanDonateForm
+                fundraisingHub
+                fundraisingHubReturnSlug={ret}
+                fundraisingHubFundLabel={scholarshipName}
+              />
             </Suspense>
           </div>
         </div>
