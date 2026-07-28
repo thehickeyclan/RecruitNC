@@ -6,7 +6,7 @@ import { FundraisingActivityClient } from "./activity-client"
 export const metadata: Metadata = {
   title: "Donor activity | NC United Fundraising",
   description:
-    "Paid NC United fundraising checkouts by campaign — public activity log with optional campaign filter.",
+    "Aggregate NC United fundraising activity by campaign, without publishing individual supporter transactions.",
 }
 
 function ActivityFallback() {

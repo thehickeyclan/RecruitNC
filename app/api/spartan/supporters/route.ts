@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
 
   const rawCampaign = request.nextUrl.searchParams.get("campaign")?.trim()
   const allHubCampaigns = rawCampaign?.toLowerCase() === "all"
+  const summaryOnly = request.nextUrl.searchParams.get("summary") === "1"
 
   let resolvedCampaign = DEFAULT_FUNDRAISING_CAMPAIGN
   if (!allHubCampaigns) {
@@ -57,13 +58,15 @@ export async function GET(request: NextRequest) {
       const admin = createAdminClient()
       const correctionIndex = await fetchSpartanCreditCorrectionsIndex(admin)
       rows = applySpartanCreditCorrectionsToDonations(rowsRaw, correctionIndex)
-      const directory = await getFundraisingAthleteEntries(admin)
-      codeToFullName = fundraisingCodeToFullNameMap(directory)
+      if (!summaryOnly) {
+        const directory = await getFundraisingAthleteEntries(admin)
+        codeToFullName = fundraisingCodeToFullNameMap(directory)
+      }
     } catch (dirErr) {
       console.error("[spartan/supporters] directory / credit corrections", dirErr)
     }
 
-    const enriched = attachPublicSupporterFields(rows, codeToFullName)
+    const enriched = summaryOnly ? [] : attachPublicSupporterFields(rows, codeToFullName)
     const entries = enriched.map((r) => {
       const { giftSourceLabel, campaignNameLabel } = hubActivityGiftSourceLabels(
         r.spartanCampaignSlug,
@@ -89,7 +92,7 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    const byAthlete = buildSpartanPublicByAthlete(rows, codeToFullName)
+    const byAthlete = summaryOnly ? undefined : buildSpartanPublicByAthlete(rows, codeToFullName)
     const summary = buildSpartanPublicSupporterSummary(rows)
 
     const res = NextResponse.json({
@@ -107,8 +110,7 @@ export async function GET(request: NextRequest) {
         ncUnitedCommunityGiftCount: summary.ncUnitedCommunityGiftCount,
         ncUnitedCommunityRaceSignupCount: summary.ncUnitedCommunityRaceSignupCount,
       },
-      entries,
-      byAthlete,
+      ...(summaryOnly ? {} : { entries, byAthlete }),
     })
     /** Live totals: avoid shared CDN caching so `/fundraising/leaderboard` matches Stripe after new checkouts. */
     res.headers.set("Cache-Control", "private, no-store, must-revalidate")
