@@ -98,10 +98,10 @@ export function TocHero({ config, confirmedColleges = [] }: Props) {
             <div className="w-full max-w-xl lg:max-w-none lg:justify-self-end">
               <div className="relative overflow-hidden rounded-sm border-2 border-white/10 shadow-xl shadow-black/20">
                 <Image
-                  src="/images/toc/venue-apex-arena.png"
-                  alt="NC United Tournament of Champions venue — Hope Community Church Apex"
-                  width={1536}
-                  height={1024}
+                  src="/images/toc/tournament-of-champions-venue-entry.png"
+                  alt="Tournament of Champions welcome display inside the Apex venue"
+                  width={1447}
+                  height={1087}
                   className="h-auto w-full"
                   sizes="(min-width: 1024px) 40vw, 100vw"
                   priority

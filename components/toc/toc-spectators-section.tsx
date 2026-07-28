@@ -1,3 +1,4 @@
+import Image from "next/image"
 import { Armchair, Car, GraduationCap, Heart, Shield, Ticket, UtensilsCrossed } from "lucide-react"
 import { TocVarsityHeading, tocDisplayClass, tocMobileCtaClass, tocSectionClass } from "@/components/toc/toc-theme"
 import { TOC_SPECTATORS } from "@/lib/toc/constants"
@@ -51,6 +52,14 @@ export function TocSpectatorsSection() {
                 </div>
               </div>
               <p className="text-[#0B1D3A]/85 text-sm sm:text-base leading-relaxed mb-4">{concessions.lead}</p>
+              <Image
+                src="/images/toc/health-first-concessions.png"
+                alt="NC United health-first concessions station with fruit, sandwiches, snacks, and drinks"
+                width={1448}
+                height={1086}
+                className="mb-5 h-auto w-full rounded-sm border border-[#0B1D3A]/10"
+                sizes="(min-width: 1024px) 44vw, 100vw"
+              />
               <ul className="space-y-2 mb-4">
                 {concessions.highlights.map((line) => (
                   <li key={line} className="flex gap-2 text-sm text-[#0B1D3A]/85 leading-relaxed">
