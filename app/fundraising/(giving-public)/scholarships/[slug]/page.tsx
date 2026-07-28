@@ -16,6 +16,8 @@ import {
   CADEN_APPLICATION_WRITTEN,
   CADEN_AWARD_SPIRIT,
   CADEN_CLOSING_TAGLINE_FULLWIDTH,
+  CADEN_FUND_STATUS_COPY,
+  CADEN_NC_UNITED_SEED_COMMITMENT_CENTS,
   CADEN_PUBLIC_PAGE_FALLBACKS,
   CADEN_REVIEW_PROCESS_STAGES,
   CADEN_SELECTION_CRITERIA_CARDS,
@@ -75,6 +77,9 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
     badge === "open" ? "Applications open" : badge === "coming_soon" ? "Coming soon" : "Applications closed"
   const appsOpen = scholarshipApplicationsAreOpen(s)
   const isCaden = s.slug === "caden-perry"
+  const cadenCommunityDonationsCents = isCaden
+    ? Math.max(0, s.total_donated_cents - CADEN_NC_UNITED_SEED_COMMITMENT_CENTS)
+    : s.total_donated_cents
 
   const openDisplayRaw =
     isCaden && !s.applications_open_date ? CADEN_PUBLIC_PAGE_FALLBACKS.applications_open_date : s.applications_open_date
@@ -423,26 +428,48 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
 
         <section className="mt-14 rounded-xl border border-[#C8A94A]/25 bg-[#0B2545]/45 px-4 py-6 sm:px-6">
           <h2 className={df("text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]")}>{isCaden ? "Fund status" : "Program summary"}</h2>
+          {isCaden ? <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/68">{CADEN_FUND_STATUS_COPY}</p> : null}
           <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wide text-white/45">Total donated</p>
-              <p className="mt-2 tabular-nums text-xl font-black text-white">{formatUsdWhole(s.total_donated_cents)}</p>
-            </div>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wide text-white/45">Award amount</p>
+              <p className="text-[10px] font-bold uppercase tracking-wide text-white/45">
+                {isCaden ? "NC United seed commitment" : "Total donated"}
+              </p>
               <p className="mt-2 tabular-nums text-xl font-black text-white">
-                {awardAmountDisplayCents != null ? formatUsdWhole(awardAmountDisplayCents) : "—"}
+                {formatUsdWhole(isCaden ? CADEN_NC_UNITED_SEED_COMMITMENT_CENTS : s.total_donated_cents)}
               </p>
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wide text-white/45">Applications close</p>
-              <p className="mt-2 text-sm font-semibold text-white/85">{closePretty ?? s.applications_close_date ?? "—"}</p>
+              <p className="text-[10px] font-bold uppercase tracking-wide text-white/45">
+                {isCaden ? "Community donations" : "Award amount"}
+              </p>
+              {isCaden ? (
+                <p className="mt-2 tabular-nums text-xl font-black text-white">{formatUsdWhole(cadenCommunityDonationsCents)}</p>
+              ) : (
+                <p className="mt-2 tabular-nums text-xl font-black text-white">
+                  {awardAmountDisplayCents != null ? formatUsdWhole(awardAmountDisplayCents) : "—"}
+                </p>
+              )}
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wide text-white/45">Award announcement</p>
+              <p className="text-[10px] font-bold uppercase tracking-wide text-white/45">
+                {isCaden ? "2026 award amount" : "Applications close"}
+              </p>
+              <p className="mt-2 tabular-nums text-xl font-black text-white">
+                {isCaden
+                  ? awardAmountDisplayCents != null
+                    ? formatUsdWhole(awardAmountDisplayCents)
+                    : "—"
+                  : closePretty ?? s.applications_close_date ?? "—"}
+              </p>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wide text-white/45">
+                {isCaden ? "Award announcement" : "Award announcement"}
+              </p>
               <p className="mt-2 text-sm font-semibold text-white/85">{announcePretty ?? s.award_announcement_date ?? "—"}</p>
             </div>
           </div>
+          {isCaden ? <p className="mt-4 text-xs leading-relaxed text-white/45">Nominations close {closePretty ?? s.applications_close_date ?? "August 30, 2026"}.</p> : null}
         </section>
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2">

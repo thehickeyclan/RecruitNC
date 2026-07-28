@@ -71,6 +71,8 @@ export const TOC_CADEN_PERRY_WARRIOR_SCHOLARSHIP = {
     "Caden Perry embodied what wrestling is supposed to build: courage, resilience, discipline, heart, and an unwavering refusal to quit.",
   award:
     "The inaugural award provides $1,000 in wrestling support for one North Carolina wrestler whose response to genuine adversity reflects that same warrior spirit.",
+  seedCommitment:
+    "NC United has committed the first $1,000 to launch the fund. Community donations build on that commitment and help expand the award’s impact.",
   notAbout:
     "This is not an award for rankings, records, championships, recruiting status, or academic achievement — and the recipient does not have to compete in the Tournament of Champions.",
   eligibility:

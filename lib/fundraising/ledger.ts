@@ -68,6 +68,11 @@ export async function recordFundraisingLedgerSpartanCheckout(
   const athleteCodeRaw = ((resolvedAthleteCode ?? meta.athlete_code) || "").trim()
   const athleteCode = athleteCodeRaw ? athleteCodeRaw.toUpperCase() : null
   const manualName = (meta.manual_athlete_name || "").trim() || null
+  const scholarshipSlug = (meta.scholarship_slug || "").trim().toLowerCase()
+  const isScholarshipFund =
+    meta.fundraising_attribution === "scholarship_fund" ||
+    meta.fundraising_checkout_surface === "scholarship_fund" ||
+    Boolean(scholarshipSlug)
 
   const piRaw = session.payment_intent
   const stripePaymentIntentId =
@@ -80,7 +85,28 @@ export async function recordFundraisingLedgerSpartanCheckout(
   const usd = formatUsdFromCents(amountCents)
   let summary: string
   let bucketTo: string
-  if (athleteCode) {
+  let scholarshipId: string | null = null
+  let scholarshipName: string | null = null
+  if (isScholarshipFund && scholarshipSlug) {
+    const { data: scholarshipRow, error: scholarshipErr } = await admin
+      .from("scholarships")
+      .select("id, name")
+      .eq("slug", scholarshipSlug)
+      .maybeSingle()
+    if (scholarshipErr) {
+      console.warn("[fundraising-ledger] scholarship lookup skipped:", scholarshipErr.message)
+    }
+    const row = scholarshipRow as { id?: string | null; name?: string | null } | null
+    scholarshipId = row?.id ?? null
+    scholarshipName = row?.name?.trim() || scholarshipSlug
+    if (scholarshipId) {
+      summary = `Stripe gift ${usd} — scholarship “${scholarshipName}”`
+      bucketTo = `scholarship:${scholarshipSlug}`
+    } else {
+      summary = `Stripe gift ${usd} — scholarship fund (${scholarshipSlug})`
+      bucketTo = `scholarship:${scholarshipSlug}`
+    }
+  } else if (athleteCode) {
     summary = `Stripe gift ${usd} — credited athlete ${athleteCode}`
     bucketTo = "athlete_fundraising"
   } else if (manualName && manualName.length >= 2) {
@@ -103,6 +129,7 @@ export async function recordFundraisingLedgerSpartanCheckout(
     detail: session.customer_details?.email ?? null,
     stripe_checkout_session_id: session.id,
     stripe_payment_intent_id: stripePaymentIntentId,
+    scholarship_id: scholarshipId,
     athlete_code: athleteCode,
     bucket_from: "stripe",
     bucket_to: bucketTo,
@@ -110,6 +137,7 @@ export async function recordFundraisingLedgerSpartanCheckout(
       spartan_campaign: meta.spartan_campaign ?? null,
       fundraising_type: meta.fundraising_type ?? null,
       donor_name: meta.donor_name ?? session.customer_details?.name ?? null,
+      scholarship_slug: scholarshipSlug || null,
     },
   })
 }

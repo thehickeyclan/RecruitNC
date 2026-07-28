@@ -19,6 +19,78 @@ function autoAckEnabled() {
   return v !== "1" && v.toLowerCase() !== "true" && v.toLowerCase() !== "yes"
 }
 
+async function upsertScholarshipDonationFromCheckoutSession(
+  admin: SupabaseClient,
+  session: Stripe.Checkout.Session,
+): Promise<string | null> {
+  if (session.payment_status !== "paid") return null
+  const meta = (session.metadata ?? {}) as Record<string, string>
+  const scholarshipSlug = (meta.scholarship_slug || "").trim().toLowerCase()
+  const isScholarshipFund =
+    meta.fundraising_attribution === "scholarship_fund" ||
+    meta.fundraising_checkout_surface === "scholarship_fund" ||
+    Boolean(scholarshipSlug)
+  if (!isScholarshipFund || !scholarshipSlug) return null
+
+  const { data: scholarshipRow, error: scholarshipErr } = await admin
+    .from("scholarships")
+    .select("id")
+    .eq("slug", scholarshipSlug)
+    .maybeSingle()
+  if (scholarshipErr) {
+    console.error("[spartan-fayetteville-webhook-ack] scholarship lookup:", scholarshipErr.message)
+    return null
+  }
+  const scholarshipId = (scholarshipRow as { id?: string | null } | null)?.id
+  if (!scholarshipId) {
+    console.error("[spartan-fayetteville-webhook-ack] scholarship not found:", scholarshipSlug)
+    return null
+  }
+
+  const stripePaymentId = session.id
+  const { data: existing, error: existingErr } = await admin
+    .from("scholarship_donations")
+    .select("id")
+    .eq("stripe_payment_id", stripePaymentId)
+    .maybeSingle()
+  if (existingErr) {
+    console.error("[spartan-fayetteville-webhook-ack] scholarship donation lookup:", existingErr.message)
+    return null
+  }
+  const existingId = (existing as { id?: string | null } | null)?.id
+  if (existingId) return existingId
+
+  const donorName =
+    meta.donor_name?.trim() ||
+    (session.customer_details?.name as string | undefined)?.trim() ||
+    "Donor"
+  const donorEmail =
+    session.customer_details?.email?.trim() ||
+    (typeof session.customer_email === "string" ? session.customer_email.trim() : "") ||
+    null
+  const publicDisplayName = meta.donor_list_public === "false" ? "Anonymous" : donorName
+
+  const { data: inserted, error: insertErr } = await admin
+    .from("scholarship_donations")
+    .insert({
+      scholarship_id: scholarshipId,
+      donor_name: donorName,
+      donor_email: donorEmail,
+      amount_cents: session.amount_total ?? 0,
+      display_name: publicDisplayName,
+      stripe_payment_id: stripePaymentId,
+      receipt_sent: false,
+      source: "donor_checkout",
+    })
+    .select("id")
+    .maybeSingle()
+  if (insertErr) {
+    console.error("[spartan-fayetteville-webhook-ack] scholarship donation insert:", insertErr.message)
+    return null
+  }
+  return (inserted as { id?: string | null } | null)?.id ?? null
+}
+
 /**
  * Idempotent: sends 501(c)(3) acknowledgment for Fayetteville Spartan paid checkouts
  * and upserts `spartan_donation_receipt_emails` (same as admin send path).
@@ -140,6 +212,8 @@ export async function upsertSpartanDonationFromCheckoutSession(
   }
 
   if (session.payment_status === "paid") {
+    await upsertScholarshipDonationFromCheckoutSession(admin, session)
+
     try {
       await upsertSpartanOrderFromCheckoutSession(admin, session)
     } catch (e) {

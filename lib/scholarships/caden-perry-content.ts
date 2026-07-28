@@ -27,6 +27,11 @@ export const CADEN_PUBLIC_PAGE_FALLBACKS = {
   award_announcement_date: "2026-09-19",
 } as const
 
+export const CADEN_NC_UNITED_SEED_COMMITMENT_CENTS = 100_000
+
+export const CADEN_FUND_STATUS_COPY =
+  "NC United has committed the first $1,000 to launch the Caden Perry Warrior Scholarship. Community donations to this fund build on that commitment and help expand the award’s impact for North Carolina wrestlers facing adversity."
+
 /** Intent of the award — written to match the “About Caden” story on this page. Edit with family approval when copy changes. */
 export const CADEN_AWARD_SPIRIT = `This award honors a North Carolina wrestler who carries the kind of warrior spirit Caden lived — grit, heart, and discipline forged on the mat and carried into life. For Caden, wrestling was never only wins and losses; it was the foundation that built his character and his relentless mindset. The recipient we seek has faced genuine adversity — on or off the mat — and refused to be defined by it.
 
