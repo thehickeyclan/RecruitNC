@@ -24,7 +24,7 @@ describe("toc registration policy", () => {
   it("invite lines ask for verbal confirm only (no payment in email)", () => {
     const lines = tocInviteConfirmLines()
     expect(lines.join(" ")).toContain(String(TOC_CONFIRM_WITHIN_DAYS))
-    expect(lines.join(" ")).toContain("verbal yes")
+    expect(lines.join(" ")).toContain("secure card payment")
     expect(lines.join(" ")).not.toContain(formatTocRegistrationFee())
     expect(lines.join(" ")).not.toContain("August 1, 2026")
   })

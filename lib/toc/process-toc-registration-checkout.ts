@@ -3,6 +3,8 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { isTocRegistrationStripeMetadata } from "@/lib/toc/stripe-metadata"
 import { TOC_REGISTRATION_FEE_USD } from "@/lib/toc/registration-policy"
 import { orderShippingFields } from "@/lib/order-shipping"
+import { resolveAthleteNotificationEmails } from "@/lib/toc/invitation-service"
+import { sendTocAthleteConfirmedEmail } from "@/lib/toc/email"
 
 function generateOrderNumber(): string {
   return (
@@ -39,7 +41,7 @@ export async function processTocRegistrationCheckoutSession(
 
   const { data: invitation, error: invError } = await admin
     .from("toc_invitations")
-    .select("id, athlete_id, weight_class, status, payment_status, paid_at")
+    .select("id, athlete_id, weight_class, jacket_size, status, confirmed_at, payment_status, paid_at")
     .eq("id", invitationId)
     .maybeSingle()
 
@@ -62,15 +64,11 @@ export async function processTocRegistrationCheckoutSession(
     return true
   }
 
-  if (invitation.status !== "confirmed") {
-    console.warn("[toc/register] payment received but invitation not confirmed:", invitationId)
-  }
-
   const now = new Date().toISOString()
   const amountCents = session.amount_total ?? TOC_REGISTRATION_FEE_USD * 100
 
   if (invitation.payment_status !== "paid") {
-    const { data: athlete } = await admin.from("athletes").select("name").eq("id", athleteId).maybeSingle()
+    const { data: athlete } = await admin.from("athletes").select("*").eq("id", athleteId).maybeSingle()
     const athleteName = typeof athlete?.name === "string" ? athlete.name : "TOC athlete"
     const customerEmail =
       (session.customer_email ?? (session.customer_details as { email?: string } | null)?.email ?? "").trim() ||
@@ -119,6 +117,8 @@ export async function processTocRegistrationCheckoutSession(
     const { error: updateError } = await admin
       .from("toc_invitations")
       .update({
+        status: "confirmed",
+        confirmed_at: invitation.confirmed_at ?? now,
         payment_status: "paid",
         paid_at: now,
         stripe_session_id: session.id,
@@ -130,6 +130,21 @@ export async function processTocRegistrationCheckoutSession(
 
     if (updateError) {
       console.error("[toc/register] mark paid:", updateError.message)
+    } else {
+      const emails = await resolveAthleteNotificationEmails(
+        admin,
+        athleteId,
+        athlete as Record<string, unknown> | undefined,
+      )
+      const to = emails.length > 0 ? emails : customerEmail !== "unknown@example.com" ? [customerEmail] : []
+      if (to.length > 0) {
+        void sendTocAthleteConfirmedEmail({
+          to,
+          athleteName,
+          weightClass: Number(invitation.weight_class),
+          jacketSize: typeof invitation.jacket_size === "string" ? invitation.jacket_size : "On file",
+        })
+      }
     }
   }
 

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
+import Stripe from "stripe"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { sendTocAthleteConfirmedEmail } from "@/lib/toc/email"
 import {
   assertWeightClassHasCapacity,
   resolveAthleteNotificationEmails,
@@ -8,14 +8,29 @@ import {
 import { tocAthleteConfirmSchema } from "@/lib/toc/invitations"
 import {
   confirmDeadlineMessage,
+  formatTocRegistrationFee,
   isConfirmPastDeadline,
+  isRegistrationPaymentPastDue,
+  registrationPaymentDueDisplay,
   TOC_CONFIRM_WITHIN_DAYS,
+  TOC_REGISTRATION_FEE_COVERS,
+  TOC_REGISTRATION_FEE_USD,
 } from "@/lib/toc/registration-policy"
+import { buildTocRegistrationCheckoutMetadata, TOC_STRIPE_REGISTRATION_TYPE } from "@/lib/toc/stripe-metadata"
 
 export const dynamic = "force-dynamic"
 
+const stripeSecret = process.env.STRIPE_SECRET_KEY
+
 export async function POST(request: Request) {
   try {
+    if (!stripeSecret?.trim()) {
+      return NextResponse.json(
+        { ok: false, error: "Stripe is not configured. Contact NC United if this persists." },
+        { status: 503 },
+      )
+    }
+
     const body = await request.json()
     const parsed = tocAthleteConfirmSchema.safeParse(body)
     if (!parsed.success) {
@@ -75,14 +90,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: capacity.message }, { status: 400 })
     }
 
+    if (isRegistrationPaymentPastDue()) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: `Registration payment was due by ${registrationPaymentDueDisplay()}. Contact ${process.env.TOC_CONTACT_EMAIL ?? "info@ncwrestlingunited.com"}.`,
+        },
+        { status: 400 },
+      )
+    }
+
     const medicalNotes = input.medicalNotes?.trim() || null
     const now = new Date().toISOString()
 
     const { data: updated, error: updateError } = await admin
       .from("toc_invitations")
       .update({
-        status: "confirmed",
-        confirmed_at: now,
         updated_at: now,
         weight_class: input.weightClass,
         jacket_size: input.jacketSize,
@@ -108,7 +131,7 @@ export async function POST(request: Request) {
           { status: 503 },
         )
       }
-      return NextResponse.json({ ok: false, error: "Failed to confirm spot" }, { status: 500 })
+      return NextResponse.json({ ok: false, error: "Failed to save registration details" }, { status: 500 })
     }
     if (!updated) {
       return NextResponse.json({ ok: false, error: "Invitation was already updated. Refresh and try again." }, { status: 409 })
@@ -121,17 +144,55 @@ export async function POST(request: Request) {
       input.athleteId,
       athlete as Record<string, unknown> | undefined,
     )
+    const customerEmail = emails[0] ?? undefined
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin
+    const stripe = new Stripe(stripeSecret)
+    const amountCents = TOC_REGISTRATION_FEE_USD * 100
 
-    if (emails.length > 0) {
-      void sendTocAthleteConfirmedEmail({
-        to: emails,
-        athleteName,
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      customer_email: customerEmail,
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            unit_amount: amountCents,
+            product_data: {
+              name: `Tournament of Champions Registration (${TOC_STRIPE_REGISTRATION_TYPE})`,
+              description: `${formatTocRegistrationFee()} registration — tournament entry, ${TOC_REGISTRATION_FEE_COVERS}.`,
+            },
+          },
+          quantity: 1,
+        },
+      ],
+      success_url: `${baseUrl}/tournament-of-champions/register/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/tournament-of-champions/confirm?athlete=${encodeURIComponent(input.athleteId)}&cancelled=1`,
+      metadata: buildTocRegistrationCheckoutMetadata({
+        invitationId: updated.id,
+        athleteId: input.athleteId,
         weightClass: input.weightClass,
-        jacketSize: input.jacketSize,
-      })
+        athleteName,
+      }),
+    })
+
+    if (!session.url) {
+      return NextResponse.json({ ok: false, error: "Could not create checkout session." }, { status: 500 })
     }
 
-    return NextResponse.json({ ok: true, weightClass: input.weightClass })
+    const { error: patchError } = await admin
+      .from("toc_invitations")
+      .update({
+        payment_status: "pending",
+        stripe_session_id: session.id,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", updated.id)
+
+    if (patchError) {
+      console.error("[toc/athlete-confirm] patch checkout session:", patchError.message)
+    }
+
+    return NextResponse.json({ ok: true, checkoutUrl: session.url, weightClass: input.weightClass })
   } catch (e) {
     console.error("[toc/athlete-confirm]", e)
     return NextResponse.json({ ok: false, error: "Something went wrong" }, { status: 500 })
