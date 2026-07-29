@@ -1,4 +1,4 @@
-/** Set TOC_BRACKETS_PUBLIC_ENABLED=true when official draws should be visible to everyone. */
+/** When false (default), TOC brackets are admin-only — pages and APIs return 404 for everyone else. */
 export function tocBracketsPublicEnabled(): boolean {
   return process.env.TOC_BRACKETS_PUBLIC_ENABLED === "true"
 }

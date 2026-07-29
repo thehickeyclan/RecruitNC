@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/admin-auth"
 import { createAdminClient } from "@/lib/supabase/admin"
+import {
+  isTocNominationsTableMissingError,
+  TOC_NOMINATIONS_TABLE_SETUP_HINT,
+} from "@/lib/toc/nominations-admin"
 
 export const dynamic = "force-dynamic"
 
@@ -15,8 +19,19 @@ export async function GET() {
     .order("created_at", { ascending: false })
     .limit(500)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ nominations: data ?? [] })
+  if (error) {
+    if (isTocNominationsTableMissingError(error)) {
+      return NextResponse.json({
+        nominations: [],
+        tableMissing: true,
+        setupHint: TOC_NOMINATIONS_TABLE_SETUP_HINT,
+      })
+    }
+    console.error("[RecruitNC] admin toc nominations GET", error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  return NextResponse.json({ nominations: data ?? [], tableMissing: false })
 }
 
 export async function PATCH(request: Request) {
@@ -32,6 +47,11 @@ export async function PATCH(request: Request) {
 
   const admin = createAdminClient()
   const { error } = await admin.from("toc_nominations").update(updates).eq("id", id)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    if (isTocNominationsTableMissingError(error)) {
+      return NextResponse.json({ error: TOC_NOMINATIONS_TABLE_SETUP_HINT }, { status: 503 })
+    }
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
   return NextResponse.json({ ok: true })
 }
