@@ -82,6 +82,8 @@ create table if not exists public.toc_nominations (
   created_at timestamptz default CURRENT_TIMESTAMP
 );
 
+alter table public.toc_nominations add column if not exists club text;
+
 create index if not exists idx_toc_nominations_reviewed on public.toc_nominations(reviewed, created_at desc);
 
 create table if not exists public.toc_email_subscribers (

@@ -28,6 +28,7 @@ import {
   confirmDeadlineFromInvitedAt,
   isConfirmPastDeadline,
   TOC_CONFIRM_WITHIN_DAYS,
+  TOC_REGISTRATION_FEE_USD,
 } from "@/lib/toc/registration-policy"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 
@@ -467,8 +468,13 @@ export default function TocInvitationsAdminPage() {
             <p className="mt-1 text-xs text-muted-foreground">
               {loading
                 ? "Loading…"
+                : `$${(inviteStats.paid * TOC_REGISTRATION_FEE_USD).toLocaleString()} collected`}
+            </p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {loading
+                ? ""
                 : inviteStats.pendingPayment > 0
-                  ? `${inviteStats.pendingPayment} confirmed, unpaid`
+                  ? `${inviteStats.pendingPayment} confirmed, unpaid · $${(inviteStats.pendingPayment * TOC_REGISTRATION_FEE_USD).toLocaleString()} outstanding`
                   : inviteStats.accepted > 0
                     ? "All confirmed athletes paid"
                     : "Registration fees received"}

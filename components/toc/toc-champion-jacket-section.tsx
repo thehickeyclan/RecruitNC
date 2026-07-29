@@ -1,6 +1,7 @@
 import Image from "next/image"
 import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass } from "@/components/toc/toc-theme"
 import { TOC_BRAND, TOC_CHAMPION_JACKET, TOC_OFFICIAL_TEE, TOC_TROPHIES_AND_AWARDS } from "@/lib/toc/constants"
+import { TocApparelCarousel } from "@/components/toc/toc-apparel-carousel"
 
 function JacketProductShot({
   side,
@@ -130,16 +131,7 @@ export function TocChampionJacketSection() {
           className="mt-6 sm:mt-8 rounded-2xl border border-white/15 bg-[#06152c] p-4 shadow-2xl sm:p-6 lg:p-7 scroll-mt-24"
         >
           <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-            <div className="relative overflow-hidden rounded-xl border border-white/15 bg-black/40">
-              <Image
-                src={TOC_OFFICIAL_TEE.src}
-                alt={TOC_OFFICIAL_TEE.alt}
-                width={TOC_OFFICIAL_TEE.width}
-                height={TOC_OFFICIAL_TEE.height}
-                className="h-auto w-full object-contain"
-                sizes="(min-width: 1024px) 54vw, 100vw"
-              />
-            </div>
+            <TocApparelCarousel />
 
             <div>
               <p className={`text-[#D7B95A] text-sm sm:text-base mb-2 ${tocDisplayClass()} tracking-[0.18em] uppercase`}>
@@ -149,7 +141,7 @@ export function TocChampionJacketSection() {
                 {TOC_OFFICIAL_TEE.headline}
               </h3>
               <p className="mt-4 text-base leading-relaxed text-white/80 sm:text-lg">
-                Navy, gold, and white — built to match the stage. This is the official event tee for the first-ever
+                Navy, gold, and white — built to match the stage. The official tee and crewneck of the first-ever
                 NC United Tournament of Champions.
               </p>
               <ul className="mt-5 space-y-3 text-sm leading-relaxed text-white/80 sm:text-base">
