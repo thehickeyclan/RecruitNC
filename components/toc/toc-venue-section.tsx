@@ -1,3 +1,4 @@
+import Image from "next/image"
 import { ExternalLink, Layers, Lightbulb, MapPin, Trophy, Users } from "lucide-react"
 import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass, tocSectionClass } from "@/components/toc/toc-theme"
 import { TOC_VENUE, TOC_VENUE_FEATURES, TOC_VENUE_LOUNGES } from "@/lib/toc/constants"
@@ -16,7 +17,7 @@ export function TocVenueSection({ config }: Props) {
   return (
     <section id="venue" className={`relative bg-[#f4f5f7] border-y border-[#0B1D3A]/10 scroll-mt-20 ${tocSectionClass()}`}>
       <TocPatrioticBar className="absolute top-0 left-0 right-0" />
-      <div className="container mx-auto w-full px-4 sm:px-6 max-w-4xl pt-4">
+      <div className="container mx-auto w-full px-4 sm:px-6 max-w-6xl pt-4">
         <p className="text-[#CC0000] text-xs font-semibold uppercase tracking-[0.22em] mb-2">The venue</p>
         <TocVarsityHeading as="h2" className="mb-3 sm:mb-4">
           Built for the big stage
@@ -25,6 +26,21 @@ export function TocVenueSection({ config }: Props) {
           {venueName} · {TOC_VENUE.campus} — {TOC_VENUE.seatingLabel}. Pro lighting, video boards, and a dedicated
           atrium lounge for credentialed coaches and officials.
         </p>
+
+        <figure className="mb-8 overflow-hidden rounded-sm border-2 border-[#0B1D3A]/15 bg-[#071426] shadow-2xl shadow-[#0B1D3A]/20">
+          <Image
+            src="/images/toc/tournament-of-champions-venue-arena.png"
+            alt="Tournament of Champions event rendering showing two NC United mats inside the Apex venue"
+            width={1537}
+            height={1023}
+            className="h-auto w-full"
+            sizes="(min-width: 1024px) 1024px, 100vw"
+          />
+          <figcaption className="border-t border-white/10 bg-[#071426] px-4 py-3 text-xs leading-relaxed text-white/60 sm:px-5">
+            Event rendering: two purpose-built NC United mats, championship presentation, video boards, and seating designed
+            around the Tournament of Champions experience.
+          </figcaption>
+        </figure>
 
         <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
           {TOC_VENUE_FEATURES.map(({ title, description }, index) => {
