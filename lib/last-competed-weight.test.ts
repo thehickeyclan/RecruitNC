@@ -40,21 +40,39 @@ describe("resolveLastCompetedWeight", () => {
 })
 
 describe("buildProfileWeightDisplay", () => {
-  it("shows last competed as primary when it differs from listed", () => {
-    const display = buildProfileWeightDisplay("106", {
+  it("leads with the athlete's own listed weight, not last competed", () => {
+    // The profile value is what the athlete maintains and updates; last-competed is history
+    // and can be a season stale, so it belongs in the subline instead of the headline.
+    const display = buildProfileWeightDisplay("113", {
+      weight: "106",
+      year: 2026,
+      event: "NCHSAA States",
+    })
+    expect(display.displayWeight).toBe("113")
+    expect(display.listedWeight).toBe("113")
+    expect(display.lastCompeted?.weight).toBe("106")
+    expect(display.differsFromListed).toBe(true)
+  })
+
+  it("falls back to last competed only when the athlete has no listed weight", () => {
+    const display = buildProfileWeightDisplay(null, {
       weight: "116",
       year: 2026,
       event: "NHSCA Duals",
     })
     expect(display.displayWeight).toBe("116")
-    expect(display.listedWeight).toBe("106")
-    expect(display.differsFromListed).toBe(true)
+    expect(display.listedWeight).toBeNull()
   })
 
   it("falls back to listed when no tournament weight", () => {
     const display = buildProfileWeightDisplay("106", null)
     expect(display.displayWeight).toBe("106")
     expect(display.differsFromListed).toBe(false)
+  })
+
+  it("returns null when neither exists", () => {
+    const display = buildProfileWeightDisplay(null, null)
+    expect(display.displayWeight).toBeNull()
   })
 })
 
@@ -79,15 +97,17 @@ describe("candidatesFromPublicProfilePayload", () => {
     expect(last).toEqual({ weight: "157", year: 2026, event: "Fargo Nationals" })
   })
 
-  it("uses Fargo display weight when it differs from profile-listed weight", () => {
+  it("surfaces the Fargo weight as last competed while the listed weight leads", () => {
     const candidates = candidatesFromPublicProfilePayload({
       nhsca_results: [{ year: 2026, weight: "138" }],
       fargo_results: [{ year: 2026, weight: "144" }],
     })
     const last = resolveLastCompetedWeight(candidates)
     const display = buildProfileWeightDisplay("150", last)
-    expect(display.displayWeight).toBe("144")
+    // Headline stays the athlete's listed 150; Fargo's 144 is surfaced as last competed.
+    expect(display.displayWeight).toBe("150")
     expect(display.listedWeight).toBe("150")
+    expect(display.lastCompeted?.weight).toBe("144")
     expect(display.lastCompeted?.event).toBe("Fargo Nationals")
     expect(display.differsFromListed).toBe(true)
   })

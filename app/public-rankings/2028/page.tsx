@@ -149,7 +149,7 @@ export default function Class2028RankingsPage() {
     }
   }
 
-  // Filter by search term and limit to top 30
+  // Filter by search term and limit to the official public top 20
   const filteredRankings = rankings
     .filter((ranking) => {
       if (!searchTerm) return true
@@ -161,7 +161,7 @@ export default function Class2028RankingsPage() {
         (ranking.weight_display?.toLowerCase() || "").includes(term)
       )
     })
-    .filter((ranking) => ranking.prospect_ranking && ranking.prospect_ranking <= 30)
+    .filter((ranking) => ranking.prospect_ranking && ranking.prospect_ranking <= 20)
 
   const hasActiveFilters = searchTerm !== ""
 
@@ -542,7 +542,7 @@ export default function Class2028RankingsPage() {
                 <CardContent className="p-6 sm:p-8 text-center flex flex-col items-center justify-center h-full">
                   <Trophy className="h-12 w-12 sm:h-16 sm:w-16 mb-4 text-[#D3B574]" />
                   <h3 className="text-xl sm:text-2xl font-bold mb-2">Class of 2027 Rankings</h3>
-                  <p className="text-blue-100 mb-4">View the Top 30 ranked prospects for 2027</p>
+                  <p className="text-blue-100 mb-4">View the Top 20 ranked prospects for 2027</p>
                   <Button
                     variant="secondary"
                     size="lg"

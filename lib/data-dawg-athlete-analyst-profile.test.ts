@@ -78,7 +78,7 @@ describe("buildAnalystLeadParagraph", () => {
     expect(lead).toContain("four-time NCHSAA champion")
     expect(lead).toContain("three-time NHSCA All-American")
     expect(lead).toContain("Super 32 All-American")
-    expect(lead).toContain("RecruitNC's No. 1 prospect in the Class of 2026")
+    expect(lead).not.toContain("RecruitNC's No. 1 prospect in the Class of 2026")
     expect(lead).toMatch(/207.6/)
     expect(lead).toContain("committed to Appalachian State")
     expect(lead).not.toMatch(/back-to-back/i)
@@ -114,7 +114,7 @@ describe("buildAnalystLeadParagraph", () => {
     expect(lead).not.toMatch(/He went /)
   })
 
-  it("does not publish RecruitNC prospect rank outside the official top 30", () => {
+  it("does not publish RecruitNC prospect rank outside the official top 20", () => {
     const lead = buildAnalystLeadParagraph(
       {
         displayName: "Abdul-Jamil Zaggout",
@@ -206,7 +206,7 @@ describe("buildHistoricalRankingsMarkdown", () => {
   it("only emits verified ranks and clear chronological 4× membership", () => {
     const r = buildHistoricalRankingsMarkdown(sly)
     expect(r).toContain("#18 in NC history")
-    expect(r).toContain("RecruitNC #1")
+    expect(r).not.toContain("RecruitNC #1")
     expect(r).toContain("One of 17")
     expect(r).toMatch(/chronologically/i)
     expect(r).not.toMatch(/15th of 17/)
@@ -214,7 +214,7 @@ describe("buildHistoricalRankingsMarkdown", () => {
     expect(r).not.toContain("Career Win %")
   })
 
-  it("does not list RecruitNC rankings past the published top 30", () => {
+  it("does not list RecruitNC rankings past the published top 20", () => {
     const r = buildHistoricalRankingsMarkdown({
       displayName: "Abdul-Jamil Zaggout",
       highSchool: "West Forsyth",

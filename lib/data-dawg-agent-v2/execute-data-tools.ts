@@ -114,7 +114,7 @@ export async function toolPublicRankingsSearch(args: {
 
   const genderRaw = String(args.gender ?? "Male").trim()
   const gender = /^female$/i.test(genderRaw) ? "Female" : "Male"
-  const maxPublicRank = PUBLIC_RANKINGS_MAX_BY_YEAR[year] ?? 30
+  const maxPublicRank = PUBLIC_RANKINGS_MAX_BY_YEAR[year] ?? 20
   const limitCap = maxPublicRank
   const limit =
     args.limit != null && Number.isFinite(Number(args.limit))

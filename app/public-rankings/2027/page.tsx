@@ -69,7 +69,7 @@ export default function Class2027RankingsPage() {
       const params = new URLSearchParams({
         year: "2027",
         gender: selectedGender,
-        mode: "rankings", // Top 30 only
+        mode: "rankings", // Official public cap only
       })
 
       const response = await fetch(`/api/public-rankings?${params}`)
@@ -90,7 +90,7 @@ export default function Class2027RankingsPage() {
     }
   }
 
-  // Filter by search term and limit to top 30
+  // Filter by search term and limit to the official public top 20
   const filteredRankings = rankings
     .filter((ranking) => {
       if (!searchTerm) return true
@@ -102,7 +102,7 @@ export default function Class2027RankingsPage() {
         (ranking.weight_display?.toLowerCase() || "").includes(term)
       )
     })
-    .filter((ranking) => ranking.prospect_ranking && ranking.prospect_ranking <= 30)
+    .filter((ranking) => ranking.prospect_ranking && ranking.prospect_ranking <= 20)
 
   const hasActiveFilters = searchTerm !== ""
 
@@ -451,7 +451,7 @@ export default function Class2027RankingsPage() {
               <>
                 <div className="mb-6">
                   <div className="flex items-center justify-between mb-2">
-                    <h2 className="text-2xl font-bold text-white">Top 30 Wrestling Prospects</h2>
+                    <h2 className="text-2xl font-bold text-white">Top 20 Wrestling Prospects</h2>
                     <div className="text-sm text-white">Showing {filteredRankings.length} ranked prospects</div>
                   </div>
                   {lastUpdated && (

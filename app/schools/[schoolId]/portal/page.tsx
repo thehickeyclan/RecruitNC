@@ -5,6 +5,7 @@ import type React from "react"
 import { useEffect, useState, useRef, useMemo } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { useRouter, useSearchParams } from "next/navigation"
+import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -1947,8 +1948,10 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   const shouldShowRanking = (prospect: any): boolean => {
     // Only show rankings for NC athletes
     if (!isNCProspect(prospect)) return false
-    // Only show rankings 1-30
-    if (!prospect.prospect_ranking || prospect.prospect_ranking > 30) return false
+    const gradYear = Number(prospect.graduationyear)
+    if (!isPublicRankingsYearPublished(gradYear)) return false
+    // Only show official published public rankings
+    if (!prospect.prospect_ranking || prospect.prospect_ranking > getPublicRankingsMax(gradYear)) return false
     return true
   }
 

@@ -13,6 +13,7 @@ import {
   mergeCommitmentHonorBadgesForDisplay,
 } from "@/lib/commitment-card-honors"
 import { prefetchAthleteProfile } from "@/lib/prefetch-athlete-profile"
+import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 interface Athlete {
   id: string
   name: string
@@ -536,8 +537,12 @@ export function ProfessionalCommitmentCard({ athlete, listMode = false }: Profes
         ? Number(athlete.rankings.nc_rank)
         : null
   const ncRankPositive = rawNcRank != null && Number.isFinite(rawNcRank) && rawNcRank >= 1 ? rawNcRank : null
+  const ncRankClassYear = Number(athlete.graduationyear ?? athlete.graduationYear)
+  const ncRankPublicCap = isPublicRankingsYearPublished(ncRankClassYear)
+    ? getPublicRankingsMax(ncRankClassYear)
+    : 0
   /** Shown below header on card back only when ranked (header already shows Class of). */
-  const backCardNcRank = ncRankPositive != null && ncRankPositive <= 30 ? ncRankPositive : null
+  const backCardNcRank = ncRankPositive != null && ncRankPositive <= ncRankPublicCap ? ncRankPositive : null
 
   const honorBadges = useMemo(() => getCommitmentHonorBadgesForAthlete(athlete), [athlete])
 

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { yearFilterToApiParams } from "@/lib/prospects-directory"
+import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -439,11 +440,11 @@ export default function ProspectsAllClient({
             ? "Verbal"
             : "Uncommitted"
 
-      // Only show rank for athletes on our official rankings (top 30); show "G" for graduated (2025 and earlier)
+      // Only show rank for athletes on our official published rankings; show "G" for graduated (2025 and earlier)
       const gradYear = prospect.graduationyear
-      const isRankedClass = gradYear === 2026 || gradYear === 2027 || gradYear === 2028 || gradYear === 2029
+      const isRankedClass = isPublicRankingsYearPublished(gradYear)
       const rawRank = getRawRank(prospect)
-      const maxRankForClass = isRankedClass ? 30 : 0
+      const maxRankForClass = isRankedClass ? getPublicRankingsMax(gradYear) : 0
       const hasOfficialRank =
         Number.isFinite(rawRank) && rawRank >= 1 && rawRank <= maxRankForClass
       const prospectRanking = isRankedClass && hasOfficialRank ? rawRank : null

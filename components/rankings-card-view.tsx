@@ -155,8 +155,8 @@ export function RankingsCardView({
       {athletes.map((athlete, index) => (
         <>
           {showAdditionalDivider &&
-            (athlete.prospect_ranking ?? 0) === 30 &&
-            athletes.some((a) => (a.prospect_ranking ?? 0) > 30) && (
+            (athlete.prospect_ranking ?? 0) === 20 &&
+            athletes.some((a) => (a.prospect_ranking ?? 0) > 20) && (
               <div key={`divider-${athlete.id}`} className="col-span-full my-6">
                 <div
                   className={`flex items-center justify-center gap-3 py-4 rounded-lg ${
@@ -206,7 +206,7 @@ export function RankingsCardView({
                       G
                     </Badge>
                   )}
-                  {showRankBadges && athlete.rank_display !== "G" && (athlete.prospect_ranking ?? 0) <= 30 && (athlete.prospect_ranking ?? 0) > 0 && (
+                  {showRankBadges && athlete.rank_display !== "G" && (athlete.prospect_ranking ?? 0) <= 20 && (athlete.prospect_ranking ?? 0) > 0 && (
                     <Badge className="bg-blue-600 text-white font-bold text-base px-2.5 py-1">
                       #{athlete.prospect_ranking}
                     </Badge>

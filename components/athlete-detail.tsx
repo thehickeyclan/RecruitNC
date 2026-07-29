@@ -302,12 +302,11 @@ export function AthleteDetail({
     weightClass === "Not specified" || weightClass === ""
       ? "Not specified"
       : String(weightClass).replace(/\s*lbs?$/i, "")
-  const weightSubline =
-    profileWeightDisplay?.lastCompeted && profileWeightDisplay.differsFromListed
-      ? `Last: ${profileWeightDisplay.lastCompeted.event} ${profileWeightDisplay.lastCompeted.year} · Profile lists ${profileWeightDisplay.listedWeight}`
-      : profileWeightDisplay?.lastCompeted
-        ? `Last competed · ${profileWeightDisplay.lastCompeted.event} ${profileWeightDisplay.lastCompeted.year}`
-        : null
+  // Headline is the athlete's own listed weight; this line is the competed history beneath
+  // it, and always names the weight they actually wrestled at.
+  const weightSubline = profileWeightDisplay?.lastCompeted
+    ? `Last competed: ${profileWeightDisplay.lastCompeted.weight} lbs · ${profileWeightDisplay.lastCompeted.event} ${profileWeightDisplay.lastCompeted.year}`
+    : null
   const highSchool = athlete?.highschool || athlete?.high_school || "Not specified"
   const wrestlingClub = athlete?.wrestlingClub || "Not specified"
   const ncUnitedTeam = athlete?.ncUnitedTeam || ""
@@ -323,7 +322,7 @@ export function AthleteDetail({
     }
     return null
   })()
-  // Only show rank on profile when athlete is on our official rankings (top 30)
+  // Only show rank on profile when athlete is on our official published rankings.
   const graduationYearNumber = Number(graduationYear)
   const maxRankForClass = isPublicRankingsYearPublished(graduationYearNumber)
     ? getPublicRankingsMax(graduationYearNumber)
