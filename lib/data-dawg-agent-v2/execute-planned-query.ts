@@ -167,7 +167,7 @@ function formatNhscaMultiTimeByClass(payload: Record<string, unknown>): string {
 function formatRankings(payload: Record<string, unknown>): string {
   if (payload.available_years && !payload.rankings) {
     const years = payload.available_years as number[]
-    return `RecruitNC public prospect rankings are available for class years: **${years.join(", ")}** (top 30 per class).`
+    return `RecruitNC public prospect rankings are available for class years: **${years.join(", ")}** (top 20 per class).`
   }
   const rankings =
     (payload.rankings as Array<{

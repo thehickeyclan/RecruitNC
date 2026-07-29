@@ -40,7 +40,7 @@ export async function GET(request: Request) {
       )
     }
 
-    // Public /public-rankings pages: always top 30 only
+    // Public /public-rankings pages: always official published cap only
     const maxPublicRank = getPublicRankingsMax(yearNum)
 
     const supabase = createAdminClient()

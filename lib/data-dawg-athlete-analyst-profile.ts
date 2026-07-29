@@ -11,7 +11,7 @@ import { athleteHasCompletedHighSchoolCareer } from "@/lib/data-dawg-athlete-car
 import { FOUR_TIME_STATE_CHAMPIONS, FOUR_TIME_STATE_CHAMPIONS_COUNT } from "@/lib/four-time-state-champions"
 import { namesMatch } from "@/lib/nhsca-live/names-match"
 import type { NchsaaRowForProfile } from "@/lib/nchsaa-results-json"
-import { getPublicRankingsMax } from "@/lib/public-rankings-cap"
+import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 import type { TournamentResultForDisplay } from "@/lib/public-profile-data"
 
 export { athleteHasCompletedHighSchoolCareer } from "@/lib/data-dawg-athlete-career-status"
@@ -85,6 +85,7 @@ function isOfficialPublishedProspectRank(rank?: number | null, graduationYear?: 
     rank != null &&
     Number.isFinite(rank) &&
     rank > 0 &&
+    isPublicRankingsYearPublished(graduationYear) &&
     rank <= getPublicRankingsMax(graduationYear)
   )
 }

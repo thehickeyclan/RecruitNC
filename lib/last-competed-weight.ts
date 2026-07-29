@@ -69,7 +69,12 @@ export function resolveLastCompetedWeight(
 }
 
 export type ProfileWeightDisplay = {
-  /** Weight shown as primary on the profile (last competed when known, else listed). */
+  /**
+   * Weight shown as primary on the profile: the athlete's own listed weight, falling back to
+   * last competed only when they haven't set one. The profile value leads because it's what
+   * the athlete maintains — it's their current/target weight, while last-competed is history
+   * and can be a year stale. Last competed is shown beneath it for context.
+   */
   displayWeight: string | null
   listedWeight: string | null
   lastCompeted: LastCompetedWeight | null
@@ -82,7 +87,7 @@ export function buildProfileWeightDisplay(
   lastCompeted: LastCompetedWeight | null,
 ): ProfileWeightDisplay {
   const listedWeight = normalizeWeightClassLabel(listedRaw)
-  const displayWeight = lastCompeted?.weight ?? listedWeight
+  const displayWeight = listedWeight ?? lastCompeted?.weight ?? null
   const differsFromListed =
     lastCompeted != null &&
     listedWeight != null &&

@@ -5,6 +5,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { SlidersHorizontal } from "lucide-react"
+import type { StoreCategoryOption } from "@/lib/store/store-categories"
 
 const SIZE_OPTIONS = ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL"]
 const PRICE_RANGES = [
@@ -14,15 +15,9 @@ const PRICE_RANGES = [
   { id: "over-75", label: "Over $75" },
 ]
 
-const CATEGORY_OPTIONS = [
-  { id: "Singlets", label: "Singlets" },
-  { id: "T-Shirts", label: "T-Shirts" },
-  { id: "Sweatshirts", label: "Sweatshirts" },
-  { id: "Headwear", label: "Headwear" },
-  { id: "Accessories", label: "Accessories" },
-]
-
 interface FilterSidebarProps {
+  /** Derived from the loaded catalog by the store page — never a hardcoded list. */
+  categoryOptions: StoreCategoryOption[]
   selectedCategories: string[]
   selectedSizes: string[]
   selectedPriceRanges: string[]
@@ -34,6 +29,7 @@ interface FilterSidebarProps {
 }
 
 export function FilterSidebar({
+  categoryOptions,
   selectedCategories,
   selectedSizes,
   selectedPriceRanges,
@@ -90,7 +86,7 @@ export function FilterSidebar({
           <div>
             <p className="text-sm font-medium mb-3 text-white/70">Category</p>
             <div className="space-y-2">
-              {CATEGORY_OPTIONS.map((cat) => (
+              {categoryOptions.map((cat) => (
                 <label
                   key={cat.id}
                   className="flex items-center gap-2 cursor-pointer"
