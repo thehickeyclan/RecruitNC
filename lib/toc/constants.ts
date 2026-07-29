@@ -71,9 +71,10 @@ export const TOC_TROPHIES_AND_AWARDS = {
     },
     {
       title: "Most Outstanding Wrestler (MOW)",
-      eyebrow: "Champion of Champions",
+      eyebrow: "Special award",
       description:
         "The MOW is awarded to the athlete who delivers the tournament’s most exceptional overall performance.",
+      highlight: "Only one MOW Hammer is awarded each year.",
       image: {
         src: "/images/toc/toc-mow-hammer.png",
         alt: "Tournament of Champions Most Outstanding Wrestler hammer award design",
@@ -87,7 +88,8 @@ export const TOC_TROPHIES_AND_AWARDS = {
         "Overall impact on the tournament",
       ],
       note:
-        "Selected after the championship finals by a Tournament of Champions Selection Committee made up of tournament officials and NC United representatives.",
+        "The MOW Hammer is selected by the Tournament of Champions Selection Committee, comprised of tournament officials and NC United representatives following the championship finals.",
+      closing: "The Hammer Is Earned.",
     },
     {
       title: "Match of Champions",
