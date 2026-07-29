@@ -50,16 +50,65 @@ export const TOC_CHAMPION_JACKET = {
 
 /** Champion and placer awards — shown with the champion jacket section. */
 export const TOC_TROPHIES_AND_AWARDS = {
-  bracket: {
-    src: "/images/toc/tournament-of-champions-bracket-award.png",
-    alt: "Tournament of Champions 24 by 36 hard-copy champion bracket award",
-    width: 1536,
-    height: 1024,
-  },
   items: [
     "Every champion receives a 24×36 hard-copy bracket.",
     "All three placers receive custom Tournament of Champions medals — gold, silver, and bronze.",
     "The champion jacket remains winner-only: one wrestler per weight earns it.",
+  ],
+  featuredAwards: [
+    {
+      title: "Champion bracket + podium medals",
+      eyebrow: "Champions & placers",
+      description:
+        "Every bracket champion receives a 24×36 hard-copy bracket, and all three podium placers receive custom Tournament of Champions gold, silver, and bronze medals.",
+      image: {
+        src: "/images/toc/tournament-of-champions-bracket-award.png",
+        alt: "Tournament of Champions 24 by 36 hard-copy champion bracket award",
+        width: 1536,
+        height: 1024,
+      },
+      bullets: ["24×36 champion bracket", "Custom gold, silver, and bronze medals", "One champion jacket per weight"],
+    },
+    {
+      title: "Most Outstanding Wrestler (MOW)",
+      eyebrow: "Champion of Champions",
+      description:
+        "The MOW is awarded to the athlete who delivers the tournament’s most exceptional overall performance.",
+      image: {
+        src: "/images/toc/toc-mow-hammer.png",
+        alt: "Tournament of Champions Most Outstanding Wrestler hammer award design",
+        width: 1448,
+        height: 1086,
+      },
+      bullets: [
+        "Quality of competition",
+        "Dominance of victories",
+        "Championship match performance",
+        "Overall impact on the tournament",
+      ],
+      note:
+        "Selected after the championship finals by a Tournament of Champions Selection Committee made up of tournament officials and NC United representatives.",
+    },
+    {
+      title: "Match of Champions",
+      eyebrow: "Iron sharpens iron",
+      description:
+        "The Match of Champions recognizes the two wrestlers who compete in the tournament’s most exceptional match over the two-day event.",
+      image: {
+        src: "/images/toc/toc-match-of-champions-hammer.png",
+        alt: "Tournament of Champions Match of Champions hammer award design",
+        width: 1448,
+        height: 1086,
+      },
+      bullets: [
+        "Technical excellence",
+        "Competitiveness and significance",
+        "Sportsmanship",
+        "Lasting impact on the Tournament of Champions",
+      ],
+      note:
+        "Selected after the championship finals by the Tournament of Champions Selection Committee. The Match of Champions may occur during any round of the tournament.",
+    },
   ],
 } as const
 
@@ -265,6 +314,17 @@ export const TOC_SPECTATORS = {
     ],
     venuePolicy:
       "Venue-wide policy: no soda, chips, candy, or junk food sold or available anywhere in the building.",
+    foodTrucks: [
+      {
+        day: "Saturday confirmed",
+        name: "Atlas Nomads",
+        cuisine: "Mediterranean Cuisine",
+        imageSrc: "/images/toc/atlas-nomads.jpg",
+        imageAlt: "Atlas Nomads Mediterranean Cuisine logo",
+        description:
+          "Fresh, flavorful, and built for performance, Atlas Nomads brings authentic Mediterranean cuisine to the Tournament of Champions. Inspired by the rich culinary traditions of Morocco's Atlas Mountains, their menu features fresh ingredients, halal meats, and handcrafted favorites including gyro wraps, chicken wraps, rice bowls, falafel, hummus, tzatziki, and more. Whether you're looking for a protein-packed meal between matches or a healthy, satisfying lunch, Atlas Nomads offers fast, high-quality food that athletes, coaches, and families will love.",
+      },
+    ],
   },
   concessionsHours: "Open Saturday · wrestlers & fans",
   ticketOptions: [

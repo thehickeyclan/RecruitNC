@@ -1,5 +1,5 @@
 import Image from "next/image"
-import { Armchair, Car, GraduationCap, Heart, Shield, Ticket, UtensilsCrossed } from "lucide-react"
+import { Armchair, Car, ChevronDown, GraduationCap, Heart, Shield, Ticket, UtensilsCrossed } from "lucide-react"
 import { TocVarsityHeading, tocDisplayClass, tocMobileCtaClass, tocSectionClass } from "@/components/toc/toc-theme"
 import { TOC_SPECTATORS } from "@/lib/toc/constants"
 import { TocTicketCta } from "@/components/toc/toc-ticket-cta"
@@ -68,6 +68,46 @@ export function TocSpectatorsSection() {
                   </li>
                 ))}
               </ul>
+              {concessions.foodTrucks.length > 0 ? (
+                <div className="mb-4 space-y-3">
+                  {concessions.foodTrucks.map((truck) => (
+                    <details
+                      key={truck.name}
+                      className="group overflow-hidden rounded-sm border border-[#0B1D3A]/10 bg-white"
+                    >
+                      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-3 text-left marker:hidden">
+                        <span>
+                          <span className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-[#CC0000]">
+                            {truck.day}
+                          </span>
+                          <span className="mt-1 block text-sm font-black uppercase tracking-wide text-[#0B1D3A]">
+                            {truck.name} · {truck.cuisine}
+                          </span>
+                        </span>
+                        <ChevronDown
+                          className="h-5 w-5 shrink-0 text-[#0B1D3A]/50 transition group-open:rotate-180"
+                          aria-hidden
+                        />
+                      </summary>
+                      <div className="border-t border-[#0B1D3A]/10 p-3 sm:p-4">
+                        <div className="grid gap-4 sm:grid-cols-[112px_minmax(0,1fr)] sm:items-start">
+                          <div className="rounded-sm border border-[#0B1D3A]/10 bg-white p-2">
+                            <Image
+                              src={truck.imageSrc}
+                              alt={truck.imageAlt}
+                              width={300}
+                              height={211}
+                              className="h-auto w-full"
+                              sizes="112px"
+                            />
+                          </div>
+                          <p className="text-sm leading-relaxed text-[#0B1D3A]/80">{truck.description}</p>
+                        </div>
+                      </div>
+                    </details>
+                  ))}
+                </div>
+              ) : null}
               <p className="text-sm font-semibold text-[#0B1D3A] leading-relaxed rounded-sm bg-white border border-[#0B1D3A]/10 px-3 py-2.5">
                 {concessions.venuePolicy}
               </p>

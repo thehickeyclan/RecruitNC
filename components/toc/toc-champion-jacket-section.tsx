@@ -95,16 +95,19 @@ export function TocChampionJacketSection() {
 
         <div
           id="trophies-awards"
-          className="mt-10 sm:mt-14 grid gap-6 rounded-2xl border border-white/15 bg-white/[0.06] p-4 sm:p-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-center"
+          className="mt-10 sm:mt-14 rounded-2xl border border-white/15 bg-white/[0.06] p-4 sm:p-6"
         >
-          <div>
-            <p className={`text-[#D7B95A] text-sm sm:text-base mb-2 ${tocDisplayClass()} tracking-[0.18em] uppercase`}>
-              Trophies & awards
-            </p>
-            <h3 className={`text-3xl sm:text-4xl text-white leading-none ${tocDisplayClass()}`}>
-              A keepsake for every podium finish.
-            </h3>
-            <ul className="mt-5 space-y-3 text-white/85 text-base sm:text-lg leading-relaxed">
+          <div className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
+            <div>
+              <p className={`text-[#D7B95A] text-sm sm:text-base mb-2 ${tocDisplayClass()} tracking-[0.18em] uppercase`}>
+                Trophies & awards
+              </p>
+              <h3 className={`text-3xl sm:text-4xl text-white leading-none ${tocDisplayClass()}`}>
+                A stage built around what wrestlers earn.
+              </h3>
+            </div>
+
+            <ul className="grid gap-3 text-white/85 text-base leading-relaxed sm:text-lg md:grid-cols-3">
               {TOC_TROPHIES_AND_AWARDS.items.map((item) => (
                 <li key={item} className="flex gap-3">
                   <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-[#D7B95A]" aria-hidden />
@@ -114,15 +117,44 @@ export function TocChampionJacketSection() {
             </ul>
           </div>
 
-          <div className="relative overflow-hidden rounded-xl border border-white/15 bg-white shadow-2xl">
-            <Image
-              src={TOC_TROPHIES_AND_AWARDS.bracket.src}
-              alt={TOC_TROPHIES_AND_AWARDS.bracket.alt}
-              width={TOC_TROPHIES_AND_AWARDS.bracket.width}
-              height={TOC_TROPHIES_AND_AWARDS.bracket.height}
-              className="h-auto w-full object-cover"
-              sizes="(min-width: 1024px) 42vw, 100vw"
-            />
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {TOC_TROPHIES_AND_AWARDS.featuredAwards.map((award) => (
+              <article
+                key={award.title}
+                className="overflow-hidden rounded-xl border border-white/15 bg-[#06152c] shadow-2xl"
+              >
+                <div className="relative overflow-hidden border-b border-white/10 bg-white">
+                  <Image
+                    src={award.image.src}
+                    alt={award.image.alt}
+                    width={award.image.width}
+                    height={award.image.height}
+                    className="h-auto w-full object-cover"
+                    sizes="(min-width: 1280px) 30vw, (min-width: 768px) 45vw, 100vw"
+                  />
+                </div>
+                <div className="p-4 sm:p-5">
+                  <p className={`text-xs text-[#D7B95A] ${tocDisplayClass()} tracking-[0.18em] uppercase`}>
+                    {award.eyebrow}
+                  </p>
+                  <h4 className="mt-2 text-xl font-black text-white sm:text-2xl">{award.title}</h4>
+                  <p className="mt-3 text-sm leading-relaxed text-white/78 sm:text-base">{award.description}</p>
+                  <ul className="mt-4 grid gap-2 text-sm leading-relaxed text-white/78">
+                    {award.bullets.map((bullet) => (
+                      <li key={bullet} className="flex gap-2">
+                        <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#CC0000]" aria-hidden />
+                        <span>{bullet}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  {"note" in award && award.note ? (
+                    <p className="mt-4 rounded-lg border border-[#D7B95A]/30 bg-[#D7B95A]/10 p-3 text-xs leading-relaxed text-[#f1df9b] sm:text-sm">
+                      {award.note}
+                    </p>
+                  ) : null}
+                </div>
+              </article>
+            ))}
           </div>
         </div>
 
