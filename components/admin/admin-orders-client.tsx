@@ -10,8 +10,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Download, Search, MoreVertical, Eye, Printer, RefreshCw, Trash2, RotateCcw, User, CloudDownload, DollarSign, ArrowLeft, Mail, Package, Truck, CheckCircle, Clock, XCircle } from "lucide-react"
+import { Download, Search, MoreVertical, Eye, Printer, RefreshCw, Trash2, RotateCcw, User, CloudDownload, DollarSign, ArrowLeft, Mail, Package, Truck, CheckCircle, Clock, XCircle, CreditCard, AlertTriangle } from "lucide-react"
 import { formatCurrency, formatDateTime, getStatusColor, type Order } from "@/lib/admin-data"
+import { ORDER_TYPES, ORDER_TYPE_LABELS, ORDER_TYPE_NEEDS_FULFILLMENT } from "@/lib/orders/order-type"
 import { deleteOrder, updateOrderStatus } from "@/app/actions/orders"
 import { toast } from "sonner"
 import {
@@ -32,8 +33,13 @@ interface AdminOrdersClientProps {
   initialOrders: Order[]
 }
 
+/**
+ * Every status a row can actually hold. "paid" was missing here, which is why the
+ * dominant status in the table rendered as an unstyled fallback badge and matched no tab.
+ */
 const STATUS_CONFIG = {
   pending: { label: "Pending", icon: Clock, color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" },
+  paid: { label: "Paid", icon: CreditCard, color: "bg-teal-500/20 text-teal-300 border-teal-500/30" },
   processing: { label: "Processing", icon: Package, color: "bg-blue-500/20 text-blue-400 border-blue-500/30" },
   shipped: { label: "Shipped", icon: Truck, color: "bg-purple-500/20 text-purple-400 border-purple-500/30" },
   delivered: { label: "Delivered", icon: CheckCircle, color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" },
@@ -41,14 +47,35 @@ const STATUS_CONFIG = {
   refunded: { label: "Refunded", icon: RotateCcw, color: "bg-gray-500/20 text-gray-400 border-gray-500/30" },
 }
 
+/** Tab order follows the real lifecycle: money in, then fulfillment, then exceptions. */
+const STATUS_TABS = ["pending", "paid", "processing", "shipped", "delivered", "cancelled", "refunded"] as const
+
+/**
+ * Where each non-merchandise order type is actually worked. These rows land in `orders`
+ * because that's where the payment is recorded, but the roster/roll is the real tool —
+ * send admins there instead of letting them treat a registration like a package.
+ */
+const TYPE_HOME: Partial<Record<string, { href: string; label: string }>> = {
+  toc_registration: { href: "/admin/toc/invitations", label: "TOC invitations & registration roster" },
+  toc_ticket: { href: "/admin/toc/invitations", label: "TOC invitations & registration roster" },
+  blue_subscription: { href: "/admin/blue", label: "Blue membership dashboard" },
+  drop_in: { href: "/admin/blue", label: "Blue dashboard" },
+  national_team_fee: { href: "/admin/blue/national-team-orders-report", label: "National team orders report" },
+  donation: { href: "/admin/fundraising", label: "Fundraising dashboard" },
+}
+
 export function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const initialStatus = searchParams.get("status") || "all"
-  
+  // This screen is the fulfillment queue, so it opens on the only orders that need
+  // fulfilling. Registrations, memberships, drop-ins, and donations are complete the
+  // moment they're paid — they have their own views and are one filter change away here.
+  const initialType = searchParams.get("type") || "merchandise"
+
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState(initialStatus)
-  const [categoryFilter, setCategoryFilter] = useState<string>("all")
+  const [typeFilter, setTypeFilter] = useState<string>(initialType)
   const [selectedOrders, setSelectedOrders] = useState<string[]>([])
   const [orderToDelete, setOrderToDelete] = useState<Order | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -58,25 +85,32 @@ export function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
   const [isReclassifying, setIsReclassifying] = useState(false)
   const [isBulkUpdating, setIsBulkUpdating] = useState(false)
 
-  // Status counts for tabs
-  const statusCounts = {
-    all: initialOrders.length,
-    pending: initialOrders.filter(o => o.status === "pending").length,
-    processing: initialOrders.filter(o => o.status === "processing").length,
-    shipped: initialOrders.filter(o => o.status === "shipped").length,
-    delivered: initialOrders.filter(o => o.status === "delivered").length,
+  // Type filter is applied before the tab counts so the counts describe what you can see.
+  const ordersInScope = initialOrders.filter(
+    (order) => typeFilter === "all" || order.orderType === typeFilter,
+  )
+
+  const statusCounts: Record<string, number> = { all: ordersInScope.length }
+  for (const status of STATUS_TABS) {
+    statusCounts[status] = ordersInScope.filter((o) => o.status === status).length
   }
 
-  const filteredOrders = initialOrders.filter((order) => {
+  const typeCounts = initialOrders.reduce<Record<string, number>>((acc, order) => {
+    acc[order.orderType] = (acc[order.orderType] ?? 0) + 1
+    return acc
+  }, {})
+
+  const filteredOrders = ordersInScope.filter((order) => {
     const matchesSearch =
       order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (order.customerEmail !== "—" && order.customerEmail.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (order.productSummary && order.productSummary.toLowerCase().includes(searchQuery.toLowerCase()))
     const matchesStatus = statusFilter === "all" || order.status === statusFilter
-    const matchesCategory = categoryFilter === "all" || order.category === categoryFilter
-    return matchesSearch && matchesStatus && matchesCategory
+    return matchesSearch && matchesStatus
   })
+
+  const unshippableCount = filteredOrders.filter((o) => o.missingShippingAddress).length
 
   const toggleOrderSelection = (orderId: string) => {
     setSelectedOrders((prev) => (prev.includes(orderId) ? prev.filter((id) => id !== orderId) : [...prev, orderId]))
@@ -186,6 +220,7 @@ export function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
         createdFromInvoices?: number
         partial?: boolean
         errors?: string[]
+        hint?: string
       } = {}
       try {
         data = await res.json()
@@ -282,7 +317,11 @@ export function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
             <div>
               <h1 className="text-3xl font-bold text-white">Order Fulfillment</h1>
               <p className="text-white/60 mt-1">
-                {filteredOrders.length} {filteredOrders.length === 1 ? "order" : "orders"} 
+                {filteredOrders.length} {filteredOrders.length === 1 ? "order" : "orders"}
+                {" · "}
+                {typeFilter === "all"
+                  ? "all order types"
+                  : ORDER_TYPE_LABELS[typeFilter as keyof typeof ORDER_TYPE_LABELS] ?? typeFilter}
                 {selectedOrders.length > 0 && ` • ${selectedOrders.length} selected`}
               </p>
             </div>
@@ -305,6 +344,12 @@ export function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
             >
               {isSyncingStripe ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <CloudDownload className="mr-2 h-4 w-4" />}
               Sync Stripe
+            </Button>
+            <Button variant="outline" asChild className="bg-white/5 border-white/10 text-white hover:bg-white/10">
+              <HardLink href="/admin/orders/validate-stripe">
+                <CheckCircle className="mr-2 h-4 w-4" />
+                Validate Stripe
+              </HardLink>
             </Button>
             <Button variant="outline" asChild className="bg-white/5 border-white/10 text-white hover:bg-white/10">
               <HardLink href="/admin/orders/payouts">
@@ -344,30 +389,59 @@ export function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
           </div>
         </div>
 
-        {/* Status Tabs */}
+        {/* Status Tabs — every status a row can hold, so nothing hides in a gap */}
         <Tabs value={statusFilter} onValueChange={setStatusFilter} className="w-full">
           <TabsList className="bg-[#0f1c2e] border border-white/10 p-1 h-auto flex-wrap">
             <TabsTrigger value="all" className="data-[state=active]:bg-[#D3B574] data-[state=active]:text-[#0A1628] text-white/70">
               All <Badge variant="secondary" className="ml-2 bg-white/10 text-white/70">{statusCounts.all}</Badge>
             </TabsTrigger>
-            <TabsTrigger value="pending" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-black text-white/70">
-              <Clock className="h-4 w-4 mr-1.5" />
-              Pending <Badge variant="secondary" className="ml-2 bg-yellow-500/20 text-yellow-400">{statusCounts.pending}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="processing" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white text-white/70">
-              <Package className="h-4 w-4 mr-1.5" />
-              Processing <Badge variant="secondary" className="ml-2 bg-blue-500/20 text-blue-400">{statusCounts.processing}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="shipped" className="data-[state=active]:bg-purple-500 data-[state=active]:text-white text-white/70">
-              <Truck className="h-4 w-4 mr-1.5" />
-              Shipped <Badge variant="secondary" className="ml-2 bg-purple-500/20 text-purple-400">{statusCounts.shipped}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="delivered" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white text-white/70">
-              <CheckCircle className="h-4 w-4 mr-1.5" />
-              Delivered <Badge variant="secondary" className="ml-2 bg-emerald-500/20 text-emerald-400">{statusCounts.delivered}</Badge>
-            </TabsTrigger>
+            {STATUS_TABS.map((status) => {
+              const config = STATUS_CONFIG[status]
+              const Icon = config.icon
+              return (
+                <TabsTrigger
+                  key={status}
+                  value={status}
+                  className="data-[state=active]:bg-[#D3B574] data-[state=active]:text-[#0A1628] text-white/70"
+                >
+                  <Icon className="h-4 w-4 mr-1.5" />
+                  {config.label}
+                  <Badge variant="secondary" className={`ml-2 ${config.color}`}>{statusCounts[status]}</Badge>
+                </TabsTrigger>
+              )
+            })}
           </TabsList>
         </Tabs>
+
+        {TYPE_HOME[typeFilter] && (
+          <Card className="bg-white/5 border-white/10">
+            <CardContent className="p-4 flex flex-wrap items-center justify-between gap-3">
+              <div className="text-sm text-white/70">
+                <span className="font-medium text-white">
+                  {ORDER_TYPE_LABELS[typeFilter as keyof typeof ORDER_TYPE_LABELS]}
+                </span>{" "}
+                orders are complete once paid — nothing here ships. This list is the payment record.
+              </div>
+              <Button variant="outline" asChild className="bg-white/5 border-white/10 text-white hover:bg-white/10">
+                <HardLink href={TYPE_HOME[typeFilter]!.href}>{TYPE_HOME[typeFilter]!.label}</HardLink>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {unshippableCount > 0 && (
+          <Card className="bg-amber-500/10 border-amber-500/30">
+            <CardContent className="p-4 flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
+              <div className="text-sm text-amber-200/90">
+                <span className="font-medium text-amber-300">
+                  {unshippableCount} {unshippableCount === 1 ? "order needs" : "orders need"} shipping but has no address on file.
+                </span>{" "}
+                These were recovered from Stripe without one. Open the order and use Edit Shipping Address before marking it shipped.
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Bulk Actions Bar */}
         {selectedOrders.length > 0 && (
@@ -413,19 +487,19 @@ export function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
                   />
                 </div>
               </div>
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-[180px] bg-white/5 border-white/10 text-white">
-                  <SelectValue placeholder="Category" />
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-[240px] bg-white/5 border-white/10 text-white">
+                  <SelectValue placeholder="Order type" />
                 </SelectTrigger>
                 <SelectContent className="bg-[#0f1c2e] border-white/10 text-white">
-                  <SelectItem value="all" className="text-white focus:bg-white/10 focus:text-white">All categories</SelectItem>
-                  <SelectItem value="Apparel" className="text-white focus:bg-white/10 focus:text-white">Apparel</SelectItem>
-                  <SelectItem value="Drop-In" className="text-white focus:bg-white/10 focus:text-white">Drop-In</SelectItem>
-                  <SelectItem value="Blue Sub" className="text-white focus:bg-white/10 focus:text-white">Blue Sub</SelectItem>
-                  <SelectItem value="Tournament Fee" className="text-white focus:bg-white/10 focus:text-white">Tournament Fee</SelectItem>
-                  <SelectItem value="Donation" className="text-white focus:bg-white/10 focus:text-white">Donation</SelectItem>
-                  <SelectItem value="Guild" className="text-white focus:bg-white/10 focus:text-white">Guild</SelectItem>
-                  <SelectItem value="Other" className="text-white focus:bg-white/10 focus:text-white">Other</SelectItem>
+                  <SelectItem value="all" className="text-white focus:bg-white/10 focus:text-white">
+                    All order types ({initialOrders.length})
+                  </SelectItem>
+                  {ORDER_TYPES.map((type) => (
+                    <SelectItem key={type} value={type} className="text-white focus:bg-white/10 focus:text-white">
+                      {ORDER_TYPE_LABELS[type]} ({typeCounts[type] ?? 0})
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -447,7 +521,7 @@ export function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
                   <TableHead className="text-white/70">Order</TableHead>
                   <TableHead className="text-white/70">Customer</TableHead>
                   <TableHead className="text-white/70">Date</TableHead>
-                  <TableHead className="text-white/70">Category</TableHead>
+                  <TableHead className="text-white/70">Type</TableHead>
                   <TableHead className="text-white/70">Product</TableHead>
                   <TableHead className="text-white/70">Status</TableHead>
                   <TableHead className="text-right text-white/70">Total</TableHead>
@@ -491,12 +565,22 @@ export function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
                       </TableCell>
                       <TableCell className="text-white/60 whitespace-nowrap text-sm">{formatDateTime(order.date)}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="font-normal text-xs text-white/70 border-white/20">
-                          {order.category}
+                        <Badge
+                          variant="outline"
+                          className={`font-normal text-xs border-white/20 ${
+                            ORDER_TYPE_NEEDS_FULFILLMENT[order.orderType] ? "text-white/70" : "text-white/40"
+                          }`}
+                        >
+                          {ORDER_TYPE_LABELS[order.orderType]}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm text-white/60 max-w-[200px] truncate" title={order.productSummary}>
-                        {order.productSummary}
+                        <div className="flex items-center gap-1.5">
+                          {order.missingShippingAddress && (
+                            <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-400" aria-label="No shipping address on file" />
+                          )}
+                          <span className="truncate">{order.productSummary}</span>
+                        </div>
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>

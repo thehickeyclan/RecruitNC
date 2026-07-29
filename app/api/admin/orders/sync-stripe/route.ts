@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { requireAdmin } from "@/lib/admin-auth"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createOrderFromPaymentIntent, createOrderFromSession } from "@/app/actions/stripe"
 import { checkoutSessionIsNonStoreImport } from "@/lib/stripe-sync-guards"
@@ -15,18 +15,6 @@ const DAYS_BACK = 60
 const INVOICE_DAYS_BACK = 14
 /** Stop checkout/PI loops before Vercel kills the function; invoices run first. */
 const SYNC_TIME_BUDGET_MS = 45_000
-
-async function requireAdmin(): Promise<{ ok: true } | { ok: false; status: 401 | 403; error: string }> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser()
-  if (authError || !user) return { ok: false, status: 401, error: "Unauthorized" }
-  const { data: profile } = await supabase.from("user_profiles").select("is_admin").eq("user_id", user.id).single()
-  if (!profile?.is_admin) return { ok: false, status: 403, error: "Admin required" }
-  return { ok: true }
-}
 
 /**
  * GET: Admin diagnostic — is Stripe secret visible to this serverless function?

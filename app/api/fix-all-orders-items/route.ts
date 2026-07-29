@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { findProductByIdOrPrefix } from "@/lib/store/product-utils"
 import { syntheticOrderItemSku } from "@/lib/order-item-sku"
 import { getStripe, readStripeSecretKey, stripeKeyMissingPayload } from "@/lib/stripe"
+import { requireAdmin } from "@/lib/admin-auth"
 
 export const dynamic = "force-dynamic"
 
@@ -36,6 +37,10 @@ function parseItemsFromMetadata(meta: Record<string, string>): Array<{
 
 export async function POST() {
   try {
+    // Bulk-rewrites line items across every order. Admin only.
+    const auth = await requireAdmin()
+    if (!auth.ok) return NextResponse.json({ success: false, error: auth.error }, { status: auth.status })
+
     if (!readStripeSecretKey()) {
       return NextResponse.json(stripeKeyMissingPayload(), { status: 503 })
     }

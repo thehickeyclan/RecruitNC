@@ -174,6 +174,7 @@ export async function insertStoreOrder(
     ...flatBilling,
     shipping_address: params.shippingAddress,
     shipping_method: params.shippingMethod,
+    order_type: "merchandise",
     subtotal: params.subtotal,
     shipping_cost: params.shipping,
     tax: params.tax,

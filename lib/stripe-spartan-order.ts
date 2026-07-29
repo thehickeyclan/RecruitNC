@@ -135,6 +135,7 @@ async function upsertSpartanOrderRow(
     ...orderShippingFields(customerName, {}),
     shipping_address: {},
     shipping_method: { name: "Fundraising donation", price: 0 },
+    order_type: "donation",
     subtotal: amountTotal,
     shipping_cost: 0,
     tax: 0,

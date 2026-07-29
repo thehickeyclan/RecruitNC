@@ -155,16 +155,23 @@ export default function ConfirmationPage() {
 
   const orderDate = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
 
-  const methodName = displayShippingMethod?.name ?? shippingMethod?.name ?? ""
-  const isPickupAtPractice = methodName === "Pickup at Practice" || methodName === "Pickup at blue practice" || methodName.includes("blue practice")
-  const isPickupAtStates = methodName.includes("Suite 109") || methodName.includes("States")
+  // Match on the method id first — the display names have been reworded before, and a
+  // case-sensitive name match is what previously made pickup orders fall through to the
+  // ship branch and show a fabricated delivery date.
+  const activeShippingMethod = displayShippingMethod ?? shippingMethod
+  const methodId = ((activeShippingMethod as { id?: string })?.id ?? "").toLowerCase()
+  const methodName = activeShippingMethod?.name ?? ""
+  const methodNameLower = methodName.toLowerCase()
+
+  const isPickupAtPractice =
+    methodId === "pickup" || methodNameLower.includes("pickup") || methodNameLower.includes("practice")
+  const isPickupAtStates = methodNameLower.includes("suite 109") || methodNameLower.includes("states")
   const isPickupMethod = isPickupAtPractice || isPickupAtStates
 
   const getDeliveryDate = () => {
-    const method = displayShippingMethod ?? shippingMethod
-    const name = (method as { name?: string })?.name ?? ""
-    if (name.includes("blue practice") || name === "Pickup at Practice") return "Available at next practice"
-    if (name.includes("Suite 109") || name.includes("States")) return "During States (Suite 109)"
+    const method = activeShippingMethod
+    if (isPickupAtStates) return "During States (Suite 109)"
+    if (isPickupAtPractice) return "Available at next practice"
     const rawDays = (method as { days?: string; estimatedDays?: number })?.estimatedDays ?? (method as { days?: string })?.days
     const days = typeof rawDays === "string" ? parseInt(rawDays, 10) : rawDays
     const numDays = Number.isFinite(days) ? (days as number) : 5

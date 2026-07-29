@@ -286,6 +286,9 @@ export async function ensureOrderFromStripeInvoice(
     ...orderShippingFields(name, {}),
     shipping_address: {},
     shipping_method: shippingMethod,
+    // Invoices are recurring billing. Blue is the only recurring product today; anything
+    // else lands unclassified on purpose so it shows up for review instead of being guessed.
+    order_type: isBlue ? "blue_subscription" : "unknown",
     subtotal: amountDollars,
     shipping_cost: 0,
     tax: 0,

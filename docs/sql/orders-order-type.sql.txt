@@ -1,0 +1,149 @@
+-- Orders: add order_type and backfill history — run in Supabase SQL Editor
+-- See docs/orders-order-type.md for what this fixes and how to verify.
+--
+-- Why: the orders table is shared by store merchandise, TOC registrations, Blue
+-- memberships, drop-ins, national team fees, guild, and fundraising. Nothing recorded
+-- WHAT was bought, so every non-merchandise payment looked like an unfulfilled
+-- apparel order. This adds that column and classifies the existing rows.
+--
+-- NOTE ON shipping_method: it is a TEXT column, not jsonb. About 80% of rows hold a
+-- serialized JSON object ('{"name":"Blue membership","price":0}') and the rest hold a
+-- bare label ('Practice Drop-in', 'Ship anywhere', 'Pickup at blue practice'). So this
+-- script matches against the raw text, which reads both shapes correctly. The ::text
+-- cast keeps it working if the column is jsonb in another environment.
+--
+-- Safe to re-run. Step 3 only touches rows still sitting at 'unknown', so it will not
+-- overwrite a classification that app code or an admin has since set.
+
+-- ── 1. Column ────────────────────────────────────────────────────────────────
+alter table public.orders
+  add column if not exists order_type text not null default 'unknown';
+
+alter table public.orders drop constraint if exists orders_order_type_check;
+alter table public.orders add constraint orders_order_type_check
+  check (order_type in (
+    'merchandise',
+    'toc_registration',
+    'toc_ticket',
+    'blue_subscription',
+    'drop_in',
+    'national_team_fee',
+    'guild',
+    'donation',
+    'unknown'
+  ));
+
+-- The orders list filters on this on every load, usually together with a date sort.
+create index if not exists orders_order_type_created_at_idx
+  on public.orders (order_type, created_at desc);
+
+comment on column public.orders.order_type is
+  'What was bought. Set at insert time by lib/orders/order-type.ts callers. Decides whether an order enters the fulfillment queue and which revenue bucket it reports in. Never infer this at read time.';
+
+-- ── 2. Snapshot before the backfill ──────────────────────────────────────────
+select order_type, count(*) as orders, sum(total) as revenue
+from public.orders
+group by order_type
+order by orders desc;
+
+-- ── 3. Backfill — mirrors classifyLegacyOrder() in lib/orders/order-type.ts ──
+-- Ordered most-specific first. Each statement only claims rows still 'unknown'.
+
+-- 3a. The admin's own manual category is a human decision — it wins over any heuristic.
+--     Stored inside the shipping_method JSON as "admin_category":"<value>".
+update public.orders set order_type = 'merchandise'
+  where order_type = 'unknown' and shipping_method::text ~* '"admin_category"\s*:\s*"apparel"';
+update public.orders set order_type = 'drop_in'
+  where order_type = 'unknown' and shipping_method::text ~* '"admin_category"\s*:\s*"drop-in"';
+update public.orders set order_type = 'blue_subscription'
+  where order_type = 'unknown' and shipping_method::text ~* '"admin_category"\s*:\s*"blue sub"';
+update public.orders set order_type = 'toc_registration'
+  where order_type = 'unknown' and shipping_method::text ~* '"admin_category"\s*:\s*"tournament fee"';
+update public.orders set order_type = 'donation'
+  where order_type = 'unknown' and shipping_method::text ~* '"admin_category"\s*:\s*"donation"';
+update public.orders set order_type = 'guild'
+  where order_type = 'unknown' and shipping_method::text ~* '"admin_category"\s*:\s*"guild"';
+
+-- 3b. Shipping method label — what each writer stamped at insert time.
+--     Matches both the JSON form and the bare-label form.
+update public.orders set order_type = 'toc_ticket'
+  where order_type = 'unknown'
+    and lower(shipping_method::text) like '%toc%'
+    and lower(shipping_method::text) like '%ticket%';
+
+update public.orders set order_type = 'toc_registration'
+  where order_type = 'unknown'
+    and (lower(shipping_method::text) like '%toc%'
+      or lower(shipping_method::text) like '%tournament of champions%');
+
+-- 'Pickup at Practice' and 'Pickup at blue practice' are STORE pickup methods, so match
+-- only an explicit drop-in label here, never a bare '%practice%'.
+update public.orders set order_type = 'drop_in'
+  where order_type = 'unknown'
+    and (lower(shipping_method::text) like '%drop-in%'
+      or lower(shipping_method::text) like '%drop in%');
+
+update public.orders set order_type = 'blue_subscription'
+  where order_type = 'unknown'
+    and (lower(shipping_method::text) like '%blue membership%'
+      or lower(shipping_method::text) like '%blue sub%');
+
+update public.orders set order_type = 'national_team_fee'
+  where order_type = 'unknown' and lower(shipping_method::text) like '%national team%';
+
+update public.orders set order_type = 'guild'
+  where order_type = 'unknown' and lower(shipping_method::text) like '%guild%';
+
+update public.orders set order_type = 'donation'
+  where order_type = 'unknown'
+    and (lower(shipping_method::text) like '%donation%'
+      or lower(shipping_method::text) like '%fundraising%');
+
+-- 3c. Channel, for rows whose shipping_method was never populated.
+update public.orders set order_type = 'blue_subscription'
+  where order_type = 'unknown' and lower(channel) = 'blue';
+update public.orders set order_type = 'guild'
+  where order_type = 'unknown' and lower(channel) = 'guild';
+update public.orders set order_type = 'donation'
+  where order_type = 'unknown' and lower(channel) = 'spartan';
+update public.orders set order_type = 'national_team_fee'
+  where order_type = 'unknown' and lower(channel) = 'national_team';
+update public.orders set order_type = 'merchandise'
+  where order_type = 'unknown' and lower(channel) = 'store';
+
+-- 3d. Real line items are the last strong merchandise signal. Placeholder names written
+--     by the Stripe recovery paths ("Product", "Order Items - See Stripe Metadata",
+--     "NC United Store purchase") do not count — they tell us nothing.
+update public.orders o set order_type = 'merchandise'
+  where o.order_type = 'unknown'
+    and exists (
+      select 1 from public.order_items i
+      where i.order_id = o.id
+        and coalesce(trim(i.product_name), '') <> ''
+        and lower(trim(i.product_name)) not in (
+          'product', 'order items - see stripe metadata', 'nc united store purchase', 'recovered'
+        )
+        and lower(i.product_name) not like '%drop-in%'
+        and lower(i.product_name) not like '%membership%'
+        and lower(i.product_name) not like '%donation%'
+    );
+
+-- ── 4. Verify ────────────────────────────────────────────────────────────────
+select order_type, count(*) as orders, sum(total) as revenue
+from public.orders
+group by order_type
+order by orders desc;
+
+-- Anything left unclassified, newest first — work these by hand in /admin/orders.
+select id, order_number, created_at, total, channel,
+       left(shipping_method::text, 60) as method
+from public.orders
+where order_type = 'unknown'
+order by created_at desc
+limit 100;
+
+-- Sanity check: merchandise orders that cannot actually be shipped.
+select count(*) as unshippable_merchandise, sum(total) as at_risk_revenue
+from public.orders
+where order_type = 'merchandise'
+  and (shipping_address_line1 is null or shipping_address_line1 in ('', 'Recovered'));

@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server"
 import { createOrderFromPaymentIntent, createOrderFromSession } from "@/app/actions/stripe"
+import { requireAdmin } from "@/lib/admin-auth"
 
 export const dynamic = "force-dynamic"
 
 export async function POST(request: Request) {
   try {
+    // Creates order rows from any Stripe id the caller supplies. Admin only.
+    const auth = await requireAdmin()
+    if (!auth.ok) return NextResponse.json({ success: false, error: auth.error }, { status: auth.status })
+
     const body = await request.json().catch(() => ({}))
     const paymentIntentId = typeof body.paymentIntentId === "string" ? body.paymentIntentId.trim() : ""
     const sessionId = typeof body.sessionId === "string" ? body.sessionId.trim() : ""
