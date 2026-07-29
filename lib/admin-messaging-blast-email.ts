@@ -1,4 +1,5 @@
 import { buildAdminBlastEmailHtml } from "@/lib/admin-blast-email-html"
+import type { AdminBlastSender } from "@/lib/admin-blast-senders"
 import { sendAdminBlastEmail } from "@/lib/email"
 import type { AdminMessagingRecipientRow } from "@/lib/admin-messaging-recipients"
 
@@ -9,7 +10,6 @@ export type BlastEmailSendResult = {
   sampleError?: string
 }
 
-const FROM_BLAST = "NC Wrestling United <info@ncwrestlingunited.com>"
 const RESEND_BATCH_MAX = 100
 /** Above this count, use Resend batch API + pacing (avoids 429 from concurrent singles). */
 const BULK_BATCH_THRESHOLD = 15
@@ -29,9 +29,12 @@ async function sendSingleWithInnerHtml(
   to: string,
   subject: string,
   innerHtmlBody: string,
-  logoVariant: "recruitnc" | "nc-united",
+  sender: AdminBlastSender,
 ): Promise<{ ok: boolean; error?: string }> {
-  const ok = await sendAdminBlastEmail(to, subject, innerHtmlBody, logoVariant)
+  const ok = await sendAdminBlastEmail(to, subject, innerHtmlBody, sender.logoVariant, {
+    from: sender.from,
+    footer: sender.footer,
+  })
   return { ok: ok.success, error: ok.error }
 }
 
@@ -51,6 +54,7 @@ async function sendBatchViaResend(
   emails: string[],
   subject: string,
   fullHtml: string,
+  from: string,
 ): Promise<{ sent: number; failed: number; sampleError?: string }> {
   if (!process.env.RESEND_API_KEY) {
     return { sent: 0, failed: emails.length, sampleError: "RESEND_API_KEY not configured" }
@@ -66,7 +70,7 @@ async function sendBatchViaResend(
   for (let bi = 0; bi < parts.length; bi++) {
     const part = parts[bi]!
     const payload = part.map((to) => ({
-      from: FROM_BLAST,
+      from,
       to: [to.trim()],
       subject: subject.trim() || "Update from RecruitNC",
       html: fullHtml,
@@ -116,7 +120,7 @@ async function sendSinglesPaced(
   recipients: AdminMessagingRecipientRow[],
   subject: string,
   innerHtmlBody: string,
-  logoVariant: "recruitnc" | "nc-united",
+  sender: AdminBlastSender,
 ): Promise<{ sent: number; failed: number; sampleError?: string }> {
   let sent = 0
   let failed = 0
@@ -129,7 +133,7 @@ async function sendSinglesPaced(
       batch.map(async (r) => {
         const email = r.email?.trim()
         if (!email) return { ok: false as const, error: "no email" }
-        return sendSingleWithInnerHtml(email, subject, innerHtmlBody, logoVariant)
+        return sendSingleWithInnerHtml(email, subject, innerHtmlBody, sender)
       }),
     )
     for (const o of outcomes) {
@@ -153,7 +157,7 @@ export async function sendAdminBlastEmails(
   opts: {
     subject: string
     htmlBody: string
-    logoVariant: "recruitnc" | "nc-united"
+    sender: AdminBlastSender
   },
 ): Promise<BlastEmailSendResult> {
   const withEmail = recipients.filter((r) => r.email?.trim())
@@ -167,13 +171,13 @@ export async function sendAdminBlastEmails(
     process.env.NEXT_PUBLIC_SITE_URL ||
     "https://app.ncwrestlingunited.com"
   ).replace(/\/$/, "")
-  const fullHtml = buildAdminBlastEmailHtml(opts.subject, opts.htmlBody, baseUrl, opts.logoVariant)
+  const fullHtml = buildAdminBlastEmailHtml(opts.subject, opts.htmlBody, baseUrl, opts.sender.logoVariant, opts.sender.footer)
   const emails = withEmail.map((r) => r.email!.trim())
 
   const result =
     withEmail.length >= BULK_BATCH_THRESHOLD
-      ? await sendBatchViaResend(emails, opts.subject, fullHtml)
-      : await sendSinglesPaced(withEmail, opts.subject, opts.htmlBody, opts.logoVariant)
+      ? await sendBatchViaResend(emails, opts.subject, fullHtml, opts.sender.from)
+      : await sendSinglesPaced(withEmail, opts.subject, opts.htmlBody, opts.sender)
 
   return {
     sent: result.sent,

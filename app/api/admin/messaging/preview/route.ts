@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { markdownToHtml } from "@/lib/blast-format"
-import { buildAdminBlastEmailHtml, parseEmailLogoVariant } from "@/lib/admin-blast-email-html"
+import { buildAdminBlastEmailHtml } from "@/lib/admin-blast-email-html"
+import { resolveAdminBlastSender } from "@/lib/admin-blast-senders"
 
 export const dynamic = "force-dynamic"
 
@@ -21,7 +22,7 @@ export async function POST(request: NextRequest) {
   const auth = await requireAdmin()
   if (!auth.ok) return NextResponse.json({ error: "Unauthorized" }, { status: auth.status })
 
-  let body: { subject?: string; body?: string; bodyHtml?: string; logoVariant?: string } = {}
+  let body: { subject?: string; body?: string; bodyHtml?: string; logoVariant?: string; emailSender?: string } = {}
   try {
     body = await request.json()
   } catch {
@@ -30,11 +31,11 @@ export async function POST(request: NextRequest) {
   const subject = typeof body.subject === "string" ? body.subject.trim() || "Update from RecruitNC" : "Update from RecruitNC"
   const rawBody = typeof body.body === "string" ? body.body.trim() : ""
   const rawBodyHtml = typeof body.bodyHtml === "string" ? body.bodyHtml.trim() : ""
-  const logoVariant = parseEmailLogoVariant(body.logoVariant)
-  
+  const sender = resolveAdminBlastSender({ emailSender: body.emailSender, logoVariant: body.logoVariant })
+
   // Use provided HTML if available (from rich text editor), otherwise convert markdown
   const htmlBody = rawBodyHtml || markdownToHtml(rawBody || "Your message here.")
   const baseUrl = (SITE_URL || "").replace(/\/$/, "")
-  const html = buildAdminBlastEmailHtml(subject, htmlBody, baseUrl, logoVariant)
+  const html = buildAdminBlastEmailHtml(subject, htmlBody, baseUrl, sender.logoVariant, sender.footer)
   return NextResponse.json({ html })
 }

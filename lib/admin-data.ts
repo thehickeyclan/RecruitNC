@@ -1,5 +1,7 @@
 // Admin dashboard types and helpers
 
+import type { OrderType } from "@/lib/orders/order-type"
+
 /** Display category for orders list and reporting. Synced with Stripe/product source. */
 export type OrderCategory =
   | "Apparel"
@@ -23,7 +25,10 @@ export interface Order {
   category: OrderCategory
   /** Product names from order_items for "what they ordered" display. */
   productSummary: string
-  orderType?: "product" | "practice-dropin"
+  /** What was actually bought. Decides whether this order belongs in the fulfillment queue. */
+  orderType: OrderType
+  /** True when this order needs shipping but has no real address to ship to. */
+  missingShippingAddress: boolean
   shippingAddress?: {
     line1: string
     line2?: string | null

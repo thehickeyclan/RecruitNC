@@ -10,7 +10,7 @@ import {
   Users, Trophy, Target, UserCheck, Clock, Calendar,
   School, Pencil, BarChart3, Settings, FileText,
   TrendingUp, Zap, Plus, Eye, UserPlus, RefreshCw, ClipboardList, Database, BookOpen, CreditCard,
-  ShoppingBag, Smile, Coins, LayoutDashboard, CircleDollarSign, Link2, Receipt, GraduationCap,
+  ShoppingBag, Smile, Coins, LayoutDashboard, CircleDollarSign, Link2, Receipt, GraduationCap, Package,
   LayoutGrid, Handshake, Mail, Bot, Scale, Newspaper, Import,
 } from "lucide-react"
 
@@ -483,13 +483,24 @@ export default function AdminDashboard() {
               </Card>
             </HardLink>
 
-            {/* Store — orders, products, promo codes. HardLink so click navigates. */}
+            {/* Store — products, promo codes, reporting. HardLink so click navigates. */}
             <HardLink href="/admin/store" className="block h-full">
               <Card className="border-t-4 border-t-[#1a5f4a] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
                 <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
                   <ShoppingBag className="h-10 w-10 text-[#1a5f4a] mb-3" />
                   <h3 className="font-bold text-[#003366] mb-1">Store</h3>
-                  <p className="text-xs text-gray-600">Orders, products, promo codes</p>
+                  <p className="text-xs text-gray-600">Products, inventory, promo codes, reports</p>
+                </CardContent>
+              </Card>
+            </HardLink>
+
+            {/* Orders — the fulfillment queue. Previously only reachable via /admin/store. */}
+            <HardLink href="/admin/orders" className="block h-full">
+              <Card className="border-t-4 border-t-[#1a5f4a] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+                <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
+                  <Package className="h-10 w-10 text-[#1a5f4a] mb-3" />
+                  <h3 className="font-bold text-[#003366] mb-1">Orders</h3>
+                  <p className="text-xs text-gray-600">Fulfillment queue, tracking, order lookup</p>
                 </CardContent>
               </Card>
             </HardLink>

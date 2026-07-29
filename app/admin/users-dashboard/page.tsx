@@ -103,6 +103,7 @@ type AcquisitionFunnel = {
   signupStartToCreateRate7d?: number | null
   signupSubmitSuccessRate7d?: number | null
   verificationRate7d?: number | null
+  funnelDataWarning?: string | null
   topLoginWallTargets: Array<{ path: string; count: number }>
 }
 
@@ -1016,6 +1017,9 @@ export default function UsersDashboardPage() {
                 <p className="mt-1 text-2xl font-bold text-gray-900">
                   {funnel.signupSubmitSuccessRate7d == null ? "—" : `${funnel.signupSubmitSuccessRate7d}%`}
                 </p>
+                {funnel.funnelDataWarning && (
+                  <p className="mt-1 text-[11px] font-medium text-amber-600">Warming up</p>
+                )}
               </div>
               <div className="rounded-lg border p-4">
                 <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Verification emails</p>
@@ -1039,6 +1043,11 @@ export default function UsersDashboardPage() {
             <p className="mt-3 text-xs text-gray-500">
               Signup opened means someone loaded the signup page. Form submitted, account created, and email verified show the true drop-off points.
             </p>
+            {funnel.funnelDataWarning && (
+              <p className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                {funnel.funnelDataWarning}
+              </p>
+            )}
             {funnel.topLoginWallTargets.length > 0 && (
               <div className="mt-4 rounded-lg border bg-gray-50 p-4">
                 <p className="mb-2 text-sm font-semibold text-gray-700">Top login-wall targets</p>
