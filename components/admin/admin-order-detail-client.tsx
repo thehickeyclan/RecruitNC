@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { formatCurrency, formatDateTime, getStatusColor, type Order } from "@/lib/admin-data"
-import { MoreVertical, Mail, Phone, Package, CreditCard, CheckCircle2, ArrowLeft, RefreshCw } from "lucide-react"
+import { MoreVertical, Mail, Phone, Package, CreditCard, CheckCircle2, ArrowLeft, RefreshCw, Clock, XCircle, RotateCcw } from "lucide-react"
 import { updateOrderStatus, addTrackingInfo, addOrderNote, setOrderCategory } from "@/app/actions/orders"
 import { MANUAL_ORDER_CATEGORIES } from "@/lib/admin/order-admin-category"
 import { updateOrderAddress } from "@/app/actions/update-order-address"
@@ -82,6 +82,28 @@ interface OrderDetailClientProps {
     showRecoverItems?: boolean
     receiptPreview?: OrderReceiptPreview | null
     orderTotalMismatch?: string | null
+  }
+}
+
+/**
+ * Payment state derived from the order's real status. This panel used to render a green
+ * "Paid" unconditionally, so a cancelled or unpaid order looked settled.
+ */
+function paymentStateFor(status: string | null | undefined) {
+  switch ((status ?? "").toLowerCase()) {
+    case "pending":
+      return { label: "Awaiting payment", icon: Clock, className: "text-amber-600" }
+    case "cancelled":
+      return { label: "Cancelled", icon: XCircle, className: "text-red-600" }
+    case "refunded":
+      return { label: "Refunded", icon: RotateCcw, className: "text-muted-foreground" }
+    case "paid":
+    case "processing":
+    case "shipped":
+    case "delivered":
+      return { label: "Paid", icon: CheckCircle2, className: "text-green-600" }
+    default:
+      return { label: status || "Unknown", icon: Clock, className: "text-muted-foreground" }
   }
 }
 
@@ -896,10 +918,16 @@ export function AdminOrderDetailClient({ order }: OrderDetailClientProps) {
             <CardContent className="space-y-3">
               <div className="text-sm">
                 <div className="text-muted-foreground">Payment Status</div>
-                <div className="font-medium text-green-600 flex items-center gap-1">
-                  <CheckCircle2 className="h-4 w-4" />
-                  Paid
-                </div>
+                {(() => {
+                  const payment = paymentStateFor(order.status)
+                  const Icon = payment.icon
+                  return (
+                    <div className={`font-medium flex items-center gap-1 ${payment.className}`}>
+                      <Icon className="h-4 w-4" />
+                      {payment.label}
+                    </div>
+                  )
+                })()}
               </div>
               <div className="text-sm">
                 <div className="text-muted-foreground">Total Amount</div>

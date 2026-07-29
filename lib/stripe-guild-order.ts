@@ -121,6 +121,7 @@ export async function upsertGuildOrderFromCheckoutSession(
     ...orderShippingFields(customerName, {}),
     shipping_address: {},
     shipping_method: { name: "Wrestling Guild", price: 0 },
+    order_type: "guild",
     subtotal: amountTotal,
     shipping_cost: 0,
     tax: 0,

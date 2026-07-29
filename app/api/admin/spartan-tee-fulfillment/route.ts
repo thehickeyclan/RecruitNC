@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
-import { createClient } from "@/lib/supabase/server"
+import { requireAdmin } from "@/lib/admin-auth"
 import {
   applySpartanCreditCorrectionsToDonations,
   fetchSpartanCreditCorrectionsIndex,
@@ -12,18 +12,6 @@ import { resolveFundraisingCampaignQueryParam } from "@/lib/fundraising/campaign
 export const dynamic = "force-dynamic"
 
 const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "2XL", "3XL"] as const
-
-async function requireAdmin(): Promise<{ ok: true } | { ok: false; status: 401 | 403; error: string }> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser()
-  if (authError || !user) return { ok: false, status: 401, error: "Unauthorized" }
-  const { data: profile } = await supabase.from("user_profiles").select("is_admin").eq("user_id", user.id).single()
-  if (!profile?.is_admin) return { ok: false, status: 403, error: "Admin required" }
-  return { ok: true }
-}
 
 /**
  * JSON rollup for admin: shirt sizes from paid checkouts (`tee_sz` in Stripe metadata).

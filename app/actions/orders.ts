@@ -41,29 +41,39 @@ export async function updateOrderStatus(
   options?: { sendEmail?: boolean }
 ): Promise<{ success: true } | { success: false; error: string }> {
   try {
+    const auth = await requireAdmin()
+    if (!auth.ok) return { success: false, error: auth.error }
+
     const supabase = createAdminClient()
-    
+
     // Get order details for email
     const { data: order, error: fetchError } = await supabase
       .from("orders")
       .select("order_number, customer_email, customer_name, tracking_info, status")
       .eq("id", orderId)
       .single()
-    
+
     if (fetchError || !order) {
       return { success: false, error: fetchError?.message || "Order not found" }
     }
-    
+
     // Don't send email if status hasn't changed
-    const shouldSendEmail = options?.sendEmail !== false && 
+    const shouldSendEmail = options?.sendEmail !== false &&
       order.status !== newStatus &&
       ["shipped", "delivered", "processing"].includes(newStatus)
-    
+
+    // shipped_at/delivered_at are what the order timeline reads. Stamp them here or the
+    // timeline shows a completed step with no date next to it, forever.
+    const now = new Date().toISOString()
+    const updates: Record<string, unknown> = { status: newStatus, updated_at: now }
+    if (newStatus === "shipped") updates.shipped_at = now
+    if (newStatus === "delivered") updates.delivered_at = now
+
     const { error } = await supabase
       .from("orders")
-      .update({ status: newStatus })
+      .update(updates)
       .eq("id", orderId)
-    
+
     if (error) return { success: false, error: error.message }
     
     // Send status notification email
@@ -96,6 +106,10 @@ export async function updateOrderStatus(
 
 export async function deleteOrder(orderId: string): Promise<{ success: true } | { success: false; error: string }> {
   try {
+    // Hard delete of a paid order and its line items. Nothing here is recoverable.
+    const auth = await requireAdmin()
+    if (!auth.ok) return { success: false, error: auth.error }
+
     const supabase = createAdminClient()
     const { error: itemsError } = await supabase.from("order_items").delete().eq("order_id", orderId)
     if (itemsError) {
@@ -120,28 +134,34 @@ export async function addTrackingInfo(
   options?: { sendEmail?: boolean }
 ): Promise<{ success: true } | { success: false; error: string }> {
   try {
+    const auth = await requireAdmin()
+    if (!auth.ok) return { success: false, error: auth.error }
+
     const supabase = createAdminClient()
-    
+
     // Get order details for email
     const { data: order, error: fetchError } = await supabase
       .from("orders")
       .select("order_number, customer_email, customer_name")
       .eq("id", orderId)
       .single()
-    
+
     if (fetchError || !order) {
       return { success: false, error: fetchError?.message || "Order not found" }
     }
-    
+
+    const now = new Date().toISOString()
     const trackingInfo = { carrier, tracking_number: trackingNumber }
     const { error } = await supabase
       .from("orders")
       .update({
         status: "shipped",
         tracking_info: trackingInfo,
+        shipped_at: now,
+        updated_at: now,
       })
       .eq("id", orderId)
-    
+
     if (error) return { success: false, error: error.message }
     
     // Send shipped notification email with tracking
@@ -174,6 +194,9 @@ export async function addOrderNote(
   note: string
 ): Promise<{ success: true } | { success: false; error: string }> {
   try {
+    const auth = await requireAdmin()
+    if (!auth.ok) return { success: false, error: auth.error }
+
     const supabase = createAdminClient()
     const { data: order } = await supabase.from("orders").select("notes").eq("id", orderId).single()
     const existing = (order as any)?.notes ?? ""
@@ -193,6 +216,10 @@ export async function getOrderDetails(orderId: string): Promise<
   | { success: false; error: string }
 > {
   try {
+    // Reads full customer PII and can write line items back from Stripe.
+    const auth = await requireAdmin()
+    if (!auth.ok) return { success: false, error: auth.error }
+
     const supabase = createAdminClient()
     const isUuid = /^[0-9a-f-]{36}$/i.test(orderId)
 

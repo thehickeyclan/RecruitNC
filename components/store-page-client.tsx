@@ -12,20 +12,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Search } from "lucide-react"
 import { useCartStore } from "@/lib/store/cart-store"
-import { isStoreSingletProduct } from "@/lib/store/product-utils"
+import { buildStoreCategories, productMatchesStoreCategory } from "@/lib/store/store-categories"
 import { useToast } from "@/hooks/use-toast"
 
 interface StorePageClientProps {
   initialProducts: ProductGridProduct[]
 }
-
-const categories = [
-  { id: "Singlets", label: "Singlets" },
-  { id: "T-Shirts", label: "T-Shirts" },
-  { id: "Sweatshirts", label: "Sweatshirts" },
-  { id: "Headwear", label: "Headwear" },
-  { id: "Accessories", label: "Accessories" },
-]
 
 export function StorePageClient({ initialProducts }: StorePageClientProps) {
   const searchParams = useSearchParams()
@@ -37,14 +29,21 @@ export function StorePageClient({ initialProducts }: StorePageClientProps) {
   const [sortBy, setSortBy] = useState<SortOption>("featured")
   const [searchQuery, setSearchQuery] = useState("")
 
-  // Sync category filter from URL (e.g. /?category=T-Shirts from banner or shared link)
+  // Pills come from the catalog that actually loaded, so a filter can never show zero results
+  // for a category no product is in.
+  const categories = useMemo(() => buildStoreCategories(initialProducts), [initialProducts])
+
+  // Sync category filter from URL (e.g. /?category=t-shirts from banner or shared link).
+  // Matched case-insensitively — older links used title-case ids.
   useEffect(() => {
     const category = searchParams?.get("category")
-    if (category && categories.some((c) => c.id === category)) {
-      setSelectedCategories([category])
+    if (!category) return
+    const match = categories.find((c) => c.id.toLowerCase() === category.toLowerCase())
+    if (match) {
+      setSelectedCategories([match.id])
       requestAnimationFrame(() => document.getElementById("products")?.scrollIntoView({ behavior: "smooth" }))
     }
-  }, [searchParams])
+  }, [searchParams, categories])
 
   // Auto-apply promo code from URL parameter (no replaceState to avoid Next router refetch / store canceled)
   useEffect(() => {
@@ -73,13 +72,9 @@ export function StorePageClient({ initialProducts }: StorePageClientProps) {
     }
 
     if (selectedCategories.length > 0) {
-      filtered = filtered.filter((product) => {
-        return selectedCategories.some((cat) => {
-          if (cat === "Singlets") return isStoreSingletProduct(product)
-          if (!product.category) return false
-          return cat.toLowerCase() === product.category.toLowerCase()
-        })
-      })
+      filtered = filtered.filter((product) =>
+        selectedCategories.some((cat) => productMatchesStoreCategory(product, cat)),
+      )
     }
 
     if (selectedSizes.length > 0) {
@@ -150,6 +145,7 @@ export function StorePageClient({ initialProducts }: StorePageClientProps) {
     <div className="min-h-screen bg-[#0A1628]">
       <StoreHeader searchQuery={searchQuery} onSearchChange={setSearchQuery} />
       <StoreBanner
+        categories={categories}
         onShopAll={() => {
           setSelectedCategories([])
           setTimeout(
@@ -200,6 +196,7 @@ export function StorePageClient({ initialProducts }: StorePageClientProps) {
             selectedCategories={selectedCategories}
             selectedSizes={selectedSizes}
             selectedPriceRanges={selectedPriceRanges}
+            categoryOptions={categories}
             onCategoriesChange={setSelectedCategories}
             onSizesChange={setSelectedSizes}
             onPriceRangesChange={setSelectedPriceRanges}

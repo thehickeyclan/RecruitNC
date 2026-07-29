@@ -2,8 +2,8 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { AdminOrdersClient } from "@/components/admin/admin-orders-client"
 import type { Order, OrderCategory } from "@/lib/admin-data"
 import { resolveOrderCategory } from "@/lib/admin/resolve-order-display"
-import { amountLooksLikeGuild, amountLooksLikePracticeDropIn } from "@/lib/stripe-checkout-amounts"
 import { orderDisplayDateFromRow } from "@/lib/orders/ensure-order-from-stripe-invoice"
+import { classifyLegacyOrder, isOrderType, orderTypeRequiresAddress, type OrderType } from "@/lib/orders/order-type"
 
 export const dynamic = "force-dynamic"
 
@@ -21,33 +21,21 @@ function isPlaceholderCustomer(email: string | null, name: string | null): boole
   return false
 }
 
-/** Derive display category from order_items, shipping_method, and total. Every order gets a category. */
-function deriveCategory(
-  orderItems: { product_name?: string }[],
-  shippingMethodStr: string,
-  totalDollars?: number
-): OrderCategory {
-  const names = (orderItems || []).map((i) => (i.product_name || "").toLowerCase())
-  const method = (shippingMethodStr || "").toLowerCase()
-  const total = Number(totalDollars) || 0
-  if (names.some((n) => n.includes("blue") && (n.includes("monthly") || n.includes("subscription")))) return "Blue Sub"
-  if (method.includes("blue membership")) return "Blue Sub"
-  // When no line items: infer Blue Sub from typical monthly price
-  if (names.length === 0 && total >= 50 && total <= 60) return "Blue Sub"
-  // Drop-In only when a line item name explicitly indicates drop-in (not from shipping method alone)
-  if (names.some((n) => /drop-?in|dropin/.test(n) || (n.includes("practice") && n.includes("drop")))) return "Drop-In"
-  if (names.some((n) => n.includes("nhsca") || n.includes("national team") || n.includes("registration + apparel"))) {
-    return "Tournament Fee"
-  }
-  if (method.includes("national team")) return "Tournament Fee"
-  if (method.includes("wrestling guild")) return "Guild"
-  if (amountLooksLikeGuild(total) && names.some((n) => /practice drop|order items|nc united store/i.test(n))) return "Guild"
-  // When no line items: infer Tournament Fee from typical event total
-  if (names.length === 0 && total >= 200 && total <= 300) return "Tournament Fee"
-  // Practice drop-in is $25 — not $30 (Guild)
-  if (names.length === 0 && amountLooksLikePracticeDropIn(total) && (method.includes("pickup") || method.includes("practice") || method.includes("drop-in") || method.includes("drop in"))) return "Drop-In"
-  if (names.length > 0) return "Apparel"
-  return "Other"
+/**
+ * What this order is. Prefer the stored column — it was set by whichever code path took
+ * the money. Only fall back to guessing for rows written before order_type existed, or
+ * for rows the backfill could not classify.
+ */
+function resolveOrderType(order: {
+  order_type?: unknown
+  channel?: string | null
+  shipping_method?: unknown
+  order_items?: { product_name?: string }[] | null
+  total?: number | string | null
+}): OrderType {
+  const stored = order.order_type
+  if (isOrderType(stored) && stored !== "unknown") return stored
+  return classifyLegacyOrder(order)
 }
 
 /** Build one-line product name/summary. Every order gets a product name (never "—" when category is known). */
@@ -87,10 +75,6 @@ function productSummary(
   if (method.includes("blue")) return "NC United Blue – Monthly"
   if (method.includes("practice") || method.includes("pickup")) return "Practice Drop-In"
   if (method.includes("national team")) return "Tournament / Event"
-  // When category was inferred from total (no line items), still show a proper product label
-  if (category === "Blue Sub") return "NC United Blue – Monthly"
-  if (category === "Tournament Fee") return "Tournament / Event"
-  if (category === "Drop-In") return "Practice Drop-In"
   return category === "Other" ? "Order" : category
 }
 
@@ -251,18 +235,7 @@ export default async function OrdersPage() {
             ? 1
             : 0
 
-      const hasDropInProduct = orderItems.some((item: any) => {
-        const name = (item.product_name || "").toLowerCase()
-        return name.includes("practice") || name.includes("drop-in") || name.includes("dropin")
-      })
-      const isLikelyDropIn =
-        amountLooksLikePracticeDropIn(Number(order.total)) &&
-        (shippingMethodStr.toLowerCase().includes("pickup") ||
-          shippingMethodStr.toLowerCase().includes("practice") ||
-          (addr.address1 && String(addr.address1).toLowerCase().includes("practice")))
-
-      const isPracticeDropin = hasDropInProduct || isLikelyDropIn
-      const orderType = isPracticeDropin ? "practice-dropin" : "product"
+      const orderType = resolveOrderType(order)
 
       const line1 =
         addr.address1 ?? addr.line1 ?? addr.shipping_address_line1 ?? ""
@@ -270,6 +243,12 @@ export default async function OrdersPage() {
         addr.address2 ?? addr.line2 ?? addr.shipping_address_line2 ?? null
       const zip =
         addr.zipCode ?? addr.zip ?? addr.postal_code ?? addr.shipping_postal_code ?? ""
+
+      // "Recovered" is the NOT NULL placeholder lib/order-shipping.ts writes when there was
+      // no address to store. Harmless on a registration; blocking on something we have to ship.
+      const resolvedLine1 = String(line1).trim() || String(order.shipping_address_line1 ?? "").trim()
+      const missingShippingAddress =
+        orderTypeRequiresAddress(orderType) && (!resolvedLine1 || resolvedLine1 === "Recovered")
 
       return {
         id: order.id,
@@ -282,7 +261,8 @@ export default async function OrdersPage() {
         total: Number(order.total ?? 0),
         category,
         productSummary: productSummaryStr,
-        orderType: orderType as "product" | "practice-dropin",
+        orderType,
+        missingShippingAddress,
         shippingAddress: {
           line1: String(line1).trim() || "",
           line2: line2 ? String(line2).trim() : null,

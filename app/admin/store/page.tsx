@@ -12,6 +12,7 @@ import {
 } from "lucide-react"
 import { HardLink } from "@/components/hard-link"
 import { createClient } from "@/lib/supabase/client"
+import { orderItemLineRevenue, orderItemUnits } from "@/lib/store/order-item-revenue"
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, BarChart, Bar, PieChart, Pie, Cell } from "recharts"
 
 interface DashboardStats {
@@ -128,7 +129,7 @@ export default function AdminStoreHubPage() {
     // Fetch top products by revenue
     const { data: orderItems } = await supabase
       .from("order_items")
-      .select("product_id, quantity, price_at_purchase, products(id, name, image_url)")
+      .select("product_id, quantity, price, subtotal, price_at_purchase, products(id, name, image_url)")
 
     if (orderItems) {
       const productRevenue: Record<string, { name: string; revenue: number; unitsSold: number; image_url: string | null }> = {}
@@ -146,8 +147,8 @@ export default function AdminStoreHubPage() {
             image_url: product.image_url
           }
         }
-        productRevenue[productId].revenue += (item.price_at_purchase || 0) * (item.quantity || 1)
-        productRevenue[productId].unitsSold += item.quantity || 1
+        productRevenue[productId].revenue += orderItemLineRevenue(item)
+        productRevenue[productId].unitsSold += orderItemUnits(item)
       })
 
       const sorted = Object.entries(productRevenue)
@@ -161,19 +162,20 @@ export default function AdminStoreHubPage() {
     // Fetch inventory alerts
     const { data: variants } = await supabase
       .from("product_variants")
-      .select("stock")
+      .select("stock_quantity")
 
     if (variants) {
-      const lowStock = variants.filter((v: any) => v.stock > 0 && v.stock <= 5).length
-      const outOfStock = variants.filter((v: any) => v.stock === 0).length
+      const lowStock = variants.filter((v: any) => v.stock_quantity > 0 && v.stock_quantity <= 5).length
+      const outOfStock = variants.filter((v: any) => v.stock_quantity === 0).length
       setStats(prev => prev ? { ...prev, lowStockCount: lowStock, outOfStockCount: outOfStock } : null)
     }
 
     setLoading(false)
   }
 
+  // orders.total and order_items line values are stored in DOLLARS, not cents.
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount / 100)
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount)
   }
 
   const pipelineData = stats ? [

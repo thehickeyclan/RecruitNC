@@ -10,6 +10,7 @@ import { resolveNationalTeamOrderTotalCents } from "@/lib/nhsca-hub-checkout-pri
 import { fetchMergedStoreMetadata } from "@/lib/store/stripe-legacy-metadata"
 import { reconcileStoreOrderItemsFromStripe } from "@/lib/store/reconcile-order-items-from-stripe"
 import { isGuildCheckoutSession, isGuildOrderRow } from "@/lib/stripe-guild-detection"
+import { requireAdmin } from "@/lib/admin-auth"
 
 export const dynamic = "force-dynamic"
 
@@ -22,6 +23,10 @@ function getStripe(): Stripe {
 
 export async function POST(request: Request) {
   try {
+    // Rewrites line items on an arbitrary order id using the service-role client. Admin only.
+    const auth = await requireAdmin()
+    if (!auth.ok) return NextResponse.json({ success: false, error: auth.error }, { status: auth.status })
+
     const body = await request.json().catch(() => ({}))
     const orderId = typeof body.orderId === "string" ? body.orderId.trim() : ""
     const force = body.force === true

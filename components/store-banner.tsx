@@ -4,17 +4,18 @@ import Image from "next/image"
 import { ChevronRight, Trophy } from "lucide-react"
 import { HardLink } from "@/components/hard-link"
 import { NC_UNITED_FIRST_IN_FLIGHT_PRODUCT_ID } from "@/lib/nc-united-2026-store-gear"
+import type { StoreCategoryOption } from "@/lib/store/store-categories"
 
 interface StoreBannerProps {
   onShopAll: () => void
   onShopCategory: (categoryId: string) => void
+  /** Derived from the loaded catalog by the store page — never a hardcoded list. */
+  categories: StoreCategoryOption[]
 }
-
-const categories = ["Singlets", "T-Shirts", "Sweatshirts", "Headwear", "Accessories"]
 
 const FIRST_IN_FLIGHT_HREF = `/store-app/product/${NC_UNITED_FIRST_IN_FLIGHT_PRODUCT_ID}`
 
-export function StoreBanner({ onShopAll, onShopCategory }: StoreBannerProps) {
+export function StoreBanner({ onShopAll, onShopCategory, categories }: StoreBannerProps) {
   return (
     <section className="relative overflow-hidden border-b border-white/10 bg-[#050c1d]">
       <div
@@ -95,12 +96,12 @@ export function StoreBanner({ onShopAll, onShopCategory }: StoreBannerProps) {
         <div className="mx-auto mt-8 flex max-w-md flex-wrap justify-center gap-2">
           {categories.map((cat) => (
             <button
-              key={cat}
+              key={cat.id}
               type="button"
-              onClick={() => onShopCategory(cat)}
+              onClick={() => onShopCategory(cat.id)}
               className="min-h-[40px] rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-white/75 backdrop-blur-sm transition-colors hover:bg-white/10 hover:text-white"
             >
-              {cat}
+              {cat.label}
             </button>
           ))}
         </div>
@@ -134,12 +135,12 @@ export function StoreBanner({ onShopAll, onShopCategory }: StoreBannerProps) {
           </button>
           {categories.map((cat) => (
             <button
-              key={cat}
+              key={cat.id}
               type="button"
-              onClick={() => onShopCategory(cat)}
+              onClick={() => onShopCategory(cat.id)}
               className="min-h-[44px] rounded-lg border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-medium text-white/80 backdrop-blur-sm transition-all hover:bg-white/10 hover:text-white"
             >
-              {cat}
+              {cat.label}
             </button>
           ))}
         </div>

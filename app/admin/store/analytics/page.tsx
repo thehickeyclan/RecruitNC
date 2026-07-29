@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 import { HardLink } from "@/components/hard-link"
 import { createClient } from "@/lib/supabase/client"
+import { orderItemLineRevenue, orderItemUnits } from "@/lib/store/order-item-revenue"
 import { 
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, 
   Tooltip, BarChart, Bar, PieChart, Pie, Cell, Area, AreaChart
@@ -70,7 +71,7 @@ export default function StoreAnalyticsPage() {
     // Fetch order items for product breakdown
     const { data: orderItems } = await supabase
       .from("order_items")
-      .select("order_id, product_id, quantity, price_at_purchase, products(id, name, image_url, category)")
+      .select("order_id, product_id, quantity, price, subtotal, price_at_purchase, products(id, name, image_url, category)")
 
     if (!orders) {
       setLoading(false)
@@ -136,8 +137,8 @@ export default function StoreAnalyticsPage() {
       if (!productRevenue[product.id]) {
         productRevenue[product.id] = { name: product.name, revenue: 0, units: 0, image_url: product.image_url }
       }
-      productRevenue[product.id].revenue += (item.price_at_purchase || 0) * (item.quantity || 1)
-      productRevenue[product.id].units += item.quantity || 1
+      productRevenue[product.id].revenue += orderItemLineRevenue(item)
+      productRevenue[product.id].units += orderItemUnits(item)
     })
 
     const topProducts = Object.entries(productRevenue)
@@ -171,8 +172,9 @@ export default function StoreAnalyticsPage() {
     setLoading(false)
   }
 
+  // orders.total and order_items line values are stored in DOLLARS, not cents.
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount / 100)
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount)
   }
 
   const formatPercent = (value: number) => {
