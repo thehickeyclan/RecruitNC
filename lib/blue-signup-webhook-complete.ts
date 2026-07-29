@@ -281,6 +281,7 @@ export async function completeBlueSignupAfterStripePayment(
       ...orderShippingFields(name, {}),
       shipping_address: {},
       shipping_method: { name: "Blue membership", price: 0, admin_category: "Blue Sub" },
+      order_type: "blue_subscription",
       subtotal: amountTotalDollars,
       shipping_cost: 0,
       tax: 0,
