@@ -139,6 +139,11 @@ export function TocChampionJacketSection() {
                   </p>
                   <h4 className="mt-2 text-xl font-black text-white sm:text-2xl">{award.title}</h4>
                   <p className="mt-3 text-sm leading-relaxed text-white/78 sm:text-base">{award.description}</p>
+                  {"highlight" in award && award.highlight ? (
+                    <p className="mt-3 text-sm font-black leading-relaxed text-white sm:text-base">
+                      {award.highlight}
+                    </p>
+                  ) : null}
                   <ul className="mt-4 grid gap-2 text-sm leading-relaxed text-white/78">
                     {award.bullets.map((bullet) => (
                       <li key={bullet} className="flex gap-2">
@@ -150,6 +155,11 @@ export function TocChampionJacketSection() {
                   {"note" in award && award.note ? (
                     <p className="mt-4 rounded-lg border border-[#D7B95A]/30 bg-[#D7B95A]/10 p-3 text-xs leading-relaxed text-[#f1df9b] sm:text-sm">
                       {award.note}
+                    </p>
+                  ) : null}
+                  {"closing" in award && award.closing ? (
+                    <p className={`mt-4 text-[#D7B95A] ${tocDisplayClass()} tracking-[0.14em] uppercase`}>
+                      {award.closing}
                     </p>
                   ) : null}
                 </div>
