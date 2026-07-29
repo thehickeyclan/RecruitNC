@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { markdownToHtml, toPlainText } from "@/lib/blast-format"
 import { sendAdminBlastEmails } from "@/lib/admin-messaging-blast-email"
-import { parseEmailLogoVariant } from "@/lib/admin-blast-email-html"
+import { resolveAdminBlastSender } from "@/lib/admin-blast-senders"
 import { getAdminMessagingRecipients } from "@/lib/admin-messaging-recipients"
 import { sendSms, toE164 } from "@/lib/sms"
 
@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
     testEmail?: string
     testOnly?: boolean
     logoVariant?: string
+    emailSender?: string
     channels?: { inApp?: boolean; email?: boolean; sms?: boolean }
   } = {}
   try {
@@ -51,7 +52,7 @@ export async function POST(request: NextRequest) {
   const rawBodyHtml = typeof body.bodyHtml === "string" ? body.bodyHtml.trim() : ""
   const testEmail = typeof body.testEmail === "string" ? body.testEmail.trim() || null : null
   const testOnly = body.testOnly === true
-  const logoVariant = parseEmailLogoVariant(body.logoVariant)
+  const sender = resolveAdminBlastSender({ emailSender: body.emailSender, logoVariant: body.logoVariant })
   const channels = body.channels && typeof body.channels === "object"
     ? { inApp: !!body.channels.inApp, email: !!body.channels.email, sms: !!body.channels.sms }
     : { inApp: false, email: false, sms: false }
@@ -157,7 +158,7 @@ export async function POST(request: NextRequest) {
     const emailResult = await sendAdminBlastEmails(recipients, {
       subject,
       htmlBody,
-      logoVariant,
+      sender,
     })
     result.email.sent = emailResult.sent
     result.email.failed = emailResult.failed

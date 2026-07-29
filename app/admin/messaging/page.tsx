@@ -21,6 +21,8 @@ import { RichTextEditor } from "@/components/rich-text-editor"
 import type { ProfileOption, AudienceGroupOption } from "@/app/api/admin/messaging/audiences/route"
 import type { RecipientRow } from "@/app/api/admin/messaging/recipients/route"
 import type { SentBlastRow } from "@/app/api/admin/messaging/sent/route"
+import type { AdminBlastSenderId } from "@/lib/admin-blast-senders"
+import { ADMIN_BLAST_SENDERS } from "@/lib/admin-blast-senders"
 
 export default function AdminMessagingPage() {
   const [profiles, setProfiles] = useState<ProfileOption[]>([])
@@ -36,7 +38,7 @@ export default function AdminMessagingPage() {
   const [subject, setSubject] = useState("")
   const [body, setBody] = useState("")
   const [channels, setChannels] = useState({ inApp: false, email: true, sms: false })
-  const [logoVariant, setLogoVariant] = useState<"recruitnc" | "nc-united">("nc-united")
+  const [emailSender, setEmailSender] = useState<AdminBlastSenderId>("nc-united")
   const [testEmail, setTestEmail] = useState("")
   const [sending, setSending] = useState(false)
   const [sendResult, setSendResult] = useState<{
@@ -425,7 +427,7 @@ export default function AdminMessagingPage() {
                             bodyHtml: bodyHtml.trim() || undefined,
                             testEmail: testEmail.trim(),
                             testOnly: true,
-                            logoVariant,
+                            emailSender,
                             channels: { ...channels, sms: false, inApp: false },
                           }),
                         })
@@ -511,13 +513,20 @@ export default function AdminMessagingPage() {
                     </label>
                   </div>
                   <div className="flex items-center gap-2 ml-auto">
-                    <Select value={logoVariant} onValueChange={(v) => setLogoVariant(v as "recruitnc" | "nc-united")}>
-                      <SelectTrigger className="w-[140px] bg-white/5 border-white/20 text-white text-sm">
+                    <Select value={emailSender} onValueChange={(v) => setEmailSender(v as AdminBlastSenderId)}>
+                      <SelectTrigger className="w-[240px] bg-white/5 border-white/20 text-white text-sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="nc-united">NC United</SelectItem>
-                        <SelectItem value="recruitnc">RecruitNC</SelectItem>
+                        <SelectItem value="nc-united">
+                          NC United · {ADMIN_BLAST_SENDERS["nc-united"].fromEmail}
+                        </SelectItem>
+                        <SelectItem value="recruitnc">
+                          RecruitNC · {ADMIN_BLAST_SENDERS.recruitnc.fromEmail}
+                        </SelectItem>
+                        <SelectItem value="wrestling-guild">
+                          Wrestling Guild · {ADMIN_BLAST_SENDERS["wrestling-guild"].fromEmail}
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -575,7 +584,7 @@ export default function AdminMessagingPage() {
                       if (subject.trim()) params.set("subject", subject.trim())
                       if (body.trim()) params.set("b64", btoa(unescape(encodeURIComponent(body.trim()))))
                       if (bodyHtml.trim()) params.set("html64", btoa(unescape(encodeURIComponent(bodyHtml.trim()))))
-                      params.set("logo", logoVariant)
+                      params.set("sender", emailSender)
                       window.open(`/admin/messaging/preview?${params.toString()}`, "_blank", "noopener,noreferrer")
                     }}
                   >
@@ -599,7 +608,7 @@ export default function AdminMessagingPage() {
                             subject: subject || "Update from RecruitNC",
                             body: body.trim(),
                             bodyHtml: bodyHtml.trim() || undefined,
-                            logoVariant,
+                            emailSender,
                             channels,
                           }),
                         })

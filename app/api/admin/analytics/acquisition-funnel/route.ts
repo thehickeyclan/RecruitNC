@@ -79,8 +79,11 @@ export async function GET() {
 
   const signupStartToCreateRate7d =
     last7.signup_started > 0 ? Math.round((last7.signup_completed / last7.signup_started) * 100) : null
+  const hasSubmitTrackingGap = last7.signup_submitted > 0 && last7.signup_completed > last7.signup_submitted
   const signupSubmitSuccessRate7d =
-    last7.signup_submitted > 0 ? Math.round((last7.signup_completed / last7.signup_submitted) * 100) : null
+    last7.signup_submitted > 0 && !hasSubmitTrackingGap
+      ? Math.round((last7.signup_completed / last7.signup_submitted) * 100)
+      : null
   const verificationRate7d =
     last7.signup_completed > 0 ? Math.round((last7.verification_completed / last7.signup_completed) * 100) : null
 
@@ -92,6 +95,9 @@ export async function GET() {
     signupStartToCreateRate7d,
     signupSubmitSuccessRate7d,
     verificationRate7d,
+    funnelDataWarning: hasSubmitTrackingGap
+      ? "Submit tracking was added after some account-created events in this 7-day window, so Submit → created is warming up."
+      : null,
     topLoginWallTargets: [...topLoginWallTargets.entries()]
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)

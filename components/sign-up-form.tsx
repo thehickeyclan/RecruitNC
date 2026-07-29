@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -28,12 +28,36 @@ export function SignUpForm() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
+  useEffect(() => {
+    void fetch("/api/track-funnel-event", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      keepalive: true,
+      body: JSON.stringify({
+        event: "signup_started",
+        path: "/auth/signup",
+        source: "legacy_signup_form",
+      }),
+    }).catch(() => {})
+  }, [])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
 
     try {
+      void fetch("/api/track-funnel-event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        keepalive: true,
+        body: JSON.stringify({
+          event: "signup_submitted",
+          path: "/auth/signup",
+          source: "legacy_signup_form",
+        }),
+      }).catch(() => {})
+
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -51,13 +75,56 @@ export function SignUpForm() {
 
       const data = await res.json()
       if (!res.ok) {
-        setError(data?.error || "Failed to create account")
+        const message = data?.error || "Failed to create account"
+        void fetch("/api/track-funnel-event", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          keepalive: true,
+          body: JSON.stringify({
+            event: "signup_error",
+            path: "/auth/signup",
+            source: "legacy_signup_form",
+            message,
+          }),
+        }).catch(() => {})
+        setError(message)
         return
       }
 
+      void fetch("/api/track-funnel-event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        keepalive: true,
+        body: JSON.stringify({
+          event: "signup_completed",
+          path: "/auth/signup",
+          source: "legacy_signup_form",
+        }),
+      }).catch(() => {})
+      void fetch("/api/track-funnel-event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        keepalive: true,
+        body: JSON.stringify({
+          event: "verification_email_sent",
+          path: "/auth/signup",
+          source: "legacy_signup_form",
+        }),
+      }).catch(() => {})
       setSuccess(true)
     } catch (err) {
       console.error(err)
+      void fetch("/api/track-funnel-event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        keepalive: true,
+        body: JSON.stringify({
+          event: "signup_error",
+          path: "/auth/signup",
+          source: "legacy_signup_form_exception",
+          message: err instanceof Error ? err.message : "Unexpected signup exception",
+        }),
+      }).catch(() => {})
       setError("An unexpected error occurred. Please try again.")
     } finally {
       setIsLoading(false)

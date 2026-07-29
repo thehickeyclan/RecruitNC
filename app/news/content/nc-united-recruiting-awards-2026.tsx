@@ -83,11 +83,8 @@ export function NcUnitedRecruitingAwards2026Content({
         deepening ecosystem. Forty-nine wrestlers from across the state have committed to wrestle at the next level — from
         Division I rosters to NJCAA programs hunting for immediate contributors — and the pattern of where they landed
         tells you as much about the colleges doing the recruiting as it does about the talent leaving North Carolina&apos;s
-        mats. See every ranked senior on the{" "}
-        <HardLink href="/public-rankings/2026" className={athleteLinkClass}>
-          Class of 2026 prospect rankings
-        </HardLink>
-        .
+        mats. The Class of 2026 ranking board is now archived as RecruitNC shifts the public prospect rankings to
+        current underclass recruiting classes.
       </p>
       <p>
         Below, we hand out four awards to the colleges that did the most recruiting North Carolina&apos;s Class of 2026.
@@ -338,10 +335,10 @@ export function NcUnitedRecruitingAwards2026Content({
       </p>
       <p className="flex flex-wrap gap-3 text-sm text-slate-600">
         <HardLink
-          href="/public-rankings/2026"
+          href="/public-rankings"
           className="inline-flex items-center rounded-md border-2 border-[#C20017] bg-transparent px-4 py-2 text-sm font-semibold text-[#C20017] transition-colors hover:bg-[#C20017] hover:text-white"
         >
-          Open the Class of 2026 rankings →
+          Open current prospect rankings →
         </HardLink>
         <HardLink
           href="/athletes"

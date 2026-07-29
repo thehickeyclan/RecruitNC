@@ -9,13 +9,15 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { HardLink } from "@/components/hard-link"
 import { Loader2, ArrowLeft, RefreshCw } from "lucide-react"
+import type { AdminBlastSenderId } from "@/lib/admin-blast-senders"
+import { ADMIN_BLAST_SENDERS } from "@/lib/admin-blast-senders"
 
 export default function AdminMessagingPreviewPage() {
   const searchParams = useSearchParams()
   const [subject, setSubject] = useState("")
   const [body, setBody] = useState("")
   const [bodyHtml, setBodyHtml] = useState("")
-  const [logoVariant, setLogoVariant] = useState<"recruitnc" | "nc-united">("nc-united")
+  const [emailSender, setEmailSender] = useState<AdminBlastSenderId>("nc-united")
   const [iframeHtml, setIframeHtml] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -32,7 +34,7 @@ export default function AdminMessagingPreviewPage() {
           subject: subject || "Update from RecruitNC",
           body: body || "Your message here.",
           bodyHtml: bodyHtml || undefined,
-          logoVariant,
+          emailSender,
         }),
       })
       const data = await res.json().catch(() => ({}))
@@ -46,7 +48,7 @@ export default function AdminMessagingPreviewPage() {
     } finally {
       setLoading(false)
     }
-  }, [subject, body, bodyHtml, logoVariant])
+  }, [subject, body, bodyHtml, emailSender])
 
   useEffect(() => {
     const sub = searchParams?.get("subject")
@@ -54,6 +56,7 @@ export default function AdminMessagingPreviewPage() {
     const b64 = searchParams?.get("b64")
     const html64 = searchParams?.get("html64")
     const logo = searchParams?.get("logo")
+    const sender = searchParams?.get("sender")
     let nextSub = ""
     let nextBody = ""
     let nextBodyHtml = ""
@@ -73,8 +76,15 @@ export default function AdminMessagingPreviewPage() {
         nextBodyHtml = ""
       }
     }
-    if (logo === "recruitnc") setLogoVariant("recruitnc")
-    else if (logo === "nc-united") setLogoVariant("nc-united")
+    const resolvedSender: AdminBlastSenderId =
+      sender === "recruitnc" || sender === "wrestling-guild" || sender === "nc-united"
+        ? sender
+        : logo === "recruitnc"
+          ? "recruitnc"
+          : logo === "wrestling-guild"
+            ? "wrestling-guild"
+            : "nc-united"
+    setEmailSender(resolvedSender)
     setSubject((prev) => (nextSub || prev))
     setBody((prev) => (nextBody || prev))
     setBodyHtml(nextBodyHtml)
@@ -88,7 +98,7 @@ export default function AdminMessagingPreviewPage() {
         subject: nextSub || "Update from RecruitNC",
         body: nextBody || "Your message here.",
         bodyHtml: nextBodyHtml || undefined,
-        logoVariant: logo === "recruitnc" ? "recruitnc" : "nc-united",
+        emailSender: resolvedSender,
       }),
     })
       .then((r) => r.json())
@@ -115,14 +125,17 @@ export default function AdminMessagingPreviewPage() {
           </p>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <Label className="text-[#003366]">Header logo</Label>
-              <Select value={logoVariant} onValueChange={(v) => setLogoVariant(v as "recruitnc" | "nc-united")}>
+              <Label className="text-[#003366]">Send as</Label>
+              <Select value={emailSender} onValueChange={(v) => setEmailSender(v as AdminBlastSenderId)}>
                 <SelectTrigger className="mt-1">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="nc-united">NC United (stacked)</SelectItem>
-                  <SelectItem value="recruitnc">RecruitNC (shield)</SelectItem>
+                  <SelectItem value="nc-united">NC United · {ADMIN_BLAST_SENDERS["nc-united"].fromEmail}</SelectItem>
+                  <SelectItem value="recruitnc">RecruitNC · {ADMIN_BLAST_SENDERS.recruitnc.fromEmail}</SelectItem>
+                  <SelectItem value="wrestling-guild">
+                    Wrestling Guild · {ADMIN_BLAST_SENDERS["wrestling-guild"].fromEmail}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
