@@ -1552,7 +1552,7 @@ export default function MatchManagerPage() {
                           {rankSyncResult.parsedSource && <p>Source parsed: {rankSyncResult.parsedSource}</p>}
                           {rankSyncResult.failedSeasons?.length > 0 && (
                             <p className="text-amber-700">
-                              {rankSyncResult.failedSeasons.length} visible season
+                              {rankSyncResult.failedSeasons.length} attempted season
                               {rankSyncResult.failedSeasons.length === 1 ? "" : "s"} could not be saved.
                             </p>
                           )}

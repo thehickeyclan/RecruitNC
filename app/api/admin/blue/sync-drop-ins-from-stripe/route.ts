@@ -154,6 +154,7 @@ export async function POST() {
       ...orderShippingFields(customerName, shippingAddress),
       shipping_address: shippingAddress,
       shipping_method: { name: "Practice Drop-in", price: 0 },
+      order_type: "drop_in",
       subtotal: amountTotal,
       shipping_cost: 0,
       tax: 0,
