@@ -52,22 +52,36 @@ export const TOC_CHAMPION_JACKET = {
 export const TOC_TROPHIES_AND_AWARDS = {
   items: [
     "Every champion receives a 24×36 hard-copy bracket.",
-    "All three placers receive custom Tournament of Champions medals — gold, silver, and bronze.",
+    "First, second, and third place receive custom Tournament of Champions medals — gold, silver, and bronze.",
     "The champion jacket remains winner-only: one wrestler per weight earns it.",
   ],
   featuredAwards: [
     {
-      title: "Champion bracket + podium medals",
-      eyebrow: "Champions & placers",
+      title: "Gold, silver & bronze medals",
+      eyebrow: "1st · 2nd · 3rd place",
+      layout: "wide",
       description:
-        "Every bracket champion receives a 24×36 hard-copy bracket, and all three podium placers receive custom Tournament of Champions gold, silver, and bronze medals.",
+        "The top three wrestlers in each weight class receive custom Tournament of Champions medals — gold for first, silver for second, and bronze for third.",
+      image: {
+        src: "/images/toc/toc-podium-medals.png",
+        alt: "Tournament of Champions gold, silver, and bronze medals with front and back designs",
+        width: 1536,
+        height: 1024,
+      },
+      bullets: ["Gold medal — 1st place", "Silver medal — 2nd place", "Bronze medal — 3rd place"],
+    },
+    {
+      title: "Champion hard-copy bracket",
+      eyebrow: "Bracket champion",
+      description:
+        "Every bracket champion receives a 24×36 hard-copy Tournament of Champions bracket — a permanent record of the path they earned.",
       image: {
         src: "/images/toc/tournament-of-champions-bracket-award.png",
         alt: "Tournament of Champions 24 by 36 hard-copy champion bracket award",
         width: 1536,
         height: 1024,
       },
-      bullets: ["24×36 champion bracket", "Custom gold, silver, and bronze medals", "One champion jacket per weight"],
+      bullets: ["24×36 hard-copy bracket", "Weight class and event branding", "Awarded to every bracket champion"],
     },
     {
       title: "Most Outstanding Wrestler (MOW)",
