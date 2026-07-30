@@ -118,53 +118,63 @@ export function TocChampionJacketSection() {
           </div>
 
           <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {TOC_TROPHIES_AND_AWARDS.featuredAwards.map((award) => (
-              <article
-                key={award.title}
-                className="overflow-hidden rounded-xl border border-white/15 bg-[#06152c] shadow-2xl"
-              >
-                <div className="relative overflow-hidden border-b border-white/10 bg-white">
-                  <Image
-                    src={award.image.src}
-                    alt={award.image.alt}
-                    width={award.image.width}
-                    height={award.image.height}
-                    className="h-auto w-full object-cover"
-                    sizes="(min-width: 1280px) 30vw, (min-width: 768px) 45vw, 100vw"
-                  />
-                </div>
-                <div className="p-4 sm:p-5">
-                  <p className={`text-xs text-[#D7B95A] ${tocDisplayClass()} tracking-[0.18em] uppercase`}>
-                    {award.eyebrow}
-                  </p>
-                  <h4 className="mt-2 text-xl font-black text-white sm:text-2xl">{award.title}</h4>
-                  <p className="mt-3 text-sm leading-relaxed text-white/78 sm:text-base">{award.description}</p>
-                  {"highlight" in award && award.highlight ? (
-                    <p className="mt-3 text-sm font-black leading-relaxed text-white sm:text-base">
-                      {award.highlight}
-                    </p>
-                  ) : null}
-                  <ul className="mt-4 grid gap-2 text-sm leading-relaxed text-white/78">
-                    {award.bullets.map((bullet) => (
-                      <li key={bullet} className="flex gap-2">
-                        <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#CC0000]" aria-hidden />
-                        <span>{bullet}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  {"note" in award && award.note ? (
-                    <p className="mt-4 rounded-lg border border-[#D7B95A]/30 bg-[#D7B95A]/10 p-3 text-xs leading-relaxed text-[#f1df9b] sm:text-sm">
-                      {award.note}
-                    </p>
-                  ) : null}
-                  {"closing" in award && award.closing ? (
-                    <p className={`mt-4 text-[#D7B95A] ${tocDisplayClass()} tracking-[0.14em] uppercase`}>
-                      {award.closing}
-                    </p>
-                  ) : null}
-                </div>
-              </article>
-            ))}
+            {TOC_TROPHIES_AND_AWARDS.featuredAwards.map((award) => {
+              const isWide = "layout" in award && award.layout === "wide"
+
+              return (
+                <article
+                  key={award.title}
+                  className={`overflow-hidden rounded-xl border border-white/15 bg-[#06152c] shadow-2xl ${
+                    isWide ? "md:col-span-2 xl:col-span-3" : ""
+                  }`}
+                >
+                  <div
+                    className={`grid ${isWide ? "lg:grid-cols-[1.4fr_0.8fr]" : ""}`}
+                  >
+                    <div className="relative overflow-hidden border-b border-white/10 bg-white lg:border-b-0 lg:border-r lg:border-white/10">
+                      <Image
+                        src={award.image.src}
+                        alt={award.image.alt}
+                        width={award.image.width}
+                        height={award.image.height}
+                        className="h-auto w-full object-cover"
+                        sizes={isWide ? "(min-width: 1280px) 62vw, 100vw" : "(min-width: 1280px) 30vw, (min-width: 768px) 45vw, 100vw"}
+                      />
+                    </div>
+                    <div className="p-4 sm:p-5">
+                      <p className={`text-xs text-[#D7B95A] ${tocDisplayClass()} tracking-[0.18em] uppercase`}>
+                        {award.eyebrow}
+                      </p>
+                      <h4 className="mt-2 text-xl font-black text-white sm:text-2xl">{award.title}</h4>
+                      <p className="mt-3 text-sm leading-relaxed text-white/78 sm:text-base">{award.description}</p>
+                      {"highlight" in award && award.highlight ? (
+                        <p className="mt-3 text-sm font-black leading-relaxed text-white sm:text-base">
+                          {award.highlight}
+                        </p>
+                      ) : null}
+                      <ul className="mt-4 grid gap-2 text-sm leading-relaxed text-white/78">
+                        {award.bullets.map((bullet) => (
+                          <li key={bullet} className="flex gap-2">
+                            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#CC0000]" aria-hidden />
+                            <span>{bullet}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      {"note" in award && award.note ? (
+                        <p className="mt-4 rounded-lg border border-[#D7B95A]/30 bg-[#D7B95A]/10 p-3 text-xs leading-relaxed text-[#f1df9b] sm:text-sm">
+                          {award.note}
+                        </p>
+                      ) : null}
+                      {"closing" in award && award.closing ? (
+                        <p className={`mt-4 text-[#D7B95A] ${tocDisplayClass()} tracking-[0.14em] uppercase`}>
+                          {award.closing}
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+                </article>
+              )
+            })}
           </div>
         </div>
 
