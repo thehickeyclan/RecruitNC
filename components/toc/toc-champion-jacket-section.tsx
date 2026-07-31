@@ -97,24 +97,13 @@ export function TocChampionJacketSection() {
           id="trophies-awards"
           className="mt-10 sm:mt-14 rounded-2xl border border-white/15 bg-white/[0.06] p-4 sm:p-6"
         >
-          <div className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
-            <div>
-              <p className={`text-[#D7B95A] text-sm sm:text-base mb-2 ${tocDisplayClass()} tracking-[0.18em] uppercase`}>
-                Trophies & awards
-              </p>
-              <h3 className={`text-3xl sm:text-4xl text-white leading-none ${tocDisplayClass()}`}>
-                A stage built around what wrestlers earn.
-              </h3>
-            </div>
-
-            <ul className="grid gap-3 text-white/85 text-base leading-relaxed sm:text-lg md:grid-cols-3">
-              {TOC_TROPHIES_AND_AWARDS.items.map((item) => (
-                <li key={item} className="flex gap-3">
-                  <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-[#D7B95A]" aria-hidden />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
+          <div>
+            <p className={`text-[#D7B95A] text-sm sm:text-base mb-2 ${tocDisplayClass()} tracking-[0.18em] uppercase`}>
+              Trophies & awards
+            </p>
+            <h3 className={`max-w-3xl text-3xl sm:text-4xl text-white leading-none ${tocDisplayClass()}`}>
+              A stage built around what wrestlers earn.
+            </h3>
           </div>
 
           <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
