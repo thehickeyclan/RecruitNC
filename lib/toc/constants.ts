@@ -57,18 +57,18 @@ export const TOC_TROPHIES_AND_AWARDS = {
   ],
   featuredAwards: [
     {
-      title: "Gold, silver & bronze medals",
+      title: "The inaugural medal",
       eyebrow: "1st · 2nd · 3rd place",
       layout: "wide",
       description:
-        "The top three wrestlers in each weight class receive custom Tournament of Champions medals — gold for first, silver for second, and bronze for third.",
+        "Designed with a timeless Olympic-inspired look, the Tournament of Champions medal is a premium 4-inch, heavyweight award built to honor North Carolina’s best. Available in gold, silver, and bronze with a custom navy-and-white ribbon, it is designed to be a lasting symbol of achievement.",
       image: {
         src: "/images/toc/toc-podium-medals.png",
         alt: "Tournament of Champions gold, silver, and bronze medals with front and back designs",
         width: 1536,
         height: 1024,
       },
-      bullets: ["Gold medal — 1st place", "Silver medal — 2nd place", "Bronze medal — 3rd place"],
+      bullets: ["Gold — 1st place", "Silver — 2nd place", "Bronze — 3rd place"],
     },
     {
       title: "Champion hard-copy bracket",
