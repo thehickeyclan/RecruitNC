@@ -7,8 +7,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { HardLink } from "@/components/hard-link"
-import { Loader2, RefreshCw, ArrowLeft, Check, Users } from "lucide-react"
+import { Loader2, RefreshCw, ArrowLeft, Check, Users, Eye } from "lucide-react"
 
 type Nomination = {
   id: string
@@ -38,6 +39,7 @@ export default function TocNominationsAdminPage() {
   const [error, setError] = useState<string | null>(null)
   const [tableMissing, setTableMissing] = useState(false)
   const [setupHint, setSetupHint] = useState<string | null>(null)
+  const [openNote, setOpenNote] = useState<Nomination | null>(null)
 
   const newCount = useMemo(() => rows.filter((r) => !r.reviewed).length, [rows])
 
@@ -206,8 +208,26 @@ export default function TocNominationsAdminPage() {
                       <TableCell>{r.club ?? "—"}</TableCell>
                       <TableCell>{r.weight_class ?? "—"}</TableCell>
                       <TableCell>{r.graduation_year ?? "—"}</TableCell>
-                      <TableCell className="max-w-[200px] text-sm text-muted-foreground truncate" title={r.notes ?? ""}>
-                        {r.notes ?? "—"}
+                      <TableCell className="min-w-[260px] max-w-[380px] align-top">
+                        {r.notes ? (
+                          <div className="space-y-2">
+                            <p className="line-clamp-2 whitespace-normal text-sm leading-relaxed text-muted-foreground">
+                              {r.notes}
+                            </p>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              className="h-auto px-0 text-[#B31B1B] hover:bg-transparent hover:text-[#8f1515]"
+                              onClick={() => setOpenNote(r)}
+                            >
+                              <Eye className="mr-1 h-3.5 w-3.5" />
+                              View full note
+                            </Button>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">—</span>
+                        )}
                       </TableCell>
                       <TableCell className="text-sm whitespace-nowrap">{formatSubmittedAt(r.created_at)}</TableCell>
                       <TableCell>
@@ -229,6 +249,30 @@ export default function TocNominationsAdminPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={Boolean(openNote)} onOpenChange={(open) => !open && setOpenNote(null)}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{openNote?.athlete_name ?? "Nomination note"}</DialogTitle>
+            <DialogDescription>
+              {openNote ? (
+                <>
+                  {openNote.school ?? "School TBD"}
+                  {openNote.weight_class ? ` · ${openNote.weight_class} lbs` : ""}
+                  {openNote.graduation_year ? ` · Class of ${openNote.graduation_year}` : ""}
+                  {" · "}
+                  Submitted {formatSubmittedAt(openNote.created_at)} by {openNote.submitted_by_email}
+                </>
+              ) : null}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-xl border bg-muted/30 p-4">
+            <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-foreground">
+              {openNote?.notes ?? "No notes submitted."}
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
