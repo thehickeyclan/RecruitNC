@@ -17,6 +17,7 @@ import { JumpingLevelsWhatDrivesRapidImprovementContent } from "../content/jumpi
 import { AauScholasticDuals2026FloridaContent } from "../content/aau-scholastic-duals-2026-florida"
 import { UnitedAscent20260718Content } from "../content/united-ascent-2026-07-18"
 import { UnitedAscent20260725Content } from "../content/united-ascent-2026-07-25"
+import { UnitedAscent20260801Content } from "../content/united-ascent-2026-08-01"
 import { TournamentOfChampionsAnnouncedContent } from "../content/tournament-of-champions-announced"
 import { TheWeightOfTheScaleContent } from "../content/the-weight-of-the-scale"
 import { CadenPerryWarriorScholarshipAnnouncedContent } from "../content/caden-perry-warrior-scholarship-announced"
@@ -35,6 +36,7 @@ const ANNOUNCEMENT_CONTENT: Record<string, () => JSX.Element> = {
   "tournament-of-champions-announced": () => <TournamentOfChampionsAnnouncedContent />,
   "caden-perry-warrior-scholarship-announced": () => <CadenPerryWarriorScholarshipAnnouncedContent />,
   "the-weight-of-the-scale": () => <TheWeightOfTheScaleContent />,
+  "united-ascent-2026-08-01": () => <UnitedAscent20260801Content />,
   "united-ascent-2026-07-25": () => <UnitedAscent20260725Content />,
   "united-ascent-2026-07-18": () => <UnitedAscent20260718Content />,
   "jumping-levels-what-drives-rapid-improvement": () => <JumpingLevelsWhatDrivesRapidImprovementContent />,

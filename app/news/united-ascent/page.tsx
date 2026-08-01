@@ -48,7 +48,16 @@ export default function UnitedAscentArchivePage() {
                     className="object-contain"
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   />
-                ) : null}
+                ) : (
+                  <div className="flex h-full flex-col items-center justify-center bg-gradient-to-br from-[#13294B] to-[#071529] p-6 text-center">
+                    <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#D3B574]">
+                      United Ascent
+                    </p>
+                    <p className="mt-4 text-3xl font-black leading-none text-white">VOL. 1</p>
+                    <p className="mt-1 text-3xl font-black leading-none text-white">NO. 3</p>
+                    <p className="mt-4 text-sm font-medium text-white/55">North Carolina Wrestling News</p>
+                  </div>
+                )}
               </div>
               <div className="p-5">
                 <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-white/45">
