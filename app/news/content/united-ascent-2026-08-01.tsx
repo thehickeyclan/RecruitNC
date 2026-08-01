@@ -1,24 +1,9 @@
-import Image from "next/image"
 import Link from "next/link"
 import { UnitedAscentSubscribeCta } from "@/components/news/united-ascent-subscribe-cta"
 
 export function UnitedAscent20260801Content() {
   return (
     <div className="space-y-10">
-      <figure className="not-prose overflow-hidden rounded-xl border border-stone-300 bg-[#e8ddc8] shadow-sm">
-        <Image
-          src="/images/united-ascent/2026-08-01-cover.png"
-          alt="United Ascent, August 1, 2026 — North Carolina wrestling news"
-          width={1088}
-          height={1408}
-          className="h-auto w-full"
-          priority
-        />
-        <figcaption className="px-4 py-3 text-center text-xs text-stone-600">
-          United Ascent · Vol. 1, No. 3 · August 1, 2026
-        </figcaption>
-      </figure>
-
       <div className="not-prose rounded-xl border border-[#D3B574]/50 bg-[#13294B] p-6 text-white">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#D3B574]">United Ascent</p>
         <p className="mt-2 text-lg font-semibold">Vol. 1, No. 3 · August 1, 2026</p>
