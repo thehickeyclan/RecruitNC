@@ -5,7 +5,7 @@ import { requireTocBracketViewer } from "@/lib/toc/require-toc-bracket-viewer"
 
 export const dynamic = "force-dynamic"
 
-/** Admin-only until TOC_BRACKETS_PUBLIC_ENABLED=true. */
+/** Admin-only bracket summaries until TOC leadership explicitly publishes draws. */
 export async function GET() {
   const gate = await requireTocBracketViewer()
   if (!gate.ok) {

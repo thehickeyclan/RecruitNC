@@ -647,6 +647,11 @@ export const TOC_CONFIRMED_COLLEGES_DEFAULT = [
     logoUrl:
       "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/bi-_P2AfNJKAJTz7hWXHv-Washington%20%26%20Lee.png",
   },
+  {
+    name: "Belmont Abbey",
+    logoUrl:
+      "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logos/college/Belmont%20Abbey%20College-1755181484888.jpeg",
+  },
 ] as const
 
 /** Program names from code defaults — not a Supabase-only list. */

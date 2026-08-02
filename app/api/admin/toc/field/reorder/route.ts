@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 import { TOC_MAX_CONFIRMED_PER_WEIGHT } from "@/lib/toc/invitations"
-import { requireTocInvitationManager } from "@/lib/toc/require-toc-invitation-manager"
+import { requireAdmin } from "@/lib/admin-auth"
 import { createAdminClientFresh } from "@/lib/supabase/admin"
 
 export const dynamic = "force-dynamic"
@@ -24,7 +24,7 @@ const reorderSchema = z.object({
 
 /** Reorder confirmed TOC wrestlers in one pass so drag/drop swaps do not hit duplicate seed conflicts. */
 export async function PATCH(request: Request) {
-  const auth = await requireTocInvitationManager()
+  const auth = await requireAdmin()
   if (!auth.ok) {
     return NextResponse.json({ error: auth.error }, { status: auth.status })
   }

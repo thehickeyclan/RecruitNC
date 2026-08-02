@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { requireTocInvitationManager } from "@/lib/toc/require-toc-invitation-manager"
+import { requireAdmin } from "@/lib/admin-auth"
 import { createAdminClientFresh } from "@/lib/supabase/admin"
 import { sendTocAthleteInviteEmail } from "@/lib/toc/email"
 import { buildTocAthleteInviteMessage } from "@/lib/toc/invite-message"
@@ -10,7 +10,7 @@ import { tocInvitationsRlsHelp } from "@/lib/toc/supabase-rls"
 export const dynamic = "force-dynamic"
 
 export async function GET() {
-  const auth = await requireTocInvitationManager()
+  const auth = await requireAdmin()
   if (!auth.ok) {
     return NextResponse.json({ error: auth.error }, { status: auth.status })
   }
@@ -47,7 +47,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const auth = await requireTocInvitationManager()
+  const auth = await requireAdmin()
   if (!auth.ok) {
     return NextResponse.json({ error: auth.error }, { status: auth.status })
   }
