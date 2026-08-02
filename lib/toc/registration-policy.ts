@@ -3,8 +3,8 @@
 export const TOC_REGISTRATION_FEE_USD = 75 as const
 export const TOC_CONFIRM_WITHIN_DAYS = 7 as const
 /** Fixed payment deadline for all invited athletes (Year 1). */
-export const TOC_REGISTRATION_PAYMENT_DUE_ISO = "2026-08-01" as const
-export const TOC_REGISTRATION_PAYMENT_DUE_DISPLAY = "August 1, 2026" as const
+export const TOC_REGISTRATION_PAYMENT_DUE_ISO = "2026-08-05" as const
+export const TOC_REGISTRATION_PAYMENT_DUE_DISPLAY = "August 5, 2026" as const
 
 export const TOC_REGISTRATION_FEE_COVERS =
   "top-three placement awards at each weight and the champion jacket program" as const
