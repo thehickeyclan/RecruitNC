@@ -16,7 +16,7 @@ describe("buildTocAthleteInviteMessage", () => {
     expect(msg.emailBody).toContain(url)
     expect(msg.emailBody).toContain("Please confirm within 7 days")
     expect(msg.emailBody).not.toContain(formatTocRegistrationFee())
-    expect(msg.emailBody).not.toContain("August 1, 2026")
+    expect(msg.emailBody).not.toContain("August 5, 2026")
     expect(msg.emailBody).toContain(msg.eventPageUrl)
     expect(msg.smsBody).toContain(url)
     expect(msg.smsBody).not.toContain(formatTocRegistrationFee())

@@ -15,10 +15,10 @@ describe("toc registration policy", () => {
     expect(isConfirmPastDeadline("2026-06-01", new Date("2026-06-10"))).toBe(true)
   })
 
-  it("uses fixed August 1 payment deadline", () => {
+  it("uses fixed August 5 payment deadline", () => {
     expect(registrationPaymentDueDisplay()).toBe(TOC_REGISTRATION_PAYMENT_DUE_DISPLAY)
-    expect(isRegistrationPaymentPastDue(new Date(2026, 6, 31, 12, 0, 0))).toBe(false)
-    expect(isRegistrationPaymentPastDue(new Date(2026, 7, 2, 12, 0, 0))).toBe(true)
+    expect(isRegistrationPaymentPastDue(new Date(2026, 7, 5, 12, 0, 0))).toBe(false)
+    expect(isRegistrationPaymentPastDue(new Date(2026, 7, 6, 12, 0, 0))).toBe(true)
   })
 
   it("invite lines ask for verbal confirm only (no payment in email)", () => {
@@ -26,6 +26,6 @@ describe("toc registration policy", () => {
     expect(lines.join(" ")).toContain(String(TOC_CONFIRM_WITHIN_DAYS))
     expect(lines.join(" ")).toContain("secure card payment")
     expect(lines.join(" ")).not.toContain(formatTocRegistrationFee())
-    expect(lines.join(" ")).not.toContain("August 1, 2026")
+    expect(lines.join(" ")).not.toContain("August 5, 2026")
   })
 })
