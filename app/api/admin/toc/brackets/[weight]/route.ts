@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { requireTocInvitationManager } from "@/lib/toc/require-toc-invitation-manager"
+import { requireAdmin } from "@/lib/admin-auth"
 import { createAdminClient } from "@/lib/supabase/admin"
 import {
   getBracketLockStatus,
@@ -18,7 +18,7 @@ function parseWeight(raw: string): number | null {
 }
 
 export async function GET(_request: Request, { params }: Params) {
-  const auth = await requireTocInvitationManager()
+  const auth = await requireAdmin()
   if (!auth.ok) {
     return NextResponse.json({ error: auth.error }, { status: auth.status })
   }
@@ -38,7 +38,7 @@ export async function GET(_request: Request, { params }: Params) {
 }
 
 export async function POST(_request: Request, { params }: Params) {
-  const auth = await requireTocInvitationManager()
+  const auth = await requireAdmin()
   if (!auth.ok) {
     return NextResponse.json({ error: auth.error }, { status: auth.status })
   }
@@ -58,7 +58,7 @@ export async function POST(_request: Request, { params }: Params) {
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
-  const auth = await requireTocInvitationManager()
+  const auth = await requireAdmin()
   if (!auth.ok) {
     return NextResponse.json({ error: auth.error }, { status: auth.status })
   }

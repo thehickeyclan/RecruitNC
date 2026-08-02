@@ -1,10 +1,16 @@
 import { NextResponse } from "next/server"
+import { requireAdmin } from "@/lib/admin-auth"
 import { createAdminClient } from "@/lib/supabase/admin"
 
 export const dynamic = "force-dynamic"
 
-/** Public confirmed field — RLS allows status=confirmed reads; service role for athlete join. */
+/** Confirmed field is private until TOC staff explicitly publishes rosters. */
 export async function GET() {
+  const auth = await requireAdmin()
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.error, field: [] }, { status: auth.status })
+  }
+
   try {
     const admin = createAdminClient()
 

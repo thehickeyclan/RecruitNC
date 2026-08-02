@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { requireAdmin } from "@/lib/admin-auth"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { mapAthleteRow, matchesAthleteNameSearch } from "@/lib/toc/invitation-service"
 
@@ -11,8 +12,13 @@ type InvitationJoinRow = {
   athletes: Record<string, unknown> | Record<string, unknown>[] | null
 }
 
-/** Public athlete search for TOC confirmation — only athletes with an active invitation. */
+/** Private TOC invitation search — do not expose invited/confirmed rosters publicly. */
 export async function GET(request: Request) {
+  const auth = await requireAdmin()
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.error, athletes: [] }, { status: auth.status })
+  }
+
   try {
     const { searchParams } = new URL(request.url)
     const query = (searchParams.get("q") ?? "").trim()

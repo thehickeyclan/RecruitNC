@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic"
 
 type Params = { params: Promise<{ weight: string }> }
 
-/** Admin-only until TOC_BRACKETS_PUBLIC_ENABLED=true. */
+/** Admin-only bracket draw until TOC leadership explicitly publishes draws. */
 export async function GET(_request: Request, { params }: Params) {
   const gate = await requireTocBracketViewer()
   if (!gate.ok) {
