@@ -1,9 +1,8 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { ClubLocatorMap } from "@/components/clubs/club-locator-map"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { MapPin, Search, ShieldCheck, Users } from "lucide-react"
+import { TocPatrioticBar, tocDisplayClass } from "@/components/toc/toc-theme"
+import { Search, ShieldCheck, Trophy, Users } from "lucide-react"
 
 export const metadata: Metadata = {
   title: "North Carolina Wrestling Club Map | RecruitNC",
@@ -20,55 +19,75 @@ export const metadata: Metadata = {
 
 export default function ClubsPage() {
   return (
-    <main className="min-h-screen bg-[#061427] text-white">
-      <section className="relative overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(220,38,38,0.28),transparent_28%),radial-gradient(circle_at_75%_12%,rgba(251,191,36,0.18),transparent_25%),linear-gradient(135deg,#061427,#0b2444_50%,#061427)]">
-        <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(255,255,255,.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.08)_1px,transparent_1px)] [background-size:54px_54px]" />
-        <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-          <div className="max-w-4xl">
-            <Badge className="mb-5 bg-amber-400 text-slate-950 hover:bg-amber-300">
-              <MapPin className="mr-2 h-4 w-4" />
-              RecruitNC Club Locator
-            </Badge>
-            <h1 className="text-4xl font-black tracking-tight sm:text-6xl">
-              Find North Carolina wrestling clubs.
+    <main className="min-h-screen overflow-hidden bg-[#060f1f] text-white">
+      <section className="relative border-b border-white/10 bg-[#0B1D3A]">
+        <TocPatrioticBar />
+        <div className="absolute inset-0 opacity-[0.18] [background-image:linear-gradient(rgba(255,255,255,.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.08)_1px,transparent_1px)] [background-size:64px_64px]" />
+        <div className="absolute -right-24 top-10 h-72 w-72 rounded-full bg-[#CC0000]/20 blur-3xl" />
+        <div className="absolute left-8 top-20 h-48 w-48 rounded-full bg-amber-300/10 blur-3xl" />
+
+        <div className="relative mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 sm:py-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-end lg:px-8 lg:py-20">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.32em] text-[#D7B968]">
+              RecruitNC · North Carolina Wrestling
+            </p>
+            <h1 className={`mt-5 max-w-4xl text-5xl leading-[0.92] text-white sm:text-7xl ${tocDisplayClass()}`}>
+              Club locator
             </h1>
-            <p className="mt-6 max-w-3xl text-lg leading-8 text-slate-200 sm:text-xl">
-              A public map of wrestling clubs and training centers across North Carolina, built from verified club
-              records and connected to RecruitNC athlete, recruiting, and commitment data.
+            <p className={`mt-3 text-3xl leading-none text-white/95 sm:text-5xl ${tocDisplayClass()}`}>
+              Find the rooms building North Carolina wrestling.
+            </p>
+            <p className="mt-6 max-w-2xl text-base leading-8 text-white/70 sm:text-lg">
+              A public directory of wrestling clubs and training centers across North Carolina — connected to
+              RecruitNC athletes, verified locations, and the data that shows where talent is developing.
             </p>
 
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Button asChild className="bg-red-600 text-white hover:bg-red-500">
-                <a href="#club-map">Explore the map</a>
-              </Button>
-              <Button asChild variant="outline" className="border-white/20 bg-white/5 text-white hover:bg-white/10">
-                <Link href="/athletes">Search athletes</Link>
-              </Button>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <a
+                href="#club-map"
+                className={`inline-flex min-h-12 items-center justify-center rounded-sm bg-[#CC0000] px-6 py-3 text-lg text-white shadow-lg shadow-black/20 transition hover:bg-[#a80000] ${tocDisplayClass()}`}
+              >
+                Explore the map
+              </a>
+              <Link
+                href="/athletes"
+                className={`inline-flex min-h-12 items-center justify-center rounded-sm border-2 border-white/25 px-6 py-3 text-lg text-white transition hover:bg-white/10 ${tocDisplayClass()}`}
+              >
+                Search athletes
+              </Link>
             </div>
           </div>
 
-          <div className="mt-10 grid gap-4 sm:grid-cols-3">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur">
-              <Search className="h-6 w-6 text-amber-300" />
-              <h2 className="mt-3 font-black">Search by club or city</h2>
-              <p className="mt-2 text-sm text-slate-300">Quickly find nearby programs and training options.</p>
+          <div className="rounded-sm border border-white/10 bg-[#061427]/80 p-5 shadow-2xl shadow-black/30">
+            <div className="border-l-4 border-[#CC0000] pl-4">
+              <p className={`text-3xl text-white ${tocDisplayClass()}`}>A smarter club directory</p>
+              <p className="mt-2 text-sm leading-6 text-white/65">
+                Clubs are matched through canonical records and aliases, so RAW, Raleigh Area Wrestling, and other
+                common naming variations resolve to one verified program instead of messy duplicate listings.
+              </p>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur">
-              <Users className="h-6 w-6 text-amber-300" />
-              <h2 className="mt-3 font-black">Connected to RecruitNC</h2>
-              <p className="mt-2 text-sm text-slate-300">See athlete counts, boys/girls totals, and commitment activity.</p>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur">
-              <ShieldCheck className="h-6 w-6 text-amber-300" />
-              <h2 className="mt-3 font-black">Built for verification</h2>
-              <p className="mt-2 text-sm text-slate-300">Alias support keeps duplicate club names from becoming duplicate pins.</p>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              {[
+                { icon: Search, label: "Search", text: "Find clubs by name, city, or website." },
+                { icon: Users, label: "Athlete data", text: "See RecruitNC athlete totals by program." },
+                { icon: Trophy, label: "Commitments", text: "Surface recent college commitment activity." },
+                { icon: ShieldCheck, label: "Verified", text: "Separate confirmed clubs from profile text." },
+              ].map(({ icon: Icon, label, text }) => (
+                <div key={label} className="rounded-sm border border-white/10 bg-white/[0.04] p-4">
+                  <Icon className="h-5 w-5 text-[#D7B968]" />
+                  <h2 className={`mt-3 text-xl text-white ${tocDisplayClass()}`}>{label}</h2>
+                  <p className="mt-1 text-sm leading-5 text-white/55">{text}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
+        <TocPatrioticBar />
       </section>
 
       <section id="club-map" className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <ClubLocatorMap />
+        <ClubLocatorMap accessToken={process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? ""} />
       </section>
     </main>
   )
