@@ -40,25 +40,25 @@ export const NHSCA_DUALS_2026_DAY2_TEAM_DINNER_PHOTO =
   "/national-team/nhsca-duals-2026/day-2-team-dinner.png"
 
 export const NHSCA_DUALS_2026_COLTON_PALMER_DAY2_RECAP_VIDEO =
-  "/national-team/nhsca-duals-2026/videos/colton-palmer-day-2-recap.mov"
+  "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/national-team/nhsca-duals-2026/videos/colton-palmer-day-2-recap.mov"
 
 export const NHSCA_DUALS_2026_MOW_TOBIN_DANNY_VIDEO =
-  "/national-team/nhsca-duals-2026/videos/mow-tobin-danny.mov"
+  "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/national-team/nhsca-duals-2026/videos/mow-tobin-danny.mov"
 
 export const NHSCA_DUALS_2026_XAN_JAXON_INTERVIEW_VIDEO =
-  "/national-team/nhsca-duals-2026/videos/xan-moody-jaxon-thomas-interview.mov"
+  "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/national-team/nhsca-duals-2026/videos/xan-moody-jaxon-thomas-interview.mov"
 
 export const NHSCA_DUALS_2026_XAN_MOODY_HIGHLIGHT_REEL_VIDEO =
-  "/national-team/nhsca-duals-2026/videos/xan-moody-highlight-reel.mov"
+  "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/national-team/nhsca-duals-2026/videos/xan-moody-highlight-reel.mov"
 
 export const NHSCA_DUALS_2026_JAXON_THOMAS_HIGHLIGHT_REEL_VIDEO =
-  "/national-team/nhsca-duals-2026/videos/jaxon-thomas-highlight.mov"
+  "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/national-team/nhsca-duals-2026/videos/jaxon-thomas-highlight.mov"
 
 export const NHSCA_DUALS_2026_JEKAI_SEDGWICK_HIGHLIGHT_REEL_VIDEO =
-  "/national-team/nhsca-duals-2026/videos/jekai-sedgwick-highlight-reel.mov"
+  "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/national-team/nhsca-duals-2026/videos/jekai-sedgwick-highlight-reel.mov"
 
 export const NHSCA_DUALS_2026_AYDEN_SUMNERS_HIGHLIGHT_REEL_VIDEO =
-  "/national-team/nhsca-duals-2026/videos/ayden-sumners-highlight-reel.mov"
+  "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/national-team/nhsca-duals-2026/videos/ayden-sumners-highlight-reel.mov"
 
 export const NHSCA_DUALS_2026_CORY_THOMAS_PORTRAIT_PHOTO =
   "/national-team/nhsca-duals-2026/media/cory-thomas-portrait.png"
@@ -70,7 +70,7 @@ export const NHSCA_DUALS_2026_SAMMY_GANTT_PORTRAIT_PHOTO =
   "/national-team/nhsca-duals-2026/media/sammy-gantt-portrait.png"
 
 export const NHSCA_DUALS_2026_NC_UNITED_APPAREL_VIDEO =
-  "/national-team/nhsca-duals-2026/videos/nc-united-apparel.mov"
+  "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/national-team/nhsca-duals-2026/videos/nc-united-apparel.mov"
 
 export const NHSCA_DUALS_2026_APPAREL_VIDEO_MOMENT: NhscaDualsVideoMoment = {
   id: "nc-united-apparel",

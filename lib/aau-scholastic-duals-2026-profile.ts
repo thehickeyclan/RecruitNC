@@ -18,7 +18,7 @@ export const AAU_SCHOLASTIC_DUALS_2026_PROFILE_HIGHLIGHT_LABEL =
 
 /** Extra profile-only highlight reels (flip card may still use a single `highlightVideoSrc`). */
 export const AAU_SCHOLASTIC_DUALS_2026_PROFILE_HIGHLIGHT_EXTRAS: Record<string, string[]> = {
-  "Jacob Perry": ["/national-team/aau-scholastic-duals-2026/videos/jacob-perry-highlight-2.mov"],
+  "Jacob Perry": ["https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/national-team/aau-scholastic-duals-2026/videos/jacob-perry-highlight-2.mov"],
 }
 
 /** Resolve AAU roster wrestler name for a public profile (override pin or name match). */

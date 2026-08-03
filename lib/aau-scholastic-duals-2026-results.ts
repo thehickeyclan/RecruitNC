@@ -151,14 +151,14 @@ export const AAU_SCHOLASTIC_DUALS_2026_TEAM_VICTORY_PHOTO = {
 } as const
 
 export const AAU_SCHOLASTIC_DUALS_2026_DAY1_HIGHLIGHTS_VIDEO = {
-  videoSrc: "/national-team/aau-scholastic-duals-2026/videos/day-1-highlights.mov",
+  videoSrc: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/national-team/aau-scholastic-duals-2026/videos/day-1-highlights.mov",
   title: "Day 1 Highlights",
   caption: "NC United National Team · AAU Scholastic Duals 2026 · Fort Lauderdale",
   ariaLabel: "NC United Day 1 highlights video — AAU Scholastic Duals 2026",
 } as const
 
 export const AAU_SCHOLASTIC_DUALS_2026_DAY2_HIGHLIGHTS_VIDEO = {
-  videoSrc: "/national-team/aau-scholastic-duals-2026/videos/day-2-highlights.mov",
+  videoSrc: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/national-team/aau-scholastic-duals-2026/videos/day-2-highlights.mov",
   title: "Day 2 Highlights",
   caption: "NC United National Team · AAU Scholastic Duals 2026 · Fort Lauderdale",
   ariaLabel: "NC United Day 2 highlights video — AAU Scholastic Duals 2026",
