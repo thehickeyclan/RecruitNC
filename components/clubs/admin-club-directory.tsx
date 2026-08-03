@@ -51,11 +51,14 @@ export function AdminClubDirectory() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState("")
-  const [onlyNeedsLocation, setOnlyNeedsLocation] = useState(true)
+  // Every club by default. Filtering to "needs an address" made a club vanish the instant
+  // you gave it one, so you could not see what you had just saved or go back and correct it.
+  const [onlyNeedsLocation, setOnlyNeedsLocation] = useState(false)
   const [openId, setOpenId] = useState<string | null>(null)
   const [draft, setDraft] = useState<Partial<ClubRow>>({})
   const [saving, setSaving] = useState(false)
   const [note, setNote] = useState<string | null>(null)
+  const [savedId, setSavedId] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -132,9 +135,28 @@ export function AdminClubDirectory() {
       setNote(data.error ?? "Save failed.")
       return
     }
-    setNote(data.geocodeNote ?? "Saved.")
-    await load()
-    setOpenId(null)
+
+    // Update this club in place rather than refetching. A reload re-sorts the list, so the
+    // club you just saved would jump somewhere else the moment it gained an address —
+    // leaving you unsure whether it saved and unable to correct it.
+    const latitude = typeof data.latitude === "number" ? data.latitude : null
+    const longitude = typeof data.longitude === "number" ? data.longitude : null
+    setClubs((current) =>
+      current.map((row) =>
+        row.id === club.id
+          ? {
+              ...row,
+              ...draft,
+              programs,
+              latitude,
+              longitude,
+              needsLocation: latitude === null || longitude === null,
+            }
+          : row,
+      ),
+    )
+    setSavedId(club.id)
+    setNote(`${club.name} — ${data.geocodeNote ?? "saved."}`)
   }
 
   if (loading) {
@@ -191,7 +213,7 @@ export function AdminClubDirectory() {
           }
         >
           <AlertTriangle className="mr-2 h-4 w-4" />
-          Needs an address only
+          {onlyNeedsLocation ? `Showing ${summary.needLocation} without an address` : `Show ${summary.needLocation} without an address`}
         </Button>
       </div>
 
@@ -203,7 +225,12 @@ export function AdminClubDirectory() {
         {visible.map((club) => {
           const open = openId === club.id
           return (
-            <div key={club.id} className="rounded-sm border border-white/10 bg-[#071427]/70">
+            <div
+              key={club.id}
+              className={`rounded-sm border bg-[#071427]/70 transition-colors ${
+                savedId === club.id ? "border-emerald-500/50" : "border-white/10"
+              }`}
+            >
               <button
                 type="button"
                 onClick={() => (open ? setOpenId(null) : openEditor(club))}
@@ -216,6 +243,12 @@ export function AdminClubDirectory() {
                       <Badge className="rounded-sm bg-emerald-500/15 text-emerald-200">
                         <ShieldCheck className="mr-1 h-3 w-3" />
                         Verified
+                      </Badge>
+                    ) : null}
+                    {savedId === club.id ? (
+                      <Badge className="rounded-sm bg-emerald-500/15 text-emerald-200">
+                        <Check className="mr-1 h-3 w-3" />
+                        Saved
                       </Badge>
                     ) : null}
                     {club.needsLocation ? (
