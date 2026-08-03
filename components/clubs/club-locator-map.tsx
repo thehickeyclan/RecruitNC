@@ -873,7 +873,19 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
               </div>
             ) : null}
 
-            <div ref={mapContainerRef} className="absolute inset-0 z-10" />
+            {/*
+              Two divs on purpose. Mapbox adds `.mapboxgl-map` to whatever element it
+              initialises into, and its stylesheet sets `position: relative` on that class.
+              `.mapboxgl-map` and Tailwind's `.absolute` have equal specificity, and the
+              Mapbox CSS is appended to <head> at runtime — after Tailwind — so it wins.
+              A container relying on `absolute inset-0` therefore loses its positioning the
+              instant the map loads and collapses to height:0, which renders as a blank box.
+              The outer div owns the positioning and Mapbox never touches it; the inner one
+              is sized with h-full/w-full, which holds whatever `position` ends up being.
+            */}
+            <div className="absolute inset-0 z-10">
+              <div ref={mapContainerRef} className="h-full w-full" />
+            </div>
 
             {hoveredPin && !mapError ? (
               <div className="pointer-events-none absolute left-4 top-4 z-30 w-[min(330px,calc(100%-2rem))] rounded-sm border border-[#d7b968]/45 bg-[#071427]/95 p-4 text-white shadow-[0_0_34px_rgba(215,185,104,0.2)] backdrop-blur">
