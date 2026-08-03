@@ -27,6 +27,51 @@ const NC_MAX_BOUNDS: [[number, number], [number, number]] = [
   [-73.0, 38.0],
 ]
 
+const NC_CENTER: [number, number] = [-79.75, 35.38]
+const STATIC_MAP_WIDTH = 1000
+const STATIC_MAP_HEIGHT = 560
+const STATIC_MAP_PADDING = 64
+
+const NC_OUTLINE_COORDS: Array<[number, number]> = [
+  [-84.32, 35.22],
+  [-83.94, 35.45],
+  [-83.45, 35.56],
+  [-83.1, 35.38],
+  [-82.62, 35.2],
+  [-81.55, 35.18],
+  [-81.03, 34.95],
+  [-80.18, 34.82],
+  [-79.45, 34.62],
+  [-78.9, 34.38],
+  [-78.38, 33.91],
+  [-77.83, 33.92],
+  [-77.25, 34.22],
+  [-76.72, 34.52],
+  [-76.25, 34.78],
+  [-75.78, 35.18],
+  [-75.46, 35.64],
+  [-75.9, 35.8],
+  [-76.66, 35.96],
+  [-77.45, 36.22],
+  [-78.28, 36.54],
+  [-79.44, 36.55],
+  [-80.78, 36.55],
+  [-81.72, 36.31],
+  [-82.36, 36.12],
+  [-83.08, 36.58],
+  [-83.64, 36.32],
+  [-84.04, 35.86],
+  [-84.32, 35.22],
+]
+
+const STATIC_CITY_LABELS = [
+  { name: "Asheville", coordinates: [-82.55, 35.6] as [number, number] },
+  { name: "Charlotte", coordinates: [-80.84, 35.23] as [number, number] },
+  { name: "Greensboro", coordinates: [-79.79, 36.07] as [number, number] },
+  { name: "Raleigh", coordinates: [-78.64, 35.78] as [number, number] },
+  { name: "Wilmington", coordinates: [-77.94, 34.23] as [number, number] },
+]
+
 type MapboxLike = {
   accessToken: string
   Map: new (options: Record<string, unknown>) => MapLike
@@ -127,6 +172,129 @@ function pinsToGeoJson(pins: ClubMapPin[]) {
       },
     })),
   }
+}
+
+function projectToStaticMap([longitude, latitude]: [number, number]) {
+  const [[minLon, minLat], [maxLon, maxLat]] = NC_BOUNDS
+  const width = STATIC_MAP_WIDTH - STATIC_MAP_PADDING * 2
+  const height = STATIC_MAP_HEIGHT - STATIC_MAP_PADDING * 2
+  const x = STATIC_MAP_PADDING + ((longitude - minLon) / (maxLon - minLon)) * width
+  const y = STATIC_MAP_PADDING + (1 - (latitude - minLat) / (maxLat - minLat)) * height
+  return { x, y }
+}
+
+function buildStaticNcPath() {
+  return NC_OUTLINE_COORDS.map((coord, index) => {
+    const point = projectToStaticMap(coord)
+    return `${index === 0 ? "M" : "L"} ${point.x.toFixed(1)} ${point.y.toFixed(1)}`
+  }).join(" ")
+}
+
+function StaticNcMapBackdrop({
+  pins,
+  selectedId,
+  onSelectPin,
+}: {
+  pins: ClubMapPin[]
+  selectedId: string | null
+  onSelectPin: (id: string) => void
+}) {
+  const outlinePath = useMemo(buildStaticNcPath, [])
+
+  return (
+    <div className="absolute inset-0 overflow-hidden bg-[#050b14]">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(215,185,104,0.16),transparent_28%),linear-gradient(135deg,rgba(11,29,58,0.88),rgba(2,6,14,0.96))]" />
+      <div className="absolute inset-0 opacity-[0.16] [background-image:linear-gradient(rgba(255,255,255,.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.08)_1px,transparent_1px)] [background-size:54px_54px]" />
+
+      <svg
+        viewBox={`0 0 ${STATIC_MAP_WIDTH} ${STATIC_MAP_HEIGHT}`}
+        className="absolute inset-0 h-full w-full"
+        role="img"
+        aria-label="North Carolina club locator fallback map"
+      >
+        <defs>
+          <filter id="club-static-glow" x="-80%" y="-80%" width="260%" height="260%">
+            <feGaussianBlur stdDeviation="10" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <linearGradient id="club-nc-fill" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#102748" stopOpacity="0.95" />
+            <stop offset="100%" stopColor="#06101f" stopOpacity="0.95" />
+          </linearGradient>
+        </defs>
+
+        <path d={`${outlinePath} Z`} fill="url(#club-nc-fill)" stroke={MAP_GOLD} strokeWidth="3.5" />
+        <path d={`${outlinePath} Z`} fill="none" stroke={MAP_GOLD} strokeOpacity="0.24" strokeWidth="18" />
+
+        {STATIC_CITY_LABELS.map((city) => {
+          const point = projectToStaticMap(city.coordinates)
+          return (
+            <g key={city.name} opacity="0.72">
+              <circle cx={point.x} cy={point.y} r="3" fill="#f5e7bd" />
+              <text x={point.x + 10} y={point.y + 4} fill="#f5e7bd" fontSize="18" fontWeight="700">
+                {city.name}
+              </text>
+            </g>
+          )
+        })}
+
+        {pins.map((pin) => {
+          const point = projectToStaticMap([pin.longitude, pin.latitude])
+          const selected = pin.id === selectedId
+          return (
+            <g
+              key={pin.id}
+              onClick={() => onSelectPin(pin.id)}
+              className="cursor-pointer"
+              filter="url(#club-static-glow)"
+            >
+              <circle cx={point.x} cy={point.y} r={selected ? 22 : 17} fill={MAP_RED} opacity="0.58" />
+              <circle cx={point.x} cy={point.y} r={selected ? 12 : 9} fill={MAP_RED} stroke={MAP_GOLD} strokeWidth="3" />
+              <text
+                x={point.x}
+                y={point.y + 4}
+                textAnchor="middle"
+                fill="#ffffff"
+                fontSize="10"
+                fontWeight="900"
+              >
+                {pin.athleteCount}
+              </text>
+            </g>
+          )
+        })}
+
+        {!pins.length ? (
+          <g>
+            <text
+              x={STATIC_MAP_WIDTH / 2}
+              y={STATIC_MAP_HEIGHT / 2 - 8}
+              textAnchor="middle"
+              fill="#ffffff"
+              fontSize="28"
+              fontWeight="900"
+            >
+              North Carolina club map
+            </text>
+            <text
+              x={STATIC_MAP_WIDTH / 2}
+              y={STATIC_MAP_HEIGHT / 2 + 28}
+              textAnchor="middle"
+              fill="#f5e7bd"
+              fontSize="17"
+              fontWeight="700"
+              opacity="0.82"
+            >
+              Add approved clubs with coordinates to light up the map.
+            </text>
+          </g>
+        ) : null}
+      </svg>
+    </div>
+  )
 }
 
 function ClubLogo({ pin }: { pin: ClubMapPin }) {
@@ -306,8 +474,8 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
         const map = new mapboxgl.Map({
           container: mapContainerRef.current,
           style: "mapbox://styles/mapbox/dark-v11",
-          bounds: NC_BOUNDS,
-          fitBoundsOptions: { padding: 46, duration: 0 },
+          center: NC_CENTER,
+          zoom: 6.2,
           maxBounds: NC_MAX_BOUNDS,
           minZoom: 5.3,
           maxZoom: 13,
@@ -331,6 +499,7 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
         map.once("load", () => {
           if (cancelled) return
           map.resize()
+          map.fitBounds(NC_BOUNDS, { padding: 46, duration: 0 })
 
           map.addSource("nc-boundary", {
             type: "geojson",
@@ -664,7 +833,13 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
           </div>
 
           <div className="relative h-[580px] bg-[#0b0f14]">
-            <div ref={mapContainerRef} className="absolute inset-0" />
+            <StaticNcMapBackdrop pins={filteredPins} selectedId={selectedPin?.id ?? null} onSelectPin={setSelectedId} />
+            <div
+              ref={mapContainerRef}
+              className={`absolute inset-0 transition-opacity duration-500 ${
+                mapReady ? "opacity-100" : "pointer-events-none opacity-0"
+              }`}
+            />
 
             {hoveredPin && !mapError ? (
               <div className="pointer-events-none absolute left-4 top-4 z-30 w-[min(330px,calc(100%-2rem))] rounded-sm border border-[#d7b968]/45 bg-[#071427]/95 p-4 text-white shadow-[0_0_34px_rgba(215,185,104,0.2)] backdrop-blur">
@@ -693,7 +868,7 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
             ) : null}
 
             {loading ? (
-              <div className="absolute inset-0 z-30 flex items-center justify-center bg-[#071427]/90 text-white">
+              <div className="absolute inset-0 z-30 flex items-center justify-center bg-[#071427]/65 text-white backdrop-blur-[1px]">
                 Loading North Carolina club map…
               </div>
             ) : null}
