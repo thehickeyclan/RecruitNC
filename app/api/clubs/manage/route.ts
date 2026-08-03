@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { geocodeClub } from "@/lib/clubs/geocode"
 import { sanitizeClubWebsite, sanitizeSocialUrl } from "@/lib/clubs/club-submissions"
+import { updateClubTolerantOfMissingColumns } from "@/lib/clubs/update-club"
 
 export const dynamic = "force-dynamic"
 
@@ -142,7 +143,9 @@ export async function PATCH(request: Request) {
   }
 
   const admin = createAdminClient()
-  const { error } = await admin.from("wrestling_clubs").update(patch).eq("id", clubId)
+  // Tolerant of columns whose migration has not run yet — otherwise one unknown column
+  // rejects the whole UPDATE and the coach loses their edit.
+  const { error } = await updateClubTolerantOfMissingColumns(admin, clubId, patch)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   // Once someone outside the admin team can change a listing, "who changed this" stops

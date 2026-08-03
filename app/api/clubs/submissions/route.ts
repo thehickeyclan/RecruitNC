@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClientFresh } from "@/lib/supabase/admin"
 import { normalizeClubName } from "@/lib/clubs/club-normalize"
 import { sanitizeClubWebsite, sanitizeSocialUrl } from "@/lib/clubs/club-submissions"
+import { unknownColumnFrom } from "@/lib/clubs/update-club"
 
 export const dynamic = "force-dynamic"
 
@@ -89,11 +90,23 @@ export async function POST(request: Request) {
     updated_at: new Date().toISOString(),
   }
 
-  const { data, error } = await admin
-    .from("wrestling_club_submissions")
-    .insert(payload)
-    .select("id")
-    .single()
+  // Retry without any column this database does not have yet. Postgres rejects the whole
+  // insert on one unknown column, so shipping instagram_url ahead of its migration would
+  // have failed every public submission — losing details a coach spent time gathering.
+  let attempt: Record<string, unknown> = { ...payload }
+  let data: { id?: unknown } | null = null
+  let error: { code?: string; message: string } | null = null
+
+  for (let i = 0; i < 6; i++) {
+    const result = await admin.from("wrestling_club_submissions").insert(attempt).select("id").single()
+    data = result.data as { id?: unknown } | null
+    error = result.error as { code?: string; message: string } | null
+    if (!error) break
+    const missing = unknownColumnFrom(error)
+    if (!missing || !(missing in attempt)) break
+    delete attempt[missing]
+    console.warn(`[clubs/submissions] dropping unknown column "${missing}" — run the pending migration`)
+  }
 
   if (error) {
     if (error.code === "42P01" || error.code === "42703") {

@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { requireAdmin } from "@/lib/admin-auth"
 import { geocodeClub, isInNorthCarolina } from "@/lib/clubs/geocode"
 import { sanitizeClubWebsite, sanitizeSocialUrl } from "@/lib/clubs/club-submissions"
+import { updateClubTolerantOfMissingColumns } from "@/lib/clubs/update-club"
 
 export const dynamic = "force-dynamic"
 
@@ -102,7 +103,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     }
   }
 
-  const { error } = await admin.from("wrestling_clubs").update(patch).eq("id", id)
+  const { error } = await updateClubTolerantOfMissingColumns(admin, id, patch)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   return NextResponse.json({
