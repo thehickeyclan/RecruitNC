@@ -1,4 +1,5 @@
 import type React from "react"
+import type { Metadata, Viewport } from "next"
 import Script from "next/script"
 import "@/app/globals.css"
 import "@/app/force-styles.css"
@@ -12,10 +13,40 @@ import { BulletproofInternalLinks } from "@/components/bulletproof-internal-link
 import { Analytics } from "@vercel/analytics/next"
 import { UserActivityTracker } from "@/components/user-activity-tracker"
 
-export const metadata = {
-  title: "NC Wrestling Commits | Prospect Rankings",
-  description: "North Carolina wrestling prospect rankings and college commitments",
+const defaultTitle = "NC United Wrestling"
+const defaultDescription =
+  "North Carolina wrestling news, rankings, events, athlete profiles, clubs, and college recruiting coverage."
+const defaultShareImage = "/images/nc-united-logo-official.png"
+
+export const metadata: Metadata = {
+  metadataBase: new URL("https://app.ncwrestlingunited.com"),
+  title: {
+    default: defaultTitle,
+    template: "%s | NC United Wrestling",
+  },
+  description: defaultDescription,
   manifest: "/api/manifest",
+  openGraph: {
+    title: defaultTitle,
+    description: defaultDescription,
+    url: "https://app.ncwrestlingunited.com",
+    siteName: "NC United Wrestling",
+    type: "website",
+    images: [
+      {
+        url: defaultShareImage,
+        width: 512,
+        height: 512,
+        alt: "NC United Wrestling logo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary",
+    title: defaultTitle,
+    description: defaultDescription,
+    images: [defaultShareImage],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -28,10 +59,10 @@ export const metadata = {
     ],
     apple: [{ url: "/icon-192.png", sizes: "192x192", type: "image/png" }],
   },
-    generator: 'v0.app'
+  generator: "v0.app",
 }
 
-export const viewport = {
+export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
