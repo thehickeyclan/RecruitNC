@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { AdminClubsManager } from "@/components/clubs/admin-clubs-manager"
+import { AdminClubDirectory } from "@/components/clubs/admin-club-directory"
 import { TocPatrioticBar, tocDisplayClass } from "@/components/toc/toc-theme"
 import { MapPinned } from "lucide-react"
 
@@ -45,7 +46,22 @@ export default function AdminClubsPage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <AdminClubsManager />
+        <h2 className={`text-3xl text-white ${tocDisplayClass()}`}>Club directory</h2>
+        <p className="mt-2 max-w-3xl text-white/60">
+          Every club on record. Add an address and the pin is placed for you — city and ZIP alone is enough for a
+          town-level pin, a street address gives an exact one.
+        </p>
+        <div className="mt-5">
+          <AdminClubDirectory />
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
+        <h2 className={`text-3xl text-white ${tocDisplayClass()}`}>Public submissions</h2>
+        <p className="mt-2 max-w-3xl text-white/60">Clubs sent in through the public form, awaiting review.</p>
+        <div className="mt-5">
+          <AdminClubsManager />
+        </div>
       </section>
     </main>
   )

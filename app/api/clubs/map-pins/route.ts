@@ -300,8 +300,23 @@ export async function GET() {
     const pins: ClubMapPin[] = []
 
     for (const club of canonicalClubs.values()) {
-      if (!Number.isFinite(club.latitude) || !Number.isFinite(club.longitude)) continue
       const stats = statsByClubId.get(club.id) ?? createStats()
+
+      // A club record that exists but has no coordinates would otherwise fall through
+      // both lists: its name matches athletes so it leaves the unlocated set, and it is
+      // skipped here for want of a position — so it vanishes from the page entirely.
+      // Keep it visible as "needs location" until someone gives it an address.
+      if (!Number.isFinite(club.latitude) || !Number.isFinite(club.longitude)) {
+        unlocatedByName.set(club.normalizedName, {
+          name: club.name,
+          normalizedName: club.normalizedName,
+          athleteCount: stats.athleteIds.size,
+          boysCount: stats.boysCount,
+          girlsCount: stats.girlsCount,
+          commitCount: stats.commitCount,
+        })
+        continue
+      }
 
       pins.push({
         id: club.id,
