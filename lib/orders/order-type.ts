@@ -116,18 +116,31 @@ export function classifyLegacyOrder(row: {
   if (methodName.includes("guild")) return "guild"
   if (methodName.includes("donation") || methodName.includes("fundraising")) return "donation"
 
+  // Store fulfillment methods. Checked after the program rules above so that
+  // "Practice Drop-in" is claimed as a drop-in before "Pickup at Practice" — a store
+  // pickup option — is read as one.
+  if (STORE_SHIPPING_METHOD.test(methodName)) return "merchandise"
+
   if (channel === "blue") return "blue_subscription"
   if (channel === "guild") return "guild"
   if (channel === "spartan") return "donation"
   if (channel === "national_team") return "national_team_fee"
   if (channel === "store") return "merchandise"
 
-  // Line items naming a real product is the strongest merchandise signal we have.
+  // Line items are the last signal. Every program type has been ruled out above, so a
+  // line item here means merchandise — including the placeholder names the Stripe
+  // recovery paths wrote ("Product", "NC United Store purchase"). Those orders lost
+  // their item detail, but they are still store orders and belong in the queue.
   const items = row.order_items ?? []
-  if (items.some((i) => looksLikeMerchandiseName(i?.product_name))) return "merchandise"
+  if (items.some((i) => nameLooksLikeDropIn(i?.product_name))) return "drop_in"
+  if (items.some((i) => hasUsableItemName(i?.product_name))) return "merchandise"
 
   return "unknown"
 }
+
+/** Every shipping option the storefront has offered, current and historical. */
+const STORE_SHIPPING_METHOD =
+  /standard shipping|ship anywhere|pickup at practice|pickup at blue practice|pickup at states|suite 109|free pickup/i
 
 const MANUAL_CATEGORY_TO_TYPE: Record<string, OrderType> = {
   apparel: "merchandise",
@@ -178,18 +191,13 @@ function manualCategory(shippingMethod: unknown): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null
 }
 
-/** Placeholder names the recovery paths wrote when they couldn't read Stripe line items. */
-const PLACEHOLDER_ITEM_NAMES = new Set([
-  "product",
-  "order items - see stripe metadata",
-  "nc united store purchase",
-  "recovered",
-  "",
-])
+function nameLooksLikeDropIn(name: string | null | undefined): boolean {
+  return /drop-?in/i.test((name ?? "").trim())
+}
 
-function looksLikeMerchandiseName(name: string | null | undefined): boolean {
+function hasUsableItemName(name: string | null | undefined): boolean {
   const n = (name ?? "").trim().toLowerCase()
-  if (!n || PLACEHOLDER_ITEM_NAMES.has(n)) return false
-  if (n.includes("drop-in") || n.includes("membership") || n.includes("donation")) return false
+  if (!n) return false
+  if (n.includes("membership") || n.includes("donation")) return false
   return true
 }
