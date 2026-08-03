@@ -47,6 +47,12 @@ function asNullableString(value: unknown): string | null {
 }
 
 function asFiniteNumber(value: unknown): number | null {
+  // Number(null) is 0 and Number("") is 0, so a club with no coordinates used to come
+  // through as 0,0 — a valid-looking finite number. That put a pin in the Gulf of Guinea,
+  // outside the map's maxBounds, so the club counted as "mapped" and "visible" while no
+  // pin was ever drawn. Reject the empty cases before coercing.
+  if (value === null || value === undefined) return null
+  if (typeof value === "string" && value.trim() === "") return null
   const numberValue = typeof value === "number" ? value : Number(value)
   return Number.isFinite(numberValue) ? numberValue : null
 }
