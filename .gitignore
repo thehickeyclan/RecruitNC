@@ -50,3 +50,6 @@ legacy-nc/
 app/api/ai/chat/route.ts.bak
 app/api/ai/chat/route.ts.bak2
 .env*.local
+
+# Claude Code machine-local permissions (not shareable)
+.claude/settings.local.json
