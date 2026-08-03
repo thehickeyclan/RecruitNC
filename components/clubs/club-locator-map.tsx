@@ -865,7 +865,7 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {[
           ["Mapped clubs", data?.summary.mappedClubs ?? 0],
-          ["RecruitNC athletes", data?.summary.athletesRepresented ?? 0],
+          ["RecruitNC profiles", data?.summary.athletesRepresented ?? 0],
           ["College commits", data?.summary.commitsRepresented ?? 0],
           ["Verified clubs", data?.summary.verifiedClubs ?? 0],
           ["Need location", data?.summary.unlocatedClubs ?? 0],
@@ -1065,7 +1065,7 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
                   </div>
                   <div className="text-right">
                     <div className="font-black text-[#d7b968]">{pin.athleteCount}</div>
-                    <div className="text-[10px] uppercase tracking-[0.18em] text-white/35">athletes</div>
+                    <div className="text-[10px] uppercase tracking-[0.18em] text-white/35">profiles</div>
                   </div>
                 </div>
               </button>
