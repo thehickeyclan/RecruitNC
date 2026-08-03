@@ -39,6 +39,7 @@ type MapLike = {
   addLayer: (layer: Record<string, unknown>, beforeId?: string) => void
   getSource: (id: string) => { setData?: (data: unknown) => void; getClusterExpansionZoom?: (clusterId: number, callback: (error: Error | null, zoom: number) => void) => void } | undefined
   getLayer: (id: string) => unknown
+  setFilter: (layerId: string, filter: unknown[]) => void
   fitBounds: (bounds: [[number, number], [number, number]], options?: Record<string, unknown>) => void
   easeTo: (options: Record<string, unknown>) => void
   getZoom: () => number
@@ -221,6 +222,7 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
   const [verifiedOnly, setVerifiedOnly] = useState(false)
   const [minAthletes, setMinAthletes] = useState("0")
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [hoveredPinId, setHoveredPinId] = useState<string | null>(null)
   const [mapError, setMapError] = useState<string | null>(null)
   const [mapReady, setMapReady] = useState(false)
   const mapContainerRef = useRef<HTMLDivElement | null>(null)
@@ -277,6 +279,10 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
   const selectedPin = useMemo(() => {
     return filteredPins.find((pin) => pin.id === selectedId) ?? filteredPins[0] ?? null
   }, [filteredPins, selectedId])
+
+  const hoveredPin = useMemo(() => {
+    return filteredPins.find((pin) => pin.id === hoveredPinId) ?? null
+  }, [filteredPins, hoveredPinId])
 
   useEffect(() => {
     pinsRef.current = filteredPins
@@ -338,6 +344,19 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
           })
 
           map.addLayer({
+            id: "club-cluster-glow",
+            type: "circle",
+            source: "clubs",
+            filter: ["has", "point_count"],
+            paint: {
+              "circle-color": MAP_GOLD,
+              "circle-opacity": 0.32,
+              "circle-radius": ["step", ["get", "point_count"], 34, 8, 44, 20, 58],
+              "circle-blur": 0.8,
+            },
+          })
+
+          map.addLayer({
             id: "club-clusters",
             type: "circle",
             source: "clubs",
@@ -368,6 +387,32 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
           })
 
           map.addLayer({
+            id: "club-pin-glow",
+            type: "circle",
+            source: "clubs",
+            filter: ["!", ["has", "point_count"]],
+            paint: {
+              "circle-color": MAP_RED,
+              "circle-opacity": 0.42,
+              "circle-radius": ["interpolate", ["linear"], ["zoom"], 5, 24, 9, 32, 12, 42],
+              "circle-blur": 0.72,
+            },
+          })
+
+          map.addLayer({
+            id: "club-pin-selected",
+            type: "circle",
+            source: "clubs",
+            filter: ["==", ["get", "pinId"], ""],
+            paint: {
+              "circle-color": MAP_GOLD,
+              "circle-opacity": 0.45,
+              "circle-radius": 30,
+              "circle-blur": 0.5,
+            },
+          })
+
+          map.addLayer({
             id: "club-pins",
             type: "circle",
             source: "clubs",
@@ -377,6 +422,21 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
               "circle-radius": 14,
               "circle-stroke-color": MAP_GOLD,
               "circle-stroke-width": 3,
+            },
+          })
+
+          map.addLayer({
+            id: "club-pin-hover",
+            type: "circle",
+            source: "clubs",
+            filter: ["==", ["get", "pinId"], ""],
+            paint: {
+              "circle-color": MAP_GOLD,
+              "circle-radius": 21,
+              "circle-opacity": 0.92,
+              "circle-stroke-color": "#ffffff",
+              "circle-stroke-width": 2,
+              "circle-blur": 0.18,
             },
           })
 
@@ -401,7 +461,7 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
             const clusterId = features[0]?.properties?.cluster_id
             const coordinates = features[0]?.geometry?.coordinates
             const source = map.getSource("clubs")
-            if (!clusterId || !coordinates || !source?.getClusterExpansionZoom) return
+            if (clusterId == null || !coordinates || !source?.getClusterExpansionZoom) return
 
             source.getClusterExpansionZoom(clusterId, (error, zoom) => {
               if (error) return
@@ -413,6 +473,24 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
             const feature = event.features?.[0]
             const id = feature?.properties?.pinId
             if (id) setSelectedId(id)
+          })
+
+          map.on("mousemove", "club-pins", (event: any) => {
+            const feature = event.features?.[0]
+            const id = feature?.properties?.pinId
+            if (!id) return
+
+            setHoveredPinId(id)
+            if (map.getLayer("club-pin-hover")) {
+              map.setFilter("club-pin-hover", ["==", ["get", "pinId"], id])
+            }
+          })
+
+          map.on("mouseleave", "club-pins", () => {
+            setHoveredPinId(null)
+            if (map.getLayer("club-pin-hover")) {
+              map.setFilter("club-pin-hover", ["==", ["get", "pinId"], ""])
+            }
           })
 
           for (const layer of ["club-clusters", "club-pins"]) {
@@ -448,7 +526,14 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
   }, [filteredPins, mapReady])
 
   useEffect(() => {
-    if (!mapReady || !selectedPin || !mapRef.current) return
+    if (!mapReady || !mapRef.current) return
+    if (mapRef.current.getLayer("club-pin-selected")) {
+      mapRef.current.setFilter(
+        "club-pin-selected",
+        selectedPin ? ["==", ["get", "pinId"], selectedPin.id] : ["==", ["get", "pinId"], ""],
+      )
+    }
+    if (!selectedPin) return
     mapRef.current.easeTo({
       center: [selectedPin.longitude, selectedPin.latitude],
       zoom: Math.max(mapRef.current.getZoom(), 8.1),
@@ -506,7 +591,7 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
             <SelectTrigger className="w-full rounded-sm border-white/10 bg-white/5 text-white">
               <SelectValue placeholder="Program" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="border-white/10 bg-[#071427] text-white">
               <SelectItem value="all">Boys & girls</SelectItem>
               <SelectItem value="boys">Boys athletes</SelectItem>
               <SelectItem value="girls">Girls athletes</SelectItem>
@@ -517,7 +602,7 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
             <SelectTrigger className="w-full rounded-sm border-white/10 bg-white/5 text-white">
               <SelectValue placeholder="Athletes" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="border-white/10 bg-[#071427] text-white">
               <SelectItem value="0">Any size</SelectItem>
               <SelectItem value="5">5+ athletes</SelectItem>
               <SelectItem value="10">10+ athletes</SelectItem>
@@ -557,6 +642,32 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
 
           <div className="relative h-[580px] bg-[#0b0f14]">
             <div ref={mapContainerRef} className="absolute inset-0" />
+
+            {hoveredPin && !mapError ? (
+              <div className="pointer-events-none absolute left-4 top-4 z-30 w-[min(330px,calc(100%-2rem))] rounded-sm border border-[#d7b968]/45 bg-[#071427]/95 p-4 text-white shadow-[0_0_34px_rgba(215,185,104,0.2)] backdrop-blur">
+                <div className="text-[10px] font-black uppercase tracking-[0.24em] text-[#d7b968]">Club preview</div>
+                <div className="mt-1 truncate text-lg font-black">{hoveredPin.name}</div>
+                <div className="mt-1 flex items-center gap-1 text-sm text-white/60">
+                  <MapPin className="h-3.5 w-3.5 text-[#d7b968]" />
+                  {[hoveredPin.city, hoveredPin.state].filter(Boolean).join(", ") || "North Carolina"}
+                </div>
+                <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+                  <div className="rounded-sm border border-white/10 bg-white/5 p-2">
+                    <div className="text-lg font-black text-[#d7b968]">{hoveredPin.athleteCount}</div>
+                    <div className="text-[9px] uppercase tracking-[0.16em] text-white/40">Athletes</div>
+                  </div>
+                  <div className="rounded-sm border border-white/10 bg-white/5 p-2">
+                    <div className="text-lg font-black text-sky-200">{hoveredPin.boysCount}</div>
+                    <div className="text-[9px] uppercase tracking-[0.16em] text-white/40">Boys</div>
+                  </div>
+                  <div className="rounded-sm border border-white/10 bg-white/5 p-2">
+                    <div className="text-lg font-black text-pink-200">{hoveredPin.girlsCount}</div>
+                    <div className="text-[9px] uppercase tracking-[0.16em] text-white/40">Girls</div>
+                  </div>
+                </div>
+                <div className="mt-3 text-xs text-white/50">Click the glowing dot for full club details.</div>
+              </div>
+            ) : null}
 
             {loading ? (
               <div className="absolute inset-0 z-30 flex items-center justify-center bg-[#071427]/90 text-white">
