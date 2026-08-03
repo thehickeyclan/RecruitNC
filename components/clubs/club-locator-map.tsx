@@ -478,7 +478,10 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
       .then((payload: ClubMapResponse) => {
         if (!mounted) return
         setData(payload)
-        setSelectedId(payload.pins?.[0]?.id ?? null)
+        // Deliberately no auto-selection. Selecting a club eases the map to it, so
+        // picking one on load dropped every visitor into whichever town happened to sort
+        // first instead of showing the state.
+        setSelectedId(null)
       })
       .catch((error) => {
         if (!mounted) return
@@ -518,7 +521,9 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
   }, [data?.pins, genderFilter, minAthletes, query, verifiedOnly])
 
   const selectedPin = useMemo(() => {
-    return filteredPins.find((pin) => pin.id === selectedId) ?? filteredPins[0] ?? null
+    // No falling back to the first pin — nothing is selected until the visitor picks it,
+    // which is what keeps the opening view on the whole state.
+    return filteredPins.find((pin) => pin.id === selectedId) ?? null
   }, [filteredPins, selectedId])
 
   const hoveredPin = useMemo(() => {
@@ -939,7 +944,23 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
               </div>
               <h2 className="mt-1 text-xl font-black text-white">North Carolina wrestling clubs</h2>
             </div>
-            <Badge className="rounded-full bg-[#d7b968] px-3 py-1 text-[#071427]">{filteredPins.length} visible</Badge>
+            <div className="flex items-center gap-2">
+              {selectedPin ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedId(null)
+                    mapRef.current?.fitBounds(NC_BOUNDS, { padding: 46, duration: 600 })
+                  }}
+                  className="rounded-sm border-white/20 bg-transparent text-white hover:bg-white/10"
+                >
+                  Show all of NC
+                </Button>
+              ) : null}
+              <Badge className="rounded-full bg-[#d7b968] px-3 py-1 text-[#071427]">{filteredPins.length} visible</Badge>
+            </div>
           </div>
 
           <div className="relative h-[440px] bg-[#0b0f14] sm:h-[520px] lg:h-[580px]">
@@ -1041,7 +1062,20 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
         </div>
 
         <div className="space-y-4">
-          {selectedPin ? <PinDetails pin={selectedPin} /> : null}
+          {selectedPin ? (
+            <PinDetails pin={selectedPin} />
+          ) : (
+            <Card className="rounded-sm border-white/10 bg-[#071427]/95 text-white">
+              <CardContent className="p-5">
+                <LocateFixed className="h-6 w-6 text-[#d7b968]" />
+                <h3 className="mt-3 text-lg font-black">Pick a club</h3>
+                <p className="mt-1 text-sm leading-6 text-white/60">
+                  Choose a dot on the map or a club below to see its programs, contact details and recent college
+                  commitments.
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
           <div className="max-h-[520px] space-y-3 overflow-auto pr-1">
             {filteredPins.map((pin) => (
