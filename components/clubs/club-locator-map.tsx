@@ -115,7 +115,7 @@ function loadMapbox() {
 
   if (mapboxPromise) return mapboxPromise
 
-  mapboxPromise = new Promise<MapboxLike>((resolve, reject) => {
+  const pending = new Promise<MapboxLike>((resolve, reject) => {
     if (!document.getElementById(MAPBOX_CSS_ID)) {
       const link = document.createElement("link")
       link.id = MAPBOX_CSS_ID
@@ -146,7 +146,14 @@ function loadMapbox() {
     document.body.appendChild(script)
   })
 
-  return mapboxPromise
+  // Don't cache a rejection — otherwise one failed load (offline, blocked CDN) poisons
+  // every retry for the rest of the session.
+  mapboxPromise = pending
+  pending.catch(() => {
+    mapboxPromise = null
+  })
+
+  return pending
 }
 
 function clubMatches(pin: ClubMapPin, query: string) {
@@ -486,18 +493,45 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
         map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right")
         requestAnimationFrame(() => map.resize())
 
+        // If the style never loads, "load" never fires and no layers are added. Surface
+        // that instead of leaving an empty canvas with no explanation.
+        const loadTimeout = window.setTimeout(() => {
+          if (cancelled) return
+          setMapReady((ready) => {
+            if (!ready) {
+              setMapError(
+                "The Mapbox base map did not finish loading. The North Carolina outline below is a fallback — check the browser console and the token's URL restrictions.",
+              )
+            }
+            return ready
+          })
+        }, 12_000)
+
         map.on("error", (event: any) => {
           if (cancelled) return
-          const message = String(event?.error?.message ?? "")
-          if (/401|403|unauthorized|forbidden|access token|not authorized/i.test(message)) {
+          // Mapbox style/tile failures arrive as an AJAXError whose `message` is often
+          // empty — the useful part is `status` and `url`. Reading only `message` is why
+          // a 401 could slip through here and leave a blank canvas with no explanation.
+          const status = event?.error?.status ?? event?.error?.statusCode
+          const message = String(event?.error?.message ?? event?.error ?? "").trim()
+          const combined = [status, message].filter(Boolean).join(" ")
+
+          if (status === 401 || status === 403 || /401|403|unauthorized|forbidden|access token|not authorized/i.test(combined)) {
             setMapError(
               "Mapbox is blocking the base map. Check that the token is active and that URL restrictions include this exact RecruitNC domain and preview URL.",
             )
+            return
           }
+          // Every other failure used to be swallowed here, which left a black rectangle
+          // and no clue why. Report it.
+          console.error("[club-locator] mapbox error:", event?.error ?? event)
+          setMapError(combined ? `Mapbox error: ${combined}` : "Mapbox failed to render the base map.")
         })
 
         map.once("load", () => {
           if (cancelled) return
+          window.clearTimeout(loadTimeout)
+          setMapError(null)
           map.resize()
           map.fitBounds(NC_BOUNDS, { padding: 46, duration: 0 })
 
@@ -823,7 +857,23 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
           </div>
 
           <div className="relative h-[440px] bg-[#0b0f14] sm:h-[520px] lg:h-[580px]">
-            <div ref={mapContainerRef} className="absolute inset-0" />
+            {/*
+              The North Carolina outline sits underneath the live map and shows through
+              whenever Mapbox has not painted — still loading, token rejected, CDN blocked.
+              Without it this area is just a black rectangle with no indication of why.
+              Once Mapbox reports `load` its style is opaque and covers this entirely.
+            */}
+            {!mapReady || mapError ? (
+              <div className="absolute inset-0 z-0">
+                <StaticNcMapBackdrop
+                  pins={filteredPins}
+                  selectedId={selectedPin?.id ?? null}
+                  onSelectPin={setSelectedId}
+                />
+              </div>
+            ) : null}
+
+            <div ref={mapContainerRef} className="absolute inset-0 z-10" />
 
             {hoveredPin && !mapError ? (
               <div className="pointer-events-none absolute left-4 top-4 z-30 w-[min(330px,calc(100%-2rem))] rounded-sm border border-[#d7b968]/45 bg-[#071427]/95 p-4 text-white shadow-[0_0_34px_rgba(215,185,104,0.2)] backdrop-blur">
@@ -857,12 +907,16 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
               </div>
             ) : null}
 
+            {/*
+              A banner rather than a full-bleed panel — the fallback outline behind it is
+              still a usable North Carolina map, so don't cover it up to report the problem.
+            */}
             {mapError ? (
-              <div className="absolute inset-6 z-30 flex items-center justify-center rounded-sm border border-[#d7b968]/35 bg-[#071427]/95 p-6 text-center text-[#f5e7bd]">
-                <div>
-                  <MapPin className="mx-auto h-8 w-8 text-[#d7b968]" />
-                  <h3 className="mt-3 text-xl font-black text-white">Live map needs Mapbox</h3>
-                  <p className="mt-2 max-w-md text-sm leading-6 text-[#f5e7bd]/80">{mapError}</p>
+              <div className="absolute inset-x-4 top-4 z-30 flex items-start gap-3 rounded-sm border border-[#d7b968]/35 bg-[#071427]/95 p-4 text-[#f5e7bd] shadow-lg backdrop-blur">
+                <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-[#d7b968]" />
+                <div className="min-w-0">
+                  <h3 className="text-sm font-black text-white">Showing the fallback North Carolina map</h3>
+                  <p className="mt-1 text-sm leading-6 text-[#f5e7bd]/80">{mapError}</p>
                 </div>
               </div>
             ) : null}
