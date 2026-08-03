@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { AdminClubsManager } from "@/components/clubs/admin-clubs-manager"
 import { AdminClubDirectory } from "@/components/clubs/admin-club-directory"
+import { AdminClubClaims } from "@/components/clubs/admin-club-claims"
 import { TocPatrioticBar, tocDisplayClass } from "@/components/toc/toc-theme"
 import { MapPinned } from "lucide-react"
 
@@ -43,6 +44,18 @@ export default function AdminClubsPage() {
           </div>
         </div>
         <TocPatrioticBar />
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
+        <h2 className={`text-3xl text-white ${tocDisplayClass()}`}>Club claims</h2>
+        <p className="mt-2 max-w-3xl text-white/60">
+          Coaches and owners asking for control of their listing. Approving grants them edit rights to that club&apos;s
+          address, contact details, socials and programs — check the evidence first. They can never mark a club
+          verified or rename it.
+        </p>
+        <div className="mt-5">
+          <AdminClubClaims />
+        </div>
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">

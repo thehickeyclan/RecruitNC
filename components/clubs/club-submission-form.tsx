@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from "react"
 import Link from "next/link"
-import { CheckCircle2, Loader2, MapPin, ShieldCheck } from "lucide-react"
+import { CheckCircle2, Facebook, Instagram, Loader2, MapPin, ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
@@ -158,8 +158,34 @@ export function ClubSubmissionForm({ isSignedIn, userName, userEmail }: ClubSubm
         </div>
 
         <div className="md:col-span-2">
-          <Label htmlFor="website" className="text-white">Website or social URL</Label>
+          <Label htmlFor="website" className="text-white">Website</Label>
           <Input id="website" name="website" placeholder="https://…" className="mt-2 border-white/15 bg-[#020b18] text-white" />
+        </div>
+
+        <div>
+          <Label htmlFor="instagramUrl" className="flex items-center gap-2 text-white">
+            <Instagram className="h-4 w-4 text-[#D7B968]" />
+            Instagram
+          </Label>
+          <Input
+            id="instagramUrl"
+            name="instagramUrl"
+            placeholder="@yourclub"
+            className="mt-2 border-white/15 bg-[#020b18] text-white"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="facebookUrl" className="flex items-center gap-2 text-white">
+            <Facebook className="h-4 w-4 text-[#D7B968]" />
+            Facebook
+          </Label>
+          <Input
+            id="facebookUrl"
+            name="facebookUrl"
+            placeholder="@yourclub or a page link"
+            className="mt-2 border-white/15 bg-[#020b18] text-white"
+          />
         </div>
 
         <div className="md:col-span-2">

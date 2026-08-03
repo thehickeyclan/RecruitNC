@@ -65,6 +65,8 @@ export async function GET() {
       state: (row.state as string | null) ?? "NC",
       zipCode: (row.zip_code as string | null) ?? null,
       website: (row.website as string | null) ?? null,
+      instagramUrl: (row.instagram_url as string | null) ?? null,
+      facebookUrl: (row.facebook_url as string | null) ?? null,
       contactPhone: (row.contact_phone as string | null) ?? null,
       contactEmail: (row.contact_email as string | null) ?? null,
       logoUrl: (row.logo_url as string | null) ?? null,

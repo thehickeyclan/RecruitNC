@@ -13,6 +13,9 @@ export type ClubMapPin = {
   verified: boolean
   contactPhone: string | null
   contactEmail: string | null
+  /** Most clubs run day to day on social, so these are often the only live link. */
+  instagramUrl: string | null
+  facebookUrl: string | null
   /**
    * What the club told us it runs, captured on the submission form and confirmed at
    * approval. This is club-supplied fact, unlike the profile counts below, which only

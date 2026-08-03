@@ -70,6 +70,8 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       verified: true,
       boys_program: row.has_mens,
       girls_program: row.has_womens,
+      instagram_url: row.instagram_url ?? null,
+      facebook_url: row.facebook_url ?? null,
       youth_program: row.has_youth,
       middle_school_program: row.has_middle_school,
       high_school_program: row.has_high_school,

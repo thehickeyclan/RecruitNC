@@ -47,6 +47,35 @@ export function sanitizeClubWebsite(value: unknown): string | null {
   }
 }
 
+/**
+ * Accepts what a coach will actually type: "@rawwolfpack", "rawwolfpack",
+ * "instagram.com/rawwolfpack", or a full URL — and normalises all of them to a profile
+ * link. Returns null for empty input so a blank field never stores a bare domain.
+ */
+export function sanitizeSocialUrl(value: unknown, platform: "instagram" | "facebook"): string | null {
+  const raw = String(value ?? "").trim().replace(/^@/, "")
+  if (!raw) return null
+
+  const host = platform === "instagram" ? "instagram.com" : "facebook.com"
+
+  // Already a link to somewhere — keep it, but only if it is http(s).
+  if (/^https?:\/\//i.test(raw) || raw.includes("/")) {
+    const withScheme = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`
+    try {
+      const parsed = new URL(withScheme)
+      if (!["http:", "https:"].includes(parsed.protocol)) return null
+      return parsed.toString().replace(/\/$/, "")
+    } catch {
+      return null
+    }
+  }
+
+  // A bare handle. Strip anything that cannot appear in one rather than building a broken link.
+  const handle = raw.replace(/[^A-Za-z0-9._-]/g, "")
+  if (!handle) return null
+  return `https://${host}/${handle}`
+}
+
 export function programSummary(row: Pick<
   ClubSubmissionRow,
   "has_youth" | "has_middle_school" | "has_high_school" | "has_mens" | "has_womens" | "has_freestyle_greco"

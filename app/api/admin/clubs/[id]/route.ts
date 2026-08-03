@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { requireAdmin } from "@/lib/admin-auth"
 import { geocodeClub, isInNorthCarolina } from "@/lib/clubs/geocode"
+import { sanitizeClubWebsite, sanitizeSocialUrl } from "@/lib/clubs/club-submissions"
 
 export const dynamic = "force-dynamic"
 
@@ -55,7 +56,9 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     city,
     state,
     zip_code: zipCode,
-    website: asText(body.website),
+    website: sanitizeClubWebsite(body.website),
+    instagram_url: sanitizeSocialUrl(body.instagramUrl, "instagram"),
+    facebook_url: sanitizeSocialUrl(body.facebookUrl, "facebook"),
     contact_phone: asText(body.contactPhone),
     contact_email: asText(body.contactEmail),
     youth_program: asBool(body.youth),

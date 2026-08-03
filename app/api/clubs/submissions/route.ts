@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClientFresh } from "@/lib/supabase/admin"
 import { normalizeClubName } from "@/lib/clubs/club-normalize"
-import { sanitizeClubWebsite } from "@/lib/clubs/club-submissions"
+import { sanitizeClubWebsite, sanitizeSocialUrl } from "@/lib/clubs/club-submissions"
 
 export const dynamic = "force-dynamic"
 
@@ -76,6 +76,8 @@ export async function POST(request: Request) {
     contact_phone: asString(body.contactPhone) || null,
     contact_email: asString(body.contactEmail) || null,
     website: sanitizeClubWebsite(body.website),
+    instagram_url: sanitizeSocialUrl(body.instagramUrl, "instagram"),
+    facebook_url: sanitizeSocialUrl(body.facebookUrl, "facebook"),
     has_youth: asBool(body.hasYouth),
     has_middle_school: asBool(body.hasMiddleSchool),
     has_high_school: asBool(body.hasHighSchool),

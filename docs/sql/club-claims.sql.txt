@@ -1,0 +1,80 @@
+-- Club claims — run in Supabase SQL Editor
+--
+-- Lets a coach or club owner request control of their club listing so they can keep the
+-- address, programs and contact details current without going through an admin every time.
+--
+-- A claim is a REQUEST. It never grants anything on its own: an admin approves each one by
+-- hand. Verification is deliberately manual — automatic claiming of a youth sports listing
+-- is how a listing gets hijacked, and at this size a human check is cheaper and safer than
+-- building domain verification.
+--
+-- Safe to re-run.
+
+create table if not exists public.club_claims (
+  id uuid primary key default gen_random_uuid(),
+  club_id integer not null references public.wrestling_clubs(id) on delete cascade,
+  user_id uuid not null,
+  user_email text,
+  user_name text,
+  -- What the claimant says they are, in their words. Not a permission level.
+  claimed_role text,
+  -- How an admin can check them: club email, a page listing them, a phone to ring.
+  evidence text,
+  status text not null default 'pending'
+    check (status in ('pending', 'approved', 'rejected', 'revoked')),
+  admin_notes text,
+  reviewed_by_user_id uuid,
+  reviewed_at timestamptz,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- One live claim per person per club. Re-requesting updates the existing row rather than
+-- stacking duplicates in the review queue.
+create unique index if not exists club_claims_club_user_key
+  on public.club_claims (club_id, user_id);
+
+create index if not exists club_claims_status_idx
+  on public.club_claims (status, created_at desc);
+
+create index if not exists club_claims_user_idx
+  on public.club_claims (user_id, status);
+
+comment on table public.club_claims is
+  'Requests from coaches/owners for edit rights on a club listing. Approval is manual and admin-only; an approved row is what grants access in /clubs/manage.';
+
+-- Audit trail. Once two coaches can edit the same club, "who changed this" stops being
+-- optional — and a claimant editing a listing is exactly when you want a record.
+create table if not exists public.club_edit_log (
+  id uuid primary key default gen_random_uuid(),
+  club_id integer not null references public.wrestling_clubs(id) on delete cascade,
+  user_id uuid,
+  user_email text,
+  -- 'admin' or 'claimant', so a listing changed by an outside coach is obvious at a glance.
+  actor_role text,
+  changed_fields jsonb,
+  created_at timestamptz default now()
+);
+
+create index if not exists club_edit_log_club_idx
+  on public.club_edit_log (club_id, created_at desc);
+
+-- ── Social links ─────────────────────────────────────────────────────────────
+-- Most clubs run their day-to-day on Instagram or Facebook rather than a website, so for
+-- a parent looking for a room these are often the only live link that matters.
+alter table public.wrestling_clubs
+  add column if not exists instagram_url text,
+  add column if not exists facebook_url text;
+
+alter table public.wrestling_club_submissions
+  add column if not exists instagram_url text,
+  add column if not exists facebook_url text;
+
+-- Verify
+select 'club_claims' as table_name, count(*) as rows from public.club_claims
+union all
+select 'club_edit_log', count(*) from public.club_edit_log;
+
+select column_name from information_schema.columns
+where table_schema = 'public' and table_name = 'wrestling_clubs'
+  and column_name in ('instagram_url', 'facebook_url');

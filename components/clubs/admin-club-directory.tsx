@@ -15,6 +15,8 @@ type ClubRow = {
   state: string | null
   zipCode: string | null
   website: string | null
+  instagramUrl: string | null
+  facebookUrl: string | null
   contactPhone: string | null
   contactEmail: string | null
   latitude: number | null
@@ -116,6 +118,8 @@ export function AdminClubDirectory() {
         state: draft.state ?? "NC",
         zipCode: draft.zipCode ?? "",
         website: draft.website ?? "",
+        instagramUrl: draft.instagramUrl ?? "",
+        facebookUrl: draft.facebookUrl ?? "",
         contactPhone: draft.contactPhone ?? "",
         contactEmail: draft.contactEmail ?? "",
         verified: draft.verified ?? club.verified,
@@ -259,6 +263,22 @@ export function AdminClubDirectory() {
                     </Field>
                     <Field label="Phone">
                       <Input value={draft.contactPhone ?? ""} onChange={(e) => setDraft({ ...draft, contactPhone: e.target.value })} className={INPUT} />
+                    </Field>
+                    <Field label="Instagram">
+                      <Input
+                        value={draft.instagramUrl ?? ""}
+                        onChange={(e) => setDraft({ ...draft, instagramUrl: e.target.value })}
+                        placeholder="@rawwolfpack"
+                        className={INPUT}
+                      />
+                    </Field>
+                    <Field label="Facebook">
+                      <Input
+                        value={draft.facebookUrl ?? ""}
+                        onChange={(e) => setDraft({ ...draft, facebookUrl: e.target.value })}
+                        placeholder="@rawwolfpack or a page URL"
+                        className={INPUT}
+                      />
                     </Field>
                   </div>
 

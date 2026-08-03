@@ -23,6 +23,8 @@ type CanonicalClub = {
   verified: boolean
   contactPhone: string | null
   contactEmail: string | null
+  instagramUrl: string | null
+  facebookUrl: string | null
   programs: {
     youth: boolean
     middleSchool: boolean
@@ -142,10 +144,11 @@ export async function GET() {
 
     const { data: clubRows, error: clubError } = await supabase
       .from("wrestling_clubs")
-      .select(
-        "id,name,normalized_name,location,logo_url,address,city,state,zip_code,latitude,longitude,website,verified," +
-          "contact_phone,contact_email,youth_program,middle_school_program,high_school_program,boys_program,girls_program,freestyle_greco,programs_offered",
-      )
+      // Deliberately `*`. Naming columns explicitly means the whole query fails the moment
+      // one of them is missing, which empties the public map until a migration is run —
+      // adding instagram_url/facebook_url to the list did exactly that. With `*`, a column
+      // that does not exist yet simply reads as undefined and the map keeps working.
+      .select("*")
       .order("name", { ascending: true })
 
     if (clubError) {
@@ -180,6 +183,8 @@ export async function GET() {
         verified: Boolean(row.verified),
         contactPhone: asNullableString(row.contact_phone),
         contactEmail: asNullableString(row.contact_email),
+        instagramUrl: asNullableString(row.instagram_url),
+        facebookUrl: asNullableString(row.facebook_url),
         programs: {
           youth: Boolean(row.youth_program),
           middleSchool: Boolean(row.middle_school_program),
@@ -333,6 +338,8 @@ export async function GET() {
         verified: club.verified,
         contactPhone: club.contactPhone,
         contactEmail: club.contactEmail,
+        instagramUrl: club.instagramUrl,
+        facebookUrl: club.facebookUrl,
         programs: club.programs,
         programsOffered: club.programsOffered,
         athleteCount: stats.athleteIds.size,

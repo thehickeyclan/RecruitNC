@@ -9,7 +9,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { ClubMapPin, ClubMapResponse } from "@/lib/clubs/club-map-types"
-import { ExternalLink, LocateFixed, MapPin, Search, ShieldCheck, Users } from "lucide-react"
+import { ExternalLink, Facebook, Instagram, LocateFixed, MapPin, Search, ShieldCheck, Users } from "lucide-react"
+import { ClubClaimButton } from "@/components/clubs/club-claim-button"
 
 const MAPBOX_SCRIPT_ID = "mapbox-gl-js"
 const MAPBOX_CSS_ID = "mapbox-gl-css"
@@ -438,6 +439,35 @@ function PinDetails({ pin }: { pin: ClubMapPin }) {
           </div>
         ) : null}
 
+        {pin.instagramUrl || pin.facebookUrl ? (
+          <div className="flex flex-wrap items-center gap-2">
+            {pin.instagramUrl ? (
+              <a
+                href={pin.instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`${pin.name} on Instagram`}
+                className="inline-flex items-center gap-2 rounded-sm border border-white/15 bg-white/5 px-3 py-2 text-sm text-white/80 transition hover:bg-white/10 hover:text-white"
+              >
+                <Instagram className="h-4 w-4 text-[#d7b968]" />
+                Instagram
+              </a>
+            ) : null}
+            {pin.facebookUrl ? (
+              <a
+                href={pin.facebookUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`${pin.name} on Facebook`}
+                className="inline-flex items-center gap-2 rounded-sm border border-white/15 bg-white/5 px-3 py-2 text-sm text-white/80 transition hover:bg-white/10 hover:text-white"
+              >
+                <Facebook className="h-4 w-4 text-[#d7b968]" />
+                Facebook
+              </a>
+            ) : null}
+          </div>
+        ) : null}
+
         <div className="flex flex-wrap gap-2">
           <Button asChild className="rounded-sm bg-[#cc0000] text-white hover:bg-[#a80000]">
             <Link href={pin.profileHref}>View RecruitNC athletes</Link>
@@ -450,6 +480,8 @@ function PinDetails({ pin }: { pin: ClubMapPin }) {
             </Button>
           ) : null}
         </div>
+
+        <ClubClaimButton clubId={pin.id} clubName={pin.name} />
       </CardContent>
     </Card>
   )
