@@ -11,7 +11,7 @@ import {
   School, Pencil, BarChart3, Settings, FileText,
   TrendingUp, Zap, Plus, Eye, UserPlus, RefreshCw, ClipboardList, Database, BookOpen, CreditCard,
   ShoppingBag, Smile, Coins, LayoutDashboard, CircleDollarSign, Link2, Receipt, GraduationCap, Package,
-  LayoutGrid, Handshake, Mail, Bot, Scale, Newspaper, Import,
+  LayoutGrid, Handshake, Mail, Bot, Scale, Newspaper, Import, MapPinned,
 } from "lucide-react"
 
 interface AdminStats {
@@ -257,6 +257,12 @@ export default function AdminDashboard() {
                 <span className="text-sm font-semibold">Schools</span>
               </Button>
             </Link>
+            <HardLink href="/admin/clubs" className="block">
+              <span className="w-full h-20 bg-gradient-to-br from-[#061427] to-[#0B1D3A] hover:from-[#0B1D3A] hover:to-[#061427] text-[#D3B574] shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex font-bold border border-[#D3B574]/30">
+                <MapPinned className="h-6 w-6" />
+                <span className="text-sm font-semibold">Clubs</span>
+              </span>
+            </HardLink>
             <Link href="/admin/match-manager">
               <Button className="w-full h-20 bg-gradient-to-br from-[#FFC72C] to-[#e6b328] hover:from-[#e6b328] hover:to-[#FFC72C] text-[#003366] shadow-lg flex flex-col items-center justify-center gap-2 font-bold">
                 <Trophy className="h-6 w-6" />
@@ -548,6 +554,16 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
             </Link>
+
+            <HardLink href="/admin/clubs" className="block h-full">
+              <Card className="border-t-4 border-t-[#D3B574] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+                <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
+                  <MapPinned className="h-10 w-10 text-[#003366] mb-3" />
+                  <h3 className="font-bold text-[#003366] mb-1">Club Submissions</h3>
+                  <p className="text-xs text-gray-600">Approve clubs for the public map</p>
+                </CardContent>
+              </Card>
+            </HardLink>
 
             {/* Prospect Rankings */}
             <Link href="/admin/prospects/simple-ranking">

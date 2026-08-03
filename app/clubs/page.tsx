@@ -55,6 +55,12 @@ export default function ClubsPage() {
               >
                 Search athletes
               </Link>
+              <Link
+                href="/clubs/submit"
+                className={`inline-flex min-h-12 items-center justify-center rounded-sm border-2 border-[#D7B968]/50 px-6 py-3 text-lg text-[#F5D985] transition hover:bg-[#D7B968]/10 ${tocDisplayClass()}`}
+              >
+                Submit a club
+              </Link>
             </div>
           </div>
 
@@ -80,6 +86,13 @@ export default function ClubsPage() {
                   <p className="mt-1 text-sm leading-5 text-white/55">{text}</p>
                 </div>
               ))}
+            </div>
+            <div className="mt-5 rounded-sm border border-[#D7B968]/20 bg-[#D7B968]/10 p-4">
+              <p className="text-sm font-bold text-[#F5D985]">Missing a club?</p>
+              <p className="mt-1 text-sm leading-6 text-white/60">
+                Club owners, coaches, and parents can submit a club for review. A free RecruitNC account is required so
+                we know who sent it and can follow up before publishing.
+              </p>
             </div>
           </div>
         </div>

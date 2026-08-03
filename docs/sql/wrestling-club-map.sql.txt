@@ -84,6 +84,75 @@ create table if not exists public.wrestling_club_aliases (
 create index if not exists wrestling_club_aliases_normalized_alias_idx
   on public.wrestling_club_aliases (normalized_alias);
 
+create table if not exists public.wrestling_club_submissions (
+  id uuid primary key default gen_random_uuid(),
+  submitted_by_user_id uuid,
+  submitted_by_email text,
+  submitted_by_name text,
+  club_name text not null,
+  normalized_name text,
+  address text not null,
+  city text,
+  state text default 'NC',
+  zip_code text,
+  contact_phone text,
+  contact_email text,
+  website text,
+  has_youth boolean not null default false,
+  has_middle_school boolean not null default false,
+  has_high_school boolean not null default false,
+  has_mens boolean not null default false,
+  has_womens boolean not null default false,
+  has_freestyle_greco boolean not null default false,
+  notes text,
+  status text not null default 'pending'
+    check (status in ('pending', 'approved', 'declined', 'needs_info')),
+  admin_notes text,
+  approved_club_id integer references public.wrestling_clubs(id) on delete set null,
+  latitude double precision,
+  longitude double precision,
+  reviewed_by_user_id uuid,
+  reviewed_at timestamptz,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+alter table public.wrestling_club_submissions
+  add column if not exists submitted_by_user_id uuid,
+  add column if not exists submitted_by_email text,
+  add column if not exists submitted_by_name text,
+  add column if not exists club_name text,
+  add column if not exists normalized_name text,
+  add column if not exists address text,
+  add column if not exists city text,
+  add column if not exists state text default 'NC',
+  add column if not exists zip_code text,
+  add column if not exists contact_phone text,
+  add column if not exists contact_email text,
+  add column if not exists website text,
+  add column if not exists has_youth boolean not null default false,
+  add column if not exists has_middle_school boolean not null default false,
+  add column if not exists has_high_school boolean not null default false,
+  add column if not exists has_mens boolean not null default false,
+  add column if not exists has_womens boolean not null default false,
+  add column if not exists has_freestyle_greco boolean not null default false,
+  add column if not exists notes text,
+  add column if not exists status text not null default 'pending',
+  add column if not exists admin_notes text,
+  add column if not exists approved_club_id integer references public.wrestling_clubs(id) on delete set null,
+  add column if not exists latitude double precision,
+  add column if not exists longitude double precision,
+  add column if not exists reviewed_by_user_id uuid,
+  add column if not exists reviewed_at timestamptz,
+  add column if not exists created_at timestamptz default now(),
+  add column if not exists updated_at timestamptz default now();
+
+create index if not exists wrestling_club_submissions_status_idx
+  on public.wrestling_club_submissions (status, created_at desc);
+
+create index if not exists wrestling_club_submissions_normalized_name_idx
+  on public.wrestling_club_submissions (normalized_name);
+
 -- Helpful starter aliases can be added like this:
 -- insert into public.wrestling_club_aliases (club_id, alias, normalized_alias)
 -- select id, 'RAW Wrestling', 'raw'
