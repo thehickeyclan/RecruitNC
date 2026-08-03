@@ -1,0 +1,92 @@
+-- RecruitNC wrestling club locator foundation
+-- Run in Supabase SQL editor.
+--
+-- Purpose:
+-- 1) Preserve the existing wrestling_clubs table if it already exists.
+-- 2) Add canonical address / coordinate / website fields for the public club map.
+-- 3) Add alias support so RAW, RAW Wrestling, Raleigh Area Wrestling, etc. can resolve to one club.
+--
+-- After running this script, update wrestling_clubs rows with verified addresses,
+-- latitude, longitude, website, and logo_url. Coordinates should be geocoded once
+-- and stored here; the public map should not geocode on every page load.
+
+create table if not exists public.wrestling_clubs (
+  id serial primary key,
+  name text not null unique,
+  location text,
+  logo_url text,
+  athlete_count integer default 0,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+alter table public.wrestling_clubs
+  add column if not exists normalized_name text,
+  add column if not exists address text,
+  add column if not exists city text,
+  add column if not exists state text default 'NC',
+  add column if not exists zip_code text,
+  add column if not exists latitude double precision,
+  add column if not exists longitude double precision,
+  add column if not exists website text,
+  add column if not exists contact_email text,
+  add column if not exists contact_phone text,
+  add column if not exists verified boolean not null default false,
+  add column if not exists boys_program boolean,
+  add column if not exists girls_program boolean,
+  add column if not exists youth_program boolean,
+  add column if not exists middle_school_program boolean,
+  add column if not exists high_school_program boolean,
+  add column if not exists freestyle_greco boolean,
+  add column if not exists public_notes text,
+  add column if not exists programs_offered text;
+
+update public.wrestling_clubs
+set
+  normalized_name = nullif(
+    trim(
+      regexp_replace(
+        regexp_replace(
+          regexp_replace(lower(coalesce(name, '')), '&', ' and ', 'g'),
+          '\m(wrestling|club|wc|rtc|training|center|academy)\M',
+          ' ',
+          'g'
+        ),
+        '[^a-z0-9]+',
+        ' ',
+        'g'
+      )
+    ),
+    ''
+  ),
+  state = coalesce(nullif(trim(state), ''), 'NC')
+where normalized_name is null or normalized_name = '' or state is null or state = '';
+
+create index if not exists wrestling_clubs_normalized_name_idx
+  on public.wrestling_clubs (normalized_name);
+
+create index if not exists wrestling_clubs_verified_idx
+  on public.wrestling_clubs (verified);
+
+create index if not exists wrestling_clubs_coordinates_idx
+  on public.wrestling_clubs (latitude, longitude)
+  where latitude is not null and longitude is not null;
+
+create table if not exists public.wrestling_club_aliases (
+  id bigserial primary key,
+  club_id integer not null references public.wrestling_clubs(id) on delete cascade,
+  alias text not null,
+  normalized_alias text not null,
+  created_at timestamptz default now(),
+  unique (club_id, normalized_alias)
+);
+
+create index if not exists wrestling_club_aliases_normalized_alias_idx
+  on public.wrestling_club_aliases (normalized_alias);
+
+-- Helpful starter aliases can be added like this:
+-- insert into public.wrestling_club_aliases (club_id, alias, normalized_alias)
+-- select id, 'RAW Wrestling', 'raw'
+-- from public.wrestling_clubs
+-- where normalized_name = 'raleigh area'
+-- on conflict do nothing;
