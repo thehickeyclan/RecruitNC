@@ -472,6 +472,7 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
     }
 
     let cancelled = false
+    let resizeObserver: ResizeObserver | null = null
 
     loadMapbox()
       .then((mapboxgl) => {
@@ -492,6 +493,17 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
         mapRef.current = map
         map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right")
         requestAnimationFrame(() => map.resize())
+
+        // Mapbox sizes its canvas once and only re-reads the container when told to.
+        // This column changes width whenever the results sidebar appears or disappears
+        // (0 pins vs 1+), so without this the map keeps painting at its old width and
+        // renders as a black strip. Covers orientation changes and window resizes too.
+        if (typeof ResizeObserver !== "undefined" && mapContainerRef.current) {
+          resizeObserver = new ResizeObserver(() => {
+            if (!cancelled) map.resize()
+          })
+          resizeObserver.observe(mapContainerRef.current)
+        }
 
         // If the style never loads, "load" never fires and no layers are added. Surface
         // that instead of leaving an empty canvas with no explanation.
@@ -729,6 +741,8 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
 
     return () => {
       cancelled = true
+      resizeObserver?.disconnect()
+      resizeObserver = null
       mapRef.current?.remove()
       mapRef.current = null
       setMapReady(false)
@@ -863,7 +877,7 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
               Without it this area is just a black rectangle with no indication of why.
               Once Mapbox reports `load` its style is opaque and covers this entirely.
             */}
-            {!mapReady || mapError ? (
+            {mapError ? (
               <div className="absolute inset-0 z-0">
                 <StaticNcMapBackdrop
                   pins={filteredPins}
