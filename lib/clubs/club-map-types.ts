@@ -11,6 +11,22 @@ export type ClubMapPin = {
   website: string | null
   logoUrl: string | null
   verified: boolean
+  contactPhone: string | null
+  contactEmail: string | null
+  /**
+   * What the club told us it runs, captured on the submission form and confirmed at
+   * approval. This is club-supplied fact, unlike the profile counts below, which only
+   * reflect how many RecruitNC profiles happen to name this club.
+   */
+  programs: {
+    youth: boolean
+    middleSchool: boolean
+    highSchool: boolean
+    boys: boolean
+    girls: boolean
+    freestyleGreco: boolean
+  }
+  programsOffered: string | null
   athleteCount: number
   boysCount: number
   girlsCount: number

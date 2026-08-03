@@ -304,6 +304,42 @@ function StaticNcMapBackdrop({
   )
 }
 
+/**
+ * What the club told us it runs. Club-supplied fact, so it is the headline on the card —
+ * unlike the profile counts, which only say how many RecruitNC profiles name this club.
+ */
+function programLabels(pin: ClubMapPin): string[] {
+  const p = pin.programs
+  if (!p) return []
+  const labels: string[] = []
+  if (p.youth) labels.push("Youth")
+  if (p.middleSchool) labels.push("Middle school")
+  if (p.highSchool) labels.push("High school")
+  if (p.boys) labels.push("Boys")
+  if (p.girls) labels.push("Girls")
+  if (p.freestyleGreco) labels.push("Freestyle / Greco")
+  return labels
+}
+
+function ProgramChips({ pin, compact = false }: { pin: ClubMapPin; compact?: boolean }) {
+  const labels = programLabels(pin)
+  if (!labels.length) return null
+  return (
+    <div className={`flex flex-wrap gap-1.5 ${compact ? "" : "mt-1"}`}>
+      {labels.map((label) => (
+        <span
+          key={label}
+          className={`rounded-full border border-[#d7b968]/35 bg-[#d7b968]/10 text-[#f5e7bd] ${
+            compact ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-xs"
+          }`}
+        >
+          {label}
+        </span>
+      ))}
+    </div>
+  )
+}
+
 function ClubLogo({ pin }: { pin: ClubMapPin }) {
   return (
     <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-sm border border-white/10 bg-white/10">
@@ -340,20 +376,49 @@ function PinDetails({ pin }: { pin: ClubMapPin }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-2 text-center">
-          <div className="rounded-sm border border-white/10 bg-white/5 p-3">
-            <div className="text-2xl font-black text-[#d7b968]">{pin.athleteCount}</div>
-            <div className="text-[11px] uppercase tracking-[0.18em] text-white/45">Athletes</div>
+        {programLabels(pin).length ? (
+          <div>
+            <div className="mb-2 text-xs font-bold uppercase tracking-[0.22em] text-[#d7b968]">Programs</div>
+            <ProgramChips pin={pin} />
           </div>
-          <div className="rounded-sm border border-white/10 bg-white/5 p-3">
-            <div className="text-2xl font-black text-sky-200">{pin.boysCount}</div>
-            <div className="text-[11px] uppercase tracking-[0.18em] text-white/45">Boys</div>
+        ) : null}
+
+        {pin.contactPhone || pin.contactEmail ? (
+          <div className="space-y-1 text-sm">
+            {pin.contactPhone ? (
+              <a href={`tel:${pin.contactPhone}`} className="block text-white/80 hover:text-[#d7b968]">
+                {pin.contactPhone}
+              </a>
+            ) : null}
+            {pin.contactEmail ? (
+              <a href={`mailto:${pin.contactEmail}`} className="block truncate text-white/80 hover:text-[#d7b968]">
+                {pin.contactEmail}
+              </a>
+            ) : null}
           </div>
-          <div className="rounded-sm border border-white/10 bg-white/5 p-3">
-            <div className="text-2xl font-black text-pink-200">{pin.girlsCount}</div>
-            <div className="text-[11px] uppercase tracking-[0.18em] text-white/45">Girls</div>
+        ) : null}
+
+        {/*
+          Counts are how many RecruitNC profiles name this club — not the club's roster.
+          Labelled as profiles so it never reads as a claim about club size, and hidden
+          entirely at zero rather than advertising a club as empty.
+        */}
+        {pin.athleteCount > 0 ? (
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="rounded-sm border border-white/10 bg-white/5 p-3">
+              <div className="text-2xl font-black text-[#d7b968]">{pin.athleteCount}</div>
+              <div className="text-[11px] uppercase tracking-[0.18em] text-white/45">Profiles</div>
+            </div>
+            <div className="rounded-sm border border-white/10 bg-white/5 p-3">
+              <div className="text-2xl font-black text-sky-200">{pin.boysCount}</div>
+              <div className="text-[11px] uppercase tracking-[0.18em] text-white/45">Boys</div>
+            </div>
+            <div className="rounded-sm border border-white/10 bg-white/5 p-3">
+              <div className="text-2xl font-black text-pink-200">{pin.girlsCount}</div>
+              <div className="text-[11px] uppercase tracking-[0.18em] text-white/45">Girls</div>
+            </div>
           </div>
-        </div>
+        ) : null}
 
         {pin.recentCommits.length ? (
           <div>
@@ -668,19 +733,26 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
             },
           })
 
+          // A single club is one dot. The old label printed the RecruitNC profile count
+          // on the pin, which read as "this club has N wrestlers" — a number we cannot
+          // know. Club names carry the meaning instead; counts are labelled on hover.
           map.addLayer({
-            id: "club-pin-count",
+            id: "club-pin-label",
             type: "symbol",
             source: "clubs",
             filter: ["!", ["has", "point_count"]],
             layout: {
-              "text-field": ["to-string", ["get", "athleteCount"]],
+              "text-field": ["get", "name"],
               "text-font": ["DIN Offc Pro Medium", "Arial Unicode MS Bold"],
               "text-size": 11,
-              "text-allow-overlap": true,
+              "text-offset": [0, 1.6],
+              "text-anchor": "top",
+              "text-optional": true,
             },
             paint: {
-              "text-color": "#ffffff",
+              "text-color": "#f5e7bd",
+              "text-halo-color": "#071427",
+              "text-halo-width": 1.4,
             },
           })
 
@@ -909,21 +981,29 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
                   <MapPin className="h-3.5 w-3.5 text-[#d7b968]" />
                   {[hoveredPin.city, hoveredPin.state].filter(Boolean).join(", ") || "North Carolina"}
                 </div>
-                <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-                  <div className="rounded-sm border border-white/10 bg-white/5 p-2">
-                    <div className="text-lg font-black text-[#d7b968]">{hoveredPin.athleteCount}</div>
-                    <div className="text-[9px] uppercase tracking-[0.16em] text-white/40">Athletes</div>
+                {programLabels(hoveredPin).length ? (
+                  <div className="mt-3">
+                    <div className="mb-1.5 text-[9px] font-bold uppercase tracking-[0.2em] text-white/40">
+                      Programs
+                    </div>
+                    <ProgramChips pin={hoveredPin} compact />
                   </div>
-                  <div className="rounded-sm border border-white/10 bg-white/5 p-2">
-                    <div className="text-lg font-black text-sky-200">{hoveredPin.boysCount}</div>
-                    <div className="text-[9px] uppercase tracking-[0.16em] text-white/40">Boys</div>
+                ) : null}
+
+                {hoveredPin.website ? (
+                  <div className="mt-2 truncate text-xs text-[#d7b968]">
+                    {hoveredPin.website.replace(/^https?:\/\//, "")}
                   </div>
-                  <div className="rounded-sm border border-white/10 bg-white/5 p-2">
-                    <div className="text-lg font-black text-pink-200">{hoveredPin.girlsCount}</div>
-                    <div className="text-[9px] uppercase tracking-[0.16em] text-white/40">Girls</div>
+                ) : null}
+
+                {hoveredPin.athleteCount > 0 ? (
+                  <div className="mt-2 text-xs text-white/45">
+                    {hoveredPin.athleteCount} RecruitNC {hoveredPin.athleteCount === 1 ? "profile" : "profiles"}
+                    {hoveredPin.commitCount > 0 ? ` · ${hoveredPin.commitCount} commits` : ""}
                   </div>
-                </div>
-                <div className="mt-3 text-xs text-white/50">Click the glowing dot for full club details.</div>
+                ) : null}
+
+                <div className="mt-3 text-xs text-white/50">Click the dot for contact details.</div>
               </div>
             ) : null}
 

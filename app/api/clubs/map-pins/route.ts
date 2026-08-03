@@ -21,6 +21,17 @@ type CanonicalClub = {
   website: string | null
   logoUrl: string | null
   verified: boolean
+  contactPhone: string | null
+  contactEmail: string | null
+  programs: {
+    youth: boolean
+    middleSchool: boolean
+    highSchool: boolean
+    boys: boolean
+    girls: boolean
+    freestyleGreco: boolean
+  }
+  programsOffered: string | null
 }
 
 type ClubStats = {
@@ -132,7 +143,8 @@ export async function GET() {
     const { data: clubRows, error: clubError } = await supabase
       .from("wrestling_clubs")
       .select(
-        "id,name,normalized_name,location,logo_url,address,city,state,zip_code,latitude,longitude,website,verified",
+        "id,name,normalized_name,location,logo_url,address,city,state,zip_code,latitude,longitude,website,verified," +
+          "contact_phone,contact_email,youth_program,middle_school_program,high_school_program,boys_program,girls_program,freestyle_greco,programs_offered",
       )
       .order("name", { ascending: true })
 
@@ -166,6 +178,17 @@ export async function GET() {
         website: asNullableString(row.website),
         logoUrl: asNullableString(row.logo_url),
         verified: Boolean(row.verified),
+        contactPhone: asNullableString(row.contact_phone),
+        contactEmail: asNullableString(row.contact_email),
+        programs: {
+          youth: Boolean(row.youth_program),
+          middleSchool: Boolean(row.middle_school_program),
+          highSchool: Boolean(row.high_school_program),
+          boys: Boolean(row.boys_program),
+          girls: Boolean(row.girls_program),
+          freestyleGreco: Boolean(row.freestyle_greco),
+        },
+        programsOffered: asNullableString(row.programs_offered),
       }
       canonicalClubs.set(id, club)
       addAlias(normalizedToClubId, name, id)
@@ -293,6 +316,10 @@ export async function GET() {
         website: club.website,
         logoUrl: club.logoUrl,
         verified: club.verified,
+        contactPhone: club.contactPhone,
+        contactEmail: club.contactEmail,
+        programs: club.programs,
+        programsOffered: club.programsOffered,
         athleteCount: stats.athleteIds.size,
         boysCount: stats.boysCount,
         girlsCount: stats.girlsCount,
