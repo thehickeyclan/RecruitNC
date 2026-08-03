@@ -15,20 +15,20 @@ const CARD_BASE = "/national-team/aau-scholastic-duals-2026/cards"
 
 /** Sorted lightest → HWT. Add entries as card art arrives (filename: slug-weight.png). */
 export const AAU_SCHOLASTIC_DUALS_2026_WRESTLER_CARDS: AauScholasticWrestlerCard[] = [
-  { weightClass: "106", wrestler: "Xan Moody", imageSrc: `${CARD_BASE}/xan-moody-106.png`, highlightVideoSrc: "/national-team/aau-scholastic-duals-2026/videos/xan-moody-highlight.mov" },
-  { weightClass: "113", wrestler: "Aiden Burkholder", imageSrc: `${CARD_BASE}/aiden-burkholder-113.png`, highlightVideoSrc: "/national-team/aau-scholastic-duals-2026/videos/aiden-burkholder-highlight.mov" },
-  { weightClass: "120", wrestler: "Luke Richards", imageSrc: `${CARD_BASE}/luke-richards-120.png`, highlightVideoSrc: "/national-team/aau-scholastic-duals-2026/videos/luke-richards-highlight.mov" },
-  { weightClass: "126", wrestler: "Paxton Kearns", imageSrc: `${CARD_BASE}/paxton-kearns-126.png`, highlightVideoSrc: "/national-team/aau-scholastic-duals-2026/videos/paxton-kearns-highlight.mov" },
-  { weightClass: "132", wrestler: "Mac Johnson", imageSrc: `${CARD_BASE}/mac-johnson-132.png`, highlightVideoSrc: "/national-team/aau-scholastic-duals-2026/videos/mac-johnson-highlight.mov" },
-  { weightClass: "138", wrestler: "Tye Johnson", imageSrc: `${CARD_BASE}/tye-johnson-138.png`, highlightVideoSrc: "/national-team/aau-scholastic-duals-2026/videos/tye-johnson-highlight.mov" },
-  { weightClass: "144", wrestler: "Jake Amiott", imageSrc: `${CARD_BASE}/jake-amiott-144.png`, highlightVideoSrc: "/national-team/aau-scholastic-duals-2026/videos/jake-amiott-highlight.mov" },
-  { weightClass: "150", wrestler: "Jacob Perry", imageSrc: `${CARD_BASE}/jacob-perry-150.png`, highlightVideoSrc: "/national-team/aau-scholastic-duals-2026/videos/jacob-perry-highlight.mov" },
-  { weightClass: "157", wrestler: "Aaron Ellison", imageSrc: `${CARD_BASE}/aaron-ellison-157.png`, highlightVideoSrc: "/national-team/aau-scholastic-duals-2026/videos/aaron-ellison-highlight.mov" },
-  { weightClass: "165", wrestler: "Tobin McNair", imageSrc: `${CARD_BASE}/tobin-mcnair-165.png`, highlightVideoSrc: "/national-team/aau-scholastic-duals-2026/videos/tobin-mcnair-highlight.mov" },
-  { weightClass: "175", wrestler: "Fares Alkurdasi", imageSrc: `${CARD_BASE}/fares-alkurdasi-175.png`, highlightVideoSrc: "/national-team/aau-scholastic-duals-2026/videos/fares-alkurdasi-highlight.mov" },
-  { weightClass: "190", wrestler: "Luke Padgett", imageSrc: `${CARD_BASE}/luke-padgett-190.png`, highlightVideoSrc: "/national-team/aau-scholastic-duals-2026/videos/luke-padgett-highlight.mov" },
-  { weightClass: "215", wrestler: "Gavin Lopez", imageSrc: `${CARD_BASE}/gavin-lopez-215.png`, highlightVideoSrc: "/national-team/aau-scholastic-duals-2026/videos/gavin-lopez-highlight.mov" },
-  { weightClass: "HWT", wrestler: "Mason Hocker", imageSrc: `${CARD_BASE}/mason-hocker-hwt.png`, highlightVideoSrc: "/national-team/aau-scholastic-duals-2026/videos/mason-hocker-highlight.mov" },
+  { weightClass: "106", wrestler: "Xan Moody", imageSrc: `${CARD_BASE}/xan-moody-106.png`, highlightVideoSrc: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/national-team/aau-scholastic-duals-2026/videos/xan-moody-highlight.mov" },
+  { weightClass: "113", wrestler: "Aiden Burkholder", imageSrc: `${CARD_BASE}/aiden-burkholder-113.png`, highlightVideoSrc: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/national-team/aau-scholastic-duals-2026/videos/aiden-burkholder-highlight.mov" },
+  { weightClass: "120", wrestler: "Luke Richards", imageSrc: `${CARD_BASE}/luke-richards-120.png`, highlightVideoSrc: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/national-team/aau-scholastic-duals-2026/videos/luke-richards-highlight.mov" },
+  { weightClass: "126", wrestler: "Paxton Kearns", imageSrc: `${CARD_BASE}/paxton-kearns-126.png`, highlightVideoSrc: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/national-team/aau-scholastic-duals-2026/videos/paxton-kearns-highlight.mov" },
+  { weightClass: "132", wrestler: "Mac Johnson", imageSrc: `${CARD_BASE}/mac-johnson-132.png`, highlightVideoSrc: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/national-team/aau-scholastic-duals-2026/videos/mac-johnson-highlight.mov" },
+  { weightClass: "138", wrestler: "Tye Johnson", imageSrc: `${CARD_BASE}/tye-johnson-138.png`, highlightVideoSrc: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/national-team/aau-scholastic-duals-2026/videos/tye-johnson-highlight.mov" },
+  { weightClass: "144", wrestler: "Jake Amiott", imageSrc: `${CARD_BASE}/jake-amiott-144.png`, highlightVideoSrc: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/national-team/aau-scholastic-duals-2026/videos/jake-amiott-highlight.mov" },
+  { weightClass: "150", wrestler: "Jacob Perry", imageSrc: `${CARD_BASE}/jacob-perry-150.png`, highlightVideoSrc: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/national-team/aau-scholastic-duals-2026/videos/jacob-perry-highlight.mov" },
+  { weightClass: "157", wrestler: "Aaron Ellison", imageSrc: `${CARD_BASE}/aaron-ellison-157.png`, highlightVideoSrc: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/national-team/aau-scholastic-duals-2026/videos/aaron-ellison-highlight.mov" },
+  { weightClass: "165", wrestler: "Tobin McNair", imageSrc: `${CARD_BASE}/tobin-mcnair-165.png`, highlightVideoSrc: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/national-team/aau-scholastic-duals-2026/videos/tobin-mcnair-highlight.mov" },
+  { weightClass: "175", wrestler: "Fares Alkurdasi", imageSrc: `${CARD_BASE}/fares-alkurdasi-175.png`, highlightVideoSrc: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/national-team/aau-scholastic-duals-2026/videos/fares-alkurdasi-highlight.mov" },
+  { weightClass: "190", wrestler: "Luke Padgett", imageSrc: `${CARD_BASE}/luke-padgett-190.png`, highlightVideoSrc: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/national-team/aau-scholastic-duals-2026/videos/luke-padgett-highlight.mov" },
+  { weightClass: "215", wrestler: "Gavin Lopez", imageSrc: `${CARD_BASE}/gavin-lopez-215.png`, highlightVideoSrc: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/national-team/aau-scholastic-duals-2026/videos/gavin-lopez-highlight.mov" },
+  { weightClass: "HWT", wrestler: "Mason Hocker", imageSrc: `${CARD_BASE}/mason-hocker-hwt.png`, highlightVideoSrc: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/national-team/aau-scholastic-duals-2026/videos/mason-hocker-highlight.mov" },
 ]
 
 export function getAauScholasticWrestlerCardsSorted(): AauScholasticWrestlerCard[] {

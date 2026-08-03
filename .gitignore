@@ -43,6 +43,9 @@ legacy-nc/
 /RecruitNC2/
 /_incoming/
 
+# Large video assets belong in Vercel Blob, not the Git deployment payload.
+*.mov
+
 # Accidental backup files next to ported Data Dawg route
 app/api/ai/chat/route.ts.bak
 app/api/ai/chat/route.ts.bak2
