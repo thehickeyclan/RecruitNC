@@ -99,6 +99,13 @@ update public.orders set order_type = 'donation'
     and (lower(shipping_method::text) like '%donation%'
       or lower(shipping_method::text) like '%fundraising%');
 
+-- 3bb. Store fulfillment methods. Runs after the program rules above so that
+--      'Practice Drop-in' is claimed as a drop-in before 'Pickup at Practice' —
+--      a store pickup option — gets read as one.
+update public.orders set order_type = 'merchandise'
+  where order_type = 'unknown'
+    and shipping_method::text ~* 'standard shipping|ship anywhere|pickup at practice|pickup at blue practice|pickup at states|suite 109|free pickup';
+
 -- 3c. Channel, for rows whose shipping_method was never populated.
 update public.orders set order_type = 'blue_subscription'
   where order_type = 'unknown' and lower(channel) = 'blue';
@@ -111,19 +118,24 @@ update public.orders set order_type = 'national_team_fee'
 update public.orders set order_type = 'merchandise'
   where order_type = 'unknown' and lower(channel) = 'store';
 
--- 3d. Real line items are the last strong merchandise signal. Placeholder names written
---     by the Stripe recovery paths ("Product", "Order Items - See Stripe Metadata",
---     "NC United Store purchase") do not count — they tell us nothing.
+-- 3d. Line items are the last signal. Every program type has been ruled out above, so a
+--     line item here means merchandise — including the placeholder names the Stripe
+--     recovery paths wrote ('Product', 'NC United Store purchase', 'Order Items - See
+--     Stripe Metadata'). Those orders lost their item detail but are still store orders,
+--     and they belong in the fulfillment queue where the missing-address warning finds them.
+update public.orders o set order_type = 'drop_in'
+  where o.order_type = 'unknown'
+    and exists (
+      select 1 from public.order_items i
+      where i.order_id = o.id and i.product_name ~* 'drop-?in'
+    );
+
 update public.orders o set order_type = 'merchandise'
   where o.order_type = 'unknown'
     and exists (
       select 1 from public.order_items i
       where i.order_id = o.id
         and coalesce(trim(i.product_name), '') <> ''
-        and lower(trim(i.product_name)) not in (
-          'product', 'order items - see stripe metadata', 'nc united store purchase', 'recovered'
-        )
-        and lower(i.product_name) not like '%drop-in%'
         and lower(i.product_name) not like '%membership%'
         and lower(i.product_name) not like '%donation%'
     );
