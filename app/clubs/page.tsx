@@ -1,189 +1,75 @@
-"use client"
-
-import { useAuth } from "@/contexts/auth-context"
-import { useRouter } from "next/navigation"
-import { useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import type { Metadata } from "next"
+import Link from "next/link"
+import { ClubLocatorMap } from "@/components/clubs/club-locator-map"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { AuthGuard } from "@/components/auth-guard"
-import { Users, Target, Calendar, Bell, Star, Zap } from "lucide-react"
-import Image from "next/image"
+import { MapPin, Search, ShieldCheck, Users } from "lucide-react"
 
-export default function ClubsComingSoonPage() {
-  const { user, loading } = useAuth()
-  const router = useRouter()
+export const metadata: Metadata = {
+  title: "North Carolina Wrestling Club Map | RecruitNC",
+  description:
+    "Find wrestling clubs and training centers across North Carolina with RecruitNC athlete counts, girls and boys participation, websites, logos, and college commitment activity.",
+  openGraph: {
+    title: "North Carolina Wrestling Club Map | RecruitNC",
+    description:
+      "Explore wrestling clubs and training centers across North Carolina with RecruitNC athlete and college commitment data.",
+    url: "/clubs",
+    type: "website",
+  },
+}
 
-  useEffect(() => {
-    if (!loading && !user) {
-      window.location.href = "/auth/signin?redirect=/clubs"
-    }
-  }, [user, loading, router])
-
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
-      </div>
-    )
-  }
-
-  if (!user) {
-    return null
-  }
-
+export default function ClubsPage() {
   return (
-    <AuthGuard>
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50">
-        <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-          {/* Hero Section */}
-          <div className="text-center mb-12">
-            <div className="relative mx-auto w-32 h-32 mb-8">
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full animate-pulse"></div>
-              <div className="absolute inset-2 bg-white rounded-full flex items-center justify-center">
-                <Users className="h-16 w-16 text-purple-600" />
-              </div>
-            </div>
-
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Wrestling Clubs & Training Centers</h1>
-            <p className="text-xl text-gray-600 mb-6 max-w-3xl mx-auto">
-              Discover elite wrestling clubs and training centers across North Carolina. Find year-round training
-              opportunities, specialized coaching, and pathways to collegiate success.
+    <main className="min-h-screen bg-[#061427] text-white">
+      <section className="relative overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(220,38,38,0.28),transparent_28%),radial-gradient(circle_at_75%_12%,rgba(251,191,36,0.18),transparent_25%),linear-gradient(135deg,#061427,#0b2444_50%,#061427)]">
+        <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(255,255,255,.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.08)_1px,transparent_1px)] [background-size:54px_54px]" />
+        <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+          <div className="max-w-4xl">
+            <Badge className="mb-5 bg-amber-400 text-slate-950 hover:bg-amber-300">
+              <MapPin className="mr-2 h-4 w-4" />
+              RecruitNC Club Locator
+            </Badge>
+            <h1 className="text-4xl font-black tracking-tight sm:text-6xl">
+              Find North Carolina wrestling clubs.
+            </h1>
+            <p className="mt-6 max-w-3xl text-lg leading-8 text-slate-200 sm:text-xl">
+              A public map of wrestling clubs and training centers across North Carolina, built from verified club
+              records and connected to RecruitNC athlete, recruiting, and commitment data.
             </p>
 
-            <Badge variant="secondary" className="text-lg px-6 py-2 bg-purple-100 text-purple-800">
-              <Calendar className="h-4 w-4 mr-2" />
-              Coming Soon
-            </Badge>
-          </div>
-
-          {/* Preview Cards */}
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 mb-12">
-            <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-purple-600">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Target className="h-5 w-5 text-orange-500" />
-                  Elite Training
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 mb-4">
-                  Premier wrestling clubs offering specialized training and development programs.
-                </p>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Elite Clubs</span>
-                    <Badge variant="outline">25+ Programs</Badge>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Youth Programs</span>
-                    <Badge variant="outline">40+ Clubs</Badge>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Training Centers</span>
-                    <Badge variant="outline">15+ Facilities</Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-blue-600">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Zap className="h-5 w-5 text-yellow-500" />
-                  Success Stories
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 mb-4">
-                  Track club alumni success at the collegiate and international levels.
-                </p>
-                <div className="bg-blue-50 p-3 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">150+</div>
-                  <div className="text-sm text-blue-700">Club Athletes Committed</div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-green-600">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Star className="h-5 w-5 text-green-500" />
-                  Club Profiles
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 mb-4">
-                  Detailed information about coaching staff, facilities, and training philosophy.
-                </p>
-                <ul className="text-sm space-y-1 text-gray-600">
-                  <li>• Coaching Credentials</li>
-                  <li>• Training Schedules</li>
-                  <li>• Competition Teams</li>
-                  <li>• Facility Information</li>
-                </ul>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Feature Preview */}
-          <Card className="mb-12 overflow-hidden">
-            <div className="md:flex">
-              <div className="md:w-1/2 p-8">
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">Find Your Training Home</h3>
-                <ul className="space-y-3">
-                  <li className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-purple-600 rounded-full mt-2"></div>
-                    <div>
-                      <strong>Club Directory</strong>
-                      <p className="text-gray-600 text-sm">
-                        Comprehensive listing of wrestling clubs by location and specialty
-                      </p>
-                    </div>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-purple-600 rounded-full mt-2"></div>
-                    <div>
-                      <strong>Coach Profiles</strong>
-                      <p className="text-gray-600 text-sm">Learn about coaching staff backgrounds and achievements</p>
-                    </div>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-purple-600 rounded-full mt-2"></div>
-                    <div>
-                      <strong>Alumni Network</strong>
-                      <p className="text-gray-600 text-sm">See where club wrestlers are competing in college</p>
-                    </div>
-                  </li>
-                </ul>
-              </div>
-              <div className="md:w-1/2 bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center p-8">
-                <Image
-                  src="/grappling-duel.png"
-                  alt="Wrestling Clubs Preview"
-                  width={400}
-                  height={300}
-                  className="rounded-lg shadow-lg"
-                />
-              </div>
-            </div>
-          </Card>
-
-          {/* Notification Signup */}
-          <Card className="text-center bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
-            <CardContent className="p-8">
-              <Bell className="h-12 w-12 mx-auto mb-4 opacity-90" />
-              <h3 className="text-2xl font-bold mb-4">Join the Club Network</h3>
-              <p className="mb-6 opacity-90">
-                Get exclusive access to our wrestling club directory and training resources.
-              </p>
-              <Button variant="secondary" size="lg" className="bg-white text-purple-600 hover:bg-gray-100">
-                Connect with Clubs
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Button asChild className="bg-red-600 text-white hover:bg-red-500">
+                <a href="#club-map">Explore the map</a>
               </Button>
-            </CardContent>
-          </Card>
+              <Button asChild variant="outline" className="border-white/20 bg-white/5 text-white hover:bg-white/10">
+                <Link href="/athletes">Search athletes</Link>
+              </Button>
+            </div>
+          </div>
+
+          <div className="mt-10 grid gap-4 sm:grid-cols-3">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur">
+              <Search className="h-6 w-6 text-amber-300" />
+              <h2 className="mt-3 font-black">Search by club or city</h2>
+              <p className="mt-2 text-sm text-slate-300">Quickly find nearby programs and training options.</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur">
+              <Users className="h-6 w-6 text-amber-300" />
+              <h2 className="mt-3 font-black">Connected to RecruitNC</h2>
+              <p className="mt-2 text-sm text-slate-300">See athlete counts, boys/girls totals, and commitment activity.</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur">
+              <ShieldCheck className="h-6 w-6 text-amber-300" />
+              <h2 className="mt-3 font-black">Built for verification</h2>
+              <p className="mt-2 text-sm text-slate-300">Alias support keeps duplicate club names from becoming duplicate pins.</p>
+            </div>
+          </div>
         </div>
-      </div>
-    </AuthGuard>
+      </section>
+
+      <section id="club-map" className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <ClubLocatorMap />
+      </section>
+    </main>
   )
 }
