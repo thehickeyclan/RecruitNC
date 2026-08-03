@@ -43,6 +43,7 @@ type MapLike = {
   fitBounds: (bounds: [[number, number], [number, number]], options?: Record<string, unknown>) => void
   easeTo: (options: Record<string, unknown>) => void
   getZoom: () => number
+  resize: () => void
   queryRenderedFeatures: (point: unknown, options?: Record<string, unknown>) => Array<Record<string, any>>
   on: (event: string, layerOrHandler: string | ((event?: any) => void), handler?: (event?: any) => void) => void
   once: (event: string, handler: () => void) => void
@@ -315,13 +316,35 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
 
         mapRef.current = map
         map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right")
+        requestAnimationFrame(() => map.resize())
+
+        map.on("error", (event: any) => {
+          if (cancelled) return
+          const message = String(event?.error?.message ?? "")
+          if (/401|403|unauthorized|forbidden|access token|not authorized/i.test(message)) {
+            setMapError(
+              "Mapbox is blocking the base map. Check that the token is active and that URL restrictions include this exact RecruitNC domain and preview URL.",
+            )
+          }
+        })
 
         map.once("load", () => {
           if (cancelled) return
+          map.resize()
 
           map.addSource("nc-boundary", {
             type: "geojson",
             data: "/geo/nc-state.geojson",
+          })
+
+          map.addLayer({
+            id: "nc-boundary-fill",
+            type: "fill",
+            source: "nc-boundary",
+            paint: {
+              "fill-color": "#0B1D3A",
+              "fill-opacity": 0.28,
+            },
           })
 
           map.addLayer({
@@ -330,8 +353,8 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
             source: "nc-boundary",
             paint: {
               "line-color": MAP_GOLD,
-              "line-opacity": 0.82,
-              "line-width": 2.25,
+              "line-opacity": 0.95,
+              "line-width": 2.75,
             },
           })
 
@@ -686,8 +709,9 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
             ) : null}
 
             {!loading && !mapError && !filteredPins.length ? (
-              <div className="absolute inset-x-6 bottom-6 z-30 rounded-sm border border-white/10 bg-black/70 p-4 text-sm text-white/75">
-                No mapped clubs match the current filters.
+              <div className="absolute inset-x-6 bottom-6 z-30 rounded-sm border border-[#d7b968]/25 bg-[#071427]/90 p-4 text-sm text-[#f5e7bd]/85 shadow-[0_0_24px_rgba(215,185,104,0.12)] backdrop-blur">
+                <span className="font-bold text-white">North Carolina map is ready.</span>{" "}
+                No mapped clubs match the current filters yet. Add verified club coordinates to light up the pins.
               </div>
             ) : null}
           </div>
