@@ -13,8 +13,8 @@ import { ExternalLink, LocateFixed, MapPin, Search, ShieldCheck, Users } from "l
 
 const MAPBOX_SCRIPT_ID = "mapbox-gl-js"
 const MAPBOX_CSS_ID = "mapbox-gl-css"
-const MAPBOX_VERSION = "v3.9.4"
-const MAP_GOLD = "#d7b968"
+const MAPBOX_VERSION = "v3.21.0"
+const MAP_GOLD = "#C9A84C"
 const MAP_RED = "#cc0000"
 
 const NC_BOUNDS: [[number, number], [number, number]] = [
@@ -507,16 +507,6 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
           })
 
           map.addLayer({
-            id: "nc-boundary-fill",
-            type: "fill",
-            source: "nc-boundary",
-            paint: {
-              "fill-color": "#0B1D3A",
-              "fill-opacity": 0.28,
-            },
-          })
-
-          map.addLayer({
             id: "nc-boundary-line",
             type: "line",
             source: "nc-boundary",
@@ -832,14 +822,8 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
             <Badge className="rounded-full bg-[#d7b968] px-3 py-1 text-[#071427]">{filteredPins.length} visible</Badge>
           </div>
 
-          <div className="relative h-[580px] bg-[#0b0f14]">
-            <StaticNcMapBackdrop pins={filteredPins} selectedId={selectedPin?.id ?? null} onSelectPin={setSelectedId} />
-            <div
-              ref={mapContainerRef}
-              className={`absolute inset-0 transition-opacity duration-500 ${
-                mapReady ? "opacity-100" : "pointer-events-none opacity-0"
-              }`}
-            />
+          <div className="relative h-[440px] bg-[#0b0f14] sm:h-[520px] lg:h-[580px]">
+            <div ref={mapContainerRef} className="absolute inset-0" />
 
             {hoveredPin && !mapError ? (
               <div className="pointer-events-none absolute left-4 top-4 z-30 w-[min(330px,calc(100%-2rem))] rounded-sm border border-[#d7b968]/45 bg-[#071427]/95 p-4 text-white shadow-[0_0_34px_rgba(215,185,104,0.2)] backdrop-blur">
