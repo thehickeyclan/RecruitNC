@@ -37,6 +37,11 @@ export function ConditionalAuthGuard({
     "/prospects",
     "/schools",
     "/colleges",
+    // Public club directory — it carries public SEO metadata and an OG url of /clubs,
+    // so gating it here made the page uncrawlable and dead-ended every shared link.
+    // /clubs/submit stays safe: it resolves the session itself and prompts signed-out
+    // visitors to sign in, and the submissions API returns 401 regardless.
+    "/clubs",
     "/news",
     "/nchsaa",
     "/nhsca",

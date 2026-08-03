@@ -59,6 +59,10 @@ export async function middleware(request: NextRequest) {
     '/prospects',
     '/schools',
     '/colleges',
+    // Public club directory. /clubs/submit still requires an account — it checks
+    // auth itself on the page and the submissions API returns 401.
+    '/clubs',
+    '/api/clubs',
     '/news',
     '/blue',
     '/go',
