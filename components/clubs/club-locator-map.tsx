@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { ClubMapPin, ClubMapResponse } from "@/lib/clubs/club-map-types"
 import { ExternalLink, Facebook, Instagram, LocateFixed, MapPin, Search, ShieldCheck, Users } from "lucide-react"
 import { ClubClaimButton } from "@/components/clubs/club-claim-button"
+import { clubSlug } from "@/lib/clubs/club-slug"
 
 const MAPBOX_SCRIPT_ID = "mapbox-gl-js"
 const MAPBOX_CSS_ID = "mapbox-gl-css"
@@ -481,7 +482,10 @@ function PinDetails({ pin }: { pin: ClubMapPin }) {
 
         <div className="flex flex-wrap gap-2">
           <Button asChild className="rounded-sm bg-[#cc0000] text-white hover:bg-[#a80000]">
-            <Link href={pin.profileHref}>View RecruitNC athletes</Link>
+            <Link href={`/clubs/${clubSlug(pin.name)}`}>Club page</Link>
+          </Button>
+          <Button asChild variant="outline" className="rounded-sm border-white/20 bg-transparent text-white hover:bg-white/10">
+            <Link href={pin.profileHref}>RecruitNC athletes</Link>
           </Button>
           {pin.website ? (
             <Button asChild variant="outline" className="rounded-sm border-white/20 bg-transparent text-white hover:bg-white/10">
@@ -994,12 +998,12 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
           Finding a club near you is the whole point of this page for a parent, so it sits
           above the filters rather than buried in them.
         */}
-        <div className="mb-3 flex flex-col gap-3 rounded-sm border border-[#d7b968]/25 bg-[#d7b968]/5 p-3 sm:flex-row sm:items-center">
+        <div className="mb-3 flex flex-col gap-2 rounded-sm border border-[#d7b968]/25 bg-[#d7b968]/5 p-3 sm:flex-row sm:items-center sm:gap-3">
           <Button
             type="button"
             onClick={useMyLocation}
             disabled={locating}
-            className="rounded-sm bg-[#d7b968] text-[#071427] hover:bg-[#c4a75c]"
+            className="min-h-11 w-full rounded-sm bg-[#d7b968] text-[#071427] hover:bg-[#c4a75c] sm:w-auto"
           >
             <LocateFixed className="mr-2 h-4 w-4" />
             {locating ? "Finding you…" : "Clubs near me"}
@@ -1014,7 +1018,7 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
               }}
               inputMode="numeric"
               placeholder="or enter your ZIP code"
-              className="rounded-sm border-white/10 bg-white/5 text-white placeholder:text-white/35"
+              className="min-h-11 rounded-sm border-white/10 bg-white/5 text-white placeholder:text-white/35"
             />
             <Button
               type="button"
@@ -1048,20 +1052,20 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
           <p className="mb-3 text-sm text-amber-200">{locationError}</p>
         ) : null}
 
-        <div className="grid gap-3 lg:grid-cols-[1fr_170px_190px_150px_140px]">
+        <div className="grid gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-[1fr_170px_190px_150px_140px]">
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-white/45" />
             <Input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search club, city, or website…"
-              className="rounded-sm border-white/10 bg-white/5 pl-9 text-white placeholder:text-white/35"
+              className="min-h-11 rounded-sm border-white/10 bg-white/5 pl-9 text-white placeholder:text-white/35"
             />
           </div>
 
           {/* Age group is the first thing a parent needs to know — "do you take 8-year-olds?" */}
           <Select value={ageFilter} onValueChange={setAgeFilter}>
-            <SelectTrigger className="w-full rounded-sm border-white/10 bg-white/5 text-white">
+            <SelectTrigger className="min-h-11 w-full rounded-sm border-white/10 bg-white/5 text-white">
               <SelectValue placeholder="Age group" />
             </SelectTrigger>
             <SelectContent className="border-white/10 bg-[#071427] text-white">
@@ -1073,7 +1077,7 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
           </Select>
 
           <Select value={genderFilter} onValueChange={setGenderFilter}>
-            <SelectTrigger className="w-full rounded-sm border-white/10 bg-white/5 text-white">
+            <SelectTrigger className="min-h-11 w-full rounded-sm border-white/10 bg-white/5 text-white">
               <SelectValue placeholder="Boys / girls" />
             </SelectTrigger>
             <SelectContent className="border-white/10 bg-[#071427] text-white">
@@ -1084,7 +1088,7 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
           </Select>
 
           <Select value={styleFilter} onValueChange={setStyleFilter}>
-            <SelectTrigger className="w-full rounded-sm border-white/10 bg-white/5 text-white">
+            <SelectTrigger className="min-h-11 w-full rounded-sm border-white/10 bg-white/5 text-white">
               <SelectValue placeholder="Style" />
             </SelectTrigger>
             <SelectContent className="border-white/10 bg-[#071427] text-white">
@@ -1139,7 +1143,7 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
             </div>
           </div>
 
-          <div className="relative h-[440px] bg-[#0b0f14] sm:h-[520px] lg:h-[580px]">
+          <div className="relative h-[300px] bg-[#0b0f14] sm:h-[460px] lg:h-[580px]">
             {/*
               The North Carolina outline sits underneath the live map and shows through
               whenever Mapbox has not painted — still loading, token rejected, CDN blocked.
@@ -1253,7 +1257,7 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
             </Card>
           )}
 
-          <div className="max-h-[520px] space-y-3 overflow-auto pr-1">
+          <div className="space-y-3 lg:max-h-[520px] lg:overflow-auto lg:pr-1">
             {filteredPins.map((pin) => (
               <button
                 key={pin.id}
