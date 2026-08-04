@@ -157,7 +157,15 @@ function loadMapbox() {
   return pending
 }
 
-/** Great-circle miles. Good enough to sort clubs by "how far is this from me". */
+/** "8 min", "1 hr 25 min" — minutes alone stop reading as a duration past an hour. */
+function formatDrive(minutes: number): string {
+  if (minutes < 60) return `${minutes} min`
+  const hours = Math.floor(minutes / 60)
+  const rest = minutes % 60
+  return rest ? `${hours} hr ${rest} min` : `${hours} hr`
+}
+
+/** Great-circle miles. Used to rank clubs before asking for real driving times. */
 function distanceMiles(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const toRad = (deg: number) => (deg * Math.PI) / 180
   const earthRadiusMiles = 3958.8
@@ -366,7 +374,7 @@ function ClubLogo({ pin }: { pin: ClubMapPin }) {
   )
 }
 
-function PinDetails({ pin, distance }: { pin: ClubMapPin; distance?: number | null }) {
+function PinDetails({ pin, distance, driveMinutes }: { pin: ClubMapPin; distance?: number | null; driveMinutes?: number | null }) {
   return (
     <Card className="rounded-sm border-white/10 bg-[#071427]/95 text-white shadow-2xl">
       <CardContent className="space-y-4 p-5">
@@ -384,7 +392,13 @@ function PinDetails({ pin, distance }: { pin: ClubMapPin; distance?: number | nu
             </div>
             <p className="mt-1 text-sm text-white/60">
               {[pin.city, pin.state].filter(Boolean).join(", ") || "North Carolina"}
-              {typeof distance === "number" ? (
+              {typeof driveMinutes === "number" ? (
+                <span className="font-semibold text-[#d7b968]">
+                  {" · "}
+                  {formatDrive(driveMinutes)} drive
+                  {typeof distance === "number" ? <span className="font-normal text-white/45"> ({Math.round(distance)} mi)</span> : null}
+                </span>
+              ) : typeof distance === "number" ? (
                 <span className="font-semibold text-[#d7b968]"> · {Math.round(distance)} miles away</span>
               ) : null}
             </p>
@@ -492,6 +506,8 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
   const [locating, setLocating] = useState(false)
   const [zipInput, setZipInput] = useState("")
   const [locationError, setLocationError] = useState<string | null>(null)
+  /** Club id → driving minutes. Only the nearest handful, and only once a location is set. */
+  const [driveMinutes, setDriveMinutes] = useState<Record<string, number>>({})
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [hoveredPinId, setHoveredPinId] = useState<string | null>(null)
   const [mapError, setMapError] = useState<string | null>(null)
@@ -619,6 +635,50 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
   useEffect(() => {
     pinsRef.current = filteredPins
   }, [filteredPins])
+
+  /**
+   * Driving times for the nearest clubs, once a location is known.
+   *
+   * Ranked by the free straight-line calculation first and capped at 24, so this is a
+   * single metered request per location — not one per filter change. Ranked against every
+   * club rather than the filtered set for the same reason: changing a filter must not
+   * trigger another billed lookup.
+   */
+  useEffect(() => {
+    if (!origin) {
+      setDriveMinutes({})
+      return
+    }
+    const nearest = [...(data?.pins ?? [])]
+      .sort(
+        (a, b) =>
+          distanceMiles(origin.lat, origin.lon, a.latitude, a.longitude) -
+          distanceMiles(origin.lat, origin.lon, b.latitude, b.longitude),
+      )
+      .slice(0, 24)
+    if (!nearest.length) return
+
+    let cancelled = false
+    fetch("/api/clubs/drive-times", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        origin: { lat: origin.lat, lon: origin.lon },
+        destinations: nearest.map((pin) => ({ id: pin.id, lat: pin.latitude, lon: pin.longitude })),
+      }),
+    })
+      .then((response) => response.json())
+      .then((payload: { durations?: Record<string, number> }) => {
+        if (!cancelled) setDriveMinutes(payload.durations ?? {})
+      })
+      .catch(() => {
+        // Straight-line miles remain on screen; a failed lookup must not blank them.
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [origin, data?.pins])
 
   /**
    * On a phone the details panel sits below the map, so tapping a pin appeared to do
@@ -1269,6 +1329,7 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
             <PinDetails
               pin={selectedPin}
               distance={origin ? distanceMiles(origin.lat, origin.lon, selectedPin.latitude, selectedPin.longitude) : null}
+              driveMinutes={driveMinutes[selectedPin.id] ?? null}
             />
           ) : (
             <Card className="rounded-sm border-white/10 bg-[#071427]/95 text-white">
@@ -1308,7 +1369,9 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
                       {origin ? (
                         <span className="text-[#d7b968]">
                           {" · "}
-                          {Math.round(distanceMiles(origin.lat, origin.lon, pin.latitude, pin.longitude))} mi
+                          {typeof driveMinutes[pin.id] === "number"
+                            ? `${formatDrive(driveMinutes[pin.id])} drive`
+                            : `${Math.round(distanceMiles(origin.lat, origin.lon, pin.latitude, pin.longitude))} mi`}
                         </span>
                       ) : null}
                     </div>
