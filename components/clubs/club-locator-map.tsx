@@ -386,6 +386,23 @@ function PinDetails({ pin }: { pin: ClubMapPin }) {
             <p className="mt-1 text-sm text-white/60">
               {[pin.city, pin.state].filter(Boolean).join(", ") || "North Carolina"}
             </p>
+            {pin.address ? (
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                  [pin.address, pin.city, pin.state, pin.zipCode].filter(Boolean).join(", "),
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-1 flex items-start gap-1.5 text-sm text-white/70 hover:text-[#d7b968]"
+              >
+                <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#d7b968]" />
+                <span>
+                  {pin.address}
+                  {pin.zipCode ? ` · ${pin.zipCode}` : ""}
+                  <span className="block text-xs text-[#d7b968]">Get directions</span>
+                </span>
+              </a>
+            ) : null}
           </div>
         </div>
 
@@ -522,6 +539,7 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
   const [mapError, setMapError] = useState<string | null>(null)
   const [mapReady, setMapReady] = useState(false)
   const mapContainerRef = useRef<HTMLDivElement | null>(null)
+  const detailsRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<MapLike | null>(null)
   const pinsRef = useRef<ClubMapPin[]>([])
 
@@ -644,6 +662,18 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
   useEffect(() => {
     pinsRef.current = filteredPins
   }, [filteredPins])
+
+  /**
+   * On a phone the details panel sits below the map, so tapping a pin appeared to do
+   * nothing — the card rendered off-screen. Bring it into view on selection. Only on
+   * small screens; on desktop the panel is already beside the map and scrolling would be
+   * disorienting.
+   */
+  useEffect(() => {
+    if (!selectedId || typeof window === "undefined") return
+    if (window.matchMedia("(min-width: 1024px)").matches) return
+    detailsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+  }, [selectedId])
 
   useEffect(() => {
     if (loading || mapRef.current || !mapContainerRef.current) return
@@ -1241,23 +1271,27 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div ref={detailsRef} className="scroll-mt-4 space-y-4">
           {selectedPin ? (
             <PinDetails pin={selectedPin} />
           ) : (
             <Card className="rounded-sm border-white/10 bg-[#071427]/95 text-white">
               <CardContent className="p-5">
                 <LocateFixed className="h-6 w-6 text-[#d7b968]" />
-                <h3 className="mt-3 text-lg font-black">Pick a club</h3>
+                <h3 className="mt-3 text-lg font-black">Tap a club on the map</h3>
                 <p className="mt-1 text-sm leading-6 text-white/60">
-                  Choose a dot on the map or a club below to see its programs, contact details and recent college
-                  commitments.
+                  You&apos;ll get its address, programs, phone and socials — plus a link to the full club page.
                 </p>
               </CardContent>
             </Card>
           )}
 
-          <div className="space-y-3 lg:max-h-[520px] lg:overflow-auto lg:pr-1">
+          {/*
+            Desktop only. On a phone the map plus the selected club's card is the whole
+            interaction — a scrolling list of every club underneath it is just something
+            to scroll past.
+          */}
+          <div className="hidden space-y-3 lg:block lg:max-h-[520px] lg:overflow-auto lg:pr-1">
             {filteredPins.map((pin) => (
               <button
                 key={pin.id}

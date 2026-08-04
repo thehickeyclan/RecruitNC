@@ -5,6 +5,8 @@ import Image from "next/image"
 import { notFound } from "next/navigation"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { clubSlug, findClubBySlug } from "@/lib/clubs/club-slug"
+import { normalizeClubName } from "@/lib/clubs/club-normalize"
+import { buildClubAchievements } from "@/lib/clubs/club-achievements"
 import { TocPatrioticBar, tocDisplayClass } from "@/components/toc/toc-theme"
 import { ClubClaimButton } from "@/components/clubs/club-claim-button"
 import { ExternalLink, Facebook, Instagram, MapPin, Phone, Mail, ShieldCheck } from "lucide-react"
@@ -21,6 +23,26 @@ const loadClub = cache(async (slug: string): Promise<ClubRow | null> => {
   const admin = createAdminClient()
   const { data } = await admin.from("wrestling_clubs").select("*")
   return findClubBySlug<ClubRow>((data ?? []) as ClubRow[], slug)
+})
+
+/**
+ * The club's wrestlers, resolved the same way the map does — canonical name plus every
+ * alias — so a club whose athletes write "RAW" still finds them.
+ */
+const loadClubAthletes = cache(async (clubId: string, clubName: string, normalizedName: string) => {
+  const admin = createAdminClient()
+  const { data: aliasRows } = await admin
+    .from("wrestling_club_aliases")
+    .select("normalized_alias")
+    .eq("club_id", clubId)
+
+  const keys = new Set<string>([normalizedName || normalizeClubName(clubName), normalizeClubName(clubName)])
+  for (const row of aliasRows ?? []) keys.add(String((row as { normalized_alias?: unknown }).normalized_alias ?? ""))
+
+  const { data: athletes } = await admin.from("athletes").select("*").limit(2000)
+  return ((athletes ?? []) as ClubRow[]).filter((athlete) =>
+    keys.has(normalizeClubName(String(athlete.wrestlingClub ?? ""))),
+  )
 })
 
 function programList(club: ClubRow): string[] {
@@ -68,6 +90,9 @@ export default async function ClubDetailPage({ params }: { params: Promise<{ slu
   const { slug } = await params
   const club = await loadClub(slug)
   if (!club) notFound()
+
+  const athletes = await loadClubAthletes(String(club.id), String(club.name), String(club.normalized_name ?? ""))
+  const achievements = buildClubAchievements(athletes)
 
   const where = [club.city, club.state].filter(Boolean).join(", ")
   const programs = programList(club)
@@ -204,6 +229,103 @@ export default async function ClubDetailPage({ params }: { params: Promise<{ slu
             </div>
           ) : null}
         </div>
+
+        {achievements.commits.length ? (
+          <div className="rounded-sm border border-white/10 bg-[#071427]/80 p-5">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="text-xs font-bold uppercase tracking-[0.22em] text-[#D7B968]">
+                College commitments
+              </h2>
+              <span className="text-xs text-white/40">as of 2025</span>
+            </div>
+            <ul className="mt-3 divide-y divide-white/5">
+              {achievements.commits.map((commit) => (
+                <li key={`${commit.name}-${commit.college}`} className="flex flex-wrap items-baseline gap-x-2 py-2">
+                  <span className="font-semibold text-white">{commit.name}</span>
+                  <span className="text-white/35">→</span>
+                  <span className="text-white/85">{commit.college}</span>
+                  {commit.classYear ? <span className="text-sm text-white/40">Class of {commit.classYear}</span> : null}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+
+        {achievements.ranked.length ? (
+          <div className="rounded-sm border border-white/10 bg-[#071427]/80 p-5">
+            <h2 className="text-xs font-bold uppercase tracking-[0.22em] text-[#D7B968]">
+              Ranked wrestlers ({achievements.ranked.length})
+            </h2>
+            <ul className="mt-3 divide-y divide-white/5">
+              {achievements.ranked.map((athlete) => (
+                <li key={`${athlete.name}-${athlete.rank}`} className="flex flex-wrap items-baseline gap-x-3 py-2">
+                  <span className="w-12 shrink-0 font-black text-[#D7B968]">#{athlete.rank}</span>
+                  <span className="font-semibold text-white">{athlete.name}</span>
+                  {athlete.classYear ? <span className="text-sm text-white/40">Class of {athlete.classYear}</span> : null}
+                  {athlete.weight ? <span className="text-sm text-white/40">{athlete.weight}</span> : null}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+
+        {achievements.nhscaAllAmericans.length || achievements.stateChampions.length || achievements.statePlacers.length ? (
+          <div className="rounded-sm border border-white/10 bg-[#071427]/80 p-5">
+            <h2 className="text-xs font-bold uppercase tracking-[0.22em] text-[#D7B968]">Honours</h2>
+
+            {achievements.nhscaAllAmericans.length ? (
+              <div className="mt-4">
+                <h3 className="text-sm font-bold text-white">NHSCA All-Americans</h3>
+                <ul className="mt-2 space-y-1.5">
+                  {achievements.nhscaAllAmericans.map((honour) => (
+                    <li key={honour.name} className="text-white/80">
+                      <span className="font-semibold text-white">{honour.name}</span>
+                      <span className="text-white/45"> — {honour.label.replace("NHSCA All-American — ", "")}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+
+            {achievements.stateChampions.length ? (
+              <div className="mt-4">
+                <h3 className="text-sm font-bold text-white">State champions</h3>
+                <ul className="mt-2 space-y-1.5">
+                  {achievements.stateChampions.map((honour) => (
+                    <li key={honour.name}>
+                      <span className="font-semibold text-white">{honour.name}</span>
+                      {honour.source ? <span className="text-sm text-white/45"> — {honour.source}</span> : null}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+
+            {achievements.statePlacers.length ? (
+              <div className="mt-4">
+                <h3 className="text-sm font-bold text-white">State placers</h3>
+                <ul className="mt-2 space-y-1.5">
+                  {achievements.statePlacers.map((honour) => (
+                    <li key={honour.name}>
+                      <span className="font-semibold text-white">{honour.name}</span>
+                      {honour.source ? <span className="text-sm text-white/45"> — {honour.source}</span> : null}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+
+            {/*
+              State results are read out of free text on athlete profiles, so the wording
+              varies and the reading can be wrong. Showing the original phrase next to each
+              name lets a reader judge it rather than take our word for it.
+            */}
+            <p className="mt-5 border-t border-white/10 pt-3 text-xs leading-5 text-white/35">
+              Honours are drawn from RecruitNC athlete profiles and shown with the wording from the profile.
+              College commitments reflect what was on file as of 2025.
+            </p>
+          </div>
+        ) : null}
 
         <div className="rounded-sm border border-white/10 bg-[#071427]/80 p-5">
           <ClubClaimButton clubId={String(club.id)} clubName={String(club.name)} />
