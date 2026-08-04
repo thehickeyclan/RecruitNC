@@ -13,6 +13,8 @@
  *    so a reader can always see the source.
  */
 
+import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
+
 export type AthleteRow = Record<string, any>
 
 export type ClubCommit = {
@@ -130,8 +132,24 @@ export function buildClubAchievements(athletes: AthleteRow[]): ClubAchievements 
       commits.push({ name, college, classYear, logoUrl: asText(row.collegeLogoUrl) || null })
     }
 
+    /**
+     * Only wrestlers inside a published ranking. `prospect_ranking` keeps ordering well
+     * past what we publish — the 2026 class runs to 119 — but a wrestler sitting at 67 is
+     * not ranked, and "#67" claims a standing that does not exist. Only some classes are
+     * published at all, so an unpublished year shows no ranks rather than leaking a
+     * working order.
+     *
+     * Deliberately uses lib/public-rankings-cap.ts, the same source Data Dawg and
+     * /public-rankings use, so the club page can never disagree with the rankings page.
+     */
     const rank = Number(row.prospect_ranking)
-    if (Number.isFinite(rank) && rank > 0) {
+    const year = Number(classYear)
+    if (
+      Number.isFinite(rank) &&
+      rank > 0 &&
+      isPublicRankingsYearPublished(year) &&
+      rank <= getPublicRankingsMax(year)
+    ) {
       ranked.push({ name, rank, classYear, weight: asText(row.weightclass) || asText(row.weight) || null })
     }
 
@@ -147,7 +165,8 @@ export function buildClubAchievements(athletes: AthleteRow[]): ClubAchievements 
   }
 
   commits.sort((a, b) => (b.classYear ?? "").localeCompare(a.classYear ?? "") || a.name.localeCompare(b.name))
-  ranked.sort((a, b) => a.rank - b.rank)
+  // Newest class first, then by rank within it — ranks only compare inside a class.
+  ranked.sort((a, b) => (b.classYear ?? "").localeCompare(a.classYear ?? "") || a.rank - b.rank)
   const byName = (a: ClubHonour, b: ClubHonour) => a.name.localeCompare(b.name)
 
   return {

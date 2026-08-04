@@ -7,6 +7,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { clubSlug, findClubBySlug } from "@/lib/clubs/club-slug"
 import { normalizeClubName } from "@/lib/clubs/club-normalize"
 import { buildClubAchievements } from "@/lib/clubs/club-achievements"
+import { DEFAULT_PUBLIC_RANKINGS_CAP, PUBLISHED_PUBLIC_RANKINGS_YEARS } from "@/lib/public-rankings-cap"
 import { TocPatrioticBar, tocDisplayClass } from "@/components/toc/toc-theme"
 import { ClubClaimButton } from "@/components/clubs/club-claim-button"
 import { ExternalLink, Facebook, Instagram, MapPin, Phone, Mail, ShieldCheck } from "lucide-react"
@@ -258,14 +259,21 @@ export default async function ClubDetailPage({ params }: { params: Promise<{ slu
             </h2>
             <ul className="mt-3 divide-y divide-white/5">
               {achievements.ranked.map((athlete) => (
-                <li key={`${athlete.name}-${athlete.rank}`} className="flex flex-wrap items-baseline gap-x-3 py-2">
+                <li key={`${athlete.name}-${athlete.classYear}-${athlete.rank}`} className="flex flex-wrap items-baseline gap-x-3 py-2">
+                  {/* Rank is always paired with the class — #5 in 2027 is not #5 in 2026. */}
                   <span className="w-12 shrink-0 font-black text-[#D7B968]">#{athlete.rank}</span>
                   <span className="font-semibold text-white">{athlete.name}</span>
-                  {athlete.classYear ? <span className="text-sm text-white/40">Class of {athlete.classYear}</span> : null}
+                  {athlete.classYear ? (
+                    <span className="text-sm text-white/55">Class of {athlete.classYear}</span>
+                  ) : null}
                   {athlete.weight ? <span className="text-sm text-white/40">{athlete.weight}</span> : null}
                 </li>
               ))}
             </ul>
+            <p className="mt-3 text-xs text-white/35">
+              RecruitNC publishes a top {DEFAULT_PUBLIC_RANKINGS_CAP} for the{" "}
+              {PUBLISHED_PUBLIC_RANKINGS_YEARS.join(" and ")} classes.
+            </p>
           </div>
         ) : null}
 
