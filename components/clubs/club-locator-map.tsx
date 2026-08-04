@@ -366,7 +366,7 @@ function ClubLogo({ pin }: { pin: ClubMapPin }) {
   )
 }
 
-function PinDetails({ pin }: { pin: ClubMapPin }) {
+function PinDetails({ pin, distance }: { pin: ClubMapPin; distance?: number | null }) {
   return (
     <Card className="rounded-sm border-white/10 bg-[#071427]/95 text-white shadow-2xl">
       <CardContent className="space-y-4 p-5">
@@ -384,6 +384,9 @@ function PinDetails({ pin }: { pin: ClubMapPin }) {
             </div>
             <p className="mt-1 text-sm text-white/60">
               {[pin.city, pin.state].filter(Boolean).join(", ") || "North Carolina"}
+              {typeof distance === "number" ? (
+                <span className="font-semibold text-[#d7b968]"> · {Math.round(distance)} miles away</span>
+              ) : null}
             </p>
             {pin.address ? (
               <a
@@ -588,21 +591,20 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
     setLocationError(null)
     setLocating(true)
     try {
-      const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${zip}.json?access_token=${encodeURIComponent(accessToken)}&country=us&types=postcode&limit=1`,
-      )
-      const body = (await response.json()) as { features?: Array<{ center?: [number, number]; place_name?: string }> }
-      const centre = body.features?.[0]?.center
-      if (!centre) {
-        setLocationError("We couldn't find that ZIP code.")
+      // Server-side, so this does not depend on the public Mapbox token reaching the
+      // browser bundle, and it inherits the Nominatim fallback.
+      const response = await fetch(`/api/clubs/geocode?zip=${encodeURIComponent(zip)}`, { cache: "no-store" })
+      const body = (await response.json()) as { latitude?: number; longitude?: number; error?: string }
+      if (!response.ok || typeof body.latitude !== "number" || typeof body.longitude !== "number") {
+        setLocationError(body.error ?? "We couldn't find that ZIP code.")
       } else {
-        setOrigin({ lat: centre[1], lon: centre[0], label: zip })
+        setOrigin({ lat: body.latitude, lon: body.longitude, label: zip })
       }
     } catch {
       setLocationError("Couldn't look up that ZIP code just now.")
     }
     setLocating(false)
-  }, [accessToken, zipInput])
+  }, [zipInput])
 
   const selectedPin = useMemo(() => {
     // No falling back to the first pin — nothing is selected until the visitor picks it,
@@ -928,6 +930,42 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
     source?.setData?.(pinsToGeoJson(filteredPins))
   }, [filteredPins, mapReady])
 
+  /**
+   * Asking for clubs near you should move the map to you — sorting the list while leaving
+   * the view on the whole state makes you find your own town by hand.
+   *
+   * Frames the area rather than a point: the visitor's location plus the nearest few clubs,
+   * so the zoom suits somewhere with three clubs in ten miles and somewhere with one in
+   * forty. Falls back to a fixed zoom when there is nothing nearby to frame.
+   */
+  useEffect(() => {
+    if (!mapReady || !mapRef.current || !origin) return
+    const map = mapRef.current
+
+    const nearest = [...filteredPins]
+      .sort(
+        (a, b) =>
+          distanceMiles(origin.lat, origin.lon, a.latitude, a.longitude) -
+          distanceMiles(origin.lat, origin.lon, b.latitude, b.longitude),
+      )
+      .slice(0, 3)
+
+    if (!nearest.length) {
+      map.easeTo({ center: [origin.lon, origin.lat], zoom: 9, duration: 800 })
+      return
+    }
+
+    const lons = [origin.lon, ...nearest.map((pin) => pin.longitude)]
+    const lats = [origin.lat, ...nearest.map((pin) => pin.latitude)]
+    map.fitBounds(
+      [
+        [Math.min(...lons), Math.min(...lats)],
+        [Math.max(...lons), Math.max(...lats)],
+      ],
+      { padding: 70, maxZoom: 11, duration: 800 },
+    )
+  }, [mapReady, origin, filteredPins])
+
   useEffect(() => {
     if (!mapReady || !mapRef.current) return
     if (mapRef.current.getLayer("club-pin-selected")) {
@@ -1228,7 +1266,10 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
 
         <div ref={detailsRef} className="scroll-mt-4 space-y-4">
           {selectedPin ? (
-            <PinDetails pin={selectedPin} />
+            <PinDetails
+              pin={selectedPin}
+              distance={origin ? distanceMiles(origin.lat, origin.lon, selectedPin.latitude, selectedPin.longitude) : null}
+            />
           ) : (
             <Card className="rounded-sm border-white/10 bg-[#071427]/95 text-white">
               <CardContent className="p-5">
