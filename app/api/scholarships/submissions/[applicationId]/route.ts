@@ -89,20 +89,24 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ appli
     nominator_name: nominatorName,
     nominator_relationship: nominatorRelationship,
     nominator_phone: nominatorPhone || null,
-    nominator_known_duration: nominatorKnownDuration || null,
     written_statement: submissionFormat === "written" ? writtenStatement : String(current.written_statement ?? ""),
-    video_url: videoUrl,
     reference_name: nominatorName,
     reference_relationship: nominatorRelationship,
     reference_email: current.nominator_email,
     reference_phone: nominatorPhone || null,
   }
 
-  let updated = await admin.from("scholarship_applications").update(updatePayload).eq("id", applicationId)
-  if (updated.error?.code === "42703" && updated.error.message?.includes("nominator_known_duration")) {
-    delete updatePayload.nominator_known_duration
-    updated = await admin.from("scholarship_applications").update(updatePayload).eq("id", applicationId)
+  // Production may still use the legacy scholarship table. Only write optional
+  // columns that were actually returned by that table so edits never fail with
+  // a PostgREST schema-cache error.
+  if (Object.prototype.hasOwnProperty.call(current, "nominator_known_duration")) {
+    updatePayload.nominator_known_duration = nominatorKnownDuration || null
   }
+  if (Object.prototype.hasOwnProperty.call(current, "video_url")) {
+    updatePayload.video_url = videoUrl
+  }
+
+  const updated = await admin.from("scholarship_applications").update(updatePayload).eq("id", applicationId)
   if (updated.error) {
     console.error("[scholarships/submission-edit]", updated.error)
     return NextResponse.json({ error: "Could not save your changes. Your text remains on this page." }, { status: 500 })

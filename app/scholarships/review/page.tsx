@@ -43,7 +43,7 @@ export default async function ScholarshipReviewHomePage() {
         Applications
       </h1>
       <p className="mt-4 text-sm leading-relaxed text-white/65">
-        Private workspace for family advisors, selection committee, and staff. Thank you for honoring these submissions with care.
+        Confidential admin workspace. Nomination details are not public and must not be shared without the required approvals.
       </p>
 
       {applications.length === 0 ? (

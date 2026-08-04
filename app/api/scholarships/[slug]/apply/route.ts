@@ -13,6 +13,17 @@ export const dynamic = "force-dynamic"
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+function isMissingColumnError(error: { code?: string; message?: string } | null): boolean {
+  if (!error) return false
+  const message = error.message?.toLowerCase() ?? ""
+  return (
+    error.code === "42703" ||
+    error.code === "PGRST204" ||
+    message.includes("schema cache") ||
+    (message.includes("could not find the") && message.includes("column"))
+  )
+}
+
 function truncate(s: string, max: number): string {
   return s.trim().slice(0, max)
 }
@@ -189,7 +200,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ slug: 
       const msg = inserted.error.message ?? ""
       const needsVideoMigration =
         submissionFormat === "video" &&
-        inserted.error.code === "42703" &&
+        isMissingColumnError(inserted.error) &&
         (msg.includes("submission_format") || msg.includes("video_url") || msg.includes("video_blob_url"))
 
       if (needsVideoMigration) {
@@ -202,11 +213,10 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ slug: 
         )
       }
 
-      const missingColLegacy =
-        inserted.error.code === "42703" ||
-        msg.includes("anonymous_id") ||
-        msg.includes("is_parent_nominating_own_child") ||
-        msg.includes("nominator_known_duration")
+      // Supabase/PostgREST reports absent columns as PGRST204 schema-cache errors,
+      // while direct Postgres calls use 42703. Written nominations must continue
+      // to save against either the legacy or current scholarship table.
+      const missingColLegacy = isMissingColumnError(inserted.error)
 
       if (missingColLegacy) {
         if (submissionFormat === "video") {
