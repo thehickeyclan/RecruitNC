@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -155,6 +155,17 @@ function loadMapbox() {
   })
 
   return pending
+}
+
+/** Great-circle miles. Good enough to sort clubs by "how far is this from me". */
+function distanceMiles(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const toRad = (deg: number) => (deg * Math.PI) / 180
+  const earthRadiusMiles = 3958.8
+  const dLat = toRad(lat2 - lat1)
+  const dLon = toRad(lon2 - lon1)
+  const a =
+    Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2
+  return 2 * earthRadiusMiles * Math.asin(Math.sqrt(a))
 }
 
 function clubMatches(pin: ClubMapPin, query: string) {
@@ -491,9 +502,17 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
   const [data, setData] = useState<ClubMapResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState("")
+  // Filters run on what a club says it RUNS, never on how many RecruitNC profiles name it.
+  // Filtering by profile count hid clubs with real girls or youth programs simply because
+  // none of their wrestlers happen to have a profile here.
+  const [ageFilter, setAgeFilter] = useState("all")
   const [genderFilter, setGenderFilter] = useState("all")
+  const [styleFilter, setStyleFilter] = useState("all")
   const [verifiedOnly, setVerifiedOnly] = useState(false)
-  const [minAthletes, setMinAthletes] = useState("0")
+  const [origin, setOrigin] = useState<{ lat: number; lon: number; label: string } | null>(null)
+  const [locating, setLocating] = useState(false)
+  const [zipInput, setZipInput] = useState("")
+  const [locationError, setLocationError] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [hoveredPinId, setHoveredPinId] = useState<string | null>(null)
   const [mapError, setMapError] = useState<string | null>(null)
@@ -541,16 +560,72 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
   }, [])
 
   const filteredPins = useMemo(() => {
-    const minimum = Number(minAthletes) || 0
-    return (data?.pins ?? []).filter((pin) => {
+    const matches = (data?.pins ?? []).filter((pin) => {
       if (!clubMatches(pin, query)) return false
       if (verifiedOnly && !pin.verified) return false
-      if (pin.athleteCount < minimum) return false
-      if (genderFilter === "boys" && pin.boysCount === 0) return false
-      if (genderFilter === "girls" && pin.girlsCount === 0) return false
+
+      const programs = pin.programs
+      if (ageFilter !== "all" && !programs?.[ageFilter as "youth" | "middleSchool" | "highSchool"]) return false
+      if (genderFilter !== "all" && !programs?.[genderFilter as "boys" | "girls"]) return false
+      if (styleFilter === "freestyleGreco" && !programs?.freestyleGreco) return false
       return true
     })
-  }, [data?.pins, genderFilter, minAthletes, query, verifiedOnly])
+
+    // Once we know where the visitor is, nearest first is the only ordering that matters.
+    if (origin) {
+      return [...matches].sort(
+        (a, b) =>
+          distanceMiles(origin.lat, origin.lon, a.latitude, a.longitude) -
+          distanceMiles(origin.lat, origin.lon, b.latitude, b.longitude),
+      )
+    }
+    return matches
+  }, [data?.pins, ageFilter, genderFilter, styleFilter, origin, query, verifiedOnly])
+
+  const useMyLocation = useCallback(() => {
+    setLocationError(null)
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      setLocationError("Your browser can't share a location. Enter a ZIP code instead.")
+      return
+    }
+    setLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setOrigin({ lat: position.coords.latitude, lon: position.coords.longitude, label: "your location" })
+        setLocating(false)
+      },
+      () => {
+        setLocating(false)
+        setLocationError("We couldn't get your location. Enter a ZIP code instead.")
+      },
+      { timeout: 10_000 },
+    )
+  }, [])
+
+  const useZip = useCallback(async () => {
+    const zip = zipInput.trim()
+    if (!/^\d{5}$/.test(zip)) {
+      setLocationError("Enter a 5-digit ZIP code.")
+      return
+    }
+    setLocationError(null)
+    setLocating(true)
+    try {
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${zip}.json?access_token=${encodeURIComponent(accessToken)}&country=us&types=postcode&limit=1`,
+      )
+      const body = (await response.json()) as { features?: Array<{ center?: [number, number]; place_name?: string }> }
+      const centre = body.features?.[0]?.center
+      if (!centre) {
+        setLocationError("We couldn't find that ZIP code.")
+      } else {
+        setOrigin({ lat: centre[1], lon: centre[0], label: zip })
+      }
+    } catch {
+      setLocationError("Couldn't look up that ZIP code just now.")
+    }
+    setLocating(false)
+  }, [accessToken, zipInput])
 
   const selectedPin = useMemo(() => {
     // No falling back to the first pin — nothing is selected until the visitor picks it,
@@ -915,7 +990,65 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
       </div>
 
       <div className="rounded-sm border border-white/10 bg-[#071427]/85 p-4 shadow-2xl shadow-black/35 sm:p-5">
-        <div className="grid gap-3 lg:grid-cols-[1fr_180px_160px_160px]">
+        {/*
+          Finding a club near you is the whole point of this page for a parent, so it sits
+          above the filters rather than buried in them.
+        */}
+        <div className="mb-3 flex flex-col gap-3 rounded-sm border border-[#d7b968]/25 bg-[#d7b968]/5 p-3 sm:flex-row sm:items-center">
+          <Button
+            type="button"
+            onClick={useMyLocation}
+            disabled={locating}
+            className="rounded-sm bg-[#d7b968] text-[#071427] hover:bg-[#c4a75c]"
+          >
+            <LocateFixed className="mr-2 h-4 w-4" />
+            {locating ? "Finding you…" : "Clubs near me"}
+          </Button>
+
+          <div className="flex flex-1 items-center gap-2">
+            <Input
+              value={zipInput}
+              onChange={(event) => setZipInput(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") void useZip()
+              }}
+              inputMode="numeric"
+              placeholder="or enter your ZIP code"
+              className="rounded-sm border-white/10 bg-white/5 text-white placeholder:text-white/35"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => void useZip()}
+              disabled={locating}
+              className="rounded-sm border-white/15 bg-transparent text-white hover:bg-white/10"
+            >
+              Go
+            </Button>
+          </div>
+
+          {origin ? (
+            <div className="flex items-center gap-2 text-sm text-[#f5e7bd]">
+              <span>Nearest to {origin.label} first</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setOrigin(null)
+                  setZipInput("")
+                }}
+                className="underline underline-offset-2 hover:text-white"
+              >
+                clear
+              </button>
+            </div>
+          ) : null}
+        </div>
+
+        {locationError ? (
+          <p className="mb-3 text-sm text-amber-200">{locationError}</p>
+        ) : null}
+
+        <div className="grid gap-3 lg:grid-cols-[1fr_170px_190px_150px_140px]">
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-white/45" />
             <Input
@@ -926,26 +1059,37 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
             />
           </div>
 
-          <Select value={genderFilter} onValueChange={setGenderFilter}>
+          {/* Age group is the first thing a parent needs to know — "do you take 8-year-olds?" */}
+          <Select value={ageFilter} onValueChange={setAgeFilter}>
             <SelectTrigger className="w-full rounded-sm border-white/10 bg-white/5 text-white">
-              <SelectValue placeholder="Program" />
+              <SelectValue placeholder="Age group" />
             </SelectTrigger>
             <SelectContent className="border-white/10 bg-[#071427] text-white">
-              <SelectItem value="all">Boys & girls</SelectItem>
-              <SelectItem value="boys">Boys athletes</SelectItem>
-              <SelectItem value="girls">Girls athletes</SelectItem>
+              <SelectItem value="all">Any age group</SelectItem>
+              <SelectItem value="youth">Youth</SelectItem>
+              <SelectItem value="middleSchool">Middle school</SelectItem>
+              <SelectItem value="highSchool">High school</SelectItem>
             </SelectContent>
           </Select>
 
-          <Select value={minAthletes} onValueChange={setMinAthletes}>
+          <Select value={genderFilter} onValueChange={setGenderFilter}>
             <SelectTrigger className="w-full rounded-sm border-white/10 bg-white/5 text-white">
-              <SelectValue placeholder="Athletes" />
+              <SelectValue placeholder="Boys / girls" />
             </SelectTrigger>
             <SelectContent className="border-white/10 bg-[#071427] text-white">
-              <SelectItem value="0">Any size</SelectItem>
-              <SelectItem value="5">5+ athletes</SelectItem>
-              <SelectItem value="10">10+ athletes</SelectItem>
-              <SelectItem value="25">25+ athletes</SelectItem>
+              <SelectItem value="all">Boys &amp; girls</SelectItem>
+              <SelectItem value="boys">Runs a boys program</SelectItem>
+              <SelectItem value="girls">Runs a girls program</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={styleFilter} onValueChange={setStyleFilter}>
+            <SelectTrigger className="w-full rounded-sm border-white/10 bg-white/5 text-white">
+              <SelectValue placeholder="Style" />
+            </SelectTrigger>
+            <SelectContent className="border-white/10 bg-[#071427] text-white">
+              <SelectItem value="all">Any style</SelectItem>
+              <SelectItem value="freestyleGreco">Freestyle / Greco</SelectItem>
             </SelectContent>
           </Select>
 
@@ -1127,6 +1271,12 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
                     <div className="truncate font-bold text-white">{pin.name}</div>
                     <div className="truncate text-sm text-white/45">
                       {[pin.city, pin.state].filter(Boolean).join(", ") || "North Carolina"}
+                      {origin ? (
+                        <span className="text-[#d7b968]">
+                          {" · "}
+                          {Math.round(distanceMiles(origin.lat, origin.lon, pin.latitude, pin.longitude))} mi
+                        </span>
+                      ) : null}
                     </div>
                   </div>
                   <div className="text-right">
