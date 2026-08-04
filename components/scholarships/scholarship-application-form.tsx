@@ -13,9 +13,9 @@ function wordCountLabel(wc: number): string {
 
 /** Essay limits are counted in words (split on whitespace), not characters. */
 function essayStatusHint(wc: number): string {
-  if (wc === 0) return "Write 400–600 words — count is words, not characters."
-  if (wc < 400) return `Need at least ${400 - wc} more word${400 - wc === 1 ? "" : "s"} (min 400, max 600).`
-  if (wc > 600) return `Trim by ${wc - 600} word${wc - 600 === 1 ? "" : "s"} (max 600).`
+  if (wc === 0) return "Write 100–250 words — count is words, not characters."
+  if (wc < 100) return `Need at least ${100 - wc} more word${100 - wc === 1 ? "" : "s"} (min 100, max 250).`
+  if (wc > 250) return `Trim by ${wc - 250} word${wc - 250 === 1 ? "" : "s"} (max 250).`
   return "Length looks good for submission."
 }
 
@@ -58,8 +58,8 @@ export function ScholarshipApplicationForm({
 
   const wcMain = useMemo(() => countWords(writtenStatement), [writtenStatement])
   const wcMoment = useMemo(() => countWords(wrestlingMoment), [wrestlingMoment])
-  const essayOk = wcMain >= 400 && wcMain <= 600
-  const extraOk = wcMoment <= 200
+  const essayOk = wcMain >= 100 && wcMain <= 250
+  const extraOk = wcMoment <= 100
 
   const videoLinkParsed = useMemo(
     () => (videoLink.trim() ? parseScholarshipVideoPageUrl(videoLink) : null),
@@ -310,9 +310,9 @@ export function ScholarshipApplicationForm({
         </fieldset>
 
         <fieldset className="space-y-4 rounded-xl border border-white/10 bg-[#0B2545]/35 p-4 sm:p-5">
-          <legend className={`${label} px-1 text-[#C8A94A]`}>Section 3 — Written essay or video *</legend>
+          <legend className={`${label} px-1 text-[#C8A94A]`}>Section 3 — Short written nomination or video *</legend>
           <p className="text-xs leading-relaxed text-white/50">
-            Pick <strong className="text-white/70">one</strong>: a 400–600 word essay, or a 3–5 minute video answering the same prompt (speak
+            Pick <strong className="text-white/70">one</strong>: a 100–250 word nomination, or a 1–2 minute video answering the same question (speak
             straight to camera — phone recording is fine).
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -328,7 +328,7 @@ export function ScholarshipApplicationForm({
                 checked={submissionKind === "written"}
                 onChange={() => setSubmissionKind("written")}
               />
-              Written essay (400–600 words)
+              Written nomination (100–250 words)
             </label>
             <label
               className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 text-sm ${
@@ -342,7 +342,7 @@ export function ScholarshipApplicationForm({
                 checked={submissionKind === "video"}
                 onChange={() => setSubmissionKind("video")}
               />
-              Video (3–5 minutes)
+              Video (1–2 minutes)
             </label>
           </div>
 
@@ -476,10 +476,10 @@ export function ScholarshipApplicationForm({
           <legend className={`${label} px-1 text-[#C8A94A]`}>Section 4 — Additional context (optional)</legend>
           <div>
             <label className={label}>Anything else the committee should know?</label>
-            <p className="mt-1 text-xs text-white/45">Optional · max 200 words</p>
+            <p className="mt-1 text-xs text-white/45">Optional · max 100 words</p>
             <textarea rows={4} value={wrestlingMoment} onChange={(e) => setWrestlingMoment(e.target.value)} className={`${field} resize-y`} />
             <p className={`mt-2 text-xs tabular-nums ${extraOk ? "text-white/45" : "text-amber-400/90"}`}>
-              {wordCountLabel(wcMoment)} · max 200
+              {wordCountLabel(wcMoment)} · max 100
             </p>
           </div>
         </fieldset>

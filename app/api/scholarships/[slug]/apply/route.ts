@@ -121,8 +121,8 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ slug: 
     writtenStatementToStore = ""
   } else {
     const wcEssay = countWords(writtenStatement)
-    if (wcEssay < 400 || wcEssay > 600) {
-      return NextResponse.json({ error: `Essay must be 400–600 words (yours: ${wcEssay}).` }, { status: 400 })
+    if (wcEssay < 100 || wcEssay > 250) {
+      return NextResponse.json({ error: `Written nomination must be 100–250 words (yours: ${wcEssay}).` }, { status: 400 })
     }
   }
 
@@ -178,8 +178,8 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ slug: 
 
   if (wrestlingMoment) {
     const mw = countWords(wrestlingMoment)
-    if (mw > 200) {
-      return NextResponse.json({ error: `Additional context must be at most 200 words (yours: ${mw}).` }, { status: 400 })
+    if (mw > 100) {
+      return NextResponse.json({ error: `Additional context must be at most 100 words (yours: ${mw}).` }, { status: 400 })
     }
   }
 

@@ -6,7 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 
 export const dynamic = "force-dynamic"
 
-const MAX_VIDEO_BYTES = 450 * 1024 * 1024 // ~450 MB — phone 3–5 min at high bitrate
+const MAX_VIDEO_BYTES = 450 * 1024 * 1024 // Generous ceiling for a 1–2 minute phone video
 const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime"] as const
 
 type ClientPayloadShape = { scholarshipSlug?: string }

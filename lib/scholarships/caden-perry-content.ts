@@ -53,10 +53,10 @@ export const CADEN_APPLICATION_INTRO =
   "One submission. One question. Video is encouraged, but written nominations are welcome."
 
 export const CADEN_APPLICATION_WRITTEN =
-  "Written: 250–500 words responding to the question below."
+  "Written: 100–250 words responding to the question below."
 
 export const CADEN_APPLICATION_VIDEO =
-  "Video: 2–4 minutes. A simple phone video is perfect. What matters is authenticity, not production quality."
+  "Video: 1–2 minutes. A simple phone video is perfect. What matters is authenticity, not production quality."
 
 export const CADEN_APPLICATION_PROMPT_LABEL = "The question:"
 
@@ -65,7 +65,7 @@ export const CADEN_APPLICATION_PROMPT_QUOTE =
 
 export const CADEN_APPLICATION_DETAILS = `The nomination also includes athlete and nominator contact details and one supporting reference. References are contacted only if the nomination reaches the finalist stage.
 
-An optional 200-word field allows nominators to share any additional context the committee should know.`
+An optional 100-word field allows nominators to share any additional context the committee should know.`
 
 export const CADEN_APPLICATION_AI_NOTE =
   "Authenticity matters more than polish. Generic nominations are less helpful than real details: what happened, who saw it, how the athlete responded, and why it mattered."
