@@ -6,6 +6,7 @@ import { notFound } from "next/navigation"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { clubSlug, findClubBySlug } from "@/lib/clubs/club-slug"
 import { normalizeClubName } from "@/lib/clubs/club-normalize"
+import { buildClubLogoIndex, resolveClubLogo, type LogoMappingRow } from "@/lib/clubs/club-logo"
 import { buildClubAchievements } from "@/lib/clubs/club-achievements"
 import { DEFAULT_PUBLIC_RANKINGS_CAP, PUBLISHED_PUBLIC_RANKINGS_YEARS } from "@/lib/public-rankings-cap"
 import { TocPatrioticBar, tocDisplayClass } from "@/components/toc/toc-theme"
@@ -24,6 +25,29 @@ const loadClub = cache(async (slug: string): Promise<ClubRow | null> => {
   const admin = createAdminClient()
   const { data } = await admin.from("wrestling_clubs").select("*")
   return findClubBySlug<ClubRow>((data ?? []) as ClubRow[], slug)
+})
+
+/**
+ * Almost no club carries its own logo_url — 50 of them live in logo_mappings instead.
+ * Reading only the club row is why the map showed a logo and this page did not.
+ */
+const loadClubLogo = cache(async (clubId: string, name: string, normalizedName: string, ownLogo: string | null) => {
+  if (ownLogo) return ownLogo
+  const admin = createAdminClient()
+
+  const { data: aliasRows } = await admin
+    .from("wrestling_club_aliases")
+    .select("alias")
+    .eq("club_id", clubId)
+  const aliases = (aliasRows ?? []).map((row) => String((row as { alias?: unknown }).alias ?? ""))
+
+  const { data: logoRows } = await admin
+    .from("logo_mappings")
+    .select("entity_name,logo_url,aliases")
+    .eq("entity_type", "club")
+
+  const index = buildClubLogoIndex((logoRows ?? []) as LogoMappingRow[])
+  return resolveClubLogo({ name, normalized_name: normalizedName, logo_url: ownLogo }, index, aliases)
 })
 
 /**
@@ -63,6 +87,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const club = await loadClub(slug)
   if (!club) return { title: "Club not found | RecruitNC" }
 
+  // cache() means this shares the page body's lookup rather than repeating it.
+  const logoUrl = await loadClubLogo(
+    String(club.id),
+    String(club.name),
+    String(club.normalized_name ?? ""),
+    (club.logo_url as string | null) ?? null,
+  )
+
   const where = [club.city, club.state].filter(Boolean).join(", ")
   const programs = programList(club)
   const description = [
@@ -82,7 +114,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       description,
       url: `/clubs/${clubSlug(String(club.name))}`,
       type: "website",
-      ...(club.logo_url ? { images: [{ url: String(club.logo_url) }] } : {}),
+      ...(logoUrl ? { images: [{ url: logoUrl }] } : {}),
     },
   }
 }
@@ -92,6 +124,12 @@ export default async function ClubDetailPage({ params }: { params: Promise<{ slu
   const club = await loadClub(slug)
   if (!club) notFound()
 
+  const logoUrl = await loadClubLogo(
+    String(club.id),
+    String(club.name),
+    String(club.normalized_name ?? ""),
+    (club.logo_url as string | null) ?? null,
+  )
   const athletes = await loadClubAthletes(String(club.id), String(club.name), String(club.normalized_name ?? ""))
   const achievements = buildClubAchievements(athletes)
 
@@ -105,7 +143,7 @@ export default async function ClubDetailPage({ params }: { params: Promise<{ slu
     "@context": "https://schema.org",
     "@type": "SportsClub",
     name: club.name,
-    ...(club.logo_url ? { logo: String(club.logo_url) } : {}),
+    ...(logoUrl ? { logo: logoUrl } : {}),
     ...(club.website ? { url: String(club.website) } : {}),
     ...(club.contact_phone ? { telephone: String(club.contact_phone) } : {}),
     ...(club.contact_email ? { email: String(club.contact_email) } : {}),
@@ -138,9 +176,9 @@ export default async function ClubDetailPage({ params }: { params: Promise<{ slu
           </Link>
 
           <div className="mt-6 flex flex-col gap-5 sm:flex-row sm:items-start">
-            {club.logo_url ? (
+            {logoUrl ? (
               <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-sm border border-white/10 bg-white/10">
-                <Image src={String(club.logo_url)} alt={`${club.name} logo`} fill className="object-contain p-1.5" sizes="80px" />
+                <Image src={logoUrl} alt={`${club.name} logo`} fill className="object-contain p-1.5" sizes="80px" />
               </div>
             ) : null}
             <div className="min-w-0">
