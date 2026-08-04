@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { sendScholarshipApplicationEmails } from "@/lib/email/scholarship-application-email"
 import { allocateScholarshipAnonymousId } from "@/lib/scholarships/anonymous-id"
 import { scholarshipApplicationsAreOpen } from "@/lib/scholarships/applications-open"
+import { sendScholarshipApplicationStaffSms } from "@/lib/scholarships/new-application-staff-sms"
 import { getScholarshipBySlug } from "@/lib/scholarships/public-queries"
 import { parseScholarshipVideoBlobUrl, parseScholarshipVideoPageUrl } from "@/lib/scholarships/scholarship-video-url"
 import { scholarshipSubmissionEditPath } from "@/lib/scholarships/submission-edit-link"
@@ -277,20 +278,30 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ slug: 
     const site = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://app.ncwrestlingunited.com"
     const manageUrl = managePath ? `${site.replace(/\/$/, "")}${managePath}` : null
 
-    void sendScholarshipApplicationEmails({
-      nominatorEmail,
-      nominatorName,
-      scholarshipName: scholarship.name,
-      athleteName,
-      anonymousId: anonUsed,
-      applicationsCloseDate: formatUsDate(scholarship.applications_close_date ?? null),
-      awardAnnouncementDate: formatUsDate(scholarship.award_announcement_date ?? null),
-      adminNotifyEmail: null,
-      submissionFormat,
-      videoUrl,
-      videoBlobUrl,
-      manageUrl,
-    })
+    // Wait for notifications so serverless execution cannot end before email/SMS delivery.
+    // Notification failures never invalidate an application that was already saved.
+    await Promise.allSettled([
+      sendScholarshipApplicationEmails({
+        nominatorEmail,
+        nominatorName,
+        scholarshipName: scholarship.name,
+        athleteName,
+        anonymousId: anonUsed,
+        applicationsCloseDate: formatUsDate(scholarship.applications_close_date ?? null),
+        awardAnnouncementDate: formatUsDate(scholarship.award_announcement_date ?? null),
+        adminNotifyEmail: null,
+        submissionFormat,
+        videoUrl,
+        videoBlobUrl,
+        manageUrl,
+      }),
+      sendScholarshipApplicationStaffSms({
+        scholarshipName: scholarship.name,
+        scholarshipSlug: scholarship.slug,
+        athleteName,
+        nominatorName,
+      }),
+    ])
 
     return NextResponse.json({ ok: true, id: insertedId, anonymous_id: anonUsed, manage_url: managePath })
   } catch (e) {

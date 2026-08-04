@@ -7,6 +7,7 @@ import {
   listScholarshipDonationsAdmin,
 } from "@/lib/scholarships/admin-queries"
 import { getScholarshipBySlug } from "@/lib/scholarships/public-queries"
+import { requireScholarshipAdmin } from "@/lib/scholarships/require-admin"
 import { scholarshipSubmissionEditPath } from "@/lib/scholarships/submission-edit-link"
 
 function formatUsd(cents: number): string {
@@ -17,6 +18,7 @@ function formatUsd(cents: number): string {
 
 export default async function AdminScholarshipDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
+  await requireScholarshipAdmin(`/admin/scholarships/${encodeURIComponent(slug)}`)
   const s = await getScholarshipBySlug(slug)
   if (!s) notFound()
 

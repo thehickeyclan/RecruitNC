@@ -1,4 +1,4 @@
-const FROM = "NC Wrestling United <info@ncwrestlingunited.com>"
+const FROM = "NC United <info@ncwrestlingunited.com>"
 
 export async function sendScholarshipApplicationEmails(params: {
   nominatorEmail: string

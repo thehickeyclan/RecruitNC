@@ -1,6 +1,9 @@
 import { HardLink } from "@/components/hard-link"
+import { requireScholarshipAdmin } from "@/lib/scholarships/require-admin"
 
-export default function AdminScholarshipNewPage() {
+export default async function AdminScholarshipNewPage() {
+  await requireScholarshipAdmin("/admin/scholarships/new")
+
   return (
     <div className="max-w-2xl text-gray-900">
       <h1 className="text-2xl font-bold">New scholarship</h1>

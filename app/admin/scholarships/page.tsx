@@ -1,7 +1,9 @@
 import { HardLink } from "@/components/hard-link"
 import { listScholarshipsAdmin } from "@/lib/scholarships/admin-queries"
+import { requireScholarshipAdmin } from "@/lib/scholarships/require-admin"
 
 export default async function AdminScholarshipsPage() {
+  await requireScholarshipAdmin("/admin/scholarships")
   const rows = await listScholarshipsAdmin()
 
   return (
