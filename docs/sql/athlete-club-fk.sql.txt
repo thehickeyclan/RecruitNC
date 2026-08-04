@@ -1,0 +1,45 @@
+-- Athletes → clubs as a real relationship — run in Supabase SQL Editor
+--
+-- `athletes.wrestlingClub` is free text, so the same club arrives as "Dark Horse" and
+-- "Darkhorse", "Sly Fox" and "Slyfox", "Combat" and "Combat Athletics" — and five athletes
+-- have two clubs typed into one box. Every count, filter and club page depends on string
+-- matching that mostly agrees. This makes the link explicit.
+--
+-- The text column stays. Nothing is dropped here: the FK is added alongside, backfilled
+-- from the club names and aliases we already resolve against, and read paths prefer it and
+-- fall back to the text. Once every profile is picking from the list, the text can go.
+--
+-- Safe to re-run.
+
+-- ── Columns ──────────────────────────────────────────────────────────────────
+alter table public.athletes
+  add column if not exists wrestling_club_id integer references public.wrestling_clubs(id) on delete set null;
+
+-- Kids genuinely train at two rooms — five profiles already say so in the text box. One
+-- primary keeps counts unambiguous; the secondary records reality instead of forcing it
+-- back into free text.
+alter table public.athletes
+  add column if not exists secondary_wrestling_club_id integer references public.wrestling_clubs(id) on delete set null;
+
+create index if not exists athletes_wrestling_club_id_idx
+  on public.athletes (wrestling_club_id) where wrestling_club_id is not null;
+
+create index if not exists athletes_secondary_wrestling_club_id_idx
+  on public.athletes (secondary_wrestling_club_id) where secondary_wrestling_club_id is not null;
+
+comment on column public.athletes.wrestling_club_id is
+  'Primary club. Set by the picker on the profile form. Drives club counts, the map and filters. The legacy free-text "wrestlingClub" is kept only as a fallback for profiles not yet migrated.';
+
+comment on column public.athletes.secondary_wrestling_club_id is
+  'Optional second club for athletes who train at two rooms. Never counted as primary.';
+
+-- ── Verify ───────────────────────────────────────────────────────────────────
+-- Backfill is done by scripts/backfill-athlete-club-fk.ts, which resolves the existing
+-- free text through the same normaliser and alias table the map uses.
+
+select
+  count(*)                                                as athletes,
+  count(*) filter (where wrestling_club_id is not null)   as linked,
+  count(*) filter (where wrestling_club_id is null
+                     and coalesce(trim("wrestlingClub"), '') <> '') as text_only_unlinked
+from public.athletes;

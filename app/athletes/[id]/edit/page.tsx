@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { ClubPicker, type PickedClub } from "@/components/clubs/club-picker"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
@@ -51,6 +52,7 @@ export default function AthleteEditPage({ params }: { params: { id: string } }) 
   const [bioHeadline, setBioHeadline] = useState("")
   const [highSchool, setHighSchool] = useState("")
   const [wrestlingClub, setWrestlingClub] = useState("")
+  const [club, setClub] = useState<PickedClub | null>(null)
   const [cell, setCell] = useState("")
   const [instagram, setInstagram] = useState("")
   const [gpa, setGpa] = useState("")
@@ -86,6 +88,13 @@ export default function AthleteEditPage({ params }: { params: { id: string } }) 
       setBioHeadline(data.bio_headline || "")
       setHighSchool(data.highschool || data.high_school || "")
       setWrestlingClub(data.wrestlingclub || data.wrestlingClub || "")
+      if (data.wrestling_club_id) {
+        setClub({
+          id: String(data.wrestling_club_id),
+          name: data.wrestling_club_name || data.wrestlingclub || data.wrestlingClub || "Your club",
+          city: data.wrestling_club_city ?? null,
+        })
+      }
       setCell(data.cell || data.cell_number || data.phone || "")
       setInstagram(data.instagram || data.instagram_handle || data.instagram_username || "")
       setGpa(data.academic_gpa ? String(data.academic_gpa) : "")
@@ -123,7 +132,12 @@ export default function AthleteEditPage({ params }: { params: { id: string } }) 
       if (bio !== (athlete?.bio || "")) updates.bio = bio
       if (bioHeadline !== (athlete?.bio_headline || "")) updates.bio_headline = bioHeadline
       if (highSchool !== (athlete?.highschool || athlete?.high_school || "")) updates.highschool = highSchool
-      if (wrestlingClub !== (athlete?.wrestlingclub || athlete?.wrestlingClub || "")) updates.wrestlingclub = wrestlingClub
+      // The picker is the source of truth. wrestlingClub is written alongside so anything
+      // still reading the text sees the same club until the migration finishes.
+      if (String(club?.id ?? "") !== String(athlete?.wrestling_club_id ?? "")) {
+        updates.wrestling_club_id = club ? Number(club.id) : null
+        updates.wrestlingClub = club?.name ?? ""
+      }
       if (cell !== (athlete?.cell || athlete?.cell_number || athlete?.phone || "")) updates.cell = cell
       if (instagram !== (athlete?.instagram || athlete?.instagram_handle || athlete?.instagram_username || "")) updates.instagram = instagram
       if (gpa !== (athlete?.academic_gpa ? String(athlete.academic_gpa) : "")) updates.academic_gpa = gpa ? parseFloat(gpa) : null
@@ -230,11 +244,11 @@ export default function AthleteEditPage({ params }: { params: { id: string } }) 
               />
             </div>
             <div>
-              <Label htmlFor="wrestlingClub">Wrestling Club</Label>
-              <Input
-                id="wrestlingClub"
-                value={wrestlingClub}
-                onChange={(e) => setWrestlingClub(e.target.value)}
+              <ClubPicker
+                value={club}
+                onChange={setClub}
+                label="Wrestling club"
+                helpText="Pick your club from the list so it links to the club map. Search by nickname too — RAW finds Raleigh Area Wolfpack."
               />
             </div>
             <div>

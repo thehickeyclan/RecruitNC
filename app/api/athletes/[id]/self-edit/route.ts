@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { mapAthleteToDb } from "@/lib/athlete-utils"
 import { normalizePhoneForStorage } from "@/lib/phone-format"
+import { unknownColumnFrom } from "@/lib/clubs/update-club"
 
 // Normalize for comparison: lowercase, no underscores (so careerRecord and career_record both match)
 const norm = (s: string) => s.toLowerCase().replace(/_/g, "")
@@ -30,6 +31,9 @@ const CONTACT_FIELDS = new Set(["cell", "cell_number", "email", "contact_email",
 const ALLOWED_UPDATE_COLUMNS = new Set([
   "cell", "cell_number", "phone", "contact_email", "contactEmail", "socialMedia", "social_media",
   "highlight_video_url", "updated_at", "bio", "bio_headline", "highschool", "wrestlingClub",
+  // The club picker writes the relationship; wrestlingClub is kept in step so anything
+  // still reading the text sees the same club during the migration.
+  "wrestling_club_id", "secondary_wrestling_club_id",
   "weightclass", "weight_class",
   "academic_gpa", "academic_sat", "academic_act", "academic_summary", "academic_interest",
   "college_opens_experience", "achievements", "additional_achievements",
@@ -201,15 +205,21 @@ export async function POST(
     let updatedAthlete: any
     let updateError: { message?: string } | null = null
 
-    const updateResult = await adminSupabase
-      .from("athletes")
-      .update(filteredPayload)
-      .eq("id", athleteId)
-      .select()
-      .single()
-
-    updatedAthlete = updateResult.data
-    updateError = updateResult.error
+    // Drop any column this database does not have yet and retry. wrestling_club_id ships
+    // with the club picker but only exists after its migration runs, and one unknown
+    // column rejects the whole update — which would fail every profile save, not just the
+    // club. Losing that one field is survivable; losing the save is not.
+    let attempt: Record<string, unknown> = { ...filteredPayload }
+    for (let i = 0; i < 4; i++) {
+      const result = await adminSupabase.from("athletes").update(attempt).eq("id", athleteId).select().single()
+      updatedAthlete = result.data
+      updateError = result.error
+      if (!result.error) break
+      const missing = unknownColumnFrom(result.error as { code?: string; message?: string })
+      if (!missing || !(missing in attempt)) break
+      delete attempt[missing]
+      console.warn(`[athletes/self-edit] dropping unknown column "${missing}" — run the pending migration`)
+    }
 
     // Fallback: try cell_number, then phone, if first update failed
     if (updateError) {
