@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClientFresh } from "@/lib/supabase/admin"
 import { normalizeClubName } from "@/lib/clubs/club-normalize"
 import { programSummary, sanitizeClubWebsite, type ClubSubmissionRow } from "@/lib/clubs/club-submissions"
+import { geocodeClub } from "@/lib/clubs/geocode"
 
 export const dynamic = "force-dynamic"
 
@@ -48,9 +49,29 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
   const row = submission as ClubSubmissionRow
   const now = new Date().toISOString()
-  const latitude = nullableNumber(body.latitude)
-  const longitude = nullableNumber(body.longitude)
+  let latitude = nullableNumber(body.latitude)
+  let longitude = nullableNumber(body.longitude)
   const adminNotes = String(body.adminNotes ?? row.admin_notes ?? "").trim() || null
+
+  /**
+   * Place the club when approving, unless coordinates were entered by hand.
+   *
+   * Without this an approved club is created with null coordinates and never appears on
+   * the map — the club is "approved" and still invisible, which is exactly what happened
+   * to the first club through this flow. A submitted town is enough for a pin.
+   */
+  if (action === "approve" && (latitude == null || longitude == null)) {
+    const hit = await geocodeClub({
+      address: row.address,
+      city: row.city,
+      state: row.state || "NC",
+      zipCode: row.zip_code,
+    })
+    if (hit) {
+      latitude = hit.latitude
+      longitude = hit.longitude
+    }
+  }
 
   if (action === "approve") {
     const normalizedName = normalizeClubName(row.club_name)
