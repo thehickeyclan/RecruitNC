@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { ClubMapPin, ClubMapResponse } from "@/lib/clubs/club-map-types"
-import { ExternalLink, Facebook, Instagram, LocateFixed, MapPin, Search, ShieldCheck, Users } from "lucide-react"
+import { ExternalLink, Facebook, Instagram, LocateFixed, MapPin, Search, ShieldCheck, X } from "lucide-react"
 import { clubSlug } from "@/lib/clubs/club-slug"
 
 const MAPBOX_SCRIPT_ID = "mapbox-gl-js"
@@ -155,6 +155,14 @@ function loadMapbox() {
   })
 
   return pending
+}
+
+/** Digits only, +1 for a US ten-digit number, so a tap actually dials. */
+function telHref(phone: string): string {
+  const digits = String(phone ?? "").replace(/\D/g, "")
+  if (digits.length === 10) return `+1${digits}`
+  if (digits.length === 11 && digits.startsWith("1")) return `+${digits}`
+  return digits
 }
 
 /** "8 min", "1 hr 25 min" — minutes alone stop reading as a duration past an hour. */
@@ -315,7 +323,7 @@ function StaticNcMapBackdrop({
               fontWeight="700"
               opacity="0.82"
             >
-              Add approved clubs with coordinates to light up the map.
+              Clubs will appear here shortly.
             </text>
           </g>
         ) : null}
@@ -432,7 +440,9 @@ function PinDetails({ pin, distance, driveMinutes }: { pin: ClubMapPin; distance
         {pin.contactPhone || pin.contactEmail ? (
           <div className="space-y-1 text-sm">
             {pin.contactPhone ? (
-              <a href={`tel:${pin.contactPhone}`} className="block text-white/80 hover:text-[#d7b968]">
+              // Strip to digits for the href — "(704) 654-5018" as typed is not a dialable
+              // tel: value on every handset. The readable form stays on screen.
+              <a href={`tel:${telHref(pin.contactPhone)}`} className="block text-white/80 hover:text-[#d7b968]">
                 {pin.contactPhone}
               </a>
             ) : null}
@@ -687,15 +697,16 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
    * disorienting.
    */
   useEffect(() => {
+    // The mobile card now overlays the map, so there is nothing to scroll to.
     if (!selectedId || typeof window === "undefined") return
-    if (window.matchMedia("(min-width: 1024px)").matches) return
-    detailsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
   }, [selectedId])
 
   useEffect(() => {
     if (loading || mapRef.current || !mapContainerRef.current) return
     if (!accessToken) {
-      setMapError("Mapbox token missing. Add NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN in Vercel to render the live map.")
+      // Technical cause goes to the console; visitors get something actionable.
+      console.error("[club-locator] NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN is not set")
+      setMapError("The interactive map is unavailable right now. The club list below still works.")
       return
     }
 
@@ -740,7 +751,7 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
           setMapReady((ready) => {
             if (!ready) {
               setMapError(
-                "The Mapbox base map did not finish loading. The North Carolina outline below is a fallback — check the browser console and the token's URL restrictions.",
+                "The interactive map is taking longer than usual. You can still search and browse clubs below.",
               )
             }
             return ready
@@ -758,14 +769,14 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
 
           if (status === 401 || status === 403 || /401|403|unauthorized|forbidden|access token|not authorized/i.test(combined)) {
             setMapError(
-              "Mapbox is blocking the base map. Check that the token is active and that URL restrictions include this exact RecruitNC domain and preview URL.",
+              "The interactive map is unavailable right now. You can still search and browse clubs below.",
             )
             return
           }
           // Every other failure used to be swallowed here, which left a black rectangle
           // and no clue why. Report it.
           console.error("[club-locator] mapbox error:", event?.error ?? event)
-          setMapError(combined ? `Mapbox error: ${combined}` : "Mapbox failed to render the base map.")
+          setMapError("The interactive map is unavailable right now. You can still search and browse clubs below.")
         })
 
         map.once("load", () => {
@@ -1049,25 +1060,28 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
     <section className="space-y-8">
       {setupMessage ? (
         <div className="rounded-sm border border-[#d7b968]/40 bg-[#d7b968]/10 p-5 text-[#f5e7bd]">
-          <h3 className="text-xl font-black">Club map database setup needed</h3>
-          <p className="mt-2 text-sm leading-6 text-[#f5e7bd]/85">{setupMessage}</p>
+          <h3 className="text-xl font-black">Club map unavailable</h3>
+          <p className="mt-2 text-sm leading-6 text-[#f5e7bd]/85">
+            We&apos;re not able to show the club map at the moment. Please try again shortly.
+          </p>
         </div>
       ) : null}
 
       {hardError ? (
         <div className="rounded-sm border border-red-400/40 bg-red-500/10 p-5 text-red-100">
-          <h3 className="text-xl font-black">Unable to load club data</h3>
-          <p className="mt-2 text-sm leading-6 text-red-100/85">{hardError}</p>
+          <h3 className="text-xl font-black">Unable to load clubs</h3>
+          <p className="mt-2 text-sm leading-6 text-red-100/85">
+            Something went wrong loading the club list. Please refresh the page.
+          </p>
         </div>
       ) : null}
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {[
           ["Mapped clubs", data?.summary.mappedClubs ?? 0],
-          ["RecruitNC profiles", data?.summary.athletesRepresented ?? 0],
+          ["Wrestlers on RecruitNC", data?.summary.athletesRepresented ?? 0],
           ["College commits", data?.summary.commitsRepresented ?? 0],
           ["Verified clubs", data?.summary.verifiedClubs ?? 0],
-          ["Need location", data?.summary.unlocatedClubs ?? 0],
         ].map(([label, value]) => (
           <div key={label} className="rounded-sm border border-white/10 bg-[#071427]/80 p-4 shadow-lg shadow-black/20">
             <div className="text-3xl font-black text-white">{value}</div>
@@ -1257,37 +1271,46 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
               <div ref={mapContainerRef} className="h-full w-full" />
             </div>
 
-            {hoveredPin && !mapError ? (
-              <div className="pointer-events-none absolute left-4 top-4 z-30 w-[min(330px,calc(100%-2rem))] rounded-sm border border-[#d7b968]/45 bg-[#071427]/95 p-4 text-white shadow-[0_0_34px_rgba(215,185,104,0.2)] backdrop-blur">
-                <div className="text-[10px] font-black uppercase tracking-[0.24em] text-[#d7b968]">Club preview</div>
-                <div className="mt-1 truncate text-lg font-black">{hoveredPin.name}</div>
+            {/*
+              Hover preview is a pointer idea — there is no hover on a phone, so a tap
+              produced this tile AND the card below saying the same things. Desktop only.
+            */}
+            {hoveredPin && !mapError && hoveredPin.id !== selectedPin?.id ? (
+              <div className="pointer-events-none absolute left-4 top-4 z-30 hidden w-[min(330px,calc(100%-2rem))] rounded-sm border border-[#d7b968]/45 bg-[#071427]/95 p-4 text-white shadow-[0_0_34px_rgba(215,185,104,0.2)] backdrop-blur lg:block">
+                <div className="truncate text-lg font-black">{hoveredPin.name}</div>
                 <div className="mt-1 flex items-center gap-1 text-sm text-white/60">
                   <MapPin className="h-3.5 w-3.5 text-[#d7b968]" />
                   {[hoveredPin.city, hoveredPin.state].filter(Boolean).join(", ") || "North Carolina"}
                 </div>
                 {programLabels(hoveredPin).length ? (
                   <div className="mt-3">
-                    <div className="mb-1.5 text-[9px] font-bold uppercase tracking-[0.2em] text-white/40">
-                      Programs
-                    </div>
                     <ProgramChips pin={hoveredPin} compact />
                   </div>
                 ) : null}
+                <div className="mt-3 text-xs text-white/50">Click for contact details.</div>
+              </div>
+            ) : null}
 
-                {hoveredPin.website ? (
-                  <div className="mt-2 truncate text-xs text-[#d7b968]">
-                    {hoveredPin.website.replace(/^https?:\/\//, "")}
-                  </div>
-                ) : null}
-
-                {hoveredPin.athleteCount > 0 ? (
-                  <div className="mt-2 text-xs text-white/45">
-                    {hoveredPin.athleteCount} RecruitNC {hoveredPin.athleteCount === 1 ? "profile" : "profiles"}
-                    {hoveredPin.commitCount > 0 ? ` · ${hoveredPin.commitCount} commits` : ""}
-                  </div>
-                ) : null}
-
-                <div className="mt-3 text-xs text-white/50">Click the dot for contact details.</div>
+            {/*
+              On a phone the selected club sits over the map with a close button, the way a
+              map app behaves — one card holding everything, and a way back to the map.
+              On desktop the same card lives in the panel beside the map instead.
+            */}
+            {selectedPin ? (
+              <div className="absolute inset-x-0 bottom-0 z-40 max-h-[85%] overflow-auto rounded-t-lg border-t border-[#d7b968]/30 bg-[#071427] p-4 shadow-[0_-8px_30px_rgba(0,0,0,0.5)] lg:hidden">
+                <button
+                  type="button"
+                  onClick={() => setSelectedId(null)}
+                  aria-label="Close club details and return to the map"
+                  className="absolute right-3 top-3 z-10 rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+                <PinDetails
+                  pin={selectedPin}
+                  distance={origin ? distanceMiles(origin.lat, origin.lon, selectedPin.latitude, selectedPin.longitude) : null}
+                  driveMinutes={driveMinutes[selectedPin.id] ?? null}
+                />
               </div>
             ) : null}
 
@@ -1305,7 +1328,7 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
               <div className="absolute inset-x-4 top-4 z-30 flex items-start gap-3 rounded-sm border border-[#d7b968]/35 bg-[#071427]/95 p-4 text-[#f5e7bd] shadow-lg backdrop-blur">
                 <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-[#d7b968]" />
                 <div className="min-w-0">
-                  <h3 className="text-sm font-black text-white">Showing the fallback North Carolina map</h3>
+                  <h3 className="text-sm font-black text-white">Map unavailable</h3>
                   <p className="mt-1 text-sm leading-6 text-[#f5e7bd]/80">{mapError}</p>
                 </div>
               </div>
@@ -1324,7 +1347,7 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
           </div>
         </div>
 
-        <div ref={detailsRef} className="scroll-mt-4 space-y-4">
+        <div ref={detailsRef} className="hidden scroll-mt-4 space-y-4 lg:block">
           {selectedPin ? (
             <PinDetails
               pin={selectedPin}
@@ -1387,28 +1410,11 @@ export function ClubLocatorMap({ accessToken }: { accessToken: string }) {
         </div>
       </div>
 
-      {data?.unlocatedClubs?.length ? (
-        <div className="rounded-sm border border-[#d7b968]/20 bg-[#d7b968]/10 p-5 text-[#f5e7bd]">
-          <h3 className="flex items-center gap-2 text-xl font-black text-white">
-            <Users className="h-5 w-5 text-[#d7b968]" />
-            Clubs showing in profiles that still need verified locations
-          </h3>
-          <p className="mt-2 text-sm text-[#f5e7bd]/80">
-            These are coming from athlete profile text. Add them to <code>wrestling_clubs</code>, give them aliases,
-            and store coordinates once to place them on the map.
-          </p>
-          <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {data.unlocatedClubs.slice(0, 18).map((club) => (
-              <div key={club.normalizedName} className="rounded-sm border border-[#d7b968]/10 bg-[#071427]/60 p-3">
-                <div className="font-semibold text-white">{club.name}</div>
-                <div className="mt-1 text-sm text-[#f5e7bd]/75">
-                  {club.athleteCount} athletes · {club.commitCount} commits
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : null}
+      {/*
+        The "clubs still needing verified locations" list lived here. It was our working
+        queue, not something a parent has any use for, and it named a database table on a
+        public page. That work now belongs in /admin/clubs.
+      */}
     </section>
   )
 }

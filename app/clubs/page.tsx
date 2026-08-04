@@ -68,17 +68,17 @@ export default function ClubsPage() {
             <div className="border-l-4 border-[#CC0000] pl-4">
               <p className={`text-3xl text-white ${tocDisplayClass()}`}>A smarter club directory</p>
               <p className="mt-2 text-sm leading-6 text-white/65">
-                Clubs are matched through canonical records and aliases, so RAW, Raleigh Area Wrestling, and other
-                common naming variations resolve to one verified program instead of messy duplicate listings.
+                Search by the name you know a club by. RAW, Raleigh Area Wrestling and other common nicknames
+                all lead to the same program, so you find the room rather than a list of near-misses.
               </p>
             </div>
 
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
               {[
-                { icon: Search, label: "Search", text: "Find clubs by name, city, or website." },
-                { icon: Users, label: "Athlete data", text: "See RecruitNC athlete totals by program." },
-                { icon: Trophy, label: "Commitments", text: "Surface recent college commitment activity." },
-                { icon: ShieldCheck, label: "Verified", text: "Separate confirmed clubs from profile text." },
+                { icon: Search, label: "Near you", text: "Find clubs by drive time from your door." },
+                { icon: Users, label: "Programs", text: "Youth, middle school, high school, boys and girls." },
+                { icon: Trophy, label: "Results", text: "College commitments and state honours." },
+                { icon: ShieldCheck, label: "Verified", text: "Confirmed details, checked by us." },
               ].map(({ icon: Icon, label, text }) => (
                 <div key={label} className="rounded-sm border border-white/10 bg-white/[0.04] p-4">
                   <Icon className="h-5 w-5 text-[#D7B968]" />
