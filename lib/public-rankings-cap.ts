@@ -1,13 +1,17 @@
 /**
  * Official published RecruitNC prospect ranking cap.
- * Data Dawg, /public-rankings, and related surfaces never list beyond top 20.
+ * Data Dawg, /public-rankings, club pages and related surfaces never list beyond this.
+ *
+ * We rank a top 30. This was briefly 20 between 29 July 2026 and this change, which hid
+ * ten ranked wrestlers per class from every public surface at once — the single reason to
+ * keep this number in one file.
  */
-export const DEFAULT_PUBLIC_RANKINGS_CAP = 20
+export const DEFAULT_PUBLIC_RANKINGS_CAP = 30
 
 /** Per-class overrides. Keep the map limited to published years only. */
 export const PUBLIC_RANKINGS_MAX_BY_YEAR: Record<number, number> = {
-  2027: 20,
-  2028: 20,
+  2027: 30,
+  2028: 30,
 }
 
 export const PUBLISHED_PUBLIC_RANKINGS_YEARS = Object.keys(PUBLIC_RANKINGS_MAX_BY_YEAR)
