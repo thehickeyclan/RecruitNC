@@ -7,6 +7,7 @@ import {
   listScholarshipDonationsAdmin,
 } from "@/lib/scholarships/admin-queries"
 import { getScholarshipBySlug } from "@/lib/scholarships/public-queries"
+import { scholarshipSubmissionEditPath } from "@/lib/scholarships/submission-edit-link"
 
 function formatUsd(cents: number): string {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(
@@ -96,14 +97,24 @@ export default async function AdminScholarshipDetailPage({ params }: { params: P
         ) : (
           <ul className="mt-4 divide-y divide-gray-200 rounded-md border border-gray-200 bg-white">
             {apps.map((a) => (
-              <li key={a.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
+              <li key={a.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
                 <div>
                   <p className="font-medium">{a.athlete_name}</p>
-                  <p className="text-xs text-gray-500">{a.athlete_school}</p>
+                  <p className="text-xs text-gray-500">
+                    {a.athlete_school} · submitted by {a.nominator_name}
+                  </p>
                 </div>
-                <HardLink href={`/scholarships/review/${a.id}`} className="text-sm text-blue-700 underline">
-                  Open in review portal
-                </HardLink>
+                <div className="flex flex-wrap items-center gap-3">
+                  <HardLink href={`/scholarships/review/${a.id}`} className="text-sm text-blue-700 underline">
+                    Open in review portal
+                  </HardLink>
+                  <HardLink
+                    href={scholarshipSubmissionEditPath(a.id, a.nominator_email)}
+                    className="text-sm text-blue-700 underline"
+                  >
+                    Open submitter edit page
+                  </HardLink>
+                </div>
               </li>
             ))}
           </ul>

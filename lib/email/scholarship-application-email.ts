@@ -12,6 +12,7 @@ export async function sendScholarshipApplicationEmails(params: {
   submissionFormat?: "written" | "video"
   videoUrl?: string | null
   videoBlobUrl?: string | null
+  manageUrl?: string | null
 }): Promise<{ ok: boolean; error?: string }> {
   if (!process.env.RESEND_API_KEY) {
     console.warn("[scholarships] RESEND_API_KEY missing — skipping application emails")
@@ -32,6 +33,10 @@ export async function sendScholarshipApplicationEmails(params: {
   const blindLine = params.anonymousId
     ? `<p>Your nomination is recorded under blind-review id <strong>${escapeHtml(params.anonymousId)}</strong>. The selection committee scores applications without seeing the athlete's name or school until finalists are chosen.</p>`
     : `<p>Applications are reviewed with identity protected until finalists are chosen.</p>`
+  const manageBlock = params.manageUrl
+    ? `<p style="margin:24px 0;"><a href="${escapeAttr(params.manageUrl)}" style="display:inline-block;background:#cc0000;color:#ffffff;text-decoration:none;font-weight:700;padding:12px 18px;border-radius:8px;">View or edit your nomination</a></p>
+  <p style="color:#64748b;font-size:13px;">This is a private link to this submission. Please do not share it.</p>`
+    : ""
 
   try {
     const { Resend } = await import("resend")
@@ -46,6 +51,7 @@ export async function sendScholarshipApplicationEmails(params: {
   ${blindLine}
   <p>${closeLine}</p>
   <p>${announceLine}</p>
+  ${manageBlock}
   <p style="margin-top:28px;color:#64748b;font-size:14px;">NC United Wrestling · Scholarships<br/><a href="${hub}">${hub}</a></p>
 </body></html>`
 

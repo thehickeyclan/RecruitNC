@@ -33,6 +33,7 @@ export function ScholarshipApplicationForm({
   const draftKey = `${SCHOLARSHIP_DRAFT_PREFIX}${slug}`
   const [status, setStatus] = useState<"idle" | "submitting" | "done" | "error">("idle")
   const [error, setError] = useState<string | null>(null)
+  const [manageHref, setManageHref] = useState<string | null>(null)
 
   const [writtenStatement, setWrittenStatement] = useState("")
   const [submissionKind, setSubmissionKind] = useState<"written" | "video">("written")
@@ -156,13 +157,14 @@ export function ScholarshipApplicationForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       })
-      const data = (await res.json().catch(() => ({}))) as { error?: string }
+      const data = (await res.json().catch(() => ({}))) as { error?: string; manage_url?: string }
       if (!res.ok) {
         setError(typeof data.error === "string" ? data.error : "Could not submit.")
         setStatus("error")
         return
       }
       setStatus("done")
+      setManageHref(typeof data.manage_url === "string" ? data.manage_url : null)
       form.reset()
       setWrittenStatement("")
       setSubmissionKind("written")
@@ -197,6 +199,14 @@ export function ScholarshipApplicationForm({
         <p className="mt-4 text-xs leading-relaxed text-white/45">
           We emailed the nominator address on file with your blind-review id and next steps.
         </p>
+        {manageHref ? (
+          <HardLink
+            href={manageHref}
+            className="mt-6 inline-flex min-h-11 items-center justify-center rounded-lg bg-[#CC0000] px-5 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#e00000]"
+          >
+            View or edit your nomination
+          </HardLink>
+        ) : null}
         <HardLink
           href={`/fundraising/scholarships/${slug}`}
           className="mt-6 inline-flex text-sm font-semibold text-[#C8A94A] underline-offset-4 hover:underline"

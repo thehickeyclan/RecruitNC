@@ -1,12 +1,10 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
-import { ScholarshipApplicationForm } from "@/components/scholarships/scholarship-application-form"
-import {
-  scholarshipApplicationsAreOpen,
-} from "@/lib/scholarships/applications-open"
-import { getScholarshipBySlug } from "@/lib/scholarships/public-queries"
 import { HardLink } from "@/components/hard-link"
+import { ScholarshipApplicationForm } from "@/components/scholarships/scholarship-application-form"
+import { scholarshipApplicationsAreOpen } from "@/lib/scholarships/applications-open"
+import { getScholarshipBySlug } from "@/lib/scholarships/public-queries"
 
 function formatUsDate(iso: string | null): string | null {
   if (!iso) return null
@@ -38,7 +36,10 @@ export default async function ScholarshipApplyPage({ params }: { params: Promise
         style={{ fontFamily: "var(--font-fundraising-body), system-ui, sans-serif" }}
       >
         <div className="mx-auto max-w-lg">
-          <HardLink href={`/fundraising/scholarships/${s.slug}`} className="text-sm font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
+          <HardLink
+            href={`/fundraising/scholarships/${s.slug}`}
+            className="text-sm font-semibold text-[#C8A94A] underline-offset-4 hover:underline"
+          >
             ← Back
           </HardLink>
           <h1 className="font-[family-name:var(--font-fundraising-display)] mt-10 text-2xl font-black uppercase text-white">
@@ -62,7 +63,10 @@ export default async function ScholarshipApplyPage({ params }: { params: Promise
       style={{ fontFamily: "var(--font-fundraising-body), system-ui, sans-serif" }}
     >
       <div className="mx-auto max-w-2xl">
-        <HardLink href={`/fundraising/scholarships/${s.slug}`} className="text-sm font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
+        <HardLink
+          href={`/fundraising/scholarships/${s.slug}`}
+          className="text-sm font-semibold text-[#C8A94A] underline-offset-4 hover:underline"
+        >
           ← {s.name}
         </HardLink>
         <div className="mt-10">

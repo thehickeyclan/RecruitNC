@@ -5,6 +5,7 @@ import { allocateScholarshipAnonymousId } from "@/lib/scholarships/anonymous-id"
 import { scholarshipApplicationsAreOpen } from "@/lib/scholarships/applications-open"
 import { getScholarshipBySlug } from "@/lib/scholarships/public-queries"
 import { parseScholarshipVideoBlobUrl, parseScholarshipVideoPageUrl } from "@/lib/scholarships/scholarship-video-url"
+import { scholarshipSubmissionEditPath } from "@/lib/scholarships/submission-edit-link"
 import { countWords } from "@/lib/scholarships/word-count"
 import { createAdminClient } from "@/lib/supabase/admin"
 
@@ -261,6 +262,11 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ slug: 
         ? (inserted.data.anonymous_id as string)
         : null
 
+    const insertedId = typeof inserted.data?.id === "string" ? inserted.data.id : null
+    const managePath = insertedId ? scholarshipSubmissionEditPath(insertedId, nominatorEmail) : null
+    const site = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://app.ncwrestlingunited.com"
+    const manageUrl = managePath ? `${site.replace(/\/$/, "")}${managePath}` : null
+
     void sendScholarshipApplicationEmails({
       nominatorEmail,
       nominatorName,
@@ -273,9 +279,10 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ slug: 
       submissionFormat,
       videoUrl,
       videoBlobUrl,
+      manageUrl,
     })
 
-    return NextResponse.json({ ok: true, id: inserted.data?.id, anonymous_id: anonUsed })
+    return NextResponse.json({ ok: true, id: insertedId, anonymous_id: anonUsed, manage_url: managePath })
   } catch (e) {
     console.error("[scholarships/apply]", e)
     return NextResponse.json({ error: "Server error." }, { status: 500 })
