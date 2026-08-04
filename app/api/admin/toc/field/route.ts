@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { getTocEventConfig } from "@/lib/toc/event-config"
 import { buildTocFieldBoard } from "@/lib/toc/field-board"
 import { applyTocAiSeedRecommendations, buildTocAiSeedRecommendations } from "@/lib/toc/ai-seeding"
+import { applyPersonalSeedOrdersToFieldBoard, readTocPersonalSeedOrders } from "@/lib/toc/personal-seeding"
 
 export const dynamic = "force-dynamic"
 
@@ -61,9 +62,15 @@ export async function GET() {
     return new Map()
   })
 
+  const recommendedBoard = applyTocAiSeedRecommendations(board, recommendations)
+  const responseBoard = auth.isAdmin
+    ? recommendedBoard
+    : applyPersonalSeedOrdersToFieldBoard(recommendedBoard, readTocPersonalSeedOrders(auth.appMetadata))
+
   return NextResponse.json({
-    board: applyTocAiSeedRecommendations(board, recommendations),
+    board: responseBoard,
     bracketsUrl: config.brackets_url,
     canManage: auth.isAdmin,
+    workspace: auth.isAdmin ? "official" : "personal",
   })
 }

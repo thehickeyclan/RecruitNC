@@ -44,6 +44,7 @@ function WeightBoardCard({
   onUnlockDraw,
   bracketBusy,
   canManage,
+  canEditSeeds,
 }: {
   board: TocWeightBoard
   onSeedChange: (invitationId: string, seed: number | null) => Promise<void>
@@ -62,6 +63,7 @@ function WeightBoardCard({
   onUnlockDraw: (weightClass: number) => Promise<void>
   bracketBusy: boolean
   canManage: boolean
+  canEditSeeds: boolean
 }) {
   const [showChart, setShowChart] = useState(false)
   const [draggingId, setDraggingId] = useState<string | null>(null)
@@ -117,15 +119,15 @@ function WeightBoardCard({
             {board.athletes.map((a) => (
               <li
                 key={a.invitationId}
-                draggable={canManage && a.status === "confirmed" && !isReordering}
+                draggable={canEditSeeds && a.status === "confirmed" && !isReordering}
                 onDragStart={(event) => {
-                  if (!canManage || a.status !== "confirmed") return
+                  if (!canEditSeeds || a.status !== "confirmed") return
                   setDraggingId(a.invitationId)
                   event.dataTransfer.effectAllowed = "move"
                   event.dataTransfer.setData("text/plain", a.invitationId)
                 }}
                 onDragOver={(event) => {
-                  if (!canManage || a.status !== "confirmed" || !draggingId || draggingId === a.invitationId) return
+                  if (!canEditSeeds || a.status !== "confirmed" || !draggingId || draggingId === a.invitationId) return
                   event.preventDefault()
                   event.dataTransfer.dropEffect = "move"
                   setDragOverId(a.invitationId)
@@ -143,7 +145,7 @@ function WeightBoardCard({
                   setDragOverId(null)
                 }}
                 className={`rounded-xl border bg-white px-3 py-3 text-sm transition-colors ${
-                  canManage && a.status === "confirmed" ? "cursor-move" : ""
+                  canEditSeeds && a.status === "confirmed" ? "cursor-move" : ""
                 } ${
                   dragOverId === a.invitationId
                     ? "border-[#CC0000] bg-[#CC0000]/10"
@@ -151,7 +153,7 @@ function WeightBoardCard({
                       ? "border-[#002147]/50 bg-[#002147]/5 opacity-70"
                       : ""
                 }`}
-                title={canManage && a.status === "confirmed" ? "Drag to change official seed order" : undefined}
+                title={canEditSeeds && a.status === "confirmed" ? `Drag to change ${canManage ? "official" : "your private"} seed order` : undefined}
               >
                 <div className="flex items-start gap-3">
                   {a.status === "confirmed" ? (
@@ -194,7 +196,7 @@ function WeightBoardCard({
                                 {a.aiSeedWarnings.join(" · ")}
                               </div>
                             ) : null}
-                            {canManage && a.seed !== a.aiSeed ? (
+                            {canEditSeeds && a.seed !== a.aiSeed ? (
                               <Button
                                 type="button"
                                 variant="outline"
@@ -211,7 +213,7 @@ function WeightBoardCard({
                       </div>
                     </div>
 
-                    {canManage && a.status === "confirmed" ? (
+                    {canEditSeeds && a.status === "confirmed" ? (
                       <div className="mt-3 flex flex-wrap items-center gap-2">
                         <Select
                           value={a.seed != null ? String(a.seed) : "none"}
@@ -219,13 +221,13 @@ function WeightBoardCard({
                           disabled={seedSavingId === a.invitationId || isReordering}
                         >
                           <SelectTrigger className="h-8 w-[8.5rem] text-xs font-semibold">
-                            <SelectValue placeholder="Official seed" />
+                            <SelectValue placeholder={canManage ? "Official seed" : "My seed"} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="none">No official seed</SelectItem>
+                            <SelectItem value="none">{canManage ? "No official seed" : "Move to end"}</SelectItem>
                             {Array.from({ length: TOC_MAX_CONFIRMED_PER_WEIGHT }, (_, i) => i + 1).map((n) => (
                               <SelectItem key={n} value={String(n)}>
-                                Official #{n}
+                                {canManage ? "Official" : "My seed"} #{n}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -243,9 +245,9 @@ function WeightBoardCard({
           </ul>
         )}
 
-        {canManage && confirmedAthletes.length > 1 ? (
+        {canEditSeeds && confirmedAthletes.length > 1 ? (
           <p className="text-[11px] text-muted-foreground">
-            Drag confirmed wrestlers to reorder seeds. Top confirmed row becomes #1; the bracket updates after save.
+            Drag confirmed wrestlers to reorder {canManage ? "official" : "your private"} seeds. Top confirmed row becomes #1; the bracket updates after save.
           </p>
         ) : null}
 
@@ -334,6 +336,7 @@ export default function TocFieldAdminPage() {
   const [board, setBoard] = useState<TocFieldBoard | null>(null)
   const [bracketsUrl, setBracketsUrl] = useState<string | null>(null)
   const [canManage, setCanManage] = useState(false)
+  const [workspace, setWorkspace] = useState<"official" | "personal">("official")
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [seedSavingId, setSeedSavingId] = useState<string | null>(null)
@@ -392,6 +395,7 @@ export default function TocFieldAdminPage() {
       setBoard(data.board)
       setBracketsUrl(data.bracketsUrl ?? null)
       setCanManage(data.canManage === true)
+      setWorkspace(data.workspace === "personal" ? "personal" : "official")
       await loadBracketStatuses()
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load")
@@ -407,11 +411,28 @@ export default function TocFieldAdminPage() {
   const updateSeed = async (invitationId: string, seed: number | null) => {
     setSeedSavingId(invitationId)
     try {
-      const res = await fetch(`/api/admin/toc/invitations/${invitationId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ seed }),
-      })
+      let res: Response
+      if (canManage) {
+        res = await fetch(`/api/admin/toc/invitations/${invitationId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ seed }),
+        })
+      } else {
+        const weight = board?.weights.find((entry) => entry.athletes.some((athlete) => athlete.invitationId === invitationId))
+        if (!weight) throw new Error("Weight class not found")
+        const order = weight.athletes.filter((athlete) => athlete.status === "confirmed").map((athlete) => athlete.invitationId)
+        const currentIndex = order.indexOf(invitationId)
+        if (currentIndex < 0) throw new Error("Wrestler not found")
+        order.splice(currentIndex, 1)
+        const targetIndex = seed == null ? order.length : Math.max(0, Math.min(order.length, seed - 1))
+        order.splice(targetIndex, 0, invitationId)
+        res = await fetch("/api/admin/toc/personal-seeds", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ weightClass: weight.weightClass, invitationIds: order }),
+        })
+      }
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || "Failed to update seed")
       void load()
@@ -425,7 +446,7 @@ export default function TocFieldAdminPage() {
   const reorderSeeds = async (weightClass: number, invitationIds: string[]) => {
     setSeedSavingWeight(weightClass)
     try {
-      const res = await fetch("/api/admin/toc/field/reorder", {
+      const res = await fetch(canManage ? "/api/admin/toc/field/reorder" : "/api/admin/toc/personal-seeds", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ weightClass, invitationIds }),
@@ -489,14 +510,14 @@ export default function TocFieldAdminPage() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" asChild>
-            <Link href="/admin/toc">
+            <Link href={canManage ? "/admin/toc" : "/tournament-of-champions/brackets"}>
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
           <div>
             <h1 className="text-2xl font-bold">Field by weight</h1>
             <p className="text-sm text-muted-foreground">
-              {canManage ? "Private roster. Seed 1–8 and publish official draws to " : "Private TOC field and bracket access. View official draws at "}
+              {canManage ? "Private roster. Seed 1–8 and publish official draws to " : "Your private seeding workspace. Open your saved draw at "}
               <HardLink href="/tournament-of-champions/brackets" className="text-[#B31B1B] hover:underline">
                 public brackets
               </HardLink>
@@ -520,6 +541,13 @@ export default function TocFieldAdminPage() {
           ) : null}
         </div>
       </div>
+
+      {workspace === "personal" ? (
+        <div className="rounded-xl border border-[#D7B95A]/60 bg-[#002147] px-4 py-3 text-sm text-white shadow-sm">
+          <strong className="text-[#D7B95A]">Your private bracket workspace.</strong>{" "}
+          Drag wrestlers or choose a seed to build your own draw. Changes save to your account only and never alter NC United's official seeds or another user's bracket.
+        </div>
+      ) : null}
 
       {board ? (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -640,6 +668,7 @@ export default function TocFieldAdminPage() {
             onUnlockDraw={unlockDraw}
             bracketBusy={bracketBusyWeight === w.weightClass}
             canManage={canManage}
+            canEditSeeds
           />
         ))}
       </div>

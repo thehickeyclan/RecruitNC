@@ -14,7 +14,8 @@ type Props = {
 
 export function TocBracketWeightPage({ weightClass }: Props) {
   const [draw, setDraw] = useState<TocBracketDraw | null>(null)
-  const [source, setSource] = useState<"locked" | "live" | null>(null)
+  const [source, setSource] = useState<"locked" | "live" | "personal" | null>(null)
+  const [workspace, setWorkspace] = useState<"official" | "personal">("official")
   const [allWeights, setAllWeights] = useState<number[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -36,7 +37,8 @@ export function TocBracketWeightPage({ weightClass }: Props) {
         setError(drawData.error ?? "Bracket not available")
       } else {
         setDraw(drawData.draw as TocBracketDraw)
-        setSource(drawData.source === "locked" ? "locked" : "live")
+        setSource(drawData.source === "personal" ? "personal" : drawData.source === "locked" ? "locked" : "live")
+        setWorkspace(drawData.workspace === "personal" ? "personal" : "official")
       }
 
       const weights = ((listData.brackets ?? []) as TocBracketDrawSummary[]).map((b) => b.weightClass)
@@ -77,5 +79,5 @@ export function TocBracketWeightPage({ weightClass }: Props) {
     )
   }
 
-  return <TocBracketView draw={draw} allWeights={allWeights} source={source ?? "live"} onDrawUpdated={load} />
+  return <TocBracketView draw={draw} allWeights={allWeights} source={source ?? "live"} workspace={workspace} onDrawUpdated={load} />
 }

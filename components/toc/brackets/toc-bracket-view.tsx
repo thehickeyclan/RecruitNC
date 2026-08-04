@@ -15,7 +15,8 @@ import { Share2 } from "lucide-react"
 type Props = {
   draw: TocBracketDraw
   allWeights?: number[]
-  source?: "locked" | "live"
+  source?: "locked" | "live" | "personal"
+  workspace?: "official" | "personal"
   onDrawUpdated?: () => Promise<void> | void
 }
 
@@ -54,7 +55,7 @@ function AthleteAvatar({ name, photoUrl, seed }: { name: string; photoUrl: strin
   )
 }
 
-export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], source = "live", onDrawUpdated }: Props) {
+export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], source = "live", workspace = "official", onDrawUpdated }: Props) {
   const [highlightedAthleteId, setHighlightedAthleteId] = useState<string | null>(null)
   const [reordering, setReordering] = useState(false)
   const winnersTree = useMemo(() => tocDrawToWinnersBracketTree(draw), [draw])
@@ -86,15 +87,19 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
 
     setReordering(true)
     try {
-      const res = await fetch("/api/admin/toc/field/reorder", {
+      const res = await fetch(workspace === "personal" ? "/api/admin/toc/personal-seeds" : "/api/admin/toc/field/reorder", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ weightClass: draw.weightClass, seedSlots: nextSlots }),
+        body: JSON.stringify(
+          workspace === "personal"
+            ? { weightClass: draw.weightClass, invitationIds: nextSlots.filter((id): id is string => id != null) }
+            : { weightClass: draw.weightClass, seedSlots: nextSlots },
+        ),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || "Failed to reorder bracket")
 
-      if (source === "locked") {
+      if (workspace === "official" && source === "locked") {
         const lockRes = await fetch(`/api/admin/toc/brackets/${draw.weightClass}`, { method: "POST" })
         const lockData = await lockRes.json()
         if (!lockRes.ok) throw new Error(lockData.error || "Seeds saved, but failed to republish locked draw")
@@ -114,7 +119,7 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
         <TocPatrioticBar />
         <div className="container mx-auto max-w-6xl px-4 sm:px-6 py-10 sm:py-14">
           <p className="text-[#CC0000] text-xs font-semibold uppercase tracking-[0.22em] mb-3">
-            {draw.isComplete ? "Official draw" : "Live bracket · field building"}
+            {workspace === "personal" ? "My private seed workspace" : draw.isComplete ? "Official draw" : "Live bracket · field building"}
           </p>
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
             <div>
@@ -128,10 +133,14 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={() => void copyLink()} className={tocMobileCtaClass("secondary")}>
-                <Share2 className="h-4 w-4 mr-2 inline" />
-                Share bracket
-              </button>
+              {workspace === "official" ? (
+                <button type="button" onClick={() => void copyLink()} className={tocMobileCtaClass("secondary")}>
+                  <Share2 className="h-4 w-4 mr-2 inline" />
+                  Share bracket
+                </button>
+              ) : (
+                <span className={tocMobileCtaClass("secondary")}>Saved to your account</span>
+              )}
               <HardLink href="/tournament-of-champions" className={tocMobileCtaClass("ghost")}>
                 Event page
               </HardLink>
@@ -159,6 +168,11 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
       </section>
 
       <section className="container mx-auto max-w-6xl px-4 sm:px-6 py-10 sm:py-14 space-y-10">
+        {workspace === "personal" ? (
+          <div className="rounded-sm border border-[#D7B95A]/50 bg-[#D7B95A]/10 px-4 py-3 text-sm text-white/85">
+            Drag wrestlers into different bracket positions. Your seed order saves privately and does not change the official TOC draw or another user's workspace.
+          </div>
+        ) : null}
         {!draw.isComplete ? (
           <div className="rounded-sm border border-[#CC0000]/30 bg-[#CC0000]/10 px-4 py-3 text-sm text-white/85">
             Field building — {draw.confirmedCount ?? 0}/8 wrestlers confirmed. Empty seeds show as TBD in the bracket.
@@ -228,7 +242,7 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
       </section>
 
       <footer className="border-t border-white/10 py-8 text-center text-white/45 text-xs">
-        NC United Tournament of Champions · {draw.weightClass} lbs official draw
+        NC United Tournament of Champions · {draw.weightClass} lbs {workspace === "personal" ? "private workspace" : "official draw"}
       </footer>
     </div>
   )

@@ -52,9 +52,38 @@ export async function loadParticipantsForWeight(
   }
 
   const participants = (data ?? [])
-    .map((row) => mapInvitationToBracketParticipant(row as InvitationRow))
+    .map((row) => mapInvitationToBracketParticipant(row as unknown as InvitationRow))
     .filter((p): p is TocBracketParticipant => p != null)
     .sort((a, b) => a.seed - b.seed)
+
+  return { participants }
+}
+
+export async function loadAllConfirmedParticipantsForWeight(
+  admin: SupabaseClient,
+  weightClass: number,
+): Promise<{ participants: TocBracketParticipant[]; error?: string }> {
+  const { data, error } = await admin
+    .from("toc_invitations")
+    .select("id, athlete_id, weight_class, status, seed, athletes(id, name, highschool, graduationyear, photourl)")
+    .eq("weight_class", weightClass)
+    .eq("status", "confirmed")
+
+  if (error) return { participants: [], error: error.message }
+
+  const rows = (data ?? []) as unknown as InvitationRow[]
+  const participants = rows
+    .sort((a, b) => (a.seed ?? 99) - (b.seed ?? 99) || (a.athletes?.name ?? "").localeCompare(b.athletes?.name ?? ""))
+    .slice(0, TOC_MAX_CONFIRMED_PER_WEIGHT)
+    .map((row, index) => ({
+      athleteId: row.athlete_id,
+      invitationId: row.id,
+      seed: index + 1,
+      name: row.athletes?.name ?? "Athlete",
+      school: row.athletes?.highschool ?? null,
+      photoUrl: row.athletes?.photourl ?? null,
+      graduationYear: row.athletes?.graduationyear ?? null,
+    }))
 
   return { participants }
 }

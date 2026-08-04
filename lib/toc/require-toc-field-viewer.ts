@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 
 export type TocFieldViewerAuth =
-  | { ok: true; isAdmin: boolean }
+  | { ok: true; isAdmin: boolean; userId: string; appMetadata: Record<string, unknown> }
   | { ok: false; status: 401 | 403; error: string }
 
 /**
@@ -33,5 +33,10 @@ export async function requireTocFieldViewer(): Promise<TocFieldViewerAuth> {
     return { ok: false, status: 403, error: "TOC field access required" }
   }
 
-  return { ok: true, isAdmin }
+  return {
+    ok: true,
+    isAdmin,
+    userId: user.id,
+    appMetadata: (user.app_metadata ?? {}) as Record<string, unknown>,
+  }
 }
