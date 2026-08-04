@@ -139,7 +139,7 @@ export function ScholarshipApplicationForm({
       _hp: String(fd.get("_hp") ?? ""),
       athlete_name: String(fd.get("athlete_name") ?? ""),
       athlete_school: String(fd.get("athlete_school") ?? ""),
-      athlete_grad_year: Number(fd.get("athlete_grad_year")),
+      athlete_grad_year: String(fd.get("athlete_grad_year") ?? ""),
       athlete_weight_class: String(fd.get("athlete_weight_class") ?? ""),
       athlete_email: String(fd.get("athlete_email") ?? ""),
       athlete_phone: String(fd.get("athlete_phone") ?? ""),
@@ -242,28 +242,31 @@ export function ScholarshipApplicationForm({
 
         <fieldset className="space-y-4 rounded-xl border border-white/10 bg-[#0B2545]/35 p-4 sm:p-5">
           <legend className={`${label} px-1 text-[#C8A94A]`}>Section 1 — About the athlete</legend>
+          <p className="text-xs leading-relaxed text-white/50">
+            Only the athlete&apos;s name is required. Share anything else you know and NC United will match the nomination to information already on file.
+          </p>
           <div>
             <label className={label}>Full name *</label>
             <input name="athlete_name" required className={field} autoComplete="name" />
           </div>
           <div>
-            <label className={label}>School *</label>
-            <input name="athlete_school" required className={field} />
+            <label className={label}>School (if known)</label>
+            <input name="athlete_school" className={field} />
           </div>
           <div>
-            <label className={label}>Graduation year *</label>
-            <input name="athlete_grad_year" type="number" required min={2024} max={2040} className={field} />
+            <label className={label}>Graduation year (if known)</label>
+            <input name="athlete_grad_year" type="number" min={2024} max={2040} className={field} />
           </div>
           <div>
-            <label className={label}>Weight class</label>
+            <label className={label}>Weight class (if known)</label>
             <input name="athlete_weight_class" className={field} />
           </div>
           <div>
-            <label className={label}>Email *</label>
-            <input name="athlete_email" type="email" required className={field} autoComplete="email" />
+            <label className={label}>Athlete or parent email (if known)</label>
+            <input name="athlete_email" type="email" className={field} autoComplete="email" />
           </div>
           <div>
-            <label className={label}>Phone</label>
+            <label className={label}>Athlete or parent phone (if known)</label>
             <input name="athlete_phone" type="tel" className={field} autoComplete="tel" />
           </div>
         </fieldset>

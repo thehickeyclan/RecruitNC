@@ -65,7 +65,8 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ slug: 
 
   const athleteName = truncate(String(body.athlete_name ?? ""), 200)
   const athleteSchool = truncate(String(body.athlete_school ?? ""), 200)
-  const athleteGradYear = Number(body.athlete_grad_year)
+  const athleteGradYearRaw = String(body.athlete_grad_year ?? "").trim()
+  const athleteGradYear = athleteGradYearRaw ? Number(athleteGradYearRaw) : null
   const athleteWeightClass = truncate(String(body.athlete_weight_class ?? ""), 60)
   const athleteEmail = truncate(String(body.athlete_email ?? "").trim(), 320)
   const athletePhone = truncate(String(body.athlete_phone ?? ""), 40)
@@ -136,14 +137,14 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ slug: 
   const secondaryRefEmail = truncate(String(body.secondary_reference_email ?? ""), 320)
   const secondaryRefPhone = truncate(String(body.secondary_reference_phone ?? ""), 40)
 
-  if (athleteName.length < 3 || athleteSchool.length < 2) {
-    return NextResponse.json({ error: "Athlete name and school are required." }, { status: 400 })
+  if (athleteName.length < 3) {
+    return NextResponse.json({ error: "Athlete name is required." }, { status: 400 })
   }
-  if (!Number.isFinite(athleteGradYear) || athleteGradYear < 2024 || athleteGradYear > 2040) {
+  if (athleteGradYear != null && (!Number.isFinite(athleteGradYear) || athleteGradYear < 2024 || athleteGradYear > 2040)) {
     return NextResponse.json({ error: "Enter a valid graduation year." }, { status: 400 })
   }
-  if (!athleteEmail || !EMAIL_RE.test(athleteEmail)) {
-    return NextResponse.json({ error: "Athlete email is required." }, { status: 400 })
+  if (athleteEmail && !EMAIL_RE.test(athleteEmail)) {
+    return NextResponse.json({ error: "Enter a valid athlete or parent email, or leave it blank." }, { status: 400 })
   }
   if (nominatorName.length < 3 || nominatorRelationship.length < 2) {
     return NextResponse.json({ error: "Nominator name and relationship are required." }, { status: 400 })
@@ -212,10 +213,10 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ slug: 
     const insertPayload: Record<string, unknown> = {
       scholarship_id: scholarship.id,
       athlete_name: athleteName,
-      athlete_school: athleteSchool,
+      athlete_school: athleteSchool || "Not provided",
       athlete_grad_year: athleteGradYear,
       athlete_weight_class: athleteWeightClass || null,
-      athlete_email: athleteEmail,
+      athlete_email: athleteEmail || null,
       athlete_phone: athletePhone || null,
       nominator_name: nominatorName,
       nominator_relationship: nominatorRelationship,
@@ -277,10 +278,10 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ slug: 
         const fallback: Record<string, unknown> = {
           scholarship_id: scholarship.id,
           athlete_name: athleteName,
-          athlete_school: athleteSchool,
+          athlete_school: athleteSchool || "Not provided",
           athlete_grad_year: athleteGradYear,
           athlete_weight_class: athleteWeightClass || null,
-          athlete_email: athleteEmail,
+          athlete_email: athleteEmail || null,
           athlete_phone: athletePhone || null,
           nominator_name: nominatorName,
           nominator_relationship: nominatorRelationship,
