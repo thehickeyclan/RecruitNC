@@ -205,6 +205,16 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
                   Established {s.established_year}
                 </p>
               ) : null}
+              {isCaden && appsOpen ? (
+                <HardLink
+                  href={`/fundraising/scholarships/${s.slug}/apply`}
+                  className={df(
+                    "mt-6 inline-flex min-h-[50px] items-center justify-center rounded-sm bg-[#CC0000] px-8 text-center text-xs font-extrabold uppercase tracking-[0.14em] text-white shadow-[0_12px_30px_rgba(204,0,0,0.3)] transition hover:bg-[#a80000] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white",
+                  )}
+                >
+                  Apply now →
+                </HardLink>
+              ) : null}
             </div>
           </div>
         </div>
