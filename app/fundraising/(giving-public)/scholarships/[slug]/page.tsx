@@ -212,7 +212,7 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
                     "mt-6 inline-flex min-h-[50px] items-center justify-center rounded-sm bg-[#CC0000] px-8 text-center text-xs font-extrabold uppercase tracking-[0.14em] text-white shadow-[0_12px_30px_rgba(204,0,0,0.3)] transition hover:bg-[#a80000] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white",
                   )}
                 >
-                  Apply now →
+                  Nominate a wrestler →
                 </HardLink>
               ) : null}
             </div>
@@ -523,7 +523,7 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
                 "flex min-h-[52px] items-center justify-center rounded-sm bg-[#CC0000] px-6 text-center text-xs font-extrabold uppercase tracking-[0.14em] text-white hover:bg-[#a80000]",
               )}
             >
-              Apply now →
+              {isCaden ? "Nominate a wrestler →" : "Apply now →"}
             </HardLink>
           ) : (
             <div
