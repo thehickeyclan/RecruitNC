@@ -134,8 +134,12 @@ export default function AthleteEditPage({ params }: { params: { id: string } }) 
       if (highSchool !== (athlete?.highschool || athlete?.high_school || "")) updates.highschool = highSchool
       // The picker is the source of truth. wrestlingClub is written alongside so anything
       // still reading the text sees the same club until the migration finishes.
-      if (String(club?.id ?? "") !== String(athlete?.wrestling_club_id ?? "")) {
-        updates.wrestling_club_id = club ? Number(club.id) : null
+      // A club just sent for review has a name but no record yet, so it carries an empty
+      // id. Store the name and leave the relationship null — Number("") is 0, which would
+      // be written as a foreign key pointing at nothing.
+      const pickedId = club?.id ? Number(club.id) : null
+      if (String(pickedId ?? "") !== String(athlete?.wrestling_club_id ?? "")) {
+        updates.wrestling_club_id = Number.isFinite(pickedId) ? pickedId : null
         updates.wrestlingClub = club?.name ?? ""
       }
       if (cell !== (athlete?.cell || athlete?.cell_number || athlete?.phone || "")) updates.cell = cell

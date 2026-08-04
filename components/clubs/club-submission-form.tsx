@@ -129,8 +129,18 @@ export function ClubSubmissionForm({ isSignedIn, userName, userEmail }: ClubSubm
         </div>
 
         <div className="md:col-span-2">
-          <Label htmlFor="address" className="text-white">Street address</Label>
-          <Input id="address" name="address" required className="mt-2 border-white/15 bg-[#020b18] text-white" />
+          <Label htmlFor="address" className="text-white">
+            Street address <span className="font-normal text-white/40">— optional</span>
+          </Label>
+          <Input
+            id="address"
+            name="address"
+            placeholder="Leave blank if you train at a school or rec centre"
+            className="mt-2 border-white/15 bg-[#020b18] text-white placeholder:text-white/30"
+          />
+          <p className="mt-1 text-xs text-white/40">
+            A town is enough to put the club on the map. Add a street address later for an exact pin.
+          </p>
         </div>
 
         <div>

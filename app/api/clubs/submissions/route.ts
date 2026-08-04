@@ -53,8 +53,14 @@ export async function POST(request: Request) {
   if (clubName.length < 2) {
     return NextResponse.json({ error: "Club name is required." }, { status: 400 })
   }
-  if (address.length < 6) {
-    return NextResponse.json({ error: "A street address is required so the club can be mapped." }, { status: 400 })
+  // A town is enough to place a pin, and a street address is often genuinely unknown —
+  // most clubs rent a school or rec-centre gym and publish no address. Demanding one
+  // turned "tell us about your club" into research, so it is optional now.
+  if (!address && !city && !zipCode) {
+    return NextResponse.json(
+      { error: "Tell us where the club trains — a town or ZIP code is enough." },
+      { status: 400 },
+    )
   }
 
   const admin = createAdminClientFresh()

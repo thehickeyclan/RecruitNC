@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Image from "next/image"
-import Link from "next/link"
 import { Input } from "@/components/ui/input"
 import { Check, Loader2, MapPin, Search, ShieldCheck, X } from "lucide-react"
 
@@ -43,7 +42,59 @@ export function ClubPicker({
   const [options, setOptions] = useState<ClubOption[]>([])
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [addingOpen, setAddingOpen] = useState(false)
+  const [adding, setAdding] = useState(false)
+  const [newCity, setNewCity] = useState("")
+  const [addError, setAddError] = useState<string | null>(null)
+  const [sent, setSent] = useState<string | null>(null)
   const wrapperRef = useRef<HTMLDivElement | null>(null)
+
+  /**
+   * Send the club for review without leaving the form. Name and town only — an athlete
+   * naming their room should not have to go and find its street address, and a town is
+   * enough to place a pin.
+   */
+  const submitNewClub = useCallback(async () => {
+    const clubName = query.trim()
+    const city = newCity.trim()
+    if (clubName.length < 2) {
+      setAddError("Enter the club's name.")
+      return
+    }
+    if (!city) {
+      setAddError("Which town do they train in?")
+      return
+    }
+
+    setAdding(true)
+    setAddError(null)
+    try {
+      const response = await fetch("/api/clubs/submissions", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clubName,
+          city,
+          state: "NC",
+          notes: "Added from an athlete profile — needs an address and programs.",
+        }),
+      })
+      const body = (await response.json()) as { error?: string }
+      if (!response.ok) {
+        setAddError(body.error ?? "Couldn't send that just now.")
+        setAdding(false)
+        return
+      }
+      // Keep the typed name on the profile so it is not blank while the club is reviewed.
+      onChange({ id: "", name: clubName, city })
+      setSent(clubName)
+      setAddingOpen(false)
+    } catch {
+      setAddError("Couldn't send that just now.")
+    }
+    setAdding(false)
+  }, [query, newCity, onChange])
 
   const search = useCallback(async (q: string) => {
     setLoading(true)
@@ -153,16 +204,60 @@ export function ClubPicker({
             </button>
           ))}
 
-          {noMatches ? (
-            <div className="px-3 py-4 text-sm text-white/60">
-              <p className="font-medium text-white">No club called “{query.trim()}”</p>
-              <p className="mt-1">
-                Check the spelling, or{" "}
-                <Link href="/clubs/submit" className="font-bold text-[#D7B968] hover:underline">
-                  submit your club
-                </Link>{" "}
-                and we&apos;ll add it.
-              </p>
+          {/*
+            Adding a missing club happens here rather than on another page. Sending someone
+            to /clubs/submit mid-edit means abandoning the profile they were filling in, so
+            most would simply give up and leave the club blank.
+          */}
+          {noMatches || (open && query.trim().length > 1 && options.length) ? (
+            <div className="border-t border-white/10 px-3 py-3 text-sm">
+              {sent ? (
+                <p className="text-emerald-200">
+                  Thanks — we&apos;ll review “{sent}” and add it to the map. Your profile is saved with that name
+                  in the meantime.
+                </p>
+              ) : addingOpen ? (
+                <div className="space-y-2">
+                  <p className="font-medium text-white">Add “{query.trim()}”</p>
+                  <Input
+                    value={newCity}
+                    onChange={(event) => setNewCity(event.target.value)}
+                    placeholder="What town do they train in?"
+                    className="min-h-10 rounded-sm border-white/15 bg-[#020b18] text-white placeholder:text-white/30"
+                  />
+                  {addError ? <p className="text-xs text-red-300">{addError}</p> : null}
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void submitNewClub()}
+                      disabled={adding}
+                      className="inline-flex items-center gap-1.5 rounded-sm bg-[#CC0000] px-3 py-1.5 text-sm font-bold text-white hover:bg-[#a80000] disabled:opacity-60"
+                    >
+                      {adding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                      Send for review
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAddingOpen(false)}
+                      className="rounded-sm px-3 py-1.5 text-sm text-white/60 hover:text-white"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAddingOpen(true)
+                    setAddError(null)
+                  }}
+                  className="text-left text-white/60 hover:text-white"
+                >
+                  {options.length ? "Not seeing your club? " : `No club called “${query.trim()}”. `}
+                  <span className="font-bold text-[#D7B968]">Add it here</span> — takes a second, no address needed.
+                </button>
+              )}
             </div>
           ) : null}
         </div>
