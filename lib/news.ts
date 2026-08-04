@@ -120,6 +120,26 @@ const ALL_NEWS: NewsItem[] = [
     isAnnouncement: true,
   },
   {
+    id: "recruitnc-interactive-wrestling-club-map",
+    slug: "recruitnc-interactive-wrestling-club-map",
+    title: "RecruitNC Launches North Carolina’s First Interactive Wrestling Club Map",
+    subtitle:
+      "New platform helps families discover clubs, explore accomplishments, and connect with wrestling programs across the state.",
+    summary:
+      "RecruitNC’s new statewide club map helps families find wrestling programs, get directions, explore club details, and see the athletes and accomplishments connected to each room.",
+    href: "/news/recruitnc-interactive-wrestling-club-map",
+    date: "2026-08-04",
+    image: "/images/news/recruitnc-club-map-launch.png",
+    imagePosition: "center",
+    imageFit: "cover",
+    newsListBanner: true,
+    category: "PLATFORM LAUNCH",
+    categoryBadgeClass: "bg-[#13294B]",
+    readTime: "5 min read",
+    author: "RecruitNC",
+    isAnnouncement: true,
+  },
+  {
     id: "caden-perry-warrior-scholarship-announced",
     slug: "caden-perry-warrior-scholarship-announced",
     title: "NC United Announces The Caden Perry Warrior Scholarship",
