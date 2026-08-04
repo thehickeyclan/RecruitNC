@@ -9,9 +9,10 @@ export async function listApplicationsForScholarships(
   const admin = createAdminClient()
   const { data, error } = await admin
     .from("scholarship_applications")
-    .select(
-      "id, scholarship_id, created_at, anonymous_id, athlete_name, athlete_school, athlete_grad_year, athlete_weight_class, athlete_email, athlete_phone, nominator_name, nominator_relationship, nominator_email, nominator_phone, is_parent_nominating_own_child, nominator_known_duration, submission_format, video_url, video_blob_url, written_statement, wrestling_moment, reference_name, reference_relationship, reference_email, reference_phone, status",
-    )
+    // Production may not have every optional video-submission column yet.
+    // Selecting * keeps legacy rows visible instead of turning a missing
+    // optional column into a misleading empty application list.
+    .select("*")
     .in("scholarship_id", scholarshipIds)
     .order("created_at", { ascending: false })
 
@@ -26,9 +27,7 @@ export async function getApplicationById(applicationId: string): Promise<Scholar
   const admin = createAdminClient()
   const { data, error } = await admin
     .from("scholarship_applications")
-    .select(
-      "id, scholarship_id, created_at, anonymous_id, athlete_name, athlete_school, athlete_grad_year, athlete_weight_class, athlete_email, athlete_phone, nominator_name, nominator_relationship, nominator_email, nominator_phone, is_parent_nominating_own_child, nominator_known_duration, submission_format, video_url, video_blob_url, written_statement, wrestling_moment, reference_name, reference_relationship, reference_email, reference_phone, status",
-    )
+    .select("*")
     .eq("id", applicationId)
     .maybeSingle()
 
