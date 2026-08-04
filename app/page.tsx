@@ -186,6 +186,23 @@ export default async function HomePage() {
                 </Button>
               </Link>
             </div>
+
+            <div className="mt-7 max-w-xl rounded-xl border border-rnc-gold/35 bg-rnc-ink/80 p-4 shadow-xl backdrop-blur-sm sm:flex sm:items-center sm:justify-between sm:gap-5">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-rnc-gold">
+                  Caden Perry Warrior Scholarship
+                </p>
+                <p className="mt-1.5 text-sm leading-relaxed text-white/75">
+                  Nominate a North Carolina wrestler for a $1,000 wrestling-support award. Nominations close August 30.
+                </p>
+              </div>
+              <Link
+                href="/fundraising/scholarships/caden-perry/apply"
+                className="mt-4 inline-flex min-h-11 shrink-0 items-center justify-center rounded-md bg-rnc-red px-5 text-sm font-bold text-white transition-colors hover:bg-rnc-red-hover sm:mt-0"
+              >
+                Nominate a Wrestler
+              </Link>
+            </div>
           </div>
         </div>
       </section>
