@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/admin-auth"
+import { requireTocFieldViewer } from "@/lib/toc/require-toc-field-viewer"
 import { createAdminClient } from "@/lib/supabase/admin"
 import {
   getBracketLockStatus,
@@ -18,7 +19,7 @@ function parseWeight(raw: string): number | null {
 }
 
 export async function GET(_request: Request, { params }: Params) {
-  const auth = await requireAdmin()
+  const auth = await requireTocFieldViewer()
   if (!auth.ok) {
     return NextResponse.json({ error: auth.error }, { status: auth.status })
   }

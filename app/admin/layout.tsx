@@ -13,7 +13,9 @@ export default function AdminLayout({
   const pathname = usePathname()
   const isScopedTocManagerPage =
     pathname === "/admin/toc/plan" ||
-    pathname.startsWith("/admin/toc/plan/")
+    pathname.startsWith("/admin/toc/plan/") ||
+    pathname === "/admin/toc/field" ||
+    pathname.startsWith("/admin/toc/field/")
 
   return (
     <AuthGuard requireAdmin={!isScopedTocManagerPage}>

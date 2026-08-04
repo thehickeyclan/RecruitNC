@@ -43,6 +43,7 @@ function WeightBoardCard({
   onLockDraw,
   onUnlockDraw,
   bracketBusy,
+  canManage,
 }: {
   board: TocWeightBoard
   onSeedChange: (invitationId: string, seed: number | null) => Promise<void>
@@ -60,6 +61,7 @@ function WeightBoardCard({
   onLockDraw: (weightClass: number) => Promise<void>
   onUnlockDraw: (weightClass: number) => Promise<void>
   bracketBusy: boolean
+  canManage: boolean
 }) {
   const [showChart, setShowChart] = useState(false)
   const [draggingId, setDraggingId] = useState<string | null>(null)
@@ -115,15 +117,15 @@ function WeightBoardCard({
             {board.athletes.map((a) => (
               <li
                 key={a.invitationId}
-                draggable={a.status === "confirmed" && !isReordering}
+                draggable={canManage && a.status === "confirmed" && !isReordering}
                 onDragStart={(event) => {
-                  if (a.status !== "confirmed") return
+                  if (!canManage || a.status !== "confirmed") return
                   setDraggingId(a.invitationId)
                   event.dataTransfer.effectAllowed = "move"
                   event.dataTransfer.setData("text/plain", a.invitationId)
                 }}
                 onDragOver={(event) => {
-                  if (a.status !== "confirmed" || !draggingId || draggingId === a.invitationId) return
+                  if (!canManage || a.status !== "confirmed" || !draggingId || draggingId === a.invitationId) return
                   event.preventDefault()
                   event.dataTransfer.dropEffect = "move"
                   setDragOverId(a.invitationId)
@@ -141,7 +143,7 @@ function WeightBoardCard({
                   setDragOverId(null)
                 }}
                 className={`rounded-xl border bg-white px-3 py-3 text-sm transition-colors ${
-                  a.status === "confirmed" ? "cursor-move" : ""
+                  canManage && a.status === "confirmed" ? "cursor-move" : ""
                 } ${
                   dragOverId === a.invitationId
                     ? "border-[#CC0000] bg-[#CC0000]/10"
@@ -149,7 +151,7 @@ function WeightBoardCard({
                       ? "border-[#002147]/50 bg-[#002147]/5 opacity-70"
                       : ""
                 }`}
-                title={a.status === "confirmed" ? "Drag to change official seed order" : undefined}
+                title={canManage && a.status === "confirmed" ? "Drag to change official seed order" : undefined}
               >
                 <div className="flex items-start gap-3">
                   {a.status === "confirmed" ? (
@@ -164,52 +166,53 @@ function WeightBoardCard({
                       >
                         {a.seed ? `#${a.seed}` : "—"}
                       </span>
-                      <div className="min-w-[11rem] flex-1">
+                      <div
+                        className="group/ai relative min-w-[11rem] flex-1 outline-none"
+                        tabIndex={a.aiSeed ? 0 : -1}
+                        aria-label={a.aiSeed ? `${a.name}: hover or focus to view AI seed recommendation` : undefined}
+                      >
                         <p className="break-words font-semibold leading-tight text-slate-950">{a.name}</p>
                         <p className="mt-0.5 break-words text-xs leading-tight text-muted-foreground">{a.school ?? "—"}</p>
-                      </div>
-                    </div>
-
-                    {a.status === "confirmed" ? (
-                      <div className="mt-3 flex flex-wrap items-center gap-2">
                         {a.aiSeed ? (
-                          <div className="group relative">
+                          <div className="pointer-events-none invisible absolute left-0 top-full z-30 mt-2 w-80 max-w-[calc(100vw-3rem)] translate-y-1 rounded-lg border bg-popover p-3 text-xs opacity-0 shadow-xl transition group-hover/ai:pointer-events-auto group-hover/ai:visible group-hover/ai:translate-y-0 group-hover/ai:opacity-100 group-focus-within/ai:pointer-events-auto group-focus-within/ai:visible group-focus-within/ai:translate-y-0 group-focus-within/ai:opacity-100">
                             <Badge className={`${aiSeedConfidenceClass(a.aiSeedConfidence)} gap-1 text-xs`}>
                               <Sparkles className="h-3 w-3" />
                               AI recommends #{a.aiSeed}
                             </Badge>
-                            <div className="pointer-events-none absolute left-0 top-8 z-20 hidden w-80 max-w-[calc(100vw-3rem)] rounded-lg border bg-popover p-3 text-xs shadow-xl group-hover:block">
-                              <p className="font-semibold text-popover-foreground">
-                                AI seed #{a.aiSeed} · score {a.aiSeedScore ?? "—"} · {a.aiSeedConfidence ?? "Unknown"} confidence
-                              </p>
-                              {a.aiSeedReasons?.length ? (
-                                <ul className="mt-2 list-disc space-y-1 pl-4 text-muted-foreground">
-                                  {a.aiSeedReasons.map((reason) => (
-                                    <li key={reason}>{reason}</li>
-                                  ))}
-                                </ul>
-                              ) : null}
-                              {a.aiSeedWarnings?.length ? (
-                                <div className="mt-2 rounded-md bg-amber-50 p-2 text-amber-900">
-                                  {a.aiSeedWarnings.join(" · ")}
-                                </div>
-                              ) : null}
-                            </div>
+                            <p className="mt-2 font-semibold text-popover-foreground">
+                              Score {a.aiSeedScore ?? "—"} · {a.aiSeedConfidence ?? "Unknown"} confidence
+                            </p>
+                            {a.aiSeedReasons?.length ? (
+                              <ul className="mt-2 list-disc space-y-1 pl-4 text-muted-foreground">
+                                {a.aiSeedReasons.map((reason) => (
+                                  <li key={reason}>{reason}</li>
+                                ))}
+                              </ul>
+                            ) : null}
+                            {a.aiSeedWarnings?.length ? (
+                              <div className="mt-2 rounded-md bg-amber-50 p-2 text-amber-900">
+                                {a.aiSeedWarnings.join(" · ")}
+                              </div>
+                            ) : null}
+                            {canManage && a.seed !== a.aiSeed ? (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="mt-3 h-7 border-[#B31B1B]/30 px-2 text-xs font-semibold text-[#B31B1B]"
+                                disabled={seedSavingId === a.invitationId}
+                                onClick={() => void onSeedChange(a.invitationId, a.aiSeed ?? null)}
+                              >
+                                Use AI recommendation
+                              </Button>
+                            ) : null}
                           </div>
                         ) : null}
-                        {a.aiSeed && a.seed !== a.aiSeed ? (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="h-7 border-[#B31B1B]/30 px-2 text-xs font-semibold text-[#B31B1B]"
-                            disabled={seedSavingId === a.invitationId}
-                            onClick={() => void onSeedChange(a.invitationId, a.aiSeed ?? null)}
-                            title="Use AI recommended seed"
-                          >
-                            Use AI
-                          </Button>
-                        ) : null}
+                      </div>
+                    </div>
+
+                    {canManage && a.status === "confirmed" ? (
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
                         <Select
                           value={a.seed != null ? String(a.seed) : "none"}
                           onValueChange={(v) => void onSeedChange(a.invitationId, v === "none" ? null : Number(v))}
@@ -240,7 +243,7 @@ function WeightBoardCard({
           </ul>
         )}
 
-        {confirmedAthletes.length > 1 ? (
+        {canManage && confirmedAthletes.length > 1 ? (
           <p className="text-[11px] text-muted-foreground">
             Drag confirmed wrestlers to reorder seeds. Top confirmed row becomes #1; the bracket updates after save.
           </p>
@@ -269,16 +272,18 @@ function WeightBoardCard({
                     View bracket
                   </HardLink>
                 </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  disabled={bracketBusy}
-                  onClick={() => void onUnlockDraw(board.weightClass)}
-                >
-                  <Unlock className="h-3.5 w-3.5 mr-1" />
-                  Unlock
-                </Button>
+                {canManage ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={bracketBusy}
+                    onClick={() => void onUnlockDraw(board.weightClass)}
+                  >
+                    <Unlock className="h-3.5 w-3.5 mr-1" />
+                    Unlock
+                  </Button>
+                ) : null}
               </div>
             </>
           ) : (
@@ -300,19 +305,23 @@ function WeightBoardCard({
               {bracketStatus?.lockError ? (
                 <p className="text-[11px] text-muted-foreground leading-relaxed">{bracketStatus.lockError}</p>
               ) : null}
-              <Button
-                type="button"
-                size="sm"
-                className="bg-[#CC0000] hover:bg-[#a80000]"
-                disabled={!bracketStatus?.readyToLock || bracketBusy}
-                onClick={() => void onLockDraw(board.weightClass)}
-              >
-                <Lock className="h-3.5 w-3.5 mr-1" />
-                Lock official draw
-              </Button>
-              <p className="text-[10px] text-muted-foreground leading-relaxed">
-                Bracket shows live as soon as one wrestler is confirmed with a seed. Lock when the field is final.
-              </p>
+              {canManage ? (
+                <>
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="bg-[#CC0000] hover:bg-[#a80000]"
+                    disabled={!bracketStatus?.readyToLock || bracketBusy}
+                    onClick={() => void onLockDraw(board.weightClass)}
+                  >
+                    <Lock className="h-3.5 w-3.5 mr-1" />
+                    Lock official draw
+                  </Button>
+                  <p className="text-[10px] text-muted-foreground leading-relaxed">
+                    Bracket shows live as soon as one wrestler is confirmed with a seed. Lock when the field is final.
+                  </p>
+                </>
+              ) : null}
             </>
           )}
         </div>
@@ -324,6 +333,7 @@ function WeightBoardCard({
 export default function TocFieldAdminPage() {
   const [board, setBoard] = useState<TocFieldBoard | null>(null)
   const [bracketsUrl, setBracketsUrl] = useState<string | null>(null)
+  const [canManage, setCanManage] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [seedSavingId, setSeedSavingId] = useState<string | null>(null)
@@ -381,6 +391,7 @@ export default function TocFieldAdminPage() {
       if (!res.ok) throw new Error(data.error || "Failed to load")
       setBoard(data.board)
       setBracketsUrl(data.bracketsUrl ?? null)
+      setCanManage(data.canManage === true)
       await loadBracketStatuses()
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load")
@@ -485,7 +496,7 @@ export default function TocFieldAdminPage() {
           <div>
             <h1 className="text-2xl font-bold">Field by weight</h1>
             <p className="text-sm text-muted-foreground">
-              Admin-only roster. Seed 1–8, publish official draws to{" "}
+              {canManage ? "Private roster. Seed 1–8 and publish official draws to " : "Private TOC field and bracket access. View official draws at "}
               <HardLink href="/tournament-of-champions/brackets" className="text-[#B31B1B] hover:underline">
                 public brackets
               </HardLink>
@@ -502,9 +513,11 @@ export default function TocFieldAdminPage() {
             <Download className="h-4 w-4 mr-2" />
             Export all CSV
           </Button>
-          <Button variant="outline" size="sm" asChild>
-            <HardLink href="/admin/toc/invitations">Send invites</HardLink>
-          </Button>
+          {canManage ? (
+            <Button variant="outline" size="sm" asChild>
+              <HardLink href="/admin/toc/invitations">Send invites</HardLink>
+            </Button>
+          ) : null}
         </div>
       </div>
 
@@ -626,6 +639,7 @@ export default function TocFieldAdminPage() {
             onLockDraw={lockDraw}
             onUnlockDraw={unlockDraw}
             bracketBusy={bracketBusyWeight === w.weightClass}
+            canManage={canManage}
           />
         ))}
       </div>
