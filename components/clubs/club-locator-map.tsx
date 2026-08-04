@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { ClubMapPin, ClubMapResponse } from "@/lib/clubs/club-map-types"
 import { ExternalLink, Facebook, Instagram, LocateFixed, MapPin, Search, ShieldCheck, Users } from "lucide-react"
-import { ClubClaimButton } from "@/components/clubs/club-claim-button"
 import { clubSlug } from "@/lib/clubs/club-slug"
 
 const MAPBOX_SCRIPT_ID = "mapbox-gl-js"
@@ -428,46 +427,6 @@ function PinDetails({ pin }: { pin: ClubMapPin }) {
           </div>
         ) : null}
 
-        {/*
-          Counts are how many RecruitNC profiles name this club — not the club's roster.
-          Labelled as profiles so it never reads as a claim about club size, and hidden
-          entirely at zero rather than advertising a club as empty.
-        */}
-        {pin.athleteCount > 0 ? (
-          <div className="grid grid-cols-3 gap-2 text-center">
-            <div className="rounded-sm border border-white/10 bg-white/5 p-3">
-              <div className="text-2xl font-black text-[#d7b968]">{pin.athleteCount}</div>
-              <div className="text-[11px] uppercase tracking-[0.18em] text-white/45">Profiles</div>
-            </div>
-            <div className="rounded-sm border border-white/10 bg-white/5 p-3">
-              <div className="text-2xl font-black text-sky-200">{pin.boysCount}</div>
-              <div className="text-[11px] uppercase tracking-[0.18em] text-white/45">Boys</div>
-            </div>
-            <div className="rounded-sm border border-white/10 bg-white/5 p-3">
-              <div className="text-2xl font-black text-pink-200">{pin.girlsCount}</div>
-              <div className="text-[11px] uppercase tracking-[0.18em] text-white/45">Girls</div>
-            </div>
-          </div>
-        ) : null}
-
-        {pin.recentCommits.length ? (
-          <div>
-            <div className="mb-2 text-xs font-bold uppercase tracking-[0.22em] text-[#d7b968]">
-              Recent college commits
-            </div>
-            <div className="space-y-2">
-              {pin.recentCommits.map((commit, index) => (
-                <div key={`${commit.name}-${commit.college}-${index}`} className="rounded-sm bg-white/5 px-3 py-2 text-sm">
-                  <span className="font-semibold text-white">{commit.name}</span>
-                  <span className="text-white/35"> → </span>
-                  <span className="text-white/80">{commit.college}</span>
-                  {commit.classYear ? <span className="text-white/35"> · {commit.classYear}</span> : null}
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : null}
-
         {pin.instagramUrl || pin.facebookUrl ? (
           <div className="flex flex-wrap items-center gap-2">
             {pin.instagramUrl ? (
@@ -501,9 +460,6 @@ function PinDetails({ pin }: { pin: ClubMapPin }) {
           <Button asChild className="rounded-sm bg-[#cc0000] text-white hover:bg-[#a80000]">
             <Link href={`/clubs/${clubSlug(pin.name)}`}>Club page</Link>
           </Button>
-          <Button asChild variant="outline" className="rounded-sm border-white/20 bg-transparent text-white hover:bg-white/10">
-            <Link href={pin.profileHref}>RecruitNC athletes</Link>
-          </Button>
           {pin.website ? (
             <Button asChild variant="outline" className="rounded-sm border-white/20 bg-transparent text-white hover:bg-white/10">
               <a href={pin.website} target="_blank" rel="noopener noreferrer">
@@ -513,7 +469,6 @@ function PinDetails({ pin }: { pin: ClubMapPin }) {
           ) : null}
         </div>
 
-        <ClubClaimButton clubId={pin.id} clubName={pin.name} />
       </CardContent>
     </Card>
   )
