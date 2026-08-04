@@ -8,9 +8,9 @@ import { FundraisingTrainingFundCheckout } from "./fundraising-training-fund-che
 const CHECKOUT_ANCHOR = "spartan-checkout"
 
 export const metadata: Metadata = {
-  title: "NC United Training Fund | Fundraising",
+  title: "NC United Fund | Giving",
   description:
-    "Support NC United Wrestling's NC United Training Fund — year-round wrestling support with nonprofit oversight and IRC-aligned acknowledgement; ask your advisor about your deduction.",
+    "Make a general charitable gift to NC United Wrestling in support of its statewide mission and programs.",
 }
 
 export default async function FundraisingTrainingFundPage({
@@ -41,13 +41,13 @@ export default async function FundraisingTrainingFundPage({
         </p>
 
         <h1 className="font-[family-name:var(--font-fundraising-display)] mt-4 text-2xl font-black uppercase leading-tight tracking-tight text-white sm:text-4xl">
-          Training Fund
+          NC United Fund
         </h1>
         <p className="mt-3 text-base leading-relaxed text-white/70">
-          The <strong className="text-white/90">NC United Training Fund</strong> backs wrestlers who need resources to train and compete nationally,
-          year-round. Gifts are charitable contributions to NC United Wrestling — North Carolina <strong className="text-white/90">501(c)(3)</strong> — for this
-          governed program pool, not informal cash to one athlete&apos;s pocket. Receipts comply with IRC charitable documentation standards; deductible
-          treatment still depends on your tax facts — consult your tax advisor.
+          The <strong className="text-white/90">NC United Fund</strong> supports NC United Wrestling&apos;s statewide charitable mission, including training,
+          competition, athlete development, and community programs. Gifts are made to NC United Wrestling — a North Carolina{" "}
+          <strong className="text-white/90">501(c)(3)</strong> — and NC United retains full discretion and control over their charitable use. General-fund
+          gifts are not earmarked for or paid directly to an individual athlete. Named scholarship funds are administered separately under NC United policy.
         </p>
 
         {cancelled ? (
@@ -97,12 +97,8 @@ export default async function FundraisingTrainingFundPage({
         </div>
 
         <p className="mt-6 text-center text-xs text-white/45">
-          “Gifts received” counts completed training-fund checkouts (no individual NCU athlete code), same basis as NC
-          United&apos;s broader{" "}
-          <HardLink href="/spartan" className="text-[#C8A94A] underline-offset-4 hover:underline">
-            fundraising ledger
-          </HardLink>
-          . “Committed to scholarships” is the total of board allocations from this pool into named scholarship funds.
+          “Gifts received” counts completed general NC United Fund checkouts. “Committed to scholarships” is the total of board-approved allocations from
+          the general fund into named scholarship funds.
         </p>
 
         {gifts.length > 0 ? (
@@ -110,7 +106,7 @@ export default async function FundraisingTrainingFundPage({
             <h2 className="font-[family-name:var(--font-fundraising-display)] text-sm font-bold uppercase tracking-wide text-white">
               Gift activity
             </h2>
-            <p className="mt-1 text-xs text-white/45">Public names only · recent training-fund gifts.</p>
+            <p className="mt-1 text-xs text-white/45">Public names only · recent NC United Fund gifts.</p>
             <div className="mt-3 overflow-hidden rounded-lg border border-white/10 bg-black/20">
               <div className="hidden grid-cols-[5.25rem_minmax(0,10.5rem)_minmax(0,1fr)_auto] gap-x-3 border-b border-white/10 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-white/40 sm:grid">
                 <span>Date</span>

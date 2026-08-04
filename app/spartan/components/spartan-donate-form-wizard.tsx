@@ -135,7 +135,7 @@ export function SpartanDonateFormWizard({
   const scholarshipFundCheckout = fh && fundraisingHubReturnSlugLower.startsWith("scholarships/")
   const destinationFundLabel = scholarshipFundCheckout
     ? (fundraisingHubFundLabel?.trim() || "this scholarship fund")
-    : "NC United Training Fund"
+    : "NC United Fund"
   const spartanTrainingFundOnly = !fh && isSpartanTeamPageAthleteDonationsDisabled()
   /** `/fundraising/athletes/[slug]` embed: not the general Make a gift hub */
   const athleteGiftPageEmbed = fh && Boolean(fundraisingHubReturnSlugLower) && !scholarshipFundCheckout

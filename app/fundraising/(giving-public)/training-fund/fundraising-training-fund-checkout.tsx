@@ -51,9 +51,8 @@ export function FundraisingTrainingFundCheckout() {
             Secure checkout
           </h2>
           <p className="mx-auto mt-2 max-w-md text-center text-[13px] leading-snug text-white/70">
-            <strong className="font-semibold text-white/85">NC United Training Fund</strong> — gifts to NC United from{" "}
-            <span className="tabular-nums">$5</span> upward for training, travel, and national competition year-round. You finish on Stripe; acknowledgement
-            email follows checkout.
+            <strong className="font-semibold text-white/85">NC United Fund</strong> — general charitable gifts to support NC United Wrestling&apos;s statewide
+            mission and programs. Gifts are not directed to an individual athlete. You finish on Stripe; an acknowledgement email follows checkout.
           </p>
           <p className="mx-auto mt-2 max-w-md text-center text-[11px] leading-snug text-white/42">{NC_UNITED_TRAINING_FUND_GOVERNANCE_DISCLAIMER}</p>
           <p className="mx-auto mt-2 max-w-md text-center text-[11px] leading-snug text-white/48">{NC_UNITED_CONTRIBUTIONS_TAX_DISCLAIMER}</p>

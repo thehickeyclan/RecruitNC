@@ -77,14 +77,9 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ slug: 
   const nominatorPhone = truncate(String(body.nominator_phone ?? ""), 40)
   const nominatorKnownDuration = truncate(String(body.nominator_known_duration ?? ""), 200)
 
-  const isParentNominating =
-    body.is_parent_nominating_own_child === true ||
-    body.is_parent_nominating_own_child === "true" ||
-    body.is_parent_nominating_own_child === "on"
+  const isParentNominating = /\b(parent|mother|father|mom|dad|guardian)\b/i.test(nominatorRelationship)
 
   const writtenStatement = String(body.written_statement ?? "").trim()
-  const wrestlingMomentRaw = String(body.wrestling_moment ?? "").trim()
-  const wrestlingMoment = wrestlingMomentRaw ? truncate(wrestlingMomentRaw, 8000) : ""
 
   const submissionFormatRaw = String(body.submission_format ?? "written").toLowerCase()
   const submissionFormat = submissionFormatRaw === "video" ? "video" : "written"
@@ -122,20 +117,17 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ slug: 
     writtenStatementToStore = ""
   } else {
     const wcEssay = countWords(writtenStatement)
-    if (wcEssay < 100 || wcEssay > 250) {
-      return NextResponse.json({ error: `Written nomination must be 100–250 words (yours: ${wcEssay}).` }, { status: 400 })
+    if (wcEssay < 1) {
+      return NextResponse.json({ error: "Written nomination is required." }, { status: 400 })
     }
   }
 
-  const referenceName = truncate(String(body.reference_name ?? ""), 200)
-  const referenceRelationship = truncate(String(body.reference_relationship ?? ""), 120)
-  const referenceEmail = truncate(String(body.reference_email ?? ""), 320)
-  const referencePhone = truncate(String(body.reference_phone ?? ""), 40)
-
-  const secondaryRefName = truncate(String(body.secondary_reference_name ?? ""), 200)
-  const secondaryRefRelationship = truncate(String(body.secondary_reference_relationship ?? ""), 120)
-  const secondaryRefEmail = truncate(String(body.secondary_reference_email ?? ""), 320)
-  const secondaryRefPhone = truncate(String(body.secondary_reference_phone ?? ""), 40)
+  // The nominator is the reference. Keep the legacy reference columns populated
+  // so existing review/admin tools continue to work without asking for duplicate data.
+  const referenceName = nominatorName
+  const referenceRelationship = nominatorRelationship
+  const referenceEmail = nominatorEmail
+  const referencePhone = nominatorPhone
 
   if (athleteName.length < 3) {
     return NextResponse.json({ error: "Athlete name is required." }, { status: 400 })
@@ -152,55 +144,6 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ slug: 
   if (!nominatorEmail || !EMAIL_RE.test(nominatorEmail)) {
     return NextResponse.json({ error: "Nominator email is required." }, { status: 400 })
   }
-  if (nominatorKnownDuration.length < 2) {
-    return NextResponse.json({ error: "Please tell us how long you have known this athlete." }, { status: 400 })
-  }
-
-  if (referenceName.length < 2 || referenceRelationship.length < 2 || !referenceEmail || !EMAIL_RE.test(referenceEmail)) {
-    return NextResponse.json({ error: "Supporting reference name, relationship, and email are required." }, { status: 400 })
-  }
-
-  if (isParentNominating) {
-    if (
-      secondaryRefName.length < 2 ||
-      secondaryRefRelationship.length < 2 ||
-      !secondaryRefEmail ||
-      !EMAIL_RE.test(secondaryRefEmail)
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            "When a parent nominates their own child, a second adult reference (coach, teacher, counselor, or community member) is required.",
-        },
-        { status: 400 },
-      )
-    }
-  }
-
-  if (wrestlingMoment) {
-    const mw = countWords(wrestlingMoment)
-    if (mw > 100) {
-      return NextResponse.json({ error: `Additional context must be at most 100 words (yours: ${mw}).` }, { status: 400 })
-    }
-  }
-
-  let additionalBlock = wrestlingMoment || ""
-
-  if (isParentNominating && secondaryRefName) {
-    const bits = [
-      "---",
-      "Second reference (parent nominating own child)",
-      `Name: ${secondaryRefName}`,
-      `Relationship: ${secondaryRefRelationship}`,
-      `Email: ${secondaryRefEmail}`,
-      secondaryRefPhone ? `Phone: ${secondaryRefPhone}` : "",
-      "---",
-    ]
-      .filter(Boolean)
-      .join("\n")
-    additionalBlock = additionalBlock ? `${additionalBlock}\n\n${bits}` : bits
-  }
-
   const cycleYear = scholarshipCycleYear({
     established_year: scholarship.established_year ?? null,
     applications_close_date: scholarship.applications_close_date ?? null,
@@ -228,7 +171,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ slug: 
       video_url: videoUrl,
       video_blob_url: videoBlobUrl,
       written_statement: writtenStatementToStore.slice(0, 12000),
-      wrestling_moment: additionalBlock ? truncate(additionalBlock, 8000) : null,
+      wrestling_moment: null,
       reference_name: referenceName,
       reference_relationship: referenceRelationship,
       reference_email: referenceEmail,
@@ -288,7 +231,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ slug: 
           nominator_email: nominatorEmail,
           nominator_phone: nominatorPhone || null,
           written_statement: writtenStatementToStore.slice(0, 12000),
-          wrestling_moment: additionalBlock ? truncate(additionalBlock, 8000) : null,
+          wrestling_moment: null,
           reference_name: referenceName,
           reference_relationship: referenceRelationship,
           reference_email: referenceEmail,

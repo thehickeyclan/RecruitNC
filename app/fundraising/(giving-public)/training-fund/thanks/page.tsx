@@ -6,9 +6,9 @@ import {
 } from "@/lib/fundraising/donor-facing-disclosures"
 
 export const metadata: Metadata = {
-  title: "Thank you | NC United Training Fund",
+  title: "Thank you | NC United Fund",
   description:
-    "Training Fund charitable gift processing — NC United acknowledgement shortly; IRC-compliant receipt wording—consult your advisor on deductions.",
+    "NC United Fund charitable gift processing — NC United acknowledgement shortly; consult your advisor on deductions.",
 }
 
 export default function FundraisingTrainingFundThanksPage() {
@@ -29,20 +29,20 @@ export default function FundraisingTrainingFundThanksPage() {
             href="/fundraising/training-fund"
             className="text-xs font-semibold uppercase tracking-wide text-white/55 underline-offset-4 hover:text-[#C8A94A] hover:underline"
           >
-            Training fund
+            NC United Fund
           </HardLink>
         </div>
       </div>
 
       <main className="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center px-4 py-14 text-center sm:py-20">
         <p className="font-[family-name:var(--font-fundraising-display)] text-[11px] font-bold uppercase tracking-[0.28em] text-[#CC0000]">
-          NC United Training Fund
+          NC United Fund
         </p>
         <h1 className="font-[family-name:var(--font-fundraising-display)] mt-4 text-[clamp(1.75rem,5vw,2.35rem)] font-black uppercase leading-tight tracking-tight text-white">
           Thank you
         </h1>
         <p className="mx-auto mt-6 max-w-md text-base leading-relaxed text-white/78">
-          Thank you — your NC United Training Fund gift is processing. Watch for acknowledgement email shortly (check spam or
+          Thank you — your NC United Fund gift is processing. Watch for an acknowledgement email shortly (check spam or
           promotions).
         </p>
         <p className="mx-auto mt-3 max-w-md text-xs leading-relaxed text-white/45">{NC_UNITED_TRAINING_FUND_GOVERNANCE_DISCLAIMER}</p>
@@ -59,13 +59,7 @@ export default function FundraisingTrainingFundThanksPage() {
             href="/fundraising/training-fund"
             className="font-[family-name:var(--font-fundraising-display)] inline-flex min-h-[48px] items-center justify-center border border-[#C8A94A]/50 bg-[#0B2545]/40 px-6 text-xs font-extrabold uppercase tracking-[0.12em] text-white hover:border-[#C8A94A] hover:bg-[#0B2545]/70"
           >
-            Training fund page
-          </HardLink>
-          <HardLink
-            href="/fundraising/athletes"
-            className="font-[family-name:var(--font-fundraising-display)] inline-flex min-h-[48px] items-center justify-center border border-white/25 px-6 text-xs font-extrabold uppercase tracking-[0.12em] text-white/90 hover:border-white/50"
-          >
-            Support an athlete
+            NC United Fund page
           </HardLink>
         </div>
       </main>

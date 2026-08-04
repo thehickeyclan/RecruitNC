@@ -19,12 +19,12 @@ const CARDS: Card[] = [
     body: "NC United Wrestling is a North Carolina public charity (EIN 99-3757238). Deduction eligibility is donor-specific; the nonprofit pathway still unlocks matching gifts, corporate giving, and institutional support in ways typical P2P apps and most personal crowdfunding pages do not.",
   },
   {
-    title: "NC United Training Fund — optionally in a wrestler's name",
-    body: "Your gift funds NC United Wrestling's NC United Training Fund. Naming a wrestler at checkout aligns your contribution under policy with qualifying training and travel—plus public recognition totals—rather than implying an informal payout to families.",
+    title: "One clear NC United Fund",
+    body: "General gifts support NC United Wrestling's charitable mission and programs. NC United retains discretion and control over their use; they are not earmarked for or paid directly to an individual athlete.",
   },
   {
     title: "Nonprofit checkout — built for wrestling",
-    body: "You pay through our nonprofit-owned Stripe checkout—email receipt, supporter visibility choices, and metadata that ties every gift to the right athlete code. Some consumer platforms add separate platform fees on top of donations; our flow is built so eligible gifts can be documented as nonprofit support without that extra layer.",
+    body: "You pay through our nonprofit-owned Stripe checkout, with an email acknowledgement and supporter visibility choices. Named scholarship funds use separate fund records so donations remain clearly attributed.",
   },
   {
     title: "Major supporters — recognition & thanks",
@@ -54,7 +54,7 @@ export function FundraisingValueProps({ hero }: { hero: FundraisingHubHeroStats 
         </h2>
         <p className="mt-4 max-w-3xl text-base leading-relaxed text-white sm:text-lg">
           You get <strong className="text-white">tax documentation</strong>,{" "}
-          <strong className="text-white">donor preference for a wrestler or the training fund</strong>, and a{" "}
+          <strong className="text-white">clear general-fund or named-scholarship attribution</strong>, and a{" "}
           <strong className="text-white">single nonprofit ledger</strong>—so donors and families see one clear story. That
           differs from routing gifts only through apps built for casual transfers or generic crowdfunding, where receipts
           and attribution can be harder to line up.{" "}
@@ -84,7 +84,7 @@ export function FundraisingValueProps({ hero }: { hero: FundraisingHubHeroStats 
           <p className="mt-3 text-sm leading-relaxed text-white">
             Crowdfunding pages often include platform fees and may not be set up as deductible gifts to a 501(c)(3). P2P
             apps like Venmo, Cash App, or Zelle are great for everyday transfers, but they don&apos;t automatically produce a
-            charity receipt or tie cleanly to NCU donor-preference tagging in our systems.
+              charity receipt or tie cleanly to NC United&apos;s nonprofit records.
           </p>
           {illustrativeFeesCents > 0 ? (
             <p className="mt-4 border-t border-white/10 pt-4 text-xs leading-relaxed text-white/85">

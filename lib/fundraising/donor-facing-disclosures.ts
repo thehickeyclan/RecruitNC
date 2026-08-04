@@ -16,7 +16,7 @@ export const NC_UNITED_CONTRIBUTIONS_TAX_DISCLAIMER =
  * Brief reassurance below Training Fund-focused copy (CPA: governance / charter path in good order for this pool).
  */
 export const NC_UNITED_TRAINING_FUND_GOVERNANCE_DISCLAIMER =
-  "Training Fund gifts are made to NC United Wrestling under our nonprofit governance for exempt-purpose wrestling support."
+  "General gifts are made to NC United Wrestling under our nonprofit governance. NC United retains discretion and control over their charitable use; they are not earmarked for or paid directly to an individual athlete."
 
 /** Paragraph for athlete “How your support helps” blocks (checkout live — keep concise). */
 export function athletePageSupportHelpParagraph(displayName: string, athleteFirstName: string): string {

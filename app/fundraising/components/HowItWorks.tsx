@@ -1,4 +1,4 @@
-import { Heart, Search } from "lucide-react"
+import { Heart } from "lucide-react"
 import { HardLink } from "@/components/hard-link"
 import { NC_UNITED_CONTRIBUTIONS_TAX_DISCLAIMER } from "@/lib/fundraising/donor-facing-disclosures"
 
@@ -9,8 +9,8 @@ function displayFont(c: string) {
 const STEPS = [
   {
     n: "01",
-    title: "Choose where to express preference",
-    body: "Give to NC United and pick a wrestler or the Training Fund — we record donor preference for program support at checkout; NC United applies funds under exempt purpose.",
+    title: "Choose a giving path",
+    body: "Give generally to NC United or choose a separately governed scholarship fund.",
   },
   {
     n: "02",
@@ -26,16 +26,9 @@ const STEPS = [
 
 const GIVE_PATHS = [
   {
-    icon: Search,
-    headline: "Support a Wrestler",
-    body: "Find a wrestler and give through NC United — donor preference toward that athlete is recorded at nonprofit checkout subject to exempt purpose and policy.",
-    cta: "Search athletes →",
-    href: "/fundraising/athletes",
-  },
-  {
     icon: Heart,
-    headline: "Support the Training Fund",
-    body: "Giving to NC United Wrestling through the Training Fund — organizational support that helps wrestlers train and compete year-round statewide.",
+    headline: "Give to NC United",
+    body: "Support NC United Wrestling's charitable mission, programs, training, competition, and statewide wrestling community.",
     cta: "Give now →",
     href: "/fundraising/training-fund",
   },
@@ -58,7 +51,7 @@ export function HowItWorks() {
             How giving works
           </h2>
           <p className="mx-auto max-w-2xl text-sm leading-relaxed text-white/70 sm:mx-0">
-            Choose athlete or NC United Training Fund → secure nonprofit checkout → email acknowledgment — consult your tax advisor about deductions.
+            Choose general NC United giving or a scholarship fund → secure nonprofit checkout → email acknowledgment.
           </p>
         </div>
 
@@ -94,16 +87,15 @@ export function HowItWorks() {
             id="fundraising-two-ways-heading"
             className={`${displayFont("mt-3 text-[clamp(1.25rem,3.5vw,1.75rem)] font-black uppercase tracking-tight text-white")}`}
           >
-            Two ways to give
+            Give to NC United
           </h3>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-white/72 sm:mx-0">
-            Pick a wrestler or the Training Fund — donations go to NC United with donor preference tracked at checkout. Scholarship funds and
-            corporate sponsors follow in the next sections.
+            General gifts support NC United&apos;s charitable mission. Named scholarship funds are managed separately and appear below.
           </p>
 
           <p className="mx-auto mt-6 max-w-2xl text-xs leading-snug text-white/55 sm:mx-0">{NC_UNITED_CONTRIBUTIONS_TAX_DISCLAIMER}</p>
 
-          <ul className="mx-auto mt-10 grid max-w-4xl list-none gap-6 sm:grid-cols-2">
+          <ul className="mx-auto mt-10 grid max-w-xl list-none gap-6">
             {GIVE_PATHS.map((c) => {
               const Icon = c.icon
               return (

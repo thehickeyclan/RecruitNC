@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error:
-          "Online gifts from athlete pages are temporarily unavailable. Use “Make a gift” on the fundraising hub or try again later.",
+          "Individual-athlete giving is not available. Use the NC United Fund or choose a named scholarship fund from the giving hub.",
       },
       { status: 503 },
     )

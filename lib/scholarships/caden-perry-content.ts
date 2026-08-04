@@ -47,13 +47,13 @@ Athletes cannot nominate themselves.`
 
 export const CADEN_WHO_CAN_NOMINATE = `Coaches, parents, guardians, teachers, counselors, administrators, teammates, or community members. Nominators under 18 should partner with an adult.
 
-If a parent is nominating their own child, a supporting reference from outside the immediate family is required — a coach, teacher, or community member who can independently validate the nomination.`
+The person submitting the nomination serves as the reference. NC United may contact the nominator if the committee needs help confirming the athlete or their story.`
 
 export const CADEN_APPLICATION_INTRO =
   "One submission. One question. Video is encouraged, but written nominations are welcome."
 
 export const CADEN_APPLICATION_WRITTEN =
-  "Written: 100–250 words responding to the question below."
+  "Written: a short response. A few specific sentences are enough, but a longer story is welcome too."
 
 export const CADEN_APPLICATION_VIDEO =
   "Video: 1–2 minutes. A simple phone video is perfect. What matters is authenticity, not production quality."
@@ -63,9 +63,10 @@ export const CADEN_APPLICATION_PROMPT_LABEL = "The question:"
 export const CADEN_APPLICATION_PROMPT_QUOTE =
   "Describe a specific moment or period when this athlete faced genuine adversity — on or off the mat — and what their response revealed about their character. Use concrete examples. Tell us what you saw."
 
-export const CADEN_APPLICATION_DETAILS = `The nomination also includes athlete and nominator contact details and one supporting reference. References are contacted only if the nomination reaches the finalist stage.
+export const CADEN_APPLICATION_DETAILS = `The nomination asks only for enough information to identify the athlete, contact the nominator, and understand the athlete's story. The nominator serves as the reference.`
 
-An optional 100-word field allows nominators to share any additional context the committee should know.`
+export const CADEN_NOMINATION_CONFIDENTIALITY =
+  "Nominations are confidential and used only for scholarship review. NC United will not publicly share an athlete's nomination, story, photo, or identifying details without the required permission from the recipient and, when the athlete is a minor, their parent or legal guardian."
 
 export const CADEN_APPLICATION_AI_NOTE =
   "Authenticity matters more than polish. Generic nominations are less helpful than real details: what happened, who saw it, how the athlete responded, and why it mattered."

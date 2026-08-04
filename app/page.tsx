@@ -197,10 +197,10 @@ export default async function HomePage() {
                 </p>
               </div>
               <Link
-                href="/fundraising/scholarships/caden-perry/apply"
+                href="/fundraising/scholarships/caden-perry"
                 className="mt-4 inline-flex min-h-11 shrink-0 items-center justify-center rounded-md bg-rnc-red px-5 text-sm font-bold text-white transition-colors hover:bg-rnc-red-hover sm:mt-0"
               >
-                Nominate a Wrestler
+                Learn More &amp; Nominate
               </Link>
             </div>
           </div>

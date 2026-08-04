@@ -3,10 +3,7 @@ import { FUNDRAISING_AUTH_RETURN_COOKIE } from "@/lib/fundraising/fundraising-au
 
 function isFundraisingHubPublicPath(p: string): boolean {
   if (p === "/fundraising" || p === "/fundraising/") return true
-  if (p.startsWith("/fundraising/athletes")) return true
   if (p.startsWith("/fundraising/scholarships")) return true
-  if (p.startsWith("/fundraising/leaderboard")) return true
-  if (p.startsWith("/fundraising/activity")) return true
   if (p.startsWith("/fundraising/") && p.includes("/thanks")) return true
   return false
 }
@@ -21,6 +18,31 @@ function isFundraisingHubPublicPath(p: string): boolean {
  */
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
+
+  // Individual-athlete giving is retired. Keep all public giving organizational
+  // or within a separately governed scholarship fund.
+  if (
+    pathname === "/fundraising/athletes" ||
+    pathname.startsWith("/fundraising/athletes/") ||
+    pathname === "/fundraising/leaderboard" ||
+    pathname.startsWith("/fundraising/leaderboard/") ||
+    pathname === "/fundraising/activity" ||
+    pathname.startsWith("/fundraising/activity/") ||
+    pathname === "/fundraising/playbook" ||
+    pathname.startsWith("/fundraising/playbook/")
+  ) {
+    return NextResponse.redirect(new URL("/fundraising", request.url), 308)
+  }
+
+  // Retire legacy campaign and miscellaneous giving URLs. The only public
+  // giving destinations are the general NC United Fund and named scholarships.
+  if (pathname.startsWith("/fundraising/")) {
+    const firstSegment = pathname.split("/")[2] ?? ""
+    const allowedGivingSections = new Set(["training-fund", "scholarships"])
+    if (firstSegment && !allowedGivingSections.has(firstSegment)) {
+      return NextResponse.redirect(new URL("/fundraising", request.url), 308)
+    }
+  }
 
   // Never run middleware on static/public assets (avoids any chance of 401 on manifest, icons, etc.)
   const staticPaths = ["/manifest.json", "/favicon.ico", "/icon-192", "/icon-512", "/icon.svg"]

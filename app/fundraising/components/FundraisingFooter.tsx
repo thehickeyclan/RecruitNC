@@ -49,32 +49,8 @@ export function FundraisingFooter() {
             <span className="hidden text-white/25 sm:inline" aria-hidden>
               ·
             </span>
-            <HardLink href="/fundraising/athletes" className={FOOTER_LINK_CLASS}>
-              Athlete profiles
-            </HardLink>
-            <span className="hidden text-white/25 sm:inline" aria-hidden>
-              ·
-            </span>
-            <HardLink href="/fundraising#fundraising-active-campaigns" className={FOOTER_LINK_CLASS}>
-              Active campaigns
-            </HardLink>
-            <span className="hidden text-white/25 sm:inline" aria-hidden>
-              ·
-            </span>
-            <HardLink href="/fundraising/leaderboard" className={FOOTER_LINK_CLASS}>
-              Training Fund leaderboard
-            </HardLink>
-            <span className="hidden text-white/25 sm:inline" aria-hidden>
-              ·
-            </span>
-            <HardLink href="/fundraising/activity?campaign=all" className={FOOTER_LINK_CLASS}>
-              Gift log
-            </HardLink>
-            <span className="hidden text-white/25 sm:inline" aria-hidden>
-              ·
-            </span>
-            <HardLink href="/fundraising#fundraising-live-donor-stream" className={FOOTER_LINK_CLASS}>
-              Live feed
+            <HardLink href="/fundraising/training-fund" className={FOOTER_LINK_CLASS}>
+              Give to NC United
             </HardLink>
           </div>
           <div className="grid grid-cols-1 gap-1 sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-2 sm:gap-y-2">

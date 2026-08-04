@@ -42,21 +42,21 @@ export function CampaignCards({ campaigns }: { campaigns: FundraisingHubCampaign
           <div className="mx-auto mt-14 max-w-lg overflow-hidden rounded-xl border border-white/12 bg-[#0B2545]/80 shadow-[0_28px_90px_-34px_rgba(0,0,0,0.85)]">
             <div className="border-b border-[#CC0000]/40 bg-[#CC0000]/12 px-6 py-4">
               <h3 className={`${displayFont("text-lg font-black uppercase tracking-wide text-white")}`}>
-                Support an Athlete Year-Round
+                Give to NC United
               </h3>
             </div>
             <div className="px-6 py-8">
               <p className="leading-relaxed text-white">
-                No timed drives are live on the board right now — NC United nonprofit checkout stays open year-round so you can give to NC United Wrestling for
-                the NC United Training Fund—with a wrestler noted at checkout, or to the unrestricted training pool.
+                No timed drives are live right now. NC United&apos;s nonprofit checkout remains open year-round for general charitable gifts supporting our
+                statewide mission and programs.
               </p>
               <HardLink
-                href="/fundraising/athletes"
+                href="/fundraising/training-fund"
                 className={`${displayFont(
                   "mt-8 inline-flex min-h-[50px] w-full touch-manipulation items-center justify-center rounded-sm bg-[#CC0000] text-sm font-extrabold uppercase tracking-[0.14em] text-white transition hover:bg-[#a80000] sm:w-auto sm:px-10",
                 )}`}
               >
-                Support an athlete year-round →
+                Give to NC United →
               </HardLink>
             </div>
           </div>

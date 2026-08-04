@@ -22,9 +22,9 @@ export function WhyNCUnited({ hero }: { hero: FundraisingHubHeroStats }) {
             Why give through NC United
           </h2>
           <p className="mt-5 text-base leading-relaxed text-white">
-            Giving through NC United means acknowledgement materials when checkout completes, donor preference attribution on our
-            reconciliation views (toward an athlete&apos;s programming or the broader training fund), and one nonprofit ledger our
-            team can defend—without treating your gift like a casual app transfer or a generic crowdfunding page.
+            Giving through NC United means acknowledgement materials when checkout completes, clear allocation to the general NC United Fund or a separately
+            governed named scholarship fund, and one nonprofit ledger our team can defend—without treating a charitable gift like a casual app transfer or
+            an informal payment to an individual athlete.
           </p>
           <p className="mt-4 text-base leading-relaxed text-white">
             NC United is a registered 501(c)(3) public charity (EIN 99-3757238). Gifts run through exempt-purpose stewardship with acknowledgements aligned to

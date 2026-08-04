@@ -18,6 +18,7 @@ import {
   CADEN_CLOSING_TAGLINE_FULLWIDTH,
   CADEN_FUND_STATUS_COPY,
   CADEN_NC_UNITED_SEED_COMMITMENT_CENTS,
+  CADEN_NOMINATION_CONFIDENTIALITY,
   CADEN_PUBLIC_PAGE_FALLBACKS,
   CADEN_REVIEW_PROCESS_STAGES,
   CADEN_SELECTION_CRITERIA_CARDS,
@@ -393,6 +394,9 @@ export default async function ScholarshipDetailPage({ params }: { params: Promis
               <p className={df("mt-6 text-[11px] font-bold uppercase tracking-[0.14em] text-white/80")}>{CADEN_APPLICATION_PROMPT_LABEL}</p>
               <p className="mt-3 text-sm italic leading-relaxed text-[#C8A94A]/95">&ldquo;{CADEN_APPLICATION_PROMPT_QUOTE}&rdquo;</p>
               <div className="mt-6 whitespace-pre-wrap text-sm leading-relaxed text-white/72">{CADEN_APPLICATION_DETAILS}</div>
+              <div className="mt-5 rounded-lg border border-[#C8A94A]/25 bg-[#C8A94A]/5 px-4 py-4 text-sm leading-relaxed text-white/78">
+                <strong className="text-white">Confidential nominations.</strong> {CADEN_NOMINATION_CONFIDENTIALITY}
+              </div>
               <div className="mt-8 whitespace-pre-wrap text-sm leading-relaxed text-white/70">{CADEN_APPLICATION_AI_NOTE}</div>
             </section>
 

@@ -23,7 +23,6 @@ import {
   Archive,
   Activity,
   Gift,
-  BookOpen,
   GraduationCap,
   MapPin,
 } from "lucide-react"
@@ -287,15 +286,9 @@ export function Navbar() {
     ...eventsFargoColumn,
   ].map((i) => ({ href: i.href }))
 
-  /** Giving hub + athlete directory + playbook + scholarships (desktop dropdown + mobile section). */
+  /** Public giving options: general NC United giving and named scholarship funds. */
   const fundraisingNavItems = [
-    { href: "/fundraising", label: "Overview", description: "Campaigns, live feed, leaderboards, corporate partners", icon: Gift },
-    {
-      href: "/fundraising/athletes",
-      label: "Athlete gift pages",
-      description: "Search the directory & team fundraisers",
-      icon: Users,
-    },
+    { href: "/fundraising", label: "Overview", description: "Give to NC United and explore scholarship funds", icon: Gift },
     {
       href: "/fundraising/scholarships",
       label: "Scholarships",
@@ -303,28 +296,10 @@ export function Navbar() {
       icon: GraduationCap,
     },
     {
-      href: "/fundraising/playbook/members",
-      label: "Fundraising playbook",
-      description: "NC United team fundraising guide",
-      icon: BookOpen,
-    },
-    {
       href: "/fundraising/training-fund",
-      label: "Training fund",
-      description: "National training & competition support",
+      label: "Give to NC United",
+      description: "General support for NC United's charitable mission",
       icon: Trophy,
-    },
-    {
-      href: "/fundraising/leaderboard",
-      label: "Leaderboard",
-      description: "Top fundraisers & teams",
-      icon: Medal,
-    },
-    {
-      href: "/fundraising/activity?campaign=all",
-      label: "Gift log",
-      description: "Public donation activity",
-      icon: Activity,
     },
   ]
 

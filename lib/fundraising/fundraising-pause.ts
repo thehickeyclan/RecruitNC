@@ -3,8 +3,8 @@
  *
  * - `RECRUITNC_FUNDRAISING_RECEIPTS_PAUSED` — skips 501(c)(3) donor acknowledgment emails
  *   (Stripe webhook auto-ack + admin “send receipt”); does not block Stripe charges or webhook upserts.
- * - `RECRUITNC_FUNDRAISING_ATHLETE_DONATIONS_DISABLED` — hides athlete-page checkout UI and rejects
- *   `/api/spartan/checkout` for hub athlete gift pages (still allows `/fundraising/training-fund`, scholarships).
+ * Individual-athlete gift checkout is permanently disabled. Public giving is limited to
+ * general NC United support and separately governed scholarship funds.
  */
 
 function isEnvPauseOn(v: string | undefined): boolean {
@@ -18,7 +18,7 @@ export function isFundraisingReceiptsPaused(): boolean {
 }
 
 export function isFundraisingAthletePageDonationsDisabled(): boolean {
-  return isEnvPauseOn(process.env.RECRUITNC_FUNDRAISING_ATHLETE_DONATIONS_DISABLED)
+  return true
 }
 
 /** Hub checkout that credits a specific athlete page (`/fundraising/athletes/{slug}`), not training/scholarship hubs. */
