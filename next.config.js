@@ -30,6 +30,12 @@ const nextConfig = {
   },
   // API routes that touch `public/` via fs cause NFT to trace the whole folder (~250MB).
   // These assets are served statically by Vercel; exclude from serverless function bundles.
+  // /admin/database reads the SQL scripts off disk so it can show you exactly what to run.
+  // Without this they are not bundled into the serverless function and the page can only
+  // name the file — which is the problem it exists to solve.
+  outputFileTracingIncludes: {
+    "/api/admin/migrations": ["docs/sql/**"],
+  },
   outputFileTracingExcludes: {
     "/*": [
       "public/images/**",
