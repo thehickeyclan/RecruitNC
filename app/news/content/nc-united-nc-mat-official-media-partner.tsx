@@ -4,17 +4,6 @@ import Link from "next/link"
 export function NcUnitedNcMatOfficialMediaPartnerContent() {
   return (
     <div className="space-y-10">
-      <figure className="not-prose overflow-hidden rounded-xl border border-[#D3B574]/35 bg-[#03070c] p-3 shadow-sm sm:p-5">
-        <Image
-          src="/images/news/nc-mat-media-partnership/official-media-partner.png"
-          alt="NC United and The NC Mat — official media partner of the Tournament of Champions"
-          width={1086}
-          height={1448}
-          className="mx-auto h-auto w-full max-w-xl"
-          priority
-        />
-      </figure>
-
       <section>
         <p>
           <strong>APEX, N.C.</strong> — NC United Wrestling is proud to announce <strong>The NC Mat</strong> as the

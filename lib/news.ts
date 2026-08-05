@@ -109,7 +109,7 @@ const ALL_NEWS: NewsItem[] = [
       "The NC Mat will serve as the official media partner of the 2026 Tournament of Champions, bringing trusted statewide coverage and live commentary to the September 18–19 event in Apex.",
     href: "/news/nc-united-nc-mat-official-media-partner",
     date: "2026-08-05",
-    image: "/images/news/nc-mat-media-partnership/official-media-partner.png",
+    image: "/images/news/nc-mat-media-partnership/home-news-card.png",
     homeImage: "/images/news/nc-mat-media-partnership/home-news-card.png",
     imagePosition: "center",
     imageFit: "contain",
