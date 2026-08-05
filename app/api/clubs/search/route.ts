@@ -17,7 +17,10 @@ export async function GET(request: Request) {
   const admin = createAdminClient()
   const { data: clubs, error } = await admin
     .from("wrestling_clubs")
-    .select("id,name,city,state,logo_url,verified,normalized_name")
+    // `*` rather than a column list: naming a column that has not been migrated yet fails
+    // the whole query and empties the typeahead, which is how instagram_url once broke the
+    // map. Missing columns simply read as undefined here.
+    .select("*")
     .order("name", { ascending: true })
 
   if (error) return NextResponse.json({ clubs: [] })
@@ -41,9 +44,14 @@ export async function GET(request: Request) {
       const aliases = aliasesByClub.get(id) ?? []
       const normalizedName = String(row.normalized_name ?? normalizeClubName(name))
 
+      const closed = String(row.status ?? "active") !== "active"
+
       let score = -1
       if (!needle) {
-        score = 0
+        // Browsing the list is someone choosing where they train now, so a club that has
+        // shut down is not offered. It stays findable by name for the wrestlers who were
+        // there, and is labelled so nobody picks it by mistake.
+        score = closed ? -1 : 0
       } else if (normalizedName === needle || aliases.some((a) => normalizeClubName(a) === needle)) {
         score = 3 // exact, including via an alias
       } else if (normalizedName.startsWith(needle)) {
@@ -66,12 +74,18 @@ export async function GET(request: Request) {
           state: (row.state as string | null) ?? "NC",
           logoUrl: (row.logo_url as string | null) ?? null,
           verified: Boolean(row.verified),
+          closed,
           aliases,
         },
       }
     })
     .filter((entry) => entry.score >= 0)
-    .sort((a, b) => b.score - a.score || a.club.name.localeCompare(b.club.name))
+    .sort(
+      (a, b) =>
+        b.score - a.score ||
+        Number(a.club.closed) - Number(b.club.closed) ||
+        a.club.name.localeCompare(b.club.name),
+    )
     .slice(0, 12)
 
   return NextResponse.json({ clubs: scored.map((entry) => entry.club) })

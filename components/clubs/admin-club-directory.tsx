@@ -22,6 +22,7 @@ type ClubRow = {
   latitude: number | null
   longitude: number | null
   verified: boolean
+  status: string
   programs: {
     youth: boolean
     middleSchool: boolean
@@ -82,7 +83,7 @@ export function AdminClubDirectory() {
   const visible = useMemo(() => {
     const query = search.trim().toLowerCase()
     return clubs.filter((club) => {
-      if (onlyNeedsLocation && !club.needsLocation) return false
+      if (onlyNeedsLocation && (!club.needsLocation || club.status !== "active")) return false
       if (!query) return true
       return [club.name, club.city, club.address, ...club.aliases]
         .filter(Boolean)
@@ -95,8 +96,11 @@ export function AdminClubDirectory() {
   const summary = useMemo(
     () => ({
       total: clubs.length,
-      needLocation: clubs.filter((c) => c.needsLocation).length,
-      mapped: clubs.filter((c) => !c.needsLocation).length,
+      // Closed clubs are excluded from both counts. They are deliberately off the map, so
+      // counting them as "not on the map" would make the address work look never-ending.
+      needLocation: clubs.filter((c) => c.needsLocation && c.status === "active").length,
+      mapped: clubs.filter((c) => !c.needsLocation && c.status === "active").length,
+      closed: clubs.filter((c) => c.status !== "active").length,
     }),
     [clubs],
   )
@@ -127,6 +131,7 @@ export function AdminClubDirectory() {
         contactPhone: draft.contactPhone ?? "",
         contactEmail: draft.contactEmail ?? "",
         verified: draft.verified ?? club.verified,
+        status: draft.status ?? club.status,
         ...programs,
       }),
     })
@@ -183,11 +188,12 @@ export function AdminClubDirectory() {
 
   return (
     <div className="space-y-5">
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {[
           ["Clubs", summary.total],
           ["On the map", summary.mapped],
           ["Not on the map", summary.needLocation],
+          ["Closed", summary.closed],
         ].map(([label, value]) => (
           <div key={label} className="rounded-sm border border-white/10 bg-[#071427]/80 p-4">
             <div className="text-3xl font-black text-white">{value}</div>
@@ -243,7 +249,12 @@ export function AdminClubDirectory() {
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-bold text-white">{club.name}</span>
-                    {club.verified ? (
+                    {club.status !== "active" ? (
+                      <Badge className="rounded-sm bg-white/10 text-white/60">
+                        {club.status === "merged" ? "Merged" : "Closed"}
+                      </Badge>
+                    ) : null}
+                    {club.verified && club.status === "active" ? (
                       <Badge className="rounded-sm bg-emerald-500/15 text-emerald-200">
                         <ShieldCheck className="mr-1 h-3 w-3" />
                         Verified
@@ -255,7 +266,7 @@ export function AdminClubDirectory() {
                         Saved
                       </Badge>
                     ) : null}
-                    {club.needsLocation ? (
+                    {club.status !== "active" ? null : club.needsLocation ? (
                       <Badge className="rounded-sm bg-amber-500/15 text-amber-200">
                         {club.hasLocationText ? "Address didn't map" : "Needs an address"}
                       </Badge>
@@ -340,6 +351,22 @@ export function AdminClubDirectory() {
                       ))}
                     </div>
                   </div>
+
+                  <Field label="Status">
+                    <select
+                      value={draft.status ?? club.status}
+                      onChange={(event) => setDraft({ ...draft, status: event.target.value })}
+                      className={`h-10 w-full px-3 text-sm ${INPUT} border`}
+                    >
+                      <option value="active">Open — shown on the club map</option>
+                      <option value="closed">Closed — off the map, page kept for its wrestlers</option>
+                      <option value="merged">Merged into another club</option>
+                    </select>
+                    <p className="mt-1.5 text-xs text-white/40">
+                      Closing a club never deletes it. Its athletes keep their history and its page stays live with a
+                      notice, so old links still work — it just stops being offered as somewhere to train.
+                    </p>
+                  </Field>
 
                   <label className="flex items-center gap-2 text-sm text-white/80">
                     <Checkbox

@@ -69,6 +69,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     girls_program: asBool(body.girls),
     freestyle_greco: asBool(body.freestyleGreco),
     verified: asBool(body.verified),
+    status: ["active", "closed", "merged"].includes(String(body.status)) ? String(body.status) : "active",
     updated_at: new Date().toISOString(),
   }
 

@@ -73,6 +73,7 @@ export async function GET() {
       latitude: Number.isFinite(latitude) ? latitude : null,
       longitude: Number.isFinite(longitude) ? longitude : null,
       verified: Boolean(row.verified),
+      status: String(row.status ?? "active"),
       programs: {
         youth: Boolean(row.youth_program),
         middleSchool: Boolean(row.middle_school_program),
@@ -94,6 +95,10 @@ export async function GET() {
   })
 
   rows.sort((a, b) => {
+    // Closed clubs sink to the bottom — they are not part of the address work.
+    const aClosed = a.status !== "active"
+    const bClosed = b.status !== "active"
+    if (aClosed !== bClosed) return aClosed ? 1 : -1
     if (a.needsLocation !== b.needsLocation) return a.needsLocation ? -1 : 1
     if (b.profileCount !== a.profileCount) return b.profileCount - a.profileCount
     return a.name.localeCompare(b.name)

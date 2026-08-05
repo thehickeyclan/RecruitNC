@@ -23,6 +23,7 @@ type CanonicalClub = {
   verified: boolean
   contactPhone: string | null
   contactEmail: string | null
+  status: string
   instagramUrl: string | null
   facebookUrl: string | null
   programs: {
@@ -183,6 +184,7 @@ export async function GET() {
         verified: Boolean(row.verified),
         contactPhone: asNullableString(row.contact_phone),
         contactEmail: asNullableString(row.contact_email),
+        status: asNullableString(row.status) || "active",
         instagramUrl: asNullableString(row.instagram_url),
         facebookUrl: asNullableString(row.facebook_url),
         programs: {
@@ -306,6 +308,13 @@ export async function GET() {
 
     for (const club of canonicalClubs.values()) {
       const stats = statsByClubId.get(club.id) ?? createStats()
+
+      /**
+       * A shut-down club is not somewhere you can take your kid on Tuesday, which is the
+       * only question the map answers. Its page stays live and its athletes keep their
+       * history — it simply stops being offered as a place to train.
+       */
+      if (club.status !== "active") continue
 
       // A club record that exists but has no coordinates would otherwise fall through
       // both lists: its name matches athletes so it leaves the unlocated set, and it is

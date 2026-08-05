@@ -14,6 +14,7 @@ type ClubOption = {
   state: string
   logoUrl: string | null
   verified: boolean
+  closed?: boolean
   aliases: string[]
 }
 
@@ -193,7 +194,15 @@ export function ClubPicker({
               <span className="min-w-0">
                 <span className="flex items-center gap-1.5">
                   <span className="truncate font-medium text-white">{club.name}</span>
-                  {club.verified ? <ShieldCheck className="h-3 w-3 shrink-0 text-emerald-300" /> : null}
+                  {club.verified && !club.closed ? (
+                    <ShieldCheck className="h-3 w-3 shrink-0 text-emerald-300" />
+                  ) : null}
+                  {/* Only reachable by searching the name — say why, so nobody picks it by mistake. */}
+                  {club.closed ? (
+                    <span className="shrink-0 rounded-sm bg-white/10 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-white/50">
+                      Closed
+                    </span>
+                  ) : null}
                 </span>
                 <span className="block truncate text-xs text-white/40">
                   {[club.city, club.state].filter(Boolean).join(", ")}

@@ -1,0 +1,48 @@
+-- Club status — run in Supabase SQL Editor
+--
+-- Some clubs have shut down but still appear on athlete profiles, because those wrestlers
+-- really did train there and those results really happened. Deleting the record would
+-- break the profiles, orphan the honours, and 404 any shared link — but a parent must not
+-- be sent to a gym that no longer exists.
+--
+-- Status separates "is this somewhere you can train on Tuesday" from "is this true
+-- history". Closed clubs drop off the map and keep their page.
+--
+-- Safe to re-run.
+
+alter table public.wrestling_clubs
+  add column if not exists status text not null default 'active';
+
+alter table public.wrestling_clubs drop constraint if exists wrestling_clubs_status_check;
+alter table public.wrestling_clubs add constraint wrestling_clubs_status_check
+  check (status in ('active', 'closed', 'merged'));
+
+-- Where a club folded into another one, so an old URL can redirect instead of 404ing.
+alter table public.wrestling_clubs
+  add column if not exists merged_into_club_id integer references public.wrestling_clubs(id) on delete set null;
+
+-- Optional, for the club page banner: "Closed in 2025".
+alter table public.wrestling_clubs
+  add column if not exists closed_note text;
+
+-- The map filters on this on every load.
+create index if not exists wrestling_clubs_status_idx
+  on public.wrestling_clubs (status) where status <> 'active';
+
+comment on column public.wrestling_clubs.status is
+  'active = shown on the map. closed = shut down; hidden from the map, page still live with a notice, athlete history preserved. merged = folded into merged_into_club_id.';
+
+-- ── Mark the clubs that have shut down ───────────────────────────────────────
+-- OBX Wrestling Factory (Nags Head) has closed. One wrestler still lists it — Everest
+-- Ouellette, class of 2025 — and keeps it.
+update public.wrestling_clubs
+   set status = 'closed', updated_at = now()
+ where name = 'OBX Wrestling Factory';
+
+-- Add more the same way, or use the Status dropdown in /admin/clubs:
+-- update public.wrestling_clubs set status = 'closed', closed_note = 'Closed in 2024.'
+--  where name = 'Club Name Here';
+
+-- ── Verify ───────────────────────────────────────────────────────────────────
+select status, count(*) from public.wrestling_clubs group by status order by count(*) desc;
+select name, city, status from public.wrestling_clubs where status <> 'active' order by name;
