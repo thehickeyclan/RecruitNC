@@ -60,7 +60,7 @@ export function HomeNewsHighlightsCarousel() {
             href={mainStory.href}
             className="group block overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md"
           >
-            {mainStory.image ? (
+            {mainStory.homeImage ?? mainStory.image ? (
               <div
                 className={`relative w-full overflow-hidden border-b border-slate-100 ${
                   mainStory.imageFit === "contain"
@@ -70,7 +70,7 @@ export function HomeNewsHighlightsCarousel() {
                 }`}
               >
                 <Image
-                  src={mainStory.image}
+                  src={mainStory.homeImage ?? mainStory.image!}
                   alt=""
                   fill
                   className={[
@@ -172,9 +172,9 @@ function StoryCard({ item }: { item: NewsItem }) {
             item.imageFit === "contain" ? item.imageBannerBgClass ?? "bg-white" : "bg-slate-100"
           }`}
         >
-          {item.image ? (
+          {item.homeImage ?? item.image ? (
             <Image
-              src={item.image}
+              src={item.homeImage ?? item.image!}
               alt=""
               fill
               className={`transition-transform group-hover:scale-[1.02] ${item.imageFit === "contain" ? "object-contain object-center p-1.5" : "object-cover"} ${item.imageFit !== "contain" && item.imagePosition === "top" ? "object-top" : ""}`}

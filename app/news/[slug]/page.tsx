@@ -22,6 +22,7 @@ import { TournamentOfChampionsAnnouncedContent } from "../content/tournament-of-
 import { TheWeightOfTheScaleContent } from "../content/the-weight-of-the-scale"
 import { CadenPerryWarriorScholarshipAnnouncedContent } from "../content/caden-perry-warrior-scholarship-announced"
 import { RecruitNcInteractiveWrestlingClubMapContent } from "../content/recruitnc-interactive-wrestling-club-map"
+import { NcUnitedNcMatOfficialMediaPartnerContent } from "../content/nc-united-nc-mat-official-media-partner"
 import { NchsaaArticleComments } from "@/components/nchsaa-article-comments"
 import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
 import { NewsSharePanel } from "@/components/news/news-share-panel"
@@ -34,6 +35,7 @@ import {
 } from "@/lib/content/aau-scholastic-duals-2026-profile-ids"
 
 const ANNOUNCEMENT_CONTENT: Record<string, () => JSX.Element> = {
+  "nc-united-nc-mat-official-media-partner": () => <NcUnitedNcMatOfficialMediaPartnerContent />,
   "recruitnc-interactive-wrestling-club-map": () => <RecruitNcInteractiveWrestlingClubMapContent />,
   "tournament-of-champions-announced": () => <TournamentOfChampionsAnnouncedContent />,
   "caden-perry-warrior-scholarship-announced": () => <CadenPerryWarriorScholarshipAnnouncedContent />,

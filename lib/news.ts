@@ -29,6 +29,8 @@ export interface NewsItem {
    * For social-first publishing, also plan 1080×1920 Story art (shareStoryImage).
    */
   image?: string
+  /** Optional artwork used only by the homepage news carousel. */
+  homeImage?: string
   imagePosition?: "top" | "center"
   /** Use "contain" to show full image (e.g. product shots); default "cover" fills the card. */
   imageFit?: "cover" | "contain"
@@ -97,6 +99,30 @@ export function newsShareUsesHeroCropOnly(
  * 3. Square/portrait/Facebook assets are auto-generated from the above when missing
  */
 const ALL_NEWS: NewsItem[] = [
+  {
+    id: "nc-united-nc-mat-official-media-partner",
+    slug: "nc-united-nc-mat-official-media-partner",
+    title: "NC United Partners with The NC Mat as Official Media Partner for Tournament of Champions",
+    subtitle:
+      "Rhett Hoy and Ryan Mitchell will help lead athlete announcements, seeding collaboration, event coverage and live commentary.",
+    summary:
+      "The NC Mat will serve as the official media partner of the 2026 Tournament of Champions, bringing trusted statewide coverage and live commentary to the September 18–19 event in Apex.",
+    href: "/news/nc-united-nc-mat-official-media-partner",
+    date: "2026-08-05",
+    image: "/images/news/nc-mat-media-partnership/official-media-partner.png",
+    homeImage: "/images/news/nc-mat-media-partnership/home-news-card.png",
+    imagePosition: "center",
+    imageFit: "contain",
+    imageBannerBgClass: "bg-[#03070c]",
+    newsListBanner: true,
+    category: "PARTNERSHIP",
+    categoryBadgeClass: "bg-[#D3B574]",
+    readTime: "3 min read",
+    author: "NC United",
+    shareHeroCropOnly: true,
+    shareStoryImage: "/images/news/nc-mat-media-partnership/official-media-partner.png",
+    isAnnouncement: true,
+  },
   {
     id: "tournament-of-champions-announced",
     slug: "tournament-of-champions-announced",
