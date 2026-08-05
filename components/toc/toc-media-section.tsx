@@ -1,4 +1,6 @@
 import { Camera, FileText, Mic, Video } from "lucide-react"
+import Image from "next/image"
+import Link from "next/link"
 import { TocMediaForm } from "@/components/toc/toc-media-form"
 import { TocPatrioticBar, TocVarsityHeading, tocSectionClass } from "@/components/toc/toc-theme"
 import { TOC_CONTACT_EMAIL, TOC_MEDIA } from "@/lib/toc/constants"
@@ -10,6 +12,38 @@ export function TocMediaSection() {
     <section id="media" className={`relative scroll-mt-20 bg-[#0B1D3A] text-white ${tocSectionClass()}`}>
       <TocPatrioticBar className="absolute top-0 left-0 right-0" />
       <div className="container mx-auto w-full px-4 sm:px-6 max-w-6xl pt-4">
+        <div className="mb-12 overflow-hidden rounded-sm border-2 border-[#D3B574]/40 bg-[#060f1f] shadow-xl shadow-black/20">
+          <div className="grid items-center lg:grid-cols-[1.35fr_1fr]">
+            <div className="relative aspect-[4/3] overflow-hidden bg-black">
+              <Image
+                src="/images/news/nc-mat-media-partnership/home-news-card.png"
+                alt="NC United and The NC Mat — official media partners for the Tournament of Champions"
+                fill
+                className="object-contain"
+                sizes="(max-width: 1024px) 100vw, 58vw"
+              />
+            </div>
+            <div className="p-6 sm:p-8 lg:p-10">
+              <p className="text-[#D3B574] text-xs font-semibold uppercase tracking-[0.22em]">
+                Official media partner
+              </p>
+              <TocVarsityHeading as="h2" className="mt-3 text-3xl text-white sm:text-4xl">
+                The NC Mat joins Tournament of Champions
+              </TocVarsityHeading>
+              <p className="mt-4 text-sm leading-relaxed text-white/75 sm:text-base">
+                Rhett Hoy and Ryan Mitchell will help lead athlete and bracket announcements, seeding collaboration,
+                event coverage, and live commentary throughout championship weekend.
+              </p>
+              <Link
+                href="/news/nc-united-nc-mat-official-media-partner"
+                className="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-sm bg-[#D3B574] px-6 py-3 text-sm font-bold uppercase tracking-wide text-[#060f1f] transition-colors hover:bg-white sm:w-auto"
+              >
+                Read the partnership announcement
+              </Link>
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-start lg:gap-12">
           <div>
             <p className="text-[#CC0000] text-xs font-semibold uppercase tracking-[0.22em] mb-2">
