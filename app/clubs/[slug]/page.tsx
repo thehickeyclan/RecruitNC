@@ -8,6 +8,7 @@ import { clubSlug, findClubBySlug } from "@/lib/clubs/club-slug"
 import { normalizeClubName } from "@/lib/clubs/club-normalize"
 import { buildClubLogoIndex, resolveClubLogo, type LogoMappingRow } from "@/lib/clubs/club-logo"
 import { buildClubAchievements } from "@/lib/clubs/club-achievements"
+import { loadClubTournamentHonours } from "@/lib/clubs/club-tournament-honours"
 import { DEFAULT_PUBLIC_RANKINGS_CAP, PUBLISHED_PUBLIC_RANKINGS_YEARS } from "@/lib/public-rankings-cap"
 import { TocPatrioticBar, tocDisplayClass } from "@/components/toc/toc-theme"
 import { ClubClaimButton } from "@/components/clubs/club-claim-button"
@@ -132,6 +133,14 @@ export default async function ClubDetailPage({ params }: { params: Promise<{ slu
   )
   const athletes = await loadClubAthletes(String(club.id), String(club.name), String(club.normalized_name ?? ""))
   const achievements = buildClubAchievements(athletes)
+  const honours = await loadClubTournamentHonours(createAdminClient(), athletes)
+  const honourSections = [
+    { title: "NCHSAA state champions", entries: honours.nchsaaChampions },
+    { title: "NCHSAA state placers", entries: honours.nchsaaPlacers },
+    { title: "NHSCA All-Americans", entries: honours.nhscaAllAmericans },
+    { title: "Super 32 placers", entries: honours.super32Placers },
+    { title: "Fargo All-Americans", entries: honours.fargoAllAmericans },
+  ]
 
   const where = [club.city, club.state].filter(Boolean).join(", ")
   const programs = programList(club)
@@ -235,7 +244,7 @@ export default async function ClubDetailPage({ params }: { params: Promise<{ slu
               <h2 className="text-xs font-bold uppercase tracking-[0.22em] text-[#D7B968]">Get in touch</h2>
               <div className="mt-3 space-y-2 text-white/80">
                 {club.contact_phone ? (
-                  <a href={`tel:${club.contact_phone}`} className="flex items-center gap-2 hover:text-[#D7B968]">
+                  <a href={`tel:${String(club.contact_phone).replace(/\D/g, "").replace(/^(\d{10})$/, "+1$1")}`} className="flex items-center gap-2 hover:text-[#D7B968]">
                     <Phone className="h-4 w-4 text-[#D7B968]" />
                     {club.contact_phone}
                   </a>
@@ -315,60 +324,29 @@ export default async function ClubDetailPage({ params }: { params: Promise<{ slu
           </div>
         ) : null}
 
-        {achievements.nhscaAllAmericans.length || achievements.stateChampions.length || achievements.statePlacers.length ? (
+        {honourSections.some((section) => section.entries.length) ? (
           <div className="rounded-sm border border-white/10 bg-[#071427]/80 p-5">
-            <h2 className="text-xs font-bold uppercase tracking-[0.22em] text-[#D7B968]">Honours</h2>
+            <h2 className="text-xs font-bold uppercase tracking-[0.22em] text-[#D7B968]">Tournament results</h2>
 
-            {achievements.nhscaAllAmericans.length ? (
-              <div className="mt-4">
-                <h3 className="text-sm font-bold text-white">NHSCA All-Americans</h3>
-                <ul className="mt-2 space-y-1.5">
-                  {achievements.nhscaAllAmericans.map((honour) => (
-                    <li key={honour.name} className="text-white/80">
-                      <span className="font-semibold text-white">{honour.name}</span>
-                      <span className="text-white/45"> — {honour.label.replace("NHSCA All-American — ", "")}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
+            {honourSections
+              .filter((section) => section.entries.length)
+              .map((section) => (
+                <div key={section.title} className="mt-4">
+                  <h3 className="text-sm font-bold text-white">{section.title}</h3>
+                  <ul className="mt-2 space-y-1.5">
+                    {section.entries.map((entry) => (
+                      <li key={entry.athleteName}>
+                        <span className="font-semibold text-white">{entry.athleteName}</span>
+                        <span className="text-sm text-white/50"> — {entry.detail}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
 
-            {achievements.stateChampions.length ? (
-              <div className="mt-4">
-                <h3 className="text-sm font-bold text-white">State champions</h3>
-                <ul className="mt-2 space-y-1.5">
-                  {achievements.stateChampions.map((honour) => (
-                    <li key={honour.name}>
-                      <span className="font-semibold text-white">{honour.name}</span>
-                      {honour.source ? <span className="text-sm text-white/45"> — {honour.source}</span> : null}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-
-            {achievements.statePlacers.length ? (
-              <div className="mt-4">
-                <h3 className="text-sm font-bold text-white">State placers</h3>
-                <ul className="mt-2 space-y-1.5">
-                  {achievements.statePlacers.map((honour) => (
-                    <li key={honour.name}>
-                      <span className="font-semibold text-white">{honour.name}</span>
-                      {honour.source ? <span className="text-sm text-white/45"> — {honour.source}</span> : null}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-
-            {/*
-              State results are read out of free text on athlete profiles, so the wording
-              varies and the reading can be wrong. Showing the original phrase next to each
-              name lets a reader judge it rather than take our word for it.
-            */}
             <p className="mt-5 border-t border-white/10 pt-3 text-xs leading-5 text-white/35">
-              Honours are drawn from RecruitNC athlete profiles and shown with the wording from the profile.
-              College commitments reflect what was on file as of 2025.
+              Results come from official tournament records. Placings are shown as year and place; NCHSAA entries
+              include the classification and weight. College commitments reflect what was on file as of 2025.
             </p>
           </div>
         ) : null}
