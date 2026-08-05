@@ -84,6 +84,12 @@ export async function GET() {
       aliases: aliasesByClub.get(id) ?? [],
       profileCount: counts.get(id) ?? 0,
       needsLocation: !Number.isFinite(latitude) || !Number.isFinite(longitude),
+      // A club can have a full address and still have no pin, when the address does not
+      // geocode. Labelling that "needs an address" sends you looking for something that is
+      // already there, so the two cases are reported separately.
+      hasLocationText: Boolean(
+        String(row.address ?? "").trim() || String(row.city ?? "").trim() || String(row.zip_code ?? "").trim(),
+      ),
     }
   })
 

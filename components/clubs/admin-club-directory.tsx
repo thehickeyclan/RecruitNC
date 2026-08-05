@@ -33,6 +33,7 @@ type ClubRow = {
   aliases: string[]
   profileCount: number
   needsLocation: boolean
+  hasLocationText: boolean
 }
 
 const PROGRAM_FIELDS = [
@@ -151,6 +152,9 @@ export function AdminClubDirectory() {
               latitude,
               longitude,
               needsLocation: latitude === null || longitude === null,
+              hasLocationText: Boolean(
+                String(draft.address ?? "").trim() || String(draft.city ?? "").trim() || String(draft.zipCode ?? "").trim(),
+              ),
             }
           : row,
       ),
@@ -183,7 +187,7 @@ export function AdminClubDirectory() {
         {[
           ["Clubs", summary.total],
           ["On the map", summary.mapped],
-          ["Need an address", summary.needLocation],
+          ["Not on the map", summary.needLocation],
         ].map(([label, value]) => (
           <div key={label} className="rounded-sm border border-white/10 bg-[#071427]/80 p-4">
             <div className="text-3xl font-black text-white">{value}</div>
@@ -213,7 +217,7 @@ export function AdminClubDirectory() {
           }
         >
           <AlertTriangle className="mr-2 h-4 w-4" />
-          {onlyNeedsLocation ? `Showing ${summary.needLocation} without an address` : `Show ${summary.needLocation} without an address`}
+          {onlyNeedsLocation ? `Showing ${summary.needLocation} not on the map` : `Show ${summary.needLocation} not on the map`}
         </Button>
       </div>
 
@@ -252,7 +256,9 @@ export function AdminClubDirectory() {
                       </Badge>
                     ) : null}
                     {club.needsLocation ? (
-                      <Badge className="rounded-sm bg-amber-500/15 text-amber-200">Needs an address</Badge>
+                      <Badge className="rounded-sm bg-amber-500/15 text-amber-200">
+                        {club.hasLocationText ? "Address didn't map" : "Needs an address"}
+                      </Badge>
                     ) : (
                       <Badge className="rounded-sm bg-white/10 text-white/60">
                         <MapPin className="mr-1 h-3 w-3" />

@@ -18,12 +18,32 @@ export type GeocodeResult = {
   provider: "mapbox" | "nominatim"
 }
 
-/** North Carolina, generously bounded. A result outside this is a bad match, not a club. */
-const NC_BOUNDS = { minLat: 33.7, maxLat: 36.7, minLon: -84.4, maxLon: -75.4 }
+/**
+ * A sanity check on the geocoder, not a state filter.
+ *
+ * This was a tight North Carolina box, which was wrong twice over. It threw away real
+ * clubs just outside the line — Carolina Reapers in Myrtle Beach sits at latitude 33.689
+ * against a southern edge of 33.7, so it geocoded correctly and was then discarded and
+ * left off the map. And it never actually enforced "North Carolina" anyway: the box was
+ * loose enough to pass Columbia and Greenville, South Carolina.
+ *
+ * NC families cross state lines to train — C2X is in Fort Mill, SC — so the directory
+ * legitimately holds out-of-state clubs. What we actually need to catch is a geocoder
+ * returning somewhere absurd, so the bound is the southeast and its neighbours.
+ */
+const SOUTHEAST_BOUNDS = { minLat: 30.0, maxLat: 39.8, minLon: -91.0, maxLon: -74.8 }
 
-export function isInNorthCarolina(lat: number, lon: number): boolean {
-  return lat >= NC_BOUNDS.minLat && lat <= NC_BOUNDS.maxLat && lon >= NC_BOUNDS.minLon && lon <= NC_BOUNDS.maxLon
+export function isPlausibleClubLocation(lat: number, lon: number): boolean {
+  return (
+    lat >= SOUTHEAST_BOUNDS.minLat &&
+    lat <= SOUTHEAST_BOUNDS.maxLat &&
+    lon >= SOUTHEAST_BOUNDS.minLon &&
+    lon <= SOUTHEAST_BOUNDS.maxLon
+  )
 }
+
+/** @deprecated Kept so existing callers keep working; use isPlausibleClubLocation. */
+export const isInNorthCarolina = isPlausibleClubLocation
 
 /**
  * Submitted addresses often already contain the city/state/zip, so appending them again
@@ -117,7 +137,7 @@ export async function geocodeClub(parts: {
   const city = String(parts.city ?? "").trim()
   const zip = String(parts.zipCode ?? "").trim()
   if (city || zip) {
-    const cityOnly = [city, parts.state ?? "NC", zip].filter(Boolean).join(", ")
+    const cityOnly = [city, parts.state || "NC", zip].filter(Boolean).join(", ")
     if (!attempts.includes(cityOnly)) attempts.push(cityOnly)
   }
 
@@ -132,8 +152,8 @@ export async function geocodeClub(parts: {
     }
     if (!result) continue
     if (!Number.isFinite(result.latitude) || !Number.isFinite(result.longitude)) continue
-    // A match outside North Carolina means the geocoder latched onto the wrong place.
-    if (!isInNorthCarolina(result.latitude, result.longitude)) continue
+    // A match outside the region means the geocoder latched onto the wrong place entirely.
+    if (!isPlausibleClubLocation(result.latitude, result.longitude)) continue
     // Only a first-attempt match on a real street address counts as address-precise;
     // the town fallback never does, whatever the provider reports.
     const addressPrecise = query === attempts[0] && hasAddress && result.precision === "address"
