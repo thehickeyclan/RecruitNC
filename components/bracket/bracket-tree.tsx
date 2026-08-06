@@ -28,6 +28,9 @@ type Props = {
   onReorderSlotDrop?: (draggedReorderId: string, targetSeed: number) => void
   reordering?: boolean
   showChampion?: boolean
+  selectedWinnerByBout?: Record<number, string>
+  onSelectWinner?: (boutNumber: number, competitorId: string) => void
+  championName?: string | null
   className?: string
 }
 
@@ -40,6 +43,9 @@ function SlotRow({
   onHighlightCompetitor,
   onReorderSlotDrop,
   reordering,
+  boutNumber,
+  selectedWinnerId,
+  onSelectWinner,
 }: {
   slot: BracketSlotDisplay
   position: "top" | "bottom"
@@ -49,11 +55,15 @@ function SlotRow({
   onHighlightCompetitor?: (id: string | null) => void
   onReorderSlotDrop?: (draggedReorderId: string, targetSeed: number) => void
   reordering?: boolean
+  boutNumber?: number
+  selectedWinnerId?: string | null
+  onSelectWinner?: (boutNumber: number, competitorId: string) => void
 }) {
   const isOpen = slot.isOpen === true
   const active = !isOpen && slot.competitorId != null && highlightedCompetitorId === slot.competitorId
   const canDrag = !isOpen && Boolean(slot.reorderId) && !reordering
   const canDrop = Boolean(slot.seed) && Boolean(onReorderSlotDrop) && !reordering
+  const selectedWinner = !isOpen && slot.competitorId != null && selectedWinnerId === slot.competitorId
 
   const inner = (
     <>
@@ -91,19 +101,21 @@ function SlotRow({
           style={{ border: `1px solid ${theme.slotBorder}` }}
         />
       ) : null}
+      {selectedWinner ? <span className="shrink-0 text-sm font-black text-emerald-400">✓</span> : null}
     </>
   )
 
   const style = {
     height: slotHeight,
-    background: active ? theme.highlight : "transparent",
-    borderBottomColor: active ? "rgba(204,0,0,0.45)" : theme.slotBorder,
+    background: selectedWinner ? "rgba(16,185,129,0.16)" : active ? theme.highlight : "transparent",
+    borderBottomColor: selectedWinner ? "rgba(52,211,153,0.5)" : active ? "rgba(204,0,0,0.45)" : theme.slotBorder,
   }
 
   const className = cn(
     "flex w-full items-center gap-2 px-2.5 border-0 border-b",
     position === "top" ? "" : "border-b-0",
     !isOpen && onHighlightCompetitor && slot.competitorId && "cursor-pointer hover:brightness-110",
+    !isOpen && onSelectWinner && slot.competitorId && boutNumber != null && "cursor-pointer hover:brightness-110",
     canDrag && "cursor-move",
     canDrop && "data-[drag-over=true]:bg-[#CC0000]/15 data-[drag-over=true]:brightness-110",
   )
@@ -136,13 +148,16 @@ function SlotRow({
       }
     : {}
 
-  if (!isOpen && onHighlightCompetitor && slot.competitorId) {
+  if (!isOpen && slot.competitorId && (onHighlightCompetitor || (onSelectWinner && boutNumber != null))) {
     return (
       <button
         type="button"
         className={className}
         style={style}
-        onClick={() => onHighlightCompetitor(active ? null : slot.competitorId!)}
+        onClick={() => {
+          if (onSelectWinner && boutNumber != null) onSelectWinner(boutNumber, slot.competitorId!)
+          else onHighlightCompetitor?.(active ? null : slot.competitorId!)
+        }}
         {...dragProps}
       >
         {inner}
@@ -169,6 +184,9 @@ export function BracketTree({
   onReorderSlotDrop,
   reordering = false,
   showChampion = true,
+  selectedWinnerByBout,
+  onSelectWinner,
+  championName,
   className,
 }: Props) {
   const theme = { ...DEFAULT_THEME, ...themeProp }
@@ -241,6 +259,9 @@ export function BracketTree({
               onHighlightCompetitor={onHighlightCompetitor}
               onReorderSlotDrop={match.roundIndex === 0 ? onReorderSlotDrop : undefined}
               reordering={reordering}
+              boutNumber={match.boutNumber}
+              selectedWinnerId={match.boutNumber != null ? selectedWinnerByBout?.[match.boutNumber] : null}
+              onSelectWinner={onSelectWinner}
             />
             <SlotRow
               slot={match.bottom}
@@ -251,6 +272,9 @@ export function BracketTree({
               onHighlightCompetitor={onHighlightCompetitor}
               onReorderSlotDrop={match.roundIndex === 0 ? onReorderSlotDrop : undefined}
               reordering={reordering}
+              boutNumber={match.boutNumber}
+              selectedWinnerId={match.boutNumber != null ? selectedWinnerByBout?.[match.boutNumber] : null}
+              onSelectWinner={onSelectWinner}
             />
           </div>
         ))}
@@ -270,7 +294,7 @@ export function BracketTree({
             >
               <span className="text-xs font-semibold uppercase tracking-wide text-[#CC0000]">Champ</span>
               <span className="text-[10px] mt-1" style={{ color: theme.slotOpenText }}>
-                TBD
+                {championName ?? "TBD"}
               </span>
             </div>
           )

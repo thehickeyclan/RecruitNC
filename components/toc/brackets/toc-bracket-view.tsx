@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import Image from "next/image"
 import { HardLink } from "@/components/hard-link"
 import { BracketTree } from "@/components/bracket/bracket-tree"
@@ -8,9 +8,10 @@ import { TocPatrioticBar, tocDisplayClass, tocMobileCtaClass } from "@/component
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 import { isPlaceholderParticipant } from "@/lib/toc/eight-man-de-bracket"
 import type { TocBracketDraw } from "@/lib/toc/bracket-types"
+import { buildSimulatedTocDraw, updateSimulationPick, type TocSimulationPicks } from "@/lib/toc/bracket-simulation"
 import { tocDrawToConsolationBracketTree, tocDrawToWinnersBracketTree } from "@/lib/toc/to-bracket-display"
 import { cn } from "@/lib/utils"
-import { Share2 } from "lucide-react"
+import { RotateCcw, Share2 } from "lucide-react"
 
 type Props = {
   draw: TocBracketDraw
@@ -58,8 +59,27 @@ function AthleteAvatar({ name, photoUrl, seed }: { name: string; photoUrl: strin
 export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], source = "live", workspace = "official", onDrawUpdated }: Props) {
   const [highlightedAthleteId, setHighlightedAthleteId] = useState<string | null>(null)
   const [reordering, setReordering] = useState(false)
-  const winnersTree = useMemo(() => tocDrawToWinnersBracketTree(draw), [draw])
-  const consolationTree = useMemo(() => tocDrawToConsolationBracketTree(draw), [draw])
+  const [simulationEnabled, setSimulationEnabled] = useState(false)
+  const [simulationPicks, setSimulationPicks] = useState<TocSimulationPicks>({})
+  const displayedDraw = useMemo(
+    () => (simulationEnabled ? buildSimulatedTocDraw(draw, simulationPicks) : draw),
+    [draw, simulationEnabled, simulationPicks],
+  )
+  const winnersTree = useMemo(() => tocDrawToWinnersBracketTree(displayedDraw), [displayedDraw])
+  const consolationTree = useMemo(() => tocDrawToConsolationBracketTree(displayedDraw), [displayedDraw])
+  const championName = useMemo(() => {
+    const championId = simulationPicks[11]
+    return championId ? draw.participants.find((participant) => participant.athleteId === championId)?.name ?? null : null
+  }, [draw.participants, simulationPicks])
+
+  useEffect(() => {
+    setSimulationEnabled(false)
+    setSimulationPicks({})
+  }, [draw.weightClass])
+
+  const selectSimulationWinner = (boutNumber: number, athleteId: string) => {
+    setSimulationPicks((current) => updateSimulationPick(draw, current, boutNumber, athleteId))
+  }
 
   const copyLink = async () => {
     const url = `${window.location.origin}/tournament-of-champions/brackets/${draw.weightClass}`
@@ -218,25 +238,75 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
         </div>
 
         <div>
-          <h2 className={cn("text-2xl sm:text-3xl text-white font-bold mb-2", tocDisplayClass())}>
-            Bracket · {draw.weightClass} lbs
-          </h2>
-          <p className="text-sm text-white/45 mb-4">Winners bracket — scroll horizontally on mobile.</p>
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className={cn("text-2xl sm:text-3xl text-white font-bold mb-2", tocDisplayClass())}>
+                Bracket · {draw.weightClass} lbs
+              </h2>
+              <p className="text-sm text-white/45">
+                {simulationEnabled
+                  ? "Simulation mode — select a wrestler in each bout to advance the winner and feed the loser into consolation."
+                  : "Winners bracket — scroll horizontally on mobile."}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {simulationEnabled ? (
+                <button
+                  type="button"
+                  onClick={() => setSimulationPicks({})}
+                  className="inline-flex min-h-10 items-center justify-center rounded-sm border border-white/20 px-4 py-2 text-xs font-semibold text-white/80 hover:border-white/40 hover:text-white"
+                >
+                  <RotateCcw className="mr-2 h-3.5 w-3.5" /> Reset picks
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => {
+                  setSimulationEnabled((enabled) => !enabled)
+                  setSimulationPicks({})
+                }}
+                className={cn(
+                  "inline-flex min-h-10 items-center justify-center rounded-sm px-4 py-2 text-xs font-bold uppercase tracking-wide transition-colors",
+                  simulationEnabled
+                    ? "border border-[#D7B95A] bg-[#D7B95A]/10 text-[#D7B95A] hover:bg-[#D7B95A]/20"
+                    : "bg-[#CC0000] text-white hover:bg-[#a80000]",
+                )}
+              >
+                {simulationEnabled ? "Exit simulation" : "Simulate matchups"}
+              </button>
+            </div>
+          </div>
+          {simulationEnabled ? (
+            <div className="mb-4 rounded-sm border border-[#D7B95A]/40 bg-[#D7B95A]/10 px-4 py-3 text-xs leading-relaxed text-white/80">
+              Private preview only. Your picks stay in this browser view and never change the official bracket. Click a
+              selected winner again to undo that bout; changing an earlier result clears affected later picks.
+            </div>
+          ) : null}
           {reordering ? <p className="text-xs text-[#D7B95A] mb-3">Saving bracket seed order…</p> : null}
           <BracketTree
             tree={winnersTree}
-            highlightedCompetitorId={highlightedAthleteId}
-            onHighlightCompetitor={setHighlightedAthleteId}
-            onReorderSlotDrop={reorderBracketSlot}
+            highlightedCompetitorId={simulationEnabled ? null : highlightedAthleteId}
+            onHighlightCompetitor={simulationEnabled ? undefined : setHighlightedAthleteId}
+            onReorderSlotDrop={simulationEnabled ? undefined : reorderBracketSlot}
             reordering={reordering}
+            selectedWinnerByBout={simulationEnabled ? simulationPicks : undefined}
+            onSelectWinner={simulationEnabled ? selectSimulationWinner : undefined}
+            championName={simulationEnabled ? championName : null}
           />
         </div>
 
         {consolationTree ? (
           <div className="border-t border-white/10 pt-10">
             <h2 className={cn("text-xl sm:text-2xl text-white mb-2", tocDisplayClass())}>Consolation bracket</h2>
-            <p className="text-sm text-white/45 mb-4">Back-side bracket — names fill in as results are recorded.</p>
-            <BracketTree tree={consolationTree} showChampion={false} />
+            <p className="text-sm text-white/45 mb-4">
+              {simulationEnabled ? "Back-side matchups update automatically from your simulated results." : "Back-side bracket — names fill in as results are recorded."}
+            </p>
+            <BracketTree
+              tree={consolationTree}
+              showChampion={false}
+              selectedWinnerByBout={simulationEnabled ? simulationPicks : undefined}
+              onSelectWinner={simulationEnabled ? selectSimulationWinner : undefined}
+            />
           </div>
         ) : null}
       </section>
