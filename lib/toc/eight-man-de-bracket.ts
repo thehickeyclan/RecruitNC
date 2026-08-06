@@ -91,9 +91,20 @@ function buildEightManDeBouts(weightClass: number, bySeed: Map<number, TocBracke
 }
 
 /** 16-slot true double-elimination flow used only when a weight has 9–12 wrestlers. */
-function buildSixteenSlotDeBouts(weightClass: number, bySeed: Map<number, TocBracketParticipant>): TocBracketBout[] {
+function buildSixteenSlotDeBouts(
+  weightClass: number,
+  bySeed: Map<number, TocBracketParticipant>,
+  fieldSize: number,
+): TocBracketBout[] {
   const r1 = standardSeedPairs(16).map((pair, index) =>
-    bout(weightClass, index + 1, "Round of 16", "winners", byeSeedSlot(bySeed, pair[0]), byeSeedSlot(bySeed, pair[1])),
+    bout(
+      weightClass,
+      index + 1,
+      "Round of 16",
+      "winners",
+      pair[0] <= fieldSize ? seedSlot(bySeed, pair[0]) : byeSeedSlot(bySeed, pair[0]),
+      pair[1] <= fieldSize ? seedSlot(bySeed, pair[1]) : byeSeedSlot(bySeed, pair[1]),
+    ),
   )
 
   return [
@@ -159,6 +170,7 @@ export function buildEightManDeDraw(
   weightClass: number,
   seededParticipants: TocBracketParticipant[],
   lockedAt: string,
+  requestedFieldSize?: 8 | 10 | 12,
 ): TocBracketDraw {
   const publishError = validatePartialBracketPublish(seededParticipants)
   if (publishError) throw new Error(publishError)
@@ -167,7 +179,8 @@ export function buildEightManDeDraw(
   const bySeed = new Map<number, TocBracketParticipant>()
   for (const p of real) bySeed.set(p.seed, p)
 
-  const bracketSize = real.length > 8 ? 16 : 8
+  const fieldSize = Math.max(real.length, requestedFieldSize ?? real.length)
+  const bracketSize = fieldSize > 8 ? 16 : 8
   const participants = Array.from({ length: bracketSize }, (_, i) => {
     const seed = i + 1
     return bySeed.get(seed) ?? placeholderParticipant(weightClass, seed)
@@ -179,12 +192,13 @@ export function buildEightManDeDraw(
     weightClass,
     format: bracketSize === 16 ? "16-slot-de" : "8-man-de",
     bracketSize,
+    previewFieldSize: requestedFieldSize,
     lockedAt,
     confirmedCount: real.length,
-    openSpots: Math.max(0, (bracketSize === 8 ? 8 : TOC_MAX_CONFIRMED_PER_WEIGHT) - real.length),
-    isComplete,
+    openSpots: Math.max(0, (requestedFieldSize ?? (bracketSize === 8 ? 8 : TOC_MAX_CONFIRMED_PER_WEIGHT)) - real.length),
+    isComplete: requestedFieldSize == null ? isComplete : real.length === requestedFieldSize && isComplete,
     participants,
-    bouts: bracketSize === 16 ? buildSixteenSlotDeBouts(weightClass, bySeed) : buildEightManDeBouts(weightClass, bySeed),
+    bouts: bracketSize === 16 ? buildSixteenSlotDeBouts(weightClass, bySeed, fieldSize) : buildEightManDeBouts(weightClass, bySeed),
   }
 }
 

@@ -6,7 +6,7 @@ import { HardLink } from "@/components/hard-link"
 import { BracketTree } from "@/components/bracket/bracket-tree"
 import { TocPatrioticBar, tocDisplayClass, tocMobileCtaClass } from "@/components/toc/toc-theme"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
-import { isPlaceholderParticipant } from "@/lib/toc/eight-man-de-bracket"
+import { buildEightManDeDraw, isPlaceholderParticipant } from "@/lib/toc/eight-man-de-bracket"
 import type { TocBracketDraw } from "@/lib/toc/bracket-types"
 import { buildSimulatedTocDraw, updateSimulationPick, type TocSimulationPicks } from "@/lib/toc/bracket-simulation"
 import { tocDrawToConsolationBracketTree, tocDrawToWinnersBracketTree } from "@/lib/toc/to-bracket-display"
@@ -61,25 +61,32 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
   const [reordering, setReordering] = useState(false)
   const [simulationEnabled, setSimulationEnabled] = useState(false)
   const [simulationPicks, setSimulationPicks] = useState<TocSimulationPicks>({})
+  const [previewFieldSize, setPreviewFieldSize] = useState<"current" | 10 | 12>("current")
+  const previewDraw = useMemo(() => {
+    if (previewFieldSize === "current") return draw
+    const realParticipants = draw.participants.filter((participant) => !isPlaceholderParticipant(participant))
+    return buildEightManDeDraw(draw.weightClass, realParticipants, draw.lockedAt, previewFieldSize)
+  }, [draw, previewFieldSize])
   const displayedDraw = useMemo(
-    () => (simulationEnabled ? buildSimulatedTocDraw(draw, simulationPicks) : draw),
-    [draw, simulationEnabled, simulationPicks],
+    () => (simulationEnabled ? buildSimulatedTocDraw(previewDraw, simulationPicks) : previewDraw),
+    [previewDraw, simulationEnabled, simulationPicks],
   )
   const winnersTree = useMemo(() => tocDrawToWinnersBracketTree(displayedDraw), [displayedDraw])
   const consolationTree = useMemo(() => tocDrawToConsolationBracketTree(displayedDraw), [displayedDraw])
   const championName = useMemo(() => {
-    const championshipBout = draw.bouts.find((bout) => bout.roundLabel === "Championship")
+    const championshipBout = previewDraw.bouts.find((bout) => bout.roundLabel === "Championship")
     const championId = championshipBout ? simulationPicks[championshipBout.boutNumber] : null
-    return championId ? draw.participants.find((participant) => participant.athleteId === championId)?.name ?? null : null
-  }, [draw.participants, simulationPicks])
+    return championId ? previewDraw.participants.find((participant) => participant.athleteId === championId)?.name ?? null : null
+  }, [previewDraw, simulationPicks])
 
   useEffect(() => {
     setSimulationEnabled(false)
     setSimulationPicks({})
+    setPreviewFieldSize("current")
   }, [draw.weightClass])
 
   const selectSimulationWinner = (boutNumber: number, athleteId: string) => {
-    setSimulationPicks((current) => updateSimulationPick(draw, current, boutNumber, athleteId))
+    setSimulationPicks((current) => updateSimulationPick(previewDraw, current, boutNumber, athleteId))
   }
 
   const copyLink = async () => {
@@ -203,9 +210,10 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
         <div>
           <h2 className={cn("text-2xl sm:text-3xl text-white mb-4", tocDisplayClass())}>Seeds</h2>
           <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory">
-            {draw.participants.map((p) => {
+            {previewDraw.participants.map((p) => {
               const open = isPlaceholderParticipant(p)
-              const bye = open && (draw.bracketSize ?? 8) === 16
+              const previewTarget = previewDraw.previewFieldSize ?? previewDraw.confirmedCount
+              const bye = open && (previewDraw.bracketSize ?? 8) === 16 && p.seed > previewTarget
               return (
                 <button
                   key={p.athleteId}
@@ -278,6 +286,41 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
               </button>
             </div>
           </div>
+          <div className="mb-5 rounded-sm border border-white/10 bg-[#0B1D3A] p-3 sm:flex sm:items-center sm:justify-between sm:gap-4">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#D7B95A]">Bracket size preview</p>
+              <p className="mt-1 text-xs text-white/50">Private view only — the field, seeds, and published bracket stay unchanged.</p>
+            </div>
+            <div className="mt-3 inline-flex rounded-md border border-white/15 bg-[#060f1f] p-1 sm:mt-0" role="group" aria-label="Preview bracket size">
+              {(["current", 10, 12] as const).map((size) => {
+                const disabled = size !== "current" && size < draw.confirmedCount
+                const selected = previewFieldSize === size
+                return (
+                  <button
+                    key={size}
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => {
+                      setPreviewFieldSize(size)
+                      setSimulationPicks({})
+                    }}
+                    className={cn(
+                      "rounded px-3 py-2 text-xs font-bold transition-colors",
+                      selected ? "bg-[#D7B95A] text-[#060f1f]" : "text-white/65 hover:bg-white/10 hover:text-white",
+                      disabled && "cursor-not-allowed opacity-30",
+                    )}
+                  >
+                    {size === "current" ? `Current (${draw.confirmedCount})` : `${size} wrestlers`}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+          {previewFieldSize !== "current" ? (
+            <div className="mb-4 rounded-sm border border-sky-300/30 bg-sky-400/10 px-4 py-3 text-xs text-sky-100">
+              Previewing a {previewFieldSize}-wrestler field. Seeds {draw.confirmedCount + 1}–{previewFieldSize} are TBD; remaining 16-slot positions are automatic byes.
+            </div>
+          ) : null}
           {simulationEnabled ? (
             <div className="mb-4 rounded-sm border border-[#D7B95A]/40 bg-[#D7B95A]/10 px-4 py-3 text-xs leading-relaxed text-white/80">
               Private preview only. Your picks stay in this browser view and never change the official bracket. Click a

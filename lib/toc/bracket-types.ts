@@ -33,6 +33,7 @@ export type TocBracketDraw = {
   weightClass: number
   format: "8-man-de" | "16-slot-de"
   bracketSize?: 8 | 16
+  previewFieldSize?: 8 | 10 | 12
   lockedAt: string
   confirmedCount: number
   openSpots: number

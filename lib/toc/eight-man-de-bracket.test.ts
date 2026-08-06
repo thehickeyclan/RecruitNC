@@ -99,4 +99,18 @@ describe("eight-man DE bracket", () => {
     expect(tocDrawToWinnersBracketTree(draw).rounds.map((round) => round.length)).toEqual([8, 4, 2, 1])
     expect(tocDrawToConsolationBracketTree(draw)?.rounds.map((round) => round.length)).toEqual([4, 4, 2, 2, 1])
   })
+
+  it("previews a 12-wrestler bracket without changing an eight-wrestler field", () => {
+    const draw = buildEightManDeDraw(149, mockParticipants(), new Date().toISOString(), 12)
+    const bout = (number: number) => draw.bouts.find((item) => item.boutNumber === number)
+
+    expect(draw.bracketSize).toBe(16)
+    expect(draw.previewFieldSize).toBe(12)
+    expect(draw.confirmedCount).toBe(8)
+    expect(draw.openSpots).toBe(4)
+    expect(draw.isComplete).toBe(false)
+    expect(bout(2)?.bottom).toEqual({ kind: "empty", label: "Seed 9 · Open" })
+    expect(bout(3)?.bottom).toEqual({ kind: "empty", label: "Seed 13 · Bye" })
+    expect(bout(4)?.bottom).toEqual({ kind: "empty", label: "Seed 12 · Open" })
+  })
 })
