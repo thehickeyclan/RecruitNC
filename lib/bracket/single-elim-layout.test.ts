@@ -4,6 +4,7 @@ import {
   buildSingleElimTreeFromSeeds,
   layoutSingleElimBracket,
   matchCenterY,
+  standardSeedPairs,
   totalBracketHeight,
 } from "@/lib/bracket/single-elim-layout"
 
@@ -73,5 +74,12 @@ describe("single-elim bracket layout", () => {
     const layout = layoutSingleElimBracket(tree)
     expect(layout.matches).toHaveLength(15)
     expect(totalBracketHeight(16, 36, 12)).toBeGreaterThan(totalBracketHeight(8, 36, 12))
+  })
+
+  it("uses the approved 16-man championship seed line", () => {
+    expect(standardSeedPairs(16)).toEqual([
+      [1, 16], [9, 8], [5, 12], [13, 4],
+      [3, 14], [6, 11], [7, 10], [15, 2],
+    ])
   })
 })

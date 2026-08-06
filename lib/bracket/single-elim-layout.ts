@@ -298,8 +298,8 @@ export function standardSeedPairs(size: BracketSize): Array<[number, number]> {
   // Reorder for standard bracket layout (1-8, 4-5, 3-6, 7-2 pattern extended)
   if (size === 16) {
     return [
-      [1, 16], [8, 9], [4, 13], [5, 12],
-      [2, 15], [7, 10], [3, 14], [6, 11],
+      [1, 16], [9, 8], [5, 12], [13, 4],
+      [3, 14], [6, 11], [7, 10], [15, 2],
     ]
   }
   if (size === 32) {
