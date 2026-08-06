@@ -1,8 +1,23 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { HardLink } from "@/components/hard-link"
-import { Trophy, Users, Mail, Handshake, UserCheck, LayoutGrid, Scale, HandHeart, Newspaper, ClipboardList } from "lucide-react"
+import { Trophy, Users, Mail, Handshake, UserCheck, UserPlus, LayoutGrid, Scale, HandHeart, Newspaper, ClipboardList } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
 
-const LINKS = [
+type CountKey = "nominations" | "sponsors" | "media" | "volunteers" | "email" | "users"
+type DashboardCounts = Record<CountKey, number>
+type DashboardLink = {
+  href: string
+  title: string
+  description: string
+  icon: LucideIcon
+  external?: boolean
+  countKey?: CountKey
+}
+
+const LINKS: DashboardLink[] = [
   {
     href: "/admin/toc/plan",
     title: "Project plan",
@@ -32,30 +47,42 @@ const LINKS = [
     title: "Prospect interest",
     description: "Athlete interest forms — name, weight, school, club",
     icon: Users,
+    countKey: "nominations",
   },
   {
     href: "/admin/toc/sponsors",
     title: "Sponsors",
     description: "Sponsor inquiry pipeline",
     icon: Handshake,
+    countKey: "sponsors",
   },
   {
     href: "/admin/toc/media",
     title: "Media requests",
     description: "Credentials & coverage pipeline",
     icon: Newspaper,
+    countKey: "media",
   },
   {
     href: "/admin/toc/volunteers",
     title: "Volunteers",
     description: "Volunteer interest signups",
     icon: HandHeart,
+    countKey: "volunteers",
   },
   {
     href: "/admin/toc/email",
     title: "Email list",
     description: "Subscribers + CSV export",
     icon: Mail,
+    countKey: "email",
+  },
+  {
+    href: "/admin/users-dashboard",
+    title: "Users",
+    description: "New platform registrations from the last seven days",
+    icon: UserPlus,
+    countKey: "users",
   },
   {
     href: "/tournament-of-champions/brackets",
@@ -73,7 +100,25 @@ const LINKS = [
   },
 ]
 
+const EMPTY_COUNTS: DashboardCounts = { nominations: 0, sponsors: 0, media: 0, volunteers: 0, email: 0, users: 0 }
+
 export default function TocAdminHubPage() {
+  const [counts, setCounts] = useState<DashboardCounts>(EMPTY_COUNTS)
+
+  useEffect(() => {
+    let active = true
+    fetch("/api/admin/toc/dashboard-counts", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Unable to load TOC dashboard counts")
+        return response.json() as Promise<{ counts?: Partial<DashboardCounts> }>
+      })
+      .then((payload) => {
+        if (active) setCounts({ ...EMPTY_COUNTS, ...payload.counts })
+      })
+      .catch((error) => console.error("[RecruitNC] TOC dashboard counts", error))
+    return () => { active = false }
+  }, [])
+
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div>
@@ -81,7 +126,9 @@ export default function TocAdminHubPage() {
         <p className="text-muted-foreground mt-1">Project plan, invitations, field, athlete compare, prospect interest, sponsors, media, volunteers, email list</p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
-        {LINKS.map(({ href, title, description, icon: Icon, external }) => (
+        {LINKS.map(({ href, title, description, icon: Icon, external, countKey }) => {
+          const count = countKey ? counts[countKey] : 0
+          return (
           <Card key={href} className="hover:border-[#002147]/30 transition-colors">
             <CardHeader className="pb-2">
               <div className="flex items-center gap-2">
@@ -97,6 +144,14 @@ export default function TocAdminHubPage() {
                     </HardLink>
                   )}
                 </CardTitle>
+                {count > 0 ? (
+                  <span
+                    className="inline-flex min-w-5 items-center justify-center rounded-full bg-[#B31B1B] px-1.5 py-0.5 text-[11px] font-bold leading-none text-white"
+                    aria-label={`${count} new ${title.toLowerCase()}`}
+                  >
+                    {count > 99 ? "99+" : count}
+                  </span>
+                ) : null}
               </div>
               <CardDescription>{description}</CardDescription>
             </CardHeader>
@@ -112,7 +167,8 @@ export default function TocAdminHubPage() {
               )}
             </CardContent>
           </Card>
-        ))}
+          )
+        })}
       </div>
     </div>
   )
