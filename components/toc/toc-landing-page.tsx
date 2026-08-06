@@ -43,6 +43,7 @@ export function TocLandingPage({ config, confirmedColleges }: Props) {
       <TocHero config={config} confirmedColleges={confirmedColleges} />
       <TocSectionNavSentinel />
       <TocQuickFacts />
+      <TocVenueSection config={config} />
       <TocRoadSection />
       <section className="bg-[#060f1f] pb-8 sm:pb-10">
         <div className="container mx-auto w-full px-4 sm:px-6 max-w-3xl">
@@ -62,7 +63,6 @@ export function TocLandingPage({ config, confirmedColleges }: Props) {
       <TocSupportDonationsSection />
 
       {/* Plan your weekend */}
-      <TocVenueSection config={config} />
       <TocScheduleTable />
       <TocSpectatorsSection />
       <TocOfficialsSection />
