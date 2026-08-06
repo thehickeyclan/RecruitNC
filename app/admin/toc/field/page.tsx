@@ -15,7 +15,11 @@ import {
   buildTocSeedChartText,
   buildTocWeightRosterCsv,
 } from "@/lib/toc/bracket-export"
-import { buildTocCredentialRollup, type TocCredentialRollup } from "@/lib/toc/credential-rollup"
+import {
+  buildTocCredentialRollup,
+  rankTocWeightBrackets,
+  type TocCredentialRollup,
+} from "@/lib/toc/credential-rollup"
 
 function CredentialRollup({
   rollup,
@@ -128,6 +132,7 @@ function AthleteCredentialBadges({ athlete }: { athlete: TocFieldAthlete }) {
 
 function WeightBoardCard({
   board,
+  watchRank,
   onSeedChange,
   onSeedReorder,
   seedSavingId,
@@ -140,6 +145,7 @@ function WeightBoardCard({
   canEditSeeds,
 }: {
   board: TocWeightBoard
+  watchRank?: number
   onSeedChange: (invitationId: string, seed: number | null) => Promise<void>
   onSeedReorder: (weightClass: number, invitationIds: string[]) => Promise<void>
   seedSavingId: string | null
@@ -192,7 +198,24 @@ function WeightBoardCard({
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
           <div>
-            <CardTitle className="text-xl font-black uppercase tracking-wide text-white">{board.weightClass} lbs</CardTitle>
+            <div className="flex flex-wrap items-center gap-2">
+              <CardTitle className="text-xl font-black uppercase tracking-wide text-white">{board.weightClass} lbs</CardTitle>
+              {watchRank ? (
+                <span
+                  className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[9px] font-black uppercase leading-none tracking-[0.06em] ${
+                    watchRank === 1
+                      ? "border-[#D7B95A] bg-[#D7B95A] text-[#060f1f]"
+                      : watchRank <= 3
+                        ? "border-[#D7B95A]/45 bg-[#D7B95A]/10 text-[#D7B95A]"
+                        : "border-white/15 bg-white/5 text-white/55"
+                  }`}
+                  title="Overall bracket ranking based on verified All-American, state championship, state placement, and national-event résumés"
+                >
+                  <Sparkles className="h-2.5 w-2.5" aria-hidden="true" />
+                  #{watchRank} {watchRank === 1 ? "bracket to watch" : "overall résumé"}
+                </span>
+              ) : null}
+            </div>
             <CardDescription className="text-white/50">
               {board.confirmedCount}/{board.maxSlots} confirmed
               {board.invitedCount > 0 ? ` · ${board.invitedCount} pending invite` : ""}
@@ -628,6 +651,10 @@ export default function TocFieldAdminPage() {
     () => buildTocCredentialRollup(board?.weights.flatMap((weight) => weight.athletes) ?? []),
     [board],
   )
+  const bracketWatchRanks = useMemo(() => {
+    const rankings = rankTocWeightBrackets(board?.weights ?? [])
+    return new Map(rankings.map((ranking) => [ranking.weightClass, ranking.rank]))
+  }, [board])
 
   const exportAllCsv = () => {
     if (!board) return
@@ -825,6 +852,7 @@ export default function TocFieldAdminPage() {
           <WeightBoardCard
             key={w.weightClass}
             board={w}
+            watchRank={bracketWatchRanks.get(w.weightClass)}
             onSeedChange={updateSeed}
             onSeedReorder={reorderSeeds}
             seedSavingId={seedSavingId}

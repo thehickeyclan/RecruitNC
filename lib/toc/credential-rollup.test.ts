@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { buildTocCredentialRollup } from "@/lib/toc/credential-rollup"
-import type { TocFieldAthlete, TocSeedEvidence } from "@/lib/toc/field-board"
+import { buildTocCredentialRollup, rankTocWeightBrackets } from "@/lib/toc/credential-rollup"
+import type { TocFieldAthlete, TocSeedEvidence, TocWeightBoard } from "@/lib/toc/field-board"
 
 function athlete(name: string, summary: TocSeedEvidence["summary"]): TocFieldAthlete {
   return {
@@ -15,6 +15,17 @@ function athlete(name: string, summary: TocSeedEvidence["summary"]): TocFieldAth
     invitedAt: null,
     confirmedAt: null,
     seedEvidence: { nchsaa: [], nhsca: [], super32: [], fargo: [], headToHead: [], summary },
+  }
+}
+
+function weight(weightClass: number, athletes: TocFieldAthlete[]): TocWeightBoard {
+  return {
+    weightClass,
+    maxSlots: 8,
+    confirmedCount: athletes.length,
+    invitedCount: 0,
+    openConfirmedSlots: Math.max(0, 8 - athletes.length),
+    athletes,
   }
 }
 
@@ -39,5 +50,20 @@ describe("TOC credential rollup", () => {
       fargoWins: 11,
       fargoLosses: 4,
     })
+  })
+
+  it("ranks bracket résumés with All-Americans and state champions carrying the most weight", () => {
+    const blank = { stateTitles: 0, statePlacements: 0, nhscaAllAmericanFinishes: 0, fargoAllAmericanFinishes: 0, nhscaWins: 0, nhscaLosses: 0, super32Wins: 0, super32Losses: 0, fargoWins: 0, fargoLosses: 0 }
+    const rankings = rankTocWeightBrackets([
+      weight(141, [athlete("State placer", { ...blank, statePlacements: 1, super32Wins: 3, super32Losses: 2 })]),
+      weight(149, [athlete("National AA", { ...blank, stateTitles: 1, statePlacements: 2, nhscaAllAmericanFinishes: 1, nhscaWins: 8, nhscaLosses: 2 })]),
+      weight(157, [athlete("State champ", { ...blank, stateTitles: 1, statePlacements: 1 })]),
+    ])
+
+    expect(rankings.map(({ weightClass, rank }) => ({ weightClass, rank }))).toEqual([
+      { weightClass: 149, rank: 1 },
+      { weightClass: 157, rank: 2 },
+      { weightClass: 141, rank: 3 },
+    ])
   })
 })

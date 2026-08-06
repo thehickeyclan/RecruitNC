@@ -1,4 +1,4 @@
-import type { TocFieldAthlete } from "@/lib/toc/field-board"
+import type { TocFieldAthlete, TocWeightBoard } from "@/lib/toc/field-board"
 
 export type TocCredentialRollup = {
   athleteCount: number
@@ -14,6 +14,12 @@ export type TocCredentialRollup = {
   super32Losses: number
   fargoWins: number
   fargoLosses: number
+}
+
+export type TocBracketWatchRanking = {
+  weightClass: number
+  rank: number
+  score: number
 }
 
 export function buildTocCredentialRollup(athletes: TocFieldAthlete[]): TocCredentialRollup {
@@ -52,4 +58,32 @@ export function buildTocCredentialRollup(athletes: TocFieldAthlete[]): TocCreden
   }
 
   return rollup
+}
+
+/** Rank populated brackets by the strength and depth of their verified résumés. */
+export function rankTocWeightBrackets(weights: TocWeightBoard[]): TocBracketWatchRanking[] {
+  const scored = weights.flatMap((weight) => {
+    const rollup = buildTocCredentialRollup(weight.athletes)
+    if (rollup.athleteCount === 0) return []
+
+    const nationalWins = rollup.nhscaWins + rollup.super32Wins + rollup.fargoWins
+    const nationalLosses = rollup.nhscaLosses + rollup.super32Losses + rollup.fargoLosses
+    const nationalMatches = nationalWins + nationalLosses
+    const nationalWinRate = nationalMatches > 0 ? nationalWins / nationalMatches : 0
+    const score =
+      rollup.allAmericanAthletes * 32 +
+      rollup.allAmericanFinishes * 10 +
+      rollup.stateChampionAthletes * 22 +
+      rollup.stateTitles * 7 +
+      rollup.statePlacerAthletes * 8 +
+      rollup.statePlacements * 3 +
+      nationalWins * 1.25 +
+      nationalWinRate * 8
+
+    return [{ weightClass: weight.weightClass, score: Math.round(score * 10) / 10 }]
+  })
+
+  return scored
+    .sort((a, b) => b.score - a.score || a.weightClass - b.weightClass)
+    .map((entry, index) => ({ ...entry, rank: index + 1 }))
 }
