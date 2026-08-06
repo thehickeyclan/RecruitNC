@@ -80,6 +80,52 @@ function downloadText(filename: string, content: string, mime = "text/plain;char
   URL.revokeObjectURL(url)
 }
 
+function AthleteCredentialBadges({ athlete }: { athlete: TocFieldAthlete }) {
+  const summary = athlete.seedEvidence?.summary
+  if (!summary) return null
+
+  const allAmericanFinishes = summary.nhscaAllAmericanFinishes + summary.fargoAllAmericanFinishes
+  const badges = [
+    summary.stateTitles > 0
+      ? {
+          label: "State Champ",
+          title: `${summary.stateTitles} state championship${summary.stateTitles === 1 ? "" : "s"}`,
+          className: "border-[#D7B95A]/55 bg-[#D7B95A] text-[#060f1f]",
+        }
+      : null,
+    summary.statePlacements > 0
+      ? {
+          label: "State Placer",
+          title: `${summary.statePlacements} state placement${summary.statePlacements === 1 ? "" : "s"}`,
+          className: "border-sky-300/45 bg-sky-400/15 text-sky-200",
+        }
+      : null,
+    allAmericanFinishes > 0
+      ? {
+          label: "All-American",
+          title: `${allAmericanFinishes} NHSCA/Fargo freestyle All-American finish${allAmericanFinishes === 1 ? "" : "es"}`,
+          className: "border-[#CC0000]/55 bg-[#CC0000]/20 text-red-200",
+        }
+      : null,
+  ].filter((badge): badge is NonNullable<typeof badge> => badge !== null)
+
+  if (badges.length === 0) return null
+
+  return (
+    <div className="mt-1.5 flex flex-wrap gap-1" aria-label={`${athlete.name} credentials`}>
+      {badges.map((badge) => (
+        <span
+          key={badge.label}
+          title={badge.title}
+          className={`inline-flex items-center rounded border px-1.5 py-0.5 text-[9px] font-black uppercase leading-none tracking-[0.04em] ${badge.className}`}
+        >
+          {badge.label}
+        </span>
+      ))}
+    </div>
+  )
+}
+
 function WeightBoardCard({
   board,
   onSeedChange,
@@ -223,6 +269,7 @@ function WeightBoardCard({
                       <div className="min-w-[11rem] flex-1">
                         <p className="break-words font-semibold leading-tight text-white">{a.name}</p>
                         <p className="mt-0.5 break-words text-xs leading-tight text-white/45">{a.school ?? "—"}</p>
+                        <AthleteCredentialBadges athlete={a} />
                       </div>
                       {a.seedEvidence ? (
                         <button
@@ -239,6 +286,54 @@ function WeightBoardCard({
 
                     {a.seedEvidence && expandedEvidenceId === a.invitationId ? (
                       <div className="mt-3 space-y-3 rounded-lg border border-white/10 bg-[#060f1f] p-3">
+                            {a.aiSeed != null ? (
+                              <div className="rounded-md border border-violet-400/25 bg-violet-400/10 p-2.5">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-violet-200">
+                                      <Sparkles className="h-3 w-3" aria-hidden="true" />
+                                      AI recommendation
+                                    </span>
+                                    <span className="rounded bg-violet-300 px-1.5 py-0.5 text-xs font-black text-[#160d2b]">
+                                      #{a.aiSeed}
+                                    </span>
+                                    {a.aiSeedConfidence ? (
+                                      <span className="text-[10px] font-semibold text-violet-100/70">
+                                        {a.aiSeedConfidence} confidence
+                                      </span>
+                                    ) : null}
+                                  </div>
+                                  <span className="text-[9px] font-semibold uppercase tracking-wide text-white/35">
+                                    Advisory only
+                                  </span>
+                                </div>
+
+                                {a.seed == null ? (
+                                  <p className="mt-2 text-[10px] font-semibold text-amber-200">No manual seed assigned yet.</p>
+                                ) : a.seed !== a.aiSeed ? (
+                                  <p className="mt-2 text-[10px] font-semibold text-amber-200">
+                                    Review: current manual seed is #{a.seed}.
+                                  </p>
+                                ) : (
+                                  <p className="mt-2 text-[10px] font-semibold text-emerald-200">Matches the current manual seed.</p>
+                                )}
+
+                                {a.aiSeedReasons?.length ? (
+                                  <ul className="mt-2 space-y-1 text-xs leading-snug text-violet-50/80">
+                                    {a.aiSeedReasons.slice(0, 3).map((reason) => (
+                                      <li key={reason}>• {reason}</li>
+                                    ))}
+                                  </ul>
+                                ) : null}
+
+                                {a.aiSeedWarnings?.[0] ? (
+                                  <p className="mt-2 border-t border-violet-200/10 pt-2 text-[10px] leading-snug text-amber-100/70">
+                                    Data note: {a.aiSeedWarnings[0]}
+                                  </p>
+                                ) : null}
+                              </div>
+                            ) : null}
+
                             {a.seedEvidence?.headToHead.length ? (
                               <div className="rounded-md border border-emerald-400/25 bg-emerald-400/10 p-2.5">
                                 <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-300">In-bracket head-to-head</p>
