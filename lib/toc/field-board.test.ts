@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { buildTocFieldBoard } from "@/lib/toc/field-board"
+import { applyTocSeedOrder, buildTocFieldBoard } from "@/lib/toc/field-board"
 import { buildTocSeedChartText, buildTocWeightRosterCsv } from "@/lib/toc/bracket-export"
 
 describe("buildTocFieldBoard", () => {
@@ -35,6 +35,29 @@ describe("buildTocFieldBoard", () => {
     expect(w174?.openConfirmedSlots).toBe(7)
     expect(board.summary.totalConfirmed).toBe(1)
     expect(board.summary.totalInvited).toBe(1)
+  })
+
+  it("applies an optimistic seed order without rebuilding the field", () => {
+    const invitations = [1, 2, 3].map((seed) => ({
+      id: `00000000-0000-4000-8000-00000000000${seed}`,
+      athlete_id: `a${seed}`,
+      weight_class: 149,
+      status: "confirmed" as const,
+      seed,
+      jacket_size: null,
+      invited_at: null,
+      confirmed_at: null,
+      athletes: { id: `a${seed}`, name: `Wrestler ${seed}`, highschool: "HS", graduationyear: 2027 },
+    }))
+    const board = buildTocFieldBoard(invitations)
+    const reordered = applyTocSeedOrder(board, 149, [invitations[2].id, invitations[0].id, invitations[1].id])
+    const athletes = reordered.weights.find((weight) => weight.weightClass === 149)!.athletes
+
+    expect(athletes.map((athlete) => [athlete.name, athlete.seed])).toEqual([
+      ["Wrestler 3", 1],
+      ["Wrestler 1", 2],
+      ["Wrestler 2", 3],
+    ])
   })
 })
 

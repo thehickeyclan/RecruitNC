@@ -61,6 +61,33 @@ export type TocFieldBoard = {
   summary: TocFieldBoardSummary
 }
 
+/** Apply a complete confirmed-athlete seed order locally for optimistic drag/drop updates. */
+export function applyTocSeedOrder(
+  board: TocFieldBoard,
+  weightClass: number,
+  invitationIds: string[],
+): TocFieldBoard {
+  const seedByInvitationId = new Map(invitationIds.map((id, index) => [id, index + 1]))
+
+  return {
+    ...board,
+    weights: board.weights.map((weight) => {
+      if (weight.weightClass !== weightClass) return weight
+
+      const updated = weight.athletes.map((athlete) => {
+        const seed = seedByInvitationId.get(athlete.invitationId)
+        return seed == null ? athlete : { ...athlete, seed }
+      })
+      const confirmed = updated
+        .filter((athlete) => athlete.status === "confirmed")
+        .sort((a, b) => (a.seed ?? Number.MAX_SAFE_INTEGER) - (b.seed ?? Number.MAX_SAFE_INTEGER))
+      const remaining = updated.filter((athlete) => athlete.status !== "confirmed")
+
+      return { ...weight, athletes: [...confirmed, ...remaining] }
+    }),
+  }
+}
+
 type RawInvitation = {
   id: string
   athlete_id: string

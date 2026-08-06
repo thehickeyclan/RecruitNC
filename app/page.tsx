@@ -8,7 +8,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, TrendingUp } from "lucide-react"
+import { ArrowRight, MapPin, TrendingUp } from "lucide-react"
 import { ProfessionalCommitmentCard } from "@/components/professional-commitment-card"
 import { normalizeAthleteList } from "@/lib/professional-athlete"
 import { StoreProductPromotion } from "@/components/store-product-promotion"
@@ -186,6 +186,14 @@ export default async function HomePage() {
                 </Button>
               </Link>
             </div>
+            <Link
+              href="/clubs"
+              className="mt-4 inline-flex min-h-9 items-center gap-2 rounded-full border border-rnc-gold/55 bg-rnc-ink/65 px-4 py-2 text-sm font-semibold text-white/85 shadow-lg backdrop-blur-sm transition-colors hover:border-rnc-gold hover:bg-rnc-gold/10 hover:text-rnc-gold"
+            >
+              <MapPin className="h-4 w-4 text-rnc-gold" aria-hidden="true" />
+              Find a Wrestling Club
+              <ArrowRight className="h-3.5 w-3.5 text-rnc-gold" aria-hidden="true" />
+            </Link>
 
             <div className="mt-7 max-w-xl rounded-xl border border-rnc-gold/35 bg-rnc-ink/80 p-4 shadow-xl backdrop-blur-sm sm:flex sm:items-center sm:justify-between sm:gap-5">
               <div>

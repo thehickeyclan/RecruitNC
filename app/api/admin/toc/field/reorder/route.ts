@@ -89,16 +89,18 @@ export async function PATCH(request: Request) {
           .filter((row): row is { id: string; seed: number } => row != null)
       : invitationIds.map((id, index) => ({ id, seed: index + 1 }))
 
-    for (const assignment of assignments) {
-      const { error: updateError } = await admin
-        .from("toc_invitations")
-        .update({ seed: assignment.seed, updated_at: now })
-        .eq("id", assignment.id)
-
-      if (updateError) {
-        console.error("[admin/toc/field/reorder] update", updateError)
-        return NextResponse.json({ error: updateError.message }, { status: 500 })
-      }
+    const updateResults = await Promise.all(
+      assignments.map((assignment) =>
+        admin
+          .from("toc_invitations")
+          .update({ seed: assignment.seed, updated_at: now })
+          .eq("id", assignment.id),
+      ),
+    )
+    const failedUpdate = updateResults.find((result) => result.error)
+    if (failedUpdate?.error) {
+      console.error("[admin/toc/field/reorder] update", failedUpdate.error)
+      return NextResponse.json({ error: failedUpdate.error.message }, { status: 500 })
     }
 
     return NextResponse.json({

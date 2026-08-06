@@ -7,9 +7,9 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { HardLink } from "@/components/hard-link"
-import { ArrowLeft, ChevronDown, ChevronUp, Download, ExternalLink, GripVertical, Loader2, Lock, RefreshCw, Sparkles, Unlock } from "lucide-react"
+import { ArrowLeft, Check, ChevronDown, ChevronUp, Download, ExternalLink, GripVertical, Loader2, Lock, RefreshCw, Sparkles, Unlock } from "lucide-react"
 import { TOC_MAX_CONFIRMED_PER_WEIGHT } from "@/lib/toc/invitations"
-import type { TocFieldBoard, TocFieldAthlete, TocWeightBoard } from "@/lib/toc/field-board"
+import { applyTocSeedOrder, type TocFieldBoard, type TocFieldAthlete, type TocWeightBoard } from "@/lib/toc/field-board"
 import {
   buildTocAllWeightsRosterCsv,
   buildTocSeedChartText,
@@ -137,6 +137,7 @@ function WeightBoardCard({
   onSeedReorder,
   seedSavingId,
   seedSavingWeight,
+  seedSavedWeight,
   bracketStatus,
   onLockDraw,
   onUnlockDraw,
@@ -150,6 +151,7 @@ function WeightBoardCard({
   onSeedReorder: (weightClass: number, invitationIds: string[]) => Promise<void>
   seedSavingId: string | null
   seedSavingWeight: number | null
+  seedSavedWeight: number | null
   bracketStatus?: {
     locked: boolean
     readyToLock: boolean
@@ -221,6 +223,15 @@ function WeightBoardCard({
               {board.invitedCount > 0 ? ` · ${board.invitedCount} pending invite` : ""}
               {board.openConfirmedSlots > 0 ? ` · ${board.openConfirmedSlots} open` : " · full"}
             </CardDescription>
+            {isReordering ? (
+              <p className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-[#D7B95A]" aria-live="polite">
+                <Loader2 className="h-3 w-3 animate-spin" /> Saving seed order…
+              </p>
+            ) : seedSavedWeight === board.weightClass ? (
+              <p className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-300" aria-live="polite">
+                <Check className="h-3 w-3" /> Seed order saved
+              </p>
+            ) : null}
           </div>
           <div className="flex gap-1 shrink-0">
             <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-white/60 hover:bg-white/10 hover:text-white" onClick={exportCsv} title="Export CSV">
@@ -265,13 +276,13 @@ function WeightBoardCard({
                   setDraggingId(null)
                   setDragOverId(null)
                 }}
-                className={`rounded-lg border border-white/10 bg-[#081426] px-3 py-3 text-sm transition-colors ${
-                  canEditSeeds && a.status === "confirmed" ? "cursor-move" : ""
+                className={`relative rounded-lg border border-white/10 bg-[#081426] px-3 py-3 text-sm transition-all duration-150 ${
+                  canEditSeeds && a.status === "confirmed" ? "cursor-grab active:cursor-grabbing" : ""
                 } ${
                   dragOverId === a.invitationId
-                    ? "border-[#CC0000] bg-[#CC0000]/10"
+                    ? "translate-y-0.5 border-[#D7B95A] bg-[#D7B95A]/10 shadow-lg shadow-black/20"
                     : draggingId === a.invitationId
-                      ? "border-[#D7B95A]/40 bg-[#D7B95A]/5 opacity-70"
+                      ? "scale-[0.99] border-[#D7B95A]/40 bg-[#D7B95A]/5 opacity-55"
                       : ""
                 }`}
                 title={canEditSeeds && a.status === "confirmed" ? `Drag to change ${canManage ? "official" : "your private"} seed order` : undefined}
@@ -522,6 +533,7 @@ export default function TocFieldAdminPage() {
   const [error, setError] = useState<string | null>(null)
   const [seedSavingId, setSeedSavingId] = useState<string | null>(null)
   const [seedSavingWeight, setSeedSavingWeight] = useState<number | null>(null)
+  const [seedSavedWeight, setSeedSavedWeight] = useState<number | null>(null)
   const [filter, setFilter] = useState<"all" | "active">("active")
   const [bracketStatuses, setBracketStatuses] = useState<
     Record<
@@ -625,7 +637,11 @@ export default function TocFieldAdminPage() {
   }
 
   const reorderSeeds = async (weightClass: number, invitationIds: string[]) => {
+    if (!board || seedSavingWeight != null) return
+    const previousBoard = board
+    setBoard(applyTocSeedOrder(board, weightClass, invitationIds))
     setSeedSavingWeight(weightClass)
+    setSeedSavedWeight(null)
     try {
       const res = await fetch(canManage ? "/api/admin/toc/field/reorder" : "/api/admin/toc/personal-seeds", {
         method: "PATCH",
@@ -634,8 +650,11 @@ export default function TocFieldAdminPage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || "Failed to reorder seeds")
-      void load()
+      setSeedSavedWeight(weightClass)
+      void loadBracketStatuses()
+      window.setTimeout(() => setSeedSavedWeight((saved) => (saved === weightClass ? null : saved)), 1800)
     } catch (e) {
+      setBoard(previousBoard)
       alert(e instanceof Error ? e.message : "Failed to reorder seeds")
     } finally {
       setSeedSavingWeight(null)
@@ -857,6 +876,7 @@ export default function TocFieldAdminPage() {
             onSeedReorder={reorderSeeds}
             seedSavingId={seedSavingId}
             seedSavingWeight={seedSavingWeight}
+            seedSavedWeight={seedSavedWeight}
             bracketStatus={bracketStatuses[w.weightClass]}
             onLockDraw={lockDraw}
             onUnlockDraw={unlockDraw}

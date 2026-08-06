@@ -360,6 +360,7 @@ export function Navbar() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              <a href="/clubs" className={navLinkClass("/clubs")}>Clubs</a>
               <DropdownMenu>
                 <DropdownMenuTrigger className={navTriggerClass(eventsNavItemsForActive)}>
                   <Trophy className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
@@ -936,6 +937,7 @@ export function Navbar() {
                       <a href={recruitingItem.href} className={mobileSubLinkClass(recruitingItem.href)} onClick={() => setIsOpen(false)}>{recruitingItem.label}</a>
                     </div>
                   </div>
+                  <a href="/clubs" className={mobileLinkClass("/clubs")} onClick={() => setIsOpen(false)}>Clubs</a>
                   <div className="px-3">
                     <div className={mobileMenuParentClass(isDropdownActive(eventsNavItemsForActive))}>Elite Tournaments</div>
                     <div className="space-y-4">
