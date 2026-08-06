@@ -120,7 +120,6 @@ const ALL_NEWS: NewsItem[] = [
     readTime: "3 min read",
     author: "NC United",
     shareHeroCropOnly: true,
-    shareStoryImage: "/images/news/nc-mat-media-partnership/official-media-partner.png",
     isAnnouncement: true,
   },
   {
