@@ -44,7 +44,7 @@ function CredentialRollup({
     },
     { label: "NHSCA record", value: `${rollup.nhscaWins}-${rollup.nhscaLosses}`, detail: "Combined" },
     { label: "Super 32 record", value: `${rollup.super32Wins}-${rollup.super32Losses}`, detail: "Combined" },
-    { label: "Fargo record", value: `${rollup.fargoWins}-${rollup.fargoLosses}`, detail: "Combined" },
+    { label: "Fargo FS record", value: `${rollup.fargoWins}-${rollup.fargoLosses}`, detail: "Freestyle only" },
   ]
 
   return (
@@ -257,7 +257,7 @@ function WeightBoardCard({
                                 ["NCHSAA", a.seedEvidence?.nchsaa],
                                 ["NHSCA", a.seedEvidence?.nhsca],
                                 ["Super 32", a.seedEvidence?.super32],
-                                ["Fargo", a.seedEvidence?.fargo],
+                                ["Fargo freestyle", a.seedEvidence?.fargo],
                               ] as const).map(([label, rows]) => (
                                 <div key={label}>
                                   <p className="text-[10px] font-bold uppercase tracking-wide text-[#D7B95A]">{label}</p>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { buildTocAiSeedRecommendations } from "@/lib/toc/ai-seeding"
+import { buildTocAiSeedRecommendations, filterFargoFreestyleResults } from "@/lib/toc/ai-seeding"
 import type { TocFieldBoard } from "@/lib/toc/field-board"
 
 function fakeSupabaseWithMatches(rows: unknown[]) {
@@ -20,6 +20,17 @@ function fakeSupabaseWithMatches(rows: unknown[]) {
 }
 
 describe("buildTocAiSeedRecommendations", () => {
+  it("excludes Fargo Greco-Roman rows from seeding evidence", () => {
+    expect(filterFargoFreestyleResults([
+      { year: 2026, placement: "", record: "5-2", weight: "113", division: "Junior Boys Freestyle" },
+      { year: 2026, placement: "", record: "2-2", weight: "113", division: "Junior Boys Greco-Roman" },
+      { year: 2025, placement: "", record: "4-2", weight: "100", division: "16U" },
+    ])).toEqual([
+      { year: 2026, placement: "", record: "5-2", weight: "113", division: "Junior Boys Freestyle" },
+      { year: 2025, placement: "", record: "4-2", weight: "100", division: "16U" },
+    ])
+  })
+
   it("uses a direct NCHSAA States head-to-head win as a pairwise seed tiebreaker", async () => {
     const board: TocFieldBoard = {
       summary: { totalConfirmed: 2, totalInvited: 0, fullBrackets: 0, partialBrackets: 1 },

@@ -5,6 +5,7 @@ import { loadNcUnitedResultsForNameSearch } from "@/lib/national-team-live-profi
 import { placementPoints, recordWinPctPoints } from "@/lib/toc/athlete-compare"
 import type { TocFieldBoard, TocFieldAthlete, TocSeedEvidence } from "@/lib/toc/field-board"
 import type { TournamentResultForDisplay } from "@/lib/public-profile-data"
+import { parseFargoStyle } from "@/lib/fargo-division"
 
 type MatchBout = {
   date?: string
@@ -231,6 +232,10 @@ function formatNationalEvidence(rows: TournamentResultForDisplay[]): string[] {
     })
 }
 
+export function filterFargoFreestyleResults(rows: TournamentResultForDisplay[]): TournamentResultForDisplay[] {
+  return rows.filter((row) => parseFargoStyle(row.division) === "FS")
+}
+
 function recordTotals(rows: TournamentResultForDisplay[]): { wins: number; losses: number } {
   let wins = 0
   let losses = 0
@@ -359,10 +364,11 @@ async function scoreAthleteForTocSeed({
       })
     evidence.nhsca = formatNationalEvidence(bundle.nhsca || [])
     evidence.super32 = formatNationalEvidence(bundle.super32 || [])
-    evidence.fargo = formatNationalEvidence(bundle.fargo || [])
+    const freestyleFargo = filterFargoFreestyleResults(bundle.fargo || [])
+    evidence.fargo = formatNationalEvidence(freestyleFargo)
     const nhscaRecord = recordTotals(bundle.nhsca || [])
     const super32Record = recordTotals(bundle.super32 || [])
-    const fargoRecord = recordTotals(bundle.fargo || [])
+    const fargoRecord = recordTotals(freestyleFargo)
     evidence.summary = {
       stateTitles: (bundle.nchsaa || []).filter((row) => row.place === 1).length,
       statePlacements: (bundle.nchsaa || []).filter((row) => row.place != null && row.place > 0).length,
@@ -370,7 +376,7 @@ async function scoreAthleteForTocSeed({
         const place = parsePlacementNumber(row.placement)
         return place != null && place <= 8
       }).length,
-      fargoAllAmericanFinishes: (bundle.fargo || []).filter((row) => {
+      fargoAllAmericanFinishes: freestyleFargo.filter((row) => {
         const place = parsePlacementNumber(row.placement)
         return place != null && place <= 8
       }).length,
@@ -397,7 +403,7 @@ async function scoreAthleteForTocSeed({
       warnings.push("No merged NCHSAA placement")
     }
 
-    const nationalRows = [...(bundle.nhsca || []), ...(bundle.super32 || []), ...(bundle.fargo || [])]
+    const nationalRows = [...(bundle.nhsca || []), ...(bundle.super32 || []), ...freestyleFargo]
     let nationalPoints = 0
     for (const row of nationalRows) {
       const place = parsePlacementNumber(row.placement)
