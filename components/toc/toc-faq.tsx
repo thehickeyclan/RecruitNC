@@ -17,7 +17,7 @@ import {
 import { tocTicketsOnSale } from "@/lib/toc/ticket-sale"
 import {
   formatTocRegistrationFee,
-  TOC_CONFIRM_WITHIN_DAYS,
+  registrationPaymentDueDisplay,
   TOC_REGISTRATION_FEE_COVERS,
 } from "@/lib/toc/registration-policy"
 
@@ -72,7 +72,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "What does registration cost?",
-    a: `Invited athletes pay a ${formatTocRegistrationFee()} registration fee during confirmation checkout. That supports tournament entry, ${TOC_REGISTRATION_FEE_COVERS}. Confirm within ${TOC_CONFIRM_WITHIN_DAYS} days of your invite; the spot is locked only after secure card payment is completed.`,
+    a: `Invited athletes pay a ${formatTocRegistrationFee()} registration fee during confirmation checkout. That supports tournament entry, ${TOC_REGISTRATION_FEE_COVERS}. Confirm and complete secure card payment by ${registrationPaymentDueDisplay()}; the spot is locked only after payment is completed.`,
   },
   {
     q: "Can I buy tickets now?",

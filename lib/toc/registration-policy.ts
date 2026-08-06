@@ -2,9 +2,9 @@
 
 export const TOC_REGISTRATION_FEE_USD = 75 as const
 export const TOC_CONFIRM_WITHIN_DAYS = 7 as const
-/** Fixed payment deadline for all invited athletes (Year 1). */
-export const TOC_REGISTRATION_PAYMENT_DUE_ISO = "2026-08-05" as const
-export const TOC_REGISTRATION_PAYMENT_DUE_DISPLAY = "August 5, 2026" as const
+/** Extended confirmation/payment deadline for all current Year 1 invitations. */
+export const TOC_REGISTRATION_PAYMENT_DUE_ISO = "2026-08-11" as const
+export const TOC_REGISTRATION_PAYMENT_DUE_DISPLAY = "August 11, 2026" as const
 
 export const TOC_REGISTRATION_FEE_COVERS =
   "top-three placement awards at each weight and the champion jacket program" as const
@@ -34,7 +34,8 @@ export function confirmDeadlineFromInvitedAt(invitedAt: string | Date): Date {
   const base = typeof invitedAt === "string" ? new Date(invitedAt) : new Date(invitedAt.getTime())
   base.setDate(base.getDate() + TOC_CONFIRM_WITHIN_DAYS)
   base.setHours(23, 59, 59, 999)
-  return base
+  const extendedDeadline = registrationPaymentDueDate()
+  return base.getTime() > extendedDeadline.getTime() ? base : extendedDeadline
 }
 
 export function isConfirmPastDeadline(invitedAt: string | null | undefined, now = new Date()): boolean {
@@ -54,7 +55,7 @@ export function confirmDeadlineMessage(invitedAt: string | null | undefined): st
 /** Invite email / SMS / admin copy. */
 export function tocInviteConfirmLines(): string[] {
   return [
-    `Please confirm within ${TOC_CONFIRM_WITHIN_DAYS} days of this invite. Registration is completed with secure card payment at checkout.`,
+    `Please confirm and complete secure card payment by ${registrationPaymentDueDisplay()}.`,
   ]
 }
 

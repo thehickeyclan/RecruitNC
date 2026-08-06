@@ -2,7 +2,7 @@ import { confirmPageUrl, registrationPayPageUrl } from "@/lib/toc/invitation-ser
 import { firstNameFromAthleteName } from "@/lib/toc/invitations"
 import {
   formatTocRegistrationFee,
-  TOC_CONFIRM_WITHIN_DAYS,
+  registrationPaymentDueDisplay,
 } from "@/lib/toc/registration-policy"
 
 export function buildTocDefaultReminderMessage(params: {
@@ -23,7 +23,7 @@ export function buildTocDefaultReminderMessage(params: {
     return `${firstName} — you're confirmed for Tournament of Champions (${params.weightClass} lbs), but registration payment is still needed to keep the spot locked. Complete the ${formatTocRegistrationFee()} secure checkout here: ${payUrl}`
   }
 
-  return `${firstName} — friendly reminder to confirm your NC United Tournament of Champions invite (${params.weightClass} lbs). Confirm within ${TOC_CONFIRM_WITHIN_DAYS} days; your spot is locked only after the ${formatTocRegistrationFee()} secure checkout is completed: ${confirmUrl}`
+  return `${firstName} — friendly reminder to confirm your NC United Tournament of Champions invite (${params.weightClass} lbs) by ${registrationPaymentDueDisplay()}; your spot is locked only after the ${formatTocRegistrationFee()} secure checkout is completed: ${confirmUrl}`
 }
 
 export function formatRecruitNcSmsBody(message: string): string {

@@ -1,7 +1,7 @@
 import { TOC_EVENT_DATES_DISPLAY, TOC_SATURDAY_COMPETITION_DATE } from "@/lib/toc/constants"
 import { firstNameFromAthleteName } from "@/lib/toc/invitations"
 import {
-  TOC_CONFIRM_WITHIN_DAYS,
+  registrationPaymentDueDisplay,
   tocInviteConfirmLines,
 } from "@/lib/toc/registration-policy"
 import { confirmPageUrl, eventPageUrl } from "@/lib/toc/invitation-service"
@@ -47,7 +47,7 @@ export function buildTocAthleteInviteMessage(payload: {
     "— NC United Wrestling",
   ].join("\n")
 
-  const smsBody = `${firstName} — invited to NC United Tournament of Champions (${payload.weightClass} lbs). ${TOC_EVENT_DATES_DISPLAY}, Apex. Confirm within ${TOC_CONFIRM_WITHIN_DAYS} days: ${confirmUrl}`
+  const smsBody = `${firstName} — invited to NC United Tournament of Champions (${payload.weightClass} lbs). ${TOC_EVENT_DATES_DISPLAY}, Apex. Confirm by ${registrationPaymentDueDisplay()}: ${confirmUrl}`
 
   return { subject, confirmUrl, eventPageUrl: learnMoreUrl, emailBody, smsBody }
 }
