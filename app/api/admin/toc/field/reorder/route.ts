@@ -18,7 +18,9 @@ const reorderSchema = z.object({
     .optional(),
   seedSlots: z
     .array(z.string().uuid().nullable())
-    .length(TOC_MAX_CONFIRMED_PER_WEIGHT, `Seed slots must include all ${TOC_MAX_CONFIRMED_PER_WEIGHT} seeds`)
+    .min(8, "Seed slots must include the bracket positions")
+    .max(16, "Seed slots cannot exceed a 16-slot bracket")
+    .refine((slots) => slots.slice(TOC_MAX_CONFIRMED_PER_WEIGHT).every((id) => id == null), `Seeds above ${TOC_MAX_CONFIRMED_PER_WEIGHT} must remain byes`)
     .optional(),
 })
 

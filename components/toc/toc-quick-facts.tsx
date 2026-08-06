@@ -3,7 +3,7 @@ import { TocPatrioticBar, tocDisplayClass } from "@/components/toc/toc-theme"
 import { TOC_WEIGH_IN } from "@/lib/toc/constants"
 
 const FACTS = [
-  { icon: Lock, label: "Invite only", sub: "88 wrestlers · hand-picked at each weight" },
+  { icon: Lock, label: "Invite only", sub: "Eight-person core · select weights up to 12" },
   { icon: CalendarClock, label: "One weigh-in", sub: `${TOC_WEIGH_IN.time} · no Saturday weigh-in` },
   { icon: Scale, label: "College weights", sub: "Friday weigh-in · flat/no allowance" },
 ]

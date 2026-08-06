@@ -1,7 +1,7 @@
 import { z } from "zod"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 
-export const TOC_MAX_CONFIRMED_PER_WEIGHT = 8 as const
+export const TOC_MAX_CONFIRMED_PER_WEIGHT = 12 as const
 
 export const TOC_JACKET_SIZES = ["AS", "AM", "AL", "AXL", "A2XL", "A3XL"] as const
 

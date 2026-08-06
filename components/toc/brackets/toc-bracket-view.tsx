@@ -68,7 +68,8 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
   const winnersTree = useMemo(() => tocDrawToWinnersBracketTree(displayedDraw), [displayedDraw])
   const consolationTree = useMemo(() => tocDrawToConsolationBracketTree(displayedDraw), [displayedDraw])
   const championName = useMemo(() => {
-    const championId = simulationPicks[11]
+    const championshipBout = draw.bouts.find((bout) => bout.roundLabel === "Championship")
+    const championId = championshipBout ? simulationPicks[championshipBout.boutNumber] : null
     return championId ? draw.participants.find((participant) => participant.athleteId === championId)?.name ?? null : null
   }, [draw.participants, simulationPicks])
 
@@ -92,13 +93,13 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
 
   const reorderBracketSlot = async (draggedInvitationId: string, targetSeed: number) => {
     if (reordering) return
-    const seedSlots = Array.from({ length: 8 }, (_, index) => {
+    const seedSlots = Array.from({ length: draw.bracketSize ?? draw.participants.length }, (_, index) => {
       const participant = draw.participants.find((p) => p.seed === index + 1 && !isPlaceholderParticipant(p))
       return participant?.invitationId ?? null
     })
     const fromIndex = seedSlots.findIndex((id) => id === draggedInvitationId)
     const toIndex = targetSeed - 1
-    if (fromIndex < 0 || toIndex < 0 || toIndex >= seedSlots.length || fromIndex === toIndex) return
+    if (fromIndex < 0 || toIndex < 0 || toIndex >= Math.min(seedSlots.length, 12) || fromIndex === toIndex) return
 
     const nextSlots = [...seedSlots]
     const targetInvitationId = nextSlots[toIndex]
@@ -148,8 +149,8 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
               </h1>
               <p className="mt-3 text-white/70 text-sm sm:text-base max-w-xl">
                 {draw.isComplete
-                  ? "Eight wrestlers. True double elimination. Two mats until the title — then one mat for the champion."
-                  : `${draw.confirmedCount ?? 0} of 8 confirmed — open spots show as TBD until the field is set.`}
+                  ? `${draw.confirmedCount} wrestlers. True double elimination${(draw.bracketSize ?? 8) === 16 ? " with opening-round byes" : ""}. Two mats until the title — then one mat for the champion.`
+                  : `${draw.confirmedCount ?? 0} confirmed — the bracket automatically expands only when the field exceeds eight.`}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -195,7 +196,7 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
         ) : null}
         {!draw.isComplete ? (
           <div className="rounded-sm border border-[#CC0000]/30 bg-[#CC0000]/10 px-4 py-3 text-sm text-white/85">
-            Field building — {draw.confirmedCount ?? 0}/8 wrestlers confirmed. Empty seeds show as TBD in the bracket.
+            Field building — {draw.confirmedCount ?? 0}/12 maximum wrestlers confirmed. Weights with eight or fewer stay on the compact bracket.
           </div>
         ) : null}
 
@@ -204,6 +205,7 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
           <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory">
             {draw.participants.map((p) => {
               const open = isPlaceholderParticipant(p)
+              const bye = open && (draw.bracketSize ?? 8) === 16
               return (
                 <button
                   key={p.athleteId}
@@ -228,9 +230,9 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
                     )}
                   </div>
                   <p className={cn("text-sm text-white leading-tight", !open && tocDisplayClass())}>
-                    {open ? "TBD" : p.name}
+                    {open ? (bye ? "BYE" : "TBD") : p.name}
                   </p>
-                  <p className="text-[11px] text-white/50 mt-1 truncate">{open ? "Open" : p.school ?? "—"}</p>
+                  <p className="text-[11px] text-white/50 mt-1 truncate">{open ? (bye ? "Automatic advance" : "Open") : p.school ?? "—"}</p>
                 </button>
               )
             })}

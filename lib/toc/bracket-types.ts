@@ -1,4 +1,4 @@
-/** Tournament of Champions — 8-man double-elimination bracket draw (Phase 1). */
+/** Tournament of Champions — adaptive 8-person or 16-slot double-elimination draw. */
 
 export type TocBracketParticipant = {
   athleteId: string
@@ -31,7 +31,8 @@ export type TocBracketBout = {
 
 export type TocBracketDraw = {
   weightClass: number
-  format: "8-man-de"
+  format: "8-man-de" | "16-slot-de"
+  bracketSize?: 8 | 16
   lockedAt: string
   confirmedCount: number
   openSpots: number

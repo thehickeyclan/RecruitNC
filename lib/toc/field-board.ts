@@ -159,7 +159,7 @@ export function buildTocFieldBoard(invitations: RawInvitation[]): TocFieldBoard 
     const invitedCount = athletes.filter((a) => a.status === "invited").length
     totalConfirmed += confirmedCount
     totalInvited += invitedCount
-    if (confirmedCount >= TOC_MAX_CONFIRMED_PER_WEIGHT) fullBrackets += 1
+    if (confirmedCount >= 8) fullBrackets += 1
     else if (confirmedCount > 0) partialBrackets += 1
 
     return {

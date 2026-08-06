@@ -37,7 +37,7 @@ describe("buildTocAiSeedRecommendations", () => {
       weights: [
         {
           weightClass: 149,
-          maxSlots: 8,
+          maxSlots: 12,
           confirmedCount: 2,
           invitedCount: 0,
           openConfirmedSlots: 6,

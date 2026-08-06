@@ -1,4 +1,5 @@
 import type { TocFieldAthlete, TocWeightBoard } from "@/lib/toc/field-board"
+import { standardSeedPairs } from "@/lib/bracket/single-elim-layout"
 
 /** Standard 8-person double-elimination first-round pairings by seed (#1 top bookend, #2 bottom). */
 export const TOC_EIGHT_MAN_DE_ROUND1 = [
@@ -75,23 +76,28 @@ export function buildTocSeedChartText(board: TocWeightBoard): string | null {
     if (a.seed != null) bySeed.set(a.seed, a)
   }
 
-  const lines = [`${board.weightClass} lbs — 8-man double elimination`, ""]
+  const bracketSize = confirmed.length > 8 ? 16 : 8
+  const lines = [`${board.weightClass} lbs — ${bracketSize === 16 ? `${confirmed.length}-person / 16-slot` : "8-person"} double elimination`, ""]
 
   for (const a of confirmed) {
     lines.push(`Seed ${a.seed ?? "?"}: ${a.name}${a.school ? ` (${a.school})` : ""}`)
   }
 
-  if (confirmed.length === 8 && [...bySeed.keys()].length === 8) {
-    lines.push("", "Round 1:")
-    for (const m of TOC_EIGHT_MAN_DE_ROUND1) {
+  const hasCompleteSeeds = confirmed.every((athlete, index) => bySeed.has(index + 1))
+  if (confirmed.length >= 8 && confirmed.length <= 12 && hasCompleteSeeds) {
+    lines.push("", bracketSize === 16 ? "Round of 16:" : "Round 1:")
+    const pairs = bracketSize === 16
+      ? standardSeedPairs(16).map(([top, bottom], index) => ({ match: index + 1, top, bottom }))
+      : [...TOC_EIGHT_MAN_DE_ROUND1]
+    for (const m of pairs) {
       const top = bySeed.get(m.top)
       const bottom = bySeed.get(m.bottom)
       lines.push(
-        `  Match ${m.match}: (#${m.top}) ${top?.name ?? "?"} vs (#${m.bottom}) ${bottom?.name ?? "?"}`,
+        `  Match ${m.match}: ${top ? `(#${m.top}) ${top.name}` : "BYE"} vs ${bottom ? `(#${m.bottom}) ${bottom.name}` : "BYE"}`,
       )
     }
   } else {
-    lines.push("", "(Assign seeds 1–8 when the bracket is full to generate Round 1 pairings.)")
+    lines.push("", "(Assign contiguous seeds once at least eight wrestlers are confirmed to generate opening pairings.)")
   }
 
   return lines.join("\n")

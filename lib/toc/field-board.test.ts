@@ -32,7 +32,7 @@ describe("buildTocFieldBoard", () => {
     const w174 = board.weights.find((w) => w.weightClass === 174)
     expect(w174?.confirmedCount).toBe(1)
     expect(w174?.invitedCount).toBe(1)
-    expect(w174?.openConfirmedSlots).toBe(7)
+    expect(w174?.openConfirmedSlots).toBe(11)
     expect(board.summary.totalConfirmed).toBe(1)
     expect(board.summary.totalInvited).toBe(1)
   })

@@ -22,6 +22,9 @@ function resolveSlotAthleteId(
 
   const sourceAthletes = simulationBoutParticipants(draw, picks, source.boutNumber, new Set(resolving).add(source.boutNumber))
   const winner = picks[source.boutNumber]
+  if (sourceAthletes.length === 1) {
+    return /^loser\b/i.test(slot.label) ? null : sourceAthletes[0]
+  }
   if (!winner || !sourceAthletes.includes(winner)) return null
   if (/^loser\b/i.test(slot.label)) return sourceAthletes.find((id) => id !== winner) ?? null
   return winner

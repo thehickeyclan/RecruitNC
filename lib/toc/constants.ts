@@ -529,7 +529,7 @@ export const TOC_SPONSOR_TIERS = [
 export const TOC_SPONSORSHIP = {
   eyebrow: "Sponsorship",
   headline: "North Carolina's #1 wrestling stage",
-  lead: `The Tournament of Champions is invite-only, college-weight, and built for the big stage — not another bracket grind. ${TOC_MATS_LINE} When the best 88 wrestlers in the state converge in Apex, your brand sits on the biggest all-NC tournament of the year by far.`,
+  lead: `The Tournament of Champions is invite-only, college-weight, and built for the big stage — not another bracket grind. ${TOC_MATS_LINE} When the state's elite wrestlers converge in Apex, your brand sits on the biggest all-NC tournament of the year by far.`,
   bullets: [
     "Up to 1,000 fans in the building — families, clubs, and programs from every corner of the state",
     "Live stream and video boards — exposure beyond the arena all weekend long",

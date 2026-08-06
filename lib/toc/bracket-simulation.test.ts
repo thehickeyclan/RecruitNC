@@ -48,4 +48,23 @@ describe("TOC bracket simulation", () => {
       athleteId: "a8",
     })
   })
+
+  it("automatically advances 16-slot byes and routes quarterfinal losers into consolation", () => {
+    const expanded = Array.from({ length: 12 }, (_, index) => ({
+      athleteId: `x${index + 1}`,
+      invitationId: `xi${index + 1}`,
+      seed: index + 1,
+      name: `Expanded ${index + 1}`,
+      school: null,
+      photoUrl: null,
+      graduationYear: 2027,
+    }))
+    const draw = buildEightManDeDraw(149, expanded, "2026-08-06T00:00:00Z")
+    let picks = updateSimulationPick(draw, {}, 2, "x8")
+
+    expect(simulationBoutParticipants(draw, picks, 9)).toEqual(["x1", "x8"])
+    expect(simulationBoutParticipants(draw, picks, 16)).toEqual(["x9"])
+    picks = updateSimulationPick(draw, picks, 9, "x1")
+    expect(simulationBoutParticipants(draw, picks, 20)).toEqual(["x8"])
+  })
 })

@@ -726,7 +726,7 @@ export default function TocFieldAdminPage() {
           <div>
             <h1 className="text-3xl font-black uppercase tracking-wide text-white">Field by weight</h1>
             <p className="text-sm text-white/50">
-              {canManage ? "Private roster. Seed 1–8 and publish official draws to " : "Your private seeding workspace. Open your saved draw at "}
+              {canManage ? `Private roster. Seed 1–${TOC_MAX_CONFIRMED_PER_WEIGHT}; weights above eight expand automatically. Publish official draws to ` : "Your private seeding workspace. Open your saved draw at "}
               <HardLink href="/tournament-of-champions/brackets" className="text-[#D7B95A] hover:underline">
                 public brackets
               </HardLink>
@@ -776,7 +776,7 @@ export default function TocFieldAdminPage() {
           <Card className="border-white/10 bg-[#0B1D3A] text-white shadow-lg shadow-black/15">
             <CardContent className="pt-4">
               <p className="text-2xl font-bold text-white">{board.summary.fullBrackets}</p>
-              <p className="text-xs text-white/45">Brackets full (8/8)</p>
+              <p className="text-xs text-white/45">Bracket-ready (8+)</p>
             </CardContent>
           </Card>
           <Card className="border-white/10 bg-[#0B1D3A] text-white shadow-lg shadow-black/15">
@@ -794,7 +794,7 @@ export default function TocFieldAdminPage() {
         <CardHeader>
           <CardTitle className="text-lg text-white">Bracketing</CardTitle>
           <CardDescription className="text-white/45">
-            Publish draws from this page when 8 wrestlers are confirmed with seeds 1–8. Export CSV for TrackWrestling if
+            Eight-person weights use the compact draw; weights with 9–12 wrestlers automatically use a 16-slot draw with byes. Export CSV for TrackWrestling if
             you also run live scoring there.
           </CardDescription>
         </CardHeader>

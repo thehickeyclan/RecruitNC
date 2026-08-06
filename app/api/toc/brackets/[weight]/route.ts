@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { buildLiveDrawFromField, getPublicBracketDraw, loadAllConfirmedParticipantsForWeight } from "@/lib/toc/bracket-service"
-import { parseAthleteWeightClass } from "@/lib/toc/invitations"
+import { parseAthleteWeightClass, TOC_MAX_CONFIRMED_PER_WEIGHT } from "@/lib/toc/invitations"
 import { applyPersonalSeedOrderToParticipants, readTocPersonalSeedOrders } from "@/lib/toc/personal-seeding"
 import { requireTocFieldViewer } from "@/lib/toc/require-toc-field-viewer"
 
@@ -38,7 +38,7 @@ export async function GET(_request: Request, { params }: Params) {
     const visibleResult = result ?? personalResult
     if (!visibleResult) {
       return NextResponse.json(
-        { error: "No bracket yet — confirm a wrestler and assign a seed (1–8) in admin." },
+        { error: `No bracket yet — confirm a wrestler and assign a seed (1–${TOC_MAX_CONFIRMED_PER_WEIGHT}) in admin.` },
         { status: 404 },
       )
     }

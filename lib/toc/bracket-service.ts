@@ -39,7 +39,7 @@ export function mapInvitationToBracketParticipant(row: InvitationRow): TocBracke
 export async function loadParticipantsForWeight(
   admin: SupabaseClient,
   weightClass: number,
-): Promise<{ participants: TocBracketParticipant[]; error?: string }> {
+): Promise<{ participants: TocBracketParticipant[]; totalConfirmed: number; error?: string }> {
   const { data, error } = await admin
     .from("toc_invitations")
     .select("id, athlete_id, weight_class, status, seed, athletes(id, name, highschool, graduationyear, photourl)")
@@ -47,8 +47,8 @@ export async function loadParticipantsForWeight(
     .eq("status", "confirmed")
 
   if (error) {
-    if (error.code === "42P01") return { participants: [], error: "Invitations table missing." }
-    return { participants: [], error: error.message }
+    if (error.code === "42P01") return { participants: [], totalConfirmed: 0, error: "Invitations table missing." }
+    return { participants: [], totalConfirmed: 0, error: error.message }
   }
 
   const participants = (data ?? [])
@@ -56,7 +56,7 @@ export async function loadParticipantsForWeight(
     .filter((p): p is TocBracketParticipant => p != null)
     .sort((a, b) => a.seed - b.seed)
 
-  return { participants }
+  return { participants, totalConfirmed: (data ?? []).length }
 }
 
 export async function loadAllConfirmedParticipantsForWeight(
@@ -105,30 +105,37 @@ export async function getPublicBracketDraw(
     return { draw: normalizeDraw(locked), source: "locked" }
   }
 
-  const { participants } = await loadParticipantsForWeight(admin, weightClass)
+  const { participants, totalConfirmed } = await loadParticipantsForWeight(admin, weightClass)
   const live = buildLiveDrawFromField(weightClass, participants)
   if (!live) return null
+  if (totalConfirmed !== participants.length) live.isComplete = false
+  live.confirmedCount = totalConfirmed
   return { draw: live, source: "live" }
 }
 
 function normalizeDraw(draw: TocBracketDraw): TocBracketDraw {
   const realCount = draw.participants.filter((p) => !p.isPlaceholder && !p.athleteId.startsWith("__toc_open_")).length
-  const hasCurrentTwelveBoutFormat =
-    draw.bouts.length === 12 &&
-    draw.bouts.some((bout) => bout.boutNumber === 12 && bout.roundLabel === "3rd place")
-  const normalizedBouts = hasCurrentTwelveBoutFormat
+  const expectedBoutCount = realCount > 8 ? 28 : 12
+  const hasCurrentFormat =
+    draw.bouts.length === expectedBoutCount &&
+    draw.bouts.some((bout) => bout.roundLabel === "3rd place")
+  const rebuilt = buildEightManDeDraw(
+    draw.weightClass,
+    draw.participants.filter((p) => !p.isPlaceholder && !p.athleteId.startsWith("__toc_open_")),
+    draw.lockedAt,
+  )
+  const normalizedBouts = hasCurrentFormat
     ? draw.bouts
-    : buildEightManDeDraw(
-        draw.weightClass,
-        draw.participants.filter((p) => !p.isPlaceholder && !p.athleteId.startsWith("__toc_open_")),
-        draw.lockedAt,
-      ).bouts
+    : rebuilt.bouts
 
   return {
     ...draw,
+    format: rebuilt.format,
+    bracketSize: rebuilt.bracketSize,
+    participants: rebuilt.participants,
     bouts: normalizedBouts,
     confirmedCount: draw.confirmedCount ?? realCount,
-    openSpots: draw.openSpots ?? Math.max(0, TOC_MAX_CONFIRMED_PER_WEIGHT - realCount),
+    openSpots: draw.openSpots ?? rebuilt.openSpots,
     isComplete: draw.isComplete ?? validateBracketParticipants(draw.participants) == null,
   }
 }
@@ -137,8 +144,11 @@ export async function lockBracketDraw(
   admin: SupabaseClient,
   weightClass: number,
 ): Promise<{ draw: TocBracketDraw } | { error: string }> {
-  const { participants, error: loadError } = await loadParticipantsForWeight(admin, weightClass)
+  const { participants, totalConfirmed, error: loadError } = await loadParticipantsForWeight(admin, weightClass)
   if (loadError) return { error: loadError }
+  if (participants.length !== totalConfirmed) {
+    return { error: `Assign contiguous seeds 1–${totalConfirmed} to every confirmed wrestler before locking the draw.` }
+  }
 
   const validationError = validatePartialBracketPublish(participants)
   if (validationError) return { error: validationError }
@@ -201,7 +211,7 @@ export async function listPublicBracketSummaries(admin: SupabaseClient): Promise
       summaries.push({
         weightClass,
         lockedAt: locked.lockedAt,
-        participantCount: TOC_MAX_CONFIRMED_PER_WEIGHT,
+        participantCount: locked.bracketSize ?? locked.participants.length,
         confirmedCount: locked.confirmedCount,
         isComplete: locked.isComplete,
         source: "locked",
@@ -209,14 +219,16 @@ export async function listPublicBracketSummaries(admin: SupabaseClient): Promise
       continue
     }
 
-    const { participants } = await loadParticipantsForWeight(admin, weightClass)
+    const { participants, totalConfirmed } = await loadParticipantsForWeight(admin, weightClass)
     const live = buildLiveDrawFromField(weightClass, participants)
     if (!live) continue
+    if (totalConfirmed !== participants.length) live.isComplete = false
+    live.confirmedCount = totalConfirmed
 
     summaries.push({
       weightClass,
       lockedAt: live.lockedAt,
-      participantCount: TOC_MAX_CONFIRMED_PER_WEIGHT,
+      participantCount: live.bracketSize ?? live.participants.length,
       confirmedCount: live.confirmedCount,
       isComplete: live.isComplete,
       source: "live",
@@ -238,12 +250,15 @@ export async function getBracketLockStatus(
   confirmedCount: number
   isComplete: boolean
 }> {
-  const [draw, { participants }] = await Promise.all([
+  const [draw, { participants, totalConfirmed }] = await Promise.all([
     getLockedDraw(admin, weightClass),
     loadParticipantsForWeight(admin, weightClass),
   ])
 
-  const partialError = validatePartialBracketPublish(participants)
+  const missingSeedError = participants.length !== totalConfirmed
+    ? `Assign contiguous seeds 1–${totalConfirmed} to every confirmed wrestler.`
+    : null
+  const partialError = missingSeedError ?? validatePartialBracketPublish(participants)
   const liveDraw = buildLiveDrawFromField(weightClass, participants)
 
   return {
@@ -252,7 +267,7 @@ export async function getBracketLockStatus(
     readyToLock: partialError == null,
     lockError: partialError,
     canViewLive: liveDraw != null,
-    confirmedCount: participants.length,
-    isComplete: validateBracketParticipants(participants) == null,
+    confirmedCount: totalConfirmed,
+    isComplete: missingSeedError == null && validateBracketParticipants(participants) == null,
   }
 }

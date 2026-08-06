@@ -42,7 +42,7 @@ export const TOC_ROAD_MILESTONES: TocRoadMilestone[] = [
   {
     dateLabel: "Fri · Aug 28 · 9:00 AM",
     label: "Full field revealed · tickets on sale",
-    detail: "All 88 wrestlers announced — public tickets open. Limited seating.",
+    detail: "Final fields announced — public tickets open. Limited seating.",
     atMs: TOC_TICKET_SALE_AT_MS,
   },
   {

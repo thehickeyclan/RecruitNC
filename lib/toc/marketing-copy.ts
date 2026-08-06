@@ -30,7 +30,7 @@ export const TOC_ATHLETE_INVITE = {
     "North Carolina's best. You're one of them.",
   ],
   bodyIntro: (firstName: string, weightClass: number | string) =>
-    `${firstName} —\n\nYou've been invited to the NC United Tournament of Champions — an invite-only event with eight wrestlers per weight. We built the field by hand, and your name is on it at ${weightClass} lbs.`,
+    `${firstName} —\n\nYou've been invited to the NC United Tournament of Champions — an invite-only event with elite fields built by hand. Most weights feature eight wrestlers; select deep weights may expand to 10 or 12. Your name is on the field at ${weightClass} lbs.`,
   bodyDetails:
     "Here's what you're walking into: college weights, stacked brackets, no easy draws. True double-elimination with top-three placement — two mats until the titles. And if you make the finals, you wrestle on one mat for a championship jacket and a title that only means something because of who you had to beat to get it.",
   bodyClose: "We think you belong here. Confirm your spot below.",

@@ -1,4 +1,5 @@
 import { TOC_EIGHT_MAN_DE_ROUND1 } from "@/lib/toc/bracket-export"
+import { standardSeedPairs } from "@/lib/bracket/single-elim-layout"
 import type { TocBracketBout, TocBracketDraw, TocBracketParticipant, TocBracketSlot } from "@/lib/toc/bracket-types"
 import { TOC_MAX_CONFIRMED_PER_WEIGHT } from "@/lib/toc/invitations"
 
@@ -14,8 +15,8 @@ function feederSlot(boutNumber: number, label: string): TocBracketSlot {
   return { kind: "feeder", boutNumber, label }
 }
 
-function openSlot(seed: number): TocBracketSlot {
-  return { kind: "empty", label: `Seed ${seed} · Open` }
+function openSlot(seed: number, label = "Open"): TocBracketSlot {
+  return { kind: "empty", label: `Seed ${seed} · ${label}` }
 }
 
 function bout(
@@ -57,6 +58,12 @@ function seedSlot(bySeed: Map<number, TocBracketParticipant>, seed: number): Toc
   return openSlot(seed)
 }
 
+function byeSeedSlot(bySeed: Map<number, TocBracketParticipant>, seed: number): TocBracketSlot {
+  const wrestler = bySeed.get(seed)
+  if (wrestler && !isPlaceholderParticipant(wrestler)) return athleteSlot(wrestler.athleteId)
+  return openSlot(seed, "Bye")
+}
+
 /** Standard 8-man DE bout template — open seeds show as TBD in round 1. */
 function buildEightManDeBouts(weightClass: number, bySeed: Map<number, TocBracketParticipant>): TocBracketBout[] {
   const r1 = TOC_EIGHT_MAN_DE_ROUND1.map((pair, index) =>
@@ -83,18 +90,49 @@ function buildEightManDeBouts(weightClass: number, bySeed: Map<number, TocBracke
   ]
 }
 
-/** At least one confirmed wrestler with a seed — unique seeds in 1–8. */
+/** 16-slot true double-elimination flow used only when a weight has 9–12 wrestlers. */
+function buildSixteenSlotDeBouts(weightClass: number, bySeed: Map<number, TocBracketParticipant>): TocBracketBout[] {
+  const r1 = standardSeedPairs(16).map((pair, index) =>
+    bout(weightClass, index + 1, "Round of 16", "winners", byeSeedSlot(bySeed, pair[0]), byeSeedSlot(bySeed, pair[1])),
+  )
+
+  return [
+    ...r1,
+    bout(weightClass, 9, "Quarterfinals", "winners", feederSlot(1, "Winner Bout 1"), feederSlot(2, "Winner Bout 2")),
+    bout(weightClass, 10, "Quarterfinals", "winners", feederSlot(3, "Winner Bout 3"), feederSlot(4, "Winner Bout 4")),
+    bout(weightClass, 11, "Quarterfinals", "winners", feederSlot(5, "Winner Bout 5"), feederSlot(6, "Winner Bout 6")),
+    bout(weightClass, 12, "Quarterfinals", "winners", feederSlot(7, "Winner Bout 7"), feederSlot(8, "Winner Bout 8")),
+    bout(weightClass, 13, "Winners semifinals", "winners", feederSlot(9, "Winner Bout 9"), feederSlot(10, "Winner Bout 10")),
+    bout(weightClass, 14, "Winners semifinals", "winners", feederSlot(11, "Winner Bout 11"), feederSlot(12, "Winner Bout 12")),
+    bout(weightClass, 15, "Championship", "placement", feederSlot(13, "Winner Bout 13"), feederSlot(14, "Winner Bout 14")),
+    bout(weightClass, 16, "Consolation R1", "losers", feederSlot(1, "Loser Bout 1"), feederSlot(2, "Loser Bout 2")),
+    bout(weightClass, 17, "Consolation R1", "losers", feederSlot(3, "Loser Bout 3"), feederSlot(4, "Loser Bout 4")),
+    bout(weightClass, 18, "Consolation R1", "losers", feederSlot(5, "Loser Bout 5"), feederSlot(6, "Loser Bout 6")),
+    bout(weightClass, 19, "Consolation R1", "losers", feederSlot(7, "Loser Bout 7"), feederSlot(8, "Loser Bout 8")),
+    bout(weightClass, 20, "Consolation R2", "losers", feederSlot(9, "Loser Bout 9"), feederSlot(17, "Winner Bout 17")),
+    bout(weightClass, 21, "Consolation R2", "losers", feederSlot(10, "Loser Bout 10"), feederSlot(16, "Winner Bout 16")),
+    bout(weightClass, 22, "Consolation R2", "losers", feederSlot(11, "Loser Bout 11"), feederSlot(19, "Winner Bout 19")),
+    bout(weightClass, 23, "Consolation R2", "losers", feederSlot(12, "Loser Bout 12"), feederSlot(18, "Winner Bout 18")),
+    bout(weightClass, 24, "Consolation R3", "losers", feederSlot(20, "Winner Bout 20"), feederSlot(21, "Winner Bout 21")),
+    bout(weightClass, 25, "Consolation R3", "losers", feederSlot(22, "Winner Bout 22"), feederSlot(23, "Winner Bout 23")),
+    bout(weightClass, 26, "Consolation semifinals", "losers", feederSlot(14, "Loser Bout 14"), feederSlot(24, "Winner Bout 24")),
+    bout(weightClass, 27, "Consolation semifinals", "losers", feederSlot(25, "Winner Bout 25"), feederSlot(13, "Loser Bout 13")),
+    bout(weightClass, 28, "3rd place", "placement", feederSlot(26, "Winner Bout 26"), feederSlot(27, "Winner Bout 27")),
+  ]
+}
+
+/** At least one confirmed wrestler with a seed — unique seeds in the supported 1–12 field. */
 export function validatePartialBracketPublish(participants: TocBracketParticipant[]): string | null {
   if (participants.length === 0) {
-    return "Confirm at least one wrestler and assign a seed (1–8) to show this bracket."
+    return `Confirm at least one wrestler and assign a seed (1–${TOC_MAX_CONFIRMED_PER_WEIGHT}) to show this bracket.`
   }
 
   const seeds = participants.map((p) => p.seed)
   if (seeds.some((s) => s < 1 || s > TOC_MAX_CONFIRMED_PER_WEIGHT)) {
-    return "Seeds must be between 1 and 8."
+    return `Seeds must be between 1 and ${TOC_MAX_CONFIRMED_PER_WEIGHT}.`
   }
   if (new Set(seeds).size !== seeds.length) {
-    return "Each seed 1–8 can only be used once."
+    return `Each seed 1–${TOC_MAX_CONFIRMED_PER_WEIGHT} can only be used once.`
   }
 
   return null
@@ -102,15 +140,15 @@ export function validatePartialBracketPublish(participants: TocBracketParticipan
 
 export function validateBracketParticipants(participants: TocBracketParticipant[]): string | null {
   const real = participants.filter((p) => !isPlaceholderParticipant(p))
-  if (real.length !== TOC_MAX_CONFIRMED_PER_WEIGHT) {
-    return `Need exactly ${TOC_MAX_CONFIRMED_PER_WEIGHT} confirmed wrestlers (have ${real.length}).`
+  if (real.length < 8 || real.length > TOC_MAX_CONFIRMED_PER_WEIGHT) {
+    return `Need between 8 and ${TOC_MAX_CONFIRMED_PER_WEIGHT} confirmed wrestlers (have ${real.length}).`
   }
 
   const seeds = real.map((p) => p.seed).sort((a, b) => a - b)
-  const expected = Array.from({ length: TOC_MAX_CONFIRMED_PER_WEIGHT }, (_, i) => i + 1)
+  const expected = Array.from({ length: real.length }, (_, i) => i + 1)
   for (let i = 0; i < expected.length; i++) {
     if (seeds[i] !== expected[i]) {
-      return "Assign unique seeds 1–8 to every confirmed wrestler before the draw is complete."
+      return `Assign contiguous unique seeds 1–${real.length} to every confirmed wrestler before the draw is complete.`
     }
   }
 
@@ -129,7 +167,8 @@ export function buildEightManDeDraw(
   const bySeed = new Map<number, TocBracketParticipant>()
   for (const p of real) bySeed.set(p.seed, p)
 
-  const participants = Array.from({ length: TOC_MAX_CONFIRMED_PER_WEIGHT }, (_, i) => {
+  const bracketSize = real.length > 8 ? 16 : 8
+  const participants = Array.from({ length: bracketSize }, (_, i) => {
     const seed = i + 1
     return bySeed.get(seed) ?? placeholderParticipant(weightClass, seed)
   })
@@ -138,13 +177,14 @@ export function buildEightManDeDraw(
 
   return {
     weightClass,
-    format: "8-man-de",
+    format: bracketSize === 16 ? "16-slot-de" : "8-man-de",
+    bracketSize,
     lockedAt,
     confirmedCount: real.length,
-    openSpots: TOC_MAX_CONFIRMED_PER_WEIGHT - real.length,
+    openSpots: Math.max(0, (bracketSize === 8 ? 8 : TOC_MAX_CONFIRMED_PER_WEIGHT) - real.length),
     isComplete,
     participants,
-    bouts: buildEightManDeBouts(weightClass, bySeed),
+    bouts: bracketSize === 16 ? buildSixteenSlotDeBouts(weightClass, bySeed) : buildEightManDeBouts(weightClass, bySeed),
   }
 }
 

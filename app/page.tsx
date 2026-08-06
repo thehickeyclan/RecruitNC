@@ -135,7 +135,7 @@ export default async function HomePage() {
               {/* The event name must never truncate — only the trailing detail may be dropped. */}
               <p className="min-w-0 text-sm text-white sm:text-base">
                 <span className="font-bold">Tournament of Champions</span>
-                <span className="hidden text-white/70 md:inline"> — Sept 18–19 · Apex · Invite-only · 11 weights, 88 wrestlers</span>
+                <span className="hidden text-white/70 md:inline"> — Sept 18–19 · Apex · Invite-only · 11 elite brackets</span>
                 <span className="hidden text-white/70 sm:inline md:hidden"> — Sept 18–19 · Apex</span>
               </p>
             </div>

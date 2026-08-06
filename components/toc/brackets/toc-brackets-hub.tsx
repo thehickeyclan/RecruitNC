@@ -57,7 +57,7 @@ export function TocBracketsHub() {
                   {b.weightClass}
                 </p>
                 <p className="text-[10px] uppercase tracking-[0.18em] text-white/45 mt-2">
-                  lbs · {b.isComplete ? "official draw" : `${b.confirmedCount ?? 0}/8 · building`}
+                  lbs · {b.isComplete ? `${b.confirmedCount}-person draw` : `${b.confirmedCount ?? 0}/12 max · building`}
                 </p>
               </HardLink>
             ))}

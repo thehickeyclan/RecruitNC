@@ -21,7 +21,7 @@ function athlete(name: string, summary: TocSeedEvidence["summary"]): TocFieldAth
 function weight(weightClass: number, athletes: TocFieldAthlete[]): TocWeightBoard {
   return {
     weightClass,
-    maxSlots: 8,
+    maxSlots: 12,
     confirmedCount: athletes.length,
     invitedCount: 0,
     openConfirmedSlots: Math.max(0, 8 - athletes.length),

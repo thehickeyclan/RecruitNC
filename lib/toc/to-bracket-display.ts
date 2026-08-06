@@ -12,13 +12,14 @@ function slotToDisplay(
   const participant = athleteId ? participantById.get(athleteId) : null
   const isOpen =
     label.isOpen || (participant != null && isPlaceholderParticipant(participant))
+  const isBye = slot.kind === "empty" && /\bbye\b/i.test(slot.label)
   const seed =
     label.seed ??
     participant?.seed ??
     (slot.kind === "empty" ? Number(slot.label.match(/Seed (\d+)/)?.[1]) || null : null)
 
   return {
-    name: isOpen ? "TBD" : label.primary,
+    name: isBye ? "BYE" : isOpen ? "TBD" : label.primary,
     subtitle: isOpen ? null : label.secondary ?? participant?.school ?? null,
     seed,
     isOpen,
@@ -45,26 +46,30 @@ function boutToMatch(
   }
 }
 
-/** Winners bracket from TOC 8-man DE draw → generic single-elim tree. */
+/** Winners side from the adaptive TOC draw → generic single-elimination tree. */
 export function tocDrawToWinnersBracketTree(draw: TocBracketDraw): BracketTreeDisplay {
   const participantById = new Map(draw.participants.map((p) => [p.athleteId, p]))
-  const round1 = draw.bouts.filter((b) => b.roundLabel === "Round 1").sort((a, b) => a.boutNumber - b.boutNumber)
-  const semis = draw.bouts.filter((b) => b.roundLabel === "Winners semifinals").sort((a, b) => a.boutNumber - b.boutNumber)
-  const finalBout = draw.bouts.find((b) => b.roundLabel === "Championship")
+  const size = draw.bracketSize ?? (draw.format === "16-slot-de" ? 16 : 8)
+  const labels = size === 16
+    ? ["Round of 16", "Quarterfinals", "Winners semifinals", "Championship"]
+    : ["Round 1", "Winners semifinals", "Championship"]
+  const rounds = labels.map((label, roundIndex) =>
+    draw.bouts
+      .filter((bout) => bout.roundLabel === label)
+      .sort((a, b) => a.boutNumber - b.boutNumber)
+      .map((bout, matchIndex) => boutToMatch(bout, roundIndex, matchIndex, participantById)),
+  )
 
   return {
-    size: 8,
+    size,
     title: `${draw.weightClass} lbs — Winners bracket`,
-    rounds: [
-      round1.map((b, i) => boutToMatch(b, 0, i, participantById)),
-      semis.map((b, i) => boutToMatch(b, 1, i, participantById)),
-      finalBout ? [boutToMatch(finalBout, 2, 0, participantById)] : [],
-    ].filter((r) => r.length > 0),
+    rounds: rounds.filter((round) => round.length > 0),
   }
 }
 
 /** Full field as generic 8-man tree from seeds (works with partial field). */
 export function tocDrawToSeededBracketTree(draw: TocBracketDraw): BracketTreeDisplay {
+  const size = draw.bracketSize ?? (draw.format === "16-slot-de" ? 16 : 8)
   const competitors: SeededCompetitor[] = draw.participants.map((p) => ({
     id: p.athleteId,
     seed: p.seed,
@@ -73,26 +78,33 @@ export function tocDrawToSeededBracketTree(draw: TocBracketDraw): BracketTreeDis
     photoUrl: p.photoUrl,
     isPlaceholder: isPlaceholderParticipant(p),
   }))
-  return buildSingleElimTreeFromSeeds(8, competitors, `${draw.weightClass} lbs`)
+  return buildSingleElimTreeFromSeeds(size, competitors, `${draw.weightClass} lbs`)
 }
 
 /** Consolation path: first-round losers, semifinal losers, then the third-place match. */
 export function tocDrawToConsolationBracketTree(draw: TocBracketDraw): BracketTreeDisplay | null {
   const participantById = new Map(draw.participants.map((p) => [p.athleteId, p]))
-  const consiR1 = draw.bouts.filter((b) => b.side === "losers" && b.roundLabel === "Consolation R1").sort((a, b) => a.boutNumber - b.boutNumber)
-  const consiSf = draw.bouts.filter((b) => b.side === "losers" && b.roundLabel === "Consolation semifinals").sort((a, b) => a.boutNumber - b.boutNumber)
+  const size = draw.bracketSize ?? (draw.format === "16-slot-de" ? 16 : 8)
+  const labels = size === 16
+    ? ["Consolation R1", "Consolation R2", "Consolation R3", "Consolation semifinals"]
+    : ["Consolation R1", "Consolation semifinals"]
   const thirdPlace = draw.bouts.find((b) => b.side === "placement" && b.roundLabel === "3rd place")
+  const consolationRounds = labels.map((label, roundIndex) =>
+    draw.bouts
+      .filter((bout) => bout.side === "losers" && bout.roundLabel === label)
+      .sort((a, b) => a.boutNumber - b.boutNumber)
+      .map((bout, matchIndex) => boutToMatch(bout, roundIndex, matchIndex, participantById)),
+  )
 
-  if (consiR1.length === 0) return null
+  if (consolationRounds[0]?.length === 0) return null
 
   const rounds = [
-    consiR1.map((b, i) => boutToMatch(b, 0, i, participantById)),
-    consiSf.map((b, i) => boutToMatch(b, 1, i, participantById)),
-    thirdPlace ? [boutToMatch(thirdPlace, 2, 0, participantById)] : [],
+    ...consolationRounds,
+    thirdPlace ? [boutToMatch(thirdPlace, labels.length, 0, participantById)] : [],
   ].filter((r) => r.length > 0)
 
   return {
-    size: 8,
+    size,
     title: `${draw.weightClass} lbs — Consolation`,
     rounds,
   }

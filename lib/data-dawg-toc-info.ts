@@ -105,7 +105,7 @@ export async function answerTournamentOfChampionsQuestion(message: string): Prom
     sections.push(
       section(
         "Tournament of Champions",
-        `${TOC_HERO.tagline}\n\n${TOC_HERO.lead}\n\n- Dates: ${TOC_EVENT_DATES_RANGE}\n- Venue: ${config.venue_name ?? TOC_VENUE.name}, ${config.venue_address ?? TOC_VENUE.address}\n- Format: invite-only, eight wrestlers per weight, true double-elimination, top-three placement\n- Weights: ${TOC_WEIGHT_CLASSES.join(", ")} lbs\n- Tickets: ${tocTicketsOnSale() ? `on sale now — [GoFan](${TOC_GOFAN_TICKETS_URL})` : `on sale ${TOC_TICKET_SALE_TIMING} (sold via GoFan)`}\n- Full page: [Tournament of Champions](${TOC_PAGE_URL})`,
+        `${TOC_HERO.tagline}\n\n${TOC_HERO.lead}\n\n- Dates: ${TOC_EVENT_DATES_RANGE}\n- Venue: ${config.venue_name ?? TOC_VENUE.name}, ${config.venue_address ?? TOC_VENUE.address}\n- Format: invite-only; most weights have eight wrestlers, with select deep weights expanding to 10 or 12; true double-elimination and top-three placement\n- Weights: ${TOC_WEIGHT_CLASSES.join(", ")} lbs\n- Tickets: ${tocTicketsOnSale() ? `on sale now — [GoFan](${TOC_GOFAN_TICKETS_URL})` : `on sale ${TOC_TICKET_SALE_TIMING} (sold via GoFan)`}\n- Full page: [Tournament of Champions](${TOC_PAGE_URL})`,
       ),
     )
   }
@@ -142,7 +142,7 @@ export async function answerTournamentOfChampionsQuestion(message: string): Prom
       section(
         "Format and weights",
         [
-          `Invite-only: eight wrestlers per weight class, 88 total spots.`,
+          `Invite-only: most weights use eight-person brackets; select deep weights may expand to 10 or 12.`,
           `College weights plus 117 lbs: ${TOC_WEIGHT_CLASSES.join(", ")}.`,
           `Bracket style: true double-elimination with top-three placement.`,
           TOC_MATS_LINE,

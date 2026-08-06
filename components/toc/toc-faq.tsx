@@ -28,7 +28,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "How is NC United selecting athletes?",
-    a: "We use the same philosophy as our RecruitNC rankings. We prioritize performance at college opens, national competition, quality of wins, NC United practice performance, and overall body of work. Our goal is to assemble the most elite eight-man bracket possible at every weight — delivering the best value to college coaches and our community.",
+    a: "We use the same philosophy as our RecruitNC rankings. We prioritize performance at college opens, national competition, quality of wins, NC United practice performance, and overall body of work. Most weights are built as elite eight-person fields; select deep weights may expand to 10 or 12 without enlarging the other brackets.",
   },
   {
     q: "Will NC United coaches be cornering the athletes?",
@@ -36,7 +36,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "What makes the Tournament of Champions different?",
-    a: `Invite-only — eight wrestlers per weight. College weight classes. Stacked eight-person brackets with true double-elimination and top-three placement. ${TOC_MATS_LINE} An elite Apex venue built for great wrestling and a crowd — championship-level production, not another grind-through tournament.`,
+    a: `Invite-only at college weight classes. Most weights use compact eight-person brackets; select weights may expand to 10 or 12 on a 16-slot draw with seeded byes. Every format preserves double-elimination and top-three placement. ${TOC_MATS_LINE} An elite Apex venue built for great wrestling and a crowd — championship-level production, not another grind-through tournament.`,
   },
   {
     q: "What weight classes are used?",
