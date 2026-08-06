@@ -90,5 +90,8 @@ describe("buildTocAiSeedRecommendations", () => {
 
     expect(recommendations.get("aiden")?.aiSeed).toBe(1)
     expect(recommendations.get("ammon")?.aiSeed).toBe(2)
+    expect(recommendations.get("ammon")?.seedEvidence.headToHead).toEqual([
+      { opponent: "Aiden Campbell", wins: 0, losses: 1 },
+    ])
   })
 })

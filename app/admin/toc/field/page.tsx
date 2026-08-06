@@ -16,13 +16,6 @@ import {
   buildTocWeightRosterCsv,
 } from "@/lib/toc/bracket-export"
 
-function aiSeedConfidenceClass(confidence: TocFieldAthlete["aiSeedConfidence"]) {
-  if (confidence === "High") return "bg-emerald-700 text-white"
-  if (confidence === "Medium") return "bg-amber-500 text-slate-950"
-  if (confidence === "Low") return "bg-red-700 text-white"
-  return "bg-slate-600 text-white"
-}
-
 function downloadText(filename: string, content: string, mime = "text/plain;charset=utf-8") {
   const blob = new Blob([content], { type: mime })
   const url = URL.createObjectURL(blob)
@@ -169,77 +162,25 @@ function WeightBoardCard({
                       >
                         {a.seed ? `#${a.seed}` : "—"}
                       </span>
-                      <div
-                        className="group/ai relative min-w-[11rem] flex-1 outline-none"
-                        tabIndex={a.aiSeed ? 0 : -1}
-                        aria-label={a.aiSeed ? `${a.name}: hover or focus to view AI seed recommendation` : undefined}
-                      >
+                      <div className="min-w-[11rem] flex-1">
                         <p className="break-words font-semibold leading-tight text-slate-950">{a.name}</p>
                         <p className="mt-0.5 break-words text-xs leading-tight text-muted-foreground">{a.school ?? "—"}</p>
-                        {a.aiSeed ? (
-                          <div className="pointer-events-none invisible absolute left-0 top-full z-30 mt-2 w-80 max-w-[calc(100vw-3rem)] translate-y-1 rounded-lg border bg-popover p-3 text-xs opacity-0 shadow-xl transition group-hover/ai:pointer-events-auto group-hover/ai:visible group-hover/ai:translate-y-0 group-hover/ai:opacity-100 group-focus-within/ai:pointer-events-auto group-focus-within/ai:visible group-focus-within/ai:translate-y-0 group-focus-within/ai:opacity-100">
-                            <Badge className={`${aiSeedConfidenceClass(a.aiSeedConfidence)} gap-1 text-xs`}>
-                              <Sparkles className="h-3 w-3" />
-                              AI recommends #{a.aiSeed}
-                            </Badge>
-                            <p className="mt-2 font-semibold text-popover-foreground">
-                              Score {a.aiSeedScore ?? "—"} · {a.aiSeedConfidence ?? "Unknown"} confidence
-                            </p>
-                            {a.aiSeedReasons?.length ? (
-                              <ul className="mt-2 list-disc space-y-1 pl-4 text-muted-foreground">
-                                {a.aiSeedReasons.map((reason) => (
-                                  <li key={reason}>{reason}</li>
-                                ))}
-                              </ul>
-                            ) : null}
-                            {a.aiSeedWarnings?.length ? (
-                              <div className="mt-2 rounded-md bg-amber-50 p-2 text-amber-900">
-                                {a.aiSeedWarnings.join(" · ")}
-                              </div>
-                            ) : null}
-                            {canEditSeeds && a.seed !== a.aiSeed ? (
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                className="mt-3 h-7 border-[#B31B1B]/30 px-2 text-xs font-semibold text-[#B31B1B]"
-                                disabled={seedSavingId === a.invitationId}
-                                onClick={() => void onSeedChange(a.invitationId, a.aiSeed ?? null)}
-                              >
-                                Use AI recommendation
-                              </Button>
-                            ) : null}
-                          </div>
-                        ) : null}
                       </div>
-                      {a.aiSeed ? (
-                        <Badge className={`${aiSeedConfidenceClass(a.aiSeedConfidence)} shrink-0 gap-1 text-[10px]`}>
-                          <Sparkles className="h-3 w-3" /> Suggested #{a.aiSeed}
-                        </Badge>
-                      ) : null}
-                    </div>
-
-                    {a.aiSeed ? (
-                      <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50/80 px-2.5 py-2">
+                      {a.seedEvidence ? (
                         <button
                           type="button"
-                          className="flex w-full items-center justify-between gap-3 text-left"
+                          className="inline-flex shrink-0 items-center gap-1 rounded-md border border-[#002147]/20 bg-[#002147]/5 px-2 py-1 text-[10px] font-semibold text-[#002147] hover:bg-[#002147]/10"
                           onClick={() => setExpandedEvidenceId((id) => (id === a.invitationId ? null : a.invitationId))}
                           aria-expanded={expandedEvidenceId === a.invitationId}
                         >
-                          <span className="min-w-0 text-[11px] leading-tight text-slate-600">
-                            <strong className="text-slate-900">Seed evidence:</strong>{" "}
-                            {a.aiSeedReasons?.[0] ?? "Open the résumé details used for this recommendation"}
-                          </span>
-                          {expandedEvidenceId === a.invitationId ? (
-                            <ChevronUp className="h-4 w-4 shrink-0 text-slate-500" />
-                          ) : (
-                            <ChevronDown className="h-4 w-4 shrink-0 text-slate-500" />
-                          )}
+                          See evidence
+                          {expandedEvidenceId === a.invitationId ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
                         </button>
+                      ) : null}
+                    </div>
 
-                        {expandedEvidenceId === a.invitationId ? (
-                          <div className="mt-3 space-y-3 border-t border-slate-200 pt-3">
+                    {a.seedEvidence && expandedEvidenceId === a.invitationId ? (
+                      <div className="mt-3 space-y-3 rounded-lg border border-slate-200 bg-slate-50/80 p-3">
                             {a.seedEvidence?.headToHead.length ? (
                               <div className="rounded-md border border-emerald-200 bg-emerald-50 p-2.5">
                                 <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-900">In-bracket head-to-head</p>
@@ -273,24 +214,6 @@ function WeightBoardCard({
                               ))}
                             </div>
 
-                            <div className="flex flex-wrap items-center gap-2 border-t border-slate-200 pt-2">
-                              <span className="text-[11px] text-slate-500">
-                                Score {a.aiSeedScore ?? "—"} · {a.aiSeedConfidence ?? "Unknown"} confidence
-                              </span>
-                              {canEditSeeds && a.seed !== a.aiSeed ? (
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  className="ml-auto h-7 bg-[#002147] px-2 text-xs text-white hover:bg-[#003366]"
-                                  disabled={seedSavingId === a.invitationId}
-                                  onClick={() => void onSeedChange(a.invitationId, a.aiSeed ?? null)}
-                                >
-                                  Use suggested #{a.aiSeed}
-                                </Button>
-                              ) : null}
-                            </div>
-                          </div>
-                        ) : null}
                       </div>
                     ) : null}
 
@@ -672,9 +595,9 @@ export default function TocFieldAdminPage() {
             <div className="flex items-start gap-2">
               <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[#B31B1B]" />
               <p>
-                <strong>AI seed</strong> is a recommendation based on RecruitNC ranking, match history, head-to-head
-                inside the field, NCHSAA results, national tournament data, NC United/NHSCA Duals records, and profile
-                accolades. The manual seed selector remains the official seed.
+                <strong>Seed evidence</strong> brings together head-to-head results inside the field, NCHSAA
+                qualification and placement, NHSCA, Super 32, and Fargo records. Review the evidence, then use the
+                manual selector to make the official seed decision.
               </p>
             </div>
           </div>

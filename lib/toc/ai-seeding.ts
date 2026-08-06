@@ -144,6 +144,7 @@ function scoreMatchRows(rows: MatchRow[]) {
   let losses = 0
   const bouts: MatchBout[] = []
   let qualityWins = 0
+  let qualityWinPoints = 0
 
   for (const row of rows) {
     totalMatches += Number(row.total_matches || 0)
@@ -155,10 +156,14 @@ function scoreMatchRows(rows: MatchRow[]) {
       const oppPct = toNumber(bout.opponent_percentage)
       if (won && oppPct && oppPct >= 95) {
         qualityWins += 1
-        score += oppPct >= 98 ? 8 : 5
+        qualityWinPoints += oppPct >= 98 ? 8 : 5
       }
     }
   }
+
+  // Match imports vary widely in depth. Quality wins matter, but an athlete with a
+  // deeper imported history must not bury state and national tournament credentials.
+  score += Math.min(qualityWinPoints, 30)
 
   if (totalMatches > 0) {
     const pct = wins / Math.max(totalMatches, 1)
@@ -181,27 +186,28 @@ function scoreMatchRows(rows: MatchRow[]) {
 function findFieldHeadToHeadBonus(
   athlete: TocFieldAthlete,
   field: TocFieldAthlete[],
-  bouts: MatchBout[],
+  boutsByAthleteId: Map<string, MatchBout[]>,
 ): { points: number; wins: number; losses: number; opponents: TocSeedEvidence["headToHead"] } {
   let wins = 0
   let losses = 0
-  const byOpponent = new Map<string, { opponent: string; wins: number; losses: number }>()
-  for (const bout of bouts) {
-    const opponent = String(bout.opponent_name ?? bout.opponent ?? "").trim()
-    if (!opponent) continue
-    const fieldOpponent = field.find((other) => other.athleteId !== athlete.athleteId && namesLikelySamePerson(opponent, other.name))
-    if (!fieldOpponent) continue
-    const record = byOpponent.get(fieldOpponent.athleteId) ?? { opponent: fieldOpponent.name, wins: 0, losses: 0 }
-    if (didWinBout(bout)) {
-      wins += 1
-      record.wins += 1
-    } else if (didLoseBout(bout)) {
-      losses += 1
-      record.losses += 1
-    }
-    byOpponent.set(fieldOpponent.athleteId, record)
+  const opponents: TocSeedEvidence["headToHead"] = []
+  const athleteBouts = boutsByAthleteId.get(athlete.athleteId) ?? []
+
+  for (const opponent of field) {
+    if (opponent.athleteId === athlete.athleteId) continue
+    const athleteSide = headToHeadRecordAgainst(athleteBouts, opponent.name)
+    const opponentSide = headToHeadRecordAgainst(boutsByAthleteId.get(opponent.athleteId) ?? [], athlete.name)
+
+    // A meeting may be stored on one wrestler or both. max() captures mirrored
+    // records without double-counting the same bout when both profiles contain it.
+    const pairWins = Math.max(athleteSide.wins, opponentSide.losses)
+    const pairLosses = Math.max(athleteSide.losses, opponentSide.wins)
+    if (pairWins === 0 && pairLosses === 0) continue
+    wins += pairWins
+    losses += pairLosses
+    opponents.push({ opponent: opponent.name, wins: pairWins, losses: pairLosses })
   }
-  return { points: wins * 18 - losses * 12, wins, losses, opponents: [...byOpponent.values()] }
+  return { points: wins * 50 - losses * 35, wins, losses, opponents }
 }
 
 function ordinal(place: number): string {
@@ -225,40 +231,46 @@ function formatNationalEvidence(rows: TournamentResultForDisplay[]): string[] {
     })
 }
 
-function pairwiseHeadToHeadSort({
-  a,
-  b,
-  aBouts,
-  bBouts,
-}: {
-  a: TocFieldAthlete
-  b: TocFieldAthlete
-  aBouts: MatchBout[]
-  bBouts: MatchBout[]
-}): number {
-  const aVsB = headToHeadRecordAgainst(aBouts, b.name)
-  const bVsA = headToHeadRecordAgainst(bBouts, a.name)
+function orderByHeadToHeadThenResume<T extends {
+  athlete: TocFieldAthlete
+  score: number
+  evidence: TocSeedEvidence
+}>(rows: T[]): T[] {
+  const remaining = [...rows]
+  const ordered: T[] = []
 
-  const aNchsaaNet = aVsB.nchsaaWins + bVsA.nchsaaLosses - aVsB.nchsaaLosses - bVsA.nchsaaWins
-  if (aNchsaaNet !== 0) return aNchsaaNet > 0 ? -1 : 1
+  while (remaining.length > 0) {
+    const eligible = remaining.filter((candidate) =>
+      !remaining.some((other) => {
+        if (other.athlete.athleteId === candidate.athlete.athleteId) return false
+        const record = other.evidence.headToHead.find((h2h) => namesLikelySamePerson(h2h.opponent, candidate.athlete.name))
+        return Boolean(record && record.wins > record.losses)
+      }),
+    )
 
-  const aOverallNet = aVsB.wins + bVsA.losses - aVsB.losses - bVsA.wins
-  if (aOverallNet !== 0) return aOverallNet > 0 ? -1 : 1
+    // A circular series (A beat B, B beat C, C beat A) has no eligible wrestler.
+    // Break only that cycle by résumé score; otherwise every direct winner stays above the loser.
+    const pool = eligible.length > 0 ? eligible : remaining
+    pool.sort((a, b) => b.score - a.score || a.athlete.name.localeCompare(b.athlete.name))
+    const next = pool[0]
+    ordered.push(next)
+    remaining.splice(remaining.indexOf(next), 1)
+  }
 
-  return 0
+  return ordered
 }
 
 async function scoreAthleteForTocSeed({
   supabase,
   athlete,
   athleteRow,
-  field,
+  fieldHeadToHead,
   matchRows,
 }: {
   supabase: SupabaseClient
   athlete: TocFieldAthlete
   athleteRow: Record<string, unknown> | undefined
-  field: TocFieldAthlete[]
+  fieldHeadToHead: ReturnType<typeof findFieldHeadToHeadBonus>
   matchRows: MatchRow[]
 }) {
   const reasons: string[] = []
@@ -273,7 +285,7 @@ async function scoreAthleteForTocSeed({
   if (matchScore.qualityWins > 0) reasons.push(`${matchScore.qualityWins} quality match win${matchScore.qualityWins === 1 ? "" : "s"}`)
   if (matchScore.totalMatches > 0 && matchScore.totalMatches < 20) warnings.push(`Thin match history (${matchScore.totalMatches} bouts)`)
 
-  const h2h = findFieldHeadToHeadBonus(athlete, field, matchScore.bouts)
+  const h2h = fieldHeadToHead
   evidence.headToHead = h2h.opponents
   score += h2h.points
   if (h2h.wins || h2h.losses) reasons.push(`Field head-to-head: ${h2h.wins}-${h2h.losses}`)
@@ -395,6 +407,12 @@ export async function buildTocAiSeedRecommendations({
   for (const weight of board.weights) {
     const confirmed = weight.athletes.filter((a) => a.status === "confirmed")
     if (!confirmed.length) continue
+    const boutsByAthleteId = new Map(
+      confirmed.map((athlete) => [
+        athlete.athleteId,
+        scoreMatchRows(matchRowsByAthlete.get(athlete.athleteId) || []).bouts,
+      ]),
+    )
 
     const scored = await Promise.all(
       confirmed.map(async (athlete) => {
@@ -402,24 +420,14 @@ export async function buildTocAiSeedRecommendations({
           supabase,
           athlete,
           athleteRow: athleteRowsById.get(athlete.athleteId),
-          field: confirmed,
+          fieldHeadToHead: findFieldHeadToHeadBonus(athlete, confirmed, boutsByAthleteId),
           matchRows: matchRowsByAthlete.get(athlete.athleteId) || [],
         })
         return { athlete, ...scoredAthlete }
       }),
     )
 
-    scored
-      .sort((a, b) => {
-        const h2hSort = pairwiseHeadToHeadSort({
-          a: a.athlete,
-          b: b.athlete,
-          aBouts: scoreMatchRows(matchRowsByAthlete.get(a.athlete.athleteId) || []).bouts,
-          bBouts: scoreMatchRows(matchRowsByAthlete.get(b.athlete.athleteId) || []).bouts,
-        })
-        if (h2hSort !== 0) return h2hSort
-        return b.score - a.score || a.athlete.name.localeCompare(b.athlete.name)
-      })
+    orderByHeadToHeadThenResume(scored)
       .forEach((row, index) => {
         out.set(row.athleteId, {
           athleteId: row.athleteId,
