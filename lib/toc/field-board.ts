@@ -14,9 +14,18 @@ export type TocFieldAthlete = {
   aiSeedConfidence?: "High" | "Medium" | "Low" | null
   aiSeedReasons?: string[]
   aiSeedWarnings?: string[]
+  seedEvidence?: TocSeedEvidence | null
   jacketSize: string | null
   invitedAt: string | null
   confirmedAt: string | null
+}
+
+export type TocSeedEvidence = {
+  nchsaa: string[]
+  nhsca: string[]
+  super32: string[]
+  fargo: string[]
+  headToHead: { opponent: string; wins: number; losses: number }[]
 }
 
 export type TocWeightBoard = {

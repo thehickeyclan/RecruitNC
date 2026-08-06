@@ -72,17 +72,14 @@ function buildEightManDeBouts(weightClass: number, bySeed: Map<number, TocBracke
 
   return [
     ...r1,
-    bout(weightClass, 5, "Winners semifinals", "winners", feederSlot(1, "Winner Bout 1"), feederSlot(2, "Winner Bout 2")),
-    bout(weightClass, 6, "Winners semifinals", "winners", feederSlot(3, "Winner Bout 3"), feederSlot(4, "Winner Bout 4")),
-    bout(weightClass, 7, "Winners final", "winners", feederSlot(5, "Winner Bout 5"), feederSlot(6, "Winner Bout 6")),
-    bout(weightClass, 8, "Consolation R1", "losers", feederSlot(1, "Loser Bout 1"), feederSlot(2, "Loser Bout 2")),
-    bout(weightClass, 9, "Consolation R1", "losers", feederSlot(3, "Loser Bout 3"), feederSlot(4, "Loser Bout 4")),
-    bout(weightClass, 10, "Consolation R2", "losers", feederSlot(5, "Winner Bout 5"), feederSlot(8, "Winner Bout 8")),
-    bout(weightClass, 11, "Consolation R2", "losers", feederSlot(6, "Winner Bout 6"), feederSlot(9, "Winner Bout 9")),
-    bout(weightClass, 12, "Consolation semifinals", "losers", feederSlot(10, "Winner Bout 10"), feederSlot(11, "Winner Bout 11")),
-    bout(weightClass, 13, "Consolation final", "losers", feederSlot(7, "Loser Bout 7"), feederSlot(12, "Winner Bout 12")),
-    bout(weightClass, 14, "Championship", "placement", feederSlot(7, "Winner Bout 7"), feederSlot(13, "Winner Bout 13")),
-    bout(weightClass, 15, "3rd place", "placement", feederSlot(7, "Loser Bout 7"), feederSlot(13, "Loser Bout 13")),
+    bout(weightClass, 5, "Consolation R1", "losers", feederSlot(1, "Loser Bout 1"), feederSlot(2, "Loser Bout 2")),
+    bout(weightClass, 6, "Consolation R1", "losers", feederSlot(3, "Loser Bout 3"), feederSlot(4, "Loser Bout 4")),
+    bout(weightClass, 7, "Winners semifinals", "winners", feederSlot(1, "Winner Bout 1"), feederSlot(2, "Winner Bout 2")),
+    bout(weightClass, 8, "Winners semifinals", "winners", feederSlot(3, "Winner Bout 3"), feederSlot(4, "Winner Bout 4")),
+    bout(weightClass, 9, "Consolation semifinals", "losers", feederSlot(8, "Loser Bout 8"), feederSlot(5, "Winner Bout 5")),
+    bout(weightClass, 10, "Consolation semifinals", "losers", feederSlot(6, "Winner Bout 6"), feederSlot(7, "Loser Bout 7")),
+    bout(weightClass, 11, "Championship", "placement", feederSlot(7, "Winner Bout 7"), feederSlot(8, "Winner Bout 8")),
+    bout(weightClass, 12, "3rd place", "placement", feederSlot(9, "Winner Bout 9"), feederSlot(10, "Winner Bout 10")),
   ]
 }
 

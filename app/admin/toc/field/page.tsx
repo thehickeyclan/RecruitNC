@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { HardLink } from "@/components/hard-link"
-import { ArrowLeft, Download, ExternalLink, GripVertical, Loader2, Lock, RefreshCw, Sparkles, Unlock } from "lucide-react"
+import { ArrowLeft, ChevronDown, ChevronUp, Download, ExternalLink, GripVertical, Loader2, Lock, RefreshCw, Sparkles, Unlock } from "lucide-react"
 import { TOC_MAX_CONFIRMED_PER_WEIGHT } from "@/lib/toc/invitations"
 import type { TocFieldBoard, TocFieldAthlete, TocWeightBoard } from "@/lib/toc/field-board"
 import {
@@ -66,6 +66,7 @@ function WeightBoardCard({
   canEditSeeds: boolean
 }) {
   const [showChart, setShowChart] = useState(false)
+  const [expandedEvidenceId, setExpandedEvidenceId] = useState<string | null>(null)
   const [draggingId, setDraggingId] = useState<string | null>(null)
   const [dragOverId, setDragOverId] = useState<string | null>(null)
   const seedChart = useMemo(() => buildTocSeedChartText(board), [board])
@@ -211,7 +212,87 @@ function WeightBoardCard({
                           </div>
                         ) : null}
                       </div>
+                      {a.aiSeed ? (
+                        <Badge className={`${aiSeedConfidenceClass(a.aiSeedConfidence)} shrink-0 gap-1 text-[10px]`}>
+                          <Sparkles className="h-3 w-3" /> Suggested #{a.aiSeed}
+                        </Badge>
+                      ) : null}
                     </div>
+
+                    {a.aiSeed ? (
+                      <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50/80 px-2.5 py-2">
+                        <button
+                          type="button"
+                          className="flex w-full items-center justify-between gap-3 text-left"
+                          onClick={() => setExpandedEvidenceId((id) => (id === a.invitationId ? null : a.invitationId))}
+                          aria-expanded={expandedEvidenceId === a.invitationId}
+                        >
+                          <span className="min-w-0 text-[11px] leading-tight text-slate-600">
+                            <strong className="text-slate-900">Seed evidence:</strong>{" "}
+                            {a.aiSeedReasons?.[0] ?? "Open the résumé details used for this recommendation"}
+                          </span>
+                          {expandedEvidenceId === a.invitationId ? (
+                            <ChevronUp className="h-4 w-4 shrink-0 text-slate-500" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 shrink-0 text-slate-500" />
+                          )}
+                        </button>
+
+                        {expandedEvidenceId === a.invitationId ? (
+                          <div className="mt-3 space-y-3 border-t border-slate-200 pt-3">
+                            {a.seedEvidence?.headToHead.length ? (
+                              <div className="rounded-md border border-emerald-200 bg-emerald-50 p-2.5">
+                                <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-900">In-bracket head-to-head</p>
+                                <ul className="mt-1 space-y-1 text-xs text-emerald-950">
+                                  {a.seedEvidence.headToHead.map((row) => (
+                                    <li key={row.opponent}>
+                                      vs {row.opponent}: <strong>{row.wins}-{row.losses}</strong>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ) : null}
+
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              {([
+                                ["NCHSAA", a.seedEvidence?.nchsaa],
+                                ["NHSCA", a.seedEvidence?.nhsca],
+                                ["Super 32", a.seedEvidence?.super32],
+                                ["Fargo", a.seedEvidence?.fargo],
+                              ] as const).map(([label, rows]) => (
+                                <div key={label}>
+                                  <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{label}</p>
+                                  {rows?.length ? (
+                                    <ul className="mt-1 space-y-1 text-xs leading-snug text-slate-800">
+                                      {rows.map((row) => <li key={row}>{row}</li>)}
+                                    </ul>
+                                  ) : (
+                                    <p className="mt-1 text-xs text-slate-400">No result on file</p>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-2 border-t border-slate-200 pt-2">
+                              <span className="text-[11px] text-slate-500">
+                                Score {a.aiSeedScore ?? "—"} · {a.aiSeedConfidence ?? "Unknown"} confidence
+                              </span>
+                              {canEditSeeds && a.seed !== a.aiSeed ? (
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  className="ml-auto h-7 bg-[#002147] px-2 text-xs text-white hover:bg-[#003366]"
+                                  disabled={seedSavingId === a.invitationId}
+                                  onClick={() => void onSeedChange(a.invitationId, a.aiSeed ?? null)}
+                                >
+                                  Use suggested #{a.aiSeed}
+                                </Button>
+                              ) : null}
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : null}
 
                     {canEditSeeds && a.status === "confirmed" ? (
                       <div className="mt-3 flex flex-wrap items-center gap-2">

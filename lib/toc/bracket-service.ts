@@ -113,8 +113,20 @@ export async function getPublicBracketDraw(
 
 function normalizeDraw(draw: TocBracketDraw): TocBracketDraw {
   const realCount = draw.participants.filter((p) => !p.isPlaceholder && !p.athleteId.startsWith("__toc_open_")).length
+  const hasCurrentTwelveBoutFormat =
+    draw.bouts.length === 12 &&
+    draw.bouts.some((bout) => bout.boutNumber === 12 && bout.roundLabel === "3rd place")
+  const normalizedBouts = hasCurrentTwelveBoutFormat
+    ? draw.bouts
+    : buildEightManDeDraw(
+        draw.weightClass,
+        draw.participants.filter((p) => !p.isPlaceholder && !p.athleteId.startsWith("__toc_open_")),
+        draw.lockedAt,
+      ).bouts
+
   return {
     ...draw,
+    bouts: normalizedBouts,
     confirmedCount: draw.confirmedCount ?? realCount,
     openSpots: draw.openSpots ?? Math.max(0, TOC_MAX_CONFIRMED_PER_WEIGHT - realCount),
     isComplete: draw.isComplete ?? validateBracketParticipants(draw.participants) == null,

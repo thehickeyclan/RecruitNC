@@ -3,7 +3,8 @@ import { namesLikelySamePerson } from "@/lib/athlete-name-match"
 import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
 import { loadNcUnitedResultsForNameSearch } from "@/lib/national-team-live-profile-results"
 import { placementPoints, recordWinPctPoints } from "@/lib/toc/athlete-compare"
-import type { TocFieldBoard, TocFieldAthlete } from "@/lib/toc/field-board"
+import type { TocFieldBoard, TocFieldAthlete, TocSeedEvidence } from "@/lib/toc/field-board"
+import type { TournamentResultForDisplay } from "@/lib/public-profile-data"
 
 type MatchBout = {
   date?: string
@@ -32,6 +33,7 @@ export type TocAiSeedRecommendation = {
   aiSeedConfidence: "High" | "Medium" | "Low"
   aiSeedReasons: string[]
   aiSeedWarnings: string[]
+  seedEvidence: TocSeedEvidence
 }
 
 function parsePlacementNumber(raw: unknown): number | null {
@@ -180,18 +182,47 @@ function findFieldHeadToHeadBonus(
   athlete: TocFieldAthlete,
   field: TocFieldAthlete[],
   bouts: MatchBout[],
-): { points: number; wins: number; losses: number } {
+): { points: number; wins: number; losses: number; opponents: TocSeedEvidence["headToHead"] } {
   let wins = 0
   let losses = 0
+  const byOpponent = new Map<string, { opponent: string; wins: number; losses: number }>()
   for (const bout of bouts) {
     const opponent = String(bout.opponent_name ?? bout.opponent ?? "").trim()
     if (!opponent) continue
     const fieldOpponent = field.find((other) => other.athleteId !== athlete.athleteId && namesLikelySamePerson(opponent, other.name))
     if (!fieldOpponent) continue
-    if (didWinBout(bout)) wins += 1
-    else if (didLoseBout(bout)) losses += 1
+    const record = byOpponent.get(fieldOpponent.athleteId) ?? { opponent: fieldOpponent.name, wins: 0, losses: 0 }
+    if (didWinBout(bout)) {
+      wins += 1
+      record.wins += 1
+    } else if (didLoseBout(bout)) {
+      losses += 1
+      record.losses += 1
+    }
+    byOpponent.set(fieldOpponent.athleteId, record)
   }
-  return { points: wins * 18 - losses * 12, wins, losses }
+  return { points: wins * 18 - losses * 12, wins, losses, opponents: [...byOpponent.values()] }
+}
+
+function ordinal(place: number): string {
+  const mod100 = place % 100
+  if (mod100 >= 11 && mod100 <= 13) return `${place}th`
+  if (place % 10 === 1) return `${place}st`
+  if (place % 10 === 2) return `${place}nd`
+  if (place % 10 === 3) return `${place}rd`
+  return `${place}th`
+}
+
+function formatNationalEvidence(rows: TournamentResultForDisplay[]): string[] {
+  return [...rows]
+    .sort((a, b) => b.year - a.year)
+    .slice(0, 4)
+    .map((row) => {
+      const details = [row.placement?.trim(), row.record?.trim() ? `${row.record} record` : "", row.weight?.trim()]
+        .filter(Boolean)
+        .join(" · ")
+      return `${row.year}${details ? ` — ${details}` : ""}`
+    })
 }
 
 function pairwiseHeadToHeadSort({
@@ -232,6 +263,7 @@ async function scoreAthleteForTocSeed({
 }) {
   const reasons: string[] = []
   const warnings: string[] = []
+  const evidence: TocSeedEvidence = { nchsaa: [], nhsca: [], super32: [], fargo: [], headToHead: [] }
   let score = 0
 
   const matchScore = scoreMatchRows(matchRows)
@@ -242,6 +274,7 @@ async function scoreAthleteForTocSeed({
   if (matchScore.totalMatches > 0 && matchScore.totalMatches < 20) warnings.push(`Thin match history (${matchScore.totalMatches} bouts)`)
 
   const h2h = findFieldHeadToHeadBonus(athlete, field, matchScore.bouts)
+  evidence.headToHead = h2h.opponents
   score += h2h.points
   if (h2h.wins || h2h.losses) reasons.push(`Field head-to-head: ${h2h.wins}-${h2h.losses}`)
 
@@ -274,6 +307,17 @@ async function scoreAthleteForTocSeed({
         athleteRow,
       }).catch(() => []),
     ])
+
+    evidence.nchsaa = [...(bundle.nchsaa || [])]
+      .sort((a, b) => b.year - a.year)
+      .slice(0, 4)
+      .map((row) => {
+        const result = row.place != null && row.place > 0 ? ordinal(row.place) : "State qualifier"
+        return `${row.year} ${row.classification} · ${row.weight_class} · ${result}`
+      })
+    evidence.nhsca = formatNationalEvidence(bundle.nhsca || [])
+    evidence.super32 = formatNationalEvidence(bundle.super32 || [])
+    evidence.fargo = formatNationalEvidence(bundle.fargo || [])
 
     for (const row of bundle.nchsaa || []) {
       const place = Number(row.place)
@@ -331,6 +375,7 @@ async function scoreAthleteForTocSeed({
     confidence,
     reasons: reasons.slice(0, 5),
     warnings: warnings.slice(0, 4),
+    evidence,
   }
 }
 
@@ -383,6 +428,7 @@ export async function buildTocAiSeedRecommendations({
           aiSeedConfidence: row.confidence,
           aiSeedReasons: row.reasons,
           aiSeedWarnings: row.warnings,
+          seedEvidence: row.evidence,
         })
       })
   }
@@ -408,6 +454,7 @@ export function applyTocAiSeedRecommendations(
               aiSeedConfidence: recommendation.aiSeedConfidence,
               aiSeedReasons: recommendation.aiSeedReasons,
               aiSeedWarnings: recommendation.aiSeedWarnings,
+              seedEvidence: recommendation.seedEvidence,
             }
           : athlete
       }),

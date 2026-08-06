@@ -33,8 +33,24 @@ describe("eight-man DE bracket", () => {
     expect(r1[2].bottom).toEqual({ kind: "athlete", athleteId: "athlete-6" })
     expect(r1[3].top).toEqual({ kind: "athlete", athleteId: "athlete-7" })
     expect(r1[3].bottom).toEqual({ kind: "athlete", athleteId: "athlete-2" })
-    expect(draw.bouts.length).toBeGreaterThanOrEqual(14)
+    expect(draw.bouts).toHaveLength(12)
     expect(draw.isComplete).toBe(true)
+  })
+
+  it("uses the standard 12-bout consolation and third-place flow", () => {
+    const draw = buildEightManDeDraw(174, mockParticipants(), new Date().toISOString())
+    const bout = (number: number) => draw.bouts.find((item) => item.boutNumber === number)
+
+    expect(bout(5)?.top).toEqual({ kind: "feeder", boutNumber: 1, label: "Loser Bout 1" })
+    expect(bout(5)?.bottom).toEqual({ kind: "feeder", boutNumber: 2, label: "Loser Bout 2" })
+    expect(bout(6)?.top).toEqual({ kind: "feeder", boutNumber: 3, label: "Loser Bout 3" })
+    expect(bout(6)?.bottom).toEqual({ kind: "feeder", boutNumber: 4, label: "Loser Bout 4" })
+    expect(bout(9)?.top).toEqual({ kind: "feeder", boutNumber: 8, label: "Loser Bout 8" })
+    expect(bout(9)?.bottom).toEqual({ kind: "feeder", boutNumber: 5, label: "Winner Bout 5" })
+    expect(bout(10)?.top).toEqual({ kind: "feeder", boutNumber: 6, label: "Winner Bout 6" })
+    expect(bout(10)?.bottom).toEqual({ kind: "feeder", boutNumber: 7, label: "Loser Bout 7" })
+    expect(bout(12)?.top).toEqual({ kind: "feeder", boutNumber: 9, label: "Winner Bout 9" })
+    expect(bout(12)?.bottom).toEqual({ kind: "feeder", boutNumber: 10, label: "Winner Bout 10" })
   })
 
   it("builds partial draw with open spots for missing seeds", () => {
