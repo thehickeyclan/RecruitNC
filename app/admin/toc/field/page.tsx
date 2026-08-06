@@ -15,6 +15,60 @@ import {
   buildTocSeedChartText,
   buildTocWeightRosterCsv,
 } from "@/lib/toc/bracket-export"
+import { buildTocCredentialRollup, type TocCredentialRollup } from "@/lib/toc/credential-rollup"
+
+function CredentialRollup({
+  rollup,
+  expectedAthletes,
+  compact = false,
+}: {
+  rollup: TocCredentialRollup
+  expectedAthletes: number
+  compact?: boolean
+}) {
+  const metrics = [
+    {
+      label: "State champions",
+      value: rollup.stateChampionAthletes,
+      detail: `${rollup.stateTitles} title${rollup.stateTitles === 1 ? "" : "s"}`,
+    },
+    {
+      label: "State placers",
+      value: rollup.statePlacerAthletes,
+      detail: `${rollup.statePlacements} finish${rollup.statePlacements === 1 ? "" : "es"}`,
+    },
+    {
+      label: "All-Americans",
+      value: rollup.allAmericanAthletes,
+      detail: `${rollup.allAmericanFinishes} NHSCA/Fargo AA finish${rollup.allAmericanFinishes === 1 ? "" : "es"}`,
+    },
+    { label: "NHSCA record", value: `${rollup.nhscaWins}-${rollup.nhscaLosses}`, detail: "Combined" },
+    { label: "Super 32 record", value: `${rollup.super32Wins}-${rollup.super32Losses}`, detail: "Combined" },
+    { label: "Fargo record", value: `${rollup.fargoWins}-${rollup.fargoLosses}`, detail: "Combined" },
+  ]
+
+  return (
+    <div className={compact ? "rounded-lg border border-white/10 bg-[#081426] p-2.5" : "rounded-xl border border-white/10 bg-[#0B1D3A] p-4 shadow-xl shadow-black/15"}>
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <p className={`${compact ? "text-[10px]" : "text-xs"} font-bold uppercase tracking-[0.16em] text-[#D7B95A]`}>
+          {compact ? "Bracket résumé" : "Field résumé snapshot"}
+        </p>
+        <p className="text-[10px] text-white/45">
+          {rollup.athleteCount}/{expectedAthletes} confirmed profiles loaded
+        </p>
+      </div>
+      <div className={`grid ${compact ? "grid-cols-3 gap-1.5" : "grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6"}`}>
+        {metrics.map((metric) => (
+          <div key={metric.label} className="min-w-0 rounded-md border border-white/10 bg-[#060f1f] px-2 py-2">
+            <p className={`${compact ? "text-base" : "text-xl"} font-black leading-none text-white`}>{metric.value}</p>
+            <p className="mt-1 text-[10px] font-semibold leading-tight text-white/70">{metric.label}</p>
+            {!compact ? <p className="mt-0.5 text-[9px] leading-tight text-white/35">{metric.detail}</p> : null}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 function downloadText(filename: string, content: string, mime = "text/plain;charset=utf-8") {
   const blob = new Blob([content], { type: mime })
@@ -64,6 +118,7 @@ function WeightBoardCard({
   const [dragOverId, setDragOverId] = useState<string | null>(null)
   const seedChart = useMemo(() => buildTocSeedChartText(board), [board])
   const confirmedAthletes = useMemo(() => board.athletes.filter((a) => a.status === "confirmed"), [board.athletes])
+  const credentialRollup = useMemo(() => buildTocCredentialRollup(board.athletes), [board.athletes])
   const isReordering = seedSavingWeight === board.weightClass
 
   const exportCsv = () => {
@@ -87,27 +142,30 @@ function WeightBoardCard({
   }
 
   return (
-    <Card className="border-t-4 border-t-[#CC0000] shadow-sm">
+    <Card className="border border-white/10 border-t-4 border-t-[#CC0000] bg-[#0B1D3A] text-white shadow-xl shadow-black/20">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
           <div>
-            <CardTitle className="text-lg">{board.weightClass} lbs</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-xl font-black uppercase tracking-wide text-white">{board.weightClass} lbs</CardTitle>
+            <CardDescription className="text-white/50">
               {board.confirmedCount}/{board.maxSlots} confirmed
               {board.invitedCount > 0 ? ` · ${board.invitedCount} pending invite` : ""}
               {board.openConfirmedSlots > 0 ? ` · ${board.openConfirmedSlots} open` : " · full"}
             </CardDescription>
           </div>
           <div className="flex gap-1 shrink-0">
-            <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={exportCsv} title="Export CSV">
+            <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-white/60 hover:bg-white/10 hover:text-white" onClick={exportCsv} title="Export CSV">
               <Download className="h-4 w-4" />
             </Button>
           </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-2">
+        {board.confirmedCount > 0 ? (
+          <CredentialRollup rollup={credentialRollup} expectedAthletes={board.confirmedCount} compact />
+        ) : null}
         {board.athletes.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-4 text-center">No invites yet</p>
+          <p className="py-4 text-center text-sm text-white/40">No invites yet</p>
         ) : (
           <ul className="space-y-2.5">
             {board.athletes.map((a) => (
@@ -138,38 +196,38 @@ function WeightBoardCard({
                   setDraggingId(null)
                   setDragOverId(null)
                 }}
-                className={`rounded-xl border bg-white px-3 py-3 text-sm transition-colors ${
+                className={`rounded-lg border border-white/10 bg-[#081426] px-3 py-3 text-sm transition-colors ${
                   canEditSeeds && a.status === "confirmed" ? "cursor-move" : ""
                 } ${
                   dragOverId === a.invitationId
                     ? "border-[#CC0000] bg-[#CC0000]/10"
                     : draggingId === a.invitationId
-                      ? "border-[#002147]/50 bg-[#002147]/5 opacity-70"
+                      ? "border-[#D7B95A]/40 bg-[#D7B95A]/5 opacity-70"
                       : ""
                 }`}
                 title={canEditSeeds && a.status === "confirmed" ? `Drag to change ${canManage ? "official" : "your private"} seed order` : undefined}
               >
                 <div className="flex items-start gap-3">
                   {a.status === "confirmed" ? (
-                    <GripVertical className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                    <GripVertical className="mt-1 h-4 w-4 shrink-0 text-white/30" aria-hidden="true" />
                   ) : null}
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span
                         className={`inline-flex h-7 min-w-7 items-center justify-center rounded-md px-2 text-xs font-black tabular-nums ${
-                          a.seed ? "bg-[#002147] text-white" : "bg-slate-100 text-slate-500"
+                          a.seed ? "bg-[#CC0000] text-white" : "bg-white/10 text-white/45"
                         }`}
                       >
                         {a.seed ? `#${a.seed}` : "—"}
                       </span>
                       <div className="min-w-[11rem] flex-1">
-                        <p className="break-words font-semibold leading-tight text-slate-950">{a.name}</p>
-                        <p className="mt-0.5 break-words text-xs leading-tight text-muted-foreground">{a.school ?? "—"}</p>
+                        <p className="break-words font-semibold leading-tight text-white">{a.name}</p>
+                        <p className="mt-0.5 break-words text-xs leading-tight text-white/45">{a.school ?? "—"}</p>
                       </div>
                       {a.seedEvidence ? (
                         <button
                           type="button"
-                          className="inline-flex shrink-0 items-center gap-1 rounded-md border border-[#002147]/20 bg-[#002147]/5 px-2 py-1 text-[10px] font-semibold text-[#002147] hover:bg-[#002147]/10"
+                          className="inline-flex shrink-0 items-center gap-1 rounded-md border border-[#D7B95A]/35 bg-[#D7B95A]/10 px-2 py-1 text-[10px] font-semibold text-[#D7B95A] hover:bg-[#D7B95A]/20"
                           onClick={() => setExpandedEvidenceId((id) => (id === a.invitationId ? null : a.invitationId))}
                           aria-expanded={expandedEvidenceId === a.invitationId}
                         >
@@ -180,11 +238,11 @@ function WeightBoardCard({
                     </div>
 
                     {a.seedEvidence && expandedEvidenceId === a.invitationId ? (
-                      <div className="mt-3 space-y-3 rounded-lg border border-slate-200 bg-slate-50/80 p-3">
+                      <div className="mt-3 space-y-3 rounded-lg border border-white/10 bg-[#060f1f] p-3">
                             {a.seedEvidence?.headToHead.length ? (
-                              <div className="rounded-md border border-emerald-200 bg-emerald-50 p-2.5">
-                                <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-900">In-bracket head-to-head</p>
-                                <ul className="mt-1 space-y-1 text-xs text-emerald-950">
+                              <div className="rounded-md border border-emerald-400/25 bg-emerald-400/10 p-2.5">
+                                <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-300">In-bracket head-to-head</p>
+                                <ul className="mt-1 space-y-1 text-xs text-emerald-100">
                                   {a.seedEvidence.headToHead.map((row) => (
                                     <li key={row.opponent}>
                                       vs {row.opponent}: <strong>{row.wins}-{row.losses}</strong>
@@ -202,13 +260,13 @@ function WeightBoardCard({
                                 ["Fargo", a.seedEvidence?.fargo],
                               ] as const).map(([label, rows]) => (
                                 <div key={label}>
-                                  <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{label}</p>
+                                  <p className="text-[10px] font-bold uppercase tracking-wide text-[#D7B95A]">{label}</p>
                                   {rows?.length ? (
-                                    <ul className="mt-1 space-y-1 text-xs leading-snug text-slate-800">
+                                    <ul className="mt-1 space-y-1 text-xs leading-snug text-white/75">
                                       {rows.map((row) => <li key={row}>{row}</li>)}
                                     </ul>
                                   ) : (
-                                    <p className="mt-1 text-xs text-slate-400">No result on file</p>
+                                    <p className="mt-1 text-xs text-white/30">No result on file</p>
                                   )}
                                 </div>
                               ))}
@@ -224,7 +282,7 @@ function WeightBoardCard({
                           onValueChange={(v) => void onSeedChange(a.invitationId, v === "none" ? null : Number(v))}
                           disabled={seedSavingId === a.invitationId || isReordering}
                         >
-                          <SelectTrigger className="h-8 w-[8.5rem] text-xs font-semibold">
+                          <SelectTrigger className="h-8 w-[8.5rem] border-white/15 bg-white/5 text-xs font-semibold text-white">
                             <SelectValue placeholder={canManage ? "Official seed" : "My seed"} />
                           </SelectTrigger>
                           <SelectContent>
@@ -250,30 +308,30 @@ function WeightBoardCard({
         )}
 
         {canEditSeeds && confirmedAthletes.length > 1 ? (
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-[11px] text-white/40">
             Drag confirmed wrestlers to reorder {canManage ? "official" : "your private"} seeds. Top confirmed row becomes #1; the bracket updates after save.
           </p>
         ) : null}
 
         {seedChart ? (
           <div className="pt-2">
-            <Button type="button" variant="link" className="h-auto p-0 text-xs" onClick={() => setShowChart((v) => !v)}>
+            <Button type="button" variant="link" className="h-auto p-0 text-xs text-[#D7B95A]" onClick={() => setShowChart((v) => !v)}>
               {showChart ? "Hide" : "Show"} seed chart / R1 pairings
             </Button>
             {showChart ? (
-              <pre className="mt-2 text-[11px] leading-relaxed bg-muted/50 rounded-md p-2 whitespace-pre-wrap font-sans">
+              <pre className="mt-2 whitespace-pre-wrap rounded-md border border-white/10 bg-[#060f1f] p-2 font-sans text-[11px] leading-relaxed text-white/70">
                 {seedChart}
               </pre>
             ) : null}
           </div>
         ) : null}
 
-        <div className="pt-3 border-t space-y-2">
+        <div className="space-y-2 border-t border-white/10 pt-3">
           {bracketStatus?.locked ? (
             <>
-              <Badge className="bg-[#002147]">Draw published</Badge>
+              <Badge className="bg-emerald-600 text-white">Draw published</Badge>
               <div className="flex flex-wrap gap-2">
-                <Button type="button" variant="outline" size="sm" asChild>
+                <Button type="button" variant="outline" size="sm" className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white" asChild>
                   <HardLink href={`/tournament-of-champions/brackets/${board.weightClass}`}>
                     View bracket
                   </HardLink>
@@ -283,6 +341,7 @@ function WeightBoardCard({
                     type="button"
                     variant="ghost"
                     size="sm"
+                    className="text-white/60 hover:bg-white/10 hover:text-white"
                     disabled={bracketBusy}
                     onClick={() => void onUnlockDraw(board.weightClass)}
                   >
@@ -296,20 +355,20 @@ function WeightBoardCard({
             <>
               {bracketStatus?.canViewLive ? (
                 <div className="flex flex-wrap gap-2">
-                  <Button type="button" variant="outline" size="sm" asChild>
+                  <Button type="button" variant="outline" size="sm" className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white" asChild>
                     <HardLink href={`/tournament-of-champions/brackets/${board.weightClass}`}>
                       View live bracket
                     </HardLink>
                   </Button>
                   {bracketStatus.confirmedCount != null && bracketStatus.isComplete === false ? (
-                    <Badge variant="secondary" className="text-[10px]">
+                    <Badge variant="secondary" className="bg-white/10 text-[10px] text-white/70">
                       {bracketStatus.confirmedCount}/{TOC_MAX_CONFIRMED_PER_WEIGHT} · building
                     </Badge>
                   ) : null}
                 </div>
               ) : null}
               {bracketStatus?.lockError ? (
-                <p className="text-[11px] text-muted-foreground leading-relaxed">{bracketStatus.lockError}</p>
+                <p className="text-[11px] leading-relaxed text-white/40">{bracketStatus.lockError}</p>
               ) : null}
               {canManage ? (
                 <>
@@ -323,7 +382,7 @@ function WeightBoardCard({
                     <Lock className="h-3.5 w-3.5 mr-1" />
                     Lock official draw
                   </Button>
-                  <p className="text-[10px] text-muted-foreground leading-relaxed">
+                  <p className="text-[10px] leading-relaxed text-white/35">
                     Bracket shows live as soon as one wrestler is confirmed with a seed. Lock when the field is final.
                   </p>
                 </>
@@ -470,6 +529,10 @@ export default function TocFieldAdminPage() {
     if (filter === "all") return board.weights
     return board.weights.filter((w) => w.athletes.length > 0)
   }, [board, filter])
+  const fieldCredentialRollup = useMemo(
+    () => buildTocCredentialRollup(board?.weights.flatMap((weight) => weight.athletes) ?? []),
+    [board],
+  )
 
   const exportAllCsv = () => {
     if (!board) return
@@ -510,19 +573,20 @@ export default function TocFieldAdminPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[96rem] space-y-6">
+    <div className="relative left-1/2 min-h-screen w-screen -translate-x-1/2 bg-[#060f1f] px-4 py-8 text-white sm:px-6">
+      <div className="mx-auto max-w-[96rem] space-y-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" asChild>
+          <Button variant="ghost" size="icon" className="text-white/60 hover:bg-white/10 hover:text-white" asChild>
             <Link href={canManage ? "/admin/toc" : "/tournament-of-champions/brackets"}>
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">Field by weight</h1>
-            <p className="text-sm text-muted-foreground">
+            <h1 className="text-3xl font-black uppercase tracking-wide text-white">Field by weight</h1>
+            <p className="text-sm text-white/50">
               {canManage ? "Private roster. Seed 1–8 and publish official draws to " : "Your private seeding workspace. Open your saved draw at "}
-              <HardLink href="/tournament-of-champions/brackets" className="text-[#B31B1B] hover:underline">
+              <HardLink href="/tournament-of-champions/brackets" className="text-[#D7B95A] hover:underline">
                 public brackets
               </HardLink>
               .
@@ -530,16 +594,16 @@ export default function TocFieldAdminPage() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" onClick={() => void load()} disabled={loading}>
+          <Button variant="outline" size="sm" className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white" onClick={() => void load()} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
-          <Button variant="outline" size="sm" onClick={exportAllCsv} disabled={!board}>
+          <Button variant="outline" size="sm" className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white" onClick={exportAllCsv} disabled={!board}>
             <Download className="h-4 w-4 mr-2" />
             Export all CSV
           </Button>
           {canManage ? (
-            <Button variant="outline" size="sm" asChild>
+            <Button variant="outline" size="sm" className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white" asChild>
               <HardLink href="/admin/toc/invitations">Send invites</HardLink>
             </Button>
           ) : null}
@@ -554,46 +618,49 @@ export default function TocFieldAdminPage() {
       ) : null}
 
       {board ? (
+        <>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <Card>
+          <Card className="border-white/10 bg-[#0B1D3A] text-white shadow-lg shadow-black/15">
             <CardContent className="pt-4">
-              <p className="text-2xl font-bold text-[#002147]">{board.summary.totalConfirmed}</p>
-              <p className="text-xs text-muted-foreground">Confirmed</p>
+              <p className="text-2xl font-bold text-white">{board.summary.totalConfirmed}</p>
+              <p className="text-xs text-white/45">Confirmed</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border-white/10 bg-[#0B1D3A] text-white shadow-lg shadow-black/15">
             <CardContent className="pt-4">
-              <p className="text-2xl font-bold text-[#002147]">{board.summary.totalInvited}</p>
-              <p className="text-xs text-muted-foreground">Invited (pending)</p>
+              <p className="text-2xl font-bold text-white">{board.summary.totalInvited}</p>
+              <p className="text-xs text-white/45">Invited (pending)</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border-white/10 bg-[#0B1D3A] text-white shadow-lg shadow-black/15">
             <CardContent className="pt-4">
-              <p className="text-2xl font-bold text-[#002147]">{board.summary.fullBrackets}</p>
-              <p className="text-xs text-muted-foreground">Brackets full (8/8)</p>
+              <p className="text-2xl font-bold text-white">{board.summary.fullBrackets}</p>
+              <p className="text-xs text-white/45">Brackets full (8/8)</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border-white/10 bg-[#0B1D3A] text-white shadow-lg shadow-black/15">
             <CardContent className="pt-4">
-              <p className="text-2xl font-bold text-[#002147]">{board.summary.partialBrackets}</p>
-              <p className="text-xs text-muted-foreground">In progress</p>
+              <p className="text-2xl font-bold text-white">{board.summary.partialBrackets}</p>
+              <p className="text-xs text-white/45">In progress</p>
             </CardContent>
           </Card>
         </div>
+        <CredentialRollup rollup={fieldCredentialRollup} expectedAthletes={board.summary.totalConfirmed} />
+        </>
       ) : null}
 
-      <Card>
+      <Card className="border-white/10 bg-[#0B1D3A] text-white shadow-xl shadow-black/20">
         <CardHeader>
-          <CardTitle className="text-lg">Bracketing</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-lg text-white">Bracketing</CardTitle>
+          <CardDescription className="text-white/45">
             Publish draws from this page when 8 wrestlers are confirmed with seeds 1–8. Export CSV for TrackWrestling if
             you also run live scoring there.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="rounded-lg border border-[#D7B95A]/50 bg-[#D7B95A]/10 p-3 text-sm text-[#3b2b00]">
+          <div className="rounded-lg border border-[#D7B95A]/35 bg-[#D7B95A]/10 p-3 text-sm text-white/75">
             <div className="flex items-start gap-2">
-              <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[#B31B1B]" />
+              <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[#D7B95A]" />
               <p>
                 <strong>Seed evidence</strong> brings together head-to-head results inside the field, NCHSAA
                 qualification and placement, NHSCA, Super 32, and Fargo records. Review the evidence, then use the
@@ -604,7 +671,7 @@ export default function TocFieldAdminPage() {
           <div className="flex flex-wrap gap-3">
           <HardLink
             href="/tournament-of-champions/brackets"
-            className="inline-flex items-center gap-2 text-sm font-medium text-[#B31B1B] hover:underline"
+            className="inline-flex items-center gap-2 text-sm font-medium text-[#D7B95A] hover:underline"
           >
             Public brackets hub <ExternalLink className="h-3.5 w-3.5" />
           </HardLink>
@@ -612,7 +679,7 @@ export default function TocFieldAdminPage() {
             href="https://www.trackwrestling.com/"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-sm font-medium text-[#B31B1B] hover:underline"
+            className="inline-flex items-center gap-2 text-sm font-medium text-[#D7B95A] hover:underline"
           >
             TrackWrestling (optional) <ExternalLink className="h-3.5 w-3.5" />
           </a>
@@ -621,7 +688,7 @@ export default function TocFieldAdminPage() {
               href={bracketsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm font-medium text-[#B31B1B] hover:underline"
+              className="inline-flex items-center gap-2 text-sm font-medium text-[#D7B95A] hover:underline"
             >
               External live URL <ExternalLink className="h-3.5 w-3.5" />
             </a>
@@ -635,7 +702,7 @@ export default function TocFieldAdminPage() {
           type="button"
           variant={filter === "active" ? "default" : "outline"}
           size="sm"
-          className={filter === "active" ? "bg-[#002147]" : ""}
+          className={filter === "active" ? "bg-[#CC0000] text-white hover:bg-[#a80000]" : "border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"}
           onClick={() => setFilter("active")}
         >
           Weights with activity
@@ -644,16 +711,16 @@ export default function TocFieldAdminPage() {
           type="button"
           variant={filter === "all" ? "default" : "outline"}
           size="sm"
-          className={filter === "all" ? "bg-[#002147]" : ""}
+          className={filter === "all" ? "bg-[#CC0000] text-white hover:bg-[#a80000]" : "border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"}
           onClick={() => setFilter("all")}
         >
           All 11 weights
         </Button>
       </div>
 
-      {error ? <p className="text-red-600 text-sm">{error}</p> : null}
+      {error ? <p className="text-sm text-red-300">{error}</p> : null}
       {loading && !board ? (
-        <p className="text-sm text-muted-foreground flex items-center gap-2">
+        <p className="flex items-center gap-2 text-sm text-white/45">
           <Loader2 className="h-4 w-4 animate-spin" /> Loading field…
         </p>
       ) : null}
@@ -675,6 +742,7 @@ export default function TocFieldAdminPage() {
             canEditSeeds
           />
         ))}
+      </div>
       </div>
     </div>
   )

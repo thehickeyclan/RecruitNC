@@ -231,6 +231,18 @@ function formatNationalEvidence(rows: TournamentResultForDisplay[]): string[] {
     })
 }
 
+function recordTotals(rows: TournamentResultForDisplay[]): { wins: number; losses: number } {
+  let wins = 0
+  let losses = 0
+  for (const row of rows) {
+    const match = String(row.record ?? "").match(/^(\d+)\s*-\s*(\d+)$/)
+    if (!match) continue
+    wins += Number(match[1])
+    losses += Number(match[2])
+  }
+  return { wins, losses }
+}
+
 function orderByHeadToHeadThenResume<T extends {
   athlete: TocFieldAthlete
   score: number
@@ -275,7 +287,25 @@ async function scoreAthleteForTocSeed({
 }) {
   const reasons: string[] = []
   const warnings: string[] = []
-  const evidence: TocSeedEvidence = { nchsaa: [], nhsca: [], super32: [], fargo: [], headToHead: [] }
+  const evidence: TocSeedEvidence = {
+    nchsaa: [],
+    nhsca: [],
+    super32: [],
+    fargo: [],
+    headToHead: [],
+    summary: {
+      stateTitles: 0,
+      statePlacements: 0,
+      nhscaAllAmericanFinishes: 0,
+      fargoAllAmericanFinishes: 0,
+      nhscaWins: 0,
+      nhscaLosses: 0,
+      super32Wins: 0,
+      super32Losses: 0,
+      fargoWins: 0,
+      fargoLosses: 0,
+    },
+  }
   let score = 0
 
   const matchScore = scoreMatchRows(matchRows)
@@ -330,6 +360,27 @@ async function scoreAthleteForTocSeed({
     evidence.nhsca = formatNationalEvidence(bundle.nhsca || [])
     evidence.super32 = formatNationalEvidence(bundle.super32 || [])
     evidence.fargo = formatNationalEvidence(bundle.fargo || [])
+    const nhscaRecord = recordTotals(bundle.nhsca || [])
+    const super32Record = recordTotals(bundle.super32 || [])
+    const fargoRecord = recordTotals(bundle.fargo || [])
+    evidence.summary = {
+      stateTitles: (bundle.nchsaa || []).filter((row) => row.place === 1).length,
+      statePlacements: (bundle.nchsaa || []).filter((row) => row.place != null && row.place > 0).length,
+      nhscaAllAmericanFinishes: (bundle.nhsca || []).filter((row) => {
+        const place = parsePlacementNumber(row.placement)
+        return place != null && place <= 8
+      }).length,
+      fargoAllAmericanFinishes: (bundle.fargo || []).filter((row) => {
+        const place = parsePlacementNumber(row.placement)
+        return place != null && place <= 8
+      }).length,
+      nhscaWins: nhscaRecord.wins,
+      nhscaLosses: nhscaRecord.losses,
+      super32Wins: super32Record.wins,
+      super32Losses: super32Record.losses,
+      fargoWins: fargoRecord.wins,
+      fargoLosses: fargoRecord.losses,
+    }
 
     for (const row of bundle.nchsaa || []) {
       const place = Number(row.place)
@@ -374,7 +425,7 @@ async function scoreAthleteForTocSeed({
     warnings.push("Athlete profile row unavailable")
   }
 
-  const confidence =
+  const confidence: TocAiSeedRecommendation["aiSeedConfidence"] =
     matchScore.totalMatches >= 20 && reasons.some((r) => /NCHSAA|national|RecruitNC|head-to-head/i.test(r))
       ? "High"
       : matchScore.totalMatches > 0 || reasons.length >= 2

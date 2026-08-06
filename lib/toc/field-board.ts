@@ -26,6 +26,18 @@ export type TocSeedEvidence = {
   super32: string[]
   fargo: string[]
   headToHead: { opponent: string; wins: number; losses: number }[]
+  summary: {
+    stateTitles: number
+    statePlacements: number
+    nhscaAllAmericanFinishes: number
+    fargoAllAmericanFinishes: number
+    nhscaWins: number
+    nhscaLosses: number
+    super32Wins: number
+    super32Losses: number
+    fargoWins: number
+    fargoLosses: number
+  }
 }
 
 export type TocWeightBoard = {
