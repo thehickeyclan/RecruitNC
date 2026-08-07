@@ -10,14 +10,34 @@ import { sendSms, toE164 } from "@/lib/sms"
 export const dynamic = "force-dynamic"
 export const maxDuration = 300
 
-type RecipientRow = { user_id: string; email: string | null; display_name: string | null; cell_phone: string | null }
+type RecipientRow = {
+  user_id: string
+  email: string | null
+  display_name: string | null
+  cell_phone: string | null
+}
 
 async function requireAdmin() {
   const supabase = await createClient()
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) return { ok: false as const, status: 401 as const, error: "Unauthorized", user: null }
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
+  if (authError || !user)
+    return {
+      ok: false as const,
+      status: 401 as const,
+      error: "Unauthorized",
+      user: null,
+    }
   const { data: profile } = await supabase.from("user_profiles").select("is_admin").eq("user_id", user.id).single()
-  if (!profile?.is_admin) return { ok: false as const, status: 403 as const, error: "Admin required", user: null }
+  if (!profile?.is_admin)
+    return {
+      ok: false as const,
+      status: 403 as const,
+      error: "Admin required",
+      user: null,
+    }
   return { ok: true as const, user }
 }
 
@@ -52,10 +72,18 @@ export async function POST(request: NextRequest) {
   const rawBodyHtml = typeof body.bodyHtml === "string" ? body.bodyHtml.trim() : ""
   const testEmail = typeof body.testEmail === "string" ? body.testEmail.trim() || null : null
   const testOnly = body.testOnly === true
-  const sender = resolveAdminBlastSender({ emailSender: body.emailSender, logoVariant: body.logoVariant })
-  const channels = body.channels && typeof body.channels === "object"
-    ? { inApp: !!body.channels.inApp, email: !!body.channels.email, sms: !!body.channels.sms }
-    : { inApp: false, email: false, sms: false }
+  const sender = resolveAdminBlastSender({
+    emailSender: body.emailSender,
+    logoVariant: body.logoVariant,
+  })
+  const channels =
+    body.channels && typeof body.channels === "object"
+      ? {
+          inApp: !!body.channels.inApp,
+          email: !!body.channels.email,
+          sms: !!body.channels.sms,
+        }
+      : { inApp: false, email: false, sms: false }
 
   if (!rawBody && !rawBodyHtml) return NextResponse.json({ error: "Message body is required" }, { status: 400 })
   if (!channels.inApp && !channels.email && !channels.sms) {
@@ -65,7 +93,14 @@ export async function POST(request: NextRequest) {
   const admin = createAdminClient()
   let recipients: RecipientRow[]
   if (testOnly && testEmail && testEmail.includes("@")) {
-    recipients = [{ user_id: "test", email: testEmail, display_name: "Test", cell_phone: null }]
+    recipients = [
+      {
+        user_id: "test",
+        email: testEmail,
+        display_name: "Test",
+        cell_phone: null,
+      },
+    ]
   } else {
     recipients = await getAdminMessagingRecipients(admin, profile, group, 5000)
     if (recipients.length === 0) {
@@ -75,7 +110,9 @@ export async function POST(request: NextRequest) {
       const withEmail = recipients.filter((r) => r.email?.trim()).length
       if (withEmail === 0) {
         return NextResponse.json(
-          { error: "No recipients have an email on file — cannot send email blast." },
+          {
+            error: "No recipients have an email on file — cannot send email blast.",
+          },
           { status: 400 },
         )
       }
@@ -87,7 +124,11 @@ export async function POST(request: NextRequest) {
   const plainBody = rawBody || toPlainText(rawBodyHtml)
   const smsBody = plainBody.length > 1500 ? plainBody.slice(0, 1497) + "…" : plainBody
 
-  const result: { inApp?: { sent: boolean; threadId?: string; error?: string }; email: { sent: number; failed: number }; sms: { sent: number; failed: number } } = {
+  const result: {
+    inApp?: { sent: boolean; threadId?: string; error?: string }
+    email: { sent: number; failed: number }
+    sms: { sent: number; failed: number }
+  } = {
     email: { sent: 0, failed: 0 },
     sms: { sent: 0, failed: 0 },
   }
@@ -123,7 +164,6 @@ export async function POST(request: NextRequest) {
     console.warn("[admin/messaging/send] admin_blast_log early insert skipped:", (e as Error).message)
   }
 
-
   if (channels.inApp && group && !testOnly) {
     let threadId: string | null = null
     if (group === "blue") {
@@ -148,7 +188,10 @@ export async function POST(request: NextRequest) {
         result.inApp = { sent: false, error: insertErr.message }
       }
     } else {
-      result.inApp = { sent: false, error: "No thread found for this group (event or Blue). In-app only works for event hubs or Blue." }
+      result.inApp = {
+        sent: false,
+        error: "No thread found for this group (event or Blue). In-app only works for event hubs or Blue.",
+      }
     }
   }
 
@@ -159,6 +202,7 @@ export async function POST(request: NextRequest) {
       subject,
       htmlBody,
       sender,
+      replyTo: group === "toc-college-coaches" ? "info@ncwrestlingunited.com" : undefined,
     })
     result.email.sent = emailResult.sent
     result.email.failed = emailResult.failed
@@ -221,8 +265,7 @@ export async function POST(request: NextRequest) {
   if (channels.email && result.email.sent === 0 && result.email.failed === 0) {
     return NextResponse.json(
       {
-        error:
-          "No emails were sent. Check RESEND_API_KEY on Vercel and that recipients have email addresses.",
+        error: "No emails were sent. Check RESEND_API_KEY on Vercel and that recipients have email addresses.",
         recipientCount: recipients.length,
         result,
         emailSkippedNoAddress,

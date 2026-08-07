@@ -8,15 +8,13 @@ export const TOC_EVENT_DATE = new Date("2026-09-18T16:00:00-04:00")
 export const TOC_EVENT_DATES_RANGE = "September 18–19, 2026" as const
 export const TOC_FRIDAY_EVENT_DATE = "Friday, September 18, 2026" as const
 export const TOC_SATURDAY_COMPETITION_DATE = "Saturday, September 19, 2026" as const
-export const TOC_EVENT_DATES_DISPLAY =
-  `${TOC_EVENT_DATES_RANGE} · one weigh-in Friday night · first round after` as const
+export const TOC_EVENT_DATES_DISPLAY = `${TOC_EVENT_DATES_RANGE} · one weigh-in Friday night · first round after` as const
 
 /** Single official weigh-in — fan-facing copy for landing, schedule, and athlete comms. */
 export const TOC_WEIGH_IN = {
   headline: "One weigh-in — Friday night only",
   time: "4:00 PM Friday, September 18",
-  detail:
-    "Friday weigh-in is flat — wrestlers must make their tournament weight with no allowance. There is no second weigh-in on Saturday. Singlet required; skin check at the scale; USA Wrestling card required.",
+  detail: "Friday weigh-in is flat — wrestlers must make their tournament weight with no allowance. There is no second weigh-in on Saturday. Singlet required; skin check at the scale; USA Wrestling card required.",
 } as const
 
 /** Hero — large date stack at top of landing page. */
@@ -73,8 +71,7 @@ export const TOC_TROPHIES_AND_AWARDS = {
     {
       title: "Champion hard-copy bracket",
       eyebrow: "Bracket champion",
-      description:
-        "Every bracket champion receives a 24×36 hard-copy Tournament of Champions bracket — a permanent record of the path they earned.",
+      description: "Every bracket champion receives a 24×36 hard-copy Tournament of Champions bracket — a permanent record of the path they earned.",
       image: {
         src: "/images/toc/tournament-of-champions-bracket-award.png",
         alt: "Tournament of Champions 24 by 36 hard-copy champion bracket award",
@@ -86,8 +83,7 @@ export const TOC_TROPHIES_AND_AWARDS = {
     {
       title: "Most Outstanding Wrestler (MOW)",
       eyebrow: "Special award",
-      description:
-        "The MOW is awarded to the athlete who delivers the tournament’s most exceptional overall performance.",
+      description: "The MOW is awarded to the athlete who delivers the tournament’s most exceptional overall performance.",
       highlight: "Only one MOW Hammer is awarded each year.",
       image: {
         src: "/images/toc/toc-mow-hammer.png",
@@ -95,35 +91,22 @@ export const TOC_TROPHIES_AND_AWARDS = {
         width: 1448,
         height: 1086,
       },
-      bullets: [
-        "Quality of competition",
-        "Dominance of victories",
-        "Championship match performance",
-        "Overall impact on the tournament",
-      ],
-      note:
-        "The MOW Hammer is selected by the Tournament of Champions Selection Committee, comprised of tournament officials and NC United representatives following the championship finals.",
+      bullets: ["Quality of competition", "Dominance of victories", "Championship match performance", "Overall impact on the tournament"],
+      note: "The MOW Hammer is selected by the Tournament of Champions Selection Committee, comprised of tournament officials and NC United representatives following the championship finals.",
       closing: "The Hammer Is Earned.",
     },
     {
       title: "Match of Champions",
       eyebrow: "Iron sharpens iron",
-      description:
-        "The Match of Champions recognizes the two wrestlers who compete in the tournament’s most exceptional match over the two-day event.",
+      description: "The Match of Champions recognizes the two wrestlers who compete in the tournament’s most exceptional match over the two-day event.",
       image: {
         src: "/images/toc/toc-match-of-champions-hammer.png",
         alt: "Tournament of Champions Match of Champions hammer award design",
         width: 1448,
         height: 1086,
       },
-      bullets: [
-        "Technical excellence",
-        "Competitiveness and significance",
-        "Sportsmanship",
-        "Lasting impact on the Tournament of Champions",
-      ],
-      note:
-        "Selected after the championship finals by the Tournament of Champions Selection Committee. The Match of Champions may occur during any round of the tournament.",
+      bullets: ["Technical excellence", "Competitiveness and significance", "Sportsmanship", "Lasting impact on the Tournament of Champions"],
+      note: "Selected after the championship finals by the Tournament of Champions Selection Committee. The Match of Champions may occur during any round of the tournament.",
     },
   ],
 } as const
@@ -132,19 +115,13 @@ export const TOC_CADEN_PERRY_WARRIOR_SCHOLARSHIP = {
   eyebrow: "Presented at Tournament of Champions",
   headline: "The Caden Perry Warrior Scholarship",
   tagline: "The future is bright for those who refuse to quit.",
-  lead:
-    "Caden Perry embodied what wrestling is supposed to build: courage, resilience, discipline, heart, and an unwavering refusal to quit.",
-  award:
-    "The inaugural award provides $1,000 in wrestling support for one North Carolina wrestler whose response to genuine adversity reflects that same warrior spirit.",
-  seedCommitment:
-    "NC United has committed the first $1,000 to launch the fund. Community donations build on that commitment and help expand the award’s impact.",
-  notAbout:
-    "This is not an award for rankings, records, championships, recruiting status, or academic achievement — and the recipient does not have to compete in the Tournament of Champions.",
-  eligibility:
-    "Any active North Carolina wrestler in grades 6–12 may be nominated by a coach, parent, teacher, teammate, counselor, or community member. Athletes may not nominate themselves.",
+  lead: "Caden Perry embodied what wrestling is supposed to build: courage, resilience, discipline, heart, and an unwavering refusal to quit.",
+  award: "The inaugural award provides $1,000 in wrestling support for one North Carolina wrestler whose response to genuine adversity reflects that same warrior spirit.",
+  seedCommitment: "NC United has committed the first $1,000 to launch the fund. Community donations build on that commitment and help expand the award’s impact.",
+  notAbout: "This is not an award for rankings, records, championships, recruiting status, or academic achievement — and the recipient does not have to compete in the Tournament of Champions.",
+  eligibility: "Any active North Carolina wrestler in grades 6–12 may be nominated by a coach, parent, teacher, teammate, counselor, or community member. Athletes may not nominate themselves.",
   dates: "Nominations open August 1 and close August 30. The recipient will be honored September 19 at the Tournament of Champions in Apex.",
-  fundUseIntro:
-    "Funds may be paid directly or reimbursed with receipts toward documented wrestling-related expenses, including:",
+  fundUseIntro: "Funds may be paid directly or reimbursed with receipts toward documented wrestling-related expenses, including:",
   fundUses: [
     "Club dues, school wrestling fees, and training fees",
     "Private lessons and small-group training",
@@ -227,14 +204,12 @@ export const TOC_COMPETITION_MATS = {
 export const TOC_SUPPORT_DONATIONS = {
   eyebrow: "Help resource the stage",
   headline: "Support Tournament of Champions",
-  lead:
-    "Families and supporters can help NC United resource the Tournament of Champions experience — mats, officials, awards, production, hospitality, and the details that make this more than another weekend tournament.",
+  lead: "Families and supporters can help NC United resource the Tournament of Champions experience — mats, officials, awards, production, hospitality, and the details that make this more than another weekend tournament.",
   qrSrc: "/images/toc/toc-donation-qr.svg",
   qrAlt: "QR code to support Tournament of Champions through the NC United Training Fund",
   href: "/fundraising/training-fund?source=toc#spartan-checkout",
   ctaLabel: "Donate to support TOC",
-  note:
-    "Gifts are charitable contributions to NC United Wrestling’s governed Training Fund. NC United applies support toward wrestling development, event resources, and exempt-purpose program needs.",
+  note: "Gifts are charitable contributions to NC United Wrestling’s governed Training Fund. NC United applies support toward wrestling development, event resources, and exempt-purpose program needs.",
   bullets: [
     "Scan the QR code at the event or share the link with family and supporters.",
     "Every gift helps raise the standard for athlete experience, awards, operations, and production.",
@@ -242,25 +217,23 @@ export const TOC_SUPPORT_DONATIONS = {
   ],
 } as const
 
-export const TOC_WEIGHT_CLASSES = [
-  117, 125, 133, 141, 149, 157, 165, 174, 184, 197, 285,
-] as const
+export const TOC_WEIGHT_CLASSES = [117, 125, 133, 141, 149, 157, 165, 174, 184, 197, 285] as const
 
-export const TOC_WEIGH_IN_LINE =
-  `${TOC_WEIGH_IN.headline} · ${TOC_WEIGH_IN.time} · Flat weight, no allowance` as const
+export const TOC_WEIGH_IN_LINE = `${TOC_WEIGH_IN.headline} · ${TOC_WEIGH_IN.time} · Flat weight, no allowance` as const
 
 /** Public schedule — Friday weigh-in + first round; Saturday finishes brackets through finals. */
 export const TOC_SCHEDULE = {
   headline: "When to be there",
-  lead:
-    "One official weigh-in only — 4:00 PM Friday night. No Saturday weigh-in. First-round bouts follow that evening; brackets play out Saturday with single-mat championship finals.",
-  athleteNote:
-    "Invited wrestlers: one weigh-in Friday at 4:00 PM only — then first round Friday night. There is no second weigh-in Saturday.",
+  lead: "One official weigh-in only — 4:00 PM Friday night. No Saturday weigh-in. First-round bouts follow that evening; brackets play out Saturday with single-mat championship finals.",
+  athleteNote: "Invited wrestlers: one weigh-in Friday at 4:00 PM only — then first round Friday night. There is no second weigh-in Saturday.",
   friday: {
     title: "Friday · September 18",
     subtitle: "One weigh-in at 4:00 PM · first round Friday night — two mats live",
     rows: [
-      { time: "2:00 PM", activity: "Crew load-in — mats, scoring tables, PA, and production setup" },
+      {
+        time: "2:00 PM",
+        activity: "Crew load-in — mats, scoring tables, PA, and production setup",
+      },
       {
         time: "4:00 PM",
         activity: "One official weigh-in & skin check (invited wrestlers only — no Saturday weigh-in)",
@@ -272,20 +245,28 @@ export const TOC_SCHEDULE = {
     title: "Saturday · September 19",
     subtitle: "Brackets resume — placement bouts, then championship finals on one mat",
     rows: [
-      { time: "7:30 AM", activity: "Doors open (athletes, coaches, ticket holders)" },
+      {
+        time: "7:30 AM",
+        activity: "Doors open (athletes, coaches, ticket holders)",
+      },
       { time: "8:45 AM", activity: "National anthem & invocation" },
-      { time: "9:00 AM", activity: "Brackets resume — two mats through placement bouts" },
+      {
+        time: "9:00 AM",
+        activity: "Brackets resume — two mats through placement bouts",
+      },
       { time: "~3:30 PM", activity: "Placement bouts complete (estimate)" },
       { time: "4:00–5:00 PM", activity: "Break — championship mat setup" },
       { time: "5:00 PM", activity: "Parade of finalists & introductions" },
-      { time: "5:15 PM", activity: "Championship finals — one mat, all 11 weights" },
+      {
+        time: "5:15 PM",
+        activity: "Championship finals — one mat, all 11 weights",
+      },
       { time: "~7:30 PM", activity: "Awards & event concludes" },
     ],
   },
 } as const
 
-export const TOC_AI_RENDERING_CAPTION =
-  "AI rendering of the existing facility for illustration; actual setup and presentation may vary." as const
+export const TOC_AI_RENDERING_CAPTION = "AI rendering of the existing facility for illustration; actual setup and presentation may vary." as const
 
 export const TOC_CONTACT_EMAIL = "info@ncwrestlingunited.com" as const
 
@@ -301,8 +282,7 @@ export const TOC_GOFAN_TICKETS_URL = "https://gofan.co/app/school/NC101846" as c
 
 export const TOC_NC_UNITED_ABOUT = {
   headline: "About NC United",
-  body:
-    "NC United is a 501(c)(3) nonprofit building North Carolina's premier wrestling ecosystem — from the RecruitNC recruiting platform to youth development, college coaching access, and signature events. Co-founded by Matt Hickey, Michael Macchiavello, and Colton Palmer.",
+  body: "NC United is a 501(c)(3) nonprofit building North Carolina's premier wrestling ecosystem — from the RecruitNC recruiting platform to youth development, college coaching access, and signature events. Co-founded by Matt Hickey, Michael Macchiavello, and Colton Palmer.",
   href: "https://ncwrestlingunited.com",
   linkLabel: "Learn more at ncwrestlingunited.com",
 } as const
@@ -310,8 +290,7 @@ export const TOC_NC_UNITED_ABOUT = {
 export const TOC_SPECTATORS = {
   eyebrow: "For families and fans",
   headline: "You're welcome in the building",
-  lead:
-    "The Tournament of Champions is built for families — comfortable seating, free parking, and a kid-friendly atmosphere in a modern Apex venue.",
+  lead: "The Tournament of Champions is built for families — comfortable seating, free parking, and a kid-friendly atmosphere in a modern Apex venue.",
   expectations: [
     "Free on-site parking",
     "Comfortable stadium seating with back rests — plus bleacher and floor options",
@@ -321,15 +300,9 @@ export const TOC_SPECTATORS = {
   ],
   concessions: {
     headline: "Health-first concessions",
-    lead:
-      "We put health first for wrestlers and fans. Concessions are built around good nutrition, real food, and choices that accelerate recovery — while giving families the energy to support our athletes all weekend.",
-    highlights: [
-      "Real food — not typical tournament fare",
-      "Recovery-focused options for elite athletes between matches",
-      "Fan-friendly nutrition that keeps the crowd going for every bout",
-    ],
-    venuePolicy:
-      "Venue-wide policy: no soda, chips, candy, or junk food sold or available anywhere in the building.",
+    lead: "We put health first for wrestlers and fans. Concessions are built around good nutrition, real food, and choices that accelerate recovery — while giving families the energy to support our athletes all weekend.",
+    highlights: ["Real food — not typical tournament fare", "Recovery-focused options for elite athletes between matches", "Fan-friendly nutrition that keeps the crowd going for every bout"],
+    venuePolicy: "Venue-wide policy: no soda, chips, candy, or junk food sold or available anywhere in the building.",
     foodTrucks: [
       {
         day: "Saturday confirmed",
@@ -346,8 +319,7 @@ export const TOC_SPECTATORS = {
   ticketOptions: [
     {
       title: "Saturday ticket",
-      description:
-        "Full tournament — all brackets on two mats through placement, plus single-mat championship finals",
+      description: "Full tournament — all brackets on two mats through placement, plus single-mat championship finals",
     },
   ],
   ticketSectionTitle: "How to attend",
@@ -368,16 +340,14 @@ export const TOC_FOUNDING_PARTNERS = {
       logoUrl: "/images/toc/sponsors/the-guild.png",
       logoTheme: "dark" as const,
       ecosystemNote: "Part of the NC United ecosystem.",
-      tagline:
-        "Youth wrestling coaching marketplace connecting NCAA athletes with North Carolina families for private and small-group training.",
+      tagline: "Youth wrestling coaching marketplace connecting NCAA athletes with North Carolina families for private and small-group training.",
     },
     {
       name: "Cama Meal",
       href: "https://www.camameal.com/",
       logoUrl: "/images/toc/sponsors/cama-meal.png",
       logoTheme: "light" as const,
-      tagline:
-        "The world's best protein powder, built for wrestlers and combat athletes. Grass-fed whey, real flavors, recovery you can feel.",
+      tagline: "The world's best protein powder, built for wrestlers and combat athletes. Grass-fed whey, real flavors, recovery you can feel.",
     },
   ],
 } as const
@@ -398,8 +368,7 @@ export const TOC_VENUE_FEATURES = [
   },
   {
     title: "Up to 1,000 fans",
-    description:
-      "Comfortable stadium seating with back rests, bleachers, and floor sightlines — families on top of every match.",
+    description: "Comfortable stadium seating with back rests, bleachers, and floor sightlines — families on top of every match.",
   },
   {
     title: "Pro lighting & production",
@@ -407,8 +376,7 @@ export const TOC_VENUE_FEATURES = [
   },
   {
     title: "Finals presentation",
-    description:
-      "Championship finals get full production — intros, awards, and the jacket moment on one mat.",
+    description: "Championship finals get full production — intros, awards, and the jacket moment on one mat.",
   },
 ] as const
 
@@ -416,8 +384,7 @@ export const TOC_VENUE_FEATURES = [
 export const TOC_VENUE_LOUNGES = {
   eyebrow: "Dedicated lounge",
   headline: "Credentialed coaches and officials — one room",
-  lead:
-    "One atrium room at Hope Apex is reserved for credentialed college coaches, credentialed high school coaches, and tournament officials — credentials required, not open to general spectators.",
+  lead: "One atrium room at Hope Apex is reserved for credentialed college coaches, credentialed high school coaches, and tournament officials — credentials required, not open to general spectators.",
   title: "Coaches & Officials Lounge",
   description:
     "Check in at credentials for your lanyard. Comfortable seating and work tables, charging and Wi-Fi, live feeds from both mats with bracket updates, hospitality on Saturday, recruiting guides for college coaches (sent in advance and available as hard copy in the lounge on event day), a print station for profiles and notes, and space for officials to store gear and regroup between sessions.",
@@ -427,8 +394,7 @@ export const TOC_ELITE_OFFICIALS = {
   eyebrow: "Elite officials",
   headline: "Led by Jonathan Sutton",
   role: "Chief of officials · NC United Tournament of Champions",
-  lead:
-    "The Tournament of Champions is judged by an elite crew hand-picked for this event. Jonathan Sutton and NWOA Officials lead the table with experienced officials who understand college weights, high-stakes brackets, and the pace this card demands.",
+  lead: "The Tournament of Champions is judged by an elite crew hand-picked for this event. Jonathan Sutton and NWOA Officials lead the table with experienced officials who understand college weights, high-stakes brackets, and the pace this card demands.",
   confirmedCrewHeadline: "Elite Officiating Crew Confirmed",
   confirmedCrew: [
     {
@@ -448,12 +414,7 @@ export const TOC_ELITE_OFFICIALS = {
       credential: "Respected NCAA official with years of collegiate and postseason assignments.",
     },
   ],
-  bullets: [
-    "Chief of officials: Jonathan Sutton",
-    "Event officiating supported by NWOA Officials",
-    "Experienced crew across both competition mats all day",
-    "Consistent standards from first bout through championship finals",
-  ],
+  bullets: ["Chief of officials: Jonathan Sutton", "Event officiating supported by NWOA Officials", "Experienced crew across both competition mats all day", "Consistent standards from first bout through championship finals"],
 } as const
 
 export const TOC_MEDIA_REQUEST_TYPES = [
@@ -469,8 +430,7 @@ export const TOC_MEDIA_REQUEST_TYPES = [
 export const TOC_MEDIA = {
   eyebrow: "Media",
   headline: "Media requests",
-  lead:
-    "Covering the Tournament of Champions? Submit a media request for credentials, access guidelines, and interview coordination. All requests are reviewed by NC United staff — approval is required before event-day access.",
+  lead: "Covering the Tournament of Champions? Submit a media request for credentials, access guidelines, and interview coordination. All requests are reviewed by NC United staff — approval is required before event-day access.",
   bullets: [
     "Press credentials for Saturday competition at Hope Apex",
     "Interview requests with athletes, coaches, and NC United staff",
@@ -485,13 +445,8 @@ export const TOC_MEDIA = {
 export const TOC_FINALS_MAT = {
   eyebrow: "Championship finals",
   headline: "One mat for the titles",
-  lead:
-    "Saturday evening the arena narrows to a single mat — finalist introductions, live announcements, and all eleven championship bouts with professional arena lighting and video boards.",
-  bullets: [
-    "Parade of finalists before each weight",
-    "Live PA announcements and title-bout presentation",
-    "One mat — every eye in the building on the championship match",
-  ],
+  lead: "Saturday evening the arena narrows to a single mat — finalist introductions, live announcements, and all eleven championship bouts with professional arena lighting and video boards.",
+  bullets: ["Parade of finalists before each weight", "Live PA announcements and title-bout presentation", "One mat — every eye in the building on the championship match"],
 } as const
 
 export const TOC_GRADUATION_YEARS = ["2026", "2027", "2028", "2029", "2030"] as const
@@ -552,8 +507,7 @@ export const TOC_ATHLETE_QUOTES = {
     {
       name: "Carson Worrick",
       credentials: "Davie HS • All-American • #1 Ranked NC Class of 2027 • Binghamton Commit",
-      quote:
-        "People always debate who the best wrestler in the state is. Tournament of Champions gives us a chance to settle it on the mat. The best guys, one bracket, no excuses. That's what competition is supposed to be.",
+      quote: "People always debate who the best wrestler in the state is. Tournament of Champions gives us a chance to settle it on the mat. The best guys, one bracket, no excuses. That's what competition is supposed to be.",
     },
     {
       name: "Tobin McNair",
@@ -564,14 +518,12 @@ export const TOC_ATHLETE_QUOTES = {
     {
       name: "Mac Johnson",
       credentials: "Cape Fear HS • 2026 NCHSAA State Champion • App State Commit",
-      quote:
-        "The atmosphere is going to be incredible. The introductions, the championship finals, the crowd, the energy—it's the kind of stage every wrestler wants to compete on. North Carolina wrestling deserves an event like this.",
+      quote: "The atmosphere is going to be incredible. The introductions, the championship finals, the crowd, the energy—it's the kind of stage every wrestler wants to compete on. North Carolina wrestling deserves an event like this.",
     },
     {
       name: "Tye Johnson",
       credentials: "Cape Fear HS • 3× NCHSAA State Champion • App State Commit",
-      quote:
-        "The champion jacket is what stands out to me. Anybody can buy gear, but you can't buy that jacket. You have to earn it by beating the best wrestlers in the state. That's what makes it special.",
+      quote: "The champion jacket is what stands out to me. Anybody can buy gear, but you can't buy that jacket. You have to earn it by beating the best wrestlers in the state. That's what makes it special.",
     },
   ],
 } as const
@@ -589,68 +541,55 @@ export const TOC_BRAND = {
 export const TOC_CONFIRMED_COLLEGES_DEFAULT = [
   {
     name: "UNC",
-    logoUrl:
-      "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/Uigu95m8-1745952038636.png",
+    logoUrl: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/Uigu95m8-1745952038636.png",
   },
   {
     name: "NC State",
-    logoUrl:
-      "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/fe5ixmej-1745958547259.png",
+    logoUrl: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/fe5ixmej-1745958547259.png",
   },
   {
     name: "Roanoke",
-    logoUrl:
-      "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/-i2rnrys-1745958901725.png",
+    logoUrl: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/-i2rnrys-1745958901725.png",
   },
   {
     name: "Greensboro College",
-    logoUrl:
-      "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/o6LgFYqZjYR2MnZou4ydo-Greensboro%20College.png",
+    logoUrl: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/o6LgFYqZjYR2MnZou4ydo-Greensboro%20College.png",
   },
   {
     name: "Montreat",
-    logoUrl:
-      "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/QS-jExE_V4gnRb3SrkmUP-Montreat.png",
+    logoUrl: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/QS-jExE_V4gnRb3SrkmUP-Montreat.png",
   },
   {
     name: "UMO",
-    logoUrl:
-      "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/cwjgktar-1745958885613.png",
+    logoUrl: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/cwjgktar-1745958885613.png",
   },
   {
     name: "Lynchburg",
-    logoUrl:
-      "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/SmHkZ3IPPB6ayHiOYue4Y-Lynchburg.jpg",
+    logoUrl: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/SmHkZ3IPPB6ayHiOYue4Y-Lynchburg.jpg",
   },
   {
     name: "Army West Point",
-    logoUrl:
-      "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/rTLFBwYxfKzHEmiET86Sk-Army%20West%20Point.jpg",
+    logoUrl: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/rTLFBwYxfKzHEmiET86Sk-Army%20West%20Point.jpg",
   },
   {
     name: "Averett",
-    logoUrl:
-      "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/XpGp9iaWUS2oENhX2XALE-Averett.png",
+    logoUrl: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/XpGp9iaWUS2oENhX2XALE-Averett.png",
   },
   {
     name: "Campbell",
-    logoUrl:
-      "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/hQ12r1UqPiFiiEG_7lrvU-Campbell.png",
+    logoUrl: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/hQ12r1UqPiFiiEG_7lrvU-Campbell.png",
   },
   {
     name: "Lander",
-    logoUrl:
-      "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/hohbgwxg-1745968850197.png",
+    logoUrl: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/hohbgwxg-1745968850197.png",
   },
   {
     name: "Washington & Lee",
-    logoUrl:
-      "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/bi-_P2AfNJKAJTz7hWXHv-Washington%20%26%20Lee.png",
+    logoUrl: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/bi-_P2AfNJKAJTz7hWXHv-Washington%20%26%20Lee.png",
   },
   {
     name: "Belmont Abbey",
-    logoUrl:
-      "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logos/college/Belmont%20Abbey%20College-1755181484888.jpeg",
+    logoUrl: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logos/college/Belmont%20Abbey%20College-1755181484888.jpeg",
   },
 ] as const
 
@@ -675,6 +614,7 @@ export const TOC_SECTION_NAV_GROUPS = [
   {
     label: "Get involved",
     links: [
+      { href: "#college-coaches", label: "College coaches" },
       { href: "#volunteer", label: "Volunteer" },
       { href: "#email-signup", label: "Event updates" },
       { href: "#athlete-interest", label: "Athlete interest" },
@@ -699,6 +639,7 @@ export const TOC_SECTION_NAV_QUICK = [
   { href: "#trophies-awards", label: "Awards" },
   { href: "#caden-perry-scholarship", label: "Scholarship" },
   { href: "#official-tee", label: "Apparel" },
+  { href: "#college-coaches", label: "College coaches" },
   { href: "#volunteer", label: "Volunteer" },
   { href: "#athlete-interest", label: "Athletes" },
 ] as const
@@ -725,8 +666,7 @@ export const TOC_VOLUNTEER_AVAILABILITY = [
 export const TOC_VOLUNTEER = {
   eyebrow: "Volunteer",
   headline: "Help us run championship weekend",
-  lead:
-    "The Tournament of Champions takes a crew — lounge hospitality, registration, concessions, and mat-side support. If you love NC wrestling and want to be part of the biggest all-state stage of the year, sign up below.",
+  lead: "The Tournament of Champions takes a crew — lounge hospitality, registration, concessions, and mat-side support. If you love NC wrestling and want to be part of the biggest all-state stage of the year, sign up below.",
   bullets: [
     "Friday load-in through Saturday finals — shifts for every schedule",
     "Coaches & Officials Lounge check-in and hospitality",

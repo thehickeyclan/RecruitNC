@@ -6,7 +6,11 @@ import { getEventSlugsForAdmin, getEventName } from "@/lib/national-team-events"
 export const dynamic = "force-dynamic"
 
 export type ProfileOption = { value: string; label: string }
-export type AudienceGroupOption = { id: string; type: "event" | "forum" | "blue"; name: string }
+export type AudienceGroupOption = {
+  id: string
+  type: "event" | "forum" | "blue" | "contacts"
+  name: string
+}
 export type AudiencesResponse = {
   profiles: ProfileOption[]
   groups: AudienceGroupOption[]
@@ -14,10 +18,18 @@ export type AudiencesResponse = {
 
 async function requireAdmin() {
   const supabase = await createClient()
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
   if (authError || !user) return { ok: false as const, status: 401 as const, error: "Unauthorized" }
   const { data: profile } = await supabase.from("user_profiles").select("is_admin").eq("user_id", user.id).single()
-  if (!profile?.is_admin) return { ok: false as const, status: 403 as const, error: "Admin required" }
+  if (!profile?.is_admin)
+    return {
+      ok: false as const,
+      status: 403 as const,
+      error: "Admin required",
+    }
   return { ok: true as const }
 }
 
@@ -30,10 +42,7 @@ export async function GET() {
 
   const profiles: ProfileOption[] = []
   try {
-    const { data: roleRows } = await admin
-      .from("user_profiles")
-      .select("role")
-      .not("role", "is", null)
+    const { data: roleRows } = await admin.from("user_profiles").select("role").not("role", "is", null)
     const roles = [...new Set((roleRows ?? []).map((r: { role: string | null }) => (r.role ?? "").trim()).filter(Boolean))].sort()
     for (const r of roles) {
       const label = r.charAt(0).toUpperCase() + r.slice(1).toLowerCase()
@@ -47,6 +56,12 @@ export async function GET() {
   }
 
   const groups: AudienceGroupOption[] = []
+
+  groups.push({
+    id: "toc-college-coaches",
+    type: "contacts",
+    name: "TOC · College Coaches",
+  })
 
   // Blue Program members
   try {

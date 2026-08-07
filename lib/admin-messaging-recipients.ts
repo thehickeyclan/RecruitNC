@@ -14,10 +14,7 @@ function chunk<T>(arr: T[], size: number): T[][] {
 }
 
 /** Resolve login email from auth when `user_profiles.email` is empty. */
-async function fetchAuthEmailsByUserId(
-  admin: SupabaseClient,
-  userIds: string[],
-): Promise<Map<string, string>> {
+async function fetchAuthEmailsByUserId(admin: SupabaseClient, userIds: string[]): Promise<Map<string, string>> {
   const out = new Map<string, string>()
   for (const part of chunk(userIds, 50)) {
     await Promise.all(
@@ -39,12 +36,21 @@ async function fetchAuthEmailsByUserId(
  * Audience for Mass Email — same logic as GET /api/admin/messaging/recipients.
  * Loads profile rows in batches (`.in()` with 700+ ids often returns nothing).
  */
-export async function getAdminMessagingRecipients(
-  admin: SupabaseClient,
-  profileFilter: string | null,
-  groupFilter: string | null,
-  limit: number,
-): Promise<AdminMessagingRecipientRow[]> {
+export async function getAdminMessagingRecipients(admin: SupabaseClient, profileFilter: string | null, groupFilter: string | null, limit: number): Promise<AdminMessagingRecipientRow[]> {
+  if (groupFilter === "toc-college-coaches") {
+    const { data, error } = await admin.from("toc_college_coaches").select("id, coach_name, email, mobile_phone").eq("opted_out", false).neq("status", "declined").order("college_program").limit(limit)
+    if (error) {
+      console.error("[admin-messaging-recipients] college coaches:", error.message)
+      return []
+    }
+    return (data ?? []).map((row) => ({
+      user_id: `toc-college-coach:${row.id}`,
+      email: row.email?.trim() || null,
+      display_name: row.coach_name ?? null,
+      cell_phone: row.mobile_phone ?? null,
+    }))
+  }
+
   let userIds = new Set<string>()
 
   if (groupFilter) {
@@ -57,26 +63,17 @@ export async function getAdminMessagingRecipients(
       }
     } else if (groupFilter.startsWith("event:")) {
       const eventSlug = groupFilter.slice("event:".length)
-      const { data: workspaceRows } = await admin
-        .from("event_workspace_members")
-        .select("user_id")
-        .eq("event_slug", eventSlug)
+      const { data: workspaceRows } = await admin.from("event_workspace_members").select("user_id").eq("event_slug", eventSlug)
       for (const r of workspaceRows ?? []) groupIds.add((r as { user_id: string }).user_id)
-      const { data: regs } = await admin
-        .from("national_team_event_registrations")
-        .select("parent_email, parent_user_id")
-        .eq("event_slug", eventSlug)
-        .eq("status", "paid")
+      const { data: regs } = await admin.from("national_team_event_registrations").select("parent_email, parent_user_id").eq("event_slug", eventSlug).eq("status", "paid")
       for (const r of regs ?? []) {
-        const row = r as { parent_user_id: string | null; parent_email: string | null }
+        const row = r as {
+          parent_user_id: string | null
+          parent_email: string | null
+        }
         if (row.parent_user_id) groupIds.add(row.parent_user_id)
         else if (row.parent_email?.trim()) {
-          const { data: up } = await admin
-            .from("user_profiles")
-            .select("user_id")
-            .ilike("email", row.parent_email.trim())
-            .limit(1)
-            .maybeSingle()
+          const { data: up } = await admin.from("user_profiles").select("user_id").ilike("email", row.parent_email.trim()).limit(1).maybeSingle()
           if (up?.user_id) groupIds.add((up as { user_id: string }).user_id)
         }
       }
@@ -127,10 +124,7 @@ export async function getAdminMessagingRecipients(
   const missingIds = idList.filter((id) => !byId.has(id))
   if (missingIds.length > 0) {
     for (const part of chunk(missingIds, 100)) {
-      const { data: rows, error } = await admin
-        .from("user_profiles")
-        .select("user_id, email, full_name, cell_phone")
-        .in("user_id", part)
+      const { data: rows, error } = await admin.from("user_profiles").select("user_id, email, full_name, cell_phone").in("user_id", part)
       if (error) {
         console.error("[admin-messaging-recipients] batch load:", error.message)
         continue
@@ -152,7 +146,7 @@ export async function getAdminMessagingRecipients(
     }
   }
 
-  const needAuth = idList.filter((id) => !(byId.get(id)?.email?.trim()))
+  const needAuth = idList.filter((id) => !byId.get(id)?.email?.trim())
   if (needAuth.length > 0) {
     const authEmails = await fetchAuthEmailsByUserId(admin, needAuth)
     for (const userId of needAuth) {

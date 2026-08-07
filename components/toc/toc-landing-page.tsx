@@ -24,6 +24,7 @@ import { TocSponsorSection } from "@/components/toc/toc-sponsor-section"
 import { TocFaq } from "@/components/toc/toc-faq"
 import { TocAboutNcUnitedSection } from "@/components/toc/toc-about-nc-united-section"
 import { TocVolunteerSection } from "@/components/toc/toc-volunteer-section"
+import { TocCollegeCoachSection } from "@/components/toc/toc-college-coach-section"
 import { TocSectionNavSentinel } from "@/components/toc/toc-section-nav"
 import { TocEmailSignup } from "@/components/toc/toc-email-signup"
 import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass } from "@/components/toc/toc-theme"
@@ -51,6 +52,7 @@ export function TocLandingPage({ config, confirmedColleges }: Props) {
         </div>
       </section>
       <TocStorySection />
+      <TocCollegeCoachSection />
 
       {/* Format */}
       <TocWeightClassesList />
@@ -80,9 +82,7 @@ export function TocLandingPage({ config, confirmedColleges }: Props) {
           <TocVarsityHeading as="h2" className="text-white mb-2">
             Stay in the loop
           </TocVarsityHeading>
-          <p className="text-white/70 text-sm sm:text-base mb-6 sm:mb-8 leading-relaxed">
-            Invite list news, streaming link, and tickets — one list for everything before championship weekend.
-          </p>
+          <p className="text-white/70 text-sm sm:text-base mb-6 sm:mb-8 leading-relaxed">Invite list news, streaming link, and tickets — one list for everything before championship weekend.</p>
           <div className="flex justify-center w-full">
             <TocEmailSignup source="landing_section" />
           </div>
@@ -95,8 +95,7 @@ export function TocLandingPage({ config, confirmedColleges }: Props) {
             Athlete interest form
           </TocVarsityHeading>
           <p className="text-muted-foreground text-sm sm:text-base mb-6 sm:mb-8 leading-relaxed">
-            Top NC prospects — tell us your name, school, club, and the weight you&apos;d compete at. We use this to plan
-            invitations and may reach out. <strong>Submitting does not guarantee an invitation.</strong>
+            Top NC prospects — tell us your name, school, club, and the weight you&apos;d compete at. We use this to plan invitations and may reach out. <strong>Submitting does not guarantee an invitation.</strong>
           </p>
           <TocNominationForm />
         </div>
@@ -115,10 +114,7 @@ export function TocLandingPage({ config, confirmedColleges }: Props) {
         <p className="mt-1">{config.venue_name}</p>
         <p className="mt-1 text-white/55">{config.venue_address ?? "Apex, NC"}</p>
         <p className="mt-4">
-          <a
-            href={`mailto:${TOC_CONTACT_EMAIL}`}
-            className="text-white/70 hover:text-white underline underline-offset-2"
-          >
+          <a href={`mailto:${TOC_CONTACT_EMAIL}`} className="text-white/70 hover:text-white underline underline-offset-2">
             {TOC_CONTACT_EMAIL}
           </a>
         </p>

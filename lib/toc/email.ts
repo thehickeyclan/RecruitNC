@@ -7,6 +7,10 @@ import { tocInviteConfirmLines } from "@/lib/toc/registration-policy"
 
 const FROM = `NC Wrestling United <${TOC_CONTACT_EMAIL}>`
 
+function escapeHtml(value: string): string {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+}
+
 async function sendHtml(to: string, subject: string, html: string): Promise<void> {
   if (!process.env.RESEND_API_KEY?.trim()) {
     console.warn("[TOC email] RESEND_API_KEY not set, skipping:", subject)
@@ -15,11 +19,31 @@ async function sendHtml(to: string, subject: string, html: string): Promise<void
   try {
     const { Resend } = await import("resend")
     const resend = new Resend(process.env.RESEND_API_KEY)
-    const result = await resend.emails.send({ from: FROM, to: [to.trim()], subject, html })
+    const result = await resend.emails.send({
+      from: FROM,
+      to: [to.trim()],
+      subject,
+      html,
+      reply_to: TOC_CONTACT_EMAIL,
+    })
     if (result.error) console.error("[TOC email]", subject, result.error)
   } catch (e) {
     console.error("[TOC email]", subject, e)
   }
+}
+
+export async function sendTocCollegeCoachConfirmation(to: string, coachName: string, collegeProgram: string, attendance: string, staffCount: number): Promise<void> {
+  const days = attendance === "both" ? "Friday and Saturday" : attendance === "friday" ? "Friday" : "Saturday"
+  const safeCoachName = escapeHtml(coachName)
+  const safeCollegeProgram = escapeHtml(collegeProgram)
+  await sendHtml(
+    to,
+    "College coach credentials confirmed — Tournament of Champions",
+    wrap(`<p>Coach ${safeCoachName},</p>
+<p>Your complimentary credentials for the <strong>NC United Tournament of Champions</strong> are registered for <strong>${safeCollegeProgram}</strong>.</p>
+<ul><li>Attendance: ${days}</li><li>Coaches attending: ${staffCount}</li><li>Includes VIP coaches lounge access</li></ul>
+<p>We will send check-in details as the event approaches. Reply to this email with any changes.</p>`),
+  )
 }
 
 function wrap(body: string): string {
@@ -55,14 +79,7 @@ export async function sendTocNominationConfirmation(to: string, athleteName: str
   return sendTocAthleteInterestConfirmation(to, athleteName)
 }
 
-export async function sendTocAdminAthleteInterestAlert(payload: {
-  athleteName: string
-  school: string
-  club: string | null
-  weightClass: number
-  graduationYear: number
-  email: string
-}): Promise<void> {
+export async function sendTocAdminAthleteInterestAlert(payload: { athleteName: string; school: string; club: string | null; weightClass: number; graduationYear: number; email: string }): Promise<void> {
   const adminTo = process.env.TOC_ADMIN_EMAIL?.trim() || process.env.ADMIN_NOTIFICATION_EMAIL?.trim()
   if (!adminTo) return
   await sendHtml(
@@ -82,12 +99,7 @@ export async function sendTocAdminAthleteInterestAlert(payload: {
 }
 
 /** @deprecated use sendTocAdminAthleteInterestAlert */
-export async function sendTocAdminNominationAlert(payload: {
-  athleteName: string
-  school: string | null
-  weightClass: number | null
-  submitterEmail: string
-}): Promise<void> {
+export async function sendTocAdminNominationAlert(payload: { athleteName: string; school: string | null; weightClass: number | null; submitterEmail: string }): Promise<void> {
   if (payload.weightClass == null) return
   return sendTocAdminAthleteInterestAlert({
     athleteName: payload.athleteName,
@@ -107,11 +119,7 @@ export async function sendTocSponsorAutoReply(to: string, company: string): Prom
   )
 }
 
-export async function sendTocAdminSponsorAlert(payload: {
-  company: string
-  contactName: string
-  contactEmail: string
-}): Promise<void> {
+export async function sendTocAdminSponsorAlert(payload: { company: string; contactName: string; contactEmail: string }): Promise<void> {
   const adminTo = process.env.TOC_ADMIN_EMAIL?.trim() || process.env.ADMIN_NOTIFICATION_EMAIL?.trim()
   if (!adminTo) return
   await sendHtml(
@@ -130,12 +138,7 @@ export async function sendTocMediaAutoReply(to: string, outlet: string): Promise
   )
 }
 
-export async function sendTocAdminMediaAlert(payload: {
-  outlet: string
-  contactName: string
-  contactEmail: string
-  mediaType: string | null
-}): Promise<void> {
+export async function sendTocAdminMediaAlert(payload: { outlet: string; contactName: string; contactEmail: string; mediaType: string | null }): Promise<void> {
   const adminTo = process.env.TOC_ADMIN_EMAIL?.trim() || process.env.ADMIN_NOTIFICATION_EMAIL?.trim()
   if (!adminTo) return
   await sendHtml(
@@ -162,12 +165,7 @@ export async function sendTocVolunteerAutoReply(to: string, contactName: string)
   )
 }
 
-export async function sendTocAdminVolunteerAlert(payload: {
-  contactName: string
-  contactEmail: string
-  roleInterest: string | null
-  availability: string[]
-}): Promise<void> {
+export async function sendTocAdminVolunteerAlert(payload: { contactName: string; contactEmail: string; roleInterest: string | null; availability: string[] }): Promise<void> {
   const adminTo = process.env.TOC_ADMIN_EMAIL?.trim() || process.env.ADMIN_NOTIFICATION_EMAIL?.trim()
   if (!adminTo) return
   await sendHtml(
@@ -184,12 +182,7 @@ export async function sendTocAdminVolunteerAlert(payload: {
   )
 }
 
-export async function sendTocAthleteInviteEmail(payload: {
-  to: string[]
-  athleteName: string
-  weightClass: number
-  confirmUrl: string
-}): Promise<void> {
+export async function sendTocAthleteInviteEmail(payload: { to: string[]; athleteName: string; weightClass: number; confirmUrl: string }): Promise<void> {
   const firstName = firstNameFromAthleteName(payload.athleteName)
   const { subject } = buildTocAthleteInviteMessage(payload)
   const [confirmLine] = tocInviteConfirmLines()
@@ -208,12 +201,7 @@ export async function sendTocAthleteInviteEmail(payload: {
   }
 }
 
-export async function sendTocAthleteConfirmedEmail(payload: {
-  to: string[]
-  athleteName: string
-  weightClass: number
-  jacketSize: string
-}): Promise<void> {
+export async function sendTocAthleteConfirmedEmail(payload: { to: string[]; athleteName: string; weightClass: number; jacketSize: string }): Promise<void> {
   const firstName = payload.athleteName.trim().split(/\s+/)[0] || payload.athleteName
   const subject = "You're in — Tournament of Champions 2026"
   const body = `<p>${firstName} —</p>

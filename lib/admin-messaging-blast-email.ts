@@ -25,39 +25,30 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-async function sendSingleWithInnerHtml(
-  to: string,
-  subject: string,
-  innerHtmlBody: string,
-  sender: AdminBlastSender,
-): Promise<{ ok: boolean; error?: string }> {
+async function sendSingleWithInnerHtml(to: string, subject: string, innerHtmlBody: string, sender: AdminBlastSender, replyTo?: string): Promise<{ ok: boolean; error?: string }> {
   const ok = await sendAdminBlastEmail(to, subject, innerHtmlBody, sender.logoVariant, {
     from: sender.from,
     footer: sender.footer,
+    replyTo,
   })
   return { ok: ok.success, error: ok.error }
 }
 
 function countBatchSuccessIds(data: unknown, batchSize: number): number {
   if (!data) return batchSize
-  const rows = Array.isArray(data)
-    ? data
-    : typeof data === "object" && data !== null && "data" in data && Array.isArray((data as { data: unknown }).data)
-      ? (data as { data: unknown[] }).data
-      : null
+  const rows = Array.isArray(data) ? data : typeof data === "object" && data !== null && "data" in data && Array.isArray((data as { data: unknown }).data) ? (data as { data: unknown[] }).data : null
   if (!rows) return batchSize
   const withId = rows.filter((r) => r && typeof r === "object" && "id" in r && (r as { id?: string }).id)
   return withId.length > 0 ? withId.length : batchSize
 }
 
-async function sendBatchViaResend(
-  emails: string[],
-  subject: string,
-  fullHtml: string,
-  from: string,
-): Promise<{ sent: number; failed: number; sampleError?: string }> {
+async function sendBatchViaResend(emails: string[], subject: string, fullHtml: string, from: string, replyTo?: string): Promise<{ sent: number; failed: number; sampleError?: string }> {
   if (!process.env.RESEND_API_KEY) {
-    return { sent: 0, failed: emails.length, sampleError: "RESEND_API_KEY not configured" }
+    return {
+      sent: 0,
+      failed: emails.length,
+      sampleError: "RESEND_API_KEY not configured",
+    }
   }
 
   const { Resend } = await import("resend")
@@ -74,6 +65,7 @@ async function sendBatchViaResend(
       to: [to.trim()],
       subject: subject.trim() || "Update from RecruitNC",
       html: fullHtml,
+      ...(replyTo ? { reply_to: replyTo } : {}),
     }))
 
     let attempt = 0
@@ -116,12 +108,7 @@ async function sendBatchViaResend(
 }
 
 /** Small audiences: paced singles (tests, tiny groups). */
-async function sendSinglesPaced(
-  recipients: AdminMessagingRecipientRow[],
-  subject: string,
-  innerHtmlBody: string,
-  sender: AdminBlastSender,
-): Promise<{ sent: number; failed: number; sampleError?: string }> {
+async function sendSinglesPaced(recipients: AdminMessagingRecipientRow[], subject: string, innerHtmlBody: string, sender: AdminBlastSender, replyTo?: string): Promise<{ sent: number; failed: number; sampleError?: string }> {
   let sent = 0
   let failed = 0
   let sampleError: string | undefined
@@ -133,7 +120,7 @@ async function sendSinglesPaced(
       batch.map(async (r) => {
         const email = r.email?.trim()
         if (!email) return { ok: false as const, error: "no email" }
-        return sendSingleWithInnerHtml(email, subject, innerHtmlBody, sender)
+        return sendSingleWithInnerHtml(email, subject, innerHtmlBody, sender, replyTo)
       }),
     )
     for (const o of outcomes) {
@@ -158,6 +145,7 @@ export async function sendAdminBlastEmails(
     subject: string
     htmlBody: string
     sender: AdminBlastSender
+    replyTo?: string
   },
 ): Promise<BlastEmailSendResult> {
   const withEmail = recipients.filter((r) => r.email?.trim())
@@ -166,18 +154,11 @@ export async function sendAdminBlastEmails(
     return { sent: 0, failed: 0, skippedNoEmail }
   }
 
-  const baseUrl = (
-    process.env.NEXT_PUBLIC_APP_URL ||
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    "https://app.ncwrestlingunited.com"
-  ).replace(/\/$/, "")
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://app.ncwrestlingunited.com").replace(/\/$/, "")
   const fullHtml = buildAdminBlastEmailHtml(opts.subject, opts.htmlBody, baseUrl, opts.sender.logoVariant, opts.sender.footer)
   const emails = withEmail.map((r) => r.email!.trim())
 
-  const result =
-    withEmail.length >= BULK_BATCH_THRESHOLD
-      ? await sendBatchViaResend(emails, opts.subject, fullHtml, opts.sender.from)
-      : await sendSinglesPaced(withEmail, opts.subject, opts.htmlBody, opts.sender)
+  const result = withEmail.length >= BULK_BATCH_THRESHOLD ? await sendBatchViaResend(emails, opts.subject, fullHtml, opts.sender.from, opts.replyTo) : await sendSinglesPaced(withEmail, opts.subject, opts.htmlBody, opts.sender, opts.replyTo)
 
   return {
     sent: result.sent,
