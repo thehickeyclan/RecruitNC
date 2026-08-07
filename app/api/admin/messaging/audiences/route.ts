@@ -62,6 +62,10 @@ export async function GET() {
     type: "contacts",
     name: "TOC · College Coaches",
   })
+  groups.push({ id: "toc-college-coaches:NC-SC-TN-VA", type: "contacts", name: "TOC · College Coaches · NC/SC/TN/VA" })
+  for (const state of ["NC", "SC", "TN", "VA"]) {
+    groups.push({ id: `toc-college-coaches:${state}`, type: "contacts", name: `TOC · College Coaches · ${state}` })
+  }
 
   // Blue Program members
   try {

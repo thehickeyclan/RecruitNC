@@ -2,6 +2,7 @@ create table if not exists public.toc_college_coaches (
   id uuid primary key default gen_random_uuid(),
   coach_name text not null,
   college_program text not null,
+  state text,
   email text not null unique,
   mobile_phone text,
   attendance text check (attendance is null or attendance in ('friday', 'saturday', 'both')),
@@ -13,6 +14,8 @@ create table if not exists public.toc_college_coaches (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.toc_college_coaches add column if not exists state text;
 
 create index if not exists toc_college_coaches_status_created
   on public.toc_college_coaches (status, created_at desc);

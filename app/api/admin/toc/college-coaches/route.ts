@@ -27,6 +27,7 @@ export async function POST(request: Request) {
     const collegeProgram = String(raw.collegeProgram ?? "")
       .trim()
       .slice(0, 200)
+    const state = String(raw.state ?? "").trim().toUpperCase().slice(0, 2) || null
     const email = String(raw.email ?? "")
       .trim()
       .toLowerCase()
@@ -40,6 +41,7 @@ export async function POST(request: Request) {
       {
         coach_name: coachName,
         college_program: collegeProgram,
+        state,
         email,
         mobile_phone: mobilePhone,
         source: "import",

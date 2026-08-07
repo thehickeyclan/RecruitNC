@@ -37,8 +37,12 @@ async function fetchAuthEmailsByUserId(admin: SupabaseClient, userIds: string[])
  * Loads profile rows in batches (`.in()` with 700+ ids often returns nothing).
  */
 export async function getAdminMessagingRecipients(admin: SupabaseClient, profileFilter: string | null, groupFilter: string | null, limit: number): Promise<AdminMessagingRecipientRow[]> {
-  if (groupFilter === "toc-college-coaches") {
-    const { data, error } = await admin.from("toc_college_coaches").select("id, coach_name, email, mobile_phone").eq("opted_out", false).neq("status", "declined").order("college_program").limit(limit)
+  if (groupFilter?.startsWith("toc-college-coaches")) {
+    const stateFilter = groupFilter.includes(":") ? groupFilter.split(":")[1] : null
+    let query = admin.from("toc_college_coaches").select("id, coach_name, email, mobile_phone").eq("opted_out", false).neq("status", "declined").order("college_program").limit(limit)
+    if (stateFilter === "NC-SC-TN-VA") query = query.in("state", ["NC", "SC", "TN", "VA"])
+    else if (stateFilter) query = query.eq("state", stateFilter)
+    const { data, error } = await query
     if (error) {
       console.error("[admin-messaging-recipients] college coaches:", error.message)
       return []

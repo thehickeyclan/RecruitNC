@@ -12,6 +12,7 @@ type Coach = {
   id: string
   coach_name: string
   college_program: string
+  state: string | null
   email: string
   mobile_phone: string | null
   attendance: string | null
@@ -30,8 +31,8 @@ function parseCsv(raw: string) {
     .flatMap((line, index) => {
       const cells = line.split(",").map((cell) => cell.trim().replace(/^"|"$/g, ""))
       if (index === 0 && cells.some((cell) => /email/i.test(cell))) return []
-      const [coachName, collegeProgram, email, mobilePhone] = cells
-      return coachName && collegeProgram && email ? [{ coachName, collegeProgram, email, mobilePhone }] : []
+      const [coachName, collegeProgram, state, email, mobilePhone] = cells
+      return coachName && collegeProgram && email ? [{ coachName, collegeProgram, state, email, mobilePhone }] : []
     })
 }
 
@@ -101,8 +102,8 @@ export default function TocCollegeCoachesAdminPage() {
           <CardTitle className="text-base">Import coach list</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="mb-3 text-sm text-muted-foreground">Paste CSV in this order: coach name, college/program, email, mobile number. Header row is optional.</p>
-          <Textarea rows={5} value={csv} onChange={(event) => setCsv(event.target.value)} placeholder={"Coach Name,College/Program,Email,Mobile\nJane Smith,Example College,jane@example.edu,555-555-5555"} />
+          <p className="mb-3 text-sm text-muted-foreground">Paste CSV in this order: coach name, college/program, state, email, mobile number. Header row is optional.</p>
+          <Textarea rows={5} value={csv} onChange={(event) => setCsv(event.target.value)} placeholder={"Coach Name,College/Program,State,Email,Mobile\nJane Smith,Example College,NC,jane@example.edu,555-555-5555"} />
           <div className="mt-3 flex items-center gap-3">
             <Button size="sm" onClick={() => void importContacts()} disabled={!csv.trim()}>
               <Upload className="mr-2 h-4 w-4" />
@@ -125,6 +126,7 @@ export default function TocCollegeCoachesAdminPage() {
                 <tr>
                   <th className="p-3">Coach</th>
                   <th className="p-3">Program</th>
+                  <th className="p-3">State</th>
                   <th className="p-3">Attendance</th>
                   <th className="p-3">Staff</th>
                   <th className="p-3">Source</th>
@@ -142,6 +144,7 @@ export default function TocCollegeCoachesAdminPage() {
                       {row.mobile_phone ? <p className="text-xs text-muted-foreground">{row.mobile_phone}</p> : null}
                     </td>
                     <td className="p-3 font-medium">{row.college_program}</td>
+                    <td className="p-3 font-semibold">{row.state ?? "—"}</td>
                     <td className="p-3 capitalize">{row.attendance?.replace("both", "Fri + Sat") ?? "—"}</td>
                     <td className="p-3">{row.staff_count ?? "—"}</td>
                     <td className="p-3 capitalize">{row.source}</td>

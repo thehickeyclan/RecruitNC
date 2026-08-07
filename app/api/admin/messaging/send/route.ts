@@ -202,7 +202,7 @@ export async function POST(request: NextRequest) {
       subject,
       htmlBody,
       sender,
-      replyTo: group === "toc-college-coaches" ? "info@ncwrestlingunited.com" : undefined,
+      replyTo: group?.startsWith("toc-college-coaches") ? "info@ncwrestlingunited.com" : undefined,
     })
     result.email.sent = emailResult.sent
     result.email.failed = emailResult.failed
