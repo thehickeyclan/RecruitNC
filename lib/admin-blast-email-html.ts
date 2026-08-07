@@ -46,8 +46,7 @@ export function buildAdminBlastEmailHtml(
   const base = baseUrl ? baseUrl.replace(/\/$/, "") : ""
   const variant = LOGO_VARIANTS[logoVariant] ?? LOGO_VARIANTS["nc-united"]
   const logoUrl = base ? `${base}${variant.path}` : ""
-  const headerBg =
-    logoVariant === "wrestling-guild" ? "#1a1a1a" : logoVariant === "nc-united" ? "#000000" : "#003366"
+  const headerBg = logoVariant === "wrestling-guild" ? "#1a1a1a" : "#003366"
   const fallbackHeader =
     logoVariant === "wrestling-guild" ? "Wrestling Guild" : logoVariant === "recruitnc" ? "RecruitNC" : "NC United"
   const safeTitle = escapeHtml((subject || fallbackHeader).slice(0, 100))
