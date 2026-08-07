@@ -25,14 +25,34 @@ export async function getScholarshipPortalAccess(userId: string): Promise<Schola
 
     const isRecruitNcAdmin = profile?.is_admin === true || profile?.role === "admin"
 
-    // Scholarship submissions contain confidential information about minors.
-    // Keep the review portal admin-only unless NC United deliberately adds a
-    // separate, consent-based reviewer release workflow in the future.
-    if (!isRecruitNcAdmin) {
+    if (isRecruitNcAdmin) {
+      return { ok: true, userId, isRecruitNcAdmin: true, reviewers: [] }
+    }
+
+    // Reviewers are explicitly scoped to one scholarship. RLS keeps the roster
+    // service-role-only; application pages still authorize every request here.
+    const { data: reviewerRows, error: reviewerError } = await admin
+      .from("scholarship_reviewers")
+      .select("scholarship_id, role")
+      .eq("user_id", userId)
+
+    if (reviewerError) {
+      console.warn("[scholarships] reviewer access lookup:", reviewerError)
       return { ok: false }
     }
 
-    return { ok: true, userId, isRecruitNcAdmin, reviewers: [] }
+    const reviewers = (reviewerRows ?? []).flatMap((row) => {
+      if (
+        typeof row.scholarship_id !== "string" ||
+        (row.role !== "family" && row.role !== "committee" && row.role !== "admin")
+      ) {
+        return []
+      }
+      return [{ scholarshipId: row.scholarship_id, role: row.role as ScholarshipReviewerRole }]
+    })
+
+    if (reviewers.length === 0) return { ok: false }
+    return { ok: true, userId, isRecruitNcAdmin: false, reviewers }
   } catch (e) {
     console.warn("[scholarships] getScholarshipPortalAccess:", e)
     return { ok: false }
