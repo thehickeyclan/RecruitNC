@@ -24,7 +24,6 @@ import { TocSponsorSection } from "@/components/toc/toc-sponsor-section"
 import { TocFaq } from "@/components/toc/toc-faq"
 import { TocAboutNcUnitedSection } from "@/components/toc/toc-about-nc-united-section"
 import { TocVolunteerSection } from "@/components/toc/toc-volunteer-section"
-import { TocCollegeCoachSection } from "@/components/toc/toc-college-coach-section"
 import { TocSectionNavSentinel } from "@/components/toc/toc-section-nav"
 import { TocEmailSignup } from "@/components/toc/toc-email-signup"
 import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass } from "@/components/toc/toc-theme"
@@ -52,7 +51,6 @@ export function TocLandingPage({ config, confirmedColleges }: Props) {
         </div>
       </section>
       <TocStorySection />
-      <TocCollegeCoachSection />
 
       {/* Format */}
       <TocWeightClassesList />

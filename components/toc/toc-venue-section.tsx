@@ -1,6 +1,7 @@
 import Image from "next/image"
 import { ExternalLink, Layers, Lightbulb, MapPin, Trophy, Users } from "lucide-react"
 import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass, tocSectionClass } from "@/components/toc/toc-theme"
+import { TocCollegeCoachSection } from "@/components/toc/toc-college-coach-section"
 import { TOC_VENUE, TOC_VENUE_FEATURES, TOC_VENUE_LOUNGES } from "@/lib/toc/constants"
 import type { TocEventConfig } from "@/lib/toc/event-config"
 
@@ -72,6 +73,7 @@ export function TocVenueSection({ config }: Props) {
             </div>
             <p className="text-sm text-[#0B1D3A]/85 leading-relaxed pl-7">{TOC_VENUE_LOUNGES.description}</p>
           </div>
+          <TocCollegeCoachSection />
         </div>
 
         <div className="rounded-sm border-2 border-[#0B1D3A]/10 bg-white p-5">

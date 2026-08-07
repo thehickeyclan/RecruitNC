@@ -4,9 +4,12 @@ import { TocPatrioticBar, TocVarsityHeading } from "@/components/toc/toc-theme"
 
 export function TocCollegeCoachSection() {
   return (
-    <section id="college-coaches" className="relative scroll-mt-20 bg-[#071426] py-12 text-white sm:py-16 md:py-20">
+    <div
+      id="college-coaches"
+      className="relative mt-5 overflow-hidden rounded-sm border border-[#0B1D3A]/15 bg-[#071426] p-5 pt-8 text-white scroll-mt-24 sm:p-7 sm:pt-10"
+    >
       <TocPatrioticBar className="absolute inset-x-0 top-0" />
-      <div className="container mx-auto grid max-w-6xl gap-8 px-4 pt-3 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:gap-12">
+      <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:gap-10">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]">College coaches</p>
           <TocVarsityHeading as="h2" className="mt-3 text-white">
@@ -29,6 +32,6 @@ export function TocCollegeCoachSection() {
           <TocCollegeCoachRegistration />
         </div>
       </div>
-    </section>
+    </div>
   )
 }
