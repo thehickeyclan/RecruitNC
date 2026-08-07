@@ -25,7 +25,7 @@ export type EmailLogoVariant = "recruitnc" | "nc-united" | "wrestling-guild"
 /** Logo assets: use transparent backgrounds (white on transparent) so they sit on navy header only. */
 const LOGO_VARIANTS: Record<EmailLogoVariant, { path: string; alt: string }> = {
   recruitnc: { path: "/images/recruitnc-logo.png", alt: "RecruitNC — North Carolina Wrestling" },
-  "nc-united": { path: "/images/nc-united-stacked-logo-white.png", alt: "NC United" },
+  "nc-united": { path: "/nc-united-white-logo.png", alt: "NC United" },
   "wrestling-guild": { path: "/images/sponsors/the-guild-logo.png", alt: "Wrestling Guild" },
 }
 
