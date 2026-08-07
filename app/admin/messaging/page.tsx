@@ -30,6 +30,7 @@ export default function AdminMessagingPage() {
   const [loadingAudiences, setLoadingAudiences] = useState(true)
   const [profile, setProfile] = useState<string>("all")
   const [group, setGroup] = useState<string>("all")
+  const [excludeCollegeCoaches, setExcludeCollegeCoaches] = useState(true)
   const [recipients, setRecipients] = useState<RecipientRow[]>([])
   const [count, setCount] = useState<number | null>(null)
   const [emailCount, setEmailCount] = useState<number | null>(null)
@@ -81,6 +82,7 @@ export default function AdminMessagingPage() {
     const params = new URLSearchParams()
     if (profile && profile !== "all") params.set("profile", profile)
     if (group && group !== "all") params.set("group", group)
+    if (excludeCollegeCoaches && profile === "all") params.set("excludeCollegeCoaches", "true")
     params.set("limit", "500")
     fetch(`/api/admin/messaging/recipients?${params}`, { credentials: "include" })
       .then((r) => r.json())
@@ -101,7 +103,7 @@ export default function AdminMessagingPage() {
     if (!loadingAudiences) {
       loadRecipients()
     }
-  }, [loadingAudiences, profile, group])
+  }, [loadingAudiences, profile, group, excludeCollegeCoaches])
 
   const loadSent = (before?: string) => {
     setSentLoading(true)
@@ -149,7 +151,8 @@ export default function AdminMessagingPage() {
       const g = groups.find(g => g.id === group)
       parts.push(g?.name || group)
     }
-    return parts.length > 0 ? parts.join(" + ") : "All members"
+    const base = parts.length > 0 ? parts.join(" + ") : "All members"
+    return excludeCollegeCoaches && profile === "all" ? `${base} (excluding college coaches)` : base
   }
 
   return (
@@ -380,6 +383,18 @@ export default function AdminMessagingPage() {
                 </div>
               </div>
 
+              {profile === "all" && (
+                <label className="mt-3 inline-flex items-center gap-2 cursor-pointer rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+                  <Checkbox
+                    checked={excludeCollegeCoaches}
+                    onCheckedChange={(checked) => setExcludeCollegeCoaches(checked === true)}
+                    className="border-white/30 data-[state=checked]:bg-[#C8A94A] data-[state=checked]:border-[#C8A94A]"
+                  />
+                  <span className="text-sm text-white/75">Exclude college coaches</span>
+                  <span className="text-xs text-white/40">from this audience</span>
+                </label>
+              )}
+
               {/* Expandable recipients list */}
               {showRecipients && recipients.length > 0 && (
                 <div className="mt-4 max-h-48 overflow-y-auto rounded-lg bg-white/5 divide-y divide-white/5">
@@ -427,6 +442,7 @@ export default function AdminMessagingPage() {
                             bodyHtml: bodyHtml.trim() || undefined,
                             testEmail: testEmail.trim(),
                             testOnly: true,
+                            excludeCollegeCoaches: excludeCollegeCoaches && profile === "all",
                             emailSender,
                             channels: { ...channels, sms: false, inApp: false },
                           }),
@@ -609,6 +625,7 @@ export default function AdminMessagingPage() {
                             body: body.trim(),
                             bodyHtml: bodyHtml.trim() || undefined,
                             emailSender,
+                            excludeCollegeCoaches: excludeCollegeCoaches && profile === "all",
                             channels,
                           }),
                         })

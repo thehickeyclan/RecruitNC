@@ -34,10 +34,11 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl
   const profileFilter = searchParams.get("profile")?.trim() || null
   const groupFilter = searchParams.get("group")?.trim() || null
+  const excludeCollegeCoaches = searchParams.get("excludeCollegeCoaches") === "true"
   const limit = Math.min(parseInt(searchParams.get("limit") ?? "2000", 10) || 2000, 5000)
 
   const admin = createAdminClient()
-  const allMatching = await getAdminMessagingRecipients(admin, profileFilter, groupFilter, 5000)
+  const allMatching = await getAdminMessagingRecipients(admin, profileFilter, groupFilter, 5000, excludeCollegeCoaches)
   const recipients = allMatching.slice(0, limit)
   const emailCount = countRecipientsWithEmail(allMatching)
 

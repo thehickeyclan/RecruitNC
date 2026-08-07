@@ -7,6 +7,12 @@ export type AdminMessagingRecipientRow = {
   cell_phone: string | null
 }
 
+const COLLEGE_COACH_ROLES = new Set(["college_coach", "college-coach"])
+
+export function isCollegeCoachRole(role: string | null | undefined): boolean {
+  return COLLEGE_COACH_ROLES.has((role ?? "").trim().toLowerCase())
+}
+
 function chunk<T>(arr: T[], size: number): T[][] {
   const out: T[][] = []
   for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size))
@@ -36,7 +42,13 @@ async function fetchAuthEmailsByUserId(admin: SupabaseClient, userIds: string[])
  * Audience for Mass Email — same logic as GET /api/admin/messaging/recipients.
  * Loads profile rows in batches (`.in()` with 700+ ids often returns nothing).
  */
-export async function getAdminMessagingRecipients(admin: SupabaseClient, profileFilter: string | null, groupFilter: string | null, limit: number): Promise<AdminMessagingRecipientRow[]> {
+export async function getAdminMessagingRecipients(
+  admin: SupabaseClient,
+  profileFilter: string | null,
+  groupFilter: string | null,
+  limit: number,
+  excludeCollegeCoaches = false,
+): Promise<AdminMessagingRecipientRow[]> {
   if (groupFilter?.startsWith("toc-college-coaches")) {
     const stateFilter = groupFilter.includes(":") ? groupFilter.split(":")[1] : null
     let query = admin.from("toc_college_coaches").select("id, coach_name, email, mobile_phone").eq("opted_out", false).neq("status", "declined").order("college_program").limit(limit)
@@ -91,12 +103,16 @@ export async function getAdminMessagingRecipients(admin: SupabaseClient, profile
 
   const byRole = profileFilter && profileFilter.toLowerCase() !== "all"
   const { data: profileRows, error: profileError } = byRole
-    ? await admin.from("user_profiles").select("user_id, email, full_name, cell_phone").eq("role", profileFilter)
-    : await admin.from("user_profiles").select("user_id, email, full_name, cell_phone")
+    ? await admin.from("user_profiles").select("user_id, email, full_name, cell_phone, role").eq("role", profileFilter)
+    : await admin.from("user_profiles").select("user_id, email, full_name, cell_phone, role")
 
   if (profileError) return []
 
-  const profileUserIds = new Set((profileRows ?? []).map((r: { user_id: string }) => r.user_id))
+  const eligibleProfileRows = excludeCollegeCoaches
+    ? (profileRows ?? []).filter((row: { role?: string | null }) => !isCollegeCoachRole(row.role))
+    : (profileRows ?? [])
+
+  const profileUserIds = new Set(eligibleProfileRows.map((r: { user_id: string }) => r.user_id))
   if (userIds.size > 0) userIds = new Set([...userIds].filter((id) => profileUserIds.has(id)))
   else userIds = profileUserIds
 
@@ -106,8 +122,8 @@ export async function getAdminMessagingRecipients(admin: SupabaseClient, profile
   const byId = new Map<string, AdminMessagingRecipientRow>()
 
   // Seed from the first query when we already have full rows (no group filter path).
-  if (!groupFilter && profileRows) {
-    for (const r of profileRows) {
+  if (!groupFilter) {
+    for (const r of eligibleProfileRows) {
       const row = r as {
         user_id: string
         email: string | null

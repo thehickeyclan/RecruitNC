@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
     testOnly?: boolean
     logoVariant?: string
     emailSender?: string
+    excludeCollegeCoaches?: boolean
     channels?: { inApp?: boolean; email?: boolean; sms?: boolean }
   } = {}
   try {
@@ -72,6 +73,7 @@ export async function POST(request: NextRequest) {
   const rawBodyHtml = typeof body.bodyHtml === "string" ? body.bodyHtml.trim() : ""
   const testEmail = typeof body.testEmail === "string" ? body.testEmail.trim() || null : null
   const testOnly = body.testOnly === true
+  const excludeCollegeCoaches = body.excludeCollegeCoaches === true
   const sender = resolveAdminBlastSender({
     emailSender: body.emailSender,
     logoVariant: body.logoVariant,
@@ -102,7 +104,7 @@ export async function POST(request: NextRequest) {
       },
     ]
   } else {
-    recipients = await getAdminMessagingRecipients(admin, profile, group, 5000)
+    recipients = await getAdminMessagingRecipients(admin, profile, group, 5000, excludeCollegeCoaches)
     if (recipients.length === 0) {
       return NextResponse.json({ error: "No recipients match the selected audience" }, { status: 400 })
     }

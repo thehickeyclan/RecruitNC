@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, Loader2, RefreshCw, Upload } from "lucide-react"
+import { ArrowLeft, Loader2, RefreshCw, Upload, UserCheck, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -20,8 +20,10 @@ type Coach = {
   status: string
   source: string
   created_at: string
+  registered_at: string | null
 }
 const STATUSES = ["contact", "invited", "registered", "confirmed", "declined"]
+type RosterView = "registered" | "all" | "outreach"
 
 function parseCsv(raw: string) {
   return raw
@@ -41,6 +43,7 @@ export default function TocCollegeCoachesAdminPage() {
   const [csv, setCsv] = useState("")
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState("")
+  const [rosterView, setRosterView] = useState<RosterView>("registered")
   const load = useCallback(async () => {
     setLoading(true)
     const response = await fetch("/api/admin/toc/college-coaches")
@@ -73,6 +76,10 @@ export default function TocCollegeCoachesAdminPage() {
       void load()
     }
   }
+  const registeredRows = rows.filter((row) => row.source === "registration" || Boolean(row.registered_at))
+  const outreachRows = rows.filter((row) => row.source !== "registration" && !row.registered_at)
+  const visibleRows = rosterView === "registered" ? registeredRows : rosterView === "outreach" ? outreachRows : rows
+
   return (
     <div className="mx-auto max-w-6xl space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -84,7 +91,7 @@ export default function TocCollegeCoachesAdminPage() {
           </Button>
           <div>
             <h1 className="text-2xl font-bold">College coaches</h1>
-            <p className="text-sm text-muted-foreground">{rows.length} contacts · registration and outreach roster</p>
+            <p className="text-sm text-muted-foreground">{registeredRows.length} registered · {outreachRows.length} outreach contacts</p>
           </div>
         </div>
         <div className="flex gap-2">
@@ -113,9 +120,51 @@ export default function TocCollegeCoachesAdminPage() {
           </div>
         </CardContent>
       </Card>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <button
+          type="button"
+          onClick={() => setRosterView("registered")}
+          className={`rounded-xl border p-4 text-left transition-colors ${rosterView === "registered" ? "border-emerald-500 bg-emerald-50" : "bg-card hover:bg-muted/50"}`}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Form submissions</p>
+              <p className="text-3xl font-bold">{registeredRows.length}</p>
+              <p className="mt-1 text-sm">College coaches who registered</p>
+            </div>
+            <UserCheck className="h-8 w-8 text-emerald-600" />
+          </div>
+        </button>
+        <button
+          type="button"
+          onClick={() => setRosterView("outreach")}
+          className={`rounded-xl border p-4 text-left transition-colors ${rosterView === "outreach" ? "border-blue-500 bg-blue-50" : "bg-card hover:bg-muted/50"}`}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Outreach directory</p>
+              <p className="text-3xl font-bold">{outreachRows.length}</p>
+              <p className="mt-1 text-sm">Imported contacts who have not registered</p>
+            </div>
+            <Users className="h-8 w-8 text-blue-600" />
+          </div>
+        </button>
+      </div>
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Coach roster</CardTitle>
+        <CardHeader className="flex-row items-center justify-between gap-3 space-y-0">
+          <div>
+            <CardTitle className="text-base">
+              {rosterView === "registered" ? "Registered college coaches" : rosterView === "outreach" ? "Outreach directory" : "All college coaches"}
+            </CardTitle>
+            <p className="mt-1 text-sm text-muted-foreground">Showing {visibleRows.length} record{visibleRows.length === 1 ? "" : "s"}</p>
+          </div>
+          <div className="flex rounded-lg border p-1">
+            {(["registered", "outreach", "all"] as const).map((view) => (
+              <Button key={view} type="button" size="sm" variant={rosterView === view ? "default" : "ghost"} onClick={() => setRosterView(view)} className="capitalize">
+                {view}
+              </Button>
+            ))}
+          </div>
         </CardHeader>
         <CardContent className="overflow-x-auto">
           {loading ? (
@@ -134,7 +183,7 @@ export default function TocCollegeCoachesAdminPage() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {rows.map((row) => (
+                {visibleRows.map((row) => (
                   <tr key={row.id}>
                     <td className="p-3">
                       <p className="font-medium">{row.coach_name}</p>
@@ -147,7 +196,11 @@ export default function TocCollegeCoachesAdminPage() {
                     <td className="p-3 font-semibold">{row.state ?? "—"}</td>
                     <td className="p-3 capitalize">{row.attendance?.replace("both", "Fri + Sat") ?? "—"}</td>
                     <td className="p-3">{row.staff_count ?? "—"}</td>
-                    <td className="p-3 capitalize">{row.source}</td>
+                    <td className="p-3">
+                      <span className={`rounded-full px-2 py-1 text-xs font-semibold ${row.source === "registration" || row.registered_at ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-700"}`}>
+                        {row.source === "registration" || row.registered_at ? "Form registration" : "Imported contact"}
+                      </span>
+                    </td>
                     <td className="p-3">
                       <Select value={row.status} onValueChange={(value) => void updateStatus(row.id, value)}>
                         <SelectTrigger className="h-8 w-32">
@@ -164,6 +217,13 @@ export default function TocCollegeCoachesAdminPage() {
                     </td>
                   </tr>
                 ))}
+                {visibleRows.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="p-10 text-center text-muted-foreground">
+                      {rosterView === "registered" ? "No college coaches have submitted the registration form yet." : "No contacts in this view."}
+                    </td>
+                  </tr>
+                ) : null}
               </tbody>
             </table>
           )}
