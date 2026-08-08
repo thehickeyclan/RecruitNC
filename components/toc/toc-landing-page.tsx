@@ -15,6 +15,7 @@ import { TocOfficialsSection } from "@/components/toc/toc-officials-section"
 import { TocSpectatorsSection } from "@/components/toc/toc-spectators-section"
 import { TocWeightClassesList } from "@/components/toc/toc-weight-classes"
 import { TocScheduleTable } from "@/components/toc/toc-schedule-table"
+import { TocHotelsSection } from "@/components/toc/toc-hotels-section"
 import { TocStreamingSection } from "@/components/toc/toc-streaming-section"
 // Temporarily removed; likely to return later.
 // import { TocRecruitingSection } from "@/components/toc/toc-recruiting-section"
@@ -64,6 +65,7 @@ export function TocLandingPage({ config, confirmedColleges }: Props) {
 
       {/* Plan your weekend */}
       <TocScheduleTable />
+      <TocHotelsSection />
       <TocSpectatorsSection />
       <TocOfficialsSection />
       <TocVolunteerSection />

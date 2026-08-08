@@ -361,6 +361,35 @@ export const TOC_VENUE = {
   seatingLabel: "Seating for up to 1,000",
 } as const
 
+/** Tournament lodging. Replace each null bookingUrl when the hotel supplies its live room-block link. */
+export const TOC_HOTELS = [
+  {
+    name: "Holiday Inn Express Apex – Raleigh",
+    distance: "1.9 mi",
+    rate: "Pending",
+    blockDeadline: "Pending hotel callback",
+    bookingUrl: null,
+    notes:
+      "Current public saver rate quoted: $139.68 ($158.18 total). The hotel is checking military, AAA, and potential group options; this is not yet a TOC rate.",
+  },
+  {
+    name: "Candlewood Suites Apex Raleigh Area",
+    distance: "2.0 mi",
+    rate: "$146–$157",
+    blockDeadline: "Confirmed block · Aug. 21 cutoff",
+    bookingUrl: null,
+    notes: "Double-room options. Block confirmed.",
+  },
+  {
+    name: "SpringHill Suites by Marriott Raleigh Apex",
+    distance: "1.9 mi",
+    rate: "$202",
+    blockDeadline: "Courtesy block · 30-day cutoff",
+    bookingUrl: null,
+    notes: "Reservation link pending. Hotel is sending the contract.",
+  },
+] as const
+
 export const TOC_VENUE_FEATURES = [
   {
     title: "Two competition mats",
@@ -608,6 +637,7 @@ export const TOC_SECTION_NAV_GROUPS = [
       { href: "#venue", label: "Venue" },
       { href: "#schedule", label: "Schedule" },
       { href: "#families", label: "Tickets & families" },
+      { href: "#hotels", label: "Hotels" },
       { href: "#streaming", label: "Watch live" },
     ],
   },
@@ -636,6 +666,7 @@ export const TOC_SECTION_NAV_QUICK = [
   { href: "#road", label: "What's next" },
   { href: "#schedule", label: "Schedule" },
   { href: "#families", label: "Tickets" },
+  { href: "#hotels", label: "Hotels" },
   { href: "#trophies-awards", label: "Awards" },
   { href: "#caden-perry-scholarship", label: "Scholarship" },
   { href: "#official-tee", label: "Apparel" },

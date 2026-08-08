@@ -13,9 +13,6 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const path = pathname && pathname.length > 0 ? pathname : "/"
   const isSpartanCampaign = path === "/spartan" || path.startsWith("/spartan/")
-  const isTocCampaign =
-    path === "/tournament-of-champions" || path.startsWith("/tournament-of-champions/")
-
   if (isSpartanCampaign) {
     return (
       <div id="app-content" className="relative flex min-h-screen flex-col bg-[#0A0A0A]">
@@ -33,7 +30,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
         <ConditionalAuthGuard>{children}</ConditionalAuthGuard>
       </main>
       <Footer />
-      {!isTocCampaign ? <AIChatWidget /> : null}
+      <AIChatWidget />
     </div>
   )
 }
