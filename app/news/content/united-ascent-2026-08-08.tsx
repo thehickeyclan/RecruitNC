@@ -149,7 +149,7 @@ export function UnitedAscent20260808Content() {
           is required. Divisions will include Tot, Bantam, Elementary, Middle School and High School.
         </p>
         <p>
-          <strong>Sunday, October 25, 2026 · Location to be announced</strong>
+          <strong>Sunday, October 25, 2026 · James B. Dudley High School</strong>
         </p>
         <p>One loss does not have to end the weekend.</p>
       </section>
