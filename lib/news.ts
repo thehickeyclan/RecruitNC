@@ -100,6 +100,29 @@ export function newsShareUsesHeroCropOnly(
  */
 const ALL_NEWS: NewsItem[] = [
   {
+    id: "united-ascent-2026-08-08",
+    slug: "united-ascent-2026-08-08",
+    title: "United Ascent: NC Clubs Win Big, Club Locator Launches & the TOC Stage Takes Shape",
+    subtitle: "Vol. 1, No. 4 of North Carolina wrestling news.",
+    summary:
+      "Two North Carolina teams place Top 10 at Deep South, School of Hard Knocks wins in Hershey, Club Locator launches, and Super 32 opportunities open.",
+    href: "/news/united-ascent-2026-08-08",
+    date: "2026-08-08",
+    image: "/images/united-ascent/2026-08-08-wide.png",
+    homeImage: "/images/united-ascent/2026-08-08-wide.png",
+    imagePosition: "center",
+    imageFit: "contain",
+    imageBannerBgClass: "bg-[#e8ddc8]",
+    newsListBanner: true,
+    category: "UNITED ASCENT",
+    categoryBadgeClass: "bg-[#1a1a1a]",
+    readTime: "8 min read",
+    author: "United Ascent Staff",
+    shareHeroCropOnly: true,
+    shareStoryImage: "/images/united-ascent/2026-08-08-wide.png",
+    isAnnouncement: true,
+  },
+  {
     id: "nc-united-nc-mat-official-media-partner",
     slug: "nc-united-nc-mat-official-media-partner",
     title: "NC United Partners with The NC Mat as Official Media Partner for Tournament of Champions",
