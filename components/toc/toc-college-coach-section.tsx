@@ -11,11 +11,18 @@ export function TocCollegeCoachSection() {
       <TocPatrioticBar className="absolute inset-x-0 top-0" />
       <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:gap-10">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]">College coaches</p>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]">College coaches only</p>
           <TocVarsityHeading as="h2" className="mt-3 text-white">
-            Your credential is on us
+            College coaches: your credential is on us
           </TocVarsityHeading>
-          <p className="mt-4 max-w-xl text-sm leading-relaxed text-white/70 sm:text-base">Register your staff for complimentary tournament admission and access to the credentialed VIP coaches lounge.</p>
+          <p className="mt-4 max-w-xl text-sm leading-relaxed text-white/70 sm:text-base">
+            This complimentary registration is exclusively for current college wrestling coaches and their staff.
+            Registered college staff receive tournament admission and access to the credentialed VIP coaches lounge.
+          </p>
+          <p className="mt-4 max-w-xl rounded-md border border-[#C8A94A]/40 bg-[#C8A94A]/10 px-4 py-3 text-sm font-semibold leading-relaxed text-[#F3D98B]">
+            High school and club coaches should not use this form. Their paid admission and credential details will be
+            announced separately.
+          </p>
           <div className="mt-6 grid gap-3 text-sm text-white/85">
             <p className="flex items-center gap-3">
               <Ticket className="h-5 w-5 text-[#C8A94A]" /> Complimentary event admission
@@ -24,7 +31,7 @@ export function TocCollegeCoachSection() {
               <Armchair className="h-5 w-5 text-[#C8A94A]" /> VIP lounge, hospitality, Wi-Fi and live mat feeds
             </p>
             <p className="flex items-center gap-3">
-              <BadgeCheck className="h-5 w-5 text-[#C8A94A]" /> Fast credential check-in for registered staff
+              <BadgeCheck className="h-5 w-5 text-[#C8A94A]" /> Fast credential check-in for registered college staff
             </p>
           </div>
         </div>

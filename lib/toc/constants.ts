@@ -577,6 +577,10 @@ export const TOC_CONFIRMED_COLLEGES_DEFAULT = [
     logoUrl: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/fe5ixmej-1745958547259.png",
   },
   {
+    name: "University of Virginia",
+    logoUrl: "/images/toc/university-of-virginia-logo.png",
+  },
+  {
     name: "Roanoke",
     logoUrl: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/-i2rnrys-1745958901725.png",
   },
