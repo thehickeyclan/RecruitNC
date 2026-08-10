@@ -1,4 +1,3 @@
-import Image from "next/image"
 import Link from "next/link"
 
 export function NcUnitedWrestlingGuildPremierPartnerContent() {
@@ -20,20 +19,6 @@ export function NcUnitedWrestlingGuildPremierPartnerContent() {
           across North Carolina.
         </p>
       </section>
-
-      <div className="not-prose rounded-2xl border border-[#D3B574]/30 bg-black p-5 shadow-xl sm:p-8">
-        <Image
-          src="/images/news/wrestling-guild-toc-premier-partner.png"
-          alt="Tournament of Champions Premier Partner — NC United and The Wrestling Guild, $1,000 commitment to North Carolina wrestling"
-          width={1448}
-          height={1086}
-          className="mx-auto h-auto w-full max-w-2xl"
-        />
-        <div className="mt-5 text-center">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#D3B574]">Premier Partner</p>
-          <p className="mt-2 text-sm text-white/70">The Wrestling Guild × NC United</p>
-        </div>
-      </div>
 
       <section>
         <h2>Tapping Into North Carolina&apos;s Wrestling Superpower</h2>
