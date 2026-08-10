@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button"
 import { ArrowRight, MapPin, TrendingUp } from "lucide-react"
 import { ProfessionalCommitmentCard } from "@/components/professional-commitment-card"
 import { normalizeAthleteList } from "@/lib/professional-athlete"
+import { getCurrentSigningClass } from "@/lib/commit-class-year"
+import { PUBLISHED_PUBLIC_RANKINGS_YEARS } from "@/lib/public-rankings-cap"
 import { StoreProductPromotion } from "@/components/store-product-promotion"
 import { HomeNewsHighlightsCarousel } from "@/components/home-news-highlights-carousel"
 import {
@@ -25,9 +27,18 @@ export const revalidate = 120
 
 const HERO_BACKGROUND_IMAGE = "/hero-banner-nchsaa-2026-arena.png"
 
-/** Stats bar reflects the current signing class. */
-const STATS_GRAD_YEAR = 2026
-const RANKING_CLASSES = [2027, 2028] as const
+/**
+ * Stats bar reflects the current signing class, which rolls over each July rather than
+ * being edited by hand — this sat on 2026 for months after that class had graduated.
+ */
+const STATS_GRAD_YEAR = getCurrentSigningClass()
+/**
+ * Which classes appear in the rankings strip is a publishing decision, not a calendar one —
+ * PUBLISHED_PUBLIC_RANKINGS_YEARS is the list you control. Deriving it from the date would
+ * put an unpublished class on the home page the moment the cycle rolled over, since
+ * getPublicRankingsMax falls back to the default cap for any year not in that map.
+ */
+const RANKING_CLASSES = PUBLISHED_PUBLIC_RANKINGS_YEARS
 
 function StatCard({ value, label, tone }: { value: number; label: string; tone: "white" | "gold" | "red" }) {
   const toneClass = tone === "gold" ? "text-rnc-gold" : tone === "red" ? "text-rnc-red" : "text-white"
