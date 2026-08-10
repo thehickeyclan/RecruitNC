@@ -100,6 +100,30 @@ export function newsShareUsesHeroCropOnly(
  */
 const ALL_NEWS: NewsItem[] = [
   {
+    id: "nc-united-wrestling-guild-premier-partner",
+    slug: "nc-united-wrestling-guild-premier-partner",
+    title: "NC United Announces The Wrestling Guild as Premier Partner of the 2026 Tournament of Champions",
+    subtitle:
+      "$1,000 partnership reflects a shared commitment to expanding opportunity and investing directly back into North Carolina wrestling.",
+    summary:
+      "The Wrestling Guild becomes the Tournament of Champions’ first Premier Partner with a $1,000 commitment that will be invested directly back into North Carolina wrestling.",
+    href: "/news/nc-united-wrestling-guild-premier-partner",
+    date: "2026-08-09",
+    image: "/images/news/wrestling-guild-toc-premier-partner.png",
+    homeImage: "/images/news/wrestling-guild-toc-premier-partner.png",
+    imagePosition: "center",
+    imageFit: "contain",
+    imageBannerBgClass: "bg-black",
+    newsListBanner: true,
+    category: "PARTNERSHIP",
+    categoryBadgeClass: "bg-[#D3B574]",
+    readTime: "5 min read",
+    author: "NC United",
+    shareHeroCropOnly: true,
+    shareStoryImage: "/images/news/wrestling-guild-toc-premier-partner.png",
+    isAnnouncement: true,
+  },
+  {
     id: "united-ascent-2026-08-08",
     slug: "united-ascent-2026-08-08",
     title: "United Ascent: NC Clubs Win Big, Club Locator Launches & the TOC Stage Takes Shape",
