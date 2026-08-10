@@ -40,6 +40,10 @@ const VARIANT_TO_CANONICAL: Record<string, string> = {
   "unc pembroke": "UNC Pembroke",
   "gardner webb": "Gardner-Webb",
   "gardner-webb": "Gardner-Webb",
+  "navy": "Navy",
+  "naval academy": "Navy",
+  "united states naval academy": "Navy",
+  "u.s. naval academy": "Navy",
   "wake tech": "Wake Tech",
   "waketech": "Wake Tech",
 

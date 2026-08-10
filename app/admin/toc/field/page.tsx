@@ -307,7 +307,13 @@ function WeightBoardCard({
                         {a.seed ? `#${a.seed}` : "—"}
                       </span>
                       <div className="min-w-[11rem] flex-1">
-                        <p className="break-words font-semibold leading-tight text-white">{a.name}</p>
+                        <Link
+                          href={`/athletes/${a.athleteId}`}
+                          className="break-words font-semibold leading-tight text-white underline-offset-2 transition-colors hover:text-[#D7B95A] hover:underline"
+                          title={`View ${a.name}'s profile`}
+                        >
+                          {a.name}
+                        </Link>
                         <p className="mt-0.5 break-words text-xs leading-tight text-white/45">{a.school ?? "—"}</p>
                         <AthleteCredentialBadges athlete={a} />
                       </div>

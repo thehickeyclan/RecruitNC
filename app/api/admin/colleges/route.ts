@@ -3,7 +3,10 @@ import { createClient } from "@/lib/supabase/server"
 
 export const dynamic = "force-dynamic"
 
-const ENSURED_COLLEGES = [{ name: "Duke", division: "NCAA Division I" }]
+const ENSURED_COLLEGES = [
+  { name: "Duke", division: "NCAA Division I" },
+  { name: "Navy", division: "NCAA Division I" },
+]
 
 /** List all colleges from the colleges table (for admin division editing). Ensures Duke (and any ENSURED_COLLEGES) exist. */
 export async function GET() {

@@ -54,6 +54,12 @@ export const COLLEGE_DIRECT_LOGO_URLS: Record<string, string> = {
   "ohio state": "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/kcgqvisv-1745968898953.png",
   "ohio state university":
     "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/kcgqvisv-1745968898953.png",
+  navy: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logos/college/Navy-20260810.png",
+  "naval academy": "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logos/college/Navy-20260810.png",
+  "united states naval academy":
+    "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logos/college/Navy-20260810.png",
+  "u.s. naval academy":
+    "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logos/college/Navy-20260810.png",
 }
 
 const HIGH_SCHOOL_DIRECT_LOGO_URLS: Record<string, string> = {

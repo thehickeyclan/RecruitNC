@@ -623,6 +623,10 @@ export const TOC_CONFIRMED_COLLEGES_DEFAULT = [
     logoUrl: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/hQ12r1UqPiFiiEG_7lrvU-Campbell.png",
   },
   {
+    name: "Gardner-Webb",
+    logoUrl: "/images/toc/gardner-webb-logo.png",
+  },
+  {
     name: "Lander",
     logoUrl: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/hohbgwxg-1745968850197.png",
   },
