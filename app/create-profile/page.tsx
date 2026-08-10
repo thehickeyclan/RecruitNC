@@ -473,7 +473,7 @@ export default function CreateProfilePage() {
                     id="wrestlingClub"
                     value={formData.wrestlingClub}
                     onChange={(e) => handleChange("wrestlingClub", e.target.value)}
-                    placeholder="e.g. NC United, Wolfpack WC"
+                    placeholder="e.g. Darkhorse, RAW"
                   />
                 </div>
               </div>
