@@ -712,9 +712,7 @@ export function ProfessionalCommitmentCard({ athlete, listMode = false }: Profes
           }}
         >
           <div className="flex h-full flex-col p-4">
-            <div
-              className="flex items-start justify-between border-b border-white/15 pb-3"
-            >
+            <div className="flex shrink-0 items-start justify-between border-b border-white/15 pb-2.5">
               <div className="flex items-center gap-2">
                 <Image
                   src="/nc-united-logo-white.png"
@@ -765,7 +763,7 @@ export function ProfessionalCommitmentCard({ athlete, listMode = false }: Profes
             </div>
 
             {legacyAwardBadges.length > 0 && (
-              <div className="mt-2 flex flex-wrap justify-center gap-1 px-0.5">
+              <div className="mt-2 flex shrink-0 flex-wrap justify-center gap-1 px-0.5">
                 {legacyAwardBadges.map((b) => (
                   <span
                     key={b.key}
@@ -783,8 +781,10 @@ export function ProfessionalCommitmentCard({ athlete, listMode = false }: Profes
             )}
 
             {honorBadgesMerged.length > 0 && (
-              <div className="mt-2 flex flex-wrap justify-center gap-1 px-0.5">
-                {honorBadgesMerged.slice(0, 3).map((label) => (
+              <div className="mt-2 flex shrink-0 flex-wrap justify-center gap-1 px-0.5">
+                {/* One fewer when a legacy award is already taking a row above, so badges
+                    never occupy three rows and squeeze the résumé down to a single placing. */}
+                {honorBadgesMerged.slice(0, legacyAwardBadges.length > 0 ? 2 : 3).map((label) => (
                   <span
                     key={label}
                     className="inline-flex items-center rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide leading-none"
@@ -800,8 +800,8 @@ export function ProfessionalCommitmentCard({ athlete, listMode = false }: Profes
               </div>
             )}
 
-            <div className="relative mt-3 overflow-hidden rounded-lg border bg-white p-3 shadow-sm">
-              <p className="mb-2 text-[9px] font-black uppercase tracking-[0.16em] text-[#B31B1B]">College destination</p>
+            <div className="relative mt-2.5 shrink-0 rounded-lg border bg-white p-2.5 shadow-sm">
+              <p className="mb-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-[#B31B1B]">College destination</p>
               <div className="flex items-center gap-2 relative z-10">
                 <div className="h-12 w-12 rounded-full bg-white p-1.5 flex items-center justify-center border border-gray-200 flex-shrink-0">
                   {collegeLogoUrl && !collegeLogoError ? (
@@ -847,38 +847,38 @@ export function ProfessionalCommitmentCard({ athlete, listMode = false }: Profes
               </div>
             </div>
 
-            <div className="mt-3 grid shrink-0 grid-cols-4 overflow-hidden rounded-lg border border-white/15 bg-white/[0.06] text-center text-white">
-              <div className="border-r border-white/10 px-1 py-2">
+            <div className="mt-2.5 grid shrink-0 grid-cols-4 overflow-hidden rounded-lg border border-white/15 bg-white/[0.06] text-center text-white">
+              <div className="border-r border-white/10 px-1 py-1.5">
                 <p className="text-[8px] font-semibold uppercase tracking-wide text-white/50">Record</p>
                 <p className="mt-0.5 text-sm font-black tabular-nums">
                   {careerStats ? `${careerStats.totalWins}-${careerStats.totalLosses}` : "—"}
                 </p>
               </div>
-              <div className="border-r border-white/10 px-1 py-2">
+              <div className="border-r border-white/10 px-1 py-1.5">
                 <p className="text-[8px] font-semibold uppercase tracking-wide text-white/50">Win %</p>
                 <p className="mt-0.5 text-sm font-black tabular-nums">
                   {careerStats ? `${careerStats.totalWinPercentage.toFixed(0)}%` : "—"}
                 </p>
               </div>
-              <div className="border-r border-white/10 px-1 py-2">
+              <div className="border-r border-white/10 px-1 py-1.5">
                 <p className="text-[8px] font-semibold uppercase tracking-wide text-white/50">State titles</p>
                 <p className="mt-0.5 text-sm font-black tabular-nums">{cardResume.stateTitles}</p>
               </div>
-              <div className="px-1 py-2">
+              <div className="px-1 py-1.5">
                 <p className="text-[8px] font-semibold uppercase tracking-wide text-white/50">National AA</p>
                 <p className="mt-0.5 text-sm font-black tabular-nums">{cardResume.nationalPlacements}</p>
               </div>
             </div>
 
-            <div className="mt-3 rounded-lg border border-white/15 bg-white/[0.06] px-3 py-2.5 text-white">
-              <div className="flex items-center justify-between">
+            <div className="mt-2.5 mb-2.5 flex min-h-0 flex-col rounded-lg border border-white/15 bg-white/[0.06] px-3 py-2 text-white">
+              <div className="flex shrink-0 items-center justify-between">
                 <h4 className="text-[9px] font-black uppercase tracking-[0.16em]" style={{ color: "#D3B574" }}>
                   Championship résumé
                 </h4>
                 <span className="text-[8px] font-semibold uppercase tracking-wide text-white/40">Verified results</span>
               </div>
               {cardResume.lines.length > 0 ? (
-                <div className="mt-1.5 space-y-1">
+                <div className="mt-1.5 min-h-0 flex-1 space-y-1 overflow-hidden">
                   {cardResume.lines.map((item) => (
                     <div key={item.label} className="flex items-center gap-2 text-[10px] leading-tight">
                       <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: "#D3B574" }} />
@@ -891,7 +891,7 @@ export function ProfessionalCommitmentCard({ athlete, listMode = false }: Profes
                   Full verified tournament results are available on the athlete profile.
                 </p>
               )}
-              <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 border-t border-white/10 pt-2 text-[9px] text-white/55">
+              <div className="mt-1.5 flex shrink-0 flex-wrap gap-x-3 gap-y-1 border-t border-white/10 pt-1.5 text-[9px] text-white/55">
                 <span>{athlete.highschool || athlete.highSchool || athlete.high_school || "High school"}</span>
                 {hasValidClub() && <span>• {displayClubName}</span>}
                 {athlete.hs_weight_class && <span>• {athlete.hs_weight_class} lbs</span>}
@@ -996,7 +996,7 @@ export function ProfessionalCommitmentCard({ athlete, listMode = false }: Profes
 
             <a
               href={athlete.id ? `/view-profile?id=${encodeURIComponent(athlete.id)}` : `/athletes/${athlete.name?.toLowerCase().replace(/\s+/g, "-")}`}
-              className="mt-auto flex w-full items-center justify-center gap-2 rounded-md py-2 text-sm font-bold shadow-md transition-colors hover:opacity-95"
+              className="mt-auto flex w-full shrink-0 items-center justify-center gap-2 rounded-md py-2 text-sm font-bold shadow-md transition-colors hover:opacity-95"
               style={{
                 backgroundColor: "#D3B574",
                 color: "#0D1A4D",
