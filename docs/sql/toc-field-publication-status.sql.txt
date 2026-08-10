@@ -1,0 +1,25 @@
+-- Tournament of Champions — athlete-field announcement status
+-- Independent from bracket seeding and official draw publication.
+
+create table if not exists public.toc_field_publication_status (
+  weight_class int primary key,
+  athlete_field_locked boolean not null default false,
+  athlete_field_locked_at timestamptz,
+  athlete_field_locked_by uuid references auth.users(id) on delete set null,
+  updated_at timestamptz not null default CURRENT_TIMESTAMP,
+  constraint toc_field_publication_weight_positive check (weight_class > 0)
+);
+
+create index if not exists idx_toc_field_publication_locked
+  on public.toc_field_publication_status (athlete_field_locked, athlete_field_locked_at desc);
+
+alter table public.toc_field_publication_status enable row level security;
+
+drop policy if exists "Service role full toc_field_publication_status"
+  on public.toc_field_publication_status;
+create policy "Service role full toc_field_publication_status"
+  on public.toc_field_publication_status
+  for all
+  to service_role
+  using (true)
+  with check (true);

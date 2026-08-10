@@ -49,4 +49,6 @@ export type TocBracketDrawSummary = {
   confirmedCount: number
   isComplete: boolean
   source: "locked" | "live"
+  athleteFieldLocked?: boolean
+  athleteFieldLockedAt?: string | null
 }

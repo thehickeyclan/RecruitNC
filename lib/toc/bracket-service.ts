@@ -7,6 +7,7 @@ import {
 import type { TocBracketDraw, TocBracketDrawSummary, TocBracketParticipant } from "@/lib/toc/bracket-types"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 import { TOC_MAX_CONFIRMED_PER_WEIGHT } from "@/lib/toc/invitations"
+import { listTocFieldPublicationStatuses } from "@/lib/toc/field-publication-status"
 
 type InvitationRow = {
   id: string
@@ -204,8 +205,11 @@ export async function getLockedDraw(
 
 export async function listPublicBracketSummaries(admin: SupabaseClient): Promise<TocBracketDrawSummary[]> {
   const summaries: TocBracketDrawSummary[] = []
+  const fieldPublication = await listTocFieldPublicationStatuses(admin)
+  const fieldStatusByWeight = new Map(fieldPublication.statuses.map((status) => [status.weightClass, status]))
 
   for (const weightClass of TOC_WEIGHT_CLASSES) {
+    const fieldStatus = fieldStatusByWeight.get(weightClass)
     const locked = await getLockedDraw(admin, weightClass)
     if (locked) {
       summaries.push({
@@ -215,6 +219,8 @@ export async function listPublicBracketSummaries(admin: SupabaseClient): Promise
         confirmedCount: locked.confirmedCount,
         isComplete: locked.isComplete,
         source: "locked",
+        athleteFieldLocked: fieldStatus?.athleteFieldLocked === true,
+        athleteFieldLockedAt: fieldStatus?.athleteFieldLockedAt ?? null,
       })
       continue
     }
@@ -232,6 +238,8 @@ export async function listPublicBracketSummaries(admin: SupabaseClient): Promise
       confirmedCount: live.confirmedCount,
       isComplete: live.isComplete,
       source: "live",
+      athleteFieldLocked: fieldStatus?.athleteFieldLocked === true,
+      athleteFieldLockedAt: fieldStatus?.athleteFieldLockedAt ?? null,
     })
   }
 

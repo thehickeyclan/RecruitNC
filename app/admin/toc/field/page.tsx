@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { HardLink } from "@/components/hard-link"
-import { ArrowLeft, Check, ChevronDown, ChevronUp, Download, ExternalLink, GripVertical, Loader2, Lock, RefreshCw, Sparkles, Unlock } from "lucide-react"
+import { ArrowLeft, Check, ChevronDown, ChevronUp, Download, ExternalLink, GripVertical, Loader2, Lock, Megaphone, RefreshCw, Sparkles, Unlock } from "lucide-react"
 import { TOC_MAX_CONFIRMED_PER_WEIGHT } from "@/lib/toc/invitations"
 import { applyTocSeedOrder, type TocFieldBoard, type TocFieldAthlete, type TocWeightBoard } from "@/lib/toc/field-board"
 import {
@@ -141,7 +141,9 @@ function WeightBoardCard({
   bracketStatus,
   onLockDraw,
   onUnlockDraw,
+  onToggleAthleteField,
   bracketBusy,
+  fieldStatusBusy,
   canManage,
   canEditSeeds,
 }: {
@@ -159,10 +161,14 @@ function WeightBoardCard({
     canViewLive?: boolean
     confirmedCount?: number
     isComplete?: boolean
+    athleteFieldLocked?: boolean
+    athleteFieldLockedAt?: string | null
   }
   onLockDraw: (weightClass: number) => Promise<void>
   onUnlockDraw: (weightClass: number) => Promise<void>
+  onToggleAthleteField: (weightClass: number, locked: boolean) => Promise<void>
   bracketBusy: boolean
+  fieldStatusBusy: boolean
   canManage: boolean
   canEditSeeds: boolean
 }) {
@@ -456,6 +462,51 @@ function WeightBoardCard({
         ) : null}
 
         <div className="space-y-2 border-t border-white/10 pt-3">
+          <div
+            className={`rounded-lg border p-3 ${
+              bracketStatus?.athleteFieldLocked
+                ? "border-emerald-400/35 bg-emerald-400/10"
+                : "border-amber-300/25 bg-amber-300/[0.07]"
+            }`}
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <Badge
+                className={
+                  bracketStatus?.athleteFieldLocked
+                    ? "bg-emerald-500 text-[#04150d] hover:bg-emerald-500"
+                    : "border border-amber-300/35 bg-amber-300/10 text-amber-100 hover:bg-amber-300/10"
+                }
+              >
+                <Megaphone className="mr-1 h-3.5 w-3.5" />
+                {bracketStatus?.athleteFieldLocked
+                  ? "Athlete field locked · Ready for NC Mat"
+                  : "Athlete field not locked"}
+              </Badge>
+              {canManage ? (
+                <Button
+                  type="button"
+                  variant={bracketStatus?.athleteFieldLocked ? "ghost" : "outline"}
+                  size="sm"
+                  className={
+                    bracketStatus?.athleteFieldLocked
+                      ? "h-8 text-white/65 hover:bg-white/10 hover:text-white"
+                      : "h-8 border-emerald-300/35 bg-emerald-400/10 text-emerald-100 hover:bg-emerald-400/20 hover:text-white"
+                  }
+                  disabled={fieldStatusBusy || board.confirmedCount < 1}
+                  onClick={() => void onToggleAthleteField(board.weightClass, !bracketStatus?.athleteFieldLocked)}
+                >
+                  {fieldStatusBusy ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : null}
+                  {bracketStatus?.athleteFieldLocked ? "Reopen athlete field" : "Mark field ready"}
+                </Button>
+              ) : null}
+            </div>
+            <p className={`mt-2 text-[11px] leading-relaxed ${bracketStatus?.athleteFieldLocked ? "text-emerald-100/75" : "text-amber-100/60"}`}>
+              {bracketStatus?.athleteFieldLocked
+                ? "NC Mat may announce the athletes in this weight. Seed order remains separate and may still change."
+                : "Do not announce this weight yet — athlete additions, withdrawals, or replacements may still occur."}
+            </p>
+          </div>
+
           {bracketStatus?.locked ? (
             <>
               <Badge className="bg-emerald-600 text-white">Draw published</Badge>
@@ -545,10 +596,13 @@ export default function TocFieldAdminPage() {
         canViewLive?: boolean
         confirmedCount?: number
         isComplete?: boolean
+        athleteFieldLocked?: boolean
+        athleteFieldLockedAt?: string | null
       }
     >
   >({})
   const [bracketBusyWeight, setBracketBusyWeight] = useState<number | null>(null)
+  const [fieldStatusBusyWeight, setFieldStatusBusyWeight] = useState<number | null>(null)
 
   const loadBracketStatuses = useCallback(async () => {
     const res = await fetch("/api/admin/toc/brackets")
@@ -563,6 +617,8 @@ export default function TocFieldAdminPage() {
         canViewLive?: boolean
         confirmedCount?: number
         isComplete?: boolean
+        athleteFieldLocked?: boolean
+        athleteFieldLockedAt?: string | null
       }
     > = {}
     for (const s of data.statuses ?? []) {
@@ -573,6 +629,8 @@ export default function TocFieldAdminPage() {
         canViewLive: Boolean(s.canViewLive),
         confirmedCount: typeof s.confirmedCount === "number" ? s.confirmedCount : undefined,
         isComplete: typeof s.isComplete === "boolean" ? s.isComplete : undefined,
+        athleteFieldLocked: s.athleteFieldLocked === true,
+        athleteFieldLockedAt: typeof s.athleteFieldLockedAt === "string" ? s.athleteFieldLockedAt : null,
       }
     }
     setBracketStatuses(map)
@@ -674,6 +732,10 @@ export default function TocFieldAdminPage() {
     const rankings = rankTocWeightBrackets(board?.weights ?? [])
     return new Map(rankings.map((ranking) => [ranking.weightClass, ranking.rank]))
   }, [board])
+  const announcementReadyCount = useMemo(
+    () => Object.values(bracketStatuses).filter((status) => status.athleteFieldLocked === true).length,
+    [bracketStatuses],
+  )
 
   const exportAllCsv = () => {
     if (!board) return
@@ -710,6 +772,29 @@ export default function TocFieldAdminPage() {
       alert(e instanceof Error ? e.message : "Failed to unlock")
     } finally {
       setBracketBusyWeight(null)
+    }
+  }
+
+  const toggleAthleteField = async (weightClass: number, locked: boolean) => {
+    const prompt = locked
+      ? `Mark the ${weightClass} lb athlete field final and ready for NC Mat to announce? Seeding will remain editable.`
+      : `Reopen the ${weightClass} lb athlete field? NC Mat will see that announcements should pause.`
+    if (!confirm(prompt)) return
+
+    setFieldStatusBusyWeight(weightClass)
+    try {
+      const res = await fetch(`/api/admin/toc/field-status/${weightClass}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ athleteFieldLocked: locked }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "Failed to update athlete field status")
+      await loadBracketStatuses()
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to update athlete field status")
+    } finally {
+      setFieldStatusBusyWeight(null)
     }
   }
 
@@ -760,11 +845,17 @@ export default function TocFieldAdminPage() {
 
       {board ? (
         <>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
           <Card className="border-white/10 bg-[#0B1D3A] text-white shadow-lg shadow-black/15">
             <CardContent className="pt-4">
               <p className="text-2xl font-bold text-white">{board.summary.totalConfirmed}</p>
               <p className="text-xs text-white/45">Confirmed</p>
+            </CardContent>
+          </Card>
+          <Card className="border-emerald-400/25 bg-emerald-400/10 text-white shadow-lg shadow-black/15">
+            <CardContent className="pt-4">
+              <p className="text-2xl font-bold text-emerald-300">{announcementReadyCount}</p>
+              <p className="text-xs text-emerald-100/65">Ready for NC Mat</p>
             </CardContent>
           </Card>
           <Card className="border-white/10 bg-[#0B1D3A] text-white shadow-lg shadow-black/15">
@@ -880,7 +971,9 @@ export default function TocFieldAdminPage() {
             bracketStatus={bracketStatuses[w.weightClass]}
             onLockDraw={lockDraw}
             onUnlockDraw={unlockDraw}
+            onToggleAthleteField={toggleAthleteField}
             bracketBusy={bracketBusyWeight === w.weightClass}
+            fieldStatusBusy={fieldStatusBusyWeight === w.weightClass}
             canManage={canManage}
             canEditSeeds
           />
