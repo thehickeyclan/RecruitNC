@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { getCurrentSigningClass, getDefaultCommitClassYear, COMMIT_CLASS_YEARS } from "./commit-class-year"
+import { getCurrentSigningClass, getDefaultCommitClassYear } from "./commit-class-year"
 
 /**
  * The class we highlight has to roll over in July, not January.
@@ -25,7 +25,9 @@ describe("getCurrentSigningClass", () => {
     expect(getCurrentSigningClass(new Date("2026-08-07T12:00:00Z"))).toBe(2027)
   })
 
-  it("keeps the leaderboard default inside the classes we actually list", () => {
-    expect(COMMIT_CLASS_YEARS).toContain(getDefaultCommitClassYear())
+  it("opens the commit leaderboards on every class, not the new one", () => {
+    // Scoped to the current signing class the leaderboards opened on 8 commitments across
+    // 5 colleges, which reads as broken rather than as early in the cycle.
+    expect(getDefaultCommitClassYear()).toBe("all")
   })
 })

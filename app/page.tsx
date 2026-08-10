@@ -119,8 +119,13 @@ function SectionHeader({
 export default async function HomePage() {
   // One parallel server-side load instead of six client round-trips. Each loader degrades to
   // an empty result rather than throwing, so a slow table can't take down the front door.
-  const [stats, rankings, latestCommitsRaw, storeProducts] = await Promise.all([
+  // Two stat loads, deliberately. The lead tile tracks the class we are highlighting, but
+  // the boys/girls split counts every commitment on file: early in a cycle the new class
+  // has no girls committed yet, and a "0 Female Athletes" tile on the front door reads as
+  // broken rather than as early.
+  const [stats, allClassStats, rankings, latestCommitsRaw, storeProducts] = await Promise.all([
     loadHomeStats(STATS_GRAD_YEAR),
+    loadHomeStats(null),
     loadFeaturedRankings([...RANKING_CLASSES], 3),
     loadLatestCommits(3),
     loadFeaturedStoreProducts(6),
@@ -236,10 +241,10 @@ export default async function HomePage() {
               <StatCard value={stats.total} label={`Class of ${STATS_GRAD_YEAR} Commits`} tone="white" />
             </div>
             <div className="sm:border-r sm:border-rnc-line">
-              <StatCard value={stats.male} label="Male Athletes" tone="gold" />
+              <StatCard value={allClassStats.male} label="Male Athletes" tone="gold" />
             </div>
             <div className="col-span-2 border-t border-rnc-line sm:col-span-1 sm:border-t-0">
-              <StatCard value={stats.female} label="Female Athletes" tone="red" />
+              <StatCard value={allClassStats.female} label="Female Athletes" tone="red" />
             </div>
           </div>
         </div>

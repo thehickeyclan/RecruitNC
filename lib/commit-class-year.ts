@@ -24,11 +24,13 @@ export function getCurrentSigningClass(now: Date = new Date()): number {
   return now.getMonth() >= NEW_CYCLE_START_MONTH ? now.getFullYear() + 1 : now.getFullYear()
 }
 
-/** Default commit filter: the current signing class, clamped to the classes we list. */
-export function getDefaultCommitClassYear(): CommitClassYear {
-  const current = String(getCurrentSigningClass())
-  if ((COMMIT_CLASS_YEARS as readonly string[]).includes(current)) {
-    return current as CommitClassYear
-  }
-  return COMMIT_CLASS_YEARS[COMMIT_CLASS_YEARS.length - 1]
+/**
+ * What the college / high-school commit leaderboards open on.
+ *
+ * Every class, not the current signing class. A leaderboard needs volume to rank anything —
+ * scoped to a class that has just started committing it opened on 8 commitments across 5
+ * colleges and looked broken. The class filter is one click away for anyone who wants it.
+ */
+export function getDefaultCommitClassYear(): CommitClassYearFilter {
+  return "all"
 }
