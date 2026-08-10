@@ -10,38 +10,38 @@ export function NcUnitedWrestlingGuildPremierPartnerContent() {
           September 18–19 in Apex, North Carolina.
         </p>
         <p>
-          The Wrestling Guild has committed <strong>$1,000 to the event</strong>, with 100% of Tournament of Champions
-          partnership and sponsorship dollars going directly back into the North Carolina wrestling community.
+          As part of the partnership, The Wrestling Guild is committing <strong>$1,000 directly back to the North
+          Carolina wrestling community</strong>, awarding <strong>10 wrestlers $100 each in Wrestling Guild training
+          credit.</strong>
         </p>
         <p>
-          The partnership brings together two organizations with a shared vision: create more opportunities for
-          wrestlers, connect the wrestling community, and better utilize the incredible resources already available
-          across North Carolina.
+          Beginning today, <strong>every new wrestler who creates a free Wrestling Guild account between August 9 and
+          September 15 will automatically be eligible</strong> for one of the ten awards. No purchase is necessary.
+        </p>
+        <p>
+          The 10 recipients will be announced and recognized at the <strong>Tournament of Champions on September
+          19</strong>. Wrestlers do not have to be competing in the Tournament of Champions to be eligible.
         </p>
       </section>
 
       <section>
         <h2>Tapping Into North Carolina&apos;s Wrestling Superpower</h2>
         <p>
-          North Carolina has something special in its backyard: outstanding college wrestling programs and
-          accomplished athletes competing and training at the highest levels of the sport.
-        </p>
-        <p>The Wrestling Guild was created in part to make that resource more accessible.</p>
-        <p>
-          The Guild is a wrestling training marketplace where families can discover and book <strong>elite coaches
-          for private lessons and small-group training</strong>, with a heavy focus on current and former NCAA
-          wrestlers.
+          The Wrestling Guild was built around a simple idea: some of the best wrestling resources in the country are
+          already in our backyard.
         </p>
         <p>
-          For families, it creates easier access to high-level instruction and mentorship. For coaches and college
-          athletes, it provides a platform to share their knowledge, connect with the next generation of wrestlers,
-          and earn income through the sport.
+          North Carolina is home to outstanding college programs, accomplished current and former NCAA athletes, and
+          elite coaches with years of experience at the highest levels of the sport.
         </p>
         <p>
-          <strong>
-            Some of the best wrestling knowledge in the country is already in our backyard. The Guild helps connect
-            wrestlers to it.
-          </strong>
+          The Guild creates a marketplace where families can discover and book <strong>elite coaches for private
+          lessons and small-group training</strong>, with a heavy focus on current and former NCAA wrestlers.
+        </p>
+        <p>
+          For wrestlers, it creates greater access to high-level instruction and mentorship. For coaches and college
+          athletes, it creates an opportunity to share their knowledge, connect with the next generation, and earn
+          income through the sport.
         </p>
       </section>
 
@@ -49,60 +49,60 @@ export function NcUnitedWrestlingGuildPremierPartnerContent() {
         <h2>More Than Training</h2>
         <p>The Wrestling Guild&apos;s vision extends beyond the training room.</p>
         <p>
-          The platform is building a broader marketplace specifically for the wrestling community, giving users a
-          place to <strong>buy, sell, and trade wrestling shoes, team-issued gear, apparel, and other wrestling
-          equipment.</strong>
+          The platform is building a broader marketplace specifically for wrestling, where members can <strong>buy,
+          sell, and trade wrestling shoes, team-issued gear, apparel, and other wrestling equipment.</strong>
         </p>
         <p>
-          The goal is to create one destination built around wrestling — connecting athletes, families, and coaches
-          with training, gear, resources, and opportunities within the sport.
-        </p>
-        <p>
-          <strong>Train. Connect. Elevate.</strong>
+          The goal is to create one destination where the wrestling community can connect around <strong>training,
+          gear, and opportunity.</strong>
         </p>
       </section>
 
       <section>
-        <h2>Investing Back Into North Carolina Wrestling</h2>
+        <h2>Partnership Dollars Going Back Into Wrestling</h2>
         <p>
-          That mission closely aligns with NC United&apos;s broader effort to strengthen the wrestling ecosystem across
-          North Carolina — athletes, coaches, clubs, college programs, and the communities that support them.
-        </p>
-        <p>The Tournament of Champions partnership program follows that same philosophy.</p>
-        <p>
-          <strong>
-            100% of partnership and sponsorship dollars generated by the Tournament of Champions go directly back
-            into the North Carolina wrestling community
-          </strong>{" "}
-          — supporting athletes, creating opportunities, improving the event experience, and helping continue to grow
-          the sport across the state.
-        </p>
-        <p>
-          The Wrestling Guild becomes the Tournament of Champions&apos; first Premier Partner with its <strong>$1,000
-          commitment to North Carolina wrestling.</strong>
-        </p>
-      </section>
-
-      <section>
-        <h2>Join The Wrestling Guild</h2>
-        <p>
-          Creating an account is <strong>free</strong>.
-        </p>
-        <p>
-          Wrestlers and families can sign up to discover coaches, explore private and small-group training
-          opportunities, and access the growing wrestling marketplace.
-        </p>
-        <p>
-          For coaches — including current and former NCAA athletes — The Guild provides an opportunity to offer
-          training, share their experience, and connect directly with wrestlers looking to improve.
+          The partnership also reflects the philosophy behind NC United&apos;s Tournament of Champions sponsorship
+          program:
         </p>
         <p>
           <strong>
-            North Carolina doesn&apos;t need to look far for elite wrestling resources. Many of them are already here.
+            100% of partnership and sponsorship dollars go directly back into the North Carolina wrestling community.
           </strong>
         </p>
         <p>
+          Rather than simply placing a sponsor logo at the event, NC United and its partners are working to turn those
+          dollars into tangible opportunities for wrestlers.
+        </p>
+        <p>The Wrestling Guild&apos;s inaugural Premier Partnership does exactly that:</p>
+        <p>
+          <strong>
+            $1,000 committed.
+            <br />
+            10 wrestlers.
+            <br />
+            $100 toward training for each.
+          </strong>
+        </p>
+      </section>
+
+      <section>
+        <h2>Create a Free Wrestling Guild Account</h2>
+        <p>
+          From <strong>August 9 through September 15</strong>, every new wrestler registration on The Wrestling Guild
+          will automatically be entered for an opportunity to receive one of the ten $100 training credits.
+        </p>
+        <p>
+          Creating an account is <strong>free</strong>, and no purchase is necessary.
+        </p>
+        <p>
+          The 10 recipients will be announced September 19 at the <strong>NC United Tournament of Champions in
+          Apex</strong>.
+        </p>
+        <p>
           <a href="https://www.wrestlingguild.com/">Create a free Wrestling Guild account</a>
+        </p>
+        <p>
+          <strong>Train. Connect. Elevate.</strong>
         </p>
       </section>
 

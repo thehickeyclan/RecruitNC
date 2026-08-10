@@ -102,11 +102,11 @@ const ALL_NEWS: NewsItem[] = [
   {
     id: "nc-united-wrestling-guild-premier-partner",
     slug: "nc-united-wrestling-guild-premier-partner",
-    title: "NC United Announces The Wrestling Guild as Premier Partner of the 2026 Tournament of Champions",
+    title: "NC United Announces The Wrestling Guild as Premier Partner of 2026 Tournament of Champions",
     subtitle:
-      "$1,000 partnership reflects a shared commitment to expanding opportunity and investing directly back into North Carolina wrestling.",
+      "Partnership will put $1,000 directly back into North Carolina wrestlers through ten $100 training awards.",
     summary:
-      "The Wrestling Guild becomes the Tournament of Champions’ first Premier Partner with a $1,000 commitment that will be invested directly back into North Carolina wrestling.",
+      "Ten wrestlers who create free Wrestling Guild accounts from August 9 through September 15 will receive $100 training credits through the Tournament of Champions partnership.",
     href: "/news/nc-united-wrestling-guild-premier-partner",
     date: "2026-08-09",
     image: "/images/news/wrestling-guild-toc-premier-partner.png",
