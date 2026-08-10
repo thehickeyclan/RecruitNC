@@ -67,7 +67,10 @@ function AthletesPublicPageContent() {
       setLoading(true)
       setError(null)
 
-      const response = await fetch("/api/athletes")
+      // The API defaults to 100 per page, which silently cut the list off at 100 of 159
+      // commitments with no pager and no indication anything was missing. 500 is the
+      // route's own ceiling and covers every commitment on file.
+      const response = await fetch("/api/athletes?limit=500")
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)

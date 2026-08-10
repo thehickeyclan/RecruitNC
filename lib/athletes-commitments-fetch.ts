@@ -233,7 +233,7 @@ export async function fetchCommitmentAthletes(
   let query = buildFilteredAthletesQuery(supabase, filters, ATHLETE_LIST_SELECT, true)
 
   const { data, error, count } = await query
-    .order("commitmentdate", { ascending: false })
+    .order("commitmentdate", { ascending: false, nullsFirst: false })
     .range(offset, offset + limit - 1)
 
   if (error || !data) {

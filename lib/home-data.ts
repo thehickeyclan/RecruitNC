@@ -159,15 +159,22 @@ function honorSourceFieldsFromRow(athlete: Record<string, unknown>) {
 }
 
 function commitmentTime(a: Record<string, any>): number {
-  return new Date(a.commitment_date || a.commitmentdate || a.updated_at || 0).getTime()
+  // commitmentdate is the real column; updated_at only stands in for the handful of rows
+  // that never got one, so a dateless commit still lands somewhere sensible.
+  return new Date(a.commitmentdate || a.updated_at || 0).getTime()
 }
 
 /**
  * Most recent commitments, newest first — the default branch of /api/featured-athletes.
  *
  * Note the source route ignores its `limit` param and always slices to 3; here the caller
- * actually controls it. Commitment dates live across three columns and aren't indexed for
- * ordering, so we pull a recent window and sort in memory, as the route does.
+ * actually controls it.
+ *
+ * The database does the ordering, then we re-sort in memory to apply the updated_at
+ * fallback. Previously it took 500 rows in whatever order Postgres felt like returning
+ * them and sorted those — fine at 159 commitments, but the moment the table passes 500
+ * the newest commit could simply not be in the window, and the home page would quietly
+ * lead with a stale one.
  */
 export async function loadLatestCommits(limit = 3): Promise<Record<string, any>[]> {
   try {
@@ -177,6 +184,7 @@ export async function loadLatestCommits(limit = 3): Promise<Record<string, any>[
       .select("*")
       .not("college", "is", null)
       .neq("college", "")
+      .order("commitmentdate", { ascending: false, nullsFirst: false })
       .limit(500)
 
     if (error || !Array.isArray(data) || data.length === 0) return []

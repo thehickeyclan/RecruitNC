@@ -11,7 +11,10 @@ import { AthletesPageSkeleton } from "@/components/athletes-page-skeleton"
 export const revalidate = 120
 
 const DEFAULT_FILTERS: CommitmentAthleteFilters = {
-  year: "2026",
+  // Every class, newest commitment first. Pinning this to one graduating year hid two
+  // thirds of the commitments — including the most recent ones, which are the reason
+  // anyone opens this page. The year filter is still there for anyone who wants it.
+  year: "all",
   gender: "all",
   division: "all",
   limit: 500,

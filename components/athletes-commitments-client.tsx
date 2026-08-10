@@ -51,7 +51,7 @@ export function AthletesCommitmentsClient({
     (initialFilters.gender as "all" | "male" | "female") ?? "all",
   )
   const [selectedYear, setSelectedYear] = useState<"all" | "2024" | "2025" | "2026" | "2027">(
-    (initialFilters.year as "all" | "2024" | "2025" | "2026" | "2027") ?? "2026",
+    (initialFilters.year as "all" | "2024" | "2025" | "2026" | "2027") ?? "all",
   )
   const [selectedDivision, setSelectedDivision] = useState<string>(initialFilters.division ?? "all")
   const [stats, setStats] = useState<CommitmentStats>(initialStats)
