@@ -25,6 +25,8 @@ function BookingLink({ url }: { url: string | null }) {
 }
 
 export function TocHotelsSection() {
+  const officialRoomBlock = TOC_HOTELS[0]
+
   return (
     <section id="hotels" className={`relative scroll-mt-20 bg-white text-[#0B1D3A] ${tocSectionClass()}`}>
       <TocPatrioticBar className="absolute left-0 right-0 top-0" />
@@ -35,12 +37,34 @@ export function TocHotelsSection() {
         </TocVarsityHeading>
         <p className="mb-3 max-w-3xl text-sm leading-relaxed text-[#0B1D3A]/70 sm:text-base">
           Several nearby hotels are offering special Tournament of Champions rates for athletes and families. All properties
-          below are approximately two miles from the venue. Booking links will be added as they become available.
+          below are approximately two miles from the venue. Book directly with the hotel using the links below.
         </p>
-        <p className="mb-8 inline-flex items-start gap-2 text-sm font-medium text-[#0B1D3A]">
+        <p className="mb-5 inline-flex items-start gap-2 text-sm font-medium text-[#0B1D3A]">
           <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#CC0000]" aria-hidden />
           Venue: {TOC_VENUE.name} — {TOC_VENUE.address}
         </p>
+
+        <div className="mb-8 flex flex-col gap-4 rounded-sm border-2 border-[#CC0000] bg-[#0B1D3A] p-5 text-white shadow-lg sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="mb-1 text-xs font-bold uppercase tracking-[0.2em] text-[#D7B95A]">Official TOC room block</p>
+            <h3 className="text-xl font-black leading-tight">{officialRoomBlock.name}</h3>
+            <p className="mt-2 text-sm text-white/80">
+              {officialRoomBlock.rate} · {officialRoomBlock.distance} from the venue
+            </p>
+            <p className="mt-2 inline-flex items-center gap-2 rounded-sm bg-[#CC0000] px-3 py-1.5 text-sm font-black uppercase tracking-wide">
+              <Clock3 className="h-4 w-4" aria-hidden /> Book by August 18, 2026
+            </p>
+          </div>
+          <a
+            href={officialRoomBlock.bookingUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-sm bg-white px-5 py-3 text-sm font-black uppercase tracking-wide text-[#0B1D3A] transition-colors hover:bg-[#D7B95A]"
+          >
+            Reserve your room
+            <ExternalLink className="h-4 w-4" aria-hidden />
+          </a>
+        </div>
 
         <div className="space-y-4 md:hidden">
           {TOC_HOTELS.map((hotel) => (

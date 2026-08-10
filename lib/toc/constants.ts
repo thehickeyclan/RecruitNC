@@ -374,6 +374,15 @@ export const TOC_VENUE = {
 /** Tournament lodging. Replace each null bookingUrl when the hotel supplies its live room-block link. */
 export const TOC_HOTELS = [
   {
+    name: "SpringHill Suites by Marriott Raleigh Apex",
+    distance: "2.3 mi",
+    rate: "$179/night",
+    blockDeadline: "Reserved room block · Book by Aug. 18",
+    bookingUrl:
+      "https://www.marriott.com/event-reservations/reservation-link.mi?id=1786378087595&key=GRP&app=resvlink&_branch_match_id=1595430146881154418&_branch_referrer=H4sIAAAAAAAAA8soKSkottLXTywo0MtNLCrKzC8p0UvOz9UvSi0uy0wtN7IHytiCODmZedlqmSm2huYWZsbmFgYW5qaWpmrZqZW27kEBanVFqWmpQO156fFJRfnlxalFts4ZRfm5qQBXsfjcYQAAAA%3D%3D",
+    notes: "Official TOC room block for Sept. 18–19. Reserve by Aug. 18, 2026; rooms are subject to availability.",
+  },
+  {
     name: "Holiday Inn Express Apex – Raleigh",
     distance: "1.9 mi",
     rate: "Pending",
@@ -389,14 +398,6 @@ export const TOC_HOTELS = [
     blockDeadline: "Confirmed block · Aug. 21 cutoff",
     bookingUrl: null,
     notes: "Double-room options. Block confirmed.",
-  },
-  {
-    name: "SpringHill Suites by Marriott Raleigh Apex",
-    distance: "1.9 mi",
-    rate: "$202",
-    blockDeadline: "Courtesy block · 30-day cutoff",
-    bookingUrl: null,
-    notes: "Reservation link pending. Hotel is sending the contract.",
   },
 ] as const
 
