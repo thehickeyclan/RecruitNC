@@ -19,8 +19,9 @@ export function NcUnitedWrestlingGuildPremierPartnerContent() {
           September 15 will automatically be eligible</strong> for one of the ten awards. No purchase is necessary.
         </p>
         <p>
-          The 10 recipients will be announced and recognized at the <strong>Tournament of Champions on September
-          19</strong>. Wrestlers do not have to be competing in the Tournament of Champions to be eligible.
+          The 10 recipients will be selected randomly, then announced and recognized at the <strong>Tournament of
+          Champions on September 19</strong>. Recipients must be present to receive an award, but wrestlers do not have
+          to be competing in the Tournament of Champions to be eligible.
         </p>
       </section>
 
@@ -100,6 +101,11 @@ export function NcUnitedWrestlingGuildPremierPartnerContent() {
         </p>
         <p>
           <a href="https://www.wrestlingguild.com/">Create a free Wrestling Guild account</a>
+        </p>
+        <p>
+          <Link href="/tournament-of-champions/wrestling-guild-training-awards">
+            Read the Wrestling Guild Training Awards official rules
+          </Link>
         </p>
         <p>
           <strong>Train. Connect. Elevate.</strong>
