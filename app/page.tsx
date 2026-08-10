@@ -18,7 +18,7 @@ import { HomeNewsHighlightsCarousel } from "@/components/home-news-highlights-ca
 import {
   loadFeaturedRankings,
   loadFeaturedStoreProducts,
-  loadHomeStats,
+  loadCommitCountsByClass,
   loadLatestCommits,
   type HomeRankedProspect,
 } from "@/lib/home-data"
@@ -32,6 +32,17 @@ const HERO_BACKGROUND_IMAGE = "/hero-banner-nchsaa-2026-arena.png"
  * being edited by hand — this sat on 2026 for months after that class had graduated.
  */
 const STATS_GRAD_YEAR = getCurrentSigningClass()
+
+/**
+ * The stats bar reports commitments per class, oldest to current.
+ *
+ * It used to show a profile count split by boys and girls, which answers "how big is your
+ * database" — not a question a parent or coach is asking. Commits per class shows how deep
+ * each North Carolina class went, and the current one filling up as its season runs.
+ *
+ * Derived from the signing class, so the window walks forward on its own each July.
+ */
+const STATS_CLASS_YEARS = [STATS_GRAD_YEAR - 2, STATS_GRAD_YEAR - 1, STATS_GRAD_YEAR] as const
 /**
  * Which classes appear in the rankings strip is a publishing decision, not a calendar one —
  * PUBLISHED_PUBLIC_RANKINGS_YEARS is the list you control. Deriving it from the date would
@@ -119,13 +130,8 @@ function SectionHeader({
 export default async function HomePage() {
   // One parallel server-side load instead of six client round-trips. Each loader degrades to
   // an empty result rather than throwing, so a slow table can't take down the front door.
-  // Two stat loads, deliberately. The lead tile tracks the class we are highlighting, but
-  // the boys/girls split counts every commitment on file: early in a cycle the new class
-  // has no girls committed yet, and a "0 Female Athletes" tile on the front door reads as
-  // broken rather than as early.
-  const [stats, allClassStats, rankings, latestCommitsRaw, storeProducts] = await Promise.all([
-    loadHomeStats(STATS_GRAD_YEAR),
-    loadHomeStats(null),
+  const [commitsByClass, rankings, latestCommitsRaw, storeProducts] = await Promise.all([
+    loadCommitCountsByClass(STATS_CLASS_YEARS),
     loadFeaturedRankings([...RANKING_CLASSES], 3),
     loadLatestCommits(3),
     loadFeaturedStoreProducts(6),
@@ -238,13 +244,26 @@ export default async function HomePage() {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 sm:grid-cols-3">
             <div className="border-r border-rnc-line">
-              <StatCard value={stats.total} label={`Class of ${STATS_GRAD_YEAR} Commits`} tone="white" />
+              <StatCard
+                value={commitsByClass[STATS_CLASS_YEARS[0]] ?? 0}
+                label={`Class of ${STATS_CLASS_YEARS[0]} Commits`}
+                tone="white"
+              />
             </div>
             <div className="sm:border-r sm:border-rnc-line">
-              <StatCard value={allClassStats.male} label="Male Athletes" tone="gold" />
+              <StatCard
+                value={commitsByClass[STATS_CLASS_YEARS[1]] ?? 0}
+                label={`Class of ${STATS_CLASS_YEARS[1]} Commits`}
+                tone="gold"
+              />
             </div>
+            {/* Full width on phones, so the class being followed reads as the headline. */}
             <div className="col-span-2 border-t border-rnc-line sm:col-span-1 sm:border-t-0">
-              <StatCard value={allClassStats.female} label="Female Athletes" tone="red" />
+              <StatCard
+                value={commitsByClass[STATS_GRAD_YEAR] ?? 0}
+                label={`Class of ${STATS_GRAD_YEAR} Commits`}
+                tone="red"
+              />
             </div>
           </div>
         </div>

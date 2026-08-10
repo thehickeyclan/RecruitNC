@@ -63,8 +63,40 @@ function normalizeGender(raw: unknown): "male" | "female" | "other" {
 }
 
 /**
- * Commit counts for the stats bar. Committed athletes only (has a college, not a prospect),
- * matching /api/stats so the bar can't disagree with the rest of the site.
+ * Commitment counts per graduating class, in one query.
+ *
+ * The stats bar used to show a profile count split by gender, which answers "how big is
+ * your database" — a question no parent or coach is asking. Commits per class answers
+ * "how deep is North Carolina right now", and shows a class filling up as its season runs.
+ */
+export async function loadCommitCountsByClass(years: readonly number[]): Promise<Record<number, number>> {
+  const counts: Record<number, number> = Object.fromEntries(years.map((y) => [y, 0]))
+  try {
+    const supabase = createAdminClient()
+    const { data, error } = await supabase
+      .from("athletes")
+      .select("graduationyear")
+      .not("college", "is", null)
+      .neq("college", "")
+      .neq("is_prospect", true)
+      .in("graduationyear", [...years])
+
+    if (error || !Array.isArray(data)) return counts
+
+    for (const row of data) {
+      const year = Number((row as { graduationyear?: unknown }).graduationyear)
+      if (counts[year] != null) counts[year] += 1
+    }
+    return counts
+  } catch (e) {
+    console.error("[home-data] loadCommitCountsByClass failed:", e instanceof Error ? e.message : e)
+    return counts
+  }
+}
+
+/**
+ * Commit counts split by gender. Committed athletes only (has a college, not a prospect),
+ * matching /api/stats so callers can't disagree with the rest of the site.
  */
 export async function loadHomeStats(gradYear?: number | null): Promise<HomeStats> {
   try {
