@@ -12,6 +12,8 @@ import { Loader2, Upload, Camera, ImageIcon, AlertCircle } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 interface PublicImageUploadProps {
+  /** Extra classes for the outer card, so a dark-themed page can restyle it. */
+  className?: string
   athleteId: string
   athleteName: string
   currentImageUrl?: string
@@ -19,6 +21,7 @@ interface PublicImageUploadProps {
 }
 
 export function PublicImageUpload({
+  className,
   athleteId,
   athleteName,
   currentImageUrl,
@@ -102,7 +105,7 @@ export function PublicImageUpload({
 
   if (!isAuthenticated) {
     return (
-      <Card className="w-full">
+      <Card className={`w-full ${className ?? ""}`}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Camera className="h-5 w-5" />
@@ -131,7 +134,7 @@ export function PublicImageUpload({
   }
 
   return (
-    <Card className="w-full">
+    <Card className={`w-full ${className ?? ""}`}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Camera className="h-5 w-5" />

@@ -5,6 +5,27 @@ import { getAthletesColumnNames, filterPayloadToSchema } from "@/lib/athletes-sc
 import { findExistingAthlete } from "@/lib/athlete-duplicate-check"
 import { normalizePhoneForStorage } from "@/lib/phone-format"
 
+/** Stored as a bare handle. Athletes type "@name", a full URL, or just the name. */
+function socialHandle(value: unknown): string | null {
+  const raw = String(value ?? "").trim()
+  if (!raw) return null
+  const handle = raw
+    .replace(/^https?:\/\/(www\.)?(instagram|twitter|x)\.com\//i, "")
+    .replace(/[/?].*$/, "")
+    .replace(/^@+/, "")
+    .trim()
+  return handle || null
+}
+
+/** Numeric academics, kept null rather than 0 when the athlete leaves them blank. */
+function numberOrNull(value: unknown, min: number, max: number): number | null {
+  const raw = String(value ?? "").trim()
+  if (!raw) return null
+  const parsed = Number(raw)
+  if (!Number.isFinite(parsed) || parsed < min || parsed > max) return null
+  return parsed
+}
+
 // Match athlete-utils mapAthleteToDb: admin uses contactEmail, phone (camelCase)
 const ADD_COLUMNS_SQL = `
 ALTER TABLE athletes ADD COLUMN IF NOT EXISTS "contactEmail" TEXT;
@@ -97,11 +118,17 @@ export async function POST(request: NextRequest) {
       graduationyear,
       weightclass: formData.weightClass || null,
       highschool: formData.highSchool || null,
-      location: formData.location || null,
       wrestlingClub: formData.wrestlingClub || formData.club || null,
       bio: formData.bio || null,
-      achievements: formData.achievements ? [formData.achievements] : [],
+      // Achievements are no longer asked for here. One free-text box produced a single blob
+      // per athlete that nothing could read back as individual placings; they are entered
+      // one at a time on the profile instead.
       photourl: formData.photoUrl || null,
+      academic_gpa: numberOrNull(formData.academicGpa, 0, 5),
+      academic_sat: numberOrNull(formData.academicSat, 400, 1600),
+      academic_act: numberOrNull(formData.academicAct, 1, 36),
+      academic_interest: formData.academicInterest || null,
+      highlight_video_url: String(formData.highlightVideoUrl ?? "").trim() || null,
       contactEmail: formData.email || null,
       phone: formData.phone ? normalizePhoneForStorage(formData.phone) : null,
       claimed_by_user_id: user.id,
@@ -111,6 +138,15 @@ export async function POST(request: NextRequest) {
       is_prospect: true,
       updated_at: now,
     }
+
+    // socialMedia is a JSONB blob, not columns. Only set it when there is something to put
+    // in it, so an athlete who skips both fields keeps a NULL rather than an empty object.
+    const socials: Record<string, string> = {}
+    const instagram = socialHandle(formData.instagram)
+    const twitter = socialHandle(formData.twitter)
+    if (instagram) socials.instagram = instagram
+    if (twitter) socials.twitter = twitter
+    if (Object.keys(socials).length > 0) insertPayload.socialMedia = socials
     if (prospectRanking != null) {
       insertPayload.prospect_ranking = prospectRanking
     }
