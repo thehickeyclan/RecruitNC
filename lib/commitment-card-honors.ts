@@ -299,29 +299,15 @@ function applyNchsaaJsonStateHonors(found: Set<string>, raw: unknown) {
   }
 }
 
-function applyAchievementTextStateHonorsOnly(found: Set<string>, hay: string) {
-  if (!hay.trim()) return
-
-  if (
-    /\bstate\s+champion\b|\bstate\s+champ\b|\bnchsaa\b.*\b(champ|champion)\b|\b\d+\s*x\s*state\s+champ|\bmulti[\s-]?time\s+state\s+champ|\bnchsaa\b.*(\b1\s*st\b|\bfirst\s+place\b)/i.test(
-      hay,
-    )
-  ) {
-    found.add("State Champion")
-  }
-
-  if (
-    /\bstate\s+placer\b|\bstate\s+finalist\b|\b(state\s+)?runner[\s-]?up\b|\b\d+\s*x\s*state\s+final|\bnchsaa\b.*\b(finalist|semifinal|(?!1\s*st)\d+\s*(?:st|nd|rd|th))\b/i.test(
-      hay,
-    )
-  ) {
-    found.add("State Placer")
-  }
-
-  if (/\bstate\s+qualifier\b|\bstate\s+qual\b|\bqualified\s+for\s+state\b|\bstate\s+qualification\b/i.test(hay)) {
-    found.add("State Qualifier")
-  }
-}
+/**
+ * Removed: state honours used to be inferred from the athlete's own achievements prose.
+ *
+ * That is how a typed line became a STATE CHAMPION badge on the commitment card. All-American
+ * was already fenced off here for the same reason ("avoids RankWrestler false positives");
+ * state honours never were. They now come from wrestling_nchsaa_results via
+ * applyNchsaaJsonStateHonors, which is populated by RecruitNC and covers girls as well as
+ * boys since the 2026 women's results were labelled.
+ */
 
 /**
  * Honor labels for the commitment card back (order preserved).
@@ -332,12 +318,6 @@ function applyAchievementTextStateHonorsOnly(found: Set<string>, hay: string) {
 export function getCommitmentHonorBadgesForAthlete(athlete: Record<string, unknown>): string[] {
   try {
     const found = new Set<string>()
-
-    const textLines: string[] = []
-    pushAchievementLines(textLines, athlete.achievements as string[] | string | undefined)
-    pushAchievementLines(textLines, athlete.additional_achievements as string[] | string | undefined)
-    const hayText = textLines.join("\n").toLowerCase().replace(/_/g, " ")
-    applyAchievementTextStateHonorsOnly(found, hayText)
 
     const placementEntries = collectHonorPlacementEntries(athlete)
     applyNationalBracketTop8FromSnippets(found, placementEntries, athlete)

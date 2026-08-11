@@ -94,25 +94,27 @@ describe("commitment-card-honors", () => {
     expect(badges).not.toContain("All-American")
   })
 
-  it("NCHSAA + 1st / first place in achievements is State Champion, not placer-only", () => {
+  // Prose no longer produces state honours. It is how a self-typed line became a
+  // STATE CHAMPION badge — All-American was fenced off here long ago for the same reason,
+  // and state honours have now caught up. wrestling_nchsaa_results is the source.
+  it("achievements prose never awards State Champion", () => {
     const badges = getCommitmentHonorBadgesForAthlete({
       id: "t",
       name: "Lydia Alley",
       achievements: ["2026 NCHSAA Girls 132 — 1st place", "North Davidson"],
     })
-    expect(badges).toContain("State Champion")
+    expect(badges).not.toContain("State Champion")
     expect(badges).not.toContain("State Placer")
     expect(badges).not.toContain("State Qualifier")
   })
 
-  it("getCommitmentHonorBadgesForAthlete: state champion drops state qualifier from same profile", () => {
+  it("achievements prose never awards State Qualifier either", () => {
     const badges = getCommitmentHonorBadgesForAthlete({
       id: "t",
       name: "Test",
       achievements: ["2026 NCHSAA 132 — 1st place", "State Qualifier"],
     })
-    expect(badges).toContain("State Champion")
-    expect(badges).not.toContain("State Qualifier")
+    expect(badges).toHaveLength(0)
   })
 
   it("mergeCommitmentHonorBadgesForDisplay: API SQ + profile State Champion → no qualifier chip", () => {
@@ -142,9 +144,12 @@ describe("commitment-card-honors", () => {
         ],
       },
     }
+    // The table said qualifier, the athlete's prose said 1st. The prose used to win.
+    // Now the table does — which is why the 79 girls' rows stored as place = 0 had to be
+    // corrected in the data rather than papered over here.
     const chips = commitmentCardHonorBadgesE2E(athlete, api)
-    expect(chips).toContain("State Champion")
-    expect(chips).not.toContain("State Qualifier")
+    expect(chips).toContain("State Qualifier")
+    expect(chips).not.toContain("State Champion")
   })
 
   it("E2E card pipeline: API only SQ + profile nchsaa_results JSON place 1 → State Champion, not State Qualifier", () => {
@@ -185,18 +190,18 @@ describe("commitment-card-honors", () => {
     expect(chips).not.toContain("State Qualifier")
   })
 
-  it("mergeCommitmentHonorBadgesForDisplay: champ only in additional_achievements + API SQ → State Champion", () => {
+  it("a title claimed only in additional_achievements does not beat the table", () => {
     const profileHonors = getCommitmentHonorBadgesForAthlete({
       id: "x",
       name: "Lydia Alley",
       achievements: [],
       additional_achievements: ["2026 NCHSAA Girls 132 — 1st place"],
     })
+    expect(profileHonors).not.toContain("State Champion")
     const serverState = stateHonorsFromNchsaaMergedRows([{ year: 2026, classification: "A", weight_class: "132", place: 0 }])
-    expect(serverState).toContain("State Qualifier")
     const merged = mergeCommitmentHonorBadgesForDisplay(profileHonors, serverState)
-    expect(merged).toContain("State Champion")
-    expect(merged).not.toContain("State Qualifier")
+    expect(merged).toContain("State Qualifier")
+    expect(merged).not.toContain("State Champion")
   })
 
   it("stateHonorsFromNchsaaMergedRows: SQ + champ same year/weight (classification mismatch) → champion only", () => {

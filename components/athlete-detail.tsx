@@ -108,6 +108,7 @@ interface AthleteDetailProps {
     claimed_by_user_id?: string
     profile_verified?: boolean
     additional_achievements?: string | null
+    other_honours?: string | null
     flo_profile_url?: string
     track_wrestling_profile_url?: string
     last_edited_by?: string
@@ -457,33 +458,24 @@ export function AthleteDetail({
     loadLogos()
   }, [highSchool, college, athleteName, wrestlingClub, athlete?.wrestlingClubLogoUrl, athlete?.highSchoolLogoUrl])
 
-  const achievements = (() => {
-    try {
-      return Array.isArray(athleteData?.achievements)
-        ? athleteData.achievements
-        : typeof athleteData?.achievements === "string"
-          ? athleteData.achievements
-              .split(",")
-              .map((a) => a.trim())
-              .filter(Boolean)
-          : []
-    } catch (error) {
-      console.error("[v0] Error parsing achievements:", error)
-      return []
-    }
-  })()
-
-  const additionalAchievements = (() => {
-    try {
-      if (!athleteData?.additional_achievements) return []
-      return athleteData.additional_achievements
-        .split(/\r?\n|;/)
-        .map((entry) => entry.trim())
-        .filter(Boolean)
-    } catch (error) {
-      console.error("[v0] Error parsing additional achievements:", error)
-      return []
-    }
+  /**
+   * Honours the athlete wrote themselves.
+   *
+   * State placements and qualifiers, NHSCA, Super 32 and Fargo come from the result tables
+   * and render in their own sections — RecruitNC populates those so nobody can mistype a
+   * state title. This field is only for what those tables do not cover: conference and
+   * regional finishes, invitationals, career records, team titles.
+   *
+   * The legacy achievements / additional_achievements columns were migrated into
+   * other_honours and are no longer read here, but they are still in the database.
+   */
+  const otherHonours = (() => {
+    const raw = (athleteData?.other_honours ?? "").toString()
+    if (!raw.trim()) return []
+    return raw
+      .split(/\r?\n|;|\s+•\s+/)
+      .map((entry) => entry.trim())
+      .filter(Boolean)
   })()
 
   const athletePhoto = getAthletePhoto()
@@ -1817,7 +1809,7 @@ export function AthleteDetail({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Trophy className="h-6 w-6 text-white" />
-              <h2 className="text-2xl font-bold text-white">College Opens Experience</h2>
+              <h2 className="text-2xl font-bold text-white">College Open Experience</h2>
             </div>
             {canEdit && !editingSection && (
               <Button
@@ -1860,7 +1852,7 @@ export function AthleteDetail({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Award className="h-6 w-6 text-white" />
-              <h2 className="text-2xl font-bold text-white">Achievements</h2>
+              <h2 className="text-2xl font-bold text-white">Other Honours</h2>
             </div>
             {canEdit && !editingSection && (
               <Button
@@ -1879,8 +1871,7 @@ export function AthleteDetail({
               {editingSection === "achievements" ? (
                 <InlineAchievementsEditor
                   athleteId={athlete.id}
-                  achievements={athleteData.achievements}
-                  additionalAchievements={athleteData.additional_achievements}
+                  otherHonours={athleteData.other_honours}
                   onSave={handleInlineSave}
                   onCancel={() => setEditingSection(null)}
                 />
@@ -1895,32 +1886,31 @@ export function AthleteDetail({
                       </div>
                     ) : null
                   })()}
-                  {achievements.length > 0 && (
-                    <div className="mb-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-3">Achievements</h3>
-                      <ul className="list-disc list-inside space-y-2 text-gray-700">
-                        {achievements.map((achievement, index) => (
-                          <li key={`achievement-${index}`} className="text-base leading-relaxed">
-                            {achievement}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {additionalAchievements.length > 0 && (
+                  {otherHonours.length > 0 && (
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-3">Additional Achievements</h3>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-1">Other honours</h3>
+                      {/* Said plainly, because the tournament sections above are verified and
+                          this is not. Leaving both unlabelled is what let a self-typed line
+                          read as a state title. */}
+                      <p className="mb-3 text-sm text-gray-500">
+                        Added by the athlete. State, NHSCA, Super 32 and Fargo results are shown separately and come
+                        from official records.
+                      </p>
                       <ul className="list-disc list-inside space-y-2 text-gray-700">
-                        {additionalAchievements.map((achievement, index) => (
-                          <li key={`additional-achievement-${index}`} className="text-base leading-relaxed">
-                            {achievement}
+                        {otherHonours.map((honour, index) => (
+                          <li key={`other-honour-${index}`} className="text-base leading-relaxed">
+                            {honour}
                           </li>
                         ))}
                       </ul>
                     </div>
                   )}
-                  {achievements.length === 0 && additionalAchievements.length === 0 && !(athleteData?.state_qualifier ?? athlete?.state_qualifier)?.toString().trim() && (
-                    <p className="profile-text-muted text-gray-500 italic">{canEdit ? "No achievements yet. Click Edit to add." : "No achievements listed."}</p>
+                  {otherHonours.length === 0 && !(athleteData?.state_qualifier ?? athlete?.state_qualifier)?.toString().trim() && (
+                    <p className="profile-text-muted text-gray-500 italic">
+                      {canEdit
+                        ? "Conference and regional finishes, invitationals, career records — anything not covered by official results. Click Edit to add."
+                        : "No additional honours listed."}
+                    </p>
                   )}
                 </>
               )}
