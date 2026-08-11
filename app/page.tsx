@@ -285,6 +285,33 @@ export default async function HomePage() {
           ) : (
             <p className="py-8 text-center text-white/50">No recent commits available.</p>
           )}
+
+          {/*
+            The growth loop had no front door: the only CTA on the home page was "Submit
+            commitment", so an athlete who wanted to be listed had nowhere to start. It sits
+            directly under the latest commits because seeing peers commit is the moment
+            someone wants their own profile up.
+
+            The button says "free account" because /create-profile is behind sign-up — a
+            bare "Create your profile" promises a form and delivers a wall.
+          */}
+          <div className="mt-8 rounded-md border border-rnc-gold/25 bg-rnc-gold/[0.06] p-6 sm:flex sm:items-center sm:justify-between sm:gap-6">
+            <div className="max-w-xl">
+              <h3 className="text-xl font-black text-white sm:text-2xl">Are you a North Carolina wrestler?</h3>
+              <p className="mt-2 leading-7 text-white/70">
+                Put your record, results and academics where college coaches are already looking. Coaches search
+                RecruitNC by class, weight, GPA and test scores.
+              </p>
+            </div>
+            <div className="mt-5 flex flex-shrink-0 flex-col gap-2 sm:mt-0 sm:items-end">
+              <Link href="/create-profile">
+                <Button className="w-full bg-rnc-red px-6 py-5 text-base font-bold text-white hover:bg-rnc-red-hover sm:w-auto">
+                  Create your athlete profile
+                </Button>
+              </Link>
+              <span className="text-xs text-white/45">Free account · about 3 minutes</span>
+            </div>
+          </div>
         </section>
 
         {/* Featured Rankings */}

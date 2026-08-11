@@ -28,7 +28,7 @@ function authIntentForPath(path: string | null) {
     }
   }
 
-  if (target.includes("submit-profile") || target.includes("/edit") || target.includes("claim") || target.startsWith("/athletes/")) {
+  if (target.includes("submit-profile") || target.includes("create-profile") || target.includes("/edit") || target.includes("claim") || target.startsWith("/athletes/")) {
     return {
       badge: "PROFILE ACCESS",
       title: "Create your free account to manage profiles",
