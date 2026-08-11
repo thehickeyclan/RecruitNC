@@ -42,7 +42,7 @@ export type TocSeedEvidence = {
 
 export type TocWeightBoard = {
   weightClass: number
-  maxSlots: typeof TOC_MAX_CONFIRMED_PER_WEIGHT
+  maxSlots: number
   confirmedCount: number
   invitedCount: number
   openConfirmedSlots: number
@@ -157,6 +157,7 @@ export function buildTocFieldBoard(invitations: RawInvitation[]): TocFieldBoard 
     const athletes = (byWeight.get(weightClass) ?? []).sort(sortAthletes)
     const confirmedCount = athletes.filter((a) => a.status === "confirmed").length
     const invitedCount = athletes.filter((a) => a.status === "invited").length
+    const maxSlots = confirmedCount > 8 ? TOC_MAX_CONFIRMED_PER_WEIGHT : 8
     totalConfirmed += confirmedCount
     totalInvited += invitedCount
     if (confirmedCount >= 8) fullBrackets += 1
@@ -164,10 +165,10 @@ export function buildTocFieldBoard(invitations: RawInvitation[]): TocFieldBoard 
 
     return {
       weightClass,
-      maxSlots: TOC_MAX_CONFIRMED_PER_WEIGHT,
+      maxSlots,
       confirmedCount,
       invitedCount,
-      openConfirmedSlots: Math.max(0, TOC_MAX_CONFIRMED_PER_WEIGHT - confirmedCount),
+      openConfirmedSlots: Math.max(0, maxSlots - confirmedCount),
       athletes,
     }
   })
