@@ -1,0 +1,33 @@
+-- Athlete-written honours move to their own column — run in Supabase SQL Editor.
+--
+-- Results (state placement, state qualifier, NHSCA, Super 32, Fargo) come from the result
+-- tables and are populated by RecruitNC. Athletes write only what those tables do not
+-- cover: conference and regional finishes, invitationals, career records, team titles.
+--
+-- The original achievements columns are LEFT UNTOUCHED, so this is reversible and no
+-- athlete-written text is lost.
+--
+-- Safe to re-run.
+
+alter table public.athletes add column if not exists other_honours text;
+
+update public.athletes
+   set other_honours = nullif(
+         concat_ws(' • ',
+           nullif(array_to_string(coalesce(achievements, '{}'), ' • '), ''),
+           nullif(btrim(additional_achievements), '')
+         ), '')
+ where other_honours is null
+   and (
+     coalesce(array_length(achievements, 1), 0) > 0
+     or nullif(btrim(additional_achievements), '') is not null
+   );
+
+-- ── Verify ───────────────────────────────────────────────────────────────────
+select count(*) filter (where other_honours is not null) as migrated,
+       count(*) filter (where coalesce(array_length(achievements,1),0) > 0
+                          or nullif(btrim(additional_achievements),'') is not null) as expected
+  from public.athletes;
+
+select name, other_honours from public.athletes
+ where other_honours ilike '%Blue signup%';

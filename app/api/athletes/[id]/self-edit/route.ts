@@ -37,7 +37,12 @@ const ALLOWED_UPDATE_COLUMNS = new Set([
   "wrestling_club_id", "secondary_wrestling_club_id",
   "weightclass", "weight_class",
   "academic_gpa", "academic_sat", "academic_act", "academic_summary", "academic_interest",
-  "college_opens_experience", "achievements", "additional_achievements",
+  // Results are populated by RecruitNC from the NCHSAA / NHSCA / Super 32 / Fargo tables,
+  // so achievements and additional_achievements are no longer athlete-editable — free text
+  // there produced state-champion claims that nothing could verify. `other_honours` is the
+  // athlete's field, for what those tables do not cover: conference and regional finishes,
+  // invitationals, career records, team titles.
+  "college_opens_experience", "other_honours",
 ])
 
 function isContactOnlyUpdate(updates: Record<string, unknown>): boolean {
