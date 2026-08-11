@@ -153,15 +153,20 @@ export function Navbar() {
   const handleNavMobile = () => setIsOpen(false)
 
   // Primary nav: Home, Athletes, Events, Calendar, Programs, News, Messages, LegacyNC, then [Commitments etc]. Right block: Store, Cart (only when items), Sign In/Account.
+  /**
+   * "Athlete Profiles" pointed at /prospects/all while "Athletes" meant commitments, so a
+   * parent looking for their wrestler had to already know the difference. Profiles lead now,
+   * because that is what people come to Athletes for.
+   */
+  const profilesItem = { href: "/prospects/all", label: "Browse Athlete Profiles" }
   const commitmentItems = [
-    { href: "/athletes", label: "All Commitments" },
-    { href: "/high-schools", label: "By High School" },
-    { href: "/colleges", label: "By College" },
+    { href: "/athletes", label: "College Commitments" },
+    { href: "/high-schools", label: "Commitments by High School" },
+    { href: "/colleges", label: "Commitments by College" },
   ]
-  const profilesItem = { href: "/prospects/all", label: "Athlete Profiles" }
   const rankingsItem = { href: "/public-rankings", label: "Rankings" }
   const recruitingItem = { href: "/recruiting/tournaments", label: "Recruiting" }
-  const athletesItems = [...commitmentItems, profilesItem, rankingsItem, recruitingItem]
+  const athletesItems = [profilesItem, ...commitmentItems, recruitingItem]
 
   const programsItems = [
     { href: "/blue", label: "NC United Blue", description: "Training, apparel, and member benefits" },
@@ -335,13 +340,18 @@ export function Navbar() {
           {/* Desktop Navigation — Dropdown items that navigate MUST use <a href>, not Link (Radix blocks navigation otherwise). See .cursorrules. */}
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-1">
-              <a href="/" className={navLinkClass("/")}>Home</a>
+              {/* No "Home" link — the logo to the left already goes there, and the slot is
+                  worth more to Rankings. */}
               <DropdownMenu>
                 <DropdownMenuTrigger className={navTriggerClass(athletesItems)}>
                   Athletes
                   <ChevronDown className="h-4 w-4" />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-56">
+                <DropdownMenuContent align="start" className="w-64">
+                  <DropdownMenuItem asChild>
+                    <a href={profilesItem.href} className="block w-full cursor-pointer font-medium">{profilesItem.label}</a>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   {commitmentItems.map((item) => (
                     <DropdownMenuItem key={item.href} asChild>
                       <a href={item.href} className="block w-full cursor-pointer">{item.label}</a>
@@ -349,22 +359,16 @@ export function Navbar() {
                   ))}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <a href={profilesItem.href} className="block w-full cursor-pointer">{profilesItem.label}</a>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <a href={rankingsItem.href} className="block w-full cursor-pointer">{rankingsItem.label}</a>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
                     <a href={recruitingItem.href} className="block w-full cursor-pointer">{recruitingItem.label}</a>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              <a href="/public-rankings" className={navLinkClass("/public-rankings")}>Rankings</a>
               <a href="/clubs" className={navLinkClass("/clubs")}>Clubs</a>
               <DropdownMenu>
                 <DropdownMenuTrigger className={navTriggerClass(eventsNavItemsForActive)}>
                   <Trophy className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
-                  Elite Tournaments
+                  Results
                   <ChevronDown className="h-4 w-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
@@ -386,7 +390,7 @@ export function Navbar() {
                       New
                     </span>
                   </a>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 divide-y md:divide-y-0 md:divide-x bg-popover text-popover-foreground rounded-b-md">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 divide-y md:divide-y-0 md:divide-x bg-popover text-popover-foreground rounded-b-md">
                     {/* Column: States */}
                     <div className="p-4 min-w-0">
                       <div className="flex items-center gap-2 font-semibold text-foreground">
@@ -518,35 +522,33 @@ export function Navbar() {
                         })}
                       </div>
                     </div>
-                  </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <DropdownMenu>
-                <DropdownMenuTrigger className={navTriggerClass(legacyNcItems)}>
-                  <Archive className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
-                  LegacyNC
-                  <ChevronDown className="h-4 w-4" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-64">
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex items-center gap-2 font-semibold">
-                      <Archive className="h-4 w-4 text-amber-600" aria-hidden />
-                      LegacyNC
+                    {/* Column: LegacyNC — history is results too, and it was costing a
+                        top-level slot of its own for four links. */}
+                    <div className="p-4 min-w-0">
+                      <div className="flex items-center gap-2 font-semibold text-foreground">
+                        <Archive className="h-4 w-4 shrink-0 text-amber-600" aria-hidden />
+                        LegacyNC
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1 mb-3">North Carolina wrestling history</p>
+                      <div className="flex flex-col gap-0.5">
+                        {legacyNcItems.map((sub) => {
+                          const Icon = sub.icon
+                          return (
+                            <a
+                              key={sub.href}
+                              href={sub.href}
+                              className="flex gap-3 rounded-md px-2 py-2.5 hover:bg-muted/80 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            >
+                              <Icon className="h-5 w-5 shrink-0 text-muted-foreground mt-0.5" aria-hidden />
+                              <div className="min-w-0 flex-1">
+                                <span className="font-semibold text-sm text-foreground">{sub.label}</span>
+                              </div>
+                            </a>
+                          )
+                        })}
+                      </div>
                     </div>
-                    <p className="text-xs text-muted-foreground font-normal mt-1">NC Wrestling history</p>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {legacyNcItems.map((sub) => {
-                    const Icon = sub.icon
-                    return (
-                      <DropdownMenuItem key={sub.href} asChild>
-                        <a href={sub.href} className="flex items-center gap-2 cursor-pointer">
-                          <Icon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-                          <span>{sub.label}</span>
-                        </a>
-                      </DropdownMenuItem>
-                    )
-                  })}
+                  </div>
                 </DropdownMenuContent>
               </DropdownMenu>
               <DropdownMenu>
@@ -929,17 +931,17 @@ export function Navbar() {
                   <div className="px-3">
                     <div className={mobileMenuParentClass(isDropdownActive(athletesItems))}>Athletes</div>
                     <div className="space-y-2">
+                      <a href={profilesItem.href} className={mobileSubLinkClass(profilesItem.href)} onClick={() => setIsOpen(false)}>{profilesItem.label}</a>
                       {commitmentItems.map((item) => (
                         <a key={item.href} href={item.href} className={mobileSubLinkClass(item.href)} onClick={() => setIsOpen(false)}>{item.label}</a>
                       ))}
-                      <a href={profilesItem.href} className={mobileSubLinkClass(profilesItem.href)} onClick={() => setIsOpen(false)}>{profilesItem.label}</a>
-                      <a href={rankingsItem.href} className={mobileSubLinkClass(rankingsItem.href)} onClick={() => setIsOpen(false)}>{rankingsItem.label}</a>
                       <a href={recruitingItem.href} className={mobileSubLinkClass(recruitingItem.href)} onClick={() => setIsOpen(false)}>{recruitingItem.label}</a>
                     </div>
                   </div>
+                  <a href={rankingsItem.href} className={mobileLinkClass(rankingsItem.href)} onClick={() => setIsOpen(false)}>{rankingsItem.label}</a>
                   <a href="/clubs" className={mobileLinkClass("/clubs")} onClick={() => setIsOpen(false)}>Clubs</a>
                   <div className="px-3">
-                    <div className={mobileMenuParentClass(isDropdownActive(eventsNavItemsForActive))}>Elite Tournaments</div>
+                    <div className={mobileMenuParentClass(isDropdownActive(eventsNavItemsForActive))}>Results</div>
                     <div className="space-y-4">
                       <a
                         href="/tournament-of-champions"
@@ -1007,21 +1009,21 @@ export function Navbar() {
                           ))}
                         </div>
                       </div>
-                    </div>
-                  </div>
-                  <div className="px-3">
-                    <div className={mobileMenuParentClass(isDropdownActive(legacyNcItems))}>LegacyNC</div>
-                    <div className="space-y-2">
-                      {legacyNcItems.map((sub) => (
-                        <a
-                          key={sub.href}
-                          href={sub.href}
-                          className={mobileSubLinkClass(sub.href.split("?")[0])}
-                          onClick={() => setIsOpen(false)}
-                        >
-                          {sub.label}
-                        </a>
-                      ))}
+                      <div>
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 pl-1">LegacyNC</p>
+                        <div className="space-y-1">
+                          {legacyNcItems.map((sub) => (
+                            <a
+                              key={sub.href}
+                              href={sub.href}
+                              className={mobileSubLinkClass(sub.href.split("?")[0])}
+                              onClick={() => setIsOpen(false)}
+                            >
+                              {sub.label}
+                            </a>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <div className="px-3">
