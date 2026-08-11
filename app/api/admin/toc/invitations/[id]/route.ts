@@ -112,12 +112,16 @@ export async function PATCH(request: Request, { params }: Params) {
         )
       }
       update.status = nextStatus
+      update.status_reason = parsed.data.statusReason
+      update.status_reason_other = parsed.data.statusReason === "other" ? parsed.data.statusReasonOther?.trim() : null
       if (canWithdrawConfirmed) update.seed = null
     }
 
     if (nextStatus === "invited" || refreshInviteWindow) {
       update.status = "invited"
       update.invited_at = now
+      update.status_reason = null
+      update.status_reason_other = null
     }
 
     if (Object.keys(update).length === 1) {
@@ -137,7 +141,7 @@ export async function PATCH(request: Request, { params }: Params) {
       .from("toc_invitations")
       .update(update)
       .eq("id", id)
-      .select("id, weight_class, seed, notes, status, invited_at")
+      .select("id, weight_class, seed, notes, status, status_reason, status_reason_other, invited_at")
       .single()
 
     if (updateError) {

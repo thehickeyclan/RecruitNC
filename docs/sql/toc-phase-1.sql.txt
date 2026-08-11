@@ -47,6 +47,8 @@ create table if not exists public.toc_invitations (
   confirmation_token text unique,
   confirmation_token_expires_at timestamptz,
   notes text,
+  status_reason text check (status_reason in ('injury','football','unknown','other')),
+  status_reason_other text,
   created_at timestamptz default CURRENT_TIMESTAMP,
   updated_at timestamptz default CURRENT_TIMESTAMP
 );

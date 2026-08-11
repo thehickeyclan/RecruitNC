@@ -4,6 +4,15 @@ import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 export const TOC_MAX_CONFIRMED_PER_WEIGHT = 12 as const
 
 export const TOC_JACKET_SIZES = ["AS", "AM", "AL", "AXL", "A2XL", "A3XL"] as const
+export const TOC_STATUS_REASONS = ["injury", "football", "unknown", "other"] as const
+export type TocStatusReason = (typeof TOC_STATUS_REASONS)[number]
+
+export const TOC_STATUS_REASON_LABELS: Record<TocStatusReason, string> = {
+  injury: "Injury",
+  football: "Football",
+  unknown: "Unknown",
+  other: "Other",
+}
 
 export type TocInvitationStatus = "nominated" | "invited" | "confirmed" | "declined" | "withdrew"
 
@@ -22,6 +31,8 @@ export type TocInvitationRow = {
   usaw_acknowledgment: boolean | null
   attendance_acknowledgment: boolean | null
   notes: string | null
+  status_reason: TocStatusReason | null
+  status_reason_other: string | null
   created_at: string
   updated_at: string
 }
@@ -61,18 +72,30 @@ export const tocAdminInviteSchema = z.object({
   sendEmail: z.boolean().optional().default(true),
 })
 
-export const tocAdminInvitationPatchSchema = z.object({
-  weightClass: z.coerce
-    .number()
-    .refine((n) => TOC_WEIGHT_CLASSES.includes(n as (typeof TOC_WEIGHT_CLASSES)[number]), "Invalid weight class")
-    .optional(),
-  seed: z.number().int().min(1).max(TOC_MAX_CONFIRMED_PER_WEIGHT).nullable().optional(),
-  notes: z.string().max(2000).nullable().optional(),
-  /** Mark an invite declined/withdrawn, withdraw a confirmed athlete, or reactivate an invite. */
-  status: z.enum(["invited", "declined", "withdrew"]).optional(),
-  /** Restart the 7-day confirm window from now (only for invited rows). */
-  refreshInviteWindow: z.boolean().optional(),
-})
+export const tocAdminInvitationPatchSchema = z
+  .object({
+    weightClass: z.coerce
+      .number()
+      .refine((n) => TOC_WEIGHT_CLASSES.includes(n as (typeof TOC_WEIGHT_CLASSES)[number]), "Invalid weight class")
+      .optional(),
+    seed: z.number().int().min(1).max(TOC_MAX_CONFIRMED_PER_WEIGHT).nullable().optional(),
+    notes: z.string().max(2000).nullable().optional(),
+    /** Mark an invite declined/withdrawn, withdraw a confirmed athlete, or reactivate an invite. */
+    status: z.enum(["invited", "declined", "withdrew"]).optional(),
+    statusReason: z.enum(TOC_STATUS_REASONS).optional(),
+    statusReasonOther: z.string().trim().max(500).optional().nullable(),
+    /** Restart the 7-day confirm window from now (only for invited rows). */
+    refreshInviteWindow: z.boolean().optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.status !== "declined" && value.status !== "withdrew") return
+    if (!value.statusReason) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["statusReason"], message: "Select a reason." })
+    }
+    if (value.statusReason === "other" && !value.statusReasonOther?.trim()) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["statusReasonOther"], message: "Enter the other reason." })
+    }
+  })
 
 export function parseAthleteWeightClass(value: string | number | null | undefined): number | null {
   if (value == null || value === "") return null

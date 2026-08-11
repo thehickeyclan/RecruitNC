@@ -19,11 +19,18 @@ import {
 } from "@/components/ui/dialog"
 import { TocInviteShareCard } from "@/components/toc/admin/toc-invite-share-card"
 import { TocInviteReminderCard } from "@/components/toc/admin/toc-invite-reminder-card"
+import { TocStatusReasonDialog } from "@/components/toc/admin/toc-status-reason-dialog"
 import { HardLink } from "@/components/hard-link"
 import { ArrowLeft, Check, Copy, CreditCard, Clock, Loader2, RefreshCw, Send, UserCheck, Users } from "lucide-react"
 import { buildTocAthleteInviteMessage, type TocInviteMessage } from "@/lib/toc/invite-message"
 import { confirmPageUrl, registrationPayPageUrl } from "@/lib/toc/invitation-service"
-import { formatTocGradYear, suggestTocInviteWeight, tocWeightProfileHint } from "@/lib/toc/invitations"
+import {
+  formatTocGradYear,
+  suggestTocInviteWeight,
+  TOC_STATUS_REASON_LABELS,
+  tocWeightProfileHint,
+  type TocStatusReason,
+} from "@/lib/toc/invitations"
 import {
   confirmDeadlineFromInvitedAt,
   isConfirmPastDeadline,
@@ -54,6 +61,8 @@ type InvitationRow = {
   paid_at: string | null
   last_reminder_at: string | null
   last_reminder_body: string | null
+  status_reason: TocStatusReason | null
+  status_reason_other: string | null
   athletes: { id: string; name: string; highschool: string | null; graduationyear: number | null } | null
 }
 
@@ -75,6 +84,7 @@ export default function TocInvitationsAdminPage() {
   const [expandedReminderId, setExpandedReminderId] = useState<string | null>(null)
   const [weightSavingId, setWeightSavingId] = useState<string | null>(null)
   const [actionSavingId, setActionSavingId] = useState<string | null>(null)
+  const [declineTarget, setDeclineTarget] = useState<InvitationRow | null>(null)
   const [copiedRowId, setCopiedRowId] = useState<string | null>(null)
   const [listFilter, setListFilter] = useState<ListFilter>("not_accepted")
 
@@ -303,7 +313,12 @@ export default function TocInvitationsAdminPage() {
 
   const patchInvitation = async (
     row: InvitationRow,
-    body: { status?: "invited" | "declined" | "withdrew"; refreshInviteWindow?: boolean },
+    body: {
+      status?: "invited" | "declined" | "withdrew"
+      statusReason?: TocStatusReason
+      statusReasonOther?: string | null
+      refreshInviteWindow?: boolean
+    },
   ) => {
     setActionSavingId(row.id)
     try {
@@ -321,6 +336,8 @@ export default function TocInvitationsAdminPage() {
         weight_class?: number
         seed?: number | null
         notes?: string | null
+        status_reason?: TocStatusReason | null
+        status_reason_other?: string | null
       }
       setInvitations((prev) =>
         prev.map((inv) =>
@@ -328,6 +345,9 @@ export default function TocInvitationsAdminPage() {
             ? {
                 ...inv,
                 status: next.status ?? inv.status,
+                status_reason: next.status_reason !== undefined ? next.status_reason : inv.status_reason,
+                status_reason_other:
+                  next.status_reason_other !== undefined ? next.status_reason_other : inv.status_reason_other,
                 invited_at: next.invited_at !== undefined ? next.invited_at : inv.invited_at,
                 weight_class: next.weight_class ?? inv.weight_class,
               }
@@ -341,10 +361,14 @@ export default function TocInvitationsAdminPage() {
     }
   }
 
-  const markDeclined = (row: InvitationRow) => {
-    const name = row.athletes?.name ?? "this athlete"
-    if (!confirm(`Flag ${name} as declined (did not accept invite)?`)) return
-    void patchInvitation(row, { status: "declined" })
+  const markDeclined = async (reason: TocStatusReason, otherReason: string | null) => {
+    if (!declineTarget) return
+    await patchInvitation(declineTarget, {
+      status: "declined",
+      statusReason: reason,
+      statusReasonOther: otherReason,
+    })
+    setDeclineTarget(null)
   }
 
   const refreshWindow = (row: InvitationRow) => {
@@ -678,6 +702,14 @@ export default function TocInvitationsAdminPage() {
                             overdue
                           </Badge>
                         ) : null}
+                        {(row.status === "declined" || row.status === "withdrew") && row.status_reason ? (
+                          <span className="max-w-[150px] text-[10px] leading-tight text-muted-foreground">
+                            {TOC_STATUS_REASON_LABELS[row.status_reason]}
+                            {row.status_reason === "other" && row.status_reason_other
+                              ? `: ${row.status_reason_other}`
+                              : ""}
+                          </span>
+                        ) : null}
                       </div>
                     </TableCell>
                     <TableCell className={`text-xs whitespace-nowrap ${overdue ? "text-amber-800 font-medium" : "text-muted-foreground"}`}>
@@ -717,7 +749,7 @@ export default function TocInvitationsAdminPage() {
                               size="sm"
                               className="text-xs h-8 text-amber-900"
                               disabled={busy}
-                              onClick={() => markDeclined(row)}
+                              onClick={() => setDeclineTarget(row)}
                             >
                               Mark declined
                             </Button>
@@ -822,6 +854,15 @@ export default function TocInvitationsAdminPage() {
 
         </CardContent>
       </Card>
+
+      <TocStatusReasonDialog
+        open={declineTarget != null}
+        athleteName={declineTarget?.athletes?.name ?? "athlete"}
+        action="declined"
+        busy={declineTarget != null && actionSavingId === declineTarget.id}
+        onOpenChange={(open) => !open && setDeclineTarget(null)}
+        onSubmit={markDeclined}
+      />
 
       <Dialog open={!!reminderRow} onOpenChange={(open) => !open && setExpandedReminderId(null)}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">

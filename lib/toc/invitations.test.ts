@@ -3,6 +3,7 @@ import {
   defaultTocWeightForAthlete,
   isTocAthleteId,
   parseAthleteWeightClass,
+  tocAdminInvitationPatchSchema,
   tocAthleteConfirmSchema,
 } from "@/lib/toc/invitations"
 
@@ -11,6 +12,25 @@ describe("isTocAthleteId", () => {
     expect(isTocAthleteId("550e8400-e29b-41d4-a716-446655440000")).toBe(true)
     expect(isTocAthleteId("{athlete-uuid}")).toBe(false)
     expect(isTocAthleteId("")).toBe(false)
+  })
+})
+
+describe("tocAdminInvitationPatchSchema", () => {
+  it("requires a structured reason for declines and withdrawals", () => {
+    expect(tocAdminInvitationPatchSchema.safeParse({ status: "withdrew" }).success).toBe(false)
+    expect(
+      tocAdminInvitationPatchSchema.safeParse({ status: "withdrew", statusReason: "injury" }).success,
+    ).toBe(true)
+    expect(
+      tocAdminInvitationPatchSchema.safeParse({ status: "declined", statusReason: "other" }).success,
+    ).toBe(false)
+    expect(
+      tocAdminInvitationPatchSchema.safeParse({
+        status: "declined",
+        statusReason: "other",
+        statusReasonOther: "Schedule conflict",
+      }).success,
+    ).toBe(true)
   })
 })
 

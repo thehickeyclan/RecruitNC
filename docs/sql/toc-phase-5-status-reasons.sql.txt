@@ -1,0 +1,18 @@
+-- TOC invitation decline / withdrawal reasons
+
+alter table public.toc_invitations
+  add column if not exists status_reason text,
+  add column if not exists status_reason_other text;
+
+alter table public.toc_invitations
+  drop constraint if exists toc_invitations_status_reason_check;
+
+alter table public.toc_invitations
+  add constraint toc_invitations_status_reason_check
+  check (status_reason is null or status_reason in ('injury','football','unknown','other'));
+
+comment on column public.toc_invitations.status_reason is
+  'Structured reason when an invitation is declined or a confirmed athlete withdraws.';
+
+comment on column public.toc_invitations.status_reason_other is
+  'Required free-text explanation when status_reason is other.';

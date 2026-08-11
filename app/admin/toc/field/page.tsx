@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { HardLink } from "@/components/hard-link"
+import { TocStatusReasonDialog } from "@/components/toc/admin/toc-status-reason-dialog"
 import { ArrowLeft, Check, ChevronDown, ChevronUp, Download, ExternalLink, GripVertical, Loader2, Lock, Megaphone, RefreshCw, Sparkles, Unlock, UserMinus } from "lucide-react"
-import { TOC_MAX_CONFIRMED_PER_WEIGHT } from "@/lib/toc/invitations"
+import { TOC_MAX_CONFIRMED_PER_WEIGHT, type TocStatusReason } from "@/lib/toc/invitations"
 import { applyTocSeedOrder, type TocFieldBoard, type TocFieldAthlete, type TocWeightBoard } from "@/lib/toc/field-board"
 import {
   buildTocAllWeightsRosterCsv,
@@ -613,6 +614,7 @@ export default function TocFieldAdminPage() {
   const [seedSavingWeight, setSeedSavingWeight] = useState<number | null>(null)
   const [seedSavedWeight, setSeedSavedWeight] = useState<number | null>(null)
   const [withdrawalBusyId, setWithdrawalBusyId] = useState<string | null>(null)
+  const [withdrawalTarget, setWithdrawalTarget] = useState<{ athlete: TocFieldAthlete; weightClass: number } | null>(null)
   const [filter, setFilter] = useState<"all" | "active">("active")
   const [bracketStatuses, setBracketStatuses] = useState<
     Record<
@@ -747,25 +749,17 @@ export default function TocFieldAdminPage() {
     }
   }
 
-  const withdrawAthlete = async (athlete: TocFieldAthlete, weightClass: number) => {
+  const withdrawAthlete = async (reason: TocStatusReason, otherReason: string | null) => {
+    if (!withdrawalTarget) return
+    const { athlete, weightClass } = withdrawalTarget
     const status = bracketStatuses[weightClass]
-    const consequences = [
-      status?.locked ? "The published bracket will be taken offline." : null,
-      status?.athleteFieldLocked ? "The athlete field will be reopened so NC Mat knows announcements should pause." : null,
-    ].filter(Boolean)
-    const message = [
-      `Mark ${athlete.name} withdrawn from ${weightClass} lbs?`,
-      "They will be removed from the active field and bracket, and their seed will be cleared. Their registration and payment history will remain on file.",
-      ...consequences,
-    ].join("\n\n")
-    if (!confirm(message)) return
 
     setWithdrawalBusyId(athlete.invitationId)
     try {
       const res = await fetch(`/api/admin/toc/invitations/${athlete.invitationId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "withdrew" }),
+        body: JSON.stringify({ status: "withdrew", statusReason: reason, statusReasonOther: otherReason }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || "Failed to withdraw athlete")
@@ -784,6 +778,7 @@ export default function TocFieldAdminPage() {
       }
 
       await load()
+      setWithdrawalTarget(null)
     } catch (e) {
       alert(e instanceof Error ? e.message : "Failed to withdraw athlete")
       await load()
@@ -1038,7 +1033,10 @@ export default function TocFieldAdminPage() {
             watchRank={bracketWatchRanks.get(w.weightClass)}
             onSeedChange={updateSeed}
             onSeedReorder={reorderSeeds}
-            onWithdraw={withdrawAthlete}
+            onWithdraw={(athlete, weightClass) => {
+              setWithdrawalTarget({ athlete, weightClass })
+              return Promise.resolve()
+            }}
             seedSavingId={seedSavingId}
             withdrawalBusyId={withdrawalBusyId}
             seedSavingWeight={seedSavingWeight}
@@ -1054,6 +1052,15 @@ export default function TocFieldAdminPage() {
           />
         ))}
       </div>
+      <TocStatusReasonDialog
+        open={withdrawalTarget != null}
+        athleteName={withdrawalTarget?.athlete.name ?? "athlete"}
+        action="withdrew"
+        busy={withdrawalBusyId != null}
+        description="Select why this athlete is withdrawing. They will be removed from the active field and bracket, their seed will be cleared, and registration/payment history will remain on file."
+        onOpenChange={(open) => !open && setWithdrawalTarget(null)}
+        onSubmit={withdrawAthlete}
+      />
       </div>
     </div>
   )
