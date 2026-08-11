@@ -4,8 +4,19 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { auditIpFrom, recordAthleteEvent } from "@/lib/athlete-audit"
 
 /**
- * After user confirmed "Yes, this is my profile", link them to the existing athlete.
- * POST body: { athleteId: string }
+ * Connect a signed-in account to an existing athlete.
+ *
+ * Two relationships, because they are not the same thing and were being conflated:
+ *
+ *   self   — this is my profile. Sets claimed_by_user_id, one owner per athlete.
+ *   parent — this is my child. Writes parent_athlete_links, which is many-to-many, so a
+ *            parent with three wrestlers can link all three.
+ *
+ * Before this, a parent had only the "self" path, which meant claiming a child made the
+ * parent *be* that child on their account — and blocked them from claiming a second one,
+ * since user_profiles.athlete_id holds a single value.
+ *
+ * POST body: { athleteId: string, relationship?: "self" | "parent" }
  */
 export async function POST(request: NextRequest) {
   try {
@@ -24,6 +35,8 @@ export async function POST(request: NextRequest) {
     if (!athleteId || typeof athleteId !== "string") {
       return NextResponse.json({ error: "athleteId is required" }, { status: 400 })
     }
+    // Defaults to "self" so existing callers that predate the parent option keep working.
+    const relationship = body?.relationship === "parent" ? "parent" : "self"
 
     const adminSupabase = createAdminClient()
     const { data: athlete, error: fetchError } = await adminSupabase
@@ -37,8 +50,35 @@ export async function POST(request: NextRequest) {
     }
 
     const previousOwner = (athlete as { claimed_by_user_id?: string | null }).claimed_by_user_id ?? null
-
     const now = new Date().toISOString()
+
+    if (relationship === "parent") {
+      // Repeatable by design: one row per child, and re-linking the same child is a no-op.
+      const { error: linkError } = await adminSupabase
+        .from("parent_athlete_links")
+        .upsert({ user_id: user.id, athlete_id: athleteId }, { onConflict: "user_id,athlete_id", ignoreDuplicates: true })
+
+      if (linkError) {
+        return NextResponse.json({ error: "Failed to link", details: linkError.message }, { status: 500 })
+      }
+
+      await recordAthleteEvent(adminSupabase, {
+        athleteId,
+        userId: user.id,
+        changeType: "parent_linked",
+        detail: `linked as parent by ${user.id}${user.email ? ` (${user.email})` : ""}`,
+        ipAddress: auditIpFrom(request),
+      })
+
+      return NextResponse.json({
+        success: true,
+        relationship,
+        athleteId: athlete.id,
+        athleteName: athlete.name,
+        message: `${athlete.name} is now linked to your account. You can add another wrestler any time.`,
+      })
+    }
+
     await adminSupabase
       .from("athletes")
       .update({
@@ -83,6 +123,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      relationship,
       athleteId: athlete.id,
       athleteName: athlete.name,
       message: "You're now linked to this profile. You can view and edit it anytime.",

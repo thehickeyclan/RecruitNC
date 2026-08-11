@@ -226,7 +226,7 @@ export function CreateProfileForm({ accountEmail }: { accountEmail: string }) {
     await createProfile(forceCreate)
   }
 
-  const handleClaimExisting = async () => {
+  const handleClaimExisting = async (relationship: "self" | "parent") => {
     if (!existingCandidate) return
     setIsSubmitting(true)
     setError("")
@@ -234,7 +234,7 @@ export function CreateProfileForm({ accountEmail }: { accountEmail: string }) {
       const res = await fetch("/api/profile/claim-existing", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ athleteId: existingCandidate.athleteId }),
+        body: JSON.stringify({ athleteId: existingCandidate.athleteId, relationship }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || "Failed to link profile")
@@ -286,7 +286,8 @@ export function CreateProfileForm({ accountEmail }: { accountEmail: string }) {
           <div className="w-full max-w-2xl rounded-sm border border-rnc-gold/40 bg-rnc-surface p-6">
             <h1 className="text-2xl font-black text-rnc-gold">We found an existing profile</h1>
             <p className="mt-2 text-white/70">
-              Is this you? Linking to it keeps your rankings and results in one place.
+              Linking to it keeps rankings and results in one place instead of splitting them
+              across two profiles.
             </p>
             {error ? (
               <Alert variant="destructive" className="mt-4">
@@ -301,13 +302,24 @@ export function CreateProfileForm({ accountEmail }: { accountEmail: string }) {
                 {` · Class of ${existingCandidate.graduationYear}`}
               </p>
             </div>
-            <div className="mt-5 flex flex-wrap gap-3">
+            {/* Three answers, because "is this you?" had no right answer for a parent. The
+                parent option writes a link rather than ownership, so one account can hold
+                several wrestlers and nobody has to pretend to be their own child. */}
+            <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
               <Button
-                onClick={handleClaimExisting}
+                onClick={() => void handleClaimExisting("self")}
                 disabled={isSubmitting}
                 className="rounded-sm bg-rnc-red text-white hover:bg-rnc-red-hover"
               >
                 {isSubmitting ? "Linking…" : "Yes, this is me"}
+              </Button>
+              <Button
+                onClick={() => void handleClaimExisting("parent")}
+                disabled={isSubmitting}
+                variant="outline"
+                className="rounded-sm border-rnc-gold/50 bg-transparent text-white hover:bg-white/10"
+              >
+                This is my child
               </Button>
               <Button
                 variant="outline"
@@ -315,7 +327,7 @@ export function CreateProfileForm({ accountEmail }: { accountEmail: string }) {
                 disabled={isSubmitting}
                 className="rounded-sm border-rnc-line bg-transparent text-white hover:bg-white/10"
               >
-                No, create a new profile
+                Neither — create a new profile
               </Button>
             </div>
           </div>
