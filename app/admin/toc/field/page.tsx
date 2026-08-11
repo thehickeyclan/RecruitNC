@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { HardLink } from "@/components/hard-link"
-import { ArrowLeft, Check, ChevronDown, ChevronUp, Download, ExternalLink, GripVertical, Loader2, Lock, Megaphone, RefreshCw, Sparkles, Unlock } from "lucide-react"
+import { ArrowLeft, Check, ChevronDown, ChevronUp, Download, ExternalLink, GripVertical, Loader2, Lock, Megaphone, RefreshCw, Sparkles, Unlock, UserMinus } from "lucide-react"
 import { TOC_MAX_CONFIRMED_PER_WEIGHT } from "@/lib/toc/invitations"
 import { applyTocSeedOrder, type TocFieldBoard, type TocFieldAthlete, type TocWeightBoard } from "@/lib/toc/field-board"
 import {
@@ -135,7 +135,9 @@ function WeightBoardCard({
   watchRank,
   onSeedChange,
   onSeedReorder,
+  onWithdraw,
   seedSavingId,
+  withdrawalBusyId,
   seedSavingWeight,
   seedSavedWeight,
   bracketStatus,
@@ -151,7 +153,9 @@ function WeightBoardCard({
   watchRank?: number
   onSeedChange: (invitationId: string, seed: number | null) => Promise<void>
   onSeedReorder: (weightClass: number, invitationIds: string[]) => Promise<void>
+  onWithdraw: (athlete: TocFieldAthlete, weightClass: number) => Promise<void>
   seedSavingId: string | null
+  withdrawalBusyId: string | null
   seedSavingWeight: number | null
   seedSavedWeight: number | null
   bracketStatus?: {
@@ -435,6 +439,23 @@ function WeightBoardCard({
                             ))}
                           </SelectContent>
                         </Select>
+                        {canManage ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 text-xs font-semibold text-red-200 hover:bg-red-400/10 hover:text-red-100"
+                            disabled={withdrawalBusyId === a.invitationId || isReordering}
+                            onClick={() => void onWithdraw(a, board.weightClass)}
+                          >
+                            {withdrawalBusyId === a.invitationId ? (
+                              <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <UserMinus className="mr-1 h-3.5 w-3.5" />
+                            )}
+                            Mark withdrawn
+                          </Button>
+                        ) : null}
                       </div>
                     ) : (
                       <Badge variant="secondary" className="mt-2 text-[10px] uppercase">
@@ -591,6 +612,7 @@ export default function TocFieldAdminPage() {
   const [seedSavingId, setSeedSavingId] = useState<string | null>(null)
   const [seedSavingWeight, setSeedSavingWeight] = useState<number | null>(null)
   const [seedSavedWeight, setSeedSavedWeight] = useState<number | null>(null)
+  const [withdrawalBusyId, setWithdrawalBusyId] = useState<string | null>(null)
   const [filter, setFilter] = useState<"all" | "active">("active")
   const [bracketStatuses, setBracketStatuses] = useState<
     Record<
@@ -722,6 +744,51 @@ export default function TocFieldAdminPage() {
       alert(e instanceof Error ? e.message : "Failed to reorder seeds")
     } finally {
       setSeedSavingWeight(null)
+    }
+  }
+
+  const withdrawAthlete = async (athlete: TocFieldAthlete, weightClass: number) => {
+    const status = bracketStatuses[weightClass]
+    const consequences = [
+      status?.locked ? "The published bracket will be taken offline." : null,
+      status?.athleteFieldLocked ? "The athlete field will be reopened so NC Mat knows announcements should pause." : null,
+    ].filter(Boolean)
+    const message = [
+      `Mark ${athlete.name} withdrawn from ${weightClass} lbs?`,
+      "They will be removed from the active field and bracket, and their seed will be cleared. Their registration and payment history will remain on file.",
+      ...consequences,
+    ].join("\n\n")
+    if (!confirm(message)) return
+
+    setWithdrawalBusyId(athlete.invitationId)
+    try {
+      const res = await fetch(`/api/admin/toc/invitations/${athlete.invitationId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "withdrew" }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "Failed to withdraw athlete")
+
+      if (status?.locked) {
+        const unlockRes = await fetch(`/api/admin/toc/brackets/${weightClass}`, { method: "DELETE" })
+        if (!unlockRes.ok) throw new Error("Athlete was withdrawn, but the published bracket could not be taken offline.")
+      }
+      if (status?.athleteFieldLocked) {
+        const fieldRes = await fetch(`/api/admin/toc/field-status/${weightClass}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ athleteFieldLocked: false }),
+        })
+        if (!fieldRes.ok) throw new Error("Athlete was withdrawn, but the NC Mat field status could not be reopened.")
+      }
+
+      await load()
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to withdraw athlete")
+      await load()
+    } finally {
+      setWithdrawalBusyId(null)
     }
   }
 
@@ -971,7 +1038,9 @@ export default function TocFieldAdminPage() {
             watchRank={bracketWatchRanks.get(w.weightClass)}
             onSeedChange={updateSeed}
             onSeedReorder={reorderSeeds}
+            onWithdraw={withdrawAthlete}
             seedSavingId={seedSavingId}
+            withdrawalBusyId={withdrawalBusyId}
             seedSavingWeight={seedSavingWeight}
             seedSavedWeight={seedSavedWeight}
             bracketStatus={bracketStatuses[w.weightClass]}

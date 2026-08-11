@@ -68,7 +68,7 @@ export const tocAdminInvitationPatchSchema = z.object({
     .optional(),
   seed: z.number().int().min(1).max(TOC_MAX_CONFIRMED_PER_WEIGHT).nullable().optional(),
   notes: z.string().max(2000).nullable().optional(),
-  /** Mark not-accepted kids declined / withdrew, or put them back on the invite list. */
+  /** Mark an invite declined/withdrawn, withdraw a confirmed athlete, or reactivate an invite. */
   status: z.enum(["invited", "declined", "withdrew"]).optional(),
   /** Restart the 7-day confirm window from now (only for invited rows). */
   refreshInviteWindow: z.boolean().optional(),

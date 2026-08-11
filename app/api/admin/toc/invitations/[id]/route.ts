@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic"
 
 type Params = { params: Promise<{ id: string }> }
 
-/** Update invited weight, seed, notes, not-accepted status, or refresh confirm window. */
+/** Update invited weight, seed, notes, status, or refresh confirm window. */
 export async function PATCH(request: Request, { params }: Params) {
   const auth = await requireAdmin()
   if (!auth.ok) {
@@ -55,9 +55,12 @@ export async function PATCH(request: Request, { params }: Params) {
       )
     }
 
-    if (existing.status === "confirmed" && (nextStatus || refreshInviteWindow)) {
+    if (
+      existing.status === "confirmed" &&
+      (refreshInviteWindow || (nextStatus != null && nextStatus !== "withdrew"))
+    ) {
       return NextResponse.json(
-        { error: "Athlete is already confirmed — change status from Field if you need to reverse that." },
+        { error: "A confirmed athlete can only be marked withdrawn from the Field page." },
         { status: 400 },
       )
     }
@@ -101,13 +104,15 @@ export async function PATCH(request: Request, { params }: Params) {
     if (parsed.data.notes !== undefined) update.notes = parsed.data.notes
 
     if (nextStatus === "declined" || nextStatus === "withdrew") {
-      if (existing.status !== "invited" && existing.status !== "nominated") {
+      const canWithdrawConfirmed = nextStatus === "withdrew" && existing.status === "confirmed"
+      if (existing.status !== "invited" && existing.status !== "nominated" && !canWithdrawConfirmed) {
         return NextResponse.json(
-          { error: "Only invited (not-accepted) athletes can be marked declined or withdrew." },
+          { error: "Only invited athletes can be declined; confirmed athletes may be marked withdrawn." },
           { status: 400 },
         )
       }
       update.status = nextStatus
+      if (canWithdrawConfirmed) update.seed = null
     }
 
     if (nextStatus === "invited" || refreshInviteWindow) {
