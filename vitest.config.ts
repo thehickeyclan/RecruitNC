@@ -14,6 +14,10 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "."),
+      // `import "server-only"` throws outside a React Server Component, which makes any
+      // server lib untestable. Stub it here so the guard still holds in the Next build
+      // while the same file can be unit tested.
+      "server-only": path.resolve(__dirname, "test/stubs/server-only.ts"),
     },
   },
 })

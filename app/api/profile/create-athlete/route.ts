@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { getAthletesColumnNames, filterPayloadToSchema } from "@/lib/athletes-schema"
 import { findExistingAthlete } from "@/lib/athlete-duplicate-check"
 import { normalizePhoneForStorage } from "@/lib/phone-format"
+import { auditIpFrom, recordAthleteEvent } from "@/lib/athlete-audit"
 
 /** Stored as a bare handle. Athletes type "@name", a full URL, or just the name. */
 function socialHandle(value: unknown): string | null {
@@ -173,6 +174,15 @@ export async function POST(request: NextRequest) {
         { status: 500 },
       )
     }
+
+    // First row in this athlete's history, so the trail starts where the profile does.
+    await recordAthleteEvent(adminSupabase, {
+      athleteId: athlete.id,
+      userId: user.id,
+      changeType: "profile_created",
+      detail: `created by ${user.id}${user.email ? ` (${user.email})` : ""}`,
+      ipAddress: auditIpFrom(request),
+    })
 
     // Link athlete to user's profile (admin client avoids RLS blocking)
     await adminSupabase

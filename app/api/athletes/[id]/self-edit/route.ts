@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { recordAthleteChanges } from "@/lib/athlete-audit"
 import { mapAthleteToDb } from "@/lib/athlete-utils"
 import { normalizePhoneForStorage } from "@/lib/phone-format"
 import { unknownColumnFrom } from "@/lib/clubs/update-club"
@@ -271,22 +272,20 @@ export async function POST(
     }
 
     if (payloadKeys.length > 0) {
-      try {
-        await adminSupabase.from("athlete_audit_log").insert(
-          payloadKeys.map((field_name) => ({
-            athlete_id: athleteId,
-            user_id: user.id,
-            field_name,
-            old_value: String(athlete[field_name] ?? athlete[field_name === "socialMedia" ? "social_media" : field_name] ?? ""),
-            new_value: String((filteredPayload[field_name] ?? updatePayload[field_name]) ?? ""),
-            change_type: "athlete_edit",
-            ip_address: ipAddress,
-            created_at: new Date().toISOString(),
-          }))
-        )
-      } catch {
-        /* non-fatal */
-      }
+      // recordAthleteChanges drops fields whose value did not move, so a save that touches
+      // four empty academic fields no longer writes four `"" -> ""` rows.
+      await recordAthleteChanges(
+        adminSupabase,
+        payloadKeys.map((fieldName) => ({
+          athleteId,
+          userId: user.id,
+          fieldName,
+          oldValue: athlete[fieldName] ?? athlete[fieldName === "socialMedia" ? "social_media" : fieldName] ?? "",
+          newValue: filteredPayload[fieldName] ?? updatePayload[fieldName] ?? "",
+          changeType: "athlete_edit" as const,
+          ipAddress,
+        })),
+      )
     }
 
     return NextResponse.json({

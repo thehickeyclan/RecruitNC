@@ -1,6 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { auditIpFrom, recordAthleteEvent } from "@/lib/athlete-audit"
+
 
 export const dynamic = "force-dynamic"
 
@@ -63,6 +65,14 @@ export async function POST(request: NextRequest) {
     console.error("[profile/unlink-athlete] delete", delErr)
     return NextResponse.json({ error: delErr.message }, { status: 500 })
   }
+
+  await recordAthleteEvent(admin, {
+    athleteId,
+    userId: user.id,
+    changeType: "parent_unlinked",
+    detail: `unlinked by ${user.id}${user.email ? ` (${user.email})` : ""}`,
+    ipAddress: auditIpFrom(request),
+  })
 
   return NextResponse.json({
     success: true,

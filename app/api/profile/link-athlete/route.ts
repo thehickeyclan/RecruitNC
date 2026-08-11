@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { auditIpFrom, recordAthleteEvent } from "@/lib/athlete-audit"
+
 
 export const dynamic = "force-dynamic"
 
@@ -44,6 +46,16 @@ export async function POST(request: NextRequest) {
   if (linkErr) {
     return NextResponse.json({ error: linkErr.message }, { status: 500 })
   }
+
+  // A parent link grants sight of the athlete's wallet, so it belongs in the trail.
+  await recordAthleteEvent(admin, {
+    athleteId,
+    userId: user.id,
+    changeType: "parent_linked",
+    detail: `linked by ${user.id}${user.email ? ` (${user.email})` : ""}`,
+    ipAddress: auditIpFrom(request),
+  })
+
   return NextResponse.json({
     success: true,
     athleteId: athlete.id,

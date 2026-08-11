@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { auditIpFrom, recordAthleteEvent } from "@/lib/athlete-audit"
 
 /**
  * After user confirmed "Yes, this is my profile", link them to the existing athlete.
@@ -27,13 +28,15 @@ export async function POST(request: NextRequest) {
     const adminSupabase = createAdminClient()
     const { data: athlete, error: fetchError } = await adminSupabase
       .from("athletes")
-      .select("id, name")
+      .select("id, name, claimed_by_user_id")
       .eq("id", athleteId)
       .single()
 
     if (fetchError || !athlete) {
       return NextResponse.json({ error: "Profile not found" }, { status: 404 })
     }
+
+    const previousOwner = (athlete as { claimed_by_user_id?: string | null }).claimed_by_user_id ?? null
 
     const now = new Date().toISOString()
     await adminSupabase
@@ -67,6 +70,16 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       )
     }
+
+    // Ownership is the event most likely to be queried later, and it was recorded nowhere.
+    await recordAthleteEvent(adminSupabase, {
+      athleteId,
+      userId: user.id,
+      changeType: "profile_claimed",
+      previousDetail: previousOwner ? `claimed by ${previousOwner}` : "unclaimed",
+      detail: `claimed by ${user.id}${user.email ? ` (${user.email})` : ""}`,
+      ipAddress: auditIpFrom(request),
+    })
 
     return NextResponse.json({
       success: true,
