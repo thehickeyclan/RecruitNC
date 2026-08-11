@@ -19,6 +19,7 @@ export const ATHLETE_SAME_PERSON_ALIAS_GROUPS: string[][] = [
   ["Max Davis", "Maxwell Davis"],
   ["Zach Smith", "Zack Smith"],
   ["Ammon Smith", "Amon Smith"],
+  ["Jeshurun Mills", "Jeshrun Mills", "Jay Mills"],
 ]
 
 /** Nickname / formal first-name pairs — expands search variants both directions. */

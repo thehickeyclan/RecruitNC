@@ -25,6 +25,12 @@ describe("athlete-name-match", () => {
     expect(variants.some((v) => /^eli horton$/i.test(v))).toBe(true)
   })
 
+  it("links Jeshurun Mills to NCHSAA results recorded under Jay Mills", () => {
+    expect(namesLikelySamePerson("Jeshurun Mills", "Jay Mills")).toBe(true)
+    const variants = getAthleteNameSearchVariants("Jeshurun Mills")
+    expect(variants.some((v) => /^jay mills$/i.test(v))).toBe(true)
+  })
+
   it("matches Last, First token order", () => {
     expect(namesReferToSamePerson("Ryan Thompson", "Thompson, Ryan")).toBe(true)
   })
