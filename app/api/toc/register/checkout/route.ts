@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
 
     const { data: invitation, error: invError } = await admin
       .from("toc_invitations")
-      .select("id, athlete_id, weight_class, status, payment_status, stripe_session_id, confirmation_token_expires_at")
+      .select("id, athlete_id, weight_class, status, payment_status, stripe_session_id, invited_at, confirmation_token_expires_at")
       .eq("athlete_id", athleteId)
       .maybeSingle()
 
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Registration is already paid.", alreadyPaid: true }, { status: 400 })
     }
 
-    if (isInvitationPaymentPastDue(invitation.confirmation_token_expires_at)) {
+    if (isInvitationPaymentPastDue(invitation.confirmation_token_expires_at, invitation.invited_at)) {
       return NextResponse.json(
         {
           error: `Registration payment was due by ${registrationPaymentDueDisplay()}. Contact ${process.env.TOC_CONTACT_EMAIL ?? "info@ncwrestlingunited.com"}.`,

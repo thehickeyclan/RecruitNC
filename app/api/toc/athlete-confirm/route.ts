@@ -90,7 +90,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: capacity.message }, { status: 400 })
     }
 
-    if (isInvitationPaymentPastDue(invitation.confirmation_token_expires_at)) {
+    if (isInvitationPaymentPastDue(invitation.confirmation_token_expires_at, invitation.invited_at)) {
       return NextResponse.json(
         {
           ok: false,
