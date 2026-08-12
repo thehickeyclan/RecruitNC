@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { buildTocAiSeedRecommendations, filterFargoFreestyleResults } from "@/lib/toc/ai-seeding"
+import { buildTocAiSeedRecommendations, filterFargoFreestyleResults, scoreNchsaaRowsForSeed } from "@/lib/toc/ai-seeding"
 import type { TocFieldBoard } from "@/lib/toc/field-board"
 
 function fakeSupabaseWithMatches(rows: unknown[]) {
@@ -20,6 +20,18 @@ function fakeSupabaseWithMatches(rows: unknown[]) {
 }
 
 describe("buildTocAiSeedRecommendations", () => {
+  it("prioritizes a top finish in a stronger classification over lesser placement depth", () => {
+    const eightARunnerUp = scoreNchsaaRowsForSeed([
+      { year: 2026, classification: "8A", weight_class: "157", place: 2, school: "Millbrook", wrestler_name: "Campbell Tufts" },
+    ])
+    const runnerUpWithLesserDepth = scoreNchsaaRowsForSeed([
+      { year: 2026, classification: "6A", weight_class: "165", place: 2, school: "Union Pines", wrestler_name: "Tripp Sullivan" },
+      { year: 2025, classification: "3A", weight_class: "165", place: 3, school: "Union Pines", wrestler_name: "Tripp Sullivan" },
+      { year: 2024, classification: "3A", weight_class: "150", place: 6, school: "Union Pines", wrestler_name: "Tripp Sullivan" },
+    ])
+    expect(eightARunnerUp).toBeGreaterThan(runnerUpWithLesserDepth)
+  })
+
   it("excludes Fargo Greco-Roman rows from seeding evidence", () => {
     expect(filterFargoFreestyleResults([
       { year: 2026, placement: "", record: "5-2", weight: "113", division: "Junior Boys Freestyle" },

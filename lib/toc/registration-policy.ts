@@ -18,8 +18,9 @@ export function formatTocLongDate(date: Date): string {
 }
 
 export function registrationPaymentDueDate(): Date {
-  const [year, month, day] = TOC_REGISTRATION_PAYMENT_DUE_ISO.split("-").map(Number)
-  return new Date(year, month - 1, day, 23, 59, 59, 999)
+  // Tournament deadlines are North Carolina deadlines. Production servers run
+  // in UTC, so constructing a local Date would close the link at 8 p.m. ET.
+  return new Date(`${TOC_REGISTRATION_PAYMENT_DUE_ISO}T23:59:59.999-04:00`)
 }
 
 export function registrationPaymentDueDisplay(): string {
@@ -30,6 +31,17 @@ export function isRegistrationPaymentPastDue(now = new Date()): boolean {
   return now.getTime() > registrationPaymentDueDate().getTime()
 }
 
+export function invitationOverrideDeadline(expiresAt: string | null | undefined): Date | null {
+  if (!expiresAt) return null
+  const deadline = new Date(expiresAt)
+  return Number.isNaN(deadline.getTime()) ? null : deadline
+}
+
+export function isInvitationPaymentPastDue(expiresAt: string | null | undefined, now = new Date()): boolean {
+  const override = invitationOverrideDeadline(expiresAt)
+  return now.getTime() > (override ?? registrationPaymentDueDate()).getTime()
+}
+
 export function confirmDeadlineFromInvitedAt(invitedAt: string | Date): Date {
   const base = typeof invitedAt === "string" ? new Date(invitedAt) : new Date(invitedAt.getTime())
   base.setDate(base.getDate() + TOC_CONFIRM_WITHIN_DAYS)
@@ -38,14 +50,18 @@ export function confirmDeadlineFromInvitedAt(invitedAt: string | Date): Date {
   return base.getTime() > extendedDeadline.getTime() ? base : extendedDeadline
 }
 
-export function isConfirmPastDeadline(invitedAt: string | null | undefined, now = new Date()): boolean {
+export function isConfirmPastDeadline(invitedAt: string | null | undefined, now = new Date(), expiresAt?: string | null): boolean {
+  const override = invitationOverrideDeadline(expiresAt)
+  if (override) return now.getTime() > override.getTime()
   if (!invitedAt) return false
   const invited = new Date(invitedAt)
   if (Number.isNaN(invited.getTime())) return false
   return now.getTime() > confirmDeadlineFromInvitedAt(invited).getTime()
 }
 
-export function confirmDeadlineMessage(invitedAt: string | null | undefined): string | null {
+export function confirmDeadlineMessage(invitedAt: string | null | undefined, expiresAt?: string | null): string | null {
+  const override = invitationOverrideDeadline(expiresAt)
+  if (override) return formatTocLongDate(override)
   if (!invitedAt) return null
   const deadline = confirmDeadlineFromInvitedAt(invitedAt)
   if (Number.isNaN(deadline.getTime())) return null

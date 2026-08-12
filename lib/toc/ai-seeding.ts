@@ -5,6 +5,7 @@ import { loadNcUnitedResultsForNameSearch } from "@/lib/national-team-live-profi
 import { placementPoints, recordWinPctPoints } from "@/lib/toc/athlete-compare"
 import type { TocFieldBoard, TocFieldAthlete, TocSeedEvidence } from "@/lib/toc/field-board"
 import type { TournamentResultForDisplay } from "@/lib/public-profile-data"
+import type { NchsaaRowForProfile } from "@/lib/nchsaa-results-json"
 import { parseFargoStyle } from "@/lib/fargo-division"
 
 type MatchBout = {
@@ -248,6 +249,37 @@ function recordTotals(rows: TournamentResultForDisplay[]): { wins: number; losse
   return { wins, losses }
 }
 
+function classificationStrengthPoints(classification: string): number {
+  const match = String(classification ?? "").toUpperCase().match(/(\d+)A/)
+  const divisions = match ? Number(match[1]) : 0
+  return divisions >= 8 ? 25 : divisions === 7 ? 20 : divisions === 6 ? 10 : divisions === 5 ? 6 : divisions === 4 ? 3 : divisions === 3 ? 1 : 0
+}
+
+/**
+ * Seed state credentials by top-end finish first, then résumé depth.
+ * Repeating the athlete's best finish keeps full value; lower secondary finishes
+ * receive diminishing weight. The strongest classification attached to a best
+ * finish breaks otherwise similar state résumés.
+ */
+export function scoreNchsaaRowsForSeed(rows: NchsaaRowForProfile[]): number {
+  const placers = rows.filter((row) => Number(row.place) > 0)
+  if (!placers.length) return 0
+
+  const bestPlace = Math.min(...placers.map((row) => Number(row.place)))
+  const bestRows = placers.filter((row) => Number(row.place) === bestPlace)
+  const lesserRows = placers
+    .filter((row) => Number(row.place) !== bestPlace)
+    .sort((a, b) => Number(a.place) - Number(b.place) || b.year - a.year)
+
+  let points = bestRows.reduce((sum, row) => sum + placementPoints(Number(row.place)), 0)
+  lesserRows.forEach((row, index) => {
+    points += placementPoints(Number(row.place)) * (index === 0 ? 0.5 : 0.25)
+  })
+  points += Math.max(...bestRows.map((row) => classificationStrengthPoints(row.classification)))
+  points += bestRows.filter((row) => row.place === 1).length * 8
+  return Math.round(points * 10) / 10
+}
+
 function orderByHeadToHeadThenResume<T extends {
   athlete: TocFieldAthlete
   score: number
@@ -261,7 +293,10 @@ function orderByHeadToHeadThenResume<T extends {
       !remaining.some((other) => {
         if (other.athlete.athleteId === candidate.athlete.athleteId) return false
         const record = other.evidence.headToHead.find((h2h) => namesLikelySamePerson(h2h.opponent, candidate.athlete.name))
-        return Boolean(record && record.wins > record.losses)
+        // A direct result resolves comparable résumés; it should not erase a
+        // materially stronger body of work. Twenty points is roughly one state
+        // placement tier in the résumé model.
+        return Boolean(record && record.wins > record.losses && other.score >= candidate.score - 20)
       }),
     )
 
@@ -322,7 +357,9 @@ async function scoreAthleteForTocSeed({
 
   const h2h = fieldHeadToHead
   evidence.headToHead = h2h.opponents
-  score += h2h.points
+  // Head-to-head is enforced by orderByHeadToHeadThenResume below. Do not also
+  // add or subtract résumé points here: doing both penalized a wrestler twice
+  // for losing to the clear No. 1 and could bury an otherwise top-four résumé.
   if (h2h.wins || h2h.losses) reasons.push(`Field head-to-head: ${h2h.wins}-${h2h.losses}`)
 
   if (athleteRow) {
@@ -388,12 +425,7 @@ async function scoreAthleteForTocSeed({
       fargoLosses: fargoRecord.losses,
     }
 
-    for (const row of bundle.nchsaa || []) {
-      const place = Number(row.place)
-      if (!Number.isFinite(place)) continue
-      score += placementPoints(place)
-      if (place === 1) score += 8
-    }
+    score += scoreNchsaaRowsForSeed(bundle.nchsaa || [])
     const statePlacers = (bundle.nchsaa || []).filter((r) => Number(r.place) > 0)
     if (statePlacers.length) {
       const titles = statePlacers.filter((r) => r.place === 1).length

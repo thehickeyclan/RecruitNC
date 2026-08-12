@@ -23,8 +23,6 @@ async function handleUpdate(request: Request) {
     bio,
     notify_sms_new_messages,
     notify_email_new_messages,
-    notify_email_fundraising_gifts,
-    notify_sms_fundraising_gifts,
     notify_sms_fundraising_activation,
     headshot_url,
   } = body
@@ -37,12 +35,6 @@ async function handleUpdate(request: Request) {
   if (bio !== undefined) updatePayload.bio = bio
   if (typeof notify_sms_new_messages === "boolean") updatePayload.notify_sms_new_messages = notify_sms_new_messages
   if (typeof notify_email_new_messages === "boolean") updatePayload.notify_email_new_messages = notify_email_new_messages
-  if (typeof notify_email_fundraising_gifts === "boolean") {
-    updatePayload.notify_email_fundraising_gifts = notify_email_fundraising_gifts
-  }
-  if (typeof notify_sms_fundraising_gifts === "boolean") {
-    updatePayload.notify_sms_fundraising_gifts = notify_sms_fundraising_gifts
-  }
   if (typeof notify_sms_fundraising_activation === "boolean") {
     updatePayload.notify_sms_fundraising_activation = notify_sms_fundraising_activation
   }
@@ -70,8 +62,6 @@ async function handleUpdate(request: Request) {
         updatePayload.role !== undefined ||
         updatePayload.notify_sms_new_messages !== undefined ||
         updatePayload.notify_email_new_messages !== undefined ||
-        updatePayload.notify_email_fundraising_gifts !== undefined ||
-        updatePayload.notify_sms_fundraising_gifts !== undefined ||
         updatePayload.notify_sms_fundraising_activation !== undefined)
     ) {
       const safePayload: Record<string, unknown> = {}

@@ -5,7 +5,7 @@ import { resolveAthleteNotificationEmails } from "@/lib/toc/invitation-service"
 import { tocRegistrationCheckoutSchema } from "@/lib/toc/registration-checkout"
 import {
   formatTocRegistrationFee,
-  isRegistrationPaymentPastDue,
+  isInvitationPaymentPastDue,
   registrationPaymentDueDisplay,
   TOC_REGISTRATION_FEE_COVERS,
   TOC_REGISTRATION_FEE_USD,
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
 
     const { data: invitation, error: invError } = await admin
       .from("toc_invitations")
-      .select("id, athlete_id, weight_class, status, payment_status, stripe_session_id")
+      .select("id, athlete_id, weight_class, status, payment_status, stripe_session_id, confirmation_token_expires_at")
       .eq("athlete_id", athleteId)
       .maybeSingle()
 
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Registration is already paid.", alreadyPaid: true }, { status: 400 })
     }
 
-    if (isRegistrationPaymentPastDue()) {
+    if (isInvitationPaymentPastDue(invitation.confirmation_token_expires_at)) {
       return NextResponse.json(
         {
           error: `Registration payment was due by ${registrationPaymentDueDisplay()}. Contact ${process.env.TOC_CONTACT_EMAIL ?? "info@ncwrestlingunited.com"}.`,

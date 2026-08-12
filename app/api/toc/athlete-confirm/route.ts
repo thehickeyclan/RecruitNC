@@ -10,7 +10,7 @@ import {
   confirmDeadlineMessage,
   formatTocRegistrationFee,
   isConfirmPastDeadline,
-  isRegistrationPaymentPastDue,
+  isInvitationPaymentPastDue,
   registrationPaymentDueDisplay,
   TOC_CONFIRM_WITHIN_DAYS,
   TOC_REGISTRATION_FEE_COVERS,
@@ -72,8 +72,8 @@ export async function POST(request: Request) {
       )
     }
 
-    if (isConfirmPastDeadline(invitation.invited_at)) {
-      const deadline = confirmDeadlineMessage(invitation.invited_at)
+    if (isConfirmPastDeadline(invitation.invited_at, new Date(), invitation.confirmation_token_expires_at)) {
+      const deadline = confirmDeadlineMessage(invitation.invited_at, invitation.confirmation_token_expires_at)
       return NextResponse.json(
         {
           ok: false,
@@ -90,7 +90,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: capacity.message }, { status: 400 })
     }
 
-    if (isRegistrationPaymentPastDue()) {
+    if (isInvitationPaymentPastDue(invitation.confirmation_token_expires_at)) {
       return NextResponse.json(
         {
           ok: false,
