@@ -2,9 +2,19 @@
 
 export const TOC_REGISTRATION_FEE_USD = 75 as const
 export const TOC_CONFIRM_WITHIN_DAYS = 7 as const
-/** Extended confirmation/payment deadline for all current Year 1 invitations. */
-export const TOC_REGISTRATION_PAYMENT_DUE_ISO = "2026-08-11" as const
-export const TOC_REGISTRATION_PAYMENT_DUE_DISPLAY = "August 11, 2026" as const
+/**
+ * Floor for the confirmation/payment deadline across every Year 1 invitation.
+ *
+ * confirmDeadlineFromInvitedAt takes the later of this and invitedAt + 7 days, so this
+ * value alone decides whether older invitations still work. When it fell into the past on
+ * 11 August every link sent to anyone invited more than a week earlier died at once —
+ * including the reminders being sent that day. Moving it forward revives all of them
+ * without touching a single row.
+ *
+ * Keep it ahead of today. If it passes again, every older invite breaks again.
+ */
+export const TOC_REGISTRATION_PAYMENT_DUE_ISO = "2026-08-14" as const
+export const TOC_REGISTRATION_PAYMENT_DUE_DISPLAY = "August 14, 2026" as const
 
 export const TOC_REGISTRATION_FEE_COVERS =
   "top-three placement awards at each weight and the champion jacket program" as const
@@ -37,9 +47,14 @@ export function invitationOverrideDeadline(expiresAt: string | null | undefined)
   return Number.isNaN(deadline.getTime()) ? null : deadline
 }
 
-export function isInvitationPaymentPastDue(expiresAt: string | null | undefined, now = new Date()): boolean {
+export function isInvitationPaymentPastDue(
+  expiresAt: string | null | undefined,
+  invitedAt?: string | null,
+  now = new Date(),
+): boolean {
   const override = invitationOverrideDeadline(expiresAt)
-  return now.getTime() > (override ?? registrationPaymentDueDate()).getTime()
+  const deadline = override ?? (invitedAt ? confirmDeadlineFromInvitedAt(invitedAt) : registrationPaymentDueDate())
+  return now.getTime() > deadline.getTime()
 }
 
 export function confirmDeadlineFromInvitedAt(invitedAt: string | Date): Date {
