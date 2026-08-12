@@ -28,6 +28,7 @@ import { InlineBioEditor } from "./inline-bio-editor"
 import { InlineContactEditor } from "./inline-contact-editor"
 import { InlineAcademicsEditor } from "./inline-academics-editor"
 import { InlineAchievementsEditor } from "./inline-achievements-editor"
+import { ParentLinkButton } from "./parent-link-button"
 import { InlineCollegeOpensEditor } from "./inline-college-opens-editor"
 import { InlineSchoolClubEditor } from "./inline-school-club-editor"
 import { InlineWeightEditor } from "./inline-weight-editor"
@@ -1328,6 +1329,16 @@ export function AthleteDetail({
           <UnifiedProfileMobileNav showQualityWins={profileQualityWins.length > 0} />
         </div>
       ) : null}
+
+      {/* Athletes create their own profiles, so a parent never fills in a form — the only
+          thing they need is to tie their account to a profile that already exists, and this
+          is where they will be when they want that. Hides itself when signed out, when this
+          is the viewer's own profile, or when the link already exists. */}
+      {!canEdit && (
+        <div className="px-1">
+          <ParentLinkButton athleteId={String(athlete.id)} athleteName={athleteName} />
+        </div>
+      )}
 
       {/* Weight / contact edit forms (opened from hero) */}
       {canEdit && editingSection === "weight" && (

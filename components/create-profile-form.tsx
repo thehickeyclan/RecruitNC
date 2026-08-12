@@ -302,9 +302,6 @@ export function CreateProfileForm({ accountEmail }: { accountEmail: string }) {
                 {` · Class of ${existingCandidate.graduationYear}`}
               </p>
             </div>
-            {/* Three answers, because "is this you?" had no right answer for a parent. The
-                parent option writes a link rather than ownership, so one account can hold
-                several wrestlers and nobody has to pretend to be their own child. */}
             <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
               <Button
                 onClick={() => void handleClaimExisting("self")}
@@ -314,20 +311,12 @@ export function CreateProfileForm({ accountEmail }: { accountEmail: string }) {
                 {isSubmitting ? "Linking…" : "Yes, this is me"}
               </Button>
               <Button
-                onClick={() => void handleClaimExisting("parent")}
-                disabled={isSubmitting}
-                variant="outline"
-                className="rounded-sm border-rnc-gold/50 bg-transparent text-white hover:bg-white/10"
-              >
-                This is my child
-              </Button>
-              <Button
                 variant="outline"
                 onClick={handleCreateNewAnyway}
                 disabled={isSubmitting}
                 className="rounded-sm border-rnc-line bg-transparent text-white hover:bg-white/10"
               >
-                Neither — create a new profile
+                No, create a new profile
               </Button>
             </div>
           </div>
