@@ -14,6 +14,8 @@ export type TocCredentialRollup = {
   super32Losses: number
   fargoWins: number
   fargoLosses: number
+  collegeCommitAthletes: number
+  collegeCommitsByDivision: Record<string, number>
 }
 
 export type TocBracketWatchRanking = {
@@ -38,6 +40,8 @@ export function buildTocCredentialRollup(athletes: TocFieldAthlete[]): TocCreden
     super32Losses: 0,
     fargoWins: 0,
     fargoLosses: 0,
+    collegeCommitAthletes: 0,
+    collegeCommitsByDivision: {},
   }
 
   for (const athlete of confirmed) {
@@ -55,6 +59,12 @@ export function buildTocCredentialRollup(athletes: TocFieldAthlete[]): TocCreden
     rollup.super32Losses += summary.super32Losses
     rollup.fargoWins += summary.fargoWins
     rollup.fargoLosses += summary.fargoLosses
+    if (athlete.collegeName) {
+      rollup.collegeCommitAthletes += 1
+      const raw = (athlete.collegeDivision || "Other").toUpperCase().replace(/\s+/g, "")
+      const division = raw.includes("III") || raw.includes("D3") ? "DIII" : raw.includes("II") || raw.includes("D2") ? "DII" : raw.includes("I") || raw.includes("D1") ? "DI" : raw.includes("NAIA") ? "NAIA" : raw.includes("NJCAA") ? "NJCAA" : "Other"
+      rollup.collegeCommitsByDivision[division] = (rollup.collegeCommitsByDivision[division] || 0) + 1
+    }
   }
 
   return rollup

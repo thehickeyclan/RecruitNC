@@ -50,6 +50,11 @@ function CredentialRollup({
     { label: "NHSCA record", value: `${rollup.nhscaWins}-${rollup.nhscaLosses}`, detail: "Combined" },
     { label: "Super 32 record", value: `${rollup.super32Wins}-${rollup.super32Losses}`, detail: "Combined" },
     { label: "Fargo FS record", value: `${rollup.fargoWins}-${rollup.fargoLosses}`, detail: "Freestyle only" },
+    {
+      label: "College commits",
+      value: rollup.collegeCommitAthletes,
+      detail: Object.entries(rollup.collegeCommitsByDivision).map(([division, count]) => `${division} ${count}`).join(" · ") || "None",
+    },
   ]
 
   return (
@@ -62,7 +67,7 @@ function CredentialRollup({
           {rollup.athleteCount}/{expectedAthletes} confirmed profiles loaded
         </p>
       </div>
-      <div className={`grid ${compact ? "grid-cols-3 gap-1.5" : "grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6"}`}>
+      <div className={`grid ${compact ? "grid-cols-3 gap-1.5" : "grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7"}`}>
         {metrics.map((metric) => (
           <div key={metric.label} className="min-w-0 rounded-md border border-white/10 bg-[#060f1f] px-2 py-2">
             <p className={`${compact ? "text-base" : "text-xl"} font-black leading-none text-white`}>{metric.value}</p>
@@ -319,6 +324,12 @@ function WeightBoardCard({
                         >
                           {a.name}
                         </Link>
+                        {a.collegeName ? (
+                          <span className="ml-1.5 inline-flex items-center gap-1 align-middle text-[10px] font-semibold text-[#D7B95A]" title={`${a.collegeName}${a.collegeDivision ? ` · ${a.collegeDivision}` : ""}`}>
+                            {a.collegeLogoUrl ? <img src={a.collegeLogoUrl} alt="" className="h-5 w-5 rounded-sm object-contain" /> : null}
+                            {a.collegeName}
+                          </span>
+                        ) : null}
                         <p className="mt-0.5 break-words text-xs leading-tight text-white/45">{a.school ?? "—"}</p>
                         <AthleteCredentialBadges athlete={a} />
                       </div>

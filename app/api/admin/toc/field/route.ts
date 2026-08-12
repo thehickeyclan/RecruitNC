@@ -19,7 +19,7 @@ export async function GET() {
   const [invitationsResult, config] = await Promise.all([
     admin
       .from("toc_invitations")
-      .select("*, athletes(id, name, highschool, graduationyear)")
+      .select("*, athletes(id, name, highschool, graduationyear, college, collegeLogoUrl, colleges(name, division, logo_url))")
       .order("weight_class")
       .order("confirmed_at", { ascending: true, nullsFirst: false })
       .order("invited_at", { ascending: true, nullsFirst: false }),

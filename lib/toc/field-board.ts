@@ -18,6 +18,9 @@ export type TocFieldAthlete = {
   jacketSize: string | null
   invitedAt: string | null
   confirmedAt: string | null
+  collegeName?: string | null
+  collegeDivision?: string | null
+  collegeLogoUrl?: string | null
 }
 
 export type TocSeedEvidence = {
@@ -102,6 +105,9 @@ type RawInvitation = {
     name: string
     highschool: string | null
     graduationyear: number | null
+    college?: string | null
+    collegeLogoUrl?: string | null
+    colleges?: { name?: string | null; division?: string | null; logo_url?: string | null } | null
   } | null
 }
 
@@ -134,6 +140,9 @@ export function mapInvitationToFieldAthlete(row: RawInvitation): TocFieldAthlete
     jacketSize: row.jacket_size,
     invitedAt: row.invited_at,
     confirmedAt: row.confirmed_at,
+    collegeName: row.athletes?.colleges?.name ?? row.athletes?.college ?? null,
+    collegeDivision: row.athletes?.colleges?.division ?? null,
+    collegeLogoUrl: row.athletes?.colleges?.logo_url ?? row.athletes?.collegeLogoUrl ?? null,
   }
 }
 
