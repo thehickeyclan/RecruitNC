@@ -10,14 +10,24 @@ describe("buildFieldClubBreakdown", () => {
       { wrestlingClub: "Combat" },
     ])
     expect(total).toBe(4)
-    expect(slices[0]).toEqual({ club: "RAW", count: 3, percentage: 75 })
-    expect(slices[1]).toEqual({ club: "Combat", count: 1, percentage: 25 })
+    expect(slices[0]).toEqual({ club: "RAW", count: 3, percentage: 75, athletes: [] })
+    expect(slices[1]).toEqual({ club: "Combat", count: 1, percentage: 25, athletes: [] })
   })
 
   it("keeps athletes with no club as their own slice, sorted last", () => {
     const { slices } = buildFieldClubBreakdown([{ wrestlingClub: "" }, { wrestlingClub: "RAW" }, {}])
     expect(slices.map((s) => s.club)).toEqual(["RAW", NO_CLUB_LABEL])
     expect(slices[1].count).toBe(2)
+  })
+
+  it("lists who is in each slice so the grouping can be checked", () => {
+    const { slices } = buildFieldClubBreakdown([
+      { name: "Gavin Lopez", wrestlingClub: "RAW" },
+      { name: "Aiden White", wrestlingClub: "raw" },
+      { name: "Mia Kiser", wrestlingClub: "Combat" },
+    ])
+    expect(slices[0].athletes).toEqual(["Aiden White", "Gavin Lopez"])
+    expect(slices[1].athletes).toEqual(["Mia Kiser"])
   })
 
   it("keeps one decimal so a small slice is not rounded to nothing", () => {

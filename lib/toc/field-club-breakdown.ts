@@ -17,27 +17,31 @@ export type ClubSlice = {
   count: number
   /** 0–100, rounded to one decimal so small slices do not all read as 0%. */
   percentage: number
+  /** Who is in this slice, alphabetical — the point is to be able to check the grouping. */
+  athletes: string[]
 }
 
 export const NO_CLUB_LABEL = "No club listed" as const
 
 export function buildFieldClubBreakdown(
-  athletes: Array<{ wrestlingClub?: unknown; wrestling_club?: unknown }>,
+  athletes: Array<{ name?: unknown; wrestlingClub?: unknown; wrestling_club?: unknown }>,
 ): { slices: ClubSlice[]; total: number } {
   const total = athletes.length
   if (total === 0) return { slices: [], total: 0 }
 
   // key -> { spellings, count } so the slice can be labelled with what people actually type.
-  const groups = new Map<string, { spellings: Map<string, number>; count: number }>()
+  const groups = new Map<string, { spellings: Map<string, number>; count: number; names: string[] }>()
 
   for (const athlete of athletes) {
     const raw = String(athlete.wrestlingClub ?? athlete.wrestling_club ?? "").trim()
     const key = raw ? normalizeClubName(raw) || NO_CLUB_LABEL : NO_CLUB_LABEL
     const label = raw || NO_CLUB_LABEL
 
-    const group = groups.get(key) ?? { spellings: new Map<string, number>(), count: 0 }
+    const group = groups.get(key) ?? { spellings: new Map<string, number>(), count: 0, names: [] }
     group.count += 1
     group.spellings.set(label, (group.spellings.get(label) ?? 0) + 1)
+    const name = String(athlete.name ?? "").trim()
+    if (name) group.names.push(name)
     groups.set(key, group)
   }
 
@@ -50,6 +54,7 @@ export function buildFieldClubBreakdown(
       club: label,
       count: group.count,
       percentage: Math.round((group.count / total) * 1000) / 10,
+      athletes: [...group.names].sort((a, b) => a.localeCompare(b)),
     }
   })
 

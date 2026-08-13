@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts"
 import type { ClubSlice } from "@/lib/toc/field-club-breakdown"
 import { NO_CLUB_LABEL } from "@/lib/toc/field-club-breakdown"
@@ -21,6 +21,32 @@ const SLICE_COLORS = [
 ]
 const NO_CLUB_COLOR = "#4A5568"
 
+/**
+ * Who is actually in a slice.
+ *
+ * The counts are only trustworthy if the grouping is, and the grouping merges spellings —
+ * so being able to read the names is how a wrong merge gets caught.
+ */
+function SliceCard({ row }: { row: ClubSlice }) {
+  return (
+    <div className="w-max min-w-[13rem] max-w-[22rem] rounded-lg border border-white/15 bg-[#060f1f] p-3 shadow-xl">
+      <p className="text-sm font-bold text-white">{row.club}</p>
+      <p className="mt-0.5 text-xs text-white/70">
+        {row.count} wrestler{row.count === 1 ? "" : "s"} · {row.percentage}%
+      </p>
+      {row.athletes.length > 0 ? (
+        <ul className="mt-2 max-h-56 space-y-0.5 overflow-y-auto text-xs leading-snug text-white/85">
+          {row.athletes.map((name) => (
+            <li key={name} className="whitespace-nowrap">{name}</li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-2 text-xs italic text-white/50">No names on file</p>
+      )}
+    </div>
+  )
+}
+
 export function TocFieldClubChart({ slices, total }: { slices: ClubSlice[]; total: number }) {
   // Long tails make an unreadable pie and an unreadable legend. Everything below two
   // athletes collapses into one slice, which is still honest because the legend names it.
@@ -37,6 +63,11 @@ export function TocFieldClubChart({ slices, total }: { slices: ClubSlice[]; tota
         club: `${minor.length} club${minor.length === 1 ? "" : "s"} with one wrestler`,
         count,
         percentage: Math.round((count / total) * 1000) / 10,
+        // Name them as "Athlete (Club)" — for a one-wrestler club the club is the thing
+        // you are checking, so the name alone would not tell you whether it grouped right.
+        athletes: minor
+          .flatMap((m) => m.athletes.map((a) => `${a} (${m.club})`))
+          .sort((a, b) => a.localeCompare(b)),
       })
     }
     if (noClub) rows.push(noClub)
@@ -46,6 +77,9 @@ export function TocFieldClubChart({ slices, total }: { slices: ClubSlice[]; tota
   if (total === 0) {
     return <p className="py-6 text-center text-sm text-white/60">No confirmed athletes yet.</p>
   }
+
+  // Hovering a row is the faster way to audit a long list than aiming at a thin slice.
+  const [hovered, setHovered] = useState<string | null>(null)
 
   const colorFor = (row: ClubSlice, index: number) =>
     row.club === NO_CLUB_LABEL ? NO_CLUB_COLOR : SLICE_COLORS[index % SLICE_COLORS.length]
@@ -74,13 +108,12 @@ export function TocFieldClubChart({ slices, total }: { slices: ClubSlice[]; tota
               ))}
             </Pie>
             <Tooltip
-              contentStyle={{ background: "#060f1f", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, color: "#fff" }}
-              // recharts 3 types the formatter with five params it does not always pass;
-              // annotating the two we use keeps it honest without fighting the generic.
-              formatter={((value: unknown, name: unknown) => [
-                `${Number(value)} · ${((Number(value) / total) * 100).toFixed(1)}%`,
-                String(name),
-              ]) as never}
+              cursor={false}
+              wrapperStyle={{ zIndex: 30 }}
+              content={((props: { active?: boolean; payload?: Array<{ payload?: ClubSlice }> }) => {
+                const row = props.active ? props.payload?.[0]?.payload : null
+                return row ? <SliceCard row={row} /> : null
+              }) as never}
             />
             <Legend wrapperStyle={{ display: "none" }} />
           </PieChart>
@@ -100,12 +133,22 @@ export function TocFieldClubChart({ slices, total }: { slices: ClubSlice[]; tota
           </thead>
           <tbody>
             {data.map((row, i) => (
-              <tr key={row.club} className="border-b border-white/5 last:border-0">
-                <td className="py-1.5 pr-2">
+              <tr
+                key={row.club}
+                className="relative border-b border-white/5 transition-colors last:border-0 hover:bg-white/5"
+                onMouseEnter={() => setHovered(row.club)}
+                onMouseLeave={() => setHovered((c) => (c === row.club ? null : c))}
+              >
+                <td className="relative py-1.5 pr-2">
                   <span className="flex items-center gap-2">
                     <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ background: colorFor(row, i) }} aria-hidden />
                     <span className="truncate text-white/90">{row.club}</span>
                   </span>
+                  {hovered === row.club ? (
+                    <div className="absolute left-0 top-full z-30 mt-1">
+                      <SliceCard row={row} />
+                    </div>
+                  ) : null}
                 </td>
                 <td className="py-1.5 text-right font-semibold tabular-nums text-white">{row.count}</td>
                 <td className="py-1.5 text-right tabular-nums text-white/70">{row.percentage}%</td>
