@@ -53,6 +53,33 @@ export function filterNchsaaRowsBySchoolOptional(
 }
 
 /**
+ * Drop wide-pass rows that belong to a different school in a year the athlete's own school
+ * already covers.
+ *
+ * Same name, overlapping years, different school is the one collision a year window cannot
+ * see — Eli Thomas, class of 2026 at Laney, was picking up Alleghany rows from the same
+ * years. Scoped to years the school-matched pass actually produced, so a year it knows
+ * nothing about is left alone rather than silently discarded.
+ */
+export function dropWideRowsFromOtherSchools(
+  wideRows: NchsaaRowForProfile[],
+  schoolMatchedRows: NchsaaRowForProfile[],
+  athleteHighSchool?: string,
+): NchsaaRowForProfile[] {
+  const school = (athleteHighSchool ?? "").trim().toLowerCase()
+  if (!school || schoolMatchedRows.length === 0) return wideRows
+
+  const coveredYears = new Set(schoolMatchedRows.map((r) => Number(r.year)))
+  return wideRows.filter((r) => {
+    if (!coveredYears.has(Number(r.year))) return true
+    const rowSchool = (r.school ?? "").toString().trim().toLowerCase()
+    // A blank school is not evidence of anything, so it is kept.
+    if (!rowSchool) return true
+    return rowSchool.includes(school) || school.includes(rowSchool)
+  })
+}
+
+/**
  * Fetch NCHSAA results for an athlete using the same logic as /api/wrestling-achievements
  * (name variations, ilike per variation, merge, placer-over-SQ). Use this so Blue list
  * and unified profiles show identical placement.
@@ -354,6 +381,17 @@ export async function getMergedNchsaaForAthlete(
   const gradYear = Number(athlete.graduationyear) || undefined
   const schoolHint = String(athlete.highschool ?? athlete.high_school ?? "").trim() || undefined
 
+  /**
+   * The "wide" passes below deliberately drop the school hint, so a row whose school is
+   * blank or spelled differently is not lost. The cost is that they also re-admit a
+   * different wrestler of the same name from another school — Eli Thomas, class of 2026 at
+   * Laney, was picking up Alleghany rows from the same years, which no date window can
+   * catch because the years genuinely overlap.
+   *
+   * So the school-matched rows win: for any year where the athlete's own school is
+   * represented, wide rows from a different school are dropped. Years the school-matched
+   * pass knows nothing about still come through, which is what the wide pass is for.
+   */
   const [byNameSchool, byWrestlingSchool, byNameWide, byWrestlingWide] = await Promise.all([
     getNCHSAAResultsForProfile(supabase, displayName, gradYear, schoolHint),
     wrestlingName && wrestlingName !== displayName
@@ -365,11 +403,14 @@ export async function getMergedNchsaaForAthlete(
       : Promise.resolve([] as NchsaaRowForProfile[]),
   ])
   const fromAthleteRow = nchsaaJsonToProfileRows(athlete.nchsaa_results, displayName || wrestlingName)
+  const schoolMatched = mergeNchsaaResults(byNameSchool, byWrestlingSchool)
+  const wide = dropWideRowsFromOtherSchools(
+    mergeNchsaaResults(byNameWide, byWrestlingWide),
+    schoolMatched,
+    schoolHint,
+  )
   const merged = mergeNchsaaResults(
-    mergeNchsaaResults(
-      mergeNchsaaResults(byNameSchool, byWrestlingSchool),
-      mergeNchsaaResults(byNameWide, byWrestlingWide),
-    ),
+    mergeNchsaaResults(schoolMatched, wide),
     fromAthleteRow,
   )
   return mergeCuratedFourTimeNchsaaIfMatch(merged, displayName, wrestlingName)
