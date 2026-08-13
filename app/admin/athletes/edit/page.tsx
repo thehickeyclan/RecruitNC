@@ -173,7 +173,7 @@ export default function EditAthletePage() {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#061224]">
+      <div className="admin-dark-page min-h-screen bg-[#061224]">
         <div className="flex min-h-screen items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="h-8 w-8 animate-spin text-[#C8A94A]" />
@@ -187,7 +187,7 @@ export default function EditAthletePage() {
   // No ID state
   if (!id) {
     return (
-      <div className="min-h-screen bg-[#061224] px-4 py-8">
+      <div className="admin-dark-page min-h-screen bg-[#061224] px-4 py-8">
         <div className="mx-auto max-w-2xl text-center">
           <AlertCircle className="mx-auto h-12 w-12 text-[#C8A94A]" />
           <h1 className="mt-4 text-xl font-bold text-white">No athlete selected</h1>
@@ -207,7 +207,7 @@ export default function EditAthletePage() {
   // Error state
   if (error) {
     return (
-      <div className="min-h-screen bg-[#061224] px-4 py-8">
+      <div className="admin-dark-page min-h-screen bg-[#061224] px-4 py-8">
         <div className="mx-auto max-w-2xl text-center">
           <AlertCircle className="mx-auto h-12 w-12 text-red-400" />
           <h1 className="mt-4 text-xl font-bold text-white">Error loading athlete</h1>
@@ -234,7 +234,7 @@ export default function EditAthletePage() {
   // Not found state
   if (!athlete) {
     return (
-      <div className="min-h-screen bg-[#061224] px-4 py-8">
+      <div className="admin-dark-page min-h-screen bg-[#061224] px-4 py-8">
         <div className="mx-auto max-w-2xl text-center">
           <AlertCircle className="mx-auto h-12 w-12 text-[#C8A94A]" />
           <h1 className="mt-4 text-xl font-bold text-white">Athlete not found</h1>
@@ -253,7 +253,7 @@ export default function EditAthletePage() {
   const displayName = athlete.name || `${athlete.firstName || ""} ${athlete.lastName || ""}`.trim() || "Athlete"
 
   return (
-    <div className="min-h-screen bg-[#061224]">
+    <div className="admin-dark-page min-h-screen bg-[#061224]">
       {/* Sticky header */}
       <header className="sticky top-0 z-40 border-b border-white/10 bg-[#061224]/95 backdrop-blur-sm">
         <div className="mx-auto max-w-3xl px-4 py-3">

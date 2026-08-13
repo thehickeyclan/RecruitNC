@@ -90,7 +90,7 @@ export default function StoreSalesReportsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A1628] p-4 md:p-8">
+    <div className="admin-dark-page min-h-screen bg-[#0A1628] p-4 md:p-8">
       <div className="mx-auto max-w-7xl space-y-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">

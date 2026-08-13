@@ -243,14 +243,14 @@ export default function AdminReimbursementsPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#0A1628] flex items-center justify-center">
+      <div className="admin-dark-page min-h-screen bg-[#0A1628] flex items-center justify-center">
         <RefreshCw className="h-8 w-8 animate-spin text-[#D3B574]" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[#0A1628]">
+    <div className="admin-dark-page min-h-screen bg-[#0A1628]">
       {/* Header */}
       <div className="bg-gradient-to-b from-[#13294B] to-[#0A1628] border-b border-[#1e3a5f]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

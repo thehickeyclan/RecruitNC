@@ -211,7 +211,7 @@ export default function ContactsDirectoryPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-[#061224]">
+    <div className="admin-dark-page min-h-screen bg-[#061224]">
       {/* Header */}
       <header className="sticky top-0 z-20 border-b border-white/10 bg-[#061224]/95 backdrop-blur-sm">
         <div className="mx-auto max-w-3xl px-4 py-4">

@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function AdminClubsPage() {
   return (
-    <main className="min-h-screen bg-[#060f1f] text-white">
+    <main className="admin-dark-page min-h-screen bg-[#060f1f] text-white">
       <section className="relative overflow-hidden border-b border-white/10 bg-[#0B1D3A]">
         <TocPatrioticBar />
         <div className="absolute inset-0 opacity-[0.16] [background-image:linear-gradient(rgba(255,255,255,.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.08)_1px,transparent_1px)] [background-size:64px_64px]" />

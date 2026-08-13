@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic"
 
 export default function AdminAthleteChangesPage() {
   return (
-    <main className="min-h-screen bg-[#060f1f] text-white">
+    <main className="admin-dark-page min-h-screen bg-[#060f1f] text-white">
       <section className="relative border-b border-white/10 bg-[#0B1D3A]">
         <TocPatrioticBar />
         <div className="relative mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">

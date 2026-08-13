@@ -5,6 +5,7 @@ import { getTocEventConfig } from "@/lib/toc/event-config"
 import { buildTocFieldBoard } from "@/lib/toc/field-board"
 import { applyTocAiSeedRecommendations, buildTocAiSeedRecommendations } from "@/lib/toc/ai-seeding"
 import { applyPersonalSeedOrdersToFieldBoard, readTocPersonalSeedOrders } from "@/lib/toc/personal-seeding"
+import { buildFieldClubBreakdown } from "@/lib/toc/field-club-breakdown"
 
 export const dynamic = "force-dynamic"
 
@@ -67,8 +68,20 @@ export async function GET() {
     ? recommendedBoard
     : applyPersonalSeedOrdersToFieldBoard(recommendedBoard, readTocPersonalSeedOrders(auth.appMetadata))
 
+  // Club mix of the confirmed field. athleteRowsById is already loaded for AI seeding, so
+  // this costs no extra query — it just exposes what was fetched anyway.
+  const confirmedAthleteIds = new Set(
+    board.weights.flatMap((w) =>
+      w.athletes.filter((a) => a.status === "confirmed").map((a) => String(a.athleteId)),
+    ),
+  )
+  const clubBreakdown = buildFieldClubBreakdown(
+    [...confirmedAthleteIds].map((id) => athleteRowsById.get(id) ?? {}),
+  )
+
   return NextResponse.json({
     board: responseBoard,
+    clubBreakdown,
     bracketsUrl: config.brackets_url,
     canManage: auth.isAdmin,
     workspace: auth.isAdmin ? "official" : "personal",

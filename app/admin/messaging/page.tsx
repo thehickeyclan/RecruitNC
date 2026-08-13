@@ -156,7 +156,7 @@ export default function AdminMessagingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#061224]">
+    <div className="admin-dark-page min-h-screen bg-[#061224]">
       {/* Header */}
       <div className="border-b border-white/10 bg-[#0A1628]">
         <div className="container mx-auto px-4 py-4">

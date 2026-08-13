@@ -21,6 +21,8 @@ import {
   rankTocWeightBrackets,
   type TocCredentialRollup,
 } from "@/lib/toc/credential-rollup"
+import { TocFieldClubChart } from "@/components/toc/admin/toc-field-club-chart"
+import type { ClubSlice } from "@/lib/toc/field-club-breakdown"
 
 function CredentialRollup({
   rollup,
@@ -619,6 +621,7 @@ export default function TocFieldAdminPage() {
   const [bracketsUrl, setBracketsUrl] = useState<string | null>(null)
   const [canManage, setCanManage] = useState(false)
   const [workspace, setWorkspace] = useState<"official" | "personal">("official")
+  const [clubBreakdown, setClubBreakdown] = useState<{ slices: ClubSlice[]; total: number } | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [seedSavingId, setSeedSavingId] = useState<string | null>(null)
@@ -685,6 +688,7 @@ export default function TocFieldAdminPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || "Failed to load")
       setBoard(data.board)
+      setClubBreakdown(data.clubBreakdown ?? null)
       setBracketsUrl(data.bracketsUrl ?? null)
       setCanManage(data.canManage === true)
       setWorkspace(data.workspace === "personal" ? "personal" : "official")
@@ -878,7 +882,7 @@ export default function TocFieldAdminPage() {
   }
 
   return (
-    <div className="relative left-1/2 min-h-screen w-screen -translate-x-1/2 bg-[#060f1f] px-4 py-8 text-white sm:px-6">
+    <div className="admin-dark-page relative left-1/2 min-h-screen w-screen -translate-x-1/2 bg-[#060f1f] px-4 py-8 text-white sm:px-6">
       <div className="mx-auto max-w-[96rem] space-y-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
@@ -957,6 +961,20 @@ export default function TocFieldAdminPage() {
           </Card>
         </div>
         <CredentialRollup rollup={fieldCredentialRollup} expectedAthletes={board.summary.totalConfirmed} />
+        {clubBreakdown && clubBreakdown.total > 0 ? (
+          <Card className="border-white/10 bg-[#0B1D3A] text-white shadow-xl shadow-black/20">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg text-white">Clubs in the field</CardTitle>
+              <CardDescription className="text-white/60">
+                Confirmed athletes by wrestling club. Spellings of the same club are merged the same way the club map
+                merges them, so "RAW" and "Raleigh Area Wolfpack" count once.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TocFieldClubChart slices={clubBreakdown.slices} total={clubBreakdown.total} />
+            </CardContent>
+          </Card>
+        ) : null}
         </>
       ) : null}
 

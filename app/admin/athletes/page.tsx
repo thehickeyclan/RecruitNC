@@ -174,7 +174,7 @@ export default function AthletesPage() {
   const currentClassCount = athletes.filter((a) => a?.graduationyear === currentYear || a?.graduationyear === currentYear + 1).length
 
   return (
-    <div className="min-h-screen bg-[#061224]">
+    <div className="admin-dark-page min-h-screen bg-[#061224]">
       {/* Header */}
       <header className="border-b border-white/10 bg-[#061224]">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">

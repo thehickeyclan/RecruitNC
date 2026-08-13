@@ -186,7 +186,7 @@ export default function AdminStoreHubPage() {
   ] : []
 
   return (
-    <div className="min-h-screen bg-[#0A1628] p-4 md:p-8">
+    <div className="admin-dark-page min-h-screen bg-[#0A1628] p-4 md:p-8">
       <div className="mx-auto max-w-7xl">
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">

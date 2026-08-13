@@ -299,7 +299,7 @@ export default function ParentContactPage({ params }: { params: Promise<{ userId
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#061224]">
+      <div className="admin-dark-page flex min-h-screen items-center justify-center bg-[#061224]">
         <div className="h-10 w-10 animate-spin rounded-full border-2 border-[#C8A94A] border-t-transparent" />
       </div>
     )
@@ -307,7 +307,7 @@ export default function ParentContactPage({ params }: { params: Promise<{ userId
 
   if (!profile) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-[#061224] px-4">
+      <div className="admin-dark-page flex min-h-screen flex-col items-center justify-center bg-[#061224] px-4">
         <p className="text-lg text-white/70">Parent not found</p>
         <Link href="/admin/contacts" className="mt-4 text-[#C8A94A] hover:underline">
           Back to Contacts
@@ -330,7 +330,7 @@ export default function ParentContactPage({ params }: { params: Promise<{ userId
   const expenses = crmData?.athleteExpenseRequests?.ok ? crmData.athleteExpenseRequests.data || [] : []
 
   return (
-    <div className="min-h-screen bg-[#061224]">
+    <div className="admin-dark-page min-h-screen bg-[#061224]">
       {/* Header */}
       <header className="sticky top-0 z-20 border-b border-white/10 bg-[#061224]/95 backdrop-blur-sm">
         <div className="mx-auto max-w-3xl px-4 py-4">

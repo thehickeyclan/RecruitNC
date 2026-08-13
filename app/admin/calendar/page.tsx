@@ -272,7 +272,7 @@ export default function AdminCalendarPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A1628]">
+    <div className="admin-dark-page min-h-screen bg-[#0A1628]">
       {/* Header */}
       <div className="bg-gradient-to-b from-[#13294B] to-[#0A1628] border-b border-[#1e3a5f]">
         <div className="max-w-6xl mx-auto px-4 py-6">
