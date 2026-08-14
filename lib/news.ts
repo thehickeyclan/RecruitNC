@@ -102,9 +102,9 @@ const ALL_NEWS: NewsItem[] = [
   {
     id: "caleb-smith-gives-back",
     slug: "caleb-smith-gives-back",
-    title: "Caleb Smith Gives Back to North Carolina Wrestling",
+    title: "Beyond the Podium: Caleb Smith's Impact Reaches Home",
     subtitle:
-      "The two-time NCAA Division I All-American spent Thursday night leading Greensboro RTC practice at Greensboro College and investing in the next generation.",
+      "Two-time NCAA Division I All-American Caleb Smith spent part of his time home in North Carolina leading a Greensboro RTC practice—offering young wrestlers a chance to learn from one of the state's most accomplished active competitors.",
     summary:
       "Caleb Smith returned home and used part of his limited downtime to lead Greensboro RTC practice, work directly with young wrestlers and give back to the North Carolina wrestling community.",
     href: "/news/caleb-smith-gives-back",
