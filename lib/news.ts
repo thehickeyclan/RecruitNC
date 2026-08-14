@@ -598,6 +598,27 @@ const ALL_NEWS: NewsItem[] = [
     isAnnouncement: false,
   },
   {
+    id: "top-10-problems-nc-wrestling-tournaments-2025",
+    slug: "top-10-problems-nc-wrestling-tournaments-2025",
+    title: "The Top 10 Problems With North Carolina Wrestling Tournaments",
+    subtitle:
+      "Long days, poor communication, limited mats and outdated infrastructure exhaust families and hold back the tournament experience.",
+    summary:
+      "Ten fixable operational problems that prevent North Carolina wrestling tournaments from matching the state's growing talent and participation.",
+    href: "/news/top-10-problems-nc-wrestling-tournaments-2025",
+    date: "2025-11-24",
+    image: "/images/news/legacy/top-10-nc-tournament-problems-2025/tournament-action.png",
+    imagePosition: "center",
+    imageFit: "cover",
+    newsListBanner: true,
+    category: "ANALYSIS",
+    categoryBadgeClass: "bg-[#b91c1c]",
+    readTime: "8 min read",
+    author: "NC United",
+    isAnnouncement: true,
+    excludeFromHomeCarousel: true,
+  },
+  {
     id: "nc-united-competitive-identity-ucd-2025",
     slug: "nc-united-competitive-identity-ucd-2025",
     title: "NC United Establishes Competitive Identity on the National Stage",
