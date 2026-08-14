@@ -1162,6 +1162,27 @@ const ALL_NEWS: NewsItem[] = [
     excludeFromHomeCarousel: true,
   },
   {
+    id: "nc-united-blue-breaking-barriers-2025",
+    slug: "nc-united-blue-breaking-barriers-2025",
+    title: "NC United Blue: Breaking Barriers, Building Champions, Representing North Carolina",
+    subtitle:
+      "NC United Blue united top high school talent, provided elite training and created national opportunities while raising the standard for North Carolina wrestling.",
+    summary:
+      "Following a dominant state-tournament performance, United Blue welcomed its next group of wrestlers and continued building a nationally competitive program.",
+    href: "/news/nc-united-blue-breaking-barriers-2025",
+    date: "2025-03-07",
+    image: "/images/news/legacy/nc-united-blue-breaking-barriers-2025/united-blue-champions.png",
+    imagePosition: "center",
+    imageFit: "cover",
+    newsListBanner: true,
+    category: "NC UNITED BLUE",
+    categoryBadgeClass: "bg-[#1d4ed8]",
+    readTime: "6 min read",
+    author: "NC United",
+    isAnnouncement: true,
+    excludeFromHomeCarousel: true,
+  },
+  {
     id: "class-of-2026-nc-womens-wrestling-prospects",
     slug: "class-of-2026-nc-womens-wrestling-prospects",
     title: "Class of 2026 NC Women’s Wrestling Top Prospects",

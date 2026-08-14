@@ -59,6 +59,7 @@ import { NcUnitedInauguralWomensUcdTeam2025Content } from "../content/nc-united-
 import { Top10ProblemsNcWrestlingTournaments2025Content } from "../content/top-10-problems-nc-wrestling-tournaments-2025"
 import { NcUnitedBlueElevatingNcWrestling2024Content } from "../content/nc-united-blue-elevating-nc-wrestling-2024"
 import { WrestlingCommunityHurricaneRelief2025Content } from "../content/wrestling-community-hurricane-relief-2025"
+import { NcUnitedBlueBreakingBarriers2025Content } from "../content/nc-united-blue-breaking-barriers-2025"
 import { NchsaaArticleComments } from "@/components/nchsaa-article-comments"
 import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
 import { NewsSharePanel } from "@/components/news/news-share-panel"
@@ -71,6 +72,7 @@ import {
 } from "@/lib/content/aau-scholastic-duals-2026-profile-ids"
 
 const ANNOUNCEMENT_CONTENT: Record<string, () => JSX.Element> = {
+  "nc-united-blue-breaking-barriers-2025": () => <NcUnitedBlueBreakingBarriers2025Content />,
   "wrestling-community-hurricane-relief-2025": () => <WrestlingCommunityHurricaneRelief2025Content />,
   "nc-united-blue-elevating-nc-wrestling-2024": () => <NcUnitedBlueElevatingNcWrestling2024Content />,
   "top-10-problems-nc-wrestling-tournaments-2025": () => <Top10ProblemsNcWrestlingTournaments2025Content />,
