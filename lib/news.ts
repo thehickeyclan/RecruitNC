@@ -1403,6 +1403,27 @@ const ALL_NEWS: NewsItem[] = [
     shareHeroCropOnly: true,
   },
   {
+    id: "nc-united-2024-patriot-open",
+    slug: "nc-united-2024-patriot-open",
+    title: "Raising the Bar: NC United’s Impressive Second Collegiate Tournament Showing",
+    subtitle:
+      "Five NC United high school wrestlers competed at the Patriot Open, producing a first podium finish and a 44% improvement in team CAP score.",
+    summary:
+      "Liam Hickey placed fourth and NC United earned six of its seven wins against Division I opponents during its second collegiate tournament appearance.",
+    href: "/news/nc-united-2024-patriot-open",
+    date: "2024-12-10",
+    image: "/images/news/legacy/nc-united-2024-patriot-open/patriot-open-cap-score.png",
+    imagePosition: "center",
+    imageFit: "cover",
+    newsListBanner: true,
+    category: "CAP SCORE",
+    categoryBadgeClass: "bg-[#087c42]",
+    readTime: "6 min read",
+    author: "Colton Palmer",
+    isAnnouncement: true,
+    excludeFromHomeCarousel: true,
+  },
+  {
     id: "new-season-new-rules-2024-25",
     slug: "new-season-new-rules-2024-25",
     title: "New Season, New Rules: What Parents, Coaches and Fans Need to Know",
