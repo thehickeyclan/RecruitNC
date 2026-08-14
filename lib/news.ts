@@ -1295,6 +1295,29 @@ const ALL_NEWS: NewsItem[] = [
     isAnnouncement: true,
     excludeFromHomeCarousel: true,
   },
+  {
+    id: "nc-united-blue-elevating-nc-wrestling-2024",
+    slug: "nc-united-blue-elevating-nc-wrestling-2024",
+    title: "NC United Blue: Elevating North Carolina Wrestling",
+    subtitle:
+      "NC United Blue united the state's top wrestlers to challenge the status quo, compete nationally and set a new standard for representing North Carolina.",
+    summary:
+      "The original United Blue launch introduced its mission, accomplished roster, development model and ambitious 2025 national schedule.",
+    href: "/news/nc-united-blue-elevating-nc-wrestling-2024",
+    date: "2024-12-20",
+    image: "/images/news/legacy/nc-united-blue-launch-2024/united-blue.png",
+    imagePosition: "center",
+    imageFit: "contain",
+    imageBannerBgClass: "bg-[#071b4b]",
+    newsListBanner: true,
+    category: "NC UNITED BLUE",
+    categoryBadgeClass: "bg-[#075de5]",
+    readTime: "8 min read",
+    author: "NC United",
+    isAnnouncement: true,
+    excludeFromHomeCarousel: true,
+    shareHeroCropOnly: true,
+  },
 ]
 
 /** All news, newest first. Use for /news index page. */
