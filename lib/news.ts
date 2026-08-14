@@ -619,6 +619,27 @@ const ALL_NEWS: NewsItem[] = [
     excludeFromHomeCarousel: true,
   },
   {
+    id: "nc-united-inaugural-womens-ucd-team-2025",
+    slug: "nc-united-inaugural-womens-ucd-team-2025",
+    title: "NC United Inaugural Women’s Team Competes at Ultimate Club Duals",
+    subtitle:
+      "NC United's first women's UCD team competed against elite national programs and laid a foundation for girls' freestyle development in North Carolina.",
+    summary:
+      "Fourteen athletes became the first to represent NC United's women's team at the Ultimate Club Duals.",
+    href: "/news/nc-united-inaugural-womens-ucd-team-2025",
+    date: "2025-09-25",
+    image: "/images/news/legacy/nc-united-womens-ucd-2025/inaugural-team.png",
+    imagePosition: "center",
+    imageFit: "cover",
+    newsListBanner: true,
+    category: "WOMEN'S WRESTLING",
+    categoryBadgeClass: "bg-[#b91c5c]",
+    readTime: "6 min read",
+    author: "NC United",
+    isAnnouncement: true,
+    excludeFromHomeCarousel: true,
+  },
+  {
     id: "nc-united-trains-uva-rtc-2025",
     slug: "nc-united-trains-uva-rtc-2025",
     title: "NC United Trains with University of Virginia Regional Training Center (RTC)",
