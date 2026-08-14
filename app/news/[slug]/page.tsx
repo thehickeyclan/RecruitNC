@@ -43,6 +43,7 @@ import { NcWomenBreakthrough2025NhscaContent } from "../content/nc-women-breakth
 import { RoadToFargo2025NorthCarolinaGuideContent } from "../content/road-to-fargo-2025-north-carolina-guide"
 import { TylerTracyBronzeJamaica2025U23PanAmsContent } from "../content/tyler-tracy-bronze-jamaica-2025-u23-pan-ams"
 import { NcUnitedGoldLaunch2025Content } from "../content/nc-united-gold-launch-2025"
+import { NcUnitedGoldInaugural2025PracticeContent } from "../content/nc-united-gold-inaugural-2025-practice"
 import { NchsaaArticleComments } from "@/components/nchsaa-article-comments"
 import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
 import { NewsSharePanel } from "@/components/news/news-share-panel"
@@ -55,6 +56,7 @@ import {
 } from "@/lib/content/aau-scholastic-duals-2026-profile-ids"
 
 const ANNOUNCEMENT_CONTENT: Record<string, () => JSX.Element> = {
+  "nc-united-gold-inaugural-2025-practice": () => <NcUnitedGoldInaugural2025PracticeContent />,
   "nc-united-gold-launch-2025": () => <NcUnitedGoldLaunch2025Content />,
   "tyler-tracy-bronze-jamaica-2025-u23-pan-ams": () => <TylerTracyBronzeJamaica2025U23PanAmsContent />,
   "road-to-fargo-2025-north-carolina-guide": () => <RoadToFargo2025NorthCarolinaGuideContent />,
