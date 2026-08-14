@@ -102,7 +102,7 @@ const ALL_NEWS: NewsItem[] = [
   {
     id: "caleb-smith-gives-back",
     slug: "caleb-smith-gives-back",
-    title: "Beyond the Podium: Caleb Smith's Impact Reaches Home",
+    title: "Beyond the Podium: Caleb Smith's Impact at Home",
     subtitle:
       "Two-time NCAA Division I All-American Caleb Smith spent part of his time home in North Carolina leading a Greensboro RTC practice—offering young wrestlers a chance to learn from one of the state's most accomplished active competitors.",
     summary:
