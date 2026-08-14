@@ -1296,6 +1296,27 @@ const ALL_NEWS: NewsItem[] = [
     excludeFromHomeCarousel: true,
   },
   {
+    id: "wrestling-community-hurricane-relief-2025",
+    slug: "wrestling-community-hurricane-relief-2025",
+    title: "Join the Wrestling Community for Hurricane Relief",
+    subtitle:
+      "The Wrestling Bridges the Gap Hurricane Relief Match united wrestlers, teams and fans to support communities recovering from devastating storms.",
+    summary:
+      "The U.S. Wrestling Foundation initiative turned wrestling competition into a vehicle for hurricane recovery and community support.",
+    href: "/news/wrestling-community-hurricane-relief-2025",
+    date: "2025-01-01",
+    image: "/images/news/legacy/wrestling-hurricane-relief-2025/hurricane-relief-match.png",
+    imagePosition: "center",
+    imageFit: "cover",
+    newsListBanner: true,
+    category: "COMMUNITY",
+    categoryBadgeClass: "bg-[#b91c1c]",
+    readTime: "4 min read",
+    author: "Colton Palmer",
+    isAnnouncement: true,
+    excludeFromHomeCarousel: true,
+  },
+  {
     id: "nc-united-blue-elevating-nc-wrestling-2024",
     slug: "nc-united-blue-elevating-nc-wrestling-2024",
     title: "NC United Blue: Elevating North Carolina Wrestling",
