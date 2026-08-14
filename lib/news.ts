@@ -597,6 +597,27 @@ const ALL_NEWS: NewsItem[] = [
     readTime: "12 min read",
     isAnnouncement: false,
   },
+  {
+    id: "ethan-oakley-mission-acc-ncaa-championships",
+    slug: "ethan-oakley-mission-acc-ncaa-championships",
+    title: "Ethan Oakley: On a Mission to the ACC & NCAA Championships",
+    subtitle:
+      "Ethan Oakley, ranked No. 18 nationally at 133 pounds, represented North Carolina and UNC with pride while chasing ACC and NCAA championships.",
+    summary:
+      "North Carolina native Ethan Oakley entered the second half of his senior season at UNC focused on the ACC Championships and NCAA Tournament.",
+    href: "/news/ethan-oakley-mission-acc-ncaa-championships",
+    date: "2025-01-23",
+    image: "/images/news/legacy/ethan-oakley-acc-ncaa/ethan-oakley.png",
+    imagePosition: "center",
+    imageFit: "cover",
+    newsListBanner: true,
+    category: "COLLEGE WRESTLING",
+    categoryBadgeClass: "bg-[#7BAFD4]",
+    readTime: "5 min read",
+    author: "Colton Palmer",
+    isAnnouncement: true,
+    excludeFromHomeCarousel: true,
+  },
 ]
 
 /** All news, newest first. Use for /news index page. */

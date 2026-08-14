@@ -26,6 +26,7 @@ import { RecruitNcInteractiveWrestlingClubMapContent } from "../content/recruitn
 import { NcUnitedNcMatOfficialMediaPartnerContent } from "../content/nc-united-nc-mat-official-media-partner"
 import { NcUnitedWrestlingGuildPremierPartnerContent } from "../content/nc-united-wrestling-guild-premier-partner"
 import { CalebSmithGivesBackContent } from "../content/caleb-smith-gives-back"
+import { EthanOakleyMissionAccNcaaChampionshipsContent } from "../content/ethan-oakley-mission-acc-ncaa-championships"
 import { NchsaaArticleComments } from "@/components/nchsaa-article-comments"
 import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
 import { NewsSharePanel } from "@/components/news/news-share-panel"
@@ -38,6 +39,7 @@ import {
 } from "@/lib/content/aau-scholastic-duals-2026-profile-ids"
 
 const ANNOUNCEMENT_CONTENT: Record<string, () => JSX.Element> = {
+  "ethan-oakley-mission-acc-ncaa-championships": () => <EthanOakleyMissionAccNcaaChampionshipsContent />,
   "caleb-smith-gives-back": () => <CalebSmithGivesBackContent />,
   "nc-united-wrestling-guild-premier-partner": () => <NcUnitedWrestlingGuildPremierPartnerContent />,
   "nc-united-nc-mat-official-media-partner": () => <NcUnitedNcMatOfficialMediaPartnerContent />,
