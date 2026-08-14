@@ -35,6 +35,17 @@ export function TocFoundingPartners() {
                   </div>
                 </div>
               </a>
+              {"productImageUrl" in partner && partner.productImageUrl ? (
+                <div className="relative aspect-[710/638] w-full border-t-2 border-[#0B1D3A]/10 bg-[#060f1f]">
+                  <Image
+                    src={partner.productImageUrl}
+                    alt="Defense Soap body wipes donated for athlete use at the Tournament of Champions"
+                    fill
+                    className="object-cover"
+                    sizes="(min-width: 768px) 50vw, 100vw"
+                  />
+                </div>
+              ) : null}
               <div className="flex flex-1 flex-col gap-3 bg-[#f4f5f7] px-5 py-4">
                 {"tier" in partner && partner.tier ? (
                   <p className="w-fit rounded-full bg-[#D3B574] px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#0B1D3A]">

@@ -359,6 +359,16 @@ export const TOC_FOUNDING_PARTNERS = {
       logoTheme: "light" as const,
       tagline: "The world's best protein powder, built for wrestlers and combat athletes. Grass-fed whey, real flavors, recovery you can feel.",
     },
+    {
+      name: "Defense Soap",
+      href: "https://www.defensesoap.com/",
+      logoUrl: "/images/toc/sponsors/defense-soap-logo.png",
+      logoTheme: "dark" as const,
+      productImageUrl: "/images/toc/sponsors/defense-soap-products.png",
+      tier: "Athlete Safety Partner",
+      ecosystemNote: "Products donated for use throughout the Tournament of Champions.",
+      tagline: "Defense Soap is providing body wipes to support athlete hygiene and help reduce skin-contact risk during tournament competition.",
+    },
   ],
 } as const
 
