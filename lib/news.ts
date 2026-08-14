@@ -598,6 +598,27 @@ const ALL_NEWS: NewsItem[] = [
     isAnnouncement: false,
   },
   {
+    id: "josh-wilson-defending-national-title-hodge-trophy",
+    slug: "josh-wilson-defending-national-title-hodge-trophy",
+    title: "Josh Wilson: Sights Set on Defending National Title & Winning Prestigious Hodge Trophy",
+    subtitle:
+      "Josh Wilson, defending national champion at 141 pounds, pursued a second title and the prestigious Hodge Trophy while representing Greensboro College and North Carolina.",
+    summary:
+      "Defending Division III national champion Josh Wilson entered the second half of his senior season chasing a repeat title and wrestling's most prestigious individual award.",
+    href: "/news/josh-wilson-defending-national-title-hodge-trophy",
+    date: "2025-01-24",
+    image: "/images/news/legacy/josh-wilson-hodge-trophy/josh-wilson.png",
+    imagePosition: "center",
+    imageFit: "cover",
+    newsListBanner: true,
+    category: "ATHLETE SPOTLIGHT",
+    categoryBadgeClass: "bg-[#1f6b3a]",
+    readTime: "5 min read",
+    author: "Colton Palmer",
+    isAnnouncement: true,
+    excludeFromHomeCarousel: true,
+  },
+  {
     id: "ethan-oakley-mission-acc-ncaa-championships",
     slug: "ethan-oakley-mission-acc-ncaa-championships",
     title: "Ethan Oakley: On a Mission to the ACC & NCAA Championships",

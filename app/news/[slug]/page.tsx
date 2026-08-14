@@ -27,6 +27,7 @@ import { NcUnitedNcMatOfficialMediaPartnerContent } from "../content/nc-united-n
 import { NcUnitedWrestlingGuildPremierPartnerContent } from "../content/nc-united-wrestling-guild-premier-partner"
 import { CalebSmithGivesBackContent } from "../content/caleb-smith-gives-back"
 import { EthanOakleyMissionAccNcaaChampionshipsContent } from "../content/ethan-oakley-mission-acc-ncaa-championships"
+import { JoshWilsonDefendingNationalTitleHodgeTrophyContent } from "../content/josh-wilson-defending-national-title-hodge-trophy"
 import { NchsaaArticleComments } from "@/components/nchsaa-article-comments"
 import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
 import { NewsSharePanel } from "@/components/news/news-share-panel"
@@ -39,6 +40,7 @@ import {
 } from "@/lib/content/aau-scholastic-duals-2026-profile-ids"
 
 const ANNOUNCEMENT_CONTENT: Record<string, () => JSX.Element> = {
+  "josh-wilson-defending-national-title-hodge-trophy": () => <JoshWilsonDefendingNationalTitleHodgeTrophyContent />,
   "ethan-oakley-mission-acc-ncaa-championships": () => <EthanOakleyMissionAccNcaaChampionshipsContent />,
   "caleb-smith-gives-back": () => <CalebSmithGivesBackContent />,
   "nc-united-wrestling-guild-premier-partner": () => <NcUnitedWrestlingGuildPremierPartnerContent />,
