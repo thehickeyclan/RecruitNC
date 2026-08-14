@@ -56,8 +56,8 @@ export function CalebSmithGivesBackContent() {
       <section>
         <p>For Caleb Smith, time home in North Carolina is an opportunity to recharge.</p>
         <p>
-          The schedule of an elite college wrestler leaves little downtime. Training, competition and travel consume
-          much of the year, making trips home a chance to reconnect with family and friends, recover and reset.
+          The schedule of an elite wrestler leaves little downtime. Training, competition and travel consume much of
+          the year, making trips home a chance to reconnect with family and friends, recover and reset.
         </p>
         <p>
           On Thursday night, August 13, Smith chose to spend part of that time in the wrestling room at Greensboro
@@ -105,8 +105,8 @@ export function CalebSmithGivesBackContent() {
           best.
         </p>
         <p>
-          His ambitions continue beyond the college season as well, including opportunities to compete on major stages
-          such as <strong>Real American Freestyle</strong>.
+          His ambitions continue beyond his college career, including opportunities to compete on major stages such as{" "}
+          <strong>Real American Freestyle</strong>.
         </p>
         <p>There is still plenty ahead.</p>
         <p>
