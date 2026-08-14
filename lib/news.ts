@@ -598,6 +598,27 @@ const ALL_NEWS: NewsItem[] = [
     isAnnouncement: false,
   },
   {
+    id: "north-carolina-ready-2025-nhsca-nationals",
+    slug: "north-carolina-ready-2025-nhsca-nationals",
+    title: "North Carolina Wrestling Is Ready for NHSCA Nationals",
+    subtitle:
+      "North Carolina's top high school wrestlers prepared for NHSCA Nationals in Virginia Beach with returning All-Americans and rising talent ready for the national stage.",
+    summary:
+      "A look at North Carolina's recent NHSCA performance, the importance of the tournament and the wrestlers positioned to contend in Virginia Beach.",
+    href: "/news/north-carolina-ready-2025-nhsca-nationals",
+    date: "2025-03-07",
+    image: "/images/news/legacy/2025-nhsca-nationals-preview/nhsca-nationals.png",
+    imagePosition: "center",
+    imageFit: "cover",
+    newsListBanner: true,
+    category: "NHSCA NATIONALS",
+    categoryBadgeClass: "bg-[#003366]",
+    readTime: "8 min read",
+    author: "NC United",
+    isAnnouncement: true,
+    excludeFromHomeCarousel: true,
+  },
+  {
     id: "class-of-2026-nc-womens-wrestling-prospects",
     slug: "class-of-2026-nc-womens-wrestling-prospects",
     title: "Class of 2026 NC Women’s Wrestling Top Prospects",
