@@ -1338,6 +1338,27 @@ const ALL_NEWS: NewsItem[] = [
     excludeFromHomeCarousel: true,
   },
   {
+    id: "in-season-strength-training-mistakes-2025",
+    slug: "in-season-strength-training-mistakes-2025",
+    title: "Top 10 Mistakes Wrestlers Make with In-Season Strength Training",
+    subtitle:
+      "Smarter in-season strength training balances power, recovery and competition readiness while avoiding preventable fatigue.",
+    summary:
+      "Ten common strength-training mistakes that can undermine wrestlers during the season—and practical ways to build a better plan.",
+    href: "/news/in-season-strength-training-mistakes-2025",
+    date: "2025-01-07",
+    image: "/images/news/legacy/in-season-strength-training-mistakes-2025/dumbbells.png",
+    imagePosition: "center",
+    imageFit: "cover",
+    newsListBanner: true,
+    category: "TRAINING & PREPARATION",
+    categoryBadgeClass: "bg-[#13294B]",
+    readTime: "6 min read",
+    author: "Matt Hickey",
+    isAnnouncement: true,
+    excludeFromHomeCarousel: true,
+  },
+  {
     id: "wrestling-community-hurricane-relief-2025",
     slug: "wrestling-community-hurricane-relief-2025",
     title: "Join the Wrestling Community for Hurricane Relief",

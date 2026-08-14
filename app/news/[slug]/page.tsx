@@ -62,6 +62,7 @@ import { WrestlingCommunityHurricaneRelief2025Content } from "../content/wrestli
 import { NcUnitedBlueBreakingBarriers2025Content } from "../content/nc-united-blue-breaking-barriers-2025"
 import { NewSeasonNewRules202425Content } from "../content/new-season-new-rules-2024-25"
 import { WrestlingYearRoundMartialArt2025Content } from "../content/wrestling-year-round-martial-art-2025"
+import { InSeasonStrengthTrainingMistakes2025Content } from "../content/in-season-strength-training-mistakes-2025"
 import { NchsaaArticleComments } from "@/components/nchsaa-article-comments"
 import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
 import { NewsSharePanel } from "@/components/news/news-share-panel"
@@ -74,6 +75,7 @@ import {
 } from "@/lib/content/aau-scholastic-duals-2026-profile-ids"
 
 const ANNOUNCEMENT_CONTENT: Record<string, () => JSX.Element> = {
+  "in-season-strength-training-mistakes-2025": () => <InSeasonStrengthTrainingMistakes2025Content />,
   "wrestling-year-round-martial-art-2025": () => <WrestlingYearRoundMartialArt2025Content />,
   "new-season-new-rules-2024-25": () => <NewSeasonNewRules202425Content />,
   "nc-united-blue-breaking-barriers-2025": () => <NcUnitedBlueBreakingBarriers2025Content />,
