@@ -50,6 +50,7 @@ import { MovingForwardFutureBrightNcWrestlingPart4Content } from "../content/mov
 import { TeamNorthCarolinaWomenFargo2025Part3Content } from "../content/team-north-carolina-women-fargo-2025-part-3"
 import { AreasForGrowthTeamNcFargo2025Part2Content } from "../content/areas-for-growth-team-nc-fargo-2025-part-2"
 import { TeamNorthCarolinaFargo2025Part1Content } from "../content/team-north-carolina-fargo-2025-part-1"
+import { NcUnitedNwoaRefereePartnership2025Content } from "../content/nc-united-nwoa-referee-partnership-2025"
 import { NchsaaArticleComments } from "@/components/nchsaa-article-comments"
 import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
 import { NewsSharePanel } from "@/components/news/news-share-panel"
@@ -62,6 +63,7 @@ import {
 } from "@/lib/content/aau-scholastic-duals-2026-profile-ids"
 
 const ANNOUNCEMENT_CONTENT: Record<string, () => JSX.Element> = {
+  "nc-united-nwoa-referee-partnership-2025": () => <NcUnitedNwoaRefereePartnership2025Content />,
   "team-north-carolina-fargo-2025-part-1": () => <TeamNorthCarolinaFargo2025Part1Content />,
   "areas-for-growth-team-nc-fargo-2025-part-2": () => <AreasForGrowthTeamNcFargo2025Part2Content />,
   "team-north-carolina-women-fargo-2025-part-3": () => <TeamNorthCarolinaWomenFargo2025Part3Content />,
