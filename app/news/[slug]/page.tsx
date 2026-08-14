@@ -38,6 +38,7 @@ import { UpdatedSeeding2025NhscaNationalsContent } from "../content/updated-seed
 import { NorthCarolinaFreshmenHistoricImpact2025NhscaContent } from "../content/north-carolina-freshmen-historic-impact-2025-nhsca"
 import { NorthCarolinaSophomoresBreakout2025NhscaContent } from "../content/north-carolina-sophomores-breakout-2025-nhsca"
 import { NorthCarolinaJuniorsTurnHeads2025NhscaContent } from "../content/north-carolina-juniors-turn-heads-2025-nhsca"
+import { NorthCarolinaSeniorsLedNation2025NhscaContent } from "../content/north-carolina-seniors-led-nation-2025-nhsca"
 import { NchsaaArticleComments } from "@/components/nchsaa-article-comments"
 import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
 import { NewsSharePanel } from "@/components/news/news-share-panel"
@@ -50,6 +51,7 @@ import {
 } from "@/lib/content/aau-scholastic-duals-2026-profile-ids"
 
 const ANNOUNCEMENT_CONTENT: Record<string, () => JSX.Element> = {
+  "north-carolina-seniors-led-nation-2025-nhsca": () => <NorthCarolinaSeniorsLedNation2025NhscaContent />,
   "north-carolina-juniors-turn-heads-2025-nhsca": () => <NorthCarolinaJuniorsTurnHeads2025NhscaContent />,
   "north-carolina-sophomores-breakout-2025-nhsca": () => <NorthCarolinaSophomoresBreakout2025NhscaContent />,
   "north-carolina-freshmen-historic-impact-2025-nhsca": () => <NorthCarolinaFreshmenHistoricImpact2025NhscaContent />,
