@@ -46,6 +46,7 @@ import { NcUnitedGoldLaunch2025Content } from "../content/nc-united-gold-launch-
 import { NcUnitedGoldInaugural2025PracticeContent } from "../content/nc-united-gold-inaugural-2025-practice"
 import { NcUnitedGoldSecond2025PracticeContent } from "../content/nc-united-gold-second-2025-practice"
 import { WrestlersUnitedInBusinessLaunch2025Content } from "../content/wrestlers-united-in-business-launch-2025"
+import { MovingForwardFutureBrightNcWrestlingPart4Content } from "../content/moving-forward-future-bright-nc-wrestling-part-4"
 import { NchsaaArticleComments } from "@/components/nchsaa-article-comments"
 import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
 import { NewsSharePanel } from "@/components/news/news-share-panel"
@@ -58,6 +59,7 @@ import {
 } from "@/lib/content/aau-scholastic-duals-2026-profile-ids"
 
 const ANNOUNCEMENT_CONTENT: Record<string, () => JSX.Element> = {
+  "moving-forward-future-bright-nc-wrestling-part-4": () => <MovingForwardFutureBrightNcWrestlingPart4Content />,
   "wrestlers-united-in-business-launch-2025": () => <WrestlersUnitedInBusinessLaunch2025Content />,
   "nc-united-gold-second-2025-practice": () => <NcUnitedGoldSecond2025PracticeContent />,
   "nc-united-gold-inaugural-2025-practice": () => <NcUnitedGoldInaugural2025PracticeContent />,
