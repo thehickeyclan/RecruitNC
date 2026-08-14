@@ -1118,6 +1118,27 @@ const ALL_NEWS: NewsItem[] = [
     shareHeroCropOnly: true,
   },
   {
+    id: "wrestling-year-round-martial-art-2025",
+    slug: "wrestling-year-round-martial-art-2025",
+    title: "Embracing Wrestling as a Year-Round Martial Art: Beyond the Season",
+    subtitle:
+      "Wrestling is more than a seasonal sport—it is a year-round pursuit of technical mastery, intelligent training and purposeful recovery.",
+    summary:
+      "A development-focused look at learning every wrestling style, redefining the offseason and building a sustainable martial-arts mentality.",
+    href: "/news/wrestling-year-round-martial-art-2025",
+    date: "2025-04-01",
+    image: "/images/news/legacy/wrestling-year-round-martial-art-2025/year-round-training.png",
+    imagePosition: "center",
+    imageFit: "cover",
+    newsListBanner: true,
+    category: "TRAINING & PREPARATION",
+    categoryBadgeClass: "bg-[#13294B]",
+    readTime: "5 min read",
+    author: "Brandon Palmer",
+    isAnnouncement: true,
+    excludeFromHomeCarousel: true,
+  },
+  {
     id: "nhsca-seeding-analysis-nc-rise-2025",
     slug: "nhsca-seeding-analysis-nc-rise-2025",
     title: "NHSCA Seeding Analysis: NC’s Rise Proves Development Strategy Is Paying Off",
