@@ -131,8 +131,11 @@ export default async function NewsAnnouncementPage({
     slug === "jumping-levels-what-drives-rapid-improvement" ||
     (item.shareHeroCropOnly === true && item.imageFit === "contain")
 
+  const showPhotoBelowHeadline = slug === "caleb-smith-gives-back"
+
   const skipHeroImage =
     designedBannerHero ||
+    showPhotoBelowHeadline ||
     slug === "class-of-2026-senior-sendoff" ||
     slug === "real-cost-elite-wrestling-nc-smarter-build" ||
     slug === RECRUITING_AWARDS_SLUG ||
@@ -257,6 +260,19 @@ export default async function NewsAnnouncementPage({
                   </span>
                 )}
               </div>
+            </div>
+          )}
+
+          {showPhotoBelowHeadline && item.image && (
+            <div className="relative mt-8 aspect-[16/9] w-full overflow-hidden rounded-2xl border border-white/10 shadow-2xl">
+              <Image
+                src={item.image}
+                alt="Caleb Smith with wrestlers following Greensboro RTC practice at Greensboro College"
+                fill
+                className="object-cover"
+                sizes="(max-width: 896px) 100vw, 896px"
+                priority
+              />
             </div>
           )}
         </div>
