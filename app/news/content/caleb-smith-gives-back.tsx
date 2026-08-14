@@ -22,7 +22,8 @@ export function CalebSmithGivesBackContent() {
           he found his way to nearly every kid in the room—often more than once.
         </p>
         <p>
-          He didn&apos;t carry himself like a two-time NCAA Division I All-American making a guest appearance. He worked.
+          Smith brought the same energy and focus that helped make him a two-time NCAA Division I All-American. He
+          worked alongside the athletes and stayed fully engaged throughout the practice.
         </p>
         <p>More importantly, he connected.</p>
         <p>
@@ -32,6 +33,10 @@ export function CalebSmithGivesBackContent() {
         <blockquote>
           <p><strong>“Everyone wants to quit. You just need to give them a reason to.”</strong></p>
         </blockquote>
+        <p>
+          Smith closed the practice by sharing lessons from his faith and wrestling experiences, along with a message
+          about the importance of giving back to the people and communities that helped make his journey possible.
+        </p>
 
         <div className="not-prose mt-8 grid gap-4 sm:grid-cols-2">
           <figure className="relative aspect-[3/4] overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
@@ -65,8 +70,9 @@ export function CalebSmithGivesBackContent() {
         <p>
           Along the way, wrestling created relationships that lasted beyond individual matches. Some came through
           competition, including his relationship with fellow North Carolina standout <strong>Ethan Oakley</strong>.
-          Others developed inside a college wrestling room, including his connection with North Carolina native and
-          Appalachian State All-American <strong>Jon Jon Millner</strong>.
+          Others began much earlier. Smith and North Carolina native <strong>Jon Jon Millner</strong> both came through
+          the <strong>School of Hard Knocks</strong> wrestling club before becoming teammates at Appalachian State, where
+          Millner became an All-American.
         </p>
         <p>
           Those relationships are part of what makes wrestling unique. Today&apos;s opponent can become tomorrow&apos;s
