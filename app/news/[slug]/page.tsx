@@ -40,6 +40,7 @@ import { NorthCarolinaSophomoresBreakout2025NhscaContent } from "../content/nort
 import { NorthCarolinaJuniorsTurnHeads2025NhscaContent } from "../content/north-carolina-juniors-turn-heads-2025-nhsca"
 import { NorthCarolinaSeniorsLedNation2025NhscaContent } from "../content/north-carolina-seniors-led-nation-2025-nhsca"
 import { NcWomenBreakthrough2025NhscaContent } from "../content/nc-women-breakthrough-2025-nhsca"
+import { RoadToFargo2025NorthCarolinaGuideContent } from "../content/road-to-fargo-2025-north-carolina-guide"
 import { NchsaaArticleComments } from "@/components/nchsaa-article-comments"
 import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
 import { NewsSharePanel } from "@/components/news/news-share-panel"
@@ -52,6 +53,7 @@ import {
 } from "@/lib/content/aau-scholastic-duals-2026-profile-ids"
 
 const ANNOUNCEMENT_CONTENT: Record<string, () => JSX.Element> = {
+  "road-to-fargo-2025-north-carolina-guide": () => <RoadToFargo2025NorthCarolinaGuideContent />,
   "nc-women-breakthrough-2025-nhsca": () => <NcWomenBreakthrough2025NhscaContent />,
   "north-carolina-seniors-led-nation-2025-nhsca": () => <NorthCarolinaSeniorsLedNation2025NhscaContent />,
   "north-carolina-juniors-turn-heads-2025-nhsca": () => <NorthCarolinaJuniorsTurnHeads2025NhscaContent />,

@@ -598,6 +598,27 @@ const ALL_NEWS: NewsItem[] = [
     isAnnouncement: false,
   },
   {
+    id: "road-to-fargo-2025-north-carolina-guide",
+    slug: "road-to-fargo-2025-north-carolina-guide",
+    title: "The Road to Fargo: A Guide for North Carolina Wrestlers",
+    subtitle:
+      "A historical 2025 guide to qualification, Olympic-style training, preparation benchmarks, travel costs and succeeding at Fargo Nationals.",
+    summary:
+      "The 2025 pathway for North Carolina wrestlers preparing to qualify for and compete at USA Wrestling's Fargo Nationals.",
+    href: "/news/road-to-fargo-2025-north-carolina-guide",
+    date: "2025-04-10",
+    image: "/images/news/legacy/road-to-fargo-2025/fargo-nationals.png",
+    imagePosition: "center",
+    imageFit: "cover",
+    newsListBanner: true,
+    category: "WRESTLER RESOURCES",
+    categoryBadgeClass: "bg-[#13294B]",
+    readTime: "9 min read",
+    author: "NC United",
+    isAnnouncement: true,
+    excludeFromHomeCarousel: true,
+  },
+  {
     id: "nc-women-breakthrough-2025-nhsca",
     slug: "nc-women-breakthrough-2025-nhsca",
     title: "Breakthrough Year for NC Women at NHSCA Nationals: Two Champions and Seven All-Americans",
