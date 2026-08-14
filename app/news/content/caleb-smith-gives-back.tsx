@@ -30,9 +30,6 @@ export function CalebSmithGivesBackContent() {
           Wrestlers of different ages and experience levels received his attention. He wrestled with them, encouraged
           them and made each athlete feel like his or her development mattered.
         </p>
-        <blockquote>
-          <p><strong>“Everyone wants to quit. You just need to give them a reason to.”</strong></p>
-        </blockquote>
         <p>
           Smith closed the practice by sharing lessons from his faith and wrestling experiences, along with a message
           about the importance of giving back to the people and communities that helped make his journey possible.
@@ -95,11 +92,17 @@ export function CalebSmithGivesBackContent() {
 
       <section>
         <h2>Momentum in Greensboro</h2>
-        <p>There is also something building at Greensboro College.</p>
         <p>
-          The program believes it can make a significant jump, and that momentum is visible in its roster and an
-          increasingly strong Greensboro RTC room. Smith&apos;s presence Thursday night added another layer to that energy.
+          <strong>There is also something very real happening at Greensboro College.</strong> The energy around the
+          program feels different—a group that isn&apos;t satisfied with incremental progress and genuinely believes it
+          can jump levels. That momentum is showing up in the room and in the roster, including recent transfers{" "}
+          <strong>Sammy Aponte</strong>, a three-time North Carolina state champion from Roanoke;{" "}
+          <strong>Eli Pendergrass</strong>, a state champion and two-time state finalist transferring from Mount Olive;
+          and <strong>Cayden Glass</strong>, a two-time state finalist transferring from King University. Add an
+          increasingly strong Greensboro RTC room and a program eager to become a bigger part of the statewide
+          wrestling community, and the trajectory is worth watching.
         </p>
+        <p>Smith&apos;s presence Thursday night added another layer to that energy.</p>
         <p>
           An accomplished North Carolina wrestler who left the state, reached the NCAA podium and competed nationally
           returned to a local college room to work directly with the next generation.
