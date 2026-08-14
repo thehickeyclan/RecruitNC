@@ -1360,6 +1360,27 @@ const ALL_NEWS: NewsItem[] = [
     excludeFromHomeCarousel: true,
     shareHeroCropOnly: true,
   },
+  {
+    id: "new-season-new-rules-2024-25",
+    slug: "new-season-new-rules-2024-25",
+    title: "New Season, New Rules: What Parents, Coaches and Fans Need to Know",
+    subtitle:
+      "The 2024–25 season introduced a three-point takedown, expanded near-fall scoring, a one-point inbounds standard and clearer technical-fall procedures.",
+    summary:
+      "A historical guide to the NFHS rule and scoring changes that shaped the 2024–25 high school wrestling season.",
+    href: "/news/new-season-new-rules-2024-25",
+    date: "2024-09-30",
+    image: "/images/news/legacy/new-season-new-rules-2024-25/referee-raises-wrestler-hand.png",
+    imagePosition: "center",
+    imageFit: "cover",
+    newsListBanner: true,
+    category: "PARENT RESOURCES",
+    categoryBadgeClass: "bg-[#D3B574]",
+    readTime: "5 min read",
+    author: "Colton Palmer",
+    isAnnouncement: true,
+    excludeFromHomeCarousel: true,
+  },
 ]
 
 /** All news, newest first. Use for /news index page. */
