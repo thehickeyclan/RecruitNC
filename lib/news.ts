@@ -598,6 +598,27 @@ const ALL_NEWS: NewsItem[] = [
     isAnnouncement: false,
   },
   {
+    id: "wrestlers-united-in-business-launch-2025",
+    slug: "wrestlers-united-in-business-launch-2025",
+    title: "NC-Based Program Connects Wrestlers with High-Growth Career Opportunities",
+    subtitle:
+      "Wrestlers United in Business connected college wrestlers with internships, mentorship and full-time roles across North Carolina's business and technology sectors.",
+    summary:
+      "NC Wrestling United launched a statewide career initiative designed to move wrestlers from competition to professional contribution and future mentorship.",
+    href: "/news/wrestlers-united-in-business-launch-2025",
+    date: "2025-07-06",
+    image: "/images/news/legacy/wrestlers-united-in-business-2025/wrestlers-in-business.png",
+    imagePosition: "center",
+    imageFit: "cover",
+    newsListBanner: true,
+    category: "CAREER DEVELOPMENT",
+    categoryBadgeClass: "bg-[#13294B]",
+    readTime: "6 min read",
+    author: "Colton Palmer",
+    isAnnouncement: true,
+    excludeFromHomeCarousel: true,
+  },
+  {
     id: "nc-united-gold-second-2025-practice",
     slug: "nc-united-gold-second-2025-practice",
     title: "United Gold Builds Momentum: Second Women’s Freestyle Practice",
