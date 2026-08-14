@@ -64,6 +64,7 @@ import { NewSeasonNewRules202425Content } from "../content/new-season-new-rules-
 import { WrestlingYearRoundMartialArt2025Content } from "../content/wrestling-year-round-martial-art-2025"
 import { InSeasonStrengthTrainingMistakes2025Content } from "../content/in-season-strength-training-mistakes-2025"
 import { NcUnited2024PatriotOpenContent } from "../content/nc-united-2024-patriot-open"
+import { NcUnited2024SoutheastOpenContent } from "../content/nc-united-2024-southeast-open"
 import { NchsaaArticleComments } from "@/components/nchsaa-article-comments"
 import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
 import { NewsSharePanel } from "@/components/news/news-share-panel"
@@ -76,6 +77,7 @@ import {
 } from "@/lib/content/aau-scholastic-duals-2026-profile-ids"
 
 const ANNOUNCEMENT_CONTENT: Record<string, () => JSX.Element> = {
+  "nc-united-2024-southeast-open": () => <NcUnited2024SoutheastOpenContent />,
   "nc-united-2024-patriot-open": () => <NcUnited2024PatriotOpenContent />,
   "in-season-strength-training-mistakes-2025": () => <InSeasonStrengthTrainingMistakes2025Content />,
   "wrestling-year-round-martial-art-2025": () => <WrestlingYearRoundMartialArt2025Content />,

@@ -1424,6 +1424,27 @@ const ALL_NEWS: NewsItem[] = [
     excludeFromHomeCarousel: true,
   },
   {
+    id: "nc-united-2024-southeast-open",
+    slug: "nc-united-2024-southeast-open",
+    title: "NC United’s First College Tournament: Six High School Athletes Compete at the Southeast Open",
+    subtitle:
+      "NC United made its college-tournament debut as six high school wrestlers faced NCAA Division I, II and III athletes at the 2024 Southeast Open.",
+    summary:
+      "The program used its CAP scoring system to evaluate eight wins, including six over Division I opponents, and establish a baseline for future growth.",
+    href: "/news/nc-united-2024-southeast-open",
+    date: "2024-11-08",
+    image: "/images/news/legacy/nc-united-2024-southeast-open/southeast-open-cap-score.png",
+    imagePosition: "center",
+    imageFit: "cover",
+    newsListBanner: true,
+    category: "CAP SCORE",
+    categoryBadgeClass: "bg-[#970c48]",
+    readTime: "6 min read",
+    author: "Colton Palmer",
+    isAnnouncement: true,
+    excludeFromHomeCarousel: true,
+  },
+  {
     id: "new-season-new-rules-2024-25",
     slug: "new-season-new-rules-2024-25",
     title: "New Season, New Rules: What Parents, Coaches and Fans Need to Know",
