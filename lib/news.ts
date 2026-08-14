@@ -100,6 +100,27 @@ export function newsShareUsesHeroCropOnly(
  */
 const ALL_NEWS: NewsItem[] = [
   {
+    id: "caleb-smith-gives-back",
+    slug: "caleb-smith-gives-back",
+    title: "Caleb Smith Gives Back to North Carolina Wrestling",
+    subtitle:
+      "The two-time NCAA Division I All-American spent Thursday night leading Greensboro RTC practice at Greensboro College and investing in the next generation.",
+    summary:
+      "Caleb Smith returned home and used part of his limited downtime to lead Greensboro RTC practice, work directly with young wrestlers and give back to the North Carolina wrestling community.",
+    href: "/news/caleb-smith-gives-back",
+    date: "2026-08-14",
+    image: "/images/news/caleb-smith-gives-back/greensboro-rtc-group.jpeg",
+    homeImage: "/images/news/caleb-smith-gives-back/greensboro-rtc-group.jpeg",
+    imagePosition: "center",
+    imageFit: "cover",
+    newsListBanner: true,
+    category: "COMMUNITY",
+    categoryBadgeClass: "bg-[#187348]",
+    readTime: "5 min read",
+    author: "NC United",
+    isAnnouncement: true,
+  },
+  {
     id: "nc-united-wrestling-guild-premier-partner",
     slug: "nc-united-wrestling-guild-premier-partner",
     title: "NC United Announces The Wrestling Guild as Premier Partner of 2026 Tournament of Champions",
