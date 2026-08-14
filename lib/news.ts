@@ -598,6 +598,27 @@ const ALL_NEWS: NewsItem[] = [
     isAnnouncement: false,
   },
   {
+    id: "nc-united-competitive-identity-ucd-2025",
+    slug: "nc-united-competitive-identity-ucd-2025",
+    title: "NC United Establishes Competitive Identity on the National Stage",
+    subtitle:
+      "A 7–2 campaign at the 2025 Ultimate Club Duals confirmed NC United's growth in depth, consistency and national competitiveness.",
+    summary:
+      "Veteran leadership, impactful newcomers and measurable year-over-year improvement defined NC United's 2025 UCD Duals performance.",
+    href: "/news/nc-united-competitive-identity-ucd-2025",
+    date: "2025-09-25",
+    image: "/images/news/legacy/nc-united-ucd-2025/team-photo.png",
+    imagePosition: "center",
+    imageFit: "cover",
+    newsListBanner: true,
+    category: "NC UNITED BLUE",
+    categoryBadgeClass: "bg-[#17106d]",
+    readTime: "7 min read",
+    author: "NC United",
+    isAnnouncement: true,
+    excludeFromHomeCarousel: true,
+  },
+  {
     id: "nc-united-trains-uva-rtc-2025",
     slug: "nc-united-trains-uva-rtc-2025",
     title: "NC United Trains with University of Virginia Regional Training Center (RTC)",

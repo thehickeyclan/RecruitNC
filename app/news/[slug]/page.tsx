@@ -54,6 +54,7 @@ import { NcUnitedNwoaRefereePartnership2025Content } from "../content/nc-united-
 import { ClassOf2025CollegeCommitsContent } from "../content/class-of-2025-college-commits"
 import { TylerTracyJuniorPanAmGamesBronze2025Content } from "../content/tyler-tracy-junior-pan-am-games-bronze-2025"
 import { NcUnitedTrainsUvaRtc2025Content } from "../content/nc-united-trains-uva-rtc-2025"
+import { NcUnitedCompetitiveIdentityUcd2025Content } from "../content/nc-united-competitive-identity-ucd-2025"
 import { NchsaaArticleComments } from "@/components/nchsaa-article-comments"
 import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
 import { NewsSharePanel } from "@/components/news/news-share-panel"
@@ -66,6 +67,7 @@ import {
 } from "@/lib/content/aau-scholastic-duals-2026-profile-ids"
 
 const ANNOUNCEMENT_CONTENT: Record<string, () => JSX.Element> = {
+  "nc-united-competitive-identity-ucd-2025": () => <NcUnitedCompetitiveIdentityUcd2025Content />,
   "nc-united-trains-uva-rtc-2025": () => <NcUnitedTrainsUvaRtc2025Content />,
   "tyler-tracy-junior-pan-am-games-bronze-2025": () => <TylerTracyJuniorPanAmGamesBronze2025Content />,
   "class-of-2025-college-commits": () => <ClassOf2025CollegeCommitsContent />,
