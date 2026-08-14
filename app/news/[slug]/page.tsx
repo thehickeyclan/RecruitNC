@@ -33,6 +33,7 @@ import { ClassOf2026Top20CollegeProspectsContent } from "../content/class-of-202
 import { ClassOf2027TopSophomoresToWatchContent } from "../content/class-of-2027-top-sophomores-to-watch"
 import { ClassOf2026NcWomensWrestlingProspectsContent } from "../content/class-of-2026-nc-womens-wrestling-prospects"
 import { NorthCarolinaReady2025NhscaNationalsContent } from "../content/north-carolina-ready-2025-nhsca-nationals"
+import { NhscaSeedingAnalysisNcRise2025Content } from "../content/nhsca-seeding-analysis-nc-rise-2025"
 import { NchsaaArticleComments } from "@/components/nchsaa-article-comments"
 import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
 import { NewsSharePanel } from "@/components/news/news-share-panel"
@@ -45,6 +46,7 @@ import {
 } from "@/lib/content/aau-scholastic-duals-2026-profile-ids"
 
 const ANNOUNCEMENT_CONTENT: Record<string, () => JSX.Element> = {
+  "nhsca-seeding-analysis-nc-rise-2025": () => <NhscaSeedingAnalysisNcRise2025Content />,
   "north-carolina-ready-2025-nhsca-nationals": () => <NorthCarolinaReady2025NhscaNationalsContent />,
   "class-of-2026-nc-womens-wrestling-prospects": () => <ClassOf2026NcWomensWrestlingProspectsContent />,
   "class-of-2027-top-sophomores-to-watch": () => <ClassOf2027TopSophomoresToWatchContent />,
