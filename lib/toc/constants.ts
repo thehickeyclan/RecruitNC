@@ -224,8 +224,19 @@ export const TOC_WEIGH_IN_LINE = `${TOC_WEIGH_IN.headline} · ${TOC_WEIGH_IN.tim
 /** Public schedule — Friday weigh-in + first round; Saturday finishes brackets through finals. */
 export const TOC_SCHEDULE = {
   headline: "When to be there",
-  lead: "One official weigh-in only — 4:00 PM Friday night. No Saturday weigh-in. First-round bouts follow that evening; brackets play out Saturday with single-mat championship finals.",
+  lead: "The NC Mat begins revealing the field with the 117 lbs athletes on August 15. Additional weight classes will be announced on a rolling basis as each field is finalized. Championship weekend opens with one official weigh-in Friday at 4:00 PM, followed by first-round bouts that evening and single-mat finals Saturday.",
   athleteNote: "Invited wrestlers: one weigh-in Friday at 4:00 PM only — then first round Friday night. There is no second weigh-in Saturday.",
+  announcements: {
+    title: "The NC Mat Field Reveal",
+    subtitle: "Announcements begin August 15 and continue as weight-class fields are finalized",
+    rows: [
+      { time: "Sat · Aug 15", activity: "117 lbs athlete announcements begin" },
+      {
+        time: "Rolling",
+        activity: "Additional weight classes announced by The NC Mat as each field is finalized",
+      },
+    ],
+  },
   friday: {
     title: "Friday · September 18",
     subtitle: "One weigh-in at 4:00 PM · first round Friday night — two mats live",

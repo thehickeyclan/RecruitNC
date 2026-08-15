@@ -323,6 +323,12 @@ export default function AdminDashboard() {
                 <span className="text-sm font-semibold">NC United Calendar</span>
               </span>
             </HardLink>
+            <HardLink href="/admin/weekend-wars" className="block">
+              <span className="w-full h-20 bg-gradient-to-br from-[#4b2d05] to-[#7a4305] hover:from-[#7a4305] hover:to-[#4b2d05] text-[#F6A313] shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex font-bold border border-[#F6A313]/30">
+                <Calendar className="h-6 w-6" />
+                <span className="text-sm font-semibold">Weekend Wars RSVPs</span>
+              </span>
+            </HardLink>
             <HardLink href="/admin/store" className="block">
               <span className="w-full h-20 bg-gradient-to-br from-[#1a5f4a] to-[#145239] hover:from-[#145239] hover:to-[#1a5f4a] text-white shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex">
                 <ShoppingBag className="h-6 w-6" />

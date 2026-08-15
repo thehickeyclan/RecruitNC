@@ -25,6 +25,22 @@ export type MigrationCheck = {
 
 export const MIGRATION_CHECKS: MigrationCheck[] = [
   {
+    file: "nc-united-practice-rsvps.sql.txt",
+    title: "NC United practice RSVPs",
+    breaksWithout: "The Weekend Wars member RSVP form cannot save attendance or carpool responses.",
+    table: "nc_united_practice_rsvps",
+    columns: [
+      "event_slug",
+      "athlete_id",
+      "weight_class",
+      "high_school",
+      "wrestling_club",
+      "attending_saturday",
+      "attending_sunday",
+      "open_to_carpool",
+    ],
+  },
+  {
     file: "club-status.sql.txt",
     title: "Club status (open / closed / merged)",
     breaksWithout: "Clubs that have shut down stay on the map, so parents are sent to gyms that no longer exist.",

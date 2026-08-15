@@ -1,0 +1,33 @@
+-- NC United practice RSVPs — safe to run more than once.
+
+create table if not exists public.nc_united_practice_rsvps (
+  id uuid primary key default gen_random_uuid(),
+  event_slug text not null,
+  athlete_id uuid not null references public.athletes(id) on delete cascade,
+  athlete_name text not null,
+  weight_class text,
+  high_school text,
+  wrestling_club text,
+  attending_saturday boolean not null default false,
+  attending_sunday boolean not null default false,
+  open_to_carpool boolean not null default false,
+  created_at timestamptz not null default current_timestamp,
+  updated_at timestamptz not null default current_timestamp,
+  constraint nc_united_practice_rsvps_attending_check
+    check (attending_saturday or attending_sunday),
+  constraint nc_united_practice_rsvps_event_athlete_unique
+    unique (event_slug, athlete_id)
+);
+
+create index if not exists idx_nc_united_practice_rsvps_event
+  on public.nc_united_practice_rsvps(event_slug, created_at desc);
+
+alter table public.nc_united_practice_rsvps enable row level security;
+
+drop policy if exists "Service role full nc_united_practice_rsvps" on public.nc_united_practice_rsvps;
+create policy "Service role full nc_united_practice_rsvps"
+  on public.nc_united_practice_rsvps
+  for all
+  to service_role
+  using (true)
+  with check (true);

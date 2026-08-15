@@ -44,7 +44,7 @@ function DayTable({
 }
 
 export function TocScheduleTable() {
-  const { friday, saturday, lead } = TOC_SCHEDULE
+  const { announcements, friday, saturday, lead } = TOC_SCHEDULE
 
   return (
     <section id="schedule" className="py-12 sm:py-16 md:py-20 bg-[#f4f5f7] scroll-mt-20">
@@ -55,6 +55,13 @@ export function TocScheduleTable() {
         <p className="text-center text-muted-foreground text-sm sm:text-base mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed px-1">
           {lead}
         </p>
+        <div className="mb-8 sm:mb-10">
+          <DayTable
+            title={announcements.title}
+            subtitle={announcements.subtitle}
+            rows={announcements.rows}
+          />
+        </div>
         <TocWeighInCallout className="mb-8 sm:mb-10 max-w-2xl mx-auto" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
           <DayTable title={friday.title} subtitle={friday.subtitle} rows={friday.rows} />
