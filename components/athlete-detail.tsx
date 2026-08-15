@@ -40,8 +40,16 @@ import { PROFILE_DARK_THEME } from "@/lib/profile-dark-theme"
 import { ProfileViewStatsPanel } from "./profile-view-stats-panel"
 import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 
-/** Bio/summary paragraph section — kept in code but hidden while copy stays stale. */
-const SHOW_ATHLETE_BIO_SECTION = false
+/**
+ * Bio/summary paragraph section.
+ *
+ * Was hidden because some bios had gone stale, but hiding it site-wide punished the
+ * athletes who keep theirs current — Jake Amiott's mother updated his the day after Fargo
+ * and then reported the write-up missing, because the text saved fine and simply never
+ * rendered. A stale paragraph on some profiles is a smaller problem than no paragraph on
+ * any of them, and the section already hides itself when an athlete has no bio.
+ */
+const SHOW_ATHLETE_BIO_SECTION = true
 
 interface AthleteDetailProps {
   athlete: {
