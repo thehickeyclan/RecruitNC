@@ -2,6 +2,7 @@ import { Wallet } from "lucide-react"
 
 import { HardLink } from "@/components/hard-link"
 import type { ParentSpartanFundraisingAthleteRow } from "@/lib/parent-spartan-fundraising-totals"
+import { walletBalanceFromRow } from "@/lib/fundraising/wallet-balance"
 
 function formatUsd(cents: number): string {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100)
@@ -31,9 +32,7 @@ export function FundraisingAthleteWalletPanel({ row, firstName }: Props) {
 
   const reimb = row.reimbursementsPaidCents ?? 0
   const guildAlloc = row.guildAllocationsCents ?? 0
-  const net = row.netAfterReimbursementsCents ?? row.totalCents - reimb
-  const remainingAfterGuild = net - guildAlloc
-  const usedTotal = reimb + guildAlloc
+  const { availableCents: remainingAfterGuild, spentCents: usedTotal } = walletBalanceFromRow(row)
   const showCodeHint = !row.fundraisingCode || row.codeUnavailable
   const hubPresent = typeof hubRaised === "number"
 
@@ -114,11 +113,7 @@ export function FundraisingAthleteWalletPanel({ row, firstName }: Props) {
         </div>
         <div className="rounded-lg border border-white/10 bg-black/25 px-4 py-3 sm:py-4">
           <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-300/90">Available</p>
-          <p
-            className={`mt-1 text-2xl font-black tabular-nums tracking-tight sm:text-3xl ${
-              remainingAfterGuild < 0 ? "text-red-400" : "text-emerald-300"
-            }`}
-          >
+          <p className="mt-1 text-2xl font-black tabular-nums tracking-tight text-emerald-300 sm:text-3xl">
             {formatUsd(remainingAfterGuild)}
           </p>
           <p className="mt-1 text-[11px] leading-snug text-white/45">What&apos;s left after spending and reimbursements</p>

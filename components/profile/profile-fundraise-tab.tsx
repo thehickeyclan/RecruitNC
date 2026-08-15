@@ -4,6 +4,7 @@ import { ExpenseRequestSection } from "@/components/profile/expense-request-sect
 import { GuildCreditAllocationSection } from "@/components/profile/guild-credit-allocation-section"
 import { ProfileFundraiseThankYousSection } from "@/components/profile/profile-fundraise-thank-yous-section"
 import type { ProfileSpartanSupportersAthletePayload } from "@/app/api/profile/spartan-fundraising-supporters/route"
+import { walletBalanceFromRow } from "@/lib/fundraising/wallet-balance"
 import { Button } from "@/components/ui/button"
 import { Loader2, Wallet, TrendingUp, TrendingDown, UserMinus } from "lucide-react"
 
@@ -133,10 +134,8 @@ export function ProfileFundraiseTab({
                 const hubRaised = row.hubWindowRaisedCents
                 const hubGiftCount = row.hubWindowGiftCount
                 const reimb = row.reimbursementsPaidCents ?? 0
-                const net = row.netAfterReimbursementsCents ?? row.totalCents - reimb
                 const guildAlloc = row.guildAllocationsCents ?? 0
-                const available = net - guildAlloc
-                const spent = reimb + guildAlloc
+                const { availableCents: available, spentCents: spent } = walletBalanceFromRow(row)
                 const showSetupHint = !row.fundraisingCode || row.codeUnavailable
                 const linkMeta = linkedAthletes.find((a) => a.id === row.athleteId)
                 const showWalletRemove = Boolean(unlinkAthlete && linkMeta?.canUnlink)
@@ -170,11 +169,7 @@ export function ProfileFundraiseTab({
                       <p className="text-[11px] font-medium uppercase tracking-wider text-[#D3B574]/80">
                         Available
                       </p>
-                      <p
-                        className={`mt-0.5 text-2xl font-bold tabular-nums sm:text-3xl ${
-                          available < 0 ? "text-red-400" : "text-[#D3B574]"
-                        }`}
-                      >
+                      <p className="mt-0.5 text-2xl font-bold tabular-nums text-[#D3B574] sm:text-3xl">
                         {formatUsd(available)}
                       </p>
                     </div>
