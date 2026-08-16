@@ -30,9 +30,38 @@ const FAQ_ITEMS = [
     q: "How is NC United selecting athletes?",
     a: "We use the same philosophy as our RecruitNC rankings. We prioritize performance at college opens, national competition, quality of wins, NC United practice performance, and overall body of work. Most weights are built as elite eight-person fields; select deep weights may expand to 10 or 12 without enlarging the other brackets.",
   },
+  /**
+   * Eligibility / NCHSAA compliance block. Every citation below is quoted from the 2025-26 NCHSAA
+   * Handbook. Do not soften or paraphrase the rule text without re-checking the Handbook first —
+   * these answers exist to be read by someone trying to disqualify the event.
+   */
+  {
+    q: "Does competing in the Tournament of Champions affect NCHSAA eligibility?",
+    a: "No. TOC is an independent NC United event, not a scholastic competition, and it is held outside the NCHSAA wrestling season — Rule 4.14.1 sets the date of first practice at October 29 and the date of first match at November 10, well after our September dates. Wrestlers enter as individuals, unattached. NCHSAA Rule 2.2.13 defines an unattached athlete as one who is not representing a school team, and states directly: “The NCHSAA does not regulate unattached student-athletes.”",
+  },
+  {
+    q: "Is the Tournament of Champions an “all-star” event under NCHSAA rules?",
+    a: "No, and this is a definitional question rather than a matter of opinion. Rule 1.2.11(1)(d) makes a student ineligible in a sport for “participating on an all-star team or in an all-star game or bowl game that is not sanctioned by the administering organization of which the student’s school is a member.” The Handbook’s Application Note to 1.2.11 then defines that term through requirements joined by “and” — every element has to be present — one of which is that “one or both teams is composed of players selected from two or more regularly constituted teams.” TOC has no teams at all. It is an individual bracketed tournament: wrestlers enter individually, compete individually, place individually, and no team score is kept. Invitation is how the field is built; it does not create a team, and the rule turns on team composition rather than on selectivity.",
+  },
+  {
+    q: "Do wrestlers compete for a school or a team at TOC?",
+    a: "No. There are no school entries, no school rosters, no team scoring, and no school-versus-school result. Wrestlers do not compete in school uniforms and do not use school equipment or school transportation. Rule 1.2.2(d) provides that school uniforms and equipment, including transportation, may not be used for any outside organization competition or by athletes performing unattached during the academic school year, and Rule 2.2.13 requires an unattached athlete to assume his or her own expenses. Where an athlete attends school appears on profiles for identification only — the same way a club is listed — not as a competitive affiliation.",
+  },
+  {
+    q: "Does the Champion jacket affect amateur status?",
+    a: "We treat it under the amateur rule rather than as a souvenir, because the Handbook is explicit that items received in connection with athletic participation count as remuneration. Rule 1.2.11(1)(c) permits a student to accept a gift or merchandise provided three conditions are met together: the value stays within the Handbook’s per-season limit, the item is totally consumable and nontransferable or “labeled in a permanent manner (e.g., an engraved or monogrammed item),” and the item is approved by the student’s principal and the local superintendent. Every TOC champion jacket is permanently embroidered with NORTH CAROLINA, the event year, and CHAMPION, which satisfies the permanent-label condition. NC United provides each champion’s family written documentation of the award and its value so it can be presented to the principal and superintendent for the approval the rule requires.",
+  },
+  {
+    q: "Are there cash prizes for winning at TOC?",
+    a: "No. TOC awards no prize money and no performance-based compensation of any kind. Champions receive the embroidered jacket; placement is recognized on the podium with medals and awards.",
+  },
+  {
+    q: "Are the Caden Perry Warrior Scholarship or the Guild training awards based on how you place?",
+    a: "No, and that separation is deliberate. The Caden Perry Warrior Scholarship is awarded on character and response to adversity through an independent nomination and selection process, and the recipient does not have to compete in TOC at all. The Guild training awards are distributed by random drawing among eligible registrations, and those wrestlers likewise do not have to compete. Neither is tied to winning, placing, or any result on the mat. NCHSAA’s NIL policy (ATHL-008, Section 2.a) provides that an agreement “shall not condition the receipt, type, or extent of any compensation on the extent or quality of the student’s athletic performance,” and we keep every award we present clear of that line.",
+  },
   {
     q: "Will NC United coaches be cornering the athletes?",
-    a: "No. We encourage each athlete's club and/or high school coach to corner them throughout the tournament. If you need a coach, we're happy to help coordinate.",
+    a: "No. Each athlete's club coach corners them throughout the tournament — wrestlers come to TOC individually, with their own coach, not as part of a school or team group. If you need a club coach to corner you, we're happy to help coordinate.",
   },
   {
     q: "What makes the Tournament of Champions different?",
@@ -48,7 +77,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Will college coaches be there?",
-    a: "Yes. Credentialed college coaches, credentialed high school coaches, and tournament officials share one atrium lounge — live feeds from both mats, bracket updates, work tables, charging and Wi-Fi, hospitality on Saturday, recruiting guides for college coaches (delivered in advance and hard copy in the lounge on event day), and a print station for profiles and notes. Credentials required; it's built for coaches and officials working the event, not general spectators.",
+    a: "Yes. Credentialed college coaches, credentialed club coaches, and tournament officials share one atrium lounge — live feeds from both mats, bracket updates, work tables, charging and Wi-Fi, hospitality on Saturday, recruiting guides for college coaches (delivered in advance and hard copy in the lounge on event day), and a print station for profiles and notes. Credentials required; it's built for coaches and officials working the event, not general spectators.",
   },
   {
     q: "What is the Champion jacket?",

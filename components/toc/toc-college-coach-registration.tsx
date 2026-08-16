@@ -56,8 +56,8 @@ export function TocCollegeCoachRegistration() {
       <div className="rounded-md border border-[#C8A94A]/40 bg-[#C8A94A]/10 p-4 sm:col-span-2">
         <p className="text-sm font-bold uppercase tracking-[0.12em] text-[#F3D98B]">College coaches only</p>
         <p className="mt-1 text-sm leading-relaxed text-white/75">
-          Complimentary credentials are available only to college wrestling coaches and staff. High school and club
-          coach admission details will be announced separately.
+          Complimentary credentials are available only to college wrestling coaches and staff. Club coach admission
+          details will be announced separately.
         </p>
       </div>
       <div className="space-y-2">

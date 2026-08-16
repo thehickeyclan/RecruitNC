@@ -20,7 +20,7 @@ export function TocCollegeCoachSection() {
             Registered college staff receive tournament admission and access to the credentialed VIP coaches lounge.
           </p>
           <p className="mt-4 max-w-xl rounded-md border border-[#C8A94A]/40 bg-[#C8A94A]/10 px-4 py-3 text-sm font-semibold leading-relaxed text-[#F3D98B]">
-            High school and club coaches should not use this form. Their paid admission and credential details will be
+            Club coaches should not use this form. Their paid admission and credential details will be
             announced separately.
           </p>
           <div className="mt-6 grid gap-3 text-sm text-white/85">

@@ -27,7 +27,7 @@ export function TocNominationForm() {
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       return setError("A valid email is required")
     }
-    if (!school.trim()) return setError("High school is required")
+    if (!school.trim()) return setError("School is required")
     if (!weightClass) return setError("Select the weight you'd compete at")
     if (!gradYear) return setError("Graduation year is required")
 
@@ -108,7 +108,7 @@ export function TocNominationForm() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="toc-school">High school *</Label>
+          <Label htmlFor="toc-school">School *</Label>
           <Input id="toc-school" value={school} onChange={(e) => setSchool(e.target.value)} required />
         </div>
         <div className="space-y-2">

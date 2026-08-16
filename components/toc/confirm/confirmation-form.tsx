@@ -112,7 +112,7 @@ export function ConfirmationForm({
         <dl className="grid grid-cols-1 sm:grid-cols-2 gap-0 divide-y sm:divide-y-0 sm:divide-x divide-[#0B1D3A]/10">
           <RegistrationFact label="Athlete" value={athleteName} />
           <RegistrationFact label="Invited weight" value={invitedWeightClass ? `${invitedWeightClass} lbs` : `${defaultWeight} lbs`} accent />
-          <RegistrationFact label="High school" value={athleteSchool ?? "On file"} />
+          <RegistrationFact label="School" value={athleteSchool ?? "On file"} />
           <RegistrationFact label="Club" value={athleteClub ?? "On file"} />
         </dl>
       </div>

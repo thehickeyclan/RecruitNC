@@ -36,7 +36,7 @@ export function AthleteVerificationCard({ data, onConfirm, onReject }: Props) {
               <dd className="font-semibold text-[#0B1D3A]">{athlete.name}</dd>
             </div>
             <div>
-              <dt className="text-muted-foreground">High school</dt>
+              <dt className="text-muted-foreground">School</dt>
               <dd className="font-semibold text-[#0B1D3A]">{athlete.school ?? "—"}</dd>
             </div>
             <div>

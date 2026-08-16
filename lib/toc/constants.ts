@@ -445,7 +445,7 @@ export const TOC_VENUE_FEATURES = [
 export const TOC_VENUE_LOUNGES = {
   eyebrow: "Dedicated lounge",
   headline: "Credentialed coaches and officials — one room",
-  lead: "One atrium room at Hope Apex is reserved for credentialed college coaches, credentialed high school coaches, and tournament officials — credentials required, not open to general spectators.",
+  lead: "One atrium room at Hope Apex is reserved for credentialed college coaches, credentialed club coaches, and tournament officials — credentials required, not open to general spectators.",
   title: "Coaches & Officials Lounge",
   description:
     "Check in at credentials for your lanyard. Comfortable seating and work tables, charging and Wi-Fi, live feeds from both mats with bracket updates, hospitality on Saturday, recruiting guides for college coaches (sent in advance and available as hard copy in the lounge on event day), a print station for profiles and notes, and space for officials to store gear and regroup between sessions.",
