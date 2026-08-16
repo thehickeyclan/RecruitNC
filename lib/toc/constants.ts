@@ -180,11 +180,11 @@ export const TOC_COMPETITION_MATS = {
   eyebrow: "Competition surface",
   headline: "Purpose-built Resilite mats ordered for Tournament of Champions.",
   partnerLabel: "Mats by Resilite",
-  rendering: {
-    src: "/images/toc/resilite-nc-united-mat-rendering.png",
-    alt: "Rendering of the NC United navy blue 42 by 42 Resilite wrestling mat with white NC United logo at center",
-    width: 642,
-    height: 602,
+  photo: {
+    src: "/images/toc/tournament-of-champions-resilite-mat.jpeg",
+    alt: "The actual navy blue Tournament of Champions Resilite wrestling mat with the white NC United logo at center",
+    width: 2400,
+    height: 1800,
   },
   resiliteLogo: {
     src: "/images/toc/resilite-logo.png",
@@ -224,13 +224,13 @@ export const TOC_WEIGH_IN_LINE = `${TOC_WEIGH_IN.headline} · ${TOC_WEIGH_IN.tim
 /** Public schedule — Friday weigh-in + first round; Saturday finishes brackets through finals. */
 export const TOC_SCHEDULE = {
   headline: "When to be there",
-  lead: "The NC Mat begins revealing the field with the 117 lbs athletes on August 15. Additional weight classes will be announced on a rolling basis as each field is finalized. Championship weekend opens with one official weigh-in Friday at 4:00 PM, followed by first-round bouts that evening and single-mat finals Saturday.",
+  lead: "The NC Mat begins revealing the field with the 117 lbs athletes on August 16. Additional weight classes will be announced on a rolling basis as each field is finalized. Championship weekend opens with one official weigh-in Friday at 4:00 PM, followed by first-round bouts that evening and single-mat finals Saturday.",
   athleteNote: "Invited wrestlers: one weigh-in Friday at 4:00 PM only — then first round Friday night. There is no second weigh-in Saturday.",
   announcements: {
     title: "The NC Mat Field Reveal",
-    subtitle: "Announcements begin August 15 and continue as weight-class fields are finalized",
+    subtitle: "Announcements begin August 16 and continue as weight-class fields are finalized",
     rows: [
-      { time: "Sat · Aug 15", activity: "117 lbs athlete announcements begin" },
+      { time: "Sun · Aug 16", activity: "117 lbs athlete announcements begin" },
       {
         time: "Rolling",
         activity: "Additional weight classes announced by The NC Mat as each field is finalized",
@@ -346,6 +346,14 @@ export const TOC_FOUNDING_PARTNERS = {
   ctaHref: "#sponsor-inquiry",
   partners: [
     {
+      name: "Cronin Customs",
+      href: null,
+      logoUrl: "/images/toc/sponsors/cronin-customs-premier-sponsor.png",
+      logoTheme: "dark" as const,
+      tier: "Premier Sponsor",
+      tagline: "Custom wrestling shoes will be awarded during the Tournament of Champions Giveaway Hour.",
+    },
+    {
       name: "The Wrestling Guild",
       href: "https://www.wrestlingguild.com/",
       logoUrl: "/images/toc/sponsors/the-guild.png",
@@ -379,6 +387,13 @@ export const TOC_FOUNDING_PARTNERS = {
       tier: "Athlete Safety Partner",
       ecosystemNote: "Products donated for use throughout the Tournament of Champions.",
       tagline: "Defense Soap is providing body wipes to support athlete hygiene and help reduce skin-contact risk during tournament competition.",
+    },
+    {
+      name: "Invictus Wrestling Co.",
+      href: null,
+      logoUrl: "/images/toc/sponsors/invictus-wrestling-co.png",
+      logoTheme: "light" as const,
+      tagline: "Limited-edition gear and featured wrestling apparel are coming to championship weekend in Apex.",
     },
   ],
 } as const

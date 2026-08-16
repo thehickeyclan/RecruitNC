@@ -18,7 +18,12 @@ export function TocFoundingPartners() {
         {partners.map((partner) => (
           <li key={partner.name}>
             <article className="flex h-full flex-col overflow-hidden rounded-sm border-2 border-[#0B1D3A]/10 transition-colors hover:border-[#CC0000]/40">
-              <a href={partner.href} target="_blank" rel="noopener noreferrer" className="group">
+              <a
+                href={partner.href ?? undefined}
+                target={partner.href ? "_blank" : undefined}
+                rel={partner.href ? "noopener noreferrer" : undefined}
+                className="group"
+              >
                 <div
                   className={`flex items-center justify-center px-6 py-8 ${
                     partner.logoTheme === "dark" ? "bg-[#060f1f]" : "bg-white"
@@ -59,9 +64,11 @@ export function TocFoundingPartners() {
                       <p className="text-xs text-[#CC0000] font-semibold mt-0.5">{partner.ecosystemNote}</p>
                     ) : null}
                   </div>
-                  <a href={partner.href} target="_blank" rel="noopener noreferrer" aria-label={`Visit ${partner.name}`}>
-                    <ExternalLink className="h-4 w-4 shrink-0 text-[#CC0000] opacity-70 hover:opacity-100 mt-0.5" aria-hidden />
-                  </a>
+                  {partner.href ? (
+                    <a href={partner.href} target="_blank" rel="noopener noreferrer" aria-label={`Visit ${partner.name}`}>
+                      <ExternalLink className="h-4 w-4 shrink-0 text-[#CC0000] opacity-70 hover:opacity-100 mt-0.5" aria-hidden />
+                    </a>
+                  ) : null}
                 </div>
                 <p className="text-sm text-muted-foreground leading-relaxed">{partner.tagline}</p>
                 {"awardDetails" in partner && partner.awardDetails ? (

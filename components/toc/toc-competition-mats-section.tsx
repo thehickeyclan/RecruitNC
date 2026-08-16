@@ -45,11 +45,11 @@ export function TocCompetitionMatsSection() {
               style={{ backgroundColor: TOC_BRAND.navy }}
             >
               <Image
-                src={TOC_COMPETITION_MATS.rendering.src}
-                alt={TOC_COMPETITION_MATS.rendering.alt}
-                width={TOC_COMPETITION_MATS.rendering.width}
-                height={TOC_COMPETITION_MATS.rendering.height}
-                className="h-auto w-full rounded-xl bg-white object-contain"
+                src={TOC_COMPETITION_MATS.photo.src}
+                alt={TOC_COMPETITION_MATS.photo.alt}
+                width={TOC_COMPETITION_MATS.photo.width}
+                height={TOC_COMPETITION_MATS.photo.height}
+                className="h-auto w-full rounded-xl object-cover"
                 sizes="(min-width: 1024px) 42vw, 100vw"
               />
             </div>

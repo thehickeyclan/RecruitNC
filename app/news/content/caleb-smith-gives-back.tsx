@@ -115,7 +115,7 @@ export function CalebSmithGivesBackContent() {
         </p>
       </section>
 
-      <section>
+      <section id="greensboro-momentum" className="scroll-mt-24">
         <h2>Momentum in Greensboro</h2>
         <p>
           There is also something very real happening at Greensboro College. The energy around the program feels

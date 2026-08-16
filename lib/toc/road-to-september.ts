@@ -28,10 +28,10 @@ export const TOC_ROAD_MILESTONES: TocRoadMilestone[] = [
     atMs: Date.parse("2026-07-24T08:00:00-04:00"),
   },
   {
-    dateLabel: "Sun · Aug 9",
+    dateLabel: "Sun · Aug 16",
     label: "Field reveals begin",
     detail: "The field, revealed weight class by weight class.",
-    atMs: Date.parse("2026-08-09T08:00:00-04:00"),
+    atMs: Date.parse("2026-08-16T08:00:00-04:00"),
   },
   {
     dateLabel: "Week of Aug 24",

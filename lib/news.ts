@@ -100,6 +100,29 @@ export function newsShareUsesHeroCropOnly(
  */
 const ALL_NEWS: NewsItem[] = [
   {
+    id: "united-ascent-2026-08-16",
+    slug: "united-ascent-2026-08-16",
+    title: "United Ascent: Athlete Reveals Begin, TOC Partners Grow & Caleb Smith Gives Back",
+    subtitle: "Vol. 1, No. 5 of North Carolina wrestling news.",
+    summary:
+      "The NC Mat begins Tournament of Champions athlete reveals, new partners and college programs join the event, Caleb Smith gives back, and Super 32 registration opens.",
+    href: "/news/united-ascent-2026-08-16",
+    date: "2026-08-16",
+    image: "/images/united-ascent/2026-08-16-wide.png",
+    homeImage: "/images/united-ascent/2026-08-16-wide.png",
+    imagePosition: "center",
+    imageFit: "contain",
+    imageBannerBgClass: "bg-[#e8ddc8]",
+    newsListBanner: true,
+    category: "UNITED ASCENT",
+    categoryBadgeClass: "bg-[#1a1a1a]",
+    readTime: "8 min read",
+    author: "United Ascent Staff",
+    shareHeroCropOnly: true,
+    shareStoryImage: "/images/united-ascent/2026-08-16-wide.png",
+    isAnnouncement: true,
+  },
+  {
     id: "caleb-smith-gives-back",
     slug: "caleb-smith-gives-back",
     title: "Beyond the Podium: Caleb Smith's Impact at Home",

@@ -1,6 +1,7 @@
 import { Eye, GraduationCap, Radio, Sparkles, Trophy } from "lucide-react"
 import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass, tocSectionClass } from "@/components/toc/toc-theme"
 import { TocFoundingPartners } from "@/components/toc/toc-founding-partners"
+import { TocSponsorLogoTicker } from "@/components/toc/toc-sponsor-logo-ticker"
 import { TocSponsorForm } from "@/components/toc/toc-sponsor-form"
 import { TOC_CONTACT_EMAIL, TOC_SPONSORSHIP, TOC_SPONSOR_TIERS } from "@/lib/toc/constants"
 
@@ -11,6 +12,16 @@ export function TocSponsorSection() {
     <section id="sponsors" className={`relative scroll-mt-20 bg-[#f4f5f7] border-t-4 border-[#CC0000] ${tocSectionClass()}`}>
       <TocPatrioticBar className="absolute top-0 left-0 right-0" />
       <div className="container mx-auto w-full px-4 sm:px-6 max-w-6xl pt-4">
+        <div className="mb-8 overflow-hidden rounded-sm bg-[#0B1D3A] px-5 py-6 shadow-lg shadow-[#0B1D3A]/10 sm:px-6 sm:py-8">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#D3B574] sm:text-xs">
+            Official Tournament Partners
+          </p>
+          <p className="mt-1.5 max-w-2xl text-sm text-white/60">
+            Proud partners helping build North Carolina&apos;s premier championship stage.
+          </p>
+          <TocSponsorLogoTicker className="mt-5" />
+        </div>
+
         <TocFoundingPartners />
 
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-start lg:gap-12">
