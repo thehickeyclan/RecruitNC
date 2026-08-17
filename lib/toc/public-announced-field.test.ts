@@ -11,6 +11,7 @@ const state = {
   publication: [] as Row[],
   invitations: [] as Row[],
   athletes: [] as Row[],
+  placements: [] as Row[],
   /** Every (table, columns) pair the module asked for, so tests can assert nothing broad was selected. */
   selects: [] as { table: string; columns: string }[],
 }
@@ -47,12 +48,15 @@ vi.mock("@/lib/supabase/admin", () => ({
       if (table === "toc_field_publication_status") return makeQuery(table, state.publication)
       if (table === "toc_invitations") return makeQuery(table, state.invitations)
       if (table === "athletes") return makeQuery(table, state.athletes)
+      if (table === "nhsca_placements") return makeQuery(table, state.placements)
       throw new Error(`unexpected table ${table}`)
     },
   }),
 }))
 
 import {
+  FORBIDDEN_SUMMARY_COLUMNS,
+  formatPlacement,
   getPublicAnnouncedWeight,
   hasAnyAnnouncedWeight,
   listPublicWeightTiles,
@@ -61,6 +65,7 @@ import {
 
 beforeEach(() => {
   state.selects = []
+  state.placements = []
   state.publication = [
     // 117 released to the public.
     { weight_class: 117, announced_at: "2026-08-14T18:00:00Z", athlete_field_locked: true },
@@ -122,7 +127,35 @@ describe("public payload contains nothing private", () => {
   it("exposes only the agreed keys per athlete", async () => {
     const field = await getPublicAnnouncedWeight(117)
     for (const a of field?.athletes ?? []) {
-      expect(Object.keys(a).sort()).toEqual(["athleteId", "club", "graduationYear", "name", "photoUrl"])
+      expect(Object.keys(a).sort()).toEqual([
+        "athleteId",
+        "club",
+        "collegeCommit",
+        "graduationYear",
+        "name",
+        "photoUrl",
+        "results",
+      ])
+    }
+  })
+
+  it("never selects the prose bio columns, which embed the athlete's school", async () => {
+    // Real data: "Liam Myles is a wrestler at Union Pines High School..." — unsanitizable, so never queried.
+    await getPublicAnnouncedWeight(117)
+    const athleteSelects = state.selects.filter((s) => s.table === "athletes").map((s) => s.columns)
+    for (const columns of athleteSelects) {
+      for (const forbidden of [...FORBIDDEN_SUMMARY_COLUMNS, "highschool"]) {
+        expect(columns).not.toContain(forbidden)
+      }
+    }
+  })
+
+  it("does not publish rankings, which would undercut 'not seeded'", async () => {
+    await getPublicAnnouncedWeight(117)
+    const athleteSelects = state.selects.filter((s) => s.table === "athletes").map((s) => s.columns)
+    for (const columns of athleteSelects) {
+      expect(columns).not.toContain("prospect_ranking")
+      expect(columns).not.toContain("rankings")
     }
   })
 
@@ -174,6 +207,113 @@ describe("field contents", () => {
       "Kristopher Kerr Jr",
       "Alexander Moody",
     ])
+  })
+})
+
+describe("summary fields", () => {
+  beforeEach(() => {
+    state.invitations = [
+      { athlete_id: "c1", weight_class: 117, status: "confirmed", photo_release_accepted: true },
+      { athlete_id: "c2", weight_class: 117, status: "confirmed", photo_release_accepted: true },
+    ]
+    state.athletes = [
+      {
+        id: "c1",
+        name: "Approved Commit",
+        graduationyear: 2027,
+        wrestlingClub: "RAW",
+        photourl: null,
+        college: "Binghamton",
+        commitment_approved: true,
+        nhsca_2026_placement: "3rd",
+        super_32_2025_placement: "Round of 16",
+        nhsca_2025_placement: "5th",
+        nhsca_2024_placement: "2nd",
+        bio: "Wrestles at Union Pines High School",
+      },
+      {
+        id: "c2",
+        name: "Unapproved Commit",
+        graduationyear: 2028,
+        wrestlingClub: null,
+        photourl: null,
+        college: "Wishful State",
+        commitment_approved: false,
+      },
+    ]
+  })
+
+  it("publishes an approved commitment and withholds an unapproved one", async () => {
+    const field = await getPublicAnnouncedWeight(117)
+    const approved = field?.athletes.find((a) => a.name === "Approved Commit")
+    const unapproved = field?.athletes.find((a) => a.name === "Unapproved Commit")
+    expect(approved?.collegeCommit).toBe("Binghamton")
+    expect(unapproved?.collegeCommit).toBeNull()
+  })
+
+  it("lists national results newest first and caps the count", async () => {
+    const field = await getPublicAnnouncedWeight(117)
+    const a = field?.athletes.find((x) => x.name === "Approved Commit")
+    expect(a?.results).toEqual(["2026 NHSCA 3rd", "2025 Super 32 Round of 16", "2025 NHSCA 5th"])
+  })
+
+  it("returns no results rather than inventing them when the athlete has none", async () => {
+    const field = await getPublicAnnouncedWeight(117)
+    expect(field?.athletes.find((a) => a.name === "Unapproved Commit")?.results).toEqual([])
+  })
+
+  it("keeps school names out of the payload even when the source row carries a bio", async () => {
+    const field = await getPublicAnnouncedWeight(117)
+    const serialized = JSON.stringify(field).toLowerCase()
+    expect(serialized).not.toContain("union pines")
+    expect(serialized).not.toContain("high school")
+  })
+})
+
+describe("national results from nhsca_placements", () => {
+  beforeEach(() => {
+    state.placements = [
+      { athlete_id: "a1", year: 2025, placement: "6", high_school: "Davie", seed: 2 },
+      { athlete_id: "a1", year: 2026, placement: "4", high_school: "Davie", seed: 1 },
+    ]
+  })
+
+  it("formats and orders newest first", async () => {
+    const field = await getPublicAnnouncedWeight(117)
+    const wilson = field?.athletes.find((a) => a.name === "Zeb Wilson")
+    expect(wilson?.results).toEqual(["2026 NHSCA 4th", "2025 NHSCA 6th"])
+  })
+
+  it("never selects high_school or seed from the placements table", async () => {
+    await getPublicAnnouncedWeight(117)
+    const sel = state.selects.filter((s) => s.table === "nhsca_placements").map((s) => s.columns)
+    expect(sel.length).toBeGreaterThan(0)
+    for (const columns of sel) {
+      expect(columns).not.toContain("high_school")
+      expect(columns).not.toContain("seed")
+      expect(columns).not.toContain("*")
+    }
+  })
+
+  it("keeps the placements school out of the payload", async () => {
+    const field = await getPublicAnnouncedWeight(117)
+    expect(JSON.stringify(field)).not.toContain("Davie")
+  })
+})
+
+describe("formatPlacement", () => {
+  it("turns a bare placing into an ordinal", () => {
+    expect(formatPlacement("4")).toBe("4th")
+    expect(formatPlacement("1")).toBe("1st")
+    expect(formatPlacement("2")).toBe("2nd")
+    expect(formatPlacement("3")).toBe("3rd")
+    expect(formatPlacement("11")).toBe("11th")
+    expect(formatPlacement("22")).toBe("22nd")
+  })
+
+  it("leaves non-numeric placings alone", () => {
+    expect(formatPlacement("Round of 16")).toBe("Round of 16")
+    expect(formatPlacement("3rd")).toBe("3rd")
   })
 })
 

@@ -31,6 +31,107 @@ export type PublicFieldAthlete = {
   club: string | null
   /** Null when the athlete has no photo or did not accept the photo release. */
   photoUrl: string | null
+  /** College name, only once staff approved the commitment. */
+  collegeCommit: string | null
+  /**
+   * Short national-event results, e.g. "2025 NHSCA 3rd". National events only — see
+   * {@link buildPublicResults} for why state and school results are excluded.
+   */
+  results: string[]
+}
+
+/**
+ * Columns that read like a good summary source and must never be used on this page: both embed the athlete's
+ * school in free text ("Liam Myles is a wrestler at Union Pines High School…"). TOC wrestlers compete unattached,
+ * so anything school-identifying is out, and prose fields cannot be sanitized reliably.
+ */
+export const FORBIDDEN_SUMMARY_COLUMNS = ["bio", "bio_headline", "achievements", "additional_achievements"] as const
+
+/**
+ * Per-athlete placement columns on `athletes`. Kept as a fallback because they are unpopulated for the current
+ * field — the live data lives in `nhsca_placements` — but they cost nothing and some older rows carry them.
+ */
+const PLACEMENT_COLUMNS = [
+  { column: "nhsca_2026_placement", label: "2026 NHSCA" },
+  { column: "super_32_2025_placement", label: "2025 Super 32" },
+  { column: "nhsca_2025_placement", label: "2025 NHSCA" },
+  { column: "super_32_2024_placement", label: "2024 Super 32" },
+  { column: "nhsca_2024_placement", label: "2024 NHSCA" },
+] as const
+
+/** At most this many result lines per athlete — the card is a summary, not a résumé. */
+const MAX_PUBLIC_RESULTS = 3
+
+/** "4" reads as a stray number under a photo; "4th" reads as a finish. */
+export function formatPlacement(raw: string): string {
+  const n = Number(raw)
+  if (!Number.isInteger(n) || n < 1 || n > 99) return raw
+  const rem100 = n % 100
+  if (rem100 >= 11 && rem100 <= 13) return `${n}th`
+  const suffix = { 1: "st", 2: "nd", 3: "rd" }[n % 10] ?? "th"
+  return `${n}${suffix}`
+}
+
+function buildPublicResults(row: Record<string, unknown>): string[] {
+  const out: string[] = []
+  for (const { column, label } of PLACEMENT_COLUMNS) {
+    if (out.length >= MAX_PUBLIC_RESULTS) break
+    const raw = row[column]
+    const value = typeof raw === "string" ? raw.trim() : typeof raw === "number" ? String(raw) : ""
+    if (!value) continue
+    out.push(`${label} ${value}`)
+  }
+  return out
+}
+
+/**
+ * National-event finishes from `nhsca_placements`, newest first.
+ *
+ * Two columns on that table are off limits and must never enter the select: `high_school`, for the same reason
+ * as everywhere else on this page, and `seed` — an NHSCA seed is still a seed, and this page states the TOC
+ * field is unseeded. Only rows with an actual placement are published; a losing record is not a "result" worth
+ * putting under an athlete's photo.
+ */
+async function fetchNationalResultsByAthleteId(athleteIds: string[]): Promise<Map<string, string[]>> {
+  const out = new Map<string, string[]>()
+  if (athleteIds.length === 0) return out
+
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from("nhsca_placements")
+    .select("athlete_id, year, tournament_name, placement, division")
+    .in("athlete_id", athleteIds)
+    .not("placement", "is", null)
+
+  if (error) {
+    console.warn("[toc-public-field] national results lookup failed:", error.message)
+    return out
+  }
+
+  type Row = { athlete_id?: string | null; year?: number | null; placement?: string | number | null }
+  const byAthlete = new Map<string, Row[]>()
+  for (const raw of (data ?? []) as Row[]) {
+    const id = typeof raw.athlete_id === "string" ? raw.athlete_id : ""
+    if (!id) continue
+    byAthlete.set(id, [...(byAthlete.get(id) ?? []), raw])
+  }
+
+  for (const [id, rows] of byAthlete) {
+    const lines = rows
+      .slice()
+      .sort((a, b) => Number(b.year ?? 0) - Number(a.year ?? 0))
+      .map((r) => {
+        const placement = typeof r.placement === "number" ? String(r.placement) : (r.placement ?? "").toString().trim()
+        if (!placement) return null
+        const year = Number(r.year) || null
+        return `${year ? `${year} ` : ""}NHSCA ${formatPlacement(placement)}`
+      })
+      .filter((l): l is string => Boolean(l))
+      .slice(0, MAX_PUBLIC_RESULTS)
+    if (lines.length > 0) out.set(id, lines)
+  }
+
+  return out
 }
 
 export type PublicAnnouncedWeight = {
@@ -138,17 +239,32 @@ async function fetchPublicAthletesForWeight(weightClass: number): Promise<Public
   const athleteIds = [...releaseByAthleteId.keys()]
   if (athleteIds.length === 0) return []
 
-  // No `highschool` in this select: the public field never identifies an athlete by school.
+  // No `highschool` here, and none of FORBIDDEN_SUMMARY_COLUMNS: the public field never identifies an athlete
+  // by school, and the prose bio fields embed the school name.
   // `wrestlingClub` is camelCase in Postgres and must stay quoted, otherwise it resolves lowercased and 404s.
   const { data: athletes, error: athleteError } = await admin
     .from("athletes")
-    .select('id, name, graduationyear, "wrestlingClub", photourl, headshot_url')
+    .select(
+      [
+        "id",
+        "name",
+        "graduationyear",
+        '"wrestlingClub"',
+        "photourl",
+        "headshot_url",
+        "college",
+        "commitment_approved",
+        ...PLACEMENT_COLUMNS.map((p) => p.column),
+      ].join(", "),
+    )
     .in("id", athleteIds)
 
   if (athleteError) {
     console.warn("[toc-public-field] athlete lookup failed:", athleteError.message)
     return []
   }
+
+  const nationalResults = await fetchNationalResultsByAthleteId(athleteIds)
 
   const out: PublicFieldAthlete[] = []
   for (const raw of athletes ?? []) {
@@ -171,12 +287,19 @@ async function fetchPublicAthletesForWeight(weightClass: number): Promise<Public
     const rawPhoto = headshot || profilePhoto
     const club = typeof row.wrestlingClub === "string" ? row.wrestlingClub.trim() : ""
 
+    const record = raw as unknown as Record<string, unknown>
+    const collegeRaw = typeof record.college === "string" ? record.college.trim() : ""
+    // An unapproved commitment is a claim staff have not verified — do not publish it.
+    const collegeCommit = record.commitment_approved === true && collegeRaw ? collegeRaw : null
+
     out.push({
       athleteId: id,
       name,
       graduationYear: typeof row.graduationyear === "number" ? row.graduationyear : null,
       club: club || null,
       photoUrl: photoReleased && rawPhoto ? rawPhoto : null,
+      collegeCommit,
+      results: nationalResults.get(id) ?? buildPublicResults(record),
     })
   }
 
