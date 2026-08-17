@@ -133,6 +133,15 @@ function mapAthleteRow(athlete: Record<string, unknown>, collegesMap: Map<string
     college: collegeName,
     college_id: athlete.college_id != null ? String(athlete.college_id) : null,
     division,
+    // Both of these were selected-but-dropped here, so ProfessionalCommitmentCard always showed "TBD".
+    college_weight_class:
+      athlete.college_weight_class != null && String(athlete.college_weight_class).trim() !== ""
+        ? String(athlete.college_weight_class)
+        : undefined,
+    collegeLogoUrl:
+      typeof athlete.collegeLogoUrl === "string" && athlete.collegeLogoUrl.trim() !== ""
+        ? athlete.collegeLogoUrl.trim()
+        : undefined,
     graduationyear: Number(athlete.graduationyear) || 0,
     photourl: photoUrl,
     photoUrl,
@@ -240,10 +249,10 @@ export async function fetchCommitmentAthletes(
     throw new Error(error?.message ?? "Failed to fetch athletes")
   }
 
-  const collegeIds = [...new Set((data as Record<string, unknown>[]).map((a) => a.college_id).filter(Boolean))] as string[]
+  const collegeIds = [...new Set((data as unknown as Record<string, unknown>[]).map((a) => a.college_id).filter(Boolean))] as string[]
   const collegesMap = collegeIds.length > 0 ? await getCollegesByIds(supabase, collegeIds) : new Map()
 
-  let athletes = (data as Record<string, unknown>[]).map((row) => mapAthleteRow(row, collegesMap))
+  let athletes = (data as unknown as Record<string, unknown>[]).map((row) => mapAthleteRow(row, collegesMap))
 
   if (divisionFilter && divisionFilter !== "all") {
     athletes = athletes.filter((a) => matchesDivisionFilter(a.division, divisionFilter))
