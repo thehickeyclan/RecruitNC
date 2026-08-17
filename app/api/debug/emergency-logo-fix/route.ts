@@ -23,7 +23,7 @@ export async function POST() {
       {
         entity_name: 'NC State University',
         entity_type: 'college',
-        logo_url: '/wolfpack-logo.png',
+        logo_url: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/fe5ixmej-1745958547259.png",
         division: 'NCAA D1'
       },
       {
@@ -132,7 +132,7 @@ export async function POST() {
       },
       {
         name: 'NC State Logo',
-        file_path: '/wolfpack-logo.png',
+        file_path: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/fe5ixmej-1745958547259.png",
         file_type: 'image/png',
         entity_type: 'college',
         entity_name: 'NC State University'

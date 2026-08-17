@@ -16,6 +16,10 @@ export type CommitmentAthleteListItem = {
   highschool: string
   college: string
   college_id: string | null
+  /** Weight the athlete projects at in college — ProfessionalCommitmentCard shows "TBD" without it. */
+  college_weight_class?: string
+  /** Resolved college mark. Empty on the athlete row, so it is filled from logo_mappings after fetch. */
+  collegeLogoUrl?: string
   division: string
   graduationyear: number
   photourl: string
@@ -69,6 +73,7 @@ export type CommitmentStats = {
 
 const ATHLETE_LIST_SELECT = `
   id, name, highschool, college, college_id,
+  college_weight_class, "collegeLogoUrl",
   graduationyear, photourl, commitmentPhotoUrl,
   weightclass, wrestlingClub,
   achievements, additional_achievements,

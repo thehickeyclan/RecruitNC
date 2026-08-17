@@ -13,24 +13,32 @@ export const COLLEGE_DIRECT_LOGO_URLS: Record<string, string> = {
     "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/b9jnnu11-1745955862533.png",
   "app state":
     "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/b9jnnu11-1745955862533.png",
-  "unc chapel hill": "/UNC_Chapel_Hill_Logo.png",
-  "university of north carolina": "/UNC_Chapel_Hill_Logo.png",
-  "university of north carolina at chapel hill": "/UNC_Chapel_Hill_Logo.png",
-  "nc state": "/wolfpack-logo.png",
-  "north carolina state": "/wolfpack-logo.png",
-  "north carolina state university": "/wolfpack-logo.png",
-  "campbell university": "/campbell-university-seal.png",
-  campbell: "/campbell-university-seal.png",
-  "queens university": "/queens-university-shield.png",
-  queens: "/queens-university-shield.png",
-  "belmont abbey": "/belmont-abbey-architectural-detail.png",
-  "belmont abbey college": "/belmont-abbey-architectural-detail.png",
+  "unc chapel hill": "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/Uigu95m8-1745952038636.png",
+  "university of north carolina":
+    "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/Uigu95m8-1745952038636.png",
+  "university of north carolina at chapel hill":
+    "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/Uigu95m8-1745952038636.png",
+  "nc state": "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/fe5ixmej-1745958547259.png",
+  "north carolina state":
+    "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/fe5ixmej-1745958547259.png",
+  "north carolina state university":
+    "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/fe5ixmej-1745958547259.png",
+  "campbell university":
+    "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/hQ12r1UqPiFiiEG_7lrvU-Campbell.png",
+  campbell: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/hQ12r1UqPiFiiEG_7lrvU-Campbell.png",
+  // No logo_mappings row for Queens yet, and /queens-university-shield.png is an AI-generated British royal
+  // coat of arms reading "QUEEN UNIVERSITY". Better to render the name than the wrong crest.
+  "belmont abbey":
+    "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logos/college/Belmont%20Abbey%20College-1755181484888.jpeg",
+  "belmont abbey college":
+    "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logos/college/Belmont%20Abbey%20College-1755181484888.jpeg",
   "unc pembroke":
     "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/vaddsdmo-1745958227949.png",
   "university of north carolina at pembroke":
     "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/vaddsdmo-1745958227949.png",
   uncp: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/vaddsdmo-1745958227949.png",
-  "greensboro college": "/Greensboro-College-Seal.png",
+  "greensboro college":
+    "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/o6LgFYqZjYR2MnZou4ydo-Greensboro%20College.png",
   // Public file was never shipped; use the same blob mark as TOC confirmed colleges.
   "roanoke college":
     "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/-i2rnrys-1745958901725.png",
@@ -108,21 +116,29 @@ export function getDirectEntityLogoUrl(entityType: string, entityName: string): 
   return null
 }
 
-async function lookupLogoInDatabase(entityType: string, entityName: string): Promise<string | null> {
+/** Exact (case-insensitive) name match in logo_mappings — the highest-trust source: an admin typed it. */
+async function lookupExactLogoInDatabase(entityType: string, entityName: string): Promise<string | null> {
+  const normalizedType = normalizeEntityType(entityType)
+  const canonicalName = normalizeEntityName(entityName)
+  if (!canonicalName) return null
+
+  const { data: exactMatch } = await createAdminClient()
+    .from("logo_mappings")
+    .select("logo_url")
+    .eq("entity_type", normalizedType)
+    .ilike("entity_name", canonicalName)
+    .maybeSingle()
+
+  return exactMatch?.logo_url ?? null
+}
+
+/** Loose ilike match in logo_mappings. Last resort — it can pull a neighbouring school's crest. */
+async function lookupFuzzyLogoInDatabase(entityType: string, entityName: string): Promise<string | null> {
   const normalizedType = normalizeEntityType(entityType)
   const canonicalName = normalizeEntityName(entityName)
   if (!canonicalName) return null
 
   const admin = createAdminClient()
-
-  const { data: exactMatch } = await admin
-    .from("logo_mappings")
-    .select("logo_url, entity_name")
-    .eq("entity_type", normalizedType)
-    .ilike("entity_name", canonicalName)
-    .maybeSingle()
-
-  if (exactMatch?.logo_url) return exactMatch.logo_url
 
   const firstToken =
     canonicalName
@@ -153,19 +169,46 @@ async function lookupLogoInDatabase(entityType: string, entityName: string): Pro
   return null
 }
 
-/** Resolve logo URL: direct /public (or blob) fallbacks, then logo_mappings via service role. */
-export async function resolveEntityLogoUrl(entityType: string, entityName: string): Promise<string | null> {
+/**
+ * Resolve a logo URL, most-trusted source first:
+ *   1. exact logo_mappings row — an admin named this entity and set this URL, so it must win;
+ *   2. the curated table above — precise aliases, and the guard against short tokens ("NC", "State")
+ *      grabbing a neighbouring crest;
+ *   3. fuzzy logo_mappings — loose enough to mismatch, so it only runs when nothing else answered.
+ *
+ * (1) used to sit last. The curated table shadowed it, so NC State served the local /wolfpack-logo.png
+ * placeholder forever while logo_mappings held the real block S — and every admin edit was a no-op.
+ */
+export type LogoSource = "database-exact" | "direct" | "database-fuzzy"
+
+/** Same resolution as resolveEntityLogoUrl, but reports which tier answered — the logo APIs label their response with it. */
+export async function resolveEntityLogoUrlWithSource(
+  entityType: string,
+  entityName: string,
+): Promise<{ url: string; source: LogoSource } | null> {
   if (!entityName?.trim()) return null
 
+  try {
+    const exact = await lookupExactLogoInDatabase(entityType, entityName)
+    if (exact) return { url: exact, source: "database-exact" }
+  } catch (error) {
+    console.error("[resolveEntityLogoUrl] exact lookup failed", entityType, entityName, error)
+  }
+
   const direct = getDirectEntityLogoUrl(entityType, entityName)
-  if (direct) return direct
+  if (direct) return { url: direct, source: "direct" }
 
   try {
-    return await lookupLogoInDatabase(entityType, entityName)
+    const fuzzy = await lookupFuzzyLogoInDatabase(entityType, entityName)
+    return fuzzy ? { url: fuzzy, source: "database-fuzzy" } : null
   } catch (error) {
-    console.error("[resolveEntityLogoUrl]", entityType, entityName, error)
+    console.error("[resolveEntityLogoUrl] fuzzy lookup failed", entityType, entityName, error)
     return null
   }
+}
+
+export async function resolveEntityLogoUrl(entityType: string, entityName: string): Promise<string | null> {
+  return (await resolveEntityLogoUrlWithSource(entityType, entityName))?.url ?? null
 }
 
 /** Try several display names (e.g. "Lynchburg" then "Lynchburg University") for award cards. */

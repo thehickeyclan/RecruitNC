@@ -13,7 +13,11 @@ describe("getDirectCollegeLogoUrl", () => {
     expect(getDirectCollegeLogoUrl("NC")).toBeNull()
   })
 
-  it("still resolves NC State via exact / alias keys", () => {
-    expect(getDirectCollegeLogoUrl("NC State")).toBe("/wolfpack-logo.png")
+  it("resolves NC State to the real block S, not the /wolfpack-logo.png placeholder", () => {
+    for (const name of ["NC State", "North Carolina State", "North Carolina State University"]) {
+      const url = getDirectCollegeLogoUrl(name)
+      expect(url).toContain("blob.vercel-storage.com")
+      expect(url).not.toContain("wolfpack-logo.png")
+    }
   })
 })

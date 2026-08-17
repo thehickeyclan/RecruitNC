@@ -16,7 +16,7 @@ export class LogoMatchingService {
   private static logoDatabase = {
     // Colleges
     unc: { path: "/UNC_Chapel_Hill_Logo.png", aliases: ["university of north carolina", "chapel hill", "tar heels"] },
-    "nc state": { path: "/wolfpack-logo.png", aliases: ["ncsu", "north carolina state", "wolfpack"] },
+    "nc state": { path: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/fe5ixmej-1745958547259.png", aliases: ["ncsu", "north carolina state", "wolfpack"] },
     "appalachian state": { path: "/appalachian-state-mountains.png", aliases: ["app state", "mountaineers"] },
     campbell: { path: "/campbell-university-seal.png", aliases: ["campbell university", "fighting camels"] },
     queens: { path: "/queens-university-shield.png", aliases: ["queens university"] },

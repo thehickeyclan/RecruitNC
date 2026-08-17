@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { getDirectEntityLogoUrl, resolveEntityLogoUrl } from "@/lib/entity-logo-resolve"
+import { resolveEntityLogoUrlWithSource } from "@/lib/entity-logo-resolve"
 import { normalizeEntityName, normalizeEntityType } from "@/lib/logo-mappings-normalize"
 
 export async function GET(
@@ -13,25 +13,22 @@ export async function GET(
     const normalizedName = normalizeEntityName(decodedName)
     const normalizedType = normalizeEntityType(type)
 
-    const directUrl = getDirectEntityLogoUrl(normalizedType, normalizedName)
-    if (directUrl) {
+    /**
+     * resolveEntityLogoUrlWithSource owns the precedence (exact logo_mappings row, then the curated table, then a
+     * fuzzy logo_mappings match) and reports which tier answered.
+     *
+     * The tiers used to run curated-table-first, so NC State resolved to the local /wolfpack-logo.png placeholder
+     * forever even though logo_mappings held the real block S — every admin edit was a silent no-op. match_type is
+     * reported honestly here because labelling a curated-table hit "database" is what hid that for so long.
+     */
+    const resolved = await resolveEntityLogoUrlWithSource(normalizedType, normalizedName)
+    if (resolved) {
       return NextResponse.json({
         success: true,
-        logo_url: directUrl,
+        logo_url: resolved.url,
         entity_name: normalizedName || decodedName,
         matched_entity_type: normalizedType,
-        match_type: "direct",
-      })
-    }
-
-    const resolvedUrl = await resolveEntityLogoUrl(normalizedType, normalizedName)
-    if (resolvedUrl) {
-      return NextResponse.json({
-        success: true,
-        logo_url: resolvedUrl,
-        entity_name: normalizedName || decodedName,
-        matched_entity_type: normalizedType,
-        match_type: "database",
+        match_type: resolved.source,
       })
     }
 
