@@ -60,6 +60,7 @@ import {
   buildAthleteSummary,
   FORBIDDEN_SUMMARY_COLUMNS,
   formatPlacement,
+  pickHeadlineCredential,
   publicAchievementLines,
   getPublicAnnouncedWeight,
   hasAnyAnnouncedWeight,
@@ -338,11 +339,15 @@ describe("buildAthleteSummary", () => {
       club: "Darkhorse",
       collegeCommit: "Binghamton",
       achievements: ["2026 State Champion", "2x Regional Champion", "3x All Conference"],
-      results: ["2024-25 · 59-1 · 30 pins", "2026 NHSCA 4-2"],
+      results: {
+        seasonRecord: { season: "2024-25", wins: 59, losses: 1, pins: 30 },
+        allAmericanYear: null,
+        lines: ["2024-25 · 59-1 · 30 pins", "2026 NHSCA 4-2"],
+      },
     })
     expect(summary).toBe(
-      "Jaxon Thomas is a Class of 2027 wrestler who competes with Darkhorse. " +
-        "Jaxon's accomplishments include 2026 State Champion, 2x Regional Champion and 3x All Conference. " +
+      "Jaxon Thomas is a Class of 2027 wrestler who competes with Darkhorse, and a 2026 State Champion. " +
+        "Jaxon's accomplishments include 2x Regional Champion and 3x All Conference. " +
         "Recent results: 2024-25 · 59-1 · 30 pins; 2026 NHSCA 4-2. " +
         "Jaxon is committed to Binghamton.",
     )
@@ -355,7 +360,7 @@ describe("buildAthleteSummary", () => {
       club: "OTM Walters",
       collegeCommit: null,
       achievements: [],
-      results: [],
+      results: { seasonRecord: null, allAmericanYear: null, lines: [] },
     })
     expect(summary).toBe("Xavier Bernthal is a Class of 2029 wrestler who competes with OTM Walters.")
   })
@@ -367,9 +372,62 @@ describe("buildAthleteSummary", () => {
       club: null,
       collegeCommit: null,
       achievements: ["45-8 last season as a freshman"],
-      results: [],
+      results: { seasonRecord: null, allAmericanYear: null, lines: [] },
     })
     expect(summary).toBe("Solo Kid is a wrestler. Solo's accomplishments include 45-8 last season as a freshman.")
+  })
+})
+
+describe("pickHeadlineCredential", () => {
+  const noSeason = { seasonRecord: null, allAmericanYear: null }
+
+  it("leads with an NHSCA All-American finish over a state title", () => {
+    const h = pickHeadlineCredential({
+      ...noSeason,
+      allAmericanYear: 2026,
+      achievements: ["2026 State Champion"],
+    })
+    expect(h?.phrase).toBe("a 2026 NHSCA All-American")
+    // The state title is left for the following sentence rather than consumed.
+    expect(h?.usedAchievement).toBeNull()
+  })
+
+  it("ranks state champion above placer above qualifier", () => {
+    expect(
+      pickHeadlineCredential({ ...noSeason, achievements: ["State Qualifier", "2026 State Champion"] })?.phrase,
+    ).toBe("a 2026 State Champion")
+    expect(pickHeadlineCredential({ ...noSeason, achievements: ["State Qualifier", "State Placer"] })?.phrase).toBe(
+      "a State Placer",
+    )
+    expect(pickHeadlineCredential({ ...noSeason, achievements: ["State Qualifier"] })?.phrase).toBe("a State Qualifier")
+  })
+
+  it("reads a placing written as prose", () => {
+    const h = pickHeadlineCredential({
+      ...noSeason,
+      achievements: ["45-8 last wrestling season as a freshman. 4th at regionals and 4th at states in 7A"],
+    })
+    expect(h?.phrase).toContain("4th at states in 7A")
+  })
+
+  it("falls back to a winning season when there is no state or national credential", () => {
+    const h = pickHeadlineCredential({
+      achievements: [],
+      allAmericanYear: null,
+      seasonRecord: { season: "2025-26", wins: 42, losses: 4, pins: 24 },
+    })
+    expect(h?.phrase).toBe("coming off a 2025-26 42-4 season")
+    expect(h?.usedSeasonRecord).toBe(true)
+  })
+
+  it("does not lead with a losing season", () => {
+    expect(
+      pickHeadlineCredential({
+        achievements: [],
+        allAmericanYear: null,
+        seasonRecord: { season: "2025-26", wins: 8, losses: 20, pins: 1 },
+      }),
+    ).toBeNull()
   })
 })
 

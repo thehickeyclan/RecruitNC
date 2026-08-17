@@ -41,10 +41,82 @@ export type PublicFieldAthlete = {
   summary: string
 }
 
+export type SeasonRecord = { season: string | null; wins: number; losses: number; pins: number | null }
+
+export type AthleteResultData = {
+  seasonRecord: SeasonRecord | null
+  /** Most recent year the athlete placed top eight at NHSCA. */
+  allAmericanYear: number | null
+  lines: string[]
+}
+
+/** Top eight at NHSCA earns All-American status. */
+const NHSCA_ALL_AMERICAN_PLACES = 8
+
+export function formatSeasonRecord(r: SeasonRecord): string {
+  return [r.season, `${r.wins}-${r.losses}`, r.pins ? `${r.pins} pins` : null].filter(Boolean).join(" · ")
+}
+
 /**
- * A short paragraph about the wrestler, in the same register as a Data Dawg write-up: who they train with,
- * what they have done, where they are headed. Assembled from structured fields only — never from `bio`, which
- * names the school.
+ * Credential patterns in descending prestige. Matched against the curated `achievements` entries, which is where
+ * state results live — an admin typed "2026 State Champion" or "4th at states in 7A".
+ */
+const STATE_CREDENTIALS = [
+  { key: "state-champion", re: /state\s+champ/i },
+  { key: "state-placer", re: /state\s+(placer|runner)|placed?\b[^.]*\bstate|\b\d+(?:st|nd|rd|th)\b[^.]*\bstates?\b/i },
+  { key: "state-qualifier", re: /state\s+qualifier|qualified\b[^.]*\bstate/i },
+] as const
+
+/**
+ * The single credential the paragraph should open with, strongest first: NHSCA All-American, then state
+ * champion, placer, qualifier, then a winning season. Returns the lead phrase plus whichever achievement entry
+ * it consumed, so the same fact is not repeated later in the paragraph.
+ */
+export function pickHeadlineCredential(input: {
+  achievements: string[]
+  allAmericanYear: number | null
+  seasonRecord: SeasonRecord | null
+}): { phrase: string; usedAchievement: string | null; usedSeasonRecord: boolean; isTitle: boolean } | null {
+  const { achievements, allAmericanYear, seasonRecord } = input
+
+  if (allAmericanYear) {
+    return {
+      phrase: `a ${allAmericanYear} NHSCA All-American`,
+      usedAchievement: null,
+      usedSeasonRecord: false,
+      isTitle: true,
+    }
+  }
+
+  for (const { re } of STATE_CREDENTIALS) {
+    const hit = achievements.find((a) => re.test(a))
+    if (hit) {
+      // Use the admin's own wording. Short title-style entries ("2026 State Champion") take an article and read
+      // inline; longer prose ("4th at regionals and 4th at states in 7A") becomes its own sentence instead.
+      const isTitle = /^\d|^[A-Z]/.test(hit) && hit.split(/\s+/).length <= 5
+      return { phrase: isTitle ? `a ${hit}` : hit, usedAchievement: hit, usedSeasonRecord: false, isTitle }
+    }
+  }
+
+  if (seasonRecord && seasonRecord.wins > seasonRecord.losses) {
+    const season = seasonRecord.season ? `${seasonRecord.season} ` : ""
+    return {
+      phrase: `coming off a ${season}${seasonRecord.wins}-${seasonRecord.losses} season`,
+      usedAchievement: null,
+      usedSeasonRecord: true,
+      isTitle: false,
+    }
+  }
+
+  return null
+}
+
+/**
+ * A short paragraph about the wrestler, in the same register as a Data Dawg write-up: name and club, then the
+ * strongest credential the athlete holds (All-American, state champion, state placer, state qualifier, winning
+ * season — in that order), then remaining accomplishments, results and commitment.
+ *
+ * Structured fields only; never `bio`, which names the school.
  */
 export function buildAthleteSummary(input: {
   name: string
@@ -52,26 +124,47 @@ export function buildAthleteSummary(input: {
   club: string | null
   collegeCommit: string | null
   achievements: string[]
-  results: string[]
+  results: AthleteResultData
 }): string {
   const { name, graduationYear, club, collegeCommit, achievements, results } = input
   const first = name.trim().split(/\s+/)[0] || name
   const sentences: string[] = []
 
-  const classPart = graduationYear ? `a Class of ${graduationYear} wrestler` : "a wrestler"
-  sentences.push(club ? `${name} is ${classPart} who competes with ${club}.` : `${name} is ${classPart}.`)
+  const headline = pickHeadlineCredential({
+    achievements,
+    allAmericanYear: results.allAmericanYear,
+    seasonRecord: results.seasonRecord,
+  })
 
-  // "accomplishments include" stays grammatical whatever an admin typed, unlike trying to inflect each entry.
-  if (achievements.length > 0) {
+  const classPart = graduationYear ? `a Class of ${graduationYear} wrestler` : "a wrestler"
+  const clubPart = club ? ` who competes with ${club}` : ""
+
+  // Club first, then the strongest credential — identity, then why they matter.
+  if (headline?.isTitle) {
+    sentences.push(`${name} is ${classPart}${clubPart}, and ${headline.phrase}.`)
+  } else if (headline?.usedSeasonRecord) {
+    sentences.push(`${name} is ${classPart}${clubPart}, ${headline.phrase}.`)
+  } else if (headline) {
+    // Prose credential stands alone rather than colliding with the sentence's own "and".
+    sentences.push(`${name} is ${classPart}${clubPart}.`)
+    sentences.push(`${first} went ${headline.phrase}.`)
+  } else {
+    sentences.push(`${name} is ${classPart}${clubPart}.`)
+  }
+
+  const remainingAchievements = achievements.filter((a) => a !== headline?.usedAchievement)
+  if (remainingAchievements.length > 0) {
     const list =
-      achievements.length === 1
-        ? achievements[0]
-        : `${achievements.slice(0, -1).join(", ")} and ${achievements[achievements.length - 1]}`
+      remainingAchievements.length === 1
+        ? remainingAchievements[0]
+        : `${remainingAchievements.slice(0, -1).join(", ")} and ${remainingAchievements[remainingAchievements.length - 1]}`
     sentences.push(`${first}'s accomplishments include ${list}.`)
   }
 
-  if (results.length > 0) {
-    sentences.push(`Recent results: ${results.join("; ")}.`)
+  const seasonLine = results.seasonRecord ? formatSeasonRecord(results.seasonRecord) : null
+  const remainingLines = results.lines.filter((l) => !(headline?.usedSeasonRecord && l === seasonLine))
+  if (remainingLines.length > 0) {
+    sentences.push(`Recent results: ${remainingLines.join("; ")}.`)
   }
 
   if (collegeCommit) {
@@ -80,6 +173,7 @@ export function buildAthleteSummary(input: {
 
   return sentences.join(" ")
 }
+
 
 
 /**
@@ -102,9 +196,13 @@ export function publicAchievementLines(raw: unknown): string[] {
   const out: string[] = []
   for (const entry of list) {
     if (typeof entry !== "string") continue
-    const text = entry.replace(/\s+/g, " ").trim().replace(/[.;,]+$/, "")
-    if (!text || SCHOOL_MENTION_RE.test(text)) continue
-    out.push(text)
+    // Admins sometimes put several facts in one entry ("45-8 as a freshman. 4th at states in 7A"). Split them so
+    // each can be ranked and quoted on its own instead of one blob headlining the paragraph.
+    for (const piece of entry.split(/(?<=\.)\s+/)) {
+      const text = piece.replace(/\s+/g, " ").trim().replace(/[.;,]+$/, "")
+      if (!text || SCHOOL_MENTION_RE.test(text)) continue
+      out.push(text)
+    }
   }
   return out
 }
@@ -154,8 +252,10 @@ function buildPublicResults(row: Record<string, unknown>): string[] {
  * field is unseeded. Only rows with an actual placement are published; a losing record is not a "result" worth
  * putting under an athlete's photo.
  */
-async function fetchNhscaLinesByAthleteId(athleteIds: string[]): Promise<Map<string, string[]>> {
-  const out = new Map<string, string[]>()
+async function fetchNhscaLinesByAthleteId(
+  athleteIds: string[],
+): Promise<Map<string, { lines: string[]; allAmericanYear: number | null }>> {
+  const out = new Map<string, { lines: string[]; allAmericanYear: number | null }>()
   if (athleteIds.length === 0) return out
 
   const admin = createAdminClient()
@@ -179,9 +279,13 @@ async function fetchNhscaLinesByAthleteId(athleteIds: string[]): Promise<Map<str
   }
 
   for (const [id, rows] of byAthlete) {
-    const lines = rows
-      .slice()
-      .sort((a, b) => Number(b.year ?? 0) - Number(a.year ?? 0))
+    const sorted = rows.slice().sort((a, b) => Number(b.year ?? 0) - Number(a.year ?? 0))
+    // Top eight at NHSCA is All-American — the strongest credential most of this field will hold.
+    const aaRow = sorted.find((r) => {
+      const place = Number(r.placement)
+      return Number.isInteger(place) && place >= 1 && place <= NHSCA_ALL_AMERICAN_PLACES
+    })
+    const lines = sorted
       .map((r) => {
         const year = Number(r.year) || null
         const prefix = `${year ? `${year} ` : ""}NHSCA`
@@ -193,7 +297,9 @@ async function fetchNhscaLinesByAthleteId(athleteIds: string[]): Promise<Map<str
         return record ? `${prefix} ${record}` : null
       })
       .filter((l): l is string => Boolean(l))
-    if (lines.length > 0) out.set(id, lines)
+    if (lines.length > 0 || aaRow) {
+      out.set(id, { lines, allAmericanYear: aaRow ? Number(aaRow.year) || null : null })
+    }
   }
 
   return out
@@ -206,8 +312,8 @@ async function fetchNhscaLinesByAthleteId(athleteIds: string[]): Promise<Map<str
  * `matches` also carries `high_school` and `grade`; neither is selected. `wrestler_id` is a name-and-season slug
  * and is not needed either.
  */
-async function fetchSeasonRecordByAthleteId(athleteIds: string[]): Promise<Map<string, string>> {
-  const out = new Map<string, string>()
+async function fetchSeasonRecordByAthleteId(athleteIds: string[]): Promise<Map<string, SeasonRecord>> {
+  const out = new Map<string, SeasonRecord>()
   if (athleteIds.length === 0) return out
 
   const admin = createAdminClient()
@@ -242,10 +348,13 @@ async function fetchSeasonRecordByAthleteId(athleteIds: string[]): Promise<Map<s
     const wins = Number(row.wins)
     const losses = Number(row.losses)
     if (!Number.isFinite(wins) || !Number.isFinite(losses) || wins + losses === 0) continue
-    const season = (row.season ?? "").trim()
     const pins = Number(row.pins)
-    const parts = [season || null, `${wins}-${losses}`, Number.isFinite(pins) && pins > 0 ? `${pins} pins` : null]
-    out.set(id, parts.filter(Boolean).join(" · "))
+    out.set(id, {
+      season: (row.season ?? "").trim() || null,
+      wins,
+      losses,
+      pins: Number.isFinite(pins) && pins > 0 ? pins : null,
+    })
   }
 
   return out
@@ -255,19 +364,24 @@ async function fetchSeasonRecordByAthleteId(athleteIds: string[]): Promise<Map<s
  * Public result lines per athlete, best-first: season record, then national tournament lines. Capped at
  * {@link MAX_PUBLIC_RESULTS} so the card stays a summary.
  */
-async function fetchPublicResultsByAthleteId(athleteIds: string[]): Promise<Map<string, string[]>> {
+async function fetchPublicResultsByAthleteId(athleteIds: string[]): Promise<Map<string, AthleteResultData>> {
   const [seasons, nhsca] = await Promise.all([
     fetchSeasonRecordByAthleteId(athleteIds),
     fetchNhscaLinesByAthleteId(athleteIds),
   ])
 
-  const out = new Map<string, string[]>()
+  const out = new Map<string, AthleteResultData>()
   for (const id of athleteIds) {
+    const seasonRecord = seasons.get(id) ?? null
+    const n = nhsca.get(id)
     const lines: string[] = []
-    const season = seasons.get(id)
-    if (season) lines.push(season)
-    lines.push(...(nhsca.get(id) ?? []))
-    if (lines.length > 0) out.set(id, lines.slice(0, MAX_PUBLIC_RESULTS))
+    if (seasonRecord) lines.push(formatSeasonRecord(seasonRecord))
+    lines.push(...(n?.lines ?? []))
+    out.set(id, {
+      seasonRecord,
+      allAmericanYear: n?.allAmericanYear ?? null,
+      lines: lines.slice(0, MAX_PUBLIC_RESULTS),
+    })
   }
   return out
 }
@@ -430,7 +544,8 @@ async function fetchPublicAthletesForWeight(weightClass: number): Promise<Public
     const collegeRaw = typeof record.college === "string" ? record.college.trim() : ""
     // An unapproved commitment is a claim staff have not verified — do not publish it.
     const collegeCommit = record.commitment_approved === true && collegeRaw ? collegeRaw : null
-    const results = publicResults.get(id) ?? buildPublicResults(record)
+    const resultData = publicResults.get(id) ?? { seasonRecord: null, allAmericanYear: null, lines: [] }
+    const results = resultData.lines.length > 0 ? resultData.lines : buildPublicResults(record)
 
     out.push({
       athleteId: id,
@@ -446,7 +561,7 @@ async function fetchPublicAthletesForWeight(weightClass: number): Promise<Public
         club: club || null,
         collegeCommit,
         achievements: publicAchievementLines(record.achievements),
-        results,
+        results: { ...resultData, lines: results },
       }),
     })
   }
