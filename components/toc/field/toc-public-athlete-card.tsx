@@ -1,9 +1,5 @@
-"use client"
-
-import { useState } from "react"
-import { ChevronDown, ExternalLink } from "lucide-react"
-
 import { tocDisplayClass } from "@/components/toc/toc-theme"
+import { TocCredentialPills } from "@/components/toc/field/toc-credential-pills"
 import type { PublicFieldAthlete } from "@/lib/toc/public-announced-field"
 
 function initials(name: string): string {
@@ -14,30 +10,20 @@ function initials(name: string): string {
 }
 
 /**
- * One announced wrestler. Tapping the card expands a summary in place rather than navigating, so a reader can
- * scan the field without losing their spot.
+ * One announced wrestler: photo, name linking to their profile, class and club, then credential pills.
  *
- * Everything rendered here comes from {@link PublicFieldAthlete}, which is assembled server-side and carries no
- * school, seed, or ranking. Nothing is fetched on expand — the summary is already in the payload — so opening a
- * card cannot reach data the page was not allowed to publish.
+ * Everything here comes from {@link PublicFieldAthlete}, assembled server-side with no school, seed, or ranking.
+ * No client state and no fetching — the card is a link and a few labels.
  */
 export function TocPublicAthleteCard({ athlete }: { athlete: PublicFieldAthlete }) {
-  const [open, setOpen] = useState(false)
-
   const meta = [athlete.graduationYear ? `Class of ${athlete.graduationYear}` : null, athlete.club]
     .filter(Boolean)
     .join(" · ")
-
-  const hasSummary = athlete.summary.trim().length > 0
+  const profileHref = `/view-profile?id=${encodeURIComponent(athlete.athleteId)}`
 
   return (
     <li className="overflow-hidden rounded-sm border border-white/10 bg-white/[0.03] transition-colors hover:border-emerald-400/40">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        className="block w-full cursor-pointer text-left"
-      >
+      <a href={profileHref} className="block">
         <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#0B1D3A]">
           {athlete.photoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element -- athlete photos come from mixed external hosts
@@ -53,37 +39,19 @@ export function TocPublicAthleteCard({ athlete }: { athlete: PublicFieldAthlete 
             </div>
           )}
         </div>
-        <div className="p-3 sm:p-4">
-          <div className="flex items-start justify-between gap-2">
-            <p className="min-w-0 truncate text-sm font-bold text-white sm:text-base" title={athlete.name}>
-              {athlete.name}
-            </p>
-            <ChevronDown
-              className={`mt-0.5 h-4 w-4 shrink-0 text-white/35 transition-transform ${open ? "rotate-180" : ""}`}
-              aria-hidden
-            />
-          </div>
-          <p className="mt-1 truncate text-[11px] uppercase tracking-[0.12em] text-white/45">{meta || "NC United"}</p>
-        </div>
-      </button>
+      </a>
 
-      {open ? (
-        <div className="border-t border-white/10 px-3 pb-4 pt-3 sm:px-4">
-          {hasSummary ? (
-            <p className="text-[12px] leading-relaxed text-white/70">{athlete.summary}</p>
-          ) : (
-            <p className="text-[11px] text-white/40">Profile details coming soon.</p>
-          )}
-
-          <a
-            href={`/view-profile?id=${encodeURIComponent(athlete.athleteId)}`}
-            className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[#C8A94A] underline-offset-4 hover:underline"
-          >
-            Read more
-            <ExternalLink className="h-3 w-3" aria-hidden />
-          </a>
-        </div>
-      ) : null}
+      <div className="p-3 sm:p-4">
+        <a
+          href={profileHref}
+          className="block truncate text-sm font-bold text-white underline-offset-4 hover:text-emerald-300 hover:underline sm:text-base"
+          title={athlete.name}
+        >
+          {athlete.name}
+        </a>
+        <p className="mt-1 truncate text-[11px] uppercase tracking-[0.12em] text-white/45">{meta || "NC United"}</p>
+        <TocCredentialPills credentials={athlete.credentials} />
+      </div>
     </li>
   )
 }

@@ -27,8 +27,8 @@ const main = async () => {
   console.log("\n=== per-weight gate check ===")
   for (const w of [117, 125, 133]) {
     const f = await getPublicAnnouncedWeight(w)
-    console.log(`  ${w}: ${f ? `PUBLIC (${f.athletes.length} athletes)` : "404 / not released"}`)
-    if (f) for (const a of f.athletes) console.log(`\n   ${a.name}\n      ${a.summary || "(no summary)"}`)
+    console.log(`  ${w}: ${f ? `PUBLIC (${f.athletes.length} athletes) rollup=${JSON.stringify(f.rollup)}` : "404 / not released"}`)
+    if (f) for (const a of f.athletes) console.log(`   ${a.name.padEnd(22)} [${a.credentials.map(c=>c.label).join(", ") || "—"}]`)
   }
 }
 main().catch(e => { console.error(e); process.exit(1) })

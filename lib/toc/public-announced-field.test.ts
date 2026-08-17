@@ -13,6 +13,7 @@ const state = {
   athletes: [] as Row[],
   placements: [] as Row[],
   matches: [] as Row[],
+  stateResults: [] as Row[],
   /** Every (table, columns) pair the module asked for, so tests can assert nothing broad was selected. */
   selects: [] as { table: string; columns: string }[],
 }
@@ -51,6 +52,7 @@ vi.mock("@/lib/supabase/admin", () => ({
       if (table === "athletes") return makeQuery(table, state.athletes)
       if (table === "nhsca_placements") return makeQuery(table, state.placements)
       if (table === "matches") return makeQuery(table, state.matches)
+      if (table === "wrestling_nchsaa_results") return makeQuery(table, state.stateResults)
       throw new Error(`unexpected table ${table}`)
     },
   }),
@@ -58,6 +60,10 @@ vi.mock("@/lib/supabase/admin", () => ({
 
 import {
   buildAthleteSummary,
+  buildCredentials,
+  buildFieldRollup,
+  normalizeNameForStateMatch,
+  formatStateCredential,
   FORBIDDEN_SUMMARY_COLUMNS,
   formatPlacement,
   pickHeadlineCredential,
@@ -72,6 +78,7 @@ beforeEach(() => {
   state.selects = []
   state.placements = []
   state.matches = []
+  state.stateResults = []
   state.publication = [
     // 117 released to the public.
     { weight_class: 117, announced_at: "2026-08-14T18:00:00Z", athlete_field_locked: true },
@@ -137,6 +144,7 @@ describe("public payload contains nothing private", () => {
         "athleteId",
         "club",
         "collegeCommit",
+        "credentials",
         "graduationYear",
         "name",
         "photoUrl",
@@ -375,6 +383,77 @@ describe("buildAthleteSummary", () => {
       results: { seasonRecord: null, allAmericanYear: null, lines: [] },
     })
     expect(summary).toBe("Solo Kid is a wrestler. Solo's accomplishments include 45-8 last season as a freshman.")
+  })
+})
+
+describe("state credentials", () => {
+  it("names the strongest pill and counts repeats", () => {
+    const creds = buildCredentials({
+      allAmericanYear: null,
+      stateResults: [
+        { year: 2026, place: 1, classification: "6A" },
+        { year: 2025, place: 1, classification: "3A" },
+      ],
+    })
+    expect(creds.map((c) => c.label)).toEqual(["2x State Champ"])
+    expect(creds[0]!.detail).toBe("2026 6A state champion · 2025 3A state champion")
+  })
+
+  it("ranks All-American ahead of a state title", () => {
+    const creds = buildCredentials({
+      allAmericanYear: 2026,
+      stateResults: [{ year: 2026, place: 1, classification: "4A" }],
+    })
+    expect(creds.map((c) => c.kind)).toEqual(["all-american", "state-champion"])
+  })
+
+  it("treats a deep placing as a placer and a null place as a qualifier", () => {
+    expect(
+      buildCredentials({ allAmericanYear: null, stateResults: [{ year: 2026, place: 3, classification: "7A" }] })[0]!
+        .kind,
+    ).toBe("state-placer")
+    expect(
+      buildCredentials({ allAmericanYear: null, stateResults: [{ year: 2025, place: null, classification: "3A" }] })[0]!
+        .kind,
+    ).toBe("state-qualifier")
+  })
+
+  it("drops the qualifier pill when something better exists", () => {
+    const creds = buildCredentials({
+      allAmericanYear: null,
+      stateResults: [
+        { year: 2026, place: 1, classification: "6A" },
+        { year: 2025, place: null, classification: "3A" },
+      ],
+    })
+    expect(creds.map((c) => c.kind)).toEqual(["state-champion"])
+  })
+
+  it("strips generational suffixes so the results table matches the roster", () => {
+    expect(normalizeNameForStateMatch("Kristopher Kerr Jr")).toBe("Kristopher Kerr")
+    expect(normalizeNameForStateMatch("Bob Smith III")).toBe("Bob Smith")
+    expect(normalizeNameForStateMatch("Xavier Bernthal")).toBe("Xavier Bernthal")
+  })
+
+  it("labels a runner-up and an ordinal placing", () => {
+    expect(formatStateCredential({ year: 2026, place: 2, classification: "6A" })).toBe("2026 6A state runner-up")
+    expect(formatStateCredential({ year: 2026, place: 4, classification: "7A" })).toBe("2026 7A state 4th place")
+  })
+})
+
+describe("field rollup", () => {
+  it("counts athletes by credential, not credentials by athlete", () => {
+    const athlete = (creds: ReturnType<typeof buildCredentials>) =>
+      ({ credentials: creds }) as unknown as Parameters<typeof buildFieldRollup>[0][number]
+    const rollup = buildFieldRollup(
+      [
+        athlete(buildCredentials({ allAmericanYear: 2026, stateResults: [{ year: 2026, place: 1, classification: "4A" }] })),
+        athlete(buildCredentials({ allAmericanYear: null, stateResults: [{ year: 2026, place: 3, classification: "7A" }] })),
+        athlete(buildCredentials({ allAmericanYear: null, stateResults: [] })),
+      ],
+      1,
+    )
+    expect(rollup).toEqual({ athletes: 3, allAmericans: 1, stateChampions: 1, statePlacers: 2, stateTitles: 1 })
   })
 })
 

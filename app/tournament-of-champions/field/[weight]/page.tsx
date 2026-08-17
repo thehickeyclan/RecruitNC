@@ -4,7 +4,7 @@ import { notFound } from "next/navigation"
 import { HardLink } from "@/components/hard-link"
 import { TocPublicAthleteCard } from "@/components/toc/field/toc-public-athlete-card"
 import { TocPublicFieldGrid } from "@/components/toc/field/toc-public-field-grid"
-import { TocVarsityHeading, tocContainerClass, tocSectionClass } from "@/components/toc/toc-theme"
+import { TocVarsityHeading, tocContainerClass, tocDisplayClass, tocSectionClass } from "@/components/toc/toc-theme"
 import { parseAthleteWeightClass } from "@/lib/toc/invitations"
 import { getPublicAnnouncedWeight, listPublicWeightTiles } from "@/lib/toc/public-announced-field"
 
@@ -49,6 +49,14 @@ export default async function TocPublicFieldWeightRoute({ params }: Props) {
 
   const tiles = await listPublicWeightTiles()
 
+  const { rollup } = field
+  const rollupStats = [
+    { label: rollup.stateTitles === 1 ? "State title" : "State titles", value: rollup.stateTitles },
+    { label: rollup.stateChampions === 1 ? "State champion" : "State champions", value: rollup.stateChampions },
+    { label: rollup.statePlacers === 1 ? "State placer" : "State placers", value: rollup.statePlacers },
+    { label: rollup.allAmericans === 1 ? "All-American" : "All-Americans", value: rollup.allAmericans },
+  ].filter((s) => s.value > 0)
+
   return (
     <div className="min-h-screen bg-[#061224]">
       <section className={tocSectionClass()}>
@@ -64,6 +72,23 @@ export default async function TocPublicFieldWeightRoute({ params }: Props) {
             {field.athletes.length} athlete{field.athletes.length === 1 ? "" : "s"} in the weight class ·{" "}
             <strong className="text-white/75">listed alphabetically · not seeded</strong>
           </p>
+
+          {/* What this bracket is made of, at a glance — the public read of the admin credential rollup. */}
+          {rollupStats.length > 0 ? (
+            <div className="mt-6 flex flex-wrap justify-center gap-2 sm:gap-3">
+              {rollupStats.map((stat) => (
+                <div
+                  key={stat.label}
+                  className="min-w-[104px] rounded-sm border border-white/10 bg-white/[0.04] px-3 py-2 text-center"
+                >
+                  <p className={`text-2xl leading-none text-white ${tocDisplayClass()}`}>{stat.value}</p>
+                  <p className="mt-1 text-[9px] font-bold uppercase leading-tight tracking-[0.14em] text-white/45">
+                    {stat.label}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : null}
 
           {/* Weight strip up top, compact, so browsing other weights is the first thing available. */}
           <div className="mt-8">

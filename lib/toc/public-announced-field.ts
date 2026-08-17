@@ -39,6 +39,28 @@ export type PublicFieldAthlete = {
   results: string[]
   /** One-paragraph write-up assembled by {@link buildAthleteSummary}. Empty when there is nothing to say. */
   summary: string
+  /** Credential pills, strongest first. Mirrors the admin field board's badges. */
+  credentials: PublicCredential[]
+}
+
+export type PublicCredentialKind = "all-american" | "state-champion" | "state-placer" | "state-qualifier"
+
+export type PublicCredential = {
+  kind: PublicCredentialKind
+  /** Short pill text, e.g. "2x State Champ". */
+  label: string
+  /** Longer text for a tooltip, e.g. "2025 3A state champion · 2026 6A state champion". */
+  detail: string
+}
+
+/** Per-weight totals for the field header — the same shape of question the admin rollup answers. */
+export type PublicFieldRollup = {
+  athletes: number
+  allAmericans: number
+  stateChampions: number
+  /** Athletes with at least one state placement (includes champions). */
+  statePlacers: number
+  stateTitles: number
 }
 
 export type SeasonRecord = { season: string | null; wins: number; losses: number; pins: number | null }
@@ -245,6 +267,164 @@ function buildPublicResults(row: Record<string, unknown>): string[] {
 }
 
 /**
+ * State-tournament credentials from `wrestling_nchsaa_results`.
+ *
+ * That table has no `athlete_id` — only `wrestler_name` and `school` — so rows are matched by name. Two guards
+ * keep that honest: generational suffixes are stripped (the table stores "Kristopher Kerr", the roster stores
+ * "Kristopher Kerr Jr"), and results are constrained to seasons the athlete could plausibly have wrestled, so a
+ * namesake from a different era cannot be credited.
+ *
+ * `school` is never selected. These are the athlete's accomplishments, not their affiliation.
+ */
+const STATE_PLACE_LABELS: Record<number, string> = { 1: "state champion", 2: "state runner-up" }
+
+/** Latest season a class-of-N wrestler could compete, and how many years back to allow. */
+const HS_SEASON_SPAN = 4
+
+export function normalizeNameForStateMatch(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  while (parts.length > 1 && NAME_SUFFIXES.has(parts[parts.length - 1]!.toLowerCase())) parts.pop()
+  return parts.join(" ")
+}
+
+export function formatStateCredential(row: { year: number; place: number | null; classification: string | null }): string | null {
+  const { year, place, classification } = row
+  if (!year) return null
+  const cls = (classification ?? "").trim()
+  const prefix = [String(year), cls].filter(Boolean).join(" ")
+  if (place == null) return `${prefix} state qualifier`
+  const label = STATE_PLACE_LABELS[place] ?? `state ${formatPlacement(String(place))} place`
+  return `${prefix} ${label}`
+}
+
+/** Parsed state result, kept structured so credentials can be counted rather than string-matched. */
+export type StateResult = { year: number; place: number | null; classification: string | null }
+
+/** A placement deep enough to count as placing at state. */
+const STATE_PLACER_MAX = 8
+
+export function buildCredentials(input: {
+  stateResults: StateResult[]
+  allAmericanYear: number | null
+}): PublicCredential[] {
+  const { stateResults, allAmericanYear } = input
+  const out: PublicCredential[] = []
+
+  if (allAmericanYear) {
+    out.push({
+      kind: "all-american",
+      label: "All-American",
+      detail: `${allAmericanYear} NHSCA All-American`,
+    })
+  }
+
+  const titles = stateResults.filter((r) => r.place === 1)
+  const placements = stateResults.filter((r) => r.place != null && r.place > 1 && r.place <= STATE_PLACER_MAX)
+  const qualifiers = stateResults.filter((r) => r.place == null)
+
+  if (titles.length > 0) {
+    out.push({
+      kind: "state-champion",
+      label: titles.length > 1 ? `${titles.length}x State Champ` : "State Champ",
+      detail: titles.map((r) => formatStateCredential(r)).filter(Boolean).join(" · "),
+    })
+  }
+  if (placements.length > 0) {
+    out.push({
+      kind: "state-placer",
+      label: placements.length > 1 ? `${placements.length}x State Placer` : "State Placer",
+      detail: placements.map((r) => formatStateCredential(r)).filter(Boolean).join(" · "),
+    })
+  }
+  // Only worth a pill when there is nothing better to say.
+  if (out.length === 0 && qualifiers.length > 0) {
+    out.push({
+      kind: "state-qualifier",
+      label: "State Qualifier",
+      detail: qualifiers.map((r) => formatStateCredential(r)).filter(Boolean).join(" · "),
+    })
+  }
+
+  return out
+}
+
+export function buildFieldRollup(athletes: PublicFieldAthlete[], stateTitles: number): PublicFieldRollup {
+  return {
+    athletes: athletes.length,
+    allAmericans: athletes.filter((a) => a.credentials.some((c) => c.kind === "all-american")).length,
+    stateChampions: athletes.filter((a) => a.credentials.some((c) => c.kind === "state-champion")).length,
+    statePlacers: athletes.filter((a) =>
+      a.credentials.some((c) => c.kind === "state-champion" || c.kind === "state-placer"),
+    ).length,
+    stateTitles,
+  }
+}
+
+async function fetchStateCredentialsByAthleteId(
+  athletes: { id: string; name: string; graduationYear: number | null }[],
+): Promise<Map<string, StateResult[]>> {
+  const out = new Map<string, StateResult[]>()
+  if (athletes.length === 0) return out
+
+  const admin = createAdminClient()
+  const byNormalizedName = new Map<string, { id: string; graduationYear: number | null }[]>()
+  for (const a of athletes) {
+    const key = normalizeNameForStateMatch(a.name).toLowerCase()
+    if (!key) continue
+    byNormalizedName.set(key, [...(byNormalizedName.get(key) ?? []), { id: a.id, graduationYear: a.graduationYear }])
+  }
+
+  // No `school` in this select.
+  // Match on the roster's own spelling as well as the suffix-stripped form, then re-key in code.
+  const wanted = new Set<string>()
+  for (const a of athletes) {
+    if (a.name.trim()) wanted.add(a.name.trim())
+    const norm = normalizeNameForStateMatch(a.name)
+    if (norm) wanted.add(norm)
+  }
+  const { data: rows, error } = await admin
+    .from("wrestling_nchsaa_results")
+    .select("wrestler_name, year, place, classification")
+    .in("wrestler_name", [...wanted])
+
+  if (error) {
+    console.warn("[toc-public-field] state results lookup failed:", error.message)
+    return out
+  }
+
+  type Row = { wrestler_name?: string | null; year?: number | null; place?: number | null; classification?: string | null }
+  const grouped = new Map<string, Row[]>()
+  for (const raw of (rows ?? []) as Row[]) {
+    const key = normalizeNameForStateMatch(String(raw.wrestler_name ?? "")).toLowerCase()
+    if (!key) continue
+    grouped.set(key, [...(grouped.get(key) ?? []), raw])
+  }
+
+  for (const [key, targets] of byNormalizedName) {
+    const rowsForName = grouped.get(key) ?? []
+    // A shared name would credit the wrong wrestler; skip rather than guess.
+    if (targets.length !== 1) continue
+    const target = targets[0]!
+    const credentials = rowsForName
+      .filter((r) => {
+        const year = Number(r.year)
+        if (!Number.isFinite(year)) return false
+        if (target.graduationYear == null) return true
+        return year <= target.graduationYear && year > target.graduationYear - HS_SEASON_SPAN - 1
+      })
+      .sort((a, b) => Number(b.year ?? 0) - Number(a.year ?? 0))
+      .map((r) => ({
+        year: Number(r.year),
+        place: r.place == null ? null : Number(r.place),
+        classification: r.classification ?? null,
+      }))
+    if (credentials.length > 0) out.set(target.id, credentials)
+  }
+
+  return out
+}
+
+/**
  * National-event finishes from `nhsca_placements`, newest first.
  *
  * Two columns on that table are off limits and must never enter the select: `high_school`, for the same reason
@@ -390,6 +570,7 @@ export type PublicAnnouncedWeight = {
   weightClass: number
   announcedAt: string
   athletes: PublicFieldAthlete[]
+  rollup: PublicFieldRollup
 }
 
 export type PublicWeightTile = {
@@ -518,6 +699,15 @@ async function fetchPublicAthletesForWeight(weightClass: number): Promise<Public
   }
 
   const publicResults = await fetchPublicResultsByAthleteId(athleteIds)
+  const rosterForState = (athletes ?? []).map((raw) => {
+    const r = raw as unknown as Record<string, unknown>
+    return {
+      id: String(r.id ?? ""),
+      name: typeof r.name === "string" ? r.name : "",
+      graduationYear: typeof r.graduationyear === "number" ? r.graduationyear : null,
+    }
+  })
+  const stateByAthlete = await fetchStateCredentialsByAthleteId(rosterForState)
 
   const out: PublicFieldAthlete[] = []
   for (const raw of athletes ?? []) {
@@ -563,6 +753,10 @@ async function fetchPublicAthletesForWeight(weightClass: number): Promise<Public
         achievements: publicAchievementLines(record.achievements),
         results: { ...resultData, lines: results },
       }),
+      credentials: buildCredentials({
+        stateResults: stateByAthlete.get(id) ?? [],
+        allAmericanYear: resultData.allAmericanYear,
+      }),
     })
   }
 
@@ -602,10 +796,19 @@ export async function getPublicAnnouncedWeight(weightClassInput: number): Promis
   const announcedAt = announced.get(weightClass)
   if (!announcedAt) return null
 
+  const athletes = await fetchPublicAthletesForWeight(weightClass)
+  const stateTitles = athletes.reduce((total, a) => {
+    const champ = a.credentials.find((c) => c.kind === "state-champion")
+    if (!champ) return total
+    const multi = /^(\d+)x/.exec(champ.label)
+    return total + (multi ? Number(multi[1]) : 1)
+  }, 0)
+
   return {
     weightClass,
     announcedAt,
-    athletes: await fetchPublicAthletesForWeight(weightClass),
+    athletes,
+    rollup: buildFieldRollup(athletes, stateTitles),
   }
 }
 
