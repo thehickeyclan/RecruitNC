@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest"
-import { buildTocAiSeedRecommendations, filterFargoFreestyleResults, scoreNchsaaRowsForSeed } from "@/lib/toc/ai-seeding"
+import {
+  buildTocAiSeedRecommendations,
+  filterFargoFreestyleResults,
+  latestSeasonMatchRows,
+  scoreNchsaaRowsForSeed,
+} from "@/lib/toc/ai-seeding"
 import type { TocFieldBoard } from "@/lib/toc/field-board"
 
 function fakeSupabaseWithMatches(rows: unknown[]) {
@@ -116,5 +121,30 @@ describe("buildTocAiSeedRecommendations", () => {
     expect(recommendations.get("ammon")?.seedEvidence.headToHead).toEqual([
       { opponent: "Aiden Campbell", wins: 0, losses: 1 },
     ])
+  })
+})
+
+describe("latestSeasonMatchRows", () => {
+  it("keeps only the most recent season", () => {
+    const rows = [
+      { athlete_id: "a", season: "2024-25", wins: 40, losses: 5 },
+      { athlete_id: "a", season: "2025-26", wins: 55, losses: 2 },
+      { athlete_id: "a", season: "2023-24", wins: 20, losses: 12 },
+    ]
+    expect(latestSeasonMatchRows(rows).map((r) => r.season)).toEqual(["2025-26"])
+  })
+
+  it("keeps every row from that season when a wrestler has more than one", () => {
+    const rows = [
+      { athlete_id: "a", season: "2025-26", wins: 30 },
+      { athlete_id: "a", season: "2025-26", wins: 12 },
+      { athlete_id: "a", season: "2024-25", wins: 40 },
+    ]
+    expect(latestSeasonMatchRows(rows)).toHaveLength(2)
+  })
+
+  it("falls back to every row when no season is recorded", () => {
+    const rows = [{ athlete_id: "a", wins: 10 }, { athlete_id: "a", wins: 4 }]
+    expect(latestSeasonMatchRows(rows)).toHaveLength(2)
   })
 })

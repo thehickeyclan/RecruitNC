@@ -22,6 +22,7 @@ type MatchBout = {
 
 type MatchRow = {
   athlete_id?: string | null
+  season?: string | null
   total_matches?: number | null
   wins?: number | null
   losses?: number | null
@@ -127,7 +128,7 @@ async function loadMatchRows(supabase: SupabaseClient, athleteIds: string[]): Pr
 
   const { data, error } = await supabase
     .from("matches")
-    .select("athlete_id,total_matches,wins,losses,matches")
+    .select("athlete_id,season,total_matches,wins,losses,matches")
     .in("athlete_id", athleteIds)
 
   if (error || !data) return out
@@ -137,6 +138,22 @@ async function loadMatchRows(supabase: SupabaseClient, athleteIds: string[]): Pr
     out.set(athleteId, [...(out.get(athleteId) || []), row])
   }
   return out
+}
+
+/**
+ * Only the most recent season's rows.
+ *
+ * Head-to-head is a seeding argument about who is beating whom *now*. A result from two seasons ago, at a
+ * different weight and a different stage of development, is not evidence about this bracket — and stale wins
+ * were outranking current ones. Season values are "2024-25" strings, so a lexical max picks the latest.
+ *
+ * Career totals deliberately still use every row; this narrows head-to-head only.
+ */
+export function latestSeasonMatchRows(rows: MatchRow[]): MatchRow[] {
+  const seasons = rows.map((r) => String(r.season ?? "").trim()).filter(Boolean)
+  if (seasons.length === 0) return rows
+  const latest = seasons.reduce((a, b) => (b > a ? b : a))
+  return rows.filter((r) => String(r.season ?? "").trim() === latest)
 }
 
 function scoreMatchRows(rows: MatchRow[]) {
@@ -499,7 +516,8 @@ export async function buildTocAiSeedRecommendations({
     const boutsByAthleteId = new Map(
       confirmed.map((athlete) => [
         athlete.athleteId,
-        scoreMatchRows(matchRowsByAthlete.get(athlete.athleteId) || []).bouts,
+        // Head-to-head is current-season only; see latestSeasonMatchRows.
+        scoreMatchRows(latestSeasonMatchRows(matchRowsByAthlete.get(athlete.athleteId) || [])).bouts,
       ]),
     )
 
