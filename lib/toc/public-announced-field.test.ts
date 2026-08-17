@@ -52,7 +52,12 @@ vi.mock("@/lib/supabase/admin", () => ({
   }),
 }))
 
-import { getPublicAnnouncedWeight, hasAnyAnnouncedWeight, listPublicWeightTiles } from "./public-announced-field"
+import {
+  getPublicAnnouncedWeight,
+  hasAnyAnnouncedWeight,
+  listPublicWeightTiles,
+  surnameSortKey,
+} from "./public-announced-field"
 
 beforeEach(() => {
   state.selects = []
@@ -146,6 +151,51 @@ describe("field contents", () => {
     // a1/Wilson is seed 1 and appears first in the source rows; alphabetical order must move him last.
     const field = await getPublicAnnouncedWeight(117)
     expect(field?.athletes.map((a) => a.name)).toEqual(["Aaron Brooks", "Zeb Wilson"])
+  })
+
+  it("sorts by surname, not by first name", async () => {
+    // The real 117 field: sorting the whole string ordered these by given name, which does not read as
+    // alphabetical to anyone scanning a roster.
+    state.invitations = ["Alexander Moody", "Matthew Akins", "Xavier Bernthal", "Kristopher Kerr Jr"].map(
+      (_n, i) => ({ athlete_id: `s${i}`, weight_class: 117, status: "confirmed", photo_release_accepted: true }),
+    )
+    state.athletes = ["Alexander Moody", "Matthew Akins", "Xavier Bernthal", "Kristopher Kerr Jr"].map((n, i) => ({
+      id: `s${i}`,
+      name: n,
+      graduationyear: 2027,
+      wrestlingClub: null,
+      photourl: null,
+    }))
+
+    const field = await getPublicAnnouncedWeight(117)
+    expect(field?.athletes.map((a) => a.name)).toEqual([
+      "Matthew Akins",
+      "Xavier Bernthal",
+      "Kristopher Kerr Jr",
+      "Alexander Moody",
+    ])
+  })
+})
+
+describe("surnameSortKey", () => {
+  it("keys on the surname", () => {
+    expect(surnameSortKey("Alexander Moody")).toBe("moody alexander")
+    expect(surnameSortKey("Matthew Akins")).toBe("akins matthew")
+  })
+
+  it("ignores generational suffixes", () => {
+    expect(surnameSortKey("Kristopher Kerr Jr")).toBe("kerr kristopher")
+    expect(surnameSortKey("Bob Smith III")).toBe("smith bob")
+    expect(surnameSortKey("Al Jones Sr.")).toBe("jones al")
+  })
+
+  it("treats a trailing name part as the surname for multi-part given names", () => {
+    expect(surnameSortKey("Gael Guerrero Perez")).toBe("perez gael guerrero")
+  })
+
+  it("handles single names and blanks without throwing", () => {
+    expect(surnameSortKey("Cyclone")).toBe("cyclone")
+    expect(surnameSortKey("   ")).toBe("")
   })
 })
 

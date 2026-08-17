@@ -83,8 +83,30 @@ async function fetchAnnouncedAtByWeight(): Promise<Map<number, string>> {
   return out
 }
 
+/** Suffixes that are not the surname — "Kristopher Kerr Jr" sorts under Kerr, not Jr. */
+const NAME_SUFFIXES = new Set(["jr", "jr.", "sr", "sr.", "ii", "iii", "iv", "v"])
+
+/**
+ * Surname, then given name. Sorting the whole name string would order the field by first name, which does not
+ * read as alphabetical on a roster — the page states the field is alphabetical, so this has to match a reader's
+ * expectation of it.
+ */
+export function surnameSortKey(fullName: string): string {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return ""
+  if (parts.length === 1) return parts[0]!.toLowerCase()
+
+  let lastIdx = parts.length - 1
+  while (lastIdx > 0 && NAME_SUFFIXES.has(parts[lastIdx]!.toLowerCase())) {
+    lastIdx -= 1
+  }
+  const surname = parts[lastIdx]!.toLowerCase()
+  const given = parts.slice(0, lastIdx).join(" ").toLowerCase()
+  return `${surname} ${given}`.trim()
+}
+
 function comparePublicNames(a: PublicFieldAthlete, b: PublicFieldAthlete): number {
-  return a.name.localeCompare(b.name, "en", { sensitivity: "base" })
+  return surnameSortKey(a.name).localeCompare(surnameSortKey(b.name), "en", { sensitivity: "base" })
 }
 
 /**
