@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
 import type { TocAthleteWithInvitation } from "@/lib/toc/invitation-service"
 import {
+  confirmDeadlineMessage,
   formatTocRegistrationFee,
-  registrationPaymentDueDisplay,
   TOC_REGISTRATION_FEE_COVERS,
 } from "@/lib/toc/registration-policy"
 
@@ -23,6 +23,8 @@ export function TocRegistrationPayCard({ data, onReset }: Props) {
   const invitation = data.invitation
   const isConfirmed = invitation?.status === "confirmed"
   const isPaid = invitation?.paymentStatus === "paid"
+  const paymentDeadline =
+    confirmDeadlineMessage(invitation?.invitedAt, invitation?.confirmationExpiresAt) ?? "the deadline in your invitation"
 
   const startCheckout = async () => {
     setError(null)
@@ -83,7 +85,7 @@ export function TocRegistrationPayCard({ data, onReset }: Props) {
           <div className="border-l-4 border-[#CC0000] pl-4 space-y-2 text-sm text-[#0B1D3A]/80">
             <p>
               <strong>{formatTocRegistrationFee()}</strong> registration due by{" "}
-              <strong>{registrationPaymentDueDisplay()}</strong>.
+              <strong>{paymentDeadline}</strong>.
             </p>
             <p>
               Covers tournament entry, {TOC_REGISTRATION_FEE_COVERS}. Secure checkout via Stripe — tagged{" "}

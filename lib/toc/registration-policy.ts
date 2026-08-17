@@ -24,7 +24,12 @@ export function formatTocRegistrationFee(): string {
 }
 
 export function formatTocLongDate(date: Date): string {
-  return date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+  return date.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "America/New_York",
+  })
 }
 
 export function registrationPaymentDueDate(): Date {

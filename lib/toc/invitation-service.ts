@@ -25,6 +25,7 @@ export type TocAthleteWithInvitation = {
     confirmedAt: string | null
     paymentStatus: string | null
     paidAt: string | null
+    confirmationExpiresAt?: string | null
   } | null
 }
 
@@ -76,6 +77,10 @@ export function toAthleteWithInvitation(
           paymentStatus:
             typeof invitation.payment_status === "string" ? invitation.payment_status : null,
           paidAt: typeof invitation.paid_at === "string" ? invitation.paid_at : null,
+          confirmationExpiresAt:
+            typeof invitation.confirmation_token_expires_at === "string"
+              ? invitation.confirmation_token_expires_at
+              : null,
         }
       : null,
   }

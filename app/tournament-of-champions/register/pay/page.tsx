@@ -4,7 +4,6 @@ import { TocRegistrationPayFlow } from "@/components/toc/register/toc-registrati
 import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass } from "@/components/toc/toc-theme"
 import {
   formatTocRegistrationFee,
-  registrationPaymentDueDisplay,
   TOC_REGISTRATION_FEE_COVERS,
 } from "@/lib/toc/registration-policy"
 
@@ -27,8 +26,8 @@ export default function TocRegistrationPayPage() {
             Pay registration
           </TocVarsityHeading>
           <p className={`text-white/80 text-lg max-w-2xl ${tocDisplayClass()}`}>
-            {formatTocRegistrationFee()} due by {registrationPaymentDueDisplay()}. Look up your RecruitNC profile and
-            complete secure checkout.
+            Look up your RecruitNC profile to see your payment deadline and complete the secure{" "}
+            {formatTocRegistrationFee()} checkout.
           </p>
           <p className="mt-3 text-white/55 text-sm max-w-2xl">
             Payment supports tournament entry, {TOC_REGISTRATION_FEE_COVERS}. Checkout is tagged{" "}

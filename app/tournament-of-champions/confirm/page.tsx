@@ -6,7 +6,7 @@ import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass } from "@/component
 import { resolveTocConfirmedColleges } from "@/lib/toc/confirmed-colleges"
 import { getTocEventConfig } from "@/lib/toc/event-config"
 import { TOC_HERO_DATES } from "@/lib/toc/constants"
-import { formatTocRegistrationFee, registrationPaymentDueDisplay } from "@/lib/toc/registration-policy"
+import { formatTocRegistrationFee } from "@/lib/toc/registration-policy"
 
 export const dynamic = "force-dynamic"
 
@@ -35,7 +35,7 @@ export default async function TocConfirmPage() {
             For invited athletes only. Look up your RecruitNC profile, verify it, choose weight and jacket size, then complete secure card checkout.
           </p>
           <p className="mt-3 text-white/55 text-sm max-w-2xl">
-            Confirm by <strong className="text-white/75">{registrationPaymentDueDisplay()}</strong>.{" "}
+            Complete registration by <strong className="text-white/75">the deadline shown with your invitation</strong>.{" "}
             <strong className="text-white/75">Your spot is locked only after the {formatTocRegistrationFee()} registration payment is completed.</strong>
           </p>
           <p className="mt-3 text-white/55 text-sm max-w-2xl">

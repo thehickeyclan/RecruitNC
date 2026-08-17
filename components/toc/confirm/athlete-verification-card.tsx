@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { TocAthleteWithInvitation } from "@/lib/toc/invitation-service"
 import { registrationPayPageUrl } from "@/lib/toc/invitation-service"
 import { formatTocGradYear } from "@/lib/toc/invitations"
-import { formatTocRegistrationFee, registrationPaymentDueDisplay } from "@/lib/toc/registration-policy"
+import { confirmDeadlineMessage, formatTocRegistrationFee } from "@/lib/toc/registration-policy"
 
 type Props = {
   data: TocAthleteWithInvitation
@@ -17,6 +17,8 @@ type Props = {
 export function AthleteVerificationCard({ data, onConfirm, onReject }: Props) {
   const { athlete, invitation } = data
   const alreadyConfirmed = invitation?.status === "confirmed"
+  const paymentDeadline =
+    confirmDeadlineMessage(invitation?.invitedAt, invitation?.confirmationExpiresAt) ?? "the deadline in your invitation"
 
   return (
     <Card className="border-2 border-[#0B1D3A]/10 border-l-4 border-l-[#CC0000]">
@@ -75,7 +77,7 @@ export function AthleteVerificationCard({ data, onConfirm, onReject }: Props) {
                 <a href={registrationPayPageUrl(athlete.id)} className="text-[#0B1D3A] underline hover:text-[#CC0000]">
                   Complete required registration payment
                 </a>{" "}
-                ({formatTocRegistrationFee()} by {registrationPaymentDueDisplay()}).
+                ({formatTocRegistrationFee()} by {paymentDeadline}).
               </p>
             )}
           </div>
