@@ -34,18 +34,80 @@ export type PublicFieldAthlete = {
   /** College name, only once staff approved the commitment. */
   collegeCommit: string | null
   /**
-   * Short national-event results, e.g. "2025 NHSCA 3rd". National events only — see
-   * {@link buildPublicResults} for why state and school results are excluded.
+   * Short result lines, e.g. "2024-25 · 59-1 · 30 pins", "2026 NHSCA 4th".
    */
   results: string[]
+  /** One-paragraph write-up assembled by {@link buildAthleteSummary}. Empty when there is nothing to say. */
+  summary: string
 }
 
 /**
- * Columns that read like a good summary source and must never be used on this page: both embed the athlete's
- * school in free text ("Liam Myles is a wrestler at Union Pines High School…"). TOC wrestlers compete unattached,
- * so anything school-identifying is out, and prose fields cannot be sanitized reliably.
+ * A short paragraph about the wrestler, in the same register as a Data Dawg write-up: who they train with,
+ * what they have done, where they are headed. Assembled from structured fields only — never from `bio`, which
+ * names the school.
  */
-export const FORBIDDEN_SUMMARY_COLUMNS = ["bio", "bio_headline", "achievements", "additional_achievements"] as const
+export function buildAthleteSummary(input: {
+  name: string
+  graduationYear: number | null
+  club: string | null
+  collegeCommit: string | null
+  achievements: string[]
+  results: string[]
+}): string {
+  const { name, graduationYear, club, collegeCommit, achievements, results } = input
+  const first = name.trim().split(/\s+/)[0] || name
+  const sentences: string[] = []
+
+  const classPart = graduationYear ? `a Class of ${graduationYear} wrestler` : "a wrestler"
+  sentences.push(club ? `${name} is ${classPart} who competes with ${club}.` : `${name} is ${classPart}.`)
+
+  // "accomplishments include" stays grammatical whatever an admin typed, unlike trying to inflect each entry.
+  if (achievements.length > 0) {
+    const list =
+      achievements.length === 1
+        ? achievements[0]
+        : `${achievements.slice(0, -1).join(", ")} and ${achievements[achievements.length - 1]}`
+    sentences.push(`${first}'s accomplishments include ${list}.`)
+  }
+
+  if (results.length > 0) {
+    sentences.push(`Recent results: ${results.join("; ")}.`)
+  }
+
+  if (collegeCommit) {
+    sentences.push(`${first} is committed to ${collegeCommit}.`)
+  }
+
+  return sentences.join(" ")
+}
+
+
+/**
+ * Prose columns that must never be used on this page: they embed the athlete's school in free text — real data
+ * reads "Liam Myles is a wrestler at Union Pines High School…". TOC wrestlers compete unattached, so anything
+ * school-identifying is out, and full prose cannot be sanitized reliably.
+ *
+ * `achievements` is deliberately NOT on this list. It is a curated array of short accomplishment strings
+ * ("2026 State Champion", "2x Regional Champion") rather than narrative, so it carries the substance a reader
+ * wants without the school. Entries are still screened by {@link SCHOOL_MENTION_RE} before publishing.
+ */
+export const FORBIDDEN_SUMMARY_COLUMNS = ["bio", "bio_headline"] as const
+
+/** Drops any achievement line that names a school, since the field is free text an admin typed. */
+const SCHOOL_MENTION_RE = /high school|middle school|\bh\.?s\.?\b|\bacademy\b|\bprep\b/i
+
+/** Accomplishment lines an admin curated, screened for school mentions and trimmed. */
+export function publicAchievementLines(raw: unknown): string[] {
+  const list = Array.isArray(raw) ? raw : typeof raw === "string" && raw.trim() ? [raw] : []
+  const out: string[] = []
+  for (const entry of list) {
+    if (typeof entry !== "string") continue
+    const text = entry.replace(/\s+/g, " ").trim().replace(/[.;,]+$/, "")
+    if (!text || SCHOOL_MENTION_RE.test(text)) continue
+    out.push(text)
+  }
+  return out
+}
 
 /**
  * Per-athlete placement columns on `athletes`. Kept as a fallback because they are unpopulated for the current
@@ -92,23 +154,23 @@ function buildPublicResults(row: Record<string, unknown>): string[] {
  * field is unseeded. Only rows with an actual placement are published; a losing record is not a "result" worth
  * putting under an athlete's photo.
  */
-async function fetchNationalResultsByAthleteId(athleteIds: string[]): Promise<Map<string, string[]>> {
+async function fetchNhscaLinesByAthleteId(athleteIds: string[]): Promise<Map<string, string[]>> {
   const out = new Map<string, string[]>()
   if (athleteIds.length === 0) return out
 
   const admin = createAdminClient()
+  // No `high_school`, and no `seed` — an NHSCA seed is still a seed on a page that says unseeded.
   const { data, error } = await admin
     .from("nhsca_placements")
-    .select("athlete_id, year, tournament_name, placement, division")
+    .select("athlete_id, year, placement, record")
     .in("athlete_id", athleteIds)
-    .not("placement", "is", null)
 
   if (error) {
-    console.warn("[toc-public-field] national results lookup failed:", error.message)
+    console.warn("[toc-public-field] NHSCA lookup failed:", error.message)
     return out
   }
 
-  type Row = { athlete_id?: string | null; year?: number | null; placement?: string | number | null }
+  type Row = { athlete_id?: string | null; year?: number | null; placement?: string | number | null; record?: string | null }
   const byAthlete = new Map<string, Row[]>()
   for (const raw of (data ?? []) as Row[]) {
     const id = typeof raw.athlete_id === "string" ? raw.athlete_id : ""
@@ -121,16 +183,92 @@ async function fetchNationalResultsByAthleteId(athleteIds: string[]): Promise<Ma
       .slice()
       .sort((a, b) => Number(b.year ?? 0) - Number(a.year ?? 0))
       .map((r) => {
-        const placement = typeof r.placement === "number" ? String(r.placement) : (r.placement ?? "").toString().trim()
-        if (!placement) return null
         const year = Number(r.year) || null
-        return `${year ? `${year} ` : ""}NHSCA ${formatPlacement(placement)}`
+        const prefix = `${year ? `${year} ` : ""}NHSCA`
+        const placement =
+          typeof r.placement === "number" ? String(r.placement) : (r.placement ?? "").toString().trim()
+        // A placing is the headline; otherwise the tournament record still shows they were on the national stage.
+        if (placement) return `${prefix} ${formatPlacement(placement)}`
+        const record = (r.record ?? "").trim()
+        return record ? `${prefix} ${record}` : null
       })
       .filter((l): l is string => Boolean(l))
-      .slice(0, MAX_PUBLIC_RESULTS)
     if (lines.length > 0) out.set(id, lines)
   }
 
+  return out
+}
+
+/**
+ * Most recent season record from `matches` — the line that actually says something about a wrestler
+ * ("2024-25 · 59-1 · 30 pins").
+ *
+ * `matches` also carries `high_school` and `grade`; neither is selected. `wrestler_id` is a name-and-season slug
+ * and is not needed either.
+ */
+async function fetchSeasonRecordByAthleteId(athleteIds: string[]): Promise<Map<string, string>> {
+  const out = new Map<string, string>()
+  if (athleteIds.length === 0) return out
+
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from("matches")
+    .select("athlete_id, season, wins, losses, pins")
+    .in("athlete_id", athleteIds)
+
+  if (error) {
+    console.warn("[toc-public-field] season record lookup failed:", error.message)
+    return out
+  }
+
+  type Row = {
+    athlete_id?: string | null
+    season?: string | null
+    wins?: number | null
+    losses?: number | null
+    pins?: number | null
+  }
+
+  const bestByAthlete = new Map<string, Row>()
+  for (const raw of (data ?? []) as Row[]) {
+    const id = typeof raw.athlete_id === "string" ? raw.athlete_id : ""
+    if (!id) continue
+    const current = bestByAthlete.get(id)
+    // Seasons are "2024-25" strings, so a lexical compare picks the latest correctly.
+    if (!current || String(raw.season ?? "") > String(current.season ?? "")) bestByAthlete.set(id, raw)
+  }
+
+  for (const [id, row] of bestByAthlete) {
+    const wins = Number(row.wins)
+    const losses = Number(row.losses)
+    if (!Number.isFinite(wins) || !Number.isFinite(losses) || wins + losses === 0) continue
+    const season = (row.season ?? "").trim()
+    const pins = Number(row.pins)
+    const parts = [season || null, `${wins}-${losses}`, Number.isFinite(pins) && pins > 0 ? `${pins} pins` : null]
+    out.set(id, parts.filter(Boolean).join(" · "))
+  }
+
+  return out
+}
+
+/**
+ * Public result lines per athlete, best-first: season record, then national tournament lines. Capped at
+ * {@link MAX_PUBLIC_RESULTS} so the card stays a summary.
+ */
+async function fetchPublicResultsByAthleteId(athleteIds: string[]): Promise<Map<string, string[]>> {
+  const [seasons, nhsca] = await Promise.all([
+    fetchSeasonRecordByAthleteId(athleteIds),
+    fetchNhscaLinesByAthleteId(athleteIds),
+  ])
+
+  const out = new Map<string, string[]>()
+  for (const id of athleteIds) {
+    const lines: string[] = []
+    const season = seasons.get(id)
+    if (season) lines.push(season)
+    lines.push(...(nhsca.get(id) ?? []))
+    if (lines.length > 0) out.set(id, lines.slice(0, MAX_PUBLIC_RESULTS))
+  }
   return out
 }
 
@@ -254,6 +392,7 @@ async function fetchPublicAthletesForWeight(weightClass: number): Promise<Public
         "headshot_url",
         "college",
         "commitment_approved",
+        "achievements",
         ...PLACEMENT_COLUMNS.map((p) => p.column),
       ].join(", "),
     )
@@ -264,7 +403,7 @@ async function fetchPublicAthletesForWeight(weightClass: number): Promise<Public
     return []
   }
 
-  const nationalResults = await fetchNationalResultsByAthleteId(athleteIds)
+  const publicResults = await fetchPublicResultsByAthleteId(athleteIds)
 
   const out: PublicFieldAthlete[] = []
   for (const raw of athletes ?? []) {
@@ -291,6 +430,7 @@ async function fetchPublicAthletesForWeight(weightClass: number): Promise<Public
     const collegeRaw = typeof record.college === "string" ? record.college.trim() : ""
     // An unapproved commitment is a claim staff have not verified — do not publish it.
     const collegeCommit = record.commitment_approved === true && collegeRaw ? collegeRaw : null
+    const results = publicResults.get(id) ?? buildPublicResults(record)
 
     out.push({
       athleteId: id,
@@ -299,7 +439,15 @@ async function fetchPublicAthletesForWeight(weightClass: number): Promise<Public
       club: club || null,
       photoUrl: photoReleased && rawPhoto ? rawPhoto : null,
       collegeCommit,
-      results: nationalResults.get(id) ?? buildPublicResults(record),
+      results,
+      summary: buildAthleteSummary({
+        name,
+        graduationYear: typeof row.graduationyear === "number" ? row.graduationyear : null,
+        club: club || null,
+        collegeCommit,
+        achievements: publicAchievementLines(record.achievements),
+        results,
+      }),
     })
   }
 

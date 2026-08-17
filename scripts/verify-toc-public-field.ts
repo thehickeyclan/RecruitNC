@@ -28,7 +28,7 @@ const main = async () => {
   for (const w of [117, 125, 133]) {
     const f = await getPublicAnnouncedWeight(w)
     console.log(`  ${w}: ${f ? `PUBLIC (${f.athletes.length} athletes)` : "404 / not released"}`)
-    if (f) for (const a of f.athletes) console.log(`      ${a.name} · ${a.graduationYear ?? "—"} · ${a.club ?? "no club"} · photo=${a.photoUrl ? "yes" : "none"} · commit=${a.collegeCommit ?? "—"} · results=[${a.results.join(" | ")}]`)
+    if (f) for (const a of f.athletes) console.log(`\n   ${a.name}\n      ${a.summary || "(no summary)"}`)
   }
 }
 main().catch(e => { console.error(e); process.exit(1) })

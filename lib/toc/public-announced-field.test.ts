@@ -12,6 +12,7 @@ const state = {
   invitations: [] as Row[],
   athletes: [] as Row[],
   placements: [] as Row[],
+  matches: [] as Row[],
   /** Every (table, columns) pair the module asked for, so tests can assert nothing broad was selected. */
   selects: [] as { table: string; columns: string }[],
 }
@@ -49,14 +50,17 @@ vi.mock("@/lib/supabase/admin", () => ({
       if (table === "toc_invitations") return makeQuery(table, state.invitations)
       if (table === "athletes") return makeQuery(table, state.athletes)
       if (table === "nhsca_placements") return makeQuery(table, state.placements)
+      if (table === "matches") return makeQuery(table, state.matches)
       throw new Error(`unexpected table ${table}`)
     },
   }),
 }))
 
 import {
+  buildAthleteSummary,
   FORBIDDEN_SUMMARY_COLUMNS,
   formatPlacement,
+  publicAchievementLines,
   getPublicAnnouncedWeight,
   hasAnyAnnouncedWeight,
   listPublicWeightTiles,
@@ -66,6 +70,7 @@ import {
 beforeEach(() => {
   state.selects = []
   state.placements = []
+  state.matches = []
   state.publication = [
     // 117 released to the public.
     { weight_class: 117, announced_at: "2026-08-14T18:00:00Z", athlete_field_locked: true },
@@ -135,6 +140,7 @@ describe("public payload contains nothing private", () => {
         "name",
         "photoUrl",
         "results",
+        "summary",
       ])
     }
   })
@@ -298,6 +304,72 @@ describe("national results from nhsca_placements", () => {
   it("keeps the placements school out of the payload", async () => {
     const field = await getPublicAnnouncedWeight(117)
     expect(JSON.stringify(field)).not.toContain("Davie")
+  })
+})
+
+describe("publicAchievementLines", () => {
+  it("keeps curated accomplishment entries", () => {
+    expect(publicAchievementLines(["2026 State Champion", "2x Regional Champion", "3x All Conference."])).toEqual([
+      "2026 State Champion",
+      "2x Regional Champion",
+      "3x All Conference",
+    ])
+  })
+
+  it("drops any entry that names a school", () => {
+    // Free text an admin typed, so it has to be screened rather than trusted.
+    expect(
+      publicAchievementLines(["2026 State Champion", "Team captain at Davie High School", "Prep National qualifier"]),
+    ).toEqual(["2026 State Champion"])
+  })
+
+  it("tolerates a bare string, null and junk", () => {
+    expect(publicAchievementLines("45-8 as a freshman")).toEqual(["45-8 as a freshman"])
+    expect(publicAchievementLines(null)).toEqual([])
+    expect(publicAchievementLines([1, null, "  "])).toEqual([])
+  })
+})
+
+describe("buildAthleteSummary", () => {
+  it("writes a paragraph in the order a reader expects", () => {
+    const summary = buildAthleteSummary({
+      name: "Jaxon Thomas",
+      graduationYear: 2027,
+      club: "Darkhorse",
+      collegeCommit: "Binghamton",
+      achievements: ["2026 State Champion", "2x Regional Champion", "3x All Conference"],
+      results: ["2024-25 · 59-1 · 30 pins", "2026 NHSCA 4-2"],
+    })
+    expect(summary).toBe(
+      "Jaxon Thomas is a Class of 2027 wrestler who competes with Darkhorse. " +
+        "Jaxon's accomplishments include 2026 State Champion, 2x Regional Champion and 3x All Conference. " +
+        "Recent results: 2024-25 · 59-1 · 30 pins; 2026 NHSCA 4-2. " +
+        "Jaxon is committed to Binghamton.",
+    )
+  })
+
+  it("still says something useful with only a club", () => {
+    const summary = buildAthleteSummary({
+      name: "Xavier Bernthal",
+      graduationYear: 2029,
+      club: "OTM Walters",
+      collegeCommit: null,
+      achievements: [],
+      results: [],
+    })
+    expect(summary).toBe("Xavier Bernthal is a Class of 2029 wrestler who competes with OTM Walters.")
+  })
+
+  it("handles a single accomplishment without a dangling conjunction", () => {
+    const summary = buildAthleteSummary({
+      name: "Solo Kid",
+      graduationYear: null,
+      club: null,
+      collegeCommit: null,
+      achievements: ["45-8 last season as a freshman"],
+      results: [],
+    })
+    expect(summary).toBe("Solo Kid is a wrestler. Solo's accomplishments include 45-8 last season as a freshman.")
   })
 })
 

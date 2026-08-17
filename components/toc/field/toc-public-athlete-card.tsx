@@ -28,7 +28,7 @@ export function TocPublicAthleteCard({ athlete }: { athlete: PublicFieldAthlete 
     .filter(Boolean)
     .join(" · ")
 
-  const hasSummary = athlete.results.length > 0 || Boolean(athlete.collegeCommit)
+  const hasSummary = athlete.summary.trim().length > 0
 
   return (
     <li className="overflow-hidden rounded-sm border border-white/10 bg-white/[0.03] transition-colors hover:border-emerald-400/40">
@@ -69,29 +69,17 @@ export function TocPublicAthleteCard({ athlete }: { athlete: PublicFieldAthlete 
 
       {open ? (
         <div className="border-t border-white/10 px-3 pb-4 pt-3 sm:px-4">
-          {athlete.collegeCommit ? (
-            <p className="text-[11px] uppercase tracking-[0.12em] text-emerald-300/90">
-              Committed · {athlete.collegeCommit}
-            </p>
-          ) : null}
-
-          {athlete.results.length > 0 ? (
-            <ul className={athlete.collegeCommit ? "mt-2 space-y-1" : "space-y-1"}>
-              {athlete.results.map((r) => (
-                <li key={r} className="text-[11px] leading-snug text-white/60">
-                  {r}
-                </li>
-              ))}
-            </ul>
-          ) : null}
-
-          {!hasSummary ? <p className="text-[11px] text-white/40">No national results on file yet.</p> : null}
+          {hasSummary ? (
+            <p className="text-[12px] leading-relaxed text-white/70">{athlete.summary}</p>
+          ) : (
+            <p className="text-[11px] text-white/40">Profile details coming soon.</p>
+          )}
 
           <a
             href={`/view-profile?id=${encodeURIComponent(athlete.athleteId)}`}
             className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[#C8A94A] underline-offset-4 hover:underline"
           >
-            See profile
+            Read more
             <ExternalLink className="h-3 w-3" aria-hidden />
           </a>
         </div>

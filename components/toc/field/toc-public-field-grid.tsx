@@ -23,11 +23,56 @@ function announcedLabel(iso: string): string {
 export function TocPublicFieldGrid({
   tiles,
   currentWeight,
+  compact = false,
 }: {
   tiles: PublicWeightTile[]
   /** When set, that tile renders as the page you are already on rather than a link. */
   currentWeight?: number
+  /** Small horizontal strip for the top of a weight page, rather than the full hub grid. */
+  compact?: boolean
 }) {
+  if (compact) {
+    return (
+      <div className="flex flex-wrap justify-center gap-2">
+        {tiles.map((tile) => {
+          const isCurrent = currentWeight === tile.weightClass
+          if (!tile.announced) {
+            return (
+              <span
+                key={tile.weightClass}
+                aria-disabled="true"
+                title={`${tile.weightClass} lbs — coming soon`}
+                className="rounded-sm border border-[#CC0000]/30 bg-[#CC0000]/[0.06] px-3 py-1.5 text-sm font-bold text-[#CC0000]/70"
+              >
+                {tile.weightClass}
+              </span>
+            )
+          }
+          if (isCurrent) {
+            return (
+              <span
+                key={tile.weightClass}
+                aria-current="page"
+                className="rounded-sm border-2 border-emerald-400 bg-emerald-400/20 px-3 py-1.5 text-sm font-bold text-emerald-300"
+              >
+                {tile.weightClass}
+              </span>
+            )
+          }
+          return (
+            <HardLink
+              key={tile.weightClass}
+              href={`/tournament-of-champions/field/${tile.weightClass}`}
+              className="rounded-sm border border-emerald-400/45 bg-emerald-400/[0.07] px-3 py-1.5 text-sm font-bold text-emerald-400 transition-colors hover:border-emerald-400 hover:bg-emerald-400/20"
+            >
+              {tile.weightClass}
+            </HardLink>
+          )
+        })}
+      </div>
+    )
+  }
+
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4">
       {tiles.map((tile) => {

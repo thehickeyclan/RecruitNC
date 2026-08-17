@@ -34,7 +34,7 @@ export default async function TocPublicFieldPage() {
           </TocVarsityHeading>
 
           <p className="mx-auto mt-4 max-w-2xl text-center text-sm leading-relaxed text-white/60">
-            Invited wrestlers are announced by weight class. Each name below is an individual invitation —
+            Athletes are announced by weight class. Each name is an individual invitation —
             athletes are <strong className="text-white/75">listed alphabetically and the field is not seeded</strong>.
             Brackets and seeds are released separately.
           </p>

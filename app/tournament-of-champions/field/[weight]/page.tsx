@@ -27,10 +27,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: `${weight} lbs — The Field | Tournament of Champions 2026`,
-    description: `The ${weight} lb field for the NC United Tournament of Champions: ${field.athletes.length} invited wrestlers, listed alphabetically. The field is not seeded.`,
+    description: `The ${weight} lb field for the NC United Tournament of Champions: ${field.athletes.length} athletes in the weight class, listed alphabetically. The field is not seeded.`,
     openGraph: {
       title: `${weight} lbs — Tournament of Champions 2026`,
-      description: `${field.athletes.length} invited wrestlers at ${weight} lbs.`,
+      description: `${field.athletes.length} athletes in the ${weight} lb weight class.`,
     },
   }
 }
@@ -54,16 +54,21 @@ export default async function TocPublicFieldWeightRoute({ params }: Props) {
       <section className={tocSectionClass()}>
         <div className={tocContainerClass("max-w-5xl")}>
           <p className="text-center text-[11px] font-bold uppercase tracking-[0.22em] text-[#CC0000]">
-            NC United · The Field
+            Tournament of Champions · {weight} lbs
           </p>
           <TocVarsityHeading as="h1" className="mt-3 text-center text-white">
             {weight} lbs
           </TocVarsityHeading>
 
           <p className="mx-auto mt-4 max-w-xl text-center text-sm leading-relaxed text-white/60">
-            {field.athletes.length} invited wrestler{field.athletes.length === 1 ? "" : "s"} ·{" "}
+            {field.athletes.length} athlete{field.athletes.length === 1 ? "" : "s"} in the weight class ·{" "}
             <strong className="text-white/75">listed alphabetically · not seeded</strong>
           </p>
+
+          {/* Weight strip up top, compact, so browsing other weights is the first thing available. */}
+          <div className="mt-8">
+            <TocPublicFieldGrid tiles={tiles} currentWeight={weight} compact />
+          </div>
 
           {field.athletes.length === 0 ? (
             <p className="mt-10 rounded-sm border border-white/10 bg-white/[0.03] p-8 text-center text-sm text-white/55">
@@ -76,14 +81,6 @@ export default async function TocPublicFieldWeightRoute({ params }: Props) {
               ))}
             </ul>
           )}
-
-          {/* Weight nav repeated here so a reader can move between released weights without going back. */}
-          <div className="mt-14 border-t border-white/10 pt-10">
-            <p className="mb-6 text-center text-[11px] font-bold uppercase tracking-[0.22em] text-white/40">
-              All weight classes
-            </p>
-            <TocPublicFieldGrid tiles={tiles} currentWeight={weight} />
-          </div>
 
           <p className="mt-10 text-center text-sm text-white/45">
             <HardLink
