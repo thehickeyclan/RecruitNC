@@ -3,9 +3,10 @@ import { notFound } from "next/navigation"
 
 import { HardLink } from "@/components/hard-link"
 import { TocPublicAthleteCard } from "@/components/toc/field/toc-public-athlete-card"
+import { TocPublicFieldGrid } from "@/components/toc/field/toc-public-field-grid"
 import { TocVarsityHeading, tocContainerClass, tocSectionClass } from "@/components/toc/toc-theme"
 import { parseAthleteWeightClass } from "@/lib/toc/invitations"
-import { getPublicAnnouncedWeight } from "@/lib/toc/public-announced-field"
+import { getPublicAnnouncedWeight, listPublicWeightTiles } from "@/lib/toc/public-announced-field"
 
 export const dynamic = "force-dynamic"
 
@@ -46,6 +47,8 @@ export default async function TocPublicFieldWeightRoute({ params }: Props) {
   const field = await getPublicAnnouncedWeight(weight)
   if (!field) notFound()
 
+  const tiles = await listPublicWeightTiles()
+
   return (
     <div className="min-h-screen bg-[#061224]">
       <section className={tocSectionClass()}>
@@ -74,12 +77,20 @@ export default async function TocPublicFieldWeightRoute({ params }: Props) {
             </ul>
           )}
 
+          {/* Weight nav repeated here so a reader can move between released weights without going back. */}
+          <div className="mt-14 border-t border-white/10 pt-10">
+            <p className="mb-6 text-center text-[11px] font-bold uppercase tracking-[0.22em] text-white/40">
+              All weight classes
+            </p>
+            <TocPublicFieldGrid tiles={tiles} currentWeight={weight} />
+          </div>
+
           <p className="mt-10 text-center text-sm text-white/45">
             <HardLink
-              href="/tournament-of-champions/field"
+              href="/tournament-of-champions"
               className="font-semibold text-[#C8A94A] underline-offset-4 hover:underline"
             >
-              All weight classes
+              Back to Tournament of Champions
             </HardLink>
           </p>
         </div>
