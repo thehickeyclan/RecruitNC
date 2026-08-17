@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { HardLink } from "@/components/hard-link"
 import { TocStatusReasonDialog } from "@/components/toc/admin/toc-status-reason-dialog"
-import { ArrowLeft, Check, ChevronDown, ChevronUp, Download, ExternalLink, GripVertical, Loader2, Lock, Megaphone, RefreshCw, Sparkles, Unlock, UserMinus } from "lucide-react"
+import { ArrowLeft, Check, ChevronDown, ChevronUp, Download, ExternalLink, Globe, GripVertical, Loader2, Lock, Megaphone, RefreshCw, Sparkles, Unlock, UserMinus } from "lucide-react"
 import { TOC_MAX_CONFIRMED_PER_WEIGHT, type TocStatusReason } from "@/lib/toc/invitations"
 import { applyTocSeedOrder, type TocFieldBoard, type TocFieldAthlete, type TocWeightBoard } from "@/lib/toc/field-board"
 import {
@@ -152,6 +152,7 @@ function WeightBoardCard({
   onLockDraw,
   onUnlockDraw,
   onToggleAthleteField,
+  onToggleAnnounced,
   bracketBusy,
   fieldStatusBusy,
   canManage,
@@ -175,10 +176,12 @@ function WeightBoardCard({
     isComplete?: boolean
     athleteFieldLocked?: boolean
     athleteFieldLockedAt?: string | null
+    announcedAt?: string | null
   }
   onLockDraw: (weightClass: number) => Promise<void>
   onUnlockDraw: (weightClass: number) => Promise<void>
   onToggleAthleteField: (weightClass: number, locked: boolean) => Promise<void>
+  onToggleAnnounced: (weightClass: number, announced: boolean, athleteCount: number) => Promise<void>
   bracketBusy: boolean
   fieldStatusBusy: boolean
   canManage: boolean
@@ -548,6 +551,81 @@ function WeightBoardCard({
             </p>
           </div>
 
+          {/*
+            Public release. Everyone with field access sees the state — NC Mat needs to know what is already
+            live — but only a full admin gets the switch, since this is the one control on the page that puts
+            athlete data in front of the public.
+          */}
+          <div
+            className={`rounded-lg border p-3 ${
+              bracketStatus?.announcedAt
+                ? "border-[#CC0000]/45 bg-[#CC0000]/[0.09]"
+                : "border-white/10 bg-white/[0.03]"
+            }`}
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <Badge
+                className={
+                  bracketStatus?.announcedAt
+                    ? "bg-[#CC0000] text-white hover:bg-[#CC0000]"
+                    : "border border-white/20 bg-white/5 text-white/70 hover:bg-white/5"
+                }
+              >
+                {bracketStatus?.announcedAt ? (
+                  <Globe className="mr-1 h-3.5 w-3.5" />
+                ) : (
+                  <Lock className="mr-1 h-3.5 w-3.5" />
+                )}
+                {bracketStatus?.announcedAt ? "Live on public field page" : "Not public"}
+              </Badge>
+              {canManage ? (
+                <Button
+                  type="button"
+                  variant={bracketStatus?.announcedAt ? "ghost" : "outline"}
+                  size="sm"
+                  disabled={fieldStatusBusy}
+                  className={
+                    bracketStatus?.announcedAt
+                      ? "h-8 text-white/65 hover:bg-white/10 hover:text-white"
+                      : "h-8 border-[#CC0000]/45 bg-[#CC0000]/10 text-red-100 hover:bg-[#CC0000]/25 hover:text-white"
+                  }
+                  onClick={() =>
+                    void onToggleAnnounced(
+                      board.weightClass,
+                      !bracketStatus?.announcedAt,
+                      board.confirmedCount,
+                    )
+                  }
+                >
+                  {fieldStatusBusy ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : null}
+                  {bracketStatus?.announcedAt ? "Remove from public page" : "Release publicly"}
+                </Button>
+              ) : null}
+            </div>
+            <p className="mt-2 text-[11px] leading-relaxed text-white/55">
+              {bracketStatus?.announcedAt ? (
+                <>
+                  Public since{" "}
+                  {new Date(bracketStatus.announcedAt).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                  })}
+                  {" · "}
+                  <HardLink
+                    href={`/tournament-of-champions/field/${board.weightClass}`}
+                    className="font-semibold text-[#F3D98B] underline-offset-2 hover:underline"
+                  >
+                    view public page
+                  </HardLink>
+                </>
+              ) : canManage ? (
+                "Hidden from the public field page. Release only after NC Mat has announced this weight."
+              ) : (
+                "Hidden from the public field page. An admin releases each weight after it is announced."
+              )}
+            </p>
+          </div>
+
           {bracketStatus?.locked ? (
             <>
               <Badge className="bg-emerald-600 text-white">Draw published</Badge>
@@ -663,6 +741,7 @@ export default function TocFieldAdminPage() {
         isComplete?: boolean
         athleteFieldLocked?: boolean
         athleteFieldLockedAt?: string | null
+        announcedAt?: string | null
       }
     > = {}
     for (const s of data.statuses ?? []) {
@@ -675,6 +754,7 @@ export default function TocFieldAdminPage() {
         isComplete: typeof s.isComplete === "boolean" ? s.isComplete : undefined,
         athleteFieldLocked: s.athleteFieldLocked === true,
         athleteFieldLockedAt: typeof s.athleteFieldLockedAt === "string" ? s.athleteFieldLockedAt : null,
+        announcedAt: typeof s.announcedAt === "string" ? s.announcedAt : null,
       }
     }
     setBracketStatuses(map)
@@ -881,6 +961,35 @@ export default function TocFieldAdminPage() {
     }
   }
 
+  /**
+   * Release a weight to the public field page. Separate from {@link toggleAthleteField} on purpose: marking a
+   * field ready is an internal handoff to NC Mat, this puts athlete names and photos in front of the world.
+   * Admin-only server side; the confirm text spells out the blast radius because it is irreversible in practice
+   * (people will have seen it).
+   */
+  const toggleAnnounced = async (weightClass: number, announced: boolean, athleteCount: number) => {
+    const prompt = announced
+      ? `Publish the ${weightClass} lb field publicly?\n\nThis puts ${athleteCount} wrestler name${athleteCount === 1 ? "" : "s"} and photo${athleteCount === 1 ? "" : "s"} on the public field page immediately, visible to anyone. Only do this after NC Mat has announced this weight.`
+      : `Remove the ${weightClass} lb field from the public page?\n\nAnyone who already saw it will remember it. Use this only to correct a mistaken release.`
+    if (!confirm(prompt)) return
+
+    setFieldStatusBusyWeight(weightClass)
+    try {
+      const res = await fetch(`/api/admin/toc/announce/${weightClass}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ announced }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "Failed to update public release")
+      await loadBracketStatuses()
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to update public release")
+    } finally {
+      setFieldStatusBusyWeight(null)
+    }
+  }
+
   return (
     <div className="admin-dark-page relative left-1/2 min-h-screen w-screen -translate-x-1/2 bg-[#060f1f] px-4 py-8 text-white sm:px-6">
       <div className="mx-auto max-w-[96rem] space-y-6">
@@ -1074,6 +1183,7 @@ export default function TocFieldAdminPage() {
             onLockDraw={lockDraw}
             onUnlockDraw={unlockDraw}
             onToggleAthleteField={toggleAthleteField}
+            onToggleAnnounced={toggleAnnounced}
             bracketBusy={bracketBusyWeight === w.weightClass}
             fieldStatusBusy={fieldStatusBusyWeight === w.weightClass}
             canManage={canManage}

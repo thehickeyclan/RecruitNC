@@ -30,6 +30,8 @@ export async function GET() {
         ...status,
         athleteFieldLocked: fieldStatus?.athleteFieldLocked === true,
         athleteFieldLockedAt: fieldStatus?.athleteFieldLockedAt ?? null,
+        /** Set once the weight is live on the public field page — distinct from the internal field lock. */
+        announcedAt: fieldStatus?.announcedAt ?? null,
       }
     }),
   )

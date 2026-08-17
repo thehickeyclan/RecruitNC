@@ -1,0 +1,22 @@
+-- Public release flag for TOC weight classes.
+--
+-- Applied to production 2026-08-17.
+--
+-- Why a separate column instead of reusing athlete_field_locked: locking a field means staff finished
+-- building it, which routinely happens weeks before media releases that weight. When this shipped, seven
+-- weights (117, 125, 133, 141, 149, 157, 174) were already locked with nothing announced — gating the
+-- public page on the lock would have published all seven at once.
+--
+-- announced_at is the ONLY thing that makes a weight visible on /tournament-of-champions/field.
+-- See lib/toc/public-announced-field.ts and its tests.
+
+alter table public.toc_field_publication_status
+  add column if not exists announced_at timestamptz,
+  add column if not exists announced_by uuid;
+
+comment on column public.toc_field_publication_status.announced_at is
+  'Set when media has publicly released this weight class. This alone makes the weight visible on /tournament-of-champions/field. Distinct from athlete_field_locked, which only means staff finished building the field.';
+
+create index if not exists toc_field_publication_status_announced_at_idx
+  on public.toc_field_publication_status (announced_at)
+  where announced_at is not null;
