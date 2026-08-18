@@ -4,6 +4,10 @@
     {
       "path": "/api/cron/blue-maintenance",
       "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron/commit-alerts",
+      "schedule": "0 * * * *"
     }
   ]
 }
