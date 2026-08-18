@@ -29,7 +29,7 @@ export function getPublicRankingsMax(_year?: number | null): number {
   return DEFAULT_PUBLIC_RANKINGS_CAP
 }
 
-/** Clamp a requested top-N (or "all") to the official published top 20. */
+/** Clamp a requested top-N (or "all") to the official published top 30. */
 export function clampProspectRankingsLimit(
   year: number | null | undefined,
   requested: number | null | undefined,

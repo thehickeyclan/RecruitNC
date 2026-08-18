@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { ArrowDown, ArrowUp, Bot, CheckCircle2, Eye, Lock, Save, Search, Sparkles, UploadCloud } from "lucide-react"
+import { getPublicRankingsMax } from "@/lib/public-rankings-cap"
 
 type Evidence = {
   kind: string
@@ -34,6 +35,7 @@ type BoardAthlete = {
   score_breakdown: Record<string, number>
   evidence: Evidence[]
   data_gaps: string[]
+  head_to_head: Array<{ opponentId: string; opponent: string; wins: number; losses: number }>
   match_count: number
   win_loss?: string | null
   college?: string | null
@@ -87,8 +89,9 @@ export default function RankingBoardPage() {
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [query, setQuery] = useState("")
-  const [view, setView] = useState<"final" | "ai" | "review" | "gaps">("final")
+  const [view, setView] = useState<"final" | "recommendation" | "review" | "gaps">("final")
   const [status, setStatus] = useState("")
+  const publicCap = getPublicRankingsMax(Number(year))
 
   const loadBoard = async () => {
     setLoading(true)
@@ -98,14 +101,17 @@ export default function RankingBoardPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || "Failed to load board")
       const rows = (data.athletes || []) as BoardAthlete[]
-      const withFinal = rows
-        .map((athlete) => ({
-          ...athlete,
-          final_rank: athlete.prospect_ranking || athlete.ai_rank,
-          locked: false,
-          reviewer_note: "",
-        }))
-        .sort((a, b) => (a.final_rank || 999) - (b.final_rank || 999))
+      // Passive by default: preserve the admin's published top 30 exactly as-is.
+      // Formula recommendations order only the private watchlist until an admin
+      // explicitly previews or accepts a recommendation.
+      const published = rows
+        .filter((athlete) => athlete.prospect_ranking != null && athlete.prospect_ranking <= publicCap)
+        .sort((a, b) => (a.prospect_ranking || 999) - (b.prospect_ranking || 999))
+      const watchlist = rows
+        .filter((athlete) => athlete.prospect_ranking == null || athlete.prospect_ranking > publicCap)
+        .sort((a, b) => a.ai_rank - b.ai_rank)
+      const withFinal = [...published, ...watchlist]
+        .map((athlete) => ({ ...athlete, locked: false, reviewer_note: "" }))
         .map((athlete, index) => ({ ...athlete, final_rank: index + 1 }))
       setAthletes(withFinal)
     } catch (error) {
@@ -122,7 +128,7 @@ export default function RankingBoardPage() {
   const filtered = useMemo(() => {
     const term = query.trim().toLowerCase()
     let rows = athletes
-    if (view === "ai") rows = [...rows].sort((a, b) => a.ai_rank - b.ai_rank)
+    if (view === "recommendation") rows = [...rows].sort((a, b) => a.ai_rank - b.ai_rank)
     if (view === "review") {
       rows = rows.filter(
         (a) =>
@@ -148,7 +154,9 @@ export default function RankingBoardPage() {
     return rows
   }, [athletes, query, view])
 
-  const top30 = athletes.filter((a) => (a.final_rank || 999) <= 30).length
+  const currentlyPublished = athletes.filter(
+    (athlete) => athlete.prospect_ranking != null && athlete.prospect_ranking <= publicCap,
+  ).length
   const highConfidence = athletes.filter((a) => a.confidence === "High").length
   const needsReview = athletes.filter((a) => a.confidence !== "High" || a.data_gaps.length >= 3).length
   const missingMatches = athletes.filter((a) => a.match_count === 0).length
@@ -165,7 +173,8 @@ export default function RankingBoardPage() {
     })
   }
 
-  const applyAiOrder = () => {
+  const applyRecommendationOrder = () => {
+    setStatus("Formula order previewed on the working board. Nothing has been saved or published.")
     setAthletes((prev) => {
       const locked = prev.filter((a) => a.locked).sort((a, b) => (a.final_rank || 999) - (b.final_rank || 999))
       const unlocked = prev.filter((a) => !a.locked).sort((a, b) => a.ai_rank - b.ai_rank)
@@ -197,7 +206,9 @@ export default function RankingBoardPage() {
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || "Failed to save rankings")
-      setStatus(`Saved ${data.updated} final ranks. Public rankings now use this order.`)
+      setStatus(
+        `Published the top ${data.published}. ${data.cleared} additional candidates remain private and unranked publicly.`,
+      )
       await loadBoard()
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Failed to save rankings")
@@ -214,11 +225,13 @@ export default function RankingBoardPage() {
           <section className="rounded-3xl border border-blue-800/60 bg-gradient-to-br from-[#041532] via-[#071f4a] to-[#010817] p-6 shadow-2xl">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <Badge className="mb-3 bg-[#d6b75d] text-slate-950">RecruitNC Rankings Lab</Badge>
-                <h1 className="text-3xl font-black tracking-tight md:text-5xl">AI Ranking Board</h1>
+                <Badge className="mb-3 bg-[#d6b75d] text-slate-950">TOC résumé formula · v2</Badge>
+                <h1 className="text-3xl font-black tracking-tight md:text-5xl">Formula Recommendation Board</h1>
                 <p className="mt-3 max-w-3xl text-sm text-blue-100 md:text-base">
-                  Transparent ranking recommendations from match data, NCHSAA, NHSCA, Super32, Fargo, college opens,
-                  and profile achievements. The model suggests. You make the final call.
+                  The same evidence-first approach as the TOC field board: current-season direct wins over athletes
+                  in the same graduation class, match résumé,
+                  NCHSAA depth, NHSCA, Super32, Fargo freestyle, NC United/NHSCA Duals, RankWrestler, college opens,
+                  and verified profile achievements. Direct winners break comparable résumés; you make the final call.
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
@@ -262,8 +275,8 @@ export default function RankingBoardPage() {
             </Card>
             <Card className="border-blue-900 bg-slate-900 text-white">
               <CardContent className="p-5">
-                <p className="text-sm text-blue-200">Published Top 30</p>
-                <p className="text-3xl font-black">{top30}</p>
+                <p className="text-sm text-blue-200">Currently published</p>
+                <p className="text-3xl font-black">{currentlyPublished}/{publicCap}</p>
               </CardContent>
             </Card>
             <Card className="border-blue-900 bg-slate-900 text-white">
@@ -298,9 +311,9 @@ export default function RankingBoardPage() {
                   <Eye className="mr-2 h-4 w-4" />
                   Final order
                 </Button>
-                <Button onClick={() => setView("ai")} variant={view === "ai" ? "default" : "outline"} className={view === "ai" ? activeGoldButton : darkOutlineButton}>
+                <Button onClick={() => setView("recommendation")} variant={view === "recommendation" ? "default" : "outline"} className={view === "recommendation" ? activeGoldButton : darkOutlineButton}>
                   <Bot className="mr-2 h-4 w-4" />
-                  AI order
+                  Formula recommendations
                 </Button>
                 <Button onClick={() => setView("review")} variant={view === "review" ? "default" : "outline"} className={view === "review" ? activeGoldButton : darkOutlineButton}>
                   <Sparkles className="mr-2 h-4 w-4" />
@@ -321,12 +334,12 @@ export default function RankingBoardPage() {
                     className="w-full border-blue-800 bg-slate-950 pl-9 text-white placeholder:text-slate-500 sm:w-72"
                   />
                 </div>
-                <Button onClick={applyAiOrder} className="bg-purple-600 hover:bg-purple-700">
-                  Apply AI order
+                <Button onClick={applyRecommendationOrder} className="bg-purple-600 hover:bg-purple-700">
+                  Preview formula order
                 </Button>
                 <Button onClick={saveFinalRanks} disabled={saving || loading} className="bg-[#d6b75d] text-slate-950 hover:bg-[#e6c86b]">
                   <Save className="mr-2 h-4 w-4" />
-                  {saving ? "Saving..." : "Save final ranks"}
+                  {saving ? "Publishing..." : `Publish top ${publicCap}`}
                 </Button>
               </div>
             </CardContent>
@@ -367,13 +380,24 @@ export default function RankingBoardPage() {
               {filtered.map((athlete) => {
                 const finalRank = athlete.final_rank || 999
                 const aiDelta = athlete.prospect_ranking ? athlete.prospect_ranking - athlete.ai_rank : null
+                const sameClassWins = (athlete.head_to_head || []).reduce((sum, record) => sum + record.wins, 0)
+                const isPublicSlot = finalRank <= publicCap
                 return (
-                  <Card key={athlete.id} className="overflow-hidden border-blue-900 bg-slate-900 text-white">
+                  <div key={athlete.id} className="space-y-4">
+                    {finalRank === publicCap + 1 ? (
+                      <div className="rounded-2xl border border-dashed border-blue-700 bg-blue-950/40 px-5 py-4">
+                        <p className="text-sm font-black uppercase tracking-[0.2em] text-[#d6b75d]">Private watchlist</p>
+                        <p className="mt-1 text-sm text-blue-100">
+                          Candidates below this line stay private. The formula continues ranking the full pool so you can identify who deserves top-{publicCap} consideration.
+                        </p>
+                      </div>
+                    ) : null}
+                    <Card className="overflow-hidden border-blue-900 bg-slate-900 text-white">
                     <CardHeader className="border-b border-blue-950 bg-slate-950/70 p-4">
                       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div className="flex gap-4">
-                          <div className="flex min-w-16 flex-col items-center rounded-2xl bg-[#d6b75d] p-3 text-slate-950">
-                            <span className="text-xs font-bold uppercase">Final</span>
+                          <div className={`flex min-w-16 flex-col items-center rounded-2xl p-3 ${isPublicSlot ? "bg-[#d6b75d] text-slate-950" : "bg-slate-800 text-blue-100"}`}>
+                            <span className="text-xs font-bold uppercase">Working</span>
                             <span className="text-3xl font-black">#{finalRank}</span>
                           </div>
                           <div>
@@ -386,10 +410,18 @@ export default function RankingBoardPage() {
                               {athlete.highschool || "School TBD"} · {athlete.weightclass || "TBD"} lbs · Class of {athlete.graduationyear}
                             </p>
                             <div className="mt-2 flex flex-wrap gap-2">
-                              <Badge className="bg-blue-700 text-white">AI #{athlete.ai_rank}</Badge>
+                              <Badge className="bg-blue-700 text-white">Formula #{athlete.ai_rank}</Badge>
                               <Badge className="bg-slate-700 text-white">Score {athlete.ai_score}</Badge>
+                              <Badge className={isPublicSlot ? "bg-[#d6b75d] text-slate-950" : "bg-slate-700 text-blue-100"}>
+                                {isPublicSlot ? `Inside top-${publicCap} cutoff` : "Private watchlist"}
+                              </Badge>
                               {athlete.rankwrestler_rank ? <Badge className="bg-slate-700 text-white">RW #{athlete.rankwrestler_rank}</Badge> : null}
                               {athlete.win_loss ? <Badge className="bg-emerald-700 text-white">Matches {athlete.win_loss}</Badge> : null}
+                              {sameClassWins > 0 ? (
+                                <Badge className="bg-emerald-600 text-white">
+                                  {sameClassWins} direct same-class win{sameClassWins === 1 ? "" : "s"}
+                                </Badge>
+                              ) : null}
                               {athlete.match_count === 0 ? (
                                 <Badge className="bg-red-700 text-white">No match data</Badge>
                               ) : athlete.match_count < 20 ? (
@@ -398,7 +430,7 @@ export default function RankingBoardPage() {
                               <Badge className={confidenceClass(athlete.confidence)}>{athlete.confidence} confidence</Badge>
                               {aiDelta ? (
                                 <Badge className={aiDelta > 0 ? "bg-emerald-700 text-white" : "bg-orange-700 text-white"}>
-                                  AI says {aiDelta > 0 ? `+${aiDelta}` : aiDelta}
+                                  Formula says {aiDelta > 0 ? `+${aiDelta}` : aiDelta}
                                 </Badge>
                               ) : null}
                             </div>
@@ -436,7 +468,7 @@ export default function RankingBoardPage() {
                             }
                             className="bg-purple-600 hover:bg-purple-700"
                           >
-                            Accept AI
+                            Use recommendation
                           </Button>
                           {athlete.match_count < 20 ? (
                             <Button size="sm" asChild className="bg-[#d6b75d] text-slate-950 hover:bg-[#e6c86b]">
@@ -485,7 +517,8 @@ export default function RankingBoardPage() {
                         {athlete.confidence_reason}
                       </div>
                     </CardContent>
-                  </Card>
+                    </Card>
+                  </div>
                 )
               })}
             </div>

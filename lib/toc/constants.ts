@@ -360,12 +360,12 @@ export const TOC_FOUNDING_PARTNERS = {
       logoTheme: "dark" as const,
       tier: "Premier Partner",
       ecosystemNote: "$1,000 committed directly back to North Carolina wrestlers.",
-      tagline: "Ten wrestlers will each receive $100 in Wrestling Guild training credit.",
+      tagline: "Win up to $1,000 in training with current and former NCAA athletes.",
       awardDetails: [
         "Create a free wrestler account August 9–September 15",
-        "Ten recipients selected randomly — one award per wrestler",
+        "Recipients selected randomly — one award per wrestler",
         "Recipients must be present at the Tournament of Champions on September 19",
-        "$100 credit is awarded immediately and may be used with any Guild coach at any location",
+        "Training credit is awarded immediately and may be used with any Guild coach at any location",
       ],
       signupLabel: "Create a free Guild account",
       rulesHref: "/tournament-of-champions/wrestling-guild-training-awards",
@@ -622,6 +622,10 @@ export const TOC_CONFIRMED_COLLEGES_DEFAULT = [
   {
     name: "NC State",
     logoUrl: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/fe5ixmej-1745958547259.png",
+  },
+  {
+    name: "UNC Pembroke",
+    logoUrl: "/images/toc/unc-pembroke-braves-logo.png",
   },
   {
     name: "University of Virginia",

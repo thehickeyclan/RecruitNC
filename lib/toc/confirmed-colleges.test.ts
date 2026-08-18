@@ -19,6 +19,7 @@ describe("mergeTocConfirmedCollegeNames", () => {
     ])
     expect(merged).toContain("UMO")
     expect(merged).toContain("Lynchburg")
+    expect(merged).toContain("UNC Pembroke")
     expect(merged.indexOf("UMO")).toBeGreaterThan(merged.indexOf("Montreat"))
   })
 
@@ -40,5 +41,7 @@ describe("resolveTocConfirmedColleges", () => {
     expect(umo?.logoUrl).toContain("cwjgktar-1745958885613")
     const lynchburg = colleges.find((c) => c.name === "Lynchburg")
     expect(lynchburg?.logoUrl).toContain("Lynchburg.jpg")
+    const uncPembroke = colleges.find((c) => c.name === "UNC Pembroke")
+    expect(uncPembroke?.logoUrl).toBe("/images/toc/unc-pembroke-braves-logo.png")
   })
 })

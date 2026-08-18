@@ -5,7 +5,7 @@ import { ArrowLeft, ExternalLink } from "lucide-react"
 export const metadata: Metadata = {
   title: "Wrestling Guild Training Awards Rules | NC United",
   description:
-    "Official rules for the ten $100 Wrestling Guild training-credit awards presented through the 2026 NC United Tournament of Champions partnership.",
+    "Official rules for the Wrestling Guild training-credit awards — win up to $1,000 in training with current and former NCAA athletes — presented through the 2026 NC United Tournament of Champions partnership.",
 }
 
 const RULE_SECTIONS = [
@@ -105,8 +105,8 @@ export default function WrestlingGuildTrainingAwardsRulesPage() {
           </h1>
           <p className="mt-3 text-lg font-semibold text-[#D3B574]">Official Rules · August 9–September 15, 2026</p>
           <p className="mt-5 max-w-3xl text-base leading-relaxed text-white/70 sm:text-lg">
-            Ten wrestlers will each receive $100 in Wrestling Guild training credit. Creating a wrestler account is
-            free, and no purchase is necessary.
+            Win up to $1,000 in training with current and former NCAA athletes. Creating a wrestler account is free,
+            and no purchase is necessary. The full award structure is set out in the rules below.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <a

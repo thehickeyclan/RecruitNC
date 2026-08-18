@@ -39,14 +39,7 @@ interface Athlete {
   super_32_2025_placement: string | null
   recruitnc_score?: number
   calculated_rank?: number
-  score_breakdown?: {
-    ranked_wins: number
-    college_opens: number
-    super_32: number
-    nhsca: number
-    state: number
-    gpa: number
-  }
+  score_breakdown?: Record<string, number>
   nchsaa_results?: Array<{
     year: number
     place: number
@@ -294,6 +287,9 @@ export default function SimpleRankingPage() {
           <div className="bg-gradient-to-r from-[#003366] to-[#004080] text-white rounded-lg p-6 shadow-lg">
             <h1 className="text-3xl font-bold mb-2">Prospect Rankings Manager</h1>
             <p className="text-blue-100">Drag the grip icon or use the arrows to move athletes up/down, then save and publish</p>
+            <Button asChild className="mt-4 bg-[#D3B574] text-slate-950 hover:bg-[#e5c879]">
+              <Link href="/admin/rankings/board">Open TOC-style ranking board</Link>
+            </Button>
           </div>
         </div>
 
@@ -364,7 +360,7 @@ export default function SimpleRankingPage() {
                   className="border-green-300 text-green-700 hover:bg-green-50"
                 >
                   <Calculator className="h-4 w-4 mr-2" />
-                  {calculatingScores ? "Calculating..." : "Calculate Scores"}
+                  {calculatingScores ? "Calculating..." : "Calculate Formula Recommendations"}
                 </Button>
 
                 <Button

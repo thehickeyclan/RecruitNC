@@ -572,12 +572,12 @@ export default function AdminDashboard() {
             </HardLink>
 
             {/* Prospect Rankings */}
-            <Link href="/admin/prospects/simple-ranking">
+            <Link href="/admin/rankings/board">
               <Card className="border-t-4 border-t-[#FFC72C] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
                 <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
                   <Trophy className="h-10 w-10 text-[#003366] mb-3" />
                   <h3 className="font-bold text-[#003366] mb-1">Prospect Rankings</h3>
-                  <p className="text-xs text-gray-600">Manage rankings</p>
+                  <p className="text-xs text-gray-600">TOC-style résumé ranking board</p>
                 </CardContent>
               </Card>
             </Link>
