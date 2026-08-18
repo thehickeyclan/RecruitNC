@@ -5,6 +5,7 @@ import { sendTocAthleteInviteEmail } from "@/lib/toc/email"
 import { buildTocAthleteInviteMessage } from "@/lib/toc/invite-message"
 import { confirmPageUrl, resolveAthleteNotificationEmails } from "@/lib/toc/invitation-service"
 import { tocAdminInviteSchema } from "@/lib/toc/invitations"
+import { confirmDeadlineFromInvitedAt } from "@/lib/toc/registration-policy"
 import { tocInvitationsRlsHelp } from "@/lib/toc/supabase-rls"
 
 export const dynamic = "force-dynamic"
@@ -67,7 +68,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Athlete not found" }, { status: 404 })
     }
 
-    const now = new Date().toISOString()
+    const invitedAt = new Date()
+    const now = invitedAt.toISOString()
+    const confirmationExpiresAt = confirmDeadlineFromInvitedAt(invitedAt).toISOString()
 
     const { data: existing } = await admin
       .from("toc_invitations")
@@ -87,6 +90,7 @@ export async function POST(request: Request) {
           weight_class: weightClass,
           status: "invited",
           invited_at: now,
+          confirmation_token_expires_at: confirmationExpiresAt,
           updated_at: now,
           notes: notes ?? null,
         })
@@ -111,6 +115,7 @@ export async function POST(request: Request) {
           weight_class: weightClass,
           status: "invited",
           invited_at: now,
+          confirmation_token_expires_at: confirmationExpiresAt,
           notes: notes ?? null,
         })
         .select("id")
@@ -132,7 +137,13 @@ export async function POST(request: Request) {
 
     const athleteName = String(athlete.name ?? "Athlete")
     const confirmUrl = confirmPageUrl(athleteId)
-    const share = buildTocAthleteInviteMessage({ athleteName, weightClass, confirmUrl })
+    const share = buildTocAthleteInviteMessage({
+      athleteName,
+      weightClass,
+      confirmUrl,
+      invitedAt: now,
+      confirmationExpiresAt,
+    })
 
     if (sendEmail) {
       const emails = await resolveAthleteNotificationEmails(admin, athleteId, athlete as Record<string, unknown>)
@@ -150,6 +161,8 @@ export async function POST(request: Request) {
         athleteName,
         weightClass,
         confirmUrl,
+        invitedAt: now,
+        confirmationExpiresAt,
       })
     }
 

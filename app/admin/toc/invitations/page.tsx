@@ -32,7 +32,7 @@ import {
   type TocStatusReason,
 } from "@/lib/toc/invitations"
 import {
-  confirmDeadlineFromInvitedAt,
+  confirmDeadlineMessage,
   isConfirmPastDeadline,
   TOC_CONFIRM_WITHIN_DAYS,
   TOC_REGISTRATION_FEE_USD,
@@ -55,6 +55,7 @@ type InvitationRow = {
   weight_class: number
   status: string
   invited_at: string | null
+  confirmation_token_expires_at: string | null
   confirmed_at: string | null
   jacket_size: string | null
   payment_status: string | null
@@ -109,7 +110,9 @@ export default function TocInvitationsAdminPage() {
     const pendingConfirm = invitations.filter((row) => row.status === "invited").length
     const declined = invitations.filter((row) => row.status === "declined" || row.status === "withdrew").length
     const overdue = invitations.filter(
-      (row) => row.status === "invited" && isConfirmPastDeadline(row.invited_at),
+      (row) =>
+        row.status === "invited" &&
+        isConfirmPastDeadline(row.invited_at, new Date(), row.confirmation_token_expires_at),
     ).length
     const pendingPayment = Math.max(0, accepted - paid)
     return { invited, accepted, paid, pendingConfirm, pendingPayment, declined, overdue }
@@ -120,7 +123,11 @@ export default function TocInvitationsAdminPage() {
     if (listFilter === "not_accepted") {
       rows = invitations.filter((row) => row.status === "invited")
     } else if (listFilter === "overdue") {
-      rows = invitations.filter((row) => row.status === "invited" && isConfirmPastDeadline(row.invited_at))
+      rows = invitations.filter(
+        (row) =>
+          row.status === "invited" &&
+          isConfirmPastDeadline(row.invited_at, new Date(), row.confirmation_token_expires_at),
+      )
     } else if (listFilter === "declined") {
       rows = invitations.filter((row) => row.status === "declined" || row.status === "withdrew")
     } else if (listFilter === "confirmed") {
@@ -129,8 +136,8 @@ export default function TocInvitationsAdminPage() {
 
     return [...rows].sort((a, b) => {
       if (listFilter === "not_accepted" || listFilter === "overdue") {
-        const aOver = isConfirmPastDeadline(a.invited_at) ? 0 : 1
-        const bOver = isConfirmPastDeadline(b.invited_at) ? 0 : 1
+        const aOver = isConfirmPastDeadline(a.invited_at, new Date(), a.confirmation_token_expires_at) ? 0 : 1
+        const bOver = isConfirmPastDeadline(b.invited_at, new Date(), b.confirmation_token_expires_at) ? 0 : 1
         if (aOver !== bOver) return aOver - bOver
         const aT = a.invited_at ? new Date(a.invited_at).getTime() : 0
         const bT = b.invited_at ? new Date(b.invited_at).getTime() : 0
@@ -273,6 +280,8 @@ export default function TocInvitationsAdminPage() {
       athleteName,
       weightClass: row.weight_class,
       confirmUrl: confirmPageUrl(row.athlete_id),
+      invitedAt: row.invited_at ?? new Date(),
+      confirmationExpiresAt: row.confirmation_token_expires_at,
     })
   }
 
@@ -333,6 +342,7 @@ export default function TocInvitationsAdminPage() {
         id: string
         status?: string
         invited_at?: string | null
+        confirmation_token_expires_at?: string | null
         weight_class?: number
         seed?: number | null
         notes?: string | null
@@ -349,6 +359,10 @@ export default function TocInvitationsAdminPage() {
                 status_reason_other:
                   next.status_reason_other !== undefined ? next.status_reason_other : inv.status_reason_other,
                 invited_at: next.invited_at !== undefined ? next.invited_at : inv.invited_at,
+                confirmation_token_expires_at:
+                  next.confirmation_token_expires_at !== undefined
+                    ? next.confirmation_token_expires_at
+                    : inv.confirmation_token_expires_at,
                 weight_class: next.weight_class ?? inv.weight_class,
               }
             : inv,
@@ -646,10 +660,12 @@ export default function TocInvitationsAdminPage() {
             </TableHeader>
             <TableBody>
               {filteredInvitations.map((row) => {
-                const overdue = row.status === "invited" && isConfirmPastDeadline(row.invited_at)
+                const overdue =
+                  row.status === "invited" &&
+                  isConfirmPastDeadline(row.invited_at, new Date(), row.confirmation_token_expires_at)
                 const confirmBy =
                   row.status === "invited" && row.invited_at
-                    ? confirmDeadlineFromInvitedAt(row.invited_at).toLocaleDateString()
+                    ? confirmDeadlineMessage(row.invited_at, row.confirmation_token_expires_at) ?? "—"
                     : "—"
                 const busy = actionSavingId === row.id || weightSavingId === row.id
                 return (

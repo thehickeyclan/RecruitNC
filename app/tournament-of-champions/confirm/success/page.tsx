@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { HardLink } from "@/components/hard-link"
 import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass, tocMobileCtaClass } from "@/components/toc/toc-theme"
 import { registrationPayPageUrl } from "@/lib/toc/invitation-service"
-import { formatTocRegistrationFee, registrationPaymentDueDisplay } from "@/lib/toc/registration-policy"
+import { formatTocRegistrationFee } from "@/lib/toc/registration-policy"
 
 export const metadata: Metadata = {
   title: "Complete Payment | Tournament of Champions 2026",
@@ -31,7 +31,7 @@ export default async function TocConfirmSuccessPage({ searchParams }: Props) {
           New Tournament of Champions registrations are finalized through secure card payment. If you landed here without paying, use the button below to complete checkout.
         </p>
         <p className="text-white/55 text-sm max-w-xl mx-auto mb-10">
-          Registration fee: {formatTocRegistrationFee()}. Payment must be completed to lock the invitation. Legacy unpaid confirmations remain due by {registrationPaymentDueDisplay()}.
+          Registration fee: {formatTocRegistrationFee()}. Payment must be completed by the deadline attached to your invitation to lock the spot.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <HardLink href={payHref} className={tocMobileCtaClass("primary")}>

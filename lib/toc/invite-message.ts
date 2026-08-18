@@ -1,7 +1,7 @@
 import { TOC_EVENT_DATES_DISPLAY, TOC_SATURDAY_COMPETITION_DATE } from "@/lib/toc/constants"
 import { firstNameFromAthleteName } from "@/lib/toc/invitations"
 import {
-  registrationPaymentDueDisplay,
+  confirmDeadlineMessage,
   tocInviteConfirmLines,
 } from "@/lib/toc/registration-policy"
 import { confirmPageUrl, eventPageUrl } from "@/lib/toc/invitation-service"
@@ -19,13 +19,17 @@ export function buildTocAthleteInviteMessage(payload: {
   weightClass: number
   athleteId?: string
   confirmUrl?: string
+  invitedAt?: string | Date
+  confirmationExpiresAt?: string | null
 }): TocInviteMessage {
   const firstName = firstNameFromAthleteName(payload.athleteName)
   const confirmUrl = payload.confirmUrl ?? confirmPageUrl(payload.athleteId)
   const learnMoreUrl = eventPageUrl()
   const subject = "You're invited — NC United Tournament of Champions"
 
-  const registrationLines = tocInviteConfirmLines()
+  const invitedAt = payload.invitedAt ?? new Date()
+  const registrationLines = tocInviteConfirmLines(invitedAt, payload.confirmationExpiresAt)
+  const confirmBy = confirmDeadlineMessage(invitedAt, payload.confirmationExpiresAt)
 
   const emailBody = [
     `${firstName} —`,
@@ -47,7 +51,8 @@ export function buildTocAthleteInviteMessage(payload: {
     "— NC United Wrestling",
   ].join("\n")
 
-  const smsBody = `${firstName} — invited to NC United Tournament of Champions (${payload.weightClass} lbs). ${TOC_EVENT_DATES_DISPLAY}, Apex. Confirm by ${registrationPaymentDueDisplay()}: ${confirmUrl}`
+  const smsDeadline = confirmBy ? `Confirm by ${confirmBy}` : "Confirm within 7 days"
+  const smsBody = `${firstName} — invited to NC United Tournament of Champions (${payload.weightClass} lbs). ${TOC_EVENT_DATES_DISPLAY}, Apex. ${smsDeadline}: ${confirmUrl}`
 
   return { subject, confirmUrl, eventPageUrl: learnMoreUrl, emailBody, smsBody }
 }

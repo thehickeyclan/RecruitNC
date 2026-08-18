@@ -141,28 +141,26 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-screen bg-rnc-ink">
-      {/* Tournament of Champions — launch announcement bar, first thing on the page.
-          Deliberately TOC-branded navy/red (not rnc gold); originally placed below the
-          stats bar, where the owner couldn't find it. */}
+      {/* Tournament of Champions athlete release bar — update this one existing strip rather
+          than stacking another promo near the hero. */}
       <section className="border-b border-[#CC0000]/60 bg-[#0B1D3A]">
         <div className="container mx-auto px-4">
           <Link
-            href="/tournament-of-champions"
+            href="/tournament-of-champions/field"
             className="group flex items-center justify-between gap-3 py-3"
           >
             <div className="flex min-w-0 items-center gap-2 sm:gap-3">
               <span className="inline-flex shrink-0 items-center rounded-full bg-[#CC0000] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white sm:px-2.5 sm:py-1 sm:text-[11px]">
-                New
+                Live
               </span>
-              {/* The event name must never truncate — only the trailing detail may be dropped. */}
               <p className="min-w-0 text-sm text-white sm:text-base">
-                <span className="font-bold">Tournament of Champions</span>
-                <span className="hidden text-white/70 md:inline"> — Sept 18–19 · Apex · Invite-only · 11 elite brackets</span>
-                <span className="hidden text-white/70 sm:inline md:hidden"> — Sept 18–19 · Apex</span>
+                <span className="hidden font-bold sm:inline">Tournament of Champions · </span>
+                <span className="font-bold">Athlete announcements</span>
+                <span className="text-white/70"> — 117 lbs is live</span>
               </p>
             </div>
             <span className="flex shrink-0 items-center gap-1 text-sm font-semibold text-[#CC0000] transition-colors group-hover:text-white">
-              <span className="hidden sm:inline">See the event</span>
+              <span className="hidden sm:inline">View the field</span>
               <ArrowRight className="h-4 w-4" />
             </span>
           </Link>

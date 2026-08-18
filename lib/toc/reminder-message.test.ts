@@ -15,9 +15,12 @@ describe("buildTocDefaultReminderMessage", () => {
       athleteId: "2608f74c-1262-44dd-9097-c990ed3c0166",
       weightClass: 165,
       status: "invited",
+      invitedAt: "2026-08-18T14:00:00.000Z",
     })
     expect(msg).toContain("Carson")
     expect(msg).toContain("165")
     expect(msg).toContain("confirm?athlete=")
+    expect(msg).toContain("August 25, 2026")
+    expect(msg).not.toContain("August 14, 2026")
   })
 })

@@ -9,14 +9,16 @@ describe("buildTocAthleteInviteMessage", () => {
       athleteName: "Tobin McNair",
       weightClass: 157,
       confirmUrl: url,
+      invitedAt: "2026-08-18T14:00:00.000Z",
     })
     expect(msg.subject).toContain("invited")
     expect(msg.emailBody).toContain("Tobin")
     expect(msg.emailBody).toContain("157 lbs")
     expect(msg.emailBody).toContain(url)
-    expect(msg.emailBody).toContain("Please confirm and complete secure card payment by August 14, 2026")
+    expect(msg.emailBody).toContain("Please confirm and complete secure card payment by August 25, 2026")
     expect(msg.emailBody).not.toContain(formatTocRegistrationFee())
-    expect(msg.smsBody).toContain("Confirm by August 14, 2026")
+    expect(msg.smsBody).toContain("Confirm by August 25, 2026")
+    expect(msg.emailBody).not.toContain("August 14, 2026")
     expect(msg.emailBody).toContain(msg.eventPageUrl)
     expect(msg.smsBody).toContain(url)
     expect(msg.smsBody).not.toContain(formatTocRegistrationFee())

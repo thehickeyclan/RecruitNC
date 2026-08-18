@@ -37,7 +37,7 @@ export async function GET(_request: Request, { params }: Params) {
     const { data: invitation, error } = await admin
       .from("toc_invitations")
       .select(
-        "id, athlete_id, weight_class, status, payment_status, last_reminder_at, last_reminder_body, athletes(id, name)",
+        "id, athlete_id, weight_class, status, payment_status, invited_at, confirmation_token_expires_at, last_reminder_at, last_reminder_body, athletes(id, name)",
       )
       .eq("id", id)
       .maybeSingle()
@@ -77,6 +77,8 @@ export async function GET(_request: Request, { params }: Params) {
       weightClass: invitation.weight_class,
       status: invitation.status,
       paymentStatus: invitation.payment_status,
+      invitedAt: invitation.invited_at,
+      confirmationExpiresAt: invitation.confirmation_token_expires_at,
     })
 
     return NextResponse.json({

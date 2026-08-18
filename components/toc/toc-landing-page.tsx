@@ -27,6 +27,7 @@ import { TocAboutNcUnitedSection } from "@/components/toc/toc-about-nc-united-se
 import { TocVolunteerSection } from "@/components/toc/toc-volunteer-section"
 import { TocSectionNavSentinel } from "@/components/toc/toc-section-nav"
 import { TocEmailSignup } from "@/components/toc/toc-email-signup"
+import { TocFieldAnnouncementLink } from "@/components/toc/toc-field-announcement-link"
 import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass } from "@/components/toc/toc-theme"
 import { TOC_CONTACT_EMAIL } from "@/lib/toc/constants"
 import type { TocConfirmedCollege } from "@/lib/toc/confirmed-colleges"
@@ -42,6 +43,7 @@ export function TocLandingPage({ config, confirmedColleges }: Props) {
     <div className="min-h-screen bg-white overflow-x-hidden">
       {/* Hook */}
       <TocHero config={config} confirmedColleges={confirmedColleges} />
+      <TocFieldAnnouncementLink />
       <TocSectionNavSentinel />
       <TocQuickFacts />
       <TocVenueSection config={config} />

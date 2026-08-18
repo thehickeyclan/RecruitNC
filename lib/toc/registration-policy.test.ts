@@ -36,9 +36,10 @@ describe("toc registration policy", () => {
     expect(isInvitationPaymentPastDue(null, "2026-08-12T16:13:57Z", new Date("2026-08-20T04:00:00Z"))).toBe(true)
   })
 
-  it("invite lines ask for verbal confirm only (no payment in email)", () => {
-    const lines = tocInviteConfirmLines()
-    expect(lines.join(" ")).toContain("August 14, 2026")
+  it("uses each new invitation's seven-day deadline in invite copy", () => {
+    const lines = tocInviteConfirmLines("2026-08-18T14:00:00.000Z")
+    expect(lines.join(" ")).toContain("August 25, 2026")
+    expect(lines.join(" ")).not.toContain("August 14, 2026")
     expect(lines.join(" ")).toContain("secure card payment")
     expect(lines.join(" ")).not.toContain(formatTocRegistrationFee())
   })

@@ -1,8 +1,9 @@
 import { confirmPageUrl, registrationPayPageUrl } from "@/lib/toc/invitation-service"
 import { firstNameFromAthleteName } from "@/lib/toc/invitations"
 import {
+  confirmDeadlineMessage,
   formatTocRegistrationFee,
-  registrationPaymentDueDisplay,
+  TOC_CONFIRM_WITHIN_DAYS,
 } from "@/lib/toc/registration-policy"
 
 export function buildTocDefaultReminderMessage(params: {
@@ -11,6 +12,8 @@ export function buildTocDefaultReminderMessage(params: {
   weightClass: number
   status: string
   paymentStatus?: string | null
+  invitedAt?: string | null
+  confirmationExpiresAt?: string | null
 }): string {
   const firstName = firstNameFromAthleteName(params.athleteName)
   const confirmUrl = confirmPageUrl(params.athleteId)
@@ -23,7 +26,9 @@ export function buildTocDefaultReminderMessage(params: {
     return `${firstName} — you're confirmed for Tournament of Champions (${params.weightClass} lbs), but registration payment is still needed to keep the spot locked. Complete the ${formatTocRegistrationFee()} secure checkout here: ${payUrl}`
   }
 
-  return `${firstName} — friendly reminder to confirm your NC United Tournament of Champions invite (${params.weightClass} lbs) by ${registrationPaymentDueDisplay()}; your spot is locked only after the ${formatTocRegistrationFee()} secure checkout is completed: ${confirmUrl}`
+  const deadline = confirmDeadlineMessage(params.invitedAt, params.confirmationExpiresAt)
+  const deadlineCopy = deadline ? `by ${deadline}` : `within ${TOC_CONFIRM_WITHIN_DAYS} days of the invite`
+  return `${firstName} — friendly reminder to confirm your NC United Tournament of Champions invite (${params.weightClass} lbs) ${deadlineCopy}; your spot is locked only after the ${formatTocRegistrationFee()} secure checkout is completed: ${confirmUrl}`
 }
 
 export function formatRecruitNcSmsBody(message: string): string {

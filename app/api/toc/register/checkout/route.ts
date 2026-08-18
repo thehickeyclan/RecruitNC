@@ -4,9 +4,9 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { resolveAthleteNotificationEmails } from "@/lib/toc/invitation-service"
 import { tocRegistrationCheckoutSchema } from "@/lib/toc/registration-checkout"
 import {
+  confirmDeadlineMessage,
   formatTocRegistrationFee,
   isInvitationPaymentPastDue,
-  registrationPaymentDueDisplay,
   TOC_REGISTRATION_FEE_COVERS,
   TOC_REGISTRATION_FEE_USD,
 } from "@/lib/toc/registration-policy"
@@ -73,9 +73,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (isInvitationPaymentPastDue(invitation.confirmation_token_expires_at, invitation.invited_at)) {
+      const deadline = confirmDeadlineMessage(invitation.invited_at, invitation.confirmation_token_expires_at)
       return NextResponse.json(
         {
-          error: `Registration payment was due by ${registrationPaymentDueDisplay()}. Contact ${process.env.TOC_CONTACT_EMAIL ?? "info@ncwrestlingunited.com"}.`,
+          error: `Registration payment was due${deadline ? ` by ${deadline}` : ""}. Contact ${process.env.TOC_CONTACT_EMAIL ?? "info@ncwrestlingunited.com"}.`,
         },
         { status: 400 },
       )

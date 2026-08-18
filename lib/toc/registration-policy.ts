@@ -3,15 +3,9 @@
 export const TOC_REGISTRATION_FEE_USD = 75 as const
 export const TOC_CONFIRM_WITHIN_DAYS = 7 as const
 /**
- * Floor for the confirmation/payment deadline across every Year 1 invitation.
- *
- * confirmDeadlineFromInvitedAt takes the later of this and invitedAt + 7 days, so this
- * value alone decides whether older invitations still work. When it fell into the past on
- * 11 August every link sent to anyone invited more than a week earlier died at once —
- * including the reminders being sent that day. Moving it forward revives all of them
- * without touching a single row.
- *
- * Keep it ahead of today. If it passes again, every older invite breaks again.
+ * Legacy event-wide extension for invitations sent before individual deadlines were stored.
+ * New and refreshed invitations always receive their own invited-at + 7 day deadline; this
+ * date must never be used in new invite email/SMS copy.
  */
 export const TOC_REGISTRATION_PAYMENT_DUE_ISO = "2026-08-14" as const
 export const TOC_REGISTRATION_PAYMENT_DUE_DISPLAY = "August 14, 2026" as const
@@ -79,7 +73,10 @@ export function isConfirmPastDeadline(invitedAt: string | null | undefined, now 
   return now.getTime() > confirmDeadlineFromInvitedAt(invited).getTime()
 }
 
-export function confirmDeadlineMessage(invitedAt: string | null | undefined, expiresAt?: string | null): string | null {
+export function confirmDeadlineMessage(
+  invitedAt: string | Date | null | undefined,
+  expiresAt?: string | null,
+): string | null {
   const override = invitationOverrideDeadline(expiresAt)
   if (override) return formatTocLongDate(override)
   if (!invitedAt) return null
@@ -88,16 +85,25 @@ export function confirmDeadlineMessage(invitedAt: string | null | undefined, exp
   return formatTocLongDate(deadline)
 }
 
-/** Invite email / SMS / admin copy. */
-export function tocInviteConfirmLines(): string[] {
+/** Invite email / SMS / admin copy, always based on this invitation's deadline. */
+export function tocInviteConfirmLines(
+  invitedAt: string | Date = new Date(),
+  expiresAt?: string | null,
+): string[] {
+  const deadline = confirmDeadlineMessage(invitedAt, expiresAt)
   return [
-    `Please confirm and complete secure card payment by ${registrationPaymentDueDisplay()}.`,
+    deadline
+      ? `Please confirm and complete secure card payment by ${deadline}.`
+      : `Please confirm and complete secure card payment within ${TOC_CONFIRM_WITHIN_DAYS} days.`,
   ]
 }
 
 /** @deprecated use tocInviteConfirmLines */
-export function tocInviteRegistrationLines(): string[] {
-  return tocInviteConfirmLines()
+export function tocInviteRegistrationLines(
+  invitedAt: string | Date = new Date(),
+  expiresAt?: string | null,
+): string[] {
+  return tocInviteConfirmLines(invitedAt, expiresAt)
 }
 
 /** Confirm page disclosure. */

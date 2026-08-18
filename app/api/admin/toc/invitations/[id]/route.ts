@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/admin-auth"
 import { createAdminClientFresh } from "@/lib/supabase/admin"
 import { tocAdminInvitationPatchSchema } from "@/lib/toc/invitations"
+import { confirmDeadlineFromInvitedAt } from "@/lib/toc/registration-policy"
 import { tocInvitationsRlsHelp } from "@/lib/toc/supabase-rls"
 
 export const dynamic = "force-dynamic"
@@ -26,7 +27,7 @@ export async function PATCH(request: Request, { params }: Params) {
     const admin = createAdminClientFresh()
     const { data: existing, error: findError } = await admin
       .from("toc_invitations")
-      .select("id, weight_class, status, seed, invited_at")
+      .select("id, weight_class, status, seed, invited_at, confirmation_token_expires_at")
       .eq("id", id)
       .maybeSingle()
 
@@ -120,6 +121,7 @@ export async function PATCH(request: Request, { params }: Params) {
     if (nextStatus === "invited" || refreshInviteWindow) {
       update.status = "invited"
       update.invited_at = now
+      update.confirmation_token_expires_at = confirmDeadlineFromInvitedAt(new Date(now)).toISOString()
       update.status_reason = null
       update.status_reason_other = null
     }
@@ -133,6 +135,7 @@ export async function PATCH(request: Request, { params }: Params) {
           seed: existing.seed,
           status: existing.status,
           invited_at: existing.invited_at,
+          confirmation_token_expires_at: existing.confirmation_token_expires_at,
         },
       })
     }
@@ -141,7 +144,7 @@ export async function PATCH(request: Request, { params }: Params) {
       .from("toc_invitations")
       .update(update)
       .eq("id", id)
-      .select("id, weight_class, seed, notes, status, status_reason, status_reason_other, invited_at")
+      .select("id, weight_class, seed, notes, status, status_reason, status_reason_other, invited_at, confirmation_token_expires_at")
       .single()
 
     if (updateError) {
