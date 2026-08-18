@@ -17,10 +17,6 @@ type Props = {
 }
 
 export function TocHero({ config, confirmedColleges = [] }: Props) {
-  const ctaHref = config.hero_primary_cta_href.startsWith("#")
-    ? config.hero_primary_cta_href
-    : config.hero_primary_cta_href
-
   return (
     <section className="relative bg-[#0B1D3A] text-white">
       <div className="relative z-10">
@@ -69,8 +65,8 @@ export function TocHero({ config, confirmedColleges = [] }: Props) {
               <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
                 {/* Announcement until Sunday Aug 2 9:00 AM ET, then the GoFan buy button — flips automatically. */}
                 <TocTicketCta variant="hero" />
-                <a href={ctaHref} className={tocMobileCtaClass("secondary")}>
-                  {config.hero_primary_cta_label}
+                <a href="/tournament-of-champions/field" className={tocMobileCtaClass("primary")}>
+                  Live Athlete Announcements
                 </a>
                 <a href="#champion-jacket" className={tocMobileCtaClass("ghost")}>
                   The Champion jacket

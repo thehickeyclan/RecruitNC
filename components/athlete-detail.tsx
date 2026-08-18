@@ -5,7 +5,7 @@ import Image from "next/image"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Edit, GraduationCap, Award, TrendingUp, Trophy, Video, ExternalLink, Share2, Phone, Mail } from "lucide-react"
+import { Award, ChevronDown, Edit, ExternalLink, GraduationCap, Mail, Phone, Share2, TrendingUp, Trophy, Video } from "lucide-react"
 import { UnifiedProfileMobileNav } from "./unified-profile-mobile-nav"
 import { ProfileQualityWinsSection } from "@/components/profile-quality-wins-section"
 import type { ProfileQualityWinsTournamentBlock } from "@/lib/profile-quality-wins"
@@ -169,6 +169,7 @@ export function AthleteDetail({
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null)
   const [athleteData, setAthleteData] = useState(athlete)
   const [editingSection, setEditingSection] = useState<string | null>(null)
+  const [bioExpanded, setBioExpanded] = useState(false)
   const [linkedProfileViewAthleteIds, setLinkedProfileViewAthleteIds] = useState<Set<string>>(new Set())
   const { toast } = useToast()
 
@@ -1401,7 +1402,6 @@ export function AthleteDetail({
         </Card>
       )}
 
-      {/* 2. Athlete Profile (Bio) — hidden for now (stale paragraph); set SHOW_ATHLETE_BIO_SECTION to re-enable */}
       {/* Profile owner or admin — the API enforces the same rule server-side, and the
           panel renders nothing until there are views worth reporting. */}
       {canViewProfileStats && athlete.id && (
@@ -1412,6 +1412,7 @@ export function AthleteDetail({
         />
       )}
 
+      {/* Athlete Profile (Bio) — first card after the hero, collapsed until someone wants the narrative. */}
       {SHOW_ATHLETE_BIO_SECTION ? (
       <Card
         id="bio"
@@ -1422,19 +1423,43 @@ export function AthleteDetail({
         data-section="bio"
       >
         <div className={cn(mobileRecruiterLayout ? PROFILE_SECTION_HEADER : "bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6")}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <TrendingUp className={cn("text-white", mobileRecruiterLayout ? "h-5 w-5" : "h-6 w-6")} />
-                <h2 className={cn(mobileRecruiterLayout ? PROFILE_SECTION_TITLE : "text-2xl font-bold text-white")}>
-                  Athlete Profile
-                </h2>
-              </div>
+            <div className="flex items-center justify-between gap-3">
+              <button
+                type="button"
+                className="flex min-w-0 flex-1 items-center justify-between gap-3 text-left"
+                aria-expanded={bioExpanded || editingSection === "bio"}
+                aria-controls={`athlete-bio-${athlete.id}`}
+                disabled={editingSection === "bio"}
+                onClick={() => setBioExpanded((expanded) => !expanded)}
+              >
+                <span className="flex min-w-0 items-center gap-3">
+                  <TrendingUp className={cn("text-white", mobileRecruiterLayout ? "h-5 w-5" : "h-6 w-6")} />
+                  <span className={cn(mobileRecruiterLayout ? PROFILE_SECTION_TITLE : "text-2xl font-bold text-white")}>
+                    Athlete Profile
+                  </span>
+                </span>
+                <span className="flex shrink-0 items-center gap-2 text-xs font-semibold uppercase tracking-wider text-white/65">
+                  <span className="hidden sm:inline">
+                    {bioExpanded || editingSection === "bio" ? "Hide" : "View"}
+                  </span>
+                  <ChevronDown
+                    className={cn(
+                      "h-5 w-5 transition-transform",
+                      (bioExpanded || editingSection === "bio") && "rotate-180",
+                    )}
+                    aria-hidden="true"
+                  />
+                </span>
+              </button>
               {canEdit && !editingSection && (
                 <Button
                   size="sm"
                   variant="ghost"
                   className="text-white hover:bg-white/20"
-                  onClick={() => setEditingSection("bio")}
+                  onClick={() => {
+                    setBioExpanded(true)
+                    setEditingSection("bio")
+                  }}
                 >
                   <Edit className="h-4 w-4 mr-2" />
                   Edit
@@ -1442,7 +1467,11 @@ export function AthleteDetail({
               )}
             </div>
           </div>
-          <div className={cn(mobileRecruiterLayout ? PROFILE_CARD_BODY : "profile-card-body p-8")}>
+          <div
+            id={`athlete-bio-${athlete.id}`}
+            hidden={!bioExpanded && editingSection !== "bio"}
+            className={cn(mobileRecruiterLayout ? PROFILE_CARD_BODY : "profile-card-body p-8")}
+          >
             {editingSection === "bio" ? (
               <InlineBioEditor
                 athleteId={athlete.id}
