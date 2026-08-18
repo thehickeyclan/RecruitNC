@@ -1,11 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { fetchTotalReimbursementPaidCentsAllTime } from "@/lib/athlete-reimbursement-net"
+import { buildParentSpartanFundraisingRowsForAthleteIds } from "@/lib/parent-spartan-fundraising-totals"
 import {
-  fetchReimbursementPaidCentsByAthleteIdAllTime,
-  fetchReimbursementPaidCentsByAthleteIdInWindow,
-  fetchTotalReimbursementPaidCentsAllTime,
-} from "@/lib/athlete-reimbursement-net"
-import { fetchGuildReservedCentsByAthleteIdGlobal } from "@/lib/guild-credit-allocations"
-import { getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
+  toAdminParentAthleteFundRow,
+  type AdminParentAthleteFundRow,
+} from "@/lib/admin-parent-athlete-wallet-math"
 import {
   FAYETTEVILLE_STRIPE_LOOKBACK_DAYS,
   getFayettevilleStripeWindowSnapshot,
@@ -13,25 +12,7 @@ import {
 import { SPARTAN_FAYETTEVILLE_CAMPAIGN } from "@/lib/spartan-fayetteville-stripe"
 import { createAdminClient } from "@/lib/supabase/admin"
 
-export type AdminParentAthleteFundRow = {
-  athleteId: string
-  name: string
-  fundraisingCode: string | null
-  /** Stripe gifts in Fayetteville lookback window (matches parent Spartan card). */
-  raisedCents: number
-  giftCount: number
-  raceSignupCount: number
-  /** Reimbursements marked paid in the same window as raised. */
-  reimbursementsPaidWindowCents: number
-  /** Reimbursements marked paid, all time (per athlete). */
-  reimbursementsPaidAllTimeCents: number
-  guildAllocationsCents: number
-  /** raised − reimb (window), before Guild. */
-  netAfterReimbursementsWindowCents: number
-  /** Parent-facing notional: net after window reimb − Guild ledger. */
-  remainingNotionalCents: number
-  codeUnavailable?: boolean
-}
+export type { AdminParentAthleteFundRow } from "@/lib/admin-parent-athlete-wallet-math"
 
 export type AdminParentAthleteFundRollup = {
   campaign: string
@@ -40,7 +21,7 @@ export type AdminParentAthleteFundRollup = {
   /** Sums over rows in `athletes` only. */
   totalsForLinkedAthletes: {
     raisedCents: number
-    reimbursementsPaidWindowCents: number
+    hubWindowRaisedCents: number
     reimbursementsPaidAllTimeCents: number
     guildAllocationsCents: number
     remainingNotionalCents: number
@@ -49,7 +30,7 @@ export type AdminParentAthleteFundRollup = {
   globalReimbursementsPaidAllTimeCents: number
   /** Sum of paid Fayetteville Checkout sessions in the lookback window (matches Admin → Fundraising gross). */
   fayettevilleGrossHubWindowCents: number
-  /** Gross minus sum of “Raised” on linked-athlete rows (community fund + coded gifts for non-linked wrestlers + gifts with no athlete_code). */
+  /** Hub-window gross minus hub-window raised on linked-athlete rows. */
   raisedOutsideLinkedAthleteRowsHubWindowCents: number
   /** Paid reimbursement cents for athletes not appearing in the linked table (still in global total). */
   reimbursementsPaidAllTimeOutsideLinkedRowsCents: number
@@ -94,7 +75,8 @@ async function collectAthleteIdsWithParentAssociation(admin: SupabaseClient): Pr
 /**
  * Spartan + reimbursement + Guild rollups for every athlete tied to a parent (`parent_athlete_links`, plus
  * `user_profiles.athlete_id` when that column exists),
- * plus a global “all reimbursements paid” total. Same hub Stripe window and Guild global ledger as admin fundraising.
+ * plus a global “all reimbursements paid” total. Wallet balances use lifetime gifts and lifetime debits;
+ * the campaign lookback remains available only for the separate hub reconciliation figures.
  */
 export async function fetchAdminParentAthleteFundraisingRollup(): Promise<
   { ok: true; data: AdminParentAthleteFundRollup } | { ok: false; error: string }
@@ -126,7 +108,7 @@ export async function fetchAdminParentAthleteFundraisingRollup(): Promise<
           athletes: [],
           totalsForLinkedAthletes: {
             raisedCents: 0,
-            reimbursementsPaidWindowCents: 0,
+            hubWindowRaisedCents: 0,
             reimbursementsPaidAllTimeCents: 0,
             guildAllocationsCents: 0,
             remainingNotionalCents: 0,
@@ -141,101 +123,34 @@ export async function fetchAdminParentAthleteFundraisingRollup(): Promise<
       }
     }
 
-    const { data: nameRows, error: nameError } = await admin.from("athletes").select("id, name").in("id", athleteIds)
-    if (nameError) {
-      return { ok: false, error: nameError.message }
-    }
-    const nameById = new Map(
-      (nameRows ?? []).map((r) => [
-        String((r as { id: string }).id),
-        String((r as { name: string | null }).name ?? "—"),
-      ]),
-    )
-
-    const entries = await getFundraisingAthleteEntries(admin)
-    const codeByAthleteId = new Map<string, string>()
-    for (const e of entries) {
-      if (e.id.startsWith("spartan-fundraising:")) continue
-      codeByAthleteId.set(e.id, e.code)
-    }
-
-    const sinceMs = Date.now() - FAYETTEVILLE_STRIPE_LOOKBACK_DAYS * 24 * 60 * 60 * 1000
-
-    let statsByCode = new Map<string, { totalCents: number; giftCount: number; raceSignupCount: number }>()
-    let fayettevilleGrossHubWindowCents = 0
-    let ncUnitedCommunityFundHubWindowCents = 0
-    try {
-      const snap = await getFayettevilleStripeWindowSnapshot()
-      statsByCode = snap.statsByAthleteCodeLowercase
-      fayettevilleGrossHubWindowCents = snap.grossSessionTotalCents
-      ncUnitedCommunityFundHubWindowCents = snap.ncUnitedCommunityFundHubWindowCents
-    } catch (e) {
-      console.error("[admin-parent-athlete-rollup] Stripe totals", e)
-    }
-
-    const [reimbWindowByAthlete, reimbAllTimeByAthlete, guildByAthlete, globalPaidAllTime] = await Promise.all([
-      fetchReimbursementPaidCentsByAthleteIdInWindow(admin, sinceMs),
-      fetchReimbursementPaidCentsByAthleteIdAllTime(admin),
-      fetchGuildReservedCentsByAthleteIdGlobal(admin),
+    const [hubSnapshot, walletRows, globalPaidAllTime] = await Promise.all([
+      getFayettevilleStripeWindowSnapshot().catch((e) => {
+        console.error("[admin-parent-athlete-rollup] Stripe totals", e)
+        return null
+      }),
+      buildParentSpartanFundraisingRowsForAthleteIds(admin, "admin-expense-rollup", athleteIds, {
+        fundraisingProfiles: "any",
+      }),
       fetchTotalReimbursementPaidCentsAllTime(admin),
     ])
+    const fayettevilleGrossHubWindowCents = hubSnapshot?.grossSessionTotalCents ?? 0
+    const ncUnitedCommunityFundHubWindowCents = hubSnapshot?.ncUnitedCommunityFundHubWindowCents ?? 0
 
-    const athletes: AdminParentAthleteFundRow[] = athleteIds.map((id) => {
-      const code = codeByAthleteId.get(id) ?? null
-      const name = nameById.get(id) ?? "—"
-      const paidWindow = reimbWindowByAthlete.get(id) ?? 0
-      const paidAllTime = reimbAllTimeByAthlete.get(id) ?? 0
-      const guildAlloc = guildByAthlete.get(id) ?? 0
-
-      if (!code) {
-        const net = 0 - paidWindow
-        return {
-          athleteId: id,
-          name,
-          fundraisingCode: null,
-          raisedCents: 0,
-          giftCount: 0,
-          raceSignupCount: 0,
-          reimbursementsPaidWindowCents: paidWindow,
-          reimbursementsPaidAllTimeCents: paidAllTime,
-          guildAllocationsCents: guildAlloc,
-          netAfterReimbursementsWindowCents: net,
-          remainingNotionalCents: net - guildAlloc,
-          codeUnavailable: true,
-        }
-      }
-
-      const s = statsByCode.get(code.toLowerCase())
-      const raisedCents = s?.totalCents ?? 0
-      const net = raisedCents - paidWindow
-      return {
-        athleteId: id,
-        name,
-        fundraisingCode: code,
-        raisedCents,
-        giftCount: s?.giftCount ?? 0,
-        raceSignupCount: s?.raceSignupCount ?? 0,
-        reimbursementsPaidWindowCents: paidWindow,
-        reimbursementsPaidAllTimeCents: paidAllTime,
-        guildAllocationsCents: guildAlloc,
-        netAfterReimbursementsWindowCents: net,
-        remainingNotionalCents: net - guildAlloc,
-      }
-    })
+    const athletes = walletRows.map(toAdminParentAthleteFundRow)
 
     athletes.sort((a, b) => a.name.localeCompare(b.name))
 
     const totalsForLinkedAthletes = athletes.reduce(
       (acc, r) => ({
         raisedCents: acc.raisedCents + r.raisedCents,
-        reimbursementsPaidWindowCents: acc.reimbursementsPaidWindowCents + r.reimbursementsPaidWindowCents,
+        hubWindowRaisedCents: acc.hubWindowRaisedCents + r.hubWindowRaisedCents,
         reimbursementsPaidAllTimeCents: acc.reimbursementsPaidAllTimeCents + r.reimbursementsPaidAllTimeCents,
         guildAllocationsCents: acc.guildAllocationsCents + r.guildAllocationsCents,
         remainingNotionalCents: acc.remainingNotionalCents + r.remainingNotionalCents,
       }),
       {
         raisedCents: 0,
-        reimbursementsPaidWindowCents: 0,
+        hubWindowRaisedCents: 0,
         reimbursementsPaidAllTimeCents: 0,
         guildAllocationsCents: 0,
         remainingNotionalCents: 0,
@@ -244,7 +159,7 @@ export async function fetchAdminParentAthleteFundraisingRollup(): Promise<
 
     const raisedOutsideLinkedAthleteRowsHubWindowCents = Math.max(
       0,
-      fayettevilleGrossHubWindowCents - totalsForLinkedAthletes.raisedCents,
+      fayettevilleGrossHubWindowCents - totalsForLinkedAthletes.hubWindowRaisedCents,
     )
     const raisedAthleteAttributedOutsideParentLinksHubWindowCents = Math.max(
       0,

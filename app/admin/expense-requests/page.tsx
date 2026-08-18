@@ -66,18 +66,18 @@ type ParentAthleteRollup = {
     name: string
     fundraisingCode: string | null
     raisedCents: number
+    hubWindowRaisedCents: number
     giftCount: number
     raceSignupCount: number
-    reimbursementsPaidWindowCents: number
     reimbursementsPaidAllTimeCents: number
     guildAllocationsCents: number
-    netAfterReimbursementsWindowCents: number
+    netAfterReimbursementsCents: number
     remainingNotionalCents: number
     codeUnavailable?: boolean
   }[]
   totalsForLinkedAthletes: {
     raisedCents: number
-    reimbursementsPaidWindowCents: number
+    hubWindowRaisedCents: number
     reimbursementsPaidAllTimeCents: number
     guildAllocationsCents: number
     remainingNotionalCents: number
@@ -309,6 +309,9 @@ export default function AdminExpenseRequestsPage() {
                     Admin → Fundraising
                   </HardLink>{" "}
                   <strong className="font-normal">Profile / parent link coverage</strong> until athlete-coded gaps hit $0.
+                  Wallet balances use <strong className="font-normal">lifetime raised, lifetime reimbursements, and Guild allocations</strong>.
+                  The separate <strong className="font-normal">{parentAthleteRollup.lookbackDays}-day hub figures</strong> are campaign reporting only.
+                  Pending requests stay in the review queue and are not deducted until they are marked paid.
                   <strong className="font-normal"> Fayetteville gross</strong> matches Admin session sum;{" "}
                   <strong className="font-normal">NC United fund</strong> is pooled checkouts only (no wrestler credit).
                   <strong className="font-normal"> Athlete $ outside parent links</strong> should trend to $0 after links + directory fixes.
@@ -382,7 +385,7 @@ export default function AdminExpenseRequestsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <Card>
                     <CardHeader className="pb-2">
-                      <CardDescription>Spartan raised (hub window, linked rows only)</CardDescription>
+                      <CardDescription>Raised (lifetime, linked athletes)</CardDescription>
                       <CardTitle className="text-2xl tabular-nums">
                         {formatMoney(parentAthleteRollup.totalsForLinkedAthletes.raisedCents)}
                       </CardTitle>
@@ -398,7 +401,7 @@ export default function AdminExpenseRequestsPage() {
                   </Card>
                   <Card>
                     <CardHeader className="pb-2">
-                      <CardDescription>Notional remaining (linked athletes)</CardDescription>
+                      <CardDescription>Wallet balance (linked athletes)</CardDescription>
                       <CardTitle className="text-2xl tabular-nums">
                         {formatMoney(parentAthleteRollup.totalsForLinkedAthletes.remainingNotionalCents)}
                       </CardTitle>
@@ -409,7 +412,7 @@ export default function AdminExpenseRequestsPage() {
                       <CardDescription className="text-slate-600">Check: gross ≈ linked + NC United + athlete gap</CardDescription>
                       <CardTitle className="text-base font-normal text-slate-700 tabular-nums leading-snug">
                         {formatMoney(parentAthleteRollup.fayettevilleGrossHubWindowCents)} ≈{" "}
-                        {formatMoney(parentAthleteRollup.totalsForLinkedAthletes.raisedCents)} +{" "}
+                        {formatMoney(parentAthleteRollup.totalsForLinkedAthletes.hubWindowRaisedCents)} +{" "}
                         {formatMoney(parentAthleteRollup.ncUnitedCommunityFundHubWindowCents ?? 0)} +{" "}
                         {formatMoney(parentAthleteRollup.raisedAthleteAttributedOutsideParentLinksHubWindowCents ?? 0)}
                       </CardTitle>
@@ -429,19 +432,19 @@ export default function AdminExpenseRequestsPage() {
                         <TableRow>
                           <TableHead>Athlete</TableHead>
                           <TableHead>Code</TableHead>
-                          <TableHead className="text-right">Raised (hub)</TableHead>
-                          <TableHead className="text-right">Reimb paid (hub)</TableHead>
+                          <TableHead className="text-right">Raised (lifetime)</TableHead>
+                          <TableHead className="text-right">Reimb paid (lifetime)</TableHead>
                           <TableHead className="text-right">Guild</TableHead>
-                          <TableHead className="text-right">Spent (reimb+Guild)</TableHead>
-                          <TableHead className="text-right">Net (hub)</TableHead>
-                          <TableHead className="text-right">Remaining</TableHead>
-                          <TableHead className="text-right">Reimb paid (all-time)</TableHead>
+                          <TableHead className="text-right">Spent / allocated</TableHead>
+                          <TableHead className="text-right">Net after reimb.</TableHead>
+                          <TableHead className="text-right">Wallet balance</TableHead>
+                          <TableHead className="text-right">Raised ({parentAthleteRollup.lookbackDays}d)</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {parentAthleteRollup.athletes.map((a) => {
-                          const spentWindowPlusGuild =
-                            a.reimbursementsPaidWindowCents + a.guildAllocationsCents
+                          const spentAllTimePlusGuild =
+                            a.reimbursementsPaidAllTimeCents + a.guildAllocationsCents
                           return (
                             <TableRow key={a.athleteId}>
                               <TableCell className="text-sm font-medium">{a.name}</TableCell>
@@ -453,20 +456,20 @@ export default function AdminExpenseRequestsPage() {
                               </TableCell>
                               <TableCell className="text-sm text-right tabular-nums">{formatMoney(a.raisedCents)}</TableCell>
                               <TableCell className="text-sm text-right tabular-nums">
-                                {formatMoney(a.reimbursementsPaidWindowCents)}
+                                {formatMoney(a.reimbursementsPaidAllTimeCents)}
                               </TableCell>
                               <TableCell className="text-sm text-right tabular-nums">
                                 {formatMoney(a.guildAllocationsCents)}
                               </TableCell>
-                              <TableCell className="text-sm text-right tabular-nums">{formatMoney(spentWindowPlusGuild)}</TableCell>
+                              <TableCell className="text-sm text-right tabular-nums">{formatMoney(spentAllTimePlusGuild)}</TableCell>
                               <TableCell className="text-sm text-right tabular-nums">
-                                {formatMoney(a.netAfterReimbursementsWindowCents)}
+                                {formatMoney(a.netAfterReimbursementsCents)}
                               </TableCell>
                               <TableCell className="text-sm text-right tabular-nums font-medium">
                                 {formatMoney(a.remainingNotionalCents)}
                               </TableCell>
                               <TableCell className="text-sm text-right tabular-nums">
-                                {formatMoney(a.reimbursementsPaidAllTimeCents)}
+                                {formatMoney(a.hubWindowRaisedCents)}
                               </TableCell>
                             </TableRow>
                           )
