@@ -12,6 +12,7 @@ import { StoreNavLink } from "@/components/store-nav-link"
 import { useCartStore, type ShippingMethod } from "@/lib/store/cart-store"
 import { CheckoutProgress } from "@/components/checkout-progress"
 import { OrderSummary } from "@/components/order-summary"
+import { isToc2026PreorderItem, TOC_2026_PICKUP_METHOD } from "@/lib/store/toc-preorder"
 
 // Order/webhook safe: Stripe metadata stores { n: name, p: price }. Webhook and admin use
 // .includes("pickup"|"practice"|"suite") for logic — no exact string match. DB stores name as-is.
@@ -35,7 +36,9 @@ const SHIPPING_OPTIONS: ShippingMethod[] = [
 export default function ShippingMethodPage() {
   const router = useRouter()
   const { items, shippingAddress, setShippingMethod, shippingMethod } = useCartStore()
-  const [selectedMethod, setSelectedMethod] = useState<string>(shippingMethod?.id ?? "standard")
+  const hasTocPreorder = items.some(isToc2026PreorderItem)
+  const availableOptions = hasTocPreorder ? [TOC_2026_PICKUP_METHOD] : SHIPPING_OPTIONS
+  const [selectedMethod, setSelectedMethod] = useState<string>(hasTocPreorder ? "pickup" : shippingMethod?.id ?? "standard")
 
   useEffect(() => {
     if (items.length === 0) {
@@ -48,7 +51,7 @@ export default function ShippingMethodPage() {
   if (!shippingAddress) return null
 
   const handleContinue = () => {
-    const method = SHIPPING_OPTIONS.find((m) => m.id === selectedMethod)
+    const method = availableOptions.find((m) => m.id === selectedMethod)
     if (method) {
       setShippingMethod(method)
       window.location.href = "/checkout/payment"
@@ -81,7 +84,7 @@ export default function ShippingMethodPage() {
               </CardHeader>
               <CardContent>
                 <RadioGroup value={selectedMethod} onValueChange={setSelectedMethod} className="space-y-4">
-                  {SHIPPING_OPTIONS.map((option) => {
+                  {availableOptions.map((option) => {
                     const isPickup = option.id === "pickup"
                     const borderClass = isPickup ? "border-green-500 bg-green-50/50" : ""
 
@@ -114,7 +117,9 @@ export default function ShippingMethodPage() {
                 {selectedMethod === "pickup" && (
                   <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
                     <p className="text-sm text-green-700 font-medium">
-                      Your order will be ready for pickup at NC United Blue practices every Sunday at UNC. You&apos;ll receive a confirmation email with details.
+                      {hasTocPreorder
+                        ? "Your preorder will be ready for pickup at the Tournament of Champions in Apex, September 18–19, 2026. You’ll receive a confirmation email with details."
+                        : "Your order will be ready for pickup at NC United Blue practices every Sunday at UNC. You’ll receive a confirmation email with details."}
                     </p>
                   </div>
                 )}

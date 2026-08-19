@@ -15,6 +15,11 @@ import { StoreNavLink } from "@/components/store-nav-link"
 import { useCartStore, type ShippingAddress, type ShippingMethod } from "@/lib/store/cart-store"
 import { CheckoutProgress } from "@/components/checkout-progress"
 import { OrderSummary } from "@/components/order-summary"
+import {
+  isToc2026PreorderItem,
+  TOC_2026_PICKUP_ADDRESS,
+  TOC_2026_PICKUP_METHOD,
+} from "@/lib/store/toc-preorder"
 
 const US_STATES = [
   "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
@@ -46,9 +51,13 @@ const PICKUP_ADDRESS: Pick<ShippingAddress, "address1" | "address2" | "city" | "
 
 export default function ShippingPage() {
   const { items, setShippingAddress, setShippingMethod, shippingAddress, shippingMethod, getTotal } = useCartStore()
+  const hasTocPreorder = items.some(isToc2026PreorderItem)
   const [fulfillmentType, setFulfillmentType] = useState<"pickup" | "ship">(
-    shippingMethod && shippingMethod.id !== "pickup" ? "ship" : "pickup"
+    hasTocPreorder ? "pickup" : shippingMethod && shippingMethod.id !== "pickup" ? "ship" : "pickup"
   )
+
+  const activePickupMethod = hasTocPreorder ? TOC_2026_PICKUP_METHOD : PICKUP_METHOD
+  const activePickupAddress = hasTocPreorder ? TOC_2026_PICKUP_ADDRESS : PICKUP_ADDRESS
 
   useEffect(() => {
     if (items.length === 0) return
@@ -58,8 +67,13 @@ export default function ShippingPage() {
   }, [items.length, getTotal])
 
   useEffect(() => {
-    if (!shippingMethod) setShippingMethod(PICKUP_METHOD)
-  }, [shippingMethod, setShippingMethod])
+    if (hasTocPreorder) {
+      setFulfillmentType("pickup")
+      setShippingMethod(TOC_2026_PICKUP_METHOD)
+    } else if (!shippingMethod) {
+      setShippingMethod(PICKUP_METHOD)
+    }
+  }, [hasTocPreorder, shippingMethod, setShippingMethod])
 
   const [formData, setFormData] = useState<ShippingAddress>(() => {
     const blankAddress = {
@@ -156,9 +170,9 @@ export default function ShippingPage() {
     if (fulfillmentType === "pickup") {
       setShippingAddress({
         ...formData,
-        ...PICKUP_ADDRESS,
+        ...activePickupAddress,
       })
-      setShippingMethod(PICKUP_METHOD)
+      setShippingMethod(activePickupMethod)
       window.location.href = "/checkout/payment"
       return
     }
@@ -202,7 +216,7 @@ export default function ShippingPage() {
                         type="button"
                         onClick={() => {
                           setFulfillmentType("pickup")
-                          setShippingMethod(PICKUP_METHOD)
+                          setShippingMethod(activePickupMethod)
                           setErrors({})
                         }}
                         className={`rounded-lg border p-4 text-left transition-colors ${
@@ -211,11 +225,11 @@ export default function ShippingPage() {
                             : "border-border bg-background hover:bg-secondary/50"
                         }`}
                       >
-                        <div className="font-semibold">Pickup at practice</div>
+                        <div className="font-semibold">{hasTocPreorder ? "Pickup at Tournament of Champions" : "Pickup at practice"}</div>
                         <div className="mt-1 text-sm text-muted-foreground">Fastest checkout. No shipping address required.</div>
                         <div className="mt-2 text-sm font-semibold text-green-700">FREE</div>
                       </button>
-                      <button
+                      {!hasTocPreorder && <button
                         type="button"
                         onClick={() => {
                           setFulfillmentType("ship")
@@ -241,7 +255,7 @@ export default function ShippingPage() {
                         <div className="font-semibold">Ship it to me</div>
                         <div className="mt-1 text-sm text-muted-foreground">Enter a shipping address and choose shipping next.</div>
                         <div className="mt-2 text-sm font-semibold">$5 standard</div>
-                      </button>
+                      </button>}
                     </div>
                   </div>
 
@@ -283,7 +297,9 @@ export default function ShippingPage() {
                 <CardContent className="space-y-4">
                   {fulfillmentType === "pickup" && (
                     <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-800">
-                      We only need your contact info for pickup orders. Your receipt will say pickup at NC United Blue practice.
+                      {hasTocPreorder
+                        ? "This is a preorder. Pickup is at the Tournament of Champions in Apex, September 18–19, 2026. We only need your contact information."
+                        : "We only need your contact info for pickup orders. Your receipt will say pickup at NC United Blue practice."}
                     </div>
                   )}
                   {fulfillmentType === "ship" && (

@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { isToc2026PreorderItem, TOC_2026_PICKUP_METHOD } from "./toc-preorder"
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const DEFAULT_TAX_RATE = 0.08
@@ -222,8 +223,19 @@ export async function buildAuthoritativeStoreCheckout(
   if (shippingId !== "standard" && shippingId !== "pickup") {
     return { ok: false, error: "Please select a valid shipping method." }
   }
+  const hasTocPreorder = items.some(isToc2026PreorderItem)
+  if (hasTocPreorder && shippingId !== "pickup") {
+    return { ok: false, error: "Tournament of Champions preorder shirts are available for event pickup only." }
+  }
   const shippingMethod = shippingId === "pickup"
-    ? {
+    ? hasTocPreorder
+      ? {
+          id: TOC_2026_PICKUP_METHOD.id,
+          name: TOC_2026_PICKUP_METHOD.name,
+          price: TOC_2026_PICKUP_METHOD.price,
+          estimatedDays: TOC_2026_PICKUP_METHOD.days,
+        }
+      : {
         id: "pickup" as const,
         name: "Free pickup at NC United Blue practices",
         price: 0,

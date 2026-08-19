@@ -166,10 +166,12 @@ export default function ConfirmationPage() {
   const isPickupAtPractice =
     methodId === "pickup" || methodNameLower.includes("pickup") || methodNameLower.includes("practice")
   const isPickupAtStates = methodNameLower.includes("suite 109") || methodNameLower.includes("states")
-  const isPickupMethod = isPickupAtPractice || isPickupAtStates
+  const isPickupAtToc = methodNameLower.includes("tournament of champions")
+  const isPickupMethod = isPickupAtPractice || isPickupAtStates || isPickupAtToc
 
   const getDeliveryDate = () => {
     const method = activeShippingMethod
+    if (isPickupAtToc) return "September 18–19 at the Tournament of Champions"
     if (isPickupAtStates) return "During States (Suite 109)"
     if (isPickupAtPractice) return "Available at next practice"
     const rawDays = (method as { days?: string; estimatedDays?: number })?.estimatedDays ?? (method as { days?: string })?.days
@@ -309,7 +311,7 @@ export default function ConfirmationPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <MapPin className="w-5 h-5" />
-                    {methodName.includes("Pickup at") ? "Pickup Information" : "Shipping Information"}
+                    {isPickupMethod ? "Pickup Information" : "Shipping Information"}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -317,7 +319,14 @@ export default function ConfirmationPage() {
                     <p className="font-semibold">
                       {(addressRecord as { firstName?: string }).firstName} {(addressRecord as { lastName?: string }).lastName}
                     </p>
-                    {methodName.includes("Suite 109") ? (
+                    {isPickupAtToc ? (
+                      <>
+                        <p className="text-muted-foreground pt-2">
+                          Your preorder will be available for pickup at the Tournament of Champions in Apex, September 18–19, 2026.
+                        </p>
+                        <p className="text-muted-foreground">You will receive an email with pickup details.</p>
+                      </>
+                    ) : methodName.includes("Suite 109") ? (
                       <>
                         <p className="text-muted-foreground pt-2">
                           Your order will be available for pickup at Suite 109, Greensboro Coliseum during the NCHSAA State tournament.
