@@ -12,7 +12,7 @@ const FAQ = [
   },
   {
     q: "How do I sign up for a practice?",
-    a: "Open Calendar, tap a practice, then Drop in. You'll fill in wrestler and guardian details, accept the waiver, and pay on the next screen. A confirmation email follows.",
+    a: "Open Calendar, tap a practice, then Drop in. You'll fill in the wrestler's name and graduation year plus guardian details, accept the waiver, and pay on the next screen. A confirmation email follows.",
   },
   {
     q: "Can I use the app without an account?",
