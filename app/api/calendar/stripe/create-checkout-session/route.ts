@@ -5,7 +5,7 @@ import {
   NC_UNITED_DROP_IN_LIABILITY_WAIVER_TYPE,
   NC_UNITED_LIABILITY_WAIVER_VERSION,
 } from "@/lib/nc-united-liability-waiver"
-import { ageFromAthleteDob, parseAthleteDobInput } from "@/lib/athlete-dob"
+import { parseGraduationYear } from "@/lib/athlete-graduation-year"
 import { normalizePhoneForStorage } from "@/lib/phone-format"
 
 const REQUIRED_ENV_VARS = [
@@ -25,7 +25,7 @@ function validateEnv() {
 interface CreateCheckoutRequest {
   eventId: string
   wrestlerName: string
-  wrestlerDob: string
+  wrestlerGraduationYear: string
   wrestlerWeight?: string
   parentName: string
   parentEmail: string
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
     const requiredFields: Array<keyof CreateCheckoutRequest> = [
       "eventId",
       "wrestlerName",
-      "wrestlerDob",
+      "wrestlerGraduationYear",
       "parentName",
       "parentEmail",
     ]
@@ -65,16 +65,12 @@ export async function POST(request: Request) {
       }
     }
 
-    const dobResult = parseAthleteDobInput(body.wrestlerDob)
-    if (!dobResult.ok) {
-      return NextResponse.json({ error: dobResult.error }, { status: 400 })
+    // A valid graduation year is the middle-school/high-school check; there is no separate age rule.
+    const gradResult = parseGraduationYear(body.wrestlerGraduationYear)
+    if (!gradResult.ok) {
+      return NextResponse.json({ error: gradResult.error }, { status: 400 })
     }
-
-    const wrestlerDob = dobResult.value
-    const wrestlerAge = ageFromAthleteDob(wrestlerDob)
-    if (wrestlerAge == null || wrestlerAge < 5 || wrestlerAge > 18) {
-      return NextResponse.json({ error: "Wrestler must be between 5 and 18 years old for drop-in practices." }, { status: 400 })
-    }
+    const wrestlerGraduationYear = gradResult.value
 
     if (body.waiverAccepted !== true) {
       return NextResponse.json(
@@ -151,7 +147,7 @@ export async function POST(request: Request) {
 
     const insertWithExtended = {
       ...insertBase,
-      wrestler_dob: wrestlerDob,
+      wrestler_graduation_year: wrestlerGraduationYear,
       waiver_signed_at: waiverSignedAt,
       waiver_signer_name: parentName,
     }
@@ -166,13 +162,13 @@ export async function POST(request: Request) {
       insertError = result.error
       if (!insertError) break
 
-      if (isUnknownColumnError(insertError, "wrestler_dob")) {
-        const { wrestler_dob: _d, ...rest } = payload as typeof insertWithExtended
+      if (isUnknownColumnError(insertError, "wrestler_graduation_year")) {
+        const { wrestler_graduation_year: _g, ...rest } = payload as typeof insertWithExtended
         payload = rest
         continue
       }
       if (isUnknownColumnError(insertError, "waiver_signed_at")) {
-        payload = { ...insertBase, wrestler_dob: wrestlerDob }
+        payload = { ...insertBase, wrestler_graduation_year: wrestlerGraduationYear }
         continue
       }
       break
@@ -209,7 +205,7 @@ export async function POST(request: Request) {
           waiver_signed_at: waiverSignedAt,
           waiver_type: NC_UNITED_DROP_IN_LIABILITY_WAIVER_TYPE,
           waiver_version: NC_UNITED_LIABILITY_WAIVER_VERSION,
-          wrestler_dob: wrestlerDob,
+          wrestler_graduation_year: String(wrestlerGraduationYear),
           ...(notesForStripe ? { registration_notes: notesForStripe } : {}),
         },
         line_items: [

@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils"
 import { formatPhoneInput, normalizePhoneForStorage } from "@/lib/phone-format"
+import { graduationYearOptions } from "@/lib/athlete-graduation-year"
 import {
   NC_UNITED_DROP_IN_LIABILITY_WAIVER_TEXT,
   NC_UNITED_LIABILITY_WAIVER_CHECKBOX_LABEL,
@@ -30,7 +31,7 @@ const brand = {
 export function DropInForm({ eventId, eventTitle, onClose }: DropInFormProps) {
   const [formData, setFormData] = useState({
     wrestlerName: "",
-    wrestlerDob: "",
+    wrestlerGraduationYear: "",
     wrestlerWeight: "",
     parentName: "",
     parentEmail: "",
@@ -58,7 +59,7 @@ export function DropInForm({ eventId, eventTitle, onClose }: DropInFormProps) {
         body: JSON.stringify({
           eventId,
           wrestlerName: formData.wrestlerName.trim(),
-          wrestlerDob: formData.wrestlerDob.trim(),
+          wrestlerGraduationYear: formData.wrestlerGraduationYear.trim(),
           wrestlerWeight: formData.wrestlerWeight.trim() || undefined,
           parentName: formData.parentName.trim(),
           parentEmail: formData.parentEmail.trim(),
@@ -169,14 +170,26 @@ export function DropInForm({ eventId, eventTitle, onClose }: DropInFormProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="wrestlerDob">Date of Birth *</Label>
-                  <Input
-                    id="wrestlerDob"
-                    type="date"
-                    value={formData.wrestlerDob}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, wrestlerDob: e.target.value }))}
+                  <Label htmlFor="wrestlerGraduationYear">Graduation Year *</Label>
+                  <select
+                    id="wrestlerGraduationYear"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    value={formData.wrestlerGraduationYear}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, wrestlerGraduationYear: e.target.value }))
+                    }
                     required
-                  />
+                  >
+                    <option value="">Select</option>
+                    {graduationYearOptions().map((year) => (
+                      <option key={year} value={String(year)}>
+                        Class of {year}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-muted-foreground">
+                    Drop-ins are open to middle and high school wrestlers.
+                  </p>
                 </div>
 
                 <div className="space-y-2">
