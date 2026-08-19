@@ -12,6 +12,7 @@ const state = {
   invitations: [] as Row[],
   athletes: [] as Row[],
   placements: [] as Row[],
+  fargoResults: [] as Row[],
   matches: [] as Row[],
   stateResults: [] as Row[],
   /** Every (table, columns) pair the module asked for, so tests can assert nothing broad was selected. */
@@ -51,6 +52,7 @@ vi.mock("@/lib/supabase/admin", () => ({
       if (table === "toc_invitations") return makeQuery(table, state.invitations)
       if (table === "athletes") return makeQuery(table, state.athletes)
       if (table === "nhsca_placements") return makeQuery(table, state.placements)
+      if (table === "fargo_results") return makeQuery(table, state.fargoResults)
       if (table === "matches") return makeQuery(table, state.matches)
       if (table === "wrestling_nchsaa_results") return makeQuery(table, state.stateResults)
       throw new Error(`unexpected table ${table}`)
@@ -77,6 +79,7 @@ import {
 beforeEach(() => {
   state.selects = []
   state.placements = []
+  state.fargoResults = []
   state.matches = []
   state.stateResults = []
   state.publication = [
@@ -313,6 +316,17 @@ describe("national results from nhsca_placements", () => {
   it("keeps the placements school out of the payload", async () => {
     const field = await getPublicAnnouncedWeight(117)
     expect(JSON.stringify(field)).not.toContain("Davie")
+  })
+})
+
+describe("Fargo All-American results", () => {
+  it("counts a linked Fargo All-American in the public rollup", async () => {
+    state.fargoResults = [{ athlete_id: "a1", year: 2026, placement: 5, is_all_american: true }]
+    const field = await getPublicAnnouncedWeight(117)
+    const athlete = field?.athletes.find((a) => a.athleteId === "a1")
+    expect(field?.rollup.allAmericans).toBe(1)
+    expect(athlete?.credentials[0]?.detail).toBe("2026 Fargo All-American")
+    expect(athlete?.results).toContain("2026 Fargo 5th")
   })
 })
 

@@ -67,8 +67,9 @@ export type SeasonRecord = { season: string | null; wins: number; losses: number
 
 export type AthleteResultData = {
   seasonRecord: SeasonRecord | null
-  /** Most recent year the athlete placed top eight at NHSCA. */
+  /** Most recent year the athlete placed top eight at NHSCA or Fargo. */
   allAmericanYear: number | null
+  allAmericanEvent?: "NHSCA" | "Fargo" | null
   lines: string[]
 }
 
@@ -97,13 +98,14 @@ const STATE_CREDENTIALS = [
 export function pickHeadlineCredential(input: {
   achievements: string[]
   allAmericanYear: number | null
+  allAmericanEvent?: "NHSCA" | "Fargo" | null
   seasonRecord: SeasonRecord | null
 }): { phrase: string; usedAchievement: string | null; usedSeasonRecord: boolean; isTitle: boolean } | null {
-  const { achievements, allAmericanYear, seasonRecord } = input
+  const { achievements, allAmericanYear, allAmericanEvent = "NHSCA", seasonRecord } = input
 
   if (allAmericanYear) {
     return {
-      phrase: `a ${allAmericanYear} NHSCA All-American`,
+      phrase: `a ${allAmericanYear} ${allAmericanEvent ?? "NHSCA"} All-American`,
       usedAchievement: null,
       usedSeasonRecord: false,
       isTitle: true,
@@ -155,6 +157,7 @@ export function buildAthleteSummary(input: {
   const headline = pickHeadlineCredential({
     achievements,
     allAmericanYear: results.allAmericanYear,
+    allAmericanEvent: results.allAmericanEvent,
     seasonRecord: results.seasonRecord,
   })
 
@@ -306,15 +309,16 @@ const STATE_PLACER_MAX = 8
 export function buildCredentials(input: {
   stateResults: StateResult[]
   allAmericanYear: number | null
+  allAmericanEvent?: "NHSCA" | "Fargo" | null
 }): PublicCredential[] {
-  const { stateResults, allAmericanYear } = input
+  const { stateResults, allAmericanYear, allAmericanEvent = "NHSCA" } = input
   const out: PublicCredential[] = []
 
   if (allAmericanYear) {
     out.push({
       kind: "all-american",
       label: "All-American",
-      detail: `${allAmericanYear} NHSCA All-American`,
+      detail: `${allAmericanYear} ${allAmericanEvent ?? "NHSCA"} All-American`,
     })
   }
 
@@ -485,6 +489,58 @@ async function fetchNhscaLinesByAthleteId(
   return out
 }
 
+/** Fargo top-eight finishes, linked to the canonical athlete profile. */
+async function fetchFargoLinesByAthleteId(
+  athleteIds: string[],
+): Promise<Map<string, { lines: string[]; allAmericanYear: number | null }>> {
+  const out = new Map<string, { lines: string[]; allAmericanYear: number | null }>()
+  if (athleteIds.length === 0) return out
+
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from("fargo_results")
+    .select("athlete_id, year, placement, is_all_american")
+    .in("athlete_id", athleteIds)
+
+  if (error) {
+    console.warn("[toc-public-field] Fargo lookup failed:", error.message)
+    return out
+  }
+
+  type Row = {
+    athlete_id?: string | null
+    year?: number | null
+    placement?: number | string | null
+    is_all_american?: boolean | null
+  }
+  const byAthlete = new Map<string, Row[]>()
+  for (const raw of (data ?? []) as Row[]) {
+    const id = typeof raw.athlete_id === "string" ? raw.athlete_id : ""
+    if (!id) continue
+    byAthlete.set(id, [...(byAthlete.get(id) ?? []), raw])
+  }
+
+  for (const [id, rows] of byAthlete) {
+    const allAmericans = rows
+      .filter((r) => {
+        const place = Number(r.placement)
+        return r.is_all_american === true || (Number.isInteger(place) && place >= 1 && place <= 8)
+      })
+      .sort((a, b) => Number(b.year ?? 0) - Number(a.year ?? 0))
+    if (allAmericans.length === 0) continue
+    out.set(id, {
+      allAmericanYear: Number(allAmericans[0]?.year) || null,
+      lines: allAmericans.map((r) => {
+        const year = Number(r.year) || null
+        const place = Number(r.placement)
+        return `${year ? `${year} ` : ""}Fargo${Number.isInteger(place) ? ` ${formatPlacement(place)}` : " All-American"}`
+      }),
+    })
+  }
+
+  return out
+}
+
 /**
  * Most recent season record from `matches` — the line that actually says something about a wrestler
  * ("2024-25 · 59-1 · 30 pins").
@@ -545,21 +601,30 @@ async function fetchSeasonRecordByAthleteId(athleteIds: string[]): Promise<Map<s
  * {@link MAX_PUBLIC_RESULTS} so the card stays a summary.
  */
 async function fetchPublicResultsByAthleteId(athleteIds: string[]): Promise<Map<string, AthleteResultData>> {
-  const [seasons, nhsca] = await Promise.all([
+  const [seasons, nhsca, fargo] = await Promise.all([
     fetchSeasonRecordByAthleteId(athleteIds),
     fetchNhscaLinesByAthleteId(athleteIds),
+    fetchFargoLinesByAthleteId(athleteIds),
   ])
 
   const out = new Map<string, AthleteResultData>()
   for (const id of athleteIds) {
     const seasonRecord = seasons.get(id) ?? null
     const n = nhsca.get(id)
+    const f = fargo.get(id)
+    const nationalAas = [
+      n?.allAmericanYear ? { year: n.allAmericanYear, event: "NHSCA" as const } : null,
+      f?.allAmericanYear ? { year: f.allAmericanYear, event: "Fargo" as const } : null,
+    ].filter((v): v is { year: number; event: "NHSCA" | "Fargo" } => v != null)
+    nationalAas.sort((a, b) => b.year - a.year)
     const lines: string[] = []
     if (seasonRecord) lines.push(formatSeasonRecord(seasonRecord))
     lines.push(...(n?.lines ?? []))
+    lines.push(...(f?.lines ?? []))
     out.set(id, {
       seasonRecord,
-      allAmericanYear: n?.allAmericanYear ?? null,
+      allAmericanYear: nationalAas[0]?.year ?? null,
+      allAmericanEvent: nationalAas[0]?.event ?? null,
       lines: lines.slice(0, MAX_PUBLIC_RESULTS),
     })
   }
@@ -756,6 +821,7 @@ async function fetchPublicAthletesForWeight(weightClass: number): Promise<Public
       credentials: buildCredentials({
         stateResults: stateByAthlete.get(id) ?? [],
         allAmericanYear: resultData.allAmericanYear,
+        allAmericanEvent: resultData.allAmericanEvent,
       }),
     })
   }
