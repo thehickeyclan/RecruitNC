@@ -2,6 +2,7 @@
 
 import { stripe } from "@/lib/stripe"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { createClient } from "@/lib/supabase/server"
 import { sendOrderReceiptIfEligible } from "@/lib/order-auto-receipt"
 import { shippingNameFromCustomerName, flatShippingFromAddress, flatBillingFromAddress } from "@/lib/order-shipping"
 import { findAndEnrichAthlete, enrichmentFromOrderCustomer } from "@/lib/enrich-athlete-profile"
@@ -12,7 +13,16 @@ import {
   finalizePendingStoreOrder,
   insertStoreOrder,
   storePaymentIntentMetadata,
+  type StoreCheckoutParams,
 } from "@/lib/store/checkout-order"
+import {
+  buildAuthoritativeStoreCheckout,
+  type StoreCheckoutItemInput,
+} from "@/lib/store/authoritative-checkout"
+import {
+  consumeStoreOrderInventory,
+  reserveStoreOrderInventory,
+} from "@/lib/store/inventory-reservations"
 import {
   buildTruncatedLegacyOrderNote,
   isTruncatedLegacyStoreMetadata,
@@ -24,16 +34,9 @@ export type CreatePaymentIntentParams = {
   customerEmail: string
   customerName: string
   shippingAddress: Record<string, unknown>
-  shippingMethod: { name: string; price: number; estimatedDays?: string }
-  items: Array<{ id: number; name: string; price: number; quantity: number; variant: { color: string; size: string }; image?: string }>
-  subtotal: number
-  shipping: number
-  tax: number
-  discount: number
-  total: number
+  shippingMethod: { id: string }
+  items: StoreCheckoutItemInput[]
   promoCode?: string
-  /** Logged-in store customer (RecruitNC auth user); stored on order when migration present. */
-  recruitncUserId?: string | null
 }
 
 const RECRUITNC_AUTH_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -71,8 +74,8 @@ function orderRowToTotals(row: {
 export async function createPaymentIntent(
   params: CreatePaymentIntentParams
 ): Promise<
-  | { success: true; clientSecret: string; orderId: string }
-  | { success: true; isFree: true; orderId: string }
+  | { success: true; clientSecret: string; orderId: string; total: number }
+  | { success: true; isFree: true; orderId: string; total: number }
   | { success: false; error: string }
 > {
   try {
@@ -83,38 +86,64 @@ export async function createPaymentIntent(
       }
     }
 
-    const supabase = createAdminClient()
-
-    if (params.total <= 0) {
-      const free = await createFreeOrderInternal(supabase, params)
-      if (!free.ok) return { success: false, error: free.error }
-      return { success: true, isFree: true, orderId: free.orderId! }
-    }
-
-    const amountCents = Math.round(params.total * 100)
-    if (amountCents < 50) {
-      return { success: false, error: "Minimum charge is $0.50." }
-    }
-
     const customerEmail = (params.customerEmail || "").trim()
     const customerName = (params.customerName || "").trim() || "Customer"
     if (!customerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
       return { success: false, error: "A valid email address is required for checkout." }
     }
 
-    const rid = recruitncUserIdForOrder(params.recruitncUserId ?? undefined)
+    const supabase = createAdminClient()
+    const authoritative = await buildAuthoritativeStoreCheckout(supabase, {
+      items: params.items,
+      shippingMethod: params.shippingMethod,
+      promoCode: params.promoCode,
+    })
+    if (!authoritative.ok) return { success: false, error: authoritative.error }
+
+    const checkout = authoritative.checkout
+    const address1 = String(params.shippingAddress?.address1 ?? params.shippingAddress?.address ?? "").trim()
+    if (checkout.shippingMethod.id === "standard" && !address1) {
+      return { success: false, error: "A shipping address is required for delivery." }
+    }
+
+    const authClient = await createClient()
+    const {
+      data: { user },
+    } = await authClient.auth.getUser()
+    const rid = recruitncUserIdForOrder(user?.id)
+    const orderParams: StoreCheckoutParams = {
+      customerEmail,
+      customerName,
+      shippingAddress: params.shippingAddress,
+      ...checkout,
+      recruitncUserId: rid,
+    }
+
+    if (checkout.total <= 0) {
+      const free = await createFreeOrderInternal(supabase, orderParams)
+      if (!free.ok) return { success: false, error: free.error }
+      return { success: true, isFree: true, orderId: free.orderId!, total: checkout.total }
+    }
+
+    const amountCents = Math.round(checkout.total * 100)
+    if (amountCents < 50) {
+      return { success: false, error: "Minimum charge is $0.50." }
+    }
+
     const pending = await insertStoreOrder(
       supabase,
-      {
-        ...params,
-        customerEmail,
-        customerName,
-      },
+      orderParams,
       { status: "pending", recruitncUserId: rid },
     )
     if (!pending.ok) return { success: false, error: pending.error }
 
-    const metadata = storePaymentIntentMetadata(pending.orderId, customerEmail, params.total, rid)
+    const reservation = await reserveStoreOrderInventory(supabase, pending.orderId)
+    if (!reservation.ok) {
+      await deletePendingStoreOrder(supabase, pending.orderId)
+      return { success: false, error: reservation.error }
+    }
+
+    const metadata = storePaymentIntentMetadata(pending.orderId, customerEmail, checkout.total, rid)
 
     let pi
     try {
@@ -141,7 +170,12 @@ export async function createPaymentIntent(
       .eq("id", pending.orderId)
       .eq("status", "pending")
 
-    return { success: true, clientSecret: pi.client_secret, orderId: pending.orderId }
+    return {
+      success: true,
+      clientSecret: pi.client_secret,
+      orderId: pending.orderId,
+      total: checkout.total,
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to create payment"
     console.error("[store] createPaymentIntent:", err)
@@ -151,15 +185,32 @@ export async function createPaymentIntent(
 
 async function createFreeOrderInternal(
   supabase: ReturnType<typeof createAdminClient>,
-  params: CreatePaymentIntentParams
+  params: StoreCheckoutParams
 ): Promise<{ ok: true; orderId: string } | { ok: false; error: string }> {
   const ridFree = recruitncUserIdForOrder(params.recruitncUserId ?? undefined)
   const inserted = await insertStoreOrder(supabase, params, {
-    status: "paid",
+    status: "pending",
     paymentIntentId: null,
     recruitncUserId: ridFree,
   })
   if (!inserted.ok) return { ok: false, error: inserted.error }
+
+  const reservation = await reserveStoreOrderInventory(supabase, inserted.orderId)
+  if (!reservation.ok) {
+    await deletePendingStoreOrder(supabase, inserted.orderId)
+    return { ok: false, error: reservation.error }
+  }
+  const consumed = await consumeStoreOrderInventory(supabase, inserted.orderId)
+  if (!consumed.ok) {
+    await deletePendingStoreOrder(supabase, inserted.orderId)
+    return { ok: false, error: consumed.error }
+  }
+  const { error: paidError } = await supabase
+    .from("orders")
+    .update({ status: "paid" })
+    .eq("id", inserted.orderId)
+    .eq("status", "pending")
+  if (paidError) return { ok: false, error: paidError.message }
 
   try {
     await sendOrderReceiptIfEligible(supabase, inserted.orderId)
@@ -170,9 +221,9 @@ async function createFreeOrderInternal(
   return { ok: true, orderId: inserted.orderId }
 }
 
-function parseOrderFromMetadata(metadata: Record<string, string>): CreatePaymentIntentParams | null {
+function parseOrderFromMetadata(metadata: Record<string, string>): StoreCheckoutParams | null {
   try {
-    const items = JSON.parse(metadata.items || "[]") as CreatePaymentIntentParams["items"]
+    const items = JSON.parse(metadata.items || "[]") as StoreCheckoutParams["items"]
     return {
       customerEmail: metadata.customer_email ?? "",
       customerName: metadata.customer_name ?? "",
@@ -305,7 +356,7 @@ async function createOrderFromPaymentIntentMetadata(
   }
 
   const orderItems = payload.items.map(
-    (i: { id: number; name: string; price: number; quantity: number; variant: { color: string; size: string }; image?: string }, idx: number) => {
+    (i: { id: string | number; variantId?: string; name: string; price: number; quantity: number; variant: { color: string; size: string }; sku?: string; image?: string }, idx: number) => {
       const uuidProduct = resolveOrderItemProductId(i.id)
       const qty = Math.max(1, Number(i.quantity) || 1)
       const unit = Number(i.price)
@@ -313,13 +364,18 @@ async function createOrderFromPaymentIntentMetadata(
         order_id: orderId,
         product_id: uuidProduct,
         product_name: i.name,
-        sku: syntheticOrderItemSku({
-          productId: uuidProduct,
-          sourceId: i.id,
-          label: i.name,
-          dedupeKey: `${paymentIntentId}:${idx}`,
-        }),
+        sku:
+          i.sku?.trim() ||
+          syntheticOrderItemSku({
+            productId: uuidProduct,
+            sourceId: i.id,
+            label: i.name,
+            dedupeKey: `${paymentIntentId}:${idx}`,
+          }),
+        variant_id: i.variantId ?? null,
         variant: i.variant,
+        color: i.variant.color,
+        size: i.variant.size,
         quantity: i.quantity,
         price: i.price,
         subtotal: (Number.isFinite(unit) ? unit : 0) * qty,
@@ -543,13 +599,30 @@ export async function createOrderFromPaymentIntent(
   try {
     const supabase = createAdminClient()
 
+    const pi = await stripe.paymentIntents.retrieve(paymentIntentId)
+    if (pi.status !== "succeeded") {
+      return { success: false, error: "Payment has not completed." }
+    }
+
     const { data: existing } = await supabase
       .from("orders")
-      .select("id, order_number, subtotal, shipping_cost, tax, discount, total, shipping_address, shipping_method")
+      .select("id, order_number, subtotal, shipping_cost, tax, discount, total, shipping_address, shipping_method, status")
       .eq("stripe_payment_intent_id", paymentIntentId)
-      .single()
+      .maybeSingle()
 
     if (existing) {
+      if (existing.status === "pending") {
+        const finalized = await finalizePendingStoreOrder(
+          supabase,
+          existing.id,
+          paymentIntentId,
+        )
+        if (!finalized) return { success: false, error: "Could not finalize the paid order." }
+        return { success: true, ...finalized, alreadyExisted: true }
+      }
+      if (existing.status !== "paid") {
+        return { success: false, error: `Order cannot be completed from status ${existing.status}.` }
+      }
       const { data: items } = await supabase
         .from("order_items")
         .select("product_name, variant, quantity, price")
@@ -576,7 +649,6 @@ export async function createOrderFromPaymentIntent(
       }
     }
 
-    const pi = await stripe.paymentIntents.retrieve(paymentIntentId)
     let chargeMeta: Record<string, string> = {}
     const chargeId = pi.latest_charge
     if (chargeId && typeof chargeId === "string") {
@@ -814,7 +886,7 @@ export async function createOrderFromSession(
       return { success: false, error: orderErr.message }
     }
     const orderItems = payload.items.map(
-      (i: { id: number; name: string; price: number; quantity: number; variant: { color: string; size: string }; image?: string }, idx: number) => {
+      (i: { id: string | number; variantId?: string; name: string; price: number; quantity: number; variant: { color: string; size: string }; sku?: string; image?: string }, idx: number) => {
         const uuidProduct = resolveOrderItemProductId(i.id)
         const qty = Math.max(1, Number(i.quantity) || 1)
         const unit = Number(i.price)
@@ -822,13 +894,18 @@ export async function createOrderFromSession(
           order_id: orderId,
           product_id: uuidProduct,
           product_name: i.name,
-          sku: syntheticOrderItemSku({
-            productId: uuidProduct,
-            sourceId: i.id,
-            label: i.name,
-            dedupeKey: `${piId ?? sessionId}:${idx}`,
-          }),
+          sku:
+            i.sku?.trim() ||
+            syntheticOrderItemSku({
+              productId: uuidProduct,
+              sourceId: i.id,
+              label: i.name,
+              dedupeKey: `${piId ?? sessionId}:${idx}`,
+            }),
+          variant_id: i.variantId ?? null,
           variant: i.variant,
+          color: i.variant.color,
+          size: i.variant.size,
           quantity: i.quantity,
           price: i.price,
           subtotal: (Number.isFinite(unit) ? unit : 0) * qty,

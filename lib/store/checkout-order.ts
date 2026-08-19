@@ -4,18 +4,21 @@ import { syntheticOrderItemSku } from "@/lib/order-item-sku"
 import { findProductByIdOrPrefix, resolveOrderItemProductId } from "@/lib/store/product-utils"
 import { sendOrderReceiptIfEligible } from "@/lib/order-auto-receipt"
 import { flatBillingFromAddress, flatShippingFromAddress, shippingNameFromCustomerName } from "@/lib/order-shipping"
+import { consumeStoreOrderInventory } from "@/lib/store/inventory-reservations"
 
 export type StoreCheckoutParams = {
   customerEmail: string
   customerName: string
   shippingAddress: Record<string, unknown>
-  shippingMethod: { name: string; price: number; estimatedDays?: string }
+  shippingMethod: { id?: string; name: string; price: number; estimatedDays?: string }
   items: Array<{
-    id: number
+    id: string | number
+    variantId?: string
     name: string
     price: number
     quantity: number
     variant: { color: string; size: string }
+    sku?: string
     image?: string
   }>
   subtotal: number
@@ -67,13 +70,18 @@ export function buildStoreOrderItems(
       order_id: orderId,
       product_id: productId,
       product_name: matched?.name ?? i.name,
-      sku: syntheticOrderItemSku({
-        productId,
-        sourceId: i.id,
-        label: matched?.name ?? i.name,
-        dedupeKey: `${dedupePrefix}:${idx}`,
-      }),
+      sku:
+        i.sku?.trim() ||
+        syntheticOrderItemSku({
+          productId,
+          sourceId: i.id,
+          label: matched?.name ?? i.name,
+          dedupeKey: `${dedupePrefix}:${idx}`,
+        }),
+      variant_id: i.variantId ?? null,
       variant: i.variant,
+      color: i.variant.color,
+      size: i.variant.size,
       quantity: i.quantity,
       price: i.price,
       subtotal: (Number.isFinite(unit) ? unit : 0) * qty,
@@ -277,7 +285,7 @@ export async function finalizePendingStoreOrder(
     .eq("stripe_payment_intent_id", paymentIntentId)
     .maybeSingle()
 
-  if (existingByPi) {
+  if (existingByPi?.status === "paid") {
     if (sendReceipt) {
       try {
         await sendOrderReceiptIfEligible(supabase, existingByPi.id)
@@ -287,18 +295,21 @@ export async function finalizePendingStoreOrder(
     }
     return orderToFinalizedResult(supabase, existingByPi)
   }
+  if (existingByPi && existingByPi.status !== "pending") return null
+
+  const resolvedOrderId = existingByPi?.id ?? orderId
 
   const { data: order } = await supabase
     .from("orders")
     .select("id, order_number, subtotal, shipping_cost, tax, discount, total, shipping_address, shipping_method, customer_email, customer_name, status, stripe_payment_intent_id")
-    .eq("id", orderId)
+    .eq("id", resolvedOrderId)
     .maybeSingle()
 
   if (!order) return null
 
   if (order.status === "paid") {
     if (!order.stripe_payment_intent_id) {
-      await supabase.from("orders").update({ stripe_payment_intent_id: paymentIntentId }).eq("id", orderId)
+      await supabase.from("orders").update({ stripe_payment_intent_id: paymentIntentId }).eq("id", resolvedOrderId)
     }
     if (sendReceipt) {
       try {
@@ -312,6 +323,16 @@ export async function finalizePendingStoreOrder(
 
   if (order.status !== "pending") return null
 
+  const consumed = await consumeStoreOrderInventory(supabase, resolvedOrderId)
+  if (!consumed.ok) {
+    console.error("[store] paid order inventory finalization failed", {
+      orderId: resolvedOrderId,
+      paymentIntentId,
+      error: consumed.error,
+    })
+    return null
+  }
+
   const paidUpdate = {
     status: "paid" as const,
     stripe_payment_intent_id: paymentIntentId,
@@ -320,14 +341,14 @@ export async function finalizePendingStoreOrder(
   let { error: updateError } = await supabase
     .from("orders")
     .update(paidUpdate)
-    .eq("id", orderId)
+    .eq("id", resolvedOrderId)
     .eq("status", "pending")
 
   if (updateError && isMissingOrdersColumnError(updateError, "updated_at")) {
     ;({ error: updateError } = await supabase
       .from("orders")
       .update({ status: "paid", stripe_payment_intent_id: paymentIntentId })
-      .eq("id", orderId)
+      .eq("id", resolvedOrderId)
       .eq("status", "pending"))
   }
 
@@ -364,7 +385,7 @@ export async function finalizePendingStoreOrder(
 
   if (sendReceipt) {
     try {
-      await sendOrderReceiptIfEligible(supabase, orderId)
+      await sendOrderReceiptIfEligible(supabase, resolvedOrderId)
     } catch (e) {
       console.warn("[store] sendOrderReceiptIfEligible failed:", e)
     }

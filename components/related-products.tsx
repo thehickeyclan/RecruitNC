@@ -1,22 +1,11 @@
 "use client"
 
-import { useState } from "react"
 import { StoreLink } from "@/components/store-link"
 import { StoreCatalogImage, STORE_CATALOG_FRAME_CLASS } from "@/components/store-catalog-image"
-import { Star, Check } from "lucide-react"
+import { Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import { useCartStore, getMaxQuantityForItem } from "@/lib/store/cart-store"
-import { useToast } from "@/hooks/use-toast"
-
-function toCartProductId(id: string | number): number {
-  if (typeof id === "number" && Number.isInteger(id)) return id
-  const s = String(id)
-  let h = 0
-  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0
-  return Math.abs(h) || 0
-}
 
 export interface RelatedProduct {
   id: string | number
@@ -36,46 +25,6 @@ interface RelatedProductsProps {
 }
 
 export function RelatedProducts({ products, storeTheme = false }: RelatedProductsProps) {
-  const [addedProducts, setAddedProducts] = useState<Record<string, boolean>>({})
-  const { addItem } = useCartStore()
-  const { toast } = useToast()
-
-  const handleAddToCart = (e: React.MouseEvent, product: RelatedProduct) => {
-    e.preventDefault()
-    e.stopPropagation()
-    const productId = String(product.id)
-    const defaultSize = product.sizes?.[0] ?? "M"
-    const defaultColor =
-      product.category?.toLowerCase() === "headwear"
-        ? "Navy Blue"
-        : product.name.toLowerCase().includes("red")
-          ? "Red"
-          : "Navy Blue"
-
-    const sku = `NC-${String(product.id).slice(0, 8)}`
-    const maxQty = getMaxQuantityForItem({ sku, name: product.name })
-
-    addItem({
-      id: toCartProductId(product.id),
-      name: product.name,
-      price: product.price,
-      image: product.image || "/placeholder.svg",
-      variant: { color: defaultColor, size: defaultSize },
-      sku,
-      quantity: Math.min(1, maxQty),
-      stock: (product.stock_quantity ?? 0) > 10 ? "in-stock" : "low-stock",
-    })
-
-    setAddedProducts((prev) => ({ ...prev, [productId]: true }))
-    toast({
-      title: "Added to cart",
-      description: `${product.name} has been added to your cart.`,
-    })
-    setTimeout(() => {
-      setAddedProducts((prev) => ({ ...prev, [productId]: false }))
-    }, 2000)
-  }
-
   const renderStars = (rating: number) => {
     const r = Math.min(5, Math.max(0, Math.round(rating)))
     return Array.from({ length: 5 }, (_, i) => (
@@ -101,7 +50,6 @@ export function RelatedProducts({ products, storeTheme = false }: RelatedProduct
         {products.map((product) => {
           const productId = String(product.id)
           const productUrl = `/store-app/product/${productId}`
-          const isAdded = addedProducts[productId]
 
           return (
             <div
@@ -158,19 +106,8 @@ export function RelatedProducts({ products, storeTheme = false }: RelatedProduct
                   </p>
                 </div>
 
-                <Button
-                  onClick={(e) => handleAddToCart(e, product)}
-                  disabled={isAdded}
-                  className="w-full bg-[#003366] hover:bg-[#003366]/90 text-white"
-                >
-                  {isAdded ? (
-                    <>
-                      <Check className="w-4 h-4 mr-2" />
-                      Added!
-                    </>
-                  ) : (
-                    "Add to Cart"
-                  )}
+                <Button asChild className="w-full bg-[#003366] hover:bg-[#003366]/90 text-white">
+                  <StoreLink href={productUrl}>Choose Options</StoreLink>
                 </Button>
               </div>
             </div>

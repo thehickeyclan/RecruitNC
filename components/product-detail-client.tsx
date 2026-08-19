@@ -11,7 +11,7 @@ interface Product {
   price: number
   image_url?: string | null
   rating?: number
-  variants?: Array<{ color: string; size: string; stock_quantity?: number; sku?: string }>
+  variants?: Array<{ id: string; color: string; size: string; stock_quantity?: number; sku?: string }>
 }
 
 interface ProductDetail {
@@ -25,7 +25,7 @@ interface ProductDetail {
   imagesByColor: Record<string, string[]>
   defaultImages: string[]
   reviews: unknown[]
-  variants?: Array<{ color: string; size: string; stock_quantity?: number; sku?: string }>
+  variants?: Array<{ id: string; color: string; size: string; stock_quantity?: number; sku?: string }>
 }
 
 interface ProductDetailClientProps {

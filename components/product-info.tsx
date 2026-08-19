@@ -21,14 +21,6 @@ import { trackAddToCart } from "@/lib/meta-pixel"
 import { shouldShowSizeSelector } from "@/lib/size-utils"
 import { getStoreProductShipLabel } from "@/lib/store/product-utils"
 
-function toCartProductId(id: string | number): number {
-  if (typeof id === "number" && Number.isInteger(id)) return id
-  const s = String(id)
-  let h = 0
-  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0
-  return Math.abs(h) || 0
-}
-
 interface Product {
   id: string | number
   name: string
@@ -37,7 +29,7 @@ interface Product {
   category?: string | null
   image_url?: string | null
   rating?: number
-  variants?: Array<{ color: string; size: string; stock_quantity?: number; sku?: string }>
+  variants?: Array<{ id: string; color: string; size: string; stock_quantity?: number; sku?: string }>
 }
 
 interface ProductDetail {
@@ -51,13 +43,13 @@ interface ProductDetail {
   imagesByColor: Record<string, string[]>
   defaultImages: string[]
   reviews: unknown[]
-  variants?: Array<{ color: string; size: string; stock_quantity?: number; sku?: string }>
+  variants?: Array<{ id: string; color: string; size: string; stock_quantity?: number; sku?: string }>
 }
 
 interface ProductInfoProps {
   product: Product & { stock_quantity?: number }
   details: ProductDetail
-  variants?: Array<{ color: string; size: string; stock_quantity?: number; sku?: string }>
+  variants?: Array<{ id: string; color: string; size: string; stock_quantity?: number; sku?: string }>
   selectedColor: string
   onColorChange: (color: string) => void
   currentImage?: string
@@ -120,13 +112,30 @@ export function ProductInfo({
       colorSpecificImage ?? product.image_url ?? "/placeholder.svg"
 
     const variant = productVariants.find(
-      (v: { color: string; size: string; stock_quantity?: number; sku?: string }) =>
+      (v: { id: string; color: string; size: string; stock_quantity?: number; sku?: string }) =>
         v.color === selectedColor && v.size === effectiveSize
     )
+    if (!variant?.id) {
+      toast({
+        title: "Selection unavailable",
+        description: "That size and color combination is no longer available. Please choose another option.",
+        variant: "destructive",
+      })
+      return
+    }
     const variantStock = variant?.stock_quantity ?? 0
+    if (variantStock < quantity) {
+      toast({
+        title: "Not enough inventory",
+        description: `Only ${Math.max(0, variantStock)} of this option ${variantStock === 1 ? "is" : "are"} available.`,
+        variant: "destructive",
+      })
+      return
+    }
 
     addItem({
-      id: toCartProductId(product.id),
+      id: String(product.id),
+      variantId: String(variant.id),
       name: product.name,
       price: product.price,
       image: imageToUse,
@@ -134,6 +143,7 @@ export function ProductInfo({
       sku: variant?.sku ?? details.sku,
       quantity,
       stock: variantStock > 10 ? "in-stock" : "low-stock",
+      stockQuantity: variantStock,
     })
 
     trackAddToCart(
@@ -168,7 +178,14 @@ export function ProductInfo({
     setTimeout(() => setIsAdded(false), 2000)
   }
 
-  const maxQty = getMaxQuantityForItem({ sku: details.sku, name: product.name })
+  const selectedVariant = productVariants.find(
+    (variant) => variant.color === selectedColor && variant.size === effectiveSize,
+  )
+  const maxQty = getMaxQuantityForItem({
+    sku: selectedVariant?.sku ?? details.sku,
+    name: product.name,
+    stockQuantity: selectedVariant?.stock_quantity,
+  })
 
   const handleQuantityChange = (delta: number) => {
     setQuantity((prev) => Math.max(1, Math.min(maxQty, prev + delta)))

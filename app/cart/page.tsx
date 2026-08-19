@@ -39,7 +39,7 @@ export default function CartPage() {
 
   const [promoInput, setPromoInput] = useState("")
   const [promoError, setPromoError] = useState("")
-  const [itemToRemove, setItemToRemove] = useState<{ id: number; variant: { color: string; size: string } } | null>(null)
+  const [itemToRemove, setItemToRemove] = useState<{ id: string; variant: { color: string; size: string } } | null>(null)
 
   const subtotal = getSubtotal()
   const shipping = getShippingCost()
@@ -48,10 +48,10 @@ export default function CartPage() {
   const total = (totalBreakdown as { total: number }).total
 
   const handleQuantityChange = (
-    id: number,
+    id: string,
     variant: { color: string; size: string },
     newQuantity: number,
-    item: { sku?: string | null; name?: string }
+    item: { sku?: string | null; name?: string; stockQuantity?: number }
   ) => {
     const max = getMaxQuantityForItem(item)
     if (newQuantity >= 1 && newQuantity <= max) {

@@ -23,6 +23,7 @@ import { syntheticOrderItemSku } from "@/lib/order-item-sku"
 import { decodeLineItemsMetadata, resolveNationalTeamOrderTotalCents } from "@/lib/nhsca-hub-checkout-pricing"
 import { ensureNationalTeamOrderLineItems } from "@/lib/national-team-order-items"
 import { finalizePendingStoreOrder } from "@/lib/store/checkout-order"
+import { releaseStoreOrderInventory } from "@/lib/store/inventory-reservations"
 import {
   isPlaceholderOrderCustomer,
   mergeStripeStoreMetadata,
@@ -354,6 +355,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ received: true })
   }
 
+  if (event.type === "payment_intent.canceled") {
+    const paymentIntent = event.data.object as Stripe.PaymentIntent
+    const orderId = paymentIntent.metadata?.order_id?.trim()
+    if (orderId && paymentIntent.metadata?.source === "store") {
+      const admin = createAdminClient()
+      await releaseStoreOrderInventory(admin, orderId)
+      await admin
+        .from("orders")
+        .update({ status: "cancelled" })
+        .eq("id", orderId)
+        .eq("status", "pending")
+    }
+    return NextResponse.json({ received: true })
+  }
+
   if (event.type === "payment_intent.succeeded") {
     const paymentIntent = event.data.object as Stripe.PaymentIntent
     let chargeMeta: Record<string, string> = {}
@@ -581,10 +597,21 @@ export async function POST(request: NextRequest) {
     }
     const { data: existing } = await admin
       .from("orders")
-      .select("id")
+      .select("id, status")
       .eq("stripe_payment_intent_id", paymentIntent.id)
       .maybeSingle()
-    if (existing) return NextResponse.json({ received: true })
+    if (existing?.status === "paid") return NextResponse.json({ received: true })
+    if (existing?.status === "pending") {
+      const finalized = await finalizePendingStoreOrder(admin, existing.id, paymentIntent.id)
+      if (!finalized) {
+        console.error("[webhooks/stripe] existing pending store order finalize failed", {
+          orderId: existing.id,
+          paymentIntentId: paymentIntent.id,
+        })
+        return NextResponse.json({ error: "Pending order finalize failed" }, { status: 500 })
+      }
+      return NextResponse.json({ received: true })
+    }
 
     if (await hasSpartanDonationForPaymentIntent(admin, paymentIntent.id)) {
       return NextResponse.json({ received: true })

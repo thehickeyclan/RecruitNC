@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { requireAdmin } from "@/lib/admin-auth"
 
 export type InventoryVariant = {
   id: string
@@ -21,6 +22,12 @@ export type InventoryProduct = {
 }
 
 export async function getInventoryProducts(): Promise<InventoryProduct[]> {
+  const auth = await requireAdmin()
+  if (!auth.ok) {
+    console.warn("[inventory] unauthorized inventory read")
+    return []
+  }
+
   const supabase = await createClient()
 
   const { data: productsData, error } = await supabase
@@ -69,6 +76,9 @@ export async function updateVariantStock(
   newQuantity: number
 ): Promise<{ success: true } | { success: false; error: string }> {
   try {
+    const auth = await requireAdmin()
+    if (!auth.ok) return { success: false, error: auth.error }
+
     if (newQuantity < 0) {
       return { success: false, error: "Stock quantity cannot be negative" }
     }

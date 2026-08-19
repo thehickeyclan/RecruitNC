@@ -19,7 +19,17 @@ export async function GET(
       *,
       product_variants (*),
       product_images (*),
-      product_reviews (*)
+      product_reviews (
+        id,
+        product_id,
+        user_name,
+        rating,
+        title,
+        content,
+        verified_purchase,
+        helpful_count,
+        created_at
+      )
     `
     )
     .eq("id", id)

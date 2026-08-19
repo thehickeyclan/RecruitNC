@@ -8,11 +8,19 @@ const isPromotionActive = () => false
 
 // Blue / drop-in orders: no low quantity limit (default 10 for other products)
 const DROPIN_BLUE_SKUS = ["DROPIN", "BLUE-SUB"]
-export const getMaxQuantityForItem = (item: { sku?: string | null; name?: string }): number => {
+export const getMaxQuantityForItem = (item: {
+  sku?: string | null
+  name?: string
+  stockQuantity?: number
+}): number => {
   const sku = (item.sku || "").toUpperCase()
-  if (DROPIN_BLUE_SKUS.includes(sku)) return 99
-  if (item.name && /drop-in|blue\s*program|practice\s*drop/i.test(item.name)) return 99
-  return 10
+  const defaultLimit =
+    DROPIN_BLUE_SKUS.includes(sku) ||
+    (item.name && /drop-in|blue\s*program|practice\s*drop/i.test(item.name))
+      ? 99
+      : 10
+  if (item.stockQuantity == null || !Number.isFinite(item.stockQuantity)) return defaultLimit
+  return Math.max(1, Math.min(defaultLimit, Math.floor(item.stockQuantity)))
 }
 
 // Helper function to update Rivalry Tee prices based on cart contents
@@ -40,12 +48,23 @@ const updateRivalryTeePrices = (items: CartItem[]): CartItem[] => {
       }
     }
 
+    if (isRivalryTee && !isPromotionActive() && item.originalPrice != null) {
+      return {
+        ...item,
+        price: item.originalPrice,
+        discount: 0,
+      }
+    }
+
     return item
   })
 }
 
 export interface CartItem {
-  id: number
+  /** Real products.id UUID. Never replace this with a client-side hash. */
+  id: string
+  /** Real product_variants.id UUID used for stock and fulfillment. */
+  variantId: string
   name: string
   price: number
   image: string
@@ -56,6 +75,7 @@ export interface CartItem {
   sku: string
   quantity: number
   stock: "in-stock" | "low-stock"
+  stockQuantity?: number
   discount?: number
   originalPrice?: number
 }
@@ -98,8 +118,8 @@ interface CartStore {
   shippingMethod: ShippingMethod | null
   addItem: (item: CartItem) => void
   autoAddRivalryTee: () => Promise<boolean>
-  removeItem: (id: number, variant: { color: string; size: string }) => void
-  updateQuantity: (id: number, variant: { color: string; size: string }, quantity: number) => void
+  removeItem: (id: string, variant: { color: string; size: string }) => void
+  updateQuantity: (id: string, variant: { color: string; size: string }, quantity: number) => void
   applyPromoCode: (code: string) => Promise<boolean>
   removePromoCode: () => void
   setShippingAddress: (address: ShippingAddress) => void
@@ -149,9 +169,8 @@ export const useCartStore = create<CartStore>()(
             } else {
               itemWithDiscount = {
                 ...item,
-                originalPrice: item.price,
-                discount: 0.5,
-                price: item.price * 0.5,
+                price: item.originalPrice ?? item.price,
+                discount: 0,
               }
             }
           }
@@ -214,10 +233,8 @@ export const useCartStore = create<CartStore>()(
               defaultVariant
 
             const rivalryTeeItem: CartItem = {
-              id:
-                typeof rivalryProduct.id === "string"
-                  ? parseInt(rivalryProduct.id, 10)
-                  : rivalryProduct.id,
+              id: String(rivalryProduct.id),
+              variantId: String(matchingVariant?.id || defaultVariant?.id || ""),
               name: rivalryProduct.name,
               price: 0,
               originalPrice: parseFloat(rivalryProduct.price) || 0,
@@ -236,6 +253,9 @@ export const useCartStore = create<CartStore>()(
                 (matchingVariant?.stock_quantity ?? defaultVariant?.stock_quantity ?? 0) > 0
                   ? "in-stock"
                   : "low-stock",
+              stockQuantity: Number(
+                matchingVariant?.stock_quantity ?? defaultVariant?.stock_quantity ?? 0,
+              ),
             }
 
             set((currentState) => ({
@@ -436,6 +456,24 @@ export const useCartStore = create<CartStore>()(
     }),
     {
       name: "nc-united-cart",
+      version: 2,
+      migrate: (persistedState: unknown) => {
+        const state = (persistedState ?? {}) as Partial<CartStore>
+        const hasLegacyItems = (state.items ?? []).some(
+          (item) =>
+            typeof (item as Partial<CartItem>).id !== "string" ||
+            !String((item as Partial<CartItem>).variantId ?? "").trim(),
+        )
+        if (!hasLegacyItems) return state as CartStore
+        return {
+          ...state,
+          items: [],
+          promoCode: null,
+          promoDiscount: 0,
+          promoDiscountType: null,
+          shippingMethod: null,
+        } as CartStore
+      },
     }
   )
 )

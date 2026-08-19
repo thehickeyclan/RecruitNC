@@ -48,7 +48,9 @@ export async function getProductReviews(productId: string) {
 
     const { data: reviews, error } = await supabase
       .from("product_reviews")
-      .select("*")
+      .select(
+        "id, product_id, user_name, rating, title, content, verified_purchase, helpful_count, created_at",
+      )
       .eq("product_id", productId)
       .order("created_at", { ascending: false })
 

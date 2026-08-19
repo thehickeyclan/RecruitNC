@@ -15,16 +15,15 @@ import { createPaymentIntent } from "@/app/actions/stripe"
 import { Elements } from "@stripe/react-stripe-js"
 import { loadStripe } from "@stripe/stripe-js"
 import { CheckoutForm } from "@/components/checkout-form"
-import { useAuth } from "@/contexts/auth-context"
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
 export default function PaymentPage() {
   const router = useRouter()
   const { toast } = useToast()
-  const { user } = useAuth()
   const { items, shippingAddress, shippingMethod, getTotal, promoCode, promoDiscount, applyPromoCode } = useCartStore()
   const [clientSecret, setClientSecret] = useState<string | null>(null)
+  const [authoritativeTotal, setAuthoritativeTotal] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const checkoutInitializedRef = useRef(false)
   const total = getTotal()
@@ -206,26 +205,13 @@ export default function PaymentPage() {
           phone: shippingAddress.phone,
           email: shippingAddress.email,
         },
-        shippingMethod: {
-          name: shippingMethod.name,
-          price: shippingMethod.price,
-          estimatedDays: shippingMethod.days,
-        },
+        shippingMethod: { id: shippingMethod.id },
         items: items.map((item) => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
+          productId: item.id,
+          variantId: item.variantId,
           quantity: item.quantity,
-          variant: item.variant,
-          image: item.image,
         })),
-        subtotal: totalState.subtotal,
-        shipping: totalState.shipping ?? shippingMethod.price ?? 0,
-        tax: totalState.tax,
-        discount: totalState.discount,
-        total: totalState.total,
         promoCode: finalPromoCode ?? undefined,
-        recruitncUserId: user?.id ?? null,
       })
 
       if (result.success && "isFree" in result && result.isFree && result.orderId) {
@@ -234,6 +220,7 @@ export default function PaymentPage() {
       }
 
       if (result.success && "clientSecret" in result && result.clientSecret) {
+        setAuthoritativeTotal(result.total)
         if ("orderId" in result && result.orderId) {
           try {
             sessionStorage.setItem("store_pending_order_id", result.orderId)
@@ -262,7 +249,7 @@ export default function PaymentPage() {
         variant: "destructive",
       })
     })
-  }, [isHydrated, items, shippingAddress, shippingMethod, isPickupMethod, router, getTotal, toast, promoCode, promoDiscount, applyPromoCode, urlPromoCode, user?.id])
+  }, [isHydrated, items, shippingAddress, shippingMethod, isPickupMethod, router, getTotal, toast, promoCode, promoDiscount, applyPromoCode, urlPromoCode])
 
   if (!shippingAddress || !shippingMethod) return null
 
@@ -304,9 +291,9 @@ export default function PaymentPage() {
                   >
                     <div className="mb-6 rounded-lg border border-[#003366]/10 bg-[#003366]/5 p-4 text-center">
                       <p className="text-sm text-muted-foreground mb-1">Total to Pay</p>
-                      <p className="text-3xl font-bold text-[#003366]">${total.total.toFixed(2)}</p>
+                      <p className="text-3xl font-bold text-[#003366]">${(authoritativeTotal ?? total.total).toFixed(2)}</p>
                     </div>
-                    <CheckoutForm clientSecret={clientSecret} total={total.total} />
+                    <CheckoutForm clientSecret={clientSecret} total={authoritativeTotal ?? total.total} />
                   </Elements>
                 ) : (
                   <div className="text-center py-12">

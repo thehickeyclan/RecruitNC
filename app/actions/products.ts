@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { requireAdmin } from "@/lib/admin-auth"
 
 function slugify(text: string): string {
   return text
@@ -41,6 +42,9 @@ export async function createProduct(payload: {
   | { success: false; error: string }
 > {
   try {
+    const auth = await requireAdmin()
+    if (!auth.ok) return { success: false, error: auth.error }
+
     const supabase = createAdminClient()
     const inStock = payload.status === "active"
     const showInPublicStore = payload.showInPublicStore !== false
@@ -127,6 +131,9 @@ export async function getProduct(
   | { success: false; error: string }
 > {
   try {
+    const auth = await requireAdmin()
+    if (!auth.ok) return { success: false, error: auth.error }
+
     const supabase = await createClient()
     const { data: product, error } = await supabase
       .from("products")
@@ -193,6 +200,9 @@ trackInventory: boolean
   }
 ): Promise<{ success: true } | { success: false; error: string }> {
   try {
+    const auth = await requireAdmin()
+    if (!auth.ok) return { success: false, error: auth.error }
+
     const supabase = createAdminClient()
 
     const inStock = payload.status === "active"

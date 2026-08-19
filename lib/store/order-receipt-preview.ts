@@ -68,7 +68,13 @@ export function mapOrderItemsToReceiptLines(itemRows: ItemRow[]): OrderReceiptLi
     const variant = variantForReceiptItem(r)
     const quantity = Number(r.quantity) || 1
     const price = Number(r.price) || 0
-    return { name, variant, quantity, price, lineLabel: name }
+    return {
+      name,
+      variant,
+      quantity,
+      price,
+      lineLabel: variant ? `${name} (${variant})` : name,
+    }
   })
 }
 
