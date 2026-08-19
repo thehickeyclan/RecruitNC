@@ -26,7 +26,6 @@ interface CreateCheckoutRequest {
   eventId: string
   wrestlerName: string
   wrestlerDob: string
-  wrestlerCell: string
   wrestlerWeight?: string
   parentName: string
   parentEmail: string
@@ -55,7 +54,6 @@ export async function POST(request: Request) {
       "eventId",
       "wrestlerName",
       "wrestlerDob",
-      "wrestlerCell",
       "parentName",
       "parentEmail",
     ]
@@ -76,11 +74,6 @@ export async function POST(request: Request) {
     const wrestlerAge = ageFromAthleteDob(wrestlerDob)
     if (wrestlerAge == null || wrestlerAge < 5 || wrestlerAge > 18) {
       return NextResponse.json({ error: "Wrestler must be between 5 and 18 years old for drop-in practices." }, { status: 400 })
-    }
-
-    const wrestlerCell = normalizePhoneForStorage(body.wrestlerCell)
-    if (wrestlerCell.replace(/\D/g, "").length !== 10) {
-      return NextResponse.json({ error: "Enter a valid 10-digit wrestler cell number." }, { status: 400 })
     }
 
     if (body.waiverAccepted !== true) {
@@ -159,7 +152,6 @@ export async function POST(request: Request) {
     const insertWithExtended = {
       ...insertBase,
       wrestler_dob: wrestlerDob,
-      wrestler_cell: wrestlerCell,
       waiver_signed_at: waiverSignedAt,
       waiver_signer_name: parentName,
     }
@@ -179,13 +171,8 @@ export async function POST(request: Request) {
         payload = rest
         continue
       }
-      if (isUnknownColumnError(insertError, "wrestler_cell")) {
-        const { wrestler_cell: _c, ...rest } = payload as Record<string, unknown>
-        payload = rest
-        continue
-      }
       if (isUnknownColumnError(insertError, "waiver_signed_at")) {
-        payload = { ...insertBase, wrestler_dob: wrestlerDob, wrestler_cell: wrestlerCell }
+        payload = { ...insertBase, wrestler_dob: wrestlerDob }
         continue
       }
       break
@@ -223,7 +210,6 @@ export async function POST(request: Request) {
           waiver_type: NC_UNITED_DROP_IN_LIABILITY_WAIVER_TYPE,
           waiver_version: NC_UNITED_LIABILITY_WAIVER_VERSION,
           wrestler_dob: wrestlerDob,
-          wrestler_cell: wrestlerCell,
           ...(notesForStripe ? { registration_notes: notesForStripe } : {}),
         },
         line_items: [

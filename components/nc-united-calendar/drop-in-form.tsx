@@ -32,7 +32,6 @@ export function DropInForm({ eventId, eventTitle, onClose }: DropInFormProps) {
     wrestlerName: "",
     wrestlerDob: "",
     wrestlerWeight: "",
-    wrestlerCell: "",
     parentName: "",
     parentEmail: "",
     parentPhone: "",
@@ -61,7 +60,6 @@ export function DropInForm({ eventId, eventTitle, onClose }: DropInFormProps) {
           wrestlerName: formData.wrestlerName.trim(),
           wrestlerDob: formData.wrestlerDob.trim(),
           wrestlerWeight: formData.wrestlerWeight.trim() || undefined,
-          wrestlerCell: normalizePhoneForStorage(formData.wrestlerCell.trim()),
           parentName: formData.parentName.trim(),
           parentEmail: formData.parentEmail.trim(),
           parentPhone: formData.parentPhone.trim()
@@ -177,18 +175,6 @@ export function DropInForm({ eventId, eventTitle, onClose }: DropInFormProps) {
                     type="date"
                     value={formData.wrestlerDob}
                     onChange={(e) => setFormData((prev) => ({ ...prev, wrestlerDob: e.target.value }))}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="wrestlerCell">Wrestler Cell *</Label>
-                  <Input
-                    id="wrestlerCell"
-                    type="tel"
-                    value={formData.wrestlerCell}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, wrestlerCell: formatPhoneInput(e.target.value) }))}
-                    placeholder="(555) 123-4567"
                     required
                   />
                 </div>
