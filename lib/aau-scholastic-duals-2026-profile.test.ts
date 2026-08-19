@@ -89,10 +89,10 @@ describe("getNationalTeamProfileHighlights", () => {
     expect(highlights.some((h) => h.videoSrc.includes("paxton-kearns-highlight"))).toBe(true)
   })
 
-  it("includes AAU highlight reel for Aiden Burkholder", () => {
+  it("does not include an incorrect AAU highlight reel for Aiden Burkholder", () => {
     const highlights = getNationalTeamProfileHighlights("any-id", ["Aiden Burkholder"])
-    expect(highlights.some((h) => h.event === AAU_SCHOLASTIC_DUALS_EVENT_LABEL)).toBe(true)
-    expect(highlights.some((h) => h.videoSrc.includes("aiden-burkholder-highlight"))).toBe(true)
+    expect(highlights.some((h) => h.event === AAU_SCHOLASTIC_DUALS_EVENT_LABEL)).toBe(false)
+    expect(highlights.some((h) => h.videoSrc.includes("aiden-burkholder-highlight"))).toBe(false)
   })
 
   it("includes AAU highlight reel for Mason Hocker", () => {
