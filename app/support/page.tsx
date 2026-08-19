@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "App Support | NC United Wrestling",
+  title: "App Support",
   description: "Help with the NC United app — alerts, practice sign-up, accounts and data requests.",
 }
 

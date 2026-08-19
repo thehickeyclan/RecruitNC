@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | NC United Wrestling",
+  title: "Privacy Policy",
   description:
     "How NC United Wrestling collects, uses and protects information in the NC United app and on ncwrestlingunited.com.",
 }
