@@ -1459,6 +1459,7 @@ export async function toolWrestlingCrossStoreSearch(args: {
 
 export async function toolCollegeCommitsSearch(args: {
   query?: string
+  college?: string | null
   grad_year?: number | null
   gender?: "Male" | "Female" | null
   division?: string | null
@@ -1471,6 +1472,7 @@ export async function toolCollegeCommitsSearch(args: {
     gender: args.gender === "Male" ? "male" : args.gender === "Female" ? "female" : "all",
     division: args.division || "all",
     search: args.query,
+    college: args.college || undefined,
   })
   return {
     rows: structuredRows.slice(0, limit),
@@ -2172,6 +2174,7 @@ export async function executeDataTool(name: string, rawArgs: unknown): Promise<s
           await toolCollegeCommitsSearch(
             args as {
               query?: string
+              college?: string | null
               grad_year?: number | null
               gender?: "Male" | "Female" | null
               division?: string | null

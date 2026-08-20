@@ -332,17 +332,29 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
     function: {
       name: "college_commits_search",
       description:
-        "Athletes with a college commitment. Optional text search (name, college, school) and/or grad year.",
+        "North Carolina athletes who have committed to a college. ALWAYS pass a filter when the question names one — `college` for 'who committed to NC State', `division` for 'how many committed to D1', `grad_year` for a class. Calling this with no arguments returns every commitment in the state and is almost never the right answer to a specific question. The response includes total_count, which is the number to quote for 'how many' questions.",
       parameters: {
         type: "object",
         additionalProperties: false,
         properties: {
+          college: {
+            type: "string",
+            description:
+              "Committed college name or fragment, e.g. 'NC State', 'Appalachian', 'UNC Pembroke'. Use this — not `query` — whenever the question names a college.",
+          },
+          division: {
+            type: "string",
+            description:
+              "Division filter. Accepts 'NCAA Division I', 'NCAA Division II', 'NCAA Division III', 'NAIA', 'NJCAA', or short forms D1/D2/D3. Use for 'how many committed to Division 1'.",
+          },
+          gender: { type: "string", enum: ["Male", "Female"], description: "Optional gender filter." },
           query: {
             type: "string",
-            description: "Optional fragment to filter name, college, or high school.",
+            description:
+              "Free-text fragment matching athlete name, college OR high school. Use only when the question is not specifically about a college — prefer `college` for college questions.",
           },
-          grad_year: { type: "integer", description: "Optional class year filter." },
-          limit: { type: "integer" },
+          grad_year: { type: "integer", description: "Optional graduating class year filter." },
+          limit: { type: "integer", description: "Max rows returned. total_count is unaffected." },
         },
         required: [],
       },

@@ -15,6 +15,12 @@ export type CollegeCommitFilters = {
   division?: string
   /** Search box — matches athlete or college name */
   search?: string
+  /**
+   * College-only filter. `search` also matches athlete and high-school names, which makes
+   * "NC State" ambiguous; this narrows to the committed college so an agent asking
+   * "who committed to NC State" cannot pick up unrelated rows.
+   */
+  college?: string
   /** Limit expand to one leaderboard bucket (all spellings) */
   collegeNames?: string[]
   /** Stable bucket from resolveCollegeCommitGroup — preferred over name-only matching */
@@ -103,6 +109,7 @@ export async function fetchCollegeCommits(
 
   const divisionFilter = filters.division ?? "all"
   const search = filters.search?.trim().toLowerCase()
+  const collegeFilter = filters.college?.trim().toLowerCase()
   const groupKeyFilter = filters.groupKey?.trim()
 
   const mapped: CollegeCommitRow[] = []
@@ -116,6 +123,8 @@ export async function fetchCollegeCommits(
       const rowGroup = resolveCollegeCommitGroup(row, collegesById, collegesByName)
       if (rowGroup.groupKey !== groupKeyFilter) continue
     }
+
+    if (collegeFilter && !college.toLowerCase().includes(collegeFilter)) continue
 
     const name = String(row.name ?? "")
     if (search) {
