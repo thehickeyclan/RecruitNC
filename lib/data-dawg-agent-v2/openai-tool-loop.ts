@@ -30,6 +30,11 @@ export async function runOpenAiDataDawgToolLoop(options: {
   priorMessages: Array<{ role: "user" | "assistant"; content: string }>
   userMessage: string
   model?: string
+  /**
+   * Facts a deterministic path already looked up for this question. Saves the model the round
+   * trip and — more importantly — keeps it answering from verified rows rather than memory.
+   */
+  groundingFacts?: string | null
 }): Promise<{ answer: string; toolRounds: number; finishReason: string }> {
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) {
@@ -37,9 +42,22 @@ export async function runOpenAiDataDawgToolLoop(options: {
   }
 
   const model = options.model || process.env.DATA_DAWG_AGENT_MODEL || "gpt-4o-mini"
+  const grounding = options.groundingFacts?.trim()
   const messages: ChatMessage[] = [
     { role: "system", content: options.systemPrompt },
     ...options.priorMessages.map((m) => ({ role: m.role, content: m.content })),
+    ...(grounding
+      ? [
+          {
+            role: "system" as const,
+            content:
+              "Already looked up for this question — these are verified rows from our database. " +
+              "Answer from them and do not call a tool for this athlete. Every number and result " +
+              "in your reply must appear below; if something is not here, we do not have it.\n\n" +
+              grounding,
+          },
+        ]
+      : []),
     { role: "user", content: options.userMessage },
   ]
 

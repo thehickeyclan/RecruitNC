@@ -48,8 +48,8 @@ import {
   getLatestNchsaaStateYear,
   nchsaaRealignmentNote,
 } from "./latest-tournament-year"
-import { buildAthleteDossierMarkdown } from "@/lib/data-dawg-athlete-dossier"
-import { buildSchoolWrestlingDossierMarkdown } from "@/lib/data-dawg-school-dossier"
+import { buildAthleteFacts } from "@/lib/data-dawg-athlete-dossier"
+import { buildSchoolFacts } from "@/lib/data-dawg-school-dossier"
 import { getNchsaaStateChampionsByExactTitleCount } from "@/lib/nchsaa-multi-time-state-champions"
 import { getNchsaaStatePlacersByExactPlacementCount } from "@/lib/nchsaa-multi-time-state-placers"
 import { loadNcUnitedResultsForNameSearch } from "@/lib/national-team-live-profile-results"
@@ -1474,8 +1474,20 @@ export async function toolCollegeCommitsSearch(args: {
     search: args.query,
     college: args.college || undefined,
   })
+  // The commit rows carry photo columns and no profile link, so the model was hyperlinking
+  // athlete names to their headshot PNG. Give it the real profile URL and drop the images.
+  const rows = structuredRows.slice(0, limit).map((row) => {
+    const r = row as unknown as Record<string, unknown>
+    const { photourl, photo_url, headshot_url, ...rest } = r
+    void photourl
+    void photo_url
+    void headshot_url
+    const id = String(r.id ?? "").trim()
+    return { ...rest, profile_url: id ? getAthleteProfileUrl(id) : null }
+  })
+
   return {
-    rows: structuredRows.slice(0, limit),
+    rows,
     total_count: structuredRows.length,
   }
 }
@@ -1688,20 +1700,34 @@ export async function toolNchsaaDualTeamChampions(args: {
 
 export async function toolGetAthleteFullDossier(args: { athlete_id: string }) {
   const id = String(args.athlete_id ?? "").trim()
-  const result = await buildAthleteDossierMarkdown(id)
-  if (result.error) {
-    return { error: result.error, markdown: "", profile_url: id ? getAthleteProfileUrl(id) : null }
+  const result = await buildAthleteFacts(id)
+  if (result.error || !result.facts) {
+    return { error: result.error ?? "Athlete not found.", profile_url: id ? getAthleteProfileUrl(id) : null }
   }
   return {
-    markdown: result.markdown,
-    profile_url: getAthleteProfileUrl(id),
-    note: "markdown already begins with a top summary (name linked to profile + college commit). Keep that block first; do not add ### headings.",
+    facts: result.facts,
+    note: "Verified record for this athlete. Write the answer yourself, in conversation — do not read these fields back as a list. Use only what is here; an empty array means we have nothing on record, not zero.",
   }
 }
 
 export async function toolGetSchoolWrestlingDossier(args: { query: string }) {
   const q = sanitizeFragment(String(args.query ?? ""))
-  return buildSchoolWrestlingDossierMarkdown(q)
+  const result = await buildSchoolFacts(q)
+  if (!result.facts) {
+    return {
+      error: result.error ?? "School not found.",
+      searched_for: result.searched_for,
+      note:
+        result.error === "school_not_found"
+          ? `No high school matched "${result.searched_for}". Say so and suggest the full official name or a spelling check — do not invent a record.`
+          : undefined,
+    }
+  }
+  return {
+    facts: result.facts,
+    searched_for: result.searched_for,
+    note: "Verified record for this school. Write the answer yourself, in conversation — do not read the lists back. Full lists are here so you can answer a follow-up without another lookup.",
+  }
 }
 
 function dedupeRecordBookRows(

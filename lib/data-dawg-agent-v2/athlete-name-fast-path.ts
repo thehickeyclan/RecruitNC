@@ -1,6 +1,10 @@
 /**
- * Skip the OpenAI tool loop for clear wrestler-name lookups.
- * Directory hit → full dossier. Alumni / no id → cross-store markdown.
+ * Resolve a clear wrestler-name lookup to verified facts before the model runs.
+ *
+ * This used to return finished markdown and skip OpenAI entirely, which is what made every
+ * athlete answer identical. It still does the same lookups — the saving was never the model
+ * round, it was the search + dossier round trip — but now it hands the facts to the model so
+ * the reply is written as conversation.
  */
 
 import {
@@ -13,16 +17,19 @@ import {
   toolSearchAthletes,
   toolWrestlingCrossStoreSearch,
 } from "./execute-data-tools"
-import {
-  crossStoreHasUsefulHits,
-  formatCrossStoreAthleteMarkdown,
-} from "./format-cross-store-athlete-markdown"
+import { crossStoreHasUsefulHits } from "./format-cross-store-athlete-markdown"
 
 export { isLikelyAthleteNameLookup } from "./athlete-name-fast-path-detect"
 
-export async function tryAthleteNameFastPath(
-  message: string,
-): Promise<{ markdown: string; athleteId: string | null } | null> {
+export type AthleteFastPathHit = {
+  /** Verified facts, JSON-serialisable, for the model to answer from. */
+  facts: unknown
+  athleteId: string | null
+  /** Where the facts came from — alumni rows read differently from a directory profile. */
+  kind: "directory" | "historical"
+}
+
+export async function tryAthleteNameFastPath(message: string): Promise<AthleteFastPathHit | null> {
   if (!isLikelyAthleteNameLookup(message)) return null
 
   const phrase = extractAthleteLookupPhrase(message)
@@ -39,17 +46,27 @@ export async function tryAthleteNameFastPath(
 
   if (id) {
     const dossier = await toolGetAthleteFullDossier({ athlete_id: id })
-    const md = typeof dossier.markdown === "string" ? dossier.markdown.trim() : ""
-    if (!(("error" in dossier && dossier.error) || md.length < 40)) {
-      return { markdown: md, athleteId: id }
+    if (!("error" in dossier && dossier.error) && "facts" in dossier && dossier.facts) {
+      return { facts: dossier.facts, athleteId: id, kind: "directory" }
     }
   }
 
-  // Alumni / no clear directory id — build from historical stores (Brandon Palmer path).
+  // Alumni / no clear directory id — fall back to the historical stores (Brandon Palmer path).
   const cross = await toolWrestlingCrossStoreSearch({ query: phrase, limit: 40 })
   if (!crossStoreHasUsefulHits(cross as never)) return null
 
-  const markdown = formatCrossStoreAthleteMarkdown(phrase, cross as never)
-  if (markdown.length < 40) return null
-  return { markdown, athleteId: null }
+  // These wrestlers predate the athlete directory, so there is no profile page to link to.
+  // Say so explicitly — told only to link the name, the model will otherwise invent a URL.
+  return {
+    facts: {
+      profile_url: null,
+      writing_notes: [
+        "This wrestler has no RecruitNC profile page. Write the name as plain text — do NOT make it a link, and never invent a profile URL.",
+        "These are historical tournament rows, not a directory profile. We may hold nothing beyond what is here; do not read an empty section as proof they never competed.",
+      ],
+      results: cross,
+    },
+    athleteId: null,
+    kind: "historical",
+  }
 }

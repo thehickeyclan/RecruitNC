@@ -16,7 +16,6 @@ import {
   toolTriciaSaundersAwardSearch,
 } from "./execute-data-tools"
 import {
-  appendSourceFooter,
   type PlannedDataDawgQuery,
 } from "./query-planner"
 
@@ -371,7 +370,7 @@ export async function executePlannedDataDawgQuery(
     }
 
     return {
-      answer: appendSourceFooter(body, plan.source),
+      answer: body,
       queryType: `planned_${plan.intent}`,
     }
   } catch (e) {

@@ -75,7 +75,7 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
     function: {
       name: "get_athlete_full_dossier",
       description:
-        "FULL athlete report (legacy Data Dawg format): NCHSAA, duals, Super32, NHSCA, **Fargo Nationals**, NC United, Dave Schultz, career record — same data path as unified profile. Call AFTER search_athletes (and use wrestling_cross_store_search for extra historical rows) whenever answering about a specific athlete by name. Required for 'tell me about [name]' when you have their UUID; do not substitute narrative bio text from other fields.",
+        "Everything on record for one athlete, as facts: NCHSAA, duals, Super32, NHSCA, **Fargo Nationals**, NC United, Dave Schultz, career and season records, college commit — same data path as the unified profile. Call AFTER search_athletes (and use wrestling_cross_store_search for extra historical rows) whenever answering about a specific athlete by name. Required for 'tell me about [name]' when you have their UUID; do not substitute narrative bio text from other fields. You write the reply from these facts — they are not pre-written prose.",
       parameters: {
         type: "object",
         additionalProperties: false,

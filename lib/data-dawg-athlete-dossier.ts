@@ -4,6 +4,11 @@
  */
 
 import { getSupabaseAdmin } from "@/lib/server-supabase"
+import { getAthleteProfileUrl } from "@/lib/athlete-profile-links"
+import { getSchoolPageUrl } from "@/lib/school-links"
+import { athleteHasCompletedHighSchoolCareer } from "@/lib/data-dawg-athlete-career-status"
+import { formatCommitChronologyLine } from "@/lib/data-dawg-college-commit"
+import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 import { resolveAthleteCollegeCommit } from "@/lib/data-dawg-college-commit"
 import { escapeForIlike } from "@/lib/nchsaa-results"
 import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
@@ -105,22 +110,26 @@ function dossierNamesMatch(directoryFullName: string, rowName: string): boolean 
 }
 
 /**
- * Build analyst-style Markdown dossier for one athlete id (RecruitNC DB).
+ * One pass over every store that has something to say about this athlete.
+ *
+ * Both consumers build on this: `buildAthleteFacts` (what Data Dawg answers from, in its own
+ * words) and `buildAthleteDossierMarkdown` (the long-form report). Keeping the gather in one
+ * place is the point — the two must never disagree about what the record actually says.
  */
-export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ markdown: string; error?: string }> {
+async function gatherAthleteDossierData(athleteId: string) {
   const id = (athleteId ?? "").trim()
   if (!id || id.length < 8) {
-    return { markdown: "", error: "Invalid athlete id." }
+    return { error: "Invalid athlete id.", data: null }
   }
 
   const supabase = getSupabaseAdmin()
   const { data: row, error: fetchErr } = await supabase.from("athletes").select("*").eq("id", id).maybeSingle()
 
   if (fetchErr) {
-    return { markdown: "", error: fetchErr.message }
+    return { error: fetchErr.message, data: null }
   }
   if (!row) {
-    return { markdown: "", error: "Athlete not found." }
+    return { error: "Athlete not found.", data: null }
   }
 
   const athlete = row as Record<string, unknown>
@@ -194,7 +203,7 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
     careerLosses += rec.losses
   }
   const hasCareerRecord = seasons.size > 0
-  const seasonRecordRows: SeasonRecordBag[] = Array.from(seasons.values()).map((s) => ({
+  const seasonRecordRows: SeasonRecordRow[] = Array.from(seasons.values()).map((s) => ({
     classLabel: s.classLabel,
     year: s.year,
     wins: s.wins,
@@ -337,6 +346,64 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
     verifiedSources: ["RecruitNC"],
   }
 
+  return {
+    error: null,
+    data: {
+      id,
+      athlete,
+      displayName,
+      stats,
+      commit,
+      hasValidGrad,
+      gradYear,
+      nchsaaSorted,
+      nhscaDisplay,
+      super32Rows,
+      fargoRows,
+      ncUnited,
+      stateDualLines,
+      mowFiltered,
+      daveFiltered,
+      triciaFiltered,
+      careerFiltered,
+      seasonFiltered,
+      seasonRecordRows,
+    },
+  }
+}
+
+/**
+ * Build analyst-style Markdown dossier for one athlete id (RecruitNC DB).
+ *
+ * Long-form report only. Data Dawg does not answer with this — see `buildAthleteFacts`.
+ */
+export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ markdown: string; error?: string }> {
+  const gathered = await gatherAthleteDossierData(athleteId)
+  if (!gathered.data) {
+    return { markdown: "", error: gathered.error }
+  }
+  const {
+    id,
+    athlete,
+    displayName,
+    stats,
+    commit,
+    hasValidGrad,
+    gradYear,
+    nchsaaSorted,
+    nhscaDisplay,
+    super32Rows,
+    fargoRows,
+    ncUnited,
+    stateDualLines,
+    mowFiltered,
+    daveFiltered,
+    triciaFiltered,
+    careerFiltered,
+    seasonFiltered,
+    seasonRecordRows,
+  } = gathered.data
+
   const lines: string[] = []
   lines.push(...formatAnalystAthleteOpening(displayName, id, stats))
 
@@ -478,4 +545,270 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
   lines.push(buildVerifiedSourcesFooter(stats))
 
   return { markdown: lines.join("\n") }
+}
+
+/**
+ * What Data Dawg actually answers from.
+ *
+ * Plain verified values — no markdown, no emoji, no section headings — so the reply can be
+ * written as conversation rather than read back as a printout. Everything here came out of a
+ * table; nothing here is narrative. The one exception is `state_results[].result`, which is a
+ * label ("State Champion", "3rd place") derived from the stored place, because "place: 1" and
+ * "place: 0" mean quite different things and the distinction is easy to get wrong downstream.
+ */
+export type AthleteFacts = {
+  name: string
+  profile_url: string
+  high_school: string | null
+  high_school_url: string | null
+  class_of: number | null
+  club: string | null
+  nc_united_blue: boolean
+  career_record: string | null
+  career_wins_rank: number | null
+  prospect_rank: number | null
+  recruiting_status: string | null
+  college: string | null
+  previous_college: string | null
+  college_division: string | null
+  /** Ready-made college line, so a transfer never gets described as a fresh commit. */
+  college_path: string | null
+  /** True once high school is behind them — decides past vs present tense in the reply. */
+  career_complete: boolean
+  state_titles: number
+  all_american_counts: { nhsca: number; super32: number; fargo: number }
+  season_records: Array<{ year: number | null; grade: string | null; record: string }>
+  state_results: Array<{ year: number; result: string; classification: string | null; weight: string | null }>
+  dual_team_titles: Array<{ year: number; division: string | null }>
+  duals_mow: Array<{ year: number; division: string | null; weight: string | null }>
+  nhsca: Array<{ year: number; placement: string | null; record: string | null; division: string | null }>
+  super32: Array<{ year: number; placement: string | null; record: string | null; division: string | null }>
+  fargo: Array<{ year: number; placement: string | null; record: string | null; division: string | null }>
+  nc_united: Array<{ year: number | null; event: string | null; record: string | null }>
+  awards: Array<{ year: number; award: string }>
+  record_book: Array<{ scope: string; rank: number | null; record: string | null; years: string | null; school: string | null }>
+  /**
+   * Per-athlete writing directives, computed here rather than left to the model to infer.
+   * Tense and transfer-vs-commit are the two things it gets wrong most often, and a rule
+   * sitting 40 lines up in a 12KB system prompt loses to a line sitting next to the data.
+   */
+  writing_notes: string[]
+}
+
+/** Stored place → the label a person would use for it. */
+function stateResultLabel(place: number | null | undefined): string {
+  if (place === 1) return "State Champion"
+  if (place === 2) return "2nd place"
+  if (place === 3) return "3rd place"
+  if (place != null && place > 3 && place <= 6) return `${place}th place`
+  // A row in the canonical state-results table without a podium place is still a verified
+  // appearance, not a blank result.
+  return "State qualifier"
+}
+
+function tidy(v: unknown): string | null {
+  const s = String(v ?? "").trim()
+  return s || null
+}
+
+function tournamentRows(
+  rows: Array<TournamentResultForDisplay | Record<string, unknown>>,
+): Array<{ year: number; placement: string | null; record: string | null; division: string | null }> {
+  return rows
+    .map((r) => {
+      const row = r as Record<string, unknown>
+      const year = Number(row.year)
+      if (!Number.isFinite(year)) return null
+      const placement = tidy(row.placement ?? row.place)
+      const record =
+        tidy(row.record) ??
+        (row.wins != null && row.losses != null ? `${row.wins}-${row.losses}` : null)
+      if (!placement && !record) return null
+      return { year, placement, record, division: tidy(row.division) }
+    })
+    .filter((r): r is { year: number; placement: string | null; record: string | null; division: string | null } => r != null)
+    .sort((a, b) => a.year - b.year)
+}
+
+/** Directives the model gets wrong when left to infer them. Computed, never guessed. */
+function buildWritingNotes(f: AthleteFacts): string[] {
+  const notes: string[] = []
+  const cls = f.class_of ? ` (class of ${f.class_of})` : ""
+
+  notes.push(
+    f.career_complete
+      ? `${f.name} has finished high school${cls}. Write in the PAST tense throughout — "was", "went ${f.career_record ?? "…"}", "finished his career". Never describe him as a current prospect.`
+      : `${f.name} is still in high school${cls}. Write in the PRESENT tense throughout.`,
+  )
+
+  if (f.college_path && f.previous_college) {
+    notes.push(
+      `College: ${f.college_path}. This is a TRANSFER, not a commitment — say he wrestled at ${f.previous_college} before ${f.college}, never that he "committed to ${f.college}".`,
+    )
+  } else if (f.college_path) {
+    notes.push(`College: ${f.college_path}.`)
+  }
+
+  if (f.high_school && f.high_school_url) {
+    notes.push(
+      `First mention of ${f.high_school} is a link to ${f.high_school_url} — link the school name itself, once.`,
+    )
+  }
+
+  if (f.prospect_rank == null) {
+    notes.push("We publish no prospect ranking for this athlete — do not mention rankings.")
+  }
+
+  if (f.state_results.length > 2) {
+    notes.push(
+      "Summarise the state results as an arc in one clause — do not list each year, place and weight.",
+    )
+  }
+
+  return notes
+}
+
+/**
+ * Verified facts for one athlete, for Data Dawg to answer in its own words.
+ * Same gather as the long-form dossier, so the two can never drift apart.
+ */
+export async function buildAthleteFacts(
+  athleteId: string,
+): Promise<{ facts: AthleteFacts | null; error?: string }> {
+  const gathered = await gatherAthleteDossierData(athleteId)
+  if (!gathered.data) {
+    return { facts: null, error: gathered.error }
+  }
+  const {
+    id,
+    stats,
+    hasValidGrad,
+    gradYear,
+    nchsaaSorted,
+    nhscaDisplay,
+    super32Rows,
+    fargoRows,
+    ncUnited,
+    mowFiltered,
+    daveFiltered,
+    triciaFiltered,
+    careerFiltered,
+    seasonFiltered,
+    seasonRecordRows,
+  } = gathered.data
+
+  const awards: AthleteFacts["awards"] = [
+    ...daveFiltered.map((d: Record<string, unknown>) => ({
+      year: Number(d.year),
+      award: "Dave Schultz High School Excellence Award",
+    })),
+    ...triciaFiltered.map((d: Record<string, unknown>) => ({
+      year: Number(d.year),
+      award: "Tricia Saunders High School Excellence Award",
+    })),
+  ]
+    .filter((a) => Number.isFinite(a.year))
+    .sort((a, b) => a.year - b.year)
+
+  const recordBook: AthleteFacts["record_book"] = [
+    ...careerFiltered.map((d: Record<string, unknown>) => ({
+      scope: "all-time career wins",
+      rank: Number.isFinite(Number(d.rank)) ? Math.floor(Number(d.rank)) : null,
+      record: tidy(d.record),
+      years: tidy(d.years),
+      school: tidy(d.school),
+    })),
+    ...seasonFiltered.map((d: Record<string, unknown>) => ({
+      scope: `single-season wins${d.year ? ` (${d.year})` : ""}`,
+      rank: Number.isFinite(Number(d.rank_numeric)) ? Math.floor(Number(d.rank_numeric)) : null,
+      record: tidy(d.record),
+      years: tidy(d.year),
+      school: tidy(d.school),
+    })),
+  ]
+
+  const facts: AthleteFacts = {
+    name: stats.displayName,
+    profile_url: getAthleteProfileUrl(id),
+    high_school: stats.highSchool ?? null,
+    high_school_url: stats.highSchool ? getSchoolPageUrl(stats.highSchool) : null,
+    class_of: stats.graduationYear ?? null,
+    club: stats.wrestlingClub ?? null,
+    nc_united_blue: Boolean(stats.ncUnitedBlue),
+    career_record:
+      stats.careerWins != null && stats.careerLosses != null
+        ? `${stats.careerWins}-${stats.careerLosses}`
+        : null,
+    career_wins_rank: stats.careerWinsRank ?? null,
+    // Only surface a rank from a class we actually publish, and only inside the published
+    // top N — otherwise an old internal number reads as a current public ranking.
+    prospect_rank:
+      stats.prospectRanking != null &&
+      isPublicRankingsYearPublished(stats.graduationYear) &&
+      stats.prospectRanking <= getPublicRankingsMax(stats.graduationYear)
+        ? stats.prospectRanking
+        : null,
+    recruiting_status: stats.recruitingStatus ?? null,
+    college: stats.college ?? null,
+    previous_college: stats.previousCollege ?? null,
+    college_division: stats.division ?? null,
+    college_path: stats.college
+      ? formatCommitChronologyLine(stats.college, stats.previousCollege, stats.division).replace(
+          /^College(?: career)?:\s*/,
+          "",
+        )
+      : null,
+    career_complete: athleteHasCompletedHighSchoolCareer(
+      hasValidGrad ? gradYear : null,
+      new Date(),
+    ),
+    state_titles: stats.stateTitleYears,
+    all_american_counts: {
+      nhsca: stats.nhscaAllAmericanCount ?? 0,
+      super32: stats.super32AllAmericanCount ?? 0,
+      fargo: stats.fargoAllAmericanCount ?? 0,
+    },
+    season_records: [...seasonRecordRows]
+      .sort((a, b) => (a.year ?? 0) - (b.year ?? 0))
+      .map((s) => ({ year: s.year ?? null, grade: s.classLabel ?? null, record: `${s.wins}-${s.losses}` })),
+    state_results: [...nchsaaSorted]
+      .sort((a, b) => a.year - b.year)
+      .map((r) => ({
+        year: r.year,
+        result: stateResultLabel(r.place),
+        classification: tidy(r.classification),
+        weight: tidy(String(r.weight_class ?? "").replace(/lbs?$/i, "")),
+      })),
+    dual_team_titles: (stats.schoolDualTitles ?? [])
+      .map((d) => ({ year: d.year, division: d.division ?? null }))
+      .sort((a, b) => a.year - b.year),
+    duals_mow: mowFiltered
+      .map((m: Record<string, unknown>) => ({
+        year: Number(m.year),
+        division: tidy(m.division),
+        weight: tidy(m.mow_weight_lb),
+      }))
+      .filter((m) => Number.isFinite(m.year)),
+    nhsca: tournamentRows(nhscaDisplay),
+    super32: tournamentRows(super32Rows),
+    fargo: tournamentRows(fargoRows),
+    nc_united: ncUnited
+      .filter((e) => !e.isPlaceholder)
+      .map((e) => ({
+        year: Number.isFinite(Number(e.year)) ? Math.floor(Number(e.year)) : null,
+        event: tidy(e.event),
+        record: tidy(e.record),
+      })),
+    awards,
+    record_book: recordBook,
+    writing_notes: [],
+  }
+
+  facts.writing_notes = buildWritingNotes(facts)
+
+  // `gradYear` defaults to the current year when the row has none — only report a real one.
+  if (!hasValidGrad) facts.class_of = null
+  else facts.class_of = gradYear
+
+  return { facts }
 }

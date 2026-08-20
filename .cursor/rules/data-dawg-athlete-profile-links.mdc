@@ -1,16 +1,49 @@
 ---
-description: Data Dawg athlete answers lead with linked name + college commit summary
+description: Data Dawg answers about an athlete are conversational prose, not a rendered dossier
 globs: lib/data-dawg*/**;lib/athlete-profile-links.ts;app/api/ai/**;lib/recruitnc-data-dawg-postprocess.ts
 alwaysApply: true
 ---
 
-# Data Dawg — athlete summary on top
+# Data Dawg — athlete answers are conversation
 
-For **any Data Dawg answer about a specific athlete** (search, “who is…”, “tell me about…”, dossier):
+Data Dawg answers about a specific athlete (search, "who is…", "tell me about…") are **written by
+the model from verified facts**. They are not a rendered template. `get_athlete_full_dossier`
+returns `facts`; `buildAthleteFacts` in `lib/data-dawg-athlete-dossier.ts` builds them.
 
-1. **Top of answer** = linked name via `Here's what I found about [Name](profile_url):` then an **analyst lead paragraph** (dossier uses `formatAnalystAthleteOpening` / `buildAnalystLeadParagraph` in `lib/data-dawg-athlete-analyst-profile.ts`; lighter surfaces may still use `formatAthleteAnswerOpening` in `lib/athlete-profile-links.ts`).
-2. **Name is the profile hyperlink** — Use `getAthleteProfileUrl(id)` → `https://app.ncwrestlingunited.com/view-profile?id=…` (not `/unified-profile/[id]` and not `/athletes/[id]`). In chat HTML, open those links **same-tab** (never `target="_blank"` on app profile routes).
-3. Include **career record**, **High School**, **Class of**, and **College commit** (with division when known) early — dossier: Career snapshot under the lead. **Do not** put **Weight** in the header — it changes often; weight belongs on tournament result lines only.
-4. Prefer **compact Hall-of-Fame storytelling** (avoid repeating the same facts): Opening → Career snapshot → Development path (HS / club / **NC United** Blue + National Team) → Career progression → Historical context (one paragraph) → **Detailed results** → verified sources. Do **not** emit Notable achievements, Represented North Carolina (fold into Development path), a closing coda, or a rankings dump that restates the snapshot. Four straight titles = **four consecutive** / every high school season — never “back-to-back.” Four-time group membership is “one of N” (label chronological order clearly if mentioned). Super32 “Best listed result” uses best W–L/placement. Never infer Fargo “Blood Round” from W–L unless the round is explicitly stored.
-5. **No markdown headings** (`###` / `##` / `#`). Plain section labels only (e.g. `Career progression:`, `Historical context:`). Postprocess strips leading `#` markers.
-6. Do not invent a profile URL without a directory id; tournament-only alumni can use a plain name. Historical context must be **derived from verified data** — never invent school prestige without dual-title evidence. College transfers: snapshot `UNC → NC State` (original first). Alumni use “finished his … career”; current Class of athletes (not yet past June of grad year) use present tense (“is a … wrestler who is … / He is W–L …”). Never say a Class of 2027 finished his HS career in 2026.
+## The shape of an answer
+
+1. **Two or three short paragraphs of prose.** No section headings, no labelled fields, no emoji,
+   no arrows, no bullet lists unless the user asked for a list.
+2. **Never these section labels:** `Career snapshot:`, `Development path:`, `Career progression:`,
+   `Detailed results:`, `Historical context:`, `National résumé:`, `Notable achievements:`, or a
+   source / verification / confidence footer. They were removed on purpose — the printout voice is
+   what this replaced. Do not reintroduce them anywhere in the answer path.
+3. **Never walk the record year by year unless the user asks.** Compress to an arc: "back-to-back
+   4A titles as a junior and senior" beats four dated lines. The year-by-year list is correct only
+   as a reply to "year by year", "his NHSCA results", "show me all of it".
+4. **Close with one short offer** of what else we hold — and only when there is more.
+
+## Links
+
+- **The first mention of the name is the profile hyperlink**, once, in the opening sentence.
+- Use `getAthleteProfileUrl(id)` → `https://app.ncwrestlingunited.com/view-profile?id=…`
+  (not `/unified-profile/[id]`, not `/athletes/[id]`). Open same-tab in chat HTML.
+- **No `profile_url` means no link.** Alumni who predate the athlete directory get a plain-text
+  name. Never emit a link with a placeholder, ellipsis, or guessed id.
+- **Never link a name to an image.** Any tool that returns athlete rows to the model must map them
+  through `getAthleteProfileUrl(id)` and strip `photourl` / `photo_url` / `headshot_url` first —
+  otherwise the model uses the only URL it was given and links names to headshot PNGs.
+
+## Facts, not adjectives
+
+- Every number, placement, school and year must come from a tool result or supplied facts. An
+  empty array means we hold nothing on record — not zero, not "never competed".
+- **Decide it in code, not in the prompt.** Tense (`career_complete`), the college line
+  (`college_path`), and whether a prospect rank is publishable are computed in `buildAthleteFacts`
+  and passed as `writing_notes`. A rule buried in the system prompt loses to a directive sitting
+  next to the data. Add new ones the same way.
+- Weight belongs on tournament result lines only — never a header field; it changes constantly.
+- Transfers read chronologically, original school first: `UNC Chapel Hill → NC State`. A transfer
+  is never described as a fresh commitment.
+- Four straight titles are **four consecutive** / every high school season — never "back-to-back".
+- Never infer a Fargo "Blood Round" from a W–L unless the round is explicitly stored.

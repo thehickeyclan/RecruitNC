@@ -12,6 +12,10 @@ import { trySchoolNameFastPath } from "./school-name-fast-path"
 import { planDataDawgQuery } from "./query-planner"
 import { executePlannedDataDawgQuery } from "./execute-planned-query"
 import { runOpenAiDataDawgToolLoop } from "./openai-tool-loop"
+import {
+  linkableEntitiesFromFacts,
+  linkifyKnownEntities,
+} from "@/lib/data-dawg-linkify-entities"
 import { DATA_DAWG_AGENT_V2_SYSTEM } from "./system-prompt"
 import {
   answerNextBluePractice,
@@ -150,13 +154,21 @@ export async function runDataDawgAgentV2(params: {
     if (schoolHint) {
       try {
         const schoolFast = await trySchoolNameFastPath(schoolHint)
-        if (schoolFast?.markdown) {
+        if (schoolFast) {
+          const { answer: followUpRaw, toolRounds: followUpRounds } = await runOpenAiDataDawgToolLoop({
+            systemPrompt: DATA_DAWG_AGENT_V2_SYSTEM,
+            priorMessages,
+            userMessage: params.message,
+            groundingFacts: JSON.stringify(schoolFast.facts),
+          })
           return {
-            answer: applyRecruitNcDataDawgAnswerPostProcess(schoolFast.markdown),
+            answer: applyRecruitNcDataDawgAnswerPostProcess(
+              linkifyKnownEntities(followUpRaw, linkableEntitiesFromFacts(schoolFast.facts)),
+            ),
             messageId,
-            queryType: "school_name_fast_path",
+            queryType: "school_facts",
             source: "data_dawg_agent_v2_scope_followup",
-            toolRounds: 0,
+            toolRounds: followUpRounds,
           }
         }
       } catch (e) {
@@ -243,31 +255,32 @@ export async function runDataDawgAgentV2(params: {
   // Deterministic dossiers: school + athlete name — no OpenAI when match is clear.
   // Run even mid-conversation: "Cardinal Gibbons" then "Kevin O'Brien" must still fast-path;
   // follow-ups like "tell me more" fail the lookalike heuristics and fall through.
+  // School lookups resolve their facts here, then the model writes the reply from them.
+  // The lookup stays deterministic; only the wording is the model's.
+  let groundingFacts: string | null = null
+  let groundedQueryType: string | null = null
+  /** Kept unserialised so we can guarantee the links the model is only asked to write. */
+  let groundedEntities: ReturnType<typeof linkableEntitiesFromFacts> = []
   try {
     const schoolFast = await trySchoolNameFastPath(params.message)
-    if (schoolFast?.markdown) {
-      return {
-        answer: applyRecruitNcDataDawgAnswerPostProcess(schoolFast.markdown),
-        messageId,
-        queryType: "school_name_fast_path",
-        source: "data_dawg_agent_v2_fast",
-        toolRounds: 0,
-      }
+    if (schoolFast) {
+      groundingFacts = JSON.stringify(schoolFast.facts)
+      groundedQueryType = "school_facts"
+      groundedEntities = linkableEntitiesFromFacts(schoolFast.facts)
     }
   } catch (e) {
     console.warn("[RecruitNC] school name fast-path failed:", e instanceof Error ? e.message : e)
   }
 
+  // Athlete lookups resolve their facts here, then the model writes the reply from them.
+  // The lookup is still deterministic; only the wording is the model's.
   try {
-    const athleteFast = await tryAthleteNameFastPath(params.message)
-    if (athleteFast?.markdown) {
-      return {
-        answer: applyRecruitNcDataDawgAnswerPostProcess(athleteFast.markdown),
-        messageId,
-        queryType: "athlete_name_fast_path",
-        source: "data_dawg_agent_v2_fast",
-        toolRounds: 0,
-      }
+    const athleteFast = groundingFacts ? null : await tryAthleteNameFastPath(params.message)
+    if (athleteFast) {
+      groundingFacts = JSON.stringify(athleteFast.facts)
+      groundedEntities = linkableEntitiesFromFacts(athleteFast.facts)
+      groundedQueryType =
+        athleteFast.kind === "directory" ? "athlete_facts_directory" : "athlete_facts_historical"
     }
   } catch (e) {
     console.warn("[RecruitNC] athlete name fast-path failed:", e instanceof Error ? e.message : e)
@@ -276,7 +289,7 @@ export async function runDataDawgAgentV2(params: {
   // Data Dawg 2.0 planner: deterministic intents → SQL tools (no LLM tool pick).
   // Runs after name/school fast paths so "Mac Johnson" stays a dossier, not a false positive.
   try {
-    const plan = planDataDawgQuery(params.message)
+    const plan = groundingFacts ? null : planDataDawgQuery(params.message)
     if (plan) {
       const planned = await executePlannedDataDawgQuery(plan)
       if (planned?.answer) {
@@ -297,15 +310,18 @@ export async function runDataDawgAgentV2(params: {
     systemPrompt: DATA_DAWG_AGENT_V2_SYSTEM,
     priorMessages,
     userMessage: params.message,
+    groundingFacts,
   })
 
-  const answer = applyRecruitNcDataDawgAnswerPostProcess(raw)
+  const answer = applyRecruitNcDataDawgAnswerPostProcess(
+    linkifyKnownEntities(raw, groundedEntities),
+  )
 
   return {
     answer,
     messageId,
-    queryType: "data_dawg_agent_v2",
-    source: "data_dawg_agent_v2",
+    queryType: groundedQueryType ?? "data_dawg_agent_v2",
+    source: groundingFacts ? "data_dawg_agent_v2_grounded" : "data_dawg_agent_v2",
     toolRounds,
   }
 }

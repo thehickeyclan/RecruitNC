@@ -415,7 +415,13 @@ export function planDataDawgQuery(message: string): PlannedDataDawgQuery | null 
   return null
 }
 
-/** Append source / verification / confidence footer for factual answers. */
+/**
+ * Append source / verification / confidence footer for factual answers.
+ *
+ * No longer used on answers. Three lines of "Source dataset / Verification / Confidence: high"
+ * under every list is the report voice Data Dawg is moving away from — the provenance lives in
+ * the query log, where it is useful to us rather than noise for the reader.
+ */
 export function appendSourceFooter(answer: string, source: DataDawgSourceMeta): string {
   const body = answer.trimEnd()
   const lines = [

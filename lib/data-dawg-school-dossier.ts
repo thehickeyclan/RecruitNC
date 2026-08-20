@@ -14,6 +14,7 @@ import {
 import { getAllCanonicalNhscaAllAmericans } from "@/lib/nhsca-canonical-aa"
 import { extractSearchablePhrase, stripConversationalNoise } from "@/lib/data-dawg-agent-v2/search-normalize"
 import { levenshteinDistance, scoreSchoolMatch } from "@/lib/data-dawg-agent-v2/fuzzy-utils"
+import { getSchoolPageUrl } from "@/lib/school-links"
 
 const MAX_NCHSAA = 2000
 const MAX_NATIONAL = 900
@@ -122,6 +123,13 @@ async function fetchNhscaByKnownWrestlerNames(
     }
   }
   return { leg, plc }
+}
+
+/** NCHSAA result rows carry `wrestler_name`; directory-shaped rows carry `name`. */
+function schoolResultWrestlerName(r: Record<string, unknown>): string {
+  const w = String(r.wrestler_name ?? "").trim()
+  if (w) return w
+  return athleteDirectoryDisplayName(r)
 }
 
 /** Display weight like `107 lbs` (matches legacy Data Dawg / schools page style). */
@@ -274,24 +282,26 @@ async function resolveCanonicalSchool(
   return { canonical: best, classification }
 }
 
-export async function buildSchoolWrestlingDossierMarkdown(rawQuery: string): Promise<{
-  markdown: string
-  error?: string
-  searched_for?: string
-  canonical_school?: string
-}> {
+/**
+ * One pass over every store that has something to say about this school.
+ *
+ * Feeds all three consumers — the conversational facts Data Dawg answers from, the long-form
+ * markdown, and the public school page — so none of them can disagree about the record.
+ */
+async function gatherSchoolDossierData(rawQuery: string): Promise<
+  | { kind: "error"; message: string; phrase: string }
+  | { kind: "not_found"; phrase: string }
+  | { kind: "ok"; phrase: string; data: SchoolDossierData }
+> {
   const phrase = (extractSearchablePhrase(rawQuery) || stripConversationalNoise(rawQuery)).trim()
   if (phrase.length < 2) {
-    return { markdown: "", error: "School name must be at least 2 characters.", searched_for: phrase }
+    return { kind: "error", message: "School name must be at least 2 characters.", phrase }
   }
 
   const admin = getSupabaseAdmin()
   const resolved = await resolveCanonicalSchool(admin, phrase)
   if (!resolved) {
-    return {
-      markdown: `I could not find a high school matching **${phrase}** in classifications, state results, or rosters. Try the full official name (e.g. include "High School") or check spelling.`,
-      searched_for: phrase,
-    }
+    return { kind: "not_found", phrase }
   }
 
   const { canonical, classification: clsMeta } = resolved
@@ -473,6 +483,68 @@ export async function buildSchoolWrestlingDossierMarkdown(rawQuery: string): Pro
     schoolCellMatchesCanonical(String(m.school ?? ""), canonical),
   )
 
+  return {
+    kind: "ok",
+    phrase,
+    data: {
+      canonical,
+      clsMeta,
+      nchsaaRows,
+      dualFiltered,
+      nhscaCombined,
+      super32Rows,
+      daveFiltered,
+      triciaFiltered,
+      mowFiltered,
+    },
+  }
+}
+
+type SchoolDossierData = {
+  canonical: string
+  clsMeta: { classification?: unknown; region?: unknown; effective_year?: number | null } | null
+  nchsaaRows: Record<string, unknown>[]
+  dualFiltered: Record<string, unknown>[]
+  nhscaCombined: Record<string, unknown>[]
+  super32Rows: Record<string, unknown>[]
+  daveFiltered: Record<string, unknown>[]
+  triciaFiltered: Record<string, unknown>[]
+  mowFiltered: Record<string, unknown>[]
+}
+
+/**
+ * Long-form school report. Data Dawg does not answer with this — see `buildSchoolFacts`.
+ * The public school page renders from the facts too; this stays for the full printable record.
+ */
+export async function buildSchoolWrestlingDossierMarkdown(rawQuery: string): Promise<{
+  markdown: string
+  error?: string
+  searched_for?: string
+  canonical_school?: string
+}> {
+  const gathered = await gatherSchoolDossierData(rawQuery)
+  if (gathered.kind === "error") {
+    return { markdown: "", error: gathered.message, searched_for: gathered.phrase }
+  }
+  if (gathered.kind === "not_found") {
+    return {
+      markdown: `I could not find a high school matching **${gathered.phrase}** in classifications, state results, or rosters. Try the full official name (e.g. include "High School") or check spelling.`,
+      searched_for: gathered.phrase,
+    }
+  }
+  const phrase = gathered.phrase
+  const {
+    canonical,
+    clsMeta,
+    nchsaaRows,
+    dualFiltered,
+    nhscaCombined,
+    super32Rows,
+    daveFiltered,
+    triciaFiltered,
+    mowFiltered,
+  } = gathered.data
+
   const lines: string[] = []
   lines.push(`${canonical}`)
   lines.push("")
@@ -650,4 +722,226 @@ export async function buildSchoolWrestlingDossierMarkdown(rawQuery: string): Pro
   lines.push(`_🔍 Matched: **${canonical}** · Search: "${phrase}"_`)
 
   return { markdown: lines.join("\n"), searched_for: phrase, canonical_school: canonical }
+}
+
+/**
+ * What Data Dawg answers from for a school, and what the public school page renders.
+ *
+ * Plain verified values — no markdown, no headings. Counts come first because that is what a
+ * person asks for ("how many champions has Cardinal Gibbons had?"); the full lists are here so
+ * the same payload can answer "show me all of them" without a second lookup.
+ */
+export type SchoolFacts = {
+  name: string
+  page_url: string | null
+  classification: string | null
+  region: string | null
+  classification_effective_year: number | null
+  counts: {
+    state_champions: number
+    state_placements: number
+    dual_team_titles: number
+    nhsca_all_americans: number
+    super32_all_americans: number
+    dave_schultz: number
+    tricia_saunders: number
+    state_mow: number
+  }
+  state_champions: Array<{ year: number; name: string; classification: string | null; weight: string | null }>
+  state_placements: Array<{ year: number; name: string; place: number | null; classification: string | null; weight: string | null }>
+  dual_team_titles: Array<{ year: number; division: string | null }>
+  nhsca: Array<{ year: number; name: string; place: number | null; record: string | null; division: string | null; weight: string | null }>
+  super32_all_americans: Array<{ year: number; name: string; place: number | null; weight: string | null }>
+  dave_schultz: Array<{ year: number; name: string }>
+  tricia_saunders: Array<{ year: number; name: string }>
+  state_mow: Array<{ year: number; name: string; division: string | null }>
+  writing_notes: string[]
+}
+
+function num(v: unknown): number | null {
+  const n = Number(v)
+  return Number.isFinite(n) ? Math.floor(n) : null
+}
+
+function str(v: unknown): string | null {
+  const s = String(v ?? "").trim()
+  return s || null
+}
+
+function byYearDesc<T extends { year: number }>(rows: T[]): T[] {
+  return [...rows].sort((a, b) => b.year - a.year)
+}
+
+/** Verified facts for one school, for Data Dawg and for the public school page. */
+export async function buildSchoolFacts(
+  rawQuery: string,
+): Promise<{ facts: SchoolFacts | null; error?: string; searched_for: string }> {
+  const gathered = await gatherSchoolDossierData(rawQuery)
+  if (gathered.kind === "error") {
+    return { facts: null, error: gathered.message, searched_for: gathered.phrase }
+  }
+  if (gathered.kind === "not_found") {
+    return { facts: null, error: "school_not_found", searched_for: gathered.phrase }
+  }
+
+  const {
+    canonical,
+    clsMeta,
+    nchsaaRows,
+    dualFiltered,
+    nhscaCombined,
+    super32Rows,
+    daveFiltered,
+    triciaFiltered,
+    mowFiltered,
+  } = gathered.data
+
+  const champions = byYearDesc(
+    nchsaaRows
+      .filter((r) => num(r.place) === 1)
+      .map((r) => ({
+        year: num(r.year) ?? 0,
+        name: schoolResultWrestlerName(r),
+        classification: str(r.classification),
+        weight: str(formatWeightLbs(r.weight_class ?? r.weight)),
+      }))
+      .filter((r) => r.year > 0),
+  )
+
+  const placements = byYearDesc(
+    nchsaaRows
+      .filter((r) => num(r.place) !== 1)
+      .map((r) => ({
+        year: num(r.year) ?? 0,
+        name: schoolResultWrestlerName(r),
+        place: num(r.place),
+        classification: str(r.classification),
+        weight: str(formatWeightLbs(r.weight_class ?? r.weight)),
+      }))
+      .filter((r) => r.year > 0),
+  )
+
+  const duals = byYearDesc(
+    dualFiltered
+      .map((d) => ({ year: num(d.year) ?? 0, division: str(d.division) }))
+      .filter((d) => d.year > 0),
+  )
+
+  const nhsca = byYearDesc(
+    nhscaCombined
+      .map((r) => ({
+        year: num(r.year) ?? 0,
+        name: String(r.athlete_name ?? "").trim(),
+        place: placementNum(r.placement) || null,
+        record: str((r as { record?: string }).record),
+        division: str(r.division),
+        weight: str(formatWeightLbs(r.weight ?? r.weight_class)),
+      }))
+      .filter((r) => r.year > 0 && r.name),
+  )
+
+  const super32Aa = byYearDesc(
+    super32Rows
+      .filter((r) => {
+        const p = placementNum(r.placement ?? r.place)
+        return p >= 1 && p <= 8
+      })
+      .map((r) => ({
+        year: num(r.year) ?? 0,
+        name: String(r.athlete_name ?? r.name ?? "").trim(),
+        place: placementNum(r.placement ?? r.place) || null,
+        weight: str(formatWeightLbs(r.weight ?? r.weight_class)),
+      }))
+      .filter((r) => r.year > 0),
+  )
+
+  const dave = byYearDesc(
+    daveFiltered
+      .map((d) => ({ year: num(d.year) ?? 0, name: String(d.name ?? "").trim() }))
+      .filter((d) => d.year > 0),
+  )
+  const tricia = byYearDesc(
+    triciaFiltered
+      .map((d) => ({ year: num(d.year) ?? 0, name: String(d.name ?? "").trim() }))
+      .filter((d) => d.year > 0),
+  )
+  const mow = byYearDesc(
+    mowFiltered
+      .map((m) => ({
+        year: num(m.year) ?? 0,
+        name: String(m.name ?? "").trim(),
+        division: str(m.division),
+      }))
+      .filter((m) => m.year > 0),
+  )
+
+  const nhscaAaCount = nhsca.filter((r) => r.place != null && r.place >= 1 && r.place <= 8).length
+
+  const facts: SchoolFacts = {
+    name: canonical,
+    page_url: getSchoolPageUrl(canonical),
+    classification: str(clsMeta?.classification),
+    region: str(clsMeta?.region),
+    classification_effective_year: num(clsMeta?.effective_year),
+    counts: {
+      state_champions: champions.length,
+      state_placements: placements.length,
+      dual_team_titles: duals.length,
+      nhsca_all_americans: nhscaAaCount,
+      super32_all_americans: super32Aa.length,
+      dave_schultz: dave.length,
+      tricia_saunders: tricia.length,
+      state_mow: mow.length,
+    },
+    state_champions: champions,
+    state_placements: placements,
+    dual_team_titles: duals,
+    nhsca,
+    super32_all_americans: super32Aa,
+    dave_schultz: dave,
+    tricia_saunders: tricia,
+    state_mow: mow,
+    writing_notes: [],
+  }
+
+  facts.writing_notes = buildSchoolWritingNotes(facts)
+  return { facts, searched_for: gathered.phrase }
+}
+
+/** Directives computed here rather than left to the model to infer from a long list. */
+function buildSchoolWritingNotes(f: SchoolFacts): string[] {
+  const notes: string[] = []
+
+  if (f.page_url) {
+    notes.push(
+      `First mention of ${f.name} is a link to ${f.page_url} — link the school name once, not a URL beside it.`,
+    )
+  }
+
+  notes.push(
+    "Lead with the counts and the names that matter, not the list. A school answer is two or three sentences of prose; the full roll of champions belongs in the reply to \"show me all of them\".",
+  )
+
+  const first = f.state_champions.length ? f.state_champions[f.state_champions.length - 1] : null
+  const latest = f.state_champions.length ? f.state_champions[0] : null
+  if (first && latest && first.year !== latest.year) {
+    notes.push(
+      `State champions span ${first.year} (${first.name}) to ${latest.year} (${latest.name}) — that range is the story, not each row.`,
+    )
+  }
+
+  const repeat = new Map<string, number>()
+  for (const c of f.state_champions) repeat.set(c.name, (repeat.get(c.name) ?? 0) + 1)
+  const multi = [...repeat.entries()].filter(([, n]) => n > 1).map(([n, c]) => `${n} (${c}×)`)
+  if (multi.length) {
+    notes.push(`Multiple-time champions worth naming: ${multi.join(", ")}.`)
+  }
+
+  if (!f.state_champions.length && !f.state_placements.length) {
+    notes.push(
+      "We hold no state results for this school. Say so plainly — it means nothing matched our data, not that the program never placed.",
+    )
+  }
+
+  return notes
 }
