@@ -3,7 +3,9 @@ import {
   ilikeOrClause,
   nameSearchKeysForSchoolDossier,
   schoolDossierAthleteMatchesKnown,
+  schoolDossierIlikePattern,
   schoolIlikePatterns,
+  schoolNamesMatchForDossier,
 } from "@/lib/data-dawg-school-nhsca-match"
 
 describe("ilikeOrClause", () => {
@@ -36,5 +38,20 @@ describe("schoolIlikePatterns", () => {
   it("adds stripped High School form", () => {
     const pats = schoolIlikePatterns("Cardinal Gibbons High School")
     expect(pats.some((p) => p.includes("Cardinal Gibbons"))).toBe(true)
+  })
+
+  it("adds a punctuation-safe form for hyphenated school names", () => {
+    expect(schoolIlikePatterns("Newton-Conover")).toContain("%newton%conover%")
+  })
+})
+
+describe("school dossier school-name matching", () => {
+  it("queries and matches hyphenated and unhyphenated forms as the same school", () => {
+    expect(schoolDossierIlikePattern("Newton Conover")).toBe("%newton%conover%")
+    expect(schoolNamesMatchForDossier("Newton-Conover High School", "Newton Conover")).toBe(true)
+  })
+
+  it("does not collapse distinct campuses that share words", () => {
+    expect(schoolNamesMatchForDossier("East Chapel Hill", "Chapel Hill")).toBe(false)
   })
 })

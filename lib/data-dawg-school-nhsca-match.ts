@@ -2,6 +2,24 @@ import { escapeForIlike } from "@/lib/nchsaa-results"
 import { namesLikelySamePerson } from "@/lib/athlete-name-match"
 import { normalizeApostrophes } from "@/lib/standardize-tournament-names"
 import { getNameVariants } from "@/lib/tournament-tables"
+import { schoolCoreName, schoolsLooselyEqual } from "@/lib/public-imports/normalize"
+
+/**
+ * Punctuation-safe school lookup for PostgREST ILIKE.
+ * `Newton Conover`, `Newton-Conover`, and `Newton-Conover High School` all match
+ * `%newton%conover%` without loosening the final in-memory identity check.
+ */
+export function schoolDossierIlikePattern(schoolName: string, anchorStart = false): string {
+  const tokens = schoolCoreName(schoolName).split(/\s+/).filter(Boolean)
+  if (tokens.length === 0) return "%"
+  const body = tokens.map(escapeForIlike).join("%")
+  return `${anchorStart ? "" : "%"}${body}%`
+}
+
+/** Exact school identity after stripping punctuation and generic school suffixes. */
+export function schoolNamesMatchForDossier(cell: string, canonical: string): boolean {
+  return schoolsLooselyEqual(cell, canonical)
+}
 
 /** PostgREST `.or()` values with spaces/commas must be double-quoted. */
 export function ilikeOrClause(column: string, values: string[]): string {
@@ -49,6 +67,7 @@ export function schoolDossierAthleteMatchesKnown(athleteName: string, knownWrest
 export function schoolIlikePatterns(canonical: string): string[] {
   const base = canonical.trim()
   const patterns = new Set<string>([`%${escapeForIlike(base)}%`])
+  patterns.add(schoolDossierIlikePattern(base))
   const stripped = base
     .replace(/\s+(high\s+school|hs|school)\s*$/i, "")
     .replace(/^the\s+/i, "")

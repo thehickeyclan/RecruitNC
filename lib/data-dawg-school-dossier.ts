@@ -4,12 +4,13 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { getSupabaseAdmin } from "@/lib/server-supabase"
-import { escapeForIlike } from "@/lib/nchsaa-results"
 import {
   ilikeOrClause,
   nameSearchKeysForSchoolDossier,
   schoolDossierAthleteMatchesKnown,
+  schoolDossierIlikePattern,
   schoolIlikePatterns,
+  schoolNamesMatchForDossier,
 } from "@/lib/data-dawg-school-nhsca-match"
 import { getAllCanonicalNhscaAllAmericans } from "@/lib/nhsca-canonical-aa"
 import { extractSearchablePhrase, stripConversationalNoise } from "@/lib/data-dawg-agent-v2/search-normalize"
@@ -25,9 +26,9 @@ const MAX_SUPER32_LIST = 120
 function getSchoolQueryPattern(schoolName: string): string {
   const normalized = schoolName.toLowerCase().trim()
   if (normalized === "chapel hill" || normalized === "east chapel hill") {
-    return `${schoolName}%`
+    return schoolDossierIlikePattern(schoolName, true)
   }
-  return `%${schoolName}%`
+  return schoolDossierIlikePattern(schoolName)
 }
 
 function isPrivateSchoolName(name: string): boolean {
@@ -43,10 +44,7 @@ function isPrivateSchoolName(name: string): boolean {
 }
 
 function schoolCellMatchesCanonical(cell: string, canonical: string): boolean {
-  const a = (cell ?? "").toLowerCase().trim()
-  const b = canonical.toLowerCase().trim()
-  if (!a || !b) return false
-  return a === b || a.includes(b) || b.includes(a)
+  return schoolNamesMatchForDossier(cell, canonical)
 }
 
 function mergeUniqueRows<T extends Record<string, unknown>>(
@@ -198,7 +196,7 @@ async function resolveCanonicalSchool(
   classification: { classification: string | null; region: string | null; effective_year: number | null } | null
 } | null> {
   const qLower = phrase.toLowerCase()
-  const pattern = `%${escapeForIlike(phrase)}%`
+  const pattern = getSchoolQueryPattern(phrase)
 
   const [clsRes, nchsaaRes, athRes] = await Promise.all([
     admin
@@ -340,7 +338,7 @@ async function gatherSchoolDossierData(rawQuery: string): Promise<
     admin
       .from("dual_team_champions")
       .select("year,division,champion_school,is_vacated")
-      .ilike("champion_school", `%${escapeForIlike(canonical)}%`)
+      .ilike("champion_school", schoolPat)
       .limit(200),
     admin
       .from("dave_schultz_award")
@@ -740,6 +738,7 @@ export type SchoolFacts = {
   counts: {
     state_champions: number
     state_placements: number
+    state_qualifiers: number
     dual_team_titles: number
     nhsca_all_americans: number
     super32_all_americans: number
@@ -749,6 +748,7 @@ export type SchoolFacts = {
   }
   state_champions: Array<{ year: number; name: string; classification: string | null; weight: string | null }>
   state_placements: Array<{ year: number; name: string; place: number | null; classification: string | null; weight: string | null }>
+  state_qualifiers: Array<{ year: number; name: string; classification: string | null; weight: string | null }>
   dual_team_titles: Array<{ year: number; division: string | null }>
   nhsca: Array<{ year: number; name: string; place: number | null; record: string | null; division: string | null; weight: string | null }>
   super32_all_americans: Array<{ year: number; name: string; place: number | null; weight: string | null }>
@@ -759,6 +759,7 @@ export type SchoolFacts = {
 }
 
 function num(v: unknown): number | null {
+  if (v == null || String(v).trim() === "") return null
   const n = Number(v)
   return Number.isFinite(n) ? Math.floor(n) : null
 }
@@ -810,11 +811,29 @@ export async function buildSchoolFacts(
 
   const placements = byYearDesc(
     nchsaaRows
-      .filter((r) => num(r.place) !== 1)
+      .filter((r) => {
+        const place = num(r.place)
+        return place != null && place >= 2 && place <= 6
+      })
       .map((r) => ({
         year: num(r.year) ?? 0,
         name: schoolResultWrestlerName(r),
         place: num(r.place),
+        classification: str(r.classification),
+        weight: str(formatWeightLbs(r.weight_class ?? r.weight)),
+      }))
+      .filter((r) => r.year > 0),
+  )
+
+  const qualifiers = byYearDesc(
+    nchsaaRows
+      .filter((r) => {
+        const place = num(r.place)
+        return place == null || place === 0
+      })
+      .map((r) => ({
+        year: num(r.year) ?? 0,
+        name: schoolResultWrestlerName(r),
         classification: str(r.classification),
         weight: str(formatWeightLbs(r.weight_class ?? r.weight)),
       }))
@@ -886,6 +905,7 @@ export async function buildSchoolFacts(
     counts: {
       state_champions: champions.length,
       state_placements: placements.length,
+      state_qualifiers: qualifiers.length,
       dual_team_titles: duals.length,
       nhsca_all_americans: nhscaAaCount,
       super32_all_americans: super32Aa.length,
@@ -895,6 +915,7 @@ export async function buildSchoolFacts(
     },
     state_champions: champions,
     state_placements: placements,
+    state_qualifiers: qualifiers,
     dual_team_titles: duals,
     nhsca,
     super32_all_americans: super32Aa,
@@ -937,7 +958,7 @@ function buildSchoolWritingNotes(f: SchoolFacts): string[] {
     notes.push(`Multiple-time champions worth naming: ${multi.join(", ")}.`)
   }
 
-  if (!f.state_champions.length && !f.state_placements.length) {
+  if (!f.state_champions.length && !f.state_placements.length && !f.state_qualifiers.length) {
     notes.push(
       "We hold no state results for this school. Say so plainly — it means nothing matched our data, not that the program never placed.",
     )

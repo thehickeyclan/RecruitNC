@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const { state_champions, dual_team_titles } = facts.counts
   const bits = [
-    state_champions ? `${state_champions} individual state champion${state_champions === 1 ? "" : "s"}` : null,
+    state_champions ? `${state_champions} individual state title${state_champions === 1 ? "" : "s"}` : null,
     dual_team_titles ? `${dual_team_titles} dual team title${dual_team_titles === 1 ? "" : "s"}` : null,
   ].filter(Boolean)
 
@@ -55,13 +55,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-function ordinal(place: number | null): string {
-  if (place == null) return "State qualifier"
+function placementLabel(place: number): string {
   if (place === 1) return "Champion"
   if (place === 2) return "2nd"
   if (place === 3) return "3rd"
-  if (place === 0) return "State qualifier"
   return `${place}th`
+}
+
+function nationalResultLabel(place: number | null): string {
+  return place == null || place === 0 ? "Competed" : placementLabel(place)
 }
 
 function Stat({ label, value }: { label: string; value: number }) {
@@ -134,13 +136,13 @@ export default async function HighSchoolPage({ params }: PageProps) {
         </header>
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Stat label="State champions" value={facts.counts.state_champions} />
-          <Stat label="State placements" value={facts.counts.state_placements} />
+          <Stat label="State titles" value={facts.counts.state_champions} />
+          <Stat label="Other state placements" value={facts.counts.state_placements} />
           <Stat label="Dual team titles" value={facts.counts.dual_team_titles} />
           <Stat label="NHSCA All-Americans" value={facts.counts.nhsca_all_americans} />
         </div>
 
-        <Section title="Individual state champions" count={facts.counts.state_champions}>
+        <Section title="Individual state titles" count={facts.counts.state_champions}>
           <ul>
             {facts.state_champions.map((c, i) => (
               <Row key={`${c.year}-${c.name}-${i}`} year={c.year}>
@@ -174,7 +176,7 @@ export default async function HighSchoolPage({ params }: PageProps) {
                 <span className="font-semibold text-white">{r.name}</span>
                 <span className="text-slate-400">
                   {" "}
-                  — {ordinal(r.place)}
+                  — {nationalResultLabel(r.place)}
                   {r.place != null && r.place >= 1 && r.place <= 8 ? " (All-American)" : ""}
                   {[r.division, r.weight, r.record].filter(Boolean).length
                     ? ` (${[r.division, r.weight, r.record].filter(Boolean).join(", ")})`
@@ -192,7 +194,7 @@ export default async function HighSchoolPage({ params }: PageProps) {
                 <span className="font-semibold text-white">{r.name}</span>
                 <span className="text-slate-400">
                   {" "}
-                  — {ordinal(r.place)}
+                  — {nationalResultLabel(r.place)}
                   {r.weight ? ` (${r.weight})` : ""}
                 </span>
               </Row>
@@ -238,7 +240,7 @@ export default async function HighSchoolPage({ params }: PageProps) {
                 <span className="font-semibold text-white">{p.name}</span>
                 <span className="text-slate-400">
                   {" "}
-                  — {ordinal(p.place)}
+                  — {placementLabel(p.place ?? 0)}
                   {[p.classification, p.weight].filter(Boolean).length
                     ? ` (${[p.classification, p.weight].filter(Boolean).join(", ")})`
                     : ""}
@@ -248,7 +250,26 @@ export default async function HighSchoolPage({ params }: PageProps) {
           </ul>
         </Section>
 
-        {facts.counts.state_champions === 0 && facts.counts.state_placements === 0 ? (
+        <Section title="State qualifiers" count={facts.counts.state_qualifiers}>
+          <ul>
+            {facts.state_qualifiers.map((q, i) => (
+              <Row key={`${q.year}-${q.name}-${i}`} year={q.year}>
+                <span className="font-semibold text-white">{q.name}</span>
+                <span className="text-slate-400">
+                  {" "}
+                  — State qualifier
+                  {[q.classification, q.weight].filter(Boolean).length
+                    ? ` (${[q.classification, q.weight].filter(Boolean).join(", ")})`
+                    : ""}
+                </span>
+              </Row>
+            ))}
+          </ul>
+        </Section>
+
+        {facts.counts.state_champions === 0 &&
+        facts.counts.state_placements === 0 &&
+        facts.counts.state_qualifiers === 0 ? (
           <p className="rounded-xl border border-rnc-line bg-rnc-raised p-5 text-slate-300">
             We don&apos;t have state tournament results on file for {facts.name} yet. If that looks
             wrong, tell Data Dawg — corrections go straight to our review queue.
