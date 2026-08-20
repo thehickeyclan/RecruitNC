@@ -21,9 +21,13 @@ describe("rateLimitKey", () => {
     expect(rateLimitKey({ forwardedFor: "1.2.3.4, 10.0.0.1, 10.0.0.2" })).toBe("ip:1.2.3.4")
   })
 
-  it("puts unidentifiable callers in one shared bucket rather than giving each a fresh one", () => {
-    expect(rateLimitKey({})).toBe("ip:unknown")
-    expect(rateLimitKey({ forwardedFor: "  " })).toBe("ip:unknown")
+  it("falls back to x-real-ip when there is no forwarded-for", () => {
+    expect(rateLimitKey({ realIp: "1.2.3.4" })).toBe("ip:1.2.3.4")
+  })
+
+  it("returns null when the caller cannot be identified", () => {
+    expect(rateLimitKey({})).toBeNull()
+    expect(rateLimitKey({ forwardedFor: "  ", realIp: "" })).toBeNull()
   })
 })
 
@@ -57,6 +61,16 @@ describe("checkDataDawgRateLimit", () => {
     expect(checkDataDawgRateLimit("ip:1.2.3.4", later).allowed).toBe(true)
   })
 
+
+  it("lets an unidentifiable caller through rather than pooling strangers into one allowance", () => {
+    const now = 1_000_000
+    // Far past the limit: a shared bucket would have refused these long ago.
+    for (let i = 0; i < DATA_DAWG_RATE_LIMIT_MAX * 3; i++) {
+      expect(checkDataDawgRateLimit(null, now).allowed).toBe(true)
+    }
+    // And it must not have consumed anyone else's allowance either.
+    expect(checkDataDawgRateLimit("ip:1.2.3.4", now).allowed).toBe(true)
+  })
   it("counts a refused request against nothing — a blocked caller is not punished further", () => {
     const now = 1_000_000
     for (let i = 0; i < DATA_DAWG_RATE_LIMIT_MAX; i++) {

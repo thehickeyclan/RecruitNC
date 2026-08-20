@@ -12,8 +12,13 @@
  * (Upstash/Redis); this is the version that ships today without new infrastructure.
  */
 
+/**
+ * Thirty a minute is well clear of a person reading answers and asking follow-ups, and still
+ * far below what a script costs. The first cut at 12 was tuned against abuse alone and refused
+ * a real second question in production.
+ */
 export const DATA_DAWG_RATE_LIMIT_WINDOW_MS = 60_000
-export const DATA_DAWG_RATE_LIMIT_MAX = 12
+export const DATA_DAWG_RATE_LIMIT_MAX = 30
 
 /** Questions are questions. Anything longer is a payload, not a wrestling question. */
 export const DATA_DAWG_MAX_MESSAGE_CHARS = 1_000
@@ -31,19 +36,33 @@ const MAX_TRACKED_KEYS = 5_000
 
 /**
  * Caller identity for limiting: the signed-in user when we have one, else the client IP.
- * Falls back to a shared bucket when neither is available, which is the safe direction —
- * unidentifiable callers share one allowance rather than each getting a fresh one.
+ *
+ * Returns null when the caller cannot be identified, and an unidentified caller is let
+ * through. The first version pooled them into one shared "unknown" bucket, which sounds
+ * conservative and is actually an outage waiting to happen: any request that arrives without a
+ * usable header lands in the same allowance as every other one, so a burst from a single source
+ * locks out unrelated people. Refusing a real question is worse than passing an anonymous one.
  */
-export function rateLimitKey(opts: { userId?: string | null; forwardedFor?: string | null }): string {
+export function rateLimitKey(opts: {
+  userId?: string | null
+  forwardedFor?: string | null
+  realIp?: string | null
+}): string | null {
   if (opts.userId) return `user:${opts.userId}`
   const first = (opts.forwardedFor ?? "").split(",")[0]?.trim()
-  return first ? `ip:${first}` : "ip:unknown"
+  if (first) return `ip:${first}`
+  const real = (opts.realIp ?? "").trim()
+  if (real) return `ip:${real}`
+  return null
 }
 
 export function checkDataDawgRateLimit(
-  key: string,
+  key: string | null,
   now: number = Date.now(),
 ): { allowed: boolean; retryAfterSeconds: number } {
+  // Unidentifiable caller — let it through rather than pooling strangers into one allowance.
+  if (!key) return { allowed: true, retryAfterSeconds: 0 }
+
   const bucket = buckets.get(key) ?? { hits: [] }
   const hits = bucket.hits.filter((t) => now - t < DATA_DAWG_RATE_LIMIT_WINDOW_MS)
 

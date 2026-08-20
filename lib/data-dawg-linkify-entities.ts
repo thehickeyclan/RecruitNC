@@ -63,14 +63,22 @@ export function linkableEntitiesFromFacts(facts: unknown): LinkableEntity[] {
   const f = facts as Record<string, unknown>
   const out: LinkableEntity[] = []
 
+  const seen = new Set<string>()
   const push = (name: unknown, url: unknown) => {
-    if (typeof name === "string" && name.trim() && typeof url === "string" && url.trim()) {
-      out.push({ name: name.trim(), url: url.trim() })
-    }
+    if (typeof name !== "string" || !name.trim()) return
+    if (typeof url !== "string" || !url.trim()) return
+    const key = name.trim().toLowerCase()
+    if (seen.has(key)) return
+    seen.add(key)
+    out.push({ name: name.trim(), url: url.trim() })
   }
 
-  push(f.high_school, f.high_school_url)
+  // Athlete facts carry `profile_url`; school facts carry `page_url`. Missing the first one
+  // meant the athlete's own name was only ever linked when the model remembered to — which is
+  // the thing this module exists to stop depending on.
+  push(f.name, f.profile_url)
   push(f.name, f.page_url)
+  push(f.high_school, f.high_school_url)
 
   return out
 }

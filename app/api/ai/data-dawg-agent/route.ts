@@ -63,7 +63,11 @@ export async function POST(req: NextRequest) {
 
     // Public endpoint calling a paid model — see lib/data-dawg-rate-limit.ts.
     const limit = checkDataDawgRateLimit(
-      rateLimitKey({ userId, forwardedFor: req.headers.get("x-forwarded-for") }),
+      rateLimitKey({
+        userId,
+        forwardedFor: req.headers.get("x-forwarded-for"),
+        realIp: req.headers.get("x-real-ip"),
+      }),
     )
     if (!limit.allowed) {
       return NextResponse.json(
