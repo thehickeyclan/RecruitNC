@@ -4,6 +4,12 @@ import { writeAiQueryLog } from "@/lib/ai-query-log-write"
 import { computeAiQuerySuccess } from "@/lib/ai-query-logs"
 import { toDataDawgUserFacingError } from "@/lib/openai-user-facing-error"
 import { resolveDataDawgRequestUserId } from "@/lib/data-dawg-request-user"
+import {
+  checkDataDawgRateLimit,
+  clampConversationHistory,
+  rateLimitKey,
+  DATA_DAWG_MAX_MESSAGE_CHARS,
+} from "@/lib/data-dawg-rate-limit"
 
 export const maxDuration = 120
 
@@ -17,7 +23,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}))
     message = typeof body.message === "string" ? body.message.trim() : ""
-    const conversationHistory = Array.isArray(body.conversationHistory) ? body.conversationHistory : undefined
+    const conversationHistory = clampConversationHistory(body.conversationHistory)
     messageId = typeof body.messageId === "string" ? body.messageId : undefined
     project =
       typeof body.project === "string" && body.project.trim()
@@ -41,6 +47,32 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: "message is required", answer: "Send a non-empty message." },
         { status: 400 },
+      )
+    }
+
+    if (message.length > DATA_DAWG_MAX_MESSAGE_CHARS) {
+      return NextResponse.json(
+        {
+          answer: "That question is too long for me. Try asking it in a sentence or two.",
+          queryType: "data_dawg_agent_v2_too_long",
+          source: "data_dawg_agent_v2",
+        },
+        { status: 400 },
+      )
+    }
+
+    // Public endpoint calling a paid model — see lib/data-dawg-rate-limit.ts.
+    const limit = checkDataDawgRateLimit(
+      rateLimitKey({ userId, forwardedFor: req.headers.get("x-forwarded-for") }),
+    )
+    if (!limit.allowed) {
+      return NextResponse.json(
+        {
+          answer: "I am getting a lot of questions right now — give me a moment and ask again.",
+          queryType: "data_dawg_agent_v2_rate_limited",
+          source: "data_dawg_agent_v2",
+        },
+        { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds) } },
       )
     }
 
