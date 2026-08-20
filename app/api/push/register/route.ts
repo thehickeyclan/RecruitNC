@@ -7,7 +7,7 @@ const EXPO_TOKEN = /^Expo(nent)?PushToken\[[^\]]+\]$/
 type RegisterBody = {
   expoPushToken?: string
   platform?: string
-  prefs?: { commits?: boolean; rankings?: boolean; events?: boolean }
+  prefs?: { commits?: boolean; rankings?: boolean; events?: boolean; toc?: boolean }
 }
 
 /**
@@ -29,19 +29,30 @@ export async function POST(request: Request) {
     const platform = body?.platform === "android" ? "android" : "ios"
     const prefs = body?.prefs ?? {}
 
-    const { error } = await createAdminClient()
+    const admin = createAdminClient()
+    const base = {
+      expo_push_token: token,
+      platform,
+      alert_commits: prefs.commits !== false,
+      alert_rankings: prefs.rankings === true,
+      alert_events: prefs.events === true,
+      last_seen_at: new Date().toISOString(),
+    }
+    // Defaults on, like commits — a TOC reveal is the reason many of these installs happened,
+    // so only an explicit false turns it off.
+    const withToc = { ...base, alert_toc: prefs.toc !== false }
+
+    let { error } = await admin
       .from("push_devices")
-      .upsert(
-        {
-          expo_push_token: token,
-          platform,
-          alert_commits: prefs.commits !== false,
-          alert_rankings: prefs.rankings === true,
-          alert_events: prefs.events === true,
-          last_seen_at: new Date().toISOString(),
-        },
-        { onConflict: "expo_push_token" },
-      )
+      .upsert(withToc, { onConflict: "expo_push_token" })
+
+    // The alert_toc migration may not have run yet. A device that cannot register is a device
+    // that gets no alerts at all, which is far worse than one missing TOC opt-in — so fall back
+    // rather than making deploy order load-bearing.
+    if (error && (error.code === "42703" || error.message?.includes("alert_toc"))) {
+      console.warn("[push/register] alert_toc column missing — run scripts/add-push-devices-alert-toc.sql")
+      ;({ error } = await admin.from("push_devices").upsert(base, { onConflict: "expo_push_token" }))
+    }
 
     if (error) {
       console.error("[push/register]", error)

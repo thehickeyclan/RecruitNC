@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getBracketLockStatus } from "@/lib/toc/bracket-service"
 import { setTocFieldAnnounced } from "@/lib/toc/field-publication-status"
+import { notifyTocWeightAnnounced } from "@/lib/toc/announce-notification"
 import { parseAthleteWeightClass } from "@/lib/toc/invitations"
 import { requireTocFieldViewer } from "@/lib/toc/require-toc-field-viewer"
 
@@ -48,6 +49,15 @@ export async function PATCH(request: Request, { params }: Params) {
     }
   }
 
+  // Whether this is a first release decides whether anyone gets a push. Re-saving an
+  // already-announced weight must not notify the same people twice.
+  const { data: priorRow } = await admin
+    .from("toc_field_publication_status")
+    .select("announced_at")
+    .eq("weight_class", weightClass)
+    .maybeSingle()
+  const wasAnnounced = Boolean(priorRow?.announced_at)
+
   const result = await setTocFieldAnnounced({
     admin,
     weightClass,
@@ -62,5 +72,12 @@ export async function PATCH(request: Request, { params }: Params) {
     `[toc-announce] weight ${weightClass} ${body.announced ? "RELEASED publicly" : "un-released"} by ${auth.userId}`,
   )
 
-  return NextResponse.json({ ok: true, status: result.status })
+  // Awaited on purpose: Vercel freezes the isolate once the response is sent, and a dropped
+  // promise here is a reveal nobody hears about. notifyTocWeightAnnounced never throws.
+  let notified: Awaited<ReturnType<typeof notifyTocWeightAnnounced>> = null
+  if (body.announced && !wasAnnounced) {
+    notified = await notifyTocWeightAnnounced(weightClass)
+  }
+
+  return NextResponse.json({ ok: true, status: result.status, notified })
 }
