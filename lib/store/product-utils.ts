@@ -1,4 +1,5 @@
 import { NC_UNITED_FIRST_IN_FLIGHT_PRODUCT_ID, NC_UNITED_FIRST_IN_FLIGHT_STORE_SLUG } from "@/lib/nc-united-2026-store-gear"
+import { isToc2026PreorderItem } from "@/lib/store/toc-preorder"
 
 /** Postgres uuid columns reject legacy numeric store ids — only persist real UUIDs. */
 export function resolveOrderItemProductId(sourceId: string | number | null | undefined): string | null {
@@ -57,6 +58,7 @@ export function getStoreProductShipLabel(product: {
   slug?: string | null
   name?: string | null
 }): string {
+  if (isToc2026PreorderItem(product)) return "Pickup September 18–19 at the Tournament of Champions"
   if (isFirstInFlightSingletProduct(product)) return "Ships in 3 weeks"
   return "Ships in 1-2 business days"
 }

@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@supabase/ssr"
+import { notifyRankingsPublished } from "@/lib/rankings-notification"
 
 export async function POST(request: NextRequest) {
   try {
@@ -73,9 +74,19 @@ export async function POST(request: NextRequest) {
 
     console.log(`[v0] Successfully published ${rankings.length} rankings for Class of ${year} ${gender}`)
 
+    // Awaited on purpose: Vercel freezes the isolate once the response is sent, and a dropped
+    // promise here is a publish nobody hears about. notifyRankingsPublished never throws.
+    const notified = await notifyRankingsPublished({
+      graduationYear: Number.parseInt(year),
+      gender: String(gender ?? ""),
+      // Publish order is rank order, so the first names are the top of the class.
+      rankedNames: (rankings as Array<{ name?: string }>).map((r) => String(r?.name ?? "")),
+    })
+
     return NextResponse.json({
       success: true,
       message: `Published ${rankings.length} rankings for Class of ${year} ${gender}`,
+      notified,
     })
   } catch (error) {
     console.error("Error publishing rankings:", error)

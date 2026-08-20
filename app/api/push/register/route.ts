@@ -7,7 +7,7 @@ const EXPO_TOKEN = /^Expo(nent)?PushToken\[[^\]]+\]$/
 type RegisterBody = {
   expoPushToken?: string
   platform?: string
-  prefs?: { commits?: boolean; rankings?: boolean; events?: boolean; toc?: boolean }
+  prefs?: { commits?: boolean; rankings?: boolean; events?: boolean; toc?: boolean; news?: boolean }
 }
 
 /**
@@ -34,23 +34,23 @@ export async function POST(request: Request) {
       expo_push_token: token,
       platform,
       alert_commits: prefs.commits !== false,
-      alert_rankings: prefs.rankings === true,
+      alert_rankings: prefs.rankings !== false,
       alert_events: prefs.events === true,
       last_seen_at: new Date().toISOString(),
     }
     // Defaults on, like commits — a TOC reveal is the reason many of these installs happened,
     // so only an explicit false turns it off.
-    const withToc = { ...base, alert_toc: prefs.toc !== false }
+    const withNew = { ...base, alert_toc: prefs.toc !== false, alert_news: prefs.news !== false }
 
     let { error } = await admin
       .from("push_devices")
-      .upsert(withToc, { onConflict: "expo_push_token" })
+      .upsert(withNew, { onConflict: "expo_push_token" })
 
     // The alert_toc migration may not have run yet. A device that cannot register is a device
     // that gets no alerts at all, which is far worse than one missing TOC opt-in — so fall back
     // rather than making deploy order load-bearing.
-    if (error && (error.code === "42703" || error.message?.includes("alert_toc"))) {
-      console.warn("[push/register] alert_toc column missing — run scripts/add-push-devices-alert-toc.sql")
+    if (error && (error.code === "42703" || /alert_(toc|news)/.test(error.message ?? ""))) {
+      console.warn("[push/register] an alert column is missing — run the push_devices alert migrations")
       ;({ error } = await admin.from("push_devices").upsert(base, { onConflict: "expo_push_token" }))
     }
 

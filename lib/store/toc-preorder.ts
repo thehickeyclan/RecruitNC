@@ -1,4 +1,5 @@
 export const TOC_2026_TEE_SKU_PREFIX = "TOC26-TEE"
+export const TOC_2026_TEE_SLUG = "2026-tournament-of-champions-tee"
 
 export const TOC_2026_PICKUP_METHOD = {
   id: "pickup" as const,
@@ -16,7 +17,18 @@ export const TOC_2026_PICKUP_ADDRESS = {
   zipCode: "27539",
 }
 
-export function isToc2026PreorderItem(item: { sku?: string | null }): boolean {
-  return String(item.sku ?? "").toUpperCase().startsWith(TOC_2026_TEE_SKU_PREFIX)
-}
+export function isToc2026PreorderItem(item: {
+  sku?: string | null
+  slug?: string | null
+  name?: string | null
+}): boolean {
+  const sku = String(item.sku ?? "").toUpperCase()
+  const slug = String(item.slug ?? "").toLowerCase()
+  const name = String(item.name ?? "").toLowerCase()
 
+  return (
+    sku.startsWith(TOC_2026_TEE_SKU_PREFIX) ||
+    slug === TOC_2026_TEE_SLUG ||
+    (name.includes("tournament of champions") && name.includes("tee"))
+  )
+}

@@ -47,7 +47,7 @@ function chunk<T>(items: T[], size: number): T[][] {
  * uninstall and each send wastes calls on addresses that can never receive again.
  */
 export async function sendToSubscribers(
-  column: "alert_commits" | "alert_rankings" | "alert_events" | "alert_toc",
+  column: "alert_commits" | "alert_rankings" | "alert_events" | "alert_toc" | "alert_news",
   message: PushMessage,
 ): Promise<{ sent: number; failed: number; pruned: number; undelivered: number }> {
   const admin = createAdminClient()
