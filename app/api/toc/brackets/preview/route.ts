@@ -6,7 +6,7 @@ import type { TocBracketParticipant } from "@/lib/toc/bracket-types"
 import { layoutBracketTree } from "@/lib/bracket/single-elim-layout"
 import {
   tocDrawToConsolationBracketTree,
-  tocDrawToSeededBracketTree,
+  tocDrawToWinnersBracketTree,
 } from "@/lib/toc/to-bracket-display"
 
 export const dynamic = "force-dynamic"
@@ -96,7 +96,11 @@ export async function POST(request: Request) {
     return NextResponse.json({
       draw,
       layout: {
-        championship: layoutBracketTree(tocDrawToSeededBracketTree(draw)),
+        // The winners tree, not the seeded one. Both draw the same shape, but the seeded tree
+        // is generated from seeds and carries no bout numbers — so every tap in the app hit a
+        // match it could not identify and did nothing. This one is built from the draw's own
+        // bouts, so a tap knows which bout it is picking.
+        championship: layoutBracketTree(tocDrawToWinnersBracketTree(draw)),
         consolation: consolationTree ? layoutBracketTree(consolationTree) : null,
       },
       // Flips to true when TOC publishes real brackets and this starts serving them instead.
