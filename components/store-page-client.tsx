@@ -1,168 +1,218 @@
-"use client"
+"use client";
 
-import { useState, useMemo, useEffect } from "react"
-import { useSearchParams } from "next/navigation"
-import { StoreHeader } from "@/components/store-header"
-import { StoreBanner } from "@/components/store-banner"
-import { FeaturedProductsSection } from "@/components/featured-products-section"
-import { FilterSidebar } from "@/components/filter-sidebar"
-import { ProductGrid, type SortOption, type ProductGridProduct } from "@/components/product-grid"
-import { FeaturesSection } from "@/components/features-section"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Search } from "lucide-react"
-import { useCartStore } from "@/lib/store/cart-store"
-import { buildStoreCategories, productMatchesStoreCategory } from "@/lib/store/store-categories"
-import { useToast } from "@/hooks/use-toast"
+import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import { StoreHeader } from "@/components/store-header";
+import { StoreBanner } from "@/components/store-banner";
+import { FeaturedProductsSection } from "@/components/featured-products-section";
+import { FilterSidebar } from "@/components/filter-sidebar";
+import {
+  ProductGrid,
+  type SortOption,
+  type ProductGridProduct,
+} from "@/components/product-grid";
+import { FeaturesSection } from "@/components/features-section";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
+import { useCartStore } from "@/lib/store/cart-store";
+import {
+  buildStoreCategories,
+  productMatchesStoreCategory,
+} from "@/lib/store/store-categories";
+import { useToast } from "@/hooks/use-toast";
+import { isToc2026PreorderItem } from "@/lib/store/toc-preorder";
 
 interface StorePageClientProps {
-  initialProducts: ProductGridProduct[]
+  initialProducts: ProductGridProduct[];
 }
 
 export function StorePageClient({ initialProducts }: StorePageClientProps) {
-  const searchParams = useSearchParams()
-  const { applyPromoCode, promoCode } = useCartStore()
-  const { toast } = useToast()
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([])
-  const [selectedSizes, setSelectedSizes] = useState<string[]>([])
-  const [selectedPriceRanges, setSelectedPriceRanges] = useState<string[]>([])
-  const [sortBy, setSortBy] = useState<SortOption>("featured")
-  const [searchQuery, setSearchQuery] = useState("")
+  const searchParams = useSearchParams();
+  const { applyPromoCode, promoCode } = useCartStore();
+  const { toast } = useToast();
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+  const [selectedPriceRanges, setSelectedPriceRanges] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<SortOption>("featured");
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Pills come from the catalog that actually loaded, so a filter can never show zero results
   // for a category no product is in.
-  const categories = useMemo(() => buildStoreCategories(initialProducts), [initialProducts])
+  const categories = useMemo(
+    () => buildStoreCategories(initialProducts),
+    [initialProducts],
+  );
+  const tocProductHref = useMemo(() => {
+    const tee = initialProducts.find((product) =>
+      isToc2026PreorderItem(product),
+    );
+    return tee ? `/store-app/product/${tee.id}` : undefined;
+  }, [initialProducts]);
 
   // Sync category filter from URL (e.g. /?category=t-shirts from banner or shared link).
   // Matched case-insensitively — older links used title-case ids.
   useEffect(() => {
-    const category = searchParams?.get("category")
-    if (!category) return
-    const match = categories.find((c) => c.id.toLowerCase() === category.toLowerCase())
+    const category = searchParams?.get("category");
+    if (!category) return;
+    const match = categories.find(
+      (c) => c.id.toLowerCase() === category.toLowerCase(),
+    );
     if (match) {
-      setSelectedCategories([match.id])
-      requestAnimationFrame(() => document.getElementById("products")?.scrollIntoView({ behavior: "smooth" }))
+      setSelectedCategories([match.id]);
+      requestAnimationFrame(() =>
+        document
+          .getElementById("products")
+          ?.scrollIntoView({ behavior: "smooth" }),
+      );
     }
-  }, [searchParams, categories])
+  }, [searchParams, categories]);
 
   // Auto-apply promo code from URL parameter (no replaceState to avoid Next router refetch / store canceled)
   useEffect(() => {
-    const promoParam = searchParams?.get("promo") || searchParams?.get("promoCode")
+    const promoParam =
+      searchParams?.get("promo") || searchParams?.get("promoCode");
     if (promoParam && promoParam !== promoCode) {
       applyPromoCode(promoParam).then((success) => {
         if (success) {
           toast({
             title: "Promo code applied!",
             description: `Promo code "${promoParam}" has been applied to your cart.`,
-          })
+          });
         }
-      })
+      });
     }
-  }, [searchParams, promoCode, applyPromoCode, toast])
+  }, [searchParams, promoCode, applyPromoCode, toast]);
 
   const filteredProducts = useMemo(() => {
-    let filtered = [...initialProducts]
+    let filtered = [...initialProducts];
 
     if (searchQuery) {
       filtered = filtered.filter(
         (product) =>
           product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          product.description?.toLowerCase().includes(searchQuery.toLowerCase()),
-      )
+          product.description
+            ?.toLowerCase()
+            .includes(searchQuery.toLowerCase()),
+      );
     }
 
     if (selectedCategories.length > 0) {
       filtered = filtered.filter((product) =>
-        selectedCategories.some((cat) => productMatchesStoreCategory(product, cat)),
-      )
+        selectedCategories.some((cat) =>
+          productMatchesStoreCategory(product, cat),
+        ),
+      );
     }
 
     if (selectedSizes.length > 0) {
       filtered = filtered.filter((product) => {
-        const variants = (product.variants ?? []) as Array<{ size?: string }>
-        return variants.some((v) => selectedSizes.includes(v.size ?? ""))
-      })
+        const variants = (product.variants ?? []) as Array<{ size?: string }>;
+        return variants.some((v) => selectedSizes.includes(v.size ?? ""));
+      });
     }
 
     if (selectedPriceRanges.length > 0) {
       filtered = filtered.filter((product) => {
-        const price = product.price
+        const price = product.price;
         return selectedPriceRanges.some((range) => {
-          if (range === "under-25") return price < 25
-          if (range === "25-50") return price >= 25 && price <= 50
-          if (range === "50-75") return price >= 50 && price <= 75
-          if (range === "over-75") return price > 75
-          return false
-        })
-      })
+          if (range === "under-25") return price < 25;
+          if (range === "25-50") return price >= 25 && price <= 50;
+          if (range === "50-75") return price >= 50 && price <= 75;
+          if (range === "over-75") return price > 75;
+          return false;
+        });
+      });
     }
 
     switch (sortBy) {
       case "price-low":
-        filtered = [...filtered].sort((a, b) => a.price - b.price)
-        break
+        filtered = [...filtered].sort((a, b) => a.price - b.price);
+        break;
       case "price-high":
-        filtered = [...filtered].sort((a, b) => b.price - a.price)
-        break
+        filtered = [...filtered].sort((a, b) => b.price - a.price);
+        break;
       case "newest":
         filtered = [...filtered].sort(
-          (a, b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime(),
-        )
-        break
+          (a, b) =>
+            new Date(b.created_at ?? 0).getTime() -
+            new Date(a.created_at ?? 0).getTime(),
+        );
+        break;
       case "featured":
       default:
-        break
+        break;
     }
 
-    return filtered
-  }, [initialProducts, selectedCategories, selectedSizes, selectedPriceRanges, sortBy, searchQuery])
+    return filtered;
+  }, [
+    initialProducts,
+    selectedCategories,
+    selectedSizes,
+    selectedPriceRanges,
+    sortBy,
+    searchQuery,
+  ]);
 
   const handleClearFilters = () => {
-    setSelectedCategories([])
-    setSelectedSizes([])
-    setSelectedPriceRanges([])
-  }
+    setSelectedCategories([]);
+    setSelectedSizes([]);
+    setSelectedPriceRanges([]);
+  };
 
   const handleCategoryToggle = (categoryId: string) => {
     if (selectedCategories.includes(categoryId)) {
-      setSelectedCategories(selectedCategories.filter((c) => c !== categoryId))
+      setSelectedCategories(selectedCategories.filter((c) => c !== categoryId));
     } else {
-      setSelectedCategories([categoryId])
+      setSelectedCategories([categoryId]);
     }
-  }
+  };
 
-  const activeFiltersCount = selectedSizes.length + selectedPriceRanges.length
+  const activeFiltersCount = selectedSizes.length + selectedPriceRanges.length;
 
   const scrollToProducts = () => {
-    setSelectedCategories([])
+    setSelectedCategories([]);
     setTimeout(
-      () => document.getElementById("products")?.scrollIntoView({ behavior: "smooth", block: "start" }),
+      () =>
+        document
+          .getElementById("products")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" }),
       100,
-    )
-  }
+    );
+  };
 
   return (
     <div className="min-h-screen bg-[#0A1628]">
       <StoreHeader searchQuery={searchQuery} onSearchChange={setSearchQuery} />
       <StoreBanner
         categories={categories}
+        tocProductHref={tocProductHref}
         onShopAll={() => {
-          setSelectedCategories([])
+          setSelectedCategories([]);
           setTimeout(
-            () => document.getElementById("products")?.scrollIntoView({ behavior: "smooth", block: "start" }),
+            () =>
+              document
+                .getElementById("products")
+                ?.scrollIntoView({ behavior: "smooth", block: "start" }),
             100,
-          )
+          );
         }}
         onShopCategory={(categoryId) => {
-          setSelectedCategories([categoryId])
+          setSelectedCategories([categoryId]);
           setTimeout(
-            () => document.getElementById("products")?.scrollIntoView({ behavior: "smooth", block: "start" }),
+            () =>
+              document
+                .getElementById("products")
+                ?.scrollIntoView({ behavior: "smooth", block: "start" }),
             100,
-          )
+          );
         }}
       />
 
-      <FeaturedProductsSection products={initialProducts} onViewAll={scrollToProducts} />
+      <FeaturedProductsSection
+        products={initialProducts}
+        onViewAll={scrollToProducts}
+      />
 
       <div id="products" className="container mx-auto px-4 py-12">
         <div className="mb-8 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
@@ -170,9 +220,10 @@ export function StorePageClient({ initialProducts }: StorePageClientProps) {
             <Button
               variant={selectedCategories.length === 0 ? "default" : "outline"}
               onClick={() => setSelectedCategories([])}
-              className={selectedCategories.length === 0
-                ? "rounded-full bg-[#D3B574] text-[#0A1628] hover:bg-[#c4a665] font-semibold"
-                : "rounded-full bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white"
+              className={
+                selectedCategories.length === 0
+                  ? "rounded-full bg-[#D3B574] text-[#0A1628] hover:bg-[#c4a665] font-semibold"
+                  : "rounded-full bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white"
               }
             >
               All Products
@@ -180,11 +231,16 @@ export function StorePageClient({ initialProducts }: StorePageClientProps) {
             {categories.map((category) => (
               <Button
                 key={category.id}
-                variant={selectedCategories.includes(category.id) ? "default" : "outline"}
+                variant={
+                  selectedCategories.includes(category.id)
+                    ? "default"
+                    : "outline"
+                }
                 onClick={() => handleCategoryToggle(category.id)}
-                className={selectedCategories.includes(category.id)
-                  ? "rounded-full bg-[#D3B574] text-[#0A1628] hover:bg-[#c4a665] font-semibold"
-                  : "rounded-full bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white"
+                className={
+                  selectedCategories.includes(category.id)
+                    ? "rounded-full bg-[#D3B574] text-[#0A1628] hover:bg-[#c4a665] font-semibold"
+                    : "rounded-full bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white"
                 }
               >
                 {category.label}
@@ -218,10 +274,14 @@ export function StorePageClient({ initialProducts }: StorePageClientProps) {
           </div>
         </div>
 
-        <ProductGrid products={filteredProducts} sortBy={sortBy} onSortChange={setSortBy} />
+        <ProductGrid
+          products={filteredProducts}
+          sortBy={sortBy}
+          onSortChange={setSortBy}
+        />
       </div>
 
       <FeaturesSection />
     </div>
-  )
+  );
 }

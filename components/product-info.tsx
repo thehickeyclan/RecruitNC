@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useState } from "react"
+import { useState } from "react";
 import {
   Star,
   Heart,
@@ -11,49 +11,68 @@ import {
   Twitter,
   Instagram,
   LinkIcon,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-import { SizeGuideModal } from "@/components/size-guide-modal"
-import { useCartStore, getMaxQuantityForItem } from "@/lib/store/cart-store"
-import { useToast } from "@/hooks/use-toast"
-import { trackAddToCart } from "@/lib/meta-pixel"
-import { shouldShowSizeSelector } from "@/lib/size-utils"
-import { getStoreProductShipLabel } from "@/lib/store/product-utils"
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { SizeGuideModal } from "@/components/size-guide-modal";
+import { useCartStore, getMaxQuantityForItem } from "@/lib/store/cart-store";
+import { useToast } from "@/hooks/use-toast";
+import { trackAddToCart } from "@/lib/meta-pixel";
+import { shouldShowSizeSelector } from "@/lib/size-utils";
+import { getStoreProductShipLabel } from "@/lib/store/product-utils";
+import { isToc2026PreorderItem } from "@/lib/store/toc-preorder";
 
 interface Product {
-  id: string | number
-  name: string
-  price: number
-  slug?: string | null
-  category?: string | null
-  image_url?: string | null
-  rating?: number
-  variants?: Array<{ id: string; color: string; size: string; stock_quantity?: number; sku?: string }>
+  id: string | number;
+  name: string;
+  price: number;
+  slug?: string | null;
+  category?: string | null;
+  image_url?: string | null;
+  rating?: number;
+  variants?: Array<{
+    id: string;
+    color: string;
+    size: string;
+    stock_quantity?: number;
+    sku?: string;
+  }>;
 }
 
 interface ProductDetail {
-  sku: string
-  description: string
-  features: string[]
-  colors: Array<{ name: string; hex: string; inStock: boolean }>
-  availableSizes: string[]
-  stockStatus: string
-  reviewCount: number
-  imagesByColor: Record<string, string[]>
-  defaultImages: string[]
-  reviews: unknown[]
-  variants?: Array<{ id: string; color: string; size: string; stock_quantity?: number; sku?: string }>
+  sku: string;
+  description: string;
+  features: string[];
+  colors: Array<{ name: string; hex: string; inStock: boolean }>;
+  availableSizes: string[];
+  stockStatus: string;
+  reviewCount: number;
+  imagesByColor: Record<string, string[]>;
+  defaultImages: string[];
+  reviews: unknown[];
+  variants?: Array<{
+    id: string;
+    color: string;
+    size: string;
+    stock_quantity?: number;
+    sku?: string;
+  }>;
 }
 
 interface ProductInfoProps {
-  product: Product & { stock_quantity?: number }
-  details: ProductDetail
-  variants?: Array<{ id: string; color: string; size: string; stock_quantity?: number; sku?: string }>
-  selectedColor: string
-  onColorChange: (color: string) => void
-  currentImage?: string
-  storeTheme?: boolean
+  product: Product & { stock_quantity?: number };
+  details: ProductDetail;
+  variants?: Array<{
+    id: string;
+    color: string;
+    size: string;
+    stock_quantity?: number;
+    sku?: string;
+  }>;
+  selectedColor: string;
+  onColorChange: (color: string) => void;
+  currentImage?: string;
+  storeTheme?: boolean;
 }
 
 export function ProductInfo({
@@ -65,72 +84,79 @@ export function ProductInfo({
   currentImage,
   storeTheme = false,
 }: ProductInfoProps) {
-  const productVariants = variants ?? product.variants ?? []
-  const shipLabel = getStoreProductShipLabel(product)
-  const [selectedSize, setSelectedSize] = useState("")
-  const [quantity, setQuantity] = useState(1)
-  const [isAdded, setIsAdded] = useState(false)
-  const [isWishlisted, setIsWishlisted] = useState(false)
-  const [showSizeGuide, setShowSizeGuide] = useState(false)
-  const [errors, setErrors] = useState({ size: false, color: false })
-  const [linkCopied, setLinkCopied] = useState(false)
+  const productVariants = variants ?? product.variants ?? [];
+  const shipLabel = getStoreProductShipLabel(product);
+  const isPreorder = isToc2026PreorderItem({ ...product, sku: details.sku });
+  const [selectedSize, setSelectedSize] = useState("");
+  const [quantity, setQuantity] = useState(1);
+  const [isAdded, setIsAdded] = useState(false);
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [showSizeGuide, setShowSizeGuide] = useState(false);
+  const [errors, setErrors] = useState({ size: false, color: false });
+  const [linkCopied, setLinkCopied] = useState(false);
 
-  const { addItem, autoAddRivalryTee } = useCartStore()
-  const { toast } = useToast()
+  const { addItem, autoAddRivalryTee } = useCartStore();
+  const { toast } = useToast();
 
   const showSizeSelector = shouldShowSizeSelector(
     details.availableSizes,
     product.category,
-    product.name
-  )
+    product.name,
+  );
 
   const effectiveSize = showSizeSelector
     ? selectedSize
-    : details.availableSizes[0] ?? "One Size"
+    : (details.availableSizes[0] ?? "One Size");
 
   const handleAddToCart = () => {
     if ((showSizeSelector && !selectedSize) || !selectedColor) {
       setErrors({
         size: showSizeSelector && !selectedSize,
         color: !selectedColor,
-      })
+      });
       toast({
         title: "Selection required",
         description: showSizeSelector
           ? "Please select both size and color before adding to cart."
           : "Please select a color before adding to cart.",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    setErrors({ size: false, color: false })
+    setErrors({ size: false, color: false });
 
     const colorSpecificImage =
-      details.imagesByColor[selectedColor]?.[0] ?? currentImage
+      details.imagesByColor[selectedColor]?.[0] ?? currentImage;
     const imageToUse =
-      colorSpecificImage ?? product.image_url ?? "/placeholder.svg"
+      colorSpecificImage ?? product.image_url ?? "/placeholder.svg";
 
     const variant = productVariants.find(
-      (v: { id: string; color: string; size: string; stock_quantity?: number; sku?: string }) =>
-        v.color === selectedColor && v.size === effectiveSize
-    )
+      (v: {
+        id: string;
+        color: string;
+        size: string;
+        stock_quantity?: number;
+        sku?: string;
+      }) => v.color === selectedColor && v.size === effectiveSize,
+    );
     if (!variant?.id) {
       toast({
         title: "Selection unavailable",
-        description: "That size and color combination is no longer available. Please choose another option.",
+        description:
+          "That size and color combination is no longer available. Please choose another option.",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
-    const variantStock = variant?.stock_quantity ?? 0
+    const variantStock = variant?.stock_quantity ?? 0;
     if (variantStock < quantity) {
       toast({
         title: "Not enough inventory",
         description: `Only ${Math.max(0, variantStock)} of this option ${variantStock === 1 ? "is" : "are"} available.`,
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
     addItem({
@@ -144,7 +170,7 @@ export function ProductInfo({
       quantity,
       stock: variantStock > 10 ? "in-stock" : "low-stock",
       stockQuantity: variantStock,
-    })
+    });
 
     trackAddToCart(
       [String(product.id)],
@@ -152,55 +178,56 @@ export function ProductInfo({
       Number(product.price ?? 0) * quantity,
       "USD",
       "product",
-      quantity
-    )
+      quantity,
+    );
 
-    setIsAdded(true)
+    setIsAdded(true);
     toast({
       title: "Added to cart",
       description: `${product.name} (${selectedColor}${showSizeSelector ? `, ${effectiveSize}` : ""}) x${quantity} has been added to your cart.`,
-    })
+    });
 
-    const isRivalryProduct = product.name.toLowerCase().includes("rivalry")
+    const isRivalryProduct = product.name.toLowerCase().includes("rivalry");
     if (!isRivalryProduct) {
       setTimeout(async () => {
-        const wasAdded = await autoAddRivalryTee()
+        const wasAdded = await autoAddRivalryTee();
         if (wasAdded) {
           toast({
             title: "🎉 Free Rivalry Tee Added!",
             description:
               "A free Rivalry Tee has been automatically added to your cart with any purchase!",
-          })
+          });
         }
-      }, 200)
+      }, 200);
     }
 
-    setTimeout(() => setIsAdded(false), 2000)
-  }
+    setTimeout(() => setIsAdded(false), 2000);
+  };
 
   const selectedVariant = productVariants.find(
-    (variant) => variant.color === selectedColor && variant.size === effectiveSize,
-  )
+    (variant) =>
+      variant.color === selectedColor && variant.size === effectiveSize,
+  );
   const maxQty = getMaxQuantityForItem({
     sku: selectedVariant?.sku ?? details.sku,
     name: product.name,
     stockQuantity: selectedVariant?.stock_quantity,
-  })
+  });
 
   const handleQuantityChange = (delta: number) => {
-    setQuantity((prev) => Math.max(1, Math.min(maxQty, prev + delta)))
-  }
+    setQuantity((prev) => Math.max(1, Math.min(maxQty, prev + delta)));
+  };
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(window.location.href)
-    setLinkCopied(true)
-    setTimeout(() => setLinkCopied(false), 2000)
-  }
+    navigator.clipboard.writeText(window.location.href);
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
+  };
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => {
-      const filled = i < Math.floor(rating)
-      const half = i === Math.floor(rating) && rating % 1 !== 0
+      const filled = i < Math.floor(rating);
+      const half = i === Math.floor(rating) && rating % 1 !== 0;
       return (
         <Star
           key={i}
@@ -210,12 +237,12 @@ export function ProductInfo({
               ? "fill-yellow-400 text-yellow-400"
               : half
                 ? "fill-yellow-400/50 text-yellow-400"
-                : "text-gray-300"
+                : "text-gray-300",
           )}
         />
-      )
-    })
-  }
+      );
+    });
+  };
 
   return (
     <div className="min-w-0 space-y-6">
@@ -228,7 +255,12 @@ export function ProductInfo({
         >
           {product.name}
         </h1>
-        <p className={cn("text-sm mb-3", storeTheme ? "text-white/55" : "text-muted-foreground")}>
+        <p
+          className={cn(
+            "text-sm mb-3",
+            storeTheme ? "text-white/55" : "text-muted-foreground",
+          )}
+        >
           SKU: {details.sku}
         </p>
 
@@ -247,9 +279,31 @@ export function ProductInfo({
           </a>
         </div>
 
-        <p className={cn("text-3xl font-bold", storeTheme ? "text-white" : "text-foreground")}>
+        <p
+          className={cn(
+            "text-3xl font-bold",
+            storeTheme ? "text-white" : "text-foreground",
+          )}
+        >
           ${Number(product.price).toFixed(2)}
         </p>
+
+        {isPreorder && (
+          <div className="mt-5 rounded-lg border border-[#D3B574]/35 bg-[#D3B574]/10 px-4 py-3">
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-[#D3B574]">
+              Pre-order
+            </p>
+            <p
+              className={cn(
+                "mt-1 text-sm font-medium",
+                storeTheme ? "text-white/85" : "text-foreground",
+              )}
+            >
+              Order now and pick up at the Tournament of Champions in Apex,
+              September 18–19, 2026.
+            </p>
+          </div>
+        )}
       </div>
 
       <div className={cn("border-t pt-6", storeTheme && "border-white/10")}>
@@ -263,7 +317,12 @@ export function ProductInfo({
         </p>
 
         <div className="space-y-2">
-          <p className={cn("font-semibold text-sm", storeTheme ? "text-white" : "text-foreground")}>
+          <p
+            className={cn(
+              "font-semibold text-sm",
+              storeTheme ? "text-white" : "text-foreground",
+            )}
+          >
             Features:
           </p>
           <ul className="space-y-1">
@@ -280,15 +339,30 @@ export function ProductInfo({
         </div>
       </div>
 
-      <div className={cn("space-y-6 border-t pt-6", storeTheme && "border-white/10")}>
+      <div
+        className={cn(
+          "space-y-6 border-t pt-6",
+          storeTheme && "border-white/10",
+        )}
+      >
         {showSizeSelector && (
           <div>
             <div className="mb-3 flex items-center justify-between gap-3">
-              <label className={cn("text-sm font-semibold", storeTheme ? "text-white" : "text-foreground")}>Select Size</label>
+              <label
+                className={cn(
+                  "text-sm font-semibold",
+                  storeTheme ? "text-white" : "text-foreground",
+                )}
+              >
+                Select Size
+              </label>
               <button
                 type="button"
                 onClick={() => setShowSizeGuide(true)}
-                className={cn("text-sm hover:underline", storeTheme ? "text-[#D3B574]" : "text-[#003366]")}
+                className={cn(
+                  "text-sm hover:underline",
+                  storeTheme ? "text-[#D3B574]" : "text-[#003366]",
+                )}
               >
                 Size Guide
               </button>
@@ -296,18 +370,21 @@ export function ProductInfo({
             <div className="flex flex-wrap gap-2">
               {details.availableSizes.map((size) => {
                 const variant = productVariants.find(
-                  (v: { size?: string; color?: string; stock_quantity?: number }) =>
-                    v.size === size && v.color === selectedColor
-                )
-                const stockQuantity = variant?.stock_quantity ?? 0
-                const isAvailable = stockQuantity > 0
+                  (v: {
+                    size?: string;
+                    color?: string;
+                    stock_quantity?: number;
+                  }) => v.size === size && v.color === selectedColor,
+                );
+                const stockQuantity = variant?.stock_quantity ?? 0;
+                const isAvailable = stockQuantity > 0;
 
                 return (
                   <button
                     key={size}
                     type="button"
                     onClick={() => {
-                      if (isAvailable) setSelectedSize(size)
+                      if (isAvailable) setSelectedSize(size);
                     }}
                     disabled={!isAvailable}
                     className={cn(
@@ -317,7 +394,7 @@ export function ProductInfo({
                         : isAvailable
                           ? "bg-white text-[#003366] border-[#003366] hover:bg-[#003366]/5"
                           : "bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed opacity-50",
-                      errors.size && !selectedSize && "border-red-500"
+                      errors.size && !selectedSize && "border-red-500",
                     )}
                     title={
                       !isAvailable
@@ -328,9 +405,11 @@ export function ProductInfo({
                     }
                   >
                     {size}
-                    {!isAvailable && <span className="ml-1 text-xs">(OOS)</span>}
+                    {!isAvailable && (
+                      <span className="ml-1 text-xs">(OOS)</span>
+                    )}
                   </button>
-                )
+                );
               })}
             </div>
             {errors.size && !selectedSize && (
@@ -340,14 +419,21 @@ export function ProductInfo({
         )}
 
         <div>
-          <label className={cn("mb-3 block text-sm font-semibold", storeTheme ? "text-white" : "text-foreground")}>Select Color</label>
+          <label
+            className={cn(
+              "mb-3 block text-sm font-semibold",
+              storeTheme ? "text-white" : "text-foreground",
+            )}
+          >
+            Select Color
+          </label>
           <div className="flex flex-wrap gap-3">
             {details.colors.map((color) => (
               <button
                 key={color.name}
                 type="button"
                 onClick={() => {
-                  if (color.inStock) onColorChange(color.name)
+                  if (color.inStock) onColorChange(color.name);
                 }}
                 disabled={!color.inStock}
                 className={cn(
@@ -355,7 +441,7 @@ export function ProductInfo({
                   selectedColor === color.name
                     ? "border-[#003366] ring-2 ring-[#003366]/20"
                     : "border-gray-300",
-                  !color.inStock && "opacity-50 cursor-not-allowed"
+                  !color.inStock && "opacity-50 cursor-not-allowed",
                 )}
                 style={{ backgroundColor: color.hex }}
                 title={color.name}
@@ -408,8 +494,8 @@ export function ProductInfo({
                 setQuantity(
                   Math.max(
                     1,
-                    Math.min(maxQty, Number.parseInt(e.target.value, 10) || 1)
-                  )
+                    Math.min(maxQty, Number.parseInt(e.target.value, 10) || 1),
+                  ),
                 )
               }
               className={cn(
@@ -439,24 +525,55 @@ export function ProductInfo({
         <div className="flex min-w-0 items-center gap-2">
           {details.stockStatus === "in-stock" && (
             <>
-              <div className="w-2 h-2 bg-green-500 rounded-full" />
-              <span className={cn("min-w-0 text-sm", storeTheme ? "text-white/70" : "text-muted-foreground")}>
-                In Stock — {shipLabel}
+              <div
+                className={cn(
+                  "h-2 w-2 rounded-full",
+                  isPreorder ? "bg-[#D3B574]" : "bg-green-500",
+                )}
+              />
+              <span
+                className={cn(
+                  "min-w-0 text-sm",
+                  storeTheme ? "text-white/70" : "text-muted-foreground",
+                )}
+              >
+                {isPreorder
+                  ? `Pre-order — ${shipLabel}`
+                  : `In Stock — ${shipLabel}`}
               </span>
             </>
           )}
           {details.stockStatus === "low-stock" && (
             <>
-              <div className="w-2 h-2 bg-orange-500 rounded-full" />
-              <span className={cn("min-w-0 text-sm", storeTheme ? "text-white/70" : "text-muted-foreground")}>
-                Low Stock — {shipLabel}
+              <div
+                className={cn(
+                  "h-2 w-2 rounded-full",
+                  isPreorder ? "bg-[#D3B574]" : "bg-orange-500",
+                )}
+              />
+              <span
+                className={cn(
+                  "min-w-0 text-sm",
+                  storeTheme ? "text-white/70" : "text-muted-foreground",
+                )}
+              >
+                {isPreorder
+                  ? `Pre-order — ${shipLabel}`
+                  : `Low Stock — ${shipLabel}`}
               </span>
             </>
           )}
           {details.stockStatus === "out-of-stock" && (
             <>
               <div className="w-2 h-2 bg-red-500 rounded-full" />
-              <span className={cn("text-sm", storeTheme ? "text-white/70" : "text-muted-foreground")}>Out of Stock</span>
+              <span
+                className={cn(
+                  "text-sm",
+                  storeTheme ? "text-white/70" : "text-muted-foreground",
+                )}
+              >
+                Out of Stock
+              </span>
             </>
           )}
         </div>
@@ -474,6 +591,8 @@ export function ProductInfo({
               </>
             ) : details.stockStatus === "out-of-stock" ? (
               "Sold Out"
+            ) : isPreorder ? (
+              "Pre-order — Add to Cart"
             ) : (
               "Add to Cart"
             )}
@@ -487,7 +606,7 @@ export function ProductInfo({
             <Heart
               className={cn(
                 "w-5 h-5 mr-2",
-                isWishlisted && "fill-red-500 text-red-500"
+                isWishlisted && "fill-red-500 text-red-500",
               )}
             />
             {isWishlisted ? "Added to Wishlist" : "Add to Wishlist"}
@@ -496,7 +615,14 @@ export function ProductInfo({
       </div>
 
       <div className={cn("border-t pt-6", storeTheme && "border-white/10")}>
-        <p className={cn("mb-3 text-sm font-semibold", storeTheme ? "text-white" : "text-foreground")}>Share this product</p>
+        <p
+          className={cn(
+            "mb-3 text-sm font-semibold",
+            storeTheme ? "text-white" : "text-foreground",
+          )}
+        >
+          Share this product
+        </p>
         <div className="flex flex-wrap gap-3">
           <Button
             variant="outline"
@@ -536,5 +662,5 @@ export function ProductInfo({
 
       <SizeGuideModal open={showSizeGuide} onOpenChange={setShowSizeGuide} />
     </div>
-  )
+  );
 }

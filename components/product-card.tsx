@@ -1,85 +1,87 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import { StoreLink } from "@/components/store-link"
-import { Badge } from "@/components/ui/badge"
-import { Star, ChevronLeft, ChevronRight } from "lucide-react"
-import { getColorHex } from "@/lib/color-utils"
-import { StoreCatalogImage, STORE_CATALOG_FRAME_CLASS } from "@/components/store-catalog-image"
+import type React from "react";
+import { useState } from "react";
+import { StoreLink } from "@/components/store-link";
+import { Badge } from "@/components/ui/badge";
+import { Star, ChevronLeft, ChevronRight } from "lucide-react";
+import { getColorHex } from "@/lib/color-utils";
+import {
+  StoreCatalogImage,
+  STORE_CATALOG_FRAME_CLASS,
+} from "@/components/store-catalog-image";
+import { isToc2026PreorderItem } from "@/lib/store/toc-preorder";
 
 interface ProductCardProduct {
-  id: string | number
-  name: string
-  slug?: string | null
-  price: number
-  category?: string | null
-  image_url?: string | null
-  stock_quantity?: number
-  rating?: number
-  is_featured?: boolean
-  variants?: Array<{ color?: string }>
-  images?: Array<{ url: string; display_order?: number }>
+  id: string | number;
+  name: string;
+  slug?: string | null;
+  price: number;
+  category?: string | null;
+  image_url?: string | null;
+  stock_quantity?: number;
+  rating?: number;
+  is_featured?: boolean;
+  variants?: Array<{ color?: string }>;
+  images?: Array<{ url: string; display_order?: number }>;
 }
 
 interface ProductCardProps {
-  product: ProductCardProduct
+  product: ProductCardProduct;
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const variants = product.variants ?? []
-  const images = product.images ?? []
+  const variants = product.variants ?? [];
+  const images = product.images ?? [];
 
   const uniqueColors = Array.from(
-    new Set(variants.map((v) => v.color).filter(Boolean))
-  )
-  const [currentColorIndex, setCurrentColorIndex] = useState(0)
+    new Set(variants.map((v) => v.color).filter(Boolean)),
+  );
+  const [currentColorIndex, setCurrentColorIndex] = useState(0);
 
   const getCurrentImage = () => {
     if (images.length > 0) {
       const sorted = [...images].sort(
-        (a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)
-      )
-      const imageIndex = Math.min(currentColorIndex, sorted.length - 1)
-      return sorted[imageIndex]?.url ?? sorted[0]?.url
+        (a, b) => (a.display_order ?? 0) - (b.display_order ?? 0),
+      );
+      const imageIndex = Math.min(currentColorIndex, sorted.length - 1);
+      return sorted[imageIndex]?.url ?? sorted[0]?.url;
     }
-    return product.image_url ?? "/placeholder.svg"
-  }
+    return product.image_url ?? "/placeholder.svg";
+  };
 
   const handlePrevColor = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
+    e.preventDefault();
+    e.stopPropagation();
     setCurrentColorIndex((prev) =>
-      prev === 0 ? uniqueColors.length - 1 : prev - 1
-    )
-  }
+      prev === 0 ? uniqueColors.length - 1 : prev - 1,
+    );
+  };
 
   const handleNextColor = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
+    e.preventDefault();
+    e.stopPropagation();
     setCurrentColorIndex((prev) =>
-      prev === uniqueColors.length - 1 ? 0 : prev + 1
-    )
-  }
+      prev === uniqueColors.length - 1 ? 0 : prev + 1,
+    );
+  };
 
   const handleColorClick = (index: number, e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setCurrentColorIndex(index)
-  }
+    e.preventDefault();
+    e.stopPropagation();
+    setCurrentColorIndex(index);
+  };
 
-  const productId = String(product.id)
-  const productUrl = `/store-app/product/${productId}`
-  const currentImage = getCurrentImage()
-  const stockQty = product.stock_quantity ?? 0
-  const rating = product.rating ?? 0
+  const productId = String(product.id);
+  const productUrl = `/store-app/product/${productId}`;
+  const currentImage = getCurrentImage();
+  const stockQty = product.stock_quantity ?? 0;
+  const rating = product.rating ?? 0;
+  const isPreorder = isToc2026PreorderItem(product);
 
   return (
     <div className="group relative">
-      <StoreLink
-        href={productUrl}
-        className="block cursor-pointer"
-      >
+      <StoreLink href={productUrl} className="block cursor-pointer">
         <div className={STORE_CATALOG_FRAME_CLASS}>
           {currentImage ? (
             <StoreCatalogImage
@@ -121,6 +123,11 @@ export function ProductCard({ product }: ProductCardProps) {
 
           {/* Badges */}
           <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
+            {isPreorder && (
+              <Badge className="border border-[#D3B574]/50 bg-[#0A1628]/95 text-[#D3B574] font-black uppercase tracking-[0.12em] text-[10px]">
+                Pre-order
+              </Badge>
+            )}
             {product.is_featured && (
               <Badge className="bg-[#D3B574] text-[#0A1628] font-semibold border-0 text-xs">
                 Featured
@@ -181,8 +188,8 @@ export function ProductCard({ product }: ProductCardProps) {
           {uniqueColors.length > 0 && (
             <div className="flex items-center gap-1.5">
               {uniqueColors.map((color, index) => {
-                const hexColor = getColorHex(color)
-                const isActive = index === currentColorIndex
+                const hexColor = getColorHex(color);
+                const isActive = index === currentColorIndex;
                 return (
                   <button
                     key={color}
@@ -196,7 +203,7 @@ export function ProductCard({ product }: ProductCardProps) {
                     title={color}
                     onClick={(e) => handleColorClick(index, e)}
                   />
-                )
+                );
               })}
             </div>
           )}
@@ -206,15 +213,17 @@ export function ProductCard({ product }: ProductCardProps) {
               ${Number(product.price).toFixed(2)}
             </p>
             <p className="text-xs text-white/40">
-              {stockQty > 10
-                ? "In Stock"
-                : stockQty > 0
-                  ? `Only ${stockQty} left`
-                  : "Out of Stock"}
+              {isPreorder
+                ? "Event pickup Sep 18–19"
+                : stockQty > 10
+                  ? "In Stock"
+                  : stockQty > 0
+                    ? `Only ${stockQty} left`
+                    : "Out of Stock"}
             </p>
           </div>
         </div>
       </StoreLink>
     </div>
-  )
+  );
 }
