@@ -1,0 +1,31 @@
+name: Tests
+
+# The suite sat with five failures for long enough that "those are pre-existing" became the
+# reflex. It is green now, so this exists to keep it that way — a rename that outruns its test
+# is cheap to fix the day it happens and expensive to find months later.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  vitest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci --no-audit --no-fund
+
+      - name: Test
+        # No secrets: every test in lib/ is a pure unit test. Anything needing Supabase or
+        # OpenAI belongs behind an integration job with its own credentials, not here.
+        run: npx vitest run
