@@ -36,6 +36,10 @@ export function ConditionalAuthGuard({
     "/view-profile",
     "/prospects",
     "/schools",
+    // A school's wrestling record is public history, same as /schools and /nchsaa — and Data
+    // Dawg, which is open to everyone, links school names straight to /high-schools/[slug].
+    // Gating it sent every signed-out reader who followed one of those links to a login wall.
+    "/high-schools",
     "/colleges",
     // Public club directory — it carries public SEO metadata and an OG url of /clubs,
     // so gating it here made the page uncrawlable and dead-ended every shared link.
