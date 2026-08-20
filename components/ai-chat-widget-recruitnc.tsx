@@ -45,9 +45,18 @@ const DATA_DAWG_INTRO_SEEN_KEY = "data-dawg-intro-seen"
 const DATA_DAWG_LEGACY_CHAT_API = "/api/ai/chat"
 const DATA_DAWG_AGENT_V2_API = "/api/ai/data-dawg-agent"
 
+/**
+ * Kill switch back to the legacy /api/ai/chat route.
+ *
+ * Case-insensitive on purpose. This compared against lowercase `"true"` exactly, so a value of
+ * `"True"` set the flag and did nothing at all — the switch looked thrown and wasn't. A kill
+ * switch that silently ignores you is worse than not having one.
+ */
 const DATA_DAWG_USE_LEGACY =
   typeof process !== "undefined" &&
-  process.env.NEXT_PUBLIC_DATA_DAWG_USE_LEGACY_CHAT === "true"
+  ["true", "1", "yes"].includes(
+    String(process.env.NEXT_PUBLIC_DATA_DAWG_USE_LEGACY_CHAT ?? "").trim().toLowerCase(),
+  )
 
 const DATA_DAWG_MESSAGE_API = DATA_DAWG_USE_LEGACY
   ? DATA_DAWG_LEGACY_CHAT_API
@@ -723,7 +732,7 @@ export function AIChatWidget() {
                                 className={cn(
                                   // Answers are real markdown now (lists, headings, bold) — no
                                   // pre-wrap, or the block elements inherit blank-line gaps.
-                                  "space-y-2 break-words",
+                                  "space-y-3 break-words",
                                   "[&_p]:leading-relaxed",
                                   "[&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-5",
                                   "[&_ol]:list-decimal [&_ol]:space-y-1 [&_ol]:pl-5",
