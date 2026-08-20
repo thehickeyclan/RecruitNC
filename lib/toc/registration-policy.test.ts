@@ -14,8 +14,11 @@ describe("toc registration policy", () => {
     // Invited 29 July, so its own seven days ran out on 5 August. It stays open only
     // because the event-wide floor is later — which is exactly what broke when that floor
     // slipped into the past and every older invite died at once.
-    expect(isConfirmPastDeadline("2026-07-29", new Date(2026, 7, 14, 12, 0, 0))).toBe(false)
-    expect(isConfirmPastDeadline("2026-07-29", new Date(2026, 7, 15, 0, 0))).toBe(true)
+    // Absolute instants, not local ones. The deadline is 23:59:59.999 Eastern, so
+    // `new Date(2026, 7, 15, 0, 0)` meant "past due" on a machine in ET and "not yet" on a
+    // runner in UTC — the test was encoding whoever ran it rather than the rule.
+    expect(isConfirmPastDeadline("2026-07-29", new Date("2026-08-14T16:00:00Z"))).toBe(false)
+    expect(isConfirmPastDeadline("2026-07-29", new Date("2026-08-15T04:00:00Z"))).toBe(true)
   })
 
   it("uses the fixed event-wide payment deadline", () => {
