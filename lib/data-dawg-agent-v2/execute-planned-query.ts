@@ -335,6 +335,7 @@ export async function executePlannedDataDawgQuery(
       case "college_commits_search": {
         const payload = await toolCollegeCommitsSearch({
           query: plan.query ?? undefined,
+          college: plan.college ?? undefined,
           grad_year: plan.grad_year ?? undefined,
           gender: plan.gender ?? undefined,
           division: plan.division ?? undefined,

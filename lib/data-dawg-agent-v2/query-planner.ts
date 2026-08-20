@@ -64,6 +64,7 @@ export type PlannedDataDawgQuery =
   | {
       intent: "college_commits_search"
       query: string | null
+      college: string | null
       grad_year: number | null
       gender: "Male" | "Female" | null
       division: "NCAA Division I" | "NCAA Division II" | "NCAA Division III" | "NAIA" | "NJCAA" | null
@@ -344,6 +345,29 @@ export function planDataDawgQuery(message: string): PlannedDataDawgQuery | null 
   }
 
   // --- College commits (list/search — not a named athlete dossier) ---
+  /**
+   * Pull the college out of "who committed to X" / "commits to X" / "signed with X".
+   * The planner used to send query: null here, so "who committed to NC State" ran an unfiltered
+   * search and answered with all 161 commitments in the state.
+   */
+  const extractCommitCollege = (raw: string): string | null => {
+    const m =
+      /\b(?:committed|commits?|signed|signing)\s+(?:to|with|at)\s+(.+)$/i.exec(raw) ??
+      /\bcommits?\s+(?:for|from)\s+(.+)$/i.exec(raw)
+    if (!m) return null
+    let candidate = m[1]
+      .replace(/[?!.,]+\s*$/, "")
+      .replace(/\b(?:this|next|last)\s+year\b/gi, "")
+      .replace(/\bin\s+\d{4}\b/gi, "")
+      .replace(/\bclass\s+of\s+\d{4}\b/gi, "")
+      .trim()
+    // Guard against the generic phrasings — "who committed to college" is not a college.
+    if (!candidate || /^(a|an|the)?\s*(college|colleges|school|schools|d\s?[123]|division\s+\w+)$/i.test(candidate)) {
+      return null
+    }
+    return candidate.length > 60 ? null : candidate
+  }
+
   const commitsish =
     /\bcollege\s+commits?\b/.test(lower) ||
     /\bwho\s+(?:has\s+)?committed\b/.test(lower) ||
@@ -375,6 +399,7 @@ export function planDataDawgQuery(message: string): PlannedDataDawgQuery | null 
     return {
       intent: "college_commits_search",
       query: null,
+      college: extractCommitCollege(text),
       grad_year: gy,
       gender,
       division,
