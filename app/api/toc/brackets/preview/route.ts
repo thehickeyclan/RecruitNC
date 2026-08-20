@@ -3,6 +3,11 @@ import { buildEightManDeDraw } from "@/lib/toc/eight-man-de-bracket"
 import { getPublicAnnouncedWeight } from "@/lib/toc/public-announced-field"
 import { tocBracketsPublicEnabled } from "@/lib/toc/bracket-public-access"
 import type { TocBracketParticipant } from "@/lib/toc/bracket-types"
+import { layoutBracketTree } from "@/lib/bracket/single-elim-layout"
+import {
+  tocDrawToConsolationBracketTree,
+  tocDrawToSeededBracketTree,
+} from "@/lib/toc/to-bracket-display"
 
 export const dynamic = "force-dynamic"
 
@@ -83,8 +88,17 @@ export async function POST(request: Request) {
 
     const draw = buildEightManDeDraw(weightClass, participants, new Date().toISOString())
 
+    // Laid out here, not in the app: the same layout engine the desktop bracket uses, so the
+    // two draw the same shape rather than two implementations drifting apart. The app renders
+    // the positions it is given.
+    const consolationTree = tocDrawToConsolationBracketTree(draw)
+
     return NextResponse.json({
       draw,
+      layout: {
+        championship: layoutBracketTree(tocDrawToSeededBracketTree(draw)),
+        consolation: consolationTree ? layoutBracketTree(consolationTree) : null,
+      },
       // Flips to true when TOC publishes real brackets and this starts serving them instead.
       official: tocBracketsPublicEnabled(),
       weightClass,
