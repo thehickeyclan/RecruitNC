@@ -3,6 +3,7 @@
  */
 
 import { formatCommitChronologyLine } from "@/lib/data-dawg-college-commit"
+import { escapeForIlike, postgrestIlikeAtom } from "@/lib/athlete-name-match"
 
 export const RECRUITNC_APP_URL = "https://app.ncwrestlingunited.com"
 
@@ -37,7 +38,11 @@ export async function batchLookupAthleteProfileLinks(
   })
   unique = [...withVariants]
 
-  const orParts = unique.map((n) => `name.ilike.%${String(n).replace(/'/g, "''")}%`).join(",")
+  // Built by hand this used to escape only apostrophes, so a name carrying a comma or a paren
+  // reshaped the filter's logic tree. `postgrestIlikeAtom` quotes the pattern when it needs to.
+  const orParts = unique
+    .map((n) => postgrestIlikeAtom("name", `%${escapeForIlike(String(n))}%`))
+    .join(",")
   const { data } = await adminClient.from("athletes").select("id, name").or(orParts)
   const map = new Map<string, string>()
   for (const row of data || []) {
