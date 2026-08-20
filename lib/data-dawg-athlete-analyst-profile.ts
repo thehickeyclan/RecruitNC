@@ -71,7 +71,7 @@ export type AnalystProfileStats = {
   fargoAllAmericanCount?: number
   daveSchultzYears?: number[]
   triciaSaundersYears?: number[]
-  seasonRecords?: SeasonRecordBag[]
+  seasonRecords?: SeasonRecordRow[]
   /** Datasets that contributed facts to this answer. */
   verifiedSources?: string[]
 }

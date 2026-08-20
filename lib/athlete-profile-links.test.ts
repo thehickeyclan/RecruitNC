@@ -38,18 +38,18 @@ describe("formatAthleteAnswerOpening", () => {
     expect(lines[0]).toContain("/view-profile?id=")
     expect(lines).toContain("High School: Green Level")
     expect(lines).toContain("Class of: 2026")
-    expect(lines).toContain("College commit: Roanoke (NCAA Division III)")
+    expect(lines).toContain("College: Roanoke (NCAA Division III)")
     expect(lines).toContain("3× State Champion with a 193-9 high school career.")
     expect(lines.some((l) => l.startsWith("Weight:"))).toBe(false)
     expect(lines.some((l) => l.startsWith("Profile:"))).toBe(false)
   })
 
-  it("includes transfer history on the college commit line", () => {
+  it("puts the original school first when there was a transfer", () => {
     const lines = formatAthleteAnswerOpening("Liam Hickey", "ed26dd22-9533-4acf-ade7-577b41b03337", null, {
       college: "NC State",
       previousCollege: "UNC Chapel Hill",
     })
-    expect(lines).toContain("College commit: NC State — transferred from UNC Chapel Hill")
+    expect(lines).toContain("College career: UNC Chapel Hill → NC State")
   })
 
   it("omits Profile-style opener when there is no id or url", () => {
