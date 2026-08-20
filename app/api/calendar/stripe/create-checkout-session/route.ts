@@ -8,6 +8,13 @@ import {
 import { parseGraduationYear } from "@/lib/athlete-graduation-year"
 import { normalizePhoneForStorage } from "@/lib/phone-format"
 
+/**
+ * Categories that take drop-ins. Mirrors the button in components/nc-united-calendar/
+ * event-detail-modal.tsx and src/lib/events.ts in the app — but this is the copy that decides
+ * whether money moves.
+ */
+const DROP_IN_CATEGORIES = new Set(["blue-practice", "gold-practice"])
+
 const REQUIRED_ENV_VARS = [
   "STRIPE_SECRET_KEY",
   "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
@@ -91,6 +98,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Event not found" }, { status: 404 })
     }
 
+    // Drop-ins are team practices only. This route already read `category` and never checked
+    // it, so the rule lived entirely in the two places that draw the button — meaning a
+    // miscategorised event, a stale link or a hand-made request could all buy a Blue practice
+    // drop-in for something that is not one. A payment path should not depend on the UI having
+    // hidden a button.
+    if (!DROP_IN_CATEGORIES.has(String(event.category ?? ""))) {
+      console.warn(
+        `[drop-in-checkout] refused ${event.id} "${event.title}" — category ${event.category ?? "(none)"} does not take drop-ins`,
+      )
+      return NextResponse.json(
+        { error: "This event does not offer drop-ins." },
+        { status: 400 },
+      )
+    }
+
     const maxDropIns = Number.isFinite(event.max_drop_ins) && event.max_drop_ins ? event.max_drop_ins : 10
 
     const { count: activeCount, error: countError } = await admin
@@ -132,7 +154,11 @@ export async function POST(request: Request) {
       event_id: event.id,
       participant_name: wrestlerName,
       wrestler_name: wrestlerName,
-      wrestler_age: wrestlerAge,
+      // wrestler_age is deliberately not written. This route moved from date of birth to
+      // graduation year to cut how much minor data we hold, and `wrestlerAge` went with it —
+      // but this line stayed, referencing a variable that no longer exists. Every drop-in
+      // checkout threw ReferenceError before reaching Stripe. The column still exists for the
+      // rows written before the change; nothing new fills it.
       wrestler_weight: body.wrestlerWeight?.trim() || null,
       participant_email: parentEmail,
       participant_phone: parentPhone,
