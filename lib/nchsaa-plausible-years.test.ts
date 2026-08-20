@@ -6,7 +6,10 @@ describe("plausibleNchsaaYearsForGradYear", () => {
   it("class of 2028 excludes early years that belong to a different same-name athlete", () => {
     const { min, max } = plausibleNchsaaYearsForGradYear(2028)
     expect(min).toBe(2024)
-    expect(max).toBe(2032)
+    // grad + 1. This expected grad + 4 until the window was deliberately tightened — nine years
+    // is more than twice a high school career, and every extra year is another chance to absorb
+    // a same-name wrestler, which is the very thing this window exists to prevent.
+    expect(max).toBe(2029)
     expect(min).toBeGreaterThan(2023)
   })
 

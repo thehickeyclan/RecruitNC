@@ -9,7 +9,12 @@ describe("tocRoadStates", () => {
   })
 
   it("advances itself: mid-reveals, two done and the presale is next", () => {
-    const states = tocRoadStates(TOC_ROAD_MILESTONES, Date.parse("2026-08-15T12:00:00-04:00"))
+    // Probed from the schedule rather than a written-in date. This asserted 2026-08-15, then
+    // "Field reveals begin" moved to the 16th and the probe landed on the wrong side of it —
+    // the state machine was fine and the calendar in the test was stale. An hour after the
+    // second milestone is "two done, third next" whatever the dates become.
+    const justAfterSecond = TOC_ROAD_MILESTONES[1]!.atMs + 60 * 60 * 1000
+    const states = tocRoadStates(TOC_ROAD_MILESTONES, justAfterSecond)
     expect(states).toEqual(["done", "done", "next", "upcoming", "upcoming", "upcoming"])
   })
 
