@@ -62,6 +62,16 @@ const DATA_DAWG_MESSAGE_API = DATA_DAWG_USE_LEGACY
   ? DATA_DAWG_LEGACY_CHAT_API
   : DATA_DAWG_AGENT_V2_API
 
+/**
+ * Analytics label for this surface.
+ *
+ * This used to sniff the hostname and path for "recruit" or "store". The site is
+ * app.ncwrestlingunited.com, which contains neither — so every web question was filed under
+ * "legacy-nc", and the admin Projects panel showed a bucket that meant nothing. The surface is
+ * known at build time; there was never anything to detect.
+ */
+const DATA_DAWG_PROJECT = "recruitnc-web"
+
 export function AIChatWidget() {
   const { session } = useAuth()
   const pathname = usePathname()
@@ -189,20 +199,6 @@ export function AIChatWidget() {
     return () => window.removeEventListener("keydown", onKeyDown)
   }, [isOpen])
 
-  const detectProject = () => {
-    if (typeof window === "undefined") return "recruit-nc"
-    const hostname = window.location.hostname
-    const pathname = window.location.pathname
-
-    if (hostname.includes("recruit") || pathname.includes("recruit")) {
-      return "recruit-nc"
-    }
-    if (hostname.includes("store") || hostname.includes("shop") || pathname.includes("store") || pathname.includes("shop")) {
-      return "ecommerce"
-    }
-    return "legacy-nc"
-  }
-
   const sendMessage = async (content: string) => {
     if (!content.trim() || isLoading) return
 
@@ -260,7 +256,6 @@ export function AIChatWidget() {
     }
 
     try {
-      const project = detectProject()
       const conversationHistory = messages.slice(-5).map(m => ({
         role: m.role,
         content: m.content,
@@ -272,7 +267,7 @@ export function AIChatWidget() {
         // Bubble keeps what the user typed; the agent gets it without the greeting so
         // fast-path routing isn't thrown off by a leading "Hey Data Dawg,".
         message: stripHeyDataDawgGreeting(userMessage.content),
-        project: project,
+        project: DATA_DAWG_PROJECT,
         conversationHistory: conversationHistory,
       }
       const requestHeaders: Record<string, string> = { "Content-Type": "application/json" }
