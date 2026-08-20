@@ -121,6 +121,9 @@ describe("buildNhscaDuals2026LiveProfileResults", () => {
         event: NHSCA_DUALS_NATIONAL_EVENT_LABEL,
         year: 2026,
         record: "1-1",
+        // The builder started carrying the weight it scored at; a result line reads better with
+        // it, and toEqual is exact, so the expectation had to follow.
+        weight: "170",
         isPlaceholder: false,
       },
     ])

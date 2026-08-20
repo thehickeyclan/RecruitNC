@@ -62,6 +62,47 @@ describe("athlete-name-match", () => {
     expect(filtered[0].name).toBe("Maxwell Davis")
   })
 
+  it("keeps a row from a school the athlete transferred away from", () => {
+    // Year still fits, so the old school is not evidence against them — dropping this would
+    // hide real results for every transfer.
+    const rows = [
+      { name: "Max Davis", school: "Jacksonville", year: 2026 },
+      { name: "Max Davis", school: "Old School", year: 2024 },
+    ]
+    const filtered = filterRowsByAthleteMatchContext(
+      rows,
+      { displayName: "Max Davis", graduationYear: 2026, highSchool: "Jacksonville" },
+      (r) => r,
+    )
+    expect(filtered).toHaveLength(2)
+  })
+
+  it("keeps a row that says nothing — a blank school and no year cannot contradict", () => {
+    const rows = [
+      { name: "Max Davis", school: "Jacksonville", year: 2026 },
+      { name: "Max Davis", school: null, year: null },
+    ]
+    const filtered = filterRowsByAthleteMatchContext(
+      rows,
+      { displayName: "Max Davis", graduationYear: 2026, highSchool: "Jacksonville" },
+      (r) => r,
+    )
+    expect(filtered).toHaveLength(2)
+  })
+
+  it("keeps everything when no row corroborates, rather than hiding data", () => {
+    const rows = [
+      { name: "Max Davis", school: "Raleigh", year: 2019 },
+      { name: "Max Davis", school: "Durham", year: 2018 },
+    ]
+    const filtered = filterRowsByAthleteMatchContext(
+      rows,
+      { displayName: "Max Davis", graduationYear: 2026, highSchool: "Jacksonville" },
+      (r) => r,
+    )
+    expect(filtered).toHaveLength(2)
+  })
+
   it("pickBestAthleteCandidate chooses grad + school match", () => {
     const candidates = [
       { id: "a", name: "Matthew Hickey", highschool: "Northwest Guilford", graduationyear: 2027 },

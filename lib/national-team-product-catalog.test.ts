@@ -18,7 +18,15 @@ describe("AAU Scholastic product catalog", () => {
       expect(product, `missing catalog entry for ${line.id}`).toBeDefined()
       expect(product!.sku).toBe(aauScholasticSkuForLineId(line.id))
       expect(product!.defaultCents).toBe(line.dollars * 100)
-      expect(product!.label).toBe(line.label)
+      // The page may elaborate where the catalog names. "Singlet (Pepsi or Pinstripes)" tells a
+      // buyer they have a style to choose; the catalog calls the product "Singlet", and that is
+      // the name on the receipt. Requiring them character-identical coupled two independent copy
+      // decisions and broke the moment the page got clearer. What must hold is that they still
+      // describe the same thing.
+      expect(
+        line.label.toLowerCase().startsWith(product!.label.toLowerCase()),
+        `catalog label "${product!.label}" does not match page line "${line.label}"`,
+      ).toBe(true)
     }
   })
 

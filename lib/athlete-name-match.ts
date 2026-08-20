@@ -215,6 +215,36 @@ export function scoreAthleteRowMatch(context: AthleteMatchContext, row: Tourname
 const STRONG_ROW_SCORE = 35
 
 /**
+ * True when a row disagrees with everything we can actually compare it against.
+ *
+ * The distinction that matters is between a row that *contradicts* the athlete and one that is
+ * merely *silent*. An exact name match alone scores 50, well past STRONG_ROW_SCORE, so a
+ * different wrestler of the same name at another school in another year used to survive
+ * alongside the real one — that is the namesake this filter exists to remove. But a tournament
+ * row with a blank school, or one from a school the athlete transferred away from, is not
+ * evidence against them, and dropping those would hide real results.
+ *
+ * So: contradiction requires that every comparable signal disagree. Nothing comparable means
+ * no contradiction.
+ */
+function rowContradictsContext(context: AthleteMatchContext, row: TournamentRowForMatch): boolean {
+  const hs = (context.highSchool ?? "").trim()
+  const rowSchool = (row.school ?? "").trim()
+  const gy = context.graduationYear
+  const ty = row.year
+
+  const schoolComparable = Boolean(hs) && Boolean(rowSchool)
+  const yearComparable = gy != null && ty != null
+
+  if (!schoolComparable && !yearComparable) return false
+
+  const schoolAgrees = schoolComparable && schoolsLikelySame(hs, rowSchool)
+  const yearAgrees = yearComparable && tournamentYearFitsGradYearLoose(Number(ty), Number(gy))
+
+  return !schoolAgrees && !yearAgrees
+}
+
+/**
  * Drop wrong namesakes when we can confidently match on name + school + grad window.
  * If nothing scores well but rows exist, return originals (avoid hiding data).
  */
@@ -232,7 +262,11 @@ export function filterRowsByAthleteMatchContext<T>(
     score: scoreAthleteRowMatch(context, accessor(row)),
   }))
 
-  const strong = scored.filter((s) => s.score >= minStrong)
+  // A high score alone is not enough: the name is worth 50 on its own, so "strong" has to mean
+  // corroborated rather than merely well-named.
+  const strong = scored.filter(
+    (s) => s.score >= minStrong && !rowContradictsContext(context, accessor(s.row)),
+  )
   if (strong.length > 0) return strong.map((s) => s.row)
 
   const nameOnly = scored.filter((s) => rowNameMatchesAthleteContext(accessor(s.row).name, context))
