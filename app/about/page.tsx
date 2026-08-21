@@ -58,6 +58,55 @@ function Pillar({ title, children }: { title: string; children: React.ReactNode 
   )
 }
 
+
+/**
+ * Founders.
+ *
+ * Ordered so the three of them read as the argument the rest of the page makes: someone who came
+ * up through North Carolina wrestling, someone who went as far as the sport goes, and someone
+ * whose career happened after the mat. Photos drop into the same slot when they arrive; until
+ * then the initials are styled to look chosen rather than missing.
+ */
+function Founder({
+  name,
+  role,
+  credential,
+  photo,
+  children,
+}: {
+  name: string
+  role: string
+  credential: string
+  photo?: string
+  children: React.ReactNode
+}) {
+  const initials = name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+
+  return (
+    <div className="flex flex-col gap-4 rounded-xl border border-rnc-line bg-rnc-raised p-6 sm:flex-row sm:gap-6">
+      <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-rnc-line bg-rnc-surface">
+        {photo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={photo} alt={name} className="h-full w-full object-cover" />
+        ) : (
+          <span className="text-xl font-bold text-rnc-gold">{initials}</span>
+        )}
+      </div>
+      <div className="flex flex-col gap-2">
+        <div>
+          <h3 className="text-lg font-bold text-white">{name}</h3>
+          <p className="text-xs font-semibold uppercase tracking-wider text-rnc-gold">{role}</p>
+        </div>
+        <p className="text-sm font-semibold text-slate-200">{credential}</p>
+        <p className="text-sm leading-relaxed text-slate-300">{children}</p>
+      </div>
+    </div>
+  )
+}
+
 export default async function AboutPage() {
   const { commitments } = await getAboutStats()
 
@@ -197,7 +246,55 @@ export default async function AboutPage() {
           </blockquote>
         </section>
 
-        <Section eyebrow="The organization" title="Who we are">
+        <Section eyebrow="The founders" title="Who runs it">
+          <p className="leading-relaxed text-slate-300">
+            NC United was founded by three people whose wrestling lives ended in three different
+            places — and who all came back to the same one.
+          </p>
+          <div className="flex flex-col gap-4">
+            <Founder
+              name="Colton Palmer"
+              role="Founder"
+              credential="284 career wins — a national record at the time"
+            >
+              Colton started wrestling at five in Durham, following his older brothers. He was an
+              NHSCA national champion by eighth grade, won two state titles for Riverside High
+              School — one of them on a 61-0 season — and finished with more high school wins than
+              any wrestler in North Carolina history. He was a four-year letterwinner and co-captain
+              at NC State. He now works in enterprise strategy, volunteer coaches, and sits on the
+              board of NC USA Wrestling.
+            </Founder>
+
+            <Founder
+              name="Michael Macchiavello"
+              role="Founder"
+              credential="NCAA Division I national champion, US National Team"
+            >
+              Michael grew up in Union County and did not start wrestling until he was fourteen. He
+              won a state title, then an NCAA Division I championship at 197 pounds for NC State —
+              only the second wrestler born in North Carolina ever to win one. He has represented
+              Team USA for five years and served on USA Wrestling&apos;s Board of Directors,
+              Executive Committee and Athlete Advisory Committee. He now coaches collegiately at
+              West Point.
+            </Founder>
+
+            <Founder
+              name="Matt Hickey"
+              role="Founder"
+              credential="Technology founder and CEO; 25+ years building companies"
+            >
+              Matt was the youngest of five wrestling brothers on Long Island, joined the Long
+              Island Century Club with over 100 high school wins, placed second in the New York
+              state championships and wrestled at Hofstra before finishing his degree at NC State.
+              He has spent his career founding and running technology companies — venture-backed
+              cybersecurity and AI data businesses, several of them sold. He lives in Raleigh with
+              his wife Lisa and their three children, and has watched his sons come up through North
+              Carolina wrestling from elementary school to Division I.
+            </Founder>
+          </div>
+        </Section>
+
+        <Section eyebrow="The organization" title="The details">
           <p className="leading-relaxed text-slate-300">
             We are <strong className="text-white">NC United</strong>. Our legal name, the one on our
             IRS determination, is <strong className="text-white">NC Wrestling United Inc.</strong> —
