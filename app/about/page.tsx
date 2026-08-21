@@ -134,7 +134,7 @@ function Action({
 }
 
 export default async function AboutPage() {
-  const { commitments } = await getAboutStats()
+  const { commitments, athleteProfiles, collegeCoaches } = await getAboutStats()
 
   return (
     <main className="min-h-screen bg-rnc-ink px-6 py-14 text-white">
@@ -174,9 +174,17 @@ export default async function AboutPage() {
 
         {/* Counted live from the same query the commitments page uses, so this page cannot drift
             from it. A failed count renders nothing rather than zero. */}
-        {commitments != null ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Stat value={String(commitments)} label="College commitments by North Carolina wrestlers tracked" />
+        {commitments != null || athleteProfiles != null || collegeCoaches != null ? (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {commitments != null ? (
+              <Stat value={String(commitments)} label="College commitments tracked" />
+            ) : null}
+            {athleteProfiles != null ? (
+              <Stat value={String(athleteProfiles)} label="Athlete profiles" />
+            ) : null}
+            {collegeCoaches != null ? (
+              <Stat value={String(collegeCoaches)} label="College coaches on the platform" />
+            ) : null}
           </div>
         ) : null}
 

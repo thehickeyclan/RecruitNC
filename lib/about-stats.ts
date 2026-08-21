@@ -19,6 +19,8 @@ import { fetchCommitmentAthletes } from "@/lib/athletes-commitments-fetch"
 
 export type AboutStats = {
   commitments: number | null
+  athleteProfiles: number | null
+  collegeCoaches: number | null
 }
 
 async function countCommitments(): Promise<number | null> {
@@ -35,6 +37,46 @@ async function countCommitments(): Promise<number | null> {
   }
 }
 
+/** Every athlete record we hold, committed or not — /athletes lists only the committed ones. */
+async function countAthleteProfiles(): Promise<number | null> {
+  try {
+    const admin = getSupabaseAdmin()
+    const { count, error } = await admin.from("athletes").select("id", { count: "exact", head: true })
+    if (error) throw new Error(error.message)
+    return typeof count === "number" ? count : null
+  } catch (e) {
+    console.warn("[about] athlete profile count:", e instanceof Error ? e.message : e)
+    return null
+  }
+}
+
+/**
+ * College coaches with accounts.
+ *
+ * Both spellings are counted because production holds both: 35 rows say `college_coach` and 4 say
+ * `college-coach`. Querying either one alone silently undercounts, and this is a number we state
+ * in public.
+ */
+async function countCollegeCoaches(): Promise<number | null> {
+  try {
+    const admin = getSupabaseAdmin()
+    const { count, error } = await admin
+      .from("user_profiles")
+      .select("id", { count: "exact", head: true })
+      .in("role", ["college_coach", "college-coach"])
+    if (error) throw new Error(error.message)
+    return typeof count === "number" ? count : null
+  } catch (e) {
+    console.warn("[about] college coach count:", e instanceof Error ? e.message : e)
+    return null
+  }
+}
+
 export async function getAboutStats(): Promise<AboutStats> {
-  return { commitments: await countCommitments() }
+  const [commitments, athleteProfiles, collegeCoaches] = await Promise.all([
+    countCommitments(),
+    countAthleteProfiles(),
+    countCollegeCoaches(),
+  ])
+  return { commitments, athleteProfiles, collegeCoaches }
 }
